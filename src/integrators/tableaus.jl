@@ -61,7 +61,7 @@ function TableauIRK{T}(name::Symbol, order::Integer,
 end
 
 
-"TableauIRK: Holds the tableau of a nonlinearly implicit Runge-Kutta method."
+"TableauNLIRK: Holds the tableau of a nonlinearly implicit Runge-Kutta method."
 type TableauNLIRK{Name, S, T} <: TableauRK{Name, S, T}
     order::Integer
     a::Matrix{T}
