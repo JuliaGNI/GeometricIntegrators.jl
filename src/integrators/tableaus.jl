@@ -44,6 +44,12 @@ type TableauIRK{Name, S, T} <: TableauRK{Name, S, T}
         @assert isa(order, Integer)
         @assert S==size(a,1)==size(a,2)==length(b)==length(c)
         @assert istril(a)
+
+        if istrilstrict(a)
+            println("WARNING: Initializing TableauIRK with explicit tableau.")
+            println("         You might want to use TableauERK instead.")
+        end
+
         new(order,a,b,c)
     end
 end
@@ -67,6 +73,15 @@ type TableauNLIRK{Name, S, T} <: TableauRK{Name, S, T}
         @assert isa(S, Integer)
         @assert isa(order, Integer)
         @assert S==size(a,1)==size(a,2)==length(b)==length(c)
+
+        if istrilstrict(a)
+            println("WARNING: Initializing TableauNLIRK with explicit tableau.")
+            println("         You might want to use TableauERK instead.")
+        elseif istril(a)
+            println("WARNING: Initializing TableauNLIRK with linearly implicit tableau.")
+            println("         You might want to use TableauIRK instead.")
+        end
+
         new(order,a,b,c)
     end
 end
