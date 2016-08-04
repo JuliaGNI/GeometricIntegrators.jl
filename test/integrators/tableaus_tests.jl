@@ -31,8 +31,8 @@ a = [[ 0.5+fac 0.0    ]
 b = [0.5,     0.5    ]
 c = [0.5+fac, 0.5-fac]
 
-tab_explicit_crouzeix = TableauIRK(:heun, 2, a, b, c)
-tab_explicit_crouzeix = TableauNLIRK(:heun, 2, a, b, c)
+tab_explicit_crouzeix = TableauIRK(:crouzeix, 2, a, b, c)
+tab_explicit_crouzeix = TableauNLIRK(:crouzeix, 2, a, b, c)
 
 
 # implicit midpoint
