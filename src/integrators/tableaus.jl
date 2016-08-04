@@ -17,6 +17,7 @@ type TableauERK{Name, S, T} <: TableauRK{Name, S, T}
         @assert isa(Name, Symbol)
         @assert isa(S, Integer)
         @assert isa(order, Integer)
+        @assert S > 0
         @assert S==size(a,1)==size(a,2)==length(b)==length(c)
         @assert c[1] == 0
         @assert istrilstrict(a)
@@ -42,6 +43,7 @@ type TableauIRK{Name, S, T} <: TableauRK{Name, S, T}
         @assert isa(Name, Symbol)
         @assert isa(S, Integer)
         @assert isa(order, Integer)
+        @assert S > 0
         @assert S==size(a,1)==size(a,2)==length(b)==length(c)
         @assert istril(a)
 
@@ -73,6 +75,7 @@ type TableauNLIRK{Name, S, T} <: TableauRK{Name, S, T}
         @assert isa(Name, Symbol)
         @assert isa(S, Integer)
         @assert isa(order, Integer)
+        @assert S > 0
         @assert S==size(a,1)==size(a,2)==length(b)==length(c)
 
         if S == 1 # catch the case of a 1x1 matrix a
@@ -110,6 +113,7 @@ type TableauPRK{Name, S, T} <: TableauRK{Name, S, T}
         @assert isa(Name, Symbol)
         @assert isa(S, Integer)
         @assert isa(order, Integer)
+        @assert S > 0
         @assert S==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
         @assert S==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
         new(order, a_q, a_p, b_q, b_p, c_q, c_p)
@@ -162,6 +166,8 @@ type TableauSPARK{Name, S, R, T} <: TableauRK{Name, S, T}
         @assert isa(S, Integer)
         @assert isa(R, Integer)
         @assert isa(order, Integer)
+        @assert S > 0
+        @assert R > 0
         @assert S==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
         @assert S==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
         @assert S==size(α_q,1)==size(α_p,1)==length(β_q)==length(β_p)
@@ -195,6 +201,8 @@ type TableauGLM{Name, S, R, T} <: Tableau{Name, T}
         @assert isa(S, Integer)
         @assert isa(R, Integer)
         @assert isa(order, Integer)
+        @assert S > 0
+        @assert R > 0
         @assert S==length(c)
         @assert S==size(a,1)==size(a,2)==length(u,1)==length(b,2)
         @assert R==size(v,1)==size(v,2)==length(u,2)==length(b,1)
