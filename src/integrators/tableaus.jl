@@ -24,7 +24,7 @@ type TableauERK{Name, S, T} <: TableauRK{Name, S, T}
     end
 end
 
-function TableauERK{T}(name::Symbol, order::Int,
+function TableauERK{T}(name::Symbol, order::Integer,
                        a::Matrix{T}, b::Vector{T}, c::Vector{T})
     TableauERK{name, length(c), T}(order, a, b, c)
 end
@@ -48,7 +48,7 @@ type TableauIRK{Name, S, T} <: TableauRK{Name, S, T}
     end
 end
 
-function TableauIRK{T}(name::Symbol, order::Int,
+function TableauIRK{T}(name::Symbol, order::Integer,
                        a::Matrix{T}, b::Vector{T}, c::Vector{T})
     TableauIRK{name, length(c), T}(order, a, b, c)
 end
@@ -71,7 +71,7 @@ type TableauNLIRK{Name, S, T} <: TableauRK{Name, S, T}
     end
 end
 
-function TableauNLIRK{T}(name::Symbol, order::Int,
+function TableauNLIRK{T}(name::Symbol, order::Integer,
                          a::Matrix{T}, b::Vector{T}, c::Vector{T})
     TableauNLIRK{name, length(c), T}(order, a, b, c)
 end
@@ -99,7 +99,7 @@ type TableauPRK{Name, S, T} <: TableauRK{Name, S, T}
     end
 end
 
-function TableauPRK{T}(name::Symbol, order::Int,
+function TableauPRK{T}(name::Symbol, order::Integer,
                        a_q::Matrix{T}, a_p::Matrix{T},
                        b_q::Vector{T}, b_p::Vector{T},
                        c_q::Vector{T}, c_p::Vector{T})
