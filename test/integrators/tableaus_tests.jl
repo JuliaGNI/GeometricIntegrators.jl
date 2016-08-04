@@ -31,6 +31,7 @@ a = [[ 0.5+fac 0.0    ]
 b = [0.5,     0.5    ]
 c = [0.5+fac, 0.5-fac]
 
+@test_throws AssertionError tab_explicit_crouzeix = TableauERK(:crouzeix, 2, a, b, c)
 tab_explicit_crouzeix = TableauIRK(:crouzeix, 2, a, b, c)
 tab_explicit_crouzeix = TableauNLIRK(:crouzeix, 2, a, b, c)
 
@@ -40,6 +41,8 @@ a = reshape(Rational{Int64}[1//2], 1, 1) # TODO How to create a 2dim 1x1 array?
 b = Rational{Int64}[1   ]
 c = Rational{Int64}[1//2]
 
+@test_throws AssertionError tab_implicit_midpoint = TableauERK(:implicit_midpoint, 2, a, b, c)
+tab_implicit_midpoint = TableauIRK(:implicit_midpoint, 2, a, b, c)
 tab_implicit_midpoint = TableauNLIRK(:implicit_midpoint, 2, a, b, c)
 
 
@@ -50,4 +53,6 @@ a = [[0.25     0.25-fac]
 b = [0.5,     0.5    ]
 c = [0.5-fac, 0.5+fac]
 
+@test_throws AssertionError tab_explicit_glrk2 = TableauERK(:glrk2, 4, a, b, c)
+@test_throws AssertionError tab_explicit_glrk2 = TableauIRK(:glrk2, 4, a, b, c)
 tab_explicit_glrk2 = TableauNLIRK(:glrk2, 4, a, b, c)
