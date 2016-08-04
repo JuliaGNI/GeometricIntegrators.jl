@@ -2,7 +2,7 @@
 "Tableau: Holds the information for the various methods' tableaus."
 abstract Tableau{Name, T}
 
-"TableauERK: Holds the tableau of a Runge-Kutta method."
+"TableauRK: Holds the tableau of a Runge-Kutta method."
 abstract TableauRK{Name, S, T} <: Tableau{Name, T}
 
 "TableauERK: Holds the tableau of an explicit Runge-Kutta method."
