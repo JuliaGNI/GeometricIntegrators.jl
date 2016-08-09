@@ -5,6 +5,33 @@ abstract Tableau{Name, T}
 "TableauRK: Holds the tableau of a Runge-Kutta method."
 abstract TableauRK{Name, S, T} <: Tableau{Name, T}
 
+function showTableau{Name, S, T}(tab::TableauRK{Name, S, T})
+    println("Explicit Runge-Kutta Method ", Name, "with ", S, " stages and order ", tab.order)
+    println("  a = ", tab.a)
+    println("  b = ", tab.b)
+    println("  c = ", tab.c)
+end
+
+function writeTableauToFile{Name, S, T}(dir::AbstractString, tab::TableauRK{Name, S, T})
+    tab_array = zeros(T, S+1, S+1)
+    tab_array[1:S, 2:S+1] = tab.a
+    tab_array[S+1, 2:S+1] = tab.b
+    tab_array[1:S, 1] = tab.c
+    tab_array[S+1, 1] = tab.order
+
+    file = string(dir, "/", Name, ".tsv")
+
+    println("  Writing Runge-Kutta tableau ", Name, " with ", S, " stages and order ", tab.order, " to file")
+    println("  ", file, ".")
+
+    writedlm(file, float(tab_array))
+end
+
+# TODO function writeTableauToFile{Name, S, T}(dir::AbstractString, tab::TableauPRK{Name, S, T})
+# TODO function writeTableauToFile{Name, S, T}(dir::AbstractString, tab::TableauSPARK{Name, S, R, T})
+# TODO function writeTableauToFile{Name, S, T}(dir::AbstractString, tab::TableauGLM{Name, S, R, T})
+
+
 "TableauERK: Holds the tableau of an explicit Runge-Kutta method."
 type TableauERK{Name, S, T} <: TableauRK{Name, S, T}
     order::Integer
@@ -28,6 +55,27 @@ end
 function TableauERK{T}(name::Symbol, order::Integer,
                        a::Matrix{T}, b::Vector{T}, c::Vector{T})
     TableauERK{name, length(c), T}(order, a, b, c)
+end
+
+function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
+    # TODO Can we read type, name, order, etc. from comment? -> DataFrames
+    file = string(dir, "/", name, ".tsv")
+    println("  Reading file ", file)
+
+    tab_array = readdlm(file)
+
+    @assert size(tab_array, 1) == size(tab_array, 2)
+
+    s = size(tab_array, 1)-1
+    a = tab_array[1:s, 2:s+1]
+    b = tab_array[s+1, 2:s+1][:]
+    c = tab_array[1:s, 1]
+    order = round(Int, tab_array[s+1, 1])
+#    name = file[rsearch(file, '/')+1:rsearch(file, '.')-1]
+
+    println("  Creating explicit Runge-Kutta tableau ", name, " with ", s, " stages and order ", order, ".")
+
+    TableauERK(symbol(name), order, a, b, c)
 end
 
 
@@ -61,6 +109,8 @@ function TableauIRK{T}(name::Symbol, order::Integer,
                        a::Matrix{T}, b::Vector{T}, c::Vector{T})
     TableauIRK{name, length(c), T}(order, a, b, c)
 end
+
+# TODO function readTableauIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
 "TableauNLIRK: Holds the tableau of a nonlinearly implicit Runge-Kutta method."
@@ -96,6 +146,8 @@ function TableauNLIRK{T}(name::Symbol, order::Integer,
     TableauNLIRK{name, length(c), T}(order, a, b, c)
 end
 
+# TODO function readTableauNLIRKFromFile(dir::AbstractString, name::AbstractString)
+
 
 "TableauPRK: Holds the tableau of a partitioned Runge-Kutta method."
 # TODO Need explicit and implicit version?
@@ -127,6 +179,8 @@ function TableauPRK{T}(name::Symbol, order::Integer,
     @assert length(c_q)==length(c_p)
     TableauPRK{name, length(c_q), T}(order, a_q, a_p, b_q, b_p, c_q, c_p)
 end
+
+# TODO function readTableauPRKFromFile(dir::AbstractString, name::AbstractString)
 
 
 "TableauSPARK: Holds the tableau of a spezialized partitioned additive
@@ -185,6 +239,8 @@ type TableauSPARK{Name, S, R, T} <: TableauRK{Name, S, T}
     end
 end
 
+# TODO function readTableauSPARKFromFile(dir::AbstractString, name::AbstractString)
+
 
 "TableauGLM: Holds the tableau of a general linear method."
 type TableauGLM{Name, S, R, T} <: Tableau{Name, T}
@@ -209,6 +265,8 @@ type TableauGLM{Name, S, R, T} <: Tableau{Name, T}
         new(order, a, b, u, v, c)
     end
 end
+
+# TODO function readTableauGLMFromFile(dir::AbstractString, name::AbstractString)
 
 
 # TODO Add TableauAGLM.

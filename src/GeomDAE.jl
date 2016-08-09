@@ -6,6 +6,7 @@ include("utils/matrix_utils.jl")
 include("integrators/tableaus.jl")
 
 export Tableau, TableauRK, TableauERK, TableauIRK, TableauNLIRK,
-       TableauPRK, TableauSPARK, TableauGLM
+       TableauPRK, TableauSPARK, TableauGLM,
+       showTableau, readTableauERKFromFile, writeTableauToFile
 
 end
