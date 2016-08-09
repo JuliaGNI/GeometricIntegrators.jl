@@ -9,6 +9,8 @@ b = Rational{Int64}[0, 1   ]
 c = Rational{Int64}[0, 1//2]
 o = 2
 
+@test TableauERK(:explicit_midpoint, o, a, b, c) == getTableauExplicitMidpoint()
+
 tab_explicit_midpoint1 = TableauERK(:explicit_midpoint, o, a, b, c)
 tab_explicit_midpoint2 = TableauIRK(:explicit_midpoint, o, a, b, c)
 tab_explicit_midpoint3 = TableauNLIRK(:explicit_midpoint, o, a, b, c)
@@ -46,6 +48,8 @@ tab_explicit_heun = TableauERK(:heun, o, a, b, c)
 tab_explicit_heun = TableauIRK(:heun, o, a, b, c)
 tab_explicit_heun = TableauNLIRK(:heun, o, a, b, c)
 
+@test TableauERK(:heun, o, a, b, c) == getTableauHeun()
+
 tmp = mktempdir()
 tab_explicit_heun1 = TableauERK(:heun, o, a, b, c)
 writeTableauToFile(tmp, tab_explicit_heun1)
@@ -63,6 +67,8 @@ b = [0.5,     0.5    ]
 c = [0.5+fac, 0.5-fac]
 o = 2
 
+@test TableauIRK(:crouzeix, o, a, b, c) == getTableauCrouzeix()
+
 @test_throws AssertionError tab_explicit_crouzeix = TableauERK(:crouzeix, o, a, b, c)
 tab_explicit_crouzeix = TableauIRK(:crouzeix, o, a, b, c)
 tab_explicit_crouzeix = TableauNLIRK(:crouzeix, o, a, b, c)
@@ -74,8 +80,11 @@ b = Rational{Int64}[1   ]
 c = Rational{Int64}[1//2]
 o = 2
 
+@test TableauNLIRK(:implicit_midpoint, o, a, b, c) == getTableauImplicitMidpoint()
+@test TableauNLIRK(:implicit_midpoint, o, a, b, c) == getTableauGLRK1()
+
 @test_throws AssertionError tab_implicit_midpoint = TableauERK(:implicit_midpoint, o, a, b, c)
-tab_implicit_midpoint = TableauIRK(:implicit_midpoint, o, a, b, c)
+@test_throws AssertionError tab_implicit_midpoint = TableauIRK(:implicit_midpoint, o, a, b, c)
 tab_implicit_midpoint = TableauNLIRK(:implicit_midpoint, o, a, b, c)
 
 
@@ -86,6 +95,8 @@ a = [[0.25     0.25-fac]
 b = [0.5,     0.5    ]
 c = [0.5-fac, 0.5+fac]
 o = 4
+
+@test TableauNLIRK(:glrk2, o, a, b, c) == getTableauGLRK2()
 
 @test_throws AssertionError tab_explicit_glrk2 = TableauERK(:glrk2, o, a, b, c)
 @test_throws AssertionError tab_explicit_glrk2 = TableauIRK(:glrk2, o, a, b, c)
