@@ -22,6 +22,11 @@ export getTableauExplicitMidpoint, getTableauHeun
 export getTableauCrouzeix
 export getTableauImplicitMidpoint, getTableauGLRK1, getTableauGLRK2
 
+include("integrators/solutions.jl")
+
+export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE,
+       reset
+
 include("integrators/integrators.jl")
 
 
