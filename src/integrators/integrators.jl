@@ -1,24 +1,41 @@
 
 abstract Integrator
 
-"Integrator: Create integrator appropriate for given tableau."
-function Integrator(equation::Equation, tableau::Tableau)
-    if typeof(tableau) <: TableauERK
-        IntegratorERK(equation, tableau)
-    elseif typeof(tableau) <: TableauIRK
-        IntegratorIRK(equation, tableau)
-    elseif typeof(tableau) <: TableauNLIRK
-        IntegratorNLIRK(equation, tableau)
-    elseif typeof(tableau) <: TableauPRK
-        IntegratorPRK(equation, tableau)
-    elseif typeof(tableau) <: TableauSARK
-        IntegratorSARK(equation, tableau)
-    elseif typeof(tableau) <: TableauSPARK
-        IntegratorSPARK(equation, tableau)
-    else
-        error("No integrator found for tableau ", tableau)
-    end
+"Integrator: Create integrator for explicit Runge-Kutta tableau."
+function Integrator(equation::Equation, tableau::TableauERK)
+    IntegratorERK(equation, tableau)
 end
+
+"Integrator: Create integrator for diagonally implicit Runge-Kutta tableau."
+function Integrator(equation::Equation, tableau::TableauIRK)
+    IntegratorIRK(equation, tableau)
+end
+
+"Integrator: Create integrator for fully implicit Runge-Kutta tableau."
+function Integrator(equation::Equation, tableau::TableauNLIRK)
+    IntegratorNLIRK(equation, tableau)
+end
+
+"Integrator: Create integrator for partitioned Runge-Kutta tableau."
+function Integrator(equation::Equation, tableau::TableauPRK)
+    IntegratorPRK(equation, tableau)
+end
+
+"Integrator: Create integrator for special additive Runge-Kutta tableau."
+function Integrator(equation::Equation, tableau::TableauSARK)
+    IntegratorSARK(equation, tableau)
+end
+
+"Integrator: Create integrator for special partitioned additive Runge-Kutta tableau."
+function Integrator(equation::Equation, tableau::TableauSPARK)
+    IntegratorSPARK(equation, tableau)
+end
+
+"Integrator: Print error for integrators not implemented, yet."
+function Integrator(equation::Equation, tableau::Tableau)
+    error("No integrator found for tableau ", tableau)
+end
+
 
 function solve(equation::Equation, tableau::Tableau, ntime::Int, nsave::Int=1)
     return solve(Integrator(equation, tableau), ntime, nsave)

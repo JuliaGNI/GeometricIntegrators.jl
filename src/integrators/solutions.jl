@@ -1,18 +1,24 @@
 
 abstract Solution{T}
 
+function Solution(equation::ODE, Δt::Real, ntime::Int, nsave::Int=1)
+    SolutionODE(equation, Δt, ntime, nsave)
+end
+
+function Solution(equation::PODE, Δt::Real, ntime::Int, nsave::Int=1)
+    SolutionPODE(equation, Δt, ntime, nsave)
+end
+
+function Solution(equation::DAE, Δt::Real, ntime::Int, nsave::Int=1)
+    SolutionDAE(equation, Δt, ntime, nsave)
+end
+
+function Solution(equation::PDAE, Δt::Real, ntime::Int, nsave::Int=1)
+    SolutionPDAE(equation, Δt, ntime, nsave)
+end
+
 function Solution(equation::Equation, Δt::Real, ntime::Int, nsave::Int=1)
-    if typeof(equation) <: ODE
-        SolutionODE(equation, Δt, ntime, nsave)
-    elseif typeof(equation) <: PODE
-        SolutionPODE(equation, Δt, ntime, nsave)
-    elseif typeof(equation) <: DAE
-        SolutionDAE(equation, Δt, ntime, nsave)
-    elseif typeof(equation) <: PDAE
-        SolutionPDAE(equation, Δt, ntime, nsave)
-    else
-        error("No solution found for equation ", equation)
-    end
+    error("No solution found for equation ", equation)
 end
 
 Base.length(s::Solution) = div(s.ntime, s.nsave)
