@@ -14,6 +14,8 @@ immutable DAE <: Equation
         @assert m == length(x0) == length(f(x0)) == length(u(x0, λ0))
         @assert n == length(λ0) == length(ϕ(x0))
         @assert m ≥ n
+        @assert eltype(x0) == eltype(f(x0)) == eltype(u(x0, λ0))
+        @assert eltype(λ0) == eltype(ϕ(x0))
 
         new(m, n, f, u, ϕ, x0, λ0)
     end
@@ -37,6 +39,9 @@ immutable PDAE <: Equation
         @assert m == length(p0) == length(g(q0, p0)) == length(v(q0, p0, λ0))
         @assert n == length(λ0) == length(ϕ(q0, p0))
         @assert 2m ≥ n
+        @assert eltype(q0) == eltype(f(q0, p0)) == eltype(u(q0, p0, λ0))
+        @assert eltype(p0) == eltype(g(q0, p0)) == eltype(v(q0, p0, λ0))
+        @assert eltype(λ0) == eltype(ϕ(q0, p0))
 
         new(m, n, f, g, u, v, ϕ, q0, p0, λ0)
     end
