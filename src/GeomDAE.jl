@@ -29,5 +29,7 @@ export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE,
 
 include("integrators/integrators.jl")
 
+export Integrator, IntegratorERK, IntegratorIRK, IntegratorNLIRK,
+       IntegratorPRK, IntegratorSPARK
 
 end
