@@ -68,8 +68,7 @@ function writeTableauToFile{Name, S, T}(dir::AbstractString, tab::TableauRK{Name
     header = string("# ", tab.order, " ", S, " ", T, "\n")
     file   = string(dir, "/", Name, ".tsv")
 
-    println("  Writing Runge-Kutta tableau ", Name, " with ", S, " stages and order ", tab.order, " to file")
-    println("  ", file, ".")
+    info("Writing Runge-Kutta tableau ", Name, " with ", S, " stages and order ", tab.order, " to file\n      ", file)
 
     f = open(file, "w")
     write(f, header)
@@ -130,8 +129,7 @@ function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
     b = tab_array[1:S, 2]
     a = tab_array[1:S, 3:S+2]
 
-    println("  Reading explicit Runge-Kutta tableau ", name, " with ", S, " stages and order ", order, " from file")
-    println("  ", file)
+    info("Reading explicit Runge-Kutta tableau ", name, " with ", S, " stages and order ", order, " from file\n      ", file)
 
     TableauERK(symbol(name), order, a, b, c)
 end
@@ -236,6 +234,8 @@ function TableauPRK{T}(name::Symbol, order::Integer,
     @assert length(c_q)==length(c_p)
     TableauPRK{name, length(c_q), T}(order, a_q, a_p, b_q, b_p, c_q, c_p)
 end
+
+# TODO Add constructor which takes two TableauRK as inputs.
 
 # TODO function readTableauPRKFromFile(dir::AbstractString, name::AbstractString)
 
