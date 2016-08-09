@@ -159,7 +159,7 @@ end
 
 "TableauPRK: Holds the tableau of a partitioned Runge-Kutta method."
 # TODO Need explicit and implicit version?
-type TableauPRK{Name, S, T} <: TableauRK{Name, S, T}
+type TableauPRK{Name, S, T} <: Tableau{Name, T}
     order::Integer
     a_q::Matrix{T}
     a_p::Matrix{T}
@@ -193,7 +193,7 @@ end
 
 "TableauSPARK: Holds the tableau of a spezialized partitioned additive
  Runge-Kutta method."
-type TableauSPARK{Name, S, R, T} <: TableauRK{Name, S, T}
+type TableauSPARK{Name, S, R, T} <: Tableau{Name, T}
     order::Integer
     a_q::Matrix{T}
     a_p::Matrix{T}
