@@ -20,6 +20,16 @@ function Integrator(equation::Equation, tableau::Tableau)
     end
 end
 
+function solve(equation::Equation, tableau::Tableau, ntime::Int, nsave::Int=1)
+    return solve(Integrator(equation, tableau), ntime, nsave)
+end
+
+function solve(integrator::Integrator, ntime::Int, nsave::Int=1)
+    solution = Solution(integrator, ntime, nsave)
+    solve!(integrator, solution)
+    return solution
+end
+
 
 # TODO Add integrator specific data structures.
 
@@ -29,11 +39,27 @@ type IntegratorERK <: Integrator
 
 end
 
+function solve!(int::IntegratorERK, s::SolutionODE)
+    # TODO
+end
+
+function solve!(int::IntegratorERK, s::SolutionPODE)
+    # TODO
+end
+
 
 type IntegratorIRK <: Integrator
     equation::Equation
     tableau::TableauIRK
 
+end
+
+function solve!(int::IntegratorIRK, s::SolutionODE)
+    # TODO
+end
+
+function solve!(int::IntegratorIRK, s::SolutionPODE)
+    # TODO
 end
 
 
@@ -43,6 +69,14 @@ type IntegratorNLIRK <: Integrator
 
 end
 
+function solve!(int::IntegratorNLIRK, s::SolutionODE)
+    # TODO
+end
+
+function solve!(int::IntegratorNLIRK, s::SolutionPODE)
+    # TODO
+end
+
 
 type IntegratorPRK <: Integrator
     equation::Equation
@@ -50,6 +84,9 @@ type IntegratorPRK <: Integrator
 
 end
 
+function solve!(int::IntegratorPRK, s::SolutionPODE)
+    # TODO
+end
 
 
 type IntegratorSARK <: Integrator
@@ -58,8 +95,17 @@ type IntegratorSARK <: Integrator
 
 end
 
+function solve!(int::IntegratorSARK, s::SolutionDAE)
+    # TODO
+end
+
+
 type IntegratorSPARK <: Integrator
     equation::Equation
     tableau::TableauSPARK
 
+end
+
+function solve!(int::IntegratorSPARK, s::SolutionPDAE)
+    # TODO
 end
