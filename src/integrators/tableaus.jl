@@ -20,19 +20,62 @@ function showTableau{Name, S, T}(tab::TableauRK{Name, S, T})
     println("  c = ", tab.c)
 end
 
-function writeTableauToFile{Name, S, T}(dir::AbstractString, tab::TableauRK{Name, S, T})
-    tab_array = zeros(T, S+1, S+1)
-    tab_array[1:S, 2:S+1] = tab.a
-    tab_array[S+1, 2:S+1] = tab.b
-    tab_array[1:S, 1] = tab.c
-    tab_array[S+1, 1] = tab.order
+"readTableauHeaderFromFile: Reads Tableau metadata from file."
+function readTableauRKHeaderFromFile(file)
+    f = open(file, "r")
+    header = readline(f)
+    close(f)
 
-    file = string(dir, "/", Name, ".tsv")
+    if header[1] == '#'
+        header = split(header[2:end])
+    else
+        header = ()
+    end
+
+    if length(header) ≥ 1
+        O = parse(Int, header[1])
+    else
+        O = 0
+    end
+
+    if length(header) ≥ 2
+        S = parse(Int, header[2])
+    else
+        S = 0
+    end
+
+    if length(header) ≥ 3
+        T = eval(parse(header[3]))
+    else
+        T = Float64
+    end
+
+    return O, S, T
+end
+
+function writeTableauToFile{Name, S, T}(dir::AbstractString, tab::TableauRK{Name, S, T})
+    # tab_array = zeros(T, S+1, S+1)
+    # tab_array[1:S, 2:S+1] = tab.a
+    # tab_array[S+1, 2:S+1] = tab.b
+    # tab_array[1:S, 1] = tab.c
+    # tab_array[S+1, 1] = tab.order
+
+    tab_array = zeros(T, S, S+2)
+    tab_array[1:S, 1] = tab.c
+    tab_array[1:S, 2] = tab.b
+    tab_array[1:S, 3:S+2] = tab.a
+
+    header = string("# ", tab.order, " ", S, " ", T, "\n")
+    file   = string(dir, "/", Name, ".tsv")
 
     println("  Writing Runge-Kutta tableau ", Name, " with ", S, " stages and order ", tab.order, " to file")
     println("  ", file, ".")
 
-    writedlm(file, float(tab_array))
+    f = open(file, "w")
+    write(f, header)
+    writedlm(f, float(tab_array))
+    close(f)
+    # TODO Write data in original format (e.g., Rational).
 end
 
 # TODO function writeTableauToFile{Name, S, T}(dir::AbstractString, tab::TableauPRK{Name, S, T})
@@ -66,22 +109,28 @@ function TableauERK{T}(name::Symbol, order::Integer,
 end
 
 function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
-    # TODO Can we read type, name, order, etc. from comment? -> DataFrames
     file = string(dir, "/", name, ".tsv")
-    println("  Reading file ", file)
 
+#    run(`cat $file`)
+
+    order, S, T = readTableauRKHeaderFromFile(file)
+
+    # TODO Read data in original format (e.g., Rational).
+#    tab_array = readdlm(file, T)
     tab_array = readdlm(file)
 
-    @assert size(tab_array, 1) == size(tab_array, 2)
+    if S == 0
+        S = size(tab_array, 1)
+    end
 
-    s = size(tab_array, 1)-1
-    a = tab_array[1:s, 2:s+1]
-    b = tab_array[s+1, 2:s+1][:]
-    c = tab_array[1:s, 1]
-    order = round(Int, tab_array[s+1, 1])
-#    name = file[rsearch(file, '/')+1:rsearch(file, '.')-1]
+    @assert S == size(tab_array, 1) == size(tab_array, 2)-2
 
-    println("  Creating explicit Runge-Kutta tableau ", name, " with ", s, " stages and order ", order, ".")
+    c = tab_array[1:S, 1]
+    b = tab_array[1:S, 2]
+    a = tab_array[1:S, 3:S+2]
+
+    println("  Reading explicit Runge-Kutta tableau ", name, " with ", S, " stages and order ", order, " from file")
+    println("  ", file)
 
     TableauERK(symbol(name), order, a, b, c)
 end
