@@ -84,7 +84,7 @@ end
 
 
 "TableauERK: Holds the tableau of an explicit Runge-Kutta method."
-type TableauERK{Name, S, T} <: TableauRK{Name, S, T}
+immutable TableauERK{Name, S, T} <: TableauRK{Name, S, T}
     order::Integer
     a::Matrix{T}
     b::Vector{T}
@@ -137,7 +137,7 @@ end
 
 
 "TableauIRK: Holds the tableau of a linearly implicit Runge-Kutta method."
-type TableauIRK{Name, S, T} <: TableauRK{Name, S, T}
+immutable TableauIRK{Name, S, T} <: TableauRK{Name, S, T}
     order::Integer
     a::Matrix{T}
     b::Vector{T}
@@ -171,7 +171,7 @@ end
 
 
 "TableauNLIRK: Holds the tableau of a nonlinearly implicit Runge-Kutta method."
-type TableauNLIRK{Name, S, T} <: TableauRK{Name, S, T}
+immutable TableauNLIRK{Name, S, T} <: TableauRK{Name, S, T}
     order::Integer
     a::Matrix{T}
     b::Vector{T}
@@ -208,7 +208,7 @@ end
 
 "TableauPRK: Holds the tableau of a partitioned Runge-Kutta method."
 # TODO Need explicit and implicit version?
-type TableauPRK{Name, S, T} <: Tableau{Name, T}
+immutable TableauPRK{Name, S, T} <: Tableau{Name, T}
     order::Integer
     a_q::Matrix{T}
     a_p::Matrix{T}
@@ -242,7 +242,7 @@ end
 
 "TableauSPARK: Holds the tableau of a spezialized partitioned additive
  Runge-Kutta method."
-type TableauSPARK{Name, S, R, T} <: Tableau{Name, T}
+immutable TableauSPARK{Name, S, R, T} <: Tableau{Name, T}
     order::Integer
     a_q::Matrix{T}
     a_p::Matrix{T}
@@ -302,7 +302,7 @@ end
 
 
 "TableauGLM: Holds the tableau of a general linear method."
-type TableauGLM{Name, S, R, T} <: Tableau{Name, T}
+immutable TableauGLM{Name, S, R, T} <: Tableau{Name, T}
     order::Integer
     a::Matrix{T}
     b::Matrix{T}
