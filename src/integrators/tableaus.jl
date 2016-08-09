@@ -105,8 +105,8 @@ type TableauIRK{Name, S, T} <: TableauRK{Name, S, T}
 
         if S == 1 # catch the case of a 1x1 matrix a
         elseif istrilstrict(a)
-            println("WARNING: Initializing TableauIRK with explicit tableau.")
-            println("         You might want to use TableauERK instead.")
+            warn("Initializing TableauIRK with explicit tableau.")
+            info("   You might want to use TableauERK instead.")
         end
 
         new(order,a,b,c)
@@ -138,11 +138,11 @@ type TableauNLIRK{Name, S, T} <: TableauRK{Name, S, T}
 
         if S == 1 # catch the case of a 1x1 matrix a
         elseif istrilstrict(a)
-            println("WARNING: Initializing TableauNLIRK with explicit tableau.")
-            println("         You might want to use TableauERK instead.")
+            warn("Initializing TableauNLIRK with explicit tableau.")
+            info("   You might want to use TableauERK instead.")
         elseif istril(a)
-            println("WARNING: Initializing TableauNLIRK with linearly implicit tableau.")
-            println("         You might want to use TableauIRK instead.")
+            warn("Initializing TableauNLIRK with linearly implicit tableau.")
+            info("   You might want to use TableauIRK instead.")
         end
 
         new(order,a,b,c)
