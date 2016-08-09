@@ -5,6 +5,14 @@ abstract Tableau{Name, T}
 "TableauRK: Holds the tableau of a Runge-Kutta method."
 abstract TableauRK{Name, S, T} <: Tableau{Name, T}
 
+Base.hash(tab::TableauRK, h::UInt) = hash(tab.order, hash(tab.a, hash(tab.b, hash(tab.c, hash(:TableauRK, h)))))
+Base.(:(==)){Name1, Name2, S1, S2, T1, T2}(tab1::TableauRK{Name1, S1, T1}, tab2::TableauRK{Name2, S2, T2}) = (tab1.order == tab2.order
+                                               && tab1.a == tab2.a
+                                               && tab1.b == tab2.b
+                                               && tab1.c == tab2.c)
+
+Base.isequal{Name1, Name2, S1, S2, T1, T2}(tab1::TableauRK{Name1, S1, T1}, tab2::TableauRK{Name2, S2, T2}) = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
+
 function showTableau{Name, S, T}(tab::TableauRK{Name, S, T})
     println("Explicit Runge-Kutta Method ", Name, "with ", S, " stages and order ", tab.order)
     println("  a = ", tab.a)
