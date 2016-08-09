@@ -95,10 +95,11 @@ immutable TableauERK{Name, S, T} <: TableauRK{Name, S, T}
         @assert isa(Name, Symbol)
         @assert isa(S, Integer)
         @assert isa(order, Integer)
-        @assert S > 0
+        @assert S > 0 "Number of stages must be > 0"
         @assert S==size(a,1)==size(a,2)==length(b)==length(c)
         @assert c[1] == 0
         @assert istrilstrict(a)
+        @assert !(S==1 && a[1,1] ≠ 0)
         new(order,a,b,c)
     end
 end
@@ -151,10 +152,10 @@ immutable TableauIRK{Name, S, T} <: TableauRK{Name, S, T}
         @assert S > 0
         @assert S==size(a,1)==size(a,2)==length(b)==length(c)
         @assert istril(a)
+        @assert !(S==1 && a[1,1] ≠ 0)
 
-        if S == 1 # catch the case of a 1x1 matrix a
-        elseif istrilstrict(a)
-            warn("Initializing TableauIRK with explicit tableau.")
+        if S > 1 && istrilstrict(a)
+            warn("Initializing TableauIRK with explicit tableau ", Name, ".")
             info("   You might want to use TableauERK instead.")
         end
 
@@ -182,15 +183,14 @@ immutable TableauNLIRK{Name, S, T} <: TableauRK{Name, S, T}
         @assert isa(Name, Symbol)
         @assert isa(S, Integer)
         @assert isa(order, Integer)
-        @assert S > 0
+        @assert S > 0 "Number of stages must be > 0"
         @assert S==size(a,1)==size(a,2)==length(b)==length(c)
 
-        if S == 1 # catch the case of a 1x1 matrix a
-        elseif istrilstrict(a)
-            warn("Initializing TableauNLIRK with explicit tableau.")
+        if (S > 1 && istrilstrict(a)) || (S==1 && a[1,1] == 0)
+            warn("Initializing TableauNLIRK with explicit tableau ", Name, ".")
             info("   You might want to use TableauERK instead.")
-        elseif istril(a)
-            warn("Initializing TableauNLIRK with linearly implicit tableau.")
+        elseif S > 1 && istril(a)
+            warn("Initializing TableauNLIRK with linearly implicit tableau ", Name, ".")
             info("   You might want to use TableauIRK instead.")
         end
 
@@ -222,7 +222,7 @@ immutable TableauPRK{Name, S, T} <: Tableau{Name, T}
         @assert isa(Name, Symbol)
         @assert isa(S, Integer)
         @assert isa(order, Integer)
-        @assert S > 0
+        @assert S > 0 "Number of stages must be > 0"
         @assert S==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
         @assert S==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
         new(order, a_q, a_p, b_q, b_p, c_q, c_p)
@@ -277,8 +277,8 @@ immutable TableauSPARK{Name, S, R, T} <: Tableau{Name, T}
         @assert isa(S, Integer)
         @assert isa(R, Integer)
         @assert isa(order, Integer)
-        @assert S > 0
-        @assert R > 0
+        @assert S > 0 "Number of stages S must be > 0"
+        @assert R > 0 "Number of stages R must be > 0"
         @assert S==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
         @assert S==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
         @assert S==size(α_q,1)==size(α_p,1)==length(β_q)==length(β_p)
@@ -316,8 +316,8 @@ immutable TableauGLM{Name, S, R, T} <: Tableau{Name, T}
         @assert isa(S, Integer)
         @assert isa(R, Integer)
         @assert isa(order, Integer)
-        @assert S > 0
-        @assert R > 0
+        @assert S > 0 "Number of stages S must be > 0"
+        @assert R > 0 "Number of stages R must be > 0"
         @assert S==length(c)
         @assert S==size(a,1)==size(a,2)==length(u,1)==length(b,2)
         @assert R==size(v,1)==size(v,2)==length(u,2)==length(b,1)
