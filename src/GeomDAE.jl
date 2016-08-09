@@ -3,6 +3,11 @@ __precompile__()
 module GeomDAE
 
 include("utils/matrix_utils.jl")
+
+include("equations/equations.jl")
+
+export Equation, ODE, PODE, DAE, PDAE
+
 include("integrators/tableaus.jl")
 
 export Tableau, TableauRK, TableauERK, TableauIRK, TableauNLIRK, TableauPRK,
