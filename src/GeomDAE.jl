@@ -11,7 +11,7 @@ export Equation, ODE, PODE, DAE, PDAE
 include("integrators/tableaus.jl")
 
 export Tableau, TableauRK, TableauERK, TableauIRK, TableauNLIRK, TableauPRK,
-       TableauSPARK, TableauGLM,
+       TableauSARK, TableauSPARK, TableauGLM,
        showTableau, writeTableauToFile, readTableauERKFromFile
 
 include("integrators/tableaus_erk.jl")
@@ -30,6 +30,6 @@ export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE,
 include("integrators/integrators.jl")
 
 export Integrator, IntegratorERK, IntegratorIRK, IntegratorNLIRK,
-       IntegratorPRK, IntegratorSPARK
+       IntegratorPRK, IntegratorSARK, IntegratorSPARK
 
 end

@@ -11,6 +11,8 @@ function Integrator(equation::Equation, tableau::Tableau)
         IntegratorNLIRK(equation, tableau)
     elseif typeof(tableau) <: TableauPRK
         IntegratorPRK(equation, tableau)
+    elseif typeof(tableau) <: TableauSARK
+        IntegratorSARK(equation, tableau)
     elseif typeof(tableau) <: TableauSPARK
         IntegratorSPARK(equation, tableau)
     else
@@ -48,6 +50,13 @@ type IntegratorPRK <: Integrator
 
 end
 
+
+
+type IntegratorSARK <: Integrator
+    equation::Equation
+    tableau::TableauSARK
+
+end
 
 type IntegratorSPARK <: Integrator
     equation::Equation

@@ -240,6 +240,51 @@ end
 # TODO function readTableauPRKFromFile(dir::AbstractString, name::AbstractString)
 
 
+"TableauSARK: Holds the tableau of a spezialized additive Runge-Kutta method."
+immutable TableauSARK{Name, S, R, T} <: Tableau{Name, T}
+    order::Integer
+    a_q::Matrix{T}
+    α_q::Matrix{T}
+
+    a_qᵠ::Matrix{T}
+    α_qᵠ::Matrix{T}
+
+    b_q::Vector{T}
+    β_q::Vector{T}
+
+    c_q::Vector{T}
+    c_λ::Vector{T}
+
+    ω_q::Matrix{T}
+    ω_λ::Matrix{T}
+
+    function TableauSARK(order, a_q, α_q, a_qᵠ, α_qᵠ,
+                                b_q, β_q, c_q, c_λ,
+                                ω_q, ω_λ)
+        # TODO Make ω_q, ω_λ optional arguments.
+        @assert T <: Real
+        @assert isa(Name, Symbol)
+        @assert isa(S, Integer)
+        @assert isa(R, Integer)
+        @assert isa(order, Integer)
+        @assert S > 0 "Number of stages S must be > 0"
+        @assert R > 0 "Number of stages R must be > 0"
+        @assert S==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
+        @assert S==size(α_q,1)==length(β_q)
+        @assert R==size(α_q,2)==size(α_p,2)
+        @assert R==length(c_λ)
+        @assert R==size(a_qᵠ,1)==size(α_qᵠ,1)==size(α_qᵠ,2)
+        @assert S==size(a_qᵠ,2)
+        # TODO Add assertions on ω_q, ω_λ to be (S-1)x(S) or (R-1)x(R) if set.
+        new(order, a_q, α_q, a_qᵠ, α_qᵠ, b_q, β_q, c_q, c_λ, ω_q, ω_λ)
+    end
+end
+
+# TODO Add external constructor for TableauSARK.
+
+# TODO function readTableauSARKFromFile(dir::AbstractString, name::AbstractString)
+
+
 "TableauSPARK: Holds the tableau of a spezialized partitioned additive
  Runge-Kutta method."
 immutable TableauSPARK{Name, S, R, T} <: Tableau{Name, T}
