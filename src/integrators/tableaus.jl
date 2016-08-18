@@ -153,8 +153,8 @@ immutable TableauIRK{Name, S, T} <: TableauRK{Name, S, T}
         @assert !(S==1 && a[1,1] ≠ 0)
 
         if S > 1 && istrilstrict(a)
-            warn("Initializing TableauIRK with explicit tableau ", Name, ".")
-            info("   You might want to use TableauERK instead.")
+            warn("Initializing TableauIRK with explicit tableau ", Name, ".\n",
+                 "You might want to use TableauERK instead.")
         end
 
         new(order,a,b,c)
@@ -185,11 +185,11 @@ immutable TableauNLIRK{Name, S, T} <: TableauRK{Name, S, T}
         @assert S==size(a,1)==size(a,2)==length(b)==length(c)
 
         if (S > 1 && istrilstrict(a)) || (S==1 && a[1,1] == 0)
-            warn("Initializing TableauNLIRK with explicit tableau ", Name, ".")
-            info("   You might want to use TableauERK instead.")
+            warn("Initializing TableauNLIRK with explicit tableau ", Name, ".\n",
+                 "You might want to use TableauERK instead.")
         elseif S > 1 && istril(a)
-            warn("Initializing TableauNLIRK with linearly implicit tableau ", Name, ".")
-            info("   You might want to use TableauIRK instead.")
+            warn("Initializing TableauNLIRK with linearly implicit tableau ", Name, ".\n",
+                 "You might want to use TableauIRK instead.")
         end
 
         new(order,a,b,c)
