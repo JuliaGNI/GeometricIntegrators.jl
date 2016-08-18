@@ -6,7 +6,7 @@ abstract Tableau{Name, T}
 abstract TableauRK{Name, S, T} <: Tableau{Name, T}
 
 Base.hash(tab::TableauRK, h::UInt) = hash(tab.order, hash(tab.a, hash(tab.b, hash(tab.c, hash(:TableauRK, h)))))
-Base.(:(==)){Name1, Name2, S1, S2, T1, T2}(tab1::TableauRK{Name1, S1, T1}, tab2::TableauRK{Name2, S2, T2}) = (tab1.order == tab2.order
+Base.:(==){Name1, Name2, S1, S2, T1, T2}(tab1::TableauRK{Name1, S1, T1}, tab2::TableauRK{Name2, S2, T2}) = (tab1.order == tab2.order
                                                && tab1.a == tab2.a
                                                && tab1.b == tab2.b
                                                && tab1.c == tab2.c)
@@ -131,7 +131,7 @@ function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
 
     info("Reading explicit Runge-Kutta tableau ", name, " with ", S, " stages and order ", order, " from file\n      ", file)
 
-    TableauERK(symbol(name), order, a, b, c)
+    TableauERK(Symbol(name), order, a, b, c)
 end
 
 
