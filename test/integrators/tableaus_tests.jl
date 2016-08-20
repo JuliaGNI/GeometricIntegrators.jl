@@ -89,11 +89,10 @@ tab_implicit_midpoint = TableauNLIRK(:implicit_midpoint, o, a, b, c)
 
 
 # Gauss-Legendre
-fac = √3/6.
-a = [[0.25     0.25-fac]
-     [0.25+fac 0.25    ]]
-b = [0.5,     0.5    ]
-c = [0.5-fac, 0.5+fac]
+a = [[0.25       0.25-√3/6]
+     [0.25+√3/6  0.25     ]]
+b = [0.5,      0.5     ]
+c = [0.5-√3/6, 0.5+√3/6]
 o = 4
 
 @test TableauNLIRK(:glrk2, o, a, b, c) == getTableauGLRK2()
@@ -101,6 +100,25 @@ o = 4
 @test_throws AssertionError tab_explicit_glrk2 = TableauERK(:glrk2, o, a, b, c)
 @test_throws AssertionError tab_explicit_glrk2 = TableauIRK(:glrk2, o, a, b, c)
 tab_explicit_glrk2 = TableauNLIRK(:glrk2, o, a, b, c)
+
+
+# instantiate all explicit tableaus
+@test typeof(getTableauExplicitEuler()) <: TableauERK
+@test typeof(getTableauExplicitMidpoint()) <: TableauERK
+@test typeof(getTableauHeun()) <: TableauERK
+@test typeof(getTableauKutta()) <: TableauERK
+@test typeof(getTableauERK4()) <: TableauERK
+@test typeof(getTableauERK438()) <: TableauERK
+
+# instantiate all diagonally implicit tableaus
+@test typeof(getTableauCrouzeix()) <: TableauIRK
+
+# instantiate all fully implicit tableaus
+@test typeof(getTableauImplicitEuler()) <: TableauNLIRK
+@test typeof(getTableauImplicitMidpoint()) <: TableauNLIRK
+@test typeof(getTableauGLRK1()) <: TableauNLIRK
+@test typeof(getTableauGLRK2()) <: TableauNLIRK
+@test typeof(getTableauGLRK3()) <: TableauNLIRK
 
 
 # TODO Add tests for TableauPRK, TableauSPARK and TableauGLM.

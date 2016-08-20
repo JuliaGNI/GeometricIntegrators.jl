@@ -15,12 +15,18 @@ export Tableau, TableauRK, TableauERK, TableauIRK, TableauNLIRK, TableauPRK,
        showTableau, writeTableauToFile, readTableauERKFromFile
 
 include("integrators/tableaus_erk.jl")
+
+export getTableauExplicitEuler, getTableauExplicitMidpoint, getTableauHeun,
+       getTableauKutta, getTableauERK4, getTableauERK438
+
 include("integrators/tableaus_irk.jl")
+
+export getTableauCrouzeix
+
 include("integrators/tableaus_nlirk.jl")
 
-export getTableauExplicitMidpoint, getTableauHeun
-export getTableauCrouzeix
-export getTableauImplicitMidpoint, getTableauGLRK1, getTableauGLRK2
+export getTableauImplicitEuler, getTableauImplicitMidpoint,
+       getTableauGLRK1, getTableauGLRK2, getTableauGLRK3
 
 include("integrators/solutions.jl")
 
