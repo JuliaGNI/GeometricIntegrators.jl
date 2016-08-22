@@ -1,5 +1,5 @@
 
-abstract Solution{T}
+abstract Solution{T} <: DenseArray{T,2}
 
 function Solution(equation::ODE, Δt::Real, ntime::Int, nsave::Int=1)
     SolutionODE(equation, Δt, ntime, nsave)
@@ -27,7 +27,7 @@ Base.endof(s::Solution) = length(s)
 
 # TODO Add solver status information to all Solutions.
 
-type SolutionODE{T} <: Solution{T}
+immutable SolutionODE{T} <: Solution{T}
     d::UInt
     x::Array{T,2}
     Δt::Real
@@ -57,7 +57,7 @@ function reset(s::SolutionODE)
 end
 
 
-type SolutionPODE{T} <: Solution{T}
+immutable SolutionPODE{T} <: Solution{T}
     d::UInt
     q::Array{T,2}
     p::Array{T,2}
@@ -90,7 +90,7 @@ function reset(s::SolutionPODE)
 end
 
 
-type SolutionDAE{T} <: Solution{T}
+immutable SolutionDAE{T} <: Solution{T}
     m::UInt
     n::UInt
     x::Array{T,2}
@@ -124,7 +124,7 @@ function reset(s::SolutionDAE)
 end
 
 
-type SolutionPDAE{T} <: Solution{T}
+immutable SolutionPDAE{T} <: Solution{T}
     m::UInt
     n::UInt
     q::Array{T,2}
