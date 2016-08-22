@@ -7,5 +7,5 @@ function getTableauCrouzeix()
     c = [0.5+fac, 0.5-fac]
     o = 2
 
-    TableauIRK(:crouzeix, o, a, b, c)
+    TableauDIRK(:crouzeix, o, a, b, c)
 end

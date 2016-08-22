@@ -6,7 +6,7 @@ function getTableauImplicitEuler()
     c = [1.0]
     o = 1
 
-    TableauNLIRK(:implicit_euler, o, a, b, c)
+    TableauFIRK(:implicit_euler, o, a, b, c)
 end
 
 "Implicit Midpoint"
@@ -16,7 +16,7 @@ function getTableauImplicitMidpoint()
     c = [0.5]
     o = 2
 
-    TableauNLIRK(:implicit_midpoint, o, a, b, c)
+    TableauFIRK(:implicit_midpoint, o, a, b, c)
 end
 
 "Gauss-Legendre Runge-Kutta, s=1"
@@ -26,7 +26,7 @@ function getTableauGLRK1()
     c = [0.5]
     o = 2
 
-    TableauNLIRK(:glrk1, o, a, b, c)
+    TableauFIRK(:glrk1, o, a, b, c)
 end
 
 "Gauss-Legendre Runge-Kutta, s=2"
@@ -38,7 +38,7 @@ function getTableauGLRK2()
     c = [0.5-√3/6, 0.5+√3/6]
     o = 4
 
-    TableauNLIRK(:glrk2, o, a, b, c)
+    TableauFIRK(:glrk2, o, a, b, c)
 end
 
 "Gauss-Legendre Runge-Kutta, s=3"
@@ -50,5 +50,5 @@ function getTableauGLRK3()
     c = [0.5-√15/10, 0.5, 0.5+√15/10]
     o = 6
 
-    TableauNLIRK(:glrk3, o, a, b, c)
+    TableauFIRK(:glrk3, o, a, b, c)
 end
