@@ -36,15 +36,15 @@ function Integrator(equation::Equation, tableau::Tableau)
     error("No integrator found for tableau ", tableau)
 end
 
-
+"solve: Solve given equation with given tableau for ntime time steps and return solution."
 function solve(equation::Equation, tableau::Tableau, ntime::Int, nsave::Int=1)
     return solve(Integrator(equation, tableau), ntime, nsave)
 end
 
+"solve: Apply integrator for ntime time steps and return solution."
 function solve(integrator::Integrator, ntime::Int, nsave::Int=1)
-    solution = Solution(integrator, ntime, nsave)
+    solution = Solution(integrator.equation, ntime, nsave)
     solve!(integrator, solution)
-    return solution
 end
 
 
