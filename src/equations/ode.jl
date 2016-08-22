@@ -14,6 +14,10 @@ immutable ODE{T} <: Equation{T}
     end
 end
 
+function ODE(d, f, x0)
+    ODE{eltype(x0)}(d, f, x0)
+end
+
 
 immutable PODE{T} <: Equation{T}
     d::UInt
@@ -30,4 +34,9 @@ immutable PODE{T} <: Equation{T}
 
         new(d, f, g, q0, p0)
     end
+end
+
+
+function PODE(d, f, g, q0, p0)
+    PODE{eltype(q0)}(d, f, g, q0, p0)
 end

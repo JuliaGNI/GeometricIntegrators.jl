@@ -21,6 +21,10 @@ immutable DAE{T} <: Equation{T}
     end
 end
 
+function DAE(m, n, f, u, ϕ, x0, λ0)
+    DAE{eltype(x0)}(m, n, f, u, ϕ, x0, λ0)
+end
+
 
 immutable PDAE{T} <: Equation{T}
     m::UInt
@@ -45,4 +49,8 @@ immutable PDAE{T} <: Equation{T}
 
         new(m, n, f, g, u, v, ϕ, q0, p0, λ0)
     end
+end
+
+function PDAE(m, n, f, g, u, v, ϕ, q0, p0, λ0)
+    PDAE{eltype(q0)}(m, n, f, g, u, v, ϕ, q0, p0, λ0)
 end
