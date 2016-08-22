@@ -48,9 +48,8 @@ function solve(integrator::Integrator, ntime::Int, nsave::Int=1)
 end
 
 
-# TODO Add integrator specific data structures.
-
-type IntegratorERK <: Integrator
+"IntegratorERK: Explicit Runge-Kutta integrator."
+immutable IntegratorERK{T} <: Integrator
     equation::Equation
     tableau::TableauERK
 
@@ -65,7 +64,8 @@ function solve!(int::IntegratorERK, s::SolutionPODE)
 end
 
 
-type IntegratorIRK <: Integrator
+"IntegratorIRK: Diagonally implicit Runge-Kutta integrator."
+immutable IntegratorIRK{T} <: Integrator
     equation::Equation
     tableau::TableauIRK
 
@@ -80,7 +80,8 @@ function solve!(int::IntegratorIRK, s::SolutionPODE)
 end
 
 
-type IntegratorNLIRK <: Integrator
+"IntegratorIRK: Fully implicit Runge-Kutta integrator."
+immutable IntegratorNLIRK{T} <: Integrator
     equation::Equation
     tableau::TableauNLIRK
 
@@ -95,7 +96,7 @@ function solve!(int::IntegratorNLIRK, s::SolutionPODE)
 end
 
 
-type IntegratorPRK <: Integrator
+immutable IntegratorPRK{T} <: Integrator
     equation::Equation
     tableau::TableauPRK
 
@@ -106,7 +107,7 @@ function solve!(int::IntegratorPRK, s::SolutionPODE)
 end
 
 
-type IntegratorSARK <: Integrator
+immutable IntegratorSARK{T} <: Integrator
     equation::Equation
     tableau::TableauSARK
 
@@ -117,7 +118,7 @@ function solve!(int::IntegratorSARK, s::SolutionDAE)
 end
 
 
-type IntegratorSPARK <: Integrator
+immutable IntegratorSPARK{T} <: Integrator
     equation::Equation
     tableau::TableauSPARK
 
