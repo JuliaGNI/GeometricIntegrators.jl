@@ -137,15 +137,15 @@ function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
 end
 
 
-"TableauIRK: Holds the tableau of a linearly implicit Runge-Kutta method."
-immutable TableauIRK{Name, T} <: TableauRK{Name, T}
+"TableauDIRK: Holds the tableau of a diagonally implicit Runge-Kutta method."
+immutable TableauDIRK{Name, T} <: TableauRK{Name, T}
     order::UInt
     s::UInt
     a::Matrix{T}
     b::Vector{T}
     c::Vector{T}
 
-    function TableauIRK(order,s,a,b,c)
+    function TableauDIRK(order,s,a,b,c)
         @assert T <: Real
         @assert isa(Name, Symbol)
         @assert isa(s, Integer)
@@ -156,7 +156,7 @@ immutable TableauIRK{Name, T} <: TableauRK{Name, T}
         @assert !(s==1 && a[1,1] ≠ 0)
 
         if s > 1 && istrilstrict(a)
-            warn("Initializing TableauIRK with explicit tableau ", Name, ".\n",
+            warn("Initializing TableauDIRK with explicit tableau ", Name, ".\n",
                  "You might want to use TableauERK instead.")
         end
 
@@ -164,23 +164,23 @@ immutable TableauIRK{Name, T} <: TableauRK{Name, T}
     end
 end
 
-function TableauIRK{T}(name::Symbol, order::Integer,
-                       a::Matrix{T}, b::Vector{T}, c::Vector{T})
-    TableauIRK{name, T}(order, length(c), a, b, c)
+function TableauDIRK{T}(name::Symbol, order::Integer,
+                        a::Matrix{T}, b::Vector{T}, c::Vector{T})
+    TableauDIRK{name, T}(order, length(c), a, b, c)
 end
 
-# TODO function readTableauIRKFromFile(dir::AbstractString, name::AbstractString)
+# TODO function readTableauDIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-"TableauNLIRK: Holds the tableau of a nonlinearly implicit Runge-Kutta method."
-immutable TableauNLIRK{Name, T} <: TableauRK{Name, T}
+"TableauFIRK: Holds the tableau of a fully implicit Runge-Kutta method."
+immutable TableauFIRK{Name, T} <: TableauRK{Name, T}
     order::UInt
     s::UInt
     a::Matrix{T}
     b::Vector{T}
     c::Vector{T}
 
-    function TableauNLIRK(order,s,a,b,c)
+    function TableauFIRK(order,s,a,b,c)
         @assert T <: Real
         @assert isa(Name, Symbol)
         @assert isa(s, Integer)
@@ -189,23 +189,34 @@ immutable TableauNLIRK{Name, T} <: TableauRK{Name, T}
         @assert s==size(a,1)==size(a,2)==length(b)==length(c)
 
         if (s > 1 && istrilstrict(a)) || (s==1 && a[1,1] == 0)
-            warn("Initializing TableauNLIRK with explicit tableau ", Name, ".\n",
+            warn("Initializing TableauFIRK with explicit tableau ", Name, ".\n",
                  "You might want to use TableauERK instead.")
         elseif s > 1 && istril(a)
-            warn("Initializing TableauNLIRK with linearly implicit tableau ", Name, ".\n",
-                 "You might want to use TableauIRK instead.")
+            warn("Initializing TableauFIRK with diagonally implicit tableau ", Name, ".\n",
+                 "You might want to use TableauDIRK instead.")
         end
 
         new(order,s,a,b,c)
     end
 end
 
-function TableauNLIRK{T}(name::Symbol, order::Integer,
+function TableauFIRK{T}(name::Symbol, order::Integer,
                          a::Matrix{T}, b::Vector{T}, c::Vector{T})
-    TableauNLIRK{name, T}(order, length(c), a, b, c)
+    TableauFIRK{name, T}(order, length(c), a, b, c)
 end
 
-# TODO function readTableauNLIRKFromFile(dir::AbstractString, name::AbstractString)
+# TODO function readTableauFIRKFromFile(dir::AbstractString, name::AbstractString)
+
+
+"TableauSIRK: Holds the tableau of a singly implicit Runge-Kutta method."
+immutable TableauSIRK{Name, T} <: TableauRK{Name, T}
+    # TODO
+end
+
+function TableauSIRK{T}(name::Symbol, order::Integer,
+                         a::Matrix{T}, b::Vector{T}, c::Vector{T})
+    TableauSIRK{name, T}(order, length(c), a, b, c)
+end
 
 
 "TableauPRK: Holds the tableau of a partitioned Runge-Kutta method."

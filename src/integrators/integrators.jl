@@ -7,13 +7,13 @@ function Integrator(equation::Equation, tableau::TableauERK)
 end
 
 "Integrator: Create integrator for diagonally implicit Runge-Kutta tableau."
-function Integrator(equation::Equation, tableau::TableauIRK)
-    IntegratorIRK(equation, tableau)
+function Integrator(equation::Equation, tableau::TableauDIRK)
+    IntegratorDIRK(equation, tableau)
 end
 
 "Integrator: Create integrator for fully implicit Runge-Kutta tableau."
-function Integrator(equation::Equation, tableau::TableauNLIRK)
-    IntegratorNLIRK(equation, tableau)
+function Integrator(equation::Equation, tableau::TableauFIRK)
+    IntegratorFIRK(equation, tableau)
 end
 
 "Integrator: Create integrator for partitioned Runge-Kutta tableau."
@@ -104,17 +104,17 @@ function solve!(int::IntegratorERK, s::SolutionPODE)
 end
 
 
-"IntegratorIRK: Diagonally implicit Runge-Kutta integrator."
-immutable IntegratorIRK{T} <: Integrator
+"IntegratorDIRK: Diagonally implicit Runge-Kutta integrator."
+immutable IntegratorDIRK{T} <: Integrator
     equation::Equation
-    tableau::TableauIRK
+    tableau::TableauDIRK
 
     x::Array{T,1}
     X::Array{T,2}
     Y::Array{T,2}
     F::Array{T,2}
 
-    function IntegratorIRK(equation, tableau)
+    function IntegratorDIRK(equation, tableau)
         D = equation.d
         S = tableau.s
         new(equation, tableau, zeros(T,D), zeros(T,D,S), zeros(T,D,S), zeros(T,D,S))
@@ -122,33 +122,33 @@ immutable IntegratorIRK{T} <: Integrator
 
 end
 
-function IntegratorIRK(equation::Equation, tableau::TableauIRK)
+function IntegratorDIRK(equation::Equation, tableau::TableauDIRK)
     T = eltype(equation.x0)
-    IntegratorIRK{T}(equation, tableau)
+    IntegratorDIRK{T}(equation, tableau)
 end
 
 "solve!: Solve ODE with diagonally implicit Runge-Kutta integrator."
-function solve!(int::IntegratorIRK, s::SolutionODE)
+function solve!(int::IntegratorDIRK, s::SolutionODE)
     # TODO
 end
 
 "solve!: Solve partitioned ODE with diagonally implicit Runge-Kutta integrator."
-function solve!(int::IntegratorIRK, s::SolutionPODE)
+function solve!(int::IntegratorDIRK, s::SolutionPODE)
     # TODO
 end
 
 
 "IntegratorIRK: Fully implicit Runge-Kutta integrator."
-immutable IntegratorNLIRK{T} <: Integrator
+immutable IntegratorFIRK{T} <: Integrator
     equation::Equation
-    tableau::TableauNLIRK
+    tableau::TableauFIRK
 
     x::Array{T,1}
     X::Array{T,2}
     Y::Array{T,2}
     F::Array{T,2}
 
-    function IntegratorNLIRK(equation, tableau)
+    function IntegratorFIRK(equation, tableau)
         D = equation.d
         S = tableau.s
         new(equation, tableau, zeros(T,D), zeros(T,D,S), zeros(T,D,S), zeros(T,D,S))
@@ -156,18 +156,18 @@ immutable IntegratorNLIRK{T} <: Integrator
 
 end
 
-function IntegratorNLIRK(equation::Equation, tableau::TableauNLIRK)
+function IntegratorFIRK(equation::Equation, tableau::TableauFIRK)
     T = eltype(equation.x0)
-    IntegratorNLIRK{T}(equation, tableau)
+    IntegratorFIRK{T}(equation, tableau)
 end
 
 "solve!: Solve ODE with fully implicit Runge-Kutta integrator."
-function solve!(int::IntegratorNLIRK, s::SolutionODE)
+function solve!(int::IntegratorFIRK, s::SolutionODE)
     # TODO
 end
 
 "solve!: Solve partitioned ODE with fully implicit Runge-Kutta integrator."
-function solve!(int::IntegratorNLIRK, s::SolutionPODE)
+function solve!(int::IntegratorFIRK, s::SolutionPODE)
     # TODO
 end
 

@@ -10,8 +10,8 @@ export Equation, ODE, PODE, DAE, PDAE
 
 include("integrators/tableaus.jl")
 
-export Tableau, TableauRK, TableauERK, TableauIRK, TableauNLIRK, TableauPRK,
-       TableauSARK, TableauSPARK, TableauGLM,
+export Tableau, TableauRK, TableauERK, TableauDIRK, TableauFIRK, TableauSIRK,
+       TableauPRK, TableauSARK, TableauSPARK, TableauGLM,
        showTableau, writeTableauToFile, readTableauERKFromFile
 
 include("integrators/tableaus_erk.jl")
@@ -19,11 +19,11 @@ include("integrators/tableaus_erk.jl")
 export getTableauExplicitEuler, getTableauExplicitMidpoint, getTableauHeun,
        getTableauKutta, getTableauERK4, getTableauERK438
 
-include("integrators/tableaus_irk.jl")
+include("integrators/tableaus_dirk.jl")
 
 export getTableauCrouzeix
 
-include("integrators/tableaus_nlirk.jl")
+include("integrators/tableaus_firk.jl")
 
 export getTableauImplicitEuler, getTableauImplicitMidpoint,
        getTableauGLRK1, getTableauGLRK2, getTableauGLRK3
@@ -35,7 +35,7 @@ export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE,
 
 include("integrators/integrators.jl")
 
-export Integrator, IntegratorERK, IntegratorIRK, IntegratorNLIRK,
+export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK,
        IntegratorPRK, IntegratorSARK, IntegratorSPARK,
        solve, solve!
 
