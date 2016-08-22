@@ -70,6 +70,33 @@ function IntegratorERK(equation::Equation, tableau::TableauERK)
     IntegratorERK{T}(equation, tableau)
 end
 
+function solve!(int::IntegratorERK, sol::SolutionODE)
+    # copy initial conditions from solution
+    int.x[:] = sol[1:sol.d, 0]
+
+    for n in 1:sol.ntime
+        # compute internal stages
+        for i = 1:int.tableau.s
+            for j = 1:i-1
+                int.Y[:,i] = int.tableau.a[i,j] * int.F[:,j]
+            end
+            int.X[:,i] = int.x[:] + sol.Δt * int.Y[:,i]
+            int.F[:,i] = int.equation.f(int.X[:,i])
+        end
+
+        # compute final update
+        for i in 1:int.tableau.s
+            int.x[:] += sol.Δt * int.tableau.b[i] * int.F[:,i]
+        end
+
+        # copy to solution
+        if mod(n, sol.nsave) == 0
+            sol[1:sol.d, div(n, sol.nsave)] = int.x[:]
+        end
+    end
+    return sol
+end
+
 function solve!(int::IntegratorERK, s::SolutionPODE)
     # TODO
 end
