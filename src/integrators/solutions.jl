@@ -21,9 +21,26 @@ function Solution(equation::Equation, Δt::Real, ntime::Int, nsave::Int=1)
     error("No solution found for equation ", equation)
 end
 
-Base.length(s::Solution) = div(s.ntime, s.nsave)
-Base.endof(s::Solution) = length(s)
 
+Base.size(s::Solution) = size(s.x)
+
+Base.indices(s::Solution) = (1:s.d, 0:s.n)
+
+function Base.indices(s::Solution, d)
+    if d == 1
+        return 1:s.d
+    elseif d == 2
+        return 0:s.n
+    end
+end
+
+function Base.stride(s::Solution, d)
+    if d == 1
+        return 1
+    elseif d == 2
+        return s.d
+    end
+end
 
 # TODO Add solver status information to all Solutions.
 
