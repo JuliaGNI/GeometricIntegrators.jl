@@ -3,7 +3,7 @@
 function getTableauSymplecticEulerA()
     a_q = [[0.0 0.0]
            [1.0 0.0]]
-    b_q = [1.0, 0.0]
+    b_q = [0.0, 1.0]
     c_q = [0.0, 1.0]
 
     a_p = [[0.0 0.0]
@@ -20,7 +20,7 @@ end
 function getTableauSymplecticEulerB()
     a_q = [[0.0 0.0]
            [0.0 1.0]]
-    b_q = [1.0, 0.0]
+    b_q = [0.0, 1.0]
     c_q = [0.0, 1.0]
 
     a_p = [[0.0 0.0]
