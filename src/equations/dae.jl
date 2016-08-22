@@ -1,14 +1,14 @@
 
 # TODO Add momentum maps, energy, ...
 
-immutable DAE <: Equation
+immutable DAE{T} <: Equation{T}
     m::UInt
     n::UInt
     f::Function
     u::Function
     ϕ::Function
-    x0::Array{Real, 1}
-    λ0::Array{Real, 1}
+    x0::Array{T,1}
+    λ0::Array{T,1}
 
     function DAE(m, n, f, u, ϕ, x0, λ0)
         @assert m == length(x0) == length(f(x0)) == length(u(x0, λ0))
@@ -22,7 +22,7 @@ immutable DAE <: Equation
 end
 
 
-immutable PDAE <: Equation
+immutable PDAE{T} <: Equation{T}
     m::UInt
     n::UInt
     f::Function
@@ -30,9 +30,9 @@ immutable PDAE <: Equation
     u::Function
     v::Function
     ϕ::Function
-    q0::Array{Real, 1}
-    p0::Array{Real, 1}
-    λ0::Array{Real, 1}
+    q0::Array{T,1}
+    p0::Array{T,1}
+    λ0::Array{T,1}
 
     function PDAE(m, n, f, g, u, v, ϕ, q0, p0, λ0)
         @assert m == length(q0) == length(f(q0, p0)) == length(u(q0, p0, λ0))

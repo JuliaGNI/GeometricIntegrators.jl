@@ -1,10 +1,10 @@
 
 # TODO Add momentum maps, energy, ...
 
-immutable ODE <: Equation
+immutable ODE{T} <: Equation{T}
     d::UInt
     f::Function
-    x0::Array{Real, 1}
+    x0::Array{T, 1}
 
     function ODE(d, f, x0)
         @assert d == length(x0) == length(f(x0))
@@ -15,12 +15,12 @@ immutable ODE <: Equation
 end
 
 
-immutable PODE <: Equation
+immutable PODE{T} <: Equation{T}
     d::UInt
     f::Function
     g::Function
-    q0::Array{Real, 1}
-    p0::Array{Real, 1}
+    q0::Array{T, 1}
+    p0::Array{T, 1}
 
     function PODE(d, f, g, q0, p0)
         @assert d == length(q0) == length(f(q0, p0))
