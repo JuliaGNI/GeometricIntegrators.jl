@@ -1,5 +1,5 @@
 
-abstract Solution{T} <: DenseArray{T,2}
+abstract Solution{T,N} <: DenseArray{T,N}
 
 function Solution(equation::ODE, Δt::Real, ntime::Int, nsave::Int=1)
     SolutionODE(equation, Δt, ntime, nsave)
@@ -22,43 +22,19 @@ function Solution(equation::Equation, Δt::Real, ntime::Int, nsave::Int=1)
 end
 
 
+Base.eltype{T,N}(s::Solution{T,N}) = T
+Base.ndims{T,N}(s::Solution{T,N}) = N
 Base.size(s::Solution) = size(s.x)
-
-Base.indices(s::Solution) = (1:s.d, 0:s.n)
-
-function Base.indices(s::Solution, d)
-    if d == 1
-        return 1:s.d
-    elseif d == 2
-        return 0:s.n
-    end
-end
-
-function Base.stride(s::Solution, d)
-    if d == 1
-        return 1
-    elseif d == 2
-        return s.d
-    end
-end
-
-
-@inline function Base.getindex(s::Solution, i::Int, j::Int)
-    @boundscheck checkbounds(s.x, i, j+1)
-    @inbounds r = getindex(s.x, i, j+1)
-    return r
-end
-
-@inline function Base.setindex!(s::Solution, x, i::Int, j::Int)
-    @boundscheck checkbounds(s.x, i, j+1)
-    @inbounds setindex!(s.x, x, i, j+1)
-end
+# Base.length(s::Solution) = s.d * s.n
+# Base.length(s::Solution) = length(s.x)
+# Base.endof(s::Solution) = length(s)
+Base.indices(s::Solution, d) = indices(s)[d]
+Base.stride(s::Solution, d) = strides(s)[d]
 
 # TODO Implement similar() and convert() to/from array functions.
 
-# TODO Add solver status information to all Solutions.
 
-immutable SolutionODE{T} <: Solution{T}
+immutable SolutionODE{T} <: Solution{T,2}
     d::Int
     n::Int
     x::Array{T,2}
@@ -86,7 +62,20 @@ function SolutionODE(equation::ODE, Δt::Real, ntime::Int, nsave::Int=1)
 end
 
 function setInitialConditions(solution::SolutionODE, equation::ODE)
-    solution[1:equation.d, 0] = equation.x0
+    solution[1:solution.d, 0] = equation.x0
+end
+
+function reset(s::SolutionODE)
+    solution[1:solution.d, 0] = solution[1:solution.d, solution.n]
+end
+
+Base.indices(s::SolutionODE) = (1:s.d, 0:s.n)
+Base.strides(s::SolutionODE) = (1, s.d)
+
+@inline function Base.getindex(s::SolutionODE, i::Int, j::Int)
+    @boundscheck checkbounds(s.x, i, j+1)
+    @inbounds r = getindex(s.x, i, j+1)
+    return r
 end
 
 @inline function Base.getindex(s::SolutionODE, j::Int)
@@ -95,22 +84,24 @@ end
     return r
 end
 
+@inline function Base.setindex!(s::SolutionODE, x, i::Int, j::Int)
+    @boundscheck checkbounds(s.x, i, j+1)
+    @inbounds setindex!(s.x, x, i, j+1)
+end
+
 @inline function Base.setindex!(s::SolutionODE, x, j::Int)
     @assert length(x) == s.d
     @boundscheck checkbounds(s.x, 1:s.d, j+1)
     @inbounds setindex!(s.x, x, 1:s.d, j+1)
 end
 
-function reset(s::SolutionODE)
-    # TODO
-end
 
-
-immutable SolutionPODE{T} <: Solution{T}
+immutable SolutionPODE{T} <: Solution{T,3}
     d::Int
     n::Int
-    q::Array{T,2}
-    p::Array{T,2}
+    x::Array{T,3}
+    q::AbstractArray{T,2}
+    p::AbstractArray{T,2}
     Δt::T
     ntime::Int
     nsave::Int
@@ -123,7 +114,10 @@ immutable SolutionPODE{T} <: Solution{T}
         @assert mod(ntime, nsave) == 0
 
         n = div(ntime, nsave)
-        new(d, n, zeros(T, d, n+1), zeros(T, d, n+1), Δt, ntime, nsave)
+        x = zeros(T, d, 2, n+1)
+        q = x[:,1,:]
+        p = x[:,2,:]
+        new(d, n, x, q, p, Δt, ntime, nsave)
     end
 end
 
@@ -131,19 +125,48 @@ function SolutionPODE(equation::PODE, Δt::Real, ntime::Int, nsave::Int=1)
     T1 = eltype(equation.q0)
     T2 = eltype(equation.p0)
     @assert T1 == T2
-    SolutionPODE{T1}(equation.d, Δt, ntime, nsave)
+    s = SolutionPODE{T1}(equation.d, Δt, ntime, nsave)
+    setInitialConditions(s, equation)
+    return s
 end
 
-function Base.getindex(s::SolutionPODE, i::Int)
-    # TODO
+function setInitialConditions(solution::SolutionPODE, equation::PODE)
+    solution[1:solution.d, 1, 0] = equation.q0
+    solution[1:solution.d, 2, 0] = equation.p0
 end
 
 function reset(s::SolutionPODE)
-    # TODO
+    solution[1:solution.d, 1:2, 0] = solution[1:solution.d, 1:2, solution.n]
+end
+
+Base.indices(s::SolutionPODE) = (1:s.d, 1:2, 0:s.n)
+Base.strides(s::SolutionPODE) = (1, s.d, 2*s.d)
+
+@inline function Base.getindex(s::SolutionPODE, i::Int, j::Int, k::Int)
+    @boundscheck checkbounds(s.x, i, j, k+1)
+    @inbounds r = getindex(s.x, i, j, k+1)
+    return r
+end
+
+@inline function Base.getindex(s::SolutionPODE, j::Int, k::Int)
+    @boundscheck checkbounds(s.x, 1:s.d, j, k+1)
+    @inbounds r = getindex(s.x, 1:s.d, j, k+1)
+    return r
+end
+
+@inline function Base.setindex!(s::SolutionPODE, x, i::Int, j::Int, k::Int)
+    @boundscheck checkbounds(s.x, i, j, k+1)
+    @inbounds setindex!(s.x, x, i, j, k+1)
+end
+
+@inline function Base.setindex!(s::SolutionPODE, x, j::Int, k::Int)
+    @assert length(x) == s.d
+    @boundscheck checkbounds(s.x, 1:s.d, j, k+1)
+    @inbounds setindex!(s.x, x, 1:s.d, j, k+1)
 end
 
 
-immutable SolutionDAE{T} <: Solution{T}
+immutable SolutionDAE{T} <: Solution{T,3}
     d::Int
     m::Int
     n::Int
@@ -182,7 +205,7 @@ function reset(s::SolutionDAE)
 end
 
 
-immutable SolutionPDAE{T} <: Solution{T}
+immutable SolutionPDAE{T} <: Solution{T,3}
     d::Int
     m::Int
     n::Int
