@@ -6,6 +6,16 @@ dim = 1
 ode = ODE(dim, x -> x, [1.])
 sol = Solution(ode, Δt, ntime)
 @test typeof(sol) <: SolutionODE
+@test size(sol) == (dim, ntime+1)
+@test indices(sol, 1) == 1:dim
+@test indices(sol, 2) == 0:ntime
+
+for i in 1:ntime
+    sol[1,i] = i
+end
+
+@test sol.x[1,1] == sol[1,0]
+@test sol.x[1:sol.d,1] == sol[1:sol.d,0]
 
 pode = PODE(1, (x, y) -> x, (x, y) -> 2y, [1.], [1.])
 @test typeof(Solution(pode, Δt, ntime)) <: SolutionPODE
