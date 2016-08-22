@@ -53,10 +53,21 @@ immutable IntegratorERK{T} <: Integrator
     equation::Equation
     tableau::TableauERK
 
+    x::Array{T,1}
+    X::Array{T,2}
+    Y::Array{T,2}
+    F::Array{T,2}
+
+    function IntegratorERK(equation, tableau)
+        D = equation.d
+        S = tableau.s
+        new(equation, tableau, zeros(T,D), zeros(T,D,S), zeros(T,D,S), zeros(T,D,S))
+    end
 end
 
-function solve!(int::IntegratorERK, s::SolutionODE)
-    # TODO
+function IntegratorERK(equation::Equation, tableau::TableauERK)
+    T = eltype(equation.x0)
+    IntegratorERK{T}(equation, tableau)
 end
 
 function solve!(int::IntegratorERK, s::SolutionPODE)
@@ -69,8 +80,25 @@ immutable IntegratorIRK{T} <: Integrator
     equation::Equation
     tableau::TableauIRK
 
+    x::Array{T,1}
+    X::Array{T,2}
+    Y::Array{T,2}
+    F::Array{T,2}
+
+    function IntegratorIRK(equation, tableau)
+        D = equation.d
+        S = tableau.s
+        new(equation, tableau, zeros(T,D), zeros(T,D,S), zeros(T,D,S), zeros(T,D,S))
+    end
+
 end
 
+function IntegratorIRK(equation::Equation, tableau::TableauIRK)
+    T = eltype(equation.x0)
+    IntegratorIRK{T}(equation, tableau)
+end
+
+"solve!: Solve ODE with diagonally implicit Runge-Kutta integrator."
 function solve!(int::IntegratorIRK, s::SolutionODE)
     # TODO
 end
@@ -85,6 +113,22 @@ immutable IntegratorNLIRK{T} <: Integrator
     equation::Equation
     tableau::TableauNLIRK
 
+    x::Array{T,1}
+    X::Array{T,2}
+    Y::Array{T,2}
+    F::Array{T,2}
+
+    function IntegratorNLIRK(equation, tableau)
+        D = equation.d
+        S = tableau.s
+        new(equation, tableau, zeros(T,D), zeros(T,D,S), zeros(T,D,S), zeros(T,D,S))
+    end
+
+end
+
+function IntegratorNLIRK(equation::Equation, tableau::TableauNLIRK)
+    T = eltype(equation.x0)
+    IntegratorNLIRK{T}(equation, tableau)
 end
 
 function solve!(int::IntegratorNLIRK, s::SolutionODE)
