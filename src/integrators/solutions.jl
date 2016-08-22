@@ -30,7 +30,7 @@ Base.endof(s::Solution) = length(s)
 immutable SolutionODE{T} <: Solution{T}
     d::UInt
     x::Array{T,2}
-    Δt::Real
+    Δt::T
     ntime::UInt
     nsave::UInt
 
@@ -61,7 +61,7 @@ immutable SolutionPODE{T} <: Solution{T}
     d::UInt
     q::Array{T,2}
     p::Array{T,2}
-    Δt::Real
+    Δt::T
     ntime::UInt
     nsave::UInt
 
@@ -95,7 +95,7 @@ immutable SolutionDAE{T} <: Solution{T}
     n::UInt
     x::Array{T,2}
     λ::Array{T,2}
-    Δt::Real
+    Δt::T
     ntime::UInt
     nsave::UInt
 
@@ -130,7 +130,7 @@ immutable SolutionPDAE{T} <: Solution{T}
     q::Array{T,2}
     p::Array{T,2}
     λ::Array{T,2}
-    Δt::Real
+    Δt::T
     ntime::UInt
     nsave::UInt
 
