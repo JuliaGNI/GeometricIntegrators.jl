@@ -60,6 +60,7 @@ end
 
 immutable SolutionODE{T} <: Solution{T}
     d::UInt
+    n::UInt
     x::Array{T,2}
     Δt::T
     ntime::UInt
@@ -70,7 +71,8 @@ immutable SolutionODE{T} <: Solution{T}
         @assert ntime ≥ nsave
         @assert mod(ntime, nsave) == 0
 
-        new(d, zeros(T, d, div(ntime, nsave)), Δt, ntime, nsave)
+        n = div(ntime, nsave)
+        new(d, n, zeros(T, d, n+1), Δt, ntime, nsave)
     end
 end
 
