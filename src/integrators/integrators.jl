@@ -45,6 +45,7 @@ end
 function solve(integrator::Integrator, ntime::Int, nsave::Int=1)
     solution = Solution(integrator.equation, ntime, nsave)
     solve!(integrator, solution)
+    return solution
 end
 
 
@@ -95,7 +96,7 @@ function solve!(int::IntegratorERK, sol::SolutionODE)
             sol[1:sol.d, div(n, sol.nsave)] = int.x[:]
         end
     end
-    return sol
+    return nothing
 end
 
 "solve!: Solve partitioned ODE with explicit Runge-Kutta integrator."
@@ -119,7 +120,6 @@ immutable IntegratorDIRK{T} <: Integrator
         S = tableau.s
         new(equation, tableau, zeros(T,D), zeros(T,D,S), zeros(T,D,S), zeros(T,D,S))
     end
-
 end
 
 function IntegratorDIRK(equation::Equation, tableau::TableauDIRK)
@@ -153,7 +153,6 @@ immutable IntegratorFIRK{T} <: Integrator
         S = tableau.s
         new(equation, tableau, zeros(T,D), zeros(T,D,S), zeros(T,D,S), zeros(T,D,S))
     end
-
 end
 
 function IntegratorFIRK(equation::Equation, tableau::TableauFIRK)
