@@ -39,4 +39,8 @@ export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK,
        IntegratorPRK, IntegratorSARK, IntegratorSPARK,
        solve, solve!
 
+include("utils/hdf5_utils.jl")
+
+export createHDF5, writeSolutionToHDF5
+
 end
