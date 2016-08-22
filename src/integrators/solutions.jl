@@ -78,7 +78,9 @@ end
 
 function SolutionODE(equation::ODE, Δt::Real, ntime::Int, nsave::Int=1)
     T = eltype(equation.x0)
-    SolutionODE{T}(equation.d, Δt, ntime, nsave)
+    s = SolutionODE{T}(equation.d, Δt, ntime, nsave)
+    s[1:equation.d, 0] = equation.x0
+    return s
 end
 
 @inline function Base.getindex(s::SolutionODE, j::Int)
