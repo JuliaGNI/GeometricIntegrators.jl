@@ -42,6 +42,20 @@ function Base.stride(s::Solution, d)
     end
 end
 
+
+@inline function Base.getindex(s::Solution, i::Int, j::Int)
+    @boundscheck checkbounds(s.x, i, j+1)
+    @inbounds r = getindex(s.x, i, j+1)
+    return r
+end
+
+@inline function Base.setindex!(s::Solution, x, i::Int, j::Int)
+    @boundscheck checkbounds(s.x, i, j+1)
+    @inbounds setindex!(s.x, x, i, j+1)
+end
+
+# TODO Implement similar() and convert() to/from array functions.
+
 # TODO Add solver status information to all Solutions.
 
 immutable SolutionODE{T} <: Solution{T}
@@ -65,8 +79,16 @@ function SolutionODE(equation::ODE, Δt::Real, ntime::Int, nsave::Int=1)
     SolutionODE{T}(equation.d, Δt, ntime, nsave)
 end
 
-function Base.getindex(s::SolutionODE, i::Int)
-    # TODO
+@inline function Base.getindex(s::SolutionODE, j::Int)
+    @boundscheck checkbounds(s.x, 1:s.d, j+1)
+    @inbounds r = getindex(s.x, 1:s.d, j+1)
+    return r
+end
+
+@inline function Base.setindex!(s::SolutionODE, x, j::Int)
+    @assert length(x) == s.d
+    @boundscheck checkbounds(s.x, 1:s.d, j+1)
+    @inbounds setindex!(s.x, x, 1:s.d, j+1)
 end
 
 function reset(s::SolutionODE)
