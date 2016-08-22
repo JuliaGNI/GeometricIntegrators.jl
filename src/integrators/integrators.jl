@@ -79,8 +79,9 @@ function solve!(int::IntegratorERK, sol::SolutionODE)
     for n in 1:sol.ntime
         # compute internal stages
         for i = 1:int.tableau.s
+            int.Y[:,i] = 0
             for j = 1:i-1
-                int.Y[:,i] = int.tableau.a[i,j] * int.F[:,j]
+                int.Y[:,i] += int.tableau.a[i,j] * int.F[:,j]
             end
             int.X[:,i] = int.x[:] + sol.Δt * int.Y[:,i]
             int.F[:,i] = int.equation.f(int.X[:,i])
