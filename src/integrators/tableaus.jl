@@ -5,6 +5,9 @@ abstract Tableau{Name, T}
 "TableauRK: Holds the tableau of a Runge-Kutta method."
 abstract TableauRK{Name, T} <: Tableau{Name, T}
 
+"TableauIRK: Holds the tableau of an implicit Runge-Kutta method."
+abstract TableauIRK{Name, T} <: TableauRK{Name, T}
+
 Base.hash(tab::TableauRK, h::UInt) = hash(tab.order, hash(tab.a, hash(tab.b, hash(tab.c, hash(:TableauRK, h)))))
 Base.:(==){Name1, Name2, T1, T2}(tab1::TableauRK{Name1, T1}, tab2::TableauRK{Name2, T2}) = (tab1.order == tab2.order
                                                && tab1.s == tab2.s
@@ -138,7 +141,7 @@ end
 
 
 "TableauDIRK: Holds the tableau of a diagonally implicit Runge-Kutta method."
-immutable TableauDIRK{Name, T} <: TableauRK{Name, T}
+immutable TableauDIRK{Name, T} <: TableauIRK{Name, T}
     order::UInt
     s::UInt
     a::Matrix{T}
@@ -173,7 +176,7 @@ end
 
 
 "TableauFIRK: Holds the tableau of a fully implicit Runge-Kutta method."
-immutable TableauFIRK{Name, T} <: TableauRK{Name, T}
+immutable TableauFIRK{Name, T} <: TableauIRK{Name, T}
     order::UInt
     s::UInt
     a::Matrix{T}
@@ -209,7 +212,7 @@ end
 
 
 "TableauSIRK: Holds the tableau of a singly implicit Runge-Kutta method."
-immutable TableauSIRK{Name, T} <: TableauRK{Name, T}
+immutable TableauSIRK{Name, T} <: TableauIRK{Name, T}
     # TODO
 end
 
