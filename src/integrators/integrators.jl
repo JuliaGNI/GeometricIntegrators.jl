@@ -70,6 +70,7 @@ function IntegratorERK(equation::Equation, tableau::TableauERK)
     IntegratorERK{T}(equation, tableau)
 end
 
+"solve!: Solve ODE with explicit Runge-Kutta integrator."
 function solve!(int::IntegratorERK, sol::SolutionODE)
     # copy initial conditions from solution
     int.x[:] = sol[1:sol.d, 0]
@@ -97,6 +98,7 @@ function solve!(int::IntegratorERK, sol::SolutionODE)
     return sol
 end
 
+"solve!: Solve partitioned ODE with explicit Runge-Kutta integrator."
 function solve!(int::IntegratorERK, s::SolutionPODE)
     # TODO
 end
@@ -130,6 +132,7 @@ function solve!(int::IntegratorIRK, s::SolutionODE)
     # TODO
 end
 
+"solve!: Solve partitioned ODE with diagonally implicit Runge-Kutta integrator."
 function solve!(int::IntegratorIRK, s::SolutionPODE)
     # TODO
 end
@@ -158,10 +161,12 @@ function IntegratorNLIRK(equation::Equation, tableau::TableauNLIRK)
     IntegratorNLIRK{T}(equation, tableau)
 end
 
+"solve!: Solve ODE with fully implicit Runge-Kutta integrator."
 function solve!(int::IntegratorNLIRK, s::SolutionODE)
     # TODO
 end
 
+"solve!: Solve partitioned ODE with fully implicit Runge-Kutta integrator."
 function solve!(int::IntegratorNLIRK, s::SolutionPODE)
     # TODO
 end
