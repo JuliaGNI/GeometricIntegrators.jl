@@ -120,5 +120,9 @@ tab_explicit_glrk2 = TableauFIRK(:glrk2, o, a, b, c)
 @test typeof(getTableauGLRK2()) <: TableauFIRK
 @test typeof(getTableauGLRK3()) <: TableauFIRK
 
+# instatiate all partitioned tableaus
+@test typeof(getTableauSymplecticEulerA()) <: TableauPRK
+@test typeof(getTableauSymplecticEulerB()) <: TableauPRK
+
 
 # TODO Add tests for TableauPRK, TableauSPARK and TableauGLM.

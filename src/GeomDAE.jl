@@ -28,6 +28,10 @@ include("integrators/tableaus_firk.jl")
 export getTableauImplicitEuler, getTableauImplicitMidpoint,
        getTableauGLRK1, getTableauGLRK2, getTableauGLRK3
 
+include("integrators/tableaus_prk.jl")
+
+export getTableauSymplecticEulerA, getTableauSymplecticEulerB
+
 include("integrators/solutions.jl")
 
 export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE,
