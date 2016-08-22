@@ -59,15 +59,17 @@ end
 # TODO Add solver status information to all Solutions.
 
 immutable SolutionODE{T} <: Solution{T}
-    d::UInt
-    n::UInt
+    d::Int
+    n::Int
     x::Array{T,2}
     Δt::T
-    ntime::UInt
-    nsave::UInt
+    ntime::Int
+    nsave::Int
 
     function SolutionODE(d, Δt, ntime, nsave)
         @assert T <: Real
+        @assert d > 0
+        @assert nsave > 0
         @assert ntime ≥ nsave
         @assert mod(ntime, nsave) == 0
 
@@ -101,19 +103,23 @@ end
 
 
 immutable SolutionPODE{T} <: Solution{T}
-    d::UInt
+    d::Int
+    n::Int
     q::Array{T,2}
     p::Array{T,2}
     Δt::T
-    ntime::UInt
-    nsave::UInt
+    ntime::Int
+    nsave::Int
 
     function SolutionPODE(d, Δt, ntime, nsave)
         @assert T <: Real
+        @assert d > 0
+        @assert nsave > 0
         @assert ntime ≥ nsave
         @assert mod(ntime, nsave) == 0
 
-        new(d, zeros(T, d, div(ntime, nsave)), zeros(T, d, div(ntime, nsave)), Δt, ntime, nsave)
+        n = div(ntime, nsave)
+        new(d, n, zeros(T, d, n+1), zeros(T, d, n+1), Δt, ntime, nsave)
     end
 end
 
@@ -134,20 +140,25 @@ end
 
 
 immutable SolutionDAE{T} <: Solution{T}
-    m::UInt
-    n::UInt
+    d::Int
+    m::Int
+    n::Int
     x::Array{T,2}
     λ::Array{T,2}
     Δt::T
-    ntime::UInt
-    nsave::UInt
+    ntime::Int
+    nsave::Int
 
-    function SolutionDAE(m, n, Δt, ntime, nsave)
+    function SolutionDAE(d, m, Δt, ntime, nsave)
         @assert T <: Real
+        @assert d > 0
+        @assert m > 0
+        @assert nsave > 0
         @assert ntime ≥ nsave
         @assert mod(ntime, nsave) == 0
 
-        new(m, n, zeros(T, m, div(ntime, nsave)), zeros(T, n, div(ntime, nsave)), Δt, ntime, nsave)
+        n = div(ntime, nsave)
+        new(d, m, n, zeros(T, d, n), zeros(T, m, n), Δt, ntime, nsave)
     end
 end
 
@@ -168,21 +179,26 @@ end
 
 
 immutable SolutionPDAE{T} <: Solution{T}
-    m::UInt
-    n::UInt
+    d::Int
+    m::Int
+    n::Int
     q::Array{T,2}
     p::Array{T,2}
     λ::Array{T,2}
     Δt::T
-    ntime::UInt
-    nsave::UInt
+    ntime::Int
+    nsave::Int
 
-    function SolutionPDAE(m, n, Δt, ntime, nsave)
+    function SolutionPDAE(d, m, Δt, ntime, nsave)
         @assert T <: Real
+        @assert d > 0
+        @assert m > 0
+        @assert nsave > 0
         @assert ntime ≥ nsave
         @assert mod(ntime, nsave) == 0
 
-        new(m, n, zeros(T, m, div(ntime, nsave)), zeros(T, m, div(ntime, nsave)), zeros(T, n, div(ntime, nsave)), Δt, ntime, nsave)
+        n = div(ntime, nsave)
+        new(d, m, n, zeros(T, d, n+1), zeros(T, d, n+1), zeros(T, m, n+1), Δt, ntime, nsave)
     end
 end
 
