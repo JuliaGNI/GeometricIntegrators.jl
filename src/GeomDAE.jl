@@ -4,6 +4,14 @@ module GeomDAE
 
 include("utils/matrix_utils.jl")
 
+include("solvers/linear/linear_solvers.jl")
+
+export LinearSolver
+
+include("solvers/linear/lu_solver_lapack.jl")
+
+export LUSolver, lufactorize!, lusolve!
+
 include("equations/equations.jl")
 
 export Equation, ODE, PODE, DAE, PDAE
