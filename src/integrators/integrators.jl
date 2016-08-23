@@ -103,12 +103,6 @@ function solve!(int::IntegratorERK, sol::SolutionODE)
     return nothing
 end
 
-"solve!: Solve partitioned ODE with explicit Runge-Kutta integrator."
-function solve!(int::IntegratorERK, s::SolutionPODE)
-    # TODO
-end
-
-
 "IntegratorDIRK: Diagonally implicit Runge-Kutta integrator."
 immutable IntegratorDIRK{T} <: Integrator
     equation::Equation
