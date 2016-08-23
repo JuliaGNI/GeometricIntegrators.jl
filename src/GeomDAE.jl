@@ -12,6 +12,10 @@ include("solvers/linear/lu_solver_lapack.jl")
 
 export LUSolver, factorize!, solve!
 
+include("solvers/nonlinear/nonlinear_solvers.jl")
+
+export NonlinearSolver, solve!
+
 include("equations/equations.jl")
 
 export Equation, ODE, PODE, DAE, PDAE
