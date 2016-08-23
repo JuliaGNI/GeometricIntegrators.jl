@@ -1,24 +1,24 @@
 
 "Tableau: Holds the information for the various methods' tableaus."
-abstract Tableau{Name, T}
+abstract Tableau{T}
 
 "TableauRK: Holds the tableau of a Runge-Kutta method."
-abstract TableauRK{Name, T} <: Tableau{Name, T}
+abstract TableauRK{T} <: Tableau{T}
 
 "TableauIRK: Holds the tableau of an implicit Runge-Kutta method."
-abstract TableauIRK{Name, T} <: TableauRK{Name, T}
+abstract TableauIRK{T} <: TableauRK{T}
 
-Base.hash(tab::TableauRK, h::UInt) = hash(tab.order, hash(tab.a, hash(tab.b, hash(tab.c, hash(:TableauRK, h)))))
-Base.:(==){Name1, Name2, T1, T2}(tab1::TableauRK{Name1, T1}, tab2::TableauRK{Name2, T2}) = (tab1.order == tab2.order
-                                               && tab1.s == tab2.s
-                                               && tab1.a == tab2.a
-                                               && tab1.b == tab2.b
-                                               && tab1.c == tab2.c)
+Base.hash(tab::TableauRK, h::UInt) = hash(tab.o, hash(tab.a, hash(tab.b, hash(tab.c, hash(:TableauRK, h)))))
+Base.:(==){T1, T2}(tab1::TableauRK{T1}, tab2::TableauRK{T2}) = (tab1.o == tab2.o
+                                                             && tab1.s == tab2.s
+                                                             && tab1.a == tab2.a
+                                                             && tab1.b == tab2.b
+                                                             && tab1.c == tab2.c)
 
-Base.isequal{Name1, Name2, T1, T2}(tab1::TableauRK{Name1, T1}, tab2::TableauRK{Name2, T2}) = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
+Base.isequal{T1, T2}(tab1::TableauRK{T1}, tab2::TableauRK{T2}) = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
 
-function showTableau{Name, T}(tab::TableauRK{Name, T})
-    println("Explicit Runge-Kutta Method ", Name, "with ", tab.s, " stages and order ", tab.order)
+function showTableau{T}(tab::TableauRK{T})
+    println("Runge-Kutta Method ", tab.name, "with ", tab.s, " stages and order ", tab.o)
     println("  a = ", tab.a)
     println("  b = ", tab.b)
     println("  c = ", tab.c)
@@ -57,7 +57,7 @@ function readTableauRKHeaderFromFile(file)
     return O, S, T
 end
 
-function writeTableauToFile{Name, T}(dir::AbstractString, tab::TableauRK{Name, T})
+function writeTableauToFile{T}(dir::AbstractString, tab::TableauRK{T})
     # tab_array = zeros(T, S+1, S+1)
     # tab_array[1:S, 2:S+1] = tab.a
     # tab_array[S+1, 2:S+1] = tab.b
@@ -69,10 +69,10 @@ function writeTableauToFile{Name, T}(dir::AbstractString, tab::TableauRK{Name, T
     tab_array[1:tab.s, 2] = tab.b
     tab_array[1:tab.s, 3:tab.s+2] = tab.a
 
-    header = string("# ", tab.order, " ", tab.s, " ", T, "\n")
-    file   = string(dir, "/", Name, ".tsv")
+    header = string("# ", tab.o, " ", tab.s, " ", T, "\n")
+    file   = string(dir, "/", tab.name, ".tsv")
 
-    info("Writing Runge-Kutta tableau ", Name, " with ", tab.s, " stages and order ", tab.order, " to file\n      ", file)
+    info("Writing Runge-Kutta tableau ", tab.name, " with ", tab.s, " stages and order ", tab.o, " to file\n      ", file)
 
     f = open(file, "w")
     write(f, header)
@@ -87,30 +87,30 @@ end
 
 
 "TableauERK: Holds the tableau of an explicit Runge-Kutta method."
-immutable TableauERK{Name, T} <: TableauRK{Name, T}
-    order::UInt
+immutable TableauERK{T} <: TableauRK{T}
+    name::Symbol
+    o::UInt
     s::UInt
     a::Matrix{T}
     b::Vector{T}
     c::Vector{T}
 
-    function TableauERK(order,s,a,b,c)
+    function TableauERK(name,o,s,a,b,c)
         @assert T <: Real
-        @assert isa(Name, Symbol)
+        @assert isa(name, Symbol)
         @assert isa(s, Integer)
-        @assert isa(order, Integer)
+        @assert isa(o, Integer)
         @assert s > 0 "Number of stages must be > 0"
         @assert s==size(a,1)==size(a,2)==length(b)==length(c)
         @assert c[1] == 0
         @assert istrilstrict(a)
         @assert !(s==1 && a[1,1] ≠ 0)
-        new(order,s,a,b,c)
+        new(name,o,s,a,b,c)
     end
 end
 
-function TableauERK{T}(name::Symbol, order::Integer,
-                       a::Matrix{T}, b::Vector{T}, c::Vector{T})
-    TableauERK{name, T}(order, length(c), a, b, c)
+function TableauERK{T}(name::Symbol, order::Integer, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+    TableauERK{T}(name, order, length(c), a, b, c)
 end
 
 function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
@@ -118,9 +118,10 @@ function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
 
 #    run(`cat $file`)
 
-    order, s, T = readTableauRKHeaderFromFile(file)
+    o, s, T = readTableauRKHeaderFromFile(file)
 
     # TODO Read data in original format (e.g., Rational).
+    #      For this we need to save tableaus as jld or hdf5.
 #    tab_array = readdlm(file, T)
     tab_array = readdlm(file)
 
@@ -134,98 +135,98 @@ function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
     b = tab_array[1:s, 2]
     a = tab_array[1:s, 3:s+2]
 
-    info("Reading explicit Runge-Kutta tableau ", name, " with ", s, " stages and order ", order, " from file\n      ", file)
+    info("Reading explicit Runge-Kutta tableau ", name, " with ", s, " stages and order ", o, " from file\n      ", file)
 
-    TableauERK(Symbol(name), order, a, b, c)
+    TableauERK(Symbol(name), o, a, b, c)
 end
 
 
 "TableauDIRK: Holds the tableau of a diagonally implicit Runge-Kutta method."
-immutable TableauDIRK{Name, T} <: TableauIRK{Name, T}
-    order::UInt
+immutable TableauDIRK{T} <: TableauIRK{T}
+    name::Symbol
+    o::UInt
     s::UInt
     a::Matrix{T}
     b::Vector{T}
     c::Vector{T}
 
-    function TableauDIRK(order,s,a,b,c)
+    function TableauDIRK(name,o,s,a,b,c)
         @assert T <: Real
-        @assert isa(Name, Symbol)
+        @assert isa(name, Symbol)
         @assert isa(s, Integer)
-        @assert isa(order, Integer)
+        @assert isa(o, Integer)
         @assert s > 0
         @assert s==size(a,1)==size(a,2)==length(b)==length(c)
         @assert istril(a)
         @assert !(s==1 && a[1,1] ≠ 0)
 
         if s > 1 && istrilstrict(a)
-            warn("Initializing TableauDIRK with explicit tableau ", Name, ".\n",
+            warn("Initializing TableauDIRK with explicit tableau ", name, ".\n",
                  "You might want to use TableauERK instead.")
         end
 
-        new(order,s,a,b,c)
+        new(name,o,s,a,b,c)
     end
 end
 
-function TableauDIRK{T}(name::Symbol, order::Integer,
-                        a::Matrix{T}, b::Vector{T}, c::Vector{T})
-    TableauDIRK{name, T}(order, length(c), a, b, c)
+function TableauDIRK{T}(name::Symbol, order::Integer, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+    TableauDIRK{T}(name, order, length(c), a, b, c)
 end
 
 # TODO function readTableauDIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
 "TableauFIRK: Holds the tableau of a fully implicit Runge-Kutta method."
-immutable TableauFIRK{Name, T} <: TableauIRK{Name, T}
-    order::UInt
+immutable TableauFIRK{T} <: TableauIRK{T}
+    name::Symbol
+    o::UInt
     s::UInt
     a::Matrix{T}
     b::Vector{T}
     c::Vector{T}
 
-    function TableauFIRK(order,s,a,b,c)
+    function TableauFIRK(name,o,s,a,b,c)
         @assert T <: Real
-        @assert isa(Name, Symbol)
+        @assert isa(name, Symbol)
         @assert isa(s, Integer)
-        @assert isa(order, Integer)
+        @assert isa(o, Integer)
         @assert s > 0 "Number of stages must be > 0"
         @assert s==size(a,1)==size(a,2)==length(b)==length(c)
 
         if (s > 1 && istrilstrict(a)) || (s==1 && a[1,1] == 0)
-            warn("Initializing TableauFIRK with explicit tableau ", Name, ".\n",
+            warn("Initializing TableauFIRK with explicit tableau ", name, ".\n",
                  "You might want to use TableauERK instead.")
         elseif s > 1 && istril(a)
-            warn("Initializing TableauFIRK with diagonally implicit tableau ", Name, ".\n",
+            warn("Initializing TableauFIRK with diagonally implicit tableau ", name, ".\n",
                  "You might want to use TableauDIRK instead.")
         end
 
-        new(order,s,a,b,c)
+        new(name,o,s,a,b,c)
     end
 end
 
-function TableauFIRK{T}(name::Symbol, order::Integer,
-                         a::Matrix{T}, b::Vector{T}, c::Vector{T})
-    TableauFIRK{name, T}(order, length(c), a, b, c)
+function TableauFIRK{T}(name::Symbol, order::Integer, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+    TableauFIRK{T}(name, order, length(c), a, b, c)
 end
 
 # TODO function readTableauFIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
 "TableauSIRK: Holds the tableau of a singly implicit Runge-Kutta method."
-immutable TableauSIRK{Name, T} <: TableauIRK{Name, T}
+immutable TableauSIRK{T} <: TableauIRK{T}
     # TODO
 end
 
-function TableauSIRK{T}(name::Symbol, order::Integer,
-                         a::Matrix{T}, b::Vector{T}, c::Vector{T})
-    TableauSIRK{name, T}(order, length(c), a, b, c)
+function TableauSIRK{T}(name::Symbol, order::Integer, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+    TableauSIRK{T}(name, order, length(c), a, b, c)
 end
 
 
 "TableauPRK: Holds the tableau of a partitioned Runge-Kutta method."
 # TODO Need explicit and implicit version?
-immutable TableauPRK{Name, T} <: Tableau{Name, T}
-    order::UInt
+immutable TableauPRK{T} <: Tableau{T}
+    name::Symbol
+    o::UInt
     s::UInt
     a_q::Matrix{T}
     a_p::Matrix{T}
@@ -234,15 +235,17 @@ immutable TableauPRK{Name, T} <: Tableau{Name, T}
     c_q::Vector{T}
     c_p::Vector{T}
 
-    function TableauPRK(order, s, a_q, a_p, b_q, b_p, c_q, c_p)
+    function TableauPRK(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p)
         @assert T <: Real
-        @assert isa(Name, Symbol)
+        @assert isa(name, Symbol)
         @assert isa(s, Integer)
-        @assert isa(order, Integer)
+        @assert isa(o, Integer)
         @assert s > 0 "Number of stages must be > 0"
         @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
         @assert s==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
-        new(order, s, a_q, a_p, b_q, b_p, c_q, c_p)
+        # TODO check that both tableaus are lower triangular and that only one element
+        #      a_q[i,i] or a_p[i,i] is non-zero for all i.
+        new(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p)
     end
 end
 
@@ -250,18 +253,27 @@ function TableauPRK{T}(name::Symbol, order::Integer,
                        a_q::Matrix{T}, a_p::Matrix{T},
                        b_q::Vector{T}, b_p::Vector{T},
                        c_q::Vector{T}, c_p::Vector{T})
-    @assert length(c_q)==length(c_p)
-    TableauPRK{name, T}(order, length(c_q), a_q, a_p, b_q, b_p, c_q, c_p)
+    @assert length(c_q) == length(c_p)
+    TableauPRK{T}(name, order, length(c_q), a_q, a_p, b_q, b_p, c_q, c_p)
 end
 
-# TODO Add constructor which takes two TableauRK as inputs.
+function TableauPRK{T}(name::Symbol, order::Integer, tab::TableauERK{T})
+    TableauPRK{T}(name, order, tab_q.s, tab_q.a, tab_p.a, tab_q.b, tab_p.b, tab_q.c, tab_p.c)
+end
+
+function TableauPRK{T1,T2}(name::Symbol, order::Integer, tab_q::TableauRK{T1}, tab_p::TableauRK{T2})
+    @assert tab_q.s == tab_p.s
+    @assert T1 == T2
+    TableauPRK{T1}(name, order, tab_q.s, tab_q.a, tab_p.a, tab_q.b, tab_p.b, tab_q.c, tab_p.c)
+end
 
 # TODO function readTableauPRKFromFile(dir::AbstractString, name::AbstractString)
 
 
 "TableauSARK: Holds the tableau of a spezialized additive Runge-Kutta method."
-immutable TableauSARK{Name, T} <: Tableau{Name, T}
-    order::UInt
+immutable TableauSARK{T} <: Tableau{T}
+    name::Symbol
+    o::UInt
     s::UInt
     r::UInt
 
@@ -280,16 +292,16 @@ immutable TableauSARK{Name, T} <: Tableau{Name, T}
     ω_q::Matrix{T}
     ω_λ::Matrix{T}
 
-    function TableauSARK(order, s, r,
+    function TableauSARK(name, o, s, r,
                          a_q, α_q, a_qᵠ, α_qᵠ,
                          b_q, β_q, c_q, c_λ,
                          ω_q, ω_λ)
         # TODO Make ω_q, ω_λ optional arguments.
         @assert T <: Real
-        @assert isa(Name, Symbol)
+        @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
-        @assert isa(order, Integer)
+        @assert isa(o, Integer)
         @assert s > 0 "Number of stages s must be > 0"
         @assert r > 0 "Number of stages r must be > 0"
         @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
@@ -299,7 +311,7 @@ immutable TableauSARK{Name, T} <: Tableau{Name, T}
         @assert r==size(a_qᵠ,1)==size(α_qᵠ,1)==size(α_qᵠ,2)
         @assert s==size(a_qᵠ,2)
         # TODO Add assertions on ω_q, ω_λ to be (S-1)x(S) or (R-1)x(R) if set.
-        new(order, s, r, a_q, α_q, a_qᵠ, α_qᵠ, b_q, β_q, c_q, c_λ, ω_q, ω_λ)
+        new(name, o, s, r, a_q, α_q, a_qᵠ, α_qᵠ, b_q, β_q, c_q, c_λ, ω_q, ω_λ)
     end
 end
 
@@ -310,8 +322,9 @@ end
 
 "TableauSPARK: Holds the tableau of a spezialized partitioned additive
  Runge-Kutta method."
-immutable TableauSPARK{Name, T} <: Tableau{Name, T}
-    order::UInt
+immutable TableauSPARK{T} <: Tableau{T}
+    name::Symbol
+    o::UInt
     s::UInt
     r::UInt
 
@@ -338,17 +351,17 @@ immutable TableauSPARK{Name, T} <: Tableau{Name, T}
     ω_p::Matrix{T}
     ω_λ::Matrix{T}
 
-    function TableauSPARK(order, s, r,
+    function TableauSPARK(name, o, s, r,
                           a_q, a_p, α_q, α_p, a_qᵠ, a_pᵠ, α_qᵠ, α_pᵠ,
                           b_q, b_p, β_q, β_p,
                           c_q, c_p, c_λ,
                           ω_q, ω_p, ω_λ)
         # TODO Make ω_q, ω_p, ω_λ optional arguments.
         @assert T <: Real
-        @assert isa(Name, Symbol)
+        @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
-        @assert isa(order, Integer)
+        @assert isa(o, Integer)
         @assert s > 0 "Number of stages s must be > 0"
         @assert r > 0 "Number of stages r must be > 0"
         @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
@@ -361,7 +374,7 @@ immutable TableauSPARK{Name, T} <: Tableau{Name, T}
         @assert r==size(α_pᵠ,1)==size(α_pᵠ,2)
         @assert s==size(a_qᵠ,2)==size(a_pᵠ,2)
         # TODO Add assertions on ω_q, ω_p, ω_λ to be (S-1)x(S) or (R-1)x(R) if set.
-        new(order, s, r,
+        new(name, o, s, r,
             a_q, a_p, α_q, α_p, a_qᵠ, a_pᵠ, α_qᵠ, α_pᵠ,
             b_q, b_p, β_q, β_p,
             c_q, c_p, c_λ,
@@ -375,8 +388,9 @@ end
 
 
 "TableauGLM: Holds the tableau of a general linear method."
-immutable TableauGLM{Name, T} <: Tableau{Name, T}
-    order::UInt
+immutable TableauGLM{T} <: Tableau{T}
+    name::Symbol
+    o::UInt
     s::UInt
     r::UInt
 
@@ -386,18 +400,18 @@ immutable TableauGLM{Name, T} <: Tableau{Name, T}
     v::Matrix{T}
     c::Vector{T}
 
-    function TableauGLM(order, s, r, a, b, u, v, c)
+    function TableauGLM(name, o, s, r, a, b, u, v, c)
         @assert T <: Real
-        @assert isa(Name, Symbol)
+        @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
-        @assert isa(order, Integer)
+        @assert isa(o, Integer)
         @assert s > 0 "Number of stages s must be > 0"
         @assert r > 0 "Number of stages r must be > 0"
         @assert s==length(c)
         @assert s==size(a,1)==size(a,2)==length(u,1)==length(b,2)
         @assert r==size(v,1)==size(v,2)==length(u,2)==length(b,1)
-        new(order, s, r, a, b, u, v, c)
+        new(name, o, s, r, a, b, u, v, c)
     end
 end
 
