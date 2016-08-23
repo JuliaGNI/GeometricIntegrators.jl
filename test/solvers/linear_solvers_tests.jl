@@ -5,9 +5,9 @@ A = [[+4.  +5.  -2.]
 b = [-14., +42., +28.]
 x = [+4., -4., +5.]
 
-lu = LUSolver(A)
+lu = LUSolver(A, b)
 
-lufactorize!(lu)
-lusolve!(lu, b)
+factorize!(lu)
+solve!(lu)
 
-@test b == x
+@test lu.b == x

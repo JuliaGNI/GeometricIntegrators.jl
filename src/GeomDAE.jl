@@ -10,7 +10,7 @@ export LinearSolver
 
 include("solvers/linear/lu_solver_lapack.jl")
 
-export LUSolver, lufactorize!, lusolve!
+export LUSolver, factorize!, solve!
 
 include("equations/equations.jl")
 
