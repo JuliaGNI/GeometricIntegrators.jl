@@ -6,7 +6,7 @@ include("utils/matrix_utils.jl")
 
 include("solvers/linear/linear_solvers.jl")
 
-export LinearSolver
+export LinearSolver, factorize!, solve!
 
 include("solvers/linear/lu_solver_lapack.jl")
 
