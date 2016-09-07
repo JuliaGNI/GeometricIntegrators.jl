@@ -1,5 +1,5 @@
 
-type NewtonSolver{T} <: NonlinearSolver{T}
+immutable NewtonSolver{T} <: NonlinearSolver{T}
     z::Vector{T}
 
     F::Function
