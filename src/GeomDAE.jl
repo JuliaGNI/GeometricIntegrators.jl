@@ -17,9 +17,17 @@ include("solvers/nonlinear/nonlinear_solvers.jl")
 
 export NonlinearSolver, solve!
 
+include("solvers/nonlinear/abstract_newton_solver.jl")
+
+export AbstractNewtonSolver
+
 include("solvers/nonlinear/newton_solver.jl")
 
 export NewtonSolver, solve!
+
+include("solvers/nonlinear/quasi_newton_solver.jl")
+
+export QuasiNewtonSolver, solve!
 
 include("equations/equations.jl")
 
