@@ -71,7 +71,7 @@ immutable IntegratorERK{T} <: Integrator
 end
 
 function IntegratorERK(equation::Equation, tableau::TableauERK, Δt)
-    T = eltype(equation.x0)
+    T = eltype(equation.q₀)
     IntegratorERK{T}(equation, tableau, Δt)
 end
 
@@ -124,7 +124,7 @@ immutable IntegratorDIRK{T} <: Integrator
 end
 
 function IntegratorDIRK(equation::Equation, tableau::TableauDIRK, Δt)
-    T = eltype(equation.x0)
+    T = eltype(equation.q₀)
     IntegratorDIRK{T}(equation, tableau, Δt)
 end
 
@@ -200,7 +200,7 @@ immutable IntegratorFIRK{T} <: Integrator
 end
 
 function IntegratorFIRK(equation::Equation, tableau::TableauFIRK, Δt)
-    T = eltype(equation.x0)
+    T = eltype(equation.q₀)
     IntegratorFIRK{T}(equation, tableau, Δt)
 end
 
@@ -266,8 +266,8 @@ immutable IntegratorPRK{T} <: Integrator
 end
 
 function IntegratorPRK(equation::Equation, tableau::TableauPRK, Δt)
-    T1 = eltype(equation.q0)
-    T2 = eltype(equation.p0)
+    T1 = eltype(equation.q₀)
+    T2 = eltype(equation.p₀)
     @assert T1 == T2
     IntegratorPRK{T1}(equation, tableau, Δt)
 end

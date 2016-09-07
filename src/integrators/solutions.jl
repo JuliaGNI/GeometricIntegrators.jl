@@ -54,14 +54,14 @@ immutable SolutionODE{T} <: Solution{T,2}
 end
 
 function SolutionODE(equation::ODE, ntime::Int, nsave::Int=1)
-    T = eltype(equation.x0)
+    T = eltype(equation.q₀)
     s = SolutionODE{T}(equation.d, ntime, nsave)
     setInitialConditions(s, equation)
     return s
 end
 
 function setInitialConditions(solution::SolutionODE, equation::ODE)
-    solution[1:solution.d, 0] = equation.x0
+    solution[1:solution.d, 0] = equation.q₀
 end
 
 function reset(s::SolutionODE)
@@ -120,8 +120,8 @@ immutable SolutionPODE{T} <: Solution{T,3}
 end
 
 function SolutionPODE(equation::PODE, ntime::Int, nsave::Int=1)
-    T1 = eltype(equation.q0)
-    T2 = eltype(equation.p0)
+    T1 = eltype(equation.q₀)
+    T2 = eltype(equation.p₀)
     @assert T1 == T2
     s = SolutionPODE{T1}(equation.d, ntime, nsave)
     setInitialConditions(s, equation)
@@ -129,8 +129,8 @@ function SolutionPODE(equation::PODE, ntime::Int, nsave::Int=1)
 end
 
 function setInitialConditions(solution::SolutionPODE, equation::PODE)
-    solution[1:solution.d, 1, 0] = equation.q0
-    solution[1:solution.d, 2, 0] = equation.p0
+    solution[1:solution.d, 1, 0] = equation.q₀
+    solution[1:solution.d, 2, 0] = equation.p₀
 end
 
 function reset(s::SolutionPODE)
@@ -187,8 +187,8 @@ immutable SolutionDAE{T} <: Solution{T,3}
 end
 
 function SolutionDAE(equation::DAE, ntime::Int, nsave::Int=1)
-    T1 = eltype(equation.x0)
-    T2 = eltype(equation.λ0)
+    T1 = eltype(equation.q₀)
+    T2 = eltype(equation.λ₀)
     @assert T1 == T2
     SolutionDAE{T1}(equation.m, equation.n, ntime, nsave)
 end
@@ -226,9 +226,9 @@ immutable SolutionPDAE{T} <: Solution{T,3}
 end
 
 function SolutionPDAE(equation::PDAE, ntime::Int, nsave::Int=1)
-    T1 = eltype(equation.q0)
-    T2 = eltype(equation.p0)
-    T3 = eltype(equation.λ0)
+    T1 = eltype(equation.q₀)
+    T2 = eltype(equation.p₀)
+    T3 = eltype(equation.λ₀)
     @assert T1 == T2 == T3
     SolutionPDAE{T1}(equation.m, equation.n, ntime, nsave)
 end

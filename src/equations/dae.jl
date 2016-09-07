@@ -7,22 +7,22 @@ immutable DAE{T} <: Equation{T}
     f::Function
     u::Function
     ϕ::Function
-    x0::Array{T,1}
-    λ0::Array{T,1}
+    q₀::Array{T,1}
+    λ₀::Array{T,1}
 
-    function DAE(m, n, f, u, ϕ, x0, λ0)
-        @assert m == length(x0)# == length(f(x0)) == length(u(x0, λ0))
-        @assert n == length(λ0)# == length(ϕ(x0))
+    function DAE(m, n, f, u, ϕ, q₀, λ₀)
+        @assert m == length(q₀)
+        @assert n == length(λ₀)
         @assert m ≥ n
-        @assert T == eltype(x0)# == eltype(f(x0)) == eltype(u(x0, λ0))
-        @assert T == eltype(λ0)# == eltype(ϕ(x0))
+        @assert T == eltype(q₀)
+        @assert T == eltype(λ₀)
 
-        new(m, n, f, u, ϕ, x0, λ0)
+        new(m, n, f, u, ϕ, q₀, λ₀)
     end
 end
 
-function DAE(m, n, f, u, ϕ, x0, λ0)
-    DAE{eltype(x0)}(m, n, f, u, ϕ, x0, λ0)
+function DAE(m, n, f, u, ϕ, q₀, λ₀)
+    DAE{eltype(q₀)}(m, n, f, u, ϕ, q₀, λ₀)
 end
 
 
@@ -34,23 +34,23 @@ immutable PDAE{T} <: Equation{T}
     u::Function
     v::Function
     ϕ::Function
-    q0::Array{T,1}
-    p0::Array{T,1}
-    λ0::Array{T,1}
+    q₀::Array{T,1}
+    p₀::Array{T,1}
+    λ₀::Array{T,1}
 
-    function PDAE(m, n, f, g, u, v, ϕ, q0, p0, λ0)
-        @assert m == length(q0)# == length(f(q0, p0)) == length(u(q0, p0, λ0))
-        @assert m == length(p0)# == length(g(q0, p0)) == length(v(q0, p0, λ0))
-        @assert n == length(λ0)# == length(ϕ(q0, p0))
+    function PDAE(m, n, f, g, u, v, ϕ, q₀, p₀, λ₀)
+        @assert m == length(q₀)
+        @assert m == length(p₀)
+        @assert n == length(λ₀)
         @assert 2m ≥ n
-        @assert T == eltype(q0)# == eltype(f(q0, p0)) == eltype(u(q0, p0, λ0))
-        @assert T == eltype(p0)# == eltype(g(q0, p0)) == eltype(v(q0, p0, λ0))
-        @assert T == eltype(λ0)# == eltype(ϕ(q0, p0))
+        @assert T == eltype(q₀)
+        @assert T == eltype(p₀)
+        @assert T == eltype(λ₀)
 
-        new(m, n, f, g, u, v, ϕ, q0, p0, λ0)
+        new(m, n, f, g, u, v, ϕ, q₀, p₀, λ₀)
     end
 end
 
-function PDAE(m, n, f, g, u, v, ϕ, q0, p0, λ0)
-    PDAE{eltype(q0)}(m, n, f, g, u, v, ϕ, q0, p0, λ0)
+function PDAE(m, n, f, g, u, v, ϕ, q₀, p₀, λ₀)
+    PDAE{eltype(q₀)}(m, n, f, g, u, v, ϕ, q₀, p₀, λ₀)
 end
