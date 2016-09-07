@@ -35,6 +35,10 @@ run_pendulum(getTableauHeun(), "pendulum_heun.pdf")
 run_pendulum(getTableauKutta(), "pendulum_kutta.pdf")
 run_pendulum(getTableauERK4(), "pendulum_explicit_rk4.pdf")
 
+run_pendulum(getTableauImplicitEuler(), "pendulum_implicit_euler.pdf")
+run_pendulum(getTableauGLRK1(), "pendulum_implicit_glrk1.pdf")
+run_pendulum(getTableauGLRK2(), "pendulum_implicit_glrk2.pdf")
+run_pendulum(getTableauGLRK3(), "pendulum_implicit_glrk3.pdf")
 
 
 function qf(x, fx)

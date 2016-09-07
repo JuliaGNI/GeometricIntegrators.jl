@@ -155,7 +155,47 @@ immutable IntegratorFIRK{T} <: Integrator
     function IntegratorFIRK(equation, tableau, Δt)
         D = equation.d
         S = tableau.s
-        new(equation, tableau, zeros(T,D), zeros(T,D,S), zeros(T,D,S), zeros(T,D,S))
+
+        # create solution vector
+        x = zeros(T,D)
+
+        # create internal stage vectors
+        X = zeros(T,D,S)
+        Y = zeros(T,D,S)
+        F = zeros(T,D,S)
+
+        # create solution vector for internal stages / nonlinear solver
+        z = zeros(T, D*S)
+
+        # create function
+        function function_stages{T}(y::Vector{T}, b::Vector{T})
+            # loop through stages
+            for i in 1:S
+                # copy y to Y
+                Y[:,i] = y[D*(i-1)+1:D*i]
+
+                # compute X
+                X[:,i] = x[:] + Δt * Y[:,i]
+
+                # compute f(X)
+                # equation.f(X[:,i], F[:,i])
+                equation.f(view(X, 1:D, i), view(F, 1:D, i))
+            end
+
+            # compute b = - (Y-AF)
+            for i in 1:S
+                b[D*(i-1)+1:D*i] = - Y[:,i]
+                for j in 1:S
+                    b[D*(i-1)+1:D*i] += tableau.a[i,j] * F[:,j]
+                end
+            end
+        end
+
+        # create solver
+        solver = NewtonSolver(z, function_stages)
+
+        # create integrator
+        new(equation, tableau, Δt, solver, x, X, Y, F)
     end
 end
 
@@ -165,14 +205,38 @@ function IntegratorFIRK(equation::Equation, tableau::TableauFIRK, Δt)
 end
 
 "solve!: Solve ODE with fully implicit Runge-Kutta integrator."
-function solve!(int::IntegratorFIRK, s::SolutionODE)
-    # TODO
+function solve!(int::IntegratorFIRK, sol::SolutionODE)
+    # copy initial conditions from solution
+    int.x[:] = sol[1:sol.d, 0]
+
+    for n in 1:sol.ntime
+        # compute initial guess
+        # TODO
+        for i in 1:int.tableau.s
+            int.solver.x[int.equation.d*(i-1)+1:int.equation.d*i] = int.x[:]
+        end
+
+        # call nonlinear solver
+        solve!(int.solver)
+        # println(int.solver.i, ", ", int.solver.rₐ,", ",  int.solver.rᵣ,", ",  int.solver.rₛ)
+
+        # compute final update
+        for i in 1:int.tableau.s
+            int.x[:] += int.Δt * int.tableau.b[i] * int.F[:,i]
+        end
+
+        # copy to solution
+        if mod(n, sol.nsave) == 0
+            sol[1:sol.d, div(n, sol.nsave)] = int.x[:]
+        end
+    end
+    return nothing
 end
 
-"solve!: Solve partitioned ODE with fully implicit Runge-Kutta integrator."
-function solve!(int::IntegratorFIRK, s::SolutionPODE)
-    # TODO
-end
+# "solve!: Solve partitioned ODE with fully implicit Runge-Kutta integrator."
+# function solve!(int::IntegratorFIRK, s::SolutionPODE)
+#     # TODO
+# end
 
 
 "IntegratorPRK: Explicit partitioned Runge-Kutta integrator."
