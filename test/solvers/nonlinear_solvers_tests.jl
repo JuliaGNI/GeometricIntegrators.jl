@@ -2,10 +2,6 @@
 n = 1
 T = Float64
 
-# J  = zeros(T, n, n)
-# b  = zeros(T, n)
-# lu = LUSolver(J, b)
-
 function F(x::Vector, b::Vector)
     b[:] = x.^2
 end
@@ -19,11 +15,11 @@ x = ones(T, n)
 nl = NewtonSolver(x, F)
 solve!(nl)
 # println(nl.status.i, ", ", nl.status.rₐ,", ",  nl.status.rᵣ,", ",  nl.status.rₛ)
-@test_approx_eq_eps(nl.z, zeros(T, n), 1E-7)
+@test_approx_eq_eps(nl.x, zeros(T, n), 1E-7)
 
 
 x = ones(T, n)
 nl = NewtonSolver(x, F, J=J)
 solve!(nl)
 # println(nl.status.i, ", ", nl.status.rₐ,", ",  nl.status.rᵣ,", ",  nl.status.rₛ)
-@test_approx_eq_eps(nl.z, zeros(T, n), 1E-7)
+@test_approx_eq_eps(nl.x, zeros(T, n), 1E-7)
