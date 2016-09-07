@@ -1,23 +1,23 @@
 
 abstract Solution{T,N} <: DenseArray{T,N}
 
-function Solution(equation::ODE, Δt::Real, ntime::Int, nsave::Int=1)
-    SolutionODE(equation, Δt, ntime, nsave)
+function Solution(equation::ODE, ntime::Int, nsave::Int=1)
+    SolutionODE(equation, ntime, nsave)
 end
 
-function Solution(equation::PODE, Δt::Real, ntime::Int, nsave::Int=1)
-    SolutionPODE(equation, Δt, ntime, nsave)
+function Solution(equation::PODE, ntime::Int, nsave::Int=1)
+    SolutionPODE(equation, ntime, nsave)
 end
 
-function Solution(equation::DAE, Δt::Real, ntime::Int, nsave::Int=1)
-    SolutionDAE(equation, Δt, ntime, nsave)
+function Solution(equation::DAE, ntime::Int, nsave::Int=1)
+    SolutionDAE(equation, ntime, nsave)
 end
 
-function Solution(equation::PDAE, Δt::Real, ntime::Int, nsave::Int=1)
-    SolutionPDAE(equation, Δt, ntime, nsave)
+function Solution(equation::PDAE, ntime::Int, nsave::Int=1)
+    SolutionPDAE(equation, ntime, nsave)
 end
 
-function Solution(equation::Equation, Δt::Real, ntime::Int, nsave::Int=1)
+function Solution(equation::Equation, ntime::Int, nsave::Int=1)
     error("No solution found for equation ", equation)
 end
 
@@ -38,11 +38,10 @@ immutable SolutionODE{T} <: Solution{T,2}
     d::Int
     n::Int
     x::Array{T,2}
-    Δt::T
     ntime::Int
     nsave::Int
 
-    function SolutionODE(d, Δt, ntime, nsave)
+    function SolutionODE(d, ntime, nsave)
         @assert T <: Real
         @assert d > 0
         @assert nsave > 0
@@ -50,13 +49,13 @@ immutable SolutionODE{T} <: Solution{T,2}
         @assert mod(ntime, nsave) == 0
 
         n = div(ntime, nsave)
-        new(d, n, zeros(T, d, n+1), Δt, ntime, nsave)
+        new(d, n, zeros(T, d, n+1), ntime, nsave)
     end
 end
 
-function SolutionODE(equation::ODE, Δt::Real, ntime::Int, nsave::Int=1)
+function SolutionODE(equation::ODE, ntime::Int, nsave::Int=1)
     T = eltype(equation.x0)
-    s = SolutionODE{T}(equation.d, Δt, ntime, nsave)
+    s = SolutionODE{T}(equation.d, ntime, nsave)
     setInitialConditions(s, equation)
     return s
 end
@@ -102,11 +101,10 @@ immutable SolutionPODE{T} <: Solution{T,3}
     x::Array{T,3}
     q::AbstractArray{T,2}
     p::AbstractArray{T,2}
-    Δt::T
     ntime::Int
     nsave::Int
 
-    function SolutionPODE(d, Δt, ntime, nsave)
+    function SolutionPODE(d, ntime, nsave)
         @assert T <: Real
         @assert d > 0
         @assert nsave > 0
@@ -115,17 +113,17 @@ immutable SolutionPODE{T} <: Solution{T,3}
 
         n = div(ntime, nsave)
         x = zeros(T, d, 2, n+1)
-        q = x[:,1,:]
-        p = x[:,2,:]
-        new(d, n, x, q, p, Δt, ntime, nsave)
+        q = view(x, 1:d, 1, 1:n+1)
+        p = view(x, 1:d, 2, 1:n+1)
+        new(d, n, x, q, p, ntime, nsave)
     end
 end
 
-function SolutionPODE(equation::PODE, Δt::Real, ntime::Int, nsave::Int=1)
+function SolutionPODE(equation::PODE, ntime::Int, nsave::Int=1)
     T1 = eltype(equation.q0)
     T2 = eltype(equation.p0)
     @assert T1 == T2
-    s = SolutionPODE{T1}(equation.d, Δt, ntime, nsave)
+    s = SolutionPODE{T1}(equation.d, ntime, nsave)
     setInitialConditions(s, equation)
     return s
 end
@@ -172,11 +170,10 @@ immutable SolutionDAE{T} <: Solution{T,3}
     n::Int
     x::Array{T,2}
     λ::Array{T,2}
-    Δt::T
     ntime::Int
     nsave::Int
 
-    function SolutionDAE(d, m, Δt, ntime, nsave)
+    function SolutionDAE(d, m, ntime, nsave)
         @assert T <: Real
         @assert d > 0
         @assert m > 0
@@ -185,15 +182,15 @@ immutable SolutionDAE{T} <: Solution{T,3}
         @assert mod(ntime, nsave) == 0
 
         n = div(ntime, nsave)
-        new(d, m, n, zeros(T, d, n), zeros(T, m, n), Δt, ntime, nsave)
+        new(d, m, n, zeros(T, d, n), zeros(T, m, n), ntime, nsave)
     end
 end
 
-function SolutionDAE(equation::DAE, Δt::Real, ntime::Int, nsave::Int=1)
+function SolutionDAE(equation::DAE, ntime::Int, nsave::Int=1)
     T1 = eltype(equation.x0)
     T2 = eltype(equation.λ0)
     @assert T1 == T2
-    SolutionDAE{T1}(equation.m, equation.n, Δt, ntime, nsave)
+    SolutionDAE{T1}(equation.m, equation.n, ntime, nsave)
 end
 
 function Base.getindex(s::SolutionDAE, i::Int)
@@ -212,11 +209,10 @@ immutable SolutionPDAE{T} <: Solution{T,3}
     q::Array{T,2}
     p::Array{T,2}
     λ::Array{T,2}
-    Δt::T
     ntime::Int
     nsave::Int
 
-    function SolutionPDAE(d, m, Δt, ntime, nsave)
+    function SolutionPDAE(d, m, ntime, nsave)
         @assert T <: Real
         @assert d > 0
         @assert m > 0
@@ -225,16 +221,16 @@ immutable SolutionPDAE{T} <: Solution{T,3}
         @assert mod(ntime, nsave) == 0
 
         n = div(ntime, nsave)
-        new(d, m, n, zeros(T, d, n+1), zeros(T, d, n+1), zeros(T, m, n+1), Δt, ntime, nsave)
+        new(d, m, n, zeros(T, d, n+1), zeros(T, d, n+1), zeros(T, m, n+1), ntime, nsave)
     end
 end
 
-function SolutionPDAE(equation::PDAE, Δt::Real, ntime::Int, nsave::Int=1)
+function SolutionPDAE(equation::PDAE, ntime::Int, nsave::Int=1)
     T1 = eltype(equation.q0)
     T2 = eltype(equation.p0)
     T3 = eltype(equation.λ0)
     @assert T1 == T2 == T3
-    SolutionPDAE{T1}(equation.m, equation.n, Δt, ntime, nsave)
+    SolutionPDAE{T1}(equation.m, equation.n, ntime, nsave)
 end
 
 function Base.getindex(s::SolutionPDAE, i::Int)

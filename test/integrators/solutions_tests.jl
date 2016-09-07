@@ -1,10 +1,9 @@
 
-Δt = 0.1
 ntime = 10
 
 dim = 1
 ode = ODE(dim, x -> x, [1.])
-sol = Solution(ode, Δt, ntime)
+sol = Solution(ode, ntime)
 @test typeof(sol) <: SolutionODE
 @test size(sol) == (dim, ntime+1)
 @test indices(sol, 1) == 1:dim
@@ -19,7 +18,7 @@ end
 
 
 pode = PODE(1, y -> y, x -> 2x, [1.], [1.])
-psol = Solution(pode, Δt, ntime)
+psol = Solution(pode, ntime)
 @test typeof(psol) <: SolutionPODE
 @test size(psol) == (dim, 2, ntime+1)
 @test indices(psol, 1) == 1:dim
@@ -37,7 +36,7 @@ end
 
 
 dae = DAE(2, 1, x -> x, (x, λ) -> [λ -λ], x -> x[2]-x[1], [1.; 1.], [0.])
-@test typeof(Solution(dae, Δt, ntime)) <: SolutionDAE
+@test typeof(Solution(dae, ntime)) <: SolutionDAE
 
 pdae = PDAE(1, 1, y -> y, x -> 2x, (x, y, λ) -> λ, (x, y, λ) -> -λ, (x, y) -> x[1]-y[1], [1.], [1.], [0.])
-@test typeof(Solution(pdae, Δt, ntime)) <: SolutionPDAE
+@test typeof(Solution(pdae, ntime)) <: SolutionPDAE

@@ -7,15 +7,18 @@ const ntime = 10000
 const neps  = 1E-14
 const nmax  = 20
 
+x0 = [acos(0.4), 0.0]
+
+function f(x, fx)
+    fx[1] = x[2]
+    fx[2] = sin(x[1])
+end
+
+ode = ODE(2, f, x0)
 
 function run_pendulum(tableau, filename)
-
-    f  = x -> [x[2], sin(x[1])]
-    x0 = [acos(0.4), 0.0]
-
-    ode = ODE(2, f, x0)
-    int = Integrator(ode, tableau)
-    sol = Solution(ode, Δt, ntime)
+    int = Integrator(ode, tableau, Δt)
+    sol = Solution(ode, ntime)
 
     solve!(int, sol)
 
@@ -33,16 +36,23 @@ run_pendulum(getTableauKutta(), "pendulum_kutta.pdf")
 run_pendulum(getTableauERK4(), "pendulum_explicit_rk4.pdf")
 
 
+
+function qf(x, fx)
+    fx[:] = x
+end
+
+function pf(x, fx)
+    fx[:] = sin(x)
+end
+
 function run_pendulum_partitioned(tableau, filename)
 
-    f  = p -> p
-    g  = q -> sin(q)
     q0 = [acos(0.4)]
     p0 = [0.0]
 
-    ode = PODE(1, f, g, q0, p0)
-    int = Integrator(ode, tableau)
-    sol = Solution(ode, Δt, ntime)
+    ode = PODE(1, qf, pf, q0, p0)
+    int = Integrator(ode, tableau, Δt)
+    sol = Solution(ode, ntime)
 
     solve!(int, sol)
 

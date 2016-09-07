@@ -1,13 +1,23 @@
 
-@test typeof(Integrator(ODE(1, x -> x, [1.]), getTableauExplicitMidpoint())) <: IntegratorERK
-@test typeof(Integrator(ODE(1, x -> x, [1.]), getTableauCrouzeix())) <: IntegratorDIRK
-@test typeof(Integrator(ODE(1, x -> x, [1.]), getTableauImplicitMidpoint())) <: IntegratorFIRK
+Δt = 0.1
 
-ode = ODE(1, x -> x, [1.])
-int = Integrator(ode, getTableauERK4())
+function f(x, fx)
+    fx[:] = x
+end
+
+function g(x, gx)
+    gx[:] = x.^2
+end
+
+@test typeof(Integrator(ODE(1, f, [1.]), getTableauExplicitMidpoint(), Δt)) <: IntegratorERK
+@test typeof(Integrator(ODE(1, f, [1.]), getTableauCrouzeix(), Δt)) <: IntegratorDIRK
+@test typeof(Integrator(ODE(1, f, [1.]), getTableauImplicitMidpoint(), Δt)) <: IntegratorFIRK
+
+ode = ODE(1, f, [1.])
+int = Integrator(ode, getTableauERK4(), Δt)
 sol = solve(int, 10)
 
 
-pode = PODE(1, y -> y, x -> 2x, [1.], [1.])
-pint = Integrator(pode, getTableauSymplecticEulerA())
+pode = PODE(1, f, g, [1.], [1.])
+pint = Integrator(pode, getTableauSymplecticEulerA(), Δt)
 psol = solve(int, 10)

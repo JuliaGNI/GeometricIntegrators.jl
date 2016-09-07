@@ -2,12 +2,11 @@
 using HDF5
 
 
-Δt    = 0.1
 ntime = 10
 nsave = 1
 dim   = 1
 
-sol = SolutionODE{Float64}(dim, Δt, ntime, nsave)
+sol = SolutionODE{Float64}(dim, ntime, nsave)
 
 for i in 1:ntime
     sol[1,i] = i
