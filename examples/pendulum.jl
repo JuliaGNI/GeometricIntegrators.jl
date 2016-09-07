@@ -70,3 +70,4 @@ end
 
 run_pendulum_partitioned(getTableauSymplecticEulerA(), "pendulum_symplectic_euler_a.pdf")
 run_pendulum_partitioned(getTableauSymplecticEulerB(), "pendulum_symplectic_euler_b.pdf")
+run_pendulum_partitioned(TableauPRK(:PERK4, 4, getTableauERK4(), getTableauERK4()), "pendulum_explicit_prk4.pdf")
