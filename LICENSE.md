@@ -1,4 +1,4 @@
-The GeoDAE.jl package is licensed under the MIT "Expat" License:
+The GeomDAE.jl package is licensed under the MIT "Expat" License:
 
 > Copyright (c) 2016 Michael Kraus <michael.kraus@ipp.mpg.de>
 >
