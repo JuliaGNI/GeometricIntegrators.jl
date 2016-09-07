@@ -18,18 +18,12 @@ end
 x = ones(T, n)
 nl = NewtonSolver(x, F)
 solve!(nl)
-
-# println(nl.x)
 # println(nl.i, ", ", nl.rₐ,", ",  nl.rᵣ,", ",  nl.rₛ)
-
-@test_approx_eq_eps(nl.x, zeros(T, n), 1E-7)
+@test_approx_eq_eps(nl.z, zeros(T, n), 1E-7)
 
 
 x = ones(T, n)
 nl = NewtonSolver(x, F, J=J)
 solve!(nl)
-
-# println(nl.x)
 # println(nl.i, ", ", nl.rₐ,", ",  nl.rᵣ,", ",  nl.rₛ)
-
-@test_approx_eq_eps(nl.x, zeros(T, n), 1E-7)
+@test_approx_eq_eps(nl.z, zeros(T, n), 1E-7)

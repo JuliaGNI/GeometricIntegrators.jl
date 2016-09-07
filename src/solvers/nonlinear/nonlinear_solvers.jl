@@ -4,6 +4,13 @@ abstract NonlinearSolver{T}
 solve!(s::NonlinearSolver) = error("solve! not implemented for $(typeof(s))")
 
 
+const DEFAULT_atol=1E-15
+const DEFAULT_rtol=1E-20
+const DEFAULT_stol=1E-20
+const DEFAULT_nmax=100
+const DEFAULT_ϵ=1E-6
+
+
 function computeJacobianFD{T}(x::Vector{T}, J::Matrix{T}, F::Function, ϵ::T)
     @assert length(x) == size(J, 1) == size(J, 2)
 

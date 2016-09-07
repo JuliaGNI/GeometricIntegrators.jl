@@ -213,7 +213,7 @@ function solve!(int::IntegratorFIRK, sol::SolutionODE)
         # compute initial guess
         # TODO
         for i in 1:int.tableau.s
-            int.solver.x[int.equation.d*(i-1)+1:int.equation.d*i] = int.x[:]
+            int.solver.z[int.equation.d*(i-1)+1:int.equation.d*i] = int.x[:]
         end
 
         # call nonlinear solver
