@@ -17,11 +17,7 @@ type NewtonSolver{T} <: NonlinearSolver{T}
 
     nmax::Int
 
-    i::Int
-    r₀::T
-    rₐ::T
-    rᵣ::T
-    rₛ::T
+    status::NonlinearSolverStatus{T}
 
     function NewtonSolver(z, F, J, linear_solver, atol, rtol, stol, nmax)
         # @assert F <: Function
@@ -34,7 +30,7 @@ type NewtonSolver{T} <: NonlinearSolver{T}
         @assert stol > 0
         @assert nmax > 0
 
-        new(z, F, J, linear_solver, atol, rtol, stol, atol^2, rtol^2, stol^2, nmax, 0, 0, 0, 0, 0)
+        new(z, F, J, linear_solver, atol, rtol, stol, atol^2, rtol^2, stol^2, nmax, NonlinearSolverStatus{T}())
     end
 end
 
@@ -68,23 +64,23 @@ end
 function solve!{T}(s::NewtonSolver{T})
     s.F(s.z, s.linear.b)
     s.linear.b[:] *= -1
-    s.rₐ = residual_absolute(s.linear.b)
-    s.r₀ = s.rₐ
+    s.status.rₐ = residual_absolute(s.linear.b)
+    s.status.r₀ = s.status.rₐ
 
-    if s.r₀ ≥ s.atol²
-        for s.i = 1:s.nmax
+    if s.status.r₀ ≥ s.atol²
+        for s.status.i = 1:s.nmax
             s.J(s.z, s.linear.A)
             factorize!(s.linear)
             solve!(s.linear)
             s.z[:] += s.linear.b[:]
-            s.rᵣ = residual_relative(s.linear.b, s.z)
+            s.status.rᵣ = residual_relative(s.linear.b, s.z)
             s.F(s.z, s.linear.b)
             s.linear.b[:] *= -1
-            s.rₛ = s.rₐ
-            s.rₐ = residual_absolute(s.linear.b)
-            s.rₛ = abs(s.rₛ - s.rₐ)/s.r₀
+            s.status.rₛ = s.status.rₐ
+            s.status.rₐ = residual_absolute(s.linear.b)
+            s.status.rₛ = abs(s.status.rₛ - s.status.rₐ)/s.status.r₀
 
-            if s.rₐ < s.atol² || s.rᵣ < s.rtol² || s.rₛ < s.stol²
+            if s.status.rₐ < s.atol² || s.status.rᵣ < s.rtol² || s.status.rₛ < s.stol²
                 break
             end
         end

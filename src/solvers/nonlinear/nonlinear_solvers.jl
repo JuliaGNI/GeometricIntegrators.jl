@@ -11,6 +11,17 @@ const DEFAULT_nmax=100
 const DEFAULT_ϵ=1E-6
 
 
+type NonlinearSolverStatus{T}
+    i::Int
+    r₀::T
+    rₐ::T
+    rᵣ::T
+    rₛ::T
+
+    NonlinearSolverStatus() = new(0, 0, 0, 0, 0)
+end
+
+
 function computeJacobianFD{T}(x::Vector{T}, J::Matrix{T}, F::Function, ϵ::T)
     @assert length(x) == size(J, 1) == size(J, 2)
 
