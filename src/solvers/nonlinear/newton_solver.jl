@@ -1,63 +1,21 @@
 
-immutable NewtonSolver{T} <: NonlinearSolver{T}
-    z::Vector{T}
-
-    F::Function
-    J::Function
-
-    linear::LinearSolver{T}
-
-    atol::T
-    rtol::T
-    stol::T
-
-    atol²::T
-    rtol²::T
-    stol²::T
-
-    nmax::Int
-
-    status::NonlinearSolverStatus{T}
-
-    function NewtonSolver(z, F, J, linear_solver, atol, rtol, stol, nmax)
-        # @assert F <: Function
-        # @assert J <: Function
-        #
-        # @assert linear_solver <: LinearSolver{T}
-
-        @assert atol > 0
-        @assert rtol > 0
-        @assert stol > 0
-        @assert nmax > 0
-
-        new(z, F, J, linear_solver, atol, rtol, stol, atol^2, rtol^2, stol^2, nmax, NonlinearSolverStatus{T}())
+immutable NewtonSolver{T} <: AbstractNewtonSolver{T}
+    @newton_solver_variables
+    function NewtonSolver(z, F, J, linear_solver, nmax, atol, rtol, stol)
+        new(z, F, J, linear_solver, NonlinearSolverParameters{T}(nmax, atol, rtol, stol), NonlinearSolverStatus{T}())
     end
 end
 
 
-function NewtonSolver(z::AbstractVector, F::Function; J=nothing, linear_solver=nothing, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol, nmax=DEFAULT_nmax, ϵ=DEFAULT_ϵ, autodiff=false)
-    T = eltype(z)
-    n = length(z)
+function NewtonSolver(z::AbstractVector, F::Function; J=nothing, linear_solver=nothing, nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol, ϵ=DEFAULT_ϵ, autodiff=false)
+    J = getComputeJacobianFunction(J, F, ϵ, autodiff)
+    linear_solver = getLinearSolver(eltype(z), length(z), linear_solver)
+    NewtonSolver{eltype(z)}(z, F, J, linear_solver, nmax, atol, rtol, stol)
+end
 
-    if J == nothing
-        if autodiff
-            function computeJacobianADF{T}(x::Vector{T}, A::Matrix{T})
-                computeJacobianAD(x, A, F, ϵ)
-            end
-            J = computeJacobianADF
-        else
-            function computeJacobianFDF{T}(x::Vector{T}, A::Matrix{T})
-                computeJacobianFD(x, A, F, ϵ)
-            end
-            J = computeJacobianFDF
-        end
-    end
 
-    if linear_solver == nothing
-        linear_solver = LUSolver(zeros(T, n, n), zeros(T, n))
-    end
-
-    NewtonSolver{T}(z, F, J, linear_solver, atol, rtol, stol, nmax)
+function setInitialConditions!{T}(s::NewtonSolver{T}, z₀::Vector{T})
+    s.z[:] = z₀
 end
 
 
@@ -67,8 +25,8 @@ function solve!{T}(s::NewtonSolver{T})
     s.status.rₐ = residual_absolute(s.linear.b)
     s.status.r₀ = s.status.rₐ
 
-    if s.status.r₀ ≥ s.atol²
-        for s.status.i = 1:s.nmax
+    if s.status.r₀ ≥ s.params.atol²
+        for s.status.i = 1:s.params.nmax
             s.J(s.z, s.linear.A)
             factorize!(s.linear)
             solve!(s.linear)
@@ -80,15 +38,9 @@ function solve!{T}(s::NewtonSolver{T})
             s.status.rₐ = residual_absolute(s.linear.b)
             s.status.rₛ = abs(s.status.rₛ - s.status.rₐ)/s.status.r₀
 
-            if s.status.rₐ < s.atol² || s.status.rᵣ < s.rtol² || s.status.rₛ < s.stol²
+            if s.status.rₐ < s.params.atol² || s.status.rᵣ < s.params.rtol² || s.status.rₛ < s.params.stol²
                 break
             end
         end
     end
-end
-
-
-function solve!{T}(s::NewtonSolver{T}, z₀::Vector{T})
-    s.z[:] = z₀
-    solve!(s)
 end
