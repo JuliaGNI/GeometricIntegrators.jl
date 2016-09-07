@@ -4,8 +4,8 @@ abstract NonlinearSolver{T}
 
 solve!(s::NonlinearSolver) = error("solve! not implemented for $(typeof(s))")
 
-function solve!{T}(s::NonlinearSolver{T}, z₀::Vector{T})
-    setInitialConditions!(s, z₀)
+function solve!{T}(s::NonlinearSolver{T}, x₀::Vector{T})
+    setInitialConditions!(s, x₀)
     solve!(s)
 end
 

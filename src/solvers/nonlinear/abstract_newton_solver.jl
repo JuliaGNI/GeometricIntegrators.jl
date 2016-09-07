@@ -3,7 +3,7 @@ abstract AbstractNewtonSolver{T} <: NonlinearSolver{T}
 
 
 @define newton_solver_variables begin
-    z::Vector{T}
+    x::Vector{T}
 
     F::Function
     J::Function
@@ -15,6 +15,6 @@ abstract AbstractNewtonSolver{T} <: NonlinearSolver{T}
 end
 
 
-function setInitialConditions!{T}(s::AbstractNewtonSolver{T}, z₀::Vector{T})
-    s.z[:] = z₀
+function setInitialConditions!{T}(s::AbstractNewtonSolver{T}, x₀::Vector{T})
+    s.x[:] = x₀
 end
