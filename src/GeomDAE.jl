@@ -17,6 +17,8 @@ include("solvers/nonlinear/nonlinear_solvers.jl")
 
 export NonlinearSolver, solve!
 
+include("solvers/nonlinear/jacobian.jl")
+
 include("solvers/nonlinear/abstract_newton_solver.jl")
 
 export AbstractNewtonSolver
