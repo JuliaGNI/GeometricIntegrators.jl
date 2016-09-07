@@ -16,6 +16,10 @@ include("solvers/nonlinear/nonlinear_solvers.jl")
 
 export NonlinearSolver, solve!
 
+include("solvers/nonlinear/newton_solver.jl")
+
+export NewtonSolver, solve!
+
 include("equations/equations.jl")
 
 export Equation, ODE, PODE, DAE, PDAE
