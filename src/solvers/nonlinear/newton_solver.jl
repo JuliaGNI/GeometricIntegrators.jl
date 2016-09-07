@@ -14,11 +14,6 @@ function NewtonSolver(z::AbstractVector, F::Function; J=nothing, linear_solver=n
 end
 
 
-function setInitialConditions!{T}(s::NewtonSolver{T}, z₀::Vector{T})
-    s.z[:] = z₀
-end
-
-
 function solve!{T}(s::NewtonSolver{T})
     s.F(s.z, s.linear.b)
     s.linear.b[:] *= -1
