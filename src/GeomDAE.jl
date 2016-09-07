@@ -6,30 +6,19 @@ include("utils/macro_utils.jl")
 include("utils/matrix_utils.jl")
 
 include("solvers/linear/linear_solvers.jl")
-
-export LinearSolver, factorize!, solve!
-
 include("solvers/linear/lu_solver_lapack.jl")
 
-export LUSolver, factorize!, solve!
+export LinearSolver, LUSolver,
+       factorize!, solve!
 
 include("solvers/nonlinear/nonlinear_solvers.jl")
-
-export NonlinearSolver, solve!
-
 include("solvers/nonlinear/jacobian.jl")
-
 include("solvers/nonlinear/abstract_newton_solver.jl")
-
-export AbstractNewtonSolver
-
 include("solvers/nonlinear/newton_solver.jl")
-
-export NewtonSolver, solve!
-
 include("solvers/nonlinear/quasi_newton_solver.jl")
 
-export QuasiNewtonSolver, solve!
+export NonlinearSolver, AbstractNewtonSolver, NewtonSolver, QuasiNewtonSolver,
+       solve!
 
 include("equations/equations.jl")
 
