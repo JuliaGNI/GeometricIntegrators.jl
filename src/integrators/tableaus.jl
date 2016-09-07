@@ -8,6 +8,15 @@ abstract TableauRK{T} <: Tableau{T}
 "TableauIRK: Holds the tableau of an implicit Runge-Kutta method."
 abstract TableauIRK{T} <: TableauRK{T}
 
+@define HeaderTableauRK begin
+    name::Symbol
+    o::UInt
+    s::UInt
+    a::Matrix{T}
+    b::Vector{T}
+    c::Vector{T}
+end
+
 Base.hash(tab::TableauRK, h::UInt) = hash(tab.o, hash(tab.a, hash(tab.b, hash(tab.c, hash(:TableauRK, h)))))
 Base.:(==){T1, T2}(tab1::TableauRK{T1}, tab2::TableauRK{T2}) = (tab1.o == tab2.o
                                                              && tab1.s == tab2.s
@@ -88,12 +97,7 @@ end
 
 "TableauERK: Holds the tableau of an explicit Runge-Kutta method."
 immutable TableauERK{T} <: TableauRK{T}
-    name::Symbol
-    o::UInt
-    s::UInt
-    a::Matrix{T}
-    b::Vector{T}
-    c::Vector{T}
+    @HeaderTableauRK
 
     function TableauERK(name,o,s,a,b,c)
         @assert T <: Real
@@ -143,12 +147,7 @@ end
 
 "TableauDIRK: Holds the tableau of a diagonally implicit Runge-Kutta method."
 immutable TableauDIRK{T} <: TableauIRK{T}
-    name::Symbol
-    o::UInt
-    s::UInt
-    a::Matrix{T}
-    b::Vector{T}
-    c::Vector{T}
+    @HeaderTableauRK
 
     function TableauDIRK(name,o,s,a,b,c)
         @assert T <: Real
@@ -178,12 +177,7 @@ end
 
 "TableauFIRK: Holds the tableau of a fully implicit Runge-Kutta method."
 immutable TableauFIRK{T} <: TableauIRK{T}
-    name::Symbol
-    o::UInt
-    s::UInt
-    a::Matrix{T}
-    b::Vector{T}
-    c::Vector{T}
+    @HeaderTableauRK
 
     function TableauFIRK(name,o,s,a,b,c)
         @assert T <: Real
