@@ -4,7 +4,7 @@ import Base.LinAlg.BLAS: BlasFloat, BlasInt, liblapack, @blasfunc
 #import Base.LinAlg.LAPACK: chkargsok, chklapackerror, chktrans
 
 
-immutable LUSolver{T<:BlasFloat} <: LinearSolver
+immutable LUSolver{T<:BlasFloat} <: LinearSolver{T}
     n::BlasInt
     A::Matrix{T}
     b::Vector{T}
