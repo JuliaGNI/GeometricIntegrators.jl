@@ -2,6 +2,7 @@ __precompile__()
 
 module GeomDAE
 
+include("utils/macro_utils.jl")
 include("utils/matrix_utils.jl")
 
 include("solvers/linear/linear_solvers.jl")
