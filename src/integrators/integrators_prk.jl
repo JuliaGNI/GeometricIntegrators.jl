@@ -15,6 +15,10 @@ immutable IntegratorPRK{T} <: Integrator{T}
     Z::Array{T,2}
     F::Array{T,2}
     G::Array{T,2}
+    tQ::Array{T,1}
+    tP::Array{T,1}
+    tF::Array{T,1}
+    tG::Array{T,1}
 
     function IntegratorPRK(equation, tableau, Δt)
         D = equation.d
@@ -24,15 +28,14 @@ immutable IntegratorPRK{T} <: Integrator{T}
             zeros(T,D), zeros(T,D),
             zeros(T,D,S), zeros(T,D,S),
             zeros(T,D,S), zeros(T,D,S),
-            zeros(T,D,S), zeros(T,D,S))
+            zeros(T,D,S), zeros(T,D,S),
+            zeros(T,D), zeros(T,D),
+            zeros(T,D), zeros(T,D))
     end
 end
 
-function IntegratorPRK(equation::Equation, tableau::TableauPRK, Δt)
-    T1 = eltype(equation.q₀)
-    T2 = eltype(equation.p₀)
-    @assert T1 == T2
-    IntegratorPRK{T1}(equation, tableau, Δt)
+function IntegratorPRK{T}(equation::PODE{T}, tableau::TableauPRK{T}, Δt::T)
+    IntegratorPRK{T}(equation, tableau, Δt)
 end
 
 
@@ -45,7 +48,9 @@ function computeStageQ!(int::IntegratorPRK, i::Int, jmax::Int)
     for k in 1:int.equation.d
         int.Q[k,i] = int.q[k] + int.Δt * int.Y[k,i]
     end
-    int.equation.g(view(int.Q, :, i), view(int.G, :, i))
+    simd_copy_xy_first!(int.tQ, int.Q, i)
+    int.equation.g(int.tQ, int.tG)
+    simd_copy_yx_first!(int.tG, int.G, i)
     nothing
 end
 
@@ -58,7 +63,9 @@ function computeStageP!(int::IntegratorPRK, i::Int, jmax::Int)
     for k in 1:int.equation.d
         int.P[k,i] = int.p[k] + int.Δt * int.Z[k,i]
     end
-    int.equation.f(view(int.P, :, i), view(int.F, :, i))
+    simd_copy_xy_first!(int.tP, int.P, i)
+    int.equation.f(int.tP, int.tF)
+    simd_copy_yx_first!(int.tF, int.F, i)
     nothing
 end
 
@@ -66,15 +73,16 @@ end
 function solve!(int::IntegratorPRK, sol::SolutionPODE)
     local j::Int
     # copy initial conditions from solution
-    int.q .= sol[1:sol.d, 1, 0]
-    int.p .= sol[1:sol.d, 2, 0]
-    stages = 1:int.tableau.s
+    for i in 1:sol.d
+        int.q[i] = sol[i, 1, 0]
+        int.p[i] = sol[i, 2, 0]
+    end
 
     for n in 1:sol.ntime
         # compute internal stages
         fill!(int.Y, 0.)
         fill!(int.Z, 0.)
-        for i in stages
+        for i in 1:int.tableau.s
             if int.tableau.a_q[i,i] ≠ 0. && int.tableau.a_p[i,i] ≠ 0.
                 error("This is an implicit method!")
             elseif int.tableau.a_q[i,i] ≠ 0.

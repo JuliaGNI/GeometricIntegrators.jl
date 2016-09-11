@@ -45,11 +45,13 @@ run_pendulum(getTableauGLRK3(), "pendulum_implicit_glrk3.pdf")
 
 
 function qf(x, fx)
-    fx[:] = x
+    fx[1] = x[1]
+    nothing
 end
 
 function pf(x, fx)
-    fx[:] = sin(x)
+    fx[1] = sin(x[1])
+    nothing
 end
 
 function run_pendulum_partitioned(tableau, filename)
@@ -60,6 +62,9 @@ function run_pendulum_partitioned(tableau, filename)
     int = Integrator(ode, tableau, Δt)
     sol = Solution(ode, ntime)
 
+    solve!(int, sol)
+    set_initial_conditions!(sol, ode)
+    
     print("Running ", tableau.name, "...")
     @time solve!(int, sol)
 
