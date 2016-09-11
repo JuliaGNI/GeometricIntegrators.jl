@@ -56,12 +56,12 @@ end
 function SolutionODE(equation::ODE, ntime::Int, nsave::Int=1)
     T = eltype(equation.q₀)
     s = SolutionODE{T}(equation.d, ntime, nsave)
-    setInitialConditions(s, equation)
+    set_initial_conditions!(s, equation)
     return s
 end
 
-function setInitialConditions(solution::SolutionODE, equation::ODE)
-    solution[1:solution.d, 0] = equation.q₀
+function set_initial_conditions!(solution::SolutionODE, equation::ODE)
+    simd_copy_yx_first!(equation.q₀, solution, 0)
 end
 
 function reset(s::SolutionODE)
@@ -124,11 +124,11 @@ function SolutionPODE(equation::PODE, ntime::Int, nsave::Int=1)
     T2 = eltype(equation.p₀)
     @assert T1 == T2
     s = SolutionPODE{T1}(equation.d, ntime, nsave)
-    setInitialConditions(s, equation)
+    set_initial_conditions!(s, equation)
     return s
 end
 
-function setInitialConditions(solution::SolutionPODE, equation::PODE)
+function set_initial_conditions!(solution::SolutionPODE, equation::PODE)
     solution[1:solution.d, 1, 0] = equation.q₀
     solution[1:solution.d, 2, 0] = equation.p₀
 end

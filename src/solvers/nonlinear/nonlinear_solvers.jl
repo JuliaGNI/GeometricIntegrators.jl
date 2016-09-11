@@ -1,7 +1,6 @@
 
 abstract NonlinearSolver{T}
 
-
 solve!(s::NonlinearSolver) = error("solve! not implemented for $(typeof(s))")
 
 function solve!{T}(s::NonlinearSolver{T}, x₀::Vector{T})
@@ -16,6 +15,9 @@ const DEFAULT_rtol=1E-20
 const DEFAULT_stol=1E-20
 const DEFAULT_nmax=100
 const DEFAULT_ϵ=1E-6
+
+
+abstract NonlinearFunctionParameters{T}
 
 
 immutable NonlinearSolverParameters{T}
@@ -47,18 +49,7 @@ type NonlinearSolverStatus{T}
     rᵣ::T       # residual (relative)
     rₛ::T       # residual (successive)
 
-    NonlinearSolverStatus() = new(0, 0, 0, 0, 0)
-end
-
-
-immutable NonlinearFunctionParameters{T, Name, TupleType}
-    f::Function
-    Δt::T
-    params::TupleType
-end
-
-function NonlinearFunctionParameters(name, f, Δt, params...)
-    NonlinearFunctionParameters{typeof(Δt), name, typeof(params)}(f, Δt, params)
+    NonlinearSolverStatus() = new(0, 0., 0., 0., 0.)
 end
 
 

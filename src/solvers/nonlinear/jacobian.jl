@@ -6,14 +6,14 @@ immutable JacobianParametersUser{T} <: JacobianParameters{T}
     J::Function
 end
 
-immutable JacobianParametersAD{T} <: JacobianParameters{T}
+immutable JacobianParametersAD{T, FT} <: JacobianParameters{T}
     ϵ::T
-    Fparams::NonlinearFunctionParameters{T}
+    Fparams::FT
 end
 
-immutable JacobianParametersFD{T} <: JacobianParameters{T}
+immutable JacobianParametersFD{T, FT} <: JacobianParameters{T}
     ϵ::T
-    Fparams::NonlinearFunctionParameters{T}
+    Fparams::FT
     f1::Vector{T}
     f2::Vector{T}
     e::Vector{T}
@@ -63,13 +63,13 @@ end
 function getJacobianParameters(J, Fparams, ϵ, T, n, autodiff)
     if J == nothing
         if autodiff
-            Jparams = JacobianParametersAD{T}(ϵ, Fparams)
+            Jparams = JacobianParametersAD{T, typeof(Fparams)}(ϵ, Fparams)
         else
             f1 = zeros(T, n)
             f2 = zeros(T, n)
             e  = zeros(T, n)
             tx = zeros(T, n)
-            Jparams = JacobianParametersFD{T}(ϵ, Fparams, f1, f2, e, tx)
+            Jparams = JacobianParametersFD{T, typeof(Fparams)}(ϵ, Fparams, f1, f2, e, tx)
         end
     else
         @assert typeof(J) <: Function

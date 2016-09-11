@@ -1,114 +1,104 @@
 
+immutable NonlinearFunctionParametersFIRK{T} <: NonlinearFunctionParameters{T}
+    f::Function
+    Δt::T
+
+    d::Int
+    s::Int
+    a::Matrix{T}
+
+    x::Vector{T}
+    y::Vector{T}
+
+    X::Matrix{T}
+    Y::Matrix{T}
+    F::Matrix{T}
+
+    tX::Vector{T}
+    tF::Vector{T}
+
+    function NonlinearFunctionParametersFIRK(f, Δt, d, s, a)
+        # create solution vectors
+        x = zeros(T,d)
+        y = zeros(T,d)
+
+        # create internal stage vectors
+        X = zeros(T,d,s)
+        Y = zeros(T,d,s)
+        F = zeros(T,d,s)
+
+        # create temporary vectors
+        tX = zeros(T,d)
+        tF = zeros(T,d)
+
+        new(f, Δt, d, s, a, x, y, X, Y, F, tX, tF)
+    end
+end
+
+
+function function_stages!{T}(y::Vector{T}, b::Vector{T}, params::NonlinearFunctionParametersFIRK{T})
+    for i in 1:params.s
+        for k in 1:params.d
+            # copy y to Y
+            params.Y[k,i] = y[params.d*(i-1)+k]
+
+            # compute X
+            params.X[k,i] = params.x[k] + params.Δt * params.Y[k,i]
+        end
+        # compute f(X)
+        simd_copy_xy_first!(params.tX, params.X, i)
+        params.f(params.tX, params.tF)
+        simd_copy_yx_first!(params.tF, params.F, i)
+    end
+
+    # compute b = - (Y-AF)
+    for i in 1:params.s
+        for k in 1:params.d
+            b[params.d*(i-1)+k] = - params.Y[k,i]
+            for j in 1:params.s
+                b[params.d*(i-1)+k] += params.a[i,j] * params.F[k,j]
+            end
+        end
+    end
+end
+
+
 "IntegratorIRK: Fully implicit Runge-Kutta integrator."
-immutable IntegratorFIRK{T} <: Integrator{T}
+immutable IntegratorFIRK{T, ST} <: Integrator{T}
     equation::ODE{T}
     tableau::TableauFIRK{T}
     Δt::T
 
-    solver::NonlinearSolver{T}
+    solver::ST
 
     x::Array{T,1}
     y::Array{T,1}
     X::Array{T,2}
     Y::Array{T,2}
     F::Array{T,2}
-
-    function IntegratorFIRK(equation, tableau, Δt)
-        D = equation.d
-        S = tableau.s
-
-        # create solution vectors
-        x = zeros(T,D)
-        y = zeros(T,D)
-
-        # create internal stage vectors
-        X = zeros(T,D,S)
-        Y = zeros(T,D,S)
-        F = zeros(T,D,S)
-
-        # create solution vector for internal stages / nonlinear solver
-        z = zeros(T, D*S)
-
-        # create temporary vectors
-        tX = zeros(T,D)
-        tF = zeros(T,D)
-
-        # create function parameter datatype
-
-
-        #
-        # tableau.name
-
-        # create function
-        code = quote end
-
-        for i in 1:S
-            for k in 1:D
-                j = D*(i-1)+k
-                # copy y to Y
-                push!(code.args, :( Y[$k,$i] = y[$j] ))
-
-                # compute X
-                push!(code.args, :( X[$k,$i] = x[$k] + params.Δt * Y[$k,$i] ))
-            end
-
-            # compute f(X)
-            push!(code.args, :( simd_copy_xy_first!(tX, X, $i) ))
-            push!(code.args, :( params.f(tX, tF) ))
-            push!(code.args, :( simd_copy_yx_first!(tF, F, $i) ))
-
-            # compute b = - (Y-AF)
-            for i in 1:S
-                for k in 1:D
-                    l = D*(i-1)+k
-                    push!(code.args, :( b[$l] = - Y[$k,$i] ))
-                    for j in 1:size(Y,2)
-                        push!(code.args, :( b[$l] += $(tableau.a[i,j]) * F[$k,$j] ))
-                    end
-                end
-            end
-        end
-
-        symbolic_name = string(tableau.name)
-
-        # fcode = quote
-        @eval begin
-            function function_stages!{T, TupleType}(y::Vector{T}, b::Vector{T}, params::NonlinearFunctionParameters{T, Symbol($symbolic_name), TupleType})
-                local x::Vector{T} = params.params[1]
-                local X::Matrix{T} = params.params[2]
-                local Y::Matrix{T} = params.params[3]
-                local F::Matrix{T} = params.params[4]
-                local tX::Vector{T} = params.params[5]
-                local tF::Vector{T} = params.params[6]
-
-                $code
-            end
-        end
-
-        # println(fcode)
-        # eval(fcode)
-
-        params = NonlinearFunctionParameters(tableau.name, equation.f, Δt, x, X, Y, F, tX, tF)
-
-        # create solver
-        solver = NewtonSolver(z, params)
-        # solver = NewtonSolver(z, equation.f, Δt, x, X, Y, F, tX, tF)
-        # TODO allow for other nonlinear solvers based on constructor argument
-
-        # create integrator
-        new(equation, tableau, Δt, solver, x, y, X, Y, F)
-    end
 end
 
-function IntegratorFIRK(equation::Equation, tableau::TableauFIRK, Δt)
-    T = eltype(equation.q₀)
-    IntegratorFIRK{T}(equation, tableau, Δt)
+function IntegratorFIRK{T}(equation::ODE{T}, tableau::TableauFIRK{T}, Δt::T)
+    D = equation.d
+    S = tableau.s
+
+    # create solution vector for internal stages / nonlinear solver
+    z = zeros(T, D*S)
+
+    # create params
+    params = NonlinearFunctionParametersFIRK{T}(equation.f, Δt, D, S, tableau.a)
+
+    # create solver
+    solver = NewtonSolver(z, params)
+    # TODO allow for other nonlinear solvers based on constructor argument
+
+    # create integrator
+    IntegratorFIRK{T, typeof(solver)}(equation, tableau, Δt, solver, params.x, params.y, params.X, params.Y, params.F)
 end
+
 
 "solve!: Solve ODE with fully implicit Runge-Kutta integrator."
 function solve!(int::IntegratorFIRK, sol::SolutionODE)
-    local offset::Int
-
     # copy initial conditions from solution
     simd_copy_xy_first!(int.x, sol, 0)
 
@@ -116,9 +106,8 @@ function solve!(int::IntegratorFIRK, sol::SolutionODE)
         # compute initial guess
         # TODO
         for i in 1:int.tableau.s
-            offset = int.equation.d*(i-1)
-            for k in 1:sol.d
-                int.solver.x[offset+k] = int.x[k]
+            for k in 1:int.equation.d
+                int.solver.x[int.equation.d*(i-1)+k] = int.x[k]
             end
         end
 

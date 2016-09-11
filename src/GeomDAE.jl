@@ -51,7 +51,7 @@ export getTableauSymplecticEulerA, getTableauSymplecticEulerB
 include("integrators/solutions.jl")
 
 export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE,
-       reset
+       reset, set_initial_conditions!
 
 include("integrators/integrators.jl")
 include("integrators/integrators_erk.jl")
