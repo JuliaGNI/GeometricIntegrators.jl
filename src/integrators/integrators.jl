@@ -1,33 +1,33 @@
 
-abstract Integrator
+abstract Integrator{T}
 
 "Integrator: Create integrator for explicit Runge-Kutta tableau."
-function Integrator(equation::Equation, tableau::TableauERK, Δt)
+function Integrator(equation::ODE, tableau::TableauERK, Δt)
     IntegratorERK(equation, tableau, Δt)
 end
 
 "Integrator: Create integrator for diagonally implicit Runge-Kutta tableau."
-function Integrator(equation::Equation, tableau::TableauDIRK, Δt)
+function Integrator(equation::ODE, tableau::TableauDIRK, Δt)
     IntegratorDIRK(equation, tableau, Δt)
 end
 
 "Integrator: Create integrator for fully implicit Runge-Kutta tableau."
-function Integrator(equation::Equation, tableau::TableauFIRK, Δt)
+function Integrator(equation::ODE, tableau::TableauFIRK, Δt)
     IntegratorFIRK(equation, tableau, Δt)
 end
 
 "Integrator: Create integrator for partitioned Runge-Kutta tableau."
-function Integrator(equation::Equation, tableau::TableauPRK, Δt)
+function Integrator(equation::PODE, tableau::TableauPRK, Δt)
     IntegratorPRK(equation, tableau, Δt)
 end
 
 "Integrator: Create integrator for special additive Runge-Kutta tableau."
-function Integrator(equation::Equation, tableau::TableauSARK, Δt)
+function Integrator(equation::DAE, tableau::TableauSARK, Δt)
     IntegratorSARK(equation, tableau, Δt)
 end
 
 "Integrator: Create integrator for special partitioned additive Runge-Kutta tableau."
-function Integrator(equation::Equation, tableau::TableauSPARK, Δt)
+function Integrator(equation::PDAE, tableau::TableauSPARK, Δt)
     IntegratorSPARK(equation, tableau, Δt)
 end
 
@@ -53,9 +53,9 @@ end
 
 
 "IntegratorERK: Explicit Runge-Kutta integrator."
-immutable IntegratorERK{T} <: Integrator
-    equation::Equation
-    tableau::TableauERK
+immutable IntegratorERK{T} <: Integrator{T}
+    equation::ODE{T}
+    tableau::TableauERK{T}
     Δt::T
 
     x::Array{T,1}
@@ -106,9 +106,9 @@ function solve!(int::IntegratorERK, sol::SolutionODE)
 end
 
 "IntegratorDIRK: Diagonally implicit Runge-Kutta integrator."
-immutable IntegratorDIRK{T} <: Integrator
-    equation::Equation
-    tableau::TableauDIRK
+immutable IntegratorDIRK{T} <: Integrator{T}
+    equation::ODE{T}
+    tableau::TableauDIRK{T}
     Δt::T
 
     x::Array{T,1}
@@ -140,9 +140,9 @@ end
 
 
 "IntegratorIRK: Fully implicit Runge-Kutta integrator."
-immutable IntegratorFIRK{T} <: Integrator
-    equation::Equation
-    tableau::TableauFIRK
+immutable IntegratorFIRK{T} <: Integrator{T}
+    equation::ODE{T}
+    tableau::TableauFIRK{T}
     Δt::T
 
     solver::NonlinearSolver{T}
@@ -240,9 +240,9 @@ end
 
 
 "IntegratorPRK: Explicit partitioned Runge-Kutta integrator."
-immutable IntegratorPRK{T} <: Integrator
-    equation::Equation
-    tableau::TableauPRK
+immutable IntegratorPRK{T} <: Integrator{T}
+    equation::PODE{T}
+    tableau::TableauPRK{T}
     Δt::T
 
     q::Array{T,1}
@@ -334,7 +334,7 @@ function solve!(int::IntegratorPRK, sol::SolutionPODE)
 end
 
 
-immutable IntegratorSARK{T} <: Integrator
+immutable IntegratorSARK{T} <: Integrator{T}
     equation::Equation
     tableau::TableauSARK
 
@@ -345,7 +345,7 @@ function solve!(int::IntegratorSARK, s::SolutionDAE)
 end
 
 
-immutable IntegratorSPARK{T} <: Integrator
+immutable IntegratorSPARK{T} <: Integrator{T}
     equation::Equation
     tableau::TableauSPARK
 
