@@ -25,6 +25,13 @@ function simd_scale!(x, a)
     end
 end
 
+function simd_copy!(x, y)
+    @assert length(x) == length(y)
+    @simd for i=1:length(x)
+        @inbounds y[i] = x[i]
+    end
+end
+
 "Copy the first dimension of a 2D array y into a 1D array x."
 function simd_copy_xy_first!(x, y, j)
     @simd for i=1:length(x)

@@ -7,20 +7,19 @@ const ntime = 10000
 const neps  = 1E-14
 const nmax  = 20
 
-x0 = [acos(0.4), 0.0]
-
 function f(x, fx)
     fx[1] = x[2]
     fx[2] = sin(x[1])
 end
 
-ode = ODE(2, f, x0)
-
 function run_pendulum(tableau, filename)
+    x0 = [acos(0.4), 0.0]
+    ode = ODE(2, f, x0)
     int = Integrator(ode, tableau, Δt)
     sol = Solution(ode, ntime)
 
-    solve!(int, sol)
+    print("Running ", tableau.name, "...")
+    @time solve!(int, sol)
 
     fig = figure(figsize=(6,6))
     plot(sol.x[1,:], sol.x[2,:])
@@ -50,7 +49,6 @@ function pf(x, fx)
 end
 
 function run_pendulum_partitioned(tableau, filename)
-
     q0 = [acos(0.4)]
     p0 = [0.0]
 
@@ -58,7 +56,8 @@ function run_pendulum_partitioned(tableau, filename)
     int = Integrator(ode, tableau, Δt)
     sol = Solution(ode, ntime)
 
-    solve!(int, sol)
+    print("Running ", tableau.name, "...")
+    @time solve!(int, sol)
 
     fig = figure(figsize=(6,6))
     plot(sol.x[1,1,:], sol.x[1,2,:])

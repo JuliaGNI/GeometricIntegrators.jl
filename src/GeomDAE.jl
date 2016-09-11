@@ -54,6 +54,12 @@ export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE,
        reset
 
 include("integrators/integrators.jl")
+include("integrators/integrators_erk.jl")
+include("integrators/integrators_dirk.jl")
+include("integrators/integrators_firk.jl")
+include("integrators/integrators_prk.jl")
+include("integrators/integrators_sark.jl")
+include("integrators/integrators_spark.jl")
 
 export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK,
        IntegratorPRK, IntegratorSARK, IntegratorSPARK,

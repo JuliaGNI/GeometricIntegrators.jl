@@ -113,8 +113,8 @@ immutable SolutionPODE{T} <: Solution{T,3}
 
         n = div(ntime, nsave)
         x = zeros(T, d, 2, n+1)
-        q = view(x, 1:d, 1, 1:n+1)
-        p = view(x, 1:d, 2, 1:n+1)
+        q = view(x, :, 1, 1:n+1)
+        p = view(x, :, 2, 1:n+1)
         new(d, n, x, q, p, ntime, nsave)
     end
 end

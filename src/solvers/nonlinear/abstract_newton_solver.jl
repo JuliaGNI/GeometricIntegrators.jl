@@ -1,12 +1,11 @@
 
 abstract AbstractNewtonSolver{T} <: NonlinearSolver{T}
 
-
 @define newton_solver_variables begin
     x::Vector{T}
 
-    F::Function
-    J::Function
+    Fparams::TF
+    Jparams::TJ
 
     linear::LinearSolver{T}
 

@@ -18,7 +18,7 @@ const DEFAULT_nmax=100
 const DEFAULT_ϵ=1E-6
 
 
-type NonlinearSolverParameters{T}
+immutable NonlinearSolverParameters{T}
     nmax::Int   # maximum number of iterations
 
     atol::T     # absolute tolerance
@@ -48,6 +48,17 @@ type NonlinearSolverStatus{T}
     rₛ::T       # residual (successive)
 
     NonlinearSolverStatus() = new(0, 0, 0, 0, 0)
+end
+
+
+immutable NonlinearFunctionParameters{T, Name, TupleType}
+    f::Function
+    Δt::T
+    params::TupleType
+end
+
+function NonlinearFunctionParameters(name, f, Δt, params...)
+    NonlinearFunctionParameters{typeof(Δt), name, typeof(params)}(f, Δt, params)
 end
 
 
