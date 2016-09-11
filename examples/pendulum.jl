@@ -10,6 +10,7 @@ const nmax  = 20
 function f(x, fx)
     fx[1] = x[2]
     fx[2] = sin(x[1])
+    nothing
 end
 
 function run_pendulum(tableau, filename)
@@ -17,6 +18,9 @@ function run_pendulum(tableau, filename)
     ode = ODE(2, f, x0)
     int = Integrator(ode, tableau, Δt)
     sol = Solution(ode, ntime)
+
+    solve!(int, sol)
+    set_initial_conditions!(sol, ode)
 
     print("Running ", tableau.name, "...")
     @time solve!(int, sol)
