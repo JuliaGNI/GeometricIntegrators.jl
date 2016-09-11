@@ -5,7 +5,7 @@ A = [[+4.  +5.  -2.]
 b = [-14., +42., +28.]
 x = [+4., -4., +5.]
 
-lu = LUSolver(A, b)
+lu = LUSolverLAPACK(A, b)
 
 factorize!(lu)
 solve!(lu)

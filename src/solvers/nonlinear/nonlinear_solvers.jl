@@ -53,7 +53,7 @@ end
 
 function getLinearSolver(T, n, linear_solver)
     if linear_solver == nothing
-        linear_solver = LUSolver(zeros(T, n, n), zeros(T, n))
+        linear_solver = LUSolverLAPACK(zeros(T, n, n), zeros(T, n))
     else
         @assert typeof(linear_solver) <: LinearSolver{T}
         @assert n == linear_solver.n

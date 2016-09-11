@@ -8,7 +8,7 @@ include("utils/matrix_utils.jl")
 include("solvers/linear/linear_solvers.jl")
 include("solvers/linear/lu_solver_lapack.jl")
 
-export LinearSolver, LUSolver,
+export LinearSolver, LUSolverLAPACK,
        factorize!, solve!
 
 include("solvers/nonlinear/nonlinear_solvers.jl")

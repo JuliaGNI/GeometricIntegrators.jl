@@ -4,29 +4,29 @@ import Base.LinAlg.BLAS: BlasFloat, BlasInt, liblapack, @blasfunc
 #import Base.LinAlg.LAPACK: chkargsok, chklapackerror, chktrans
 
 
-immutable LUSolver{T<:BlasFloat} <: LinearSolver{T}
+immutable LUSolverLAPACK{T<:BlasFloat} <: LinearSolver{T}
     n::BlasInt
     A::Matrix{T}
     b::Vector{T}
     pivots::Vector{BlasInt}
-    info::Ref{BlasInt}
+    info::BlasInt
 
-    LUSolver(n::BlasInt) = new(n, zeros(T, n, n), zeros(T, n), zeros(BlasInt, n), Ref{BlasInt}())
+    LUSolverLAPACK(n::BlasInt) = new(n, zeros(T, n, n), zeros(T, n), zeros(BlasInt, n), 0)
 end
 
-function LUSolver{T}(A::AbstractMatrix{T})
+function LUSolverLAPACK{T}(A::Matrix{T})
     n = checksquare(A)
-    lu = LUSolver{eltype(A)}(n)
-    lu.A[:,:] = A[:,:]
+    lu = LUSolverLAPACK{eltype(A)}(n)
+    lu.A .= A
     lu
 end
 
-function LUSolver{T}(A::AbstractMatrix{T}, b::AbstractVector{T})
+function LUSolverLAPACK{T}(A::Matrix{T}, b::Vector{T})
     n = checksquare(A)
     @assert n == length(b)
-    lu = LUSolver{eltype(A)}(n)
-    lu.A[:,:] = A[:,:]
-    lu.b[:] = b[:]
+    lu = LUSolverLAPACK{eltype(A)}(n)
+    lu.A .= A
+    lu.b .= b
     lu
 end
 
@@ -38,30 +38,32 @@ for (getrf, getrs, elty) in
      (:zgetrf_,:zgetrs_,:Complex128),
      (:cgetrf_,:cgetrs_,:Complex64))
     @eval begin
-        function factorize!(lu::LUSolver{$elty})
+        function factorize!(lu::LUSolverLAPACK{$elty})
             ccall((@blasfunc($getrf), liblapack), Void,
                   (Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$elty},
                    Ptr{BlasInt}, Ptr{BlasInt}, Ptr{BlasInt}),
-                   &lu.n, &lu.n, lu.A, &lu.n, lu.pivots, lu.info)
+                   &lu.n, &lu.n, lu.A, &lu.n, lu.pivots, &lu.info)
 
-            if lu.info[] > 0
-                throw(SingularException(lu.info[]))
-            elseif lu.info[] < 0
-                throw(ArgumentError(lu.info[]))
+            if lu.info > 0
+                throw(SingularException(lu.info))
+            elseif lu.info < 0
+                throw(ArgumentError(lu.info))
             end
+            nothing
         end
 
-        function solve!(lu::LUSolver{$elty})
+        function solve!(lu::LUSolverLAPACK{$elty})
             const trans = 'N'
             const nrhs = 1
             ccall((@blasfunc($getrs), liblapack), Void,
                   (Ptr{UInt8}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$elty}, Ptr{BlasInt},
                    Ptr{BlasInt}, Ptr{$elty}, Ptr{BlasInt}, Ptr{BlasInt}),
-                   &trans, &lu.n, &nrhs, lu.A, &lu.n, lu.pivots, lu.b, &lu.n, lu.info)
+                   &trans, &lu.n, &nrhs, lu.A, &lu.n, lu.pivots, lu.b, &lu.n, &lu.info)
 
-            if lu.info[] < 0
-                throw(ArgumentError(lu.info[]))
+            if lu.info < 0
+                throw(ArgumentError(lu.info))
             end
+            nothing
         end
 
         # SUBROUTINE DGETRF( M, N, A, LDA, IPIV, INFO )
