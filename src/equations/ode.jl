@@ -2,7 +2,7 @@
 # TODO Add momentum maps, energy, ...
 
 immutable ODE{T} <: Equation{T}
-    d::UInt
+    d::Int
     f::Function
     q₀::Array{T, 1}
 
@@ -20,7 +20,7 @@ end
 
 
 immutable PODE{T} <: Equation{T}
-    d::UInt
+    d::Int
     f::Function
     g::Function
     q₀::Array{T, 1}

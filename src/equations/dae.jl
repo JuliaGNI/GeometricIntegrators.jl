@@ -2,8 +2,8 @@
 # TODO Add momentum maps, energy, ...
 
 immutable DAE{T} <: Equation{T}
-    m::UInt
-    n::UInt
+    m::Int
+    n::Int
     f::Function
     u::Function
     ϕ::Function
@@ -27,8 +27,8 @@ end
 
 
 immutable PDAE{T} <: Equation{T}
-    m::UInt
-    n::UInt
+    m::Int
+    n::Int
     f::Function
     g::Function
     u::Function

@@ -10,8 +10,8 @@ abstract TableauIRK{T} <: TableauRK{T}
 
 @define HeaderTableauRK begin
     name::Symbol
-    o::UInt
-    s::UInt
+    o::Int
+    s::Int
     a::Matrix{T}
     b::Vector{T}
     c::Vector{T}
@@ -220,8 +220,8 @@ end
 # TODO Need explicit and implicit version?
 immutable TableauPRK{T} <: Tableau{T}
     name::Symbol
-    o::UInt
-    s::UInt
+    o::Int
+    s::Int
     a_q::Matrix{T}
     a_p::Matrix{T}
     b_q::Vector{T}
@@ -267,9 +267,9 @@ end
 "TableauSARK: Holds the tableau of a spezialized additive Runge-Kutta method."
 immutable TableauSARK{T} <: Tableau{T}
     name::Symbol
-    o::UInt
-    s::UInt
-    r::UInt
+    o::Int
+    s::Int
+    r::Int
 
     a_q::Matrix{T}
     α_q::Matrix{T}
@@ -318,9 +318,9 @@ end
  Runge-Kutta method."
 immutable TableauSPARK{T} <: Tableau{T}
     name::Symbol
-    o::UInt
-    s::UInt
-    r::UInt
+    o::Int
+    s::Int
+    r::Int
 
     a_q::Matrix{T}
     a_p::Matrix{T}
@@ -384,9 +384,9 @@ end
 "TableauGLM: Holds the tableau of a general linear method."
 immutable TableauGLM{T} <: Tableau{T}
     name::Symbol
-    o::UInt
-    s::UInt
-    r::UInt
+    o::Int
+    s::Int
+    r::Int
 
     a::Matrix{T}
     b::Matrix{T}
