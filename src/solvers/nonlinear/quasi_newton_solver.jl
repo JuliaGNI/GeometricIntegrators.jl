@@ -1,5 +1,5 @@
 
-immutable QuasiNewtonSolver{T, TF, TJ} <: AbstractNewtonSolver{T}
+immutable QuasiNewtonSolver{T, TF, TJ, TL} <: AbstractNewtonSolver{T}
     @newton_solver_variables
     function QuasiNewtonSolver(x, Fparams, Jparams, linear_solver, nmax, atol, rtol, stol)
         new(x, Fparams, Jparams, linear_solver, NonlinearSolverParameters{T}(nmax, atol, rtol, stol), NonlinearSolverStatus{T}())
@@ -12,7 +12,7 @@ function QuasiNewtonSolver(x::Vector, Fparams::NonlinearFunctionParameters; J=no
     n = length(x)
     Jparams = getJacobianParameters(J, Fparams, ϵ, T, n, autodiff)
     linear_solver = getLinearSolver(T, n, linear_solver)
-    QuasiNewtonSolver{T, typeof(Fparams), typeof(Jparams)}(x, Fparams, Jparams, linear_solver, nmax, atol, rtol, stol)
+    QuasiNewtonSolver{T, typeof(Fparams), typeof(Jparams), typeof(linear_solver)}(x, Fparams, Jparams, linear_solver, nmax, atol, rtol, stol)
 end
 
 

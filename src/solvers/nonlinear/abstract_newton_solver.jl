@@ -7,7 +7,7 @@ abstract AbstractNewtonSolver{T} <: NonlinearSolver{T}
     Fparams::TF
     Jparams::TJ
 
-    linear::LinearSolver{T}
+    linear::TL
 
     params::NonlinearSolverParameters{T}
     status::NonlinearSolverStatus{T}

@@ -1,5 +1,5 @@
 
-immutable NewtonSolver{T, TF, TJ} <: AbstractNewtonSolver{T}
+immutable NewtonSolver{T, TF, TJ, TL} <: AbstractNewtonSolver{T}
     @newton_solver_variables
     function NewtonSolver(x, Fparams, Jparams, linear_solver, nmax, atol, rtol, stol)
         new(x, Fparams, Jparams, linear_solver, NonlinearSolverParameters{T}(nmax, atol, rtol, stol), NonlinearSolverStatus{T}())
@@ -12,7 +12,7 @@ function NewtonSolver(x::Vector, Fparams::NonlinearFunctionParameters; J=nothing
     n = length(x)
     Jparams = getJacobianParameters(J, Fparams, ϵ, T, n, autodiff)
     linear_solver = getLinearSolver(T, n, linear_solver)
-    NewtonSolver{T, typeof(Fparams), typeof(Jparams)}(x, Fparams, Jparams, linear_solver, nmax, atol, rtol, stol)
+    NewtonSolver{T, typeof(Fparams), typeof(Jparams), typeof(linear_solver)}(x, Fparams, Jparams, linear_solver, nmax, atol, rtol, stol)
 end
 
 
