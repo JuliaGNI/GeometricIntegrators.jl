@@ -113,7 +113,7 @@ immutable TableauERK{T} <: TableauRK{T}
     end
 end
 
-function TableauERK{T}(name::Symbol, order::Integer, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+function TableauERK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T})
     TableauERK{T}(name, order, length(c), a, b, c)
 end
 
@@ -168,7 +168,7 @@ immutable TableauDIRK{T} <: TableauIRK{T}
     end
 end
 
-function TableauDIRK{T}(name::Symbol, order::Integer, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+function TableauDIRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T})
     TableauDIRK{T}(name, order, length(c), a, b, c)
 end
 
@@ -199,7 +199,7 @@ immutable TableauFIRK{T} <: TableauIRK{T}
     end
 end
 
-function TableauFIRK{T}(name::Symbol, order::Integer, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+function TableauFIRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T})
     TableauFIRK{T}(name, order, length(c), a, b, c)
 end
 
@@ -211,7 +211,7 @@ immutable TableauSIRK{T} <: TableauIRK{T}
     # TODO
 end
 
-function TableauSIRK{T}(name::Symbol, order::Integer, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+function TableauSIRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T})
     TableauSIRK{T}(name, order, length(c), a, b, c)
 end
 
@@ -243,7 +243,7 @@ immutable TableauPRK{T} <: Tableau{T}
     end
 end
 
-function TableauPRK{T}(name::Symbol, order::Integer,
+function TableauPRK{T}(name::Symbol, order::Int,
                        a_q::Matrix{T}, a_p::Matrix{T},
                        b_q::Vector{T}, b_p::Vector{T},
                        c_q::Vector{T}, c_p::Vector{T})
@@ -251,11 +251,11 @@ function TableauPRK{T}(name::Symbol, order::Integer,
     TableauPRK{T}(name, order, length(c_q), a_q, a_p, b_q, b_p, c_q, c_p)
 end
 
-function TableauPRK{T}(name::Symbol, order::Integer, tab::TableauERK{T})
+function TableauPRK{T}(name::Symbol, order::Int, tab::TableauERK{T})
     TableauPRK{T}(name, order, tab_q.s, tab_q.a, tab_p.a, tab_q.b, tab_p.b, tab_q.c, tab_p.c)
 end
 
-function TableauPRK{T1,T2}(name::Symbol, order::Integer, tab_q::TableauRK{T1}, tab_p::TableauRK{T2})
+function TableauPRK{T1,T2}(name::Symbol, order::Int, tab_q::TableauRK{T1}, tab_p::TableauRK{T2})
     @assert tab_q.s == tab_p.s
     @assert T1 == T2
     TableauPRK{T1}(name, order, tab_q.s, tab_q.a, tab_p.a, tab_q.b, tab_p.b, tab_q.c, tab_p.c)
