@@ -1,11 +1,11 @@
 
-"Tableau: Holds the information for the various methods' tableaus."
+"Holds the information for the various methods' tableaus."
 abstract Tableau{T}
 
-"TableauRK: Holds the tableau of a Runge-Kutta method."
+"Holds the tableau of a Runge-Kutta method."
 abstract TableauRK{T} <: Tableau{T}
 
-"TableauIRK: Holds the tableau of an implicit Runge-Kutta method."
+"Holds the tableau of an implicit Runge-Kutta method."
 abstract TableauIRK{T} <: TableauRK{T}
 
 @define HeaderTableauRK begin
@@ -26,6 +26,7 @@ Base.:(==){T1, T2}(tab1::TableauRK{T1}, tab2::TableauRK{T2}) = (tab1.o == tab2.o
 
 Base.isequal{T1, T2}(tab1::TableauRK{T1}, tab2::TableauRK{T2}) = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
 
+"Print Runge-Kutta tableau to standard output."
 function showTableau{T}(tab::TableauRK{T})
     println("Runge-Kutta Method ", tab.name, "with ", tab.s, " stages and order ", tab.o)
     println("  a = ", tab.a)
@@ -33,7 +34,7 @@ function showTableau{T}(tab::TableauRK{T})
     println("  c = ", tab.c)
 end
 
-"readTableauHeaderFromFile: Reads Tableau metadata from file."
+"Reads and parses Tableau metadata from file."
 function readTableauRKHeaderFromFile(file)
     f = open(file, "r")
     header = readline(f)
@@ -66,6 +67,7 @@ function readTableauRKHeaderFromFile(file)
     return O, S, T
 end
 
+"Write Runge-Kutta tableau to file."
 function writeTableauToFile{T}(dir::AbstractString, tab::TableauRK{T})
     # tab_array = zeros(T, S+1, S+1)
     # tab_array[1:S, 2:S+1] = tab.a
@@ -95,7 +97,7 @@ end
 # TODO function writeTableauToFile{Name, T}(dir::AbstractString, tab::TableauGLM{Name, T})
 
 
-"TableauERK: Holds the tableau of an explicit Runge-Kutta method."
+"Holds the tableau of an explicit Runge-Kutta method."
 immutable TableauERK{T} <: TableauRK{T}
     @HeaderTableauRK
 
@@ -117,6 +119,7 @@ function TableauERK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::
     TableauERK{T}(name, order, length(c), a, b, c)
 end
 
+"Read explicit Runge-Kutta tableau from file."
 function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
     file = string(dir, "/", name, ".tsv")
 
@@ -145,7 +148,7 @@ function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
 end
 
 
-"TableauDIRK: Holds the tableau of a diagonally implicit Runge-Kutta method."
+"Holds the tableau of a diagonally implicit Runge-Kutta method."
 immutable TableauDIRK{T} <: TableauIRK{T}
     @HeaderTableauRK
 
@@ -175,7 +178,7 @@ end
 # TODO function readTableauDIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-"TableauFIRK: Holds the tableau of a fully implicit Runge-Kutta method."
+"Holds the tableau of a fully implicit Runge-Kutta method."
 immutable TableauFIRK{T} <: TableauIRK{T}
     @HeaderTableauRK
 
@@ -206,7 +209,7 @@ end
 # TODO function readTableauFIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-"TableauSIRK: Holds the tableau of a singly implicit Runge-Kutta method."
+"Holds the tableau of a singly implicit Runge-Kutta method."
 immutable TableauSIRK{T} <: TableauIRK{T}
     # TODO
 end
@@ -216,7 +219,7 @@ function TableauSIRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c:
 end
 
 
-"TableauPRK: Holds the tableau of a partitioned Runge-Kutta method."
+"Holds the tableau of an explicit partitioned Runge-Kutta method."
 # TODO Need explicit and implicit version?
 immutable TableauPRK{T} <: Tableau{T}
     name::Symbol
@@ -264,7 +267,7 @@ end
 # TODO function readTableauPRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-"TableauSARK: Holds the tableau of a spezialized additive Runge-Kutta method."
+"Holds the tableau of a spezialized additive Runge-Kutta method."
 immutable TableauSARK{T} <: Tableau{T}
     name::Symbol
     o::Int
@@ -314,8 +317,7 @@ end
 # TODO function readTableauSARKFromFile(dir::AbstractString, name::AbstractString)
 
 
-"TableauSPARK: Holds the tableau of a spezialized partitioned additive
- Runge-Kutta method."
+"Holds the tableau of a spezialized partitioned additive Runge-Kutta method."
 immutable TableauSPARK{T} <: Tableau{T}
     name::Symbol
     o::Int
@@ -381,7 +383,7 @@ end
 # TODO function readTableauSPARKFromFile(dir::AbstractString, name::AbstractString)
 
 
-"TableauGLM: Holds the tableau of a general linear method."
+"Holds the tableau of a general linear method."
 immutable TableauGLM{T} <: Tableau{T}
     name::Symbol
     o::Int

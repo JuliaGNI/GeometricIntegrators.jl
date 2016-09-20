@@ -1,5 +1,5 @@
 
-"IntegratorPRK: Explicit partitioned Runge-Kutta integrator."
+"Explicit partitioned Runge-Kutta integrator."
 immutable IntegratorPRK{T} <: Integrator{T}
     equation::PODE{T}
     tableau::TableauPRK{T}
@@ -39,6 +39,7 @@ function IntegratorPRK{T}(equation::PODE{T}, tableau::TableauPRK{T}, Δt::T)
 end
 
 
+"Compute Q stages of explicit partitioned Runge-Kutta methods."
 function computeStageQ!(int::IntegratorPRK, i::Int, jmax::Int)
     for j in 1:jmax
         for k in 1:int.equation.d
@@ -54,6 +55,7 @@ function computeStageQ!(int::IntegratorPRK, i::Int, jmax::Int)
     nothing
 end
 
+"Compute P stages of explicit partitioned Runge-Kutta methods."
 function computeStageP!(int::IntegratorPRK, i::Int, jmax::Int)
     for j in 1:jmax
         for k in 1:int.equation.d
@@ -69,7 +71,7 @@ function computeStageP!(int::IntegratorPRK, i::Int, jmax::Int)
     nothing
 end
 
-"solve!: Solve partitioned ODE with explicit partitioned Runge-Kutta integrator."
+"Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
 function integrate!(int::IntegratorPRK, sol::SolutionPODE)
     local j::Int
     # copy initial conditions from solution

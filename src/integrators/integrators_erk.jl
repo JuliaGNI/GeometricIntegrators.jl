@@ -1,5 +1,5 @@
 
-"IntegratorERK: Explicit Runge-Kutta integrator."
+"Explicit Runge-Kutta integrator."
 immutable IntegratorERK{T} <: Integrator{T}
     equation::ODE{T}
     tableau::TableauERK{T}
@@ -25,7 +25,7 @@ function IntegratorERK(equation::Equation, tableau::TableauERK, Δt)
     IntegratorERK{eltype(equation.q₀)}(equation, tableau, Δt)
 end
 
-"solve!: Solve ODE with explicit Runge-Kutta integrator."
+"Integrate ODE with explicit Runge-Kutta integrator."
 function integrate!(int::IntegratorERK, sol::SolutionODE)
     # copy initial conditions from solution
     simd_copy_xy_first!(int.x, sol, 0)

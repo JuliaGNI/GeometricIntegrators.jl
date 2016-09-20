@@ -1,5 +1,5 @@
 
-"IntegratorDIRK: Diagonally implicit Runge-Kutta integrator."
+"Diagonally implicit Runge-Kutta integrator."
 immutable IntegratorDIRK{T} <: Integrator{T}
     equation::ODE{T}
     tableau::TableauDIRK{T}
@@ -22,12 +22,12 @@ function IntegratorDIRK(equation::Equation, tableau::TableauDIRK, Δt)
     IntegratorDIRK{T}(equation, tableau, Δt)
 end
 
-"solve!: Solve ODE with diagonally implicit Runge-Kutta integrator."
+"Integrate ODE with diagonally implicit Runge-Kutta integrator."
 function integrate!(int::IntegratorDIRK, s::SolutionODE)
     # TODO
 end
 
-"solve!: Solve partitioned ODE with diagonally implicit Runge-Kutta integrator."
+"Integrate partitioned ODE with diagonally implicit Runge-Kutta integrator."
 function integrate!(int::IntegratorDIRK, s::SolutionPODE)
     # TODO
 end

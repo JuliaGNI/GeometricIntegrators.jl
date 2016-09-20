@@ -1,4 +1,5 @@
 
+"Parameters for right-hand side function of fully implicit Runge-Kutta methods."
 immutable NonlinearFunctionParametersFIRK{T} <: NonlinearFunctionParameters{T}
     f::Function
     Δt::T
@@ -35,7 +36,7 @@ immutable NonlinearFunctionParametersFIRK{T} <: NonlinearFunctionParameters{T}
     end
 end
 
-
+"Compute stages of fully implicit Runge-Kutta methods."
 function function_stages!{T}(y::Vector{T}, b::Vector{T}, params::NonlinearFunctionParametersFIRK{T})
     for i in 1:params.s
         for k in 1:params.d
@@ -63,7 +64,7 @@ function function_stages!{T}(y::Vector{T}, b::Vector{T}, params::NonlinearFuncti
 end
 
 
-"IntegratorIRK: Fully implicit Runge-Kutta integrator."
+"Fully implicit Runge-Kutta integrator."
 immutable IntegratorFIRK{T, ST} <: Integrator{T}
     equation::ODE{T}
     tableau::TableauFIRK{T}
@@ -97,7 +98,7 @@ function IntegratorFIRK{T}(equation::ODE{T}, tableau::TableauFIRK{T}, Δt::T)
 end
 
 
-"solve!: Solve ODE with fully implicit Runge-Kutta integrator."
+"Integrate ODE with fully implicit Runge-Kutta integrator."
 function integrate!(int::IntegratorFIRK, sol::SolutionODE)
     # copy initial conditions from solution
     simd_copy_xy_first!(int.x, sol, 0)
@@ -127,7 +128,7 @@ function integrate!(int::IntegratorFIRK, sol::SolutionODE)
     nothing
 end
 
-"solve!: Solve partitioned ODE with fully implicit Runge-Kutta integrator."
+"Integrate partitioned ODE with fully implicit Runge-Kutta integrator."
 function integrate!(int::IntegratorFIRK, s::SolutionPODE)
     # TODO
 end

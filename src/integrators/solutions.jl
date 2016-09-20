@@ -3,22 +3,27 @@ using HDF5
 
 abstract Solution{T,N} <: DenseArray{T,N}
 
+"Create solution for ODE."
 function Solution(equation::ODE, ntime::Int, nsave::Int=1)
     SolutionODE(equation, ntime, nsave)
 end
 
+"Create solution for partitioned ODE."
 function Solution(equation::PODE, ntime::Int, nsave::Int=1)
     SolutionPODE(equation, ntime, nsave)
 end
 
+"Create solution for DAE."
 function Solution(equation::DAE, ntime::Int, nsave::Int=1)
     SolutionDAE(equation, ntime, nsave)
 end
 
+"Create solution for partitioned DAE."
 function Solution(equation::PDAE, ntime::Int, nsave::Int=1)
     SolutionPDAE(equation, ntime, nsave)
 end
 
+"Print error for solutions of equations not implemented, yet."
 function Solution(equation::Equation, ntime::Int, nsave::Int=1)
     error("No solution found for equation ", equation)
 end
@@ -34,7 +39,7 @@ end
 #     h5open(file, flag)
 # end
 
-"writeSolutionToHDF5: Creates HDF5 file, writes solution to file, and closes file."
+"Creates HDF5 file, writes solution to file, and closes file."
 function writeSolutionToHDF5(solution::Solution, file::AbstractString)
     h5 = createHDF5(solution, file, solution.n+1)
     writeSolutionToHDF5(solution, h5)
@@ -54,6 +59,7 @@ Base.stride(s::Solution, d) = strides(s)[d]
 # TODO Implement similar() and convert() to/from array functions.
 
 
+"Solution of an ordinary differential equation."
 immutable SolutionODE{T} <: Solution{T,2}
     d::Int
     n::Int
@@ -116,7 +122,7 @@ end
 
 
 
-"createHDF5: Creates HDF5 file and initialises datasets for solution object."
+"Creates HDF5 file and initialises datasets for ODE solution object."
 function createHDF5{T}(solution::SolutionODE{T}, file::AbstractString, ntime::Int=1)
     @assert ntime ≥ 1
 
@@ -135,7 +141,7 @@ function createHDF5{T}(solution::SolutionODE{T}, file::AbstractString, ntime::In
     return h5
 end
 
-"writeSolutionToHDF5: Append solution to HDF5 file."
+"Append solution to HDF5 file."
 function writeSolutionToHDF5(solution::SolutionODE, h5::HDF5.HDF5File, offset=0)
     # aquire dataset from HDF5 file
     x = h5["x"]
@@ -158,6 +164,7 @@ function writeSolutionToHDF5(solution::SolutionODE, h5::HDF5.HDF5File, offset=0)
 end
 
 
+"Solution of a partitioned ordinary differential equation."
 immutable SolutionPODE{T} <: Solution{T,3}
     d::Int
     n::Int
@@ -227,6 +234,7 @@ end
 end
 
 
+"Solution of a differential algebraic equation."
 immutable SolutionDAE{T} <: Solution{T,3}
     d::Int
     m::Int
@@ -265,6 +273,7 @@ function reset(s::SolutionDAE)
 end
 
 
+"Solution of a partitioned differential algebraic equation."
 immutable SolutionPDAE{T} <: Solution{T,3}
     d::Int
     m::Int

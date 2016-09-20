@@ -1,4 +1,5 @@
 
+"Special Partitioned Additive Runge Kutta integrator."
 immutable IntegratorSPARK{T} <: Integrator{T}
     equation::Equation
     tableau::TableauSPARK
@@ -13,7 +14,7 @@ immutable IntegratorSPARK{T} <: Integrator{T}
     F::Array{T,2}
 end
 
-"solve!: Solve partitioned DAE with Special Additive Runge Kutta integrator."
+"Integrate partitioned DAE with Special Additive Runge Kutta integrator."
 function integrate!(int::IntegratorSPARK, s::SolutionPDAE)
     # TODO
 end
