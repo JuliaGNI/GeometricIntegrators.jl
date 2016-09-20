@@ -15,9 +15,9 @@ end
 
 ode = ODE(1, f, [1.])
 int = Integrator(ode, getTableauERK4(), Δt)
-sol = solve(int, 10)
+sol = integrate(int, 10)
 
 
 pode = PODE(1, f, g, [1.], [1.])
 pint = Integrator(pode, getTableauSymplecticEulerA(), Δt)
-psol = solve(int, 10)
+psol = integrate(int, 10)
