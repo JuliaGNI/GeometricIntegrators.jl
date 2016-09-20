@@ -18,7 +18,9 @@ module Solvers
 
     include("solvers/nonlinear/nonlinear_solvers.jl")
     include("solvers/nonlinear/jacobian.jl")
+    include("solvers/nonlinear/abstract_fixed_point_solver.jl")
     include("solvers/nonlinear/abstract_newton_solver.jl")
+    include("solvers/nonlinear/fixed_point_solver.jl")
     include("solvers/nonlinear/newton_solver.jl")
     include("solvers/nonlinear/quasi_newton_solver.jl")
 
