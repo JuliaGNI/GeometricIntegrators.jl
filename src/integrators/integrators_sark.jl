@@ -5,6 +5,7 @@ immutable IntegratorSARK{T} <: Integrator{T}
 
 end
 
-function solve!(int::IntegratorSARK, s::SolutionDAE)
+"solve!: Solve DAE with Special Additive Runge Kutta integrator."
+function integrate!(int::IntegratorSARK, s::SolutionDAE)
     # TODO
 end

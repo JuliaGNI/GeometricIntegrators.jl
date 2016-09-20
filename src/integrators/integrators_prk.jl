@@ -70,7 +70,7 @@ function computeStageP!(int::IntegratorPRK, i::Int, jmax::Int)
 end
 
 "solve!: Solve partitioned ODE with explicit partitioned Runge-Kutta integrator."
-function solve!(int::IntegratorPRK, sol::SolutionPODE)
+function integrate!(int::IntegratorPRK, sol::SolutionPODE)
     local j::Int
     # copy initial conditions from solution
     for i in 1:sol.d

@@ -19,11 +19,11 @@ function run_pendulum(tableau, filename)
     int = Integrator(ode, tableau, Δt)
     sol = Solution(ode, ntime)
 
-    solve!(int, sol)
+    integrate!(int, sol)
     set_initial_conditions!(sol, ode)
 
     print("Running ", tableau.name, "...")
-    @time solve!(int, sol)
+    @time integrate!(int, sol)
 
     fig = figure(figsize=(6,6))
     plot(sol.x[1,:], sol.x[2,:])
@@ -62,11 +62,11 @@ function run_pendulum_partitioned(tableau, filename)
     int = Integrator(ode, tableau, Δt)
     sol = Solution(ode, ntime)
 
-    solve!(int, sol)
+    integrate!(int, sol)
     set_initial_conditions!(sol, ode)
-    
+
     print("Running ", tableau.name, "...")
-    @time solve!(int, sol)
+    @time integrate!(int, sol)
 
     fig = figure(figsize=(6,6))
     plot(sol.x[1,1,:], sol.x[1,2,:])

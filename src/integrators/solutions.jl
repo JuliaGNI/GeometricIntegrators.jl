@@ -196,7 +196,7 @@ function set_initial_conditions!(solution::SolutionPODE, equation::PODE)
     solution[1:solution.d, 2, 0] = equation.p₀
 end
 
-function reset(s::SolutionPODE)
+function reset!(s::SolutionPODE)
     solution[1:solution.d, 1:2, 0] = solution[1:solution.d, 1:2, solution.n]
 end
 

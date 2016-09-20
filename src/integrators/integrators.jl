@@ -37,14 +37,14 @@ function Integrator(equation::Equation, tableau::Tableau, Δt)
 end
 
 "solve: Solve given equation with given tableau for ntime time steps and return solution."
-function solve(equation::Equation, tableau::Tableau, Δt, ntime::Int, nsave::Int=1)
-    return solve(Integrator(equation, tableau, Δt), ntime, nsave)
+function integrate(equation::Equation, tableau::Tableau, Δt, ntime::Int, nsave::Int=1)
+    return integrate(Integrator(equation, tableau, Δt), ntime, nsave)
 end
 
 "solve: Apply integrator for ntime time steps and return solution."
-function solve(integrator::Integrator, ntime::Int, nsave::Int=1)
+function integrate(integrator::Integrator, ntime::Int, nsave::Int=1)
     solution = Solution(integrator.equation, ntime, nsave)
-    solve!(integrator, solution)
+    integrate!(integrator, solution)
     return solution
 end
 

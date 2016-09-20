@@ -98,7 +98,7 @@ end
 
 
 "solve!: Solve ODE with fully implicit Runge-Kutta integrator."
-function solve!(int::IntegratorFIRK, sol::SolutionODE)
+function integrate!(int::IntegratorFIRK, sol::SolutionODE)
     # copy initial conditions from solution
     simd_copy_xy_first!(int.x, sol, 0)
 
@@ -128,6 +128,6 @@ function solve!(int::IntegratorFIRK, sol::SolutionODE)
 end
 
 "solve!: Solve partitioned ODE with fully implicit Runge-Kutta integrator."
-function solve!(int::IntegratorFIRK, s::SolutionPODE)
+function integrate!(int::IntegratorFIRK, s::SolutionPODE)
     # TODO
 end

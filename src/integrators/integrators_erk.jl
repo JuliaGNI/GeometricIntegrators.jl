@@ -26,7 +26,7 @@ function IntegratorERK(equation::Equation, tableau::TableauERK, Δt)
 end
 
 "solve!: Solve ODE with explicit Runge-Kutta integrator."
-function solve!(int::IntegratorERK, sol::SolutionODE)
+function integrate!(int::IntegratorERK, sol::SolutionODE)
     # copy initial conditions from solution
     simd_copy_xy_first!(int.x, sol, 0)
 

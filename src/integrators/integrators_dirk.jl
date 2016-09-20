@@ -23,11 +23,11 @@ function IntegratorDIRK(equation::Equation, tableau::TableauDIRK, Δt)
 end
 
 "solve!: Solve ODE with diagonally implicit Runge-Kutta integrator."
-function solve!(int::IntegratorDIRK, s::SolutionODE)
+function integrate!(int::IntegratorDIRK, s::SolutionODE)
     # TODO
 end
 
 "solve!: Solve partitioned ODE with diagonally implicit Runge-Kutta integrator."
-function solve!(int::IntegratorDIRK, s::SolutionPODE)
+function integrate!(int::IntegratorDIRK, s::SolutionPODE)
     # TODO
 end

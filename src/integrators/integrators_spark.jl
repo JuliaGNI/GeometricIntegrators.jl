@@ -13,6 +13,7 @@ immutable IntegratorSPARK{T} <: Integrator{T}
     F::Array{T,2}
 end
 
-function solve!(int::IntegratorSPARK, s::SolutionPDAE)
+"solve!: Solve partitioned DAE with Special Additive Runge Kutta integrator."
+function integrate!(int::IntegratorSPARK, s::SolutionPDAE)
     # TODO
 end
