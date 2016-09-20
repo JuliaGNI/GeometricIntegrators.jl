@@ -19,6 +19,10 @@ const DEFAULT_ϵ=1E-6
 
 abstract NonlinearFunctionParameters{T}
 
+function function_stages!{T}(y::Vector{T}, b::Vector{T}, params::NonlinearFunctionParameters{T})
+    error("No function_stages implemented for this integrator.")
+end
+
 
 immutable NonlinearSolverParameters{T}
     nmax::Int   # maximum number of iterations
