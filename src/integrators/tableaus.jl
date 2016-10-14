@@ -8,6 +8,9 @@ abstract TableauRK{T} <: Tableau{T}
 "Holds the tableau of an implicit Runge-Kutta method."
 abstract TableauIRK{T} <: TableauRK{T}
 
+"Holds the tableau of a partitioned Runge-Kutta method."
+abstract TableauPRK{T} <: TableauRK{T}
+
 @define HeaderTableauRK begin
     name::Symbol
     o::Int
@@ -15,6 +18,18 @@ abstract TableauIRK{T} <: TableauRK{T}
     a::Matrix{T}
     b::Vector{T}
     c::Vector{T}
+end
+
+@define HeaderTableauPRK begin
+    name::Symbol
+    o::Int
+    s::Int
+    a_q::Matrix{T}
+    a_p::Matrix{T}
+    b_q::Vector{T}
+    b_p::Vector{T}
+    c_q::Vector{T}
+    c_p::Vector{T}
 end
 
 Base.hash(tab::TableauRK, h::UInt) = hash(tab.o, hash(tab.a, hash(tab.b, hash(tab.c, hash(:TableauRK, h)))))
@@ -221,18 +236,10 @@ end
 
 "Holds the tableau of an explicit partitioned Runge-Kutta method."
 # TODO Need explicit and implicit version?
-immutable TableauPRK{T} <: Tableau{T}
-    name::Symbol
-    o::Int
-    s::Int
-    a_q::Matrix{T}
-    a_p::Matrix{T}
-    b_q::Vector{T}
-    b_p::Vector{T}
-    c_q::Vector{T}
-    c_p::Vector{T}
+immutable TableauEPRK{T} <: Tableau{T}
+    @HeaderTableauPRK
 
-    function TableauPRK(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p)
+    function TableauEPRK(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p)
         @assert T <: Real
         @assert isa(name, Symbol)
         @assert isa(s, Integer)
@@ -246,25 +253,57 @@ immutable TableauPRK{T} <: Tableau{T}
     end
 end
 
-function TableauPRK{T}(name::Symbol, order::Int,
-                       a_q::Matrix{T}, a_p::Matrix{T},
-                       b_q::Vector{T}, b_p::Vector{T},
-                       c_q::Vector{T}, c_p::Vector{T})
+function TableauEPRK{T}(name::Symbol, order::Int,
+                        a_q::Matrix{T}, a_p::Matrix{T},
+                        b_q::Vector{T}, b_p::Vector{T},
+                        c_q::Vector{T}, c_p::Vector{T})
     @assert length(c_q) == length(c_p)
-    TableauPRK{T}(name, order, length(c_q), a_q, a_p, b_q, b_p, c_q, c_p)
+    TableauEPRK{T}(name, order, length(c_q), a_q, a_p, b_q, b_p, c_q, c_p)
 end
 
-function TableauPRK{T}(name::Symbol, order::Int, tab::TableauERK{T})
-    TableauPRK{T}(name, order, tab_q.s, tab_q.a, tab_p.a, tab_q.b, tab_p.b, tab_q.c, tab_p.c)
+function TableauEPRK{T}(name::Symbol, order::Int, tab::TableauERK{T})
+    TableauEPRK{T}(name, order, tab.s, tab.a, tab.a, tab.b, tab.b, tab.c, tab.c)
 end
 
-function TableauPRK{T1,T2}(name::Symbol, order::Int, tab_q::TableauRK{T1}, tab_p::TableauRK{T2})
+function TableauEPRK{T}(name::Symbol, order::Int, tab_q::TableauRK{T}, tab_p::TableauRK{T})
     @assert tab_q.s == tab_p.s
-    @assert T1 == T2
-    TableauPRK{T1}(name, order, tab_q.s, tab_q.a, tab_p.a, tab_q.b, tab_p.b, tab_q.c, tab_p.c)
+    TableauEPRK{T}(name, order, tab_q.s, tab_q.a, tab_p.a, tab_q.b, tab_p.b, tab_q.c, tab_p.c)
 end
 
 # TODO function readTableauPRKFromFile(dir::AbstractString, name::AbstractString)
+
+
+"Holds the tableau of a implicit partitioned Runge-Kutta method."
+immutable TableauIPRK{T} <: Tableau{T}
+    @HeaderTableauPRK
+
+    function TableauIPRK(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p)
+        @assert T <: Real
+        @assert isa(name, Symbol)
+        @assert isa(s, Integer)
+        @assert isa(o, Integer)
+        @assert s > 0 "Number of stages must be > 0"
+        @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
+        @assert s==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
+
+        new(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p)
+    end
+end
+
+function TableauIPRK{T}(name::Symbol, order::Int,
+                        a_q::Matrix{T}, a_p::Matrix{T},
+                        b_q::Vector{T}, b_p::Vector{T},
+                        c_q::Vector{T}, c_p::Vector{T})
+    @assert length(c_q) == length(c_p)
+    TableauIPRK{T}(name, order, length(c_q), a_q, a_p, b_q, b_p, c_q, c_p)
+end
+
+function TableauIPRK{T}(name::Symbol, order::Int, tab_q::TableauRK{T}, tab_p::TableauRK{T})
+    @assert tab_q.s == tab_p.s
+    TableauIPRK{T}(name, order, tab_q.s, tab_q.a, tab_p.a, tab_q.b, tab_p.b, tab_q.c, tab_p.c)
+end
+
+# TODO function readTableauIPRKFromFile(dir::AbstractString, name::AbstractString)
 
 
 "Holds the tableau of a spezialized additive Runge-Kutta method."

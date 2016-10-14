@@ -20,7 +20,7 @@ module Tableaus
 
     include("tableaus/tableaus_sirk.jl")
 
-    include("tableaus/tableaus_prk.jl")
+    include("tableaus/tableaus_eprk.jl")
 
     export getTableauSymplecticEulerA, getTableauSymplecticEulerB
 

@@ -16,9 +16,24 @@ function Integrator(equation::ODE, tableau::TableauFIRK, Δt)
     IntegratorFIRK(equation, tableau, Δt)
 end
 
-"Create integrator for partitioned Runge-Kutta tableau."
-function Integrator(equation::PODE, tableau::TableauPRK, Δt)
-    IntegratorPRK(equation, tableau, Δt)
+"Create integrator for singly implicit Runge-Kutta tableau."
+function Integrator(equation::ODE, tableau::TableauSIRK, Δt)
+    IntegratorSIRK(equation, tableau, Δt)
+end
+
+"Create integrator for explicit partitioned Runge-Kutta tableau."
+function Integrator(equation::PODE, tableau::TableauEPRK, Δt)
+    IntegratorEPRK(equation, tableau, Δt)
+end
+
+"Create integrator for implicit partitioned Runge-Kutta tableau."
+function Integrator(equation::PODE, tableau::TableauIPRK, Δt)
+    IntegratorIPRK(equation, tableau, Δt)
+end
+
+"Create integrator for implicit partitioned Runge-Kutta tableau."
+function Integrator(equation::SPODE, tableau::TableauIPRK, Δt)
+    IntegratorIPRK(equation, tableau, Δt)
 end
 
 "Create integrator for special additive Runge-Kutta tableau."

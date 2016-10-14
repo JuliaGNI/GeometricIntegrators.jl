@@ -121,11 +121,11 @@ tab_explicit_glrk2 = TableauFIRK(:glrk2, o, a, b, c)
 @test typeof(getTableauGLRK3()) <: TableauFIRK
 
 # instatiate all partitioned tableaus
-@test typeof(getTableauSymplecticEulerA()) <: TableauPRK
-@test typeof(getTableauSymplecticEulerB()) <: TableauPRK
+@test typeof(getTableauSymplecticEulerA()) <: TableauEPRK
+@test typeof(getTableauSymplecticEulerB()) <: TableauEPRK
 
 # test instatiation of partioned tableau by composition of two RK tableaus
-@test typeof(TableauPRK(:PERK4, 4, getTableauERK4(), getTableauERK4())) <: TableauPRK
+@test typeof(TableauEPRK(:PERK4, 4, getTableauERK4(), getTableauERK4())) <: TableauEPRK
 
 
-# TODO Add tests for TableauPRK, TableauSPARK and TableauGLM.
+# TODO Add tests for TableauIPRK, TableauSARK, TableauSPARK and TableauGLM.

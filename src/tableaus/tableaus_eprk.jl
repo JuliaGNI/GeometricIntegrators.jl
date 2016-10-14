@@ -13,7 +13,7 @@ function getTableauSymplecticEulerA()
 
     o = 1
 
-    TableauPRK(:symplectic_euler_a, o, a_q, a_p, b_q, b_p, c_q, c_p)
+    TableauEPRK(:symplectic_euler_a, o, a_q, a_p, b_q, b_p, c_q, c_p)
 end
 
 "Tableau for symplectic Euler-B method"
@@ -30,5 +30,5 @@ function getTableauSymplecticEulerB()
 
     o = 1
 
-    TableauPRK(:symplectic_euler_b, o, a_q, a_p, b_q, b_p, c_q, c_p)
+    TableauEPRK(:symplectic_euler_b, o, a_q, a_p, b_q, b_p, c_q, c_p)
 end
