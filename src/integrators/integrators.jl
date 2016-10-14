@@ -51,16 +51,21 @@ function Integrator(equation::Equation, tableau::Tableau, Δt)
     error("No integrator found for tableau ", tableau)
 end
 
-"Integrate given equation with given tableau for ntime time steps and return solution."
-function integrate(equation::Equation, tableau::Tableau, Δt, ntime::Int, nsave::Int=1)
-    return integrate(Integrator(equation, tableau, Δt), ntime, nsave)
-end
-
 "Apply integrator for ntime time steps and return solution."
 function integrate(integrator::Integrator, ntime::Int, nsave::Int=1)
     solution = Solution(integrator.equation, ntime, nsave)
     integrate!(integrator, solution)
     return solution
+end
+
+"Integrate given equation with given tableau for ntime time steps and return solution."
+function integrate(equation::Equation, tableau::Tableau, Δt, ntime::Int, nsave::Int=1)
+    return integrate(Integrator(equation, tableau, Δt), ntime, nsave)
+end
+
+"Integrate ODE specified by vector field and initial condition with given tableau for ntime time steps and return solution."
+function integrate(f::Function, x0::Vector, tableau::Tableau, Δt, ntime::Int, nsave::Int=1)
+    return integrate(ODE(f, x0), tableau, Δt, ntime, nsave)
 end
 
 
