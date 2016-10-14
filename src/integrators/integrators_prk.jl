@@ -113,6 +113,7 @@ function integrate!(int::IntegratorPRK, sol::SolutionPODE)
                 sol[i, 1, j] = int.q[i]
                 sol[i, 2, j] = int.p[i]
             end
+            sol.t[div(n, sol.nsave)+1] = sol.t[1] + n * int.Δt
         end
     end
     nothing

@@ -123,6 +123,7 @@ function integrate!(int::IntegratorFIRK, sol::SolutionODE)
         # copy to solution
         if mod(n, sol.nsave) == 0
             simd_copy_yx_first!(int.x, sol, div(n, sol.nsave))
+            sol.t[div(n, sol.nsave)+1] = sol.t[1] + n * int.Δt
         end
     end
     nothing
