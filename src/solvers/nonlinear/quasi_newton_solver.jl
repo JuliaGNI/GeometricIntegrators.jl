@@ -35,7 +35,7 @@ function solve!{T}(s::QuasiNewtonSolver{T})
             s.status.rₐ = residual_absolute(s.linear.b)
             s.status.rₛ = abs(s.status.rₛ - s.status.rₐ)/s.status.r₀
 
-            if s.status.rₐ < s.params.atol² || s.status.rᵣ < s.params.rtol² || s.status.rₛ < s.params.stol²
+            if s.status.rₐ < s.params.atol² || s.status.rᵣ < s.params.rtol || s.status.rₛ < s.params.stol²
                 break
             end
         end
