@@ -90,7 +90,7 @@ function IntegratorFIRK{T}(equation::ODE{T}, tableau::TableauFIRK{T}, Δt::T)
     params = NonlinearFunctionParametersFIRK{T}(equation.f, Δt, D, S, tableau.a)
 
     # create solver
-    solver = NewtonSolver(z, params)
+    solver = QuasiNewtonSolver(z, params)
     # TODO allow for other nonlinear solvers based on constructor argument
 
     # create integrator
