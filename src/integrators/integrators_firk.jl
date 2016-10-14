@@ -114,7 +114,13 @@ function integrate!(int::IntegratorFIRK, sol::SolutionODE)
 
         # call nonlinear solver
         solve!(int.solver)
-        # println(int.solver.i, ", ", int.solver.rₐ,", ",  int.solver.rᵣ,", ",  int.solver.rₛ)
+
+        if (int.solver.status.rₐ > int.solver.params.atol² &&
+            int.solver.status.rᵣ > int.solver.params.rtol  &&
+            int.solver.status.rₛ > int.solver.params.stol²)||
+            int.solver.status.i >= int.solver.params.nmax
+            println(int.solver.status.i, ", ", int.solver.status.rₐ,", ",  int.solver.status.rᵣ,", ",  int.solver.status.rₛ)
+        end
 
         # compute final update
         simd_mult!(int.y, int.F, int.tableau.b)
