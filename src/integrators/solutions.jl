@@ -63,11 +63,12 @@ Base.stride(s::Solution, d) = strides(s)[d]
 immutable SolutionODE{T} <: Solution{T,2}
     d::Int
     n::Int
+    t::Array{T,1}
     x::Array{T,2}
     ntime::Int
     nsave::Int
 
-    function SolutionODE(d, ntime, nsave)
+    function SolutionODE(d::Int, ntime::Int, nsave::Int)
         @assert T <: Real
         @assert d > 0
         @assert nsave > 0
@@ -75,7 +76,9 @@ immutable SolutionODE{T} <: Solution{T,2}
         @assert mod(ntime, nsave) == 0
 
         n = div(ntime, nsave)
-        new(d, n, zeros(T, d, n+1), ntime, nsave)
+        t = zeros(T, n+1)
+        x = zeros(T, d, n+1)
+        new(d, n, t, x, ntime, nsave)
     end
 end
 
@@ -88,10 +91,12 @@ end
 
 function set_initial_conditions!(solution::SolutionODE, equation::ODE)
     simd_copy_yx_first!(equation.q₀, solution, 0)
+    solution.t[1] = equation.t₀
 end
 
 function reset(s::SolutionODE)
     solution[1:solution.d, 0] = solution[1:solution.d, solution.n]
+    solution.t[0] = equation.t[solution.n+1]
 end
 
 Base.indices(s::SolutionODE) = (1:s.d, 0:s.n)
@@ -168,6 +173,7 @@ end
 immutable SolutionPODE{T} <: Solution{T,3}
     d::Int
     n::Int
+    t::Array{T,1}
     x::Array{T,3}
     q::AbstractArray{T,2}
     p::AbstractArray{T,2}
@@ -182,10 +188,11 @@ immutable SolutionPODE{T} <: Solution{T,3}
         @assert mod(ntime, nsave) == 0
 
         n = div(ntime, nsave)
+        t = zeros(T, n+1)
         x = zeros(T, d, 2, n+1)
         q = view(x, :, 1, 1:n+1)
         p = view(x, :, 2, 1:n+1)
-        new(d, n, x, q, p, ntime, nsave)
+        new(d, n, t, x, q, p, ntime, nsave)
     end
 end
 
@@ -239,6 +246,7 @@ immutable SolutionDAE{T} <: Solution{T,3}
     d::Int
     m::Int
     n::Int
+    t::Array{T,1}
     x::Array{T,2}
     λ::Array{T,2}
     ntime::Int
@@ -253,7 +261,10 @@ immutable SolutionDAE{T} <: Solution{T,3}
         @assert mod(ntime, nsave) == 0
 
         n = div(ntime, nsave)
-        new(d, m, n, zeros(T, d, n), zeros(T, m, n), ntime, nsave)
+        t = zeros(T, n+1)
+        x = zeros(T, d, n+1)
+        λ = zeros(T, m, n+1)
+        new(d, m, n, t, x, λ, ntime, nsave)
     end
 end
 
@@ -278,6 +289,7 @@ immutable SolutionPDAE{T} <: Solution{T,3}
     d::Int
     m::Int
     n::Int
+    t::Array{T,1}
     q::Array{T,2}
     p::Array{T,2}
     λ::Array{T,2}
@@ -293,7 +305,11 @@ immutable SolutionPDAE{T} <: Solution{T,3}
         @assert mod(ntime, nsave) == 0
 
         n = div(ntime, nsave)
-        new(d, m, n, zeros(T, d, n+1), zeros(T, d, n+1), zeros(T, m, n+1), ntime, nsave)
+        t = zeros(T, n+1)
+        q = zeros(T, d, n+1)
+        p = zeros(T, d, n+1)
+        λ = zeros(T, m, n+1)
+        new(d, m, n, t, q, p, λ, ntime, nsave)
     end
 end
 
