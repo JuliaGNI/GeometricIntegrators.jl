@@ -10,11 +10,11 @@ end
 
 
 # default parameters for nonlinear solvers
-const DEFAULT_atol=1E-15
-const DEFAULT_rtol=1E-20
-const DEFAULT_stol=1E-20
+const DEFAULT_atol=2eps()
+const DEFAULT_rtol=2eps()
+const DEFAULT_stol=2eps()
 const DEFAULT_nmax=100
-const DEFAULT_ϵ=1E-6
+const DEFAULT_ϵ=sqrt(eps())
 
 
 abstract NonlinearFunctionParameters{T}
