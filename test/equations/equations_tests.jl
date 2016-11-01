@@ -35,16 +35,13 @@ pode2 = PODE(f_pode, g_pode, q₀, p₀)
 @test pode == pode2
 
 
-spode  = SPODE{Float64}(1, f_pode, g_pode, t₀, q₀, p₀)
-spode1 = SPODE(1, f_pode, g_pode, t₀, q₀, p₀)
-spode2 = SPODE(1, f_pode, g_pode, q₀, p₀)
-spode3 = SPODE(f_pode, g_pode, t₀, q₀, p₀)
-spode4 = SPODE(f_pode, g_pode, q₀, p₀)
+sode  = SODE{Float64}(1, q₀, p₀, t₀, do_nothing, do_nothing, f_pode, g_pode)
+sode1 = SODE(q₀, p₀, t₀; v=f_pode, f=g_pode)
+sode2 = SODE(q₀, p₀; v=f_pode, f=g_pode)
 
-@test spode == spode1
-@test spode == spode2
-@test spode == spode3
-@test spode == spode4
+@test sode == sode1
+@test sode == sode2
+# @test pode1 == pode2
 
 
 function f_dae(x, fx)

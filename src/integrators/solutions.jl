@@ -13,10 +13,9 @@ function Solution(equation::PODE, ntime::Int, nsave::Int=1)
     SolutionPODE(equation, ntime, nsave)
 end
 
-"Create solution for special partitioned ODE."
-function Solution(equation::SPODE, ntime::Int, nsave::Int=1)
+"Create solution for special ODE."
+function Solution(equation::SODE, ntime::Int, nsave::Int=1)
     SolutionPODE(equation, ntime, nsave)
-end
 
 "Create solution for DAE."
 function Solution(equation::DAE, ntime::Int, nsave::Int=1)
@@ -209,7 +208,7 @@ function SolutionPODE(equation::PODE, ntime::Int, nsave::Int=1)
     return s
 end
 
-function SolutionPODE(equation::SPODE, ntime::Int, nsave::Int=1)
+function SolutionPODE(equation::SODE, ntime::Int, nsave::Int=1)
     T1 = eltype(equation.q₀)
     T2 = eltype(equation.p₀)
     @assert T1 == T2
@@ -223,7 +222,7 @@ function set_initial_conditions!(solution::SolutionPODE, equation::PODE)
     solution[1:solution.d, 2, 0] = equation.p₀
 end
 
-function set_initial_conditions!(solution::SolutionPODE, equation::SPODE)
+function set_initial_conditions!(solution::SolutionPODE, equation::SODE)
     solution[1:solution.d, 1, 0] = equation.q₀
     solution[1:solution.d, 2, 0] = equation.p₀
 end

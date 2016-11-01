@@ -1,9 +1,11 @@
 
 abstract Equation{T}
 
+function do_nothing(x...) end
+
 include("ode.jl")
 include("pode.jl")
-include("spode.jl")
+include("sode.jl")
 include("dae.jl")
 include("pdae.jl")
 

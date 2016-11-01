@@ -1,36 +1,49 @@
 
-"Special Partitioned Ordinary Differential Equation"
-immutable SPODE{T} <: Equation{T}
+using GeomDAE.Fields: Field, Q, P, V, F
+
+"Special Ordinary Differential Equation"
+immutable SODE{T} <: Equation{T}
     d::Int
-    f::Function
-    g::Function
-    t₀::T
+
     q₀::Array{T, 1}
     p₀::Array{T, 1}
+    t₀::T
 
-    function SPODE(d, f, g, t₀, q₀, p₀)
+    q::Function
+    p::Function
+    v::Function
+    f::Function
+
+    fields::Tuple{Vararg{Field}}
+    functs::Tuple{Vararg{Field}}
+
+    function SODE(d, q₀, p₀, t₀, q, p, v, f)
         @assert d == length(q₀) == length(p₀)
         @assert T == eltype(q₀) == eltype(p₀)
 
-        new(d, f, g, t₀, q₀, p₀)
+        fields = []
+        functs = []
+
+        for (field, symb) in ((q, Q()),
+                              (p, P()),
+                              (v, V()),
+                              (f, F()))
+            if field == do_nothing
+                push!(fields, symb)
+            else
+                push!(functs, symb)
+            end
+        end
+
+        @assert length(fields) == length(functs) == 2
+
+        new(d, q₀, p₀, t₀, q, p, v, f, tuple(fields...), tuple(functs...))
     end
 end
 
-
-function SPODE{T}(d::Integer, f::Function, g::Function, t₀::Real, q₀::Vector{T}, p₀::Vector{T})
-    SPODE{T}(d, f, g, t₀, q₀, p₀)
-end
-
-function SPODE{T}(d::Integer, f::Function, g::Function, q₀::Vector{T}, p₀::Vector{T})
-    SPODE{T}(d, f, g, 0, q₀, p₀)
-end
-
-function SPODE{T}(f::Function, g::Function, t₀::Real, q₀::Vector{T}, p₀::Vector{T})
+function SODE{T}(q₀::Vector{T}, p₀::Vector{T}, t₀::Real=0;
+                 q::Function=do_nothing, p::Function=do_nothing,
+                 v::Function=do_nothing, f::Function=do_nothing)
     @assert length(q₀) == length(p₀)
-    SPODE{T}(length(q₀), f, g, t₀, q₀, p₀)
-end
-
-function SPODE{T}(f::Function, g::Function, q₀::Vector{T}, p₀::Vector{T})
-    @assert length(q₀) == length(p₀)
-    SPODE{T}(length(q₀), f, g, 0, q₀, p₀)
+    SODE{T}(length(q₀), q₀, p₀, t₀, q, p, v, f)
 end
