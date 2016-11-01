@@ -316,8 +316,8 @@ immutable TableauSARK{T} <: Tableau{T}
     a_q::Matrix{T}
     α_q::Matrix{T}
 
-    a_qᵠ::Matrix{T}
-    α_qᵠ::Matrix{T}
+    a_q̃::Matrix{T}
+    α_q̃::Matrix{T}
 
     b_q::Vector{T}
     β_q::Vector{T}
@@ -329,7 +329,7 @@ immutable TableauSARK{T} <: Tableau{T}
     ω_λ::Matrix{T}
 
     function TableauSARK(name, o, s, r,
-                         a_q, α_q, a_qᵠ, α_qᵠ,
+                         a_q, α_q, a_q̃, α_q̃,
                          b_q, β_q, c_q, c_λ,
                          ω_q, ω_λ)
         # TODO Make ω_q, ω_λ optional arguments.
@@ -347,7 +347,7 @@ immutable TableauSARK{T} <: Tableau{T}
         @assert r==size(a_qᵠ,1)==size(α_qᵠ,1)==size(α_qᵠ,2)
         @assert s==size(a_qᵠ,2)
         # TODO Add assertions on ω_q, ω_λ to be (S-1)x(S) or (R-1)x(R) if set.
-        new(name, o, s, r, a_q, α_q, a_qᵠ, α_qᵠ, b_q, β_q, c_q, c_λ, ω_q, ω_λ)
+        new(name, o, s, r, a_q, α_q, a_q̃, α_q̃, b_q, β_q, c_q, c_λ, ω_q, ω_λ)
     end
 end
 
@@ -368,10 +368,10 @@ immutable TableauSPARK{T} <: Tableau{T}
     α_q::Matrix{T}
     α_p::Matrix{T}
 
-    a_qᵠ::Matrix{T}
-    a_pᵠ::Matrix{T}
-    α_qᵠ::Matrix{T}
-    α_pᵠ::Matrix{T}
+    a_q̃::Matrix{T}
+    a_p̃::Matrix{T}
+    α_q̃::Matrix{T}
+    α_p̃::Matrix{T}
 
     b_q::Vector{T}
     b_p::Vector{T}
@@ -387,7 +387,7 @@ immutable TableauSPARK{T} <: Tableau{T}
     ω_λ::Matrix{T}
 
     function TableauSPARK(name, o, s, r,
-                          a_q, a_p, α_q, α_p, a_qᵠ, a_pᵠ, α_qᵠ, α_pᵠ,
+                          a_q, a_p, α_q, α_p, a_q̃, a_p̃, α_q̃, α_p̃,
                           b_q, b_p, β_q, β_p,
                           c_q, c_p, c_λ,
                           ω_q, ω_p, ω_λ)
@@ -410,7 +410,7 @@ immutable TableauSPARK{T} <: Tableau{T}
         @assert s==size(a_qᵠ,2)==size(a_pᵠ,2)
         # TODO Add assertions on ω_q, ω_p, ω_λ to be (S-1)x(S) or (R-1)x(R) if set.
         new(name, o, s, r,
-            a_q, a_p, α_q, α_p, a_qᵠ, a_pᵠ, α_qᵠ, α_pᵠ,
+            a_q, a_p, α_q, α_p, a_q̃, a_p̃, α_q̃, α_p̃,
             b_q, b_p, β_q, β_p,
             c_q, c_p, c_λ,
             ω_q, ω_p, ω_λ)
