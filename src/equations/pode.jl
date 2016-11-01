@@ -17,20 +17,11 @@ immutable PODE{T} <: Equation{T}
 end
 
 
-function PODE{T}(d::Integer, f::Function, g::Function, t₀::Real, q₀::Vector{T}, p₀::Vector{T})
-    PODE{T}(d, f, g, t₀, q₀, p₀)
-end
-
-function PODE{T}(d::Integer, f::Function, g::Function, q₀::Vector{T}, p₀::Vector{T})
-    PODE{T}(d, f, g, 0, q₀, p₀)
-end
-
 function PODE{T}(f::Function, g::Function, t₀::Real, q₀::Vector{T}, p₀::Vector{T})
     @assert length(q₀) == length(p₀)
     PODE{T}(length(q₀), f, g, t₀, q₀, p₀)
 end
 
 function PODE{T}(f::Function, g::Function, q₀::Vector{T}, p₀::Vector{T})
-    @assert length(q₀) == length(p₀)
-    PODE{T}(length(q₀), f, g, 0, q₀, p₀)
+    PODE(f, g, 0, q₀, p₀)
 end

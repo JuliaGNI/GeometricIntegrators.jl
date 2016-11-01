@@ -14,18 +14,10 @@ immutable ODE{T} <: Equation{T}
     end
 end
 
-function ODE{T}(d::Integer, f::Function, t₀::Real, q₀::Vector{T})
-    ODE{T}(d, f, t₀, q₀)
-end
-
-function ODE{T}(d::Integer, f::Function, q₀::Vector{T})
-    ODE{T}(d, f, 0, q₀)
-end
-
 function ODE{T}(f::Function, t₀::Real, q₀::Vector{T})
     ODE{T}(length(q₀), f, t₀, q₀)
 end
 
 function ODE{T}(f::Function, q₀::Vector{T})
-    ODE{T}(length(q₀), f, 0, q₀)
+    ODE(f, 0, q₀)
 end

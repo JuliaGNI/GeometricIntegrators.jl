@@ -12,15 +12,11 @@ function f_ode(x, fx)
 end
 
 ode  = ODE{Float64}(1, f_ode, t₀, q₀)
-ode1 = ODE(1, f_ode, t₀, q₀)
-ode2 = ODE(1, f_ode, q₀)
-ode3 = ODE(f_ode, t₀, q₀)
-ode4 = ODE(f_ode, q₀)
+ode1 = ODE(f_ode, t₀, q₀)
+ode2 = ODE(f_ode, q₀)
 
 @test ode == ode1
 @test ode == ode2
-@test ode == ode3
-@test ode == ode4
 
 
 function f_pode(q, p, fp)
@@ -32,15 +28,11 @@ function g_pode(q, p, fp)
 end
 
 pode  = PODE{Float64}(1, f_pode, g_pode, t₀, q₀, p₀)
-pode1 = PODE(1, f_pode, g_pode, t₀, q₀, p₀)
-pode2 = PODE(1, f_pode, g_pode, q₀, p₀)
-pode3 = PODE(f_pode, g_pode, t₀, q₀, p₀)
-pode4 = PODE(f_pode, g_pode, q₀, p₀)
+pode1 = PODE(f_pode, g_pode, t₀, q₀, p₀)
+pode2 = PODE(f_pode, g_pode, q₀, p₀)
 
 @test pode == pode1
 @test pode == pode2
-@test pode == pode3
-@test pode == pode4
 
 
 spode  = SPODE{Float64}(1, f_pode, g_pode, t₀, q₀, p₀)
@@ -70,15 +62,11 @@ function ϕ_dae(x, λ, fϕ)
 end
 
 dae  = DAE{Float64}(2, 1, f_dae, u_dae, ϕ_dae, t₀, x₀, λ₀)
-dae1 = DAE(2, 1, f_dae, u_dae, ϕ_dae, t₀, x₀, λ₀)
-dae2 = DAE(2, 1, f_dae, u_dae, ϕ_dae, x₀, λ₀)
-dae3 = DAE(f_dae, u_dae, ϕ_dae, t₀, x₀, λ₀)
-dae4 = DAE(f_dae, u_dae, ϕ_dae, x₀, λ₀)
+dae1 = DAE(f_dae, u_dae, ϕ_dae, t₀, x₀, λ₀)
+dae2 = DAE(f_dae, u_dae, ϕ_dae, x₀, λ₀)
 
 @test dae == dae1
 @test dae == dae2
-@test dae == dae3
-@test dae == dae4
 
 
 function f_pdae(q, p, fp)
@@ -102,12 +90,8 @@ function ϕ_pdae(q, p, λ, fϕ)
 end
 
 pdae  = PDAE{Float64}(1, 1, f_pdae, g_pdae, u_pdae, v_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
-pdae1 = PDAE(1, 1, f_pdae, g_pdae, u_pdae, v_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
-pdae2 = PDAE(1, 1, f_pdae, g_pdae, u_pdae, v_pdae, ϕ_pdae, q₀, p₀, λ₀)
-pdae3 = PDAE(f_pdae, g_pdae, u_pdae, v_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
-pdae4 = PDAE(f_pdae, g_pdae, u_pdae, v_pdae, ϕ_pdae, q₀, p₀, λ₀)
+pdae1 = PDAE(f_pdae, g_pdae, u_pdae, v_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
+pdae2 = PDAE(f_pdae, g_pdae, u_pdae, v_pdae, ϕ_pdae, q₀, p₀, λ₀)
 
 @test pdae == pdae1
 @test pdae == pdae2
-@test pdae == pdae3
-@test pdae == pdae4
