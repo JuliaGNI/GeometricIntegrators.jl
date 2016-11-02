@@ -16,6 +16,7 @@ end
 "Create solution for special ODE."
 function Solution(equation::SODE, ntime::Int, nsave::Int=1)
     SolutionPODE(equation, ntime, nsave)
+end
 
 "Create solution for DAE."
 function Solution(equation::DAE, ntime::Int, nsave::Int=1)
