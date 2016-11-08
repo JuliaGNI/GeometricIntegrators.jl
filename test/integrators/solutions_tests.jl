@@ -36,7 +36,7 @@ end
 
 @test psol.x[1,1,1] == psol[1,1,0]
 @test psol.x[1,2,1] == psol[1,2,0]
-@test psol.x[1:sol.d,1:2,1] == psol[1:sol.d,1:2,0]
+@test psol.x[1:psol.d,1:2,1] == psol[1:psol.d,1:2,0]
 
 
 dae = DAE(x -> x, (x, λ) -> [λ -λ], x -> x[2]-x[1], [1.; 1.], [0.])
