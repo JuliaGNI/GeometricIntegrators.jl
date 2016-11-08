@@ -1,5 +1,33 @@
+"""
+`ODE`: Ordinary Differential Equation
 
+Defines an initial value problem
+```math
+\\dot{q} (t) = f(t, q(t)) , \\qquad q(t_{0}) = q_{0} ,
+```
+with vector field ``f``, initial condition ``q_{0}`` and the solution
+``q`` taking values in ``\\mathbb{R}^{d}``.
 
+### Fields
+
+* `d`: dimension of dynamical variable ``q`` and the vector field ``f``
+* `f`: function computing the vector field
+* `t₀`: initial time
+* `q₀`: initial condition
+
+The function `f` providing the vector field must have the interface
+```julia
+    function f(t, q, fq)
+        fq[1] = ...
+        fq[2] = ...
+        ...
+    end
+```
+where `t` is the current time, `q` is the current solution vector, and
+`fq` is the vector which holds the result of evaluating the vector field ``f``
+on `t` and `q`.
+
+"""
 immutable ODE{T} <: Equation{T}
     d::Int
     n::Int
