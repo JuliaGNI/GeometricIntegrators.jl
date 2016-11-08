@@ -28,7 +28,7 @@ end
 
 function simd_copy!(x, y)
     @assert length(x) == length(y)
-    @simd for i=1:length(x)
+    @simd for i=1:length(y)
         @inbounds y[i] = x[i]
     end
     nothing
@@ -43,25 +43,44 @@ function simd_copy_xy_first!(x, y, j)
     nothing
 end
 
+"Copy the first dimension of a 3D array y into a 1D array x."
+function simd_copy_xy_first!(x, y, j, k)
+    @assert length(x) == size(y, 1)
+    @simd for i=1:length(x)
+        @inbounds x[i] = y[i,j,k]
+    end
+    nothing
+end
+
 "Copy a 1D array x into the first dimension of a 2D array y."
 function simd_copy_yx_first!(x, y, j)
     @assert length(x) == size(y, 1)
-    @simd for i=1:length(x)
+    @simd for i=1:size(y, 1)
         @inbounds y[i,j] = x[i]
+    end
+    nothing
+end
+
+"Copy a 1D array x into the first dimension of a 3D array y."
+function simd_copy_yx_first!(x, y, j, k)
+    @assert length(x) == size(y, 1)
+    @simd for i=1:size(y, 1)
+        @inbounds y[i,j,k] = x[i]
     end
     nothing
 end
 
 function simd_xpy!(x, y)
     @assert length(x) == length(y)
-    @simd for i=1:length(x)
+    @simd for i=1:length(y)
         @inbounds y[i] += x[i]
     end
+    nothing
 end
 
 function simd_axpy!(a, x, y)
     @assert length(x) == length(y)
-    @simd for i=1:length(x)
+    @simd for i=1:length(y)
         @inbounds y[i] += a*x[i]
     end
     nothing
@@ -69,9 +88,10 @@ end
 
 function simd_wxpy!(w, x, y)
     @assert length(x) == length(y) == length(w)
-    @simd for i=1:length(x)
+    @simd for i=1:length(w)
         @inbounds w[i] = x[i] + y[i]
     end
+    nothing
 end
 
 function simd_waxpy!(w, a, x, y)
@@ -102,4 +122,5 @@ function simd_mult!(w, a, X, y)
             @inbounds w[i] += a * X[i,j] * y[j]
         end
     end
+    nothing
 end
