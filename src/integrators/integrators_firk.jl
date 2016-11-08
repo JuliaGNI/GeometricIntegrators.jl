@@ -79,7 +79,7 @@ immutable IntegratorFIRK{T, ST} <: Integrator{T}
     F::Array{T,2}
 end
 
-function IntegratorFIRK{T}(equation::ODE{T}, tableau::TableauFIRK{T}, Δt::T)
+function IntegratorFIRK{T}(equation::ODE{T}, tableau::TableauFIRK{T}, Δt::T; nonlinear_solver=QuasiNewtonSolver)
     D = equation.d
     S = tableau.s
 
@@ -90,8 +90,7 @@ function IntegratorFIRK{T}(equation::ODE{T}, tableau::TableauFIRK{T}, Δt::T)
     params = NonlinearFunctionParametersFIRK{T}(equation.f, Δt, D, S, tableau.a)
 
     # create solver
-    solver = QuasiNewtonSolver(z, params)
-    # TODO allow for other nonlinear solvers based on constructor argument
+    solver = nonlinear_solver(z, params)
 
     # create integrator
     IntegratorFIRK{T, typeof(solver)}(equation, tableau, Δt, solver, params.x, params.y, params.X, params.Y, params.F)
