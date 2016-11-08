@@ -15,8 +15,9 @@ function fp(q, p, fp)
 end
 
 include("equations/equations_tests.jl")
-include("integrators/integrators_test.jl")
+include("integrators/timeseries_tests.jl")
 include("integrators/solutions_tests.jl")
+include("integrators/integrators_test.jl")
 include("integrators/tableaus_tests.jl")
 include("solvers/linear_solvers_tests.jl")
 include("solvers/nonlinear_solvers_tests.jl")

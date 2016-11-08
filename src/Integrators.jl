@@ -16,11 +16,19 @@ module Integrators
 
     include("integrators/tableaus.jl")
 
+    export Timeseries, compute_timeseries!
+
+    include("integrators/timeseries.jl")
+
     export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE,
-           reset!, set_initial_conditions!,
+           reset!, set_initial_conditions!, compute_time_steps!,
            createHDF5, writeSolutionToHDF5
 
     include("integrators/solutions.jl")
+    include("integrators/solutions_ode.jl")
+    include("integrators/solutions_pode.jl")
+    include("integrators/solutions_dae.jl")
+    include("integrators/solutions_pdae.jl")
 
     export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK, IntegratorSIRK,
            IntegratorEPRK, IntegratorIPRK, IntegratorSARK, IntegratorSPARK,

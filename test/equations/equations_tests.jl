@@ -11,7 +11,7 @@ function f_ode(x, fx)
     fx[1] = x[1]
 end
 
-ode  = ODE{Float64}(1, f_ode, t₀, q₀)
+ode  = ODE{Float64}(1, 1, f_ode, t₀, q₀)
 ode1 = ODE(f_ode, t₀, q₀)
 ode2 = ODE(f_ode, q₀)
 
@@ -27,7 +27,7 @@ function g_pode(q, p, fp)
     fp[1] = 2p[1]
 end
 
-pode  = PODE{Float64}(1, f_pode, g_pode, t₀, q₀, p₀)
+pode  = PODE{Float64}(1, 1, f_pode, g_pode, t₀, q₀, p₀)
 pode1 = PODE(f_pode, g_pode, t₀, q₀, p₀)
 pode2 = PODE(f_pode, g_pode, q₀, p₀)
 
@@ -35,7 +35,7 @@ pode2 = PODE(f_pode, g_pode, q₀, p₀)
 @test pode == pode2
 
 
-sode  = SODE{Float64}(1, q₀, p₀, t₀, do_nothing, do_nothing, f_pode, g_pode)
+sode  = SODE{Float64}(1, 1, q₀, p₀, t₀, do_nothing, do_nothing, f_pode, g_pode)
 sode1 = SODE(q₀, p₀, t₀; v=f_pode, f=g_pode)
 sode2 = SODE(q₀, p₀; v=f_pode, f=g_pode)
 

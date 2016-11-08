@@ -100,36 +100,38 @@ end
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
 function integrate!(int::IntegratorFIRK, sol::SolutionODE)
-    # copy initial conditions from solution
-    simd_copy_xy_first!(int.x, sol, 0)
+    # loop over initial conditions
+    for m in 1:sol.n0
+        # copy initial conditions from solution
+        simd_copy_xy_first!(int.x, sol, 0, m)
 
-    for n in 1:sol.ntime
-        # compute initial guess
-        # TODO
-        for i in 1:int.tableau.s
-            for k in 1:int.equation.d
-                int.solver.x[int.equation.d*(i-1)+k] = int.x[k]
+        for n in 1:sol.ntime
+            # compute initial guess
+            # TODO
+            for i in 1:int.tableau.s
+                for k in 1:int.equation.d
+                    int.solver.x[int.equation.d*(i-1)+k] = int.x[k]
+                end
             end
-        end
 
-        # call nonlinear solver
-        solve!(int.solver)
+            # call nonlinear solver
+            solve!(int.solver)
 
-        if (int.solver.status.rₐ > int.solver.params.atol² &&
-            int.solver.status.rᵣ > int.solver.params.rtol  &&
-            int.solver.status.rₛ > int.solver.params.stol²)||
-            int.solver.status.i >= int.solver.params.nmax
-            println(int.solver.status.i, ", ", int.solver.status.rₐ,", ",  int.solver.status.rᵣ,", ",  int.solver.status.rₛ)
-        end
+            if (int.solver.status.rₐ > int.solver.params.atol² &&
+                int.solver.status.rᵣ > int.solver.params.rtol  &&
+                int.solver.status.rₛ > int.solver.params.stol²)||
+                int.solver.status.i >= int.solver.params.nmax
+                println(int.solver.status.i, ", ", int.solver.status.rₐ,", ",  int.solver.status.rᵣ,", ",  int.solver.status.rₛ)
+            end
 
-        # compute final update
-        simd_mult!(int.y, int.F, int.tableau.b)
-        simd_axpy!(int.Δt, int.y, int.x)
+            # compute final update
+            simd_mult!(int.y, int.F, int.tableau.b)
+            simd_axpy!(int.Δt, int.y, int.x)
 
-        # copy to solution
-        if mod(n, sol.nsave) == 0
-            simd_copy_yx_first!(int.x, sol, div(n, sol.nsave))
-            sol.t[div(n, sol.nsave)+1] = sol.t[1] + n * int.Δt
+            # copy to solution
+            if mod(n, sol.nsave) == 0
+                simd_copy_yx_first!(int.x, sol, div(n, sol.nsave), m)
+            end
         end
     end
     nothing

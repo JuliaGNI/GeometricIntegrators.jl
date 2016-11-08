@@ -48,7 +48,7 @@ end
 
 "Apply integrator for ntime time steps and return solution."
 function integrate(integrator::Integrator, ntime::Int, nsave::Int=1)
-    solution = Solution(integrator.equation, ntime, nsave)
+    solution = Solution(integrator.equation, integrator.Δt, ntime, nsave)
     integrate!(integrator, solution)
     return solution
 end

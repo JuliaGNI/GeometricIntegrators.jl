@@ -73,47 +73,50 @@ end
 
 "Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
 function integrate!(int::IntegratorEPRK, sol::SolutionPODE)
-    local j::Int
-    # copy initial conditions from solution
-    for i in 1:sol.d
-        int.q[i] = sol[i, 1, 0]
-        int.p[i] = sol[i, 2, 0]
-    end
+    # loop over initial conditions
+    for m in 1:sol.n0
+        local j::Int
 
-    for n in 1:sol.ntime
-        # compute internal stages
-        fill!(int.Y, 0.)
-        fill!(int.Z, 0.)
-        for i in 1:int.tableau.s
-            if int.tableau.a_q[i,i] ≠ 0. && int.tableau.a_p[i,i] ≠ 0.
-                error("This is an implicit method!")
-            elseif int.tableau.a_q[i,i] ≠ 0.
-                computeStageP!(int, i, i-1)
-                computeStageQ!(int, i, i)
-            elseif int.tableau.a_p[i,i] ≠ 0.
-                computeStageQ!(int, i, i-1)
-                computeStageP!(int, i, i)
-            else
-                computeStageQ!(int, i, i-1)
-                computeStageP!(int, i, i-1)
-            end
+        # copy initial conditions from solution
+        for i in 1:sol.nd
+            int.q[i] = sol[1, i, 0, m]
+            int.p[i] = sol[2, i, 0, m]
         end
 
-        # compute final update
-        simd_mult!(int.y, int.F, int.tableau.b_q)
-        simd_axpy!(int.Δt, int.y, int.q)
-
-        simd_mult!(int.z, int.G, int.tableau.b_p)
-        simd_axpy!(int.Δt, int.z, int.p)
-
-        # copy to solution
-        if mod(n, sol.nsave) == 0
-            j = div(n, sol.nsave)
-            for i in 1:sol.d
-                sol[i, 1, j] = int.q[i]
-                sol[i, 2, j] = int.p[i]
+        for n in 1:sol.ntime
+            # compute internal stages
+            fill!(int.Y, 0.)
+            fill!(int.Z, 0.)
+            for i in 1:int.tableau.s
+                if int.tableau.a_q[i,i] ≠ 0. && int.tableau.a_p[i,i] ≠ 0.
+                    error("This is an implicit method!")
+                elseif int.tableau.a_q[i,i] ≠ 0.
+                    computeStageP!(int, i, i-1)
+                    computeStageQ!(int, i, i)
+                elseif int.tableau.a_p[i,i] ≠ 0.
+                    computeStageQ!(int, i, i-1)
+                    computeStageP!(int, i, i)
+                else
+                    computeStageQ!(int, i, i-1)
+                    computeStageP!(int, i, i-1)
+                end
             end
-            sol.t[div(n, sol.nsave)+1] = sol.t[1] + n * int.Δt
+
+            # compute final update
+            simd_mult!(int.y, int.F, int.tableau.b_q)
+            simd_axpy!(int.Δt, int.y, int.q)
+
+            simd_mult!(int.z, int.G, int.tableau.b_p)
+            simd_axpy!(int.Δt, int.z, int.p)
+
+            # copy to solution
+            if mod(n, sol.nsave) == 0
+                j = div(n, sol.nsave)
+                for i in 1:sol.nd
+                    sol[1, i, j, m] = int.q[i]
+                    sol[2, i, j, m] = int.p[i]
+                end
+            end
         end
     end
     nothing
