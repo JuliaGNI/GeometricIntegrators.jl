@@ -2,7 +2,7 @@ using Documenter, GeomDAE
 
 makedocs(
     sitename = "GeomDAE.jl",
-    format = Documenter.Formats.HTML,
+    format = :html,
     pages = ["Home" => "index.md",
              "Tutorial" => "tutorial.md",
              "Modules"  => [
