@@ -18,7 +18,8 @@ end
 
 function solve!{T}(s::NewtonSolver{T})
     function_stages!(s.x, s.linear.b, s.Fparams)
-    scale!(s.linear.b, -1.)
+    scale!(s.linear.b, -one(T))
+    s.status.i  = 0
     s.status.rₐ = residual_absolute(s.linear.b)
     s.status.r₀ = s.status.rₐ
 
@@ -27,10 +28,10 @@ function solve!{T}(s::NewtonSolver{T})
             computeJacobian(s.x, s.linear.A, s.Jparams)
             factorize!(s.linear)
             solve!(s.linear)
-            simd_axpy!(1., s.linear.b, s.x)
+            simd_xpy!(s.linear.b, s.x)
             s.status.rᵣ = residual_relative(s.linear.b, s.x)
             function_stages!(s.x, s.linear.b, s.Fparams)
-            scale!(s.linear.b, -1.)
+            scale!(s.linear.b, -one(T))
             s.status.rₛ = s.status.rₐ
             s.status.rₐ = residual_absolute(s.linear.b)
             s.status.rₛ = abs(s.status.rₛ - s.status.rₐ)/s.status.r₀
