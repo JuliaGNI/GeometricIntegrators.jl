@@ -202,7 +202,7 @@ function integrate!(int::IntegratorIPRK, sol::SolutionPODE)
         # call nonlinear solver
         solve!(int.solver)
 
-        if !solverStatusOK(int.solver.status)
+        if !solverStatusOK(int.solver.status, int.solver.params)
             println(int.solver.status)
         end
 

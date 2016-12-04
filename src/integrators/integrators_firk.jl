@@ -139,7 +139,7 @@ function integrate!{T}(int::IntegratorFIRK{T}, sol::SolutionODE{T})
             # call nonlinear solver
             solve!(int.solver)
 
-            if !solverStatusOK(int.solver.status)
+            if !solverStatusOK(int.solver.status, int.solver.params)
                 println(int.solver.status)
             end
 
