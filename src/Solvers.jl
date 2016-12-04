@@ -3,13 +3,14 @@ __precompile__()
 module Solvers
 
     using ..Utils
-    
+
     include("utils/macro_utils.jl")
 
-    export LinearSolver, LUSolverLAPACK,
+    export LinearSolver, LUSolver, LUSolverLAPACK,
            factorize!, solve!
 
     include("solvers/linear/linear_solvers.jl")
+    include("solvers/linear/lu_solver.jl")
     include("solvers/linear/lu_solver_lapack.jl")
 
     export NonlinearSolver, AbstractNewtonSolver, NewtonSolver, QuasiNewtonSolver,
