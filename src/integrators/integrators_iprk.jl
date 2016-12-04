@@ -86,6 +86,9 @@ end
          push!(fargs, :(params.tF))
      end
 
+     # TODO Below, only the case (fp, ff) is implemented. All other combinations
+     #      need to be implemented as well.
+
      code = quote
          local tqᵢ::T
          local tpᵢ::T
@@ -199,11 +202,8 @@ function integrate!(int::IntegratorIPRK, sol::SolutionPODE)
         # call nonlinear solver
         solve!(int.solver)
 
-        if (int.solver.status.rₐ > int.solver.params.atol² &&
-            int.solver.status.rᵣ > int.solver.params.rtol  &&
-            int.solver.status.rₛ > int.solver.params.stol²)||
-            int.solver.status.i  ≥ int.solver.params.nmax
-            println(int.solver.status.i, ", ", int.solver.status.rₐ,", ",  int.solver.status.rᵣ,", ",  int.solver.status.rₛ)
+        if !solverStatusOK(int.solver.status)
+            println(int.solver.status)
         end
 
         # compute final update

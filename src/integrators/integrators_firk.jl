@@ -139,12 +139,8 @@ function integrate!{T}(int::IntegratorFIRK{T}, sol::SolutionODE{T})
             # call nonlinear solver
             solve!(int.solver)
 
-            if (int.solver.status.rₐ > int.solver.params.atol² &&
-                int.solver.status.rᵣ > int.solver.params.rtol  &&
-                int.solver.status.rₛ > int.solver.params.stol²)||
-                int.solver.status.i >= int.solver.params.nmax
-                println(int.solver.status.i, ", ", int.solver.status.rₐ,", ",
-                        int.solver.status.rᵣ,", ", int.solver.status.rₛ)
+            if !solverStatusOK(int.solver.status)
+                println(int.solver.status)
             end
 
             # compute final update

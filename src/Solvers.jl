@@ -14,7 +14,7 @@ module Solvers
     include("solvers/linear/lu_solver_lapack.jl")
 
     export NonlinearSolver, AbstractNewtonSolver, NewtonSolver, QuasiNewtonSolver,
-           NonlinearFunctionParameters,
+           NonlinearFunctionParameters, solverStatusOK,
            solve!, function_stages!
 
     include("solvers/nonlinear/nonlinear_solvers.jl")

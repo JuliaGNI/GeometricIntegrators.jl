@@ -56,6 +56,16 @@ type NonlinearSolverStatus{T}
     NonlinearSolverStatus() = new(0, 0., 0., 0., 0.)
 end
 
+Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
+                        int.solver.status.i, ", ", int.solver.status.rₐ,", ",
+                        int.solver.status.rᵣ,", ", int.solver.status.rₛ)
+
+function solverStatusOK(status::NonlinearSolverStatus)
+    return int.solver.status.rₐ < int.solver.params.atol² &&
+           int.solver.status.rᵣ < int.solver.params.rtol  &&
+           int.solver.status.rₛ < int.solver.params.stol² &&
+           int.solver.status.i  ≤ int.solver.params.nmax
+end
 
 function getLinearSolver(T, n, linear_solver)
     if linear_solver == nothing
