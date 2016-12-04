@@ -11,6 +11,8 @@ module GeomDAE
     @reexport using .Utils
     include("Equations.jl")
     @reexport using .Equations
+    include("Interpolation.jl")
+    @reexport using .Interpolation
     include("Solvers.jl")
     @reexport using .Solvers
     include("Integrators.jl")
