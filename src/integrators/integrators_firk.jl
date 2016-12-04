@@ -73,12 +73,13 @@ end
 
 
 "Fully implicit Runge-Kutta integrator."
-immutable IntegratorFIRK{T, ST} <: Integrator{T}
+immutable IntegratorFIRK{T, ST, IT} <: Integrator{T}
     equation::ODE{T}
     tableau::TableauFIRK{T}
     Δt::T
 
     solver::ST
+    iguess::InitialGuess{T, IT}
 
     x::Array{T,1}
     y::Array{T,1}
@@ -87,7 +88,9 @@ immutable IntegratorFIRK{T, ST} <: Integrator{T}
     F::Array{T,2}
 end
 
-function IntegratorFIRK{T}(equation::ODE{T}, tableau::TableauFIRK{T}, Δt::T; nonlinear_solver=QuasiNewtonSolver)
+function IntegratorFIRK{T}(equation::ODE{T}, tableau::TableauFIRK{T}, Δt::T;
+                           nonlinear_solver=QuasiNewtonSolver,
+                           interpolation=HermiteInterpolation{T})
     D = equation.d
     S = tableau.s
 
@@ -100,8 +103,11 @@ function IntegratorFIRK{T}(equation::ODE{T}, tableau::TableauFIRK{T}, Δt::T; no
     # create solver
     solver = nonlinear_solver(z, params)
 
+    # create initial guess
+    iguess = InitialGuess(interpolation, equation, Δt)
+
     # create integrator
-    IntegratorFIRK{T, typeof(solver)}(equation, tableau, Δt, solver, params.x, params.y, params.X, params.Y, params.F)
+    IntegratorFIRK{T, typeof(solver), typeof(iguess.int)}(equation, tableau, Δt, solver, iguess, params.x, params.y, params.X, params.Y, params.F)
 end
 
 
@@ -112,12 +118,21 @@ function integrate!{T}(int::IntegratorFIRK{T}, sol::SolutionODE{T})
         # copy initial conditions from solution
         simd_copy_xy_first!(int.x, sol, 0, m)
 
+        # initialise initial guess
+        initialize!(int.iguess, sol.t[0], int.x)
+
         for n in 1:sol.ntime
-            # compute initial guess
-            # TODO
+            # set time for nonlinear solver
+            int.solver.Fparams.t = sol.t[n]
+
+            # copy previous solution to initial guess
+            update!(int.iguess, sol.t[n], int.x)
+
+            # compute initial guess for internal stages
             for i in 1:int.tableau.s
+                evaluate(int.iguess, int.y, int.tableau.c[i])
                 for k in 1:int.equation.d
-                    int.solver.x[int.equation.d*(i-1)+k] = int.x[k]
+                    int.solver.x[int.equation.d*(i-1)+k] = int.y[k]
                 end
             end
 
@@ -128,7 +143,8 @@ function integrate!{T}(int::IntegratorFIRK{T}, sol::SolutionODE{T})
                 int.solver.status.rᵣ > int.solver.params.rtol  &&
                 int.solver.status.rₛ > int.solver.params.stol²)||
                 int.solver.status.i >= int.solver.params.nmax
-                println(int.solver.status.i, ", ", int.solver.status.rₐ,", ",  int.solver.status.rᵣ,", ",  int.solver.status.rₛ)
+                println(int.solver.status.i, ", ", int.solver.status.rₐ,", ",
+                        int.solver.status.rᵣ,", ", int.solver.status.rₛ)
             end
 
             # compute final update
