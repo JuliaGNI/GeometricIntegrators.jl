@@ -2,15 +2,15 @@
 using GeomDAE
 using Base.Test
 
-function fx(x, fx)
+function fx(t, x, fx)
     fx .= x
 end
 
-function fq(q, p, fq)
+function fq(t, q, p, fq)
     fq .= q
 end
 
-function fp(q, p, fp)
+function fp(t, q, p, fp)
     fp .= q.^2
 end
 
