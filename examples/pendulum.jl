@@ -7,7 +7,7 @@ const ntime = 100000
 const neps  = 1E-14
 const nmax  = 20
 
-function f(x, fx)
+function f(t, x, fx)
     fx[1] = x[2]
     fx[2] = sin(x[1])
     nothing
@@ -50,7 +50,7 @@ function qf(x, fx)
     nothing
 end
 
-function pf(x, fx)
+function pf(t, x, fx)
     fx[1] = sin(x[1])
     nothing
 end

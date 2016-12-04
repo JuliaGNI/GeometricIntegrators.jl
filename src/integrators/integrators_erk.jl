@@ -21,12 +21,14 @@ immutable IntegratorERK{T} <: Integrator{T}
     end
 end
 
-function IntegratorERK(equation::Equation, tableau::TableauERK, Δt)
-    IntegratorERK{eltype(equation.q₀)}(equation, tableau, Δt)
+function IntegratorERK{T}(equation::Equation{T}, tableau::TableauERK{T}, Δt::T)
+    IntegratorERK{T}(equation, tableau, Δt)
 end
 
 "Integrate ODE with explicit Runge-Kutta integrator."
-function integrate!(int::IntegratorERK, sol::SolutionODE)
+function integrate!{T}(int::IntegratorERK{T}, sol::SolutionODE{T})
+    local tᵢ::T
+
     # loop over initial conditions
     for m in 1:sol.n0
         # copy initial conditions from solution
@@ -35,7 +37,7 @@ function integrate!(int::IntegratorERK, sol::SolutionODE)
         # loop over time steps
         for n in 1:sol.ntime
             # compute internal stages
-            fill!(int.Y, 0.)
+            fill!(int.Y, zero(T))
             for i in 1:int.tableau.s
                 for k in 1:sol.nd
                     for j = 1:i-1
@@ -43,8 +45,9 @@ function integrate!(int::IntegratorERK, sol::SolutionODE)
                     end
                     int.X[k,i] = int.x[k] + int.Δt * int.Y[k,i]
                 end
+                tᵢ = sol.t[n] + int.Δt * int.tableau.c[i]
                 simd_copy_xy_first!(int.tX, int.X, i)
-                int.equation.f(int.tX, int.tF)
+                int.equation.f(tᵢ, int.tX, int.tF)
                 simd_copy_yx_first!(int.tF, int.F, i)
             end
 

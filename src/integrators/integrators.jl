@@ -59,9 +59,9 @@ function integrate(equation::Equation, tableau::Tableau, Δt, ntime::Int, nsave:
 end
 
 "Integrate ODE specified by vector field and initial condition with given tableau for ntime time steps and return solution."
-function integrate(f::Function, x0::Vector, tableau::Tableau, Δt, ntime::Int, nsave::Int=1)
-    return integrate(ODE(f, x0), tableau, Δt, ntime, nsave)
+function integrate(f::Function, x₀::Vector, tableau::Tableau, Δt, ntime::Int, nsave::Int=1; t₀=0)
+    return integrate(ODE(f, t₀, x₀), tableau, Δt, ntime, nsave)
 end
 
 
-# TODO Add solver status information to all integrators.
+# TODO Add solver status information to all integrators (if requested).
