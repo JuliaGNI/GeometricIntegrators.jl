@@ -35,18 +35,27 @@ function SolutionPODE{T}(equation::Union{PODE{T},SODE{T}}, Δt::T, ntime::Int, n
 end
 
 function set_initial_conditions!(solution::SolutionPODE, equation::Union{PODE,SODE})
-    solution[1, :, 0, 1] = equation.q₀
-    solution[2, :, 0, 1] = equation.p₀
+    for k in 1:solution.n0
+        for i in 1:solution.nd
+            solution[1, i, 0, k] = equation.q₀[i,k]
+            solution[2, i, 0, k] = equation.p₀[i,k]
+        end
+    end
     solution.t[0] = equation.t₀
     compute_timeseries!(solution.t)
 end
 
 function reset!(s::SolutionPODE)
-    solution[:, :, 0, :] = solution[1:2, :, end, :]
+    for k in 1:solution.n0
+        for i in 1:solution.nd
+            solution[1, i, 0, k] = solution[1, i, end, k]
+            solution[2, i, 0, k] = solution[2, i, end, k]
+        end
+    end
 end
 
 Base.indices(s::SolutionPODE) = (1:2, 1:s.nd, 0:s.nt, 1:s.n0)
-Base.strides(s::SolutionPODE) = (1, s.nd, s.nt)
+Base.strides(s::SolutionPODE) = (1, 2, 2*s.nd, 2*s.nd*s.nt)
 # Base.linearindexing{T<:SolutionPODE}(::Type{T}) = LinearFast()
 
 @inline function Base.getindex(s::SolutionPODE, i::Int, j::Int, k::Int, m::Int)
@@ -71,19 +80,19 @@ end
         @boundscheck checkbounds(s.x, :, k, m+1, 1)
         @inbounds r = getindex(s.x, :, k, m+1, 1)
     else
-        @boundscheck checkbounds(s.x, :, :, k+1, m)
-        @inbounds r = getindex(s.x, :, :, k+1, m)
+        @boundscheck checkbounds(s.x, :, 1:s.nd, k+1, m)
+        @inbounds r = getindex(s.x, :, 1:s.nd, k+1, m)
     end
     return r
 end
 
 @inline function Base.getindex(s::SolutionPODE, m::Int)
     if s.n0 == 1
-        @boundscheck checkbounds(s.x, :, :, m, 1)
-        @inbounds r = getindex(s.x, :, :, m, 1)
+        @boundscheck checkbounds(s.x, :, 1:s.nd, m, 1)
+        @inbounds r = getindex(s.x, :, 1:s.nd, m, 1)
     else
-        @boundscheck checkbounds(s.x, :, :, :, m)
-        @inbounds r = getindex(s.x, :, :, :, m)
+        @boundscheck checkbounds(s.x, :, 1:s.nd, :, m)
+        @inbounds r = getindex(s.x, :, 1:s.nd, :, m)
     end
     return r
 end

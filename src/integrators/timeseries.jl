@@ -1,7 +1,7 @@
 
 immutable Timeseries{T} <: AbstractArray{T,1}
     n::Int
-    t::Array{T,1}
+    t::Vector{T}
 
     Δt::T
     step::Int
@@ -10,6 +10,7 @@ immutable Timeseries{T} <: AbstractArray{T,1}
         @assert T <: Real
         @assert n > 0
         @assert step > 0
+        @assert n ≥ step
 
         t = zeros(T, n+1)
         new(n, t, Δt, step)
@@ -27,7 +28,7 @@ Base.length(t::Timeseries) = length(t.t)
 Base.endof(t::Timeseries) = length(t)
 Base.indices(t::Timeseries) = (0:t.n,)
 Base.indices(t::Timeseries, d) = indices(t)[d]
-Base.strides(t::Timeseries) = (1)
+Base.strides(t::Timeseries) = (1,)
 Base.stride(t::Timeseries, d) = strides(t)[d]
 
 @inline function Base.setindex!(ts::Timeseries, t, i::Int)

@@ -45,19 +45,27 @@ function SolutionODE{T}(equation::ODE{T}, Δt::T, ntime::Int, nsave::Int=1)
 end
 
 function set_initial_conditions!(solution::SolutionODE, equation::ODE)
-    simd_copy_yx_first!(equation.q₀, solution, 0)
-    solution.t[0] = equation.t₀
+    set_initial_conditions!(solution, equation.t₀, equation.q₀)
+end
+
+function set_initial_conditions!(solution::SolutionODE, t₀, q₀)
+    simd_copy_yx_first_last!(q₀, solution, 0)
+    solution.t[0] = t₀
     compute_timeseries!(solution.t)
 end
 
 function reset(s::SolutionODE)
-    solution[1:solution.nd, 0, 1:solution.n0] = solution[1:solution.d, end, 1:solution.n0]
+    for k in 1:solution.n0
+        for i in 1:solution.nd
+            solution[i, 0, k] = solution[i, end, k]
+        end
+    end
     solution.t[0] = solution.t[end]
     compute_timeseries!(solution.t)
 end
 
 Base.indices(s::SolutionODE) = (1:s.nd, 0:s.nt, 1:s.n0)
-Base.strides(s::SolutionODE) = (1, s.nd, s.nt)
+Base.strides(s::SolutionODE) = (1, s.nd, s.nd*s.nt)
 # Base.linearindexing{T<:SolutionODE}(::Type{T}) = LinearFast()
 
 @inline function Base.getindex(s::SolutionODE, i::Int, j::Int, k::Int)
@@ -82,8 +90,8 @@ end
         @boundscheck checkbounds(s.x, 1:s.nd, k+1, 1)
         @inbounds r = getindex(s.x, 1:s.nd, k+1, 1)
     else
-        @boundscheck checkbounds(s.x, 1:s.nd, :, k)
-        @inbounds r = getindex(s.x, 1:s.nd, :, k)
+        @boundscheck checkbounds(s.x, 1:s.nd, 1:s.nt, k)
+        @inbounds r = getindex(s.x, 1:s.nd, 1:s.nt, k)
     end
     return r
 end
