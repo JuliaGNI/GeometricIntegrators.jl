@@ -1,7 +1,7 @@
 
 "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
-type NonlinearFunctionParametersFIRK{T} <: NonlinearFunctionParameters{T}
-    f::Function
+type NonlinearFunctionParametersFIRK{T,FT} <: NonlinearFunctionParameters{T}
+    f::FT
     Δt::T
 
     d::Int
@@ -40,7 +40,7 @@ type NonlinearFunctionParametersFIRK{T} <: NonlinearFunctionParameters{T}
 end
 
 "Compute stages of fully implicit Runge-Kutta methods."
-function function_stages!{T}(y::Vector{T}, b::Vector{T}, params::NonlinearFunctionParametersFIRK{T})
+function function_stages!{T,FT}(y::Vector{T}, b::Vector{T}, params::NonlinearFunctionParametersFIRK{T,FT})
     local tᵢ::T
 
     for i in 1:params.s
@@ -73,13 +73,13 @@ end
 
 
 "Fully implicit Runge-Kutta integrator."
-immutable IntegratorFIRK{T, ST, IT} <: Integrator{T}
-    equation::ODE{T}
+immutable IntegratorFIRK{T, FT, ST, IT} <: Integrator{T}
+    equation::ODE{T,FT}
     tableau::TableauFIRK{T}
     Δt::T
 
     solver::ST
-    iguess::InitialGuess{T, IT}
+    iguess::InitialGuess{T, FT, IT}
 
     x::Array{T,1}
     y::Array{T,1}
@@ -88,9 +88,9 @@ immutable IntegratorFIRK{T, ST, IT} <: Integrator{T}
     F::Array{T,2}
 end
 
-function IntegratorFIRK{T}(equation::ODE{T}, tableau::TableauFIRK{T}, Δt::T;
-                           nonlinear_solver=QuasiNewtonSolver,
-                           interpolation=HermiteInterpolation{T})
+function IntegratorFIRK{T,FT}(equation::ODE{T,FT}, tableau::TableauFIRK{T}, Δt::T;
+                              nonlinear_solver=QuasiNewtonSolver,
+                              interpolation=HermiteInterpolation{T})
     D = equation.d
     S = tableau.s
 
@@ -98,7 +98,7 @@ function IntegratorFIRK{T}(equation::ODE{T}, tableau::TableauFIRK{T}, Δt::T;
     z = zeros(T, D*S)
 
     # create params
-    params = NonlinearFunctionParametersFIRK{T}(equation.f, Δt, D, S, tableau.a, tableau.c)
+    params = NonlinearFunctionParametersFIRK{T,FT}(equation.f, Δt, D, S, tableau.a, tableau.c)
 
     # create solver
     solver = nonlinear_solver(z, params)
@@ -107,12 +107,12 @@ function IntegratorFIRK{T}(equation::ODE{T}, tableau::TableauFIRK{T}, Δt::T;
     iguess = InitialGuess(interpolation, equation, Δt)
 
     # create integrator
-    IntegratorFIRK{T, typeof(solver), typeof(iguess.int)}(equation, tableau, Δt, solver, iguess, params.x, params.y, params.X, params.Y, params.F)
+    IntegratorFIRK{T, FT, typeof(solver), typeof(iguess.int)}(equation, tableau, Δt, solver, iguess, params.x, params.y, params.X, params.Y, params.F)
 end
 
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
-function integrate!{T}(int::IntegratorFIRK{T}, sol::SolutionODE{T})
+function integrate!{T, FT, ST, IT}(int::IntegratorFIRK{T, FT, ST, IT}, sol::SolutionODE{T})
     # loop over initial conditions
     for m in 1:sol.n0
         # copy initial conditions from solution

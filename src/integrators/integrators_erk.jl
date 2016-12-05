@@ -1,7 +1,7 @@
 
 "Explicit Runge-Kutta integrator."
-immutable IntegratorERK{T} <: Integrator{T}
-    equation::ODE{T}
+immutable IntegratorERK{T,F} <: Integrator{T}
+    equation::ODE{T,F}
     tableau::TableauERK{T}
     Δt::T
 
@@ -21,12 +21,12 @@ immutable IntegratorERK{T} <: Integrator{T}
     end
 end
 
-function IntegratorERK{T}(equation::Equation{T}, tableau::TableauERK{T}, Δt::T)
-    IntegratorERK{T}(equation, tableau, Δt)
+function IntegratorERK{T,F}(equation::ODE{T,F}, tableau::TableauERK{T}, Δt::T)
+    IntegratorERK{T,F}(equation, tableau, Δt)
 end
 
 "Integrate ODE with explicit Runge-Kutta integrator."
-function integrate!{T}(int::IntegratorERK{T}, sol::SolutionODE{T})
+function integrate!{T,F}(int::IntegratorERK{T,F}, sol::SolutionODE{T})
     local tᵢ::T
 
     # loop over initial conditions

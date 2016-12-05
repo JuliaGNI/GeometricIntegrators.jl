@@ -4,7 +4,7 @@ ntime = 10
 x0  = [1.]
 dim = 1
 
-ode = ODE{eltype(x0)}(dim, 1, fx, 0, x0)
+ode = ODE(fx, x0)
 sol = Solution(ode, Δt, ntime)
 @test typeof(sol) <: SolutionODE
 # @test length(sol) == dim*(ntime+1)

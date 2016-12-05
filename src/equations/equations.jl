@@ -1,5 +1,5 @@
 
-abstract Equation{T}
+abstract Equation{T <: Number}
 
 function do_nothing(x...) end
 
