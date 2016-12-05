@@ -1,5 +1,5 @@
 
-abstract Integrator{T}
+abstract Integrator{dType, tType}
 
 "Create integrator for explicit Runge-Kutta tableau."
 function Integrator(equation::ODE, tableau::TableauERK, Δt)

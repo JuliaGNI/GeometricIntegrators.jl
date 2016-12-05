@@ -1,7 +1,7 @@
 
 using HDF5
 
-abstract Solution{T,N} <: AbstractArray{T,N}
+abstract Solution{dType, tType, N} <: AbstractArray{dType, N}
 
 "Create solution for ODE."
 function Solution(equation::ODE, Δt, ntime::Int, nsave::Int=1)
@@ -52,8 +52,8 @@ function writeSolutionToHDF5(solution::Solution, file::AbstractString)
 end
 
 
-Base.eltype{T,N}(s::Solution{T,N}) = T
-Base.ndims{T,N}(s::Solution{T,N}) = N
+Base.eltype{DT,TT,N}(s::Solution{DT,TT,N}) = DT
+Base.ndims{DT,TT,N}(s::Solution{DT,TT,N}) = N
 Base.size(s::Solution) = size(s.x)
 # Base.length(s::Solution) = s.d * s.n
 # Base.length(s::Solution) = length(s.x)

@@ -3,28 +3,28 @@ include("../interpolation/interpolation.jl")
 include("../interpolation/hermite_interpolation.jl")
 include("../tableaus/tableaus_erk.jl")
 
-type InitialGuess{T, FT, IT <: Interpolator}
+type InitialGuess{DT, TT, FT, IT <: Interpolator}
     int::IT
-    rk4::IntegratorERK{T,FT}
-    sol::SolutionODE{T}
+    rk4::IntegratorERK{DT,TT,FT}
+    sol::SolutionODE{DT,TT}
     f::FT
-    Δt::T
-    y₀::Vector{T}
-    f₀::Vector{T}
-    y₁::Vector{T}
-    f₁::Vector{T}
+    Δt::TT
+    y₀::Vector{DT}
+    f₀::Vector{DT}
+    y₁::Vector{DT}
+    f₁::Vector{DT}
 end
 
-function InitialGuess{T,FT}(int, equ::ODE{T,FT}, Δt::T)
-    interp = int(zero(T), one(T), equ.d)
+function InitialGuess{DT,TT,FT}(int, equ::ODE{DT,TT,FT}, Δt::TT)
+    interp = int(zero(DT), one(DT), equ.d)
     rk4 = IntegratorERK(equ, getTableauERK4(), -Δt)
     sol = SolutionODE(equ, Δt, 1)
-    InitialGuess{T, FT, int}(interp, rk4, sol, equ.f, Δt,
-                             zeros(T, equ.d), zeros(T, equ.d),
-                             zeros(T, equ.d), zeros(T, equ.d))
+    InitialGuess{DT, TT, FT, int}(interp, rk4, sol, equ.f, Δt,
+                                  zeros(DT, equ.d), zeros(DT, equ.d),
+                                  zeros(DT, equ.d), zeros(DT, equ.d))
 end
 
-function initialize!{T,FT,IT}(ig::InitialGuess{T,FT,IT}, t₁::T, y₁::Vector{T})
+function initialize!{DT,TT,FT,IT}(ig::InitialGuess{DT,TT,FT,IT}, t₁::TT, y₁::Vector{DT})
     set_initial_conditions!(ig.sol, t₁, y₁)
     integrate!(ig.rk4, ig.sol)
     simd_copy_xy_first!(ig.y₁, ig.sol, 1, 1)
@@ -32,7 +32,7 @@ function initialize!{T,FT,IT}(ig::InitialGuess{T,FT,IT}, t₁::T, y₁::Vector{T
     simd_scale!(ig.f₁, ig.Δt)
 end
 
-function update!{T,FT,IT}(ig::InitialGuess{T,FT,IT}, t₁::T, y₁::Vector{T})
+function update!{DT,TT,FT,IT}(ig::InitialGuess{DT,TT,FT,IT}, t₁::TT, y₁::Vector{DT})
     simd_copy!(ig.y₁, ig.y₀)
     simd_copy!(ig.f₁, ig.f₀)
     simd_copy!(y₁, ig.y₁)
@@ -40,6 +40,6 @@ function update!{T,FT,IT}(ig::InitialGuess{T,FT,IT}, t₁::T, y₁::Vector{T})
     simd_scale!(ig.f₁, ig.Δt)
 end
 
-function evaluate{T,FT,IT}(ig::InitialGuess{T,FT,IT}, guess::Vector{T}, c::T=one(T))
-    evaluate(ig.int, ig.y₀, ig.y₁, ig.f₀, ig.f₁, one(T)+c, guess)
+function evaluate{DT,TT,FT,IT}(ig::InitialGuess{DT,TT,FT,IT}, guess::Vector{DT}, c::TT=one(TT))
+    evaluate(ig.int, ig.y₀, ig.y₁, ig.f₀, ig.f₁, one(TT)+c, guess)
 end

@@ -11,7 +11,7 @@ function f_ode(x, fx)
     fx[1] = x[1]
 end
 
-ode  = ODE{Float64, typeof(f_ode)}(1, 1, f_ode, t₀, q₀)
+ode  = ODE{eltype(q₀), typeof(t₀), typeof(f_ode)}(1, 1, f_ode, t₀, q₀)
 ode1 = ODE(f_ode, t₀, q₀)
 ode2 = ODE(f_ode, q₀)
 
@@ -27,7 +27,7 @@ function g_pode(q, p, fp)
     fp[1] = 2p[1]
 end
 
-pode  = PODE{Float64, typeof(f_pode), typeof(g_pode)}(1, 1, f_pode, g_pode, t₀, q₀, p₀)
+pode  = PODE{eltype(q₀), typeof(t₀), typeof(f_pode), typeof(g_pode)}(1, 1, f_pode, g_pode, t₀, q₀, p₀)
 pode1 = PODE(f_pode, g_pode, t₀, q₀, p₀)
 pode2 = PODE(f_pode, g_pode, q₀, p₀)
 

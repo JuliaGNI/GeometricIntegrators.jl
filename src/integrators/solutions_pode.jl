@@ -1,18 +1,19 @@
 
 "Solution of a partitioned ordinary differential equation."
-immutable SolutionPODE{T} <: Solution{T,4}
+immutable SolutionPODE{dType, tType} <: Solution{dType, tType, 4}
     nd::Int
     nt::Int
     n0::Int
-    t::Timeseries{T}
-    x::Array{T,4}
-    q::AbstractArray{T,3}
-    p::AbstractArray{T,3}
+    t::Timeseries{tType}
+    x::Array{dType, 4}
+    q::AbstractArray{dType,3}
+    p::AbstractArray{dType,3}
     ntime::Int
     nsave::Int
 
     function SolutionPODE(nd, n0, ntime, nsave, Δt)
-        @assert T <: Real
+        @assert dType <: Number
+        @assert tType <: Real
         @assert nd > 0
         @assert n0 > 0
         @assert nsave > 0
@@ -20,16 +21,16 @@ immutable SolutionPODE{T} <: Solution{T,4}
         @assert mod(ntime, nsave) == 0
 
         nt = div(ntime, nsave)
-        t = Timeseries{T}(nt, Δt, nsave)
-        x = zeros(T, 2, nd, nt+1, n0)
+        t = Timeseries{tType}(nt, Δt, nsave)
+        x = zeros(dType, 2, nd, nt+1, n0)
         q = view(x, 1, :, :, :)
         p = view(x, 2, :, :, :)
         new(nd, nt, n0, t, x, q, p, ntime, nsave)
     end
 end
 
-function SolutionPODE{T}(equation::Union{PODE{T},SODE{T}}, Δt::T, ntime::Int, nsave::Int=1)
-    s = SolutionPODE{T}(equation.d, equation.n, ntime, nsave, Δt)
+function SolutionPODE{DT,TT}(equation::Union{PODE{DT,TT}, SODE{DT}}, Δt::TT, ntime::Int, nsave::Int=1)
+    s = SolutionPODE{DT,TT}(equation.d, equation.n, ntime, nsave, Δt)
     set_initial_conditions!(s, equation)
     return s
 end

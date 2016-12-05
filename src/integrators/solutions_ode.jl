@@ -14,17 +14,18 @@ Contains all fields necessary to store the solution of an ODE.
 * `nsave`: save every nsave'th time step
 
 """
-immutable SolutionODE{T} <: Solution{T,3}
+immutable SolutionODE{dType, tType} <: Solution{dType, tType, 3}
     nd::Int
     nt::Int
     n0::Int
-    t::Timeseries{T}
-    x::Array{T,3}
+    t::Timeseries{tType}
+    x::Array{dType,3}
     ntime::Int
     nsave::Int
 
     function SolutionODE(nd, n0, ntime, nsave, Δt)
-        @assert T <: Real
+        @assert dType <: Number
+        @assert tType <: Real
         @assert nd > 0
         @assert n0 > 0
         @assert nsave > 0
@@ -32,14 +33,14 @@ immutable SolutionODE{T} <: Solution{T,3}
         @assert mod(ntime, nsave) == 0
 
         nt = div(ntime, nsave)
-        t = Timeseries{T}(nt, Δt, nsave)
-        x = zeros(T, nd, nt+1, n0)
+        t = Timeseries{tType}(nt, Δt, nsave)
+        x = zeros(dType, nd, nt+1, n0)
         new(nd, nt, n0, t, x, ntime, nsave)
     end
 end
 
-function SolutionODE{T}(equation::ODE{T}, Δt::T, ntime::Int, nsave::Int=1)
-    s = SolutionODE{T}(equation.d, equation.n, ntime, nsave, Δt)
+function SolutionODE{DT,TT,FT}(equation::ODE{DT,TT,FT}, Δt::TT, ntime::Int, nsave::Int=1)
+    s = SolutionODE{DT,TT}(equation.d, equation.n, ntime, nsave, Δt)
     set_initial_conditions!(s, equation)
     return s
 end
@@ -122,7 +123,7 @@ end
 
 
 "Creates HDF5 file and initialises datasets for ODE solution object."
-function createHDF5{T}(solution::SolutionODE{T}, file::AbstractString, ntime::Int=1)
+function createHDF5{DT,TT}(solution::SolutionODE{DT,TT}, file::AbstractString, ntime::Int=1)
     @assert ntime ≥ 1
 
     info("Creating HDF5 file ", file)
@@ -134,7 +135,7 @@ function createHDF5{T}(solution::SolutionODE{T}, file::AbstractString, ntime::In
     # so that the size of the array does not need to be adapted dynamically.
     # Right now, it has to be set as dynamical size adaptation is not yet
     # working.
-    x = d_create(h5, "x", datatype(T), dataspace(solution.nd, ntime))
+    x = d_create(h5, "x", datatype(DT), dataspace(solution.nd, ntime))
     x[1:solution.nd, 1] = solution[1:solution.nd, 0]
 
     return h5

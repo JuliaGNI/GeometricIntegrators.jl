@@ -28,17 +28,17 @@ where `t` is the current time, `q` is the current solution vector, and
 on `t` and `q`.
 
 """
-immutable ODE{T,F} <: Equation{T}
+immutable ODE{dType, tType, fType} <: Equation{dType, tType}
     d::Int
     n::Int
-    f::F
-    t₀::T
-    q₀::Array{T,2}
+    f::fType
+    t₀::tType
+    q₀::Array{dType,2}
 
     function ODE(d, n, f, t₀, q₀)
         @assert d == size(q₀,1)
         @assert n == size(q₀,2)
-        @assert T == eltype(q₀)
+        @assert dType == eltype(q₀)
         @assert ndims(q₀) ∈ (1,2)
 
         if ndims(q₀) == 1
@@ -49,16 +49,16 @@ immutable ODE{T,F} <: Equation{T}
     end
 end
 
-function ODE{T,F}(f::F, t₀::Real, q₀::DenseArray{T})
-    ODE{T,F}(size(q₀, 1), size(q₀, 2), f, t₀, q₀)
+function ODE{DT,TT,FT}(f::FT, t₀::TT, q₀::DenseArray{DT})
+    ODE{DT,TT,FT}(size(q₀, 1), size(q₀, 2), f, t₀, q₀)
 end
 
 function ODE(f, q₀)
-    ODE(f, 0, q₀)
+    ODE(f, zero(eltype(q₀)), q₀)
 end
 
 Base.hash(ode::ODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.f, hash(ode.t₀, hash(ode.q₀, h)))))
-Base.:(==){T1, T2, F1, F2}(ode1::ODE{T1,F1}, ode2::ODE{T2,F2}) = (
+Base.:(==){DT1, DT2, TT1, TT2, FT1, FT2}(ode1::ODE{DT1,TT1,FT1}, ode2::ODE{DT2,TT2,FT2}) = (
                                 ode1.d == ode2.d
                              && ode1.n == ode2.n
                              && ode1.f == ode2.f

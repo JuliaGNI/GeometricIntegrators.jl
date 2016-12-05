@@ -1,5 +1,5 @@
 
-abstract Equation{T <: Number}
+abstract Equation{dType <: Number, tType <: Real}
 
 function do_nothing(x...) end
 

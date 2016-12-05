@@ -19,7 +19,7 @@ const DEFAULT_ϵ=sqrt(eps())
 
 abstract NonlinearFunctionParameters{T}
 
-function function_stages!{T}(y::Vector{T}, b::Vector{T}, params::NonlinearFunctionParameters{T})
+function function_stages!{DT,TT}(y::Vector{DT}, b::Vector{TT}, params::NonlinearFunctionParameters{DT})
     error("No function_stages implemented for this integrator.")
 end
 

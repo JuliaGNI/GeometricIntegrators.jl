@@ -1,6 +1,7 @@
 
 ntime = 10
 
+Δt  = .1
 x0  = [1.]
 dim = 1
 
@@ -20,7 +21,7 @@ end
 @test sol.x[1,1,1] == sol[1,0,1]
 @test sol.x[1:sol.nd,1,1] == sol[1:sol.nd,0,1]
 
-@test typeof(Integrator(ODE(fx, [1.]), getTableauExplicitMidpoint(), Δt)) <: IntegratorERK
+@test typeof(Integrator(ODE(fx, x0), getTableauExplicitMidpoint(), Δt)) <: IntegratorERK
 
 
 pode = PODE(fq, fp, [1.], [1.])
