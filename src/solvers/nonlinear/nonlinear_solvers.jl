@@ -61,9 +61,9 @@ Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
                         status.rᵣ,", ", status.rₛ)
 
 function solverStatusOK(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
-    return status.rₐ < params.atol² &&
-           status.rᵣ < params.rtol  &&
-           status.rₛ < params.stol² &&
+    return (status.rₐ < params.atol² ||
+            status.rᵣ < params.rtol  ||
+            status.rₛ < params.stol²)&&
            status.i  ≤ params.nmax
 end
 
