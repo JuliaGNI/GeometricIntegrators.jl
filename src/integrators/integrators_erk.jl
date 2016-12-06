@@ -20,7 +20,7 @@ immutable IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
         new(equation, tableau, Δt,
             zeros(DT,D), zeros(DT,D),
             zeros(DT,D,S), zeros(DT,D,S), zeros(DT,D,S),
-            zeros(DT,D), zeros(DT,D))
+            zeros(DT,D), zeros(DT,D), zeros(DT,D))
     end
 end
 
@@ -40,17 +40,18 @@ function integrate!{DT,TT,FT}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT}
         # loop over time steps
         for n in 1:sol.ntime
             # compute internal stages
-            fill!(int.Y, zero(DT))
             for i in 1:int.tableau.s
                 for k in 1:sol.nd
+                    int.tY[k] = zero(DT)
                     for j = 1:i-1
-                        int.Y[k,i] += int.tableau.a[i,j] * int.F[k,j]
+                        int.tY[k] += int.tableau.a[i,j] * int.F[k,j]
                     end
-                    int.X[k,i] = int.x[k] + int.Δt * int.Y[k,i]
                 end
+                simd_waxpy!(int.tX, int.Δt, int.tY, int.x)
                 tᵢ = sol.t[n] + int.Δt * int.tableau.c[i]
-                simd_copy_xy_first!(int.tX, int.X, i)
                 int.equation.f(tᵢ, int.tX, int.tF)
+
+                simd_copy_yx_first!(int.tX, int.X, i)
                 simd_copy_yx_first!(int.tF, int.F, i)
             end
 
