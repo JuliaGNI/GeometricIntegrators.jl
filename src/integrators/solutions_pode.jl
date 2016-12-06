@@ -29,13 +29,13 @@ immutable SolutionPODE{dType, tType} <: Solution{dType, tType, 4}
     end
 end
 
-function SolutionPODE{DT,TT}(equation::Union{PODE{DT,TT}, SODE{DT}}, Δt::TT, ntime::Int, nsave::Int=1)
+function SolutionPODE{DT,TT}(equation::Union{PODE{DT,TT}, IODE{DT}}, Δt::TT, ntime::Int, nsave::Int=1)
     s = SolutionPODE{DT,TT}(equation.d, equation.n, ntime, nsave, Δt)
     set_initial_conditions!(s, equation)
     return s
 end
 
-function set_initial_conditions!(solution::SolutionPODE, equation::Union{PODE,SODE})
+function set_initial_conditions!(solution::SolutionPODE, equation::Union{PODE,IODE})
     for k in 1:solution.n0
         for i in 1:solution.nd
             solution[1, i, 0, k] = equation.q₀[i,k]
