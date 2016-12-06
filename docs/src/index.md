@@ -11,7 +11,8 @@ GeomDAE.jl is a library of geometric integrators for ordinary differential equat
 Currently the following methods are supported or planned to be supported,
 
 - [x] Explicit Runge-Kutta Methods (ERK),
-- [x] Explicit Partitioned Runge-Kutta Methods (PRK),
+- [x] Explicit Partitioned Runge-Kutta Methods (EPRK),
+- [x] Implicit Partitioned Runge-Kutta Methods (IPRK),
 - [x] Fully Implicit Runge-Kutta Methods (FIRK),
 - [ ] Diagonally Implicit Runge-Kutta Methods (DIRK),
 - [ ] Singly Implicit Runge-Kutta Methods (SIRK),
@@ -27,6 +28,8 @@ The following families of equations are supported or planned to be supported,
 - [ ] Systems of DAEs,
 - [x] Partitioned ODEs,
 - [ ] Partitioned DAEs,
+- [x] Implicit ODEs
+- [ ] Implicit DAEs
 
 which can be prescribed manually or obtained as
 
@@ -45,7 +48,8 @@ The following families of integrators are supported or planned to be supported,
 
 - [ ] Gauss-Legendre Runge-Kutta,
 - [ ] Galerkin Variational Integrators,
-- [ ] Discontinuous Galerkin Hamilton-Pontryagin Equations.
+- [ ] Taylor Variational Integrators,
+- [ ] Hamilton-Pontryagin-Galerkin Integrators.
 
 Available linear solvers are
 
@@ -59,6 +63,7 @@ and nonlinear solvers
 - [ ] Fixed-Point Iteration with Aitken's Acceleration,
 - [x] Newton's method,
 - [ ] Newton's method with line search,
+- [x] Quasi-Newton,
 
 either with exact Jacobian or with approximate Jacobian obtained via
 
@@ -89,7 +94,7 @@ Pages = ["modules/equations.md",
 ```
 
 
-## License (MIT/Expat)
+## License
 
 > Copyright (c) 2016 Michael Kraus <michael.kraus@ipp.mpg.de>
 >
