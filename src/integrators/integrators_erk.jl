@@ -11,6 +11,7 @@ immutable IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
     Y::Array{DT,2}
     F::Array{DT,2}
     tX::Array{DT,1}
+    tY::Array{DT,1}
     tF::Array{DT,1}
 
 
