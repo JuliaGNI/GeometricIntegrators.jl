@@ -1,18 +1,18 @@
 
-function istriustrict(A::Matrix)
+function istriustrict{T}(A::Matrix{T})
     m, n = size(A)
     @inbounds for j = 1:min(n,m-1), i = j:m
-        if A[i,j] != 0.
+        if A[i,j] ≠ zero(T)
             return false
         end
     end
     return true
 end
 
-function istrilstrict(A::Matrix)
+function istrilstrict{T}(A::Matrix{T})
     m, n = size(A)
     @inbounds for j = 2:n, i = 1:min(j,m)
-        if A[i,j] != 0.
+        if A[i,j] ≠ zero(T)
             return false
         end
     end
@@ -115,8 +115,9 @@ end
 
 function simd_waxpy!(w, a, x, y)
     @assert length(x) == length(y) == length(w)
-    simd_copy!(y, w)
-    simd_axpy!(a, x, w)
+    @inbounds for i=1:length(w)
+        w[i] = a*x[i] + y[i]
+    end
     nothing
 end
 
@@ -124,7 +125,7 @@ function simd_mult!(w, X, y)
     @assert length(w) == size(X, 1)
     @assert length(y) == size(X, 2)
     @inbounds for i=1:length(w)
-        w[i] = 0.
+        w[i] = zero(eltype(w))
         for j=1:length(y)
             w[i] += X[i,j] * y[j]
         end
@@ -136,7 +137,7 @@ function simd_mult!(w, a, X, y)
     @assert length(w) == size(X, 1)
     @assert length(y) == size(X, 2)
     @inbounds for i=1:length(w)
-        w[i] = 0
+        w[i] = zero(eltype(w))
         for j=1:length(y)
             w[i] += a * X[i,j] * y[j]
         end
