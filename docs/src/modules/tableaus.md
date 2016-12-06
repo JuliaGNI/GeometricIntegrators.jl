@@ -2,6 +2,6 @@
 # Tableaus
 
 ```@autodocs
-Modules = [GeomDAE.Tableaus]
+Modules = [GeometricIntegrators.Tableaus]
 Order   = [:constant, :type, :macro, :function]
 ```

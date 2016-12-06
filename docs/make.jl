@@ -1,7 +1,7 @@
-using Documenter, GeomDAE
+using Documenter, GeometricIntegrators
 
 makedocs(
-    sitename = "GeomDAE.jl",
+    sitename = "GeometricIntegrators.jl",
     format = :html,
     pages = ["Home" => "index.md",
              "Tutorial" => "tutorial.md",

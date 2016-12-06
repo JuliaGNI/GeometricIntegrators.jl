@@ -2,6 +2,6 @@
 # Integrators
 
 ```@autodocs
-Modules = [GeomDAE.Integrators]
+Modules = [GeometricIntegrators.Integrators]
 Order   = [:constant, :type, :macro, :function]
 ```

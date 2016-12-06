@@ -2,7 +2,7 @@
 # Nonlinear Solvers
 
 ```@autodocs
-Modules = [GeomDAE.Solvers]
+Modules = [GeometricIntegrators.Solvers]
 Pages   = ["solvers/nonlinear/nonlinear_solvers.jl",
            "solvers/nonlinear/jacobian.jl",
            "solvers/nonlinear/abstract_fixed_point_solver.jl",

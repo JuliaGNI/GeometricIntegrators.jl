@@ -2,6 +2,6 @@
 # Equations
 
 ```@autodocs
-Modules = [GeomDAE.Equations]
+Modules = [GeometricIntegrators.Equations]
 Order   = [:constant, :type, :macro, :function]
 ```
