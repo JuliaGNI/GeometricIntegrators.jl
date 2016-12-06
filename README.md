@@ -1,5 +1,5 @@
 
-# GeomDAE.jl
+# GeometricIntegrators.jl
 
 *Julia library of geometric integrators for ordinary differential equations and differential algebraic equations.*
 
@@ -16,4 +16,4 @@ GeometricIntegrators.jl is a library of geometric integrators for ordinary diffe
 
 ## License
 
-The GeomDAE.jl package is licensed under the MIT "Expat" License.
+The GeometricIntegrators.jl package is licensed under the MIT "Expat" License.
