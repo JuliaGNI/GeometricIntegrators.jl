@@ -13,6 +13,7 @@ matrix:
 notifications:
   email: false
 script:
+  - julia -e 'Pkg.build("HDF5")'
   - julia -e 'Pkg.clone(pwd())'
   - julia -e 'Pkg.test("GeometricIntegrators",coverage=true)'
 fiafter_success:
