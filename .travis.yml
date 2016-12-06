@@ -1,0 +1,22 @@
+# Documentation: http://docs.travis-ci.com/user/languages/julia/
+language: julia
+os:
+  - linux
+  - osx
+julia:
+  - nightly
+  - release
+  - 0.5.0
+matrix:
+  allow_failures:
+    - julia: nightly
+notifications:
+  email: false
+script:
+  - julia -e 'Pkg.clone(pwd())'
+  - julia -e 'Pkg.test("GeometricIntegrators.jl",coverage=true)'
+fiafter_success:
+  - julia -e 'Pkg.clone("https://github.com/MichaelHatherly/Documenter.jl")'
+  - julia -e 'cd(Pkg.dir("GeometricIntegrators.jl")); include(joinpath("docs", "make.jl"))'
+  - julia -e 'cd(Pkg.dir("GeometricIntegrators.jl")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - julia -e 'cd(Pkg.dir("GeometricIntegrators.jl")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
