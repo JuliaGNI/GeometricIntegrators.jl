@@ -1,5 +1,5 @@
 
-using GeomDAE
+using GeometricIntegrators
 using Base.Test
 
 function fx(t, x, fx)

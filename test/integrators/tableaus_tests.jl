@@ -1,7 +1,4 @@
 
-using GeomDAE
-using Base.Test
-
 # explicit midpoint
 a = Rational{Int64}[[0    0]
                     [1//2 0]]

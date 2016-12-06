@@ -1,6 +1,6 @@
 __precompile__()
 
-module GeomDAE
+module GeometricIntegrators
 
     include("utils/macro_utils.jl")
 

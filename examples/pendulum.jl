@@ -1,5 +1,5 @@
 
-using GeomDAE
+using GeometricIntegrators
 using PyPlot
 
 const Δt    = 0.1
