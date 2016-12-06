@@ -13,3 +13,10 @@ makedocs(
                 "Tableaus"          => "modules/tableaus.md"]
              ]
 )
+
+deploydocs(
+    repo   = "github.com/DDMGNI/GeometricIntegrators.jl.git",
+    target = "build",
+    deps   = nothing,
+    make   = nothing
+)
