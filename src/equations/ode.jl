@@ -17,14 +17,14 @@ with vector field ``f``, initial condition ``q_{0}`` and the solution
 
 The function `f` providing the vector field must have the interface
 ```julia
-    function f(t, q, fq)
-        fq[1] = ...
-        fq[2] = ...
+    function f(t, q, f)
+        f[1] = ...
+        f[2] = ...
         ...
     end
 ```
 where `t` is the current time, `q` is the current solution vector, and
-`fq` is the vector which holds the result of evaluating the vector field ``f``
+`f` is the vector which holds the result of evaluating the vector field ``f``
 on `t` and `q`.
 
 """
