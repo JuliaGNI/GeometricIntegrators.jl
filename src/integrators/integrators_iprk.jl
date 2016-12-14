@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of implicit partitioned Runge-Kutta methods."
-immutable NonlinearFunctionParametersIPRK{T} <: NonlinearFunctionParameters{T}
+type NonlinearFunctionParametersIPRK{T} <: NonlinearFunctionParameters{T}
     f::Function
     g::Function
     Δt::T
@@ -9,7 +9,10 @@ immutable NonlinearFunctionParametersIPRK{T} <: NonlinearFunctionParameters{T}
     s::Int
     a_q::Matrix{T}
     a_p::Matrix{T}
+    c_q::Vector{T}
+    c_p::Vector{T}
 
+    t::T
     q::Vector{T}
     p::Vector{T}
     y::Vector{T}
@@ -27,7 +30,7 @@ immutable NonlinearFunctionParametersIPRK{T} <: NonlinearFunctionParameters{T}
     tP::Vector{T}
     tF::Vector{T}
 
-    function NonlinearFunctionParametersIPRK(f, g, Δt, d, s, a_q, a_p)
+    function NonlinearFunctionParametersIPRK(f, g, Δt, d, s, a_q, a_p, c_q, c_p)
         # create solution vectors
         q = zeros(T,d)
         p = zeros(T,d)
@@ -48,12 +51,15 @@ immutable NonlinearFunctionParametersIPRK{T} <: NonlinearFunctionParameters{T}
         tP = zeros(T,d)
         tF = zeros(T,d)
 
-        new(f, g, Δt, d, s, a_q, a_p, q, p, y, z, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
+        new(f, g, Δt, d, s, a_q, a_p, c_q, c_p, 0, q, p, y, z, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
     end
 end
 
 "Compute stages of implicit partitioned Runge-Kutta methods."
 function function_stages!{T}(y::Vector{T}, b::Vector{T}, params::NonlinearFunctionParametersIPRK{T})
+    local tqᵢ::T
+    local tpᵢ::T
+
     for i in 1:params.s
         for k in 1:params.d
             # copy y to Y and Z
@@ -66,10 +72,13 @@ function function_stages!{T}(y::Vector{T}, b::Vector{T}, params::NonlinearFuncti
         end
 
         # compute f(X)
+        tqᵢ = params.t + params.Δt * params.c_q[i]
+        tpᵢ = params.t + params.Δt * params.c_p[i]
+
         simd_copy_xy_first!(params.tQ, params.Q, i)
         simd_copy_xy_first!(params.tV, params.V, i)
-        params.f(params.tQ, params.tV, params.tP)
-        params.g(params.tQ, params.tV, params.tF)
+        params.f(tqᵢ, params.tQ, params.tV, params.tP)
+        params.g(tpᵢ, params.tQ, params.tV, params.tF)
         simd_copy_yx_first!(params.tP, params.P, i)
         simd_copy_yx_first!(params.tF, params.F, i)
     end
@@ -116,7 +125,9 @@ function IntegratorIPRK{T}(equation::IODE{T}, tableau::TableauIPRK{T}, Δt::T)
     z = zeros(T, 2*D*S)
 
     # create params
-    params = NonlinearFunctionParametersIPRK{T}(equation.f, equation.g, Δt, D, S, tableau.a_q, tableau.a_p)
+    params = NonlinearFunctionParametersIPRK{T}(equation.f, equation.g, Δt, D, S,
+                                                tableau.a_q, tableau.a_p,
+                                                tableau.c_q, tableau.c_p)
 
     # create solver
     solver = QuasiNewtonSolver(z, params)
@@ -139,11 +150,14 @@ function integrate!(int::IntegratorIPRK, sol::SolutionPODE)
     simd_copy_xy_first!(int.p, sol.p, 1)
 
     for n in 1:sol.ntime
+        # set time for nonlinear solver
+        int.solver.Fparams.t = sol.t[n]
+
         # compute initial guess
         # TODO
         for i in 1:int.tableau.s
             for k in 1:int.equation.d
-                int.solver.x[2*(sol.d*(i-1)+k-1)+1] = int.q[k]
+                int.solver.x[2*(sol.nd*(i-1)+k-1)+1] = int.q[k]
                 # TODO initial guess for velocity
                 # int.solver.x[2*(params.d*(i-1)+k-1)+1] = 0.
             end
@@ -170,7 +184,6 @@ function integrate!(int::IntegratorIPRK, sol::SolutionPODE)
             nt = div(n, sol.nsave)+1
             simd_copy_yx_first!(int.q, sol.q, nt)
             simd_copy_yx_first!(int.p, sol.p, nt)
-            sol.t[nt] = sol.t[1] + n * int.Δt
         end
     end
     nothing
