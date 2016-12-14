@@ -69,6 +69,15 @@ function simd_copy_yx_first!(x, y, j)
     nothing
 end
 
+"Copy a 1D array x into the second dimension of a 2D array y."
+function simd_copy_yx_second!(x, y, j)
+    @assert length(x) == size(y, 2)
+    @inbounds for i=1:size(y, 2)
+        y[j,i] = x[i]
+    end
+    nothing
+end
+
 "Copy a 1D array x into the first dimension of a 3D array y."
 function simd_copy_yx_first!(x, y, j, k)
     @assert length(x) == size(y, 1)
@@ -121,26 +130,58 @@ function simd_waxpy!(w, a, x, y)
     nothing
 end
 
-function simd_mult!(w, X, y)
-    @assert length(w) == size(X, 1)
-    @assert length(y) == size(X, 2)
-    @inbounds for i=1:length(w)
-        w[i] = zero(eltype(w))
-        for j=1:length(y)
-            w[i] += X[i,j] * y[j]
+function simd_aXbpy!{T}(a::T, b::Vector{T}, X::Matrix{T}, y::Vector{T})
+    @assert length(y) == size(X, 1)
+    @assert length(b) == size(X, 2)
+    local ty::T
+    @inbounds for i=1:length(y)
+        ty = zero(T)
+        for j=1:length(b)
+            ty += X[i,j] * b[j]
         end
+        y[i] = a*ty
     end
     nothing
 end
 
-function simd_mult!(w, a, X, y)
+function simd_abXpy!{T}(a::T, b::Vector{T}, X::Matrix{T}, y::Vector{T})
+    @assert length(y) == size(X, 2)
+    @assert length(b) == size(X, 1)
+    local ty::T
+    @inbounds for i=1:length(y)
+        ty = zero(T)
+        for j=1:length(b)
+            ty += b[j] * X[j,i]
+        end
+        y[i] += a*ty
+    end
+    nothing
+end
+
+function simd_mult!{T}(w::Vector{T}, X::Matrix{T}, y::Vector{T})
     @assert length(w) == size(X, 1)
     @assert length(y) == size(X, 2)
+    local tw::T
     @inbounds for i=1:length(w)
-        w[i] = zero(eltype(w))
+        tw = zero(T)
         for j=1:length(y)
-            w[i] += a * X[i,j] * y[j]
+            tw += X[i,j] * y[j]
         end
+        w[i] = tw
+    end
+    nothing
+end
+
+function simd_mult!{T}(w::Vector{T}, y::Vector{T}, X::Matrix{T})
+    @assert length(w) == size(X, 2)
+    @assert length(y) == size(X, 1)
+    local tw::T
+    @inbounds for i=1:length(w)
+        tw = zero(T)
+        for j=1:length(y)
+            tw += y[j] * X[j,i]
+        end
+        w[i] = tw
     end
     nothing
 end
