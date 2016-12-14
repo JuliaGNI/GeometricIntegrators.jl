@@ -6,12 +6,8 @@ immutable IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
     Δt::TT
 
     x::Array{DT,1}
-    y::Array{DT,1}
-    X::Array{DT,2}
-    Y::Array{DT,2}
     F::Array{DT,2}
     tX::Array{DT,1}
-    tY::Array{DT,1}
     tF::Array{DT,1}
 
 
@@ -19,9 +15,8 @@ immutable IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
         D = equation.d
         S = tableau.s
         new(equation, tableau, Δt,
-            zeros(DT,D), zeros(DT,D),
-            zeros(DT,D,S), zeros(DT,D,S), zeros(DT,D,S),
-            zeros(DT,D), zeros(DT,D), zeros(DT,D))
+            zeros(DT,D), zeros(DT,S,D),
+            zeros(DT,D), zeros(DT,D))
     end
 end
 
@@ -32,6 +27,7 @@ end
 "Integrate ODE with explicit Runge-Kutta integrator."
 function integrate!{DT,TT,FT}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT})
     local tᵢ::TT
+    local y::DT
 
     # loop over initial conditions
     for m in 1:sol.n0
@@ -41,24 +37,24 @@ function integrate!{DT,TT,FT}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT}
         # loop over time steps
         for n in 1:sol.ntime
             # compute internal stages
-            for i in 1:int.tableau.s
+            int.equation.f(sol.t[n], int.x, int.tF)
+            simd_copy_yx_second!(int.tF, int.F, 1)
+
+            for i in 2:int.tableau.s
                 for k in 1:sol.nd
-                    int.tY[k] = zero(DT)
+                    y = zero(DT)
                     for j = 1:i-1
-                        int.tY[k] += int.tableau.a[i,j] * int.F[k,j]
+                        y += int.tableau.a[i,j] * int.F[j,k]
                     end
+                    int.tX[k] = int.x[k] + int.Δt * y
                 end
-                simd_waxpy!(int.tX, int.Δt, int.tY, int.x)
                 tᵢ = sol.t[n] + int.Δt * int.tableau.c[i]
                 int.equation.f(tᵢ, int.tX, int.tF)
-
-                simd_copy_yx_first!(int.tX, int.X, i)
-                simd_copy_yx_first!(int.tF, int.F, i)
+                simd_copy_yx_second!(int.tF, int.F, i)
             end
 
             # compute final update
-            simd_mult!(int.y, int.F, int.tableau.b)
-            simd_axpy!(int.Δt, int.y, int.x)
+            simd_abXpy!(int.Δt, int.tableau.b, int.F, int.x)
 
             # copy to solution
             if mod(n, sol.nsave) == 0
