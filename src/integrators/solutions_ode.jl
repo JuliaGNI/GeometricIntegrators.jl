@@ -14,12 +14,12 @@ Contains all fields necessary to store the solution of an ODE.
 * `nsave`: save every nsave'th time step
 
 """
-immutable SolutionODE{dType, tType} <: Solution{dType, tType, 3}
+immutable SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
     nd::Int
     nt::Int
     n0::Int
     t::Timeseries{tType}
-    x::Array{dType,3}
+    x::Array{dType,N}
     ntime::Int
     nsave::Int
 
@@ -34,13 +34,22 @@ immutable SolutionODE{dType, tType} <: Solution{dType, tType, 3}
 
         nt = div(ntime, nsave)
         t = Timeseries{tType}(nt, Δt, nsave)
-        x = zeros(dType, nd, nt+1, n0)
+
+        @assert N ∈ (2,3)
+
+        if N == 2
+            x = zeros(dType, nd, nt+1)
+        elseif N == 3
+            x = zeros(dType, nd, nt+1, n0)
+        end
+
         new(nd, nt, n0, t, x, ntime, nsave)
     end
 end
 
 function SolutionODE{DT,TT,FT}(equation::ODE{DT,TT,FT}, Δt::TT, ntime::Int, nsave::Int=1)
-    s = SolutionODE{DT,TT}(equation.d, equation.n, ntime, nsave, Δt)
+    N = equation.n > 1 ? 3 : 2
+    s = SolutionODE{DT,TT,N}(equation.d, equation.n, ntime, nsave, Δt)
     set_initial_conditions!(s, equation)
     return s
 end
@@ -55,9 +64,17 @@ function set_initial_conditions!(solution::SolutionODE, t₀, q₀)
     compute_timeseries!(solution.t)
 end
 
-function reset(s::SolutionODE)
-    for k in 1:solution.n0
-        for i in 1:solution.nd
+function reset{DT,TT}(s::SolutionODE{DT,TT,2})
+    for i in 1:size(solution,1)
+        solution[i, 0] = solution[i, end]
+    end
+    solution.t[0] = solution.t[end]
+    compute_timeseries!(solution.t)
+end
+
+function reset{DT,TT}(s::SolutionODE{DT,TT,3})
+    for k in 1:size(solution,3)
+        for i in 1:size(solution,1)
             solution[i, 0, k] = solution[i, end, k]
         end
     end
@@ -65,62 +82,75 @@ function reset(s::SolutionODE)
     compute_timeseries!(solution.t)
 end
 
-Base.indices(s::SolutionODE) = (1:s.nd, 0:s.nt, 1:s.n0)
-Base.strides(s::SolutionODE) = (1, s.nd, s.nd*s.nt)
-# Base.linearindexing{T<:SolutionODE}(::Type{T}) = LinearFast()
+Base.indices{DT,TT}(s::SolutionODE{DT,TT,2}) = (1:s.nd, 0:s.nt)
+Base.indices{DT,TT}(s::SolutionODE{DT,TT,3}) = (1:s.nd, 0:s.nt, 1:s.n0)
+Base.strides(s::SolutionODE) = strides(s.x)
 
-@inline function Base.getindex(s::SolutionODE, i::Int, j::Int, k::Int)
+@inline function Base.getindex{DT,TT}(s::SolutionODE{DT,TT,2}, i::Int, j::Int)
+    @boundscheck checkbounds(s.x, i, j+1)
+    @inbounds r = getindex(s.x, i, j+1)
+    return r
+end
+
+@inline function Base.getindex{DT,TT}(s::SolutionODE{DT,TT,2}, j::Int)
+    @boundscheck checkbounds(s.x, :, j+1)
+    @inbounds r = getindex(s.x, :, j+1)
+    return r
+end
+
+@inline function Base.getindex{DT,TT}(s::SolutionODE{DT,TT,3}, i::Int, j::Int, k::Int)
     @boundscheck checkbounds(s.x, i, j+1, k)
     @inbounds r = getindex(s.x, i, j+1, k)
     return r
 end
 
-@inline function Base.getindex(s::SolutionODE, i::Int, j::Int)
-    if s.n0 == 1
-        @boundscheck checkbounds(s.x, i, j+1, 1)
-        @inbounds r = getindex(s.x, i, j+1, 1)
-    else
-        @boundscheck checkbounds(s.x, 1:s.nd, i+1, j)
-        @inbounds r = getindex(s.x, 1:s.nd, i+1, j)
-    end
+@inline function Base.getindex{DT,TT}(s::SolutionODE{DT,TT,3}, j::Int, k::Int)
+    @boundscheck checkbounds(s.x, :, j+1, k)
+    @inbounds r = getindex(s.x, :, j+1, k)
     return r
 end
 
-@inline function Base.getindex(s::SolutionODE, k::Int)
-    if s.n0 == 1
-        @boundscheck checkbounds(s.x, 1:s.nd, k+1, 1)
-        @inbounds r = getindex(s.x, 1:s.nd, k+1, 1)
-    else
-        @boundscheck checkbounds(s.x, 1:s.nd, 1:s.nt, k)
-        @inbounds r = getindex(s.x, 1:s.nd, 1:s.nt, k)
-    end
+@inline function Base.getindex{DT,TT}(s::SolutionODE{DT,TT,3}, k::Int)
+    @boundscheck checkbounds(s.x, :, :, k)
+    @inbounds r = getindex(s.x, :, :, k)
     return r
 end
 
-@inline function Base.setindex!(s::SolutionODE, x, i::Int, j::Int, k::Int)
+@inline function Base.setindex!{DT,TT}(s::SolutionODE{DT,TT,2}, x, i::Int, j::Int)
+    @assert length(x) == 1
+    @boundscheck checkbounds(s.x, i, j+1)
+    @inbounds setindex!(s.x, x, i, j+1)
+end
+
+@inline function Base.setindex!{DT,TT}(s::SolutionODE{DT,TT,2}, x, j::Int)
+    @assert ndims(x) == 1
+    @assert length(x) == size(s.x, 1)
+    @boundscheck checkbounds(s.x, :, j)
+    @inbounds setindex!(s.x, x, :, j)
+end
+
+@inline function Base.setindex!{DT,TT}(s::SolutionODE{DT,TT,3}, x, i::Int, j::Int, k::Int)
+    @assert length(x) == 1
     @boundscheck checkbounds(s.x, i, j+1, k)
     @inbounds setindex!(s.x, x, i, j+1, k)
 end
 
-@inline function Base.setindex!(s::SolutionODE, x, j::Int, k::Int)
-    if s.n0 == 1
-        @assert length(x) == 1
-        @boundscheck checkbounds(s.x, j, k+1, 1)
-        @inbounds setindex!(s.x, x, j, k+1, 1)
-    else
-        @assert length(x) == s.nd
-        @boundscheck checkbounds(s.x, :, j+1, k)
-        @inbounds setindex!(s.x, x, :, j+1, k)
-    end
+@inline function Base.setindex!{DT,TT}(s::SolutionODE{DT,TT,3}, x, j::Int, k::Int)
+    @assert ndims(x) == 1
+    @assert length(x) == size(s.x, 1)
+    @boundscheck checkbounds(s.x, :, j+1, k)
+    @inbounds setindex!(s.x, x, :, j+1, k)
 end
 
-@inline function Base.setindex!(s::SolutionODE, x, k::Int)
-    @assert length(x) == s.nd*s.n0
+@inline function Base.setindex!{DT,TT}(s::SolutionODE{DT,TT,3}, x, k::Int)
+    @assert ndims(x) == 2
+    @assert size(x,1) == size(s.x, 1)
+    @assert size(x,2) == size(s.x, 2)
     @boundscheck checkbounds(s.x, :, :, k)
     @inbounds setindex!(s.x, x, :, :, k)
 end
 
-
+# TODO Fix HDF5 functions.
 
 "Creates HDF5 file and initialises datasets for ODE solution object."
 function createHDF5{DT,TT}(solution::SolutionODE{DT,TT}, file::AbstractString, ntime::Int=1)
