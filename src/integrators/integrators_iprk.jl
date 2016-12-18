@@ -145,7 +145,7 @@ end
 
 
 "Integrate ODE with implicit partitioned Runge-Kutta integrator."
-function integrate!(int::IntegratorIPRK, sol::SolutionPODE)
+function integrate!{DT,TT,VT,FT}(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT})
     local nt::Int
 
     # copy initial conditions from solution

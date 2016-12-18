@@ -25,7 +25,7 @@ function IntegratorERK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauERK{TT
 end
 
 "Integrate ODE with explicit Runge-Kutta integrator."
-function integrate!{DT,TT,FT}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT})
+function integrate!{DT,TT,FT}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT})
     local tᵢ::TT
     local y::DT
 
