@@ -37,7 +37,7 @@ function integrate!{DT,TT,FT}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT}
         # loop over time steps
         for n in 1:sol.ntime
             # compute internal stages
-            int.equation.f(sol.t[n], int.x, int.tF)
+            int.equation.v(sol.t[n], int.x, int.tF)
             simd_copy_yx_second!(int.tF, int.F, 1)
 
             for i in 2:int.tableau.s
@@ -49,7 +49,7 @@ function integrate!{DT,TT,FT}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT}
                     int.tX[k] = int.x[k] + int.Δt * y
                 end
                 tᵢ = sol.t[n] + int.Δt * int.tableau.c[i]
-                int.equation.f(tᵢ, int.tX, int.tF)
+                int.equation.v(tᵢ, int.tX, int.tF)
                 simd_copy_yx_second!(int.tF, int.F, i)
             end
 

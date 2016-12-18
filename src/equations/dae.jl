@@ -5,7 +5,7 @@
 Defines a differential algebraic initial value problem
 ```math
 \\begin{align*}
-\\dot{q} (t) &= f(t, q(t)) + u(t, q(t), \\lambda(t)) , & q(t_{0}) &= q_{0} , \\\\
+\\dot{q} (t) &= v(t, q(t)) + u(t, q(t), \\lambda(t)) , & q(t_{0}) &= q_{0} , \\\\
 0 &= \\phi (t, q(t), \\lambda(t)) , & \\lambda(t_{0}) &= \\lambda_{0} ,
 \\end{align*}
 ```
@@ -18,7 +18,7 @@ taking values in ``\\mathbb{R}^{n}``.
 
 * `m`: dimension of dynamical variable ``q`` and the vector field ``f``
 * `n`: dimension of algebraic variable ``\\lambda`` and the constraint ``\\phi``
-* `f`: function computing the vector field
+* `v`: function computing the vector field
 * `u`: function computing the projection
 * `ϕ`: algebraic constraint
 * `t₀`: initial time
@@ -26,64 +26,90 @@ taking values in ``\\mathbb{R}^{n}``.
 * `λ₀`: initial condition for algebraic variable ``\\lambda``
 
 
-The function `f`, providing the vector field, takes three arguments,
-`f(t, q, fq)`, the functions `u` and `ϕ`, providing the projection and the
-algebraic constraint take four arguments, `u(t, q, λ, fu)` and `ϕ(t, q, λ, fϕ)`,
+The function `v`, providing the vector field, takes three arguments,
+`v(t, q, v)`, the functions `u` and `ϕ`, providing the projection and the
+algebraic constraint take four arguments, `u(t, q, λ, u)` and `ϕ(t, q, λ, ϕ)`,
 where `t` is the current time, `q` and `λ` are the current solution vectors,
-and `fq`, `fu` and `fϕ` are the vectors which hold the result of evaluating the
-vector field ``f``, the projection ``u`` and the algebraic constraint ``\\phi``
+and `v`, `u` and `ϕ` are the vectors which hold the result of evaluating the
+vector field ``v``, the projection ``u`` and the algebraic constraint ``\\phi``
 on `t`, `q` and `λ`.
 
 ### Example
 
 ```julia
-    function f(t, q, fq)
-        fq[1] = q[1]
-        fq[2] = q[2]
+    function v(t, q, v)
+        v[1] = q[1]
+        v[2] = q[2]
     end
 
-    function u(t, q, λ, fu)
-        fu[1] = +λ[1]
-        fu[2] = -λ[1]
+    function u(t, q, λ, u)
+        u[1] = +λ[1]
+        u[2] = -λ[1]
     end
 
-    function ϕ(t, q, λ, fϕ)
-        fϕ[1] = q[2] - q[1]
+    function ϕ(t, q, λ, ϕ)
+        ϕ[1] = q[2] - q[1]
     end
 
     t₀ = 0.
     q₀ = [1., 1.]
     λ₀ = [0.]
 
-    dae = DAE(f, u, ϕ, t₀, q₀, λ₀)
+    dae = DAE(v, u, ϕ, t₀, q₀, λ₀)
 
 ```
 """
-immutable DAE{T} <: Equation{T}
+immutable DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Function, ϕType <: Function} <: Equation{dType, tType}
+    d::Int
     m::Int
     n::Int
-    f::Function
-    u::Function
-    ϕ::Function
-    t₀::T
-    q₀::Array{T,1}
-    λ₀::Array{T,1}
+    v::vType
+    u::uType
+    ϕ::ϕType
+    t₀::tType
+    q₀::Array{dType, 2}
+    λ₀::Array{dType, 2}
 
-    function DAE(m, n, f, u, ϕ, t₀, q₀, λ₀)
-        @assert m == length(q₀)
-        @assert n == length(λ₀)
-        @assert m ≥ n
-        @assert T == eltype(q₀)
-        @assert T == eltype(λ₀)
+    function DAE(d, m, n, v, u, ϕ, t₀, q₀, λ₀)
+        @assert d == size(q₀,1)
+        @assert m == size(λ₀,1)
+        @assert n == size(q₀,2) == size(λ₀,2)
+        @assert d ≥ m
 
-        new(m, n, f, u, ϕ, t₀, q₀, λ₀)
+        @assert dType == eltype(q₀)
+        @assert dType == eltype(λ₀)
+        @assert tType == typeof(t₀)
+
+        @assert ndims(q₀) ∈ (1,2)
+        @assert ndims(λ₀) ∈ (1,2)
+
+        if ndims(q₀) == 1
+            q₀ = reshape(q₀, d, n)
+        end
+
+        if ndims(λ₀) == 1
+            λ₀ = reshape(λ₀, m, n)
+        end
+
+        new(d, m, n, v, u, ϕ, t₀, q₀, λ₀)
     end
 end
 
-function DAE{T}(f::Function, u::Function, ϕ::Function, t₀::Real, q₀::Vector{T}, λ₀::Vector{T})
-    DAE{T}(length(q₀), length(λ₀), f, u, ϕ, t₀, q₀, λ₀)
+function DAE{DT, TT, VT, UT, ΦT}(v::VT, u::UT, ϕ::ΦT, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArray{DT})
+    DAE{DT, TT, VT, UT, ΦT}(size(q₀, 1), size(q₀, 2), size(λ₀, 1), v, u, ϕ, t₀, q₀, λ₀)
 end
 
-function DAE{T}(f::Function, u::Function, ϕ::Function, q₀::Vector{T}, λ₀::Vector{T})
-    DAE(f, u, ϕ, 0, q₀, λ₀)
+function DAE(v, u, ϕ, q₀, λ₀)
+    DAE(v, u, ϕ, zero(eltype(q₀)), q₀, λ₀)
 end
+
+Base.hash(dae::DAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n, hash(dae.v, hash(dae.u, hash(dae.t₀, hash(dae.q₀, hash(dae.λ₀, h))))))))
+Base.:(==)(dae1::DAE, dae2::DAE) = (
+                                dae1.d == dae2.d
+                             && dae1.m == dae2.m
+                             && dae1.n == dae2.n
+                             && dae1.v == dae2.v
+                             && dae1.u == dae2.u
+                             && dae1.t₀ == dae2.t₀
+                             && dae1.q₀ == dae2.q₀
+                             && dae1.λ₀ == dae2.λ₀)

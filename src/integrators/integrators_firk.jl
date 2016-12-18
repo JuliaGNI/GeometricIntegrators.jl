@@ -98,7 +98,7 @@ function IntegratorFIRK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{
     z = zeros(DT, D*S)
 
     # create params
-    params = NonlinearFunctionParametersFIRK{DT,TT,FT}(equation.f, Δt, D, S, tableau.a, tableau.c)
+    params = NonlinearFunctionParametersFIRK{DT,TT,FT}(equation.v, Δt, D, S, tableau.a, tableau.c)
 
     # create solver
     solver = nonlinear_solver(z, params)

@@ -19,7 +19,7 @@ function InitialGuess{DT,TT,FT}(int, equ::ODE{DT,TT,FT}, Δt::TT)
     interp = int(zero(DT), one(DT), equ.d)
     rk4 = IntegratorERK(equ, getTableauERK4(), -Δt)
     sol = SolutionODE(equ, Δt, 1)
-    InitialGuess{DT, TT, FT, int}(interp, rk4, sol, equ.f, Δt,
+    InitialGuess{DT, TT, FT, int}(interp, rk4, sol, equ.v, Δt,
                                   zeros(DT, equ.d), zeros(DT, equ.d),
                                   zeros(DT, equ.d), zeros(DT, equ.d))
 end
