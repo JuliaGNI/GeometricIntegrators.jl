@@ -1,41 +1,41 @@
 
 "Explicit partitioned Runge-Kutta integrator."
-immutable IntegratorEPRK{T} <: Integrator{T}
-    equation::PODE{T}
-    tableau::TableauEPRK{T}
-    Δt::T
+immutable IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
+    equation::PODE{DT,TT,VT,FT}
+    tableau::TableauEPRK{TT}
+    Δt::TT
 
-    q::Array{T,1}
-    p::Array{T,1}
-    y::Array{T,1}
-    z::Array{T,1}
-    Q::Array{T,2}
-    P::Array{T,2}
-    Y::Array{T,2}
-    Z::Array{T,2}
-    F::Array{T,2}
-    G::Array{T,2}
-    tQ::Array{T,1}
-    tP::Array{T,1}
-    tF::Array{T,1}
-    tG::Array{T,1}
+    q::Array{DT,1}
+    p::Array{DT,1}
+    y::Array{DT,1}
+    z::Array{DT,1}
+    Q::Array{DT,2}
+    P::Array{DT,2}
+    Y::Array{DT,2}
+    Z::Array{DT,2}
+    F::Array{DT,2}
+    G::Array{DT,2}
+    tQ::Array{DT,1}
+    tP::Array{DT,1}
+    tF::Array{DT,1}
+    tG::Array{DT,1}
 
     function IntegratorEPRK(equation, tableau, Δt)
         D = equation.d
         S = tableau.s
         new(equation, tableau, Δt,
-            zeros(T,D), zeros(T,D),
-            zeros(T,D), zeros(T,D),
-            zeros(T,D,S), zeros(T,D,S),
-            zeros(T,D,S), zeros(T,D,S),
-            zeros(T,D,S), zeros(T,D,S),
-            zeros(T,D), zeros(T,D),
-            zeros(T,D), zeros(T,D))
+            zeros(DT,D), zeros(DT,D),
+            zeros(DT,D), zeros(DT,D),
+            zeros(DT,D,S), zeros(DT,D,S),
+            zeros(DT,D,S), zeros(DT,D,S),
+            zeros(DT,D,S), zeros(DT,D,S),
+            zeros(DT,D), zeros(DT,D),
+            zeros(DT,D), zeros(DT,D))
     end
 end
 
-function IntegratorEPRK{T}(equation::PODE{T}, tableau::TableauEPRK{T}, Δt::T)
-    IntegratorEPRK{T}(equation, tableau, Δt)
+function IntegratorEPRK{DT,TT,VT,FT}(equation::PODE{DT,TT,VT,FT}, tableau::TableauEPRK{TT}, Δt::TT)
+    IntegratorEPRK{DT,TT,VT,FT}(equation, tableau, Δt)
 end
 
 
@@ -72,12 +72,12 @@ function computeStageP!(int::IntegratorEPRK, i::Int, jmax::Int, t)
 end
 
 "Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
-function integrate!{T}(int::IntegratorEPRK{T}, sol::SolutionPODE{T})
+function integrate!{DT,TT,VT,FT}(int::IntegratorEPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT})
     # loop over initial conditions
     for m in 1:sol.n0
         local j::Int
-        local tqᵢ::T
-        local tpᵢ::T
+        local tqᵢ::TT
+        local tpᵢ::TT
 
         # copy initial conditions from solution
         for i in 1:sol.nd
@@ -87,8 +87,8 @@ function integrate!{T}(int::IntegratorEPRK{T}, sol::SolutionPODE{T})
 
         for n in 1:sol.ntime
             # compute internal stages
-            fill!(int.Y, zero(T))
-            fill!(int.Z, zero(T))
+            fill!(int.Y, zero(DT))
+            fill!(int.Z, zero(DT))
             for i in 1:int.tableau.s
                 tqᵢ = sol.t[n] + int.Δt * int.tableau.c_q[i]
                 tpᵢ = sol.t[n] + int.Δt * int.tableau.c_p[i]

@@ -1,64 +1,64 @@
 
 "Parameters for right-hand side function of implicit partitioned Runge-Kutta methods."
-type NonlinearFunctionParametersIPRK{T} <: NonlinearFunctionParameters{T}
-    f::Function
-    g::Function
-    Δt::T
+type NonlinearFunctionParametersIPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters{DT}
+    f::FT
+    g::GT
+    Δt::TT
 
     d::Int
     s::Int
-    a_q::Matrix{T}
-    a_p::Matrix{T}
-    c_q::Vector{T}
-    c_p::Vector{T}
+    a_q::Matrix{TT}
+    a_p::Matrix{TT}
+    c_q::Vector{TT}
+    c_p::Vector{TT}
 
-    t::T
-    q::Vector{T}
-    p::Vector{T}
-    y::Vector{T}
-    z::Vector{T}
+    t::TT
+    q::Vector{DT}
+    p::Vector{DT}
+    y::Vector{DT}
+    z::Vector{DT}
 
-    Q::Matrix{T}
-    V::Matrix{T}
-    P::Matrix{T}
-    F::Matrix{T}
-    Y::Matrix{T}
-    Z::Matrix{T}
+    Q::Matrix{DT}
+    V::Matrix{DT}
+    P::Matrix{DT}
+    F::Matrix{DT}
+    Y::Matrix{DT}
+    Z::Matrix{DT}
 
-    tQ::Vector{T}
-    tV::Vector{T}
-    tP::Vector{T}
-    tF::Vector{T}
+    tQ::Vector{DT}
+    tV::Vector{DT}
+    tP::Vector{DT}
+    tF::Vector{DT}
 
     function NonlinearFunctionParametersIPRK(f, g, Δt, d, s, a_q, a_p, c_q, c_p)
         # create solution vectors
-        q = zeros(T,d)
-        p = zeros(T,d)
-        y = zeros(T,d)
-        z = zeros(T,d)
+        q = zeros(DT,d)
+        p = zeros(DT,d)
+        y = zeros(DT,d)
+        z = zeros(DT,d)
 
         # create internal stage vectors
-        Q = zeros(T,d,s)
-        V = zeros(T,d,s)
-        P = zeros(T,d,s)
-        F = zeros(T,d,s)
-        Y = zeros(T,d,s)
-        Z = zeros(T,d,s)
+        Q = zeros(DT,d,s)
+        V = zeros(DT,d,s)
+        P = zeros(DT,d,s)
+        F = zeros(DT,d,s)
+        Y = zeros(DT,d,s)
+        Z = zeros(DT,d,s)
 
         # create temporary vectors
-        tQ = zeros(T,d)
-        tV = zeros(T,d)
-        tP = zeros(T,d)
-        tF = zeros(T,d)
+        tQ = zeros(DT,d)
+        tV = zeros(DT,d)
+        tP = zeros(DT,d)
+        tF = zeros(DT,d)
 
         new(f, g, Δt, d, s, a_q, a_p, c_q, c_p, 0, q, p, y, z, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
     end
 end
 
 "Compute stages of implicit partitioned Runge-Kutta methods."
-function function_stages!{T}(y::Vector{T}, b::Vector{T}, params::NonlinearFunctionParametersIPRK{T})
-    local tqᵢ::T
-    local tpᵢ::T
+function function_stages!{DT,TT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersIPRK{DT,TT,FT,GT})
+    local tqᵢ::TT
+    local tpᵢ::TT
 
     for i in 1:params.s
         for k in 1:params.d
@@ -98,34 +98,36 @@ end
 
 
 "Implicit partitioned Runge-Kutta integrator."
-immutable IntegratorIPRK{T, ST} <: Integrator{T}
-    equation::IODE{T}
-    tableau::TableauIPRK{T}
-    Δt::T
+immutable IntegratorIPRK{DT, TT, FT, GT, ST} <: Integrator{DT, TT}
+    equation::IODE{DT,TT,FT,GT}
+    tableau::TableauIPRK{TT}
+    Δt::TT
 
     solver::ST
 
-    q::Array{T,1}
-    p::Array{T,1}
-    y::Array{T,1}
-    z::Array{T,1}
-    Q::Array{T,2}
-    V::Array{T,2}
-    P::Array{T,2}
-    F::Array{T,2}
-    Y::Array{T,2}
-    Z::Array{T,2}
+    q::Array{DT,1}
+    p::Array{DT,1}
+    y::Array{DT,1}
+    z::Array{DT,1}
+    Q::Array{DT,2}
+    V::Array{DT,2}
+    P::Array{DT,2}
+    F::Array{DT,2}
+    Y::Array{DT,2}
+    Z::Array{DT,2}
 end
 
-function IntegratorIPRK{T}(equation::IODE{T}, tableau::TableauIPRK{T}, Δt::T)
+function IntegratorIPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::TableauIPRK{TT}, Δt::TT)
     D = equation.d
     S = tableau.s
 
     # create solution vector for internal stages / nonlinear solver
-    z = zeros(T, 2*D*S)
+    z = zeros(DT, 2*D*S)
 
     # create params
-    params = NonlinearFunctionParametersIPRK{T}(equation.f, equation.g, Δt, D, S,
+    params = NonlinearFunctionParametersIPRK{DT,TT,FT,GT}(
+                                                equation.f, equation.g,
+                                                Δt, D, S,
                                                 tableau.a_q, tableau.a_p,
                                                 tableau.c_q, tableau.c_p)
 
@@ -134,10 +136,11 @@ function IntegratorIPRK{T}(equation::IODE{T}, tableau::TableauIPRK{T}, Δt::T)
     # TODO allow for other nonlinear solvers based on constructor argument
 
     # create integrator
-    IntegratorIPRK{T, typeof(solver)}(equation, tableau, Δt, solver,
-                                      params.q, params.p, params.y, params.z,
-                                      params.Q, params.V, params.P, params.F,
-                                      params.Y, params.Z)
+    IntegratorIPRK{DT, TT, FT, GT, typeof(solver)}(
+                                        equation, tableau, Δt, solver,
+                                        params.q, params.p, params.y, params.z,
+                                        params.Q, params.V, params.P, params.F,
+                                        params.Y, params.Z)
 end
 
 
@@ -166,11 +169,8 @@ function integrate!(int::IntegratorIPRK, sol::SolutionPODE)
         # call nonlinear solver
         solve!(int.solver)
 
-        if (int.solver.status.rₐ > int.solver.params.atol² &&
-            int.solver.status.rᵣ > int.solver.params.rtol  &&
-            int.solver.status.rₛ > int.solver.params.stol²)||
-            int.solver.status.i >= int.solver.params.nmax
-            println(int.solver.status.i, ", ", int.solver.status.rₐ,", ",  int.solver.status.rᵣ,", ",  int.solver.status.rₛ)
+        if !solverStatusOK(int.solver.status, int.solver.params)
+            println(int.solver.status)
         end
 
         # compute final update
