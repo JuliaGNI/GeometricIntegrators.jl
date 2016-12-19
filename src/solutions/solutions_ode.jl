@@ -9,7 +9,7 @@ Contains all fields necessary to store the solution of an ODE.
 * `nt`: number of time steps to store
 * `n0`: number of initial conditions
 * `t`:  time steps
-* `x`:  solution `x[nd, nt+1, n0]` with `x[:,0,:]` the initial conditions
+* `q`:  solution `q[nd, nt+1, n0]` with `q[:,0,:]` the initial conditions
 * `ntime`: number of time steps to compute
 * `nsave`: save every nsave'th time step
 
@@ -19,173 +19,68 @@ immutable SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
     nt::Int
     n0::Int
     t::TimeSeries{tType}
-    x::Array{dType,N}
+    q::DataSeries{dType,N}
     ntime::Int
     nsave::Int
 
-    function SolutionODE(nd, n0, ntime, nsave, Δt)
-        @assert dType <: Number
-        @assert tType <: Real
-        @assert nd > 0
-        @assert n0 > 0
-        @assert nsave > 0
-        @assert ntime ≥ nsave
-        @assert mod(ntime, nsave) == 0
-
-        nt = div(ntime, nsave)
-        t = TimeSeries{tType}(nt, Δt, nsave)
-
-        @assert N ∈ (2,3)
-
-        if N == 2
-            x = zeros(dType, nd, nt+1)
-        elseif N == 3
-            x = zeros(dType, nd, nt+1, n0)
-        end
-
-        new(nd, nt, n0, t, x, ntime, nsave)
-    end
+    # function SolutionODE(nd, n0, ntime, nsave, Δt)
+    #     @assert dType <: Number
+    #     @assert tType <: Real
+    #     @assert nd > 0
+    #     @assert n0 > 0
+    #     @assert nsave > 0
+    #     @assert ntime ≥ nsave
+    #     @assert mod(ntime, nsave) == 0
+    #
+    #     nt = div(ntime, nsave)
+    #     t = TimeSeries{tType}(nt, Δt, nsave)
+    #     q = DataSeries(dType, nd, nt, n0, nsave)
+    #
+    #     new(nd, nt, n0, t, q, ntime, nsave)
+    # end
 end
 
 function SolutionODE{DT,TT,FT}(equation::ODE{DT,TT,FT}, Δt::TT, ntime::Int, nsave::Int=1)
-    N = equation.n > 1 ? 3 : 2
-    s = SolutionODE{DT,TT,N}(equation.d, equation.n, ntime, nsave, Δt)
+    N  = equation.n > 1 ? 3 : 2
+    nd = equation.d
+    ni = equation.n
+    nt = div(ntime, nsave)
+
+    @assert DT <: Number
+    @assert TT <: Real
+    @assert nd > 0
+    @assert ni > 0
+    @assert nsave > 0
+    @assert ntime ≥ nsave
+    @assert mod(ntime, nsave) == 0
+
+    t = TimeSeries{TT}(nt, Δt, nsave)
+    q = DataSeries(DT, nd, nt, ni)
+    s = SolutionODE{DT,TT,N}(nd, nt, ni, t, q, ntime, nsave)
     set_initial_conditions!(s, equation)
     return s
 end
 
-function set_initial_conditions!(solution::SolutionODE, equation::ODE)
-    set_initial_conditions!(solution, equation.t₀, equation.q₀)
+function set_initial_conditions!{DT,TT}(sol::SolutionODE{DT,TT}, equ::ODE{DT,TT})
+    set_initial_conditions!(sol, equ.t₀, equ.q₀)
 end
 
-function set_initial_conditions!{DT,TT}(solution::SolutionODE{DT,TT,2}, t₀::TT, q₀::Array{DT,1})
-    @assert size(solution, 1) == size(q₀, 1)
-    @inbounds for i in 1:size(solution, 1)
-        solution[i, 0] = q₀[i]
-    end
-    compute_timeseries!(solution.t, t₀)
+function set_initial_conditions!{DT,TT}(sol::SolutionODE{DT,TT}, t₀::TT, q₀::Array{DT})
+    set_data!(sol.q, q₀, 0)
+    compute_timeseries!(sol.t, t₀)
 end
 
-function set_initial_conditions!{DT,TT}(solution::SolutionODE{DT,TT,3}, t₀::TT, q₀::Array{DT,2})
-    @assert size(solution, 1) == size(q₀, 1)
-    @assert size(solution, 3) == size(q₀, 2)
-    @inbounds for k in 1:size(solution, 3)
-        for i in 1:size(solution, 1)
-            solution[i, 0 ,k] = q₀[i,k]
-        end
-    end
-    compute_timeseries!(solution.t, t₀)
-end
-
-function copy_solution!{DT,TT}(x::Vector{DT}, sol::SolutionODE{DT,TT,2}, n, k)
+function copy_solution!{DT,TT}(sol::SolutionODE{DT,TT}, x::Vector{DT}, n, k)
     if mod(n, sol.nsave) == 0
-        j = div(n, sol.nsave)+1
-        @assert length(x) == size(sol.x, 1)
-        @assert j ≤ size(sol.x, 2)
-        @assert k == 1
-        @inbounds for i in 1:size(sol.x, 1)
-            sol.x[i,j] = x[i]
-        end
+        set_data!(sol.q, x, div(n, sol.nsave), k)
     end
 end
 
-function copy_solution!{DT,TT}(x::Vector{DT}, sol::SolutionODE{DT,TT,3}, n, k)
-    if mod(n, sol.nsave) == 0
-        j = div(n, sol.nsave)+1
-        @assert length(x) == size(sol.x, 1)
-        @assert j ≤ size(sol.x, 2)
-        @assert k ≤ size(sol.x, 3)
-        @inbounds for i in 1:size(sol.x, 1)
-            sol.x[i,j,k] = x[i]
-        end
-    end
+function reset!(s::SolutionODE)
+    reset!(s.q)
+    compute_timeseries!(solution.t, solution.t[end])
 end
 
-function reset{DT,TT}(s::SolutionODE{DT,TT,2})
-    for i in 1:size(solution,1)
-        solution[i, 0] = solution[i, end]
-    end
-    solution.t[0] = solution.t[end]
-    compute_timeseries!(solution.t)
-end
-
-function reset{DT,TT}(s::SolutionODE{DT,TT,3})
-    for k in 1:size(solution,3)
-        for i in 1:size(solution,1)
-            solution[i, 0, k] = solution[i, end, k]
-        end
-    end
-    solution.t[0] = solution.t[end]
-    compute_timeseries!(solution.t)
-end
-
-Base.indices{DT,TT}(s::SolutionODE{DT,TT,2}) = (1:s.nd, 0:s.nt)
-Base.indices{DT,TT}(s::SolutionODE{DT,TT,3}) = (1:s.nd, 0:s.nt, 1:s.n0)
-Base.strides(s::SolutionODE) = strides(s.x)
-
-@inline function Base.getindex{DT,TT}(s::SolutionODE{DT,TT,2}, i::Int, j::Int)
-    @boundscheck checkbounds(s.x, i, j+1)
-    @inbounds r = getindex(s.x, i, j+1)
-    return r
-end
-
-@inline function Base.getindex{DT,TT}(s::SolutionODE{DT,TT,2}, j::Int)
-    @boundscheck checkbounds(s.x, :, j+1)
-    @inbounds r = getindex(s.x, :, j+1)
-    return r
-end
-
-@inline function Base.getindex{DT,TT}(s::SolutionODE{DT,TT,3}, i::Int, j::Int, k::Int)
-    @boundscheck checkbounds(s.x, i, j+1, k)
-    @inbounds r = getindex(s.x, i, j+1, k)
-    return r
-end
-
-@inline function Base.getindex{DT,TT}(s::SolutionODE{DT,TT,3}, j::Int, k::Int)
-    @boundscheck checkbounds(s.x, :, j+1, k)
-    @inbounds r = getindex(s.x, :, j+1, k)
-    return r
-end
-
-@inline function Base.getindex{DT,TT}(s::SolutionODE{DT,TT,3}, k::Int)
-    @boundscheck checkbounds(s.x, :, :, k)
-    @inbounds r = getindex(s.x, :, :, k)
-    return r
-end
-
-@inline function Base.setindex!{DT,TT}(s::SolutionODE{DT,TT,2}, x, i::Int, j::Int)
-    @assert length(x) == 1
-    @boundscheck checkbounds(s.x, i, j+1)
-    @inbounds setindex!(s.x, x, i, j+1)
-end
-
-@inline function Base.setindex!{DT,TT}(s::SolutionODE{DT,TT,2}, x, j::Int)
-    @assert ndims(x) == 1
-    @assert length(x) == size(s.x, 1)
-    @boundscheck checkbounds(s.x, :, j+1)
-    @inbounds setindex!(s.x, x, :, j+1)
-end
-
-@inline function Base.setindex!{DT,TT}(s::SolutionODE{DT,TT,3}, x, i::Int, j::Int, k::Int)
-    @assert length(x) == 1
-    @boundscheck checkbounds(s.x, i, j+1, k)
-    @inbounds setindex!(s.x, x, i, j+1, k)
-end
-
-@inline function Base.setindex!{DT,TT}(s::SolutionODE{DT,TT,3}, x, j::Int, k::Int)
-    @assert ndims(x) == 1
-    @assert length(x) == size(s.x, 1)
-    @boundscheck checkbounds(s.x, :, j+1, k)
-    @inbounds setindex!(s.x, x, :, j+1, k)
-end
-
-@inline function Base.setindex!{DT,TT}(s::SolutionODE{DT,TT,3}, x, k::Int)
-    @assert ndims(x) == 2
-    @assert size(x,1) == size(s.x, 1)
-    @assert size(x,2) == size(s.x, 2)
-    @boundscheck checkbounds(s.x, :, :, k)
-    @inbounds setindex!(s.x, x, :, :, k)
-end
 
 # TODO Fix HDF5 functions.
 

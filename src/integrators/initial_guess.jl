@@ -27,7 +27,7 @@ end
 function initialize!{DT,TT,FT,IT}(ig::InitialGuess{DT,TT,FT,IT}, t₁::TT, y₁::Vector{DT})
     set_initial_conditions!(ig.sol, t₁, y₁)
     integrate!(ig.rk4, ig.sol)
-    simd_copy_xy_first!(ig.y₁, ig.sol, 1, 1)
+    get_data!(ig.sol.q, ig.y₁, 1, 1)
     ig.f(t₁-ig.Δt, ig.y₁, ig.f₁)
     simd_scale!(ig.f₁, ig.Δt)
 end
