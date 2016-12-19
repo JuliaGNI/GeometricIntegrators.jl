@@ -125,8 +125,8 @@ end
 @inline function Base.setindex!{DT,TT}(s::SolutionODE{DT,TT,2}, x, j::Int)
     @assert ndims(x) == 1
     @assert length(x) == size(s.x, 1)
-    @boundscheck checkbounds(s.x, :, j)
-    @inbounds setindex!(s.x, x, :, j)
+    @boundscheck checkbounds(s.x, :, j+1)
+    @inbounds setindex!(s.x, x, :, j+1)
 end
 
 @inline function Base.setindex!{DT,TT}(s::SolutionODE{DT,TT,3}, x, i::Int, j::Int, k::Int)
