@@ -66,6 +66,34 @@ function set_initial_conditions!{DT,TT}(solution::SolutionPODE{DT,TT,4}, equatio
     compute_timeseries!(solution.t)
 end
 
+function copy_solution!{DT,TT}(q::Vector{DT}, p::Vector{DT}, sol::SolutionPODE{DT,TT,3}, n, k)
+    if mod(n, sol.nsave) == 0
+        j = div(n, sol.nsave)+1
+        @assert length(q) == size(sol.x, 2)
+        @assert length(p) == size(sol.x, 2)
+        @assert j ≤ size(sol.x, 3)
+        @assert k == 1
+        @inbounds for i=1:size(sol.x, 2)
+            sol.x[1, i, j] = q[i]
+            sol.x[2, i, j] = p[i]
+        end
+    end
+end
+
+function copy_solution!{DT,TT}(q::Vector{DT}, p::Vector{DT}, sol::SolutionPODE{DT,TT,4}, n, k)
+    if mod(n, sol.nsave) == 0
+        j = div(n, sol.nsave)+1
+        @assert length(q) == size(sol.x, 2)
+        @assert length(p) == size(sol.x, 2)
+        @assert j ≤ size(sol.x, 3)
+        @assert k ≤ size(sol.x, 4)
+        @inbounds for i=1:size(sol.x, 2)
+            sol.x[1, i, j, k] = q[i]
+            sol.x[2, i, j, k] = p[i]
+        end
+    end
+end
+
 function reset!{DT,TT}(s::SolutionPODE{DT,TT,3})
     for i in 1:size(solution,2)
         solution[1, i, 0] = solution[1, i, end]

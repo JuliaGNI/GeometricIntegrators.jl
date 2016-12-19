@@ -64,6 +64,30 @@ function set_initial_conditions!(solution::SolutionODE, t₀, q₀)
     compute_timeseries!(solution.t)
 end
 
+function copy_solution!{DT,TT}(x::Vector{DT}, sol::SolutionODE{DT,TT,2}, n, k)
+    if mod(n, sol.nsave) == 0
+        j = div(n, sol.nsave)+1
+        @assert length(x) == size(sol.x, 1)
+        @assert j ≤ size(sol.x, 2)
+        @assert k == 1
+        @inbounds for i=1:size(sol.x, 1)
+            sol.x[i,j] = x[i]
+        end
+    end
+end
+
+function copy_solution!{DT,TT}(x::Vector{DT}, sol::SolutionODE{DT,TT,3}, n, k)
+    if mod(n, sol.nsave) == 0
+        j = div(n, sol.nsave)+1
+        @assert length(x) == size(sol.x, 1)
+        @assert j ≤ size(sol.x, 2)
+        @assert k ≤ size(sol.x, 3)
+        @inbounds for i=1:size(sol.x, 1)
+            sol.x[i,j,k] = x[i]
+        end
+    end
+end
+
 function reset{DT,TT}(s::SolutionODE{DT,TT,2})
     for i in 1:size(solution,1)
         solution[i, 0] = solution[i, end]
