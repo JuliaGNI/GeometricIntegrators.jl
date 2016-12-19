@@ -21,15 +21,15 @@ function Timeseries{T}(n::Int, Δt::T, step::Int=1)
     return Timeseries{T}(n, Δt, step)
 end
 
-Base.eltype{T}(t::Timeseries{T}) = T
-Base.ndims(t::Timeseries) = 1
-Base.size(t::Timeseries) = size(t.t)
-Base.length(t::Timeseries) = length(t.t)
-Base.endof(t::Timeseries) = length(t)
-Base.indices(t::Timeseries) = (0:t.n,)
-Base.indices(t::Timeseries, d) = indices(t)[d]
-Base.strides(t::Timeseries) = (1,)
-Base.stride(t::Timeseries, d) = strides(t)[d]
+Base.eltype{T}(ts::Timeseries{T}) = T
+Base.ndims(ts::Timeseries) = 1
+Base.size(ts::Timeseries) = size(ts.t)
+Base.length(ts::Timeseries) = length(ts.t)
+Base.endof(ts::Timeseries) = length(ts)
+Base.indices(ts::Timeseries) = (0:ts.n,)
+Base.indices(ts::Timeseries, d) = indices(ts)[d]
+Base.strides(ts::Timeseries) = (1,)
+Base.stride(ts::Timeseries, d) = strides(ts)[d]
 
 @inline function Base.setindex!(ts::Timeseries, t, i::Int)
     @boundscheck checkbounds(ts.t, i+1)
