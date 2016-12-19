@@ -53,8 +53,9 @@ end
 
 function copy_solution!{DT,TT}(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, n, k)
     if mod(n, sol.nsave) == 0
-        set_data!(sol.q, q, div(n, sol.nsave), k)
-        set_data!(sol.λ, λ, div(n, sol.nsave), k)
+        j = div(n, sol.nsave)
+        set_data!(sol.q, q, j, k)
+        set_data!(sol.λ, λ, j, k)
     end
 end
 

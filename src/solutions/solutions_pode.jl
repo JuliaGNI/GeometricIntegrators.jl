@@ -50,8 +50,9 @@ end
 
 function copy_solution!{DT,TT}(sol::SolutionPODE{DT,TT}, q::Vector{DT}, p::Vector{DT}, n, k)
     if mod(n, sol.nsave) == 0
-        set_data!(sol.q, q, div(n, sol.nsave), k)
-        set_data!(sol.p, p, div(n, sol.nsave), k)
+        j = div(n, sol.nsave)
+        set_data!(sol.q, q, j, k)
+        set_data!(sol.p, p, j, k)
     end
 end
 
