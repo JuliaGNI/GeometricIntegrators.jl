@@ -32,7 +32,7 @@ function integrate!{DT,TT,FT,N}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{D
     # loop over initial conditions
     for m in 1:sol.ni
         # copy initial conditions from solution
-        get_data!(sol.q, int.x, 0, m)
+        get_initial_conditions!(sol, int.x, m)
 
         # loop over time steps
         for n in 1:sol.ntime
@@ -57,7 +57,7 @@ function integrate!{DT,TT,FT,N}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{D
             simd_abXpy!(int.Δt, int.tableau.b, int.F, int.x)
 
             # copy to solution
-            set_data!(sol.q, int.x, n, m)
+            copy_solution!(sol, int.x, n, m)
         end
     end
     nothing

@@ -13,7 +13,8 @@ module Solutions
     include("solutions/timeseries.jl")
 
     export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE,
-           copy_solution!, reset!, set_initial_conditions!,
+           copy_solution!, reset!,
+           get_initial_conditions!, set_initial_conditions!,
            createHDF5, writeSolutionToHDF5
 
     include("solutions/solutions.jl")

@@ -116,7 +116,7 @@ function integrate!{DT,TT,FT,ST,IT,N}(int::IntegratorFIRK{DT, TT, FT, ST, IT}, s
     # loop over initial conditions
     for m in 1:sol.ni
         # copy initial conditions from solution
-        get_data!(sol.q, int.x, 0, m)
+        get_initial_conditions!(sol, int.x, m)
 
         # initialise initial guess
         initialize!(int.iguess, sol.t[0], int.x)
@@ -148,7 +148,7 @@ function integrate!{DT,TT,FT,ST,IT,N}(int::IntegratorFIRK{DT, TT, FT, ST, IT}, s
             simd_axpy!(int.Δt, int.y, int.x)
 
             # copy to solution
-            set_data!(sol.q, int.x, n, m)
+            copy_solution!(sol, int.x, n, m)
         end
     end
     nothing

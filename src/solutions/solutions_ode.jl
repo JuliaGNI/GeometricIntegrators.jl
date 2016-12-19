@@ -54,9 +54,13 @@ function set_initial_conditions!{DT,TT}(sol::SolutionODE{DT,TT}, t₀::TT, q₀:
     compute_timeseries!(sol.t, t₀)
 end
 
-function copy_solution!{DT,TT}(sol::SolutionODE{DT,TT}, x::Vector{DT}, n, k)
+function get_initial_conditions!{DT,TT}(sol::SolutionODE{DT,TT}, q::Vector{DT}, k)
+    get_data!(sol.q, q, 0, k)
+end
+
+function copy_solution!{DT,TT}(sol::SolutionODE{DT,TT}, q::Vector{DT}, n, k)
     if mod(n, sol.nsave) == 0
-        set_data!(sol.q, x, div(n, sol.nsave), k)
+        set_data!(sol.q, q, div(n, sol.nsave), k)
     end
 end
 
