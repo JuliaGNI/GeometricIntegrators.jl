@@ -4,12 +4,12 @@ module Solutions
 
     using ..Equations
 
-    export Timeseries, compute_timeseries!
+    export TimeSeries, compute_timeseries!
 
     include("solutions/timeseries.jl")
 
     export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE,
-           copy_solution!, reset!, set_initial_conditions!, compute_time_steps!,
+           copy_solution!, reset!, set_initial_conditions!,
            createHDF5, writeSolutionToHDF5
 
     include("solutions/solutions.jl")

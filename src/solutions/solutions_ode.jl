@@ -18,7 +18,7 @@ immutable SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
     nd::Int
     nt::Int
     n0::Int
-    t::Timeseries{tType}
+    t::TimeSeries{tType}
     x::Array{dType,N}
     ntime::Int
     nsave::Int
@@ -33,7 +33,7 @@ immutable SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
         @assert mod(ntime, nsave) == 0
 
         nt = div(ntime, nsave)
-        t = Timeseries{tType}(nt, Δt, nsave)
+        t = TimeSeries{tType}(nt, Δt, nsave)
 
         @assert N ∈ (2,3)
 
