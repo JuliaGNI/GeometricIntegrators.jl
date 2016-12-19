@@ -74,7 +74,7 @@ end
 "Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
 function integrate!{DT,TT,VT,FT,N}(int::IntegratorEPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N})
     # loop over initial conditions
-    for m in 1:sol.n0
+    for m in 1:sol.ni
         local j::Int
         local tqᵢ::TT
         local tpᵢ::TT

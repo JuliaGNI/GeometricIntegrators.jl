@@ -3,7 +3,7 @@
 immutable SolutionPODE{dType, tType, N} <: Solution{dType, tType, N}
     nd::Int
     nt::Int
-    n0::Int
+    ni::Int
     t::TimeSeries{tType}
     q::DataSeries{dType,N}
     p::DataSeries{dType,N}
