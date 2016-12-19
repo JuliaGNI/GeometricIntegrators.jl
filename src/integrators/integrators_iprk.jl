@@ -146,41 +146,45 @@ end
 
 "Integrate ODE with implicit partitioned Runge-Kutta integrator."
 function integrate!{DT,TT,VT,FT,N}(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N})
-    local nt::Int
+    # loop over initial conditions
+    for m in 1:sol.ni
+        local j::Int
+        local tqᵢ::TT
+        local tpᵢ::TT
 
-    # copy initial conditions from solution
-    simd_copy_xy_first!(int.q, sol.q, 1)
-    simd_copy_xy_first!(int.p, sol.p, 1)
+        # copy initial conditions from solution
+        get_initial_conditions!(sol, int.q, int.p, m)
 
-    for n in 1:sol.ntime
-        # set time for nonlinear solver
-        int.solver.Fparams.t = sol.t[n]
+        for n in 1:sol.ntime
+            # set time for nonlinear solver
+            int.solver.Fparams.t = sol.t[n]
 
-        # compute initial guess
-        # TODO
-        for i in 1:int.tableau.s
-            for k in 1:int.equation.d
-                int.solver.x[2*(sol.nd*(i-1)+k-1)+1] = int.q[k]
-                # TODO initial guess for velocity
-                # int.solver.x[2*(params.d*(i-1)+k-1)+1] = 0.
+            # compute initial guess
+            # TODO
+            for i in 1:int.tableau.s
+                for k in 1:int.equation.d
+                    int.solver.x[2*(sol.nd*(i-1)+k-1)+1] = int.q[k]
+                    # TODO initial guess for velocity
+                    # int.solver.x[2*(params.d*(i-1)+k-1)+1] = 0.
+                end
             end
+
+            # call nonlinear solver
+            solve!(int.solver)
+
+            if !solverStatusOK(int.solver.status, int.solver.params)
+                println(int.solver.status)
+            end
+
+            # compute final update
+            simd_mult!(int.y, int.V, int.tableau.b_q)
+            simd_mult!(int.z, int.F, int.tableau.b_p)
+            simd_axpy!(int.Δt, int.y, int.q)
+            simd_axpy!(int.Δt, int.z, int.p)
+
+            # copy to solution
+            copy_solution!(sol, int.q, int.p, n, m)
         end
-
-        # call nonlinear solver
-        solve!(int.solver)
-
-        if !solverStatusOK(int.solver.status, int.solver.params)
-            println(int.solver.status)
-        end
-
-        # compute final update
-        simd_mult!(int.y, int.V, int.tableau.b_q)
-        simd_mult!(int.z, int.F, int.tableau.b_p)
-        simd_axpy!(int.Δt, int.y, int.q)
-        simd_axpy!(int.Δt, int.z, int.p)
-
-        # copy to solution
-        copy_solution!(int.q, int.p, sol, n, m)
     end
     nothing
 end
