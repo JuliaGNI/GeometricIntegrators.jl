@@ -4,14 +4,12 @@ immutable DataSeries{T,N} <: AbstractArray{T,N}
     nt::Int
     ni::Int
     d::Array{T,N}
-    step::Int
 
-    function DataSeries(nd, nt, ni, step)
+    function DataSeries(nd, nt, ni)
         @assert T <: Number
         @assert nd > 0
         @assert nt > 0
         @assert ni > 0
-        @assert nt ≥ step
 
         @assert N ∈ (2,3)
 
@@ -21,13 +19,13 @@ immutable DataSeries{T,N} <: AbstractArray{T,N}
             d = zeros(T, nd, nt+1, ni)
         end
 
-        new(nd, nt, ni, d, step)
+        new(nd, nt, ni, d)
     end
 end
 
-function DataSeries(T, nd::Int, nt::Int, ni::Int, step::Int=1)
+function DataSeries(T, nd::Int, nt::Int, ni::Int)
     ni == 1 ? N = 2 : N = 3
-    return DataSeries{T,N}(nd, nt, ni, step)
+    return DataSeries{T,N}(nd, nt, ni)
 end
 
 Base.eltype{T,N}(ds::DataSeries{T,N}) = T
@@ -39,59 +37,78 @@ Base.indices{T}(ds::DataSeries{T,2}) = (1:ds.nd, 0:ds.nt)
 Base.indices{T}(ds::DataSeries{T,3}) = (1:ds.nd, 0:ds.nt, 1:ds.ni)
 Base.strides(ds::DataSeries) = (strides(ds.d))
 
-function set_initial_conditions!(ds::DataSeries, equation::ODE)
-    set_initial_conditions!(ds, equation.t₀, equation.q₀)
-end
-
-function set_initial_conditions!{T}(ds::DataSeries{T,2}, x::Array{T,1})
-    @assert size(ds, 1) == size(x, 1)
-    @inbounds for i in 1:size(ds, 1)
-        ds[i,0] = x[i]
+function get_data!{T}(ds::DataSeries{T,2}, x::Array{T,1}, n, k=1)
+    j = n+1
+    @assert length(x) == size(ds.d, 1)
+    @assert j ≤ size(ds.d, 2)
+    @assert k == 1
+    @inbounds for i in eachindex(x)
+        x[i] = ds.d[i,j]
     end
 end
 
-function set_initial_conditions!{T}(ds::DataSeries{T,3}, x::Array{T,2})
-    @assert size(ds, 1) == size(x, 1)
-    @assert size(ds, 3) == size(x, 2)
-    @inbounds for k in 1:size(ds, 3)
-        for i in 1:size(ds, 1)
-            ds[i,0,k] = x[i,k]
+function get_data!{T}(ds::DataSeries{T,3}, x::Array{T,2}, n)
+    j = n+1
+    @assert size(x,1) == size(ds.d, 1)
+    @assert size(x,2) == size(ds.d, 3)
+    @assert j ≤ size(ds.d, 2)
+    @inbounds for k in 1:size(x, 2)
+        for i in 1:size(x, 1)
+            x[i,k] = ds.d[i,j,k]
         end
     end
 end
 
-function copy_solution!{T}(x::Vector{T}, ds::DataSeries{T,2}, n, k=1)
-    if mod(n, ds.step) == 0
-        j = div(n, ds.step)+1
-        @assert length(x) == size(ds.d, 1)
-        @assert j ≤ size(ds.d, 2)
-        @assert k == 1
-        @inbounds for i in 1:size(ds.d, 1)
-            ds.d[i,j] = x[i]
+function get_data!{T}(ds::DataSeries{T,3}, x::Array{T,1}, n, k)
+    j = n+1
+    @assert size(x,1) == size(ds.d, 1)
+    @assert j ≤ size(ds.d, 2)
+    @assert k ≤ size(ds.d, 3)
+    @inbounds for i in eachindex(x)
+        x[i] = ds.d[i,j,k]
+    end
+end
+
+function set_data!{T}(ds::DataSeries{T,2}, x::Array{T,1}, n, k=1)
+    j = n+1
+    @assert length(x) == size(ds.d, 1)
+    @assert j ≤ size(ds.d, 2)
+    @assert k == 1
+    @inbounds for i in 1:size(ds.d, 1)
+        ds.d[i,j] = x[i]
+    end
+end
+
+function set_data!{T}(ds::DataSeries{T,3}, x::Array{T,2}, n)
+    j = n+1
+    @assert size(x,1) == size(ds.d, 1)
+    @assert size(x,2) == size(ds.d, 3)
+    @assert j ≤ size(ds.d, 2)
+    @inbounds for k in 1:size(ds.d, 3)
+        for i in 1:size(ds.d, 1)
+            ds.d[i,j,k] = x[i,k]
         end
     end
 end
 
-function copy_solution!{T}(x::Vector{T}, ds::DataSeries{T,3}, n, k)
-    if mod(n, ds.step) == 0
-        j = div(n, ds.step)+1
-        @assert length(x) == size(ds.d, 1)
-        @assert j ≤ size(ds.d, 2)
-        @assert k ≤ size(ds.d, 3)
-        @inbounds for i in 1:size(ds.d, 1)
-            ds.d[i,j,k] = x[i]
-        end
+function set_data!{T}(ds::DataSeries{T,3}, x::Array{T,1}, n, k)
+    j = n+1
+    @assert size(x,1) == size(ds.d, 1)
+    @assert j ≤ size(ds.d, 2)
+    @assert k ≤ size(ds.d, 3)
+    @inbounds for i in 1:size(ds.d, 1)
+        ds.d[i,j,k] = x[i]
     end
 end
 
 function reset!{T}(ds::DataSeries{T,2})
-    for i in 1:size(ds,1)
+    @inbounds for i in 1:size(ds,1)
         ds[i,0] = ds[i,end]
     end
 end
 
 function reset!{T}(ds::DataSeries{T,3})
-    for k in 1:size(ds,3)
+    @inbounds for k in 1:size(ds,3)
         for i in 1:size(ds,1)
             ds[i,0,k] = ds[i,end,k]
         end

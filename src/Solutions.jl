@@ -4,7 +4,7 @@ module Solutions
 
     using ..Equations
 
-    export DataSeries, copy_solution!, reset!, set_initial_conditions!
+    export DataSeries, get_data!, set_data!, reset!
 
     include("solutions/dataseries.jl")
 
