@@ -6,8 +6,8 @@ immutable SolutionPODE{dType, tType, N} <: Solution{dType, tType, N}
     n0::Int
     t::Timeseries{tType}
     x::Array{dType, N}
-    q::AbstractArray{dType}
-    p::AbstractArray{dType}
+    q::AbstractArray{dType} # TODO Provide actual type.
+    p::AbstractArray{dType} # TODO Provide actual type.
     ntime::Int
     nsave::Int
 
@@ -46,24 +46,29 @@ function SolutionPODE{DT,TT}(equation::Union{PODE{DT,TT}, IODE{DT,TT}}, Δt::TT,
     return s
 end
 
-function set_initial_conditions!{DT,TT}(solution::SolutionPODE{DT,TT,3}, equation::Union{PODE,IODE})
-    for i in 1:size(solution,2)
-        solution[1, i, 0] = equation.q₀[i]
-        solution[2, i, 0] = equation.p₀[i]
-    end
-    solution.t[0] = equation.t₀
-    compute_timeseries!(solution.t)
+function set_initial_conditions!{DT,TT}(solution::SolutionPODE{DT,TT}, equation::Union{PODE{DT,TT},IODE{DT,TT}})
+    set_initial_conditions!(solution, equation.t₀, equation.q₀, equation.p₀)
 end
 
-function set_initial_conditions!{DT,TT}(solution::SolutionPODE{DT,TT,4}, equation::Union{PODE,IODE})
-    for k in 1:size(solution,4)
+function set_initial_conditions!{DT,TT}(solution::SolutionPODE{DT,TT,3}, t₀::TT, q₀::Array{DT,1}, p₀::Array{DT,1})
+    @assert size(solution, 2) == size(q₀, 1) == size(p₀, 1)
+    @inbounds for i in 1:size(solution, 2)
+        solution[1, i, 0] = q₀[i]
+        solution[2, i, 0] = p₀[i]
+    end
+    compute_timeseries!(solution.t, t₀)
+end
+
+function set_initial_conditions!{DT,TT}(solution::SolutionPODE{DT,TT,4}, t₀::TT, q₀::Array{DT,2}, p₀::Array{DT,2})
+    @assert size(solution, 2) == size(q₀, 1) == size(p₀, 1)
+    @assert size(solution, 4) == size(q₀, 2) == size(p₀, 2)
+    @inbounds for k in 1:size(solution,4)
         for i in 1:size(solution,2)
-            solution[1, i, 0, k] = equation.q₀[i,k]
-            solution[2, i, 0, k] = equation.p₀[i,k]
+            solution[1, i, 0, k] = q₀[i,k]
+            solution[2, i, 0, k] = p₀[i,k]
         end
     end
-    solution.t[0] = equation.t₀
-    compute_timeseries!(solution.t)
+    compute_timeseries!(solution.t, t₀)
 end
 
 function copy_solution!{DT,TT}(q::Vector{DT}, p::Vector{DT}, sol::SolutionPODE{DT,TT,3}, n, k)
@@ -73,7 +78,7 @@ function copy_solution!{DT,TT}(q::Vector{DT}, p::Vector{DT}, sol::SolutionPODE{D
         @assert length(p) == size(sol.x, 2)
         @assert j ≤ size(sol.x, 3)
         @assert k == 1
-        @inbounds for i=1:size(sol.x, 2)
+        @inbounds for i in 1:size(sol.x, 2)
             sol.x[1, i, j] = q[i]
             sol.x[2, i, j] = p[i]
         end
@@ -87,7 +92,7 @@ function copy_solution!{DT,TT}(q::Vector{DT}, p::Vector{DT}, sol::SolutionPODE{D
         @assert length(p) == size(sol.x, 2)
         @assert j ≤ size(sol.x, 3)
         @assert k ≤ size(sol.x, 4)
-        @inbounds for i=1:size(sol.x, 2)
+        @inbounds for i in 1:size(sol.x, 2)
             sol.x[1, i, j, k] = q[i]
             sol.x[2, i, j, k] = p[i]
         end

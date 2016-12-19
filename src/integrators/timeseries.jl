@@ -42,7 +42,8 @@ end
     return t
 end
 
-function compute_timeseries!(ts::Timeseries)
+function compute_timeseries!{T}(ts::Timeseries{T}, t₀::T)
+    ts[0] = t₀
     for n in 1:ts.n
         ts[n] = ts[0] + n * ts.step * ts.Δt
     end

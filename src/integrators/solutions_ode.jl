@@ -58,10 +58,23 @@ function set_initial_conditions!(solution::SolutionODE, equation::ODE)
     set_initial_conditions!(solution, equation.t₀, equation.q₀)
 end
 
-function set_initial_conditions!(solution::SolutionODE, t₀, q₀)
-    simd_copy_yx_first_last!(q₀, solution, 0)
-    solution.t[0] = t₀
-    compute_timeseries!(solution.t)
+function set_initial_conditions!{DT,TT}(solution::SolutionODE{DT,TT,2}, t₀::TT, q₀::Array{DT,1})
+    @assert size(solution, 1) == size(q₀, 1)
+    @inbounds for i in 1:size(solution, 1)
+        solution[i, 0] = q₀[i]
+    end
+    compute_timeseries!(solution.t, t₀)
+end
+
+function set_initial_conditions!{DT,TT}(solution::SolutionODE{DT,TT,3}, t₀::TT, q₀::Array{DT,2})
+    @assert size(solution, 1) == size(q₀, 1)
+    @assert size(solution, 3) == size(q₀, 2)
+    @inbounds for k in 1:size(solution, 3)
+        for i in 1:size(solution, 1)
+            solution[i, 0 ,k] = q₀[i,k]
+        end
+    end
+    compute_timeseries!(solution.t, t₀)
 end
 
 function copy_solution!{DT,TT}(x::Vector{DT}, sol::SolutionODE{DT,TT,2}, n, k)
@@ -70,7 +83,7 @@ function copy_solution!{DT,TT}(x::Vector{DT}, sol::SolutionODE{DT,TT,2}, n, k)
         @assert length(x) == size(sol.x, 1)
         @assert j ≤ size(sol.x, 2)
         @assert k == 1
-        @inbounds for i=1:size(sol.x, 1)
+        @inbounds for i in 1:size(sol.x, 1)
             sol.x[i,j] = x[i]
         end
     end
@@ -82,7 +95,7 @@ function copy_solution!{DT,TT}(x::Vector{DT}, sol::SolutionODE{DT,TT,3}, n, k)
         @assert length(x) == size(sol.x, 1)
         @assert j ≤ size(sol.x, 2)
         @assert k ≤ size(sol.x, 3)
-        @inbounds for i=1:size(sol.x, 1)
+        @inbounds for i in 1:size(sol.x, 1)
             sol.x[i,j,k] = x[i]
         end
     end
