@@ -4,6 +4,10 @@ module Solutions
 
     using ..Equations
 
+    export DataSeries, copy_solution!, reset!, set_initial_conditions!
+
+    include("solutions/dataseries.jl")
+
     export TimeSeries, compute_timeseries!
 
     include("solutions/timeseries.jl")
