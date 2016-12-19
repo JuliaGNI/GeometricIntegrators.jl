@@ -25,7 +25,7 @@ function IntegratorERK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauERK{TT
 end
 
 "Integrate ODE with explicit Runge-Kutta integrator."
-function integrate!{DT,TT,FT}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT})
+function integrate!{DT,TT,FT,N}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N})
     local tᵢ::TT
     local y::DT
 
@@ -41,8 +41,8 @@ function integrate!{DT,TT,FT}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,
             simd_copy_yx_second!(int.tF, int.F, 1)
 
             for i in 2:int.tableau.s
-                for k in 1:sol.nd
-                    y = zero(DT)
+                @inbounds for k in eachindex(int.tX)
+                    y = 0
                     for j = 1:i-1
                         y += int.tableau.a[i,j] * int.F[j,k]
                     end
@@ -57,9 +57,7 @@ function integrate!{DT,TT,FT}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,
             simd_abXpy!(int.Δt, int.tableau.b, int.F, int.x)
 
             # copy to solution
-            if mod(n, sol.nsave) == 0
-                simd_copy_yx_first!(int.x, sol, div(n, sol.nsave), m)
-            end
+            copy_solution!(int.x, sol, n, m)
         end
     end
     nothing

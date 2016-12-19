@@ -112,7 +112,7 @@ end
 
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
-function integrate!{DT, TT, FT, ST, IT}(int::IntegratorFIRK{DT, TT, FT, ST, IT}, sol::SolutionODE{DT,TT})
+function integrate!{DT,TT,FT,ST,IT,N}(int::IntegratorFIRK{DT, TT, FT, ST, IT}, sol::SolutionODE{DT,TT,N})
     # loop over initial conditions
     for m in 1:sol.n0
         # copy initial conditions from solution
@@ -148,9 +148,7 @@ function integrate!{DT, TT, FT, ST, IT}(int::IntegratorFIRK{DT, TT, FT, ST, IT},
             simd_axpy!(int.Δt, int.y, int.x)
 
             # copy to solution
-            if mod(n, sol.nsave) == 0
-                simd_copy_yx_first!(int.x, sol, div(n, sol.nsave), m)
-            end
+            copy_solution!(int.x, sol, n, m)
         end
     end
     nothing

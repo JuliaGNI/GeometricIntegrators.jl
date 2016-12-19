@@ -145,7 +145,7 @@ end
 
 
 "Integrate ODE with implicit partitioned Runge-Kutta integrator."
-function integrate!{DT,TT,VT,FT}(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT})
+function integrate!{DT,TT,VT,FT,N}(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N})
     local nt::Int
 
     # copy initial conditions from solution
@@ -180,11 +180,7 @@ function integrate!{DT,TT,VT,FT}(int::IntegratorIPRK{DT,TT,VT,FT}, sol::Solution
         simd_axpy!(int.Δt, int.z, int.p)
 
         # copy to solution
-        if mod(n, sol.nsave) == 0
-            nt = div(n, sol.nsave)+1
-            simd_copy_yx_first!(int.q, sol.q, nt)
-            simd_copy_yx_first!(int.p, sol.p, nt)
-        end
+        copy_solution!(int.q, int.p, sol, n, m)
     end
     nothing
 end

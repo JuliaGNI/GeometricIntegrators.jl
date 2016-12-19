@@ -72,7 +72,7 @@ function computeStageP!(int::IntegratorEPRK, i::Int, jmax::Int, t)
 end
 
 "Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
-function integrate!{DT,TT,VT,FT}(int::IntegratorEPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT})
+function integrate!{DT,TT,VT,FT,N}(int::IntegratorEPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N})
     # loop over initial conditions
     for m in 1:sol.n0
         local j::Int
@@ -115,13 +115,7 @@ function integrate!{DT,TT,VT,FT}(int::IntegratorEPRK{DT,TT,VT,FT}, sol::Solution
             simd_axpy!(int.Δt, int.z, int.p)
 
             # copy to solution
-            if mod(n, sol.nsave) == 0
-                j = div(n, sol.nsave)
-                for i in 1:sol.nd
-                    sol[1, i, j, m] = int.q[i]
-                    sol[2, i, j, m] = int.p[i]
-                end
-            end
+            copy_solution!(int.q, int.p, sol, n, m)
         end
     end
     nothing
