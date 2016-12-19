@@ -114,7 +114,7 @@ end
 "Integrate ODE with fully implicit Runge-Kutta integrator."
 function integrate!{DT,TT,FT,ST,IT,N}(int::IntegratorFIRK{DT, TT, FT, ST, IT}, sol::SolutionODE{DT,TT,N})
     # loop over initial conditions
-    for m in 1:sol.n0
+    for m in 1:sol.ni
         # copy initial conditions from solution
         get_data!(sol.q, int.x, 0, m)
 

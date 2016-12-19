@@ -7,9 +7,9 @@ Contains all fields necessary to store the solution of an ODE.
 
 * `nd`: dimension of the dynamical variable ``q``
 * `nt`: number of time steps to store
-* `n0`: number of initial conditions
+* `ni`: number of initial conditions
 * `t`:  time steps
-* `q`:  solution `q[nd, nt+1, n0]` with `q[:,0,:]` the initial conditions
+* `q`:  solution `q[nd, nt+1, ni]` with `q[:,0,:]` the initial conditions
 * `ntime`: number of time steps to compute
 * `nsave`: save every nsave'th time step
 
@@ -17,27 +17,11 @@ Contains all fields necessary to store the solution of an ODE.
 immutable SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
     nd::Int
     nt::Int
-    n0::Int
+    ni::Int
     t::TimeSeries{tType}
     q::DataSeries{dType,N}
     ntime::Int
     nsave::Int
-
-    # function SolutionODE(nd, n0, ntime, nsave, Δt)
-    #     @assert dType <: Number
-    #     @assert tType <: Real
-    #     @assert nd > 0
-    #     @assert n0 > 0
-    #     @assert nsave > 0
-    #     @assert ntime ≥ nsave
-    #     @assert mod(ntime, nsave) == 0
-    #
-    #     nt = div(ntime, nsave)
-    #     t = TimeSeries{tType}(nt, Δt, nsave)
-    #     q = DataSeries(dType, nd, nt, n0, nsave)
-    #
-    #     new(nd, nt, n0, t, q, ntime, nsave)
-    # end
 end
 
 function SolutionODE{DT,TT,FT}(equation::ODE{DT,TT,FT}, Δt::TT, ntime::Int, nsave::Int=1)
