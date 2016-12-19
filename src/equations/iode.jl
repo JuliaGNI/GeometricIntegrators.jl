@@ -45,32 +45,20 @@ where `t` is the current time, `q` is the current solution vector, `v` is the
 current velocity and `f` and `g` are the vectors which hold the result of
 evaluating the functions ``f`` and ``g`` on `t`, `q` and `v`.
 """
-immutable IODE{dType <: Number, tType <: Number, fType <: Function, gType <: Function} <: Equation{dType, tType}
+immutable IODE{dType <: Number, tType <: Number, fType <: Function, gType <: Function, N} <: Equation{dType, tType}
     d::Int
     n::Int
     f::fType
     g::gType
     t₀::tType
-    q₀::Array{dType, 2}
-    p₀::Array{dType, 2}
+    q₀::Array{dType, N}
+    p₀::Array{dType, N}
 
     function IODE(d, n, f, g, t₀, q₀, p₀)
         @assert d == size(q₀,1) == size(p₀,1)
         @assert n == size(q₀,2) == size(p₀,2)
-
         @assert dType == eltype(q₀) == eltype(p₀)
-
-        @assert ndims(q₀) ∈ (1,2)
-        @assert ndims(p₀) ∈ (1,2)
-
-        if ndims(q₀) == 1
-            q₀ = reshape(q₀, d, n)
-        end
-
-        if ndims(p₀) == 1
-            p₀ = reshape(p₀, d, n)
-        end
-
+        @assert ndims(q₀) == ndims(p₀) == N ∈ (1,2)
         new(d, n, f, g, t₀, q₀, p₀)
     end
 end
@@ -78,7 +66,7 @@ end
 
 function IODE{DT,TT,FT,GT}(f::FT, g::GT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT})
     @assert size(q₀) == size(p₀)
-    IODE{DT,TT,FT,GT}(size(q₀, 1), size(q₀, 2), f, g, t₀, q₀, p₀)
+    IODE{DT, TT, FT, GT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), f, g, t₀, q₀, p₀)
 end
 
 function IODE(f, g, q₀, p₀)

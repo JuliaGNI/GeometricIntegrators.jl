@@ -28,31 +28,24 @@ where `t` is the current time, `q` is the current solution vector, and
 on `t` and `q`.
 
 """
-immutable ODE{dType <: Number, tType <: Number, vType <: Function} <: Equation{dType, tType}
+immutable ODE{dType <: Number, tType <: Number, vType <: Function, N} <: Equation{dType, tType}
     d::Int
     n::Int
     v::vType
     t₀::tType
-    q₀::Array{dType,2}
+    q₀::Array{dType,N}
 
     function ODE(d, n, v, t₀, q₀)
         @assert d == size(q₀,1)
         @assert n == size(q₀,2)
-
         @assert dType == eltype(q₀)
-
-        @assert ndims(q₀) ∈ (1,2)
-
-        if ndims(q₀) == 1
-            q₀ = reshape(q₀, d, n)
-        end
-
+        @assert ndims(q₀) == N ∈ (1,2)
         new(d, n, v, t₀, q₀)
     end
 end
 
 function ODE{DT <: Number, TT <: Number, VT <: Function}(v::VT, t₀::TT, q₀::DenseArray{DT})
-    ODE{DT,TT,VT}(size(q₀, 1), size(q₀, 2), v, t₀, q₀)
+    ODE{DT, TT, VT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), v, t₀, q₀)
 end
 
 function ODE(v, q₀)

@@ -59,7 +59,7 @@ on `t`, `q` and `λ`.
 
 ```
 """
-immutable DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Function, ϕType <: Function} <: Equation{dType, tType}
+immutable DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Function, ϕType <: Function, N} <: Equation{dType, tType}
     d::Int
     m::Int
     n::Int
@@ -67,8 +67,8 @@ immutable DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Func
     u::uType
     ϕ::ϕType
     t₀::tType
-    q₀::Array{dType, 2}
-    λ₀::Array{dType, 2}
+    q₀::Array{dType, N}
+    λ₀::Array{dType, N}
 
     function DAE(d, m, n, v, u, ϕ, t₀, q₀, λ₀)
         @assert d == size(q₀,1)
@@ -80,23 +80,15 @@ immutable DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Func
         @assert dType == eltype(λ₀)
         @assert tType == typeof(t₀)
 
-        @assert ndims(q₀) ∈ (1,2)
-        @assert ndims(λ₀) ∈ (1,2)
-
-        if ndims(q₀) == 1
-            q₀ = reshape(q₀, d, n)
-        end
-
-        if ndims(λ₀) == 1
-            λ₀ = reshape(λ₀, m, n)
-        end
+        @assert ndims(q₀) == ndims(λ₀) == N ∈ (1,2)
 
         new(d, m, n, v, u, ϕ, t₀, q₀, λ₀)
     end
 end
 
 function DAE{DT, TT, VT, UT, ΦT}(v::VT, u::UT, ϕ::ΦT, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArray{DT})
-    DAE{DT, TT, VT, UT, ΦT}(size(q₀, 1), size(q₀, 2), size(λ₀, 1), v, u, ϕ, t₀, q₀, λ₀)
+    @assert size(q₀,2) == size(λ₀,2)
+    DAE{DT, TT, VT, UT, ΦT, ndims(q₀)}(size(q₀, 1), size(λ₀, 1), size(q₀, 2), v, u, ϕ, t₀, q₀, λ₀)
 end
 
 function DAE(v, u, ϕ, q₀, λ₀)

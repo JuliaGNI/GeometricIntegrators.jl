@@ -42,32 +42,20 @@ where `t` is the current time, `q` and `p` are the current solution vectors
 and `v` and `f` are the vectors which hold the result of evaluating the
 vector fields ``v`` and ``f`` on `t`, `q` and `p`.
 """
-immutable PODE{dType <: Number, tType <: Number, vType <: Function, fType <: Function} <: Equation{dType, tType}
+immutable PODE{dType <: Number, tType <: Number, vType <: Function, fType <: Function, N} <: Equation{dType, tType}
     d::Int
     n::Int
     v::vType
     f::fType
     t₀::tType
-    q₀::Array{dType, 2}
-    p₀::Array{dType, 2}
+    q₀::Array{dType, N}
+    p₀::Array{dType, N}
 
     function PODE(d, n, v, f, t₀, q₀, p₀)
         @assert d == size(q₀,1) == size(p₀,1)
         @assert n == size(q₀,2) == size(p₀,2)
-
         @assert dType == eltype(q₀) == eltype(p₀)
-
-        @assert ndims(q₀) ∈ (1,2)
-        @assert ndims(p₀) ∈ (1,2)
-
-        if ndims(q₀) == 1
-            q₀ = reshape(q₀, d, n)
-        end
-
-        if ndims(p₀) == 1
-            p₀ = reshape(p₀, d, n)
-        end
-
+        @assert ndims(q₀) == ndims(p₀) == N ∈ (1,2)
         new(d, n, v, f, t₀, q₀, p₀)
     end
 end
@@ -75,7 +63,7 @@ end
 
 function PODE{DT, TT, VT, FT}(v::VT, f::FT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT})
     @assert size(q₀) == size(p₀)
-    PODE{DT, TT, VT, FT}(size(q₀, 1), size(q₀, 2), v, f, t₀, q₀, p₀)
+    PODE{DT, TT, VT, FT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), v, f, t₀, q₀, p₀)
 end
 
 function PODE(v, f, q₀, p₀)

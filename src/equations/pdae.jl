@@ -31,7 +31,7 @@ the algebraic variable ``\\lambda`` taking values in ``\\mathbb{R}^{n}``.
 * `λ₀`: initial condition for algebraic variable ``\\lambda``
 
 """
-immutable PDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Function, uType <: Function, gType <: Function, ϕType <: Function} <: Equation{dType, tType}
+immutable PDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Function, uType <: Function, gType <: Function, ϕType <: Function, N} <: Equation{dType, tType}
     d::Int
     m::Int
     n::Int
@@ -41,9 +41,9 @@ immutable PDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Fun
     g::gType
     ϕ::ϕType
     t₀::tType
-    q₀::Array{dType, 2}
-    p₀::Array{dType, 2}
-    λ₀::Array{dType, 2}
+    q₀::Array{dType, N}
+    p₀::Array{dType, N}
+    λ₀::Array{dType, N}
 
     function PDAE(d, m, n, v, f, u, g, ϕ, t₀, q₀, p₀, λ₀)
         @assert d == size(q₀,1) == size(p₀,1)
@@ -55,21 +55,7 @@ immutable PDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Fun
         @assert dType == eltype(p₀)
         @assert dType == eltype(λ₀)
 
-        @assert ndims(q₀) ∈ (1,2)
-        @assert ndims(p₀) ∈ (1,2)
-        @assert ndims(λ₀) ∈ (1,2)
-
-        if ndims(q₀) == 1
-            q₀ = reshape(q₀, d, n)
-        end
-
-        if ndims(p₀) == 1
-            p₀ = reshape(p₀, d, n)
-        end
-
-        if ndims(λ₀) == 1
-            λ₀ = reshape(λ₀, m, n)
-        end
+        @assert ndims(q₀) == ndims(p₀) == ndims(λ₀) == N ∈ (1,2)
 
         new(d, m, n, v, f, u, g, ϕ, t₀, q₀, p₀, λ₀)
     end
@@ -77,7 +63,8 @@ end
 
 function PDAE{DT, TT, VT, FT, UT, GT, ΦT}(v::VT, f::FT, u::UT, g::GT, ϕ::ΦT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT})
     @assert size(q₀) == size(p₀)
-    PDAE{DT, TT, VT, FT, UT, GT, ΦT}(size(q₀, 1), size(q₀, 2), size(λ₀, 1), v, f, u, g, ϕ, t₀, q₀, p₀, λ₀)
+    @assert size(q₀,2) == size(λ₀,2)
+    PDAE{DT, TT, VT, FT, UT, GT, ΦT, ndims(q₀)}(size(q₀, 1), size(λ₀, 1), size(q₀, 2), v, f, u, g, ϕ, t₀, q₀, p₀, λ₀)
 end
 
 function PDAE(v, f, u, g, ϕ, q₀, p₀, λ₀)
