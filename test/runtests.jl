@@ -14,6 +14,27 @@ function fp(t, q, p, fp)
     fp .= q.^2
 end
 
+function fϕ(t, x, λ, fϕ)
+    fϕ .= 0
+end
+
+function gx(t, x, λ, fx)
+    fx .= x
+end
+
+function gq(t, q, p, λ, fλ)
+    fλ .= q
+end
+
+function gp(t, q, p, λ, fλ)
+    fλ .= q.^2
+end
+
+function gϕ(t, q, p, λ, gϕ)
+    gϕ .= p - q.^2
+end
+
+
 include("equations/equations_tests.jl")
 include("integrators/timeseries_tests.jl")
 include("integrators/solutions_tests.jl")

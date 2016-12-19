@@ -20,12 +20,12 @@ end
 
 "Create solution for DAE."
 function Solution(equation::DAE, Δt, ntime::Int, nsave::Int=1)
-    SolutionDAE(equation, ntime, nsave)
+    SolutionDAE(equation, Δt, ntime, nsave)
 end
 
 "Create solution for partitioned DAE."
 function Solution(equation::PDAE, Δt, ntime::Int, nsave::Int=1)
-    SolutionPDAE(equation, ntime, nsave)
+    SolutionPDAE(equation, Δt, ntime, nsave)
 end
 
 "Print error for solutions of equations not implemented, yet."
