@@ -80,10 +80,7 @@ function integrate!{DT,TT,VT,FT,N}(int::IntegratorEPRK{DT,TT,VT,FT}, sol::Soluti
         local tpᵢ::TT
 
         # copy initial conditions from solution
-        for i in 1:sol.nd
-            int.q[i] = sol[1, i, 0, m]
-            int.p[i] = sol[2, i, 0, m]
-        end
+        get_initial_conditions!(sol, int.q, int.p, m)
 
         for n in 1:sol.ntime
             # compute internal stages
@@ -115,7 +112,7 @@ function integrate!{DT,TT,VT,FT,N}(int::IntegratorEPRK{DT,TT,VT,FT}, sol::Soluti
             simd_axpy!(int.Δt, int.z, int.p)
 
             # copy to solution
-            copy_solution!(int.q, int.p, sol, n, m)
+            copy_solution!(sol, int.q, int.p, n, m)
         end
     end
     nothing
