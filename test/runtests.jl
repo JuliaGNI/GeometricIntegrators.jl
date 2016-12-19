@@ -36,8 +36,8 @@ end
 
 
 include("equations/equations_tests.jl")
-include("integrators/timeseries_tests.jl")
-include("integrators/solutions_tests.jl")
+include("solutions/timeseries_tests.jl")
+include("solutions/solutions_tests.jl")
 include("integrators/integrators_test.jl")
 include("integrators/tableaus_tests.jl")
 include("solvers/linear_solvers_tests.jl")

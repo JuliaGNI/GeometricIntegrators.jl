@@ -11,6 +11,8 @@ module GeometricIntegrators
     @reexport using .Utils
     include("Equations.jl")
     @reexport using .Equations
+    include("Solutions.jl")
+    @reexport using .Solutions
     include("Interpolation.jl")
     @reexport using .Interpolation
     include("Solvers.jl")

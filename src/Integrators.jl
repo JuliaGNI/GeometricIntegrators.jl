@@ -3,6 +3,7 @@ __precompile__()
 module Integrators
 
     using ..Equations
+    using ..Solutions
     using ..Solvers
     using ..Utils
 
@@ -15,20 +16,6 @@ module Integrators
            showTableau, writeTableauToFile, readTableauERKFromFile
 
     include("integrators/tableaus.jl")
-
-    export Timeseries, compute_timeseries!
-
-    include("integrators/timeseries.jl")
-
-    export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE,
-           copy_solution!, reset!, set_initial_conditions!, compute_time_steps!,
-           createHDF5, writeSolutionToHDF5
-
-    include("integrators/solutions.jl")
-    include("integrators/solutions_ode.jl")
-    include("integrators/solutions_pode.jl")
-    include("integrators/solutions_dae.jl")
-    include("integrators/solutions_pdae.jl")
 
     export InitialGuess, evaluate, initialize!, update!
 
