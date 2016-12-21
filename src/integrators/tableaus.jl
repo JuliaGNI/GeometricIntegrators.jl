@@ -514,8 +514,8 @@ immutable TableauSARK{T} <: Tableau{T}
         @assert s==size(α_q,1)==length(β_q)
         @assert r==size(α_q,2)==size(α_p,2)
         @assert r==length(c_λ)
-        @assert r==size(a_qᵠ,1)==size(α_qᵠ,1)==size(α_qᵠ,2)
-        @assert s==size(a_qᵠ,2)
+        @assert r==size(a_q̃,1)==size(α_q̃,1)==size(α_q̃,2)
+        @assert s==size(a_q̃,2)
         # TODO Add assertions on ω_q, ω_λ to be (S-1)x(S) or (R-1)x(R) if set.
         new(name, o, s, r, a_q, α_q, a_q̃, α_q̃, b_q, β_q, c_q, c_λ, ω_q, ω_λ)
     end
@@ -574,10 +574,10 @@ immutable TableauSPARK{T} <: Tableau{T}
         @assert s==size(α_q,1)==size(α_p,1)==length(β_q)==length(β_p)
         @assert r==size(α_q,2)==size(α_p,2)
         @assert r==length(c_λ)
-        @assert r==size(a_qᵠ,1)==size(a_pᵠ,1)
-        @assert r==size(α_qᵠ,1)==size(α_qᵠ,2)
-        @assert r==size(α_pᵠ,1)==size(α_pᵠ,2)
-        @assert s==size(a_qᵠ,2)==size(a_pᵠ,2)
+        @assert r==size(a_q̃,1)==size(a_p̃,1)
+        @assert r==size(α_q̃,1)==size(α_q̃,2)
+        @assert r==size(α_p̃,1)==size(α_p̃,2)
+        @assert s==size(a_q̃,2)==size(a_p̃,2)
         # TODO Add assertions on ω_q, ω_p, ω_λ to be (S-1)x(S) or (R-1)x(R) if set.
         new(name, o, s, r,
             a_q, a_p, α_q, α_p, a_q̃, a_p̃, α_q̃, α_p̃,

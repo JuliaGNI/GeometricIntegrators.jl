@@ -31,7 +31,6 @@ end
 
 "Gauss-Legendre Runge-Kutta, s=2"
 function getTableauGLRK2()
-    fac =
     a = [[0.25       0.25-√3/6]
          [0.25+√3/6  0.25     ]]
     b = [0.5,      0.5     ]
