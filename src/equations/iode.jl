@@ -54,12 +54,12 @@ immutable IODE{dType <: Number, tType <: Number, fType <: Function, pType <: Fun
     q₀::Array{dType, N}
     p₀::Array{dType, N}
 
-    function IODE(d, n, f, g, t₀, q₀, p₀)
+    function IODE(d, n, f, p, t₀, q₀, p₀)
         @assert d == size(q₀,1) == size(p₀,1)
         @assert n == size(q₀,2) == size(p₀,2)
         @assert dType == eltype(q₀) == eltype(p₀)
         @assert ndims(q₀) == ndims(p₀) == N ∈ (1,2)
-        new(d, n, f, g, t₀, q₀, p₀)
+        new(d, n, f, p, t₀, q₀, p₀)
     end
 end
 
