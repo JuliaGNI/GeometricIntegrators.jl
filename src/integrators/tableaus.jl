@@ -306,6 +306,43 @@ end
 # TODO function readTableauIPRKFromFile(dir::AbstractString, name::AbstractString)
 
 
+"Holds the tableau of a variational partitioned Runge-Kutta method."
+immutable TableauVPRK{T} <: Tableau{T}
+    @HeaderTableauPRK
+
+    d::Vector{T}
+
+    function TableauVPRK(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p, d)
+        @assert T <: Real
+        @assert isa(name, Symbol)
+        @assert isa(s, Integer)
+        @assert isa(o, Integer)
+        @assert s > 0 "Number of stages must be > 0"
+        @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
+        @assert s==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
+        @assert s==length(d)
+
+        new(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p, d)
+    end
+end
+
+function TableauVPRK{T}(name::Symbol, order::Int,
+                        a_q::Matrix{T}, a_p::Matrix{T},
+                        b_q::Vector{T}, b_p::Vector{T},
+                        c_q::Vector{T}, c_p::Vector{T},
+                        d::Vector{T})
+    @assert length(c_q) == length(c_p)
+    TableauVPRK{T}(name, order, length(c_q), a_q, a_p, b_q, b_p, c_q, c_p, d)
+end
+
+function TableauVPRK{T}(name::Symbol, order::Int, tab_q::TableauRK{T}, tab_p::TableauRK{T}, d::Vector{T})
+    @assert tab_q.s == tab_p.s
+    TableauVPRK{T}(name, order, tab_q.s, tab_q.a, tab_p.a, tab_q.b, tab_p.b, tab_q.c, tab_p.c, d)
+end
+
+# TODO function readTableauVPRKFromFile(dir::AbstractString, name::AbstractString)
+
+
 "Holds the tableau of a spezialized additive Runge-Kutta method."
 immutable TableauSARK{T} <: Tableau{T}
     name::Symbol

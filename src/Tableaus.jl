@@ -24,6 +24,10 @@ module Tableaus
 
     export getTableauSymplecticEulerA, getTableauSymplecticEulerB
 
+    include("tableaus/tableaus_vprk.jl")
+
+    export getTableauLobIIIAB2
+
     include("tableaus/tableaus_spark.jl")
 
 end
