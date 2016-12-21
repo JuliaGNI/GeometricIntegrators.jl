@@ -234,8 +234,26 @@ function TableauSIRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c:
 end
 
 
-"Holds the tableau of an explicit partitioned Runge-Kutta method."
-# TODO Need explicit and implicit version?
+"""
+`TableauVPRK`: Tableau of an Explicit Partitioned Runge-Kutta method
+```math
+\\begin{align*}
+V_{n,i} &= \\hphantom{-} \\dfrac{\\partial H}{\\partial p} (Q_{n,i}, P_{n,i}) , &
+Q_{n,i} &= q_{n} + h \\sum \\limits_{j=1}^{s} a_{ij} \\, V_{n,j} , &
+q_{n+1} &= q_{n} + h \\sum \\limits_{i=1}^{s} b_{i} \\, V_{n,i} , \\\\
+F_{k,i} &= - \\dfrac{\\partial H}{\\partial q} (Q_{n,i}, P_{n,i}) , &
+P_{n,i} &= p_{n} + h  \\sum \\limits_{i=1}^{s} \\bar{a}_{ij} \\, F_{n,j} , &
+p_{n+1} &= p_{n} + h \\sum \\limits_{i=1}^{s} \\bar{b}_{i} \\, F_{n,i} ,
+\\end{align*}
+```
+usually satisfying the symplecticity conditions
+```math
+\\begin{align*}
+b_{i} \\bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
+\\bar{b}_i &= b_i .
+\\end{align*}
+```
+"""
 immutable TableauEPRK{T} <: Tableau{T}
     @HeaderTableauPRK
 
@@ -273,7 +291,26 @@ end
 # TODO function readTableauPRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-"Holds the tableau of a implicit partitioned Runge-Kutta method."
+"""
+`TableauVPRK`: Tableau of an Implicit Partitioned Runge-Kutta method
+```math
+\\begin{align*}
+P_{n,i} &= \\dfrac{\\partial L}{\\partial v} (Q_{n,i}, V_{n,i}) , &
+Q_{n,i} &= q_{n} + h \\sum \\limits_{j=1}^{s} a_{ij} \\, V_{n,j} , &
+q_{n+1} &= q_{n} + h \\sum \\limits_{i=1}^{s} b_{i} \\, V_{n,i} , \\\\
+F_{k,i} &= \\dfrac{\\partial L}{\\partial q} (Q_{n,i}, V_{n,i}) , &
+P_{n,i} &= p_{n} + h  \\sum \\limits_{i=1}^{s} \\bar{a}_{ij} \\, F_{n,j} , &
+p_{n+1} &= p_{n} + h \\sum \\limits_{i=1}^{s} \\bar{b}_{i} \\, F_{n,i} ,
+\\end{align*}
+```
+usually satisfying the symplecticity conditions
+```math
+\\begin{align*}
+b_{i} \\bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
+\\bar{b}_i &= b_i .
+\\end{align*}
+```
+"""
 immutable TableauIPRK{T} <: Tableau{T}
     @HeaderTableauPRK
 
@@ -306,7 +343,28 @@ end
 # TODO function readTableauIPRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-"Holds the tableau of a variational partitioned Runge-Kutta method."
+"""
+`TableauVPRK`: Tableau of a Variational Partitioned Runge-Kutta method
+```math
+\\begin{align*}
+P_{n,i} &= \\dfrac{\\partial L}{\\partial v} (Q_{n,i}, V_{n,i}) , &
+Q_{n,i} &= q_{n} + h \\sum \\limits_{j=1}^{s} a_{ij} \\, V_{n,j} , &
+q_{n+1} &= q_{n} + h \\sum \\limits_{i=1}^{s} b_{i} \\, V_{n,i} , \\\\
+F_{k,i} &= \\dfrac{\\partial L}{\\partial q} (Q_{n,i}, V_{n,i}) , &
+P_{n,i} &= p_{n} + h  \\sum \\limits_{i=1}^{s} \\bar{a}_{ij} \\, F_{n,j} - d_i \\lambda , &
+p_{n+1} &= p_{n} + h \\sum \\limits_{i=1}^{s} \\bar{b}_{i} \\, F_{n,i} , \\\\
+&&
+0 &= \\sum \\limits_{i=1}^{s} d_i V_i , &&
+\\end{align*}
+```
+satisfying the symplecticity conditions
+```math
+\\begin{align*}
+b_{i} \\bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
+\\bar{b}_i &= b_i .
+\\end{align*}
+```
+"""
 immutable TableauVPRK{T} <: Tableau{T}
     @HeaderTableauPRK
 
