@@ -28,6 +28,11 @@ function Solution(equation::PDAE, Δt, ntime::Int, nsave::Int=1)
     SolutionPDAE(equation, Δt, ntime, nsave)
 end
 
+"Create solution for implicit DAE."
+function Solution(equation::IDAE, Δt, ntime::Int, nsave::Int=1)
+    SolutionPDAE(equation, Δt, ntime, nsave)
+end
+
 "Print error for solutions of equations not implemented, yet."
 function Solution(equation::Equation, Δt, ntime::Int, nsave::Int=1)
     error("No solution found for equation ", equation)

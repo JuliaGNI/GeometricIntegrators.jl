@@ -30,7 +30,7 @@ function gp(t, q, p, λ, fλ)
     fλ .= q.^2
 end
 
-function gϕ(t, q, p, λ, gϕ)
+function gϕ(t, q, p, gϕ)
     gϕ .= p - q.^2
 end
 

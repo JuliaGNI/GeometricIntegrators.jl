@@ -46,6 +46,11 @@ function Integrator(equation::PDAE, tableau::TableauSPARK, Δt)
     IntegratorSPARK(equation, tableau, Δt)
 end
 
+"Create integrator for implicit partitioned additive Runge-Kutta tableau."
+function Integrator(equation::IDAE, tableau::TableauIPARK, Δt)
+    IntegratorIPARK(equation, tableau, Δt)
+end
+
 "Print error for integrators not implemented, yet."
 function Integrator(equation::Equation, tableau::Tableau, Δt)
     error("No integrator found for tableau ", tableau)

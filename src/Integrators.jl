@@ -12,7 +12,9 @@ module Integrators
     include("utils/macro_utils.jl")
 
     export Tableau, TableauRK, TableauERK, TableauDIRK, TableauFIRK, TableauSIRK,
-           TableauEPRK, TableauIPRK, TableauVPRK, TableauSARK, TableauSPARK, TableauGLM,
+           TableauEPRK, TableauIPRK, TableauVPRK,
+           TableauIPARK, TableauSARK, TableauSPARK,
+           TableauGLM,
            showTableau, writeTableauToFile, readTableauERKFromFile
 
     include("integrators/tableaus.jl")
@@ -20,7 +22,9 @@ module Integrators
     export InitialGuess, evaluate, initialize!, update!
 
     export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK, IntegratorSIRK,
-           IntegratorEPRK, IntegratorIPRK, IntegratorVPRK, IntegratorSARK, IntegratorSPARK,
+           IntegratorEPRK, IntegratorIPRK, IntegratorVPRK,
+           IntegratorIPARK,
+           IntegratorSARK, IntegratorSPARK,
            integrate, integrate!, function_stages!
 
     include("integrators/integrators.jl")
@@ -34,6 +38,7 @@ module Integrators
     include("integrators/integrators_sirk.jl")
     include("integrators/integrators_iprk.jl")
     include("integrators/integrators_vprk.jl")
+    include("integrators/integrators_ipark.jl")
     include("integrators/integrators_sark.jl")
     include("integrators/integrators_spark.jl")
 

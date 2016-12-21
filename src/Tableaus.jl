@@ -28,6 +28,10 @@ module Tableaus
 
     export getTableauLobIIIAB2
 
+    include("tableaus/tableaus_ipark.jl")
+
+    export getTableauGLRK2symmetricProjection
+
     include("tableaus/tableaus_spark.jl")
 
 end

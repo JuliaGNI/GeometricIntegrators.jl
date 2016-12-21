@@ -13,7 +13,7 @@ immutable SolutionPDAE{dType, tType, N} <: Solution{dType, tType, N}
     nsave::Int
 end
 
-function SolutionPDAE{DT,TT}(equation::PDAE{DT,TT}, Δt::TT, ntime::Int, nsave::Int=1)
+function SolutionPDAE{DT,TT}(equation::Union{PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1)
     N  = equation.n > 1 ? 3 : 2
     nd = equation.d
     nm = equation.m
@@ -38,7 +38,7 @@ function SolutionPDAE{DT,TT}(equation::PDAE{DT,TT}, Δt::TT, ntime::Int, nsave::
     return s
 end
 
-function set_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, equ::PDAE{DT,TT})
+function set_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, equ::Union{PDAE{DT,TT},IDAE{DT,TT}})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, equ.λ₀)
 end
 
