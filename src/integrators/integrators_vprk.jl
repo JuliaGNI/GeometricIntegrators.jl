@@ -173,7 +173,7 @@ function integrate!{DT,TT,VT,FT,N}(int::IntegratorVPRK{DT,TT,VT,FT}, sol::Soluti
             # TODO
             for i in 1:int.tableau.s
                 for k in 1:int.equation.d
-                    int.solver.x[2*(sol.nd*(i-1)+k-1)+1] = int.q[k]
+                    # int.solver.x[2*(sol.nd*(i-1)+k-1)+1] = int.q[k]
                     # TODO initial guess for velocity
                     # int.solver.x[2*(params.d*(i-1)+k-1)+1] = 0.
                 end
