@@ -127,7 +127,8 @@ immutable IntegratorVPRK{DT, TT, FT, GT, ST} <: Integrator{DT, TT}
     F::Array{DT,2}
 end
 
-function IntegratorVPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::TableauVPRK{TT}, Δt::TT)
+function IntegratorVPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::TableauVPRK{TT}, Δt::TT;
+                              nonlinear_solver=QuasiNewtonSolver)
     D = equation.d
     S = tableau.s
 
@@ -143,8 +144,7 @@ function IntegratorVPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::Table
                                                 tableau.d)
 
     # create solver
-    solver = QuasiNewtonSolver(z, params)
-    # TODO allow for other nonlinear solvers based on constructor argument
+    solver = nonlinear_solver(z, params)
 
     # create integrator
     IntegratorVPRK{DT, TT, FT, GT, typeof(solver)}(
