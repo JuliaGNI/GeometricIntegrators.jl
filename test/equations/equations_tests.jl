@@ -81,6 +81,10 @@ function f_pdae(t, q, p, f)
     f[1] = p[1]
 end
 
+function p_pdae(t, q, v, p)
+    p[1] = v[1]
+end
+
 function u_pdae(t, q, p, λ, u)
     u[1] = +λ[1]
 end
@@ -101,3 +105,13 @@ pdae2 = PDAE(v_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, q₀, p₀, λ₀)
 @test pdae == pdae2
 
 @test hash(pdae1) == hash(pdae2)
+
+
+idae  = IDAE{eltype(q₀), typeof(t₀), typeof(f_pdae), typeof(p_pdae), typeof(u_pdae), typeof(g_pdae), typeof(ϕ_pdae), 1}(1, 1, 1, f_pdae, p_pdae, u_pdae, g_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
+idae1 = IDAE(f_pdae, p_pdae, u_pdae, g_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
+idae2 = IDAE(f_pdae, p_pdae, u_pdae, g_pdae, ϕ_pdae, q₀, p₀, λ₀)
+
+@test idae == idae1
+@test idae == idae2
+
+@test hash(idae1) == hash(idae2)
