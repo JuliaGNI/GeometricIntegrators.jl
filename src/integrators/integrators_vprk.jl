@@ -18,7 +18,7 @@ type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters
     p::Vector{DT}
     y::Vector{DT}
     z::Vector{DT}
-    λ::Vector{DT}
+    μ::Vector{DT}
 
     Q::Matrix{DT}
     V::Matrix{DT}
@@ -38,7 +38,7 @@ type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters
         p = zeros(DT,d)
         y = zeros(DT,d)
         z = zeros(DT,d)
-        λ = zeros(DT,d)
+        μ = zeros(DT,d)
 
         # create internal stage vectors
         Q = zeros(DT,d,s)
@@ -54,7 +54,7 @@ type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters
         tP = zeros(DT,d)
         tF = zeros(DT,d)
 
-        new(f, g, Δt, d, s, a_q, a_p, c_q, c_p, d_v, 0, q, p, y, z, λ, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
+        new(f, g, Δt, d, s, a_q, a_p, c_q, c_p, d_v, 0, q, p, y, z, μ, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
     end
 end
 
@@ -86,14 +86,14 @@ function function_stages!{DT,TT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params::Non
         simd_copy_yx_first!(params.tF, params.F, i)
     end
     for k in 1:params.d
-        params.λ[k] = y[2*params.d*params.s+k]
+        params.μ[k] = y[2*params.d*params.s+k]
     end
 
     # compute b = - [(Y-AV), (P-AF), ΛV]
     for i in 1:params.s
         for k in 1:params.d
             b[2*(params.d*(i-1)+k-1)+1] = - params.Y[k,i]
-            b[2*(params.d*(i-1)+k-1)+2] = - params.P[k,i] + params.p[k] - params.d_v[i] * params.λ[k]
+            b[2*(params.d*(i-1)+k-1)+2] = - params.P[k,i] + params.p[k] - params.d_v[i] * params.μ[k]
             for j in 1:params.s
                 b[2*(params.d*(i-1)+k-1)+1] += params.a_q[i,j] * params.V[k,j]
                 b[2*(params.d*(i-1)+k-1)+2] += params.a_p[i,j] * params.F[k,j] * params.Δt
