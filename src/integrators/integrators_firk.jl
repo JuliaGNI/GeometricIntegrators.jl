@@ -83,8 +83,6 @@ immutable IntegratorFIRK{DT, TT, FT, ST, IT} <: Integrator{DT,TT}
 
     x::Array{DT,1}
     y::Array{DT,1}
-    X::Array{DT,2}
-    Y::Array{DT,2}
     F::Array{DT,2}
 end
 
@@ -107,7 +105,7 @@ function IntegratorFIRK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{
     iguess = InitialGuess(interpolation, equation, Δt)
 
     # create integrator
-    IntegratorFIRK{DT, TT, FT, typeof(solver), typeof(iguess.int)}(equation, tableau, Δt, solver, iguess, params.x, params.y, params.X, params.Y, params.F)
+    IntegratorFIRK{DT, TT, FT, typeof(solver), typeof(iguess.int)}(equation, tableau, Δt, solver, iguess, params.x, params.y, params.F)
 end
 
 

@@ -125,8 +125,6 @@ immutable IntegratorVPRK{DT, TT, FT, GT, ST} <: Integrator{DT, TT}
     V::Array{DT,2}
     P::Array{DT,2}
     F::Array{DT,2}
-    Y::Array{DT,2}
-    Z::Array{DT,2}
 end
 
 function IntegratorVPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::TableauVPRK{TT}, Δt::TT)
@@ -152,8 +150,7 @@ function IntegratorVPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::Table
     IntegratorVPRK{DT, TT, FT, GT, typeof(solver)}(
                                         equation, tableau, Δt, solver,
                                         params.q, params.p, params.y, params.z,
-                                        params.Q, params.V, params.P, params.F,
-                                        params.Y, params.Z)
+                                        params.Q, params.V, params.P, params.F)
 end
 
 
