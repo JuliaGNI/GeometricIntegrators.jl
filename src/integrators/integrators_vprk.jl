@@ -138,7 +138,7 @@ function IntegratorVPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::Table
 
     # create params
     params = NonlinearFunctionParametersVPRK{DT,TT,FT,GT}(
-                                                equation.f, equation.g,
+                                                equation.f, equation.p,
                                                 Δt, D, S,
                                                 tableau.a_q, tableau.a_p,
                                                 tableau.c_q, tableau.c_p,
