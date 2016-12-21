@@ -12,7 +12,7 @@ immutable IntegratorDIRK{T} <: Integrator{T}
 
     function IntegratorDIRK(equation, tableau, Δt)
         D = equation.d
-        S = tableau.s
+        S = tableau.q.s
         new(equation, tableau, Δt, zeros(T,D), zeros(T,D,S), zeros(T,D,S), zeros(T,D,S))
     end
 end

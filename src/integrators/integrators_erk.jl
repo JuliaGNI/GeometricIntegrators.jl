@@ -13,7 +13,7 @@ immutable IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
 
     function IntegratorERK(equation, tableau, Δt)
         D = equation.d
-        S = tableau.s
+        S = tableau.q.s
         new(equation, tableau, Δt,
             zeros(DT,D), zeros(DT,S,D),
             zeros(DT,D), zeros(DT,D))
@@ -40,21 +40,21 @@ function integrate!{DT,TT,FT,N}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{D
             int.equation.v(sol.t[n], int.x, int.tF)
             simd_copy_yx_second!(int.tF, int.F, 1)
 
-            for i in 2:int.tableau.s
+            for i in 2:int.tableau.q.s
                 @inbounds for k in eachindex(int.tX)
                     y = 0
                     for j = 1:i-1
-                        y += int.tableau.a[i,j] * int.F[j,k]
+                        y += int.tableau.q.a[i,j] * int.F[j,k]
                     end
                     int.tX[k] = int.x[k] + int.Δt * y
                 end
-                tᵢ = sol.t[n] + int.Δt * int.tableau.c[i]
+                tᵢ = sol.t[n] + int.Δt * int.tableau.q.c[i]
                 int.equation.v(tᵢ, int.tX, int.tF)
                 simd_copy_yx_second!(int.tF, int.F, i)
             end
 
             # compute final update
-            simd_abXpy!(int.Δt, int.tableau.b, int.F, int.x)
+            simd_abXpy!(int.Δt, int.tableau.q.b, int.F, int.x)
 
             # copy to solution
             copy_solution!(sol, int.x, n, m)

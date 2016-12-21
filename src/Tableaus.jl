@@ -30,7 +30,7 @@ module Tableaus
 
     include("tableaus/tableaus_ipark.jl")
 
-    export getTableauGLRK2symmetricProjection
+    export getTableauSymplecticProjection
 
     include("tableaus/tableaus_spark.jl")
 

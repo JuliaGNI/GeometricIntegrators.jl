@@ -90,13 +90,13 @@ function IntegratorFIRK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{
                               nonlinear_solver=QuasiNewtonSolver,
                               interpolation=HermiteInterpolation{DT})
     D = equation.d
-    S = tableau.s
+    S = tableau.q.s
 
     # create solution vector for internal stages / nonlinear solver
     z = zeros(DT, D*S)
 
     # create params
-    params = NonlinearFunctionParametersFIRK{DT,TT,FT}(equation.v, Δt, D, S, tableau.a, tableau.c)
+    params = NonlinearFunctionParametersFIRK{DT,TT,FT}(equation.v, Δt, D, S, tableau.q.a, tableau.q.c)
 
     # create solver
     solver = nonlinear_solver(z, params)
@@ -127,8 +127,8 @@ function integrate!{DT,TT,FT,ST,IT,N}(int::IntegratorFIRK{DT, TT, FT, ST, IT}, s
             update!(int.iguess, sol.t[n], int.x)
 
             # compute initial guess for internal stages
-            for i in 1:int.tableau.s
-                evaluate(int.iguess, int.y, int.tableau.c[i])
+            for i in 1:int.tableau.q.s
+                evaluate(int.iguess, int.y, int.tableau.q.c[i])
                 for k in 1:int.equation.d
                     int.solver.x[int.equation.d*(i-1)+k] = int.y[k]
                 end
@@ -142,7 +142,7 @@ function integrate!{DT,TT,FT,ST,IT,N}(int::IntegratorFIRK{DT, TT, FT, ST, IT}, s
             end
 
             # compute final update
-            simd_mult!(int.y, int.F, int.tableau.b)
+            simd_mult!(int.y, int.F, int.tableau.q.b)
             simd_axpy!(int.Δt, int.y, int.x)
 
             # copy to solution

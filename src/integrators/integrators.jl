@@ -52,7 +52,7 @@ function Integrator(equation::IDAE, tableau::TableauIPARK, Δt)
 end
 
 "Print error for integrators not implemented, yet."
-function Integrator(equation::Equation, tableau::Tableau, Δt)
+function Integrator(equation::Equation, tableau::AbstractTableau, Δt)
     error("No integrator found for tableau ", tableau)
 end
 
@@ -64,12 +64,12 @@ function integrate(integrator::Integrator, ntime::Int, nsave::Int=1)
 end
 
 "Integrate given equation with given tableau for ntime time steps and return solution."
-function integrate(equation::Equation, tableau::Tableau, Δt, ntime::Int, nsave::Int=1)
+function integrate(equation::Equation, tableau::AbstractTableau, Δt, ntime::Int, nsave::Int=1)
     return integrate(Integrator(equation, tableau, Δt), ntime, nsave)
 end
 
 "Integrate ODE specified by vector field and initial condition with given tableau for ntime time steps and return solution."
-function integrate(f::Function, x₀::Vector, tableau::Tableau, Δt, ntime::Int, nsave::Int=1; t₀=0)
+function integrate(f::Function, x₀::Vector, tableau::AbstractTableau, Δt, ntime::Int, nsave::Int=1; t₀=0)
     return integrate(ODE(f, t₀, x₀), tableau, Δt, ntime, nsave)
 end
 

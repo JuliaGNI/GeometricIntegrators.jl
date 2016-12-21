@@ -122,7 +122,7 @@ tab_explicit_glrk2 = TableauFIRK(:glrk2, o, a, b, c)
 @test typeof(getTableauSymplecticEulerB()) <: TableauEPRK
 
 # test instatiation of partioned tableau by composition of two RK tableaus
-@test typeof(TableauEPRK(:PERK4, 4, getTableauERK4(), getTableauERK4())) <: TableauEPRK
+@test typeof(TableauEPRK(:PERK4, 4, getTableauERK4().q, getTableauERK4().q)) <: TableauEPRK
 
 
 # TODO Add tests for TableauIPRK, TableauSARK, TableauSPARK and TableauGLM.

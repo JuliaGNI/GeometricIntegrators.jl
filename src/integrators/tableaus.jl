@@ -1,15 +1,15 @@
 
 "Holds the information for the various methods' tableaus."
-abstract Tableau{T}
+abstract AbstractTableau{T}
 
 "Holds the tableau of a Runge-Kutta method."
-abstract TableauRK{T} <: Tableau{T}
+abstract AbstractTableauRK{T} <: AbstractTableau{T}
 
 "Holds the tableau of an implicit Runge-Kutta method."
-abstract TableauIRK{T} <: TableauRK{T}
+abstract TableauIRK{T} <: AbstractTableauRK{T}
 
 "Holds the tableau of a partitioned Runge-Kutta method."
-abstract TableauPRK{T} <: TableauRK{T}
+abstract TableauPRK{T} <: AbstractTableauRK{T}
 
 @define HeaderTableauRK begin
     name::Symbol
@@ -18,6 +18,11 @@ abstract TableauPRK{T} <: TableauRK{T}
     a::Matrix{T}
     b::Vector{T}
     c::Vector{T}
+end
+
+@define FooterTableauARK begin
+    α::Matrix{T}
+    β::Vector{T}
 end
 
 @define HeaderTableauPRK begin
@@ -32,7 +37,27 @@ end
     c_p::Vector{T}
 end
 
+"Holds the tableau of a Runge-Kutta method."
+immutable TableauRK{T} <: AbstractTableauRK{T}
+    @HeaderTableauRK
+
+    function TableauRK(name,o,s,a,b,c)
+        @assert T <: Real
+        @assert isa(name, Symbol)
+        @assert isa(s, Integer)
+        @assert isa(o, Integer)
+        @assert s > 0 "Number of stages must be > 0"
+        @assert s==size(a,1)==size(a,2)==length(b)==length(c)
+        new(name,o,s,a,b,c)
+    end
+end
+
+function TableauRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+    TableauRK{T}(name, order, length(c), a, b, c)
+end
+
 Base.hash(tab::TableauRK, h::UInt) = hash(tab.o, hash(tab.a, hash(tab.b, hash(tab.c, hash(:TableauRK, h)))))
+
 Base.:(==){T1, T2}(tab1::TableauRK{T1}, tab2::TableauRK{T2}) = (tab1.o == tab2.o
                                                              && tab1.s == tab2.s
                                                              && tab1.a == tab2.a
@@ -40,6 +65,10 @@ Base.:(==){T1, T2}(tab1::TableauRK{T1}, tab2::TableauRK{T2}) = (tab1.o == tab2.o
                                                              && tab1.c == tab2.c)
 
 Base.isequal{T1, T2}(tab1::TableauRK{T1}, tab2::TableauRK{T2}) = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
+
+Base.:(==){T1, T2}(tab1::AbstractTableauRK{T1}, tab2::AbstractTableauRK{T2}) = (tab1.q == tab2.q)
+
+Base.isequal{T1, T2}(tab1::AbstractTableauRK{T1}, tab2::AbstractTableauRK{T2}) = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
 
 "Print Runge-Kutta tableau to standard output."
 function showTableau{T}(tab::TableauRK{T})
@@ -83,22 +112,22 @@ function readTableauRKHeaderFromFile(file)
 end
 
 "Write Runge-Kutta tableau to file."
-function writeTableauToFile{T}(dir::AbstractString, tab::TableauRK{T})
+function writeTableauToFile{T}(dir::AbstractString, tab::AbstractTableauRK{T})
     # tab_array = zeros(T, S+1, S+1)
-    # tab_array[1:S, 2:S+1] = tab.a
-    # tab_array[S+1, 2:S+1] = tab.b
-    # tab_array[1:S, 1] = tab.c
-    # tab_array[S+1, 1] = tab.order
+    # tab_array[1:S, 2:S+1] = tab.q.a
+    # tab_array[S+1, 2:S+1] = tab.q.b
+    # tab_array[1:S, 1] = tab.q.c
+    # tab_array[S+1, 1] = tab.q.order
 
-    tab_array = zeros(T, tab.s, tab.s+2)
-    tab_array[1:tab.s, 1] = tab.c
-    tab_array[1:tab.s, 2] = tab.b
-    tab_array[1:tab.s, 3:tab.s+2] = tab.a
+    tab_array = zeros(T, tab.q.s, tab.q.s+2)
+    tab_array[1:tab.q.s, 1] = tab.q.c
+    tab_array[1:tab.q.s, 2] = tab.q.b
+    tab_array[1:tab.q.s, 3:tab.q.s+2] = tab.q.a
 
-    header = string("# ", tab.o, " ", tab.s, " ", T, "\n")
-    file   = string(dir, "/", tab.name, ".tsv")
+    header = string("# ", tab.q.o, " ", tab.q.s, " ", T, "\n")
+    file   = string(dir, "/", tab.q.name, ".tsv")
 
-    info("Writing Runge-Kutta tableau ", tab.name, " with ", tab.s, " stages and order ", tab.o, " to file\n      ", file)
+    info("Writing Runge-Kutta tableau ", tab.q.name, " with ", tab.q.s, " stages and order ", tab.q.o, " to file\n      ", file)
 
     f = open(file, "w")
     write(f, header)
@@ -113,25 +142,22 @@ end
 
 
 "Holds the tableau of an explicit Runge-Kutta method."
-immutable TableauERK{T} <: TableauRK{T}
-    @HeaderTableauRK
+immutable TableauERK{T} <: AbstractTableauRK{T}
+    q::TableauRK{T}
 
-    function TableauERK(name,o,s,a,b,c)
-        @assert T <: Real
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(o, Integer)
-        @assert s > 0 "Number of stages must be > 0"
-        @assert s==size(a,1)==size(a,2)==length(b)==length(c)
-        @assert c[1] == 0
-        @assert istrilstrict(a)
-        @assert !(s==1 && a[1,1] ≠ 0)
-        new(name,o,s,a,b,c)
+    function TableauERK(q)
+        @assert q.c[1] == 0
+        @assert istrilstrict(q.a)
+        @assert !(q.s==1 && q.a[1,1] ≠ 0)
+        new(q)
     end
 end
 
+function TableauERK{T}(q::TableauRK{T})
+    TableauERK{T}(q)
+end
 function TableauERK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T})
-    TableauERK{T}(name, order, length(c), a, b, c)
+    TableauERK{T}(TableauRK(name, order, a, b, c))
 end
 
 "Read explicit Runge-Kutta tableau from file."
@@ -165,29 +191,27 @@ end
 
 "Holds the tableau of a diagonally implicit Runge-Kutta method."
 immutable TableauDIRK{T} <: TableauIRK{T}
-    @HeaderTableauRK
+    q::TableauRK{T}
 
-    function TableauDIRK(name,o,s,a,b,c)
-        @assert T <: Real
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(o, Integer)
-        @assert s > 0
-        @assert s==size(a,1)==size(a,2)==length(b)==length(c)
-        @assert istril(a)
-        @assert !(s==1 && a[1,1] ≠ 0)
+    function TableauDIRK(q)
+        @assert istril(q.a)
+        @assert !(q.s==1 && q.a[1,1] ≠ 0)
 
-        if s > 1 && istrilstrict(a)
-            warn("Initializing TableauDIRK with explicit tableau ", name, ".\n",
+        if q.s > 1 && istrilstrict(q.a)
+            warn("Initializing TableauDIRK with explicit tableau ", q.name, ".\n",
                  "You might want to use TableauERK instead.")
         end
 
-        new(name,o,s,a,b,c)
+        new(q)
     end
 end
 
+function TableauDIRK{T}(q::TableauRK{T})
+    TableauDIRK{T}(q)
+end
+
 function TableauDIRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T})
-    TableauDIRK{T}(name, order, length(c), a, b, c)
+    TableauDIRK{T}(TableauRK(name, order, a, b, c))
 end
 
 # TODO function readTableauDIRKFromFile(dir::AbstractString, name::AbstractString)
@@ -195,30 +219,27 @@ end
 
 "Holds the tableau of a fully implicit Runge-Kutta method."
 immutable TableauFIRK{T} <: TableauIRK{T}
-    @HeaderTableauRK
+    q::TableauRK{T}
 
-    function TableauFIRK(name,o,s,a,b,c)
-        @assert T <: Real
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(o, Integer)
-        @assert s > 0 "Number of stages must be > 0"
-        @assert s==size(a,1)==size(a,2)==length(b)==length(c)
-
-        if (s > 1 && istrilstrict(a)) || (s==1 && a[1,1] == 0)
-            warn("Initializing TableauFIRK with explicit tableau ", name, ".\n",
+    function TableauFIRK(q)
+        if (q.s > 1 && istrilstrict(q.a)) || (q.s==1 && q.a[1,1] == 0)
+            warn("Initializing TableauFIRK with explicit tableau ", q.name, ".\n",
                  "You might want to use TableauERK instead.")
-        elseif s > 1 && istril(a)
-            warn("Initializing TableauFIRK with diagonally implicit tableau ", name, ".\n",
+        elseif q.s > 1 && istril(q.a)
+            warn("Initializing TableauFIRK with diagonally implicit tableau ", q.name, ".\n",
                  "You might want to use TableauDIRK instead.")
         end
 
-        new(name,o,s,a,b,c)
+        new(q)
     end
 end
 
+function TableauFIRK{T}(q::TableauRK{T})
+    TableauFIRK{T}(q)
+end
+
 function TableauFIRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T})
-    TableauFIRK{T}(name, order, length(c), a, b, c)
+    TableauFIRK{T}(TableauRK(name, order, a, b, c))
 end
 
 # TODO function readTableauFIRKFromFile(dir::AbstractString, name::AbstractString)
@@ -235,7 +256,7 @@ end
 
 
 """
-`TableauVPRK`: Tableau of an Explicit Partitioned Runge-Kutta method
+`TableauEPRK`: Tableau of an Explicit Partitioned Runge-Kutta method
 ```math
 \\begin{align*}
 V_{n,i} &= \\hphantom{-} \\dfrac{\\partial H}{\\partial p} (Q_{n,i}, P_{n,i}) , &
@@ -254,7 +275,7 @@ b_{i} \\bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 \\end{align*}
 ```
 """
-immutable TableauEPRK{T} <: Tableau{T}
+immutable TableauEPRK{T} <: TableauPRK{T}
     @HeaderTableauPRK
 
     function TableauEPRK(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p)
@@ -292,7 +313,7 @@ end
 
 
 """
-`TableauVPRK`: Tableau of an Implicit Partitioned Runge-Kutta method
+`TableauIPRK`: Tableau of an Implicit Partitioned Runge-Kutta method
 ```math
 \\begin{align*}
 P_{n,i} &= \\dfrac{\\partial L}{\\partial v} (Q_{n,i}, V_{n,i}) , &
@@ -311,7 +332,7 @@ b_{i} \\bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 \\end{align*}
 ```
 """
-immutable TableauIPRK{T} <: Tableau{T}
+immutable TableauIPRK{T} <: TableauPRK{T}
     @HeaderTableauPRK
 
     function TableauIPRK(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p)
@@ -335,9 +356,9 @@ function TableauIPRK{T}(name::Symbol, order::Int,
     TableauIPRK{T}(name, order, length(c_q), a_q, a_p, b_q, b_p, c_q, c_p)
 end
 
-function TableauIPRK{T}(name::Symbol, order::Int, tab_q::TableauRK{T}, tab_p::TableauRK{T})
-    @assert tab_q.s == tab_p.s
-    TableauIPRK{T}(name, order, tab_q.s, tab_q.a, tab_p.a, tab_q.b, tab_p.b, tab_q.c, tab_p.c)
+function TableauIPRK{T}(name::Symbol, order::Int, tab_q::AbstractTableauRK{T}, tab_p::AbstractTableauRK{T})
+    @assert tab_q.q.s == tab_p.q.s
+    TableauIPRK{T}(name, order, tab_q.q.s, tab_q.q.a, tab_p.q.a, tab_q.q.b, tab_p.q.b, tab_q.q.c, tab_p.q.c)
 end
 
 # TODO function readTableauIPRKFromFile(dir::AbstractString, name::AbstractString)
@@ -365,7 +386,7 @@ b_{i} \\bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 \\end{align*}
 ```
 """
-immutable TableauVPRK{T} <: Tableau{T}
+immutable TableauVPRK{T} <: TableauPRK{T}
     @HeaderTableauPRK
 
     d::Vector{T}
@@ -395,14 +416,14 @@ end
 
 function TableauVPRK{T}(name::Symbol, order::Int, tab_q::TableauRK{T}, tab_p::TableauRK{T}, d::Vector{T})
     @assert tab_q.s == tab_p.s
-    TableauVPRK{T}(name, order, tab_q.s, tab_q.a, tab_p.a, tab_q.b, tab_p.b, tab_q.c, tab_p.c, d)
+    TableauVPRK{T}(name, order, tab_q.q.s, tab_q.q.a, tab_p.q.a, tab_q.q.b, tab_p.q.b, tab_q.q.c, tab_p.q.c, d)
 end
 
 # TODO function readTableauVPRKFromFile(dir::AbstractString, name::AbstractString)
 
 
 "Holds the tableau of an implicit partitioned additive Runge-Kutta method."
-immutable TableauIPARK{T} <: Tableau{T}
+immutable TableauIPARK{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int
@@ -477,7 +498,7 @@ end
 
 
 "Holds the tableau of a spezialized additive Runge-Kutta method."
-immutable TableauSARK{T} <: Tableau{T}
+immutable TableauSARK{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int
@@ -527,7 +548,7 @@ end
 
 
 "Holds the tableau of a spezialized partitioned additive Runge-Kutta method."
-immutable TableauSPARK{T} <: Tableau{T}
+immutable TableauSPARK{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int
@@ -593,7 +614,7 @@ end
 
 
 "Holds the tableau of a general linear method."
-immutable TableauGLM{T} <: Tableau{T}
+immutable TableauGLM{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int

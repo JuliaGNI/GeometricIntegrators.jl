@@ -26,5 +26,6 @@ isol = integrate(iint, nt)
 vint = Integrator(iode, getTableauLobIIIAB2(), Δt)
 vsol = integrate(vint, nt)
 
-dint = Integrator(idae, getTableauGLRK2symmetricProjection(), Δt)
+dtab = getTableauGLRK2()
+dint = Integrator(idae, getTableauSymplecticProjection(dtab.q, dtab.q), Δt)
 dsol = integrate(dint, nt)

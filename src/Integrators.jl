@@ -11,7 +11,9 @@ module Integrators
 
     include("utils/macro_utils.jl")
 
-    export Tableau, TableauRK, TableauERK, TableauDIRK, TableauFIRK, TableauSIRK,
+    export AbstractTableau, AbstractTableauRK,
+           TableauRK,
+           TableauERK, TableauDIRK, TableauFIRK, TableauSIRK,
            TableauEPRK, TableauIPRK, TableauVPRK,
            TableauIPARK, TableauSARK, TableauSPARK,
            TableauGLM,
