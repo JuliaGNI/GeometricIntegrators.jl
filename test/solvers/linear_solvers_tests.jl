@@ -5,9 +5,20 @@ A = [[+4.  +5.  -2.]
 b = [-14., +42., +28.]
 x = [+4., -4., +5.]
 
-lu = LUSolverLAPACK(A, b)
 
-factorize!(lu)
-solve!(lu)
+function test_lu_solver(solver, A, b, x)
+    # for T in (Float64, Complex128, Float32, Complex64) # TODO
+    for T in (Float64, Complex128)
+        AT = convert(Array{T,2}, A)
+        bT = convert(Array{T,1}, b)
+        xT = convert(Array{T,1}, x)
 
-@test lu.b == x
+        lu = solver(AT, bT)
+        factorize!(lu)
+        solve!(lu)
+        @test lu.b == xT
+    end
+end
+
+test_lu_solver(LUSolverLAPACK, A, b, x)
+test_lu_solver(LUSolver, A, b, x)
