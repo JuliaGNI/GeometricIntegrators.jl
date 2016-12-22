@@ -1,34 +1,33 @@
 
-"Tableau for symplectic Euler-A method"
-function getTableauSymplecticEulerA()
-    a_q = [[0.0 0.0]
-           [1.0 0.0]]
-    b_q = [1.0, 0.0]
-    c_q = [0.0, 1.0]
 
-    a_p = [[0.0 0.0]
-           [0.0 1.0]]
-    b_p = [0.0, 1.0]
-    c_p = [0.0, 1.0]
+function getTableauSymplecticEulerForward()
+    a = [[0.0 0.0]
+         [1.0 0.0]]
+    b = [1.0, 0.0]
+    c = [0.0, 1.0]
 
     o = 1
 
-    TableauEPRK(:symplectic_euler_a, o, a_q, a_p, b_q, b_p, c_q, c_p)
+    TableauRK(:symplectic_euler_backward, o, a, b, c)
+end
+
+function getTableauSymplecticEulerBackward()
+    a = [[0.0 0.0]
+         [0.0 1.0]]
+    b = [0.0, 1.0]
+    c = [0.0, 1.0]
+
+    o = 1
+
+    TableauRK(:symplectic_euler_forward, o, a, b, c)
+end
+
+"Tableau for symplectic Euler-A method"
+function getTableauSymplecticEulerA()
+    TableauEPRK(:symplectic_euler_a, 1, getTableauSymplecticEulerForward(), getTableauSymplecticEulerBackward())
 end
 
 "Tableau for symplectic Euler-B method"
 function getTableauSymplecticEulerB()
-    a_q = [[0.0 0.0]
-           [0.0 1.0]]
-    b_q = [0.0, 1.0]
-    c_q = [0.0, 1.0]
-
-    a_p = [[0.0 0.0]
-           [1.0 0.0]]
-    b_p = [1.0, 0.0]
-    c_p = [0.0, 1.0]
-
-    o = 1
-
-    TableauEPRK(:symplectic_euler_b, o, a_q, a_p, b_q, b_p, c_q, c_p)
+    TableauEPRK(:symplectic_euler_b, 1, getTableauSymplecticEulerBackward(), getTableauSymplecticEulerForward())
 end

@@ -15,31 +15,23 @@ abstract TableauPRK{T} <: AbstractTableauRK{T}
     name::Symbol
     o::Int
     s::Int
+end
+
+@define CoefficientsTableauRK begin
     a::Matrix{T}
     b::Vector{T}
     c::Vector{T}
 end
 
-@define FooterTableauARK begin
+@define CoefficientsTableauARK begin
     α::Matrix{T}
     β::Vector{T}
-end
-
-@define HeaderTableauPRK begin
-    name::Symbol
-    o::Int
-    s::Int
-    a_q::Matrix{T}
-    a_p::Matrix{T}
-    b_q::Vector{T}
-    b_p::Vector{T}
-    c_q::Vector{T}
-    c_p::Vector{T}
 end
 
 "Holds the tableau of a Runge-Kutta method."
 immutable TableauRK{T} <: AbstractTableauRK{T}
     @HeaderTableauRK
+    @CoefficientsTableauRK
 
     function TableauRK(name,o,s,a,b,c)
         @assert T <: Real
@@ -143,13 +135,15 @@ end
 
 "Holds the tableau of an explicit Runge-Kutta method."
 immutable TableauERK{T} <: AbstractTableauRK{T}
+    @HeaderTableauRK
+
     q::TableauRK{T}
 
     function TableauERK(q)
         @assert q.c[1] == 0
         @assert istrilstrict(q.a)
         @assert !(q.s==1 && q.a[1,1] ≠ 0)
-        new(q)
+        new(q.name, q.o, q.s, q)
     end
 end
 
@@ -191,6 +185,8 @@ end
 
 "Holds the tableau of a diagonally implicit Runge-Kutta method."
 immutable TableauDIRK{T} <: TableauIRK{T}
+    @HeaderTableauRK
+
     q::TableauRK{T}
 
     function TableauDIRK(q)
@@ -202,7 +198,7 @@ immutable TableauDIRK{T} <: TableauIRK{T}
                  "You might want to use TableauERK instead.")
         end
 
-        new(q)
+        new(q.name, q.o, q.s, q)
     end
 end
 
@@ -219,6 +215,8 @@ end
 
 "Holds the tableau of a fully implicit Runge-Kutta method."
 immutable TableauFIRK{T} <: TableauIRK{T}
+    @HeaderTableauRK
+
     q::TableauRK{T}
 
     function TableauFIRK(q)
@@ -230,7 +228,7 @@ immutable TableauFIRK{T} <: TableauIRK{T}
                  "You might want to use TableauDIRK instead.")
         end
 
-        new(q)
+        new(q.name, q.o, q.s, q)
     end
 end
 
@@ -276,37 +274,21 @@ b_{i} \\bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 ```
 """
 immutable TableauEPRK{T} <: TableauPRK{T}
-    @HeaderTableauPRK
+    @HeaderTableauRK
 
-    function TableauEPRK(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p)
-        @assert T <: Real
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(o, Integer)
-        @assert s > 0 "Number of stages must be > 0"
-        @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
-        @assert s==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
+    q::TableauRK{T}
+    p::TableauRK{T}
+
+    function TableauEPRK(name, o, q, p)
+        @assert q.s==p.s
         # TODO check that both tableaus are lower triangular and that only one element
         #      a_q[i,i] or a_p[i,i] is non-zero for all i.
-        new(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p)
+        new(name, o, q.s, q, p)
     end
 end
 
-function TableauEPRK{T}(name::Symbol, order::Int,
-                        a_q::Matrix{T}, a_p::Matrix{T},
-                        b_q::Vector{T}, b_p::Vector{T},
-                        c_q::Vector{T}, c_p::Vector{T})
-    @assert length(c_q) == length(c_p)
-    TableauEPRK{T}(name, order, length(c_q), a_q, a_p, b_q, b_p, c_q, c_p)
-end
-
-function TableauEPRK{T}(name::Symbol, order::Int, tab::TableauERK{T})
-    TableauEPRK{T}(name, order, tab.s, tab.a, tab.a, tab.b, tab.b, tab.c, tab.c)
-end
-
-function TableauEPRK{T}(name::Symbol, order::Int, tab_q::TableauRK{T}, tab_p::TableauRK{T})
-    @assert tab_q.s == tab_p.s
-    TableauEPRK{T}(name, order, tab_q.s, tab_q.a, tab_p.a, tab_q.b, tab_p.b, tab_q.c, tab_p.c)
+function TableauEPRK{T}(name::Symbol, order::Int, q::TableauRK{T}, p::TableauRK{T})
+    TableauEPRK{T}(name, order, q, p)
 end
 
 # TODO function readTableauPRKFromFile(dir::AbstractString, name::AbstractString)
@@ -333,32 +315,19 @@ b_{i} \\bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 ```
 """
 immutable TableauIPRK{T} <: TableauPRK{T}
-    @HeaderTableauPRK
+    @HeaderTableauRK
 
-    function TableauIPRK(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p)
-        @assert T <: Real
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(o, Integer)
-        @assert s > 0 "Number of stages must be > 0"
-        @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
-        @assert s==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
+    q::TableauRK{T}
+    p::TableauRK{T}
 
-        new(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p)
+    function TableauIPRK(name, o, q, p)
+        @assert q.s==p.s
+        new(name, o, q.s, q, p)
     end
 end
 
-function TableauIPRK{T}(name::Symbol, order::Int,
-                        a_q::Matrix{T}, a_p::Matrix{T},
-                        b_q::Vector{T}, b_p::Vector{T},
-                        c_q::Vector{T}, c_p::Vector{T})
-    @assert length(c_q) == length(c_p)
-    TableauIPRK{T}(name, order, length(c_q), a_q, a_p, b_q, b_p, c_q, c_p)
-end
-
-function TableauIPRK{T}(name::Symbol, order::Int, tab_q::AbstractTableauRK{T}, tab_p::AbstractTableauRK{T})
-    @assert tab_q.q.s == tab_p.q.s
-    TableauIPRK{T}(name, order, tab_q.q.s, tab_q.q.a, tab_p.q.a, tab_q.q.b, tab_p.q.b, tab_q.q.c, tab_p.q.c)
+function TableauIPRK{T}(name::Symbol, order::Int, q::TableauRK{T}, p::TableauRK{T})
+    TableauIPRK{T}(name, order, q, p)
 end
 
 # TODO function readTableauIPRKFromFile(dir::AbstractString, name::AbstractString)
@@ -387,36 +356,21 @@ b_{i} \\bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 ```
 """
 immutable TableauVPRK{T} <: TableauPRK{T}
-    @HeaderTableauPRK
+    @HeaderTableauRK
+
+    q::TableauRK{T}
+    p::TableauRK{T}
 
     d::Vector{T}
 
-    function TableauVPRK(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p, d)
-        @assert T <: Real
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(o, Integer)
-        @assert s > 0 "Number of stages must be > 0"
-        @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
-        @assert s==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
-        @assert s==length(d)
-
-        new(name, o, s, a_q, a_p, b_q, b_p, c_q, c_p, d)
+    function TableauVPRK(name, o, q, p, d)
+        @assert q.s == p.s == length(d)
+        new(name, o, q.s, q, p, d)
     end
 end
 
-function TableauVPRK{T}(name::Symbol, order::Int,
-                        a_q::Matrix{T}, a_p::Matrix{T},
-                        b_q::Vector{T}, b_p::Vector{T},
-                        c_q::Vector{T}, c_p::Vector{T},
-                        d::Vector{T})
-    @assert length(c_q) == length(c_p)
-    TableauVPRK{T}(name, order, length(c_q), a_q, a_p, b_q, b_p, c_q, c_p, d)
-end
-
-function TableauVPRK{T}(name::Symbol, order::Int, tab_q::TableauRK{T}, tab_p::TableauRK{T}, d::Vector{T})
-    @assert tab_q.s == tab_p.s
-    TableauVPRK{T}(name, order, tab_q.q.s, tab_q.q.a, tab_p.q.a, tab_q.q.b, tab_p.q.b, tab_q.q.c, tab_p.q.c, d)
+function TableauVPRK{T}(name::Symbol, order::Int, q::TableauRK{T}, p::TableauRK{T}, d::Vector{T})
+    TableauVPRK{T}(name, order, q, p, d)
 end
 
 # TODO function readTableauVPRKFromFile(dir::AbstractString, name::AbstractString)

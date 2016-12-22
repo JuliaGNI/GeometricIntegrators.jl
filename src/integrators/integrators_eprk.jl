@@ -43,7 +43,7 @@ end
 function computeStageQ!(int::IntegratorEPRK, i::Int, jmax::Int, t)
     for j in 1:jmax
         for k in 1:int.equation.d
-            int.Y[k,i] += int.tableau.a_q[i,j] * int.F[k,j]
+            int.Y[k,i] += int.tableau.q.a[i,j] * int.F[k,j]
         end
     end
     for k in 1:int.equation.d
@@ -59,7 +59,7 @@ end
 function computeStageP!(int::IntegratorEPRK, i::Int, jmax::Int, t)
     for j in 1:jmax
         for k in 1:int.equation.d
-            int.Z[k,i] += int.tableau.a_p[i,j] * int.G[k,j]
+            int.Z[k,i] += int.tableau.p.a[i,j] * int.G[k,j]
         end
     end
     for k in 1:int.equation.d
@@ -87,15 +87,15 @@ function integrate!{DT,TT,VT,FT,N}(int::IntegratorEPRK{DT,TT,VT,FT}, sol::Soluti
             fill!(int.Y, zero(DT))
             fill!(int.Z, zero(DT))
             for i in 1:int.tableau.s
-                tqᵢ = sol.t[n] + int.Δt * int.tableau.c_q[i]
-                tpᵢ = sol.t[n] + int.Δt * int.tableau.c_p[i]
+                tqᵢ = sol.t[n] + int.Δt * int.tableau.q.c[i]
+                tpᵢ = sol.t[n] + int.Δt * int.tableau.p.c[i]
 
-                if int.tableau.a_q[i,i] ≠ 0. && int.tableau.a_p[i,i] ≠ 0.
+                if int.tableau.q.a[i,i] ≠ 0. && int.tableau.p.a[i,i] ≠ 0.
                     error("This is an implicit method!")
-                elseif int.tableau.a_q[i,i] ≠ 0.
+                elseif int.tableau.q.a[i,i] ≠ 0.
                     computeStageP!(int, i, i-1, tpᵢ)
                     computeStageQ!(int, i, i, tqᵢ)
-                elseif int.tableau.a_p[i,i] ≠ 0.
+                elseif int.tableau.p.a[i,i] ≠ 0.
                     computeStageQ!(int, i, i-1, tqᵢ)
                     computeStageP!(int, i, i, tpᵢ)
                 else
@@ -105,10 +105,10 @@ function integrate!{DT,TT,VT,FT,N}(int::IntegratorEPRK{DT,TT,VT,FT}, sol::Soluti
             end
 
             # compute final update
-            simd_mult!(int.y, int.F, int.tableau.b_q)
+            simd_mult!(int.y, int.F, int.tableau.q.b)
             simd_axpy!(int.Δt, int.y, int.q)
 
-            simd_mult!(int.z, int.G, int.tableau.b_p)
+            simd_mult!(int.z, int.G, int.tableau.p.b)
             simd_axpy!(int.Δt, int.z, int.p)
 
             # copy to solution

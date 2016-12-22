@@ -128,8 +128,8 @@ function IntegratorIPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::Table
     params = NonlinearFunctionParametersIPRK{DT,TT,FT,GT}(
                                                 equation.f, equation.p,
                                                 Δt, D, S,
-                                                tableau.a_q, tableau.a_p,
-                                                tableau.c_q, tableau.c_p)
+                                                tableau.q.a, tableau.p.a,
+                                                tableau.q.c, tableau.p.c)
 
     # create solver
     solver = nonlinear_solver(z, params)
@@ -174,8 +174,8 @@ function integrate!{DT,TT,VT,FT,N}(int::IntegratorIPRK{DT,TT,VT,FT}, sol::Soluti
             end
 
             # compute final update
-            simd_mult!(int.y, int.V, int.tableau.b_q)
-            simd_mult!(int.z, int.F, int.tableau.b_p)
+            simd_mult!(int.y, int.V, int.tableau.q.b)
+            simd_mult!(int.z, int.F, int.tableau.p.b)
             simd_axpy!(int.Δt, int.y, int.q)
             simd_axpy!(int.Δt, int.z, int.p)
 
