@@ -5,21 +5,10 @@ module Integrators
     using ..Equations
     using ..Solutions
     using ..Solvers
+    using ..Tableaus
     using ..Utils
 
     import ..Solvers.function_stages!
-
-    include("utils/macro_utils.jl")
-
-    export AbstractTableau, AbstractTableauRK,
-           TableauRK,
-           TableauERK, TableauDIRK, TableauFIRK, TableauSIRK,
-           TableauEPRK, TableauIPRK, TableauVPRK,
-           TableauIPARK, TableauSARK, TableauSPARK,
-           TableauGLM,
-           showTableau, writeTableauToFile, readTableauERKFromFile
-
-    include("integrators/tableaus.jl")
 
     export InitialGuess, evaluate, initialize!, update!
 
