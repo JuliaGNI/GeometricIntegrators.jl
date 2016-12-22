@@ -3,6 +3,7 @@ abstract AbstractCoefficients{T}
 
 Base.isequal{T1,T2}(coeff1::AbstractCoefficients{T1}, coeff2::AbstractCoefficients{T2}) = (coeff1 == coeff2 && T1 == T2 && typeof(coeff1) == typeof(coeff2))
 
+
 @define HeaderCoefficientsRK begin
     name::Symbol
     o::Int
@@ -31,6 +32,7 @@ end
     c::Vector{T}
     α::Matrix{T}
 end
+
 
 "Holds the coefficients of a Runge-Kutta method."
 immutable CoefficientsRK{T} <: AbstractCoefficients{T}
@@ -64,14 +66,14 @@ Base.isequal{T1, T2}(tab1::CoefficientsRK{T1}, tab2::CoefficientsRK{T2}) = (tab1
 
 "Print Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsRK)
-    print(io, "Runge-Kutta Method ", tab.name, "with ", tab.s, " stages and order ", tab.o)
+    print(io, "Runge-Kutta Coefficients ", tab.name, "with ", tab.s, " stages and order ", tab.o)
     print(io, "  a = ", tab.a)
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)
 end
 
 
-"Holds the coefficients of a additive Runge-Kutta method."
+"Holds the coefficients of an additive Runge-Kutta method."
 immutable CoefficientsARK{T} <: AbstractCoefficients{T}
     @HeaderCoefficientsARK
     @CoefficientsARK
@@ -107,7 +109,7 @@ Base.:(==){T1, T2}(tab1::CoefficientsARK{T1}, tab2::CoefficientsARK{T2}) = (tab1
 
 "Print additive Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsARK)
-    print(io, "Additive Runge-Kutta Method ", tab.name, "with ", tab.s, " internal stages, ", tab.r, " projective stages and order ", tab.o)
+    print(io, "Additive Runge-Kutta Coefficients ", tab.name, "with ", tab.s, " internal stages, ", tab.r, " projective stages and order ", tab.o)
     print(io, "  a = ", tab.a)
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)
@@ -136,7 +138,7 @@ immutable CoefficientsPRK{T} <: AbstractCoefficients{T}
 end
 
 function CoefficientsPRK{T}(name::Symbol, order::Int, a::Matrix{T}, c::Vector{T}, α::Matrix{T})
-    CoefficientsARK{T}(name, order, size(a,2), length(c), a, c, α)
+    CoefficientsPRK{T}(name, order, size(a,2), length(c), a, c, α)
 end
 
 Base.hash(tab::CoefficientsPRK, h::UInt) = hash(tab.o, hash(tab.s, hash(tab.r, hash(tab.a, hash(tab.c, hash(tab.α, hash(:CoefficientsPRK, h)))))))
@@ -150,8 +152,44 @@ Base.:(==){T1, T2}(tab1::CoefficientsPRK{T1}, tab2::CoefficientsPRK{T2}) = (tab1
 
 "Print projective Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsPRK)
-    print(io, "Projective Runge-Kutta Method ", tab.name, "with ", tab.s, " internal stages, ", tab.r, " projective stages and order ", tab.o)
+    print(io, "Projective Runge-Kutta Coefficients ", tab.name, "with ", tab.s, " internal stages, ", tab.r, " projective stages and order ", tab.o)
     print(io, "  a = ", tab.a)
     print(io, "  c = ", tab.c)
     print(io, "  α = ", tab.α)
+end
+
+
+"Holds the multiplier Runge-Kutta coefficients."
+immutable CoefficientsMRK{T}
+    name::Symbol
+    r::Int
+    b::Vector{T}
+    c::Vector{T}
+
+    function CoefficientsMRK(name,r,b,c)
+        @assert T <: Real
+        @assert isa(name, Symbol)
+        @assert isa(r, Integer)
+        @assert r > 0 "Number of stages r must be > 0"
+        @assert r==length(b)==length(c)
+        new(name,r,b,c)
+    end
+end
+
+function CoefficientsMRK{T}(name::Symbol, b::Vector{T}, c::Vector{T})
+    CoefficientsMRK{T}(name, length(c), b, c)
+end
+
+Base.hash(tab::CoefficientsMRK, h::UInt) = hash(tab.r, hash(tab.b, hash(tab.c, hash(:CoefficientsMRK, h))))
+
+Base.:(==){T1, T2}(tab1::CoefficientsMRK{T1}, tab2::CoefficientsMRK{T2}) = (
+                                                                tab1.r == tab2.r
+                                                             && tab1.b == tab2.b
+                                                             && tab1.c == tab2.c)
+
+"Print multiplier Runge-Kutta coefficients."
+function Base.show(io::IO, tab::CoefficientsMRK)
+    print(io, "Multiplier Runge-Kutta coefficients ", tab.name, "with ", tab.r, " projective stages")
+    print(io, "  b = ", tab.b)
+    print(io, "  c = ", tab.c)
 end

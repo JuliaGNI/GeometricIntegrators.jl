@@ -12,24 +12,11 @@ type NonlinearFunctionParametersIPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
     s::Int
     r::Int
 
-    a_q::Matrix{TT}
-    a_p::Matrix{TT}
-    α_q::Matrix{TT}
-    α_p::Matrix{TT}
-
-    a_q̃::Matrix{TT}
-    a_p̃::Matrix{TT}
-    α_q̃::Matrix{TT}
-    α_p̃::Matrix{TT}
-
-    b_q::Vector{TT}
-    b_p::Vector{TT}
-    β_q::Vector{TT}
-    β_p::Vector{TT}
-
-    c_q::Vector{TT}
-    c_p::Vector{TT}
-    c_λ::Vector{TT}
+    t_q::CoefficientsARK{TT}
+    t_p::CoefficientsARK{TT}
+    t_q̃::CoefficientsPRK{TT}
+    t_p̃::CoefficientsPRK{TT}
+    t_λ::CoefficientsMRK{TT}
 
     t::TT
     q::Vector{DT}
@@ -66,10 +53,7 @@ type NonlinearFunctionParametersIPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
     Gt::Vector{DT}
     Φt::Vector{DT}
 
-    function NonlinearFunctionParametersIPARK(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r,
-                                                a_q, a_p, α_q, α_p, a_q̃, a_p̃, α_q̃, α_p̃,
-                                                b_q, b_p, β_q, β_p,
-                                                c_q, c_p, c_λ)
+    function NonlinearFunctionParametersIPARK(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, t_q, t_p, t_q̃, t_p̃, t_λ)
         # create solution vectors
         q = zeros(DT,d)
         p = zeros(DT,d)
@@ -107,10 +91,8 @@ type NonlinearFunctionParametersIPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
         Φt = zeros(DT,d)
 
         new(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r,
-            a_q, a_p, α_q, α_p, a_q̃, a_p̃, α_q̃, α_p̃,
-            b_q, b_p, β_q, β_p,
-            c_q, c_p, c_λ, 0,
-            q, p, λ, y, z,
+            t_q, t_p, t_q̃, t_p̃, t_λ,
+            0, q, p, λ, y, z,
             Qi, Pi, Λi, Vi, Fi, Yi, Zi, Φi,
             Qp, Pp, Λp, Up, Gp, Yp, Zp, Φp,
             Qt, Pt, Λt, Vt, Ft, Ut, Gt, Φt)
@@ -136,7 +118,7 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
         end
 
         # compute f(X)
-        tpᵢ = params.t + params.Δt * params.c_p[i]
+        tpᵢ = params.t + params.Δt * params.t_p.c[i]
 
         simd_copy_xy_first!(params.Qt, params.Qi, i)
         simd_copy_xy_first!(params.Pt, params.Pi, i)
@@ -160,7 +142,7 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
         end
 
         # compute f(X)
-        tλᵢ = params.t + params.Δt * params.c_q[i]
+        tλᵢ = params.t + params.Δt * params.t_q.c[i]
 
         simd_copy_xy_first!(params.Qt, params.Qp, i)
         simd_copy_xy_first!(params.Pt, params.Pp, i)
@@ -180,12 +162,12 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
             b[3*(params.d*(i-1)+k-1)+2] = - params.Zi[k,i]
             b[3*(params.d*(i-1)+k-1)+3] = - params.Φi[k,i]
             for j in 1:params.s
-                b[3*(params.d*(i-1)+k-1)+1] += params.a_q[i,j] * params.Vi[k,j]
-                b[3*(params.d*(i-1)+k-1)+2] += params.a_p[i,j] * params.Fi[k,j]
+                b[3*(params.d*(i-1)+k-1)+1] += params.t_q.a[i,j] * params.Vi[k,j]
+                b[3*(params.d*(i-1)+k-1)+2] += params.t_p.a[i,j] * params.Fi[k,j]
             end
             for j in 1:params.r
-                b[3*(params.d*(i-1)+k-1)+1] += params.a_q̃[i,j] * params.Up[k,j]
-                b[3*(params.d*(i-1)+k-1)+2] += params.a_p̃[i,j] * params.Gp[k,j]
+                b[3*(params.d*(i-1)+k-1)+1] += params.t_q̃.a[i,j] * params.Up[k,j]
+                b[3*(params.d*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * params.Gp[k,j]
             end
         end
     end
@@ -198,18 +180,18 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
             # b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+3] = - params.Λp[k,i]
             b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+3] = - params.Φp[k,i]
             for j in 1:params.s
-                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.α_q[i,j] * params.Vi[k,j]
-                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2] += params.α_p[i,j] * params.Fi[k,j]
+                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.t_q.α[i,j] * params.Vi[k,j]
+                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2] += params.t_p.α[i,j] * params.Fi[k,j]
             end
             for j in 1:params.r
-                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.α_q̃[i,j] * params.Up[k,j]
-                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2] += params.α_p̃[i,j] * params.Gp[k,j]
+                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.t_q̃.α[i,j] * params.Up[k,j]
+                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2] += params.t_p̃.α[i,j] * params.Gp[k,j]
             end
         end
     end
 
     # compute b = - [Λ₁-λ]
-    if params.c_λ[1] == 0
+    if params.t_λ.c[1] == 0
         for k in 1:params.d
             b[3*params.d*params.s+3*(k-1)+3] = - params.Λp[k,1] + params.λ[k]
         end
@@ -253,11 +235,7 @@ function IntegratorIPARK{DT,TT,FT,PT,UT,GT,ϕT}(equation::IDAE{DT,TT,FT,PT,UT,GT
     # create params
     params = NonlinearFunctionParametersIPARK{DT,TT,FT,PT,UT,GT,ϕT}(
                                                 equation.f, equation.p, equation.u, equation.g, equation.ϕ,
-                                                Δt, D, S, R,
-                                                tableau.a_q, tableau.a_p, tableau.α_q, tableau.α_p,
-                                                tableau.a_q̃, tableau.a_p̃, tableau.α_q̃, tableau.α_p̃,
-                                                tableau.b_q, tableau.b_p, tableau.β_q, tableau.β_p,
-                                                tableau.c_q, tableau.c_p, tableau.c_λ)
+                                                Δt, D, S, R, tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ)
 
     # create solver
     solver = nonlinear_solver(z, params)
@@ -313,15 +291,15 @@ function integrate!{DT,TT,FT,PT,UT,GT,ϕT,N}(int::IntegratorIPARK{DT,TT,FT,PT,UT
             end
 
             # compute final update
-            simd_mult!(int.y, int.V, int.tableau.b_q)
-            simd_mult!(int.z, int.F, int.tableau.b_p)
+            simd_mult!(int.y, int.V, int.tableau.q.b)
+            simd_mult!(int.z, int.F, int.tableau.p.b)
             simd_axpy!(int.Δt, int.y, int.q)
             simd_axpy!(int.Δt, int.z, int.p)
-            simd_mult!(int.y, int.U, int.tableau.β_q)
-            simd_mult!(int.z, int.G, int.tableau.β_p)
+            simd_mult!(int.y, int.U, int.tableau.q.β)
+            simd_mult!(int.z, int.G, int.tableau.p.β)
             simd_axpy!(int.Δt, int.y, int.q)
             simd_axpy!(int.Δt, int.z, int.p)
-            simd_mult!(int.λ, int.Λ, int.tableau.d_λ)
+            simd_mult!(int.λ, int.Λ, int.tableau.λ.b)
 
             # copy to solution
             copy_solution!(sol, int.q, int.p, int.λ, n, m)

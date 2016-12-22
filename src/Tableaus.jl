@@ -6,7 +6,7 @@ module Tableaus
 
     include("utils/macro_utils.jl")
 
-    export CoefficientsRK, CoefficientsARK, CoefficientsPRK
+    export CoefficientsRK, CoefficientsARK, CoefficientsPRK, CoefficientsMRK
 
     include("tableaus/coefficients.jl")
 

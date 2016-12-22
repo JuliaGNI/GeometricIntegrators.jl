@@ -1,6 +1,6 @@
 
 "Holds the tableau of a Runge-Kutta method."
-abstract AbstractTableauRK{T} <: AbstractTableau{T}
+abstract AbstractTableauRK{T} <: AbstractTableau{T <: Real}
 
 "Holds the tableau of an implicit Runge-Kutta method."
 abstract AbstractTableauIRK{T} <: AbstractTableauRK{T}
