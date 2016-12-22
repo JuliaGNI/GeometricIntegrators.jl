@@ -3,14 +3,14 @@ __precompile__()
 module Tableaus
 
     using ..Utils
-    
+
     include("utils/macro_utils.jl")
 
-    export CoefficientsRK, CoefficientsARK, show_coefficients
+    export CoefficientsRK, CoefficientsARK, CoefficientsPRK
 
     include("tableaus/coefficients.jl")
 
-    export AbstractTableau, showTableau
+    export AbstractTableau
 
     include("tableaus/tableaus.jl")
 

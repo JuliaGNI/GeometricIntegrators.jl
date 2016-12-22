@@ -14,7 +14,7 @@ function fp(t, q, p, fp)
     fp .= q.^2
 end
 
-function fϕ(t, x, λ, fϕ)
+function fϕ(t, x, fϕ)
     fϕ .= 0
 end
 
@@ -39,8 +39,8 @@ include("equations/equations_tests.jl")
 include("solutions/dataseries_tests.jl")
 include("solutions/timeseries_tests.jl")
 include("solutions/solutions_tests.jl")
+include("tableaus/tableaus_tests.jl")
 include("integrators/integrators_test.jl")
-include("integrators/tableaus_tests.jl")
 include("solvers/linear_solvers_tests.jl")
 include("solvers/nonlinear_solvers_tests.jl")
 #include("utils/hdf5_tests.jl")
