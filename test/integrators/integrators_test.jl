@@ -6,15 +6,18 @@ nt = 10
 @test typeof(Integrator(ODE(fx, [1.]), getTableauCrouzeix(), Δt)) <: IntegratorDIRK
 @test typeof(Integrator(ODE(fx, [1.]), getTableauImplicitMidpoint(), Δt)) <: IntegratorFIRK
 
-ode = ODE(fx, [1.])
-pode = PODE(fx, fx, [1.], [1.])
-iode = IODE(fq, fp, [1.], [1.])
-idae = IDAE(fq, fp, gq, gp, gϕ, [1.], [1.], [0.])
+ode = pendulum_ode()
+pode = pendulum_pode()
+iode = pendulum_iode()
+idae = pendulum_idae()
 
-int = Integrator(ode, getTableauERK4(), Δt)
+int = Integrator(ode, getTableauExplicitEuler(), Δt)
 sol = integrate(int, nt)
 
-int = Integrator(ode, getTableauImplicitMidpoint(), Δt)
+int = Integrator(ode, getTableauImplicitEuler(), Δt)
+sol = integrate(int, nt)
+
+int = IntegratorFIRK(ode, getTableauImplicitMidpoint(), Δt, nonlinear_solver=NewtonSolver)
 sol = integrate(int, nt)
 
 pint = Integrator(pode, getTableauSymplecticEulerA(), Δt)
