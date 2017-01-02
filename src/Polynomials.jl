@@ -4,6 +4,6 @@ module Polynomials
 
     export vandermonde_matrix, vandermonde_matrix_inverse
 
-    include("polynomials/vandermonde.jl")
+    include("polynomials/vandermonde_matrix.jl")
 
 end
