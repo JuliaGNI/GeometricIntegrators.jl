@@ -1,2 +1,4 @@
 julia 0.5-
+FastGaussQuadrature
 HDF5
+Polynomials
