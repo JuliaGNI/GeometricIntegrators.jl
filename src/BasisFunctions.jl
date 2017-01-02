@@ -1,6 +1,6 @@
 __precompile__()
 
-module Polynomials
+module BasisFunctions
 
     export vandermonde_matrix, vandermonde_matrix_inverse
 
