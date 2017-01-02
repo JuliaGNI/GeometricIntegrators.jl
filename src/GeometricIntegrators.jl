@@ -17,6 +17,8 @@ module GeometricIntegrators
     @reexport using .Interpolation
     include("Solvers.jl")
     @reexport using .Solvers
+    include("Polynomials.jl")
+    @reexport using .Polynomials
     include("Tableaus.jl")
     @reexport using .Tableaus
     include("Integrators.jl")
