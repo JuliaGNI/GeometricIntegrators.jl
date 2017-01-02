@@ -124,5 +124,20 @@ tab_explicit_glrk2 = TableauFIRK(:glrk2, o, a, b, c)
 # test instatiation of partioned tableau by composition of two RK tableaus
 @test typeof(TableauEPRK(:PERK4, 4, getTableauERK4().q, getTableauERK4().q)) <: TableauEPRK
 
+# test computation of Gauss-Legendre Runge-Kutta tableaus
+@test getTableauGLRK(1) == getTableauGLRK1()
+
+glrk2_tab1 = getTableauGLRK(2)
+glrk2_tab2 = getTableauGLRK2()
+@test_approx_eq_eps glrk2_tab1.q.a glrk2_tab1.q.a 2eps()
+@test glrk2_tab1.q.b == glrk2_tab1.q.b
+@test glrk2_tab1.q.c == glrk2_tab1.q.c
+
+glrk3_tab1 = getTableauGLRK(3)
+glrk3_tab2 = getTableauGLRK3()
+@test_approx_eq_eps glrk3_tab1.q.a glrk3_tab1.q.a 2eps()
+@test glrk3_tab1.q.b == glrk3_tab1.q.b
+@test glrk3_tab1.q.c == glrk3_tab1.q.c
+
 
 # TODO Add tests for TableauIPRK, TableauSARK, TableauSPARK and TableauGLM.

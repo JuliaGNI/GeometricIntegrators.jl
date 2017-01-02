@@ -3,6 +3,7 @@ __precompile__()
 module Tableaus
 
     using ..Utils
+    using ..BasisFunctions
 
     include("utils/macro_utils.jl")
 
@@ -44,6 +45,11 @@ module Tableaus
     export TableauGLM
 
     include("tableaus/tableau_glm.jl")
+
+
+    export getTableauGLRK
+
+    include("tableaus/tableaus_glrk.jl")
 
 
     include("tableaus/tableaus_erk.jl")
