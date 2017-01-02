@@ -23,5 +23,7 @@ module GeometricIntegrators
     @reexport using .Tableaus
     include("Integrators.jl")
     @reexport using .Integrators
+    include("Problems.jl")
+    @reexport using .Problems
 
 end
