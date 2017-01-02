@@ -3,10 +3,12 @@
 type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters{DT}
     f::FT
     g::GT
+
     Δt::TT
 
     d::Int
     s::Int
+
     a_q::Matrix{TT}
     a_p::Matrix{TT}
     c_q::Vector{TT}
@@ -14,6 +16,7 @@ type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters
     d_v::Vector{TT}
 
     t::TT
+    
     q::Vector{DT}
     p::Vector{DT}
     y::Vector{DT}

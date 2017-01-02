@@ -6,7 +6,6 @@ module GeometricIntegrators
 
     export Utils, Solvers, Equations, Integrators, Tableaus
 
-    include("Fields.jl")
     include("Utils.jl")
     @reexport using .Utils
     include("Equations.jl")

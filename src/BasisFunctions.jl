@@ -4,10 +4,10 @@ module BasisFunctions
 
     export vandermonde_matrix, vandermonde_matrix_inverse
 
-    include("polynomials/vandermonde_matrix.jl")
+    include("basis_functions/vandermonde_matrix.jl")
 
     export LagrangePolynomial, similar, evaluate!
 
-    include("polynomials/lagrange_polynomials.jl")
+    include("basis_functions/lagrange_polynomials.jl")
 
 end

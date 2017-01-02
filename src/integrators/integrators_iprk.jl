@@ -3,6 +3,7 @@
 type NonlinearFunctionParametersIPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters{DT}
     f_f::FT
     f_p::GT
+
     Δt::TT
 
     d::Int
@@ -14,6 +15,7 @@ type NonlinearFunctionParametersIPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters
     c_p::Vector{TT}
 
     t::TT
+    
     q::Vector{DT}
     p::Vector{DT}
     y::Vector{DT}

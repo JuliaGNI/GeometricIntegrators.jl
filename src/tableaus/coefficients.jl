@@ -66,7 +66,7 @@ Base.isequal{T1, T2}(tab1::CoefficientsRK{T1}, tab2::CoefficientsRK{T2}) = (tab1
 
 "Print Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsRK)
-    print(io, "Runge-Kutta Coefficients ", tab.name, "with ", tab.s, " stages and order ", tab.o)
+    print(io, "Runge-Kutta Coefficients ", tab.name, " with ", tab.s, " stages and order ", tab.o)
     print(io, "  a = ", tab.a)
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)
