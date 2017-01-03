@@ -4,7 +4,7 @@ using PyPlot
 
 const Δt    = 0.1
 const ntime = 100000
-const plot  = false
+const splot = true
 
 ode_tableaus = (
     (getTableauExplicitEuler(), "pendulum_explicit_euler.png"),
@@ -40,7 +40,7 @@ function run_pendulum(tableau, filename=nothing)
 
     if filename ≠ nothing
         fig = figure(figsize=(6,6))
-        plot(sol.x[1,:,1], sol.x[2,:,1])
+        plot(sol.q.d[1,:], sol.q.d[2,:])
         xlim(0, 6)
         ylim(-2,+2)
         savefig(filename)
@@ -48,7 +48,7 @@ function run_pendulum(tableau, filename=nothing)
 end
 
 for tab in ode_tableaus
-    if plot
+    if splot
         run_pendulum(tab[1], tab[2])
     else
         run_pendulum(tab[1])
@@ -69,7 +69,7 @@ function run_pendulum_partitioned(tableau, filename=nothing)
 
     if filename ≠ nothing
         fig = figure(figsize=(6,6))
-        plot(sol.x[1,1,:,1], sol.x[2,1,:,1])
+        plot(sol.q.d[1,:], sol.p.d[1,:])
         xlim(0, 6)
         ylim(-2,+2)
         savefig(filename)
@@ -77,7 +77,7 @@ function run_pendulum_partitioned(tableau, filename=nothing)
 end
 
 for ptab in pode_tableaus
-    if plot
+    if splot
         run_pendulum_partitioned(ptab[1], ptab[2])
     else
         run_pendulum_partitioned(ptab[1])
