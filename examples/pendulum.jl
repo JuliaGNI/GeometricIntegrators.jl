@@ -22,7 +22,8 @@ ode_tableaus = (
 pode_tableaus = (
     (getTableauSymplecticEulerA(), "pendulum_symplectic_euler_a.png"),
     (getTableauSymplecticEulerB(), "pendulum_symplectic_euler_b.png"),
-    (TableauEPRK(:PERK4, 4, getTableauERK4().q, getTableauERK4().q), "pendulum_explicit_prk4.png")
+    (TableauEPRK(:PERK4, 4, getTableauERK4().q, getTableauERK4().q), "pendulum_explicit_prk4.png"),
+    (TableauIPRK(:PGLRK2, 4, getTableauGLRK2().q, getTableauGLRK2().q), "pendulum_implicit_prk4.png")
 )
 
 
