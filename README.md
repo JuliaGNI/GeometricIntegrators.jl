@@ -27,8 +27,8 @@ The following list provides and overview of supported and planned features.
 - [x] Fully Implicit Runge-Kutta Methods (FIRK),
 - [ ] Singly Implicit Runge-Kutta Methods (SIRK),
 - [ ] Additive Runge-Kutta Methods (ARK),
-- [ ] Partitioned Additive Runge-Kutta Methods (PARK),
 - [ ] Special Additive Runge-Kutta Methods (SARK),
+- [x] Partitioned Additive Runge-Kutta Methods (PARK),
 - [ ] Special Partitioned Additive Runge-Kutta Methods (SPARK),
 - [ ] Two-Step Runge-Kutta Methods (TSRK),
 - [ ] General Linear Methods (GLM).
@@ -37,7 +37,7 @@ The following list provides and overview of supported and planned features.
 
 - [x] Gauss-Legendre Runge-Kutta Methods (GLRK),
 - [x] Variational Partitioned Runge-Kutta Methods (VPRK),
-- [ ] Variational Partitioned Additive Runge-Kutta Methods (VPARK),
+- [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK),
 - [ ] Continuous and Discontinuous Galerkin Variational Integrators (CGVI/DGVI),
 - [ ] Spline Variational Integrators (SVI),
 - [ ] Taylor Variational Integrators (TVI),

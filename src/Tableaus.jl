@@ -36,11 +36,16 @@ module Tableaus
     include("tableaus/tableau_iprk.jl")
     include("tableaus/tableau_vprk.jl")
 
-    export TableauIPARK, TableauSARK, TableauSPARK
+    export TableauARK, TableauSARK
 
-    include("tableaus/tableau_ipark.jl")
+    include("tableaus/tableau_ark.jl")
     include("tableaus/tableau_sark.jl")
+
+    export TableauPARK, TableauSPARK, TableauVPARK
+
+    include("tableaus/tableau_park.jl")
     include("tableaus/tableau_spark.jl")
+    include("tableaus/tableau_vpark.jl")
 
     export TableauGLM
 
@@ -72,14 +77,14 @@ module Tableaus
 
     export getTableauSymplecticEulerA, getTableauSymplecticEulerB
 
-    include("tableaus/tableaus_vprk.jl")
+    include("tableaus/tableaus_spark.jl")
 
     export getTableauLobIIIAB2
 
-    include("tableaus/tableaus_ipark.jl")
+    include("tableaus/tableaus_vprk.jl")
 
-    export getTableauSymplecticProjection
+    export getTableauSymplecticProjection, getTableauLobIIIAB2p
 
-    include("tableaus/tableaus_spark.jl")
+    include("tableaus/tableaus_vpark.jl")
 
 end

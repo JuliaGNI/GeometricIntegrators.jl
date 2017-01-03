@@ -1,6 +1,6 @@
 
-"Parameters for right-hand side function of implicit partitioned additive Runge-Kutta methods."
-type NonlinearFunctionParametersIPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctionParameters{DT}
+"Parameters for right-hand side function of variational partitioned additive Runge-Kutta methods."
+type NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctionParameters{DT}
     f_f::FT
     f_p::PT
     f_u::UT
@@ -18,12 +18,14 @@ type NonlinearFunctionParametersIPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
     t_q̃::CoefficientsPRK{TT}
     t_p̃::CoefficientsPRK{TT}
     t_λ::CoefficientsMRK{TT}
+    d_v::Vector{TT}
 
     t::TT
-    
+
     q::Vector{DT}
     p::Vector{DT}
     λ::Vector{DT}
+    μ::Vector{DT}
 
     y::Vector{DT}
     z::Vector{DT}
@@ -55,11 +57,12 @@ type NonlinearFunctionParametersIPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
     Gt::Vector{DT}
     Φt::Vector{DT}
 
-    function NonlinearFunctionParametersIPARK(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, t_q, t_p, t_q̃, t_p̃, t_λ)
+    function NonlinearFunctionParametersVPARK(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, t_q, t_p, t_q̃, t_p̃, t_λ, d_v)
         # create solution vectors
         q = zeros(DT,d)
         p = zeros(DT,d)
         λ = zeros(DT,d)
+        μ = zeros(DT,d)
         y = zeros(DT,d)
         z = zeros(DT,d)
 
@@ -93,16 +96,16 @@ type NonlinearFunctionParametersIPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
         Φt = zeros(DT,d)
 
         new(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r,
-            t_q, t_p, t_q̃, t_p̃, t_λ,
-            0, q, p, λ, y, z,
+            t_q, t_p, t_q̃, t_p̃, t_λ, d_v,
+            0, q, p, λ, μ, y, z,
             Qi, Pi, Λi, Vi, Fi, Yi, Zi, Φi,
             Qp, Pp, Λp, Up, Gp, Yp, Zp, Φp,
             Qt, Pt, Λt, Vt, Ft, Ut, Gt, Φt)
     end
 end
 
-"Compute stages of implicit partitioned additive Runge-Kutta methods."
-function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersIPARK{DT,TT,FT,PT,UT,GT,ϕT})
+"Compute stages of variational partitioned additive Runge-Kutta methods."
+function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT})
     local tpᵢ::TT
     local tλᵢ::TT
 
@@ -126,7 +129,7 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
         simd_copy_xy_first!(params.Pt, params.Pi, i)
         simd_copy_xy_first!(params.Λt, params.Λi, i)
         params.f_f(tpᵢ, params.Qt, params.Λt, params.Ft)
-        params.f_ϕ(tpᵢ, params.Qt, params.Pt, params.Φt)
+        params.f_p(tpᵢ, params.Qt, params.Λt, params.Φt)
         simd_copy_yx_first!(params.Ft, params.Fi, i)
         simd_copy_yx_first!(params.Φt, params.Φi, i)
     end
@@ -157,12 +160,18 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
         simd_copy_yx_first!(params.Φt, params.Φp, i)
     end
 
+    if length(params.d_v) > 0
+        for k in 1:params.d
+            params.μ[k] = y[3*params.d*params.s+3*params.d*params.r+k]
+        end
+    end
+
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
     for i in 1:params.s
         for k in 1:params.d
             b[3*(params.d*(i-1)+k-1)+1] = - params.Yi[k,i]
             b[3*(params.d*(i-1)+k-1)+2] = - params.Zi[k,i]
-            b[3*(params.d*(i-1)+k-1)+3] = - params.Φi[k,i]
+            b[3*(params.d*(i-1)+k-1)+3] = - params.Φi[k,i] + params.Pi[k,i]
             for j in 1:params.s
                 b[3*(params.d*(i-1)+k-1)+1] += params.t_q.a[i,j] * params.Vi[k,j]
                 b[3*(params.d*(i-1)+k-1)+2] += params.t_p.a[i,j] * params.Fi[k,j]
@@ -179,7 +188,6 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
         for k in 1:params.d
             b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1] = - params.Yp[k,i]
             b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2] = - params.Zp[k,i]
-            # b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+3] = - params.Λp[k,i]
             b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+3] = - params.Φp[k,i]
             for j in 1:params.s
                 b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.t_q.α[i,j] * params.Vi[k,j]
@@ -198,13 +206,28 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
             b[3*params.d*params.s+3*(k-1)+3] = - params.Λp[k,1] + params.λ[k]
         end
     end
+
+    if length(params.d_v) > 0
+        for i in 1:params.s
+            for k in 1:params.d
+                b[3*(params.d*(i-1)+k-1)+2] -= params.d_v[i] * params.μ[k]
+            end
+        end
+
+        for k in 1:params.d
+            b[3*params.d*params.s+3*params.d*params.r+k] = 0
+            for i in 1:params.s
+                b[3*params.d*params.s+3*params.d*params.r+k] -= params.Vi[k,i] * params.d_v[i]
+            end
+        end
+    end
 end
 
 
 "Implicit partitioned additive Runge-Kutta integrator."
-immutable IntegratorIPARK{DT, TT, FT, PT, UT, GT, ϕT, ST} <: Integrator{DT, TT}
+immutable IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, ST} <: Integrator{DT, TT}
     equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}
-    tableau::TableauIPARK{TT}
+    tableau::TableauVPARK{TT}
     Δt::TT
 
     solver::ST
@@ -224,26 +247,37 @@ immutable IntegratorIPARK{DT, TT, FT, PT, UT, GT, ϕT, ST} <: Integrator{DT, TT}
     G::Array{DT,2}
 end
 
-function IntegratorIPARK{DT,TT,FT,PT,UT,GT,ϕT}(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}, tableau::TableauIPARK{TT}, Δt::TT;
-                              nonlinear_solver=QuasiNewtonSolver,
-                              interpolation=HermiteInterpolation{DT})
+function IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT}(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT},
+                                               tableau::TableauVPARK{TT}, Δt::TT;
+                                               nonlinear_solver=QuasiNewtonSolver,
+                                               interpolation=HermiteInterpolation{DT})
     D = equation.d
     S = tableau.s
     R = tableau.r
 
+    N = 3*D*S + 3*D*R
+
+    if isdefined(tableau, :d)
+        N += D
+        d_v = tableau.d
+    else
+        d_v = DT[]
+    end
+
     # create solution vector for internal stages / nonlinear solver
-    z = zeros(DT, 3*D*S + 3*D*R)
+    z = zeros(DT, N)
 
     # create params
-    params = NonlinearFunctionParametersIPARK{DT,TT,FT,PT,UT,GT,ϕT}(
+    params = NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT}(
                                                 equation.f, equation.p, equation.u, equation.g, equation.ϕ,
-                                                Δt, D, S, R, tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ)
+                                                Δt, D, S, R,
+                                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, d_v)
 
     # create solver
     solver = nonlinear_solver(z, params)
 
     # create integrator
-    IntegratorIPARK{DT, TT, FT, PT, UT, GT, ϕT, typeof(solver)}(
+    IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, typeof(solver)}(
                                         equation, tableau, Δt, solver,
                                         params.q, params.p, params.λ, params.y, params.z,
                                         params.Qi, params.Pi, params.Vi, params.Fi,
@@ -251,8 +285,8 @@ function IntegratorIPARK{DT,TT,FT,PT,UT,GT,ϕT}(equation::IDAE{DT,TT,FT,PT,UT,GT
 end
 
 
-"Integrate DAE with implicit partitioned additive Runge-Kutta integrator."
-function integrate!{DT,TT,FT,PT,UT,GT,ϕT,N}(int::IntegratorIPARK{DT,TT,FT,PT,UT,GT,ϕT}, sol::SolutionPDAE{DT,TT,N})
+"Integrate DAE with variational partitioned additive Runge-Kutta integrator."
+function integrate!{DT,TT,FT,PT,UT,GT,ϕT,N}(int::IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT}, sol::SolutionPDAE{DT,TT,N})
     # loop over initial conditions
     for m in 1:sol.ni
         local j::Int

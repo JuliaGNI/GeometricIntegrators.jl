@@ -1,6 +1,6 @@
 
-"Holds the tableau of an implicit partitioned additive Runge-Kutta method."
-immutable TableauIPARK{T} <: AbstractTableau{T}
+"Holds the tableau of an partitioned additive Runge-Kutta method."
+immutable TableauPARK{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int
@@ -14,7 +14,7 @@ immutable TableauIPARK{T} <: AbstractTableau{T}
 
     λ::CoefficientsMRK{T}
 
-    function TableauIPARK(name, o, s, r, q, p, q̃, p̃, λ)
+    function TableauPARK(name, o, s, r, q, p, q̃, p̃, λ)
         @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
@@ -30,7 +30,7 @@ immutable TableauIPARK{T} <: AbstractTableau{T}
     end
 end
 
-function TableauIPARK{T <: Real}(name::Symbol, order::Int,
+function TableauPARK{T <: Real}(name::Symbol, order::Int,
                         a_q::Matrix{T}, a_p::Matrix{T},
                         α_q::Matrix{T}, α_p::Matrix{T},
                         a_q̃::Matrix{T}, a_p̃::Matrix{T},
@@ -62,7 +62,7 @@ function TableauIPARK{T <: Real}(name::Symbol, order::Int,
     p̃ = CoefficientsPRK{T}(name, order, s, r, a_p̃, c_λ, α_p̃)
     λ = CoefficientsMRK{T}(name, r, d_λ, c_λ)
 
-    TableauIPARK{T}(name, order, s, r, q, p, q̃, p̃, λ)
+    TableauPARK{T}(name, order, s, r, q, p, q̃, p̃, λ)
 end
 
-# TODO function readTableauIPARKFromFile(dir::AbstractString, name::AbstractString)
+# TODO function readTableauPARKFromFile(dir::AbstractString, name::AbstractString)

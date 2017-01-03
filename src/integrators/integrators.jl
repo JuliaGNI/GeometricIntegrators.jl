@@ -36,9 +36,19 @@ function Integrator(equation::IODE, tableau::TableauVPRK, Δt)
     IntegratorVPRK(equation, tableau, Δt)
 end
 
+"Create integrator for additive Runge-Kutta tableau."
+function Integrator(equation::DAE, tableau::TableauARK, Δt)
+    IntegratorARK(equation, tableau, Δt)
+end
+
 "Create integrator for special additive Runge-Kutta tableau."
 function Integrator(equation::DAE, tableau::TableauSARK, Δt)
     IntegratorSARK(equation, tableau, Δt)
+end
+
+"Create integrator for partitioned additive Runge-Kutta tableau."
+function Integrator(equation::PDAE, tableau::TableauPARK, Δt)
+    IntegratorPARK(equation, tableau, Δt)
 end
 
 "Create integrator for special partitioned additive Runge-Kutta tableau."
@@ -46,9 +56,9 @@ function Integrator(equation::PDAE, tableau::TableauSPARK, Δt)
     IntegratorSPARK(equation, tableau, Δt)
 end
 
-"Create integrator for implicit partitioned additive Runge-Kutta tableau."
-function Integrator(equation::IDAE, tableau::TableauIPARK, Δt)
-    IntegratorIPARK(equation, tableau, Δt)
+"Create integrator for variational partitioned additive Runge-Kutta tableau."
+function Integrator(equation::IDAE, tableau::TableauVPARK, Δt)
+    IntegratorVPARK(equation, tableau, Δt)
 end
 
 "Print error for integrators not implemented, yet."

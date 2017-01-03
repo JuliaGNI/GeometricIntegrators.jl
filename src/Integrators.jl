@@ -20,17 +20,19 @@ module Integrators
 
     include("integrators/integrators.jl")
     include("integrators/integrators_erk.jl")
-    include("integrators/integrators_eprk.jl")
 
     include("integrators/initial_guess.jl")
 
     include("integrators/integrators_dirk.jl")
     include("integrators/integrators_firk.jl")
     include("integrators/integrators_sirk.jl")
+    include("integrators/integrators_eprk.jl")
     include("integrators/integrators_iprk.jl")
     include("integrators/integrators_vprk.jl")
-    include("integrators/integrators_ipark.jl")
+    include("integrators/integrators_ark.jl")
     include("integrators/integrators_sark.jl")
+    include("integrators/integrators_park.jl")
     include("integrators/integrators_spark.jl")
+    include("integrators/integrators_vpark.jl")
 
 end

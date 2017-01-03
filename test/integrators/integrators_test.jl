@@ -35,5 +35,8 @@ isol = integrate(iint, nt)
 vint = Integrator(iode, getTableauLobIIIAB2(), Δt)
 vsol = integrate(vint, nt)
 
-dint = Integrator(idae, getTableauSymplecticProjection(glrk2.q, glrk2.q), Δt)
+dint = Integrator(idae, getTableauSymplecticProjection(:pglrk2p, glrk2.q, glrk2.q), Δt)
+dsol = integrate(dint, nt)
+
+dint = Integrator(idae, getTableauLobIIIAB2p(), Δt)
 dsol = integrate(dint, nt)
