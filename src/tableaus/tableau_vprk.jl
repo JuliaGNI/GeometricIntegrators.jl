@@ -33,10 +33,19 @@ immutable TableauVPRK{T} <: AbstractTableauPRK{T}
         @assert q.s == p.s == length(d)
         new(name, o, q.s, q, p, d)
     end
+
+    function TableauVPRK(name, o, q, p)
+        @assert q.s == p.s
+        new(name, o, q.s, q, p)
+    end
 end
 
 function TableauVPRK{T}(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d::Vector{T})
     TableauVPRK{T}(name, order, q, p, d)
+end
+
+function TableauVPRK{T}(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T})
+    TableauVPRK{T}(name, order, q, p)
 end
 
 # TODO function readTableauVPRKFromFile(dir::AbstractString, name::AbstractString)

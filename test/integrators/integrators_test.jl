@@ -24,7 +24,7 @@ pint = Integrator(pode, getTableauSymplecticEulerA(), Δt)
 psol = integrate(pint, nt)
 
 itab = getTableauGLRK1()
-iint = Integrator(iode, TableauIPRK(:pglrk, 2, itab.q, itab.q), Δt)
+iint = Integrator(iode, TableauVPRK(:pglrk, 2, itab.q, itab.q), Δt)
 isol = integrate(iint, nt)
 
 vint = Integrator(iode, getTableauLobIIIAB2(), Δt)

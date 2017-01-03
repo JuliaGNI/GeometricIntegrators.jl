@@ -88,25 +88,37 @@ function function_stages!{DT,TT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params::Non
         simd_copy_yx_first!(params.tP, params.P, i)
         simd_copy_yx_first!(params.tF, params.F, i)
     end
-    for k in 1:params.d
-        params.μ[k] = y[2*params.d*params.s+k]
+
+    if length(params.d_v) > 0
+        for k in 1:params.d
+            params.μ[k] = y[2*params.d*params.s+k]
+        end
     end
 
     # compute b = - [(Y-AV), (P-AF), ΛV]
     for i in 1:params.s
         for k in 1:params.d
             b[2*(params.d*(i-1)+k-1)+1] = - params.Y[k,i]
-            b[2*(params.d*(i-1)+k-1)+2] = - params.P[k,i] + params.p[k] - params.d_v[i] * params.μ[k]
+            b[2*(params.d*(i-1)+k-1)+2] = - params.P[k,i] + params.p[k]
             for j in 1:params.s
                 b[2*(params.d*(i-1)+k-1)+1] += params.a_q[i,j] * params.V[k,j]
                 b[2*(params.d*(i-1)+k-1)+2] += params.a_p[i,j] * params.F[k,j] * params.Δt
             end
         end
     end
-    for k in 1:params.d
-        b[2*params.d*params.s+k] = 0
+
+    if length(params.d_v) > 0
         for i in 1:params.s
-            b[2*params.d*params.s+k] -= params.V[k,i] * params.d_v[i]
+            for k in 1:params.d
+                b[2*(params.d*(i-1)+k-1)+2] -= params.d_v[i] * params.μ[k]
+            end
+        end
+
+        for k in 1:params.d
+            b[2*params.d*params.s+k] = 0
+            for i in 1:params.s
+                b[2*params.d*params.s+k] -= params.V[k,i] * params.d_v[i]
+            end
         end
     end
 end
@@ -135,8 +147,17 @@ function IntegratorVPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::Table
     D = equation.d
     S = tableau.s
 
+    N = 2*D*S
+
+    if isdefined(tableau, :d)
+        N += D
+        d_v = tableau.d
+    else
+        d_v = DT[]
+    end
+
     # create solution vector for internal stages / nonlinear solver
-    z = zeros(DT, 2*D*S+D)
+    z = zeros(DT, N)
 
     # create params
     params = NonlinearFunctionParametersVPRK{DT,TT,FT,GT}(
@@ -144,7 +165,7 @@ function IntegratorVPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::Table
                                                 Δt, D, S,
                                                 tableau.q.a, tableau.p.a,
                                                 tableau.q.c, tableau.p.c,
-                                                tableau.d)
+                                                d_v)
 
     # create solver
     solver = nonlinear_solver(z, params)
@@ -181,8 +202,10 @@ function integrate!{DT,TT,VT,FT,N}(int::IntegratorVPRK{DT,TT,VT,FT}, sol::Soluti
                     # int.solver.x[2*(params.d*(i-1)+k-1)+1] = 0.
                 end
             end
-            for k in 1:int.equation.d
-                int.solver.x[2*int.equation.d*int.tableau.s+k] = 0
+            if isdefined(int.tableau, :d)
+                for k in 1:int.equation.d
+                    int.solver.x[2*int.equation.d*int.tableau.s+k] = 0
+                end
             end
 
             # call nonlinear solver
