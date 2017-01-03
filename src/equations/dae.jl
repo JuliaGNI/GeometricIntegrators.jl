@@ -105,3 +105,13 @@ Base.:(==)(dae1::DAE, dae2::DAE) = (
                              && dae1.t₀ == dae2.t₀
                              && dae1.q₀ == dae2.q₀
                              && dae1.λ₀ == dae2.λ₀)
+
+function Base.similar{DT, TT, VT, UT, ΦT}(dae::DAE{DT,TT,VT,UT,ΦT}, q₀::DenseArray{DT}, λ₀::DenseArray{DT})
+    similar(dae, dae.t₀, q₀, λ₀)
+end
+
+function Base.similar{DT, TT, VT, UT, ΦT}(dae::DAE{DT,TT,VT,UT,ΦT}, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArray{DT})
+    @assert dae.d == size(q₀,1)
+    @assert dae.m == size(λ₀,1)
+    ODE(dae.v, t₀, q₀, λ₀)
+end

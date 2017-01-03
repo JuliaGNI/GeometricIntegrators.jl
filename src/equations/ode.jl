@@ -59,3 +59,12 @@ Base.:(==)(ode1::ODE, ode2::ODE) = (
                              && ode1.v == ode2.v
                              && ode1.t₀ == ode2.t₀
                              && ode1.q₀ == ode2.q₀)
+
+function Base.similar{DT, TT, VT}(ode::ODE{DT,TT,VT}, q₀::DenseArray{DT})
+    similar(ode, ode.t₀, q₀)
+end
+
+function Base.similar{DT, TT, VT}(ode::ODE{DT,TT,VT}, t₀::TT, q₀::DenseArray{DT})
+    @assert ode.d == size(q₀,1)
+    ODE(ode.v, t₀, q₀)
+end
