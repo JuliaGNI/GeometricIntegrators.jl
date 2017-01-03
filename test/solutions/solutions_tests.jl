@@ -12,6 +12,7 @@ q1    = rand(dim, n1)
 p1    = q1.^2
 λ1    = zeros(1, n1)
 
+
 ode = ODE(fx, q0)
 sol = Solution(ode, Δt, ntime)
 @test typeof(sol) <: SolutionODE
@@ -19,8 +20,6 @@ sol = Solution(ode, Δt, ntime)
 ode = ODE(fx, q1)
 sol = Solution(ode, Δt, ntime)
 @test typeof(sol) <: SolutionODE
-
-@test typeof(Integrator(ODE(fx, q0), getTableauExplicitMidpoint(), Δt)) <: IntegratorERK
 
 
 pode = PODE(fq, fp, q0, p0)

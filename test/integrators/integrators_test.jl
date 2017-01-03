@@ -2,14 +2,14 @@
 Δt = 0.1
 nt = 10
 
-@test typeof(Integrator(ODE(fx, [1.]), getTableauExplicitMidpoint(), Δt)) <: IntegratorERK
-@test typeof(Integrator(ODE(fx, [1.]), getTableauCrouzeix(), Δt)) <: IntegratorDIRK
-@test typeof(Integrator(ODE(fx, [1.]), getTableauImplicitMidpoint(), Δt)) <: IntegratorFIRK
-
-ode = pendulum_ode()
+ode  = pendulum_ode()
 pode = pendulum_pode()
 iode = pendulum_iode()
 idae = pendulum_idae()
+
+@test typeof(Integrator(ode, getTableauExplicitMidpoint(), Δt)) <: IntegratorERK
+@test typeof(Integrator(ode, getTableauCrouzeix(), Δt)) <: IntegratorDIRK
+@test typeof(Integrator(ode, getTableauImplicitMidpoint(), Δt)) <: IntegratorFIRK
 
 int = Integrator(ode, getTableauExplicitEuler(), Δt)
 sol = integrate(int, nt)
