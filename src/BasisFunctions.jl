@@ -6,7 +6,7 @@ module BasisFunctions
 
     include("basis_functions/vandermonde_matrix.jl")
 
-    export LagrangePolynomial, similar, evaluate!
+    export LagrangePolynomial, evaluate!
 
     include("basis_functions/lagrange_polynomials.jl")
 

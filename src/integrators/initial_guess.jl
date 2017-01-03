@@ -1,7 +1,8 @@
 
-include("../interpolation/interpolation.jl")
-include("../interpolation/hermite_interpolation.jl")
-include("../tableaus/tableaus_erk.jl")
+using ..CommonFunctions
+using ..Interpolation
+using ..Tableaus
+
 
 type InitialGuess{DT, TT, FT, IT <: Interpolator}
     int::IT
@@ -40,6 +41,6 @@ function update!{DT,TT,FT,IT}(ig::InitialGuess{DT,TT,FT,IT}, t₁::TT, y₁::Vec
     simd_scale!(ig.f₁, ig.Δt)
 end
 
-function evaluate{DT,TT,FT,IT}(ig::InitialGuess{DT,TT,FT,IT}, guess::Vector{DT}, c::TT=one(TT))
-    evaluate(ig.int, ig.y₀, ig.y₁, ig.f₀, ig.f₁, one(TT)+c, guess)
+function CommonFunctions.evaluate!{DT,TT,FT,IT}(ig::InitialGuess{DT,TT,FT,IT}, guess::Vector{DT}, c::TT=one(TT))
+    evaluate!(ig.int, ig.y₀, ig.y₁, ig.f₀, ig.f₁, one(TT)+c, guess)
 end

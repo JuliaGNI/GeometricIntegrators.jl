@@ -10,7 +10,7 @@ module Integrators
 
     import ..Solvers.function_stages!
 
-    export InitialGuess, evaluate, initialize!, update!
+    export InitialGuess, evaluate!, initialize!, update!
 
     export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK, IntegratorSIRK,
            IntegratorEPRK, IntegratorIPRK, IntegratorVPRK,

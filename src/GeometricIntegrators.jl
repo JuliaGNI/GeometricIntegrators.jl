@@ -4,8 +4,11 @@ module GeometricIntegrators
 
     include("utils/macro_utils.jl")
 
-    export Utils, Solvers, Equations, Integrators, Tableaus
+    export Utils, Equations, Solutions, Interpolation, Solvers, BasisFunctions,
+           Tableaus, Integrators, Problems
 
+    include("CommonFunctions.jl")
+    @reexport using .CommonFunctions
     include("Utils.jl")
     @reexport using .Utils
     include("Equations.jl")

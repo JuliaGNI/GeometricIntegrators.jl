@@ -1,4 +1,6 @@
 
+using ..CommonFunctions
+
 immutable LagrangePolynomial{T<:AbstractFloat}
     p::Int
     n::Int
@@ -36,12 +38,12 @@ function LagrangePolynomial{T}(x::Vector{T}, y::Vector{T})
     LagrangePolynomial{T}(x, y)
 end
 
-function similar{T}(lag::LagrangePolynomial{T}, y::Vector{T})
+function Base.similar{T}(lag::LagrangePolynomial{T}, y::Vector{T})
     @assert length(y) == lag.n
     LagrangePolynomial{T}(lag.p, lag.n, lag.x, y, lag.denom)
 end
 
-function evaluate!{T}(pol::LagrangePolynomial{T}, x::Vector{T}, y::Vector{T})
+function CommonFunctions.evaluate!{T}(pol::LagrangePolynomial{T}, x::Vector{T}, y::Vector{T})
     @assert length(x) == length(y)
 
     local p::T
@@ -66,7 +68,7 @@ function evaluate!{T}(pol::LagrangePolynomial{T}, x::Vector{T}, y::Vector{T})
     return nothing
 end
 
-function evaluate!{T}(pol::LagrangePolynomial{T}, sy::Vector{T}, x::Vector{T}, y::Vector{T})
+function CommonFunctions.evaluate!{T}(pol::LagrangePolynomial{T}, sy::Vector{T}, x::Vector{T}, y::Vector{T})
     spol = similar(pol, sy)
     evaluate!(spol, x, y)
 end

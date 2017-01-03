@@ -128,7 +128,7 @@ function integrate!{DT,TT,FT,ST,IT,N}(int::IntegratorFIRK{DT, TT, FT, ST, IT}, s
 
             # compute initial guess for internal stages
             for i in 1:int.tableau.q.s
-                evaluate(int.iguess, int.y, int.tableau.q.c[i])
+                evaluate!(int.iguess, int.y, int.tableau.q.c[i])
                 for k in 1:int.equation.d
                     int.solver.x[int.equation.d*(i-1)+k] = int.y[k]
                 end

@@ -1,4 +1,6 @@
 
+using ..CommonFunctions
+
 immutable HermiteInterpolation{T} <: Interpolator{T}
 
     x₀::T
@@ -26,7 +28,7 @@ function HermiteInterpolation{T}(x₀::T, x₁::T, d::Int)
 end
 
 
-function evaluate{T}(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x::T, y::Vector{T})
+function CommonFunctions.evaluate!{T}(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x::T, y::Vector{T})
     local d₀::T
     local d₁::T
     local c₀::T
