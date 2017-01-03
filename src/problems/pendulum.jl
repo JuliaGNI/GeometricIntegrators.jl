@@ -10,12 +10,12 @@ function pendulum_ode(x₀=[acos(0.4), 0.0])
 end
 
 
-function pendulum_pode_v(t, p, v)
+function pendulum_pode_v(t, q, p, v)
     v[1] = p[1]
     nothing
 end
 
-function pendulum_pode_f(t, q, f)
+function pendulum_pode_f(t, q, p, f)
     f[1] = sin(q[1])
     nothing
 end
