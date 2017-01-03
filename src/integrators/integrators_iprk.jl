@@ -9,10 +9,8 @@ type NonlinearFunctionParametersIPRK{DT,TT,VT,FT} <: NonlinearFunctionParameters
     d::Int
     s::Int
 
-    a_q::Matrix{TT}
-    a_p::Matrix{TT}
-    c_q::Vector{TT}
-    c_p::Vector{TT}
+    t_q::CoefficientsRK{TT}
+    t_p::CoefficientsRK{TT}
 
     t::TT
 
@@ -33,7 +31,7 @@ type NonlinearFunctionParametersIPRK{DT,TT,VT,FT} <: NonlinearFunctionParameters
     tP::Vector{DT}
     tF::Vector{DT}
 
-    function NonlinearFunctionParametersIPRK(f_v, f_f, Δt, d, s, a_q, a_p, c_q, c_p)
+    function NonlinearFunctionParametersIPRK(f_v, f_f, Δt, d, s, t_q, t_p)
         # create solution vectors
         q = zeros(DT,d)
         p = zeros(DT,d)
@@ -54,7 +52,7 @@ type NonlinearFunctionParametersIPRK{DT,TT,VT,FT} <: NonlinearFunctionParameters
         tP = zeros(DT,d)
         tF = zeros(DT,d)
 
-        new(f_v, f_f, Δt, d, s, a_q, a_p, c_q, c_p, 0, q, p, y, z, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
+        new(f_v, f_f, Δt, d, s, t_q, t_p, 0, q, p, y, z, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
     end
 end
 
@@ -75,8 +73,8 @@ function function_stages!{DT,TT,VT,FT}(y::Vector{DT}, b::Vector{DT}, params::Non
         end
 
         # compute f(X)
-        tqᵢ = params.t + params.Δt * params.c_q[i]
-        tpᵢ = params.t + params.Δt * params.c_p[i]
+        tqᵢ = params.t + params.Δt * params.t_q.c[i]
+        tpᵢ = params.t + params.Δt * params.t_p.c[i]
 
         simd_copy_xy_first!(params.tQ, params.Q, i)
         simd_copy_xy_first!(params.tP, params.P, i)
@@ -92,8 +90,8 @@ function function_stages!{DT,TT,VT,FT}(y::Vector{DT}, b::Vector{DT}, params::Non
             b[2*(params.d*(i-1)+k-1)+1] = - params.Y[k,i]
             b[2*(params.d*(i-1)+k-1)+2] = - params.Z[k,i]
             for j in 1:params.s
-                b[2*(params.d*(i-1)+k-1)+1] += params.a_q[i,j] * params.V[k,j]
-                b[2*(params.d*(i-1)+k-1)+2] += params.a_p[i,j] * params.F[k,j]
+                b[2*(params.d*(i-1)+k-1)+1] += params.t_q.a[i,j] * params.V[k,j]
+                b[2*(params.d*(i-1)+k-1)+2] += params.t_p.a[i,j] * params.F[k,j]
             end
         end
     end
@@ -130,8 +128,7 @@ function IntegratorIPRK{DT,TT,VT,FT}(equation::PODE{DT,TT,VT,FT}, tableau::Table
     params = NonlinearFunctionParametersIPRK{DT,TT,VT,FT}(
                                                 equation.v, equation.f,
                                                 Δt, D, S,
-                                                tableau.q.a, tableau.p.a,
-                                                tableau.q.c, tableau.p.c)
+                                                tableau.q, tableau.p)
 
     # create solver
     solver = nonlinear_solver(z, params)
