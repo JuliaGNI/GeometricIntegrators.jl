@@ -50,7 +50,7 @@ function computeStageQ!(int::IntegratorEPRK, i::Int, jmax::Int, t)
         int.Q[k,i] = int.q[k] + int.Δt * int.Y[k,i]
     end
     simd_copy_xy_first!(int.tQ, int.Q, i)
-    int.equation.f(t, int.tQ, int.tG)
+    int.equation.f(t, int.tQ, int.tP, int.tG)
     simd_copy_yx_first!(int.tG, int.G, i)
     nothing
 end
@@ -66,7 +66,7 @@ function computeStageP!(int::IntegratorEPRK, i::Int, jmax::Int, t)
         int.P[k,i] = int.p[k] + int.Δt * int.Z[k,i]
     end
     simd_copy_xy_first!(int.tP, int.P, i)
-    int.equation.v(t, int.tP, int.tF)
+    int.equation.v(t, int.tQ, int.tP, int.tF)
     simd_copy_yx_first!(int.tF, int.F, i)
     nothing
 end
