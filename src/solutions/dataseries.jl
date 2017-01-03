@@ -28,6 +28,10 @@ function DataSeries(T, nd::Int, nt::Int, ni::Int)
     return DataSeries{T,N}(nd, nt, ni)
 end
 
+function similar{T,N}(ds::DataSeries{T,N})
+    DataSeries{T,N}(ds.nd, ds.nt, ds.ni)
+end
+
 Base.eltype{T,N}(ds::DataSeries{T,N}) = T
 Base.ndims{T,N}(ds::DataSeries{T,N}) = N
 Base.size(ds::DataSeries) = size(ds.d)
@@ -178,3 +182,5 @@ end
     @boundscheck checkbounds(ds.d, :, :, k)
     @inbounds setindex!(ds.d, x, :, :, k)
 end
+
+# TODO Implement convert() to/from array.
