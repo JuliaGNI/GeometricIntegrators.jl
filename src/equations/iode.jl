@@ -69,8 +69,8 @@ function IODE{DT,TT,FT,PT}(f::FT, p::PT, t₀::TT, q₀::DenseArray{DT}, p₀::D
     IODE{DT, TT, FT, PT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), f, p, t₀, q₀, p₀)
 end
 
-function IODE(f, g, q₀, p₀)
-    IODE(f, g, zero(eltype(q₀)), q₀, p₀)
+function IODE(f, p, q₀, p₀)
+    IODE(f, p, zero(eltype(q₀)), q₀, p₀)
 end
 
 Base.hash(ode::IODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.f, hash(ode.p, hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, h)))))))

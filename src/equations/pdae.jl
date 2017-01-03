@@ -71,14 +71,14 @@ function PDAE(v, f, u, g, ϕ, q₀, p₀, λ₀)
     PDAE(v, f, u, g, ϕ, zero(eltype(q₀)), q₀, p₀, λ₀)
 end
 
-Base.hash(dae::PDAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n, hash(dae.v, hash(dae.u, hash(dae.f, hash(dae.g, hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, h)))))))))))
+Base.hash(dae::PDAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n, hash(dae.v, hash(dae.f, hash(dae.u, hash(dae.g, hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, h)))))))))))
 Base.:(==)(dae1::PDAE, dae2::PDAE) = (
                                 dae1.d == dae2.d
                              && dae1.m == dae2.m
                              && dae1.n == dae2.n
                              && dae1.v == dae2.v
-                             && dae1.u == dae2.u
                              && dae1.f == dae2.f
+                             && dae1.u == dae2.u
                              && dae1.g == dae2.g
                              && dae1.t₀ == dae2.t₀
                              && dae1.q₀ == dae2.q₀

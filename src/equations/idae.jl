@@ -68,8 +68,8 @@ function IDAE{DT, TT, FT, PT, UT, GT, ΦT}(f::FT, p::PT, u::UT, g::GT, ϕ::ΦT, 
     IDAE{DT, TT, FT, PT, UT, GT, ΦT, ndims(q₀)}(size(q₀, 1), size(λ₀, 1), size(q₀, 2), f, p, u, g, ϕ, t₀, q₀, p₀, λ₀)
 end
 
-function IDAE(v, f, u, g, ϕ, q₀, p₀, λ₀)
-    IDAE(v, f, u, g, ϕ, zero(eltype(q₀)), q₀, p₀, λ₀)
+function IDAE(f, p, u, g, ϕ, q₀, p₀, λ₀)
+    IDAE(f, p, u, g, ϕ, zero(eltype(q₀)), q₀, p₀, λ₀)
 end
 
 Base.hash(dae::IDAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n, hash(dae.f, hash(dae.p, hash(dae.u, hash(dae.g, hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, h)))))))))))
