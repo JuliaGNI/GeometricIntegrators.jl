@@ -22,7 +22,7 @@ The following list provides and overview of supported and planned features.
 
 - [x] Explicit Runge-Kutta Methods (ERK),
 - [x] Explicit Partitioned Runge-Kutta Methods (EPRK),
-- [ ] Implicit Partitioned Runge-Kutta Methods (IPRK),
+- [x] Implicit Partitioned Runge-Kutta Methods (IPRK),
 - [ ] Diagonally Implicit Runge-Kutta Methods (DIRK),
 - [x] Fully Implicit Runge-Kutta Methods (FIRK),
 - [ ] Singly Implicit Runge-Kutta Methods (SIRK),

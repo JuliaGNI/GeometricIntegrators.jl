@@ -27,7 +27,7 @@ function Integrator(equation::PODE, tableau::TableauEPRK, Δt)
 end
 
 "Create integrator for implicit partitioned Runge-Kutta tableau."
-function Integrator(equation::IODE, tableau::TableauIPRK, Δt)
+function Integrator(equation::PODE, tableau::TableauIPRK, Δt)
     IntegratorIPRK(equation, tableau, Δt)
 end
 
