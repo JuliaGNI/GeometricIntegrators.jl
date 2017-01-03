@@ -1,8 +1,8 @@
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
 type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters{DT}
-    f::FT
-    g::GT
+    f_f::FT
+    f_p::GT
 
     Δt::TT
 
@@ -16,7 +16,7 @@ type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters
     d_v::Vector{TT}
 
     t::TT
-    
+
     q::Vector{DT}
     p::Vector{DT}
     y::Vector{DT}
@@ -35,7 +35,7 @@ type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters
     tP::Vector{DT}
     tF::Vector{DT}
 
-    function NonlinearFunctionParametersVPRK(f, g, Δt, d, s, a_q, a_p, c_q, c_p, d_v)
+    function NonlinearFunctionParametersVPRK(f_f, f_p, Δt, d, s, a_q, a_p, c_q, c_p, d_v)
         # create solution vectors
         q = zeros(DT,d)
         p = zeros(DT,d)
@@ -57,7 +57,7 @@ type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters
         tP = zeros(DT,d)
         tF = zeros(DT,d)
 
-        new(f, g, Δt, d, s, a_q, a_p, c_q, c_p, d_v, 0, q, p, y, z, μ, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
+        new(f_f, f_p, Δt, d, s, a_q, a_p, c_q, c_p, d_v, 0, q, p, y, z, μ, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
     end
 end
 
@@ -83,8 +83,8 @@ function function_stages!{DT,TT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params::Non
 
         simd_copy_xy_first!(params.tQ, params.Q, i)
         simd_copy_xy_first!(params.tV, params.V, i)
-        params.f(tqᵢ, params.tQ, params.tV, params.tP)
-        params.g(tpᵢ, params.tQ, params.tV, params.tF)
+        params.f_f(tpᵢ, params.tQ, params.tV, params.tF)
+        params.f_p(tqᵢ, params.tQ, params.tV, params.tP)
         simd_copy_yx_first!(params.tP, params.P, i)
         simd_copy_yx_first!(params.tF, params.F, i)
     end

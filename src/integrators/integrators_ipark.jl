@@ -6,6 +6,7 @@ type NonlinearFunctionParametersIPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
     f_u::UT
     f_g::GT
     f_ϕ::ϕT
+
     Δt::TT
 
     d::Int
@@ -19,6 +20,7 @@ type NonlinearFunctionParametersIPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
     t_λ::CoefficientsMRK{TT}
 
     t::TT
+    
     q::Vector{DT}
     p::Vector{DT}
     λ::Vector{DT}
