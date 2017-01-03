@@ -6,13 +6,15 @@ makedocs(
     pages = ["Home" => "index.md",
              "Tutorial" => "tutorial.md",
              "Modules"  => [
+                "Basis Functions"   => "modules/basis_functions.md",
                 "Equations"         => "modules/equations.md",
-                "Solutions"         => "modules/solutions.md",
                 "Integrators"       => "modules/integrators.md",
                 "Interpolation"     => "modules/interpolation.md",
                 "Linear Solvers"    => "modules/solvers_linear.md",
                 "Nonlinear Solvers" => "modules/solvers_nonlinear.md",
-                "Tableaus"          => "modules/tableaus.md"]
+                "Solutions"         => "modules/solutions.md",
+                "Tableaus"          => "modules/tableaus.md",
+                "Example Problems"  => "modules/problems.md"]
              ]
 )
 
