@@ -29,6 +29,10 @@ function f_pode(t, q, p, f)
     f[1] = 2p[1]
 end
 
+function λ_pode(t, q, p, v)
+    nothing
+end
+
 pode  = PODE{eltype(q₀), typeof(t₀), typeof(v_pode), typeof(f_pode), 1}(1, 1, v_pode, f_pode, t₀, q₀, p₀)
 pode1 = PODE(v_pode, f_pode, t₀, q₀, p₀)
 pode2 = PODE(v_pode, f_pode, q₀, p₀)
@@ -39,9 +43,9 @@ pode2 = PODE(v_pode, f_pode, q₀, p₀)
 @test hash(pode1) == hash(pode2)
 
 
-iode  = IODE{eltype(q₀), typeof(t₀), typeof(v_pode), typeof(f_pode), 1}(1, 1, v_pode, f_pode, t₀, q₀, p₀)
-iode1 = IODE(v_pode, f_pode, t₀, q₀, p₀)
-iode2 = IODE(v_pode, f_pode, q₀, p₀)
+iode  = IODE{eltype(q₀), typeof(t₀), typeof(v_pode), typeof(f_pode), typeof(λ_pode), 1}(1, 1, v_pode, f_pode, λ_pode, t₀, q₀, p₀)
+iode1 = IODE(v_pode, f_pode, λ_pode, t₀, q₀, p₀)
+iode2 = IODE(v_pode, f_pode, λ_pode, q₀, p₀)
 
 @test iode == iode1
 @test iode == iode2
@@ -97,6 +101,10 @@ function ϕ_pdae(t, q, p, λ, ϕ)
     ϕ[1] = p[1] - q[1]
 end
 
+function λ_pdae(t, q, p, v)
+    nothing
+end
+
 pdae  = PDAE{eltype(q₀), typeof(t₀), typeof(v_pdae), typeof(f_pdae), typeof(u_pdae), typeof(g_pdae), typeof(ϕ_pdae), 1}(1, 1, 1, v_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
 pdae1 = PDAE(v_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
 pdae2 = PDAE(v_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, q₀, p₀, λ₀)
@@ -107,9 +115,9 @@ pdae2 = PDAE(v_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, q₀, p₀, λ₀)
 @test hash(pdae1) == hash(pdae2)
 
 
-idae  = IDAE{eltype(q₀), typeof(t₀), typeof(f_pdae), typeof(p_pdae), typeof(u_pdae), typeof(g_pdae), typeof(ϕ_pdae), 1}(1, 1, 1, f_pdae, p_pdae, u_pdae, g_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
-idae1 = IDAE(f_pdae, p_pdae, u_pdae, g_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
-idae2 = IDAE(f_pdae, p_pdae, u_pdae, g_pdae, ϕ_pdae, q₀, p₀, λ₀)
+idae  = IDAE{eltype(q₀), typeof(t₀), typeof(f_pdae), typeof(p_pdae), typeof(u_pdae), typeof(g_pdae), typeof(ϕ_pdae), typeof(λ_pdae), 1}(1, 1, 1, f_pdae, p_pdae, u_pdae, g_pdae, ϕ_pdae, λ_pdae, t₀, q₀, p₀, λ₀)
+idae1 = IDAE(f_pdae, p_pdae, u_pdae, g_pdae, ϕ_pdae, λ_pdae, t₀, q₀, p₀, λ₀)
+idae2 = IDAE(f_pdae, p_pdae, u_pdae, g_pdae, ϕ_pdae, λ_pdae, q₀, p₀, λ₀)
 
 @test idae == idae1
 @test idae == idae2

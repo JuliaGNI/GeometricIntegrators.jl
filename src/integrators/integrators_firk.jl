@@ -79,7 +79,7 @@ immutable IntegratorFIRK{DT, TT, FT, ST, IT} <: Integrator{DT,TT}
     Δt::TT
 
     solver::ST
-    iguess::InitialGuess{DT, TT, FT, IT}
+    iguess::InitialGuessODE{DT, TT, FT, IT}
 
     x::Array{DT,1}
     y::Array{DT,1}
@@ -102,10 +102,12 @@ function IntegratorFIRK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{
     solver = nonlinear_solver(z, params)
 
     # create initial guess
-    iguess = InitialGuess(interpolation, equation, Δt)
+    iguess = InitialGuessODE(interpolation, equation, Δt)
 
     # create integrator
-    IntegratorFIRK{DT, TT, FT, typeof(solver), typeof(iguess.int)}(equation, tableau, Δt, solver, iguess, params.x, params.y, params.F)
+    IntegratorFIRK{DT, TT, FT, typeof(solver), typeof(iguess.int)}(
+                                        equation, tableau, Δt, solver, iguess,
+                                        params.x, params.y, params.F)
 end
 
 
@@ -130,7 +132,7 @@ function integrate!{DT,TT,FT,ST,IT,N}(int::IntegratorFIRK{DT, TT, FT, ST, IT}, s
             for i in 1:int.tableau.q.s
                 evaluate!(int.iguess, int.y, int.tableau.q.c[i])
                 for k in 1:int.equation.d
-                    int.solver.x[int.equation.d*(i-1)+k] = int.y[k]
+                    int.solver.x[int.equation.d*(i-1)+k] = (int.y[k] - int.x[k])/(int.Δt)
                 end
             end
 

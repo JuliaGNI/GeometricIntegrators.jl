@@ -37,8 +37,14 @@ function pendulum_iode_f(t, q, v, f)
     nothing
 end
 
+function pendulum_iode_v(t, q, p, v)
+    v[1] = q[2]
+    v[2] = sin(q[1])
+    nothing
+end
+
 function pendulum_iode(q₀=[acos(0.4), 0.0], p₀=[0.0, 0.0])
-    IODE(pendulum_iode_f, pendulum_iode_p, q₀, p₀)
+    IODE(pendulum_iode_f, pendulum_iode_p, pendulum_iode_v, q₀, p₀)
 end
 
 
@@ -61,5 +67,5 @@ function pendulum_idae_ϕ(t, q, p, ϕ)
 end
 
 function pendulum_idae(q₀=[acos(0.4), 0.0], p₀=[0.0, 0.0], λ₀=[0.0, 0.0])
-    IDAE(pendulum_iode_f, pendulum_iode_p, pendulum_idae_u, pendulum_idae_g, pendulum_idae_ϕ, q₀, p₀, λ₀)
+    IDAE(pendulum_iode_f, pendulum_iode_p, pendulum_idae_u, pendulum_idae_g, pendulum_idae_ϕ, pendulum_iode_v, q₀, p₀, λ₀)
 end

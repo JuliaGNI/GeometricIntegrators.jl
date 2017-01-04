@@ -9,22 +9,23 @@ immutable HermiteInterpolation{T} <: Interpolator{T}
     a₁::T
     b₀::T
     b₁::T
+    Δx::T
 
     num::Vector{T}
 
-    function HermiteInterpolation(x₀, x₁, d)
+    function HermiteInterpolation(x₀, x₁, Δx, d)
         a₀ = 2/(x₀-x₁)
         a₁ = 2/(x₁-x₀)
 
-        b₀ = one(T)/(x₀-x₁)^2
-        b₁ = one(T)/(x₁-x₀)^2
+        b₀ = 1/(x₀-x₁)^2
+        b₁ = 1/(x₁-x₀)^2
 
-        new(x₀, x₁, a₀, a₁, b₀, b₁, zeros(T, d))
+        new(x₀, x₁, a₀, a₁, b₀, b₁, Δx, zeros(T, d))
     end
 end
 
-function HermiteInterpolation{T}(x₀::T, x₁::T, d::Int)
-    HermiteInterpolation{T}(x₀, x₁, d)
+function HermiteInterpolation{T}(x₀::T, x₁::T, Δx::T, d::Int)
+    HermiteInterpolation{T}(x₀, x₁, Δx, d)
 end
 
 
@@ -46,7 +47,7 @@ function CommonFunctions.evaluate!{T}(int::HermiteInterpolation{T}, y₀::Vector
         c₀ = c₁*(d₀-int.a₀)
 
         simd_copy_scale!(c₀, y₀, int.num)
-        simd_axpy!(c₁, f₀, int.num)
+        simd_axpy!(c₁*int.Δx, f₀, int.num)
         den = c₀
 
         d₁ = one(T)/(x-int.x₁)
@@ -54,7 +55,7 @@ function CommonFunctions.evaluate!{T}(int::HermiteInterpolation{T}, y₀::Vector
         c₀ = c₁*(d₁-int.a₁)
 
         simd_axpy!(c₀, y₁, int.num)
-        simd_axpy!(c₁, f₁, int.num)
+        simd_axpy!(c₁*int.Δx, f₁, int.num)
         den += c₀
 
         simd_copy_scale!(one(T)/den, int.num, y)

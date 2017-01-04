@@ -23,6 +23,7 @@ type NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
     t::TT
 
     q::Vector{DT}
+    v::Vector{DT}
     p::Vector{DT}
     λ::Vector{DT}
     μ::Vector{DT}
@@ -60,9 +61,11 @@ type NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
     function NonlinearFunctionParametersVPARK(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, t_q, t_p, t_q̃, t_p̃, t_λ, d_v)
         # create solution vectors
         q = zeros(DT,d)
+        v = zeros(DT,d)
         p = zeros(DT,d)
         λ = zeros(DT,d)
         μ = zeros(DT,d)
+
         y = zeros(DT,d)
         z = zeros(DT,d)
 
@@ -97,7 +100,7 @@ type NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
 
         new(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r,
             t_q, t_p, t_q̃, t_p̃, t_λ, d_v,
-            0, q, p, λ, μ, y, z,
+            0, q, v, p, λ, μ, y, z,
             Qi, Pi, Λi, Vi, Fi, Yi, Zi, Φi,
             Qp, Pp, Λp, Up, Gp, Yp, Zp, Φp,
             Qt, Pt, Λt, Vt, Ft, Ut, Gt, Φt)
@@ -112,34 +115,37 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
     for i in 1:params.s
         for k in 1:params.d
             # copy y to Y, Z, Λ
-            params.Yi[k,i] = y[3*(params.d*(i-1)+k-1)+1]
-            params.Zi[k,i] = y[3*(params.d*(i-1)+k-1)+2]
-            params.Λi[k,i] = y[3*(params.d*(i-1)+k-1)+3]
+            params.Yi[k,i] = y[2*(params.d*(i-1)+k-1)+1]
+            params.Zi[k,i] = y[2*(params.d*(i-1)+k-1)+2]
+            # params.Λi[k,i] = y[3*(params.d*(i-1)+k-1)+3]
 
-            # compute Q and P
+            # compute Q and V
             params.Qi[k,i] = params.q[k] + params.Δt * params.Yi[k,i]
-            params.Pi[k,i] = params.p[k] + params.Δt * params.Zi[k,i]
-            params.Vi[k,i] = params.Λi[k,i]
+            params.Vi[k,i] = params.Zi[k,i]
+            # params.Pi[k,i] = params.p[k] + params.Δt * params.Zi[k,i]
+            # params.Vi[k,i] = params.Λi[k,i]
         end
 
         # compute f(X)
         tpᵢ = params.t + params.Δt * params.t_p.c[i]
 
         simd_copy_xy_first!(params.Qt, params.Qi, i)
-        simd_copy_xy_first!(params.Pt, params.Pi, i)
-        simd_copy_xy_first!(params.Λt, params.Λi, i)
-        params.f_f(tpᵢ, params.Qt, params.Λt, params.Ft)
-        params.f_p(tpᵢ, params.Qt, params.Λt, params.Φt)
+        simd_copy_xy_first!(params.Vt, params.Vi, i)
+        # simd_copy_xy_first!(params.Pt, params.Pi, i)
+        # simd_copy_xy_first!(params.Λt, params.Λi, i)
+        params.f_f(tpᵢ, params.Qt, params.Vt, params.Ft)
+        params.f_p(tpᵢ, params.Qt, params.Vt, params.Pt)
         simd_copy_yx_first!(params.Ft, params.Fi, i)
-        simd_copy_yx_first!(params.Φt, params.Φi, i)
+        simd_copy_yx_first!(params.Pt, params.Pi, i)
+        # simd_copy_yx_first!(params.Φt, params.Φi, i)
     end
 
     for i in 1:params.r
         for k in 1:params.d
             # copy y to Y and Z
-            params.Yp[k,i] = y[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1]
-            params.Zp[k,i] = y[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2]
-            params.Λp[k,i] = y[3*params.d*params.s+3*(params.d*(i-1)+k-1)+3]
+            params.Yp[k,i] = y[2*params.d*params.s+3*(params.d*(i-1)+k-1)+1]
+            params.Zp[k,i] = y[2*params.d*params.s+3*(params.d*(i-1)+k-1)+2]
+            params.Λp[k,i] = y[2*params.d*params.s+3*(params.d*(i-1)+k-1)+3]
 
             # compute Q and V
             params.Qp[k,i] = params.q[k] + params.Δt * params.Yp[k,i]
@@ -162,23 +168,26 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
 
     if length(params.d_v) > 0
         for k in 1:params.d
-            params.μ[k] = y[3*params.d*params.s+3*params.d*params.r+k]
+            params.μ[k] = y[2*params.d*params.s+3*params.d*params.r+k]
         end
     end
 
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
     for i in 1:params.s
         for k in 1:params.d
-            b[3*(params.d*(i-1)+k-1)+1] = - params.Yi[k,i]
-            b[3*(params.d*(i-1)+k-1)+2] = - params.Zi[k,i]
-            b[3*(params.d*(i-1)+k-1)+3] = - params.Φi[k,i] + params.Pi[k,i]
+            b[2*(params.d*(i-1)+k-1)+1] = - params.Yi[k,i]
+            b[2*(params.d*(i-1)+k-1)+2] = - params.Pi[k,i] + params.p[k]
+            # b[2*(params.d*(i-1)+k-1)+2] = - params.Zi[k,i]
+            # b[3*(params.d*(i-1)+k-1)+3] = - params.Φi[k,i] + params.Pi[k,i]
             for j in 1:params.s
-                b[3*(params.d*(i-1)+k-1)+1] += params.t_q.a[i,j] * params.Vi[k,j]
-                b[3*(params.d*(i-1)+k-1)+2] += params.t_p.a[i,j] * params.Fi[k,j]
+                b[2*(params.d*(i-1)+k-1)+1] += params.t_q.a[i,j] * params.Vi[k,j]
+                b[2*(params.d*(i-1)+k-1)+2] += params.t_p.a[i,j] * params.Fi[k,j] * params.Δt
+                # b[2*(params.d*(i-1)+k-1)+2] += params.t_p.a[i,j] * params.Fi[k,j]
             end
             for j in 1:params.r
-                b[3*(params.d*(i-1)+k-1)+1] += params.t_q̃.a[i,j] * params.Up[k,j]
-                b[3*(params.d*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * params.Gp[k,j]
+                b[2*(params.d*(i-1)+k-1)+1] += params.t_q̃.a[i,j] * params.Up[k,j]
+                b[2*(params.d*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * params.Gp[k,j] * params.Δt
+                # b[2*(params.d*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * params.Gp[k,j]
             end
         end
     end
@@ -186,16 +195,16 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
     for i in 1:params.r
         for k in 1:params.d
-            b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1] = - params.Yp[k,i]
-            b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2] = - params.Zp[k,i]
-            b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+3] = - params.Φp[k,i]
+            b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+1] = - params.Yp[k,i]
+            b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+2] = - params.Zp[k,i]
+            b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+3] = - params.Φp[k,i]
             for j in 1:params.s
-                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.t_q.α[i,j] * params.Vi[k,j]
-                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2] += params.t_p.α[i,j] * params.Fi[k,j]
+                b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.t_q.α[i,j] * params.Vi[k,j]
+                b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+2] += params.t_p.α[i,j] * params.Fi[k,j]
             end
             for j in 1:params.r
-                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.t_q̃.α[i,j] * params.Up[k,j]
-                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2] += params.t_p̃.α[i,j] * params.Gp[k,j]
+                b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.t_q̃.α[i,j] * params.Up[k,j]
+                b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+2] += params.t_p̃.α[i,j] * params.Gp[k,j]
             end
         end
     end
@@ -203,21 +212,21 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
     # compute b = - [Λ₁-λ]
     if params.t_λ.c[1] == 0
         for k in 1:params.d
-            b[3*params.d*params.s+3*(k-1)+3] = - params.Λp[k,1] + params.λ[k]
+            b[2*params.d*params.s+3*(k-1)+3] = - params.Λp[k,1] + params.λ[k]
         end
     end
 
     if length(params.d_v) > 0
         for i in 1:params.s
             for k in 1:params.d
-                b[3*(params.d*(i-1)+k-1)+2] -= params.d_v[i] * params.μ[k]
+                b[2*(params.d*(i-1)+k-1)+2] -= params.d_v[i] * params.μ[k]
             end
         end
 
         for k in 1:params.d
-            b[3*params.d*params.s+3*params.d*params.r+k] = 0
+            b[2*params.d*params.s+3*params.d*params.r+k] = 0
             for i in 1:params.s
-                b[3*params.d*params.s+3*params.d*params.r+k] -= params.Vi[k,i] * params.d_v[i]
+                b[2*params.d*params.s+3*params.d*params.r+k] -= params.Vi[k,i] * params.d_v[i]
             end
         end
     end
@@ -225,14 +234,16 @@ end
 
 
 "Implicit partitioned additive Runge-Kutta integrator."
-immutable IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, ST} <: Integrator{DT, TT}
+immutable IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, ST, IT} <: Integrator{DT, TT}
     equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}
     tableau::TableauVPARK{TT}
     Δt::TT
 
     solver::ST
+    iguess::InitialGuessIODE{DT, TT, VT, FT, IT}
 
     q::Array{DT,1}
+    v::Array{DT,1}
     p::Array{DT,1}
     λ::Array{DT,1}
     y::Array{DT,1}
@@ -247,7 +258,7 @@ immutable IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, ST} <: Integrator{DT, TT}
     G::Array{DT,2}
 end
 
-function IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT}(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT},
+function IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
                                                tableau::TableauVPARK{TT}, Δt::TT;
                                                nonlinear_solver=QuasiNewtonSolver,
                                                interpolation=HermiteInterpolation{DT})
@@ -255,7 +266,7 @@ function IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT}(equation::IDAE{DT,TT,FT,PT,UT,GT
     S = tableau.s
     R = tableau.r
 
-    N = 3*D*S + 3*D*R
+    N = 2*D*S + 3*D*R
 
     if isdefined(tableau, :d)
         N += D
@@ -276,17 +287,21 @@ function IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT}(equation::IDAE{DT,TT,FT,PT,UT,GT
     # create solver
     solver = nonlinear_solver(z, params)
 
+    # create initial guess
+    iguess = InitialGuessIODE(interpolation, equation, Δt)
+
     # create integrator
-    IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, typeof(solver)}(
-                                        equation, tableau, Δt, solver,
-                                        params.q, params.p, params.λ, params.y, params.z,
+    IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, typeof(solver), typeof(iguess.int)}(
+                                        equation, tableau, Δt, solver, iguess,
+                                        params.q, params.v, params.p, params.λ,
+                                        params.y, params.z,
                                         params.Qi, params.Pi, params.Vi, params.Fi,
                                         params.Λp, params.Up, params.Gp)
 end
 
 
 "Integrate DAE with variational partitioned additive Runge-Kutta integrator."
-function integrate!{DT,TT,FT,PT,UT,GT,ϕT,N}(int::IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT}, sol::SolutionPDAE{DT,TT,N})
+function integrate!{DT,TT,FT,PT,UT,GT,ϕT,VT,N}(int::IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::SolutionPDAE{DT,TT,N})
     # loop over initial conditions
     for m in 1:sol.ni
         local j::Int
@@ -296,34 +311,41 @@ function integrate!{DT,TT,FT,PT,UT,GT,ϕT,N}(int::IntegratorVPARK{DT,TT,FT,PT,UT
         # copy initial conditions from solution
         get_initial_conditions!(sol, int.q, int.p, int.λ, m)
 
+        # initialise initial guess
+        initialize!(int.iguess, sol.t[0], int.q, int.p)
+
         for n in 1:sol.ntime
             # set time for nonlinear solver
             int.solver.Fparams.t = sol.t[n]
 
+            # copy previous solution to initial guess
+            update!(int.iguess, sol.t[n], int.q, int.p)
+
             # compute initial guess
             for i in 1:int.tableau.s
+                evaluate!(int.iguess, int.y, int.z, int.v, int.tableau.q.c[i], int.tableau.p.c[i])
                 for k in 1:int.equation.d
-                    # TODO initial guess for y and z
-                    int.solver.x[3*(int.equation.d*(i-1)+k-1)+1] = 0
-                    int.solver.x[3*(int.equation.d*(i-1)+k-1)+2] = 0
-                    int.solver.x[3*(int.equation.d*(i-1)+k-1)+3] = 0
+                    int.solver.x[2*(int.equation.d*(i-1)+k-1)+1] = (int.y[k] - int.q[k])/(int.Δt)
+                    int.solver.x[2*(int.equation.d*(i-1)+k-1)+2] = int.v[k]
                 end
             end
 
             for i in 1:int.tableau.r
+                evaluate!(int.iguess, int.y, int.z, int.v, int.tableau.q̃.c[i], int.tableau.p̃.c[i])
                 for k in 1:int.equation.d
-                    # TODO initial guess for y and z
-                    int.solver.x[3*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+1] = 0
-                    int.solver.x[3*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+2] = 0
-                    int.solver.x[3*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+3] = 0
+                    int.solver.x[2*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+1] = (int.y[k] - int.q[k])/(int.Δt)
+                    int.solver.x[2*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+2] = (int.z[k] - int.p[k])/(int.Δt)
+                    int.solver.x[2*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+3] = 0
                 end
             end
 
             if isdefined(int.tableau, :d)
                 for k in 1:int.equation.d
-                    int.solver.x[3*int.equation.d*int.tableau.s+3*int.equation.d*int.tableau.r+k] = 0
+                    int.solver.x[2*int.equation.d*int.tableau.s+3*int.equation.d*int.tableau.r+k] = 0
                 end
             end
+
+            # println("initial guess:  ", int.solver.x)
 
             # call nonlinear solver
             solve!(int.solver)
@@ -331,6 +353,8 @@ function integrate!{DT,TT,FT,PT,UT,GT,ϕT,N}(int::IntegratorVPARK{DT,TT,FT,PT,UT
             if !solverStatusOK(int.solver.status, int.solver.params)
                 println(int.solver.status)
             end
+
+            # println("final solution: ", int.solver.x)
 
             # compute final update
             simd_mult!(int.y, int.V, int.tableau.q.b)

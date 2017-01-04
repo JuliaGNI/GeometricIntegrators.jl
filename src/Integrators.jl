@@ -10,7 +10,7 @@ module Integrators
 
     import ..Solvers.function_stages!
 
-    export InitialGuess, evaluate!, initialize!, update!
+    export InitialGuess, InitialGuessIODE, initialize!, update!
 
     export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK, IntegratorSIRK,
            IntegratorEPRK, IntegratorIPRK, IntegratorVPRK,
@@ -21,7 +21,8 @@ module Integrators
     include("integrators/integrators.jl")
     include("integrators/integrators_erk.jl")
 
-    include("integrators/initial_guess.jl")
+    include("integrators/initial_guess_ode.jl")
+    include("integrators/initial_guess_iode.jl")
 
     include("integrators/integrators_dirk.jl")
     include("integrators/integrators_firk.jl")

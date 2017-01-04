@@ -1,8 +1,8 @@
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters{DT}
+type NonlinearFunctionParametersVPRK{DT,TT,FT,PT} <: NonlinearFunctionParameters{DT}
     f_f::FT
-    f_p::GT
+    f_p::PT
 
     Δt::TT
 
@@ -16,10 +16,12 @@ type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters
     t::TT
 
     q::Vector{DT}
+    v::Vector{DT}
     p::Vector{DT}
+    μ::Vector{DT}
+
     y::Vector{DT}
     z::Vector{DT}
-    μ::Vector{DT}
 
     Q::Matrix{DT}
     V::Matrix{DT}
@@ -36,10 +38,12 @@ type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters
     function NonlinearFunctionParametersVPRK(f_f, f_p, Δt, d, s, t_q, t_p, d_v)
         # create solution vectors
         q = zeros(DT,d)
+        v = zeros(DT,d)
         p = zeros(DT,d)
+        μ = zeros(DT,d)
+
         y = zeros(DT,d)
         z = zeros(DT,d)
-        μ = zeros(DT,d)
 
         # create internal stage vectors
         Q = zeros(DT,d,s)
@@ -55,12 +59,12 @@ type NonlinearFunctionParametersVPRK{DT,TT,FT,GT} <: NonlinearFunctionParameters
         tP = zeros(DT,d)
         tF = zeros(DT,d)
 
-        new(f_f, f_p, Δt, d, s, t_q, t_p, d_v, 0, q, p, y, z, μ, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
+        new(f_f, f_p, Δt, d, s, t_q, t_p, d_v, 0, q, v, p, μ, y, z, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
     end
 end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-function function_stages!{DT,TT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersVPRK{DT,TT,FT,GT})
+function function_stages!{DT,TT,FT,PT}(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersVPRK{DT,TT,FT,PT})
     local tqᵢ::TT
     local tpᵢ::TT
 
@@ -123,14 +127,16 @@ end
 
 
 "Variational partitioned Runge-Kutta integrator."
-immutable IntegratorVPRK{DT, TT, FT, GT, ST} <: Integrator{DT, TT}
-    equation::IODE{DT,TT,FT,GT}
+immutable IntegratorVPRK{DT, TT, FT, PT, VT, ST, IT} <: Integrator{DT, TT}
+    equation::IODE{DT,TT,FT,PT,VT}
     tableau::TableauVPRK{TT}
     Δt::TT
 
     solver::ST
+    iguess::InitialGuessIODE{DT, TT, VT, FT, IT}
 
     q::Array{DT,1}
+    v::Array{DT,1}
     p::Array{DT,1}
     y::Array{DT,1}
     z::Array{DT,1}
@@ -140,8 +146,9 @@ immutable IntegratorVPRK{DT, TT, FT, GT, ST} <: Integrator{DT, TT}
     F::Array{DT,2}
 end
 
-function IntegratorVPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::TableauVPRK{TT}, Δt::TT;
-                                     nonlinear_solver=QuasiNewtonSolver)
+function IntegratorVPRK{DT,TT,FT,PT,VT}(equation::IODE{DT,TT,FT,PT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
+                                        nonlinear_solver=QuasiNewtonSolver,
+                                        interpolation=HermiteInterpolation{DT})
     D = equation.d
     S = tableau.s
 
@@ -158,7 +165,7 @@ function IntegratorVPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::Table
     z = zeros(DT, N)
 
     # create params
-    params = NonlinearFunctionParametersVPRK{DT,TT,FT,GT}(
+    params = NonlinearFunctionParametersVPRK{DT,TT,FT,PT}(
                                                 equation.f, equation.p,
                                                 Δt, D, S,
                                                 tableau.q, tableau.p,
@@ -167,16 +174,19 @@ function IntegratorVPRK{DT,TT,FT,GT}(equation::IODE{DT,TT,FT,GT}, tableau::Table
     # create solver
     solver = nonlinear_solver(z, params)
 
+    # create initial guess
+    iguess = InitialGuessIODE(interpolation, equation, Δt)
+
     # create integrator
-    IntegratorVPRK{DT, TT, FT, GT, typeof(solver)}(
-                                        equation, tableau, Δt, solver,
-                                        params.q, params.p, params.y, params.z,
+    IntegratorVPRK{DT, TT, FT, PT, VT, typeof(solver), typeof(iguess.int)}(
+                                        equation, tableau, Δt, solver, iguess,
+                                        params.q, params.v, params.p, params.y, params.z,
                                         params.Q, params.V, params.P, params.F)
 end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate!{DT,TT,VT,FT,N}(int::IntegratorVPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N})
+function integrate!{DT,TT,FT,PT,VT,N}(int::IntegratorVPRK{DT,TT,FT,PT,VT}, sol::SolutionPODE{DT,TT,N})
     # loop over initial conditions
     for m in 1:sol.ni
         local j::Int
@@ -186,17 +196,22 @@ function integrate!{DT,TT,VT,FT,N}(int::IntegratorVPRK{DT,TT,VT,FT}, sol::Soluti
         # copy initial conditions from solution
         get_initial_conditions!(sol, int.q, int.p, m)
 
+        # initialise initial guess
+        initialize!(int.iguess, sol.t[0], int.q, int.p)
+
         for n in 1:sol.ntime
             # set time for nonlinear solver
             int.solver.Fparams.t = sol.t[n]
 
+            # copy previous solution to initial guess
+            update!(int.iguess, sol.t[n], int.q, int.p)
+
             # compute initial guess
-            # TODO
             for i in 1:int.tableau.s
+                evaluate!(int.iguess, int.y, int.z, int.v, int.tableau.q.c[i], int.tableau.p.c[i])
                 for k in 1:int.equation.d
-                    # int.solver.x[2*(sol.nd*(i-1)+k-1)+1] = int.q[k]
-                    # TODO initial guess for velocity
-                    # int.solver.x[2*(params.d*(i-1)+k-1)+1] = 0.
+                    int.solver.x[2*(int.equation.d*(i-1)+k-1)+1] = (int.y[k] - int.q[k])/(int.Δt)
+                    int.solver.x[2*(int.equation.d*(i-1)+k-1)+2] = int.v[k]
                 end
             end
             if isdefined(int.tableau, :d)
