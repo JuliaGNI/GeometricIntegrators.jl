@@ -319,6 +319,12 @@ function integrate!{DT,TT,FT,PT,UT,GT,ϕT,N}(int::IntegratorVPARK{DT,TT,FT,PT,UT
                 end
             end
 
+            if isdefined(int.tableau, :d)
+                for k in 1:int.equation.d
+                    int.solver.x[3*int.equation.d*int.tableau.s+3*int.equation.d*int.tableau.r+k] = 0
+                end
+            end
+
             # call nonlinear solver
             solve!(int.solver)
 
