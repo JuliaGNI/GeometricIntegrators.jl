@@ -1,26 +1,106 @@
 
 using ..CommonFunctions
 
-immutable HermiteInterpolation{T} <: Interpolator{T}
 
+
+"""
+# Hermite's Interpolating Polynomials
+
+Here, we implement a two point Hermite interpolation function which passes
+through the function and its first derivative for the interval ``[0,1]``.
+The polynomial is determined by four constraint equations, matching the
+function and its derivative at the points ``0`` and ``1``.
+
+Start by defining the 3rd degree polynomial and its derivative by
+```math
+\\begin{align*}
+g(x) &= a_0 + a_1 x + a_2 x^2 + a_3 x^3 , \\\\
+g'(x) &= a_1 + 2 a_2 x + 3 a_3 x^2 ,
+\\end{align*}
+```
+and apply the constraints
+```math
+\\begin{align*}
+g(0) &= f_0 & & \\Rightarrow & a_0 &= f_0 , \\\\
+g(1) &= f_1 & & \\Rightarrow & a_0 + a_1 + a_2 + a_3 &= f_1 , \\\\
+g'(0) &= f'_0 & & \\Rightarrow & a_1 &= f'_0 , \\\\
+g'(1) &= f'_1 & & \\Rightarrow & a_1 + 2 a_2 + 3 a_3 &= f'_1 . \\\\
+\\end{align*}
+```
+Solving for ``a_0, a_1, a_2, a_3`` leads to
+```math
+\\begin{align*}
+a_0 &= f_0 , &
+a_1 &= f'_0 , &
+a_2 &= - 3 f_0 + 3 f_1 - 2 f'_0 - f'_1 , &
+a_3 &= 2 f_0 - 2 f_1 + f'_0 + f'_1 ,
+\\end{align*}
+```
+so that the polynomial ``g(x)`` reads
+```math
+g(x) = f_0 + f'_0 x + (- 3 f_0 + 3 f_1 - 2 f'_0 - f'_1) x^2 + (2 f_0 - 2 f_1 + f'_0 + f'_1) x^3 .
+```
+The function and derivative values can be factored out, so that ``g(x)`` can be rewritten as
+```math
+g(x) = f_0 (1 - 3 x^2 + 2 x^3) + f_1 (3 x^2 - 2 x^3) + f'_0 (x - 2 x^2 + x^3) + f'_1 (- x^2 + x^3) ,
+```
+or in generic form as
+```math
+g(x) = f_0 a_0(x) + f_1 a_1(x) + f'_0 b_0(x) + f'_1 b_1(x) ,
+```
+with basis functions
+```math
+\\begin{align*}
+a_0 (x) &= 1 - 3 x^2 + 2 x^3 , &
+b_0 (x) &= x - 2 x^2 + x^3 , \\\\
+a_1 (x) &= 3 x^2 - 2 x^3 , &
+b_1 (x) &= - x^2 + x^3 .
+\\end{align*}
+```
+The derivative ``g'(x)`` accordingly reads
+```math
+g'(x) = f_0 a'_0(x) + f_1 a'_1(x) + f'_0 b'_0(x) + f'_1 b'_1(x) ,
+```
+with
+```math
+\\begin{align*}
+a'_0 (x) &= - 6 x + 6 x^2 , &
+b'_0 (x) &= 1 - 4 x + 3 x^2 , \\\\
+a'_1 (x) &= 6 x - 6 x^2 , &
+b'_1 (x) &= - 2 x + 3 x^2 .
+\\end{align*}
+```
+The basis functions ``a_0``and ``a_1`` are associated with the function
+values at ``x_0`` and ``x_1``, respectively, while the basis functions
+``b_0`` and ``b_1`` are associated with the derivative values at
+``x_0`` and ``x_1``.
+The basis functions satisfy the following relations,
+```math
+\\begin{align*}
+a_i (x_j) &= \\delta_{ij} , &
+b_i (x_j) &= 0 , &
+a'_i (x_j) &= 0 , &
+b'_i (x_j) &= \\delta_{ij} , &
+i,j &= 0, 1 ,
+\\end{align*}
+```
+where ``\\delta_{ij}`` denotes the Kronecker-delta, so that
+```math
+\\begin{align*}
+g(0) &= f_0 , &
+g(1) &= f_1 , &
+g'(0) &= f'_0 , &
+g'(1) &= f'_1 .
+\\end{align*}
+```
+"""
+immutable HermiteInterpolation{T} <: Interpolator{T}
     x₀::T
     x₁::T
-    a₀::T
-    a₁::T
-    b₀::T
-    b₁::T
     Δx::T
 
-    num::Vector{T}
-
     function HermiteInterpolation(x₀, x₁, Δx, d)
-        a₀ = 2/(x₀-x₁)
-        a₁ = 2/(x₁-x₀)
-
-        b₀ = 1/(x₀-x₁)^2
-        b₁ = 1/(x₁-x₀)^2
-
-        new(x₀, x₁, a₀, a₁, b₀, b₁, Δx, zeros(T, d))
+        new(x₀, x₁, Δx)
     end
 end
 
@@ -30,10 +110,10 @@ end
 
 
 function CommonFunctions.evaluate!{T}(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x::T, y::Vector{T})
-    local d₀::T
-    local d₁::T
-    local c₀::T
-    local c₁::T
+    local a₀::T
+    local a₁::T
+    local b₀::T
+    local b₁::T
     local den::T
 
     # Interpolate y values at required locations
@@ -42,22 +122,41 @@ function CommonFunctions.evaluate!{T}(int::HermiteInterpolation{T}, y₀::Vector
     elseif x == int.x₁
         simd_copy!(y₁, y)
     else
-        d₀ = one(T)/(x-int.x₀)
-        c₁ = d₀*int.b₀
-        c₀ = c₁*(d₀-int.a₀)
+        a₁ = 3x^2 - 2x^3
+        a₀ = 1 - a₁
+        b₁ = x^2*(x-1)
+        b₀ = x*(1-x)+b₁
 
-        simd_copy_scale!(c₀, y₀, int.num)
-        simd_axpy!(c₁*int.Δx, f₀, int.num)
-        den = c₀
+        simd_copy_scale!(a₀, y₀, y)
+        simd_axpy!(a₁, y₁, y)
+        simd_axpy!(b₀*int.Δx, f₀, y)
+        simd_axpy!(b₁*int.Δx, f₁, y)
+    end
+end
 
-        d₁ = one(T)/(x-int.x₁)
-        c₁ = d₁*int.b₁
-        c₀ = c₁*(d₁-int.a₁)
+function CommonFunctions.evaluate!{T}(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x::T, y::Vector{T}, f::Vector{T})
+    local a₀::T
+    local a₁::T
+    local b₀::T
+    local b₁::T
+    local den::T
 
-        simd_axpy!(c₀, y₁, int.num)
-        simd_axpy!(c₁*int.Δx, f₁, int.num)
-        den += c₀
+    evaluate!(int, y₀, y₁, f₀, f₁, x, y)
 
-        simd_copy_scale!(one(T)/den, int.num, y)
+    # Interpolate f values at required locations
+    if x == int.x₀
+        simd_copy!(f₀, f)
+    elseif x == int.x₁
+        simd_copy!(f₁, f)
+    else
+        a₁ = 6x - 6x^2
+        a₀ = - a₁
+        b₁ = x*(3x-2)
+        b₀ = 1-2x+b₁
+
+        simd_copy_scale!(b₀, f₀, f)
+        simd_axpy!(b₁, f₁, f)
+        simd_axpy!(a₀/int.Δx, y₀, f)
+        simd_axpy!(a₁/int.Δx, y₁, f)
     end
 end
