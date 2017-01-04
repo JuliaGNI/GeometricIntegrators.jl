@@ -114,16 +114,13 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
 
     for i in 1:params.s
         for k in 1:params.d
-            # copy y to Y, Z, Λ
+            # copy y to Y, Z
             params.Yi[k,i] = y[2*(params.d*(i-1)+k-1)+1]
             params.Zi[k,i] = y[2*(params.d*(i-1)+k-1)+2]
-            # params.Λi[k,i] = y[3*(params.d*(i-1)+k-1)+3]
 
             # compute Q and V
             params.Qi[k,i] = params.q[k] + params.Δt * params.Yi[k,i]
             params.Vi[k,i] = params.Zi[k,i]
-            # params.Pi[k,i] = params.p[k] + params.Δt * params.Zi[k,i]
-            # params.Vi[k,i] = params.Λi[k,i]
         end
 
         # compute f(X)
@@ -131,13 +128,10 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
 
         simd_copy_xy_first!(params.Qt, params.Qi, i)
         simd_copy_xy_first!(params.Vt, params.Vi, i)
-        # simd_copy_xy_first!(params.Pt, params.Pi, i)
-        # simd_copy_xy_first!(params.Λt, params.Λi, i)
         params.f_f(tpᵢ, params.Qt, params.Vt, params.Ft)
         params.f_p(tpᵢ, params.Qt, params.Vt, params.Pt)
         simd_copy_yx_first!(params.Ft, params.Fi, i)
         simd_copy_yx_first!(params.Pt, params.Pi, i)
-        # simd_copy_yx_first!(params.Φt, params.Φi, i)
     end
 
     for i in 1:params.r
@@ -153,7 +147,7 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
         end
 
         # compute f(X)
-        tλᵢ = params.t + params.Δt * params.t_q.c[i]
+        tλᵢ = params.t + params.Δt * params.t_λ.c[i]
 
         simd_copy_xy_first!(params.Qt, params.Qp, i)
         simd_copy_xy_first!(params.Pt, params.Pp, i)
@@ -182,8 +176,8 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
                 b[2*(params.d*(i-1)+k-1)+2] += params.t_p.a[i,j] * params.Fi[k,j] * params.Δt
             end
             for j in 1:params.r
-                b[2*(params.d*(i-1)+k-1)+1] += params.t_q̃.a[i,j] * params.Up[k,j]
-                b[2*(params.d*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * params.Gp[k,j] * params.Δt
+                b[2*(params.d*(i-1)+k-1)+1] += params.t_q.α[i,j] * params.Up[k,j]
+                b[2*(params.d*(i-1)+k-1)+2] += params.t_p.α[i,j] * params.Gp[k,j] * params.Δt
             end
         end
     end
@@ -195,8 +189,8 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
             b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+2] = - params.Zp[k,i]
             b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+3] = - params.Φp[k,i]
             for j in 1:params.s
-                b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.t_q.α[i,j] * params.Vi[k,j]
-                b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+2] += params.t_p.α[i,j] * params.Fi[k,j]
+                b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.t_q̃.a[i,j] * params.Vi[k,j]
+                b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * params.Fi[k,j]
             end
             for j in 1:params.r
                 b[2*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.t_q̃.α[i,j] * params.Up[k,j]
