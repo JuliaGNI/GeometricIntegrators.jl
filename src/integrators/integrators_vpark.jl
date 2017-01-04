@@ -177,17 +177,13 @@ function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, p
         for k in 1:params.d
             b[2*(params.d*(i-1)+k-1)+1] = - params.Yi[k,i]
             b[2*(params.d*(i-1)+k-1)+2] = - params.Pi[k,i] + params.p[k]
-            # b[2*(params.d*(i-1)+k-1)+2] = - params.Zi[k,i]
-            # b[3*(params.d*(i-1)+k-1)+3] = - params.Φi[k,i] + params.Pi[k,i]
             for j in 1:params.s
                 b[2*(params.d*(i-1)+k-1)+1] += params.t_q.a[i,j] * params.Vi[k,j]
                 b[2*(params.d*(i-1)+k-1)+2] += params.t_p.a[i,j] * params.Fi[k,j] * params.Δt
-                # b[2*(params.d*(i-1)+k-1)+2] += params.t_p.a[i,j] * params.Fi[k,j]
             end
             for j in 1:params.r
                 b[2*(params.d*(i-1)+k-1)+1] += params.t_q̃.a[i,j] * params.Up[k,j]
                 b[2*(params.d*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * params.Gp[k,j] * params.Δt
-                # b[2*(params.d*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * params.Gp[k,j]
             end
         end
     end
@@ -345,16 +341,12 @@ function integrate!{DT,TT,FT,PT,UT,GT,ϕT,VT,N}(int::IntegratorVPARK{DT,TT,FT,PT
                 end
             end
 
-            # println("initial guess:  ", int.solver.x)
-
             # call nonlinear solver
             solve!(int.solver)
 
             if !solverStatusOK(int.solver.status, int.solver.params)
                 println(int.solver.status)
             end
-
-            # println("final solution: ", int.solver.x)
 
             # compute final update
             simd_mult!(int.y, int.V, int.tableau.q.b)
