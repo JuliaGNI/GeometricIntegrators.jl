@@ -2,10 +2,8 @@ __precompile__()
 
 module Tableaus
 
-    using ..Utils
     using ..BasisFunctions
-
-    include("utils/macro_utils.jl")
+    using ..Utils
 
     export CoefficientsRK, CoefficientsARK, CoefficientsPRK, CoefficientsMRK
 

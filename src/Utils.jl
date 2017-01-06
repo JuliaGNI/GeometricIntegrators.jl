@@ -2,9 +2,9 @@ __precompile__()
 
 module Utils
 
-    # export @define, @reexport
-    #
-    # include("utils/macro_utils.jl")
+    export @define, @reexport
+
+    include("utils/macro_utils.jl")
 
     export istriustrict, istrilstrict
     export simd_scale!, simd_copy!, simd_copy_scale!,

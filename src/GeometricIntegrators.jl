@@ -2,15 +2,14 @@ __precompile__()
 
 module GeometricIntegrators
 
-    include("utils/macro_utils.jl")
+    include("Utils.jl")
+    using .Utils
 
     export Utils, Equations, Solutions, Interpolation, Solvers, BasisFunctions,
            Tableaus, Integrators, Problems
 
     include("CommonFunctions.jl")
     @reexport using .CommonFunctions
-    include("Utils.jl")
-    @reexport using .Utils
     include("Equations.jl")
     @reexport using .Equations
     include("Solutions.jl")

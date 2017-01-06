@@ -4,8 +4,6 @@ module Solvers
 
     using ..Utils
 
-    include("utils/macro_utils.jl")
-
     export LinearSolver, LUSolver, LUSolverLAPACK,
            factorize!, solve!
 
