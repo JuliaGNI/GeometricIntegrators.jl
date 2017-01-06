@@ -21,6 +21,7 @@ makedocs(
 deploydocs(
     repo   = "github.com/DDMGNI/GeometricIntegrators.jl.git",
     target = "build",
+    julia  = "0.5",
+    osname = "linux",
     deps   = nothing,
-    make   = nothing
-)
+    make   = nothing)
