@@ -13,4 +13,4 @@ solve!(lu)
 
 a = *(Vinv, y)
 
-@test maximum(abs((a .- lu.x) ./ a)) < eps(Float32)
+@test maximum(abs.((a .- lu.x) ./ a)) < eps(Float32)
