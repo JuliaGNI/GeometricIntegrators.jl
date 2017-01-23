@@ -1,7 +1,9 @@
 
 ntime = 10
 Δt    = .1
-dim   = 2
+
+ode   = pendulum_ode()
+dim   = ode.d
 
 q0    = rand(dim)
 p0    = q0.^2
@@ -13,12 +15,10 @@ p1    = q1.^2
 λ1    = zeros(1, n1)
 
 
-ode = ODE(fx, q0)
 sol = Solution(ode, Δt, ntime)
 @test typeof(sol) <: SolutionODE
 
-ode = ODE(fx, q1)
-sol = Solution(ode, Δt, ntime)
+sol = Solution(similar(ode, q1), Δt, ntime)
 @test typeof(sol) <: SolutionODE
 
 

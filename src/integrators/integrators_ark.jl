@@ -1,8 +1,8 @@
 
 "Additive Runge Kutta integrator."
-immutable IntegratorARK{T} <: Integrator{T}
-    equation::Equation
-    tableau::TableauARK
+immutable IntegratorARK{DT,TT,VT,UT,ΦT} <: Integrator{DT,TT}
+    equation::DAE{DT,TT,VT,UT,ΦT}
+    tableau::TableauARK{TT}
 
 end
 

@@ -1,25 +1,27 @@
 
 "Diagonally implicit Runge-Kutta integrator."
-immutable IntegratorDIRK{T} <: Integrator{T}
-    equation::ODE{T}
-    tableau::TableauDIRK{T}
-    Δt::T
+immutable IntegratorDIRK{DT,TT,FT} <: Integrator{DT,TT}
+    equation::ODE{DT,TT,FT}
+    tableau::TableauDIRK{TT}
+    Δt::TT
 
-    x::Array{T,1}
-    X::Array{T,2}
-    Y::Array{T,2}
-    F::Array{T,2}
+    x::Array{DT,1}
+    X::Array{DT,2}
+    Y::Array{DT,2}
+    F::Array{DT,2}
 
     function IntegratorDIRK(equation, tableau, Δt)
         D = equation.d
         S = tableau.q.s
-        new(equation, tableau, Δt, zeros(T,D), zeros(T,D,S), zeros(T,D,S), zeros(T,D,S))
+        new(equation, tableau, Δt, zeros(DT,D), zeros(DT,D,S), zeros(DT,D,S), zeros(DT,D,S))
     end
 end
 
 function IntegratorDIRK(equation::Equation, tableau::TableauDIRK, Δt)
-    T = eltype(equation.q₀)
-    IntegratorDIRK{T}(equation, tableau, Δt)
+    DT = eltype(equation.q₀)
+    TT = typeof(Δt)
+    FT = typeof(equation.v)
+    IntegratorDIRK{DT,TT,FT}(equation, tableau, Δt)
 end
 
 "Integrate ODE with diagonally implicit Runge-Kutta integrator."

@@ -1,7 +1,7 @@
 
 function vandermonde_matrix{T}(x::Vector{T})
     local n = length(x)
-	local V = Array(T, n, n)
+	local V = Array{T,2}(n,n)
 
 	for i in 1:n
 		V[:,i] .= x.^(i-1)

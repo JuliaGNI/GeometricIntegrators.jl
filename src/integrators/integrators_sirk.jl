@@ -1,19 +1,19 @@
 
 "Singly implicit Runge-Kutta integrator."
-immutable IntegratorSIRK{T} <: Integrator{T}
-    equation::ODE{T}
-    tableau::TableauSIRK{T}
-    Δt::T
+immutable IntegratorSIRK{DT,TT,FT} <: Integrator{DT,TT}
+    equation::ODE{DT,TT,FT}
+    tableau::TableauSIRK{TT}
+    Δt::TT
 
-    x::Array{T,1}
-    X::Array{T,2}
-    Y::Array{T,2}
-    F::Array{T,2}
+    x::Array{DT,1}
+    X::Array{DT,2}
+    Y::Array{DT,2}
+    F::Array{DT,2}
 
     function IntegratorSIRK(equation, tableau, Δt)
         D = equation.d
         S = tableau.s
-        new(equation, tableau, Δt, zeros(T,D), zeros(T,D,S), zeros(T,D,S), zeros(T,D,S))
+        new(equation, tableau, Δt, zeros(DT,D), zeros(DT,D,S), zeros(DT,D,S), zeros(DT,D,S))
     end
 end
 

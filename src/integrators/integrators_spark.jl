@@ -1,17 +1,17 @@
 
 "Special Partitioned Additive Runge Kutta integrator."
-immutable IntegratorSPARK{T} <: Integrator{T}
-    equation::Equation
-    tableau::TableauSPARK
-    Δt::T
+immutable IntegratorSPARK{DT,TT,VT,FT,UT,GT,ΦT} <: Integrator{DT,TT}
+    equation::PDAE{DT,TT,VT,FT,UT,GT,ΦT}
+    tableau::TableauSPARK{TT}
+    Δt::TT
 
-    solver::NonlinearSolver{T}
+    solver::NonlinearSolver{DT}
 
-    x::Array{T,1}
-    y::Array{T,1}
-    X::Array{T,2}
-    Y::Array{T,2}
-    F::Array{T,2}
+    x::Array{DT,1}
+    y::Array{DT,1}
+    X::Array{DT,2}
+    Y::Array{DT,2}
+    F::Array{DT,2}
 end
 
 "Integrate partitioned DAE with Special Additive Runge Kutta integrator."
