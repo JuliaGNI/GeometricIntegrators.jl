@@ -81,7 +81,8 @@ module Tableaus
 
     include("tableaus/tableaus_vprk.jl")
 
-    export getTableauSymplecticProjection, getTableauLobIIIAB2p
+    export getTableauSymplecticProjection, getTableauConjugateProjection,
+           getTableauLobIIIAB2p
 
     include("tableaus/tableaus_vpark.jl")
 
