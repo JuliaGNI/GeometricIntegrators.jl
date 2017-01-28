@@ -57,8 +57,8 @@ type NonlinearSolverStatus{T}
 end
 
 Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
-                        status.i, ", ", status.rₐ,", ",
-                        status.rᵣ,", ", status.rₛ)
+                        (@sprintf "%4i"    status.i),  ", ", (@sprintf "%14.8e" status.rₐ), ", ",
+                        (@sprintf "%14.8e" status.rᵣ), ", ", (@sprintf "%14.8e" status.rₛ))
 
 function solverStatusOK(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
     return (status.rₐ < params.atol² ||
