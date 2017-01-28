@@ -77,6 +77,11 @@ function CommonFunctions.evaluate!{DT,TT,VT,FT,IT}(ig::InitialGuessIODE{DT,TT,VT
     @assert length(guess_q) == length(guess_p) == length(guess_v)
 
     evaluate!(ig.int, ig.q₀, ig.q₁, ig.v₀, ig.v₁, one(TT)+c_q, guess_q, guess_v)
+
+    if ig.q₀ == ig.q₁
+        guess_v .= 0
+    end
+
     evaluate!(ig.int, ig.p₀, ig.p₁, ig.f₀, ig.f₁, one(TT)+c_p, guess_p)
 
     nothing
