@@ -61,6 +61,11 @@ function Integrator(equation::IDAE, tableau::TableauVPARK, Δt)
     IntegratorVPARK(equation, tableau, Δt)
 end
 
+"Create integrator for variational special partitioned additive Runge-Kutta tableau."
+function Integrator(equation::IDAE, tableau::TableauVSPARK, Δt)
+    IntegratorVSPARK(equation, tableau, Δt)
+end
+
 "Print error for integrators not implemented, yet."
 function Integrator(equation::Equation, tableau::AbstractTableau, Δt)
     error("No integrator found for tableau ", tableau)

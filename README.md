@@ -38,6 +38,7 @@ The following list provides and overview of supported and planned features.
 - [x] Gauss-Legendre Runge-Kutta Methods (GLRK),
 - [x] Variational Partitioned Runge-Kutta Methods (VPRK),
 - [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK),
+- [x] Variational Special Partitioned Additive Runge-Kutta Methods (VSPARK),
 - [ ] Continuous and Discontinuous Galerkin Variational Integrators (CGVI/DGVI),
 - [ ] Spline Variational Integrators (SVI),
 - [ ] Taylor Variational Integrators (TVI),
@@ -92,6 +93,7 @@ with
 
 #### Diagnostics
 
+- [ ] Symplecticity Conditions,
 - [ ] Runge-Kutta Stability Area,
 - [ ] Convergence Analysis,
 - [ ] First Poincaré Integral Invariant,
@@ -103,7 +105,11 @@ with
 - [x] Pendulum,
 - [x] Lotka-Volterra in 2D,
 - [ ] Lotka-Volterra in 3D,
-- [ ] Charged Particle in a Uniform Magnetic Field.
+- [ ] Hénon-Heiles System,
+- [ ] Planar Point Vortices,
+- [ ] Inner Solar System,
+- [ ] Outer Solar System,
+- [ ] Charged Particle Motion in a Uniform Magnetic Field.
 
 
 ## License

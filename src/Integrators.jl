@@ -13,7 +13,7 @@ module Integrators
     export InitialGuess, InitialGuessIODE, initialize!, update!
 
     export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK, IntegratorSIRK,
-           IntegratorEPRK, IntegratorIPRK, IntegratorVPRK,
+           IntegratorEPRK, IntegratorIPRK, IntegratorVPRK, IntegratorVSPARK,
            IntegratorIPARK,
            IntegratorSARK, IntegratorSPARK,
            integrate, integrate!, function_stages!
@@ -35,5 +35,6 @@ module Integrators
     include("integrators/integrators_park.jl")
     include("integrators/integrators_spark.jl")
     include("integrators/integrators_vpark.jl")
+    include("integrators/integrators_vspark.jl")
 
 end

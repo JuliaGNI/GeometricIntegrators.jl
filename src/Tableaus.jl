@@ -39,11 +39,12 @@ module Tableaus
     include("tableaus/tableau_ark.jl")
     include("tableaus/tableau_sark.jl")
 
-    export TableauPARK, TableauSPARK, TableauVPARK
+    export TableauPARK, TableauSPARK, TableauVPARK, TableauVSPARK
 
     include("tableaus/tableau_park.jl")
     include("tableaus/tableau_spark.jl")
     include("tableaus/tableau_vpark.jl")
+    include("tableaus/tableau_vspark.jl")
 
     export TableauGLM
 
@@ -85,5 +86,10 @@ module Tableaus
            getTableauLobIIIAB2p
 
     include("tableaus/tableaus_vpark.jl")
+
+    export getTableauSymmetricSymplecticProjection, getTableauSymmetricConjugateProjection,
+           getTableauLobIIIAB2sp
+
+    include("tableaus/tableaus_vspark.jl")
 
 end
