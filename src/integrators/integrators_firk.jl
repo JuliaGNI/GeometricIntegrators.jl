@@ -87,8 +87,9 @@ immutable IntegratorFIRK{DT, TT, FT, ST, IT} <: Integrator{DT,TT}
 end
 
 function IntegratorFIRK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::TT;
-                              nonlinear_solver=QuasiNewtonSolver,
-                              interpolation=HermiteInterpolation{DT})
+                                  nonlinear_solver=DEFAULT_NonlinearSolver,
+                                  nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
+                                  interpolation=HermiteInterpolation{DT})
     D = equation.d
     S = tableau.q.s
 
@@ -99,7 +100,7 @@ function IntegratorFIRK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{
     params = NonlinearFunctionParametersFIRK{DT,TT,FT}(equation.v, Δt, D, S, tableau.q.a, tableau.q.c)
 
     # create solver
-    solver = nonlinear_solver(z, params)
+    solver = nonlinear_solver(z, params; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
 
     # create initial guess
     iguess = InitialGuessODE(interpolation, equation, Δt)

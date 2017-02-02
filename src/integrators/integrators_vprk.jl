@@ -147,7 +147,8 @@ immutable IntegratorVPRK{DT, TT, FT, PT, VT, ST, IT} <: Integrator{DT, TT}
 end
 
 function IntegratorVPRK{DT,TT,FT,PT,VT}(equation::IODE{DT,TT,FT,PT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
-                                        nonlinear_solver=QuasiNewtonSolver,
+                                        nonlinear_solver=DEFAULT_NonlinearSolver,
+                                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
                                         interpolation=HermiteInterpolation{DT})
     D = equation.d
     S = tableau.s
@@ -172,7 +173,7 @@ function IntegratorVPRK{DT,TT,FT,PT,VT}(equation::IODE{DT,TT,FT,PT,VT}, tableau:
                                                 d_v)
 
     # create solver
-    solver = nonlinear_solver(z, params)
+    solver = nonlinear_solver(z, params; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
 
     # create initial guess
     iguess = InitialGuessIODE(interpolation, equation, Δt)

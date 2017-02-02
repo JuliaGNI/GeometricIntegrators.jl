@@ -250,7 +250,8 @@ end
 
 function IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
                                                tableau::TableauVPARK{TT}, Δt::TT;
-                                               nonlinear_solver=QuasiNewtonSolver,
+                                               nonlinear_solver=DEFAULT_NonlinearSolver,
+                                               nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
                                                interpolation=HermiteInterpolation{DT})
     D = equation.d
     S = tableau.s
@@ -275,7 +276,7 @@ function IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}(equation::IDAE{DT,TT,FT,PT,UT
                                                 tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, d_v)
 
     # create solver
-    solver = nonlinear_solver(z, params)
+    solver = nonlinear_solver(z, params; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
 
     # create initial guess
     iguess = InitialGuessIODE(interpolation, equation, Δt)

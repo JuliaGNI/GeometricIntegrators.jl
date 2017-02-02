@@ -220,8 +220,9 @@ immutable IntegratorPARK{DT, TT, FT, PT, UT, GT, ϕT, ST} <: Integrator{DT, TT}
 end
 
 function IntegratorPARK{DT,TT,FT,PT,UT,GT,ϕT}(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}, tableau::TableauPARK{TT}, Δt::TT;
-                              nonlinear_solver=QuasiNewtonSolver,
-                              interpolation=HermiteInterpolation{DT})
+                                              nonlinear_solver=DEFAULT_NonlinearSolver,
+                                              nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
+                                              interpolation=HermiteInterpolation{DT})
     D = equation.d
     S = tableau.s
     R = tableau.r
@@ -235,7 +236,7 @@ function IntegratorPARK{DT,TT,FT,PT,UT,GT,ϕT}(equation::IDAE{DT,TT,FT,PT,UT,GT,
                                                 Δt, D, S, R, tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ)
 
     # create solver
-    solver = nonlinear_solver(z, params)
+    solver = nonlinear_solver(z, params; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
 
     # create integrator
     IntegratorPARK{DT, TT, FT, PT, UT, GT, ϕT, typeof(solver)}(

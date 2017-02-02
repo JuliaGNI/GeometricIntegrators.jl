@@ -15,6 +15,9 @@ module Solvers
            NonlinearFunctionParameters, solverStatusOK,
            solve!, function_stages!
 
+    export DEFAULT_atol, DEFAULT_rtol, DEFAULT_stol, DEFAULT_nmax, DEFAULT_ϵ,
+           DEFAULT_NonlinearSolver
+
     include("solvers/nonlinear/nonlinear_solvers.jl")
     include("solvers/nonlinear/jacobian.jl")
     include("solvers/nonlinear/abstract_fixed_point_solver.jl")

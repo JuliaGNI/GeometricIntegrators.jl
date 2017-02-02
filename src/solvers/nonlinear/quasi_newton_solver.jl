@@ -6,6 +6,7 @@ immutable QuasiNewtonSolver{T, TF, TJ, TL} <: AbstractNewtonSolver{T}
     end
 end
 
+const DEFAULT_NonlinearSolver=QuasiNewtonSolver
 
 function QuasiNewtonSolver(x::Vector, Fparams::NonlinearFunctionParameters; J=nothing, linear_solver=nothing, nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol, ϵ=DEFAULT_ϵ, autodiff=false)
     T = eltype(x)
