@@ -40,3 +40,9 @@ dsol = integrate(dint, nt)
 
 dint = Integrator(idae, getTableauLobIIIAB2p(), Δt)
 dsol = integrate(dint, nt)
+
+dint = Integrator(idae, getTableauSymmetricSymplecticProjection(:pglrk2p, glrk2.q, glrk2.q), Δt)
+dsol = integrate(dint, nt)
+
+dint = Integrator(idae, getTableauLobIIIAB2sp(), Δt)
+dsol = integrate(dint, nt)
