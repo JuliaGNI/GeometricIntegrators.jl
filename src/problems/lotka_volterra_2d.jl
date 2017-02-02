@@ -25,8 +25,14 @@ function lotka_volterra_2d_iode_f(t, q, v, f)
     nothing
 end
 
+function lotka_volterra_2d_iode_v(t, q, p, v)
+    v[1] = q[1] * (q[2] - 2)
+    v[2] = q[2] * (1 - q[1])
+    nothing
+end
+
 function lotka_volterra_2d_iode(q₀=[1., 1.], p₀=[1. + log(1.), 1.])
-    IODE(lotka_volterra_2d_iode_f, lotka_volterra_2d_iode_p, q₀, p₀)
+    IODE(lotka_volterra_2d_iode_f, lotka_volterra_2d_iode_p, lotka_volterra_2d_iode_v, q₀, p₀)
 end
 
 
@@ -48,14 +54,8 @@ function lotka_volterra_2d_idae_ϕ(t, q, p, ϕ)
     nothing
 end
 
-function lotka_volterra_2d_idae_v(t, q, p, v)
-    v[1] = q[1] * (q[2] - 2)
-    v[2] = q[2] * (1 - q[1])
-    nothing
-end
-
 function lotka_volterra_2d_idae(q₀=[1., 1.], p₀=[1. + log(1.), 1.], λ₀ = [0.0, 0.0])
     IDAE(lotka_volterra_2d_iode_f, lotka_volterra_2d_iode_p,
          lotka_volterra_2d_idae_u, lotka_volterra_2d_idae_g,
-         lotka_volterra_2d_idae_ϕ, lotka_volterra_2d_idae_v, q₀, p₀, λ₀)
+         lotka_volterra_2d_idae_ϕ, lotka_volterra_2d_iode_v, q₀, p₀, λ₀)
 end
