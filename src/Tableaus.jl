@@ -82,12 +82,12 @@ module Tableaus
 
     include("tableaus/tableaus_vprk.jl")
 
-    export getTableauSymplecticProjection, getTableauConjugateProjection,
+    export getTableauSymplecticProjection,
            getTableauLobIIIAB2p
 
     include("tableaus/tableaus_vpark.jl")
 
-    export getTableauSymmetricSymplecticProjection, getTableauSymmetricConjugateProjection,
+    export getTableauSymmetricSymplecticProjection,
            getTableauLobIIIAB2sp
 
     include("tableaus/tableaus_vspark.jl")
