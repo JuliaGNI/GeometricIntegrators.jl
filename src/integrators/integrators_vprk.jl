@@ -212,7 +212,7 @@ function integrate!{DT,TT,FT,PT,VT,N}(int::IntegratorVPRK{DT,TT,FT,PT,VT}, sol::
                 evaluate!(int.iguess, int.y, int.z, int.v, int.tableau.q.c[i], int.tableau.p.c[i])
                 for k in 1:int.equation.d
                     int.solver.x[2*(int.equation.d*(i-1)+k-1)+1] = (int.y[k] - int.q[k])/(int.Δt)
-                    int.solver.x[2*(int.equation.d*(i-1)+k-1)+2] = 0
+                    int.solver.x[2*(int.equation.d*(i-1)+k-1)+2] = int.v[k]
                 end
             end
             if isdefined(int.tableau, :d)
