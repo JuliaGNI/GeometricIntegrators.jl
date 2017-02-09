@@ -59,11 +59,14 @@ Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
                         (@sprintf "%4i"    status.i),  ", ", (@sprintf "%14.8e" status.rₐ), ", ",
                         (@sprintf "%14.8e" status.rᵣ), ", ", (@sprintf "%14.8e" status.rₛ))
 
+function solverConverged(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
+    return status.rₐ < params.atol² ||
+           status.rₐ < params.rtol² * status.r₀ ||
+           status.rₛ < params.stol²
+end
+
 function solverStatusOK(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
-    return (status.rₐ < params.atol² ||
-            status.rᵣ < params.rtol  ||
-            status.rₛ < params.stol²)&&
-           status.i  ≤ params.nmax
+    return solverConverged(status, params) && status.i  ≤ params.nmax
 end
 
 function getLinearSolver(T, n, linear_solver)

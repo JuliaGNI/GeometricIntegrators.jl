@@ -12,7 +12,7 @@ module Solvers
     include("solvers/linear/lu_solver_lapack.jl")
 
     export NonlinearSolver, AbstractNewtonSolver, NewtonSolver, QuasiNewtonSolver,
-           NonlinearFunctionParameters, solverStatusOK,
+           NonlinearFunctionParameters, solverConverged, solverStatusOK,
            solve!, function_stages!
 
     export DEFAULT_atol, DEFAULT_rtol, DEFAULT_stol, DEFAULT_nmax, DEFAULT_ϵ,
