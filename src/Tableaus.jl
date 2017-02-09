@@ -5,9 +5,13 @@ module Tableaus
     using ..BasisFunctions
     using ..Utils
 
-    export CoefficientsRK, CoefficientsARK, CoefficientsPRK, CoefficientsMRK
+    export CoefficientsRK, CoefficientsARK, CoefficientsPRK, CoefficientsMRK,
+           getCoefficientsGLRK,
+           getCoefficientsLobIIIA, getCoefficientsLobIIIB
 
     include("tableaus/coefficients.jl")
+    include("tableaus/coefficients_glrk.jl")
+    include("tableaus/coefficients_lob.jl")
 
     export AbstractTableau
 
@@ -51,11 +55,6 @@ module Tableaus
     include("tableaus/tableau_glm.jl")
 
 
-    export getTableauGLRK
-
-    include("tableaus/tableaus_glrk.jl")
-
-
     include("tableaus/tableaus_erk.jl")
 
     export getTableauExplicitEuler, getTableauExplicitMidpoint, getTableauHeun,
@@ -68,7 +67,8 @@ module Tableaus
     include("tableaus/tableaus_firk.jl")
 
     export getTableauImplicitEuler, getTableauImplicitMidpoint,
-           getTableauGLRK1, getTableauGLRK2, getTableauGLRK3
+           getTableauGLRK1, getTableauGLRK2, getTableauGLRK3,
+           getTableauGLRK
 
     include("tableaus/tableaus_sirk.jl")
 

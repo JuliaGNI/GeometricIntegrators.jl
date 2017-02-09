@@ -2,7 +2,7 @@
 using FastGaussQuadrature
 using Polynomials
 
-function getTableauGLRK(s::Int)
+function getCoefficientsGLRK(s::Int)
 
     function evaluate!{T}(pol::Poly{T}, x::Vector{T}, y::Vector{T})
         @assert length(x) == length(y)
@@ -47,6 +47,5 @@ function getTableauGLRK(s::Int)
         end
     end
 
-    # create tableau
-    TableauFIRK(Symbol("glrk", s), o, a, b, c)
+    CoefficientsRK(Symbol("glrk", s), o, a, b, c)
 end

@@ -51,3 +51,7 @@ function getTableauGLRK3()
 
     TableauFIRK(:glrk3, o, a, b, c)
 end
+
+function getTableauGLRK(s::Int)
+    TableauFIRK(getCoefficientsGLRK(s))
+end
