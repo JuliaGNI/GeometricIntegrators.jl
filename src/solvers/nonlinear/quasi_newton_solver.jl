@@ -7,6 +7,7 @@ immutable QuasiNewtonSolver{T, TF, TJ, TL} <: AbstractNewtonSolver{T}
 end
 
 const DEFAULT_NonlinearSolver=QuasiNewtonSolver
+const DEFAULT_REFACTORIZE=5
 
 function QuasiNewtonSolver(x::Vector, Fparams::NonlinearFunctionParameters; J=nothing, linear_solver=nothing, nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol, ϵ=DEFAULT_ϵ, autodiff=false)
     T = eltype(x)
@@ -39,6 +40,11 @@ function solve!{T}(s::QuasiNewtonSolver{T})
 
             if s.status.rₐ < s.params.atol² || s.status.rᵣ < s.params.rtol || s.status.rₛ < s.params.stol²
                 break
+            end
+
+            if s.status.i % DEFAULT_REFACTORIZE == 0
+                computeJacobian(s.x, s.linear.A, s.Jparams)
+                factorize!(s.linear)
             end
         end
     end
