@@ -16,7 +16,6 @@ const DEFAULT_stol=2eps()
 const DEFAULT_nmax=100
 const DEFAULT_ϵ=sqrt(eps())
 
-
 abstract NonlinearFunctionParameters{T}
 
 function function_stages!{DT,TT}(y::Vector{DT}, b::Vector{TT}, params::NonlinearFunctionParameters{DT})
@@ -69,7 +68,7 @@ end
 
 function getLinearSolver(T, n, linear_solver)
     if linear_solver == nothing || linear_solver == :lapack
-        linear_solver = LUSolverLAPACK(zeros(T, n, n), zeros(T, n))
+        linear_solver = LUSolverLAPACK{T}(n)
     elseif linear_solver == :julia
         linear_solver = LUSolver{T}(n)
     else
