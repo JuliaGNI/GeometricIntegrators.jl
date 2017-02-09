@@ -78,7 +78,7 @@ module Tableaus
 
     include("tableaus/tableaus_spark.jl")
 
-    export getTableauLobIIIAB2
+    export getTableauLobIIIAB2, getTableauVPGLRK
 
     include("tableaus/tableaus_vprk.jl")
 
@@ -87,7 +87,7 @@ module Tableaus
 
     include("tableaus/tableaus_vpark.jl")
 
-    export getTableauSymmetricSymplecticProjection,
+    export getTableauSymmetricProjection,
            getTableauLobIIIAB2sp
 
     include("tableaus/tableaus_vspark.jl")

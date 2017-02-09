@@ -29,7 +29,7 @@ psol = integrate(pint, nt)
 pint = Integrator(pode, TableauIPRK(:pglrk, 2, glrk1.q, glrk1.q), Δt)
 psol = integrate(pint, nt)
 
-iint = Integrator(iode, TableauVPRK(:pglrk, 2, glrk1.q, glrk1.q), Δt)
+iint = Integrator(iode, TableauVPRK(:pglrk, 2, glrk1.q, glrk1.q, -1), Δt)
 isol = integrate(iint, nt)
 
 vint = Integrator(iode, getTableauLobIIIAB2(), Δt)
@@ -41,7 +41,7 @@ dsol = integrate(dint, nt)
 dint = Integrator(idae, getTableauLobIIIAB2p(), Δt)
 dsol = integrate(dint, nt)
 
-dint = Integrator(idae, getTableauSymmetricSymplecticProjection(:pglrk2p, glrk2.q, glrk2.q), Δt)
+dint = Integrator(idae, getTableauSymmetricProjection(:pglrk2p, glrk2.q, glrk2.q), Δt)
 dsol = integrate(dint, nt)
 
 dint = Integrator(idae, getTableauLobIIIAB2sp(), Δt)

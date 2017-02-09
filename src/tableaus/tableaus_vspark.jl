@@ -1,5 +1,5 @@
 
-function getTableauSymmetricSymplecticProjection{T}(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1)
+function getTableauSymmetricProjection{T}(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1)
 
     @assert q.s == p.s
 
@@ -60,5 +60,5 @@ end
 function getTableauLobIIIAB2sp()
     d = [+1.0, -1.0]
 
-    getTableauSymmetricSymplecticProjection(:LobIIIAB2p, getCoefficientsLobIIIA(), getCoefficientsLobIIIB(), d; R∞=-1)
+    getTableauSymmetricProjection(:LobIIIAB2p, getCoefficientsLobIIIA(), getCoefficientsLobIIIB(), d; R∞=-1)
 end

@@ -27,25 +27,27 @@ immutable TableauVPRK{T} <: AbstractTableauPRK{T}
     q::CoefficientsRK{T}
     p::CoefficientsRK{T}
 
+    R∞::Int
+
     d::Vector{T}
 
-    function TableauVPRK(name, o, q, p, d)
+    function TableauVPRK(name, o, q, p, R∞, d)
         @assert q.s == p.s == length(d)
-        new(name, o, q.s, q, p, d)
+        new(name, o, q.s, q, p, R∞, d)
     end
 
-    function TableauVPRK(name, o, q, p)
+    function TableauVPRK(name, o, q, p, R∞)
         @assert q.s == p.s
-        new(name, o, q.s, q, p)
+        new(name, o, q.s, q, p, R∞)
     end
 end
 
-function TableauVPRK{T}(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d::Vector{T})
-    TableauVPRK{T}(name, order, q, p, d)
+function TableauVPRK{T}(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int, d::Vector{T})
+    TableauVPRK{T}(name, order, q, p, R∞, d)
 end
 
-function TableauVPRK{T}(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T})
-    TableauVPRK{T}(name, order, q, p)
+function TableauVPRK{T}(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int)
+    TableauVPRK{T}(name, order, q, p, R∞)
 end
 
 # TODO function readTableauVPRKFromFile(dir::AbstractString, name::AbstractString)
