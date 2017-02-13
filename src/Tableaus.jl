@@ -78,17 +78,19 @@ module Tableaus
 
     include("tableaus/tableaus_spark.jl")
 
-    export getTableauLobIIIAB2, getTableauVPGLRK
+    export getTableauLobIIIAIIIB2, getTableauLobIIIAIIIB3, getTableauVPGLRK
 
     include("tableaus/tableaus_vprk.jl")
 
     export getTableauSymplecticProjection,
-           getTableauLobIIIAB2p
+           getTableauLobIIIAIIIB2pSymplectic, getTableauLobIIIAIIIB3pSymplectic,
+           getTableauGLRKpSymplectic
 
     include("tableaus/tableaus_vpark.jl")
 
     export getTableauSymmetricProjection,
-           getTableauLobIIIAB2sp
+           getTableauLobIIIAIIIB2pSymmetric, getTableauLobIIIAIIIB3pSymmetric,
+           getTableauGLRKpSymmetric
 
     include("tableaus/tableaus_vspark.jl")
 

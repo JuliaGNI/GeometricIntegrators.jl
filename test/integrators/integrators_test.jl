@@ -32,17 +32,31 @@ psol = integrate(pint, nt)
 iint = Integrator(iode, TableauVPRK(:pglrk, 2, glrk1.q, glrk1.q, -1), Δt)
 isol = integrate(iint, nt)
 
-vint = Integrator(iode, getTableauLobIIIAB2(), Δt)
+vint = Integrator(iode, getTableauLobIIIAIIIB2(), Δt)
 vsol = integrate(vint, nt)
 
+vint = Integrator(iode, getTableauLobIIIAIIIB3(), Δt)
+vsol = integrate(vint, nt)
 dint = Integrator(idae, getTableauSymplecticProjection(:pglrk2p, glrk2.q, glrk2.q), Δt)
 dsol = integrate(dint, nt)
 
-dint = Integrator(idae, getTableauLobIIIAB2p(), Δt)
+dint = Integrator(idae, getTableauGLRKpSymplectic(2), Δt)
+dsol = integrate(dint, nt)
+
+dint = Integrator(idae, getTableauLobIIIAIIIB2pSymplectic(), Δt)
+dsol = integrate(dint, nt)
+
+dint = Integrator(idae, getTableauLobIIIAIIIB3pSymplectic(), Δt)
 dsol = integrate(dint, nt)
 
 dint = Integrator(idae, getTableauSymmetricProjection(:pglrk2p, glrk2.q, glrk2.q), Δt)
 dsol = integrate(dint, nt)
 
-dint = Integrator(idae, getTableauLobIIIAB2sp(), Δt)
+dint = Integrator(idae, getTableauGLRKpSymmetric(2), Δt)
+dsol = integrate(dint, nt)
+
+dint = Integrator(idae, getTableauLobIIIAIIIB2pSymmetric(), Δt)
+dsol = integrate(dint, nt)
+
+dint = Integrator(idae, getTableauLobIIIAIIIB3pSymmetric(), Δt)
 dsol = integrate(dint, nt)
