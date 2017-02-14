@@ -114,6 +114,21 @@ function simd_axpy!(a, x, y)
     nothing
 end
 
+function simd_axpy!(a, x, y, e)
+    @assert length(x) == length(y) == length(e)
+
+    local err::eltype(e)
+    local ty::eltype(y)
+
+    @inbounds for i=1:length(y)
+        err = e[i] + a*x[i]
+        ty  = y[i]
+        y[i] = err + ty
+        e[i] = err + (ty - y[i])
+    end
+    nothing
+end
+
 function simd_wxpy!(w, x, y)
     @assert length(x) == length(y) == length(w)
     @inbounds for i=1:length(w)
