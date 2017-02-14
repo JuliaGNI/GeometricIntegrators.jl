@@ -2,7 +2,14 @@
 immutable NewtonSolver{T, TF, TJ, TL} <: AbstractNewtonSolver{T}
     @newton_solver_variables
     function NewtonSolver(x, Fparams, Jparams, linear_solver, nmax, atol, rtol, stol)
-        new(x, Fparams, Jparams, linear_solver, NonlinearSolverParameters{T}(nmax, atol, rtol, stol), NonlinearSolverStatus{T}())
+        J  = zeros(linear_solver.A)
+        x₀ = zeros(x)
+        x₁ = zeros(x)
+        y₁ = zeros(x)
+        y₀ = zeros(x)
+        δx = zeros(x)
+        δy = zeros(x)
+        new(x, J, x₀, x₁, y₀, y₁, δx, δy, Fparams, Jparams, linear_solver, NonlinearSolverParameters{T}(nmax, atol, rtol, stol), NonlinearSolverStatus{T}(length(x)))
     end
 end
 
@@ -18,23 +25,19 @@ end
 
 function solve!{T}(s::NewtonSolver{T})
     function_stages!(s.x, s.linear.b, s.Fparams)
-    scale!(s.linear.b, -one(T))
+    residual_initial!(s.status, s.linear.b)
     s.status.i  = 0
-    s.status.rₐ = residual_absolute(s.linear.b)
-    s.status.r₀ = s.status.rₐ
 
-    if s.status.r₀ ≥ s.params.atol²
+    if s.status.rₐ ≥ s.params.atol²
         for s.status.i = 1:s.params.nmax
             computeJacobian(s.x, s.linear.A, s.Jparams)
             factorize!(s.linear)
+            scale!(s.linear.b, -one(T))
             solve!(s.linear)
             simd_xpy!(s.linear.b, s.x)
-            s.status.rᵣ = residual_relative(s.linear.b, s.x)
             function_stages!(s.x, s.linear.b, s.Fparams)
-            scale!(s.linear.b, -one(T))
-            s.status.rₛ = s.status.rₐ
-            s.status.rₐ = residual_absolute(s.linear.b)
-            s.status.rₛ = abs(s.status.rₛ - s.status.rₐ)/s.status.r₀
+            residual_absolute!(s.status, s.linear.b)
+            residual_relative!(s.status, s.linear.b)
 
             if solverConverged(s.status, s.params)
                 break

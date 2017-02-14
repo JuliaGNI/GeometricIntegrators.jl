@@ -13,8 +13,9 @@ end
 const DEFAULT_atol=2eps()
 const DEFAULT_rtol=2eps()
 const DEFAULT_stol=2eps()
-const DEFAULT_nmax=100
-const DEFAULT_ϵ=sqrt(eps())
+const DEFAULT_nmax=1000
+const DEFAULT_nwarn=100
+const DEFAULT_ϵ=4sqrt(eps())
 
 abstract NonlinearFunctionParameters{T}
 
@@ -46,13 +47,13 @@ end
 
 
 type NonlinearSolverStatus{T}
-    i::Int      # iteration number
-    r₀::T       # initial residual (absolute)
-    rₐ::T       # residual (absolute)
-    rᵣ::T       # residual (relative)
-    rₛ::T       # residual (successive)
+    i::Int         # iteration number
+    rₐ::T          # residual (absolute)
+    rᵣ::T          # residual (relative)
+    rₛ::T          # residual (successive)
+    r₀::Vector{T}  # initial residual (absolute)
 
-    NonlinearSolverStatus() = new(0, 0., 0., 0., 0.)
+    NonlinearSolverStatus(n) = new(0, 0, 0, 0, zeros(T, n))
 end
 
 Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
@@ -60,9 +61,8 @@ Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
                         (@sprintf "%14.8e" status.rᵣ), ", ", (@sprintf "%14.8e" status.rₛ))
 
 function solverConverged(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
-    return status.rₐ < params.atol² ||
-           status.rₐ < params.rtol² * status.r₀ ||
-           status.rₛ < params.stol²
+    return status.rₐ ≤ params.atol² ||
+           status.rᵣ ≤ params.rtol²
 end
 
 function solverStatusOK(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
@@ -82,19 +82,28 @@ function getLinearSolver(T, n, linear_solver)
 end
 
 
-function residual_absolute{T}(x::Vector{T})
-    local r::T = 0.
-    for xᵢ in x
-        r = max(r, xᵢ*xᵢ)
+function residual_initial!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
+    @assert length(y) == length(status.r₀)
+    @inbounds for i in 1:length(status.r₀)
+        status.r₀[i] = y[i]^2
     end
-    r
+    status.rₐ = maximum(status.r₀)
+    status.rᵣ = 1
 end
 
-function residual_relative{T}(δx::Vector{T}, x::Vector{T})
-    @assert length(x) == length(δx)
-    local r::T = 0.
-    for i in 1:length(x)
-        r = max(r, abs(δx[i] / x[i]))
+
+function residual_absolute!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
+    @assert length(y) == length(status.r₀)
+    status.rₐ = 0
+    @inbounds for yᵢ in y
+        status.rₐ = max(status.rₐ, yᵢ^2)
     end
-    r
+end
+
+function residual_relative!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
+    @assert length(y) == length(status.r₀)
+    status.rᵣ = 0
+    @inbounds for i in 1:length(y)
+        status.rᵣ = max(status.rᵣ, y[i]^2 / status.r₀[i])
+    end
 end

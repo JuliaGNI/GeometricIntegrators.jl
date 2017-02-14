@@ -3,6 +3,14 @@ abstract AbstractNewtonSolver{T} <: NonlinearSolver{T}
 
 @define newton_solver_variables begin
     x::Vector{T}
+    J::Matrix{T}
+
+    x₀::Vector{T}
+    x₁::Vector{T}
+    y₀::Vector{T}
+    y₁::Vector{T}
+    δx::Vector{T}
+    δy::Vector{T}
 
     Fparams::TF
     Jparams::TJ

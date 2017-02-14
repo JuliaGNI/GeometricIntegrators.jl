@@ -12,11 +12,12 @@ module Solvers
     include("solvers/linear/lu_solver_lapack.jl")
 
     export NonlinearSolver, AbstractNewtonSolver, NewtonSolver, QuasiNewtonSolver,
-           NonlinearFunctionParameters, solverConverged, solverStatusOK,
-           solve!, function_stages!
+           NonlinearFunctionParameters,
+           residual_initial!, residual_absolute!, residual_relative!,
+           solverConverged, solverStatusOK, solve!, function_stages!
 
-    export DEFAULT_atol, DEFAULT_rtol, DEFAULT_stol, DEFAULT_nmax, DEFAULT_ϵ,
-           DEFAULT_NonlinearSolver
+    export DEFAULT_atol, DEFAULT_rtol, DEFAULT_stol, DEFAULT_nmax, DEFAULT_nwarn,
+           DEFAULT_ϵ, DEFAULT_NonlinearSolver
 
     include("solvers/nonlinear/nonlinear_solvers.jl")
     include("solvers/nonlinear/jacobian.jl")
