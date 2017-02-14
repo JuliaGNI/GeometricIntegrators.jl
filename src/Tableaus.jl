@@ -68,7 +68,7 @@ module Tableaus
 
     export getTableauImplicitEuler, getTableauImplicitMidpoint,
            getTableauGLRK1, getTableauGLRK2, getTableauGLRK3,
-           getTableauGLRK
+           getTableauGLRK, getTableauSRK3
 
     include("tableaus/tableaus_sirk.jl")
 
