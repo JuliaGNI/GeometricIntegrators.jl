@@ -29,10 +29,6 @@ function f_pode(t, q, p, f)
     f[1] = 2p[1]
 end
 
-function λ_pode(t, q, p, v)
-    nothing
-end
-
 pode  = PODE{eltype(q₀), typeof(t₀), typeof(v_pode), typeof(f_pode), 1}(1, 1, v_pode, f_pode, t₀, q₀, p₀)
 pode1 = PODE(v_pode, f_pode, t₀, q₀, p₀)
 pode2 = PODE(v_pode, f_pode, q₀, p₀)
@@ -43,9 +39,25 @@ pode2 = PODE(v_pode, f_pode, q₀, p₀)
 @test hash(pode1) == hash(pode2)
 
 
-iode  = IODE{eltype(q₀), typeof(t₀), typeof(v_pode), typeof(f_pode), typeof(λ_pode), 1}(1, 1, v_pode, f_pode, λ_pode, t₀, q₀, p₀)
-iode1 = IODE(v_pode, f_pode, λ_pode, t₀, q₀, p₀)
-iode2 = IODE(v_pode, f_pode, λ_pode, q₀, p₀)
+function iode_α(t, q, v, p)
+    p[1] = v[1]
+end
+
+function iode_f(t, q, v, f)
+    f[1] = sin(q[1])
+end
+
+function iode_g(t, q, λ, g)
+    g[1] = λ[1]
+end
+
+function iode_v(t, q, p, v)
+    v[1] = p[1]
+end
+
+iode  = IODE{eltype(q₀), typeof(t₀), typeof(iode_α), typeof(iode_f), typeof(iode_g), typeof(iode_v), 1}(1, 1, iode_α, iode_f, iode_g, iode_v, t₀, q₀, p₀)
+iode1 = IODE(iode_α, iode_f, iode_g, iode_v, t₀, q₀, p₀)
+iode2 = IODE(iode_α, iode_f, iode_g, iode_v, q₀, p₀)
 
 @test iode == iode1
 @test iode == iode2

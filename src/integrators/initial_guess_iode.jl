@@ -24,7 +24,7 @@ type InitialGuessIODE{DT, TT, VT, FT, IT <: Interpolator}
     f₁::Vector{DT}
 end
 
-function InitialGuessIODE{DT,TT,FT,PT,VT}(interp, equ::IODE{DT,TT,FT,PT,VT}, Δt::TT)
+function InitialGuessIODE{DT,TT,ΑT,FT,GT,VT}(interp, equ::IODE{DT,TT,ΑT,FT,GT,VT}, Δt::TT)
     InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
                                          equ.v, equ.f, Δt, 0, 0,
                                          zeros(DT, equ.d), zeros(DT, equ.d),

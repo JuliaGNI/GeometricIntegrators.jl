@@ -13,7 +13,8 @@ module Integrators
     export InitialGuess, InitialGuessIODE, initialize!, update!
 
     export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK, IntegratorSIRK,
-           IntegratorEPRK, IntegratorIPRK, IntegratorVPRK, IntegratorVSPARK,
+           IntegratorEPRK, IntegratorIPRK, IntegratorVPRK, IntegratorVPARK, IntegratorVSPARK,
+           IntegratorVPRKpStandard, IntegratorVPRKpSymplectic, IntegratorVPRKpSymmetric,
            IntegratorIPARK,
            IntegratorSARK, IntegratorSPARK,
            integrate, integrate!, function_stages!
@@ -30,6 +31,9 @@ module Integrators
     include("integrators/integrators_eprk.jl")
     include("integrators/integrators_iprk.jl")
     include("integrators/integrators_vprk.jl")
+    include("integrators/integrators_vprk_pstandard.jl")
+    include("integrators/integrators_vprk_psymplectic.jl")
+    include("integrators/integrators_vprk_psymmetric.jl")
     include("integrators/integrators_ark.jl")
     include("integrators/integrators_sark.jl")
     include("integrators/integrators_park.jl")

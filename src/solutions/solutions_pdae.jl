@@ -13,7 +13,7 @@ immutable SolutionPDAE{dType, tType, N} <: Solution{dType, tType, N}
     nsave::Int
 end
 
-function SolutionPDAE{DT,TT}(equation::Union{PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1)
+function SolutionPDAE{DT,TT}(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1)
     N  = equation.n > 1 ? 3 : 2
     nd = equation.d
     nm = equation.m
@@ -42,6 +42,10 @@ function set_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, equ::Union{PDA
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, equ.λ₀)
 end
 
+function set_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, equ::IODE{DT,TT})
+    set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, zeros(equ.q₀))
+end
+
 function set_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, t₀::TT, q₀::Array{DT}, p₀::Array{DT}, λ₀::Array{DT})
     set_data!(sol.q, q₀, 0)
     set_data!(sol.p, p₀, 0)
@@ -55,12 +59,25 @@ function get_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, q::Vector{DT},
     get_data!(sol.λ, λ, 0, k)
 end
 
+function get_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, k)
+    get_data!(sol.q, q, 0, k)
+    get_data!(sol.p, p, 0, k)
+end
+
 function copy_solution!{DT,TT}(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, λ::Vector{DT}, n, k)
     if mod(n, sol.nsave) == 0
         j = div(n, sol.nsave)
         set_data!(sol.q, q, j, k)
         set_data!(sol.p, p, j, k)
         set_data!(sol.λ, λ, j, k)
+    end
+end
+
+function copy_solution!{DT,TT}(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, n, k)
+    if mod(n, sol.nsave) == 0
+        j = div(n, sol.nsave)
+        set_data!(sol.q, q, j, k)
+        set_data!(sol.p, p, j, k)
     end
 end
 

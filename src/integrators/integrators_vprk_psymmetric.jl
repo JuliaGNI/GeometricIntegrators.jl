@@ -1,8 +1,9 @@
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-type NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT} <: NonlinearFunctionParameters{DT}
+type NonlinearFunctionParametersVPRKpSymmetric{DT,TT,ΑT,FT,GT} <: NonlinearFunctionParameters{DT}
     α::ΑT
     f::FT
+    g::GT
 
     Δt::TT
 
@@ -11,32 +12,47 @@ type NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT} <: NonlinearFunctionParameter
 
     t_q::CoefficientsRK{TT}
     t_p::CoefficientsRK{TT}
+    R∞::Int
     d_v::Vector{TT}
+    b_λ::Vector{TT}
 
     t::TT
 
     q::Vector{DT}
     v::Vector{DT}
     p::Vector{DT}
+
+    q̅::Vector{DT}
+    p̅::Vector{DT}
+    λ::Vector{DT}
     μ::Vector{DT}
 
     Q::Matrix{DT}
     V::Matrix{DT}
     P::Matrix{DT}
     F::Matrix{DT}
+
     Y::Matrix{DT}
     Z::Matrix{DT}
+    U::Matrix{DT}
+    G::Matrix{DT}
 
     tQ::Vector{DT}
     tV::Vector{DT}
     tP::Vector{DT}
     tF::Vector{DT}
+    tU::Vector{DT}
+    tG::Vector{DT}
 
-    function NonlinearFunctionParametersVPRK(α, f, Δt, d, s, t_q, t_p, d_v)
+    function NonlinearFunctionParametersVPRKpSymmetric(α, f, g, Δt, d, s, t_q, t_p, R∞, d_v)
         # create solution vectors
         q = zeros(DT,d)
         v = zeros(DT,d)
         p = zeros(DT,d)
+
+        q̅ = zeros(DT,d)
+        p̅ = zeros(DT,d)
+        λ = zeros(DT,d)
         μ = zeros(DT,d)
 
         # create internal stage vectors
@@ -44,24 +60,31 @@ type NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT} <: NonlinearFunctionParameter
         V = zeros(DT,d,s)
         P = zeros(DT,d,s)
         F = zeros(DT,d,s)
+
         Y = zeros(DT,d,s)
         Z = zeros(DT,d,s)
+        U = zeros(DT,d,2)
+        G = zeros(DT,d,2)
 
         # create temporary vectors
         tQ = zeros(DT,d)
         tV = zeros(DT,d)
         tP = zeros(DT,d)
         tF = zeros(DT,d)
+        tU = zeros(DT,d)
+        tG = zeros(DT,d)
 
-        new(α, f, Δt, d, s, t_q, t_p, d_v, 0, q, v, p, μ, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
+        b_λ = float([1, R∞])
+
+        new(α, f, g, Δt, d, s, t_q, t_p, R∞, d_v, b_λ, 0, q, v, p, q̅, p̅, λ, μ, Q, V, P, F, Y, Z, U, G, tQ, tV, tP, tF, tU, tG)
     end
 end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-function function_stages!{DT,TT,ΑT,FT}(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT})
-    local tqᵢ::TT
-    local tpᵢ::TT
-    local tf::DT
+function function_stages!{DT,TT,ΑT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersVPRKpSymmetric{DT,TT,ΑT,FT,GT})
+    local tᵢ::TT
+    local t₀::TT = params.t
+    local t₁::TT = params.t + params.Δt
 
     # copy y to V
     for i in 1:params.s
@@ -70,17 +93,28 @@ function function_stages!{DT,TT,ΑT,FT}(y::Vector{DT}, b::Vector{DT}, params::No
         end
     end
 
+    # copy y to λ, q̅ and p̅
+    for k in 1:params.d
+        params.p̅[k] = y[params.d*(params.s+0)+k]
+        params.λ[k] = y[params.d*(params.s+1)+k]
+        params.q̅[k] = y[params.d*(params.s+2)+k]
+    end
+
     # copy y to μ
     if length(params.d_v) > 0
         for k in 1:params.d
-            params.μ[k] = y[params.d*params.s+k]
+            params.μ[k] = y[params.d*(params.s+3)+k]
         end
     end
+
+    # compute U=λ
+    simd_copy_yx_first!(params.λ, params.U, 1)
+    simd_copy_yx_first!(params.λ, params.U, 2)
 
     # compute Y and Q
     for i in 1:params.s
         for k in 1:params.d
-            params.Y[k,i] = 0
+            params.Y[k,i] = params.U[k,1]
             for j in 1:params.s
                 params.Y[k,i] += params.t_q.a[i,j] * params.V[k,j]
             end
@@ -101,15 +135,48 @@ function function_stages!{DT,TT,ΑT,FT}(y::Vector{DT}, b::Vector{DT}, params::No
         simd_copy_yx_first!(params.tF, params.F, i)
     end
 
-    # compute b = - [(Y-AV), (P-AF), ΛV]
+    # compute G=g(q,λ)
+    params.g(t₀, params.q, params.λ, params.tG)
+    simd_copy_yx_first!(params.tG, params.G, 1)
+
+    params.g(t₁, params.q̅, params.λ, params.tG)
+    simd_copy_yx_first!(params.tG, params.G, 2)
+
+    # compute tP=α(tQ)
+    params.α(t₁, params.q̅, params.λ, params.tP)
+
+    # compute b = - [P-AF-U]
     for i in 1:params.s
         for k in 1:params.d
-            tf = 0
+            params.Z[k,i] = params.G[k,1]
             for j in 1:params.s
-                tf += params.t_p.a[i,j] * params.F[k,j]
+                params.Z[k,i] += params.t_p.a[i,j] * params.F[k,j]
             end
-            b[params.d*(i-1)+k] = - (params.P[k,i] - params.p[k]) + params.Δt * tf
+            b[params.d*(i-1)+k] = - params.P[k,i] + params.p[k] + params.Δt * params.Z[k,i]
         end
+    end
+
+    # compute b = - [p-α(q)]
+    for k in 1:params.d
+        b[params.d*params.s+k] = - params.p̅[k] + params.tP[k]
+    end
+
+    # compute b = - [q-bV-U]
+    for k in 1:params.d
+        params.tV[k] = params.U[k,1] + params.R∞ * params.U[k,2]
+        for j in 1:params.s
+            params.tV[k] += params.t_q.b[j] * params.V[k,j]
+        end
+        b[params.d*(params.s+1)+k] = - params.q̅[k] + params.q[k] + params.Δt * params.tV[k]
+    end
+
+    # compute b = - [α(q)-bF-G]
+    for k in 1:params.d
+        params.tF[k] = params.G[k,1] + params.R∞ * params.G[k,2]
+        for j in 1:params.s
+            params.tF[k] += params.t_p.b[j] * params.F[k,j]
+        end
+        b[params.d*(params.s+2)+k] = - params.p̅[k] + params.p[k] + params.Δt * params.tF[k]
     end
 
     if length(params.d_v) > 0
@@ -120,9 +187,9 @@ function function_stages!{DT,TT,ΑT,FT}(y::Vector{DT}, b::Vector{DT}, params::No
         end
 
         for k in 1:params.d
-            b[params.d*params.s+k] = 0
+            b[params.d*(params.s+3)+k] = 0
             for i in 1:params.s
-                b[params.d*params.s+k] -= params.V[k,i] * params.d_v[i]
+                b[params.d*(params.s+3)+k] -= params.V[k,i] * params.d_v[i]
             end
         end
     end
@@ -130,10 +197,11 @@ end
 
 
 "Variational partitioned Runge-Kutta integrator."
-immutable IntegratorVPRK{DT,TT,ΑT,FT,GT,VT,ST,IT} <: Integrator{DT,TT}
+immutable IntegratorVPRKpSymmetric{DT,TT,ΑT,FT,GT,VT,ST,IT} <: Integrator{DT,TT}
     equation::IODE{DT,TT,ΑT,FT,GT,VT}
     tableau::TableauVPRK{TT}
     Δt::TT
+    b_λ::Vector{TT}
 
     solver::ST
     iguess::InitialGuessIODE{DT,TT,VT,FT,IT}
@@ -142,26 +210,35 @@ immutable IntegratorVPRK{DT,TT,ΑT,FT,GT,VT,ST,IT} <: Integrator{DT,TT}
     v::Array{DT,1}
     p::Array{DT,1}
 
+    q̅::Array{DT,1}
+    p̅::Array{DT,1}
+    λ::Array{DT,1}
+
     qₑᵣᵣ::Vector{DT}
     pₑᵣᵣ::Vector{DT}
 
-    y::Array{DT,1}
-    z::Array{DT,1}
-
     Q::Array{DT,2}
     V::Array{DT,2}
+    U::Array{DT,2}
+
     P::Array{DT,2}
     F::Array{DT,2}
+    G::Array{DT,2}
+
+    y::Array{DT,1}
+    z::Array{DT,1}
+    u::Array{DT,1}
+    g::Array{DT,1}
 end
 
-function IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
+function IntegratorVPRKpSymmetric{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
                                         nonlinear_solver=DEFAULT_NonlinearSolver,
                                         nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
                                         interpolation=HermiteInterpolation{DT})
     D = equation.d
     S = tableau.s
 
-    N = D*S
+    N = D*(S+3)
 
     if isdefined(tableau, :d)
         N += D
@@ -170,18 +247,21 @@ function IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT,GT,VT}, 
         d_v = DT[]
     end
 
-    # create solution vector for internal stages / nonlinear solver
-    z = zeros(DT, N)
+    # create update vectors
+    y = zeros(DT,D)
+    z = zeros(DT,D)
+    u = zeros(DT,D)
+    g = zeros(DT,D)
 
     # create params
-    params = NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT}(
-                                                equation.α, equation.f,
+    params = NonlinearFunctionParametersVPRKpSymmetric{DT,TT,ΑT,FT,GT}(
+                                                equation.α, equation.f, equation.g,
                                                 Δt, D, S,
-                                                tableau.q, tableau.p,
+                                                tableau.q, tableau.p, tableau.R∞,
                                                 d_v)
 
     # create solver
-    solver = nonlinear_solver(z, params; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+    solver = nonlinear_solver(zeros(DT,N), params; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
 
     # create initial guess
     iguess = InitialGuessIODE(interpolation, equation, Δt)
@@ -190,19 +270,19 @@ function IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT,GT,VT}, 
     qₑᵣᵣ = zeros(DT,D)
     pₑᵣᵣ = zeros(DT,D)
 
-    y = zeros(DT,D)
-    z = zeros(DT,D)
-
-    IntegratorVPRK{DT, TT, ΑT, FT, GT, VT, typeof(solver), typeof(iguess.int)}(
-                                        equation, tableau, Δt, solver, iguess,
+    IntegratorVPRKpSymmetric{DT, TT, ΑT, FT, GT, VT, typeof(solver), typeof(iguess.int)}(
+                                        equation, tableau, Δt, params.b_λ, solver, iguess,
                                         params.q, params.v, params.p,
-                                        qₑᵣᵣ, pₑᵣᵣ, y, z,
-                                        params.Q, params.V, params.P, params.F)
+                                        params.q̅, params.p̅, params.λ,
+                                        qₑᵣᵣ, pₑᵣᵣ,
+                                        params.Q, params.V, params.U,
+                                        params.P, params.F, params.G,
+                                        y, z, u, g)
 end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N})
+function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpSymmetric{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N})
     # loop over initial conditions
     for m in 1:sol.ni
         local j::Int
@@ -229,9 +309,19 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT
                     int.solver.x[int.equation.d*(i-1)+k] = int.v[k]
                 end
             end
+            evaluate!(int.iguess, int.y, int.z, int.v, one(TT), one(TT))
+            for k in 1:int.equation.d
+                int.solver.x[int.equation.d*(int.tableau.s+0)+k] = int.z[k]
+            end
+            for k in 1:int.equation.d
+                int.solver.x[int.equation.d*(int.tableau.s+1)+k] = 0
+            end
+            for k in 1:int.equation.d
+                int.solver.x[int.equation.d*(int.tableau.s+2)+k] = int.y[k]
+            end
             if isdefined(int.tableau, :d)
                 for k in 1:int.equation.d
-                    int.solver.x[int.equation.d*int.tableau.s+k] = 0
+                    int.solver.x[int.equation.d*(int.tableau.s+3)+k] = 0
                 end
             end
 
@@ -246,14 +336,19 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT
                 break
             end
 
-            # compute final update
+            # copy solution
             simd_mult!(int.y, int.V, int.tableau.q.b)
             simd_mult!(int.z, int.F, int.tableau.p.b)
             simd_axpy!(int.Δt, int.y, int.q, int.qₑᵣᵣ)
             simd_axpy!(int.Δt, int.z, int.p, int.pₑᵣᵣ)
 
+            simd_mult!(int.u, int.U, int.b_λ)
+            simd_mult!(int.g, int.G, int.b_λ)
+            simd_axpy!(int.Δt, int.u, int.q, int.qₑᵣᵣ)
+            simd_axpy!(int.Δt, int.g, int.p, int.pₑᵣᵣ)
+
             # copy to solution
-            copy_solution!(sol, int.q, int.p, n, m)
+            copy_solution!(sol, int.q, int.p, int.λ, n, m)
         end
     end
     nothing

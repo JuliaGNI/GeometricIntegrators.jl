@@ -23,6 +23,21 @@ sol = integrate(int, nt)
 int = IntegratorFIRK(ode, getTableauImplicitMidpoint(), Δt, nonlinear_solver=NewtonSolver)
 sol = integrate(int, nt)
 
+int = IntegratorFIRK(ode, getTableauGLRK1(), Δt, nonlinear_solver=NewtonSolver)
+sol = integrate(int, nt)
+
+int = IntegratorFIRK(ode, getTableauGLRK2(), Δt, nonlinear_solver=NewtonSolver)
+sol = integrate(int, nt)
+
+int = IntegratorFIRK(ode, getTableauGLRK3(), Δt, nonlinear_solver=NewtonSolver)
+sol = integrate(int, nt)
+
+int = IntegratorFIRK(ode, getTableauGLRK(4), Δt, nonlinear_solver=NewtonSolver)
+sol = integrate(int, nt)
+
+int = IntegratorFIRK(ode, getTableauSRK3(), Δt, nonlinear_solver=NewtonSolver)
+sol = integrate(int, nt)
+
 pint = Integrator(pode, getTableauSymplecticEulerA(), Δt)
 psol = integrate(pint, nt)
 
@@ -37,6 +52,16 @@ vsol = integrate(vint, nt)
 
 vint = Integrator(iode, getTableauLobIIIAIIIB3(), Δt)
 vsol = integrate(vint, nt)
+
+vint = IntegratorVPRKpStandard(iode, getTableauVPGLRK(1), Δt)
+isol = integrate(vint, nt)
+
+vint = IntegratorVPRKpSymplectic(iode, getTableauVPGLRK(1), Δt)
+isol = integrate(vint, nt)
+
+vint = IntegratorVPRKpSymmetric(iode, getTableauVPGLRK(1), Δt)
+isol = integrate(vint, nt)
+
 dint = Integrator(idae, getTableauSymplecticProjection(:pglrk2p, glrk2.q, glrk2.q), Δt)
 dsol = integrate(dint, nt)
 
