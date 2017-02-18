@@ -1,4 +1,6 @@
 
+using GeometricIntegrators.Problems.Pendulum
+
 Δt = 0.1
 nt = 10
 
@@ -61,6 +63,9 @@ isol = integrate(vint, nt)
 
 vint = IntegratorVPRKpSymmetric(iode, getTableauVPGLRK(1), Δt)
 isol = integrate(vint, nt)
+
+
+# TODO Add PDAE/PARK test.
 
 dint = Integrator(idae, getTableauSymplecticProjection(:pglrk2p, glrk2.q, glrk2.q), Δt)
 dsol = integrate(dint, nt)

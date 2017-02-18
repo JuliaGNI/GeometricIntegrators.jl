@@ -6,12 +6,13 @@ module Tableaus
     using ..Utils
 
     export CoefficientsRK, CoefficientsARK, CoefficientsPRK, CoefficientsMRK,
-           getCoefficientsGLRK,
+           getCoefficientsGLRK, getCoefficientsSRK3,
            getCoefficientsLobIIIA, getCoefficientsLobIIIB
 
     include("tableaus/coefficients.jl")
     include("tableaus/coefficients_glrk.jl")
     include("tableaus/coefficients_lob.jl")
+    include("tableaus/coefficients_srk.jl")
 
     export AbstractTableau
 
@@ -78,7 +79,8 @@ module Tableaus
 
     include("tableaus/tableaus_spark.jl")
 
-    export getTableauLobIIIAIIIB2, getTableauLobIIIAIIIB3, getTableauVPGLRK
+    export getTableauLobIIIAIIIB2, getTableauLobIIIAIIIB3, getTableauVPGLRK,
+           getTableauVPSRK3
 
     include("tableaus/tableaus_vprk.jl")
 

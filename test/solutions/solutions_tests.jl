@@ -1,4 +1,6 @@
 
+using GeometricIntegrators.Problems.Pendulum
+
 ntime = 10
 Δt    = .1
 

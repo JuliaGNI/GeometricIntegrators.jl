@@ -62,14 +62,14 @@ end
 function getTableauLobIIIAIIIB2pSymmetric()
     d = [+1.0, -1.0]
 
-    getTableauSymmetricProjection(:LobIIIAB2p, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), d; R∞=-1)
+    getTableauSymmetricProjection(:LobIIIAIIIB2pSymmetric, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), d; R∞=-1)
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with three stages and symmetric projection."
 function getTableauLobIIIAIIIB3pSymmetric()
     d = [+0.5, -1.0, +0.5]
 
-    getTableauSymmetricProjection(:LobIIIAB3p, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), d; R∞=+1)
+    getTableauSymmetricProjection(:LobIIIAIIIB3pSymmetric, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), d; R∞=+1)
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
@@ -77,5 +77,5 @@ function getTableauGLRKpSymmetric(s)
     glrk = getCoefficientsGLRK(s)
     R∞ = -1^s
 
-    getTableauSymmetricProjection(Symbol("vpglrk", s, "p"), glrk, glrk; R∞=R∞)
+    getTableauSymmetricProjection(Symbol("vpglrk", s, "pSymmetric"), glrk, glrk; R∞=R∞)
 end
