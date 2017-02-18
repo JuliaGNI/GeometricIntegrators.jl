@@ -15,7 +15,7 @@ end
 
 const DEFAULT_NonlinearSolver=QuasiNewtonSolver
 const DEFAULT_QUASINEWTON_REFACTORIZE=5
-const DEFAULT_LINESEARCH_nmax=10
+const DEFAULT_LINESEARCH_nmax=20
 const DEFAULT_ARMIJO_λ₀ = 1.0
 const DEFAULT_ARMIJO_σ₀ = 0.1
 const DEFAULT_ARMIJO_σ₁ = 0.5
@@ -52,7 +52,7 @@ function solve!{T}(s::QuasiNewtonSolver{T})
 
         for s.status.i = 1:s.params.nmax
             simd_copy!(s.x, s.x₀)
-            y₀norm = vecnorm(s.y₀, 2)
+            y₀norm = l2norm(s.y₀)
 
             # b = - y₀
             simd_copy_scale!(-one(T), s.y₀, s.linear.b)
@@ -71,6 +71,27 @@ function solve!{T}(s::QuasiNewtonSolver{T})
             # set λ to default initial value
             λ = DEFAULT_ARMIJO_λ₀
 
+            # use simple line search to determine a λ for which there is not Domain Error
+            for lsiter in 1:DEFAULT_LINESEARCH_nmax
+                # x₁ = x₀ + λ δx
+                simd_waxpy!(s.x₁, λ, s.δx, s.x₀)
+
+                try
+                    # y₁ = f(x₁)
+                    function_stages!(s.x₁, s.y₁, s.Fparams)
+
+                    break
+                catch DomainError
+                    # in case the new function value results in some DomainError
+                    # (e.g., for functions f(x) containing sqrt's or log's),
+                    # decrease λ and retry
+
+                    println("WARNING: Quasi-Newton Solver encountered Domain Error (lsiter=", lsiter, ", λ=", λ, ").")
+
+                    λ *= DEFAULT_ARMIJO_σ₁
+                end
+            end
+
             # x₁ = x₀ + λ δx
             simd_waxpy!(s.x₁, λ, s.δx, s.x₀)
 
@@ -78,8 +99,8 @@ function solve!{T}(s::QuasiNewtonSolver{T})
             function_stages!(s.x₁, s.y₁, s.Fparams)
 
             # compute norms of solutions
-            y₀norm = vecnorm(s.y₀, 2)
-            y₁norm = vecnorm(s.y₁, 2)
+            y₀norm = l2norm(s.y₀)
+            y₁norm = l2norm(s.y₁)
 
             if y₁norm < (one(T)-DEFAULT_ARMIJO_σ₀*λ)*y₀norm
                 nothing
