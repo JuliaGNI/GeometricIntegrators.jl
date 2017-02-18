@@ -19,6 +19,18 @@ function istrilstrict{T}(A::Matrix{T})
     return true
 end
 
+function L2norm(x)
+    local l2::eltype(x) = 0
+    for xᵢ in x
+        l2 += xᵢ^2
+    end
+    l2
+end
+
+function l2norm(x)
+    sqrt(L2norm(x))
+end
+
 function simd_scale!(x, a)
     @inbounds for i=1:length(x)
         x[i] *= a
