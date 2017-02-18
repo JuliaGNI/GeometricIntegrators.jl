@@ -85,6 +85,8 @@ function function_stages!{DT,TT,ΑT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params:
     local tᵢ::TT
     local t₀::TT = params.t
     local t₁::TT = params.t + params.Δt
+    local tf::DT
+    local sl::Int = div(params.s+1, 2)
 
     # copy y to V
     for i in 1:params.s
@@ -95,16 +97,9 @@ function function_stages!{DT,TT,ΑT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params:
 
     # copy y to λ, q̅ and p̅
     for k in 1:params.d
-        params.p̅[k] = y[params.d*(params.s+0)+k]
-        params.λ[k] = y[params.d*(params.s+1)+k]
-        params.q̅[k] = y[params.d*(params.s+2)+k]
-    end
-
-    # copy y to μ
-    if length(params.d_v) > 0
-        for k in 1:params.d
-            params.μ[k] = y[params.d*(params.s+3)+k]
-        end
+        params.q̅[k] = y[params.d*(params.s+0)+k]
+        params.p̅[k] = y[params.d*(params.s+1)+k]
+        params.λ[k] = y[params.d*(params.s+2)+k]
     end
 
     # compute U=λ
@@ -156,18 +151,18 @@ function function_stages!{DT,TT,ΑT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params:
         end
     end
 
-    # compute b = - [p-α(q)]
-    for k in 1:params.d
-        b[params.d*params.s+k] = - params.p̅[k] + params.tP[k]
-    end
-
     # compute b = - [q-bV-U]
     for k in 1:params.d
         params.tV[k] = params.U[k,1] + params.R∞ * params.U[k,2]
         for j in 1:params.s
             params.tV[k] += params.t_q.b[j] * params.V[k,j]
         end
-        b[params.d*(params.s+1)+k] = - params.q̅[k] + params.q[k] + params.Δt * params.tV[k]
+        b[params.d*(params.s+0)+k] = - (params.q̅[k] - params.q[k]) / params.Δt + params.tV[k]
+    end
+
+    # compute b = - [p-α(q)]
+    for k in 1:params.d
+        b[params.d*(params.s+1)+k] = - params.p̅[k] + params.tP[k]
     end
 
     # compute b = - [α(q)-bF-G]
@@ -180,16 +175,26 @@ function function_stages!{DT,TT,ΑT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params:
     end
 
     if length(params.d_v) > 0
-        for i in 1:params.s
-            for k in 1:params.d
-                b[params.d*(i-1)+k] -= params.d_v[i] * params.μ[k]
+        # compute μ
+        for k in 1:params.d
+            params.μ[k] = params.t_p.b[sl] / params.d_v[sl] * ( - params.P[k,sl] + params.p[k] + params.Δt * params.Z[k,sl] )
+        end
+
+        # replace equation for Pₗ with constraint on V
+        for k in 1:params.d
+            b[params.d*(sl-1)+k] = 0
+            for i in 1:params.s
+                b[params.d*(sl-1)+k] += params.V[k,i] * params.d_v[i]
             end
         end
 
-        for k in 1:params.d
-            b[params.d*(params.s+3)+k] = 0
-            for i in 1:params.s
-                b[params.d*(params.s+3)+k] -= params.V[k,i] * params.d_v[i]
+        # modify P₁, ..., Pₛ except for Pₗ
+        for i in 1:params.s
+            if i ≠ sl
+                tf = params.d_v[i] / params.t_p.b[i]
+                for k in 1:params.d
+                    b[params.d*(i-1)+k] -= tf * params.μ[k]
+                end
             end
         end
     end
@@ -241,7 +246,6 @@ function IntegratorVPRKpSymmetric{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,F
     N = D*(S+3)
 
     if isdefined(tableau, :d)
-        N += D
         d_v = tableau.d
     else
         d_v = DT[]
@@ -309,20 +313,15 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpSymmetric{DT,TT,Α
                     int.solver.x[int.equation.d*(i-1)+k] = int.v[k]
                 end
             end
-            evaluate!(int.iguess, int.y, int.z, int.v, one(TT), one(TT))
+            # evaluate!(int.iguess, int.y, int.z, int.v, one(TT), one(TT))
             for k in 1:int.equation.d
-                int.solver.x[int.equation.d*(int.tableau.s+0)+k] = int.z[k]
+                int.solver.x[int.equation.d*(int.tableau.s+0)+k] = int.y[k]
             end
             for k in 1:int.equation.d
-                int.solver.x[int.equation.d*(int.tableau.s+1)+k] = 0
+                int.solver.x[int.equation.d*(int.tableau.s+1)+k] = int.z[k]
             end
             for k in 1:int.equation.d
-                int.solver.x[int.equation.d*(int.tableau.s+2)+k] = int.y[k]
-            end
-            if isdefined(int.tableau, :d)
-                for k in 1:int.equation.d
-                    int.solver.x[int.equation.d*(int.tableau.s+3)+k] = 0
-                end
+                int.solver.x[int.equation.d*(int.tableau.s+2)+k] = 0
             end
 
             # call nonlinear solver

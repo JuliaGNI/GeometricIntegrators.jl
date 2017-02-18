@@ -112,7 +112,6 @@ function IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT
     N = D*S
 
     if isdefined(tableau, :d)
-        N += D
         d_v = tableau.d
     else
         d_v = DT[]
@@ -183,11 +182,6 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT
                 evaluate!(int.iguess, int.y, int.z, int.v, int.tableau.q.c[i], int.tableau.p.c[i])
                 for k in 1:int.equation.d
                     int.solver.x[int.equation.d*(i-1)+k] = int.v[k]
-                end
-            end
-            if isdefined(int.tableau, :d)
-                for k in 1:int.equation.d
-                    int.solver.x[int.equation.d*int.tableau.s+k] = 0
                 end
             end
 

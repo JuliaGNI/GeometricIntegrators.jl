@@ -62,18 +62,12 @@ function function_stages!{DT,TT,ΑT,FT}(y::Vector{DT}, b::Vector{DT}, params::No
     local tqᵢ::TT
     local tpᵢ::TT
     local tf::DT
+    local sl::Int = div(params.s+1, 2)
 
     # copy y to V
     for i in 1:params.s
         for k in 1:params.d
             params.V[k,i] = y[params.d*(i-1)+k]
-        end
-    end
-
-    # copy y to μ
-    if length(params.d_v) > 0
-        for k in 1:params.d
-            params.μ[k] = y[params.d*params.s+k]
         end
     end
 
@@ -113,16 +107,30 @@ function function_stages!{DT,TT,ΑT,FT}(y::Vector{DT}, b::Vector{DT}, params::No
     end
 
     if length(params.d_v) > 0
-        for i in 1:params.s
-            for k in 1:params.d
-                b[params.d*(i-1)+k] -= params.d_v[i] * params.μ[k]
+        # compute μ
+        for k in 1:params.d
+            tf = 0
+            for j in 1:params.s
+                tf += params.t_p.a[sl,j] * params.F[k,j]
+            end
+            params.μ[k] = params.t_p.b[sl] / params.d_v[sl] * ( - params.P[k,sl] + params.p[k] + params.Δt * tf )
+        end
+
+        # replace equation for Pₗ with constraint on V
+        for k in 1:params.d
+            b[params.d*(sl-1)+k] = 0
+            for i in 1:params.s
+                b[params.d*(sl-1)+k] += params.V[k,i] * params.d_v[i]
             end
         end
 
-        for k in 1:params.d
-            b[params.d*params.s+k] = 0
-            for i in 1:params.s
-                b[params.d*params.s+k] -= params.V[k,i] * params.d_v[i]
+        # modify P₁, ..., Pₛ except for Pₗ
+        for i in 1:params.s
+            if i ≠ sl
+                tf = params.d_v[i] / params.t_p.b[i]
+                for k in 1:params.d
+                    b[params.d*(i-1)+k] -= tf * params.μ[k]
+                end
             end
         end
     end
@@ -164,7 +172,6 @@ function IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT,GT,VT}, 
     N = D*S
 
     if isdefined(tableau, :d)
-        N += D
         d_v = tableau.d
     else
         d_v = DT[]
@@ -227,11 +234,6 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT
                 evaluate!(int.iguess, int.y, int.z, int.v, int.tableau.q.c[i], int.tableau.p.c[i])
                 for k in 1:int.equation.d
                     int.solver.x[int.equation.d*(i-1)+k] = int.v[k]
-                end
-            end
-            if isdefined(int.tableau, :d)
-                for k in 1:int.equation.d
-                    int.solver.x[int.equation.d*int.tableau.s+k] = 0
                 end
             end
 
