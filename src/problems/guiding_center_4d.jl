@@ -90,32 +90,41 @@ function toroidal_momentum(t,q)
 end
 
 
-function guiding_center_4d_iode_α(t, q, v, p)
-    p[1] = α1(t,q)
-    p[2] = α2(t,q)
-    p[3] = α3(t,q)
-    p[4] = α4(t,q)
-    nothing
+function f1(t, q, v)
+    dα1d1(t,q) * v[1] + dα2d1(t,q) * v[2] + dα3d1(t,q) * v[3]
 end
 
-function guiding_center_4d_iode_f(t, q, v, f)
-    f[1] = dα1d1(t,q) * v[1] + dα2d1(t,q) * v[2] + dα3d1(t,q) * v[3] - μ * dBd1(t,q)
-    f[2] = dα1d2(t,q) * v[1] + dα2d2(t,q) * v[2] + dα3d2(t,q) * v[3] - μ * dBd2(t,q)
-    f[3] = dα1d3(t,q) * v[1] + dα2d3(t,q) * v[2] + dα3d3(t,q) * v[3] - μ * dBd3(t,q)
-    f[4] = b1(t,q) * v[1] + b2(t,q) * v[2] + R(t,q) * b3(t,q) * v[3] - q[4]
-    nothing
+function f2(t, q, v)
+    dα1d2(t,q) * v[1] + dα2d2(t,q) * v[2] + dα3d2(t,q) * v[3]
 end
 
-function guiding_center_4d_iode_g(t, q, λ, g)
-    g[1] = dα1d1(t,q) * λ[1] + dα2d1(t,q) * λ[2] + dα3d1(t,q) * λ[3]
-    g[2] = dα1d2(t,q) * λ[1] + dα2d2(t,q) * λ[2] + dα3d2(t,q) * λ[3]
-    g[3] = dα1d3(t,q) * λ[1] + dα2d3(t,q) * λ[2] + dα3d3(t,q) * λ[3]
-    g[4] = b1(t,q) * λ[1] + b2(t,q) * λ[2] + R(t,q) * b3(t,q) * λ[3]
-    nothing
+function f3(t, q, v)
+    dα1d3(t,q) * v[1] + dα2d3(t,q) * v[2] + dα3d3(t,q) * v[3]
 end
 
-function guiding_center_4d_iode_v(t, q, p, v)
+function f4(t, q, v)
+    b1(t,q) * v[1] + b2(t,q) * v[2] + R(t,q) * b3(t,q) * v[3]
+end
 
+
+function dHd1(t, q)
+    μ * dBd1(t,q)
+end
+
+function dHd2(t, q)
+    μ * dBd2(t,q)
+end
+
+function dHd3(t, q)
+    μ * dBd3(t,q)
+end
+
+function dHd4(t, q)
+    q[4]
+end
+
+
+function guiding_center_4d_ode_v(t, q, v)
     local β₀ = β(t,q)
     local β₁ = β1(t,q)
     local β₂ = β2(t,q)
@@ -139,6 +148,39 @@ function guiding_center_4d_iode_v(t, q, p, v)
              + μ * ∇₃B * β₃ / β₀ )
 
     nothing
+end
+
+function guiding_center_4d_ode(q₀=q₀)
+    ODE(guiding_center_4d_ode_v, q₀)
+end
+
+
+function guiding_center_4d_iode_α(t, q, v, p)
+    p[1] = α1(t,q)
+    p[2] = α2(t,q)
+    p[3] = α3(t,q)
+    p[4] = α4(t,q)
+    nothing
+end
+
+function guiding_center_4d_iode_f(t, q, v, f)
+    f[1] = f1(t,q,v) - dHd1(t,q)
+    f[2] = f2(t,q,v) - dHd2(t,q)
+    f[3] = f3(t,q,v) - dHd3(t,q)
+    f[4] = f4(t,q,v) - dHd4(t,q)
+    nothing
+end
+
+function guiding_center_4d_iode_g(t, q, λ, g)
+    g[1] = f1(t,q,λ)
+    g[2] = f2(t,q,λ)
+    g[3] = f3(t,q,λ)
+    g[4] = f4(t,q,λ)
+    nothing
+end
+
+function guiding_center_4d_iode_v(t, q, p, v)
+    guiding_center_4d_ode_v(t, q, v)
 end
 
 function guiding_center_4d_iode(q₀=q₀, p₀=p₀)
