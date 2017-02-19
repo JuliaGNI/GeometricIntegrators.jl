@@ -34,31 +34,38 @@ immutable ODE{dType <: Number, tType <: Number, vType <: Function, N} <: Equatio
     v::vType
     t₀::tType
     q₀::Array{dType,N}
+    periodicity::Vector{dType}
 
-    function ODE(d, n, v, t₀, q₀)
+    function ODE(d, n, v, t₀, q₀; periodicity=[])
         @assert d == size(q₀,1)
         @assert n == size(q₀,2)
         @assert dType == eltype(q₀)
         @assert ndims(q₀) == N ∈ (1,2)
-        new(d, n, v, t₀, q₀)
+
+        if !(length(periodicity) == d)
+            periodicity = zeros(dType, d)
+        end
+
+        new(d, n, v, t₀, q₀, periodicity)
     end
 end
 
-function ODE{DT <: Number, TT <: Number, VT <: Function}(v::VT, t₀::TT, q₀::DenseArray{DT})
-    ODE{DT, TT, VT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), v, t₀, q₀)
+function ODE{DT <: Number, TT <: Number, VT <: Function}(v::VT, t₀::TT, q₀::DenseArray{DT}; periodicity=[])
+    ODE{DT, TT, VT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), v, t₀, q₀, periodicity=periodicity)
 end
 
-function ODE(v, q₀)
-    ODE(v, zero(eltype(q₀)), q₀)
+function ODE(v, q₀; periodicity=[])
+    ODE(v, zero(eltype(q₀)), q₀, periodicity=periodicity)
 end
 
-Base.hash(ode::ODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.v, hash(ode.t₀, hash(ode.q₀, h)))))
+Base.hash(ode::ODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.v, hash(ode.t₀, hash(ode.q₀, hash(ode.periodicity, h))))))
 Base.:(==)(ode1::ODE, ode2::ODE) = (
                                 ode1.d == ode2.d
                              && ode1.n == ode2.n
                              && ode1.v == ode2.v
                              && ode1.t₀ == ode2.t₀
-                             && ode1.q₀ == ode2.q₀)
+                             && ode1.q₀ == ode2.q₀
+                             && ode1.periodicity == ode2.periodicity)
 
 function Base.similar{DT, TT, VT}(ode::ODE{DT,TT,VT}, q₀::DenseArray{DT})
     similar(ode, ode.t₀, q₀)
