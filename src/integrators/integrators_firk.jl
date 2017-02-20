@@ -148,6 +148,13 @@ function integrate!{DT,TT,FT,ST,IT,N}(int::IntegratorFIRK{DT, TT, FT, ST, IT}, s
             simd_mult!(int.y, int.F, int.tableau.q.b)
             simd_axpy!(int.Δt, int.y, int.x)
 
+            # take care of periodic solutions
+            for k in 1:int.equation.d
+                if int.equation.periodicity[k] ≠ 0
+                    int.x[k] = mod(int.x[k], int.equation.periodicity[k])
+                end
+            end
+
             # copy to solution
             copy_solution!(sol, int.x, n, m)
         end

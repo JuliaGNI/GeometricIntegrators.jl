@@ -254,6 +254,13 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT
             simd_axpy!(int.Δt, int.y, int.q, int.qₑᵣᵣ)
             simd_axpy!(int.Δt, int.z, int.p, int.pₑᵣᵣ)
 
+            # take care of periodic solutions
+            for k in 1:int.equation.d
+                if int.equation.periodicity[k] ≠ 0
+                    int.q[k] = mod(int.q[k], int.equation.periodicity[k])
+                end
+            end
+
             # copy to solution
             copy_solution!(sol, int.q, int.p, n, m)
         end

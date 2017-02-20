@@ -1,6 +1,9 @@
 
 using GeometricIntegrators.Equations
 
+periodicity = zeros(q₀)
+periodicity[3] = 2π
+
 
 function α1(t, q)
     A1(t,q) + q[4] * b1(t,q)
@@ -151,7 +154,7 @@ function guiding_center_4d_ode_v(t, q, v)
 end
 
 function guiding_center_4d_ode(q₀=q₀)
-    ODE(guiding_center_4d_ode_v, q₀)
+    ODE(guiding_center_4d_ode_v, q₀; periodicity=periodicity)
 end
 
 
@@ -186,5 +189,5 @@ end
 function guiding_center_4d_iode(q₀=q₀, p₀=p₀)
     IODE(guiding_center_4d_iode_α, guiding_center_4d_iode_f,
          guiding_center_4d_iode_g, guiding_center_4d_iode_v,
-         q₀, p₀)
+         q₀, p₀; periodicity=periodicity)
 end

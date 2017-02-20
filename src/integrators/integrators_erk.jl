@@ -56,6 +56,13 @@ function integrate!{DT,TT,FT,N}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{D
             # compute final update
             simd_abXpy!(int.Δt, int.tableau.q.b, int.F, int.x)
 
+            # take care of periodic solutions
+            for k in 1:int.equation.d
+                if int.equation.periodicity[k] ≠ 0
+                    int.x[k] = mod(int.x[k], int.equation.periodicity[k])
+                end
+            end
+
             # copy to solution
             copy_solution!(sol, int.x, n, m)
         end

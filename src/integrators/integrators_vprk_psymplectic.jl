@@ -165,6 +165,13 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpSymplectic{DT,TT,�
             simd_axpy!(int.tableau.R∞*int.Δt, int.u, int.q, int.qₑᵣᵣ)
             simd_axpy!(int.tableau.R∞*int.Δt, int.g, int.p, int.pₑᵣᵣ)
 
+            # take care of periodic solutions
+            for k in 1:int.equation.d
+                if int.equation.periodicity[k] ≠ 0
+                    int.q[k] = mod(int.q[k], int.equation.periodicity[k])
+                end
+            end
+
             # copy to solution
             copy_solution!(sol, int.q, int.p, int.λ, n, m)
         end
