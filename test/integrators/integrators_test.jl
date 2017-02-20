@@ -64,6 +64,9 @@ isol = integrate(vint, nt)
 vint = IntegratorVPRKpSymmetric(iode, getTableauVPGLRK(1), Δt)
 isol = integrate(vint, nt)
 
+vint = IntegratorVPRKpMidpoint(iode, getTableauVPGLRK(1), Δt)
+isol = integrate(vint, nt)
+
 
 # TODO Add PDAE/PARK test.
 

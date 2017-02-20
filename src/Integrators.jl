@@ -15,7 +15,7 @@ module Integrators
     export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK, IntegratorSIRK,
            IntegratorEPRK, IntegratorIPRK, IntegratorVPRK, IntegratorVPARK, IntegratorVSPARK,
            IntegratorVPRKpStandard, IntegratorVPRKpSymplectic, IntegratorVPRKpSymmetric,
-           IntegratorIPARK,
+           IntegratorVPRKpMidpoint, IntegratorIPARK,
            IntegratorSARK, IntegratorSPARK,
            integrate, integrate!, function_stages!
 
@@ -34,6 +34,7 @@ module Integrators
     include("integrators/integrators_vprk_pstandard.jl")
     include("integrators/integrators_vprk_psymplectic.jl")
     include("integrators/integrators_vprk_psymmetric.jl")
+    include("integrators/integrators_vprk_pmidpoint.jl")
     include("integrators/integrators_ark.jl")
     include("integrators/integrators_sark.jl")
     include("integrators/integrators_park.jl")
