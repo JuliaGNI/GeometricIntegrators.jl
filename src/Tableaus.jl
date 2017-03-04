@@ -6,10 +6,15 @@ module Tableaus
     using ..Utils
 
     export CoefficientsRK, CoefficientsARK, CoefficientsPRK, CoefficientsMRK,
-           getCoefficientsGLRK, getCoefficientsSRK3,
+           get_symplectic_conjugate_coefficients,
+           getCoefficientsGLRK, getCoefficientsPGLRK, getTableauPGLRK,
+           getCoefficientsGLRK1, getCoefficientsGLRK2, getCoefficientsGLRK3,
+           getCoefficientsGLRK4, getCoefficientsGLRK5, getCoefficientsGLRK6,
+           getCoefficientsSRK3,
            getCoefficientsLobIIIA, getCoefficientsLobIIIB
 
     include("tableaus/coefficients.jl")
+    include("tableaus/coefficients_symplectic.jl")
     include("tableaus/coefficients_glrk.jl")
     include("tableaus/coefficients_lob.jl")
     include("tableaus/coefficients_srk.jl")

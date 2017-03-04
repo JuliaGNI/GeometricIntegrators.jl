@@ -193,3 +193,69 @@ function Base.show(io::IO, tab::CoefficientsMRK)
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)
 end
+
+
+"Holds the coefficients of a projected Gauss-Legendre Runge-Kutta method."
+immutable CoefficientsPGLRK{T} <: AbstractCoefficients{T}
+    @HeaderCoefficientsRK
+    @CoefficientsRK
+
+    P::Matrix{T}
+    Q::Matrix{T}
+    X::Matrix{T}
+    W::Matrix{T}
+    A::Matrix{T}
+
+    function CoefficientsPGLRK(name,o,s,a,b,c,P,X,W)
+        @assert T <: Real
+        @assert isa(name, Symbol)
+        @assert isa(o, Integer)
+        @assert isa(s, Integer)
+        @assert s ≥ 2 "Number of stages must be ≥ 2"
+        @assert s==size(a,1)==size(a,2)==length(b)==length(c)
+        @assert s==size(P,1)==size(P,2)
+        @assert s==size(X,1)==size(X,2)
+        @assert s==size(W,1)==size(W,2)
+
+        Q = inv(P)
+        A = zeros(a)
+        B = zeros(a)
+
+        simd_mult!(B, W, Q)
+        simd_mult!(A, P, B)
+
+        new(name,o,s,a,b,c,P,Q,X,W,A)
+    end
+end
+
+function CoefficientsPGLRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}, P::Matrix{T}, X::Matrix{T}, W::Matrix{T})
+    CoefficientsPGLRK{T}(name, order, length(c), a, b, c, P, X, W)
+end
+
+Base.hash(tab::CoefficientsPGLRK, h::UInt) = hash(tab.o, hash(tab.s, hash(tab.a, hash(tab.b, hash(tab.c, hash(tab.P, hash(tab.Q, hash(tab.X, hash(tab.W, hash(tab.A, h))))))))))
+
+Base.:(==){T1, T2}(tab1::CoefficientsPGLRK{T1}, tab2::CoefficientsPGLRK{T2}) = (tab1.o == tab2.o
+                                                             && tab1.s == tab2.s
+                                                             && tab1.a == tab2.a
+                                                             && tab1.b == tab2.b
+                                                             && tab1.c == tab2.c
+                                                             && tab1.P == tab2.P
+                                                             && tab1.Q == tab2.Q
+                                                             && tab1.X == tab2.X
+                                                             && tab1.W == tab2.W
+                                                             && tab1.A == tab2.A)
+
+Base.isequal{T1, T2}(tab1::CoefficientsPGLRK{T1}, tab2::CoefficientsPGLRK{T2}) = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
+
+"Print Runge-Kutta coefficients."
+function Base.show(io::IO, tab::CoefficientsPGLRK)
+    print(io, "Projected Gauss-Legendre Runge-Kutta Coefficients ", tab.name, " with ", tab.s, " stages and order ", tab.o)
+    print(io, "  a = ", tab.a)
+    print(io, "  b = ", tab.b)
+    print(io, "  c = ", tab.c)
+    print(io, "  P = ", tab.P)
+    print(io, "  Q = ", tab.Q)
+    print(io, "  X = ", tab.X)
+    print(io, "  W = ", tab.W)
+    print(io, "  A = ", tab.A)
+end
