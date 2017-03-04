@@ -5,9 +5,9 @@ module PointVortices
     export point_vortices_ode, point_vortices_iode,
            hamiltonian, angular_momentum, α1, α2, α3, α4
 
-    const γ₁ = +0.1
-    const γ₂ = +0.1
-    const q₀ = [1., +0.1, 1., -0.1]
+    const γ₁ = +0.5
+    const γ₂ = +0.5
+    const q₀ = [0.5, +0.1, 0.5, -0.1]
 
 
     function S{T}(x::T,y::T)
