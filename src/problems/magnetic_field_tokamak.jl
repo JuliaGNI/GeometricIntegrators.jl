@@ -128,6 +128,18 @@ function R(t,x)
     x[1]
 end
 
+function dRd1(t,x)
+    return one(eltype(x))
+end
+
+function dRd2(t,x)
+    return zero(eltype(x))
+end
+
+function dRd3(t,x)
+    return zero(eltype(x))
+end
+
 function db3d2(t,x)
     B₀*R₀*x[2]*q/((R₀^2*q^2 + x[2]^2 + (R₀ - x[1])^2)^(3/2)*B₀)
 end
@@ -174,4 +186,8 @@ end
 
 function db2d3(t,x)
     zero(eltype(x))
+end
+
+function compute_parallel_velocity(t,x,pᵤ)
+    - (pᵤ + 0.5 * ( x[2]^2 + (R₀ - x[1])^2 ) * B₀ / q) * B(t,x) / (B₀ * R₀)
 end
