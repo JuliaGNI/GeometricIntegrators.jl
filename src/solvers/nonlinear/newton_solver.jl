@@ -36,8 +36,7 @@ function solve!{T}(s::NewtonSolver{T})
             solve!(s.linear)
             simd_xpy!(s.linear.b, s.x)
             function_stages!(s.x, s.linear.b, s.Fparams)
-            residual_absolute!(s.status, s.linear.b)
-            residual_relative!(s.status, s.linear.b)
+            residual!(s.status, s.linear.b)
 
             if solverConverged(s.status, s.params)
                 break

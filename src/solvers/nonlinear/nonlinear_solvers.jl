@@ -52,8 +52,10 @@ type NonlinearSolverStatus{T}
     rᵣ::T          # residual (relative)
     rₛ::T          # residual (successive)
     r₀::Vector{T}  # initial residual (absolute)
+    y₀::Vector{T}  # initial solution
+    yₚ::Vector{T}  # previous solution
 
-    NonlinearSolverStatus(n) = new(0, 0, 0, 0, zeros(T, n))
+    NonlinearSolverStatus(n) = new(0, 0, 0, 0, zeros(T,n), zeros(T,n), zeros(T,n))
 end
 
 Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
@@ -62,7 +64,8 @@ Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
 
 function solverConverged(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
     return status.rₐ ≤ params.atol² ||
-           status.rᵣ ≤ params.rtol²
+           status.rᵣ ≤ params.rtol²# ||
+        #    status.rₛ ≤ params.stol²
 end
 
 function solverStatusOK(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
@@ -71,9 +74,12 @@ end
 
 function getLinearSolver(T, n, linear_solver)
     if linear_solver == nothing || linear_solver == :lapack
+    # if linear_solver == :lapack
         linear_solver = LUSolverLAPACK{T}(n)
     elseif linear_solver == :julia
         linear_solver = LUSolver{T}(n)
+    # elseif linear_solver == nothing
+    #     linear_solver = IterativeSolver{T}(n)
     else
         @assert typeof(linear_solver) <: LinearSolver{T}
         @assert n == linear_solver.n
@@ -89,8 +95,16 @@ function residual_initial!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
     end
     status.rₐ = maximum(status.r₀)
     status.rᵣ = 1
+    simd_copy!(y, status.y₀)
+    simd_copy!(y, status.yₚ)
 end
 
+function residual!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
+    residual_absolute!(status, y)
+    residual_relative!(status, y)
+    residual_successive!(status, y)
+    simd_copy!(y, status.yₚ)
+end
 
 function residual_absolute!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
     @assert length(y) == length(status.r₀)
@@ -105,5 +119,13 @@ function residual_relative!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
     status.rᵣ = 0
     @inbounds for i in 1:length(y)
         status.rᵣ = max(status.rᵣ, y[i]^2 / status.r₀[i])
+    end
+end
+
+function residual_successive!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
+    @assert length(y) == length(status.yₚ)
+    status.rₛ = 0
+    @inbounds for i in 1:length(y)
+        status.rₛ = max(status.rₛ, ( (status.yₚ[i] - y[i]) / status.y₀[i] )^2)
     end
 end

@@ -163,8 +163,7 @@ function solve!{T}(s::QuasiNewtonSolver{T})
 
             simd_xpy!(s.δx, s.x)
             function_stages!(s.x, s.y₀, s.Fparams)
-            residual_absolute!(s.status, s.y₀)
-            residual_relative!(s.status, s.y₀)
+            residual!(s.status, s.y₀)
 
             if solverConverged(s.status, s.params)
                 if s.status.i > DEFAULT_nwarn
