@@ -59,10 +59,11 @@ end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 function function_stages!{DT,TT,ΑT,FT}(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT})
+    local sl::Int = div(params.s+1, 2)
     local tqᵢ::TT
     local tpᵢ::TT
     local tf::DT
-    local sl::Int = div(params.s+1, 2)
+    local y::DT
 
     # copy y to V
     for i in 1:params.s
@@ -113,7 +114,7 @@ function function_stages!{DT,TT,ΑT,FT}(y::Vector{DT}, b::Vector{DT}, params::No
             for j in 1:params.s
                 tf += params.t_p.a[sl,j] * params.F[k,j]
             end
-            params.μ[k] = params.t_p.b[sl] / params.d_v[sl] * ( - params.P[k,sl] + params.p[k] + params.Δt * tf )
+            params.μ[k] = params.t_p.b[sl] / params.d_v[sl] * ( - (params.P[k,sl] - params.p[k]) + params.Δt * tf )
         end
 
         # replace equation for Pₗ with constraint on V
@@ -244,7 +245,7 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT
                 println(int.solver.status, ", it=", n)
             end
 
-            if int.solver.status.rₐ == NaN
+            if isnan(int.solver.status.rₐ)
                 break
             end
 

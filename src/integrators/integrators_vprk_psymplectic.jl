@@ -141,9 +141,10 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpSymplectic{DT,TT,�
             int.projector.Fparams.t = sol.t[n]
 
             # set initial guess for projection
+            int.equation.α(sol.t[n], int.q, int.v, int.z)
             for k in 1:int.equation.d
                 int.projector.x[0*int.equation.d+k] = int.q[k]
-                int.projector.x[1*int.equation.d+k] = int.p[k]
+                int.projector.x[1*int.equation.d+k] = int.z[k]
                 int.projector.x[2*int.equation.d+k] = 0
             end
 
@@ -155,7 +156,7 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpSymplectic{DT,TT,�
                 println(int.projector.status, ", pit=", n)
             end
 
-            if int.solver.status.rₐ == NaN
+            if isnan(int.solver.status.rₐ)
                 break
             end
 

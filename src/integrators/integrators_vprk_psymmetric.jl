@@ -97,9 +97,9 @@ function function_stages!{DT,TT,ΑT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params:
 
     # copy y to λ, q̅ and p̅
     for k in 1:params.d
-        params.q̅[k] = y[params.d*(params.s+0)+k]
-        params.p̅[k] = y[params.d*(params.s+1)+k]
-        params.λ[k] = y[params.d*(params.s+2)+k]
+        params.p̅[k] = y[params.d*(params.s+0)+k]
+        params.λ[k] = y[params.d*(params.s+1)+k]
+        params.q̅[k] = y[params.d*(params.s+2)+k]
     end
 
     # compute U=λ
@@ -119,13 +119,12 @@ function function_stages!{DT,TT,ΑT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params:
 
     # compute P=α(Q) and F=f(Q)
     for i in 1:params.s
-        tqᵢ = params.t + params.Δt * params.t_q.c[i]
-        tpᵢ = params.t + params.Δt * params.t_p.c[i]
+        tᵢ = params.t + params.Δt * params.t_q.c[i]
 
         simd_copy_xy_first!(params.tQ, params.Q, i)
         simd_copy_xy_first!(params.tV, params.V, i)
-        params.α(tqᵢ, params.tQ, params.tV, params.tP)
-        params.f(tqᵢ, params.tQ, params.tV, params.tF)
+        params.α(tᵢ, params.tQ, params.tV, params.tP)
+        params.f(tᵢ, params.tQ, params.tV, params.tF)
         simd_copy_yx_first!(params.tP, params.P, i)
         simd_copy_yx_first!(params.tF, params.F, i)
     end
@@ -147,8 +146,17 @@ function function_stages!{DT,TT,ΑT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params:
             for j in 1:params.s
                 params.Z[k,i] += params.t_p.a[i,j] * params.F[k,j]
             end
-            b[params.d*(i-1)+k] = - params.P[k,i] + params.p[k] + params.Δt * params.Z[k,i]
+            b[params.d*(i-1)+k] = - (params.P[k,i] - params.p[k]) + params.Δt * params.Z[k,i]
         end
+    end
+
+    # compute b = - [p-bF-G]
+    for k in 1:params.d
+        params.tF[k] = params.G[k,1] + params.R∞ * params.G[k,2]
+        for j in 1:params.s
+            params.tF[k] += params.t_p.b[j] * params.F[k,j]
+        end
+        b[params.d*(params.s+0)+k] = - (params.p̅[k] - params.p[k]) + params.Δt * params.tF[k]
     end
 
     # compute b = - [q-bV-U]
@@ -157,21 +165,12 @@ function function_stages!{DT,TT,ΑT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params:
         for j in 1:params.s
             params.tV[k] += params.t_q.b[j] * params.V[k,j]
         end
-        b[params.d*(params.s+0)+k] = - (params.q̅[k] - params.q[k]) / params.Δt + params.tV[k]
+        b[params.d*(params.s+1)+k] = - (params.q̅[k] - params.q[k]) + params.Δt * params.tV[k]
     end
 
     # compute b = - [p-α(q)]
     for k in 1:params.d
-        b[params.d*(params.s+1)+k] = - params.p̅[k] + params.tP[k]
-    end
-
-    # compute b = - [α(q)-bF-G]
-    for k in 1:params.d
-        params.tF[k] = params.G[k,1] + params.R∞ * params.G[k,2]
-        for j in 1:params.s
-            params.tF[k] += params.t_p.b[j] * params.F[k,j]
-        end
-        b[params.d*(params.s+2)+k] = - params.p̅[k] + params.p[k] + params.Δt * params.tF[k]
+        b[params.d*(params.s+2)+k] = - params.p̅[k] + params.tP[k]
     end
 
     if length(params.d_v) > 0
@@ -301,7 +300,7 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpSymmetric{DT,TT,Α
 
         for n in 1:sol.ntime
             # set time for nonlinear solver
-            int.solver.Fparams.t = sol.t[n]
+            int.solver.Fparams.t = sol.t[n-1]
 
             # copy previous solution to initial guess
             update!(int.iguess, sol.t[n], int.q, int.p)
@@ -313,15 +312,16 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpSymmetric{DT,TT,Α
                     int.solver.x[int.equation.d*(i-1)+k] = int.v[k]
                 end
             end
-            # evaluate!(int.iguess, int.y, int.z, int.v, one(TT), one(TT))
+            evaluate!(int.iguess, int.y, int.z, int.v, one(TT), one(TT))
+            int.equation.α(sol.t[n], int.y, int.v, int.z)
             for k in 1:int.equation.d
-                int.solver.x[int.equation.d*(int.tableau.s+0)+k] = int.y[k]
+                int.solver.x[int.equation.d*(int.tableau.s+0)+k] = int.z[k]
             end
             for k in 1:int.equation.d
-                int.solver.x[int.equation.d*(int.tableau.s+1)+k] = int.z[k]
+                int.solver.x[int.equation.d*(int.tableau.s+1)+k] = 0
             end
             for k in 1:int.equation.d
-                int.solver.x[int.equation.d*(int.tableau.s+2)+k] = 0
+                int.solver.x[int.equation.d*(int.tableau.s+2)+k] = int.y[k]
             end
 
             # call nonlinear solver
@@ -331,7 +331,7 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpSymmetric{DT,TT,Α
                 println(int.solver.status, ", it=", n)
             end
 
-            if int.solver.status.rₐ == NaN
+            if isnan(int.solver.status.rₐ)
                 break
             end
 

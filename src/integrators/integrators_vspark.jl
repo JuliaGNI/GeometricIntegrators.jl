@@ -402,6 +402,9 @@ function integrate!{DT,TT,FT,PT,UT,GT,ϕT,VT,N}(int::IntegratorVSPARK{DT,TT,FT,P
                 println(int.solver.status)
             end
 
+            if isnan(int.solver.status.rₐ)
+                break
+            end
             # compute final update
             simd_mult!(int.y, int.V, int.tableau.q.b)
             simd_mult!(int.z, int.F, int.tableau.p.b)

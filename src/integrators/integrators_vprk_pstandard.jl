@@ -56,7 +56,7 @@ function function_stages!{DT,TT,ΑT,GT}(y::Vector{DT}, b::Vector{DT}, params::No
 
     # compute b = - [q-q̃-U]
     for k in 1:params.d
-        b[0*params.d+k] = - params.q[k] + params.q̃[k] + params.R∞ * params.Δt * params.U[k]
+        b[0*params.d+k] = - (params.q[k] - params.q̃[k]) + params.R∞ * params.Δt * params.U[k]
     end
 
     # compute b = - [p-α(q)]
@@ -66,7 +66,7 @@ function function_stages!{DT,TT,ΑT,GT}(y::Vector{DT}, b::Vector{DT}, params::No
 
     # compute b = - [p-p̃-G]
     for k in 1:params.d
-        b[2*params.d+k] = - params.p[k] + params.p̃[k] + params.R∞ * params.Δt * params.G[k]
+        b[2*params.d+k] = - (params.p[k] - params.p̃[k]) + params.R∞ * params.Δt * params.G[k]
     end
 end
 
@@ -172,7 +172,7 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT
 
         for n in 1:sol.ntime
             # set time for nonlinear solver
-            int.solver.Fparams.t = sol.t[n]
+            int.solver.Fparams.t = sol.t[n-1]
 
             # copy previous solution to initial guess
             update!(int.iguess, sol.t[n], int.q, int.p)
@@ -193,6 +193,9 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT
                 println(int.solver.status, ", sit=", n)
             end
 
+            if isnan(int.solver.status.rₐ)
+                break
+            end
             # compute unprojected solution
             simd_mult!(int.y, int.V, int.tableau.q.b)
             simd_mult!(int.z, int.F, int.tableau.p.b)
@@ -203,9 +206,10 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT
             int.projector.Fparams.t = sol.t[n]
 
             # set initial guess for projection
+            int.equation.α(sol.t[n], int.q, int.v, int.z)
             for k in 1:int.equation.d
                 int.projector.x[0*int.equation.d+k] = int.q[k]
-                int.projector.x[1*int.equation.d+k] = int.p[k]
+                int.projector.x[1*int.equation.d+k] = int.z[k]
                 int.projector.x[2*int.equation.d+k] = 0
             end
 
@@ -217,7 +221,7 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT
                 println(int.projector.status, ", pit=", n)
             end
 
-            if int.solver.status.rₐ == NaN
+            if isnan(int.projector.status.rₐ)
                 break
             end
 

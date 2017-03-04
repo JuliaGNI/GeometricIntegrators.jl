@@ -85,8 +85,9 @@ function function_stages!{DT,TT,ΑT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params:
     local tᵢ::TT
     local t₀::TT = params.t
     local t₁::TT = params.t + params.Δt
-    local tf::DT
     local sl::Int = div(params.s+1, 2)
+    local tv::DT
+    local tf::DT
 
     # copy y to V
     for i in 1:params.s
@@ -131,12 +132,16 @@ function function_stages!{DT,TT,ΑT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params:
     end
 
     # compute G=g(q,λ)
-    simd_copy_xy_first!(params.tQ, params.Q, sl)
+    for k in 1:params.d
+        tv = 0
+        for j in 1:params.s
+            tv += params.t_q.b[j] * params.V[k,j]
+        end
+        params.tQ[k] = params.q[k] + params.Δt * params.U[k,1] + 0.5 * params.Δt * tv
+    end
 
     params.g(t₀, params.tQ, params.λ, params.tG)
     simd_copy_yx_first!(params.tG, params.G, 1)
-
-    params.g(t₁, params.tQ, params.λ, params.tG)
     simd_copy_yx_first!(params.tG, params.G, 2)
 
     # compute tP=α(tQ)
@@ -149,31 +154,60 @@ function function_stages!{DT,TT,ΑT,FT,GT}(y::Vector{DT}, b::Vector{DT}, params:
             for j in 1:params.s
                 params.Z[k,i] += params.t_p.a[i,j] * params.F[k,j]
             end
-            b[params.d*(i-1)+k] = - params.P[k,i] + params.p[k] + params.Δt * params.Z[k,i]
+            b[params.d*(i-1)+k] = - (params.P[k,i] - params.p[k]) + params.Δt * params.Z[k,i]
         end
     end
 
     # compute b = - [p-bF-G]
     for k in 1:params.d
+        # TODO There should be no R∞ here! (in which case the integrator is unstable)
         params.tF[k] = params.G[k,1] + params.R∞ * params.G[k,2]
+#        params.tF[k] = params.G[k,1] + params.G[k,2]
         for j in 1:params.s
             params.tF[k] += params.t_p.b[j] * params.F[k,j]
         end
-        b[params.d*(params.s+0)+k] = - params.p̅[k] + params.p[k] + params.Δt * params.tF[k]
+        b[params.d*(params.s+0)+k] = - (params.p̅[k] - params.p[k]) + params.Δt * params.tF[k]
     end
 
     # compute b = - [q-bV-U]
     for k in 1:params.d
+        # TODO There should be no R∞ here! (in which case the integrator is unstable)
         params.tV[k] = params.U[k,1] + params.R∞ * params.U[k,2]
+#        params.tV[k] = params.U[k,1] + params.U[k,2]
         for j in 1:params.s
             params.tV[k] += params.t_q.b[j] * params.V[k,j]
         end
-        b[params.d*(params.s+1)+k] = - (params.q̅[k] - params.q[k]) / params.Δt + params.tV[k]
+        b[params.d*(params.s+1)+k] = - (params.q̅[k] - params.q[k]) + params.Δt * params.tV[k]
     end
 
     # compute b = - [p-α(q)]
     for k in 1:params.d
         b[params.d*(params.s+2)+k] = - params.p̅[k] + params.tP[k]
+    end
+
+    if length(params.d_v) > 0
+        # compute μ
+        for k in 1:params.d
+            params.μ[k] = params.t_p.b[sl] / params.d_v[sl] * ( - params.P[k,sl] + params.p[k] + params.Δt * params.Z[k,sl] )
+        end
+
+        # replace equation for Pₗ with constraint on V
+        for k in 1:params.d
+            b[params.d*(sl-1)+k] = 0
+            for i in 1:params.s
+                b[params.d*(sl-1)+k] += params.V[k,i] * params.d_v[i]
+            end
+        end
+
+        # modify P₁, ..., Pₛ except for Pₗ
+        for i in 1:params.s
+            if i ≠ sl
+                tf = params.d_v[i] / params.t_p.b[i]
+                for k in 1:params.d
+                    b[params.d*(i-1)+k] -= tf * params.μ[k]
+                end
+            end
+        end
     end
 end
 
@@ -222,10 +256,10 @@ function IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT
 
     N = D*(S+3)
 
-    # TODO Check for odd number of stages and symmetry.
+    # TODO Check for odd number of stages and symmetry?
 
     if isdefined(tableau, :d)
-        # TODO ERROR
+        d_v = tableau.d
     else
         d_v = DT[]
     end
@@ -280,7 +314,7 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpMidpoint{DT,TT,ΑT
 
         for n in 1:sol.ntime
             # set time for nonlinear solver
-            int.solver.Fparams.t = sol.t[n]
+            int.solver.Fparams.t = sol.t[n-1]
 
             # copy previous solution to initial guess
             update!(int.iguess, sol.t[n], int.q, int.p)
@@ -292,7 +326,8 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpMidpoint{DT,TT,ΑT
                     int.solver.x[int.equation.d*(i-1)+k] = int.v[k]
                 end
             end
-            # evaluate!(int.iguess, int.y, int.z, int.v, one(TT), one(TT))
+            evaluate!(int.iguess, int.y, int.z, int.v, one(TT), one(TT))
+            int.equation.α(sol.t[n], int.y, int.v, int.z)
             for k in 1:int.equation.d
                 int.solver.x[int.equation.d*(int.tableau.s+0)+k] = int.z[k]
             end
@@ -310,7 +345,7 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpMidpoint{DT,TT,ΑT
                 println(int.solver.status, ", it=", n)
             end
 
-            if int.solver.status.rₐ == NaN
+            if isnan(int.solver.status.rₐ)
                 break
             end
 
