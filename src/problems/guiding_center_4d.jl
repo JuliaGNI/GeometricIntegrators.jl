@@ -1,8 +1,6 @@
 
 using GeometricIntegrators.Equations
-
-periodicity = zeros(q₀)
-periodicity[3] = 2π
+using GeometricIntegrators.Utils
 
 
 function α1(t, q)
@@ -22,10 +20,13 @@ function α4(t, q)
 end
 
 
-const p₀ = [α1(0, q₀),
-            α2(0, q₀),
-            α3(0, q₀),
-            α4(0, q₀)]
+function α(t, q, p)
+    p[1] = α1(t,q)
+    p[2] = α2(t,q)
+    p[3] = α3(t,q)
+    p[4] = α4(t,q)
+    nothing
+end
 
 
 function dα1d1(t, q)
@@ -53,15 +54,15 @@ function dα2d3(t, q)
 end
 
 function dα3d1(t, q)
-    R(t,q) * ( dA3d1(t,q) + q[4] * db3d1(t,q) ) + A3(t,q) + q[4] * b3(t,q)
+    R(t,q) * ( dA3d1(t,q) + q[4] * db3d1(t,q) ) + dRd1(t,q) * ( A3(t,q) + q[4] * b3(t,q) )
 end
 
 function dα3d2(t, q)
-    R(t,q) * ( dA3d2(t,q) + q[4] * db3d2(t,q) )
+    R(t,q) * ( dA3d2(t,q) + q[4] * db3d2(t,q) ) + dRd2(t,q) * ( A3(t,q) + q[4] * b3(t,q) )
 end
 
 function dα3d3(t, q)
-    R(t,q) * ( dA3d3(t,q) + q[4] * db3d3(t,q) )
+    R(t,q) * ( dA3d3(t,q) + q[4] * db3d3(t,q) ) + dRd3(t,q) * ( A3(t,q) + q[4] * b3(t,q) )
 end
 
 
@@ -90,6 +91,13 @@ end
 
 function toroidal_momentum(t,q)
     α3(t,q)
+end
+
+
+function guiding_center_4d_periodicity(q₀)
+    periodicity = zeros(eltype(q₀), size(q₀,1))
+    periodicity[3] = 2π
+    return periodicity
 end
 
 
@@ -153,17 +161,17 @@ function guiding_center_4d_ode_v(t, q, v)
     nothing
 end
 
-function guiding_center_4d_ode(q₀=q₀)
-    ODE(guiding_center_4d_ode_v, q₀; periodicity=periodicity)
+function guiding_center_4d_ode(q₀=q₀; periodic=true)
+    if periodic
+        ODE(guiding_center_4d_ode_v, q₀; periodicity=guiding_center_4d_periodicity(q₀))
+    else
+        ODE(guiding_center_4d_ode_v, q₀)
+    end
 end
 
 
 function guiding_center_4d_iode_α(t, q, v, p)
-    p[1] = α1(t,q)
-    p[2] = α2(t,q)
-    p[3] = α3(t,q)
-    p[4] = α4(t,q)
-    nothing
+    α(t, q, p)
 end
 
 function guiding_center_4d_iode_f(t, q, v, f)
@@ -186,8 +194,28 @@ function guiding_center_4d_iode_v(t, q, p, v)
     guiding_center_4d_ode_v(t, q, v)
 end
 
-function guiding_center_4d_iode(q₀=q₀, p₀=p₀)
-    IODE(guiding_center_4d_iode_α, guiding_center_4d_iode_f,
-         guiding_center_4d_iode_g, guiding_center_4d_iode_v,
-         q₀, p₀; periodicity=periodicity)
+function guiding_center_4d_iode(q₀=q₀; periodic=true)
+    p₀ = zeros(q₀)
+
+    if ndims(q₀) == 1
+        α(0, q₀, p₀)
+    else
+        for i in 1:size(q₀,2)
+            tq = zeros(eltype(q₀), size(q₀,1))
+            tp = zeros(eltype(p₀), size(p₀,1))
+            simd_copy_xy_first!(tq, q₀, i)
+            α(0, tq, tp)
+            simd_copy_yx_first!(tp, p₀, i)
+        end
+    end
+
+    if periodic
+        IODE(guiding_center_4d_iode_α, guiding_center_4d_iode_f,
+             guiding_center_4d_iode_g, guiding_center_4d_iode_v,
+             q₀, p₀; periodicity=guiding_center_4d_periodicity(q₀))
+    else
+        IODE(guiding_center_4d_iode_α, guiding_center_4d_iode_f,
+             guiding_center_4d_iode_g, guiding_center_4d_iode_v,
+             q₀, p₀)
+    end
 end
