@@ -15,12 +15,15 @@ function α3(t, q)
 end
 
 
-const p₀ = [α1(0, q₀),
-            α2(0, q₀),
-            α3(0, q₀),
-            zero(eltype(q₀)),
-            zero(eltype(q₀)),
-            zero(eltype(q₀))]
+function α(t, q, p)
+    p[1] = α1(t,q)
+    p[2] = α2(t,q)
+    p[3] = α3(t,q)
+    p[4] = zero(eltype(q₀))
+    p[5] = zero(eltype(q₀))
+    p[6] = zero(eltype(q₀))
+    nothing
+end
 
 
 function ϕ₀(x)
@@ -54,13 +57,7 @@ end
 
 
 function charged_particle_3d_iode_α(t, q, v, p)
-    p[1] = α1(t,q)
-    p[2] = α2(t,q)
-    p[3] = α3(t,q)
-    p[4] = 0
-    p[5] = 0
-    p[6] = 0
-    nothing
+    α(t, q, p)
 end
 
 function charged_particle_3d_iode_f(t, q, v, f)
@@ -93,7 +90,21 @@ function charged_particle_3d_iode_v(t, q, p, v)
     nothing
 end
 
-function charged_particle_3d_iode(q₀=q₀, p₀=p₀)
+function charged_particle_3d_iode(q₀=q₀)
+    p₀ = zeros(q₀)
+
+    if ndims(q₀) == 1
+        α(0, q₀, p₀)
+    else
+        for i in 1:size(q₀,2)
+            tq = zeros(eltype(q₀), size(q₀,1))
+            tp = zeros(eltype(p₀), size(p₀,1))
+            simd_copy_xy_first!(tq, q₀, i)
+            α(0, tq, tp)
+            simd_copy_yx_first!(tp, p₀, i)
+        end
+    end
+
     IODE(charged_particle_3d_iode_α, charged_particle_3d_iode_f,
          charged_particle_3d_iode_g, charged_particle_3d_iode_v,
          q₀, p₀)
