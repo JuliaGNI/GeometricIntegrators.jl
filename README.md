@@ -82,7 +82,7 @@ with
 - [ ] Fixed-Point Iteration with Aitken's Acceleration,
 - [ ] Jacobian-free Newton-Krylov,
 - [x] Newton's method,
-- [ ] Newton's method with line search (Armijo),
+- [x] Newton's method with line search (Armijo, quadratic),
 - [x] Quasi-Newton,
 
 with
@@ -106,10 +106,11 @@ with
 - [x] Lotka-Volterra in 2D,
 - [ ] Lotka-Volterra in 3D,
 - [ ] Hénon-Heiles System,
-- [ ] Planar Point Vortices,
+- [x] Planar Point Vortices,
 - [ ] Inner Solar System,
 - [ ] Outer Solar System,
-- [ ] Charged Particle Motion in a Uniform Magnetic Field.
+- [x] Charged Particle Motion in various electromagnetic Fields,
+- [x] Guiding Center Dynamics in various magnetic fields.
 
 
 ## License
