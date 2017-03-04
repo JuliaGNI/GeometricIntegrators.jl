@@ -7,7 +7,7 @@ using ..Tableaus
 type InitialGuessODE{DT, TT, FT, IT <: Interpolator}
     int::IT
     rk4::IntegratorERK{DT,TT,FT}
-    sol::SolutionODE{DT,TT}
+    sol::SolutionODE{DT,TT,2}
     f::FT
     Δt::TT
     x₀::Vector{DT}
@@ -16,7 +16,13 @@ type InitialGuessODE{DT, TT, FT, IT <: Interpolator}
     f₁::Vector{DT}
 end
 
-function InitialGuessODE{DT,TT,FT}(interp, equ::ODE{DT,TT,FT}, Δt::TT)
+function InitialGuessODE{DT,TT,FT,N}(interp, equation::ODE{DT,TT,FT,N}, Δt::TT)
+    if N > 1
+        equ = similar(equation, equation.q₀[:,1])
+    else
+        equ = equation
+    end
+
     int = interp(zero(DT), one(DT), Δt, equ.d)
     rk4 = IntegratorERK(equ, getTableauERK4(), -Δt)
     sol = SolutionODE(equ, Δt, 1)
