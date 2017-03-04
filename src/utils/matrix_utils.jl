@@ -38,10 +38,20 @@ function simd_scale!(x, a)
     nothing
 end
 
-function simd_copy!(x, y)
+function simd_copy!{T}(x::Vector{T}, y::Vector{T})
     @assert length(x) == length(y)
     @inbounds for i=1:length(y)
         y[i] = x[i]
+    end
+    nothing
+end
+
+function simd_copy!{T}(x::Matrix{T}, y::Matrix{T})
+    @assert size(x) == size(y)
+    @inbounds for j=1:size(y,2)
+        for i=1:size(y,1)
+            y[i,j] = x[i,j]
+        end
     end
     nothing
 end
@@ -110,7 +120,7 @@ function simd_copy_yx_first_last!(x, y, j)
     nothing
 end
 
-function simd_xpy!(x, y)
+function simd_xpy!{T}(x::Vector{T}, y::Vector{T})
     @assert length(x) == length(y)
     @inbounds for i=1:length(y)
         y[i] += x[i]
@@ -118,7 +128,17 @@ function simd_xpy!(x, y)
     nothing
 end
 
-function simd_axpy!(a, x, y)
+function simd_xpy!{T}(x::Matrix{T}, y::Matrix{T})
+    @assert size(x) == size(y)
+    @inbounds for j=1:size(y,2)
+        for i=1:size(y,1)
+            y[i,j] += x[i,j]
+        end
+    end
+    nothing
+end
+
+function simd_axpy!{T}(a, x::Vector{T}, y::Vector{T})
     @assert length(x) == length(y)
     @inbounds for i=1:length(y)
         y[i] += a*x[i]
@@ -126,7 +146,7 @@ function simd_axpy!(a, x, y)
     nothing
 end
 
-function simd_axpy!(a, x, y, e)
+function simd_axpy!{T}(a, x::Vector{T}, y::Vector{T}, e::Vector{T})
     @assert length(x) == length(y) == length(e)
 
     local err::eltype(e)
@@ -141,7 +161,17 @@ function simd_axpy!(a, x, y, e)
     nothing
 end
 
-function simd_wxpy!(w, x, y)
+function simd_axpy!{T}(a, x::Matrix{T}, y::Matrix{T})
+    @assert size(x) == size(y)
+    @inbounds for j=1:size(y,2)
+        for i=1:size(y,1)
+            y[i,j] += a*x[i,j]
+        end
+    end
+    nothing
+end
+
+function simd_wxpy!{T}(w::Vector{T}, x::Vector{T}, y::Vector{T})
     @assert length(x) == length(y) == length(w)
     @inbounds for i=1:length(w)
         w[i] = x[i] + y[i]
@@ -149,7 +179,17 @@ function simd_wxpy!(w, x, y)
     nothing
 end
 
-function simd_waxpy!(w, a, x, y)
+function simd_wxpy!{T}(w::Matrix{T}, x::Matrix{T}, y::Matrix{T})
+    @assert size(w) == size(x) == size(y)
+    @inbounds for j=1:size(y,2)
+        for i=1:size(y,1)
+            w[i,j] = x[i,j] + y[i,j]
+        end
+    end
+    nothing
+end
+
+function simd_waxpy!{T}(w::Vector{T}, a, x::Vector{T}, y::Vector{T})
     @assert length(x) == length(y) == length(w)
     @inbounds for i=1:length(w)
         w[i] = a*x[i] + y[i]
@@ -157,7 +197,17 @@ function simd_waxpy!(w, a, x, y)
     nothing
 end
 
-function simd_aXbpy!{T}(a::T, b::Vector{T}, X::Matrix{T}, y::Vector{T})
+function simd_waxpy!{T}(w::Matrix{T}, a, x::Matrix{T}, y::Matrix{T})
+    @assert size(w) == size(x) == size(y)
+    @inbounds for j=1:size(y,2)
+        for i=1:size(y,1)
+            w[i,j] = a*x[i,j] + y[i,j]
+        end
+    end
+    nothing
+end
+
+function simd_aXbpy!{T}(a, b::Vector{T}, X::Matrix{T}, y::Vector{T})
     @assert length(y) == size(X, 1)
     @assert length(b) == size(X, 2)
     local ty::T
@@ -204,11 +254,28 @@ function simd_mult!{T}(w::Vector{T}, y::Vector{T}, X::Matrix{T})
     @assert length(y) == size(X, 1)
     local tw::T
     @inbounds for i=1:length(w)
-        tw = zero(T)
+        tw = 0
         for j=1:length(y)
             tw += y[j] * X[j,i]
         end
         w[i] = tw
+    end
+    nothing
+end
+
+function simd_mult!{T}(W::Matrix{T}, X::Matrix{T}, Y::Matrix{T})
+    @assert size(W,1) == size(X, 1)
+    @assert size(W,2) == size(Y, 2)
+    @assert size(X,2) == size(Y, 1)
+    local tw::T
+    @inbounds for j in 1:size(W,2)
+        for i in 1:size(W,1)
+            tw = 0
+            for k in 1:size(X,2)
+                tw += X[i,k] * Y[k,j]
+            end
+            W[i,j] = tw
+        end
     end
     nothing
 end
