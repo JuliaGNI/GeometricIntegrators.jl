@@ -78,7 +78,7 @@ end
 end
 
 "Variational partitioned Runge-Kutta integrator."
-immutable IntegratorVPRKpStandard{DT, TT, ΑT, FT, GT, VT, SPT, PPT, SST, STP, IT} <: Integrator{DT, TT}
+immutable IntegratorVPRKpStandard{DT, TT, ΑT, FT, GT, VT, SPT, PPT, SST, STP, IT} <: AbstractIntegratorVPRK{DT, TT}
     equation::IODE{DT,TT,ΑT,FT,GT,VT}
     tableau::TableauVPRK{TT}
     Δt::TT
@@ -187,10 +187,7 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT
             int.pparams.t = sol.t[0] + (n-1)*int.Δt
 
             # add perturbation to solution (same vector field as previous time step)
-            simd_mult!(int.pcache.u, int.pcache.U, int.pparams.R1)
-            simd_mult!(int.pcache.g, int.pcache.G, int.pparams.R1)
-            simd_axpy!(int.Δt, int.pcache.u, int.q, int.qₑᵣᵣ)
-            simd_axpy!(int.Δt, int.pcache.g, int.p, int.pₑᵣᵣ)
+            project_solution!(int, int.pcache, int.pparams.R1)
 
             # copy perturbed previous solution to initial guess
             update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
@@ -214,13 +211,9 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT
                 break
             end
 
-            compute_stages_vprk!(int.solver.x, int.scache.Q, int.scache.V, int.scache.P, int.scache.F, int.sparams)
-
             # compute unprojected solution
-            simd_mult!(int.scache.y, int.scache.V, int.tableau.q.b)
-            simd_mult!(int.scache.z, int.scache.F, int.tableau.p.b)
-            simd_axpy!(int.Δt, int.scache.y, int.q, int.qₑᵣᵣ)
-            simd_axpy!(int.Δt, int.scache.z, int.p, int.pₑᵣᵣ)
+            compute_stages_vprk!(int.solver.x, int.scache.Q, int.scache.V, int.scache.P, int.scache.F, int.sparams)
+            update_solution!(int, int.scache)
 
             # set initial guess for projection
             for k in 1:int.equation.d
@@ -239,20 +232,12 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT
                 break
             end
 
-            compute_projection_vprk!(int.projector.x, int.pcache.q̅, int.pcache.p̅, int.pcache.λ, int.pcache.U, int.pcache.G, int.pparams)
-
             # add projection to solution
-            simd_mult!(int.pcache.u, int.pcache.U, int.pparams.R2)
-            simd_mult!(int.pcache.g, int.pcache.G, int.pparams.R2)
-            simd_axpy!(int.Δt, int.pcache.u, int.q, int.qₑᵣᵣ)
-            simd_axpy!(int.Δt, int.pcache.g, int.p, int.pₑᵣᵣ)
+            compute_projection_vprk!(int.projector.x, int.pcache.q̅, int.pcache.p̅, int.pcache.λ, int.pcache.U, int.pcache.G, int.pparams)
+            project_solution!(int, int.pcache, int.pparams.R2)
 
             # take care of periodic solutions
-            for k in 1:int.equation.d
-                if int.equation.periodicity[k] ≠ 0
-                    int.q[k] = mod(int.q[k], int.equation.periodicity[k])
-                end
-            end
+            cut_periodic_solution!(int)
 
             # copy to solution
             copy_solution!(sol, int.q, int.p, int.pcache.λ, n, m)

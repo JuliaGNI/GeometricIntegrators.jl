@@ -1,5 +1,6 @@
 
 abstract AbstractNonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S} <: NonlinearFunctionParameters{DT}
+abstract AbstractIntegratorVPRK{DT,TT} <: Integrator{DT,TT}
 
 immutable NonlinearFunctionCacheVPRK{ST}
     Q::Matrix{ST}
@@ -260,4 +261,29 @@ end
     end
 
     return compute_stages_vprk
+end
+
+
+function update_solution!{DT,TT}(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRK{DT})
+    simd_mult!(cache.y, cache.V, int.tableau.q.b)
+    simd_mult!(cache.z, cache.F, int.tableau.p.b)
+    simd_axpy!(int.Δt, cache.y, int.q, int.qₑᵣᵣ)
+    simd_axpy!(int.Δt, cache.z, int.p, int.pₑᵣᵣ)
+end
+
+
+function project_solution!{DT,TT}(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRKprojection{DT}, R::Vector{TT})
+    simd_mult!(cache.u, cache.U, R)
+    simd_mult!(cache.g, cache.G, R)
+    simd_axpy!(int.Δt, cache.u, int.q, int.qₑᵣᵣ)
+    simd_axpy!(int.Δt, cache.g, int.p, int.pₑᵣᵣ)
+end
+
+function cut_periodic_solution!(int::AbstractIntegratorVPRK)
+    # take care of periodic solutions
+    for k in 1:int.equation.d
+        if int.equation.periodicity[k] ≠ 0
+            int.q[k] = mod(int.q[k], int.equation.periodicity[k])
+        end
+    end
 end

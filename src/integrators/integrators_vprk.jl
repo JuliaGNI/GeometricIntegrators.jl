@@ -40,7 +40,7 @@ end
 
 
 "Variational partitioned Runge-Kutta integrator."
-immutable IntegratorVPRK{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: Integrator{DT,TT}
+immutable IntegratorVPRK{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegratorVPRK{DT,TT}
     equation::IODE{DT,TT,ΑT,FT,GT,VT}
     tableau::TableauVPRK{TT}
     Δt::TT
@@ -144,20 +144,10 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT
                 break
             end
 
-            compute_stages_vprk!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.params)
-
             # compute final update
-            simd_mult!(int.cache.y, int.cache.V, int.tableau.q.b)
-            simd_mult!(int.cache.z, int.cache.F, int.tableau.p.b)
-            simd_axpy!(int.Δt, int.cache.y, int.q, int.qₑᵣᵣ)
-            simd_axpy!(int.Δt, int.cache.z, int.p, int.pₑᵣᵣ)
-
-            # take care of periodic solutions
-            for k in 1:int.equation.d
-                if int.equation.periodicity[k] ≠ 0
-                    int.q[k] = mod(int.q[k], int.equation.periodicity[k])
-                end
-            end
+            compute_stages_vprk!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.params)
+            update_solution!(int, int.cache)
+            cut_periodic_solution!(int)
 
             # copy to solution
             copy_solution!(sol, int.q, int.p, n, m)

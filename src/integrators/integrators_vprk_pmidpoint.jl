@@ -91,7 +91,7 @@ end
 
 
 "Variational partitioned Runge-Kutta integrator."
-immutable IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: Integrator{DT,TT}
+immutable IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegratorVPRK{DT,TT}
     equation::IODE{DT,TT,ΑT,FT,GT,VT}
     tableau::TableauVPRK{TT}
     Δt::TT
@@ -206,28 +206,15 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpMidpoint{DT,TT,ΑT
                 break
             end
 
+            # compute final update
             compute_stages_vprk!(int.solver.x,
                                  int.pcache.q̅, int.pcache.p̅, int.pcache.λ,
                                  int.scache.Q, int.scache.V, int.pcache.U,
                                  int.scache.P, int.scache.F, int.pcache.G, int.params)
 
-            # copy solution
-            simd_mult!(int.scache.y, int.scache.V, int.tableau.q.b)
-            simd_mult!(int.scache.z, int.scache.F, int.tableau.p.b)
-            simd_axpy!(int.Δt, int.scache.y, int.q, int.qₑᵣᵣ)
-            simd_axpy!(int.Δt, int.scache.z, int.p, int.pₑᵣᵣ)
-
-            simd_mult!(int.pcache.u, int.pcache.U, int.params.R)
-            simd_mult!(int.pcache.g, int.pcache.G, int.params.R)
-            simd_axpy!(int.Δt, int.pcache.u, int.q, int.qₑᵣᵣ)
-            simd_axpy!(int.Δt, int.pcache.g, int.p, int.pₑᵣᵣ)
-
-            # take care of periodic solutions
-            for k in 1:int.equation.d
-                if int.equation.periodicity[k] ≠ 0
-                    int.q[k] = mod(int.q[k], int.equation.periodicity[k])
-                end
-            end
+            update_solution!(int, int.scache)
+            project_solution!(int, int.pcache, int.params.R)
+            cut_periodic_solution!(int)
 
             # copy to solution
             copy_solution!(sol, int.q, int.p, int.pcache.λ, n, m)
