@@ -5,8 +5,8 @@ immutable SolutionPODE{dType, tType, N} <: Solution{dType, tType, N}
     nt::Int
     ni::Int
     t::TimeSeries{tType}
-    q::DataSeries{dType,N}
-    p::DataSeries{dType,N}
+    q::SDataSeries{dType,N}
+    p::SDataSeries{dType,N}
     ntime::Int
     nsave::Int
 end
@@ -26,8 +26,8 @@ function SolutionPODE{DT,TT}(equation::Union{PODE{DT,TT}, IODE{DT,TT}}, Δt::TT,
     @assert mod(ntime, nsave) == 0
 
     t = TimeSeries{TT}(nt, Δt, nsave)
-    q = DataSeries(DT, nd, nt, ni)
-    p = DataSeries(DT, nd, nt, ni)
+    q = SDataSeries(DT, nd, nt, ni)
+    p = SDataSeries(DT, nd, nt, ni)
     s = SolutionPODE{DT,TT,N}(nd, nt, ni, t, q, p, ntime, nsave)
     set_initial_conditions!(s, equation)
     return s

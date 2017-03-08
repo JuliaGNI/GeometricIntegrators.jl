@@ -114,5 +114,10 @@ function integrate(f::Function, x₀::Vector, tableau::AbstractTableau, Δt, nti
     return integrate(ODE(f, t₀, x₀), tableau, Δt, ntime, nsave)
 end
 
+"Integrate ODE for all initial conditions."
+function integrate!(int, sol)
+    integrate!(int, sol, 1, sol.ni)
+end
+
 
 # TODO Add solver status information to all integrators (if requested).

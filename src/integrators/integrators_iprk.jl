@@ -147,13 +147,12 @@ end
 
 
 "Integrate ODE with implicit partitioned Runge-Kutta integrator."
-function integrate!{DT,TT,VT,FT,N}(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N})
-    # loop over initial conditions
-    for m in 1:sol.ni
-        local j::Int
-        local tqᵢ::TT
-        local tpᵢ::TT
+function integrate!{DT,TT,VT,FT,N}(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N}, m1::Int, m2::Int)
+    @assert m1 ≥ 1
+    @assert m2 ≤ sol.ni
 
+    # loop over initial conditions
+    for m in m1:m2
         # copy initial conditions from solution
         get_initial_conditions!(sol, int.q, int.p, m)
 

@@ -109,9 +109,12 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N})
+function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m1::Int, m2::Int)
+    @assert m1 ≥ 1
+    @assert m2 ≤ sol.ni
+
     # loop over initial conditions
-    for m in 1:sol.ni
+    for m in m1:m2
         # copy initial conditions from solution
         get_initial_conditions!(sol, int.q, int.p, m)
 

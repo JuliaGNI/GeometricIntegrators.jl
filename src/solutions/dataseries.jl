@@ -1,11 +1,14 @@
 
-immutable DataSeries{T,N} <: AbstractArray{T,N}
+abstract DataSeries{T,N} <: AbstractArray{T,N}
+
+
+immutable SDataSeries{T,N} <: DataSeries{T,N}
     nd::Int
     nt::Int
     ni::Int
     d::Array{T,N}
 
-    function DataSeries(nd, nt, ni)
+    function SDataSeries(nd, nt, ni)
         @assert T <: Number
         @assert nd > 0
         @assert nt > 0
@@ -23,13 +26,45 @@ immutable DataSeries{T,N} <: AbstractArray{T,N}
     end
 end
 
-function DataSeries(T, nd::Int, nt::Int, ni::Int)
+function SDataSeries(T, nd::Int, nt::Int, ni::Int)
     ni == 1 ? N = 2 : N = 3
-    return DataSeries{T,N}(nd, nt, ni)
+    return SDataSeries{T,N}(nd, nt, ni)
 end
 
+
+
+immutable PDataSeries{T,N} <: DataSeries{T,N}
+    nd::Int
+    nt::Int
+    ni::Int
+    d::SharedArray{T,N}
+
+    function PDataSeries(nd, nt, ni)
+        @assert T <: Number
+        @assert nd > 0
+        @assert nt > 0
+        @assert ni > 0
+
+        @assert N ∈ (2,3)
+
+        if N == 2
+            d = SharedArray(T, (nd, nt+1))
+        elseif N == 3
+            d = SharedArray(T, (nd, nt+1, ni))
+        end
+
+        new(nd, nt, ni, d)
+    end
+end
+
+function PDataSeries(T, nd::Int, nt::Int, ni::Int)
+    ni == 1 ? N = 2 : N = 3
+    return PDataSeries{T,N}(nd, nt, ni)
+end
+
+
 function similar{T,N}(ds::DataSeries{T,N})
-    DataSeries{T,N}(ds.nd, ds.nt, ds.ni)
+    typeof(ds){T,N}(ds.nd, ds.nt, ds.ni)
 end
 
 Base.eltype{T,N}(ds::DataSeries{T,N}) = T

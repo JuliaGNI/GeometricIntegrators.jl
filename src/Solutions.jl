@@ -5,6 +5,7 @@ module Solutions
     using ..Equations
 
     export DataSeries, get_data!, set_data!, reset!
+    export PDataSeries, SDataSeries
 
     include("solutions/dataseries.jl")
 
@@ -16,6 +17,7 @@ module Solutions
            copy_solution!, reset!,
            get_initial_conditions!, set_initial_conditions!,
            createHDF5, writeSolutionToHDF5
+    export PSolutionPDAE, SSolutionPDAE
 
     include("solutions/solutions.jl")
     include("solutions/solutions_ode.jl")

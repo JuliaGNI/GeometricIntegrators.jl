@@ -72,9 +72,12 @@ function computeStageP!(int::IntegratorEPRK, i::Int, jmax::Int, t)
 end
 
 "Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
-function integrate!{DT,TT,VT,FT,N}(int::IntegratorEPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N})
+function integrate!{DT,TT,VT,FT,N}(int::IntegratorEPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N}, m1::Int, m2::Int)
+    @assert m1 ≥ 1
+    @assert m2 ≤ sol.ni
+
     # loop over initial conditions
-    for m in 1:sol.ni
+    for m in m1:m2
         local j::Int
         local tqᵢ::TT
         local tpᵢ::TT

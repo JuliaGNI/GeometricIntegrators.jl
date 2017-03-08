@@ -6,8 +6,8 @@ immutable SolutionDAE{dType, tType, N} <: Solution{dType, tType, N}
     nt::Int
     ni::Int
     t::TimeSeries{tType}
-    q::DataSeries{dType,N}
-    λ::DataSeries{dType,N}
+    q::SDataSeries{dType,N}
+    λ::SDataSeries{dType,N}
     ntime::Int
     nsave::Int
 end
@@ -29,8 +29,8 @@ function SolutionDAE{DT,TT}(equation::DAE{DT,TT}, Δt::TT, ntime::Int, nsave::In
     @assert mod(ntime, nsave) == 0
 
     t = TimeSeries{TT}(nt, Δt, nsave)
-    q = DataSeries(DT, nd, nt, ni)
-    λ = DataSeries(DT, nm, nt, ni)
+    q = SDataSeries(DT, nd, nt, ni)
+    λ = SDataSeries(DT, nm, nt, ni)
     s = SolutionDAE{DT,TT,N}(nd, nm, nt, ni, t, q, λ, ntime, nsave)
     set_initial_conditions!(s, equation)
     return s

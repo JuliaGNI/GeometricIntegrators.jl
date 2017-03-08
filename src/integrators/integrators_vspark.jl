@@ -334,12 +334,13 @@ end
 
 
 "Integrate DAE with variational special partitioned additive Runge-Kutta integrator."
-function integrate!{DT,TT,FT,PT,UT,GT,ϕT,VT,N}(int::IntegratorVSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::SolutionPDAE{DT,TT,N})
+function integrate!{DT,TT,FT,PT,UT,GT,ϕT,VT,N}(int::IntegratorVSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::SolutionPDAE{DT,TT,N}, m1::Int, m2::Int)
+    @assert m1 ≥ 1
+    @assert m2 ≤ sol.ni
+
     # loop over initial conditions
-    for m in 1:sol.ni
+    for m in m1:m2
         local offset::Int
-        local tqᵢ::TT
-        local tpᵢ::TT
 
         # copy initial conditions from solution
         get_initial_conditions!(sol, int.q, int.p, int.λ, m)

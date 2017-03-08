@@ -5,7 +5,7 @@ nt = 10
 
 
 ni = 1
-ds = DataSeries(dt, nd, nt, ni)
+ds = SDataSeries(dt, nd, nt, ni)
 @test typeof(ds) <: AbstractArray{dt,2}
 @test length(ds) == nd*(nt+1)
 @test size(ds) == (nd, nt+1)
@@ -20,7 +20,7 @@ end
 
 
 ni = 2
-ds = DataSeries(dt, nd, nt, ni)
+ds = SDataSeries(dt, nd, nt, ni)
 @test typeof(ds) <: AbstractArray{dt,3}
 @test length(ds) == nd*(nt+1)*ni
 @test size(ds) == (nd, nt+1, ni)

@@ -25,12 +25,15 @@ function IntegratorERK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauERK{TT
 end
 
 "Integrate ODE with explicit Runge-Kutta integrator."
-function integrate!{DT,TT,FT,N}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N})
+function integrate!{DT,TT,FT,N}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N}, m1::Int, m2::Int)
+    @assert m1 ≥ 1
+    @assert m2 ≤ sol.ni
+
     local tᵢ::TT
     local y::DT
 
     # loop over initial conditions
-    for m in 1:sol.ni
+    for m in m1:m2
         # copy initial conditions from solution
         get_initial_conditions!(sol, int.x, m)
 

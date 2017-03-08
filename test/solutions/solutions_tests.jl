@@ -44,8 +44,8 @@ sol = Solution(dae, Δt, ntime)
 
 pdae = PDAE(fq, fp, gq, gp, gϕ, q0, p0, λ0)
 psol = Solution(pdae, Δt, ntime)
-@test typeof(psol) <: SolutionPDAE
+@test typeof(psol) <: SSolutionPDAE
 
 pdae = PDAE(fq, fp, gq, gp, gϕ, q1, p1, λ1)
 psol = Solution(pdae, Δt, ntime)
-@test typeof(psol) <: SolutionPDAE
+@test typeof(psol) <: SSolutionPDAE

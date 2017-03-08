@@ -19,7 +19,7 @@ immutable SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
     nt::Int
     ni::Int
     t::TimeSeries{tType}
-    q::DataSeries{dType,N}
+    q::SDataSeries{dType,N}
     ntime::Int
     nsave::Int
 end
@@ -39,7 +39,7 @@ function SolutionODE{DT,TT,FT}(equation::ODE{DT,TT,FT}, Δt::TT, ntime::Int, nsa
     @assert mod(ntime, nsave) == 0
 
     t = TimeSeries{TT}(nt, Δt, nsave)
-    q = DataSeries(DT, nd, nt, ni)
+    q = SDataSeries(DT, nd, nt, ni)
     s = SolutionODE{DT,TT,N}(nd, nt, ni, t, q, ntime, nsave)
     set_initial_conditions!(s, equation)
     return s

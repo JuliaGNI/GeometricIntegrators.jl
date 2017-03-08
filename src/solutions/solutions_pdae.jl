@@ -1,19 +1,22 @@
 
-"Solution of a partitioned differential algebraic equation."
-immutable SolutionPDAE{dType, tType, N} <: Solution{dType, tType, N}
+abstract SolutionPDAE{dType, tType, N} <: Solution{dType, tType, N}
+
+
+"Serial Solution of a partitioned differential algebraic equation."
+immutable SSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
     nd::Int
     nm::Int
     nt::Int
     ni::Int
     t::TimeSeries{tType}
-    q::DataSeries{dType,N}
-    p::DataSeries{dType,N}
-    λ::DataSeries{dType,N}
+    q::SDataSeries{dType,N}
+    p::SDataSeries{dType,N}
+    λ::SDataSeries{dType,N}
     ntime::Int
     nsave::Int
 end
 
-function SolutionPDAE{DT,TT}(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1)
+function SSolutionPDAE{DT,TT}(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1)
     N  = equation.n > 1 ? 3 : 2
     nd = equation.d
     nm = equation.m
@@ -30,13 +33,54 @@ function SolutionPDAE{DT,TT}(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}
     @assert mod(ntime, nsave) == 0
 
     t = TimeSeries{TT}(nt, Δt, nsave)
-    q = DataSeries(DT, nd, nt, ni)
-    p = DataSeries(DT, nd, nt, ni)
-    λ = DataSeries(DT, nm, nt, ni)
-    s = SolutionPDAE{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave)
+    q = SDataSeries(DT, nd, nt, ni)
+    p = SDataSeries(DT, nd, nt, ni)
+    λ = SDataSeries(DT, nm, nt, ni)
+    s = SSolutionPDAE{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave)
     set_initial_conditions!(s, equation)
     return s
 end
+
+
+"Parallel Solution of a partitioned differential algebraic equation."
+immutable PSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
+    nd::Int
+    nm::Int
+    nt::Int
+    ni::Int
+    t::TimeSeries{tType}
+    q::PDataSeries{dType,N}
+    p::PDataSeries{dType,N}
+    λ::PDataSeries{dType,N}
+    ntime::Int
+    nsave::Int
+end
+
+function PSolutionPDAE{DT,TT}(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1)
+    N  = equation.n > 1 ? 3 : 2
+    nd = equation.d
+    nm = equation.m
+    ni = equation.n
+    nt = div(ntime, nsave)
+
+    @assert DT <: Number
+    @assert TT <: Real
+    @assert nd > 0
+    @assert nm > 0
+    @assert ni > 0
+    @assert nsave > 0
+    @assert ntime ≥ nsave
+    @assert mod(ntime, nsave) == 0
+
+    t = TimeSeries{TT}(nt, Δt, nsave)
+    q = PDataSeries(DT, nd, nt, ni)
+    p = PDataSeries(DT, nd, nt, ni)
+    λ = PDataSeries(DT, nm, nt, ni)
+    s = PSolutionPDAE{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave)
+    set_initial_conditions!(s, equation)
+    return s
+end
+
 
 function set_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, equ::Union{PDAE{DT,TT},IDAE{DT,TT}})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, equ.λ₀)
