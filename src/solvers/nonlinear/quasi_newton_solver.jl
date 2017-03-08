@@ -1,5 +1,5 @@
 
-immutable QuasiNewtonSolver{T, TF, TJ, TL} <: AbstractNewtonSolver{T}
+immutable QuasiNewtonSolver{T, FT, TJ, TL} <: AbstractNewtonSolver{T}
     @newton_solver_variables
     function QuasiNewtonSolver(x, Fparams, Jparams, linear_solver, nmax, atol, rtol, stol)
         J  = zeros(linear_solver.A)
@@ -15,19 +15,19 @@ end
 
 const DEFAULT_NonlinearSolver=QuasiNewtonSolver
 const DEFAULT_QUASINEWTON_REFACTORIZE=5
-const DEFAULT_LINESEARCH_nmax=20
+const DEFAULT_LINESEARCH_nmax=50
 const DEFAULT_ARMIJO_λ₀ = 1.0
 const DEFAULT_ARMIJO_σ₀ = 0.1
 const DEFAULT_ARMIJO_σ₁ = 0.5
 const DEFAULT_ARMIJO_ϵ  = 0.5
 
 
-function QuasiNewtonSolver(x::Vector, Fparams::NonlinearFunctionParameters; J=nothing, linear_solver=nothing, nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol, ϵ=DEFAULT_ϵ, autodiff=false)
+function QuasiNewtonSolver(x::Vector, F!::Function; J=nothing, linear_solver=nothing, nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol, ϵ=DEFAULT_ϵ, autodiff=true)
     T = eltype(x)
     n = length(x)
-    Jparams = getJacobianParameters(J, Fparams, ϵ, T, n, autodiff)
+    Jparams = getJacobianParameters(J, F!, ϵ, T, n, autodiff)
     linear_solver = getLinearSolver(T, n, linear_solver)
-    QuasiNewtonSolver{T, typeof(Fparams), typeof(Jparams), typeof(linear_solver)}(x, Fparams, Jparams, linear_solver, nmax, atol, rtol, stol)
+    QuasiNewtonSolver{T, typeof(F!), typeof(Jparams), typeof(linear_solver)}(x, F!, Jparams, linear_solver, nmax, atol, rtol, stol)
 end
 
 
@@ -41,7 +41,7 @@ function solve!{T}(s::QuasiNewtonSolver{T})
     local p₁::T
     local p₂::T
 
-    function_stages!(s.x, s.y₀, s.Fparams)
+    s.F!(s.x, s.y₀)
     residual_initial!(s.status, s.y₀)
     s.status.i  = 0
 
@@ -78,7 +78,7 @@ function solve!{T}(s::QuasiNewtonSolver{T})
 
                 try
                     # y₁ = f(x₁)
-                    function_stages!(s.x₁, s.y₁, s.Fparams)
+                    s.F!(s.x₁, s.y₁)
 
                     break
                 catch DomainError
@@ -96,7 +96,7 @@ function solve!{T}(s::QuasiNewtonSolver{T})
             simd_waxpy!(s.x₁, λ, s.δx, s.x₀)
 
             # y₁ = f(x₁)
-            function_stages!(s.x₁, s.y₁, s.Fparams)
+            s.F!(s.x₁, s.y₁)
 
             # compute norms of solutions
             y₀norm = l2norm(s.y₀)
@@ -162,7 +162,7 @@ function solve!{T}(s::QuasiNewtonSolver{T})
             # end
 
             simd_xpy!(s.δx, s.x)
-            function_stages!(s.x, s.y₀, s.Fparams)
+            s.F!(s.x, s.y₀)
             residual!(s.status, s.y₀)
 
             if solverConverged(s.status, s.params)

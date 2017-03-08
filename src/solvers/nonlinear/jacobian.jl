@@ -5,27 +5,25 @@ using ForwardDiff
 abstract JacobianParameters{T}
 
 
-immutable JacobianParametersUser{T, FT <: Function} <: JacobianParameters{T}
-    J::FT
+immutable JacobianParametersUser{T, JT <: Function} <: JacobianParameters{T}
+    J::JT
 end
 
-immutable JacobianParametersAD{T, FT <: Function, FPT <: NonlinearFunctionParameters, N} <: JacobianParameters{T}
-    ϵ::T
-    f!::FT
-    Fparams::FPT
+immutable JacobianParametersAD{T, FT <: Function, N} <: JacobianParameters{T}
+    F!::FT
     Jconfig::ForwardDiff.JacobianConfig{N}
     tx::Vector{T}
     ty::Vector{T}
 end
 
-function JacobianParametersAD{T, FT, FPT}(ϵ, f!::FT, Fparams::FPT, Jconfig, tx::Vector{T}, ty::Vector{T})
+function JacobianParametersAD{T, FT}(F!::FT, Jconfig, tx::Vector{T}, ty::Vector{T})
     @assert length(tx) == length(ty)
-    JacobianParametersAD{T, FT, FPT, length(tx)}(ϵ, f!, Fparams, Jconfig, tx, ty)
+    JacobianParametersAD{T, FT, length(tx)}(F!, Jconfig, tx, ty)
 end
 
-immutable JacobianParametersFD{T, FPT <: NonlinearFunctionParameters} <: JacobianParameters{T}
+immutable JacobianParametersFD{T, FT} <: JacobianParameters{T}
     ϵ::T
-    Fparams::FPT
+    F!::FT
     f1::Vector{T}
     f2::Vector{T}
     e::Vector{T}
@@ -47,9 +45,9 @@ function computeJacobian{T}(x::Vector{T}, J::Matrix{T}, params::JacobianParamete
         fill!(params.e, 0)
         params.e[j] = 1
         simd_waxpy!(params.tx, -ϵⱼ, params.e, x)
-        function_stages!(params.tx, params.f1, params.Fparams)
+        params.F!(params.tx, params.f1)
         simd_waxpy!(params.tx, +ϵⱼ, params.e, x)
-        function_stages!(params.tx, params.f2, params.Fparams)
+        params.F!(params.tx, params.f2)
         for i in 1:length(x)
             J[i,j] = (params.f2[i]-params.f1[i])/(2ϵⱼ)
         end
@@ -68,27 +66,24 @@ end
 
 
 function computeJacobian{T}(x::Vector{T}, J::Matrix{T}, Jparams::JacobianParametersAD{T})
-    ForwardDiff.jacobian!(J, Jparams.f!, Jparams.ty, x, Jparams.Jconfig)
+    ForwardDiff.jacobian!(J, Jparams.F!, Jparams.ty, x, Jparams.Jconfig)
 end
 
 
-function getJacobianParameters(J, Fparams, ϵ, T, n, autodiff)
+function getJacobianParameters(J, F!, ϵ, T, n, autodiff)
     if J == nothing
         if autodiff
-            function function_stages_ad!(y, x)
-                function_stages!(x, y, Fparams)
-            end
-
+            F!rev = (y,x) -> F!(x,y)
             tx = zeros(T, n)
             ty = zeros(T, n)
             Jconfig = ForwardDiff.JacobianConfig(ty, tx)
-            Jparams = JacobianParametersAD(ϵ, function_stages_ad!, Fparams, Jconfig, tx, ty)
+            Jparams = JacobianParametersAD(F!rev, Jconfig, tx, ty)
         else
             f1 = zeros(T, n)
             f2 = zeros(T, n)
             e  = zeros(T, n)
             tx = zeros(T, n)
-            Jparams = JacobianParametersFD{T, typeof(Fparams)}(ϵ, Fparams, f1, f2, e, tx)
+            Jparams = JacobianParametersFD{T, typeof(F!)}(ϵ, F!, f1, f2, e, tx)
         end
     else
         JacobianParametersUser{T, typeof(J)}(J)

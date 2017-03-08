@@ -99,11 +99,12 @@ end
 
 
 "Implicit partitioned Runge-Kutta integrator."
-immutable IntegratorIPRK{DT, TT, VT, FT, ST} <: Integrator{DT, TT}
+immutable IntegratorIPRK{DT, TT, VT, FT, SPT, ST} <: Integrator{DT, TT}
     equation::PODE{DT,TT,VT,FT}
     tableau::TableauIPRK{TT}
     Δt::TT
 
+    params::SPT
     solver::ST
 
     q::Array{DT,1}
@@ -117,12 +118,13 @@ immutable IntegratorIPRK{DT, TT, VT, FT, ST} <: Integrator{DT, TT}
 end
 
 function IntegratorIPRK{DT,TT,VT,FT}(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT;
-                                     nonlinear_solver=QuasiNewtonSolver)
+                                     nonlinear_solver=DEFAULT_NonlinearSolver,
+                                     nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
     D = equation.d
     S = tableau.s
 
     # create solution vector for internal stages / nonlinear solver
-    z = zeros(DT, 2*D*S)
+    x = zeros(DT, 2*D*S)
 
     # create params
     params = NonlinearFunctionParametersIPRK{DT,TT,VT,FT}(
@@ -130,12 +132,15 @@ function IntegratorIPRK{DT,TT,VT,FT}(equation::PODE{DT,TT,VT,FT}, tableau::Table
                                                 Δt, D, S,
                                                 tableau.q, tableau.p)
 
+    # create rhs function for nonlinear solver
+    function_stages = (x,b) -> function_stages!(x, b, params)
+
     # create solver
-    solver = nonlinear_solver(z, params)
+    solver = nonlinear_solver(x, function_stages; nmax=nmax, atol=atol, rtol=rtol, stol=stol, autodiff=false)
 
     # create integrator
-    IntegratorIPRK{DT, TT, VT, FT, typeof(solver)}(
-                                        equation, tableau, Δt, solver,
+    IntegratorIPRK{DT, TT, VT, FT, typeof(params), typeof(solver)}(
+                                        equation, tableau, Δt, params, solver,
                                         params.q, params.p, params.y, params.z,
                                         params.Q, params.V, params.P, params.F)
 end
@@ -154,7 +159,7 @@ function integrate!{DT,TT,VT,FT,N}(int::IntegratorIPRK{DT,TT,VT,FT}, sol::Soluti
 
         for n in 1:sol.ntime
             # set time for nonlinear solver
-            int.solver.Fparams.t = sol.t[n]
+            int.params.t = sol.t[n]
 
             # compute initial guess
             for i in 1:int.tableau.s

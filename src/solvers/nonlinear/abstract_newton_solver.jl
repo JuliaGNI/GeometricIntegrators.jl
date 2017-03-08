@@ -12,7 +12,7 @@ abstract AbstractNewtonSolver{T} <: NonlinearSolver{T}
     δx::Vector{T}
     δy::Vector{T}
 
-    Fparams::TF
+    F!::FT
     Jparams::TJ
 
     linear::TL

@@ -10,7 +10,6 @@ immutable TimeSeries{T} <: AbstractArray{T,1}
         @assert T <: Real
         @assert n > 0
         @assert step > 0
-        @assert n ≥ step
 
         t = zeros(T, n+1)
         new(n, t, Δt, step)

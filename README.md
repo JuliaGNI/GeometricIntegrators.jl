@@ -87,9 +87,8 @@ with
 
 with
 
-- [ ] Analytic Jacobian,
 - [x] Finite Difference Jacobian,
-- [ ] Jacobian obtained via Automatic Differentiation.
+- [x] Jacobian obtained via Automatic Differentiation.
 
 #### Diagnostics
 

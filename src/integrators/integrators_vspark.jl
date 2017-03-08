@@ -261,11 +261,12 @@ end
 
 
 "Variational special partitioned additive Runge-Kutta integrator."
-immutable IntegratorVSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, ST, IT} <: Integrator{DT, TT}
+immutable IntegratorVSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integrator{DT, TT}
     equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}
     tableau::TableauVSPARK{TT}
     Δt::TT
 
+    params::SPT
     solver::ST
     iguess::InitialGuessIODE{DT, TT, VT, FT, IT}
 
@@ -313,15 +314,18 @@ function IntegratorVSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}(equation::IDAE{DT,TT,FT,PT,U
                                                 Δt, D, S, R, ρ,
                                                 tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, tableau.ω, d_v)
 
+    # create rhs function for nonlinear solver
+    function_stages = (x,b) -> function_stages!(x, b, params)
+
     # create solver
-    solver = nonlinear_solver(z, params; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+    solver = nonlinear_solver(z, function_stages; nmax=nmax, atol=atol, rtol=rtol, stol=stol, autodiff=false)
 
     # create initial guess
     iguess = InitialGuessIODE(interpolation, equation, Δt)
 
     # create integrator
-    IntegratorVSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, typeof(solver), typeof(iguess.int)}(
-                                        equation, tableau, Δt, solver, iguess,
+    IntegratorVSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
+                                        equation, tableau, Δt, params, solver, iguess,
                                         params.q, params.v, params.p, params.λ,
                                         params.y, params.z,
                                         params.Qi, params.Pi, params.Vi, params.Fi,
@@ -345,7 +349,7 @@ function integrate!{DT,TT,FT,PT,UT,GT,ϕT,VT,N}(int::IntegratorVSPARK{DT,TT,FT,P
 
         for n in 1:sol.ntime
             # set time for nonlinear solver
-            int.solver.Fparams.t = sol.t[n]
+            int.params.t = sol.t[n]
 
             # copy previous solution to initial guess
             update!(int.iguess, sol.t[n], int.q, int.p)
