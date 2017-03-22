@@ -1,4 +1,16 @@
 
+function compensated_summation{T}(x::T, y::T, e::T)
+    local err::T
+    local res::T
+
+    err = e + x
+    res = err + y
+    e   = err + (y - res)
+
+    return (res, e)
+end
+
+
 function istriustrict{T}(A::Matrix{T})
     m, n = size(A)
     @inbounds for j = 1:min(n,m-1), i = j:m

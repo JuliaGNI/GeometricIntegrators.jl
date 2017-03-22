@@ -6,6 +6,7 @@ module Utils
 
     include("utils/macro_utils.jl")
 
+    export compensated_summation
     export istriustrict, istrilstrict, L2norm, l2norm
     export simd_scale!, simd_copy!, simd_copy_scale!,
            simd_copy_xy_first!, simd_copy_yx_first!, simd_copy_yx_second!,
