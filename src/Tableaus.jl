@@ -5,19 +5,35 @@ module Tableaus
     using ..BasisFunctions
     using ..Utils
 
+
     export CoefficientsRK, CoefficientsARK, CoefficientsPRK, CoefficientsMRK,
-           get_symplectic_conjugate_coefficients,
-           getCoefficientsGLRK, getCoefficientsPGLRK, getTableauPGLRK,
-           getCoefficientsGLRK1, getCoefficientsGLRK2, getCoefficientsGLRK3,
-           getCoefficientsGLRK4, getCoefficientsGLRK5, getCoefficientsGLRK6,
-           getCoefficientsSRK3,
-           getCoefficientsLobIIIA, getCoefficientsLobIIIB
 
     include("tableaus/coefficients.jl")
+
+    export get_symplectic_conjugate_coefficients, check_symplecticity, check_symmetry,
+           check_order_conditions_B, check_order_conditions_C, check_order_conditions_D
+
     include("tableaus/coefficients_symplectic.jl")
+
+    export getCoefficientsGLRK,
+           getCoefficientsGLRK1, getCoefficientsGLRK2, getCoefficientsGLRK3,
+           getCoefficientsGLRK4, getCoefficientsGLRK5, getCoefficientsGLRK6
+
     include("tableaus/coefficients_glrk.jl")
+
+    export getCoefficientsLobIII2,  getCoefficientsLobIII3,  getCoefficientsLobIII4,
+           getCoefficientsLobIIIA2, getCoefficientsLobIIIA3, getCoefficientsLobIIIA4,
+           getCoefficientsLobIIIB2, getCoefficientsLobIIIB3, getCoefficientsLobIIIB4,
+           getCoefficientsLobIIIC2, getCoefficientsLobIIIC3, getCoefficientsLobIIIC4,
+           getCoefficientsLobIIID2, getCoefficientsLobIIID3, getCoefficientsLobIIID4,
+           getCoefficientsLobIIIE2, getCoefficientsLobIIIE3, getCoefficientsLobIIIE4,
+
     include("tableaus/coefficients_lob.jl")
+
+    export getCoefficientsSRK3
+
     include("tableaus/coefficients_srk.jl")
+
 
     export AbstractTableau
 
@@ -84,7 +100,10 @@ module Tableaus
 
     include("tableaus/tableaus_spark.jl")
 
-    export getTableauLobIIIAIIIB2, getTableauLobIIIAIIIB3, getTableauVPGLRK,
+    export getTableauLobIIIAIIIB2, getTableauLobIIIAIIIB3, getTableauLobIIIAIIIB4,
+           getTableauLobIIIC2, getTableauLobIIIC3, getTableauLobIIIC4,
+           getTableauLobIIID2, getTableauLobIIID3, getTableauLobIIID4,
+           getTableauLobIIIE2, getTableauLobIIIE3, getTableauLobIIIE4,
            getTableauVPSRK3
 
     include("tableaus/tableaus_vprk.jl")
