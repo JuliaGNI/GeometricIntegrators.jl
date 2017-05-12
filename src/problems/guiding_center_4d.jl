@@ -3,16 +3,21 @@ using GeometricIntegrators.Equations
 using GeometricIntegrators.Utils
 
 
+function u(t, q)
+    q[4]
+end
+
+
 function α1(t, q)
-    A1(t,q) + q[4] * b1(t,q)
+    A1(t,q) + u(t,q) * b1(t,q)
 end
 
 function α2(t, q)
-    A2(t,q) + q[4] * b2(t,q)
+    A2(t,q) + u(t,q) * b2(t,q)
 end
 
 function α3(t, q)
-    R(t,q) * ( A3(t,q) + q[4] * b3(t,q) )
+    R(t,q) * ( A3(t,q) + u(t,q) * b3(t,q) )
 end
 
 function α4(t, q)
@@ -29,7 +34,7 @@ function α(t, q, p)
 end
 
 
-function β(t, q, Β)
+function ω(t, q, Β)
     Β[1,1] = 0
     Β[1,2] =-β3(t,q)
     Β[1,3] = β2(t,q)
@@ -54,40 +59,65 @@ function β(t, q, Β)
 end
 
 
+function dα(t, q, dα)
+    dα[1,1] = dα1d1(t,q)
+    dα[1,2] = dα1d2(t,q)
+    dα[1,3] = dα1d3(t,q)
+    dα[1,4] = b1(t,q)
+
+    dα[2,1] = dα2d1(t,q)
+    dα[2,2] = dα2d2(t,q)
+    dα[2,3] = dα2d3(t,q)
+    dα[2,4] = b2(t,q)
+
+    dα[3,1] = dα3d1(t,q)
+    dα[3,2] = dα3d2(t,q)
+    dα[3,3] = dα3d3(t,q)
+    dα[3,4] = b3(t,q)
+
+    dα[4,1] = 0
+    dα[4,2] = 0
+    dα[4,3] = 0
+    dα[4,4] = 0
+
+    nothing
+end
+
+
 function dα1d1(t, q)
-    dA1d1(t,q) + q[4] * db1d1(t,q)
+    dA1d1(t,q) + u(t,q) * db1d1(t,q)
 end
 
 function dα1d2(t, q)
-    dA1d2(t,q) + q[4] * db1d2(t,q)
+    dA1d2(t,q) + u(t,q) * db1d2(t,q)
 end
 
 function dα1d3(t, q)
-    dA1d3(t,q) + q[4] * db1d3(t,q)
+    dA1d3(t,q) + u(t,q) * db1d3(t,q)
 end
 
 function dα2d1(t, q)
-    dA2d1(t,q) + q[4] * db2d1(t,q)
+    dA2d1(t,q) + u(t,q) * db2d1(t,q)
 end
 
 function dα2d2(t, q)
-    dA2d2(t,q) + q[4] * db2d2(t,q)
+    dA2d2(t,q) + u(t,q) * db2d2(t,q)
 end
 
 function dα2d3(t, q)
-    dA2d3(t,q) + q[4] * db2d3(t,q)
+    dA2d3(t,q) + u(t,q) * db2d3(t,q)
 end
 
 function dα3d1(t, q)
-    R(t,q) * ( dA3d1(t,q) + q[4] * db3d1(t,q) ) + dRd1(t,q) * ( A3(t,q) + q[4] * b3(t,q) )
+    R(t,q) * ( dA3d1(t,q) + u(t,q) * db3d1(t,q) ) + dRd1(t,q) * ( A3(t,q) + u(t,q) * b3(t,q) )
 end
 
 function dα3d2(t, q)
-    R(t,q) * ( dA3d2(t,q) + q[4] * db3d2(t,q) ) + dRd2(t,q) * ( A3(t,q) + q[4] * b3(t,q) )
+    R(t,q) * ( dA3d2(t,q) + u(t,q) * db3d2(t,q) ) + dRd2(t,q) * ( A3(t,q) + u(t,q) * b3(t,q) )
 end
 
 function dα3d3(t, q)
-    R(t,q) * ( dA3d3(t,q) + q[4] * db3d3(t,q) ) + dRd3(t,q) * ( A3(t,q) + q[4] * b3(t,q) )
+    R(t,q) * ( dA3d3(t,q) + u(t,q) * db3d3(t,q) ) + dRd3(t,q) * ( A3(t,q) + u(t,q) * b3(t,q) )
 end
 
 
@@ -111,7 +141,7 @@ end
 
 
 function hamiltonian(t,q)
-    0.5 * q[4]^2 + μ*B(t,q)
+    0.5 * u(t,q)^2 + μ*B(t,q)
 end
 
 function toroidal_momentum(t,q)
@@ -156,7 +186,16 @@ function dHd3(t, q)
 end
 
 function dHd4(t, q)
-    q[4]
+    u(t,q)
+end
+
+
+function dH(t, q, dH)
+    dH[1] = dHd1(t, q)
+    dH[2] = dHd2(t, q)
+    dH[3] = dHd3(t, q)
+    dH[4] = dHd4(t, q)
+    nothing
 end
 
 
@@ -176,9 +215,9 @@ function guiding_center_4d_ode_v(t, q, v)
     local ∇₂B = dBd2(t,q)
     local ∇₃B = dBd3(t,q)
 
-    v[1] = q[4] * β₁ / β₀ + μ * ( ∇₂B * B₃ - ∇₃B * B₂ ) / BB
-    v[2] = q[4] * β₂ / β₀ + μ * ( ∇₃B * B₁ - ∇₁B * B₃ ) / BB
-    v[3] = q[4] * β₃ / β₀ + μ * ( ∇₁B * B₂ - ∇₂B * B₁ ) / BB
+    v[1] = u(t,q) * β₁ / β₀ + μ * ( ∇₂B * B₃ - ∇₃B * B₂ ) / BB
+    v[2] = u(t,q) * β₂ / β₀ + μ * ( ∇₃B * B₁ - ∇₁B * B₃ ) / BB
+    v[3] = u(t,q) * β₃ / β₀ + μ * ( ∇₁B * B₂ - ∇₂B * B₁ ) / BB
     v[4] = - ( μ * ∇₁B * β₁ / β₀
              + μ * ∇₂B * β₂ / β₀
              + μ * ∇₃B * β₃ / β₀ )
@@ -219,7 +258,8 @@ function guiding_center_4d_iode_v(t, q, p, v)
     guiding_center_4d_ode_v(t, q, v)
 end
 
-function guiding_center_4d_iode(q₀=q₀; periodic=true)
+
+function guiding_center_4d_p₀(q₀)
     p₀ = zeros(q₀)
 
     if ndims(q₀) == 1
@@ -233,7 +273,11 @@ function guiding_center_4d_iode(q₀=q₀; periodic=true)
             simd_copy_yx_first!(tp, p₀, i)
         end
     end
+    p₀
+end
 
+function guiding_center_4d_iode(q₀=q₀; periodic=true)
+    p₀ = guiding_center_4d_p₀(q₀)
     if periodic
         IODE(guiding_center_4d_iode_α, guiding_center_4d_iode_f,
              guiding_center_4d_iode_g, guiding_center_4d_iode_v,
@@ -242,5 +286,18 @@ function guiding_center_4d_iode(q₀=q₀; periodic=true)
         IODE(guiding_center_4d_iode_α, guiding_center_4d_iode_f,
              guiding_center_4d_iode_g, guiding_center_4d_iode_v,
              q₀, p₀)
+    end
+end
+
+function guiding_center_4d_vode(q₀=q₀; periodic=true)
+    p₀ = guiding_center_4d_p₀(q₀)
+    if periodic
+        VODE(guiding_center_4d_iode_α, guiding_center_4d_iode_f,
+             guiding_center_4d_iode_g, guiding_center_4d_iode_v,
+             ω, dH, q₀, p₀; periodicity=guiding_center_4d_periodicity(q₀))
+    else
+        VODE(guiding_center_4d_iode_α, guiding_center_4d_iode_f,
+             guiding_center_4d_iode_g, guiding_center_4d_iode_v,
+             ω, dH, q₀, p₀)
     end
 end

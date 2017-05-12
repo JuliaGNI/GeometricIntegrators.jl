@@ -1,7 +1,7 @@
 module GuidingCenter4dTokamakLoop
 
     export guiding_center_4d_loop_ode, guiding_center_4d_loop_iode,
-           hamiltonian, toroidal_momentum, α, α1, α2, α3, α4, β, β1, β2, β3, b1, b2, b3
+           hamiltonian, toroidal_momentum, u, α, α1, α2, α3, α4, β, β1, β2, β3, b1, b2, b3
 
     include("magnetic_field_tokamak.jl")
 
@@ -12,7 +12,7 @@ module GuidingCenter4dTokamakLoop
         R0 = 1.0
         Z0 = 0.0
         φ0 = 0.0
-        u0 = 4E-03
+        u0 = 4E-4
         r0 = 0.05
 
         Rt = R0 + r0*cos(2π*t)

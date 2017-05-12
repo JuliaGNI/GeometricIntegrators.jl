@@ -1,7 +1,7 @@
 module GuidingCenter4dSymmetricSurface
 
     export guiding_center_4d_surface_ode, guiding_center_4d_surface_iode,
-           hamiltonian, toroidal_momentum, α, α1, α2, α3, α4, β, β1, β2, β3, b1, b2, b3
+           hamiltonian, toroidal_momentum, u, α, α1, α2, α3, α4, β, β1, β2, β3, b1, b2, b3
 
     include("magnetic_field_symmetric.jl")
 
@@ -10,7 +10,8 @@ module GuidingCenter4dSymmetricSurface
 
     function f_surface(s,t)
         φ0 = 0.0
-        u0 = 4E-03
+        u0 = 1E-5
+        # u0 = 4E-4
         r0 = 0.1
 
         Rt = 2r0*(s-0.5)
