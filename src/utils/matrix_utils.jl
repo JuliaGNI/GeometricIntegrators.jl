@@ -1,5 +1,5 @@
 
-function compensated_summation{T}(x::T, y::T, e::T)
+function compensated_summation{T}(x, y::T, e::T)
     local err::T
     local res::T
 

@@ -31,7 +31,7 @@ function QuasiNewtonSolver(x::Vector, F!::Function; J=nothing, linear_solver=not
 end
 
 
-function solve!{T}(s::QuasiNewtonSolver{T})
+function solve!{T}(s::QuasiNewtonSolver{T}; n::Int=0, refactorize::Int=DEFAULT_QUASINEWTON_REFACTORIZE)
     local λ::T
     local λₜ::T
     local y₀norm::T
@@ -40,17 +40,22 @@ function solve!{T}(s::QuasiNewtonSolver{T})
     local p₀::T
     local p₁::T
     local p₂::T
+    local nmax::Int = s.params.nmax
+
+    if n > 0
+        nmax = n
+    end
 
     s.F!(s.x, s.y₀)
     residual_initial!(s.status, s.y₀)
     s.status.i  = 0
 
-    if s.status.rₐ ≥ s.params.atol²
+    if s.status.rₐ ≥ s.params.atol² || n > 0
         computeJacobian(s.x, s.J, s.Jparams)
         simd_copy!(s.J, s.linear.A)
         factorize!(s.linear)
 
-        for s.status.i = 1:s.params.nmax
+        for s.status.i = 1:nmax
             simd_copy!(s.x, s.x₀)
             y₀norm = l2norm(s.y₀)
 
@@ -165,19 +170,18 @@ function solve!{T}(s::QuasiNewtonSolver{T})
             s.F!(s.x, s.y₀)
             residual!(s.status, s.y₀)
 
-            if solverConverged(s.status, s.params)
+            if solverConverged(s.status, s.params) && !(n > 0)
                 if s.status.i > DEFAULT_nwarn
                     println("WARNING: Quasi-Newton Solver took ", s.status.i, " iterations.")
                 end
                 break
             end
 
-            if s.status.i % DEFAULT_QUASINEWTON_REFACTORIZE == 0
+            if mod(s.status.i, refactorize) == 0
                 computeJacobian(s.x, s.J, s.Jparams)
                 simd_copy!(s.J, s.linear.A)
                 factorize!(s.linear)
             end
         end
     end
-    nothing
 end

@@ -33,27 +33,35 @@ immutable NonlinearFunctionCacheVPRKprojection{ST}
     p̅::Vector{ST}
     λ::Vector{ST}
 
+    Λ::Matrix{ST}
+    Φ::Matrix{ST}
+
     U::Array{ST,2}
     G::Array{ST,2}
+    R::Array{ST,2}
 
     u::Array{ST,1}
     g::Array{ST,1}
 
-    function NonlinearFunctionCacheVPRKprojection(D)
+    function NonlinearFunctionCacheVPRKprojection(D,S)
         # create projected solution vectors
         q̅ = zeros(ST,D)
         p̅ = zeros(ST,D)
         λ = zeros(ST,D)
 
+        Λ = zeros(ST,D,S)
+        Φ = zeros(ST,D,S)
+
         # create projection vectors
         U = zeros(ST,D,2)
         G = zeros(ST,D,2)
+        R = zeros(ST,D,S)
 
         # create update vectors
         u = zeros(ST,D)
         g = zeros(ST,D)
 
-        new(q̅, p̅, λ, U, G, u, g)
+        new(q̅, p̅, λ, Λ, Φ, U, G, R, u, g)
     end
 end
 
@@ -91,6 +99,18 @@ function compute_stages_v_vprk!{ST,DT,TT,AT,FT,D,S}(x::Vector{ST}, V::Matrix{ST}
     for i in 1:S
         for k in 1:D
             V[k,i] = x[D*(i-1)+k]
+        end
+    end
+end
+
+function compute_stages_λ_vprk!{ST,DT,TT,AT,FT,D,S}(x::Vector{ST}, Λ::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+    @assert D == size(Λ,1)
+    @assert S == size(Λ,2)
+
+    # copy x to V
+    for i in 1:S
+        for k in 1:D
+            Λ[k,i] = x[D*(S+i-1)+k]
         end
     end
 end
@@ -162,6 +182,24 @@ end
 end
 
 
+function scale_projection!{ST,TT}(Y::Matrix{ST}, Δt::TT, o::Int)
+    local scale_fac::TT = Δt^(-1)
+
+    # if Δt > 1
+    #     scale_fac = Δt^(-o/2)
+    # else
+    #     scale_fac = Δt^(+o/2)
+    # end
+
+    simd_scale!(Y, scale_fac)
+end
+
+function scale_projection!{ST,TT}(U::Matrix{ST}, G::Matrix{ST}, Δt::TT, o::Int)
+    scale_projection!(U, Δt, o)
+    scale_projection!(G, Δt, o)
+end
+
+
 @generated function compute_rhs_vprk!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
     compute_stages_vprk = quote
         local z::ST
@@ -186,12 +224,32 @@ end
     compute_stages_vprk = quote
         local z::ST
 
-        # compute b = - [(P-AF)]
+        # compute b = - [(P-G-AF)]
         for i in 1:S
             for k in 1:D
                 z = params.R[1] * G[k,1]
                 for j in 1:S
                     z += params.t_p.a[i,j] * F[k,j]
+                end
+                b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * z
+            end
+        end
+    end
+
+    return compute_stages_vprk
+end
+
+
+@generated function compute_rhs_vprk!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+    compute_stages_vprk = quote
+        local z::ST
+
+        # compute b = - [(P-G-AF)]
+        for i in 1:S
+            for k in 1:D
+                z = params.R[1] * G[k,1]
+                for j in 1:S
+                    z += params.t_p.a[i,j] * (F[k,j] + R[k,j])
                 end
                 b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * z
             end
@@ -222,6 +280,19 @@ function compute_rhs_vprk_projection_p!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, p̅::
         z = params.R[1] * G[k,1] + params.R[2] * G[k,2]
         for j in 1:S
             z += params.t_p.b[j] * F[k,j]
+        end
+        b[offset+k] = - (p̅[k] - params.p[k]) + params.Δt * z
+    end
+end
+
+
+function compute_rhs_vprk_projection_p!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, p̅::Vector{ST}, F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+    local z::ST
+
+    for k in 1:D
+        z = params.R[1] * G[k,1] + params.R[2] * G[k,2]
+        for j in 1:S
+            z += params.t_p.b[j] * (F[k,j] + R[k,j])
         end
         b[offset+k] = - (p̅[k] - params.p[k]) + params.Δt * z
     end
@@ -265,25 +336,41 @@ end
 
 
 function update_solution!{DT,TT}(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRK{DT})
-    simd_mult!(cache.y, cache.V, int.tableau.q.b)
-    simd_mult!(cache.z, cache.F, int.tableau.p.b)
-    simd_axpy!(int.Δt, cache.y, int.q, int.qₑᵣᵣ)
-    simd_axpy!(int.Δt, cache.z, int.p, int.pₑᵣᵣ)
+    for k in 1:size(cache.V, 1)
+        for i in 1:size(cache.V, 2)
+            int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.q.b[i] * cache.V[k,i], int.q[k], int.qₑᵣᵣ[k])
+            int.p[k], int.pₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.q.b[i] * cache.F[k,i], int.p[k], int.pₑᵣᵣ[k])
+        end
+    end
+
+    # simd_mult!(cache.y, cache.V, int.tableau.q.b)
+    # simd_mult!(cache.z, cache.F, int.tableau.p.b)
+    # simd_axpy!(int.Δt, cache.y, int.q, int.qₑᵣᵣ)
+    # simd_axpy!(int.Δt, cache.z, int.p, int.pₑᵣᵣ)
 end
 
 
 function project_solution!{DT,TT}(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRKprojection{DT}, R::Vector{TT})
-    simd_mult!(cache.u, cache.U, R)
-    simd_mult!(cache.g, cache.G, R)
-    simd_axpy!(int.Δt, cache.u, int.q, int.qₑᵣᵣ)
-    simd_axpy!(int.Δt, cache.g, int.p, int.pₑᵣᵣ)
+    for k in 1:size(cache.U, 1)
+        for i in 1:size(cache.U, 2)
+            int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * R[i] * cache.U[k,i], int.q[k], int.qₑᵣᵣ[k])
+            int.p[k], int.pₑᵣᵣ[k] = compensated_summation(int.Δt * R[i] * cache.G[k,i], int.p[k], int.pₑᵣᵣ[k])
+        end
+    end
+
+    # simd_mult!(cache.u, cache.U, R)
+    # simd_mult!(cache.g, cache.G, R)
+    # simd_axpy!(int.Δt, cache.u, int.q, int.qₑᵣᵣ)
+    # simd_axpy!(int.Δt, cache.g, int.p, int.pₑᵣᵣ)
 end
 
+
 function cut_periodic_solution!(int::AbstractIntegratorVPRK)
-    # take care of periodic solutions
     for k in 1:int.equation.d
         if int.equation.periodicity[k] ≠ 0
-            int.q[k] = mod(int.q[k], int.equation.periodicity[k])
+            if int.q[k] < 0 || int.q[k] ≥ int.equation.periodicity[k]
+                (int.q[k], int.qₑᵣᵣ[k]) = compensated_summation(-fld(int.q[k], int.equation.periodicity[k]) * int.equation.periodicity[k], int.q[k], int.qₑᵣᵣ[k])
+            end
         end
     end
 end

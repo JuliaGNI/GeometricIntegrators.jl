@@ -1,11 +1,22 @@
 
+# include("../problems/guiding_center_4d_symmetric_loop.jl")
+#
+# using .GuidingCenter4dSymmetricLoop
+
+
+# include("../problems/guiding_center_4d_tokamak_passing.jl")
+#
+# using .GuidingCenter4dTokamakPassing
+
+
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-type NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT,D} <: NonlinearFunctionParameters{DT}
+type NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT,D,S} <: NonlinearFunctionParameters{DT}
     α::AT
     g::GT
 
     Δt::TT
 
+    o::Int
     R::Vector{TT}
     R1::Vector{TT}
     R2::Vector{TT}
@@ -16,16 +27,22 @@ type NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT,D} <: NonlinearFunctio
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT}(α::AT, g::GT, Δt::TT, R::Vector, q::Vector{DT}, p::Vector{DT})
+function NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT}(α::AT, g::GT, Δt::TT, o::Int, R::Vector, q::Vector{DT}, p::Vector{DT}, S::Int)
     @assert length(q)==length(p)
     R = convert(Vector{TT}, R)
     R1 = [R[1], zero(TT)]
     R2 = [zero(TT), R[2]]
-    NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT,length(q)}(α, g, Δt, R, R1, R2, 0, q, p)
+    # R  = [one(TT), one(TT)]
+    # R1 = [one(TT), zero(TT)]
+    # R2 = [zero(TT), one(TT)]
+    # println("R  = ", R)
+    # println("R1 = ", R1)
+    # println("R2 = ", R2)
+    NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT,length(q),S}(α, g, Δt, o, R, R1, R2, 0, q, p)
 end
 
 
-@generated function compute_projection_vprk!{ST,DT,TT,ΑT,GT,D}(x::Vector{ST}, q̅::Vector{ST}, p̅::Vector{ST}, λ::Vector{ST}, U::Matrix{ST}, G::Matrix{ST}, params::NonlinearFunctionParametersVPRKpStandard{DT,TT,ΑT,GT,D})
+@generated function compute_projection_vprk!{ST,DT,TT,ΑT,GT,D,S}(x::Vector{ST}, q̅::Vector{ST}, p̅::Vector{ST}, λ::Vector{ST}, U::Matrix{ST}, G::Matrix{ST}, params::NonlinearFunctionParametersVPRKpStandard{DT,TT,ΑT,GT,D,S})
     # create temporary vectors
     tG = zeros(ST,D)
 
@@ -47,6 +64,9 @@ end
         simd_copy_yx_first!($tG, G, 1)
         simd_copy_yx_first!($tG, G, 2)
 
+        # scale U and G to avoid accuracy issues
+        scale_projection!(U, G, params.Δt, params.o)
+
         # compute p̅=α(q)
         params.α(params.t + params.Δt, q̅, λ, p̅)
     end
@@ -55,18 +75,31 @@ end
 end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."
-@generated function function_stages!{ST,DT,TT,ΑT,GT,D}(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersVPRKpStandard{DT,TT,ΑT,GT,D})
-    cache = NonlinearFunctionCacheVPRKprojection{ST}(D)
+@generated function function_stages!{ST,DT,TT,ΑT,GT,D,S}(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersVPRKpStandard{DT,TT,ΑT,GT,D,S})
+    cache = NonlinearFunctionCacheVPRKprojection{ST}(D,S)
+
+    # λ  = zeros(ST, D)
+    # ω  = zeros(ST, D, D)
+    # dh = zeros(ST, D)
 
     function_stages = quote
         @assert length(x) == length(b)
 
         compute_projection_vprk!(x, $cache.q̅, $cache.p̅, $cache.λ, $cache.U, $cache.G, params)
 
-        # compute b = - [q̅-q-U]
+        # # compute b = - [q̅-q-U]
         for k in 1:D
             b[0*D+k] = - ($cache.q̅[k] - params.q[k]) + params.Δt * params.R[2] * $cache.U[k,2]
         end
+
+        # dH(params.t + params.Δt, $cache.q̅, $dh)
+        # β(params.t + params.Δt, $cache.q̅, $ω)
+        # simd_mult!($λ, inv($ω), $dh)
+        # simd_scale!($λ, 1/params.Δt)
+        #
+        # for k in 1:D
+        #     b[1*D+k] = - $cache.λ[k] + $λ[k]
+        # end
 
         # compute b = - [p̅-p-G]
         for k in 1:D
@@ -137,7 +170,7 @@ function IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT
 
     # create cache for internal stage vectors and update vectors
     scache = NonlinearFunctionCacheVPRK{DT}(D,S)
-    pcache = NonlinearFunctionCacheVPRKprojection{DT}(D)
+    pcache = NonlinearFunctionCacheVPRKprojection{DT}(D,S)
 
     # create solver params
     sparams = NonlinearFunctionParametersVPRK(equation.α, equation.f, Δt,
@@ -152,7 +185,7 @@ function IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT
 
     # create projector params
     R[2] *= tableau.R∞
-    pparams = NonlinearFunctionParametersVPRKpStandard(equation.α, equation.g, Δt, R, q, p)
+    pparams = NonlinearFunctionParametersVPRKpStandard(equation.α, equation.g, Δt, tableau.o, R, q, p, S)
 
     # create rhs function for projector
     function_stages_projector = (x,b) -> function_stages!(x, b, pparams)
@@ -161,7 +194,7 @@ function IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT
     projector = nonlinear_solver(x, function_stages_projector; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
 
     # create initial guess
-    iguess = InitialGuessIODE(interpolation, equation, Δt)
+    iguess = InitialGuessIODE(interpolation, equation, Δt; periodicity=equation.periodicity)
 
 
     IntegratorVPRKpStandard{DT, TT, ΑT, FT, GT, VT, typeof(sparams), typeof(pparams), typeof(solver), typeof(projector), typeof(iguess.int)}(
@@ -175,13 +208,34 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT
     @assert m1 ≥ 1
     @assert m2 ≤ sol.ni
 
+    tG = zeros(DT, int.equation.d)
+
     # loop over initial conditions
     for m in m1:m2
         # copy initial conditions from solution
-        get_initial_conditions!(sol, int.q, int.p, m)
+        get_initial_conditions!(sol, int.q, int.p, int.pcache.λ, m)
 
         # initialise initial guess
         initialize!(int.iguess, sol.t[0], int.q, int.p)
+
+        # compute initial λ
+        # dh = zeros(int.q)
+        # dH(sol.t[0], int.q, dh)
+        # ω = zeros(DT, length(int.q), length(int.q))
+        # β(sol.t[0], int.q, ω)
+        # simd_mult!(int.pcache.λ, inv(ω), dh)
+        # simd_scale!(int.pcache.λ, 1/int.Δt)
+        # copy_solution!(sol, int.q, int.p, int.pcache.λ, 0, m)
+
+        # initialise projector
+        simd_copy_yx_first!(int.pcache.λ, int.pcache.U, 1)
+
+        int.equation.g(sol.t[0], int.q, int.pcache.λ, tG)
+        simd_copy_yx_first!(tG, int.pcache.G, 1)
+
+        # scale U and G to avoid accuracy issues
+        scale_projection!(int.pcache.U, int.pcache.G, int.Δt, int.tableau.o)
+
 
         for n in 1:sol.ntime
             # set time for nonlinear and projection solver
@@ -190,9 +244,6 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT
 
             # add perturbation to solution (same vector field as previous time step)
             project_solution!(int, int.pcache, int.pparams.R1)
-
-            # copy perturbed previous solution to initial guess
-            update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
 
             # compute initial guess
             for i in 1:int.tableau.s
@@ -221,6 +272,7 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT
             for k in 1:int.equation.d
                 int.projector.x[0*int.equation.d+k] = int.q[k]
                 int.projector.x[1*int.equation.d+k] = 0
+                # int.projector.x[1*int.equation.d+k] = int.tableau.R∞ * int.pcache.λ[k]
             end
 
             # call projection solver
@@ -238,8 +290,13 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT
             compute_projection_vprk!(int.projector.x, int.pcache.q̅, int.pcache.p̅, int.pcache.λ, int.pcache.U, int.pcache.G, int.pparams)
             project_solution!(int, int.pcache, int.pparams.R2)
 
+            # copy solution to initial guess for next time step
+            update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
+
             # take care of periodic solutions
             cut_periodic_solution!(int)
+
+            # println("pit=", n, ", λ = ", int.pcache.λ)
 
             # copy to solution
             copy_solution!(sol, int.q, int.p, int.pcache.λ, n, m)

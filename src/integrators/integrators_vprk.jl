@@ -99,7 +99,7 @@ function IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT,GT,VT}, 
     solver = nonlinear_solver(x, function_stages; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
 
     # create initial guess
-    iguess = InitialGuessIODE(interpolation, equation, Δt)
+    iguess = InitialGuessIODE(interpolation, equation, Δt; periodicity=equation.periodicity)
 
     # create integrator
     IntegratorVPRK{DT, TT, ΑT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
@@ -125,9 +125,6 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT
             # set time for nonlinear solver
             int.params.t = sol.t[0] + (n-1)*int.Δt
 
-            # copy previous solution to initial guess
-            update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
-
             # compute initial guess
             for i in 1:int.tableau.s
                 evaluate!(int.iguess, int.cache.y, int.cache.z, int.cache.v, int.tableau.q.c[i], int.tableau.p.c[i])
@@ -138,6 +135,7 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT
 
             # call nonlinear solver
             solve!(int.solver)
+            # solve!(int.solver; refactorize=1)
 
             if !solverStatusOK(int.solver.status, int.solver.params)
                 println(int.solver.status, ", it=", n)
@@ -150,6 +148,11 @@ function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT
             # compute final update
             compute_stages_vprk!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.params)
             update_solution!(int, int.cache)
+
+            # copy solution to initial guess for next time step
+            update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
+
+            # take care of periodic solutions
             cut_periodic_solution!(int)
 
             # copy to solution
