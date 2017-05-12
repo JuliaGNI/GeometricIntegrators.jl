@@ -26,7 +26,7 @@ module Tableaus
            getCoefficientsLobIIIB2, getCoefficientsLobIIIB3, getCoefficientsLobIIIB4,
            getCoefficientsLobIIIC2, getCoefficientsLobIIIC3, getCoefficientsLobIIIC4,
            getCoefficientsLobIIID2, getCoefficientsLobIIID3, getCoefficientsLobIIID4,
-           getCoefficientsLobIIIE2, getCoefficientsLobIIIE3, getCoefficientsLobIIIE4,
+           getCoefficientsLobIIIE2, getCoefficientsLobIIIE3, getCoefficientsLobIIIE4
 
     include("tableaus/coefficients_lob.jl")
 
