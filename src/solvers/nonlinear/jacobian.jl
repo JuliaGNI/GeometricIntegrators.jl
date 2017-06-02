@@ -76,7 +76,7 @@ function getJacobianParameters(J, F!, ϵ, T, n, autodiff)
             F!rev = (y,x) -> F!(x,y)
             tx = zeros(T, n)
             ty = zeros(T, n)
-            Jconfig = ForwardDiff.JacobianConfig(ty, tx)
+            Jconfig = ForwardDiff.JacobianConfig(nothing, ty, tx)
             Jparams = JacobianParametersAD(F!rev, Jconfig, tx, ty)
         else
             f1 = zeros(T, n)
