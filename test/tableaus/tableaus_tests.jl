@@ -129,13 +129,13 @@ tab_explicit_glrk2 = TableauFIRK(:glrk2, o, a, b, c)
 
 glrk2_tab1 = getTableauGLRK(2)
 glrk2_tab2 = getTableauGLRK2()
-@test_approx_eq_eps glrk2_tab1.q.a glrk2_tab1.q.a 2eps()
+@test glrk2_tab1.q.a ≈ glrk2_tab1.q.a atol=2 * eps()
 @test glrk2_tab1.q.b == glrk2_tab1.q.b
 @test glrk2_tab1.q.c == glrk2_tab1.q.c
 
 glrk3_tab1 = getTableauGLRK(3)
 glrk3_tab2 = getTableauGLRK3()
-@test_approx_eq_eps glrk3_tab1.q.a glrk3_tab1.q.a 2eps()
+@test glrk3_tab1.q.a ≈ glrk3_tab1.q.a atol=2 * eps()
 @test glrk3_tab1.q.b == glrk3_tab1.q.b
 @test glrk3_tab1.q.c == glrk3_tab1.q.c
 

@@ -10,7 +10,7 @@ ts = TimeSeries{eltype(Δt)}(ntime, Δt, 1)
 
 compute_timeseries!(ts, 0.)
 t = collect(0:Δt:ntime*Δt)
-@test_approx_eq_eps(ts, t, eps())
+@test ts.t ≈ t atol=eps()
 
 ts1 = TimeSeries(ntime, Δt)
 compute_timeseries!(ts1, 0.)
