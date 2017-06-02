@@ -20,6 +20,11 @@ function get_symplectic_conjugate_coefficients{T}(coeff::CoefficientsRK{T})
 end
 
 
+function compute_symplecticity_error{T}(coeff::CoefficientsRK{T})
+    [coeff.b[i] * coeff.a[i,j] + coeff.b[j] * coeff.a[j,i] - coeff.b[i] * coeff.b[j] for i in 1:size(coeff.a,1), j in 1:size(coeff.a,2)]
+end
+
+
 function check_symplecticity{T}(coeff::CoefficientsRK{T})
     symplectic = falses(coeff.s, coeff.s)
 

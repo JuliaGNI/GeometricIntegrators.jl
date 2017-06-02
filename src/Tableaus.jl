@@ -11,7 +11,8 @@ module Tableaus
     include("tableaus/coefficients.jl")
 
     export get_symplectic_conjugate_coefficients, check_symplecticity, check_symmetry,
-           check_order_conditions_B, check_order_conditions_C, check_order_conditions_D
+           check_order_conditions_B, check_order_conditions_C, check_order_conditions_D,
+           compute_symplecticity_error
 
     include("tableaus/coefficients_symplectic.jl")
 
