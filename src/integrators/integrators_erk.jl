@@ -5,10 +5,10 @@ immutable IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
     tableau::TableauERK{TT}
     Δt::TT
 
-    x::Array{DT,1}
-    F::Array{DT,2}
-    tX::Array{DT,1}
-    tF::Array{DT,1}
+    q::Array{DT,1}
+    V::Array{DT,2}
+    tQ::Array{DT,1}
+    tV::Array{DT,1}
 
 
     function IntegratorERK(equation, tableau, Δt)
@@ -24,51 +24,46 @@ function IntegratorERK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauERK{TT
     IntegratorERK{DT,TT,FT}(equation, tableau, Δt)
 end
 
-"Integrate ODE with explicit Runge-Kutta integrator."
-function integrate!{DT,TT,FT,N}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N}, m1::Int, m2::Int)
-    @assert m1 ≥ 1
-    @assert m2 ≤ sol.ni
+function initialize!(int::IntegratorERK, sol::SolutionODE, m::Int)
+    @assert m ≥ 1
+    @assert m ≤ sol.ni
 
+    # copy initial conditions from solution
+    get_initial_conditions!(sol, int.q, m)
+end
+
+"Integrate ODE with explicit Runge-Kutta integrator."
+function integrate_step!{DT,TT,FT,N}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int)
     local tᵢ::TT
     local y::DT
 
-    # loop over initial conditions
-    for m in m1:m2
-        # copy initial conditions from solution
-        get_initial_conditions!(sol, int.x, m)
+    # compute internal stages
+    int.equation.v(sol.t[n], int.q, int.tV)
+    simd_copy_yx_second!(int.tV, int.V, 1)
 
-        # loop over time steps
-        for n in 1:sol.ntime
-            # compute internal stages
-            int.equation.v(sol.t[n], int.x, int.tF)
-            simd_copy_yx_second!(int.tF, int.F, 1)
-
-            for i in 2:int.tableau.q.s
-                @inbounds for k in eachindex(int.tX)
-                    y = 0
-                    for j = 1:i-1
-                        y += int.tableau.q.a[i,j] * int.F[j,k]
-                    end
-                    int.tX[k] = int.x[k] + int.Δt * y
-                end
-                tᵢ = sol.t[n] + int.Δt * int.tableau.q.c[i]
-                int.equation.v(tᵢ, int.tX, int.tF)
-                simd_copy_yx_second!(int.tF, int.F, i)
+    for i in 2:int.tableau.q.s
+        @inbounds for k in eachindex(int.tQ)
+            y = 0
+            for j = 1:i-1
+                y += int.tableau.q.a[i,j] * int.V[j,k]
             end
+            int.tQ[k] = int.q[k] + int.Δt * y
+        end
+        tᵢ = sol.t[n] + int.Δt * int.tableau.q.c[i]
+        int.equation.v(tᵢ, int.tQ, int.tV)
+        simd_copy_yx_second!(int.tV, int.V, i)
+    end
 
-            # compute final update
-            simd_abXpy!(int.Δt, int.tableau.q.b, int.F, int.x)
+    # compute final update
+    simd_abXpy!(int.Δt, int.tableau.q.b, int.V, int.q)
 
-            # take care of periodic solutions
-            for k in 1:int.equation.d
-                if int.equation.periodicity[k] ≠ 0
-                    int.x[k] = mod(int.x[k], int.equation.periodicity[k])
-                end
-            end
-
-            # copy to solution
-            copy_solution!(sol, int.x, n, m)
+    # take care of periodic solutions
+    for k in 1:int.equation.d
+        if int.equation.periodicity[k] ≠ 0
+            int.q[k] = mod(int.q[k], int.equation.periodicity[k])
         end
     end
-    nothing
+
+    # copy to solution
+    copy_solution!(sol, int.q, n, m)
 end

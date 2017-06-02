@@ -172,65 +172,54 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N}, m1::Int, m2::Int)
-    @assert m1 ≥ 1
-    @assert m2 ≤ sol.ni
+function integrate_step!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m::Int, n::Int)
+    # set time for nonlinear solver
+    int.params.t = sol.t[0] + (n-1)*int.Δt
 
-    # loop over initial conditions
-    for m in m1:m2
-        # copy initial conditions from solution
-        get_initial_conditions!(sol, int.q, int.p, m)
-
-        # initialise initial guess
-        initialize!(int.iguess, sol.t[0], int.q, int.p)
-
-        for n in 1:sol.ntime
-            # set time for nonlinear solver
-            int.params.t = sol.t[0] + (n-1)*int.Δt
-
-            # compute initial guess
-            for i in 1:int.tableau.s
-                evaluate!(int.iguess, int.scache.y, int.scache.z, int.scache.v, int.tableau.q.c[i], int.tableau.p.c[i])
-                for k in 1:int.equation.d
-                    int.solver.x[int.equation.d*(i-1)+k] = int.scache.v[k]
-                end
-            end
-            evaluate!(int.iguess, int.scache.y, int.scache.z, int.scache.v, one(TT), one(TT))
-            for k in 1:int.equation.d
-                int.solver.x[int.equation.d*(int.tableau.s+0)+k] = int.scache.y[k]
-            end
-            for k in 1:int.equation.d
-                int.solver.x[int.equation.d*(int.tableau.s+1)+k] = 0
-            end
-
-            # call nonlinear solver
-            solve!(int.solver; refactorize=1)
-
-            if !solverStatusOK(int.solver.status, int.solver.params)
-                println(int.solver.status, ", it=", n)
-            end
-
-            if isnan(int.solver.status.rₐ)
-                break
-            end
-
-            # compute final update
-            compute_stages_vprk!(int.solver.x,
-                                 int.pcache.q̅, int.pcache.p̅, int.pcache.λ,
-                                 int.scache.Q, int.scache.V, int.pcache.U,
-                                 int.scache.P, int.scache.F, int.pcache.G, int.params)
-
-            update_solution!(int, int.scache)
-            project_solution!(int, int.pcache, int.params.R)
-
-            # copy solution to initial guess for next time step
-            update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
-
-            # take care of periodic solutions
-            cut_periodic_solution!(int)
-
-            # copy to solution
-            copy_solution!(sol, int.q, int.p, int.pcache.λ, n, m)
+    # compute initial guess
+    for i in 1:int.tableau.s
+        evaluate!(int.iguess, int.scache.y, int.scache.z, int.scache.v, int.tableau.q.c[i], int.tableau.p.c[i])
+        for k in 1:int.equation.d
+            int.solver.x[int.equation.d*(i-1)+k] = int.scache.v[k]
         end
     end
+    evaluate!(int.iguess, int.scache.y, int.scache.z, int.scache.v, one(TT), one(TT))
+    for k in 1:int.equation.d
+        int.solver.x[int.equation.d*(int.tableau.s+0)+k] = int.scache.y[k]
+    end
+    for k in 1:int.equation.d
+        int.solver.x[int.equation.d*(int.tableau.s+1)+k] = 0
+    end
+
+    # call nonlinear solver
+    solve!(int.solver)
+    # solve!(int.solver; refactorize=1)
+
+    # println(int.solver.status, ", it=", n)
+    if !solverStatusOK(int.solver.status, int.solver.params)
+        println(int.solver.status, ", it=", n)
+    end
+
+    # if isnan(int.solver.status.rₐ)
+    #     println("WARNING: Detected NaN in it=", n)
+    #     break
+    # end
+
+    # compute final update
+    compute_stages_vprk!(int.solver.x,
+                         int.pcache.q̅, int.pcache.p̅, int.pcache.λ,
+                         int.scache.Q, int.scache.V, int.pcache.U,
+                         int.scache.P, int.scache.F, int.pcache.G, int.params)
+
+    update_solution!(int, int.scache)
+    project_solution!(int, int.pcache, int.params.R)
+
+    # copy solution to initial guess for next time step
+    update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
+
+    # take care of periodic solutions
+    cut_periodic_solution!(int)
+
+    # copy to solution
+    copy_solution!(sol, int.q, int.p, int.pcache.λ, n, m)
 end

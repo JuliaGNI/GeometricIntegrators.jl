@@ -146,45 +146,41 @@ function IntegratorIPRK{DT,TT,VT,FT}(equation::PODE{DT,TT,VT,FT}, tableau::Table
 end
 
 
+function initialize!(int::IntegratorIPRK, sol::SolutionPODE, m::Int)
+    @assert m ≥ 1
+    @assert m ≤ sol.ni
+
+    # copy initial conditions from solution
+    get_initial_conditions!(sol, int.q, int.p, m)
+end
+
 "Integrate ODE with implicit partitioned Runge-Kutta integrator."
-function integrate!{DT,TT,VT,FT,N}(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N}, m1::Int, m2::Int)
-    @assert m1 ≥ 1
-    @assert m2 ≤ sol.ni
+function integrate_step!{DT,TT,VT,FT,N}(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N}, m::Int, n::Int)
+    # set time for nonlinear solver
+    int.params.t = sol.t[n]
 
-    # loop over initial conditions
-    for m in m1:m2
-        # copy initial conditions from solution
-        get_initial_conditions!(sol, int.q, int.p, m)
-
-        for n in 1:sol.ntime
-            # set time for nonlinear solver
-            int.params.t = sol.t[n]
-
-            # compute initial guess
-            for i in 1:int.tableau.s
-                for k in 1:int.equation.d
-                    # TODO initial guess
-                    # int.solver.x[2*(sol.nd*(i-1)+k-1)+1] = int.q[k]
-                    # int.solver.x[2*(params.d*(i-1)+k-1)+1] = 0.
-                end
-            end
-
-            # call nonlinear solver
-            solve!(int.solver)
-
-            if !solverStatusOK(int.solver.status, int.solver.params)
-                println(int.solver.status)
-            end
-
-            # compute final update
-            simd_mult!(int.y, int.V, int.tableau.q.b)
-            simd_mult!(int.z, int.F, int.tableau.p.b)
-            simd_axpy!(int.Δt, int.y, int.q)
-            simd_axpy!(int.Δt, int.z, int.p)
-
-            # copy to solution
-            copy_solution!(sol, int.q, int.p, n, m)
+    # compute initial guess
+    for i in 1:int.tableau.s
+        for k in 1:int.equation.d
+            # TODO initial guess
+            # int.solver.x[2*(sol.nd*(i-1)+k-1)+1] = int.q[k]
+            # int.solver.x[2*(params.d*(i-1)+k-1)+1] = 0.
         end
     end
-    nothing
+
+    # call nonlinear solver
+    solve!(int.solver)
+
+    if !solverStatusOK(int.solver.status, int.solver.params)
+        println(int.solver.status)
+    end
+
+    # compute final update
+    simd_mult!(int.y, int.V, int.tableau.q.b)
+    simd_mult!(int.z, int.F, int.tableau.p.b)
+    simd_axpy!(int.Δt, int.y, int.q)
+    simd_axpy!(int.Δt, int.z, int.p)
+
+    # copy to solution
+    copy_solution!(sol, int.q, int.p, n, m)
 end

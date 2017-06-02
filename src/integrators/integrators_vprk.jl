@@ -108,55 +108,56 @@ function IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT,GT,VT}, 
 end
 
 
+
+function initialize!(int::Union{IntegratorVPRK, IntegratorVPRKpMidpoint, IntegratorVPRKpSymmetric}, sol::Union{SolutionPDAE, PSolutionPDAE}, m::Int)
+    @assert m ≥ 1
+    @assert m ≤ sol.ni
+
+    # copy initial conditions from solution
+    get_initial_conditions!(sol, int.q, int.p, m)
+
+    # initialise initial guess
+    initialize!(int.iguess, sol.t[0], int.q, int.p)
+end
+
+
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m1::Int, m2::Int)
-    @assert m1 ≥ 1
-    @assert m2 ≤ sol.ni
+function integrate_step!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m::Int, n::Int)
+    # set time for nonlinear solver
+    int.params.t = sol.t[0] + (n-1)*int.Δt
 
-    # loop over initial conditions
-    for m in m1:m2
-        # copy initial conditions from solution
-        get_initial_conditions!(sol, int.q, int.p, m)
-
-        # initialise initial guess
-        initialize!(int.iguess, sol.t[0], int.q, int.p)
-
-        for n in 1:sol.ntime
-            # set time for nonlinear solver
-            int.params.t = sol.t[0] + (n-1)*int.Δt
-
-            # compute initial guess
-            for i in 1:int.tableau.s
-                evaluate!(int.iguess, int.cache.y, int.cache.z, int.cache.v, int.tableau.q.c[i], int.tableau.p.c[i])
-                for k in 1:int.equation.d
-                    int.solver.x[int.equation.d*(i-1)+k] = int.cache.v[k]
-                end
-            end
-
-            # call nonlinear solver
-            solve!(int.solver)
-            # solve!(int.solver; refactorize=1)
-
-            if !solverStatusOK(int.solver.status, int.solver.params)
-                println(int.solver.status, ", it=", n)
-            end
-
-            if isnan(int.solver.status.rₐ)
-                break
-            end
-
-            # compute final update
-            compute_stages_vprk!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.params)
-            update_solution!(int, int.cache)
-
-            # copy solution to initial guess for next time step
-            update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
-
-            # take care of periodic solutions
-            cut_periodic_solution!(int)
-
-            # copy to solution
-            copy_solution!(sol, int.q, int.p, n, m)
+    # compute initial guess
+    for i in 1:int.tableau.s
+        evaluate!(int.iguess, int.cache.y, int.cache.z, int.cache.v, int.tableau.q.c[i], int.tableau.p.c[i])
+        for k in 1:int.equation.d
+            int.solver.x[int.equation.d*(i-1)+k] = int.cache.v[k]
         end
     end
+
+    # call nonlinear solver
+    solve!(int.solver)
+    # solve!(int.solver; refactorize=1)
+
+    # println(int.solver.status, ", it=", n)
+    if !solverStatusOK(int.solver.status, int.solver.params)
+        println(int.solver.status, ", it=", n)
+    end
+
+    # if isnan(int.solver.status.rₐ)
+    #     println("WARNING: Detected NaN in it=", n)
+    #     break
+    # end
+
+    # compute final update
+    compute_stages_vprk!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.params)
+    update_solution!(int, int.cache)
+
+    # copy solution to initial guess for next time step
+    update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
+
+    # take care of periodic solutions
+    cut_periodic_solution!(int)
+
+    # copy to solution
+    copy_solution!(sol, int.q, int.p, n, m)
 end

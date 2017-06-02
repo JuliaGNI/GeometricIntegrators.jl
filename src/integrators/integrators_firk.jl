@@ -162,61 +162,57 @@ function IntegratorFIRK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{
 end
 
 
+function initialize!(int::IntegratorFIRK, sol::SolutionODE, m::Int)
+    @assert m ≥ 1
+    @assert m ≤ sol.ni
+
+    # copy initial conditions from solution
+    get_initial_conditions!(sol, int.q, m)
+
+    # initialise initial guess
+    initialize!(int.iguess, sol.t[0], int.q)
+end
+
 "Integrate ODE with fully implicit Runge-Kutta integrator."
-function integrate!{DT,TT,FT,SPT,ST,IT,N}(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::SolutionODE{DT,TT,N}, m1::Int, m2::Int)
-    @assert m1 ≥ 1
-    @assert m2 ≤ sol.ni
+function integrate_step!{DT,TT,FT,SPT,ST,IT,N}(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int)
+    # set time for nonlinear solver
+    int.Sparams.t = sol.t[n-1]
 
-    # loop over initial conditions
-    for m in m1:m2
-        # copy initial conditions from solution
-        get_initial_conditions!(sol, int.q, m)
+    # copy previous solution to initial guess
+    update!(int.iguess, sol.t[n], int.q)
 
-        # initialise initial guess
-        initialize!(int.iguess, sol.t[0], int.q)
-
-        for n in 1:sol.ntime
-            # set time for nonlinear solver
-            int.Sparams.t = sol.t[n-1]
-
-            # copy previous solution to initial guess
-            update!(int.iguess, sol.t[n], int.q)
-
-            # compute initial guess for internal stages
-            for i in 1:int.tableau.q.s
-                evaluate!(int.iguess, int.y, int.v, int.tableau.q.c[i])
-                for k in 1:int.equation.d
-                    int.solver.x[int.equation.d*(i-1)+k] = int.v[k]
-                end
-            end
-
-            # call nonlinear solver
-            solve!(int.solver)
-
-            if !solverStatusOK(int.solver.status, int.solver.params)
-                println(int.solver.status)
-            end
-
-            compute_stages_firk!(int.solver.x, int.Q, int.V, int.Y, int.q,
-                                 int.tableau.q.a, int.tableau.q.c, int.Δt, sol.t[n-1],
-                                 int.equation.v, int.tQ, int.tV)
-
-            # compute final update
-            simd_mult!(int.y, int.V, int.tableau.q.b)
-            simd_axpy!(int.Δt, int.y, int.q)
-
-            # take care of periodic solutions
-            for k in 1:int.equation.d
-                if int.equation.periodicity[k] ≠ 0
-                    int.q[k] = mod(int.q[k], int.equation.periodicity[k])
-                end
-            end
-
-            # copy to solution
-            copy_solution!(sol, int.q, n, m)
+    # compute initial guess for internal stages
+    for i in 1:int.tableau.q.s
+        evaluate!(int.iguess, int.y, int.v, int.tableau.q.c[i])
+        for k in 1:int.equation.d
+            int.solver.x[int.equation.d*(i-1)+k] = int.v[k]
         end
     end
-    nothing
+
+    # call nonlinear solver
+    solve!(int.solver)
+
+    if !solverStatusOK(int.solver.status, int.solver.params)
+        println(int.solver.status)
+    end
+
+    compute_stages_firk!(int.solver.x, int.Q, int.V, int.Y, int.q,
+                         int.tableau.q.a, int.tableau.q.c, int.Δt, sol.t[n-1],
+                         int.equation.v, int.tQ, int.tV)
+
+    # compute final update
+    simd_mult!(int.y, int.V, int.tableau.q.b)
+    simd_axpy!(int.Δt, int.y, int.q)
+
+    # take care of periodic solutions
+    for k in 1:int.equation.d
+        if int.equation.periodicity[k] ≠ 0
+            int.q[k] = mod(int.q[k], int.equation.periodicity[k])
+        end
+    end
+
+    # copy to solution
+    copy_solution!(sol, int.q, n, m)
 end
 
 "Integrate partitioned ODE with fully implicit Runge-Kutta integrator."

@@ -203,103 +203,103 @@ function IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT
 end
 
 
-"Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N}, m1::Int, m2::Int)
-    @assert m1 ≥ 1
-    @assert m2 ≤ sol.ni
+function initialize!{DT,TT}(int::IntegratorVPRKpStandard{DT,TT}, sol::Union{SolutionPDAE, PSolutionPDAE}, m::Int)
+    @assert m ≥ 1
+    @assert m ≤ sol.ni
 
     tG = zeros(DT, int.equation.d)
 
-    # loop over initial conditions
-    for m in m1:m2
-        # copy initial conditions from solution
-        get_initial_conditions!(sol, int.q, int.p, int.pcache.λ, m)
+    # copy initial conditions from solution
+    get_initial_conditions!(sol, int.q, int.p, int.pcache.λ, m)
 
-        # initialise initial guess
-        initialize!(int.iguess, sol.t[0], int.q, int.p)
+    # initialise initial guess
+    initialize!(int.iguess, sol.t[0], int.q, int.p)
 
-        # compute initial λ
-        # dh = zeros(int.q)
-        # dH(sol.t[0], int.q, dh)
-        # ω = zeros(DT, length(int.q), length(int.q))
-        # β(sol.t[0], int.q, ω)
-        # simd_mult!(int.pcache.λ, inv(ω), dh)
-        # simd_scale!(int.pcache.λ, 1/int.Δt)
-        # copy_solution!(sol, int.q, int.p, int.pcache.λ, 0, m)
+    # compute initial λ
+    # dh = zeros(int.q)
+    # dH(sol.t[0], int.q, dh)
+    # ω = zeros(DT, length(int.q), length(int.q))
+    # β(sol.t[0], int.q, ω)
+    # simd_mult!(int.pcache.λ, inv(ω), dh)
+    # simd_scale!(int.pcache.λ, 1/int.Δt)
+    # copy_solution!(sol, int.q, int.p, int.pcache.λ, 0, m)
 
-        # initialise projector
-        simd_copy_yx_first!(int.pcache.λ, int.pcache.U, 1)
+    # initialise projector
+    simd_copy_yx_first!(int.pcache.λ, int.pcache.U, 1)
 
-        int.equation.g(sol.t[0], int.q, int.pcache.λ, tG)
-        simd_copy_yx_first!(tG, int.pcache.G, 1)
+    int.equation.g(sol.t[0], int.q, int.pcache.λ, tG)
+    simd_copy_yx_first!(tG, int.pcache.G, 1)
 
-        # scale U and G to avoid accuracy issues
-        scale_projection!(int.pcache.U, int.pcache.G, int.Δt, int.tableau.o)
+    # scale U and G to avoid accuracy issues
+    scale_projection!(int.pcache.U, int.pcache.G, int.Δt, int.tableau.o)
+end
 
 
-        for n in 1:sol.ntime
-            # set time for nonlinear and projection solver
-            int.sparams.t = sol.t[0] + (n-1)*int.Δt
-            int.pparams.t = sol.t[0] + (n-1)*int.Δt
+"Integrate ODE with variational partitioned Runge-Kutta integrator."
+function integrate_step!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m::Int, n::Int)
+    # set time for nonlinear and projection solver
+    int.sparams.t = sol.t[0] + (n-1)*int.Δt
+    int.pparams.t = sol.t[0] + (n-1)*int.Δt
 
-            # add perturbation to solution (same vector field as previous time step)
-            project_solution!(int, int.pcache, int.pparams.R1)
+    # add perturbation to solution (same vector field as previous time step)
+    project_solution!(int, int.pcache, int.pparams.R1)
 
-            # compute initial guess
-            for i in 1:int.tableau.s
-                evaluate!(int.iguess, int.scache.y, int.scache.z, int.scache.v, int.tableau.q.c[i], int.tableau.p.c[i])
-                for k in 1:int.equation.d
-                    int.solver.x[int.equation.d*(i-1)+k] = int.scache.v[k]
-                end
-            end
-
-            # call nonlinear solver
-            solve!(int.solver)
-
-            if !solverStatusOK(int.solver.status, int.solver.params)
-                println(int.solver.status, ", sit=", n)
-            end
-
-            if isnan(int.solver.status.rₐ)
-                break
-            end
-
-            # compute unprojected solution
-            compute_stages_vprk!(int.solver.x, int.scache.Q, int.scache.V, int.scache.P, int.scache.F, int.sparams)
-            update_solution!(int, int.scache)
-
-            # set initial guess for projection
-            for k in 1:int.equation.d
-                int.projector.x[0*int.equation.d+k] = int.q[k]
-                int.projector.x[1*int.equation.d+k] = 0
-                # int.projector.x[1*int.equation.d+k] = int.tableau.R∞ * int.pcache.λ[k]
-            end
-
-            # call projection solver
-            solve!(int.projector)
-
-            if !solverStatusOK(int.projector.status, int.projector.params)
-                println(int.projector.status, ", pit=", n)
-            end
-
-            if isnan(int.projector.status.rₐ)
-                break
-            end
-
-            # add projection to solution
-            compute_projection_vprk!(int.projector.x, int.pcache.q̅, int.pcache.p̅, int.pcache.λ, int.pcache.U, int.pcache.G, int.pparams)
-            project_solution!(int, int.pcache, int.pparams.R2)
-
-            # copy solution to initial guess for next time step
-            update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
-
-            # take care of periodic solutions
-            cut_periodic_solution!(int)
-
-            # println("pit=", n, ", λ = ", int.pcache.λ)
-
-            # copy to solution
-            copy_solution!(sol, int.q, int.p, int.pcache.λ, n, m)
+    # compute initial guess
+    for i in 1:int.tableau.s
+        evaluate!(int.iguess, int.scache.y, int.scache.z, int.scache.v, int.tableau.q.c[i], int.tableau.p.c[i])
+        for k in 1:int.equation.d
+            int.solver.x[int.equation.d*(i-1)+k] = int.scache.v[k]
         end
     end
+
+    # call nonlinear solver
+    solve!(int.solver)
+
+    if !solverStatusOK(int.solver.status, int.solver.params)
+        println(int.solver.status, ", sit=", n)
+    end
+
+    # if isnan(int.solver.status.rₐ)
+    #     println("WARNING: Detected NaN in sit=", n)
+    #     break
+    # end
+
+    # compute unprojected solution
+    compute_stages_vprk!(int.solver.x, int.scache.Q, int.scache.V, int.scache.P, int.scache.F, int.sparams)
+    update_solution!(int, int.scache)
+
+    # set initial guess for projection
+    for k in 1:int.equation.d
+        int.projector.x[0*int.equation.d+k] = int.q[k]
+        int.projector.x[1*int.equation.d+k] = 0
+        # int.projector.x[1*int.equation.d+k] = int.tableau.R∞ * int.pcache.λ[k]
+    end
+
+    # call projection solver
+    solve!(int.projector)
+
+    # println(int.projector.status, ", pit=", n)
+    if !solverStatusOK(int.projector.status, int.projector.params)
+        println(int.projector.status, ", pit=", n)
+    end
+
+    # if isnan(int.projector.status.rₐ)
+    #     println("WARNING: Detected NaN in pit=", n)
+    #     break
+    # end
+
+    # add projection to solution
+    compute_projection_vprk!(int.projector.x, int.pcache.q̅, int.pcache.p̅, int.pcache.λ, int.pcache.U, int.pcache.G, int.pparams)
+    project_solution!(int, int.pcache, int.pparams.R2)
+
+    # copy solution to initial guess for next time step
+    update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
+
+    # take care of periodic solutions
+    cut_periodic_solution!(int)
+
+    # println("pit=", n, ", λ = ", int.pcache.λ)
+
+    # copy to solution
+    copy_solution!(sol, int.q, int.p, int.pcache.λ, n, m)
 end

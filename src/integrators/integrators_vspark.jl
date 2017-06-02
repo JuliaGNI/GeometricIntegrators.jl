@@ -333,97 +333,94 @@ function IntegratorVSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}(equation::IDAE{DT,TT,FT,PT,U
 end
 
 
+function initialize!(int::IntegratorVSPARK, sol::Union{SolutionPDAE, PSolutionPDAE}, m::Int)
+    @assert m ≥ 1
+    @assert m ≤ sol.ni
+
+    # copy initial conditions from solution
+    get_initial_conditions!(sol, int.q, int.p, int.λ, m)
+
+    # initialise initial guess
+    initialize!(int.iguess, sol.t[0], int.q, int.p)
+end
+
 "Integrate DAE with variational special partitioned additive Runge-Kutta integrator."
-function integrate!{DT,TT,FT,PT,UT,GT,ϕT,VT,N}(int::IntegratorVSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::SolutionPDAE{DT,TT,N}, m1::Int, m2::Int)
-    @assert m1 ≥ 1
-    @assert m2 ≤ sol.ni
+function integrate_step!{DT,TT,FT,PT,UT,GT,ϕT,VT,N}(int::IntegratorVSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int)
+    local offset::Int
 
-    # loop over initial conditions
-    for m in m1:m2
-        local offset::Int
+    # set time for nonlinear solver
+    int.params.t = sol.t[n]
 
-        # copy initial conditions from solution
-        get_initial_conditions!(sol, int.q, int.p, int.λ, m)
+    # copy previous solution to initial guess
+    update!(int.iguess, sol.t[n], int.q, int.p)
 
-        # initialise initial guess
-        initialize!(int.iguess, sol.t[0], int.q, int.p)
-
-        for n in 1:sol.ntime
-            # set time for nonlinear solver
-            int.params.t = sol.t[n]
-
-            # copy previous solution to initial guess
-            update!(int.iguess, sol.t[n], int.q, int.p)
-
-            # compute initial guess
-            for i in 1:int.tableau.s
-                evaluate!(int.iguess, int.y, int.z, int.v, int.tableau.q.c[i], int.tableau.p.c[i])
-                for k in 1:int.equation.d
-                    offset = 3*(int.equation.d*(i-1)+k-1)
-                    int.solver.x[offset+1] = (int.y[k] - int.q[k])/(int.Δt)
-                    int.solver.x[offset+2] = (int.z[k] - int.p[k])/(int.Δt)
-                    int.solver.x[offset+3] = int.v[k]
-                end
-            end
-
-            for i in 1:int.tableau.r
-                evaluate!(int.iguess, int.y, int.z, int.v, int.tableau.q̃.c[i], int.tableau.p̃.c[i])
-                for k in 1:int.equation.d
-                    offset = 3*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)
-                    int.solver.x[offset+1] = (int.y[k] - int.q[k])/(int.Δt)
-                    int.solver.x[offset+2] = (int.z[k] - int.p[k])/(int.Δt)
-                    int.solver.x[offset+3] = 0
-                end
-            end
-
-            for i in 1:int.tableau.ρ
-                offset = 3*int.equation.d*int.tableau.s+3*int.equation.d*int.tableau.r+int.equation.d*(i-1)
-                for k in 1:int.equation.d
-                    int.solver.x[offset+k] = 0
-                    # for j in 1:int.tableau.r
-                    #     int.solver.x[offset+k] += 0
-                    # end
-                end
-            end
-
-            if isdefined(int.tableau, :d)
-                offset = 3*int.equation.d*int.tableau.s+3*int.equation.d*int.tableau.r+int.equation.d*int.tableau.ρ
-                for k in 1:int.equation.d
-                    int.solver.x[offset+k] = 0
-                end
-            end
-
-            # println("ig:  ", join([@sprintf "%8.4e" x for x in int.solver.x], ", "))
-
-            # call nonlinear solver
-            solve!(int.solver)
-
-            # println("sol: ", join([@sprintf "%8.4e" x for x in int.solver.x], ", "))
-            #
-            # println(int.solver.status)
-            # println()
-
-            if !solverStatusOK(int.solver.status, int.solver.params)
-                println(int.solver.status)
-            end
-
-            if isnan(int.solver.status.rₐ)
-                break
-            end
-            # compute final update
-            simd_mult!(int.y, int.V, int.tableau.q.b)
-            simd_mult!(int.z, int.F, int.tableau.p.b)
-            simd_axpy!(int.Δt, int.y, int.q)
-            simd_axpy!(int.Δt, int.z, int.p)
-            simd_mult!(int.y, int.U, int.tableau.q.β)
-            simd_mult!(int.z, int.G, int.tableau.p.β)
-            simd_axpy!(int.Δt, int.y, int.q)
-            simd_axpy!(int.Δt, int.z, int.p)
-            simd_mult!(int.λ, int.Λ, int.tableau.λ.b)
-
-            # copy to solution
-            copy_solution!(sol, int.q, int.p, int.λ, n, m)
+    # compute initial guess
+    for i in 1:int.tableau.s
+        evaluate!(int.iguess, int.y, int.z, int.v, int.tableau.q.c[i], int.tableau.p.c[i])
+        for k in 1:int.equation.d
+            offset = 3*(int.equation.d*(i-1)+k-1)
+            int.solver.x[offset+1] = (int.y[k] - int.q[k])/(int.Δt)
+            int.solver.x[offset+2] = (int.z[k] - int.p[k])/(int.Δt)
+            int.solver.x[offset+3] = int.v[k]
         end
     end
-    nothing
+
+    for i in 1:int.tableau.r
+        evaluate!(int.iguess, int.y, int.z, int.v, int.tableau.q̃.c[i], int.tableau.p̃.c[i])
+        for k in 1:int.equation.d
+            offset = 3*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)
+            int.solver.x[offset+1] = (int.y[k] - int.q[k])/(int.Δt)
+            int.solver.x[offset+2] = (int.z[k] - int.p[k])/(int.Δt)
+            int.solver.x[offset+3] = 0
+        end
+    end
+
+    for i in 1:int.tableau.ρ
+        offset = 3*int.equation.d*int.tableau.s+3*int.equation.d*int.tableau.r+int.equation.d*(i-1)
+        for k in 1:int.equation.d
+            int.solver.x[offset+k] = 0
+            # for j in 1:int.tableau.r
+            #     int.solver.x[offset+k] += 0
+            # end
+        end
+    end
+
+    if isdefined(int.tableau, :d)
+        offset = 3*int.equation.d*int.tableau.s+3*int.equation.d*int.tableau.r+int.equation.d*int.tableau.ρ
+        for k in 1:int.equation.d
+            int.solver.x[offset+k] = 0
+        end
+    end
+
+    # println("ig:  ", join([@sprintf "%8.4e" x for x in int.solver.x], ", "))
+
+    # call nonlinear solver
+    solve!(int.solver)
+
+    # println("sol: ", join([@sprintf "%8.4e" x for x in int.solver.x], ", "))
+    #
+    # println(int.solver.status)
+    # println()
+
+    if !solverStatusOK(int.solver.status, int.solver.params)
+        println(int.solver.status)
+    end
+
+    # if isnan(int.solver.status.rₐ)
+    #     break
+    # end
+    
+    # compute final update
+    simd_mult!(int.y, int.V, int.tableau.q.b)
+    simd_mult!(int.z, int.F, int.tableau.p.b)
+    simd_axpy!(int.Δt, int.y, int.q)
+    simd_axpy!(int.Δt, int.z, int.p)
+    simd_mult!(int.y, int.U, int.tableau.q.β)
+    simd_mult!(int.z, int.G, int.tableau.p.β)
+    simd_axpy!(int.Δt, int.y, int.q)
+    simd_axpy!(int.Δt, int.z, int.p)
+    simd_mult!(int.λ, int.Λ, int.tableau.λ.b)
+
+    # copy to solution
+    copy_solution!(sol, int.q, int.p, int.λ, n, m)
 end

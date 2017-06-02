@@ -1,6 +1,9 @@
 
 abstract Integrator{dType, tType}
 
+const DEFAULT_PROGRESS_NTMIN = 10000
+
+
 "Create integrator for explicit Runge-Kutta tableau."
 function Integrator(equation::ODE, tableau::TableauERK, Δt;
         nonlinear_solver=DEFAULT_NonlinearSolver,
@@ -114,9 +117,46 @@ function integrate(f::Function, x₀::Vector, tableau::AbstractTableau, Δt, nti
     return integrate(ODE(f, t₀, x₀), tableau, Δt, ntime, nsave)
 end
 
+
 "Integrate ODE for all initial conditions."
 function integrate!(int, sol)
     integrate!(int, sol, 1, sol.ni)
+end
+
+"Integrate ODE for initial conditions m with m₁ ≤ m ≤ m₂."
+function integrate!{DT,TT,N}(int::Integrator{DT,TT}, sol::Solution{DT,TT,N}, m1::Int, m2::Int)
+    @assert m1 ≥ 1
+    @assert m2 ≤ sol.ni
+
+    # loop over initial conditions
+    for m in m1:m2
+        # integrate one initial condition
+        integrate!(int, sol, m)
+
+    end
+end
+
+"Integrate ODE for initial condition m."
+function integrate!{DT,TT,N}(int::Integrator{DT,TT}, sol::Solution{DT,TT,N}, m::Int)
+    # time step period for showing progress bar
+    local nshow = div(sol.ntime, 10)
+
+    # initialize integrator for initial condition m
+    initialize!(int, sol, m)
+
+    # loop over time steps
+    for n in 1:sol.ntime
+
+        # integrate one step
+        integrate_step!(int, sol, m, n)
+
+        # show progress
+        if sol.ntime > DEFAULT_PROGRESS_NTMIN
+            if mod(n, nshow) == 0
+                println("   ", div(n, nshow), "0%...")
+            end
+        end
+    end
 end
 
 

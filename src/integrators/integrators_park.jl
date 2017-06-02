@@ -247,59 +247,55 @@ function IntegratorPARK{DT,TT,FT,PT,UT,GT,ϕT}(equation::IDAE{DT,TT,FT,PT,UT,GT,
 end
 
 
+function initialize!(int::IntegratorPARK, sol::Union{SolutionPDAE, PSolutionPDAE}, m::Int)
+    @assert m ≥ 1
+    @assert m ≤ sol.ni
+
+    # copy initial conditions from solution
+    get_initial_conditions!(sol, int.q, int.p, int.λ, m)
+end
+
 "Integrate DAE with partitioned additive Runge-Kutta integrator."
-function integrate!{DT,TT,FT,PT,UT,GT,ϕT,N}(int::IntegratorPARK{DT,TT,FT,PT,UT,GT,ϕT}, sol::SolutionPDAE{DT,TT,N}, m1::Int, m2::Int)
-    @assert m1 ≥ 1
-    @assert m2 ≤ sol.ni
+function integrate_step!{DT,TT,FT,PT,UT,GT,ϕT,N}(int::IntegratorPARK{DT,TT,FT,PT,UT,GT,ϕT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int)
+    # set time for nonlinear solver
+    int.solver.Fparams.t = sol.t[n]
 
-    # loop over initial conditions
-    for m in m1:m2
-        # copy initial conditions from solution
-        get_initial_conditions!(sol, int.q, int.p, int.λ, m)
-
-        for n in 1:sol.ntime
-            # set time for nonlinear solver
-            int.solver.Fparams.t = sol.t[n]
-
-            # compute initial guess
-            for i in 1:int.tableau.s
-                for k in 1:int.equation.d
-                    # TODO initial guess for y and z
-                    int.solver.x[2*(int.equation.d*(i-1)+k-1)+1] = 0
-                    int.solver.x[2*(int.equation.d*(i-1)+k-1)+2] = 0
-                end
-            end
-
-            for i in 1:int.tableau.r
-                for k in 1:int.equation.d
-                    # TODO initial guess for y and z
-                    int.solver.x[2*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+1] = 0
-                    int.solver.x[2*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+2] = 0
-                    int.solver.x[2*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+3] = 0
-                end
-            end
-
-            # call nonlinear solver
-            solve!(int.solver)
-
-            if !solverStatusOK(int.solver.status, int.solver.params)
-                println(int.solver.status)
-            end
-
-            # compute final update
-            simd_mult!(int.y, int.V, int.tableau.q.b)
-            simd_mult!(int.z, int.F, int.tableau.p.b)
-            simd_axpy!(int.Δt, int.y, int.q)
-            simd_axpy!(int.Δt, int.z, int.p)
-            simd_mult!(int.y, int.U, int.tableau.q.β)
-            simd_mult!(int.z, int.G, int.tableau.p.β)
-            simd_axpy!(int.Δt, int.y, int.q)
-            simd_axpy!(int.Δt, int.z, int.p)
-            simd_mult!(int.λ, int.Λ, int.tableau.λ.b)
-
-            # copy to solution
-            copy_solution!(sol, int.q, int.p, int.λ, n, m)
+    # compute initial guess
+    for i in 1:int.tableau.s
+        for k in 1:int.equation.d
+            # TODO initial guess for y and z
+            int.solver.x[2*(int.equation.d*(i-1)+k-1)+1] = 0
+            int.solver.x[2*(int.equation.d*(i-1)+k-1)+2] = 0
         end
     end
-    nothing
+
+    for i in 1:int.tableau.r
+        for k in 1:int.equation.d
+            # TODO initial guess for y and z
+            int.solver.x[2*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+1] = 0
+            int.solver.x[2*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+2] = 0
+            int.solver.x[2*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+3] = 0
+        end
+    end
+
+    # call nonlinear solver
+    solve!(int.solver)
+
+    if !solverStatusOK(int.solver.status, int.solver.params)
+        println(int.solver.status)
+    end
+
+    # compute final update
+    simd_mult!(int.y, int.V, int.tableau.q.b)
+    simd_mult!(int.z, int.F, int.tableau.p.b)
+    simd_axpy!(int.Δt, int.y, int.q)
+    simd_axpy!(int.Δt, int.z, int.p)
+    simd_mult!(int.y, int.U, int.tableau.q.β)
+    simd_mult!(int.z, int.G, int.tableau.p.β)
+    simd_axpy!(int.Δt, int.y, int.q)
+    simd_axpy!(int.Δt, int.z, int.p)
+    simd_mult!(int.λ, int.Λ, int.tableau.λ.b)
+
+    # copy to solution
+    copy_solution!(sol, int.q, int.p, int.λ, n, m)
 end
