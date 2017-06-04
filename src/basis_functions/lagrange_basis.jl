@@ -49,7 +49,7 @@ Base.:(==)(b1::LagrangeBasis, b2::LagrangeBasis) = (b1.p == b2.p
 Base.isequal{T1, T2}(b1::LagrangeBasis{T1}, b2::LagrangeBasis{T2}) = (b1 == b2 && T1 == T2)
 
 
-function lagrange{T}(b::LagrangeBasis{T}, j::Int, x::T)
+function CommonFunctions.evaluate{T}(b::LagrangeBasis{T}, j::Int, x::T)
     local y::T = 1
 
     for i in 1:b.n
@@ -59,7 +59,7 @@ function lagrange{T}(b::LagrangeBasis{T}, j::Int, x::T)
 end
 
 
-function lagrange_derivative{T}(b::LagrangeBasis{T}, j::Int, x::T)
+function derivative{T}(b::LagrangeBasis{T}, j::Int, x::T)
     local y::T = 0
     local z::T
 
@@ -75,14 +75,14 @@ function lagrange_derivative{T}(b::LagrangeBasis{T}, j::Int, x::T)
     y
 end
 
-lagrange_derivative(b::LagrangeBasis, j::Int, i::Int) = lagrange_derivative(b, j, b.x[i])
+derivative(b::LagrangeBasis, j::Int, i::Int) = derivative(b, j, b.x[i])
 
 
-function lagrange_integral{T}(b::LagrangeBasis{T}, j::Int, x::T)
+function integral{T}(b::LagrangeBasis{T}, j::Int, x::T)
     y = zeros(b.x)
     y[j] = 1
     lint = polyint(Poly(*(b.vdminv, y)))
     return lint(x)
 end
 
-lagrange_integral(b::LagrangeBasis, j::Int, i::Int) = lagrange_integral(b, j, b.x[i])
+integral(b::LagrangeBasis, j::Int, i::Int) = integral(b, j, b.x[i])

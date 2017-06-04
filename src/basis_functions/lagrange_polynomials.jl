@@ -44,7 +44,7 @@ function CommonFunctions.evaluate!{T}(pol::LagrangePolynomial{T}, x::Vector{T}, 
         tx = x[k]
         ty = 0
         for j in eachindex(pol.c)
-            ty += pol.c[j] * lagrange(pol.b, j, tx)
+            ty += pol.c[j] * evaluate(pol.b, j, tx)
         end
         y[k] = ty
     end

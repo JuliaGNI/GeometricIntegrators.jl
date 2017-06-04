@@ -2,11 +2,13 @@ __precompile__()
 
 module BasisFunctions
 
+    export derivative, integral
+
     export vandermonde_matrix, vandermonde_matrix_inverse
 
     include("basis_functions/vandermonde_matrix.jl")
 
-    export LagrangeBasis, lagrange, lagrange_derivative, lagrange_integral
+    export LagrangeBasis, evaluate
 
     include("basis_functions/lagrange_basis.jl")
 
