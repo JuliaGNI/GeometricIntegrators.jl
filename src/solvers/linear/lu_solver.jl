@@ -5,6 +5,7 @@ mutable struct LUSolver{T} <: LinearSolver{T}
     b::Vector{T}
     x::Vector{T}
     pivots::Vector{Int}
+    perms::Vector{Int}
     info::Int
 
     LUSolver{T}(n) where {T} = new(n, zeros(T, n, n), zeros(T, n), zeros(T, n), zeros(Int, n), zeros(Int, n), 0)
@@ -27,54 +28,56 @@ function LUSolver(A::Matrix{T}, b::Vector{T}) where {T}
 end
 
 function factorize!(lu::LUSolver{T}, pivot=true) where {T}
+    A = lu.A
 
-    @inbounds begin
-        for k = 1:lu.n
-            lu.pivots[k] = k
+    begin
+        @inbounds for i in eachindex(lu.perms)
+            lu.perms[i] = i
         end
 
-        for k = 1:lu.n
+        @inbounds for k = 1:lu.n
             # find index max
             kp = k
             if pivot
                 amax = real(zero(T))
                 for i = k:lu.n
-                    absi = abs(lu.A[i,k])
+                    absi = abs(A[i,k])
                     if absi > amax
                         kp = i
                         amax = absi
                     end
                 end
             end
-
-            ki = lu.pivots[k]
             lu.pivots[k] = kp
-            lu.pivots[kp] = ki
+            lu.perms[k], lu.perms[kp] = lu.perms[kp], lu.perms[k]
 
-            if lu.A[kp,k] != 0
+            if A[kp,k] != 0
                 if k != kp
                     # Interchange
                     for i = 1:lu.n
-                        tmp = lu.A[k,i]
-                        lu.A[k,i] = lu.A[kp,i]
-                        lu.A[kp,i] = tmp
+                        tmp = A[k,i]
+                        A[k,i] = A[kp,i]
+                        A[kp,i] = tmp
                     end
                 end
-                Akkinv = real(one(T))/lu.A[k,k]
+                # Scale first column
+                Akkinv = inv(A[k,k])
                 for i = k+1:lu.n
-                    # Scale first column
-                    lu.A[i,k] *= Akkinv
-                    # Update the rest
-                    for j = k+1:lu.n
-                        lu.A[i,j] -= lu.A[i,k] * lu.A[k,j]
-                    end
+                    A[i,k] *= Akkinv
                 end
             elseif lu.info == 0
                 lu.info = k
             end
+            # Update the rest
+            for j = k+1:lu.n
+                for i = k+1:lu.n
+                    A[i,j] -= A[i,k]*A[k,j]
+                end
+            end
         end
+
+        lu.info
     end
-    nothing
 end
 
 
@@ -97,7 +100,7 @@ function solve!(lu::LUSolver{T}) where {T}
     local s::T
 
     @inbounds for i = 1:lu.n
-        lu.x[i] = lu.b[lu.pivots[i]]
+        lu.x[i] = lu.b[lu.perms[i]]
     end
 
     @inbounds for i = 2:lu.n
@@ -118,8 +121,7 @@ function solve!(lu::LUSolver{T}) where {T}
         lu.x[i] /= lu.A[i,i]
     end
 
-    @inbounds for i = 1:lu.n
-        lu.b[i] = lu.x[i]
-    end
-    nothing
+    lu.b .= lu.x
+
+    lu.x
 end
