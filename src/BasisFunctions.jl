@@ -6,7 +6,11 @@ module BasisFunctions
 
     include("basis_functions/vandermonde_matrix.jl")
 
-    export LagrangeBasis, LagrangePolynomial, lagrange, lagrange_derivative, evaluate!
+    export LagrangeBasis, lagrange, lagrange_derivative, lagrange_integral
+
+    include("basis_functions/lagrange_basis.jl")
+
+    export LagrangePolynomial, evaluate!
 
     include("basis_functions/lagrange_polynomials.jl")
 

@@ -2,8 +2,9 @@ __precompile__()
 
 module CommonFunctions
 
-    export evaluate!
+    export evaluate, evaluate!
 
+    evaluate() = nothing
     evaluate!() = nothing
 
 end
