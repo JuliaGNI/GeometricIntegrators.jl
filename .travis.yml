@@ -12,6 +12,7 @@ matrix:
 notifications:
   email: false
 script:
+  - julia -e 'ENV["PYTHON"]=""; Pkg.build("PyCall")'
   - julia -e 'Pkg.clone(pwd())'
   - julia -e 'Pkg.test("GeometricIntegrators", coverage=true)'
 after_success:
