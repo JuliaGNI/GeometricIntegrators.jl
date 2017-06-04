@@ -2,8 +2,6 @@ __precompile__()
 
 module Diagnostics
 
-    using PyPlot
-
     using ..BasisFunctions
     using ..Equations
     using ..Integrators
