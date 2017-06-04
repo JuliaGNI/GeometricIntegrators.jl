@@ -49,10 +49,13 @@ The following list provides and overview of supported and planned features.
 
 - [x] Systems of ODEs,
 - [x] Systems of DAEs,
+- [ ] Systems of SDEs,
 - [x] Partitioned ODEs,
 - [x] Partitioned DAEs,
+- [ ] Partitioned SDEs,
 - [x] Implicit ODEs,
 - [x] Implicit DAEs,
+- [ ] Implicit SDEs,
 
 which can be prescribed manually or obtained as
 
@@ -92,11 +95,11 @@ with
 
 #### Diagnostics
 
-- [ ] Symplecticity Conditions,
+- [x] Symplecticity Conditions,
 - [ ] Runge-Kutta Stability Area,
 - [ ] Convergence Analysis,
-- [ ] First Poincaré Integral Invariant,
-- [ ] Second Poincaré Integral Invariant.
+- [x] First Poincaré Integral Invariant,
+- [x] Second Poincaré Integral Invariant.
 
 #### Example Problems
 
