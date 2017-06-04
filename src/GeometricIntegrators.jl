@@ -20,6 +20,8 @@ module GeometricIntegrators
     @reexport using .Solvers
     include("BasisFunctions.jl")
     @reexport using .BasisFunctions
+    include("Quadratures.jl")
+    @reexport using .Quadratures
     include("Tableaus.jl")
     @reexport using .Tableaus
     include("Integrators.jl")
