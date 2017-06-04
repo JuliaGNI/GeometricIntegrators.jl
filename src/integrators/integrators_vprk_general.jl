@@ -182,8 +182,10 @@ end
 end
 
 
-    local scale_fac::TT = Δt^(-1)
 function scale_projection!(Y::Matrix{ST}, Δt::TT, o::Int) where {ST,TT}
+    # local scale_fac::TT = Δt^(-1)
+    # local scale_fac::TT = 10.^(-convert(TT,o)/2)
+    # local scale_fac::TT = 1
 
     # if Δt > 1
     #     scale_fac = Δt^(-o/2)
@@ -191,7 +193,7 @@ function scale_projection!(Y::Matrix{ST}, Δt::TT, o::Int) where {ST,TT}
     #     scale_fac = Δt^(+o/2)
     # end
 
-    simd_scale!(Y, scale_fac)
+    # simd_scale!(Y, scale_fac)
 end
 
 function scale_projection!(U::Matrix{ST}, G::Matrix{ST}, Δt::TT, o::Int) where {ST,TT}
