@@ -1,6 +1,6 @@
 
 "Holds the tableau of an partitioned additive Runge-Kutta method."
-immutable TableauPARK{T} <: AbstractTableau{T}
+struct TableauPARK{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int
@@ -14,7 +14,7 @@ immutable TableauPARK{T} <: AbstractTableau{T}
 
     λ::CoefficientsMRK{T}
 
-    function TableauPARK(name, o, s, r, q, p, q̃, p̃, λ)
+    function TableauPARK{T}(name, o, s, r, q, p, q̃, p̃, λ) where {T}
         @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
@@ -30,15 +30,15 @@ immutable TableauPARK{T} <: AbstractTableau{T}
     end
 end
 
-function TableauPARK{T <: Real}(name::Symbol, order::Int,
-                        a_q::Matrix{T}, a_p::Matrix{T},
-                        α_q::Matrix{T}, α_p::Matrix{T},
-                        a_q̃::Matrix{T}, a_p̃::Matrix{T},
-                        α_q̃::Matrix{T}, α_p̃::Matrix{T},
-                        b_q::Vector{T}, b_p::Vector{T},
-                        β_q::Vector{T}, β_p::Vector{T},
-                        c_q::Vector{T}, c_p::Vector{T},
-                        c_λ::Vector{T}, d_λ::Vector{T})
+function TableauPARK(name::Symbol, order::Int,
+                     a_q::Matrix{T}, a_p::Matrix{T},
+                     α_q::Matrix{T}, α_p::Matrix{T},
+                     a_q̃::Matrix{T}, a_p̃::Matrix{T},
+                     α_q̃::Matrix{T}, α_p̃::Matrix{T},
+                     b_q::Vector{T}, b_p::Vector{T},
+                     β_q::Vector{T}, β_p::Vector{T},
+                     c_q::Vector{T}, c_p::Vector{T},
+                     c_λ::Vector{T}, d_λ::Vector{T}) where {T <: Real}
 
     s = length(c_q)
     r = length(c_λ)

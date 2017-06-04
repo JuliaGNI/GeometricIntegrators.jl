@@ -1,6 +1,6 @@
 
 "Holds the tableau of a general linear method."
-immutable TableauGLM{T} <: AbstractTableau{T}
+struct TableauGLM{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int
@@ -12,7 +12,7 @@ immutable TableauGLM{T} <: AbstractTableau{T}
     v::Matrix{T}
     c::Vector{T}
 
-    function TableauGLM(name, o, s, r, a, b, u, v, c)
+    function TableauGLM{T}(name, o, s, r, a, b, u, v, c) where {T}
         @assert T <: Real
         @assert isa(name, Symbol)
         @assert isa(s, Integer)

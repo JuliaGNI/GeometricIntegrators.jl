@@ -76,7 +76,7 @@ immutable IODE{dType <: Number, tType <: Number, αType <: Function, fType <: Fu
     p₀::Array{dType, N}
     periodicity::Vector{dType}
 
-    function IODE(d, n, α, f, g, v, t₀, q₀, p₀; periodicity=[])
+    function IODE{dType,tType,αType,fType,gType,vType,N}(d, n, α, f, g, v, t₀, q₀, p₀; periodicity=[]) where {dType <: Number, tType <: Number, αType <: Function, fType <: Function, gType <: Function, vType <: Function, N}
         @assert d == size(q₀,1) == size(p₀,1)
         @assert n == size(q₀,2) == size(p₀,2)
         @assert dType == eltype(q₀) == eltype(p₀)
@@ -91,7 +91,7 @@ immutable IODE{dType <: Number, tType <: Number, αType <: Function, fType <: Fu
 end
 
 
-function IODE{DT,TT,ΑT,FT,GT,VT}(α::ΑT, f::FT, g::GT, v::VT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}; periodicity=[])
+function IODE(α::ΑT, f::FT, g::GT, v::VT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}; periodicity=[]) where {DT,TT,ΑT,FT,GT,VT}
     @assert size(q₀) == size(p₀)
     IODE{DT, TT, ΑT, FT, GT, VT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), α, f, g, v, t₀, q₀, p₀, periodicity=periodicity)
 end
@@ -101,11 +101,11 @@ function IODE(α::Function, f::Function, g::Function, t₀::Number, q₀::DenseA
 end
 
 function IODE(α::Function, f::Function, g::Function, v::Function, q₀::DenseArray, p₀::DenseArray; periodicity=[])
-    IODE(α, f, g, v, zero(Float64), q₀, p₀, periodicity=periodicity)
+    IODE(α, f, g, v, zero(eltype(q₀)), q₀, p₀, periodicity=periodicity)
 end
 
 function IODE(f, p, u, g, q₀, p₀; periodicity=[])
-    IODE(α, f, g, function_v_dummy, zero(Float64), q₀, p₀, periodicity=periodicity)
+    IODE(α, f, g, function_v_dummy, zero(eltype(q₀)), q₀, p₀, periodicity=periodicity)
 end
 
 Base.hash(ode::IODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.α, hash(ode.f, hash(ode.g, hash(ode.v, hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, hash(ode.periodicity, h))))))))))

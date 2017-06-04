@@ -51,7 +51,7 @@ immutable PODE{dType <: Number, tType <: Number, vType <: Function, fType <: Fun
     q₀::Array{dType, N}
     p₀::Array{dType, N}
 
-    function PODE(d, n, v, f, t₀, q₀, p₀)
+    function PODE{dType,tType,vType,fType,N}(d, n, v, f, t₀, q₀, p₀) where {dType <: Number, tType <: Number, vType <: Function, fType <: Function, N}
         @assert d == size(q₀,1) == size(p₀,1)
         @assert n == size(q₀,2) == size(p₀,2)
         @assert dType == eltype(q₀) == eltype(p₀)
@@ -61,7 +61,7 @@ immutable PODE{dType <: Number, tType <: Number, vType <: Function, fType <: Fun
 end
 
 
-function PODE{DT, TT, VT, FT}(v::VT, f::FT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT})
+function PODE(v::VT, f::FT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}) where {DT,TT,VT,FT}
     @assert size(q₀) == size(p₀)
     PODE{DT, TT, VT, FT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), v, f, t₀, q₀, p₀)
 end

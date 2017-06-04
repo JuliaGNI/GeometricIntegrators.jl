@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-type NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S} <: AbstractNonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S}
+mutable struct NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S} <: AbstractNonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S}
     α::ΑT
     f::FT
 
@@ -16,7 +16,7 @@ type NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S} <: AbstractNonlinearFunct
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersVPRK{DT,TT,AT,FT}(α::AT, f::FT, Δt::TT, t_q, t_p, d_v, q::Vector{DT}, p::Vector{DT})
+function NonlinearFunctionParametersVPRK(α::AT, f::FT, Δt::TT, t_q, t_p, d_v, q::Vector{DT}, p::Vector{DT}) where {DT,TT,AT,FT}
     @assert t_q.s == t_p.s
     @assert length(q) == length(p)
     NonlinearFunctionParametersVPRK{DT,TT,AT,FT,length(q),t_q.s}(α, f, Δt, t_q, t_p, d_v, 0, q, p)
@@ -24,7 +24,7 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!{ST,DT,TT,ΑT,FT,D,S}(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S})
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S}) where {ST,DT,TT,ΑT,FT,D,S}
     cache = NonlinearFunctionCacheVPRK{ST}(D, S)
 
     function_stages = quote
@@ -40,7 +40,7 @@ end
 
 
 "Variational partitioned Runge-Kutta integrator."
-immutable IntegratorVPRK{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegratorVPRK{DT,TT}
+struct IntegratorVPRK{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegratorVPRK{DT,TT}
     equation::IODE{DT,TT,ΑT,FT,GT,VT}
     tableau::TableauVPRK{TT}
     Δt::TT
@@ -58,10 +58,10 @@ immutable IntegratorVPRK{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegratorVPRK
     cache::NonlinearFunctionCacheVPRK{DT}
 end
 
-function IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
-                                        nonlinear_solver=DEFAULT_NonlinearSolver,
-                                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
-                                        interpolation=HermiteInterpolation{DT})
+function IntegratorVPRK(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
+                        nonlinear_solver=DEFAULT_NonlinearSolver,
+                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
+                        interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
     S = tableau.s
 
@@ -122,7 +122,7 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m::Int, n::Int)
+function integrate_step!(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
     # set time for nonlinear solver
     int.params.t = sol.t[0] + (n-1)*int.Δt
 

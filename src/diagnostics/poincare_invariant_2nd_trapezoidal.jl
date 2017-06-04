@@ -1,5 +1,5 @@
 
-immutable PoincareInvariant2ndTrapezoidal{ET,DT,TT,ΩT}
+struct PoincareInvariant2ndTrapezoidal{ET,DT,TT,ΩT}
     equ::ET
     ω::ΩT
     Δt::TT
@@ -14,8 +14,8 @@ immutable PoincareInvariant2ndTrapezoidal{ET,DT,TT,ΩT}
     nmax::Int
 end
 
-function PoincareInvariant2ndTrapezoidal{DT,TT,ΩT}(f_equ::Function, f_surface::Function, ω::ΩT, Δt::TT, d::Int, nx::Int, ny::Int, ntime::Int, nsave::Int, nplot::Int, odir::String;
-                                        atol::DT=2*eps(), rtol::DT=2*eps(), nmax::Int=100)
+function PoincareInvariant2ndTrapezoidal(f_equ::Function, f_surface::Function, ω::ΩT, Δt::TT, d::Int, nx::Int, ny::Int, ntime::Int, nsave::Int, nplot::Int, odir::String;
+                                        atol::DT=2*eps(), rtol::DT=2*eps(), nmax::Int=100) where {DT,TT,ΩT}
 
     println()
     println("Second Euler-Poincaré Integral Invariant")
@@ -146,7 +146,7 @@ function interpolate_derivative_j(x, i1, j1, λ, μ, γ̇, nx, ny)
 end
 
 
-function integrate{DT,TT}(t, γ, γ̇ᵢ, γ̇ⱼ, ω, b::Vector{TT}, c::Vector{TT}, q::Vector{DT}, vᵢ::Vector{DT}, vⱼ::Vector{DT}, B::Matrix{DT})
+function integrate(t, γ, γ̇ᵢ, γ̇ⱼ, ω, b::Vector{TT}, c::Vector{TT}, q::Vector{DT}, vᵢ::Vector{DT}, vⱼ::Vector{DT}, B::Matrix{DT}) where {DT,TT}
     @assert length(b) == length(c)
 
     local result = zero(DT)
@@ -165,7 +165,7 @@ function integrate{DT,TT}(t, γ, γ̇ᵢ, γ̇ⱼ, ω, b::Vector{TT}, c::Vector{
     return result
 end
 
-function surface_integral{DT}(t, x::Matrix{DT}, ω, nx, ny)
+function surface_integral(t, x::Matrix{DT}, ω, nx, ny) where {DT}
     const b = [0.5, 0.5]
     const c = [0.0, 1.0]
 
@@ -191,7 +191,7 @@ end
 
 
 
-function integrate_canonical{DT,TT}(γ̇ᵢ, γ̇ⱼ, Θ̇ᵢ, Θ̇ⱼ, b::Vector{TT}, c::Vector{TT}, vᵢ::Vector{DT}, vⱼ::Vector{DT})
+function integrate_canonical(γ̇ᵢ, γ̇ⱼ, Θ̇ᵢ, Θ̇ⱼ, b::Vector{TT}, c::Vector{TT}, vᵢ::Vector{DT}, vⱼ::Vector{DT}) where {DT,TT}
     @assert length(b) == length(c)
 
     local result = zero(DT)
@@ -211,7 +211,7 @@ function integrate_canonical{DT,TT}(γ̇ᵢ, γ̇ⱼ, Θ̇ᵢ, Θ̇ⱼ, b::Vecto
     return result
 end
 
-function surface_integral_canonical{DT}(q::Matrix{DT}, p::Matrix{DT}, nx, ny)
+function surface_integral_canonical(q::Matrix{DT}, p::Matrix{DT}, nx, ny) where {DT}
     const b = [0.5, 0.5]
     const c = [0.0, 1.0]
 

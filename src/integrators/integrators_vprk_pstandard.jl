@@ -10,7 +10,7 @@
 
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-type NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT,D,S} <: NonlinearFunctionParameters{DT}
+mutable struct NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT,D,S} <: NonlinearFunctionParameters{DT}
     α::AT
     g::GT
 
@@ -27,7 +27,7 @@ type NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT,D,S} <: NonlinearFunct
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT}(α::AT, g::GT, Δt::TT, o::Int, R::Vector, q::Vector{DT}, p::Vector{DT}, S::Int)
+function NonlinearFunctionParametersVPRKpStandard(α::AT, g::GT, Δt::TT, o::Int, R::Vector, q::Vector{DT}, p::Vector{DT}, S::Int) where {DT,TT,AT,GT}
     @assert length(q)==length(p)
     R = convert(Vector{TT}, R)
     R1 = [R[1], zero(TT)]
@@ -42,7 +42,7 @@ function NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT}(α::AT, g::GT, Δ
 end
 
 
-@generated function compute_projection_vprk!{ST,DT,TT,ΑT,GT,D,S}(x::Vector{ST}, q̅::Vector{ST}, p̅::Vector{ST}, λ::Vector{ST}, U::Matrix{ST}, G::Matrix{ST}, params::NonlinearFunctionParametersVPRKpStandard{DT,TT,ΑT,GT,D,S})
+@generated function compute_projection_vprk!(x::Vector{ST}, q̅::Vector{ST}, p̅::Vector{ST}, λ::Vector{ST}, U::Matrix{ST}, G::Matrix{ST}, params::NonlinearFunctionParametersVPRKpStandard{DT,TT,ΑT,GT,D,S}) where {ST,DT,TT,ΑT,GT,D,S}
     # create temporary vectors
     tG = zeros(ST,D)
 
@@ -75,7 +75,7 @@ end
 end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."
-@generated function function_stages!{ST,DT,TT,ΑT,GT,D,S}(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersVPRKpStandard{DT,TT,ΑT,GT,D,S})
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersVPRKpStandard{DT,TT,ΑT,GT,D,S}) where {ST,DT,TT,ΑT,GT,D,S}
     cache = NonlinearFunctionCacheVPRKprojection{ST}(D,S)
 
     # λ  = zeros(ST, D)
@@ -111,7 +111,7 @@ end
 end
 
 "Variational partitioned Runge-Kutta integrator."
-immutable IntegratorVPRKpStandard{DT, TT, ΑT, FT, GT, VT, SPT, PPT, SST, STP, IT} <: AbstractIntegratorVPRK{DT, TT}
+struct IntegratorVPRKpStandard{DT, TT, ΑT, FT, GT, VT, SPT, PPT, SST, STP, IT} <: AbstractIntegratorVPRK{DT, TT}
     equation::IODE{DT,TT,ΑT,FT,GT,VT}
     tableau::TableauVPRK{TT}
     Δt::TT
@@ -138,11 +138,11 @@ function IntegratorVPRKpSymplectic(args...; kwargs...)
     IntegratorVPRKpStandard(args...; kwargs..., R=[1,1])
 end
 
-function IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
-                                        R=[0,1],
-                                        nonlinear_solver=DEFAULT_NonlinearSolver,
-                                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
-                                        interpolation=HermiteInterpolation{DT})
+function IntegratorVPRKpStandard(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
+                                 R=[0,1],
+                                 nonlinear_solver=DEFAULT_NonlinearSolver,
+                                 nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
+                                 interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
     S = tableau.s
 
@@ -203,7 +203,7 @@ function IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT
 end
 
 
-function initialize!{DT,TT}(int::IntegratorVPRKpStandard{DT,TT}, sol::Union{SolutionPDAE, PSolutionPDAE}, m::Int)
+function initialize!(int::IntegratorVPRKpStandard{DT,TT}, sol::Union{SolutionPDAE, PSolutionPDAE}, m::Int) where {DT,TT}
     @assert m ≥ 1
     @assert m ≤ sol.ni
 
@@ -236,7 +236,7 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m::Int, n::Int)
+function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
     # set time for nonlinear and projection solver
     int.sparams.t = sol.t[0] + (n-1)*int.Δt
     int.pparams.t = sol.t[0] + (n-1)*int.Δt

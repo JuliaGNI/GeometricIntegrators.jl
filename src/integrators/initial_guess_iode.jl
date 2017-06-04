@@ -4,7 +4,7 @@ using ..Interpolation
 using ..Tableaus
 
 
-type InitialGuessIODE{DT, TT, VT, FT, IT <: Interpolator}
+mutable struct InitialGuessIODE{DT, TT, VT, FT, IT <: Interpolator}
     int::IT
 
     v::VT
@@ -25,7 +25,7 @@ type InitialGuessIODE{DT, TT, VT, FT, IT <: Interpolator}
     f₀::Vector{DT}
     f₁::Vector{DT}
 
-    function InitialGuessIODE(interp, v, f, Δt, d, periodicity)
+    function InitialGuessIODE{DT,TT,VT,FT,IT}(interp, v, f, Δt, d, periodicity) where {DT,TT,VT,FT,IT}
         if !(length(periodicity) == d)
             periodicity = zeros(DT, d)
         end
@@ -37,18 +37,17 @@ type InitialGuessIODE{DT, TT, VT, FT, IT <: Interpolator}
     end
 end
 
-function InitialGuessIODE{DT,TT,ΑT,FT,GT,VT}(interp, equ::IODE{DT,TT,ΑT,FT,GT,VT}, Δt::TT; periodicity=[])
+function InitialGuessIODE(interp, equ::IODE{DT,TT,ΑT,FT,GT,VT}, Δt::TT; periodicity=[]) where {DT,TT,ΑT,FT,GT,VT}
     InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
                                          equ.v, equ.f, Δt, equ.d, periodicity)
 end
 
-function InitialGuessIODE{DT,TT,FT,PT,UT,GT,ϕT,VT}(interp, equ::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, Δt::TT; periodicity=[])
+function InitialGuessIODE(interp, equ::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, Δt::TT; periodicity=[]) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
     InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
                                          equ.v, equ.f, Δt, equ.d, periodicity)
 end
 
-function initialize!{DT,TT,VT,FT,IT}(ig::InitialGuessIODE{DT,TT,VT,FT,IT},
-                                     t₁::TT, q₁::Vector{DT}, p₁::Vector{DT})
+function initialize!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, t₁::TT, q₁::Vector{DT}, p₁::Vector{DT}) where {DT,TT,VT,FT,IT}
     ig.t₁ = t₁
     # TODO Replace copy with EPRK4 step.
     simd_copy!(q₁, ig.q₁)
@@ -60,8 +59,7 @@ function initialize!{DT,TT,VT,FT,IT}(ig::InitialGuessIODE{DT,TT,VT,FT,IT},
     update!(ig, t₁, q₁, p₁)
 end
 
-function update!{DT,TT,VT,FT,IT}(ig::InitialGuessIODE{DT,TT,VT,FT,IT},
-                                 t₁::TT, q₁::Vector{DT}, p₁::Vector{DT})
+function update!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, t₁::TT, q₁::Vector{DT}, p₁::Vector{DT}) where {DT,TT,VT,FT,IT}
     local Δq::DT
 
     ig.t₀ = ig.t₁
@@ -91,9 +89,9 @@ function update!{DT,TT,VT,FT,IT}(ig::InitialGuessIODE{DT,TT,VT,FT,IT},
     ig.f(ig.t₁, ig.q₁, ig.v₁, ig.f₁)
 end
 
-function CommonFunctions.evaluate!{DT,TT,VT,FT,IT}(ig::InitialGuessIODE{DT,TT,VT,FT,IT},
+function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT,VT,FT,IT},
            guess_q::Vector{DT}, guess_p::Vector{DT}, guess_v::Vector{DT},
-           c_q::TT=one(TT), c_p::TT=one(TT))
+           c_q::TT=one(TT), c_p::TT=one(TT)) where {DT,TT,VT,FT,IT}
 
     @assert length(guess_q) == length(guess_p) == length(guess_v)
 

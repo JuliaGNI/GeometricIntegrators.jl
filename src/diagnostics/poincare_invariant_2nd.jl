@@ -3,7 +3,7 @@ using ApproxFun
 using StaticArrays
 
 
-immutable PoincareInvariant2nd{ET,DT,TT,ΩT}
+struct PoincareInvariant2nd{ET,DT,TT,ΩT}
     equ::ET
     ω::ΩT
     Δt::TT
@@ -18,8 +18,8 @@ immutable PoincareInvariant2nd{ET,DT,TT,ΩT}
     nmax::Int
 end
 
-function PoincareInvariant2nd{DT,TT,ΩT}(f_equ::Function, f_surface::Function, ω::ΩT, Δt::TT, d::Int, nx::Int, ny::Int, ntime::Int, nsave::Int, nplot::Int, odir::String;
-                                        atol::DT=2*eps(), rtol::DT=2*eps(), nmax::Int=100)
+function PoincareInvariant2nd(f_equ::Function, f_surface::Function, ω::ΩT, Δt::TT, d::Int, nx::Int, ny::Int, ntime::Int, nsave::Int, nplot::Int, odir::String;
+                              atol::DT=2*eps(), rtol::DT=2*eps(), nmax::Int=100) where {DT,TT,ΩT}
 
     println()
     println("Second Euler-Poincaré Integral Invariant")
@@ -54,7 +54,7 @@ end
 
 
 
-function evaluate_poincare_invariant{ET,DT,TT}(pinv::PoincareInvariant2nd{ET,DT,TT}, integrator, tableau, runid)
+function evaluate_poincare_invariant(pinv::PoincareInvariant2nd{ET,DT,TT}, integrator, tableau, runid) where {ET,DT,TT}
 
     int = integrator(pinv.equ, tableau, pinv.Δt; atol=pinv.atol, rtol=pinv.rtol, nmax=pinv.nmax)
     sol = Solution(pinv.equ, pinv.Δt, pinv.ntime, pinv.nsave)

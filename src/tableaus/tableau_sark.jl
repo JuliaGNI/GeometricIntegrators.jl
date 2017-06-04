@@ -1,6 +1,6 @@
 
 "Holds the tableau of a spezialized additive Runge-Kutta method."
-immutable TableauSARK{T} <: AbstractTableau{T}
+struct TableauSARK{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int
@@ -21,10 +21,10 @@ immutable TableauSARK{T} <: AbstractTableau{T}
     ω_q::Matrix{T}
     ω_λ::Matrix{T}
 
-    function TableauSARK(name, o, s, r,
-                         a_q, α_q, a_q̃, α_q̃,
-                         b_q, β_q, c_q, c_λ,
-                         ω_q, ω_λ)
+    function TableauSARK{T}(name, o, s, r,
+                            a_q, α_q, a_q̃, α_q̃,
+                            b_q, β_q, c_q, c_λ,
+                            ω_q, ω_λ) where {T}
         # TODO Make ω_q, ω_λ optional arguments.
         @assert T <: Real
         @assert isa(name, Symbol)

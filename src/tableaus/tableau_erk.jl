@@ -1,11 +1,11 @@
 
 "Holds the tableau of an explicit Runge-Kutta method."
-immutable TableauERK{T} <: AbstractTableauRK{T}
+struct TableauERK{T} <: AbstractTableauRK{T}
     @HeaderTableau
 
     q::CoefficientsRK{T}
 
-    function TableauERK(q)
+    function TableauERK{T}(q) where {T}
         @assert q.c[1] == 0
         @assert istrilstrict(q.a)
         @assert !(q.s==1 && q.a[1,1] ≠ 0)
@@ -13,11 +13,11 @@ immutable TableauERK{T} <: AbstractTableauRK{T}
     end
 end
 
-function TableauERK{T}(q::CoefficientsRK{T})
+function TableauERK(q::CoefficientsRK{T}) where {T}
     TableauERK{T}(q)
 end
 
-function TableauERK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+function TableauERK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}) where {T}
     TableauERK{T}(CoefficientsRK(name, order, a, b, c))
 end
 

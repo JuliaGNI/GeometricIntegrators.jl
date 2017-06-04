@@ -9,13 +9,13 @@ struct Quadrature{T,N}
     weights::Vector{T}
 end
 
-function Quadrature{T}(order, nodes::Vector{T}, weights::Vector{T})
+function Quadrature(order, nodes::Vector{T}, weights::Vector{T}) where {T}
     @assert length(nodes) == length(weights)
     Quadrature{T, length(nodes)}(order, nodes, weights)
 end
 
-length{T,N}(Q::Quadrature{T,N}) = N
-nnodes{T,N}(Q::Quadrature{T,N}) = N
+length(Q::Quadrature{T,N}) where {T,N} = N
+nnodes(Q::Quadrature{T,N}) where {T,N} = N
 order(Q::Quadrature) = Q.order
 nodes(Q::Quadrature) = Q.nodes
 weights(Q::Quadrature) = Q.weights

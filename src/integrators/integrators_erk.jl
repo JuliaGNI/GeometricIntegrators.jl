@@ -1,6 +1,6 @@
 
 "Explicit Runge-Kutta integrator."
-immutable IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
+struct IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
     equation::ODE{DT,TT,FT}
     tableau::TableauERK{TT}
     Δt::TT
@@ -11,7 +11,7 @@ immutable IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
     tV::Array{DT,1}
 
 
-    function IntegratorERK(equation, tableau, Δt)
+    function IntegratorERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
         D = equation.d
         S = tableau.q.s
         new(equation, tableau, Δt,
@@ -20,7 +20,7 @@ immutable IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
     end
 end
 
-function IntegratorERK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauERK{TT}, Δt::TT)
+function IntegratorERK(equation::ODE{DT,TT,FT}, tableau::TableauERK{TT}, Δt::TT) where {DT,TT,FT}
     IntegratorERK{DT,TT,FT}(equation, tableau, Δt)
 end
 
@@ -33,7 +33,7 @@ function initialize!(int::IntegratorERK, sol::SolutionODE, m::Int)
 end
 
 "Integrate ODE with explicit Runge-Kutta integrator."
-function integrate_step!{DT,TT,FT,N}(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int)
+function integrate_step!(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,N}
     local tᵢ::TT
     local y::DT
 

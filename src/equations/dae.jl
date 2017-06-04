@@ -70,7 +70,7 @@ immutable DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Func
     q₀::Array{dType, N}
     λ₀::Array{dType, N}
 
-    function DAE(d, m, n, v, u, ϕ, t₀, q₀, λ₀)
+    function DAE{dType,tType,vType,uType,ϕType,N}(d, m, n, v, u, ϕ, t₀, q₀, λ₀) where {dType <: Number, tType <: Number, vType <: Function, uType <: Function, ϕType <: Function, N}
         @assert d == size(q₀,1)
         @assert m == size(λ₀,1)
         @assert n == size(q₀,2) == size(λ₀,2)
@@ -86,7 +86,7 @@ immutable DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Func
     end
 end
 
-function DAE{DT, TT, VT, UT, ΦT}(v::VT, u::UT, ϕ::ΦT, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArray{DT})
+function DAE(v::VT, u::UT, ϕ::ΦT, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArray{DT}) where {DT,TT,VT,UT,ΦT}
     @assert size(q₀,2) == size(λ₀,2)
     DAE{DT, TT, VT, UT, ΦT, ndims(q₀)}(size(q₀, 1), size(λ₀, 1), size(q₀, 2), v, u, ϕ, t₀, q₀, λ₀)
 end
@@ -106,11 +106,11 @@ Base.:(==)(dae1::DAE, dae2::DAE) = (
                              && dae1.q₀ == dae2.q₀
                              && dae1.λ₀ == dae2.λ₀)
 
-function Base.similar{DT, TT, VT, UT, ΦT}(dae::DAE{DT,TT,VT,UT,ΦT}, q₀::DenseArray{DT}, λ₀::DenseArray{DT})
+function Base.similar(dae::DAE{DT,TT,VT,UT,ΦT}, q₀::DenseArray{DT}, λ₀::DenseArray{DT}) where {DT, TT, VT, UT, ΦT}
     similar(dae, dae.t₀, q₀, λ₀)
 end
 
-function Base.similar{DT, TT, VT, UT, ΦT}(dae::DAE{DT,TT,VT,UT,ΦT}, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArray{DT})
+function Base.similar(dae::DAE{DT,TT,VT,UT,ΦT}, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArray{DT}) where {DT, TT, VT, UT, ΦT}
     @assert dae.d == size(q₀,1)
     @assert dae.m == size(λ₀,1)
     ODE(dae.v, t₀, q₀, λ₀)

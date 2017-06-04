@@ -1,5 +1,5 @@
 
-type LUSolver{T} <: LinearSolver{T}
+mutable struct LUSolver{T} <: LinearSolver{T}
     n::Int
     A::Matrix{T}
     b::Vector{T}
@@ -7,17 +7,17 @@ type LUSolver{T} <: LinearSolver{T}
     pivots::Vector{Int}
     info::Int
 
-    LUSolver(n) = new(n, zeros(T, n, n), zeros(T, n), zeros(T, n), zeros(Int, n), 0)
+    LUSolver{T}(n) where {T} = new(n, zeros(T, n, n), zeros(T, n), zeros(T, n), zeros(Int, n), zeros(Int, n), 0)
 end
 
-function LUSolver{T}(A::Matrix{T})
+function LUSolver(A::Matrix{T}) where {T}
     n = checksquare(A)
     lu = LUSolver{eltype(A)}(n)
     lu.A .= A
     lu
 end
 
-function LUSolver{T}(A::Matrix{T}, b::Vector{T})
+function LUSolver(A::Matrix{T}, b::Vector{T}) where {T}
     n = checksquare(A)
     @assert n == length(b)
     lu = LUSolver{eltype(A)}(n)
@@ -26,8 +26,8 @@ function LUSolver{T}(A::Matrix{T}, b::Vector{T})
     lu
 end
 
+function factorize!(lu::LUSolver{T}, pivot=true) where {T}
 
-function factorize!{T}(lu::LUSolver{T}, pivot=true)
     @inbounds begin
         for k = 1:lu.n
             lu.pivots[k] = k
@@ -93,7 +93,7 @@ end
 # end
 
 
-function solve!{T}(lu::LUSolver{T})
+function solve!(lu::LUSolver{T}) where {T}
     local s::T
 
     @inbounds for i = 1:lu.n

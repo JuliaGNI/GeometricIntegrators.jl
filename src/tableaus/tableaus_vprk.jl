@@ -107,8 +107,8 @@ end
 
 
 "Tableau for variational Gauss-Legendre method with s stages"
-function getTableauVPGLRK(s)
-    glrk = getCoefficientsGLRK(s)
+function getTableauVPGLRK(s; T=Float64)
+    glrk = getCoefficientsGLRK(s, T=T)
     R∞ = (-1)^s
     TableauVPRK(Symbol("vpglrk", s), glrk.o, glrk, glrk, R∞)
 end

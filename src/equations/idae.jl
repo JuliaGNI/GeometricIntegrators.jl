@@ -47,7 +47,7 @@ immutable IDAE{dType <: Number, tType <: Number, fType <: Function, pType <: Fun
     p₀::Array{dType, N}
     λ₀::Array{dType, N}
 
-    function IDAE(d, m, n, f, p, u, g, ϕ, v, t₀, q₀, p₀, λ₀)
+    function IDAE{dType,tType,fType,pType,uType,gType,ϕType,vType,N}(d, m, n, f, p, u, g, ϕ, v, t₀, q₀, p₀, λ₀) where {dType <: Number, tType <: Number, fType <: Function, pType <: Function, uType <: Function, gType <: Function, ϕType <: Function, vType <: Function, N}
         @assert d == size(q₀,1) == size(p₀,1)
         @assert m == size(λ₀,1)
         @assert n == size(q₀,2) == size(p₀,2) == size(λ₀,2)
@@ -63,7 +63,7 @@ immutable IDAE{dType <: Number, tType <: Number, fType <: Function, pType <: Fun
     end
 end
 
-function IDAE{DT, TT, FT, PT, UT, GT, ΦT, VT}(f::FT, p::PT, u::UT, g::GT, ϕ::ΦT, v::VT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT})
+function IDAE(f::FT, p::PT, u::UT, g::GT, ϕ::ΦT, v::VT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}) where {DT,TT,FT,PT,UT,GT,ΦT,VT}
     @assert size(q₀) == size(p₀)
     @assert size(q₀,2) == size(λ₀,2)
     IDAE{DT, TT, FT, PT, UT, GT, ΦT, VT, ndims(q₀)}(size(q₀, 1), size(λ₀, 1), size(q₀, 2), f, p, u, g, ϕ, v, t₀, q₀, p₀, λ₀)

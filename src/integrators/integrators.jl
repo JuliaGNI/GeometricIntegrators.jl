@@ -1,5 +1,5 @@
 
-abstract Integrator{dType, tType}
+abstract type Integrator{dType, tType} end
 
 const DEFAULT_PROGRESS_NTMIN = 10000
 
@@ -124,7 +124,7 @@ function integrate!(int, sol)
 end
 
 "Integrate ODE for initial conditions m with m₁ ≤ m ≤ m₂."
-function integrate!{DT,TT,N}(int::Integrator{DT,TT}, sol::Solution{DT,TT,N}, m1::Int, m2::Int)
+function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT,N}, m1::Int, m2::Int) where {DT,TT,N}
     @assert m1 ≥ 1
     @assert m2 ≤ sol.ni
 
@@ -137,7 +137,7 @@ function integrate!{DT,TT,N}(int::Integrator{DT,TT}, sol::Solution{DT,TT,N}, m1:
 end
 
 "Integrate ODE for initial condition m."
-function integrate!{DT,TT,N}(int::Integrator{DT,TT}, sol::Solution{DT,TT,N}, m::Int)
+function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT,N}, m::Int) where {DT,TT,N}
     # time step period for showing progress bar
     local nshow = div(sol.ntime, 10)
 

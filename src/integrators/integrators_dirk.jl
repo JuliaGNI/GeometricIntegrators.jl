@@ -1,6 +1,6 @@
 
 "Diagonally implicit Runge-Kutta integrator."
-immutable IntegratorDIRK{DT,TT,FT} <: Integrator{DT,TT}
+struct IntegratorDIRK{DT,TT,FT} <: Integrator{DT,TT}
     equation::ODE{DT,TT,FT}
     tableau::TableauDIRK{TT}
     Δt::TT
@@ -10,7 +10,7 @@ immutable IntegratorDIRK{DT,TT,FT} <: Integrator{DT,TT}
     Y::Array{DT,2}
     F::Array{DT,2}
 
-    function IntegratorDIRK(equation, tableau, Δt)
+    function IntegratorDIRK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
         D = equation.d
         S = tableau.q.s
         new(equation, tableau, Δt, zeros(DT,D), zeros(DT,D,S), zeros(DT,D,S), zeros(DT,D,S))

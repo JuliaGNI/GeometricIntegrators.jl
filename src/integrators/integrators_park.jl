@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of partitioned additive Runge-Kutta methods."
-type NonlinearFunctionParametersPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctionParameters{DT}
+mutable struct NonlinearFunctionParametersPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctionParameters{DT}
     f_f::FT
     f_p::PT
     f_u::UT
@@ -55,7 +55,7 @@ type NonlinearFunctionParametersPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunction
     Gt::Vector{DT}
     Φt::Vector{DT}
 
-    function NonlinearFunctionParametersPARK(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, t_q, t_p, t_q̃, t_p̃, t_λ)
+    function NonlinearFunctionParametersPARK{DT,TT,FT,PT,UT,GT,ϕT}(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, t_q, t_p, t_q̃, t_p̃, t_λ) where {DT,TT,FT,PT,UT,GT,ϕT}
         # create solution vectors
         q = zeros(DT,d)
         p = zeros(DT,d)
@@ -102,7 +102,7 @@ type NonlinearFunctionParametersPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunction
 end
 
 "Compute stages of partitioned additive Runge-Kutta methods."
-function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersPARK{DT,TT,FT,PT,UT,GT,ϕT})
+function function_stages!(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersPARK{DT,TT,FT,PT,UT,GT,ϕT}) where {DT,TT,FT,PT,UT,GT,ϕT}
     local tpᵢ::TT
     local tλᵢ::TT
 
@@ -197,7 +197,7 @@ end
 
 
 "Implicit partitioned additive Runge-Kutta integrator."
-immutable IntegratorPARK{DT, TT, FT, PT, UT, GT, ϕT, ST} <: Integrator{DT, TT}
+struct IntegratorPARK{DT, TT, FT, PT, UT, GT, ϕT, ST} <: Integrator{DT, TT}
     equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}
     tableau::TableauPARK{TT}
     Δt::TT
@@ -219,10 +219,10 @@ immutable IntegratorPARK{DT, TT, FT, PT, UT, GT, ϕT, ST} <: Integrator{DT, TT}
     G::Array{DT,2}
 end
 
-function IntegratorPARK{DT,TT,FT,PT,UT,GT,ϕT}(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}, tableau::TableauPARK{TT}, Δt::TT;
-                                              nonlinear_solver=DEFAULT_NonlinearSolver,
-                                              nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
-                                              interpolation=HermiteInterpolation{DT})
+function IntegratorPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}, tableau::TableauPARK{TT}, Δt::TT;
+                        nonlinear_solver=DEFAULT_NonlinearSolver,
+                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
+                        interpolation=HermiteInterpolation{DT}) where {DT,TT,FT,PT,UT,GT,ϕT}
     D = equation.d
     S = tableau.s
     R = tableau.r
@@ -256,7 +256,7 @@ function initialize!(int::IntegratorPARK, sol::Union{SolutionPDAE, PSolutionPDAE
 end
 
 "Integrate DAE with partitioned additive Runge-Kutta integrator."
-function integrate_step!{DT,TT,FT,PT,UT,GT,ϕT,N}(int::IntegratorPARK{DT,TT,FT,PT,UT,GT,ϕT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int)
+function integrate_step!(int::IntegratorPARK{DT,TT,FT,PT,UT,GT,ϕT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,PT,UT,GT,ϕT,N}
     # set time for nonlinear solver
     int.solver.Fparams.t = sol.t[n]
 

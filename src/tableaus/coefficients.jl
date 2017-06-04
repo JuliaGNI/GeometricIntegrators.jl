@@ -1,7 +1,7 @@
 
-abstract AbstractCoefficients{T}
+abstract type AbstractCoefficients{T} end
 
-Base.isequal{T1,T2}(coeff1::AbstractCoefficients{T1}, coeff2::AbstractCoefficients{T2}) = (coeff1 == coeff2 && T1 == T2 && typeof(coeff1) == typeof(coeff2))
+Base.isequal(coeff1::AbstractCoefficients{T1}, coeff2::AbstractCoefficients{T2}) where {T1,T2} = (coeff1 == coeff2 && T1 == T2 && typeof(coeff1) == typeof(coeff2))
 
 
 @define HeaderCoefficientsRK begin
@@ -35,11 +35,11 @@ end
 
 
 "Holds the coefficients of a Runge-Kutta method."
-immutable CoefficientsRK{T} <: AbstractCoefficients{T}
+struct CoefficientsRK{T} <: AbstractCoefficients{T}
     @HeaderCoefficientsRK
     @CoefficientsRK
 
-    function CoefficientsRK(name,o,s,a,b,c)
+    function CoefficientsRK{T}(name,o,s,a,b,c) where {T}
         @assert T <: Real
         @assert isa(name, Symbol)
         @assert isa(o, Integer)
@@ -50,19 +50,19 @@ immutable CoefficientsRK{T} <: AbstractCoefficients{T}
     end
 end
 
-function CoefficientsRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+function CoefficientsRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}) where {T}
     CoefficientsRK{T}(name, order, length(c), a, b, c)
 end
 
 Base.hash(tab::CoefficientsRK, h::UInt) = hash(tab.o, hash(tab.s, hash(tab.a, hash(tab.b, hash(tab.c, hash(:CoefficientsRK, h))))))
 
-Base.:(==){T1, T2}(tab1::CoefficientsRK{T1}, tab2::CoefficientsRK{T2}) = (tab1.o == tab2.o
-                                                             && tab1.s == tab2.s
-                                                             && tab1.a == tab2.a
-                                                             && tab1.b == tab2.b
-                                                             && tab1.c == tab2.c)
+Base.:(==)(tab1::CoefficientsRK, tab2::CoefficientsRK) = (tab1.o == tab2.o
+                                                       && tab1.s == tab2.s
+                                                       && tab1.a == tab2.a
+                                                       && tab1.b == tab2.b
+                                                       && tab1.c == tab2.c)
 
-Base.isequal{T1, T2}(tab1::CoefficientsRK{T1}, tab2::CoefficientsRK{T2}) = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
+Base.isequal(tab1::CoefficientsRK{T1}, tab2::CoefficientsRK{T2}) where {T1,T2} = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
 
 "Print Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsRK)
@@ -74,11 +74,11 @@ end
 
 
 "Holds the coefficients of an additive Runge-Kutta method."
-immutable CoefficientsARK{T} <: AbstractCoefficients{T}
+struct CoefficientsARK{T} <: AbstractCoefficients{T}
     @HeaderCoefficientsARK
     @CoefficientsARK
 
-    function CoefficientsARK(name,o,s,r,a,b,c,α,β)
+    function CoefficientsARK{T}(name,o,s,r,a,b,c,α,β) where {T}
         @assert T <: Real
         @assert isa(name, Symbol)
         @assert isa(o, Integer)
@@ -92,20 +92,20 @@ immutable CoefficientsARK{T} <: AbstractCoefficients{T}
     end
 end
 
-function CoefficientsARK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}, α::Matrix{T}, β::Vector{T})
+function CoefficientsARK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}, α::Matrix{T}, β::Vector{T}) where {T}
     CoefficientsARK{T}(name, order, length(b), length(β), a, b, c, α, β)
 end
 
 Base.hash(tab::CoefficientsARK, h::UInt) = hash(tab.o, hash(tab.s, hash(tab.r, hash(tab.a, hash(tab.b, hash(tab.c, hash(tab.α, hash(tab.β, hash(:CoefficientsARK, h)))))))))
 
-Base.:(==){T1, T2}(tab1::CoefficientsARK{T1}, tab2::CoefficientsARK{T2}) = (tab1.o == tab2.o
-                                                             && tab1.s == tab2.s
-                                                             && tab1.r == tab2.r
-                                                             && tab1.a == tab2.a
-                                                             && tab1.b == tab2.b
-                                                             && tab1.c == tab2.c
-                                                             && tab1.α == tab2.α
-                                                             && tab1.β == tab2.β)
+Base.:(==)(tab1::CoefficientsARK, tab2::CoefficientsARK) = (tab1.o == tab2.o
+                                                         && tab1.s == tab2.s
+                                                         && tab1.r == tab2.r
+                                                         && tab1.a == tab2.a
+                                                         && tab1.b == tab2.b
+                                                         && tab1.c == tab2.c
+                                                         && tab1.α == tab2.α
+                                                         && tab1.β == tab2.β)
 
 "Print additive Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsARK)
@@ -119,11 +119,11 @@ end
 
 
 "Holds the coefficients of a projective Runge-Kutta method."
-immutable CoefficientsPRK{T} <: AbstractCoefficients{T}
+struct CoefficientsPRK{T} <: AbstractCoefficients{T}
     @HeaderCoefficientsARK
     @CoefficientsPRK
 
-    function CoefficientsPRK(name,o,s,r,a,c,α)
+    function CoefficientsPRK{T}(name,o,s,r,a,c,α) where {T}
         @assert T <: Real
         @assert isa(name, Symbol)
         @assert isa(o, Integer)
@@ -137,18 +137,18 @@ immutable CoefficientsPRK{T} <: AbstractCoefficients{T}
     end
 end
 
-function CoefficientsPRK{T}(name::Symbol, order::Int, a::Matrix{T}, c::Vector{T}, α::Matrix{T})
+function CoefficientsPRK(name::Symbol, order::Int, a::Matrix{T}, c::Vector{T}, α::Matrix{T}) where {T}
     CoefficientsPRK{T}(name, order, size(a,2), length(c), a, c, α)
 end
 
 Base.hash(tab::CoefficientsPRK, h::UInt) = hash(tab.o, hash(tab.s, hash(tab.r, hash(tab.a, hash(tab.c, hash(tab.α, hash(:CoefficientsPRK, h)))))))
 
-Base.:(==){T1, T2}(tab1::CoefficientsPRK{T1}, tab2::CoefficientsPRK{T2}) = (tab1.o == tab2.o
-                                                             && tab1.s == tab2.s
-                                                             && tab1.r == tab2.r
-                                                             && tab1.a == tab2.a
-                                                             && tab1.c == tab2.c
-                                                             && tab1.α == tab2.α)
+Base.:(==)(tab1::CoefficientsPRK, tab2::CoefficientsPRK) = (tab1.o == tab2.o
+                                                         && tab1.s == tab2.s
+                                                         && tab1.r == tab2.r
+                                                         && tab1.a == tab2.a
+                                                         && tab1.c == tab2.c
+                                                         && tab1.α == tab2.α)
 
 "Print projective Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsPRK)
@@ -160,13 +160,13 @@ end
 
 
 "Holds the multiplier Runge-Kutta coefficients."
-immutable CoefficientsMRK{T}
+struct CoefficientsMRK{T}
     name::Symbol
     r::Int
     b::Vector{T}
     c::Vector{T}
 
-    function CoefficientsMRK(name,r,b,c)
+    function CoefficientsMRK{T}(name,r,b,c) where {T}
         @assert T <: Real
         @assert isa(name, Symbol)
         @assert isa(r, Integer)
@@ -176,16 +176,15 @@ immutable CoefficientsMRK{T}
     end
 end
 
-function CoefficientsMRK{T}(name::Symbol, b::Vector{T}, c::Vector{T})
+function CoefficientsMRK(name::Symbol, b::Vector{T}, c::Vector{T}) where {T}
     CoefficientsMRK{T}(name, length(c), b, c)
 end
 
 Base.hash(tab::CoefficientsMRK, h::UInt) = hash(tab.r, hash(tab.b, hash(tab.c, hash(:CoefficientsMRK, h))))
 
-Base.:(==){T1, T2}(tab1::CoefficientsMRK{T1}, tab2::CoefficientsMRK{T2}) = (
-                                                                tab1.r == tab2.r
-                                                             && tab1.b == tab2.b
-                                                             && tab1.c == tab2.c)
+Base.:(==)(tab1::CoefficientsMRK, tab2::CoefficientsMRK) = (tab1.r == tab2.r
+                                                         && tab1.b == tab2.b
+                                                         && tab1.c == tab2.c)
 
 "Print multiplier Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsMRK)
@@ -196,7 +195,7 @@ end
 
 
 "Holds the coefficients of a projected Gauss-Legendre Runge-Kutta method."
-immutable CoefficientsPGLRK{T} <: AbstractCoefficients{T}
+struct CoefficientsPGLRK{T} <: AbstractCoefficients{T}
     @HeaderCoefficientsRK
     @CoefficientsRK
 
@@ -206,7 +205,7 @@ immutable CoefficientsPGLRK{T} <: AbstractCoefficients{T}
     W::Matrix{T}
     A::Matrix{T}
 
-    function CoefficientsPGLRK(name,o,s,a,b,c,P,X,W)
+    function CoefficientsPGLRK{T}(name,o,s,a,b,c,P,X,W) where {T}
         @assert T <: Real
         @assert isa(name, Symbol)
         @assert isa(o, Integer)
@@ -228,13 +227,13 @@ immutable CoefficientsPGLRK{T} <: AbstractCoefficients{T}
     end
 end
 
-function CoefficientsPGLRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}, P::Matrix{T}, X::Matrix{T}, W::Matrix{T})
+function CoefficientsPGLRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}, P::Matrix{T}, X::Matrix{T}, W::Matrix{T}) where {T}
     CoefficientsPGLRK{T}(name, order, length(c), a, b, c, P, X, W)
 end
 
 Base.hash(tab::CoefficientsPGLRK, h::UInt) = hash(tab.o, hash(tab.s, hash(tab.a, hash(tab.b, hash(tab.c, hash(tab.P, hash(tab.Q, hash(tab.X, hash(tab.W, hash(tab.A, h))))))))))
 
-Base.:(==){T1, T2}(tab1::CoefficientsPGLRK{T1}, tab2::CoefficientsPGLRK{T2}) = (tab1.o == tab2.o
+Base.:(==)(tab1::CoefficientsPGLRK, tab2::CoefficientsPGLRK) = (tab1.o == tab2.o
                                                              && tab1.s == tab2.s
                                                              && tab1.a == tab2.a
                                                              && tab1.b == tab2.b
@@ -245,7 +244,7 @@ Base.:(==){T1, T2}(tab1::CoefficientsPGLRK{T1}, tab2::CoefficientsPGLRK{T2}) = (
                                                              && tab1.W == tab2.W
                                                              && tab1.A == tab2.A)
 
-Base.isequal{T1, T2}(tab1::CoefficientsPGLRK{T1}, tab2::CoefficientsPGLRK{T2}) = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
+Base.isequal(tab1::CoefficientsPGLRK{T1}, tab2::CoefficientsPGLRK{T2}) where {T1,T2} = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
 
 "Print Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsPGLRK)

@@ -1,2 +1,2 @@
 
-abstract AbstractFixedPointSolver{T} <: NonlinearSolver{T}
+abstract type AbstractFixedPointSolver{T} <: NonlinearSolver{T} end

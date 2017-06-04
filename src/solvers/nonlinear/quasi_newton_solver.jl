@@ -1,7 +1,7 @@
 
 immutable QuasiNewtonSolver{T, FT, TJ, TL} <: AbstractNewtonSolver{T}
     @newton_solver_variables
-    function QuasiNewtonSolver(x, Fparams, Jparams, linear_solver, nmax, atol, rtol, stol)
+    function QuasiNewtonSolver{T,FT,TJ,TL}(x, Fparams, Jparams, linear_solver, nmax, atol, rtol, stol) where {T,FT,TJ,TL}
         J  = zeros(linear_solver.A)
         x₀ = zeros(x)
         x₁ = zeros(x)
@@ -31,7 +31,7 @@ function QuasiNewtonSolver(x::Vector, F!::Function; J=nothing, linear_solver=not
 end
 
 
-function solve!{T}(s::QuasiNewtonSolver{T}; n::Int=0, refactorize::Int=DEFAULT_QUASINEWTON_REFACTORIZE)
+function solve!(s::QuasiNewtonSolver{T}; n::Int=0, refactorize::Int=DEFAULT_QUASINEWTON_REFACTORIZE) where {T}
     local λ::T
     local λₜ::T
     local y₀norm::T

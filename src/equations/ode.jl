@@ -36,7 +36,7 @@ immutable ODE{dType <: Number, tType <: Number, vType <: Function, N} <: Equatio
     q₀::Array{dType,N}
     periodicity::Vector{dType}
 
-    function ODE(d, n, v, t₀, q₀; periodicity=[])
+    function ODE{dType,tType,vType,N}(d, n, v, t₀, q₀; periodicity=[]) where {dType <: Number, tType <: Number, vType <: Function, N}
         @assert d == size(q₀,1)
         @assert n == size(q₀,2)
         @assert dType == eltype(q₀)
@@ -50,7 +50,7 @@ immutable ODE{dType <: Number, tType <: Number, vType <: Function, N} <: Equatio
     end
 end
 
-function ODE{DT <: Number, TT <: Number, VT <: Function}(v::VT, t₀::TT, q₀::DenseArray{DT}; periodicity=[])
+function ODE(v::VT, t₀::TT, q₀::DenseArray{DT}; periodicity=[]) where {DT,TT,VT}
     ODE{DT, TT, VT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), v, t₀, q₀, periodicity=periodicity)
 end
 
@@ -67,11 +67,11 @@ Base.:(==)(ode1::ODE, ode2::ODE) = (
                              && ode1.q₀ == ode2.q₀
                              && ode1.periodicity == ode2.periodicity)
 
-function Base.similar{DT, TT, VT}(ode::ODE{DT,TT,VT}, q₀::DenseArray{DT})
+function Base.similar(ode::ODE{DT,TT,VT}, q₀::DenseArray{DT}) where {DT, TT, VT}
     similar(ode, ode.t₀, q₀)
 end
 
-function Base.similar{DT, TT, VT}(ode::ODE{DT,TT,VT}, t₀::TT, q₀::DenseArray{DT})
+function Base.similar(ode::ODE{DT,TT,VT}, t₀::TT, q₀::DenseArray{DT}) where {DT, TT, VT}
     @assert ode.d == size(q₀,1)
     ODE(ode.v, t₀, q₀)
 end

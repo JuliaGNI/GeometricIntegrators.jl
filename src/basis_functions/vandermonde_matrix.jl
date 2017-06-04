@@ -1,5 +1,5 @@
 
-function vandermonde_matrix{T}(x::Vector{T})
+function vandermonde_matrix(x::Vector{T}) where {T}
     local n = length(x)
 	local V = Array{T,2}(n,n)
 
@@ -10,7 +10,7 @@ function vandermonde_matrix{T}(x::Vector{T})
 	V
 end
 
-function vandermonde_matrix_inverse{T}(x::Vector{T})
+function vandermonde_matrix_inverse(x::Vector{T}) where {T}
     local n = length(x)
 
     local L::Matrix{T} = zeros(n,n)

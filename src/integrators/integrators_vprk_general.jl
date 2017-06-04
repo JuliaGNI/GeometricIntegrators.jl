@@ -1,8 +1,8 @@
 
-abstract AbstractNonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S} <: NonlinearFunctionParameters{DT}
-abstract AbstractIntegratorVPRK{DT,TT} <: Integrator{DT,TT}
+abstract type AbstractNonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S} <: NonlinearFunctionParameters{DT} end
+abstract type AbstractIntegratorVPRK{DT,TT} <: Integrator{DT,TT} end
 
-immutable NonlinearFunctionCacheVPRK{ST}
+struct NonlinearFunctionCacheVPRK{ST}
     Q::Matrix{ST}
     V::Matrix{ST}
     P::Matrix{ST}
@@ -12,7 +12,7 @@ immutable NonlinearFunctionCacheVPRK{ST}
     y::Array{ST,1}
     z::Array{ST,1}
 
-    function NonlinearFunctionCacheVPRK(D,S)
+    function NonlinearFunctionCacheVPRK{ST}(D,S) where {ST}
         # create internal stage vectors
         Q = zeros(ST,D,S)
         V = zeros(ST,D,S)
@@ -28,7 +28,7 @@ immutable NonlinearFunctionCacheVPRK{ST}
     end
 end
 
-immutable NonlinearFunctionCacheVPRKprojection{ST}
+struct NonlinearFunctionCacheVPRKprojection{ST}
     q̅::Vector{ST}
     p̅::Vector{ST}
     λ::Vector{ST}
@@ -43,7 +43,7 @@ immutable NonlinearFunctionCacheVPRKprojection{ST}
     u::Array{ST,1}
     g::Array{ST,1}
 
-    function NonlinearFunctionCacheVPRKprojection(D,S)
+    function NonlinearFunctionCacheVPRKprojection{ST}(D,S) where {ST}
         # create projected solution vectors
         q̅ = zeros(ST,D)
         p̅ = zeros(ST,D)
@@ -91,7 +91,7 @@ function compute_stages_vprk!(x, q̅, p̅, λ, Q, V, U, P, F, G, params)
     compute_stages_p_vprk!(Q, V, P, F, params)
 end
 
-function compute_stages_v_vprk!{ST,DT,TT,AT,FT,D,S}(x::Vector{ST}, V::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+function compute_stages_v_vprk!(x::Vector{ST}, V::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     @assert D == size(V,1)
     @assert S == size(V,2)
 
@@ -103,7 +103,7 @@ function compute_stages_v_vprk!{ST,DT,TT,AT,FT,D,S}(x::Vector{ST}, V::Matrix{ST}
     end
 end
 
-function compute_stages_λ_vprk!{ST,DT,TT,AT,FT,D,S}(x::Vector{ST}, Λ::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+function compute_stages_λ_vprk!(x::Vector{ST}, Λ::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     @assert D == size(Λ,1)
     @assert S == size(Λ,2)
 
@@ -115,7 +115,7 @@ function compute_stages_λ_vprk!{ST,DT,TT,AT,FT,D,S}(x::Vector{ST}, Λ::Matrix{S
     end
 end
 
-function compute_stages_q_vprk!{ST,DT,TT,AT,FT,D,S}(Q::Matrix{ST}, V::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+function compute_stages_q_vprk!(Q::Matrix{ST}, V::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     @assert D == size(Q,1) == size(V,1)
     @assert S == size(Q,2) == size(V,2)
 
@@ -134,7 +134,7 @@ function compute_stages_q_vprk!{ST,DT,TT,AT,FT,D,S}(Q::Matrix{ST}, V::Matrix{ST}
 end
 
 
-function compute_stages_q_vprk!{ST,DT,TT,AT,FT,D,S}(Q::Matrix{ST}, V::Matrix{ST}, U::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+function compute_stages_q_vprk!(Q::Matrix{ST}, V::Matrix{ST}, U::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     @assert D == size(Q,1) == size(V,1) == size(U,1)
     @assert S == size(Q,2) == size(V,2)
 
@@ -153,7 +153,7 @@ function compute_stages_q_vprk!{ST,DT,TT,AT,FT,D,S}(Q::Matrix{ST}, V::Matrix{ST}
 end
 
 
-@generated function compute_stages_p_vprk!{ST,DT,TT,AT,FT,D,S}(Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+@generated function compute_stages_p_vprk!(Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     # create temporary vectors
     tQ = zeros(ST,D)
     tV = zeros(ST,D)
@@ -182,8 +182,8 @@ end
 end
 
 
-function scale_projection!{ST,TT}(Y::Matrix{ST}, Δt::TT, o::Int)
     local scale_fac::TT = Δt^(-1)
+function scale_projection!(Y::Matrix{ST}, Δt::TT, o::Int) where {ST,TT}
 
     # if Δt > 1
     #     scale_fac = Δt^(-o/2)
@@ -194,13 +194,13 @@ function scale_projection!{ST,TT}(Y::Matrix{ST}, Δt::TT, o::Int)
     simd_scale!(Y, scale_fac)
 end
 
-function scale_projection!{ST,TT}(U::Matrix{ST}, G::Matrix{ST}, Δt::TT, o::Int)
+function scale_projection!(U::Matrix{ST}, G::Matrix{ST}, Δt::TT, o::Int) where {ST,TT}
     scale_projection!(U, Δt, o)
     scale_projection!(G, Δt, o)
 end
 
 
-@generated function compute_rhs_vprk!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+@generated function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     compute_stages_vprk = quote
         local z::ST
 
@@ -220,7 +220,7 @@ end
 end
 
 
-@generated function compute_rhs_vprk!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, G::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+@generated function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, G::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     compute_stages_vprk = quote
         local z::ST
 
@@ -240,7 +240,7 @@ end
 end
 
 
-@generated function compute_rhs_vprk!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+@generated function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     compute_stages_vprk = quote
         local z::ST
 
@@ -260,7 +260,7 @@ end
 end
 
 
-function compute_rhs_vprk_projection_q!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, q̅::Vector{ST}, V::Matrix{ST}, U::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+function compute_rhs_vprk_projection_q!(b::Vector{ST}, q̅::Vector{ST}, V::Matrix{ST}, U::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     local y::ST
 
     for k in 1:D
@@ -273,7 +273,7 @@ function compute_rhs_vprk_projection_q!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, q̅::
 end
 
 
-function compute_rhs_vprk_projection_p!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, p̅::Vector{ST}, F::Matrix{ST}, G::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+function compute_rhs_vprk_projection_p!(b::Vector{ST}, p̅::Vector{ST}, F::Matrix{ST}, G::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     local z::ST
 
     for k in 1:D
@@ -286,7 +286,7 @@ function compute_rhs_vprk_projection_p!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, p̅::
 end
 
 
-function compute_rhs_vprk_projection_p!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, p̅::Vector{ST}, F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+function compute_rhs_vprk_projection_p!(b::Vector{ST}, p̅::Vector{ST}, F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     local z::ST
 
     for k in 1:D
@@ -299,7 +299,7 @@ function compute_rhs_vprk_projection_p!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, p̅::
 end
 
 
-@generated function compute_rhs_vprk_correction!{ST,DT,TT,AT,FT,D,S}(b::Vector{ST}, V::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S})
+@generated function compute_rhs_vprk_correction!(b::Vector{ST}, V::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     μ = zeros(ST,D)
 
     compute_stages_vprk = quote
@@ -335,7 +335,7 @@ end
 end
 
 
-function update_solution!{DT,TT}(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRK{DT})
+function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRK{DT}) where {DT,TT}
     for k in 1:size(cache.V, 1)
         for i in 1:size(cache.V, 2)
             int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.q.b[i] * cache.V[k,i], int.q[k], int.qₑᵣᵣ[k])
@@ -350,7 +350,7 @@ function update_solution!{DT,TT}(int::AbstractIntegratorVPRK{DT,TT}, cache::Nonl
 end
 
 
-function project_solution!{DT,TT}(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRKprojection{DT}, R::Vector{TT})
+function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRKprojection{DT}, R::Vector{TT}) where {DT,TT}
     for k in 1:size(cache.U, 1)
         for i in 1:size(cache.U, 2)
             int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * R[i] * cache.U[k,i], int.q[k], int.qₑᵣᵣ[k])

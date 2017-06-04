@@ -94,27 +94,29 @@ g'(1) &= f'_1 .
 \\end{align*}
 ```
 """
-immutable HermiteInterpolation{T} <: Interpolator{T}
+struct HermiteInterpolation{T} <: Interpolator{T}
     x₀::T
     x₁::T
     Δx::T
 
-    function HermiteInterpolation(x₀, x₁, Δx, d)
+    function HermiteInterpolation{T}(x₀, x₁, Δx, d) where {T}
         new(x₀, x₁, Δx)
     end
 end
 
-function HermiteInterpolation{T}(x₀::T, x₁::T, Δx::T, d::Int)
+function HermiteInterpolation(x₀::T, x₁::T, Δx::T, d::Int) where {T}
     HermiteInterpolation{T}(x₀, x₁, Δx, d)
 end
 
 
-function CommonFunctions.evaluate!{T}(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x::T, y::Vector{T})
+function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x, y::Vector{T}) where {T}
     local a₀::T
     local a₁::T
     local b₀::T
     local b₁::T
     local den::T
+
+    x = convert(T, x)
 
     # Interpolate y values at required locations
     if x == int.x₀
@@ -134,12 +136,14 @@ function CommonFunctions.evaluate!{T}(int::HermiteInterpolation{T}, y₀::Vector
     end
 end
 
-function CommonFunctions.evaluate!{T}(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x::T, y::Vector{T}, f::Vector{T})
+function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x, y::Vector{T}, f::Vector{T}) where {T}
     local a₀::T
     local a₁::T
     local b₀::T
     local b₁::T
     local den::T
+
+    x = convert(T, x)
 
     evaluate!(int, y₀, y₁, f₀, f₁, x, y)
 

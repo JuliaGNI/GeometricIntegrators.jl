@@ -1,6 +1,6 @@
 
 "Holds the tableau of an variational special partitioned additive Runge-Kutta method."
-immutable TableauVSPARK{T} <: AbstractTableau{T}
+struct TableauVSPARK{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int
@@ -18,7 +18,7 @@ immutable TableauVSPARK{T} <: AbstractTableau{T}
     ω::Matrix{T}
     d::Vector{T}
 
-    function TableauVSPARK(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, d)
+    function TableauVSPARK{T}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, d) where {T}
         @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
@@ -37,7 +37,7 @@ immutable TableauVSPARK{T} <: AbstractTableau{T}
         new(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, d)
     end
 
-    function TableauVSPARK(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω)
+    function TableauVSPARK{T}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω) where {T}
         @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
@@ -57,16 +57,16 @@ immutable TableauVSPARK{T} <: AbstractTableau{T}
     end
 end
 
-function TableauVSPARK{T <: Real}(name::Symbol, order::Int,
-                        a_q::Matrix{T}, a_p::Matrix{T},
-                        α_q::Matrix{T}, α_p::Matrix{T},
-                        a_q̃::Matrix{T}, a_p̃::Matrix{T},
-                        α_q̃::Matrix{T}, α_p̃::Matrix{T},
-                        b_q::Vector{T}, b_p::Vector{T},
-                        β_q::Vector{T}, β_p::Vector{T},
-                        c_q::Vector{T}, c_p::Vector{T},
-                        c_λ::Vector{T}, d_λ::Vector{T},
-                        ω_λ::Matrix{T}, d::Vector{T})
+function TableauVSPARK(name::Symbol, order::Int,
+                         a_q::Matrix{T}, a_p::Matrix{T},
+                         α_q::Matrix{T}, α_p::Matrix{T},
+                         a_q̃::Matrix{T}, a_p̃::Matrix{T},
+                         α_q̃::Matrix{T}, α_p̃::Matrix{T},
+                         b_q::Vector{T}, b_p::Vector{T},
+                         β_q::Vector{T}, β_p::Vector{T},
+                         c_q::Vector{T}, c_p::Vector{T},
+                         c_λ::Vector{T}, d_λ::Vector{T},
+                         ω_λ::Matrix{T}, d::Vector{T}) where {T <: Real}
 
     s = length(c_q)
     r = length(c_λ)
@@ -96,16 +96,16 @@ function TableauVSPARK{T <: Real}(name::Symbol, order::Int,
 end
 
 
-function TableauVSPARK{T <: Real}(name::Symbol, order::Int,
-                        a_q::Matrix{T}, a_p::Matrix{T},
-                        α_q::Matrix{T}, α_p::Matrix{T},
-                        a_q̃::Matrix{T}, a_p̃::Matrix{T},
-                        α_q̃::Matrix{T}, α_p̃::Matrix{T},
-                        b_q::Vector{T}, b_p::Vector{T},
-                        β_q::Vector{T}, β_p::Vector{T},
-                        c_q::Vector{T}, c_p::Vector{T},
-                        c_λ::Vector{T}, d_λ::Vector{T},
-                        ω_λ::Matrix{T})
+function TableauVSPARK(name::Symbol, order::Int,
+                         a_q::Matrix{T}, a_p::Matrix{T},
+                         α_q::Matrix{T}, α_p::Matrix{T},
+                         a_q̃::Matrix{T}, a_p̃::Matrix{T},
+                         α_q̃::Matrix{T}, α_p̃::Matrix{T},
+                         b_q::Vector{T}, b_p::Vector{T},
+                         β_q::Vector{T}, β_p::Vector{T},
+                         c_q::Vector{T}, c_p::Vector{T},
+                         c_λ::Vector{T}, d_λ::Vector{T},
+                         ω_λ::Matrix{T}) where {T <: Real}
 
     s = length(c_q)
     r = length(c_λ)

@@ -4,7 +4,7 @@ using ..Interpolation
 using ..Tableaus
 
 
-type InitialGuessODE{DT, TT, VT, IT <: Interpolator}
+mutable struct InitialGuessODE{DT, TT, VT, IT <: Interpolator}
     int::IT
 
     rk4::IntegratorERK{DT,TT,VT}
@@ -23,14 +23,14 @@ type InitialGuessODE{DT, TT, VT, IT <: Interpolator}
     q₁::Vector{DT}
     v₁::Vector{DT}
 
-    function InitialGuessODE(interp, rk4, sol, v, Δt, d, periodicity)
+    function InitialGuessODE{DT,TT,VT,IT}(interp, rk4, sol, v, Δt, d, periodicity) where {DT,TT,VT,IT}
         new(interp, rk4, sol, v, Δt, 0, 0, periodicity,
             zeros(DT,d), zeros(DT,d),
             zeros(DT,d), zeros(DT,d))
     end
 end
 
-function InitialGuessODE{DT,TT,VT,N}(interp, equation::ODE{DT,TT,VT,N}, Δt::TT; periodicity=[])
+function InitialGuessODE(interp, equation::ODE{DT,TT,VT,N}, Δt::TT; periodicity=[]) where {DT,TT,VT,N}
     if N > 1
         equ = similar(equation, equation.q₀[:,1])
     else
@@ -47,7 +47,7 @@ function InitialGuessODE{DT,TT,VT,N}(interp, equation::ODE{DT,TT,VT,N}, Δt::TT;
     InitialGuessODE{DT, TT, VT, interp}(int, rk4, sol, equ.v, Δt, equ.d, periodicity)
 end
 
-function initialize!{DT,TT,VT,IT}(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, x₁::Vector{DT})
+function initialize!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, x₁::Vector{DT}) where {DT,TT,VT,IT}
     ig.t₁ = t₁
     set_initial_conditions!(ig.sol, t₁, x₁)
     integrate!(ig.rk4, ig.sol)
@@ -55,7 +55,7 @@ function initialize!{DT,TT,VT,IT}(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, x�
     ig.v(t₁-ig.Δt, ig.q₁, ig.v₁)
 end
 
-function update!{DT,TT,VT,IT}(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, x₁::Vector{DT})
+function update!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, x₁::Vector{DT}) where {DT,TT,VT,IT}
     local Δq::DT
 
     ig.t₀ = ig.t₁
@@ -80,12 +80,12 @@ function update!{DT,TT,VT,IT}(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, x₁::
     ig.v(t₁, ig.q₁, ig.v₁)
 end
 
-function CommonFunctions.evaluate!{DT,TT,VT,IT}(ig::InitialGuessODE{DT,TT,VT,IT}, guess::Vector{DT}, c::TT=one(TT))
+function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT,VT,IT}, guess::Vector{DT}, c::TT=one(TT)) where {DT,TT,VT,IT}
     evaluate!(ig.int, ig.q₀, ig.q₁, ig.v₀, ig.v₁, one(TT)+c, guess)
 end
 
-function CommonFunctions.evaluate!{DT,TT,VT,IT}(ig::InitialGuessODE{DT,TT,VT,IT},
-           guess_q::Vector{DT}, guess_v::Vector{DT}, c::TT=one(TT))
+function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT,VT,IT},
+           guess_q::Vector{DT}, guess_v::Vector{DT}, c::TT=one(TT)) where {DT,TT,VT,IT}
 
     @assert length(guess_q) == length(guess_v)
 

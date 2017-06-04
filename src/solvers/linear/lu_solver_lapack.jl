@@ -4,24 +4,24 @@ import Base.LinAlg.BLAS: BlasFloat, BlasInt, liblapack, @blasfunc
 #import Base.LinAlg.LAPACK: chkargsok, chklapackerror, chktrans
 
 
-immutable LUSolverLAPACK{T<:BlasFloat} <: LinearSolver{T}
+struct LUSolverLAPACK{T<:BlasFloat} <: LinearSolver{T}
     n::BlasInt
     A::Matrix{T}
     b::Vector{T}
     pivots::Vector{BlasInt}
     info::BlasInt
 
-    LUSolverLAPACK(n::BlasInt) = new(n, zeros(T, n, n), zeros(T, n), zeros(BlasInt, n), 0)
+    LUSolverLAPACK{T}(n::BlasInt) where {T} = new(n, zeros(T, n, n), zeros(T, n), zeros(BlasInt, n), 0)
 end
 
-function LUSolverLAPACK{T}(A::Matrix{T})
+function LUSolverLAPACK(A::Matrix{T}) where {T}
     n = checksquare(A)
     lu = LUSolverLAPACK{eltype(A)}(n)
     lu.A .= A
     lu
 end
 
-function LUSolverLAPACK{T}(A::Matrix{T}, b::Vector{T})
+function LUSolverLAPACK(A::Matrix{T}, b::Vector{T}) where {T}
     n = checksquare(A)
     @assert n == length(b)
     lu = LUSolverLAPACK{eltype(A)}(n)

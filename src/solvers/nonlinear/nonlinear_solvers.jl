@@ -1,9 +1,9 @@
 
-abstract NonlinearSolver{T}
+abstract type NonlinearSolver{T} end
 
 solve!(s::NonlinearSolver) = error("solve! not implemented for $(typeof(s))")
 
-function solve!{T}(s::NonlinearSolver{T}, x₀::Vector{T})
+function solve!(s::NonlinearSolver{T}, x₀::Vector{T}) where {T}
     setInitialConditions!(s, x₀)
     solve!(s)
 end
@@ -17,14 +17,14 @@ const DEFAULT_nmax=1000
 const DEFAULT_nwarn=100
 const DEFAULT_ϵ=4sqrt(eps())
 
-abstract NonlinearFunctionParameters{T}
+abstract type NonlinearFunctionParameters{T} end
 
-function function_stages!{DT,TT}(y::Vector{DT}, b::Vector{TT}, params::NonlinearFunctionParameters{DT})
+function function_stages!(y::Vector{DT}, b::Vector{TT}, params::NonlinearFunctionParameters{DT}) where {DT,TT}
     error("No function_stages implemented for this integrator.")
 end
 
 
-immutable NonlinearSolverParameters{T}
+struct NonlinearSolverParameters{T}
     nmax::Int   # maximum number of iterations
 
     atol::T     # absolute tolerance
@@ -35,7 +35,7 @@ immutable NonlinearSolverParameters{T}
     rtol²::T
     stol²::T
 
-    function NonlinearSolverParameters(nmax, atol, rtol, stol)
+    function NonlinearSolverParameters{T}(nmax, atol, rtol, stol) where {T}
         @assert nmax > 0
         @assert atol > 0
         @assert rtol > 0
@@ -46,7 +46,7 @@ immutable NonlinearSolverParameters{T}
 end
 
 
-type NonlinearSolverStatus{T}
+mutable struct NonlinearSolverStatus{T}
     i::Int         # iteration number
     rₐ::T          # residual (absolute)
     rᵣ::T          # residual (relative)
@@ -55,7 +55,7 @@ type NonlinearSolverStatus{T}
     y₀::Vector{T}  # initial solution
     yₚ::Vector{T}  # previous solution
 
-    NonlinearSolverStatus(n) = new(0, 0, 0, 0, zeros(T,n), zeros(T,n), zeros(T,n))
+    NonlinearSolverStatus{T}(n) where {T} = new(0, 0, 0, 0, zeros(T,n), zeros(T,n), zeros(T,n))
 end
 
 Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
@@ -88,7 +88,7 @@ function getLinearSolver(T, n, linear_solver)
 end
 
 
-function residual_initial!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
+function residual_initial!(status::NonlinearSolverStatus{T}, y::Vector{T}) where {T}
     @assert length(y) == length(status.r₀)
     @inbounds for i in 1:length(status.r₀)
         status.r₀[i] = y[i]^2
@@ -99,14 +99,14 @@ function residual_initial!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
     simd_copy!(y, status.yₚ)
 end
 
-function residual!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
+function residual!(status::NonlinearSolverStatus{T}, y::Vector{T}) where {T}
     residual_absolute!(status, y)
     residual_relative!(status, y)
     residual_successive!(status, y)
     simd_copy!(y, status.yₚ)
 end
 
-function residual_absolute!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
+function residual_absolute!(status::NonlinearSolverStatus{T}, y::Vector{T}) where {T}
     @assert length(y) == length(status.r₀)
     status.rₐ = 0
     @inbounds for yᵢ in y
@@ -114,7 +114,7 @@ function residual_absolute!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
     end
 end
 
-function residual_relative!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
+function residual_relative!(status::NonlinearSolverStatus{T}, y::Vector{T}) where {T}
     @assert length(y) == length(status.r₀)
     status.rᵣ = 0
     @inbounds for i in 1:length(y)
@@ -122,7 +122,7 @@ function residual_relative!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
     end
 end
 
-function residual_successive!{T}(status::NonlinearSolverStatus{T}, y::Vector{T})
+function residual_successive!(status::NonlinearSolverStatus{T}, y::Vector{T}) where {T}
     @assert length(y) == length(status.yₚ)
     status.rₛ = 0
     @inbounds for i in 1:length(y)

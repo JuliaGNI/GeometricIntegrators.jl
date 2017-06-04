@@ -45,7 +45,7 @@ immutable PDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Fun
     p₀::Array{dType, N}
     λ₀::Array{dType, N}
 
-    function PDAE(d, m, n, v, f, u, g, ϕ, t₀, q₀, p₀, λ₀)
+    function PDAE{dType,tType,vType,fType,uType,gType,ϕType,N}(d, m, n, v, f, u, g, ϕ, t₀, q₀, p₀, λ₀) where {dType <: Number, tType <: Number, vType <: Function, fType <: Function, uType <: Function, gType <: Function, ϕType <: Function, N}
         @assert d == size(q₀,1) == size(p₀,1)
         @assert m == size(λ₀,1)
         @assert n == size(q₀,2) == size(p₀,2) == size(λ₀,2)
@@ -61,7 +61,7 @@ immutable PDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Fun
     end
 end
 
-function PDAE{DT, TT, VT, FT, UT, GT, ΦT}(v::VT, f::FT, u::UT, g::GT, ϕ::ΦT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT})
+function PDAE(v::VT, f::FT, u::UT, g::GT, ϕ::ΦT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}) where {DT,TT,VT,FT,UT,GT,ΦT}
     @assert size(q₀) == size(p₀)
     @assert size(q₀,2) == size(λ₀,2)
     PDAE{DT, TT, VT, FT, UT, GT, ΦT, ndims(q₀)}(size(q₀, 1), size(λ₀, 1), size(q₀, 2), v, f, u, g, ϕ, t₀, q₀, p₀, λ₀)

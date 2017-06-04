@@ -1,16 +1,16 @@
 
 "Holds the tableau of a Runge-Kutta method."
-abstract AbstractTableauRK{T} <: AbstractTableau{T <: Real}
+abstract type AbstractTableauRK{T} <: AbstractTableau{T <: Real} end
 
 "Holds the tableau of an implicit Runge-Kutta method."
-abstract AbstractTableauIRK{T} <: AbstractTableauRK{T}
+abstract type AbstractTableauIRK{T} <: AbstractTableauRK{T} end
 
 "Holds the tableau of a partitioned Runge-Kutta method."
-abstract AbstractTableauPRK{T} <: AbstractTableauRK{T}
+abstract type AbstractTableauPRK{T} <: AbstractTableauRK{T} end
 
-Base.:(==){T1, T2}(tab1::AbstractTableauRK{T1}, tab2::AbstractTableauRK{T2}) = (tab1.q == tab2.q && tab1.o == tab2.o && tab1.s == tab2.s)
+Base.:(==)(tab1::AbstractTableauRK, tab2::AbstractTableauRK) = (tab1.q == tab2.q && tab1.o == tab2.o && tab1.s == tab2.s)
 
-Base.isequal{T1, T2}(tab1::AbstractTableauRK{T1}, tab2::AbstractTableauRK{T2}) = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
+Base.isequal(tab1::AbstractTableauRK{T1}, tab2::AbstractTableauRK{T2}) where {T1, T2} = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
 
 "Reads and parses Tableau metadata from file."
 function readTableauRKHeaderFromFile(file)
@@ -46,7 +46,7 @@ function readTableauRKHeaderFromFile(file)
 end
 
 "Write Runge-Kutta tableau to file."
-function writeTableauToFile{T}(dir::AbstractString, tab::AbstractTableauRK{T})
+function writeTableauToFile(dir::AbstractString, tab::AbstractTableauRK{T}) where {T}
     # tab_array = zeros(T, S+1, S+1)
     # tab_array[1:S, 2:S+1] = tab.q.a
     # tab_array[S+1, 2:S+1] = tab.q.b

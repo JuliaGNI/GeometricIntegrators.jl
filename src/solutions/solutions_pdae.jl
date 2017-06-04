@@ -1,9 +1,9 @@
 
-abstract SolutionPDAE{dType, tType, N} <: Solution{dType, tType, N}
+abstract type SolutionPDAE{dType, tType, N} <: Solution{dType, tType, N} end
 
 
 "Serial Solution of a partitioned differential algebraic equation."
-immutable SSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
+struct SSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
     nd::Int
     nm::Int
     nt::Int
@@ -16,7 +16,7 @@ immutable SSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
     nsave::Int
 end
 
-function SSolutionPDAE{DT,TT}(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1)
+function SSolutionPDAE(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
     N  = equation.n > 1 ? 3 : 2
     nd = equation.d
     nm = equation.m
@@ -43,7 +43,7 @@ end
 
 
 "Parallel Solution of a partitioned differential algebraic equation."
-immutable PSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
+struct PSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
     nd::Int
     nm::Int
     nt::Int
@@ -56,7 +56,7 @@ immutable PSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
     nsave::Int
 end
 
-function PSolutionPDAE{DT,TT}(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1)
+function PSolutionPDAE(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
     N  = equation.n > 1 ? 3 : 2
     nd = equation.d
     nm = equation.m
@@ -82,33 +82,33 @@ function PSolutionPDAE{DT,TT}(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT
 end
 
 
-function set_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, equ::Union{PDAE{DT,TT},IDAE{DT,TT}})
+function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, equ::Union{PDAE{DT,TT},IDAE{DT,TT}}) where {DT,TT}
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, equ.λ₀)
 end
 
-function set_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, equ::IODE{DT,TT})
+function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, equ::IODE{DT,TT}) where {DT,TT}
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, zeros(equ.q₀))
 end
 
-function set_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, t₀::TT, q₀::Array{DT}, p₀::Array{DT}, λ₀::Array{DT})
+function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, t₀::TT, q₀::Array{DT}, p₀::Array{DT}, λ₀::Array{DT}) where {DT,TT}
     set_data!(sol.q, q₀, 0)
     set_data!(sol.p, p₀, 0)
     set_data!(sol.λ, λ₀, 0)
     compute_timeseries!(sol.t, t₀)
 end
 
-function get_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, λ::Vector{DT}, k)
+function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, λ::Vector{DT}, k) where {DT,TT}
     get_data!(sol.q, q, 0, k)
     get_data!(sol.p, p, 0, k)
     get_data!(sol.λ, λ, 0, k)
 end
 
-function get_initial_conditions!{DT,TT}(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, k)
+function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, k) where {DT,TT}
     get_data!(sol.q, q, 0, k)
     get_data!(sol.p, p, 0, k)
 end
 
-function copy_solution!{DT,TT}(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, λ::Vector{DT}, n, k)
+function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, λ::Vector{DT}, n, k) where {DT,TT}
     if mod(n, sol.nsave) == 0
         j = div(n, sol.nsave)
         set_data!(sol.q, q, j, k)
@@ -117,7 +117,7 @@ function copy_solution!{DT,TT}(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vecto
     end
 end
 
-function copy_solution!{DT,TT}(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, n, k)
+function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, n, k) where {DT,TT}
     if mod(n, sol.nsave) == 0
         j = div(n, sol.nsave)
         set_data!(sol.q, q, j, k)

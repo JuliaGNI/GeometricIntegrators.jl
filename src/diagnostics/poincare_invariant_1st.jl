@@ -1,5 +1,5 @@
 
-immutable PoincareInvariant1st{ET,DT,TT,ΘT}
+struct PoincareInvariant1st{ET,DT,TT,ΘT}
     equ::ET
     Θ::ΘT
     Δt::TT
@@ -13,8 +13,8 @@ immutable PoincareInvariant1st{ET,DT,TT,ΘT}
     nmax::Int
 end
 
-function PoincareInvariant1st{DT,TT,ΘT}(equ::Equation{DT,TT}, Θ::ΘT, Δt::TT, nloop::Int, ntime::Int, nsave::Int, nplot::Int, odir::String;
-                                        atol::DT=2*eps(), rtol::DT=2*eps(), nmax::Int=100)
+function PoincareInvariant1st(equ::Equation{DT,TT}, Θ::ΘT, Δt::TT, nloop::Int, ntime::Int, nsave::Int, nplot::Int, odir::String;
+                              atol::DT=2*eps(), rtol::DT=2*eps(), nmax::Int=100) where {DT,TT,ΘT}
 
     println()
     println("First Euler-Poincaré Integral Invariant")
@@ -99,7 +99,7 @@ function compute_velocity(γ, γ̇)
 end
 
 
-function compute_loop_integral{T}(p::Array{T,2}, v::Array{T,2})
+function compute_loop_integral(p::Array{T,2}, v::Array{T,2}) where {T}
     local result = zero(T)
     local error  = zero(T)
 

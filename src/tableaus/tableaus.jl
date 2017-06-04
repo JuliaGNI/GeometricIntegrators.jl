@@ -1,6 +1,6 @@
 
 "Holds the information for the various methods' tableaus."
-abstract AbstractTableau{T}
+abstract type AbstractTableau{T} end
 
 
 @define HeaderTableau begin

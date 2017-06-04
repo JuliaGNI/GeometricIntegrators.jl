@@ -19,19 +19,19 @@ b_{i} \\bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 \\end{align*}
 ```
 """
-immutable TableauIPRK{T} <: AbstractTableauPRK{T}
+struct TableauIPRK{T} <: AbstractTableauPRK{T}
     @HeaderTableau
 
     q::CoefficientsRK{T}
     p::CoefficientsRK{T}
 
-    function TableauIPRK(name, o, q, p)
+    function TableauIPRK{T}(name, o, q, p) where {T}
         @assert q.s==p.s
         new(name, o, q.s, q, p)
     end
 end
 
-function TableauIPRK{T}(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T})
+function TableauIPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}) where {T}
     TableauIPRK{T}(name, order, q, p)
 end
 

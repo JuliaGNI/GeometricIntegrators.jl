@@ -1,6 +1,6 @@
 
 "Additive Runge Kutta integrator."
-immutable IntegratorARK{DT,TT,VT,UT,ΦT} <: Integrator{DT,TT}
+struct IntegratorARK{DT,TT,VT,UT,ΦT} <: Integrator{DT,TT}
     equation::DAE{DT,TT,VT,UT,ΦT}
     tableau::TableauARK{TT}
 

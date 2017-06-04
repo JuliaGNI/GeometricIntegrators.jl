@@ -78,7 +78,7 @@ immutable VODE{dType <: Number, tType <: Number, αType <: Function, fType <: Fu
     p₀::Array{dType, N}
     periodicity::Vector{dType}
 
-    function VODE(d, n, α, f, g, v, ω, dH, t₀, q₀, p₀; periodicity=[])
+    function VODE{dType,tType,αType,fType,gType,vType,ωType,dHType,N}(d, n, α, f, g, v, ω, dH, t₀, q₀, p₀; periodicity=[]) where {dType <: Number, tType <: Number, αType <: Number, fType <: Number, gType <: Number, vType <: Number, ωType <: Number, dHType <: Number, N}
         @assert d == size(q₀,1) == size(p₀,1)
         @assert n == size(q₀,2) == size(p₀,2)
         @assert dType == eltype(q₀) == eltype(p₀)
@@ -93,7 +93,7 @@ immutable VODE{dType <: Number, tType <: Number, αType <: Function, fType <: Fu
 end
 
 
-function VODE{DT,TT,ΑT,FT,GT,VT,ΩT,HT}(α::ΑT, f::FT, g::GT, v::VT, ω::ΩT, dH::HT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}; periodicity=[])
+function VODE(α::ΑT, f::FT, g::GT, v::VT, ω::ΩT, dH::HT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}; periodicity=[]) where {DT,TT,ΑT,FT,GT,VT,ΩT,HT}
     @assert size(q₀) == size(p₀)
     VODE{DT, TT, ΑT, FT, GT, VT, ΩT, HT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), α, f, g, v, ω, dH, t₀, q₀, p₀, periodicity=periodicity)
 end

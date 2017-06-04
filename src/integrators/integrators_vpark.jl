@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of variational partitioned additive Runge-Kutta methods."
-type NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctionParameters{DT}
+mutable struct NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctionParameters{DT}
     f_f::FT
     f_p::PT
     f_u::UT
@@ -58,7 +58,7 @@ type NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
     Gt::Vector{DT}
     Φt::Vector{DT}
 
-    function NonlinearFunctionParametersVPARK(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, t_q, t_p, t_q̃, t_p̃, t_λ, d_v)
+    function NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT}(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, t_q, t_p, t_q̃, t_p̃, t_λ, d_v) where {DT,TT,FT,PT,UT,GT,ϕT}
         # create solution vectors
         q = zeros(DT,d)
         v = zeros(DT,d)
@@ -108,7 +108,7 @@ type NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctio
 end
 
 "Compute stages of variational partitioned additive Runge-Kutta methods."
-function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT})
+function function_stages!(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT}) where {DT,TT,FT,PT,UT,GT,ϕT}
     local tpᵢ::TT
     local tλᵢ::TT
 
@@ -224,7 +224,7 @@ end
 
 
 "Variational partitioned additive Runge-Kutta integrator."
-immutable IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integrator{DT, TT}
+struct IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integrator{DT, TT}
     equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}
     tableau::TableauVPARK{TT}
     Δt::TT
@@ -249,11 +249,11 @@ immutable IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integ
     G::Array{DT,2}
 end
 
-function IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
-                                               tableau::TableauVPARK{TT}, Δt::TT;
-                                               nonlinear_solver=DEFAULT_NonlinearSolver,
-                                               nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
-                                               interpolation=HermiteInterpolation{DT})
+function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
+                         tableau::TableauVPARK{TT}, Δt::TT;
+                         nonlinear_solver=DEFAULT_NonlinearSolver,
+                         nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
+                         interpolation=HermiteInterpolation{DT}) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
     D = equation.d
     S = tableau.s
     R = tableau.r

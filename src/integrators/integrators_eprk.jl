@@ -1,6 +1,6 @@
 
 "Explicit partitioned Runge-Kutta integrator."
-immutable IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
+struct IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
     equation::PODE{DT,TT,VT,FT}
     tableau::TableauEPRK{TT}
     Δt::TT
@@ -20,7 +20,7 @@ immutable IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
     tF::Array{DT,1}
     tG::Array{DT,1}
 
-    function IntegratorEPRK(equation, tableau, Δt)
+    function IntegratorEPRK{DT,TT,VT,FT}(equation, tableau, Δt) where {DT,TT,VT,FT}
         D = equation.d
         S = tableau.s
         new(equation, tableau, Δt,
@@ -34,7 +34,7 @@ immutable IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
     end
 end
 
-function IntegratorEPRK{DT,TT,VT,FT}(equation::PODE{DT,TT,VT,FT}, tableau::TableauEPRK{TT}, Δt::TT)
+function IntegratorEPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauEPRK{TT}, Δt::TT) where {DT,TT,VT,FT}
     IntegratorEPRK{DT,TT,VT,FT}(equation, tableau, Δt)
 end
 
@@ -80,7 +80,7 @@ function initialize!(int::IntegratorEPRK, sol::SolutionPODE, m::Int)
 end
 
 "Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
-function integrate_step!{DT,TT,VT,FT,N}(int::IntegratorEPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N}, m::Int, n::Int)
+function integrate_step!(int::IntegratorEPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,VT,FT,N}
     local j::Int
     local tqᵢ::TT
     local tpᵢ::TT

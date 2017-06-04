@@ -1,2 +1,2 @@
 
-abstract Interpolator{T}
+abstract type Interpolator{T} end

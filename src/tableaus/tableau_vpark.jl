@@ -1,6 +1,6 @@
 
 "Holds the tableau of an variational partitioned additive Runge-Kutta method."
-immutable TableauVPARK{T} <: AbstractTableau{T}
+struct TableauVPARK{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int
@@ -16,7 +16,7 @@ immutable TableauVPARK{T} <: AbstractTableau{T}
 
     d::Vector{T}
 
-    function TableauVPARK(name, o, s, r, q, p, q̃, p̃, λ, d)
+    function TableauVPARK{T}(name, o, s, r, q, p, q̃, p̃, λ, d) where {T}
         @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
@@ -31,7 +31,7 @@ immutable TableauVPARK{T} <: AbstractTableau{T}
         new(name, o, s, r, q, p, q̃, p̃, λ, d)
     end
 
-    function TableauVPARK(name, o, s, r, q, p, q̃, p̃, λ)
+    function TableauVPARK{T}(name, o, s, r, q, p, q̃, p̃, λ) where {T}
         @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
@@ -47,7 +47,7 @@ immutable TableauVPARK{T} <: AbstractTableau{T}
     end
 end
 
-function TableauVPARK{T <: Real}(name::Symbol, order::Int,
+function TableauVPARK(name::Symbol, order::Int,
                         a_q::Matrix{T}, a_p::Matrix{T},
                         α_q::Matrix{T}, α_p::Matrix{T},
                         a_q̃::Matrix{T}, a_p̃::Matrix{T},
@@ -56,7 +56,7 @@ function TableauVPARK{T <: Real}(name::Symbol, order::Int,
                         β_q::Vector{T}, β_p::Vector{T},
                         c_q::Vector{T}, c_p::Vector{T},
                         c_λ::Vector{T}, d_λ::Vector{T},
-                        d::Vector{T})
+                        d::Vector{T}) where {T <: Real}
 
     s = length(c_q)
     r = length(c_λ)
@@ -85,7 +85,7 @@ function TableauVPARK{T <: Real}(name::Symbol, order::Int,
 end
 
 
-function TableauVPARK{T <: Real}(name::Symbol, order::Int,
+function TableauVPARK(name::Symbol, order::Int,
                         a_q::Matrix{T}, a_p::Matrix{T},
                         α_q::Matrix{T}, α_p::Matrix{T},
                         a_q̃::Matrix{T}, a_p̃::Matrix{T},
@@ -93,7 +93,7 @@ function TableauVPARK{T <: Real}(name::Symbol, order::Int,
                         b_q::Vector{T}, b_p::Vector{T},
                         β_q::Vector{T}, β_p::Vector{T},
                         c_q::Vector{T}, c_p::Vector{T},
-                        c_λ::Vector{T}, d_λ::Vector{T})
+                        c_λ::Vector{T}, d_λ::Vector{T}) where {T <: Real}
 
     s = length(c_q)
     r = length(c_λ)

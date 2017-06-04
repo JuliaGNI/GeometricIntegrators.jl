@@ -21,7 +21,7 @@ b_{i} \\bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 \\end{align*}
 ```
 """
-immutable TableauVPRK{T} <: AbstractTableauPRK{T}
+struct TableauVPRK{T} <: AbstractTableauPRK{T}
     @HeaderTableau
 
     q::CoefficientsRK{T}
@@ -31,22 +31,22 @@ immutable TableauVPRK{T} <: AbstractTableauPRK{T}
 
     d::Vector{T}
 
-    function TableauVPRK(name, o, q, p, R∞, d)
+    function TableauVPRK{T}(name, o, q, p, R∞, d) where {T}
         @assert q.s == p.s == length(d)
         new(name, o, q.s, q, p, R∞, d)
     end
 
-    function TableauVPRK(name, o, q, p, R∞)
+    function TableauVPRK{T}(name, o, q, p, R∞) where {T}
         @assert q.s == p.s
         new(name, o, q.s, q, p, R∞)
     end
 end
 
-function TableauVPRK{T}(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int, d::Vector{T})
+function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int, d::Vector{T}) where {T}
     TableauVPRK{T}(name, order, q, p, R∞, d)
 end
 
-function TableauVPRK{T}(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int)
+function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int) where {T}
     TableauVPRK{T}(name, order, q, p, R∞)
 end
 

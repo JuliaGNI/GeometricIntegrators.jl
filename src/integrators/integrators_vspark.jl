@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of variational special partitioned additive Runge-Kutta methods."
-type NonlinearFunctionParametersVSPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctionParameters{DT}
+mutable struct NonlinearFunctionParametersVSPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctionParameters{DT}
     f_f::FT
     f_p::PT
     f_u::UT
@@ -63,7 +63,7 @@ type NonlinearFunctionParametersVSPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFuncti
     Gt::Vector{DT}
     Φt::Vector{DT}
 
-    function NonlinearFunctionParametersVSPARK(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, ρ, t_q, t_p, t_q̃, t_p̃, t_λ, ω_λ, d_v)
+    function NonlinearFunctionParametersVSPARK{DT,TT,FT,PT,UT,GT,ϕT}(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, ρ, t_q, t_p, t_q̃, t_p̃, t_λ, ω_λ, d_v) where {DT,TT,FT,PT,UT,GT,ϕT}
         # create solution vectors
         q = zeros(DT,d)
         v = zeros(DT,d)
@@ -118,7 +118,7 @@ type NonlinearFunctionParametersVSPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFuncti
 end
 
 "Compute stages of variational special partitioned additive Runge-Kutta methods."
-function function_stages!{DT,TT,FT,PT,UT,GT,ϕT}(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersVSPARK{DT,TT,FT,PT,UT,GT,ϕT})
+function function_stages!(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersVSPARK{DT,TT,FT,PT,UT,GT,ϕT}) where {DT,TT,FT,PT,UT,GT,ϕT}
     local offset::Int
     local tpᵢ::TT
     local tλᵢ::TT
@@ -286,11 +286,10 @@ immutable IntegratorVSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Inte
     G::Array{DT,2}
 end
 
-function IntegratorVSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
-                                               tableau::TableauVSPARK{TT}, Δt::TT;
-                                               nonlinear_solver=DEFAULT_NonlinearSolver,
-                                               nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
-                                               interpolation=HermiteInterpolation{DT})
+function IntegratorVSPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, tableau::TableauVSPARK{TT}, Δt::TT;
+                          nonlinear_solver=DEFAULT_NonlinearSolver,
+                          nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
+                          interpolation=HermiteInterpolation{DT}) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
     D = equation.d
     S = tableau.s
     R = tableau.r
@@ -345,7 +344,7 @@ function initialize!(int::IntegratorVSPARK, sol::Union{SolutionPDAE, PSolutionPD
 end
 
 "Integrate DAE with variational special partitioned additive Runge-Kutta integrator."
-function integrate_step!{DT,TT,FT,PT,UT,GT,ϕT,VT,N}(int::IntegratorVSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int)
+function integrate_step!(int::IntegratorVSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,PT,UT,GT,ϕT,VT,N}
     local offset::Int
 
     # set time for nonlinear solver

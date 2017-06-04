@@ -6,35 +6,35 @@ struct LagrangePolynomial{T<:AbstractFloat}
     b::LagrangeBasis{T}
     c::Vector{T}
 
-    function LagrangePolynomial(b::LagrangeBasis, c)
+    function LagrangePolynomial{T}(b::LagrangeBasis, c) where {T}
         @assert b.n == length(c)
         new(b, c)
     end
 
-    function LagrangePolynomial(x::Vector, c)
+    function LagrangePolynomial{T}(x::Vector, c) where {T}
         @assert length(x) == length(c)
 
         new(LagrangeBasis(x), c)
     end
 end
 
-function LagrangePolynomial{T}(b::LagrangeBasis{T}, c::Vector{T})
+function LagrangePolynomial(b::LagrangeBasis{T}, c::Vector{T}) where {T}
     LagrangePolynomial{T}(b, c)
 end
 
 
-function LagrangePolynomial{T}(x::Vector{T}, c::Vector{T})
+function LagrangePolynomial(x::Vector{T}, c::Vector{T}) where {T}
     LagrangePolynomial{T}(x, c)
 end
 
 
-function Base.similar{T}(lag::LagrangePolynomial{T}, c::Vector{T})
+function Base.similar(lag::LagrangePolynomial{T}, c::Vector{T}) where {T}
     @assert length(c) == length(lag.c)
     LagrangePolynomial{T}(lag.b, c)
 end
 
 
-function CommonFunctions.evaluate!{T}(pol::LagrangePolynomial{T}, x::Vector{T}, y::Vector{T})
+function CommonFunctions.evaluate!(pol::LagrangePolynomial{T}, x::Vector{T}, y::Vector{T}) where {T}
     @assert length(x) == length(y)
 
     local tx::T
@@ -52,6 +52,6 @@ function CommonFunctions.evaluate!{T}(pol::LagrangePolynomial{T}, x::Vector{T}, 
     return nothing
 end
 
-function CommonFunctions.evaluate!{T}(b::LagrangeBasis{T}, c::Vector{T}, x::Vector{T}, y::Vector{T})
+function CommonFunctions.evaluate!(b::LagrangeBasis{T}, c::Vector{T}, x::Vector{T}, y::Vector{T}) where {T}
     evaluate!(LagrangePolynomial(b, c), x, y)
 end

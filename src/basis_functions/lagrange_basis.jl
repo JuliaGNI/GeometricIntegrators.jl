@@ -13,7 +13,7 @@ struct LagrangeBasis{T<:AbstractFloat}
     diffs::Matrix{T}
     vdminv::Matrix{T}
 
-    function LagrangeBasis(x)
+    function LagrangeBasis{T}(x) where {T}
         local p::T
         local n = length(x)
 
@@ -35,7 +35,7 @@ struct LagrangeBasis{T<:AbstractFloat}
     end
 end
 
-function LagrangeBasis{T}(x::Vector{T})
+function LagrangeBasis(x::Vector{T}) where {T}
     LagrangeBasis{T}(x)
 end
 
@@ -46,10 +46,10 @@ Base.:(==)(b1::LagrangeBasis, b2::LagrangeBasis) = (b1.p == b2.p
                                                  && b1.n == b2.n
                                                  && b1.x == b2.x)
 
-Base.isequal{T1, T2}(b1::LagrangeBasis{T1}, b2::LagrangeBasis{T2}) = (b1 == b2 && T1 == T2)
+Base.isequal(b1::LagrangeBasis{T1}, b2::LagrangeBasis{T2}) where {T1,T2} = (b1 == b2 && T1 == T2)
 
 
-function CommonFunctions.evaluate{T}(b::LagrangeBasis{T}, j::Int, x::T)
+function CommonFunctions.evaluate(b::LagrangeBasis{T}, j::Int, x::T) where {T}
     local y::T = 1
 
     for i in 1:b.n
@@ -59,7 +59,7 @@ function CommonFunctions.evaluate{T}(b::LagrangeBasis{T}, j::Int, x::T)
 end
 
 
-function derivative{T}(b::LagrangeBasis{T}, j::Int, x::T)
+function derivative(b::LagrangeBasis{T}, j::Int, x::T) where {T}
     local y::T = 0
     local z::T
 
@@ -78,7 +78,7 @@ end
 derivative(b::LagrangeBasis, j::Int, i::Int) = derivative(b, j, b.x[i])
 
 
-function integral{T}(b::LagrangeBasis{T}, j::Int, x::T)
+function integral(b::LagrangeBasis{T}, j::Int, x::T) where {T}
     y = zeros(b.x)
     y[j] = 1
     lint = polyint(Poly(*(b.vdminv, y)))

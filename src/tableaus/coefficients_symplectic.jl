@@ -1,6 +1,6 @@
 
 
-function get_symplectic_conjugate_coefficients{T}(a::Matrix{T}, b::Vector{T}, a̅::Matrix{T})
+function get_symplectic_conjugate_coefficients(a::Matrix{T}, b::Vector{T}, a̅::Matrix{T}) where {T}
     @assert size(a) == size(a̅)
     @assert length(b) == size(a,1) == size(a,2)
 
@@ -13,19 +13,19 @@ function get_symplectic_conjugate_coefficients{T}(a::Matrix{T}, b::Vector{T}, a�
 end
 
 
-function get_symplectic_conjugate_coefficients{T}(coeff::CoefficientsRK{T})
+function get_symplectic_conjugate_coefficients(coeff::CoefficientsRK{T}) where {T}
     a̅ = zeros(coeff.a)
     get_symplectic_conjugate_coefficients(coeff.a, coeff.b, a̅)
     CoefficientsRK(coeff.name, coeff.s, a̅, coeff.b, coeff.c)
 end
 
 
-function compute_symplecticity_error{T}(coeff::CoefficientsRK{T})
+function compute_symplecticity_error(coeff::CoefficientsRK{T}) where {T}
     [coeff.b[i] * coeff.a[i,j] + coeff.b[j] * coeff.a[j,i] - coeff.b[i] * coeff.b[j] for i in 1:size(coeff.a,1), j in 1:size(coeff.a,2)]
 end
 
 
-function check_symplecticity{T}(coeff::CoefficientsRK{T})
+function check_symplecticity(coeff::CoefficientsRK{T}) where {T}
     symplectic = falses(coeff.s, coeff.s)
 
     for i in 1:size(coeff.a, 1)
@@ -38,7 +38,7 @@ function check_symplecticity{T}(coeff::CoefficientsRK{T})
 end
 
 
-function check_symmetry{T}(coeff::CoefficientsRK{T})
+function check_symmetry(coeff::CoefficientsRK{T}) where {T}
     symmetric = falses(coeff.s, coeff.s)
 
     for i in 1:size(coeff.a, 1)
@@ -51,7 +51,7 @@ function check_symmetry{T}(coeff::CoefficientsRK{T})
 end
 
 
-function check_order_conditions_B{T}(coeff::CoefficientsRK{T}, k)
+function check_order_conditions_B(coeff::CoefficientsRK{T}, k) where {T}
     local res::T = 0
 
     for i in 1:coeff.s
@@ -62,7 +62,7 @@ function check_order_conditions_B{T}(coeff::CoefficientsRK{T}, k)
 end
 
 
-function check_order_conditions_C{T}(coeff::CoefficientsRK{T}, k)
+function check_order_conditions_C(coeff::CoefficientsRK{T}, k) where {T}
     local order  = falses(coeff.s)
     local res::T
 
@@ -79,7 +79,7 @@ function check_order_conditions_C{T}(coeff::CoefficientsRK{T}, k)
 end
 
 
-function check_order_conditions_D{T}(coeff::CoefficientsRK{T}, k)
+function check_order_conditions_D(coeff::CoefficientsRK{T}, k) where {T}
     local order  = falses(coeff.s)
     local res::T
 

@@ -1,6 +1,6 @@
 
 "Holds the tableau of a additive Runge-Kutta method."
-immutable TableauARK{T} <: AbstractTableau{T}
+struct TableauARK{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int
@@ -18,9 +18,9 @@ immutable TableauARK{T} <: AbstractTableau{T}
     c_q::Vector{T}
     c_λ::Vector{T}
 
-    function TableauARK(name, o, s, r,
-                         a_q, α_q, a_q̃, α_q̃,
-                         b_q, β_q, c_q, c_λ)
+    function TableauARK{T}(name, o, s, r,
+                           a_q, α_q, a_q̃, α_q̃,
+                           b_q, β_q, c_q, c_λ) where {T}
         @assert T <: Real
         @assert isa(name, Symbol)
         @assert isa(s, Integer)

@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
-type NonlinearFunctionParametersFIRK{DT,TT,VT,D,S} <: NonlinearFunctionParameters{DT}
+mutable struct NonlinearFunctionParametersFIRK{DT,TT,VT,D,S} <: NonlinearFunctionParameters{DT}
     v::VT
     Δt::TT
 
@@ -12,11 +12,11 @@ type NonlinearFunctionParametersFIRK{DT,TT,VT,D,S} <: NonlinearFunctionParameter
     q::Vector{DT}
 end
 
-function NonlinearFunctionParametersFIRK{DT,TT,VT}(v::VT, Δt::TT, tab, q::Vector{DT})
+function NonlinearFunctionParametersFIRK(v::VT, Δt::TT, tab, q::Vector{DT}) where {DT,TT,VT}
     NonlinearFunctionParametersFIRK{DT,TT,VT,length(q),tab.s}(v, Δt, tab.a, tab.c, 0, q)
 end
 
-immutable NonlinearFunctionCacheFIRK{DT}
+struct NonlinearFunctionCacheFIRK{DT}
     Q::Matrix{DT}
     V::Matrix{DT}
     Y::Matrix{DT}
@@ -24,7 +24,7 @@ immutable NonlinearFunctionCacheFIRK{DT}
     tQ::Vector{DT}
     tV::Vector{DT}
 
-    function NonlinearFunctionCacheFIRK(d, s)
+    function NonlinearFunctionCacheFIRK{DT}(d, s) where {DT}
 
         # create internal stage vectors
         Q = zeros(DT,d,s)
@@ -39,9 +39,9 @@ immutable NonlinearFunctionCacheFIRK{DT}
     end
 end
 
-function compute_stages_firk!{DT,TT,VT}(x::Vector{DT}, Q::Matrix{DT}, V::Matrix{DT}, Y::Matrix{DT},
-                                           q::Vector, a::Matrix{TT}, c::Vector{TT}, Δt::TT, t::TT, v::VT,
-                                           tQ::Vector{DT}, tV::Vector{DT})
+function compute_stages_firk!(x::Vector{DT}, Q::Matrix{DT}, V::Matrix{DT}, Y::Matrix{DT},
+                              q::Vector, a::Matrix{TT}, c::Vector{TT}, Δt::TT, t::TT, v::VT,
+                              tQ::Vector{DT}, tV::Vector{DT}) where {DT,TT,VT}
 
     local d::Int = length(q)
     local s::Int = length(c)
@@ -72,7 +72,7 @@ function compute_stages_firk!{DT,TT,VT}(x::Vector{DT}, Q::Matrix{DT}, V::Matrix{
 end
 
 "Compute stages of fully implicit Runge-Kutta methods."
-@generated function function_stages!{ST,DT,TT,VT,D,S}(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersFIRK{DT,TT,VT,D,S})
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersFIRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
 
     cache = NonlinearFunctionCacheFIRK{ST}(D, S)
 
@@ -96,7 +96,7 @@ end
 
 
 "Fully implicit Runge-Kutta integrator."
-immutable IntegratorFIRK{DT, TT, FT, SPT, ST, IT} <: Integrator{DT,TT}
+struct IntegratorFIRK{DT, TT, FT, SPT, ST, IT} <: Integrator{DT,TT}
     equation::ODE{DT,TT,FT}
     tableau::TableauFIRK{TT}
     Δt::TT
@@ -117,10 +117,10 @@ immutable IntegratorFIRK{DT, TT, FT, SPT, ST, IT} <: Integrator{DT,TT}
     tV::Vector{DT}
 end
 
-function IntegratorFIRK{DT,TT,FT}(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::TT;
-                                  nonlinear_solver=DEFAULT_NonlinearSolver,
-                                  nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
-                                  interpolation=HermiteInterpolation{DT})
+function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::TT;
+                        nonlinear_solver=DEFAULT_NonlinearSolver,
+                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
+                        interpolation=HermiteInterpolation{DT}) where {DT,TT,FT}
     D = equation.d
     S = tableau.q.s
 
@@ -174,7 +174,7 @@ function initialize!(int::IntegratorFIRK, sol::SolutionODE, m::Int)
 end
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
-function integrate_step!{DT,TT,FT,SPT,ST,IT,N}(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int)
+function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,SPT,ST,IT,N}
     # set time for nonlinear solver
     int.Sparams.t = sol.t[n-1]
 

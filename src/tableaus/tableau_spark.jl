@@ -1,6 +1,6 @@
 
 "Holds the tableau of a spezialized partitioned additive Runge-Kutta method."
-immutable TableauSPARK{T} <: AbstractTableau{T}
+struct TableauSPARK{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int
@@ -29,11 +29,11 @@ immutable TableauSPARK{T} <: AbstractTableau{T}
     ω_p::Matrix{T}
     ω_λ::Matrix{T}
 
-    function TableauSPARK(name, o, s, r,
-                          a_q, a_p, α_q, α_p, a_q̃, a_p̃, α_q̃, α_p̃,
-                          b_q, b_p, β_q, β_p,
-                          c_q, c_p, c_λ,
-                          ω_q, ω_p, ω_λ)
+    function TableauSPARK{T}(name, o, s, r,
+                             a_q, a_p, α_q, α_p, a_q̃, a_p̃, α_q̃, α_p̃,
+                             b_q, b_p, β_q, β_p,
+                             c_q, c_p, c_λ,
+                             ω_q, ω_p, ω_λ) where {T}
         # TODO Make ω_q, ω_p, ω_λ optional arguments.
         @assert T <: Real
         @assert isa(name, Symbol)

@@ -1,6 +1,6 @@
 
 "Special Partitioned Additive Runge Kutta integrator."
-immutable IntegratorSPARK{DT,TT,VT,FT,UT,GT,ΦT} <: Integrator{DT,TT}
+struct IntegratorSPARK{DT,TT,VT,FT,UT,GT,ΦT} <: Integrator{DT,TT}
     equation::PDAE{DT,TT,VT,FT,UT,GT,ΦT}
     tableau::TableauSPARK{TT}
     Δt::TT

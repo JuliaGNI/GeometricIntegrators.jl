@@ -14,7 +14,7 @@ Contains all fields necessary to store the solution of an ODE.
 * `nsave`: save every nsave'th time step
 
 """
-immutable SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
+struct SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
     nd::Int
     nt::Int
     ni::Int
@@ -24,7 +24,7 @@ immutable SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
     nsave::Int
 end
 
-function SolutionODE{DT,TT,FT}(equation::ODE{DT,TT,FT}, Δt::TT, ntime::Int, nsave::Int=1)
+function SolutionODE(equation::ODE{DT,TT,FT}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT,FT}
     N  = equation.n > 1 ? 3 : 2
     nd = equation.d
     ni = equation.n
@@ -45,20 +45,20 @@ function SolutionODE{DT,TT,FT}(equation::ODE{DT,TT,FT}, Δt::TT, ntime::Int, nsa
     return s
 end
 
-function set_initial_conditions!{DT,TT}(sol::SolutionODE{DT,TT}, equ::ODE{DT,TT})
+function set_initial_conditions!(sol::SolutionODE{DT,TT}, equ::ODE{DT,TT}) where {DT,TT}
     set_initial_conditions!(sol, equ.t₀, equ.q₀)
 end
 
-function set_initial_conditions!{DT,TT}(sol::SolutionODE{DT,TT}, t₀::TT, q₀::Array{DT})
+function set_initial_conditions!(sol::SolutionODE{DT,TT}, t₀::TT, q₀::Array{DT}) where {DT,TT}
     set_data!(sol.q, q₀, 0)
     compute_timeseries!(sol.t, t₀)
 end
 
-function get_initial_conditions!{DT,TT}(sol::SolutionODE{DT,TT}, q::Vector{DT}, k)
+function get_initial_conditions!(sol::SolutionODE{DT,TT}, q::Vector{DT}, k) where {DT,TT}
     get_data!(sol.q, q, 0, k)
 end
 
-function copy_solution!{DT,TT}(sol::SolutionODE{DT,TT}, q::Vector{DT}, n, k)
+function copy_solution!(sol::SolutionODE{DT,TT}, q::Vector{DT}, n, k) where {DT,TT}
     if mod(n, sol.nsave) == 0
         set_data!(sol.q, q, div(n, sol.nsave), k)
     end
@@ -73,7 +73,7 @@ end
 # TODO Fix HDF5 functions.
 
 "Creates HDF5 file and initialises datasets for ODE solution object."
-function createHDF5{DT,TT}(solution::SolutionODE{DT,TT}, file::AbstractString, ntime::Int=1)
+function createHDF5(solution::SolutionODE{DT,TT}, file::AbstractString, ntime::Int=1) where {DT,TT}
     @assert ntime ≥ 1
 
     info("Creating HDF5 file ", file)

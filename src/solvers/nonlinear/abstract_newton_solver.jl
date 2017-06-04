@@ -1,5 +1,5 @@
 
-abstract AbstractNewtonSolver{T} <: NonlinearSolver{T}
+abstract type AbstractNewtonSolver{T} <: NonlinearSolver{T} end
 
 @define newton_solver_variables begin
     x::Vector{T}
@@ -22,6 +22,6 @@ abstract AbstractNewtonSolver{T} <: NonlinearSolver{T}
 end
 
 
-function setInitialConditions!{T}(s::AbstractNewtonSolver{T}, x₀::Vector{T})
+function setInitialConditions!(s::AbstractNewtonSolver{T}, x₀::Vector{T}) where {T}
     s.x[:] = x₀
 end

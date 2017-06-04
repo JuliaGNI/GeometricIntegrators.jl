@@ -1,11 +1,11 @@
 
 "Holds the tableau of a fully implicit Runge-Kutta method."
-immutable TableauFIRK{T} <: AbstractTableauIRK{T}
+struct TableauFIRK{T} <: AbstractTableauIRK{T}
     @HeaderTableau
 
     q::CoefficientsRK{T}
 
-    function TableauFIRK(q)
+    function TableauFIRK{T}(q) where {T}
         if (q.s > 1 && istrilstrict(q.a)) || (q.s==1 && q.a[1,1] == 0)
             warn("Initializing TableauFIRK with explicit tableau ", q.name, ".\n",
                  "You might want to use TableauERK instead.")
@@ -18,11 +18,11 @@ immutable TableauFIRK{T} <: AbstractTableauIRK{T}
     end
 end
 
-function TableauFIRK{T}(q::CoefficientsRK{T})
+function TableauFIRK(q::CoefficientsRK{T}) where {T}
     TableauFIRK{T}(q)
 end
 
-function TableauFIRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+function TableauFIRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}) where {T}
     TableauFIRK{T}(CoefficientsRK(name, order, a, b, c))
 end
 

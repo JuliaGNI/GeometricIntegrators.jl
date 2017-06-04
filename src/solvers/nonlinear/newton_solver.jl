@@ -1,7 +1,7 @@
 
-immutable NewtonSolver{T, FT, TJ, TL} <: AbstractNewtonSolver{T}
+struct NewtonSolver{T, FT, TJ, TL} <: AbstractNewtonSolver{T}
     @newton_solver_variables
-    function NewtonSolver(x, F!, Jparams, linear_solver, nmax, atol, rtol, stol)
+    function NewtonSolver{T,FT,TJ,TL}(x, F!, Jparams, linear_solver, nmax, atol, rtol, stol) where {T,FT,TJ,TL}
         J  = zeros(linear_solver.A)
         x₀ = zeros(x)
         x₁ = zeros(x)
@@ -23,7 +23,7 @@ function NewtonSolver(x::Vector, F!::Function; J=nothing, linear_solver=nothing,
 end
 
 
-function solve!{T}(s::NewtonSolver{T})
+function solve!(s::NewtonSolver{T}) where {T}
     s.F!(s.x, s.linear.b)
     residual_initial!(s.status, s.linear.b)
     s.status.i  = 0

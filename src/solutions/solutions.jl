@@ -1,7 +1,7 @@
 
 using HDF5
 
-abstract Solution{dType, tType, N}
+abstract type Solution{dType, tType, N} end
 
 "Create solution for ODE."
 function Solution(equation::ODE, Δt, ntime::Int, nsave::Int=1)

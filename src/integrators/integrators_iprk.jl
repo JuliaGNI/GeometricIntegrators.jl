@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of implicit partitioned Runge-Kutta methods."
-type NonlinearFunctionParametersIPRK{DT,TT,VT,FT} <: NonlinearFunctionParameters{DT}
+mutable struct NonlinearFunctionParametersIPRK{DT,TT,VT,FT} <: NonlinearFunctionParameters{DT}
     f_v::VT
     f_f::FT
 
@@ -31,7 +31,7 @@ type NonlinearFunctionParametersIPRK{DT,TT,VT,FT} <: NonlinearFunctionParameters
     tP::Vector{DT}
     tF::Vector{DT}
 
-    function NonlinearFunctionParametersIPRK(f_v, f_f, Δt, d, s, t_q, t_p)
+    function NonlinearFunctionParametersIPRK{DT,TT,VT,FT}(f_v, f_f, Δt, d, s, t_q, t_p) where {DT,TT,VT,FT}
         # create solution vectors
         q = zeros(DT,d)
         p = zeros(DT,d)
@@ -57,7 +57,7 @@ type NonlinearFunctionParametersIPRK{DT,TT,VT,FT} <: NonlinearFunctionParameters
 end
 
 "Compute stages of implicit partitioned Runge-Kutta methods."
-function function_stages!{DT,TT,VT,FT}(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersIPRK{DT,TT,VT,FT})
+function function_stages!(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersIPRK{DT,TT,VT,FT}) where {DT,TT,VT,FT}
     local tqᵢ::TT
     local tpᵢ::TT
 
@@ -99,7 +99,7 @@ end
 
 
 "Implicit partitioned Runge-Kutta integrator."
-immutable IntegratorIPRK{DT, TT, VT, FT, SPT, ST} <: Integrator{DT, TT}
+struct IntegratorIPRK{DT, TT, VT, FT, SPT, ST} <: Integrator{DT, TT}
     equation::PODE{DT,TT,VT,FT}
     tableau::TableauIPRK{TT}
     Δt::TT
@@ -117,9 +117,9 @@ immutable IntegratorIPRK{DT, TT, VT, FT, SPT, ST} <: Integrator{DT, TT}
     F::Array{DT,2}
 end
 
-function IntegratorIPRK{DT,TT,VT,FT}(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT;
-                                     nonlinear_solver=DEFAULT_NonlinearSolver,
-                                     nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
+function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT;
+                        nonlinear_solver=DEFAULT_NonlinearSolver,
+                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol) where {DT,TT,VT,FT}
     D = equation.d
     S = tableau.s
 
@@ -155,7 +155,7 @@ function initialize!(int::IntegratorIPRK, sol::SolutionPODE, m::Int)
 end
 
 "Integrate ODE with implicit partitioned Runge-Kutta integrator."
-function integrate_step!{DT,TT,VT,FT,N}(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N}, m::Int, n::Int)
+function integrate_step!(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,VT,FT,N}
     # set time for nonlinear solver
     int.params.t = sol.t[n]
 

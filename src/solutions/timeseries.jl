@@ -1,12 +1,12 @@
 
-immutable TimeSeries{T} <: AbstractArray{T,1}
+struct TimeSeries{T} <: AbstractArray{T,1}
     n::Int
     t::Vector{T}
 
     Δt::T
     step::Int
 
-    function TimeSeries(n, Δt, step)
+    function TimeSeries{T}(n, Δt, step) where {T}
         @assert T <: Real
         @assert n > 0
         @assert step > 0
@@ -16,11 +16,11 @@ immutable TimeSeries{T} <: AbstractArray{T,1}
     end
 end
 
-function TimeSeries{T}(n::Int, Δt::T, step::Int=1)
+function TimeSeries(n::Int, Δt::T, step::Int=1) where {T}
     return TimeSeries{T}(n, Δt, step)
 end
 
-Base.eltype{T}(ts::TimeSeries{T}) = T
+Base.eltype(ts::TimeSeries{T}) where {T} = T
 Base.ndims(ts::TimeSeries) = 1
 Base.size(ts::TimeSeries) = size(ts.t)
 Base.length(ts::TimeSeries) = length(ts.t)
@@ -41,7 +41,7 @@ end
     return t
 end
 
-function compute_timeseries!{T}(ts::TimeSeries{T}, t₀::T)
+function compute_timeseries!(ts::TimeSeries{T}, t₀::T) where {T}
     ts[0] = t₀
     for n in 1:ts.n
         ts[n] = ts[0] + n * ts.step * ts.Δt

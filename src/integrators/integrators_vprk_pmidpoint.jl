@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-type NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ΑT,FT,GT,D,S} <: AbstractNonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S}
+mutable struct NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ΑT,FT,GT,D,S} <: AbstractNonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S}
     α::ΑT
     f::FT
     g::GT
@@ -18,14 +18,14 @@ type NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ΑT,FT,GT,D,S} <: AbstractNo
     q::Vector{DT}
     p::Vector{DT}
 
-    function NonlinearFunctionParametersVPRKpMidpoint(α, f, g, Δt, o, t_q, t_p, d_v, R∞, q, p)
+    function NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ΑT,FT,GT,D,S}(α, f, g, Δt, o, t_q, t_p, d_v, R∞, q, p) where {DT,TT,ΑT,FT,GT,D,S}
         R = convert(Vector{TT}, [1, R∞])
         new(α, f, g, Δt, o, t_q, t_p, d_v, R, 0, q, p)
     end
 end
 
 
-@generated function compute_projection_vprk!{ST,DT,TT,ΑT,FT,GT,D,S}(x::Vector{ST}, q̅::Vector{ST}, p̅::Vector{ST}, λ::Vector{ST}, V::Matrix{ST}, U::Matrix{ST}, G::Matrix{ST}, params::NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ΑT,FT,GT,D,S})
+@generated function compute_projection_vprk!(x::Vector{ST}, q̅::Vector{ST}, p̅::Vector{ST}, λ::Vector{ST}, V::Matrix{ST}, U::Matrix{ST}, G::Matrix{ST}, params::NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ΑT,FT,GT,D,S}) where {ST,DT,TT,ΑT,FT,GT,D,S}
     # create temporary vectors
     q̃  = zeros(ST,D)
     # qm = zeros(ST,D)
@@ -79,7 +79,7 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!{ST,DT,TT,ΑT,FT,GT,D,S}(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ΑT,FT,GT,D,S})
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ΑT,FT,GT,D,S}) where {ST,DT,TT,ΑT,FT,GT,D,S}
     scache = NonlinearFunctionCacheVPRK{ST}(D,S)
     pcache = NonlinearFunctionCacheVPRKprojection{ST}(D,S)
 
@@ -103,7 +103,7 @@ end
 
 
 "Variational partitioned Runge-Kutta integrator."
-immutable IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegratorVPRK{DT,TT}
+struct IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegratorVPRK{DT,TT}
     equation::IODE{DT,TT,ΑT,FT,GT,VT}
     tableau::TableauVPRK{TT}
     Δt::TT
@@ -123,10 +123,10 @@ immutable IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractInteg
     pₑᵣᵣ::Vector{DT}
 end
 
-function IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
-                                        nonlinear_solver=DEFAULT_NonlinearSolver,
-                                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
-                                        interpolation=HermiteInterpolation{DT})
+function IntegratorVPRKpMidpoint(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
+                                 nonlinear_solver=DEFAULT_NonlinearSolver,
+                                 nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
+                                 interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
     S = tableau.s
 
@@ -172,7 +172,7 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!{DT,TT,ΑT,FT,GT,VT,N}(int::IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m::Int, n::Int)
+function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
     # set time for nonlinear solver
     int.params.t = sol.t[0] + (n-1)*int.Δt
 

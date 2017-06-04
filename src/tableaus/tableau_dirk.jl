@@ -1,11 +1,11 @@
 
 "Holds the tableau of a diagonally implicit Runge-Kutta method."
-immutable TableauDIRK{T} <: AbstractTableauIRK{T}
+struct TableauDIRK{T} <: AbstractTableauIRK{T}
     @HeaderTableau
 
     q::CoefficientsRK{T}
 
-    function TableauDIRK(q)
+    function TableauDIRK{T}(q) where {T}
         @assert istril(q.a)
         @assert !(q.s==1 && q.a[1,1] ≠ 0)
 
@@ -18,11 +18,11 @@ immutable TableauDIRK{T} <: AbstractTableauIRK{T}
     end
 end
 
-function TableauDIRK{T}(q::CoefficientsRK{T})
+function TableauDIRK(q::CoefficientsRK{T}) where {T}
     TableauDIRK{T}(q)
 end
 
-function TableauDIRK{T}(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T})
+function TableauDIRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}) where {T}
     TableauDIRK{T}(CoefficientsRK(name, order, a, b, c))
 end
 

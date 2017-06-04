@@ -19,13 +19,13 @@ b_{i} \\bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 \\end{align*}
 ```
 """
-immutable TableauEPRK{T} <: AbstractTableauPRK{T}
+struct TableauEPRK{T} <: AbstractTableauPRK{T}
     @HeaderTableau
 
     q::CoefficientsRK{T}
     p::CoefficientsRK{T}
 
-    function TableauEPRK(name, o, q, p)
+    function TableauEPRK{T}(name, o, q, p) where {T}
         @assert q.s==p.s
         # TODO check that both tableaus are lower triangular and that only one element
         #      a_q[i,i] or a_p[i,i] is non-zero for all i.
@@ -33,7 +33,7 @@ immutable TableauEPRK{T} <: AbstractTableauPRK{T}
     end
 end
 
-function TableauEPRK{T}(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T})
+function TableauEPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}) where {T}
     TableauEPRK{T}(name, order, q, p)
 end
 
