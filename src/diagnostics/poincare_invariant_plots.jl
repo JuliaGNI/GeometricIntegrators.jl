@@ -4,8 +4,12 @@ if Pkg.installed("PyPlot") != nothing
 end
 
 
-function plot_integral_error(t, I, filename; plot_title=L"\Delta I")
+function plot_integral_error(t, I, filename; plot_title=nothing)
     if Pkg.installed("PyPlot") != nothing
+        if plot_title == nothing
+            plot_title=L"\Delta I"
+        end
+
         function power10ticks(x, pos)
             if x == 0
                 return "\$ 0 \$"
