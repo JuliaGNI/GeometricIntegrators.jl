@@ -6,6 +6,6 @@ module Quadratures
     export GaussLegendreQuadrature, GaussLobattoQuadrature,
            ClenshawCurtisQuadrature
 
-    include("Quadrature/quadrature.jl")
+    include("quadratures/quadrature.jl")
 
 end
