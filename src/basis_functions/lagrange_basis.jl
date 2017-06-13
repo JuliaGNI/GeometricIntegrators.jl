@@ -4,21 +4,20 @@ using Polynomials
 using ..CommonFunctions
 
 
-struct LagrangeBasis{T<:AbstractFloat}
-    p::Int
-    n::Int
+struct LagrangeBasis{T,P} <: Basis{T,P}
     x::Vector{T}
 
     denom::Vector{T}
     diffs::Matrix{T}
     vdminv::Matrix{T}
 
-    function LagrangeBasis{T}(x) where {T}
-        local p::T
-        local n = length(x)
+    function LagrangeBasis{T,P}(x) where {T,P}
+        @assert length(x) == P+1
 
-        denom = zeros(n)
-        diffs = zeros(n,n)
+        local p::T
+
+        denom = zeros(P+1)
+        diffs = zeros(P+1, P+1)
 
         for i in 1:length(x)
             p = 1
@@ -31,42 +30,44 @@ struct LagrangeBasis{T<:AbstractFloat}
             denom[i] = 1/p
         end
 
-        new(n-1, n, x, denom, diffs, vandermonde_matrix_inverse(x))
+        new(x, denom, diffs, vandermonde_matrix_inverse(x))
     end
 end
 
 function LagrangeBasis(x::Vector{T}) where {T}
-    LagrangeBasis{T}(x)
+    LagrangeBasis{T, length(x)-1}(x)
 end
 
+CommonFunctions.nbasis(b::LagrangeBasis{T,P}) where {T,P} = P+1
+CommonFunctions.nnodes(b::LagrangeBasis{T,P}) where {T,P} = P+1
+CommonFunctions.nodes(b::LagrangeBasis{T,P})  where {T,P} = b.x
+CommonFunctions.degree(b::LagrangeBasis{T,P}) where {T,P} = P
 
-Base.hash(b::LagrangeBasis, h::UInt) = hash(b.p, hash(b.n, hash(b.c, h)))
+Base.hash(b::LagrangeBasis, h::UInt) = hash(b.c, h)
 
-Base.:(==)(b1::LagrangeBasis, b2::LagrangeBasis) = (b1.p == b2.p
-                                                 && b1.n == b2.n
-                                                 && b1.x == b2.x)
+Base.:(==)(b1::LagrangeBasis, b2::LagrangeBasis) = (b1.x == b2.x)
 
-Base.isequal(b1::LagrangeBasis{T1}, b2::LagrangeBasis{T2}) where {T1,T2} = (b1 == b2 && T1 == T2)
+Base.isequal(b1::LagrangeBasis{T1,P1}, b2::LagrangeBasis{T2,P2}) where {T1,P1,T2,P2} = (T1 == T2 && P1 == P2)
 
 
-function CommonFunctions.evaluate(b::LagrangeBasis{T}, j::Int, x::T) where {T}
+function CommonFunctions.evaluate(b::LagrangeBasis{T,P}, j::Int, x::T) where {T,P}
     local y::T = 1
 
-    for i in 1:b.n
+    for i in 1:nnodes(b)
         i ≠ j ? y *= (x - b.x[i]) : nothing
     end
     y * b.denom[j]
 end
 
 
-function derivative(b::LagrangeBasis{T}, j::Int, x::T) where {T}
+function derivative(b::LagrangeBasis{T,P}, j::Int, x::T) where {T,P}
     local y::T = 0
     local z::T
 
-    for l in 1:b.n
+    for l in 1:nnodes(b)
         if l ≠ j
-            z = b.diffs[j,l]
-            for i in 1:b.n
+            z = 1 / b.diffs[j,l]
+            for i in 1:nnodes(b)
                 i ≠ j && i ≠ l ? z *= (x - b.x[i]) / b.diffs[j,i] : nothing
             end
             y += z
@@ -78,7 +79,7 @@ end
 derivative(b::LagrangeBasis, j::Int, i::Int) = derivative(b, j, b.x[i])
 
 
-function integral(b::LagrangeBasis{T}, j::Int, x::T) where {T}
+function integral(b::LagrangeBasis{T,P}, j::Int, x::T) where {T,P}
     y = zeros(b.x)
     y[j] = 1
     lint = polyint(Poly(*(b.vdminv, y)))

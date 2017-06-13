@@ -2,18 +2,23 @@ __precompile__()
 
 module BasisFunctions
 
-    export derivative, integral
+    export Basis
+
+    include("basis_functions/basis_functions.jl")
+
+    export derivative, integral, evaluate, evaluate!
 
     export vandermonde_matrix, vandermonde_matrix_inverse
 
     include("basis_functions/vandermonde_matrix.jl")
 
-    export LagrangeBasis, evaluate
+    export BernsteinBasis, LagrangeBasis
 
+    include("basis_functions/bernstein_basis.jl")
     include("basis_functions/lagrange_basis.jl")
 
-    export LagrangePolynomial, evaluate!
+    export Polynomial, BernsteinPolynomial, LagrangePolynomial
 
-    include("basis_functions/lagrange_polynomials.jl")
+    include("basis_functions/polynomial.jl")
 
 end
