@@ -158,48 +158,31 @@ function getCoefficientsGLRK(s::Int; T=Float64, high_precision=true)
     end
 
 
-    function evaluate!{T}(pol::Poly{T}, x::Vector{T}, y::Vector{T})
-        @assert length(x) == length(y)
-
-        for j in 1:length(y)
-            y[j] = pol(x[j])
-        end
-    end
-
     # order
     o = 2s
 
     # obtain Gauss-Legendre nodes and weights
-    gl = gausslegendre(s)
-
-    # scale from [-1,+1] to [0,1]
-    c = (gl[1]+1)/2
-    b = gl[2]/2
+    q = GaussLegendreQuadrature(s, T)
 
     # create Lagrange polynomial
-    lag = LagrangePolynomial(c, ones(s))
-    vdm = vandermonde_matrix_inverse(c)
+    vdm = vandermonde_matrix_inverse(nodes(q))
 
     # compute monomial basis functions and corresponding integrals
-    polys = []
     poly_ints = []
-
     for i in 1:s
         y = zeros(s)
         y[i] = 1
         mon = *(vdm, y)
-        push!(polys, Poly(mon))
-        push!(poly_ints, polyint(polys[i]))
+        push!(poly_ints, polyint(Poly(mon)))
     end
 
     # compute Runge-Kutta coefficients
     a = zeros(s,s)
-
     for i in 1:s
         for j in 1:s
-            a[i,j] = poly_ints[j](c[i])
+            a[i,j] = poly_ints[j](nodes(q)[i])
         end
     end
 
-    CoefficientsRK(Symbol("glrk", s), o, a, b, c)
+    CoefficientsRK(Symbol("glrk", s), o, a, weights(q), nodes(q))
 end

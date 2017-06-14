@@ -2,7 +2,9 @@ __precompile__()
 
 module Tableaus
 
+    using ..CommonFunctions
     using ..BasisFunctions
+    using ..Quadratures
     using ..Utils
 
 
