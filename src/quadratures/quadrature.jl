@@ -1,6 +1,8 @@
 
-using FastGaussQuadrature
-using FastTransforms
+import FastGaussQuadrature
+import FastTransforms
+
+using ..CommonFunctions
 
 
 struct Quadrature{T,N}
@@ -14,10 +16,9 @@ function Quadrature(order, nodes::Vector{T}, weights::Vector{T}) where {T}
     Quadrature{T, length(nodes)}(order, nodes, weights)
 end
 
-length(Q::Quadrature{T,N}) where {T,N} = N
-nnodes(Q::Quadrature{T,N}) where {T,N} = N
-order(Q::Quadrature) = Q.order
-nodes(Q::Quadrature) = Q.nodes
+CommonFunctions.nnodes(Q::Quadrature{T,N}) where {T,N} = N
+CommonFunctions.nodes(Q::Quadrature) = Q.nodes
+CommonFunctions.order(Q::Quadrature) = Q.order
 weights(Q::Quadrature) = Q.weights
 
 
@@ -28,23 +29,29 @@ function shift!(b,c)
 end
 
 
-function GaussLegendreQuadrature(s, T=eltype(one()))
-    c, b = gausslegendre(s)
+# function LegendreGaussQuadrature(s, T=Float64)
+function GaussLegendreQuadrature(s, T=Float64)
+    c, b = FastGaussQuadrature.gausslegendre(s)
     shift!(b,c)
     Quadrature(s^2, c, b)
 end
 
 
-function GaussLobattoQuadrature(s, T=eltype(one()))
-    c, b = gausslobatto(s)
+# function LegendreLobattoQuadrature(s, T=Float64)
+function GaussLobattoQuadrature(s, T=Float64)
+    c, b = FastGaussQuadrature.gausslobatto(s)
     shift!(b,c)
     Quadrature(s^2-2, c, b)
 end
 
 
-function ClenshawCurtisQuadrature(s, T=eltype(one()))
-    b, c = FastTransforms.clenshawcurtis(s, zero(T), zero(T))
-    b = flipdim(b,1)
+# function ChebyshevGaussQuadrature(s, T=Float64)
+# function ChebyshevLobattoQuadrature(s, T=Float64)
+
+
+function ClenshawCurtisQuadrature(s, T=Float64)
+    c, b = FastTransforms.clenshawcurtis(s, zero(T), zero(T))
+    c = flipdim(c,1)
     shift!(b,c)
     Quadrature(s^2, c, b)
 end
