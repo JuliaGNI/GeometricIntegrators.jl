@@ -1,5 +1,6 @@
 
 using GeometricIntegrators
+using GeometricIntegrators.Utils
 using Base.Test
 
 function fx(t, x, fx)

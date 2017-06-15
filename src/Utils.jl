@@ -2,7 +2,7 @@ __precompile__()
 
 module Utils
 
-    export @define, @reexport
+    export @define, @reexport, @dec128
 
     include("utils/macro_utils.jl")
 

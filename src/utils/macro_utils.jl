@@ -1,4 +1,7 @@
 
+using DecFP: Dec128
+
+
 macro define(name, definition)
     quote
         macro $(esc(name))()
@@ -27,4 +30,19 @@ macro reexport(ex)
 
     esc(Expr(:toplevel, ex,
              [:(eval(Expr(:export, names($mod)...))) for mod in modules]...))
+end
+
+
+function _dec128(x::Expr)
+    y = x
+    y.args .= _dec128.(y.args)
+    return  y
+end
+
+_dec128(x::Int) = Dec128(x)
+
+_dec128(x) = x
+
+macro dec128(x)
+    return esc(_dec128(x))
 end

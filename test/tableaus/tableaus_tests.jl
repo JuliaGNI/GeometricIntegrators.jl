@@ -86,10 +86,12 @@ tab_implicit_midpoint = TableauFIRK(:implicit_midpoint, o, a, b, c)
 
 
 # Gauss-Legendre
-a = [[0.25       0.25-√3/6]
-     [0.25+√3/6  0.25     ]]
-b = [0.5,      0.5     ]
-c = [0.5-√3/6, 0.5+√3/6]
+a = Array{Float64}(@dec128 [
+     [0.25       0.25-√3/6]
+     [0.25+√3/6  0.25     ]
+    ])
+b = Array{Float64}(@dec128 [0.5,      0.5     ])
+c = Array{Float64}(@dec128 [0.5-√3/6, 0.5+√3/6])
 o = 4
 
 @test TableauFIRK(:glrk2, o, a, b, c) == getTableauGLRK2()

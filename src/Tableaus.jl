@@ -29,7 +29,8 @@ module Tableaus
            getCoefficientsLobIIIB2, getCoefficientsLobIIIB3, getCoefficientsLobIIIB4,
            getCoefficientsLobIIIC2, getCoefficientsLobIIIC3, getCoefficientsLobIIIC4,
            getCoefficientsLobIIID2, getCoefficientsLobIIID3, getCoefficientsLobIIID4,
-           getCoefficientsLobIIIE2, getCoefficientsLobIIIE3, getCoefficientsLobIIIE4
+           getCoefficientsLobIIIE2, getCoefficientsLobIIIE3, getCoefficientsLobIIIE4,
+           getCoefficientsLobIIIF2, getCoefficientsLobIIIF3, getCoefficientsLobIIIF4
 
     include("tableaus/coefficients_lob.jl")
 
@@ -107,8 +108,10 @@ module Tableaus
            getTableauLobIIIC2, getTableauLobIIIC3, getTableauLobIIIC4,
            getTableauLobIIID2, getTableauLobIIID3, getTableauLobIIID4,
            getTableauLobIIIE2, getTableauLobIIIE3, getTableauLobIIIE4,
+           getTableauLobIIIF2, getTableauLobIIIF3, getTableauLobIIIF4,
            getTableauVPGLRK,
            getTableauVPSRK3
+
 
     include("tableaus/tableaus_vprk.jl")
 
