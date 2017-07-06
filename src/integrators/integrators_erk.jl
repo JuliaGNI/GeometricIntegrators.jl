@@ -38,7 +38,7 @@ function integrate_step!(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N}
     local y::DT
 
     # compute internal stages
-    int.equation.v(sol.t[n], int.q, int.tV)
+    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q, int.tV)
     simd_copy_yx_second!(int.tV, int.V, 1)
 
     for i in 2:int.tableau.q.s
@@ -49,7 +49,7 @@ function integrate_step!(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N}
             end
             int.tQ[k] = int.q[k] + int.Δt * y
         end
-        tᵢ = sol.t[n] + int.Δt * int.tableau.q.c[i]
+        tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.q.c[i]
         int.equation.v(tᵢ, int.tQ, int.tV)
         simd_copy_yx_second!(int.tV, int.V, i)
     end

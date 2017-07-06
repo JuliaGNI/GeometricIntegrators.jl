@@ -172,7 +172,7 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
+function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
     # set time for nonlinear solver
     int.params.t = sol.t[0] + (n-1)*int.Δt
 

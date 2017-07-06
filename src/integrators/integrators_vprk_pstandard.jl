@@ -203,7 +203,7 @@ function IntegratorVPRKpStandard(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
 end
 
 
-function initialize!(int::IntegratorVPRKpStandard{DT,TT}, sol::Union{SolutionPDAE, PSolutionPDAE}, m::Int) where {DT,TT}
+function initialize!(int::IntegratorVPRKpStandard{DT,TT}, sol::SolutionPDAE, m::Int) where {DT,TT}
     @assert m ≥ 1
     @assert m ≤ sol.ni
 
@@ -214,6 +214,10 @@ function initialize!(int::IntegratorVPRKpStandard{DT,TT}, sol::Union{SolutionPDA
 
     # initialise initial guess
     initialize!(int.iguess, sol.t[0], int.q, int.p)
+
+    # reset compensated summation error
+    int.qₑᵣᵣ .= 0
+    int.pₑᵣᵣ .= 0
 
     # compute initial λ
     # dh = zeros(int.q)
@@ -236,7 +240,7 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
+function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
     # set time for nonlinear and projection solver
     int.sparams.t = sol.t[0] + (n-1)*int.Δt
     int.pparams.t = sol.t[0] + (n-1)*int.Δt

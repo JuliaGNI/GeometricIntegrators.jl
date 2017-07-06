@@ -131,6 +131,9 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::
     q = zeros(DT,D)
     v = zeros(DT,D)
 
+    # create compensated summation error vectors
+    qₑᵣᵣ = zeros(DT,D)
+
     # create update vector
     y = zeros(DT,D)
 
@@ -158,11 +161,11 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::
     # create integrator
     IntegratorFIRK{DT, TT, FT, typeof(params), typeof(solver), typeof(iguess.int)}(
                                         equation, tableau, Δt, params, solver, iguess,
-                                        q, v, y, Q, V, Y, tQ, tV)
+                                        q, qₑᵣᵣ, v, y, Q, V, Y, tQ, tV)
 end
 
 
-function initialize!(int::IntegratorFIRK, sol::SolutionODE, m::Int)
+function initialize!(int::IntegratorFIRK{DT,TT}, sol::SolutionODE, m::Int) where {DT,TT}
     @assert m ≥ 1
     @assert m ≤ sol.ni
 
@@ -171,21 +174,32 @@ function initialize!(int::IntegratorFIRK, sol::SolutionODE, m::Int)
 
     # initialise initial guess
     initialize!(int.iguess, sol.t[0], int.q)
+
+    # reset compensated summation error
+    int.qₑᵣᵣ .= 0
 end
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,SPT,ST,IT,N}
     # set time for nonlinear solver
-    int.Sparams.t = sol.t[n-1]
+    int.Sparams.t = sol.t[0] + (n-1)*int.Δt
 
     # copy previous solution to initial guess
-    update!(int.iguess, sol.t[n], int.q)
+    update!(int.iguess, sol.t[0] + (n-1)*int.Δt, int.q)
 
     # compute initial guess for internal stages
     for i in 1:int.tableau.q.s
         evaluate!(int.iguess, int.y, int.v, int.tableau.q.c[i])
         for k in 1:int.equation.d
-            int.solver.x[int.equation.d*(i-1)+k] = int.v[k]
+            int.V[k,i] = int.v[k]
+        end
+    end
+    for i in 1:int.tableau.q.s
+        for k in 1:int.equation.d
+            int.solver.x[int.equation.d*(i-1)+k] = 0
+            for j in 1:int.tableau.q.s
+                int.solver.x[int.equation.d*(i-1)+k] += int.tableau.q.a[i,j] * int.V[k,j]
+            end
         end
     end
 
@@ -197,17 +211,26 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
     end
 
     compute_stages_firk!(int.solver.x, int.Q, int.V, int.Y, int.q,
-                         int.tableau.q.a, int.tableau.q.c, int.Δt, sol.t[n-1],
+                         int.tableau.q.a, int.tableau.q.c, int.Δt, sol.t[0] + (n-1)*int.Δt,
                          int.equation.v, int.tQ, int.tV)
 
     # compute final update
-    simd_mult!(int.y, int.V, int.tableau.q.b)
-    simd_axpy!(int.Δt, int.y, int.q)
+    for k in 1:size(int.V, 1)
+        for i in 1:size(int.V, 2)
+            int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.q.b[i] * int.V[k,i], int.q[k], int.qₑᵣᵣ[k])
+            int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.q.b̂[i] * int.V[k,i], int.q[k], int.qₑᵣᵣ[k])
+        end
+    end
 
     # take care of periodic solutions
     for k in 1:int.equation.d
         if int.equation.periodicity[k] ≠ 0
-            int.q[k] = mod(int.q[k], int.equation.periodicity[k])
+            while int.q[k] < 0
+                (int.q[k], int.qₑᵣᵣ[k]) = compensated_summation(+int.equation.periodicity[k], int.q[k], int.qₑᵣᵣ[k])
+            end
+            while int.q[k] ≥ int.equation.periodicity[k]
+                (int.q[k], int.qₑᵣᵣ[k]) = compensated_summation(-int.equation.periodicity[k], int.q[k], int.qₑᵣᵣ[k])
+            end
         end
     end
 

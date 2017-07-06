@@ -109,7 +109,7 @@ end
 
 
 
-function initialize!(int::Union{IntegratorVPRK, IntegratorVPRKpMidpoint, IntegratorVPRKpSymmetric}, sol::Union{SolutionPDAE, PSolutionPDAE}, m::Int)
+function initialize!(int::Union{IntegratorVPRK{DT,TT}, IntegratorVPRKpMidpoint{DT,TT}, IntegratorVPRKpSymmetric{DT,TT}}, sol::SolutionPDAE, m::Int) where {DT,TT}
     @assert m ≥ 1
     @assert m ≤ sol.ni
 
@@ -118,11 +118,15 @@ function initialize!(int::Union{IntegratorVPRK, IntegratorVPRKpMidpoint, Integra
 
     # initialise initial guess
     initialize!(int.iguess, sol.t[0], int.q, int.p)
+
+    # reset compensated summation error
+    int.qₑᵣᵣ .= 0
+    int.pₑᵣᵣ .= 0
 end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::Union{SolutionPDAE{DT,TT,N}, PSolutionPDAE{DT,TT,N}}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
+function integrate_step!(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
     # set time for nonlinear solver
     int.params.t = sol.t[0] + (n-1)*int.Δt
 
