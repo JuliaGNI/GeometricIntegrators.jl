@@ -119,16 +119,19 @@ function compute_stages_q_vprk!(Q::Matrix{ST}, V::Matrix{ST}, params::AbstractNo
     @assert D == size(Q,1) == size(V,1)
     @assert S == size(Q,2) == size(V,2)
 
-    local y::ST
+    local y1::ST
+    local y2::ST
 
     # compute Q
     for i in 1:S
         for k in 1:D
-            y = 0
+            y1 = 0
+            y2 = 0
             for j in 1:S
-                y += params.t_q.a[i,j] * V[k,j]
+                y1 += params.t_q.a[i,j] * V[k,j]
+                y2 += params.t_q.â[i,j] * V[k,j]
             end
-            Q[k,i] = params.q[k] + params.Δt * y
+            Q[k,i] = params.q[k] + params.Δt * (y1 + y2)
         end
     end
 end
@@ -138,16 +141,19 @@ function compute_stages_q_vprk!(Q::Matrix{ST}, V::Matrix{ST}, U::Matrix{ST}, par
     @assert D == size(Q,1) == size(V,1) == size(U,1)
     @assert S == size(Q,2) == size(V,2)
 
-    local y::ST
+    local y1::ST
+    local y2::ST
 
     # compute Q
     for i in 1:S
         for k in 1:D
-            y = params.R[1] * U[k,1]
+            y1 = 0
+            y2 = 0
             for j in 1:S
-                y += params.t_q.a[i,j] * V[k,j]
+                y1 += params.t_q.a[i,j] * V[k,j]
+                y2 += params.t_q.â[i,j] * V[k,j]
             end
-            Q[k,i] = params.q[k] + params.Δt * y
+            Q[k,i] = params.q[k] + params.Δt * (y1 + y2 + params.R[1] * U[k,1])
         end
     end
 end
@@ -204,16 +210,19 @@ end
 
 @generated function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     compute_stages_vprk = quote
-        local z::ST
+        local z1::ST
+        local z2::ST
 
         # compute b = - [(P-AF)]
         for i in 1:S
             for k in 1:D
-                z = 0
+                z1 = 0
+                z2 = 0
                 for j in 1:S
-                    z += params.t_p.a[i,j] * F[k,j]
+                    z1 += params.t_p.a[i,j] * F[k,j]
+                    z2 += params.t_p.â[i,j] * F[k,j]
                 end
-                b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * z
+                b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * (z1 + z2)
             end
         end
     end
@@ -224,16 +233,19 @@ end
 
 @generated function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, G::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     compute_stages_vprk = quote
-        local z::ST
+        local z1::ST
+        local z2::ST
 
         # compute b = - [(P-G-AF)]
         for i in 1:S
             for k in 1:D
-                z = params.R[1] * G[k,1]
+                z1 = 0
+                z2 = 0
                 for j in 1:S
-                    z += params.t_p.a[i,j] * F[k,j]
+                    z1 += params.t_p.a[i,j] * F[k,j]
+                    z2 += params.t_p.â[i,j] * F[k,j]
                 end
-                b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * z
+                b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * (z1 + z2 + params.R[1] * G[k,1])
             end
         end
     end
@@ -244,16 +256,19 @@ end
 
 @generated function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     compute_stages_vprk = quote
-        local z::ST
+        local z1::ST
+        local z2::ST
 
         # compute b = - [(P-G-AF)]
         for i in 1:S
             for k in 1:D
-                z = params.R[1] * G[k,1]
+                z1 = 0
+                z2 = 0
                 for j in 1:S
-                    z += params.t_p.a[i,j] * (F[k,j] + R[k,j])
+                    z1 += params.t_p.a[i,j] * (F[k,j] + R[k,j])
+                    z2 += params.t_p.â[i,j] * (F[k,j] + R[k,j])
                 end
-                b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * z
+                b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * (z1 + z2 + params.R[1] * G[k,1])
             end
         end
     end
@@ -263,40 +278,49 @@ end
 
 
 function compute_rhs_vprk_projection_q!(b::Vector{ST}, q̅::Vector{ST}, V::Matrix{ST}, U::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
-    local y::ST
+    local y1::ST
+    local y2::ST
 
     for k in 1:D
-        y = params.R[1] * U[k,1] + params.R[2] * U[k,2]
+        y1 = 0
+        y2 = 0
         for j in 1:S
-            y += params.t_q.b[j] * V[k,j]
+            y1 += params.t_q.b[j] * V[k,j]
+            y2 += params.t_q.b̂[j] * V[k,j]
         end
-        b[offset+k] = - (q̅[k] - params.q[k]) + params.Δt * y
+        b[offset+k] = - (q̅[k] - params.q[k]) + params.Δt * (y1 + y2) + params.Δt * (params.R[1] * U[k,1] + params.R[2] * U[k,2])
     end
 end
 
 
 function compute_rhs_vprk_projection_p!(b::Vector{ST}, p̅::Vector{ST}, F::Matrix{ST}, G::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
-    local z::ST
+    local z1::ST
+    local z2::ST
 
     for k in 1:D
-        z = params.R[1] * G[k,1] + params.R[2] * G[k,2]
+        z1 = 0
+        z2 = 0
         for j in 1:S
-            z += params.t_p.b[j] * F[k,j]
+            z1 += params.t_p.b[j] * F[k,j]
+            z2 += params.t_p.b̂[j] * F[k,j]
         end
-        b[offset+k] = - (p̅[k] - params.p[k]) + params.Δt * z
+        b[offset+k] = - (p̅[k] - params.p[k]) + params.Δt * (z1 + z2) + params.Δt * (params.R[1] * G[k,1] + params.R[2] * G[k,2])
     end
 end
 
 
 function compute_rhs_vprk_projection_p!(b::Vector{ST}, p̅::Vector{ST}, F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
-    local z::ST
+    local z1::ST
+    local z2::ST
 
     for k in 1:D
-        z = params.R[1] * G[k,1] + params.R[2] * G[k,2]
+        z1 = 0
+        z2 = 0
         for j in 1:S
-            z += params.t_p.b[j] * (F[k,j] + R[k,j])
+            z1 += params.t_p.b[j] * (F[k,j] + R[k,j])
+            z2 += params.t_p.b̂[j] * (F[k,j] + R[k,j])
         end
-        b[offset+k] = - (p̅[k] - params.p[k]) + params.Δt * z
+        b[offset+k] = - (p̅[k] - params.p[k]) + params.Δt * (z1 + z2) + params.Δt * (params.R[1] * G[k,1] + params.R[2] * G[k,2])
     end
 end
 
@@ -341,7 +365,9 @@ function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFu
     for k in 1:size(cache.V, 1)
         for i in 1:size(cache.V, 2)
             int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.q.b[i] * cache.V[k,i], int.q[k], int.qₑᵣᵣ[k])
-            int.p[k], int.pₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.q.b[i] * cache.F[k,i], int.p[k], int.pₑᵣᵣ[k])
+            int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.q.b̂[i] * cache.V[k,i], int.q[k], int.qₑᵣᵣ[k])
+            int.p[k], int.pₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.p.b[i] * cache.F[k,i], int.p[k], int.pₑᵣᵣ[k])
+            int.p[k], int.pₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.p.b̂[i] * cache.F[k,i], int.p[k], int.pₑᵣᵣ[k])
         end
     end
 

@@ -5,6 +5,7 @@ mutable struct NonlinearFunctionParametersFIRK{DT,TT,VT,D,S} <: NonlinearFunctio
     Δt::TT
 
     a::Matrix{TT}
+    â::Matrix{TT}
     c::Vector{TT}
 
     t::TT
@@ -13,7 +14,7 @@ mutable struct NonlinearFunctionParametersFIRK{DT,TT,VT,D,S} <: NonlinearFunctio
 end
 
 function NonlinearFunctionParametersFIRK(v::VT, Δt::TT, tab, q::Vector{DT}) where {DT,TT,VT}
-    NonlinearFunctionParametersFIRK{DT,TT,VT,length(q),tab.s}(v, Δt, tab.a, tab.c, 0, q)
+    NonlinearFunctionParametersFIRK{DT,TT,VT,length(q),tab.s}(v, Δt, tab.a, tab.â, tab.c, 0, q)
 end
 
 struct NonlinearFunctionCacheFIRK{DT}
@@ -80,13 +81,19 @@ end
 
         compute_stages_firk!(x, $cache.Q, $cache.V, $cache.Y, params.q, params.a, params.c, params.Δt, params.t, params.v, $cache.tQ, $cache.tV)
 
+        local y1::ST
+        local y2::ST
+
         # compute b = - (Y-AV)
         for i in 1:S
             for k in 1:D
-                b[D*(i-1)+k] = - $cache.Y[k,i]
+                y1 = 0
+                y2 = 0
                 for j in 1:S
-                    b[D*(i-1)+k] += params.a[i,j] * $cache.V[k,j]
+                    y1 += params.a[i,j] * $cache.V[k,j]
+                    y2 += params.â[i,j] * $cache.V[k,j]
                 end
+                b[D*(i-1)+k] = - $cache.Y[k,i] + y1 + y2
             end
         end
     end
@@ -106,6 +113,8 @@ struct IntegratorFIRK{DT, TT, FT, SPT, ST, IT} <: Integrator{DT,TT}
     iguess::InitialGuessODE{DT, TT, FT, IT}
 
     q::Vector{DT}
+    qₑᵣᵣ::Vector{DT}
+
     v::Vector{DT}
     y::Vector{DT}
 
