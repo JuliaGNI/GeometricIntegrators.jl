@@ -256,8 +256,9 @@ function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::
     # call nonlinear solver
     solve!(int.solver)
 
+    # println((@sprintf "  i=%07i" n), ",", int.solver.status)
     if !solverStatusOK(int.solver.status, int.solver.params)
-        println(int.solver.status, ", sit=", n)
+        println((@sprintf "  si=%07i" n), ",", int.solver.status)
     end
 
     # if isnan(int.solver.status.rₐ)
@@ -279,9 +280,9 @@ function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::
     # call projection solver
     solve!(int.projector)
 
-    # println(int.projector.status, ", pit=", n)
+    # println((@sprintf "  i=%07i" n), ",", int.solver.status)
     if !solverStatusOK(int.projector.status, int.projector.params)
-        println(int.projector.status, ", pit=", n)
+        println((@sprintf "  pi=%07i" n), ",", int.projector.status)
     end
 
     # if isnan(int.projector.status.rₐ)

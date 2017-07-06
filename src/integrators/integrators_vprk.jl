@@ -139,9 +139,9 @@ function integrate_step!(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::SolutionP
     # call nonlinear solver
     solve!(int.solver)
 
-    # println(int.solver.status, ", it=", n)
+    # println((@sprintf "  i=%07i" n), ",", int.solver.status)
     if !solverStatusOK(int.solver.status, int.solver.params)
-        println(int.solver.status, ", it=", n)
+        println((@sprintf "  i=%07i" n), ",", int.solver.status)
     end
 
     # if isnan(int.solver.status.rₐ)

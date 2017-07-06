@@ -54,7 +54,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
     local refactorize::Int = s.refactorize
 
     s.F!(s.x, s.y₀)
-    residual_initial!(s.status, s.y₀)
+    residual_initial!(s.status, s.x, s.y₀)
     s.status.i  = 0
 
     if s.status.rₐ ≥ s.params.atol² || n > 0 || s.params.nmin > 0
@@ -175,7 +175,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
 
             simd_xpy!(s.δx, s.x)
             s.F!(s.x, s.y₀)
-            residual!(s.status, s.y₀)
+            residual!(s.status, s.δx, s.x, s.y₀)
 
             if solverConverged(s.status, s.params) && s.status.i ≥ s.params.nmin && !(n > 0)
                 if s.status.i > DEFAULT_nwarn
