@@ -10,12 +10,7 @@ end
 
 
 # default parameters for nonlinear solvers
-const DEFAULT_atol=2eps()
-const DEFAULT_rtol=2eps()
-const DEFAULT_stol=2eps()
-const DEFAULT_nmax=1000
 const DEFAULT_nwarn=100
-const DEFAULT_ϵ=4sqrt(eps())
 
 abstract type NonlinearFunctionParameters{T} end
 
@@ -25,6 +20,7 @@ end
 
 
 struct NonlinearSolverParameters{T}
+    nmin::Int   # minimum number of iterations
     nmax::Int   # maximum number of iterations
 
     atol::T     # absolute tolerance
@@ -35,14 +31,23 @@ struct NonlinearSolverParameters{T}
     rtol²::T
     stol²::T
 
-    function NonlinearSolverParameters{T}(nmax, atol, rtol, stol) where {T}
+    function NonlinearSolverParameters{T}(nmin, nmax, atol, rtol, stol) where {T}
+        @assert nmin ≥ 0
         @assert nmax > 0
         @assert atol > 0
         @assert rtol > 0
         @assert stol > 0
 
-        new(nmax, atol, rtol, stol, atol^2, rtol^2, stol^2)
+        new(nmin, nmax, atol, rtol, stol, atol^2, rtol^2, stol^2)
     end
+end
+
+function NonlinearSolverParameters(T)
+    NonlinearSolverParameters{T}(get_config(:nls_nmin),
+                                 get_config(:nls_nmax),
+                                 get_config(:nls_atol),
+                                 get_config(:nls_rtol),
+                                 get_config(:nls_stol))
 end
 
 
@@ -72,7 +77,9 @@ function solverStatusOK(status::NonlinearSolverStatus, params::NonlinearSolverPa
     return solverConverged(status, params) && status.i  ≤ params.nmax
 end
 
-function getLinearSolver(T, n, linear_solver)
+function getLinearSolver(T, n)
+    linear_solver = get_config(:ls_solver)
+
     if linear_solver == nothing || linear_solver == :lapack
     # if linear_solver == :lapack
         linear_solver = LUSolverLAPACK{T}(n)

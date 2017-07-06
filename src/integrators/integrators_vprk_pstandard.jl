@@ -139,10 +139,7 @@ function IntegratorVPRKpSymplectic(args...; kwargs...)
 end
 
 function IntegratorVPRKpStandard(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
-                                 R=[0,1],
-                                 nonlinear_solver=DEFAULT_NonlinearSolver,
-                                 nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
-                                 interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
+                                 R=[0,1], interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
     S = tableau.s
 
@@ -181,7 +178,7 @@ function IntegratorVPRKpStandard(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
     function_stages_solver = (x,b) -> function_stages!(x, b, sparams)
 
     # create nonlinear solver
-    solver = nonlinear_solver(x̃, function_stages_solver; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+    solver = get_config(:nls_solver)(x̃, function_stages_solver)
 
     # create projector params
     R[2] *= tableau.R∞
@@ -191,7 +188,7 @@ function IntegratorVPRKpStandard(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
     function_stages_projector = (x,b) -> function_stages!(x, b, pparams)
 
     # create projector
-    projector = nonlinear_solver(x, function_stages_projector; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+    projector = get_config(:nls_solver)(x, function_stages_projector)
 
     # create initial guess
     iguess = InitialGuessIODE(interpolation, equation, Δt; periodicity=equation.periodicity)

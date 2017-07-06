@@ -117,9 +117,7 @@ struct IntegratorIPRK{DT, TT, VT, FT, SPT, ST} <: Integrator{DT, TT}
     F::Array{DT,2}
 end
 
-function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT;
-                        nonlinear_solver=DEFAULT_NonlinearSolver,
-                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol) where {DT,TT,VT,FT}
+function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT,VT,FT}
     D = equation.d
     S = tableau.s
 
@@ -136,7 +134,7 @@ function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, �
     function_stages = (x,b) -> function_stages!(x, b, params)
 
     # create solver
-    solver = nonlinear_solver(x, function_stages; nmax=nmax, atol=atol, rtol=rtol, stol=stol, autodiff=false)
+    solver = get_config(:nls_solver)(x, function_stages)
 
     # create integrator
     IntegratorIPRK{DT, TT, VT, FT, typeof(params), typeof(solver)}(

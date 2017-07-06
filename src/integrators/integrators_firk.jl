@@ -118,8 +118,6 @@ struct IntegratorFIRK{DT, TT, FT, SPT, ST, IT} <: Integrator{DT,TT}
 end
 
 function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::TT;
-                        nonlinear_solver=DEFAULT_NonlinearSolver,
-                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
                         interpolation=HermiteInterpolation{DT}) where {DT,TT,FT}
     D = equation.d
     S = tableau.q.s
@@ -153,7 +151,7 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::
     function_stages = (x,b) -> function_stages!(x, b, params)
 
     # create solver
-    solver = nonlinear_solver(x, function_stages; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+    solver = get_config(:nls_solver)(x, function_stages)
 
     # create initial guess
     iguess = InitialGuessODE(interpolation, equation, Δt)

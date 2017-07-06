@@ -70,9 +70,11 @@ function computeJacobian(x::Vector{T}, J::Matrix{T}, Jparams::JacobianParameters
 end
 
 
-function getJacobianParameters(J, F!, ϵ, T, n, autodiff)
+function getJacobianParameters(J, F!, T, n)
+    ϵ = get_config(:jacobian_fd_ϵ)
+
     if J == nothing
-        if autodiff
+        if get_config(:jacobian_autodiff)
             F!rev = (y,x) -> F!(x,y)
             tx = zeros(T, n)
             ty = zeros(T, n)

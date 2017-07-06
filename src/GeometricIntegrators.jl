@@ -5,9 +5,11 @@ module GeometricIntegrators
     include("Utils.jl")
     using .Utils
 
-    export Utils, Equations, Solutions, Interpolation, Solvers, BasisFunctions,
-           Tableaus, Integrators, Diagnostics
+    export Config, Utils, Equations, Solutions, Interpolation, Solvers,
+           BasisFunctions, Tableaus, Integrators, Diagnostics
 
+    include("Config.jl")
+    @reexport using .Config
     include("CommonFunctions.jl")
     @reexport using .CommonFunctions
     include("Equations.jl")

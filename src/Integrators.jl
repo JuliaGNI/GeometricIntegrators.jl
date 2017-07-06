@@ -2,11 +2,12 @@ __precompile__()
 
 module Integrators
 
+    using ..Config
+    using ..Utils
     using ..Equations
     using ..Solutions
     using ..Solvers
     using ..Tableaus
-    using ..Utils
 
     import ..Solvers.function_stages!
 

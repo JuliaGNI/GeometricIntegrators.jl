@@ -1,7 +1,12 @@
 
 immutable QuasiNewtonSolver{T, FT, TJ, TL} <: AbstractNewtonSolver{T}
     @newton_solver_variables
-    function QuasiNewtonSolver{T,FT,TJ,TL}(x, Fparams, Jparams, linear_solver, nmax, atol, rtol, stol) where {T,FT,TJ,TL}
+    tx::Vector{T}
+    ty::Vector{T}
+
+    refactorize::Int
+
+    function QuasiNewtonSolver{T,FT,TJ,TL}(x, Fparams, Jparams, linear_solver) where {T,FT,TJ,TL}
         J  = zeros(linear_solver.A)
         x₀ = zeros(x)
         x₁ = zeros(x)
@@ -9,12 +14,17 @@ immutable QuasiNewtonSolver{T, FT, TJ, TL} <: AbstractNewtonSolver{T}
         y₀ = zeros(x)
         δx = zeros(x)
         δy = zeros(x)
-        new(x, J, x₀, x₁, y₀, y₁, δx, δy, Fparams, Jparams, linear_solver, NonlinearSolverParameters{T}(nmax, atol, rtol, stol), NonlinearSolverStatus{T}(length(x)))
+        tx = zeros(x)
+        ty = zeros(x)
+
+        nls_params = NonlinearSolverParameters(T)
+        nls_status = NonlinearSolverStatus{T}(length(x))
+
+        new(x, J, x₀, x₁, y₀, y₁, δx, δy, Fparams, Jparams, linear_solver,
+            nls_params, nls_status, tx, ty, get_config(:quasi_newton_refactorize))
     end
 end
 
-const DEFAULT_NonlinearSolver=QuasiNewtonSolver
-const DEFAULT_QUASINEWTON_REFACTORIZE=5
 const DEFAULT_LINESEARCH_nmax=50
 const DEFAULT_ARMIJO_λ₀ = 1.0
 const DEFAULT_ARMIJO_σ₀ = 0.1
@@ -22,16 +32,16 @@ const DEFAULT_ARMIJO_σ₁ = 0.5
 const DEFAULT_ARMIJO_ϵ  = 0.5
 
 
-function QuasiNewtonSolver(x::Vector, F!::Function; J=nothing, linear_solver=nothing, nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol, ϵ=DEFAULT_ϵ, autodiff=true)
+function QuasiNewtonSolver(x::Vector, F!::Function; J=nothing)
     T = eltype(x)
     n = length(x)
-    Jparams = getJacobianParameters(J, F!, ϵ, T, n, autodiff)
-    linear_solver = getLinearSolver(T, n, linear_solver)
-    QuasiNewtonSolver{T, typeof(F!), typeof(Jparams), typeof(linear_solver)}(x, F!, Jparams, linear_solver, nmax, atol, rtol, stol)
+    Jparams = getJacobianParameters(J, F!, T, n)
+    linear_solver = getLinearSolver(T, n)
+    QuasiNewtonSolver{T, typeof(F!), typeof(Jparams), typeof(linear_solver)}(x, F!, Jparams, linear_solver)
 end
 
 
-function solve!(s::QuasiNewtonSolver{T}; n::Int=0, refactorize::Int=DEFAULT_QUASINEWTON_REFACTORIZE) where {T}
+function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
     local λ::T
     local λₜ::T
     local y₀norm::T
@@ -40,17 +50,14 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0, refactorize::Int=DEFAULT_QUAS
     local p₀::T
     local p₁::T
     local p₂::T
-    local nmax::Int = s.params.nmax
-
-    if n > 0
-        nmax = n
-    end
+    local nmax::Int = n > 0 ? nmax = n : s.params.nmax
+    local refactorize::Int = s.refactorize
 
     s.F!(s.x, s.y₀)
     residual_initial!(s.status, s.y₀)
     s.status.i  = 0
 
-    if s.status.rₐ ≥ s.params.atol² || n > 0
+    if s.status.rₐ ≥ s.params.atol² || n > 0 || s.params.nmin > 0
         computeJacobian(s.x, s.J, s.Jparams)
         simd_copy!(s.J, s.linear.A)
         factorize!(s.linear)
@@ -170,7 +177,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0, refactorize::Int=DEFAULT_QUAS
             s.F!(s.x, s.y₀)
             residual!(s.status, s.y₀)
 
-            if solverConverged(s.status, s.params) && !(n > 0)
+            if solverConverged(s.status, s.params) && s.status.i ≥ s.params.nmin && !(n > 0)
                 if s.status.i > DEFAULT_nwarn
                     println("WARNING: Quasi-Newton Solver took ", s.status.i, " iterations.")
                 end

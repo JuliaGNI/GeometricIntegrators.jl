@@ -124,8 +124,6 @@ struct IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegrat
 end
 
 function IntegratorVPRKpMidpoint(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
-                                 nonlinear_solver=DEFAULT_NonlinearSolver,
-                                 nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
                                  interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
     S = tableau.s
@@ -160,7 +158,7 @@ function IntegratorVPRKpMidpoint(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
     function_stages_solver = (x,b) -> function_stages!(x, b, params)
 
     # create solver
-    solver = nonlinear_solver(zeros(DT,N), function_stages_solver; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+    solver = get_config(:nls_solver)(zeros(DT,N), function_stages_solver)
 
     # create initial guess
     iguess = InitialGuessIODE(interpolation, equation, Δt; periodicity=equation.periodicity)
@@ -193,7 +191,6 @@ function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}, sol::
 
     # call nonlinear solver
     solve!(int.solver)
-    # solve!(int.solver; refactorize=1)
 
     # println(int.solver.status, ", it=", n)
     if !solverStatusOK(int.solver.status, int.solver.params)

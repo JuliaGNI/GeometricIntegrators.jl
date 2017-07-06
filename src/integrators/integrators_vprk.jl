@@ -59,8 +59,6 @@ struct IntegratorVPRK{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegratorVPRK{DT
 end
 
 function IntegratorVPRK(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
-                        nonlinear_solver=DEFAULT_NonlinearSolver,
-                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
                         interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
     S = tableau.s
@@ -96,7 +94,7 @@ function IntegratorVPRK(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK
     function_stages = (x,b) -> function_stages!(x, b, params)
 
     # create nonlinear solver
-    solver = nonlinear_solver(x, function_stages; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+    solver = get_config(:nls_solver)(x, function_stages)
 
     # create initial guess
     iguess = InitialGuessIODE(interpolation, equation, Δt; periodicity=equation.periodicity)
@@ -140,7 +138,6 @@ function integrate_step!(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::SolutionP
 
     # call nonlinear solver
     solve!(int.solver)
-    # solve!(int.solver; refactorize=1)
 
     # println(int.solver.status, ", it=", n)
     if !solverStatusOK(int.solver.status, int.solver.params)

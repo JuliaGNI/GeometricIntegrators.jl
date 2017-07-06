@@ -5,73 +5,53 @@ const DEFAULT_PROGRESS_NTMIN = 10000
 
 
 "Create integrator for explicit Runge-Kutta tableau."
-function Integrator(equation::ODE, tableau::TableauERK, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
+function Integrator(equation::ODE, tableau::TableauERK, Δt)
     IntegratorERK(equation, tableau, Δt)
 end
 
 "Create integrator for diagonally implicit Runge-Kutta tableau."
-function Integrator(equation::ODE, tableau::TableauDIRK, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
+function Integrator(equation::ODE, tableau::TableauDIRK, Δt)
     IntegratorDIRK(equation, tableau, Δt)
 end
 
 "Create integrator for fully implicit Runge-Kutta tableau."
-function Integrator(equation::ODE, tableau::TableauFIRK, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
-    IntegratorFIRK(equation, tableau, Δt; nonlinear_solver=nonlinear_solver, nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+function Integrator(equation::ODE, tableau::TableauFIRK, Δt)
+    IntegratorFIRK(equation, tableau, Δt)
 end
 
 "Create integrator for singly implicit Runge-Kutta tableau."
-function Integrator(equation::ODE, tableau::TableauSIRK, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
+function Integrator(equation::ODE, tableau::TableauSIRK, Δt)
     IntegratorSIRK(equation, tableau, Δt)
 end
 
 "Create integrator for explicit partitioned Runge-Kutta tableau."
-function Integrator(equation::PODE, tableau::TableauEPRK, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
+function Integrator(equation::PODE, tableau::TableauEPRK, Δt)
     IntegratorEPRK(equation, tableau, Δt)
 end
 
 "Create integrator for implicit partitioned Runge-Kutta tableau."
-function Integrator(equation::PODE, tableau::TableauIPRK, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
+function Integrator(equation::PODE, tableau::TableauIPRK, Δt)
     IntegratorIPRK(equation, tableau, Δt)
 end
 
 "Create integrator for variational partitioned Runge-Kutta tableau."
-function Integrator(equation::IODE, tableau::TableauVPRK, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
-    IntegratorVPRK(equation, tableau, Δt; nonlinear_solver=nonlinear_solver, nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+function Integrator(equation::IODE, tableau::TableauVPRK, Δt)
+    IntegratorVPRK(equation, tableau, Δt)
 end
 
 "Create integrator for additive Runge-Kutta tableau."
-function Integrator(equation::DAE, tableau::TableauARK, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
+function Integrator(equation::DAE, tableau::TableauARK, Δt)
     IntegratorARK(equation, tableau, Δt)
 end
 
 "Create integrator for special additive Runge-Kutta tableau."
-function Integrator(equation::DAE, tableau::TableauSARK, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
+function Integrator(equation::DAE, tableau::TableauSARK, Δt)
     IntegratorSARK(equation, tableau, Δt)
 end
 
 "Create integrator for partitioned additive Runge-Kutta tableau."
-function Integrator(equation::PDAE, tableau::TableauPARK, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
-    IntegratorPARK(equation, tableau, Δt; nonlinear_solver=nonlinear_solver, nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+function Integrator(equation::PDAE, tableau::TableauPARK, Δt)
+    IntegratorPARK(equation, tableau, Δt)
 end
 
 "Create integrator for special partitioned additive Runge-Kutta tableau."
@@ -80,23 +60,17 @@ function Integrator(equation::PDAE, tableau::TableauSPARK, Δt)
 end
 
 "Create integrator for variational partitioned additive Runge-Kutta tableau."
-function Integrator(equation::IDAE, tableau::TableauVPARK, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
-    IntegratorVPARK(equation, tableau, Δt; nonlinear_solver=nonlinear_solver, nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+function Integrator(equation::IDAE, tableau::TableauVPARK, Δt)
+    IntegratorVPARK(equation, tableau, Δt)
 end
 
 "Create integrator for variational special partitioned additive Runge-Kutta tableau."
-function Integrator(equation::IDAE, tableau::TableauVSPARK, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
-    IntegratorVSPARK(equation, tableau, Δt; nonlinear_solver=nonlinear_solver, nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+function Integrator(equation::IDAE, tableau::TableauVSPARK, Δt)
+    IntegratorVSPARK(equation, tableau, Δt)
 end
 
 "Print error for integrators not implemented, yet."
-function Integrator(equation::Equation, tableau::AbstractTableau, Δt;
-        nonlinear_solver=DEFAULT_NonlinearSolver,
-        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol)
+function Integrator(equation::Equation, tableau::AbstractTableau, Δt)
     error("No integrator found for tableau ", tableau)
 end
 

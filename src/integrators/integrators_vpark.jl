@@ -251,8 +251,6 @@ end
 
 function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
                          tableau::TableauVPARK{TT}, Δt::TT;
-                         nonlinear_solver=DEFAULT_NonlinearSolver,
-                         nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
                          interpolation=HermiteInterpolation{DT}) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
     D = equation.d
     S = tableau.s
@@ -280,7 +278,7 @@ function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
     function_stages = (x,b) -> function_stages!(x, b, params)
 
     # create solver
-    solver = nonlinear_solver(x, function_stages; nmax=nmax, atol=atol, rtol=rtol, stol=stol, autodiff=false)
+    solver = get_config(:nls_solver)(x, function_stages)
 
     # create initial guess
     iguess = InitialGuessIODE(interpolation, equation, Δt)

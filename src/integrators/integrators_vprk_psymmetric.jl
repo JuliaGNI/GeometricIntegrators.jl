@@ -103,8 +103,6 @@ struct IntegratorVPRKpSymmetric{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegra
 end
 
 function IntegratorVPRKpSymmetric(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
-                                  nonlinear_solver=DEFAULT_NonlinearSolver,
-                                  nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
                                   interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
     S = tableau.s
@@ -139,7 +137,7 @@ function IntegratorVPRKpSymmetric(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::T
     function_stages_solver = (x,b) -> function_stages!(x, b, params)
 
     # create solver
-    solver = nonlinear_solver(zeros(DT,N), function_stages_solver; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+    solver = get_config(:nls_solver)(zeros(DT,N), function_stages_solver)
 
     # create initial guess
     iguess = InitialGuessIODE(interpolation, equation, Δt; periodicity=equation.periodicity)
@@ -171,8 +169,7 @@ function integrate_step!(int::IntegratorVPRKpSymmetric{DT,TT,ΑT,FT,GT,VT}, sol:
     end
 
     # call nonlinear solver
-    # solve!(int.solver)
-    solve!(int.solver; refactorize=1)
+    solve!(int.solver)
 
     # println(int.solver.status, ", it=", n)
     if !solverStatusOK(int.solver.status, int.solver.params)
