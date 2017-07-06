@@ -1,5 +1,6 @@
 
-using DecFP: Dec128
+using DecFP
+using DecFP: Dec128, _parse
 
 
 macro define(name, definition)
@@ -40,6 +41,7 @@ function _dec128(x::Expr)
 end
 
 _dec128(x::Int) = Dec128(x)
+_dec128(x::String) = _parse(Dec128, x)
 
 _dec128(x) = x
 

@@ -38,20 +38,51 @@ end
 struct CoefficientsRK{T} <: AbstractCoefficients{T}
     @HeaderCoefficientsRK
     @CoefficientsRK
+    â::Matrix{T}
+    b̂::Vector{T}
+    ĉ::Vector{T}
 
     function CoefficientsRK{T}(name,o,s,a,b,c) where {T}
+        new(name,o,s,a,b,c,zeros(a),zeros(b),zeros(c))
+    end
+
+    function CoefficientsRK{T}(name,o,s,a,b,c,â,b̂,ĉ) where {T}
         @assert T <: Real
         @assert isa(name, Symbol)
         @assert isa(o, Integer)
         @assert isa(s, Integer)
         @assert s > 0 "Number of stages must be > 0"
         @assert s==size(a,1)==size(a,2)==length(b)==length(c)
-        new(name,o,s,a,b,c)
+        @assert s==size(â,1)==size(â,2)==length(b̂)==length(ĉ)
+        new(name,o,s,a,b,c,â,b̂,ĉ)
     end
+end
+
+function CoefficientsRK(T::Type, name::Symbol, order::Int, a::Matrix, b::Vector, c::Vector; compensated=true)
+
+    a̅ = Matrix{T}(a)
+    b̅ = Vector{T}(b)
+    c̅ = Vector{T}(c)
+
+    if compensated
+        â = Matrix{T}(a-Matrix{eltype(a)}(a̅))
+        b̂ = Vector{T}(b-Vector{eltype(b)}(b̅))
+        ĉ = Vector{T}(c-Vector{eltype(c)}(c̅))
+    else
+        â = zeros(a̅)
+        b̂ = zeros(b̅)
+        ĉ = zeros(c̅)
+    end
+
+    CoefficientsRK{T}(name, order, length(c), a̅, b̅, c̅, â, b̂, ĉ)
 end
 
 function CoefficientsRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}) where {T}
     CoefficientsRK{T}(name, order, length(c), a, b, c)
+end
+
+function CoefficientsRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}, â::Matrix{T}, b̂::Vector{T}, ĉ::Vector{T}) where {T}
+    CoefficientsRK{T}(name, order, length(c), a, b, c, â, b̂, ĉ)
 end
 
 Base.hash(tab::CoefficientsRK, h::UInt) = hash(tab.o, hash(tab.s, hash(tab.a, hash(tab.b, hash(tab.c, hash(:CoefficientsRK, h))))))

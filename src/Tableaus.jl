@@ -34,6 +34,10 @@ module Tableaus
 
     include("tableaus/coefficients_lob.jl")
 
+    export getCoefficientsRadIIA2, getCoefficientsRadIIA3
+
+    include("tableaus/coefficients_rad.jl")
+
     export getCoefficientsSRK3
 
     include("tableaus/coefficients_srk.jl")
@@ -93,8 +97,16 @@ module Tableaus
     include("tableaus/tableaus_firk.jl")
 
     export getTableauImplicitEuler, getTableauImplicitMidpoint,
-           getTableauGLRK1, getTableauGLRK2, getTableauGLRK3,
-           getTableauGLRK, getTableauSRK3
+           getTableauGLRK,
+           getTableauLobIIIA2, getTableauLobIIIA3, getTableauLobIIIA4,
+           getTableauLobIIIB2, getTableauLobIIIB3, getTableauLobIIIB4,
+           getTableauLobIIIC2, getTableauLobIIIC3, getTableauLobIIIC4,
+           getTableauLobIIID2, getTableauLobIIID3, getTableauLobIIID4,
+           getTableauLobIIIE2, getTableauLobIIIE3, getTableauLobIIIE4,
+           getTableauLobIIIF2, getTableauLobIIIF3, getTableauLobIIIF4,
+           getTableauLobIIIG2, getTableauLobIIIG3, getTableauLobIIIG4,
+           getTableauRadIIA2,  getTableauRadIIA3,
+           getTableauSRK3
 
     include("tableaus/tableaus_sirk.jl")
 
@@ -104,12 +116,12 @@ module Tableaus
 
     include("tableaus/tableaus_spark.jl")
 
-    export getTableauLobIIIAIIIB2, getTableauLobIIIAIIIB3, getTableauLobIIIAIIIB4,
-           getTableauLobIIIC2, getTableauLobIIIC3, getTableauLobIIIC4,
-           getTableauLobIIID2, getTableauLobIIID3, getTableauLobIIID4,
-           getTableauLobIIIE2, getTableauLobIIIE3, getTableauLobIIIE4,
-           getTableauLobIIIF2, getTableauLobIIIF3, getTableauLobIIIF4,
-           getTableauVPGLRK,
+    export getTableauVPGLRK,
+           getTableauVPLobIIIAIIIB2, getTableauVPLobIIIAIIIB3, getTableauVPLobIIIAIIIB4,
+           getTableauVPLobIIIC2, getTableauVPLobIIIC3, getTableauVPLobIIIC4,
+           getTableauVPLobIIID2, getTableauVPLobIIID3, getTableauVPLobIIID4,
+           getTableauVPLobIIIE2, getTableauVPLobIIIE3, getTableauVPLobIIIE4,
+           getTableauVPLobIIIF2, getTableauVPLobIIIF3, getTableauVPLobIIIF4,
            getTableauVPSRK3
 
 

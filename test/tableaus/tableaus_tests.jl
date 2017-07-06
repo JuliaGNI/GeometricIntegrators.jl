@@ -78,7 +78,7 @@ c = Rational{Int64}[1//2]
 o = 2
 
 @test TableauFIRK(:implicit_midpoint, o, a, b, c) == getTableauImplicitMidpoint()
-@test TableauFIRK(:implicit_midpoint, o, a, b, c) == getTableauGLRK1()
+@test TableauFIRK(:implicit_midpoint, o, a, b, c) == getTableauGLRK(1)
 
 @test_throws AssertionError tab_implicit_midpoint = TableauERK(:implicit_midpoint, o, a, b, c)
 @test_throws AssertionError tab_implicit_midpoint = TableauDIRK(:implicit_midpoint, o, a, b, c)
@@ -94,7 +94,7 @@ b = Array{Float64}(@dec128 [0.5,      0.5     ])
 c = Array{Float64}(@dec128 [0.5-√3/6, 0.5+√3/6])
 o = 4
 
-@test TableauFIRK(:glrk2, o, a, b, c) == getTableauGLRK2()
+@test TableauFIRK(:glrk2, o, a, b, c) == getTableauGLRK(2)
 
 @test_throws AssertionError tab_explicit_glrk2 = TableauERK(:glrk2, o, a, b, c)
 @test_throws AssertionError tab_explicit_glrk2 = TableauDIRK(:glrk2, o, a, b, c)
@@ -115,9 +115,8 @@ tab_explicit_glrk2 = TableauFIRK(:glrk2, o, a, b, c)
 # instantiate all fully implicit tableaus
 @test typeof(getTableauImplicitEuler()) <: TableauFIRK
 @test typeof(getTableauImplicitMidpoint()) <: TableauFIRK
-@test typeof(getTableauGLRK1()) <: TableauFIRK
-@test typeof(getTableauGLRK2()) <: TableauFIRK
-@test typeof(getTableauGLRK3()) <: TableauFIRK
+@test typeof(getTableauGLRK(1)) <: TableauFIRK
+@test typeof(getTableauGLRK(2)) <: TableauFIRK
 
 # instatiate all partitioned tableaus
 @test typeof(getTableauSymplecticEulerA()) <: TableauEPRK
@@ -127,19 +126,17 @@ tab_explicit_glrk2 = TableauFIRK(:glrk2, o, a, b, c)
 @test typeof(TableauEPRK(:PERK4, 4, getTableauERK4().q, getTableauERK4().q)) <: TableauEPRK
 
 # test computation of Gauss-Legendre Runge-Kutta tableaus
-@test getTableauGLRK(1) == getTableauGLRK1()
+glrk2_tab1 = getCoefficientsGLRK(2)
+glrk2_tab2 = getCoefficientsGLRK(2, high_precision=false)
+@test glrk2_tab1.a ≈ glrk2_tab2.a atol=2 * eps()
+@test glrk2_tab1.b == glrk2_tab2.b
+@test glrk2_tab1.c ≈ glrk2_tab2.c atol=2 * eps()
 
-glrk2_tab1 = getTableauGLRK(2)
-glrk2_tab2 = getTableauGLRK2()
-@test glrk2_tab1.q.a ≈ glrk2_tab1.q.a atol=2 * eps()
-@test glrk2_tab1.q.b == glrk2_tab1.q.b
-@test glrk2_tab1.q.c == glrk2_tab1.q.c
-
-glrk3_tab1 = getTableauGLRK(3)
-glrk3_tab2 = getTableauGLRK3()
-@test glrk3_tab1.q.a ≈ glrk3_tab1.q.a atol=2 * eps()
-@test glrk3_tab1.q.b == glrk3_tab1.q.b
-@test glrk3_tab1.q.c == glrk3_tab1.q.c
+glrk3_tab1 = getCoefficientsGLRK(3)
+glrk3_tab2 = getCoefficientsGLRK(3, high_precision=false)
+@test glrk3_tab1.a ≈ glrk3_tab2.a atol=2 * eps()
+@test glrk3_tab1.b == glrk3_tab2.b
+@test glrk3_tab1.c ≈ glrk3_tab2.c atol=2 * eps()
 
 
 # TODO Add tests for TableauIPRK, TableauSARK, TableauSPARK and TableauGLM.
