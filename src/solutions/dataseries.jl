@@ -77,7 +77,7 @@ Base.indices(ds::DataSeries{T,2}) where {T} = (1:ds.nd, 0:ds.nt)
 Base.indices(ds::DataSeries{T,3}) where {T} = (1:ds.nd, 0:ds.nt, 1:ds.ni)
 Base.strides(ds::DataSeries) = (strides(ds.d))
 
-function get_data!(ds::DataSeries{T,2}, x::Array{T,1}, n, k=1) where {T}
+function get_data!(ds::DataSeries{T,2}, x::Union{Array{T,1}, Array{Double{T},1}}, n, k=1) where {T}
     j = n+1
     @assert length(x) == size(ds.d, 1)
     @assert j ≤ size(ds.d, 2)
@@ -87,7 +87,7 @@ function get_data!(ds::DataSeries{T,2}, x::Array{T,1}, n, k=1) where {T}
     end
 end
 
-function get_data!(ds::DataSeries{T,3}, x::Array{T,2}, n) where {T}
+function get_data!(ds::DataSeries{T,3}, x::Union{Array{T,2}, Array{Double{T},2}}, n) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert size(x,2) == size(ds.d, 3)
@@ -99,7 +99,7 @@ function get_data!(ds::DataSeries{T,3}, x::Array{T,2}, n) where {T}
     end
 end
 
-function get_data!(ds::DataSeries{T,3}, x::Array{T,1}, n, k) where {T}
+function get_data!(ds::DataSeries{T,3}, x::Union{Array{T,1}, Array{Double{T},1}}, n, k) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert j ≤ size(ds.d, 2)
@@ -109,7 +109,7 @@ function get_data!(ds::DataSeries{T,3}, x::Array{T,1}, n, k) where {T}
     end
 end
 
-function set_data!(ds::DataSeries{T,2}, x::Array{T,1}, n, k=1) where {T}
+function set_data!(ds::DataSeries{T,2}, x::Union{Array{T,1}, Array{Double{T},1}}, n, k=1) where {T}
     j = n+1
     @assert length(x) == size(ds.d, 1)
     @assert j ≤ size(ds.d, 2)
@@ -119,7 +119,7 @@ function set_data!(ds::DataSeries{T,2}, x::Array{T,1}, n, k=1) where {T}
     end
 end
 
-function set_data!(ds::DataSeries{T,3}, x::Array{T,2}, n) where {T}
+function set_data!(ds::DataSeries{T,3}, x::Union{Array{T,2}, Array{Double{T},2}}, n) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert size(x,2) == size(ds.d, 3)
@@ -131,7 +131,7 @@ function set_data!(ds::DataSeries{T,3}, x::Array{T,2}, n) where {T}
     end
 end
 
-function set_data!(ds::DataSeries{T,3}, x::Array{T,1}, n, k) where {T}
+function set_data!(ds::DataSeries{T,3}, x::Union{Array{T,1}, Array{Double{T},1}}, n, k) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert j ≤ size(ds.d, 2)

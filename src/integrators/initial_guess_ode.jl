@@ -47,7 +47,7 @@ function InitialGuessODE(interp, equation::ODE{DT,TT,VT,N}, Δt::TT; periodicity
     InitialGuessODE{DT, TT, VT, interp}(int, rk4, sol, equ.v, Δt, equ.d, periodicity)
 end
 
-function initialize!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, x₁::Vector{DT}) where {DT,TT,VT,IT}
+function initialize!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, x₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT,VT,IT}
     ig.t₁ = t₁
     set_initial_conditions!(ig.sol, t₁, x₁)
     integrate!(ig.rk4, ig.sol)
@@ -55,15 +55,15 @@ function initialize!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, x₁::Vector{DT
     ig.v(t₁-ig.Δt, ig.q₁, ig.v₁)
 end
 
-function update!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, x₁::Vector{DT}) where {DT,TT,VT,IT}
+function update!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, x₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT,VT,IT}
     local Δq::DT
 
     ig.t₀ = ig.t₁
     ig.t₁ = t₁
 
-    simd_copy!(ig.q₁, ig.q₀)
-    simd_copy!(ig.v₁, ig.v₀)
-    simd_copy!(x₁, ig.q₁)
+    ig.q₀ .= ig.q₁
+    ig.v₀ .= ig.v₁
+    ig.q₁ .= x₁
 
     # take care of periodic solutions
     for k in 1:length(ig.q₁)
@@ -80,12 +80,12 @@ function update!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, x₁::Vector{DT}) w
     ig.v(t₁, ig.q₁, ig.v₁)
 end
 
-function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT,VT,IT}, guess::Vector{DT}, c::TT=one(TT)) where {DT,TT,VT,IT}
+function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT,VT,IT}, guess::Union{Vector{DT}, Vector{Double{DT}}}, c::TT=one(TT)) where {DT,TT,VT,IT}
     evaluate!(ig.int, ig.q₀, ig.q₁, ig.v₀, ig.v₁, one(TT)+c, guess)
 end
 
 function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT,VT,IT},
-           guess_q::Vector{DT}, guess_v::Vector{DT}, c::TT=one(TT)) where {DT,TT,VT,IT}
+           guess_q::Union{Vector{DT}, Vector{Double{DT}}}, guess_v::Vector{DT}, c::TT=one(TT)) where {DT,TT,VT,IT}
 
     @assert length(guess_q) == length(guess_v)
 

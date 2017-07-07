@@ -49,16 +49,16 @@ function set_initial_conditions!(sol::SolutionODE{DT,TT}, equ::ODE{DT,TT}) where
     set_initial_conditions!(sol, equ.t₀, equ.q₀)
 end
 
-function set_initial_conditions!(sol::SolutionODE{DT,TT}, t₀::TT, q₀::Array{DT}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionODE{DT,TT}, t₀::TT, q₀::Union{Array{DT}, Array{Double{DT}}}) where {DT,TT}
     set_data!(sol.q, q₀, 0)
     compute_timeseries!(sol.t, t₀)
 end
 
-function get_initial_conditions!(sol::SolutionODE{DT,TT}, q::Vector{DT}, k) where {DT,TT}
+function get_initial_conditions!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, k) where {DT,TT}
     get_data!(sol.q, q, 0, k)
 end
 
-function copy_solution!(sol::SolutionODE{DT,TT}, q::Vector{DT}, n, k) where {DT,TT}
+function copy_solution!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, n, k) where {DT,TT}
     if mod(n, sol.nsave) == 0
         set_data!(sol.q, q, div(n, sol.nsave), k)
     end

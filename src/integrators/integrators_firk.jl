@@ -100,8 +100,7 @@ struct IntegratorFIRK{DT, TT, FT, SPT, ST, IT} <: Integrator{DT,TT}
     solver::ST
     iguess::InitialGuessODE{DT, TT, FT, IT}
 
-    q::Vector{DT}
-    qₑᵣᵣ::Vector{DT}
+    q::Vector{Double{DT}}
 
     v::Vector{DT}
     y::Vector{DT}
@@ -109,9 +108,6 @@ struct IntegratorFIRK{DT, TT, FT, SPT, ST, IT} <: Integrator{DT,TT}
     Q::Matrix{DT}
     V::Matrix{DT}
     Y::Matrix{DT}
-
-    tQ::Vector{DT}
-    tV::Vector{DT}
 end
 
 function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::TT;
@@ -123,23 +119,16 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::
     x = zeros(DT, D*S)
 
     # create solution vectors
-    q = zeros(DT,D)
+    q = zeros(Double{DT},D)
+
+    # create velocity and update vector
     v = zeros(DT,D)
-
-    # create compensated summation error vectors
-    qₑᵣᵣ = zeros(DT,D)
-
-    # create update vector
     y = zeros(DT,D)
 
     # create internal stage vectors
     Q = zeros(DT,D,S)
     V = zeros(DT,D,S)
     Y = zeros(DT,D,S)
-
-    # create temporary vectors
-    tQ = zeros(DT,D)
-    tV = zeros(DT,D)
 
     # create params
     params = NonlinearFunctionParametersFIRK(equation.v, Δt, tableau.q, q)
@@ -156,7 +145,7 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::
     # create integrator
     IntegratorFIRK{DT, TT, FT, typeof(params), typeof(solver), typeof(iguess.int)}(
                                         equation, tableau, Δt, params, solver, iguess,
-                                        q, qₑᵣᵣ, v, y, Q, V, Y, tQ, tV)
+                                        q, v, y, Q, V, Y)
 end
 
 
@@ -169,9 +158,6 @@ function initialize!(int::IntegratorFIRK{DT,TT}, sol::SolutionODE, m::Int) where
 
     # initialise initial guess
     initialize!(int.iguess, sol.t[0], int.q)
-
-    # reset compensated summation error
-    int.qₑᵣᵣ .= 0
 end
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
@@ -180,7 +166,7 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
     int.params.t = sol.t[0] + (n-1)*int.Δt
 
     # copy previous solution to initial guess
-    update!(int.iguess, sol.t[0] + (n-1)*int.Δt, int.q)
+    update!(int.iguess, int.params.t, int.q)
 
     # compute initial guess for internal stages
     for i in 1:int.tableau.q.s
@@ -210,10 +196,10 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
     compute_stages_firk!(int.solver.x, int.Q, int.V, int.Y, int.params)
 
     # compute final update
-    update_solution!(int.q, int.qₑᵣᵣ, int.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
+    update_solution!(int.q, int.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q, int.qₑᵣᵣ, int.equation.periodicity)
+    cut_periodic_solution!(int.q, int.equation.periodicity)
 
     # copy to solution
     copy_solution!(sol, int.q, n, m)

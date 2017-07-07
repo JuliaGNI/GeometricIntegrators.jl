@@ -2,6 +2,8 @@ __precompile__()
 
 module Solutions
 
+    using DoubleDouble
+
     using ..Equations
 
     export DataSeries, get_data!, set_data!, reset!

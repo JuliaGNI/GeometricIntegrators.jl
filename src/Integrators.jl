@@ -2,6 +2,8 @@ __precompile__()
 
 module Integrators
 
+    using DoubleDouble
+
     using ..Config
     using ..Utils
     using ..Equations
