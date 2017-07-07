@@ -1,2 +1,3 @@
 examples/*.ipynb linguist-vendored
 prototyping/*.ipynb linguist-vendored
+test/*/*.ipynb linguist-vendored
