@@ -50,9 +50,6 @@ end
         params.g(t₁, q̅, λ, $tG)
         simd_copy_yx_first!($tG, G, 2)
 
-        # scale U and G to avoid accuracy issues
-        scale_projection!(U, G, params.Δt, params.o)
-
         # compute p̅=α(q̅)p̅
         params.α(t₁, q̅, λ, p̅)
     end
@@ -198,8 +195,4 @@ function integrate_step!(int::IntegratorVPRKpSymmetric{DT,TT,ΑT,FT,GT,VT}, sol:
 
     # copy to solution
     copy_solution!(sol, int.q, int.p, int.pcache.λ, n, m)
-    # println(int.q)
-    # println(int.p)
-    # println(int.pcache.λ)
-    # println()
 end

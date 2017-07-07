@@ -188,26 +188,6 @@ end
 end
 
 
-function scale_projection!(Y::Matrix{ST}, Δt::TT, o::Int) where {ST,TT}
-    # local scale_fac::TT = Δt^(-1)
-    # local scale_fac::TT = 10.^(-convert(TT,o)/2)
-    # local scale_fac::TT = 1
-
-    # if Δt > 1
-    #     scale_fac = Δt^(-o/2)
-    # else
-    #     scale_fac = Δt^(+o/2)
-    # end
-
-    # simd_scale!(Y, scale_fac)
-end
-
-function scale_projection!(U::Matrix{ST}, G::Matrix{ST}, Δt::TT, o::Int) where {ST,TT}
-    scale_projection!(U, Δt, o)
-    scale_projection!(G, Δt, o)
-end
-
-
 @generated function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,S}) where {ST,DT,TT,AT,FT,D,S}
     compute_stages_vprk = quote
         local z1::ST
@@ -362,43 +342,17 @@ end
 
 
 function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRK{DT}) where {DT,TT}
-    for k in 1:size(cache.V, 1)
-        for i in 1:size(cache.V, 2)
-            int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.q.b[i] * cache.V[k,i], int.q[k], int.qₑᵣᵣ[k])
-            int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.q.b̂[i] * cache.V[k,i], int.q[k], int.qₑᵣᵣ[k])
-            int.p[k], int.pₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.p.b[i] * cache.F[k,i], int.p[k], int.pₑᵣᵣ[k])
-            int.p[k], int.pₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.p.b̂[i] * cache.F[k,i], int.p[k], int.pₑᵣᵣ[k])
-        end
-    end
-
-    # simd_mult!(cache.y, cache.V, int.tableau.q.b)
-    # simd_mult!(cache.z, cache.F, int.tableau.p.b)
-    # simd_axpy!(int.Δt, cache.y, int.q, int.qₑᵣᵣ)
-    # simd_axpy!(int.Δt, cache.z, int.p, int.pₑᵣᵣ)
+    update_solution!(int.q, int.qₑᵣᵣ, cache.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
+    update_solution!(int.p, int.pₑᵣᵣ, cache.F, int.tableau.p.b, int.tableau.p.b̂, int.Δt)
 end
 
 
 function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRKprojection{DT}, R::Vector{TT}) where {DT,TT}
-    for k in 1:size(cache.U, 1)
-        for i in 1:size(cache.U, 2)
-            int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * R[i] * cache.U[k,i], int.q[k], int.qₑᵣᵣ[k])
-            int.p[k], int.pₑᵣᵣ[k] = compensated_summation(int.Δt * R[i] * cache.G[k,i], int.p[k], int.pₑᵣᵣ[k])
-        end
-    end
-
-    # simd_mult!(cache.u, cache.U, R)
-    # simd_mult!(cache.g, cache.G, R)
-    # simd_axpy!(int.Δt, cache.u, int.q, int.qₑᵣᵣ)
-    # simd_axpy!(int.Δt, cache.g, int.p, int.pₑᵣᵣ)
+    update_solution!(int.q, int.qₑᵣᵣ, cache.U, R, int.Δt)
+    update_solution!(int.p, int.pₑᵣᵣ, cache.G, R, int.Δt)
 end
 
 
 function cut_periodic_solution!(int::AbstractIntegratorVPRK)
-    for k in 1:int.equation.d
-        if int.equation.periodicity[k] ≠ 0
-            if int.q[k] < 0 || int.q[k] ≥ int.equation.periodicity[k]
-                (int.q[k], int.qₑᵣᵣ[k]) = compensated_summation(-fld(int.q[k], int.equation.periodicity[k]) * int.equation.periodicity[k], int.q[k], int.qₑᵣᵣ[k])
-            end
-        end
-    end
+    cut_periodic_solution!(int.q, int.qₑᵣᵣ, int.equation.periodicity)
 end

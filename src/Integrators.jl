@@ -11,6 +11,8 @@ module Integrators
 
     import ..Solvers.function_stages!
 
+    include("integrators/runge_kutta.jl")
+
     export InitialGuess, InitialGuessIODE, initialize!, update!
 
     export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK, IntegratorSIRK,

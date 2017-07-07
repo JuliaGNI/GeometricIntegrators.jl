@@ -47,9 +47,6 @@ end
         simd_copy_yx_first!(λ, U, 1)
         simd_copy_yx_first!(λ, U, 2)
 
-        # scale U to avoid accuracy issues
-        scale_projection!(U, params.Δt, params.o)
-
         # compute G=g(q,λ)
         for k in 1:D
             y = 0
@@ -66,9 +63,6 @@ end
         params.g(tₘ, $q̃, λ, $tG)
         simd_copy_yx_first!($tG, G, 1)
         simd_copy_yx_first!($tG, G, 2)
-
-        # scale G to avoid accuracy issues
-        scale_projection!(G, params.Δt, params.o)
 
         # compute p̅=α(q̅)
         params.α(t₁, q̅, λ, p̅)

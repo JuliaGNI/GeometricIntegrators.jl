@@ -64,9 +64,6 @@ end
         simd_copy_yx_first!($tG, G, 1)
         simd_copy_yx_first!($tG, G, 2)
 
-        # scale U and G to avoid accuracy issues
-        scale_projection!(U, G, params.Δt, params.o)
-
         # compute p̅=α(q)
         params.α(params.t + params.Δt, q̅, λ, p̅)
     end
@@ -230,9 +227,6 @@ function initialize!(int::IntegratorVPRKpStandard{DT,TT}, sol::SolutionPDAE, m::
 
     int.equation.g(sol.t[0], int.q, int.pcache.λ, tG)
     simd_copy_yx_first!(tG, int.pcache.G, 1)
-
-    # scale U and G to avoid accuracy issues
-    scale_projection!(int.pcache.U, int.pcache.G, int.Δt, int.tableau.o)
 end
 
 

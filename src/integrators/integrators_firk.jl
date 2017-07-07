@@ -22,9 +22,6 @@ struct NonlinearFunctionCacheFIRK{DT}
     V::Matrix{DT}
     Y::Matrix{DT}
 
-    tQ::Vector{DT}
-    tV::Vector{DT}
-
     function NonlinearFunctionCacheFIRK{DT}(d, s) where {DT}
 
         # create internal stage vectors
@@ -32,16 +29,12 @@ struct NonlinearFunctionCacheFIRK{DT}
         V = zeros(DT,d,s)
         Y = zeros(DT,d,s)
 
-        # create temporary vectors
-        tQ = zeros(DT,d)
-        tV = zeros(DT,d)
-
-        new(Q, V, Y, tQ, tV)
+        new(Q, V, Y)
     end
 end
 
 function compute_stages_firk!(x::Vector{DT}, Q::Matrix{DT}, V::Matrix{DT}, Y::Matrix{DT},
-                              q::Vector, a::Matrix{TT}, c::Vector{TT}, Δt::TT, t::TT, v::VT,
+                              q::Vector, c::Vector{TT}, Δt::TT, t::TT, v::VT,
                               tQ::Vector{DT}, tV::Vector{DT}) where {DT,TT,VT}
 
     local d::Int = length(q)
@@ -49,7 +42,6 @@ function compute_stages_firk!(x::Vector{DT}, Q::Matrix{DT}, V::Matrix{DT}, Y::Ma
     local tᵢ::TT
 
     @assert d == length(tQ) == length(tV)
-    @assert s == size(a,1) == size(a,2)
     @assert d == size(Q,1) == size(V,1) == size(Y,1)
     @assert s == size(Q,2) == size(V,2) == size(Y,2)
 
@@ -75,11 +67,14 @@ end
 "Compute stages of fully implicit Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersFIRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
 
+    tQ::Vector{ST} = zeros(ST,D)
+    tV::Vector{ST} = zeros(ST,D)
+
     cache = NonlinearFunctionCacheFIRK{ST}(D, S)
 
     function_stages = quote
 
-        compute_stages_firk!(x, $cache.Q, $cache.V, $cache.Y, params.q, params.a, params.c, params.Δt, params.t, params.v, $cache.tQ, $cache.tV)
+        compute_stages_firk!(x, $cache.Q, $cache.V, $cache.Y, params.q, params.c, params.Δt, params.t, params.v, $tQ, $tV)
 
         local y1::ST
         local y2::ST
@@ -213,33 +208,20 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
     # call nonlinear solver
     solve!(int.solver)
 
+    # println(int.solver.status)
     if !solverStatusOK(int.solver.status, int.solver.params)
         println(int.solver.status)
     end
 
     compute_stages_firk!(int.solver.x, int.Q, int.V, int.Y, int.q,
-                         int.tableau.q.a, int.tableau.q.c, int.Δt, sol.t[0] + (n-1)*int.Δt,
+                         int.tableau.q.c, int.Δt, sol.t[0] + (n-1)*int.Δt,
                          int.equation.v, int.tQ, int.tV)
 
     # compute final update
-    for k in 1:size(int.V, 1)
-        for i in 1:size(int.V, 2)
-            int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.q.b[i] * int.V[k,i], int.q[k], int.qₑᵣᵣ[k])
-            int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * int.tableau.q.b̂[i] * int.V[k,i], int.q[k], int.qₑᵣᵣ[k])
-        end
-    end
+    update_solution!(int.q, int.qₑᵣᵣ, int.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
 
     # take care of periodic solutions
-    for k in 1:int.equation.d
-        if int.equation.periodicity[k] ≠ 0
-            while int.q[k] < 0
-                (int.q[k], int.qₑᵣᵣ[k]) = compensated_summation(+int.equation.periodicity[k], int.q[k], int.qₑᵣᵣ[k])
-            end
-            while int.q[k] ≥ int.equation.periodicity[k]
-                (int.q[k], int.qₑᵣᵣ[k]) = compensated_summation(-int.equation.periodicity[k], int.q[k], int.qₑᵣᵣ[k])
-            end
-        end
-    end
+    cut_periodic_solution!(int.q, int.qₑᵣᵣ, int.equation.periodicity)
 
     # copy to solution
     copy_solution!(sol, int.q, n, m)
