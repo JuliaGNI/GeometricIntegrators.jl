@@ -186,10 +186,8 @@ function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}, sol::
     # call nonlinear solver
     solve!(int.solver)
 
-    # println((@sprintf "  i=%07i" n), ",", int.solver.status)
-    if !solverStatusOK(int.solver.status, int.solver.params)
-        println((@sprintf "  i=%07i" n), ",", int.solver.status)
-    end
+    # print solver status
+    printSolverStatus(int.solver.status, int.solver.params, n)
 
     # if isnan(int.solver.status.rₐ)
     #     println("WARNING: Detected NaN in it=", n)

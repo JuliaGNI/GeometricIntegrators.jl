@@ -73,6 +73,20 @@ Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
                         (@sprintf "    n=%4i" status.i),  ",   ", (@sprintf "rₐ=%14.8e" status.rₐ), ",   ",
                         (@sprintf "rᵣ=%14.8e" status.rᵣ), ",   ", (@sprintf "rₛ=%14.8e" status.rₛ))
 
+function printSolverStatus(status::NonlinearSolverStatus, params::NonlinearSolverParameters, n::Int)
+    if (get_config(:verbosity) == 1 && !solverStatusOK(status, params)) ||
+        get_config(:verbosity) > 1
+        println((@sprintf "  i=%07i" n), ",", status)
+    end
+end
+
+function printSolverStatus(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
+    if (get_config(:verbosity) == 1 && !solverStatusOK(status, params)) ||
+        get_config(:verbosity) > 1
+        println(status)
+    end
+end
+
 function solverConverged(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
     return status.rₐ ≤ params.atol  ||
            status.rᵣ ≤ params.rtol  ||

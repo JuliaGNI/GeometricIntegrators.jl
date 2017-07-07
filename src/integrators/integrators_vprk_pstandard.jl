@@ -274,10 +274,8 @@ function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::
     # call projection solver
     solve!(int.projector)
 
-    # println((@sprintf "  i=%07i" n), ",", int.solver.status)
-    if !solverStatusOK(int.projector.status, int.projector.params)
-        println((@sprintf "  pi=%07i" n), ",", int.projector.status)
-    end
+    # print solver status
+    printSolverStatus(int.solver.status, int.solver.params, n)
 
     # if isnan(int.projector.status.rₐ)
     #     println("WARNING: Detected NaN in pit=", n)

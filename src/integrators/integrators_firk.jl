@@ -187,10 +187,8 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
     # call nonlinear solver
     solve!(int.solver)
 
-    # println(int.solver.status)
-    if !solverStatusOK(int.solver.status, int.solver.params)
-        println(int.solver.status)
-    end
+    # print solver status
+    printSolverStatus(int.solver.status, int.solver.params, n)
 
     # compute internal stages
     compute_stages_firk!(int.solver.x, int.Q, int.V, int.Y, int.params)

@@ -35,4 +35,9 @@ module GeometricIntegrators
 
     include("Problems.jl")
 
+
+    function __init__()
+        add_config(:verbosity, 1)
+    end
+
 end
