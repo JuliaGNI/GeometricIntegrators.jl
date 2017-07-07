@@ -66,19 +66,25 @@ function update!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, q₁::Union{Vector{
     ig.v₀ .= ig.v₁
     ig.q₁ .= q₁
 
+    # compute vector field
+    ig.v(t₁, ig.q₁, ig.v₁)
+
     # take care of periodic solutions
     for k in eachindex(ig.q₁)
         if ig.periodicity[k] ≠ 0
             Δq = ig.q₁[k] - ig.q₀[k]
-            if ig.q₁[k] < 0 || ig.q₁[k] ≥ ig.periodicity[k]
-                ig.q₁[k] -= fld(ig.q₁[k], ig.periodicity[k]) * ig.periodicity[k]
+            # if ig.q₁[k] < 0 || ig.q₁[k] ≥ ig.periodicity[k]
+            #     ig.q₁[k] -= fld(ig.q₁[k], ig.periodicity[k]) * ig.periodicity[k]
+            # end
+            while ig.q₁[k] < 0
+                ig.q₁[k] += ig.periodicity[k]
+            end
+            while ig.q₁[k] ≥ ig.periodicity[k]
+                ig.q₁[k] -= ig.periodicity[k]
             end
             ig.q₀[k] = ig.q₁[k] - Δq
         end
     end
-
-    # compute vector field
-    ig.v(t₁, ig.q₁, ig.v₁)
 end
 
 function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT,VT,IT}, guess::Union{Vector{DT}, Vector{Double{DT}}}, c::TT=one(TT)) where {DT,TT,VT,IT}
