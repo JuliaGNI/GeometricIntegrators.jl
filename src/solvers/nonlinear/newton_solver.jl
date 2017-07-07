@@ -19,11 +19,11 @@ struct NewtonSolver{T, FT, TJ, TL} <: AbstractNewtonSolver{T}
 end
 
 
-function NewtonSolver(x::Vector, F!::Function; J=nothing, linear_solver=nothing)
+function NewtonSolver(x::Vector, F!::Function; J=nothing)
     T = eltype(x)
     n = length(x)
     Jparams = getJacobianParameters(J, F!, T, n)
-    linear_solver = getLinearSolver(T, n, linear_solver)
+    linear_solver = getLinearSolver(T, n)
     NewtonSolver{T, typeof(F!), typeof(Jparams), typeof(linear_solver)}(x, F!, Jparams, linear_solver)
 end
 

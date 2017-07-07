@@ -1,6 +1,8 @@
 
 using GeometricIntegrators.Problems.Pendulum
 
+set_config(:nls_solver, NewtonSolver)
+
 Δt = 0.1
 nt = 10
 
@@ -22,31 +24,31 @@ sol = integrate(int, nt)
 int = Integrator(ode, getTableauImplicitEuler(), Δt)
 sol = integrate(int, nt)
 
-int = IntegratorFIRK(ode, getTableauImplicitMidpoint(), Δt, nonlinear_solver=NewtonSolver)
+int = IntegratorFIRK(ode, getTableauImplicitMidpoint(), Δt)
 sol = integrate(int, nt)
 
-int = IntegratorFIRK(ode, getTableauGLRK(1), Δt, nonlinear_solver=NewtonSolver)
+int = IntegratorFIRK(ode, getTableauGLRK(1), Δt)
 sol = integrate(int, nt)
 
-int = IntegratorFIRK(ode, getTableauGLRK(2), Δt, nonlinear_solver=NewtonSolver)
+int = IntegratorFIRK(ode, getTableauGLRK(2), Δt)
 sol = integrate(int, nt)
 
-int = IntegratorFIRK(ode, getTableauGLRK(3), Δt, nonlinear_solver=NewtonSolver)
+int = IntegratorFIRK(ode, getTableauGLRK(3), Δt)
 sol = integrate(int, nt)
 
-int = IntegratorFIRK(ode, getTableauGLRK(4), Δt, nonlinear_solver=NewtonSolver)
+int = IntegratorFIRK(ode, getTableauGLRK(4), Δt)
 sol = integrate(int, nt)
 
-int = IntegratorFIRK(ode, getTableauGLRK(5), Δt, nonlinear_solver=NewtonSolver)
+int = IntegratorFIRK(ode, getTableauGLRK(5), Δt)
 sol = integrate(int, nt)
 
-int = IntegratorFIRK(ode, getTableauGLRK(6), Δt, nonlinear_solver=NewtonSolver)
+int = IntegratorFIRK(ode, getTableauGLRK(6), Δt)
 sol = integrate(int, nt)
 
-int = IntegratorFIRK(ode, getTableauGLRK(7), Δt, nonlinear_solver=NewtonSolver)
+int = IntegratorFIRK(ode, getTableauGLRK(7), Δt)
 sol = integrate(int, nt)
 
-int = IntegratorFIRK(ode, getTableauSRK3(), Δt, nonlinear_solver=NewtonSolver)
+int = IntegratorFIRK(ode, getTableauSRK3(), Δt)
 sol = integrate(int, nt)
 
 pint = Integrator(pode, getTableauSymplecticEulerA(), Δt)
