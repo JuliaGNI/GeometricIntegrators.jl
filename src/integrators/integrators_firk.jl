@@ -13,8 +13,8 @@ mutable struct NonlinearFunctionParametersFIRK{DT,TT,VT,D,S} <: NonlinearFunctio
     q::Vector{DT}
 end
 
-function NonlinearFunctionParametersFIRK(v::VT, Δt::TT, tab, q::Vector{DT}) where {DT,TT,VT}
-    NonlinearFunctionParametersFIRK{DT,TT,VT,length(q),tab.s}(v, Δt, tab.a, tab.â, tab.c, 0, q)
+function NonlinearFunctionParametersFIRK(DT, D, v::VT, Δt::TT, tab) where {TT,VT}
+    NonlinearFunctionParametersFIRK{DT,TT,VT,D,tab.s}(v, Δt, tab.a, tab.â, tab.c, 0, zeros(DT,D))
 end
 
 struct NonlinearFunctionCacheFIRK{DT}
@@ -33,8 +33,8 @@ struct NonlinearFunctionCacheFIRK{DT}
     end
 end
 
-@generated function compute_stages_firk!(x::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, Y::Matrix{ST},
-                                         params::NonlinearFunctionParametersFIRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
+@generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, Y::Matrix{ST},
+                                    params::NonlinearFunctionParametersFIRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
 
     tQ::Vector{ST} = zeros(ST,D)
     tV::Vector{ST} = zeros(ST,D)
@@ -69,7 +69,7 @@ end
     cache = NonlinearFunctionCacheFIRK{ST}(D, S)
 
     quote
-        compute_stages_firk!(x, $cache.Q, $cache.V, $cache.Y, params)
+        compute_stages!(x, $cache.Q, $cache.V, $cache.Y, params)
 
         local y1::ST
         local y2::ST
@@ -113,6 +113,7 @@ end
 function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::TT;
                         interpolation=HermiteInterpolation{DT}) where {DT,TT,FT}
     D = equation.d
+    M = equation.n
     S = tableau.q.s
 
     # create solution vector for internal stages / nonlinear solver
@@ -131,7 +132,7 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::
     Y = zeros(DT,D,S)
 
     # create params
-    params = NonlinearFunctionParametersFIRK(equation.v, Δt, tableau.q, q)
+    params = NonlinearFunctionParametersFIRK(DT, D, equation.v, Δt, tableau.q)
 
     # create rhs function for nonlinear solver
     function_stages = (x,b) -> function_stages!(x, b, params)
@@ -160,14 +161,7 @@ function initialize!(int::IntegratorFIRK{DT,TT}, sol::SolutionODE, m::Int) where
     initialize!(int.iguess, sol.t[0], int.q)
 end
 
-"Integrate ODE with fully implicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,SPT,ST,IT,N}
-    # set time for nonlinear solver
-    int.params.t = sol.t[0] + (n-1)*int.Δt
-
-    # copy previous solution to initial guess
-    update!(int.iguess, int.params.t, int.q)
-
+function initial_guess!(int::IntegratorFIRK)
     # compute initial guess for internal stages
     for i in 1:int.tableau.q.s
         evaluate!(int.iguess, int.y, int.v, int.tableau.q.c[i])
@@ -183,6 +177,17 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
             end
         end
     end
+end
+
+
+"Integrate ODE with fully implicit Runge-Kutta integrator."
+function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,SPT,ST,IT,N}
+    # set time for nonlinear solver
+    int.params.t  = sol.t[0] + (n-1)*int.Δt
+    int.params.q .= int.q
+
+    # compute initial guess
+    initial_guess!(int)
 
     # call nonlinear solver
     solve!(int.solver)
@@ -190,11 +195,14 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
     # print solver status
     printSolverStatus(int.solver.status, int.solver.params, n)
 
-    # compute internal stages
-    compute_stages_firk!(int.solver.x, int.Q, int.V, int.Y, int.params)
+    # compute vector field at internal stages
+    compute_stages!(int.solver.x, int.Q, int.V, int.Y, int.params)
 
     # compute final update
     update_solution!(int.q, int.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
+
+    # copy solution to initial guess
+    update!(int.iguess, sol.t[0] + n*int.Δt, int.q)
 
     # take care of periodic solutions
     cut_periodic_solution!(int.q, int.equation.periodicity)

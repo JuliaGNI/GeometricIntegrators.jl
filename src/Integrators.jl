@@ -13,6 +13,7 @@ module Integrators
 
     import ..Solvers.function_stages!
 
+    include("integrators/extrapolation.jl")
     include("integrators/runge_kutta.jl")
 
     export InitialGuess, InitialGuessIODE, initialize!, update!
@@ -25,11 +26,11 @@ module Integrators
            integrate, integrate!, function_stages!
 
     include("integrators/integrators.jl")
-    include("integrators/integrators_erk.jl")
 
     include("integrators/initial_guess_ode.jl")
     include("integrators/initial_guess_iode.jl")
 
+    include("integrators/integrators_erk.jl")
     include("integrators/integrators_dirk.jl")
     include("integrators/integrators_firk.jl")
     include("integrators/integrators_sirk.jl")
@@ -46,5 +47,10 @@ module Integrators
     include("integrators/integrators_spark.jl")
     include("integrators/integrators_vpark.jl")
     include("integrators/integrators_vspark.jl")
+
+
+    function __init__()
+        add_config(:ig_extrapolation_stages, 5)
+    end
 
 end
