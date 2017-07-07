@@ -206,6 +206,7 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
         println(int.solver.status)
     end
 
+    # compute internal stages
     compute_stages_firk!(int.solver.x, int.Q, int.V, int.Y, int.params)
 
     # compute final update
@@ -216,9 +217,4 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
 
     # copy to solution
     copy_solution!(sol, int.q, n, m)
-end
-
-"Integrate partitioned ODE with fully implicit Runge-Kutta integrator."
-function integrate!(int::IntegratorFIRK, s::SolutionPODE)
-    # TODO
 end
