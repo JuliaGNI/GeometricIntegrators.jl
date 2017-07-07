@@ -32,7 +32,7 @@ function solve!(s::NewtonSolver{T}; n::Int=0) where {T}
     local nmax::Int = n > 0 ? nmax = n : s.params.nmax
 
     s.F!(s.x, s.linear.b)
-    residual_initial!(s.status, s.linear.b)
+    residual_initial!(s.status, s.x, s.linear.b)
     s.status.i  = 0
 
     if s.status.rₐ ≥ s.params.atol²
@@ -41,9 +41,10 @@ function solve!(s::NewtonSolver{T}; n::Int=0) where {T}
             factorize!(s.linear)
             scale!(s.linear.b, -one(T))
             solve!(s.linear)
-            simd_xpy!(s.linear.b, s.x)
+            s.δx .= s.linear.b
+            s.x .+= s.δx
             s.F!(s.x, s.linear.b)
-            residual!(s.status, s.linear.b)
+            residual!(s.status, s.δx, s.x, s.linear.b)
 
             if solverConverged(s.status, s.params) && s.status.i ≥ s.params.nmin && !(n > 0)
                 break
