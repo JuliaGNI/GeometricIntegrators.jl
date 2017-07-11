@@ -1,7 +1,10 @@
 julia 0.6-
 ApproxFun
+DecFP
+DoubleDouble
 FastGaussQuadrature
 FastTransforms
 ForwardDiff 0.5-
 HDF5
 Polynomials
+ProgressMeter
