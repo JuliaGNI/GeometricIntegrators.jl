@@ -82,110 +82,138 @@ mutable struct InitialGuessIODE{DT, TT, VT, FT, IT <: Interpolator}
     f::FT
 
     Δt::TT
-    t₀::TT
-    t₁::TT
 
     periodicity::Vector{DT}
 
-    q₀::Vector{DT}
-    q₁::Vector{DT}
-    v₀::Vector{DT}
-    v₁::Vector{DT}
-    p₀::Vector{DT}
-    p₁::Vector{DT}
-    f₀::Vector{DT}
-    f₁::Vector{DT}
+    t₀::Vector{TT}
+    q₀::Vector{Vector{DT}}
+    v₀::Vector{Vector{DT}}
+    p₀::Vector{Vector{DT}}
+    f₀::Vector{Vector{DT}}
+
+    t₁::Vector{TT}
+    q₁::Vector{Vector{DT}}
+    v₁::Vector{Vector{DT}}
+    p₁::Vector{Vector{DT}}
+    f₁::Vector{Vector{DT}}
 
     s::Int
 
-    function InitialGuessIODE{DT,TT,VT,FT,IT}(interp, v, f, Δt, d, periodicity) where {DT,TT,VT,FT,IT}
+    function InitialGuessIODE{DT,TT,VT,FT,IT}(interp, v, f, Δt, m, d, periodicity) where {DT,TT,VT,FT,IT}
         if !(length(periodicity) == d)
             periodicity = zeros(DT, d)
         end
-        new(interp, v, f, Δt, 0, 0, periodicity,
-            zeros(DT,d), zeros(DT,d),
-            zeros(DT,d), zeros(DT,d),
-            zeros(DT,d), zeros(DT,d),
-            zeros(DT,d), zeros(DT,d),
+
+        t₀ = zeros(DT,m)
+        q₀ = Array{Vector{DT}}(m)
+        v₀ = Array{Vector{DT}}(m)
+        p₀ = Array{Vector{DT}}(m)
+        f₀ = Array{Vector{DT}}(m)
+
+        t₁ = zeros(DT,m)
+        q₁ = Array{Vector{DT}}(m)
+        v₁ = Array{Vector{DT}}(m)
+        p₁ = Array{Vector{DT}}(m)
+        f₁ = Array{Vector{DT}}(m)
+
+        for i in 1:m
+            q₀[i] = zeros(DT,d)
+            v₀[i] = zeros(DT,d)
+            p₀[i] = zeros(DT,d)
+            f₀[i] = zeros(DT,d)
+            q₁[i] = zeros(DT,d)
+            v₁[i] = zeros(DT,d)
+            p₁[i] = zeros(DT,d)
+            f₁[i] = zeros(DT,d)
+        end
+
+
+        new(interp, v, f, Δt, periodicity, t₀, q₀, v₀, p₀, f₀, t₁, q₁, v₁, p₁, f₁,
             get_config(:ig_extrapolation_stages))
     end
 end
 
 function InitialGuessIODE(interp, equ::IODE{DT,TT,ΑT,FT,GT,VT}, Δt::TT; periodicity=[]) where {DT,TT,ΑT,FT,GT,VT}
     InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
-                                         equ.v, equ.f, Δt, equ.d, periodicity)
+                                         equ.v, equ.f, Δt, equ.n, equ.d, periodicity)
 end
 
 function InitialGuessIODE(interp, equ::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, Δt::TT; periodicity=[]) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
     InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
-                                         equ.v, equ.f, Δt, equ.d, periodicity)
+                                         equ.v, equ.f, Δt, equ.n, equ.d, periodicity)
 end
 
 
-function initialize!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, t₁::TT, q₁::Vector{DT}, p₁::Vector{DT}) where {DT,TT,VT,FT,IT}
-    ig.t₀  = t₁ - ig.Δt
-    ig.t₁  = t₁
-    ig.q₁ .= q₁
-    ig.p₁ .= p₁
+function initialize!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}, p₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT,VT,FT,IT}
+    ig.t₀[m]  = t₁ - ig.Δt
+    ig.t₁[m]  = t₁
+    ig.q₁[m] .= q₁
+    ig.p₁[m] .= p₁
 
-    midpoint_extrapolation(ig.v, ig.f, ig.t₁, ig.t₀, ig.q₁, ig.p₁, ig.q₀, ig.p₀, ig.s)
+    midpoint_extrapolation(ig.v, ig.f, ig.t₁[m], ig.t₀[m], ig.q₁[m], ig.p₁[m], ig.q₀[m], ig.p₀[m], ig.s)
 
-    ig.v(ig.t₀, ig.q₀, ig.p₀, ig.v₀)
-    ig.v(ig.t₁, ig.q₁, ig.p₁, ig.v₁)
-    ig.f(ig.t₀, ig.q₀, ig.v₀, ig.f₀)
-    ig.f(ig.t₁, ig.q₁, ig.v₁, ig.f₁)
+    ig.v(ig.t₀[m], ig.q₀[m], ig.p₀[m], ig.v₀[m])
+    ig.v(ig.t₁[m], ig.q₁[m], ig.p₁[m], ig.v₁[m])
+    ig.f(ig.t₀[m], ig.q₀[m], ig.v₀[m], ig.f₀[m])
+    ig.f(ig.t₁[m], ig.q₁[m], ig.v₁[m], ig.f₁[m])
 end
 
-function update!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, t₁::TT, q₁::Vector{DT}, p₁::Vector{DT}) where {DT,TT,VT,FT,IT}
+
+function update!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}, p₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT,VT,FT,IT}
     local Δq::DT
 
-    ig.t₀ = ig.t₁
-    ig.t₁ = t₁
+    ig.t₀[m] = ig.t₁[m]
+    ig.t₁[m] = t₁
 
-    ig.q₀ .= ig.q₁
-    ig.v₀ .= ig.v₁
-    ig.p₀ .= ig.p₁
-    ig.f₀ .= ig.f₁
+    ig.q₀[m] .= ig.q₁[m]
+    ig.v₀[m] .= ig.v₁[m]
+    ig.p₀[m] .= ig.p₁[m]
+    ig.f₀[m] .= ig.f₁[m]
 
-    ig.q₁ .= q₁
-    ig.p₁ .= p₁
+    ig.q₁[m] .= q₁
+    ig.p₁[m] .= p₁
 
     # compute vector fields
-    ig.v(ig.t₁, ig.q₁, ig.p₁, ig.v₁)
-    ig.f(ig.t₁, ig.q₁, ig.v₁, ig.f₁)
+    ig.v(ig.t₁[m], ig.q₁[m], ig.p₁[m], ig.v₁[m])
+    ig.f(ig.t₁[m], ig.q₁[m], ig.v₁[m], ig.f₁[m])
 
     # take care of periodic solutions
-    for k in eachindex(ig.q₁)
+    for k in eachindex(ig.q₁[m], ig.periodicity)
         if ig.periodicity[k] ≠ 0
-            Δq = ig.q₁[k] - ig.q₀[k]
-            # if ig.q₁[k] < 0 || ig.q₁[k] ≥ ig.periodicity[k]
-            #     ig.q₁[k] -= fld(ig.q₁[k], ig.periodicity[k]) * ig.periodicity[k]
+            Δq = ig.q₁[m][k] - ig.q₀[m][k]
+            # if ig.q₁[m][k] < 0 || ig.q₁[m][k] ≥ ig.periodicity[k]
+            #     ig.q₁[m][k] -= fld(ig.q₁[m][k], ig.periodicity[k]) * ig.periodicity[k]
             # end
-            while ig.q₁[k] < 0
-                ig.q₁[k] += ig.periodicity[k]
+            while ig.q₁[m][k] < 0
+                ig.q₁[m][k] += ig.periodicity[k]
             end
-            while ig.q₁[k] ≥ ig.periodicity[k]
-                ig.q₁[k] -= ig.periodicity[k]
+            while ig.q₁[m][k] ≥ ig.periodicity[k]
+                ig.q₁[m][k] -= ig.periodicity[k]
             end
-            ig.q₀[k] = ig.q₁[k] - Δq
+            ig.q₀[m][k] = ig.q₁[m][k] - Δq
         end
     end
 end
 
-function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT,VT,FT,IT},
+
+function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, m::Int,
            guess_q::Vector{DT}, guess_p::Vector{DT}, guess_v::Vector{DT},
            c_q::TT=one(TT), c_p::TT=one(TT)) where {DT,TT,VT,FT,IT}
 
     @assert length(guess_q) == length(guess_p) == length(guess_v)
 
-    evaluate!(ig.int, ig.q₀, ig.q₁, ig.v₀, ig.v₁, one(TT)+c_q, guess_q, guess_v)
-
-    if ig.q₀ == ig.q₁
-        warn("q₀ and q₁ in initial guess are identital!")
+    if ig.q₀[m] == ig.q₁[m]
+        warn("q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0.")
+        guess_q .= ig.q₁[m]
         guess_v .= 0
+    else
+        evaluate!(ig.int, ig.q₀[m], ig.q₁[m], ig.v₀[m], ig.v₁[m], one(TT)+c_q, guess_q, guess_v)
     end
 
-    evaluate!(ig.int, ig.p₀, ig.p₁, ig.f₀, ig.f₁, one(TT)+c_p, guess_p)
-
-    nothing
+    if ig.p₀[m] == ig.p₁[m]
+        warn("p₀ and p₁ in initial guess are identical! Setting p=p₁.")
+        guess_p .= ig.p₁[m]
+    else
+        evaluate!(ig.int, ig.p₀[m], ig.p₁[m], ig.f₀[m], ig.f₁[m], one(TT)+c_p, guess_p)
+    end
 end

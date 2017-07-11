@@ -83,7 +83,7 @@ end
                     y1 += params.a[i,j] * $cache.V[k,j]
                     y2 += params.â[i,j] * $cache.V[k,j]
                 end
-                b[D*(i-1)+k] = - $cache.Y[k,i] + y1 + y2
+                b[D*(i-1)+k] = - $cache.Y[k,i] + (y1 + y2)
             end
         end
     end
@@ -91,8 +91,8 @@ end
 
 
 "Fully implicit Runge-Kutta integrator."
-struct IntegratorFIRK{DT, TT, FT, SPT, ST, IT} <: Integrator{DT,TT}
-    equation::ODE{DT,TT,FT}
+struct IntegratorFIRK{DT, TT, FT, SPT, ST, IT, N} <: Integrator{DT,TT}
+    equation::ODE{DT,TT,FT,N}
     tableau::TableauFIRK{TT}
     Δt::TT
 
@@ -100,7 +100,7 @@ struct IntegratorFIRK{DT, TT, FT, SPT, ST, IT} <: Integrator{DT,TT}
     solver::ST
     iguess::InitialGuessODE{DT, TT, FT, IT}
 
-    q::Vector{Double{DT}}
+    q::Vector{Vector{Double{DT}}}
 
     v::Vector{DT}
     y::Vector{DT}
@@ -110,8 +110,8 @@ struct IntegratorFIRK{DT, TT, FT, SPT, ST, IT} <: Integrator{DT,TT}
     Y::Matrix{DT}
 end
 
-function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::TT;
-                        interpolation=HermiteInterpolation{DT}) where {DT,TT,FT}
+function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt::TT;
+                        interpolation=HermiteInterpolation{DT}) where {DT,TT,FT,N}
     D = equation.d
     M = equation.n
     S = tableau.q.s
@@ -120,7 +120,10 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::
     x = zeros(DT, D*S)
 
     # create solution vectors
-    q = zeros(Double{DT},D)
+    q = Array{Vector{Double{DT}}}(M)
+    for i in 1:M
+        q[i] = zeros(Double{DT},D)
+    end
 
     # create velocity and update vector
     v = zeros(DT,D)
@@ -141,10 +144,10 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT}, tableau::TableauFIRK{TT}, Δt::
     solver = get_config(:nls_solver)(x, function_stages)
 
     # create initial guess
-    iguess = InitialGuessODE(interpolation, equation, Δt)
+    iguess = InitialGuessODE(interpolation, equation, Δt; periodicity=equation.periodicity)
 
     # create integrator
-    IntegratorFIRK{DT, TT, FT, typeof(params), typeof(solver), typeof(iguess.int)}(
+    IntegratorFIRK{DT, TT, FT, typeof(params), typeof(solver), typeof(iguess.int), M}(
                                         equation, tableau, Δt, params, solver, iguess,
                                         q, v, y, Q, V, Y)
 end
@@ -155,16 +158,16 @@ function initialize!(int::IntegratorFIRK{DT,TT}, sol::SolutionODE, m::Int) where
     @assert m ≤ sol.ni
 
     # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q, m)
+    get_initial_conditions!(sol, int.q[m], m)
 
     # initialise initial guess
-    initialize!(int.iguess, sol.t[0], int.q)
+    initialize!(int.iguess, m, sol.t[0], int.q[m])
 end
 
-function initial_guess!(int::IntegratorFIRK)
+function initial_guess!(int::IntegratorFIRK, m::Int)
     # compute initial guess for internal stages
     for i in 1:int.tableau.q.s
-        evaluate!(int.iguess, int.y, int.v, int.tableau.q.c[i])
+        evaluate!(int.iguess, m, int.y, int.v, int.tableau.q.c[i])
         for k in 1:int.equation.d
             int.V[k,i] = int.v[k]
         end
@@ -182,12 +185,18 @@ end
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,SPT,ST,IT,N}
+    @assert m ≥ 1
+    @assert m ≤ sol.ni
+
+    @assert n ≥ 1
+    @assert n ≤ sol.ntime
+
     # set time for nonlinear solver
     int.params.t  = sol.t[0] + (n-1)*int.Δt
-    int.params.q .= int.q
+    int.params.q .= int.q[m]
 
     # compute initial guess
-    initial_guess!(int)
+    initial_guess!(int, m)
 
     # call nonlinear solver
     solve!(int.solver)
@@ -195,18 +204,21 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
     # print solver status
     printSolverStatus(int.solver.status, int.solver.params, n)
 
+    # check if solution contains NaNs
+    checkNaN(int.solver.status, n)
+
     # compute vector field at internal stages
     compute_stages!(int.solver.x, int.Q, int.V, int.Y, int.params)
 
     # compute final update
-    update_solution!(int.q, int.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
+    update_solution!(int.q[m], int.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t[0] + n*int.Δt, int.q)
+    update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q[m])
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q, int.equation.periodicity)
+    cut_periodic_solution!(int.q[m], int.equation.periodicity)
 
     # copy to solution
-    copy_solution!(sol, int.q, n, m)
+    copy_solution!(sol, int.q[m], n, m)
 end

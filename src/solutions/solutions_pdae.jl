@@ -90,25 +90,25 @@ function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, equ::IODE{DT,TT}) whe
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, zeros(equ.q₀))
 end
 
-function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, t₀::TT, q₀::Array{DT}, p₀::Array{DT}, λ₀::Array{DT}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, t₀::TT, q₀::Union{Array{DT}, Array{Double{DT}}}, p₀::Union{Array{DT}, Array{Double{DT}}}, λ₀::Union{Array{DT}, Array{Double{DT}}}) where {DT,TT}
     set_data!(sol.q, q₀, 0)
     set_data!(sol.p, p₀, 0)
     set_data!(sol.λ, λ₀, 0)
     compute_timeseries!(sol.t, t₀)
 end
 
-function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, λ::Vector{DT}, k) where {DT,TT}
+function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, p::Union{Vector{DT}, Vector{Double{DT}}}, λ::Union{Vector{DT}, Vector{Double{DT}}}, k) where {DT,TT}
     get_data!(sol.q, q, 0, k)
     get_data!(sol.p, p, 0, k)
     get_data!(sol.λ, λ, 0, k)
 end
 
-function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, k) where {DT,TT}
+function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, p::Union{Vector{DT}, Vector{Double{DT}}}, k) where {DT,TT}
     get_data!(sol.q, q, 0, k)
     get_data!(sol.p, p, 0, k)
 end
 
-function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, λ::Vector{DT}, n, k) where {DT,TT}
+function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, p::Union{Vector{DT}, Vector{Double{DT}}}, λ::Union{Vector{DT}, Vector{Double{DT}}}, n, k) where {DT,TT}
     if mod(n, sol.nsave) == 0
         j = div(n, sol.nsave)
         set_data!(sol.q, q, j, k)
@@ -117,7 +117,7 @@ function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, 
     end
 end
 
-function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Vector{DT}, p::Vector{DT}, n, k) where {DT,TT}
+function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, p::Union{Vector{DT}, Vector{Double{DT}}}, n, k) where {DT,TT}
     if mod(n, sol.nsave) == 0
         j = div(n, sol.nsave)
         set_data!(sol.q, q, j, k)

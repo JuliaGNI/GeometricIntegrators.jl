@@ -18,9 +18,9 @@ mutable struct NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ΑT,FT,GT,D,S} <: 
     q::Vector{DT}
     p::Vector{DT}
 
-    function NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ΑT,FT,GT,D,S}(α, f, g, Δt, o, t_q, t_p, d_v, R∞, q, p) where {DT,TT,ΑT,FT,GT,D,S}
+    function NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ΑT,FT,GT,D,S}(α, f, g, Δt, o, t_q, t_p, d_v, R∞) where {DT,TT,ΑT,FT,GT,D,S}
         R = convert(Vector{TT}, [1, R∞])
-        new(α, f, g, Δt, o, t_q, t_p, d_v, R, 0, q, p)
+        new(α, f, g, Δt, o, t_q, t_p, d_v, R, 0, zeros(DT,D), zeros(DT,D))
     end
 end
 
@@ -78,7 +78,7 @@ end
     pcache = NonlinearFunctionCacheVPRKprojection{ST}(D,S)
 
     function_stages = quote
-        compute_stages_vprk!(x, $pcache.q̅, $pcache.p̅, $pcache.λ, $scache.Q, $scache.V, $pcache.U, $scache.P, $scache.F, $pcache.G, params)
+        compute_stages!(x, $pcache.q̅, $pcache.p̅, $pcache.λ, $scache.Q, $scache.V, $pcache.U, $scache.P, $scache.F, $pcache.G, params)
 
         # compute b = - [P-AF-U]
         compute_rhs_vprk!(b, $scache.P, $scache.F, $pcache.G, params)
@@ -110,16 +110,14 @@ struct IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegrat
 
     iguess::InitialGuessIODE{DT,TT,VT,FT,IT}
 
-    q::Array{DT,1}
-    p::Array{DT,1}
-
-    qₑᵣᵣ::Vector{DT}
-    pₑᵣᵣ::Vector{DT}
+    q::Vector{Vector{Double{DT}}}
+    p::Vector{Vector{Double{DT}}}
 end
 
 function IntegratorVPRKpMidpoint(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
                                  interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
+    M = equation.n
     S = tableau.s
 
     N = D*(S+2)
@@ -131,12 +129,13 @@ function IntegratorVPRKpMidpoint(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
     end
 
     # create solution vectors
-    q = zeros(DT,D)
-    p = zeros(DT,D)
+    q = Array{Vector{Double{DT}}}(M)
+    p = Array{Vector{Double{DT}}}(M)
 
-    # create compensated summation error vectors
-    qₑᵣᵣ = zeros(DT,D)
-    pₑᵣᵣ = zeros(DT,D)
+    for i in 1:M
+        q[i] = zeros(Double{DT},D)
+        p[i] = zeros(Double{DT},D)
+    end
 
     # create cache for internal stage vectors and update vectors
     scache = NonlinearFunctionCacheVPRK{DT}(D,S)
@@ -145,8 +144,7 @@ function IntegratorVPRKpMidpoint(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
     # create params
     params = NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ΑT,FT,GT,D,S}(
                                                 equation.α, equation.f, equation.g, Δt,
-                                                tableau.o, tableau.q, tableau.p, tableau_d, tableau.R∞,
-                                                q, p)
+                                                tableau.o, tableau.q, tableau.p, tableau_d, tableau.R∞)
 
     # create rhs function for nonlinear solver
     function_stages_solver = (x,b) -> function_stages!(x, b, params)
@@ -158,30 +156,41 @@ function IntegratorVPRKpMidpoint(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
     iguess = InitialGuessIODE(interpolation, equation, Δt; periodicity=equation.periodicity)
 
     IntegratorVPRKpMidpoint{DT, TT, ΑT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
-                                        equation, tableau, Δt, params, solver, scache, pcache, iguess,
-                                        q, p, qₑᵣᵣ, pₑᵣᵣ)
+                                        equation, tableau, Δt, params, solver, scache, pcache, iguess, q, p)
 end
 
 
-"Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
-    # set time for nonlinear solver
-    int.params.t = sol.t[0] + (n-1)*int.Δt
-
-    # compute initial guess
+function initial_guess!(int::IntegratorVPRKpMidpoint{DT,TT}, m::Int) where {DT,TT}
     for i in 1:int.tableau.s
-        evaluate!(int.iguess, int.scache.y, int.scache.z, int.scache.v, int.tableau.q.c[i], int.tableau.p.c[i])
+        evaluate!(int.iguess, m, int.scache.y, int.scache.z, int.scache.v, int.tableau.q.c[i], int.tableau.p.c[i])
         for k in 1:int.equation.d
             int.solver.x[int.equation.d*(i-1)+k] = int.scache.v[k]
         end
     end
-    evaluate!(int.iguess, int.scache.y, int.scache.z, int.scache.v, one(TT), one(TT))
+    evaluate!(int.iguess, m, int.scache.y, int.scache.z, int.scache.v, one(TT), one(TT))
     for k in 1:int.equation.d
         int.solver.x[int.equation.d*(int.tableau.s+0)+k] = int.scache.y[k]
     end
     for k in 1:int.equation.d
         int.solver.x[int.equation.d*(int.tableau.s+1)+k] = 0
     end
+end
+
+"Integrate ODE with variational partitioned Runge-Kutta integrator."
+function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
+    @assert m ≥ 1
+    @assert m ≤ sol.ni
+
+    @assert n ≥ 1
+    @assert n ≤ sol.ntime
+
+    # set time for nonlinear solver
+    int.params.t = sol.t[0] + (n-1)*int.Δt
+    int.params.q .= int.q[m]
+    int.params.p .= int.p[m]
+
+    # compute initial guess
+    initial_guess!(int, m)
 
     # call nonlinear solver
     solve!(int.solver)
@@ -189,26 +198,29 @@ function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT}, sol::
     # print solver status
     printSolverStatus(int.solver.status, int.solver.params, n)
 
-    # if isnan(int.solver.status.rₐ)
-    #     println("WARNING: Detected NaN in it=", n)
-    #     break
-    # end
+    # check if solution contains NaNs
+    checkNaN(int.solver.status, n)
 
-    # compute final update
-    compute_stages_vprk!(int.solver.x,
-                         int.pcache.q̅, int.pcache.p̅, int.pcache.λ,
-                         int.scache.Q, int.scache.V, int.pcache.U,
-                         int.scache.P, int.scache.F, int.pcache.G, int.params)
+    # compute vector fields at internal stages and projection vector fields
+    compute_stages!(int.solver.x,
+                    int.pcache.q̅, int.pcache.p̅, int.pcache.λ,
+                    int.scache.Q, int.scache.V, int.pcache.U,
+                    int.scache.P, int.scache.F, int.pcache.G, int.params)
 
-    update_solution!(int, int.scache)
-    project_solution!(int, int.pcache, int.params.R)
+    # compute unprojected solution
+    update_solution!(int.q[m], int.scache.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
+    update_solution!(int.p[m], int.scache.F, int.tableau.p.b, int.tableau.p.b̂, int.Δt)
+
+    # add projection to solution
+    update_solution!(int.q[m], int.pcache.U, int.params.R, int.Δt)
+    update_solution!(int.p[m], int.pcache.G, int.params.R, int.Δt)
 
     # copy solution to initial guess for next time step
-    update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
+    update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q[m], int.p[m])
 
     # take care of periodic solutions
-    cut_periodic_solution!(int)
+    cut_periodic_solution!(int.q[m], int.equation.periodicity)
 
     # copy to solution
-    copy_solution!(sol, int.q, int.p, int.pcache.λ, n, m)
+    copy_solution!(sol, int.q[m], int.p[m], int.pcache.λ, n, m)
 end

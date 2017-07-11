@@ -27,8 +27,7 @@ mutable struct NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT,D,S} <: Nonl
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersVPRKpStandard(α::AT, g::GT, Δt::TT, o::Int, R::Vector, q::Vector{DT}, p::Vector{DT}, S::Int) where {DT,TT,AT,GT}
-    @assert length(q)==length(p)
+function NonlinearFunctionParametersVPRKpStandard(DT, α::AT, g::GT, Δt::TT, o::Int, R::Vector, D::Int, S::Int) where {TT,AT,GT}
     R = convert(Vector{TT}, R)
     R1 = [R[1], zero(TT)]
     R2 = [zero(TT), R[2]]
@@ -38,11 +37,11 @@ function NonlinearFunctionParametersVPRKpStandard(α::AT, g::GT, Δt::TT, o::Int
     # println("R  = ", R)
     # println("R1 = ", R1)
     # println("R2 = ", R2)
-    NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT,length(q),S}(α, g, Δt, o, R, R1, R2, 0, q, p)
+    NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT,D,S}(α, g, Δt, o, R, R1, R2, 0, zeros(DT,D), zeros(DT,D))
 end
 
 
-@generated function compute_projection_vprk!(x::Vector{ST}, q̅::Vector{ST}, p̅::Vector{ST}, λ::Vector{ST}, U::Matrix{ST}, G::Matrix{ST}, params::NonlinearFunctionParametersVPRKpStandard{DT,TT,ΑT,GT,D,S}) where {ST,DT,TT,ΑT,GT,D,S}
+@generated function compute_projection!(x::Vector{ST}, q̅::Vector{ST}, p̅::Vector{ST}, λ::Vector{ST}, U::Matrix{ST}, G::Matrix{ST}, params::NonlinearFunctionParametersVPRKpStandard{DT,TT,ΑT,GT,D,S}) where {ST,DT,TT,ΑT,GT,D,S}
     # create temporary vectors
     tG = zeros(ST,D)
 
@@ -82,7 +81,7 @@ end
     function_stages = quote
         @assert length(x) == length(b)
 
-        compute_projection_vprk!(x, $cache.q̅, $cache.p̅, $cache.λ, $cache.U, $cache.G, params)
+        compute_projection!(x, $cache.q̅, $cache.p̅, $cache.λ, $cache.U, $cache.G, params)
 
         # # compute b = - [q̅-q-U]
         for k in 1:D
@@ -124,11 +123,8 @@ struct IntegratorVPRKpStandard{DT, TT, ΑT, FT, GT, VT, SPT, PPT, SST, STP, IT} 
 
     iguess::InitialGuessIODE{DT, TT, VT, FT, IT}
 
-    q::Vector{DT}
-    p::Vector{DT}
-
-    qₑᵣᵣ::Vector{DT}
-    pₑᵣᵣ::Vector{DT}
+    q::Vector{Vector{Double{DT}}}
+    p::Vector{Vector{Double{DT}}}
 end
 
 function IntegratorVPRKpSymplectic(args...; kwargs...)
@@ -138,6 +134,7 @@ end
 function IntegratorVPRKpStandard(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
                                  R=[0,1], interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
+    M = equation.n
     S = tableau.s
 
     N = D*S
@@ -155,21 +152,21 @@ function IntegratorVPRKpStandard(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
     x = zeros(DT,2*D)
 
     # create solution vectors
-    q = zeros(DT,D)
-    p = zeros(DT,D)
+    q = Array{Vector{Double{DT}}}(M)
+    p = Array{Vector{Double{DT}}}(M)
 
-    # create compensated summation error vectors
-    qₑᵣᵣ = zeros(DT,D)
-    pₑᵣᵣ = zeros(DT,D)
+    for i in 1:M
+        q[i] = zeros(Double{DT},D)
+        p[i] = zeros(Double{DT},D)
+    end
 
     # create cache for internal stage vectors and update vectors
     scache = NonlinearFunctionCacheVPRK{DT}(D,S)
     pcache = NonlinearFunctionCacheVPRKprojection{DT}(D,S)
 
     # create solver params
-    sparams = NonlinearFunctionParametersVPRK(equation.α, equation.f, Δt,
-                                              tableau.q, tableau.p, d_v,
-                                              q, p)
+    sparams = NonlinearFunctionParametersVPRK(DT, D, equation.α, equation.f, Δt,
+                                              tableau.q, tableau.p, d_v)
 
     # create rhs function for nonlinear solver
     function_stages_solver = (x,b) -> function_stages!(x, b, sparams)
@@ -179,7 +176,7 @@ function IntegratorVPRKpStandard(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
 
     # create projector params
     R[2] *= tableau.R∞
-    pparams = NonlinearFunctionParametersVPRKpStandard(equation.α, equation.g, Δt, tableau.o, R, q, p, S)
+    pparams = NonlinearFunctionParametersVPRKpStandard(DT, equation.α, equation.g, Δt, tableau.o, R, D, S)
 
     # create rhs function for projector
     function_stages_projector = (x,b) -> function_stages!(x, b, pparams)
@@ -192,8 +189,7 @@ function IntegratorVPRKpStandard(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
 
 
     IntegratorVPRKpStandard{DT, TT, ΑT, FT, GT, VT, typeof(sparams), typeof(pparams), typeof(solver), typeof(projector), typeof(iguess.int)}(
-                                        equation, tableau, Δt, sparams, pparams, solver, projector, scache, pcache, iguess,
-                                        q, p, qₑᵣᵣ, pₑᵣᵣ)
+                                        equation, tableau, Δt, sparams, pparams, solver, projector, scache, pcache, iguess, q, p)
 end
 
 
@@ -201,17 +197,14 @@ function initialize!(int::IntegratorVPRKpStandard{DT,TT}, sol::SolutionPDAE, m::
     @assert m ≥ 1
     @assert m ≤ sol.ni
 
-    tG = zeros(DT, int.equation.d)
+    local tq = zeros(DT, int.equation.d)
+    local tG = zeros(DT, int.equation.d)
 
     # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q, int.p, int.pcache.λ, m)
+    get_initial_conditions!(sol, int.q[m], int.p[m], int.pcache.λ, m)
 
     # initialise initial guess
-    initialize!(int.iguess, sol.t[0], int.q, int.p)
-
-    # reset compensated summation error
-    int.qₑᵣᵣ .= 0
-    int.pₑᵣᵣ .= 0
+    initialize!(int.iguess, m, sol.t[0], int.q[m], int.p[m])
 
     # compute initial λ
     # dh = zeros(int.q)
@@ -223,77 +216,91 @@ function initialize!(int::IntegratorVPRKpStandard{DT,TT}, sol::SolutionPDAE, m::
     # copy_solution!(sol, int.q, int.p, int.pcache.λ, 0, m)
 
     # initialise projector
+    tq .= int.q[m]
     simd_copy_yx_first!(int.pcache.λ, int.pcache.U, 1)
-
-    int.equation.g(sol.t[0], int.q, int.pcache.λ, tG)
+    int.equation.g(sol.t[0], tq, int.pcache.λ, tG)
     simd_copy_yx_first!(tG, int.pcache.G, 1)
 end
 
 
-"Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
-    # set time for nonlinear and projection solver
-    int.sparams.t = sol.t[0] + (n-1)*int.Δt
-    int.pparams.t = sol.t[0] + (n-1)*int.Δt
-
-    # add perturbation to solution (same vector field as previous time step)
-    project_solution!(int, int.pcache, int.pparams.R1)
-
-    # compute initial guess
+function initial_guess!(int::IntegratorVPRKpStandard, m::Int)
     for i in 1:int.tableau.s
-        evaluate!(int.iguess, int.scache.y, int.scache.z, int.scache.v, int.tableau.q.c[i], int.tableau.p.c[i])
+        evaluate!(int.iguess, m, int.scache.y, int.scache.z, int.scache.v, int.tableau.q.c[i], int.tableau.p.c[i])
         for k in 1:int.equation.d
             int.solver.x[int.equation.d*(i-1)+k] = int.scache.v[k]
         end
     end
+end
+
+"Integrate ODE with variational partitioned Runge-Kutta integrator."
+function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
+    @assert m ≥ 1
+    @assert m ≤ sol.ni
+
+    @assert n ≥ 1
+    @assert n ≤ sol.ntime
+
+    # add perturbation to solution (same vector field as previous time step)
+    update_solution!(int.q[m], int.pcache.U, int.pparams.R1, int.Δt)
+    update_solution!(int.p[m], int.pcache.G, int.pparams.R1, int.Δt)
+
+    # set time and solution for nonlinear solver
+    int.sparams.t = sol.t[0] + (n-1)*int.Δt
+    int.sparams.q .= int.q[m]
+    int.sparams.p .= int.p[m]
+
+    # compute initial guess
+    initial_guess!(int, m)
 
     # call nonlinear solver
     solve!(int.solver)
 
-    # println((@sprintf "  i=%07i" n), ",", int.solver.status)
-    if !solverStatusOK(int.solver.status, int.solver.params)
-        println((@sprintf "  si=%07i" n), ",", int.solver.status)
-    end
+    # print solver status
+    printSolverStatus(int.solver.status, int.solver.params, n)
 
-    # if isnan(int.solver.status.rₐ)
-    #     println("WARNING: Detected NaN in sit=", n)
-    #     break
-    # end
+    # check if solution contains NaNs
+    checkNaN(int.solver.status, n)
+
+    # compute vector fields at internal stages
+    compute_stages!(int.solver.x, int.scache.Q, int.scache.V, int.scache.P, int.scache.F, int.sparams)
 
     # compute unprojected solution
-    compute_stages_vprk!(int.solver.x, int.scache.Q, int.scache.V, int.scache.P, int.scache.F, int.sparams)
-    update_solution!(int, int.scache)
+    update_solution!(int.q[m], int.scache.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
+    update_solution!(int.p[m], int.scache.F, int.tableau.p.b, int.tableau.p.b̂, int.Δt)
+
+    # set time and solution for projection solver
+    int.pparams.t = sol.t[0] + (n-1)*int.Δt
+    int.pparams.q .= int.q[m]
+    int.pparams.p .= int.p[m]
 
     # set initial guess for projection
     for k in 1:int.equation.d
-        int.projector.x[0*int.equation.d+k] = int.q[k]
+        int.projector.x[0*int.equation.d+k] = int.pparams.q[k]
         int.projector.x[1*int.equation.d+k] = 0
-        # int.projector.x[1*int.equation.d+k] = int.tableau.R∞ * int.pcache.λ[k]
     end
 
     # call projection solver
     solve!(int.projector)
 
     # print solver status
-    printSolverStatus(int.solver.status, int.solver.params, n)
+    printSolverStatus(int.projector.status, int.projector.params, n)
 
-    # if isnan(int.projector.status.rₐ)
-    #     println("WARNING: Detected NaN in pit=", n)
-    #     break
-    # end
+    # check if solution contains NaNs
+    checkNaN(int.projector.status, n)
+
+    # compute projection vector fields
+    compute_projection!(int.projector.x, int.pcache.q̅, int.pcache.p̅, int.pcache.λ, int.pcache.U, int.pcache.G, int.pparams)
 
     # add projection to solution
-    compute_projection_vprk!(int.projector.x, int.pcache.q̅, int.pcache.p̅, int.pcache.λ, int.pcache.U, int.pcache.G, int.pparams)
-    project_solution!(int, int.pcache, int.pparams.R2)
+    update_solution!(int.q[m], int.pcache.U, int.pparams.R2, int.Δt)
+    update_solution!(int.p[m], int.pcache.G, int.pparams.R2, int.Δt)
 
     # copy solution to initial guess for next time step
-    update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
+    update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q[m], int.p[m])
 
     # take care of periodic solutions
-    cut_periodic_solution!(int)
-
-    # println("pit=", n, ", λ = ", int.pcache.λ)
+    cut_periodic_solution!(int.q[m], int.equation.periodicity)
 
     # copy to solution
-    copy_solution!(sol, int.q, int.p, int.pcache.λ, n, m)
+    copy_solution!(sol, int.q[m], int.p[m], int.pcache.λ, n, m)
 end

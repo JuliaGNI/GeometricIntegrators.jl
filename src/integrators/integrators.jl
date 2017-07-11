@@ -1,8 +1,6 @@
 
 abstract type Integrator{dType, tType} end
 
-const DEFAULT_PROGRESS_NTMIN = 10000
-
 
 "Create integrator for explicit Runge-Kutta tableau."
 function Integrator(equation::ODE, tableau::TableauERK, Δt)
@@ -92,42 +90,62 @@ function integrate(f::Function, x₀::Vector, tableau::AbstractTableau, Δt, nti
 end
 
 
+"Initialize integrator for initial conditions m with m₁ ≤ m ≤ m₂ and time step 0."
+function initialize!(int::Integrator, sol::Solution, m1::Int, m2::Int)
+    for m in m1:m2
+        # initialize integrator for initial condition m and time step 0
+        initialize!(int, sol, m)
+    end
+end
+
 "Integrate ODE for all initial conditions."
 function integrate!(int, sol)
     integrate!(int, sol, 1, sol.ni)
 end
 
+# TODO Add counter to solution and reactivate this.
+# "Integrate ODE for all initial conditions for nt time steps."
+# function integrate!(int, sol, ntime)
+#     integrate!(int, sol, 1, sol.ni, ntime)
+# end
+
 "Integrate ODE for initial conditions m with m₁ ≤ m ≤ m₂."
-function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT,N}, m1::Int, m2::Int) where {DT,TT,N}
+function integrate!(int, sol, m1, m2)
+    # initialize integrator for initial conditions m with m₁ ≤ m ≤ m₂ and time step 0
+    initialize!(int, sol, m1, m2)
+
+    # integrate initial conditions m with m₁ ≤ m ≤ m₂ for all time steps
+    integrate!(int, sol, m1, m2, 1, sol.ntime)
+end
+
+"Integrate ODE for initial conditions m with m₁ ≤ m ≤ m₂ for time steps n with n₁ ≤ n ≤ n₂."
+function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT,N}, m1::Int, m2::Int, n1::Int, n2::Int) where {DT,TT,N}
     @assert m1 ≥ 1
+    @assert m2 ≥ m1
     @assert m2 ≤ sol.ni
+
+    @assert n1 ≥ 1
+    @assert n2 ≥ n1
+    @assert n2 ≤ sol.ntime
+
+    local nshow = get_config(:int_show_progress_nmin)
+    local nrun  = (m2-m1+1)*(n2-n1+1)
+
+    # initialize progress bar
+    if nrun ≥ nshow
+        p = Progress(nrun, 5)
+    end
 
     # loop over initial conditions
     for m in m1:m2
-        # integrate one initial condition
-        integrate!(int, sol, m)
+        # loop over time steps
+        for n in n1:n2
+            # integrate one initial condition for one time step
+            integrate_step!(int, sol, m, n)
 
-    end
-end
-
-"Integrate ODE for initial condition m."
-function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT,N}, m::Int) where {DT,TT,N}
-    # time step period for showing progress bar
-    local nshow = div(sol.ntime, 10)
-
-    # initialize integrator for initial condition m
-    initialize!(int, sol, m)
-
-    # loop over time steps
-    for n in 1:sol.ntime
-
-        # integrate one step
-        integrate_step!(int, sol, m, n)
-
-        # show progress
-        if sol.ntime > DEFAULT_PROGRESS_NTMIN
-            if mod(n, nshow) == 0
-                println("   ", div(n, nshow), "0%...")
+            # update progress bar
+            if nrun ≥ nshow
+                next!(p)
             end
         end
     end

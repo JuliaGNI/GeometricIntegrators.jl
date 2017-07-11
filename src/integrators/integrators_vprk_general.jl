@@ -66,7 +66,7 @@ struct NonlinearFunctionCacheVPRKprojection{ST}
 end
 
 
-function compute_stages_vprk!(x, Q, V, P, F, params)
+function compute_stages!(x, Q, V, P, F, params::AbstractNonlinearFunctionParametersVPRK)
     # copy x to V
     compute_stages_v_vprk!(x, V, params)
 
@@ -77,7 +77,7 @@ function compute_stages_vprk!(x, Q, V, P, F, params)
     compute_stages_p_vprk!(Q, V, P, F, params)
 end
 
-function compute_stages_vprk!(x, q̅, p̅, λ, Q, V, U, P, F, G, params)
+function compute_stages!(x, q̅, p̅, λ, Q, V, U, P, F, G, params::AbstractNonlinearFunctionParametersVPRK)
     # copy x to V
     compute_stages_v_vprk!(x, V, params)
 
@@ -342,17 +342,17 @@ end
 
 
 function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRK{DT}) where {DT,TT}
-    update_solution!(int.q, int.qₑᵣᵣ, cache.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
-    update_solution!(int.p, int.pₑᵣᵣ, cache.F, int.tableau.p.b, int.tableau.p.b̂, int.Δt)
+    update_solution!(int.q, cache.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
+    update_solution!(int.p, cache.F, int.tableau.p.b, int.tableau.p.b̂, int.Δt)
 end
 
 
 function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRKprojection{DT}, R::Vector{TT}) where {DT,TT}
-    update_solution!(int.q, int.qₑᵣᵣ, cache.U, R, int.Δt)
-    update_solution!(int.p, int.pₑᵣᵣ, cache.G, R, int.Δt)
+    update_solution!(int.q, cache.U, R, int.Δt)
+    update_solution!(int.p, cache.G, R, int.Δt)
 end
 
 
 function cut_periodic_solution!(int::AbstractIntegratorVPRK)
-    cut_periodic_solution!(int.q, int.qₑᵣᵣ, int.equation.periodicity)
+    cut_periodic_solution!(int.q, int.equation.periodicity)
 end

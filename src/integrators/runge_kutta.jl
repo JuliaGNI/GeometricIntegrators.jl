@@ -17,10 +17,14 @@ function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, ẋ::Matrix{T}
     @assert length(x) == size(ẋ, 1)
     @assert length(b) == size(ẋ, 2)
 
+    local Δx::eltype(x)
+
     for k in indices(ẋ, 1)
+        Δx = 0
         for i in indices(ẋ, 2)
-            x[k] += Δt * b[i] * ẋ[k,i]
+            Δx += b[i] * ẋ[k,i]
         end
+        x[k] += Δt * Δx
     end
 end
 
@@ -50,7 +54,7 @@ function cut_periodic_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, periodicity
     end
 end
 
-function cut_periodic_solution!(x::Union{Vector{T}, Vector{Double{T}}}, periodicity::Vector{T}) where {T}
+function cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}) where {T}
     @assert length(x) == length(periodicity)
 
     for k in eachindex(x, periodicity)
@@ -59,6 +63,21 @@ function cut_periodic_solution!(x::Union{Vector{T}, Vector{Double{T}}}, periodic
                 x[k] += periodicity[k]
             end
             while x[k] ≥ periodicity[k]
+                x[k] -= periodicity[k]
+            end
+        end
+    end
+end
+
+function cut_periodic_solution!(x::Vector{Double{T}}, periodicity::Vector{T}) where {T}
+    @assert length(x) == length(periodicity)
+
+    for k in eachindex(x, periodicity)
+        if periodicity[k] ≠ 0
+            while x[k].hi < 0
+                x[k] += periodicity[k]
+            end
+            while x[k].hi ≥ periodicity[k]
                 x[k] -= periodicity[k]
             end
         end

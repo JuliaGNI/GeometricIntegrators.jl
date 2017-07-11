@@ -3,6 +3,7 @@ __precompile__()
 module Integrators
 
     using DoubleDouble
+    using ProgressMeter
 
     using ..Config
     using ..Utils

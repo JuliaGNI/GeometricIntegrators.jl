@@ -11,15 +11,13 @@ mutable struct NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S} <: AbstractNonl
     d_v::Vector{TT}
 
     t::TT
-
     q::Vector{DT}
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersVPRK(α::AT, f::FT, Δt::TT, t_q, t_p, d_v, q::Vector{DT}, p::Vector{DT}) where {DT,TT,AT,FT}
+function NonlinearFunctionParametersVPRK(DT, D, α::AT, f::FT, Δt::TT, t_q, t_p, d_v) where {TT,AT,FT}
     @assert t_q.s == t_p.s
-    @assert length(q) == length(p)
-    NonlinearFunctionParametersVPRK{DT,TT,AT,FT,length(q),t_q.s}(α, f, Δt, t_q, t_p, d_v, 0, q, p)
+    NonlinearFunctionParametersVPRK{DT,TT,AT,FT,D,t_q.s}(α, f, Δt, t_q, t_p, d_v, 0, zeros(DT,D), zeros(DT,D))
 end
 
 
@@ -30,7 +28,7 @@ end
     function_stages = quote
         @assert length(x) == length(b)
 
-        compute_stages_vprk!(x, $cache.Q, $cache.V, $cache.P, $cache.F, params)
+        compute_stages!(x, $cache.Q, $cache.V, $cache.P, $cache.F, params)
         compute_rhs_vprk!(b, $cache.P, $cache.F, params)
         compute_rhs_vprk_correction!(b, $cache.V, params)
     end
@@ -49,11 +47,8 @@ struct IntegratorVPRK{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegratorVPRK{DT
     solver::ST
     iguess::InitialGuessIODE{DT,TT,VT,FT,IT}
 
-    q::Array{DT,1}
-    p::Array{DT,1}
-
-    qₑᵣᵣ::Vector{DT}
-    pₑᵣᵣ::Vector{DT}
+    q::Vector{Vector{Double{DT}}}
+    p::Vector{Vector{Double{DT}}}
 
     cache::NonlinearFunctionCacheVPRK{DT}
 end
@@ -61,6 +56,7 @@ end
 function IntegratorVPRK(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
                         interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
+    M = equation.n
     S = tableau.s
 
     N = D*S
@@ -75,20 +71,20 @@ function IntegratorVPRK(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK
     x = zeros(DT,N)
 
     # create solution vectors
-    q = zeros(DT,D)
-    p = zeros(DT,D)
+    q = Array{Vector{Double{DT}}}(M)
+    p = Array{Vector{Double{DT}}}(M)
 
-    # create compensated summation error vectors
-    qₑᵣᵣ = zeros(DT,D)
-    pₑᵣᵣ = zeros(DT,D)
+    for i in 1:M
+        q[i] = zeros(Double{DT},D)
+        p[i] = zeros(Double{DT},D)
+    end
 
     # create cache for internal stage vectors and update vectors
     cache = NonlinearFunctionCacheVPRK{DT}(D,S)
 
     # create params
-    params = NonlinearFunctionParametersVPRK(equation.α, equation.f, Δt,
-                                             tableau.q, tableau.p, d_v,
-                                             q, p)
+    params = NonlinearFunctionParametersVPRK(DT, D, equation.α, equation.f, Δt,
+                                             tableau.q, tableau.p, d_v)
 
     # create rhs function for nonlinear solver
     function_stages = (x,b) -> function_stages!(x, b, params)
@@ -102,7 +98,7 @@ function IntegratorVPRK(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK
     # create integrator
     IntegratorVPRK{DT, TT, ΑT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
                                         equation, tableau, Δt, params, solver, iguess,
-                                        q, p, qₑᵣᵣ, pₑᵣᵣ, cache)
+                                        q, p, cache)
 end
 
 
@@ -112,29 +108,37 @@ function initialize!(int::Union{IntegratorVPRK{DT,TT}, IntegratorVPRKpMidpoint{D
     @assert m ≤ sol.ni
 
     # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q, int.p, m)
+    get_initial_conditions!(sol, int.q[m], int.p[m], m)
 
     # initialise initial guess
-    initialize!(int.iguess, sol.t[0], int.q, int.p)
-
-    # reset compensated summation error
-    int.qₑᵣᵣ .= 0
-    int.pₑᵣᵣ .= 0
+    initialize!(int.iguess, m, sol.t[0], int.q[m], int.p[m])
 end
 
 
-"Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
-    # set time for nonlinear solver
-    int.params.t = sol.t[0] + (n-1)*int.Δt
-
-    # compute initial guess
+function initial_guess!(int::IntegratorVPRK, m::Int)
     for i in 1:int.tableau.s
-        evaluate!(int.iguess, int.cache.y, int.cache.z, int.cache.v, int.tableau.q.c[i], int.tableau.p.c[i])
+        evaluate!(int.iguess, m, int.cache.y, int.cache.z, int.cache.v, int.tableau.q.c[i], int.tableau.p.c[i])
         for k in 1:int.equation.d
             int.solver.x[int.equation.d*(i-1)+k] = int.cache.v[k]
         end
     end
+end
+
+"Integrate ODE with variational partitioned Runge-Kutta integrator."
+function integrate_step!(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
+    @assert m ≥ 1
+    @assert m ≤ sol.ni
+
+    @assert n ≥ 1
+    @assert n ≤ sol.ntime
+
+    # set time for nonlinear solver
+    int.params.t  = sol.t[0] + (n-1)*int.Δt
+    int.params.q .= int.q[m]
+    int.params.p .= int.p[m]
+
+    # compute initial guess
+    initial_guess!(int, m)
 
     # call nonlinear solver
     solve!(int.solver)
@@ -142,21 +146,22 @@ function integrate_step!(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::SolutionP
     # print solver status
     printSolverStatus(int.solver.status, int.solver.params, n)
 
-    # if isnan(int.solver.status.rₐ)
-    #     println("WARNING: Detected NaN in it=", n)
-    #     break
-    # end
+    # check if solution contains NaNs
+    checkNaN(int.solver.status, n)
+
+    # compute vector fields at internal stages
+    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.params)
 
     # compute final update
-    compute_stages_vprk!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.params)
-    update_solution!(int, int.cache)
+    update_solution!(int.q[m], int.cache.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
+    update_solution!(int.p[m], int.cache.F, int.tableau.p.b, int.tableau.p.b̂, int.Δt)
 
     # copy solution to initial guess for next time step
-    update!(int.iguess, sol.t[0] + n*int.Δt, int.q, int.p)
+    update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q[m], int.p[m])
 
     # take care of periodic solutions
-    cut_periodic_solution!(int)
+    cut_periodic_solution!(int.q[m], int.equation.periodicity)
 
     # copy to solution
-    copy_solution!(sol, int.q, int.p, n, m)
+    copy_solution!(sol, int.q[m], int.p[m], n, m)
 end
