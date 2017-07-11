@@ -99,6 +99,12 @@ function solverStatusOK(status::NonlinearSolverStatus, params::NonlinearSolverPa
     return solverConverged(status, params) && status.i  ≤ params.nmax
 end
 
+function checkNaN(status::NonlinearSolverStatus, n::Int)
+    if all(x -> isnan(x), status.xₚ)
+        err("Detected NaN in it=", n)
+    end
+end
+
 function getLinearSolver(T, n)
     linear_solver = get_config(:ls_solver)
 
@@ -133,8 +139,8 @@ function residual!(status::NonlinearSolverStatus{T}, δx::Vector{T}, x::Vector{T
     residual_absolute!(status, y)
     residual_relative!(status, y)
     residual_successive!(status, δx, x)
-    simd_copy!(x, status.xₚ)
-    simd_copy!(y, status.yₚ)
+    status.xₚ .= x
+    status.yₚ .= y
 end
 
 function residual_absolute!(status::NonlinearSolverStatus{T}, y::Vector{T}) where {T}

@@ -15,7 +15,7 @@ module Solvers
     export NonlinearSolver, AbstractNewtonSolver, NewtonSolver, QuasiNewtonSolver,
            NonlinearFunctionParameters,
            residual_initial!, residual_absolute!, residual_relative!,
-           printSolverStatus, solverConverged, solverStatusOK,
+           printSolverStatus, solverConverged, solverStatusOK, checkNaN,
            solve!, function_stages!
 
     include("solvers/nonlinear/nonlinear_solvers.jl")
