@@ -7,6 +7,9 @@ module Integrators
 
     using ..Config
     using ..Utils
+
+    using ..BasisFunctions
+    using ..Quadratures
     using ..Equations
     using ..Solutions
     using ..Solvers
@@ -14,8 +17,6 @@ module Integrators
 
     import ..Solvers.function_stages!
 
-    include("integrators/extrapolation.jl")
-    include("integrators/runge_kutta.jl")
 
     export InitialGuess, InitialGuessIODE, initialize!, update!
 
@@ -27,27 +28,34 @@ module Integrators
            integrate, integrate!, function_stages!
 
     include("integrators/integrators.jl")
+    include("integrators/runge_kutta.jl")
 
+    include("integrators/extrapolation.jl")
     include("integrators/initial_guess_ode.jl")
     include("integrators/initial_guess_iode.jl")
 
-    include("integrators/integrators_erk.jl")
-    include("integrators/integrators_dirk.jl")
-    include("integrators/integrators_firk.jl")
-    include("integrators/integrators_sirk.jl")
-    include("integrators/integrators_eprk.jl")
-    include("integrators/integrators_iprk.jl")
-    include("integrators/integrators_vprk_general.jl")
-    include("integrators/integrators_vprk_pmidpoint.jl")
-    include("integrators/integrators_vprk_pstandard.jl")
-    include("integrators/integrators_vprk_psymmetric.jl")
-    include("integrators/integrators_vprk.jl")
-    include("integrators/integrators_ark.jl")
-    include("integrators/integrators_sark.jl")
-    include("integrators/integrators_park.jl")
-    include("integrators/integrators_spark.jl")
-    include("integrators/integrators_vpark.jl")
-    include("integrators/integrators_vspark.jl")
+    include("integrators/rk/integrators_erk.jl")
+    include("integrators/rk/integrators_dirk.jl")
+    include("integrators/rk/integrators_firk.jl")
+    include("integrators/rk/integrators_sirk.jl")
+    include("integrators/rk/integrators_eprk.jl")
+    include("integrators/rk/integrators_iprk.jl")
+
+    include("integrators/vprk/integrators_vprk_general.jl")
+    include("integrators/vprk/integrators_vprk_pmidpoint.jl")
+    include("integrators/vprk/integrators_vprk_pstandard.jl")
+    include("integrators/vprk/integrators_vprk_psymplectic.jl")
+    include("integrators/vprk/integrators_vprk_psymmetric.jl")
+    include("integrators/vprk/integrators_vprk_pvariational.jl")
+    include("integrators/vprk/integrators_vprk_pglrk.jl")
+    include("integrators/vprk/integrators_vprk.jl")
+
+    include("integrators/spark/integrators_ark.jl")
+    include("integrators/spark/integrators_sark.jl")
+    include("integrators/spark/integrators_park.jl")
+    include("integrators/spark/integrators_spark.jl")
+    include("integrators/spark/integrators_vpark.jl")
+    include("integrators/spark/integrators_vspark.jl")
 
 
     function __init__()
