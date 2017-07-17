@@ -31,7 +31,7 @@ the algebraic variable ``\\lambda`` taking values in ``\\mathbb{R}^{n}``.
 * `λ₀`: initial condition for algebraic variable ``\\lambda``
 
 """
-immutable PDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Function, uType <: Function, gType <: Function, ϕType <: Function, N} <: Equation{dType, tType}
+struct PDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Function, uType <: Function, gType <: Function, ϕType <: Function, N} <: Equation{dType, tType}
     d::Int
     m::Int
     n::Int

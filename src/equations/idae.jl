@@ -32,7 +32,7 @@ the algebraic variable ``\\lambda`` taking values in ``\\mathbb{R}^{n}``.
 * `λ₀`: initial condition for algebraic variable ``\\lambda``
 
 """
-immutable IDAE{dType <: Number, tType <: Number, fType <: Function, pType <: Function, uType <: Function, gType <: Function, ϕType <: Function, vType <: Function, N} <: Equation{dType, tType}
+struct IDAE{dType <: Number, tType <: Number, fType <: Function, pType <: Function, uType <: Function, gType <: Function, ϕType <: Function, vType <: Function, N} <: Equation{dType, tType}
     d::Int
     m::Int
     n::Int

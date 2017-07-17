@@ -42,7 +42,7 @@ where `t` is the current time, `q` and `p` are the current solution vectors
 and `v` and `f` are the vectors which hold the result of evaluating the
 vector fields ``v`` and ``f`` on `t`, `q` and `p`.
 """
-immutable PODE{dType <: Number, tType <: Number, vType <: Function, fType <: Function, N} <: Equation{dType, tType}
+struct PODE{dType <: Number, tType <: Number, vType <: Function, fType <: Function, N} <: Equation{dType, tType}
     d::Int
     n::Int
     v::vType

@@ -28,7 +28,7 @@ where `t` is the current time, `q` is the current solution vector, and
 on `t` and `q`.
 
 """
-immutable ODE{dType <: Number, tType <: Number, vType <: Function, N} <: Equation{dType, tType}
+struct ODE{dType <: Number, tType <: Number, vType <: Function, N} <: Equation{dType, tType}
     d::Int
     n::Int
     v::vType

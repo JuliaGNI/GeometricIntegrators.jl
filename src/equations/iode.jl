@@ -63,7 +63,7 @@ and
     end
 ```
 """
-immutable IODE{dType <: Number, tType <: Number, αType <: Function, fType <: Function, gType <: Function, vType <: Function, N} <: Equation{dType, tType}
+struct IODE{dType <: Number, tType <: Number, αType <: Function, fType <: Function, gType <: Function, vType <: Function, N} <: Equation{dType, tType}
     d::Int
     m::Int
     n::Int

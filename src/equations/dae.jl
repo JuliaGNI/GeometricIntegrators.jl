@@ -59,7 +59,7 @@ on `t`, `q` and `λ`.
 
 ```
 """
-immutable DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Function, ϕType <: Function, N} <: Equation{dType, tType}
+struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Function, ϕType <: Function, N} <: Equation{dType, tType}
     d::Int
     m::Int
     n::Int
