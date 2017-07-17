@@ -147,7 +147,7 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt
     iguess = InitialGuessODE(interpolation, equation, Δt; periodicity=equation.periodicity)
 
     # create integrator
-    IntegratorFIRK{DT, TT, FT, typeof(params), typeof(solver), typeof(iguess.int), M}(
+    IntegratorFIRK{DT, TT, FT, typeof(params), typeof(solver), typeof(iguess.int), N}(
                                         equation, tableau, Δt, params, solver, iguess,
                                         q, v, y, Q, V, Y)
 end
