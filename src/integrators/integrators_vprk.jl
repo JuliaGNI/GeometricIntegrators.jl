@@ -25,15 +25,13 @@ end
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S}) where {ST,DT,TT,ΑT,FT,D,S}
     cache = NonlinearFunctionCacheVPRK{ST}(D, S)
 
-    function_stages = quote
+    quote
         @assert length(x) == length(b)
 
         compute_stages!(x, $cache.Q, $cache.V, $cache.P, $cache.F, params)
         compute_rhs_vprk!(b, $cache.P, $cache.F, params)
         compute_rhs_vprk_correction!(b, $cache.V, params)
     end
-
-    return function_stages
 end
 
 
