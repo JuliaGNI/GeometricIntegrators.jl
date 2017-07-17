@@ -13,8 +13,7 @@ makedocs(
                 "Linear Solvers"    => "modules/solvers_linear.md",
                 "Nonlinear Solvers" => "modules/solvers_nonlinear.md",
                 "Solutions"         => "modules/solutions.md",
-                "Tableaus"          => "modules/tableaus.md",
-                "Example Problems"  => "modules/problems.md"]
+                "Tableaus"          => "modules/tableaus.md"]
              ]
 )
 
