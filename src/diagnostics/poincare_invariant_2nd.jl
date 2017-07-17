@@ -11,15 +11,13 @@ struct PoincareInvariant2nd{ET,DT,TT,ΩT}
     ny::Int
     ntime::Int
     nsave::Int
-    nplot::Int
-    odir::String
-    atol::DT
-    rtol::DT
-    nmax::Int
+    nt::Int
+    I::Vector{DT}
+    J::Vector{DT}
+    L::Vector{DT}
 end
 
-function PoincareInvariant2nd(f_equ::Function, f_surface::Function, ω::ΩT, Δt::TT, d::Int, nx::Int, ny::Int, ntime::Int, nsave::Int, nplot::Int, odir::String;
-                              atol::DT=2*eps(), rtol::DT=2*eps(), nmax::Int=100) where {DT,TT,ΩT}
+function PoincareInvariant2nd(f_equ::Function, f_surface::Function, ω::ΩT, Δt::TT, d::Int, nx::Int, ny::Int, ntime::Int, nsave::Int, DT=Float64) where {TT,ΩT}
 
     println()
     println("Second Euler-Poincaré Integral Invariant")
@@ -28,18 +26,15 @@ function PoincareInvariant2nd(f_equ::Function, f_surface::Function, ω::ΩT, Δt
     println(" nx    = ", nx)
     println(" ny    = ", ny)
     println(" ntime = ", ntime)
+    println(" nsave = ", nsave)
     println(" Δt    = ", Δt)
     println()
-
-    if !isdir(odir)
-        mkpath(odir)
-    end
 
     # compute Chebyshev points
     c = points(Chebyshev(0..1)^2, nx*ny)
 
     # compute initial conditions
-    q₀ = zeros(d, length(c))
+    q₀ = zeros(DT, (d, length(c)))
 
     for i in 1:length(c)
         q₀[:,i] .= f_surface(c[i][1], c[i][2])
@@ -48,27 +43,19 @@ function PoincareInvariant2nd(f_equ::Function, f_surface::Function, ω::ΩT, Δt
     # initialise euation
     equ = f_equ(q₀)
 
+    # create arrays for results
+    nt = div(ntime, nsave)
+
+    I = zeros(DT, nt+1)
+    J = zeros(DT, nt+1)
+    L = zeros(DT, nt+1)
+
     # initialise Poincare invariant
-    PoincareInvariant2nd{typeof(equ),DT,TT,ΩT,}(equ, ω, Δt, nx, ny, ntime, nsave, nplot, odir, atol, rtol, nmax)
+    PoincareInvariant2nd{typeof(equ),DT,TT,ΩT}(equ, ω, Δt, nx, ny, ntime, nsave, nt, I, J, L)
 end
 
 
-
-function evaluate_poincare_invariant(pinv::PoincareInvariant2nd{ET,DT,TT}, integrator, tableau, runid) where {ET,DT,TT}
-
-    int = integrator(pinv.equ, tableau, pinv.Δt; atol=pinv.atol, rtol=pinv.rtol, nmax=pinv.nmax)
-    sol = Solution(pinv.equ, pinv.Δt, pinv.ntime, pinv.nsave)
-
-    println("Running ", tableau.name, " (", runid, ")...")
-
-    integrate!(int, sol)
-    # try
-    #     integrate!(int, sol)
-    # catch DomainError
-    #     println("DOMAIN ERROR")
-    # end
-
-    println("   Computing surface integrals...")
+function evaluate_poincare_invariant(pinv::PoincareInvariant2nd{ET,DT,TT}, sol::Solution) where {ET,DT,TT}
 
     local SC  = Chebyshev(0..1)^2
     local SU  = Ultraspherical(1, 0..1)^2
@@ -88,36 +75,53 @@ function evaluate_poincare_invariant(pinv::PoincareInvariant2nd{ET,DT,TT}, integ
     local nc = ncoefficients(fq)
     local nv = length(values(fq))
 
-    local I = zeros(DT, sol.t.n+1)
-    local J = zeros(DT, sol.t.n+1)
-
     local Iᵢⱼ = zeros(DT, nv)
     local Jᵢⱼ = zeros(DT, nv)
+    local Kᵢⱼ = zeros(DT, nv)
+    local Lᵢⱼ = zeros(DT, nv)
 
     local qᵢⱼ = zeros(DT, sol.nd, nv)
     local vᵢ  = zeros(DT, sol.nd, nv)
     local vⱼ  = zeros(DT, sol.nd, nv)
     local aᵢ  = zeros(DT, sol.nd, nv)
     local aⱼ  = zeros(DT, sol.nd, nv)
+    local γᵢ  = zeros(DT, sol.nd, nv)
+    local γⱼ  = zeros(DT, sol.nd, nv)
 
     local ω::Matrix{DT} = zeros(DT, sol.nd, sol.nd)
 
     local q = permutedims(sol.q.d, [3,1,2])
-    local p = permutedims(sol.p.d, [3,1,2])
+    if isdefined(sol, :p)
+        local p = permutedims(sol.p.d, [3,1,2])
+    end
+    if isdefined(sol, :λ)
+        local λ = permutedims(sol.λ.d, [3,1,2])
+    end
 
     for i in 1:size(sol.q.d,2)
         println("      it = ", i-1)
 
         # create funs for q and p
         fq = Fun(SCV, ApproxFun.transform(SCV, q[:,:,i]))
-        fp = Fun(SCV, ApproxFun.transform(SCV, p[:,:,i]))
+        if isdefined(sol, :p)
+            fp = Fun(SCV, ApproxFun.transform(SCV, p[:,:,i]))
+        end
+        if isdefined(sol, :λ)
+            fλ = Fun(SCV, ApproxFun.transform(SCV, λ[:,:,i]))
+        end
 
         for k in 1:sol.nd
             # compute derivatives of q and p and store values
             vᵢ[k,:] .= values(CXU * (Dx * fq[k]))
             vⱼ[k,:] .= values(CYU * (Dy * fq[k]))
-            aᵢ[k,:] .= values(CXU * (Dx * fp[k]))
-            aⱼ[k,:] .= values(CYU * (Dy * fp[k]))
+            if isdefined(sol, :p)
+                aᵢ[k,:] .= values(CXU * (Dx * fp[k]))
+                aⱼ[k,:] .= values(CYU * (Dy * fp[k]))
+            end
+            if isdefined(sol, :λ)
+                γᵢ[k,:] .= values(CXU * (Dx * fλ[k]))
+                γⱼ[k,:] .= values(CYU * (Dy * fλ[k]))
+            end
 
             # obtain values of q at the same points as the derivatives
             qᵢⱼ[k,:] .= itransform(SU, resize!((CSU * fq[k]).coefficients, nc))
@@ -127,24 +131,42 @@ function evaluate_poincare_invariant(pinv::PoincareInvariant2nd{ET,DT,TT}, integ
         for j in 1:nv
             pinv.ω(sol.t.t[i], qᵢⱼ[:,j], ω)
             Iᵢⱼ[j] = vector_matrix_vector_product(vⱼ[:,j], ω, vᵢ[:,j])
-            Jᵢⱼ[j] = dot(aᵢ[:,j], vⱼ[:,j]) - dot(vᵢ[:,j], aⱼ[:,j])
+            if isdefined(sol, :p)
+                Jᵢⱼ[j] = dot(aᵢ[:,j], vⱼ[:,j]) - dot(vᵢ[:,j], aⱼ[:,j])
+            end
+            if isdefined(sol, :λ)
+                Kᵢⱼ[j] = vector_matrix_vector_product(γⱼ[:,j], ω, γᵢ[:,j])
+                Lᵢⱼ[j] = Iᵢⱼ[j] - pinv.Δt^2 * Kᵢⱼ[j]
+            end
         end
 
         # compute noncanonical integral invariant
-        I[i] = Q * Fun(SU, ApproxFun.transform(SU, Iᵢⱼ))
+        pinv.I[i] = Q * Fun(SU, ApproxFun.transform(SU, Iᵢⱼ))
 
         # compute canonical integral invariant
-        J[i] = Q * Fun(SU, ApproxFun.transform(SU, Jᵢⱼ))
+        if isdefined(sol, :p)
+            pinv.J[i] = Q * Fun(SU, ApproxFun.transform(SU, Jᵢⱼ))
+        end
+
+        # compute corrected integral invariant
+        if isdefined(sol, :λ)
+            pinv.L[i] = Q * Fun(SU, ApproxFun.transform(SU, Lᵢⱼ))
+        end
     end
 
+    return (pinv.I, pinv.J, pinv.L)
+end
 
-    println("   Plotting results...")
 
-    plot_integral_error(sol.t.t, I, pinv.odir * "/" * runid * "_poincare_2nd_q.png";
-                        plot_title=L"$\Delta \int_S \omega_{ij} (q) \, dq^i \wedge dq^j$")
-    plot_integral_error(sol.t.t, J, pinv.odir * "/" * runid * "_poincare_2nd_p.png";
-                        plot_title=L"$\Delta \int_S dp_i \, dq^i$")
-    plot_surface(sol, pinv.nplot, pinv.odir * "/" * runid * "_area.png")
+function CommonFunctions.write_to_hdf5(pinv::PoincareInvariant2nd, sol::Solution, output_file::String)
+    # h5open(output_file, isfile(output_file) ? "r+" : "w") do h5
+    h5open(output_file, "w") do h5
 
-    return I, J
+        write(h5, "t", sol.t.t)
+        write(h5, "I", pinv.I)
+
+        isdefined(sol, :p) ? write(h5, "J", pinv.J) : nothing
+        isdefined(sol, :λ) ? write(h5, "L", pinv.L) : nothing
+
+    end
 end

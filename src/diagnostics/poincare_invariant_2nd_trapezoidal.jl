@@ -7,15 +7,13 @@ struct PoincareInvariant2ndTrapezoidal{ET,DT,TT,ΩT}
     ny::Int
     ntime::Int
     nsave::Int
-    nplot::Int
-    odir::String
-    atol::DT
-    rtol::DT
-    nmax::Int
+    nt::Int
+    I::Vector{DT}
+    J::Vector{DT}
+    L::Vector{DT}
 end
 
-function PoincareInvariant2ndTrapezoidal(f_equ::Function, f_surface::Function, ω::ΩT, Δt::TT, d::Int, nx::Int, ny::Int, ntime::Int, nsave::Int, nplot::Int, odir::String;
-                                        atol::DT=2*eps(), rtol::DT=2*eps(), nmax::Int=100) where {DT,TT,ΩT}
+function PoincareInvariant2ndTrapezoidal(f_equ::Function, f_surface::Function, ω::ΩT, Δt::TT, d::Int, nx::Int, ny::Int, ntime::Int, nsave::Int, DT=Float64) where {TT,ΩT}
 
     println()
     println("Second Euler-Poincaré Integral Invariant")
@@ -24,13 +22,11 @@ function PoincareInvariant2ndTrapezoidal(f_equ::Function, f_surface::Function, �
     println(" nx    = ", nx)
     println(" ny    = ", ny)
     println(" ntime = ", ntime)
+    println(" nsave = ", nsave)
     println(" Δt    = ", Δt)
     println()
 
-    if !isdir(odir)
-        mkpath(odir)
-    end
-
+    # compute initial conditions
     q₀ = zeros(d, nx*ny)
 
     for j in 1:ny
@@ -41,40 +37,25 @@ function PoincareInvariant2ndTrapezoidal(f_equ::Function, f_surface::Function, �
 
     equ = f_equ(q₀)
 
-    PoincareInvariant2ndTrapezoidal{typeof(equ),DT,TT,ΩT}(equ, ω, Δt, nx, ny, ntime, nsave, nplot, odir, atol, rtol, nmax)
+    # create arrays for results
+    nt = div(ntime, nsave)
+
+    I = zeros(DT, nt+1)
+    J = zeros(DT, nt+1)
+    L = zeros(DT, nt+1)
+
+    PoincareInvariant2ndTrapezoidal{typeof(equ),DT,TT,ΩT}(equ, ω, Δt, nx, ny, ntime, nsave, nt, I, J, L)
 end
 
 
 
-function evaluate_poincare_invariant(pinv::PoincareInvariant2ndTrapezoidal, integrator, tableau, runid)
-
-    int = integrator(pinv.equ, tableau, pinv.Δt; atol=pinv.atol, rtol=pinv.rtol, nmax=pinv.nmax)
-    sol = Solution(pinv.equ, pinv.Δt, pinv.ntime, pinv.nsave)
-
-    println("Running ", tableau.name, " (", runid, ")...")
-
-    integrate!(int, sol)
-    # try
-    #     integrate!(int, sol)
-    # catch DomainError
-    #     println("DOMAIN ERROR")
-    # end
-
-    I = zeros(sol.t.n+1)
-    J = zeros(sol.t.n+1)
-
+function evaluate_poincare_invariant(pinv::PoincareInvariant2ndTrapezoidal, sol::Solution)
     for i in 1:size(sol.q.d,2)
-        I[i] = surface_integral(sol.t.t[i], sol.q.d[:,i,:], pinv.ω, pinv.nx, pinv.ny)
-        J[i] = surface_integral_canonical(sol.q.d[:,i,:], sol.p.d[:,i,:], pinv.nx, pinv.ny)
+        pinv.I[i] = surface_integral(sol.t.t[i], sol.q.d[:,i,:], pinv.ω, pinv.nx, pinv.ny)
+        pinv.J[i] = surface_integral_canonical(sol.q.d[:,i,:], sol.p.d[:,i,:], pinv.nx, pinv.ny)
     end
 
-    plot_integral_error(sol.t.t, I, pinv.odir * "/" * runid * "_poincare_2nd_q.png";
-                        plot_title=L"$\Delta \int_S \omega_{ij} (q) \, dq^i \wedge dq^j$")
-    plot_integral_error(sol.t.t, J, pinv.odir * "/" * runid * "_poincare_2nd_p.png";
-                        plot_title=L"$\Delta \int_S dp_i \, dq^i$")
-    plot_surface(sol, pinv.nplot, pinv.odir * "/" * runid * "_area.png")
-
-    return I, J
+    return (pinv.I, pinv.J, pinv.L)
 end
 
 
@@ -232,4 +213,18 @@ function surface_integral_canonical(q::Matrix{DT}, p::Matrix{DT}, nx, ny) where 
     end
 
     return I
+end
+
+
+function CommonFunctions.write_to_hdf5(pinv::PoincareInvariant2ndTrapezoidal, sol::Solution, output_file::String)
+    # h5open(output_file, isfile(output_file) ? "r+" : "w") do h5
+    h5open(output_file, "w") do h5
+
+        write(h5, "t", sol.t.t)
+        write(h5, "I", pinv.I)
+
+        isdefined(sol, :p) ? write(h5, "J", pinv.J) : nothing
+        isdefined(sol, :λ) ? write(h5, "L", pinv.L) : nothing
+
+    end
 end
