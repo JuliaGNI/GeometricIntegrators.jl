@@ -1,0 +1,14 @@
+__precompile__()
+
+module Simulations
+
+    using ..Equations
+    using ..Integrators
+    using ..Solutions
+    using ..Tableaus
+
+    export Simulation, run!
+
+    include("simulations/simulation.jl")
+
+end
