@@ -20,7 +20,14 @@ function get_symplectic_conjugate_coefficients(coeff::CoefficientsRK{T}) where {
 end
 
 
-function compute_symplecticity_error(coeff::CoefficientsRK{T}) where {T}
+function symplecticize(coeff::CoefficientsRK; name=nothing, T=Float64)
+    name == nothing ? Symbol(string(coeff.name)*"S") : nothing
+    a̅ = zeros(coeff.a)
+    get_symplectic_conjugate_coefficients(coeff.a, coeff.b, a̅)
+    CoefficientsRK(T, name, coeff.o, 0.5*(coeff.a + a̅), coeff.b, coeff.c)
+end
+
+
     [coeff.b[i] * coeff.a[i,j] + coeff.b[j] * coeff.a[j,i] - coeff.b[i] * coeff.b[j] for i in 1:size(coeff.a,1), j in 1:size(coeff.a,2)]
 end
 

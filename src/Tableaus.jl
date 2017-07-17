@@ -12,9 +12,10 @@ module Tableaus
 
     include("tableaus/coefficients.jl")
 
-    export get_symplectic_conjugate_coefficients, check_symplecticity, check_symmetry,
-           check_order_conditions_B, check_order_conditions_C, check_order_conditions_D,
-           compute_symplecticity_error
+    export get_symplectic_conjugate_coefficients, symplecticize,
+           check_symplecticity, check_symmetry, compute_symplecticity_error,
+           check_order_conditions_B, check_order_conditions_C, check_order_conditions_D
+
 
     include("tableaus/coefficients_symplectic.jl")
 
