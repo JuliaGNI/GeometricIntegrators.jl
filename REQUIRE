@@ -6,5 +6,6 @@ FastGaussQuadrature
 FastTransforms
 ForwardDiff 0.5-
 HDF5
+OffsetArrays
 Polynomials
 ProgressMeter
