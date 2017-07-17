@@ -2,6 +2,7 @@ __precompile__()
 
 module Tableaus
 
+    using ..Config
     using ..CommonFunctions
     using ..BasisFunctions
     using ..Quadratures
@@ -139,5 +140,10 @@ module Tableaus
            getTableauGLRKpSymmetric
 
     include("tableaus/tableaus_vspark.jl")
+
+
+    function __init__()
+        add_config(:tab_compensated_summation, true)
+    end
 
 end

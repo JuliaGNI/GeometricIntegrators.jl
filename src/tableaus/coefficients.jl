@@ -58,13 +58,13 @@ struct CoefficientsRK{T} <: AbstractCoefficients{T}
     end
 end
 
-function CoefficientsRK(T::Type, name::Symbol, order::Int, a::Matrix, b::Vector, c::Vector; compensated=true)
+function CoefficientsRK(T::Type, name::Symbol, order::Int, a::Matrix, b::Vector, c::Vector)
 
     a̅ = Matrix{T}(a)
     b̅ = Vector{T}(b)
     c̅ = Vector{T}(c)
 
-    if compensated
+    if get_config(:tab_compensated_summation)
         â = Matrix{T}(a-Matrix{eltype(a)}(a̅))
         b̂ = Vector{T}(b-Vector{eltype(b)}(b̅))
         ĉ = Vector{T}(c-Vector{eltype(c)}(c̅))
