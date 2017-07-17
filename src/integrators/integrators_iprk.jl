@@ -1,13 +1,41 @@
 
+
+struct NonlinearFunctionCacheIPRK{ST}
+    Q::Matrix{ST}
+    V::Matrix{ST}
+    P::Matrix{ST}
+    F::Matrix{ST}
+    Y::Matrix{ST}
+    Z::Matrix{ST}
+
+    v::Array{ST,1}
+    y::Array{ST,1}
+    z::Array{ST,1}
+
+    function NonlinearFunctionCacheIPRK{ST}(D,S) where {ST}
+        # create internal stage vectors
+        Q = zeros(ST,D,S)
+        V = zeros(ST,D,S)
+        P = zeros(ST,D,S)
+        F = zeros(ST,D,S)
+        Y = zeros(ST,D,S)
+        Z = zeros(ST,D,S)
+
+        # create update vectors
+        v = zeros(ST,D)
+        y = zeros(ST,D)
+        z = zeros(ST,D)
+
+        new(Q, V, P, F, Y, Z, v, y, z)
+    end
+end
+
 "Parameters for right-hand side function of implicit partitioned Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersIPRK{DT,TT,VT,FT} <: NonlinearFunctionParameters{DT}
+mutable struct NonlinearFunctionParametersIPRK{DT,TT,VT,FT,D,S} <: NonlinearFunctionParameters{DT}
     f_v::VT
     f_f::FT
 
     Δt::TT
-
-    d::Int
-    s::Int
 
     t_q::CoefficientsRK{TT}
     t_p::CoefficientsRK{TT}
@@ -16,83 +44,72 @@ mutable struct NonlinearFunctionParametersIPRK{DT,TT,VT,FT} <: NonlinearFunction
 
     q::Vector{DT}
     p::Vector{DT}
-    y::Vector{DT}
-    z::Vector{DT}
 
-    Q::Matrix{DT}
-    V::Matrix{DT}
-    P::Matrix{DT}
-    F::Matrix{DT}
-    Y::Matrix{DT}
-    Z::Matrix{DT}
-
-    tQ::Vector{DT}
-    tV::Vector{DT}
-    tP::Vector{DT}
-    tF::Vector{DT}
-
-    function NonlinearFunctionParametersIPRK{DT,TT,VT,FT}(f_v, f_f, Δt, d, s, t_q, t_p) where {DT,TT,VT,FT}
+    function NonlinearFunctionParametersIPRK{DT,TT,VT,FT,D,S}(f_v, f_f, Δt, t_q, t_p) where {DT,TT,VT,FT,D,S}
         # create solution vectors
-        q = zeros(DT,d)
-        p = zeros(DT,d)
-        y = zeros(DT,d)
-        z = zeros(DT,d)
+        q = zeros(DT,D)
+        p = zeros(DT,D)
 
-        # create internal stage vectors
-        Q = zeros(DT,d,s)
-        V = zeros(DT,d,s)
-        P = zeros(DT,d,s)
-        F = zeros(DT,d,s)
-        Y = zeros(DT,d,s)
-        Z = zeros(DT,d,s)
-
-        # create temporary vectors
-        tQ = zeros(DT,d)
-        tV = zeros(DT,d)
-        tP = zeros(DT,d)
-        tF = zeros(DT,d)
-
-        new(f_v, f_f, Δt, d, s, t_q, t_p, 0, q, p, y, z, Q, V, P, F, Y, Z, tQ, tV, tP, tF)
+        new(f_v, f_f, Δt, t_q, t_p, 0, q, p)
     end
 end
 
 "Compute stages of implicit partitioned Runge-Kutta methods."
-function function_stages!(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersIPRK{DT,TT,VT,FT}) where {DT,TT,VT,FT}
-    local tqᵢ::TT
-    local tpᵢ::TT
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersIPRK{DT,TT,VT,FT,D,S}) where {ST,DT,TT,VT,FT,D,S}
+    cache = NonlinearFunctionCacheIPRK{ST}(D, S)
 
-    for i in 1:params.s
-        for k in 1:params.d
-            # copy y to Y and Z
-            params.Y[k,i] = y[2*(params.d*(i-1)+k-1)+1]
-            params.Z[k,i] = y[2*(params.d*(i-1)+k-1)+2]
+    quote
+        compute_stages!(x, $cache.Q, $cache.V, $cache.P, $cache.F, $cache.Y, $cache.Z, params)
 
-            # compute Q and P
-            params.Q[k,i] = params.q[k] + params.Δt * params.Y[k,i]
-            params.P[k,i] = params.p[k] + params.Δt * params.Z[k,i]
-        end
-
-        # compute f(X)
-        tqᵢ = params.t + params.Δt * params.t_q.c[i]
-        tpᵢ = params.t + params.Δt * params.t_p.c[i]
-
-        simd_copy_xy_first!(params.tQ, params.Q, i)
-        simd_copy_xy_first!(params.tP, params.P, i)
-        params.f_v(tqᵢ, params.tQ, params.tP, params.tV)
-        params.f_f(tpᵢ, params.tQ, params.tP, params.tF)
-        simd_copy_yx_first!(params.tV, params.V, i)
-        simd_copy_yx_first!(params.tF, params.F, i)
-    end
-
-    # compute b = - [(Y-AV), (Z-AF)]
-    for i in 1:params.s
-        for k in 1:params.d
-            b[2*(params.d*(i-1)+k-1)+1] = - params.Y[k,i]
-            b[2*(params.d*(i-1)+k-1)+2] = - params.Z[k,i]
-            for j in 1:params.s
-                b[2*(params.d*(i-1)+k-1)+1] += params.t_q.a[i,j] * params.V[k,j]
-                b[2*(params.d*(i-1)+k-1)+2] += params.t_p.a[i,j] * params.F[k,j]
+        # compute b = - [(Y-AV), (Z-AF)]
+        for i in 1:S
+            for k in 1:D
+                b[2*(D*(i-1)+k-1)+1] = - $cache.Y[k,i]
+                b[2*(D*(i-1)+k-1)+2] = - $cache.Z[k,i]
+                for j in 1:S
+                    b[2*(D*(i-1)+k-1)+1] += params.t_q.a[i,j] * $cache.V[k,j]
+                    b[2*(D*(i-1)+k-1)+2] += params.t_p.a[i,j] * $cache.F[k,j]
+                end
             end
+        end
+    end
+end
+
+
+@generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST},
+                                                   P::Matrix{ST}, F::Matrix{ST},
+                                                   Y::Matrix{ST}, Z::Matrix{ST},
+                                                   params::NonlinearFunctionParametersIPRK{DT,TT,VT,FT,D,S}) where {ST,DT,TT,VT,FT,D,S}
+    tQ = zeros(ST,D)
+    tV = zeros(ST,D)
+    tP = zeros(ST,D)
+    tF = zeros(ST,D)
+
+    quote
+        local tqᵢ::TT
+        local tpᵢ::TT
+
+        for i in 1:S
+            for k in 1:D
+                # copy y to Y and Z
+                Y[k,i] = x[2*(D*(i-1)+k-1)+1]
+                Z[k,i] = x[2*(D*(i-1)+k-1)+2]
+
+                # compute Q and P
+                Q[k,i] = params.q[k] + params.Δt * Y[k,i]
+                P[k,i] = params.p[k] + params.Δt * Z[k,i]
+            end
+
+            # compute f(X)
+            tqᵢ = params.t + params.Δt * params.t_q.c[i]
+            tpᵢ = params.t + params.Δt * params.t_p.c[i]
+
+            simd_copy_xy_first!($tQ, Q, i)
+            simd_copy_xy_first!($tP, P, i)
+            params.f_v(tqᵢ, $tQ, $tP, $tV)
+            params.f_f(tpᵢ, $tQ, $tP, $tF)
+            simd_copy_yx_first!($tV, V, i)
+            simd_copy_yx_first!($tF, F, i)
         end
     end
 end
@@ -104,31 +121,38 @@ struct IntegratorIPRK{DT, TT, VT, FT, SPT, ST} <: Integrator{DT, TT}
     tableau::TableauIPRK{TT}
     Δt::TT
 
+    cache::NonlinearFunctionCacheIPRK{DT}
     params::SPT
     solver::ST
 
-    q::Array{DT,1}
-    p::Array{DT,1}
-    y::Array{DT,1}
-    z::Array{DT,1}
-    Q::Array{DT,2}
-    V::Array{DT,2}
-    P::Array{DT,2}
-    F::Array{DT,2}
+    q::Vector{Vector{Double{DT}}}
+    p::Vector{Vector{Double{DT}}}
 end
 
 function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT,VT,FT}
     D = equation.d
+    M = equation.n
     S = tableau.s
 
     # create solution vector for internal stages / nonlinear solver
     x = zeros(DT, 2*D*S)
 
+    # create solution vectors
+    q = Array{Vector{Double{DT}}}(M)
+    p = Array{Vector{Double{DT}}}(M)
+
+    for i in 1:M
+        q[i] = zeros(Double{DT},D)
+        p[i] = zeros(Double{DT},D)
+    end
+
+    # create cache for internal stage vectors and update vectors
+    cache = NonlinearFunctionCacheIPRK{DT}(D,S)
+
     # create params
-    params = NonlinearFunctionParametersIPRK{DT,TT,VT,FT}(
+    params = NonlinearFunctionParametersIPRK{DT,TT,VT,FT,D,S}(
                                                 equation.v, equation.f,
-                                                Δt, D, S,
-                                                tableau.q, tableau.p)
+                                                Δt, tableau.q, tableau.p)
 
     # create rhs function for nonlinear solver
     function_stages = (x,b) -> function_stages!(x, b, params)
@@ -138,9 +162,7 @@ function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, �
 
     # create integrator
     IntegratorIPRK{DT, TT, VT, FT, typeof(params), typeof(solver)}(
-                                        equation, tableau, Δt, params, solver,
-                                        params.q, params.p, params.y, params.z,
-                                        params.Q, params.V, params.P, params.F)
+                                        equation, tableau, Δt, cache, params, solver, q, p)
 end
 
 
@@ -149,36 +171,48 @@ function initialize!(int::IntegratorIPRK, sol::SolutionPODE, m::Int)
     @assert m ≤ sol.ni
 
     # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q, int.p, m)
+    get_initial_conditions!(sol, int.q[m], int.p[m], m)
+end
+
+function initial_guess!(int::IntegratorIPRK, m::Int)
+    # TODO initial guess
+    # for i in 1:int.tableau.s
+    #     for k in 1:int.equation.d
+    #         # int.solver.x[2*(sol.nd*(i-1)+k-1)+1] = int.q[k]
+    #         # int.solver.x[2*(params.d*(i-1)+k-1)+1] = 0.
+    #     end
+    # end
 end
 
 "Integrate ODE with implicit partitioned Runge-Kutta integrator."
 function integrate_step!(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,VT,FT,N}
     # set time for nonlinear solver
-    int.params.t = sol.t[n]
+    int.params.t  = sol.t[0] + (n-1)*int.Δt
+    int.params.q .= int.q[m]
+    int.params.p .= int.p[m]
 
     # compute initial guess
-    for i in 1:int.tableau.s
-        for k in 1:int.equation.d
-            # TODO initial guess
-            # int.solver.x[2*(sol.nd*(i-1)+k-1)+1] = int.q[k]
-            # int.solver.x[2*(params.d*(i-1)+k-1)+1] = 0.
-        end
-    end
+    initial_guess!(int, m)
 
     # call nonlinear solver
     solve!(int.solver)
 
-    if !solverStatusOK(int.solver.status, int.solver.params)
-        println(int.solver.status)
-    end
+    # print solver status
+    printSolverStatus(int.solver.status, int.solver.params, n)
+
+    # check if solution contains NaNs
+    checkNaN(int.solver.status, n)
+
+    # compute vector fields at internal stages
+    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.cache.Y, int.cache.Z, int.params)
 
     # compute final update
-    simd_mult!(int.y, int.V, int.tableau.q.b)
-    simd_mult!(int.z, int.F, int.tableau.p.b)
-    simd_axpy!(int.Δt, int.y, int.q)
-    simd_axpy!(int.Δt, int.z, int.p)
+    update_solution!(int.q[m], int.cache.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
+    update_solution!(int.p[m], int.cache.F, int.tableau.p.b, int.tableau.p.b̂, int.Δt)
+
+    # TODO take care of periodic solutions
+    # cut_periodic_solution!(int.q[m], int.equation.periodicity)
 
     # copy to solution
-    copy_solution!(sol, int.q, int.p, n, m)
+    copy_solution!(sol, int.q[m], int.p[m], n, m)
 end
