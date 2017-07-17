@@ -3,7 +3,9 @@ __precompile__()
 module Solutions
 
     using DoubleDouble
+    using HDF5
 
+    using ..CommonFunctions
     using ..Equations
 
     export DataSeries, get_data!, set_data!, reset!
@@ -18,7 +20,7 @@ module Solutions
     export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE,
            copy_solution!, reset!,
            get_initial_conditions!, set_initial_conditions!,
-           createHDF5, writeSolutionToHDF5
+           create_hdf5, write_to_hdf5
     export PSolutionPDAE, SSolutionPDAE
 
     include("solutions/solutions.jl")

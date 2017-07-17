@@ -70,31 +70,38 @@ function reset!(s::SolutionODE)
 end
 
 
-# TODO Fix HDF5 functions.
-
 "Creates HDF5 file and initialises datasets for ODE solution object."
-function createHDF5(solution::SolutionODE{DT,TT}, file::AbstractString, ntime::Int=1) where {DT,TT}
+function create_hdf5(solution::SolutionODE{DT,TT}, file::AbstractString, ntime::Int=1) where {DT,TT}
     @assert ntime ≥ 1
 
     info("Creating HDF5 file ", file)
-    # TODO Put warning if file exists.
+    isfile(file) ? warn("Overwriting existing HDF5 file.") : nothing
     h5 = h5open(file, "w")
 
-    # create dataset and copy initial conditions
+    # save attributes
+    attrs(h5)["ntime"] = solution.ntime
+    attrs(h5)["nsave"] = solution.nsave
+
+    # copy time
+    write(h5, "t", solution.t.t)
+
+    # create dataset
     # ntime can be used to set the expected total number of timesteps
     # so that the size of the array does not need to be adapted dynamically.
     # Right now, it has to be set as dynamical size adaptation is not yet
     # working.
-    x = d_create(h5, "x", datatype(DT), dataspace(solution.nd, ntime))
-    x[1:solution.nd, 1] = solution[1:solution.nd, 0]
+    q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
+
+    # copy initial conditions
+    q[1:solution.nd, 1] = solution.q.d[1:solution.nd, 1]
 
     return h5
 end
 
 "Append solution to HDF5 file."
-function writeSolutionToHDF5(solution::SolutionODE, h5::HDF5.HDF5File, offset=0)
+function CommonFunctions.write_to_hdf5(solution::SolutionODE, h5::HDF5.HDF5File, offset=0)
     # aquire dataset from HDF5 file
-    x = h5["x"]
+    q = h5["q"]
 
     # set convenience variables and compute ranges
     d  = solution.nd
@@ -108,7 +115,7 @@ function writeSolutionToHDF5(solution::SolutionODE, h5::HDF5.HDF5File, offset=0)
     # end
 
     # copy data from solution to HDF5 dataset
-    x[1:d, j1:j2] = solution[1:d, 1:n]
+    q[1:d, j1:j2] = solution.q.d[1:d, 2:n+1]
 
     return nothing
 end
