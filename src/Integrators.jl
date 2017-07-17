@@ -44,10 +44,10 @@ module Integrators
     include("integrators/vprk/integrators_vprk_general.jl")
     include("integrators/vprk/integrators_vprk_pmidpoint.jl")
     include("integrators/vprk/integrators_vprk_pstandard.jl")
-    include("integrators/vprk/integrators_vprk_psymplectic.jl")
+#    include("integrators/vprk/integrators_vprk_psymplectic.jl")
     include("integrators/vprk/integrators_vprk_psymmetric.jl")
-    include("integrators/vprk/integrators_vprk_pvariational.jl")
-    include("integrators/vprk/integrators_vprk_pglrk.jl")
+#    include("integrators/vprk/integrators_vprk_pvariational.jl")
+#    include("integrators/vprk/integrators_vprk_pglrk.jl")
     include("integrators/vprk/integrators_vprk.jl")
 
     include("integrators/spark/integrators_ark.jl")
