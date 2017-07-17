@@ -116,23 +116,17 @@ end
 
 "Gauss-Lobatto-IIIG Runge-Kutta, s=2"
 function getTableauLobIIIG2()
-    lobF1 = getCoefficientsLobIIIF2()
-    lobF2 = get_symplectic_conjugate_coefficients(lobF1)
-    TableauFIRK(CoefficientsRK(:LobIIIG2, lobF1.o, 0.5*(lobF1.a + lobF2.a), lobF1.b, lobF1.c))
+    TableauFIRK(getCoefficientsLobIIIG2())
 end
 
 "Gauss-Lobatto-IIIG Runge-Kutta, s=3"
 function getTableauLobIIIG3()
-    lobF1 = getCoefficientsLobIIIF3()
-    lobF2 = get_symplectic_conjugate_coefficients(lobF1)
-    TableauFIRK(CoefficientsRK(:LobIIIG3, lobF1.o, 0.5*(lobF1.a + lobF2.a), lobF1.b, lobF1.c))
+    TableauFIRK(getCoefficientsLobIIIG3())
 end
 
 "Gauss-Lobatto-IIIG Runge-Kutta, s=4"
 function getTableauLobIIIG4()
-    lobF1 = getCoefficientsLobIIIF4()
-    lobF2 = get_symplectic_conjugate_coefficients(lobF1)
-    TableauFIRK(CoefficientsRK(:LobIIIG4, lobF1.o, 0.5*(lobF1.a + lobF2.a), lobF1.b, lobF1.c))
+    TableauFIRK(getCoefficientsLobIIIG4())
 end
 
 "Gauss-Radau-IIA Runge-Kutta, s=2"
