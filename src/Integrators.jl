@@ -52,6 +52,7 @@ module Integrators
 
     function __init__()
         add_config(:ig_extrapolation_stages, 5)
+        add_config(:int_show_progress_nmin,  1000)
     end
 
 end
