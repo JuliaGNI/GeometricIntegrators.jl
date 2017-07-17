@@ -6,14 +6,13 @@ struct PoincareInvariant1st{ET,DT,TT,ΘT}
     nloop::Int
     ntime::Int
     nsave::Int
-    nplot::Int
     nt::Int
     I::Vector{DT}
     J::Vector{DT}
     L::Vector{DT}
 end
 
-function PoincareInvariant1st(f_equ::Function, f_loop::Function, Θ::ΘT, Δt::TT, d::Int, nloop::Int, ntime::Int, nsave::Int, nplot::Int, DT=Float64) where {TT,ΘT}
+function PoincareInvariant1st(f_equ::Function, f_loop::Function, Θ::ΘT, Δt::TT, d::Int, nloop::Int, ntime::Int, nsave::Int, DT=Float64) where {TT,ΘT}
 
     println()
     println("First Euler-Poincaré Integral Invariant")
@@ -42,7 +41,7 @@ function PoincareInvariant1st(f_equ::Function, f_loop::Function, Θ::ΘT, Δt::T
     J = zeros(DT, nt+1)
     L = zeros(DT, nt+1)
 
-    PoincareInvariant1st{typeof(equ),DT,TT,ΘT}(equ, Θ, Δt, nloop, ntime, nsave, nplot, nt, I, J, L)
+    PoincareInvariant1st{typeof(equ),DT,TT,ΘT}(equ, Θ, Δt, nloop, ntime, nsave, nt, I, J, L)
 end
 
 
