@@ -13,7 +13,7 @@ function get_symplectic_conjugate_coefficients(a::Matrix{T}, b::Vector{T}, a̅::
 end
 
 
-function get_symplectic_conjugate_coefficients(coeff::CoefficientsRK{T}) where {T}
+function get_symplectic_conjugate_coefficients(coeff::CoefficientsRK)
     a̅ = zeros(coeff.a)
     get_symplectic_conjugate_coefficients(coeff.a, coeff.b, a̅)
     CoefficientsRK(coeff.name, coeff.s, a̅, coeff.b, coeff.c)
@@ -28,6 +28,7 @@ function symplecticize(coeff::CoefficientsRK; name=nothing, T=Float64)
 end
 
 
+function compute_symplecticity_error(coeff::CoefficientsRK)
     [coeff.b[i] * coeff.a[i,j] + coeff.b[j] * coeff.a[j,i] - coeff.b[i] * coeff.b[j] for i in 1:size(coeff.a,1), j in 1:size(coeff.a,2)]
 end
 
