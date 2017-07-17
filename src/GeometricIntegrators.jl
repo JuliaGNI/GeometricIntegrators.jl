@@ -31,10 +31,6 @@ module GeometricIntegrators
     include("Diagnostics.jl")
     @reexport using .Diagnostics
 
-    export Problems
-
-    include("Problems.jl")
-
 
     function __init__()
         add_config(:verbosity, 1)

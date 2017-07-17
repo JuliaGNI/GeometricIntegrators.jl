@@ -1,6 +1,4 @@
 
-using GeometricIntegrators.Problems.Pendulum
-
 set_config(:nls_solver, NewtonSolver)
 
 Δt = 0.1

@@ -1,10 +1,4 @@
 
-module Pendulum
-
-    using GeometricIntegrators.Equations
-
-    export pendulum_ode, pendulum_pode, pendulum_iode, pendulum_idae
-
     function pendulum_ode_f(t, x, f)
         f[1] = x[2]
         f[2] = sin(x[1])
@@ -62,38 +56,6 @@ module Pendulum
     end
 
 
-    # function pendulum_pdae_v(t, q, p, v)
-    #     v[1] = 0
-    #     nothing
-    # end
-    #
-    # function pendulum_pdae_f(t, q, p, f)
-    #     f[1] = sin(q[1])
-    #     nothing
-    # end
-    #
-    # function pendulum_pdae_u(t, q, p, λ, u)
-    #     u[1] = λ[1]
-    #     nothing
-    # end
-    #
-    # function pendulum_pdae_g(t, q, p, λ, g)
-    #     g[1] = 0
-    #     nothing
-    # end
-    #
-    # # TODO
-    # function pendulum_pdae_ϕ(t, q, p, ϕ)
-    #     ϕ[1] = p[1] - q[2]
-    #     nothing
-    # end
-    #
-    # # TODO
-    # function pendulum_pdae(q₀=[acos(0.4)], p₀=[0.0], λ₀=[0.0, 0.0])
-    #     PDAE(pendulum_pdae_v, pendulum_pdae_f, pendulum_pdae_u, pendulum_pdae_g, pendulum_pdae_ϕ, q₀, p₀, λ₀)
-    # end
-
-
     function pendulum_idae_u(t, q, p, λ, u)
         u[1] = λ[1]
         u[2] = λ[2]
@@ -118,5 +80,3 @@ module Pendulum
              pendulum_idae_ϕ, pendulum_iode_v,
              q₀, p₀, λ₀)
     end
-
-end
