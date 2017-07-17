@@ -166,40 +166,43 @@ end
 
 
 function getCoefficientsLobIIID2(T=Float64)
-    lob  = getCoefficientsLobIII2(T)
-    lobC = getCoefficientsLobIIIC2(T)
-    CoefficientsRK(:LobIIID, lobC.o, (lob.a + lobC.a)/2, lobC.b, lobC.c)
+    lob  = getCoefficientsLobIII2(Dec128)
+    lobC = getCoefficientsLobIIIC2(Dec128)
+    CoefficientsRK(T, :LobIIID, lobC.o, (lob.a + lobC.a)/2, lobC.b, lobC.c)
 end
 
 function getCoefficientsLobIIID3(T=Float64)
-    lob  = getCoefficientsLobIII3(T)
-    lobC = getCoefficientsLobIIIC3(T)
-    CoefficientsRK(:LobIIID, lobC.o, (lob.a + lobC.a)/2, lobC.b, lobC.c)
+    lob  = getCoefficientsLobIII3(Dec128)
+    lobC = getCoefficientsLobIIIC3(Dec128)
+    CoefficientsRK(T, :LobIIID, lobC.o, (lob.a + lobC.a)/2, lobC.b, lobC.c)
 end
 
 function getCoefficientsLobIIID4(T=Float64)
-    lob  = getCoefficientsLobIII4(T)
-    lobC = getCoefficientsLobIIIC4(T)
-    CoefficientsRK(:LobIIID, lobC.o, (lob.a + lobC.a)/2, lobC.b, lobC.c)
+    lob  = getCoefficientsLobIII4(Dec128)
+    lobC = getCoefficientsLobIIIC4(Dec128)
+    CoefficientsRK(T, :LobIIID, lobC.o, (lob.a + lobC.a)/2, lobC.b, lobC.c)
 end
 
 
 function getCoefficientsLobIIIE2(T=Float64)
-    lobA = getCoefficientsLobIIIA2(T)
-    lobB = getCoefficientsLobIIIB2(T)
-    CoefficientsRK(:LobIIIE, lobA.o, (lobA.a + lobB.a)/2, lobA.b, lobA.c)
+    lobA = getCoefficientsLobIIIA2(Dec128)
+    lobB = getCoefficientsLobIIIB2(Dec128)
+    CoefficientsRK(T, :LobIIIE, lobA.o, (lobA.a + lobB.a)/2, lobA.b, lobA.c)
 end
 
 function getCoefficientsLobIIIE3(T=Float64)
-    lobA = getCoefficientsLobIIIA3(T)
-    lobB = getCoefficientsLobIIIB3(T)
-    CoefficientsRK(:LobIIIE, lobA.o, (lobA.a + lobB.a)/2, lobA.b, lobA.c)
+    lobA = getCoefficientsLobIIIA3(Dec128)
+    lobB = getCoefficientsLobIIIB3(Dec128)
+    CoefficientsRK(T, :LobIIIE, lobA.o, (lobA.a + lobB.a)/2, lobA.b, lobA.c)
 end
 
 function getCoefficientsLobIIIE4(T=Float64)
-    lobA = getCoefficientsLobIIIA4(T)
-    lobB = getCoefficientsLobIIIB4(T)
-    CoefficientsRK(:LobIIIE, lobA.o, (lobA.a + lobB.a)/2, lobA.b, lobA.c)
+    lobA = getCoefficientsLobIIIA4(Dec128)
+    lobB = getCoefficientsLobIIIB4(Dec128)
+    CoefficientsRK(T, :LobIIIE, lobA.o, (lobA.a + lobB.a)/2, lobA.b, lobA.c)
+end
+
+
 function getCoefficientsLobIIIG2(T=Float64)
     symplecticize(getCoefficientsLobIIIF2(Dec128); name=:LobIIIG, T=T)
 end
