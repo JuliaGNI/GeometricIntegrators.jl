@@ -35,4 +35,8 @@ function TableauIPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::Coeffici
     TableauIPRK{T}(name, order, q, p)
 end
 
+function TableauIPRK(name::Symbol, order::Int, q::CoefficientsRK{T}) where {T}
+    TableauIPRK{T}(name, order, q, q)
+end
+
 # TODO function readTableauIPRKFromFile(dir::AbstractString, name::AbstractString)

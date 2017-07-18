@@ -50,4 +50,8 @@ function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::Coeffici
     TableauVPRK{T}(name, order, q, p, R∞)
 end
 
+function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int) where {T}
+    TableauVPRK{T}(name, order, q, q, R∞)
+end
+
 # TODO function readTableauVPRKFromFile(dir::AbstractString, name::AbstractString)
