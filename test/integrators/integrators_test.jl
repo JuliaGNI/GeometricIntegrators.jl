@@ -1,16 +1,21 @@
 
 set_config(:nls_solver, NewtonSolver)
 
-Δt = 0.1
-nt = 10
+function rel_err(sol, ref)
+    maximum(abs.((sol.d[:,end] .- ref) ./ ref))
+end
 
-ode  = pendulum_ode()
-pode = pendulum_pode()
-iode = pendulum_iode()
-idae = pendulum_idae()
+Δt  = 0.1
+nt  = 10
 
-glrk1 = getTableauGLRK(1)
-glrk2 = getTableauGLRK(2)
+refq = A * sin(ω * Δt * nt + ϕ)
+refp = ω * Δt * nt * A * cos(ω * Δt * nt + ϕ)
+refx = [refq, refp]
+
+ode  = oscillator_ode()
+pode = oscillator_pode()
+iode = oscillator_iode()
+idae = oscillator_idae()
 
 @test typeof(Integrator(ode, getTableauExplicitMidpoint(), Δt)) <: IntegratorERK
 @test typeof(Integrator(ode, getTableauCrouzeix(), Δt)) <: IntegratorDIRK
@@ -19,69 +24,139 @@ glrk2 = getTableauGLRK(2)
 int = Integrator(ode, getTableauExplicitEuler(), Δt)
 sol = integrate(int, nt)
 
+@test rel_err(sol.q, refx) < 5E-2
+
 int = Integrator(ode, getTableauImplicitEuler(), Δt)
 sol = integrate(int, nt)
+
+@test rel_err(sol.q, refx) < 5E-2
 
 int = IntegratorFIRK(ode, getTableauImplicitMidpoint(), Δt)
 sol = integrate(int, nt)
 
+@test rel_err(sol.q, refx) < 5E-4
+
 int = IntegratorFIRK(ode, getTableauGLRK(1), Δt)
 sol = integrate(int, nt)
+
+@test rel_err(sol.q, refx) < 5E-4
 
 int = IntegratorFIRK(ode, getTableauGLRK(2), Δt)
 sol = integrate(int, nt)
 
+@test rel_err(sol.q, refx) < 1E-7
+
 int = IntegratorFIRK(ode, getTableauGLRK(3), Δt)
 sol = integrate(int, nt)
+
+@test rel_err(sol.q, refx) < 1E-11
 
 int = IntegratorFIRK(ode, getTableauGLRK(4), Δt)
 sol = integrate(int, nt)
 
+@test rel_err(sol.q, refx) < 1E-15
+
 int = IntegratorFIRK(ode, getTableauGLRK(5), Δt)
-sol = integrate(int, nt)
+
+@test rel_err(sol.q, refx) < 1E-15
 
 int = IntegratorFIRK(ode, getTableauGLRK(6), Δt)
 sol = integrate(int, nt)
 
+@test rel_err(sol.q, refx) < 1E-15
+
 int = IntegratorFIRK(ode, getTableauGLRK(7), Δt)
 sol = integrate(int, nt)
+
+@test rel_err(sol.q, refx) < 1E-15
 
 int = IntegratorFIRK(ode, getTableauSRK3(), Δt)
 sol = integrate(int, nt)
 
+@test rel_err(sol.q, refx) < 1E-7
+
 pint = Integrator(pode, getTableauSymplecticEulerA(), Δt)
 psol = integrate(pint, nt)
+
+@test rel_err(psol.q, refq) < 5E-2
+@test rel_err(psol.p, refp) < 1E-3
 
 pint = Integrator(pode, getTableauSymplecticEulerB(), Δt)
 psol = integrate(pint, nt)
 
-pint = Integrator(pode, TableauIPRK(:pglrk, 2, glrk1.q, glrk1.q), Δt)
+@test rel_err(psol.q, refq) < 5E-2
+@test rel_err(psol.p, refp) < 1E-3
+
+pint = Integrator(pode, TableauIPRK(:pglrk, 2, getCoefficientsGLRK(1)), Δt)
 psol = integrate(pint, nt)
 
-iint = Integrator(iode, TableauVPRK(:pglrk, 2, glrk1.q, glrk1.q, -1), Δt)
+@test rel_err(psol.q, refq) < 5E-4
+@test rel_err(psol.p, refp) < 5E-4
+
+pint = Integrator(pode, TableauIPRK(:pglrk, 4, getCoefficientsGLRK(2)), Δt)
+psol = integrate(pint, nt)
+
+@test rel_err(psol.q, refq) < 1E-7
+@test rel_err(psol.p, refp) < 1E-7
+
+pint = Integrator(pode, TableauIPRK(:pglrk, 6, getCoefficientsGLRK(3)), Δt)
+psol = integrate(pint, nt)
+
+@test rel_err(psol.q, refq) < 1E-11
+@test rel_err(psol.p, refp) < 1E-11
+
+iint = Integrator(iode, TableauVPRK(:pglrk, 2, getCoefficientsGLRK(1), -1), Δt)
 isol = integrate(iint, nt)
+
+@test rel_err(isol.q, refx) < 5E-4
+
+iint = Integrator(iode, TableauVPRK(:pglrk, 4, getCoefficientsGLRK(2), +1), Δt)
+isol = integrate(iint, nt)
+
+@test rel_err(isol.q, refx) < 1E-7
+
+iint = Integrator(iode, TableauVPRK(:pglrk, 6, getCoefficientsGLRK(3), -1), Δt)
+isol = integrate(iint, nt)
+
+@test rel_err(isol.q, refx) < 1E-11
 
 vint = Integrator(iode, getTableauVPLobIIIAIIIB2(), Δt)
 vsol = integrate(vint, nt)
 
+@test rel_err(vsol.q, refx) < 5E-3
+
 vint = Integrator(iode, getTableauVPLobIIIAIIIB3(), Δt)
 vsol = integrate(vint, nt)
+
+@test rel_err(vsol.q, refx) < 5E-4
 
 vint = Integrator(iode, getTableauVPLobIIIAIIIB4(), Δt)
 vsol = integrate(vint, nt)
 
+@test rel_err(vsol.q, refx) < 1E-7
+
 vint = IntegratorVPRKpStandard(iode, getTableauVPGLRK(1), Δt)
 isol = integrate(vint, nt)
+
+@test rel_err(isol.q, refx) < 5E-4
 
 vint = IntegratorVPRKpSymplectic(iode, getTableauVPGLRK(1), Δt)
 isol = integrate(vint, nt)
 
+@test rel_err(isol.q, refx) < 5E-4
+
 vint = IntegratorVPRKpSymmetric(iode, getTableauVPGLRK(1), Δt)
 isol = integrate(vint, nt)
+
+@test rel_err(isol.q, refx) < 5E-4
 
 vint = IntegratorVPRKpMidpoint(iode, getTableauVPGLRK(1), Δt)
 isol = integrate(vint, nt)
 
+@test rel_err(isol.q, refx) < 5E-4
+
+# vint = Integrator(iode, getCoefficientsPGLRK(2), Δt)
+# vsol = integrate(vint, nt)
 
 # TODO Add PDAE/PARK test.
 
