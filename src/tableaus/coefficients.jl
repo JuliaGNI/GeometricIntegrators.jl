@@ -54,25 +54,25 @@ struct CoefficientsRK{T} <: AbstractCoefficients{T}
         @assert s > 0 "Number of stages must be > 0"
         @assert s==size(a,1)==size(a,2)==length(b)==length(c)
         @assert s==size(â,1)==size(â,2)==length(b̂)==length(ĉ)
+
+        if !get_config(:tab_compensated_summation)
+            â = zeros(â)
+            b̂ = zeros(b̂)
+            ĉ = zeros(ĉ)
+        end
+        
         new(name,o,s,a,b,c,â,b̂,ĉ)
     end
 end
 
 function CoefficientsRK(T::Type, name::Symbol, order::Int, a::Matrix, b::Vector, c::Vector)
-
     a̅ = Matrix{T}(a)
     b̅ = Vector{T}(b)
     c̅ = Vector{T}(c)
 
-    if get_config(:tab_compensated_summation)
-        â = Matrix{T}(a-Matrix{eltype(a)}(a̅))
-        b̂ = Vector{T}(b-Vector{eltype(b)}(b̅))
-        ĉ = Vector{T}(c-Vector{eltype(c)}(c̅))
-    else
-        â = zeros(a̅)
-        b̂ = zeros(b̅)
-        ĉ = zeros(c̅)
-    end
+    â = Matrix{T}(a-Matrix{eltype(a)}(a̅))
+    b̂ = Vector{T}(b-Vector{eltype(b)}(b̅))
+    ĉ = Vector{T}(c-Vector{eltype(c)}(c̅))
 
     CoefficientsRK{T}(name, order, length(c), a̅, b̅, c̅, â, b̂, ĉ)
 end
