@@ -124,6 +124,7 @@ tab_explicit_glrk2 = TableauFIRK(:glrk2, o, a, b, c)
 
 # test instatiation of partioned tableau by composition of two RK tableaus
 @test typeof(TableauEPRK(:PERK4, 4, getTableauERK4().q, getTableauERK4().q)) <: TableauEPRK
+@test TableauEPRK(:PERK4, 4, getTableauERK4().q, getTableauERK4().q) == TableauEPRK(:PERK4, 4, getTableauERK4().q)
 
 # test computation of Gauss-Legendre Runge-Kutta tableaus
 glrk2_tab1 = getCoefficientsGLRK(2)
