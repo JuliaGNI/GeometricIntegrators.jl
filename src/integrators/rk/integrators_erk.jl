@@ -15,7 +15,7 @@ struct IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
         D = equation.d
         S = tableau.q.s
         new(equation, tableau, Δt,
-            zeros(DT,D), zeros(DT,S,D),
+            zeros(DT,D), zeros(DT,D,S),
             zeros(DT,D), zeros(DT,D))
     end
 end
@@ -39,30 +39,26 @@ function integrate_step!(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N}
 
     # compute internal stages
     int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q, int.tV)
-    simd_copy_yx_second!(int.tV, int.V, 1)
+    simd_copy_yx_first!(int.tV, int.V, 1)
 
     for i in 2:int.tableau.q.s
         @inbounds for k in eachindex(int.tQ)
             y = 0
             for j = 1:i-1
-                y += int.tableau.q.a[i,j] * int.V[j,k]
+                y += int.tableau.q.a[i,j] * int.V[k,j]
             end
             int.tQ[k] = int.q[k] + int.Δt * y
         end
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.q.c[i]
         int.equation.v(tᵢ, int.tQ, int.tV)
-        simd_copy_yx_second!(int.tV, int.V, i)
+        simd_copy_yx_first!(int.tV, int.V, i)
     end
 
     # compute final update
-    simd_abXpy!(int.Δt, int.tableau.q.b, int.V, int.q)
+    update_solution!(int.q, int.V, int.tableau.q.b, int.Δt)
 
     # take care of periodic solutions
-    for k in 1:int.equation.d
-        if int.equation.periodicity[k] ≠ 0
-            int.q[k] = mod(int.q[k], int.equation.periodicity[k])
-        end
-    end
+    cut_periodic_solution!(int.q, int.equation.periodicity)
 
     # copy to solution
     copy_solution!(sol, int.q, n, m)
