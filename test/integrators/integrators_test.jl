@@ -78,7 +78,7 @@ sol = integrate(int, nt)
 int = IntegratorFIRK(ode, getTableauGLRK(7), Δt)
 sol = integrate(int, nt)
 
-@test rel_err(sol.q, refx) < 1E-15
+@test rel_err(sol.q, refx) < 2E-15
 
 int = IntegratorFIRK(ode, getTableauSRK3(), Δt)
 sol = integrate(int, nt)
