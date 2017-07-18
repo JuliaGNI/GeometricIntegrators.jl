@@ -37,4 +37,8 @@ function TableauEPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::Coeffici
     TableauEPRK{T}(name, order, q, p)
 end
 
+function TableauEPRK(name::Symbol, order::Int, q::CoefficientsRK{T}) where {T}
+    TableauEPRK{T}(name, order, q, q)
+end
+
 # TODO function readAbstractTableauPRKFromFile(dir::AbstractString, name::AbstractString)
