@@ -50,24 +50,30 @@ struct PODE{dType <: Number, tType <: Number, vType <: Function, fType <: Functi
     t₀::tType
     q₀::Array{dType, N}
     p₀::Array{dType, N}
+    periodicity::Vector{dType}
 
-    function PODE{dType,tType,vType,fType,N}(d, n, v, f, t₀, q₀, p₀) where {dType <: Number, tType <: Number, vType <: Function, fType <: Function, N}
+    function PODE{dType,tType,vType,fType,N}(d, n, v, f, t₀, q₀, p₀; periodicity=[]) where {dType <: Number, tType <: Number, vType <: Function, fType <: Function, N}
         @assert d == size(q₀,1) == size(p₀,1)
         @assert n == size(q₀,2) == size(p₀,2)
         @assert dType == eltype(q₀) == eltype(p₀)
         @assert ndims(q₀) == ndims(p₀) == N ∈ (1,2)
-        new(d, n, v, f, t₀, q₀, p₀)
+
+        if !(length(periodicity) == d)
+            periodicity = zeros(dType, d)
+        end
+
+        new(d, n, v, f, t₀, q₀, p₀, periodicity)
     end
 end
 
 
-function PODE(v::VT, f::FT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}) where {DT,TT,VT,FT}
+function PODE(v::VT, f::FT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}; periodicity=[]) where {DT,TT,VT,FT}
     @assert size(q₀) == size(p₀)
-    PODE{DT, TT, VT, FT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), v, f, t₀, q₀, p₀)
+    PODE{DT, TT, VT, FT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), v, f, t₀, q₀, p₀, periodicity=periodicity)
 end
 
-function PODE(v, f, q₀, p₀)
-    PODE(v, f, zero(eltype(q₀)), q₀, p₀)
+function PODE(v, f, q₀, p₀; periodicity=[])
+    PODE(v, f, zero(eltype(q₀)), q₀, p₀, periodicity=periodicity)
 end
 
 Base.hash(ode::PODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.v, hash(ode.f, hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, h)))))))
@@ -78,4 +84,5 @@ Base.:(==){DT1, DT2, TT1, TT2, VT1, VT2, FT1, FT2}(ode1::PODE{DT1,TT1,VT1,FT1}, 
                              && ode1.f == ode2.f
                              && ode1.t₀ == ode2.t₀
                              && ode1.q₀ == ode2.q₀
-                             && ode1.p₀ == ode2.p₀)
+                             && ode1.p₀ == ode2.p₀
+                             && ode1.periodicity == ode2.periodicity)
