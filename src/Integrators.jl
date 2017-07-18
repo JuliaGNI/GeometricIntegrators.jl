@@ -32,7 +32,7 @@ module Integrators
 
     include("integrators/extrapolation.jl")
     include("integrators/initial_guess_ode.jl")
-    include("integrators/initial_guess_iode.jl")
+    include("integrators/initial_guess_pode.jl")
 
     include("integrators/rk/integrators_erk.jl")
     include("integrators/rk/integrators_dirk.jl")
