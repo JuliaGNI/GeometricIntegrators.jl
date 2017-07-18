@@ -1,5 +1,4 @@
 
-
 struct NonlinearFunctionCacheIPRK{ST}
     Q::Matrix{ST}
     V::Matrix{ST}
@@ -9,6 +8,7 @@ struct NonlinearFunctionCacheIPRK{ST}
     Z::Matrix{ST}
 
     v::Array{ST,1}
+    f::Array{ST,1}
     y::Array{ST,1}
     z::Array{ST,1}
 
@@ -23,10 +23,11 @@ struct NonlinearFunctionCacheIPRK{ST}
 
         # create update vectors
         v = zeros(ST,D)
+        f = zeros(ST,D)
         y = zeros(ST,D)
         z = zeros(ST,D)
 
-        new(Q, V, P, F, Y, Z, v, y, z)
+        new(Q, V, P, F, Y, Z, v, f, y, z)
     end
 end
 
@@ -116,7 +117,7 @@ end
 
 
 "Implicit partitioned Runge-Kutta integrator."
-struct IntegratorIPRK{DT, TT, VT, FT, SPT, ST} <: Integrator{DT, TT}
+struct IntegratorIPRK{DT, TT, VT, FT, SPT, ST, IT} <: Integrator{DT, TT}
     equation::PODE{DT,TT,VT,FT}
     tableau::TableauIPRK{TT}
     Δt::TT
@@ -124,12 +125,14 @@ struct IntegratorIPRK{DT, TT, VT, FT, SPT, ST} <: Integrator{DT, TT}
     cache::NonlinearFunctionCacheIPRK{DT}
     params::SPT
     solver::ST
+    iguess::InitialGuessPODE{DT,TT,VT,FT,IT}
 
     q::Vector{Vector{Double{DT}}}
     p::Vector{Vector{Double{DT}}}
 end
 
-function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT,VT,FT}
+function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT;
+                        interpolation=HermiteInterpolation{DT}) where {DT,TT,VT,FT}
     D = equation.d
     M = equation.n
     S = tableau.s
@@ -160,9 +163,12 @@ function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, �
     # create solver
     solver = get_config(:nls_solver)(x, function_stages)
 
+    # create initial guess
+    iguess = InitialGuessPODE(interpolation, equation, Δt; periodicity=equation.periodicity)
+
     # create integrator
-    IntegratorIPRK{DT, TT, VT, FT, typeof(params), typeof(solver)}(
-                                        equation, tableau, Δt, cache, params, solver, q, p)
+    IntegratorIPRK{DT, TT, VT, FT, typeof(params), typeof(solver), typeof(iguess.int)}(
+                                        equation, tableau, Δt, cache, params, solver, iguess, q, p)
 end
 
 
@@ -172,16 +178,29 @@ function initialize!(int::IntegratorIPRK, sol::SolutionPODE, m::Int)
 
     # copy initial conditions from solution
     get_initial_conditions!(sol, int.q[m], int.p[m], m)
+
+    # initialise initial guess
+    initialize!(int.iguess, m, sol.t[0], int.q[m], int.p[m])
 end
 
 function initial_guess!(int::IntegratorIPRK, m::Int)
-    # TODO initial guess
-    # for i in 1:int.tableau.s
-    #     for k in 1:int.equation.d
-    #         # int.solver.x[2*(sol.nd*(i-1)+k-1)+1] = int.q[k]
-    #         # int.solver.x[2*(params.d*(i-1)+k-1)+1] = 0.
-    #     end
-    # end
+    for i in 1:int.tableau.q.s
+        evaluate!(int.iguess, m, int.cache.y, int.cache.z, int.cache.v, int.cache.f, int.tableau.q.c[i], int.tableau.p.c[i])
+        for k in 1:int.equation.d
+            int.cache.V[k,i] = int.cache.v[k]
+            int.cache.F[k,i] = int.cache.f[k]
+        end
+    end
+    for i in 1:int.tableau.q.s
+        for k in 1:int.equation.d
+            int.solver.x[2*(int.equation.d*(i-1)+k-1)+1] = 0
+            int.solver.x[2*(int.equation.d*(i-1)+k-1)+2] = 0
+            for j in 1:int.tableau.q.s
+                int.solver.x[2*(int.equation.d*(i-1)+k-1)+1] += int.tableau.q.a[i,j] * int.cache.V[k,j]
+                int.solver.x[2*(int.equation.d*(i-1)+k-1)+2] += int.tableau.p.a[i,j] * int.cache.F[k,j]
+            end
+        end
+    end
 end
 
 "Integrate ODE with implicit partitioned Runge-Kutta integrator."
@@ -210,8 +229,8 @@ function integrate_step!(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,
     update_solution!(int.q[m], int.cache.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
     update_solution!(int.p[m], int.cache.F, int.tableau.p.b, int.tableau.p.b̂, int.Δt)
 
-    # TODO take care of periodic solutions
-    # cut_periodic_solution!(int.q[m], int.equation.periodicity)
+    # take care of periodic solutions
+    cut_periodic_solution!(int.q[m], int.equation.periodicity)
 
     # copy to solution
     copy_solution!(sol, int.q[m], int.p[m], n, m)

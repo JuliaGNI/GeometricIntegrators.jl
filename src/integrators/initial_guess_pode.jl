@@ -75,7 +75,7 @@ end
 
 
 
-mutable struct InitialGuessIODE{DT, TT, VT, FT, IT <: Interpolator}
+mutable struct InitialGuessPODE{DT, TT, VT, FT, IT <: Interpolator}
     int::IT
 
     v::VT
@@ -99,7 +99,7 @@ mutable struct InitialGuessIODE{DT, TT, VT, FT, IT <: Interpolator}
 
     s::Int
 
-    function InitialGuessIODE{DT,TT,VT,FT,IT}(interp, v, f, Δt, m, d, periodicity) where {DT,TT,VT,FT,IT}
+    function InitialGuessPODE{DT,TT,VT,FT,IT}(interp, v, f, Δt, m, d, periodicity) where {DT,TT,VT,FT,IT}
         if !(length(periodicity) == d)
             periodicity = zeros(DT, d)
         end
@@ -133,18 +133,23 @@ mutable struct InitialGuessIODE{DT, TT, VT, FT, IT <: Interpolator}
     end
 end
 
-function InitialGuessIODE(interp, equ::IODE{DT,TT,ΑT,FT,GT,VT}, Δt::TT; periodicity=[]) where {DT,TT,ΑT,FT,GT,VT}
-    InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
+function InitialGuessPODE(interp, equ::PODE{DT,TT,VT,FT}, Δt::TT; periodicity=[]) where {DT,TT,VT,FT}
+    InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
                                          equ.v, equ.f, Δt, equ.n, equ.d, periodicity)
 end
 
-function InitialGuessIODE(interp, equ::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, Δt::TT; periodicity=[]) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
-    InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
+function InitialGuessPODE(interp, equ::IODE{DT,TT,ΑT,FT,GT,VT}, Δt::TT; periodicity=[]) where {DT,TT,ΑT,FT,GT,VT}
+    InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
+                                         equ.v, equ.f, Δt, equ.n, equ.d, periodicity)
+end
+
+function InitialGuessPODE(interp, equ::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, Δt::TT; periodicity=[]) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
+    InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
                                          equ.v, equ.f, Δt, equ.n, equ.d, periodicity)
 end
 
 
-function initialize!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}, p₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT,VT,FT,IT}
+function initialize!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}, p₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT,VT,FT,IT}
     ig.t₀[m]  = t₁ - ig.Δt
     ig.t₁[m]  = t₁
     ig.q₁[m] .= q₁
@@ -159,7 +164,7 @@ function initialize!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, m::Int, t₁::TT, q�
 end
 
 
-function update!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}, p₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT,VT,FT,IT}
+function update!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}, p₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT,VT,FT,IT}
     local Δq::DT
 
     ig.t₀[m] = ig.t₁[m]
@@ -196,7 +201,7 @@ function update!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, m::Int, t₁::TT, q₁::U
 end
 
 
-function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, m::Int,
+function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int,
            guess_q::Vector{DT}, guess_p::Vector{DT}, guess_v::Vector{DT},
            c_q::TT=one(TT), c_p::TT=one(TT)) where {DT,TT,VT,FT,IT}
 
@@ -215,5 +220,29 @@ function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT,VT,FT,IT}, m::Int,
         guess_p .= ig.p₁[m]
     else
         evaluate!(ig.int, ig.p₀[m], ig.p₁[m], ig.f₀[m], ig.f₁[m], one(TT)+c_p, guess_p)
+    end
+end
+
+
+function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int,
+           guess_q::Vector{DT}, guess_p::Vector{DT}, guess_v::Vector{DT}, guess_f::Vector{DT},
+           c_q::TT=one(TT), c_p::TT=one(TT)) where {DT,TT,VT,FT,IT}
+
+    @assert length(guess_q) == length(guess_p) == length(guess_v) == length(guess_f)
+
+    if ig.q₀[m] == ig.q₁[m]
+        warn("q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0.")
+        guess_q .= ig.q₁[m]
+        guess_v .= 0
+    else
+        evaluate!(ig.int, ig.q₀[m], ig.q₁[m], ig.v₀[m], ig.v₁[m], one(TT)+c_q, guess_q, guess_v)
+    end
+
+    if ig.p₀[m] == ig.p₁[m]
+        warn("p₀ and p₁ in initial guess are identical! Setting p=p₁.")
+        guess_p .= ig.p₁[m]
+        guess_f .= 0
+    else
+        evaluate!(ig.int, ig.p₀[m], ig.p₁[m], ig.f₀[m], ig.f₁[m], one(TT)+c_p, guess_p, guess_f)
     end
 end
