@@ -90,7 +90,7 @@ struct IntegratorVPRKpSymmetric{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegra
     scache::NonlinearFunctionCacheVPRK{DT}
     pcache::NonlinearFunctionCacheVPRKprojection{DT}
 
-    iguess::InitialGuessIODE{DT,TT,VT,FT,IT}
+    iguess::InitialGuessPODE{DT,TT,VT,FT,IT}
 
     q::Vector{Vector{Double{DT}}}
     p::Vector{Vector{Double{DT}}}
@@ -135,7 +135,7 @@ function IntegratorVPRKpSymmetric(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::T
     solver = get_config(:nls_solver)(zeros(DT,N), function_stages_solver)
 
     # create initial guess
-    iguess = InitialGuessIODE(interpolation, equation, Δt; periodicity=equation.periodicity)
+    iguess = InitialGuessPODE(interpolation, equation, Δt; periodicity=equation.periodicity)
 
     IntegratorVPRKpSymmetric{DT, TT, ΑT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
                                         equation, tableau, Δt, params, solver, scache, pcache, iguess, q, p)

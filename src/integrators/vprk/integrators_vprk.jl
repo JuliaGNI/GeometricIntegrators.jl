@@ -43,7 +43,7 @@ struct IntegratorVPRK{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegratorVPRK{DT
 
     params::FPT
     solver::ST
-    iguess::InitialGuessIODE{DT,TT,VT,FT,IT}
+    iguess::InitialGuessPODE{DT,TT,VT,FT,IT}
 
     q::Vector{Vector{Double{DT}}}
     p::Vector{Vector{Double{DT}}}
@@ -91,7 +91,7 @@ function IntegratorVPRK(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK
     solver = get_config(:nls_solver)(x, function_stages)
 
     # create initial guess
-    iguess = InitialGuessIODE(interpolation, equation, Δt; periodicity=equation.periodicity)
+    iguess = InitialGuessPODE(interpolation, equation, Δt; periodicity=equation.periodicity)
 
     # create integrator
     IntegratorVPRK{DT, TT, ΑT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(

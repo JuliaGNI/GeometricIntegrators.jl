@@ -268,7 +268,7 @@ immutable IntegratorVSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Inte
 
     params::SPT
     solver::ST
-    iguess::InitialGuessIODE{DT, TT, VT, FT, IT}
+    iguess::InitialGuessPODE{DT, TT, VT, FT, IT}
 
     q::Array{DT,1}
     v::Array{DT,1}
@@ -318,7 +318,7 @@ function IntegratorVSPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, tableau::Tab
     solver = get_config(:nls_solver)(z, function_stages)
 
     # create initial guess
-    iguess = InitialGuessIODE(interpolation, equation, Δt)
+    iguess = InitialGuessPODE(interpolation, equation, Δt)
 
     # create integrator
     IntegratorVSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(

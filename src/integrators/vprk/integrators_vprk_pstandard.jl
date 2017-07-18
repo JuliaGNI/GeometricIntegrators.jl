@@ -121,7 +121,7 @@ struct IntegratorVPRKpStandard{DT, TT, ΑT, FT, GT, VT, SPT, PPT, SST, STP, IT} 
     scache::NonlinearFunctionCacheVPRK{DT}
     pcache::NonlinearFunctionCacheVPRKprojection{DT}
 
-    iguess::InitialGuessIODE{DT, TT, VT, FT, IT}
+    iguess::InitialGuessPODE{DT, TT, VT, FT, IT}
 
     q::Vector{Vector{Double{DT}}}
     p::Vector{Vector{Double{DT}}}
@@ -185,7 +185,7 @@ function IntegratorVPRKpStandard(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
     projector = get_config(:nls_solver)(x, function_stages_projector)
 
     # create initial guess
-    iguess = InitialGuessIODE(interpolation, equation, Δt; periodicity=equation.periodicity)
+    iguess = InitialGuessPODE(interpolation, equation, Δt; periodicity=equation.periodicity)
 
 
     IntegratorVPRKpStandard{DT, TT, ΑT, FT, GT, VT, typeof(sparams), typeof(pparams), typeof(solver), typeof(projector), typeof(iguess.int)}(

@@ -231,7 +231,7 @@ struct IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integrat
 
     params::SPT
     solver::ST
-    iguess::InitialGuessIODE{DT, TT, VT, FT, IT}
+    iguess::InitialGuessPODE{DT, TT, VT, FT, IT}
 
     q::Array{DT,1}
     v::Array{DT,1}
@@ -281,7 +281,7 @@ function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
     solver = get_config(:nls_solver)(x, function_stages)
 
     # create initial guess
-    iguess = InitialGuessIODE(interpolation, equation, Δt)
+    iguess = InitialGuessPODE(interpolation, equation, Δt)
 
     # create integrator
     IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
