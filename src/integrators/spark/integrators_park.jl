@@ -281,7 +281,7 @@ function integrate_step!(int::IntegratorPARK{DT,TT,FT,PT,UT,GT,ϕT}, sol::Soluti
     # call nonlinear solver
     solve!(int.solver)
 
-    if !solverStatusOK(int.solver.status, int.solver.params)
+    if !check_solver_status(int.solver.status, int.solver.params)
         println(int.solver.status)
     end
 

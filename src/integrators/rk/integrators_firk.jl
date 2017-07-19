@@ -202,10 +202,10 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
     solve!(int.solver)
 
     # print solver status
-    printSolverStatus(int.solver.status, int.solver.params, n)
+    print_solver_status(int.solver.status, int.solver.params, n)
 
-    # check if solution contains NaNs
-    checkNaN(int.solver.status, n)
+    # check if solution contains NaNs or error bounds are violated
+    check_solver_status(int.solver.status, int.solver.params, n)
 
     # compute vector field at internal stages
     compute_stages!(int.solver.x, int.Q, int.V, int.Y, int.params)

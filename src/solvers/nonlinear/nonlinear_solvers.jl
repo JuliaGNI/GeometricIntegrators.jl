@@ -31,14 +31,21 @@ struct NonlinearSolverParameters{T}
     rtol²::T
     stol²::T
 
-    function NonlinearSolverParameters{T}(nmin, nmax, atol, rtol, stol) where {T}
+    atol_break::T
+    rtol_break::T
+    stol_break::T
+
+    function NonlinearSolverParameters{T}(nmin, nmax, atol, rtol, stol, atol_break, rtol_break, stol_break) where {T}
         @assert nmin ≥ 0
         @assert nmax > 0
         @assert atol > 0
         @assert rtol > 0
         @assert stol > 0
+        @assert atol_break > 0
+        @assert rtol_break > 0
+        @assert stol_break > 0
 
-        new(nmin, nmax, atol, rtol, stol, atol^2, rtol^2, stol^2)
+        new(nmin, nmax, atol, rtol, stol, atol^2, rtol^2, stol^2, atol_break, rtol_break, stol_break)
     end
 end
 
@@ -47,7 +54,10 @@ function NonlinearSolverParameters(T)
                                  get_config(:nls_nmax),
                                  get_config(:nls_atol),
                                  get_config(:nls_rtol),
-                                 get_config(:nls_stol))
+                                 get_config(:nls_stol),
+                                 get_config(:nls_atol_break),
+                                 get_config(:nls_rtol_break),
+                                 get_config(:nls_stol_break))
 end
 
 
@@ -73,21 +83,21 @@ Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
                         (@sprintf "    n=%4i" status.i),  ",   ", (@sprintf "rₐ=%14.8e" status.rₐ), ",   ",
                         (@sprintf "rᵣ=%14.8e" status.rᵣ), ",   ", (@sprintf "rₛ=%14.8e" status.rₛ))
 
-function printSolverStatus(status::NonlinearSolverStatus, params::NonlinearSolverParameters, n::Int)
-    if (get_config(:verbosity) == 1 && !solverStatusOK(status, params)) ||
+function print_solver_status(status::NonlinearSolverStatus, params::NonlinearSolverParameters, n::Int)
+    if (get_config(:verbosity) == 1 && !(check_solver_converged(status, params) && status.i ≤ params.nmax)) ||
         get_config(:verbosity) > 1
         println((@sprintf "  i=%07i" n), ",", status)
     end
 end
 
-function printSolverStatus(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
-    if (get_config(:verbosity) == 1 && !solverStatusOK(status, params)) ||
+function print_solver_status(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
+    if (get_config(:verbosity) == 1 && !(check_solver_converged(status, params) && status.i ≤ params.nmax)) ||
         get_config(:verbosity) > 1
         println(status)
     end
 end
 
-function solverConverged(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
+function check_solver_converged(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
     return status.rₐ ≤ params.atol  ||
            status.rᵣ ≤ params.rtol  ||
            status.rₛ ≤ params.stol
@@ -95,15 +105,24 @@ function solverConverged(status::NonlinearSolverStatus, params::NonlinearSolverP
         #    maximum(status.Δx) / maximum(abs.(status.xₚ)) ≤ params.stol
 end
 
-function solverStatusOK(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
-    return solverConverged(status, params) && status.i  ≤ params.nmax
-end
+function check_solver_status(status::NonlinearSolverStatus, params::NonlinearSolverParameters, n::Int)
+    if any(x -> isnan(x), status.xₚ)
+        error("Detected NaN in it=", n)
+    end
 
-function checkNaN(status::NonlinearSolverStatus, n::Int)
-    if all(x -> isnan(x), status.xₚ)
-        err("Detected NaN in it=", n)
+    if status.rₐ > params.atol_break
+        error("Absolute error of nonlinear solver ($(status.rₐ)) larger than allowed ($(params.atol_break)) in it=", n)
+    end
+
+    if status.rᵣ > params.rtol_break
+        error("Relative error of nonlinear solver ($(status.rᵣ)) larger than allowed ($(params.rtol_break)) in it=", n)
+    end
+
+    if status.rₛ > params.stol_break
+        error("Succesive error of nonlinear solver ($(status.rₛ)) larger than allowed ($(params.stol_break)) in it=", n)
     end
 end
+
 
 function getLinearSolver(T, n)
     linear_solver = get_config(:ls_solver)

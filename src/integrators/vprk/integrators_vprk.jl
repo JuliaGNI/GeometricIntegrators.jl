@@ -100,6 +100,8 @@ function IntegratorVPRK(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK
 end
 
 
+IntegratorVPRKpNone = IntegratorVPRK
+
 
 function initialize!(int::Union{IntegratorVPRK{DT,TT}, IntegratorVPRKpMidpoint{DT,TT}, IntegratorVPRKpSymmetric{DT,TT}}, sol::SolutionPDAE, m::Int) where {DT,TT}
     @assert m ≥ 1
@@ -142,10 +144,10 @@ function integrate_step!(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::SolutionP
     solve!(int.solver)
 
     # print solver status
-    printSolverStatus(int.solver.status, int.solver.params, n)
+    print_solver_status(int.solver.status, int.solver.params, n)
 
-    # check if solution contains NaNs
-    checkNaN(int.solver.status, n)
+    # check if solution contains NaNs or error bounds are violated
+    check_solver_status(int.solver.status, int.solver.params, n)
 
     # compute vector fields at internal stages
     compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.params)

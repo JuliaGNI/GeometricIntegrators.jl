@@ -15,7 +15,7 @@ module Solvers
     export NonlinearSolver, AbstractNewtonSolver, NewtonSolver, QuasiNewtonSolver,
            NonlinearFunctionParameters,
            residual_initial!, residual_absolute!, residual_relative!,
-           printSolverStatus, solverConverged, solverStatusOK, checkNaN,
+           print_solver_status, check_solver_converged, check_solver_status,
            solve!, function_stages!
 
     include("solvers/nonlinear/nonlinear_solvers.jl")
@@ -33,6 +33,9 @@ module Solvers
             (:nls_atol,  2eps()),
             (:nls_rtol,  2eps()),
             (:nls_stol,  2eps()),
+            (:nls_atol_break,  1E-0),
+            (:nls_rtol_break,  1E-0),
+            (:nls_stol_break,  1E-0),
             (:nls_nmax,  10000),
             (:nls_nmin,  0),
             (:nls_nwarn, 100),

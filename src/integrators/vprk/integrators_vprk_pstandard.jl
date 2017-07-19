@@ -256,10 +256,10 @@ function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::
     solve!(int.solver)
 
     # print solver status
-    printSolverStatus(int.solver.status, int.solver.params, n)
+    print_solver_status(int.solver.status, int.solver.params, n)
 
-    # check if solution contains NaNs
-    checkNaN(int.solver.status, n)
+    # check if solution contains NaNs or error bounds are violated
+    check_solver_status(int.solver.status, int.solver.params, n)
 
     # compute vector fields at internal stages
     compute_stages!(int.solver.x, int.scache.Q, int.scache.V, int.scache.P, int.scache.F, int.sparams)
@@ -283,10 +283,10 @@ function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::
     solve!(int.projector)
 
     # print solver status
-    printSolverStatus(int.projector.status, int.projector.params, n)
+    print_solver_status(int.projector.status, int.projector.params, n)
 
-    # check if solution contains NaNs
-    checkNaN(int.projector.status, n)
+    # check if solution contains NaNs or error bounds are violated
+    check_solver_status(int.projector.status, int.projector.params, n)
 
     # compute projection vector fields
     compute_projection!(int.projector.x, int.pcache.q̅, int.pcache.p̅, int.pcache.λ, int.pcache.U, int.pcache.G, int.pparams)

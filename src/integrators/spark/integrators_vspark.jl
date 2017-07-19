@@ -399,7 +399,7 @@ function integrate_step!(int::IntegratorVSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::S
     # println(int.solver.status)
     # println()
 
-    if !solverStatusOK(int.solver.status, int.solver.params)
+    if !check_solver_status(int.solver.status, int.solver.params)
         println(int.solver.status)
     end
 

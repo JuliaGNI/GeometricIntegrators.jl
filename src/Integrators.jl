@@ -18,12 +18,13 @@ module Integrators
     import ..Solvers.function_stages!
 
 
-    export InitialGuess, InitialGuessIODE, initialize!, update!
+    export InitialGuess, InitialGuessPODE, initialize!, update!
 
     export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK, IntegratorSIRK,
-           IntegratorEPRK, IntegratorIPRK, IntegratorVPRK, IntegratorVPARK, IntegratorVSPARK,
-           IntegratorVPRKpStandard, IntegratorVPRKpSymplectic, IntegratorVPRKpSymmetric,
-           IntegratorVPRKpMidpoint, IntegratorIPARK,
+           IntegratorEPRK, IntegratorIPRK, IntegratorVPARK, IntegratorVSPARK,
+           IntegratorVPRK, IntegratorVPRKpNone,
+           IntegratorVPRKpStandard, IntegratorVPRKpSymplectic,
+           IntegratorVPRKpMidpoint, IntegratorVPRKpSymmetric,
            IntegratorSARK, IntegratorSPARK,
            integrate, integrate!, function_stages!
 
