@@ -207,9 +207,9 @@ function getCoefficientsLobIIIG2(T=Float64)
 end
 
 function getCoefficientsLobIIIG3(T=Float64)
-    symplecticize(getCoefficientsLobIIIG3(Dec128); name=:LobIIIG3, T=T)
+    symplecticize(getCoefficientsLobIIIF3(Dec128); name=:LobIIIG3, T=T)
 end
 
 function getCoefficientsLobIIIG4(T=Float64)
-    symplecticize(getCoefficientsLobIIIG4(Dec128); name=:LobIIIG4, T=T)
+    symplecticize(getCoefficientsLobIIIF4(Dec128); name=:LobIIIG4, T=T)
 end
