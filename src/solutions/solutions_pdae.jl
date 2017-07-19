@@ -3,7 +3,7 @@ abstract type SolutionPDAE{dType, tType, N} <: Solution{dType, tType, N} end
 
 
 "Serial Solution of a partitioned differential algebraic equation."
-struct SSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
+mutable struct SSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
     nd::Int
     nm::Int
     nt::Int
@@ -14,6 +14,7 @@ struct SSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
     λ::SDataSeries{dType,N}
     ntime::Int
     nsave::Int
+    counter::Int
 end
 
 function SSolutionPDAE(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
@@ -36,14 +37,14 @@ function SSolutionPDAE(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt
     q = SDataSeries(DT, nd, nt, ni)
     p = SDataSeries(DT, nd, nt, ni)
     λ = SDataSeries(DT, nm, nt, ni)
-    s = SSolutionPDAE{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave)
+    s = SSolutionPDAE{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
 
 
 "Parallel Solution of a partitioned differential algebraic equation."
-struct PSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
+mutable struct PSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
     nd::Int
     nm::Int
     nt::Int
@@ -54,6 +55,7 @@ struct PSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
     λ::PDataSeries{dType,N}
     ntime::Int
     nsave::Int
+    counter::Int
 end
 
 function PSolutionPDAE(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
@@ -76,7 +78,7 @@ function PSolutionPDAE(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt
     q = PDataSeries(DT, nd, nt, ni)
     p = PDataSeries(DT, nd, nt, ni)
     λ = PDataSeries(DT, nm, nt, ni)
-    s = PSolutionPDAE{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave)
+    s = PSolutionPDAE{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
@@ -114,6 +116,7 @@ function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{Do
         set_data!(sol.q, q, j, k)
         set_data!(sol.p, p, j, k)
         set_data!(sol.λ, λ, j, k)
+        sol.counter += 1
     end
 end
 
@@ -122,6 +125,7 @@ function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{Do
         j = div(n, sol.nsave)
         set_data!(sol.q, q, j, k)
         set_data!(sol.p, p, j, k)
+        sol.counter += 1
     end
 end
 
@@ -130,6 +134,7 @@ function reset!(s::SolutionPDAE)
     reset!(s.p)
     reset!(s.λ)
     compute_timeseries!(solution.t, solution.t[end])
+    s.counter = 0
 end
 
 

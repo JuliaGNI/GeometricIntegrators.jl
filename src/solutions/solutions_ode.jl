@@ -14,7 +14,7 @@ Contains all fields necessary to store the solution of an ODE.
 * `nsave`: save every nsave'th time step
 
 """
-struct SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
+mutable struct SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
     nd::Int
     nt::Int
     ni::Int
@@ -22,6 +22,7 @@ struct SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
     q::SDataSeries{dType,N}
     ntime::Int
     nsave::Int
+    counter::Int
 end
 
 function SolutionODE(equation::ODE{DT,TT,FT}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT,FT}
@@ -40,7 +41,7 @@ function SolutionODE(equation::ODE{DT,TT,FT}, Δt::TT, ntime::Int, nsave::Int=1)
 
     t = TimeSeries{TT}(nt, Δt, nsave)
     q = SDataSeries(DT, nd, nt, ni)
-    s = SolutionODE{DT,TT,N}(nd, nt, ni, t, q, ntime, nsave)
+    s = SolutionODE{DT,TT,N}(nd, nt, ni, t, q, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
@@ -61,12 +62,14 @@ end
 function copy_solution!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, n, k) where {DT,TT}
     if mod(n, sol.nsave) == 0
         set_data!(sol.q, q, div(n, sol.nsave), k)
+        sol.counter += 1
     end
 end
 
 function reset!(s::SolutionODE)
     reset!(s.q)
     compute_timeseries!(solution.t, solution.t[end])
+    s.counter = 0
 end
 
 

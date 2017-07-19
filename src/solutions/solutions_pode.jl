@@ -1,6 +1,6 @@
 
 "Solution of a partitioned ordinary differential equation."
-struct SolutionPODE{dType, tType, N} <: Solution{dType, tType, N}
+mutable struct SolutionPODE{dType, tType, N} <: Solution{dType, tType, N}
     nd::Int
     nt::Int
     ni::Int
@@ -9,6 +9,7 @@ struct SolutionPODE{dType, tType, N} <: Solution{dType, tType, N}
     p::SDataSeries{dType,N}
     ntime::Int
     nsave::Int
+    counter::Int
 end
 
 function SolutionPODE(equation::Union{PODE{DT,TT}, IODE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
@@ -28,7 +29,7 @@ function SolutionPODE(equation::Union{PODE{DT,TT}, IODE{DT,TT}}, Δt::TT, ntime:
     t = TimeSeries{TT}(nt, Δt, nsave)
     q = SDataSeries(DT, nd, nt, ni)
     p = SDataSeries(DT, nd, nt, ni)
-    s = SolutionPODE{DT,TT,N}(nd, nt, ni, t, q, p, ntime, nsave)
+    s = SolutionPODE{DT,TT,N}(nd, nt, ni, t, q, p, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
@@ -53,6 +54,7 @@ function copy_solution!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, Vector{Do
         j = div(n, sol.nsave)
         set_data!(sol.q, q, j, k)
         set_data!(sol.p, p, j, k)
+        sol.counter += 1
     end
 end
 
@@ -60,6 +62,7 @@ function reset!(s::SolutionPODE)
     reset!(s.q)
     reset!(s.p)
     compute_timeseries!(solution.t, solution.t[end])
+    s.counter = 0
 end
 
 
