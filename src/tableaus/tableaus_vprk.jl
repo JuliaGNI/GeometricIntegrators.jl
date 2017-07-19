@@ -21,6 +21,28 @@ function getTableauVPLobIIIAIIIB4()
 end
 
 
+"Tableau for variational Gauss-Lobatto IIIA-IIIB method with two stages"
+function getTableauVPLobIIIBIIIA2()
+    d = [+1.0, -1.0]
+    R∞ = -1
+    TableauVPRK(:LobIIIBIIIA2, 2, getCoefficientsLobIIIB2(), getCoefficientsLobIIIA2(), R∞, d)
+end
+
+"Tableau for variational Gauss-Lobatto IIIA-IIIB method with three stages"
+function getTableauVPLobIIIBIIIA3()
+    d = [+1.0, -2.0, +1.0]
+    R∞ = +1
+    TableauVPRK(:LobIIIBIIIA3, 4, getCoefficientsLobIIIB3(), getCoefficientsLobIIIA3(), R∞, d)
+end
+
+"Tableau for variational Gauss-Lobatto IIIA-IIIB method with four stages"
+function getTableauVPLobIIIBIIIA4()
+    d = [+1.0, -√5, +√5, -1.0]
+    R∞ = -1
+    TableauVPRK(:LobIIIBIIIA4, 6, getCoefficientsLobIIIB4(), getCoefficientsLobIIIA4(), R∞, d)
+end
+
+
 "Tableau for variational Gauss-Lobatto IIIC-III method with two stages"
 function getTableauVPLobIIIC2()
     R∞ = -1
@@ -103,6 +125,28 @@ function getTableauVPLobIIIF4()
     lobF = getCoefficientsLobIIIF4()
     R∞ = +1
     TableauVPRK(:LobIIIF4, lobF.o, lobF, get_symplectic_conjugate_coefficients(lobF), R∞)
+end
+
+
+"Tableau for variational Gauss-Lobatto IIIG method with two stages"
+function getTableauVPLobIIIG2()
+    lobG = getCoefficientsLobIIIG2()
+    R∞ = +1
+    TableauVPRK(:LobIIIG2, 4, lobG, lobG, R∞)
+end
+
+"Tableau for variational Gauss-Lobatto IIIG method with three stages"
+function getTableauVPLobIIIG3()
+    lobG = getCoefficientsLobIIIG3()
+    R∞ = -1
+    TableauVPRK(:LobIIIG3, 6, lobG, lobG, R∞)
+end
+
+"Tableau for variational Gauss-Lobatto IIIG method with four stages"
+function getTableauVPLobIIIG4()
+    lobG = getCoefficientsLobIIIG4()
+    R∞ = +1
+    TableauVPRK(:LobIIIG4, 8, lobG, lobG, R∞)
 end
 
 

@@ -121,10 +121,12 @@ module Tableaus
 
     export getTableauVPGLRK,
            getTableauVPLobIIIAIIIB2, getTableauVPLobIIIAIIIB3, getTableauVPLobIIIAIIIB4,
+           getTableauVPLobIIIBIIIA2, getTableauVPLobIIIBIIIA3, getTableauVPLobIIIBIIIA4,
            getTableauVPLobIIIC2, getTableauVPLobIIIC3, getTableauVPLobIIIC4,
            getTableauVPLobIIID2, getTableauVPLobIIID3, getTableauVPLobIIID4,
            getTableauVPLobIIIE2, getTableauVPLobIIIE3, getTableauVPLobIIIE4,
            getTableauVPLobIIIF2, getTableauVPLobIIIF3, getTableauVPLobIIIF4,
+           getTableauVPLobIIIG2, getTableauVPLobIIIG3, getTableauVPLobIIIG4,
            getTableauVPSRK3
 
 
