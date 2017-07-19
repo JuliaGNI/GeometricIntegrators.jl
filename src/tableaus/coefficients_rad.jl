@@ -17,5 +17,5 @@ function getCoefficientsRadIIA3(T=Float64)
     b = @dec128 [4/9-√6/36,   4/9+√6/36,  1/9 ]
     c = @dec128 [2/5-√6/10,   2/5+√6/10,  1   ]
 
-    CoefficientsRK(T, :RadIIA4, 5, a, b, c)
+    CoefficientsRK(T, :RadIIA3, 5, a, b, c)
 end

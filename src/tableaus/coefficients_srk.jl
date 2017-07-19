@@ -9,5 +9,5 @@ function getCoefficientsSRK3(T=Float64)
     c = @dec128 [1/2-√15/10,  1/2,       1/2+√15/10 ]
     o = 4
 
-    CoefficientsRK(T, :srk3, o, a, b, c)
+    CoefficientsRK(T, :SRK3, o, a, b, c)
 end

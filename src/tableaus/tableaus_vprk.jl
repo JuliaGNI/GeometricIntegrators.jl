@@ -110,12 +110,12 @@ end
 function getTableauVPGLRK(s; T=Float64)
     glrk = getCoefficientsGLRK(s, T=T)
     R∞ = (-1)^s
-    TableauVPRK(Symbol("vpglrk", s), glrk.o, glrk, glrk, R∞)
+    TableauVPRK(Symbol("GLRK", s), glrk.o, glrk, glrk, R∞)
 end
 
 "Tableau for variational symmetric Runge-Kutta method with 3 stages"
 function getTableauVPSRK3()
     srk = getCoefficientsSRK3()
     R∞ = (-1)^3
-    TableauVPRK(:vpsrk3, srk.o, srk, srk, R∞)
+    TableauVPRK(:SRK3, srk.o, srk, srk, R∞)
 end

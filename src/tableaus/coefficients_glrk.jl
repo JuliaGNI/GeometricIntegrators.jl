@@ -11,7 +11,7 @@ function getCoefficientsGLRK1(T=Float64)
     c = Vector([1//2])
     o = 2
 
-    CoefficientsRK(T, :glrk1, o, a, b, c)
+    CoefficientsRK(T, :GLRK1, o, a, b, c)
 end
 
 function getCoefficientsGLRK2(T=Float64)
@@ -23,7 +23,7 @@ function getCoefficientsGLRK2(T=Float64)
     c = @dec128 [1/2-√3/6, 1/2+√3/6]
     o = 4
 
-    CoefficientsRK(T, :glrk2, o, a, b, c)
+    CoefficientsRK(T, :GLRK2, o, a, b, c)
 end
 
 function getCoefficientsGLRK3(T=Float64)
@@ -36,7 +36,7 @@ function getCoefficientsGLRK3(T=Float64)
     c = @dec128 [1/2-√15/10,  1/2,        1/2+√15/10 ]
     o = 6
 
-    CoefficientsRK(T, :glrk3, o, a, b, c)
+    CoefficientsRK(T, :GLRK3, o, a, b, c)
 end
 
 function getCoefficientsGLRK4(T=Float64)
@@ -75,7 +75,7 @@ function getCoefficientsGLRK4(T=Float64)
 
     o = 8
 
-    CoefficientsRK(T, :glrk4, o, a, b, c)
+    CoefficientsRK(T, :GLRK4, o, a, b, c)
 end
 
 function getCoefficientsGLRK5(T=Float64)
@@ -125,7 +125,7 @@ function getCoefficientsGLRK5(T=Float64)
 
     o = 10
 
-    CoefficientsRK(T, :glrk5, o, a, b, c)
+    CoefficientsRK(T, :GLRK5, o, a, b, c)
 end
 
 function getCoefficientsGLRK6(T=Float64)
@@ -188,7 +188,7 @@ function getCoefficientsGLRK6(T=Float64)
 
     o = 12
 
-    CoefficientsRK(T, :glrk6, o, a, b, c)
+    CoefficientsRK(T, :GLRK6, o, a, b, c)
 end
 
 
@@ -237,5 +237,5 @@ function getCoefficientsGLRK(s::Int; T=Float64, high_precision=true)
         end
     end
 
-    CoefficientsRK(Symbol("glrk", s), o, a, weights(q), nodes(q))
+    CoefficientsRK(Symbol("GLRK", s), o, a, weights(q), nodes(q))
 end
