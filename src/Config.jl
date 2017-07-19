@@ -2,7 +2,8 @@ __precompile__()
 
 module Config
 
-    export add_config, get_config, set_config
+    export add_config, get_config, set_config,
+           get_config_dictionary
 
     if !isdefined(:GICONFIG)
         global GICONFIG = Dict()
@@ -29,6 +30,10 @@ module Config
             println("  WARNING: Unknown parameter name.")
             return nothing
         end
+    end
+
+    function get_config_dictionary()
+        return Dict(GICONFIG)
     end
 
 end
