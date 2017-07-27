@@ -2,15 +2,21 @@
 "Holds the tableau of a Runge-Kutta method."
 abstract type AbstractTableauRK{T} <: AbstractTableau{T <: Real} end
 
+"Holds the tableau of an explicit Runge-Kutta method."
+abstract type AbstractTableauERK{T} <: AbstractTableauRK{T} end
+
 "Holds the tableau of an implicit Runge-Kutta method."
 abstract type AbstractTableauIRK{T} <: AbstractTableauRK{T} end
 
 "Holds the tableau of a partitioned Runge-Kutta method."
 abstract type AbstractTableauPRK{T} <: AbstractTableauRK{T} end
 
-Base.:(==)(tab1::AbstractTableauRK, tab2::AbstractTableauRK) = (tab1.q == tab2.q && tab1.o == tab2.o && tab1.s == tab2.s)
+Base.:(==)(tab1::T1, tab2::T2) where {T1 <: Union{AbstractTableauERK,AbstractTableauIRK},
+                                      T2 <: Union{AbstractTableauERK,AbstractTableauIRK}} = (tab1.q == tab2.q && order(tab1) == order(tab2) && nstages(tab1) == nstages(tab2))
 
-Base.isequal(tab1::AbstractTableauRK{T1}, tab2::AbstractTableauRK{T2}) where {T1, T2} = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
+Base.:(==)(tab1::AbstractTableauPRK, tab2::AbstractTableauPRK) = (tab1.q == tab2.q && tab1.p == tab2.p && order(tab1) == order(tab2) && nstages(tab1) == nstages(tab2))
+
+Base.isequal(tab1::AbstractTableauRK{DT1}, tab2::AbstractTableauRK{DT2}) where {DT1, DT2} = (tab1 == tab2 && DT1 == DT2 && typeof(tab1) == typeof(tab2))
 
 "Reads and parses Tableau metadata from file."
 function readTableauRKHeaderFromFile(file)

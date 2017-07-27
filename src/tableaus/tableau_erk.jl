@@ -1,6 +1,6 @@
 
 "Holds the tableau of an explicit Runge-Kutta method."
-struct TableauERK{T} <: AbstractTableauRK{T}
+struct TableauERK{T} <: AbstractTableauERK{T}
     @HeaderTableau
 
     q::CoefficientsRK{T}
