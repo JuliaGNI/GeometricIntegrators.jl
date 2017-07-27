@@ -21,11 +21,11 @@ The following list provides and overview of supported and planned features.
 #### Families of Standard Methods
 
 - [x] Explicit Runge-Kutta Methods (ERK),
-- [x] Explicit Partitioned Runge-Kutta Methods (EPRK),
-- [x] Implicit Partitioned Runge-Kutta Methods (IPRK),
+- [ ] Singly Implicit Runge-Kutta Methods (SIRK),
 - [ ] Diagonally Implicit Runge-Kutta Methods (DIRK),
 - [x] Fully Implicit Runge-Kutta Methods (FIRK),
-- [ ] Singly Implicit Runge-Kutta Methods (SIRK),
+- [x] Explicit Partitioned Runge-Kutta Methods (EPRK),
+- [x] Implicit Partitioned Runge-Kutta Methods (IPRK),
 - [ ] Additive Runge-Kutta Methods (ARK),
 - [ ] Special Additive Runge-Kutta Methods (SARK),
 - [x] Partitioned Additive Runge-Kutta Methods (PARK),
@@ -38,12 +38,11 @@ The following list provides and overview of supported and planned features.
 - [x] Gauss-Legendre Runge-Kutta Methods (GLRK),
 - [x] Variational Partitioned Runge-Kutta Methods (VPRK),
 - [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK),
-- [x] Variational Special Partitioned Additive Runge-Kutta Methods (VSPARK),
 - [ ] Continuous and Discontinuous Galerkin Variational Integrators (CGVI/DGVI),
 - [ ] Spline Variational Integrators (SVI),
 - [ ] Taylor Variational Integrators (TVI),
 - [ ] Hamilton-Pontryagin-Galerkin Integrators (HPGI),
-- [ ] Splitting Methods (SM).
+- [x] Splitting Methods (SM).
 
 #### Families of Equations
 
@@ -56,6 +55,7 @@ The following list provides and overview of supported and planned features.
 - [x] Implicit ODEs,
 - [x] Implicit DAEs,
 - [ ] Implicit SDEs,
+- [x] Split ODEs,
 
 which can be prescribed manually or obtained as
 
@@ -100,19 +100,6 @@ with
 - [ ] Convergence Analysis,
 - [x] First Poincaré Integral Invariant,
 - [x] Second Poincaré Integral Invariant.
-
-#### Example Problems
-
-- [x] Exponential Growth,
-- [x] Pendulum,
-- [x] Lotka-Volterra in 2D,
-- [ ] Lotka-Volterra in 3D,
-- [ ] Hénon-Heiles System,
-- [x] Planar Point Vortices,
-- [ ] Inner Solar System,
-- [ ] Outer Solar System,
-- [x] Charged Particle Motion in various electromagnetic Fields,
-- [x] Guiding Center Dynamics in various magnetic fields.
 
 
 ## License
