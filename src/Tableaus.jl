@@ -87,6 +87,10 @@ module Tableaus
 
     include("tableaus/tableau_glm.jl")
 
+    export AbstractTableauSplitting, TableauSplittingGS, TableauSplittingNS, TableauSplittingSS
+
+    include("tableaus/tableau_splitting.jl")
+
 
     include("tableaus/tableaus_erk.jl")
 

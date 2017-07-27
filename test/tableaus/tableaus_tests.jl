@@ -141,3 +141,14 @@ glrk3_tab2 = getCoefficientsGLRK(3, high_precision=false)
 
 
 # TODO Add tests for TableauIPRK, TableauSARK, TableauSPARK and TableauGLM.
+
+
+# instatiate all splitting tableaus
+@test typeof(getTableauLieA()) <: TableauSplittingNS{Float64}
+@test typeof(getTableauLieB()) <: TableauSplittingNS{Float64}
+@test typeof(getTableauStrang()) <: TableauSplittingNS{Float64}
+@test typeof(getTableauMcLachlan2()) <: TableauSplittingNS{Float64}
+@test typeof(getTableauMcLachlan4()) <: TableauSplittingNS{Float64}
+
+@test typeof(getTableauTripleJump()) <: TableauSplittingSS{Float64}
+@test typeof(getTableauSuzukiFractal()) <: TableauSplittingSS{Float64}

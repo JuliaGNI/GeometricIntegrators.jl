@@ -25,7 +25,7 @@ mutable struct SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
     counter::Int
 end
 
-function SolutionODE(equation::ODE{DT,TT,FT}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT,FT}
+function SolutionODE(equation::Union{ODE{DT,TT,FT},SODE{DT,TT,FT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT,FT}
     N  = equation.n > 1 ? 3 : 2
     nd = equation.d
     ni = equation.n
@@ -46,7 +46,7 @@ function SolutionODE(equation::ODE{DT,TT,FT}, Δt::TT, ntime::Int, nsave::Int=1)
     return s
 end
 
-function set_initial_conditions!(sol::SolutionODE{DT,TT}, equ::ODE{DT,TT}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionODE{DT,TT}, equ::Union{ODE{DT,TT},SODE{DT,TT}}) where {DT,TT}
     set_initial_conditions!(sol, equ.t₀, equ.q₀)
 end
 

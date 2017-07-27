@@ -67,6 +67,11 @@ function Integrator(equation::IDAE, tableau::TableauVSPARK, Δt)
     IntegratorVSPARK(equation, tableau, Δt)
 end
 
+"Create integrator for splitting tableau."
+function Integrator(equation::SODE, tableau::AbstractTableauSplitting, Δt)
+    IntegratorSplitting(equation, tableau, Δt)
+end
+
 "Print error for integrators not implemented, yet."
 function Integrator(equation::Equation, tableau::AbstractTableau, Δt)
     error("No integrator found for tableau ", tableau)

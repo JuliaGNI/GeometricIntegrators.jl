@@ -26,6 +26,7 @@ module Integrators
            IntegratorVPRKpStandard, IntegratorVPRKpSymplectic,
            IntegratorVPRKpMidpoint, IntegratorVPRKpSymmetric,
            IntegratorSARK, IntegratorSPARK,
+           IntegratorSplitting,
            integrate, integrate!, function_stages!
 
     include("integrators/integrators.jl")
@@ -57,6 +58,8 @@ module Integrators
     include("integrators/spark/integrators_spark.jl")
     include("integrators/spark/integrators_vpark.jl")
     include("integrators/spark/integrators_vspark.jl")
+
+    include("integrators/integrators_splitting.jl")
 
 
     function __init__()

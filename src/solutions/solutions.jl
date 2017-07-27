@@ -3,8 +3,8 @@ using HDF5
 
 abstract type Solution{dType, tType, N} end
 
-"Create solution for ODE."
-function Solution(equation::ODE, Δt, ntime::Int, nsave::Int=1)
+"Create solution for ODE and split ODE."
+function Solution(equation::Union{ODE,SODE}, Δt, ntime::Int, nsave::Int=1)
     SolutionODE(equation, Δt, ntime, nsave)
 end
 
