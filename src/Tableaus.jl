@@ -148,6 +148,12 @@ module Tableaus
 
     include("tableaus/tableaus_vspark.jl")
 
+    export getTableauLieA, getTableauLieB, getTableauStrang,
+           getTableauMcLachlan2, getTableauMcLachlan4,
+           getTableauTripleJump, getTableauSuzukiFractal
+
+    include("tableaus/tableaus_splitting.jl")
+
 
     function __init__()
         add_config(:tab_compensated_summation, true)
