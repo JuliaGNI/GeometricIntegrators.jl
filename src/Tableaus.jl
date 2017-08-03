@@ -124,8 +124,8 @@ module Tableaus
     include("tableaus/tableaus_spark.jl")
 
     export getTableauVPGLRK,
-           getTableauVPLobIIIAIIIB2, getTableauVPLobIIIAIIIB3, getTableauVPLobIIIAIIIB4,
-           getTableauVPLobIIIBIIIA2, getTableauVPLobIIIBIIIA3, getTableauVPLobIIIBIIIA4,
+           getTableauVPLobIIIA2, getTableauVPLobIIIA3, getTableauVPLobIIIA4,
+           getTableauVPLobIIIB2, getTableauVPLobIIIB3, getTableauVPLobIIIB4,
            getTableauVPLobIIIC2, getTableauVPLobIIIC3, getTableauVPLobIIIC4,
            getTableauVPLobIIID2, getTableauVPLobIIID3, getTableauVPLobIIID4,
            getTableauVPLobIIIE2, getTableauVPLobIIIE3, getTableauVPLobIIIE4,

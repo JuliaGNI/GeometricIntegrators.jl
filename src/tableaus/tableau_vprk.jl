@@ -50,8 +50,10 @@ function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::Coeffici
     TableauVPRK{T}(name, order, q, p, R∞)
 end
 
-function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int) where {T}
-    TableauVPRK{T}(name, order, q, q, R∞)
+function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int, d::Vector{T}) where {T}
+    TableauVPRK{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞, d)
 end
 
-# TODO function readTableauVPRKFromFile(dir::AbstractString, name::AbstractString)
+function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int) where {T}
+    TableauVPRK{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞)
+end
