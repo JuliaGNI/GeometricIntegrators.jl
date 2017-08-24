@@ -5,6 +5,7 @@ module Integrators
     using DoubleDouble
     using ProgressMeter
 
+    using ..CommonFunctions
     using ..Config
     using ..Utils
 
@@ -21,11 +22,14 @@ module Integrators
     export InitialGuess, InitialGuessPODE, initialize!, update!
 
     export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK, IntegratorSIRK,
-           IntegratorEPRK, IntegratorIPRK, IntegratorVPARK, IntegratorVSPARK,
+           IntegratorEPRK, IntegratorIPRK,
+           IntegratorPARK, IntegratorVPARK,
+           IntegratorSPARK, IntegratorVSPARK,
            IntegratorVPRK, IntegratorVPRKpNone,
            IntegratorVPRKpStandard, IntegratorVPRKpSymplectic,
            IntegratorVPRKpMidpoint, IntegratorVPRKpSymmetric,
-           IntegratorSARK, IntegratorSPARK,
+           IntegratorVPRKpSecondary, IntegratorVPRKpVariational,
+           IntegratorCGVI, IntegratorDGVI,
            IntegratorSplitting,
            integrate, integrate!, function_stages!
 
@@ -43,21 +47,22 @@ module Integrators
     include("integrators/rk/integrators_eprk.jl")
     include("integrators/rk/integrators_iprk.jl")
 
-    include("integrators/vprk/integrators_vprk_general.jl")
+    include("integrators/vprk/integrators_vprk_common.jl")
     include("integrators/vprk/integrators_vprk_pmidpoint.jl")
     include("integrators/vprk/integrators_vprk_pstandard.jl")
-#    include("integrators/vprk/integrators_vprk_psymplectic.jl")
+    include("integrators/vprk/integrators_vprk_psecondary.jl")
     include("integrators/vprk/integrators_vprk_psymmetric.jl")
-#    include("integrators/vprk/integrators_vprk_pvariational.jl")
+    include("integrators/vprk/integrators_vprk_pvariational.jl")
 #    include("integrators/vprk/integrators_vprk_pglrk.jl")
     include("integrators/vprk/integrators_vprk.jl")
 
-    include("integrators/spark/integrators_ark.jl")
-    include("integrators/spark/integrators_sark.jl")
     include("integrators/spark/integrators_park.jl")
-    include("integrators/spark/integrators_spark.jl")
     include("integrators/spark/integrators_vpark.jl")
+    include("integrators/spark/integrators_spark.jl")
     include("integrators/spark/integrators_vspark.jl")
+
+    include("integrators/cgvi/integrators_cgvi.jl")
+    include("integrators/dgvi/integrators_dgvi.jl")
 
     include("integrators/integrators_splitting.jl")
 

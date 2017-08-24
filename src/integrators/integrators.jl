@@ -74,7 +74,7 @@ end
 
 "Print error for integrators not implemented, yet."
 function Integrator(equation::Equation, tableau::AbstractTableau, Δt)
-    error("No integrator found for tableau ", tableau)
+    error("No integrator found for equation ", equation, " and tableau ", tableau)
 end
 
 "Apply integrator for ntime time steps and return solution."
@@ -104,7 +104,7 @@ function initialize!(int::Integrator, sol::Solution, m1::Int, m2::Int)
 end
 
 "Integrate ODE for all initial conditions."
-function integrate!(int, sol)
+function integrate!(int::Integrator, sol::Solution)
     integrate!(int, sol, 1, sol.ni)
 end
 
@@ -115,7 +115,7 @@ end
 # end
 
 "Integrate ODE for initial conditions m with m₁ ≤ m ≤ m₂."
-function integrate!(int, sol, m1, m2)
+function integrate!(int::Integrator, sol::Solution, m1, m2)
     # initialize integrator for initial conditions m with m₁ ≤ m ≤ m₂ and time step 0
     initialize!(int, sol, m1, m2)
 

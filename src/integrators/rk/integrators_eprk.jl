@@ -5,14 +5,16 @@ struct IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
     tableau::TableauEPRK{TT}
     Δt::TT
 
-    q::Array{DT,1}
-    p::Array{DT,1}
+    q::Vector{Vector{Double{DT}}}
+    p::Vector{Vector{Double{DT}}}
+
     Q::Array{DT,2}
     P::Array{DT,2}
     Y::Array{DT,2}
     Z::Array{DT,2}
     V::Array{DT,2}
     F::Array{DT,2}
+
     tQ::Array{DT,1}
     tP::Array{DT,1}
     tV::Array{DT,1}
@@ -20,9 +22,18 @@ struct IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
 
     function IntegratorEPRK{DT,TT,VT,FT}(equation, tableau, Δt) where {DT,TT,VT,FT}
         D = equation.d
+        M = equation.n
         S = tableau.s
-        new(equation, tableau, Δt,
-            zeros(DT,D), zeros(DT,D),
+
+        q = Array{Vector{Double{DT}}}(M)
+        p = Array{Vector{Double{DT}}}(M)
+
+        for i in 1:M
+            q[i] = zeros(Double{DT},D)
+            p[i] = zeros(Double{DT},D)
+        end
+
+        new(equation, tableau, Δt, q, p,
             zeros(DT,D,S), zeros(DT,D,S),
             zeros(DT,D,S), zeros(DT,D,S),
             zeros(DT,D,S), zeros(DT,D,S),
@@ -37,32 +48,32 @@ end
 
 
 "Compute Q stages of explicit partitioned Runge-Kutta methods."
-function computeStageQ!(int::IntegratorEPRK, i::Int, jmax::Int, t)
+function computeStageQ!(int::IntegratorEPRK, m::Int, i::Int, jmax::Int, t)
     for j in 1:jmax
         for k in 1:int.equation.d
             int.Y[k,i] += int.tableau.q.a[i,j] * int.V[k,j]
         end
     end
     for k in 1:int.equation.d
-        int.Q[k,i] = int.q[k] + int.Δt * int.Y[k,i]
+        int.Q[k,i] = int.q[m][k] + int.Δt * int.Y[k,i]
     end
     simd_copy_xy_first!(int.tQ, int.Q, i)
-    jmax == 0 ? int.tP .= int.p : simd_copy_xy_first!(int.tP, int.P, jmax)
+    jmax == 0 ? int.tP .= int.p[m] : simd_copy_xy_first!(int.tP, int.P, jmax)
     int.equation.f(t, int.tQ, int.tP, int.tF)
     simd_copy_yx_first!(int.tF, int.F, i)
 end
 
 "Compute P stages of explicit partitioned Runge-Kutta methods."
-function computeStageP!(int::IntegratorEPRK, i::Int, jmax::Int, t)
+function computeStageP!(int::IntegratorEPRK, m::Int, i::Int, jmax::Int, t)
     for j in 1:jmax
         for k in 1:int.equation.d
             int.Z[k,i] += int.tableau.p.a[i,j] * int.F[k,j]
         end
     end
     for k in 1:int.equation.d
-        int.P[k,i] = int.p[k] + int.Δt * int.Z[k,i]
+        int.P[k,i] = int.p[m][k] + int.Δt * int.Z[k,i]
     end
-    jmax == 0 ? int.tQ .= int.q : simd_copy_xy_first!(int.tQ, int.Q, jmax)
+    jmax == 0 ? int.tQ .= int.q[m] : simd_copy_xy_first!(int.tQ, int.Q, jmax)
     simd_copy_xy_first!(int.tP, int.P, i)
     int.equation.v(t, int.tQ, int.tP, int.tV)
     simd_copy_yx_first!(int.tV, int.V, i)
@@ -73,7 +84,7 @@ function initialize!(int::IntegratorEPRK, sol::SolutionPODE, m::Int)
     @assert m ≤ sol.ni
 
     # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q, int.p, m)
+    get_initial_conditions!(sol, int.q[m], int.p[m], m)
 end
 
 "Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
@@ -85,6 +96,7 @@ function integrate_step!(int::IntegratorEPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,
     # compute internal stages
     fill!(int.Y, zero(DT))
     fill!(int.Z, zero(DT))
+
     for i in 1:int.tableau.s
         tqᵢ = sol.t[n] + int.Δt * int.tableau.q.c[i]
         tpᵢ = sol.t[n] + int.Δt * int.tableau.p.c[i]
@@ -92,21 +104,24 @@ function integrate_step!(int::IntegratorEPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,
         if int.tableau.q.a[i,i] ≠ zero(TT) && int.tableau.p.a[i,i] ≠ zero(TT)
             error("This is an implicit method!")
         elseif int.tableau.q.a[i,i] ≠ zero(TT)
-            computeStageP!(int, i, i-1, tpᵢ)
-            computeStageQ!(int, i, i, tqᵢ)
+            computeStageP!(int, m, i, i-1, tpᵢ)
+            computeStageQ!(int, m, i, i, tqᵢ)
         elseif int.tableau.p.a[i,i] ≠ zero(TT)
-            computeStageQ!(int, i, i-1, tqᵢ)
-            computeStageP!(int, i, i, tpᵢ)
+            computeStageQ!(int, m, i, i-1, tqᵢ)
+            computeStageP!(int, m, i, i, tpᵢ)
         else
-            computeStageQ!(int, i, i-1, tqᵢ)
-            computeStageP!(int, i, i-1, tpᵢ)
+            computeStageQ!(int, m, i, i-1, tqᵢ)
+            computeStageP!(int, m, i, i-1, tpᵢ)
         end
     end
 
     # compute final update
-    update_solution!(int.q, int.V, int.tableau.q.b, int.Δt)
-    update_solution!(int.p, int.F, int.tableau.p.b, int.Δt)
+    update_solution!(int.q[m], int.V, int.tableau.q.b, int.Δt)
+    update_solution!(int.p[m], int.F, int.tableau.p.b, int.Δt)
+
+    # take care of periodic solutions
+    cut_periodic_solution!(int.q[m], int.equation.periodicity)
 
     # copy to solution
-    copy_solution!(sol, int.q, int.p, n, m)
+    copy_solution!(sol, int.q[m], int.p[m], n, m)
 end

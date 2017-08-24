@@ -1,14 +1,4 @@
 
-# include("../problems/guiding_center_4d_symmetric_loop.jl")
-#
-# using .GuidingCenter4dSymmetricLoop
-
-
-# include("../problems/guiding_center_4d_tokamak_passing.jl")
-#
-# using .GuidingCenter4dTokamakPassing
-
-
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
 mutable struct NonlinearFunctionParametersVPRKpStandard{DT,TT,AT,GT,D,S} <: NonlinearFunctionParameters{DT}
     α::AT
@@ -47,13 +37,17 @@ end
 
     compute_projection_vprk = quote
         @assert length(q̅) == length(p̅) == length(λ) == size(U,1) == size(G,1)
-        @assert length(x) ≥ 2length(q̅)
+        # @assert length(x) ≥ 2length(q̅)
 
         # copy x to q, λ
         for k in 1:D
             q̅[k] = x[0*D+k]
             λ[k] = x[1*D+k]
         end
+        # for k in 1:D
+        #     λ[k] = x[0*D+k]
+        #     q̅[k] = params.q[k] + params.Δt * params.R[2] * λ[k]
+        # end
 
         # compute u=λ and g=∇α(q)⋅λ
         simd_copy_yx_first!(λ, U, 1)
@@ -74,32 +68,20 @@ end
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersVPRKpStandard{DT,TT,ΑT,GT,D,S}) where {ST,DT,TT,ΑT,GT,D,S}
     cache = NonlinearFunctionCacheVPRKprojection{ST}(D,S)
 
-    # λ  = zeros(ST, D)
-    # ω  = zeros(ST, D, D)
-    # dh = zeros(ST, D)
-
     function_stages = quote
         @assert length(x) == length(b)
 
         compute_projection!(x, $cache.q̅, $cache.p̅, $cache.λ, $cache.U, $cache.G, params)
 
-        # # compute b = - [q̅-q-U]
+        # compute b = - [q̅-q-U]
         for k in 1:D
             b[0*D+k] = - ($cache.q̅[k] - params.q[k]) + params.Δt * params.R[2] * $cache.U[k,2]
         end
 
-        # dH(params.t + params.Δt, $cache.q̅, $dh)
-        # β(params.t + params.Δt, $cache.q̅, $ω)
-        # simd_mult!($λ, inv($ω), $dh)
-        # simd_scale!($λ, 1/params.Δt)
-        #
-        # for k in 1:D
-        #     b[1*D+k] = - $cache.λ[k] + $λ[k]
-        # end
-
         # compute b = - [p̅-p-G]
         for k in 1:D
             b[1*D+k] = - ($cache.p̅[k] - params.p[k]) + params.Δt * params.R[2] * $cache.G[k,2]
+            # b[0*D+k] = - ($cache.p̅[k] - params.p[k]) + params.Δt * params.R[2] * $cache.G[k,2]
         end
     end
 
@@ -125,6 +107,8 @@ struct IntegratorVPRKpStandard{DT, TT, ΑT, FT, GT, VT, SPT, PPT, SST, STP, IT} 
 
     q::Vector{Vector{Double{DT}}}
     p::Vector{Vector{Double{DT}}}
+    # q::Vector{Vector{DT}}
+    # p::Vector{Vector{DT}}
 end
 
 function IntegratorVPRKpSymplectic(args...; kwargs...)
@@ -150,14 +134,19 @@ function IntegratorVPRKpStandard(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
 
     # create solution vector for projector
     x = zeros(DT,2*D)
+    # x = zeros(DT,1*D)
 
     # create solution vectors
     q = Array{Vector{Double{DT}}}(M)
     p = Array{Vector{Double{DT}}}(M)
+    # q = Array{Vector{DT}}(M)
+    # p = Array{Vector{DT}}(M)
 
     for i in 1:M
         q[i] = zeros(Double{DT},D)
         p[i] = zeros(Double{DT},D)
+        # q[i] = zeros(DT,D)
+        # p[i] = zeros(DT,D)
     end
 
     # create cache for internal stage vectors and update vectors
@@ -206,20 +195,15 @@ function initialize!(int::IntegratorVPRKpStandard{DT,TT}, sol::SolutionPDAE, m::
     # initialise initial guess
     initialize!(int.iguess, m, sol.t[0], int.q[m], int.p[m])
 
-    # compute initial λ
-    # dh = zeros(int.q)
-    # dH(sol.t[0], int.q, dh)
-    # ω = zeros(DT, length(int.q), length(int.q))
-    # β(sol.t[0], int.q, ω)
-    # simd_mult!(int.pcache.λ, inv(ω), dh)
-    # simd_scale!(int.pcache.λ, 1/int.Δt)
-    # copy_solution!(sol, int.q, int.p, int.pcache.λ, 0, m)
-
     # initialise projector
     tq .= int.q[m]
     simd_copy_yx_first!(int.pcache.λ, int.pcache.U, 1)
     int.equation.g(sol.t[0], tq, int.pcache.λ, tG)
     simd_copy_yx_first!(tG, int.pcache.G, 1)
+
+    # add perturbation for first time step to solution
+    update_solution!(int.q[m], int.pcache.U, int.pparams.R1, int.Δt)
+    update_solution!(int.p[m], int.pcache.G, int.pparams.R1, int.Δt)
 end
 
 
@@ -239,10 +223,6 @@ function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::
 
     @assert n ≥ 1
     @assert n ≤ sol.ntime
-
-    # add perturbation to solution (same vector field as previous time step)
-    update_solution!(int.q[m], int.pcache.U, int.pparams.R1, int.Δt)
-    update_solution!(int.p[m], int.pcache.G, int.pparams.R1, int.Δt)
 
     # set time and solution for nonlinear solver
     int.sparams.t = sol.t[0] + (n-1)*int.Δt
@@ -277,6 +257,7 @@ function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::
     for k in 1:int.equation.d
         int.projector.x[0*int.equation.d+k] = int.pparams.q[k]
         int.projector.x[1*int.equation.d+k] = 0
+        # int.projector.x[0*int.equation.d+k] = 0
     end
 
     # call projection solver
@@ -303,4 +284,9 @@ function integrate_step!(int::IntegratorVPRKpStandard{DT,TT,ΑT,FT,GT,VT}, sol::
 
     # copy to solution
     copy_solution!(sol, int.q[m], int.p[m], int.pcache.λ, n, m)
+
+    # add perturbation for next time step to solution
+    # (same vector field as previous time step)
+    update_solution!(int.q[m], int.pcache.U, int.pparams.R1, int.Δt)
+    update_solution!(int.p[m], int.pcache.G, int.pparams.R1, int.Δt)
 end

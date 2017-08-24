@@ -125,7 +125,7 @@ function initial_guess!(int::IntegratorVPRK, m::Int)
 end
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRK{DT,TT,ΑT,FT,GT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΑT,FT,GT,VT,N}
+function integrate_step!(int::IntegratorVPRK{DT,TT}, sol::SolutionPDAE{DT,TT}, m::Int, n::Int) where {DT,TT}
     @assert m ≥ 1
     @assert m ≤ sol.ni
 

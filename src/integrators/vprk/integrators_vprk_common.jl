@@ -203,6 +203,9 @@ end
                     z2 += params.t_p.â[i,j] * F[k,j]
                 end
                 b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * (z1 + z2)
+                # b[D*(i-1)+k]  = - (P[k,i] - params.p[k])
+                # b[D*(i-1)+k] += params.Δt * z1
+                # b[D*(i-1)+k] += params.Δt * z2
             end
         end
     end
@@ -226,6 +229,10 @@ end
                     z2 += params.t_p.â[i,j] * F[k,j]
                 end
                 b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * (z1 + z2 + params.R[1] * G[k,1])
+                # b[D*(i-1)+k]  = - (P[k,i] - params.p[k])
+                # b[D*(i-1)+k] += params.Δt * z1
+                # b[D*(i-1)+k] += params.Δt * params.R[1] * G[k,1]
+                # b[D*(i-1)+k] += params.Δt * z2
             end
         end
     end
@@ -249,6 +256,10 @@ end
                     z2 += params.t_p.â[i,j] * (F[k,j] + R[k,j])
                 end
                 b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * (z1 + z2 + params.R[1] * G[k,1])
+                # b[D*(i-1)+k]  = - (P[k,i] - params.p[k])
+                # b[D*(i-1)+k] += params.Δt * z1
+                # b[D*(i-1)+k] += params.Δt * params.R[1] * G[k,1]
+                # b[D*(i-1)+k] += params.Δt * z2
             end
         end
     end
@@ -269,6 +280,10 @@ function compute_rhs_vprk_projection_q!(b::Vector{ST}, q̅::Vector{ST}, V::Matri
             y2 += params.t_q.b̂[j] * V[k,j]
         end
         b[offset+k] = - (q̅[k] - params.q[k]) + params.Δt * (y1 + y2) + params.Δt * (params.R[1] * U[k,1] + params.R[2] * U[k,2])
+        # b[offset+k]  = - (q̅[k] - params.q[k])
+        # b[offset+k] += params.Δt * y1
+        # b[offset+k] += params.Δt * (params.R[1] * U[k,1] + params.R[2] * U[k,2])
+        # b[offset+k] += params.Δt * y2
     end
 end
 
@@ -285,6 +300,10 @@ function compute_rhs_vprk_projection_p!(b::Vector{ST}, p̅::Vector{ST}, F::Matri
             z2 += params.t_p.b̂[j] * F[k,j]
         end
         b[offset+k] = - (p̅[k] - params.p[k]) + params.Δt * (z1 + z2) + params.Δt * (params.R[1] * G[k,1] + params.R[2] * G[k,2])
+        # b[offset+k]  = - (p̅[k] - params.p[k])
+        # b[offset+k] += params.Δt * z1
+        # b[offset+k] += params.Δt * (params.R[1] * G[k,1] + params.R[2] * G[k,2])
+        # b[offset+k] += params.Δt * z2
     end
 end
 
@@ -301,6 +320,10 @@ function compute_rhs_vprk_projection_p!(b::Vector{ST}, p̅::Vector{ST}, F::Matri
             z2 += params.t_p.b̂[j] * (F[k,j] + R[k,j])
         end
         b[offset+k] = - (p̅[k] - params.p[k]) + params.Δt * (z1 + z2) + params.Δt * (params.R[1] * G[k,1] + params.R[2] * G[k,2])
+        # b[offset+k]  = - (p̅[k] - params.p[k])
+        # b[offset+k] += params.Δt * z1
+        # b[offset+k] += params.Δt * (params.R[1] * G[k,1] + params.R[2] * G[k,2])
+        # b[offset+k] += params.Δt * z2
     end
 end
 
