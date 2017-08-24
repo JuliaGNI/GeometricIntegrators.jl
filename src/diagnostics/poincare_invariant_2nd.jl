@@ -3,10 +3,11 @@ using ApproxFun
 using StaticArrays
 
 
-struct PoincareInvariant2nd{ET,DT,TT,ΩT}
+struct PoincareInvariant2nd{DT,ND,NC,NV,ET,ΩT,ϑT}
     equ::ET
     ω::ΩT
-    Δt::TT
+    D²ϑ::ϑT
+    Δt::DT
     nx::Int
     ny::Int
     ntime::Int
@@ -14,27 +15,30 @@ struct PoincareInvariant2nd{ET,DT,TT,ΩT}
     nt::Int
     I::Vector{DT}
     J::Vector{DT}
+    K::Vector{DT}
     L::Vector{DT}
 end
 
-function PoincareInvariant2nd(f_equ::Function, f_surface::Function, ω::ΩT, Δt::TT, d::Int, nx::Int, ny::Int, ntime::Int, nsave::Int, DT=Float64) where {TT,ΩT}
+function PoincareInvariant2nd(f_equ::Function, f_surface::Function, ω::ΩT, D²ϑ::ϑT, Δt::TT, nd::Int, nx::Int, ny::Int, ntime::Int, nsave::Int=1, DT=Float64) where {TT,ΩT,ϑT}
 
-    println()
-    println("Second Euler-Poincaré Integral Invariant")
-    println("========================================")
-    println()
-    println(" nx    = ", nx)
-    println(" ny    = ", ny)
-    println(" ntime = ", ntime)
-    println(" nsave = ", nsave)
-    println(" Δt    = ", Δt)
-    println()
+    if get_config(:verbosity) > 1
+        println()
+        println("Second Euler-Poincaré Integral Invariant")
+        println("========================================")
+        println()
+        println(" nx    = ", nx)
+        println(" ny    = ", ny)
+        println(" ntime = ", ntime)
+        println(" nsave = ", nsave)
+        println(" Δt    = ", Δt)
+        println()
+    end
 
     # compute Chebyshev points
     c = points(Chebyshev(0..1)^2, nx*ny)
 
     # compute initial conditions
-    q₀ = zeros(DT, (d, length(c)))
+    q₀ = zeros(DT, (nd, length(c)))
 
     for i in 1:length(c)
         q₀[:,i] .= f_surface(c[i][1], c[i][2])
@@ -48,117 +52,68 @@ function PoincareInvariant2nd(f_equ::Function, f_surface::Function, ω::ΩT, Δt
 
     I = zeros(DT, nt+1)
     J = zeros(DT, nt+1)
+    K = zeros(DT, nt+1)
     L = zeros(DT, nt+1)
 
+    # get size of coefficient and value vectors
+    SC = Chebyshev(0..1)^2
+    SU = Ultraspherical(1, 0..1)^2
+    Dx = Derivative(SC, [1,0])
+    Dy = Derivative(SC, [0,1])
+
+    fq = Fun(Dx * Fun(SC, ApproxFun.transform(SC, q₀[1,:])), SU)
+    nc = ncoefficients(fq)
+    nv = length(values(fq))
+
     # initialise Poincare invariant
-    PoincareInvariant2nd{typeof(equ),DT,TT,ΩT}(equ, ω, Δt, nx, ny, ntime, nsave, nt, I, J, L)
+    PoincareInvariant2nd{DT,nd,nc,nv,typeof(equ),ΩT,ϑT}(equ, ω, D²ϑ, DT(Δt), nx, ny, ntime, nsave, nt, I, J, K, L)
 end
 
 
-function evaluate_poincare_invariant(pinv::PoincareInvariant2nd{ET,DT,TT}, sol::Solution) where {ET,DT,TT}
+function PoincareInvariant2nd(f_equ::Function, f_surface::Function, ω::ΩT, Δt::TT, nd::Int, nx::Int, ny::Int, ntime::Int, nsave::Int=1, DT=Float64) where {TT,ΩT}
+    PoincareInvariant2nd(f_equ, f_surface, ω, (), Δt, nd, nx, ny, ntime, nsave, DT)
+end
 
-    local SC  = Chebyshev(0..1)^2
-    local SU  = Ultraspherical(1, 0..1)^2
-    local SCV = ApproxFun.ArraySpace(SC, sol.nd)
-    local SUV = ApproxFun.ArraySpace(SU, sol.nd)
-    local Dx  = Derivative(SC, [1,0])
-    local Dy  = Derivative(SC, [0,1])
-    local Q   = DefiniteIntegral(SU[1]) ⊗ DefiniteIntegral(SU[2])
-    # local Q   = DefiniteIntegral(SU)
 
-    local CSU = Conversion(SC, SU)
-    local CXU = Conversion(Ultraspherical(1, 0..1) ⊗ Chebyshev(0..1), SU)
-    local CYU = Conversion(Chebyshev(0..1) ⊗ Ultraspherical(1, 0..1), SU)
+function evaluate_poincare_invariant(pinv::PoincareInvariant2nd{DT}, sol::Solution) where {DT}
 
-    fq = Fun(Derivative(SC, [1,0]) * Fun(SC, ApproxFun.transform(SC, pinv.equ.q₀[1,:])), SU)
+    local verbosity = get_config(:verbosity)
 
-    local nc = ncoefficients(fq)
-    local nv = length(values(fq))
+    # local q = permutedims(sol.q.d, [3,1,2])
+    # if isdefined(sol, :p)
+    #     local p = permutedims(sol.p.d, [3,1,2])
+    # end
+    # if isdefined(sol, :λ)
+    #     local λ = permutedims(sol.λ.d, [3,1,2])
+    # end
 
-    local Iᵢⱼ = zeros(DT, nv)
-    local Jᵢⱼ = zeros(DT, nv)
-    local Kᵢⱼ = zeros(DT, nv)
-    local Lᵢⱼ = zeros(DT, nv)
-
-    local qᵢⱼ = zeros(DT, sol.nd, nv)
-    local vᵢ  = zeros(DT, sol.nd, nv)
-    local vⱼ  = zeros(DT, sol.nd, nv)
-    local aᵢ  = zeros(DT, sol.nd, nv)
-    local aⱼ  = zeros(DT, sol.nd, nv)
-    local γᵢ  = zeros(DT, sol.nd, nv)
-    local γⱼ  = zeros(DT, sol.nd, nv)
-
-    local ω::Matrix{DT} = zeros(DT, sol.nd, sol.nd)
-
-    local q = permutedims(sol.q.d, [3,1,2])
-    if isdefined(sol, :p)
-        local p = permutedims(sol.p.d, [3,1,2])
-    end
-    if isdefined(sol, :λ)
-        local λ = permutedims(sol.λ.d, [3,1,2])
-    end
+    verbosity ≤ 1 ? prog = Progress(size(sol.q.d,2), 5) : nothing
 
     for i in 1:size(sol.q.d,2)
-        println("      it = ", i-1)
+        verbosity > 1 ? println("      it = ", i-1) : nothing
+        pinv.I[i] = compute_noncanonical_invariant(pinv, sol.t.t[i], sol.q.d[:,i,:])
+        verbosity > 1 ? println("           I_q = ", pinv.I[i], ",   ε_q = ", (pinv.I[i]-pinv.I[1])/pinv.I[1]) : nothing
 
-        # create funs for q and p
-        fq = Fun(SCV, ApproxFun.transform(SCV, q[:,:,i]))
         if isdefined(sol, :p)
-            fp = Fun(SCV, ApproxFun.transform(SCV, p[:,:,i]))
+            pinv.J[i] = compute_canonical_invariant(pinv, sol.q.d[:,i,:], sol.p.d[:,i,:])
+            verbosity > 1 ? println("           I_p = ", pinv.J[i], ",   ε_p = ", (pinv.J[i]-pinv.J[1])/pinv.J[1]) : nothing
         end
+
         if isdefined(sol, :λ)
-            fλ = Fun(SCV, ApproxFun.transform(SCV, λ[:,:,i]))
+            pinv.K[i] = compute_noncanonical_correction(pinv, sol.t.t[i], sol.q.d[:,i,:], sol.λ.d[:,i,:])
+            pinv.L[i] = pinv.I[i] - pinv.Δt^2 * pinv.K[i]
+            verbosity > 1 ? println("           I_λ = ", pinv.L[i], ",   ε_λ = ", (pinv.L[i]-pinv.L[1])/pinv.L[1]) : nothing
+            verbosity > 1 ? println("           K_λ = ", pinv.K[i]) : nothing
         end
 
-        for k in 1:sol.nd
-            # compute derivatives of q and p and store values
-            vᵢ[k,:] .= values(CXU * (Dx * fq[k]))
-            vⱼ[k,:] .= values(CYU * (Dy * fq[k]))
-            if isdefined(sol, :p)
-                aᵢ[k,:] .= values(CXU * (Dx * fp[k]))
-                aⱼ[k,:] .= values(CYU * (Dy * fp[k]))
-            end
-            if isdefined(sol, :λ)
-                γᵢ[k,:] .= values(CXU * (Dx * fλ[k]))
-                γⱼ[k,:] .= values(CYU * (Dy * fλ[k]))
-            end
-
-            # obtain values of q at the same points as the derivatives
-            qᵢⱼ[k,:] .= itransform(SU, resize!((CSU * fq[k]).coefficients, nc))
-        end
-
-        # compute integrands of integral invariants at all points
-        for j in 1:nv
-            pinv.ω(sol.t.t[i], qᵢⱼ[:,j], ω)
-            Iᵢⱼ[j] = vector_matrix_vector_product(vⱼ[:,j], ω, vᵢ[:,j])
-            if isdefined(sol, :p)
-                Jᵢⱼ[j] = dot(aᵢ[:,j], vⱼ[:,j]) - dot(vᵢ[:,j], aⱼ[:,j])
-            end
-            if isdefined(sol, :λ)
-                Kᵢⱼ[j] = vector_matrix_vector_product(γⱼ[:,j], ω, γᵢ[:,j])
-                Lᵢⱼ[j] = Iᵢⱼ[j] - pinv.Δt^2 * Kᵢⱼ[j]
-            end
-        end
-
-        # compute noncanonical integral invariant
-        pinv.I[i] = Q * Fun(SU, ApproxFun.transform(SU, Iᵢⱼ))
-
-        # compute canonical integral invariant
-        if isdefined(sol, :p)
-            pinv.J[i] = Q * Fun(SU, ApproxFun.transform(SU, Jᵢⱼ))
-        end
-
-        # compute corrected integral invariant
-        if isdefined(sol, :λ)
-            pinv.L[i] = Q * Fun(SU, ApproxFun.transform(SU, Lᵢⱼ))
-        end
+        verbosity ≤ 1 ? next!(prog) : nothing
     end
 
-    return (pinv.I, pinv.J, pinv.L)
+    return (pinv.I, pinv.J, pinv.K, pinv.L)
 end
 
 
-function CommonFunctions.write_to_hdf5(pinv::PoincareInvariant2nd, sol::Solution, output_file::String)
+function CommonFunctions.write_to_hdf5(pinv::PoincareInvariant2nd{DT}, sol::Solution, output_file::String) where {DT}
     # h5open(output_file, isfile(output_file) ? "r+" : "w") do h5
     h5open(output_file, "w") do h5
 
@@ -166,6 +121,7 @@ function CommonFunctions.write_to_hdf5(pinv::PoincareInvariant2nd, sol::Solution
         write(h5, "I", pinv.I)
 
         isdefined(sol, :p) ? write(h5, "J", pinv.J) : nothing
+        isdefined(sol, :λ) ? write(h5, "K", pinv.L) : nothing
         isdefined(sol, :λ) ? write(h5, "L", pinv.L) : nothing
 
     end
