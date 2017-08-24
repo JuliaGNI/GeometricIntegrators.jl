@@ -1,5 +1,5 @@
 
-immutable QuasiNewtonSolver{T, FT, TJ, TL} <: AbstractNewtonSolver{T}
+struct QuasiNewtonSolver{T, FT, TJ, TL} <: AbstractNewtonSolver{T}
     @newton_solver_variables
     tx::Vector{T}
     ty::Vector{T}
