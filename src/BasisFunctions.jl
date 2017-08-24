@@ -12,10 +12,14 @@ module BasisFunctions
 
     include("basis_functions/vandermonde_matrix.jl")
 
-    export BernsteinBasis, LagrangeBasis
+    export BernsteinBasis, BernsteinBasisModified, LagrangeBasis,
+           LegendreBasis, LegendreBasisHierarchical
 
     include("basis_functions/bernstein_basis.jl")
+    include("basis_functions/bernstein_basis_modified.jl")
     include("basis_functions/lagrange_basis.jl")
+    include("basis_functions/legendre_basis.jl")
+    include("basis_functions/legendre_basis_hierarchical.jl")
 
     export Polynomial, BernsteinPolynomial, LagrangePolynomial
 
