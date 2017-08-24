@@ -25,8 +25,8 @@ function midpoint_extrapolation(v::Function, f::Function, t₀::TT, t₁::TT, q�
     local σ   = Δt ./ F
     local σ2  = σ.^2
 
-    local qts = zeros(length(q₀), s+1)
-    local pts = zeros(length(p₀), s+1)
+    local qts = zeros(eltype(q₀), length(q₀), s+1)
+    local pts = zeros(eltype(p₀), length(p₀), s+1)
 
     local qᵢ₁= zeros(q₀)
     local qᵢ₂= zeros(q₀)

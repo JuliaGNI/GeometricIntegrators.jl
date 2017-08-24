@@ -83,7 +83,7 @@ function midpoint_extrapolation(v::Function, t₀::TT, t₁::TT, x₀::Vector{DT
     local Δt  = t₁ - t₀
     local σ   = Δt ./ F
     local σ²  = σ.^2
-    local pts = zeros(length(x₀), s+1)
+    local pts = zeros(eltype(x₀), length(x₀), s+1)
 
     local xᵢ₁= zeros(x₀)
     local xᵢ₂= zeros(x₀)
