@@ -2,8 +2,11 @@ __precompile__()
 
 module Quadratures
 
+    using ..Utils
+
     export Quadrature
-    export GaussLegendreQuadrature, GaussLobattoQuadrature,
+    export GaussLegendreQuadrature, LobattoLegendreQuadrature,
+           GaussChebyshevQuadrature, LobattoChebyshevQuadrature,
            ClenshawCurtisQuadrature
     export weights
 
