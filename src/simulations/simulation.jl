@@ -19,6 +19,10 @@ function Simulation(equ::Equation, tableau::AbstractTableau, Δt, run_id, filena
     Simulation(equ, Integrator(equ, tableau, Δt), Δt, run_id, filename, ntime, nsave)
 end
 
+function Simulation(equ::Equation, integrator, tableau::AbstractTableau, Δt, run_id, filename, ntime, nsave)
+    Simulation(equ, integrator(equ, tableau, Δt), Δt, run_id, filename, ntime, nsave)
+end
+
 
 function run!(sim::Simulation)
 
@@ -28,8 +32,15 @@ function run!(sim::Simulation)
 
     try
         integrate!(sim.integrator, sim.solution)
-    catch DomainError
-        warn("DOMAIN ERROR")
+    catch ex
+        if isa(ex, DomainError)
+            warn("DOMAIN ERROR")
+        elseif isa(ex, ErrorException)
+            warn("Simulation exited early.")
+            warn(ex.msg)
+        else
+            throw(ex)
+        end
     end
 
     write_to_hdf5(sim.solution, h5)
