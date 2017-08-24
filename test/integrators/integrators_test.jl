@@ -18,9 +18,13 @@ sode = oscillator_sode()
 iode = oscillator_iode()
 idae = oscillator_idae()
 
+
 @test typeof(Integrator(ode, getTableauExplicitMidpoint(), Δt)) <: IntegratorERK
 @test typeof(Integrator(ode, getTableauCrouzeix(), Δt)) <: IntegratorDIRK
 @test typeof(Integrator(ode, getTableauImplicitMidpoint(), Δt)) <: IntegratorFIRK
+
+
+### ERK Integrators ###
 
 int = Integrator(ode, getTableauExplicitEuler(), Δt)
 sol = integrate(int, nt)
@@ -36,6 +40,8 @@ int = Integrator(ode, getTableauERK4(), Δt)
 sol = integrate(int, nt)
 
 @test rel_err(sol.q, refx) < 5E-7
+
+### IRK Integrators ###
 
 int = Integrator(ode, getTableauImplicitEuler(), Δt)
 sol = integrate(int, nt)
@@ -86,6 +92,8 @@ sol = integrate(int, nt)
 
 @test rel_err(sol.q, refx) < 1E-7
 
+### PRK Integrators ###
+
 pint = Integrator(pode, getTableauSymplecticEulerA(), Δt)
 psol = integrate(pint, nt)
 
@@ -122,6 +130,8 @@ psol = integrate(pint, nt)
 @test rel_err(psol.q, refq) < 1E-11
 @test rel_err(psol.p, refp) < 1E-11
 
+### VPRK Integrators ###
+
 iint = Integrator(iode, TableauVPRK(:pglrk, 2, getCoefficientsGLRK(1), -1), Δt)
 isol = integrate(iint, nt)
 
@@ -137,17 +147,32 @@ isol = integrate(iint, nt)
 
 @test rel_err(isol.q, refx) < 1E-11
 
-vint = Integrator(iode, getTableauVPLobIIIAIIIB2(), Δt)
+vint = Integrator(iode, getTableauVPLobIIIA2(), Δt)
 vsol = integrate(vint, nt)
 
 @test rel_err(vsol.q, refx) < 5E-3
 
-vint = Integrator(iode, getTableauVPLobIIIAIIIB3(), Δt)
+vint = Integrator(iode, getTableauVPLobIIIA3(), Δt)
 vsol = integrate(vint, nt)
 
 @test rel_err(vsol.q, refx) < 5E-4
 
-vint = Integrator(iode, getTableauVPLobIIIAIIIB4(), Δt)
+vint = Integrator(iode, getTableauVPLobIIIA4(), Δt)
+vsol = integrate(vint, nt)
+
+@test rel_err(vsol.q, refx) < 1E-7
+
+vint = Integrator(iode, getTableauVPLobIIIB2(), Δt)
+vsol = integrate(vint, nt)
+
+@test rel_err(vsol.q, refx) < 5E-3
+
+vint = Integrator(iode, getTableauVPLobIIIB3(), Δt)
+vsol = integrate(vint, nt)
+
+@test rel_err(vsol.q, refx) < 5E-4
+
+vint = Integrator(iode, getTableauVPLobIIIB4(), Δt)
 vsol = integrate(vint, nt)
 
 @test rel_err(vsol.q, refx) < 1E-7
@@ -240,6 +265,9 @@ isol = integrate(vint, nt)
 
 # dint = Integrator(idae, getTableauLobIIIAIIIB3pSymmetric(), Δt)
 # dsol = integrate(dint, nt)
+
+
+### Splitting Integrators ###
 
 sint = Integrator(sode, getTableauLieA(), Δt)
 ssol = integrate(sint, nt)

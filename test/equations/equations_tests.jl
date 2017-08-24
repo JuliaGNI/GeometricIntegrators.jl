@@ -55,12 +55,14 @@ function iode_v(t, q, p, v)
     v[1] = p[1]
 end
 
-iode  = IODE{eltype(q₀), typeof(t₀), typeof(iode_α), typeof(iode_f), typeof(iode_g), typeof(iode_v), 1}(1, 1, iode_α, iode_f, iode_g, iode_v, t₀, q₀, p₀)
-iode1 = IODE(iode_α, iode_f, iode_g, iode_v, t₀, q₀, p₀)
-iode2 = IODE(iode_α, iode_f, iode_g, iode_v, q₀, p₀)
+iode  = IODE{eltype(q₀), typeof(t₀), typeof(iode_α), typeof(iode_f), typeof(iode_g), typeof(iode_v), 1}(1, 1, iode_α, iode_f, iode_g, iode_v, t₀, q₀, p₀, λ₀)
+iode1 = IODE(iode_α, iode_f, iode_g, iode_v, t₀, q₀, p₀, λ₀)
+iode2 = IODE(iode_α, iode_f, iode_g, iode_v, t₀, q₀, p₀)
+iode3 = IODE(iode_α, iode_f, iode_g, iode_v, q₀, p₀)
 
 @test iode == iode1
 @test iode == iode2
+@test iode == iode3
 
 @test hash(iode1) == hash(iode2)
 

@@ -129,15 +129,15 @@ tab_explicit_glrk2 = TableauFIRK(:glrk2, o, a, b, c)
 # test computation of Gauss-Legendre Runge-Kutta tableaus
 glrk2_tab1 = getCoefficientsGLRK(2)
 glrk2_tab2 = getCoefficientsGLRK(2, high_precision=false)
-@test glrk2_tab1.a ≈ glrk2_tab2.a atol=2 * eps()
+@test glrk2_tab1.a ≈ glrk2_tab2.a atol=2eps()
 @test glrk2_tab1.b == glrk2_tab2.b
-@test glrk2_tab1.c ≈ glrk2_tab2.c atol=2 * eps()
+@test glrk2_tab1.c ≈ glrk2_tab2.c atol=2eps()
 
 glrk3_tab1 = getCoefficientsGLRK(3)
 glrk3_tab2 = getCoefficientsGLRK(3, high_precision=false)
-@test glrk3_tab1.a ≈ glrk3_tab2.a atol=2 * eps()
+@test glrk3_tab1.a ≈ glrk3_tab2.a atol=2eps()
 @test glrk3_tab1.b == glrk3_tab2.b
-@test glrk3_tab1.c ≈ glrk3_tab2.c atol=2 * eps()
+@test glrk3_tab1.c ≈ glrk3_tab2.c atol=2eps()
 
 
 # TODO Add tests for TableauIPRK, TableauSARK, TableauSPARK and TableauGLM.

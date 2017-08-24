@@ -77,6 +77,13 @@ function oscillator_iode_v(t, q, p, v)
     nothing
 end
 
+function oscillator_iode(q₀)
+    v₀ = zeros(q₀)
+    p₀ = zeros(q₀)
+    oscillator_iode_α(0, q₀, v₀, p₀)
+    oscillator_iode(q₀, p₀)
+end
+
 function oscillator_iode(q₀=q₀, p₀=p₀)
     IODE(oscillator_iode_α, oscillator_iode_f,
          oscillator_iode_g, oscillator_iode_v,
