@@ -25,7 +25,7 @@ function SolutionDAE(equation::DAE{DT,TT}, Δt::TT, ntime::Int, nsave::Int=1) wh
     @assert nm > 0
     @assert ni > 0
     @assert nsave > 0
-    @assert ntime ≥ nsave
+    @assert ntime == 0 || ntime ≥ nsave
     @assert mod(ntime, nsave) == 0
 
     t = TimeSeries{TT}(nt, Δt, nsave)
@@ -35,6 +35,45 @@ function SolutionDAE(equation::DAE{DT,TT}, Δt::TT, ntime::Int, nsave::Int=1) wh
     set_initial_conditions!(s, equation)
     return s
 end
+
+function SolutionDAE(t::TimeSeries{TT}, q::SDataSeries{DT,N}, λ::SDataSeries{DT,N}, ntime::Int, nsave::Int) where {DT,TT,N}
+    @assert q.nd
+    @assert q.nt == λ.nt
+    @assert q.ni == λ.ni
+
+    # extract parameters
+    nd = q.nd
+    nm = λ.nd
+    ni = q.ni
+    nt = t.n
+
+    # create solution
+    SolutionDAE{DT,TT,N}(nd, nm, nt, ni, t, q, λ, ntime, nsave, 0)
+end
+
+function SolutionDAE(file::String)
+    # open HDF5 file
+    info("Reading HDF5 file ", file)
+    h5 = h5open(file, "r")
+
+    # read attributes
+    ntime = read(attrs(h5)["ntime"])
+    nsave = read(attrs(h5)["nsave"])
+
+    # reading data arrays
+    t = TimeSeries(read(h5["t"]), nsave)
+    q = SDataSeries(read(h5["q"]))
+    λ = SDataSeries(read(h5["λ"]))
+
+    # create solution
+    SolutionDAE(t, q, λ, ntime, nsave)
+end
+
+
+time(sol::SolutionDAE)  = sol.t.t
+ntime(sol::SolutionDAE) = sol.ntime
+nsave(sol::SolutionDAE) = sol.nsave
+
 
 function set_initial_conditions!(sol::SolutionDAE{DT,TT}, equ::DAE{DT,TT}) where {DT,TT}
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.λ₀)
@@ -67,19 +106,11 @@ end
 
 
 "Creates HDF5 file and initialises datasets for DAE solution object."
-function create_hdf5(solution::SolutionDAE{DT,TT}, file::AbstractString, ntime::Int=1) where {DT,TT}
+function create_hdf5(solution::SolutionDAE{DT,TT,2}, file::AbstractString, ntime::Int=1) where {DT,TT}
     @assert ntime ≥ 1
 
-    info("Creating HDF5 file ", file)
-    isfile(file) ? warn("Overwriting existing HDF5 file.") : nothing
-    h5 = h5open(file, "w")
-
-    # save attributes
-    attrs(h5)["ntime"] = solution.ntime
-    attrs(h5)["nsave"] = solution.nsave
-
-    # copy time
-    write(h5, "t", solution.t.t)
+    # create HDF5 file and save attributes and common parameters
+    h5 = createHDF5(solution, file)
 
     # create datasets
     q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
@@ -92,12 +123,26 @@ function create_hdf5(solution::SolutionDAE{DT,TT}, file::AbstractString, ntime::
     return h5
 end
 
-"Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionDAE, h5::HDF5.HDF5File, offset=0)
-    # aquire dataset from HDF5 file
-    q = h5["q"]
-    λ = h5["λ"]
+"Creates HDF5 file and initialises datasets for DAE solution object."
+function create_hdf5(solution::SolutionDAE{DT,TT,3}, file::AbstractString, ntime::Int=1) where {DT,TT}
+    @assert ntime ≥ 1
 
+    # create HDF5 file and save attributes and common parameters
+    h5 = createHDF5(solution, file)
+
+    # create datasets
+    q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ni), "chunk", (solution.nd,1,1))
+    λ = d_create(h5, "λ", datatype(DT), dataspace(solution.nm, solution.nt+1, solution.ni), "chunk", (solution.nm,1,1))
+
+    # copy initial conditions
+    q[1:solution.nd, 1, 1:solution.ni] = solution.q.d[1:solution.nd, 1, 1:solution.ni]
+    λ[1:solution.nm, 1, 1:solution.ni] = solution.λ.d[1:solution.nm, 1, 1:solution.ni]
+
+    return h5
+end
+
+"Append solution to HDF5 file."
+function CommonFunctions.write_to_hdf5(solution::SolutionDAE{DT,TT,2}, h5::HDF5.HDF5File, offset=0) where {DT,TT}
     # set convenience variables and compute ranges
     d  = solution.nd
     m  = solution.nm
@@ -106,8 +151,25 @@ function CommonFunctions.write_to_hdf5(solution::SolutionDAE, h5::HDF5.HDF5File,
     j2 = offset+1+n
 
     # copy data from solution to HDF5 dataset
-    q[1:d, j1:j2] = solution.q.d[1:d, 2:n+1]
-    λ[1:m, j1:j2] = solution.λ.d[1:m, 2:n+1]
+    h5["q"][1:d, j1:j2] = solution.q.d[1:d, 2:n+1]
+    h5["λ"][1:m, j1:j2] = solution.λ.d[1:m, 2:n+1]
+
+    return nothing
+end
+
+"Append solution to HDF5 file."
+function CommonFunctions.write_to_hdf5(solution::SolutionDAE{DT,TT,3}, h5::HDF5.HDF5File, offset=0) where {DT,TT}
+    # set convenience variables and compute ranges
+    d  = solution.nd
+    m  = solution.nm
+    n  = solution.nt
+    i  = solution.ni
+    j1 = offset+2
+    j2 = offset+1+n
+
+    # copy data from solution to HDF5 dataset
+    h5["q"][1:d, j1:j2, 1:i] = solution.q.d[1:d, 2:n+1, 1:i]
+    h5["λ"][1:m, j1:j2, 1:i] = solution.λ.d[1:m, 2:n+1, 1:i]
 
     return nothing
 end

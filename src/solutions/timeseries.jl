@@ -8,16 +8,27 @@ struct TimeSeries{T} <: AbstractArray{T,1}
 
     function TimeSeries{T}(n, Δt, step) where {T}
         @assert T <: Real
-        @assert n > 0
+        @assert n ≥ 0
         @assert step > 0
 
         t = zeros(T, n+1)
+        new(n, t, Δt, step)
+    end
+
+    function TimeSeries{T}(n, t, Δt, step) where {T}
         new(n, t, Δt, step)
     end
 end
 
 function TimeSeries(n::Int, Δt::T, step::Int=1) where {T}
     return TimeSeries{T}(n, Δt, step)
+end
+
+function TimeSeries(t::Vector{T}, step=1) where {T}
+    @assert length(t) ≥ 2
+    n  = length(t)-1
+    Δt = t[2] - t[1]
+    return TimeSeries{T}(n, t, Δt, step)
 end
 
 Base.eltype(ts::TimeSeries{T}) where {T} = T

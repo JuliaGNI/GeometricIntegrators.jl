@@ -11,7 +11,7 @@ struct SDataSeries{T,N} <: DataSeries{T,N}
     function SDataSeries{T,N}(nd, nt, ni) where {T,N}
         @assert T <: Number
         @assert nd > 0
-        @assert nt > 0
+        @assert nt ≥ 0
         @assert ni > 0
 
         @assert N ∈ (2,3)
@@ -24,6 +24,10 @@ struct SDataSeries{T,N} <: DataSeries{T,N}
 
         new(nd, nt, ni, d)
     end
+
+    function SDataSeries{T,N}(nd, nt, ni, d) where {T,N}
+        new(nd, nt, ni, d)
+    end
 end
 
 function SDataSeries(T, nd::Int, nt::Int, ni::Int)
@@ -31,6 +35,19 @@ function SDataSeries(T, nd::Int, nt::Int, ni::Int)
     return SDataSeries{T,N}(nd, nt, ni)
 end
 
+function SDataSeries(d::Array{T,2}) where {T}
+    nd = size(d,1)
+    nt = size(d,2)
+    ni = 1
+    return SDataSeries{T,2}(nd, nt, ni, d)
+end
+
+function SDataSeries(d::Array{T,3}) where {T}
+    nd = size(d,1)
+    nt = size(d,2)
+    ni = size(d,3)
+    return SDataSeries{T,3}(nd, nt, ni, d)
+end
 
 
 struct PDataSeries{T,N} <: DataSeries{T,N}
@@ -42,7 +59,7 @@ struct PDataSeries{T,N} <: DataSeries{T,N}
     function PDataSeries{T,N}(nd, nt, ni) where {T,N}
         @assert T <: Number
         @assert nd > 0
-        @assert nt > 0
+        @assert nt ≥ 0
         @assert ni > 0
 
         @assert N ∈ (2,3)
@@ -55,11 +72,35 @@ struct PDataSeries{T,N} <: DataSeries{T,N}
 
         new(nd, nt, ni, d)
     end
+
+    function PDataSeries{T,N}(nd, nt, ni, d::SharedArray{T,N}) where {T,N}
+        new(nd, nt, ni, d)
+    end
+
+    function PDataSeries{T,N}(nd, nt, ni, d::Array{T,N}) where {T,N}
+        sd = SharedArray(eltype(d),size(d));
+        copy!(sd,d)
+        new(nd, nt, ni, sd)
+    end
 end
 
 function PDataSeries(T, nd::Int, nt::Int, ni::Int)
     ni == 1 ? N = 2 : N = 3
     return PDataSeries{T,N}(nd, nt, ni)
+end
+
+function PDataSeries(d::Array{T,2}) where {T}
+    nd = size(d,1)
+    nt = size(d,2)
+    ni = 1
+    return PDataSeries{T,2}(nd, nt, ni, d)
+end
+
+function PDataSeries(d::Array{T,3}) where {T}
+    nd = size(d,1)
+    nt = size(d,2)
+    ni = size(d,3)
+    return PDataSeries{T,3}(nd, nt, ni, d)
 end
 
 

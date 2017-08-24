@@ -23,7 +23,7 @@ function SolutionPODE(equation::Union{PODE{DT,TT}, IODE{DT,TT}}, Δt::TT, ntime:
     @assert nd > 0
     @assert ni > 0
     @assert nsave > 0
-    @assert ntime ≥ nsave
+    @assert ntime == 0 || ntime ≥ nsave
     @assert mod(ntime, nsave) == 0
 
     t = TimeSeries{TT}(nt, Δt, nsave)
@@ -33,6 +33,44 @@ function SolutionPODE(equation::Union{PODE{DT,TT}, IODE{DT,TT}}, Δt::TT, ntime:
     set_initial_conditions!(s, equation)
     return s
 end
+
+function SolutionPODE(t::TimeSeries{TT}, q::SDataSeries{DT,N}, p::SDataSeries{DT,N}, ntime::Int, nsave::Int) where {DT,TT,N}
+    @assert q.nd == p.nd
+    @assert q.nt == p.nt
+    @assert q.ni == p.ni
+
+    # extract parameters
+    nd = q.nd
+    ni = q.ni
+    nt = t.n
+
+    # create solution
+    SolutionPODE{DT,TT,N}(nd, nt, ni, t, q, p, ntime, nsave, 0)
+end
+
+function SolutionPODE(file::String)
+    # open HDF5 file
+    info("Reading HDF5 file ", file)
+    h5 = h5open(file, "r")
+
+    # read attributes
+    ntime = read(attrs(h5)["ntime"])
+    nsave = read(attrs(h5)["nsave"])
+
+    # reading data arrays
+    t = TimeSeries(read(h5["t"]), nsave)
+    q = SDataSeries(read(h5["q"]))
+    p = SDataSeries(read(h5["p"]))
+
+    # create solution
+    SolutionPODE(t, q, p, ntime, nsave)
+end
+
+
+time(sol::SolutionPODE)  = sol.t.t
+ntime(sol::SolutionPODE) = sol.ntime
+nsave(sol::SolutionPODE) = sol.nsave
+
 
 function set_initial_conditions!(sol::SolutionPODE{DT,TT}, equ::Union{PODE{DT,TT},IODE{DT,TT}}) where {DT,TT}
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
@@ -67,19 +105,11 @@ end
 
 
 "Creates HDF5 file and initialises datasets for PODE solution object."
-function create_hdf5(solution::SolutionPODE{DT,TT}, file::AbstractString, ntime::Int=1) where {DT,TT}
+function create_hdf5(solution::SolutionPODE{DT,TT,2}, file::AbstractString, ntime::Int=1) where {DT,TT}
     @assert ntime ≥ 1
 
-    info("Creating HDF5 file ", file)
-    isfile(file) ? warn("Overwriting existing HDF5 file.") : nothing
-    h5 = h5open(file, "w")
-
-    # save attributes
-    attrs(h5)["ntime"] = solution.ntime
-    attrs(h5)["nsave"] = solution.nsave
-
-    # copy time
-    write(h5, "t", solution.t.t)
+    # create HDF5 file and save attributes and common parameters
+    h5 = createHDF5(solution, file)
 
     # create datasets
     q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
@@ -92,13 +122,26 @@ function create_hdf5(solution::SolutionPODE{DT,TT}, file::AbstractString, ntime:
     return h5
 end
 
-"Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionPODE, h5::HDF5.HDF5File, offset=0)
-    # aquire dataset from HDF5 file
-    t = h5["t"]
-    q = h5["q"]
-    p = h5["p"]
+"Creates HDF5 file and initialises datasets for PODE solution object."
+function create_hdf5(solution::SolutionPODE{DT,TT,3}, file::AbstractString, ntime::Int=1) where {DT,TT}
+    @assert ntime ≥ 1
 
+    # create HDF5 file and save attributes and common parameters
+    h5 = createHDF5(solution, file)
+
+    # create datasets
+    q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ni), "chunk", (solution.nd,1,1))
+    p = d_create(h5, "p", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ni), "chunk", (solution.nd,1,1))
+
+    # copy initial conditions
+    q[1:solution.nd, 1, 1:solution.ni] = solution.q.d[1:solution.nd, 1, 1:solution.ni]
+    p[1:solution.nd, 1, 1:solution.ni] = solution.p.d[1:solution.nd, 1, 1:solution.ni]
+
+    return h5
+end
+
+"Append solution to HDF5 file."
+function CommonFunctions.write_to_hdf5(solution::SolutionPODE{DT,TT,2}, h5::HDF5.HDF5File, offset=0) where {DT,TT}
     # set convenience variables and compute ranges
     d  = solution.nd
     n  = solution.nt
@@ -106,8 +149,24 @@ function CommonFunctions.write_to_hdf5(solution::SolutionPODE, h5::HDF5.HDF5File
     j2 = offset+1+n
 
     # copy data from solution to HDF5 dataset
-    q[1:d, j1:j2] = solution.q.d[1:d, 2:n+1]
-    p[1:d, j1:j2] = solution.p.d[1:d, 2:n+1]
+    h5["q"][1:d, j1:j2] = solution.q.d[1:d, 2:n+1]
+    h5["p"][1:d, j1:j2] = solution.p.d[1:d, 2:n+1]
+
+    return nothing
+end
+
+"Append solution to HDF5 file."
+function CommonFunctions.write_to_hdf5(solution::SolutionPODE{DT,TT,3}, h5::HDF5.HDF5File, offset=0) where {DT,TT}
+    # set convenience variables and compute ranges
+    d  = solution.nd
+    n  = solution.nt
+    i  = solution.ni
+    j1 = offset+2
+    j2 = offset+1+n
+
+    # copy data from solution to HDF5 dataset
+    h5["q"][1:d, j1:j2, 1:i] = solution.q.d[1:d, 2:n+1, 1:i]
+    h5["p"][1:d, j1:j2, 1:i] = solution.p.d[1:d, 2:n+1, 1:i]
 
     return nothing
 end
