@@ -67,14 +67,11 @@ end
 function evaluate_poincare_invariant(pinv::PoincareInvariant2ndCanonical{DT}, sol::Solution) where {DT}
     local verbosity = get_config(:verbosity)
 
-    local q = permutedims(sol.q.d, [3,1,2])
-    local p = permutedims(sol.p.d, [3,1,2])
+    verbosity ≤ 1 ? prog = Progress(size(sol.q.d,2), 5) : nothing
 
-    verbosity ≤ 1 ? prog = Progress(size(q,3), 5) : nothing
-
-    for i in 1:size(q,3)
+    for i in 1:size(sol.q.d,2)
         verbosity > 1 ? println("      it = ", i-1) : nothing
-        pinv.I[i] = compute_canonical_invariant(pinv, q[:,:,i], p[:,:,i])
+        pinv.I[i] = compute_canonical_invariant(pinv, sol.q.d[:,i,:], sol.p.d[:,i,:])
         verbosity > 1 ? println("           I_p = ", pinv.I[i], ",   ε_p = ", (pinv.I[i]-pinv.I[1])/pinv.I[1]) : nothing
 
         verbosity ≤ 1 ? next!(prog) : nothing
