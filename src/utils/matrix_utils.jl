@@ -77,7 +77,7 @@ function simd_copy_scale!(a, x, y)
 end
 
 "Copy the first dimension of a 2D array y into a 1D array x."
-function simd_copy_xy_first!(x, y, j)
+function simd_copy_xy_first!(x::Array{T,1}, y::Array{T,2}, j) where {T}
     @assert length(x) == size(y, 1)
     @inbounds for i=1:length(x)
         x[i] = y[i,j]
@@ -86,7 +86,7 @@ function simd_copy_xy_first!(x, y, j)
 end
 
 "Copy the first dimension of a 3D array y into a 1D array x."
-function simd_copy_xy_first!(x, y, j, k)
+function simd_copy_xy_first!(x::Array{T,1}, y::Array{T,3}, j, k) where {T}
     @assert length(x) == size(y, 1)
     @inbounds for i=1:length(x)
         x[i] = y[i,j,k]
@@ -94,8 +94,20 @@ function simd_copy_xy_first!(x, y, j, k)
     nothing
 end
 
+"Copy the first dimension of a 3D array y into a 1D array x."
+function simd_copy_xy_first!(x::Array{T,2}, y::Array{T,3}, k) where {T}
+    @assert size(x,1) == size(y, 1)
+    @assert size(x,2) == size(y, 2)
+    @inbounds for i=1:size(x,1)
+        for j=1:size(x,2)
+            x[i,j] = y[i,j,k]
+        end
+    end
+    nothing
+end
+
 "Copy a 1D array x into the first dimension of a 2D array y."
-function simd_copy_yx_first!(x, y, j)
+function simd_copy_yx_first!(x::Array{T,1}, y::Array{T,2}, j) where {T}
     @assert length(x) == size(y, 1)
     @inbounds for i=1:size(y, 1)
         y[i,j] = x[i]
@@ -104,7 +116,7 @@ function simd_copy_yx_first!(x, y, j)
 end
 
 "Copy a 1D array x into the second dimension of a 2D array y."
-function simd_copy_yx_second!(x, y, j)
+function simd_copy_yx_second!(x::Array{T,1}, y::Array{T,2}, j) where {T}
     @assert length(x) == size(y, 2)
     @inbounds for i=1:size(y, 2)
         y[j,i] = x[i]
@@ -113,7 +125,7 @@ function simd_copy_yx_second!(x, y, j)
 end
 
 "Copy a 1D array x into the first dimension of a 3D array y."
-function simd_copy_yx_first!(x, y, j, k)
+function simd_copy_yx_first!(x::Array{T,1}, y::Array{T,3}, j, k) where {T}
     @assert length(x) == size(y, 1)
     @inbounds for i=1:size(y, 1)
         y[i,j,k] = x[i]
@@ -121,7 +133,7 @@ function simd_copy_yx_first!(x, y, j, k)
     nothing
 end
 
-function simd_copy_yx_first_last!(x, y, j)
+function simd_copy_yx_first_last!(x::Array{T,2}, y::Array{T,3}, j) where {T}
     @assert size(x, 1) == size(y, 1)
     @assert size(x, 2) == size(y, 3)
     @inbounds for k=1:size(y, 3)
