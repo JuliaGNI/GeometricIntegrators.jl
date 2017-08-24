@@ -131,7 +131,9 @@ module Tableaus
            getTableauVPLobIIIE2, getTableauVPLobIIIE3, getTableauVPLobIIIE4,
            getTableauVPLobIIIF2, getTableauVPLobIIIF3, getTableauVPLobIIIF4,
            getTableauVPLobIIIG2, getTableauVPLobIIIG3, getTableauVPLobIIIG4,
-           getTableauVPSRK3
+           getTableauVPSRK3,
+           getTableauVPLobIIIAIIIA2, getTableauVPLobIIIAIIIA3, getTableauVPLobIIIAIIIA4,
+           getTableauVPRadIIAIIA2, getTableauVPRadIIAIIA3
 
 
     include("tableaus/tableaus_vprk.jl")
