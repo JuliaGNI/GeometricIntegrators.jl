@@ -8,7 +8,7 @@ function getCoefficientsSymplecticEulerForward()
 
     o = 1
 
-    CoefficientsRK(:symplectic_euler_backward, o, a, b, c)
+    CoefficientsRK(:symplectic_euler_forward, o, a, b, c)
 end
 
 function getCoefficientsSymplecticEulerBackward()
@@ -19,7 +19,7 @@ function getCoefficientsSymplecticEulerBackward()
 
     o = 1
 
-    CoefficientsRK(:symplectic_euler_forward, o, a, b, c)
+    CoefficientsRK(:symplectic_euler_backward, o, a, b, c)
 end
 
 "Tableau for symplectic Euler-A method"

@@ -163,3 +163,36 @@ function getTableauVPSRK3()
     R∞ = (-1)^3
     TableauVPRK(:SRK3, srk.o, srk, R∞)
 end
+
+
+"Tableau for Gauss-Lobatto IIIA-IIIA method with two stages"
+function getTableauVPLobIIIAIIIA2()
+    R∞ = -1
+    TableauVPRK(:LobIIIAIIIA2, 2, getCoefficientsLobIIIA2(), getCoefficientsLobIIIA2(), R∞)
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIA method with three stages"
+function getTableauVPLobIIIAIIIA3()
+    R∞ = +1
+    TableauVPRK(:LobIIIAIIIA3, 4, getCoefficientsLobIIIA3(), getCoefficientsLobIIIA3(), R∞)
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIA method with four stages"
+function getTableauVPLobIIIAIIIA4()
+    R∞ = -1
+    TableauVPRK(:LobIIIAIIIA4, 6, getCoefficientsLobIIIA4(), getCoefficientsLobIIIA4(), R∞)
+end
+
+
+
+"Tableau for Gauss-Radau IIA-IIA method with two stages"
+function getTableauVPRadIIAIIA2()
+    R∞ = -1
+    TableauVPRK(:RadIIAIIA2, 2, getCoefficientsRadIIA2(), getCoefficientsRadIIA2(), R∞)
+end
+
+"Tableau for Gauss-Radau IIA-IIA method with three stages"
+function getTableauVPRadIIAIIA3()
+    R∞ = +1
+    TableauVPRK(:RadIIAIIA3, 4, getCoefficientsRadIIA3(), getCoefficientsRadIIA3(), R∞)
+end

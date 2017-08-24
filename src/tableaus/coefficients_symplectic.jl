@@ -15,8 +15,15 @@ end
 
 function get_symplectic_conjugate_coefficients(coeff::CoefficientsRK)
     a̅ = zeros(coeff.a)
+    ã = zeros(coeff.a)
+
     get_symplectic_conjugate_coefficients(coeff.a, coeff.b, a̅)
-    CoefficientsRK(coeff.name, coeff.s, a̅, coeff.b, coeff.c)
+
+    if all(x -> x≠0, coeff.b̂)
+        get_symplectic_conjugate_coefficients(coeff.â, coeff.b̂, ã)
+    end
+
+    CoefficientsRK(coeff.name, coeff.s, a̅, coeff.b, coeff.c, ã, coeff.b̂, coeff.ĉ)
 end
 
 

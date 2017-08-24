@@ -60,7 +60,7 @@ struct CoefficientsRK{T} <: AbstractCoefficients{T}
             b̂ = zeros(b̂)
             ĉ = zeros(ĉ)
         end
-        
+
         new(name,o,s,a,b,c,â,b̂,ĉ)
     end
 end
@@ -70,9 +70,15 @@ function CoefficientsRK(T::Type, name::Symbol, order::Int, a::Matrix, b::Vector,
     b̅ = Vector{T}(b)
     c̅ = Vector{T}(c)
 
-    â = Matrix{T}(a-Matrix{eltype(a)}(a̅))
-    b̂ = Vector{T}(b-Vector{eltype(b)}(b̅))
-    ĉ = Vector{T}(c-Vector{eltype(c)}(c̅))
+    if get_config(:tab_compensated_summation)
+        â = Matrix{T}(a-Matrix{eltype(a)}(a̅))
+        b̂ = Vector{T}(b-Vector{eltype(b)}(b̅))
+        ĉ = Vector{T}(c-Vector{eltype(c)}(c̅))
+    else
+        â = zeros(a̅)
+        b̂ = zeros(b̅)
+        ĉ = zeros(c̅)
+    end
 
     CoefficientsRK{T}(name, order, length(c), a̅, b̅, c̅, â, b̂, ĉ)
 end
