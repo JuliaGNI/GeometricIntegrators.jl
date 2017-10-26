@@ -18,6 +18,11 @@ function Solution(equation::PODE, Δt, ntime::Int, nsave::Int=1)
     SolutionPODE(equation, Δt, ntime, nsave)
 end
 
+"Create solution for variational ODE."
+function Solution(equation::VODE, Δt, ntime::Int, nsave::Int=1)
+    SolutionPODE(equation, Δt, ntime, nsave)
+end
+
 "Create solution for implicit ODE."
 function Solution(equation::IODE, Δt, ntime::Int, nsave::Int=1)
     SSolutionPDAE(equation, Δt, ntime, nsave)

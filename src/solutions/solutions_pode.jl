@@ -12,7 +12,7 @@ mutable struct SolutionPODE{dType, tType, N} <: Solution{dType, tType, N}
     counter::Int
 end
 
-function SolutionPODE(equation::Union{PODE{DT,TT}, IODE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
+function SolutionPODE(equation::Union{PODE{DT,TT}, IODE{DT,TT}, VODE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
     N  = equation.n > 1 ? 3 : 2
     nd = equation.d
     ni = equation.n
@@ -72,7 +72,7 @@ ntime(sol::SolutionPODE) = sol.ntime
 nsave(sol::SolutionPODE) = sol.nsave
 
 
-function set_initial_conditions!(sol::SolutionPODE{DT,TT}, equ::Union{PODE{DT,TT},IODE{DT,TT}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPODE{DT,TT}, equ::Union{PODE{DT,TT},IODE{DT,TT},VODE{DT,TT}}) where {DT,TT}
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end
 
