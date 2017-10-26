@@ -133,6 +133,18 @@ function simd_copy_yx_first!(x::Array{T,1}, y::Array{T,3}, j, k) where {T}
     nothing
 end
 
+"Copy a 1D array x into the first dimension of a 3D array y."
+function simd_copy_yx_first!(x::Array{T,2}, y::Array{T,3}, k) where {T}
+    @assert size(x, 1) == size(y, 1)
+    @assert size(x, 2) == size(y, 2)
+    @inbounds for j in 1:size(y, 2)
+        for i in 1:size(y, 1)
+            y[i,j,k] = x[i,j]
+        end
+    end
+    nothing
+end
+
 function simd_copy_yx_first_last!(x::Array{T,2}, y::Array{T,3}, j) where {T}
     @assert size(x, 1) == size(y, 1)
     @assert size(x, 2) == size(y, 3)
