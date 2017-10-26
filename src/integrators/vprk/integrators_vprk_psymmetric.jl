@@ -135,7 +135,7 @@ function IntegratorVPRKpSymmetric(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::T
     solver = get_config(:nls_solver)(zeros(DT,N), function_stages_solver)
 
     # create initial guess
-    iguess = InitialGuessPODE(interpolation, equation, Δt; periodicity=equation.periodicity)
+    iguess = InitialGuessPODE(interpolation, equation, Δt)
 
     IntegratorVPRKpSymmetric{DT, TT, ΑT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
                                         equation, tableau, Δt, params, solver, scache, pcache, iguess, q, p)

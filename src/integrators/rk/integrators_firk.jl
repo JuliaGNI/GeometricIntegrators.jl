@@ -144,7 +144,7 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt
     solver = get_config(:nls_solver)(x, function_stages)
 
     # create initial guess
-    iguess = InitialGuessODE(interpolation, equation, Δt; periodicity=equation.periodicity)
+    iguess = InitialGuessODE(interpolation, equation, Δt)
 
     # create integrator
     IntegratorFIRK{DT, TT, FT, typeof(params), typeof(solver), typeof(iguess.int), N}(

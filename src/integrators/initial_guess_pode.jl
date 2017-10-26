@@ -133,19 +133,19 @@ mutable struct InitialGuessPODE{DT, TT, VT, FT, IT <: Interpolator}
     end
 end
 
-function InitialGuessPODE(interp, equ::PODE{DT,TT,VT,FT}, Δt::TT; periodicity=[]) where {DT,TT,VT,FT}
+function InitialGuessPODE(interp, equ::PODE{DT,TT,VT,FT}, Δt::TT) where {DT,TT,VT,FT}
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
-                                         equ.v, equ.f, Δt, equ.n, equ.d, periodicity)
+                                         equ.v, equ.f, Δt, equ.n, equ.d, equ.periodicity)
 end
 
-function InitialGuessPODE(interp, equ::IODE{DT,TT,ΑT,FT,GT,VT}, Δt::TT; periodicity=[]) where {DT,TT,ΑT,FT,GT,VT}
+function InitialGuessPODE(interp, equ::IODE{DT,TT,ΑT,FT,GT,VT}, Δt::TT) where {DT,TT,ΑT,FT,GT,VT}
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
-                                         equ.v, equ.f, Δt, equ.n, equ.d, periodicity)
+                                         equ.v, equ.f, Δt, equ.n, equ.d, equ.periodicity)
 end
 
-function InitialGuessPODE(interp, equ::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, Δt::TT; periodicity=[]) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
+function InitialGuessPODE(interp, equ::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, Δt::TT) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
-                                         equ.v, equ.f, Δt, equ.n, equ.d, periodicity)
+                                         equ.v, equ.f, Δt, equ.n, equ.d, equ.periodicity)
 end
 
 

@@ -164,7 +164,7 @@ function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, �
     solver = get_config(:nls_solver)(x, function_stages)
 
     # create initial guess
-    iguess = InitialGuessPODE(interpolation, equation, Δt; periodicity=equation.periodicity)
+    iguess = InitialGuessPODE(interpolation, equation, Δt)
 
     # create integrator
     IntegratorIPRK{DT, TT, VT, FT, typeof(params), typeof(solver), typeof(iguess.int)}(

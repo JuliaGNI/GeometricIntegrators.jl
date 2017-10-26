@@ -45,12 +45,14 @@ mutable struct InitialGuessODE{DT, TT, VT, IT <: Interpolator}
 end
 
 
-function InitialGuessODE(interp, equation::ODE{DT,TT,VT,N}, Δt::TT; periodicity=[]) where {DT,TT,VT,N}
-    if !(length(periodicity) == equation.d)
-        periodicity = zeros(DT, equation.d)
-    end
+function InitialGuessODE(interp, equation::ODE{DT,TT,VT}, Δt::TT) where {DT,TT,VT}
     int = interp(zero(DT), one(DT), Δt, equation.d)
-    InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt, equation.n, equation.d, periodicity)
+    InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt, equation.n, equation.d, equation.periodicity)
+end
+
+function InitialGuessODE(interp, equation::VODE{DT,TT,AT,FT,GT,VT}, Δt::TT) where {DT,TT,AT,FT,GT,VT}
+    int = interp(zero(DT), one(DT), Δt, equation.d)
+    InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt, equation.n, equation.d, equation.periodicity)
 end
 
 

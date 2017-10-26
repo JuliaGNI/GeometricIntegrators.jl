@@ -246,7 +246,7 @@ function IntegratorVPRKpSecondary(equation::VODE{DT,TT,ΑT,FT,GT,VT,ΩT,HT}, tab
     solver = nonlinear_solver(zeros(DT,N), function_stages_solver; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
 
     # create initial guess
-    iguess = InitialGuessPODE(interpolation, equation, Δt; periodicity=equation.periodicity)
+    iguess = InitialGuessPODE(interpolation, equation, Δt)
 
     IntegratorVPRKpSecondary{DT, TT, ΑT, FT, GT, VT, ΩT, HT, typeof(params), typeof(solver), typeof(iguess.int)}(
                                         equation, tableau, Δt, params, solver, scache, pcache, iguess,

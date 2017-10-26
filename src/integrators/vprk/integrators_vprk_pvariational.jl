@@ -158,7 +158,7 @@ function IntegratorVPRKpVariational{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT
     projector = nonlinear_solver(x, function_stages_projector; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
 
     # create initial guess
-    iguess = InitialGuessPODE(interpolation, equation, Δt; periodicity=equation.periodicity)
+    iguess = InitialGuessPODE(interpolation, equation, Δt)
 
 
     IntegratorVPRKpVariational{DT, TT, ΑT, FT, GT, VT, typeof(sparams), typeof(pparams), typeof(solver), typeof(projector), typeof(iguess.int)}(
