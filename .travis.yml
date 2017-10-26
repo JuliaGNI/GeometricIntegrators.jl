@@ -12,6 +12,7 @@ matrix:
     - os: osx
 notifications:
   email: false
+sudo: required
 script:
   - julia -e 'Pkg.clone(pwd())'
   - julia -e 'Pkg.test("GeometricIntegrators", coverage=true)'
