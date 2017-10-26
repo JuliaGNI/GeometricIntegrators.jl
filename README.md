@@ -38,10 +38,11 @@ The following list provides and overview of supported and planned features.
 - [x] Gauss-Legendre Runge-Kutta Methods (GLRK),
 - [x] Variational Partitioned Runge-Kutta Methods (VPRK),
 - [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK),
-- [ ] Continuous and Discontinuous Galerkin Variational Integrators (CGVI/DGVI),
+- [x] Continuous Galerkin Variational Integrators (CGVI),
+- [ ] Discontinuous Galerkin Variational Integrators (DGVI),
+- [ ] Hamilton-Pontryagin-Galerkin Integrators (HPGI),
 - [ ] Spline Variational Integrators (SVI),
 - [ ] Taylor Variational Integrators (TVI),
-- [ ] Hamilton-Pontryagin-Galerkin Integrators (HPGI),
 - [x] Splitting Methods (SM).
 
 #### Families of Equations
