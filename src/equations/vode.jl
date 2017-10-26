@@ -78,7 +78,7 @@ struct VODE{dType <: Number, tType <: Number, αType <: Function, fType <: Funct
     p₀::Array{dType, N}
     periodicity::Vector{dType}
 
-    function VODE{dType,tType,αType,fType,gType,vType,ωType,dHType,N}(d, n, α, f, g, v, ω, dH, t₀, q₀, p₀; periodicity=[]) where {dType <: Number, tType <: Number, αType <: Number, fType <: Number, gType <: Number, vType <: Number, ωType <: Number, dHType <: Number, N}
+    function VODE{dType,tType,αType,fType,gType,vType,ωType,dHType,N}(d, n, α, f, g, v, ω, dH, t₀, q₀, p₀; periodicity=[]) where {dType <: Number, tType <: Number, αType <: Function, fType <: Function, gType <: Function, vType <: Function, ωType <: Function, dHType <: Function, N}
         @assert d == size(q₀,1) == size(p₀,1)
         @assert n == size(q₀,2) == size(p₀,2)
         @assert dType == eltype(q₀) == eltype(p₀)
