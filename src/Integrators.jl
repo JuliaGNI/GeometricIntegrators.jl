@@ -11,6 +11,7 @@ module Integrators
 
     using ..BasisFunctions
     using ..Quadratures
+    using ..NumericalFluxes
     using ..Equations
     using ..Solutions
     using ..Solvers

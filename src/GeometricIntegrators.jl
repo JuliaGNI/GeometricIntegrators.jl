@@ -6,7 +6,8 @@ module GeometricIntegrators
     using .Utils
 
     export Config, Utils, Equations, Solutions, Interpolation, Solvers,
-           BasisFunctions, Tableaus, Integrators, Simulations, Diagnostics
+           BasisFunctions, NumericalFluxes, Tableaus, Integrators, Simulations,
+           Diagnostics
 
     include("Config.jl")
     @reexport using .Config
@@ -24,6 +25,8 @@ module GeometricIntegrators
     @reexport using .BasisFunctions
     include("Quadratures.jl")
     @reexport using .Quadratures
+    include("NumericalFluxes.jl")
+    @reexport using .NumericalFluxes
     include("Tableaus.jl")
     @reexport using .Tableaus
     include("Integrators.jl")
