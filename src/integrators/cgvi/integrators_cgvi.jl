@@ -1,5 +1,23 @@
 
-"Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
+"""
+`NonlinearFunctionParametersCGVI`: Parameters for right-hand side function of continuous Galerkin variational Integrator.
+
+### Parameters
+
+* `Θ`: function of the noncanonical one-form (∂L/∂v)
+* `f`: function of the force (∂L/∂q)
+* `Δt`: time step
+* `b`: weights of the quadrature rule
+* `c`: nodes of the quadrature rule
+* `x`: nodes of the basis
+* `m`: mass matrix
+* `a`: derivative matrix
+* `r₀`: reconstruction coefficients at the beginning of the interval
+* `r₁`: reconstruction coefficients at the end of the interval
+* `t`: current time
+* `q`: current solution of q
+* `p`: current solution of p
+"""
 mutable struct NonlinearFunctionParametersCGVI{DT,TT,ΘT,FT,D,S,R} <: NonlinearFunctionParameters{DT}
     Θ::ΘT
     f::FT
@@ -8,11 +26,12 @@ mutable struct NonlinearFunctionParametersCGVI{DT,TT,ΘT,FT,D,S,R} <: NonlinearF
 
     b::Vector{TT}
     c::Vector{TT}
-    τ::Vector{TT}
-    α::Vector{TT}
-    β::Vector{TT}
+
+    x::Vector{TT}
     m::Matrix{TT}
     a::Matrix{TT}
+    r₀::Vector{TT}
+    r₁::Vector{TT}
 
     t::TT
 
@@ -20,9 +39,9 @@ mutable struct NonlinearFunctionParametersCGVI{DT,TT,ΘT,FT,D,S,R} <: NonlinearF
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersCGVI(Θ::ΘT, f::FT, Δt::TT, b, c, τ, α, β, m, a, q::Vector{DT}, p::Vector{DT}) where {DT,TT,ΘT,FT}
+function NonlinearFunctionParametersCGVI(Θ::ΘT, f::FT, Δt::TT, b, c, x, m, a, r₀, r₁, q::Vector{DT}, p::Vector{DT}) where {DT,TT,ΘT,FT}
     @assert length(q) == length(p)
-    NonlinearFunctionParametersCGVI{DT,TT,ΘT,FT,length(q),length(τ),length(c)}(Θ, f, Δt, b, c, τ, α, β, m, a, 0, q, p)
+    NonlinearFunctionParametersCGVI{DT,TT,ΘT,FT,length(q),length(x),length(c)}(Θ, f, Δt, b, c, x, m, a, r₀, r₁, 0, q, p)
 end
 
 
@@ -111,7 +130,7 @@ function compute_stages_q!(X::Matrix{ST}, Q::Matrix{ST}, q̅::Vector{ST}, params
     for k in 1:size(X,1)
         y = 0
         for i in 1:size(X,2)
-            y += params.β[i] * X[k,i]
+            y += params.r₁[i] * X[k,i]
         end
         q̅[k] = y
     end
@@ -184,16 +203,16 @@ end
                     # ffac += params.b[j] * params.m[j,i]
                     # pfac += params.b[j] * params.a[j,i]
                 end
-                b[D*(i-1)+k] = - (params.β[i] * p̅[k] - params.α[i] * params.p[k]) / params.Δt + z
-                # b[D*(i-1)+k] = - (params.β[i] * p̅[k] - params.α[i] * params.p[k]) / params.Δt + ffac * F[k,j] + pfac * P[k,i] / params.Δt
+                b[D*(i-1)+k] = - (params.r₁[i] * p̅[k] - params.r₀[i] * params.p[k]) / params.Δt + z
+                # b[D*(i-1)+k] = - (params.r₁[i] * p̅[k] - params.r₀[i] * params.p[k]) / params.Δt + ffac * F[k,j] + pfac * P[k,i] / params.Δt
             end
         end
 
-        # compute b = - [(q-αQ)]
+        # compute b = - [(q-r₀Q)]
         for k in 1:size(X,1)
             y = 0
             for j in 1:size(X,2)
-                y += params.α[j] * X[k,j]
+                y += params.r₀[j] * X[k,j]
             end
             b[D*S+k] = - (params.q[k] - y)
         end
@@ -221,7 +240,7 @@ struct IntegratorCGVI{DT,TT,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis,D,S,R} <: Integrato
 end
 
 function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}, quadrature::Quadrature{TT,R}, Δt::TT;
-                        interpolation=HermiteInterpolation{DT}) where {DT,TT,ΘT,FT,GT,VT,P,R}
+    interpolation=HermiteInterpolation{DT}) where {DT,TT,ΘT,FT,GT,VT,P,R}
     D = equation.d
     S = nbasis(basis)
 
@@ -235,14 +254,14 @@ function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}, 
     p = zeros(DT,D)
 
     # compute coefficients
-    α = zeros(TT, nbasis(basis))
-    β = zeros(TT, nbasis(basis))
+    r₀ = zeros(TT, nbasis(basis))
+    r₁ = zeros(TT, nbasis(basis))
     m = zeros(TT, nnodes(quadrature), S)
     a = zeros(TT, nnodes(quadrature), S)
 
     for i in 1:nbasis(basis)
-        α[i] = evaluate(basis, i, zero(TT))
-        β[i] = evaluate(basis, i, one(TT))
+        r₀[i] = evaluate(basis, i, zero(TT))
+        r₁[i] = evaluate(basis, i, one(TT))
         for j in 1:nnodes(quadrature)
             m[j,i] = evaluate(basis, i, nodes(quadrature)[j])
             a[j,i] = derivative(basis, i, nodes(quadrature)[j])
@@ -254,13 +273,13 @@ function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}, 
     println("  Continuous Galerkin Variational Integrator")
     println("  ==========================================")
     println()
-    println("    c = ", nodes(quadrature))
-    println("    b = ", weights(quadrature))
-    # println("    τ = ", basis.x)
-    println("    α = ", α)
-    println("    β = ", β)
-    println("    m = ", m)
-    println("    a = ", a)
+    println("    c  = ", nodes(quadrature))
+    println("    b  = ", weights(quadrature))
+    println("    x  = ", nodes(basis))
+    println("    m  = ", m)
+    println("    a  = ", a)
+    println("    r₀ = ", r₀)
+    println("    r₁ = ", r₁)
     println()
 
 
@@ -268,7 +287,7 @@ function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}, 
     cache = NonlinearFunctionCacheCGVI{DT}(D,S,R)
 
     # create params
-    params = NonlinearFunctionParametersCGVI(equation.α, equation.f, Δt, weights(quadrature), nodes(quadrature), nodes(basis), α, β, m, a, q, p)
+    params = NonlinearFunctionParametersCGVI(equation.α, equation.f, Δt, weights(quadrature), nodes(quadrature), nodes(basis), m, a, r₀, r₁, q, p)
 
     # create rhs function for nonlinear solver
     function_stages = (x,b) -> function_stages!(x, b, params)
@@ -277,12 +296,12 @@ function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}, 
     solver = get_config(:nls_solver)(x, function_stages)
 
     # create initial guess
-    iguess = InitialGuessPODE(interpolation, equation, Δt; periodicity=equation.periodicity)
+    iguess = InitialGuessPODE(interpolation, equation, Δt)
 
     # create integrator
     IntegratorCGVI{DT, TT, ΘT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int), typeof(basis), D, S, R}(
-                                        equation, basis, quadrature, Δt, params, solver, iguess,
-                                        q, p, cache)
+                equation, basis, quadrature, Δt, params, solver, iguess,
+                q, p, cache)
 end
 
 
