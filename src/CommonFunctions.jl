@@ -15,6 +15,11 @@ module CommonFunctions
     evaluate() = nothing
     evaluate!() = nothing
 
+    export derivative, integral
+
+    derivative() = nothing
+    integral() = nothing
+
     export write_to_hdf5
 
     write_to_hdf5() = nothing

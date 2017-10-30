@@ -1,8 +1,6 @@
 
 using OffsetArrays
 
-using ..CommonFunctions
-
 
 struct BernsteinBasisModified{T,P} <: Basis{T,P}
     x::OffsetArray{T,1,Array{T,1}}
@@ -56,7 +54,7 @@ function CommonFunctions.evaluate(b::BernsteinBasisModified{T,P}, i::Int, x::T) 
 end
 
 
-function derivative(b::BernsteinBasisModified{T,P}, i::Int, x::T) where {T,P}
+function CommonFunctions.derivative(b::BernsteinBasisModified{T,P}, i::Int, x::T) where {T,P}
     if i == 1
         - 1 / (b.x[end] - b.x[0])
     elseif i == P+1
@@ -67,10 +65,10 @@ function derivative(b::BernsteinBasisModified{T,P}, i::Int, x::T) where {T,P}
     end
 end
 
-derivative(b::BernsteinBasisModified, i::Int, j::Int) = derivative(b, i, b.x[j])
+CommonFunctions.derivative(b::BernsteinBasisModified, i::Int, j::Int) = derivative(b, i, b.x[j])
 
 
-# function integral(b::BernsteinBasisModified{T,P}, i::Int, x::T) where {T,P}
+# function CommonFunctions.integral(b::BernsteinBasisModified{T,P}, i::Int, x::T) where {T,P}
 # end
 #
-# integral(b::BernsteinBasisModified, i::Int, j::Int) = integral(b, i, b.x[j])
+# CommonFunctions.integral(b::BernsteinBasisModified, i::Int, j::Int) = integral(b, i, b.x[j])

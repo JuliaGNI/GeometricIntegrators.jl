@@ -1,7 +1,4 @@
 
-using ..CommonFunctions
-
-
 struct Polynomial{DT<:AbstractFloat, BT <: Basis}
     b::BT
     c::Vector{DT}

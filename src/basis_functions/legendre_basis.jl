@@ -1,8 +1,6 @@
 
 using Polynomials
 
-using ..CommonFunctions
-
 
 struct LegendreBasis{T, P, fT, pT, dT, iT} <: Basis{T,P}
     factors::fT
@@ -79,11 +77,11 @@ function CommonFunctions.evaluate(b::LegendreBasis{T,P}, j::Int, x::T) where {T,
 end
 
 
-function derivative(b::LegendreBasis{T,P}, j::Int, x::T) where {T,P}
+function CommonFunctions.derivative(b::LegendreBasis{T,P}, j::Int, x::T) where {T,P}
     return b.factors[j] * b.derivs[j](x)
 end
 
 
-function integral(b::LegendreBasis{T,P}, j::Int, x::T) where {T,P}
+function CommonFunctions.integral(b::LegendreBasis{T,P}, j::Int, x::T) where {T,P}
     return b.factors[j] * b.ints[j](x)
 end

@@ -1,8 +1,6 @@
 
 using Polynomials
 
-using ..CommonFunctions
-
 
 struct LegendreBasisHierarchical{T, P, fT, pT, dT, iT} <: Basis{T,P}
     x::Vector{T}
@@ -81,11 +79,11 @@ function CommonFunctions.evaluate(b::LegendreBasisHierarchical{T,P}, j::Int, x::
 end
 
 
-function derivative(b::LegendreBasisHierarchical{T,P}, j::Int, x::T) where {T,P}
+function CommonFunctions.derivative(b::LegendreBasisHierarchical{T,P}, j::Int, x::T) where {T,P}
     return b.factors[j] * b.derivs[j](x)
 end
 
 
-function integral(b::LegendreBasisHierarchical{T,P}, j::Int, x::T) where {T,P}
+function CommonFunctions.integral(b::LegendreBasisHierarchical{T,P}, j::Int, x::T) where {T,P}
     return b.factors[j] * b.ints[j](x)
 end

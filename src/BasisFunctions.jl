@@ -2,11 +2,11 @@ __precompile__()
 
 module BasisFunctions
 
+    using ..CommonFunctions
+
     export Basis
 
     include("basis_functions/basis_functions.jl")
-
-    export derivative, integral, evaluate, evaluate!
 
     export vandermonde_matrix, vandermonde_matrix_inverse
 

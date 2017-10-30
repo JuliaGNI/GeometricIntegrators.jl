@@ -1,8 +1,6 @@
 
 using Polynomials
 
-using ..CommonFunctions
-
 
 struct LagrangeBasis{T,P} <: Basis{T,P}
     x::Vector{T}
@@ -60,7 +58,7 @@ function CommonFunctions.evaluate(b::LagrangeBasis{T,P}, j::Int, x::T) where {T,
 end
 
 
-function derivative(b::LagrangeBasis{T,P}, j::Int, x::T) where {T,P}
+function CommonFunctions.derivative(b::LagrangeBasis{T,P}, j::Int, x::T) where {T,P}
     local y::T = 0
     local z::T
 
@@ -76,14 +74,14 @@ function derivative(b::LagrangeBasis{T,P}, j::Int, x::T) where {T,P}
     y
 end
 
-derivative(b::LagrangeBasis, j::Int, i::Int) = derivative(b, j, b.x[i])
+CommonFunctions.derivative(b::LagrangeBasis, j::Int, i::Int) = derivative(b, j, b.x[i])
 
 
-function integral(b::LagrangeBasis{T,P}, j::Int, x::T) where {T,P}
+function CommonFunctions.integral(b::LagrangeBasis{T,P}, j::Int, x::T) where {T,P}
     y = zeros(b.x)
     y[j] = 1
     lint = polyint(Poly(*(b.vdminv, y)))
     return lint(x)
 end
 
-integral(b::LagrangeBasis, j::Int, i::Int) = integral(b, j, b.x[i])
+CommonFunctions.integral(b::LagrangeBasis, j::Int, i::Int) = integral(b, j, b.x[i])
