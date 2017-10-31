@@ -21,9 +21,12 @@ Pages = ["tutorial.md"]
 
 ```@contents
 Pages = ["modules/basis_functions.md",
+         "modules/diagnostics.md",
          "modules/equations.md",
          "modules/integrators.md",
          "modules/interpolation.md",
+         "modules/quadratures.md",
+         "modules/simulations.md",
          "modules/solvers_linear.md",
          "modules/solvers_nonlinear.md",
          "modules/solutions.md",
@@ -34,7 +37,7 @@ Pages = ["modules/basis_functions.md",
 
 ## License
 
-> Copyright (c) 2016 Michael Kraus <michael.kraus@ipp.mpg.de>
+> Copyright (c) 2016-2017 Michael Kraus <michael.kraus@ipp.mpg.de>
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal

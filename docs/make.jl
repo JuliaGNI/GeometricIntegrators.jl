@@ -12,8 +12,10 @@ makedocs(
                 "Interpolation"     => "modules/interpolation.md",
                 "Linear Solvers"    => "modules/solvers_linear.md",
                 "Nonlinear Solvers" => "modules/solvers_nonlinear.md",
+                "Numerical Fluxes"  => "modules/numerical_fluxes.md",
+                "Quadrature Rules"  => "modules/quadratures.md",
                 "Solutions"         => "modules/solutions.md",
-                "Tableaus"          => "modules/tableaus.md"]
+                "Tableaus"          => "modules/tableaus.md"],
              ]
 )
 
