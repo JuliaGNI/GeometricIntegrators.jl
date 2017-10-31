@@ -31,3 +31,16 @@ end
 function getTableauSymplecticEulerB()
     TableauEPRK(:symplectic_euler_b, 1, getCoefficientsSymplecticEulerBackward(), getCoefficientsSymplecticEulerForward())
 end
+
+
+"Tableau for Gauss-Lobatto IIIAIIIB method with s=2 stages"
+function getTableauLobattoIIIAIIIB2()
+    TableauEPRK(:lobatto_IIIA_IIIB_2, 2, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2())
+end
+
+
+"Tableau for Gauss-Lobatto IIIBIIIA method with s=2 stages"
+function getTableauLobattoIIIBIIIA2()
+    TableauEPRK(:lobatto_IIIB_IIIA_2, 2, getCoefficientsLobIIIB2(), getCoefficientsLobIIIA2())
+end
+

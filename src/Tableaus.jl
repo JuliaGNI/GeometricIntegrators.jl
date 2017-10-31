@@ -119,7 +119,8 @@ module Tableaus
 
     include("tableaus/tableaus_eprk.jl")
 
-    export getTableauSymplecticEulerA, getTableauSymplecticEulerB
+    export getTableauSymplecticEulerA, getTableauSymplecticEulerB,
+           getTableauLobattoIIIAIIIB2, getTableauLobattoIIIBIIIA2
 
     include("tableaus/tableaus_spark.jl")
 
