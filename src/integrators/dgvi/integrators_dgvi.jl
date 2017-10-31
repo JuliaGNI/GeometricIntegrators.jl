@@ -14,8 +14,10 @@
 * `r₁`: reconstruction coefficients, right-hand side
 * `β`: weights of the quadrature rule for the flux
 * `γ`: nodes of the quadrature rule for the flux
-* `μ₀`: mass vector for the flux, left-hand side
-* `μ₁`: mass vector for the flux, right-hand side
+* `μ₀`: mass vector for the lhs flux
+* `μ₁`: mass vector for the rhs flux
+* `α₀`: derivative vector for the lhs flux
+* `α₁`: derivative vector for the rhs flux
 * `t`: current time
 * `q`: current solution of q
 * `p`: current solution of p
@@ -42,6 +44,8 @@ mutable struct NonlinearFunctionParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR} <: Non
     γ::Vector{TT}
     μ₀::Vector{TT}
     μ₁::Vector{TT}
+    α₀::Vector{TT}
+    α₁::Vector{TT}
 
     t::TT
 
@@ -52,7 +56,8 @@ end
 function NonlinearFunctionParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
                 b::Vector{TT}, c::Vector{TT}, m::Matrix{TT}, a::Matrix{TT},
                 r₀::Vector{TT}, r₁::Vector{TT}, β::Vector{TT}, γ::Vector{TT},
-                μ₀::Vector{TT}, μ₁::Vector{TT}, q::Vector{DT}, p::Vector{DT}) where {DT,TT,ΘT,FT,GT}
+                μ₀::Vector{TT}, μ₁::Vector{TT}, α₀::Vector{TT}, α₁::Vector{TT},
+                q::Vector{DT}, p::Vector{DT}) where {DT,TT,ΘT,FT,GT}
 
     @assert length(q)  == length(p)
     @assert length(b)  == length(c)
@@ -78,10 +83,12 @@ function NonlinearFunctionParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
     println("    γ = ", γ)
     println("    μ₀= ", μ₀)
     println("    μ₁= ", μ₁)
+    println("    α₀= ", α₀)
+    println("    α₁= ", α₁)
     println()
 
     NonlinearFunctionParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR}(
-                Θ, f, g, Δt, b, c, m, a, r₀, r₁, β, γ, μ₀, μ₁, 0, q, p)
+                Θ, f, g, Δt, b, c, m, a, r₀, r₁, β, γ, μ₀, μ₁, α₀, α₁, 0, q, p)
 end
 
 
@@ -108,15 +115,19 @@ function NonlinearFunctionParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
 
     μ₀ = zeros(TT, nnodes(flux.quadrature))
     μ₁ = zeros(TT, nnodes(flux.quadrature))
+    α₀ = zeros(TT, nnodes(flux.quadrature))
+    α₁ = zeros(TT, nnodes(flux.quadrature))
 
     for i in 1:nnodes(flux.quadrature)
         μ₀[i] = evaluate_l(flux.path, nodes(flux.quadrature)[i])
         μ₁[i] = evaluate_r(flux.path, nodes(flux.quadrature)[i])
+        α₀[i] = derivative_l(flux.path, nodes(flux.quadrature)[i])
+        α₁[i] = derivative_r(flux.path, nodes(flux.quadrature)[i])
     end
 
     NonlinearFunctionParametersDGVI(
                     Θ, f, g, Δt, weights(quadrature), nodes(quadrature), m, a, r₀, r₁,
-                    weights(flux.quadrature), nodes(flux.quadrature), μ₀, μ₁, q, p)
+                    weights(flux.quadrature), nodes(flux.quadrature), μ₀, μ₁, α₀, α₁, q, p)
 end
 
 
@@ -128,8 +139,8 @@ struct NonlinearFunctionCacheDGVI{ST}
     F::Matrix{ST}
     q̅::Vector{ST}
     p̅::Vector{ST}
-    λ::Vector{ST}
-    λ̅::Vector{ST}
+    λ::Matrix{ST}
+    λ̅::Matrix{ST}
     ϕ::Matrix{ST}
     ϕ̅::Matrix{ST}
 
@@ -142,8 +153,8 @@ struct NonlinearFunctionCacheDGVI{ST}
         F = zeros(ST,D,QR)
         q̅ = zeros(ST,D)
         p̅ = zeros(ST,D)
-        λ = zeros(ST,D)
-        λ̅ = zeros(ST,D)
+        λ = zeros(ST,D,FR)
+        λ̅ = zeros(ST,D,FR)
         ϕ = zeros(ST,D,FR)
         ϕ̅ = zeros(ST,D,FR)
 
@@ -284,7 +295,7 @@ end
 end
 
 
-function compute_stages_λ!(X::Matrix{ST}, q̅::Vector{ST}, λ::Vector{ST}, λ̅::Vector{ST}, ϕ::Matrix{ST}, ϕ̅::Matrix{ST},
+function compute_stages_λ!(X::Matrix{ST}, q̅::Vector{ST}, λ::Matrix{ST}, λ̅::Matrix{ST}, ϕ::Matrix{ST}, ϕ̅::Matrix{ST},
                 params::NonlinearFunctionParametersDGVI{DT,TT,AT,FT,GT,D,S,QR,FR}) where {ST,DT,TT,AT,FT,GT,D,S,QR,FR}
 
     @assert D == size(X,1)
@@ -303,10 +314,11 @@ function compute_stages_λ!(X::Matrix{ST}, q̅::Vector{ST}, λ::Vector{ST}, λ̅
             y₀ += params.r₀[j] * X[k,j]
             y₁ += params.r₁[j] * X[k,j]
         end
-        λ[k] = y₀ - q[k]
-        λ̅[k] = q̅[k] - y₁
-        # λ[k] = y₀
-        # λ̅[k] = y₁
+
+        for i in 1:FR
+            λ[k,i] = params.α₀[i] * q[k] + params.α₁[i] * y₀
+            λ̅[k,i] = params.α₀[i] * y₁ + params.α₁[i] * q̅[k]
+        end
 
         for i in 1:FR
             ϕ[k,i] = 2 * params.μ₁[i] * q[k] + (params.μ₀[i] - params.μ₁[i]) * y₀
@@ -321,7 +333,7 @@ end
 
 
 @generated function compute_rhs!(b::Vector{ST}, X::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST},
-                λ::Vector{ST}, λ̅::Vector{ST}, ϕ::Matrix{ST}, ϕ̅::Matrix{ST},
+                λ::Matrix{ST}, λ̅::Matrix{ST}, ϕ::Matrix{ST}, ϕ̅::Matrix{ST},
                 params::NonlinearFunctionParametersDGVI{DT,TT,AT,FT,GT,D,S,QR,FR}) where {ST,DT,TT,AT,FT,GT,D,S,QR,FR}
 
     local θ::Matrix{ST} = zeros(ST,D,FR)
@@ -330,6 +342,7 @@ end
     local g̅::Matrix{ST} = zeros(ST,D,FR)
 
     local tϕ = zeros(ST,D)
+    local tλ = zeros(ST,D)
     local tθ = zeros(ST,D)
     local tg = zeros(ST,D)
 
@@ -342,14 +355,16 @@ end
 
         for j in 1:FR
             simd_copy_xy_first!($tϕ, ϕ, j)
-            params.Θ(t₀, $tϕ, λ, $tθ)
-            params.g(t₀, $tϕ, λ, $tg)
+            simd_copy_xy_first!($tλ, λ, j)
+            params.Θ(t₀, $tϕ, $tλ, $tθ)
+            params.g(t₀, $tϕ, $tλ, $tg)
             simd_copy_yx_first!($tθ, $θ, j)
             simd_copy_yx_first!($tg, $g, j)
 
             simd_copy_xy_first!($tϕ, ϕ̅, j)
-            params.Θ(t₁, $tϕ, λ̅, $tθ)
-            params.g(t₁, $tϕ, λ̅, $tg)
+            simd_copy_xy_first!($tλ, λ̅, j)
+            params.Θ(t₁, $tϕ, $tλ, $tθ)
+            params.g(t₁, $tϕ, $tλ, $tg)
             simd_copy_yx_first!($tθ, $Θ̅, j)
             simd_copy_yx_first!($tg, $g̅, j)
         end
@@ -363,15 +378,15 @@ end
                     z += params.b[j] * params.a[j,i] * P[k,j]
                 end
                 for j in 1:FR
-                    z += params.β[j] * params.r₀[i] * $θ[k,j]
-                    z -= params.β[j] * params.r₁[i] * $Θ̅[k,j]
+                    z += 1 * params.β[j] * params.r₀[i] * params.α₁[j] * $θ[k,j]
+                    z += 1 * params.β[j] * params.r₁[i] * params.α₀[j] * $Θ̅[k,j]
                     z += 2 * params.β[j] * params.r₀[i] * params.μ₀[j] * $g[k,j]
                     z += 2 * params.β[j] * params.r₁[i] * params.μ₁[j] * $g̅[k,j]
 
-                    # z += 0.5 * params.β[j] * params.r₀[i] * $θ[k,j]
-                    # z -= 0.5 * params.β[j] * params.r₁[i] * $Θ̅[k,j]
-                    # z += 0.5 * params.β[j] * params.r₀[i] * $g[k,j]
-                    # z += 0.5 * params.β[j] * params.r₁[i] * $g̅[k,j]
+                    # z += params.β[j] * params.r₀[i] * params.α₁[j] * $θ[k,j]
+                    # z += params.β[j] * params.r₁[i] * params.α₀[j] * $Θ̅[k,j]
+                    # z += params.β[j] * params.r₀[i] * params.μ₀[j] * $g[k,j]
+                    # z += params.β[j] * params.r₁[i] * params.μ₁[j] * $g̅[k,j]
 
                     # z += params.β[j] * params.r₀[i] * $θ[k,j]
                     # z -= params.β[j] * params.r₁[i] * $Θ̅[k,j]
