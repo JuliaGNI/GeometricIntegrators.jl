@@ -1,6 +1,4 @@
 julia 0.6-
-BandedMatrices 0.2.3
-ApproxFun
 DecFP
 DoubleDouble
 FastGaussQuadrature

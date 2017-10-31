@@ -48,8 +48,5 @@ include("tableaus/tableaus_tests.jl")
 include("integrators/integrators_test.jl")
 include("solvers/linear_solvers_tests.jl")
 include("solvers/nonlinear_solvers_tests.jl")
-include("diagnostics/poincare_invariant_1st_tests.jl")
-include("diagnostics/poincare_invariant_2nd_unittests.jl")
-include("diagnostics/poincare_invariant_2nd_tests.jl")
 
 #include("utils/hdf5_tests.jl")

@@ -21,7 +21,6 @@ Pages = ["tutorial.md"]
 
 ```@contents
 Pages = ["modules/basis_functions.md",
-         "modules/diagnostics.md",
          "modules/equations.md",
          "modules/integrators.md",
          "modules/interpolation.md",
