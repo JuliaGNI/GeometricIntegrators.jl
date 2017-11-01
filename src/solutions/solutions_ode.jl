@@ -99,10 +99,10 @@ function copy_solution!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{Dou
     end
 end
 
-function reset!(s::SolutionODE)
-    reset!(s.q)
-    compute_timeseries!(solution.t, solution.t[end])
-    s.counter = 0
+function reset!(sol::SolutionODE)
+    reset!(sol.q)
+    compute_timeseries!(sol.t, sol.t[end])
+    sol.counter = 0
 end
 
 
