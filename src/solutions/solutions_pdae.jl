@@ -198,12 +198,12 @@ function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{Do
     end
 end
 
-function reset!(s::SolutionPDAE)
-    reset!(s.q)
-    reset!(s.p)
-    reset!(s.λ)
-    compute_timeseries!(solution.t, solution.t[end])
-    s.counter = 0
+function reset!(sol::SolutionPDAE)
+    reset!(sol.q)
+    reset!(sol.p)
+    reset!(sol.λ)
+    compute_timeseries!(sol.t, sol.t[end])
+    sol.counter = 0
 end
 
 

@@ -96,11 +96,11 @@ function copy_solution!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, Vector{Do
     end
 end
 
-function reset!(s::SolutionPODE)
-    reset!(s.q)
-    reset!(s.p)
-    compute_timeseries!(solution.t, solution.t[end])
-    s.counter = 0
+function reset!(sol::SolutionPODE)
+    reset!(sol.q)
+    reset!(sol.p)
+    compute_timeseries!(sol.t, sol.t[end])
+    sol.counter = 0
 end
 
 

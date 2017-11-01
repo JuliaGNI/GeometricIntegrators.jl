@@ -98,10 +98,10 @@ function copy_solution!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, 
     end
 end
 
-function reset!(s::SolutionDAE)
-    reset!(s.q)
-    reset!(s.λ)
-    compute_timeseries!(solution.t, solution.t[end])
+function reset!(sol::SolutionDAE)
+    reset!(sol.q)
+    reset!(sol.λ)
+    compute_timeseries!(sol.t, sol.t[end])
 end
 
 
