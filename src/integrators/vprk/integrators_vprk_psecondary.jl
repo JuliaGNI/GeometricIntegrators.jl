@@ -113,7 +113,9 @@ end
 
             simd_mult!($tR, $tΩ, $tΛ)
             simd_mult!($tΦ, $tΩ, $tV)
-            simd_axpy!(-one(ST), $tH, $tΦ)
+
+            $tΦ .-= $tH
+            # simd_axpy!(-one(ST), $tH, $tΦ)
 
             simd_copy_yx_first!($tR, R, i)
             simd_copy_yx_first!($tΦ, Φ, i)

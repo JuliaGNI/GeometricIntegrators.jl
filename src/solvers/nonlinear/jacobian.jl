@@ -44,9 +44,9 @@ function computeJacobian(x::Vector{T}, J::Matrix{T}, params::JacobianParametersF
         ϵⱼ = params.ϵ * x[j] + params.ϵ
         fill!(params.e, 0)
         params.e[j] = 1
-        simd_waxpy!(params.tx, -ϵⱼ, params.e, x)
+        params.tx .= x .- ϵⱼ .* params.e
         params.F!(params.tx, params.f1)
-        simd_waxpy!(params.tx, +ϵⱼ, params.e, x)
+        params.tx .= x .+ ϵⱼ .* params.e
         params.F!(params.tx, params.f2)
         for i in 1:length(x)
             J[i,j] = (params.f2[i]-params.f1[i])/(2ϵⱼ)

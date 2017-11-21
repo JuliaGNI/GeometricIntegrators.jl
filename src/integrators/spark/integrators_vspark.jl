@@ -150,7 +150,7 @@ function function_stages!(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctio
         simd_copy_yx_first!(params.Pt, params.Φi, i)
     end
 
-    simd_axpy!(-1, params.Pi, params.Φi)
+    params.Φi .-= params.Pi
 
     for i in 1:params.r
         for k in 1:params.d
@@ -410,12 +410,12 @@ function integrate_step!(int::IntegratorVSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::S
     # compute final update
     simd_mult!(int.y, int.V, int.tableau.q.b)
     simd_mult!(int.z, int.F, int.tableau.p.b)
-    simd_axpy!(int.Δt, int.y, int.q)
-    simd_axpy!(int.Δt, int.z, int.p)
+    int.q .+= int.Δt .* int.y
+    int.p .+= int.Δt .* int.z
     simd_mult!(int.y, int.U, int.tableau.q.β)
     simd_mult!(int.z, int.G, int.tableau.p.β)
-    simd_axpy!(int.Δt, int.y, int.q)
-    simd_axpy!(int.Δt, int.z, int.p)
+    int.q .+= int.Δt .* int.y
+    int.p .+= int.Δt .* int.z
     simd_mult!(int.λ, int.Λ, int.tableau.λ.b)
 
     # copy to solution

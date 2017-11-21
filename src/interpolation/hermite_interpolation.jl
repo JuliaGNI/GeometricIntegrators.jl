@@ -120,19 +120,15 @@ function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}
 
     # Interpolate y values at required locations
     if x == int.x₀
-        simd_copy!(y₀, y)
+        y .= y₀
     elseif x == int.x₁
-        simd_copy!(y₁, y)
+        y .= y₁
     else
         a₁ = 3x^2 - 2x^3
         a₀ = 1 - a₁
         b₁ = x^2*(x-1)
         b₀ = x*(1-x)+b₁
-
-        simd_copy_scale!(a₀, y₀, y)
-        simd_axpy!(a₁, y₁, y)
-        simd_axpy!(b₀*int.Δx, f₀, y)
-        simd_axpy!(b₁*int.Δx, f₁, y)
+        y .= a₀ .* y₀ .+ a₁ .* y₁ .+ b₀ .* int.Δx .* f₀ .+ b₁ .* int.Δx .* f₁
     end
 end
 
@@ -149,18 +145,14 @@ function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}
 
     # Interpolate f values at required locations
     if x == int.x₀
-        simd_copy!(f₀, f)
+        f .= f₀
     elseif x == int.x₁
-        simd_copy!(f₁, f)
+        f .= f₁
     else
-        a₁ = 6x - 6x^2
+        a₁ = (6x - 6x^2) / int.Δx
         a₀ = - a₁
         b₁ = x*(3x-2)
         b₀ = 1-2x+b₁
-
-        simd_copy_scale!(b₀, f₀, f)
-        simd_axpy!(b₁, f₁, f)
-        simd_axpy!(a₀/int.Δx, y₀, f)
-        simd_axpy!(a₁/int.Δx, y₁, f)
+        f .= b₀ .* f₀ .+ b₁ .* f₁ .+ a₀ .* y₀ .+ a₁ .* y₁
     end
 end

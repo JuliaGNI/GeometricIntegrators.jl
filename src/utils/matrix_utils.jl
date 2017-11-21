@@ -1,5 +1,5 @@
 
-function compensated_summation(x, y::T, e::T) where {T}
+function compensated_summation(x::T, y::T, e::T) where {T}
     local err::T
     local res::T
 
@@ -43,38 +43,6 @@ function l2norm(x)
     sqrt(L2norm(x))
 end
 
-function simd_scale!(x, a)
-    @inbounds for i in 1:length(x)
-        x[i] *= a
-    end
-    nothing
-end
-
-function simd_copy!(x::Vector{T}, y::Vector{T}) where {T}
-    @assert length(x) == length(y)
-    @inbounds for i in 1:length(y)
-        y[i] = x[i]
-    end
-    nothing
-end
-
-function simd_copy!(x::Matrix{T}, y::Matrix{T}) where {T}
-    @assert size(x) == size(y)
-    @inbounds for j=1:size(y,2)
-        for i in 1:size(y,1)
-            y[i,j] = x[i,j]
-        end
-    end
-    nothing
-end
-
-function simd_copy_scale!(a, x, y)
-    @assert length(x) == length(y)
-    @inbounds for i in 1:length(y)
-        y[i] = a*x[i]
-    end
-    nothing
-end
 
 "Copy the first dimension of a 2D array y into a 1D array x."
 function simd_copy_xy_first!(x::Array{T,1}, y::Array{T,2}, j) where {T}
@@ -156,39 +124,13 @@ function simd_copy_yx_first_last!(x::Array{T,2}, y::Array{T,3}, j) where {T}
     nothing
 end
 
-function simd_xpy!(x::Vector{T}, y::Vector{T}) where {T}
-    @assert length(x) == length(y)
-    @inbounds for i in 1:length(y)
-        y[i] += x[i]
-    end
-    nothing
-end
+function simd_axpy!(a::T, x::DenseMatrix{T}, y::DenseMatrix{T}, e::DenseMatrix{T}) where {T}
+    @assert size(x) == size(y) == size(e)
 
-function simd_xpy!(x::Matrix{T}, y::Matrix{T}) where {T}
-    @assert size(x) == size(y)
-    @inbounds for j=1:size(y,2)
-        for i in 1:size(y,1)
-            y[i,j] += x[i,j]
-        end
-    end
-    nothing
-end
+    local err::T
+    local ty::T
 
-function simd_axpy!(a, x::Vector{T}, y::Vector{T}) where {T}
-    @assert length(x) == length(y)
-    @inbounds for i in 1:length(y)
-        y[i] += a*x[i]
-    end
-    nothing
-end
-
-function simd_axpy!(a, x::Vector{T}, y::Vector{T}, e::Vector{T}) where {T}
-    @assert length(x) == length(y) == length(e)
-
-    local err::eltype(e)
-    local ty::eltype(y)
-
-    @inbounds for i in 1:length(y)
+    @inbounds for i in eachindex(x,y,e)
         err = e[i] + a*x[i]
         ty  = y[i]
         y[i] = err + ty
@@ -197,51 +139,6 @@ function simd_axpy!(a, x::Vector{T}, y::Vector{T}, e::Vector{T}) where {T}
     nothing
 end
 
-function simd_axpy!(a, x::Matrix{T}, y::Matrix{T}) where {T}
-    @assert size(x) == size(y)
-    @inbounds for j=1:size(y,2)
-        for i in 1:size(y,1)
-            y[i,j] += a*x[i,j]
-        end
-    end
-    nothing
-end
-
-function simd_wxpy!(w::Vector{T}, x::Vector{T}, y::Vector{T}) where {T}
-    @assert length(x) == length(y) == length(w)
-    @inbounds for i in 1:length(w)
-        w[i] = x[i] + y[i]
-    end
-    nothing
-end
-
-function simd_wxpy!(w::Matrix{T}, x::Matrix{T}, y::Matrix{T}) where {T}
-    @assert size(w) == size(x) == size(y)
-    @inbounds for j=1:size(y,2)
-        for i in 1:size(y,1)
-            w[i,j] = x[i,j] + y[i,j]
-        end
-    end
-    nothing
-end
-
-function simd_waxpy!(w::Vector{T}, a, x::Vector{T}, y::Vector{T}) where {T}
-    @assert length(x) == length(y) == length(w)
-    @inbounds for i in 1:length(w)
-        w[i] = a*x[i] + y[i]
-    end
-    nothing
-end
-
-function simd_waxpy!(w::Matrix{T}, a, x::Matrix{T}, y::Matrix{T}) where {T}
-    @assert size(w) == size(x) == size(y)
-    @inbounds for j=1:size(y,2)
-        for i in 1:size(y,1)
-            w[i,j] = a*x[i,j] + y[i,j]
-        end
-    end
-    nothing
-end
 
 function simd_aXbpy!(a, b::Vector{T}, X::Matrix{T}, y::Vector{T}) where {T}
     @assert length(y) == size(X, 1)

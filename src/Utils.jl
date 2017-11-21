@@ -8,11 +8,9 @@ module Utils
 
     export compensated_summation
     export istriustrict, istrilstrict, L2norm, l2norm
-    export simd_scale!, simd_copy!, simd_copy_scale!,
-           simd_copy_xy_first!, simd_copy_yx_first!, simd_copy_yx_second!,
+    export simd_copy_xy_first!, simd_copy_yx_first!, simd_copy_yx_second!,
            simd_copy_yx_first_last!,
-           simd_xpy!, simd_axpy!, simd_wxpy!, simd_waxpy!,
-           simd_aXbpy!, simd_abXpy!, simd_mult!,
+           simd_axpy!, simd_aXbpy!, simd_abXpy!, simd_mult!,
            vector_matrix_vector_product, vector_vector_product
 
     include("utils/matrix_utils.jl")

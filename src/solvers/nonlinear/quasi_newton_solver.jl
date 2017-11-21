@@ -59,15 +59,15 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
 
     if s.status.rₐ ≥ s.params.atol² || n > 0 || s.params.nmin > 0
         computeJacobian(s.x, s.J, s.Jparams)
-        simd_copy!(s.J, s.linear.A)
+        s.linear.A .= s.J
         factorize!(s.linear)
 
         for s.status.i = 1:nmax
-            simd_copy!(s.x, s.x₀)
+            s.x₀ .= s.x
             y₀norm = l2norm(s.y₀)
 
             # b = - y₀
-            simd_copy_scale!(-one(T), s.y₀, s.linear.b)
+            s.linear.b .= -one(T) .* s.y₀
 
             # solve J δx = -f(x)
             solve!(s.linear)
@@ -75,7 +75,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
             # TODO Separate line search algorithms into independent modules.
 
             # δx = b
-            simd_copy!(s.linear.b, s.δx)
+            s.δx .= s.linear.b
 
             # δy = Jδx
             simd_mult!(s.δy, s.J, s.δx)
@@ -86,7 +86,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
             # use simple line search to determine a λ for which there is not Domain Error
             for lsiter in 1:DEFAULT_LINESEARCH_nmax
                 # x₁ = x₀ + λ δx
-                simd_waxpy!(s.x₁, λ, s.δx, s.x₀)
+                s.x₁ .=  s.x₀ .+ λ .* s.δx
 
                 try
                     # y₁ = f(x₁)
@@ -105,7 +105,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
             end
 
             # x₁ = x₀ + λ δx
-            simd_waxpy!(s.x₁, λ, s.δx, s.x₀)
+            s.x₁ .= s.x₀ .+ λ .* s.δx
 
             # y₁ = f(x₁)
             s.F!(s.x₁, s.y₁)
@@ -173,7 +173,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
             #     simd_scale!(s.δx, DEFAULT_ARMIJO_σ₁)
             # end
 
-            simd_xpy!(s.δx, s.x)
+            s.x .+= s.δx
             s.F!(s.x, s.y₀)
             residual!(s.status, s.δx, s.x, s.y₀)
 
@@ -186,7 +186,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
 
             if mod(s.status.i, refactorize) == 0
                 computeJacobian(s.x, s.J, s.Jparams)
-                simd_copy!(s.J, s.linear.A)
+                s.linear.A .= s.J
                 factorize!(s.linear)
             end
         end

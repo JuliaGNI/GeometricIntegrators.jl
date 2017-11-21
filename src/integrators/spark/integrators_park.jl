@@ -288,12 +288,12 @@ function integrate_step!(int::IntegratorPARK{DT,TT,FT,PT,UT,GT,ϕT}, sol::Soluti
     # compute final update
     simd_mult!(int.y, int.V, int.tableau.q.b)
     simd_mult!(int.z, int.F, int.tableau.p.b)
-    simd_axpy!(int.Δt, int.y, int.q)
-    simd_axpy!(int.Δt, int.z, int.p)
+    int.q .+= int.Δt .* int.y
+    int.p .+= int.Δt .* int.z
     simd_mult!(int.y, int.U, int.tableau.q.β)
     simd_mult!(int.z, int.G, int.tableau.p.β)
-    simd_axpy!(int.Δt, int.y, int.q)
-    simd_axpy!(int.Δt, int.z, int.p)
+    int.q .+= int.Δt .* int.y
+    int.p .+= int.Δt .* int.z
     simd_mult!(int.λ, int.Λ, int.tableau.λ.b)
 
     # copy to solution
