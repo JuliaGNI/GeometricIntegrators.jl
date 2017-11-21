@@ -134,7 +134,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
                 end
             end
 
-            simd_scale!(s.δx, λ)
+            s.δx .*= λ
 
             # simple Armijo line search
             #
