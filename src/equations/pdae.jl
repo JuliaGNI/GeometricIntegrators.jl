@@ -18,8 +18,9 @@ the algebraic variable ``\\lambda`` taking values in ``\\mathbb{R}^{n}``.
 
 ### Fields
 
-* `m`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``v`` and ``f``
-* `n`: dimension of algebraic variable ``\\lambda`` and the constraint ``\\phi``
+* `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``f`` and ``p``
+* `m`: dimension of algebraic variable ``\\lambda`` and the constraint ``\\phi``
+* `n`: number of initial conditions
 * `v`: function computing the vector field ``v``
 * `f`: function computing the vector field ``f``
 * `u`: function computing the projection
@@ -27,7 +28,7 @@ the algebraic variable ``\\lambda`` taking values in ``\\mathbb{R}^{n}``.
 * `ϕ`: algebraic constraint
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q``
-* `p₀`: initial condition for dynamical variable `p`
+* `p₀`: initial condition for dynamical variable ``p``
 * `λ₀`: initial condition for algebraic variable ``\\lambda``
 
 """
