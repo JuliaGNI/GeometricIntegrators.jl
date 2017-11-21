@@ -308,7 +308,7 @@ function initialize!(int::IntegratorVPARK, sol::Union{SolutionPDAE, PSolutionPDA
     get_initial_conditions!(sol, int.q, int.p, int.λ, m)
 
     # initialise initial guess
-    initialize!(int.iguess, sol.t[0], int.q, int.p)
+    initialize!(int.iguess, m, sol.t[0], int.q, int.p)
 end
 
 

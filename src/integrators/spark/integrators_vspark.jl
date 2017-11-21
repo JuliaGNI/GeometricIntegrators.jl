@@ -338,7 +338,7 @@ function initialize!(int::IntegratorVSPARK, sol::Union{SolutionPDAE, PSolutionPD
     get_initial_conditions!(sol, int.q, int.p, int.λ, m)
 
     # initialise initial guess
-    initialize!(int.iguess, sol.t[0], int.q, int.p)
+    initialize!(int.iguess, m, sol.t[0], int.q, int.p)
 end
 
 "Integrate DAE with variational special partitioned additive Runge-Kutta integrator."
