@@ -1,9 +1,4 @@
 
-using ..CommonFunctions
-using ..Interpolation
-using ..Tableaus
-
-
 """
 Midpoint extrapolation method with arbitrary order p.
 

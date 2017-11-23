@@ -1,12 +1,4 @@
 
-abstract type Integrator{dType, tType} end
-
-equation(integrator::Integrator) = integrator.equation
-timestep(integrator::Integrator) = integrator.Δt
-
-abstract type NonlinearFunctionParameters{DT,TT} end
-
-
 "Create integrator for explicit Runge-Kutta tableau."
 function Integrator(equation::ODE, tableau::TableauERK, Δt)
     IntegratorERK(equation, tableau, Δt)
@@ -40,6 +32,16 @@ end
 "Create integrator for variational partitioned Runge-Kutta tableau."
 function Integrator(equation::IODE, tableau::TableauVPRK, Δt)
     IntegratorVPRK(equation, tableau, Δt)
+end
+
+"Create integrator for formal Lagrangian Runge-Kutta tableau."
+function Integrator(equation::VODE, tableau::TableauFIRK, Δt)
+    IntegratorFLRK(equation, tableau, Δt)
+end
+
+"Create integrator for Projected Gauss-Legendre Runge-Kutta tableau."
+function Integrator(equation::IODE, tableau::CoefficientsPGLRK, Δt)
+    IntegratorPGLRK(equation, tableau, Δt)
 end
 
 "Create integrator for additive Runge-Kutta tableau."
@@ -138,8 +140,8 @@ function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT,N}, m1::Int, m2:
     @assert n2 ≥ n1
     @assert n2 ≤ sol.ntime
 
-    local nshow = get_config(:int_show_progress_nmin)
-    local nrun  = (m2-m1+1)*(n2-n1+1)
+    local nshow::Int = get_config(:int_show_progress_nmin)
+    local nrun::Int  = (m2-m1+1)*(n2-n1+1)
 
     # initialize progress bar
     if nrun ≥ nshow

@@ -1,4 +1,94 @@
 
+@define HeaderCoefficientsRK begin
+    name::Symbol
+    o::Int
+    s::Int
+end
+
+@define CoefficientsRK begin
+    a::Matrix{T}
+    b::Vector{T}
+    c::Vector{T}
+end
+
+"Holds the coefficients of a Runge-Kutta method."
+struct CoefficientsRK{T} <: AbstractCoefficients{T}
+    @HeaderCoefficientsRK
+    @CoefficientsRK
+    â::Matrix{T}
+    b̂::Vector{T}
+    ĉ::Vector{T}
+
+    function CoefficientsRK{T}(name,o,s,a,b,c) where {T}
+        new(name,o,s,a,b,c,zeros(a),zeros(b),zeros(c))
+    end
+
+    function CoefficientsRK{T}(name,o,s,a,b,c,â,b̂,ĉ) where {T}
+        @assert T <: Real
+        @assert isa(name, Symbol)
+        @assert isa(o, Integer)
+        @assert isa(s, Integer)
+        @assert s > 0 "Number of stages must be > 0"
+        @assert s==size(a,1)==size(a,2)==length(b)==length(c)
+        @assert s==size(â,1)==size(â,2)==length(b̂)==length(ĉ)
+
+        if !get_config(:tab_compensated_summation)
+            â = zeros(â)
+            b̂ = zeros(b̂)
+            ĉ = zeros(ĉ)
+        end
+
+        new(name,o,s,a,b,c,â,b̂,ĉ)
+    end
+end
+
+function CoefficientsRK(T::Type, name::Symbol, order::Int, a::Matrix, b::Vector, c::Vector)
+    a̅ = Matrix{T}(a)
+    b̅ = Vector{T}(b)
+    c̅ = Vector{T}(c)
+
+    if get_config(:tab_compensated_summation)
+        â = Matrix{T}(a-Matrix{eltype(a)}(a̅))
+        b̂ = Vector{T}(b-Vector{eltype(b)}(b̅))
+        ĉ = Vector{T}(c-Vector{eltype(c)}(c̅))
+    else
+        â = zeros(a̅)
+        b̂ = zeros(b̅)
+        ĉ = zeros(c̅)
+    end
+
+    CoefficientsRK{T}(name, order, length(c), a̅, b̅, c̅, â, b̂, ĉ)
+end
+
+function CoefficientsRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}) where {T}
+    CoefficientsRK{T}(name, order, length(c), a, b, c)
+end
+
+function CoefficientsRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}, â::Matrix{T}, b̂::Vector{T}, ĉ::Vector{T}) where {T}
+    CoefficientsRK{T}(name, order, length(c), a, b, c, â, b̂, ĉ)
+end
+
+Base.hash(tab::CoefficientsRK, h::UInt) = hash(tab.o, hash(tab.s, hash(tab.a, hash(tab.b, hash(tab.c, hash(:CoefficientsRK, h))))))
+
+Base.:(==)(tab1::CoefficientsRK, tab2::CoefficientsRK) = (tab1.o == tab2.o
+                                                       && tab1.s == tab2.s
+                                                       && tab1.a == tab2.a
+                                                       && tab1.b == tab2.b
+                                                       && tab1.c == tab2.c)
+
+Base.isequal(tab1::CoefficientsRK{T1}, tab2::CoefficientsRK{T2}) where {T1,T2} = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
+
+"Print Runge-Kutta coefficients."
+function Base.show(io::IO, tab::CoefficientsRK)
+    print(io, "Runge-Kutta Coefficients ", tab.name, " with ", tab.s, " stages and order ", tab.o)
+    print(io, "  a = ", tab.a)
+    print(io, "  b = ", tab.b)
+    print(io, "  c = ", tab.c)
+end
+
+
+
+
 
 function get_symplectic_conjugate_coefficients(a::Matrix{T}, b::Vector{T}, a̅::Matrix{T}) where {T}
     @assert size(a) == size(a̅)

@@ -5,7 +5,6 @@ module Simulations
     using ..Equations
     using ..Integrators
     using ..Solutions
-    using ..Tableaus
 
     export Simulation, run!
 

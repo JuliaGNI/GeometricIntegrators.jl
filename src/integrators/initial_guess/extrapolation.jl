@@ -1,5 +1,4 @@
 
-
 """
 Compute p(x) where p is the unique polynomial of degree length(xi),
 such that p(x[i]) = y[i]) for all i.

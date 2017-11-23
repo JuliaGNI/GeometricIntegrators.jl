@@ -1,261 +1,138 @@
 
-"Holds the tableau of an Specialised Partitioned Additive Runge-Kutta method."
-struct TableauSPARK{T} <: AbstractTableau{T}
-    name::Symbol
-    o::Int
-    s::Int
-    r::Int
-    ρ::Int
-
-    q::CoefficientsARK{T}
-    p::CoefficientsARK{T}
-
-    q̃::CoefficientsPRK{T}
-    p̃::CoefficientsPRK{T}
-
-    λ::CoefficientsMRK{T}
-
-    ω::Matrix{T}
-    d::Vector{T}
-
-    function TableauSPARK{T}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, d) where {T}
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(r, Integer)
-        @assert isa(ρ, Integer)
-        @assert isa(o, Integer)
-
-        @assert s > 0 "Number of stages s must be > 0"
-        @assert r > 0 "Number of stages r must be > 0"
-        @assert ρ > 0 && ρ ≤ r
-
-        @assert s==q.s==p.s==q̃.s==p̃.s==length(d)
-        @assert r==q.r==p.r==q̃.r==p̃.r==λ.r
-        @assert ρ==size(ω, 1)
-        @assert r==size(ω, 2)
-
-        new(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, d)
-    end
-
-    function TableauSPARK{T}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω) where {T}
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(r, Integer)
-        @assert isa(ρ, Integer)
-        @assert isa(o, Integer)
-
-        @assert s > 0 "Number of stages s must be > 0"
-        @assert r > 0 "Number of stages r must be > 0"
-        @assert ρ > 0 && ρ ≤ r
-
-        @assert s==q.s==p.s==q̃.s==p̃.s
-        @assert r==q.r==p.r==q̃.r==p̃.r==λ.r
-        @assert ρ==size(ω, 1)
-        @assert r==size(ω, 2)
-
-        new(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω)
-    end
+"Holds the tableau of an Hamiltonian Specialised Partitioned Additive Runge-Kutta method."
+struct TableauHSPARK{T} <: AbstractTableau{T}
 end
 
-function TableauSPARK(name::Symbol, order::Int,
-                         a_q::Matrix{T}, a_p::Matrix{T},
-                         α_q::Matrix{T}, α_p::Matrix{T},
-                         a_q̃::Matrix{T}, a_p̃::Matrix{T},
-                         α_q̃::Matrix{T}, α_p̃::Matrix{T},
-                         b_q::Vector{T}, b_p::Vector{T},
-                         β_q::Vector{T}, β_p::Vector{T},
-                         c_q::Vector{T}, c_p::Vector{T},
-                         c_λ::Vector{T}, d_λ::Vector{T},
-                         ω_λ::Matrix{T}, d::Vector{T}) where {T <: Real}
-
-    s = length(c_q)
-    r = length(c_λ)
-    ρ = size(ω_λ, 1)
-
-    @assert s > 0 "Number of stages s must be > 0"
-    @assert r > 0 "Number of stages r must be > 0"
-
-    @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
-    @assert s==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
-    @assert s==size(α_q,1)==size(α_p,1)
-    @assert r==size(α_q,2)==size(α_p,2)
-    @assert s==length(d)
-    @assert r==length(c_λ)==length(d_λ)
-    @assert r==size(a_q̃,1)==size(a_p̃,1)
-    @assert s==size(a_q̃,2)==size(a_p̃,2)
-    @assert r==size(α_q̃,1)==size(α_q̃,2)==length(β_q)
-    @assert r==size(α_p̃,1)==size(α_p̃,2)==length(β_p)
-
-    q = CoefficientsARK{T}(name, order, s, r, a_q, b_q, c_q, α_q, β_q)
-    p = CoefficientsARK{T}(name, order, s, r, a_p, b_p, c_p, α_p, β_p)
-    q̃ = CoefficientsPRK{T}(name, order, s, r, a_q̃, c_λ, α_q̃)
-    p̃ = CoefficientsPRK{T}(name, order, s, r, a_p̃, c_λ, α_p̃)
-    λ = CoefficientsMRK{T}(name, r, d_λ, c_λ)
-
-    TableauSPARK{T}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω_λ, d)
-end
-
-
-function TableauSPARK(name::Symbol, order::Int,
-                         a_q::Matrix{T}, a_p::Matrix{T},
-                         α_q::Matrix{T}, α_p::Matrix{T},
-                         a_q̃::Matrix{T}, a_p̃::Matrix{T},
-                         α_q̃::Matrix{T}, α_p̃::Matrix{T},
-                         b_q::Vector{T}, b_p::Vector{T},
-                         β_q::Vector{T}, β_p::Vector{T},
-                         c_q::Vector{T}, c_p::Vector{T},
-                         c_λ::Vector{T}, d_λ::Vector{T},
-                         ω_λ::Matrix{T}) where {T <: Real}
-
-    s = length(c_q)
-    r = length(c_λ)
-    ρ = size(ω_λ, 1)
-
-    @assert s > 0 "Number of stages s must be > 0"
-    @assert r > 0 "Number of stages r must be > 0"
-
-    @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
-    @assert s==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
-    @assert s==size(α_q,1)==size(α_p,1)
-    @assert r==size(α_q,2)==size(α_p,2)
-    @assert r==length(c_λ)==length(d_λ)
-    @assert r==size(a_q̃,1)==size(a_p̃,1)
-    @assert s==size(a_q̃,2)==size(a_p̃,2)
-    @assert r==size(α_q̃,1)==size(α_q̃,2)==length(β_q)
-    @assert r==size(α_p̃,1)==size(α_p̃,2)==length(β_p)
-
-    q = CoefficientsARK{T}(name, order, s, r, a_q, b_q, c_q, α_q, β_q)
-    p = CoefficientsARK{T}(name, order, s, r, a_p, b_p, c_p, α_p, β_p)
-    q̃ = CoefficientsPRK{T}(name, order, s, r, a_q̃, c_λ, α_q̃)
-    p̃ = CoefficientsPRK{T}(name, order, s, r, a_p̃, c_λ, α_p̃)
-    λ = CoefficientsMRK{T}(name, r, d_λ, c_λ)
-
-    TableauSPARK{T}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω_λ)
-end
-
-# TODO function readTableauSPARKFromFile(dir::AbstractString, name::AbstractString)
-
-
-"Parameters for right-hand side function of Specialised Partitioned Additive Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersSPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctionParameters{DT,TT}
+"Parameters for right-hand side function of Hamiltonian Specialised Partitioned Additive Runge-Kutta methods."
+mutable struct NonlinearFunctionParametersHSPARK{DT,TT,VT,FT,ϕT,ψT} <: NonlinearFunctionParameters{DT,TT}
+    f_v::VT
     f_f::FT
-    f_p::PT
-    f_u::UT
-    f_g::GT
     f_ϕ::ϕT
+    f_ψ::ψT
 
     Δt::TT
 
     d::Int
+    m::Int
     s::Int
-    r::Int
-    ρ::Int
+    σ::Int
 
     t_q::CoefficientsARK{TT}
     t_p::CoefficientsARK{TT}
     t_q̃::CoefficientsPRK{TT}
     t_p̃::CoefficientsPRK{TT}
-    t_λ::CoefficientsMRK{TT}
-    ω_λ::Matrix{TT}
-    d_v::Vector{TT}
+    t_ω::Matrix{TT}
 
     t::TT
 
     q::Vector{DT}
-    v::Vector{DT}
     p::Vector{DT}
-    λ::Vector{DT}
-    μ::Vector{DT}
 
-    y::Vector{DT}
-    z::Vector{DT}
-
-    Qi::Matrix{DT}
-    Pi::Matrix{DT}
-    Vi::Matrix{DT}
-    Λi::Matrix{DT}
-    Fi::Matrix{DT}
-    Yi::Matrix{DT}
-    Zi::Matrix{DT}
-    Φi::Matrix{DT}
-
-    Qp::Matrix{DT}
-    Pp::Matrix{DT}
-    Vp::Matrix{DT}
-    Up::Matrix{DT}
-    Gp::Matrix{DT}
-    Yp::Matrix{DT}
-    Zp::Matrix{DT}
-    Φp::Matrix{DT}
-
-    Λρ::Matrix{DT}
-    Φρ::Matrix{DT}
-
-    Qt::Vector{DT}
-    Pt::Vector{DT}
-    Λt::Vector{DT}
-    Vt::Vector{DT}
-    Ft::Vector{DT}
-    Ut::Vector{DT}
-    Gt::Vector{DT}
-    Φt::Vector{DT}
-
-    function NonlinearFunctionParametersSPARK{DT,TT,FT,PT,UT,GT,ϕT}(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, ρ, t_q, t_p, t_q̃, t_p̃, t_λ, ω_λ, d_v) where {DT,TT,FT,PT,UT,GT,ϕT}
+    function NonlinearFunctionParametersHSPARK{DT,TT,VT,FT,ϕT,ψT}(f_v, f_f, f_ϕ, f_ψ, Δt, d, m, s, σ, t_q, t_p, t_q̃, t_p̃, t_ω) where {DT,TT,VT,FT,ϕT,ψT}
         # create solution vectors
         q = zeros(DT,d)
-        v = zeros(DT,d)
         p = zeros(DT,d)
-        λ = zeros(DT,d)
-        μ = zeros(DT,d)
 
-        y = zeros(DT,d)
-        z = zeros(DT,d)
+        new(f_v, f_f, f_ϕ, f_ψ,
+            Δt, d, s, σ,
+            t_q, t_p, t_q̃, t_p̃, t_ω,
+            0, q, p)
+    end
+end
+
+
+struct NonlinearFunctionCacheHSPARK{ST}
+
+    q̅::Vector{ST}
+    p̅::Vector{ST}
+
+    y::Vector{ST}
+    z::Vector{ST}
+
+    Qi::Matrix{ST}
+    Pi::Matrix{ST}
+    Λi::Matrix{ST}
+
+    Vi::Matrix{ST}
+    Fi::Matrix{ST}
+    Yi::Matrix{ST}
+    Zi::Matrix{ST}
+    Φi::Matrix{ST}
+
+    Qp::Matrix{ST}
+    Pp::Matrix{ST}
+    Λp::Matrix{ST}
+    Γp::Matrix{ST}
+
+    Vp::Matrix{ST}
+    Fp::Matrix{ST}
+    Yp::Matrix{ST}
+    Zp::Matrix{ST}
+    Φp::Matrix{ST}
+    Ψp::Matrix{ST}
+
+    # Qt::Vector{ST}
+    # Pt::Vector{ST}
+    # Λt::Vector{ST}
+    # Γt::Vector{ST}
+    #
+    # Vt::Vector{ST}
+    # Ft::Vector{ST}
+    # Φt::Vector{ST}
+    # Ψt::Vector{ST}
+
+    function NonlinearFunctionCacheHSPARK{ST}(d,m,s,σ) where {ST}
+        # create solution vectors
+        q̅ = zeros(ST,d)
+        p̅ = zeros(ST,d)
+
+        y = zeros(ST,d)
+        z = zeros(ST,d)
 
         # create internal stage vectors
         Qi = zeros(DT,d,s)
         Pi = zeros(DT,d,s)
-        Vi = zeros(DT,d,s)
         Λi = zeros(DT,d,s)
+
+        Vi = zeros(DT,d,s)
         Fi = zeros(DT,d,s)
         Yi = zeros(DT,d,s)
         Zi = zeros(DT,d,s)
-        Φi = zeros(DT,d,s)
+        Φi = zeros(DT,m,s)
 
-        Qp = zeros(DT,d,r)
-        Pp = zeros(DT,d,r)
-        Vp = zeros(DT,d,r)
-        Up = zeros(DT,d,r)
-        Gp = zeros(DT,d,r)
-        Yp = zeros(DT,d,r)
-        Zp = zeros(DT,d,r)
-        Φp = zeros(DT,d,r)
+        Qp = zeros(DT,d,σ)
+        Pp = zeros(DT,d,σ)
+        Λp = zeros(DT,m,σ)
+        Γp = zeros(DT,m,σ)
 
-        Λρ = zeros(DT,d,ρ)
-        Φρ = zeros(DT,d,ρ)
+        Vp = zeros(DT,d,σ)
+        Fp = zeros(DT,d,σ)
+        Yp = zeros(DT,d,σ)
+        Zp = zeros(DT,d,σ)
+        Φp = zeros(DT,m,σ)
+        Ψp = zeros(DT,m,σ)
 
         # create temporary vectors
-        Qt = zeros(DT,d)
-        Pt = zeros(DT,d)
-        Λt = zeros(DT,d)
-        Vt = zeros(DT,d)
-        Ft = zeros(DT,d)
-        Ut = zeros(DT,d)
-        Gt = zeros(DT,d)
-        Φt = zeros(DT,d)
+        # Qt = zeros(DT,d)
+        # Pt = zeros(DT,d)
+        # Λt = zeros(DT,m)
+        # Γt = zeros(DT,m)
+        #
+        # Vt = zeros(DT,d)
+        # Ft = zeros(DT,d)
+        # Φt = zeros(DT,m)
+        # Ψt = zeros(DT,m)
 
-        new(f_f, f_p, f_u, f_g, f_ϕ,
-            Δt, d, s, r, ρ,
-            t_q, t_p, t_q̃, t_p̃, t_λ, ω_λ, d_v,
-            0, q, v, p, λ, μ, y, z,
-            Qi, Pi, Vi, Λi, Fi, Yi, Zi, Φi,
-            Qp, Pp, Vp, Up, Gp, Yp, Zp, Φp,
-            Λρ, Φρ,
-            Qt, Pt, Λt, Vt, Ft, Ut, Gt, Φt)
+        new(q̅, p̅, y, z, Qi, Pi, Λi, Vi, Fi, Yi, Zi, Φi, Qp, Pp, Λp, Γp, Vp, Fp, Yp, Zp, Φp, Ψp)
     end
 end
 
-"Compute stages of variational special partitioned additive Runge-Kutta methods."
-function function_stages!(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersSPARK{DT,TT,FT,PT,UT,GT,ϕT}) where {DT,TT,FT,PT,UT,GT,ϕT}
+
+# -> edited till here
+
+
+"Compute stages of Hamiltonian Specialised Partitioned Additive Runge-Kutta methods."
+function function_stages!(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersHSPARK{DT,TT,VT,FT,ϕT,ψT}) where {DT,TT,VT,FT,ϕT,ψT}
     local offset::Int
     local tpᵢ::TT
     local tλᵢ::TT
@@ -397,10 +274,10 @@ function function_stages!(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctio
 end
 
 
-"Variational special partitioned additive Runge-Kutta integrator."
-immutable IntegratorSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integrator{DT, TT}
-    equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}
-    tableau::TableauSPARK{TT}
+"Hamiltonian Specialised Partitioned Additive Runge-Kutta integrator."
+immutable IntegratorHSPARK{DT, TT, VT, FT, ϕT, ψT, SPT, ST, IT} <: Integrator{DT, TT}
+    equation::IDAE{DT,TT,VT,FT,ϕT,ψT}
+    tableau::TableauHSPARK{TT}
     Δt::TT
 
     params::SPT
@@ -423,7 +300,7 @@ immutable IntegratorSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integ
     G::Array{DT,2}
 end
 
-function IntegratorSPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, tableau::TableauSPARK{TT}, Δt::TT) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
+function IntegratorHSPARK(equation::HDAE{DT,TT,VT,FT,ϕT,ψT}, tableau::TableauHSPARK{TT}, Δt::TT) where {DT,TT,VT,FT,ϕT,ψT}
     D = equation.d
     S = tableau.s
     R = tableau.r
@@ -442,7 +319,7 @@ function IntegratorSPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, tableau::Tabl
     z = zeros(DT, N)
 
     # create params
-    params = NonlinearFunctionParametersSPARK{DT,TT,FT,PT,UT,GT,ϕT}(
+    params = NonlinearFunctionParametersHSPARK{DT,TT,VT,FT,ϕT,ψT}(
                                                 equation.f, equation.p, equation.u, equation.g, equation.ϕ,
                                                 Δt, D, S, R, ρ,
                                                 tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, tableau.ω, d_v)
@@ -457,7 +334,7 @@ function IntegratorSPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, tableau::Tabl
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
     # create integrator
-    IntegratorSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
+    IntegratorHSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
                                         equation, tableau, Δt, params, solver, iguess,
                                         params.q, params.v, params.p, params.λ,
                                         params.y, params.z,
@@ -466,7 +343,7 @@ function IntegratorSPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, tableau::Tabl
 end
 
 
-function initialize!(int::IntegratorSPARK, sol::Union{SolutionPDAE, PSolutionPDAE}, m::Int)
+function initialize!(int::IntegratorHSPARK, sol::SolutionPDAE, m::Int)
     @assert m ≥ 1
     @assert m ≤ sol.ni
 
@@ -478,7 +355,7 @@ function initialize!(int::IntegratorSPARK, sol::Union{SolutionPDAE, PSolutionPDA
 end
 
 "Integrate DAE with variational special partitioned additive Runge-Kutta integrator."
-function integrate_step!(int::IntegratorSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,PT,UT,GT,ϕT,VT,N}
+function integrate_step!(int::IntegratorHSPARK{DT,TT,VT,FT,ϕT,ψT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,VT,FT,ϕT,ψT,N}
     local offset::Int
 
     # set time for nonlinear solver

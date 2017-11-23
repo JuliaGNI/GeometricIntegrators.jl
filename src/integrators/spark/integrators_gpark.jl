@@ -1,6 +1,6 @@
 
 "Holds the tableau of a spezialized partitioned additive Runge-Kutta method."
-struct TableauSPARK{T} <: AbstractTableau{T}
+struct TableauGPARK{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
     s::Int
@@ -29,7 +29,7 @@ struct TableauSPARK{T} <: AbstractTableau{T}
     ω_p::Matrix{T}
     ω_λ::Matrix{T}
 
-    function TableauSPARK{T}(name, o, s, r,
+    function TableauGPARK{T}(name, o, s, r,
                              a_q, a_p, α_q, α_p, a_q̃, a_p̃, α_q̃, α_p̃,
                              b_q, b_p, β_q, β_p,
                              c_q, c_p, c_λ,
@@ -60,8 +60,29 @@ struct TableauSPARK{T} <: AbstractTableau{T}
     end
 end
 
-# TODO Add external constructor for TableauSPARK.
+# TODO Add external constructor for TableauGPARK.
 
-# TODO function readTableauSPARKFromFile(dir::AbstractString, name::AbstractString)
+# TODO function readTableauGPARKFromFile(dir::AbstractString, name::AbstractString)
 
-# TODO function writeTableauToFile{Name, T}(dir::AbstractString, tab::TableauSPARK{Name, T})
+# TODO function writeTableauToFile{Name, T}(dir::AbstractString, tab::TableauGPARK{Name, T})
+
+
+"Special Partitioned Additive Runge Kutta integrator."
+struct IntegratorGPARK{DT,TT,VT,FT,UT,GT,ΦT} <: Integrator{DT,TT}
+    equation::PDAE{DT,TT,VT,FT,UT,GT,ΦT}
+    tableau::TableauGPARK{TT}
+    Δt::TT
+
+    solver::NonlinearSolver{DT}
+
+    x::Array{DT,1}
+    y::Array{DT,1}
+    X::Array{DT,2}
+    Y::Array{DT,2}
+    F::Array{DT,2}
+end
+
+"Integrate partitioned DAE with Special Additive Runge Kutta integrator."
+function integrate!(int::IntegratorGPARK, s::SolutionPDAE)
+    # TODO
+end
