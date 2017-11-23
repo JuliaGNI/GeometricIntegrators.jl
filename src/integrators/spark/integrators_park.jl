@@ -219,10 +219,7 @@ struct IntegratorPARK{DT, TT, FT, PT, UT, GT, ϕT, ST} <: Integrator{DT, TT}
     G::Array{DT,2}
 end
 
-function IntegratorPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}, tableau::TableauPARK{TT}, Δt::TT;
-                        nonlinear_solver=DEFAULT_NonlinearSolver,
-                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
-                        interpolation=HermiteInterpolation{DT}) where {DT,TT,FT,PT,UT,GT,ϕT}
+function IntegratorPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}, tableau::TableauPARK{TT}, Δt::TT) where {DT,TT,FT,PT,UT,GT,ϕT}
     D = equation.d
     S = tableau.s
     R = tableau.r
@@ -236,7 +233,7 @@ function IntegratorPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}, tableau::TableauP
                                                 Δt, D, S, R, tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ)
 
     # create solver
-    solver = nonlinear_solver(z, params; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
+    solver = nonlinear_solver(z, params)
 
     # create integrator
     IntegratorPARK{DT, TT, FT, PT, UT, GT, ϕT, typeof(solver)}(

@@ -199,10 +199,7 @@ struct IntegratorVPRKpSecondary{DT,TT,ΑT,FT,GT,VT,ΩT,HT,FPT,ST,IT} <: Abstract
     pₑᵣᵣ::Vector{DT}
 end
 
-function IntegratorVPRKpSecondary(equation::VODE{DT,TT,ΑT,FT,GT,VT,ΩT,HT}, tableau::TableauVPRK{TT}, Δt::TT;
-                                        nonlinear_solver=DEFAULT_NonlinearSolver,
-                                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
-                                        interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT,ΩT,HT}
+function IntegratorVPRKpSecondary(equation::VODE{DT,TT,ΑT,FT,GT,VT,ΩT,HT}, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,ΑT,FT,GT,VT,ΩT,HT}
     D = equation.d
     S = tableau.s
 
@@ -248,7 +245,7 @@ function IntegratorVPRKpSecondary(equation::VODE{DT,TT,ΑT,FT,GT,VT,ΩT,HT}, tab
     solver = nonlinear_solver(zeros(DT,N), function_stages_solver; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
 
     # create initial guess
-    iguess = InitialGuessPODE(interpolation, equation, Δt)
+    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
     IntegratorVPRKpSecondary{DT, TT, ΑT, FT, GT, VT, ΩT, HT, typeof(params), typeof(solver), typeof(iguess.int)}(
                                         equation, tableau, Δt, params, solver, scache, pcache, iguess,

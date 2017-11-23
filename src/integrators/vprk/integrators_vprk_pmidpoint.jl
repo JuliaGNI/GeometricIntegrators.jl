@@ -114,8 +114,7 @@ struct IntegratorVPRKpMidpoint{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegrat
     p::Vector{Vector{Double{DT}}}
 end
 
-function IntegratorVPRKpMidpoint(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
-                                 interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
+function IntegratorVPRKpMidpoint(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
     M = equation.n
     S = tableau.s
@@ -153,7 +152,7 @@ function IntegratorVPRKpMidpoint(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Ta
     solver = get_config(:nls_solver)(zeros(DT,N), function_stages_solver)
 
     # create initial guess
-    iguess = InitialGuessPODE(interpolation, equation, Δt)
+    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
     IntegratorVPRKpMidpoint{DT, TT, ΑT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
                                         equation, tableau, Δt, params, solver, scache, pcache, iguess, q, p)

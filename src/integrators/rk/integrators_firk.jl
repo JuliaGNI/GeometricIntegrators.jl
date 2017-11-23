@@ -110,8 +110,7 @@ struct IntegratorFIRK{DT, TT, FT, SPT, ST, IT, N} <: Integrator{DT,TT}
     Y::Matrix{DT}
 end
 
-function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt::TT;
-                        interpolation=HermiteInterpolation{DT}) where {DT,TT,FT,N}
+function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,FT,N}
     D = equation.d
     M = equation.n
     S = tableau.q.s

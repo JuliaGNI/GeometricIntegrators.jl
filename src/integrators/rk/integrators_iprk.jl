@@ -131,8 +131,7 @@ struct IntegratorIPRK{DT, TT, VT, FT, SPT, ST, IT} <: Integrator{DT, TT}
     p::Vector{Vector{Double{DT}}}
 end
 
-function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT;
-                        interpolation=HermiteInterpolation{DT}) where {DT,TT,VT,FT}
+function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT,VT,FT}
     D = equation.d
     M = equation.n
     S = tableau.s

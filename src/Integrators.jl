@@ -67,8 +67,15 @@ module Integrators
 
 
     function __init__()
-        add_config(:ig_extrapolation_stages, 5)
-        add_config(:int_show_progress_nmin,  1000)
+        default_params = (
+            (:ig_interpolation, HermiteInterpolation),
+            (:ig_extrapolation_stages, 5),
+            (:int_show_progress_nmin,  1000),
+        )
+
+        for param in default_params
+            add_config(param...)
+        end
     end
 
 end

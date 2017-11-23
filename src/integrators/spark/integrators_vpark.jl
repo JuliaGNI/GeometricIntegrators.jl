@@ -257,8 +257,7 @@ struct IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integrat
 end
 
 function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
-                         tableau::TableauVPARK{TT}, Δt::TT;
-                         interpolation=HermiteInterpolation{DT}) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
+                         tableau::TableauVPARK{TT}, Δt::TT) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
     D = equation.d
     S = tableau.s
     R = tableau.r
@@ -288,7 +287,7 @@ function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
     solver = get_config(:nls_solver)(x, function_stages)
 
     # create initial guess
-    iguess = InitialGuessPODE(interpolation, equation, Δt)
+    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
     # create integrator
     IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(

@@ -51,8 +51,7 @@ struct IntegratorVPRK{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegratorVPRK{DT
     cache::NonlinearFunctionCacheVPRK{DT}
 end
 
-function IntegratorVPRK(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
-                        interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
+function IntegratorVPRK(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
     M = equation.n
     S = tableau.s
@@ -91,7 +90,7 @@ function IntegratorVPRK(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK
     solver = get_config(:nls_solver)(x, function_stages)
 
     # create initial guess
-    iguess = InitialGuessPODE(interpolation, equation, Δt)
+    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
     # create integrator
     IntegratorVPRK{DT, TT, ΑT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(

@@ -96,8 +96,7 @@ struct IntegratorVPRKpSymmetric{DT,TT,ΑT,FT,GT,VT,FPT,ST,IT} <: AbstractIntegra
     p::Vector{Vector{Double{DT}}}
 end
 
-function IntegratorVPRKpSymmetric(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
-                                  interpolation=HermiteInterpolation{DT}) where {DT,TT,ΑT,FT,GT,VT}
+function IntegratorVPRKpSymmetric(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,ΑT,FT,GT,VT}
     D = equation.d
     M = equation.n
     S = tableau.s
@@ -135,7 +134,7 @@ function IntegratorVPRKpSymmetric(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::T
     solver = get_config(:nls_solver)(zeros(DT,N), function_stages_solver)
 
     # create initial guess
-    iguess = InitialGuessPODE(interpolation, equation, Δt)
+    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
     IntegratorVPRKpSymmetric{DT, TT, ΑT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
                                         equation, tableau, Δt, params, solver, scache, pcache, iguess, q, p)

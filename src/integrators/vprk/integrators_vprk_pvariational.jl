@@ -103,10 +103,7 @@ immutable IntegratorVPRKpVariational{DT, TT, ΑT, FT, GT, VT, SPT, PPT, SST, STP
 end
 
 function IntegratorVPRKpVariational{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT;
-                                        R=[1,1],
-                                        nonlinear_solver=DEFAULT_NonlinearSolver,
-                                        nmax=DEFAULT_nmax, atol=DEFAULT_atol, rtol=DEFAULT_rtol, stol=DEFAULT_stol,
-                                        interpolation=HermiteInterpolation{DT})
+                                        R=[1,1])
     D = equation.d
     S = tableau.s
 
@@ -158,7 +155,7 @@ function IntegratorVPRKpVariational{DT,TT,ΑT,FT,GT,VT}(equation::IODE{DT,TT,ΑT
     projector = nonlinear_solver(x, function_stages_projector; nmax=nmax, atol=atol, rtol=rtol, stol=stol)
 
     # create initial guess
-    iguess = InitialGuessPODE(interpolation, equation, Δt)
+    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
 
     IntegratorVPRKpVariational{DT, TT, ΑT, FT, GT, VT, typeof(sparams), typeof(pparams), typeof(solver), typeof(projector), typeof(iguess.int)}(
