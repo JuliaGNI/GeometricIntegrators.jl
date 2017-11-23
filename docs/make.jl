@@ -5,6 +5,15 @@ makedocs(
     format = :html,
     pages = ["Home" => "index.md",
              "Tutorial" => "tutorial.md",
+             "Integrators" => [
+                "Overview"    => "integrators.md",
+                "Splitting"   => "integrators/splitting.md",
+                "Runge-Kutta" => "integrators/rk.md",
+                "VPRK"        => "integrators/vprk.md",
+                "SPARK"       => "integrators/spark.md",
+                "CGVI"        => "integrators/cgvi.md",
+                "DGVI"        => "integrators/dgvi.md",
+                "HPG"         => "integrators/hpg.md"],
              "Modules"  => [
                 "Basis Functions"   => "modules/basis_functions.md",
                 "Equations"         => "modules/equations.md",
@@ -26,3 +35,6 @@ deploydocs(
     osname = "linux",
     deps   = nothing,
     make   = nothing)
+
+# note: julia version must be the same as in .travis.yml, that is both must be
+#       set to either 0.6 or release, but not one to 0.6 and one to release.

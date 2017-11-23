@@ -1,0 +1,2 @@
+
+# Continuous Galerkin Variational Integrators

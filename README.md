@@ -21,16 +21,17 @@ The following list provides and overview of supported and planned features.
 #### Families of Standard Methods
 
 - [x] Explicit Runge-Kutta Methods (ERK),
-- [ ] Singly Implicit Runge-Kutta Methods (SIRK),
 - [ ] Diagonally Implicit Runge-Kutta Methods (DIRK),
+- [ ] Singly Diagonally Implicit Runge-Kutta Methods (SIRK),
 - [x] Fully Implicit Runge-Kutta Methods (FIRK),
 - [x] Explicit Partitioned Runge-Kutta Methods (EPRK),
 - [x] Implicit Partitioned Runge-Kutta Methods (IPRK),
 - [ ] Additive Runge-Kutta Methods (ARK),
-- [ ] Special Additive Runge-Kutta Methods (SARK),
+- [ ] Specialised Additive Runge-Kutta Methods (SARK),
 - [x] Partitioned Additive Runge-Kutta Methods (PARK),
-- [ ] Special Partitioned Additive Runge-Kutta Methods (SPARK),
-- [ ] Two-Step Runge-Kutta Methods (TSRK),
+- [ ] Specialised Partitioned Additive Runge-Kutta Methods (SPARK),
+- [ ] Generalised Partitioned Additive Runge-Kutta Methods (GPARK),
+- [ ] Two-step Runge-Kutta Methods (TSRK),
 - [ ] General Linear Methods (GLM).
 
 #### Families of Geometric Integrators
@@ -56,6 +57,7 @@ The following list provides and overview of supported and planned features.
 - [x] Implicit ODEs,
 - [x] Implicit DAEs,
 - [ ] Implicit SDEs,
+- [x] Hamiltonian DAEs,
 - [x] Split ODEs,
 
 which can be prescribed manually or obtained as
@@ -83,7 +85,8 @@ with
 #### Nonlinear Solvers
 
 - [ ] Fixed-Point Iteration,
-- [ ] Fixed-Point Iteration with Aitken's Acceleration,
+- [ ] Fixed-Point Iteration with Aitken Acceleration,
+- [ ] Fixed-Point Iteration with Anderson Acceleration,
 - [ ] Jacobian-free Newton-Krylov,
 - [x] Newton's method,
 - [x] Newton's method with line search (Armijo, quadratic),
