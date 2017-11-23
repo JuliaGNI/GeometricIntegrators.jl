@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of partitioned additive Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctionParameters{DT}
+mutable struct NonlinearFunctionParametersPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctionParameters{DT,TT}
     f_f::FT
     f_p::PT
     f_u::UT

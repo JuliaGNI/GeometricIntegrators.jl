@@ -1,5 +1,5 @@
 
-abstract type AbstractNonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S} <: NonlinearFunctionParameters{DT} end
+abstract type AbstractNonlinearFunctionParametersVPRK{DT,TT,ΑT,FT,D,S} <: NonlinearFunctionParameters{DT,TT} end
 abstract type AbstractIntegratorVPRK{DT,TT} <: Integrator{DT,TT} end
 
 struct NonlinearFunctionCacheVPRK{ST}

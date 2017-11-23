@@ -12,12 +12,6 @@ end
 # default parameters for nonlinear solvers
 const DEFAULT_nwarn=100
 
-abstract type NonlinearFunctionParameters{T} end
-
-function function_stages!(y::Vector{DT}, b::Vector{TT}, params::NonlinearFunctionParameters{DT}) where {DT,TT}
-    error("No function_stages implemented for this integrator.")
-end
-
 
 struct NonlinearSolverParameters{T}
     nmin::Int   # minimum number of iterations

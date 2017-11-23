@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-type NonlinearFunctionParametersVPRKpVariational{DT,TT,AT,GT,D} <: NonlinearFunctionParameters{DT}
+type NonlinearFunctionParametersVPRKpVariational{DT,TT,AT,GT,D} <: NonlinearFunctionParameters{DT,TT}
     α::AT
     g::GT
 

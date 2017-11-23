@@ -18,7 +18,7 @@
 * `q`: current solution of q
 * `p`: current solution of p
 """
-mutable struct NonlinearFunctionParametersCGVI{DT,TT,ΘT,FT,D,S,R} <: NonlinearFunctionParameters{DT}
+mutable struct NonlinearFunctionParametersCGVI{DT,TT,ΘT,FT,D,S,R} <: NonlinearFunctionParameters{DT,TT}
     Θ::ΘT
     f::FT
 

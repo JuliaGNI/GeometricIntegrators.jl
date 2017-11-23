@@ -13,10 +13,9 @@ module Solvers
     include("solvers/linear/lu_solver_lapack.jl")
 
     export NonlinearSolver, AbstractNewtonSolver, NewtonSolver, QuasiNewtonSolver,
-           NonlinearFunctionParameters,
            residual_initial!, residual_absolute!, residual_relative!,
            print_solver_status, check_solver_converged, check_solver_status,
-           solve!, function_stages!
+           solve!
 
     include("solvers/nonlinear/nonlinear_solvers.jl")
     include("solvers/nonlinear/jacobian.jl")

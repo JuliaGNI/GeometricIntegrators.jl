@@ -26,7 +26,7 @@
 * `R`: number of quadrature nodes
 * `P`: number of quadrature nodes for the flux
 """
-mutable struct NonlinearFunctionParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR} <: NonlinearFunctionParameters{DT}
+mutable struct NonlinearFunctionParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR} <: NonlinearFunctionParameters{DT,TT}
     Θ::ΘT
     f::FT
     g::GT

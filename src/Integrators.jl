@@ -17,8 +17,6 @@ module Integrators
     using ..Solvers
     using ..Tableaus
 
-    import ..Solvers.function_stages!
-
 
     export InitialGuess, InitialGuessPODE, initialize!, update!
 

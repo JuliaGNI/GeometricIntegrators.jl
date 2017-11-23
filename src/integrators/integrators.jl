@@ -1,6 +1,8 @@
 
 abstract type Integrator{dType, tType} end
 
+abstract type NonlinearFunctionParameters{DT,TT} end
+
 
 "Create integrator for explicit Runge-Kutta tableau."
 function Integrator(equation::ODE, tableau::TableauERK, Δt)

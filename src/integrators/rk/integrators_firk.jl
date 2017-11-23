@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersFIRK{DT,TT,VT,D,S} <: NonlinearFunctionParameters{DT}
+mutable struct NonlinearFunctionParametersFIRK{DT,TT,VT,D,S} <: NonlinearFunctionParameters{DT,TT}
     v::VT
     Δt::TT
 
