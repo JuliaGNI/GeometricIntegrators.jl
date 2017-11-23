@@ -1,6 +1,9 @@
 
 abstract type Integrator{dType, tType} end
 
+equation(integrator::Integrator) = integrator.equation
+timestep(integrator::Integrator) = integrator.Δt
+
 abstract type NonlinearFunctionParameters{DT,TT} end
 
 
@@ -81,7 +84,7 @@ end
 
 "Apply integrator for ntime time steps and return solution."
 function integrate(integrator::Integrator, ntime::Int, nsave::Int=1)
-    solution = Solution(integrator.equation, integrator.Δt, ntime, nsave)
+    solution = Solution(equation(integrator), timestep(integrator), ntime, nsave)
     integrate!(integrator, solution)
     return solution
 end

@@ -1,26 +1,25 @@
 
 "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersFIRK{DT,TT,VT,D,S} <: NonlinearFunctionParameters{DT,TT}
-    v::VT
+mutable struct NonlinearFunctionParametersFIRK{DT, TT, ET <: ODE{DT,TT}, D, S} <: NonlinearFunctionParameters{DT,TT}
+    equ::ET
+    tab::TableauFIRK{TT}
     Δt::TT
 
-    a::Matrix{TT}
-    â::Matrix{TT}
-    c::Vector{TT}
-
     t::TT
-
     q::Vector{DT}
 end
 
-function NonlinearFunctionParametersFIRK(DT, D, v::VT, Δt::TT, tab) where {TT,VT}
-    NonlinearFunctionParametersFIRK{DT,TT,VT,D,tab.s}(v, Δt, tab.a, tab.â, tab.c, 0, zeros(DT,D))
+function NonlinearFunctionParametersFIRK(equ::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, ET <: ODE{DT,TT}}
+    NonlinearFunctionParametersFIRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, zeros(DT, equ.d))
 end
 
 struct NonlinearFunctionCacheFIRK{DT}
     Q::Matrix{DT}
     V::Matrix{DT}
     Y::Matrix{DT}
+
+    v::Vector{DT}
+    y::Vector{DT}
 
     function NonlinearFunctionCacheFIRK{DT}(d, s) where {DT}
 
@@ -29,12 +28,16 @@ struct NonlinearFunctionCacheFIRK{DT}
         V = zeros(DT,d,s)
         Y = zeros(DT,d,s)
 
-        new(Q, V, Y)
+        # create velocity and update vector
+        v = zeros(DT,d)
+        y = zeros(DT,d)
+
+        new(Q, V, Y, v, y)
     end
 end
 
 @generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, Y::Matrix{ST},
-                                    params::NonlinearFunctionParametersFIRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
+                                    params::NonlinearFunctionParametersFIRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
 
     tQ::Vector{ST} = zeros(ST,D)
     tV::Vector{ST} = zeros(ST,D)
@@ -55,16 +58,16 @@ end
 
         # compute V = v(Q)
         for i in 1:S
-            tᵢ = params.t + params.Δt * params.c[i]
+            tᵢ = params.t + params.Δt * params.tab.q.c[i]
             simd_copy_xy_first!($tQ, Q, i)
-            params.v(tᵢ, $tQ, $tV)
+            params.equ.v(tᵢ, $tQ, $tV)
             simd_copy_yx_first!($tV, V, i)
         end
     end
 end
 
 "Compute stages of fully implicit Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersFIRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersFIRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
 
     cache = NonlinearFunctionCacheFIRK{ST}(D, S)
 
@@ -80,8 +83,8 @@ end
                 y1 = 0
                 y2 = 0
                 for j in 1:S
-                    y1 += params.a[i,j] * $cache.V[k,j]
-                    y2 += params.â[i,j] * $cache.V[k,j]
+                    y1 += params.tab.q.a[i,j] * $cache.V[k,j]
+                    y2 += params.tab.q.â[i,j] * $cache.V[k,j]
                 end
                 b[D*(i-1)+k] = - $cache.Y[k,i] + (y1 + y2)
             end
@@ -91,23 +94,15 @@ end
 
 
 "Fully implicit Runge-Kutta integrator."
-struct IntegratorFIRK{DT, TT, FT, SPT, ST, IT, N} <: Integrator{DT,TT}
-    equation::ODE{DT,TT,FT,N}
-    tableau::TableauFIRK{TT}
-    Δt::TT
-
-    params::SPT
+struct IntegratorFIRK{DT, TT, PT <: NonlinearFunctionParametersFIRK{DT,TT},
+                              ST <: NonlinearSolver{DT},
+                              IT <: InitialGuessODE{DT,TT}, N} <: Integrator{DT,TT}
+    params::PT
     solver::ST
-    iguess::InitialGuessODE{DT, TT, FT, IT}
+    iguess::IT
+    fcache::NonlinearFunctionCacheFIRK{DT}
 
     q::Vector{Vector{Double{DT}}}
-
-    v::Vector{DT}
-    y::Vector{DT}
-
-    Q::Matrix{DT}
-    V::Matrix{DT}
-    Y::Matrix{DT}
 end
 
 function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,FT,N}
@@ -115,41 +110,30 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt
     M = equation.n
     S = tableau.q.s
 
-    # create solution vector for internal stages / nonlinear solver
-    x = zeros(DT, D*S)
-
-    # create solution vectors
-    q = Array{Vector{Double{DT}}}(M)
-    for i in 1:M
-        q[i] = zeros(Double{DT},D)
-    end
-
-    # create velocity and update vector
-    v = zeros(DT,D)
-    y = zeros(DT,D)
-
-    # create internal stage vectors
-    Q = zeros(DT,D,S)
-    V = zeros(DT,D,S)
-    Y = zeros(DT,D,S)
-
     # create params
-    params = NonlinearFunctionParametersFIRK(DT, D, equation.v, Δt, tableau.q)
-
-    # create rhs function for nonlinear solver
-    function_stages = (x,b) -> function_stages!(x, b, params)
+    params = NonlinearFunctionParametersFIRK(equation, tableau, Δt)
 
     # create solver
-    solver = get_config(:nls_solver)(x, function_stages)
+    solver = create_nonlinear_solver(DT, D*S, params)
 
     # create initial guess
-    iguess = InitialGuessODE(interpolation, equation, Δt)
+    iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
+
+    # create cache for internal stage vectors and update vectors
+    fcache = NonlinearFunctionCacheFIRK{DT}(D, S)
+
+    # create solution vectors
+    q = create_solution_vector_double_double(DT, D, M)
 
     # create integrator
-    IntegratorFIRK{DT, TT, FT, typeof(params), typeof(solver), typeof(iguess.int), N}(
-                                        equation, tableau, Δt, params, solver, iguess,
-                                        q, v, y, Q, V, Y)
+    IntegratorFIRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), N}(
+                params, solver, iguess, fcache, q)
 end
+
+equation(integrator::IntegratorFIRK) = integrator.params.equ
+timestep(integrator::IntegratorFIRK) = integrator.params.Δt
+tableau(integrator::IntegratorFIRK) = integrator.params.tab
+dims(integrator::IntegratorFIRK) = integrator.params.equ.d
 
 
 function initialize!(int::IntegratorFIRK{DT,TT}, sol::SolutionODE, m::Int) where {DT,TT}
@@ -164,18 +148,21 @@ function initialize!(int::IntegratorFIRK{DT,TT}, sol::SolutionODE, m::Int) where
 end
 
 function initial_guess!(int::IntegratorFIRK, m::Int)
+    local offset::Int
+
     # compute initial guess for internal stages
-    for i in 1:int.tableau.q.s
-        evaluate!(int.iguess, m, int.y, int.v, int.tableau.q.c[i])
-        for k in 1:int.equation.d
-            int.V[k,i] = int.v[k]
+    for i in 1:int.params.tab.q.s
+        evaluate!(int.iguess, m, int.fcache.y, int.fcache.v, int.params.tab.q.c[i])
+        for k in 1:dims(int)
+            int.fcache.V[k,i] = int.fcache.v[k]
         end
     end
-    for i in 1:int.tableau.q.s
-        for k in 1:int.equation.d
-            int.solver.x[int.equation.d*(i-1)+k] = 0
-            for j in 1:int.tableau.q.s
-                int.solver.x[int.equation.d*(i-1)+k] += int.tableau.q.a[i,j] * int.V[k,j]
+    for i in 1:int.params.tab.q.s
+        offset = dims(int)*(i-1)
+        for k in 1:dims(int)
+            int.solver.x[offset+k] = 0
+            for j in 1:int.params.tab.q.s
+                int.solver.x[offset+k] += int.params.tab.q.a[i,j] * int.fcache.V[k,j]
             end
         end
     end
@@ -183,7 +170,7 @@ end
 
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,SPT,ST,IT,N}
+function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,N}
     @assert m ≥ 1
     @assert m ≤ sol.ni
 
@@ -191,7 +178,7 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
     @assert n ≤ sol.ntime
 
     # set time for nonlinear solver
-    int.params.t  = sol.t[0] + (n-1)*int.Δt
+    int.params.t  = sol.t[0] + (n-1)*int.params.Δt
     int.params.q .= int.q[m]
 
     # compute initial guess
@@ -207,16 +194,16 @@ function integrate_step!(int::IntegratorFIRK{DT, TT, FT, SPT, ST, IT}, sol::Solu
     check_solver_status(int.solver.status, int.solver.params, n)
 
     # compute vector field at internal stages
-    compute_stages!(int.solver.x, int.Q, int.V, int.Y, int.params)
+    compute_stages!(int.solver.x, int.fcache.Q, int.fcache.V, int.fcache.Y, int.params)
 
     # compute final update
-    update_solution!(int.q[m], int.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
+    update_solution!(int.q[m], int.fcache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
 
     # copy solution to initial guess
-    update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q[m])
+    update!(int.iguess, m, sol.t[0] + n*int.params.Δt, int.q[m])
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q[m], int.equation.periodicity)
+    cut_periodic_solution!(int.q[m], int.params.equ.periodicity)
 
     # copy to solution
     copy_solution!(sol, int.q[m], n, m)

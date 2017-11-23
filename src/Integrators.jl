@@ -21,6 +21,7 @@ module Integrators
     export InitialGuess, InitialGuessPODE, initialize!, update!
 
     export Integrator, IntegratorERK, IntegratorDIRK, IntegratorFIRK, IntegratorSIRK,
+    export equation, timestep
            IntegratorEPRK, IntegratorIPRK,
            IntegratorPARK, IntegratorVPARK,
            IntegratorSPARK, IntegratorVSPARK,
@@ -33,7 +34,8 @@ module Integrators
            integrate, integrate!, function_stages!
 
     include("integrators/integrators.jl")
-    include("integrators/runge_kutta.jl")
+    include("integrators/integrators_common.jl")
+    include("integrators/runge_kutta_common.jl")
 
     include("integrators/extrapolation.jl")
     include("integrators/initial_guess_ode.jl")
