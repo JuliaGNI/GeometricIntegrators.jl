@@ -26,6 +26,7 @@ variables ``(q,p)`` and algebraic variable ``v``.
 * `t₀`: initial time (optional)
 * `q₀`: initial condition for `q`
 * `p₀`: initial condition for `p`
+* `λ₀`: initial condition for `λ`
 
 The functions `α` and `f` must have the interface
 ```julia
@@ -76,6 +77,7 @@ struct VODE{dType <: Number, tType <: Number, αType <: Function, fType <: Funct
     t₀::tType
     q₀::Array{dType, N}
     p₀::Array{dType, N}
+    λ₀::Array{dType, N}
     periodicity::Vector{dType}
 
     function VODE{dType,tType,αType,fType,gType,vType,ωType,dHType,N}(d, n, α, f, g, v, ω, dH, t₀, q₀, p₀; periodicity=[]) where {dType <: Number, tType <: Number, αType <: Function, fType <: Function, gType <: Function, vType <: Function, ωType <: Function, dHType <: Function, N}
@@ -84,33 +86,34 @@ struct VODE{dType <: Number, tType <: Number, αType <: Function, fType <: Funct
         @assert dType == eltype(q₀) == eltype(p₀)
         @assert ndims(q₀) == ndims(p₀) == N ∈ (1,2)
 
+        λ₀ = zeros(q₀)
+
         if !(length(periodicity) == d)
             periodicity = zeros(dType, d)
         end
 
-        new(d, d, n, α, f, g, v, ω, dH, t₀, q₀, p₀, periodicity)
+        new(d, d, n, α, f, g, v, ω, dH, t₀, q₀, p₀, λ₀, periodicity)
     end
 end
-
 
 function VODE(α::ΑT, f::FT, g::GT, v::VT, ω::ΩT, dH::HT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}; periodicity=[]) where {DT,TT,ΑT,FT,GT,VT,ΩT,HT}
     @assert size(q₀) == size(p₀)
     VODE{DT, TT, ΑT, FT, GT, VT, ΩT, HT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), α, f, g, v, ω, dH, t₀, q₀, p₀, periodicity=periodicity)
 end
 
-function VODE(α::Function, f::Function, g::Function, t₀::Number, q₀::DenseArray, p₀::DenseArray; periodicity=[])
-    VODE(α, f, g, function_v_dummy, t₀, q₀, p₀, periodicity=periodicity)
+function VODE(α::Function, f::Function, g::Function, ω::Function, dH::Function, t₀::Number, q₀::DenseArray, p₀::DenseArray; periodicity=[])
+    VODE(α, f, g, function_v_dummy, ω, dH, t₀, q₀, p₀, periodicity=periodicity)
 end
 
 function VODE(α::Function, f::Function, g::Function, v::Function, ω::Function, dH::Function, q₀::DenseArray, p₀::DenseArray; periodicity=[])
     VODE(α, f, g, v, ω, dH, zero(Float64), q₀, p₀, periodicity=periodicity)
 end
 
-function VODE(f, p, u, g, q₀, p₀; periodicity=[])
-    VODE(α, f, g, function_v_dummy, zero(Float64), q₀, p₀, periodicity=periodicity)
+function VODE(α::Function, f::Function, g::Function, ω::Function, dH::Function, q₀::DenseArray, p₀::DenseArray; periodicity=[])
+    VODE(α, f, g, function_v_dummy, ω, dH, zero(Float64), q₀, p₀, periodicity=periodicity)
 end
 
-Base.hash(ode::VODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.α, hash(ode.f, hash(ode.g, hash(ode.v, hash(ode.ω, hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, hash(ode.periodicity, h)))))))))))
+Base.hash(ode::VODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.α, hash(ode.f, hash(ode.g, hash(ode.v, hash(ode.ω, hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, hash(ode.λ₀, hash(ode.periodicity, h))))))))))))
 Base.:(==)(ode1::VODE, ode2::VODE) = (
                                 ode1.d == ode2.d
                              && ode1.n == ode2.n
@@ -122,4 +125,5 @@ Base.:(==)(ode1::VODE, ode2::VODE) = (
                              && ode1.t₀ == ode2.t₀
                              && ode1.q₀ == ode2.q₀
                              && ode1.p₀ == ode2.p₀
+                             && ode1.λ₀ == ode2.λ₀
                              && ode1.periodicity == ode2.periodicity)
