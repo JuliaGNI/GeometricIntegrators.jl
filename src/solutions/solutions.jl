@@ -20,7 +20,7 @@ end
 
 "Create solution for variational ODE."
 function Solution(equation::VODE, Δt, ntime::Int, nsave::Int=1)
-    SolutionPODE(equation, Δt, ntime, nsave)
+    SSolutionPDAE(equation, Δt, ntime, nsave)
 end
 
 "Create solution for implicit ODE."

@@ -17,7 +17,7 @@ mutable struct SSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
     counter::Int
 end
 
-function SSolutionPDAE(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
+function SSolutionPDAE(equation::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
     N  = equation.n > 1 ? 3 : 2
     nd = equation.d
     nm = equation.m
@@ -92,7 +92,7 @@ mutable struct PSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
     counter::Int
 end
 
-function PSolutionPDAE(equation::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
+function PSolutionPDAE(equation::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
     N  = equation.n > 1 ? 3 : 2
     nd = equation.d
     nm = equation.m
@@ -157,7 +157,7 @@ ntime(sol::SolutionPDAE) = sol.ntime
 nsave(sol::SolutionPDAE) = sol.nsave
 
 
-function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, equ::Union{IODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, equ::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}) where {DT,TT}
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, equ.λ₀)
 end
 
