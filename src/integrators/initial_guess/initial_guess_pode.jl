@@ -138,13 +138,18 @@ function InitialGuessPODE(interp, equ::IODE{DT,TT,ΑT,FT,GT,VT}, Δt::TT) where 
                                          equ.v, equ.f, Δt, equ.n, equ.d, equ.periodicity)
 end
 
+function InitialGuessPODE(interp, equ::VODE{DT,TT,ΑT,FT,GT,VT}, Δt::TT) where {DT,TT,ΑT,FT,GT,VT}
+    InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
+                                         equ.v, equ.f, Δt, equ.n, equ.d, equ.periodicity)
+end
+
 function InitialGuessPODE(interp, equ::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, Δt::TT) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d),
                                          equ.v, equ.f, Δt, equ.n, equ.d, equ.periodicity)
 end
 
 
-function initialize!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}, p₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT,VT,FT,IT}
+function initialize!(ig::InitialGuessPODE{DT,TT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}, p₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT}
     ig.t₀[m]  = t₁ - ig.Δt
     ig.t₁[m]  = t₁
     ig.q₁[m] .= q₁
@@ -159,7 +164,7 @@ function initialize!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int, t₁::TT, q�
 end
 
 
-function update!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}, p₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT,VT,FT,IT}
+function update!(ig::InitialGuessPODE{DT,TT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}, p₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT}
     local Δq::DT
 
     ig.t₀[m] = ig.t₁[m]
