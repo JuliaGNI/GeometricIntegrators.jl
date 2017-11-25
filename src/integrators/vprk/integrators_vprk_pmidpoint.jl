@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersVPRKpMidpoint{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}
+mutable struct ParametersVPRKpMidpoint{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractParametersVPRK{DT,TT,ET,D,S}
     equ::ET
     tab::TableauVPRK{TT}
     Δt::TT
@@ -12,19 +12,19 @@ mutable struct NonlinearFunctionParametersVPRKpMidpoint{DT, TT, ET <: IODE{DT,TT
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersVPRKpMidpoint(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
+function ParametersVPRKpMidpoint(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
     R = convert(Vector{TT}, [1, tab.R∞])
     q = zeros(DT, equ.d)
     p = zeros(DT, equ.d)
 
-    NonlinearFunctionParametersVPRKpMidpoint{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, R, 0, q, p)
+    ParametersVPRKpMidpoint{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, R, 0, q, p)
 end
 
 
 @generated function compute_projection_vprk!(x::Vector{ST},
                 q̅::Vector{ST}, p̅::Vector{ST}, λ::Vector{ST},
                 V::Matrix{ST}, U::Matrix{ST}, G::Matrix{ST},
-                params::NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ET,D,S}
+                params::ParametersVPRKpMidpoint{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
     # create temporary vectors
@@ -73,7 +73,7 @@ end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST},
-                params::NonlinearFunctionParametersVPRKpMidpoint{DT,TT,ET,D,S}
+                params::ParametersVPRKpMidpoint{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
     fcache = NonlinearFunctionCacheVPRK{ST}(D,S)
@@ -99,7 +99,7 @@ end
 
 
 "Variational partitioned Runge-Kutta integrator."
-struct IntegratorVPRKpMidpoint{DT, TT, PT <: NonlinearFunctionParametersVPRKpMidpoint{DT,TT},
+struct IntegratorVPRKpMidpoint{DT, TT, PT <: ParametersVPRKpMidpoint{DT,TT},
                                        ST <: NonlinearSolver{DT},
                                        IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT}
 
@@ -120,7 +120,7 @@ function IntegratorVPRKpMidpoint(equation::ET, tableau::TableauVPRK{TT}, Δt::TT
     S = tableau.s
 
     # create params
-    params = NonlinearFunctionParametersVPRKpMidpoint(equation, tableau, Δt)
+    params = ParametersVPRKpMidpoint(equation, tableau, Δt)
 
     # create solver
     solver = create_nonlinear_solver(DT, D*(S+2), params)

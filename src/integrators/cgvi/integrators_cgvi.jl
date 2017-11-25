@@ -1,6 +1,6 @@
 
 """
-`NonlinearFunctionParametersCGVI`: Parameters for right-hand side function of continuous Galerkin variational Integrator.
+`ParametersCGVI`: Parameters for right-hand side function of continuous Galerkin variational Integrator.
 
 ### Parameters
 
@@ -18,7 +18,7 @@
 * `q`: current solution of q
 * `p`: current solution of p
 """
-mutable struct NonlinearFunctionParametersCGVI{DT,TT,ΘT,FT,D,S,R} <: NonlinearFunctionParameters{DT,TT}
+mutable struct ParametersCGVI{DT,TT,ΘT,FT,D,S,R} <: Parameters{DT,TT}
     Θ::ΘT
     f::FT
 
@@ -39,9 +39,9 @@ mutable struct NonlinearFunctionParametersCGVI{DT,TT,ΘT,FT,D,S,R} <: NonlinearF
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersCGVI(Θ::ΘT, f::FT, Δt::TT, b, c, x, m, a, r₀, r₁, q::Vector{DT}, p::Vector{DT}) where {DT,TT,ΘT,FT}
+function ParametersCGVI(Θ::ΘT, f::FT, Δt::TT, b, c, x, m, a, r₀, r₁, q::Vector{DT}, p::Vector{DT}) where {DT,TT,ΘT,FT}
     @assert length(q) == length(p)
-    NonlinearFunctionParametersCGVI{DT,TT,ΘT,FT,length(q),length(x),length(c)}(Θ, f, Δt, b, c, x, m, a, r₀, r₁, 0, q, p)
+    ParametersCGVI{DT,TT,ΘT,FT,length(q),length(x),length(c)}(Θ, f, Δt, b, c, x, m, a, r₀, r₁, 0, q, p)
 end
 
 
@@ -70,7 +70,7 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersCGVI{DT,TT,ΘT,FT,D,S,R}) where {ST,DT,TT,ΘT,FT,D,S,R}
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersCGVI{DT,TT,ΘT,FT,D,S,R}) where {ST,DT,TT,ΘT,FT,D,S,R}
     cache = NonlinearFunctionCacheCGVI{ST}(D, S, R)
 
     quote
@@ -83,7 +83,7 @@ end
 end
 
 
-function compute_stages!(x, X, Q, V, P, F, q̅, p̅, params::NonlinearFunctionParametersCGVI{DT,TT,ΘT,FT,D,S,R}) where {DT,TT,ΘT,FT,D,S,R}
+function compute_stages!(x, X, Q, V, P, F, q̅, p̅, params::ParametersCGVI{DT,TT,ΘT,FT,D,S,R}) where {DT,TT,ΘT,FT,D,S,R}
 
     # copy x to X
     for i in 1:S
@@ -108,7 +108,7 @@ function compute_stages!(x, X, Q, V, P, F, q̅, p̅, params::NonlinearFunctionPa
 end
 
 
-function compute_stages_q!(X::Matrix{ST}, Q::Matrix{ST}, q̅::Vector{ST}, params::NonlinearFunctionParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
+function compute_stages_q!(X::Matrix{ST}, Q::Matrix{ST}, q̅::Vector{ST}, params::ParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
     @assert D == size(Q,1) == size(X,1)
     @assert R == size(Q,2)
     @assert S == size(X,2)
@@ -137,7 +137,7 @@ function compute_stages_q!(X::Matrix{ST}, Q::Matrix{ST}, q̅::Vector{ST}, params
 end
 
 
-function compute_stages_v!(X::Matrix{ST}, V::Matrix{ST}, params::NonlinearFunctionParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
+function compute_stages_v!(X::Matrix{ST}, V::Matrix{ST}, params::ParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
     @assert D == size(V,1) == size(X,1)
     @assert R == size(V,2)
     @assert S == size(X,2)
@@ -157,7 +157,7 @@ function compute_stages_v!(X::Matrix{ST}, V::Matrix{ST}, params::NonlinearFuncti
 end
 
 
-@generated function compute_stages_p!(Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, params::NonlinearFunctionParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
+@generated function compute_stages_p!(Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, params::ParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
     # create temporary vectors
     tQ = zeros(ST,D)
     tV = zeros(ST,D)
@@ -184,7 +184,7 @@ end
 end
 
 
-@generated function compute_rhs!(b::Vector{ST}, X::Matrix{ST}, Q::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, p̅::Vector{ST}, params::NonlinearFunctionParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
+@generated function compute_rhs!(b::Vector{ST}, X::Matrix{ST}, Q::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, p̅::Vector{ST}, params::ParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
     quote
         local y::ST
         local z::ST
@@ -287,7 +287,7 @@ function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}, 
     cache = NonlinearFunctionCacheCGVI{DT}(D,S,R)
 
     # create params
-    params = NonlinearFunctionParametersCGVI(equation.α, equation.f, Δt, weights(quadrature), nodes(quadrature), nodes(basis), m, a, r₀, r₁, q, p)
+    params = ParametersCGVI(equation.α, equation.f, Δt, weights(quadrature), nodes(quadrature), nodes(basis), m, a, r₀, r₁, q, p)
 
     # create rhs function for nonlinear solver
     function_stages = (x,b) -> function_stages!(x, b, params)

@@ -2,7 +2,7 @@
 using ForwardDiff
 
 "Parameters for right-hand side function of formal Lagrangian Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersFLRK{DT,TT,VT,D,S} <: NonlinearFunctionParameters{DT,TT}
+mutable struct ParametersFLRK{DT,TT,VT,D,S} <: Parameters{DT,TT}
     v::VT
     Δt::TT
 
@@ -15,8 +15,8 @@ mutable struct NonlinearFunctionParametersFLRK{DT,TT,VT,D,S} <: NonlinearFunctio
     q::Vector{DT}
 end
 
-function NonlinearFunctionParametersFLRK(DT, D, v::VT, Δt::TT, tab) where {TT,VT}
-    NonlinearFunctionParametersFLRK{DT,TT,VT,D,tab.s}(v, Δt, tab.a, tab.â, tab.c, 0, zeros(DT,D))
+function ParametersFLRK(DT, D, v::VT, Δt::TT, tab) where {TT,VT}
+    ParametersFLRK{DT,TT,VT,D,tab.s}(v, Δt, tab.a, tab.â, tab.c, 0, zeros(DT,D))
 end
 
 struct NonlinearFunctionCacheFLRK{DT}
@@ -36,7 +36,7 @@ struct NonlinearFunctionCacheFLRK{DT}
 end
 
 @generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, Y::Matrix{ST},
-                                    params::NonlinearFunctionParametersFLRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
+                                    params::ParametersFLRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
 
     tQ::Vector{ST} = zeros(ST,D)
     tV::Vector{ST} = zeros(ST,D)
@@ -66,7 +66,7 @@ end
 end
 
 "Compute stages of formal Lagrangian Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersFLRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFLRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
 
     cache = NonlinearFunctionCacheFLRK{ST}(D, S)
 
@@ -151,7 +151,7 @@ function IntegratorFLRK(equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}, tableau::Ta
     J = zeros(DT,D,D,S)
 
     # create params
-    params = NonlinearFunctionParametersFLRK(DT, D, equation.v, Δt, tableau.q)
+    params = ParametersFLRK(DT, D, equation.v, Δt, tableau.q)
 
     # create rhs function for nonlinear solver
     function_stages = (x,b) -> function_stages!(x, b, params)

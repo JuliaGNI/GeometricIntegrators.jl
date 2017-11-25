@@ -4,7 +4,7 @@ struct TableauHSPARK{T} <: AbstractTableau{T}
 end
 
 "Parameters for right-hand side function of Hamiltonian Specialised Partitioned Additive Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersHSPARK{DT,TT,VT,FT,ϕT,ψT} <: NonlinearFunctionParameters{DT,TT}
+mutable struct ParametersHSPARK{DT,TT,VT,FT,ϕT,ψT} <: Parameters{DT,TT}
     f_v::VT
     f_f::FT
     f_ϕ::ϕT
@@ -28,7 +28,7 @@ mutable struct NonlinearFunctionParametersHSPARK{DT,TT,VT,FT,ϕT,ψT} <: Nonline
     q::Vector{DT}
     p::Vector{DT}
 
-    function NonlinearFunctionParametersHSPARK{DT,TT,VT,FT,ϕT,ψT}(f_v, f_f, f_ϕ, f_ψ, Δt, d, m, s, σ, t_q, t_p, t_q̃, t_p̃, t_ω) where {DT,TT,VT,FT,ϕT,ψT}
+    function ParametersHSPARK{DT,TT,VT,FT,ϕT,ψT}(f_v, f_f, f_ϕ, f_ψ, Δt, d, m, s, σ, t_q, t_p, t_q̃, t_p̃, t_ω) where {DT,TT,VT,FT,ϕT,ψT}
         # create solution vectors
         q = zeros(DT,d)
         p = zeros(DT,d)
@@ -132,7 +132,7 @@ end
 
 
 "Compute stages of Hamiltonian Specialised Partitioned Additive Runge-Kutta methods."
-function function_stages!(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersHSPARK{DT,TT,VT,FT,ϕT,ψT}) where {DT,TT,VT,FT,ϕT,ψT}
+function function_stages!(y::Vector{DT}, b::Vector{DT}, params::ParametersHSPARK{DT,TT,VT,FT,ϕT,ψT}) where {DT,TT,VT,FT,ϕT,ψT}
     local offset::Int
     local tpᵢ::TT
     local tλᵢ::TT
@@ -319,7 +319,7 @@ function IntegratorHSPARK(equation::HDAE{DT,TT,VT,FT,ϕT,ψT}, tableau::TableauH
     z = zeros(DT, N)
 
     # create params
-    params = NonlinearFunctionParametersHSPARK{DT,TT,VT,FT,ϕT,ψT}(
+    params = ParametersHSPARK{DT,TT,VT,FT,ϕT,ψT}(
                                                 equation.f, equation.p, equation.u, equation.g, equation.ϕ,
                                                 Δt, D, S, R, ρ,
                                                 tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, tableau.ω, d_v)

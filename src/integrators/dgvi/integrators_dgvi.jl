@@ -1,5 +1,5 @@
 """
-`NonlinearFunctionParametersDGVI`: Parameters for right-hand side function of discontinuous Galerkin variational Integrator.
+`ParametersDGVI`: Parameters for right-hand side function of discontinuous Galerkin variational Integrator.
 
 ### Parameters
 
@@ -26,7 +26,7 @@
 * `R`: number of quadrature nodes
 * `P`: number of quadrature nodes for the flux
 """
-mutable struct NonlinearFunctionParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR} <: NonlinearFunctionParameters{DT,TT}
+mutable struct ParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR} <: Parameters{DT,TT}
     Θ::ΘT
     f::FT
     g::GT
@@ -53,7 +53,7 @@ mutable struct NonlinearFunctionParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR} <: Non
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
+function ParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
                 b::Vector{TT}, c::Vector{TT}, m::Matrix{TT}, a::Matrix{TT},
                 r₀::Vector{TT}, r₁::Vector{TT}, β::Vector{TT}, γ::Vector{TT},
                 μ₀::Vector{TT}, μ₁::Vector{TT}, α₀::Vector{TT}, α₁::Vector{TT},
@@ -87,12 +87,12 @@ function NonlinearFunctionParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
     println("    α₁= ", α₁)
     println()
 
-    NonlinearFunctionParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR}(
+    ParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR}(
                 Θ, f, g, Δt, b, c, m, a, r₀, r₁, β, γ, μ₀, μ₁, α₀, α₁, 0, q, p)
 end
 
 
-function NonlinearFunctionParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
+function ParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
                 basis::Basis{TT}, quadrature::Quadrature{TT}, flux::Flux{TT},
                 q::Vector{DT}, p::Vector{DT}) where {DT,TT,ΘT,FT,GT}
 
@@ -125,7 +125,7 @@ function NonlinearFunctionParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
         α₁[i] = derivative_r(flux.path, nodes(flux.quadrature)[i])
     end
 
-    NonlinearFunctionParametersDGVI(
+    ParametersDGVI(
                     Θ, f, g, Δt, weights(quadrature), nodes(quadrature), m, a, r₀, r₁,
                     weights(flux.quadrature), nodes(flux.quadrature), μ₀, μ₁, α₀, α₁, q, p)
 end
@@ -164,7 +164,7 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR}) where {ST,DT,TT,ΘT,FT,GT,D,S,QR,FR}
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR}) where {ST,DT,TT,ΘT,FT,GT,D,S,QR,FR}
     cache = NonlinearFunctionCacheDGVI{ST}(D, S, QR, FR)
 
     quote
@@ -180,7 +180,7 @@ end
 end
 
 
-function compute_stages!(x, X, Q, V, P, F, q̅, p̅, λ, λ̅, ϕ, ϕ̅, params::NonlinearFunctionParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR}) where {DT,TT,ΘT,FT,GT,D,S,QR,FR}
+function compute_stages!(x, X, Q, V, P, F, q̅, p̅, λ, λ̅, ϕ, ϕ̅, params::ParametersDGVI{DT,TT,ΘT,FT,GT,D,S,QR,FR}) where {DT,TT,ΘT,FT,GT,D,S,QR,FR}
 
     # copy x to X
     for i in 1:S
@@ -216,7 +216,7 @@ end
 
 
 function compute_stages_q!(X::Matrix{ST}, Q::Matrix{ST}, p̅::Vector{ST},
-            params::NonlinearFunctionParametersDGVI{DT,TT,AT,FT,GT,D,S,R}) where {ST,DT,TT,AT,FT,GT,D,S,R}
+            params::ParametersDGVI{DT,TT,AT,FT,GT,D,S,R}) where {ST,DT,TT,AT,FT,GT,D,S,R}
 
     @assert D == size(Q,1) == size(X,1)
     @assert R == size(Q,2)
@@ -246,7 +246,7 @@ function compute_stages_q!(X::Matrix{ST}, Q::Matrix{ST}, p̅::Vector{ST},
 end
 
 
-function compute_stages_v!(X::Matrix{ST}, V::Matrix{ST}, params::NonlinearFunctionParametersDGVI{DT,TT,AT,FT,GT,D,S,R}) where {ST,DT,TT,AT,FT,GT,D,S,R}
+function compute_stages_v!(X::Matrix{ST}, V::Matrix{ST}, params::ParametersDGVI{DT,TT,AT,FT,GT,D,S,R}) where {ST,DT,TT,AT,FT,GT,D,S,R}
     @assert D == size(V,1) == size(X,1)
     @assert R == size(V,2)
     @assert S == size(X,2)
@@ -267,7 +267,7 @@ end
 
 
 @generated function compute_stages_p!(Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST},
-            params::NonlinearFunctionParametersDGVI{DT,TT,AT,FT,GT,D,S,R}) where {ST,DT,TT,AT,FT,GT,D,S,R}
+            params::ParametersDGVI{DT,TT,AT,FT,GT,D,S,R}) where {ST,DT,TT,AT,FT,GT,D,S,R}
 
     # create temporary vectors
     tQ = zeros(ST,D)
@@ -296,7 +296,7 @@ end
 
 
 function compute_stages_λ!(X::Matrix{ST}, q̅::Vector{ST}, λ::Matrix{ST}, λ̅::Matrix{ST}, ϕ::Matrix{ST}, ϕ̅::Matrix{ST},
-                params::NonlinearFunctionParametersDGVI{DT,TT,AT,FT,GT,D,S,QR,FR}) where {ST,DT,TT,AT,FT,GT,D,S,QR,FR}
+                params::ParametersDGVI{DT,TT,AT,FT,GT,D,S,QR,FR}) where {ST,DT,TT,AT,FT,GT,D,S,QR,FR}
 
     @assert D == size(X,1)
     @assert S == size(X,2)
@@ -334,7 +334,7 @@ end
 
 @generated function compute_rhs!(b::Vector{ST}, X::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST},
                 λ::Matrix{ST}, λ̅::Matrix{ST}, ϕ::Matrix{ST}, ϕ̅::Matrix{ST},
-                params::NonlinearFunctionParametersDGVI{DT,TT,AT,FT,GT,D,S,QR,FR}) where {ST,DT,TT,AT,FT,GT,D,S,QR,FR}
+                params::ParametersDGVI{DT,TT,AT,FT,GT,D,S,QR,FR}) where {ST,DT,TT,AT,FT,GT,D,S,QR,FR}
 
     local θ::Matrix{ST} = zeros(ST,D,FR)
     local Θ̅::Matrix{ST} = zeros(ST,D,FR)
@@ -450,7 +450,7 @@ function IntegratorDGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P},
     cache = NonlinearFunctionCacheDGVI{DT}(D,S,R,QN)
 
     # create params
-    params = NonlinearFunctionParametersDGVI(equation.α, equation.f, equation.g,
+    params = ParametersDGVI(equation.α, equation.f, equation.g,
                 Δt, basis, quadrature, flux, q, p)
 
     # create rhs function for nonlinear solver

@@ -11,6 +11,6 @@ integrate(integrator::Integrator) = error("integrate() not implemented for ", ty
 integrate!(integrator::Integrator) = error("integrate()! not implemented for ", typeof(integrator))
 
 
-abstract type NonlinearFunctionParameters{DT,TT} end
+abstract type Parameters{DT,TT} end
 
-function_stages!(x::Vector{DT}, b::Vector{DT}, params::PT) where {DT, TT, PT <: NonlinearFunctionParameters{DT,TT}} = error("function_stages!() not implemented for ", PT)
+function_stages!(x::Vector{DT}, b::Vector{DT}, params::PT) where {DT, TT, PT <: Parameters{DT,TT}} = error("function_stages!() not implemented for ", PT)

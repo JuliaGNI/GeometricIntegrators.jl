@@ -1,6 +1,8 @@
 
+# TODO Add VPRKpSecondary tableau.
+
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersVPRKpSecondary{DT, TT, ET <: VODE{DT,TT}, D, S} <: AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}
+mutable struct ParametersVPRKpSecondary{DT, TT, ET <: VODE{DT,TT}, D, S} <: AbstractParametersVPRK{DT,TT,ET,D,S}
     equ::ET
     tab::TableauVPRK{TT}
     Δt::TT
@@ -13,185 +15,214 @@ mutable struct NonlinearFunctionParametersVPRKpSecondary{DT, TT, ET <: VODE{DT,T
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersVPRKpSecondary(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: VODE{DT,TT}}
+function ParametersVPRKpSecondary(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: VODE{DT,TT}}
+    D = equ.d
+    S = tab.s
+
     # compute reduction matrix
     ω = zeros(TT, S-1, S)
 
     for i in 1:(S-1)
         for j in 1:S
-            ω[i,j] = tab.b[j] * tab.c[j]^(i-1)
+            ω[i,j] = tab.q.b[j] * tab.q.c[j]^(i-1)
         end
     end
 
     R = convert(Vector{TT}, [1, tab.R∞])
-    q = zeros(DT, equ.d)
-    p = zeros(DT, equ.d)
+    q = zeros(DT,D)
+    p = zeros(DT,D)
 
-    NonlinearFunctionParametersVPRKpMidpoint{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, ω, R, 0, q, p)
+    ParametersVPRKpSecondary{DT,TT,ET,D,S}(equ, tab, Δt, ω, R, 0, q, p)
 end
 
 
-function compute_stages_vprk!(x, q̅, p̅, λ, Q, V, Λ, U, P, F, R, G, Φ, params)
+function compute_stages_vprk!(x, q̅, p̅, Q, V, Λ, P, F, R, Φ, params)
     # copy x to V
     compute_stages_v_vprk!(x, V, params)
 
     # copy x to Λ
     compute_stages_λ_vprk!(x, Λ, params)
 
-    # compute U, G and p̅
-    compute_projection_vprk!(x, q̅, p̅, λ, V, U, G, params)
-
     # compute Q
-    compute_stages_q_vprk!(Q, V, U, params)
+    compute_stages_q_vprk!(q̅, Q, V, Λ, params)
 
-    # compute R and Φ
-    compute_internal_projection_vprk!(x, Q, V, Λ, R, Φ, params)
+    # compute p̅, R and Ψ
+    compute_projection_vprk!(q̅, p̅, Q, V, Λ, R, Φ, params)
 
     # compute P and F
     compute_stages_p_vprk!(Q, V, P, F, params)
 end
 
 
-@generated function compute_projection_vprk!(x::Vector{ST},
-                q̅::Vector{ST}, p̅::Vector{ST}, λ::Vector{ST},
-                V::Matrix{ST}, U::Matrix{ST}, G::Matrix{ST},
-                params::NonlinearFunctionParametersVPRKpSecondary{DT,TT,ET,D,S}
-            ) where {ST,DT,TT,ET,D,S}
+function compute_stages_q_vprk!(q̅::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, Λ::Matrix{ST},
+                params::ParametersVPRKpSecondary{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
 
-    # create temporary vectors
-    tG = zeros(ST,D)
+    @assert D == size(Q,1) == size(V,1) == size(Λ,1) == length(q̅)
+    @assert S == size(Q,2) == size(V,2) == size(Λ,2)
 
-    compute_projection_vprk = quote
-        local t₀::TT = params.t
-        local t₁::TT = params.t + params.Δt
-        local y::ST
+    local y1::ST
+    local y2::ST
+    local y3::ST
+    local y4::ST
 
-        # compute q̅
+    # compute Q
+    for i in 1:S
         for k in 1:D
-            y = params.R[1] * U[k,1] + params.R[2] * U[k,2]
+            y1 = y2 = y3 = y4 = 0
             for j in 1:S
-                y += params.tab.q.b[j] * V[k,j]
+                y1 += params.tab.q.a[i,j] * V[k,j]
+                y2 += params.tab.q.â[i,j] * V[k,j]
+                y3 += params.tab.q.a[i,j] * Λ[k,j]
+                y4 += params.tab.q.â[i,j] * Λ[k,j]
             end
-            q̅[k] = params.q[k] + params.Δt * y
+            Q[k,i] = params.q[k] + params.Δt * (y1 + y2 + y3 + y4)
         end
-
-        # compute U=λ at tₙ
-        params.equ.v(t₀, params.q, params.p, λ)
-        simd_copy_yx_first!(λ, U, 1)
-
-        # compute G=g(q,λ) at tₙ
-        params.equ.g(t₀, params.q, λ, $tG)
-        simd_copy_yx_first!($tG, G, 1)
-
-        # compute U=λ at tₙ+₁
-        params.equ.v(t₁, q̅, params.p, λ)
-        simd_copy_yx_first!(λ, U, 2)
-
-        # compute G=g(q,λ) at tₙ+₁
-        params.equ.g(t₁, q̅, λ, $tG)
-        simd_copy_yx_first!($tG, G, 2)
-
-        # compute p̅=α(q̅)
-        params.equ.α(t₁, q̅, λ, p̅)
     end
 
-    return compute_projection_vprk
+    # compute q̅
+    for k in 1:D
+        y1 = y2 = y3 = y4 = 0
+        for j in 1:S
+            y1 += params.tab.q.b[j] * V[k,j]
+            y2 += params.tab.q.b̂[j] * V[k,j]
+            y3 += params.tab.q.b[j] * Λ[k,j]
+            y4 += params.tab.q.b̂[j] * Λ[k,j]
+        end
+        q̅[k] = params.q[k] + params.Δt * (y1 + y2 + y3 + y4)
+    end
 end
 
 
-@generated function compute_internal_projection_vprk!(
-                x::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST},
-                Λ::Matrix{ST}, R::Matrix{ST}, Φ::Matrix{ST},
-                params::NonlinearFunctionParametersVPRKpSecondary{DT,TT,ET,D,S}
+@generated function compute_projection_vprk!(q̅::Vector{ST}, p̅::Vector{ST},
+                Q::Matrix{ST}, V::Matrix{ST}, Λ::Matrix{ST}, R::Matrix{ST}, Ψ::Matrix{ST},
+                params::ParametersVPRKpSecondary{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
     # create temporary vectors
     tQ = zeros(ST,D)
-    tΛ = zeros(ST,D)
     tV = zeros(ST,D)
+    tΛ = zeros(ST,D)
     tR = zeros(ST,D)
-    tΦ = zeros(ST,D)
+    tΨ = zeros(ST,D)
     tH = zeros(ST,D)
     tΩ = zeros(ST,D,D)
 
-    compute_internal_projection_vprk = quote
+    quote
+        local t₀::TT = params.t
+        local t₁::TT = params.t + params.Δt
+        local tᵢ::TT
+        local v = zeros(q̅)
+
+        # compute p̅=α(q̅)
+        params.equ.α(t₁, q̅, v, p̅)
+
         for i in 1:S
             simd_copy_xy_first!($tQ, Q, i)
             simd_copy_xy_first!($tV, V, i)
             simd_copy_xy_first!($tΛ, Λ, i)
 
-            params.equ.ω(params.t, $tQ, $tΩ)
-            params.equ.dH(params.t, $tQ, $tH)
+            tᵢ = t₀ + params.Δt * params.tab.p.c[i]
 
-            simd_mult!($tR, $tΩ, $tΛ)
-            simd_mult!($tΦ, $tΩ, $tV)
+            params.equ.g(tᵢ, $tQ, $tΛ, $tR)
+            params.equ.ω(tᵢ, $tQ, $tΩ)
+            params.equ.dH(tᵢ, $tQ, $tH)
 
-            $tΦ .-= $tH
-            # simd_axpy!(-one(ST), $tH, $tΦ)
+            # TODO Check if ω() returns Ω or Ω^T -> this decides the sign on dH below
+            #      Seems to be Ω^T -> then dH should be subtracted
+
+            simd_mult!($tΨ, $tΩ, $tV)
+
+            $tΨ .-= $tH
 
             simd_copy_yx_first!($tR, R, i)
-            simd_copy_yx_first!($tΦ, Φ, i)
+            simd_copy_yx_first!($tΨ, Ψ, i)
         end
     end
-
-    return compute_internal_projection_vprk
 end
 
 
-function compute_rhs_vprk_symplectic_projection!(b::Vector{ST}, p̅::Vector{ST},
-                F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, Φ::Matrix{ST},
-                offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}
+function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, R::Matrix{ST},
+                params::ParametersVPRKpSecondary{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+
+    local z1::ST
+    local z2::ST
+    local z3::ST
+    local z4::ST
+
+    # compute b = - [(P-AF-AR)]
+    for i in 1:S
+        for k in 1:D
+            z1 = z2 = z3 = z4 = 0
+            for j in 1:S
+                z1 += params.tab.p.a[i,j] * F[k,j]
+                z2 += params.tab.p.â[i,j] * F[k,j]
+                z3 += params.tab.p.a[i,j] * R[k,j]
+                z4 += params.tab.p.â[i,j] * R[k,j]
+            end
+            b[D*(i-1)+k] = (P[k,i] - params.p[k]) - params.Δt * (z1 + z2 + z3 + z4)
+        end
+    end
+end
+
+function compute_rhs_vprk_projection!(b::Vector{ST}, p̅::Vector{ST},
+                F::Matrix{ST}, R::Matrix{ST}, Ψ::Matrix{ST}, offset::Int,
+                params::ParametersVPRKpSecondary{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
-    local z::ST
+    local ψ::ST
+    local z1::ST
+    local z2::ST
+    local z3::ST
+    local z4::ST
 
     # for i in 1:S
     #     for k in 1:D
-    #         b[offset+D*(i-1)+k] = 0
-    #         for j in 1:S
-    #             b[offset+D*(i-1)+k] -= Φ[k,j]
-    #         end
-    #     end
-    # end
-    #
-    # for i in 1:(S-1)
-    #     for k in 1:D
-    #         b[offset+D*(i-1)+k] = 0
-    #         for j in 1:S
-    #             b[offset+D*(i-1)+k] -= params.ω_λ[i,j] * Φ[k,j]
-    #         end
+    #         b[offset+D*(i-1)+k] = Ψ[k,i]
     #     end
     # end
 
-    for k in 1:D
-        z = params.R[1] * G[k,1] + params.R[2] * G[k,2]
-        for j in 1:S
-            z += params.tab.p.b[j] * (F[k,j] + R[k,j])
+    for i in 1:(S-1)
+        for k in 1:D
+            ψ = 0
+            for j in 1:S
+                ψ += params.ω[i,j] * Ψ[k,j]
+            end
+            b[offset+D*(i-1)+k] = ψ
         end
-        b[offset+D*(S-1)+k] = - (p̅[k] - params.p[k]) + params.Δt * z
+    end
+
+    for k in 1:D
+        z1 = z2 = z3 = z4 = 0
+        for j in 1:S
+            z1 += params.tab.p.b[j] * F[k,j]
+            z2 += params.tab.p.b̂[j] * F[k,j]
+            z3 += params.tab.p.b[j] * R[k,j]
+            z4 += params.tab.p.b̂[j] * R[k,j]
+        end
+        b[offset+D*(S-1)+k] = (p̅[k] - params.p[k]) - params.Δt * (z1 + z2 + z3 + z4)
     end
 end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST},
-                params::NonlinearFunctionParametersVPRKpSecondary{DT,TT,ET,D,S}
+                params::ParametersVPRKpSecondary{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
     scache = NonlinearFunctionCacheVPRK{ST}(D,S)
     pcache = NonlinearFunctionCacheVPRKprojection{ST}(D,S)
 
     function_stages = quote
-        compute_stages_vprk!(x, $pcache.q̅, $pcache.p̅, $pcache.λ,
+        compute_stages_vprk!(x, $pcache.q̅, $pcache.p̅,
                                 $scache.Q, $scache.V, $pcache.Λ,
-                                $pcache.U, $scache.P, $scache.F,
-                                $pcache.R, $pcache.G, $pcache.Φ, params)
+                                $scache.P, $scache.F, $pcache.R,
+                                $pcache.Φ, params)
 
-        # compute b = - [P-AF-U]
-        compute_rhs_vprk!(b, $scache.P, $scache.F, $pcache.R, $pcache.G, params)
+        # compute b = [P-AF-AR]
+        compute_rhs_vprk!(b, $scache.P, $scache.F, $pcache.R, params)
 
-        # compute b = - [p-bF-G]
-        compute_rhs_vprk_symplectic_projection!(b, $pcache.p̅, $scache.F, $pcache.R, $pcache.G, $pcache.Φ, D*S, params)
+        # compute b = Φ
+        compute_rhs_vprk_projection!(b, $pcache.p̅, $scache.F, $pcache.R, $pcache.Φ, D*S, params)
 
         compute_rhs_vprk_correction!(b, $scache.V, params)
     end
@@ -251,10 +282,7 @@ The vector ``d`` is zero for Gauss-Legendre methods and needs to be chosen
 appropriately for Gauss-Lobatto methods (for details see documentation of
 VPRK methods).
 """
-#
-# TODO Fix this and correctly implement what is described above.
-#
-struct IntegratorVPRKpSecondary{DT, TT, PT <: NonlinearFunctionParametersVPRKpSecondary{DT,TT},
+struct IntegratorVPRKpSecondary{DT, TT, PT <: ParametersVPRKpSecondary{DT,TT},
                                         ST <: NonlinearSolver{DT},
                                         IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT}
     params::PT
@@ -274,10 +302,10 @@ function IntegratorVPRKpSecondary(equation::ET, tableau::TableauVPRK{TT}, Δt::T
     S = tableau.s
 
     # create params
-    params = NonlinearFunctionParametersVPRKpSecondary(equation, tableau, Δt)
+    params = ParametersVPRKpSecondary(equation, tableau, Δt)
 
     # create solver
-    solver = create_nonlinear_solver(DT, 2*D*S, sparams)
+    solver = create_nonlinear_solver(DT, 2*D*S, params)
 
     # create initial guess
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
@@ -297,8 +325,8 @@ end
 
 
 function initial_guess!(int::IntegratorVPRKpSecondary{DT,TT}, m::Int) where {DT,TT}
-    for i in 1:params.tab.s
-        evaluate!(int.iguess, int.scache.y, int.scache.z, int.scache.v, int.params.tab.q.c[i], int.params.tab.p.c[i])
+    for i in 1:int.params.tab.s
+        evaluate!(int.iguess, m, int.scache.y, int.scache.z, int.scache.v, int.params.tab.q.c[i], int.params.tab.p.c[i])
         for k in 1:int.params.equ.d
             int.solver.x[int.params.equ.d*(0*int.params.tab.s+i-1)+k] = int.scache.v[k]
             int.solver.x[int.params.equ.d*(1*int.params.tab.s+i-1)+k] = 0
@@ -308,14 +336,14 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate!(int::IntegratorVPRKpSecondary{DT,TT}, sol::SolutionPDAE{DT,TT}, m1::Int, m2::Int) where {DT,TT}
+function integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::SolutionPDAE{DT,TT}, m::Int, n::Int) where {DT,TT}
     # check if m and n are compatible with solution dimensions
     check_solution_dimension_asserts(sol, m, n)
 
     # set time and solution for nonlinear solver
-    int.sparams.t = sol.t[0] + (n-1)*int.Δt
-    int.sparams.q .= int.q[m]
-    int.sparams.p .= int.p[m]
+    int.params.t = sol.t[0] + (n-1)*int.params.Δt
+    int.params.q .= int.q[m]
+    int.params.p .= int.p[m]
 
     # compute initial guess
     initial_guess!(int, m)
@@ -330,25 +358,24 @@ function integrate!(int::IntegratorVPRKpSecondary{DT,TT}, sol::SolutionPDAE{DT,T
     check_solver_status(int.solver.status, int.solver.params, n)
 
     # compute final update
-    compute_stages_vprk!(int.solver.x,
-                         int.pcache.q̅, int.pcache.p̅, int.pcache.λ,
-                         int.scache.Q, int.scache.V, int.pcache.Λ, int.pcache.U,
-                         int.scache.P, int.scache.F, int.pcache.R, int.pcache.G,
+    compute_stages_vprk!(int.solver.x, int.pcache.q̅, int.pcache.p̅,
+                         int.scache.Q, int.scache.V, int.pcache.Λ,
+                         int.scache.P, int.scache.F, int.pcache.R,
                          int.pcache.Φ, int.params)
 
     # compute unprojected solution
-    update_solution!(int.q[m], int.scache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.Δt)
-    update_solution!(int.p[m], int.scache.F, int.params.tab.p.b, int.params.tab.p.b̂, int.Δt)
+    update_solution!(int.q[m], int.scache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
+    update_solution!(int.p[m], int.scache.F, int.params.tab.p.b, int.params.tab.p.b̂, int.params.Δt)
 
     # add projection to solution
-    update_solution!(int.q[m], int.pcache.U, int.params.R, int.params.Δt)
-    update_solution!(int.p[m], int.pcache.G, int.params.R, int.params.Δt)
+    update_solution!(int.q[m], int.pcache.Λ, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
+    update_solution!(int.p[m], int.pcache.R, int.params.tab.p.b, int.params.tab.p.b̂, int.params.Δt)
 
     # copy solution to initial guess for next time step
     update!(int.iguess, m, sol.t[0] + n*int.params.Δt, int.q[m], int.p[m])
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q[m], int.equation.periodicity)
+    cut_periodic_solution!(int.q[m], int.params.equ.periodicity)
 
     # copy to solution
     copy_solution!(sol, int.q[m], int.p[m], int.pcache.λ, n, m)

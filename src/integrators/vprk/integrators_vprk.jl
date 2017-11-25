@@ -60,7 +60,7 @@ end
 
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersVPRK{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}
+mutable struct ParametersVPRK{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractParametersVPRK{DT,TT,ET,D,S}
     equ::ET
     tab::TableauVPRK{TT}
     Δt::TT
@@ -70,17 +70,17 @@ mutable struct NonlinearFunctionParametersVPRK{DT, TT, ET <: IODE{DT,TT}, D, S} 
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersVPRK(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
+function ParametersVPRK(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
     q = zeros(DT, equ.d)
     p = zeros(DT, equ.d)
 
-    NonlinearFunctionParametersVPRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, q, p)
+    ParametersVPRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, q, p)
 end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST},
-                params::NonlinearFunctionParametersVPRK{DT,TT,ET,D,S}
+                params::ParametersVPRK{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
     cache = NonlinearFunctionCacheVPRK{ST}(D, S)
@@ -96,7 +96,7 @@ end
 
 
 "Variational partitioned Runge-Kutta integrator."
-struct IntegratorVPRK{DT, TT, PT <: NonlinearFunctionParametersVPRK{DT,TT},
+struct IntegratorVPRK{DT, TT, PT <: ParametersVPRK{DT,TT},
                               ST <: NonlinearSolver{DT},
                               IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT}
 
@@ -116,7 +116,7 @@ function IntegratorVPRK(equation::ET, tableau::TableauVPRK{TT}, Δt::TT) where {
     S = tableau.s
 
     # create params
-    params = NonlinearFunctionParametersVPRK(equation, tableau, Δt)
+    params = ParametersVPRK(equation, tableau, Δt)
 
     # create nonlinear solver
     solver = create_nonlinear_solver(DT, D*S, params)

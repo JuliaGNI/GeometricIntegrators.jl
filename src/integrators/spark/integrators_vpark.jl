@@ -124,7 +124,7 @@ end
 
 
 "Parameters for right-hand side function of variational partitioned additive Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: NonlinearFunctionParameters{DT,TT}
+mutable struct ParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: Parameters{DT,TT}
     f_f::FT
     f_p::PT
     f_u::UT
@@ -182,7 +182,7 @@ mutable struct NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: Nonlin
     Gt::Vector{DT}
     Φt::Vector{DT}
 
-    function NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT}(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, t_q, t_p, t_q̃, t_p̃, t_λ, d_v) where {DT,TT,FT,PT,UT,GT,ϕT}
+    function ParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT}(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, t_q, t_p, t_q̃, t_p̃, t_λ, d_v) where {DT,TT,FT,PT,UT,GT,ϕT}
         # create solution vectors
         q = zeros(DT,d)
         v = zeros(DT,d)
@@ -232,7 +232,7 @@ mutable struct NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: Nonlin
 end
 
 "Compute stages of variational partitioned additive Runge-Kutta methods."
-function function_stages!(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT}) where {DT,TT,FT,PT,UT,GT,ϕT}
+function function_stages!(y::Vector{DT}, b::Vector{DT}, params::ParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT}) where {DT,TT,FT,PT,UT,GT,ϕT}
     local tpᵢ::TT
     local tλᵢ::TT
 
@@ -399,7 +399,7 @@ function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
     x = zeros(DT, N)
 
     # create params
-    params = NonlinearFunctionParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT}(
+    params = ParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT}(
                                                 equation.f, equation.p, equation.u, equation.g, equation.ϕ,
                                                 Δt, D, S, R,
                                                 tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, d_v)

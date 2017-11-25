@@ -1,5 +1,5 @@
 
-abstract type AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S} <: NonlinearFunctionParameters{DT,TT} end
+abstract type AbstractParametersVPRK{DT,TT,ET,D,S} <: Parameters{DT,TT} end
 abstract type AbstractIntegratorVPRK{DT,TT} <: Integrator{DT,TT} end
 
 equation(integrator::AbstractIntegratorVPRK) = integrator.params.equ
@@ -72,7 +72,7 @@ struct NonlinearFunctionCacheVPRKprojection{ST}
 end
 
 
-function compute_stages!(x, Q, V, P, F, params::AbstractNonlinearFunctionParametersVPRK)
+function compute_stages!(x, Q, V, P, F, params::AbstractParametersVPRK)
     # copy x to V
     compute_stages_v_vprk!(x, V, params)
 
@@ -83,7 +83,7 @@ function compute_stages!(x, Q, V, P, F, params::AbstractNonlinearFunctionParamet
     compute_stages_p_vprk!(Q, V, P, F, params)
 end
 
-function compute_stages!(x, q̅, p̅, λ, Q, V, U, P, F, G, params::AbstractNonlinearFunctionParametersVPRK)
+function compute_stages!(x, q̅, p̅, λ, Q, V, U, P, F, G, params::AbstractParametersVPRK)
     # copy x to V
     compute_stages_v_vprk!(x, V, params)
 
@@ -97,7 +97,7 @@ function compute_stages!(x, q̅, p̅, λ, Q, V, U, P, F, G, params::AbstractNonl
     compute_stages_p_vprk!(Q, V, P, F, params)
 end
 
-function compute_stages_v_vprk!(x::Vector{ST}, V::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+function compute_stages_v_vprk!(x::Vector{ST}, V::Matrix{ST}, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     @assert D == size(V,1)
     @assert S == size(V,2)
 
@@ -109,11 +109,11 @@ function compute_stages_v_vprk!(x::Vector{ST}, V::Matrix{ST}, params::AbstractNo
     end
 end
 
-function compute_stages_λ_vprk!(x::Vector{ST}, Λ::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+function compute_stages_λ_vprk!(x::Vector{ST}, Λ::Matrix{ST}, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     @assert D == size(Λ,1)
     @assert S == size(Λ,2)
 
-    # copy x to V
+    # copy x to Λ
     for i in 1:S
         for k in 1:D
             Λ[k,i] = x[D*(S+i-1)+k]
@@ -121,7 +121,7 @@ function compute_stages_λ_vprk!(x::Vector{ST}, Λ::Matrix{ST}, params::Abstract
     end
 end
 
-function compute_stages_q_vprk!(Q::Matrix{ST}, V::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+function compute_stages_q_vprk!(Q::Matrix{ST}, V::Matrix{ST}, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     @assert D == size(Q,1) == size(V,1)
     @assert S == size(Q,2) == size(V,2)
 
@@ -143,7 +143,7 @@ function compute_stages_q_vprk!(Q::Matrix{ST}, V::Matrix{ST}, params::AbstractNo
 end
 
 
-function compute_stages_q_vprk!(Q::Matrix{ST}, V::Matrix{ST}, U::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+function compute_stages_q_vprk!(Q::Matrix{ST}, V::Matrix{ST}, U::Matrix{ST}, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     @assert D == size(Q,1) == size(V,1) == size(U,1)
     @assert S == size(Q,2) == size(V,2)
 
@@ -165,7 +165,7 @@ function compute_stages_q_vprk!(Q::Matrix{ST}, V::Matrix{ST}, U::Matrix{ST}, par
 end
 
 
-@generated function compute_stages_p_vprk!(Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+@generated function compute_stages_p_vprk!(Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     # create temporary vectors
     tQ = zeros(ST,D)
     tV = zeros(ST,D)
@@ -178,7 +178,7 @@ end
 
         local tᵢ::TT
 
-        # compute P=α(Q) and F=f(Q)
+        # compute P=α(Q) and F=f(Q,V)
         for i in 1:S
             tᵢ = params.t + params.Δt * params.tab.q.c[i]
             simd_copy_xy_first!($tQ, Q, i)
@@ -194,7 +194,7 @@ end
 end
 
 
-@generated function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+@generated function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     compute_stages_vprk = quote
         local z1::ST
         local z2::ST
@@ -220,7 +220,7 @@ end
 end
 
 
-@generated function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, G::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+@generated function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, G::Matrix{ST}, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     compute_stages_vprk = quote
         local z1::ST
         local z2::ST
@@ -247,34 +247,30 @@ end
 end
 
 
-@generated function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
-    compute_stages_vprk = quote
-        local z1::ST
-        local z2::ST
+function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+    local z1::ST
+    local z2::ST
 
-        # compute b = - [(P-G-AF)]
-        for i in 1:S
-            for k in 1:D
-                z1 = 0
-                z2 = 0
-                for j in 1:S
-                    z1 += params.tab.p.a[i,j] * (F[k,j] + R[k,j])
-                    z2 += params.tab.p.â[i,j] * (F[k,j] + R[k,j])
-                end
-                b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * (z1 + z2 + params.R[1] * G[k,1])
-                # b[D*(i-1)+k]  = - (P[k,i] - params.p[k])
-                # b[D*(i-1)+k] += params.Δt * z1
-                # b[D*(i-1)+k] += params.Δt * params.R[1] * G[k,1]
-                # b[D*(i-1)+k] += params.Δt * z2
+    # compute b = - [(P-G-AF)]
+    for i in 1:S
+        for k in 1:D
+            z1 = 0
+            z2 = 0
+            for j in 1:S
+                z1 += params.tab.p.a[i,j] * (F[k,j] + R[k,j])
+                z2 += params.tab.p.â[i,j] * (F[k,j] + R[k,j])
             end
+            b[D*(i-1)+k] = - (P[k,i] - params.p[k]) + params.Δt * (z1 + z2 + params.R[1] * G[k,1])
+            # b[D*(i-1)+k]  = - (P[k,i] - params.p[k])
+            # b[D*(i-1)+k] += params.Δt * z1
+            # b[D*(i-1)+k] += params.Δt * params.R[1] * G[k,1]
+            # b[D*(i-1)+k] += params.Δt * z2
         end
     end
-
-    return compute_stages_vprk
 end
 
 
-function compute_rhs_vprk_projection_q!(b::Vector{ST}, q̅::Vector{ST}, V::Matrix{ST}, U::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+function compute_rhs_vprk_projection_q!(b::Vector{ST}, q̅::Vector{ST}, V::Matrix{ST}, U::Matrix{ST}, offset::Int, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     local y1::ST
     local y2::ST
 
@@ -294,7 +290,7 @@ function compute_rhs_vprk_projection_q!(b::Vector{ST}, q̅::Vector{ST}, V::Matri
 end
 
 
-function compute_rhs_vprk_projection_p!(b::Vector{ST}, p̅::Vector{ST}, F::Matrix{ST}, G::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+function compute_rhs_vprk_projection_p!(b::Vector{ST}, p̅::Vector{ST}, F::Matrix{ST}, G::Matrix{ST}, offset::Int, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     local z1::ST
     local z2::ST
 
@@ -314,7 +310,7 @@ function compute_rhs_vprk_projection_p!(b::Vector{ST}, p̅::Vector{ST}, F::Matri
 end
 
 
-function compute_rhs_vprk_projection_p!(b::Vector{ST}, p̅::Vector{ST}, F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, offset::Int, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+function compute_rhs_vprk_projection_p!(b::Vector{ST}, p̅::Vector{ST}, F::Matrix{ST}, R::Matrix{ST}, G::Matrix{ST}, offset::Int, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     local z1::ST
     local z2::ST
 
@@ -334,7 +330,7 @@ function compute_rhs_vprk_projection_p!(b::Vector{ST}, p̅::Vector{ST}, F::Matri
 end
 
 
-@generated function compute_rhs_vprk_correction!(b::Vector{ST}, V::Matrix{ST}, params::AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+@generated function compute_rhs_vprk_correction!(b::Vector{ST}, V::Matrix{ST}, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     μ = zeros(ST,D)
 
     compute_stages_vprk = quote

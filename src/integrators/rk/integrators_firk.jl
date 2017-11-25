@@ -30,7 +30,7 @@ end
 
 
 "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersFIRK{DT, TT, ET <: ODE{DT,TT}, D, S} <: NonlinearFunctionParameters{DT,TT}
+mutable struct ParametersFIRK{DT, TT, ET <: ODE{DT,TT}, D, S} <: Parameters{DT,TT}
     equ::ET
     tab::TableauFIRK{TT}
     Δt::TT
@@ -39,8 +39,8 @@ mutable struct NonlinearFunctionParametersFIRK{DT, TT, ET <: ODE{DT,TT}, D, S} <
     q::Vector{DT}
 end
 
-function NonlinearFunctionParametersFIRK(equ::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, ET <: ODE{DT,TT}}
-    NonlinearFunctionParametersFIRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, zeros(DT, equ.d))
+function ParametersFIRK(equ::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, ET <: ODE{DT,TT}}
+    ParametersFIRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, zeros(DT, equ.d))
 end
 
 struct NonlinearFunctionCacheFIRK{DT}
@@ -67,7 +67,7 @@ struct NonlinearFunctionCacheFIRK{DT}
 end
 
 @generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, Y::Matrix{ST},
-                                    params::NonlinearFunctionParametersFIRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+                                    params::ParametersFIRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
 
     tQ::Vector{ST} = zeros(ST,D)
     tV::Vector{ST} = zeros(ST,D)
@@ -97,7 +97,7 @@ end
 end
 
 "Compute stages of fully implicit Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersFIRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
 
     cache = NonlinearFunctionCacheFIRK{ST}(D, S)
 
@@ -124,7 +124,7 @@ end
 
 
 "Fully implicit Runge-Kutta integrator."
-struct IntegratorFIRK{DT, TT, PT <: NonlinearFunctionParametersFIRK{DT,TT},
+struct IntegratorFIRK{DT, TT, PT <: ParametersFIRK{DT,TT},
                               ST <: NonlinearSolver{DT},
                               IT <: InitialGuessODE{DT,TT}, N} <: Integrator{DT,TT}
     params::PT
@@ -141,7 +141,7 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt
     S = tableau.q.s
 
     # create params
-    params = NonlinearFunctionParametersFIRK(equation, tableau, Δt)
+    params = ParametersFIRK(equation, tableau, Δt)
 
     # create solver
     solver = create_nonlinear_solver(DT, D*S, params)

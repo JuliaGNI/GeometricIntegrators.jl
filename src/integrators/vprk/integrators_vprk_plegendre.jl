@@ -39,7 +39,7 @@ end
 
 
 "Parameters for right-hand side function of variational special partitioned additive Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S} <: NonlinearFunctionParameters{DT,TT}
+mutable struct ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S} <: Parameters{DT,TT}
     f_θ::ΘT
     f_f::FT
 
@@ -55,7 +55,7 @@ mutable struct NonlinearFunctionParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S} <: Non
     p::Vector{DT}
 
 
-    function NonlinearFunctionParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}(f_θ, f_f, Δt, t_q, t_p, d_v, q, p) where {DT,TT,ΘT,FT,D,S}
+    function ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}(f_θ, f_f, Δt, t_q, t_p, d_v, q, p) where {DT,TT,ΘT,FT,D,S}
         new(f_θ, f_f, Δt, t_q, t_p, d_v, 0, q, p)
     end
 end
@@ -102,7 +102,7 @@ end
 
 
 "Compute stages of variational special partitioned additive Runge-Kutta methods."
-@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}) where {ST,DT,TT,ΘT,FT,D,S}
+@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}) where {ST,DT,TT,ΘT,FT,D,S}
     cache = NonlinearFunctionCacheVPRKpLegendre{ST}(D,S)
 
     quote
@@ -121,7 +121,7 @@ end
     end
 end
 
-@generated function compute_stages!(y::Vector{ST}, Q, V, P, F, Φ, q̅, p̅, ϕ, μ, params::NonlinearFunctionParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}) where {ST,DT,TT,ΘT,FT,D,S}
+@generated function compute_stages!(y::Vector{ST}, Q, V, P, F, Φ, q̅, p̅, ϕ, μ, params::ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}) where {ST,DT,TT,ΘT,FT,D,S}
     # create temporary vectors
     Qt = zeros(ST,D)
     Pt = zeros(ST,D)
@@ -172,7 +172,7 @@ end
 end
 
 
-function compute_rhs!(b::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, Φ::Matrix{ST}, q̅::Vector{ST}, p̅::Vector{ST}, ϕ::Vector{ST}, μ::Vector{ST}, params::NonlinearFunctionParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}) where {ST,DT,TT,ΘT,FT,D,S}
+function compute_rhs!(b::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, Φ::Matrix{ST}, q̅::Vector{ST}, p̅::Vector{ST}, ϕ::Vector{ST}, μ::Vector{ST}, params::ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}) where {ST,DT,TT,ΘT,FT,D,S}
     local ω::ST
     local z::ST
 
@@ -323,7 +323,7 @@ function IntegratorVPRKpLegendre(equation::IODE{DT,TT,ΘT,FT,GT,VT}, tableau::Ta
     cache = NonlinearFunctionCacheVPRKpLegendre{DT}(D,S)
 
     # create params
-    params = NonlinearFunctionParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}(
+    params = ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}(
                                                 equation.α, equation.f,
                                                 Δt, tableau.q, tableau.p, d_v, q, p)
 

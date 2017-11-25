@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersVPRKpSymmetric{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}
+mutable struct ParametersVPRKpSymmetric{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractParametersVPRK{DT,TT,ET,D,S}
     equ::ET
     tab::TableauVPRK{TT}
     Δt::TT
@@ -12,19 +12,19 @@ mutable struct NonlinearFunctionParametersVPRKpSymmetric{DT, TT, ET <: IODE{DT,T
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersVPRKpSymmetric(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
+function ParametersVPRKpSymmetric(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
     R = convert(Vector{TT}, [1, tab.R∞])
     q = zeros(DT, equ.d)
     p = zeros(DT, equ.d)
 
-    NonlinearFunctionParametersVPRKpSymmetric{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, R, 0, q, p)
+    ParametersVPRKpSymmetric{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, R, 0, q, p)
 end
 
 
 @generated function compute_projection_vprk!(x::Vector{ST},
                 q̅::Vector{ST}, p̅::Vector{ST}, λ::Vector{ST},
                 V::Matrix{ST}, U::Matrix{ST}, G::Matrix{ST},
-                params::NonlinearFunctionParametersVPRKpSymmetric{DT,TT,ET,D,S}
+                params::ParametersVPRKpSymmetric{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
     # create temporary vectors
@@ -59,7 +59,7 @@ end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST},
-                params::NonlinearFunctionParametersVPRKpSymmetric{DT,TT,ET,D,S}
+                params::ParametersVPRKpSymmetric{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
     scache = NonlinearFunctionCacheVPRK{ST}(D,S)
@@ -83,7 +83,7 @@ end
 
 
 "Variational partitioned Runge-Kutta integrator."
-struct IntegratorVPRKpSymmetric{DT, TT, PT <: NonlinearFunctionParametersVPRKpSymmetric{DT,TT},
+struct IntegratorVPRKpSymmetric{DT, TT, PT <: ParametersVPRKpSymmetric{DT,TT},
                                         ST <: NonlinearSolver{DT},
                                         IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT}
 
@@ -104,7 +104,7 @@ function IntegratorVPRKpSymmetric(equation::ET, tableau::TableauVPRK{TT}, Δt::T
     S = tableau.s
 
     # create params
-    params = NonlinearFunctionParametersVPRKpSymmetric(equation, tableau, Δt)
+    params = ParametersVPRKpSymmetric(equation, tableau, Δt)
 
     # create solver
     solver = create_nonlinear_solver(DT, D*(S+2), params)

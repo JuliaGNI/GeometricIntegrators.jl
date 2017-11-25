@@ -43,7 +43,7 @@ end
 
 
 "Parameters for right-hand side function of implicit partitioned Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersIPRK{DT, TT, ET <: PODE{DT,TT}, D, S} <: NonlinearFunctionParameters{DT,TT}
+mutable struct ParametersIPRK{DT, TT, ET <: PODE{DT,TT}, D, S} <: Parameters{DT,TT}
     equ::ET
     tab::TableauIPRK{TT}
     Δt::TT
@@ -53,11 +53,11 @@ mutable struct NonlinearFunctionParametersIPRK{DT, TT, ET <: PODE{DT,TT}, D, S} 
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersIPRK(equ::ET, tab::TableauIPRK{TT}, Δt::TT) where {DT, TT, ET <: PODE{DT,TT}}
+function ParametersIPRK(equ::ET, tab::TableauIPRK{TT}, Δt::TT) where {DT, TT, ET <: PODE{DT,TT}}
     q = zeros(DT, equ.d)
     p = zeros(DT, equ.d)
 
-    NonlinearFunctionParametersIPRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, q, p)
+    ParametersIPRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, q, p)
 end
 
 
@@ -94,7 +94,7 @@ struct NonlinearFunctionCacheIPRK{ST}
 end
 
 "Compute stages of implicit partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::NonlinearFunctionParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     cache = NonlinearFunctionCacheIPRK{ST}(D, S)
 
     quote
@@ -118,7 +118,7 @@ end
 @generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST},
                                                    P::Matrix{ST}, F::Matrix{ST},
                                                    Y::Matrix{ST}, Z::Matrix{ST},
-                                                   params::NonlinearFunctionParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+                                                   params::ParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     tQ = zeros(ST,D)
     tV = zeros(ST,D)
     tP = zeros(ST,D)
@@ -155,7 +155,7 @@ end
 
 
 "Implicit partitioned Runge-Kutta integrator."
-struct IntegratorIPRK{DT, TT, PT <: NonlinearFunctionParametersIPRK{DT,TT},
+struct IntegratorIPRK{DT, TT, PT <: ParametersIPRK{DT,TT},
                               ST <: NonlinearSolver{DT},
                               IT <: InitialGuessPODE{DT,TT}} <: Integrator{DT,TT}
     params::PT
@@ -173,7 +173,7 @@ function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, �
     S = tableau.s
 
     # create params
-    params = NonlinearFunctionParametersIPRK(equation, tableau, Δt)
+    params = ParametersIPRK(equation, tableau, Δt)
 
     # create solver
     solver = create_nonlinear_solver(DT, 2*D*S, params)

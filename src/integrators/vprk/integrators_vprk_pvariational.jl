@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-type NonlinearFunctionParametersVPRKpVariational{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractNonlinearFunctionParametersVPRK{DT,TT,ET,D,S}
+type ParametersVPRKpVariational{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractParametersVPRK{DT,TT,ET,D,S}
     equ::ET
     tab::TableauVPRK{TT}
     Δt::TT
@@ -14,7 +14,7 @@ type NonlinearFunctionParametersVPRKpVariational{DT, TT, ET <: IODE{DT,TT}, D, S
     p::Vector{DT}
 end
 
-function NonlinearFunctionParametersVPRKpVariational(equ::ET, tab::TableauVPRK{TT}, Δt::TT, R::Vector) where {DT, TT, ET <: IODE{DT,TT}}
+function ParametersVPRKpVariational(equ::ET, tab::TableauVPRK{TT}, Δt::TT, R::Vector) where {DT, TT, ET <: IODE{DT,TT}}
     R  = convert(Vector{TT}, R)
     R1 = [one(TT), zero(TT)]
     R2 = [zero(TT), one(TT)]
@@ -22,14 +22,14 @@ function NonlinearFunctionParametersVPRKpVariational(equ::ET, tab::TableauVPRK{T
     q = zeros(DT, equ.d)
     p = zeros(DT, equ.d)
 
-    NonlinearFunctionParametersVPRKpVariational{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, R, R1, R2, 0, q, p)
+    ParametersVPRKpVariational{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, R, R1, R2, 0, q, p)
 end
 
 
 @generated function compute_projection!(
                 x::Vector{ST}, q̅::Vector{ST}, p̅::Vector{ST},
                 λ::Vector{ST}, U::Matrix{ST}, G::Matrix{ST},
-                params::NonlinearFunctionParametersVPRKpVariational{DT,TT,ET,D,S}
+                params::ParametersVPRKpVariational{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
     # create temporary vectors
@@ -60,7 +60,7 @@ end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST},
-                params::NonlinearFunctionParametersVPRKpVariational{DT,TT,ET,D,S}
+                params::ParametersVPRKpVariational{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
     cache = NonlinearFunctionCacheVPRKprojection{ST}(D)
@@ -86,8 +86,8 @@ end
 
 "Variational partitioned Runge-Kutta integrator."
 immutable IntegratorVPRKpVariational{DT, TT,
-                SPT <: NonlinearFunctionParametersVPRK{DT,TT},
-                PPT <: NonlinearFunctionParametersVPRKpVariational{DT,TT},
+                SPT <: ParametersVPRK{DT,TT},
+                PPT <: ParametersVPRKpVariational{DT,TT},
                 SST <: NonlinearSolver{DT},
                 STP <: NonlinearSolver{DT},
                 IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT}
@@ -113,10 +113,10 @@ function IntegratorVPRKpVariational(equation::ET, tableau::TableauVPRK{TT}, Δt:
     S = tableau.s
 
     # create solver params
-    sparams = NonlinearFunctionParametersVPRK(equation, tableau, Δt)
+    sparams = ParametersVPRK(equation, tableau, Δt)
 
     # create projector params
-    pparams = NonlinearFunctionParametersVPRKpVariational(equation, tableau, Δt)
+    pparams = ParametersVPRKpVariational(equation, tableau, Δt)
 
     # create nonlinear solver
     solver = create_nonlinear_solver(DT, D*S, sparams)
@@ -182,7 +182,7 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate!(int::IntegratorVPRKpVariational{DT,TT}, sol::SolutionPDAE{DT,TT}, m::Int, n::Int) where {DT,TT}
+function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::SolutionPDAE{DT,TT}, m::Int, n::Int) where {DT,TT}
     # check if m and n are compatible with solution dimensions
     check_solution_dimension_asserts(sol, m, n)
 

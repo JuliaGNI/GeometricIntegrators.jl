@@ -66,7 +66,7 @@ end
 
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-mutable struct NonlinearFunctionParametersPGLRK{DT,TT,ΑT,FT,GT} <: NonlinearFunctionParameters{DT,TT}
+mutable struct ParametersPGLRK{DT,TT,ΑT,FT,GT} <: Parameters{DT,TT}
     α::ΑT
     f::FT
     g::GT
@@ -105,7 +105,7 @@ mutable struct NonlinearFunctionParametersPGLRK{DT,TT,ΑT,FT,GT} <: NonlinearFun
     tP::Vector{DT}
     tF::Vector{DT}
 
-    function NonlinearFunctionParametersPGLRK{DT,TT,ΑT,FT,GT}(α, f, g, Δt, d, s, tab) where {DT,TT,ΑT,FT,GT}
+    function ParametersPGLRK{DT,TT,ΑT,FT,GT}(α, f, g, Δt, d, s, tab) where {DT,TT,ΑT,FT,GT}
         # create coefficient matrices
         A_q = zeros(TT, s, s, d)
         A_p = zeros(TT, s, s, d)
@@ -141,7 +141,7 @@ mutable struct NonlinearFunctionParametersPGLRK{DT,TT,ΑT,FT,GT} <: NonlinearFun
 end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-function function_stages!(y::Vector{DT}, b::Vector{DT}, params::NonlinearFunctionParametersPGLRK{DT,TT,ΑT,FT,GT}) where {DT,TT,ΑT,FT,GT}
+function function_stages!(y::Vector{DT}, b::Vector{DT}, params::ParametersPGLRK{DT,TT,ΑT,FT,GT}) where {DT,TT,ΑT,FT,GT}
     local tᵢ::TT
     local t₀::TT = params.t
     local t₁::TT = params.t + params.Δt
@@ -276,7 +276,7 @@ function IntegratorPGLRK(equation::IODE{DT,TT,ΑT,FT,GT,VT}, tableau::Coefficien
     z = zeros(DT,D)
 
     # create params
-    params = NonlinearFunctionParametersPGLRK{DT,TT,ΑT,FT,GT}(
+    params = ParametersPGLRK{DT,TT,ΑT,FT,GT}(
                                                 equation.α, equation.f, equation.g,
                                                 Δt, D, S,
                                                 tableau)
