@@ -43,6 +43,11 @@ function Solution(equation::IDAE, Δt, ntime::Int, nsave::Int=1)
     SSolutionPDAE(equation, Δt, ntime, nsave)
 end
 
+"Create solution for SDE."
+function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=1)
+    SolutionSDE(equation, Δt, ntime, nsave)
+end
+
 "Print error for solutions of equations not implemented, yet."
 function Solution(equation::Equation, Δt, ntime::Int, nsave::Int=1)
     error("No solution found for equation ", equation)
