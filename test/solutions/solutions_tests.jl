@@ -53,3 +53,16 @@ psol = Solution(pdae, Δt, ntime)
 pdae = PDAE(fq, fp, gq, gp, gϕ, q1, p1, λ1)
 psol = Solution(pdae, Δt, ntime)
 @test typeof(psol) <: SSolutionPDAE
+
+
+
+sde   = oscillator_sde()
+
+ssol = Solution(sde, Δt, ntime)
+@test typeof(ssol) <: SolutionSDE
+
+ssol0 = Solution(similar(sde, q0), Δt, ntime)
+@test typeof(ssol0) <: SolutionSDE
+
+ssol1 = Solution(similar(sde, q1), Δt, ntime)
+@test typeof(ssol1) <: SolutionSDE
