@@ -95,5 +95,5 @@ end
 
 function Base.similar(sde::SDE{DT,TT,VT,UT}, t₀::TT, q₀::DenseArray{DT}) where {DT, TT, VT, UT}
     @assert sde.d == size(q₀,1)
-    SDE(sde.v, t₀, q₀)
+    SDE(sde.v, sde.u, t₀, q₀)
 end
