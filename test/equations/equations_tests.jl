@@ -7,6 +7,10 @@ x₀ = [1., 1.]
 λ₀ = [0.]
 
 
+################################################################################
+# Test ODE: Ordinary Differential Equation
+################################################################################
+
 function f_ode(t, x, f)
     f[1] = x[1]
 end
@@ -20,6 +24,10 @@ ode2 = ODE(f_ode, q₀)
 
 @test hash(ode1) == hash(ode2)
 
+
+################################################################################
+# Test PODE: Partitioned Ordinary Differential Equation
+################################################################################
 
 function v_pode(t, q, p, v)
     v[1] = q[1]
@@ -38,6 +46,10 @@ pode2 = PODE(v_pode, f_pode, q₀, p₀)
 
 @test hash(pode1) == hash(pode2)
 
+
+################################################################################
+# Test IODE: Implicit Ordinary Differential Equation
+################################################################################
 
 function iode_α(t, q, v, p)
     p[1] = v[1]
@@ -67,6 +79,10 @@ iode3 = IODE(iode_α, iode_f, iode_g, iode_v, q₀, p₀)
 @test hash(iode1) == hash(iode2)
 
 
+################################################################################
+# Test DAE: Differential Algebraic Equation
+################################################################################
+
 function v_dae(t, x, v)
     v[1] = x[1]
     v[2] = x[2]
@@ -90,6 +106,10 @@ dae2 = DAE(v_dae, u_dae, ϕ_dae, x₀, λ₀)
 
 @test hash(dae1) == hash(dae2)
 
+
+################################################################################
+# Test PDAE: Partitioned Differential Algebraic Equation
+################################################################################
 
 function v_pdae(t, q, p, v)
     v[1] = q[1]
@@ -138,6 +158,10 @@ idae2 = IDAE(f_pdae, p_pdae, u_pdae, g_pdae, ϕ_pdae, λ_pdae, q₀, p₀, λ₀
 
 @test hash(idae1) == hash(idae2)
 
+
+################################################################################
+# Test SDE: Stochastic Differential Equation
+################################################################################
 
 function v_sde(λ, t, q, v)
     v[1] = λ*q[1]
