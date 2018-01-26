@@ -115,3 +115,14 @@ function oscillator_idae(q₀=q₀, p₀=p₀, λ₀=λ₀)
          oscillator_idae_ϕ, oscillator_iode_v,
          q₀, p₀, λ₀)
 end
+
+
+
+function oscillator_sde_u(t, x, u)
+    u[1] = x[1]
+    u[2] = x[2]
+end
+
+function oscillator_sde(x₀=q₀)
+    SDE(oscillator_ode_f, oscillator_sde_u, q₀)
+end
