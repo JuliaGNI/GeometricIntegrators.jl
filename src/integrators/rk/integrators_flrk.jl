@@ -93,14 +93,14 @@ end
 
 
 "Formal Lagrangian Runge-Kutta integrator."
-struct IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, SPT, ST, IT, N} <: Integrator{DT,TT}
+struct IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, SPT, ST, IT <: InitialGuessODE{DT,TT,VT}, N} <: Integrator{DT,TT}
     equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}
     tableau::TableauFIRK{TT}
     Δt::TT
 
     params::SPT
     solver::ST
-    iguess::InitialGuessODE{DT, TT, VT, IT}
+    iguess::IT
 
     q::Vector{Vector{Double{DT}}}
     p::Vector{Vector{Double{DT}}}
@@ -163,7 +163,7 @@ function IntegratorFLRK(equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}, tableau::Ta
     iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
 
     # create integrator
-    IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, typeof(params), typeof(solver), typeof(iguess.int), N}(
+    IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, typeof(params), typeof(solver), typeof(iguess), N}(
                                         equation, tableau, Δt, params, solver, iguess,
                                         q, p, v, y, Q, V, P, F, G, ϑ, Y, Z, J)
 end
