@@ -9,15 +9,16 @@ Defines a differential algebraic initial value problem
 0 &= \\phi (t, q(t), \\lambda(t)) , & \\lambda(t_{0}) &= \\lambda_{0} ,
 \\end{align*}
 ```
-with vector field ``f``, projection ``u``, algebraic constraint ``\\phi=0``,
+with vector field ``v``, projection ``u``, algebraic constraint ``\\phi=0``,
 initial conditions ``q_{0}`` and ``\\lambda_{0}``, the dynamical variable ``q``
 taking values in ``\\mathbb{R}^{m}`` and the algebraic variable ``\\lambda``
 taking values in ``\\mathbb{R}^{n}``.
 
 ### Fields
 
-* `m`: dimension of dynamical variable ``q`` and the vector field ``f``
-* `n`: dimension of algebraic variable ``\\lambda`` and the constraint ``\\phi``
+* `d`: dimension of dynamical variable ``q`` and the vector field ``v``
+* `m`: dimension of algebraic variable ``\\lambda`` and the constraint ``\\phi``
+* `n`: number of initial conditions
 * `v`: function computing the vector field
 * `u`: function computing the projection
 * `ϕ`: algebraic constraint
@@ -113,5 +114,5 @@ end
 function Base.similar(dae::DAE{DT,TT,VT,UT,ΦT}, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArray{DT}) where {DT, TT, VT, UT, ΦT}
     @assert dae.d == size(q₀,1)
     @assert dae.m == size(λ₀,1)
-    ODE(dae.v, t₀, q₀, λ₀)
+    DAE(dae.v, t₀, q₀, λ₀)
 end

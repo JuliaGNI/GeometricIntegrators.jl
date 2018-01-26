@@ -11,6 +11,7 @@ with vector field ``v``, initial condition ``q_{0}`` and the solution
 ### Fields
 
 * `d`: dimension of dynamical variable ``q`` and the vector field ``v``
+* `n`: number of initial conditions
 * `v`: function computing the vector field
 * `t₀`: initial time
 * `q₀`: initial condition

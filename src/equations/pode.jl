@@ -66,7 +66,6 @@ struct PODE{dType <: Number, tType <: Number, vType <: Function, fType <: Functi
     end
 end
 
-
 function PODE(v::VT, f::FT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}; periodicity=[]) where {DT,TT,VT,FT}
     @assert size(q₀) == size(p₀)
     PODE{DT, TT, VT, FT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), v, f, t₀, q₀, p₀, periodicity=periodicity)
