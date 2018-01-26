@@ -19,6 +19,8 @@ function getCoefficientsPGLRK(s::Int)
 
     local ξᵢ::T
 
+    leg_basis = LegendreBasis(T,s)
+
     a = zeros(T, s, s)
     t = zeros(T, s, s)
     P = zeros(T, s, s)
@@ -27,7 +29,7 @@ function getCoefficientsPGLRK(s::Int)
 
     for j in 1:s
         for i in 1:s
-            P[i,j] = legendre_polynomial(j-1, c[i])
+            P[i,j] = evaluate(leg_basis, j, c[i])
         end
     end
 
