@@ -45,8 +45,8 @@ of evaluating the vector fields ``v`` and ``u`` on `t` and `q`.
     λ  = 2.
     μ  = 1.
 
-    v_sde = (t, q, v) → v(λ, t, q, v)
-    u_sde = (t, q, v) → u(μ, t, q, v)
+    v_sde = (t, q, v) -> v(λ, t, q, v)
+    u_sde = (t, q, v) -> u(μ, t, q, v)
 
     sde = SDE(v_sde, u_sde, t₀, q₀)
 ```
@@ -73,7 +73,6 @@ struct SDE{dType <: Number, tType <: Number, vType <: Function, uType <: Functio
 end
 
 function SDE(v::VT, u::UT, t₀::TT, q₀::DenseArray{DT}) where {DT,TT,VT,UT}
-    @assert size(q₀,2)
     SDE{DT, TT, VT, UT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), v, u, t₀, q₀)
 end
 
