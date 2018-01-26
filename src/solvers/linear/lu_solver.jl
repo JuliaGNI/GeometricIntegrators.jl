@@ -80,22 +80,6 @@ function factorize!(lu::LUSolver{T}, pivot=true) where {T}
     end
 end
 
-
-# function factorize!{T}(lu::LUSolver{T})
-#     @inbounds for k = 1:lu.n-1
-#         lu.pivots[k] = k
-#         Ainv = real(one(T))/lu.A[k,k]
-#         for i = k+1:lu.n
-#             lu.A[i,k] *= Ainv
-#             for j = k+1:lu.n
-#                 lu.A[i,j] -= lu.A[i,k] * lu.A[k,j]
-#             end
-#         end
-#     end
-#     lu.pivots[lu.n] = lu.n
-# end
-
-
 function solve!(lu::LUSolver{T}) where {T}
     local s::T
 
