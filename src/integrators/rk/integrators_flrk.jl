@@ -241,21 +241,15 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
     tJ = zeros(DT, int.equation.d, int.equation.d)
     δP = zeros(DT, int.equation.d*int.tableau.q.s)
 
-    # compute ϑ = α(Q)
-    for i in 1:int.tableau.q.s
-        tᵢ = int.params.t + int.Δt * int.tableau.q.c[i]
-        simd_copy_xy_first!(tQ, int.Q, i)
-        int.equation.α(tᵢ, tQ, tϑ)
-        simd_copy_yx_first!(tϑ, int.ϑ, i)
-    end
-
-    # compute V(Q) = int.equation.v(t, Q, V)
+    # compute ϑ = α(Q), V(Q) = int.equation.v(t, Q, V)
     # and f_0(Q, V(Q)) = int.equation.f(t, Q, V, F)
     for i in 1:int.tableau.q.s
         tᵢ = int.params.t + int.Δt * int.tableau.q.c[i]
         simd_copy_xy_first!(tQ, int.Q, i)
+        int.equation.α(tᵢ, tQ, tϑ)
         int.equation.v(tᵢ, tQ, tV)
         int.equation.f(tᵢ, tQ, tV, tF)
+        simd_copy_yx_first!(tϑ, int.ϑ, i)
         simd_copy_yx_first!(tV, int.V, i)
         simd_copy_yx_first!(tF, int.F, i)
     end
