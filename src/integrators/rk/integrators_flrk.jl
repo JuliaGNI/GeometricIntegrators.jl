@@ -13,10 +13,11 @@ mutable struct ParametersFLRK{DT,TT,VT,D,S} <: Parameters{DT,TT}
     t::TT
 
     q::Vector{DT}
+    p::Vector{DT}
 end
 
 function ParametersFLRK(DT, D, v::VT, Δt::TT, tab) where {TT,VT}
-    ParametersFLRK{DT,TT,VT,D,tab.s}(v, Δt, tab.a, tab.â, tab.c, 0, zeros(DT,D))
+    ParametersFLRK{DT,TT,VT,D,tab.s}(v, Δt, tab.a, tab.â, tab.c, 0, zeros(DT,D), zeros(DT,D))
 end
 
 struct NonlinearFunctionCacheFLRK{DT}
@@ -117,6 +118,7 @@ struct IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, SPT, ST, IT <: InitialGu
     Y::Matrix{DT}
     Z::Matrix{DT}
     J::Array{DT,3}
+    A::Array{DT,2}
 end
 
 function IntegratorFLRK(equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,AT,FT,GT,VT,ΩT,dHT,N}
@@ -130,9 +132,9 @@ function IntegratorFLRK(equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}, tableau::Ta
     # create solution vectors
     q = Array{Vector{Double{DT}}}(M)
     p = Array{Vector{Double{DT}}}(M)
-    for i in 1:M
-        q[i] = zeros(Double{DT},D)
-        p[i] = zeros(Double{DT},D)
+    for m in 1:M
+        q[m] = zeros(Double{DT},D)
+        p[m] = zeros(Double{DT},D)
     end
 
     # create velocity and update vector
@@ -149,6 +151,7 @@ function IntegratorFLRK(equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}, tableau::Ta
     Y = zeros(DT,D,S)
     Z = zeros(DT,D,S)
     J = zeros(DT,D,D,S)
+    A = zeros(DT,D*S,D*S)
 
     # create params
     params = ParametersFLRK(DT, D, equation.v, Δt, tableau.q)
@@ -165,7 +168,7 @@ function IntegratorFLRK(equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}, tableau::Ta
     # create integrator
     IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, typeof(params), typeof(solver), typeof(iguess), N}(
                                         equation, tableau, Δt, params, solver, iguess,
-                                        q, p, v, y, Q, V, P, F, G, ϑ, Y, Z, J)
+                                        q, p, v, y, Q, V, P, F, G, ϑ, Y, Z, J, A)
 end
 
 
@@ -210,6 +213,7 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
     # set time for nonlinear solver
     int.params.t  = sol.t[0] + (n-1)*int.Δt
     int.params.q .= int.q[m]
+    int.params.p .= int.p[m]
 
     # compute initial guess
     initial_guess!(int, m)
@@ -235,14 +239,7 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
     tϑ = zeros(DT, int.equation.d)
     tF = zeros(DT, int.equation.d)
     tJ = zeros(DT, int.equation.d, int.equation.d)
-
-    te  = zeros(DT, int.equation.d)
-    dQ1 = zeros(DT, int.equation.d)
-    dQ2 = zeros(DT, int.equation.d)
-    dV1 = zeros(DT, int.equation.d)
-    dV2 = zeros(DT, int.equation.d)
-
-    # println()
+    δP = zeros(DT, int.equation.d*int.tableau.q.s)
 
     # compute ϑ = α(Q)
     for i in 1:int.tableau.q.s
@@ -252,91 +249,88 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
         simd_copy_yx_first!(tϑ, int.ϑ, i)
     end
 
-    # compute f_0(Q, V(Q)) = int.equation.f(t, Q, V, F)
+    # compute V(Q) = int.equation.v(t, Q, V)
+    # and f_0(Q, V(Q)) = int.equation.f(t, Q, V, F)
     for i in 1:int.tableau.q.s
         tᵢ = int.params.t + int.Δt * int.tableau.q.c[i]
         simd_copy_xy_first!(tQ, int.Q, i)
-        simd_copy_xy_first!(tV, int.V, i)
+        int.equation.v(tᵢ, tQ, tV)
         int.equation.f(tᵢ, tQ, tV, tF)
+        simd_copy_yx_first!(tV, int.V, i)
         simd_copy_yx_first!(tF, int.F, i)
     end
 
     # compute Jacobian of v via ForwardDiff
-    ϵ = sqrt(eps())
     for i in 1:int.tableau.q.s
         tᵢ = int.params.t + int.Δt * int.tableau.q.c[i]
         v_rev! = (y,x) -> int.equation.v(tᵢ,x,y)
         simd_copy_xy_first!(tQ, int.Q, i)
         ForwardDiff.jacobian!(tJ, v_rev!, tV, tQ)
         simd_copy_yx_first!(tJ, int.J, i)
-
-        # println(tJ)
-        # println(eig(tJ))
     end
 
-    # set initial guess P = ϑ = α(Q)
-    int.P .= int.ϑ
+    # contract J with ϑ and add to G
+    for l in 1:int.tableau.q.s
+        for i in 1:int.equation.d
+            int.G[i,l] = 0
+            for j in 1:int.equation.d
+                int.G[i,l] += int.ϑ[j,l] * int.J[j,i,l]
+            end
+        end
+    end
 
-    # fixed-point iteration for P
-    P  = zeros(int.P)
-    δP = zeros(int.P)
-    for r in 1:get_config(:nls_nmax)
-        # copy P
-        P .= int.P
+    # solve linear system AP=δP for P
 
-        # contract J with (ϑ-p) and add to Z
-        int.G .= 0
+    # compute δP
+    for l in 1:int.tableau.q.s
+        for i in 1:int.equation.d
+            # set δP = p
+            δP[(l-1)*int.equation.d+i] = int.params.p[i]
+            # add A(F+G) to δP
+            for k in 1:int.tableau.q.s
+                δP[(l-1)*int.equation.d+i] += int.Δt * int.tableau.q.a[l,k] * (int.F[i,k] + int.G[i,k])
+            end
+        end
+    end
+
+    # construct A = identity(sd×sd) + A ⊗ J
+    for k in 1:int.tableau.q.s
         for l in 1:int.tableau.q.s
             for i in 1:int.equation.d
                 for j in 1:int.equation.d
-                    int.G[i,l] += (int.ϑ[j,l] - int.P[j,l]) * int.J[j,i,l]
+                    int.A[(k-1)*int.equation.d+i, (l-1)*int.equation.d+j] = int.Δt * int.tableau.q.a[k,l] * int.J[j,i,l]
                 end
             end
-        end
-
-        # set Z = A(F+G)
-        int.Z .= 0
-        for l in 1:int.tableau.q.s
-            for i in 1:int.equation.d
-                for k in 1:int.tableau.q.s
-                    int.Z[i,k] += int.tableau.q.a[k,l] * (int.F[i,l] + int.G[i,l])
-                end
-            end
-        end
-
-        # update P
-        for l in 1:int.tableau.q.s
-            for i in 1:int.equation.d
-                int.P[i,l] = int.p[m][i] + int.Δt * int.Z[i,l]
-            end
-        end
-
-        δP .= (int.P .- P)
-
-        # println(r, ", ", norm(δP) / norm(int.P))
-        if norm(δP) / norm(int.P) ≤ get_config(:nls_stol)
-            break
         end
     end
+    for i in 1:int.equation.d*int.tableau.q.s
+        int.A[i,i] += one(DT)
+    end
 
-    # update G
-    int.G .= 0
+    # solve AP = δP and copy result to int.P
+    lu = LUSolver(int.A, δP)
+    factorize!(lu)
+    solve!(lu)
+    int.P .= reshape(lu.x, (int.equation.d, int.tableau.q.s))
+
+    # contract J with P and subtract from G, so that G = (ϑ-P)J
     for l in 1:int.tableau.q.s
         for i in 1:int.equation.d
+            int.G[i,l] = 0
             for j in 1:int.equation.d
                 int.G[i,l] += (int.ϑ[j,l] - int.P[j,l]) * int.J[j,i,l]
             end
         end
     end
 
-    # println(int.F)
-    # println(int.G)
+    # println(int.ϑ)
+    # println(int.P)
+    # println(int.ϑ .- int.P)
+    # println()
 
     # compute final update for p
     update_solution!(int.p[m], int.F, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
     update_solution!(int.p[m], int.G, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
-
-    # println(int.p[m])
 
     # copy solution to initial guess
     update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q[m])
