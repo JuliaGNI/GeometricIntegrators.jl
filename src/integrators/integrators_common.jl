@@ -58,6 +58,18 @@ function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b
     end
 end
 
+function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Vector{Vector{T}}, b::Vector{T}, Δt::T) where {T}
+    @assert length(b) == length(ẋ)
+    @assert length(x) == length(ẋ[1])
+    @assert length(x) == length(xₑᵣᵣ)
+
+    for i in indices(ẋ)
+        for k in indices(ẋ[i])
+            x[k], xₑᵣᵣ[k] = compensated_summation(Δt * b[i] * ẋ[i][k], x[k], xₑᵣᵣ[k])
+        end
+    end
+end
+
 function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, ẋ::Matrix{T}, b::Vector{T}, Δt::T) where {T}
     @assert length(x) == size(ẋ, 1)
     @assert length(b) == size(ẋ, 2)
@@ -73,12 +85,23 @@ function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, ẋ::Matrix{T}
     end
 end
 
-function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
+function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, ẋ::Vector{Vector{T}}, b::Vector{T}, Δt::T) where {T}
+    @assert length(b) == length(ẋ)
+    @assert length(x) == length(ẋ[1])
+
+    for i in 1:length(ẋ)
+        for k in 1:length(ẋ[i])
+            x[k] += Δt * b[i] * ẋ[i][k]
+        end
+    end
+end
+
+function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
     update_solution!(x, xₑᵣᵣ, ẋ, b, Δt)
     update_solution!(x, xₑᵣᵣ, ẋ, b̂, Δt)
 end
 
-function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, ẋ::Matrix{T}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
+function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
     update_solution!(x, ẋ, b, Δt)
     update_solution!(x, ẋ, b̂, Δt)
 end
