@@ -140,10 +140,12 @@ Base.indices(ds::DataSeries{T,2}) where {T} = (1:ds.nd, 0:ds.nt)
 Base.indices(ds::DataSeries{T,3}) where {T} = (1:ds.nd, 0:ds.nt, 1:ds.ni)
 Base.strides(ds::DataSeries) = (strides(ds.d))
 
+
+# Corrected the bugs: removed the line with the x variable; assertion for j checked
+# along the first dimension of ds.d
 function get_data!(ds::DataSeries{T,1}, n, k=1) where {T}
     j = n+1
-    @assert length(x) == size(ds.d, 1)
-    @assert j ≤ size(ds.d, 2)
+    @assert j ≤ size(ds.d, 1)
     @assert k == 1
     @inbounds return ds.d[j]
 end
@@ -179,11 +181,14 @@ function get_data!(ds::DataSeries{T,3}, x::Union{Array{T,1}, Array{Double{T},1}}
     end
 end
 
+
+# Corrected the bugs: assertion for j checked
+# along the first dimension of ds.d, removed index from x
 function set_data!(ds::DataSeries{T,1}, x::Union{T, Double{T}}, n, k=1) where {T}
     j = n+1
-    @assert j ≤ size(ds.d, 2)
+    @assert j ≤ size(ds.d, 1)
     @assert k == 1
-    @inbounds ds.d[j] = x[i]
+    @inbounds ds.d[j] = x
 end
 
 function set_data!(ds::DataSeries{T,2}, x::Union{Array{T,1}, Array{Double{T},1}}, n, k=1) where {T}
@@ -218,20 +223,21 @@ function set_data!(ds::DataSeries{T,3}, x::Union{Array{T,1}, Array{Double{T},1}}
     end
 end
 
+# Corrected the bugs in all reset! functions: changed end to end-1
 function reset!(ds::DataSeries{T,1}) where {T}
-    @inbounds ds[0] = ds[end]
+    @inbounds ds[0] = ds[end-1]
 end
 
 function reset!(ds::DataSeries{T,2}) where {T}
     @inbounds for i in 1:size(ds,1)
-        ds[i,0] = ds[i,end]
+        ds[i,0] = ds[i,end-1]
     end
 end
 
 function reset!(ds::DataSeries{T,3}) where {T}
     @inbounds for k in 1:size(ds,3)
         for i in 1:size(ds,1)
-            ds[i,0,k] = ds[i,end,k]
+            ds[i,0,k] = ds[i,end-1,k]
         end
     end
 end

@@ -17,6 +17,11 @@ module Solutions
 
     include("solutions/timeseries.jl")
 
+    export StochasticDataSeries, get_data!, set_data!, reset!
+    export SStochasticDataSeries
+
+    include("solutions/stochasticdataseries.jl")
+
     export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE, SolutionSDE,
            copy_solution!, reset!,
            get_initial_conditions!, set_initial_conditions!,
