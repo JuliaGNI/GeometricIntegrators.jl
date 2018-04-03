@@ -65,7 +65,7 @@ end
 
 function SStochasticDataSeries(d::Array{T,1}) where {T}
     nd = 1
-    nt = size(d,1)-1
+    nt = size(d,1)
     ns = 1
     ni = 1
     return SStochasticDataSeries{T,1}(nd, nt, ns, ni, d)
@@ -75,7 +75,7 @@ end
 
 function SStochasticDataSeries(d::Array{T,2}) where {T}
     nd = size(d,1)
-    nt = size(d,2)-1
+    nt = size(d,2)
     ns = 1
     ni = 1
     return SStochasticDataSeries{T,2}(nd, nt, ns, ni, d)
@@ -87,7 +87,7 @@ end
 # (IC=true, so ni>1) or a single one (default IC=false, so ni=1)
 function SStochasticDataSeries(d::Array{T,3}; IC=false) where {T}
     nd = size(d,1)
-    nt = size(d,2)-1
+    nt = size(d,2)
 
     if IC==false
         ns = size(d,3)
@@ -104,7 +104,7 @@ end
 
 function SStochasticDataSeries(d::Array{T,4}) where {T}
     nd = size(d,1)
-    nt = size(d,2)-1
+    nt = size(d,2)
     ns = size(d,3)
     ni = size(d,4)
     return SStochasticDataSeries{T,4}(nd, nt, ns, ni, d)
@@ -304,6 +304,7 @@ function set_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,1}, Array{Dou
 end
 
 
+####### BUGS IN RESET! #######################################3
 function reset!(ds::StochasticDataSeries{T,1}) where {T}
     @inbounds ds[0] = ds[end-1]
 end

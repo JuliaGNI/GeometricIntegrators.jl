@@ -38,23 +38,27 @@ function SDataSeries(T, nd::Int, nt::Int, ni::Int)
     return SDataSeries{T,N}(nd, nt, ni)
 end
 
+
+# Corrected the bug: nt=size(d,1)-1
 function SDataSeries(d::Array{T,1}) where {T}
     nd = 1
-    nt = size(d,1)
+    nt = size(d,1)-1
     ni = 1
     return SDataSeries{T,1}(nd, nt, ni, d)
 end
 
+# Corrected the bug: nt=size(d,2)-1
 function SDataSeries(d::Array{T,2}) where {T}
     nd = size(d,1)
-    nt = size(d,2)
+    nt = size(d,2)-1
     ni = 1
     return SDataSeries{T,2}(nd, nt, ni, d)
 end
 
+# Corrected the bug: nt=size(d,2)-1
 function SDataSeries(d::Array{T,3}) where {T}
     nd = size(d,1)
-    nt = size(d,2)
+    nt = size(d,2)-1
     ni = size(d,3)
     return SDataSeries{T,3}(nd, nt, ni, d)
 end

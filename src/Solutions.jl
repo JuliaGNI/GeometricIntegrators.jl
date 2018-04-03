@@ -22,6 +22,11 @@ module Solutions
 
     include("solutions/stochasticdataseries.jl")
 
+    export SemiMartingale
+    export WienerProcess
+
+    include("solutions/wienerprocess.jl")
+
     export Solution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE, SolutionSDE,
            copy_solution!, reset!,
            get_initial_conditions!, set_initial_conditions!,
