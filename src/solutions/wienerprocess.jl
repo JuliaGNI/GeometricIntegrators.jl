@@ -111,3 +111,30 @@ function WienerProcess(Δt::tType, dW::Array{dType,3}, dZ::Array{dType,3}) where
 
     return WienerProcess{dType, tType, 3}(nd, nt, ns, Δt, dW, dZ)
 end
+
+
+# Generates a new series of increments for the Wiener process W
+function generate_wienerprocess!(W::WienerProcess{dType, tType, N}) where {dType, tType, N}
+
+    if N == 1
+        chi = randn(W.nt)
+        eta = randn(W.nt)
+    elseif N == 2
+        chi = randn(W.nd, W.nt)
+        eta = randn(W.nd, W.nt)
+    elseif N == 3
+        chi = randn(W.nd, W.nt, W.ns)
+        eta = randn(W.nd, W.nt, W.ns)
+    end
+
+    dW = chi*√W.Δt
+    dZ = W.Δt^(3/2)/2 * (chi+eta/√3)
+
+    W.ΔW.d.=dW
+    W.ΔZ.d.=dZ
+
+    return nothing
+end
+
+
+Base.ndims(ds::WienerProcess{DT,TT,N}) where {DT,TT,N} = N

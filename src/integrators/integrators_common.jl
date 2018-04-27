@@ -37,6 +37,23 @@ function create_solution_vector_double_double(DT, D, M)
 end
 
 
+"""
+Create a solution vector of type `Double{DT}` for a problem with `D` dimensions,
+`NS' sample paths, and `NI` independent initial conditions.
+"""
+function create_solution_vector_double_double(DT, D, NS, NI)
+    x = Array{Vector{Double{DT}}}(NS,NI)
+
+    for i in 1:NS
+        for j in 1:NI
+            x[i,j] = zeros(Double{DT}, D)
+        end
+    end
+
+    return x
+end
+
+
 function check_solution_dimension_asserts(sol::Solution, m::Int, n::Int)
     @assert m ≥ 1
     @assert m ≤ sol.ni
@@ -73,6 +90,44 @@ function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, ẋ::Matrix{T}
     end
 end
 
+
+# For stochastic Runge-Kutta methods
+# x - the solution vector to be updated
+# Vx - the matrix containing the drift vector evaluated at the internal stages v(Q_i)
+# Bx - the array containing the diffusion matrix evaluated at the internal stages B(Q_i)
+# bdrift - the Runge-Kutta coefficients for the drift part
+# bdiff - the Runge-Kutta coefficients for the diffusion part
+# Δt - the time step
+# ΔW - the increments of the Brownian motion
+function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, Vx::Matrix{T}, Bx::Array{T,3}, bdrift::Vector{T}, bdiff::Vector{T}, Δt::T, ΔW::Vector{T}) where {T}
+    @assert length(x) == size(Vx, 1) == size(Bx, 1)
+    @assert length(bdrift) == length(bdiff) == size(Vx, 2) == size(Bx, 3)
+    @assert length(ΔW)== size(Bx, 2)
+
+    local Δx::eltype(x)
+
+    # Contribution from the drift part
+    for k in indices(Vx, 1)
+        Δx = 0.
+        for i in indices(Vx, 2)
+            Δx += bdrift[i] * Vx[k,i]
+        end
+        x[k] += Δt * Δx
+    end
+
+    local Δy = zeros(eltype(x), length(ΔW))
+
+    # Contribution from the diffusion part
+    for k in indices(Bx, 1)
+        Δy .= zeros(eltype(x), length(ΔW))
+        for i in indices(Bx, 3)
+            Δy += bdiff[i] * Bx[k,:,i]
+        end
+        x[k] += dot(Δy,ΔW)
+    end
+end
+
+
 function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
     update_solution!(x, xₑᵣᵣ, ẋ, b, Δt)
     update_solution!(x, xₑᵣᵣ, ẋ, b̂, Δt)
@@ -81,6 +136,13 @@ end
 function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, ẋ::Matrix{T}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
     update_solution!(x, ẋ, b, Δt)
     update_solution!(x, ẋ, b̂, Δt)
+end
+
+# For stochastic Runge-Kutta methods
+function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, Vx::Matrix{T}, Bx::Array{T,3},
+                            bdrift::Vector{T}, b̂drift::Vector, bdiff::Vector{T}, b̂diff::Vector, Δt::T, ΔW::Vector{T}) where {T}
+    update_solution!(x, Vx, Bx, bdrift, bdiff, Δt, ΔW)
+    update_solution!(x, Vx, Bx, b̂drift, b̂diff, Δt, ΔW)
 end
 
 

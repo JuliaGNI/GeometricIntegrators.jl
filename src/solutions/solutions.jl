@@ -3,6 +3,8 @@ using HDF5
 
 abstract type Solution{dType, tType, N} end
 
+abstract type StochasticSolution{dType, tType, NQ, NW} <: Solution{dType, tType, NQ} end
+
 time(sol::Solution)  = error("time() not implemented for ", typeof(sol))
 ntime(sol::Solution) = error("ntime() not implemented for ", typeof(sol))
 nsave(sol::Solution) = error("nsave() not implemented for ", typeof(sol))

@@ -65,6 +65,11 @@ module Integrators
     include("integrators/rk/integrators_sirk.jl")
 
 
+    export IntegratorSFIRK, TableauSFIRK
+
+    include("integrators/rk/integrators_sfirk.jl")
+
+
     export IntegratorEPRK, TableauEPRK
     export IntegratorIPRK, TableauIPRK
     export IntegratorFLRK
