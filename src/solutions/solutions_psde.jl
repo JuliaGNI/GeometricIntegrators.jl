@@ -18,7 +18,7 @@ Contains all fields necessary to store the solution of a PSDE.
 * `nsave`: save every nsave'th time step
 
 """
-mutable struct SolutionPSDE{dType, tType, NQ, NW} <: Solution{dType, tType, NQ}
+mutable struct SolutionPSDE{dType, tType, NQ, NW} <: StochasticSolution{dType, tType, NQ, NW}
     nd::Int
     nm::Int
     nt::Int
@@ -153,29 +153,82 @@ function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, t₀::TT, q₀::Union
 end
 
 
-# COME BACK TO FIX THIS FUNCTION LATER
-# function get_initial_conditions!(sol::SolutionSDE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, k) where {DT,TT}
-#     get_data!(sol.q, q, 0, k)
-#
-#     # FOR NOW FORGET ABOUT COPYING THE BROWNIAN MOTION - PERHAPS IT IS NOT NECESSARY
-#     # get_data!(sol.w, w, 0, k)
-# end
-#
-# COME BACK TO FIX THIS FUNCTION LATER
-# function copy_solution!(sol::SolutionSDE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, w::Union{Array{DT}, Array{Double{DT}}}, n, k) where {DT,TT}
-#     if mod(n, sol.nsave) == 0
-#         set_data!(sol.q, q, div(n, sol.nsave), k)
-#         set_data!(sol.w, w, div(n, sol.nsave), k)
-#         sol.counter += 1
-#     end
-# end
-#
-# COME BACK TO FIX THIS FUNCTION LATER
-# function reset!(sol::SolutionSDE)
-#     reset!(sol.q)
-#     compute_timeseries!(sol.t, sol.t[end])
-#     sol.counter = 0
-# end
+# copies the m-th initial condition for the k-th sample path from sol.q to q
+function get_initial_conditions!(sol::SolutionPSDE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, p::Union{Vector{DT}, Vector{Double{DT}}}, k, m) where {DT,TT}
+
+    @assert k ≤ sol.ns
+    @assert m ≤ sol.ni
+
+    N = ndims(sol.q)
+
+    if N==1
+        # 1D space, 1 sample path and 1 initial condition, k==m==1
+        q[1] = get_data!(sol.q, 0)
+        p[1] = get_data!(sol.p, 0)
+    elseif N==2
+        # Multidimensional space, 1 sample path and 1 initial condition, k==m==1
+        get_data!(sol.q, q, 0)
+        get_data!(sol.p, p, 0)
+    elseif N==3
+        # Multidimensional space, with either 1 sample path or 1 initial condition
+        if sol.ns==1
+            # 1 sample path, k==1, reading the m-th initial condition
+            get_data!(sol.q, q, 0, m)
+            get_data!(sol.p, p, 0, m)
+        else
+            #1 initial condition, m==1, reading the k-th sample path
+            get_data!(sol.q, q, 0, k)
+            get_data!(sol.p, p, 0, k)
+        end
+    elseif N==4
+        # Multidimensional space, multiple sample paths and initial conditions
+        get_data!(sol.q, q, 0, k, m)
+        get_data!(sol.p, p, 0, k, m)
+    end
+
+end
+
+
+function copy_solution!(sol::SolutionPSDE{DT,TT,NQ,NW}, q::Union{Vector{DT}, Vector{Double{DT}}}, p::Union{Vector{DT}, Vector{Double{DT}}}, n, k, m) where {DT,TT,NQ,NW}
+
+    if mod(n, sol.nsave) == 0
+
+        if NQ ∈ (1,2)
+            # Single sample path and a single initial condition, k==m==1
+            @assert k==m==1
+            set_data!(sol.q, q, div(n, sol.nsave))
+            set_data!(sol.p, p, div(n, sol.nsave))
+        elseif NQ==3
+            if sol.ni==1
+                #Single initial condition, multiple sample paths, m==1
+                @assert m==1
+                set_data!(sol.q, q, div(n, sol.nsave), k)
+                set_data!(sol.p, p, div(n, sol.nsave), k)
+            else
+                #Single sample path, multiple initial conditions, k==1
+                @assert k==1
+                set_data!(sol.q, q, div(n, sol.nsave), m)
+                set_data!(sol.p, p, div(n, sol.nsave), m)
+            end
+        elseif NQ==4
+            # Multiple sample paths and initial conditions
+            set_data!(sol.q, q, div(n, sol.nsave), k, m)
+            set_data!(sol.p, p, div(n, sol.nsave), k, m)
+        end
+
+        sol.counter += 1
+    end
+end
+
+
+function reset!(sol::SolutionPSDE)
+    reset!(sol.q)
+    reset!(sol.p)
+    compute_timeseries!(sol.t, sol.t[end])
+    generate_wienerprocess!(sol.W)
+    sol.counter = 0
+end
+
 
 
 # "Creates HDF5 file and initialises datasets for SDE solution object."

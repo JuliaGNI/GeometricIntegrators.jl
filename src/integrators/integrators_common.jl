@@ -128,6 +128,53 @@ function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, Vx::Matrix{T},
 end
 
 
+# For stochastic partitioned Runge-Kutta methods
+# q, p - the solution vector to be updated
+# Vqp, Fqp - the matrix containing the drift vectors evaluated at the internal stages v(Q_i), f(Q_i)
+# Bqp, Gqp - the array containing the diffusion matrices evaluated at the internal stages B(Q_i), G(Q_i)
+# bqdrift, bpdrift - the Runge-Kutta coefficients for the drift parts of the q and p equations
+# bqdiff, bpdiff - the Runge-Kutta coefficients for the diffusion parts of the q and p equations
+# Δt - the time step
+# ΔW - the increments of the Brownian motion
+function update_solution!(q::Union{Vector{T}, Vector{Double{T}}}, p::Union{Vector{T}, Vector{Double{T}}}, Vqp::Matrix{T}, Fqp::Matrix{T}, Bqp::Array{T,3}, Gqp::Array{T,3}, bqdrift::Vector{T}, bqdiff::Vector{T}, bpdrift::Vector{T}, bpdiff::Vector{T}, Δt::T, ΔW::Vector{T}) where {T}
+    @assert length(q) == length(p) == size(Vqp, 1) == size(Fqp, 1) == size(Bqp, 1) == size(Gqp, 1)
+    @assert length(bqdrift) == length(bqdiff) == length(bpdrift) == length(bpdiff) == size(Vqp, 2) == size(Fqp, 2) == size(Bqp, 3) == size(Gqp, 3)
+    @assert length(ΔW) == size(Bqp, 2) == size(Gqp, 2)
+
+    local Δq::eltype(q)
+    local Δp::eltype(p)
+
+    # Contribution from the drift part
+    for k in indices(Vqp, 1)
+        Δq = 0.
+        Δp = 0.
+        for i in indices(Vqp, 2)
+            Δq += bqdrift[i] * Vqp[k,i]
+            Δp += bpdrift[i] * Fqp[k,i]
+        end
+        q[k] += Δt * Δq
+        p[k] += Δt * Δp
+    end
+
+    local Δy = zeros(eltype(q), length(ΔW))
+    local Δz = zeros(eltype(p), length(ΔW))
+
+    # Contribution from the diffusion part
+    for k in indices(Bqp, 1)
+        Δy .= zeros(eltype(q), length(ΔW))
+        Δz .= zeros(eltype(p), length(ΔW))
+
+        for i in indices(Bqp, 3)
+            Δy += bqdiff[i] * Bqp[k,:,i]
+            Δz += bpdiff[i] * Gqp[k,:,i]
+        end
+
+        q[k] += dot(Δy,ΔW)
+        p[k] += dot(Δz,ΔW)
+    end
+end
+
+
 function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
     update_solution!(x, xₑᵣᵣ, ẋ, b, Δt)
     update_solution!(x, xₑᵣᵣ, ẋ, b̂, Δt)
@@ -145,6 +192,13 @@ function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, Vx::Matrix{T},
     update_solution!(x, Vx, Bx, b̂drift, b̂diff, Δt, ΔW)
 end
 
+# For stochastic partitioned Runge-Kutta methods
+function update_solution!(q::Union{Vector{T}, Vector{Double{T}}}, p::Union{Vector{T}, Vector{Double{T}}}, Vqp::Matrix{T}, Fqp::Matrix{T}, Bqp::Array{T,3}, Gqp::Array{T,3},
+                            bqdrift::Vector{T}, b̂qdrift::Vector, bqdiff::Vector{T}, b̂qdiff::Vector,
+                            bpdrift::Vector{T}, b̂pdrift::Vector, bpdiff::Vector{T}, b̂pdiff::Vector, Δt::T, ΔW::Vector{T}) where {T}
+    update_solution!(q, p, Vqp, Fqp, Bqp, Gqp, bqdrift, bqdiff, bpdrift, bpdiff, Δt, ΔW)
+    update_solution!(q, p, Vqp, Fqp, Bqp, Gqp, b̂qdrift, b̂qdiff, b̂pdrift, b̂pdiff, Δt, ΔW)
+end
 
 function cut_periodic_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, periodicity::Vector{T}) where {T}
     @assert length(x) == length(xₑᵣᵣ) == length(periodicity)

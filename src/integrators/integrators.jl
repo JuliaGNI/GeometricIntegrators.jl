@@ -19,6 +19,11 @@ function Integrator(equation::SDE, tableau::TableauSFIRK, Δt)
     IntegratorSFIRK(equation, tableau, Δt)
 end
 
+"Create integrator for stochastic fully implicit partitioned Runge-Kutta tableau."
+function Integrator(equation::PSDE, tableau::TableauSFIPRK, Δt)
+    IntegratorSFIPRK(equation, tableau, Δt)
+end
+
 "Create integrator for singly implicit Runge-Kutta tableau."
 function Integrator(equation::ODE, tableau::TableauSIRK, Δt)
     IntegratorSIRK(equation, tableau, Δt)

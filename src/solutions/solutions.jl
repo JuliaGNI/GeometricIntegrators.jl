@@ -50,6 +50,11 @@ function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=1)
     SolutionSDE(equation, Δt, ntime, nsave)
 end
 
+"Create solution for PSDE."
+function Solution(equation::PSDE, Δt, ntime::Int, nsave::Int=1)
+    SolutionPSDE(equation, Δt, ntime, nsave)
+end
+
 "Print error for solutions of equations not implemented, yet."
 function Solution(equation::Equation, Δt, ntime::Int, nsave::Int=1)
     error("No solution found for equation ", equation)
