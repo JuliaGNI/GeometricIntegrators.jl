@@ -73,6 +73,62 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int
 end
 
 
+function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1) where {DT,TT,VT,BT,NW}
+    nd = equation.d
+    nm = equation.m
+    ns = equation.ns
+    ni = equation.n
+    nt = div(ntime, nsave)
+
+    if nd==ns==ni==1
+        NQ = 1
+    elseif ns==ni==1
+        NQ = 2
+    elseif ns==1 || ni==1
+        NQ = 3
+    else
+        NQ = 4
+    end
+
+    @assert size(dW) == size(dZ)
+
+    if NW==1
+        @assert ns==nm==1
+        @assert ntime==length(dW)
+    elseif NW==2
+        @assert nm==size(dW,1)
+        @assert ntime==size(dW,2)
+        @assert ns==1
+    elseif NW==3
+        @assert nm==size(dW,1)
+        @assert ntime==size(dW,2)
+        @assert ns==size(dW,3)
+    end
+
+    @assert DT <: Number
+    @assert TT <: Real
+    @assert nd > 0
+    @assert ns > 0
+    @assert ni > 0
+    @assert nsave > 0
+    @assert ntime == 0 || ntime ≥ nsave
+    @assert mod(ntime, nsave) == 0
+
+
+    t = TimeSeries{TT}(nt, Δt, nsave)
+
+    q = SStochasticDataSeries(DT, nd, nt, ns, ni)
+
+    # Holds the Wiener process data for ALL computed time steps
+    # Wiener process increments are prescribed by the arrays ΔW and ΔZ
+    W = WienerProcess(Δt, dW, dZ)
+
+    s = SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, ntime, nsave, 0)
+    set_initial_conditions!(s, equation)
+    return s
+end
+
+
 function SolutionSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW}) where {DT,TT,NQ,NW}
     # extract parameters
     nd = q.nd
@@ -110,7 +166,7 @@ function SolutionSDE(file::String)
     close(h5)
 
     if ndims(q_array)==3 && ni>1
-        q = SStochasticDataSeries(q_array,true)
+        q = SStochasticDataSeries(q_array,IC=true)
     else
         q = SStochasticDataSeries(q_array)
     end
