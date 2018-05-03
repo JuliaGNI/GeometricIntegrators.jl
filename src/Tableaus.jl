@@ -68,6 +68,11 @@ module Tableaus
 
     include("tableaus/tableaus_eprk.jl")
 
+    export getTableauPlaten, getTableauBurrageR2, getTableauBurrageCL
+    export getTableauBurrageE1, getTableauBurrageG5
+
+    include("tableaus/tableaus_serk.jl")
+
     export getTableauSymplecticEulerA, getTableauSymplecticEulerB,
            getTableauLobattoIIIAIIIB2, getTableauLobattoIIIBIIIA2
 

@@ -4,6 +4,11 @@ function Integrator(equation::ODE, tableau::TableauERK, Δt)
     IntegratorERK(equation, tableau, Δt)
 end
 
+"Create integrator for stochastic explicit Runge-Kutta tableau."
+function Integrator(equation::SDE, tableau::TableauSERK, Δt)
+    IntegratorSERK(equation, tableau, Δt)
+end
+
 "Create integrator for diagonally implicit Runge-Kutta tableau."
 function Integrator(equation::ODE, tableau::TableauDIRK, Δt)
     IntegratorDIRK(equation, tableau, Δt)

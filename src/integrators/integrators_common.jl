@@ -128,6 +128,54 @@ function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, Vx::Matrix{T},
 end
 
 
+# For stochastic Runge-Kutta methods
+# x - the solution vector to be updated
+# Vx - the matrix containing the drift vector evaluated at the internal stages v(Q_i)
+# Bx - the array containing the diffusion matrix evaluated at the internal stages B(Q_i)
+# bdrift - the Runge-Kutta coefficients for the drift part
+# bdiff - the Runge-Kutta coefficients for the ΔW terms of the diffusion part
+# bdiff2- the Runge-Kutta coefficients for the ΔZ terms of the diffusion part
+# Δt - the time step
+# ΔW - the increments of the Brownian motion
+# ΔZ - the integrals of the increments of the Brownian motion
+function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, Vx::Matrix{T}, Bx::Array{T,3}, bdrift::Vector{T}, bdiff::Vector{T}, bdiff2::Vector{T}, Δt::T, ΔW::Vector{T}, ΔZ::Vector{T}) where {T}
+    @assert length(x) == size(Vx, 1) == size(Bx, 1)
+    @assert length(bdrift) == length(bdiff) == length(bdiff2) == size(Vx, 2) == size(Bx, 3)
+    @assert length(ΔW) == length(ΔZ) == size(Bx, 2)
+
+    local Δx::eltype(x)
+
+    # Contribution from the drift part
+    for k in indices(Vx, 1)
+        Δx = 0.
+        for i in indices(Vx, 2)
+            Δx += bdrift[i] * Vx[k,i]
+        end
+        x[k] += Δt * Δx
+    end
+
+    local Δy = zeros(eltype(x), length(ΔW))
+
+    # Contribution from the diffusion part (ΔW terms)
+    for k in indices(Bx, 1)
+        Δy .= zeros(eltype(x), length(ΔW))
+        for i in indices(Bx, 3)
+            Δy += bdiff[i] * Bx[k,:,i]
+        end
+        x[k] += dot(Δy,ΔW)
+    end
+
+    # Contribution from the diffusion part (ΔZ terms)
+    for k in indices(Bx, 1)
+        Δy .= zeros(eltype(x), length(ΔW))
+        for i in indices(Bx, 3)
+            Δy += bdiff2[i] * Bx[k,:,i]
+        end
+        x[k] += dot(Δy,ΔZ)/Δt
+    end
+end
+
+
 # For stochastic partitioned Runge-Kutta methods
 # q, p - the solution vector to be updated
 # Vqp, Fqp - the matrix containing the drift vectors evaluated at the internal stages v(Q_i), f(Q_i)

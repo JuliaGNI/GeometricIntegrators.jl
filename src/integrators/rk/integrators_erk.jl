@@ -57,7 +57,7 @@ struct IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
     tableau::TableauERK{TT}
     Δt::TT
 
-    q::Array{DT,1}
+    q::Vector{Array{DT,1}}
     V::Array{DT,2}
     tQ::Array{DT,1}
     tV::Array{DT,1}
@@ -66,8 +66,12 @@ struct IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
     function IntegratorERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
         D = equation.d
         S = tableau.q.s
+        NI= equation.n
+        # create solution vectors
+        q = create_solution_vector_double_double(DT, D, NI)
+
         new(equation, tableau, Δt,
-            zeros(DT,D), zeros(DT,D,S),
+            q, zeros(DT,D,S),
             zeros(DT,D), zeros(DT,D))
     end
 end
@@ -81,7 +85,7 @@ function initialize!(int::IntegratorERK, sol::SolutionODE, m::Int)
     @assert m ≤ sol.ni
 
     # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q, m)
+    get_initial_conditions!(sol, int.q[m], m)
 end
 
 "Integrate ODE with explicit Runge-Kutta integrator."
@@ -90,7 +94,7 @@ function integrate_step!(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N}
     local y::DT
 
     # compute internal stages
-    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q, int.tV)
+    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[m], int.tV)
     simd_copy_yx_first!(int.tV, int.V, 1)
 
     for i in 2:int.tableau.q.s
@@ -99,7 +103,7 @@ function integrate_step!(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N}
             for j = 1:i-1
                 y += int.tableau.q.a[i,j] * int.V[k,j]
             end
-            int.tQ[k] = int.q[k] + int.Δt * y
+            int.tQ[k] = int.q[m][k] + int.Δt * y
         end
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.q.c[i]
         int.equation.v(tᵢ, int.tQ, int.tV)
@@ -107,11 +111,11 @@ function integrate_step!(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N}
     end
 
     # compute final update
-    update_solution!(int.q, int.V, int.tableau.q.b, int.Δt)
+    update_solution!(int.q[m], int.V, int.tableau.q.b, int.Δt)
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q, int.equation.periodicity)
+    cut_periodic_solution!(int.q[m], int.equation.periodicity)
 
     # copy to solution
-    copy_solution!(sol, int.q, n, m)
+    copy_solution!(sol, int.q[m], n, m)
 end
