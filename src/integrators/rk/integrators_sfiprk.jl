@@ -266,14 +266,72 @@ function initialize!(int::IntegratorSFIPRK{DT,TT}, sol::SolutionPSDE, k::Int, m:
 end
 
 # NOT IMPLEMENTING InitialGuessSDE
-# This function assigns zeroes to solver.x as initial guesses for Y, Z
-# s-th sample path for m-th initial condition---these arguments are not used yet,
-# but will be used when a better prediction is implemented
-function initial_guess!(int::IntegratorSFIPRK, s::Int, m::Int)
+# This function computes initial guesses for Y, Z and assigns them to int.solver.x
+# The prediction is calculated using an explicit integrator.
+function initial_guess!(int::IntegratorSFIPRK{DT,TT}) where {DT,TT}
 
-    #TODO: Use an explicit integrator to compute a better initial guess
+    # SIMPLE SOLUTION
+    # The simplest initial guess for Y, Z is 0
+    # int.solver.x .= zeros(eltype(int), 2*int.params.tab.s*dims(int))
 
-    int.solver.x .= zeros(eltype(int), 2*int.params.tab.s*dims(int))
+    # USING AN EXPLICIT INTEGRATOR TO COMPUTE AN INITIAL GUESS
+    # Below we use the R2 method of Burrage & Burrage to calculate
+    # the internal stages at the times c[1]...c[s].
+    # This approach seems to give very good approximations if the time step
+    # and magnitude of noise are not too large. If the noise intensity is too big,
+    # one may have to perform a few iterations of the explicit method with a smaller
+    # time step, use a higher-order explicit method (e.g. CL or G5), or use
+    # the simple solution above.
+
+    local tV1 = zeros(DT,int.params.equ.d)
+    local tV2 = zeros(DT,int.params.equ.d)
+    local tF1 = zeros(DT,int.params.equ.d)
+    local tF2 = zeros(DT,int.params.equ.d)
+    local tB1 = zeros(DT,int.params.equ.d, int.params.equ.m)
+    local tB2 = zeros(DT,int.params.equ.d, int.params.equ.m)
+    local tG1 = zeros(DT,int.params.equ.d, int.params.equ.m)
+    local tG2 = zeros(DT,int.params.equ.d, int.params.equ.m)
+    local Q   = zeros(DT,int.params.equ.d)
+    local P   = zeros(DT,int.params.equ.d)
+    local t2::TT
+    local Δt_local::TT
+    local ΔW_local = zeros(DT,int.params.equ.m)
+
+    # When calling this function, int.params should contain the data:
+    # int.params.q - the q solution at the previous time step
+    # int.params.p - the p solution at the previous time step
+    # int.params.t - the time of the previous step
+    # int.params.ΔW- the increment of the Brownian motion for the current step
+
+    #Evaluating the functions v and B at t,q - same for all stages
+    int.params.equ.v(int.params.t, int.params.q, int.params.p, tV1)
+    int.params.equ.B(int.params.t, int.params.q, int.params.p, tB1)
+    int.params.equ.f(int.params.t, int.params.q, int.params.p, tF1)
+    int.params.equ.G(int.params.t, int.params.q, int.params.p, tG1)
+
+    for i in 1:int.params.tab.s
+
+        # Taking the c[i] from the qdrift tableau. Assuming that they're the same
+        # for pdrift. One should be caeful if they're different
+        Δt_local  = int.params.tab.qdrift.c[i]*int.params.Δt
+        ΔW_local .= int.params.tab.qdrift.c[i]*int.params.ΔW
+
+        Q = int.params.q + 2./3. * Δt_local * tV1 + 2./3. * tB1 * ΔW_local
+        P = int.params.p + 2./3. * Δt_local * tF1 + 2./3. * tG1 * ΔW_local
+
+        t2 = int.params.t + 2./3.*Δt_local
+
+        int.params.equ.v(t2, Q, P, tV2)
+        int.params.equ.B(t2, Q, P, tB2)
+        int.params.equ.f(t2, Q, P, tF2)
+        int.params.equ.G(t2, Q, P, tG2)
+
+        #Calculating the Y's and Z's and assigning them to the array int.solver.x as initial guesses
+        for j in 1:int.params.equ.d
+            int.solver.x[(i-1)*int.params.equ.d+j] =  Δt_local*(1./4.*tV1[j] + 3./4.*tV2[j]) + dot( (1./4.*tB1[j,:] + 3./4.*tB2[j,:]), ΔW_local )
+            int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1./4.*tF1[j] + 3./4.*tF2[j]) + dot( (1./4.*tG1[j,:] + 3./4.*tG2[j,:]), ΔW_local )
+        end
+    end
 
 end
 
@@ -314,8 +372,8 @@ function integrate_step!(int::IntegratorSFIPRK{DT,TT}, sol::SolutionPSDE{DT,TT,N
     end
 
 
-    # compute initial guess - assigns zeroes to int.solver.x
-    initial_guess!(int, k, m)
+    # compute initial guess and assign to int.solver.x
+    initial_guess!(int)
 
     # call nonlinear solver
     solve!(int.solver)

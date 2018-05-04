@@ -223,14 +223,58 @@ function initialize!(int::IntegratorSFIRK{DT,TT}, sol::SolutionSDE, k::Int, m::I
 end
 
 # NOT IMPLEMENTING InitialGuessSDE
-# This function assigns zeroes to solver.x as initial guesses for Y
-# s-th sample path for m-th initial condition---these arguments are not used yet,
-# but will be used when a better prediction is implemented
-function initial_guess!(int::IntegratorSFIRK, s::Int, m::Int)
+# This function computes initial guesses for Y and assigns them to int.solver.x
+# The prediction is calculated using an explicit integrator.
+function initial_guess!(int::IntegratorSFIRK{DT,TT}) where {DT,TT}
 
-    #TODO: Use an explicit integrator to compute a better initial guess
+    # SIMPLE SOLUTION
+    # The simplest initial guess for Y is 0
+    # int.solver.x .= zeros(eltype(int), int.params.tab.s*dims(int))
 
-    int.solver.x .= zeros(eltype(int), int.params.tab.s*dims(int))
+    # USING AN EXPLICIT INTEGRATOR TO COMPUTE AN INITIAL GUESS
+    # Below we use the R2 method of Burrage & Burrage to calculate
+    # the internal stages at the times c[1]...c[s].
+    # This approach seems to give very good approximations if the time step
+    # and magnitude of noise are not too large. If the noise intensity is too big,
+    # one may have to perform a few iterations of the explicit method with a smaller
+    # time step, use a higher-order explicit method (e.g. CL or G5), or use
+    # the simple solution above.
+
+    local tV1 = zeros(DT,int.params.equ.d)
+    local tV2 = zeros(DT,int.params.equ.d)
+    local tB1 = zeros(DT,int.params.equ.d, int.params.equ.m)
+    local tB2 = zeros(DT,int.params.equ.d, int.params.equ.m)
+    local Q   = zeros(DT,int.params.equ.d)
+    local t2::TT
+    local Δt_local::TT
+    local ΔW_local = zeros(DT,int.params.equ.m)
+
+    # When calling this function, int.params should contain the data:
+    # int.params.q - the solution at the previous time step
+    # int.params.t - the time of the previous step
+    # int.params.ΔW- the increment of the Brownian motion for the current step
+
+    #Evaluating the functions v and B at t,q - same for all stages
+    int.params.equ.v(int.params.t, int.params.q, tV1)
+    int.params.equ.B(int.params.t, int.params.q, tB1)
+
+    for i in 1:int.params.tab.s
+
+        Δt_local  = int.params.tab.qdrift.c[i]*int.params.Δt
+        ΔW_local .= int.params.tab.qdrift.c[i]*int.params.ΔW
+
+        Q = int.params.q + 2./3. * Δt_local * tV1 + 2./3. * tB1 * ΔW_local
+
+        t2 = int.params.t + 2./3.*Δt_local
+
+        int.params.equ.v(t2, Q, tV2)
+        int.params.equ.B(t2, Q, tB2)
+
+        #Calculating the Y's and assigning them to the array int.solver.x as initial guesses
+        for j in 1:int.params.equ.d
+            int.solver.x[(i-1)*int.params.equ.d+j] =  Δt_local*(1./4.*tV1[j] + 3./4.*tV2[j]) + dot( (1./4.*tB1[j,:] + 3./4.*tB2[j,:]), ΔW_local )
+        end
+    end
 
 end
 
@@ -270,8 +314,8 @@ function integrate_step!(int::IntegratorSFIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,
     end
 
 
-    # compute initial guess - assigns zeroes to int.solver.x
-    initial_guess!(int, k, m)
+    # compute initial guess and assign to int.solver.x
+    initial_guess!(int)
 
     # call nonlinear solver
     solve!(int.solver)
