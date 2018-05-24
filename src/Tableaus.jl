@@ -64,7 +64,11 @@ module Tableaus
            getTableauRadIIA2,  getTableauRadIIA3,
            getTableauSRK3
 
-    include("tableaus/tableaus_sirk.jl")
+    include("tableaus/tableaus_sfirk.jl")
+    include("tableaus/tableaus_sfiprk.jl")
+
+    export  getTableauStochasticGLRK
+    export getTableauStochasticStormerVerlet
 
     include("tableaus/tableaus_eprk.jl")
 

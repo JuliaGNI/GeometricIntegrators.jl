@@ -130,7 +130,8 @@ end
     tG::Matrix{ST} = zeros(ST,D,M)
 
     quote
-        local tᵢ::TT
+        local tqᵢ::TT       #times for the q internal stages
+        local tpᵢ::TT       #times for the p internal stages
 
         @assert D == size(Q,1) == size(VQP,1) == size(BQP,1) == size(P,1) == size(FQP,1) == size(GQP,1)
         @assert S == size(Q,2) == size(VQP,2) == size(BQP,3) == size(P,2) == size(FQP,2) == size(GQP,3)
@@ -148,19 +149,20 @@ end
 
         # compute VQ = v(Q) and BQ=B(Q)
         for i in 1:S
-            tᵢ = params.t + params.Δt * params.tab.qdrift.c[i]
+            tqᵢ = params.t + params.Δt * params.tab.qdrift.c[i]
+            tpᵢ = params.t + params.Δt * params.tab.pdrift.c[i]
             # copies the i-th column of Q, P to the vectors tQ, tP
             simd_copy_xy_first!($tQ, Q, i)
             simd_copy_xy_first!($tP, P, i)
             # calculates v(t,tQ) and assigns to tV
-            params.equ.v(tᵢ, $tQ, $tP, $tV)
-            params.equ.f(tᵢ, $tQ, $tP, $tF)
+            params.equ.v(tqᵢ, $tQ, $tP, $tV)
+            params.equ.f(tpᵢ, $tQ, $tP, $tF)
             # copies tV into the i-th column of VQ
             simd_copy_yx_first!($tV, VQP, i)
             simd_copy_yx_first!($tF, FQP, i)
             # calculates B(t,tQ) and assigns to the matrix tB
-            params.equ.B(tᵢ, $tQ, $tP, $tB)
-            params.equ.G(tᵢ, $tQ, $tP, $tG)
+            params.equ.B(tqᵢ, $tQ, $tP, $tB)
+            params.equ.G(tpᵢ, $tQ, $tP, $tG)
             # copies the matrix tB to BQ[:,:,i]
             simd_copy_yx_first!($tB, BQP, i)
             simd_copy_yx_first!($tG, GQP, i)
@@ -283,13 +285,13 @@ function initial_guess!(int::IntegratorSFIPRK{DT,TT}) where {DT,TT}
     # time step, use a higher-order explicit method (e.g. CL or G5), or use
     # the simple solution above.
 
-    local tV1 = zeros(DT,int.params.equ.d)
+    local tV1   = zeros(DT,int.params.equ.d)
     local tV2 = zeros(DT,int.params.equ.d)
-    local tF1 = zeros(DT,int.params.equ.d)
+    local tF1   = zeros(DT,int.params.equ.d)
     local tF2 = zeros(DT,int.params.equ.d)
-    local tB1 = zeros(DT,int.params.equ.d, int.params.equ.m)
+    local tB1   = zeros(DT,int.params.equ.d, int.params.equ.m)
     local tB2 = zeros(DT,int.params.equ.d, int.params.equ.m)
-    local tG1 = zeros(DT,int.params.equ.d, int.params.equ.m)
+    local tG1   = zeros(DT,int.params.equ.d, int.params.equ.m)
     local tG2 = zeros(DT,int.params.equ.d, int.params.equ.m)
     local Q   = zeros(DT,int.params.equ.d)
     local P   = zeros(DT,int.params.equ.d)
@@ -309,10 +311,12 @@ function initial_guess!(int::IntegratorSFIPRK{DT,TT}) where {DT,TT}
     int.params.equ.f(int.params.t, int.params.q, int.params.p, tF1)
     int.params.equ.G(int.params.t, int.params.q, int.params.p, tG1)
 
+
+    # Calculating the positions q at the points qdrift.c[i]
+    # if qdrift.c==pdrift.c, then also calculating the momenta
     for i in 1:int.params.tab.s
 
-        # Taking the c[i] from the qdrift tableau. Assuming that they're the same
-        # for pdrift. One should be caeful if they're different
+        # Taking the c[i] from the qdrift tableau.
         Δt_local  = int.params.tab.qdrift.c[i]*int.params.Δt
         ΔW_local .= int.params.tab.qdrift.c[i]*int.params.ΔW
 
@@ -326,10 +330,44 @@ function initial_guess!(int::IntegratorSFIPRK{DT,TT}) where {DT,TT}
         int.params.equ.f(t2, Q, P, tF2)
         int.params.equ.G(t2, Q, P, tG2)
 
-        #Calculating the Y's and Z's and assigning them to the array int.solver.x as initial guesses
+        #Calculating the Y's and assigning them to the array int.solver.x as initial guesses
         for j in 1:int.params.equ.d
             int.solver.x[(i-1)*int.params.equ.d+j] =  Δt_local*(1./4.*tV1[j] + 3./4.*tV2[j]) + dot( (1./4.*tB1[j,:] + 3./4.*tB2[j,:]), ΔW_local )
-            int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1./4.*tF1[j] + 3./4.*tF2[j]) + dot( (1./4.*tG1[j,:] + 3./4.*tG2[j,:]), ΔW_local )
+        end
+
+        # if the collocation points are the same for both q and p parts
+        if int.params.tab.qdrift.c==int.params.tab.pdrift.c
+            for j in 1:int.params.equ.d
+                int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1./4.*tF1[j] + 3./4.*tF2[j]) + dot( (1./4.*tG1[j,:] + 3./4.*tG2[j,:]), ΔW_local )
+            end
+        end
+    end
+
+
+    # If qdrift.c != pdrift.c, then calculating the momenta p at the points pdrift.c[i]
+    if int.params.tab.qdrift.c != int.params.tab.pdrift.c
+
+        for i in 1:int.params.tab.s
+
+            # Taking the c[i] from the pdrift tableau.
+            Δt_local  = int.params.tab.pdrift.c[i]*int.params.Δt
+            ΔW_local .= int.params.tab.pdrift.c[i]*int.params.ΔW
+
+            Q = int.params.q + 2./3. * Δt_local * tV1 + 2./3. * tB1 * ΔW_local
+            P = int.params.p + 2./3. * Δt_local * tF1 + 2./3. * tG1 * ΔW_local
+
+            t2 = int.params.t + 2./3.*Δt_local
+
+            int.params.equ.v(t2, Q, P, tV2)
+            int.params.equ.B(t2, Q, P, tB2)
+            int.params.equ.f(t2, Q, P, tF2)
+            int.params.equ.G(t2, Q, P, tG2)
+
+            # Calculating the Z's and assigning them to the array int.solver.x as initial guesses
+            # The guesses for the Y's have already been written to x above
+            for j in 1:int.params.equ.d
+                int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1./4.*tF1[j] + 3./4.*tF2[j]) + dot( (1./4.*tG1[j,:] + 3./4.*tG2[j,:]), ΔW_local )
+            end
         end
     end
 
