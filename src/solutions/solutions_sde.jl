@@ -266,10 +266,15 @@ end
 # "Creates HDF5 file and initialises datasets for SDE solution object."
 # It is implemented as one fucntion for all NQ and NW cases, rather than several
 # separate cases as was done for SolutionODE.
-function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString, ntime::Int=1) where {DT,TT,NQ,NW}
+# nt - the total number of time steps to store
+# ntime - the total number of timesteps to be computed
+function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString, nt::Int=solution.nt, ntime::Int=solution.ntime) where {DT,TT,NQ,NW}
+    @assert nt ≥ 1
     @assert ntime ≥ 1
 
-    # create HDF5 file and save ntime, nsave as attributes, and t as the dataset called "t"
+    # create HDF5 file
+    # this calls the variant of createHDF5 for StochasticSolution,
+    # which does not create the array for t.
     h5 = createHDF5(solution, file)
 
     # Adding the attributes specific to SolutionSDE that were not added above
@@ -277,13 +282,15 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString, n
     attrs(h5)["nm"] = solution.nm
     attrs(h5)["ns"] = solution.ns
     attrs(h5)["ni"] = solution.ni
-    attrs(h5)["nt"] = solution.nt
+    attrs(h5)["nt"] = nt
+    attrs(h5)["ntime"] = ntime
+    attrs(h5)["nsave"] = solution.nsave
 
     # create dataset
-    # ntime can be used to set the expected total number of timesteps
+    # nt and ntime can be used to set the expected total number of timesteps to be saved,
     # so that the size of the array does not need to be adapted dynamically.
     # Right now, it has to be set as dynamical size adaptation is not yet
-    # working.
+    # working. The default value is the size of the solution structure.
     if NQ==1
         # COULDN'T FIGURE OUT HOW TO USE d_create FOR A 1D ARRAY - the line below gives errors,
         # i.e., a 1x1 dataset is created, instead of an array
@@ -291,49 +298,76 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString, n
         #q[1] = solution.q.d[1]
 
         # INSTEAD, ALLOCATING A ZERO ARRAY q AND USING write TO CREATE A DATASET IN THE FILE
-        q = zeros(DT,solution.nt+1)
+        q = zeros(DT,nt+1)
         # copy initial conditions
         q[1] = solution.q.d[1]
         write(h5,"q",q)
     elseif NQ==2
-        q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
+        q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
         # copy initial conditions
         q[1:solution.nd, 1] = solution.q.d[1:solution.nd, 1]
     elseif NQ==3
         if solution.ns>1
-            q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ns), "chunk", (solution.nd,1,1))
+            q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ns), "chunk", (solution.nd,1,1))
         else
-            q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ni), "chunk", (solution.nd,1,1))
+            q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
         end
         # copy initial conditions
         q[:, 1, :] = solution.q.d[:, 1, :]
     else
-        q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ns, solution.ni), "chunk", (solution.nd,1,1,1))
+        q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ns, solution.ni), "chunk", (solution.nd,1,1,1))
         # copy initial conditions
         q[:, 1, :, :] = solution.q.d[:, 1, :, :]
     end
 
-    write(h5, "ΔW", solution.W.ΔW.d)
-    write(h5, "ΔZ", solution.W.ΔZ.d)
+
+    # creating datasets to store the Wiener process increments
+    if NW==1
+        # COULDN'T FIGURE OUT HOW TO USE d_create FOR A 1D ARRAY
+        # INSTEAD, ALLOCATING A ZERO ARRAY q AND USING write TO CREATE A DATASET IN THE FILE
+        write(h5,"ΔW",zeros(DT,ntime))
+        write(h5,"ΔZ",zeros(DT,ntime))
+    elseif NW==2
+        dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
+        dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
+    elseif NW==3
+        dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, ntime, solution.ns), "chunk", (solution.nm,1,1))
+        dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, ntime, solution.ns), "chunk", (solution.nm,1,1))
+    end
+
+
+    # Creating a dataset for storing the time series
+    t = zeros(DT,nt+1)
+    t[1] = solution.t.t[1]
+    write(h5,"t",t)
 
     return h5
 end
 
 
 # "Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, h5::HDF5.HDF5File, offset=0) where {DT,TT,NQ,NW}
+# offset - start writing q at the position offset+2
+# offset2- start writing ΔW, ΔZ at the position offset2+1
+function CommonFunctions.write_to_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, h5::HDF5.HDF5File, offset=0, offset2=offset) where {DT,TT,NQ,NW}
     # set convenience variables and compute ranges
-    d  = solution.nd
-    n  = solution.nt
-    s  = solution.ns
-    i  = solution.ni
-    j1 = offset+2
-    j2 = offset+1+n
+    d   = solution.nd
+    m   = solution.nm
+    n   = solution.nt
+    s   = solution.ns
+    i   = solution.ni
+    ntime = solution.ntime
+    j1  = offset+2
+    j2  = offset+1+n
+    jw1 = offset2+1
+    jw2 = offset2+ntime
 
     # # extend dataset if necessary
     # if size(x, 2) < j2
     #     set_dims!(x, (d, j2))
     # end
+
+    # saving the time time series
+    h5["t"][j1:j2] = solution.t.t[2:n+1]
 
     # copy data from solution to HDF5 dataset
     if NQ==1
@@ -344,6 +378,18 @@ function CommonFunctions.write_to_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, h5::H
         h5["q"][:, j1:j2, :] = solution.q.d[:, 2:n+1,:]
     else
         h5["q"][:, j1:j2, :, :] = solution.q.d[:, 2:n+1, :, :]
+    end
+
+    # copy the Wiener process increments from solution to HDF5 dataset
+    if NW==1
+        h5["ΔW"][jw1:jw2] = solution.W.ΔW.d[1:ntime]
+        h5["ΔZ"][jw1:jw2] = solution.W.ΔZ.d[1:ntime]
+    elseif NW==2
+        h5["ΔW"][:,jw1:jw2] = solution.W.ΔW.d[:,1:ntime]
+        h5["ΔZ"][:,jw1:jw2] = solution.W.ΔZ.d[:,1:ntime]
+    elseif NW==3
+        h5["ΔW"][:,jw1:jw2,:] = solution.W.ΔW.d[:,1:ntime,:]
+        h5["ΔZ"][:,jw1:jw2,:] = solution.W.ΔZ.d[:,1:ntime,:]
     end
 
     return nothing

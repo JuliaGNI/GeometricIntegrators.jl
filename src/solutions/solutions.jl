@@ -84,6 +84,30 @@ function createHDF5(sol::Solution, file::AbstractString, overwrite=true)
     return h5
 end
 
+
+"createHDF5: Creates or opens HDF5 file."
+# A version for StochasticSolution. It does not create attributes
+# and does not write the time array t, like the version above does. Instead these
+# are set in create_hdf5(), so that arrays larger than currently held in the solution
+# structure can be created in the file. In the future it would be better to rewrite
+# the function above, so that it is universal for all solution structures.
+function createHDF5(sol::StochasticSolution, file::AbstractString, overwrite=true)
+    if overwrite
+        flag = "w"
+        info("Creating HDF5 file ", file)
+        isfile(file) ? warn("Overwriting existing HDF5 file.") : nothing
+    else
+        flag = "r+"
+        info("Opening HDF5 file ", file)
+    end
+
+    # create or open HDF5 file
+    h5 = h5open(file, flag)
+
+    return h5
+end
+
+
 "Creates HDF5 file, writes solution to file, and closes file."
 function writeSolutionToHDF5(solution::Solution, file::AbstractString)
     h5 = createHDF5(solution, file, solution.nt+1)

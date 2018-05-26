@@ -340,10 +340,14 @@ end
 
 
 function reset!(ds::StochasticDataSeries{T,1}) where {T}
-    @inbounds ds[0] = ds[end-1]
+    # ds[0]=ds[end-1] was wrong for some reason
+    # ds[0]=ds[end] would be ok, but to be safe below using ds.d
+    @inbounds ds.d[1] = ds.d[end]
 end
 
 function reset!(ds::StochasticDataSeries{T,2}) where {T}
+    # when 'end' is passed to getindex, because of the shift it becomes end+1
+    # in ds.d, therefore end-1 has to be passed to getindex instead
     @inbounds for i in 1:size(ds,1)
         ds[i,0] = ds[i,end-1]
     end
