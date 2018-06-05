@@ -156,6 +156,33 @@ function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SSt
 end
 
 
+# If the Wiener process W data are not available, creates a one-element zero array instead
+# For instance used when reading a file with no Wiener process data saved
+function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SStochasticDataSeries{DT,NQ}) where {DT,TT,NQ}
+    # extract parameters
+    nd = q.nd
+    ns = q.ns
+    ni = q.ni
+    nt = t.n
+    nsave = t.step
+    ntime = nt*nsave
+
+    @assert q.nt == nt
+    @assert q.nd == p.nd
+    @assert q.nt == p.nt
+    @assert q.ni == p.ni
+    @assert q.ns == p.ns
+
+    W = WienerProcess(t.Δt, [0.0], [0.0])
+
+    nm = W.nd
+    NW = ndims(W.ΔW)
+
+    # create solution
+    SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, ntime, nsave, 0)
+end
+
+
 function SolutionPSDE(file::String)
     # open HDF5 file
     info("Reading HDF5 file ", file)
@@ -167,7 +194,12 @@ function SolutionPSDE(file::String)
 
     # reading data arrays
     t = TimeSeries(read(h5["t"]), nsave)
-    W = WienerProcess(t.Δt, read(h5["ΔW"]), read(h5["ΔZ"]))
+
+    W_exists = exists(h5, "ΔW") && exists(h5, "ΔZ")
+
+    if W_exists == true
+        W = WienerProcess(t.Δt, read(h5["ΔW"]), read(h5["ΔZ"]))
+    end
 
     q_array = read(h5["q"])
     p_array = read(h5["p"])
@@ -183,7 +215,12 @@ function SolutionPSDE(file::String)
     end
 
     # create solution
-    SolutionPSDE(t, q, p, W)
+    if W_exists == true
+        SolutionPSDE(t, q, p, W)
+    else
+        SolutionPSDE(t, q, p)
+    end
+
 end
 
 
@@ -292,7 +329,7 @@ end
 # separate cases as was done for SolutionODE.
 # nt - the total number of time steps to store
 # ntime - the total number of timesteps to be computed
-function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString,  nt::Int=solution.nt, ntime::Int=solution.ntime) where {DT,TT,NQ,NW}
+function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString,  nt::Int=solution.nt, ntime::Int=solution.ntime; save_W=true) where {DT,TT,NQ,NW}
     @assert nt ≥ 1
     @assert ntime ≥ 1
 
@@ -353,18 +390,20 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
     end
 
 
-    # creating datasets to store the Wiener process increments
-    if NW==1
-        # COULDN'T FIGURE OUT HOW TO USE d_create FOR A 1D ARRAY
-        # INSTEAD, ALLOCATING A ZERO ARRAY q AND USING write TO CREATE A DATASET IN THE FILE
-        write(h5,"ΔW",zeros(DT,ntime))
-        write(h5,"ΔZ",zeros(DT,ntime))
-    elseif NW==2
-        dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
-        dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
-    elseif NW==3
-        dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, ntime, solution.ns), "chunk", (solution.nm,1,1))
-        dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, ntime, solution.ns), "chunk", (solution.nm,1,1))
+    if save_W==true
+        # creating datasets to store the Wiener process increments
+        if NW==1
+            # COULDN'T FIGURE OUT HOW TO USE d_create FOR A 1D ARRAY
+            # INSTEAD, ALLOCATING A ZERO ARRAY q AND USING write TO CREATE A DATASET IN THE FILE
+            write(h5,"ΔW",zeros(DT,ntime))
+            write(h5,"ΔZ",zeros(DT,ntime))
+        elseif NW==2
+            dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
+            dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
+        elseif NW==3
+            dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, ntime, solution.ns), "chunk", (solution.nm,1,1))
+            dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, ntime, solution.ns), "chunk", (solution.nm,1,1))
+        end
     end
 
 
@@ -417,18 +456,20 @@ function CommonFunctions.write_to_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, h5::
     end
 
 
-    # copy the Wiener process increments from solution to HDF5 dataset
-    if NW==1
-        h5["ΔW"][jw1:jw2] = solution.W.ΔW.d[1:ntime]
-        h5["ΔZ"][jw1:jw2] = solution.W.ΔZ.d[1:ntime]
-    elseif NW==2
-        h5["ΔW"][:,jw1:jw2] = solution.W.ΔW.d[:,1:ntime]
-        h5["ΔZ"][:,jw1:jw2] = solution.W.ΔZ.d[:,1:ntime]
-    elseif NW==3
-        h5["ΔW"][:,jw1:jw2,:] = solution.W.ΔW.d[:,1:ntime,:]
-        h5["ΔZ"][:,jw1:jw2,:] = solution.W.ΔZ.d[:,1:ntime,:]
+    if exists(h5, "ΔW") && exists(h5, "ΔZ")
+        # copy the Wiener process increments from solution to HDF5 dataset
+        if NW==1
+            h5["ΔW"][jw1:jw2] = solution.W.ΔW.d[1:ntime]
+            h5["ΔZ"][jw1:jw2] = solution.W.ΔZ.d[1:ntime]
+        elseif NW==2
+            h5["ΔW"][:,jw1:jw2] = solution.W.ΔW.d[:,1:ntime]
+            h5["ΔZ"][:,jw1:jw2] = solution.W.ΔZ.d[:,1:ntime]
+        elseif NW==3
+            h5["ΔW"][:,jw1:jw2,:] = solution.W.ΔW.d[:,1:ntime,:]
+            h5["ΔZ"][:,jw1:jw2,:] = solution.W.ΔZ.d[:,1:ntime,:]
+        end
     end
-    
+
 
     return nothing
 end
