@@ -1,3 +1,15 @@
+"Tableau for the explicit 2-stage stochastic Heun method"
+
+function getTableauStochasticHeun()
+
+    a = [[0.0 0.0]
+         [1.0 0.0]]
+    b = [0.5, 0.5]
+    c = [0.,  1.]
+
+    TableauSERK(:BurrageR2_explicit_method, 2, a, b, c, 2, a, b, c)
+end
+
 
 "Tableau for the explicit Platen method"
 # Platen's method cited in Eq. (52) in

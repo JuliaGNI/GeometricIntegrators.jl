@@ -73,7 +73,7 @@ module Tableaus
     include("tableaus/tableaus_eprk.jl")
 
     export getTableauPlaten, getTableauBurrageR2, getTableauBurrageCL
-    export getTableauBurrageE1, getTableauBurrageG5
+    export getTableauBurrageE1, getTableauBurrageG5, getTableauStochasticHeun
 
     include("tableaus/tableaus_serk.jl")
 
