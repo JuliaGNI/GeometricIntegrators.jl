@@ -45,20 +45,22 @@ end
 
 
 # "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
+#  A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
 mutable struct ParametersSFIRK{DT, TT, ET <: SDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
     equ::ET
     tab::TableauSFIRK{TT}
     Δt::TT
     ΔW::Vector{DT}
     ΔZ::Vector{DT}
+    A::DT
 
     t::TT
     q::Vector{DT}
 end
 
-function ParametersSFIRK(equ::ET, tab::TableauSFIRK{TT}, Δt::TT, ΔW::Vector{DT}, ΔZ::Vector{DT}) where {DT, TT, ET <: SDE{DT,TT}}
+function ParametersSFIRK(equ::ET, tab::TableauSFIRK{TT}, Δt::TT, ΔW::Vector{DT}, ΔZ::Vector{DT}, A::DT) where {DT, TT, ET <: SDE{DT,TT}}
     @assert equ.m == length(ΔW) == length(ΔZ)
-    ParametersSFIRK{DT, TT, ET, equ.d, equ.m, tab.s}(equ, tab, Δt, ΔW, ΔZ, 0, zeros(DT, equ.d))
+    ParametersSFIRK{DT, TT, ET, equ.d, equ.m, tab.s}(equ, tab, Δt, ΔW, ΔZ, A, 0, zeros(DT, equ.d))
 end
 
 struct NonlinearFunctionCacheSFIRK{DT}
@@ -174,7 +176,9 @@ struct IntegratorSFIRK{DT, TT, PT <: ParametersSFIRK{DT,TT},
     q::Matrix{Vector{Double{DT}}}
 end
 
-function IntegratorSFIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSFIRK{TT}, Δt::TT) where {DT,TT,VT,BT,N}
+
+# K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
+function IntegratorSFIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSFIRK{TT}, Δt::TT; K::Int=0) where {DT,TT,VT,BT,N}
     D = equation.d
     M = equation.m
     NS= equation.ns
@@ -182,7 +186,8 @@ function IntegratorSFIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSFIRK{TT}
     S = tableau.s
 
     # create params
-    params = ParametersSFIRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M))
+    K==0 ? A = 0.0 : A = sqrt( 2*K*Δt*abs(log(Δt)) )
+    params = ParametersSFIRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), A)
 
     # create solver
     solver = create_nonlinear_solver(DT, D*S, params)
@@ -313,6 +318,16 @@ function integrate_step!(int::IntegratorSFIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,
         int.params.ΔZ .= sol.W.ΔZ[n-1,k]
     end
 
+    # truncate the increments ΔW with A
+    if int.params.A>0
+        for i in 1:length(int.params.ΔW)
+            if int.params.ΔW[i]<-int.params.A
+                int.params.ΔW[i] = -int.params.A
+            elseif int.params.ΔW[i]>int.params.A
+                int.params.ΔW[i] = int.params.A
+            end
+        end
+    end
 
     # compute initial guess and assign to int.solver.x
     initial_guess!(int)

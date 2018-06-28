@@ -14,6 +14,8 @@ Contains all fields necessary to store the solution of a PSDE.
 * `q`:  solution `q[nd, nt+1, ns, ni]` with `q[:,0,:,:]` the initial conditions
 * `p`:  solution `p[nd, nt+1, ns, ni]` with `p[:,0,:,:]` the initial conditions
 * `W`:  Wiener process driving the stochastic processes q and p
+* `K`:  integer parameter defining the truncation of the increments of the Wiener process,
+*       A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; if K=0 no truncation
 * `ntime`: number of time steps to compute
 * `nsave`: save every nsave'th time step
 
@@ -28,13 +30,14 @@ mutable struct SolutionPSDE{dType, tType, NQ, NW} <: StochasticSolution{dType, t
     q::SStochasticDataSeries{dType,NQ}
     p::SStochasticDataSeries{dType,NQ}
     W::WienerProcess{dType,tType,NW}
+    K::Int
     ntime::Int
     nsave::Int
     counter::Int
 end
 
 
-function SolutionPSDE(equation::PSDE{DT,TT,VT,FT,BT,GT}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT,VT,FT,BT,GT}
+function SolutionPSDE(equation::PSDE{DT,TT,VT,FT,BT,GT}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0) where {DT,TT,VT,FT,BT,GT}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -70,13 +73,13 @@ function SolutionPSDE(equation::PSDE{DT,TT,VT,FT,BT,GT}, Δt::TT, ntime::Int, ns
     W = WienerProcess(DT, nm, ntime, ns, Δt)
     NW = ndims(W.ΔW)
 
-    s = SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, ntime, nsave, 0)
+    s = SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
 
 
-function SolutionPSDE(equation::PSDE{DT,TT,VT,FT,BT,GT}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1) where {DT,TT,VT,FT,BT,GT,NW}
+function SolutionPSDE(equation::PSDE{DT,TT,VT,FT,BT,GT}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1; K::Int=0) where {DT,TT,VT,FT,BT,GT,NW}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -126,13 +129,13 @@ function SolutionPSDE(equation::PSDE{DT,TT,VT,FT,BT,GT}, Δt::TT, dW::Array{DT, 
     # Wiener process increments are prescribed by the arrays dW and dZ
     W = WienerProcess(Δt, dW, dZ)
 
-    s = SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, ntime, nsave, 0)
+    s = SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
 
 
-function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SStochasticDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW}) where {DT,TT,NQ,NW}
+function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SStochasticDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW}; K::Int=0) where {DT,TT,NQ,NW}
     # extract parameters
     nd = q.nd
     ns = q.ns
@@ -152,13 +155,13 @@ function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SSt
     @assert q.ns == p.ns
 
     # create solution
-    SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, ntime, nsave, 0)
+    SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
 end
 
 
 # If the Wiener process W data are not available, creates a one-element zero array instead
 # For instance used when reading a file with no Wiener process data saved
-function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SStochasticDataSeries{DT,NQ}) where {DT,TT,NQ}
+function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SStochasticDataSeries{DT,NQ}; K::Int=0) where {DT,TT,NQ}
     # extract parameters
     nd = q.nd
     ns = q.ns
@@ -179,7 +182,7 @@ function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SSt
     NW = ndims(W.ΔW)
 
     # create solution
-    SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, ntime, nsave, 0)
+    SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
 end
 
 
@@ -201,6 +204,12 @@ function SolutionPSDE(file::String)
         W = WienerProcess(t.Δt, read(h5["ΔW"]), read(h5["ΔZ"]))
     end
 
+    if exists(attrs(h5),"K")
+        K = read(attrs(h5)["K"])
+    else
+        K=0
+    end
+
     q_array = read(h5["q"])
     p_array = read(h5["p"])
 
@@ -216,9 +225,9 @@ function SolutionPSDE(file::String)
 
     # create solution
     if W_exists == true
-        SolutionPSDE(t, q, p, W)
+        SolutionPSDE(t, q, p, W, K=K)
     else
-        SolutionPSDE(t, q, p)
+        SolutionPSDE(t, q, p, K=K)
     end
 
 end
@@ -344,6 +353,7 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
     attrs(h5)["nt"] = nt
     attrs(h5)["ntime"] = ntime
     attrs(h5)["nsave"] = solution.nsave
+    attrs(h5)["K"] = solution.K
 
     # create dataset
     # nt and ntime can be used to set the expected total number of timesteps to be saved,

@@ -13,6 +13,8 @@ Contains all fields necessary to store the solution of an SDE.
 * `t`:  time steps
 * `q`:  solution `q[nd, nt+1, ns, ni]` with `q[:,0,:,:]` the initial conditions
 * `W`:  Wiener process driving the stochastic process q
+* `K`:  integer parameter defining the truncation of the increments of the Wiener process,
+*       A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; if K=0 no truncation
 * `ntime`: number of time steps to compute
 * `nsave`: save every nsave'th time step
 
@@ -26,13 +28,14 @@ mutable struct SolutionSDE{dType, tType, NQ, NW} <: StochasticSolution{dType, tT
     t::TimeSeries{tType}
     q::SStochasticDataSeries{dType,NQ}
     W::WienerProcess{dType,tType,NW}
+    K::Int
     ntime::Int
     nsave::Int
     counter::Int
 end
 
 
-function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT,VT,BT}
+function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0) where {DT,TT,VT,BT}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -67,13 +70,13 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int
     W = WienerProcess(DT, nm, ntime, ns, Δt)
     NW = ndims(W.ΔW)
 
-    s = SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, ntime, nsave, 0)
+    s = SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
 
 
-function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1) where {DT,TT,VT,BT,NW}
+function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1; K::Int=0) where {DT,TT,VT,BT,NW}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -123,13 +126,13 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, dW::Array{DT, NW}, dZ:
     # Wiener process increments are prescribed by the arrays ΔW and ΔZ
     W = WienerProcess(Δt, dW, dZ)
 
-    s = SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, ntime, nsave, 0)
+    s = SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
 
 
-function SolutionSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW}) where {DT,TT,NQ,NW}
+function SolutionSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW}; K::Int=0) where {DT,TT,NQ,NW}
     # extract parameters
     nd = q.nd
     ns = q.ns
@@ -144,13 +147,13 @@ function SolutionSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, W::Wien
     @assert W.ns == q.ns
 
     # create solution
-    SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, ntime, nsave, 0)
+    SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
 end
 
 
 # If the Wiener process W data are not available, creates a one-element zero array instead
 # For instance used when reading a file with no Wiener process data saved
-function SolutionSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}) where {DT,TT,NQ}
+function SolutionSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}; K::Int=0) where {DT,TT,NQ}
     # extract parameters
     nd = q.nd
     ns = q.ns
@@ -167,7 +170,7 @@ function SolutionSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}) where {
     NW = ndims(W.ΔW)
 
     # create solution
-    SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, ntime, nsave, 0)
+    SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
 end
 
 
@@ -189,6 +192,12 @@ function SolutionSDE(file::String)
         W = WienerProcess(t.Δt, read(h5["ΔW"]), read(h5["ΔZ"]))
     end
 
+    if exists(attrs(h5),"K")
+        K = read(attrs(h5)["K"])
+    else
+        K=0
+    end
+
     q_array = read(h5["q"])
 
     close(h5)
@@ -201,9 +210,9 @@ function SolutionSDE(file::String)
 
     # create solution
     if W_exists == true
-        return SolutionSDE(t, q, W)
+        return SolutionSDE(t, q, W, K=K)
     else
-        return SolutionSDE(t, q)
+        return SolutionSDE(t, q, K=K)
     end
 
 end
@@ -318,6 +327,7 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString, n
     attrs(h5)["nt"] = nt
     attrs(h5)["ntime"] = ntime
     attrs(h5)["nsave"] = solution.nsave
+    attrs(h5)["K"] = solution.K
 
     # create dataset
     # nt and ntime can be used to set the expected total number of timesteps to be saved,
