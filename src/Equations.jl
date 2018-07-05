@@ -2,7 +2,8 @@ __precompile__()
 
 module Equations
 
-    export Equation, ODE, IODE, PODE, SODE, VODE, DAE, HDAE, IDAE, PDAE, SDE, PSDE
+    export Equation, ODE, IODE, PODE, SODE, VODE, DAE, HDAE, IDAE, PDAE
+    export SDE, PSDE, SPSDE
 
     include("equations/equations.jl")
 
@@ -17,5 +18,6 @@ module Equations
     include("equations/pdae.jl")
     include("equations/sde.jl")
     include("equations/psde.jl")
+    include("equations/spsde.jl")
 
 end

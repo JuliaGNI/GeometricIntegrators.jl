@@ -223,6 +223,59 @@ function update_solution!(q::Union{Vector{T}, Vector{Double{T}}}, p::Union{Vecto
 end
 
 
+# For stochastic split partitioned Runge-Kutta methods
+# q, p - the solution vector to be updated
+# Vqp, Fqp1, Fqp2 - the matrix containing the drift vectors evaluated at the internal stages v(Q_i), fi(Q_i)
+# Bqp, Gqp1, Gqp2 - the array containing the diffusion matrices evaluated at the internal stages B(Q_i), Gi(Q_i)
+# bqdrift, bpdrift1, bpdrift2 - the Runge-Kutta coefficients for the drift parts of the q and p equations
+# bqdiff, bpdiff1, bpdiff2 - the Runge-Kutta coefficients for the diffusion parts of the q and p equations
+# Δt - the time step
+# ΔW - the increments of the Brownian motion
+function update_solution!(q::Union{Vector{T}, Vector{Double{T}}}, p::Union{Vector{T}, Vector{Double{T}}},
+                            Vqp::Matrix{T}, Fqp1::Matrix{T}, Fqp2::Matrix{T},
+                            Bqp::Array{T,3}, Gqp1::Array{T,3}, Gqp2::Array{T,3},
+                            bqdrift::Vector{T}, bqdiff::Vector{T},
+                            bpdrift1::Vector{T}, bpdrift2::Vector{T},
+                            bpdiff1::Vector{T}, bpdiff2::Vector{T},
+                            Δt::T, ΔW::Vector{T}) where {T}
+   @assert length(q) == length(p) == size(Vqp, 1) == size(Fqp1, 1) == size(Fqp2, 1) == size(Bqp, 1) == size(Gqp1, 1) == size(Gqp2, 1)
+   @assert length(bqdrift) == length(bqdiff) == length(bpdrift1) == length(bpdrift2) == length(bpdiff1) == length(bpdiff2) == size(Vqp, 2) == size(Fqp1, 2) == size(Fqp2, 2) == size(Bqp, 3) == size(Gqp1, 3) == size(Gqp2, 3)
+   @assert length(ΔW) == size(Bqp, 2) == size(Gqp1, 2) == size(Gqp2, 2)
+
+   local Δq::eltype(q)
+   local Δp::eltype(p)
+
+   # Contribution from the drift part
+   for k in indices(Vqp, 1)
+       Δq = 0.
+       Δp = 0.
+       for i in indices(Vqp, 2)
+           Δq += bqdrift[i] * Vqp[k,i]
+           Δp += bpdrift1[i] * Fqp1[k,i] + bpdrift2[i] * Fqp2[k,i]
+       end
+       q[k] += Δt * Δq
+       p[k] += Δt * Δp
+   end
+
+   local Δy = zeros(eltype(q), length(ΔW))
+   local Δz = zeros(eltype(p), length(ΔW))
+
+   # Contribution from the diffusion part
+   for k in indices(Bqp, 1)
+       Δy .= zeros(eltype(q), length(ΔW))
+       Δz .= zeros(eltype(p), length(ΔW))
+
+       for i in indices(Bqp, 3)
+           Δy += bqdiff[i] * Bqp[k,:,i]
+           Δz += bpdiff1[i] * Gqp1[k,:,i] + bpdiff2[i] * Gqp2[k,:,i]
+       end
+
+       q[k] += dot(Δy,ΔW)
+       p[k] += dot(Δz,ΔW)
+   end
+end
+
+
 function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
     update_solution!(x, xₑᵣᵣ, ẋ, b, Δt)
     update_solution!(x, xₑᵣᵣ, ẋ, b̂, Δt)
@@ -246,6 +299,18 @@ function update_solution!(q::Union{Vector{T}, Vector{Double{T}}}, p::Union{Vecto
                             bpdrift::Vector{T}, b̂pdrift::Vector, bpdiff::Vector{T}, b̂pdiff::Vector, Δt::T, ΔW::Vector{T}) where {T}
     update_solution!(q, p, Vqp, Fqp, Bqp, Gqp, bqdrift, bqdiff, bpdrift, bpdiff, Δt, ΔW)
     update_solution!(q, p, Vqp, Fqp, Bqp, Gqp, b̂qdrift, b̂qdiff, b̂pdrift, b̂pdiff, Δt, ΔW)
+end
+
+# For stochastic split partitioned Runge-Kutta methods
+function update_solution!(q::Union{Vector{T}, Vector{Double{T}}}, p::Union{Vector{T}, Vector{Double{T}}},
+                            Vqp::Matrix{T}, Fqp1::Matrix{T}, Fqp2::Matrix{T},
+                            Bqp::Array{T,3}, Gqp1::Array{T,3}, Gqp2::Array{T,3},
+                            bqdrift::Vector{T}, b̂qdrift::Vector, bqdiff::Vector{T}, b̂qdiff::Vector,
+                            bpdrift1::Vector{T}, b̂pdrift1::Vector, bpdrift2::Vector{T}, b̂pdrift2::Vector,
+                            bpdiff1::Vector{T}, b̂pdiff1::Vector, bpdiff2::Vector{T}, b̂pdiff2::Vector,
+                            Δt::T, ΔW::Vector{T}) where {T}
+    update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, bqdrift, bqdiff, bpdrift1, bpdrift2, bpdiff1, bpdiff2, Δt, ΔW)
+    update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, b̂qdrift, b̂qdiff, b̂pdrift1, b̂pdrift2, b̂pdiff1, b̂pdiff2, Δt, ΔW)
 end
 
 function cut_periodic_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, periodicity::Vector{T}) where {T}

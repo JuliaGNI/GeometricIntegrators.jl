@@ -68,10 +68,12 @@ module Integrators
     export IntegratorSERK, TableauSERK
     export IntegratorSFIRK, TableauSFIRK
     export IntegratorSFIPRK, TableauSFIPRK
+    export IntegratorSFISPRK, TableauSFISPRK
 
     include("integrators/rk/integrators_serk.jl")
     include("integrators/rk/integrators_sfirk.jl")
     include("integrators/rk/integrators_sfiprk.jl")
+    include("integrators/rk/integrators_sfisprk.jl")
 
 
     export IntegratorEPRK, TableauEPRK

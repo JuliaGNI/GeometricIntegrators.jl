@@ -51,7 +51,7 @@ function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=1; K::Int=0)
 end
 
 "Create solution for PSDE."
-function Solution(equation::PSDE, Δt, ntime::Int, nsave::Int=1; K::Int=0)
+function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int, nsave::Int=1; K::Int=0)
     SolutionPSDE(equation, Δt, ntime, nsave, K=K)
 end
 

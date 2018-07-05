@@ -1,7 +1,7 @@
 """
 `SolutionPSDE`: Solution of a partitioned stochastic differential equation
 
-Contains all fields necessary to store the solution of a PSDE.
+Contains all fields necessary to store the solution of a PSDE or SPSDE
 
 ### Fields
 
@@ -37,7 +37,7 @@ mutable struct SolutionPSDE{dType, tType, NQ, NW} <: StochasticSolution{dType, t
 end
 
 
-function SolutionPSDE(equation::PSDE{DT,TT,VT,FT,BT,GT}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0) where {DT,TT,VT,FT,BT,GT}
+function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0) where {DT,TT}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -79,7 +79,7 @@ function SolutionPSDE(equation::PSDE{DT,TT,VT,FT,BT,GT}, Δt::TT, ntime::Int, ns
 end
 
 
-function SolutionPSDE(equation::PSDE{DT,TT,VT,FT,BT,GT}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1; K::Int=0) where {DT,TT,VT,FT,BT,GT,NW}
+function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1; K::Int=0) where {DT,TT,NW}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -238,7 +238,7 @@ ntime(sol::SolutionPSDE) = sol.ntime
 nsave(sol::SolutionPSDE) = sol.nsave
 
 
-function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, equ::PSDE{DT,TT}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, equ::Union{PSDE{DT,TT},SPSDE{DT,TT}}) where {DT,TT}
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end
 
