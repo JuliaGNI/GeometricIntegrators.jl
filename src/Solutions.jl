@@ -3,6 +3,7 @@ __precompile__()
 module Solutions
 
     using HDF5
+    using SharedArrays
 
     using Base: TwicePrecision
 

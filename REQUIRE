@@ -7,3 +7,4 @@ HDF5
 OffsetArrays
 Polynomials
 ProgressMeter
+SharedArrays
