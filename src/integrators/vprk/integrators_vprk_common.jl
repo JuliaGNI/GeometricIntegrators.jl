@@ -336,7 +336,7 @@ end
     quote
         local sl::Int = div(S+1, 2)
 
-        if @isdefined(params.tab, :d)
+        if isdefined(params.tab, :d)
             # compute μ
             for k in 1:D
                 $μ[k] = params.tab.p.b[sl] / params.tab.d[sl] * b[D*(sl-1)+k]

@@ -308,7 +308,7 @@ function IntegratorHSPARK(equation::HDAE{DT,TT,VT,FT,ϕT,ψT}, tableau::TableauH
 
     N = 3*D*S + 3*D*R + D*ρ
 
-    if @isdefined(tableau.d, d)
+    if isdefined(tableau, :d)
         N += D
         d_v = tableau.d
     else
@@ -395,7 +395,7 @@ function integrate_step!(int::IntegratorHSPARK{DT,TT,VT,FT,ϕT,ψT}, sol::Soluti
         end
     end
 
-    if @isdefined(int.tableau.d, d)
+    if isdefined(int.tableau, :d)
         offset = 3*int.equation.d*int.tableau.s+3*int.equation.d*int.tableau.r+int.equation.d*int.tableau.ρ
         for k in 1:int.equation.d
             int.solver.x[offset+k] = 0

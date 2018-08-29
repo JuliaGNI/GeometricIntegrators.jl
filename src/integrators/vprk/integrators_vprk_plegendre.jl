@@ -306,7 +306,7 @@ function IntegratorVPRKpLegendre(equation::IODE{DT,TT,ΘT,FT,GT,VT}, tableau::Ta
 
     N = (3*S+2)*D
 
-    if @isdefined(tableau, d)
+    if isdefined(tableau, :d)
         d_v = tableau.d
     else
         d_v = DT[]
@@ -384,7 +384,7 @@ function integrate_step!(int::IntegratorVPRKpLegendre{DT,TT,ΘT,FT,VT}, sol::Sol
         int.solver.x[(3*int.tableau.s+1)*int.equation.d+k] = int.cache.z[k]
     end
 
-    # if @isdefined(int.tableau, d)
+    # if isdefined(int.tableau, :d)
     #     offset = (3*int.tableau.s+2)*int.equation.d
     #     for k in 1:int.equation.d
     #         int.solver.x[offset+k] = 0
