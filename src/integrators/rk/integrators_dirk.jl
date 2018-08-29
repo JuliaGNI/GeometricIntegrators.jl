@@ -10,8 +10,7 @@ struct TableauDIRK{T} <: AbstractTableauIRK{T}
         @assert !(q.s==1 && q.a[1,1] ≠ 0)
 
         if q.s > 1 && istrilstrict(q.a)
-            warn("Initializing TableauDIRK with explicit tableau ", q.name, ".\n",
-                 "You might want to use TableauERK instead.")
+            @warn "Initializing TableauDIRK with explicit tableau $(q.name).\nYou might want to use TableauERK instead."
         end
 
         new(q.name, q.o, q.s, q)

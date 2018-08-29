@@ -2,11 +2,13 @@ __precompile__()
 
 module Solutions
 
-    using DoubleDouble
     using HDF5
+
+    using Base: TwicePrecision
 
     using ..CommonFunctions
     using ..Equations
+
 
     export DataSeries, get_data!, set_data!, reset!
     export PDataSeries, SDataSeries

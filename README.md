@@ -50,7 +50,7 @@ The following list provides and overview of supported and planned features.
 
 - [x] Systems of ODEs,
 - [x] Systems of DAEs,
-- [ ] Systems of SDEs,
+- [x] Systems of SDEs,
 - [x] Partitioned ODEs,
 - [x] Partitioned DAEs,
 - [ ] Partitioned SDEs,

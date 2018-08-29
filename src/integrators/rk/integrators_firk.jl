@@ -7,11 +7,9 @@ struct TableauFIRK{T} <: AbstractTableauIRK{T}
 
     function TableauFIRK{T}(q) where {T}
         if (q.s > 1 && istrilstrict(q.a)) || (q.s==1 && q.a[1,1] == 0)
-            warn("Initializing TableauFIRK with explicit tableau ", q.name, ".\n",
-                 "You might want to use TableauERK instead.")
+            @warn "Initializing TableauFIRK with explicit tableau $(q.name).\nYou might want to use TableauERK instead."
         elseif q.s > 1 && istril(q.a)
-            warn("Initializing TableauFIRK with diagonally implicit tableau ", q.name, ".\n",
-                 "You might want to use TableauDIRK instead.")
+            @warn "Initializing TableauFIRK with diagonally implicit tableau $(q.name).\nYou might want to use TableauDIRK instead."
         end
 
         new(q.name, q.o, q.s, q)
@@ -54,9 +52,9 @@ struct NonlinearFunctionCacheFIRK{DT}
     function NonlinearFunctionCacheFIRK{DT}(D,S) where {DT}
 
         # create internal stage vectors
-        Q = Array{Vector{DT}}(S)
-        V = Array{Vector{DT}}(S)
-        Y = Array{Vector{DT}}(S)
+        Q = Array{Vector{DT}}(undef, S)
+        V = Array{Vector{DT}}(undef, S)
+        Y = Array{Vector{DT}}(undef, S)
 
         for i in 1:S
             Q[i] = zeros(DT,D)
@@ -131,7 +129,7 @@ struct IntegratorFIRK{DT, TT, PT <: ParametersFIRK{DT,TT},
     iguess::IT
     fcache::NonlinearFunctionCacheFIRK{DT}
 
-    q::Vector{Vector{Double{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
 end
 
 function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,FT,N}

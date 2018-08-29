@@ -1,4 +1,6 @@
 
+using Printf
+
 abstract type NonlinearSolver{T} end
 
 solve!(s::NonlinearSolver) = error("solve! not implemented for $(typeof(s))")

@@ -22,15 +22,16 @@ macro reexport(ex)
 
     if ex.head == :module
         modules = Any[ex.args[2]]
-        ex = Expr(:toplevel, ex, Expr(:using, :., ex.args[2]))
-    elseif ex.head == :using || ex.head == :importall
+        ex = Expr(:toplevel, ex, :(using .$(ex.args[2])))
+    elseif (ex.head == :using || ex.head == :importall) && all(e->isa(e, Symbol), ex.args)
         modules = Any[ex.args[end]]
     else
         modules = Any[e.args[end] for e in ex.args]
     end
 
+    # TODO Replace 'GeometricIntegrators' with name of module from which 'reexport()' is called.
     esc(Expr(:toplevel, ex,
-             [:(eval(Expr(:export, names($mod)...))) for mod in modules]...))
+             [:(Core.eval(GeometricIntegrators, Expr(:export, names($mod)...))) for mod in modules]...))
 end
 
 

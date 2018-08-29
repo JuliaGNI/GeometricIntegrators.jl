@@ -398,7 +398,7 @@ end
 
 
 "Variational special partitioned additive Runge-Kutta integrator."
-immutable IntegratorSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integrator{DT, TT}
+mutable struct IntegratorSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integrator{DT, TT}
     equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}
     tableau::TableauSPARK{TT}
     Δt::TT
@@ -431,7 +431,7 @@ function IntegratorSPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, tableau::Tabl
 
     N = 3*D*S + 3*D*R + D*ρ
 
-    if isdefined(tableau, :d)
+    if @isdefined(tableau.d, d)
         N += D
         d_v = tableau.d
     else
@@ -518,7 +518,7 @@ function integrate_step!(int::IntegratorSPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::So
         end
     end
 
-    if isdefined(int.tableau, :d)
+    if @isdefined(int.tableau.d, d)
         offset = 3*int.equation.d*int.tableau.s+3*int.equation.d*int.tableau.r+int.equation.d*int.tableau.ρ
         for k in 1:int.equation.d
             int.solver.x[offset+k] = 0

@@ -12,9 +12,9 @@ function aitken_neville(ti::Vector{TT}, xi::Matrix{DT}, t::TT, x::Vector{DT}) wh
     @assert length(ti) == size(xi,2)
     @assert length(x)  == size(xi,1)
 
-    for j in indices(t)
+    for j in axes(t)
         for i in 1:(length(t)-j)
-            for k in indices(x,1)
+            for k in axes(x,1)
                 xi[k,i] = xi[k,i+1] + (xi[k,i] - xi[k,i+1]) * (ti[i+j] - t) / (ti[i+j] - ti[i])
             end
         end
@@ -45,17 +45,17 @@ function euler_extrapolation(v::Function, t₀::TT, t₁::TT, x₀::Vector{DT}, 
     σ   = Δt ./ F
     pts = repmat(x₀, 1, s+1)
 
-    local xᵢ = zeros(x₀)
-    local vᵢ = zeros(x₀)
+    local xᵢ = zero(x₀)
+    local vᵢ = zero(x₀)
 
     for i in 1:(s+1)
         for j in 1:(F[i]-1)
             tᵢ  = t₀ + σ[i]
-            for k in indices(pts,1)
+            for k in axes(pts,1)
                 xᵢ[k] = pts[k,i]
             end
             v(tᵢ, xᵢ, vᵢ)
-            for k in indices(pts,1)
+            for k in axes(pts,1)
                 pts[k,i] += σ[i] * vᵢ[k]
             end
         end
@@ -84,11 +84,11 @@ function midpoint_extrapolation(v::Function, t₀::TT, t₁::TT, x₀::Vector{DT
     local σ²  = σ.^2
     local pts = zeros(eltype(x₀), length(x₀), s+1)
 
-    local xᵢ₁= zeros(x₀)
-    local xᵢ₂= zeros(x₀)
-    local xᵢₜ= zeros(x₀)
-    local vᵢ = zeros(x₀)
-    local v₀ = zeros(x₀)
+    local xᵢ₁= zero(x₀)
+    local xᵢ₂= zero(x₀)
+    local xᵢₜ= zero(x₀)
+    local vᵢ = zero(x₀)
+    local v₀ = zero(x₀)
 
     v(t₀, x₀, v₀)
 
@@ -102,7 +102,7 @@ function midpoint_extrapolation(v::Function, t₀::TT, t₁::TT, x₀::Vector{DT
             xᵢ₁ .= xᵢ₂
             xᵢ₂ .= xᵢₜ
         end
-        for k in indices(pts,1)
+        for k in axes(pts,1)
             pts[k,i] += xᵢ₂[k]
         end
     end

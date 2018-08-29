@@ -388,7 +388,7 @@ function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
 
     N = 3*D*S + 3*D*R
 
-    if isdefined(tableau, :d)
+    if @isdefined(tableau.d, d)
         N += D
         d_v = tableau.d
     else
@@ -468,7 +468,7 @@ function integrate_step!(int::IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::So
         end
     end
 
-    if isdefined(int.tableau, :d)
+    if @isdefined(int.tableau.d, d)
         for k in 1:int.equation.d
             int.solver.x[3*int.equation.d*int.tableau.s+3*int.equation.d*int.tableau.r+k] = 0
         end

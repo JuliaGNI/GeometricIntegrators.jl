@@ -31,10 +31,10 @@ makedocs(
 deploydocs(
     repo   = "github.com/DDMGNI/GeometricIntegrators.jl.git",
     target = "build",
-    julia  = "0.6",
+    julia  = "1.0",
     osname = "linux",
     deps   = nothing,
     make   = nothing)
 
 # note: julia version must be the same as in .travis.yml, that is both must be
-#       set to either 0.6 or release, but not one to 0.6 and one to release.
+#       set to either 1.0 or release, but not one to 1.0 and one to release.

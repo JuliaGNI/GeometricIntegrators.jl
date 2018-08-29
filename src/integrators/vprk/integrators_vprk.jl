@@ -106,8 +106,8 @@ struct IntegratorVPRK{DT, TT, PT <: ParametersVPRK{DT,TT},
 
     cache::NonlinearFunctionCacheVPRK{DT}
 
-    q::Vector{Vector{Double{DT}}}
-    p::Vector{Vector{Double{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
+    p::Vector{Vector{TwicePrecision{DT}}}
 end
 
 function IntegratorVPRK(equation::ET, tableau::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}

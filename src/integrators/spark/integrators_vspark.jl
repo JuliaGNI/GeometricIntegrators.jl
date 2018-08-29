@@ -142,5 +142,5 @@ end
 
 
 "Variational Specialised Partitioned Additive Runge-Kutta integrator."
-immutable IntegratorVSPARK{DT, TT, VT, FT, ϕT, ψT, SPT, ST, IT} <: Integrator{DT, TT}
+mutable struct IntegratorVSPARK{DT, TT, VT, FT, ϕT, ψT, SPT, ST, IT} <: Integrator{DT, TT}
 end

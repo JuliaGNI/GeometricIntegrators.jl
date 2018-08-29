@@ -87,7 +87,7 @@ function set_initial_conditions!(sol::SolutionSDE{DT,TT}, equ::SDE{DT,TT}) where
     set_initial_conditions!(sol, equ.t₀, equ.q₀)
 end
 
-function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT}, Array{Double{DT}}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT}, Array{TwicePrecision{DT}}}) where {DT,TT}
     if ndims(q₀) == 1
         w₀ = zeros(eltype(q₀), 1)
     elseif ndims(q₀) == 2
@@ -96,18 +96,18 @@ function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{
     set_initial_conditions!(sol, t₀, q₀, w₀)
 end
 
-function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT}, Array{Double{DT}}}, w₀::Union{Array{DT}, Array{Double{DT}}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT}, Array{TwicePrecision{DT}}}, w₀::Union{Array{DT}, Array{TwicePrecision{DT}}}) where {DT,TT}
     set_data!(sol.q, q₀, 0)
     set_data!(sol.w, w₀, 0)
     compute_timeseries!(sol.t, t₀)
 end
 
-function get_initial_conditions!(sol::SolutionSDE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, w::Union{Array{DT}, Array{Double{DT}}}, k) where {DT,TT}
+function get_initial_conditions!(sol::SolutionSDE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, w::Union{Array{DT}, Array{TwicePrecision{DT}}}, k) where {DT,TT}
     get_data!(sol.q, q, 0, k)
     get_data!(sol.w, w, 0, k)
 end
 
-function copy_solution!(sol::SolutionSDE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, w::Union{Array{DT}, Array{Double{DT}}}, n, k) where {DT,TT}
+function copy_solution!(sol::SolutionSDE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, w::Union{Array{DT}, Array{TwicePrecision{DT}}}, n, k) where {DT,TT}
     if mod(n, sol.nsave) == 0
         set_data!(sol.q, q, div(n, sol.nsave), k)
         set_data!(sol.w, w, div(n, sol.nsave), k)

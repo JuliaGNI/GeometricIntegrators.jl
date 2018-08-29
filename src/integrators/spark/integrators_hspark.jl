@@ -275,7 +275,7 @@ end
 
 
 "Hamiltonian Specialised Partitioned Additive Runge-Kutta integrator."
-immutable IntegratorHSPARK{DT, TT, VT, FT, ϕT, ψT, SPT, ST, IT} <: Integrator{DT, TT}
+mutable struct IntegratorHSPARK{DT, TT, VT, FT, ϕT, ψT, SPT, ST, IT} <: Integrator{DT, TT}
     equation::IDAE{DT,TT,VT,FT,ϕT,ψT}
     tableau::TableauHSPARK{TT}
     Δt::TT
@@ -308,7 +308,7 @@ function IntegratorHSPARK(equation::HDAE{DT,TT,VT,FT,ϕT,ψT}, tableau::TableauH
 
     N = 3*D*S + 3*D*R + D*ρ
 
-    if isdefined(tableau, :d)
+    if @isdefined(tableau.d, d)
         N += D
         d_v = tableau.d
     else
@@ -395,7 +395,7 @@ function integrate_step!(int::IntegratorHSPARK{DT,TT,VT,FT,ϕT,ψT}, sol::Soluti
         end
     end
 
-    if isdefined(int.tableau, :d)
+    if @isdefined(int.tableau.d, d)
         offset = 3*int.equation.d*int.tableau.s+3*int.equation.d*int.tableau.r+int.equation.d*int.tableau.ρ
         for k in 1:int.equation.d
             int.solver.x[offset+k] = 0

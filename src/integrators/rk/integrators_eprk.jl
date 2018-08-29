@@ -50,8 +50,8 @@ struct IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
     tableau::TableauEPRK{TT}
     Δt::TT
 
-    q::Vector{Vector{Double{DT}}}
-    p::Vector{Vector{Double{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
+    p::Vector{Vector{TwicePrecision{DT}}}
 
     Q::Array{DT,2}
     P::Array{DT,2}
@@ -70,12 +70,12 @@ struct IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
         M = equation.n
         S = tableau.s
 
-        q = Array{Vector{Double{DT}}}(M)
-        p = Array{Vector{Double{DT}}}(M)
+        q = Array{Vector{TwicePrecision{DT}}}(undef, M)
+        p = Array{Vector{TwicePrecision{DT}}}(undef, M)
 
         for i in 1:M
-            q[i] = zeros(Double{DT},D)
-            p[i] = zeros(Double{DT},D)
+            q[i] = zeros(TwicePrecision{DT},D)
+            p[i] = zeros(TwicePrecision{DT},D)
         end
 
         new(equation, tableau, Δt, q, p,

@@ -163,8 +163,8 @@ struct IntegratorIPRK{DT, TT, PT <: ParametersIPRK{DT,TT},
     iguess::IT
     fcache::NonlinearFunctionCacheIPRK{DT}
 
-    q::Vector{Vector{Double{DT}}}
-    p::Vector{Vector{Double{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
+    p::Vector{Vector{TwicePrecision{DT}}}
 end
 
 function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT,VT,FT}

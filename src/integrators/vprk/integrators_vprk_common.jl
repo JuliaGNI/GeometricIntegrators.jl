@@ -333,10 +333,10 @@ end
 @generated function compute_rhs_vprk_correction!(b::Vector{ST}, V::Matrix{ST}, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     μ = zeros(ST,D)
 
-    compute_stages_vprk = quote
+    quote
         local sl::Int = div(S+1, 2)
 
-        if isdefined(params.tab, :d)
+        if @isdefined(params.tab, :d)
             # compute μ
             for k in 1:D
                 $μ[k] = params.tab.p.b[sl] / params.tab.d[sl] * b[D*(sl-1)+k]
@@ -361,8 +361,6 @@ end
             end
         end
     end
-
-    return compute_stages_vprk
 end
 
 

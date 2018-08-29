@@ -1,11 +1,10 @@
-
 """
 `SDE`: Stochastic Differential Equation
 
 Defines a stochastic differential initial value problem
 ```math
 \\begin{align*}
-\\dq (t) &= v(t, q(t)) \, dt + u(t, q(t)), dW , & q(t_{0}) &= q_{0} ,
+dq (t) &= v(t, q(t)) \\, dt + u(t, q(t)), dW , & q(t_{0}) &= q_{0} ,
 \\end{align*}
 ```
 with deterministic vector field ``v``, stochastic vector field ``u``,

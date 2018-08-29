@@ -36,15 +36,15 @@ function oscillator_pode(q₀=[q₀[1]], p₀=[p₀[1]])
 end
 
 
-function oscillator_sode_v_1(t, q, v)
-    v[1] = q[2]
-    v[2] = 0
+function oscillator_sode_v_1(t, q, v, h)
+    v[1] = q[1] + h * q[2]
+    v[2] = q[2]
     nothing
 end
 
-function oscillator_sode_v_2(t, q, v)
-    v[1] = 0
-    v[2] = -k*q[1]
+function oscillator_sode_v_2(t, q, v, h)
+    v[1] = q[1]
+    v[2] = q[2] - h * k*q[1]
     nothing
 end
 

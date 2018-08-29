@@ -1,6 +1,6 @@
 
 "Holds the tableau of a Runge-Kutta method."
-abstract type AbstractTableauRK{T} <: AbstractTableau{T <: Real} end
+abstract type AbstractTableauRK{T <: Real} <: AbstractTableau{T} end
 
 "Holds the tableau of an explicit Runge-Kutta method."
 abstract type AbstractTableauERK{T} <: AbstractTableauRK{T} end
@@ -31,19 +31,19 @@ function readTableauRKHeaderFromFile(file)
     end
 
     if length(header) ≥ 1
-        O = parse(Int, header[1])
+        O = Base.parse(Int, header[1])
     else
         O = 0
     end
 
     if length(header) ≥ 2
-        S = parse(Int, header[2])
+        S = Base.parse(Int, header[2])
     else
         S = 0
     end
 
     if length(header) ≥ 3
-        T = eval(parse(header[3]))
+        T = Core.eval(Main, Meta.parse(header[3]))
     else
         T = Float64
     end
@@ -67,7 +67,7 @@ function writeTableauToFile(dir::AbstractString, tab::AbstractTableauRK{T}) wher
     header = string("# ", tab.q.o, " ", tab.q.s, " ", T, "\n")
     file   = string(dir, "/", tab.q.name, ".tsv")
 
-    info("Writing Runge-Kutta tableau ", tab.q.name, " with ", tab.q.s, " stages and order ", tab.q.o, " to file\n      ", file)
+    @info "Writing Runge-Kutta tableau $(tab.q.name) with $(tab.q.s) stages and order $(tab.q.o) to file\n$(file)"
 
     f = open(file, "w")
     write(f, header)

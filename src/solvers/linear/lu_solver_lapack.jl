@@ -1,7 +1,6 @@
 
-import Base.LinAlg: Factorization, checksquare, chkstride1, @assertnonsingular
-import Base.LinAlg.BLAS: BlasFloat, BlasInt, liblapack, @blasfunc
-#import Base.LinAlg.LAPACK: chkargsok, chklapackerror, chktrans
+import LinearAlgebra: checksquare
+import LinearAlgebra.BLAS: BlasFloat, BlasInt, liblapack, @blasfunc
 
 
 struct LUSolverLAPACK{T<:BlasFloat} <: LinearSolver{T}
@@ -35,14 +34,14 @@ end
 for (getrf, getrs, elty) in
     ((:dgetrf_,:dgetrs_,:Float64),
      (:sgetrf_,:sgetrs_,:Float32),
-     (:zgetrf_,:zgetrs_,:Complex128),
-     (:cgetrf_,:cgetrs_,:Complex64))
+     (:zgetrf_,:zgetrs_,:ComplexF64),
+     (:cgetrf_,:cgetrs_,:ComplexF32))
     @eval begin
         function factorize!(lu::LUSolverLAPACK{$elty})
-            ccall((@blasfunc($getrf), liblapack), Void,
+            ccall((@blasfunc($getrf), liblapack), Nothing,
                   (Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$elty},
                    Ptr{BlasInt}, Ptr{BlasInt}, Ptr{BlasInt}),
-                   &lu.n, &lu.n, lu.A, &lu.n, lu.pivots, &lu.info)
+                   Ref(lu.n), Ref(lu.n), lu.A, Ref(lu.n), lu.pivots, Ref(lu.info))
 
             if lu.info > 0
                 throw(SingularException(lu.info))
@@ -53,12 +52,12 @@ for (getrf, getrs, elty) in
         end
 
         function solve!(lu::LUSolverLAPACK{$elty})
-            const trans = 'N'
-            const nrhs = 1
-            ccall((@blasfunc($getrs), liblapack), Void,
+            trans = UInt8('N')
+            nrhs = 1
+            ccall((@blasfunc($getrs), liblapack), Nothing,
                   (Ptr{UInt8}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$elty}, Ptr{BlasInt},
                    Ptr{BlasInt}, Ptr{$elty}, Ptr{BlasInt}, Ptr{BlasInt}),
-                   &trans, &lu.n, &nrhs, lu.A, &lu.n, lu.pivots, lu.b, &lu.n, &lu.info)
+                   Ref(trans), Ref(lu.n), Ref(nrhs), lu.A, Ref(lu.n), lu.pivots, lu.b, Ref(lu.n), Ref(lu.info))
 
             if lu.info < 0
                 throw(ArgumentError(lu.info))

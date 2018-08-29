@@ -103,8 +103,8 @@ struct IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, SPT, ST, IT <: InitialGu
     solver::ST
     iguess::IT
 
-    q::Vector{Vector{Double{DT}}}
-    p::Vector{Vector{Double{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
+    p::Vector{Vector{TwicePrecision{DT}}}
 
     v::Vector{DT}
     y::Vector{DT}
@@ -117,7 +117,7 @@ struct IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, SPT, ST, IT <: InitialGu
     ϑ::Matrix{DT}
     Y::Matrix{DT}
     Z::Matrix{DT}
-    J::Array{DT,3}
+    J::Vector{Matrix{DT}}
     A::Array{DT,2}
 end
 
@@ -130,11 +130,11 @@ function IntegratorFLRK(equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}, tableau::Ta
     x = zeros(DT, D*S)
 
     # create solution vectors
-    q = Array{Vector{Double{DT}}}(M)
-    p = Array{Vector{Double{DT}}}(M)
+    q = Array{Vector{TwicePrecision{DT}}}(M)
+    p = Array{Vector{TwicePrecision{DT}}}(M)
     for m in 1:M
-        q[m] = zeros(Double{DT},D)
-        p[m] = zeros(Double{DT},D)
+        q[m] = zeros(TwicePrecision{DT},D)
+        p[m] = zeros(TwicePrecision{DT},D)
     end
 
     # create velocity and update vector
@@ -150,8 +150,13 @@ function IntegratorFLRK(equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}, tableau::Ta
     ϑ = zeros(DT,D,S)
     Y = zeros(DT,D,S)
     Z = zeros(DT,D,S)
-    J = zeros(DT,D,D,S)
     A = zeros(DT,D*S,D*S)
+
+    J = Vector{Matrix{DT}}(S)
+    for i in 1:S
+        J[i] = zeros(DT,D,D)
+    end
+
 
     # create params
     params = ParametersFLRK(DT, D, equation.v, Δt, tableau.q)
@@ -238,7 +243,6 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
     tV = zeros(DT, int.equation.d)
     tϑ = zeros(DT, int.equation.d)
     tF = zeros(DT, int.equation.d)
-    tJ = zeros(DT, int.equation.d, int.equation.d)
     δP = zeros(DT, int.equation.d*int.tableau.q.s)
 
     # compute ϑ = α(Q), V(Q) = int.equation.v(t, Q, V)
@@ -248,7 +252,7 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
         simd_copy_xy_first!(tQ, int.Q, i)
         int.equation.α(tᵢ, tQ, tϑ)
         int.equation.v(tᵢ, tQ, tV)
-        int.equation.f(tᵢ, tQ, tV, tF)
+        int.equation.g(tᵢ, tQ, tV, tF)
         simd_copy_yx_first!(tϑ, int.ϑ, i)
         simd_copy_yx_first!(tV, int.V, i)
         simd_copy_yx_first!(tF, int.F, i)
@@ -257,10 +261,9 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
     # compute Jacobian of v via ForwardDiff
     for i in 1:int.tableau.q.s
         tᵢ = int.params.t + int.Δt * int.tableau.q.c[i]
-        v_rev! = (y,x) -> int.equation.v(tᵢ,x,y)
+        v_rev! = (v,q) -> int.equation.v(tᵢ,q,v)
         simd_copy_xy_first!(tQ, int.Q, i)
-        ForwardDiff.jacobian!(tJ, v_rev!, tV, tQ)
-        simd_copy_yx_first!(tJ, int.J, i)
+        ForwardDiff.jacobian!(int.J[i], v_rev!, tV, tQ)
     end
 
     # contract J with ϑ and add to G
@@ -268,7 +271,7 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
         for i in 1:int.equation.d
             int.G[i,l] = 0
             for j in 1:int.equation.d
-                int.G[i,l] += int.ϑ[j,l] * int.J[j,i,l]
+                int.G[i,l] += int.ϑ[j,l] * int.J[l][j,i]
             end
         end
     end
@@ -292,7 +295,7 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
         for l in 1:int.tableau.q.s
             for i in 1:int.equation.d
                 for j in 1:int.equation.d
-                    int.A[(k-1)*int.equation.d+i, (l-1)*int.equation.d+j] = int.Δt * int.tableau.q.a[k,l] * int.J[j,i,l]
+                    int.A[(k-1)*int.equation.d+i, (l-1)*int.equation.d+j] = int.Δt * int.tableau.q.a[k,l] * int.J[l][j,i]
                 end
             end
         end
@@ -312,7 +315,7 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
         for i in 1:int.equation.d
             int.G[i,l] = 0
             for j in 1:int.equation.d
-                int.G[i,l] += (int.ϑ[j,l] - int.P[j,l]) * int.J[j,i,l]
+                int.G[i,l] += (int.ϑ[j,l] - int.P[j,l]) * int.J[l][j,i]
             end
         end
     end

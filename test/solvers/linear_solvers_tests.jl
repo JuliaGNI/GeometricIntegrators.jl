@@ -7,8 +7,8 @@ x = [+4., -4., +5.]
 
 
 function test_lu_solver(solver, A, b, x)
-    # for T in (Float64, Complex128, Float32, Complex64) # TODO
-    for T in (Float64, Complex128)
+    # for T in (Float64, ComplexF64, Float32, ComplexF32) # TODO
+    for T in (Float64, ComplexF64)
         AT = convert(Array{T,2}, A)
         bT = convert(Array{T,1}, b)
         xT = convert(Array{T,1}, x)

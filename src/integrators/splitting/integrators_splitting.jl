@@ -1,5 +1,5 @@
 
-abstract type AbstractTableauSplitting{T} <: AbstractTableau{T <: Real} end
+abstract type AbstractTableauSplitting{T <: Real} <: AbstractTableau{T} end
 
 
 "Tableau for non-symmetric splitting methods."
@@ -220,15 +220,13 @@ function integrate_step!(int::IntegratorSplitting{DT,TT,FT}, sol::SolutionODE{DT
     for i in eachindex(int.f, int.c)
         if int.c[i] ≠ zero(TT)
             tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.c[i]
-            int.equation.v[int.f[i]](tᵢ, int.q, int.v)
-            for k in eachindex(int.q, int.v)
-                int.q[k], int.qₑᵣᵣ[k] = compensated_summation(int.Δt * int.c[i] * int.v[k], int.q[k], int.qₑᵣᵣ[k])
-            end
+            int.equation.v[int.f[i]](tᵢ, int.q, int.v, int.c[i] * int.Δt)
+            int.q .= int.v
         end
     end
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q, int.qₑᵣᵣ, int.equation.periodicity)
+    cut_periodic_solution!(int.q, int.equation.periodicity)
 
     # copy to solution
     copy_solution!(sol, int.q, n, m)

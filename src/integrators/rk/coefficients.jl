@@ -20,7 +20,7 @@ struct CoefficientsRK{T} <: AbstractCoefficients{T}
     ĉ::Vector{T}
 
     function CoefficientsRK{T}(name,o,s,a,b,c) where {T}
-        new(name,o,s,a,b,c,zeros(a),zeros(b),zeros(c))
+        new(name,o,s,a,b,c,zero(a),zero(b),zero(c))
     end
 
     function CoefficientsRK{T}(name,o,s,a,b,c,â,b̂,ĉ) where {T}
@@ -33,16 +33,16 @@ struct CoefficientsRK{T} <: AbstractCoefficients{T}
         @assert s==size(â,1)==size(â,2)==length(b̂)==length(ĉ)
 
         if !get_config(:tab_compensated_summation)
-            â = zeros(â)
-            b̂ = zeros(b̂)
-            ĉ = zeros(ĉ)
+            â = zero(â)
+            b̂ = zero(b̂)
+            ĉ = zero(ĉ)
         end
 
         new(name,o,s,a,b,c,â,b̂,ĉ)
     end
 end
 
-function CoefficientsRK(T::Type, name::Symbol, order::Int, a::Matrix, b::Vector, c::Vector)
+function CoefficientsRK(T::Type, name::Symbol, order::Int, a::AbstractArray{CT,2}, b::AbstractArray{CT,1}, c::AbstractArray{CT,1}) where {CT}
     a̅ = Matrix{T}(a)
     b̅ = Vector{T}(b)
     c̅ = Vector{T}(c)
@@ -52,19 +52,21 @@ function CoefficientsRK(T::Type, name::Symbol, order::Int, a::Matrix, b::Vector,
         b̂ = Vector{T}(b-Vector{eltype(b)}(b̅))
         ĉ = Vector{T}(c-Vector{eltype(c)}(c̅))
     else
-        â = zeros(a̅)
-        b̂ = zeros(b̅)
-        ĉ = zeros(c̅)
+        â = zero(a̅)
+        b̂ = zero(b̅)
+        ĉ = zero(c̅)
     end
 
     CoefficientsRK{T}(name, order, length(c), a̅, b̅, c̅, â, b̂, ĉ)
 end
 
-function CoefficientsRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}) where {T}
+function CoefficientsRK(name::Symbol, order::Int, a::AbstractArray{T,2}, b::AbstractArray{T,1}, c::AbstractArray{T,1}) where {T}
     CoefficientsRK{T}(name, order, length(c), a, b, c)
 end
 
-function CoefficientsRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}, â::Matrix{T}, b̂::Vector{T}, ĉ::Vector{T}) where {T}
+function CoefficientsRK(name::Symbol, order::Int,
+        a::AbstractArray{T,2}, b::AbstractArray{T,1}, c::AbstractArray{T,1},
+        â::AbstractArray{T,2}, b̂::AbstractArray{T,1}, ĉ::AbstractArray{T,1}) where {T}
     CoefficientsRK{T}(name, order, length(c), a, b, c, â, b̂, ĉ)
 end
 
@@ -104,8 +106,8 @@ end
 
 
 function get_symplectic_conjugate_coefficients(coeff::CoefficientsRK)
-    a̅ = zeros(coeff.a)
-    ã = zeros(coeff.a)
+    a̅ = zero(coeff.a)
+    ã = zero(coeff.a)
 
     get_symplectic_conjugate_coefficients(coeff.a, coeff.b, a̅)
 
@@ -119,7 +121,7 @@ end
 
 function symplecticize(coeff::CoefficientsRK; name=nothing, T=Float64)
     name == nothing ? Symbol(string(coeff.name)*"S") : nothing
-    a̅ = zeros(coeff.a)
+    a̅ = zero(coeff.a)
     get_symplectic_conjugate_coefficients(coeff.a, coeff.b, a̅)
     CoefficientsRK(T, name, coeff.o, 0.5*(coeff.a + a̅), coeff.b, coeff.c)
 end

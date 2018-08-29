@@ -78,7 +78,7 @@ CommonFunctions.derivative(b::LagrangeBasis, j::Int, i::Int) = derivative(b, j, 
 
 
 function CommonFunctions.integral(b::LagrangeBasis{T,P}, j::Int, x::T) where {T,P}
-    y = zeros(b.x)
+    y = zero(b.x)
     y[j] = 1
     lint = polyint(Poly(*(b.vdminv, y)))
     return lint(x)

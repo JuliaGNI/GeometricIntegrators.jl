@@ -2,6 +2,8 @@ __precompile__()
 
 module Solvers
 
+    using LinearAlgebra
+    
     using ..Config
     using ..Utils
 

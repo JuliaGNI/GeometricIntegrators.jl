@@ -1,7 +1,7 @@
 
 using GeometricIntegrators
 using GeometricIntegrators.Utils
-using Base.Test
+using Test
 
 function fx(t, x, fx)
     fx .= x

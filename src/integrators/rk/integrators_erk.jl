@@ -32,7 +32,7 @@ function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
     # TODO Read data in original format (e.g., Rational).
     #      For this we need to save tableaus as jld or hdf5.
 #    tab_array = readdlm(file, T)
-    tab_array = readdlm(file)
+    tab_array = readdlm(file, comments=true)
 
     if s == 0
         s = size(tab_array, 1)
@@ -44,7 +44,7 @@ function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
     b = tab_array[1:s, 2]
     a = tab_array[1:s, 3:s+2]
 
-    info("Reading explicit Runge-Kutta tableau ", name, " with ", s, " stages and order ", o, " from file\n      ", file)
+    @info "Reading explicit Runge-Kutta tableau $(name) with $(s) stages and order $(o) from file\n$(file)"
 
     TableauERK(Symbol(name), o, a, b, c)
 end
