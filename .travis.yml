@@ -15,11 +15,10 @@ notifications:
   email: false
 sudo: required
 script:
-  - julia -e 'Pkg.clone(pwd())'
-  - julia -e 'Pkg.test("GeometricIntegrators", coverage=true)'
+  - julia --color=yes -e 'if VERSION >= v"0.7.0-" using Pkg; end; Pkg.clone(pwd())'
+  - julia --color=yes -e 'if VERSION >= v"0.7.0-" using Pkg; end; Pkg.test("GeometricIntegrators", coverage=true)'
 after_success:
-  - julia -e 'Pkg.add("Documenter")'
-  - julia -e 'Pkg.add("Coverage")'
-  - julia -e 'cd(Pkg.dir("GeometricIntegrators")); include(joinpath("docs", "make.jl"))'
-  - julia -e 'cd(Pkg.dir("GeometricIntegrators")); using Coverage; Codecov.submit(process_folder())'
-  - julia -e 'cd(Pkg.dir("GeometricIntegrators")); using Coverage; Coveralls.submit(process_folder())'
+  - julia --color=yes -e 'if VERSION >= v"0.7.0-" using Pkg; end; Pkg.add("Documenter"); Pkg.add("Coverage");'
+  - julia --color=yes -e 'if VERSION >= v"0.7.0-" using Pkg; end; cd(Pkg.dir("GeometricIntegrators")); include(joinpath("docs", "make.jl"))'
+  - julia --color=yes -e 'if VERSION >= v"0.7.0-" using Pkg; end; cd(Pkg.dir("GeometricIntegrators")); using Coverage; Codecov.submit(process_folder())'
+  - julia --color=yes -e 'if VERSION >= v"0.7.0-" using Pkg; end; cd(Pkg.dir("GeometricIntegrators")); using Coverage; Coveralls.submit(process_folder())'
