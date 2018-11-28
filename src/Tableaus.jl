@@ -70,7 +70,7 @@ module Tableaus
 
     export  getTableauStochasticGLRK
     export  getTableauStochasticStormerVerlet
-    export  getTableauStochasticLobIIIABD2
+    export  getTableauStochasticLobIIIABD2, getTableauModifiedStochasticStormerVerlet
 
     include("tableaus/tableaus_eprk.jl")
 
