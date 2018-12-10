@@ -12,8 +12,8 @@ function getTableauStochasticSymplecticEuler()
     a_p = zeros(Float64, 1, 1)
     b_p = [1.0]
     c_p = [0.0]
-    
-    TableauSFIPRK(:StochasticSymplecticEuler, 1, a_q, b_q, c_q, 1, a_q, b_q, c_q, 1, a_p, b_p, c_p, 1, a_p, b_p, c_p,)
+
+    TableauSFIPRK(:StochasticSymplecticEuler, 1, a_q, b_q, c_q, 1, a_q, b_q, c_q, 1, a_p, b_p, c_p, 1, a_p, b_p, c_p)
 end
 
 

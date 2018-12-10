@@ -68,7 +68,7 @@ module Tableaus
     include("tableaus/tableaus_sfiprk.jl")
     include("tableaus/tableaus_sfisprk.jl")
 
-    export  getTableauStochasticGLRK
+    export  getTableauStochasticGLRK, getTableauStochasticDIRK
     export  getTableauStochasticStormerVerlet, getTableauStochasticSymplecticEuler
     export  getTableauStochasticLobIIIABD2, getTableauModifiedStochasticStormerVerlet
 
