@@ -9,6 +9,11 @@ function Integrator(equation::SDE, tableau::TableauSERK, Δt)
     IntegratorSERK(equation, tableau, Δt)
 end
 
+"Create integrator for weak explicit Runge-Kutta tableau."
+function Integrator(equation::SDE, tableau::TableauWERK, Δt)
+    IntegratorWERK(equation, tableau, Δt)
+end
+
 "Create integrator for diagonally implicit Runge-Kutta tableau."
 function Integrator(equation::ODE, tableau::TableauDIRK, Δt)
     IntegratorDIRK(equation, tableau, Δt)

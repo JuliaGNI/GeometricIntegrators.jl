@@ -46,13 +46,13 @@ function Solution(equation::IDAE, Δt, ntime::Int, nsave::Int=1)
 end
 
 "Create solution for SDE."
-function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=1; K::Int=0)
-    SolutionSDE(equation, Δt, ntime, nsave, K=K)
+function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=1; K::Int=0, conv::String="strong")
+    SolutionSDE(equation, Δt, ntime, nsave, K=K, conv=conv)
 end
 
 "Create solution for PSDE."
-function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int, nsave::Int=1; K::Int=0)
-    SolutionPSDE(equation, Δt, ntime, nsave, K=K)
+function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int, nsave::Int=1; K::Int=0, conv::String="strong")
+    SolutionPSDE(equation, Δt, ntime, nsave, K=K, conv=conv)
 end
 
 "Print error for solutions of equations not implemented, yet."

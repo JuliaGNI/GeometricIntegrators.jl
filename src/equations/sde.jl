@@ -24,10 +24,11 @@ taking values in ``\\mathbb{R}^{d}``, and the m-dimensional Wiener process W
 * `q₀`: initial condition for dynamical variable ``q`` (may be a random variable itself)
 
 
-The functions `v` and `B`, providing the drift vector field and diffusion matrix, take three arguments,
-`v(t, q, v)` and `B(t, q, B)`, where `t` is the current time, `q` is the
+The functions `v` and `B`, providing the drift vector field and diffusion matrix,
+`v(t, q, v)` and `B(t, q, B; col=0)`, where `t` is the current time, `q` is the
 current solution vector, and `v` and `B` are the variables which hold the result
-of evaluating the vector field ``v`` and the matrix ``B`` on `t` and `q`.
+of evaluating the vector field ``v`` and the matrix ``B`` on `t` and `q` (if col==0),
+or the column col of the matrix B (if col>0).
 
 ### Example
 

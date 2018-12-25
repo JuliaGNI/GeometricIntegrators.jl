@@ -276,6 +276,56 @@ function update_solution!(q::Union{Vector{T}, Vector{Double{T}}}, p::Union{Vecto
 end
 
 
+# For weak Runge-Kutta methods
+# x - the solution vector to be updated
+# Vx - the matrix containing the drift vector evaluated at the internal stages v(Q_i)
+# Bx1 - the array containing the diffusion matrix evaluated at the internal stages H^(l)_i, such that Bx1[:,l,i] is evaluated at H^(l)_i
+# Bx2 - the array containing the diffusion matrix evaluated at the internal stages \hat H^(l)_i, such that Bx2[:,l,i] is evaluated at \hat H^(l)_i
+# alpha - the Runge-Kutta coefficients for the drift part
+# beta1 - the Runge-Kutta coefficients for the diffusion term with the random increments
+# beta2 - the Runge-Kutta coefficients for the second diffusion term
+# Δt - the time step
+# ΔW - the increments of the Brownian motion represented by the random variables \hat I^(k)
+function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, Vx::Matrix{T}, Bx1::Array{T,3}, Bx2::Array{T,3}, alpha::Vector{T}, beta1::Vector{T}, beta2::Vector{T}, Δt::T, ΔW::Vector{T}) where {T}
+    @assert length(x) == size(Vx, 1) == size(Bx1, 1) == size(Bx2, 1)
+    @assert length(alpha) == length(beta1) == length(beta2) == size(Vx, 2) == size(Bx1, 3) == size(Bx2, 3)
+    @assert length(ΔW)== size(Bx1, 2) == size(Bx2, 2)
+
+    local Δx::eltype(x)
+
+    # Contribution from the drift part
+    for k in indices(Vx, 1)
+        Δx = 0.
+        for i in indices(Vx, 2)
+            Δx += alpha[i] * Vx[k,i]
+        end
+        x[k] += Δt * Δx
+    end
+
+    local Δy = zeros(eltype(x), length(ΔW))
+
+    # Contribution from the diffusion term with the random variables I^(k)_i
+    for k in indices(Bx1, 1)
+        Δy .= zeros(eltype(x), length(ΔW))
+        for i in indices(Bx1, 3)
+            Δy += beta1[i] * Bx1[k,:,i]
+        end
+        x[k] += dot(Δy,ΔW)
+    end
+
+    # Contribution from the second diffusion term
+    for k in indices(Bx2, 1)
+        Δx= 0.
+        for l in indices(Bx2, 2)
+            for i in indices(Bx2, 3)
+                Δx += beta2[i] * Bx2[k,l,i]
+            end
+        end
+        x[k] += sqrt(Δt)*Δx
+    end
+end
+
+
 function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
     update_solution!(x, xₑᵣᵣ, ẋ, b, Δt)
     update_solution!(x, xₑᵣᵣ, ẋ, b̂, Δt)
@@ -312,6 +362,13 @@ function update_solution!(q::Union{Vector{T}, Vector{Double{T}}}, p::Union{Vecto
     update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, bqdrift, bqdiff, bpdrift1, bpdrift2, bpdiff1, bpdiff2, Δt, ΔW)
     update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, b̂qdrift, b̂qdiff, b̂pdrift1, b̂pdrift2, b̂pdiff1, b̂pdiff2, Δt, ΔW)
 end
+
+ # For weak Runge-Kutta methods
+ function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, Vx::Matrix{T}, Bx1::Array{T,3}, Bx2::Array{T,3},
+                             alpha::Vector{T}, âlpha::Vector, beta1::Vector{T}, b̂eta1::Vector, beta2::Vector{T}, b̂eta2::Vector, Δt::T, ΔW::Vector{T}) where {T}
+     update_solution!(x, Vx, Bx1, Bx2, alpha, beta1, beta2, Δt, ΔW)
+     update_solution!(x, Vx, Bx1, Bx2, âlpha, b̂eta1, b̂eta2, Δt, ΔW)
+ end
 
 function cut_periodic_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, periodicity::Vector{T}) where {T}
     @assert length(x) == length(xₑᵣᵣ) == length(periodicity)

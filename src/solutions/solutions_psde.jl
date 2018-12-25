@@ -4,7 +4,7 @@
 Contains all fields necessary to store the solution of a PSDE or SPSDE
 
 ### Fields
-
+* `conv`: type of the solution: "strong" or "weak"
 * `nd`: dimension of the dynamical variable ``q``
 * `nm`: dimension of the Wiener process
 * `nt`: number of time steps to store
@@ -14,13 +14,14 @@ Contains all fields necessary to store the solution of a PSDE or SPSDE
 * `q`:  solution `q[nd, nt+1, ns, ni]` with `q[:,0,:,:]` the initial conditions
 * `p`:  solution `p[nd, nt+1, ns, ni]` with `p[:,0,:,:]` the initial conditions
 * `W`:  Wiener process driving the stochastic processes q and p
-* `K`:  integer parameter defining the truncation of the increments of the Wiener process,
+* `K`:  integer parameter defining the truncation of the increments of the Wiener process (for strong solutions),
 *       A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; if K=0 no truncation
 * `ntime`: number of time steps to compute
 * `nsave`: save every nsave'th time step
 
 """
 mutable struct SolutionPSDE{dType, tType, NQ, NW} <: StochasticSolution{dType, tType, NQ, NW}
+    conv::String
     nd::Int
     nm::Int
     nt::Int
@@ -37,7 +38,7 @@ mutable struct SolutionPSDE{dType, tType, NQ, NW} <: StochasticSolution{dType, t
 end
 
 
-function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0) where {DT,TT}
+function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0, conv::String="strong") where {DT,TT}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -54,6 +55,7 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime:
         NQ = 4
     end
 
+    @assert conv=="strong" || (conv=="weak" && K==0)
     @assert DT <: Number
     @assert TT <: Real
     @assert nd > 0
@@ -70,16 +72,16 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime:
 
     # Holds the Wiener process data for ALL computed time steps
     # Wiener process increments are automatically generated here
-    W = WienerProcess(DT, nm, ntime, ns, Δt)
+    W = WienerProcess(DT, nm, ntime, ns, Δt, conv)
     NW = ndims(W.ΔW)
 
-    s = SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
+    s = SolutionPSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
 
 
-function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1; K::Int=0) where {DT,TT,NW}
+function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1; K::Int=0, conv::String="strong") where {DT,TT,NW}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -111,6 +113,7 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Ar
         @assert ns==size(dW,3)
     end
 
+    @assert conv=="strong" || (conv=="weak" && K==0)
     @assert DT <: Number
     @assert TT <: Real
     @assert nd > 0
@@ -127,7 +130,7 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Ar
 
     # Holds the Wiener process data for ALL computed time steps
     # Wiener process increments are prescribed by the arrays dW and dZ
-    W = WienerProcess(Δt, dW, dZ)
+    W = WienerProcess(Δt, dW, dZ, conv)
 
     s = SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
@@ -137,6 +140,7 @@ end
 
 function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SStochasticDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW}; K::Int=0) where {DT,TT,NQ,NW}
     # extract parameters
+    conv = W.conv
     nd = q.nd
     ns = q.ns
     ni = q.ni
@@ -145,6 +149,7 @@ function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SSt
     ntime = W.nt
     nsave = t.step
 
+    @assert conv=="strong" || (conv=="weak" && K==0)
     @assert ntime==nt*nsave
     @assert q.nt == nt
     @assert W.ns == q.ns
@@ -155,13 +160,13 @@ function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SSt
     @assert q.ns == p.ns
 
     # create solution
-    SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
+    SolutionPSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
 end
 
 
 # If the Wiener process W data are not available, creates a one-element zero array instead
 # For instance used when reading a file with no Wiener process data saved
-function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SStochasticDataSeries{DT,NQ}; K::Int=0) where {DT,TT,NQ}
+function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SStochasticDataSeries{DT,NQ}; K::Int=0, conv::String="strong") where {DT,TT,NQ}
     # extract parameters
     nd = q.nd
     ns = q.ns
@@ -170,19 +175,20 @@ function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SSt
     nsave = t.step
     ntime = nt*nsave
 
+    @assert conv=="strong" || (conv=="weak" && K==0)
     @assert q.nt == nt
     @assert q.nd == p.nd
     @assert q.nt == p.nt
     @assert q.ni == p.ni
     @assert q.ns == p.ns
 
-    W = WienerProcess(t.Δt, [0.0], [0.0])
+    W = WienerProcess(t.Δt, [0.0], [0.0], conv)
 
     nm = W.nd
     NW = ndims(W.ΔW)
 
     # create solution
-    SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
+    SolutionPSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
 end
 
 
@@ -198,10 +204,16 @@ function SolutionPSDE(file::String)
     # reading data arrays
     t = TimeSeries(read(h5["t"]), nsave)
 
+    if exists(attrs(h5),"conv")
+        conv = read(attrs(h5)["conv"])
+    else
+        conv = "strong"
+    end
+
     W_exists = exists(h5, "ΔW") && exists(h5, "ΔZ")
 
     if W_exists == true
-        W = WienerProcess(t.Δt, read(h5["ΔW"]), read(h5["ΔZ"]))
+        W = WienerProcess(t.Δt, read(h5["ΔW"]), read(h5["ΔZ"]), conv)
     end
 
     if exists(attrs(h5),"K")
@@ -227,7 +239,7 @@ function SolutionPSDE(file::String)
     if W_exists == true
         SolutionPSDE(t, q, p, W, K=K)
     else
-        SolutionPSDE(t, q, p, K=K)
+        SolutionPSDE(t, q, p, K=K, conv=conv)
     end
 
 end
@@ -346,6 +358,7 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
     h5 = createHDF5(solution, file)
 
     # Adding the attributes specific to SolutionSDE that were not added above
+    attrs(h5)["conv"] = solution.conv
     attrs(h5)["nd"] = solution.nd
     attrs(h5)["nm"] = solution.nm
     attrs(h5)["ns"] = solution.ns

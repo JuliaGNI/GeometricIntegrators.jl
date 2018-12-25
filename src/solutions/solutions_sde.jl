@@ -4,7 +4,7 @@
 Contains all fields necessary to store the solution of an SDE.
 
 ### Fields
-
+* `conv`: type of the solution: "strong" or "weak"
 * `nd`: dimension of the dynamical variable ``q``
 * `nm`: dimension of the Wiener process
 * `nt`: number of time steps to store
@@ -13,13 +13,14 @@ Contains all fields necessary to store the solution of an SDE.
 * `t`:  time steps
 * `q`:  solution `q[nd, nt+1, ns, ni]` with `q[:,0,:,:]` the initial conditions
 * `W`:  Wiener process driving the stochastic process q
-* `K`:  integer parameter defining the truncation of the increments of the Wiener process,
+* `K`:  integer parameter defining the truncation of the increments of the Wiener process (for strong solutions),
 *       A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; if K=0 no truncation
 * `ntime`: number of time steps to compute
 * `nsave`: save every nsave'th time step
 
 """
 mutable struct SolutionSDE{dType, tType, NQ, NW} <: StochasticSolution{dType, tType, NQ, NW}
+    conv::String
     nd::Int
     nm::Int
     nt::Int
@@ -35,7 +36,7 @@ mutable struct SolutionSDE{dType, tType, NQ, NW} <: StochasticSolution{dType, tT
 end
 
 
-function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0) where {DT,TT,VT,BT}
+function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0, conv::String="strong") where {DT,TT,VT,BT}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -52,6 +53,7 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int
         NQ = 4
     end
 
+    @assert conv=="strong" || (conv=="weak" && K==0)
     @assert DT <: Number
     @assert TT <: Real
     @assert nd > 0
@@ -67,16 +69,16 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int
 
     # Holds the Wiener process data for ALL computed time steps
     # Wiener process increments are automatically generated here
-    W = WienerProcess(DT, nm, ntime, ns, Δt)
+    W = WienerProcess(DT, nm, ntime, ns, Δt, conv)
     NW = ndims(W.ΔW)
 
-    s = SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
+    s = SolutionSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
 
 
-function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1; K::Int=0) where {DT,TT,VT,BT,NW}
+function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1; K::Int=0, conv::String="strong") where {DT,TT,VT,BT,NW}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -108,6 +110,7 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, dW::Array{DT, NW}, dZ:
         @assert ns==size(dW,3)
     end
 
+    @assert conv=="strong" || (conv=="weak" && K==0)
     @assert DT <: Number
     @assert TT <: Real
     @assert nd > 0
@@ -124,9 +127,9 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, dW::Array{DT, NW}, dZ:
 
     # Holds the Wiener process data for ALL computed time steps
     # Wiener process increments are prescribed by the arrays ΔW and ΔZ
-    W = WienerProcess(Δt, dW, dZ)
+    W = WienerProcess(Δt, dW, dZ, conv)
 
-    s = SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
+    s = SolutionSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
@@ -134,6 +137,7 @@ end
 
 function SolutionSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW}; K::Int=0) where {DT,TT,NQ,NW}
     # extract parameters
+    conv = W.conv
     nd = q.nd
     ns = q.ns
     ni = q.ni
@@ -142,18 +146,19 @@ function SolutionSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, W::Wien
     ntime = W.nt
     nsave = t.step
 
+    @assert conv=="strong" || (conv=="weak" && K==0)
     @assert ntime==nt*nsave
     @assert q.nt == nt
     @assert W.ns == q.ns
 
     # create solution
-    SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
+    SolutionSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
 end
 
 
 # If the Wiener process W data are not available, creates a one-element zero array instead
 # For instance used when reading a file with no Wiener process data saved
-function SolutionSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}; K::Int=0) where {DT,TT,NQ}
+function SolutionSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}; K::Int=0, conv::String="strong") where {DT,TT,NQ}
     # extract parameters
     nd = q.nd
     ns = q.ns
@@ -162,15 +167,16 @@ function SolutionSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}; K::Int=
     nsave = t.step
     ntime = nt*nsave
 
+    @assert conv=="strong" || (conv=="weak" && K==0)
     @assert q.nt == nt
 
-    W = WienerProcess(t.Δt, [0.0], [0.0])
+    W = WienerProcess(t.Δt, [0.0], [0.0], conv)
 
     nm = W.nd
     NW = ndims(W.ΔW)
 
     # create solution
-    SolutionSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
+    SolutionSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
 end
 
 
@@ -186,10 +192,16 @@ function SolutionSDE(file::String)
     # reading data arrays
     t = TimeSeries(read(h5["t"]), nsave)
 
+    if exists(attrs(h5),"conv")
+        conv = read(attrs(h5)["conv"])
+    else
+        conv = "strong"
+    end
+
     W_exists = exists(h5, "ΔW") && exists(h5, "ΔZ")
 
     if W_exists == true
-        W = WienerProcess(t.Δt, read(h5["ΔW"]), read(h5["ΔZ"]))
+        W = WienerProcess(t.Δt, read(h5["ΔW"]), read(h5["ΔZ"]), conv)
     end
 
     if exists(attrs(h5),"K")
@@ -212,7 +224,7 @@ function SolutionSDE(file::String)
     if W_exists == true
         return SolutionSDE(t, q, W, K=K)
     else
-        return SolutionSDE(t, q, K=K)
+        return SolutionSDE(t, q, K=K, conv=conv)
     end
 
 end
@@ -320,6 +332,7 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString, n
     h5 = createHDF5(solution, file)
 
     # Adding the attributes specific to SolutionSDE that were not added above
+    attrs(h5)["conv"] = solution.conv
     attrs(h5)["nd"] = solution.nd
     attrs(h5)["nm"] = solution.nm
     attrs(h5)["ns"] = solution.ns
