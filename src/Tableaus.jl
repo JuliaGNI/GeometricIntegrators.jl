@@ -81,6 +81,10 @@ module Tableaus
 
     export getTableauRosslerRS1, getTableauRosslerRS2
 
+    include("tableaus/tableaus_wfirk.jl")
+
+    export getTableauSRKw1, getTableauSRKw2
+
     include("tableaus/tableaus_eprk.jl")
 
     export getTableauSymplecticEulerA, getTableauSymplecticEulerB,

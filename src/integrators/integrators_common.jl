@@ -91,14 +91,14 @@ function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, ẋ::Matrix{T}
 end
 
 
-# For stochastic Runge-Kutta methods
+# For stochastic Runge-Kutta methods (SFIRK and WFIRK)
 # x - the solution vector to be updated
-# Vx - the matrix containing the drift vector evaluated at the internal stages v(Q_i)
-# Bx - the array containing the diffusion matrix evaluated at the internal stages B(Q_i)
+# Vx - the matrix containing the drift vector evaluated at the internal stages v(Q_i) (SFIRK) or v(Q0_i) (WFIRK)
+# Bx - the array containing the diffusion matrix evaluated at the internal stages B(Q_i) (SFIRK) or B(Q1^(l)_i) (WFIRK)
 # bdrift - the Runge-Kutta coefficients for the drift part
 # bdiff - the Runge-Kutta coefficients for the diffusion part
 # Δt - the time step
-# ΔW - the increments of the Brownian motion
+# ΔW - the increments of the Brownian motion (SFIRK) or the increments represented by the random variables \hat I^(k) (WFIRK)
 function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, Vx::Matrix{T}, Bx::Array{T,3}, bdrift::Vector{T}, bdiff::Vector{T}, Δt::T, ΔW::Vector{T}) where {T}
     @assert length(x) == size(Vx, 1) == size(Bx, 1)
     @assert length(bdrift) == length(bdiff) == size(Vx, 2) == size(Bx, 3)
@@ -276,7 +276,7 @@ function update_solution!(q::Union{Vector{T}, Vector{Double{T}}}, p::Union{Vecto
 end
 
 
-# For weak Runge-Kutta methods
+# For weak Runge-Kutta methods WERK
 # x - the solution vector to be updated
 # Vx - the matrix containing the drift vector evaluated at the internal stages v(Q_i)
 # Bx1 - the array containing the diffusion matrix evaluated at the internal stages H^(l)_i, such that Bx1[:,l,i] is evaluated at H^(l)_i
@@ -363,7 +363,7 @@ function update_solution!(q::Union{Vector{T}, Vector{Double{T}}}, p::Union{Vecto
     update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, b̂qdrift, b̂qdiff, b̂pdrift1, b̂pdrift2, b̂pdiff1, b̂pdiff2, Δt, ΔW)
 end
 
- # For weak Runge-Kutta methods
+ # For weak Runge-Kutta methods WERK
  function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, Vx::Matrix{T}, Bx1::Array{T,3}, Bx2::Array{T,3},
                              alpha::Vector{T}, âlpha::Vector, beta1::Vector{T}, b̂eta1::Vector, beta2::Vector{T}, b̂eta2::Vector, Δt::T, ΔW::Vector{T}) where {T}
      update_solution!(x, Vx, Bx1, Bx2, alpha, beta1, beta2, Δt, ΔW)

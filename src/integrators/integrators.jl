@@ -39,6 +39,11 @@ function Integrator(equation::SPSDE, tableau::TableauSFISPRK, Δt; K::Int=0)
     IntegratorSFISPRK(equation, tableau, Δt, K=K)
 end
 
+"Create integrator for weak fully implicit Runge-Kutta tableau."
+function Integrator(equation::SDE, tableau::TableauWFIRK, Δt)
+    IntegratorWFIRK(equation, tableau, Δt)
+end
+
 "Create integrator for singly implicit Runge-Kutta tableau."
 function Integrator(equation::ODE, tableau::TableauSIRK, Δt)
     IntegratorSIRK(equation, tableau, Δt)

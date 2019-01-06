@@ -38,9 +38,13 @@ or the column col of the matrix B (if col>0).
         v[2] = λ*q[2]
     end
 
-    function B(μ, t, q, B)
-        B[1] = μ*q[1]
-        B[2] = μ*q[2]
+    function B(μ, t, q, B; col=0)
+        if col==0 #whole matrix
+            B[1,1] = μ*q[1]
+            B[2,1] = μ*q[2]
+        elseif col==1
+            #just first column
+        end
     end
 
     t₀ = 0.
