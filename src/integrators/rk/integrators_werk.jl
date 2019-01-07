@@ -84,8 +84,8 @@ struct IntegratorWERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
     tQ0::Array{DT,1}   # tQ0[1..n]      - the internal stage H^(0)_i for a given i
     tQ1::Array{DT,2}   # tQ1[1..n,1..m] - the internal stages H^(l)_i for a given i
     tQ2::Array{DT,2}   # tQ2[1..n,1..m] - the internal stages \hat H^(l)_i for a given i
-    tV::Array{DT,1}    # the value of the drift term evaluated at the internal stage H^(0)_i for a given i
-    tB::Array{DT,2}    # the value of the diffusion matrix such that tB[:,l] is evaluated at H^(l)_i for a given i
+    tV::Array{DT,1}    # the value of the drift term evaluated at the internal stage H^(0)_i or the l-th column of the diffusion term for H^(l)_i for a given i
+    tB::Array{DT,2}    # the value of the diffusion matrix; here used only at the first stage of the step
 
 
     function IntegratorWERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
@@ -243,25 +243,26 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
         simd_copy_yx_first!(int.tV, int.VQ, i)
 
         #CALCULATING THE NEW VALUES OF BQ1
-        # each column of tB evaluated at a different internal stage
+        # each column of B evaluated at a different internal stage
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.qdrift1.c[i]
 
         for l = 1:sol.nm
-            int.equation.B(tᵢ, int.tQ1[:,l], int.tB[:,l], col=l)
+            # here int.tV holds the l-th column of B
+            int.equation.B(tᵢ, int.tQ1[:,l], int.tV, col=l)
+            simd_copy_yx_first!(int.tV, int.BQ1, l, i)
         end
-
-        simd_copy_yx_first!(int.tB, int.BQ1, i)
 
 
         #CALCULATING THE NEW VALUES OF BQ2
-        # each column of tB evaluated at a different internal stage
+        # each column of B evaluated at a different internal stage
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.qdrift2.c[i]
 
         for l = 1:sol.nm
-            int.equation.B(tᵢ, int.tQ2[:,l], int.tB[:,l], col=l)
+            # here int.tV holds the l-th column of B
+            int.equation.B(tᵢ, int.tQ2[:,l], int.tV, col=l)
+            simd_copy_yx_first!(int.tV, int.BQ2, l, i)
         end
 
-        simd_copy_yx_first!(int.tB, int.BQ2, i)
     end
 
     # compute final update
