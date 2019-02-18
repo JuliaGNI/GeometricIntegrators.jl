@@ -132,8 +132,8 @@ function IntegratorVPRKpVariational(equation::ET, tableau::TableauVPRK{TT}, Δt:
     pcache = NonlinearFunctionCacheVPRKprojection{DT}(D)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, M)
-    p = create_solution_vector_double_double(DT, D, M)
+    q = create_solution_vector(DT, D, M)
+    p = create_solution_vector(DT, D, M)
 
     # create integrator
     IntegratorVPRKpVariational{DT, TT, ET, typeof(sparams), typeof(pparams), typeof(solver), typeof(projector), typeof(iguess)}(

@@ -14,9 +14,12 @@ struct NonlinearFunctionCacheVPRK{ST}
     P::Matrix{ST}
     F::Matrix{ST}
 
-    v::Array{ST,1}
-    y::Array{ST,1}
-    z::Array{ST,1}
+    v::Vector{ST}
+    y::Vector{ST}
+    z::Vector{ST}
+
+    q̅::Vector{ST}
+    p̅::Vector{ST}
 
     function NonlinearFunctionCacheVPRK{ST}(D,S) where {ST}
         # create internal stage vectors
@@ -30,7 +33,11 @@ struct NonlinearFunctionCacheVPRK{ST}
         y = zeros(ST,D)
         z = zeros(ST,D)
 
-        new(Q, V, P, F, v, y, z)
+        # create solution vector
+        q̅ = zeros(ST,D)
+        p̅ = zeros(ST,D)
+
+        new(Q, V, P, F, v, y, z, q̅, p̅)
     end
 end
 

@@ -26,7 +26,7 @@ end
 Create a solution vector of type `TwicePrecision{DT}` for a problem with `D` dimensions
 and `M` independent initial conditions.
 """
-function create_solution_vector_double_double(DT, D, M)
+function create_solution_vector(DT, D, M)
     x = Array{Vector{TwicePrecision{DT}}}(undef, M)
 
     for i in 1:M
@@ -35,6 +35,38 @@ function create_solution_vector_double_double(DT, D, M)
 
     return x
 end
+
+
+"""
+Create a vector of S solution vectors of type DT to store the solution of S
+internal stages for a problem with `D` dimensions.
+"""
+function create_internal_stage_vector(DT, D, S)
+    a = Array{Vector{DT}}(undef, S)
+
+    for i in 1:S
+        a[i] = zeros(DT,D)
+    end
+
+    return a
+end
+
+
+"""
+Create a vector of S+1 solution vectors of type DT to store the solution of S
+internal stages and the solution of the previous timestep for a problem with `D`
+    dimensions.
+"""
+function create_internal_stage_vector_with_zero(DT, D, S)
+    a = OffsetArray{Vector{DT}}(undef, 0:S)
+
+    for i in 0:S
+        a[i] = zeros(DT,D)
+    end
+
+    return a
+end
+
 
 
 function check_solution_dimension_asserts(sol::Solution, m::Int, n::Int)

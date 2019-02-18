@@ -128,8 +128,8 @@ function IntegratorVPRK(equation::ET, tableau::TableauVPRK{TT}, Δt::TT) where {
     cache = NonlinearFunctionCacheVPRK{DT}(D,S)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, M)
-    p = create_solution_vector_double_double(DT, D, M)
+    q = create_solution_vector(DT, D, M)
+    p = create_solution_vector(DT, D, M)
 
     # create integrator
     IntegratorVPRK{DT, TT, typeof(params), typeof(solver), typeof(iguess)}(

@@ -315,8 +315,8 @@ function IntegratorVPRKpSecondary(equation::ET, tableau::TableauVPRK{TT}, Δt::T
     pcache = NonlinearFunctionCacheVPRKprojection{DT}(D,S)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, M)
-    p = create_solution_vector_double_double(DT, D, M)
+    q = create_solution_vector(DT, D, M)
+    p = create_solution_vector(DT, D, M)
 
     # create integrator
     IntegratorVPRKpSecondary{DT, TT, typeof(params), typeof(solver), typeof(iguess)}(

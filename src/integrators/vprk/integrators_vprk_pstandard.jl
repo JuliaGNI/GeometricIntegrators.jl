@@ -153,8 +153,8 @@ function IntegratorVPRKpStandard(equation::ET, tableau::TableauVPRK{TT}, Δt::TT
     pcache = NonlinearFunctionCacheVPRKprojection{DT}(D,S)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, M)
-    p = create_solution_vector_double_double(DT, D, M)
+    q = create_solution_vector(DT, D, M)
+    p = create_solution_vector(DT, D, M)
 
     # create integrator
     IntegratorVPRKpStandard{DT, TT, typeof(sparams), typeof(pparams), typeof(solver), typeof(projector), typeof(iguess)}(

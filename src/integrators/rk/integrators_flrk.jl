@@ -21,48 +21,41 @@ function ParametersFLRK(DT, D, v::VT, Δt::TT, tab) where {TT,VT}
 end
 
 struct NonlinearFunctionCacheFLRK{DT}
-    Q::Matrix{DT}
-    V::Matrix{DT}
-    Y::Matrix{DT}
+    Q::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
+    Y::Vector{Vector{DT}}
 
     function NonlinearFunctionCacheFLRK{DT}(d, s) where {DT}
 
         # create internal stage vectors
-        Q = zeros(DT,d,s)
-        V = zeros(DT,d,s)
-        Y = zeros(DT,d,s)
+        Q = create_internal_stage_vector(DT, d, s)
+        V = create_internal_stage_vector(DT, d, s)
+        Y = create_internal_stage_vector(DT, d, s)
 
         new(Q, V, Y)
     end
 end
 
-@generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, Y::Matrix{ST},
+function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
                                     params::ParametersFLRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
+    local tᵢ::TT
 
-    tQ::Vector{ST} = zeros(ST,D)
-    tV::Vector{ST} = zeros(ST,D)
+    @assert S == length(Q) == length(V) == length(Y)
 
-    quote
-        local tᵢ::TT
+    for i in 1:S
+        @assert D == length(Q[i]) == length(V[i]) == length(Y[i])
+        tᵢ = params.t + params.Δt * params.c[i]
 
-        @assert D == size(Q,1) == size(V,1) == size(Y,1)
-        @assert S == size(Q,2) == size(V,2) == size(Y,2)
-
-        # copy x to Y and compute Q = q + Δt Y
-        for i in 1:size(Y,2)
-            for k in 1:size(Y,1)
-                Y[k,i] = x[D*(i-1)+k]
-                Q[k,i] = params.q[k] + params.Δt * Y[k,i]
-            end
+        # copy x to Y
+        for k in 1:D
+            Y[i][k] = x[D*(i-1)+k]
         end
+
+        # compute Q = q + Δt Y
+        Q[i] .= params.q .+ params.Δt .* Y[i]
 
         # compute V = v(Q)
-        for i in 1:S
-            tᵢ = params.t + params.Δt * params.c[i]
-            simd_copy_xy_first!($tQ, Q, i)
-            params.v(tᵢ, $tQ, $tV)
-            simd_copy_yx_first!($tV, V, i)
-        end
+        params.v(tᵢ, Q[i], V[i])
     end
 end
 
@@ -83,10 +76,10 @@ end
                 y1 = 0
                 y2 = 0
                 for j in 1:S
-                    y1 += params.a[i,j] * $cache.V[k,j]
-                    y2 += params.â[i,j] * $cache.V[k,j]
+                    y1 += params.a[i,j] * $cache.V[j][k]
+                    y2 += params.â[i,j] * $cache.V[j][k]
                 end
-                b[D*(i-1)+k] = - $cache.Y[k,i] + (y1 + y2)
+                b[D*(i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
             end
         end
     end
@@ -109,14 +102,15 @@ struct IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, SPT, ST, IT <: InitialGu
     v::Vector{DT}
     y::Vector{DT}
 
-    Q::Matrix{DT}
-    V::Matrix{DT}
-    P::Matrix{DT}
-    F::Matrix{DT}
-    G::Matrix{DT}
-    ϑ::Matrix{DT}
-    Y::Matrix{DT}
-    Z::Matrix{DT}
+    Q::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
+    P::Vector{Vector{DT}}
+    F::Vector{Vector{DT}}
+    G::Vector{Vector{DT}}
+    ϑ::Vector{Vector{DT}}
+    Y::Vector{Vector{DT}}
+    Z::Vector{Vector{DT}}
+
     J::Vector{Matrix{DT}}
     A::Array{DT,2}
 end
@@ -130,32 +124,30 @@ function IntegratorFLRK(equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}, tableau::Ta
     x = zeros(DT, D*S)
 
     # create solution vectors
-    q = Array{Vector{TwicePrecision{DT}}}(M)
-    p = Array{Vector{TwicePrecision{DT}}}(M)
-    for m in 1:M
-        q[m] = zeros(TwicePrecision{DT},D)
-        p[m] = zeros(TwicePrecision{DT},D)
-    end
+    q = create_solution_vector(DT, D, M)
+    p = create_solution_vector(DT, D, M)
 
     # create velocity and update vector
     v = zeros(DT,D)
     y = zeros(DT,D)
 
     # create internal stage vectors
-    Q = zeros(DT,D,S)
-    V = zeros(DT,D,S)
-    P = zeros(DT,D,S)
-    F = zeros(DT,D,S)
-    G = zeros(DT,D,S)
-    ϑ = zeros(DT,D,S)
-    Y = zeros(DT,D,S)
-    Z = zeros(DT,D,S)
-    A = zeros(DT,D*S,D*S)
+    Q = create_internal_stage_vector(DT, D, S)
+    V = create_internal_stage_vector(DT, D, S)
+    P = create_internal_stage_vector(DT, D, S)
+    F = create_internal_stage_vector(DT, D, S)
+    G = create_internal_stage_vector(DT, D, S)
+    ϑ = create_internal_stage_vector(DT, D, S)
+    Y = create_internal_stage_vector(DT, D, S)
+    Z = create_internal_stage_vector(DT, D, S)
 
-    J = Vector{Matrix{DT}}(S)
+    J = Array{Matrix{DT}}(undef, S)
+    # J = Vector{Matrix{DT}}(S)
     for i in 1:S
         J[i] = zeros(DT,D,D)
     end
+
+    A = zeros(DT,D*S,D*S)
 
 
     # create params
@@ -193,14 +185,14 @@ function initial_guess!(int::IntegratorFLRK, m::Int)
     for i in 1:int.tableau.q.s
         evaluate!(int.iguess, m, int.y, int.v, int.tableau.q.c[i])
         for k in 1:int.equation.d
-            int.V[k,i] = int.v[k]
+            int.V[i][k] = int.v[k]
         end
     end
     for i in 1:int.tableau.q.s
         for k in 1:int.equation.d
             int.solver.x[int.equation.d*(i-1)+k] = 0
             for j in 1:int.tableau.q.s
-                int.solver.x[int.equation.d*(i-1)+k] += int.tableau.q.a[i,j] * int.V[k,j]
+                int.solver.x[int.equation.d*(i-1)+k] += int.tableau.q.a[i,j] * int.V[j][k]
             end
         end
     end
@@ -239,39 +231,31 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
     update_solution!(int.q[m], int.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
 
     # create temporary arrays
-    tQ = zeros(DT, int.equation.d)
     tV = zeros(DT, int.equation.d)
-    tϑ = zeros(DT, int.equation.d)
-    tF = zeros(DT, int.equation.d)
     δP = zeros(DT, int.equation.d*int.tableau.q.s)
 
     # compute ϑ = α(Q), V(Q) = int.equation.v(t, Q, V)
     # and f_0(Q, V(Q)) = int.equation.f(t, Q, V, F)
     for i in 1:int.tableau.q.s
         tᵢ = int.params.t + int.Δt * int.tableau.q.c[i]
-        simd_copy_xy_first!(tQ, int.Q, i)
-        int.equation.α(tᵢ, tQ, tϑ)
-        int.equation.v(tᵢ, tQ, tV)
-        int.equation.g(tᵢ, tQ, tV, tF)
-        simd_copy_yx_first!(tϑ, int.ϑ, i)
-        simd_copy_yx_first!(tV, int.V, i)
-        simd_copy_yx_first!(tF, int.F, i)
+        int.equation.α(tᵢ, int.Q[i], int.ϑ[i])
+        int.equation.v(tᵢ, int.Q[i], int.V[i])
+        int.equation.g(tᵢ, int.Q[i], int.V[i], int.F[i])
     end
 
     # compute Jacobian of v via ForwardDiff
     for i in 1:int.tableau.q.s
         tᵢ = int.params.t + int.Δt * int.tableau.q.c[i]
         v_rev! = (v,q) -> int.equation.v(tᵢ,q,v)
-        simd_copy_xy_first!(tQ, int.Q, i)
-        ForwardDiff.jacobian!(int.J[i], v_rev!, tV, tQ)
+        ForwardDiff.jacobian!(int.J[i], v_rev!, tV, int.Q[i])
     end
 
     # contract J with ϑ and add to G
     for l in 1:int.tableau.q.s
         for i in 1:int.equation.d
-            int.G[i,l] = 0
+            int.G[l][i] = 0
             for j in 1:int.equation.d
-                int.G[i,l] += int.ϑ[j,l] * int.J[l][j,i]
+                int.G[l][i] += int.ϑ[l][j] * int.J[l][j,i]
             end
         end
     end
@@ -285,7 +269,7 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
             δP[(l-1)*int.equation.d+i] = int.params.p[i]
             # add A(F+G) to δP
             for k in 1:int.tableau.q.s
-                δP[(l-1)*int.equation.d+i] += int.Δt * int.tableau.q.a[l,k] * (int.F[i,k] + int.G[i,k])
+                δP[(l-1)*int.equation.d+i] += int.Δt * int.tableau.q.a[l,k] * (int.F[k][i] + int.G[k][i])
             end
         end
     end
@@ -308,14 +292,17 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
     lu = LUSolver(int.A, δP)
     factorize!(lu)
     solve!(lu)
-    int.P .= reshape(lu.x, (int.equation.d, int.tableau.q.s))
+    tP = reshape(lu.x, (int.equation.d, int.tableau.q.s))
+    for l in 1:int.tableau.q.s
+        int.P[l] .= tP[:,l]
+    end
 
     # contract J with P and subtract from G, so that G = (ϑ-P)J
     for l in 1:int.tableau.q.s
         for i in 1:int.equation.d
-            int.G[i,l] = 0
+            int.G[l][i] = 0
             for j in 1:int.equation.d
-                int.G[i,l] += (int.ϑ[j,l] - int.P[j,l]) * int.J[l][j,i]
+                int.G[l][i] += (int.ϑ[l][j] - int.P[l][j]) * int.J[l][j,i]
             end
         end
     end

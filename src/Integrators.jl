@@ -4,6 +4,7 @@ module Integrators
 
     using DelimitedFiles
     using LinearAlgebra
+    using OffsetArrays
     using ProgressMeter
 
     using Base: TwicePrecision

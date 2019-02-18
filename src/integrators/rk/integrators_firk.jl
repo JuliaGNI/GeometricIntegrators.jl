@@ -52,15 +52,9 @@ struct NonlinearFunctionCacheFIRK{DT}
     function NonlinearFunctionCacheFIRK{DT}(D,S) where {DT}
 
         # create internal stage vectors
-        Q = Array{Vector{DT}}(undef, S)
-        V = Array{Vector{DT}}(undef, S)
-        Y = Array{Vector{DT}}(undef, S)
-
-        for i in 1:S
-            Q[i] = zeros(DT,D)
-            V[i] = zeros(DT,D)
-            Y[i] = zeros(DT,D)
-        end
+        Q = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        Y = create_internal_stage_vector(DT, D, S)
 
         # create velocity and update vector
         v = zeros(DT,D)
@@ -150,7 +144,7 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt
     fcache = NonlinearFunctionCacheFIRK{DT}(D, S)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, M)
+    q = create_solution_vector(DT, D, M)
 
     # create integrator
     IntegratorFIRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), N}(
@@ -180,7 +174,7 @@ function initial_guess!(int::IntegratorFIRK, m::Int)
     # compute initial guess for internal stages
     for i in 1:int.params.tab.q.s
         evaluate!(int.iguess, m, int.fcache.y, int.fcache.v, int.params.tab.q.c[i])
-        for k in 1:dims(int)
+        for k in eachindex(int.fcache.V[i], int.fcache.v)
             int.fcache.V[i][k] = int.fcache.v[k]
         end
     end
