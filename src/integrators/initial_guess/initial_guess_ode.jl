@@ -105,7 +105,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int,
     @assert length(guess_q) == length(guess_v)
 
     if ig.q₀[m] == ig.q₁[m]
-        warn("q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0.")
+        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0."
         guess_q .= ig.q₁[m]
         guess_v .= 0
     else

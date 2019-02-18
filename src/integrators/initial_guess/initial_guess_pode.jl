@@ -208,7 +208,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int,
     @assert length(guess_q) == length(guess_p) == length(guess_v)
 
     if ig.q₀[m] == ig.q₁[m]
-        warn("q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0.")
+        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0."
         guess_q .= ig.q₁[m]
         guess_v .= 0
     else
@@ -216,7 +216,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int,
     end
 
     if ig.p₀[m] == ig.p₁[m]
-        warn("p₀ and p₁ in initial guess are identical! Setting p=p₁.")
+        @warn "p₀ and p₁ in initial guess are identical! Setting p=p₁."
         guess_p .= ig.p₁[m]
     else
         evaluate!(ig.int, ig.p₀[m], ig.p₁[m], ig.f₀[m], ig.f₁[m], one(TT)+c_p, guess_p)
@@ -231,7 +231,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int,
     @assert length(guess_q) == length(guess_p) == length(guess_v) == length(guess_f)
 
     if ig.q₀[m] == ig.q₁[m]
-        warn("q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0.")
+        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0."
         guess_q .= ig.q₁[m]
         guess_v .= 0
     else
@@ -239,7 +239,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int,
     end
 
     if ig.p₀[m] == ig.p₁[m]
-        warn("p₀ and p₁ in initial guess are identical! Setting p=p₁.")
+        @warn "p₀ and p₁ in initial guess are identical! Setting p=p₁."
         guess_p .= ig.p₁[m]
         guess_f .= 0
     else

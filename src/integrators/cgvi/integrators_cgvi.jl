@@ -1,4 +1,3 @@
-
 """
 `ParametersCGVI`: Parameters for right-hand side function of continuous Galerkin variational Integrator.
 
@@ -184,38 +183,29 @@ end
 end
 
 
-@generated function compute_rhs!(b::Vector{ST}, X::Matrix{ST}, Q::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, p̅::Vector{ST}, params::ParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
-    quote
-        local y::ST
-        local z::ST
-        # local ffac::ST
-        # local pfac::ST
+function compute_rhs!(b::Vector{ST}, X::Matrix{ST}, Q::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, p̅::Vector{ST}, params::ParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
+    local y::ST
+    local z::ST
 
-        # compute b = - [(P-AF)]
-        for i in 1:S
-            for k in 1:D
-                z = 0
-                # pfac = 0
-                # ffac = 0
-                for j in 1:R
-                    z += params.b[j] * params.m[j,i] * F[k,j]
-                    z += params.b[j] * params.a[j,i] * P[k,j] / params.Δt
-                    # ffac += params.b[j] * params.m[j,i]
-                    # pfac += params.b[j] * params.a[j,i]
-                end
-                b[D*(i-1)+k] = - (params.r₁[i] * p̅[k] - params.r₀[i] * params.p[k]) / params.Δt + z
-                # b[D*(i-1)+k] = - (params.r₁[i] * p̅[k] - params.r₀[i] * params.p[k]) / params.Δt + ffac * F[k,j] + pfac * P[k,i] / params.Δt
+    # compute b = - [(P-AF)]
+    for i in 1:S
+        for k in 1:D
+            z = 0
+            for j in 1:R
+                z += params.b[j] * params.m[j,i] * F[k,j]
+                z += params.b[j] * params.a[j,i] * P[k,j] / params.Δt
             end
+            b[D*(i-1)+k] = z - (params.r₁[i] * p̅[k] - params.r₀[i] * params.p[k]) / params.Δt
         end
+    end
 
-        # compute b = - [(q-r₀Q)]
-        for k in 1:size(X,1)
-            y = 0
-            for j in 1:size(X,2)
-                y += params.r₀[j] * X[k,j]
-            end
-            b[D*S+k] = - (params.q[k] - y)
+    # compute b = - [(q-r₀Q)]
+    for k in 1:size(X,1)
+        y = 0
+        for j in 1:size(X,2)
+            y += params.r₀[j] * X[k,j]
         end
+        b[D*S+k] = y - params.q[k]
     end
 end
 
@@ -256,8 +246,8 @@ function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}, 
     # compute coefficients
     r₀ = zeros(TT, nbasis(basis))
     r₁ = zeros(TT, nbasis(basis))
-    m = zeros(TT, nnodes(quadrature), S)
-    a = zeros(TT, nnodes(quadrature), S)
+    m  = zeros(TT, nnodes(quadrature), S)
+    a  = zeros(TT, nnodes(quadrature), S)
 
     for i in 1:nbasis(basis)
         r₀[i] = evaluate(basis, i, zero(TT))

@@ -86,7 +86,7 @@ struct VODE{dType <: Number, tType <: Number, αType <: Function, fType <: Funct
         @assert dType == eltype(q₀) == eltype(p₀)
         @assert ndims(q₀) == ndims(p₀) == N ∈ (1,2)
 
-        λ₀ = zeros(q₀)
+        λ₀ = zero(q₀)
 
         if !(length(periodicity) == d)
             periodicity = zeros(dType, d)
