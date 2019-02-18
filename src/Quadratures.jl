@@ -5,10 +5,11 @@ module Quadratures
     using ..Utils
 
     export Quadrature
+    export RiemannQuadratureLeft, RiemannQuadratureRight
     export GaussLegendreQuadrature, LobattoLegendreQuadrature,
            GaussChebyshevQuadrature, LobattoChebyshevQuadrature,
            ClenshawCurtisQuadrature
-    export weights
+    export quadrature, weights
 
     include("quadratures/quadrature.jl")
 
