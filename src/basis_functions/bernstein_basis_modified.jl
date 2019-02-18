@@ -2,12 +2,12 @@
 using OffsetArrays
 
 
-struct BernsteinBasisModified{T,P} <: Basis{T,P}
+struct BernsteinBasisModified{T,N} <: PolynomialBasis{T,N}
     x::OffsetArray{T,1,Array{T,1}}
 
-    function BernsteinBasisModified{T,P}(x) where {T,P}
-        @assert length(x) == P+1
-        ox  = OffsetArray(T, 0:P)
+    function BernsteinBasisModified{T,N}(x) where {T,N}
+        @assert length(x) == N
+        ox  = OffsetArray(T, 0:N-1)
         for i in eachindex(x)
             ox[i-1] = x[i]
         end
@@ -16,27 +16,24 @@ struct BernsteinBasisModified{T,P} <: Basis{T,P}
 end
 
 function BernsteinBasisModified(x::Vector{T}) where {T}
-    BernsteinBasisModified{T,length(x)-1}(x)
+    BernsteinBasisModified{T,length(x)}(x)
 end
 
-CommonFunctions.nbasis(b::BernsteinBasisModified{T,P}) where {T,P} = P+1
-CommonFunctions.nnodes(b::BernsteinBasisModified{T,P}) where {T,P} = P+1
-CommonFunctions.nodes(b::BernsteinBasisModified{T,P})  where {T,P} = b.x.parent
-CommonFunctions.degree(b::BernsteinBasisModified{T,P}) where {T,P} = P
+nodes(b::BernsteinBasisModified{T,N})  where {T,N} = b.x.parent
 
 Base.hash(b::BernsteinBasisModified, h::UInt) = hash(b.c, h)
 
 Base.:(==)(b1::BernsteinBasisModified, b2::BernsteinBasisModified) = (b1.x == b2.x)
 
-Base.isequal(b1::BernsteinBasisModified{T1,P1}, b2::BernsteinBasisModified{T2,P2}) where {T1,P1,T2,P2} = (b1 == b2 && T1 == T2 && P1 == P2)
+Base.isequal(b1::BernsteinBasisModified{T1,N1}, b2::BernsteinBasisModified{T2,N2}) where {T1,N1,T2,N2} = (b1 == b2 && T1 == T2 && N1 == N2)
 
 
-function bernstein(b::BernsteinBasisModified{T,P}, i::Int, n::Int, x::T) where {T,P}
+function bernstein(b::BernsteinBasisModified{T,N}, i::Int, n::Int, x::T) where {T,N}
     if i < 0 || i > n
         return zero(T)
-    elseif i == 0 && n == P
+    elseif i == 0 && n == N-1
         (b.x[end] - x) / (b.x[end] - b.x[0])
-    elseif i == n && n == P
+    elseif i == n && n == N-1
         (x - b.x[0]) / (b.x[end] - b.x[0])
     else
         if n == 0
@@ -48,27 +45,27 @@ function bernstein(b::BernsteinBasisModified{T,P}, i::Int, n::Int, x::T) where {
 end
 
 
-function CommonFunctions.evaluate(b::BernsteinBasisModified{T,P}, i::Int, x::T) where {T,P}
-    @assert i-1 ≥ 0 && i-1 ≤ P
-    bernstein(b, i-1, P, x)
+function eval_basis(b::BernsteinBasisModified{T,N}, i::Int, x::T) where {T,N}
+    @assert i ≥ 1 && i ≤ N
+    bernstein(b, i-1, N, x)
 end
 
 
-function CommonFunctions.derivative(b::BernsteinBasisModified{T,P}, i::Int, x::T) where {T,P}
+function deriv_basis(b::BernsteinBasisModified{T,N}, i::Int, x::T) where {T,N}
     if i == 1
         - 1 / (b.x[end] - b.x[0])
-    elseif i == P+1
+    elseif i == N
         + 1 / (b.x[end] - b.x[0])
     else
-        @assert i-1 ≥ 0 && i-1 ≤ P
-        P * ( bernstein(b, i-2, P-1, x) - bernstein(b, i-1, P-1, x) )
+        @assert i ≥ 1 && i ≤ N
+        P * ( bernstein(b, i-2, N-1, x) - bernstein(b, i-1, N-1, x) )
     end
 end
 
-CommonFunctions.derivative(b::BernsteinBasisModified, i::Int, j::Int) = derivative(b, i, b.x[j])
+deriv_basis(b::BernsteinBasisModified, i::Int, j::Int) = derivative(b, i, b.x[j])
 
 
-# function CommonFunctions.integral(b::BernsteinBasisModified{T,P}, i::Int, x::T) where {T,P}
+# function int_basis(b::BernsteinBasisModified{T,N}, i::Int, x::T) where {T,N}
 # end
 #
-# CommonFunctions.integral(b::BernsteinBasisModified, i::Int, j::Int) = integral(b, i, b.x[j])
+# int_basis(b::BernsteinBasisModified, i::Int, j::Int) = integral(b, i, b.x[j])
