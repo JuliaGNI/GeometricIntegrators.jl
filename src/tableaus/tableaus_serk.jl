@@ -7,7 +7,7 @@ function getTableauStochasticHeun()
     b = [0.5, 0.5]
     c = [0.,  1.]
 
-    TableauSERK(:BurrageR2_explicit_method, 2, a, b, c, 2, a, b, c)
+    TableauSERK(:Stochastic_Heun_explicit_method, 2, a, b, c, 2, a, b, c)
 end
 
 
