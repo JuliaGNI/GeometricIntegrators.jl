@@ -32,7 +32,7 @@ function TableauSERK(name, qdrift::CoefficientsRK{T}, qdiff::CoefficientsRK{T}, 
 end
 
 function TableauSERK(name, qdrift::CoefficientsRK{T}, qdiff::CoefficientsRK{T}) where {T}
-    TableauSERK{T}(name, qdrift, qdiff, CoefficientsRK(T, :NULL, 0, zeros(qdrift.a), zeros(qdrift.b), zeros(qdrift.c)) )
+    TableauSERK{T}(name, qdrift, qdiff, CoefficientsRK(T, :NULL, 0, zero(qdrift.a), zero(qdrift.b), zero(qdrift.c)) )
 end
 
 function TableauSERK(name::Symbol, order_drift::Int, a_drift::Matrix{T}, b_drift::Vector{T}, c_drift::Vector{T},
@@ -45,7 +45,7 @@ end
 function TableauSERK(name::Symbol, order_drift::Int, a_drift::Matrix{T}, b_drift::Vector{T}, c_drift::Vector{T},
                                     order_diff::Int, a_diff::Matrix{T}, b_diff::Vector{T}, c_diff::Vector{T}) where {T}
     TableauSERK{T}(name, CoefficientsRK(name, order_drift, a_drift, b_drift, c_drift), CoefficientsRK(name, order_diff, a_diff, b_diff, c_diff),
-                    CoefficientsRK(:NULL, 0, zeros(a_drift), zeros(b_drift), zeros(c_drift)))
+                    CoefficientsRK(:NULL, 0, zero(a_drift), zero(b_drift), zero(c_drift)))
 end
 
 

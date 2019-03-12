@@ -96,7 +96,7 @@ struct IntegratorWERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
         S = tableau.s
 
         # create solution vectors
-        q = create_solution_vector_double_double(DT, D, NS, NI)
+        q = create_solution_vector(DT, D, NS, NI)
 
         new(equation, tableau, Δt, zeros(DT,M), zeros(DT,M),
             q, zeros(DT,D,S), zeros(DT,D,M,S), zeros(DT,D,M,S),

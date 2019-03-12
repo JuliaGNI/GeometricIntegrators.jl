@@ -64,11 +64,11 @@ end
 function createHDF5(sol::Solution, file::AbstractString, overwrite=true)
     if overwrite
         flag = "w"
-        info("Creating HDF5 file ", file)
-        isfile(file) ? warn("Overwriting existing HDF5 file.") : nothing
+        @info("Creating HDF5 file ", file)
+        isfile(file) ? @warn("Overwriting existing HDF5 file.") : nothing
     else
         flag = "r+"
-        info("Opening HDF5 file ", file)
+        @info("Opening HDF5 file ", file)
     end
 
     # create or open HDF5 file
@@ -94,11 +94,11 @@ end
 function createHDF5(sol::StochasticSolution, file::AbstractString, overwrite=true)
     if overwrite
         flag = "w"
-        info("Creating HDF5 file ", file)
-        isfile(file) ? warn("Overwriting existing HDF5 file.") : nothing
+        @info("Creating HDF5 file ", file)
+        isfile(file) ? @warn("Overwriting existing HDF5 file.") : nothing
     else
         flag = "r+"
-        info("Opening HDF5 file ", file)
+        @info("Opening HDF5 file ", file)
     end
 
     # create or open HDF5 file

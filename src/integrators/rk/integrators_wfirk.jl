@@ -238,7 +238,7 @@ struct IntegratorWFIRK{DT, TT, PT <: ParametersWFIRK{DT,TT},
     #iguess::IT
     fcache::NonlinearFunctionCacheWFIRK{DT}
 
-    q::Matrix{Vector{Double{DT}}}
+    q::Matrix{Vector{TwicePrecision{DT}}}
 end
 
 
@@ -263,7 +263,7 @@ function IntegratorWFIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauWFIRK{TT}
     fcache = NonlinearFunctionCacheWFIRK{DT}(D, M, S)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, NS, NI)
+    q = create_solution_vector(DT, D, NS, NI)
 
     # create integrator
     IntegratorWFIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q)

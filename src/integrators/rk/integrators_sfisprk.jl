@@ -249,8 +249,8 @@ struct IntegratorSFISPRK{DT, TT, PT <: ParametersSFISPRK{DT,TT},
     #iguess::IT
     fcache::NonlinearFunctionCacheSFISPRK{DT}
 
-    q::Matrix{Vector{Double{DT}}}
-    p::Matrix{Vector{Double{DT}}}
+    q::Matrix{Vector{TwicePrecision{DT}}}
+    p::Matrix{Vector{TwicePrecision{DT}}}
 end
 
 # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
@@ -276,8 +276,8 @@ function IntegratorSFISPRK(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}, table
     fcache = NonlinearFunctionCacheSFISPRK{DT}(D, M, S)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, NS, NI)
-    p = create_solution_vector_double_double(DT, D, NS, NI)
+    q = create_solution_vector(DT, D, NS, NI)
+    p = create_solution_vector(DT, D, NS, NI)
 
     # create integrator
     IntegratorSFISPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q, p)

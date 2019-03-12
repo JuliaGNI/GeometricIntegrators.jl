@@ -173,7 +173,7 @@ struct IntegratorSFIRK{DT, TT, PT <: ParametersSFIRK{DT,TT},
     #iguess::IT
     fcache::NonlinearFunctionCacheSFIRK{DT}
 
-    q::Matrix{Vector{Double{DT}}}
+    q::Matrix{Vector{TwicePrecision{DT}}}
 end
 
 
@@ -200,7 +200,7 @@ function IntegratorSFIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSFIRK{TT}
     fcache = NonlinearFunctionCacheSFIRK{DT}(D, M, S)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, NS, NI)
+    q = create_solution_vector(DT, D, NS, NI)
 
     # create integrator
     IntegratorSFIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q)
@@ -268,16 +268,16 @@ function initial_guess!(int::IntegratorSFIRK{DT,TT}) where {DT,TT}
         Δt_local  = int.params.tab.qdrift.c[i]*int.params.Δt
         ΔW_local .= int.params.tab.qdrift.c[i]*int.params.ΔW
 
-        Q = int.params.q + 2./3. * Δt_local * tV1 + 2./3. * tB1 * ΔW_local
+        Q = int.params.q + 2. / 3. * Δt_local * tV1 + 2. / 3. * tB1 * ΔW_local
 
-        t2 = int.params.t + 2./3.*Δt_local
+        t2 = int.params.t + 2. / 3. *Δt_local
 
         int.params.equ.v(t2, Q, tV2)
         int.params.equ.B(t2, Q, tB2)
 
         #Calculating the Y's and assigning them to the array int.solver.x as initial guesses
         for j in 1:int.params.equ.d
-            int.solver.x[(i-1)*int.params.equ.d+j] =  Δt_local*(1./4.*tV1[j] + 3./4.*tV2[j]) + dot( (1./4.*tB1[j,:] + 3./4.*tB2[j,:]), ΔW_local )
+            int.solver.x[(i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * tV1[j] + 3. / 4. * tV2[j]) + dot( (1. / 4. * tB1[j,:] + 3. / 4. * tB2[j,:]), ΔW_local )
         end
     end
 

@@ -8,8 +8,8 @@ abstract type SemiMartingale{dType, tType, N} end
 # nt   - number of increments in the DataSeries
 # ns   - number of sample paths of the Wiener process
 # Δt   - time increment of the TimeSeries
-# ΔW   - variable storing the increments of the Wiener process over Δt, or the discrete random variable \hat I
-# ΔZ   - variable holding the time integral of the Wiener process \int_{tk}^{tk+1} (W(t)-W(tk))dt, or the discrete random variable \tilde I
+# ΔW   - variable storing the increments of the Wiener process over Δt, or the discrete random variable \\hat{I}
+# ΔZ   - variable holding the time integral of the Wiener process \\int_{tk}^{tk+1} (W(t)-W(tk))dt, or the discrete random variable \\tilde{I}
 # dType- type of the elements of the increments of the Wiener process
 # tType- type of the time steps
 # N    - the number of dimensions of the arrays holding data in ΔW and ΔZ
@@ -65,17 +65,17 @@ struct WienerProcess{dType, tType, N} <: SemiMartingale{dType, tType, N}
             end
 
             # Generating the random variable \hat I
-            # P(\hat I=+-sqrt(3*Δt)) = 1/6
-            # P(\hat I=0) = 2/3
-            indx     = find(x->x<1./6., chi)
-            dW[indx] = -sqrt(3*Δt)
-            indx     = find(x->x>5./6., chi)
-            dW[indx] = sqrt(3*Δt)
+            # P(\\hat I=+-sqrt(3*Δt)) = 1/6
+            # P(\\hat I=0) = 2/3
+            indx     = findall(x->x<1. / 6., chi)
+            dW[indx] .= -sqrt(3*Δt)
+            indx     = findall(x->x>5. / 6., chi)
+            dW[indx] .= sqrt(3*Δt)
 
             # Generating the random variable \tilde I
             # P(\tilde I=+-sqrt(Δt)) = 1/2
-            indx     = find(x->x<0.5, eta)
-            dZ[indx] = -sqrt(Δt)
+            indx     = findall(x->x<0.5, eta)
+            dZ[indx] .= -sqrt(Δt)
         end
 
         # Creating ΔW, ΔZ
@@ -186,18 +186,18 @@ function generate_wienerprocess!(W::WienerProcess{dType, tType, N}) where {dType
             dZ  = sqrt(W.Δt)*ones(dType, W.nd, W.nt, W.ns)
         end
 
-        # Generating the random variable \hat I
-        # P(\hat I=+-sqrt(3*Δt)) = 1/6
-        # P(\hat I=0) = 2/3
-        indx     = find(x->x<1./6., chi)
-        dW[indx] = -sqrt(3*W.Δt)
-        indx     = find(x->x>5./6., chi)
-        dW[indx] = sqrt(3*W.Δt)
+        # Generating the random variable \\hat I
+        # P(\\hat I=+-sqrt(3*Δt)) = 1/6
+        # P(\\hat I=0) = 2/3
+        indx     = findall(x->x<1. / 6., chi)
+        dW[indx] .= -sqrt(3*W.Δt)
+        indx     = findall(x->x>5. / 6., chi)
+        dW[indx] .= sqrt(3*W.Δt)
 
-        # Generating the random variable \tilde I
-        # P(\tilde I=+-sqrt(Δt)) = 1/2
-        indx     = find(x->x<0.5, eta)
-        dZ[indx] = -sqrt(W.Δt)
+        # Generating the random variable \\tilde I
+        # P(\\tilde I=+-sqrt(Δt)) = 1/2
+        indx     = findall(x->x<0.5, eta)
+        dZ[indx] .= -sqrt(W.Δt)
     end
 
     W.ΔW.d.=dW

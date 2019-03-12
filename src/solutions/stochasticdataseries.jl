@@ -118,20 +118,28 @@ function similar(ds::StochasticDataSeries{T,N}) where {T,N}
     typeof(ds){T,N}(ds.nd, ds.nt, ds.ns, ds.ni)
 end
 
+Base.parent(ds::StochasticDataSeries) = ds.d
 Base.eltype(ds::StochasticDataSeries{T,N}) where {T,N} = T
 Base.ndims(ds::StochasticDataSeries{T,N}) where {T,N} = N
-Base.size(ds::StochasticDataSeries) = size(ds.d)
-Base.length(ds::StochasticDataSeries) = length(ds.d)
-Base.endof(ds::StochasticDataSeries{T,1}) where {T} = (ds.nt)
-Base.endof(ds::StochasticDataSeries{T,2}) where {T} = (ds.nd, ds.nt)
-Base.endof(ds::StochasticDataSeries{T,3}) where {T} = ds.ni==1 ? (ds.nd, ds.nt, ds.ns) : (ds.nd, ds.nt, ds.ni)
-Base.endof(ds::StochasticDataSeries{T,4}) where {T} = (ds.nd, ds.nt, ds.ns, ds.ni)
-Base.indices(ds::StochasticDataSeries{T,1}) where {T} = (0:ds.nt)
-Base.indices(ds::StochasticDataSeries{T,2}) where {T} = (1:ds.nd, 0:ds.nt)
-Base.indices(ds::StochasticDataSeries{T,3}) where {T} = ds.ni==1 ? (1:ds.nd, 0:ds.nt, 1:ds.ns) : (1:ds.nd, 0:ds.nt, 1:ds.ni)
-Base.indices(ds::StochasticDataSeries{T,4}) where {T} = (1:ds.nd, 0:ds.nt, 1:ds.ns, 1:ds.ni)
-Base.strides(ds::StochasticDataSeries) = (strides(ds.d))
 
+errmsg_size(ds::StochasticDataSeries) = error("size not supported for data series with axes $(axes(ds))")
+Base.size(ds::StochasticDataSeries) = errmsg_size(ds)
+Base.size(ds::StochasticDataSeries, d) = errmsg_size(ds)
+
+Base.eachindex(::IndexCartesian, ds::StochasticDataSeries) = CartesianIndices(axes(ds))
+Base.eachindex(::IndexLinear, ds::StochasticDataSeries) = axes(ds, 1)
+
+Base.lastindex(ds::StochasticDataSeries{T,1}) where {T} = (ds.nt)
+Base.lastindex(ds::StochasticDataSeries{T,2}) where {T} = (ds.nd, ds.nt)
+Base.lastindex(ds::StochasticDataSeries{T,3}) where {T} = ds.ni==1 ? (ds.nd, ds.nt, ds.ns) : (ds.nd, ds.nt, ds.ni)
+Base.lastindex(ds::StochasticDataSeries{T,4}) where {T} = (ds.nd, ds.nt, ds.ns, ds.ni)
+
+@inline Base.axes(ds::StochasticDataSeries{T,1}) where {T} = (0:ds.nt)
+@inline Base.axes(ds::StochasticDataSeries{T,2}) where {T} = (1:ds.nd, 0:ds.nt)
+@inline Base.axes(ds::StochasticDataSeries{T,3}) where {T} = ds.ni==1 ? (1:ds.nd, 0:ds.nt, 1:ds.ns) : (1:ds.nd, 0:ds.nt, 1:ds.ni)
+@inline Base.axes(ds::StochasticDataSeries{T,4}) where {T} = (1:ds.nd, 0:ds.nt, 1:ds.ns, 1:ds.ni)
+
+Base.strides(ds::StochasticDataSeries) = (strides(ds.d))
 
 
 
@@ -142,7 +150,7 @@ function get_data!(ds::StochasticDataSeries{T,1}, n) where {T}
     @inbounds return ds.d[j]
 end
 
-function get_data!(ds::StochasticDataSeries{T,2}, x::Union{Array{T,1}, Array{Double{T},1}}, n) where {T}
+function get_data!(ds::StochasticDataSeries{T,2}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n) where {T}
     j = n+1
     @assert j ≤ size(ds.d, 2)
     @inbounds for i in eachindex(x)
@@ -150,19 +158,19 @@ function get_data!(ds::StochasticDataSeries{T,2}, x::Union{Array{T,1}, Array{Dou
     end
 end
 
-function get_data!(ds::StochasticDataSeries{T,3}, x::Union{Array{T,2}, Array{Double{T},2}}, n) where {T}
+function get_data!(ds::StochasticDataSeries{T,3}, x::Union{Array{T,2}, Array{TwicePrecision{T},2}}, n) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert size(x,2) == size(ds.d, 3)
     @assert j ≤ size(ds.d, 2)
-    @inbounds for k in 1:size(x, 2)
-        for i in 1:size(x, 1)
+    @inbounds for k in axes(x, 2)
+        for i in axes(x, 1)
             x[i,k] = ds.d[i,j,k]
         end
     end
 end
 
-function get_data!(ds::StochasticDataSeries{T,3}, x::Union{Array{T,1}, Array{Double{T},1}}, n, k) where {T}
+function get_data!(ds::StochasticDataSeries{T,3}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n, k) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert j ≤ size(ds.d, 2)
@@ -173,15 +181,15 @@ function get_data!(ds::StochasticDataSeries{T,3}, x::Union{Array{T,1}, Array{Dou
 end
 
 
-function get_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,3}, Array{Double{T},3}}, n) where {T}
+function get_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,3}, Array{TwicePrecision{T},3}}, n) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert size(x,2) == size(ds.d, 3)
     @assert size(x,3) == size(ds.d, 4)
     @assert j ≤ size(ds.d, 2)
-    @inbounds for m in 1:size(x,3)
-        for k in 1:size(x, 2)
-            for i in 1:size(x, 1)
+    @inbounds for m in axes(x,3)
+        for k in axes(x, 2)
+            for i in axes(x, 1)
                 x[i,k,m] = ds.d[i,j,k,m]
             end
         end
@@ -190,21 +198,21 @@ end
 
 
 # Copies the data for the time step n and initial condition m from ds.d to x
-function get_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,2}, Array{Double{T},2}}, n, m) where {T}
+function get_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,2}, Array{TwicePrecision{T},2}}, n, m) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert size(x,2) == size(ds.d, 3)
     @assert j ≤ size(ds.d, 2)
     @assert m ≤ size(ds.d, 4)
-    @inbounds for k in 1:size(x, 2)
-        for i in 1:size(x, 1)
+    @inbounds for k in axes(x, 2)
+        for i in axes(x, 1)
             x[i,k] = ds.d[i,j,k,m]
         end
     end
 end
 
 
-function get_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,1}, Array{Double{T},1}}, n, k, m) where {T}
+function get_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n, k, m) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert j ≤ size(ds.d, 2)
@@ -218,7 +226,7 @@ end
 
 
 # Assigns a number to the nth time slot in a one-dimensional data series
-function set_data!(ds::StochasticDataSeries{T,1}, x::Union{T, Double{T}}, n) where {T}
+function set_data!(ds::StochasticDataSeries{T,1}, x::Union{T, TwicePrecision{T}}, n) where {T}
     j = n+1
     @assert j ≤ size(ds.d, 1)
     @inbounds ds.d[j] = x
@@ -226,67 +234,67 @@ end
 
 # Assigns a number to the nth time slot in a one-dimensional data series,
 # when the number is passed as a single-entry array
-function set_data!(ds::StochasticDataSeries{T,1}, x::Union{Array{T,1}, Array{Double{T},1}}, n) where {T}
+function set_data!(ds::StochasticDataSeries{T,1}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n) where {T}
     @assert length(x)==1
     set_data!(ds,x[1],n)
 end
 
 # Assigns a vector to the nth time slot in a two-dimensional data series
-function set_data!(ds::StochasticDataSeries{T,2}, x::Union{Array{T,1}, Array{Double{T},1}}, n) where {T}
+function set_data!(ds::StochasticDataSeries{T,2}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n) where {T}
     j = n+1
     @assert length(x) == size(ds.d, 1)
     @assert j ≤ size(ds.d, 2)
-    @inbounds for i in 1:size(ds.d, 1)
+    @inbounds for i in axes(ds.d, 1)
         ds.d[i,j] = x[i]
     end
 end
 
 # Assigns a two dimensional array (nd x ns or nd x ni) to the nth time slot in a 3-dimensional data series
-function set_data!(ds::StochasticDataSeries{T,3}, x::Union{Array{T,2}, Array{Double{T},2}}, n) where {T}
+function set_data!(ds::StochasticDataSeries{T,3}, x::Union{Array{T,2}, Array{TwicePrecision{T},2}}, n) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert size(x,2) == size(ds.d, 3)
     @assert j ≤ size(ds.d, 2)
-    @inbounds for k in 1:size(ds.d, 3)
-        for i in 1:size(ds.d, 1)
+    @inbounds for k in axes(ds.d, 3)
+        for i in axes(ds.d, 1)
             ds.d[i,j,k] = x[i,k]
         end
     end
 end
 
 # Assigns a one dimensional array (nd elements) to the nth time slot and the kth sample path in a 3-dimensional data series
-function set_data!(ds::StochasticDataSeries{T,3}, x::Union{Array{T,1}, Array{Double{T},1}}, n, k) where {T}
+function set_data!(ds::StochasticDataSeries{T,3}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n, k) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert j ≤ size(ds.d, 2)
     @assert k ≤ size(ds.d, 3)
-    @inbounds for i in 1:size(ds.d, 1)
+    @inbounds for i in axes(ds.d, 1)
         ds.d[i,j,k] = x[i]
     end
 end
 
 # Assigns a one dimensional array (nd elements) to the nth time slot and to all sample paths in a 3-dimensional data series
-function set_data!(ds::StochasticDataSeries{T,3}, x::Union{Array{T,1}, Array{Double{T},1}}, n) where {T}
+function set_data!(ds::StochasticDataSeries{T,3}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert j ≤ size(ds.d, 2)
-    @inbounds for k in 1:size(ds.d, 3)
-        @inbounds for i in 1:size(ds.d, 1)
+    @inbounds for k in axes(ds.d, 3)
+        @inbounds for i in axes(ds.d, 1)
             ds.d[i,j,k] = x[i]
         end
     end
 end
 
 # Assign an nd x ns x ni array to the nth time slot in a 4-dimensional data series
-function set_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,3}, Array{Double{T},3}}, n) where {T}
+function set_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,3}, Array{TwicePrecision{T},3}}, n) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert size(x,2) == size(ds.d, 3)
     @assert size(x,3) == size(ds.d, 4)
     @assert j ≤ size(ds.d, 2)
-    @inbounds for m in 1:size(x,3)
-        for k in 1:size(x, 2)
-            for i in 1:size(x, 1)
+    @inbounds for m in axes(x,3)
+        for k in axes(x, 2)
+            for i in axes(x, 1)
                 ds.d[i,j,k,m] = x[i,k,m]
             end
         end
@@ -296,14 +304,14 @@ end
 
 # Assings the data stored in x to the data series ds as the time step n and for
 # the initial condition m
-function set_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,2}, Array{Double{T},2}}, n, m) where {T}
+function set_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,2}, Array{TwicePrecision{T},2}}, n, m) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert size(x,2) == size(ds.d, 3)
     @assert j ≤ size(ds.d, 2)
     @assert m ≤ size(ds.d, 4)
-    @inbounds for k in 1:size(x, 2)
-        for i in 1:size(x, 1)
+    @inbounds for k in axes(x, 2)
+        for i in axes(x, 1)
             ds.d[i,j,k,m] = x[i,k]
         end
     end
@@ -312,14 +320,14 @@ end
 
 # Assings an nd x ni matrix to the data series ds as the time step n and for
 # all sample paths
-function set_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,2}, Array{Double{T},2}}, n) where {T}
+function set_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,2}, Array{TwicePrecision{T},2}}, n) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert size(x,2) == size(ds.d, 4)
     @assert j ≤ size(ds.d, 2)
-    @inbounds for m in 1:size(ds.d, 3)
-        @inbounds for k in 1:size(x, 2)
-            for i in 1:size(x, 1)
+    @inbounds for m in axes(ds.d, 3)
+        @inbounds for k in axes(x, 2)
+            for i in axes(x, 1)
                 ds.d[i,j,m,k] = x[i,k]
             end
         end
@@ -327,7 +335,7 @@ function set_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,2}, Array{Dou
 end
 
 
-function set_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,1}, Array{Double{T},1}}, n, k, m) where {T}
+function set_data!(ds::StochasticDataSeries{T,4}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n, k, m) where {T}
     j = n+1
     @assert size(x,1) == size(ds.d, 1)
     @assert j ≤ size(ds.d, 2)
@@ -348,24 +356,25 @@ end
 function reset!(ds::StochasticDataSeries{T,2}) where {T}
     # when 'end' is passed to getindex, because of the shift it becomes end+1
     # in ds.d, therefore end-1 has to be passed to getindex instead
-    @inbounds for i in 1:size(ds,1)
-        ds[i,0] = ds[i,end-1]
+	# -> should be fixed now (but check!)
+    @inbounds for i in axes(ds,1)
+        ds[i,0] = ds[i,end]
     end
 end
 
 function reset!(ds::StochasticDataSeries{T,3}) where {T}
-    @inbounds for k in 1:size(ds,3)
-        for i in 1:size(ds,1)
-            ds[i,0,k] = ds[i,end-1,k]
+    @inbounds for k in axes(ds,3)
+        for i in axes(ds,1)
+            ds[i,0,k] = ds[i,end,k]
         end
     end
 end
 
 function reset!(ds::StochasticDataSeries{T,4}) where {T}
-    @inbounds for m in 1:size(ds,4)
-        for k in 1:size(ds,3)
-            for i in 1:size(ds,1)
-                ds[i,0,k,m] = ds[i,end-1,k,m]
+    @inbounds for m in axes(ds,4)
+        for k in axes(ds,3)
+            for i in axes(ds,1)
+                ds[i,0,k,m] = ds[i,end,k,m]
             end
         end
     end

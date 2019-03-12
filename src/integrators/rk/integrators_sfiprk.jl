@@ -216,8 +216,8 @@ struct IntegratorSFIPRK{DT, TT, PT <: ParametersSFIPRK{DT,TT},
     #iguess::IT
     fcache::NonlinearFunctionCacheSFIPRK{DT}
 
-    q::Matrix{Vector{Double{DT}}}
-    p::Matrix{Vector{Double{DT}}}
+    q::Matrix{Vector{TwicePrecision{DT}}}
+    p::Matrix{Vector{TwicePrecision{DT}}}
 end
 
 # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
@@ -243,8 +243,8 @@ function IntegratorSFIPRK(equation::PSDE{DT,TT,VT,BT,N}, tableau::TableauSFIPRK{
     fcache = NonlinearFunctionCacheSFIPRK{DT}(D, M, S)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, NS, NI)
-    p = create_solution_vector_double_double(DT, D, NS, NI)
+    q = create_solution_vector(DT, D, NS, NI)
+    p = create_solution_vector(DT, D, NS, NI)
 
     # create integrator
     IntegratorSFIPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q, p)
@@ -324,10 +324,10 @@ function initial_guess!(int::IntegratorSFIPRK{DT,TT}) where {DT,TT}
         Δt_local  = int.params.tab.qdrift.c[i]*int.params.Δt
         ΔW_local .= int.params.tab.qdrift.c[i]*int.params.ΔW
 
-        Q = int.params.q + 2./3. * Δt_local * tV1 + 2./3. * tB1 * ΔW_local
-        P = int.params.p + 2./3. * Δt_local * tF1 + 2./3. * tG1 * ΔW_local
+        Q = int.params.q + 2. / 3. * Δt_local * tV1 + 2. / 3. * tB1 * ΔW_local
+        P = int.params.p + 2. / 3. * Δt_local * tF1 + 2. / 3. * tG1 * ΔW_local
 
-        t2 = int.params.t + 2./3.*Δt_local
+        t2 = int.params.t + 2. / 3. * Δt_local
 
         int.params.equ.v(t2, Q, P, tV2)
         int.params.equ.B(t2, Q, P, tB2)
@@ -336,13 +336,13 @@ function initial_guess!(int::IntegratorSFIPRK{DT,TT}) where {DT,TT}
 
         #Calculating the Y's and assigning them to the array int.solver.x as initial guesses
         for j in 1:int.params.equ.d
-            int.solver.x[(i-1)*int.params.equ.d+j] =  Δt_local*(1./4.*tV1[j] + 3./4.*tV2[j]) + dot( (1./4.*tB1[j,:] + 3./4.*tB2[j,:]), ΔW_local )
+            int.solver.x[(i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * tV1[j] + 3. / 4. * tV2[j]) + dot( (1. / 4. * tB1[j,:] + 3. / 4. * tB2[j,:]), ΔW_local )
         end
 
         # if the collocation points are the same for both q and p parts
         if int.params.tab.qdrift.c==int.params.tab.pdrift.c
             for j in 1:int.params.equ.d
-                int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1./4.*tF1[j] + 3./4.*tF2[j]) + dot( (1./4.*tG1[j,:] + 3./4.*tG2[j,:]), ΔW_local )
+                int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * tF1[j] + 3. / 4. * tF2[j]) + dot( (1. / 4. * tG1[j,:] + 3. / 4. * tG2[j,:]), ΔW_local )
             end
         end
     end
@@ -357,10 +357,10 @@ function initial_guess!(int::IntegratorSFIPRK{DT,TT}) where {DT,TT}
             Δt_local  = int.params.tab.pdrift.c[i]*int.params.Δt
             ΔW_local .= int.params.tab.pdrift.c[i]*int.params.ΔW
 
-            Q = int.params.q + 2./3. * Δt_local * tV1 + 2./3. * tB1 * ΔW_local
-            P = int.params.p + 2./3. * Δt_local * tF1 + 2./3. * tG1 * ΔW_local
+            Q = int.params.q + 2. / 3. * Δt_local * tV1 + 2. / 3. * tB1 * ΔW_local
+            P = int.params.p + 2. / 3. * Δt_local * tF1 + 2. / 3. * tG1 * ΔW_local
 
-            t2 = int.params.t + 2./3.*Δt_local
+            t2 = int.params.t + 2. / 3. * Δt_local
 
             int.params.equ.v(t2, Q, P, tV2)
             int.params.equ.B(t2, Q, P, tB2)
@@ -370,7 +370,7 @@ function initial_guess!(int::IntegratorSFIPRK{DT,TT}) where {DT,TT}
             # Calculating the Z's and assigning them to the array int.solver.x as initial guesses
             # The guesses for the Y's have already been written to x above
             for j in 1:int.params.equ.d
-                int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1./4.*tF1[j] + 3./4.*tF2[j]) + dot( (1./4.*tG1[j,:] + 3./4.*tG2[j,:]), ΔW_local )
+                int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * tF1[j] + 3. / 4. * tF2[j]) + dot( (1. / 4. * tG1[j,:] + 3. / 4. * tG2[j,:]), ΔW_local )
             end
         end
     end
