@@ -14,9 +14,12 @@ struct NonlinearFunctionCacheVPRK{ST}
     P::Matrix{ST}
     F::Matrix{ST}
 
-    v::Array{ST,1}
-    y::Array{ST,1}
-    z::Array{ST,1}
+    v::Vector{ST}
+    y::Vector{ST}
+    z::Vector{ST}
+
+    q̅::Vector{ST}
+    p̅::Vector{ST}
 
     function NonlinearFunctionCacheVPRK{ST}(D,S) where {ST}
         # create internal stage vectors
@@ -30,7 +33,11 @@ struct NonlinearFunctionCacheVPRK{ST}
         y = zeros(ST,D)
         z = zeros(ST,D)
 
-        new(Q, V, P, F, v, y, z)
+        # create solution vector
+        q̅ = zeros(ST,D)
+        p̅ = zeros(ST,D)
+
+        new(Q, V, P, F, v, y, z, q̅, p̅)
     end
 end
 
@@ -333,7 +340,7 @@ end
 @generated function compute_rhs_vprk_correction!(b::Vector{ST}, V::Matrix{ST}, params::AbstractParametersVPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     μ = zeros(ST,D)
 
-    compute_stages_vprk = quote
+    quote
         local sl::Int = div(S+1, 2)
 
         if isdefined(params.tab, :d)
@@ -361,8 +368,6 @@ end
             end
         end
     end
-
-    return compute_stages_vprk
 end
 
 

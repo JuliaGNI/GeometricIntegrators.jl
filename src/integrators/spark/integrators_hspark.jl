@@ -275,7 +275,7 @@ end
 
 
 "Hamiltonian Specialised Partitioned Additive Runge-Kutta integrator."
-immutable IntegratorHSPARK{DT, TT, VT, FT, ϕT, ψT, SPT, ST, IT} <: Integrator{DT, TT}
+mutable struct IntegratorHSPARK{DT, TT, VT, FT, ϕT, ψT, SPT, ST, IT} <: Integrator{DT, TT}
     equation::IDAE{DT,TT,VT,FT,ϕT,ψT}
     tableau::TableauHSPARK{TT}
     Δt::TT

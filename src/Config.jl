@@ -5,7 +5,7 @@ module Config
     export add_config, get_config, set_config,
            get_config_dictionary
 
-    if !isdefined(:GICONFIG)
+    if !(@isdefined GICONFIG)
         global GICONFIG = Dict()
     end
 

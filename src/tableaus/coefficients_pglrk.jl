@@ -53,6 +53,6 @@ function getCoefficientsPGLRK(s::Int)
 end
 
 
-function getTableauPGLRK{T}(coeff::CoefficientsPGLRK{T}, λ::T, a::Matrix{T})
+function getTableauPGLRK(coeff::CoefficientsPGLRK{T}, λ::T, a::Matrix{T}) where {T}
     a .= coeff.a .+ λ .* coeff.A
 end

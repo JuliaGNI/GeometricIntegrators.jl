@@ -23,14 +23,14 @@ end
 
 
 """
-Create a solution vector of type `Double{DT}` for a problem with `D` dimensions
+Create a solution vector of type `TwicePrecision{DT}` for a problem with `D` dimensions
 and `M` independent initial conditions.
 """
-function create_solution_vector_double_double(DT, D, M)
-    x = Array{Vector{Double{DT}}}(M)
+function create_solution_vector(DT, D, M)
+    x = Array{Vector{TwicePrecision{DT}}}(undef, M)
 
     for i in 1:M
-        x[i] = zeros(Double{DT}, D)
+        x[i] = zeros(TwicePrecision{DT}, D)
     end
 
     return x
@@ -38,20 +38,35 @@ end
 
 
 """
-Create a solution vector of type `Double{DT}` for a problem with `D` dimensions,
-`NS' sample paths, and `NI` independent initial conditions.
+Create a vector of S solution vectors of type DT to store the solution of S
+internal stages for a problem with `D` dimensions.
 """
-function create_solution_vector_double_double(DT, D, NS, NI)
-    x = Array{Vector{Double{DT}}}(NS,NI)
+function create_internal_stage_vector(DT, D, S)
+    a = Array{Vector{DT}}(undef, S)
 
-    for i in 1:NS
-        for j in 1:NI
-            x[i,j] = zeros(Double{DT}, D)
-        end
+    for i in 1:S
+        a[i] = zeros(DT,D)
     end
 
-    return x
+    return a
 end
+
+
+"""
+Create a vector of S+1 solution vectors of type DT to store the solution of S
+internal stages and the solution of the previous timestep for a problem with `D`
+    dimensions.
+"""
+function create_internal_stage_vector_with_zero(DT, D, S)
+    a = OffsetArray{Vector{DT}}(undef, 0:S)
+
+    for i in 0:S
+        a[i] = zeros(DT,D)
+    end
+
+    return a
+end
+
 
 
 function check_solution_dimension_asserts(sol::Solution, m::Int, n::Int)
@@ -68,22 +83,34 @@ function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b
     @assert length(x) == size(ẋ, 1)
     @assert length(b) == size(ẋ, 2)
 
-    for k in indices(ẋ, 1)
-        for i in indices(ẋ, 2)
+    for k in axes(ẋ, 1)
+        for i in axes(ẋ, 2)
             x[k], xₑᵣᵣ[k] = compensated_summation(Δt * b[i] * ẋ[k,i], x[k], xₑᵣᵣ[k])
         end
     end
 end
 
-function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, ẋ::Matrix{T}, b::Vector{T}, Δt::T) where {T}
+function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Vector{Vector{T}}, b::Vector{T}, Δt::T) where {T}
+    @assert length(b) == length(ẋ)
+    @assert length(x) == length(ẋ[1])
+    @assert length(x) == length(xₑᵣᵣ)
+
+    for i in axes(ẋ)
+        for k in axes(ẋ[i])
+            x[k], xₑᵣᵣ[k] = compensated_summation(Δt * b[i] * ẋ[i][k], x[k], xₑᵣᵣ[k])
+        end
+    end
+end
+
+function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, ẋ::Matrix{T}, b::Vector{T}, Δt::T) where {T}
     @assert length(x) == size(ẋ, 1)
     @assert length(b) == size(ẋ, 2)
 
     local Δx::eltype(x)
 
-    for k in indices(ẋ, 1)
+    for k in axes(ẋ, 1)
         Δx = 0
-        for i in indices(ẋ, 2)
+        for i in axes(ẋ, 2)
             Δx += b[i] * ẋ[k,i]
         end
         x[k] += Δt * Δx
@@ -326,12 +353,23 @@ function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, Vx::Matrix{T},
 end
 
 
-function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
+function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, ẋ::Vector{Vector{T}}, b::Vector{T}, Δt::T) where {T}
+    @assert length(b) == length(ẋ)
+    @assert length(x) == length(ẋ[1])
+
+    for i in 1:length(ẋ)
+        for k in 1:length(ẋ[i])
+            x[k] += Δt * b[i] * ẋ[i][k]
+        end
+    end
+end
+
+function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
     update_solution!(x, xₑᵣᵣ, ẋ, b, Δt)
     update_solution!(x, xₑᵣᵣ, ẋ, b̂, Δt)
 end
 
-function update_solution!(x::Union{Vector{T}, Vector{Double{T}}}, ẋ::Matrix{T}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
+function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
     update_solution!(x, ẋ, b, Δt)
     update_solution!(x, ẋ, b̂, Δt)
 end
@@ -400,7 +438,7 @@ function cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}) where {T}
     end
 end
 
-function cut_periodic_solution!(x::Vector{Double{T}}, periodicity::Vector{T}) where {T}
+function cut_periodic_solution!(x::Vector{TwicePrecision{T}}, periodicity::Vector{T}) where {T}
     @assert length(x) == length(periodicity)
 
     for k in eachindex(x, periodicity)

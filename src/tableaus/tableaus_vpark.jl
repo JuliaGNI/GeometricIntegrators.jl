@@ -1,5 +1,5 @@
 
-function getTableauSymplecticProjection{T}(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1)
+function getTableauSymplecticProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 

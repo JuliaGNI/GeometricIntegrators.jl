@@ -2,11 +2,11 @@ __precompile__()
 
 module GeometricIntegrators
 
+    using Reexport
+
     include("Utils.jl")
     using .Utils
 
-    export Config, Utils, Equations, Solutions, Interpolation, Solvers,
-           BasisFunctions, NumericalFluxes, Integrators, Simulations, Tableaus
 
     include("Config.jl")
     @reexport using .Config

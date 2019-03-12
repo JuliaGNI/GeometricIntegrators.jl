@@ -7,15 +7,15 @@ struct QuasiNewtonSolver{T, FT, TJ, TL} <: AbstractNewtonSolver{T}
     refactorize::Int
 
     function QuasiNewtonSolver{T,FT,TJ,TL}(x, Fparams, Jparams, linear_solver) where {T,FT,TJ,TL}
-        J  = zeros(linear_solver.A)
-        x₀ = zeros(x)
-        x₁ = zeros(x)
-        y₁ = zeros(x)
-        y₀ = zeros(x)
-        δx = zeros(x)
-        δy = zeros(x)
-        tx = zeros(x)
-        ty = zeros(x)
+        J  = zero(linear_solver.A)
+        x₀ = zero(x)
+        x₁ = zero(x)
+        y₁ = zero(x)
+        y₀ = zero(x)
+        δx = zero(x)
+        δy = zero(x)
+        tx = zero(x)
+        ty = zero(x)
 
         nls_params = NonlinearSolverParameters(T)
         nls_status = NonlinearSolverStatus{T}(length(x))

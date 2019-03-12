@@ -2,8 +2,12 @@ __precompile__()
 
 module Integrators
 
-    using DoubleDouble
+    using DelimitedFiles
+    using LinearAlgebra
+    using OffsetArrays
     using ProgressMeter
+
+    using Base: TwicePrecision
 
     using ..CommonFunctions
     using ..Config

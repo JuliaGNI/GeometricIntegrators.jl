@@ -1,22 +1,22 @@
 
-using Polynomials
+using Polynomials: Poly
 
 
-struct LegendreBasis{T, P, fT, pT, dT, iT} <: Basis{T,P}
+struct LegendreBasis{T, N, fT, pT, dT, iT} <: PolynomialBasis{T,N}
     factors::fT
     polys::pT
     derivs::dT
     ints::iT
 end
 
-function LegendreBasis(T,P)
+function LegendreBasis(T,N)
 
     factors = Tuple{}()
     polys   = Tuple{}()
     derivs  = Tuple{}()
     ints    = Tuple{}()
 
-    for p in 0:P
+    for p in 0:N-1
         tfac, tpol = legendre_polynomial(p)
         tder = polyder(tpol)
         tint = polyint(tpol)
@@ -28,19 +28,16 @@ function LegendreBasis(T,P)
     end
 
 
-    LegendreBasis{T, P, typeof(factors), typeof(polys), typeof(derivs), typeof(ints)}(factors, polys, derivs, ints)
+    LegendreBasis{T, N, typeof(factors), typeof(polys), typeof(derivs), typeof(ints)}(factors, polys, derivs, ints)
 end
 
-CommonFunctions.nbasis(b::LegendreBasis{T,P}) where {T,P} = P+1
-CommonFunctions.nnodes(b::LegendreBasis{T,P}) where {T,P} = P+1
-CommonFunctions.nodes(b::LegendreBasis{T,P})  where {T,P} = Vector{T}([])
-CommonFunctions.degree(b::LegendreBasis{T,P}) where {T,P} = P
+nodes(b::LegendreBasis{T,N})  where {T,N} = Vector{T}([])
 
-Base.hash(b::LegendreBasis{T,P}, h::UInt) where {T,P} = hash(T, hash(P, h))
+Base.hash(b::LegendreBasis{T,N}, h::UInt) where {T,N} = hash(T, hash(N, h))
 
-Base.:(==)(b1::LegendreBasis{T1,P1}, b2::LegendreBasis{T2,P2}) where {T1,P1,T2,P2} = (T1 == T2 && P1 == P2)
+Base.:(==)(b1::LegendreBasis{T1,N1}, b2::LegendreBasis{T2,N2}) where {T1,N1,T2,N2} = (T1 == T2 && N1 == N2)
 
-Base.isequal(b1::LegendreBasis{T1,P1}, b2::LegendreBasis{T2,P2}) where {T1,P1,T2,P2} = (T1 == T2 && P1 == P2)
+Base.isequal(b1::LegendreBasis{T1,N1}, b2::LegendreBasis{T2,N2}) where {T1,N1,T2,N2} = (T1 == T2 && N1 == N2)
 
 
 function legendre_polynomial(p, T=Float64)
@@ -72,16 +69,16 @@ function legendre_polynomial(p, T=Float64)
 end
 
 
-function CommonFunctions.evaluate(b::LegendreBasis{T,P}, j::Int, x::T) where {T,P}
+function eval_basis(b::LegendreBasis{T,N}, j::Int, x::T) where {T,N}
     return b.factors[j] * b.polys[j](x)
 end
 
 
-function CommonFunctions.derivative(b::LegendreBasis{T,P}, j::Int, x::T) where {T,P}
+function deriv_basis(b::LegendreBasis{T,N}, j::Int, x::T) where {T,N}
     return b.factors[j] * b.derivs[j](x)
 end
 
 
-function CommonFunctions.integral(b::LegendreBasis{T,P}, j::Int, x::T) where {T,P}
+function int_basis(b::LegendreBasis{T,N}, j::Int, x::T) where {T,N}
     return b.factors[j] * b.ints[j](x)
 end

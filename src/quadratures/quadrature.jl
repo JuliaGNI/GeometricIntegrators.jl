@@ -22,25 +22,49 @@ CommonFunctions.nnodes(Q::Quadrature{T,N}) where {T,N} = N
 CommonFunctions.nodes(Q::Quadrature) = Q.nodes
 CommonFunctions.order(Q::Quadrature) = Q.order
 weights(Q::Quadrature) = Q.weights
+Base.eachindex(Q::Quadrature) = eachindex(Q.nodes, Q.weights)
 
 
-"Scale nodes and weights from the interval [-1,+1] to the interval [0,1]"
+"""
+Integrate a function `f(x)` over the interval [0,1] using the quadrature `quad`.
+"""
+function quadrature(quad::Quadrature, f::Function)
+    sum(quad.weights[i] * f(quad.nodes[i]) for i in eachindex(quad))
+end
+
+
+"Scale nodes and weights from the interval [-1,+1] to the interval [0,1]."
 function shift!(b,c)
     b .= b ./ 2
     c .= (c .+ 1) ./ 2
 end
 
+"Scale nodes and weights from the interval [0,1] to the interval [-1,+1]."
+function unshift!(b,c)
+    b .= b .* 2
+    c .= 2 .* c .- 1
+end
 
-function GaussLegendreQuadrature(s, T=Float64)
+
+function RiemannQuadratureLeft(T=Float64)
+    Quadrature(1, [0.0,], [1.0,])
+end
+
+function RiemannQuadratureRight(T=Float64)
+    Quadrature(1, [1.0,], [1.0,])
+end
+
+
+function GaussLegendreQuadrature(s, T=Float64; shift=true)
     c, b = FastGaussQuadrature.gausslegendre(s)
-    shift!(b,c)
+    if shift shift!(b,c) end
     Quadrature(2s, c, b)
 end
 
 
-function LobattoLegendreQuadrature(s, T=Float64)
+function LobattoLegendreQuadrature(s, T=Float64; shift=true)
     c, b = FastGaussQuadrature.gausslobatto(s)
-    shift!(b,c)
+    if shift shift!(b,c) end
     Quadrature(2s-2, c, b)
 end
 
@@ -60,7 +84,7 @@ function get_nodes_gauss_chebychev(s, k=1, T=Float64)
     end
 end
 
-function GaussChebyshevQuadrature(s, k=1, T=Float64)
+function GaussChebyshevQuadrature(s, k=1, T=Float64; shift=true)
     c = get_nodes_gauss_chebychev(s,k,T)
     b = zeros(c)
 
@@ -89,6 +113,8 @@ function GaussChebyshevQuadrature(s, k=1, T=Float64)
         error("GaussChebyshevQuadrature: k=", k, " not supported.")
     end
 
+    if !shift unshift!(b,c) end
+
     Quadrature(2s-2,c,b)
 end
 
@@ -111,9 +137,9 @@ function LobattoChebyshevQuadrature(s, T=Float64)
 end
 
 
-function ClenshawCurtisQuadrature(s, T=Float64)
+function ClenshawCurtisQuadrature(s, T=Float64; shift=true)
     c, b = FastTransforms.clenshawcurtis(s, zero(T), zero(T))
     c = flipdim(c,1)
-    shift!(b,c)
+    if shift shift!(b,c) end
     Quadrature(s^2, c, b)
 end

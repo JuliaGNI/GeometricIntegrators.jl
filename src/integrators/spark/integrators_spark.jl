@@ -398,7 +398,7 @@ end
 
 
 "Variational special partitioned additive Runge-Kutta integrator."
-immutable IntegratorSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integrator{DT, TT}
+mutable struct IntegratorSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integrator{DT, TT}
     equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}
     tableau::TableauSPARK{TT}
     Δt::TT

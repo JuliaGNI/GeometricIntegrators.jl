@@ -23,19 +23,19 @@ function midpoint_extrapolation(v::Function, f::Function, t₀::TT, t₁::TT, q�
     local qts = zeros(eltype(q₀), length(q₀), s+1)
     local pts = zeros(eltype(p₀), length(p₀), s+1)
 
-    local qᵢ₁= zeros(q₀)
-    local qᵢ₂= zeros(q₀)
-    local qᵢₜ= zeros(q₀)
+    local qᵢ₁= zero(q₀)
+    local qᵢ₂= zero(q₀)
+    local qᵢₜ= zero(q₀)
 
-    local pᵢ₁= zeros(p₀)
-    local pᵢ₂= zeros(p₀)
-    local pᵢₜ= zeros(p₀)
+    local pᵢ₁= zero(p₀)
+    local pᵢ₂= zero(p₀)
+    local pᵢₜ= zero(p₀)
 
-    local v₀ = zeros(q₀)
-    local vᵢ = zeros(q₀)
+    local v₀ = zero(q₀)
+    local vᵢ = zero(q₀)
 
-    local f₀ = zeros(p₀)
-    local fᵢ = zeros(p₀)
+    local f₀ = zero(p₀)
+    local fᵢ = zero(p₀)
 
     v(t₀, q₀, p₀, v₀)
     f(t₀, q₀, v₀, f₀)
@@ -56,10 +56,10 @@ function midpoint_extrapolation(v::Function, f::Function, t₀::TT, t₁::TT, q�
             pᵢ₁ .= pᵢ₂
             pᵢ₂ .= pᵢₜ
         end
-        for k in indices(qts,1)
+        for k in axes(qts,1)
             qts[k,i] += qᵢ₂[k]
         end
-        for k in indices(pts,1)
+        for k in axes(pts,1)
             pts[k,i] += pᵢ₂[k]
         end
     end
@@ -100,16 +100,16 @@ mutable struct InitialGuessPODE{DT, TT, VT, FT, IT <: Interpolator}
         end
 
         t₀ = zeros(DT,m)
-        q₀ = Array{Vector{DT}}(m)
-        v₀ = Array{Vector{DT}}(m)
-        p₀ = Array{Vector{DT}}(m)
-        f₀ = Array{Vector{DT}}(m)
+        q₀ = Array{Vector{DT}}(undef, m)
+        v₀ = Array{Vector{DT}}(undef, m)
+        p₀ = Array{Vector{DT}}(undef, m)
+        f₀ = Array{Vector{DT}}(undef, m)
 
         t₁ = zeros(DT,m)
-        q₁ = Array{Vector{DT}}(m)
-        v₁ = Array{Vector{DT}}(m)
-        p₁ = Array{Vector{DT}}(m)
-        f₁ = Array{Vector{DT}}(m)
+        q₁ = Array{Vector{DT}}(undef, m)
+        v₁ = Array{Vector{DT}}(undef, m)
+        p₁ = Array{Vector{DT}}(undef, m)
+        f₁ = Array{Vector{DT}}(undef, m)
 
         for i in 1:m
             q₀[i] = zeros(DT,d)
@@ -149,7 +149,7 @@ function InitialGuessPODE(interp, equ::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, Δt::TT) 
 end
 
 
-function initialize!(ig::InitialGuessPODE{DT,TT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}, p₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT}
+function initialize!(ig::InitialGuessPODE{DT,TT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}) where {DT,TT}
     ig.t₀[m]  = t₁ - ig.Δt
     ig.t₁[m]  = t₁
     ig.q₁[m] .= q₁
@@ -164,7 +164,7 @@ function initialize!(ig::InitialGuessPODE{DT,TT}, m::Int, t₁::TT, q₁::Union{
 end
 
 
-function update!(ig::InitialGuessPODE{DT,TT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}, p₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT}
+function update!(ig::InitialGuessPODE{DT,TT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}) where {DT,TT}
     local Δq::DT
 
     ig.t₀[m] = ig.t₁[m]
@@ -208,7 +208,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int,
     @assert length(guess_q) == length(guess_p) == length(guess_v)
 
     if ig.q₀[m] == ig.q₁[m]
-        warn("q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0.")
+        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0."
         guess_q .= ig.q₁[m]
         guess_v .= 0
     else
@@ -216,7 +216,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int,
     end
 
     if ig.p₀[m] == ig.p₁[m]
-        warn("p₀ and p₁ in initial guess are identical! Setting p=p₁.")
+        @warn "p₀ and p₁ in initial guess are identical! Setting p=p₁."
         guess_p .= ig.p₁[m]
     else
         evaluate!(ig.int, ig.p₀[m], ig.p₁[m], ig.f₀[m], ig.f₁[m], one(TT)+c_p, guess_p)
@@ -231,7 +231,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int,
     @assert length(guess_q) == length(guess_p) == length(guess_v) == length(guess_f)
 
     if ig.q₀[m] == ig.q₁[m]
-        warn("q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0.")
+        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0."
         guess_q .= ig.q₁[m]
         guess_v .= 0
     else
@@ -239,7 +239,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT,VT,FT,IT}, m::Int,
     end
 
     if ig.p₀[m] == ig.p₁[m]
-        warn("p₀ and p₁ in initial guess are identical! Setting p=p₁.")
+        @warn "p₀ and p₁ in initial guess are identical! Setting p=p₁."
         guess_p .= ig.p₁[m]
         guess_f .= 0
     else

@@ -15,15 +15,19 @@ struct IntegratorSIRK{DT,TT,FT} <: Integrator{DT,TT}
     tableau::TableauSIRK{TT}
     Δt::TT
 
-    x::Array{DT,1}
-    X::Array{DT,2}
-    Y::Array{DT,2}
-    F::Array{DT,2}
+    x::Vector{Vector{TwicePrecision{DT}}}
+    X::Vector{Vector{DT}}
+    Y::Vector{Vector{DT}}
+    F::Vector{Vector{DT}}
 
     function IntegratorSIRK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
         D = equation.d
+        M = equation.n
         S = tableau.s
-        new(equation, tableau, Δt, zeros(DT,D), zeros(DT,D,S), zeros(DT,D,S), zeros(DT,D,S))
+        X = create_internal_stage_vector(DT, D, S)
+        Y = create_internal_stage_vector(DT, D, S)
+        F = create_internal_stage_vector(DT, D, S)
+        new(equation, tableau, Δt, create_solution_vector(DT,D,M), X, Y, F)
     end
 end
 

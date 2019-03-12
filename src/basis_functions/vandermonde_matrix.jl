@@ -1,7 +1,9 @@
 
+using LinearAlgebra
+
 function vandermonde_matrix(x::Vector{T}) where {T}
     local n = length(x)
-	local V = Array{T,2}(n,n)
+	local V = Array{T,2}(undef, n, n)
 
 	for i in 1:n
 		V[:,i] .= x.^(i-1)
@@ -14,7 +16,7 @@ function vandermonde_matrix_inverse(x::Vector{T}) where {T}
     local n = length(x)
 
     local L::Matrix{T} = zeros(n,n)
-    local U::Matrix{T} = eye(n)
+    local U::Matrix{T} = Matrix{T}(I, n, n)
     local V::Matrix{T}
 
     L[1,1] = 1

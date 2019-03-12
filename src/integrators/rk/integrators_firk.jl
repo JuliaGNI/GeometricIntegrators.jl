@@ -7,11 +7,9 @@ struct TableauFIRK{T} <: AbstractTableauIRK{T}
 
     function TableauFIRK{T}(q) where {T}
         if (q.s > 1 && istrilstrict(q.a)) || (q.s==1 && q.a[1,1] == 0)
-            warn("Initializing TableauFIRK with explicit tableau ", q.name, ".\n",
-                 "You might want to use TableauERK instead.")
+            @warn "Initializing TableauFIRK with explicit tableau $(q.name).\nYou might want to use TableauERK instead."
         elseif q.s > 1 && istril(q.a)
-            warn("Initializing TableauFIRK with diagonally implicit tableau ", q.name, ".\n",
-                 "You might want to use TableauDIRK instead.")
+            @warn "Initializing TableauFIRK with diagonally implicit tableau $(q.name).\nYou might want to use TableauDIRK instead."
         end
 
         new(q.name, q.o, q.s, q)
@@ -44,55 +42,48 @@ function ParametersFIRK(equ::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, E
 end
 
 struct NonlinearFunctionCacheFIRK{DT}
-    Q::Matrix{DT}
-    V::Matrix{DT}
-    Y::Matrix{DT}
+    Q::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
+    Y::Vector{Vector{DT}}
 
     v::Vector{DT}
     y::Vector{DT}
 
-    function NonlinearFunctionCacheFIRK{DT}(d, s) where {DT}
+    function NonlinearFunctionCacheFIRK{DT}(D,S) where {DT}
 
         # create internal stage vectors
-        Q = zeros(DT,d,s)
-        V = zeros(DT,d,s)
-        Y = zeros(DT,d,s)
+        Q = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        Y = create_internal_stage_vector(DT, D, S)
 
         # create velocity and update vector
-        v = zeros(DT,d)
-        y = zeros(DT,d)
+        v = zeros(DT,D)
+        y = zeros(DT,D)
 
         new(Q, V, Y, v, y)
     end
 end
 
-@generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, Y::Matrix{ST},
+function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
                                     params::ParametersFIRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
 
-    tQ::Vector{ST} = zeros(ST,D)
-    tV::Vector{ST} = zeros(ST,D)
+    local tᵢ::TT
 
-    quote
-        local tᵢ::TT
+    @assert S == length(Q) == length(V) == length(Y)
+    @assert D == length(Q[1]) == length(V[1]) == length(Y[1])
 
-        @assert D == size(Q,1) == size(V,1) == size(Y,1)
-        @assert S == size(Q,2) == size(V,2) == size(Y,2)
-
-        # copy x to Y and compute Q = q + Δt Y
-        for i in 1:size(Y,2)
-            for k in 1:size(Y,1)
-                Y[k,i] = x[D*(i-1)+k]
-                Q[k,i] = params.q[k] + params.Δt * Y[k,i]
-            end
+    # copy x to Y and compute Q = q + Δt Y
+    for i in 1:S
+        for k in 1:D
+            Y[i][k] = x[D*(i-1)+k]
+            Q[i][k] = params.q[k] + params.Δt * Y[i][k]
         end
+    end
 
-        # compute V = v(Q)
-        for i in 1:S
-            tᵢ = params.t + params.Δt * params.tab.q.c[i]
-            simd_copy_xy_first!($tQ, Q, i)
-            params.equ.v(tᵢ, $tQ, $tV)
-            simd_copy_yx_first!($tV, V, i)
-        end
+    # compute V = v(Q)
+    for i in 1:S
+        tᵢ = params.t + params.Δt * params.tab.q.c[i]
+        params.equ.v(tᵢ, Q[i], V[i])
     end
 end
 
@@ -113,10 +104,10 @@ end
                 y1 = 0
                 y2 = 0
                 for j in 1:S
-                    y1 += params.tab.q.a[i,j] * $cache.V[k,j]
-                    y2 += params.tab.q.â[i,j] * $cache.V[k,j]
+                    y1 += params.tab.q.a[i,j] * $cache.V[j][k]
+                    y2 += params.tab.q.â[i,j] * $cache.V[j][k]
                 end
-                b[D*(i-1)+k] = - $cache.Y[k,i] + (y1 + y2)
+                b[D*(i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
             end
         end
     end
@@ -132,7 +123,7 @@ struct IntegratorFIRK{DT, TT, PT <: ParametersFIRK{DT,TT},
     iguess::IT
     fcache::NonlinearFunctionCacheFIRK{DT}
 
-    q::Vector{Vector{Double{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
 end
 
 function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,FT,N}
@@ -153,7 +144,7 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt
     fcache = NonlinearFunctionCacheFIRK{DT}(D, S)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, M)
+    q = create_solution_vector(DT, D, M)
 
     # create integrator
     IntegratorFIRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), N}(
@@ -183,8 +174,8 @@ function initial_guess!(int::IntegratorFIRK, m::Int)
     # compute initial guess for internal stages
     for i in 1:int.params.tab.q.s
         evaluate!(int.iguess, m, int.fcache.y, int.fcache.v, int.params.tab.q.c[i])
-        for k in 1:dims(int)
-            int.fcache.V[k,i] = int.fcache.v[k]
+        for k in eachindex(int.fcache.V[i], int.fcache.v)
+            int.fcache.V[i][k] = int.fcache.v[k]
         end
     end
     for i in 1:int.params.tab.q.s
@@ -192,7 +183,7 @@ function initial_guess!(int::IntegratorFIRK, m::Int)
         for k in 1:dims(int)
             int.solver.x[offset+k] = 0
             for j in 1:int.params.tab.q.s
-                int.solver.x[offset+k] += int.params.tab.q.a[i,j] * int.fcache.V[k,j]
+                int.solver.x[offset+k] += int.params.tab.q.a[i,j] * int.fcache.V[j][k]
             end
         end
     end

@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-type ParametersVPRKpVariational{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractParametersVPRK{DT,TT,ET,D,S}
+mutable struct ParametersVPRKpVariational{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractParametersVPRK{DT,TT,ET,D,S}
     equ::ET
     tab::TableauVPRK{TT}
     Δt::TT
@@ -85,7 +85,7 @@ end
 end
 
 "Variational partitioned Runge-Kutta integrator."
-immutable IntegratorVPRKpVariational{DT, TT,
+mutable struct IntegratorVPRKpVariational{DT, TT,
                 SPT <: ParametersVPRK{DT,TT},
                 PPT <: ParametersVPRKpVariational{DT,TT},
                 SST <: NonlinearSolver{DT},
@@ -102,8 +102,8 @@ immutable IntegratorVPRKpVariational{DT, TT,
     scache::NonlinearFunctionCacheVPRK{DT}
     pcache::NonlinearFunctionCacheVPRKprojection{DT}
 
-    q::Vector{Vector{Double{DT}}}
-    p::Vector{Vector{Double{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
+    p::Vector{Vector{TwicePrecision{DT}}}
 end
 
 function IntegratorVPRKpVariational(equation::ET, tableau::TableauVPRK{TT}, Δt::TT;
@@ -132,8 +132,8 @@ function IntegratorVPRKpVariational(equation::ET, tableau::TableauVPRK{TT}, Δt:
     pcache = NonlinearFunctionCacheVPRKprojection{DT}(D)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, M)
-    p = create_solution_vector_double_double(DT, D, M)
+    q = create_solution_vector(DT, D, M)
+    p = create_solution_vector(DT, D, M)
 
     # create integrator
     IntegratorVPRKpVariational{DT, TT, ET, typeof(sparams), typeof(pparams), typeof(solver), typeof(projector), typeof(iguess)}(

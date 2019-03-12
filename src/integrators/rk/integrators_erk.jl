@@ -32,7 +32,7 @@ function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
     # TODO Read data in original format (e.g., Rational).
     #      For this we need to save tableaus as jld or hdf5.
 #    tab_array = readdlm(file, T)
-    tab_array = readdlm(file)
+    tab_array = readdlm(file, comments=true)
 
     if s == 0
         s = size(tab_array, 1)
@@ -44,7 +44,7 @@ function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
     b = tab_array[1:s, 2]
     a = tab_array[1:s, 3:s+2]
 
-    info("Reading explicit Runge-Kutta tableau ", name, " with ", s, " stages and order ", o, " from file\n      ", file)
+    @info "Reading explicit Runge-Kutta tableau $(name) with $(s) stages and order $(o) from file\n$(file)"
 
     TableauERK(Symbol(name), o, a, b, c)
 end
@@ -57,22 +57,16 @@ struct IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
     tableau::TableauERK{TT}
     Δt::TT
 
-    q::Vector{Array{DT,1}}
-    V::Array{DT,2}
-    tQ::Array{DT,1}
-    tV::Array{DT,1}
-
+    q::Vector{DT}
+    Q::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
 
     function IntegratorERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
         D = equation.d
         S = tableau.q.s
-        NI= equation.n
-        # create solution vectors
-        q = create_solution_vector_double_double(DT, D, NI)
-
-        new(equation, tableau, Δt,
-            q, zeros(DT,D,S),
-            zeros(DT,D), zeros(DT,D))
+        Q = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        new(equation, tableau, Δt, zeros(DT,D), Q, V)
     end
 end
 
@@ -89,25 +83,27 @@ function initialize!(int::IntegratorERK, sol::SolutionODE, m::Int)
 end
 
 "Integrate ODE with explicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorERK{DT,TT,FT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,N}
+function integrate_step!(int::IntegratorERK{DT,TT}, sol::SolutionODE{DT,TT}, m::Int, n::Int) where {DT,TT}
+    @assert m ≥ 1
+    @assert m ≤ sol.ni
+
+    @assert n ≥ 1
+    @assert n ≤ sol.ntime
+
     local tᵢ::TT
-    local y::DT
+    local yᵢ::DT
 
     # compute internal stages
-    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[m], int.tV)
-    simd_copy_yx_first!(int.tV, int.V, 1)
-
-    for i in 2:int.tableau.q.s
-        @inbounds for k in eachindex(int.tQ)
-            y = 0
-            for j = 1:i-1
-                y += int.tableau.q.a[i,j] * int.V[k,j]
+    for i in 1:int.tableau.q.s
+        @inbounds for k in eachindex(int.Q[i], int.V[i])
+            yᵢ = 0
+            for j in 1:i-1
+                yᵢ += int.tableau.q.a[i,j] * int.V[j][k]
             end
-            int.tQ[k] = int.q[m][k] + int.Δt * y
+            int.Q[i][k] = int.q[k] + int.Δt * yᵢ
         end
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.q.c[i]
-        int.equation.v(tᵢ, int.tQ, int.tV)
-        simd_copy_yx_first!(int.tV, int.V, i)
+        int.equation.v(tᵢ, int.Q[i], int.V[i])
     end
 
     # compute final update

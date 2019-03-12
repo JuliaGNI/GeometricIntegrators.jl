@@ -10,8 +10,7 @@ struct TableauDIRK{T} <: AbstractTableauIRK{T}
         @assert !(q.s==1 && q.a[1,1] ≠ 0)
 
         if q.s > 1 && istrilstrict(q.a)
-            warn("Initializing TableauDIRK with explicit tableau ", q.name, ".\n",
-                 "You might want to use TableauERK instead.")
+            @warn "Initializing TableauDIRK with explicit tableau $(q.name).\nYou might want to use TableauERK instead."
         end
 
         new(q.name, q.o, q.s, q)
@@ -35,15 +34,19 @@ struct IntegratorDIRK{DT,TT,FT} <: Integrator{DT,TT}
     tableau::TableauDIRK{TT}
     Δt::TT
 
-    x::Array{DT,1}
-    X::Array{DT,2}
-    Y::Array{DT,2}
-    F::Array{DT,2}
+    x::Vector{Vector{TwicePrecision{DT}}}
+    X::Vector{Vector{DT}}
+    Y::Vector{Vector{DT}}
+    F::Vector{Vector{DT}}
 
     function IntegratorDIRK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
         D = equation.d
+        M = equation.n
         S = tableau.q.s
-        new(equation, tableau, Δt, zeros(DT,D), zeros(DT,D,S), zeros(DT,D,S), zeros(DT,D,S))
+        X = create_internal_stage_vector(DT, D, S)
+        Y = create_internal_stage_vector(DT, D, S)
+        F = create_internal_stage_vector(DT, D, S)
+        new(equation, tableau, Δt, create_solution_vector(DT,D,M), X, Y, F)
     end
 end
 

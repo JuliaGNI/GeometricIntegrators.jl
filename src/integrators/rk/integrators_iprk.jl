@@ -1,4 +1,3 @@
-
 """
 `TableauIPRK`: Tableau of an Implicit Partitioned Runge-Kutta method
 ```math
@@ -62,12 +61,12 @@ end
 
 
 struct NonlinearFunctionCacheIPRK{ST}
-    Q::Matrix{ST}
-    V::Matrix{ST}
-    P::Matrix{ST}
-    F::Matrix{ST}
-    Y::Matrix{ST}
-    Z::Matrix{ST}
+    Q::Vector{Vector{ST}}
+    V::Vector{Vector{ST}}
+    P::Vector{Vector{ST}}
+    F::Vector{Vector{ST}}
+    Y::Vector{Vector{ST}}
+    Z::Vector{Vector{ST}}
 
     v::Vector{ST}
     f::Vector{ST}
@@ -76,12 +75,12 @@ struct NonlinearFunctionCacheIPRK{ST}
 
     function NonlinearFunctionCacheIPRK{ST}(D,S) where {ST}
         # create internal stage vectors
-        Q = zeros(ST,D,S)
-        V = zeros(ST,D,S)
-        P = zeros(ST,D,S)
-        F = zeros(ST,D,S)
-        Y = zeros(ST,D,S)
-        Z = zeros(ST,D,S)
+        Q = create_internal_stage_vector(ST, D, S)
+        V = create_internal_stage_vector(ST, D, S)
+        P = create_internal_stage_vector(ST, D, S)
+        F = create_internal_stage_vector(ST, D, S)
+        Y = create_internal_stage_vector(ST, D, S)
+        Z = create_internal_stage_vector(ST, D, S)
 
         # create update vectors
         v = zeros(ST,D)
@@ -103,11 +102,11 @@ end
         # compute b = - [(Y-AV), (Z-AF)]
         for i in 1:S
             for k in 1:D
-                b[2*(D*(i-1)+k-1)+1] = - $cache.Y[k,i]
-                b[2*(D*(i-1)+k-1)+2] = - $cache.Z[k,i]
+                b[2*(D*(i-1)+k-1)+1] = - $cache.Y[i][k]
+                b[2*(D*(i-1)+k-1)+2] = - $cache.Z[i][k]
                 for j in 1:S
-                    b[2*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * $cache.V[k,j]
-                    b[2*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * $cache.F[k,j]
+                    b[2*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * $cache.V[j][k]
+                    b[2*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * $cache.F[j][k]
                 end
             end
         end
@@ -115,41 +114,31 @@ end
 end
 
 
-@generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST},
-                                                   P::Matrix{ST}, F::Matrix{ST},
-                                                   Y::Matrix{ST}, Z::Matrix{ST},
-                                                   params::ParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
-    tQ = zeros(ST,D)
-    tV = zeros(ST,D)
-    tP = zeros(ST,D)
-    tF = zeros(ST,D)
+function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
+                                        P::Vector{Vector{ST}}, F::Vector{Vector{ST}},
+                                        Y::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
+                                        params::ParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+    local tqᵢ::TT
+    local tpᵢ::TT
 
-    quote
-        local tqᵢ::TT
-        local tpᵢ::TT
+    for i in 1:S
+        for k in 1:D
+            # copy y to Y and Z
+            Y[i][k] = x[2*(D*(i-1)+k-1)+1]
+            Z[i][k] = x[2*(D*(i-1)+k-1)+2]
 
-        for i in 1:S
-            for k in 1:D
-                # copy y to Y and Z
-                Y[k,i] = x[2*(D*(i-1)+k-1)+1]
-                Z[k,i] = x[2*(D*(i-1)+k-1)+2]
-
-                # compute Q and P
-                Q[k,i] = params.q[k] + params.Δt * Y[k,i]
-                P[k,i] = params.p[k] + params.Δt * Z[k,i]
-            end
-
-            # compute f(X)
-            tqᵢ = params.t + params.Δt * params.tab.q.c[i]
-            tpᵢ = params.t + params.Δt * params.tab.p.c[i]
-
-            simd_copy_xy_first!($tQ, Q, i)
-            simd_copy_xy_first!($tP, P, i)
-            params.equ.v(tqᵢ, $tQ, $tP, $tV)
-            params.equ.f(tpᵢ, $tQ, $tP, $tF)
-            simd_copy_yx_first!($tV, V, i)
-            simd_copy_yx_first!($tF, F, i)
+            # compute Q and P
+            Q[i][k] = params.q[k] + params.Δt * Y[i][k]
+            P[i][k] = params.p[k] + params.Δt * Z[i][k]
         end
+
+        # compute time of internal stage
+        tqᵢ = params.t + params.Δt * params.tab.q.c[i]
+        tpᵢ = params.t + params.Δt * params.tab.p.c[i]
+
+        # compute v(Q,P) and f(Q,P)
+        params.equ.v(tqᵢ, Q[i], P[i], V[i])
+        params.equ.f(tpᵢ, Q[i], P[i], F[i])
     end
 end
 
@@ -163,8 +152,8 @@ struct IntegratorIPRK{DT, TT, PT <: ParametersIPRK{DT,TT},
     iguess::IT
     fcache::NonlinearFunctionCacheIPRK{DT}
 
-    q::Vector{Vector{Double{DT}}}
-    p::Vector{Vector{Double{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
+    p::Vector{Vector{TwicePrecision{DT}}}
 end
 
 function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT,VT,FT}
@@ -185,8 +174,8 @@ function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, �
     fcache = NonlinearFunctionCacheIPRK{DT}(D,S)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, M)
-    p = create_solution_vector_double_double(DT, D, M)
+    q = create_solution_vector(DT, D, M)
+    p = create_solution_vector(DT, D, M)
 
     # create integrator
     IntegratorIPRK{DT, TT, typeof(params), typeof(solver), typeof(iguess)}(
@@ -212,8 +201,8 @@ function initial_guess!(int::IntegratorIPRK, m::Int)
     for i in 1:int.params.tab.q.s
         evaluate!(int.iguess, m, int.fcache.y, int.fcache.z, int.fcache.v, int.fcache.f, int.params.tab.q.c[i], int.params.tab.p.c[i])
         for k in 1:int.params.equ.d
-            int.fcache.V[k,i] = int.fcache.v[k]
-            int.fcache.F[k,i] = int.fcache.f[k]
+            int.fcache.V[i][k] = int.fcache.v[k]
+            int.fcache.F[i][k] = int.fcache.f[k]
         end
     end
     for i in 1:int.params.tab.q.s
@@ -221,17 +210,19 @@ function initial_guess!(int::IntegratorIPRK, m::Int)
             int.solver.x[2*(int.params.equ.d*(i-1)+k-1)+1] = 0
             int.solver.x[2*(int.params.equ.d*(i-1)+k-1)+2] = 0
             for j in 1:int.params.tab.q.s
-                int.solver.x[2*(int.params.equ.d*(i-1)+k-1)+1] += int.params.tab.q.a[i,j] * int.fcache.V[k,j]
-                int.solver.x[2*(int.params.equ.d*(i-1)+k-1)+2] += int.params.tab.p.a[i,j] * int.fcache.F[k,j]
+                int.solver.x[2*(int.params.equ.d*(i-1)+k-1)+1] += int.params.tab.q.a[i,j] * int.fcache.V[j][k]
+                int.solver.x[2*(int.params.equ.d*(i-1)+k-1)+2] += int.params.tab.p.a[i,j] * int.fcache.F[j][k]
             end
         end
     end
 end
 
 "Integrate ODE with implicit partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorIPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,VT,FT,N}
+function integrate_step!(int::IntegratorIPRK{DT,TT}, sol::SolutionPODE{DT,TT}, m::Int, n::Int) where {DT,TT}
     # set time for nonlinear solver
     int.params.t  = sol.t[0] + (n-1)*int.params.Δt
+
+    # copy previous solution
     int.params.q .= int.q[m]
     int.params.p .= int.p[m]
 

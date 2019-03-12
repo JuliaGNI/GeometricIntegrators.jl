@@ -94,7 +94,7 @@ end
 end
 
 "Variational partitioned Runge-Kutta integrator."
-immutable IntegratorVPRKpStandard{DT, TT,
+mutable struct IntegratorVPRKpStandard{DT, TT,
                 SPT <: ParametersVPRK{DT,TT},
                 PPT <: ParametersVPRKpStandard{DT,TT},
                 SST <: NonlinearSolver{DT},
@@ -111,8 +111,8 @@ immutable IntegratorVPRKpStandard{DT, TT,
     scache::NonlinearFunctionCacheVPRK{DT}
     pcache::NonlinearFunctionCacheVPRKprojection{DT}
 
-    q::Vector{Vector{Double{DT}}}
-    p::Vector{Vector{Double{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
+    p::Vector{Vector{TwicePrecision{DT}}}
 end
 
 function IntegratorVPRKpSymplectic(args...; kwargs...)
@@ -153,8 +153,8 @@ function IntegratorVPRKpStandard(equation::ET, tableau::TableauVPRK{TT}, Δt::TT
     pcache = NonlinearFunctionCacheVPRKprojection{DT}(D,S)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, M)
-    p = create_solution_vector_double_double(DT, D, M)
+    q = create_solution_vector(DT, D, M)
+    p = create_solution_vector(DT, D, M)
 
     # create integrator
     IntegratorVPRKpStandard{DT, TT, typeof(sparams), typeof(pparams), typeof(solver), typeof(projector), typeof(iguess)}(

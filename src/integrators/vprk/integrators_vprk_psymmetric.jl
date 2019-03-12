@@ -94,8 +94,8 @@ struct IntegratorVPRKpSymmetric{DT, TT, PT <: ParametersVPRKpSymmetric{DT,TT},
     scache::NonlinearFunctionCacheVPRK{DT}
     pcache::NonlinearFunctionCacheVPRKprojection{DT}
 
-    q::Vector{Vector{Double{DT}}}
-    p::Vector{Vector{Double{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
+    p::Vector{Vector{TwicePrecision{DT}}}
 end
 
 function IntegratorVPRKpSymmetric(equation::ET, tableau::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
@@ -117,8 +117,8 @@ function IntegratorVPRKpSymmetric(equation::ET, tableau::TableauVPRK{TT}, Δt::T
     pcache = NonlinearFunctionCacheVPRKprojection{DT}(D,S)
 
     # create solution vectors
-    q = create_solution_vector_double_double(DT, D, M)
-    p = create_solution_vector_double_double(DT, D, M)
+    q = create_solution_vector(DT, D, M)
+    p = create_solution_vector(DT, D, M)
 
     # create integrator
     IntegratorVPRKpSymmetric{DT, TT, typeof(params), typeof(solver), typeof(iguess)}(

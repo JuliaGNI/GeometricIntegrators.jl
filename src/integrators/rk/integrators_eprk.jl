@@ -50,40 +50,34 @@ struct IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
     tableau::TableauEPRK{TT}
     Δt::TT
 
-    q::Vector{Vector{Double{DT}}}
-    p::Vector{Vector{Double{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
+    p::Vector{Vector{TwicePrecision{DT}}}
 
-    Q::Array{DT,2}
-    P::Array{DT,2}
-    Y::Array{DT,2}
-    Z::Array{DT,2}
-    V::Array{DT,2}
-    F::Array{DT,2}
+    Q::OffsetArray{Array{DT,1},1,Array{Array{DT,1},1}}
+    P::OffsetArray{Array{DT,1},1,Array{Array{DT,1},1}}
 
-    tQ::Array{DT,1}
-    tP::Array{DT,1}
-    tV::Array{DT,1}
-    tF::Array{DT,1}
+    Y::Vector{Vector{DT}}
+    Z::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
+    F::Vector{Vector{DT}}
 
     function IntegratorEPRK{DT,TT,VT,FT}(equation, tableau, Δt) where {DT,TT,VT,FT}
         D = equation.d
         M = equation.n
         S = tableau.s
 
-        q = Array{Vector{Double{DT}}}(M)
-        p = Array{Vector{Double{DT}}}(M)
+        q = create_solution_vector(DT, D, M)
+        p = create_solution_vector(DT, D, M)
 
-        for i in 1:M
-            q[i] = zeros(Double{DT},D)
-            p[i] = zeros(Double{DT},D)
-        end
+        Q = create_internal_stage_vector_with_zero(DT, D, S)
+        P = create_internal_stage_vector_with_zero(DT, D, S)
 
-        new(equation, tableau, Δt, q, p,
-            zeros(DT,D,S), zeros(DT,D,S),
-            zeros(DT,D,S), zeros(DT,D,S),
-            zeros(DT,D,S), zeros(DT,D,S),
-            zeros(DT,D), zeros(DT,D),
-            zeros(DT,D), zeros(DT,D))
+        Y = create_internal_stage_vector(DT, D, S)
+        Z = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        F = create_internal_stage_vector(DT, D, S)
+
+        new(equation, tableau, Δt, q, p, Q, P, Y, Z, V, F)
     end
 end
 
@@ -93,35 +87,31 @@ end
 
 
 "Compute Q stages of explicit partitioned Runge-Kutta methods."
-function computeStageQ!(int::IntegratorEPRK, m::Int, i::Int, jmax::Int, t)
+function computeStageQ!(int::IntegratorEPRK{DT,TT}, m::Int, i::Int, jmax::Int, t) where {DT,TT}
+    fill!(int.Y[i], zero(DT))
     for j in 1:jmax
         for k in 1:int.equation.d
-            int.Y[k,i] += int.tableau.q.a[i,j] * int.V[k,j]
+            int.Y[i][k] += int.tableau.q.a[i,j] * int.V[j][k]
         end
     end
     for k in 1:int.equation.d
-        int.Q[k,i] = int.q[m][k] + int.Δt * int.Y[k,i]
+        int.Q[i][k] = int.q[m][k] + int.Δt * int.Y[i][k]
     end
-    simd_copy_xy_first!(int.tQ, int.Q, i)
-    jmax == 0 ? int.tP .= int.p[m] : simd_copy_xy_first!(int.tP, int.P, jmax)
-    int.equation.f(t, int.tQ, int.tP, int.tF)
-    simd_copy_yx_first!(int.tF, int.F, i)
+    int.equation.f(t, int.Q[i], int.P[jmax], int.F[i])
 end
 
 "Compute P stages of explicit partitioned Runge-Kutta methods."
-function computeStageP!(int::IntegratorEPRK, m::Int, i::Int, jmax::Int, t)
+function computeStageP!(int::IntegratorEPRK{DT,TT}, m::Int, i::Int, jmax::Int, t) where {DT,TT}
+    fill!(int.Z[i], zero(DT))
     for j in 1:jmax
         for k in 1:int.equation.d
-            int.Z[k,i] += int.tableau.p.a[i,j] * int.F[k,j]
+            int.Z[i][k] += int.tableau.p.a[i,j] * int.F[j][k]
         end
     end
     for k in 1:int.equation.d
-        int.P[k,i] = int.p[m][k] + int.Δt * int.Z[k,i]
+        int.P[i][k] = int.p[m][k] + int.Δt * int.Z[i][k]
     end
-    jmax == 0 ? int.tQ .= int.q[m] : simd_copy_xy_first!(int.tQ, int.Q, jmax)
-    simd_copy_xy_first!(int.tP, int.P, i)
-    int.equation.v(t, int.tQ, int.tP, int.tV)
-    simd_copy_yx_first!(int.tV, int.V, i)
+    int.equation.v(t, int.Q[jmax], int.P[i], int.V[i])
 end
 
 function initialize!(int::IntegratorEPRK, sol::SolutionPODE, m::Int)
@@ -133,15 +123,16 @@ function initialize!(int::IntegratorEPRK, sol::SolutionPODE, m::Int)
 end
 
 "Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorEPRK{DT,TT,VT,FT}, sol::SolutionPODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,VT,FT,N}
+function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::SolutionPODE{DT,TT}, m::Int, n::Int) where {DT,TT}
     local j::Int
     local tqᵢ::TT
     local tpᵢ::TT
 
-    # compute internal stages
-    fill!(int.Y, zero(DT))
-    fill!(int.Z, zero(DT))
+    # store previous solution
+    int.Q[0] .= int.q[m]
+    int.P[0] .= int.p[m]
 
+    # compute internal stages
     for i in 1:int.tableau.s
         tqᵢ = sol.t[n] + int.Δt * int.tableau.q.c[i]
         tpᵢ = sol.t[n] + int.Δt * int.tableau.p.c[i]

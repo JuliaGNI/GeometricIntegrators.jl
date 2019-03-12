@@ -21,15 +21,20 @@ v (t) = v_1 (t) + ... + v_r (t) .
 
 The functions `v_i` providing the vector field must have the interface
 ```julia
-    function v_i(t, q, v)
-        v[1] = ...
-        v[2] = ...
+    function v_i(t, q₀, q₁, h)
+        q₁[1] = q₀[1] + ...
+        q₁[2] = q₀[2] + ...
         ...
     end
 ```
-where `t` is the current time, `q` is the current solution vector, and
-`v` is the vector which holds the result of evaluating the vector field ``v_i``
-on `t` and `q`.
+where `t` is the current time, `q₀` is the current solution vector, `q₁` is the
+new solution vector which holds the result of computing one substep with the
+vector field ``v_i`` on `t` and `q₀`, and `h` is the (sub-)timestep to compute
+the update for.
+
+The fact that the function `v` returns the solution and not just the vector
+field for each substep increases the flexibility for the use of splitting
+methods, e.g., it allows to use another integrator for solving substeps.
 
 """
 struct SODE{dType <: Number, tType <: Number, vType <: Tuple, N} <: Equation{dType, tType}

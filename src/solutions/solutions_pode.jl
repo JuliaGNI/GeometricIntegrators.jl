@@ -76,18 +76,18 @@ function set_initial_conditions!(sol::SolutionPODE{DT,TT}, equ::Union{PODE{DT,TT
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end
 
-function set_initial_conditions!(sol::SolutionPODE{DT,TT}, t₀::TT, q₀::Union{Array{DT}, Array{Double{DT}}}, p₀::Union{Array{DT}, Array{Double{DT}}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPODE{DT,TT}, t₀::TT, q₀::Union{Array{DT}, Array{TwicePrecision{DT}}}, p₀::Union{Array{DT}, Array{TwicePrecision{DT}}}) where {DT,TT}
     set_data!(sol.q, q₀, 0)
     set_data!(sol.p, p₀, 0)
     compute_timeseries!(sol.t, t₀)
 end
 
-function get_initial_conditions!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, p::Union{Vector{DT}, Vector{Double{DT}}}, k) where {DT,TT}
+function get_initial_conditions!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, k) where {DT,TT}
     get_data!(sol.q, q, 0, k)
     get_data!(sol.p, p, 0, k)
 end
 
-function copy_solution!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, Vector{Double{DT}}}, p::Union{Vector{DT}, Vector{Double{DT}}}, n, k) where {DT,TT}
+function copy_solution!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
     if mod(n, sol.nsave) == 0
         j = div(n, sol.nsave)
         set_data!(sol.q, q, j, k)

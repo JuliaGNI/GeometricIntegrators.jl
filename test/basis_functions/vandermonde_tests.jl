@@ -1,6 +1,6 @@
 
 n = 11
-x = collect(linspace(0., 1., n))
+x = collect(range(0., stop=1., length=n))
 y = rand(n)
 
 V = vandermonde_matrix(x)

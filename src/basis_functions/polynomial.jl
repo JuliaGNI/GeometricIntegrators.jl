@@ -32,7 +32,7 @@ function Base.similar(lag::Polynomial{T}, c::Vector{T}) where {T}
 end
 
 
-function CommonFunctions.evaluate!(pol::Polynomial{T}, x::Vector{T}, y::Vector{T}) where {T}
+function evaluate!(pol::Polynomial{T}, x::Vector{T}, y::Vector{T}) where {T}
     @assert length(x) == length(y)
 
     local tx::T
@@ -42,7 +42,7 @@ function CommonFunctions.evaluate!(pol::Polynomial{T}, x::Vector{T}, y::Vector{T
         tx = x[k]
         ty = 0
         for j in eachindex(pol.c)
-            ty += pol.c[j] * evaluate(pol.b, j, tx)
+            ty += pol.c[j] * eval_basis(pol.b, j, tx)
         end
         y[k] = ty
     end
@@ -50,6 +50,6 @@ function CommonFunctions.evaluate!(pol::Polynomial{T}, x::Vector{T}, y::Vector{T
     return nothing
 end
 
-function CommonFunctions.evaluate!(b::LagrangeBasis{T}, c::Vector{T}, x::Vector{T}, y::Vector{T}) where {T}
+function evaluate!(b::LagrangeBasis{T}, c::Vector{T}, x::Vector{T}, y::Vector{T}) where {T}
     evaluate!(Polynomial(b, c), x, y)
 end

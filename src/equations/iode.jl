@@ -101,7 +101,7 @@ function IODE(α::Function, f::Function, g::Function, v::Function, q₀::DenseAr
 end
 
 function IODE(α::Function, f::Function, g::Function, v::Function, t₀::Number, q₀::DenseArray, p₀::DenseArray; periodicity=[])
-    IODE(α, f, g, v, t₀, q₀, p₀, zeros(q₀), periodicity=periodicity)
+    IODE(α, f, g, v, t₀, q₀, p₀, zero(q₀), periodicity=periodicity)
 end
 
 function IODE(α::Function, f::Function, g::Function, t₀::Number, q₀::DenseArray, p₀::DenseArray; periodicity=[])

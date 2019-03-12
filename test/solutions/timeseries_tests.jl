@@ -4,9 +4,6 @@ ntime = 10
 
 ts = TimeSeries{eltype(Δt)}(ntime, Δt, 1)
 @test typeof(ts) <: AbstractArray
-@test length(ts) == ntime+1
-@test size(ts) == (ntime+1,)
-@test indices(ts, 1) == 0:ntime
 
 compute_timeseries!(ts, 0.)
 t = collect(0:Δt:ntime*Δt)

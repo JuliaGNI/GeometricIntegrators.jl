@@ -1,5 +1,4 @@
 
-# check linear Lagrange basis
 b = LagrangeBasis([0.0, 1.0])
 
 @test evaluate(b, 1, 0.0) == 1.0

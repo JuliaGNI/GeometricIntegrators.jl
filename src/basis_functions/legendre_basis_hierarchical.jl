@@ -1,8 +1,8 @@
 
-using Polynomials
+using Polynomials: Poly
 
 
-struct LegendreBasisHierarchical{T, P, fT, pT, dT, iT} <: Basis{T,P}
+struct LegendreBasisHierarchical{T, N, fT, pT, dT, iT} <: PolynomialBasis{T,N}
     x::Vector{T}
     factors::fT
     polys::pT
@@ -10,19 +10,19 @@ struct LegendreBasisHierarchical{T, P, fT, pT, dT, iT} <: Basis{T,P}
     ints::iT
 end
 
-function LegendreBasisHierarchical(T,P)
+function LegendreBasisHierarchical(T,N)
 
-    if P < 1
-        error("Degree of Hierarchical Legendre Basis must be at least 1.")
+    if N < 2
+        error("Number of Nodes of Hierarchical Legendre Basis must be at least 2 (Degree at least 1).")
     end
 
-    x       = zeros(T,P+1)
+    x       = zeros(T,N)
     factors = Tuple{}()
     polys   = Tuple{}()
     derivs  = Tuple{}()
     ints    = Tuple{}()
 
-    for p in 0:P
+    for p in 0:N-1
         tfac, tpol = legendre_polynomial_hierarchical(p, T)
         tder = polyder(tpol)
         tint = polyint(tpol)
@@ -45,16 +45,13 @@ function LegendreBasisHierarchical(T,P)
     LegendreBasisHierarchical{T, P, typeof(factors), typeof(polys), typeof(derivs), typeof(ints)}(x, factors, polys, derivs, ints)
 end
 
-CommonFunctions.nbasis(b::LegendreBasisHierarchical{T,P}) where {T,P} = P+1
-CommonFunctions.nnodes(b::LegendreBasisHierarchical{T,P}) where {T,P} = P+1
-CommonFunctions.nodes(b::LegendreBasisHierarchical{T,P})  where {T,P} = b.x
-CommonFunctions.degree(b::LegendreBasisHierarchical{T,P}) where {T,P} = P
+nodes(b::LegendreBasisHierarchical{T,N})  where {T,N} = b.x
 
-Base.hash(b::LegendreBasisHierarchical{T,P}, h::UInt) where {T,P} = hash(T, hash(P, h))
+Base.hash(b::LegendreBasisHierarchical{T,N}, h::UInt) where {T,N} = hash(T, hash(N, h))
 
-Base.:(==)(b1::LegendreBasisHierarchical{T1,P1}, b2::LegendreBasisHierarchical{T2,P2}) where {T1,P1,T2,P2} = (T1 == T2 && P1 == P2)
+Base.:(==)(b1::LegendreBasisHierarchical{T1,N1}, b2::LegendreBasisHierarchical{T2,N2}) where {T1,N1,T2,N2} = (T1 == T2 && N1 == N2)
 
-Base.isequal(b1::LegendreBasisHierarchical{T1,P1}, b2::LegendreBasisHierarchical{T2,P2}) where {T1,P1,T2,P2} = (T1 == T2 && P1 == P2)
+Base.isequal(b1::LegendreBasisHierarchical{T1,N1}, b2::LegendreBasisHierarchical{T2,N2}) where {T1,N1,T2,N2} = (T1 == T2 && N1 == N2)
 
 
 function legendre_polynomial_hierarchical(p, T=Float64)
@@ -74,16 +71,16 @@ function legendre_polynomial_hierarchical(p, T=Float64)
 end
 
 
-function CommonFunctions.evaluate(b::LegendreBasisHierarchical{T,P}, j::Int, x::T) where {T,P}
+function eval_basis(b::LegendreBasisHierarchical{T,N}, j::Int, x::T) where {T,N}
     return b.factors[j] * b.polys[j](x)
 end
 
 
-function CommonFunctions.derivative(b::LegendreBasisHierarchical{T,P}, j::Int, x::T) where {T,P}
+function deriv_basis(b::LegendreBasisHierarchical{T,N}, j::Int, x::T) where {T,N}
     return b.factors[j] * b.derivs[j](x)
 end
 
 
-function CommonFunctions.integral(b::LegendreBasisHierarchical{T,P}, j::Int, x::T) where {T,P}
+function int_basis(b::LegendreBasisHierarchical{T,N}, j::Int, x::T) where {T,N}
     return b.factors[j] * b.ints[j](x)
 end

@@ -21,12 +21,12 @@ mutable struct InitialGuessODE{DT, TT, VT, IT <: Interpolator}
     function InitialGuessODE{DT,TT,VT,IT}(interp, v, Δt, m, d, periodicity) where {DT,TT,VT,IT}
 
         t₀ = zeros(DT,m)
-        q₀ = Array{Vector{DT}}(m)
-        v₀ = Array{Vector{DT}}(m)
+        q₀ = Array{Vector{DT}}(undef, m)
+        v₀ = Array{Vector{DT}}(undef, m)
 
         t₁ = zeros(DT,m)
-        q₁ = Array{Vector{DT}}(m)
-        v₁ = Array{Vector{DT}}(m)
+        q₁ = Array{Vector{DT}}(undef, m)
+        v₁ = Array{Vector{DT}}(undef, m)
 
         for i in 1:m
             q₀[i] = zeros(DT,d)
@@ -52,7 +52,7 @@ function InitialGuessODE(interp, equation::VODE{DT,TT,AT,FT,GT,VT}, Δt::TT) whe
 end
 
 
-function initialize!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT,VT,IT}
+function initialize!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}) where {DT,TT,VT,IT}
     ig.t₀[m]  = t₁ - ig.Δt
     ig.t₁[m]  = t₁
     ig.q₁[m] .= q₁
@@ -64,7 +64,7 @@ function initialize!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int, t₁::TT, q₁::U
 end
 
 
-function update!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{Double{DT}}}) where {DT,TT,VT,IT}
+function update!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}) where {DT,TT,VT,IT}
     local Δq::DT
 
     ig.t₀[m] = ig.t₁[m]
@@ -95,17 +95,17 @@ function update!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int, t₁::TT, q₁::Union
     end
 end
 
-function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int, guess::Union{Vector{DT}, Vector{Double{DT}}}, c::TT=one(TT)) where {DT,TT,VT,IT}
+function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int, guess::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, c::TT=one(TT)) where {DT,TT,VT,IT}
     evaluate!(ig.int, ig.q₀[m], ig.q₁[m], ig.v₀[m], ig.v₁[m], one(TT)+c, guess)
 end
 
 function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int,
-           guess_q::Union{Vector{DT}, Vector{Double{DT}}}, guess_v::Vector{DT}, c::TT=one(TT)) where {DT,TT,VT,IT}
+           guess_q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, guess_v::Vector{DT}, c::TT=one(TT)) where {DT,TT,VT,IT}
 
     @assert length(guess_q) == length(guess_v)
 
     if ig.q₀[m] == ig.q₁[m]
-        warn("q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0.")
+        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0."
         guess_q .= ig.q₁[m]
         guess_v .= 0
     else

@@ -285,7 +285,7 @@ end
 
 
 "Variational special partitioned additive Runge-Kutta integrator."
-immutable IntegratorVPRKpLegendre{DT, TT, ΘT, FT, GT, VT, SPT, ST, IT} <: Integrator{DT, TT}
+mutable struct IntegratorVPRKpLegendre{DT, TT, ΘT, FT, GT, VT, SPT, ST, IT} <: Integrator{DT, TT}
     equation::IODE{DT,TT,ΘT,FT,GT,VT}
     tableau::TableauVPRK{TT}
     Δt::TT

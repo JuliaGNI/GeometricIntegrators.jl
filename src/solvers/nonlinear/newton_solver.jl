@@ -2,13 +2,13 @@
 struct NewtonSolver{T, FT, TJ, TL} <: AbstractNewtonSolver{T}
     @newton_solver_variables
     function NewtonSolver{T,FT,TJ,TL}(x, F!, Jparams, linear_solver) where {T,FT,TJ,TL}
-        J  = zeros(linear_solver.A)
-        x₀ = zeros(x)
-        x₁ = zeros(x)
-        y₁ = zeros(x)
-        y₀ = zeros(x)
-        δx = zeros(x)
-        δy = zeros(x)
+        J  = zero(linear_solver.A)
+        x₀ = zero(x)
+        x₁ = zero(x)
+        y₁ = zero(x)
+        y₀ = zero(x)
+        δx = zero(x)
+        δy = zero(x)
 
         nls_params = NonlinearSolverParameters(T)
         nls_status = NonlinearSolverStatus{T}(length(x))
@@ -39,7 +39,7 @@ function solve!(s::NewtonSolver{T}; n::Int=0) where {T}
         for s.status.i = 1:nmax
             computeJacobian(s.x, s.linear.A, s.Jparams)
             factorize!(s.linear)
-            scale!(s.linear.b, -one(T))
+            rmul!(s.linear.b, -one(T))
             solve!(s.linear)
             s.δx .= s.linear.b
             s.x .+= s.δx
