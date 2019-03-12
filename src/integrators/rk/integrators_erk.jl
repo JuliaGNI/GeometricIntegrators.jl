@@ -79,7 +79,7 @@ function initialize!(int::IntegratorERK, sol::SolutionODE, m::Int)
     @assert m ≤ sol.ni
 
     # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q, m)
+    get_initial_conditions!(sol, int.q[m], m)
 end
 
 "Integrate ODE with explicit Runge-Kutta integrator."
@@ -107,11 +107,11 @@ function integrate_step!(int::IntegratorERK{DT,TT}, sol::SolutionODE{DT,TT}, m::
     end
 
     # compute final update
-    update_solution!(int.q, int.V, int.tableau.q.b, int.Δt)
+    update_solution!(int.q[m], int.V, int.tableau.q.b, int.Δt)
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q, int.equation.periodicity)
+    cut_periodic_solution!(int.q[m], int.equation.periodicity)
 
     # copy to solution
-    copy_solution!(sol, int.q, n, m)
+    copy_solution!(sol, int.q[m], n, m)
 end

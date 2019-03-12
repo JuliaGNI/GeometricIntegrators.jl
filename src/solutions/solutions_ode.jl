@@ -69,6 +69,9 @@ function SolutionODE(file::String)
     t = TimeSeries(read(h5["t"]), nsave)
     q = SDataSeries(read(h5["q"]))
 
+    # need to close the file
+    close(h5)
+
     # create solution
     SolutionODE(t, q, ntime, nsave)
 end

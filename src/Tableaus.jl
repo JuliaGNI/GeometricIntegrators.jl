@@ -64,7 +64,26 @@ module Tableaus
            getTableauRadIIA2,  getTableauRadIIA3,
            getTableauSRK3
 
-    include("tableaus/tableaus_sirk.jl")
+    include("tableaus/tableaus_sfirk.jl")
+    include("tableaus/tableaus_sfiprk.jl")
+    include("tableaus/tableaus_sfisprk.jl")
+
+    export  getTableauStochasticGLRK, getTableauStochasticDIRK
+    export  getTableauStochasticStormerVerlet, getTableauStochasticSymplecticEuler
+    export  getTableauStochasticLobIIIABD2, getTableauModifiedStochasticStormerVerlet
+
+    include("tableaus/tableaus_serk.jl")
+
+    export getTableauPlaten, getTableauBurrageR2, getTableauBurrageCL
+    export getTableauBurrageE1, getTableauBurrageG5, getTableauStochasticHeun
+
+    include("tableaus/tableaus_werk.jl")
+
+    export getTableauRosslerRS1, getTableauRosslerRS2
+
+    include("tableaus/tableaus_wfirk.jl")
+
+    export getTableauSRKw1, getTableauSRKw2
 
     include("tableaus/tableaus_eprk.jl")
 

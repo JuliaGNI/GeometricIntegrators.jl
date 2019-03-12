@@ -69,7 +69,8 @@ function getCoefficientsLobIIIB2(T=Float64)
     a = Array{Dec128}( [[1//2  0]
                         [1//2  0]] )
     b = Array{Dec128}( [1//2, 1//2] )
-    c = Array{Dec128}( [0,    1//1] )
+    c = Array{Dec128}( [1//2, 1//2] )
+    # CORRECTED AN ERROR IN c: it was 0, 1 before
 
     CoefficientsRK(T, :LobIIIB2, 2, a, b, c)
 end
