@@ -179,9 +179,9 @@ end
 v_sde_params = (t, q, v) -> v_sde(λ, t, q, v)
 u_sde_params = (t, q, v) -> u_sde(μ, t, q, v)
 
-sde  = SDE{eltype(x₀), typeof(t₀), typeof(v_sde_params), typeof(u_sde_params), 1}(2, 1, v_sde_params, u_sde_params, t₀, x₀)
-sde1 = SDE(v_sde_params, u_sde_params, t₀, x₀)
-sde2 = SDE(v_sde_params, u_sde_params, x₀)
+sde  = SDE{eltype(x₀), typeof(t₀), typeof(v_sde_params), typeof(u_sde_params), 1}(2, 1, 1, 1, v_sde_params, u_sde_params, t₀, x₀)
+sde1 = SDE(1, 1, v_sde_params, u_sde_params, t₀, x₀)
+sde2 = SDE(1, 1, v_sde_params, u_sde_params, x₀)
 
 @test sde == sde1
 @test sde == sde2

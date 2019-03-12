@@ -124,5 +124,5 @@ function oscillator_sde_u(t, x, u)
 end
 
 function oscillator_sde(x₀=q₀)
-    SDE(oscillator_ode_f, oscillator_sde_u, q₀)
+    SDE(1, 1, oscillator_ode_f, oscillator_sde_u, q₀)
 end
