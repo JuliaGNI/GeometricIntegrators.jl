@@ -135,11 +135,15 @@ module Integrators
     include("integrators/splitting/integrators_splitting.jl")
 
 
-    export IntegratorCGVI, IntegratorDGVI, IntegratorDGVIPI
+    export IntegratorCGVI, IntegratorDGVI, IntegratorDGVIEXP,
+           IntegratorDGVIPI, IntegratorDGVIP0, IntegratorDGVIP1
 
     include("integrators/cgvi/integrators_cgvi.jl")
     include("integrators/dgvi/integrators_dgvi.jl")
+    include("integrators/dgvi/integrators_dgvi_experimental.jl")
     include("integrators/dgvi/integrators_dgvi_path_integral.jl")
+    include("integrators/dgvi/integrators_dgvi_projection_initial.jl")
+    include("integrators/dgvi/integrators_dgvi_projection_final.jl")
 
 
     include("integrators/integrators.jl")
