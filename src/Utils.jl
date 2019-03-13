@@ -10,8 +10,7 @@ module Utils
     export istriustrict, istrilstrict, L2norm, l2norm
     export simd_copy_xy_first!, simd_copy_yx_first!, simd_copy_yx_second!,
            simd_copy_yx_first_last!,
-           simd_axpy!, simd_aXbpy!, simd_abXpy!, simd_mult!,
-           vector_matrix_vector_product, vector_vector_product
+           simd_axpy!, simd_aXbpy!, simd_abXpy!, simd_mult!
 
     include("utils/matrix_utils.jl")
 
