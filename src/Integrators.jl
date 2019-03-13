@@ -89,7 +89,8 @@ module Integrators
     export IntegratorVPRKdegenerate
 
     export IntegratorVPRKpStandard, IntegratorVPRKpSymplectic,
-           IntegratorVPRKpMidpoint, IntegratorVPRKpSymmetric,
+           IntegratorVPRKpInternal, IntegratorVPRKpMidpoint,
+           IntegratorVPRKpSymmetric,
            IntegratorVPRKpSecondary, IntegratorVPRKpVariational
 
     export IntegratorVPRKpLegendre, TableauVPRKpLegendre
@@ -97,6 +98,7 @@ module Integrators
     include("integrators/vprk/integrators_vprk_common.jl")
     include("integrators/vprk/integrators_vprk.jl")
     include("integrators/vprk/integrators_vprk_degenerate.jl")
+    include("integrators/vprk/integrators_vprk_pinternal.jl")
     include("integrators/vprk/integrators_vprk_pmidpoint.jl")
     include("integrators/vprk/integrators_vprk_pstandard.jl")
     include("integrators/vprk/integrators_vprk_psecondary.jl")
