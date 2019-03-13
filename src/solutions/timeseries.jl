@@ -29,7 +29,7 @@ end
 function TimeSeries(t::Vector{T}, step=1) where {T}
     @assert length(t) ≥ 2
     n  = length(t)-1
-    Δt = t[2] - t[1]
+    Δt = (t[2] - t[1]) / step
     return TimeSeries{T}(n, t, Δt, step)
 end
 

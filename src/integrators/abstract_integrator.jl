@@ -1,6 +1,9 @@
 
 abstract type Integrator{dType, tType} end
 
+abstract type StochasticIntegrator{dType, tType} <: Integrator{dType, tType} end
+
+
 # function CommonFunctions.name(int::Integrator)
 #     warn(string(typeof(int)) * ".name() Not implemented!")
 # end
