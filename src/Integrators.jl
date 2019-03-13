@@ -86,6 +86,8 @@ module Integrators
 
     export IntegratorVPRK, IntegratorVPRKpNone, TableauVPRK
 
+    export IntegratorVPRKdegenerate
+
     export IntegratorVPRKpStandard, IntegratorVPRKpSymplectic,
            IntegratorVPRKpMidpoint, IntegratorVPRKpSymmetric,
            IntegratorVPRKpSecondary, IntegratorVPRKpVariational
@@ -94,6 +96,7 @@ module Integrators
 
     include("integrators/vprk/integrators_vprk_common.jl")
     include("integrators/vprk/integrators_vprk.jl")
+    include("integrators/vprk/integrators_vprk_degenerate.jl")
     include("integrators/vprk/integrators_vprk_pmidpoint.jl")
     include("integrators/vprk/integrators_vprk_pstandard.jl")
     include("integrators/vprk/integrators_vprk_psecondary.jl")
