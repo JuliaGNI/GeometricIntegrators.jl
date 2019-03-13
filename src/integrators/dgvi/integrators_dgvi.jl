@@ -3,34 +3,30 @@
 
 ### Parameters
 
-* `Θ`: function of the noncanonical one-form (∂L/∂v)
-* `f`: function of the force (∂L/∂q)
-* `g`: function of the projection ∇ϑ(q)⋅v
+* `DT`: data type
+* `TT`: parameter type
+* `D`: dimension of the system
+* `S`: number of basis nodes
+* `R`: number of quadrature nodes
+
+### Fields
+
+* `Θ`:  function of the noncanonical one-form (∂L/∂v)
+* `f`:  function of the force (∂L/∂q)
+* `g`:  function of the projection ∇ϑ(q)⋅v
 * `Δt`: time step
-* `b`: quadrature weights
-* `c`: quadrature nodes
-* `m`: mass matrix
-* `a`: derivative matrix
+* `b`:  quadrature weights
+* `c`:  quadrature nodes
+* `m`:  mass matrix
+* `a`:  derivative matrix
 * `r⁻`: reconstruction coefficients, jump lhs value
 * `r⁺`: reconstruction coefficients, jump rhs value
-* `β`:  weights of the quadrature rule for the flux
-* `γ`:  nodes of the quadrature rule for the flux
-* `μ⁻`: mass vector for the lhs jump value
-* `μ⁺`: mass vector for the rhs jump value
-* `α⁻`: derivative vector for the flux lhs value
-* `α⁺`: derivative vector for the flux rhs value
-* `ρ⁻`: reconstruction coefficients for central jump value, lhs value
-* `ρ⁺`: reconstruction coefficients for central jump value, rhs value
 * `t`:  current time
 * `q`:  current solution of qₙ
 * `q⁻`: current solution of qₙ⁻
 * `q⁺`: current solution of qₙ⁺
-* `D`: dimension of the system
-* `S`: number of basis nodes
-* `R`: number of quadrature nodes
-* `P`: number of quadrature nodes for the flux
 """
-mutable struct ParametersDGVI{DT,TT,D,S,QR,FR,ΘT,FT,GT} <: Parameters{DT,TT}
+mutable struct ParametersDGVI{DT,TT,D,S,R,ΘT,FT,GT} <: Parameters{DT,TT}
     Θ::ΘT
     f::FT
     g::GT
@@ -44,15 +40,6 @@ mutable struct ParametersDGVI{DT,TT,D,S,QR,FR,ΘT,FT,GT} <: Parameters{DT,TT}
     r⁻::Vector{TT}
     r⁺::Vector{TT}
 
-    β::Vector{TT}
-    γ::Vector{TT}
-    μ⁻::Vector{TT}
-    μ⁺::Vector{TT}
-    α⁻::Vector{TT}
-    α⁺::Vector{TT}
-    ρ⁻::TT
-    ρ⁺::TT
-
     t::TT
 
     q::Vector{DT}
@@ -61,20 +48,16 @@ mutable struct ParametersDGVI{DT,TT,D,S,QR,FR,ΘT,FT,GT} <: Parameters{DT,TT}
 end
 
 function ParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
-                b::Vector{TT}, c::Vector{TT}, m::Matrix{TT}, a::Matrix{TT},
-                r⁻::Vector{TT}, r⁺::Vector{TT}, β::Vector{TT}, γ::Vector{TT},
-                μ⁻::Vector{TT}, μ⁺::Vector{TT}, α⁻::Vector{TT}, α⁺::Vector{TT}, ρ⁻::TT, ρ⁺::TT,
+                b::Vector{TT}, c::Vector{TT}, m::Matrix{TT}, a::Matrix{TT}, r⁻::Vector{TT}, r⁺::Vector{TT},
                 q::Vector{DT}, q⁻::Vector{DT}, q⁺::Vector{DT}) where {DT,TT,ΘT,FT,GT}
 
-    @assert length(q)  == length(q⁻) == length(q⁺)
+    @assert length(q)  == length(q⁻)  == length(q⁺)
     @assert length(b)  == length(c)
-    @assert length(β)  == length(γ)
     @assert length(r⁻) == length(r⁺)
 
-    D  = length(q)
-    S  = length(r⁻)
-    QR = length(c)
-    FR = length(γ)
+    D = length(q)
+    S = length(r⁻)
+    R = length(c)
 
     println()
     println("  Discontinuous Galerkin Variational Integrator")
@@ -86,24 +69,15 @@ function ParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
     println("    a = ", a)
     println("    r⁻= ", r⁻)
     println("    r⁺= ", r⁺)
-    println("    β = ", β)
-    println("    γ = ", γ)
-    println("    μ⁻= ", μ⁻)
-    println("    μ⁺= ", μ⁺)
-    println("    α⁻= ", α⁻)
-    println("    α⁺= ", α⁺)
-    println("    ρ⁻= ", ρ⁻)
-    println("    ρ⁺= ", ρ⁺)
     println()
 
-    ParametersDGVI{DT,TT,D,S,QR,FR,ΘT,FT,GT}(
-                Θ, f, g, Δt, b, c, m, a, r⁻, r⁺, β, γ, μ⁻, μ⁺, α⁻, α⁺, ρ⁻, ρ⁺, 0, q, q⁻, q⁺)
+    ParametersDGVI{DT,TT,D,S,R,ΘT,FT,GT}(
+                Θ, f, g, Δt, b, c, m, a, r⁻, r⁺, 0, q, q⁻, q⁺)
 end
 
-
 function ParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
-                basis::Basis{TT}, quadrature::Quadrature{TT}, flux::Flux{TT},
-                q::Vector{DT}, q⁻::Vector{DT}) where {DT,TT,ΘT,FT,GT}
+                basis::Basis{TT}, quadrature::Quadrature{TT},
+                q::Vector{DT}, q⁻::Vector{DT}, q⁺::Vector{DT}) where {DT,TT,ΘT,FT,GT}
 
     # compute coefficients
     m = zeros(TT, nnodes(quadrature), nbasis(basis))
@@ -120,34 +94,26 @@ function ParametersDGVI(Θ::ΘT, f::FT, g::GT, Δt::TT,
         r⁺[i] = evaluate(basis, i, zero(TT))
     end
 
-    μ⁰ = zeros(TT, 2)
-    μ⁻ = zeros(TT, nnodes(flux.quadrature))
-    μ⁺ = zeros(TT, nnodes(flux.quadrature))
-    α⁻ = zeros(TT, nnodes(flux.quadrature))
-    α⁺ = zeros(TT, nnodes(flux.quadrature))
-
-    ρ⁻ = evaluate_l(flux.path, TT(0.5))
-    ρ⁺ = evaluate_r(flux.path, TT(0.5))
-
-    for i in 1:nnodes(flux.quadrature)
-        μ⁻[i] = evaluate_l(flux.path, nodes(flux.quadrature)[i])
-        μ⁺[i] = evaluate_r(flux.path, nodes(flux.quadrature)[i])
-        α⁻[i] = derivative_l(flux.path, nodes(flux.quadrature)[i])
-        α⁺[i] = derivative_r(flux.path, nodes(flux.quadrature)[i])
-    end
-
-    q⁺ = (q .- ρ⁻ .* q⁻) ./ ρ⁺
-
-    ParametersDGVI(Θ, f, g, Δt, weights(quadrature), nodes(quadrature), m, a, r⁻, r⁺,
-                weights(flux.quadrature), nodes(flux.quadrature), μ⁻, μ⁺, α⁻, α⁺, ρ⁻, ρ⁺,
-                q, q⁻, q⁺)
+    ParametersDGVI(Θ, f, g, Δt, weights(quadrature), nodes(quadrature), m, a, r⁻, r⁺, q, q⁻, q⁺)
 end
 
+function ParametersDGVI(Θ, f, g, Δt, basis, quadrature, q, q⁻)
+    q⁺ = zero(q)
+    q⁺ .= q
+    ParametersDGVI(Θ, f, g, Δt, basis, quadrature, q, q⁻, q⁺)
+end
 
 """
 Nonlinear function cache for Discontinuous Galerkin Variational Integrator.
 
 ### Parameters
+
+* `ST`: data type
+* `D`: number of dimensions
+* `S`: number of degrees of freedom
+* `R`: number of nodes of quadrature formula
+
+### Fields
 
 * `X`: degrees of freedom
 * `Q`: solution at quadrature nodes
@@ -160,12 +126,16 @@ Nonlinear function cache for Discontinuous Galerkin Variational Integrator.
 * `q̅`:  current solution of qₙ₊₁
 * `q̅⁻`: current solution of qₙ₊₁⁻
 * `q̅⁺`: current solution of qₙ₊₁⁺
+* `ϕ`:  average of the solution at tₙ
+* `ϕ̅`:  average of the solution at tₙ₊₁
 * `λ`:  jump of the solution at tₙ
 * `λ̅`:  jump of the solution at tₙ₊₁
-* `ϕ`:  one-form evaluated across the jump at tₙ
-* `ϕ̅`:  one-form evaluated across the jump at tₙ₊₁
+* `θ`:  one-form evaluated across at tₙ
+* `Θ̅`:  one-form evaluated across at tₙ₊₁
+* `g`:  projection evaluated across  at tₙ
+* `g̅`:  projection evaluated across at tₙ₊₁
 """
-struct NonlinearFunctionCacheDGVI{ST,D,S,QR,FR}
+struct NonlinearFunctionCacheDGVI{ST,D,S,R}
     X::Vector{Vector{ST}}
     Q::Vector{Vector{ST}}
     V::Vector{Vector{ST}}
@@ -179,22 +149,41 @@ struct NonlinearFunctionCacheDGVI{ST,D,S,QR,FR}
     q̅⁻::Vector{ST}
     q̅⁺::Vector{ST}
 
-    λ::Vector{Vector{ST}}
-    λ̅::Vector{Vector{ST}}
-    ϕ::Vector{Vector{ST}}
-    ϕ̅::Vector{Vector{ST}}
-    θ::Vector{Vector{ST}}
-    Θ̅::Vector{Vector{ST}}
-    g::Vector{Vector{ST}}
-    g̅::Vector{Vector{ST}}
+    ϕ::Vector{ST}
+    ϕ⁻::Vector{ST}
+    ϕ⁺::Vector{ST}
+    ϕ̅::Vector{ST}
+    ϕ̅⁻::Vector{ST}
+    ϕ̅⁺::Vector{ST}
 
-    function NonlinearFunctionCacheDGVI{ST,D,S,QR,FR}() where {ST,D,S,QR,FR}
+    λ::Vector{ST}
+    λ⁻::Vector{ST}
+    λ⁺::Vector{ST}
+    λ̅::Vector{ST}
+    λ̅⁻::Vector{ST}
+    λ̅⁺::Vector{ST}
+
+    θ::Vector{ST}
+    θ⁻::Vector{ST}
+    θ⁺::Vector{ST}
+    Θ̅::Vector{ST}
+    Θ̅⁻::Vector{ST}
+    Θ̅⁺::Vector{ST}
+
+    g::Vector{ST}
+    g⁻::Vector{ST}
+    g⁺::Vector{ST}
+    g̅::Vector{ST}
+    g̅⁻::Vector{ST}
+    g̅⁺::Vector{ST}
+
+    function NonlinearFunctionCacheDGVI{ST,D,S,R}() where {ST,D,S,R}
         # create internal stage vectors
         X = create_internal_stage_vector(ST,D,S)
-        Q = create_internal_stage_vector(ST,D,QR)
-        V = create_internal_stage_vector(ST,D,QR)
-        P = create_internal_stage_vector(ST,D,QR)
-        F = create_internal_stage_vector(ST,D,QR)
+        Q = create_internal_stage_vector(ST,D,R)
+        V = create_internal_stage_vector(ST,D,R)
+        P = create_internal_stage_vector(ST,D,R)
+        F = create_internal_stage_vector(ST,D,R)
 
         # create solution vectors
         q  = zeros(ST,D)
@@ -205,29 +194,50 @@ struct NonlinearFunctionCacheDGVI{ST,D,S,QR,FR}
         q̅⁺ = zeros(ST,D)
 
         # create jump vectors
-        λ  = create_internal_stage_vector(ST,D,FR)
-        λ̅  = create_internal_stage_vector(ST,D,FR)
-        ϕ  = create_internal_stage_vector(ST,D,FR)
-        ϕ̅  = create_internal_stage_vector(ST,D,FR)
-        θ  = create_internal_stage_vector(ST,D,FR)
-        Θ̅  = create_internal_stage_vector(ST,D,FR)
-        g  = create_internal_stage_vector(ST,D,FR)
-        g̅  = create_internal_stage_vector(ST,D,FR)
+        ϕ  = zeros(ST,D)
+        ϕ⁻ = zeros(ST,D)
+        ϕ⁺ = zeros(ST,D)
+        ϕ̅  = zeros(ST,D)
+        ϕ̅⁻ = zeros(ST,D)
+        ϕ̅⁺ = zeros(ST,D)
 
-        new(X, Q, V, P, F, q, q⁻, q⁺, q̅, q̅⁻, q̅⁺, λ, λ̅, ϕ, ϕ̅, θ, Θ̅, g, g̅)
+        λ  = zeros(ST,D)
+        λ⁻ = zeros(ST,D)
+        λ⁺ = zeros(ST,D)
+        λ̅  = zeros(ST,D)
+        λ̅⁻ = zeros(ST,D)
+        λ̅⁺ = zeros(ST,D)
+
+        θ  = zeros(ST,D)
+        θ⁻ = zeros(ST,D)
+        θ⁺ = zeros(ST,D)
+        Θ̅  = zeros(ST,D)
+        Θ̅⁻ = zeros(ST,D)
+        Θ̅⁺ = zeros(ST,D)
+
+        g  = zeros(ST,D)
+        g⁻ = zeros(ST,D)
+        g⁺ = zeros(ST,D)
+        g̅  = zeros(ST,D)
+        g̅⁻ = zeros(ST,D)
+        g̅⁺ = zeros(ST,D)
+
+        new(X, Q, V, P, F,
+            q, q⁻, q⁺, q̅, q̅⁻, q̅⁺,
+            ϕ, ϕ⁻, ϕ⁺, ϕ̅, ϕ̅⁻, ϕ̅⁺,
+            λ, λ⁻, λ⁺, λ̅, λ̅⁻, λ̅⁺,
+            θ, θ⁻, θ⁺, Θ̅, Θ̅⁻, Θ̅⁺,
+            g, g⁻, g⁺, g̅, g̅⁻, g̅⁺)
     end
 end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVI{DT,TT,D,S,QR,FR}) where {ST,DT,TT,D,S,QR,FR}
-    cache = NonlinearFunctionCacheDGVI{ST,D,S,QR,FR}()
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+    cache = NonlinearFunctionCacheDGVI{ST,D,S,R}()
 
     quote
         @assert length(x) == length(b)
-
-        $cache.q  .= params.q
-        $cache.q⁻ .= params.q⁻
 
         compute_stages!(x, $cache, params)
 
@@ -249,7 +259,7 @@ function compute_stages!(x, cache::NonlinearFunctionCacheDGVI{ST,D,S}, params::P
         cache.q̅[k] = x[D*S+k]
     end
 
-    # compute Q, qₙ⁺, qₙ₊₁⁻ and qₙ₊₁⁺
+    # compute Q, qₙ⁺ and qₙ₊₁⁻
     compute_stages_q!(cache, params)
 
     # compute V
@@ -274,6 +284,10 @@ function compute_stages_q!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
     local X = cache.X
     local Q = cache.Q
 
+    # copy q and q⁻
+    cache.q  .= params.q
+    cache.q⁻ .= params.q⁻
+
     # compute Q
     for i in 1:R
         for k in 1:D
@@ -296,9 +310,6 @@ function compute_stages_q!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
         cache.q⁺[k] = q⁺
         cache.q̅⁻[k] = q̅⁻
     end
-
-    # compute qₙ₊₁⁺
-    cache.q̅⁺ .= (cache.q̅ .- params.ρ⁻ .* cache.q̅⁻) ./ params.ρ⁺
 end
 
 
@@ -334,31 +345,52 @@ function compute_stages_p!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
 end
 
 
-function compute_stages_λ!(cache::NonlinearFunctionCacheDGVI{ST,D,S,QR,FR},
-                           params::ParametersDGVI{DT,TT,D,S,QR,FR}) where {ST,DT,TT,D,S,QR,FR}
+function compute_stages_λ!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
+                           params::ParametersDGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
     local t₀::TT = params.t
     local t₁::TT = params.t + params.Δt
 
-    # compute λ and λ̅
-    for i in 1:FR
-        cache.λ[i] .= params.α⁻[i] .* cache.q⁻ .+ params.α⁺[i] .* cache.q⁺
-        cache.λ̅[i] .= params.α⁻[i] .* cache.q̅⁻ .+ params.α⁺[i] .* cache.q̅⁺
-        cache.ϕ[i] .= params.μ⁻[i] .* cache.q⁻ .+ params.μ⁺[i] .* cache.q⁺
-        cache.ϕ̅[i] .= params.μ⁻[i] .* cache.q̅⁻ .+ params.μ⁺[i] .* cache.q̅⁺
-    end
+    # compute ϕ and ϕ̅
+    cache.ϕ  .= 0.5 * (cache.q⁺ .+ cache.q⁻)
+    cache.ϕ⁻ .= 0.5 * (cache.q⁻ .+ cache.q )
+    cache.ϕ⁺ .= 0.5 * (cache.q  .+ cache.q⁺)
+    cache.ϕ̅⁻ .= 0.5 * (cache.q̅⁻ .+ cache.q̅ )
 
-    for i in 1:FR
-        params.Θ(t₀, cache.ϕ[i], cache.λ[i], cache.θ[i])
-        params.Θ(t₁, cache.ϕ̅[i], cache.λ̅[i], cache.Θ̅[i])
-        params.g(t₀, cache.ϕ[i], cache.λ[i], cache.g[i])
-        params.g(t₁, cache.ϕ̅[i], cache.λ̅[i], cache.g̅[i])
-    end
+    # compute λ and λ̅
+    cache.λ  .= cache.q⁺ .- cache.q⁻
+    cache.λ⁻ .= cache.q  .- cache.q⁻
+    cache.λ⁺ .= cache.q⁺ .- cache.q
+    cache.λ̅⁻ .= cache.q̅  .- cache.q̅⁻
+
+    # compute ϑ
+    params.Θ(t₀, cache.q,  cache.q,  cache.θ)
+    params.Θ(t₀, cache.q⁻, cache.q⁻, cache.θ⁻)
+    params.Θ(t₀, cache.q⁺, cache.q⁺, cache.θ⁺)
+
+    params.Θ(t₁, cache.q̅,  cache.q̅,  cache.Θ̅)
+    params.Θ(t₁, cache.q̅⁻, cache.q̅⁻, cache.Θ̅⁻)
+
+    # compute projection
+    params.g(t₀, cache.q,  cache.λ,  cache.g)
+    params.g(t₀, cache.q⁻, cache.λ⁻, cache.g⁻)
+    params.g(t₀, cache.q⁺, cache.λ⁺, cache.g⁺)
+    params.g(t₁, cache.q̅⁻, cache.λ̅⁻, cache.g̅⁻)
+
+    # # compute ϑ
+    # params.Θ(t₀, cache.ϕ⁻, cache.ϕ⁻, cache.θ⁻)
+    # params.Θ(t₀, cache.ϕ⁺, cache.ϕ⁺, cache.θ⁺)
+    # params.Θ(t₁, cache.ϕ̅⁻, cache.ϕ̅⁻, cache.Θ̅⁻)
+    #
+    # # compute projection
+    # params.g(t₀, cache.ϕ⁻, cache.λ⁻, cache.g⁻)
+    # params.g(t₀, cache.ϕ⁺, cache.λ⁺, cache.g⁺)
+    # params.g(t₁, cache.ϕ̅⁻, cache.λ̅⁻, cache.g̅⁻)
 end
 
 
-function compute_rhs!(b::Vector{ST}, cache::NonlinearFunctionCacheDGVI{ST,D,S,QR,FR},
-                params::ParametersDGVI{DT,TT,D,S,QR,FR}) where {ST,DT,TT,D,S,QR,FR}
+function compute_rhs!(b::Vector{ST}, cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
+                params::ParametersDGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
     local z::ST
 
@@ -366,24 +398,31 @@ function compute_rhs!(b::Vector{ST}, cache::NonlinearFunctionCacheDGVI{ST,D,S,QR
     for i in 1:S
         for k in 1:D
             z = 0
-            for j in 1:QR
+            for j in 1:R
                 z += params.b[j] * params.m[j,i] * cache.F[j][k] * params.Δt
                 z += params.b[j] * params.a[j,i] * cache.P[j][k]
             end
-            for j in 1:FR
-                z += params.β[j] * params.r⁺[i] * params.α⁺[j] * cache.θ[j][k]
-                z += params.β[j] * params.r⁻[i] * params.α⁻[j] * cache.Θ̅[j][k]
-                z += params.β[j] * params.r⁺[i] * params.μ⁺[j] * cache.g[j][k]
-                z += params.β[j] * params.r⁻[i] * params.μ⁻[j] * cache.g̅[j][k]
-            end
+
+            z += params.r⁺[i] * 0.5 * ( cache.θ[k] + cache.θ⁺[k] )
+            z -= params.r⁻[i] * 0.5 * ( cache.Θ̅[k] + cache.Θ̅⁻[k] )
+
+            z += params.r⁺[i] * 0.5 * cache.g⁺[k]
+            z += params.r⁻[i] * 0.5 * cache.g̅⁻[k]
+
+            # z += params.r⁺[i] * cache.θ⁺[k]
+            # z -= params.r⁻[i] * cache.Θ̅⁻[k]
+            #
+            # z += params.r⁺[i] * cache.g⁺[k]
+            # z += params.r⁻[i] * cache.g̅⁻[k]
 
             b[D*(i-1)+k] = z
         end
     end
 
-    # compute b = [qₙ - ϕ(0.5; qₙ⁻, qₙ⁺)]
+    # compute b = ϑ(qₙ⁺) - ϑ(qₙ⁻) - ∇ϑ(qₙ)⋅(qₙ⁺-qₙ⁻)
     for k in 1:D
-        b[D*S+k] = cache.q[k] - params.ρ⁻ * cache.q⁻[k] - params.ρ⁺ * cache.q⁺[k]
+        b[D*S+k] = cache.θ⁺[k] - cache.θ⁻[k] - cache.g[k]
+        # b[D*S+k] = cache.θ⁺[k] - cache.θ⁻[k] - 0.5 * (cache.g⁻[k] + cache.g⁺[k])
     end
 end
 
@@ -393,10 +432,11 @@ end
 
 ### Parameters
 
+### Fields
+
 * `equation`: Implicit Ordinary Differential Equation
 * `basis`: piecewise polynomial basis
 * `quadrature`: numerical quadrature rule
-* `flux`: numerical flux
 * `Δt`: time step
 * `params`: ParametersDGVI
 * `solver`: nonlinear solver
@@ -405,12 +445,11 @@ end
 * `p`: current solution vector for one-form
 * `cache`: temporary variables for nonlinear solver
 """
-struct IntegratorDGVI{DT,TT,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis,FLT<:Flux,D,S,R} <: Integrator{DT,TT}
+struct IntegratorDGVI{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis} <: Integrator{DT,TT}
     equation::IODE{DT,TT,ΘT,FT,GT,VT}
 
     basis::BT
     quadrature::Quadrature{TT,R}
-    flux::FLT
 
     Δt::TT
 
@@ -420,14 +459,13 @@ struct IntegratorDGVI{DT,TT,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis,FLT<:Flux,D,S,R} <:
 
     q::Vector{DT}
     q⁻::Vector{DT}
-    q⁺::Vector{DT}
 
     cache::NonlinearFunctionCacheDGVI{DT}
 end
 
 function IntegratorDGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P},
-                quadrature::Quadrature{TT,R}, flux::Flux{TT,PT,QN}, Δt::TT;
-                interpolation=HermiteInterpolation{DT}) where {DT,TT,ΘT,FT,GT,VT,P,R,PT,QN}
+                quadrature::Quadrature{TT,R}, Δt::TT;
+                interpolation=HermiteInterpolation{DT}) where {DT,TT,ΘT,FT,GT,VT,P,R}
 
     D = equation.d
     S = nbasis(basis)
@@ -440,14 +478,13 @@ function IntegratorDGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P},
     # create solution vectors
     q  = zeros(DT,D)
     q⁻ = zeros(DT,D)
-    q⁺ = zeros(DT,D)
 
     # create cache for internal stage vectors and update vectors
-    cache = NonlinearFunctionCacheDGVI{DT,D,S,R,QN}()
+    cache = NonlinearFunctionCacheDGVI{DT,D,S,R}()
 
     # create params
     params = ParametersDGVI(equation.α, equation.f, equation.g,
-                Δt, basis, quadrature, flux, q, q⁻)
+                Δt, basis, quadrature, q, q⁻)
 
     # create rhs function for nonlinear solver
     function_stages = (x,b) -> function_stages!(x, b, params)
@@ -459,10 +496,10 @@ function IntegratorDGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P},
     iguess = InitialGuessPODE(interpolation, equation, Δt)
 
     # create integrator
-    IntegratorDGVI{DT, TT, ΘT, FT, GT, VT, typeof(params), typeof(solver),
-                typeof(iguess.int), typeof(basis), typeof(flux), D, S, R}(
-                equation, basis, quadrature, flux, Δt, params, solver, iguess,
-                q, q⁻, q⁺, cache)
+    IntegratorDGVI{DT, TT, D, S, R, ΘT, FT, GT, VT, typeof(params), typeof(solver),
+                typeof(iguess.int), typeof(basis)}(
+                equation, basis, quadrature, Δt, params, solver, iguess,
+                q, q⁻, cache)
 end
 
 
@@ -482,11 +519,10 @@ end
 function update_solution!(int::IntegratorDGVI{DT,TT}, cache::NonlinearFunctionCacheDGVI{DT}) where {DT,TT}
     int.q  .= cache.q̅
     int.q⁻ .= cache.q̅⁻
-    int.q⁺ .= cache.q̅⁺
 end
 
 
-@generated function initial_guess!(int::IntegratorDGVI{DT,TT,ΘT,FT,GT,VT,FPT,ST,IT,BT,FLT,D,S,R}, m::Int) where {DT,TT,ΘT,FT,GT,VT,FPT,ST,IT,BT,FLT,D,S,R}
+@generated function initial_guess!(int::IntegratorDGVI{DT,TT, D, S, R}, m::Int) where {DT,TT,D,S,R}
     v = zeros(DT,D)
     y = zeros(DT,D)
     z = zeros(DT,D)
@@ -536,6 +572,16 @@ function integrate_step!(int::IntegratorDGVI{DT,TT}, sol::Union{SolutionPODE{DT,
     # compute final update
     compute_stages!(int.solver.x, int.cache, int.params)
 
+    # debug output
+    # println("m = ", m, ", n = ", n)
+    # println(int.cache.q⁻)
+    # println(int.cache.q)
+    # println(int.cache.q⁺)
+    # println(int.cache.q⁻ .- int.cache.q)
+    # println(int.cache.q⁺ .- int.cache.q)
+    # println()
+
+    # copy solution from cache to integrator
     update_solution!(int, int.cache)
 
     # copy solution to initial guess for next time step
