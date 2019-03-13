@@ -3,6 +3,7 @@ __precompile__()
 module Integrators
 
     using DelimitedFiles
+    using Documenter
     using LinearAlgebra
     using OffsetArrays
     using ProgressMeter
