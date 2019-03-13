@@ -7,7 +7,7 @@ struct BernsteinBasisModified{T,N} <: PolynomialBasis{T,N}
 
     function BernsteinBasisModified{T,N}(x) where {T,N}
         @assert length(x) == N
-        ox  = OffsetArray(T, 0:N-1)
+        ox  = OffsetArray{T}(undef, 0:N-1)
         for i in eachindex(x)
             ox[i-1] = x[i]
         end
@@ -47,7 +47,7 @@ end
 
 function eval_basis(b::BernsteinBasisModified{T,N}, i::Int, x::T) where {T,N}
     @assert i ≥ 1 && i ≤ N
-    bernstein(b, i-1, N, x)
+    bernstein(b, i-1, N-1, x)
 end
 
 
@@ -58,7 +58,7 @@ function deriv_basis(b::BernsteinBasisModified{T,N}, i::Int, x::T) where {T,N}
         + 1 / (b.x[end] - b.x[0])
     else
         @assert i ≥ 1 && i ≤ N
-        P * ( bernstein(b, i-2, N-1, x) - bernstein(b, i-1, N-1, x) )
+        (N-1) * ( bernstein(b, i-2, N-2, x) - bernstein(b, i-1, N-2, x) )
     end
 end
 
