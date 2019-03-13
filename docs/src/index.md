@@ -35,6 +35,108 @@ Pages = ["modules/basis_functions.md",
 ```
 
 
+## Features
+
+The following list provides and overview of supported and planned features.
+
+#### Families of Standard Methods
+
+- [x] Explicit Runge-Kutta Methods (ERK),
+- [ ] Diagonally Implicit Runge-Kutta Methods (DIRK),
+- [ ] Singly Diagonally Implicit Runge-Kutta Methods (SIRK),
+- [x] Fully Implicit Runge-Kutta Methods (FIRK),
+- [x] Explicit Partitioned Runge-Kutta Methods (EPRK),
+- [x] Implicit Partitioned Runge-Kutta Methods (IPRK),
+- [ ] Additive Runge-Kutta Methods (ARK),
+- [ ] Specialised Additive Runge-Kutta Methods (SARK),
+- [x] Partitioned Additive Runge-Kutta Methods (PARK),
+- [ ] Specialised Partitioned Additive Runge-Kutta Methods (SPARK),
+- [ ] Generalised Partitioned Additive Runge-Kutta Methods (GPARK),
+- [ ] Two-step Runge-Kutta Methods (TSRK),
+- [ ] General Linear Methods (GLM).
+
+#### Families of Geometric Integrators
+
+- [x] Gauss-Legendre Runge-Kutta Methods (GLRK),
+- [x] Variational Partitioned Runge-Kutta Methods (VPRK),
+- [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK),
+- [ ] Specialised Partitioned Additive Runge-Kutta Methods for Dirac Constraints (SPARK-Dirac),
+- [x] Continuous Galerkin Variational Integrators (CGVI),
+- [ ] Discontinuous Galerkin Variational Integrators (DGVI),
+- [ ] Hamilton-Pontryagin-Galerkin Integrators (HPGI),
+- [ ] Spline Variational Integrators (SVI),
+- [ ] Taylor Variational Integrators (TVI),
+- [x] Splitting Methods (SM).
+
+#### Families of Stochastic Integrators
+
+- [x] Stochastic Explicit Runge-Kutta Methods
+- [x] Stochastic Implicit Runge-Kutta Methods
+- [x] Stochastic Implicit Partitioned Runge-Kutta Methods
+- [x] Stochastic Implicit Split Partitioned Runge-Kutta Methods
+- [x] Stochastic Weak Explicit Runge-Kutta Methods
+- [x] Stochastic Weak Implicit Runge-Kutta Methods
+
+#### Families of Equations
+
+- [x] Systems of ODEs,
+- [x] Systems of DAEs,
+- [x] Systems of SDEs,
+- [x] Partitioned ODEs,
+- [x] Partitioned DAEs,
+- [ ] Partitioned SDEs,
+- [x] Implicit ODEs,
+- [x] Implicit DAEs,
+- [ ] Implicit SDEs,
+- [x] Hamiltonian DAEs,
+- [x] Split ODEs,
+
+which can be prescribed manually or obtained as
+
+- [ ] Euler-Lagrange Equations,
+- [ ] Hamilton Equations,
+- [ ] Hamilton-Pontryagin Equations,
+- [ ] Lagrange-d'Alembert Equations,
+- [ ] Hamilton-d'Alembert Equations,
+- [ ] Symplectic Equations,
+- [ ] Poisson Equations,
+
+with
+
+- [ ] Holonomic Constraints,
+- [ ] Nonholonomic Constraints,
+- [ ] Dirac Constraints.
+
+#### Linear Solvers
+
+- [x] LU decomposition (LAPACK),
+- [x] LU decomposition (native Julia),
+- [ ] Krylov,
+
+#### Nonlinear Solvers
+
+- [ ] Fixed-Point Iteration,
+- [ ] Fixed-Point Iteration with Aitken Acceleration,
+- [ ] Fixed-Point Iteration with Anderson Acceleration,
+- [ ] Jacobian-free Newton-Krylov,
+- [x] Newton's method,
+- [x] Newton's method with line search (Armijo, quadratic),
+- [x] Quasi-Newton,
+
+with
+
+- [x] Finite Difference Jacobian,
+- [x] Jacobian obtained via Automatic Differentiation.
+
+#### Diagnostics
+
+- [x] Symplecticity Conditions,
+- [ ] Runge-Kutta Stability Area,
+- [ ] Convergence Analysis,
+- [x] First Poincaré Integral Invariant,
+- [x] Second Poincaré Integral Invariant.
+
+
 ## Background Material
 
 - Ernst Hairer and Christian Lubich. Numerical Solution of Ordinary Differential Equations. The Princeton Companion to Applied Mathematics, 293-305, 2015. Princeton University Press. ([Author's Web Site](https://na.uni-tuebingen.de/~lubich/pcam-ode.pdf))
