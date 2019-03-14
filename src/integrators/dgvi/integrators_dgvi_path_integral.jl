@@ -9,7 +9,7 @@ Galerkin Variational Integrator with Path Integral approximation of the jump.
 * `D`:  dimension of the system
 * `S`:  number of basis nodes
 * `QR`: number of quadrature nodes
-* `FR`: number of quadrature nodes for the flux
+* `FR`: number of quadrature nodes for the discontinuity
 
 ### Fields
 
@@ -23,12 +23,12 @@ Galerkin Variational Integrator with Path Integral approximation of the jump.
 * `a`:  derivative matrix
 * `r⁻`: reconstruction coefficients, jump lhs value
 * `r⁺`: reconstruction coefficients, jump rhs value
-* `β`:  weights of the quadrature rule for the flux
-* `γ`:  nodes of the quadrature rule for the flux
+* `β`:  weights of the quadrature rule for the discontinuity
+* `γ`:  nodes of the quadrature rule for the discontinuity
 * `μ⁻`: mass vector for the lhs jump value
 * `μ⁺`: mass vector for the rhs jump value
-* `α⁻`: derivative vector for the flux lhs value
-* `α⁺`: derivative vector for the flux rhs value
+* `α⁻`: derivative vector for the discontinuity lhs value
+* `α⁺`: derivative vector for the discontinuity rhs value
 * `ρ⁻`: reconstruction coefficients for central jump value, lhs value
 * `ρ⁺`: reconstruction coefficients for central jump value, rhs value
 * `t`:  current time
@@ -108,7 +108,7 @@ end
 
 
 function ParametersDGVIPI(Θ::ΘT, f::FT, g::GT, Δt::TT,
-                basis::Basis{TT}, quadrature::Quadrature{TT}, flux::Flux{TT},
+                basis::Basis{TT}, quadrature::Quadrature{TT}, jump::Discontinuity{TT},
                 q::Vector{DT}, q⁻::Vector{DT}) where {DT,TT,ΘT,FT,GT}
 
     # compute coefficients
@@ -127,25 +127,25 @@ function ParametersDGVIPI(Θ::ΘT, f::FT, g::GT, Δt::TT,
     end
 
     μ⁰ = zeros(TT, 2)
-    μ⁻ = zeros(TT, nnodes(flux.quadrature))
-    μ⁺ = zeros(TT, nnodes(flux.quadrature))
-    α⁻ = zeros(TT, nnodes(flux.quadrature))
-    α⁺ = zeros(TT, nnodes(flux.quadrature))
+    μ⁻ = zeros(TT, nnodes(jump.quadrature))
+    μ⁺ = zeros(TT, nnodes(jump.quadrature))
+    α⁻ = zeros(TT, nnodes(jump.quadrature))
+    α⁺ = zeros(TT, nnodes(jump.quadrature))
 
-    ρ⁻ = evaluate_l(flux.path, TT(0.5))
-    ρ⁺ = evaluate_r(flux.path, TT(0.5))
+    ρ⁻ = evaluate_l(jump.path, TT(0.5))
+    ρ⁺ = evaluate_r(jump.path, TT(0.5))
 
-    for i in 1:nnodes(flux.quadrature)
-        μ⁻[i] = evaluate_l(flux.path, nodes(flux.quadrature)[i])
-        μ⁺[i] = evaluate_r(flux.path, nodes(flux.quadrature)[i])
-        α⁻[i] = derivative_l(flux.path, nodes(flux.quadrature)[i])
-        α⁺[i] = derivative_r(flux.path, nodes(flux.quadrature)[i])
+    for i in 1:nnodes(jump.quadrature)
+        μ⁻[i] = evaluate_l(jump.path, nodes(jump.quadrature)[i])
+        μ⁺[i] = evaluate_r(jump.path, nodes(jump.quadrature)[i])
+        α⁻[i] = derivative_l(jump.path, nodes(jump.quadrature)[i])
+        α⁺[i] = derivative_r(jump.path, nodes(jump.quadrature)[i])
     end
 
     q⁺ = (q .- ρ⁻ .* q⁻) ./ ρ⁺
 
     ParametersDGVIPI(Θ, f, g, Δt, weights(quadrature), nodes(quadrature), m, a, r⁻, r⁺,
-                weights(flux.quadrature), nodes(flux.quadrature), μ⁻, μ⁺, α⁻, α⁺, ρ⁻, ρ⁺,
+                weights(jump.quadrature), nodes(jump.quadrature), μ⁻, μ⁺, α⁻, α⁺, ρ⁻, ρ⁺,
                 q, q⁻, q⁺)
 end
 
@@ -408,7 +408,7 @@ end
 * `equation`: Implicit Ordinary Differential Equation
 * `basis`: piecewise polynomial basis
 * `quadrature`: numerical quadrature rule
-* `flux`: numerical flux
+* `jump`: jump across discontinuity
 * `Δt`: time step
 * `params`: ParametersDGVIPI
 * `solver`: nonlinear solver
@@ -418,12 +418,12 @@ end
 * `q⁺`: current solution vector for trajectory, rhs of jump
 * `cache`: temporary variables for nonlinear solver
 """
-struct IntegratorDGVIPI{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis,FLT<:Flux} <: Integrator{DT,TT}
+struct IntegratorDGVIPI{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis,JT<:Discontinuity} <: Integrator{DT,TT}
     equation::IODE{DT,TT,ΘT,FT,GT,VT}
 
     basis::BT
     quadrature::Quadrature{TT,R}
-    flux::FLT
+    jump::JT
 
     Δt::TT
 
@@ -439,7 +439,7 @@ struct IntegratorDGVIPI{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis,FLT<:Flux} 
 end
 
 function IntegratorDGVIPI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P},
-                quadrature::Quadrature{TT,R}, flux::Flux{TT,PT,QN}, Δt::TT;
+                quadrature::Quadrature{TT,R}, jump::Discontinuity{TT,PT,QN}, Δt::TT;
                 interpolation=HermiteInterpolation{DT}) where {DT,TT,ΘT,FT,GT,VT,P,R,PT,QN}
 
     D = equation.d
@@ -460,7 +460,7 @@ function IntegratorDGVIPI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}
 
     # create params
     params = ParametersDGVIPI(equation.α, equation.f, equation.g,
-                Δt, basis, quadrature, flux, q, q⁻)
+                Δt, basis, quadrature, jump, q, q⁻)
 
     # create rhs function for nonlinear solver
     function_stages = (x,b) -> function_stages!(x, b, params)
@@ -473,8 +473,8 @@ function IntegratorDGVIPI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}
 
     # create integrator
     IntegratorDGVIPI{DT, TT, D, S, R, ΘT, FT, GT, VT, typeof(params), typeof(solver),
-                typeof(iguess.int), typeof(basis), typeof(flux)}(
-                equation, basis, quadrature, flux, Δt, params, solver, iguess,
+                typeof(iguess.int), typeof(basis), typeof(jump)}(
+                equation, basis, quadrature, jump, Δt, params, solver, iguess,
                 q, q⁻, q⁺, cache)
 end
 

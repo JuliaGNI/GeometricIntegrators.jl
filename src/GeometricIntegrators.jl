@@ -23,8 +23,8 @@ module GeometricIntegrators
     @reexport using .BasisFunctions
     include("Quadratures.jl")
     @reexport using .Quadratures
-    include("NumericalFluxes.jl")
-    @reexport using .NumericalFluxes
+    include("Discontinuities.jl")
+    @reexport using .Discontinuities
     include("Integrators.jl")
     @reexport using .Integrators
     include("Simulations.jl")
