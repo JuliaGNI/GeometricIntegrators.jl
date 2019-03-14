@@ -66,6 +66,12 @@ for (TDataSeries, TArray) in
             return ds
         end
 
+
+        Base.:(==)(ds1::$TDataSeries, ds2::$TDataSeries) = (
+                                        ds1.nd == ds2.nd
+                                     && ds1.nt == ds2.nt
+                                     && ds1.ni == ds2.ni
+                                     && ds1.d  == ds2.d)
     end
 end
 

@@ -76,6 +76,15 @@ function SolutionODE(file::String)
     SolutionODE(t, q, ntime, nsave)
 end
 
+Base.:(==)(sol1::SolutionODE, sol2::SolutionODE) = (
+                                sol1.nd == sol2.nd
+                             && sol1.nt == sol2.nt
+                             && sol1.ni == sol2.ni
+                             && sol1.t  == sol2.t
+                             && sol1.q  == sol2.q
+                             && sol1.ntime == sol2.ntime
+                             && sol1.nsave == sol2.nsave
+                             && sol1.counter == sol2.counter)
 
 time(sol::SolutionODE)  = sol.t.t
 ntime(sol::SolutionODE) = sol.ntime

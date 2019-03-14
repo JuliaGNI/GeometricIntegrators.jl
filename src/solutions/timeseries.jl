@@ -33,6 +33,12 @@ function TimeSeries(t::Vector{T}, step=1) where {T}
     return TimeSeries{T}(n, t, Δt, step)
 end
 
+Base.:(==)(ts1::TimeSeries, ts2::TimeSeries) = (
+                                ts1.n  == ts2.n
+                             && ts1.t  == ts2.t
+                             && ts1.Δt == ts2.Δt
+                             && ts1.step == ts2.step)
+
 Base.parent(ts::TimeSeries) = ts.t
 Base.eltype(ts::TimeSeries{T}) where {T} = T
 Base.ndims(ts::TimeSeries) = 1
