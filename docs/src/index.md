@@ -137,6 +137,19 @@ with
 - [x] Second Poincaré Integral Invariant.
 
 
+## References (mostly in preparation)
+
+- Michael Kraus. Hamilton-Pontryagin-Galerkin Integrators.
+- Michael Kraus. Projected Variational Integrators for Degenerate Lagrangian Systems.
+- Michael Kraus. Variational Integrators for Noncanonical Hamiltonian Systems.
+- Michael Kraus. Discontinuous Galerkin Variational Integrators for Degenerate Lagrangian Systems.
+- Michael Kraus. Discontinuous Galerkin Variational Integrators for Hamiltonian Systems subject to Dirac Constraints.
+- Michael Kraus. SPARK Methods for Degenerate Lagrangian Systems.
+- Michael Kraus. SPARK Methods for Hamiltonian Systems subject to Dirac Constraints.
+- Michael Kraus. Symplectic Runge-Kutta Methods for Certain Degenerate Lagrangian Systems.
+- Michael Kraus and Tomasz M. Tyranowski􏰁. Variational Integrators for Stochastic Dissipative Hamiltonian Systems.
+
+
 ## Background Material
 
 - Ernst Hairer and Christian Lubich. Numerical Solution of Ordinary Differential Equations. The Princeton Companion to Applied Mathematics, 293-305, 2015. Princeton University Press. ([Author's Web Site](https://na.uni-tuebingen.de/~lubich/pcam-ode.pdf))
