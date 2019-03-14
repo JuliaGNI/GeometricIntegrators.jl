@@ -146,7 +146,7 @@ end
 "Implicit partitioned Runge-Kutta integrator."
 struct IntegratorIPRK{DT, TT, PT <: ParametersIPRK{DT,TT},
                               ST <: NonlinearSolver{DT},
-                              IT <: InitialGuessPODE{DT,TT}} <: Integrator{DT,TT}
+                              IT <: InitialGuessPODE{DT,TT}} <: IntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT

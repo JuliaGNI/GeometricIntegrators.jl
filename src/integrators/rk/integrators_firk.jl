@@ -117,7 +117,7 @@ end
 "Fully implicit Runge-Kutta integrator."
 struct IntegratorFIRK{DT, TT, PT <: ParametersFIRK{DT,TT},
                               ST <: NonlinearSolver{DT},
-                              IT <: InitialGuessODE{DT,TT}, N} <: Integrator{DT,TT}
+                              IT <: InitialGuessODE{DT,TT}, N} <: IntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -150,11 +150,6 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt
     IntegratorFIRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), N}(
                 params, solver, iguess, fcache, q)
 end
-
-equation(integrator::IntegratorFIRK) = integrator.params.equ
-timestep(integrator::IntegratorFIRK) = integrator.params.Δt
-tableau(integrator::IntegratorFIRK) = integrator.params.tab
-dims(integrator::IntegratorFIRK) = integrator.params.equ.d
 
 
 function initialize!(int::IntegratorFIRK{DT,TT}, sol::SolutionODE, m::Int) where {DT,TT}
