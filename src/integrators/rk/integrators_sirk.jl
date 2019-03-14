@@ -1,9 +1,9 @@
 """
- Holds the tableau of a stochastic fully implicit Runge-Kutta method.
+ Holds the tableau of a stochastic implicit Runge-Kutta method.
  qdrift holds the RK coefficients for the drift part,
  and qdiff holds the RK coefficients for the diffusion part of the SDE.
 """
-struct TableauSFIRK{T} <: AbstractTableauIRK{T}
+struct TableauSIRK{T} <: AbstractTableauIRK{T}
     name::Symbol
     s::Int
     qdrift::CoefficientsRK{T}
@@ -16,9 +16,9 @@ struct TableauSFIRK{T} <: AbstractTableauIRK{T}
     # Orders stored in qdrift and qdiff are understood as the classical orders of these methods.
 
 
-    function TableauSFIRK{T}(name, s, qdrift, qdiff) where {T}
+    function TableauSIRK{T}(name, s, qdrift, qdiff) where {T}
         # THE COMMENTED OUT PART WAS FOR TableauFIRK. MAY IMPLEMENT SOMETHING
-        # SIMILAR FOR TableauSFIRK LATER.
+        # SIMILAR FOR TableauSIRK LATER.
 
         # if (q.s > 1 && istrilstrict(q.a)) || (q.s==1 && q.a[1,1] == 0)
         #     warn("Initializing TableauFIRK with explicit tableau ", q.name, ".\n",
@@ -34,22 +34,22 @@ struct TableauSFIRK{T} <: AbstractTableauIRK{T}
     end
 end
 
-function TableauSFIRK(name::Symbol, qdrift::CoefficientsRK{T}, qdiff::CoefficientsRK{T}) where {T}
-    TableauSFIRK{T}(name, qdrift.s, qdrift, qdiff)
+function TableauSIRK(name::Symbol, qdrift::CoefficientsRK{T}, qdiff::CoefficientsRK{T}) where {T}
+    TableauSIRK{T}(name, qdrift.s, qdrift, qdiff)
 end
 
-function TableauSFIRK(name::Symbol, order_drift::Int, a_drift::Matrix{T}, b_drift::Vector{T}, c_drift::Vector{T}, order_diff::Int, a_diff::Matrix{T}, b_diff::Vector{T}, c_diff::Vector{T}) where {T}
-    TableauSFIRK{T}(name, length(c_drift), CoefficientsRK(name, order_drift, a_drift, b_drift, c_drift), CoefficientsRK(name, order_diff, a_diff, b_diff, c_diff))
+function TableauSIRK(name::Symbol, order_drift::Int, a_drift::Matrix{T}, b_drift::Vector{T}, c_drift::Vector{T}, order_diff::Int, a_diff::Matrix{T}, b_diff::Vector{T}, c_diff::Vector{T}) where {T}
+    TableauSIRK{T}(name, length(c_drift), CoefficientsRK(name, order_drift, a_drift, b_drift, c_drift), CoefficientsRK(name, order_diff, a_diff, b_diff, c_diff))
 end
 
-# TODO function readTableauSFIRKFromFile(dir::AbstractString, name::AbstractString)
+# TODO function readTableauSIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-# "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
+# "Parameters for right-hand side function of implicit Runge-Kutta methods."
 #  A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
-mutable struct ParametersSFIRK{DT, TT, ET <: SDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
+mutable struct ParametersSIRK{DT, TT, ET <: SDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
     equ::ET
-    tab::TableauSFIRK{TT}
+    tab::TableauSIRK{TT}
     Δt::TT
     ΔW::Vector{DT}
     ΔZ::Vector{DT}
@@ -59,12 +59,12 @@ mutable struct ParametersSFIRK{DT, TT, ET <: SDE{DT,TT}, D, M, S} <: Parameters{
     q::Vector{DT}
 end
 
-function ParametersSFIRK(equ::ET, tab::TableauSFIRK{TT}, Δt::TT, ΔW::Vector{DT}, ΔZ::Vector{DT}, A::DT) where {DT, TT, ET <: SDE{DT,TT}}
+function ParametersSIRK(equ::ET, tab::TableauSIRK{TT}, Δt::TT, ΔW::Vector{DT}, ΔZ::Vector{DT}, A::DT) where {DT, TT, ET <: SDE{DT,TT}}
     @assert equ.m == length(ΔW) == length(ΔZ)
-    ParametersSFIRK{DT, TT, ET, equ.d, equ.m, tab.s}(equ, tab, Δt, ΔW, ΔZ, A, 0, zeros(DT, equ.d))
+    ParametersSIRK{DT, TT, ET, equ.d, equ.m, tab.s}(equ, tab, Δt, ΔW, ΔZ, A, 0, zeros(DT, equ.d))
 end
 
-struct NonlinearFunctionCacheSFIRK{DT}
+struct NonlinearFunctionCacheSIRK{DT}
     # Structure for holding the internal stages Q, the values of the drift vector
     # and the diffusion matrix evaluated at the internal stages VQ=v(Q), BQ=B(Q),
     # and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
@@ -77,7 +77,7 @@ struct NonlinearFunctionCacheSFIRK{DT}
     bq::Matrix{DT}
     y::Vector{DT}
 
-    function NonlinearFunctionCacheSFIRK{DT}(d, m, s) where {DT}
+    function NonlinearFunctionCacheSIRK{DT}(d, m, s) where {DT}
 
         # create internal stage vectors
         Q  = zeros(DT,d,s)
@@ -99,7 +99,7 @@ end
 # of the SDE ( v(Q) and B(Q) ), and assigns them to VQ and BQ.
 # Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
 @generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, VQ::Matrix{ST}, BQ::Array{ST,3}, Y::Matrix{ST},
-                                          params::ParametersSFIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+                                          params::ParametersSIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
     tQ::Vector{ST} = zeros(ST,D)
     tV::Vector{ST} = zeros(ST,D)
@@ -137,10 +137,10 @@ end
     end
 end
 
-# "Compute stages of fully implicit Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSFIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+# "Compute stages of implicit Runge-Kutta methods."
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
-    cache = NonlinearFunctionCacheSFIRK{ST}(D, M, S)
+    cache = NonlinearFunctionCacheSIRK{ST}(D, M, S)
 
     quote
         compute_stages!(x, $cache.Q, $cache.VQ, $cache.BQ, $cache.Y, params)
@@ -164,22 +164,22 @@ end
 end
 
 
-"Stochastic fully implicit Runge-Kutta integrator."
-# InitialGuessSDE not implemented for SFIRK
-struct IntegratorSFIRK{DT, TT, PT <: ParametersSFIRK{DT,TT},
+"Stochastic implicit Runge-Kutta integrator."
+# InitialGuessSDE not implemented for SIRK
+struct IntegratorSIRK{DT, TT, PT <: ParametersSIRK{DT,TT},
                               ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
     params::PT
     solver::ST
     #Not implementing InitialGuessSDE
     #iguess::IT
-    fcache::NonlinearFunctionCacheSFIRK{DT}
+    fcache::NonlinearFunctionCacheSIRK{DT}
 
     q::Matrix{Vector{TwicePrecision{DT}}}
 end
 
 
 # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
-function IntegratorSFIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSFIRK{TT}, Δt::TT; K::Int=0) where {DT,TT,VT,BT,N}
+function IntegratorSIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSIRK{TT}, Δt::TT; K::Int=0) where {DT,TT,VT,BT,N}
     D = equation.d
     M = equation.m
     NS= equation.ns
@@ -188,7 +188,7 @@ function IntegratorSFIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSFIRK{TT}
 
     # create params
     K==0 ? A = 0.0 : A = sqrt( 2*K*Δt*abs(log(Δt)) )
-    params = ParametersSFIRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), A)
+    params = ParametersSIRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), A)
 
     # create solver
     solver = create_nonlinear_solver(DT, D*S, params)
@@ -198,23 +198,23 @@ function IntegratorSFIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSFIRK{TT}
     #iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
 
     # create cache for internal stage vectors and update vectors
-    fcache = NonlinearFunctionCacheSFIRK{DT}(D, M, S)
+    fcache = NonlinearFunctionCacheSIRK{DT}(D, M, S)
 
     # create solution vectors
     q = create_solution_vector(DT, D, NS, NI)
 
     # create integrator
-    IntegratorSFIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q)
+    IntegratorSIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q)
 end
 
-equation(integrator::IntegratorSFIRK) = integrator.params.equ
-timestep(integrator::IntegratorSFIRK) = integrator.params.Δt
-tableau(integrator::IntegratorSFIRK) = integrator.params.tab
-dims(integrator::IntegratorSFIRK) = integrator.params.equ.d
-Base.eltype(integrator::IntegratorSFIRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
+equation(integrator::IntegratorSIRK) = integrator.params.equ
+timestep(integrator::IntegratorSIRK) = integrator.params.Δt
+tableau(integrator::IntegratorSIRK) = integrator.params.tab
+dims(integrator::IntegratorSIRK) = integrator.params.equ.d
+Base.eltype(integrator::IntegratorSIRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
 
 
-function initialize!(int::IntegratorSFIRK{DT,TT}, sol::SolutionSDE, k::Int, m::Int) where {DT,TT}
+function initialize!(int::IntegratorSIRK{DT,TT}, sol::SolutionSDE, k::Int, m::Int) where {DT,TT}
     @assert m ≥ 1
     @assert m ≤ sol.ni
     @assert k ≥ 1
@@ -231,7 +231,7 @@ end
 # NOT IMPLEMENTING InitialGuessSDE
 # This function computes initial guesses for Y and assigns them to int.solver.x
 # The prediction is calculated using an explicit integrator.
-function initial_guess!(int::IntegratorSFIRK{DT,TT}) where {DT,TT}
+function initial_guess!(int::IntegratorSIRK{DT,TT}) where {DT,TT}
 
     # SIMPLE SOLUTION
     # The simplest initial guess for Y is 0
@@ -285,9 +285,9 @@ function initial_guess!(int::IntegratorSFIRK{DT,TT}) where {DT,TT}
 end
 
 
-"Integrate SDE with a stochastic fully implicit Runge-Kutta integrator."
+"Integrate SDE with a stochastic implicit Runge-Kutta integrator."
 # Integrating the k-th sample path for the m-th initial condition
-function integrate_step!(int::IntegratorSFIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,NW}, k::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
+function integrate_step!(int::IntegratorSIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,NW}, k::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
 
     @assert k ≥ 1
     @assert k ≤ sol.ns

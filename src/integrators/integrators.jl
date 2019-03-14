@@ -25,23 +25,23 @@ function Integrator(equation::ODE, tableau::TableauFIRK, Δt)
 end
 
 "Create integrator for stochastic fully implicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauSFIRK, Δt; K::Int=0)
-    IntegratorSFIRK(equation, tableau, Δt, K=K)
+function Integrator(equation::SDE, tableau::TableauSIRK, Δt; K::Int=0)
+    IntegratorSIRK(equation, tableau, Δt, K=K)
 end
 
 "Create integrator for stochastic fully implicit partitioned Runge-Kutta tableau."
-function Integrator(equation::PSDE, tableau::TableauSFIPRK, Δt; K::Int=0)
-    IntegratorSFIPRK(equation, tableau, Δt, K=K)
+function Integrator(equation::PSDE, tableau::TableauSIPRK, Δt; K::Int=0)
+    IntegratorSIPRK(equation, tableau, Δt, K=K)
 end
 
 "Create integrator for stochastic fully implicit split partitioned Runge-Kutta tableau."
-function Integrator(equation::SPSDE, tableau::TableauSFISPRK, Δt; K::Int=0)
-    IntegratorSFISPRK(equation, tableau, Δt, K=K)
+function Integrator(equation::SPSDE, tableau::TableauSISPRK, Δt; K::Int=0)
+    IntegratorSISPRK(equation, tableau, Δt, K=K)
 end
 
 "Create integrator for weak fully implicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauWFIRK, Δt)
-    IntegratorWFIRK(equation, tableau, Δt)
+function Integrator(equation::SDE, tableau::TableauWIRK, Δt)
+    IntegratorWIRK(equation, tableau, Δt)
 end
 
 "Create integrator for explicit partitioned Runge-Kutta tableau."
