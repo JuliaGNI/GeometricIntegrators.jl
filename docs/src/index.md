@@ -43,8 +43,7 @@ The following list provides and overview of supported and planned features.
 #### Families of Standard Methods
 
 - [x] Explicit Runge-Kutta Methods (ERK),
-- [ ] Diagonally Implicit Runge-Kutta Methods (DIRK),
-- [ ] Singly Diagonally Implicit Runge-Kutta Methods (SIRK),
+- [x] Diagonally Implicit Runge-Kutta Methods (DIRK),
 - [x] Fully Implicit Runge-Kutta Methods (FIRK),
 - [x] Explicit Partitioned Runge-Kutta Methods (EPRK),
 - [x] Implicit Partitioned Runge-Kutta Methods (IPRK),
@@ -63,7 +62,7 @@ The following list provides and overview of supported and planned features.
 - [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK),
 - [ ] Specialised Partitioned Additive Runge-Kutta Methods for Dirac Constraints (SPARK-Dirac),
 - [x] Continuous Galerkin Variational Integrators (CGVI),
-- [ ] Discontinuous Galerkin Variational Integrators (DGVI),
+- [x] Discontinuous Galerkin Variational Integrators (DGVI),
 - [ ] Hamilton-Pontryagin-Galerkin Integrators (HPGI),
 - [ ] Spline Variational Integrators (SVI),
 - [ ] Taylor Variational Integrators (TVI),
@@ -85,12 +84,14 @@ The following list provides and overview of supported and planned features.
 - [x] Systems of SDEs,
 - [x] Partitioned ODEs,
 - [x] Partitioned DAEs,
-- [ ] Partitioned SDEs,
+- [x] Partitioned SDEs,
 - [x] Implicit ODEs,
 - [x] Implicit DAEs,
 - [ ] Implicit SDEs,
+- [x] Variational ODEs,
 - [x] Hamiltonian DAEs,
 - [x] Split ODEs,
+- [x] Split Partitioned SDEs,
 
 which can be prescribed manually or obtained as
 
@@ -126,6 +127,7 @@ with
 
 with
 
+- [ ] Analytic Jacobian,
 - [x] Finite Difference Jacobian,
 - [x] Jacobian obtained via Automatic Differentiation.
 
