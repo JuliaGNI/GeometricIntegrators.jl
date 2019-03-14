@@ -8,3 +8,7 @@ docs/build/
 docs/site/
 examples/.ipynb_checkpoints
 examples/*.pdf
+examples/*.png
+examples/*/*.png
+examples/*/*/*.png
+obsolete/
