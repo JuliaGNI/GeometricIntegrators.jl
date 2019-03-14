@@ -15,5 +15,11 @@ notifications:
   email: false
 codecov: true
 coveralls: true
-after_script:
-  - bash ./docs/travis.sh
+jobs:
+  include:
+    - stage: "Documentation"
+      julia: 1.1
+      os: linux
+      script:
+        - bash ./docs/travis.sh
+      after_success: skip

@@ -2,7 +2,7 @@ using Documenter, GeometricIntegrators
 
 makedocs(
     sitename = "GeometricIntegrators.jl",
-    format = :html,
+    format = Documenter.HTML(),
     pages = ["Home" => "index.md",
              "Tutorial" => "tutorial.md",
              "Integrators" => [
@@ -30,11 +30,4 @@ makedocs(
 
 deploydocs(
     repo   = "github.com/DDMGNI/GeometricIntegrators.jl.git",
-    target = "build",
-    julia  = "1.0",
-    osname = "linux",
-    deps   = nothing,
-    make   = nothing)
-
-# note: julia version must be the same as in .travis.yml, that is both must be
-#       set to either 1.0 or release, but not one to 1.0 and one to release.
+)
