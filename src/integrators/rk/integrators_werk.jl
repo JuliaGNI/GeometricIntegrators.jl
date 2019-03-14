@@ -1,6 +1,6 @@
 """
  Holds the tableau of a weak explicit Runge-Kutta method.
- 
+
    According to Andreas Rossler, "Second order Runge-Kutta methods for Stratonovich stochastic differential equations",
    BIT Numerical Mathematics (2007) 47, equation (5.1)
 """
@@ -121,8 +121,10 @@ function initialize!(int::IntegratorWERK, sol::SolutionSDE, k::Int, m::Int)
     get_initial_conditions!(sol, int.q[k,m], k, m)
 end
 
-"Integrate SDE with explicit Runge-Kutta integrator."
-# Calculating the n-th time step of the explicit integrator for the sample path r and the initial condition m
+"""
+Integrate SDE with explicit Runge-Kutta integrator.
+ Calculating the n-th time step of the explicit integrator for the sample path r and the initial condition m
+"""
 function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,NQ,NW}, r::Int, m::Int, n::Int) where {DT,TT,FT,NQ,NW}
     local tᵢ::TT
     local ydrift::DT

@@ -1,4 +1,4 @@
-# Tableau for the s-stage Gauss-Lobatto SFIRK method
+"Tableau for the s-stage Gauss-Lobatto SFIRK method"
 function getTableauStochasticGLRK(s::Int)
 
     if s==1
@@ -19,10 +19,12 @@ function getTableauStochasticGLRK(s::Int)
 end
 
 
-"Tableau for the 2-stage stochastic symplectic DIRK method"
-# Tableau for the stochastic symplectic DIRK method
-# Satisfies the conditions for Lagrange-d'Alembert integrators.
-# Satisfies the conditions for strong convergence of order 1.0 for one Wiener process
+"""
+Tableau for the 2-stage stochastic symplectic DIRK method
+  Tableau for the stochastic symplectic DIRK method
+  Satisfies the conditions for Lagrange-d'Alembert integrators.
+  Satisfies the conditions for strong convergence of order 1.0 for one Wiener process
+"""
 function getTableauStochasticDIRK(c::Number=0.5)
 
     a_drift = [[c/2  0.0    ]

@@ -1,9 +1,10 @@
-"Tableau for the explicit 4-stage RS1 method due to Andreas Rossler"
-# Method cited in Table 5.2 in
-# Andreas Rossler, "Second order Runge-Kutta methods for Stratonovich stochastic differential equations",
-# BIT Numerical Mathematics (2007) 47
-# According to the paper, the method has weak order 2.0.
-
+"""
+Tableau for the explicit 4-stage RS1 method due to Andreas Rossler
+  Method cited in Table 5.2 in
+  Andreas Rossler, "Second order Runge-Kutta methods for Stratonovich stochastic differential equations",
+  BIT Numerical Mathematics (2007) 47
+  According to the paper, the method has weak order 2.0.
+"""
 function getTableauRosslerRS1()
 
     A0 = [[0.0   0.0   0.0   0.0]
@@ -50,12 +51,13 @@ function getTableauRosslerRS1()
 end
 
 
-"Tableau for the explicit 4-stage RS2 method due to Andreas Rossler"
-# Method cited in Table 5.3 in
-# Andreas Rossler, "Second order Runge-Kutta methods for Stratonovich stochastic differential equations",
-# BIT Numerical Mathematics (2007) 47
-# According to the paper, the method has weak order 2.0.
-
+"""
+Tableau for the explicit 4-stage RS2 method due to Andreas Rossler
+  Method cited in Table 5.3 in
+  Andreas Rossler, "Second order Runge-Kutta methods for Stratonovich stochastic differential equations",
+  BIT Numerical Mathematics (2007) 47
+  According to the paper, the method has weak order 2.0.
+"""
 function getTableauRosslerRS2()
 
     A0 = [[0.0      0.0      0.0   0.0]

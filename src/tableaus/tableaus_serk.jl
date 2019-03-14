@@ -1,5 +1,4 @@
 "Tableau for the explicit 2-stage stochastic Heun method"
-
 function getTableauStochasticHeun()
 
     a = [[0.0 0.0]
@@ -11,11 +10,13 @@ function getTableauStochasticHeun()
 end
 
 
-"Tableau for the explicit Platen method"
-# Platen's method cited in Eq. (52) in
-#  K. Burrage, P. Burrage (1996) "High strong order explicit Runge-Kutta methods for stochastic ordinary differential equations".
-# According to the paper, the method has strong order 1.0 for one-dimensional Brownian motion.
-# Appears to have a rather poor long-time performance.
+"""
+Tableau for the explicit Platen method
+  Platen's method cited in Eq. (52) in
+   K. Burrage, P. Burrage (1996) "High strong order explicit Runge-Kutta methods for stochastic ordinary differential equations".
+  According to the paper, the method has strong order 1.0 for one-dimensional Brownian motion.
+  Appears to have a rather poor long-time performance.
+"""
 function getTableauPlaten()
 
     a_drift = [[0.0 0.0]
@@ -32,10 +33,12 @@ function getTableauPlaten()
 end
 
 
-"Tableau for the explicit 2-stage R2 method due to K. Burrage and P. Burrage"
-# Method cited in Eq. (51) in
-#  K. Burrage, P. Burrage (1996) "High strong order explicit Runge-Kutta methods for stochastic ordinary differential equations".
-# According to the paper, the method has strong order 1.0 for one-dimensional Brownian motion
+"""
+Tableau for the explicit 2-stage R2 method due to K. Burrage and P. Burrage
+  Method cited in Eq. (51) in
+   K. Burrage, P. Burrage (1996) "High strong order explicit Runge-Kutta methods for stochastic ordinary differential equations".
+  According to the paper, the method has strong order 1.0 for one-dimensional Brownian motion
+"""
 function getTableauBurrageR2()
 
     a = [[0.0 0.0]
@@ -47,11 +50,13 @@ function getTableauBurrageR2()
 end
 
 
-"Tableau for the explicit 4-stage CL method due to K. Burrage and P. Burrage"
-# Method cited in Eq. (56) in
-#  K. Burrage, P. Burrage (1996) "High strong order explicit Runge-Kutta methods for stochastic ordinary differential equations".
-# According to the paper, the method has strong order 1.5 for one-dimensional Brownian motion. Reduces to the classical R-K method
-# of order 4 when noise is zero.
+"""
+Tableau for the explicit 4-stage CL method due to K. Burrage and P. Burrage
+  Method cited in Eq. (56) in
+   K. Burrage, P. Burrage (1996) "High strong order explicit Runge-Kutta methods for stochastic ordinary differential equations".
+  According to the paper, the method has strong order 1.5 for one-dimensional Brownian motion. Reduces to the classical R-K method
+  of order 4 when noise is zero.
+"""
 function getTableauBurrageCL()
 
     a_drift = [[0.0 0.0 0.0 0.0]
@@ -79,11 +84,12 @@ function getTableauBurrageCL()
 end
 
 
-"Tableau for the explicit 4-stage E1 method due to K. Burrage and P. Burrage"
-# Method cited in Eq. (4.2)-(4.3) in
-#  K. Burrage, P. Burrage (2000) "Order conditions for stochastic Runge-Kutta methods by B-series".
-# According to the paper, the method has strong order 1.0 for one-dimensional Brownian motion.
-
+"""
+Tableau for the explicit 4-stage E1 method due to K. Burrage and P. Burrage
+  Method cited in Eq. (4.2)-(4.3) in
+   K. Burrage, P. Burrage (2000) "Order conditions for stochastic Runge-Kutta methods by B-series".
+  According to the paper, the method has strong order 1.0 for one-dimensional Brownian motion.
+"""
 function getTableauBurrageE1()
 
     a_drift = [[0.0      0.0     0.0 0.0]
@@ -111,10 +117,12 @@ function getTableauBurrageE1()
 end
 
 
-"Tableau for the explicit 5-stage G5 method due to K. Burrage and P. Burrage"
-# Method cited in Section 4 of
-#  K. Burrage, P. Burrage (2000) "Order conditions for stochastic Runge-Kutta methods by B-series".
-# According to the paper, the method has strong order 1.5 for one-dimensional Brownian motion.
+"""
+Tableau for the explicit 5-stage G5 method due to K. Burrage and P. Burrage
+  Method cited in Section 4 of
+   K. Burrage, P. Burrage (2000) "Order conditions for stochastic Runge-Kutta methods by B-series".
+  According to the paper, the method has strong order 1.5 for one-dimensional Brownian motion.
+"""
 function getTableauBurrageG5()
 
     a_drift = [[ 0.0               0.0               0.0               0.0              0.0]

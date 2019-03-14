@@ -43,12 +43,17 @@ sol = integrate(int, nt)
 
 ### IRK Integrators ###
 
+int = Integrator(ode, getTableauCrouzeix(), Δt)
+sol = integrate(int, nt)
+
+@test rel_err(sol.q, refx) < 5E-5
+
 int = Integrator(ode, getTableauImplicitEuler(), Δt)
 sol = integrate(int, nt)
 
 @test rel_err(sol.q, refx) < 5E-2
 
-int = IntegratorFIRK(ode, getTableauImplicitMidpoint(), Δt)
+int = Integrator(ode, getTableauImplicitMidpoint(), Δt)
 sol = integrate(int, nt)
 
 @test rel_err(sol.q, refx) < 5E-4

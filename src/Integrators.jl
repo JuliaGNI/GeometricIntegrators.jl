@@ -46,12 +46,13 @@ module Integrators
 
 
     export CoefficientsRK, AbstractTableauRK, AbstractTableauIRK, AbstractTableauPRK,
-           writeTableauToFile
+           IntegratorRK, writeTableauToFile
 
     export get_symplectic_conjugate_coefficients, symplecticize,
            check_symplecticity, check_symmetry, compute_symplecticity_error,
            check_order_conditions_B, check_order_conditions_C, check_order_conditions_D
 
+    include("integrators/rk/abstract_integrator_rk.jl")
     include("integrators/rk/coefficients.jl")
     include("integrators/rk/tableaus.jl")
 
@@ -63,26 +64,24 @@ module Integrators
 
     export IntegratorDIRK, TableauDIRK
     export IntegratorFIRK, TableauFIRK
-    export IntegratorSIRK, TableauSIRK
 
     include("integrators/rk/integrators_dirk.jl")
     include("integrators/rk/integrators_firk.jl")
-    include("integrators/rk/integrators_sirk.jl")
 
 
     export IntegratorSERK, TableauSERK
-    export IntegratorSFIRK, TableauSFIRK
-    export IntegratorSFIPRK, TableauSFIPRK
-    export IntegratorSFISPRK, TableauSFISPRK
+    export IntegratorSIRK, TableauSIRK
+    export IntegratorSIPRK, TableauSIPRK
+    export IntegratorSISPRK, TableauSISPRK
     export IntegratorWERK, TableauWERK
-    export IntegratorWFIRK, TableauWFIRK
+    export IntegratorWIRK, TableauWIRK
 
     include("integrators/rk/integrators_serk.jl")
-    include("integrators/rk/integrators_sfirk.jl")
-    include("integrators/rk/integrators_sfiprk.jl")
-    include("integrators/rk/integrators_sfisprk.jl")
+    include("integrators/rk/integrators_sirk.jl")
+    include("integrators/rk/integrators_siprk.jl")
+    include("integrators/rk/integrators_sisprk.jl")
     include("integrators/rk/integrators_werk.jl")
-    include("integrators/rk/integrators_wfirk.jl")
+    include("integrators/rk/integrators_wirk.jl")
 
 
     export IntegratorEPRK, TableauEPRK

@@ -85,12 +85,14 @@ function createHDF5(sol::Solution, file::AbstractString, overwrite=true)
 end
 
 
-"createHDF5: Creates or opens HDF5 file."
-# A version for StochasticSolution. It does not create attributes
-# and does not write the time array t, like the version above does. Instead these
-# are set in create_hdf5(), so that arrays larger than currently held in the solution
-# structure can be created in the file. In the future it would be better to rewrite
-# the function above, so that it is universal for all solution structures.
+"""
+createHDF5: Creates or opens HDF5 file.
+  A version for StochasticSolution. It does not create attributes
+  and does not write the time array t, like the version above does. Instead these
+  are set in create_hdf5(), so that arrays larger than currently held in the solution
+  structure can be created in the file. In the future it would be better to rewrite
+  the function above, so that it is universal for all solution structures.
+"""
 function createHDF5(sol::StochasticSolution, file::AbstractString, overwrite=true)
     if overwrite
         flag = "w"

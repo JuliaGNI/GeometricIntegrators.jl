@@ -1,9 +1,9 @@
 """
- Holds the tableau of a stochastic fully implicit partitioned Runge-Kutta method.
+ Holds the tableau of a stochastic implicit partitioned Runge-Kutta method.
  qdrift, pdrift hold the RK coefficients for the drift part,
  and qdiff, pdiff hold the RK coefficients for the diffusion part of the SDE.
 """
-struct TableauSFIPRK{T} <: AbstractTableauIRK{T}
+struct TableauSIPRK{T} <: AbstractTableauIRK{T}
     name::Symbol
     s::Int
     qdrift::CoefficientsRK{T}
@@ -18,7 +18,7 @@ struct TableauSFIPRK{T} <: AbstractTableauIRK{T}
     # Orders stored in qdrift and qdiff are understood as the classical orders of these methods.
 
 
-    function TableauSFIPRK{T}(name, s, qdrift, qdiff, pdrift, pdiff) where {T}
+    function TableauSIPRK{T}(name, s, qdrift, qdiff, pdrift, pdiff) where {T}
         # THE COMMENTED OUT PART WAS FOR TableauFIRK. MAY IMPLEMENT SOMETHING
         # SIMILAR FOR TableauSFIRK LATER.
 
@@ -36,23 +36,25 @@ struct TableauSFIPRK{T} <: AbstractTableauIRK{T}
     end
 end
 
-function TableauSFIPRK(name::Symbol, qdrift::CoefficientsRK{T}, qdiff::CoefficientsRK{T}, pdrift::CoefficientsRK{T}, pdiff::CoefficientsRK{T}) where {T}
-    TableauSFIPRK{T}(name, qdrift.s, qdrift, qdiff, pdrift, pdiff)
+function TableauSIPRK(name::Symbol, qdrift::CoefficientsRK{T}, qdiff::CoefficientsRK{T}, pdrift::CoefficientsRK{T}, pdiff::CoefficientsRK{T}) where {T}
+    TableauSIPRK{T}(name, qdrift.s, qdrift, qdiff, pdrift, pdiff)
 end
 
-function TableauSFIPRK(name::Symbol, qorder_drift::Int, qa_drift::Matrix{T}, qb_drift::Vector{T}, qc_drift::Vector{T}, qorder_diff::Int, qa_diff::Matrix{T}, qb_diff::Vector{T}, qc_diff::Vector{T},
+function TableauSIPRK(name::Symbol, qorder_drift::Int, qa_drift::Matrix{T}, qb_drift::Vector{T}, qc_drift::Vector{T}, qorder_diff::Int, qa_diff::Matrix{T}, qb_diff::Vector{T}, qc_diff::Vector{T},
                                     porder_drift::Int, pa_drift::Matrix{T}, pb_drift::Vector{T}, pc_drift::Vector{T}, porder_diff::Int, pa_diff::Matrix{T}, pb_diff::Vector{T}, pc_diff::Vector{T}) where {T}
-    TableauSFIPRK{T}(name, length(qc_drift), CoefficientsRK(name, qorder_drift, qa_drift, qb_drift, qc_drift), CoefficientsRK(name, qorder_diff, qa_diff, qb_diff, qc_diff), CoefficientsRK(name, porder_drift, pa_drift, pb_drift, pc_drift), CoefficientsRK(name, porder_diff, pa_diff, pb_diff, pc_diff))
+    TableauSIPRK{T}(name, length(qc_drift), CoefficientsRK(name, qorder_drift, qa_drift, qb_drift, qc_drift), CoefficientsRK(name, qorder_diff, qa_diff, qb_diff, qc_diff), CoefficientsRK(name, porder_drift, pa_drift, pb_drift, pc_drift), CoefficientsRK(name, porder_diff, pa_diff, pb_diff, pc_diff))
 end
 
 # TODO function readTableauSFIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-# "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
-#  A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
-mutable struct ParametersSFIPRK{DT, TT, ET <: PSDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
+"""
+Parameters for right-hand side function of implicit Runge-Kutta methods.
+  A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
+"""
+mutable struct ParametersSIPRK{DT, TT, ET <: PSDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
     equ::ET
-    tab::TableauSFIPRK{TT}
+    tab::TableauSIPRK{TT}
     Δt::TT
     ΔW::Vector{DT}
     ΔZ::Vector{DT}
@@ -63,16 +65,18 @@ mutable struct ParametersSFIPRK{DT, TT, ET <: PSDE{DT,TT}, D, M, S} <: Parameter
     p::Vector{DT}
 end
 
-function ParametersSFIPRK(equ::ET, tab::TableauSFIPRK{TT}, Δt::TT, ΔW::Vector{DT}, ΔZ::Vector{DT}, A::DT) where {DT, TT, ET <: PSDE{DT,TT}}
+function ParametersSIPRK(equ::ET, tab::TableauSIPRK{TT}, Δt::TT, ΔW::Vector{DT}, ΔZ::Vector{DT}, A::DT) where {DT, TT, ET <: PSDE{DT,TT}}
     @assert equ.m == length(ΔW) == length(ΔZ)
-    ParametersSFIPRK{DT, TT, ET, equ.d, equ.m, tab.s}(equ, tab, Δt, ΔW, ΔZ, A, 0, zeros(DT, equ.d), zeros(DT, equ.d))
+    ParametersSIPRK{DT, TT, ET, equ.d, equ.m, tab.s}(equ, tab, Δt, ΔW, ΔZ, A, 0, zeros(DT, equ.d), zeros(DT, equ.d))
 end
 
 
-struct NonlinearFunctionCacheSFIPRK{DT}
-    # Structure for holding the internal stages Q, the values of the drift vector
-    # and the diffusion matrix evaluated at the internal stages VQ=v(Q), BQ=B(Q),
-    # and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
+"""
+Structure for holding the internal stages Q, the values of the drift vector
+and the diffusion matrix evaluated at the internal stages VQ=v(Q), BQ=B(Q),
+and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
+"""
+struct NonlinearFunctionCacheSIPRK{DT}
     Q::Matrix{DT}
     P::Matrix{DT}
     VQP::Matrix{DT}
@@ -89,7 +93,7 @@ struct NonlinearFunctionCacheSFIPRK{DT}
     y::Vector{DT}
     z::Vector{DT}
 
-    function NonlinearFunctionCacheSFIPRK{DT}(d, m, s) where {DT}
+    function NonlinearFunctionCacheSIPRK{DT}(d, m, s) where {DT}
 
         # create internal stage vectors
         Q  = zeros(DT,d,s)
@@ -113,17 +117,19 @@ struct NonlinearFunctionCacheSFIPRK{DT}
     end
 end
 
-# Unpacks the data stored in x = (Y[1,1], Y[2,1], ... Y[D,1], Y[1,2], ..., Z[1,1], Z[2,1], ... Z[D,1], Z[1,2], ...)
-# into the matrix Y, Z, calculates the internal stages Q, P, the values of the RHS
-# of the SDE ( v(Q,P), f(Q,P), B(Q,P) and G(Q,P) ), and assigns them to VQP, FQP, BQP and GQP.
-# Unlike for FIRK, here
-# Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW,
-# Z = Δt ̃a_drift v(Q,P) + ̃a_diff B(Q,P) ΔW.
+"""
+Unpacks the data stored in x = (Y[1,1], Y[2,1], ... Y[D,1], Y[1,2], ..., Z[1,1], Z[2,1], ... Z[D,1], Z[1,2], ...)
+into the matrix Y, Z, calculates the internal stages Q, P, the values of the RHS
+of the SDE ( v(Q,P), f(Q,P), B(Q,P) and G(Q,P) ), and assigns them to VQP, FQP, BQP and GQP.
+Unlike for FIRK, here
+Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW,
+Z = Δt ̃a_drift v(Q,P) + ̃a_diff B(Q,P) ΔW.
+"""
 @generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, P::Matrix{ST},
                                                     VQP::Matrix{ST}, FQP::Matrix{ST},
                                                     BQP::Array{ST,3}, GQP::Array{ST,3},
                                                     Y::Matrix{ST}, Z::Matrix{ST},
-                                                    params::ParametersSFIPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+                                                    params::ParametersSIPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
     tQ::Vector{ST} = zeros(ST,D)
     tP::Vector{ST} = zeros(ST,D)
@@ -173,10 +179,10 @@ end
     end
 end
 
-# "Compute stages of fully implicit Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSFIPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+"Compute stages of implicit Runge-Kutta methods."
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSIPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
-    cache = NonlinearFunctionCacheSFIPRK{ST}(D, M, S)
+    cache = NonlinearFunctionCacheSIPRK{ST}(D, M, S)
 
     quote
         compute_stages!(x, $cache.Q, $cache.P, $cache.VQP, $cache.FQP, $cache.BQP, $cache.GQP, $cache.Y, $cache.Z, params)
@@ -207,22 +213,21 @@ end
 end
 
 
-"Stochastic fully implicit partitioned Runge-Kutta integrator."
-# InitialGuessPSDE not implemented for SFIPRK
-struct IntegratorSFIPRK{DT, TT, PT <: ParametersSFIPRK{DT,TT},
+"Stochastic implicit partitioned Runge-Kutta integrator."
+struct IntegratorSIPRK{DT, TT, PT <: ParametersSIPRK{DT,TT},
                               ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
     params::PT
     solver::ST
-    #Not implementing InitialGuessSDE
+    # InitialGuessPSDE not implemented for SIPRK
     #iguess::IT
-    fcache::NonlinearFunctionCacheSFIPRK{DT}
+    fcache::NonlinearFunctionCacheSIPRK{DT}
 
     q::Matrix{Vector{TwicePrecision{DT}}}
     p::Matrix{Vector{TwicePrecision{DT}}}
 end
 
 # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
-function IntegratorSFIPRK(equation::PSDE{DT,TT,VT,BT,N}, tableau::TableauSFIPRK{TT}, Δt::TT; K::Int=0) where {DT,TT,VT,BT,N}
+function IntegratorSIPRK(equation::PSDE{DT,TT,VT,BT,N}, tableau::TableauSIPRK{TT}, Δt::TT; K::Int=0) where {DT,TT,VT,BT,N}
     D = equation.d
     M = equation.m
     NS= equation.ns
@@ -231,7 +236,7 @@ function IntegratorSFIPRK(equation::PSDE{DT,TT,VT,BT,N}, tableau::TableauSFIPRK{
 
     # create params
     K==0 ? A = 0.0 : A = sqrt( 2*K*Δt*abs(log(Δt)) )
-    params = ParametersSFIPRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), A)
+    params = ParametersSIPRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), A)
 
     # create solver
     solver = create_nonlinear_solver(DT, 2*D*S, params)
@@ -241,24 +246,24 @@ function IntegratorSFIPRK(equation::PSDE{DT,TT,VT,BT,N}, tableau::TableauSFIPRK{
     #iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
 
     # create cache for internal stage vectors and update vectors
-    fcache = NonlinearFunctionCacheSFIPRK{DT}(D, M, S)
+    fcache = NonlinearFunctionCacheSIPRK{DT}(D, M, S)
 
     # create solution vectors
     q = create_solution_vector(DT, D, NS, NI)
     p = create_solution_vector(DT, D, NS, NI)
 
     # create integrator
-    IntegratorSFIPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q, p)
+    IntegratorSIPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q, p)
 end
 
-equation(integrator::IntegratorSFIPRK) = integrator.params.equ
-timestep(integrator::IntegratorSFIPRK) = integrator.params.Δt
-tableau(integrator::IntegratorSFIPRK) = integrator.params.tab
-dims(integrator::IntegratorSFIPRK) = integrator.params.equ.d
-Base.eltype(integrator::IntegratorSFIPRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
+equation(integrator::IntegratorSIPRK) = integrator.params.equ
+timestep(integrator::IntegratorSIPRK) = integrator.params.Δt
+tableau(integrator::IntegratorSIPRK) = integrator.params.tab
+dims(integrator::IntegratorSIPRK) = integrator.params.equ.d
+Base.eltype(integrator::IntegratorSIPRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
 
 
-function initialize!(int::IntegratorSFIPRK{DT,TT}, sol::SolutionPSDE, k::Int, m::Int) where {DT,TT}
+function initialize!(int::IntegratorSIPRK{DT,TT}, sol::SolutionPSDE, k::Int, m::Int) where {DT,TT}
     @assert m ≥ 1
     @assert m ≤ sol.ni
     @assert k ≥ 1
@@ -272,10 +277,13 @@ function initialize!(int::IntegratorSFIPRK{DT,TT}, sol::SolutionPSDE, k::Int, m:
     # initialize!(int.iguess, m, sol.t[0], int.q[m])
 end
 
-# NOT IMPLEMENTING InitialGuessSDE
-# This function computes initial guesses for Y, Z and assigns them to int.solver.x
-# The prediction is calculated using an explicit integrator.
-function initial_guess!(int::IntegratorSFIPRK{DT,TT}) where {DT,TT}
+"""
+This function computes initial guesses for Y, Z and assigns them to int.solver.x
+The prediction is calculated using an explicit integrator.
+"""
+function initial_guess!(int::IntegratorSIPRK{DT,TT}) where {DT,TT}
+
+    # NOT IMPLEMENTING InitialGuessSDE
 
     # SIMPLE SOLUTION
     # The simplest initial guess for Y, Z is 0
@@ -379,9 +387,11 @@ function initial_guess!(int::IntegratorSFIPRK{DT,TT}) where {DT,TT}
 end
 
 
-"Integrate PSDE with a stochastic fully implicit partitioned Runge-Kutta integrator."
-# Integrating the k-th sample path for the m-th initial condition
-function integrate_step!(int::IntegratorSFIPRK{DT,TT}, sol::SolutionPSDE{DT,TT,NQ,NW}, k::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
+"""
+Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator.
+Integrating the k-th sample path for the m-th initial condition
+"""
+function integrate_step!(int::IntegratorSIPRK{DT,TT}, sol::SolutionPSDE{DT,TT,NQ,NW}, k::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
 
     @assert k ≥ 1
     @assert k ≤ sol.ns

@@ -98,8 +98,11 @@ function initialize!(int::IntegratorSERK, sol::SolutionSDE, k::Int, m::Int)
     get_initial_conditions!(sol, int.q[k,m], k, m)
 end
 
-"Integrate SDE with explicit Runge-Kutta integrator."
-# Calculating the n-th time step of the explicit integrator for the sample path r and the initial condition m
+"""
+Integrate SDE with explicit Runge-Kutta integrator.
+  Calculating the n-th time step of the explicit integrator for the
+  sample path r and the initial condition m
+"""
 function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,NQ,NW}, r::Int, m::Int, n::Int) where {DT,TT,FT,NQ,NW}
     local tᵢ::TT
     local ydrift::DT
