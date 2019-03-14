@@ -1,7 +1,8 @@
-
-"Holds the tableau of a stochastic fully implicit partitioned Runge-Kutta method.
+"""
+ Holds the tableau of a stochastic fully implicit partitioned Runge-Kutta method.
  qdrift, pdrift hold the RK coefficients for the drift part,
- and qdiff, pdiff hold the RK coefficients for the diffusion part of the SDE."
+ and qdiff, pdiff hold the RK coefficients for the diffusion part of the SDE.
+"""
 struct TableauSFIPRK{T} <: AbstractTableauIRK{T}
     name::Symbol
     s::Int

@@ -1,30 +1,29 @@
-
-"""
+@doc raw"""
 `DAE`: Differential Algebraic Equation
 
 Defines a differential algebraic initial value problem
 ```math
-\\begin{align*}
-\\dot{q} (t) &= v(t, q(t)) + u(t, q(t), \\lambda(t)) , & q(t_{0}) &= q_{0} , \\\\
-0 &= \\phi (t, q(t), \\lambda(t)) , & \\lambda(t_{0}) &= \\lambda_{0} ,
-\\end{align*}
+\begin{align*}
+\dot{q} (t) &= v(t, q(t)) + u(t, q(t), \lambda(t)) , & q(t_{0}) &= q_{0} , \\
+0 &= \phi (t, q(t), \lambda(t)) , & \lambda(t_{0}) &= \lambda_{0} ,
+\end{align*}
 ```
-with vector field ``v``, projection ``u``, algebraic constraint ``\\phi=0``,
-initial conditions ``q_{0}`` and ``\\lambda_{0}``, the dynamical variable ``q``
-taking values in ``\\mathbb{R}^{m}`` and the algebraic variable ``\\lambda``
-taking values in ``\\mathbb{R}^{n}``.
+with vector field ``v``, projection ``u``, algebraic constraint ``\phi=0``,
+initial conditions ``q_{0}`` and ``\lambda_{0}``, the dynamical variable ``q``
+taking values in ``\mathbb{R}^{m}`` and the algebraic variable ``\lambda``
+taking values in ``\mathbb{R}^{n}``.
 
 ### Fields
 
 * `d`: dimension of dynamical variable ``q`` and the vector field ``v``
-* `m`: dimension of algebraic variable ``\\lambda`` and the constraint ``\\phi``
+* `m`: dimension of algebraic variable ``\lambda`` and the constraint ``\phi``
 * `n`: number of initial conditions
 * `v`: function computing the vector field
 * `u`: function computing the projection
 * `ϕ`: algebraic constraint
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q``
-* `λ₀`: initial condition for algebraic variable ``\\lambda``
+* `λ₀`: initial condition for algebraic variable ``\lambda``
 
 
 The function `v`, providing the vector field, takes three arguments,
@@ -32,7 +31,7 @@ The function `v`, providing the vector field, takes three arguments,
 algebraic constraint take four arguments, `u(t, q, λ, u)` and `ϕ(t, q, λ, ϕ)`,
 where `t` is the current time, `q` and `λ` are the current solution vectors,
 and `v`, `u` and `ϕ` are the vectors which hold the result of evaluating the
-vector field ``v``, the projection ``u`` and the algebraic constraint ``\\phi``
+vector field ``v``, the projection ``u`` and the algebraic constraint ``\phi``
 on `t`, `q` and `λ`.
 
 ### Example

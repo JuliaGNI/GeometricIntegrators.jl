@@ -2,8 +2,7 @@
 using ..CommonFunctions
 
 
-
-"""
+@doc raw"""
 # Hermite's Interpolating Polynomials
 
 Here, we implement a two point Hermite interpolation function which passes
@@ -13,28 +12,28 @@ function and its derivative at the points ``0`` and ``1``.
 
 Start by defining the 3rd degree polynomial and its derivative by
 ```math
-\\begin{align*}
-g(x) &= a_0 + a_1 x + a_2 x^2 + a_3 x^3 , \\\\
+\begin{align*}
+g(x) &= a_0 + a_1 x + a_2 x^2 + a_3 x^3 , \\
 g'(x) &= a_1 + 2 a_2 x + 3 a_3 x^2 ,
-\\end{align*}
+\end{align*}
 ```
 and apply the constraints
 ```math
-\\begin{align*}
-g(0) &= f_0 & & \\Rightarrow & a_0 &= f_0 , \\\\
-g(1) &= f_1 & & \\Rightarrow & a_0 + a_1 + a_2 + a_3 &= f_1 , \\\\
-g'(0) &= f'_0 & & \\Rightarrow & a_1 &= f'_0 , \\\\
-g'(1) &= f'_1 & & \\Rightarrow & a_1 + 2 a_2 + 3 a_3 &= f'_1 . \\\\
-\\end{align*}
+\begin{align*}
+g(0) &= f_0 & & \Rightarrow & a_0 &= f_0 , \\
+g(1) &= f_1 & & \Rightarrow & a_0 + a_1 + a_2 + a_3 &= f_1 , \\
+g'(0) &= f'_0 & & \Rightarrow & a_1 &= f'_0 , \\
+g'(1) &= f'_1 & & \Rightarrow & a_1 + 2 a_2 + 3 a_3 &= f'_1 . \\
+\end{align*}
 ```
 Solving for ``a_0, a_1, a_2, a_3`` leads to
 ```math
-\\begin{align*}
+\begin{align*}
 a_0 &= f_0 , &
 a_1 &= f'_0 , &
 a_2 &= - 3 f_0 + 3 f_1 - 2 f'_0 - f'_1 , &
 a_3 &= 2 f_0 - 2 f_1 + f'_0 + f'_1 ,
-\\end{align*}
+\end{align*}
 ```
 so that the polynomial ``g(x)`` reads
 ```math
@@ -50,12 +49,12 @@ g(x) = f_0 a_0(x) + f_1 a_1(x) + f'_0 b_0(x) + f'_1 b_1(x) ,
 ```
 with basis functions
 ```math
-\\begin{align*}
+\begin{align*}
 a_0 (x) &= 1 - 3 x^2 + 2 x^3 , &
-b_0 (x) &= x - 2 x^2 + x^3 , \\\\
+b_0 (x) &= x - 2 x^2 + x^3 , \\
 a_1 (x) &= 3 x^2 - 2 x^3 , &
 b_1 (x) &= - x^2 + x^3 .
-\\end{align*}
+\end{align*}
 ```
 The derivative ``g'(x)`` accordingly reads
 ```math
@@ -63,12 +62,12 @@ g'(x) = f_0 a'_0(x) + f_1 a'_1(x) + f'_0 b'_0(x) + f'_1 b'_1(x) ,
 ```
 with
 ```math
-\\begin{align*}
+\begin{align*}
 a'_0 (x) &= - 6 x + 6 x^2 , &
-b'_0 (x) &= 1 - 4 x + 3 x^2 , \\\\
+b'_0 (x) &= 1 - 4 x + 3 x^2 , \\
 a'_1 (x) &= 6 x - 6 x^2 , &
 b'_1 (x) &= - 2 x + 3 x^2 .
-\\end{align*}
+\end{align*}
 ```
 The basis functions ``a_0``and ``a_1`` are associated with the function
 values at ``x_0`` and ``x_1``, respectively, while the basis functions
@@ -76,22 +75,22 @@ values at ``x_0`` and ``x_1``, respectively, while the basis functions
 ``x_0`` and ``x_1``.
 The basis functions satisfy the following relations,
 ```math
-\\begin{align*}
-a_i (x_j) &= \\delta_{ij} , &
+\begin{align*}
+a_i (x_j) &= \delta_{ij} , &
 b_i (x_j) &= 0 , &
 a'_i (x_j) &= 0 , &
-b'_i (x_j) &= \\delta_{ij} , &
+b'_i (x_j) &= \delta_{ij} , &
 i,j &= 0, 1 ,
-\\end{align*}
+\end{align*}
 ```
-where ``\\delta_{ij}`` denotes the Kronecker-delta, so that
+where ``\delta_{ij}`` denotes the Kronecker-delta, so that
 ```math
-\\begin{align*}
+\begin{align*}
 g(0) &= f_0 , &
 g(1) &= f_1 , &
 g'(0) &= f'_0 , &
 g'(1) &= f'_1 .
-\\end{align*}
+\end{align*}
 ```
 """
 struct HermiteInterpolation{T} <: Interpolator{T}

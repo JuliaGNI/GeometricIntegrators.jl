@@ -1,25 +1,24 @@
-
-"""
+@doc raw"""
 `PDAE`: Partitioned Differential Algebraic Equation
 
 Defines a partitioned differential algebraic initial value problem
 ```math
-\\begin{align*}
-\\dot{q} (t) &= v(t, q(t), p(t)) + u(t, q(t), p(t), \\lambda(t)) , & q(t_{0}) &= q_{0} , \\\\
-\\dot{p} (t) &= f(t, q(t), p(t)) + r(t, q(t), p(t), \\lambda(t)) , & p(t_{0}) &= p_{0} , \\\\
-0 &= \\phi (t, q(t), p(t), \\lambda(t)) , & \\lambda(t_{0}) &= \\lambda_{0} ,
-\\end{align*}
+\begin{align*}
+\dot{q} (t) &= v(t, q(t), p(t)) + u(t, q(t), p(t), \lambda(t)) , & q(t_{0}) &= q_{0} , \\
+\dot{p} (t) &= f(t, q(t), p(t)) + r(t, q(t), p(t), \lambda(t)) , & p(t_{0}) &= p_{0} , \\
+0 &= \phi (t, q(t), p(t), \lambda(t)) , & \lambda(t_{0}) &= \lambda_{0} ,
+\end{align*}
 ```
 with vector fields ``v`` and ``f``, projection ``u`` and ``r``,
-algebraic constraint ``\\phi=0``,
-conditions ``(q_{0}, p_{0})`` and ``\\lambda_{0}``, the dynamical variables
-``(q,p)`` taking values in ``\\mathbb{R}^{d} \\times \\mathbb{R}^{d}`` and
-the algebraic variable ``\\lambda`` taking values in ``\\mathbb{R}^{n}``.
+algebraic constraint ``\phi=0``,
+conditions ``(q_{0}, p_{0})`` and ``\lambda_{0}``, the dynamical variables
+``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}`` and
+the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 
 ### Fields
 
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``f`` and ``p``
-* `m`: dimension of algebraic variable ``\\lambda`` and the constraint ``\\phi``
+* `m`: dimension of algebraic variable ``\lambda`` and the constraint ``\phi``
 * `n`: number of initial conditions
 * `v`: function computing the vector field ``v``
 * `f`: function computing the vector field ``f``
@@ -29,7 +28,7 @@ the algebraic variable ``\\lambda`` taking values in ``\\mathbb{R}^{n}``.
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q``
 * `p₀`: initial condition for dynamical variable ``p``
-* `λ₀`: initial condition for algebraic variable ``\\lambda``
+* `λ₀`: initial condition for algebraic variable ``\lambda``
 
 """
 struct PDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Function, uType <: Function, gType <: Function, ϕType <: Function, N} <: Equation{dType, tType}

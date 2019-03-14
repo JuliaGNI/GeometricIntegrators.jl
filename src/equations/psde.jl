@@ -1,16 +1,16 @@
-"""
+@doc raw"""
 `PSDE`: Stratonovich Partitioned Stochastic Differential Equation
 
 Defines a partitioned stochastic differential initial value problem
 ```math
-\\begin{align*}
-\\dq (t) &= v(t, q(t)) \\, dt + B(t, q(t)) \\circ dW , & q(t_{0}) &= q_{0} ,
-\\dp (t) &= f(t, q(t)) \\, dt + G(t, q(t)) \\circ dW , & p(t_{0}) &= p_{0}
-\\end{align*}
+\begin{align*}
+\dq (t) &= v(t, q(t)) \, dt + B(t, q(t)) \circ dW , & q(t_{0}) &= q_{0} ,
+\dp (t) &= f(t, q(t)) \, dt + G(t, q(t)) \circ dW , & p(t_{0}) &= p_{0}
+\end{align*}
 ```
 with the drift vector fields ``v`` and ``f``, diffusion matrices ``B`` and ``G``,
 initial conditions ``q_{0}`` and ``p_{0}``, the dynamical variables ``(q,p)`` taking
-values in ``\\mathbb{R}^{d} \\times \\mathbb{R}^{d}``, and the m-dimensional Wiener process W
+values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``, and the m-dimensional Wiener process W
 
 ### Fields
 

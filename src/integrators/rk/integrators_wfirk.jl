@@ -1,7 +1,9 @@
-
-"Holds the tableau of a weak fully implicit Runge-Kutta method."
-# According to Wang, Hong, Xu, "Construction of Symplectic Runge-Kutta Methods for Stochastic Hamiltonian Systems",
-# Commun. Comput. Phys. 21(1), 2017
+"""
+ Holds the tableau of a weak fully implicit Runge-Kutta method.
+ 
+   According to Wang, Hong, Xu, "Construction of Symplectic Runge-Kutta Methods for Stochastic Hamiltonian Systems",
+   Commun. Comput. Phys. 21(1), 2017
+"""
 struct TableauWFIRK{T} <: AbstractTableauIRK{T}
     name::Symbol
     s::Int

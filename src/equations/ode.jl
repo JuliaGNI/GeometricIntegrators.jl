@@ -1,12 +1,12 @@
-"""
+@doc raw"""
 `ODE`: Ordinary Differential Equation
 
 Defines an initial value problem
 ```math
-\\dot{q} (t) = v(t, q(t)) , \\qquad q(t_{0}) = q_{0} ,
+\dot{q} (t) = v(t, q(t)) , \qquad q(t_{0}) = q_{0} ,
 ```
 with vector field ``v``, initial condition ``q_{0}`` and the solution
-``q`` taking values in ``\\mathbb{R}^{d}``.
+``q`` taking values in ``\mathbb{R}^{d}``.
 
 ### Fields
 

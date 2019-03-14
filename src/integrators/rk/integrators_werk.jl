@@ -1,7 +1,9 @@
-
-"Holds the tableau of a weak explicit Runge-Kutta method."
-# According to Andreas Rossler, "Second order Runge-Kutta methods for Stratonovich stochastic differential equations",
-# BIT Numerical Mathematics (2007) 47, equation (5.1)
+"""
+ Holds the tableau of a weak explicit Runge-Kutta method.
+ 
+   According to Andreas Rossler, "Second order Runge-Kutta methods for Stratonovich stochastic differential equations",
+   BIT Numerical Mathematics (2007) 47, equation (5.1)
+"""
 struct TableauWERK{T} <: AbstractTableauERK{T}
     name::Symbol
     s::Int

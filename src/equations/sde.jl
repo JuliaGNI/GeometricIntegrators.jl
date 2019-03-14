@@ -1,15 +1,15 @@
-"""
+@doc raw"""
 `SDE`: Stratonovich Stochastic Differential Equation
 
 Defines a stochastic differential initial value problem
 ```math
-\\begin{align*}
-\\dq (t) &= v(t, q(t)) \\, dt + B(t, q(t)) \\circ dW , & q(t_{0}) &= q_{0} ,
-\\end{align*}
+\begin{align*}
+\dq (t) &= v(t, q(t)) \, dt + B(t, q(t)) \circ dW , & q(t_{0}) &= q_{0} ,
+\end{align*}
 ```
 with drift vector field ``v``, diffusion matrix ``B``,
 initial conditions ``q_{0}``, the dynamical variable ``q``
-taking values in ``\\mathbb{R}^{d}``, and the m-dimensional Wiener process W
+taking values in ``\mathbb{R}^{d}``, and the m-dimensional Wiener process W
 
 ### Fields
 

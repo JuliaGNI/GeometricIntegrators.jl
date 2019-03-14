@@ -1,28 +1,27 @@
-
-"""
+@doc raw"""
 `HDAE`: Hamiltonian Differential Algebraic Equation
 
 Defines a Hamiltonian differential algebraic initial value problem, that is
 a canonical Hamiltonian system of equations subject to Dirac constraints,
 ```math
-\\begin{align*}
-\\dot{q} (t) &= v_1(t, q(t), p(t)) + v_2(t, q(t), p(t), \\lambda(t)) + v_3(t, q(t), p(t), \\lambda(t), \\gamma(t)) , & q(t_{0}) &= q_{0} , \\\\
-\\dot{p} (t) &= f_1(t, q(t), p(t)) + f_2(t, q(t), p(t), \\lambda(t)) + f_3(t, q(t), p(t), \\lambda(t), \\gamma(t)) , & p(t_{0}) &= p_{0} , \\\\
-0 &= \\phi (t, q(t), p(t)) , \\\\
-0 &= \\psi (t, q(t), p(t), \\lambda(t)) ,
-\\end{align*}
+\begin{align*}
+\dot{q} (t) &= v_1(t, q(t), p(t)) + v_2(t, q(t), p(t), \lambda(t)) + v_3(t, q(t), p(t), \lambda(t), \gamma(t)) , & q(t_{0}) &= q_{0} , \\
+\dot{p} (t) &= f_1(t, q(t), p(t)) + f_2(t, q(t), p(t), \lambda(t)) + f_3(t, q(t), p(t), \lambda(t), \gamma(t)) , & p(t_{0}) &= p_{0} , \\
+0 &= \phi (t, q(t), p(t)) , \\
+0 &= \psi (t, q(t), p(t), \lambda(t)) ,
+\end{align*}
 ```
 with vector fields ``v_i`` and ``f_i`` for ``i = 1 ... 3``,
-primary constraint ``\\phi(q,p)=0`` and secondary constraint ``\\psi(q,p,\\lambda)=0``,
+primary constraint ``\phi(q,p)=0`` and secondary constraint ``\psi(q,p,\lambda)=0``,
 initial conditions ``(q_{0}, p_{0})``, the dynamical variables ``(q,p)``
-taking values in ``\\mathbb{R}^{d} \\times \\mathbb{R}^{d}`` and
-the algebraic variables ``(\\lambda, \\gamma)`` taking values in
-``\\mathbb{R}^{n} \\times \\mathbb{R}^{d}``.
+taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}`` and
+the algebraic variables ``(\lambda, \gamma)`` taking values in
+``\mathbb{R}^{n} \times \mathbb{R}^{d}``.
 
 ### Fields
 
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``v`` and ``f``
-* `m`: dimension of algebraic variables ``\\lambda`` and ``\\gamma`` and the constraints ``\\phi`` and ``\\psi``
+* `m`: dimension of algebraic variables ``\lambda`` and ``\gamma`` and the constraints ``\phi`` and ``\psi``
 * `n`: number of initial conditions
 * `v`: tuple of functions computing the vector fields ``v_i``, ``i = 1 ... 3``
 * `f`: tuple of functions computing the vector fields ``f_i``, ``i = 1 ... 3``
