@@ -44,11 +44,6 @@ function Integrator(equation::SDE, tableau::TableauWFIRK, Δt)
     IntegratorWFIRK(equation, tableau, Δt)
 end
 
-"Create integrator for singly implicit Runge-Kutta tableau."
-function Integrator(equation::ODE, tableau::TableauSIRK, Δt)
-    IntegratorSIRK(equation, tableau, Δt)
-end
-
 "Create integrator for explicit partitioned Runge-Kutta tableau."
 function Integrator(equation::PODE, tableau::TableauEPRK, Δt)
     IntegratorEPRK(equation, tableau, Δt)
