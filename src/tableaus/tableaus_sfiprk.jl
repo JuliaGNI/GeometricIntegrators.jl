@@ -1,8 +1,10 @@
-"Tableau for the stochastic symplectic Euler method"
-# Tableau for the stochastic symplectic Euler method
-# Satisfies the conditions for Lagrange-d'Alembert integrators.
-# Satisfies the conditions for strong convergence of order 1.0 for one Wiener process
-# for special choices of the stochastic Hamiltonians and forces, e.g., h=h(q), f=0.
+"""
+Tableau for the stochastic symplectic Euler method
+  Tableau for the stochastic symplectic Euler method
+  Satisfies the conditions for Lagrange-d'Alembert integrators.
+  Satisfies the conditions for strong convergence of order 1.0 for one Wiener process
+  for special choices of the stochastic Hamiltonians and forces, e.g., h=h(q), f=0.
+"""
 function getTableauStochasticSymplecticEuler()
 
     a_q = ones(Float64, 1, 1)
@@ -18,7 +20,7 @@ end
 
 
 
-# Tableau for the 2-stage stochastic LobattoIIA-IIB method (Stormer-Verlet)
+"Tableau for the 2-stage stochastic LobattoIIA-IIB method (Stormer-Verlet)"
 function getTableauStochasticStormerVerlet()
 
     TableauSFIPRK(:StochasticStormerVerlet,getCoefficientsLobIIIA2(),getCoefficientsLobIIIA2(),getCoefficientsLobIIIB2(),getCoefficientsLobIIIB2())

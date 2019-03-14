@@ -62,8 +62,10 @@ end
 # TODO function readTableauSFIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-# "Parameters for right-hand side function of implicit Runge-Kutta methods."
-#  A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
+"""
+Parameters for right-hand side function of implicit Runge-Kutta methods.
+  A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
+"""
 mutable struct ParametersSISPRK{DT, TT, ET <: SPSDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
     equ::ET
     tab::TableauSISPRK{TT}
@@ -135,12 +137,14 @@ struct NonlinearFunctionCacheSISPRK{DT}
     end
 end
 
-# Unpacks the data stored in x = (Y[1,1], Y[2,1], ... Y[D,1], Y[1,2], ..., Z[1,1], Z[2,1], ... Z[D,1], Z[1,2], ...)
-# into the matrix Y, Z, calculates the internal stages Q, P, the values of the RHS
-# of the SDE ( vi(Q,P), fi(Q,P), Bi(Q,P) and Gi(Q,P) ), and assigns them to VQPi, FQPi, BQPi and GQPi.
-# Unlike for FIRK, here
-# Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW,
-# Z = Δt ̃a1_drift f1(Q,P) + Δt ̃a2_drift f2(Q,P) + ̃a1_diff G1(Q,P) ΔW + ̃a2_diff G2(Q,P) ΔW.
+"""
+Unpacks the data stored in x = (Y[1,1], Y[2,1], ... Y[D,1], Y[1,2], ..., Z[1,1], Z[2,1], ... Z[D,1], Z[1,2], ...)
+into the matrix Y, Z, calculates the internal stages Q, P, the values of the RHS
+of the SDE ( vi(Q,P), fi(Q,P), Bi(Q,P) and Gi(Q,P) ), and assigns them to VQPi, FQPi, BQPi and GQPi.
+Unlike for FIRK, here
+Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW,
+Z = Δt ̃a1_drift f1(Q,P) + Δt ̃a2_drift f2(Q,P) + ̃a1_diff G1(Q,P) ΔW + ̃a2_diff G2(Q,P) ΔW.
+"""
 @generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, P::Matrix{ST},
                                                     VQP::Matrix{ST},
                                                     FQP1::Matrix{ST}, FQP2::Matrix{ST},
@@ -204,7 +208,7 @@ end
     end
 end
 
-# "Compute stages of implicit Runge-Kutta methods."
+"Compute stages of stochastic implicit split partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSISPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
     cache = NonlinearFunctionCacheSISPRK{ST}(D, M, S)
@@ -241,12 +245,11 @@ end
 
 
 "Stochastic implicit partitioned Runge-Kutta integrator."
-# InitialGuessPSDE not implemented for SFIPRK
 struct IntegratorSISPRK{DT, TT, PT <: ParametersSISPRK{DT,TT},
                               ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
     params::PT
     solver::ST
-    #Not implementing InitialGuessSDE
+    # InitialGuessPSDE not implemented for SFIPRK
     #iguess::IT
     fcache::NonlinearFunctionCacheSISPRK{DT}
 
@@ -305,10 +308,13 @@ function initialize!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE, k::Int, m:
     # initialize!(int.iguess, m, sol.t[0], int.q[m])
 end
 
-# NOT IMPLEMENTING InitialGuessSDE
-# This function computes initial guesses for Y, Z and assigns them to int.solver.x
-# The prediction is calculated using an explicit integrator.
+"""
+This function computes initial guesses for Y, Z and assigns them to int.solver.x
+The prediction is calculated using an explicit integrator.
+"""
 function initial_guess!(int::IntegratorSISPRK{DT,TT}) where {DT,TT}
+
+    # NOT IMPLEMENTING InitialGuessSDE
 
     # SIMPLE SOLUTION
     # The simplest initial guess for Y, Z is 0

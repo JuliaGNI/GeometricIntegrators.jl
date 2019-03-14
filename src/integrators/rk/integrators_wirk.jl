@@ -59,7 +59,7 @@ end
 
 
 
-# "Parameters for right-hand side function of implicit Runge-Kutta methods."
+"Parameters for right-hand side function of weak implicit Runge-Kutta methods."
 mutable struct ParametersWIRK{DT, TT, ET <: SDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
     equ::ET
     tab::TableauWIRK{TT}
@@ -110,11 +110,13 @@ struct NonlinearFunctionCacheWIRK{DT}
     end
 end
 
-# Unpacks the data stored in
-# x = (Y0[1,1], Y0[2,1], ... Y0[D,1], ... Y0[D,S], Y1[1,1,1], Y1[2,1,1], ... Y1[D,1,1], Y1[1,2,1], Y1[2,2,1], ... Y1[D,2,1], ... Y1[D,M,S]  )
-# into the matrices Y0 and Y1, calculates the internal stages Q0 and Q1, the values of the RHS
-# of the SDE ( v(Q0) and B(Q1) ), and assigns them to VQ and BQ.
-# Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
+"""
+Unpacks the data stored in
+x = (Y0[1,1], Y0[2,1], ... Y0[D,1], ... Y0[D,S], Y1[1,1,1], Y1[2,1,1], ... Y1[D,1,1], Y1[1,2,1], Y1[2,2,1], ... Y1[D,2,1], ... Y1[D,M,S]  )
+into the matrices Y0 and Y1, calculates the internal stages Q0 and Q1, the values of the RHS
+of the SDE ( v(Q0) and B(Q1) ), and assigns them to VQ and BQ.
+Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
+"""
 @generated function compute_stages!(x::Vector{ST}, Q0::Matrix{ST}, Q1::Array{ST,3}, VQ::Matrix{ST}, BQ::Array{ST,3}, Y0::Matrix{ST}, Y1::Array{ST,3},
                                           params::ParametersWIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
@@ -174,7 +176,7 @@ end
     end
 end
 
-# "Compute stages of implicit Runge-Kutta methods."
+"Compute stages of weak implicit Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersWIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
     cache = NonlinearFunctionCacheWIRK{ST}(D, M, S)
@@ -231,12 +233,11 @@ end
 
 
 "Stochastic implicit Runge-Kutta integrator."
-# InitialGuessSDE not implemented for WIRK
 struct IntegratorWIRK{DT, TT, PT <: ParametersWIRK{DT,TT},
                               ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
     params::PT
     solver::ST
-    #Not implementing InitialGuessSDE
+    # InitialGuessSDE not implemented for WIRK
     #iguess::IT
     fcache::NonlinearFunctionCacheWIRK{DT}
 
@@ -293,10 +294,13 @@ function initialize!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE, k::Int, m::In
     # initialize!(int.iguess, m, sol.t[0], int.q[m])
 end
 
-# NOT IMPLEMENTING InitialGuessSDE
-# This function computes initial guesses for Y and assigns them to int.solver.x
-# The prediction is calculated using an explicit integrator.
+"""
+This function computes initial guesses for Y and assigns them to int.solver.x
+The prediction is calculated using an explicit integrator.
+"""
 function initial_guess!(int::IntegratorWIRK{DT,TT}) where {DT,TT}
+
+    # NOT IMPLEMENTING InitialGuessSDE
 
     # SIMPLE SOLUTION
     # The simplest initial guess for Y is 0
@@ -310,8 +314,10 @@ function initial_guess!(int::IntegratorWIRK{DT,TT}) where {DT,TT}
 end
 
 
-"Integrate SDE with a stochastic implicit Runge-Kutta integrator."
-# Integrating the k-th sample path for the m-th initial condition
+"""
+Integrate SDE with a stochastic implicit Runge-Kutta integrator.
+  Integrating the k-th sample path for the m-th initial condition
+"""
 function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,NW}, k::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
 
     @assert k ≥ 1

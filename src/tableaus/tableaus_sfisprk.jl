@@ -1,8 +1,10 @@
-"Tableau for the 2-stage stochastic LobattoIIIA-IIIB-IIID method"
-# Tableau for the 2-stage stochastic LobattoIIIA-IIIB-IIID method
-# (based on the deterministic LobattoIIIA-IIIB-IIID due to L. Jay)
-# It satisfies the conditions for convergence of order 1.0 for one Wiener process,
-# but it doesn't satisfy the conditions for Lagrange-d'Alembert integrators
+"""
+Tableau for the 2-stage stochastic LobattoIIIA-IIIB-IIID method
+  Tableau for the 2-stage stochastic LobattoIIIA-IIIB-IIID method
+  (based on the deterministic LobattoIIIA-IIIB-IIID due to L. Jay)
+  It satisfies the conditions for convergence of order 1.0 for one Wiener process,
+  but it doesn't satisfy the conditions for Lagrange-d'Alembert integrators
+"""
 function getTableauStochasticLobIIIABD2()
 
     TableauSFISPRK(:StochasticLobIIIABD2,getCoefficientsLobIIIA2(),getCoefficientsLobIIIA2(),
@@ -11,10 +13,12 @@ function getTableauStochasticLobIIIABD2()
 end
 
 
-"Tableau for the 2-stage modified stochastic LobattoIIIA-IIIB method"
-# Tableau for the 2-stage modified stochastic LobattoIIIA-IIIB method
-# Satisfies the conditions for Lagrange-d'Alembert integrators
-# and the conditions for convergence of order 1.0 for one Wiener process
+"""
+Tableau for the 2-stage modified stochastic LobattoIIIA-IIIB method
+  Tableau for the 2-stage modified stochastic LobattoIIIA-IIIB method
+  Satisfies the conditions for Lagrange-d'Alembert integrators
+  and the conditions for convergence of order 1.0 for one Wiener process
+"""
 function getTableauModifiedStochasticStormerVerlet(c::Number=0.0)
 
     @assert c ≥ 0.0

@@ -48,8 +48,10 @@ end
 # TODO function readTableauSFIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-# "Parameters for right-hand side function of implicit Runge-Kutta methods."
-#  A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
+"""
+Parameters for right-hand side function of implicit Runge-Kutta methods.
+  A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
+"""
 mutable struct ParametersSIPRK{DT, TT, ET <: PSDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
     equ::ET
     tab::TableauSIPRK{TT}
@@ -69,10 +71,12 @@ function ParametersSIPRK(equ::ET, tab::TableauSIPRK{TT}, Δt::TT, ΔW::Vector{DT
 end
 
 
+"""
+Structure for holding the internal stages Q, the values of the drift vector
+and the diffusion matrix evaluated at the internal stages VQ=v(Q), BQ=B(Q),
+and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
+"""
 struct NonlinearFunctionCacheSIPRK{DT}
-    # Structure for holding the internal stages Q, the values of the drift vector
-    # and the diffusion matrix evaluated at the internal stages VQ=v(Q), BQ=B(Q),
-    # and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
     Q::Matrix{DT}
     P::Matrix{DT}
     VQP::Matrix{DT}
@@ -113,12 +117,14 @@ struct NonlinearFunctionCacheSIPRK{DT}
     end
 end
 
-# Unpacks the data stored in x = (Y[1,1], Y[2,1], ... Y[D,1], Y[1,2], ..., Z[1,1], Z[2,1], ... Z[D,1], Z[1,2], ...)
-# into the matrix Y, Z, calculates the internal stages Q, P, the values of the RHS
-# of the SDE ( v(Q,P), f(Q,P), B(Q,P) and G(Q,P) ), and assigns them to VQP, FQP, BQP and GQP.
-# Unlike for FIRK, here
-# Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW,
-# Z = Δt ̃a_drift v(Q,P) + ̃a_diff B(Q,P) ΔW.
+"""
+Unpacks the data stored in x = (Y[1,1], Y[2,1], ... Y[D,1], Y[1,2], ..., Z[1,1], Z[2,1], ... Z[D,1], Z[1,2], ...)
+into the matrix Y, Z, calculates the internal stages Q, P, the values of the RHS
+of the SDE ( v(Q,P), f(Q,P), B(Q,P) and G(Q,P) ), and assigns them to VQP, FQP, BQP and GQP.
+Unlike for FIRK, here
+Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW,
+Z = Δt ̃a_drift v(Q,P) + ̃a_diff B(Q,P) ΔW.
+"""
 @generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, P::Matrix{ST},
                                                     VQP::Matrix{ST}, FQP::Matrix{ST},
                                                     BQP::Array{ST,3}, GQP::Array{ST,3},
@@ -173,7 +179,7 @@ end
     end
 end
 
-# "Compute stages of implicit Runge-Kutta methods."
+"Compute stages of implicit Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSIPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
     cache = NonlinearFunctionCacheSIPRK{ST}(D, M, S)
@@ -208,12 +214,11 @@ end
 
 
 "Stochastic implicit partitioned Runge-Kutta integrator."
-# InitialGuessPSDE not implemented for SIPRK
 struct IntegratorSIPRK{DT, TT, PT <: ParametersSIPRK{DT,TT},
                               ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
     params::PT
     solver::ST
-    #Not implementing InitialGuessSDE
+    # InitialGuessPSDE not implemented for SIPRK
     #iguess::IT
     fcache::NonlinearFunctionCacheSIPRK{DT}
 
@@ -272,10 +277,13 @@ function initialize!(int::IntegratorSIPRK{DT,TT}, sol::SolutionPSDE, k::Int, m::
     # initialize!(int.iguess, m, sol.t[0], int.q[m])
 end
 
-# NOT IMPLEMENTING InitialGuessSDE
-# This function computes initial guesses for Y, Z and assigns them to int.solver.x
-# The prediction is calculated using an explicit integrator.
+"""
+This function computes initial guesses for Y, Z and assigns them to int.solver.x
+The prediction is calculated using an explicit integrator.
+"""
 function initial_guess!(int::IntegratorSIPRK{DT,TT}) where {DT,TT}
+
+    # NOT IMPLEMENTING InitialGuessSDE
 
     # SIMPLE SOLUTION
     # The simplest initial guess for Y, Z is 0
@@ -379,8 +387,10 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}) where {DT,TT}
 end
 
 
-"Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator."
-# Integrating the k-th sample path for the m-th initial condition
+"""
+Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator.
+Integrating the k-th sample path for the m-th initial condition
+"""
 function integrate_step!(int::IntegratorSIPRK{DT,TT}, sol::SolutionPSDE{DT,TT,NQ,NW}, k::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
 
     @assert k ≥ 1

@@ -317,11 +317,13 @@ function reset!(sol::SolutionSDE)
 end
 
 
-# "Creates HDF5 file and initialises datasets for SDE solution object."
-# It is implemented as one fucntion for all NQ and NW cases, rather than several
-# separate cases as was done for SolutionODE.
-# nt - the total number of time steps to store
-# ntime - the total number of timesteps to be computed
+"""
+Creates HDF5 file and initialises datasets for SDE solution object.
+  It is implemented as one fucntion for all NQ and NW cases, rather than several
+  separate cases as was done for SolutionODE.
+  nt - the total number of time steps to store
+  ntime - the total number of timesteps to be computed
+"""
 function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString, nt::Int=solution.nt, ntime::Int=solution.ntime; save_W=true) where {DT,TT,NQ,NW}
     @assert nt ≥ 1
     @assert ntime ≥ 1
@@ -403,9 +405,11 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString, n
 end
 
 
-# "Append solution to HDF5 file."
-# offset - start writing q at the position offset+2
-# offset2- start writing ΔW, ΔZ at the position offset2+1
+"""
+Append solution to HDF5 file.
+  offset - start writing q at the position offset+2
+  offset2- start writing ΔW, ΔZ at the position offset2+1
+"""
 function CommonFunctions.write_to_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, h5::HDF5.HDF5File, offset=0, offset2=offset) where {DT,TT,NQ,NW}
     # set convenience variables and compute ranges
     d   = solution.nd
