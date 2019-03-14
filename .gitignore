@@ -1,5 +1,7 @@
 build
 .ipynb_checkpoints
+.tags
+.tags1
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
