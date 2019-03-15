@@ -17,7 +17,7 @@
 * `q`: current solution of q
 * `p`: current solution of p
 """
-mutable struct ParametersCGVI{DT,TT,ΘT,FT,D,S,R} <: Parameters{DT,TT}
+mutable struct ParametersCGVI{DT,TT,D,S,R,ΘT,FT} <: Parameters{DT,TT}
     Θ::ΘT
     f::FT
 
@@ -40,26 +40,29 @@ end
 
 function ParametersCGVI(Θ::ΘT, f::FT, Δt::TT, b, c, x, m, a, r₀, r₁, q::Vector{DT}, p::Vector{DT}) where {DT,TT,ΘT,FT}
     @assert length(q) == length(p)
-    ParametersCGVI{DT,TT,ΘT,FT,length(q),length(x),length(c)}(Θ, f, Δt, b, c, x, m, a, r₀, r₁, 0, q, p)
+    ParametersCGVI{DT,TT,length(q),length(x),length(c),ΘT,FT}(Θ, f, Δt, b, c, x, m, a, r₀, r₁, 0, q, p)
 end
 
 
 struct NonlinearFunctionCacheCGVI{ST}
-    X::Matrix{ST}
-    Q::Matrix{ST}
-    V::Matrix{ST}
-    P::Matrix{ST}
-    F::Matrix{ST}
+    X::Vector{Vector{ST}}
+    Q::Vector{Vector{ST}}
+    V::Vector{Vector{ST}}
+    P::Vector{Vector{ST}}
+    F::Vector{Vector{ST}}
+
     q̅::Vector{ST}
     p̅::Vector{ST}
 
     function NonlinearFunctionCacheCGVI{ST}(D,S,R) where {ST}
         # create internal stage vectors
-        X = zeros(ST,D,S)
-        Q = zeros(ST,D,R)
-        V = zeros(ST,D,R)
-        P = zeros(ST,D,R)
-        F = zeros(ST,D,R)
+        X = create_internal_stage_vector(ST,D,S)
+        Q = create_internal_stage_vector(ST,D,R)
+        V = create_internal_stage_vector(ST,D,R)
+        P = create_internal_stage_vector(ST,D,R)
+        F = create_internal_stage_vector(ST,D,R)
+
+        # create solution vectors
         q̅ = zeros(ST,D)
         p̅ = zeros(ST,D)
 
@@ -69,7 +72,7 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersCGVI{DT,TT,ΘT,FT,D,S,R}) where {ST,DT,TT,ΘT,FT,D,S,R}
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersCGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     cache = NonlinearFunctionCacheCGVI{ST}(D, S, R)
 
     quote
@@ -82,17 +85,17 @@ end
 end
 
 
-function compute_stages!(x, X, Q, V, P, F, q̅, p̅, params::ParametersCGVI{DT,TT,ΘT,FT,D,S,R}) where {DT,TT,ΘT,FT,D,S,R}
+function compute_stages!(x, X, Q, V, P, F, q̅, p̅, params::ParametersCGVI{DT,TT,D,S,R}) where {DT,TT,D,S,R}
 
     # copy x to X
-    for i in 1:S
-        for k in 1:D
-            X[k,i] = x[D*(i-1)+k]
+    for i in eachindex(X)
+        for k in eachindex(X[i])
+            X[i][k] = x[D*(i-1)+k]
         end
     end
 
     # copy x to p̅
-    for k in 1:D
+    for k in eachindex(p̅)
         p̅[k] = x[D*S+k]
     end
 
@@ -107,83 +110,76 @@ function compute_stages!(x, X, Q, V, P, F, q̅, p̅, params::ParametersCGVI{DT,T
 end
 
 
-function compute_stages_q!(X::Matrix{ST}, Q::Matrix{ST}, q̅::Vector{ST}, params::ParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
-    @assert D == size(Q,1) == size(X,1)
-    @assert R == size(Q,2)
-    @assert S == size(X,2)
+function compute_stages_q!(X::Vector{Vector{ST}}, Q::Vector{Vector{ST}}, q̅::Vector{ST}, params::ParametersCGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+    @assert R == length(Q)
+    @assert S == length(X)
 
     local y::ST
 
     # compute Q
-    for i in 1:size(Q,2)
-        for k in 1:size(Q,1)
+    for i in eachindex(Q)
+        @assert D == length(Q[i])
+        for k in eachindex(Q[i])
             y = 0
-            for j in 1:size(X,2)
-                y += params.m[i,j] * X[k,j]
+            for j in eachindex(X)
+                @assert D == length(X[j])
+                y += params.m[i,j] * X[j][k]
             end
-            Q[k,i] = y
+            Q[i][k] = y
         end
     end
 
     # compute q̅
-    for k in 1:size(X,1)
+    for k in eachindex(q̅)
         y = 0
-        for i in 1:size(X,2)
-            y += params.r₁[i] * X[k,i]
+        for i in eachindex(X)
+            y += params.r₁[i] * X[i][k]
         end
         q̅[k] = y
     end
 end
 
 
-function compute_stages_v!(X::Matrix{ST}, V::Matrix{ST}, params::ParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
-    @assert D == size(V,1) == size(X,1)
-    @assert R == size(V,2)
-    @assert S == size(X,2)
+function compute_stages_v!(X::Vector{Vector{ST}}, V::Vector{Vector{ST}}, params::ParametersCGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+    @assert R == length(V)
+    @assert S == length(X)
 
     local y::ST
 
     # compute V
-    for i in 1:R
-        for k in 1:D
+    for i in eachindex(V)
+        @assert D == length(V[i])
+        for k in eachindex(V[i])
             y = 0
-            for j in 1:S
-                y += params.a[i,j] * X[k,j]
+            for j in eachindex(X)
+                @assert D == length(X[j])
+                y += params.a[i,j] * X[j][k]
             end
-            V[k,i] = y / params.Δt
+            V[i][k] = y / params.Δt
         end
     end
 end
 
 
-@generated function compute_stages_p!(Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, params::ParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
-    # create temporary vectors
-    tQ = zeros(ST,D)
-    tV = zeros(ST,D)
-    tP = zeros(ST,D)
-    tF = zeros(ST,D)
+function compute_stages_p!(Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
+                           P::Vector{Vector{ST}}, F::Vector{Vector{ST}},
+                           params::ParametersCGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
-    quote
-        @assert D == size(Q,1) == size(V,1) == size(P,1) == size(F,1)
-        @assert R == size(Q,2) == size(V,2) == size(P,2) == size(F,2)
+    @assert R == length(Q) == length(V) == length(P) == length(F)
 
-        local tᵢ::TT
+    local tᵢ::TT
 
-        # compute P=α(Q) and F=f(Q)
-        for i in 1:R
-            tᵢ = params.t + params.Δt * params.c[i]
-            simd_copy_xy_first!($tQ, Q, i)
-            simd_copy_xy_first!($tV, V, i)
-            params.Θ(tᵢ, $tQ, $tV, $tP)
-            params.f(tᵢ, $tQ, $tV, $tF)
-            simd_copy_yx_first!($tP, P, i)
-            simd_copy_yx_first!($tF, F, i)
-        end
+    # compute P=ϑ(Q,V) and F=f(Q,V)
+    for i in eachindex(Q,V,P,F)
+        @assert D == length(Q[i]) == length(V[i]) == length(P[i]) == length(F[i])
+        tᵢ = params.t + params.Δt * params.c[i]
+        params.Θ(tᵢ, Q[i], V[i], P[i])
+        params.f(tᵢ, Q[i], V[i], F[i])
     end
 end
 
 
-function compute_rhs!(b::Vector{ST}, X::Matrix{ST}, Q::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, p̅::Vector{ST}, params::ParametersCGVI{DT,TT,AT,FT,D,S,R}) where {ST,DT,TT,AT,FT,D,S,R}
+function compute_rhs!(b::Vector{ST}, X::Vector{Vector{ST}}, Q::Vector{Vector{ST}}, P::Vector{Vector{ST}}, F::Vector{Vector{ST}}, p̅::Vector{ST}, params::ParametersCGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local y::ST
     local z::ST
 
@@ -191,19 +187,19 @@ function compute_rhs!(b::Vector{ST}, X::Matrix{ST}, Q::Matrix{ST}, P::Matrix{ST}
     for i in 1:S
         for k in 1:D
             z = 0
-            for j in 1:R
-                z += params.b[j] * params.m[j,i] * F[k,j]
-                z += params.b[j] * params.a[j,i] * P[k,j] / params.Δt
+            for j in eachindex(P,F)
+                z += params.b[j] * params.m[j,i] * F[j][k]
+                z += params.b[j] * params.a[j,i] * P[j][k] / params.Δt
             end
             b[D*(i-1)+k] = z - (params.r₁[i] * p̅[k] - params.r₀[i] * params.p[k]) / params.Δt
         end
     end
 
     # compute b = - [(q-r₀Q)]
-    for k in 1:size(X,1)
+    for k in eachindex(params.q)
         y = 0
-        for j in 1:size(X,2)
-            y += params.r₀[j] * X[k,j]
+        for j in eachindex(X)
+            y += params.r₀[j] * X[j][k]
         end
         b[D*S+k] = y - params.q[k]
     end
@@ -290,8 +286,7 @@ function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}, 
 
     # create integrator
     IntegratorCGVI{DT, TT, ΘT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int), typeof(basis), D, S, R}(
-                equation, basis, quadrature, Δt, params, solver, iguess,
-                q, p, cache)
+                equation, basis, quadrature, Δt, params, solver, iguess, q, p, cache)
 end
 
 
