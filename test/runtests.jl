@@ -47,6 +47,7 @@ include("oscillator.jl")
 include("solutions/dataseries_tests.jl")
 include("solutions/timeseries_tests.jl")
 include("solutions/solutions_tests.jl")
+include("tableaus/coefficients_tests.jl")
 include("tableaus/tableaus_tests.jl")
 include("integrators/integrators_test.jl")
 
