@@ -21,6 +21,15 @@ function JacobianParametersAD(F!::FT, Jconfig, tx::Vector{T}, ty::Vector{T}) whe
     JacobianParametersAD{T, FT, length(tx)}(F!, Jconfig, tx, ty)
 end
 
+function JacobianParametersAD(F!::FT, T, n::Int) where {FT <: Function}
+    F!rev = (y,x) -> F!(x,y)
+    tx = zeros(T, n)
+    ty = zeros(T, n)
+    Jconfig = ForwardDiff.JacobianConfig(nothing, ty, tx)
+    Jparams = JacobianParametersAD(F!rev, Jconfig, tx, ty)
+end
+
+
 struct JacobianParametersFD{T, FT} <: JacobianParameters{T}
     ϵ::T
     F!::FT
@@ -28,6 +37,14 @@ struct JacobianParametersFD{T, FT} <: JacobianParameters{T}
     f2::Vector{T}
     e::Vector{T}
     tx::Vector{T}
+end
+
+function JacobianParametersFD(F!::FT, ϵ, T, n::Int) where {FT <: Function}
+    f1 = zeros(T, n)
+    f2 = zeros(T, n)
+    e  = zeros(T, n)
+    tx = zeros(T, n)
+    Jparams = JacobianParametersFD{T, typeof(F!)}(ϵ, F!, f1, f2, e, tx)
 end
 
 
@@ -54,38 +71,27 @@ function computeJacobian(x::Vector{T}, J::Matrix{T}, params::JacobianParametersF
     end
 end
 
-# TODO (reactivate)
-# function computeJacobianFD{T}(x::Vector{T}, J::Matrix{T}, F::Function, Fparams, ϵ::T)
-#     local f1::Vector{T} = zeros(T, length(x))
-#     local f2::Vector{T} = zeros(T, length(x))
-#     local e::Vector{T}  = zeros(T, length(x))
-#     local tx::Vector{T} = zeros(T, length(x))
-#
-#     computeJacobianFD(x, J, F, Fparams, ϵ, f1, f2, e, tx)
-# end
-
-
 function computeJacobian(x::Vector{T}, J::Matrix{T}, Jparams::JacobianParametersAD{T}) where {T}
     ForwardDiff.jacobian!(J, Jparams.F!, Jparams.ty, x, Jparams.Jconfig)
 end
 
+function computeJacobianFD(x::Vector{T}, J::Matrix{T}, F!::FT, ϵ::T) where{T, FT <: Function}
+    params = JacobianParametersFD(F!, ϵ, T, length(x))
+    computeJacobian(x, J, params)
+end
+
+function computeJacobianAD(x::Vector{T}, J::Matrix{T}, F!::FT) where{T, FT <: Function}
+    params = JacobianParametersAD(F!, T, length(x))
+    computeJacobian(x, J, params)
+end
+
 
 function getJacobianParameters(J, F!, T, n)
-    ϵ = get_config(:jacobian_fd_ϵ)
-
     if J == nothing
         if get_config(:jacobian_autodiff)
-            F!rev = (y,x) -> F!(x,y)
-            tx = zeros(T, n)
-            ty = zeros(T, n)
-            Jconfig = ForwardDiff.JacobianConfig(nothing, ty, tx)
-            Jparams = JacobianParametersAD(F!rev, Jconfig, tx, ty)
+            Jparams = JacobianParametersAD(F!, T, n)
         else
-            f1 = zeros(T, n)
-            f2 = zeros(T, n)
-            e  = zeros(T, n)
-            tx = zeros(T, n)
-            Jparams = JacobianParametersFD{T, typeof(F!)}(ϵ, F!, f1, f2, e, tx)
+            Jparams = JacobianParametersFD(F!, get_config(:jacobian_fd_ϵ), T, n)
         end
     else
         JacobianParametersUser{T, typeof(J)}(J)
