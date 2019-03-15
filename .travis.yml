@@ -1,15 +1,19 @@
 language: julia
-julia:
-  - 1.0
-  - 1.1
-  - nightly
 jobs:
   fast_finish: true
   include:
     - stage: "Linux"
       os: linux
+      julia:
+        - 1.0
+        - 1.1
+        - nightly
     - stage: "macOS"
       os: osx
+      julia:
+        - 1.0
+        - 1.1
+        - nightly
     - stage: "Documentation"
       julia: 1.1
       os: linux
