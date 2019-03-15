@@ -94,7 +94,7 @@ function getJacobianParameters(J, F!, T, n)
             Jparams = JacobianParametersFD(F!, get_config(:jacobian_fd_ϵ), T, n)
         end
     else
-        JacobianParametersUser{T, typeof(J)}(J)
+        Jparams = JacobianParametersUser{T, typeof(J)}(J)
     end
     return Jparams
 end
