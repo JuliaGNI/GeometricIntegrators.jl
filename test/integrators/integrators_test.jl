@@ -272,6 +272,14 @@ isol = integrate(vint, nt)
 # dsol = integrate(dint, nt)
 
 
+### Special Integrators ###
+
+pgint = IntegratorPGLRK(iode, getCoefficientsPGLRK(2), Δt)
+pgsol = integrate(pgint, nt)
+
+@test rel_err(pgsol.q, refx) < 1E-5
+
+
 ### Splitting Integrators ###
 
 sint = Integrator(sode, getTableauLieA(), Δt)
