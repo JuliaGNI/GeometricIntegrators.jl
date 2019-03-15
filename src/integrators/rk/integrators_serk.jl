@@ -59,15 +59,10 @@ struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
     ΔW::Vector{DT}
     ΔZ::Vector{DT}
 
-    q ::Matrix{Vector{DT}}
-    VQ::Vector{Vector{DT}}
-    BQ::Vector{Matrix{DT}}
-
-    # VQ::Array{DT,2}
-    # BQ::Array{DT,3}
-    # tQ::Array{DT,1}
-    # tV::Array{DT,1}
-    # tB::Array{DT,2}
+    q::Matrix{Vector{DT}}
+    Q::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
+    B::Vector{Matrix{DT}}
 
 
     function IntegratorSERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
@@ -81,10 +76,11 @@ struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
         q = create_solution_vector(DT, D, NS, NI)
 
         # create internal stage vectors
-        VQ = create_internal_stage_vector(DT, D, S)
-        BQ = create_internal_stage_vector(DT, D, M, S)
+        Q = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        B = create_internal_stage_vector(DT, D, M, S)
 
-        new(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), q, VQ, BQ)
+        new(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), q, Q, V, B)
     end
 end
 
@@ -128,10 +124,10 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
         int.ΔZ .= sol.W.ΔZ[n-1,r]
     end
 
-    # calculates v(t,tQ) and assigns to the i-th column of VQ
-    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.VQ[1])
+    # calculates v(t,tQ) and assigns to the i-th column of V
+    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.Q[1])
     # calculates B(t,tQ) and assigns to the matrix BQ[:,:,1]
-    int.equation.B(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.BQ[1])
+    int.equation.B(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.Q[1])
 
 
     for i in 2:int.tableau.s
@@ -139,13 +135,13 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
             # contribution from the drift part
             ydrift = 0.
             for j = 1:i-1
-                ydrift += int.tableau.qdrift.a[i,j] * int.VQ[j][k]
+                ydrift += int.tableau.qdrift.a[i,j] * int.V[j][k]
             end
 
             # ΔW contribution from the diffusion part
             ydiff .= zeros(DT, sol.nm)
             for j = 1:i-1
-                ydiff .+= int.tableau.qdiff.a[i,j] .* int.BQ[j][k,:]
+                ydiff .+= int.tableau.qdiff.a[i,j] .* int.B[j][k,:]
             end
 
             int.Q[i][k] = int.q[r,m][k] + int.Δt * ydrift + dot(ydiff,int.ΔW)
@@ -154,7 +150,7 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
             if int.tableau.qdiff2.name ≠ :NULL
                 ydiff .= zeros(DT, sol.nm)
                 for j = 1:i-1
-                    ydiff .+= int.tableau.qdiff2.a[i,j] .* int.BQ[j][k,:]
+                    ydiff .+= int.tableau.qdiff2.a[i,j] .* int.B[j][k,:]
                 end
 
                 int.Q[i][k] += dot(ydiff,int.ΔZ)/int.Δt
@@ -162,15 +158,15 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
 
         end
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.qdrift.c[i]
-        int.equation.v(tᵢ, int.Q[i], int.VQ[i])
-        int.equation.B(tᵢ, int.Q[i], int.BQ[i])
+        int.equation.v(tᵢ, int.Q[i], int.V[i])
+        int.equation.B(tᵢ, int.Q[i], int.B[i])
     end
 
     # compute final update
     if int.tableau.qdiff2.name == :NULL
-        update_solution!(int.q[r,m], int.VQ, int.BQ, int.tableau.qdrift.b, int.tableau.qdiff.b, int.Δt, int.ΔW)
+        update_solution!(int.q[r,m], int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.Δt, int.ΔW)
     else
-        update_solution!(int.q[r,m], int.VQ, int.BQ, int.tableau.qdrift.b, int.tableau.qdiff.b, int.tableau.qdiff2.b, int.Δt, int.ΔW, int.ΔZ)
+        update_solution!(int.q[r,m], int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.tableau.qdiff2.b, int.Δt, int.ΔW, int.ΔZ)
     end
 
     # take care of periodic solutions
