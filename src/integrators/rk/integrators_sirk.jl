@@ -73,29 +73,29 @@ and the diffusion matrix evaluated at the internal stages VQ=v(Q), BQ=B(Q),
 and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
 """
 struct NonlinearFunctionCacheSIRK{DT}
-    Q::Matrix{DT}
-    VQ::Matrix{DT}
-    BQ::Array{DT,3}
-    Y::Matrix{DT}
+    Q::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
+    B::Vector{Matrix{DT}}
+    Y::Vector{Vector{DT}}
 
-    vq::Vector{DT}
-    bq::Matrix{DT}
+    v::Vector{DT}
+    b::Matrix{DT}
     y::Vector{DT}
 
     function NonlinearFunctionCacheSIRK{DT}(d, m, s) where {DT}
 
         # create internal stage vectors
-        Q  = zeros(DT,d,s)
-        VQ = zeros(DT,d,s)
-        BQ = zeros(DT,d,m,s)
-        Y  = zeros(DT,d,s)
+        Q = create_internal_stage_vector(DT, d, s)
+        V = create_internal_stage_vector(DT, d, s)
+        B = create_internal_stage_vector(DT, d, m, s)
+        Y = create_internal_stage_vector(DT, d, s)
 
         # create velocity and update vector
-        vq = zeros(DT,d)
-        bq = zeros(DT,d,m)
-        y  = zeros(DT,d)
+        v = zeros(DT,d)
+        b = zeros(DT,d,m)
+        y = zeros(DT,d)
 
-        new(Q, VQ, BQ, Y, vq, bq, y)
+        new(Q, V, B, Y, v, b, y)
     end
 end
 
@@ -105,42 +105,31 @@ into the matrix Y, calculates the internal stages Q, the values of the RHS
 of the SDE ( v(Q) and B(Q) ), and assigns them to VQ and BQ.
 Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
 """
-@generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, VQ::Matrix{ST}, BQ::Array{ST,3}, Y::Matrix{ST},
-                                          params::ParametersSIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, B::Vector{Matrix{ST}}, Y::Vector{Vector{ST}},
+                         params::ParametersSIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
-    tQ::Vector{ST} = zeros(ST,D)
-    tV::Vector{ST} = zeros(ST,D)
-    tB::Matrix{ST} = zeros(ST,D,M)
+    local tᵢ::TT
 
-    quote
-        local tᵢ::TT
+    @assert S == length(Q) == length(V) == length(B)
 
-        @assert D == size(Q,1) == size(VQ,1) == size(BQ,1)
-        @assert S == size(Q,2) == size(VQ,2) == size(BQ,3)
-        @assert M == size(BQ,2)
 
-        # copy x to Y and calculate Q
-        for i in 1:size(Q,2)
-            for k in 1:size(Q,1)
-                Y[k,i] = x[D*(i-1)+k]
-                Q[k,i] = params.q[k] + Y[k,i]
-            end
+    # copy x to Y and calculate Q
+    for i in eachindex(Q)
+        @assert D == size(B[i],1) == length(Q[i]) == length(V[i])
+        @assert M == size(B[i],2)
+        for k in eachindex(Q[i])
+            Y[i][k] = x[D*(i-1)+k]
         end
+        Q[i] .= params.q .+ Y[i]
+    end
 
-        # compute VQ = v(Q) and BQ=B(Q)
-        for i in 1:S
-            tᵢ = params.t + params.Δt * params.tab.qdrift.c[i]
-            # copies the i-th column of Q to the vector tQ
-            simd_copy_xy_first!($tQ, Q, i)
-            # calculates v(t,tQ) and assigns to tV
-            params.equ.v(tᵢ, $tQ, $tV)
-            # copies tV into the i-th column of VQ
-            simd_copy_yx_first!($tV, VQ, i)
-            # calculates B(t,tQ) and assigns to the matrix tB
-            params.equ.B(tᵢ, $tQ, $tB)
-            # copies the matrix tB to BQ[:,:,i]
-            simd_copy_yx_first!($tB, BQ, i)
-        end
+    # compute VQ = v(Q) and BQ=B(Q)
+    for i in eachindex(Q,V,B)
+        tᵢ = params.t + params.Δt * params.tab.qdrift.c[i]
+        # calculates v(t,Q[i]) and assigns to the i-th column of V
+        params.equ.v(tᵢ, Q[i], V[i])
+        # calculates B(t,Q[i]) and assigns to the matrix B[i]
+        params.equ.B(tᵢ, Q[i], B[i])
     end
 end
 
@@ -150,7 +139,7 @@ end
     cache = NonlinearFunctionCacheSIRK{ST}(D, M, S)
 
     quote
-        compute_stages!(x, $cache.Q, $cache.VQ, $cache.BQ, $cache.Y, params)
+        compute_stages!(x, $cache.Q, $cache.V, $cache.B, $cache.Y, params)
 
         local y1::ST
         local y2::ST
@@ -161,10 +150,10 @@ end
                 y1 = 0
                 y2 = 0
                 for j in 1:S
-                    y1 += params.tab.qdrift.a[i,j] * $cache.VQ[k,j] * params.Δt + params.tab.qdiff.a[i,j] * dot($cache.BQ[k,:,j], params.ΔW)
-                    y2 += params.tab.qdrift.â[i,j] * $cache.VQ[k,j] * params.Δt + params.tab.qdiff.â[i,j] * dot($cache.BQ[k,:,j], params.ΔW)
+                    y1 += params.tab.qdrift.a[i,j] * $cache.V[j][k] * params.Δt + params.tab.qdiff.a[i,j] * dot($cache.B[j][k,:], params.ΔW)
+                    y2 += params.tab.qdrift.â[i,j] * $cache.V[j][k] * params.Δt + params.tab.qdiff.â[i,j] * dot($cache.B[j][k,:], params.ΔW)
                 end
-                b[D*(i-1)+k] = - $cache.Y[k,i] + (y1 + y2)
+                b[D*(i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
             end
         end
     end
@@ -354,10 +343,10 @@ function integrate_step!(int::IntegratorSIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,N
     check_solver_status(int.solver.status, int.solver.params, n)
 
     # compute the drift vector field and the diffusion matrix at internal stages
-    compute_stages!(int.solver.x, int.fcache.Q, int.fcache.VQ, int.fcache.BQ, int.fcache.Y, int.params)
+    compute_stages!(int.solver.x, int.fcache.Q, int.fcache.V, int.fcache.B, int.fcache.Y, int.params)
 
     # compute final update
-    update_solution!(int.q[k,m], int.fcache.VQ, int.fcache.BQ, int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂, int.params.Δt, int.params.ΔW)
+    update_solution!(int.q[k,m], int.fcache.V, int.fcache.B, int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂, int.params.Δt, int.params.ΔW)
 
     # # NOT IMPLEMENTING InitialGuessSDE
     # # # copy solution to initial guess

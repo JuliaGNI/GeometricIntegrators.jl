@@ -59,12 +59,15 @@ struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
     ΔW::Vector{DT}
     ΔZ::Vector{DT}
 
-    q ::Matrix{Array{DT,1}}
-    VQ::Array{DT,2}
-    BQ::Array{DT,3}
-    tQ::Array{DT,1}
-    tV::Array{DT,1}
-    tB::Array{DT,2}
+    q ::Matrix{Vector{DT}}
+    VQ::Vector{Vector{DT}}
+    BQ::Vector{Matrix{DT}}
+
+    # VQ::Array{DT,2}
+    # BQ::Array{DT,3}
+    # tQ::Array{DT,1}
+    # tV::Array{DT,1}
+    # tB::Array{DT,2}
 
 
     function IntegratorSERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
@@ -77,9 +80,11 @@ struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
         # create solution vectors
         q = create_solution_vector(DT, D, NS, NI)
 
-        new(equation, tableau, Δt, zeros(DT,M), zeros(DT,M),
-            q, zeros(DT,D,S), zeros(DT,D,M,S),
-            zeros(DT,D), zeros(DT,D), zeros(DT,D,M))
+        # create internal stage vectors
+        VQ = create_internal_stage_vector(DT, D, S)
+        BQ = create_internal_stage_vector(DT, D, M, S)
+
+        new(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), q, VQ, BQ)
     end
 end
 
@@ -123,48 +128,42 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
         int.ΔZ .= sol.W.ΔZ[n-1,r]
     end
 
-    # calculates v(t,tQ) and assigns to the matrix tV
-    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.tV)
-    # copies tV into the i-th column of VQ
-    simd_copy_yx_first!(int.tV, int.VQ, 1)
-    # calculates B(t,tQ) and assigns to the matrix tB
-    int.equation.B(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.tB)
-    # copies the matrix tB to BQ[:,:,i]
-    simd_copy_yx_first!(int.tB, int.BQ, 1)
+    # calculates v(t,tQ) and assigns to the i-th column of VQ
+    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.VQ[1])
+    # calculates B(t,tQ) and assigns to the matrix BQ[:,:,1]
+    int.equation.B(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.BQ[1])
 
 
     for i in 2:int.tableau.s
-        @inbounds for k in eachindex(int.tQ)
+        @inbounds for k in eachindex(int.Q[i])
             # contribution from the drift part
             ydrift = 0.
             for j = 1:i-1
-                ydrift += int.tableau.qdrift.a[i,j] * int.VQ[k,j]
+                ydrift += int.tableau.qdrift.a[i,j] * int.VQ[j][k]
             end
 
             # ΔW contribution from the diffusion part
             ydiff .= zeros(DT, sol.nm)
             for j = 1:i-1
-                ydiff += int.tableau.qdiff.a[i,j] * int.BQ[k,:,j]
+                ydiff .+= int.tableau.qdiff.a[i,j] .* int.BQ[j][k,:]
             end
 
-            int.tQ[k] = int.q[r,m][k] + int.Δt * ydrift + dot(ydiff,int.ΔW)
+            int.Q[i][k] = int.q[r,m][k] + int.Δt * ydrift + dot(ydiff,int.ΔW)
 
             # ΔZ contribution from the diffusion part
             if int.tableau.qdiff2.name ≠ :NULL
                 ydiff .= zeros(DT, sol.nm)
                 for j = 1:i-1
-                    ydiff += int.tableau.qdiff2.a[i,j] * int.BQ[k,:,j]
+                    ydiff .+= int.tableau.qdiff2.a[i,j] .* int.BQ[j][k,:]
                 end
 
-                int.tQ[k] = int.tQ[k] + dot(ydiff,int.ΔZ)/int.Δt
+                int.Q[i][k] += dot(ydiff,int.ΔZ)/int.Δt
             end
 
         end
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.qdrift.c[i]
-        int.equation.v(tᵢ, int.tQ, int.tV)
-        simd_copy_yx_first!(int.tV, int.VQ, i)
-        int.equation.B(tᵢ, int.tQ, int.tB)
-        simd_copy_yx_first!(int.tB, int.BQ, i)
+        int.equation.v(tᵢ, int.Q[i], int.VQ[i])
+        int.equation.B(tᵢ, int.Q[i], int.BQ[i])
     end
 
     # compute final update
