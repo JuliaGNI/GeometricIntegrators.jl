@@ -91,16 +91,16 @@ and the diffusion matrix evaluated at the internal stages VQ=v(Q), BQ=B(Q),
 and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
 """
 struct NonlinearFunctionCacheSISPRK{DT}
-    Q ::Matrix{DT}
-    P ::Matrix{DT}
-    V ::Matrix{DT}
-    F1::Matrix{DT}
-    F2::Matrix{DT}
-    B ::Array{DT,3}
-    G1::Array{DT,3}
-    G2::Array{DT,3}
-    Y ::Matrix{DT}
-    Z ::Matrix{DT}
+    Q ::Vector{Vector{DT}}
+    P ::Vector{Vector{DT}}
+    V ::Vector{Vector{DT}}
+    F1::Vector{Vector{DT}}
+    F2::Vector{Vector{DT}}
+    B ::Vector{Matrix{DT}}
+    G1::Vector{Matrix{DT}}
+    G2::Vector{Matrix{DT}}
+    Y ::Vector{Vector{DT}}
+    Z ::Vector{Vector{DT}}
 
     v ::Vector{DT}
     f1::Vector{DT}
@@ -111,29 +111,29 @@ struct NonlinearFunctionCacheSISPRK{DT}
     y ::Vector{DT}
     z ::Vector{DT}
 
-    function NonlinearFunctionCacheSISPRK{DT}(d, m, s) where {DT}
+    function NonlinearFunctionCacheSISPRK{DT}(D, M, S) where {DT}
 
         # create internal stage vectors
-        Q  = zeros(DT,d,s)
-        P  = zeros(DT,d,s)
-        V  = zeros(DT,d,s)
-        F1 = zeros(DT,d,s)
-        F2 = zeros(DT,d,s)
-        B  = zeros(DT,d,m,s)
-        G1 = zeros(DT,d,m,s)
-        G2 = zeros(DT,d,m,s)
-        Y  = zeros(DT,d,s)
-        Z  = zeros(DT,d,s)
+        Q  = create_internal_stage_vector(DT, D, S)
+        P  = create_internal_stage_vector(DT, D, S)
+        V  = create_internal_stage_vector(DT, D, S)
+        F1 = create_internal_stage_vector(DT, D, S)
+        F2 = create_internal_stage_vector(DT, D, S)
+        B  = create_internal_stage_vector(DT, D, M, S)
+        G1 = create_internal_stage_vector(DT, D, M, S)
+        G2 = create_internal_stage_vector(DT, D, M, S)
+        Y  = create_internal_stage_vector(DT, D, S)
+        Z  = create_internal_stage_vector(DT, D, S)
 
         # create velocity and update vector
-        v  = zeros(DT,d)
-        f1 = zeros(DT,d)
-        f2 = zeros(DT,d)
-        b  = zeros(DT,d,m)
-        g1 = zeros(DT,d,m)
-        g2 = zeros(DT,d,m)
-        y  = zeros(DT,d)
-        z  = zeros(DT,d)
+        v  = zeros(DT,D)
+        f1 = zeros(DT,D)
+        f2 = zeros(DT,D)
+        b  = zeros(DT,D,M)
+        g1 = zeros(DT,D,M)
+        g2 = zeros(DT,D,M)
+        y  = zeros(DT,D)
+        z  = zeros(DT,D)
 
         new(Q, P, V, F1, F2, B, G1, G2, Y, Z, v, f1, f2, b, g1, g2, y, z)
     end
