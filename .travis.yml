@@ -9,7 +9,9 @@ julia:
 matrix:
   fast_finish: true
   allow_failures:
-    - julia: nightly
+    - julia:
+        - nightly
+        - 1.1
     - os: osx
 jobs:
   allow_failures:
