@@ -82,29 +82,29 @@ spsde3  = kubo_oscillator_spsde_3()
 @test typeof(Integrator(spsde1, getTableauModifiedStochasticStormerVerlet(), Δt)) <: IntegratorSISPRK
 
 
-
 ### SERK Integrators ###
+
 int = Integrator(sde1, getTableauBurrageE1(), Δt)
 sol = Solution(sde1, Δt, nt, conv="strong")
 integrate!(int, sol)
 
-@test rel_energy_err_sde(sol) < 1E-5
+@test rel_energy_err_sde(sol) < 1E-3
 
 int = Integrator(sde2, getTableauBurrageE1(), Δt)
 sol = Solution(sde2, Δt, nt, conv="strong")
 integrate!(int, sol)
 
-@test rel_energy_err_sde(sol) < 1E-5
+@test rel_energy_err_sde(sol) < 1E-3
 
 int = Integrator(sde3, getTableauBurrageE1(), Δt)
 sol = Solution(sde3, Δt, nt, conv="strong")
 integrate!(int, sol)
 
-@test rel_energy_err_sde(sol) < 1E-5
-
+@test rel_energy_err_sde(sol) < 1E-3
 
 
 ### SIRK Integrators ###
+
 int = Integrator(sde1, getTableauStochasticGLRK(1), Δt)
 sol = Solution(sde1, Δt, nt, conv="strong")
 integrate!(int, sol)
@@ -125,6 +125,7 @@ integrate!(int, sol)
 
 
 ### WERK Integrators ###
+
 int = Integrator(sde1, getTableauRosslerRS1(), Δt)
 sol = Solution(sde1, Δt, nt, conv="weak")
 integrate!(int, sol)
@@ -164,6 +165,7 @@ integrate!(int, sol)
 
 
 ### SIPRK Integrators ###
+
 int = Integrator(psde1, getTableauStochasticStormerVerlet(), Δt)
 sol = Solution(psde1, Δt, nt, conv="strong")
 integrate!(int, sol)
@@ -184,6 +186,7 @@ integrate!(int, sol)
 
 
 ### SISPRK Integrators ###
+
 int = Integrator(spsde1, getTableauModifiedStochasticStormerVerlet(), Δt)
 sol = Solution(spsde1, Δt, nt, conv="strong")
 integrate!(int, sol)
