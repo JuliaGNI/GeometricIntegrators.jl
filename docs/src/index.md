@@ -60,22 +60,23 @@ The following list provides and overview of supported and planned features.
 - [x] Gauss-Legendre Runge-Kutta Methods (GLRK),
 - [x] Variational Partitioned Runge-Kutta Methods (VPRK),
 - [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK),
-- [ ] Specialised Partitioned Additive Runge-Kutta Methods for Dirac Constraints (SPARK-Dirac),
+- [ ] Hamiltonian Partitioned Additive Runge-Kutta Methods (HPARK),
 - [x] Continuous Galerkin Variational Integrators (CGVI),
 - [x] Discontinuous Galerkin Variational Integrators (DGVI),
 - [ ] Hamilton-Pontryagin-Galerkin Integrators (HPGI),
 - [ ] Spline Variational Integrators (SVI),
 - [ ] Taylor Variational Integrators (TVI),
-- [x] Splitting Methods (SM).
+- [x] Splitting Methods (SM),
+- [ ] Hamiltonian Boundary Value Methods (HBVM).
 
 #### Families of Stochastic Integrators
 
-- [x] Stochastic Explicit Runge-Kutta Methods
-- [x] Stochastic Implicit Runge-Kutta Methods
-- [x] Stochastic Implicit Partitioned Runge-Kutta Methods
-- [x] Stochastic Implicit Split Partitioned Runge-Kutta Methods
-- [x] Stochastic Weak Explicit Runge-Kutta Methods
-- [x] Stochastic Weak Implicit Runge-Kutta Methods
+- [x] Stochastic Explicit Runge-Kutta Methods,
+- [x] Stochastic Implicit Runge-Kutta Methods,
+- [x] Stochastic Implicit Partitioned Runge-Kutta Methods,
+- [x] Stochastic Implicit Split Partitioned Runge-Kutta Methods,
+- [x] Stochastic Weak Explicit Runge-Kutta Methods,
+- [x] Stochastic Weak Implicit Runge-Kutta Methods.
 
 #### Families of Equations
 
@@ -127,7 +128,7 @@ with
 
 with
 
-- [ ] Analytic Jacobian,
+- [x] Analytic Jacobian,
 - [x] Finite Difference Jacobian,
 - [x] Jacobian obtained via Automatic Differentiation.
 
