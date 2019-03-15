@@ -84,14 +84,16 @@ psol = Solution(pdae, Δt, ntime)
 
 
 ### Test SolutionSDE ###
-
-sde  = oscillator_sde()
-
+sde  = kubo_oscillator_sde_1()
 ssol = Solution(sde, Δt, ntime)
 @test typeof(ssol) <: SolutionSDE
 
-ssol0 = Solution(similar(sde, q0), Δt, ntime)
-@test typeof(ssol0) <: SolutionSDE
+### Test SolutionPSDE ###
+psde  = kubo_oscillator_psde_1()
+ssol = Solution(psde, Δt, ntime)
+@test typeof(ssol) <: SolutionPSDE
 
-ssol1 = Solution(similar(sde, q1), Δt, ntime)
-@test typeof(ssol1) <: SolutionSDE
+### Test SolutionSPSDE ###
+spsde  = kubo_oscillator_spsde_1()
+ssol = Solution(spsde, Δt, ntime)
+@test typeof(ssol) <: SolutionPSDE

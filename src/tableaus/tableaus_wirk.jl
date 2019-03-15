@@ -23,7 +23,7 @@ function getTableauSRKw1(x::Number=0.0)
     c0 =  [0.5]
     c1 =  [1. - x]
 
-    TableauWFIRK(:SRKw1, A0, A1, B0, B1, B3, α, β1, c0, c1)
+    TableauWIRK(:SRKw1, A0, A1, B0, B1, B3, α, β1, c0, c1)
 end
 
 
@@ -65,5 +65,5 @@ function getTableauSRKw2(x1::Number=0.0, x2::Number=0.0, x3::Number=0.0)
     c0 =  [1. / 8., 3. / 8., 5. / 8., 7. / 8.]
     c1 =  [0.5, 0.5, 0.0, 0.0]
 
-    TableauWFIRK(:SRKw2, A0, A1, B0, B1, B3, α, β1, c0, c1)
+    TableauWIRK(:SRKw2, A0, A1, B0, B1, B3, α, β1, c0, c1)
 end

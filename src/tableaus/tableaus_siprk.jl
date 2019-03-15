@@ -15,7 +15,7 @@ function getTableauStochasticSymplecticEuler()
     b_p = [1.0]
     c_p = [0.0]
 
-    TableauSFIPRK(:StochasticSymplecticEuler, 1, a_q, b_q, c_q, 1, a_q, b_q, c_q, 1, a_p, b_p, c_p, 1, a_p, b_p, c_p)
+    TableauSIPRK(:StochasticSymplecticEuler, 1, a_q, b_q, c_q, 1, a_q, b_q, c_q, 1, a_p, b_p, c_p, 1, a_p, b_p, c_p)
 end
 
 
@@ -23,5 +23,5 @@ end
 "Tableau for the 2-stage stochastic LobattoIIA-IIB method (Stormer-Verlet)"
 function getTableauStochasticStormerVerlet()
 
-    TableauSFIPRK(:StochasticStormerVerlet,getCoefficientsLobIIIA2(),getCoefficientsLobIIIA2(),getCoefficientsLobIIIB2(),getCoefficientsLobIIIB2())
+    TableauSIPRK(:StochasticStormerVerlet,getCoefficientsLobIIIA2(),getCoefficientsLobIIIA2(),getCoefficientsLobIIIB2(),getCoefficientsLobIIIB2())
 end

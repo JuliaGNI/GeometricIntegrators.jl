@@ -15,7 +15,7 @@ function getTableauStochasticGLRK(s::Int)
         name = :StochasticGLRK6
     end
 
-    TableauSFIRK(name,getCoefficientsGLRK(s),getCoefficientsGLRK(s))
+    TableauSIRK(name,getCoefficientsGLRK(s),getCoefficientsGLRK(s))
 end
 
 
@@ -34,5 +34,5 @@ function getTableauStochasticDIRK(c::Number=0.5)
 
     c_drift = [c/2, (1+c)/2]
 
-    TableauSFIRK(:StochasticSymplecticDIRK, 2, a_drift, b_drift, c_drift, 2, a_drift, b_drift, c_drift)
+    TableauSIRK(:StochasticSymplecticDIRK, 2, a_drift, b_drift, c_drift, 2, a_drift, b_drift, c_drift)
 end
