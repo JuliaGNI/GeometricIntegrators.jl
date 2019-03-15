@@ -12,8 +12,8 @@ function getCoefficientsPGLRK(s::Int)
     gl = gausslegendre(s)
 
     # scale from [-1,+1] to [0,1]
-    c = (gl[1]+1)/2
-    b = gl[2]/2
+    c = (gl[1] .+ 1) ./ 2
+    b = gl[2] ./ 2
 
     T = eltype(c)
 
