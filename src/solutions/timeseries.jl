@@ -43,9 +43,8 @@ Base.parent(ts::TimeSeries) = ts.t
 Base.eltype(ts::TimeSeries{T}) where {T} = T
 Base.ndims(ts::TimeSeries) = 1
 
-errmsg_size(ts::TimeSeries) = error("size not supported for time series with axes $(axes(ts))")
-Base.size(ts::TimeSeries) = errmsg_size(ts)
-Base.size(ts::TimeSeries, d) = errmsg_size(ts)
+Base.size(ts::TimeSeries) = ts.n+1
+Base.size(ts::TimeSeries, d) = d == 1 ? size(ts) : 0
 
 Base.eachindex(::IndexCartesian, ts::TimeSeries) = CartesianIndices(axes(ts))
 Base.eachindex(::IndexLinear, ts::TimeSeries) = axes(ts, 1)
@@ -55,7 +54,7 @@ Base.lastindex(ts::TimeSeries) = ts.n
 @inline Base.axes(ts::TimeSeries) = (0:ts.n,)
 @inline Base.axes(ts::TimeSeries, d) = d == 1 ? (axes(parent(ts))[d] .- 1) : (1:1)
 
-Base.strides(ts::TimeSeries) = (1,)
+Base.strides(ts::TimeSeries) = strides(1)
 Base.stride(ts::TimeSeries, d) = strides(ts)[d]
 
 
