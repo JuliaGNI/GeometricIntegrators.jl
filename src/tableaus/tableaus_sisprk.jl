@@ -7,7 +7,7 @@ Tableau for the 2-stage stochastic LobattoIIIA-IIIB-IIID method
 """
 function getTableauStochasticLobIIIABD2()
 
-    TableauSFISPRK(:StochasticLobIIIABD2,getCoefficientsLobIIIA2(),getCoefficientsLobIIIA2(),
+    TableauSISPRK(:StochasticLobIIIABD2,getCoefficientsLobIIIA2(),getCoefficientsLobIIIA2(),
                                          getCoefficientsLobIIIB2(),getCoefficientsLobIIID2(),
                                          getCoefficientsLobIIIB2(),getCoefficientsLobIIID2())
 end
@@ -31,7 +31,7 @@ function getTableauModifiedStochasticStormerVerlet(c::Number=0.0)
 
     c_drift2 = [c, c]
 
-    TableauSFISPRK(:StochasticModifiedStormerVerlet,getCoefficientsLobIIIA2(),getCoefficientsLobIIIA2(),
+    TableauSISPRK(:StochasticModifiedStormerVerlet,getCoefficientsLobIIIA2(),getCoefficientsLobIIIA2(),
                                          getCoefficientsLobIIIB2(),CoefficientsRK(typeof(c), :cTableau, 1, a_drift2, b_drift2, c_drift2),
                                          getCoefficientsLobIIIB2(),getCoefficientsLobIIIB2())
 end
