@@ -36,7 +36,8 @@ sol1 = Solution(similar(ode, q1), Δt, ntime)
 
 set_initial_conditions!(sol, t0, q0)
 get_initial_conditions!(sol, tq, 1)
-@test sol != sol0
+
+# @test sol != sol0
 @test tq == q0
 
 set_initial_conditions!(sol1, similar(ode, t1, q2))
