@@ -419,8 +419,10 @@ function initial_guess!(int::IntegratorSISPRK{DT,TT}) where {DT,TT}
 end
 
 
-"Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator."
-# Integrating the k-th sample path for the m-th initial condition
+"""
+Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator.
+ Integrating the k-th sample path for the m-th initial condition
+"""
 function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,NQ,NW}, k::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
 
     @assert k ≥ 1
