@@ -59,10 +59,15 @@ struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
     ΔW::Vector{DT}
     ΔZ::Vector{DT}
 
-    q::Matrix{Vector{DT}}
-    Q::Vector{Vector{DT}}
-    V::Vector{Vector{DT}}
-    B::Vector{Matrix{DT}}
+    q ::Matrix{Vector{DT}}
+    VQ::Vector{Vector{DT}}
+    BQ::Vector{Matrix{DT}}
+
+    # VQ::Array{DT,2}
+    # BQ::Array{DT,3}
+    # tQ::Array{DT,1}
+    # tV::Array{DT,1}
+    # tB::Array{DT,2}
 
 
     function IntegratorSERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
