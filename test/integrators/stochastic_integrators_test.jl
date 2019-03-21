@@ -89,19 +89,19 @@ int = Integrator(sde1, getTableauBurrageE1(), Δt)
 sol = Solution(sde1, Δt, nt, conv="strong")
 integrate!(int, sol)
 
-@test rel_energy_err_sde(sol) < 2E-3
+@test rel_energy_err_sde(sol) < 1E-5
 
 int = Integrator(sde2, getTableauBurrageE1(), Δt)
 sol = Solution(sde2, Δt, nt, conv="strong")
 integrate!(int, sol)
 
-@test rel_energy_err_sde(sol) < 2E-3
+@test rel_energy_err_sde(sol) < 1E-6
 
 int = Integrator(sde3, getTableauBurrageE1(), Δt)
 sol = Solution(sde3, Δt, nt, conv="strong")
 integrate!(int, sol)
 
-@test rel_energy_err_sde(sol) < 2E-3
+@test rel_energy_err_sde(sol) < 1E-6
 
 
 ### SIRK Integrators ###
