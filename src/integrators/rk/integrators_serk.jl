@@ -59,15 +59,10 @@ struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
     ΔW::Vector{DT}
     ΔZ::Vector{DT}
 
-    q ::Matrix{Vector{DT}}
-    VQ::Vector{Vector{DT}}
-    BQ::Vector{Matrix{DT}}
-
-    # VQ::Array{DT,2}
-    # BQ::Array{DT,3}
-    # tQ::Array{DT,1}
-    # tV::Array{DT,1}
-    # tB::Array{DT,2}
+    q ::Matrix{Vector{DT}}    # q[k,m]  - holds the previous time step solution (for k-th sample path and m-th initial condition)
+    Q::Vector{Vector{DT}}     # Q[j][k] - the k-th component of the j-th internal stage
+    V::Vector{Vector{DT}}     # V[j][k] - the k-th component of v(Q[j])
+    B::Vector{Matrix{DT}}     # B[j]    - the diffucion matrix B(Q[j])
 
 
     function IntegratorSERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
