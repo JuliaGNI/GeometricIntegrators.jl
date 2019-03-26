@@ -272,6 +272,24 @@ isol = integrate(vint, nt)
 # dsol = integrate(dint, nt)
 
 
+### Special Integrators ###
+
+pgint = IntegratorPGLRK(iode, getCoefficientsPGLRK(2), Δt)
+pgsol = integrate(pgint, nt)
+
+@test rel_err(pgsol.q, refx) < 1E-5
+
+
+### CGVI and DGVI Integrators ###
+
+QGau4 = GaussLegendreQuadrature(4)
+BGau4 = LagrangeBasis(nodes(QGau4))
+cgint = IntegratorCGVI(iode, BGau4, QGau4, Δt)
+cgsol = integrate(cgint, nt)
+
+@test rel_err(cgsol.q, refx) < 1E-7
+
+
 ### Splitting Integrators ###
 
 sint = Integrator(sode, getTableauLieA(), Δt)

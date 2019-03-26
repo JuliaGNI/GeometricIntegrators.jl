@@ -1,5 +1,5 @@
 
-using Polynomials: Poly
+using Polynomials: Poly, polyder, polyint
 
 
 struct LegendreBasisHierarchical{T, N, fT, pT, dT, iT} <: PolynomialBasis{T,N}

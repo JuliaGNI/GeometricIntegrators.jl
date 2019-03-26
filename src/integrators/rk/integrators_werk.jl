@@ -79,15 +79,16 @@ struct IntegratorWERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
     ΔW::Vector{DT}
     ΔZ::Vector{DT}
 
-    q ::Matrix{Array{DT,1}}
-    VQ::Array{DT,2}
-    BQ1::Array{DT,3}   # Bq1[:,:,i] holds the values of the diffusion matrix such that BQ1[:,l,i] is evaluated at H^(l)_i
-    BQ2::Array{DT,3}   # Bq2[:,:,i] holds the values of the diffusion matrix such that BQ1[:,l,i] is evaluated at \hat H^(l)_i
-    tQ0::Array{DT,1}   # tQ0[1..n]      - the internal stage H^(0)_i for a given i
-    tQ1::Array{DT,2}   # tQ1[1..n,1..m] - the internal stages H^(l)_i for a given i
-    tQ2::Array{DT,2}   # tQ2[1..n,1..m] - the internal stages \hat H^(l)_i for a given i
-    tV::Array{DT,1}    # the value of the drift term evaluated at the internal stage H^(0)_i or the l-th column of the diffusion term for H^(l)_i for a given i
-    tB::Array{DT,2}    # the value of the diffusion matrix; here used only at the first stage of the step
+    q ::Matrix{Vector{DT}}
+    Q0::Vector{DT}           # Q0[1..n]      - the internal stage H^(0)_i for a given i
+    Q1::Vector{Vector{DT}}   # Q1[1..n,1..m] - the internal stages H^(l)_i for a given i
+    Q2::Vector{Vector{DT}}   # Q2[1..n,1..m] - the internal stages \hat H^(l)_i for a given i
+    V ::Vector{Vector{DT}}
+    B1::Vector{Matrix{DT}}   # B1[i] holds the values of the diffusion matrix such that BQ1[i][:,l] is evaluated at H^(l)_i
+    B2::Vector{Matrix{DT}}   # B2[i] holds the values of the diffusion matrix such that BQ2[i][:,l] is evaluated at \hat H^(l)_i
+    # tV::Array{DT,1}          # the value of the drift term evaluated at the internal stage H^(0)_i or the l-th column of the diffusion term for H^(l)_i for a given i
+    # tB::Array{DT,2}          # the value of the diffusion matrix; here used only at the first stage of the step
+    tB::Vector{DT}
 
 
     function IntegratorWERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
@@ -100,9 +101,15 @@ struct IntegratorWERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
         # create solution vectors
         q = create_solution_vector(DT, D, NS, NI)
 
-        new(equation, tableau, Δt, zeros(DT,M), zeros(DT,M),
-            q, zeros(DT,D,S), zeros(DT,D,M,S), zeros(DT,D,M,S),
-            zeros(DT,D), zeros(DT,D,M), zeros(DT,D,M), zeros(DT,D), zeros(DT,D,M))
+        # create internal stage vectors
+        Q0 = zeros(DT, D)
+        Q1 = create_internal_stage_vector(DT, D, M)
+        Q2 = create_internal_stage_vector(DT, D, M)
+        V  = create_internal_stage_vector(DT, D, S)
+        B1 = create_internal_stage_vector(DT, D, M, S)
+        B2 = create_internal_stage_vector(DT, D, M, S)
+
+        new(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), q, Q0, Q1, Q2, V, B1, B2, zeros(DT,D))
     end
 end
 
@@ -115,7 +122,6 @@ function initialize!(int::IntegratorWERK, sol::SolutionSDE, k::Int, m::Int)
     @assert m ≤ sol.ni
     @assert k ≥ 1
     @assert k ≤ sol.ns
-
 
     # copy initial conditions from solution
     get_initial_conditions!(sol, int.q[k,m], k, m)
@@ -147,78 +153,75 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
     end
 
     # THE FIRST INTERNAL STAGES ARE ALL EQUAL TO THE PREVIOUS STEP SOLUTION
-    # calculates v(t,tQ0) and assigns to the matrix tV
-    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.tV)
-    # copies tV into the i-th column of VQ
-    simd_copy_yx_first!(int.tV, int.VQ, 1)
-    # calculates B(t,tQ) and assigns to the matrix tB
+    # calculates v(t,tQ0) and assigns to the 1st column of V
+    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.V[1])
+    # calculates B(t,Q) and assigns to the matrix tB
     # no need to calculate the columns of B separately, because all internal stages
     # for i=1 are equal to int.q[r,m]
-    int.equation.B(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.tB)
-    # copies the matrix tB to BQ1[:,:,i] and BQ2[:,:,i] (they're equal for i=1)
-    simd_copy_yx_first!(int.tB, int.BQ1, 1)
-    simd_copy_yx_first!(int.tB, int.BQ2, 1)
+    int.equation.B(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.B1[1])
+    # copy B1[i] to B2[i] (they're equal for i=1)
+    int.B2[1] .= int.B1[1]
 
 
     for i in 2:int.tableau.s
 
         # Calculating the internal stage H^(0)_i
-        @inbounds for k in eachindex(int.tQ0)
+        @inbounds for k in eachindex(int.Q0)
             # contribution from the drift part
             ydrift = 0.
             for j = 1:i-1
-                ydrift += int.tableau.qdrift0.a[i,j] * int.VQ[k,j]
+                ydrift += int.tableau.qdrift0.a[i,j] * int.V[j][k]
             end
 
             # ΔW contribution from the diffusion part
             ydiff .= zeros(DT, sol.nm)
             for j = 1:i-1
-                ydiff += int.tableau.qdiff0.a[i,j] * int.BQ1[k,:,j]
+                ydiff += int.tableau.qdiff0.a[i,j] * int.B1[j][k,:]
             end
 
-            int.tQ0[k] = int.q[r,m][k] + int.Δt * ydrift + dot(ydiff,int.ΔW)
+            int.Q0[k] = int.q[r,m][k] + int.Δt * ydrift + dot(ydiff,int.ΔW)
 
         end
 
 
         # Calculating the internal stages H^(l)_i for l=1..sol.nm
-        @inbounds for k in eachindex(int.tQ1[:,1])
+        @inbounds for k in eachindex(int.Q1[1][:])
             # contribution from the drift part (same for all noises)
             ydrift = 0.
             for j = 1:i-1
-                ydrift += int.tableau.qdrift1.a[i,j] * int.VQ[k,j]
+                ydrift += int.tableau.qdrift1.a[i,j] * int.V[j][k]
             end
 
             # contribution from the diffusion part is different for each noise
-            @inbounds for noise_idx in eachindex(int.tQ1[1,:])
+            @inbounds for noise_idx in eachindex(int.Q1)
 
                 # ΔW contribution from the diffusion part
                 ydiff .= zeros(DT, sol.nm)
                 for j = 1:i-1
                     for l = 1:sol.nm
                         if l==noise_idx
-                            ydiff[l] += int.tableau.qdiff1.a[i,j] * int.BQ1[k,l,j]
+                            ydiff[l] += int.tableau.qdiff1.a[i,j] * int.B1[j][k,l]
                         else
-                            ydiff[l] += int.tableau.qdiff3.a[i,j] * int.BQ1[k,l,j]
+                            ydiff[l] += int.tableau.qdiff3.a[i,j] * int.B1[j][k,l]
                         end
                     end
                 end
 
-                int.tQ1[k,noise_idx] = int.q[r,m][k] + int.Δt * ydrift + dot(ydiff,int.ΔW)
+                int.Q1[noise_idx][k] = int.q[r,m][k] + int.Δt * ydrift + dot(ydiff,int.ΔW)
             end
         end
 
 
         # Calculating the internal stages \hat H^(l)_i for l=1..sol.nm
-        @inbounds for k in eachindex(int.tQ2[:,1])
+        @inbounds for k in eachindex(int.Q2)
             # contribution from the drift part (same for all noises)
             ydrift = 0.
             for j = 1:i-1
-                ydrift += int.tableau.qdrift2.a[i,j] * int.VQ[k,j]
+                ydrift += int.tableau.qdrift2.a[i,j] * int.V[j][k]
             end
 
             # contribution from the diffusion part is different for each noise
-            @inbounds for noise_idx in eachindex(int.tQ2[1,:])
+            @inbounds for noise_idx in eachindex(int.Q2)
 
                 # ΔW contribution from the diffusion part
                 ydiff2 = 0.0
@@ -227,33 +230,30 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
                     for l = 1:sol.nm
                         # calculating the terms with the random variables \hat I_{noise_idx,l}
                         if l<noise_idx
-                            ydiff2 += int.tableau.qdiff2.a[i,j] * int.BQ1[k,l,j] * int.ΔW[noise_idx] * int.ΔZ[l]
+                            ydiff2 += int.tableau.qdiff2.a[i,j] * int.B1[j][k,l] * int.ΔW[noise_idx] * int.ΔZ[l]
                         elseif l>noise_idx
-                            ydiff2 += -int.tableau.qdiff2.a[i,j] * int.BQ1[k,l,j] * int.ΔW[l] * int.ΔZ[noise_idx]
+                            ydiff2 += -int.tableau.qdiff2.a[i,j] * int.B1[j][k,l] * int.ΔW[l] * int.ΔZ[noise_idx]
                         end
                     end
                 end
 
-                int.tQ2[k,noise_idx] = int.q[r,m][k] + int.Δt * ydrift + ydiff2/sqrt(int.Δt)
+                int.Q2[noise_idx][k] = int.q[r,m][k] + int.Δt * ydrift + ydiff2/sqrt(int.Δt)
             end
-
         end
 
-
-
-        #CALCULATING THE NEW VALUES OF VQ
+        # CALCULATING THE NEW VALUES OF V
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.qdrift0.c[i]
-        int.equation.v(tᵢ, int.tQ0, int.tV)
-        simd_copy_yx_first!(int.tV, int.VQ, i)
+        int.equation.v(tᵢ, int.Q0, int.V[i])
 
-        #CALCULATING THE NEW VALUES OF BQ1
+        # CALCULATING THE NEW VALUES OF BQ1
         # each column of B evaluated at a different internal stage
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.qdrift1.c[i]
 
         for l = 1:sol.nm
             # here int.tV holds the l-th column of B
-            int.equation.B(tᵢ, int.tQ1[:,l], int.tV, col=l)
-            simd_copy_yx_first!(int.tV, int.BQ1, l, i)
+            # TODO check for correctness
+            int.equation.B(tᵢ, int.Q1[l], int.tB, col=l)
+            simd_copy_yx_first!(int.tB, int.B1[i], l)
         end
 
 
@@ -263,14 +263,15 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
 
         for l = 1:sol.nm
             # here int.tV holds the l-th column of B
-            int.equation.B(tᵢ, int.tQ2[:,l], int.tV, col=l)
-            simd_copy_yx_first!(int.tV, int.BQ2, l, i)
+            # TODO check for correctness
+            int.equation.B(tᵢ, int.Q2[l], int.tB, col=l)
+            simd_copy_yx_first!(int.tB, int.B2[i], l)
         end
 
     end
 
     # compute final update
-    update_solution!(int.q[r,m], int.VQ, int.BQ1, int.BQ2, int.tableau.qdrift0.b, int.tableau.qdiff0.b, int.tableau.qdiff3.b, int.Δt, int.ΔW)
+    update_solution!(int.q[r,m], int.V, int.B1, int.B2, int.tableau.qdrift0.b, int.tableau.qdiff0.b, int.tableau.qdiff3.b, int.Δt, int.ΔW)
 
     # take care of periodic solutions
     cut_periodic_solution!(int.q[r,m], int.equation.periodicity)

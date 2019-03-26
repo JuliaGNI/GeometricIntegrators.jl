@@ -7,18 +7,20 @@ julia:
   - 1.1
   - nightly
 matrix:
+  fast_finish: true
   allow_failures:
     - julia: nightly
     - os: osx
-notifications:
-  email: false
-codecov: true
-coveralls: true
 jobs:
+  allow_failures:
+    - script: bash ./docs/travis.sh
   include:
     - stage: "Documentation"
       julia: 1.1
       os: linux
-      script:
-        - bash ./docs/travis.sh
+      script: bash ./docs/travis.sh
       after_success: skip
+notifications:
+  email: false
+codecov: true
+coveralls: true

@@ -39,9 +39,9 @@ struct TableauSISPRK{T} <: AbstractTableauIRK{T}
 end
 
 function TableauSISPRK(name::Symbol, qdrift::CoefficientsRK{T},
-                                      qdiff::CoefficientsRK{T},
-                                      pdrift1::CoefficientsRK{T}, pdrift2::CoefficientsRK{T},
-                                      pdiff1::CoefficientsRK{T}, pdiff2::CoefficientsRK{T}) where {T}
+                                     qdiff::CoefficientsRK{T},
+                                     pdrift1::CoefficientsRK{T}, pdrift2::CoefficientsRK{T},
+                                     pdiff1::CoefficientsRK{T}, pdiff2::CoefficientsRK{T}) where {T}
     TableauSISPRK{T}(name, qdrift.s, qdrift, qdiff, pdrift1, pdrift2, pdiff1, pdiff2)
 end
 
@@ -85,55 +85,57 @@ function ParametersSISPRK(equ::ET, tab::TableauSISPRK{TT}, Δt::TT, ΔW::Vector{
 end
 
 
+"""
+Structure for holding the internal stages Q, the values of the drift vector
+and the diffusion matrix evaluated at the internal stages VQ=v(Q), BQ=B(Q),
+and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
+"""
 struct NonlinearFunctionCacheSISPRK{DT}
-    # Structure for holding the internal stages Q, the values of the drift vector
-    # and the diffusion matrix evaluated at the internal stages VQ=v(Q), BQ=B(Q),
-    # and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
-    Q::Matrix{DT}
-    P::Matrix{DT}
-    VQP ::Matrix{DT}
-    FQP1::Matrix{DT}
-    FQP2::Matrix{DT}
-    BQP ::Array{DT,3}
-    GQP1::Array{DT,3}
-    GQP2::Array{DT,3}
-    Y::Matrix{DT}
-    Z::Matrix{DT}
+    Q ::Vector{Vector{DT}}
+    P ::Vector{Vector{DT}}
+    V ::Vector{Vector{DT}}
+    F1::Vector{Vector{DT}}
+    F2::Vector{Vector{DT}}
+    B ::Vector{Matrix{DT}}
+    G1::Vector{Matrix{DT}}
+    G2::Vector{Matrix{DT}}
+    Y ::Vector{Vector{DT}}
+    Z ::Vector{Vector{DT}}
 
-    vqp ::Vector{DT}
-    fqp1::Vector{DT}
-    fqp2::Vector{DT}
-    bqp ::Matrix{DT}
-    gqp1::Matrix{DT}
-    gqp2::Matrix{DT}
-    y::Vector{DT}
-    z::Vector{DT}
+    v ::Vector{DT}
+    f1::Vector{DT}
+    f2::Vector{DT}
+    b ::Matrix{DT}
+    g1::Matrix{DT}
+    g2::Matrix{DT}
+    y ::Vector{DT}
+    z ::Vector{DT}
 
-    function NonlinearFunctionCacheSISPRK{DT}(d, m, s) where {DT}
+    function NonlinearFunctionCacheSISPRK{DT}(D, M, S) where {DT}
 
         # create internal stage vectors
-        Q  = zeros(DT,d,s)
-        P  = zeros(DT,d,s)
-        VQP  = zeros(DT,d,s)
-        FQP1 = zeros(DT,d,s)
-        FQP2 = zeros(DT,d,s)
-        BQP  = zeros(DT,d,m,s)
-        GQP1 = zeros(DT,d,m,s)
-        GQP2 = zeros(DT,d,m,s)
-        Y  = zeros(DT,d,s)
-        Z  = zeros(DT,d,s)
+        Q  = create_internal_stage_vector(DT, D, S)
+        P  = create_internal_stage_vector(DT, D, S)
+        V  = create_internal_stage_vector(DT, D, S)
+        F1 = create_internal_stage_vector(DT, D, S)
+        F2 = create_internal_stage_vector(DT, D, S)
+        B  = create_internal_stage_vector(DT, D, M, S)
+        G1 = create_internal_stage_vector(DT, D, M, S)
+        G2 = create_internal_stage_vector(DT, D, M, S)
+        Y  = create_internal_stage_vector(DT, D, S)
+        Z  = create_internal_stage_vector(DT, D, S)
 
         # create velocity and update vector
-        vqp  = zeros(DT,d)
-        fqp1 = zeros(DT,d)
-        fqp2 = zeros(DT,d)
-        bqp  = zeros(DT,d,m)
-        gqp1 = zeros(DT,d,m)
-        gqp2 = zeros(DT,d,m)
-        y  = zeros(DT,d)
-        z  = zeros(DT,d)
+        v  = zeros(DT,D)
+        f1 = zeros(DT,D)
+        f2 = zeros(DT,D)
+        b  = zeros(DT,D,M)
+        g1 = zeros(DT,D,M)
+        g2 = zeros(DT,D,M)
+        y  = zeros(DT,D)
+        z  = zeros(DT,D)
 
-        new(Q, P, VQP, FQP1, FQP2, BQP, GQP1, GQP2, Y, Z, vqp, fqp1, fqp2, bqp, gqp1, gqp2, y, z)
+        new(Q, P, V, F1, F2, B, G1, G2, Y, Z, v, f1, f2, b, g1, g2, y, z)
     end
 end
 
@@ -145,66 +147,43 @@ Unlike for FIRK, here
 Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW,
 Z = Δt ̃a1_drift f1(Q,P) + Δt ̃a2_drift f2(Q,P) + ̃a1_diff G1(Q,P) ΔW + ̃a2_diff G2(Q,P) ΔW.
 """
-@generated function compute_stages!(x::Vector{ST}, Q::Matrix{ST}, P::Matrix{ST},
-                                                    VQP::Matrix{ST},
-                                                    FQP1::Matrix{ST}, FQP2::Matrix{ST},
-                                                    BQP::Array{ST,3},
-                                                    GQP1::Array{ST,3}, GQP2::Array{ST,3},
-                                                    Y::Matrix{ST}, Z::Matrix{ST},
-                                                    params::ParametersSISPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, P::Vector{Vector{ST}},
+                                        V::Vector{Vector{ST}}, F1::Vector{Vector{ST}}, F2::Vector{Vector{ST}},
+                                        B::Vector{Matrix{ST}}, G1::Vector{Matrix{ST}}, G2::Vector{Matrix{ST}},
+                                        Y::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
+                                        params::ParametersSISPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
-    tQ ::Vector{ST} = zeros(ST,D)
-    tP ::Vector{ST} = zeros(ST,D)
-    tV ::Vector{ST} = zeros(ST,D)
-    tF1::Vector{ST} = zeros(ST,D)
-    tF2::Vector{ST} = zeros(ST,D)
-    tB ::Matrix{ST} = zeros(ST,D,M)
-    tG1::Matrix{ST} = zeros(ST,D,M)
-    tG2::Matrix{ST} = zeros(ST,D,M)
+    local tqᵢ::TT       #times for the q internal stages
+    local tpᵢ::TT       #times for the p internal stages
 
-    quote
-        local tqᵢ::TT       #times for the q internal stages
-        local tpᵢ::TT       #times for the p internal stages
+    # TODO reactivate
+    # @assert D == size(Q,1) == size(VQP,1) == size(BQP,1) == size(P,1) == size(FQP1,1) == size(FQP2,1) == size(GQP1,1) == size(GQP2,1)
+    # @assert S == size(Q,2) == size(VQP,2) == size(BQP,3) == size(P,2) == size(FQP1,2) == size(FQP2,2) == size(GQP1,3) == size(GQP2,3)
+    # @assert M == size(BQP,2) == size(GQP1,2) == size(GQP2,2)
 
-        @assert D == size(Q,1) == size(VQP,1) == size(BQP,1) == size(P,1) == size(FQP1,1) == size(FQP2,1) == size(GQP1,1) == size(GQP2,1)
-        @assert S == size(Q,2) == size(VQP,2) == size(BQP,3) == size(P,2) == size(FQP1,2) == size(FQP2,2) == size(GQP1,3) == size(GQP2,3)
-        @assert M == size(BQP,2) == size(GQP1,2) == size(GQP2,2)
-
-        # copy x to Y, Z and calculate Q, P
-        for i in 1:S
-            for k in 1:D
-                Y[k,i] = x[D*(i-1)+k]
-                Q[k,i] = params.q[k] + Y[k,i]
-                Z[k,i] = x[D*(S+i-1)+k]
-                P[k,i] = params.p[k] + Z[k,i]
-            end
+    # copy x to Y, Z and calculate Q, P
+    for i in 1:S
+        for k in 1:D
+            Y[i][k] = x[D*(  i-1)+k]
+            Z[i][k] = x[D*(S+i-1)+k]
         end
+        Q[i] .= params.q .+ Y[i]
+        P[i] .= params.p .+ Z[i]
+    end
 
-        # compute VQi = vi(Q) and BQi=Bi(Q)
-        for i in 1:S
-            tqᵢ = params.t + params.Δt * params.tab.qdrift.c[i]
-            # Not sure what about pdrift2.c[i] --- should there be another time point?
-            tpᵢ = params.t + params.Δt * params.tab.pdrift1.c[i]
-            # copies the i-th column of Q, P to the vectors tQ, tP
-            simd_copy_xy_first!($tQ, Q, i)
-            simd_copy_xy_first!($tP, P, i)
-            # calculates v(t,tQ) and assigns to tV
-            params.equ.v(tqᵢ, $tQ, $tP, $tV)
-            params.equ.f1(tpᵢ, $tQ, $tP, $tF1)
-            params.equ.f2(tpᵢ, $tQ, $tP, $tF2)
-            # copies tV into the i-th column of VQ
-            simd_copy_yx_first!($tV, VQP, i)
-            simd_copy_yx_first!($tF1, FQP1, i)
-            simd_copy_yx_first!($tF2, FQP2, i)
-            # calculates B(t,tQ) and assigns to the matrix tB
-            params.equ.B(tqᵢ, $tQ, $tP, $tB)
-            params.equ.G1(tpᵢ, $tQ, $tP, $tG1)
-            params.equ.G2(tpᵢ, $tQ, $tP, $tG2)
-            # copies the matrix tB to BQ[:,:,i]
-            simd_copy_yx_first!($tB, BQP, i)
-            simd_copy_yx_first!($tG1, GQP1, i)
-            simd_copy_yx_first!($tG2, GQP2, i)
-        end
+    # compute VQi = vi(Q) and BQi=Bi(Q)
+    for i in 1:S
+        tqᵢ = params.t + params.Δt * params.tab.qdrift.c[i]
+        # Not sure what about pdrift2.c[i] --- should there be another time point?
+        tpᵢ = params.t + params.Δt * params.tab.pdrift1.c[i]
+        # calculates v(t,Q,P), f1(t,Q,P), f2(t,Q,P) and assigns to V, F1, F2
+        params.equ.v(tqᵢ, Q[i], P[i], V[i])
+        params.equ.f1(tpᵢ, Q[i], P[i], F1[i])
+        params.equ.f2(tpᵢ, Q[i], P[i], F2[i])
+        # calculates B(t,Q,P), G1(t,Q,P), G2(t,Q,P) and assigns to the matrices B[i], G1[i], G2[i]
+        params.equ.B(tqᵢ, Q[i], P[i], B[i])
+        params.equ.G1(tpᵢ, Q[i], P[i], G1[i])
+        params.equ.G2(tpᵢ, Q[i], P[i], G2[i])
     end
 end
 
@@ -214,7 +193,7 @@ end
     cache = NonlinearFunctionCacheSISPRK{ST}(D, M, S)
 
     quote
-        compute_stages!(x, $cache.Q, $cache.P, $cache.VQP, $cache.FQP1, $cache.FQP2, $cache.BQP, $cache.GQP1, $cache.GQP2, $cache.Y, $cache.Z, params)
+        compute_stages!(x, $cache.Q, $cache.P, $cache.V, $cache.F1, $cache.F2, $cache.B, $cache.G1, $cache.G2, $cache.Y, $cache.Z, params)
 
         local y1::ST
         local y2::ST
@@ -229,15 +208,15 @@ end
                 z1 = 0
                 z2 = 0
                 for j in 1:S
-                    y1 += params.tab.qdrift.a[i,j] * $cache.VQP[k,j] * params.Δt + params.tab.qdiff.a[i,j] * dot($cache.BQP[k,:,j], params.ΔW)
-                    y2 += params.tab.qdrift.â[i,j] * $cache.VQP[k,j] * params.Δt + params.tab.qdiff.â[i,j] * dot($cache.BQP[k,:,j], params.ΔW)
-                    z1 += params.tab.pdrift1.a[i,j] * $cache.FQP1[k,j] * params.Δt + params.tab.pdrift2.a[i,j] * $cache.FQP2[k,j] * params.Δt
-                          + params.tab.pdiff1.a[i,j] * dot($cache.GQP1[k,:,j], params.ΔW) + params.tab.pdiff2.a[i,j] * dot($cache.GQP2[k,:,j], params.ΔW)
-                    z2 += params.tab.pdrift1.â[i,j] * $cache.FQP1[k,j] * params.Δt + params.tab.pdrift2.â[i,j] * $cache.FQP2[k,j] * params.Δt
-                          + params.tab.pdiff1.â[i,j] * dot($cache.GQP1[k,:,j], params.ΔW) + params.tab.pdiff2.â[i,j] * dot($cache.GQP2[k,:,j], params.ΔW)
+                    y1 += params.tab.qdrift.a[i,j]  * $cache.V[j][k]  * params.Δt + params.tab.qdiff.a[i,j]  * dot($cache.B[j][k,:], params.ΔW)
+                    y2 += params.tab.qdrift.â[i,j]  * $cache.V[j][k]  * params.Δt + params.tab.qdiff.â[i,j]  * dot($cache.B[j][k,:], params.ΔW)
+                    z1 += params.tab.pdrift1.a[i,j] * $cache.F1[j][k] * params.Δt + params.tab.pdrift2.a[i,j] * $cache.F2[j][k] * params.Δt
+                        + params.tab.pdiff1.a[i,j]  * dot($cache.G1[j][k,:], params.ΔW) + params.tab.pdiff2.a[i,j] * dot($cache.G2[j][k,:], params.ΔW)
+                    z2 += params.tab.pdrift1.â[i,j] * $cache.F1[j][k] * params.Δt + params.tab.pdrift2.â[i,j] * $cache.F2[j][k] * params.Δt
+                        + params.tab.pdiff1.â[i,j]  * dot($cache.G1[j][k,:], params.ΔW) + params.tab.pdiff2.â[i,j] * dot($cache.G2[j][k,:], params.ΔW)
                 end
-                b[D*(i-1)+k] = - $cache.Y[k,i] + (y1 + y2)
-                b[D*(S+i-1)+k] = - $cache.Z[k,i] + (z1 + z2)
+                b[D*(  i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
+                b[D*(S+i-1)+k] = - $cache.Z[i][k] + (z1 + z2)
             end
         end
     end
@@ -246,7 +225,7 @@ end
 
 "Stochastic implicit partitioned Runge-Kutta integrator."
 struct IntegratorSISPRK{DT, TT, PT <: ParametersSISPRK{DT,TT},
-                              ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
+                                ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
     params::PT
     solver::ST
     # InitialGuessPSDE not implemented for SFIPRK
@@ -440,8 +419,10 @@ function initial_guess!(int::IntegratorSISPRK{DT,TT}) where {DT,TT}
 end
 
 
-"Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator."
-# Integrating the k-th sample path for the m-th initial condition
+"""
+Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator.
+ Integrating the k-th sample path for the m-th initial condition
+"""
 function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,NQ,NW}, k::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
 
     @assert k ≥ 1
@@ -501,10 +482,10 @@ function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,N
     check_solver_status(int.solver.status, int.solver.params, n)
 
     # compute the drift vector field and the diffusion matrix at internal stages
-    compute_stages!(int.solver.x, int.fcache.Q, int.fcache.P, int.fcache.VQP, int.fcache.FQP1, int.fcache.FQP2, int.fcache.BQP, int.fcache.GQP1, int.fcache.GQP2, int.fcache.Y, int.fcache.Z, int.params)
+    compute_stages!(int.solver.x, int.fcache.Q, int.fcache.P, int.fcache.V, int.fcache.F1, int.fcache.F2, int.fcache.B, int.fcache.G1, int.fcache.G2, int.fcache.Y, int.fcache.Z, int.params)
 
     # compute final update
-    update_solution!(int.q[k,m], int.p[k,m], int.fcache.VQP, int.fcache.FQP1, int.fcache.FQP2, int.fcache.BQP, int.fcache.GQP1, int.fcache.GQP2,
+    update_solution!(int.q[k,m], int.p[k,m], int.fcache.V, int.fcache.F1, int.fcache.F2, int.fcache.B, int.fcache.G1, int.fcache.G2,
                     int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂,
                     int.params.tab.pdrift1.b, int.params.tab.pdrift1.b̂, int.params.tab.pdrift2.b, int.params.tab.pdrift2.b̂,
                     int.params.tab.pdiff1.b, int.params.tab.pdiff1.b̂, int.params.tab.pdiff2.b, int.params.tab.pdiff2.b̂,

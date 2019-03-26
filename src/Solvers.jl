@@ -14,6 +14,10 @@ module Solvers
     include("solvers/linear/lu_solver.jl")
     include("solvers/linear/lu_solver_lapack.jl")
 
+    export JacobianParameters, JacobianParametersAD, JacobianParametersFD,
+           JacobianParametersUser, getJacobianParameters,
+           computeJacobian, computeJacobianAD, computeJacobianFD
+
     export NonlinearSolver, AbstractNewtonSolver, NewtonSolver, QuasiNewtonSolver,
            residual_initial!, residual_absolute!, residual_relative!,
            print_solver_status, check_solver_converged, check_solver_status,

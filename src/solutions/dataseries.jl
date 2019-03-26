@@ -105,7 +105,7 @@ Base.lastindex(ds::DataSeries{T,3}) where {T} = (ds.nd, ds.nt, ds.ni)
 @inline Base.axes(ds::DataSeries{T,3}) where {T} = (1:ds.nd, 0:ds.nt, 1:ds.ni)
 @inline Base.axes(ds::DataSeries{T,N}, d) where {T,N} = d ≥ 1 && d ≤ N ? axes(ds)[d] : (1:1)
 
-Base.strides(ds::DataSeries) = (strides(ds.d))
+Base.strides(ds::DataSeries) = strides(ds.d)
 
 
 function get_data!(ds::DataSeries{T,1}, n, k=1) where {T}
