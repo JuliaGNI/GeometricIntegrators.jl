@@ -149,19 +149,22 @@ function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, ẋ::M
 end
 
 
-# For stochastic Runge-Kutta methods (SFIRK and WFIRK)
+# For stochastic Runge-Kutta methods (SIRK and WIRK)
 # x - the solution vector to be updated
-# Vx - the matrix containing the drift vector evaluated at the internal stages v(Q_i) (SFIRK) or v(Q0_i) (WFIRK)
-# Bx - the array containing the diffusion matrix evaluated at the internal stages B(Q_i) (SFIRK) or B(Q1^(l)_i) (WFIRK)
+# Vx - the matrix containing the drift vector evaluated at the internal stages v(Q_i) (SIRK) or v(Q0_i) (WIRK)
+# Bx - the array containing the diffusion matrix evaluated at the internal stages B(Q_i) (SIRK) or B(Q1^(l)_i) (WIRK)
 # bdrift - the Runge-Kutta coefficients for the drift part
 # bdiff - the Runge-Kutta coefficients for the diffusion part
 # Δt - the time step
 # ΔW - the increments of the Brownian motion (SFIRK) or the increments represented by the random variables \hat I^(k) (WFIRK)
 function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Vector{Vector{T}}, Bx::Vector{Matrix{T}}, bdrift::Vector{T}, bdiff::Vector{T}, Δt::T, ΔW::Vector{T}) where {T}
+
     @assert length(bdrift) == length(bdiff) == length(Vx) == length(Bx)
-    # TODO reactivate assertions
-    # @assert length(x) == size(Vx[i], 1) == size(Bx[i], 1)
-    # @assert length(ΔW)== size(Bx[i], 2)
+
+    for i in eachindex(Vx, Bx)
+        @assert length(x) == length(Vx[i]) == size(Bx[i], 1)
+        @assert length(ΔW)== size(Bx[i], 2)
+    end
 
     local Δx::eltype(x)
 
@@ -198,10 +201,13 @@ end
 # ΔW - the increments of the Brownian motion
 # ΔZ - the integrals of the increments of the Brownian motion
 function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Vector{Vector{T}}, Bx::Vector{Matrix{T}}, bdrift::Vector{T}, bdiff::Vector{T}, bdiff2::Vector{T}, Δt::T, ΔW::Vector{T}, ΔZ::Vector{T}) where {T}
+
     @assert length(bdrift) == length(bdiff) == length(bdiff2) == length(Vx) == length(Bx)
-    # TODO reactivate assertions
-    # @assert length(x) == length(Vx[i]) == size(Bx[i], 1)
-    # @assert length(ΔW) == length(ΔZ) == size(Bx[i], 2)
+
+    for i in eachindex(Vx, Bx)
+        @assert length(x) == length(Vx[i]) == size(Bx[i], 1)
+        @assert length(ΔW) == length(ΔZ) == size(Bx[i], 2)
+    end
 
     local Δx::eltype(x)
 
@@ -252,9 +258,11 @@ function update_solution!(q::Vector{VT}, p::Vector{VT},
                           Δt::T, ΔW::Vector{T}) where {T, VT <: Union{T, TwicePrecision{T}}}
 
     @assert length(bqdrift) == length(bqdiff) == length(bpdrift) == length(bpdiff) == length(Vqp) == length(Fqp) == length(Bqp) == length(Gqp)
-    # TODO reactivate assertions
-    # @assert length(q) == length(p) == size(Vqp[i]) == size(Fqp[i]) == size(Bqp[i], 1) == size(Gqp[i], 1)
-    # @assert length(ΔW) == size(Bqp[i], 2) == size(Gqp[i], 2)
+
+    for i in eachindex(Vqp, Fqp, Bqp, Gqp)
+        @assert length(q) == length(p) == length(Vqp[i]) == length(Fqp[i]) == size(Bqp[i], 1) == size(Gqp[i], 1)
+        @assert length(ΔW) == size(Bqp[i], 2) == size(Gqp[i], 2)
+    end
 
     local Δq::eltype(q)
     local Δp::eltype(p)
@@ -307,9 +315,11 @@ function update_solution!(q::Union{Vector{T}, Vector{TwicePrecision{T}}}, p::Uni
                             Δt::T, ΔW::Vector{T}) where {T}
 
    @assert length(bqdrift) == length(bqdiff) == length(bpdrift1) == length(bpdrift2) == length(bpdiff1) == length(bpdiff2) == length(Vqp) == length(Fqp1) == length(Fqp2) == length(Bqp) == length(Gqp1) == length(Gqp2)
-   # TODO reactivate assertions
-   # @assert length(q) == length(p) == length(Vqp[i]) == length(Fqp1[i]) == length(Fqp2[i]) == size(Bqp[i], 1) == size(Gqp1[i], 1) == size(Gqp2[i], 1)
-   # @assert length(ΔW) == size(Bqp[i], 2) == size(Gqp1[i], 2) == size(Gqp2[i], 2)
+
+   for i in eachindex(Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2)
+       @assert length(q) == length(p) == length(Vqp[i]) == length(Fqp1[i]) == length(Fqp2[i]) == size(Bqp[i], 1) == size(Gqp1[i], 1) == size(Gqp2[i], 1)
+       @assert length(ΔW) == size(Bqp[i], 2) == size(Gqp1[i], 2) == size(Gqp2[i], 2)
+   end
 
    local Δq::eltype(q)
    local Δp::eltype(p)
@@ -357,9 +367,11 @@ end
 # ΔW - the increments of the Brownian motion represented by the random variables \hat I^(k)
 function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Vector{Vector{T}}, Bx1::Vector{Matrix{T}}, Bx2::Vector{Matrix{T}}, alpha::Vector{T}, beta1::Vector{T}, beta2::Vector{T}, Δt::T, ΔW::Vector{T}) where {T}
     @assert length(alpha) == length(beta1) == length(beta2) == length(Vx) == length(Bx1) == length(Bx2)
-    # TODO reactivate assertions
-    # @assert length(x) == length(Vx) == size(Bx1[i], 1) == size(Bx2[i], 1)
-    # @assert length(ΔW)== size(Bx1[i], 2) == size(Bx2[i], 2)
+
+    for i in eachindex(Vx, Bx1, Bx2)
+        @assert length(x) == length(Vx[i]) == size(Bx1[i], 1) == size(Bx2[i], 1)
+        @assert length(ΔW)== size(Bx1[i], 2) == size(Bx2[i], 2)
+    end
 
     local Δx::eltype(x)
 
