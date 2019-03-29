@@ -118,9 +118,9 @@ struct NonlinearFunctionCacheSIPRK{DT}
 end
 
 """
-Unpacks the data stored in x = (Y[1,1], Y[2,1], ... Y[D,1], Y[1,2], ..., Z[1,1], Z[2,1], ... Z[D,1], Z[1,2], ...)
-into the matrix Y, Z, calculates the internal stages Q, P, the values of the RHS
-of the SDE ( v(Q,P), f(Q,P), B(Q,P) and G(Q,P) ), and assigns them to VQP, FQP, BQP and GQP.
+Unpacks the data stored in x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ..., Z[1][1], Z[1][2], ... Z[1][D], Z[2][1], ...)
+into Y, Z::Vector{Vector}, calculates the internal stages Q, P, the values of the RHS
+of the SDE ( v(Q,P), f(Q,P), B(Q,P) and G(Q,P) ), and assigns them to V, F, B and G.
 Unlike for FIRK, here
 Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW,
 Z = Δt ̃a_drift v(Q,P) + ̃a_diff B(Q,P) ΔW.
@@ -134,17 +134,19 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, P::Vector{Vector{
     local tqᵢ::TT       #times for the q internal stages
     local tpᵢ::TT       #times for the p internal stages
 
-    # TODO reactivate
-    # @assert D == size(Q,1) == size(V,1) == size(B,1) == size(P,1) == size(F,1) == size(G,1)
-    # @assert S == size(Q,2) == size(V,2) == size(B,3) == size(P,2) == size(F,2) == size(G,3)
-    # @assert M == size(B,2) == size(G,2)
+
+    @assert S == length(Q) == length(V) == length(B) == length(P) == length(F) == length(G)
 
     # copy x to Y, Z and calculate Q, P
     for i in 1:S
+        @assert D == length(Q[i]) == length(V[i]) == size(B[i],1) == length(P[i]) == length(F[i]) == size(G[i],1)
+        @assert M == size(B[i],2) == size(G[i],2)
+
         for k in 1:D
             Y[i][k] = x[D*(  i-1)+k]
             Z[i][k] = x[D*(S+i-1)+k]
         end
+
         Q[i] .= params.q .+ Y[i]
         P[i] .= params.p .+ Z[i]
     end

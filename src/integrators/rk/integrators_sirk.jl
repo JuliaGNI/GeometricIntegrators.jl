@@ -69,7 +69,7 @@ end
 
 """
 Structure for holding the internal stages Q, the values of the drift vector
-and the diffusion matrix evaluated at the internal stages VQ=v(Q), BQ=B(Q),
+and the diffusion matrix evaluated at the internal stages V=v(Q), B=B(Q),
 and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
 """
 struct NonlinearFunctionCacheSIRK{DT}
@@ -100,9 +100,9 @@ struct NonlinearFunctionCacheSIRK{DT}
 end
 
 """
-Unpacks the data stored in x = (Y[1,1], Y[2,1], ... Y[D,1], Y[1,2], ...)
-into the matrix Y, calculates the internal stages Q, the values of the RHS
-of the SDE ( v(Q) and B(Q) ), and assigns them to VQ and BQ.
+Unpacks the data stored in x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ...)
+into Y::Vector{Vector}, calculates the internal stages Q, the values of the RHS
+of the SDE ( v(Q) and B(Q) ), and assigns them to V and B.
 Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
 """
 function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, B::Vector{Matrix{ST}}, Y::Vector{Vector{ST}},
