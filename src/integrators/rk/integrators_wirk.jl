@@ -111,9 +111,9 @@ end
 
 """
 Unpacks the data stored in
-x = (Y0[1,1], Y0[2,1], ... Y0[D,1], ... Y0[D,S], Y1[1,1,1], Y1[2,1,1], ... Y1[D,1,1], Y1[1,2,1], Y1[2,2,1], ... Y1[D,2,1], ... Y1[D,M,S]  )
-into the matrices Y0 and Y1, calculates the internal stages Q0 and Q1, the values of the RHS
-of the SDE ( v(Q0) and B(Q1) ), and assigns them to VQ and BQ.
+x = (Y0[1][1], Y0[1][2]], ... Y0[1][D], ... Y0[S][D], Y1[1][1,1], Y1[1][2,1], ... Y1[1][D,1], Y1[1][1,2], Y1[1][2,2], ... Y1[1][D,2], ... Y1[S][D,M]  )
+into Y0::Vector{Vector} and Y1::Vector{Matrix}, calculates the internal stages Q0 and Q1, the values of the RHS
+of the SDE ( v(Q0) and B(Q1) ), and assigns them to V and B.
 Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
 """
 @generated function compute_stages!(x::Vector{ST}, Q0::Vector{Vector{ST}}, Q1::Vector{Matrix{ST}}, V::Vector{Vector{ST}},
@@ -122,19 +122,20 @@ Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
 
     tQ::Vector{ST} = zeros(ST,D)
     tV::Vector{ST} = zeros(ST,D)
-    tB::Vector{ST} = zeros(ST,D)    # This was tB::Matrix{ST} = zeros(ST,D,M) for SFIRK, but here we calculate B column by column.
+    tB::Vector{ST} = zeros(ST,D)    # This was tB::Matrix{ST} = zeros(ST,D,M) for SIRK, but here we calculate B column by column.
                                     # tB is actually superfluous, could just use tV; keeping tB for clarity though
 
     quote
         local tᵢ::TT
 
         @assert S == length(Q0) == length(Q1) == length(V) == length(B)
-        # TODO reactivate
-        # @assert D == size(Q0,1) == size(Q1,1) == size(VQ,1) == size(BQ,1)
-        # @assert M == size(Q1,2) == size(BQ,2)
 
         # copy x to Y0 and Y1, and calculate Q0 and Q1
         for i in eachindex(Q0)
+
+            @assert D == length(Q0[i]) == size(Q1[i],1) == length(V[i]) == size(B[i],1)
+            @assert M == size(Q1[i],2) == size(B[i],2)
+
             for k in eachindex(Q0[i])
                 Y0[i][k] = x[D*(i-1)+k]
                 Q0[i][k] = params.q[k] + Y0[i][k]
@@ -303,7 +304,7 @@ function initial_guess!(int::IntegratorWIRK{DT,TT}) where {DT,TT}
     # The simplest initial guess for Y is 0
     int.solver.x .= zeros(eltype(int), int.params.tab.s*dims(int)*(noisedims(int)+1) )
 
-    # Using an explicit integrator to predict the next step's value (like in SFIRK)
+    # Using an explicit integrator to predict the next step's value (like in SIRK)
     # does not seem to be a good idea here, because the integrators are convergent
     # in the weak sense only, and there is no guarantee that the explicit integrator
     # will produce anything close to the desired solution...
@@ -363,7 +364,7 @@ function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,N
     # compute the drift vector field and the diffusion matrix at internal stages
     compute_stages!(int.solver.x, int.fcache.Q0, int.fcache.Q1, int.fcache.V, int.fcache.B, int.fcache.Y0, int.fcache.Y1, int.params)
 
-    # compute final update (same update function as for SFIRK)
+    # compute final update (same update function as for SIRK)
     update_solution!(int.q[k,m], int.fcache.V, int.fcache.B, int.params.tab.qdrift0.b, int.params.tab.qdrift0.b̂, int.params.tab.qdiff0.b, int.params.tab.qdiff0.b̂, int.params.Δt, int.params.ΔW)
 
     # # NOT IMPLEMENTING InitialGuessSDE

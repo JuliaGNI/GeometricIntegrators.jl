@@ -81,14 +81,12 @@ struct IntegratorWERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
 
     q ::Matrix{Vector{DT}}
     Q0::Vector{DT}           # Q0[1..n]      - the internal stage H^(0)_i for a given i
-    Q1::Vector{Vector{DT}}   # Q1[1..n,1..m] - the internal stages H^(l)_i for a given i
-    Q2::Vector{Vector{DT}}   # Q2[1..n,1..m] - the internal stages \hat H^(l)_i for a given i
+    Q1::Vector{Vector{DT}}   # Q1[1..m][1..n] - the internal stages H^(l)_i for a given i
+    Q2::Vector{Vector{DT}}   # Q2[1..m][1..n] - the internal stages \hat H^(l)_i for a given i
     V ::Vector{Vector{DT}}
-    B1::Vector{Matrix{DT}}   # B1[i] holds the values of the diffusion matrix such that BQ1[i][:,l] is evaluated at H^(l)_i
-    B2::Vector{Matrix{DT}}   # B2[i] holds the values of the diffusion matrix such that BQ2[i][:,l] is evaluated at \hat H^(l)_i
-    # tV::Array{DT,1}          # the value of the drift term evaluated at the internal stage H^(0)_i or the l-th column of the diffusion term for H^(l)_i for a given i
-    # tB::Array{DT,2}          # the value of the diffusion matrix; here used only at the first stage of the step
-    tB::Vector{DT}
+    B1::Vector{Matrix{DT}}   # B1[i] holds the values of the diffusion matrix such that B1[i][:,l] is evaluated at H^(l)_i
+    B2::Vector{Matrix{DT}}   # B2[i] holds the values of the diffusion matrix such that B2[i][:,l] is evaluated at \hat H^(l)_i
+    tB::Vector{DT}           # the value of the l-th column of the diffusion term evaluated at the internal stage H^(l)_i for given i and l
 
 
     function IntegratorWERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
@@ -155,7 +153,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
     # THE FIRST INTERNAL STAGES ARE ALL EQUAL TO THE PREVIOUS STEP SOLUTION
     # calculates v(t,tQ0) and assigns to the 1st column of V
     int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.V[1])
-    # calculates B(t,Q) and assigns to the matrix tB
+    # calculates B(t,Q) and assigns to the matrix B1[1]
     # no need to calculate the columns of B separately, because all internal stages
     # for i=1 are equal to int.q[r,m]
     int.equation.B(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.B1[1])
@@ -185,7 +183,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
 
 
         # Calculating the internal stages H^(l)_i for l=1..sol.nm
-        @inbounds for k in eachindex(int.Q1[1][:])
+        @inbounds for k in eachindex(int.Q1[1])
             # contribution from the drift part (same for all noises)
             ydrift = 0.
             for j = 1:i-1
@@ -213,7 +211,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
 
 
         # Calculating the internal stages \hat H^(l)_i for l=1..sol.nm
-        @inbounds for k in eachindex(int.Q2)
+        @inbounds for k in eachindex(int.Q2[1])
             # contribution from the drift part (same for all noises)
             ydrift = 0.
             for j = 1:i-1
@@ -245,25 +243,21 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.qdrift0.c[i]
         int.equation.v(tᵢ, int.Q0, int.V[i])
 
-        # CALCULATING THE NEW VALUES OF BQ1
+        # CALCULATING THE NEW VALUES OF B1
         # each column of B evaluated at a different internal stage
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.qdrift1.c[i]
 
         for l = 1:sol.nm
-            # here int.tV holds the l-th column of B
-            # TODO check for correctness
             int.equation.B(tᵢ, int.Q1[l], int.tB, col=l)
             simd_copy_yx_first!(int.tB, int.B1[i], l)
         end
 
 
-        #CALCULATING THE NEW VALUES OF BQ2
+        #CALCULATING THE NEW VALUES OF B2
         # each column of B evaluated at a different internal stage
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.qdrift2.c[i]
 
         for l = 1:sol.nm
-            # here int.tV holds the l-th column of B
-            # TODO check for correctness
             int.equation.B(tᵢ, int.Q2[l], int.tB, col=l)
             simd_copy_yx_first!(int.tB, int.B2[i], l)
         end

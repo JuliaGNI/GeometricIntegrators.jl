@@ -87,7 +87,7 @@ end
 
 """
 Structure for holding the internal stages Q, the values of the drift vector
-and the diffusion matrix evaluated at the internal stages VQ=v(Q), BQ=B(Q),
+and the diffusion matrix evaluated at the internal stages V=v(Q), B=B(Q),
 and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
 """
 struct NonlinearFunctionCacheSISPRK{DT}
@@ -140,9 +140,9 @@ struct NonlinearFunctionCacheSISPRK{DT}
 end
 
 """
-Unpacks the data stored in x = (Y[1,1], Y[2,1], ... Y[D,1], Y[1,2], ..., Z[1,1], Z[2,1], ... Z[D,1], Z[1,2], ...)
-into the matrix Y, Z, calculates the internal stages Q, P, the values of the RHS
-of the SDE ( vi(Q,P), fi(Q,P), Bi(Q,P) and Gi(Q,P) ), and assigns them to VQPi, FQPi, BQPi and GQPi.
+Unpacks the data stored in x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ..., Z[1][1], Z[1][2], ... Z[1][D], Z[2][1], ...)
+into Y, Z::Vector{Vector}, calculates the internal stages Q, P, the values of the RHS
+of the SDE ( vi(Q,P), fi(Q,P), Bi(Q,P) and Gi(Q,P) ), and assigns them to V[i], F[i], B[i] and G[i].
 Unlike for FIRK, here
 Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW,
 Z = Δt ̃a1_drift f1(Q,P) + Δt ̃a2_drift f2(Q,P) + ̃a1_diff G1(Q,P) ΔW + ̃a2_diff G2(Q,P) ΔW.
@@ -156,22 +156,24 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, P::Vector{Vector{
     local tqᵢ::TT       #times for the q internal stages
     local tpᵢ::TT       #times for the p internal stages
 
-    # TODO reactivate
-    # @assert D == size(Q,1) == size(VQP,1) == size(BQP,1) == size(P,1) == size(FQP1,1) == size(FQP2,1) == size(GQP1,1) == size(GQP2,1)
-    # @assert S == size(Q,2) == size(VQP,2) == size(BQP,3) == size(P,2) == size(FQP1,2) == size(FQP2,2) == size(GQP1,3) == size(GQP2,3)
-    # @assert M == size(BQP,2) == size(GQP1,2) == size(GQP2,2)
+    @assert S == length(Q) == length(V) == length(B) == length(P) == length(F1) == length(F2) == length(G1) == length(G2)
+
 
     # copy x to Y, Z and calculate Q, P
     for i in 1:S
+        @assert D == length(Q[i]) == length(V[i]) == size(B[i],1) == length(P[i]) == length(F1[i]) == length(F2[i]) == size(G1[i],1) == size(G2[i],1)
+        @assert M == size(B[i],2) == size(G1[i],2) == size(G2[i],2)
+
         for k in 1:D
             Y[i][k] = x[D*(  i-1)+k]
             Z[i][k] = x[D*(S+i-1)+k]
         end
+
         Q[i] .= params.q .+ Y[i]
         P[i] .= params.p .+ Z[i]
     end
 
-    # compute VQi = vi(Q) and BQi=Bi(Q)
+    # compute Vi = vi(Q) and Bi=Bi(Q)
     for i in 1:S
         tqᵢ = params.t + params.Δt * params.tab.qdrift.c[i]
         # Not sure what about pdrift2.c[i] --- should there be another time point?
