@@ -114,6 +114,11 @@ end
 #TODO: PStochasticDataSeries
 
 
+function Base.show(io::IO, ds::StochasticDataSeries{T,N}) where {T,N}
+    print(io, "StochasticDataSeries with data type ", T, " and ", N, " dimensions:\n")
+    print(io, ds.d)
+end
+
 function similar(ds::StochasticDataSeries{T,N}) where {T,N}
     typeof(ds){T,N}(ds.nd, ds.nt, ds.ns, ds.ni)
 end
