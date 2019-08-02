@@ -5,7 +5,7 @@
 
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://ddmgni.github.io/GeometricIntegrators.jl/stable/)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://ddmgni.github.io/GeometricIntegrators.jl/latest/)
-[![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](LICENSE.md)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 [![Build Status](https://travis-ci.org/DDMGNI/GeometricIntegrators.jl.svg?branch=master)](https://travis-ci.org/DDMGNI/GeometricIntegrators.jl)
 [![Coverage Status](https://coveralls.io/repos/github/DDMGNI/GeometricIntegrators.jl/badge.svg)](https://coveralls.io/github/DDMGNI/GeometricIntegrators.jl)
 [![codecov](https://codecov.io/gh/DDMGNI/GeometricIntegrators.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/DDMGNI/GeometricIntegrators.jl)
