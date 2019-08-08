@@ -1,5 +1,5 @@
 
-abstract type SolutionPDAE{dType, tType, N} <: Solution{dType, tType, N} end
+abstract type SolutionPDAE{dType, tType, N} <: DeterministicSolution{dType, tType, N} end
 
 
 "Serial Solution of a partitioned differential algebraic equation."

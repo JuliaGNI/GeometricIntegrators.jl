@@ -2,7 +2,7 @@
 using HDF5
 
 abstract type Solution{dType, tType, N} end
-
+abstract type DeterministicSolution{dType, tType, N} end <: Solution{dType, tType, N} end
 abstract type StochasticSolution{dType, tType, NQ, NW} <: Solution{dType, tType, NQ} end
 
 hdf5(sol::Solution)   = error("hdf5() not implemented for ", typeof(sol))

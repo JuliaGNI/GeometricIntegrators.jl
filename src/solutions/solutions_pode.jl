@@ -1,6 +1,6 @@
 
 "Solution of a partitioned ordinary differential equation."
-mutable struct SolutionPODE{dType, tType, N} <: Solution{dType, tType, N}
+mutable struct SolutionPODE{dType, tType, N} <: DeterministicSolution{dType, tType, N}
     nd::Int
     nt::Int
     ni::Int

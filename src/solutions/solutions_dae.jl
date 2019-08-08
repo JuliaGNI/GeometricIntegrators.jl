@@ -1,6 +1,6 @@
 
 "Solution of a differential algebraic equation."
-struct SolutionDAE{dType, tType, N} <: Solution{dType, tType, N}
+struct SolutionDAE{dType, tType, N} <: DeterministicSolution{dType, tType, N}
     nd::Int
     nm::Int
     nt::Int

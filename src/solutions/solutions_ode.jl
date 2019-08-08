@@ -17,7 +17,7 @@ Contains all fields necessary to store the solution of an ODE.
 * `woffset`:
 * `h5`:
 """
-mutable struct SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
+mutable struct SolutionODE{dType, tType, N} <: DeterministicSolution{dType, tType, N}
     nd::Int
     nt::Int
     ni::Int
