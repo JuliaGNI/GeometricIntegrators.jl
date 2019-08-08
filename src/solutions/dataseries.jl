@@ -65,16 +65,14 @@ for (TDataSeries, TArray) in
             copy!(ds.d, d)
             return ds
         end
-
-
-        Base.:(==)(ds1::$TDataSeries, ds2::$TDataSeries) = (
-                                        ds1.nd == ds2.nd
-                                     && ds1.nt == ds2.nt
-                                     && ds1.ni == ds2.ni
-                                     && ds1.d  == ds2.d)
     end
 end
 
+Base.:(==)(ds1::DataSeries, ds2::DataSeries) = (
+                                ds1.nd == ds2.nd
+                             && ds1.nt == ds2.nt
+                             && ds1.ni == ds2.ni
+                             && ds1.d  == ds2.d)
 
 function Base.show(io::IO, ds::DataSeries{T,N}) where {T,N}
     print(io, "DataSeries with data type ", T, " and ", N, " dimensions:\n")
