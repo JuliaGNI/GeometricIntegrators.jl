@@ -41,27 +41,27 @@ for (TDataSeries, TArray) in
 
         function $TDataSeries(d::AbstractArray{T,1}) where {T}
             nd = 1
-            nt = size(d,1)
+            nt = size(d,1)-1
             ni = 1
-            ds = $TDataSeries{T,1}(nd, nt, ni, d)
-            copy!(ds.d, d)
+            ds = $TDataSeries{T,1}(nd, nt, ni)
+            copy!(ds.d, d[1,:,1])
             return ds
         end
 
         function $TDataSeries(d::AbstractArray{T,2}) where {T}
             nd = size(d,1)
-            nt = size(d,2)
+            nt = size(d,2)-1
             ni = 1
-            ds = $TDataSeries{T,2}(nd, nt, ni, d)
-            copy!(ds.d, d)
+            ds = $TDataSeries{T,2}(nd, nt, ni)
+            copy!(ds.d, d[:,:,1])
             return ds
         end
 
         function $TDataSeries(d::AbstractArray{T,3}) where {T}
             nd = size(d,1)
-            nt = size(d,2)
+            nt = size(d,2)-1
             ni = size(d,3)
-            ds = $TDataSeries{T,3}(nd, nt, ni, d)
+            ds = $TDataSeries{T,3}(nd, nt, ni)
             copy!(ds.d, d)
             return ds
         end
