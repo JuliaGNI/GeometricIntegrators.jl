@@ -86,6 +86,22 @@ function createHDF5(sol::Solution, file::AbstractString, overwrite=true)
     return h5
 end
 
+"save_attributes: Saves common attributes of Solution to HDF5 file."
+function save_attributes(sol::Solution)
+    # save attributes
+    attrs(hdf5(sol))["ntime"] = ntime(sol)
+    attrs(hdf5(sol))["nsave"] = nsave(sol)
+
+    # copy time
+    write(hdf5(sol), "t", time(sol))
+end
+
+
+"write_to_hdf5: Wrapper for saving Solution to HDF5 file."
+function CommonFunctions.write_to_hdf5(solution::Solution)
+    write_to_hdf5(solution, hdf5(solution), offset(solution))
+end
+
 
 """
 createHDF5: Creates or opens HDF5 file.
