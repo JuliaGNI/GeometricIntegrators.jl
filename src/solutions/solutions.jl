@@ -5,58 +5,60 @@ abstract type Solution{dType, tType, N} end
 
 abstract type StochasticSolution{dType, tType, NQ, NW} <: Solution{dType, tType, NQ} end
 
-time(sol::Solution)  = error("time() not implemented for ", typeof(sol))
-ntime(sol::Solution) = error("ntime() not implemented for ", typeof(sol))
-nsave(sol::Solution) = error("nsave() not implemented for ", typeof(sol))
+hdf5(sol::Solution)   = error("hdf5() not implemented for ", typeof(sol))
+time(sol::Solution)   = error("time() not implemented for ", typeof(sol))
+ntime(sol::Solution)  = error("ntime() not implemented for ", typeof(sol))
+nsave(sol::Solution)  = error("nsave() not implemented for ", typeof(sol))
+offset(sol::Solution) = error("offset() not implemented for ", typeof(sol))
 
 
 "Create solution for ODE and split ODE."
-function Solution(equation::Union{ODE,SODE}, Δt, ntime::Int, nsave::Int=1, nwrite::Int=0)
+function Solution(equation::Union{ODE,SODE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
     SolutionODE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for partitioned ODE."
-function Solution(equation::PODE, Δt, ntime::Int, nsave::Int=1)
+function Solution(equation::PODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
     SolutionPODE(equation, Δt, ntime, nsave)
 end
 
 "Create solution for variational ODE."
-function Solution(equation::VODE, Δt, ntime::Int, nsave::Int=1)
+function Solution(equation::VODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
     SolutionPODE(equation, Δt, ntime, nsave)
 end
 
 "Create solution for implicit ODE."
-function Solution(equation::IODE, Δt, ntime::Int, nsave::Int=1)
+function Solution(equation::IODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
     SSolutionPDAE(equation, Δt, ntime, nsave)
 end
 
 "Create solution for DAE."
-function Solution(equation::DAE, Δt, ntime::Int, nsave::Int=1)
+function Solution(equation::DAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
     SolutionDAE(equation, Δt, ntime, nsave)
 end
 
 "Create solution for partitioned DAE."
-function Solution(equation::PDAE, Δt, ntime::Int, nsave::Int=1)
+function Solution(equation::PDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
     SSolutionPDAE(equation, Δt, ntime, nsave)
 end
 
 "Create solution for implicit DAE."
-function Solution(equation::IDAE, Δt, ntime::Int, nsave::Int=1)
+function Solution(equation::IDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
     SSolutionPDAE(equation, Δt, ntime, nsave)
 end
 
 "Create solution for SDE."
-function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=1; K::Int=0, conv::String="strong")
+function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE; K::Int=0, conv::String="strong")
     SolutionSDE(equation, Δt, ntime, nsave, K=K, conv=conv)
 end
 
 "Create solution for PSDE."
-function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int, nsave::Int=1; K::Int=0, conv::String="strong")
+function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE; K::Int=0, conv::String="strong")
     SolutionPSDE(equation, Δt, ntime, nsave, K=K, conv=conv)
 end
 
 "Print error for solutions of equations not implemented, yet."
-function Solution(equation::Equation, Δt, ntime::Int, nsave::Int=1)
+function Solution(equation::Equation, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
     error("No solution found for equation ", equation)
 end
 

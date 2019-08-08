@@ -11,6 +11,10 @@ module Solutions
     using ..Equations
 
 
+    const DEFAULT_NSAVE = 1
+    const DEFAULT_NWRITE = 0
+
+
     export DataSeries, get_data!, set_data!, reset!
     export PDataSeries, SDataSeries
 
