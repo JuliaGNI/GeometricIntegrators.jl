@@ -319,7 +319,7 @@ end
 
 """
 Creates HDF5 file and initialises datasets for SDE solution object.
-  It is implemented as one fucntion for all NQ and NW cases, rather than several
+  It is implemented as one function for all NQ and NW cases, rather than several
   separate cases as was done for SolutionODE.
   nt - the total number of time steps to store
   ntime - the total number of timesteps to be computed
