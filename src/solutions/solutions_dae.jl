@@ -144,7 +144,7 @@ function copy_solution!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, 
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
-        if sol.counter[k] > nt
+        if sol.counter[k] > sol.nt
             @error("Solution overflow. Call write_to_hdf5() and reset!() before continuing the simulation.")
         end
         set_data!(sol.q, q, sol.counter[k], k)
