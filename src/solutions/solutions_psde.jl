@@ -369,25 +369,17 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
     # Right now, it has to be set as dynamical size adaptation is not yet
     # working. The default value is the size of the solution structure.
     if NQ==1
-        # COULDN'T FIGURE OUT HOW TO USE d_create FOR A 1D ARRAY - the line below gives errors,
-        # i.e., a 1x1 dataset is created, instead of an array
-        #q = d_create(h5, "q", datatype(DT), dataspace(solution.nt+1,))
-        #q[1] = solution.q.d[1]
-
-        # INSTEAD, ALLOCATING A ZERO ARRAY q AND USING write TO CREATE A DATASET IN THE FILE
-        q = zeros(DT,nt+1)
-        p = zeros(DT,nt+1)
+        q = d_create(h5, "q", datatype(DT), dataspace((nt+1,)), "chunk", (1,))
+        p = d_create(h5, "p", datatype(DT), dataspace((nt+1,)), "chunk", (1,))
         # copy initial conditions
-        q[1] = solution.q.d[1]
-        p[1] = solution.p.d[1]
-        write(h5,"q",q)
-        write(h5,"p",p)
+        q[1] = solution.q[0]
+        p[1] = solution.p[0]
     elseif NQ==2
         q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
         p = d_create(h5, "p", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
         # copy initial conditions
-        q[1:solution.nd, 1] = solution.q.d[1:solution.nd, 1]
-        p[1:solution.nd, 1] = solution.p.d[1:solution.nd, 1]
+        q[:, 1] = solution.q[:, 0]
+        p[:, 1] = solution.p[:, 0]
     elseif NQ==3
         if solution.ns>1
             q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ns), "chunk", (solution.nd,1,1))
@@ -397,24 +389,22 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
             p = d_create(h5, "p", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
         end
         # copy initial conditions
-        q[:, 1, :] = solution.q.d[:, 1, :]
-        p[:, 1, :] = solution.p.d[:, 1, :]
+        q[:, 1, :] = solution.q[:, 0, :]
+        p[:, 1, :] = solution.p[:, 0, :]
     else
         q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ns, solution.ni), "chunk", (solution.nd,1,1,1))
         p = d_create(h5, "p", datatype(DT), dataspace(solution.nd, nt+1, solution.ns, solution.ni), "chunk", (solution.nd,1,1,1))
         # copy initial conditions
-        q[:, 1, :, :] = solution.q.d[:, 1, :, :]
-        p[:, 1, :, :] = solution.p.d[:, 1, :, :]
+        q[:, 1, :, :] = solution.q[:, 0, :, :]
+        p[:, 1, :, :] = solution.p[:, 0, :, :]
     end
 
 
     if save_W==true
         # creating datasets to store the Wiener process increments
         if NW==1
-            # COULDN'T FIGURE OUT HOW TO USE d_create FOR A 1D ARRAY
-            # INSTEAD, ALLOCATING A ZERO ARRAY q AND USING write TO CREATE A DATASET IN THE FILE
-            write(h5,"ΔW",zeros(DT,ntime))
-            write(h5,"ΔZ",zeros(DT,ntime))
+            dW = d_create(h5, "ΔW", datatype(DT), dataspace((ntime,)), "chunk", (1,))
+            dZ = d_create(h5, "ΔZ", datatype(DT), dataspace((ntime,)), "chunk", (1,))
         elseif NW==2
             dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
             dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
@@ -426,9 +416,8 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
 
 
     # Creating a dataset for storing the time series
-    t = zeros(DT,nt+1)
-    t[1] = solution.t.t[1]
-    write(h5,"t",t)
+    t = d_create(h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
+    t[1] = solution.t[0]
 
     return h5
 end
@@ -458,21 +447,21 @@ function CommonFunctions.write_to_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, h5::
     # end
 
     # saving the time time series
-    h5["t"][j1:j2] = solution.t.t[2:n+1]
+    h5["t"][j1:j2] = solution.t[1:n]
 
     # copy data from solution to HDF5 dataset
     if NQ==1
-        h5["q"][j1:j2] = solution.q.d[2:n+1]
-        h5["p"][j1:j2] = solution.p.d[2:n+1]
+        h5["q"][j1:j2] = solution.q[1:n]
+        h5["p"][j1:j2] = solution.p[1:n]
     elseif NQ==2
-        h5["q"][1:d, j1:j2] = solution.q.d[1:d, 2:n+1]
-        h5["p"][1:d, j1:j2] = solution.p.d[1:d, 2:n+1]
+        h5["q"][:, j1:j2] = solution.q[:, 1:n]
+        h5["p"][:, j1:j2] = solution.p[:, 1:n]
     elseif NQ==3
-        h5["q"][:, j1:j2, :] = solution.q.d[:, 2:n+1,:]
-        h5["p"][:, j1:j2, :] = solution.p.d[:, 2:n+1,:]
+        h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
+        h5["p"][:, j1:j2, :] = solution.p[:, 1:n, :]
     else
-        h5["q"][:, j1:j2, :, :] = solution.q.d[:, 2:n+1, :, :]
-        h5["p"][:, j1:j2, :, :] = solution.p.d[:, 2:n+1, :, :]
+        h5["q"][:, j1:j2, :, :] = solution.q[:, 1:n, :, :]
+        h5["p"][:, j1:j2, :, :] = solution.p[:, 1:n, :, :]
     end
 
 
