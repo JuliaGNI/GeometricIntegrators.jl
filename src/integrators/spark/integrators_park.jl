@@ -266,7 +266,7 @@ end
 
 
 "Implicit partitioned additive Runge-Kutta integrator."
-struct IntegratorPARK{DT, TT, FT, PT, UT, GT, ϕT, ST} <: Integrator{DT, TT}
+struct IntegratorPARK{DT, TT, FT, PT, UT, GT, ϕT, ST} <: AbstractIntegratorSPARK{DT, TT}
     equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}
     tableau::TableauPARK{TT}
     Δt::TT

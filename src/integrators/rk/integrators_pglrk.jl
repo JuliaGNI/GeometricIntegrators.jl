@@ -255,7 +255,7 @@ end
 "Variational partitioned Runge-Kutta integrator."
 struct IntegratorPGLRK{DT, TT, PT <: ParametersPGLRK{DT,TT},
                                ST <: NonlinearSolver{DT},
-                               IT <: InitialGuessPODE{DT,TT}, N} <: Integrator{DT,TT}
+                               IT <: InitialGuessPODE{DT,TT}, N} <: DeterministicIntegrator{DT,TT}
     params::PT
     solver::ST
     iguess::IT

@@ -1,5 +1,5 @@
 
-abstract type IntegratorRK{dType, tType} <: Integrator{dType, tType} end
+abstract type IntegratorRK{dType, tType} <: DeterministicIntegrator{dType, tType} end
 
 equation(integrator::IntegratorRK) = integrator.params.equ
 timestep(integrator::IntegratorRK) = integrator.params.Δt

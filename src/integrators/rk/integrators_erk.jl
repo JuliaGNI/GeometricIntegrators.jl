@@ -52,7 +52,7 @@ end
 
 
 "Explicit Runge-Kutta integrator."
-struct IntegratorERK{DT,TT,FT} <: Integrator{DT,TT}
+struct IntegratorERK{DT,TT,FT} <: DeterministicIntegrator{DT,TT}
     equation::ODE{DT,TT,FT}
     tableau::TableauERK{TT}
     Δt::TT

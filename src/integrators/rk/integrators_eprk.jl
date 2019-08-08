@@ -44,7 +44,7 @@ end
 
 
 "Explicit partitioned Runge-Kutta integrator."
-struct IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
+struct IntegratorEPRK{DT,TT,VT,FT} <: DeterministicIntegrator{DT,TT}
     equation::PODE{DT,TT,VT,FT}
     tableau::TableauEPRK{TT}
     Δt::TT

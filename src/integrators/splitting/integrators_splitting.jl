@@ -57,7 +57,7 @@ end
 
 
 "Splitting integrator."
-struct IntegratorSplitting{DT, TT, VT, ST <: AbstractTableauSplitting, FT, CT, N} <: Integrator{DT,TT}
+struct IntegratorSplitting{DT, TT, VT, ST <: AbstractTableauSplitting, FT, CT, N} <: DeterministicIntegrator{DT,TT}
     equation::SODE{DT,TT,VT,N}
     tableau::ST
     f::FT

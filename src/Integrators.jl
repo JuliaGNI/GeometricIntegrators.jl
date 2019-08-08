@@ -36,7 +36,8 @@ module Integrators
     include("integrators/abstract_tableau.jl")
 
 
-    export Integrator, integrate, integrate!, equation, timestep
+    export Integrator, DeterministicIntegrator, StochasticIntegrator
+    export integrate, integrate!, equation, timestep
     export NonlinearFunctionParameters, function_stages!
 
     include("integrators/abstract_integrator.jl")
@@ -125,6 +126,7 @@ module Integrators
 
     export TableauARK
     export TableauSARK
+    export AbstractIntegratorSPARK
     export IntegratorPARK, TableauPARK
     export IntegratorGPARK, TableauGPARK
     export IntegratorVPARK, TableauVPARK
@@ -132,6 +134,7 @@ module Integrators
     export IntegratorHSPARK, TableauHSPARK
     export IntegratorVSPARK, TableauVSPARK
 
+    include("integrators/spark/abstract_integrator_spark.jl")
     include("integrators/spark/coefficients.jl")
     include("integrators/spark/integrators_spark_common.jl")
     include("integrators/spark/integrators_ark.jl")

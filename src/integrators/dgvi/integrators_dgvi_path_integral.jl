@@ -418,7 +418,7 @@ end
 * `q⁺`: current solution vector for trajectory, rhs of jump
 * `cache`: temporary variables for nonlinear solver
 """
-struct IntegratorDGVIPI{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis,JT<:Discontinuity} <: Integrator{DT,TT}
+struct IntegratorDGVIPI{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis,JT<:Discontinuity} <: DeterministicIntegrator{DT,TT}
     equation::IODE{DT,TT,ΘT,FT,GT,VT}
 
     basis::BT

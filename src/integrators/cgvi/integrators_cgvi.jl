@@ -207,7 +207,7 @@ end
 
 
 "Continuous Galerkin Variational Integrator."
-struct IntegratorCGVI{DT,TT,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis,D,S,R} <: Integrator{DT,TT}
+struct IntegratorCGVI{DT,TT,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis,D,S,R} <: DeterministicIntegrator{DT,TT}
     equation::IODE{DT,TT,ΘT,FT,GT,VT}
 
     basis::BT

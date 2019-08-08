@@ -1,7 +1,24 @@
 
 abstract type Integrator{dType, tType} end
 
+abstract type DeterministicIntegrator{dType, tType} <: Integrator{dType, tType} end
 abstract type StochasticIntegrator{dType, tType} <: Integrator{dType, tType} end
+
+abstract type ODEIntegrator{dType, tType} <: DeterministicIntegrator{dType, tType} end
+abstract type DAEIntegrator{dType, tType} <: DeterministicIntegrator{dType, tType} end
+abstract type IODEIntegrator{dType, tType} <: DeterministicIntegrator{dType, tType} end
+abstract type IDAEIntegrator{dType, tType} <: DeterministicIntegrator{dType, tType} end
+abstract type PODEIntegrator{dType, tType} <: DeterministicIntegrator{dType, tType} end
+abstract type PDAEIntegrator{dType, tType} <: DeterministicIntegrator{dType, tType} end
+
+abstract type HODEIntegrator{dType, tType} <: PODEIntegrator{dType, tType} end
+abstract type HDAEIntegrator{dType, tType} <: PDAEIntegrator{dType, tType} end
+abstract type VODEIntegrator{dType, tType} <: IODEIntegrator{dType, tType} end
+abstract type VDAEIntegrator{dType, tType} <: IDAEIntegrator{dType, tType} end
+
+abstract type SDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType} end
+abstract type PSDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType} end
+abstract type SPSDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType} end
 
 
 # function CommonFunctions.name(int::Integrator)

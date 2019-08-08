@@ -68,7 +68,7 @@ end
 
 
 "Special Partitioned Additive Runge Kutta integrator."
-struct IntegratorGPARK{DT,TT,VT,FT,UT,GT,ΦT} <: Integrator{DT,TT}
+struct IntegratorGPARK{DT,TT,VT,FT,UT,GT,ΦT} <: AbstractIntegratorSPARK{DT,TT}
     equation::PDAE{DT,TT,VT,FT,UT,GT,ΦT}
     tableau::TableauGPARK{TT}
     Δt::TT

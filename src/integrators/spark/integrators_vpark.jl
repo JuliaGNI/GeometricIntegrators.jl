@@ -355,7 +355,7 @@ end
 
 
 "Variational partitioned additive Runge-Kutta integrator."
-struct IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integrator{DT, TT}
+struct IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: AbstractIntegratorSPARK{DT, TT}
     equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}
     tableau::TableauVPARK{TT}
     Δt::TT
