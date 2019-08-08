@@ -76,9 +76,6 @@ function createHDF5(sol::Solution, file::AbstractString, overwrite=true)
     # create or open HDF5 file
     h5 = h5open(file, flag)
 
-    # save attributes
-    save_attributes(sol, h5)
-
     return h5
 end
 
@@ -87,41 +84,27 @@ function save_attributes(sol::Solution)
     save_attributes(sol, hdf5(sol))
 end
 
-function save_attributes(sol::Solution, h5::HDF5File)
+"save_attributes: Saves attributes of Deterministic Solutions to HDF5 file."
+function save_attributes(sol::DeterministicSolution, h5::HDF5File)
     # save attributes
     attrs(h5)["ntime"] = ntime(sol)
     attrs(h5)["nsave"] = nsave(sol)
 end
 
+"save_attributes: Saves attributes of Stochastic Solutions to HDF5 file."
+function save_attributes(sol::StochasticSolution, h5::HDF5File)
+    attrs(h5)["nsave"] = solution.nsave
+    attrs(h5)["conv"] = solution.conv
+    attrs(h5)["nd"] = solution.nd
+    attrs(h5)["nm"] = solution.nm
+    attrs(h5)["ns"] = solution.ns
+    attrs(h5)["ni"] = solution.ni
+    attrs(h5)["K"] = solution.K
+end
 
 "write_to_hdf5: Wrapper for saving Solution to HDF5 file."
 function CommonFunctions.write_to_hdf5(solution::Solution)
     write_to_hdf5(solution, hdf5(solution), offset(solution))
-end
-
-
-"""
-createHDF5: Creates or opens HDF5 file.
-  A version for StochasticSolution. It does not create attributes
-  and does not write the time array t, like the version above does. Instead these
-  are set in create_hdf5(), so that arrays larger than currently held in the solution
-  structure can be created in the file. In the future it would be better to rewrite
-  the function above, so that it is universal for all solution structures.
-"""
-function createHDF5(sol::StochasticSolution, file::AbstractString, overwrite=true)
-    if overwrite
-        flag = "w"
-        @info("Creating HDF5 file ", file)
-        isfile(file) ? @warn("Overwriting existing HDF5 file.") : nothing
-    else
-        flag = "r+"
-        @info("Opening HDF5 file ", file)
-    end
-
-    # create or open HDF5 file
-    h5 = h5open(file, flag)
-
-    return h5
 end
 
 

@@ -329,20 +329,12 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString, n
     @assert ntime ≥ 1
 
     # create HDF5 file
-    # this calls the variant of createHDF5 for StochasticSolution,
-    # which does not create the array for t.
     h5 = createHDF5(solution, file)
 
     # Adding the attributes specific to SolutionSDE that were not added above
-    attrs(h5)["conv"] = solution.conv
-    attrs(h5)["nd"] = solution.nd
-    attrs(h5)["nm"] = solution.nm
-    attrs(h5)["ns"] = solution.ns
-    attrs(h5)["ni"] = solution.ni
+    save_attributes(solution, h5)
     attrs(h5)["nt"] = nt
     attrs(h5)["ntime"] = ntime
-    attrs(h5)["nsave"] = solution.nsave
-    attrs(h5)["K"] = solution.K
 
     # create dataset
     # nt and ntime can be used to set the expected total number of timesteps to be saved,

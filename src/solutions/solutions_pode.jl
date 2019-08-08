@@ -121,6 +121,9 @@ function create_hdf5(solution::SolutionPODE{DT,TT,2}, file::AbstractString, ntim
     # create HDF5 file and save attributes and common parameters
     h5 = createHDF5(solution, file)
 
+    # save attributes
+    save_attributes(solution, h5)
+
     # create datasets
     q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
     p = d_create(h5, "p", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
@@ -138,6 +141,9 @@ function create_hdf5(solution::SolutionPODE{DT,TT,3}, file::AbstractString, ntim
 
     # create HDF5 file and save attributes and common parameters
     h5 = createHDF5(solution, file)
+
+    # save attributes
+    save_attributes(solution, h5)
 
     # create datasets
     q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ni), "chunk", (solution.nd,1,1))

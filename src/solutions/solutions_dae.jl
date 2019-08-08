@@ -112,6 +112,9 @@ function create_hdf5(solution::SolutionDAE{DT,TT,2}, file::AbstractString, ntime
     # create HDF5 file and save attributes and common parameters
     h5 = createHDF5(solution, file)
 
+    # save attributes
+    save_attributes(solution, h5)
+
     # create datasets
     q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
     λ = d_create(h5, "λ", datatype(DT), dataspace(solution.nm, solution.nt+1), "chunk", (solution.nm,1))
@@ -129,6 +132,9 @@ function create_hdf5(solution::SolutionDAE{DT,TT,3}, file::AbstractString, ntime
 
     # create HDF5 file and save attributes and common parameters
     h5 = createHDF5(solution, file)
+
+    # save attributes
+    save_attributes(solution, h5)
 
     # create datasets
     q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ni), "chunk", (solution.nd,1,1))

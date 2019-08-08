@@ -169,6 +169,9 @@ function create_hdf5(solution::SolutionODE{DT,TT,2}, file::AbstractString, ntime
     # create HDF5 file and save attributes and common parameters
     solution.h5 = createHDF5(solution, file)
 
+    # save attributes
+    save_attributes(solution)
+
     # create dataset
     nt = div(solution.ntime, solution.nsave)
 

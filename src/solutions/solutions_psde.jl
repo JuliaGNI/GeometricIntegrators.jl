@@ -344,7 +344,6 @@ function reset!(sol::SolutionPSDE)
 end
 
 
-
 """
 Creates HDF5 file and initialises datasets for SDE solution object.
   It is implemented as one fucntion for all NQ and NW cases, rather than several
@@ -356,19 +355,13 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
     @assert nt ≥ 1
     @assert ntime ≥ 1
 
-    # create HDF5 file and save ntime, nsave as attributes, and t as the dataset called "t"
+    # create HDF5 file
     h5 = createHDF5(solution, file)
 
     # Adding the attributes specific to SolutionSDE that were not added above
-    attrs(h5)["conv"] = solution.conv
-    attrs(h5)["nd"] = solution.nd
-    attrs(h5)["nm"] = solution.nm
-    attrs(h5)["ns"] = solution.ns
-    attrs(h5)["ni"] = solution.ni
+    save_attributes(solution, h5)
     attrs(h5)["nt"] = nt
     attrs(h5)["ntime"] = ntime
-    attrs(h5)["nsave"] = solution.nsave
-    attrs(h5)["K"] = solution.K
 
     # create dataset
     # nt and ntime can be used to set the expected total number of timesteps to be saved,
