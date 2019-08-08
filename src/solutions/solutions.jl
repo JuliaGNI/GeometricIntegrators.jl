@@ -11,8 +11,8 @@ nsave(sol::Solution) = error("nsave() not implemented for ", typeof(sol))
 
 
 "Create solution for ODE and split ODE."
-function Solution(equation::Union{ODE,SODE}, Δt, ntime::Int, nsave::Int=1)
-    SolutionODE(equation, Δt, ntime, nsave)
+function Solution(equation::Union{ODE,SODE}, Δt, ntime::Int, nsave::Int=1, nwrite::Int=0)
+    SolutionODE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for partitioned ODE."

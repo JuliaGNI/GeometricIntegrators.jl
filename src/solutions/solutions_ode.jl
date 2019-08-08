@@ -11,8 +11,8 @@ Contains all fields necessary to store the solution of an ODE.
 * `t`:  time steps
 * `q`:  solution `q[nd, nt+1, ni]` with `q[:,0,:]` the initial conditions
 * `ntime`: number of time steps to compute
-* `nsave`: save every nsave'th time step
-
+* `nsave`: store every nsave'th time step (default: 1)
+* `nwrite`: save data to disk after every nwrite'th time step (default: ntime)
 """
 mutable struct SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
     nd::Int
@@ -22,38 +22,56 @@ mutable struct SolutionODE{dType, tType, N} <: Solution{dType, tType, N}
     q::SDataSeries{dType,N}
     ntime::Int
     nsave::Int
-    counter::Int
+    nwrite::Int
+    counter::Vector{Int}
+
+    function SolutionODE{dType, tType, N}(nd, nt, ni, t, q, ntime, nsave, nwrite) where {dType <: Number, tType <: Real, N}
+        new(nd, nt, ni, t, q, ntime, nsave, nwrite, zeros(Int, ni))
+    end
 end
 
-function SolutionODE(equation::Union{ODE{DT,TT,FT},SODE{DT,TT,FT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT,FT}
-    N  = equation.n > 1 ? 3 : 2
+function SolutionODE(equation::Union{ODE{DT,TT,FT},SODE{DT,TT,FT}}, Δt::TT, ntime::Int, nsave::Int=1, nwrite::Int=0) where {DT,TT,FT}
+    @assert nsave > 0
+    @assert ntime == 0 || ntime ≥ nsave
+    @assert nwrite == 0 || nwrite ≥ nsave
+    @assert mod(ntime, nsave) == 0
+
+    if nwrite > 0
+        @assert mod(nwrite, nsave) == 0
+        @assert mod(ntime, nwrite) == 0
+    end
+
+    N  = (equation.n > 1 ? 3 : 2)
     nd = equation.d
     ni = equation.n
     nt = div(ntime, nsave)
+    nt = (nwrite == 0 ? nt : div(nwrite, nsave))
+    nw = (nwrite == 0 ? ntime : nwrite)
 
-    @assert DT <: Number
-    @assert TT <: Real
     @assert nd > 0
     @assert ni > 0
-    @assert nsave > 0
-    @assert ntime == 0 || ntime ≥ nsave
-    @assert mod(ntime, nsave) == 0
+    @assert nt > 0
+    @assert nw > 0
 
     t = TimeSeries{TT}(nt, Δt, nsave)
     q = SDataSeries(DT, nd, nt, ni)
-    s = SolutionODE{DT,TT,N}(nd, nt, ni, t, q, ntime, nsave, 0)
+    s = SolutionODE{DT,TT,N}(nd, nt, ni, t, q, ntime, nsave, nw)
     set_initial_conditions!(s, equation)
+
     return s
 end
 
-function SolutionODE(t::TimeSeries{TT}, q::SDataSeries{DT,N}, ntime::Int, nsave::Int) where {DT,TT,N}
+function SolutionODE(t::TimeSeries{TT}, q::SDataSeries{DT,N}, ntime::Int) where {DT,TT,N}
     # extract parameters
     nd = q.nd
     ni = q.ni
     nt = t.n
+    ns = div(ntime, nt)
+
+    @assert mod(ntime, nt) == 0
 
     # create solution
-    SolutionODE{DT,TT,N}(nd, nt, ni, t, q, ntime, nsave, 0)
+    SolutionODE{DT,TT,N}(nd, nt, ni, t, q, ntime, ns, 0)
 end
 
 function SolutionODE(file::String)
@@ -63,7 +81,7 @@ function SolutionODE(file::String)
 
     # read attributes
     ntime = read(attrs(h5)["ntime"])
-    nsave = read(attrs(h5)["nsave"])
+    # nsave = read(attrs(h5)["nsave"])
 
     # reading data arrays
     t = TimeSeries(read(h5["t"]), nsave)
@@ -73,7 +91,7 @@ function SolutionODE(file::String)
     close(h5)
 
     # create solution
-    SolutionODE(t, q, ntime, nsave)
+    SolutionODE(t, q, ntime)
 end
 
 Base.:(==)(sol1::SolutionODE, sol2::SolutionODE) = (
@@ -98,6 +116,7 @@ end
 function set_initial_conditions!(sol::SolutionODE{DT,TT}, t₀::TT, q₀::Union{Array{DT}, Array{TwicePrecision{DT}}}) where {DT,TT}
     set_data!(sol.q, q₀, 0)
     compute_timeseries!(sol.t, t₀)
+    sol.counter .= 1
 end
 
 function get_initial_conditions!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, k) where {DT,TT}
@@ -105,16 +124,21 @@ function get_initial_conditions!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, V
 end
 
 function copy_solution!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
+    @assert n <= sol.ntime
+    @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
-        set_data!(sol.q, q, div(n, sol.nsave), k)
-        sol.counter += 1
+        if sol.counter[k] > nt
+            error("Solution overflow. Call write_to_hdf5() and reset!() before continuing the simulation.")
+        end
+        set_data!(sol.q, q, sol.counter[k], k)
+        sol.counter[k] += 1
     end
 end
 
 function reset!(sol::SolutionODE)
     reset!(sol.q)
     compute_timeseries!(sol.t, sol.t[end])
-    sol.counter = 0
+    sol.counter .= 0
 end
 
 
