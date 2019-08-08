@@ -87,12 +87,12 @@ end
 
 function SolutionODE(file::String)
     # open HDF5 file
-    info("Reading HDF5 file ", file)
+    @info("Reading HDF5 file ", file)
     h5 = h5open(file, "r")
 
     # read attributes
     ntime = read(attrs(h5)["ntime"])
-    # nsave = read(attrs(h5)["nsave"])
+    nsave = read(attrs(h5)["nsave"])
 
     # reading data arrays
     t = TimeSeries(read(h5["t"]), nsave)
@@ -141,7 +141,7 @@ function copy_solution!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{Twi
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
         if sol.counter[k] > nt
-            error("Solution overflow. Call write_to_hdf5() and reset!() before continuing the simulation.")
+            @error("Solution overflow. Call write_to_hdf5() and reset!() before continuing the simulation.")
         end
         set_data!(sol.q, q, sol.counter[k], k)
         sol.counter[k] += 1
@@ -155,7 +155,7 @@ function reset!(sol::SolutionODE)
     sol.woffset += sol.nt
 end
 
-function close(solution::SolutionODE)
+function Base.close(solution::SolutionODE)
     # close(solution.t)
     # close(solution.q)
     close(solution.h5)
@@ -170,14 +170,18 @@ function create_hdf5(solution::SolutionODE{DT,TT,2}, file::AbstractString, ntime
     solution.h5 = createHDF5(solution, file)
 
     # create dataset
-    # ntime can be used to set the expected total number of timesteps
+    nt = div(solution.ntime, solution.nsave)
+
+    # nt can be used to set the expected total number of timesteps
     # so that the size of the array does not need to be adapted dynamically.
-    # Right now, it has to be set as dynamical size adaptation is not yet
-    # working.
+    # Right now, the size has to be set to nt as dynamical size adaptation is
+    # not yet working.
+    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
     q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
 
     # copy initial conditions
-    q[1:solution.nd, 1] = solution.q.d[1:solution.nd, 1]
+    t[1] = solution.t[0]
+    q[:, 1] = solution.q[:, 0]
 
     return solution.h5
 end
@@ -190,14 +194,18 @@ function create_hdf5(solution::SolutionODE{DT,TT,3}, file::AbstractString, ntime
     solution.h5 = createHDF5(solution, file)
 
     # create dataset
-    # ntime can be used to set the expected total number of timesteps
+    nt = div(solution.ntime, solution.nsave)
+
+    # nt can be used to set the expected total number of timesteps
     # so that the size of the array does not need to be adapted dynamically.
-    # Right now, it has to be set as dynamical size adaptation is not yet
-    # working.
-    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ni), "chunk", (solution.nd,1,1))
+    # Right now, the size has to be set to nt as dynamical size adaptation is
+    # not yet working.
+    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
+    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
 
     # copy initial conditions
-    q[1:solution.nd, 1, 1:solution.ni] = solution.q.d[1:solution.nd, 1, 1:solution.ni]
+    t[1] = solution.t[0]
+    q[:, 1, :] = solution.q[:, 0, :]
 
     return solution.h5
 end
@@ -205,7 +213,6 @@ end
 "Append solution to HDF5 file."
 function CommonFunctions.write_to_hdf5(solution::SolutionODE{DT,TT,2}, h5::HDF5.HDF5File, offset=0) where {DT,TT}
     # set convenience variables and compute ranges
-    d  = solution.nd
     n  = solution.nt
     j1 = offset+2
     j2 = offset+1+n
@@ -216,7 +223,8 @@ function CommonFunctions.write_to_hdf5(solution::SolutionODE{DT,TT,2}, h5::HDF5.
     # end
 
     # copy data from solution to HDF5 dataset
-    h5["q"][1:d, j1:j2] = solution.q.d[1:d, 2:n+1]
+    h5["t"][j1:j2] = solution.t[1:n]
+    h5["q"][:, j1:j2] = solution.q[:, 1:n]
 
     return nothing
 end
@@ -224,9 +232,7 @@ end
 "Append solution to HDF5 file."
 function CommonFunctions.write_to_hdf5(solution::SolutionODE{DT,TT,3}, h5::HDF5.HDF5File, offset=0) where {DT,TT}
     # set convenience variables and compute ranges
-    d  = solution.nd
     n  = solution.nt
-    i  = solution.ni
     j1 = offset+2
     j2 = offset+1+n
 
@@ -236,7 +242,8 @@ function CommonFunctions.write_to_hdf5(solution::SolutionODE{DT,TT,3}, h5::HDF5.
     # end
 
     # copy data from solution to HDF5 dataset
-    h5["q"][1:d, j1:j2, 1:i] = solution.q.d[1:d, 2:n+1, 1:i]
+    h5["t"][j1:j2] = solution.t[1:n]
+    h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
 
     return nothing
 end

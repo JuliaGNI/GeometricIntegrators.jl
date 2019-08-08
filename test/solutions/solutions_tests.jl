@@ -44,6 +44,15 @@ set_initial_conditions!(sol1, similar(ode, t1, q2))
 get_initial_conditions!(sol1, tq, 1)
 @test tq == q2[:,1]
 
+# test hdf5 in- and output
+create_hdf5(sol, "test.hdf5")
+write_to_hdf5(sol)
+close(sol)
+
+sol2 = SolutionODE("test.hdf5")
+@test sol != sol2
+rm("test.hdf5")
+
 # test nsave and nwrite parameters
 sol = Solution(ode, Δt, 20, 2)
 @test sol.nt == 10

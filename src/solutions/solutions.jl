@@ -77,23 +77,20 @@ function createHDF5(sol::Solution, file::AbstractString, overwrite=true)
     h5 = h5open(file, flag)
 
     # save attributes
-    attrs(h5)["ntime"] = ntime(sol)
-    attrs(h5)["nsave"] = nsave(sol)
-
-    # copy time
-    write(h5, "t", time(sol))
+    save_attributes(sol, h5)
 
     return h5
 end
 
 "save_attributes: Saves common attributes of Solution to HDF5 file."
 function save_attributes(sol::Solution)
-    # save attributes
-    attrs(hdf5(sol))["ntime"] = ntime(sol)
-    attrs(hdf5(sol))["nsave"] = nsave(sol)
+    save_attributes(sol, hdf5(sol))
+end
 
-    # copy time
-    write(hdf5(sol), "t", time(sol))
+function save_attributes(sol::Solution, h5::HDF5File)
+    # save attributes
+    attrs(h5)["ntime"] = ntime(sol)
+    attrs(h5)["nsave"] = nsave(sol)
 end
 
 
