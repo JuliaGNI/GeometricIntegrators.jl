@@ -77,6 +77,15 @@ psol1 = Solution(pode1, Δt, ntime)
 @test pode == pode0
 @test pode != pode1
 
+# test hdf5 in- and output
+create_hdf5(psol, "test.hdf5")
+write_to_hdf5(psol)
+close(psol)
+
+psol2 = SolutionPODE("test.hdf5")
+@test psol != psol2
+rm("test.hdf5")
+
 
 ### Test SolutionDAE ###
 
@@ -88,6 +97,15 @@ dae = DAE(fx, gx, fϕ, q1, λ1)
 sol = Solution(dae, Δt, ntime)
 @test typeof(sol) <: SolutionDAE
 
+# test hdf5 in- and output
+create_hdf5(sol, "test.hdf5")
+write_to_hdf5(sol)
+close(sol)
+
+sol2 = SolutionDAE("test.hdf5")
+@test sol != sol2
+rm("test.hdf5")
+
 
 ### Test SolutionPDAE ###
 
@@ -98,6 +116,15 @@ psol = Solution(pdae, Δt, ntime)
 pdae = PDAE(fq, fp, gq, gp, gϕ, q1, p1, λ1)
 psol = Solution(pdae, Δt, ntime)
 @test typeof(psol) <: SSolutionPDAE
+
+# test hdf5 in- and output
+create_hdf5(psol, "test.hdf5")
+write_to_hdf5(psol)
+close(psol)
+
+psol2 = SSolutionPDAE("test.hdf5")
+@test psol != psol2
+rm("test.hdf5")
 
 
 ### Test SolutionSDE ###

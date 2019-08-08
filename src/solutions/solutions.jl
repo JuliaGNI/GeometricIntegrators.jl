@@ -18,33 +18,33 @@ function Solution(equation::Union{ODE,SODE}, Δt, ntime::Int, nsave::Int=DEFAULT
 end
 
 "Create solution for partitioned ODE."
-function Solution(equation::PODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
-    SolutionPODE(equation, Δt, ntime, nsave)
+function Solution(equation::PODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+    SolutionPODE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for variational ODE."
-function Solution(equation::VODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
-    SolutionPODE(equation, Δt, ntime, nsave)
+function Solution(equation::VODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+    SolutionPODE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for implicit ODE."
-function Solution(equation::IODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
-    SSolutionPDAE(equation, Δt, ntime, nsave)
+function Solution(equation::IODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+    SSolutionPDAE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for DAE."
-function Solution(equation::DAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
-    SolutionDAE(equation, Δt, ntime, nsave)
+function Solution(equation::DAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+    SolutionDAE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for partitioned DAE."
-function Solution(equation::PDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
-    SSolutionPDAE(equation, Δt, ntime, nsave)
+function Solution(equation::PDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+    SSolutionPDAE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for implicit DAE."
-function Solution(equation::IDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
-    SSolutionPDAE(equation, Δt, ntime, nsave)
+function Solution(equation::IDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+    SSolutionPDAE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for SDE."

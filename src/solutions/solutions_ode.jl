@@ -13,9 +13,9 @@ Contains all fields necessary to store the solution of an ODE.
 * `ntime`: number of time steps to compute
 * `nsave`: store every nsave'th time step (default: 1)
 * `nwrite`: save data to disk after every nwrite'th time step (default: ntime)
-* `counter`:
-* `woffset`:
-* `h5`:
+* `counter`: counter for copied solution entries
+* `woffset`: counter for file offset
+* `h5`: HDF5 file for storage
 """
 mutable struct SolutionODE{dType, tType, N} <: DeterministicSolution{dType, tType, N}
     nd::Int
@@ -65,8 +65,7 @@ function SolutionODE(equation::Union{ODE{DT,TT,FT},SODE{DT,TT,FT}}, Δt::TT, nti
 
     if !isnothing(filename)
         isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
-        s.h5 = h5open(filename, "w")
-        save_attributes(s)
+        create_hdf5(s, filename)
     end
 
     return s
@@ -151,7 +150,7 @@ end
 function reset!(sol::SolutionODE)
     reset!(sol.q)
     compute_timeseries!(sol.t, sol.t[end])
-    sol.counter .= 0
+    sol.counter .= 1
     sol.woffset += sol.nt
 end
 
