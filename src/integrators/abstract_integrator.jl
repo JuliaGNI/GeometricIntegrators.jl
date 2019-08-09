@@ -25,10 +25,8 @@ abstract type SPSDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType
 #     warn(string(typeof(int)) * ".name() Not implemented!")
 # end
 
-equation(integrator::Integrator) = integrator.equation
-timestep(integrator::Integrator) = integrator.Δt
-integrate(integrator::Integrator) = error("integrate() not implemented for ", typeof(integrator))
-integrate!(integrator::Integrator) = error("integrate()! not implemented for ", typeof(integrator))
+equation(integrator::Integrator) = error("equation() not implemented for ", typeof(integrator))
+timestep(integrator::Integrator) = error("timestep() not implemented for ", typeof(integrator))
 
 
 abstract type Parameters{DT,TT} end

@@ -66,6 +66,9 @@ function IntegratorERK(equation::ODE{DT,TT,FT}, tableau::TableauERK{TT}, Δt::TT
     IntegratorERK{DT,TT,FT}(equation, tableau, Δt)
 end
 
+equation(int::IntegratorERK) = int.equation
+timestep(int::IntegratorERK) = int.Δt
+
 
 "Explicit Runge-Kutta integrator cache."
 mutable struct IntegratorCacheERK{DT,TT,D,S} <: ODEIntegratorCache{DT,D,S}
