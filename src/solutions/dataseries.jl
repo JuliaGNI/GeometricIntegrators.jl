@@ -34,6 +34,14 @@ for (TDataSeries, TArray) in
         end
 
 
+        function $TDataSeries(T, nt::Int)
+            return $TDataSeries{T,1}(1, nt, 1)
+        end
+
+        function $TDataSeries(T, nd::Int, nt::Int)
+            return $TDataSeries{T,2}(nd, nt, 1)
+        end
+
         function $TDataSeries(T, nd::Int, nt::Int, ni::Int)
             ni == 1 ? N = 2 : N = 3
             return $TDataSeries{T,N}(nd, nt, ni)
@@ -186,13 +194,9 @@ function set_data!(ds::DataSeries{T,3}, x::Union{Array{T,1}, Array{TwicePrecisio
 end
 
 function CommonFunctions.reset!(ds::DataSeries{T,1}) where {T}
-    # ds[0]=ds[end-1] was wrong for some reason
-    # ds[0]=ds[end] would be ok, but to be safe below using ds.d
-    @inbounds ds.d[1] = ds.d[end]
+    @inbounds ds[0] = ds[end]
 end
 
-# Corrected the bugs in all reset! functions: changed end to end-1.
-# When 'end' is passed to getindex, because of the shift it becomes end+1.
 function CommonFunctions.reset!(ds::DataSeries{T,2}) where {T}
     @inbounds for i in axes(ds, 1)
         ds[i,0] = ds[i,end]
