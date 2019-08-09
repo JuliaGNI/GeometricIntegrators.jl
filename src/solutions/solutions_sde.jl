@@ -392,7 +392,7 @@ Append solution to HDF5 file.
   offset - start writing q at the position offset+2
   offset2- start writing ΔW, ΔZ at the position offset2+1
 """
-function CommonFunctions.write_to_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, h5::HDF5.HDF5File, offset=0, offset2=offset) where {DT,TT,NQ,NW}
+function CommonFunctions.write_to_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, h5::HDF5File, offset=0, offset2=offset) where {DT,TT,NQ,NW}
     # set convenience variables and compute ranges
     d   = solution.nd
     m   = solution.nm

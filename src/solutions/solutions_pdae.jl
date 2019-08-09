@@ -254,7 +254,7 @@ function create_hdf5(solution::SolutionPDAE{DT,TT,3}, file::AbstractString) wher
 end
 
 "Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,2}, h5::HDF5.HDF5File, offset=0) where {DT,TT}
+function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,2}, h5::HDF5File, offset=0) where {DT,TT}
     # set convenience variables and compute ranges
     n  = solution.nt
     j1 = offset+2
@@ -269,7 +269,7 @@ function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,2}, h5::HDF5
 end
 
 "Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,3}, h5::HDF5.HDF5File, offset=0) where {DT,TT}
+function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,3}, h5::HDF5File, offset=0) where {DT,TT}
     # set convenience variables and compute ranges
     n  = solution.nt
     j1 = offset+2
