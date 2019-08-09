@@ -15,8 +15,8 @@ module Solutions
     const DEFAULT_NWRITE = 0
 
 
-    export DataSeries, get_data!, set_data!, reset!
-    export PDataSeries, SDataSeries
+    export get_data!, set_data!
+    export DataSeries, PDataSeries, SDataSeries
 
     include("solutions/dataseries.jl")
 
@@ -24,8 +24,7 @@ module Solutions
 
     include("solutions/timeseries.jl")
 
-    export StochasticDataSeries, get_data!, set_data!, reset!
-    export SStochasticDataSeries
+    export StochasticDataSeries, SStochasticDataSeries
 
     include("solutions/stochasticdataseries.jl")
 
@@ -35,8 +34,7 @@ module Solutions
     include("solutions/wienerprocess.jl")
 
     export Solution, StochasticSolution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE, SolutionSDE, SolutionPSDE,
-           copy_solution!, reset!,
-           get_initial_conditions!, set_initial_conditions!,
+           get_initial_conditions, get_initial_conditions!, set_initial_conditions!,
            create_hdf5, write_to_hdf5
     export PSolutionPDAE, SSolutionPDAE
 

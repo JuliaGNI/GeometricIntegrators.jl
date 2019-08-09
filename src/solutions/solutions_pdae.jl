@@ -160,7 +160,7 @@ function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, 
     get_data!(sol.p, p, 0, k)
 end
 
-function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, λ::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
+function CommonFunctions.set_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, λ::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
@@ -174,7 +174,7 @@ function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{Tw
     end
 end
 
-function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
+function CommonFunctions.set_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
@@ -187,7 +187,7 @@ function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{Tw
     end
 end
 
-function reset!(sol::SolutionPDAE)
+function CommonFunctions.reset!(sol::SolutionPDAE)
     reset!(sol.q)
     reset!(sol.p)
     reset!(sol.λ)

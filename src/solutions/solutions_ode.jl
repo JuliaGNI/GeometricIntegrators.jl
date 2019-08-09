@@ -135,7 +135,23 @@ function get_initial_conditions!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, V
     get_data!(sol.q, q, 0, k)
 end
 
-function copy_solution!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
+function get_initial_conditions(sol::SolutionODE, k, n=1)
+    (sol.t[n], sol.q[:, n-1, k])
+end
+
+function CommonFunctions.get_solution!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
+    q .= sol.q[:, n, k]
+end
+
+function CommonFunctions.get_solution(sol::SolutionODE, n, k)
+    (sol.t[n], sol.q[:, n, k])
+end
+
+function CommonFunctions.set_solution!(sol, t, q, n, k)
+    set_solution!(sol, q, n, k)
+end
+
+function CommonFunctions.set_solution!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
@@ -147,7 +163,7 @@ function copy_solution!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{Twi
     end
 end
 
-function reset!(sol::SolutionODE)
+function CommonFunctions.reset!(sol::SolutionODE)
     reset!(sol.q)
     compute_timeseries!(sol.t, sol.t[end])
     sol.counter .= 1

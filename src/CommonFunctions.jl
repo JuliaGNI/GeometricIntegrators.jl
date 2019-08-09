@@ -24,4 +24,12 @@ module CommonFunctions
 
     write_to_hdf5() = nothing
 
+
+    export get_solution, get_solution!, set_solution!, reset!
+
+    get_solution() = nothing
+    get_solution!() = nothing
+    set_solution!() = nothing
+    reset!() = nothing
+
 end

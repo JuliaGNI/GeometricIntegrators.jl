@@ -146,7 +146,7 @@ function get_initial_conditions!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, 
     get_data!(sol.p, p, 0, k)
 end
 
-function copy_solution!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
+function CommonFunctions.set_solution!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
@@ -159,7 +159,7 @@ function copy_solution!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, Vector{Tw
     end
 end
 
-function reset!(sol::SolutionPODE)
+function CommonFunctions.reset!(sol::SolutionPODE)
     reset!(sol.q)
     reset!(sol.p)
     compute_timeseries!(sol.t, sol.t[end])

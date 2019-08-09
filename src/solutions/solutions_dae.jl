@@ -140,7 +140,7 @@ function get_initial_conditions!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vec
     get_data!(sol.λ, λ, 0, k)
 end
 
-function copy_solution!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, n, k) where {DT,TT}
+function CommonFunctions.set_solution!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, n, k) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
@@ -153,7 +153,7 @@ function copy_solution!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, 
     end
 end
 
-function reset!(sol::SolutionDAE)
+function CommonFunctions.reset!(sol::SolutionDAE)
     reset!(sol.q)
     reset!(sol.λ)
     compute_timeseries!(sol.t, sol.t[end])
