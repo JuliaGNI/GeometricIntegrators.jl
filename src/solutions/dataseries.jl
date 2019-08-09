@@ -87,9 +87,11 @@ Base.parent(ds::DataSeries) = ds.d
 Base.eltype(ds::DataSeries{T,N}) where {T,N} = T
 Base.ndims(ds::DataSeries{T,N}) where {T,N} = N
 
-errmsg_size(ds::DataSeries) = error("size not supported for data series with axes $(axes(ds))")
-Base.size(ds::DataSeries) = errmsg_size(ds)
-Base.size(ds::DataSeries, d) = errmsg_size(ds)
+# errmsg_size(ds::DataSeries) = error("size not supported for data series with axes $(axes(ds))")
+# Base.size(ds::DataSeries) = errmsg_size(ds)
+# Base.size(ds::DataSeries, d) = errmsg_size(ds)
+Base.size(ds::DataSeries) = size(ds.d)
+Base.size(ds::DataSeries, d) = size(ds.d, d)
 
 Base.eachindex(::IndexCartesian, ds::DataSeries) = CartesianIndices(axes(ds))
 Base.eachindex(::IndexLinear, ds::DataSeries) = axes(ds, 1)

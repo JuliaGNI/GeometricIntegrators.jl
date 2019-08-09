@@ -27,6 +27,8 @@ end
 @test ds[1,nt] == ds[1,end]
 @test ds[1:ds.nd,nt] == ds[1:ds.nd,end]
 
+@test ds.d[:,1] == ds[:,0]
+
 reset!(ds)
 @test ds[1,0] == ds[1,end]
 
@@ -57,6 +59,9 @@ end
 @test ds[1,end,1] == ds.d[1,end,1]
 @test ds[1,nt,1] == ds[1,end,1]
 @test ds[1:ds.nd,nt,1] == ds[1:ds.nd,end,1]
+
+@test ds.d[:,1,1] == ds[:,0,1]
+@test ds.d[:,1,:] == ds[:,0,:]
 
 reset!(ds)
 @test ds[1,0,1] == ds[1,end,1]
