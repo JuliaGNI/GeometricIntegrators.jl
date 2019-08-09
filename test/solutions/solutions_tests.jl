@@ -62,8 +62,8 @@ close(h5)
 rm(testfile)
 
 write_to_hdf5(sol, testfile)
-@test typeof(h5) == HDF5File
 @test isfile(testfile)
+rm(testfile)
 
 create_hdf5(sol, testfile)
 write_to_hdf5(sol)
