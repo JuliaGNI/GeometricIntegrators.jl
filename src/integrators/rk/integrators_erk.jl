@@ -74,15 +74,17 @@ timestep(int::IntegratorERK) = int.Δt
 mutable struct IntegratorCacheERK{DT,TT,D,S} <: ODEIntegratorCache{DT,D,S}
     t::TT
     t̅::TT
-    q::Vector{DT}
-    q̅::Vector{DT}
+    q::Vector{TwicePrecision{DT}}
+    q̅::Vector{TwicePrecision{DT}}
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
 
     function IntegratorCacheERK{DT,TT,D,S}() where {DT,TT,D,S}
+        q = zeros(TwicePrecision{DT}, D)
+        q̅ = zeros(TwicePrecision{DT}, D)
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
-        new(zero(TT), zero(TT), zeros(DT,D), zeros(DT,D), Q, V)
+        new(zero(TT), zero(TT), q, q̅, Q, V)
     end
 end
 
