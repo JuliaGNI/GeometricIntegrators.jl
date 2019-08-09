@@ -11,6 +11,8 @@ module Solutions
     using ..Equations
 
 
+    export DEFAULT_NSAVE, DEFAULT_NWRITE
+
     const DEFAULT_NSAVE = 1
     const DEFAULT_NWRITE = 0
 

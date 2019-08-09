@@ -129,24 +129,24 @@ end
 #*****************************************************************************#
 
 "Apply integrator for ntime time steps and return solution."
-function integrate(integrator::Integrator, ntime::Int, nsave::Int=1)
+function integrate(integrator::Integrator, ntime::Int, nsave::Int=DEFAULT_NSAVE)
     solution = Solution(equation(integrator), timestep(integrator), ntime, nsave)
     integrate!(integrator, solution)
     return solution
 end
 
 "Integrate given equation with given tableau for ntime time steps and return solution."
-function integrate(equation::Equation, tableau::AbstractTableau, Δt, ntime, nsave=1)
+function integrate(equation::Equation, tableau::AbstractTableau, Δt, ntime, nsave=DEFAULT_NSAVE)
     return integrate(Integrator(equation, tableau, Δt), ntime, nsave)
 end
 
 "Integrate ODE specified by vector field and initial condition with given tableau for ntime time steps and return solution."
-function integrate(f::Function, x₀::Vector, tableau::AbstractTableau, Δt, ntime, nsave=1; t₀=0)
+function integrate(f::Function, x₀::Vector, tableau::AbstractTableau, Δt, ntime, nsave=DEFAULT_NSAVE; t₀=0)
     return integrate(ODE(f, t₀, x₀), tableau, Δt, ntime, nsave)
 end
 
 "Integrate PODE specified by two vector fields and initial conditions with given tableau for ntime time steps and return solution."
-function integrate(v::Function, f::Function, q₀::Vector, p₀::Vector, tableau::AbstractTableau, Δt, ntime, nsave=1; t₀=0)
+function integrate(v::Function, f::Function, q₀::Vector, p₀::Vector, tableau::AbstractTableau, Δt, ntime, nsave=DEFAULT_NSAVE; t₀=0)
     return integrate(PODE(v, f, t₀, q₀, p₀), tableau, Δt, ntime, nsave)
 end
 
