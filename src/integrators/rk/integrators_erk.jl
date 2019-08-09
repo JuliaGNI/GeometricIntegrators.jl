@@ -72,6 +72,7 @@ timestep(int::IntegratorERK) = int.Δt
 
 "Explicit Runge-Kutta integrator cache."
 mutable struct IntegratorCacheERK{DT,TT,D,S} <: ODEIntegratorCache{DT,D,S}
+    n::Int
     t::TT
     t̅::TT
     q::Vector{TwicePrecision{DT}}
@@ -84,26 +85,28 @@ mutable struct IntegratorCacheERK{DT,TT,D,S} <: ODEIntegratorCache{DT,D,S}
         q̅ = zeros(TwicePrecision{DT}, D)
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
-        new(zero(TT), zero(TT), q, q̅, Q, V)
+        new(0, zero(TT), zero(TT), q, q̅, Q, V)
     end
 end
 
 function create_integrator_cache(int::IntegratorERK{DT,TT}) where {DT,TT}
-    IntegratorCacheERK{DT, TT, int.equation.d, int.tableau.s}()
+    IntegratorCacheERK{DT, TT, ndims(equation(int)), int.tableau.s}()
 end
 
 function CommonFunctions.reset!(cache::IntegratorCacheERK{DT,TT}, Δt::TT) where {DT,TT}
     cache.t̅  = cache.t
     cache.q̅ .= cache.q
     cache.t += Δt
+    cache.n += 1
 end
 
 function CommonFunctions.get_solution(cache::IntegratorCacheERK)
     (cache.t, cache.q)
 end
 
-function CommonFunctions.set_solution!(cache::IntegratorCacheERK, sol)
+function CommonFunctions.set_solution!(cache::IntegratorCacheERK, sol, n=0)
     t, q = sol
+    cache.n  = n
     cache.t  = t
     cache.q .= q
 end

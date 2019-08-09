@@ -1,114 +1,80 @@
+"""
+`InitialGuessODE`: Initial guess for ordinary differential equations
 
+### Fields
+
+* `int`: interpolation structure
+* `v`:   vector  field
+* `Δt`:  time step
+* `s`:   number of extrapolation stages (for initialisation)
+"""
 mutable struct InitialGuessODE{DT, TT, VT, IT <: Interpolator}
     int::IT
-
     v::VT
-
     Δt::TT
-
-    periodicity::Vector{DT}
-
-    t₀::Vector{TT}
-    q₀::Vector{Vector{DT}}
-    v₀::Vector{Vector{DT}}
-
-    t₁::Vector{TT}
-    q₁::Vector{Vector{DT}}
-    v₁::Vector{Vector{DT}}
-
     s::Int
 
-    function InitialGuessODE{DT,TT,VT,IT}(interp, v, Δt, m, d, periodicity) where {DT,TT,VT,IT}
-
-        t₀ = zeros(DT,m)
-        q₀ = Array{Vector{DT}}(undef, m)
-        v₀ = Array{Vector{DT}}(undef, m)
-
-        t₁ = zeros(DT,m)
-        q₁ = Array{Vector{DT}}(undef, m)
-        v₁ = Array{Vector{DT}}(undef, m)
-
-        for i in 1:m
-            q₀[i] = zeros(DT,d)
-            v₀[i] = zeros(DT,d)
-            q₁[i] = zeros(DT,d)
-            v₁[i] = zeros(DT,d)
-        end
-
-        new(interp, v, Δt, periodicity, t₀, q₀, v₀, t₁, q₁, v₁,
-            get_config(:ig_extrapolation_stages))
+    function InitialGuessODE{DT,TT,VT,IT}(interp, v, Δt) where {DT,TT,VT,IT}
+        new(interp, v, Δt, get_config(:ig_extrapolation_stages))
     end
 end
 
 
 function InitialGuessODE(interp, equation::ODE{DT,TT,VT}, Δt::TT) where {DT,TT,VT}
-    int = interp(zero(DT), one(DT), Δt, equation.d)
-    InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt, equation.n, equation.d, equation.periodicity)
+    int = interp(zero(DT), one(DT), Δt, ndims(equation))
+    InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt)
 end
 
 function InitialGuessODE(interp, equation::VODE{DT,TT,AT,FT,GT,VT}, Δt::TT) where {DT,TT,AT,FT,GT,VT}
-    int = interp(zero(DT), one(DT), Δt, equation.d)
-    InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt, equation.n, equation.d, equation.periodicity)
+    int = interp(zero(DT), one(DT), Δt, ndims(equation))
+    InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt)
 end
 
 
-function initialize!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}) where {DT,TT,VT,IT}
-    ig.t₀[m]  = t₁ - ig.Δt
-    ig.t₁[m]  = t₁
-    ig.q₁[m] .= q₁
-
-    midpoint_extrapolation(ig.v, ig.t₁[m], ig.t₀[m], ig.q₁[m], ig.q₀[m], ig.s)
-
-    ig.v(ig.t₀[m], ig.q₀[m], ig.v₀[m])
-    ig.v(ig.t₁[m], ig.q₁[m], ig.v₁[m])
+"Initialise initial guess, i.e., given t₀, t₁, q₁ compute q₀, v₀, v₁."
+function initialize!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT,
+                q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                v₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, t₀::TT,
+                q₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                v₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}}) where {DT,TT,VT,IT}
+    midpoint_extrapolation(ig.v, t₁, t₀, q₁, q₀, ig.s)
+    ig.v(t₀, q₀, v₀)
+    ig.v(t₁, q₁, v₁)
 end
 
 
-function update!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int, t₁::TT, q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}) where {DT,TT,VT,IT}
-    local Δq::DT
-
-    ig.t₀[m] = ig.t₁[m]
-    ig.t₁[m] = t₁
-
-    ig.q₀[m] .= ig.q₁[m]
-    ig.v₀[m] .= ig.v₁[m]
-    ig.q₁[m] .= q₁
-
-    # compute vector field
-    ig.v(ig.t₁[m], ig.q₁[m], ig.v₁[m])
-
-    # take care of periodic solutions
-    for k in eachindex(ig.q₁[m], ig.periodicity)
-        if ig.periodicity[k] ≠ 0
-            Δq = ig.q₁[m][k] - ig.q₀[m][k]
-            # if ig.q₁[m][k] < 0 || ig.q₁[m][k] ≥ ig.periodicity[k]
-            #     ig.q₁[m][k] -= fld(ig.q₁[m][k], ig.periodicity[k]) * ig.periodicity[k]
-            # end
-            while ig.q₁[m][k] < 0
-                ig.q₁[m][k] += ig.periodicity[k]
-            end
-            while ig.q₁[m][k] ≥ ig.periodicity[k]
-                ig.q₁[m][k] -= ig.periodicity[k]
-            end
-            ig.q₀[m][k] = ig.q₁[m][k] - Δq
-        end
-    end
+"compute vector field of new solution"
+function update!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, v₁::Vector{DT}) where {DT,TT,VT,IT}
+    ig.v(t₁, q₁, v₁)
 end
 
-function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int, guess::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, c::TT=one(TT)) where {DT,TT,VT,IT}
-    evaluate!(ig.int, ig.q₀[m], ig.q₁[m], ig.v₀[m], ig.v₁[m], one(TT)+c, guess)
+function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT},
+                q₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                v₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                v₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                guess::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                c::TT=one(TT)) where {DT,TT}
+    evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c, guess)
 end
 
-function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT,VT,IT}, m::Int,
-           guess_q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, guess_v::Vector{DT}, c::TT=one(TT)) where {DT,TT,VT,IT}
+function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT},
+                q₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                v₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                v₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                guess_q::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                guess_v::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                c::TT=one(TT)) where {DT,TT}
+                @assert length(guess_q) == length(guess_v)
 
-    @assert length(guess_q) == length(guess_v)
-
-    if ig.q₀[m] == ig.q₁[m]
+    if q₀ == q₁
+        # TODO # Maybe instead of the following one should extrapolate to the
+        #      # previous timestep (see above) and use that?
         @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0."
-        guess_q .= ig.q₁[m]
+        guess_q .= ig.q₁
         guess_v .= 0
     else
-        evaluate!(ig.int, ig.q₀[m], ig.q₁[m], ig.v₀[m], ig.v₁[m], one(TT)+c, guess_q, guess_v)
+        evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c, guess_q, guess_v)
     end
 end

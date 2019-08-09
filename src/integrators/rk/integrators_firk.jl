@@ -121,9 +121,6 @@ struct IntegratorFIRK{DT, TT, PT <: ParametersFIRK{DT,TT},
     params::PT
     solver::ST
     iguess::IT
-    fcache::NonlinearFunctionCacheFIRK{DT}
-
-    q::Vector{Vector{TwicePrecision{DT}}}
 end
 
 function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,FT,N}
@@ -140,37 +137,81 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt
     # create initial guess
     iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
 
-    # create cache for internal stage vectors and update vectors
-    fcache = NonlinearFunctionCacheFIRK{DT}(D, S)
-
-    # create solution vectors
-    q = create_solution_vector(DT, D, M)
-
     # create integrator
     IntegratorFIRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), N}(
-                params, solver, iguess, fcache, q)
+                params, solver, iguess)
+end
+
+equation(int::IntegratorFIRK) = int.params.equ
+timestep(int::IntegratorFIRK) = int.params.Δt
+has_initial_guess(int::IntegratorFIRK) = true
+
+
+"Fully implicit Runge-Kutta integrator cache."
+mutable struct IntegratorCacheFIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D,S}
+    n::Int
+    t::TT
+    t̅::TT
+    q::Vector{TwicePrecision{DT}}
+    q̅::Vector{TwicePrecision{DT}}
+    v::Vector{DT}
+    v̅::Vector{DT}
+    q̃::Vector{DT}
+    ṽ::Vector{DT}
+    Q::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
+    Y::Vector{Vector{DT}}
+    periodicity_shift::Vector{DT}
+
+    function IntegratorCacheFIRK{DT,TT,D,S}() where {DT,TT,D,S}
+        q = zeros(TwicePrecision{DT}, D)
+        q̅ = zeros(TwicePrecision{DT}, D)
+        Q = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        Y = create_internal_stage_vector(DT, D, S)
+        new(0, zero(TT), zero(TT), q, q̅, zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y, zeros(DT,D))
+    end
+end
+
+function create_integrator_cache(int::IntegratorFIRK{DT,TT}) where {DT,TT}
+    IntegratorCacheFIRK{DT, TT, ndims(equation(int)), int.params.tab.s}()
+end
+
+function CommonFunctions.reset!(cache::IntegratorCacheFIRK{DT,TT}, Δt::TT) where {DT,TT}
+    cache.t̅  = cache.t
+    cache.q̅ .= cache.q
+    cache.v̅ .= cache.v
+    cache.t += Δt
+    cache.n += 1
+end
+
+function cut_periodic_solution!(cache::IntegratorCacheFIRK, periodicity::Vector)
+    cut_periodic_solution!(cache.q, periodicity, cache.periodicity_shift)
+    cache.q .+= cache.periodicity_shift
+    cache.q̅ .+= cache.periodicity_shift
+end
+
+function CommonFunctions.get_solution(cache::IntegratorCacheFIRK)
+    (cache.t, cache.q)
+end
+
+function CommonFunctions.set_solution!(cache::IntegratorCacheFIRK, sol, n=0)
+    t, q = sol
+    cache.n  = n
+    cache.t  = t
+    cache.q .= q
+    cache.v .= 0
 end
 
 
-function initialize!(int::IntegratorFIRK{DT,TT}, sol::SolutionODE, m::Int) where {DT,TT}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q[m], m)
-
-    # initialise initial guess
-    initialize!(int.iguess, m, sol.t[0], int.q[m])
-end
-
-function initial_guess!(int::IntegratorFIRK, m::Int)
+function initial_guess!(int::IntegratorFIRK, cache::IntegratorCacheFIRK)
     local offset::Int
 
     # compute initial guess for internal stages
     for i in 1:int.params.tab.q.s
-        evaluate!(int.iguess, m, int.fcache.y, int.fcache.v, int.params.tab.q.c[i])
-        for k in eachindex(int.fcache.V[i], int.fcache.v)
-            int.fcache.V[i][k] = int.fcache.v[k]
+        evaluate!(int.iguess, cache.q, cache.v, cache.q̅, cache.v̅, cache.q̃, cache.ṽ, int.params.tab.q.c[i])
+        for k in eachindex(cache.V[i], cache.ṽ)
+            cache.V[i][k] = cache.ṽ[k]
         end
     end
     for i in 1:int.params.tab.q.s
@@ -178,7 +219,7 @@ function initial_guess!(int::IntegratorFIRK, m::Int)
         for k in 1:dims(int)
             int.solver.x[offset+k] = 0
             for j in 1:int.params.tab.q.s
-                int.solver.x[offset+k] += int.params.tab.q.a[i,j] * int.fcache.V[j][k]
+                int.solver.x[offset+k] += int.params.tab.q.a[i,j] * cache.V[j][k]
             end
         end
     end
@@ -186,41 +227,35 @@ end
 
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,N}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    @assert n ≥ 1
-    @assert n ≤ sol.ntime
-
+function integrate_step!(int::IntegratorFIRK{DT,TT}, cache::IntegratorCacheFIRK{DT,TT}) where {DT,TT}
     # set time for nonlinear solver
-    int.params.t  = sol.t[0] + (n-1)*int.params.Δt
-    int.params.q .= int.q[m]
+    int.params.t  = cache.t
+    int.params.q .= cache.q
 
     # compute initial guess
-    initial_guess!(int, m)
+    initial_guess!(int, cache)
+
+    # reset cache
+    reset!(cache, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params, n)
+    print_solver_status(int.solver.status, int.solver.params, cache.n)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params, n)
+    check_solver_status(int.solver.status, int.solver.params, cache.n)
 
     # compute vector field at internal stages
-    compute_stages!(int.solver.x, int.fcache.Q, int.fcache.V, int.fcache.Y, int.params)
+    compute_stages!(int.solver.x, cache.Q, cache.V, cache.Y, int.params)
 
     # compute final update
-    update_solution!(int.q[m], int.fcache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
+    update_solution!(cache.q, cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
 
     # copy solution to initial guess
-    update!(int.iguess, m, sol.t[0] + n*int.params.Δt, int.q[m])
+    update!(int.iguess, cache.t, cache.q, cache.v)
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q[m], int.params.equ.periodicity)
-
-    # copy to solution
-    copy_solution!(sol, int.q[m], n, m)
+    cut_periodic_solution!(cache, int.params.equ.periodicity)
 end

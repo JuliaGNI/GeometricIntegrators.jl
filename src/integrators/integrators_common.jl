@@ -465,21 +465,6 @@ end
  end
 
 
-function cut_periodic_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, periodicity::Vector{T}) where {T}
-    @assert length(x) == length(xₑᵣᵣ) == length(periodicity)
-
-    for k in eachindex(x, periodicity)
-        if periodicity[k] ≠ 0
-            while x[k] < 0
-                (x[k], xₑᵣᵣ[k]) = compensated_summation(+periodicity[k], x[k], xₑᵣᵣ[k])
-            end
-            while x[k] ≥ periodicity[k]
-                (x[k], xₑᵣᵣ[k]) = compensated_summation(-periodicity[k], x[k], xₑᵣᵣ[k])
-            end
-        end
-    end
-end
-
 function cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}) where {T}
     @assert length(x) == length(periodicity)
 
@@ -505,6 +490,36 @@ function cut_periodic_solution!(x::Vector{TwicePrecision{T}}, periodicity::Vecto
             end
             while x[k].hi ≥ periodicity[k]
                 x[k] -= periodicity[k]
+            end
+        end
+    end
+end
+
+function cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}, shift::Vector{T}) where {T}
+    @assert length(x) == length(periodicity)
+    shift .= 0
+    for k in eachindex(x, periodicity, shift)
+        if periodicity[k] ≠ 0
+            while x[k] + shift[k] < 0
+                shift[k] += periodicity[k]
+            end
+            while x[k] + shift[k] ≥ periodicity[k]
+                shift[k] -= periodicity[k]
+            end
+        end
+    end
+end
+
+function cut_periodic_solution!(x::Vector{TwicePrecision{T}}, periodicity::Vector{T}, shift::Vector{T}) where {T}
+    @assert length(x) == length(periodicity)
+    shift .= 0
+    for k in eachindex(x, periodicity, shift)
+        if periodicity[k] ≠ 0
+            while x[k].hi + shift[k] < 0
+                shift[k] += periodicity[k]
+            end
+            while x[k].hi + shift[k] ≥ periodicity[k]
+                shift[k] -= periodicity[k]
             end
         end
     end

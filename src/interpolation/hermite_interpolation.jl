@@ -108,7 +108,7 @@ function HermiteInterpolation(x₀::T, x₁::T, Δx::T, d::Int) where {T}
 end
 
 
-function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x, y::Vector{T}) where {T}
+function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector, y₁::Vector, f₀::Vector, f₁::Vector, x, y::Vector) where {T}
     local a₀::T
     local a₁::T
     local b₀::T
@@ -131,7 +131,7 @@ function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}
     end
 end
 
-function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x, y::Vector{T}, f::Vector{T}) where {T}
+function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector, y₁::Vector, f₀::Vector, f₁::Vector, x, y::Vector, f::Vector) where {T}
     local a₀::T
     local a₁::T
     local b₀::T
