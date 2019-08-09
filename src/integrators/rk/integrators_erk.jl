@@ -57,16 +57,8 @@ struct IntegratorERK{DT,TT,FT} <: DeterministicIntegrator{DT,TT}
     tableau::TableauERK{TT}
     Δt::TT
 
-    q::Vector{DT}
-    Q::Vector{Vector{DT}}
-    V::Vector{Vector{DT}}
-
     function IntegratorERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
-        D = equation.d
-        S = tableau.q.s
-        Q = create_internal_stage_vector(DT, D, S)
-        V = create_internal_stage_vector(DT, D, S)
-        new(equation, tableau, Δt, zeros(DT,D), Q, V)
+        new(equation, tableau, Δt)
     end
 end
 
@@ -74,44 +66,79 @@ function IntegratorERK(equation::ODE{DT,TT,FT}, tableau::TableauERK{TT}, Δt::TT
     IntegratorERK{DT,TT,FT}(equation, tableau, Δt)
 end
 
-function initialize!(int::IntegratorERK, sol::SolutionODE, m::Int)
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
 
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q, m)
+"Explicit Runge-Kutta integrator cache."
+mutable struct IntegratorCacheERK{DT,TT,D,S} <: ODEIntegratorCache{DT,D,S}
+    t::TT
+    t̅::TT
+    q::Vector{DT}
+    q̅::Vector{DT}
+    Q::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
+
+    function IntegratorCacheERK{DT,TT,D,S}() where {DT,TT,D,S}
+        Q = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        new(zero(TT), zero(TT), zeros(DT,D), zeros(DT,D), Q, V)
+    end
 end
 
-"Integrate ODE with explicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorERK{DT,TT}, sol::SolutionODE{DT,TT}, m::Int, n::Int) where {DT,TT}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
+function create_integrator_cache(int::IntegratorERK{DT,TT}) where {DT,TT}
+    IntegratorCacheERK{DT, TT, int.equation.d, int.tableau.s}()
+end
 
-    @assert n ≥ 1
-    @assert n ≤ sol.ntime
+function CommonFunctions.reset!(cache::IntegratorCacheERK{DT,TT}, Δt::TT) where {DT,TT}
+    cache.t̅  = cache.t
+    cache.q̅ .= cache.q
+    cache.t += Δt
+end
+
+function CommonFunctions.get_solution(cache::IntegratorCacheERK)
+    (cache.t, cache.q)
+end
+
+function CommonFunctions.set_solution!(cache::IntegratorCacheERK, sol)
+    t, q = sol
+    cache.t  = t
+    cache.q .= q
+end
+
+
+"Integrate ODE with explicit Runge-Kutta integrator."
+function integrate_step!(int::IntegratorERK{DT,TT}, cache::IntegratorCacheERK{DT,TT}) where {DT,TT}
+    # @assert m ≥ 1
+    # @assert m ≤ sol.ni
+    #
+    # @assert n ≥ 1
+    # @assert n ≤ sol.ntime
+    #
+    # t = sol.t[0] + (n-1)*int.Δt
 
     local tᵢ::TT
     local yᵢ::DT
 
+    # reset cache
+    reset!(cache, int.Δt)
+
     # compute internal stages
     for i in 1:int.tableau.q.s
-        @inbounds for k in eachindex(int.Q[i], int.V[i])
+        @inbounds for k in eachindex(cache.Q[i], cache.V[i])
             yᵢ = 0
             for j in 1:i-1
-                yᵢ += int.tableau.q.a[i,j] * int.V[j][k]
+                yᵢ += int.tableau.q.a[i,j] * cache.V[j][k]
             end
-            int.Q[i][k] = int.q[k] + int.Δt * yᵢ
+            cache.Q[i][k] = cache.q̅[k] + int.Δt * yᵢ
         end
-        tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.q.c[i]
-        int.equation.v(tᵢ, int.Q[i], int.V[i])
+        tᵢ = cache.t̅ + int.Δt * int.tableau.q.c[i]
+        int.equation.v(tᵢ, cache.Q[i], cache.V[i])
     end
 
     # compute final update
-    update_solution!(int.q, int.V, int.tableau.q.b, int.Δt)
+    update_solution!(cache.q, cache.V, int.tableau.q.b, int.Δt)
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q, int.equation.periodicity)
+    cut_periodic_solution!(cache.q, int.equation.periodicity)
 
     # copy to solution
-    copy_solution!(sol, int.q, n, m)
+    # copy_solution!(sol, int.q, n, m)
 end

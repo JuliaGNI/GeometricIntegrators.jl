@@ -161,18 +161,8 @@ function integrate!(int::DeterministicIntegrator, sol::Solution)
 end
 
 
-# TODO Add counter to solution and reactivate this.
-# "Integrate ODE for all initial conditions for nt time steps."
-# function integrate!(int, sol, ntime)
-#     integrate!(int, sol, 1, sol.ni, ntime)
-# end
-
-
 "Integrate ODE for initial conditions m with m₁ ≤ m ≤ m₂."
 function integrate!(int::DeterministicIntegrator, sol::Solution, m1, m2)
-    # initialize integrator for initial conditions m with m₁ ≤ m ≤ m₂ and time step 0
-    initialize!(int, sol, m1, m2)
-
     # integrate initial conditions m with m₁ ≤ m ≤ m₂ for all time steps
     integrate!(int, sol, m1, m2, 1, sol.ntime)
 end
@@ -196,12 +186,20 @@ function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT,N},
         p = Progress(nrun, 5)
     end
 
+    cache = create_integrator_cache(int)
+
     # loop over initial conditions
     for m in m1:m2
+        # get cache from solution
+        set_solution!(cache, get_initial_conditions(sol, m, n1))
+
         # loop over time steps
         for n in n1:n2
             # integrate one initial condition for one time step
-            integrate_step!(int, sol, m, n)
+            integrate_step!(int, cache)
+
+            # copy solution from cache to solution
+            set_solution!(sol, get_solution(cache)..., n, m)
 
             # update progress bar
             if nrun ≥ nshow
@@ -273,18 +271,6 @@ function integrate!(int::StochasticIntegrator{DT,TT}, sol::StochasticSolution{DT
 end
 
 
-# TODO Add solver status information to all integrators (if requested).
-
-
-"Initialize integrator for initial conditions m with m₁ ≤ m ≤ m₂ and time step 0."
-function initialize!(int::Integrator, sol::Solution, m1::Int, m2::Int)
-    for m in m1:m2
-        # initialize integrator for initial condition m and time step 0
-        initialize!(int, sol, m)
-    end
-end
-
-
 "Initialize stochastic integrator for the sample paths k with k₁ ≤ k ≤ k₂, initial conditions m with m₁ ≤ m ≤ m₂ and time step 0."
 function initialize!(int::StochasticIntegrator, sol::StochasticSolution, k1::Int, k2::Int, m1::Int, m2::Int)
     for m in m1:m2
@@ -294,3 +280,15 @@ function initialize!(int::StochasticIntegrator, sol::StochasticSolution, k1::Int
         end
     end
 end
+
+
+# TODO Add solver status information to all integrators (if requested).
+
+
+# "Initialize integrator for initial conditions m with m₁ ≤ m ≤ m₂ and time step 0."
+# function initialize!(int::Integrator, sol::Solution, m1::Int, m2::Int)
+#     for m in m1:m2
+#         # initialize integrator for initial condition m and time step 0
+#         initialize!(int, sol, m)
+#     end
+# end
