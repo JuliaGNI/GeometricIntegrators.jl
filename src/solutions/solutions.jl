@@ -11,6 +11,9 @@ ntime(sol::Solution)  = error("ntime() not implemented for ", typeof(sol))
 nsave(sol::Solution)  = error("nsave() not implemented for ", typeof(sol))
 offset(sol::Solution) = error("offset() not implemented for ", typeof(sol))
 
+create_hdf5(sol::Solution, file) = error("create_hdf5() not implemented for ", typeof(sol))
+CommonFunctions.write_to_hdf5(sol::Solution, h5::HDF5File, offset=0) = error("write_to_hdf5() not implemented for ", typeof(sol))
+
 
 "Create solution for ODE and split ODE."
 function Solution(equation::Union{ODE,SODE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
