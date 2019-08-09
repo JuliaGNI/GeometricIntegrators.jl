@@ -1,4 +1,7 @@
 
+using GeometricIntegrators.Solutions: createHDF5
+using HDF5: HDF5File
+
 ntime = 10
 Δt    = .1
 
@@ -18,6 +21,8 @@ p1    = q1.^2
 
 tq    = zero(q0)
 q2    = rand(dim, n1)
+
+testfile = "test.hdf5"
 
 
 ### Test SolutionODE ###
@@ -45,13 +50,28 @@ get_initial_conditions!(sol1, tq, 1)
 @test tq == q2[:,1]
 
 # test hdf5 in- and output
-create_hdf5(sol, "test.hdf5")
+h5 = createHDF5(sol, testfile)
+@test typeof(h5) == HDF5File
+close(h5)
+@test isfile(testfile)
+
+h5 = createHDF5(sol, testfile; overwrite=false)
+@test typeof(h5) == HDF5File
+close(h5)
+@test isfile(testfile)
+rm(testfile)
+
+write_to_hdf5(sol, testfile)
+@test typeof(h5) == HDF5File
+@test isfile(testfile)
+
+create_hdf5(sol, testfile)
 write_to_hdf5(sol)
 close(sol)
 
-sol2 = SolutionODE("test.hdf5")
+sol2 = SolutionODE(testfile)
 @test sol != sol2
-rm("test.hdf5")
+rm(testfile)
 
 # test nsave and nwrite parameters
 sol = Solution(ode, Δt, 20, 2)
@@ -132,10 +152,36 @@ sde  = kubo_oscillator_sde_1()
 ssol = Solution(sde, Δt, ntime)
 @test typeof(ssol) <: SolutionSDE
 
+# test hdf5 in- and output
+h5 = createHDF5(ssol, testfile)
+@test typeof(h5) == HDF5File
+close(h5)
+@test isfile(testfile)
+
+h5 = createHDF5(ssol, testfile, overwrite=false)
+@test typeof(h5) == HDF5File
+close(h5)
+@test isfile(testfile)
+rm(testfile)
+
+
 ### Test SolutionPSDE ###
 psde  = kubo_oscillator_psde_1()
 ssol = Solution(psde, Δt, ntime)
 @test typeof(ssol) <: SolutionPSDE
+
+# test hdf5 in- and output
+h5 = createHDF5(ssol, testfile)
+@test typeof(h5) == HDF5File
+close(h5)
+@test isfile(testfile)
+
+h5 = createHDF5(ssol, testfile, overwrite=false)
+@test typeof(h5) == HDF5File
+close(h5)
+@test isfile(testfile)
+rm(testfile)
+
 
 ### Test SolutionSPSDE ###
 spsde  = kubo_oscillator_spsde_1()

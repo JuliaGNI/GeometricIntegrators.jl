@@ -37,7 +37,7 @@ module Solutions
 
     export Solution, StochasticSolution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE, SolutionSDE, SolutionPSDE,
            get_initial_conditions, get_initial_conditions!, set_initial_conditions!,
-           create_hdf5, write_to_hdf5
+           create_hdf5
     export PSolutionPDAE, SSolutionPDAE
 
     include("solutions/solutions.jl")

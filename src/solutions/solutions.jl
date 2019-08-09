@@ -63,7 +63,7 @@ function Solution(equation::Equation, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
 end
 
 "createHDF5: Creates or opens HDF5 file."
-function createHDF5(sol::Solution, file::AbstractString, overwrite=true)
+function createHDF5(sol::Solution, file::AbstractString; overwrite=true)
     if overwrite
         flag = "w"
         @info("Creating HDF5 file ", file)
@@ -107,10 +107,9 @@ function CommonFunctions.write_to_hdf5(solution::Solution)
     write_to_hdf5(solution, hdf5(solution), offset(solution))
 end
 
-
 "Creates HDF5 file, writes solution to file, and closes file."
-function writeSolutionToHDF5(solution::Solution, file::AbstractString)
-    h5 = createHDF5(solution, file, solution.nt+1)
-    writeSolutionToHDF5(solution, h5)
+function CommonFunctions.write_to_hdf5(solution::Solution, file::AbstractString)
+    h5 = create_hdf5(solution, file)
+    write_to_hdf5(solution, h5)
     close(h5)
 end
