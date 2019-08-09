@@ -85,3 +85,5 @@ Base.:(==)(ode1::PODE{DT1,TT1,VT1,FT1}, ode2::PODE{DT2,TT2,VT2,FT2}) where {DT1,
                              && ode1.q₀ == ode2.q₀
                              && ode1.p₀ == ode2.p₀
                              && ode1.periodicity == ode2.periodicity)
+
+Base.ndims(ode::PODE) = ode.d

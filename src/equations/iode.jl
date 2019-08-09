@@ -129,3 +129,5 @@ Base.:(==)(ode1::IODE, ode2::IODE) = (
                              && ode1.p₀ == ode2.p₀
                              && ode1.λ₀ == ode2.λ₀
                              && ode1.periodicity == ode2.periodicity)
+
+Base.ndims(ode::IODE) = ode.d

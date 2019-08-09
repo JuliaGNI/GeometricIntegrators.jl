@@ -115,3 +115,5 @@ function Base.similar(dae::DAE{DT,TT,VT,UT,ΦT}, t₀::TT, q₀::DenseArray{DT},
     @assert dae.m == size(λ₀,1)
     DAE(dae.v, t₀, q₀, λ₀)
 end
+
+Base.ndims(dae::DAE) = dae.d

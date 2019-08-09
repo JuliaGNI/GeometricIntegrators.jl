@@ -76,3 +76,5 @@ function Base.similar(ode::ODE{DT,TT,VT}, t₀::TT, q₀::DenseArray{DT}) where 
     @assert ode.d == size(q₀,1)
     ODE(ode.v, t₀, q₀)
 end
+
+Base.ndims(ode::ODE) = ode.d

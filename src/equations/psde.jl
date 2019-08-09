@@ -220,3 +220,5 @@ function Base.similar(sde::PSDE{DT,TT,VT,FT,BT,GT}, t₀::TT, q₀::DenseArray{D
     @assert sde.d == size(q₀,1)
     PSDE(sde.m, sde.v, sde.f, sde.B, sde.G, t₀, q₀, p₀, periodicity=sde.periodicity)
 end
+
+Base.ndims(sde::PSDE) = sde.d

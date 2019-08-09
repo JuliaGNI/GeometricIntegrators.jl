@@ -84,3 +84,5 @@ Base.:(==)(dae1::PDAE, dae2::PDAE) = (
                              && dae1.q₀ == dae2.q₀
                              && dae1.p₀ == dae2.p₀
                              && dae1.λ₀ == dae2.λ₀)
+
+Base.ndims(dae::PDAE) = ode.d
