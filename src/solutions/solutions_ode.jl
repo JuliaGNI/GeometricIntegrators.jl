@@ -178,9 +178,7 @@ end
 
 
 "Creates HDF5 file and initialises datasets for ODE solution object."
-function create_hdf5(solution::SolutionODE{DT,TT,2}, file::AbstractString, ntime::Int=1) where {DT,TT}
-    @assert ntime ≥ 1
-
+function create_hdf5(solution::SolutionODE{DT,TT,2}, file::AbstractString) where {DT,TT}
     # create HDF5 file and save attributes and common parameters
     solution.h5 = createHDF5(solution, file)
 
@@ -205,9 +203,7 @@ function create_hdf5(solution::SolutionODE{DT,TT,2}, file::AbstractString, ntime
 end
 
 "Creates HDF5 file and initialises datasets for ODE solution object."
-function create_hdf5(solution::SolutionODE{DT,TT,3}, file::AbstractString, ntime::Int=1) where {DT,TT}
-    @assert ntime ≥ 1
-
+function create_hdf5(solution::SolutionODE{DT,TT,3}, file::AbstractString) where {DT,TT}
     # create HDF5 file and save attributes and common parameters
     solution.h5 = createHDF5(solution, file)
 

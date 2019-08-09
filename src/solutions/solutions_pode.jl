@@ -176,9 +176,7 @@ end
 
 
 "Creates HDF5 file and initialises datasets for PODE solution object."
-function create_hdf5(solution::SolutionPODE{DT,TT,2}, file::AbstractString, ntime::Int=1) where {DT,TT}
-    @assert ntime ≥ 1
-
+function create_hdf5(solution::SolutionPODE{DT,TT,2}, file::AbstractString) where {DT,TT}
     # create HDF5 file and save attributes and common parameters
     solution.h5 = createHDF5(solution, file)
 
@@ -200,9 +198,7 @@ function create_hdf5(solution::SolutionPODE{DT,TT,2}, file::AbstractString, ntim
 end
 
 "Creates HDF5 file and initialises datasets for PODE solution object."
-function create_hdf5(solution::SolutionPODE{DT,TT,3}, file::AbstractString, ntime::Int=1) where {DT,TT}
-    @assert ntime ≥ 1
-
+function create_hdf5(solution::SolutionPODE{DT,TT,3}, file::AbstractString) where {DT,TT}
     # create HDF5 file and save attributes and common parameters
     solution.h5 = createHDF5(solution, file)
 
