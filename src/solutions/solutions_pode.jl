@@ -146,6 +146,23 @@ function get_initial_conditions!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, 
     get_data!(sol.p, p, 0, k)
 end
 
+function get_initial_conditions(sol::SolutionPODE, k, n=1)
+    (sol.t[n], sol.q[:, n-1, k], sol.p[:, n-1, k])
+end
+
+function CommonFunctions.get_solution!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
+    q .= sol.q[:, n, k]
+    p .= sol.p[:, n, k]
+end
+
+function CommonFunctions.get_solution(sol::SolutionPODE, n, k)
+    (sol.t[n], sol.q[:, n, k], sol.p[:, n, k])
+end
+
+function CommonFunctions.set_solution!(sol, t, q, p, n, k)
+    set_solution!(sol, q, p, n, k)
+end
+
 function CommonFunctions.set_solution!(sol::SolutionPODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
