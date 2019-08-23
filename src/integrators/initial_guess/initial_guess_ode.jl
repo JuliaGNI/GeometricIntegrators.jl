@@ -32,9 +32,11 @@ end
 
 
 "Initialise initial guess, i.e., given t₀, t₁, q₁ compute q₀, v₀, v₁."
-function initialize!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT,
+function initialize!(ig::InitialGuessODE{DT,TT,VT,IT},
+                t₁::TT,
                 q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
-                v₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, t₀::TT,
+                v₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                t₀::TT,
                 q₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
                 v₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}}) where {DT,TT,VT,IT}
     midpoint_extrapolation(ig.v, t₁, t₀, q₁, q₀, ig.s)
@@ -44,18 +46,30 @@ end
 
 
 "compute vector field of new solution"
-function update!(ig::InitialGuessODE{DT,TT,VT,IT}, t₁::TT, q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, v₁::Vector{DT}) where {DT,TT,VT,IT}
+function update!(ig::InitialGuessODE{DT,TT}, t₁::TT, q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, v₁::Vector{DT}) where {DT,TT}
     ig.v(t₁, q₁, v₁)
 end
 
 function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT},
                 q₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
-                q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
                 v₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
                 v₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
                 guess::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
                 c::TT=one(TT)) where {DT,TT}
-    evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c, guess)
+
+    if q₀ == q₁
+        tt₁ = zero(ig.Δt)
+        tt₀ = - ig.Δt
+        tq₀ = zero(q₀)
+        tv₀ = zero(p₀)
+
+        midpoint_extrapolation(ig.v, ig.f, tt₁, tt₀, q₁, tq₀, ig.s)
+        ig.v(tt₀, tq₀, tp₀, tv₀)
+        evaluate!(ig.int, tq₀, q₁, tv₀, v₁, one(TT)+c, guess)
+    else
+        evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c, guess)
+    end
 end
 
 function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT},
@@ -69,11 +83,14 @@ function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT},
                 @assert length(guess_q) == length(guess_v)
 
     if q₀ == q₁
-        # TODO # Maybe instead of the following one should extrapolate to the
-        #      # previous timestep (see above) and use that?
-        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0."
-        guess_q .= ig.q₁
-        guess_v .= 0
+        tt₁ = zero(ig.Δt)
+        tt₀ = - ig.Δt # TODO # This is not the right time!
+        tq₀ = zero(q₀)
+        tv₀ = zero(p₀)
+
+        midpoint_extrapolation(ig.v, ig.f, tt₁, tt₀, q₁, tq₀, ig.s)
+        ig.v(tt₀, tq₀, tp₀, tv₀)
+        evaluate!(ig.int, tq₀, q₁, tv₀, v₁, one(TT)+c, guess_q, guess_v)
     else
         evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c, guess_q, guess_v)
     end
