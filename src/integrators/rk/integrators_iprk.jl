@@ -92,7 +92,34 @@ timestep(integrator::IntegratorIPRK) = integrator.params.Δt
 has_initial_guess(int::IntegratorIPRK) = true
 
 
-"Explicit Runge-Kutta integrator cache."
+"""
+Implicit partitioned Runge-Kutta integrator cache.
+
+### Fields
+
+* `n`: time step number
+* `t`: time of current time step
+* `t̅`: time of previous time step
+* `q`: current solution of q
+* `q̅`: previous solution of q
+* `p`: current solution of p
+* `p̅`: previous solution of p
+* `v`: vector field of q
+* `v̅`: vector field of q̅
+* `f`: vector field of p
+* `f̅`: vector field of p̅
+* `q̃`: initial guess of q
+* `p̃`: initial guess of p
+* `ṽ`: initial guess of v
+* `f̃`: initial guess of f
+* `s̃`: holds shift due to periodicity of solution
+* `Q`: internal stages of q
+* `P`: internal stages of p
+* `V`: internal stages of v
+* `F`: internal stages of f
+* `Y`: vector field of internal stages of q
+* `Z`: vector field of internal stages of p
+"""
 mutable struct IntegratorCacheIPRK{ST,TT,D,S} <: ODEIntegratorCache{ST,D,S}
     n::Int
     t::TT
@@ -109,18 +136,17 @@ mutable struct IntegratorCacheIPRK{ST,TT,D,S} <: ODEIntegratorCache{ST,D,S}
     f̅::Vector{ST}
 
     q̃::Vector{ST}
-    ṽ::Vector{ST}
     p̃::Vector{ST}
+    ṽ::Vector{ST}
     f̃::Vector{ST}
+    s̃::Vector{ST}
 
     Q::Vector{Vector{ST}}
-    V::Vector{Vector{ST}}
     P::Vector{Vector{ST}}
+    V::Vector{Vector{ST}}
     F::Vector{Vector{ST}}
     Y::Vector{Vector{ST}}
     Z::Vector{Vector{ST}}
-
-    periodicity_shift::Vector{ST}
 
     function IntegratorCacheIPRK{ST,TT,D,S}() where {ST,TT,D,S}
         q = zeros(TwicePrecision{ST}, D)
@@ -136,19 +162,20 @@ mutable struct IntegratorCacheIPRK{ST,TT,D,S} <: ODEIntegratorCache{ST,D,S}
 
         # create temporary vectors
         q̃ = zeros(ST,D)
-        ṽ = zeros(ST,D)
         p̃ = zeros(ST,D)
+        ṽ = zeros(ST,D)
         f̃ = zeros(ST,D)
+        s̃ = zeros(ST,D)
 
         # create internal stage vectors
         Q = create_internal_stage_vector(ST, D, S)
-        V = create_internal_stage_vector(ST, D, S)
         P = create_internal_stage_vector(ST, D, S)
+        V = create_internal_stage_vector(ST, D, S)
         F = create_internal_stage_vector(ST, D, S)
         Y = create_internal_stage_vector(ST, D, S)
         Z = create_internal_stage_vector(ST, D, S)
 
-        new(0, zero(TT), zero(TT), q, q̅, p, p̅, v, v̅, f, f̅, q̃, ṽ, p̃, f̃, Q, P, Y, Z, V, F, zeros(ST,D))
+        new(0, zero(TT), zero(TT), q, q̅, p, p̅, v, v̅, f, f̅, q̃, ṽ, p̃, f̃, s̃, Q, P, V, F, Y, Z)
     end
 end
 
@@ -165,9 +192,9 @@ function CommonFunctions.reset!(cache::IntegratorCacheIPRK{DT,TT}, Δt::TT) wher
 end
 
 function cut_periodic_solution!(cache::IntegratorCacheIPRK, periodicity::Vector)
-    cut_periodic_solution!(cache.q, periodicity, cache.periodicity_shift)
-    cache.q .+= cache.periodicity_shift
-    cache.q̅ .+= cache.periodicity_shift
+    cut_periodic_solution!(cache.q, periodicity, cache.s̃)
+    cache.q .+= cache.s̃
+    cache.q̅ .+= cache.s̃
 end
 
 function CommonFunctions.get_solution(cache::IntegratorCacheIPRK)

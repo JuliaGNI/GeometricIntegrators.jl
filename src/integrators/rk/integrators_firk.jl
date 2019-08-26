@@ -46,9 +46,6 @@ struct NonlinearFunctionCacheFIRK{DT}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
 
-    v::Vector{DT}
-    y::Vector{DT}
-
     function NonlinearFunctionCacheFIRK{DT}(D,S) where {DT}
 
         # create internal stage vectors
@@ -56,11 +53,7 @@ struct NonlinearFunctionCacheFIRK{DT}
         V = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
 
-        # create velocity and update vector
-        v = zeros(DT,D)
-        y = zeros(DT,D)
-
-        new(Q, V, Y, v, y)
+        new(Q, V, Y)
     end
 end
 
@@ -147,21 +140,42 @@ timestep(int::IntegratorFIRK) = int.params.Δt
 has_initial_guess(int::IntegratorFIRK) = true
 
 
-"Fully implicit Runge-Kutta integrator cache."
+"""
+Fully implicit Runge-Kutta integrator cache.
+
+### Fields
+
+* `n`: time step number
+* `t`: time of current time step
+* `t̅`: time of previous time step
+* `q`: current solution
+* `q̅`: previous solution
+* `v`: vector field of current solution
+* `v̅`: vector field of previous solution
+* `q̃`: initial guess of solution
+* `ṽ`: initial guess of vector field
+* `s̃`: holds shift due to periodicity of solution
+* `Q`: internal stages of solution
+* `V`: internal stages of vector field
+* `Y`: vector field of internal stages
+"""
 mutable struct IntegratorCacheFIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D,S}
     n::Int
     t::TT
     t̅::TT
+
     q::Vector{TwicePrecision{DT}}
     q̅::Vector{TwicePrecision{DT}}
     v::Vector{DT}
     v̅::Vector{DT}
+
     q̃::Vector{DT}
     ṽ::Vector{DT}
+    s̃::Vector{ST}
+
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
-    periodicity_shift::Vector{DT}
 
     function IntegratorCacheFIRK{DT,TT,D,S}() where {DT,TT,D,S}
         q = zeros(TwicePrecision{DT}, D)
@@ -169,7 +183,7 @@ mutable struct IntegratorCacheFIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D,S}
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
-        new(0, zero(TT), zero(TT), q, q̅, zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y, zeros(DT,D))
+        new(0, zero(TT), zero(TT), q, q̅, zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y)
     end
 end
 
@@ -186,9 +200,9 @@ function CommonFunctions.reset!(cache::IntegratorCacheFIRK{DT,TT}, Δt::TT) wher
 end
 
 function cut_periodic_solution!(cache::IntegratorCacheFIRK, periodicity::Vector)
-    cut_periodic_solution!(cache.q, periodicity, cache.periodicity_shift)
-    cache.q .+= cache.periodicity_shift
-    cache.q̅ .+= cache.periodicity_shift
+    cut_periodic_solution!(cache.q, periodicity, cache.s̃)
+    cache.q .+= cache.s̃
+    cache.q̅ .+= cache.s̃
 end
 
 function CommonFunctions.get_solution(cache::IntegratorCacheFIRK)
@@ -228,7 +242,7 @@ end
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorFIRK{DT,TT}, cache::IntegratorCacheFIRK{DT,TT}) where {DT,TT}
-    # set time for nonlinear solver
+    # set time for nonlinear solver and copy previous solution
     int.params.t  = cache.t
     int.params.q .= cache.q
 
