@@ -160,6 +160,19 @@ function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, 
     get_data!(sol.p, p, 0, k)
 end
 
+function get_initial_conditions(sol::SolutionPDAE, k, n=1)
+    (sol.t[n], sol.q[:, n-1, k], sol.p[:, n-1, k])
+end
+
+function CommonFunctions.get_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
+    q .= sol.q[:, n, k]
+    p .= sol.p[:, n, k]
+end
+
+function CommonFunctions.get_solution(sol::SolutionPDAE, n, k)
+    (sol.t[n], sol.q[:, n, k], sol.p[:, n, k])
+end
+
 function CommonFunctions.set_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, λ::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
