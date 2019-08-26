@@ -113,8 +113,8 @@ end
         local tᵢ::TT
         local v = zeros(q̅)
 
-        # compute p̅=α(q̅)
-        params.equ.α(t₁, q̅, v, p̅)
+        # compute p̅=ϑ(q̅)
+        params.equ.ϑ(t₁, q̅, v, p̅)
 
         for i in 1:S
             simd_copy_xy_first!($tQ, Q, i)

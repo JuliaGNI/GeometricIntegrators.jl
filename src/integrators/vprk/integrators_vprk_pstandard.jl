@@ -53,7 +53,7 @@ end
         #     q̅[k] = params.q[k] + params.Δt * params.R[2] * λ[k]
         # end
 
-        # compute u=λ and g=∇α(q)⋅λ
+        # compute u=λ and g=∇ϑ(q)⋅λ
         simd_copy_yx_first!(λ, U, 1)
         simd_copy_yx_first!(λ, U, 2)
 
@@ -61,8 +61,8 @@ end
         simd_copy_yx_first!($tG, G, 1)
         simd_copy_yx_first!($tG, G, 2)
 
-        # compute p̅=α(q)
-        params.equ.α(params.t + params.Δt, q̅, λ, p̅)
+        # compute p̅=ϑ(q)
+        params.equ.ϑ(params.t + params.Δt, q̅, λ, p̅)
     end
 
     return compute_projection_vprk

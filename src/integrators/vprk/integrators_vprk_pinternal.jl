@@ -104,9 +104,9 @@ end
         local t₁::TT = params.t + params.Δt
         local tᵢ::TT
 
-        # compute p̅=α(q̅)
+        # compute p̅=ϑ(q̅)
         $tV .= 0
-        params.equ.α(t₁, q̅, $tV, p̅)
+        params.equ.ϑ(t₁, q̅, $tV, p̅)
 
         for i in 1:S
             simd_copy_xy_first!($tQ, Q, i)

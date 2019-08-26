@@ -51,8 +51,8 @@ end
         params.equ.g(t₁, q̅, λ, $tG)
         simd_copy_yx_first!($tG, G, 2)
 
-        # compute p̅=α(q̅)p̅
-        params.equ.α(t₁, q̅, λ, p̅)
+        # compute p̅=ϑ(q̅)p̅
+        params.equ.ϑ(t₁, q̅, λ, p̅)
     end
 end
 

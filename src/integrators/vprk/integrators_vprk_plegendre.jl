@@ -324,7 +324,7 @@ function IntegratorVPRKpLegendre(equation::IODE{DT,TT,ΘT,FT,GT,VT}, tableau::Ta
 
     # create params
     params = ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}(
-                                                equation.α, equation.f,
+                                                equation.ϑ, equation.f,
                                                 Δt, tableau.q, tableau.p, d_v, q, p)
 
     # create rhs function for nonlinear solver
