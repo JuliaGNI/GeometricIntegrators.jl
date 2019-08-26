@@ -63,10 +63,10 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     local tᵢ::TT
 
     @assert S == length(Q) == length(V) == length(Y)
-    @assert D == length(Q[1]) == length(V[1]) == length(Y[1])
 
     # copy x to Y and compute Q = q + Δt Y
     for i in 1:S
+        @assert D == length(Q[i]) == length(V[i]) == length(Y[i])
         for k in 1:D
             Y[i][k] = x[D*(i-1)+k]
             Q[i][k] = params.q[k] + params.Δt * Y[i][k]
