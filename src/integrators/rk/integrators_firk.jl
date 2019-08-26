@@ -171,7 +171,7 @@ mutable struct IntegratorCacheFIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D,S}
 
     q̃::Vector{DT}
     ṽ::Vector{DT}
-    s̃::Vector{ST}
+    s̃::Vector{DT}
 
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
