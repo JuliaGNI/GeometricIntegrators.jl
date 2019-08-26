@@ -80,9 +80,67 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
                 v₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
                 f₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
                 guess_q::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                c_q::TT) where {DT,TT}
+
+    if q₀ == q₁
+        tt₁ = zero(ig.Δt)
+        tt₀ = - ig.Δt # TODO # This is not the right time!
+        tq₀ = zero(q₀)
+        tp₀ = zero(p₀)
+        tv₀ = zero(p₀)
+
+        midpoint_extrapolation(ig.v, ig.f, tt₁, tt₀, q₁, tq₀, p₁, tp₀, ig.s)
+        ig.v(tt₀, tq₀, tp₀, tv₀)
+        evaluate!(ig.int, tq₀, q₁, tv₀, v₁, one(TT)+c_q, guess_q)
+    else
+        evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c_q, guess_q)
+    end
+end
+
+
+function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
+                q₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                p₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                v₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                f₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                p₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                v₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                f₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                guess_q::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                guess_v::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                c_q::TT) where {DT,TT}
+    @assert length(guess_q) == length(guess_v)
+
+    if q₀ == q₁
+        tt₁ = zero(ig.Δt)
+        tt₀ = - ig.Δt # TODO # This is not the right time!
+        tq₀ = zero(q₀)
+        tp₀ = zero(p₀)
+        tv₀ = zero(p₀)
+
+        midpoint_extrapolation(ig.v, ig.f, tt₁, tt₀, q₁, tq₀, p₁, tp₀, ig.s)
+        ig.v(tt₀, tq₀, tp₀, tv₀)
+        evaluate!(ig.int, tq₀, q₁, tv₀, v₁, one(TT)+c_q, guess_q, guess_v)
+    else
+        evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c_q, guess_q, guess_v)
+    end
+end
+
+
+function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
+                q₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                p₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                v₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                f₀::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                q₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                p₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                v₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                f₁::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
+                guess_q::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
                 guess_p::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
-                c_q::TT=one(TT), c_p::TT=one(TT)) where {DT,TT}
-                @assert length(guess_q) == length(guess_p)
+                c_q::TT, c_p::TT) where {DT,TT}
+    @assert length(guess_q) == length(guess_p)
 
     if q₀ == q₁
         tt₁ = zero(ig.Δt)
@@ -129,10 +187,10 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
                 guess_p::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
                 guess_v::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
                 guess_f::Union{Vector{DT}, Vector{TwicePrecision{DT}}},
-                c_q::TT=one(TT), c_p::TT=one(TT)) where {DT,TT}
-                @assert length(guess_q) == length(guess_v)
-                @assert length(guess_p) == length(guess_f)
-                @assert length(guess_q) == length(guess_p)
+                c_q::TT, c_p::TT) where {DT,TT}
+    @assert length(guess_q) == length(guess_v)
+    @assert length(guess_p) == length(guess_f)
+    @assert length(guess_q) == length(guess_p)
 
     if q₀ == q₁
         tt₁ = zero(ig.Δt)
