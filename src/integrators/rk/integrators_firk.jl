@@ -216,6 +216,13 @@ function initialize!(int::IntegratorFIRK, cache::IntegratorCacheFIRK)
 end
 
 
+function update_params!(int::IntegratorFIRK, cache::IntegratorCacheFIRK)
+    # set time for nonlinear solver and copy previous solution
+    int.params.t  = cache.t
+    int.params.q .= cache.q
+end
+
+
 function initial_guess!(int::IntegratorFIRK, cache::IntegratorCacheFIRK)
     local offset::Int
 
@@ -240,9 +247,8 @@ end
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorFIRK{DT,TT}, cache::IntegratorCacheFIRK{DT,TT}) where {DT,TT}
-    # set time for nonlinear solver and copy previous solution
-    int.params.t  = cache.t
-    int.params.q .= cache.q
+    # update nonlinear solver parameters from cache
+    update_params!(int, cache)
 
     # compute initial guess
     initial_guess!(int, cache)

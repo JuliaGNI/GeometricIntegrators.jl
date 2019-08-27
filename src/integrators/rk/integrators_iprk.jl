@@ -202,6 +202,14 @@ function CommonFunctions.set_solution!(cache::IntegratorCacheIPRK, sol, n=0)
 end
 
 
+function update_params!(int::IntegratorIPRK, cache::IntegratorCacheIPRK)
+    # set time for nonlinear solver and copy previous solution
+    int.params.t  = cache.t
+    int.params.q .= cache.q
+    int.params.p .= cache.p
+end
+
+
 "Compute stages of implicit partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     cache = IntegratorCacheIPRK{ST,TT,D,S}()
@@ -285,12 +293,11 @@ function initial_guess!(int::IntegratorIPRK, cache::IntegratorCacheIPRK)
     end
 end
 
+
 "Integrate ODE with implicit partitioned Runge-Kutta integrator."
 function integrate_step!(int::IntegratorIPRK{DT,TT}, cache::IntegratorCacheIPRK{DT,TT}) where {DT,TT}
-    # set time for nonlinear solver and copy previous solution
-    int.params.t  = cache.t
-    int.params.q .= cache.q
-    int.params.p .= cache.p
+    # update nonlinear solver parameters from cache
+    update_params!(int, cache)
 
     # compute initial guess
     initial_guess!(int, cache)
