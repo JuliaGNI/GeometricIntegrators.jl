@@ -1,13 +1,4 @@
 
-abstract type AbstractParametersVPRK{DT,TT,ET,D,S} <: Parameters{DT,TT} end
-abstract type AbstractIntegratorVPRK{DT,TT} <: DeterministicIntegrator{DT,TT} end
-
-equation(integrator::AbstractIntegratorVPRK) = integrator.params.equ
-timestep(integrator::AbstractIntegratorVPRK) = integrator.params.Δt
-tableau(integrator::AbstractIntegratorVPRK) = integrator.params.tab
-dims(integrator::AbstractIntegratorVPRK) = integrator.params.equ.d
-
-
 struct NonlinearFunctionCacheVPRK{ST}
     Q::Vector{Vector{ST}}
     P::Vector{Vector{ST}}
@@ -41,6 +32,7 @@ struct NonlinearFunctionCacheVPRK{ST}
     end
 end
 
+
 struct NonlinearFunctionCacheVPRKprojection{ST}
     q::Vector{ST}
     p::Vector{ST}
@@ -62,6 +54,7 @@ struct NonlinearFunctionCacheVPRKprojection{ST}
         p = zeros(ST,D)
         λ = zeros(ST,D)
 
+        # create internal stage vectors
         Λ = create_internal_stage_vector(ST, D, S)
         Φ = create_internal_stage_vector(ST, D, S)
 
@@ -144,7 +137,7 @@ function compute_stages_q_vprk!(Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, pa
                 y1 += params.tab.q.a[i,j] * V[j][k]
                 y2 += params.tab.q.â[i,j] * V[j][k]
             end
-            Q[i][k] = params.q[k] + params.Δt * (y1 + y2)
+            Q[i][k] = params.q̅[k] + params.Δt * (y1 + y2)
         end
     end
 end
@@ -163,10 +156,10 @@ function compute_stages_q_vprk!(Q::Matrix{ST}, V::Matrix{ST}, U::Matrix{ST}, par
             y1 = 0
             y2 = 0
             for j in 1:S
-                y1 += params.tab.q.a[i,j] * V[k,j]
-                y2 += params.tab.q.â[i,j] * V[k,j]
+                y1 += params.tab.q.a[i,j] * V[j][k]
+                y2 += params.tab.q.â[i,j] * V[j][k]
             end
-            Q[k,i] = params.q[k] + params.Δt * (y1 + y2 + params.R[1] * U[k,1])
+            Q[k,i] = params.q̅[k] + params.Δt * (y1 + y2 + params.RU[1] * U[1][k])
         end
     end
 end
@@ -182,7 +175,7 @@ function compute_stages_p_vprk!(Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
     # compute P=ϑ(Q) and F=f(Q,V)
     for i in 1:S
         @assert D == length(Q[i]) == length(V[i]) == length(P[i]) == length(F[i])
-        tᵢ = params.t + params.Δt * params.tab.q.c[i]
+        tᵢ = params.t̅ + params.Δt * params.tab.q.c[i]
         params.equ.ϑ(tᵢ, Q[i], V[i], P[i])
         params.equ.f(tᵢ, Q[i], V[i], F[i])
     end
@@ -206,7 +199,7 @@ function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vecto
                 z1 += params.tab.p.a[i,j] * F[j][k]
                 z2 += params.tab.p.â[i,j] * F[j][k]
             end
-            b[D*(i-1)+k] = - (P[i][k] - params.p[k]) + params.Δt * (z1 + z2)
+            b[D*(i-1)+k] = - (P[i][k] - params.p̅[k]) + params.Δt * (z1 + z2)
         end
     end
 end
@@ -229,7 +222,7 @@ function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vecto
                 z1 += params.tab.p.a[i,j] * F[j][k]
                 z2 += params.tab.p.â[i,j] * F[j][k]
             end
-            b[D*(i-1)+k] = - (P[i][k] - params.p[k]) + params.Δt * (z1 + z2 + params.R[1] * G[1][k])
+            b[D*(i-1)+k] = - (P[i][k] - params.p̅[k]) + params.Δt * (z1 + z2 + params.RG[1] * G[1][k])
         end
     end
 end
@@ -254,7 +247,7 @@ function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vecto
                 z1 += params.tab.p.a[i,j] * (F[j][k] + R[j][k])
                 z2 += params.tab.p.â[i,j] * (F[j][k] + R[j][k])
             end
-            b[D*(i-1)+k] = - (P[i][k] - params.p[k]) + params.Δt * (z1 + z2 + params.R[1] * G[1][k])
+            b[D*(i-1)+k] = - (P[i][k] - params.p̅[k]) + params.Δt * (z1 + z2 + params.RG[1] * G[1][k])
         end
     end
 end
@@ -275,7 +268,7 @@ function compute_rhs_vprk_projection_q!(b::Vector{ST}, q::Vector{ST}, V::Vector{
             y1 += params.tab.q.b[j] * V[j][k]
             y2 += params.tab.q.b̂[j] * V[j][k]
         end
-        b[offset+k] = - (q[k] - params.q[k]) + params.Δt * (y1 + y2) + params.Δt * (params.R[1] * U[1][k] + params.R[2] * U[2][k])
+        b[offset+k] = - (q[k] - params.q̅[k]) + params.Δt * (y1 + y2) + params.Δt * (params.RU[1] * U[1][k] + params.RU[2] * U[2][k])
     end
 end
 
@@ -295,7 +288,7 @@ function compute_rhs_vprk_projection_p!(b::Vector{ST}, p::Vector{ST}, F::Vector{
             z1 += params.tab.p.b[j] * F[j][k]
             z2 += params.tab.p.b̂[j] * F[j][k]
         end
-        b[offset+k] = - (p[k] - params.p[k]) + params.Δt * (z1 + z2) + params.Δt * (params.R[1] * G[1][k] + params.R[2] * G[2][k])
+        b[offset+k] = - (p[k] - params.p̅[k]) + params.Δt * (z1 + z2) + params.Δt * (params.RG[1] * G[1][k] + params.RG[2] * G[2][k])
     end
 end
 
@@ -316,7 +309,7 @@ function compute_rhs_vprk_projection_p!(b::Vector{ST}, p::Vector{ST},
             z1 += params.tab.p.b[j] * (F[j][k] + R[j][k])
             z2 += params.tab.p.b̂[j] * (F[j][k] + R[j][k])
         end
-        b[offset+k] = - (p[k] - params.p[k]) + params.Δt * (z1 + z2) + params.Δt * (params.R[1] * G[1][k] + params.R[2] * G[2][k])
+        b[offset+k] = - (p[k] - params.p̅[k]) + params.Δt * (z1 + z2) + params.Δt * (params.RG[1] * G[1][k] + params.RG[2] * G[2][k])
     end
 end
 

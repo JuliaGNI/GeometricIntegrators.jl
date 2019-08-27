@@ -113,6 +113,8 @@ module Integrators
 
     export IntegratorVPRKpLegendre, TableauVPRKpLegendre
 
+    include("integrators/vprk/integrators_vprk_abstract.jl")
+    include("integrators/vprk/integrators_vprk_cache.jl")
     include("integrators/vprk/integrators_vprk_common.jl")
     include("integrators/vprk/integrators_vprk.jl")
     include("integrators/vprk/integrators_vprk_degenerate.jl")
