@@ -18,4 +18,16 @@ function copy_solution!(sol::Solution, cache::IntegratorCache, n, m)
     copy_solution!(sol, get_solution(cache)..., n, m)
 end
 
+function CommonFunctions.get_solution(cache::ODEIntegratorCache)
+    (cache.t, cache.q)
+end
 
+function CommonFunctions.get_solution(cache::PODEIntegratorCache)
+    (cache.t, cache.q, cache.p)
+end
+
+function cut_periodic_solution!(cache::Union{ODEIntegratorCache, PODEIntegratorCache}, periodicity::Vector)
+    cut_periodic_solution!(cache.q, periodicity, cache.s̃)
+    cache.q .+= cache.s̃
+    cache.q̅ .+= cache.s̃
+end

@@ -199,16 +199,6 @@ function CommonFunctions.reset!(cache::IntegratorCacheFIRK{DT,TT}, Δt::TT) wher
     cache.n += 1
 end
 
-function cut_periodic_solution!(cache::IntegratorCacheFIRK, periodicity::Vector)
-    cut_periodic_solution!(cache.q, periodicity, cache.s̃)
-    cache.q .+= cache.s̃
-    cache.q̅ .+= cache.s̃
-end
-
-function CommonFunctions.get_solution(cache::IntegratorCacheFIRK)
-    (cache.t, cache.q)
-end
-
 function CommonFunctions.set_solution!(cache::IntegratorCacheFIRK, sol, n=0)
     t, q = sol
     cache.n  = n
