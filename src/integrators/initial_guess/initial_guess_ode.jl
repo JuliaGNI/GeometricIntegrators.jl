@@ -59,14 +59,8 @@ function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT},
                 c::TT=one(TT)) where {DT,TT}
 
     if q₀ == q₁
-        tt₁ = zero(ig.Δt)
-        tt₀ = - ig.Δt
-        tq₀ = zero(q₀)
-        tv₀ = zero(p₀)
-
-        midpoint_extrapolation(ig.v, ig.f, tt₁, tt₀, q₁, tq₀, ig.s)
-        ig.v(tt₀, tq₀, tp₀, tv₀)
-        evaluate!(ig.int, tq₀, q₁, tv₀, v₁, one(TT)+c, guess)
+        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁."
+        guess .= q₁
     else
         evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c, guess)
     end
@@ -83,14 +77,9 @@ function CommonFunctions.evaluate!(ig::InitialGuessODE{DT,TT},
                 @assert length(guess_q) == length(guess_v)
 
     if q₀ == q₁
-        tt₁ = zero(ig.Δt)
-        tt₀ = - ig.Δt # TODO # This is not the right time!
-        tq₀ = zero(q₀)
-        tv₀ = zero(p₀)
-
-        midpoint_extrapolation(ig.v, ig.f, tt₁, tt₀, q₁, tq₀, ig.s)
-        ig.v(tt₀, tq₀, tp₀, tv₀)
-        evaluate!(ig.int, tq₀, q₁, tv₀, v₁, one(TT)+c, guess_q, guess_v)
+        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0."
+        guess_q .= q₁
+        guess_v .= 0
     else
         evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c, guess_q, guess_v)
     end

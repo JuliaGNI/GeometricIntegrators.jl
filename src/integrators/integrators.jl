@@ -192,6 +192,7 @@ function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT,N},
     for m in m1:m2
         # get cache from solution
         set_solution!(cache, get_initial_conditions(sol, m, n1), n1)
+        initialize!(int, cache)
 
         # loop over time steps
         for n in n1:n2

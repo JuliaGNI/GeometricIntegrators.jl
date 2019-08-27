@@ -83,15 +83,8 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
                 c_q::TT) where {DT,TT}
 
     if q₀ == q₁
-        tt₁ = zero(ig.Δt)
-        tt₀ = - ig.Δt # TODO # This is not the right time!
-        tq₀ = zero(q₀)
-        tp₀ = zero(p₀)
-        tv₀ = zero(p₀)
-
-        midpoint_extrapolation(ig.v, ig.f, tt₁, tt₀, q₁, tq₀, p₁, tp₀, ig.s)
-        ig.v(tt₀, tq₀, tp₀, tv₀)
-        evaluate!(ig.int, tq₀, q₁, tv₀, v₁, one(TT)+c_q, guess_q)
+        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁."
+        guess .= q₁
     else
         evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c_q, guess_q)
     end
@@ -113,15 +106,9 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
     @assert length(guess_q) == length(guess_v)
 
     if q₀ == q₁
-        tt₁ = zero(ig.Δt)
-        tt₀ = - ig.Δt # TODO # This is not the right time!
-        tq₀ = zero(q₀)
-        tp₀ = zero(p₀)
-        tv₀ = zero(p₀)
-
-        midpoint_extrapolation(ig.v, ig.f, tt₁, tt₀, q₁, tq₀, p₁, tp₀, ig.s)
-        ig.v(tt₀, tq₀, tp₀, tv₀)
-        evaluate!(ig.int, tq₀, q₁, tv₀, v₁, one(TT)+c_q, guess_q, guess_v)
+        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0."
+        guess_q .= q₁
+        guess_v .= 0
     else
         evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c_q, guess_q, guess_v)
     end
@@ -143,31 +130,15 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
     @assert length(guess_q) == length(guess_p)
 
     if q₀ == q₁
-        tt₁ = zero(ig.Δt)
-        tt₀ = - ig.Δt # TODO # This is not the right time!
-        tq₀ = zero(q₀)
-        tp₀ = zero(p₀)
-        tv₀ = zero(p₀)
-
-        midpoint_extrapolation(ig.v, ig.f, tt₁, tt₀, q₁, tq₀, p₁, tp₀, ig.s)
-        ig.v(tt₀, tq₀, tp₀, tv₀)
-        evaluate!(ig.int, tq₀, q₁, tv₀, v₁, one(TT)+c_q, guess_q)
+        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁."
+        guess_q .= q₁
     else
         evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c_q, guess_q)
     end
 
     if p₀ == p₁
-        tt₁ = zero(ig.Δt)
-        tt₀ = - ig.Δt # TODO # This is not the right time!
-        tq₀ = zero(q₀)
-        tp₀ = zero(p₀)
-        tv₀ = zero(p₀)
-        tf₀ = zero(p₀)
-
-        midpoint_extrapolation(ig.v, ig.f, tt₁, tt₀, q₁, tq₀, p₁, tp₀, ig.s)
-        ig.v(tt₀, tq₀, tp₀, tv₀)
-        ig.f(tt₀, tq₀, tv₀, tf₀)
-        evaluate!(ig.int, tp₀, p₁, tf₀, f₁, one(TT)+c_p, guess_p)
+        @warn "p₀ and p₁ in initial guess are identical! Setting p=p₁."
+        guess_p .= p₁
     else
         evaluate!(ig.int, p₀, p₁, f₀, f₁, one(TT)+c_p, guess_p)
     end
@@ -193,31 +164,17 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
     @assert length(guess_q) == length(guess_p)
 
     if q₀ == q₁
-        tt₁ = zero(ig.Δt)
-        tt₀ = - ig.Δt # TODO # This is not the right time!
-        tq₀ = zero(q₀)
-        tp₀ = zero(p₀)
-        tv₀ = zero(p₀)
-
-        midpoint_extrapolation(ig.v, ig.f, tt₁, tt₀, q₁, tq₀, p₁, tp₀, ig.s)
-        ig.v(tt₀, tq₀, tp₀, tv₀)
-        evaluate!(ig.int, tq₀, q₁, tv₀, v₁, one(TT)+c_q, guess_q, guess_v)
+        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0."
+        guess_q .= q₁
+        guess_v .= 0
     else
         evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c_q, guess_q, guess_v)
     end
 
     if p₀ == p₁
-        tt₁ = zero(ig.Δt)
-        tt₀ = - ig.Δt # TODO # This is not the right time!
-        tq₀ = zero(q₀)
-        tp₀ = zero(p₀)
-        tv₀ = zero(p₀)
-        tf₀ = zero(p₀)
-
-        midpoint_extrapolation(ig.v, ig.f, tt₁, tt₀, q₁, tq₀, p₁, tp₀, ig.s)
-        ig.v(tt₀, tq₀, tp₀, tv₀)
-        ig.f(tt₀, tq₀, tv₀, tf₀)
-        evaluate!(ig.int, tp₀, p₁, tf₀, f₁, one(TT)+c_p, guess_p, guess_f)
+        @warn "p₀ and p₁ in initial guess are identical! Setting p=p₁ and f=0."
+        guess_p .= p₁
+        guess_f .= 0
     else
         evaluate!(ig.int, p₀, p₁, f₀, f₁, one(TT)+c_p, guess_p, guess_f)
     end

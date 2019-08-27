@@ -261,6 +261,15 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheIPRK{ST,TT,D,S},
 end
 
 
+function initialize!(int::IntegratorIPRK, cache::IntegratorCacheIPRK)
+    int.params.equ.v(cache.t, cache.q, cache.p, cache.v)
+    int.params.equ.f(cache.t, cache.q, cache.p, cache.f)
+
+    initialize!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f,
+                            cache.t̅, cache.q̅, cache.p̅, cache.v̅, cache.f̅)
+end
+
+
 function initial_guess!(int::IntegratorIPRK, cache::IntegratorCacheIPRK)
     for i in 1:int.params.tab.s
         evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,

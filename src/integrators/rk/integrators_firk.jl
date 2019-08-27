@@ -218,6 +218,14 @@ function CommonFunctions.set_solution!(cache::IntegratorCacheFIRK, sol, n=0)
 end
 
 
+function initialize!(int::IntegratorFIRK, cache::IntegratorCacheFIRK)
+    int.params.equ.v(cache.t, cache.q, cache.v)
+
+    initialize!(int.iguess, cache.t, cache.q, cache.v,
+                            cache.t̅, cache.q̅, cache.v̅)
+end
+
+
 function initial_guess!(int::IntegratorFIRK, cache::IntegratorCacheFIRK)
     local offset::Int
 

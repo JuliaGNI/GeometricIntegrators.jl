@@ -28,8 +28,6 @@ abstract type SPSDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType
 equation(integrator::Integrator) = error("equation() not implemented for ", typeof(integrator))
 timestep(integrator::Integrator) = error("timestep() not implemented for ", typeof(integrator))
 
-initialize!(integrator::Integrator) = nothing
-
 has_initial_guess(integrator::Integrator) = false
 
 
