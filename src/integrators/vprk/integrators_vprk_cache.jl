@@ -71,6 +71,7 @@ mutable struct IntegratorCacheVPRK{ST,TT,D,S} <: AbstractIntegratorCacheVPRK{ST,
     R::Vector{Vector{ST}}
 
     function IntegratorCacheVPRK{ST,TT,D,S}(projection::Bool=false) where {ST,TT,D,S}
+        # create solution vectors
         q = zeros(TwicePrecision{ST}, D)
         q̅ = zeros(TwicePrecision{ST}, D)
         p = zeros(TwicePrecision{ST}, D)
@@ -138,7 +139,7 @@ mutable struct IntegratorCacheVPRK{ST,TT,D,S} <: AbstractIntegratorCacheVPRK{ST,
 
         new(0, zero(TT), zero(TT),
             q, q̅, p, p̅, λ, λ̅, q₋, q̅₊, p₋, p̅₊,
-            v, v̅, f, f̅, u, g, q̃, ṽ, p̃, f̃, s̃,
+            v, v̅, f, f̅, u, g, q̃, p̃, ṽ, f̃, s̃,
             Q, P, V, F, Λ, Φ, Y, Z, U, G, R)
     end
 end
