@@ -120,7 +120,7 @@ Implicit partitioned Runge-Kutta integrator cache.
 * `Y`: vector field of internal stages of q
 * `Z`: vector field of internal stages of p
 """
-mutable struct IntegratorCacheIPRK{ST,TT,D,S} <: PODEIntegratorCache{ST,D,S}
+mutable struct IntegratorCacheIPRK{ST,TT,D,S} <: PODEIntegratorCache{ST,D}
     n::Int
     t::TT
     t̅::TT

@@ -159,7 +159,7 @@ Fully implicit Runge-Kutta integrator cache.
 * `V`: internal stages of vector field
 * `Y`: vector field of internal stages
 """
-mutable struct IntegratorCacheFIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D,S}
+mutable struct IntegratorCacheFIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
     n::Int
     t::TT
     t̅::TT

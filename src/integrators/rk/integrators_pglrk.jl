@@ -98,7 +98,7 @@ mutable struct ParametersPGLRK{DT,TT,D,S,ET} <: Parameters{DT,TT}
 end
 
 
-struct NonlinearFunctionCachePGLRK{DT}
+struct NonlinearFunctionCachePGLRK{DT,D,S}
     q̃::Vector{DT}
     p̃::Vector{DT}
     ṽ::Vector{DT}
@@ -113,7 +113,7 @@ struct NonlinearFunctionCachePGLRK{DT}
     Y::Vector{Vector{DT}}
     Z::Vector{Vector{DT}}
 
-    function NonlinearFunctionCachePGLRK{DT}(D,S) where {DT}
+    function NonlinearFunctionCachePGLRK{DT,D,S}() where {DT,D,S}
         # create temporary vectors
         q̃ = zeros(DT,D)
         p̃ = zeros(DT,D)
@@ -136,7 +136,7 @@ struct NonlinearFunctionCachePGLRK{DT}
 end
 
 
-mutable struct IntegratorCachePGLRK{DT,TT}
+mutable struct IntegratorCachePGLRK{DT,TT,D,S} <: IODEIntegratorCache{DT,D}
     n::Int
     t::TT
     t̅::TT
@@ -158,9 +158,9 @@ mutable struct IntegratorCachePGLRK{DT,TT}
 
     s̃::Vector{DT}
 
-    fcache::NonlinearFunctionCachePGLRK{DT}
+    fcache::NonlinearFunctionCachePGLRK{DT,D,S}
 
-    function IntegratorCachePGLRK{DT,TT}(D,S) where {DT,TT}
+    function IntegratorCachePGLRK{DT,TT,D,S}() where {DT,TT,D,S}
         # create solution vectors
         q = zeros(TwicePrecision{DT}, D)
         q̅ = zeros(TwicePrecision{DT}, D)
@@ -181,7 +181,7 @@ mutable struct IntegratorCachePGLRK{DT,TT}
         f = zeros(DT,D)
         f̅ = zeros(DT,D)
 
-        fcache = NonlinearFunctionCachePGLRK{DT}(D,S)
+        fcache = NonlinearFunctionCachePGLRK{DT,D,S}()
 
         new(0, zero(TT), zero(TT),
             q, q̅, p, p̅, θ, θ̅, λ, λ̅,
@@ -320,7 +320,7 @@ end
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    cache = NonlinearFunctionCachePGLRK{ST}(D,S)
+    cache = NonlinearFunctionCachePGLRK{ST,D,S}()
 
     quote
         compute_stages!(x, $cache, params)
@@ -376,7 +376,7 @@ has_initial_guess(int::IntegratorPGLRK) = true
 
 
 function create_integrator_cache(int::IntegratorPGLRK{DT,TT}) where {DT,TT}
-    IntegratorCachePGLRK{DT,TT}(ndims(int), nstages(int))
+    IntegratorCachePGLRK{DT, TT, ndims(int), nstages(int)}()
 end
 
 

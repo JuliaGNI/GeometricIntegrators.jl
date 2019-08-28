@@ -71,7 +71,7 @@ timestep(int::IntegratorERK) = int.Δt
 
 
 "Explicit Runge-Kutta integrator cache."
-mutable struct IntegratorCacheERK{DT,TT,D,S} <: ODEIntegratorCache{DT,D,S}
+mutable struct IntegratorCacheERK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
     n::Int
     t::TT
     t̅::TT

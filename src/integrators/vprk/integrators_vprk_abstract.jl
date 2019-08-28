@@ -1,7 +1,7 @@
 
 abstract type AbstractParametersVPRK{DT,TT,ET,D,S} <: Parameters{DT,TT} end
 abstract type AbstractIntegratorVPRK{DT,TT} <: DeterministicIntegrator{DT,TT} end
-abstract type AbstractIntegratorCacheVPRK{DT,D,S} <: PODEIntegratorCache{DT,D,S} end
+abstract type AbstractIntegratorCacheVPRK{DT,D,S} <: IODEIntegratorCache{DT,D} end
 
 equation(integrator::AbstractIntegratorVPRK) = integrator.params.equ
 timestep(integrator::AbstractIntegratorVPRK) = integrator.params.Δt

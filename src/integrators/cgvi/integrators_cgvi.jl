@@ -47,7 +47,7 @@ function ParametersCGVI(equ::IODE{DT,TT,ΘT,FT}, Δt::TT, b, c, x, m, a, r₀, r
 end
 
 
-struct NonlinearFunctionCacheCGVI{ST}
+struct NonlinearFunctionCacheCGVI{ST,D,S,R}
     q̃::Vector{ST}
     p̃::Vector{ST}
     ṽ::Vector{ST}
@@ -60,7 +60,7 @@ struct NonlinearFunctionCacheCGVI{ST}
     F::Vector{Vector{ST}}
 
 
-    function NonlinearFunctionCacheCGVI{ST}(D,S,R) where {ST}
+    function NonlinearFunctionCacheCGVI{ST,D,S,R}() where {ST,D,S,R}
         # create temporary vectors
         q̃ = zeros(ST,D)
         p̃ = zeros(ST,D)
@@ -79,7 +79,7 @@ struct NonlinearFunctionCacheCGVI{ST}
 end
 
 
-mutable struct IntegratorCacheCGVI{DT,TT}
+mutable struct IntegratorCacheCGVI{DT,TT,D,S,R} <: IODEIntegratorCache{DT,D}
     n::Int
     t::TT
     t̅::TT
@@ -96,9 +96,9 @@ mutable struct IntegratorCacheCGVI{DT,TT}
 
     s̃::Vector{DT}
 
-    fcache::NonlinearFunctionCacheCGVI{DT}
+    fcache::NonlinearFunctionCacheCGVI{DT,D,S,R}
 
-    function IntegratorCacheCGVI{DT,TT}(D,S,R) where {DT,TT}
+    function IntegratorCacheCGVI{DT,TT,D,S,R}() where {DT,TT,D,S,R}
         # create solution vectors
         q = zeros(TwicePrecision{DT}, D)
         q̅ = zeros(TwicePrecision{DT}, D)
@@ -114,7 +114,7 @@ mutable struct IntegratorCacheCGVI{DT,TT}
         f = zeros(DT,D)
         f̅ = zeros(DT,D)
 
-        fcache = NonlinearFunctionCacheCGVI{DT}(D,S,R)
+        fcache = NonlinearFunctionCacheCGVI{DT,D,S,R}()
 
         new(0, zero(TT), zero(TT),
             q, q̅, p, p̅,
@@ -162,7 +162,7 @@ end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersCGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
-    cache = NonlinearFunctionCacheCGVI{ST}(D, S, R)
+    cache = NonlinearFunctionCacheCGVI{ST,D,S,R}()
 
     quote
         @assert length(x) == length(b)
@@ -383,7 +383,7 @@ has_initial_guess(int::IntegratorCGVI) = true
 
 
 function create_integrator_cache(int::IntegratorCGVI{DT,TT}) where {DT,TT}
-    IntegratorCacheCGVI{DT,TT}(ndims(int), nbasis(int.basis), nnodes(int.quadrature))
+    IntegratorCacheCGVI{DT, TT, ndims(int), nbasis(int.basis), nnodes(int.quadrature)}()
 end
 
 

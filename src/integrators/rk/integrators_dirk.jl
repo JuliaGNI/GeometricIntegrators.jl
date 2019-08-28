@@ -158,7 +158,7 @@ has_initial_guess(int::IntegratorDIRK) = true
 """
 Diagonally implicit Runge-Kutta integrator cache.
 """
-mutable struct IntegratorCacheDIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D,S}
+mutable struct IntegratorCacheDIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
     n::Int
     t::TT
     t̅::TT

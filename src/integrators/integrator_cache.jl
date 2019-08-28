@@ -1,12 +1,12 @@
 
-abstract type IntegratorCache{DT,D,S} end
+abstract type IntegratorCache{DT,D} end
 
-abstract type ODEIntegratorCache{DT,D,S} <: IntegratorCache{DT,D,S} end
-abstract type DAEIntegratorCache{DT,D,S} <: IntegratorCache{DT,D,S} end
-abstract type IODEIntegratorCache{DT,D,S} <: IntegratorCache{DT,D,S} end
-abstract type IDAEIntegratorCache{DT,D,S} <: IntegratorCache{DT,D,S} end
-abstract type PODEIntegratorCache{DT,D,S} <: IntegratorCache{DT,D,S} end
-abstract type PDAEIntegratorCache{DT,D,S} <: IntegratorCache{DT,D,S} end
+abstract type ODEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
+abstract type DAEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
+abstract type IODEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
+abstract type IDAEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
+abstract type PODEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
+abstract type PDAEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 
 
 create_integrator_cache(integrator::Integrator) = error("create_integrator_cache()! not implemented for ", typeof(integrator))
