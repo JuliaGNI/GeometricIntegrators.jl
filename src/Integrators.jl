@@ -109,7 +109,8 @@ module Integrators
     export IntegratorVPRKpStandard, IntegratorVPRKpSymplectic,
            IntegratorVPRKpInternal, IntegratorVPRKpMidpoint,
            IntegratorVPRKpSymmetric,
-           IntegratorVPRKpSecondary, IntegratorVPRKpVariational
+           IntegratorVPRKpSecondary, IntegratorVPRKpVariational,
+           IntegratorVPRKpVariationalQ, IntegratorVPRKpVariationalP
 
     export IntegratorVPRKpLegendre, TableauVPRKpLegendre
 
