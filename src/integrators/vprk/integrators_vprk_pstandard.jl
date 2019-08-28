@@ -22,7 +22,6 @@ mutable struct ParametersVPRKpStandard{DT, TT, ET <: IODE{DT,TT}, D, S} <: Abstr
         RU2 = [zero(TT), tab.R∞ * RU[2]]
         RG1 = [RG[1], zero(TT)]
         RG2 = [zero(TT), tab.R∞ * RG[2]]
-
         new(equ, tab, Δt, RU, RG, RU1, RU2, RG1, RG2, zero(TT), zeros(DT,D), zeros(DT,D))
     end
 end
@@ -171,7 +170,7 @@ has_initial_guess(int::IntegratorVPRKpStandard) = true
 
 
 function create_integrator_cache(int::IntegratorVPRKpStandard{DT,TT}) where {DT,TT}
-    IntegratorCacheVPRK{DT, TT, ndims(equation(int)), int.sparams.tab.s}(true)
+    IntegratorCacheVPRK{DT, TT, ndims(int), nstages(int)}(true)
 end
 
 

@@ -133,7 +133,7 @@ has_initial_guess(int::IntegratorVPRK) = true
 
 
 function create_integrator_cache(int::IntegratorVPRK{DT,TT}) where {DT,TT}
-    IntegratorCacheVPRK{DT, TT, ndims(equation(int)), int.params.tab.s}()
+    IntegratorCacheVPRK{DT, TT, ndims(int), nstages(int)}()
 end
 
 
