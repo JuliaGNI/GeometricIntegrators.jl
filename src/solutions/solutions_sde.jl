@@ -281,7 +281,7 @@ function get_initial_conditions!(sol::SolutionSDE{DT,TT}, q::Union{Vector{DT}, V
 end
 
 
-function copy_solution!(sol::SolutionSDE{DT,TT,NQ,NW}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k, m) where {DT,TT,NQ,NW}
+function CommonFunctions.set_solution!(sol::SolutionSDE{DT,TT,NQ,NW}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k, m) where {DT,TT,NQ,NW}
 
     if mod(n, sol.nsave) == 0
 

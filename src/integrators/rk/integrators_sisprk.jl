@@ -501,5 +501,5 @@ function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,N
     cut_periodic_solution!(int.q[k,m], int.params.equ.periodicity)
 
     # # copy to solution
-    copy_solution!(sol, int.q[k,m], int.p[k,m], n, k, m)
+    set_solution!(sol, int.q[k,m], int.p[k,m], n, k, m)
 end

@@ -303,7 +303,7 @@ function get_initial_conditions!(sol::SolutionPSDE{DT,TT}, q::Union{Vector{DT}, 
 end
 
 
-function copy_solution!(sol::SolutionPSDE{DT,TT,NQ,NW}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k, m) where {DT,TT,NQ,NW}
+function CommonFunctions.set_solution!(sol::SolutionPSDE{DT,TT,NQ,NW}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k, m) where {DT,TT,NQ,NW}
 
     if mod(n, sol.nsave) == 0
 
