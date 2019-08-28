@@ -201,33 +201,65 @@ function IntegratorSplitting(equation::SODE{DT,TT,VT}, tableau::ST, Δt::TT) whe
 end
 
 
-function initialize!(int::IntegratorSplitting, sol::SolutionODE, m::Int)
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
+equation(int::IntegratorSplitting) = int.equation
+timestep(int::IntegratorSplitting) = int.Δt
 
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q, m)
 
-    # reset compensated summation error
-    int.qₑᵣᵣ .= 0
+"Explicit Runge-Kutta integrator cache."
+mutable struct IntegratorCacheSplitting{DT,TT,D} <: ODEIntegratorCache{DT,D}
+    n::Int
+    t::TT
+    t̅::TT
+    q::Vector{TwicePrecision{DT}}
+    q̅::Vector{TwicePrecision{DT}}
+    v::Vector{DT}
+    s̃::Vector{DT}
+
+    function IntegratorCacheSplitting{DT,TT,D}() where {DT,TT,D}
+        q = zeros(TwicePrecision{DT}, D)
+        q̅ = zeros(TwicePrecision{DT}, D)
+        v = zeros(DT, D)
+        s̃ = zeros(DT, D)
+        new(0, zero(TT), zero(TT), q, q̅, v, s̃)
+    end
 end
 
+function create_integrator_cache(int::IntegratorSplitting{DT,TT}) where {DT,TT}
+    IntegratorCacheSplitting{DT, TT, ndims(equation(int))}()
+end
+
+function CommonFunctions.reset!(cache::IntegratorCacheSplitting{DT,TT}, Δt::TT) where {DT,TT}
+    cache.t̅  = cache.t
+    cache.q̅ .= cache.q
+    cache.t += Δt
+    cache.n += 1
+end
+
+
+function CommonFunctions.set_solution!(cache::IntegratorCacheSplitting, sol, n=0)
+    t, q = sol
+    cache.n  = n
+    cache.t  = t
+    cache.q .= q
+end
+
+
 "Integrate ODE with splitting integrator."
-function integrate_step!(int::IntegratorSplitting{DT,TT,FT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,N}
+function integrate_step!(int::IntegratorSplitting{DT,TT,FT}, cache::IntegratorCacheSplitting{DT,TT}) where {DT,TT,FT}
     local tᵢ::TT
+
+    # reset cache
+    reset!(cache, int.Δt)
 
     # compute internal stages
     for i in eachindex(int.f, int.c)
         if int.c[i] ≠ zero(TT)
-            tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.c[i]
-            int.equation.v[int.f[i]](tᵢ, int.q, int.v, int.c[i] * int.Δt)
-            int.q .= int.v
+            tᵢ = cache.t̅ + int.Δt * int.c[i]
+            int.equation.v[int.f[i]](tᵢ, cache.q, cache.v, int.c[i] * int.Δt)
+            cache.q .= cache.v
         end
     end
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q, int.equation.periodicity)
-
-    # copy to solution
-    copy_solution!(sol, int.q, n, m)
+    cut_periodic_solution!(cache, equation(int).periodicity)
 end
