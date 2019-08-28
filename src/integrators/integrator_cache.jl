@@ -22,11 +22,11 @@ function CommonFunctions.get_solution(cache::ODEIntegratorCache)
     (cache.t, cache.q)
 end
 
-function CommonFunctions.get_solution(cache::PODEIntegratorCache)
+function CommonFunctions.get_solution(cache::Union{PODEIntegratorCache, IODEIntegratorCache})
     (cache.t, cache.q, cache.p)
 end
 
-function cut_periodic_solution!(cache::Union{ODEIntegratorCache, PODEIntegratorCache}, periodicity::Vector)
+function cut_periodic_solution!(cache::Union{ODEIntegratorCache, PODEIntegratorCache, IODEIntegratorCache}, periodicity::Vector)
     cut_periodic_solution!(cache.q, periodicity, cache.s̃)
     cache.q .+= cache.s̃
     cache.q̅ .+= cache.s̃
