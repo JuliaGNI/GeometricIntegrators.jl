@@ -146,7 +146,4 @@ function integrate_step!(int::IntegratorERK{DT,TT}, cache::IntegratorCacheERK{DT
 
     # take care of periodic solutions
     cut_periodic_solution!(cache.q, int.equation.periodicity)
-
-    # copy to solution
-    # copy_solution!(sol, int.q, n, m)
 end
