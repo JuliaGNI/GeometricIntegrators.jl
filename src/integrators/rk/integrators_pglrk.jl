@@ -98,6 +98,44 @@ mutable struct ParametersPGLRK{DT,TT,D,S,ET} <: Parameters{DT,TT}
 end
 
 
+struct NonlinearFunctionCachePGLRK{DT}
+    q̃::Vector{DT}
+    p̃::Vector{DT}
+    ṽ::Vector{DT}
+    f̃::Vector{DT}
+    θ̃::Vector{DT}
+    λ̃::Vector{DT}
+
+    Q::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
+    P::Vector{Vector{DT}}
+    F::Vector{Vector{DT}}
+    Y::Vector{Vector{DT}}
+    Z::Vector{Vector{DT}}
+
+    function NonlinearFunctionCachePGLRK{DT}(D,S) where {DT}
+        # create temporary vectors
+        q̃ = zeros(DT,D)
+        p̃ = zeros(DT,D)
+        ṽ = zeros(DT,D)
+        f̃ = zeros(DT,D)
+        θ̃ = zeros(DT,D)
+        λ̃ = zeros(DT,D)
+
+        # create internal stage vectors
+        Q = create_internal_stage_vector(DT, D, S)
+        P = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        F = create_internal_stage_vector(DT, D, S)
+        Y = create_internal_stage_vector(DT, D, S)
+        Z = create_internal_stage_vector(DT, D, S)
+
+        new(q̃, p̃, ṽ, f̃, θ̃, λ̃,
+            Q, P, V, F, Y, Z)
+    end
+end
+
+
 mutable struct IntegratorCachePGLRK{DT,TT}
     n::Int
     t::TT
@@ -118,20 +156,9 @@ mutable struct IntegratorCachePGLRK{DT,TT}
     f::Vector{DT}
     f̅::Vector{DT}
 
-    q̃::Vector{DT}
-    p̃::Vector{DT}
-    ṽ::Vector{DT}
-    f̃::Vector{DT}
-    θ̃::Vector{DT}
-    λ̃::Vector{DT}
     s̃::Vector{DT}
 
-    Q::Vector{Vector{DT}}
-    V::Vector{Vector{DT}}
-    P::Vector{Vector{DT}}
-    F::Vector{Vector{DT}}
-    Y::Vector{Vector{DT}}
-    Z::Vector{Vector{DT}}
+    fcache::NonlinearFunctionCachePGLRK{DT}
 
     function IntegratorCachePGLRK{DT,TT}(D,S) where {DT,TT}
         # create solution vectors
@@ -145,33 +172,21 @@ mutable struct IntegratorCachePGLRK{DT,TT}
         λ = zeros(DT,D)
         λ̅ = zeros(DT,D)
 
+        # create temporary vectors
+        s̃ = zeros(DT,D)
+
         # create update vectors
         v = zeros(DT,D)
         v̅ = zeros(DT,D)
         f = zeros(DT,D)
         f̅ = zeros(DT,D)
 
-        # create temporary vectors
-        q̃ = zeros(DT,D)
-        p̃ = zeros(DT,D)
-        ṽ = zeros(DT,D)
-        f̃ = zeros(DT,D)
-        θ̃ = zeros(DT,D)
-        λ̃ = zeros(DT,D)
-        s̃ = zeros(DT,D)
-
-        # create internal stage vectors
-        Q = create_internal_stage_vector(DT, D, S)
-        P = create_internal_stage_vector(DT, D, S)
-        V = create_internal_stage_vector(DT, D, S)
-        F = create_internal_stage_vector(DT, D, S)
-        Y = create_internal_stage_vector(DT, D, S)
-        Z = create_internal_stage_vector(DT, D, S)
+        fcache = NonlinearFunctionCachePGLRK{DT}(D,S)
 
         new(0, zero(TT), zero(TT),
             q, q̅, p, p̅, θ, θ̅, λ, λ̅,
-            v, v̅, f, f̅, q̃, p̃, ṽ, f̃, θ̃, λ̃, s̃,
-            Q, P, V, F, Y, Z)
+            v, v̅, f, f̅, s̃,
+            fcache)
     end
 end
 
@@ -211,6 +226,16 @@ function update_params!(params::ParametersPGLRK, cache::IntegratorCachePGLRK)
     params.p̅ .= cache.p
 end
 
+
+function compute_stages!(x::Vector{ST}, cache::NonlinearFunctionCachePGLRK{ST}, params::ParametersPGLRK) where {ST}
+    compute_stages!(x, cache.Q, cache.V,
+                       cache.P, cache.F,
+                       cache.Y, cache.Z,
+                       cache.q̃, cache.p̃,
+                       cache.θ̃, cache.λ̃,
+                       cache.ṽ, cache.f̃,
+                       params)
+end
 
 function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
                                         P::Vector{Vector{ST}}, F::Vector{Vector{ST}},
@@ -295,11 +320,10 @@ end
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    cache = IntegratorCachePGLRK{ST,TT}(D,S)
+    cache = NonlinearFunctionCachePGLRK{ST}(D,S)
 
     quote
-        compute_stages!(x, $cache.Q, $cache.V, $cache.P, $cache.F, $cache.Y, $cache.Z,
-                           $cache.q̃, $cache.p̃, $cache.θ̃, $cache.λ̃, $cache.ṽ, $cache.f̃, params)
+        compute_stages!(x, $cache, params)
 
         # compute b = [P-p-AF]
         for i in 1:S
@@ -369,24 +393,24 @@ function initial_guess!(int::IntegratorPGLRK{DT,TT}, cache::IntegratorCachePGLRK
     for i in 1:nstages(int)
         evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
                               cache.q̅, cache.p̅, cache.v̅, cache.f̅,
-                              cache.q̃, cache.ṽ,
+                              cache.fcache.q̃, cache.fcache.ṽ,
                               tableau(int).c[i])
 
         for k in 1:ndims(int)
-            int.solver.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
+            int.solver.x[ndims(int)*(i-1)+k] = cache.fcache.ṽ[k]
         end
     end
 
     evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
                           cache.q̅, cache.p̅, cache.v̅, cache.f̅,
-                          cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
+                          cache.fcache.q̃, cache.fcache.p̃,
                           one(TT), one(TT))
 
     for k in 1:ndims(int)
-        int.solver.x[ndims(int)*(nstages(int)+0)+k] = cache.q̃[k]
+        int.solver.x[ndims(int)*(nstages(int)+0)+k] = cache.fcache.q̃[k]
     end
     for k in 1:ndims(int)
-        int.solver.x[ndims(int)*(nstages(int)+1)+k] = cache.p̃[k]
+        int.solver.x[ndims(int)*(nstages(int)+1)+k] = cache.fcache.p̃[k]
     end
     for k in 1:ndims(int)
         int.solver.x[ndims(int)*(nstages(int)+2)+k] = 0
@@ -415,17 +439,11 @@ function integrate_step!(int::IntegratorPGLRK{DT,TT}, cache::IntegratorCachePGLR
     check_solver_status(int.solver.status, int.solver.params, cache.n)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, cache.Q, cache.V,
-                                  cache.P, cache.F,
-                                  cache.Y, cache.Z,
-                                  cache.q̃, cache.p̃,
-                                  cache.θ, cache.λ,
-                                  cache.ṽ, cache.f̃,
-                                  int.params)
+    compute_stages!(int.solver.x, cache.fcache, int.params)
 
     # compute final update
-    update_solution!(cache.q, cache.V, int.params.tab.b, int.params.Δt)
-    update_solution!(cache.p, cache.F, int.params.tab.b, int.params.Δt)
+    update_solution!(cache.q, cache.fcache.V, int.params.tab.b, int.params.Δt)
+    update_solution!(cache.p, cache.fcache.F, int.params.tab.b, int.params.Δt)
 
     # copy solution to initial guess
     update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)
