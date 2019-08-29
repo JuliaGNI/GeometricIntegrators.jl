@@ -109,7 +109,7 @@ nstages(integrator::IntegratorVPRKpSymmetric) = integrator.params.tab.s
 
 
 function create_integrator_cache(int::IntegratorVPRKpSymmetric{DT,TT}) where {DT,TT}
-    IntegratorCacheVPRK{DT, TT, ndims(int), nstages(int)}(true)
+    IntegratorCacheVPRKwProjection(DT, TT, ndims(int), nstages(int))
 end
 
 

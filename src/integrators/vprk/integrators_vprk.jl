@@ -131,7 +131,7 @@ nstages(integrator::IntegratorVPRK) = integrator.params.tab.s
 
 
 function create_integrator_cache(int::IntegratorVPRK{DT,TT}) where {DT,TT}
-    IntegratorCacheVPRK{DT, TT, ndims(int), nstages(int)}()
+    IntegratorCacheVPRK(DT, TT, ndims(int), nstages(int))
 end
 
 

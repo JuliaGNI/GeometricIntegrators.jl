@@ -164,7 +164,7 @@ nstages(integrator::IntegratorVPRKpStandard) = integrator.sparams.tab.s
 
 
 function create_integrator_cache(int::IntegratorVPRKpStandard{DT,TT}) where {DT,TT}
-    IntegratorCacheVPRK{DT, TT, ndims(int), nstages(int)}(true)
+    IntegratorCacheVPRKwProjection(DT, TT, ndims(int), nstages(int))
 end
 
 

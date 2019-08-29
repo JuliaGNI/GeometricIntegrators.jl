@@ -131,7 +131,7 @@ nstages(integrator::IntegratorVPRKpMidpoint) = integrator.params.tab.s
 
 
 function create_integrator_cache(int::IntegratorVPRKpMidpoint{DT,TT}) where {DT,TT}
-    IntegratorCacheVPRK{DT, TT, ndims(int), nstages(int)}(true)
+    IntegratorCacheVPRKwProjection(DT, TT, ndims(int), nstages(int))
 end
 
 
