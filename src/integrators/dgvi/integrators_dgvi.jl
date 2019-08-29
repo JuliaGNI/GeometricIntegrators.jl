@@ -245,16 +245,12 @@ mutable struct IntegratorCacheDGVI{DT,TT,D,S,R} <: IODEIntegratorCache{DT,D}
 
     q::Vector{TwicePrecision{DT}}
     q̅::Vector{TwicePrecision{DT}}
-    # p::Vector{TwicePrecision{DT}}
-    # p̅::Vector{TwicePrecision{DT}}
 
     q⁻::Vector{TwicePrecision{DT}}
     q̅⁻::Vector{TwicePrecision{DT}}
 
     v::Vector{DT}
     v̅::Vector{DT}
-    # f::Vector{DT}
-    # f̅::Vector{DT}
 
     s̃::Vector{DT}
 
@@ -264,8 +260,6 @@ mutable struct IntegratorCacheDGVI{DT,TT,D,S,R} <: IODEIntegratorCache{DT,D}
         # create solution vectors
         q = zeros(TwicePrecision{DT}, D)
         q̅ = zeros(TwicePrecision{DT}, D)
-        # p = zeros(TwicePrecision{DT}, D)
-        # p̅ = zeros(TwicePrecision{DT}, D)
 
         q⁻= zeros(TwicePrecision{DT}, D)
         q̅⁻= zeros(TwicePrecision{DT}, D)
@@ -276,12 +270,9 @@ mutable struct IntegratorCacheDGVI{DT,TT,D,S,R} <: IODEIntegratorCache{DT,D}
         # create update vectors
         v = zeros(DT,D)
         v̅ = zeros(DT,D)
-        # f = zeros(DT,D)
-        # f̅ = zeros(DT,D)
 
         fcache = NonlinearFunctionCacheDGVI{DT,D,S,R}()
 
-        # new(0, zero(TT), zero(TT), q, q̅, p, p̅, q⁻, q̅⁻, v, v̅, f, f̅, s̃, fcache)
         new(0, zero(TT), zero(TT), q, q̅, q⁻, q̅⁻, v, v̅, s̃, fcache)
     end
 end
@@ -289,7 +280,6 @@ end
 function CommonFunctions.reset!(cache::IntegratorCacheDGVI{DT,TT}, Δt::TT) where {DT,TT}
     cache.t̅  = cache.t
     cache.q̅ .= cache.q
-    # cache.p̅ .= cache.p
     cache.q̅⁻.= cache.q⁻
     cache.t += Δt
     cache.n += 1
@@ -314,7 +304,6 @@ function CommonFunctions.set_solution!(cache::IntegratorCacheDGVI, sol, n=0)
     cache.q .= q
     cache.q⁻.= q⁻
     cache.v .= 0
-    # cache.f .= 0
 end
 
 
