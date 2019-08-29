@@ -114,14 +114,6 @@ end
 
 "Integrate ODE with explicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorERK{DT,TT}, cache::IntegratorCacheERK{DT,TT}) where {DT,TT}
-    # @assert m ≥ 1
-    # @assert m ≤ sol.ni
-    #
-    # @assert n ≥ 1
-    # @assert n ≤ sol.ntime
-    #
-    # t = sol.t[0] + (n-1)*int.Δt
-
     local tᵢ::TT
     local yᵢ::DT
 

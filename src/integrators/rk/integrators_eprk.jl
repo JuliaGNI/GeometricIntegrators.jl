@@ -161,6 +161,9 @@ function integrate_step!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{
     cache.Q[0] .= cache.q
     cache.P[0] .= cache.p
 
+    # reset cache
+    reset!(cache, timestep(int))
+
     # compute internal stages
     for i in 1:int.tableau.s
         tqᵢ = cache.t̅ + int.Δt * int.tableau.q.c[i]
