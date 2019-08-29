@@ -59,10 +59,6 @@ function compute_projection!(
         q[k] = x[0*D+k]
         λ[k] = x[1*D+k]
     end
-    # for k in 1:D
-    #     λ[k] = x[0*D+k]
-    #     q[k] = params.q[k] + params.Δt * params.R[2] * λ[k]
-    # end
 
     # compute u=λ and g=∇ϑ(q)⋅λ
     U[1] .= λ
@@ -180,7 +176,8 @@ function initialize!(int::IntegratorVPRKpStandard{DT,TT}, cache::IntegratorCache
                             cache.t̅, cache.q̅, cache.p̅, cache.v̅, cache.f̅)
 
     # initialise projector
-    equation(int).g(cache.t, cache.q, cache.U[1], cache.G[1])
+    cache.U[1] .= cache.λ
+    equation(int).g(cache.t, cache.q, cache.λ, cache.G[1])
 end
 
 
