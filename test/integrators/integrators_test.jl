@@ -16,6 +16,7 @@ ode  = oscillator_ode()
 pode = oscillator_pode()
 sode = oscillator_sode()
 iode = oscillator_iode()
+iode_dg = oscillator_iode(q₀, q₀)
 idae = oscillator_idae()
 
 
@@ -330,10 +331,16 @@ pgsol = integrate(pgint, nt)
 
 QGau4 = GaussLegendreQuadrature(4)
 BGau4 = LagrangeBasis(nodes(QGau4))
+
 cgint = IntegratorCGVI(iode, BGau4, QGau4, Δt)
 cgsol = integrate(cgint, nt)
 
 @test rel_err(cgsol.q, refx) < 1E-7
+
+dgint = IntegratorDGVI(iode_dg, BGau4, QGau4, Δt)
+dgsol = integrate(dgint, nt)
+
+@test rel_err(dgsol.q, refx) < 1E-7
 
 
 ### Splitting Integrators ###
