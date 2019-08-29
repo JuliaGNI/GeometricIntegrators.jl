@@ -71,10 +71,14 @@ function oscillator_iode_g(t, q, λ, g)
     nothing
 end
 
-function oscillator_iode_v(t, q, p, v)
+function oscillator_iode_v(t, q, v)
     v[1] = q[2]
     v[2] = -k*q[1]
     nothing
+end
+
+function oscillator_iode_v(t, q, p, v)
+    oscillator_iode_v(t, q, v)
 end
 
 function oscillator_iode(q₀)
