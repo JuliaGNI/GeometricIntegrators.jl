@@ -76,6 +76,7 @@ module Tableaus
 
     export getTableauPlaten, getTableauBurrageR2, getTableauBurrageCL
     export getTableauBurrageE1, getTableauBurrageG5, getTableauStochasticHeun
+    export getTableauStochasticEuler
 
     include("tableaus/tableaus_werk.jl")
 
