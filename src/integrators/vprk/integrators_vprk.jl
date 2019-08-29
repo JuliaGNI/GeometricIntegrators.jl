@@ -181,8 +181,7 @@ function integrate_step!(int::IntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK{
     compute_stages!(int.solver.x, cache.Q, cache.V, cache.P, cache.F, int.params)
 
     # compute final update
-    update_solution!(cache.q, cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
-    update_solution!(cache.p, cache.F, int.params.tab.p.b, int.params.tab.p.b̂, int.params.Δt)
+    update_solution!(int, cache)
 
     # copy solution to initial guess
     update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)

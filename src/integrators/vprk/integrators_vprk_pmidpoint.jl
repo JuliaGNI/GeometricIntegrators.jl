@@ -195,12 +195,10 @@ function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT}, cache::IntegratorC
                     cache.P, cache.F, cache.G, int.params)
 
     # compute unprojected solution
-    update_solution!(cache.q, cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
-    update_solution!(cache.p, cache.F, int.params.tab.p.b, int.params.tab.p.b̂, int.params.Δt)
+    update_solution!(int, cache)
 
     # add projection to solution
-    update_solution!(cache.q, cache.U, int.params.R, int.params.Δt)
-    update_solution!(cache.p, cache.G, int.params.R, int.params.Δt)
+    project_solution!(int, cache, int.params.R)
 
     # copy solution to initial guess
     update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)

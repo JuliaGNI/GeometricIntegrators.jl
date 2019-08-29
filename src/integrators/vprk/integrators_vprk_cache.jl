@@ -160,6 +160,21 @@ function CommonFunctions.reset!(cache::IntegratorCacheVPRK{DT,TT}, Δt::TT) wher
     cache.n += 1
 end
 
+function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK{DT,TT}) where {DT,TT}
+    update_solution!(cache.q, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(cache.p, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+end
+
+function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK, R::Vector{TT}) where {DT,TT}
+    update_solution!(cache.q, cache.U, R, timestep(int))
+    update_solution!(cache.p, cache.G, R, timestep(int))
+end
+
+function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK, RU::Vector{TT}, RG::Vector{TT}) where {DT,TT}
+    update_solution!(cache.q, cache.U, RU, timestep(int))
+    update_solution!(cache.p, cache.G, RG, timestep(int))
+end
+
 function cut_periodic_solution!(cache::IntegratorCacheVPRK, periodicity::Vector)
     cut_periodic_solution!(cache.q, periodicity, cache.s̃)
     cache.q .+= cache.s̃

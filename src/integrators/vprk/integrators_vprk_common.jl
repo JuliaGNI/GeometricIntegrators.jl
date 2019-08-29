@@ -348,20 +348,3 @@ end
         end
     end
 end
-
-
-function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRK{DT}) where {DT,TT}
-    update_solution!(int.q, cache.V, params.tab.q.b, params.tab.q.b̂, int.params.Δt)
-    update_solution!(int.p, cache.F, params.tab.p.b, params.tab.p.b̂, int.params.Δt)
-end
-
-
-function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::NonlinearFunctionCacheVPRKprojection{DT}, R::Vector{TT}) where {DT,TT}
-    update_solution!(int.q, cache.U, R, int.params.Δt)
-    update_solution!(int.p, cache.G, R, int.params.Δt)
-end
-
-
-function cut_periodic_solution!(int::AbstractIntegratorVPRK)
-    cut_periodic_solution!(int.q, int.params.equ.periodicity)
-end

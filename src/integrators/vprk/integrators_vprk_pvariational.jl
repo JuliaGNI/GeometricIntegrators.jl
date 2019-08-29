@@ -186,8 +186,7 @@ end
 function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, cache::IntegratorCacheVPRK{DT,TT}) where {DT,TT}
     # add perturbation for next time step to solution
     # (same vector field as previous time step)
-    update_solution!(cache.q, cache.U, int.pparams.R1, int.pparams.Δt)
-    update_solution!(cache.p, cache.G, int.pparams.R1, int.pparams.Δt)
+    project_solution!(int ,cache, int.pparams.R1)
 
     # update nonlinear solver parameters from cache
     update_params!(int.sparams, cache)
@@ -211,8 +210,7 @@ function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, cache::Integrat
     compute_stages!(int.solver.x, cache.Q, cache.V, cache.P, cache.F, int.sparams)
 
     # compute unprojected solution
-    update_solution!(cache.q, cache.V, int.sparams.tab.q.b, int.sparams.tab.q.b̂, int.sparams.Δt)
-    update_solution!(cache.p, cache.F, int.sparams.tab.p.b, int.sparams.tab.p.b̂, int.sparams.Δt)
+    update_solution!(int, cache)
 
     # set time and solution for projection solver
     update_params!(int.pparams, cache)
@@ -233,8 +231,7 @@ function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, cache::Integrat
     compute_projection!(int.projector.x, cache.q̃, cache.p̃, cache.λ, cache.U, cache.G, int.pparams)
 
     # add projection to solution
-    update_solution!(cache.q, cache.U, int.pparams.R2, int.pparams.Δt)
-    update_solution!(cache.p, cache.G, int.pparams.R2, int.pparams.Δt)
+    project_solution!(int, cache, int.pparams.R2)
 
     # copy solution to initial guess
     update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)
