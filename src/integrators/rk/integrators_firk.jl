@@ -137,7 +137,6 @@ end
 
 equation(int::IntegratorFIRK) = int.params.equ
 timestep(int::IntegratorFIRK) = int.params.Δt
-has_initial_guess(int::IntegratorFIRK) = true
 
 
 """
@@ -188,7 +187,7 @@ mutable struct IntegratorCacheFIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
 end
 
 function create_integrator_cache(int::IntegratorFIRK{DT,TT}) where {DT,TT}
-    IntegratorCacheFIRK{DT, TT, ndims(equation(int)), int.params.tab.s}()
+    IntegratorCacheFIRK{DT, TT, ndims(int), int.params.tab.s}()
 end
 
 function CommonFunctions.reset!(cache::IntegratorCacheFIRK{DT,TT}, Δt::TT) where {DT,TT}
@@ -234,8 +233,8 @@ function initial_guess!(int::IntegratorFIRK, cache::IntegratorCacheFIRK)
         end
     end
     for i in 1:int.params.tab.q.s
-        offset = dims(int)*(i-1)
-        for k in 1:dims(int)
+        offset = ndims(int)*(i-1)
+        for k in 1:ndims(int)
             int.solver.x[offset+k] = 0
             for j in 1:int.params.tab.q.s
                 int.solver.x[offset+k] += int.params.tab.q.a[i,j] * cache.V[j][k]

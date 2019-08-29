@@ -13,6 +13,7 @@ create_integrator_cache(integrator::Integrator) = error("create_integrator_cache
 
 initialize!(::Integrator, ::IntegratorCache) = nothing
 
+integrate_step!(integrator::Integrator, ::IntegratorCache) = error("integrate_step()! not implemented for ", typeof(integrator))
 
 function copy_solution!(sol::Solution, cache::IntegratorCache, n, m)
     copy_solution!(sol, get_solution(cache)..., n, m)

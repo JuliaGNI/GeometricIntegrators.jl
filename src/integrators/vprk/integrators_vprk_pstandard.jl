@@ -165,8 +165,6 @@ equation(integrator::IntegratorVPRKpStandard) = integrator.sparams.equ
 timestep(integrator::IntegratorVPRKpStandard) = integrator.sparams.Δt
 tableau(integrator::IntegratorVPRKpStandard) = integrator.sparams.tab
 nstages(integrator::IntegratorVPRKpStandard) = integrator.sparams.tab.s
-Base.ndims(integrator::IntegratorVPRKpStandard) = integrator.sparams.equ.d
-has_initial_guess(int::IntegratorVPRKpStandard) = true
 
 
 function create_integrator_cache(int::IntegratorVPRKpStandard{DT,TT}) where {DT,TT}
@@ -183,12 +181,6 @@ function initialize!(int::IntegratorVPRKpStandard{DT,TT}, cache::IntegratorCache
 
     # initialise projector
     equation(int).g(cache.t, cache.q, cache.U[1], cache.G[1])
-
-    # # add perturbation for first time step to solution
-    # cache.q̅₊ .= cache.q
-    # cache.p̅₊ .= cache.p
-    # update_solution!(cache.q̅₊, cache.U, int.pparams.RU1, int.pparams.Δt)
-    # update_solution!(cache.p̅₊, cache.G, int.pparams.RG1, int.pparams.Δt)
 end
 
 

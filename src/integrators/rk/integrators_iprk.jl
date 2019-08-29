@@ -89,7 +89,6 @@ end
 
 equation(integrator::IntegratorIPRK) = integrator.params.equ
 timestep(integrator::IntegratorIPRK) = integrator.params.Δt
-has_initial_guess(int::IntegratorIPRK) = true
 
 
 """
@@ -180,7 +179,7 @@ mutable struct IntegratorCacheIPRK{ST,TT,D,S} <: PODEIntegratorCache{ST,D}
 end
 
 function create_integrator_cache(int::IntegratorIPRK{DT,TT}) where {DT,TT}
-    IntegratorCacheIPRK{DT, TT, ndims(equation(int)), int.params.tab.s}()
+    IntegratorCacheIPRK{DT, TT, ndims(int), int.params.tab.s}()
 end
 
 function CommonFunctions.reset!(cache::IntegratorCacheIPRK{DT,TT}, Δt::TT) where {DT,TT}

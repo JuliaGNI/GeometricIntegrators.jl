@@ -284,12 +284,3 @@ end
 
 
 # TODO Add solver status information to all integrators (if requested).
-
-
-# "Initialize integrator for initial conditions m with m₁ ≤ m ≤ m₂ and time step 0."
-# function initialize!(int::Integrator, sol::Solution, m1::Int, m2::Int)
-#     for m in m1:m2
-#         # initialize integrator for initial condition m and time step 0
-#         initialize!(int, sol, m)
-#     end
-# end

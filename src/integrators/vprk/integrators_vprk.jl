@@ -128,8 +128,6 @@ equation(int::IntegratorVPRK) = int.params.equ
 timestep(int::IntegratorVPRK) = int.params.Δt
 tableau(integrator::IntegratorVPRK) = integrator.params.tab
 nstages(integrator::IntegratorVPRK) = integrator.params.tab.s
-Base.ndims(integrator::IntegratorVPRK) = integrator.params.equ.d
-has_initial_guess(int::IntegratorVPRK) = true
 
 
 function create_integrator_cache(int::IntegratorVPRK{DT,TT}) where {DT,TT}

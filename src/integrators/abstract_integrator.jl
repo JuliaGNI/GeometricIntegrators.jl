@@ -20,15 +20,10 @@ abstract type SDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType} 
 abstract type PSDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType} end
 abstract type SPSDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType} end
 
-
-# function CommonFunctions.name(int::Integrator)
-#     warn(string(typeof(int)) * ".name() Not implemented!")
-# end
-
 equation(integrator::Integrator) = error("equation() not implemented for ", typeof(integrator))
 timestep(integrator::Integrator) = error("timestep() not implemented for ", typeof(integrator))
 
-has_initial_guess(integrator::Integrator) = false
+Base.ndims(integrator::Integrator) = ndims(equation(integrator))
 
 
 abstract type Parameters{DT,TT} end

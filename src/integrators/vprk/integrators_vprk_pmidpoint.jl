@@ -128,8 +128,6 @@ equation(integrator::IntegratorVPRKpMidpoint) = integrator.params.equ
 timestep(integrator::IntegratorVPRKpMidpoint) = integrator.params.Δt
 tableau(integrator::IntegratorVPRKpMidpoint) = integrator.params.tab
 nstages(integrator::IntegratorVPRKpMidpoint) = integrator.params.tab.s
-Base.ndims(integrator::IntegratorVPRKpMidpoint) = integrator.params.equ.d
-has_initial_guess(int::IntegratorVPRKpMidpoint) = true
 
 
 function create_integrator_cache(int::IntegratorVPRKpMidpoint{DT,TT}) where {DT,TT}

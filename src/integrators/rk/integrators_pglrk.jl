@@ -371,8 +371,6 @@ equation(integrator::IntegratorPGLRK) = integrator.params.equ
 timestep(integrator::IntegratorPGLRK) = integrator.params.Δt
 tableau(integrator::IntegratorPGLRK) = integrator.params.tab
 nstages(integrator::IntegratorPGLRK) = integrator.params.tab.s
-Base.ndims(integrator::IntegratorPGLRK) = integrator.params.equ.d
-has_initial_guess(int::IntegratorPGLRK) = true
 
 
 function create_integrator_cache(int::IntegratorPGLRK{DT,TT}) where {DT,TT}

@@ -90,7 +90,7 @@ mutable struct IntegratorCacheERK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
 end
 
 function create_integrator_cache(int::IntegratorERK{DT,TT}) where {DT,TT}
-    IntegratorCacheERK{DT, TT, ndims(equation(int)), int.tableau.s}()
+    IntegratorCacheERK{DT, TT, ndims(int), int.tableau.s}()
 end
 
 function CommonFunctions.reset!(cache::IntegratorCacheERK{DT,TT}, Δt::TT) where {DT,TT}

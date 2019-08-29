@@ -100,7 +100,7 @@ mutable struct IntegratorCacheEPRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
 end
 
 function create_integrator_cache(int::IntegratorEPRK{DT,TT}) where {DT,TT}
-    IntegratorCacheEPRK{DT, TT, ndims(equation(int)), int.tableau.s}()
+    IntegratorCacheEPRK{DT, TT, ndims(int), int.tableau.s}()
 end
 
 function CommonFunctions.reset!(cache::IntegratorCacheEPRK{DT,TT}, Δt::TT) where {DT,TT}

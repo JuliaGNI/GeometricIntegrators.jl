@@ -244,7 +244,6 @@ end
 equation(integrator::IntegratorSIPRK) = integrator.params.equ
 timestep(integrator::IntegratorSIPRK) = integrator.params.Δt
 tableau(integrator::IntegratorSIPRK) = integrator.params.tab
-dims(integrator::IntegratorSIPRK) = integrator.params.equ.d
 Base.eltype(integrator::IntegratorSIPRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
 
 
@@ -272,7 +271,7 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}) where {DT,TT}
 
     # SIMPLE SOLUTION
     # The simplest initial guess for Y, Z is 0
-    # int.solver.x .= zeros(eltype(int), 2*int.params.tab.s*dims(int))
+    # int.solver.x .= zeros(eltype(int), 2*int.params.tab.s*ndims(int))
 
     # USING AN EXPLICIT INTEGRATOR TO COMPUTE AN INITIAL GUESS
     # Below we use the R2 method of Burrage & Burrage to calculate

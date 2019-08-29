@@ -271,7 +271,6 @@ end
 equation(integrator::IntegratorSISPRK) = integrator.params.equ
 timestep(integrator::IntegratorSISPRK) = integrator.params.Δt
 tableau(integrator::IntegratorSISPRK) = integrator.params.tab
-dims(integrator::IntegratorSISPRK) = integrator.params.equ.d
 Base.eltype(integrator::IntegratorSISPRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
 
 
@@ -299,7 +298,7 @@ function initial_guess!(int::IntegratorSISPRK{DT,TT}) where {DT,TT}
 
     # SIMPLE SOLUTION
     # The simplest initial guess for Y, Z is 0
-    int.solver.x .= zeros(eltype(int), 2*int.params.tab.s*dims(int))
+    int.solver.x .= zeros(eltype(int), 2*int.params.tab.s*ndims(int))
 
 
     # FIX NEEDED !!!

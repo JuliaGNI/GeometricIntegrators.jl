@@ -6,7 +6,6 @@ abstract type AbstractIntegratorCacheVPRK{DT,D,S} <: IODEIntegratorCache{DT,D} e
 equation(integrator::AbstractIntegratorVPRK) = integrator.params.equ
 timestep(integrator::AbstractIntegratorVPRK) = integrator.params.Δt
 tableau(integrator::AbstractIntegratorVPRK) = integrator.params.tab
-dims(integrator::AbstractIntegratorVPRK) = integrator.params.equ.d
 
 
 function update_params!(params::AbstractParametersVPRK, cache::AbstractIntegratorCacheVPRK)

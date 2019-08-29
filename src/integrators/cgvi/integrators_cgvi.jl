@@ -377,9 +377,6 @@ end
 
 equation(integrator::IntegratorCGVI) = integrator.equation
 timestep(integrator::IntegratorCGVI) = integrator.Δt
-Base.ndims(integrator::IntegratorCGVI) = integrator.equation.d
-has_initial_guess(int::IntegratorCGVI) = true
-
 
 
 function create_integrator_cache(int::IntegratorCGVI{DT,TT}) where {DT,TT}

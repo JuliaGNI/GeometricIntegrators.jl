@@ -106,8 +106,6 @@ equation(integrator::IntegratorVPRKpSymmetric) = integrator.params.equ
 timestep(integrator::IntegratorVPRKpSymmetric) = integrator.params.Δt
 tableau(integrator::IntegratorVPRKpSymmetric) = integrator.params.tab
 nstages(integrator::IntegratorVPRKpSymmetric) = integrator.params.tab.s
-Base.ndims(integrator::IntegratorVPRKpSymmetric) = integrator.params.equ.d
-has_initial_guess(int::IntegratorVPRKpSymmetric) = true
 
 
 function create_integrator_cache(int::IntegratorVPRKpSymmetric{DT,TT}) where {DT,TT}

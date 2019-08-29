@@ -184,7 +184,7 @@ mutable struct IntegratorCacheDIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
 end
 
 function create_integrator_cache(int::IntegratorDIRK{DT,TT}) where {DT,TT}
-    IntegratorCacheDIRK{DT, TT, ndims(equation(int)), int.params.tab.s}()
+    IntegratorCacheDIRK{DT, TT, ndims(int), int.params.tab.s}()
 end
 
 function CommonFunctions.reset!(cache::IntegratorCacheDIRK{DT,TT}, Δt::TT) where {DT,TT}
@@ -230,7 +230,7 @@ function initial_guess!(int::IntegratorDIRK, cache::IntegratorCacheDIRK)
         end
     end
     for i in 1:int.params.tab.q.s
-        for k in 1:dims(int)
+        for k in 1:ndims(int)
             int.solver[i].x[k] = 0
             for j in 1:int.params.tab.q.s
                 int.solver[i].x[k] += int.params.tab.q.a[i,j] * cache.V[j][k]
