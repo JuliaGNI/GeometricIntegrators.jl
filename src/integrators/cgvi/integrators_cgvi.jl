@@ -13,9 +13,9 @@
 * `a`: derivative matrix
 * `r₀`: reconstruction coefficients at the beginning of the interval
 * `r₁`: reconstruction coefficients at the end of the interval
-* `t`: current time
-* `q`: current solution of q
-* `p`: current solution of p
+* `t`: initial time
+* `q`: solution of q at time t
+* `p`: solution of p at time t
 """
 mutable struct ParametersCGVI{DT,TT,D,S,R,ΘT,FT} <: Parameters{DT,TT}
     Θ::ΘT
@@ -32,10 +32,9 @@ mutable struct ParametersCGVI{DT,TT,D,S,R,ΘT,FT} <: Parameters{DT,TT}
     r₀::Vector{TT}
     r₁::Vector{TT}
 
-    t̅::TT
-
-    q̅::Vector{DT}
-    p̅::Vector{DT}
+    t::TT
+    q::Vector{DT}
+    p::Vector{DT}
 
     function ParametersCGVI{DT,TT,D,S,R,ΘT,FT}(Θ::ΘT, f::FT, Δt::TT, b, c, x, m, a, r₀, r₁) where {DT,TT,D,S,R,ΘT,FT}
         new(Θ, f, Δt, b, c, x, m, a, r₀, r₁, zero(TT), zeros(DT,D), zeros(DT,D))
@@ -154,9 +153,9 @@ end
 
 function update_params!(params::ParametersCGVI, cache::IntegratorCacheCGVI)
     # set time for nonlinear solver and copy previous solution
-    params.t̅  = cache.t
-    params.q̅ .= cache.q
-    params.p̅ .= cache.p
+    params.t  = cache.t
+    params.q .= cache.q
+    params.p .= cache.p
 end
 
 
@@ -265,7 +264,7 @@ function compute_stages_p!(Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
     # compute P=ϑ(Q,V) and F=f(Q,V)
     for i in eachindex(Q,V,P,F)
         @assert D == length(Q[i]) == length(V[i]) == length(P[i]) == length(F[i])
-        tᵢ = params.t̅ + params.Δt * params.c[i]
+        tᵢ = params.t + params.Δt * params.c[i]
         params.Θ(tᵢ, Q[i], V[i], P[i])
         params.f(tᵢ, Q[i], V[i], F[i])
     end
@@ -286,17 +285,17 @@ function compute_rhs!(b::Vector{ST}, X::Vector{Vector{ST}}, Q::Vector{Vector{ST}
                 z += params.b[j] * params.m[j,i] * F[j][k]
                 z += params.b[j] * params.a[j,i] * P[j][k] / params.Δt
             end
-            b[D*(i-1)+k] = z - (params.r₁[i] * p[k] - params.r₀[i] * params.p̅[k]) / params.Δt
+            b[D*(i-1)+k] = z - (params.r₁[i] * p[k] - params.r₀[i] * params.p[k]) / params.Δt
         end
     end
 
     # compute b = - [(q-r₀Q)]
-    for k in eachindex(params.q̅)
+    for k in eachindex(params.q)
         y = 0
         for j in eachindex(X)
             y += params.r₀[j] * X[j][k]
         end
-        b[D*S+k] = y - params.q̅[k]
+        b[D*S+k] = y - params.q[k]
     end
 end
 
