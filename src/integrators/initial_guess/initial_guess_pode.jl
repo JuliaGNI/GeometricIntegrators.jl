@@ -84,7 +84,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
 
     if q₀ == q₁
         @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁."
-        guess .= q₁
+        guess_q .= q₁
     else
         evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c_q, guess_q)
     end
