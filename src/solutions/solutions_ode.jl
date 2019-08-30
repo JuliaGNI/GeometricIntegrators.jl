@@ -131,15 +131,15 @@ function set_initial_conditions!(sol::SolutionODE{DT,TT}, t₀::TT, q₀::Union{
     sol.counter .= 1
 end
 
-function get_initial_conditions!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, k) where {DT,TT}
+function get_initial_conditions!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, k) where {DT,TT}
     get_data!(sol.q, q, 0, k)
 end
 
 function get_initial_conditions(sol::SolutionODE, k, n=1)
-    (sol.t[n], sol.q[:, n-1, k])
+    (sol.t[n-1], sol.q[:, n-1, k])
 end
 
-function CommonFunctions.get_solution!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
+function CommonFunctions.get_solution!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, n, k) where {DT,TT}
     q .= sol.q[:, n, k]
 end
 
@@ -151,7 +151,7 @@ function CommonFunctions.set_solution!(sol, t, q, n, k)
     set_solution!(sol, q, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionODE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
+function CommonFunctions.set_solution!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, n, k) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0

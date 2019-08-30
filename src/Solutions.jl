@@ -10,6 +10,10 @@ module Solutions
     using ..CommonFunctions
     using ..Equations
 
+    # TODO # Fix this!
+    # using ..Integrators: SolutionVector
+    SolutionVector{DT} = Union{Vector{DT}, Vector{TwicePrecision{DT}}}
+
 
     export DEFAULT_NSAVE, DEFAULT_NWRITE
 
