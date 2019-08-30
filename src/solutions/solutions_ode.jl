@@ -132,11 +132,11 @@ function set_initial_conditions!(sol::SolutionODE{DT,TT}, t₀::TT, q₀::Union{
 end
 
 function get_initial_conditions!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, k) where {DT,TT}
-    get_data!(sol.q, q, 0, k)
+    get_solution!(sol, q, 0, k)
 end
 
 function get_initial_conditions(sol::SolutionODE, k, n=1)
-    (sol.t[n-1], sol.q[:, n-1, k])
+    get_solution(sol, n-1, k)
 end
 
 function CommonFunctions.get_solution!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, n, k) where {DT,TT}
@@ -147,7 +147,7 @@ function CommonFunctions.get_solution(sol::SolutionODE, n, k)
     (sol.t[n], sol.q[:, n, k])
 end
 
-function CommonFunctions.set_solution!(sol, t, q, n, k)
+function CommonFunctions.set_solution!(sol::SolutionODE, t, q, n, k)
     set_solution!(sol, q, n, k)
 end
 

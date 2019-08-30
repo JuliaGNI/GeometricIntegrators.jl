@@ -150,18 +150,15 @@ function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, t₀::TT, q₀::Union
 end
 
 function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, k) where {DT,TT}
-    get_data!(sol.q, q, 0, k)
-    get_data!(sol.p, p, 0, k)
-    get_data!(sol.λ, λ, 0, k)
+    get_solution!(sol, q, p, λ, 0, k)
 end
 
 function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, k) where {DT,TT}
-    get_data!(sol.q, q, 0, k)
-    get_data!(sol.p, p, 0, k)
+    get_solution!(sol, q, p, 0, k)
 end
 
 function get_initial_conditions(sol::SolutionPDAE, k, n=1)
-    (sol.t[n-1], sol.q[:, n-1, k], sol.p[:, n-1, k], sol.λ[:, n-1, k])
+    get_solution(sol, n-1, k)
 end
 
 function CommonFunctions.get_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, n, k) where {DT,TT}
@@ -177,6 +174,14 @@ end
 
 function CommonFunctions.get_solution(sol::SolutionPDAE, n, k)
     (sol.t[n], sol.q[:, n, k], sol.p[:, n, k], sol.λ[:, n, k])
+end
+
+function CommonFunctions.set_solution!(sol::SolutionPDAE, t, q, p, n, k)
+    set_solution!(sol, q, p, n, k)
+end
+
+function CommonFunctions.set_solution!(sol::SolutionPDAE, t, q, p, λ, n, k)
+    set_solution!(sol, q, p, λ, n, k)
 end
 
 function CommonFunctions.set_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, n, k) where {DT,TT}
