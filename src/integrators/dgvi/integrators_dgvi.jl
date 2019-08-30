@@ -21,10 +21,10 @@
 * `a`:  derivative matrix
 * `r⁻`: reconstruction coefficients, jump lhs value
 * `r⁺`: reconstruction coefficients, jump rhs value
-* `t`:  current time
-* `q`:  current solution of qₙ
-* `q⁻`: current solution of qₙ⁻
-* `q⁺`: current solution of qₙ⁺
+* `t`:  initial time
+* `q`:  solution of q  at time t
+* `q⁻`: solution of q⁻ at time t
+* `q⁺`: solution of q⁺ at time t
 """
 mutable struct ParametersDGVI{DT,TT,D,S,R,ΘT,FT,GT} <: Parameters{DT,TT}
     Θ::ΘT
@@ -40,14 +40,15 @@ mutable struct ParametersDGVI{DT,TT,D,S,R,ΘT,FT,GT} <: Parameters{DT,TT}
     r⁻::Vector{TT}
     r⁺::Vector{TT}
 
-    t̅::TT
+    t::TT
+    q::Vector{DT}
+    p::Vector{DT}
 
-    q̅::Vector{DT}
-    q̅⁻::Vector{DT}
-    q̅⁺::Vector{DT}
+    q⁻::Vector{DT}
+    q⁺::Vector{DT}
 
     function ParametersDGVI{DT,TT,D,S,R,ΘT,FT,GT}(Θ::ΘT, f::FT, g::GT, Δt::TT, b, c, m, a, r⁻, r⁺) where {DT,TT,D,S,R,ΘT,FT,GT}
-        new(Θ, f, g, Δt, b, c, m, a, r⁻, r⁺, zero(TT), zeros(DT,D), zeros(DT,D), zeros(DT,D))
+        new(Θ, f, g, Δt, b, c, m, a, r⁻, r⁺, zero(TT), zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D))
     end
 end
 
@@ -148,6 +149,9 @@ struct NonlinearFunctionCacheDGVI{ST,D,S,R}
     q̅⁻::Vector{ST}
     q̅⁺::Vector{ST}
 
+    p::Vector{ST}
+    p̅::Vector{ST}
+
     ϕ::Vector{ST}
     ϕ⁻::Vector{ST}
     ϕ⁺::Vector{ST}
@@ -176,6 +180,9 @@ struct NonlinearFunctionCacheDGVI{ST,D,S,R}
     g̅⁻::Vector{ST}
     g̅⁺::Vector{ST}
 
+    h⁺::Vector{ST}
+    h̅⁻::Vector{ST}
+
     function NonlinearFunctionCacheDGVI{ST,D,S,R}() where {ST,D,S,R}
         # create internal stage vectors
         X = create_internal_stage_vector(ST,D,S)
@@ -197,6 +204,9 @@ struct NonlinearFunctionCacheDGVI{ST,D,S,R}
         q̅  = zeros(ST,D)
         q̅⁻ = zeros(ST,D)
         q̅⁺ = zeros(ST,D)
+
+        p = zeros(ST,D)
+        p̅ = zeros(ST,D)
 
         # create jump vectors
         ϕ  = zeros(ST,D)
@@ -227,13 +237,18 @@ struct NonlinearFunctionCacheDGVI{ST,D,S,R}
         g̅⁻ = zeros(ST,D)
         g̅⁺ = zeros(ST,D)
 
+        h⁺ = zeros(ST,D)
+        h̅⁻ = zeros(ST,D)
+
         new(X, Q, V, P, F,
             q̃, p̃, ṽ, f̃,
             q, q⁻, q⁺, q̅, q̅⁻, q̅⁺,
+            p, p̅,
             ϕ, ϕ⁻, ϕ⁺, ϕ̅, ϕ̅⁻, ϕ̅⁺,
             λ, λ⁻, λ⁺, λ̅, λ̅⁻, λ̅⁺,
             θ, θ⁻, θ⁺, Θ̅, Θ̅⁻, Θ̅⁺,
-            g, g⁻, g⁺, g̅, g̅⁻, g̅⁺)
+            g, g⁻, g⁺, g̅, g̅⁻, g̅⁺,
+            h⁺, h̅⁻)
     end
 end
 
@@ -245,9 +260,8 @@ mutable struct IntegratorCacheDGVI{DT,TT,D,S,R} <: IODEIntegratorCache{DT,D}
 
     q::Vector{TwicePrecision{DT}}
     q̅::Vector{TwicePrecision{DT}}
-
-    q⁻::Vector{TwicePrecision{DT}}
-    q̅⁻::Vector{TwicePrecision{DT}}
+    p::Vector{TwicePrecision{DT}}
+    p̅::Vector{TwicePrecision{DT}}
 
     v::Vector{DT}
     v̅::Vector{DT}
@@ -260,9 +274,8 @@ mutable struct IntegratorCacheDGVI{DT,TT,D,S,R} <: IODEIntegratorCache{DT,D}
         # create solution vectors
         q = zeros(TwicePrecision{DT}, D)
         q̅ = zeros(TwicePrecision{DT}, D)
-
-        q⁻= zeros(TwicePrecision{DT}, D)
-        q̅⁻= zeros(TwicePrecision{DT}, D)
+        p = zeros(TwicePrecision{DT}, D)
+        p̅ = zeros(TwicePrecision{DT}, D)
 
         # create temporary vectors
         s̃ = zeros(DT,D)
@@ -273,14 +286,14 @@ mutable struct IntegratorCacheDGVI{DT,TT,D,S,R} <: IODEIntegratorCache{DT,D}
 
         fcache = NonlinearFunctionCacheDGVI{DT,D,S,R}()
 
-        new(0, zero(TT), zero(TT), q, q̅, q⁻, q̅⁻, v, v̅, s̃, fcache)
+        new(0, zero(TT), zero(TT), q, q̅, p, p̅, v, v̅, s̃, fcache)
     end
 end
 
 function CommonFunctions.reset!(cache::IntegratorCacheDGVI{DT,TT}, Δt::TT) where {DT,TT}
     cache.t̅  = cache.t
     cache.q̅ .= cache.q
-    cache.q̅⁻.= cache.q⁻
+    cache.p̅ .= cache.p
     cache.t += Δt
     cache.n += 1
 end
@@ -289,29 +302,27 @@ function cut_periodic_solution!(cache::IntegratorCacheDGVI{DT}, periodicity::Vec
     cut_periodic_solution!(cache.q, periodicity, cache.s̃)
     cache.q .+= cache.s̃
     cache.q̅ .+= cache.s̃
-    cache.q⁻ += cache.s̃
-    cache.q̅⁻.+= cache.s̃
 end
 
 function CommonFunctions.get_solution(cache::IntegratorCacheDGVI)
-    (cache.t, cache.q, cache.q⁻)
+    (cache.t, cache.q, cache.p)
 end
 
 function CommonFunctions.set_solution!(cache::IntegratorCacheDGVI, sol, n=0)
-    t, q, q⁻ = sol
+    t, q, p = sol
     cache.n  = n
     cache.t  = t
     cache.q .= q
-    cache.q⁻.= q⁻
+    cache.p .= p
     cache.v .= 0
 end
 
 
 function update_params!(params::ParametersDGVI, cache::IntegratorCacheDGVI)
     # set time for nonlinear solver and copy previous solution
-    params.t̅  = cache.t
-    params.q̅ .= cache.q
-    params.q̅⁻.= cache.q⁻
+    params.t  = cache.t
+    params.q .= cache.q
+    params.p .= cache.p
 end
 
 
@@ -368,8 +379,9 @@ function compute_stages_q!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
     local Q = cache.Q
 
     # copy q and q⁻
-    cache.q  .= params.q̅
-    cache.q⁻ .= params.q̅⁻
+    cache.q  .= params.q
+    cache.p  .= params.p
+    cache.q⁻ .= params.q⁻
 
     # compute Q
     for i in 1:R
@@ -421,7 +433,7 @@ function compute_stages_p!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
 
     # compute P=ϑ(Q) and F=f(Q)
     for i in 1:R
-        tᵢ = params.t̅ + params.Δt * params.c[i]
+        tᵢ = params.t + params.Δt * params.c[i]
         params.Θ(tᵢ, cache.Q[i], cache.V[i], cache.P[i])
         params.f(tᵢ, cache.Q[i], cache.V[i], cache.F[i])
     end
@@ -431,8 +443,8 @@ end
 function compute_stages_λ!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
                            params::ParametersDGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
-    local t₀::TT = params.t̅
-    local t₁::TT = params.t̅ + params.Δt
+    local t₀::TT = params.t
+    local t₁::TT = params.t + params.Δt
 
     # compute ϕ and ϕ̅
     cache.ϕ  .= 0.5 * (cache.q⁺ .+ cache.q⁻)
@@ -459,6 +471,8 @@ function compute_stages_λ!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
     params.g(t₀, cache.q⁻, cache.λ⁻, cache.g⁻)
     params.g(t₀, cache.q⁺, cache.λ⁺, cache.g⁺)
     params.g(t₁, cache.q̅⁻, cache.λ̅⁻, cache.g̅⁻)
+    params.g(t₀, cache.q,  cache.λ⁺, cache.h⁺)
+    params.g(t₁, cache.q̅,  cache.λ̅⁻, cache.h̅⁻)
 
     # # compute ϑ
     # params.Θ(t₀, cache.ϕ⁻, cache.ϕ⁻, cache.θ⁻)
@@ -469,6 +483,10 @@ function compute_stages_λ!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
     # params.g(t₀, cache.ϕ⁻, cache.λ⁻, cache.g⁻)
     # params.g(t₀, cache.ϕ⁺, cache.λ⁺, cache.g⁺)
     # params.g(t₁, cache.ϕ̅⁻, cache.λ̅⁻, cache.g̅⁻)
+
+    # compute pₙ₊₁ = ϑ(qₙ₊₁⁻) + ∇ϑ(qₙ₊₁)⋅(qₙ₊₁-qₙ₊₁⁻)
+    #    i.e. p̅ = ϑ(q̅⁻) + ∇ϑ(q̅)⋅(q̅-q̅⁻)
+    cache.p̅ .= cache.Θ̅⁻ .+ cache.h̅⁻
 end
 
 
@@ -502,18 +520,119 @@ function compute_rhs!(b::Vector{ST}, cache::NonlinearFunctionCacheDGVI{ST,D,S,R}
         end
     end
 
-    # compute b = ϑ(qₙ⁺) - ϑ(qₙ⁻) - ∇ϑ(qₙ)⋅(qₙ⁺-qₙ⁻)
+    # compute b = ϑ(qₙ⁺) - pₙ - ∇ϑ(qₙ)⋅(qₙ⁺-qₙ)
     for k in 1:D
-        b[D*S+k] = cache.θ⁺[k] - cache.θ⁻[k] - cache.g[k]
-        # b[D*S+k] = cache.θ⁺[k] - cache.θ⁻[k] - 0.5 * (cache.g⁻[k] + cache.g⁺[k])
+        b[D*S+k] = cache.θ⁺[k] - cache.p[k] - cache.h⁺[k]
     end
 end
 
 
-"""
+@doc raw"""
 `IntegratorDGVI`: Discontinuous Galerkin Variational Integrator.
 
-### Parameters
+
+The DGVI integrators arise from the discretization of the action integral
+```math
+\mathcal{A} [q] = \int \limits_{0}^{T} L(q(t), \dot{q}(t)) \, dt ,
+```
+with ``L`` a fully degenerate Lagrangian of the form
+```math
+L(q, \dot{q}) = \vartheta (q) \cdot \dot{q} - H(q) ,
+```
+where ``\vartheta (q)`` denotes the Cartan one-form and ``H(q)`` the Hamiltonian,
+which is usually given by the total energy of the system.
+
+
+### Discretization
+
+Within each interval ``(t_{n}, t_{n+1})`` a piecewise-polynomial approximation ``q_h``
+of the trajectory ``q`` is constructed using ``S`` basis functions ``\varphi_{i}``,
+```math
+q_h(t) \vert_{(t_{n}, t_{n+1})} = \sum \limits_{i=1}^{S} x_{n,i} \, \bar{\varphi}_{n,i} (t) ,
+```
+where ``\bar{\varphi}_{n,i} (t)`` is a rescaled basis function, defined by
+```math
+\bar{\varphi}_{n,i} (t) = \varphi_{i} \bigg( \frac{t - t_{n}}{t_{n+1} - t_{n}} \bigg) ,
+```
+and it is assumed that ``\varphi_{i}`` is compactly supported on ``[0,1]``.
+These approximations ``q_h(t)`` are not assumed to be continuous across interval
+boundaries ``t_{n}`` but usuaslly have jumps.
+
+The integral over ``(t_{n}, t_{n+1})`` is approximated by a quadrature rule with
+``R`` nodes ``c_i`` and weights ``b_i``.
+Denote by ``m`` and ``a`` mass and derivative matrices, respectively, whose elements
+ are given by
+```math
+m_{ij} = \varphi_j (c_i) ,
+\qquad
+a_{ij} = \varphi_j' (c_i) ,
+\qquad
+i = 1, ..., R ,
+\;
+j = 1, ..., S .
+```
+With that, the solution and its time derivative at the quadrature points can be written as
+```math
+Q_{n,i} \equiv q_h(t_n + c_i h) = m_{ij} x_{n,j} ,
+\qquad
+V_{n,i} \equiv \dot{q}_h (t_n + c_i h) = a_{ij} x_{n,j} ,
+```
+where
+```math
+x_{n} = ( x_{n,1}, ..., x_{n,S} )^T
+```
+is the vector containing the degrees of freedom of ``q_h \vert_{[t_{n}, t_{n+1}]}``.
+The limits of ``q_h(t)`` at ``t_{n}`` and ``t_{n+1}`` are given by
+```math
+q_{n}^{+} = \lim \limits_{t \downarrow t_{n}} q_h(t) = \sum \limits_{j=1}^{S} r^{+}_{j} \delta x_{n,j} ,
+\hspace{3em}
+q_{n+1}^{-} = \lim \limits_{t \uparrow t_{n+1}} q_h(t) = \sum \limits_{j=1}^{S} r^{-}_{j} \delta x_{n,j} .
+```
+
+The discrete action reads
+```math
+\mathcal{A}_d [x_d] = h \sum \limits_{n=0}^{N-1} \bigg[
+     \sum \limits_{i=1}^{R} b_i \big[ \vartheta (Q_{n,i}) \cdot V_{n,i} - H(Q_{n,i}) \big] \\
+     + \frac{\vartheta (q_n) + \vartheta (q_n^+)}{2} \cdot (q_n^+ - q_n)
+     + \frac{\vartheta (q_{n+1}^-) + \vartheta (q_{n+1})}{2} \cdot (q_{n+1} - q_{n+1}^-)
+\bigg] ,
+```
+so that using the relations
+```math
+\delta Q_{n,i} = m_{ij} \delta x_{n,j} ,
+\qquad
+\delta V_{n,i} = \frac{a_{ij}}{h} \delta x_{n,j} ,
+\qquad
+\delta q_{n}^- = r^{-}_{j} \delta x_{n-1,j} ,
+\qquad
+\delta q_{n}^+ = r^{+}_{j} \delta x_{n,j} ,
+```
+the discrete action principle leads to the discrete equations of motion,
+```math
+0 = \sum \limits_{i=1}^{R} b_i \big[ h m_{ij} \nabla \vartheta (Q_{n,i}) \cdot V_{n,i} + a_{ij} \vartheta (Q_{n,i}) - h m_{ij} \nabla H(Q_{n,i}) \big] \\
++ r^{+}_{j} \, \frac{ \vartheta ( q_{n  }   ) + \vartheta( q_{n  }^+ ) }{2}
+- r^{-}_{j} \, \frac{ \vartheta ( q_{n+1}^- ) + \vartheta( q_{n+1}   ) }{2}
+   \big] \\
++ h r^{+}_{j} \, \nabla \vartheta (q_{n  }^+) \cdot (q_{n  }^+ - q_{n  }  )
++ h r^{-}_{j} \, \nabla \vartheta (q_{n+1}^-) \cdot (q_{n+1}   - q_{n+1}^-) ,
+```
+and
+```math
+\vartheta(q_{n}^+) = \vartheta (q_{n}^-) + \nabla \vartheta (q_{n}) \cdot (q_{n}^+ - q_{n}^-) ,
+```
+for all ``n`` and all ``j``.
+Let us introduce the variable ``p_n`` as
+```math
+p_{n} = \vartheta (q_{n}^-) + \nabla \vartheta (q_{n}) \cdot (q_{n} - q_{n}^-) ,
+```
+so that
+```math
+\vartheta(q_{n}^+) = p_{n} + \nabla \vartheta (q_{n}) \cdot (q_{n}^+ - q_{n}) .
+```
+Then the above equations provide a map ``(q_{n}, p_{n}) \mapsto (q_{n+1}, p_{n+1})``.
+In order to solve these equations, initial conditions ``q_{0}`` and
+``p_{0} = \vartheta(q_{0})`` have to be prescribed.
+
 
 ### Fields
 
@@ -588,8 +707,8 @@ end
 
 
 function update_solution!(cache::IntegratorCacheDGVI{DT,TT}) where {DT,TT}
-    cache.q  .= cache.fcache.q̅
-    cache.q⁻ .= cache.fcache.q̅⁻
+    cache.q .= cache.fcache.q̅
+    cache.p .= cache.fcache.p̅
 end
 
 
@@ -646,15 +765,6 @@ function integrate_step!(int::IntegratorDGVI{DT,TT}, cache::IntegratorCacheDGVI{
 
     # compute vector fields at internal stages
     compute_stages!(int.solver.x, cache.fcache, int.params)
-
-    # debug output
-    # println("n = ", n)
-    # println(cache.fcache.q⁻)
-    # println(cache.fcache.q)
-    # println(cache.fcache.q⁺)
-    # println(cache.fcache.q⁻ .- cache.q)
-    # println(cache.fcache.q⁺ .- cache.q)
-    # println()
 
     # copy solution from cache to integrator
     update_solution!(cache)

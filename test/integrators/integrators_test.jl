@@ -16,7 +16,6 @@ ode  = oscillator_ode()
 pode = oscillator_pode()
 sode = oscillator_sode()
 iode = oscillator_iode()
-iode_dg = oscillator_iode(q₀, q₀)
 idae = oscillator_idae()
 
 
@@ -337,7 +336,7 @@ cgsol = integrate(cgint, nt)
 
 @test rel_err(cgsol.q, refx) < 1E-7
 
-dgint = IntegratorDGVI(iode_dg, BGau4, QGau4, Δt)
+dgint = IntegratorDGVI(iode, BGau4, QGau4, Δt)
 dgsol = integrate(dgint, nt)
 
 @test rel_err(dgsol.q, refx) < 1E-7
