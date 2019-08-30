@@ -529,7 +529,6 @@ end
 end
 
 
-"Integrate ODE with variational partitioned Runge-Kutta integrator."
 function integrate_step!(int::IntegratorDGVIPI{DT,TT}, sol::Union{SolutionPODE{DT,TT}, SolutionPDAE{DT,TT}}, m::Int, n::Int) where {DT,TT}
     # set time for nonlinear solver
     int.params.t = sol.t[0] + (n-1)*int.Δt

@@ -743,7 +743,6 @@ function initial_guess!(int::IntegratorDGVI{DT,TT,D,S,R}, cache::IntegratorCache
 end
 
 
-"Integrate ODE with variational partitioned Runge-Kutta integrator."
 function integrate_step!(int::IntegratorDGVI{DT,TT}, cache::IntegratorCacheDGVI{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, cache)
