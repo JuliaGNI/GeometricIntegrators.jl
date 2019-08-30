@@ -208,6 +208,8 @@ end
 
 
 function initialize!(int::IntegratorFIRK, cache::IntegratorCacheFIRK)
+    cache.t̅ = cache.t - timestep(int)
+
     int.params.equ.v(cache.t, cache.q, cache.v)
 
     initialize!(int.iguess, cache.t, cache.q, cache.v,

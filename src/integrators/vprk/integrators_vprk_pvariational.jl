@@ -141,6 +141,8 @@ nstages(integrator::IntegratorVPRKpVariational) = integrator.sparams.tab.s
 
 
 function initialize!(int::IntegratorVPRKpVariational{DT,TT}, cache::IntegratorCacheVPRK) where {DT,TT}
+    cache.t̅ = cache.t - timestep(int)
+
     equation(int).v(cache.t, cache.q, cache.p, cache.v)
     equation(int).f(cache.t, cache.q, cache.p, cache.f)
 

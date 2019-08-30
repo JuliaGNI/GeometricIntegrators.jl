@@ -217,6 +217,9 @@ end
 function initialize!(int::IntegratorDIRK, cache::IntegratorCacheDIRK)
     # initialise initial guess
     cache.t̅ = cache.t - timestep(int)
+
+    int.params.equ.v(cache.t, cache.q, cache.v)
+
     initialize!(int.iguess, cache.t, cache.q, cache.v, cache.t̅, cache.q̅, cache.v̅)
 end
 

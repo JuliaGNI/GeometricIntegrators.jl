@@ -259,6 +259,8 @@ end
 
 
 function initialize!(int::IntegratorIPRK, cache::IntegratorCacheIPRK)
+    cache.t̅ = cache.t - timestep(int)
+    
     int.params.equ.v(cache.t, cache.q, cache.p, cache.v)
     int.params.equ.f(cache.t, cache.q, cache.p, cache.f)
 

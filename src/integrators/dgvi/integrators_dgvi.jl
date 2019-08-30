@@ -700,7 +700,10 @@ end
 
 
 function initialize!(int::IntegratorDGVI, cache::IntegratorCacheDGVI)
+    cache.t̅ = cache.t - timestep(int)
+
     equation(int).v(cache.t, cache.q, cache.q, cache.v)
+    
     initialize!(int.iguess, cache.t, cache.q, cache.v,
                             cache.t̅, cache.q̅, cache.v̅)
 end

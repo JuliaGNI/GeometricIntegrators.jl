@@ -130,15 +130,6 @@ tableau(integrator::IntegratorVPRKpMidpoint) = integrator.params.tab
 nstages(integrator::IntegratorVPRKpMidpoint) = integrator.params.tab.s
 
 
-function initialize!(int::IntegratorVPRKpMidpoint{DT,TT}, cache::IntegratorCacheVPRK) where {DT,TT}
-    equation(int).v(cache.t, cache.q, cache.p, cache.v)
-    equation(int).f(cache.t, cache.q, cache.p, cache.f)
-
-    initialize!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f,
-                            cache.t̅, cache.q̅, cache.p̅, cache.v̅, cache.f̅)
-end
-
-
 function initial_guess!(int::IntegratorVPRKpMidpoint{DT,TT}, cache::IntegratorCacheVPRK{DT,TT}) where {DT,TT}
     for i in 1:nstages(int)
         evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
