@@ -174,7 +174,7 @@ mutable struct IntegratorCacheIPRK{ST,TT,D,S} <: PODEIntegratorCache{ST,D}
         Y = create_internal_stage_vector(ST, D, S)
         Z = create_internal_stage_vector(ST, D, S)
 
-        new(0, zero(TT), zero(TT), q, q̅, p, p̅, v, v̅, f, f̅, q̃, ṽ, p̃, f̃, s̃, Q, P, V, F, Y, Z)
+        new(0, zero(TT), zero(TT), q, q̅, p, p̅, v, v̅, f, f̅, q̃, p̃, ṽ, f̃, s̃, Q, P, V, F, Y, Z)
     end
 end
 
