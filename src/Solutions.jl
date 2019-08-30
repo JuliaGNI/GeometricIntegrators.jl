@@ -10,15 +10,16 @@ module Solutions
     using ..CommonFunctions
     using ..Equations
 
-    # TODO # Fix this!
-    # using ..Integrators: SolutionVector
-    SolutionVector{DT} = Union{Vector{DT}, Vector{TwicePrecision{DT}}}
-
 
     export DEFAULT_NSAVE, DEFAULT_NWRITE
 
     const DEFAULT_NSAVE = 1
     const DEFAULT_NWRITE = 0
+
+
+    export SolutionVector
+
+    SolutionVector{DT} = Union{Vector{DT}, Vector{TwicePrecision{DT}}}
 
 
     export get_data!, set_data!

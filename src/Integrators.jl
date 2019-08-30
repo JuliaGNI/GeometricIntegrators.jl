@@ -23,7 +23,6 @@ module Integrators
     using ..Solvers
 
 
-    SolutionVector{DT} = Union{Vector{DT}, Vector{TwicePrecision{DT}}}
 
 
     export InitialGuessODE, InitialGuessPODE, initialize!, update!
