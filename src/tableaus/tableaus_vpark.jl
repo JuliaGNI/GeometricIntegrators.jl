@@ -14,8 +14,8 @@ function getTableauSymplecticProjection(name, q::CoefficientsRK{T}, p::Coefficie
     α_p = zeros(T, p.s, 2)
     α_p[:,1] .= 0.5
 
-    a_q̃ = transpose(hcat(zeros(q.b), q.b))
-    a_p̃ = transpose(hcat(zeros(p.b), p.b))
+    a_q̃ = Array(transpose(hcat(zero(q.b), q.b)))
+    a_p̃ = Array(transpose(hcat(zero(p.b), p.b)))
 
     α_q̃ = [[0.0  0.0]
            [0.5  R∞*0.5]]
