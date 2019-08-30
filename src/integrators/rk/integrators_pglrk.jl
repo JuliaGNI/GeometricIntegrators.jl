@@ -190,34 +190,6 @@ mutable struct IntegratorCachePGLRK{DT,TT,D,S} <: IODEIntegratorCache{DT,D}
     end
 end
 
-function CommonFunctions.reset!(cache::IntegratorCachePGLRK{DT,TT}, Δt::TT) where {DT,TT}
-    cache.t̅  = cache.t
-    cache.q̅ .= cache.q
-    cache.p̅ .= cache.p
-    cache.t += Δt
-    cache.n += 1
-end
-
-function cut_periodic_solution!(cache::IntegratorCachePGLRK, periodicity::Vector)
-    cut_periodic_solution!(cache.q, periodicity, cache.s̃)
-    cache.q .+= cache.s̃
-    cache.q̅ .+= cache.s̃
-end
-
-function CommonFunctions.get_solution(cache::IntegratorCachePGLRK)
-    (cache.t, cache.q, cache.p)
-end
-
-function CommonFunctions.set_solution!(cache::IntegratorCachePGLRK, sol, n=0)
-    t, q, p = sol
-    cache.n  = n
-    cache.t  = t
-    cache.q .= q
-    cache.p .= p
-    cache.v .= 0
-    cache.f .= 0
-end
-
 
 function update_params!(params::ParametersPGLRK, cache::IntegratorCachePGLRK)
     # set time for nonlinear solver and copy previous solution
@@ -380,7 +352,7 @@ end
 
 function initialize!(int::IntegratorPGLRK, cache::IntegratorCachePGLRK)
     cache.t̅ = cache.t - timestep(int)
-    
+
     equation(int).v(cache.t, cache.q, cache.p, cache.v)
     equation(int).f(cache.t, cache.q, cache.p, cache.f)
 

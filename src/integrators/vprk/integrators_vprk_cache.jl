@@ -26,7 +26,7 @@ Variational partitioned Runge-Kutta integrator cache.
 * `Y`: integral of vector field of internal stages of q
 * `Z`: integral of vector field of internal stages of p
 """
-mutable struct IntegratorCacheVPRK{ST,TT,D,S} <: AbstractIntegratorCacheVPRK{ST,D,S}
+mutable struct IntegratorCacheVPRK{ST,TT,D,S} <: IODEIntegratorCache{ST,D}
     n::Int
     t::TT
     t̅::TT
@@ -152,12 +152,11 @@ function IntegratorCacheVPRKwProjection(ST,TT,D,S)
     IntegratorCacheVPRK{ST,TT,D,S}(true)
 end
 
-function CommonFunctions.reset!(cache::IntegratorCacheVPRK{DT,TT}, Δt::TT) where {DT,TT}
-    cache.t̅  = cache.t
-    cache.q̅ .= cache.q
-    cache.p̅ .= cache.p
-    cache.t += Δt
-    cache.n += 1
+function update_params!(params::AbstractParametersVPRK, cache::IntegratorCacheVPRK)
+    # set time for nonlinear solver and copy previous solution
+    params.t̅  = cache.t
+    params.q̅ .= cache.q
+    params.p̅ .= cache.p
 end
 
 function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK{DT,TT}) where {DT,TT}
@@ -173,16 +172,6 @@ end
 function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK, RU::Vector{TT}, RG::Vector{TT}) where {DT,TT}
     update_solution!(cache.q, cache.U, RU, timestep(int))
     update_solution!(cache.p, cache.G, RG, timestep(int))
-end
-
-function cut_periodic_solution!(cache::IntegratorCacheVPRK, periodicity::Vector)
-    cut_periodic_solution!(cache.q, periodicity, cache.s̃)
-    cache.q .+= cache.s̃
-    cache.q̅ .+= cache.s̃
-end
-
-function CommonFunctions.get_solution(cache::IntegratorCacheVPRK)
-    (cache.t, cache.q, cache.p)
 end
 
 function CommonFunctions.set_solution!(cache::IntegratorCacheVPRK, sol, n=0)

@@ -63,7 +63,7 @@ timestep(int::IntegratorEPRK) = int.Δt
 
 
 "Explicit Runge-Kutta integrator cache."
-mutable struct IntegratorCacheEPRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
+mutable struct IntegratorCacheEPRK{DT,TT,D,S} <: PODEIntegratorCache{DT,D}
     n::Int
     t::TT
     t̅::TT
@@ -109,10 +109,6 @@ function CommonFunctions.reset!(cache::IntegratorCacheEPRK{DT,TT}, Δt::TT) wher
     cache.p̅ .= cache.p
     cache.t += Δt
     cache.n += 1
-end
-
-function CommonFunctions.get_solution(cache::IntegratorCacheEPRK)
-    (cache.t, cache.q, cache.p)
 end
 
 function CommonFunctions.set_solution!(cache::IntegratorCacheEPRK, sol, n=0)

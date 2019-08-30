@@ -37,7 +37,7 @@ function ParametersVPRKpStandard(equ::ET, tab::TableauVPRK{TT}, Δt::TT, RU::Vec
     ParametersVPRKpStandard{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, RU, RG)
 end
 
-function update_params!(params::ParametersVPRKpStandard, cache::AbstractIntegratorCacheVPRK)
+function update_params!(params::ParametersVPRKpStandard, cache::IntegratorCacheVPRK)
     # set time for nonlinear solver and copy previous solution
     params.t  = cache.t
     params.q .= cache.q

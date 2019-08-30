@@ -15,12 +15,52 @@ initialize!(::Integrator, ::IntegratorCache) = nothing
 
 integrate_step!(integrator::Integrator, ::IntegratorCache) = error("integrate_step()! not implemented for ", typeof(integrator))
 
-function copy_solution!(sol::Solution, cache::IntegratorCache, n, m)
-    copy_solution!(sol, get_solution(cache)..., n, m)
+
+function CommonFunctions.reset!(cache::Union{ODEIntegratorCache, DAEIntegratorCache}, Δt)
+    cache.t̅  = cache.t
+    cache.q̅ .= cache.q
+    cache.v̅ .= cache.v
+    cache.t += Δt
+    cache.n += 1
 end
+
+function CommonFunctions.reset!(cache::Union{PODEIntegratorCache, IODEIntegratorCache}, Δt)
+    cache.t̅  = cache.t
+    cache.q̅ .= cache.q
+    cache.p̅ .= cache.p
+    cache.v̅ .= cache.v
+    cache.f̅ .= cache.f
+    cache.t += Δt
+    cache.n += 1
+end
+
+
+function CommonFunctions.set_solution!(cache::ODEIntegratorCache, sol, n=0)
+    t, q = sol
+    cache.n  = n
+    cache.t  = t
+    cache.q .= q
+    cache.v .= 0
+end
+
+
+function CommonFunctions.set_solution!(cache::Union{PODEIntegratorCache, IODEIntegratorCache}, sol, n=0)
+    t, q, p = sol
+    cache.n  = n
+    cache.t  = t
+    cache.q .= q
+    cache.p .= p
+    cache.v .= 0
+    cache.f .= 0
+end
+
 
 function CommonFunctions.get_solution(cache::ODEIntegratorCache)
     (cache.t, cache.q)
+end
+
+function CommonFunctions.get_solution(cache::DAEIntegratorCache)
+    (cache.t, cache.q, cache.λ)
 end
 
 function CommonFunctions.get_solution(cache::Union{PODEIntegratorCache, IODEIntegratorCache})
@@ -30,6 +70,12 @@ end
 function CommonFunctions.get_solution(cache::Union{PDAEIntegratorCache, IDAEIntegratorCache})
     (cache.t, cache.q, cache.p, cache.λ)
 end
+
+
+function copy_solution!(sol::Solution, cache::IntegratorCache, n, m)
+    copy_solution!(sol, get_solution(cache)..., n, m)
+end
+
 
 function cut_periodic_solution!(cache::IntegratorCache, periodicity::Vector)
     cut_periodic_solution!(cache.q, periodicity, cache.s̃)

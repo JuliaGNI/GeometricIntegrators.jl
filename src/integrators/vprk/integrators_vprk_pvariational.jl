@@ -25,7 +25,7 @@ function ParametersVPRKpVariational(equ::ET, tab::TableauVPRK{TT}, Δt::TT, R::V
     ParametersVPRKpVariational{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, R, R1, R2, zero(TT), q, p)
 end
 
-function update_params!(params::ParametersVPRKpVariational, cache::AbstractIntegratorCacheVPRK)
+function update_params!(params::ParametersVPRKpVariational, cache::IntegratorCacheVPRK)
     # set time for nonlinear solver and copy previous solution
     params.t  = cache.t
     params.q .= cache.q

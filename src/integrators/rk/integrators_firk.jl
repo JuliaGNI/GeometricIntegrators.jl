@@ -190,23 +190,6 @@ function create_integrator_cache(int::IntegratorFIRK{DT,TT}) where {DT,TT}
     IntegratorCacheFIRK{DT, TT, ndims(int), int.params.tab.s}()
 end
 
-function CommonFunctions.reset!(cache::IntegratorCacheFIRK{DT,TT}, Δt::TT) where {DT,TT}
-    cache.t̅  = cache.t
-    cache.q̅ .= cache.q
-    cache.v̅ .= cache.v
-    cache.t += Δt
-    cache.n += 1
-end
-
-function CommonFunctions.set_solution!(cache::IntegratorCacheFIRK, sol, n=0)
-    t, q = sol
-    cache.n  = n
-    cache.t  = t
-    cache.q .= q
-    cache.v .= 0
-end
-
-
 function initialize!(int::IntegratorFIRK, cache::IntegratorCacheFIRK)
     cache.t̅ = cache.t - timestep(int)
 

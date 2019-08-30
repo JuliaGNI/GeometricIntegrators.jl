@@ -182,25 +182,6 @@ function create_integrator_cache(int::IntegratorIPRK{DT,TT}) where {DT,TT}
     IntegratorCacheIPRK{DT, TT, ndims(int), int.params.tab.s}()
 end
 
-function CommonFunctions.reset!(cache::IntegratorCacheIPRK{DT,TT}, Δt::TT) where {DT,TT}
-    cache.t̅  = cache.t
-    cache.q̅ .= cache.q
-    cache.p̅ .= cache.p
-    cache.t += Δt
-    cache.n += 1
-end
-
-function CommonFunctions.set_solution!(cache::IntegratorCacheIPRK, sol, n=0)
-    t, q, p = sol
-    cache.n  = n
-    cache.t  = t
-    cache.q .= q
-    cache.p .= p
-    cache.v .= 0
-    cache.f .= 0
-end
-
-
 function update_params!(int::IntegratorIPRK, cache::IntegratorCacheIPRK)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = cache.t
@@ -260,7 +241,7 @@ end
 
 function initialize!(int::IntegratorIPRK, cache::IntegratorCacheIPRK)
     cache.t̅ = cache.t - timestep(int)
-    
+
     int.params.equ.v(cache.t, cache.q, cache.p, cache.v)
     int.params.equ.f(cache.t, cache.q, cache.p, cache.f)
 

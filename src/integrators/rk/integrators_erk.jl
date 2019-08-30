@@ -100,10 +100,6 @@ function CommonFunctions.reset!(cache::IntegratorCacheERK{DT,TT}, Δt::TT) where
     cache.n += 1
 end
 
-function CommonFunctions.get_solution(cache::IntegratorCacheERK)
-    (cache.t, cache.q)
-end
-
 function CommonFunctions.set_solution!(cache::IntegratorCacheERK, sol, n=0)
     t, q = sol
     cache.n  = n

@@ -166,12 +166,14 @@ mutable struct IntegratorCacheDIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
     q̅::Vector{TwicePrecision{DT}}
     v::Vector{DT}
     v̅::Vector{DT}
+
     q̃::Vector{DT}
     ṽ::Vector{DT}
+    s̃::Vector{DT}
+
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
-    periodicity_shift::Vector{DT}
 
     function IntegratorCacheDIRK{DT,TT,D,S}() where {DT,TT,D,S}
         q = zeros(TwicePrecision{DT}, D)
@@ -179,7 +181,7 @@ mutable struct IntegratorCacheDIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
-        new(0, zero(TT), zero(TT), q, q̅, zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y, zeros(DT,D))
+        new(0, zero(TT), zero(TT), q, q̅, zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y)
     end
 end
 
@@ -187,31 +189,6 @@ function create_integrator_cache(int::IntegratorDIRK{DT,TT}) where {DT,TT}
     IntegratorCacheDIRK{DT, TT, ndims(int), int.params.tab.s}()
 end
 
-function CommonFunctions.reset!(cache::IntegratorCacheDIRK{DT,TT}, Δt::TT) where {DT,TT}
-    cache.t̅  = cache.t
-    cache.q̅ .= cache.q
-    cache.v̅ .= cache.v
-    cache.t += Δt
-    cache.n += 1
-end
-
-function cut_periodic_solution!(cache::IntegratorCacheDIRK, periodicity::Vector)
-    cut_periodic_solution!(cache.q, periodicity, cache.periodicity_shift)
-    cache.q .+= cache.periodicity_shift
-    cache.q̅ .+= cache.periodicity_shift
-end
-
-function CommonFunctions.get_solution(cache::IntegratorCacheDIRK)
-    (cache.t, cache.q)
-end
-
-function CommonFunctions.set_solution!(cache::IntegratorCacheDIRK, sol, n=0)
-    t, q = sol
-    cache.n  = n
-    cache.t  = t
-    cache.q .= q
-    cache.v .= 0
-end
 
 "Initialise initial guess"
 function initialize!(int::IntegratorDIRK, cache::IntegratorCacheDIRK)
