@@ -130,20 +130,6 @@ tableau(integrator::IntegratorVPRK) = integrator.params.tab
 nstages(integrator::IntegratorVPRK) = integrator.params.tab.s
 
 
-function create_integrator_cache(int::IntegratorVPRK{DT,TT}) where {DT,TT}
-    IntegratorCacheVPRK(DT, TT, ndims(int), nstages(int))
-end
-
-
-function initialize!(int::IntegratorVPRK, cache::IntegratorCacheVPRK)
-    equation(int).v(cache.t, cache.q, cache.p, cache.v)
-    equation(int).f(cache.t, cache.q, cache.p, cache.f)
-
-    initialize!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f,
-                            cache.t̅, cache.q̅, cache.p̅, cache.v̅, cache.f̅)
-end
-
-
 function initial_guess!(int::IntegratorVPRK, cache::IntegratorCacheVPRK)
     for i in 1:nstages(int)
         evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
@@ -156,6 +142,7 @@ function initial_guess!(int::IntegratorVPRK, cache::IntegratorCacheVPRK)
         end
     end
 end
+
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
 function integrate_step!(int::IntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK{DT,TT}) where {DT,TT}

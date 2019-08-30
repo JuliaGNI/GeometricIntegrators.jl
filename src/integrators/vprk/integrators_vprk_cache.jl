@@ -196,11 +196,20 @@ function CommonFunctions.set_solution!(cache::IntegratorCacheVPRK, sol, n=0)
 end
 
 
+function create_integrator_cache(int::AbstractIntegratorVPRK{DT,TT}) where {DT,TT}
+    IntegratorCacheVPRK(DT, TT, ndims(int), nstages(int))
+end
 
-# function initialize!(int::AbstractIntegratorVPRK, cache::AbstractIntegratorCacheVPRK)
-#     equation(int).v(cache.t, cache.q, cache.p, cache.v)
-#     equation(int).f(cache.t, cache.q, cache.p, cache.f)
-#
-#     initialize!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f,
-#                             cache.t̅, cache.q̅, cache.p̅, cache.v̅, cache.f̅)
-# end
+
+function create_integrator_cache(int::AbstractIntegratorVPRKwProjection{DT,TT}) where {DT,TT}
+    IntegratorCacheVPRKwProjection(DT, TT, ndims(int), nstages(int))
+end
+
+
+function initialize!(int::AbstractIntegratorVPRK, cache::IntegratorCacheVPRK)
+    equation(int).v(cache.t, cache.q, cache.p, cache.v)
+    equation(int).f(cache.t, cache.q, cache.p, cache.f)
+
+    initialize!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f,
+                            cache.t̅, cache.q̅, cache.p̅, cache.v̅, cache.f̅)
+end

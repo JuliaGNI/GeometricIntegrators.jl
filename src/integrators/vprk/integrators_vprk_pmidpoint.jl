@@ -99,7 +99,7 @@ end
 "Variational partitioned Runge-Kutta integrator."
 struct IntegratorVPRKpMidpoint{DT, TT, PT <: ParametersVPRKpMidpoint{DT,TT},
                                        ST <: NonlinearSolver{DT},
-                                       IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT}
+                                       IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT}
 
     params::PT
     solver::ST
@@ -128,11 +128,6 @@ equation(integrator::IntegratorVPRKpMidpoint) = integrator.params.equ
 timestep(integrator::IntegratorVPRKpMidpoint) = integrator.params.Δt
 tableau(integrator::IntegratorVPRKpMidpoint) = integrator.params.tab
 nstages(integrator::IntegratorVPRKpMidpoint) = integrator.params.tab.s
-
-
-function create_integrator_cache(int::IntegratorVPRKpMidpoint{DT,TT}) where {DT,TT}
-    IntegratorCacheVPRKwProjection(DT, TT, ndims(int), nstages(int))
-end
 
 
 function initialize!(int::IntegratorVPRKpMidpoint{DT,TT}, cache::IntegratorCacheVPRK) where {DT,TT}

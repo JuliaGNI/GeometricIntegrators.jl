@@ -101,7 +101,7 @@ mutable struct IntegratorVPRKpStandard{DT, TT,
                 PPT <: ParametersVPRKpStandard{DT,TT},
                 SST <: NonlinearSolver{DT},
                 STP <: NonlinearSolver{DT},
-                IT  <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT}
+                IT  <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT}
 
     sparams::SPT
     pparams::PPT
@@ -161,11 +161,6 @@ equation(integrator::IntegratorVPRKpStandard) = integrator.sparams.equ
 timestep(integrator::IntegratorVPRKpStandard) = integrator.sparams.Δt
 tableau(integrator::IntegratorVPRKpStandard) = integrator.sparams.tab
 nstages(integrator::IntegratorVPRKpStandard) = integrator.sparams.tab.s
-
-
-function create_integrator_cache(int::IntegratorVPRKpStandard{DT,TT}) where {DT,TT}
-    IntegratorCacheVPRKwProjection(DT, TT, ndims(int), nstages(int))
-end
 
 
 function initialize!(int::IntegratorVPRKpStandard{DT,TT}, cache::IntegratorCacheVPRK) where {DT,TT}

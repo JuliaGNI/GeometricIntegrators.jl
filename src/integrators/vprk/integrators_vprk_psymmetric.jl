@@ -77,7 +77,7 @@ end
 "Variational partitioned Runge-Kutta integrator."
 struct IntegratorVPRKpSymmetric{DT, TT, PT <: ParametersVPRKpSymmetric{DT,TT},
                                         ST <: NonlinearSolver{DT},
-                                        IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT}
+                                        IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT}
 
     params::PT
     solver::ST
@@ -106,20 +106,6 @@ equation(integrator::IntegratorVPRKpSymmetric) = integrator.params.equ
 timestep(integrator::IntegratorVPRKpSymmetric) = integrator.params.Δt
 tableau(integrator::IntegratorVPRKpSymmetric) = integrator.params.tab
 nstages(integrator::IntegratorVPRKpSymmetric) = integrator.params.tab.s
-
-
-function create_integrator_cache(int::IntegratorVPRKpSymmetric{DT,TT}) where {DT,TT}
-    IntegratorCacheVPRKwProjection(DT, TT, ndims(int), nstages(int))
-end
-
-
-function initialize!(int::IntegratorVPRKpSymmetric{DT,TT}, cache::IntegratorCacheVPRK) where {DT,TT}
-    equation(int).v(cache.t, cache.q, cache.p, cache.v)
-    equation(int).f(cache.t, cache.q, cache.p, cache.f)
-
-    initialize!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f,
-                            cache.t̅, cache.q̅, cache.p̅, cache.v̅, cache.f̅)
-end
 
 
 function initial_guess!(int::IntegratorVPRKpSymmetric{DT,TT}, cache::IntegratorCacheVPRK{DT,TT}) where {DT,TT}

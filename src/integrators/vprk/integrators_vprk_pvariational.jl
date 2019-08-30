@@ -98,7 +98,7 @@ mutable struct IntegratorVPRKpVariational{DT, TT,
                 PPT <: ParametersVPRKpVariational{DT,TT},
                 SST <: NonlinearSolver{DT},
                 STP <: NonlinearSolver{DT},
-                IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT}
+                IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT}
 
     sparams::SPT
     pparams::PPT
@@ -138,11 +138,6 @@ equation(integrator::IntegratorVPRKpVariational) = integrator.sparams.equ
 timestep(integrator::IntegratorVPRKpVariational) = integrator.sparams.Δt
 tableau(integrator::IntegratorVPRKpVariational) = integrator.sparams.tab
 nstages(integrator::IntegratorVPRKpVariational) = integrator.sparams.tab.s
-
-
-function create_integrator_cache(int::IntegratorVPRKpVariational{DT,TT}) where {DT,TT}
-    IntegratorCacheVPRKwProjection(DT, TT, ndims(int), nstages(int))
-end
 
 
 function initialize!(int::IntegratorVPRKpVariational{DT,TT}, cache::IntegratorCacheVPRK) where {DT,TT}

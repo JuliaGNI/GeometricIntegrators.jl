@@ -27,7 +27,11 @@ function CommonFunctions.get_solution(cache::Union{PODEIntegratorCache, IODEInte
     (cache.t, cache.q, cache.p)
 end
 
-function cut_periodic_solution!(cache::Union{ODEIntegratorCache, PODEIntegratorCache, IODEIntegratorCache}, periodicity::Vector)
+function CommonFunctions.get_solution(cache::Union{PDAEIntegratorCache, IDAEIntegratorCache})
+    (cache.t, cache.q, cache.p, cache.λ)
+end
+
+function cut_periodic_solution!(cache::IntegratorCache, periodicity::Vector)
     cut_periodic_solution!(cache.q, periodicity, cache.s̃)
     cache.q .+= cache.s̃
     cache.q̅ .+= cache.s̃
