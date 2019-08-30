@@ -141,8 +141,8 @@ function set_initial_conditions!(sol::SolutionPODE{DT,TT}, t₀::TT, q₀::Union
     sol.counter .= 1
 end
 
-function get_initial_conditions!(sol::SolutionPODE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, k) where {DT,TT}
-    get_solution!(sol, q, p, 0, k)
+function get_initial_conditions!(sol::SolutionPODE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, k, n=1) where {DT,TT}
+    get_solution!(sol, q, p, n-1, k)
 end
 
 function get_initial_conditions(sol::SolutionPODE, k, n=1)

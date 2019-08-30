@@ -149,12 +149,12 @@ function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, t₀::TT, q₀::Union
     sol.counter .= 1
 end
 
-function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, k) where {DT,TT}
-    get_solution!(sol, q, p, λ, 0, k)
+function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, k, n=1) where {DT,TT}
+    get_solution!(sol, q, p, λ, n-1, k)
 end
 
-function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, k) where {DT,TT}
-    get_solution!(sol, q, p, 0, k)
+function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, k, n=1) where {DT,TT}
+    get_solution!(sol, q, p, n-1, k)
 end
 
 function get_initial_conditions(sol::SolutionPDAE, k, n=1)
