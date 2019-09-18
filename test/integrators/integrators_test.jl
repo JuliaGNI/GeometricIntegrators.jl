@@ -1,5 +1,6 @@
 
 set_config(:nls_solver, NewtonSolver)
+set_config(:jacobian_autodiff, false)
 
 function rel_err(sol, ref)
     maximum(abs.((sol.d[:,end] .- ref) ./ ref))
@@ -291,21 +292,48 @@ isolP3 = integrate(vintP3, nt)
 @test rel_err(isolV2.q, isolP2.q[:,end]) < 1E-15
 @test rel_err(isolV3.q, isolP3.q[:,end]) < 1E-15
 
-# TODO Add PDAE/PARK test.
 
-# dint = Integrator(idae, getTableauSymplecticProjection(:pglrk2p, glrk2.q, glrk2.q), Δt)
-# dsol = integrate(dint, nt)
+### Special Integrators ###
 
-# dint = Integrator(idae, getTableauGLRKpSymplectic(2), Δt)
-# dsol = integrate(dint, nt)
+pgint = IntegratorPGLRK(iode, getCoefficientsPGLRK(2), Δt)
+pgsol = integrate(pgint, nt)
 
-# dint = Integrator(idae, getTableauLobIIIAIIIB2pSymplectic(), Δt)
-# dsol = integrate(dint, nt)
+@test rel_err(pgsol.q, refx) < 1E-5
 
-# dint = Integrator(idae, getTableauLobIIIAIIIB3pSymplectic(), Δt)
-# dsol = integrate(dint, nt)
 
-# dint = Integrator(idae, getTableauSymmetricProjection(:pglrk2p, glrk2.q, glrk2.q), Δt)
+### VPARK Integrator ###
+
+dint = Integrator(idae, getTableauSymplecticProjection(:pglrk1ps, getCoefficientsGLRK(1), getCoefficientsGLRK(1)), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 5E-4
+
+dint = Integrator(idae, getTableauSymplecticProjection(:pglrk2ps, getCoefficientsGLRK(2), getCoefficientsGLRK(2)), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 5E-8
+
+dint = Integrator(idae, getTableauGLRKpSymplectic(1), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 5E-4
+
+dint = Integrator(idae, getTableauGLRKpSymplectic(2), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 5E-8
+
+dint = Integrator(idae, getTableauLobIIIAIIIB2pSymplectic(), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 8E-4
+
+dint = Integrator(idae, getTableauLobIIIAIIIB3pSymplectic(), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 2E-4
+
+
 # dsol = integrate(dint, nt)
 
 # dint = Integrator(idae, getTableauGLRKpSymmetric(2), Δt)
@@ -316,14 +344,6 @@ isolP3 = integrate(vintP3, nt)
 
 # dint = Integrator(idae, getTableauLobIIIAIIIB3pSymmetric(), Δt)
 # dsol = integrate(dint, nt)
-
-
-### Special Integrators ###
-
-pgint = IntegratorPGLRK(iode, getCoefficientsPGLRK(2), Δt)
-pgsol = integrate(pgint, nt)
-
-@test rel_err(pgsol.q, refx) < 1E-5
 
 
 ### CGVI and DGVI Integrators ###

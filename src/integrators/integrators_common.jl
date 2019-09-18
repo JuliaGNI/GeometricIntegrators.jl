@@ -465,6 +465,20 @@ end
  end
 
 
+function update_multiplier!(λ::SolutionVector{T}, Λ::Vector{Vector{T}}, b::Vector{T}) where {T}
+    @assert length(λ) == size(Λ, 1)
+    local t::T
+    @inbounds for i in 1:length(λ)
+        t = zero(T)
+        for j=1:length(b)
+            t += b[j] * Λ[j][i]
+        end
+        λ[i] = t
+    end
+    nothing
+end
+
+
 function cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}) where {T}
     @assert length(x) == length(periodicity)
 
