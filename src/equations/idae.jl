@@ -46,8 +46,9 @@ struct IDAE{dType <: Number, tType <: Number, fType <: Function, pType <: Functi
     q₀::Array{dType, N}
     p₀::Array{dType, N}
     λ₀::Array{dType, N}
+    periodicity::Vector{dType}
 
-    function IDAE{dType,tType,fType,pType,uType,gType,ϕType,vType,N}(d, m, n, f, p, u, g, ϕ, v, t₀, q₀, p₀, λ₀) where {dType <: Number, tType <: Number, fType <: Function, pType <: Function, uType <: Function, gType <: Function, ϕType <: Function, vType <: Function, N}
+    function IDAE{dType,tType,fType,pType,uType,gType,ϕType,vType,N}(d, m, n, f, p, u, g, ϕ, v, t₀, q₀, p₀, λ₀; periodicity=[]) where {dType <: Number, tType <: Number, fType <: Function, pType <: Function, uType <: Function, gType <: Function, ϕType <: Function, vType <: Function, N}
         @assert d == size(q₀,1) == size(p₀,1)
         @assert m == size(λ₀,1)
         @assert n == size(q₀,2) == size(p₀,2) == size(λ₀,2)
@@ -59,26 +60,30 @@ struct IDAE{dType <: Number, tType <: Number, fType <: Function, pType <: Functi
 
         @assert ndims(q₀) == ndims(p₀) == ndims(λ₀) == N ∈ (1,2)
 
-        new(d, m, n, f, p, u, g, ϕ, v, t₀, q₀, p₀, λ₀)
+        if !(length(periodicity) == d)
+            periodicity = zeros(dType, d)
+        end
+
+        new(d, m, n, f, p, u, g, ϕ, v, t₀, q₀, p₀, λ₀, periodicity)
     end
 end
 
-function IDAE(f::FT, p::PT, u::UT, g::GT, ϕ::ΦT, v::VT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}) where {DT,TT,FT,PT,UT,GT,ΦT,VT}
+function IDAE(f::FT, p::PT, u::UT, g::GT, ϕ::ΦT, v::VT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}; periodicity=[]) where {DT,TT,FT,PT,UT,GT,ΦT,VT}
     @assert size(q₀) == size(p₀)
     @assert size(q₀,2) == size(λ₀,2)
-    IDAE{DT, TT, FT, PT, UT, GT, ΦT, VT, ndims(q₀)}(size(q₀, 1), size(λ₀, 1), size(q₀, 2), f, p, u, g, ϕ, v, t₀, q₀, p₀, λ₀)
+    IDAE{DT, TT, FT, PT, UT, GT, ΦT, VT, ndims(q₀)}(size(q₀, 1), size(λ₀, 1), size(q₀, 2), f, p, u, g, ϕ, v, t₀, q₀, p₀, λ₀, periodicity=periodicity)
 end
 
-function IDAE(f::Function, p::Function, u::Function, g::Function, ϕ::Function, t₀::Number, q₀, p₀, λ₀)
-    IDAE(f, p, u, g, ϕ, function_v_dummy, t₀, q₀, p₀, λ₀)
+function IDAE(f::Function, p::Function, u::Function, g::Function, ϕ::Function, t₀::Number, q₀, p₀, λ₀; periodicity=[])
+    IDAE(f, p, u, g, ϕ, function_v_dummy, t₀, q₀, p₀, λ₀, periodicity=periodicity)
 end
 
-function IDAE(f::Function, p::Function, u::Function, g::Function, ϕ::Function, v::Function, q₀, p₀, λ₀)
-    IDAE(f, p, u, g, ϕ, v, zero(Float64), q₀, p₀, λ₀)
+function IDAE(f::Function, p::Function, u::Function, g::Function, ϕ::Function, v::Function, q₀, p₀, λ₀; periodicity=[])
+    IDAE(f, p, u, g, ϕ, v, zero(Float64), q₀, p₀, λ₀, periodicity=periodicity)
 end
 
-function IDAE(f, p, u, g, ϕ, q₀, p₀, λ₀)
-    IDAE(f, p, u, g, ϕ, function_v_dummy, zero(Float64), q₀, p₀, λ₀)
+function IDAE(f, p, u, g, ϕ, q₀, p₀, λ₀; periodicity=[])
+    IDAE(f, p, u, g, ϕ, function_v_dummy, zero(Float64), q₀, p₀, λ₀, periodicity=periodicity)
 end
 
 Base.hash(dae::IDAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n, hash(dae.f, hash(dae.p, hash(dae.u, hash(dae.g, hash(dae.ϕ, hash(dae.v, hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, h)))))))))))))
