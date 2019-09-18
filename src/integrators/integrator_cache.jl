@@ -34,6 +34,19 @@ function CommonFunctions.reset!(cache::Union{PODEIntegratorCache, IODEIntegrator
     cache.n += 1
 end
 
+function CommonFunctions.reset!(cache::Union{PDAEIntegratorCache, IDAEIntegratorCache}, Δt)
+    cache.t̅  = cache.t
+    cache.q̅ .= cache.q
+    cache.p̅ .= cache.p
+    cache.λ̅ .= cache.λ
+    cache.v̅ .= cache.v
+    cache.f̅ .= cache.f
+    cache.u̅ .= cache.u
+    cache.g̅ .= cache.g
+    cache.t += Δt
+    cache.n += 1
+end
+
 
 function CommonFunctions.set_solution!(cache::ODEIntegratorCache, sol, n=0)
     t, q = sol
@@ -50,6 +63,17 @@ function CommonFunctions.set_solution!(cache::Union{PODEIntegratorCache, IODEInt
     cache.t  = t
     cache.q .= q
     cache.p .= p
+    cache.v .= 0
+    cache.f .= 0
+end
+
+function CommonFunctions.set_solution!(cache::Union{PDAEIntegratorCache, IDAEIntegratorCache}, sol, n=0)
+    t, q, p, λ = sol
+    cache.n  = n
+    cache.t  = t
+    cache.q .= q
+    cache.p .= p
+    cache.λ .= λ
     cache.v .= 0
     cache.f .= 0
 end
