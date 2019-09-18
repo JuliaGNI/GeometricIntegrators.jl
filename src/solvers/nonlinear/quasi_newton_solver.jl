@@ -41,24 +41,6 @@ function QuasiNewtonSolver(x::Vector, F!::Function; J=nothing)
 end
 
 
-function computeJacobian(s::QuasiNewtonSolver)
-    computeJacobian(s.x, s.J, s.Jparams)
-end
-
-function check_jacobian(s::QuasiNewtonSolver)
-    println("Condition Number of Jacobian: ", cond(s.J))
-    println("Determinant of Jacobian:      ", det(s.J))
-    println("minimum(|Jacobian|):          ", minimum(abs.(s.J)))
-    println("maximum(|Jacobian|):          ", maximum(abs.(s.J)))
-    println()
-end
-
-function print_jacobian(s::QuasiNewtonSolver)
-    println(s.J)
-    println()
-end
-
-
 function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
     local λ::T
     local λₜ::T
@@ -203,7 +185,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
             end
 
             if mod(s.status.i, refactorize) == 0
-                computeJacobian(s.x, s.J, s.Jparams)
+                computeJacobian(s)
                 s.linear.A .= s.J
                 factorize!(s.linear)
             end

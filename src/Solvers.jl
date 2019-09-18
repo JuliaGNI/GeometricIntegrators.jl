@@ -3,7 +3,7 @@ __precompile__()
 module Solvers
 
     using LinearAlgebra
-    
+
     using ..Config
     using ..Utils
 
@@ -17,6 +17,8 @@ module Solvers
     export JacobianParameters, JacobianParametersAD, JacobianParametersFD,
            JacobianParametersUser, getJacobianParameters,
            computeJacobian, computeJacobianAD, computeJacobianFD
+
+    export computeJacobian, check_jacobian, print_jacobian
 
     export NonlinearSolver, AbstractNewtonSolver, NewtonSolver, QuasiNewtonSolver,
            residual_initial!, residual_absolute!, residual_relative!,
