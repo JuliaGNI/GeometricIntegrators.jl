@@ -1,5 +1,5 @@
 @doc raw"""
-`IODE`: Partitioned Ordinary Differential Equation
+`PODE`: Partitioned Ordinary Differential Equation
 
 Defines a partitioned initial value problem
 ```math
