@@ -334,16 +334,37 @@ dsol = integrate(dint, nt)
 @test rel_err(dsol.q, refx) < 2E-4
 
 
-# dsol = integrate(dint, nt)
+### VSPARK Integrators ###
 
-# dint = Integrator(idae, getTableauGLRKpSymmetric(2), Δt)
-# dsol = integrate(dint, nt)
+dint = Integrator(idae, getTableauSymmetricProjection(:pglrk2ps, getCoefficientsGLRK(1), getCoefficientsGLRK(1)), Δt)
+dsol = integrate(dint, nt)
 
-# dint = Integrator(idae, getTableauLobIIIAIIIB2pSymmetric(), Δt)
-# dsol = integrate(dint, nt)
+@test rel_err(dsol.q, refx) < 5E-4
 
-# dint = Integrator(idae, getTableauLobIIIAIIIB3pSymmetric(), Δt)
-# dsol = integrate(dint, nt)
+dint = Integrator(idae, getTableauSymmetricProjection(:pglrk2ps, getCoefficientsGLRK(2), getCoefficientsGLRK(2)), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 5E-8
+
+dint = Integrator(idae, getTableauGLRKpSymmetric(1), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 5E-4
+
+dint = Integrator(idae, getTableauGLRKpSymmetric(2), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 5E-8
+
+dint = Integrator(idae, getTableauLobIIIAIIIB2pSymmetric(), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 8E-3
+
+dint = Integrator(idae, getTableauLobIIIAIIIB3pSymmetric(), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 1E-2
 
 
 ### CGVI and DGVI Integrators ###
