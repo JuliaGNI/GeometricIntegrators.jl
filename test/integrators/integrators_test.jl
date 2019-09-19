@@ -361,10 +361,6 @@ dsol = integrate(dint, nt)
 
 @test rel_err(dsol.q, refx) < 8E-3
 
-dint = Integrator(idae, getTableauLobIIIAIIIB3pSymmetric(), Δt)
-dsol = integrate(dint, nt)
-
-@test rel_err(dsol.q, refx) < 1E-2
 
 
 ### CGVI and DGVI Integrators ###
