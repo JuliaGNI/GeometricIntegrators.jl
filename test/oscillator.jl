@@ -119,3 +119,21 @@ function oscillator_idae(q₀=q₀, p₀=p₀, λ₀=λ₀)
          oscillator_idae_ϕ, oscillator_iode_v,
          q₀, p₀, λ₀)
 end
+
+function oscillator_pdae_v(t, q, p, v)
+    v[1] = q[2]
+    v[2] = -k*q[1]
+    nothing
+end
+
+function oscillator_pdae_f(t, q, p, f)
+    f[1] = -k*q[1]
+    f[2] = p[1] - q[2]
+    nothing
+end
+
+function oscillator_pdae(q₀=q₀, p₀=p₀, λ₀=λ₀)
+    PDAE(oscillator_pdae_v, oscillator_pdae_f,
+         oscillator_idae_u, oscillator_idae_g,
+         oscillator_idae_ϕ, q₀, p₀, λ₀)
+end
