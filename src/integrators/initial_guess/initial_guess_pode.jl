@@ -37,6 +37,10 @@ function InitialGuessPODE(interp, equ::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT}, Δt::TT) 
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
+function InitialGuessPODE(interp, equ::PDAE{DT,TT,VT,FT,UT,GT,ϕT}, Δt::TT) where {DT,TT,VT,FT,UT,GT,ϕT}
+    InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
+end
+
 
 "Initialise initial guess, i.e., given t₀, t₁, q₁ compute q₀, v₀, v₁."
 function initialize!(ig::InitialGuessPODE{DT,TT,VT,IT},

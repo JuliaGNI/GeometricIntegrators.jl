@@ -136,6 +136,8 @@ module Integrators
     export IntegratorGPARK, TableauGPARK
     export IntegratorVPARK, TableauVPARK
     export IntegratorSPARK, TableauSPARK
+
+    export IntegratorHPARK, TableauHPARK
     export IntegratorHSPARK, TableauHSPARK
     export IntegratorVSPARK, TableauVSPARK
 
@@ -150,6 +152,7 @@ module Integrators
     include("integrators/spark/integrators_spark.jl")
     include("integrators/spark/integrators_hspark.jl")
     include("integrators/spark/integrators_vspark.jl")
+    include("integrators/spark/integrators_hpark.jl")
 
 
     export TableauGLM

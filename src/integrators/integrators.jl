@@ -83,6 +83,11 @@ function Integrator(equation::IDAE, tableau::TableauVSPARK, Δt)
     IntegratorVSPARK(equation, tableau, Δt)
 end
 
+"Create integrator for Hamiltonian partitioned additive Runge-Kutta tableau."
+function Integrator(equation::PDAE, tableau::TableauHPARK, Δt)
+    IntegratorHPARK(equation, tableau, Δt)
+end
+
 "Create integrator for splitting tableau."
 function Integrator(equation::SODE, tableau::AbstractTableauSplitting, Δt)
     IntegratorSplitting(equation, tableau, Δt)

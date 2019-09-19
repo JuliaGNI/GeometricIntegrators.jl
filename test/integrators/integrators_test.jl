@@ -18,6 +18,7 @@ pode = oscillator_pode()
 sode = oscillator_sode()
 iode = oscillator_iode()
 idae = oscillator_idae()
+pdae = oscillator_pdae()
 
 
 @test typeof(Integrator(ode, getTableauExplicitMidpoint(), Δt)) <: IntegratorERK
@@ -361,6 +362,39 @@ dsol = integrate(dint, nt)
 
 @test rel_err(dsol.q, refx) < 8E-3
 
+
+
+### HPARK Integrator ###
+
+dint = Integrator(pdae, getTableauSymplecticProjection(:pglrk1ps, getCoefficientsGLRK(1), getCoefficientsGLRK(1)), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 5E-4
+
+dint = Integrator(pdae, getTableauSymplecticProjection(:pglrk2ps, getCoefficientsGLRK(2), getCoefficientsGLRK(2)), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 5E-8
+
+dint = Integrator(pdae, getTableauGLRKpSymplectic(1), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 5E-4
+
+dint = Integrator(pdae, getTableauGLRKpSymplectic(2), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 5E-8
+
+dint = Integrator(pdae, getTableauLobIIIAIIIB2pSymplectic(), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 2E-2
+
+dint = Integrator(pdae, getTableauLobIIIAIIIB3pSymplectic(), Δt)
+dsol = integrate(dint, nt)
+
+@test rel_err(dsol.q, refx) < 2E-4
 
 
 ### CGVI and DGVI Integrators ###
