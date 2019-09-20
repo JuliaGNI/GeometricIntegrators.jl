@@ -1,4 +1,7 @@
 
+Δt  = 0.1
+nt  = 10
+
 k = 0.5
 ω = √k
 
@@ -8,6 +11,10 @@ p₀=[0.0, 0.0]
 
 A = sqrt(q₀[2]^2 / k + q₀[1]^2)
 ϕ = asin(q₀[1] / A)
+
+refq = A * sin(ω * Δt * nt + ϕ)
+refp = ω * Δt * nt * A * cos(ω * Δt * nt + ϕ)
+refx = [refq, refp]
 
 
 function oscillator_ode_f(t, x, f)
