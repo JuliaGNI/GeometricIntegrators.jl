@@ -306,9 +306,10 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVPARK{ST,TT,D,S,R}
         tpᵢ = params.t + params.Δt * params.t_p.c[i]
         params.f_f(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Fi[i])
         params.f_p(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Φi[i])
+
+        cache.Φi[i] .-= cache.Pi[i]
     end
 
-    cache.Φi .-= cache.Pi
 
     for i in 1:R
         for k in 1:D
