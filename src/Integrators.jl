@@ -72,21 +72,6 @@ module Integrators
     include("integrators/rk/integrators_firk.jl")
 
 
-    export IntegratorSERK, TableauSERK
-    export IntegratorSIRK, TableauSIRK
-    export IntegratorSIPRK, TableauSIPRK
-    export IntegratorSISPRK, TableauSISPRK
-    export IntegratorWERK, TableauWERK
-    export IntegratorWIRK, TableauWIRK
-
-    include("integrators/rk/integrators_serk.jl")
-    include("integrators/rk/integrators_sirk.jl")
-    include("integrators/rk/integrators_siprk.jl")
-    include("integrators/rk/integrators_sisprk.jl")
-    include("integrators/rk/integrators_werk.jl")
-    include("integrators/rk/integrators_wirk.jl")
-
-
     export IntegratorEPRK, TableauEPRK
     export IntegratorIPRK, TableauIPRK
     export IntegratorFLRK
@@ -99,6 +84,21 @@ module Integrators
     export IntegratorPGLRK, CoefficientsPGLRK
 
     include("integrators/rk/integrators_pglrk.jl")
+
+
+    export IntegratorSERK, TableauSERK
+    export IntegratorSIRK, TableauSIRK
+    export IntegratorSIPRK, TableauSIPRK
+    export IntegratorSISPRK, TableauSISPRK
+    export IntegratorWERK, TableauWERK
+    export IntegratorWIRK, TableauWIRK
+
+    include("integrators/stochastic/integrators_serk.jl")
+    include("integrators/stochastic/integrators_sirk.jl")
+    include("integrators/stochastic/integrators_siprk.jl")
+    include("integrators/stochastic/integrators_sisprk.jl")
+    include("integrators/stochastic/integrators_werk.jl")
+    include("integrators/stochastic/integrators_wirk.jl")
 
 
     export IntegratorVPRK, IntegratorVPRKpNone, TableauVPRK
