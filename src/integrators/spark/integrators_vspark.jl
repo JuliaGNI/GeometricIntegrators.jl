@@ -384,8 +384,8 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVSPARK{ST,TT,D,S,R
     end
 
     # compute ϕ(q,p)
-    tpᵢ = params.t + params.Δt
-    params.f_ϕ(tpᵢ, cache.q̃, cache.p̃, cache.ϕ̃)
+    tλᵢ = params.t + params.Δt
+    params.f_ϕ(tλᵢ, cache.q̃, cache.p̃, cache.ϕ̃)
 end
 
 
@@ -623,10 +623,6 @@ function integrate_step!(int::IntegratorVSPARK{DT,TT}, cache::IntegratorCacheVSP
 
     # call nonlinear solver
     solve!(int.solver)
-
-    # TODO # disable # print some debug information
-    # check_jacobian(int.solver)
-    # print_jacobian(int.solver)
 
     # print solver status
     print_solver_status(int.solver.status, int.solver.params, cache.n)

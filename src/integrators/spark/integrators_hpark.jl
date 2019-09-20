@@ -1,4 +1,5 @@
 
+"Holds the tableau of an Partitioned Additive Runge-Kutta method for Hamiltonian systems."
 TableauHPARK = TableauVPARK
 
 
@@ -17,21 +18,20 @@ mutable struct ParametersHPARK{DT,TT,D,S,R,VT,FT,UT,GT,ϕT} <: Parameters{DT,TT}
     t_q̃::CoefficientsPRK{TT}
     t_p̃::CoefficientsPRK{TT}
     t_λ::CoefficientsMRK{TT}
-    d_v::Vector{TT}
 
     t::TT
     q::Vector{DT}
     p::Vector{DT}
     λ::Vector{DT}
 
-    function ParametersHPARK{DT,TT,D,S,R,VT,FT,UT,GT,ϕT}(f_v, f_f, f_u, f_g, f_ϕ, Δt, t_q, t_p, t_q̃, t_p̃, t_λ, d_v) where {DT,TT,D,S,R,VT,FT,UT,GT,ϕT}
+    function ParametersHPARK{DT,TT,D,S,R,VT,FT,UT,GT,ϕT}(f_v, f_f, f_u, f_g, f_ϕ, Δt, t_q, t_p, t_q̃, t_p̃, t_λ) where {DT,TT,D,S,R,VT,FT,UT,GT,ϕT}
         # create solution vectors
         q = zeros(DT,D)
         p = zeros(DT,D)
         λ = zeros(DT,D)
 
         new(f_v, f_f, f_u, f_g, f_ϕ, Δt,
-            t_q, t_p, t_q̃, t_p̃, t_λ, d_v,
+            t_q, t_p, t_q̃, t_p̃, t_λ,
             zero(TT), q, p, λ)
     end
 end
@@ -79,12 +79,6 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVPARK{ST,TT,D,S,R}
         params.f_g(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Gp[i])
         params.f_ϕ(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Φp[i])
     end
-
-    if length(params.d_v) > 0
-        for k in 1:D
-            cache.μ[k] = x[2*D*S+3*D*R+k]
-        end
-    end
 end
 
 
@@ -95,7 +89,7 @@ end
     quote
         compute_stages!(y, $cache, params)
 
-        # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
+        # compute b = - [(Y-AV-AU), (Z-AF-AG)]
         for i in 1:S
             for k in 1:D
                 b[2*(D*(i-1)+k-1)+1] = - $cache.Yi[i][k]
@@ -132,21 +126,6 @@ end
         if params.t_λ.c[1] == 0
             for k in 1:D
                 b[2*D*S+3*(k-1)+3] = - $cache.Λp[1][k] + params.λ[k]
-            end
-        end
-
-        if length(params.d_v) > 0
-            for i in 1:S
-                for k in 1:D
-                    b[2*(D*(i-1)+k-1)+3] -= $cache.μ[k] * params.d_v[i]
-                end
-            end
-
-            for k in 1:D
-                b[2*D*S+3*D*R+k] = 0
-                for i in 1:S
-                    b[2*D*S+3*D*R+k] -= $cache.Vi[i][k] * params.d_v[i]
-                end
             end
         end
     end
@@ -205,17 +184,10 @@ function IntegratorHPARK(equation::PDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
 
     N = 2*D*S + 3*D*R
 
-    if isdefined(tableau, :d)
-        N += D
-        d_v = tableau.d
-    else
-        d_v = DT[]
-    end
-
     # create params
     params = ParametersHPARK{DT,TT,D,S,R,FT,PT,UT,GT,ϕT}(
                                 equation.v, equation.f, equation.u, equation.g, equation.ϕ, Δt,
-                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, d_v)
+                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ)
 
     # create solver
     solver = create_nonlinear_solver(DT, N, params)
@@ -289,12 +261,6 @@ function initial_guess!(int::IntegratorHPARK, cache::IntegratorCacheVPARK)
     if int.params.t_λ.c[1] == 0
         for k in 1:ndims(int)
             int.solver.x[2*ndims(int)*nstages(int)+3*(k-1)+3] = cache.λ[k]
-        end
-    end
-
-    if isdefined(tableau(int), :d)
-        for k in 1:ndims(int)
-            int.solver.x[2*ndims(int)*nstages(int)+3*ndims(int)*pstages(int)+k] = 0
         end
     end
 end

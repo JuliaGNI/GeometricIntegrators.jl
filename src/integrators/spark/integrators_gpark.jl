@@ -1,5 +1,5 @@
 
-"Holds the tableau of a spezialized partitioned additive Runge-Kutta method."
+"Holds the tableau of a General Partitioned Additive Runge-Kutta method."
 struct TableauGPARK{T} <: AbstractTableau{T}
     name::Symbol
     o::Int
@@ -67,7 +67,7 @@ end
 # TODO function writeTableauToFile{Name, T}(dir::AbstractString, tab::TableauGPARK{Name, T})
 
 
-"Special Partitioned Additive Runge Kutta integrator."
+"General Partitioned Additive Runge Kutta integrator."
 struct IntegratorGPARK{DT,TT,VT,FT,UT,GT,ΦT} <: AbstractIntegratorSPARK{DT,TT}
     equation::PDAE{DT,TT,VT,FT,UT,GT,ΦT}
     tableau::TableauGPARK{TT}
@@ -82,7 +82,7 @@ struct IntegratorGPARK{DT,TT,VT,FT,UT,GT,ΦT} <: AbstractIntegratorSPARK{DT,TT}
     F::Array{DT,2}
 end
 
-"Integrate partitioned DAE with Special Additive Runge Kutta integrator."
+"Integrate partitioned DAE with General Additive Runge Kutta integrator."
 function integrate!(int::IntegratorGPARK, s::SolutionPDAE)
     # TODO
 end
