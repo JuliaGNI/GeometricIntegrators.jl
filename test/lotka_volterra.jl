@@ -3,12 +3,12 @@ module LotkaVolterraTest
 
     using GeometricIntegrators.Equations
 
-    export lotka_volterra_2d_ode, lotka_volterra_2d_iode, lotka_volterra_2d_idae,
-           lotka_volterra_2d_dg
+    export lotka_volterra_2d_ode, lotka_volterra_2d_iode,
+           lotka_volterra_2d_idae, lotka_volterra_2d_pdae
 
 
-    Δt  = 0.1
-    nt  = 10
+    Δt = 0.01
+    nt = 10
 
     const A1=1.0
     const A2=1.0
@@ -17,6 +17,14 @@ module LotkaVolterraTest
 
     const X0=1.0
     const Y0=1.0
+
+
+    using Base: TwicePrecision
+
+    Base.log(x::TwicePrecision) = TwicePrecision(log(x.hi))
+    Base.one(::Type{TwicePrecision{DT}}) where {DT} = TwicePrecision(one(DT))
+    Base.:/(x::Number, y::TwicePrecision{DT}) where {DT} = TwicePrecision(x/y.hi)
+    Base.:^(x::TwicePrecision, p) = TwicePrecision(x.hi^p)
 
 
     function ϑ₁(t, q)
@@ -85,6 +93,7 @@ module LotkaVolterraTest
     function ϑ(t, q, Θ)
         Θ[1] = ϑ₁(t,q)
         Θ[2] = ϑ₂(t,q)
+        nothing
     end
 
     function ω(t, q, Ω)
@@ -153,8 +162,8 @@ module LotkaVolterraTest
     end
 
     function lotka_volterra_2d_g(t::Real, q::Vector, v::Vector, g::Vector)
-        g[1] = g₁(t,q,v)
-        g[2] = g₂(t,q,v)
+        g[1] = f₁(t,q,v)
+        g[2] = f₂(t,q,v)
         nothing
     end
 
@@ -162,10 +171,14 @@ module LotkaVolterraTest
         lotka_volterra_2d_g(t, q, v, g)
     end
 
-    function lotka_volterra_2d_u(t, q, p, v, u)
+    function lotka_volterra_2d_u(t, q, v, u)
         u[1] = v[1]
         u[2] = v[2]
         nothing
+    end
+
+    function lotka_volterra_2d_u(t, q, p, v, u)
+        lotka_volterra_2d_u(t, q, v, u)
     end
 
     function lotka_volterra_2d_ϕ(t, q, p, ϕ)
@@ -176,7 +189,7 @@ module LotkaVolterraTest
 
 
     function lotka_volterra_2d_ode(q₀=q₀)
-        ODE(lotka_volterra_2d_ode_v, q₀)
+        ODE(lotka_volterra_2d_v, q₀)
     end
 
 
@@ -186,15 +199,15 @@ module LotkaVolterraTest
              q₀, p₀)
     end
 
-    function lotka_volterra_2d_idae(q₀=q₀, p₀=p₀, λ₀=zeros(q₀))
+    function lotka_volterra_2d_idae(q₀=q₀, p₀=p₀, λ₀=zero(q₀))
         IDAE(lotka_volterra_2d_f, lotka_volterra_2d_ϑ,
              lotka_volterra_2d_u, lotka_volterra_2d_g,
              lotka_volterra_2d_ϕ, lotka_volterra_2d_v,
              q₀, p₀, λ₀)
     end
 
-    function lotka_volterra_2d_pdae(q₀=q₀, p₀=p₀, λ₀=zeros(q₀))
-        IDAE(lotka_volterra_2d_v, lotka_volterra_2d_f,
+    function lotka_volterra_2d_pdae(q₀=q₀, p₀=p₀, λ₀=zero(q₀))
+        PDAE(lotka_volterra_2d_v, lotka_volterra_2d_f,
              lotka_volterra_2d_u, lotka_volterra_2d_g,
              lotka_volterra_2d_ϕ, q₀, p₀, λ₀)
     end
