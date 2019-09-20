@@ -3,8 +3,9 @@ using GeometricIntegrators
 using GeometricIntegrators.Utils
 using Test
 
-include("test_functions.jl")
-include("test_utils.jl")
+include("oscillator.jl")
+include("kubo_oscillator.jl")
+include("lotka_volterra.jl")
 
 include("solvers/linear_solvers_tests.jl")
 include("solvers/jacobian_tests.jl")
@@ -13,8 +14,6 @@ include("basis_functions/vandermonde_tests.jl")
 include("basis_functions/lagrange_basis_tests.jl")
 include("basis_functions/lagrange_polynomials_tests.jl")
 include("equations/equations_tests.jl")
-include("oscillator.jl")
-include("kubo_oscillator.jl")
 include("solutions/dataseries_tests.jl")
 include("solutions/timeseries_tests.jl")
 include("solutions/solutions_tests.jl")
