@@ -17,24 +17,24 @@ mutable struct ParametersVPRKpStandard{DT, TT, ET <: IODE{DT,TT}, D, S} <: Abstr
     q::Vector{DT}
     p::Vector{DT}
 
-    function ParametersVPRKpStandard{DT,TT,ET,D,S}(equ, tab, Δt, RU, RG) where {DT,TT,ET,D,S}
+    function ParametersVPRKpStandard{DT,TT,ET,D,S}(equ, tab, Δt, RU, RG, R∞) where {DT,TT,ET,D,S}
         RU1 = [RU[1], zero(TT)]
-        RU2 = [zero(TT), tab.R∞ * RU[2]]
+        RU2 = [zero(TT), R∞ * RU[2]]
         RG1 = [RG[1], zero(TT)]
-        RG2 = [zero(TT), tab.R∞ * RG[2]]
+        RG2 = [zero(TT), R∞ * RG[2]]
         new(equ, tab, Δt, RU, RG, RU1, RU2, RG1, RG2, zero(TT), zeros(DT,D), zeros(DT,D))
     end
 end
 
-function ParametersVPRKpStandard(equ::ET, tab::TableauVPRK{TT}, Δt::TT, R::Vector) where {DT, TT, ET <: IODE{DT,TT}}
+function ParametersVPRKpStandard(equ::ET, tab::TableauVPRK{TT}, Δt::TT, R::Vector, R∞=tab.R∞) where {DT, TT, ET <: IODE{DT,TT}}
     R = Vector{TT}(R)
-    ParametersVPRKpStandard{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, R, R)
+    ParametersVPRKpStandard{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, R, R, R∞)
 end
 
-function ParametersVPRKpStandard(equ::ET, tab::TableauVPRK{TT}, Δt::TT, RU::Vector, RG::Vector) where {DT, TT, ET <: IODE{DT,TT}}
+function ParametersVPRKpStandard(equ::ET, tab::TableauVPRK{TT}, Δt::TT, RU::Vector, RG::Vector, R∞=tab.R∞) where {DT, TT, ET <: IODE{DT,TT}}
     RU = Vector{TT}(RU)
     RG = Vector{TT}(RG)
-    ParametersVPRKpStandard{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, RU, RG)
+    ParametersVPRKpStandard{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, RU, RG, R∞)
 end
 
 function update_params!(params::ParametersVPRKpStandard, cache::IntegratorCacheVPRK)
@@ -112,7 +112,7 @@ mutable struct IntegratorVPRKpStandard{DT, TT,
 end
 
 function IntegratorVPRKpStandard(args...)
-    IntegratorVPRKpStandardConstructor(args..., [0,1])
+    IntegratorVPRKpStandardConstructor(args..., [0,1]; R∞=1)
 end
 
 function IntegratorVPRKpSymplectic(args...)
@@ -120,19 +120,19 @@ function IntegratorVPRKpSymplectic(args...)
 end
 
 function IntegratorVPRKpVariationalQ(args...)
-    IntegratorVPRKpStandardConstructor(args..., [1,0], [0,1])
+    IntegratorVPRKpStandardConstructor(args..., [1,0], [0,1]; R∞=1)
 end
 
 function IntegratorVPRKpVariationalP(args...)
-    IntegratorVPRKpStandardConstructor(args..., [0,1], [1,0])
+    IntegratorVPRKpStandardConstructor(args..., [0,1], [1,0]; R∞=1)
 end
 
-function IntegratorVPRKpStandardConstructor(equation, tableau, Δt, R)
-    IntegratorVPRKpStandardConstructor(equation, tableau, Δt, R, R)
+function IntegratorVPRKpStandardConstructor(equation, tableau, Δt, R; R∞=tableau.R∞)
+    IntegratorVPRKpStandardConstructor(equation, tableau, Δt, R, R; R∞=R∞)
 end
 
 function IntegratorVPRKpStandardConstructor(equation::ET, tableau::TableauVPRK{TT}, Δt::TT,
-                                    RU::Vector, RG::Vector) where {DT, TT, ET <: IODE{DT,TT}}
+                                    RU::Vector, RG::Vector; R∞::Int=tableau.R∞) where {DT, TT, ET <: IODE{DT,TT}}
     D = equation.d
     M = equation.n
     S = tableau.s
@@ -141,7 +141,7 @@ function IntegratorVPRKpStandardConstructor(equation::ET, tableau::TableauVPRK{T
     sparams = ParametersVPRK(equation, tableau, Δt)
 
     # create projector params
-    pparams = ParametersVPRKpStandard(equation, tableau, Δt, RU, RG)
+    pparams = ParametersVPRKpStandard(equation, tableau, Δt, RU, RG, R∞)
 
     # create nonlinear solver
     solver = create_nonlinear_solver(DT, D*S, sparams)
@@ -165,7 +165,7 @@ nstages(integrator::IntegratorVPRKpStandard) = integrator.sparams.tab.s
 
 function initialize!(int::IntegratorVPRKpStandard{DT,TT}, cache::IntegratorCacheVPRK) where {DT,TT}
     cache.t̅ = cache.t - timestep(int)
-    
+
     equation(int).v(cache.t, cache.q, cache.p, cache.v)
     equation(int).f(cache.t, cache.q, cache.p, cache.f)
 
