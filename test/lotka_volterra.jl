@@ -36,8 +36,18 @@ module LotkaVolterraTest
     end
 
 
+    function v₁(t, q)
+        q[1] * (A2*q[2] - B2)
+    end
+
+    function v₂(t, q)
+        q[2] * (B1 - A1*q[1])
+    end
+
+
     const q₀=[X0, Y0]
     const p₀=[ϑ₁(0, q₀), ϑ₂(0, q₀)]
+    const v₀=[v₁(0, q₀), v₂(0, q₀)]
 
 
     function dϑ₁d₁(t, q)
@@ -146,8 +156,8 @@ module LotkaVolterraTest
     end
 
     function lotka_volterra_2d_v(t, q, v)
-        v[1] = q[1] * (A2*q[2] - B2)
-        v[2] = q[2] * (B1 - A1*q[1])
+        v[1] = v₁(t, q)
+        v[2] = v₂(t, q)
         nothing
     end
 
@@ -155,9 +165,21 @@ module LotkaVolterraTest
         lotka_volterra_2d_v(t, q, v)
     end
 
+    function lotka_volterra_2d_v_ham(t, q, p, v)
+        v[1] = 0
+        v[2] = 0
+        nothing
+    end
+
     function lotka_volterra_2d_f(t::Real, q::Vector, v::Vector, f::Vector)
         f[1] = f₁(t,q,v) - dHd₁(t,q)
         f[2] = f₂(t,q,v) - dHd₂(t,q)
+        nothing
+    end
+
+    function lotka_volterra_2d_f_ham(t::Real, q::Vector, v::Vector, f::Vector)
+        f[1] = - dHd₁(t,q)
+        f[2] = - dHd₂(t,q)
         nothing
     end
 
@@ -207,7 +229,7 @@ module LotkaVolterraTest
     end
 
     function lotka_volterra_2d_pdae(q₀=q₀, p₀=p₀, λ₀=zero(q₀))
-        PDAE(lotka_volterra_2d_v, lotka_volterra_2d_f,
+        PDAE(lotka_volterra_2d_v_ham, lotka_volterra_2d_f_ham,
              lotka_volterra_2d_u, lotka_volterra_2d_g,
              lotka_volterra_2d_ϕ, q₀, p₀, λ₀)
     end
