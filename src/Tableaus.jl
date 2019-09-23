@@ -123,6 +123,12 @@ module Tableaus
            getTableauMcLachlan2, getTableauMcLachlan4,
            getTableauTripleJump, getTableauSuzukiFractal
 
+    include("tableaus/tableaus_hpark.jl")
+
+    export getTableauHPARKNoProjection, getTableauHPARKGLRK,
+           getTableauHPARKLobIIIAIIIB2, getTableauHPARKLobIIIAIIIB3
+
+
     include("tableaus/tableaus_splitting.jl")
 
 

@@ -296,7 +296,7 @@ function integrate_step!(int::IntegratorHPARK{DT,TT}, cache::IntegratorCacheVPAR
     # compute projection
     update_solution!(cache.q, cache.Up, int.params.t_q.β, timestep(int))
     update_solution!(cache.p, cache.Gp, int.params.t_p.β, timestep(int))
-    update_multiplier!(cache.λ, cache.Λp, int.params.t_λ.b)
+    # TODO # update_multiplier!(cache.λ, cache.Λp, int.params.t_λ.b)
 
     # copy solution to initial guess
     update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)
