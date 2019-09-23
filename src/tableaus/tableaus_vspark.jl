@@ -29,10 +29,10 @@ function getTableauSymmetricProjection(name, q::CoefficientsRK{T}, p::Coefficien
 
     c_q = q.c
     c_p = p.c
-    c_λ = [0.0, 1.0]
-    d_λ = [0.0, 1.0]
+    c_λ = [ 0.0, 1.0]
+    d_λ = [-1.0, 1.0]
 
-    ω_λ = [0.5, 0.5]
+    ω_λ = [0.5, R∞*0.5]
     ω_λ = reshape(ω_λ, 1, length(ω_λ))
 
 
@@ -75,7 +75,7 @@ end
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function getTableauGLRKpSymmetric(s)
     glrk = getCoefficientsGLRK(s)
-    R∞ = -1^s
+    R∞ = (-1)^s
 
     getTableauSymmetricProjection(Symbol("vpglrk", s, "pSymmetric"), glrk, glrk; R∞=R∞)
 end

@@ -368,24 +368,6 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVSPARK{ST,TT,D,S,R
             cache.μ[k] = x[3*D*S+3*D*R+k]
         end
     end
-
-    # compute q and p
-    for k in 1:D
-        cache.q̃[k] = params.q[k]
-        cache.p̃[k] = params.p[k]
-        for i in 1:S
-            cache.q̃[k] += params.Δt * params.t_q.b[i] * cache.Vi[i][k]
-            cache.p̃[k] += params.Δt * params.t_p.b[i] * cache.Fi[i][k]
-        end
-        for i in 1:R
-            cache.q̃[k] += params.Δt * params.t_q.β[i] * cache.Up[i][k]
-            cache.p̃[k] += params.Δt * params.t_p.β[i] * cache.Gp[i][k]
-        end
-    end
-
-    # compute ϕ(q,p)
-    tλᵢ = params.t + params.Δt
-    params.f_ϕ(tλᵢ, cache.q̃, cache.p̃, cache.ϕ̃)
 end
 
 
@@ -437,9 +419,12 @@ end
             end
         end
 
-        # compute b = -ϕ
+        # compute b = d_λ ⋅ Λ
         for k in 1:D
-            b[3*D*S+3*(D*(R-1)+k-1)+3] = - $cache.ϕ̃[k]
+            b[3*D*S+3*(D*(R-1)+k-1)+3] = 0
+            for j in 1:R
+                b[3*D*S+3*(D*(R-1)+k-1)+3] -= params.t_λ.b[j] * $cache.Λp[j][k]
+            end
         end
 
         if length(params.d_v) > 0
@@ -470,7 +455,8 @@ Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} V_{n,j} + h \sum \limits_{j=1
 P_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} a_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} G_{n,j} , & i &= 1, ..., s , \\
 \tilde{Q}_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} U_{n,j} , & i &= 1, ..., r , \\
 \tilde{P}_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} G_{n,j} , & i &= 1, ..., r , \\
-0 &= \sum \limits_{j=1}^{r} \omega_{ij} \tilde{\Phi}_{n,j} , & i &= 1, ..., r-1 ,
+0 &= \sum \limits_{j=1}^{r} \omega_{ij} \tilde{\Phi}_{n,j} , & i &= 1, ..., r-1 , \\
+0 &= \sum \limits_{i=1}^{r} \tilde{d}_i \, \Lambda_{n,i} ,
 \end{align}
 ```
 with definitions
@@ -487,8 +473,7 @@ and update rule
 ```math
 \begin{align}
 q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} V_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} U_{n,i} , \\
-p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} G_{n,i} , \\
-0 &= \phi (q_{n+1}, p_{n+1}) .
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} G_{n,i} .
 \end{align}
 ```
 """
@@ -640,7 +625,7 @@ function integrate_step!(int::IntegratorVSPARK{DT,TT}, cache::IntegratorCacheVSP
     # compute projection
     update_solution!(cache.q, cache.Up, int.params.t_q.β, timestep(int))
     update_solution!(cache.p, cache.Gp, int.params.t_p.β, timestep(int))
-    update_multiplier!(cache.λ, cache.Λp, int.params.t_λ.b)
+    # TODO # update_multiplier!(cache.λ, cache.Λp, int.params.t_λ.b)
 
     # copy solution to initial guess
     update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)
