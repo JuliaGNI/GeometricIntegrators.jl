@@ -52,8 +52,9 @@ function IntegratorVSPARKprimary(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
     D = equation.d
     S = tableau.s
     R = tableau.r
+    P = tableau.ρ
 
-    @assert tableau.ρ == tableau.r-1
+    # @assert tableau.ρ == tableau.r-1
 
     N = 3*D*S + 3*D*R
 
@@ -65,9 +66,9 @@ function IntegratorVSPARKprimary(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
     end
 
     # create params
-    params = ParametersVSPARKprimary{DT,TT,D,S,R,FT,PT,UT,GT,ϕT}(
+    params = ParametersVSPARKprimary{DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT}(
                                 equation.f, equation.p, equation.u, equation.g, equation.ϕ, Δt,
-                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, tableau.ω, d_v)
+                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, tableau.ω, tableau.δ, d_v)
 
     # create solver
     solver = create_nonlinear_solver(DT, N, params)
@@ -82,7 +83,7 @@ end
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVSPARK{ST,TT,D,S,R},
-                                        params::ParametersVSPARKprimary{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+                                        params::ParametersVSPARKprimary{DT,TT,D,S,R,P}) where {ST,DT,TT,D,S,R,P}
     local tpᵢ::TT
     local tλᵢ::TT
 
@@ -130,11 +131,27 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVSPARK{ST,TT,D,S,R
             cache.μ[k] = x[3*D*S+3*D*R+k]
         end
     end
+
+    # compute q and p
+    cache.q̃ .= params.q
+    cache.p̃ .= params.p
+    for i in 1:S
+        cache.q̃ .+= params.Δt .* params.t_q.b[i] .* cache.Vi[i]
+        cache.p̃ .+= params.Δt .* params.t_p.b[i] .* cache.Fi[i]
+    end
+    for i in 1:R
+        cache.q̃ .+= params.Δt .* params.t_q.β[i] .* cache.Up[i]
+        cache.p̃ .+= params.Δt .* params.t_p.β[i] .* cache.Gp[i]
+    end
+
+    # compute ϕ(q,p)
+    tλᵢ = params.t + params.Δt
+    params.f_ϕ(tλᵢ, cache.q̃, cache.p̃, cache.ϕ̃)
 end
 
 
 "Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems."
-@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVSPARKprimary{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVSPARKprimary{DT,TT,D,S,R,P}) where {ST,DT,TT,D,S,R,P}
     cache = IntegratorCacheVSPARK{ST,TT,D,S,R}()
 
     quote
@@ -172,20 +189,23 @@ end
                 end
             end
         end
-        for i in 1:R-1
+        for i in 1:R-P
             for k in 1:D
                 b[3*D*S+3*(D*(i-1)+k-1)+3] = 0
                 for j in 1:R
                     b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.t_ω[i,j] * $cache.Φp[j][k]
                 end
+                b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.t_ω[i,R+1] * $cache.ϕ̃[k]
             end
         end
 
         # compute b = d_λ ⋅ Λ
-        for k in 1:D
-            b[3*D*S+3*(D*(R-1)+k-1)+3] = 0
-            for j in 1:R
-                b[3*D*S+3*(D*(R-1)+k-1)+3] -= params.t_λ.b[j] * $cache.Λp[j][k]
+        for i in R-P+1:R
+            for k in 1:D
+                b[3*D*S+3*(D*(R-1)+k-1)+3] = 0
+                for j in 1:R
+                    b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.t_δ[j] * $cache.Λp[j][k]
+                end
             end
         end
 

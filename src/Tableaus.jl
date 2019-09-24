@@ -116,7 +116,8 @@ module Tableaus
     export getTableauVSPARKGLRK,
            getTableauMidpointProjection, getTableauGLRKpMidpoint,
            getTableauSymmetricProjection, getTableauGLRKpSymmetric,
-           getTableauLobIIIAIIIB2pSymmetric, getTableauLobIIIAIIIB3pSymmetric
+           getTableauLobIIIAIIIB2pSymmetric, getTableauLobIIIAIIIB3pSymmetric,
+           getTableauVSPARKSymplecticProjection, getTableauVSPARKGLRKpSymplectic
 
     include("tableaus/tableaus_vspark.jl")
 

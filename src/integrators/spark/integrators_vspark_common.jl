@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of Specialised Partitioned Additive Runge-Kutta methods for Variational systems."
-mutable struct AbstractParametersVSPARK{IT,DT,TT,D,S,R,FT,PT,UT,GT,ϕT} <: Parameters{DT,TT}
+mutable struct AbstractParametersVSPARK{IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT} <: Parameters{DT,TT}
     f_f::FT
     f_p::PT
     f_u::UT
@@ -15,6 +15,7 @@ mutable struct AbstractParametersVSPARK{IT,DT,TT,D,S,R,FT,PT,UT,GT,ϕT} <: Param
     t_p̃::CoefficientsPRK{TT}
     t_λ::CoefficientsMRK{TT}
     t_ω::Matrix{TT}
+    t_δ::Matrix{TT}
     d_v::Vector{TT}
 
     t::TT
@@ -22,14 +23,14 @@ mutable struct AbstractParametersVSPARK{IT,DT,TT,D,S,R,FT,PT,UT,GT,ϕT} <: Param
     p::Vector{DT}
     λ::Vector{DT}
 
-    function AbstractParametersVSPARK{IT,DT,TT,D,S,R,FT,PT,UT,GT,ϕT}(f_f, f_p, f_u, f_g, f_ϕ, Δt, t_q, t_p, t_q̃, t_p̃, t_λ, t_ω, d_v) where {IT,DT,TT,D,S,R,FT,PT,UT,GT,ϕT}
+    function AbstractParametersVSPARK{IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT}(f_f, f_p, f_u, f_g, f_ϕ, Δt, t_q, t_p, t_q̃, t_p̃, t_λ, t_ω, t_δ, d_v) where {IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT}
         # create solution vectors
         q = zeros(DT,D)
         p = zeros(DT,D)
         λ = zeros(DT,D)
 
         new(f_f, f_p, f_u, f_g, f_ϕ, Δt,
-            t_q, t_p, t_q̃, t_p̃, t_λ, t_ω, d_v,
+            t_q, t_p, t_q̃, t_p̃, t_λ, t_ω, t_δ, d_v,
             zero(TT), q, p, λ)
     end
 end

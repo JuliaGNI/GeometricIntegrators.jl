@@ -115,6 +115,18 @@ module SPARKIntegratorsTest
         # println(rel_err(dsol.q, refx))
         @test rel_err(dsol.q, refx) < 1E-11
 
+        dint = Integrator(idae, getTableauVSPARKGLRKpSymplectic(1), Δt)
+        dsol = integrate(dint, nt)
+
+        # println(rel_err(dsol.q, refx))
+        @test rel_err(dsol.q, refx) < 1E-6
+
+        dint = Integrator(idae, getTableauVSPARKGLRKpSymplectic(2), Δt)
+        dsol = integrate(dint, nt)
+
+        # println(rel_err(dsol.q, refx))
+        @test rel_err(dsol.q, refx) < 1E-11
+
         # dint = IntegratorVSPARKprimary(idae, getTableauLobIIIAIIIB2pSymmetric(), Δt)
         # dsol = integrate(dint, nt)
         #

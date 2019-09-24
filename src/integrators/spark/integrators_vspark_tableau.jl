@@ -15,9 +15,10 @@ struct AbstractTableauVSPARK{IT,DT} <: AbstractTableau{DT}
     λ::CoefficientsMRK{DT}
 
     ω::Matrix{DT}
+    δ::Matrix{DT}
     d::Vector{DT}
 
-    function AbstractTableauVSPARK{IT,DT}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, d) where {IT,DT}
+    function AbstractTableauVSPARK{IT,DT}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, δ, d) where {IT,DT}
         @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
@@ -30,13 +31,13 @@ struct AbstractTableauVSPARK{IT,DT} <: AbstractTableau{DT}
 
         @assert s==q.s==p.s==q̃.s==p̃.s==length(d)
         @assert r==q.r==p.r==q̃.r==p̃.r==λ.r
-        @assert ρ==size(ω, 1)
-        @assert r==size(ω, 2)
+        @assert size(ω, 1)==r-ρ
+        @assert size(δ, 1)==ρ
 
-        new(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, d)
+        new(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, δ, d)
     end
 
-    function AbstractTableauVSPARK{IT,DT}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω) where {IT,DT}
+    function AbstractTableauVSPARK{IT,DT}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, δ) where {IT,DT}
         @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
@@ -49,10 +50,10 @@ struct AbstractTableauVSPARK{IT,DT} <: AbstractTableau{DT}
 
         @assert s==q.s==p.s==q̃.s==p̃.s
         @assert r==q.r==p.r==q̃.r==p̃.r==λ.r
-        @assert ρ==size(ω, 1)
-        @assert r==size(ω, 2)
+        @assert size(ω, 1)==r-ρ
+        @assert size(δ, 1)==ρ
 
-        new(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω)
+        new(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, δ)
     end
 end
 
@@ -64,12 +65,12 @@ function AbstractTableauVSPARK{IT}(name::Symbol, order::Int,
                          b_q::Vector{DT}, b_p::Vector{DT},
                          β_q::Vector{DT}, β_p::Vector{DT},
                          c_q::Vector{DT}, c_p::Vector{DT},
-                         c_λ::Vector{DT}, d_λ::Vector{DT},
-                         ω_λ::Matrix{DT}, d::Vector{DT}) where {IT, DT <: Real}
+                         c_λ::Vector{DT}, d_λ::Union{Vector{DT},Matrix{DT}},
+                         ω_λ::Matrix{DT}, δ_λ::Matrix{DT}, d::Vector{DT}) where {IT, DT <: Real}
 
     s = length(c_q)
     r = length(c_λ)
-    ρ = size(ω_λ, 1)
+    ρ = size(δ_λ, 1)
 
     @assert s > 0 "Number of stages s must be > 0"
     @assert r > 0 "Number of stages r must be > 0"
@@ -91,7 +92,7 @@ function AbstractTableauVSPARK{IT}(name::Symbol, order::Int,
     p̃ = CoefficientsPRK{DT}(name, order, s, r, a_p̃, c_λ, α_p̃)
     λ = CoefficientsMRK{DT}(name, r, d_λ, c_λ)
 
-    AbstractTableauVSPARK{IT,DT}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω_λ, d)
+    AbstractTableauVSPARK{IT,DT}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω_λ, δ_λ, d)
 end
 
 
@@ -103,12 +104,12 @@ function AbstractTableauVSPARK{IT}(name::Symbol, order::Int,
                          b_q::Vector{DT}, b_p::Vector{DT},
                          β_q::Vector{DT}, β_p::Vector{DT},
                          c_q::Vector{DT}, c_p::Vector{DT},
-                         c_λ::Vector{DT}, d_λ::Vector{DT},
-                         ω_λ::Matrix{DT}) where {IT, DT <: Real}
+                         c_λ::Vector{DT}, d_λ::Union{Vector{DT},Matrix{DT}},
+                         ω_λ::Matrix{DT}, δ_λ::Matrix{DT}) where {IT, DT <: Real}
 
     s = length(c_q)
     r = length(c_λ)
-    ρ = size(ω_λ, 1)
+    ρ = size(δ_λ, 1)
 
     @assert s > 0 "Number of stages s must be > 0"
     @assert r > 0 "Number of stages r must be > 0"
@@ -129,7 +130,7 @@ function AbstractTableauVSPARK{IT}(name::Symbol, order::Int,
     p̃ = CoefficientsPRK{DT}(name, order, s, r, a_p̃, c_λ, α_p̃)
     λ = CoefficientsMRK{DT}(name, r, d_λ, c_λ)
 
-    AbstractTableauVSPARK{IT,DT}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω_λ)
+    AbstractTableauVSPARK{IT,DT}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω_λ, δ_λ)
 end
 
 # TODO function readAbstractTableauVSPARKFromFile(dir::AbstractString, name::AbstractString)

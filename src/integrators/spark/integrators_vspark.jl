@@ -67,7 +67,7 @@ function IntegratorVSPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
     # create params
     params = ParametersVSPARK{DT,TT,D,S,R,FT,PT,UT,GT,ϕT}(
                                 equation.f, equation.p, equation.u, equation.g, equation.ϕ, Δt,
-                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, tableau.ω, d_v)
+                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, tableau.ωt_δ, d_v)
 
     # create solver
     solver = create_nonlinear_solver(DT, N, params)
