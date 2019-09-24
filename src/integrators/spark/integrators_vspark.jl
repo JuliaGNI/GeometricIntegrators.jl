@@ -45,7 +45,7 @@ struct TableauVSPARK{T} <: AbstractTableau{T}
 
         @assert s > 0 "Number of stages s must be > 0"
         @assert r > 0 "Number of stages r must be > 0"
-        @assert ρ > 0 && ρ ≤ r
+        @assert ρ ≥ 0 && ρ ≤ r
 
         @assert s==q.s==p.s==q̃.s==p̃.s
         @assert r==q.r==p.r==q̃.r==p̃.r==λ.r
@@ -340,7 +340,6 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVSPARK{ST,TT,D,S,R
         tpᵢ = params.t + params.Δt * params.t_p.c[i]
         params.f_f(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Fi[i])
         params.f_p(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Φi[i])
-
         cache.Φi[i] .-= cache.Pi[i]
     end
 
@@ -368,6 +367,22 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVSPARK{ST,TT,D,S,R
             cache.μ[k] = x[3*D*S+3*D*R+k]
         end
     end
+
+    # compute q and p
+    cache.q̃ .= params.q
+    cache.p̃ .= params.p
+    for i in 1:S
+        cache.q̃ .+= params.Δt .* params.t_q.b[i] .* cache.Vi[i]
+        cache.p̃ .+= params.Δt .* params.t_p.b[i] .* cache.Fi[i]
+    end
+    for i in 1:R
+        cache.q̃ .+= params.Δt .* params.t_q.β[i] .* cache.Up[i]
+        cache.p̃ .+= params.Δt .* params.t_p.β[i] .* cache.Gp[i]
+    end
+
+    # compute ϕ(q,p)
+    tλᵢ = params.t + params.Δt
+    params.f_ϕ(tλᵢ, cache.q̃, cache.p̃, cache.ϕ̃)
 end
 
 
@@ -419,12 +434,9 @@ end
             end
         end
 
-        # compute b = d_λ ⋅ Λ
+        # compute b = -ϕ
         for k in 1:D
-            b[3*D*S+3*(D*(R-1)+k-1)+3] = 0
-            for j in 1:R
-                b[3*D*S+3*(D*(R-1)+k-1)+3] -= params.t_λ.b[j] * $cache.Λp[j][k]
-            end
+            b[3*D*S+3*(D*(R-1)+k-1)+3] = - $cache.ϕ̃[k]
         end
 
         if length(params.d_v) > 0
@@ -455,8 +467,7 @@ Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} V_{n,j} + h \sum \limits_{j=1
 P_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} a_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} G_{n,j} , & i &= 1, ..., s , \\
 \tilde{Q}_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} U_{n,j} , & i &= 1, ..., r , \\
 \tilde{P}_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} G_{n,j} , & i &= 1, ..., r , \\
-0 &= \sum \limits_{j=1}^{r} \omega_{ij} \tilde{\Phi}_{n,j} , & i &= 1, ..., r-1 , \\
-0 &= \sum \limits_{i=1}^{r} \tilde{d}_i \, \Lambda_{n,i} ,
+0 &= \sum \limits_{j=1}^{r} \omega_{ij} \tilde{\Phi}_{n,j} , & i &= 1, ..., r-1 ,
 \end{align}
 ```
 with definitions
@@ -473,7 +484,8 @@ and update rule
 ```math
 \begin{align}
 q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} V_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} U_{n,i} , \\
-p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} G_{n,i} .
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} G_{n,i} , \\
+0 &= \phi (q_{n+1}, p_{n+1}) .
 \end{align}
 ```
 """

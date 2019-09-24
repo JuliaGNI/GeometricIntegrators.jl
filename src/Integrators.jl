@@ -142,6 +142,7 @@ module Integrators
 
     export IntegratorVPARK, TableauVPARK
     export IntegratorVSPARK, TableauVSPARK
+    export IntegratorVSPARKprimary
 
     include("integrators/spark/abstract_integrator_spark.jl")
     include("integrators/spark/coefficients.jl")
@@ -155,6 +156,7 @@ module Integrators
 
     include("integrators/spark/integrators_vpark.jl")
     include("integrators/spark/integrators_vspark.jl")
+    include("integrators/spark/integrators_vspark_primary.jl")
 
     include("integrators/spark/integrators_hpark.jl")
     include("integrators/spark/integrators_hspark.jl")
