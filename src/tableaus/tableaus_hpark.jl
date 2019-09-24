@@ -1,5 +1,5 @@
 
-function getTableauHPARKNoProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]) where {T}
+function getTableauHPARK(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]) where {T}
 
     @assert q.s == p.s
 
@@ -29,7 +29,6 @@ function getTableauHPARKNoProjection(name, q::CoefficientsRK{T}, p::Coefficients
                             c_q, c_p, c_q, c_p,
                             d)
     end
-
 end
 
 
@@ -37,18 +36,18 @@ end
 function getTableauHPARKLobIIIAIIIB2()
     d = [+1.0, -1.0]
 
-    getTableauHPARKNoProjection(:HPARKLobIIIAIIIB2, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), d)
+    getTableauHPARK(:HPARKLobIIIAIIIB2, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), d)
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB HPARK method with three stages."
 function getTableauHPARKLobIIIAIIIB3()
     d = [+0.5, -1.0, +0.5]
 
-    getTableauHPARKNoProjection(:HPARKLobIIIAIIIB3, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), d)
+    getTableauHPARK(:HPARKLobIIIAIIIB3, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), d)
 end
 
 "Tableau for Gauss-Legendre HPARK method with s stages."
 function getTableauHPARKGLRK(s)
     glrk = getCoefficientsGLRK(s)
-    getTableauHPARKNoProjection(Symbol("HPARKGLRK", s), glrk, glrk)
+    getTableauHPARK(Symbol("HPARKGLRK", s), glrk, glrk)
 end
