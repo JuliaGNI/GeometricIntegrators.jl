@@ -104,8 +104,8 @@ module Tableaus
            getTableauVPLobIIIAIIIA2, getTableauVPLobIIIAIIIA3, getTableauVPLobIIIAIIIA4,
            getTableauVPRadIIAIIA2, getTableauVPRadIIAIIA3
 
-
     include("tableaus/tableaus_vprk.jl")
+
 
     export getTableauSymplecticProjection,
            getTableauLobIIIAIIIB2pSymplectic, getTableauLobIIIAIIIB3pSymplectic,
@@ -113,21 +113,22 @@ module Tableaus
 
     include("tableaus/tableaus_vpark.jl")
 
-    export getTableauSymmetricProjection,
-           getTableauLobIIIAIIIB2pSymmetric, getTableauLobIIIAIIIB3pSymmetric,
-           getTableauGLRKpSymmetric
+    export getTableauVSPARKGLRK,
+           getTableauMidpointProjection, getTableauGLRKpMidpoint,
+           getTableauSymmetricProjection, getTableauGLRKpSymmetric,
+           getTableauLobIIIAIIIB2pSymmetric, getTableauLobIIIAIIIB3pSymmetric
 
     include("tableaus/tableaus_vspark.jl")
+
+    export getTableauHPARK, getTableauHPARKGLRK,
+           getTableauHPARKLobIIIAIIIB2, getTableauHPARKLobIIIAIIIB3
+
+    include("tableaus/tableaus_hpark.jl")
+
 
     export getTableauLieA, getTableauLieB, getTableauStrang,
            getTableauMcLachlan2, getTableauMcLachlan4,
            getTableauTripleJump, getTableauSuzukiFractal
-
-    include("tableaus/tableaus_hpark.jl")
-
-    export getTableauHPARKNoProjection, getTableauHPARKGLRK,
-           getTableauHPARKLobIIIAIIIB2, getTableauHPARKLobIIIAIIIB3
-
 
     include("tableaus/tableaus_splitting.jl")
 

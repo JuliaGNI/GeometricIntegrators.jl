@@ -83,6 +83,11 @@ function Integrator(equation::IDAE, tableau::TableauVSPARK, Δt)
     IntegratorVSPARK(equation, tableau, Δt)
 end
 
+"Create integrator for variational special partitioned additive Runge-Kutta tableau with projection on primary constraint."
+function Integrator(equation::IDAE, tableau::TableauVSPARKprimary, Δt)
+    IntegratorVSPARKprimary(equation, tableau, Δt)
+end
+
 "Create integrator for Hamiltonian partitioned additive Runge-Kutta tableau."
 function Integrator(equation::PDAE, tableau::TableauHPARK, Δt)
     IntegratorHPARK(equation, tableau, Δt)
