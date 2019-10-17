@@ -53,7 +53,7 @@ for (getrf, getrs, elty) in
 
         function solve!(lu::LUSolverLAPACK{$elty})
             trans = UInt8('N')
-            nrhs = 1
+            nrhs = BlasInt(1)
             ccall((@blasfunc($getrs), liblapack), Nothing,
                   (Ptr{UInt8}, Ptr{BlasInt}, Ptr{BlasInt}, Ptr{$elty}, Ptr{BlasInt},
                    Ptr{BlasInt}, Ptr{$elty}, Ptr{BlasInt}, Ptr{BlasInt}),
