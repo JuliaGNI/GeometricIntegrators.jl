@@ -3,6 +3,7 @@ module SPARKIntegratorsTest
     export test_spark_integrators
 
     using GeometricIntegrators
+    using GeometricIntegrators.Utils
     using Test
 
     set_config(:nls_solver, NewtonSolver)
@@ -10,8 +11,6 @@ module SPARKIntegratorsTest
 
     using ..LotkaVolterraTest
     using ..LotkaVolterraTest: Δt, nt
-
-    include("utils.jl")
 
     idae = lotka_volterra_2d_idae()
     pdae = lotka_volterra_2d_pdae()

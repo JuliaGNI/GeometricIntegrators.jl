@@ -3,6 +3,7 @@ module IntegratorsTest
     export test_integrators
 
     using GeometricIntegrators
+    using GeometricIntegrators.Utils
     using Test
 
     set_config(:nls_solver, NewtonSolver)
@@ -10,8 +11,6 @@ module IntegratorsTest
 
     using ..OscillatorTest
     using ..OscillatorTest: Δt, nt, refx, refq, refp
-
-    include("utils.jl")
 
     ode  = oscillator_ode()
     pode = oscillator_pode()

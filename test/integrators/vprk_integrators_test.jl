@@ -4,6 +4,7 @@ module VPRKIntegratorsTest
     export test_vprk_integrators
 
     using GeometricIntegrators
+    using GeometricIntegrators.Utils
     using Test
 
     set_config(:nls_solver, NewtonSolver)
@@ -13,8 +14,6 @@ module VPRKIntegratorsTest
     using ..LotkaVolterraTest: Δt, nt
     # using ..OscillatorTest
     # using ..OscillatorTest: Δt, nt, refx
-
-    include("utils.jl")
 
     iode = lotka_volterra_2d_iode()
     # iode = oscillator_iode()
