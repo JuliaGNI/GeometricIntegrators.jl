@@ -96,7 +96,7 @@ module VPRKIntegratorsTest
         isol = integrate(vint, nt)
 
         # println(rel_err(isol.q, refx))
-        @test rel_err(isol.q, refx) < 2E-16
+        @test rel_err(isol.q, refx) < 4E-16
 
         vint = IntegratorVPRKpSymplectic(iode, getTableauVPGLRK(1), Δt)
         isol = integrate(vint, nt)
@@ -150,7 +150,7 @@ module VPRKIntegratorsTest
         isol = integrate(vint, nt)
 
         # println(rel_err(isol.q, refx))
-        @test rel_err(isol.q, refx) < 2E-16
+        @test rel_err(isol.q, refx) < 4E-16
 
         vintV1 = IntegratorVPRKpVariational(iode, getTableauVPGLRK(1), Δt)
         isolV1 = integrate(vintV1, nt)
