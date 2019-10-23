@@ -397,7 +397,7 @@ function function_stages!(y::Vector{DT}, b::Vector{DT}, params::ParametersSPARK{
 end
 
 
-"Variational special partitioned additive Runge-Kutta integrator."
+"Special partitioned additive Runge-Kutta integrator for DAEs of Index two."
 mutable struct IntegratorSPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: AbstractIntegratorSPARK{DT, TT}
     equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}
     tableau::TableauSPARK{TT}
