@@ -2,6 +2,10 @@ __precompile__()
 
 module Utils
 
+    export rel_err
+
+    include("utils/diag_utils.jl")
+
     export @define, @reexport, @dec128
 
     include("utils/macro_utils.jl")

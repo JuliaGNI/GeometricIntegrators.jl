@@ -46,7 +46,7 @@ and
 where `t` is the current time, `q` is the current solution vector, `v` is the
 current velocity and `f` and `p` are the vectors which hold the result of
 evaluating the functions ``f`` and ``ϑ`` on `t`, `q` and `v`.
-The funtions `g` and `v` are specified by
+In addition, two functions `g` and `v` are specified by
 ```julia
     function g(t, q, λ, g)
         g[1] = ...
@@ -62,6 +62,8 @@ and
         ...
     end
 ```
+The function `v` is used for initial guesses in nonlinear implicit solvers.
+The function `g` is used in projection methods that enforce ``p = ϑ(q)``.
 """
 struct IODE{dType <: Number, tType <: Number, ϑType <: Function, fType <: Function, gType <: Function, vType <: Function, N} <: Equation{dType, tType}
     d::Int
