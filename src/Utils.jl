@@ -10,8 +10,11 @@ module Utils
 
     include("utils/macro_utils.jl")
 
-    export compensated_summation
-    export istriustrict, istrilstrict, L2norm, l2norm
+    export compensated_summation, L2norm, l2norm
+
+    include("utils/sum_utils.jl")
+
+    export istriustrict, istrilstrict
     export simd_copy_xy_first!, simd_copy_yx_first!, simd_copy_yx_second!,
            simd_copy_yx_first_last!,
            simd_axpy!, simd_aXbpy!, simd_abXpy!, simd_mult!

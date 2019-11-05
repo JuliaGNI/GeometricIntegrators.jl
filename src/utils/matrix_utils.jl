@@ -1,16 +1,4 @@
 
-function compensated_summation(x::T, y::T, e::T) where {T}
-    local err::T
-    local res::T
-
-    err = e + x
-    res = err + y
-    e   = err + (y - res)
-
-    return (res, e)
-end
-
-
 function istriustrict(A::Matrix{T}) where {T}
     m, n = size(A)
     @inbounds for j = 1:min(n,m-1), i = j:m
@@ -29,18 +17,6 @@ function istrilstrict(A::Matrix{T}) where {T}
         end
     end
     return true
-end
-
-function L2norm(x)
-    local l2::eltype(x) = 0
-    for xᵢ in x
-        l2 += xᵢ^2
-    end
-    l2
-end
-
-function l2norm(x)
-    sqrt(L2norm(x))
 end
 
 
