@@ -8,7 +8,7 @@ such that p(x[i]) = y[i]) for all i.
     t:  evaluation point
     x:  evaluation value
 """
-function aitken_neville(ti::Vector{TT}, xi::Matrix{DT}, t::TT, x::Vector{DT}) where {DT,TT}
+function aitken_neville(ti::Vector{TT}, xi::Matrix, t::TT, x::Vector) where {TT}
     @assert length(ti) == size(xi,2)
     @assert length(x)  == size(xi,1)
 
@@ -37,7 +37,7 @@ Euler extrapolation method with arbitrary order p.
 
 # TODO This is probably broken!
 """
-function euler_extrapolation(v::Function, t₀::TT, t₁::TT, x₀::Vector{DT}, x₁::Vector{DT}, s::Int) where {DT,TT}
+function euler_extrapolation(v::Function, t₀::TT, t₁::TT, x₀::Vector, x₁::Vector, s::Int) where {TT}
     @assert size(x₀) == size(x₁)
 
     F   = collect(1:(s+1))
@@ -75,7 +75,7 @@ Midpoint extrapolation method with arbitrary order p.
     x₁: final   value
     s:  number of interpolations (order p=2s+2)
 """
-function midpoint_extrapolation(v::Function, t₀::TT, t₁::TT, x₀::Vector{DT}, x₁::Vector{DT}, s::Int) where {DT,TT}
+function midpoint_extrapolation(v::Function, t₀::TT, t₁::TT, x₀::Vector, x₁::Vector, s::Int) where {TT}
     @assert size(x₀) == size(x₁)
 
     local F   = 2*collect(1:(s+1))
@@ -124,7 +124,7 @@ Midpoint extrapolation method with arbitrary order p.
     p₁: final   momenta
     s:  number of interpolations (order p=2s+2)
 """
-function midpoint_extrapolation(v::Function, f::Function, t₀::TT, t₁::TT, q₀::Vector{DT}, q₁::Vector{DT}, p₀::Vector{DT}, p₁::Vector{DT}, s::Int) where {DT,TT}
+function midpoint_extrapolation(v::Function, f::Function, t₀::TT, t₁::TT, q₀::Vector, q₁::Vector, p₀::Vector, p₁::Vector, s::Int) where {TT}
     @assert size(q₀) == size(q₁) == size(p₀) == size(p₁)
 
     local F   = 2*collect(1:(s+1))
