@@ -52,7 +52,7 @@ struct IDAE{dType <: Number, tType <: Number, fType <: Function, pType <: Functi
         @assert d == size(q₀,1) == size(p₀,1)
         @assert m == size(λ₀,1)
         @assert n == size(q₀,2) == size(p₀,2) == size(λ₀,2)
-        @assert 2n ≥ m
+        @assert 2d ≥ m
 
         @assert dType == eltype(q₀)
         @assert dType == eltype(p₀)
