@@ -31,14 +31,17 @@ mutable struct IntegratorCacheVSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
     t::TT
     t̅::TT
 
-    q::Vector{TwicePrecision{ST}}
-    q̅::Vector{TwicePrecision{ST}}
-    p::Vector{TwicePrecision{ST}}
-    p̅::Vector{TwicePrecision{ST}}
-    λ::Vector{TwicePrecision{ST}}
-    λ̅::Vector{TwicePrecision{ST}}
-    μ::Vector{TwicePrecision{ST}}
-    μ̅::Vector{TwicePrecision{ST}}
+    q::Vector{ST}
+    q̅::Vector{ST}
+    p::Vector{ST}
+    p̅::Vector{ST}
+    λ::Vector{ST}
+    λ̅::Vector{ST}
+    μ::Vector{ST}
+    μ̅::Vector{ST}
+
+    qₑᵣᵣ::Vector{ST}
+    pₑᵣᵣ::Vector{ST}
 
     v::Vector{ST}
     v̅::Vector{ST}
@@ -76,14 +79,18 @@ mutable struct IntegratorCacheVSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
     Φp::Vector{Vector{ST}}
 
     function IntegratorCacheVSPARK{ST,TT,D,S,R}() where {ST,TT,D,S,R}
-        q = zeros(TwicePrecision{ST}, D)
-        q̅ = zeros(TwicePrecision{ST}, D)
-        p = zeros(TwicePrecision{ST}, D)
-        p̅ = zeros(TwicePrecision{ST}, D)
-        λ = zeros(TwicePrecision{ST}, D)
-        λ̅ = zeros(TwicePrecision{ST}, D)
-        μ = zeros(TwicePrecision{ST}, D)
-        μ̅ = zeros(TwicePrecision{ST}, D)
+        q = zeros(ST,D)
+        q̅ = zeros(ST,D)
+        p = zeros(ST,D)
+        p̅ = zeros(ST,D)
+        λ = zeros(ST,D)
+        λ̅ = zeros(ST,D)
+        μ = zeros(ST,D)
+        μ̅ = zeros(ST,D)
+
+        # create error vectors
+        qₑᵣᵣ = zeros(ST,D)
+        pₑᵣᵣ = zeros(ST,D)
 
         # create update vectors
         v = zeros(ST,D)
@@ -124,6 +131,7 @@ mutable struct IntegratorCacheVSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
         Φp = create_internal_stage_vector(ST, D, R)
 
         new(0, zero(TT), zero(TT), q, q̅, p, p̅, λ, λ̅, μ, μ̅,
+                                   qₑᵣᵣ, pₑᵣᵣ,
                                    v, v̅, f, f̅, u, u̅, g, g̅, ϕ, ϕ̅,
                                    q̃, p̃, ṽ, f̃, ϕ̃, s̃,
                                    Qi, Pi, Vi, Fi, Yi, Zi, Φi,

@@ -131,7 +131,7 @@ module VPRKIntegratorsTest
         isol = integrate(vint, nt)
 
         # println(rel_err(isol.q, refx))
-        @test rel_err(isol.q, refx) < 2E-16
+        @test rel_err(isol.q, refx) < 4E-16
 
         vint = IntegratorVPRKpMidpoint(iode, getTableauVPGLRK(1), Δt)
         isol = integrate(vint, nt)

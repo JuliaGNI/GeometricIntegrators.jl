@@ -126,8 +126,8 @@ function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Vector{Vecto
     @assert length(x) == length(ẋ[1])
     @assert length(x) == length(xₑᵣᵣ)
 
-    for i in axes(ẋ)
-        for k in axes(ẋ[i])
+    for i in 1:length(ẋ)
+        for k in 1:length(ẋ[i])
             x[k], xₑᵣᵣ[k] = compensated_summation(Δt * b[i] * ẋ[i][k], x[k], xₑᵣᵣ[k])
         end
     end

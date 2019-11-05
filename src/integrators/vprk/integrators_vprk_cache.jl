@@ -31,17 +31,20 @@ mutable struct IntegratorCacheVPRK{ST,TT,D,S} <: IODEIntegratorCache{ST,D}
     t::TT
     t̅::TT
 
-    q::Vector{TwicePrecision{ST}}
-    q̅::Vector{TwicePrecision{ST}}
-    p::Vector{TwicePrecision{ST}}
-    p̅::Vector{TwicePrecision{ST}}
-    λ::Vector{TwicePrecision{ST}}
-    λ̅::Vector{TwicePrecision{ST}}
+    q::Vector{ST}
+    q̅::Vector{ST}
+    p::Vector{ST}
+    p̅::Vector{ST}
+    λ::Vector{ST}
+    λ̅::Vector{ST}
 
-    q₋::Vector{TwicePrecision{ST}}
-    q̅₊::Vector{TwicePrecision{ST}}
-    p₋::Vector{TwicePrecision{ST}}
-    p̅₊::Vector{TwicePrecision{ST}}
+    qₑᵣᵣ::Vector{ST}
+    pₑᵣᵣ::Vector{ST}
+
+    q₋::Vector{ST}
+    q̅₊::Vector{ST}
+    p₋::Vector{ST}
+    p̅₊::Vector{ST}
 
     v::Vector{ST}
     v̅::Vector{ST}
@@ -72,10 +75,14 @@ mutable struct IntegratorCacheVPRK{ST,TT,D,S} <: IODEIntegratorCache{ST,D}
 
     function IntegratorCacheVPRK{ST,TT,D,S}(projection::Bool=false) where {ST,TT,D,S}
         # create solution vectors
-        q = zeros(TwicePrecision{ST}, D)
-        q̅ = zeros(TwicePrecision{ST}, D)
-        p = zeros(TwicePrecision{ST}, D)
-        p̅ = zeros(TwicePrecision{ST}, D)
+        q = zeros(ST,D)
+        q̅ = zeros(ST,D)
+        p = zeros(ST,D)
+        p̅ = zeros(ST,D)
+
+        # create error vectors
+        qₑᵣᵣ = zeros(ST,D)
+        pₑᵣᵣ = zeros(ST,D)
 
         # create update vectors
         v = zeros(ST,D)
@@ -100,13 +107,13 @@ mutable struct IntegratorCacheVPRK{ST,TT,D,S} <: IODEIntegratorCache{ST,D}
 
         # projection vectors
         if projection
-            λ = zeros(TwicePrecision{ST}, D)
-            λ̅ = zeros(TwicePrecision{ST}, D)
+            λ = zeros(ST,D)
+            λ̅ = zeros(ST,D)
 
-            q₋= zeros(TwicePrecision{ST}, D)
-            q̅₊= zeros(TwicePrecision{ST}, D)
-            p₋= zeros(TwicePrecision{ST}, D)
-            p̅₊= zeros(TwicePrecision{ST}, D)
+            q₋= zeros(ST,D)
+            q̅₊= zeros(ST,D)
+            p₋= zeros(ST,D)
+            p̅₊= zeros(ST,D)
 
             u = zeros(ST,D)
             g = zeros(ST,D)
@@ -118,13 +125,13 @@ mutable struct IntegratorCacheVPRK{ST,TT,D,S} <: IODEIntegratorCache{ST,D}
             G = create_internal_stage_vector(ST, D, 2)
             R = create_internal_stage_vector(ST, D, S)
         else
-            λ = Vector{TwicePrecision{ST}}()
-            λ̅ = Vector{TwicePrecision{ST}}()
+            λ = Vector{ST}()
+            λ̅ = Vector{ST}()
 
-            q₋= Vector{TwicePrecision{ST}}()
-            q̅₊= Vector{TwicePrecision{ST}}()
-            p₋= Vector{TwicePrecision{ST}}()
-            p̅₊= Vector{TwicePrecision{ST}}()
+            q₋= Vector{ST}()
+            q̅₊= Vector{ST}()
+            p₋= Vector{ST}()
+            p̅₊= Vector{ST}()
 
             u = Vector{ST}()
             g = Vector{ST}()
@@ -138,7 +145,9 @@ mutable struct IntegratorCacheVPRK{ST,TT,D,S} <: IODEIntegratorCache{ST,D}
         end
 
         new(0, zero(TT), zero(TT),
-            q, q̅, p, p̅, λ, λ̅, q₋, q̅₊, p₋, p̅₊,
+            q, q̅, p, p̅, λ, λ̅,
+            qₑᵣᵣ, pₑᵣᵣ,
+            q₋, q̅₊, p₋, p̅₊,
             v, v̅, f, f̅, u, g, q̃, p̃, ṽ, f̃, s̃,
             Q, P, V, F, Λ, Φ, Y, Z, U, G, R)
     end
@@ -160,18 +169,18 @@ function update_params!(params::AbstractParametersVPRK, cache::IntegratorCacheVP
 end
 
 function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK{DT,TT}) where {DT,TT}
-    update_solution!(cache.q, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
-    update_solution!(cache.p, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+    update_solution!(cache.q, cache.qₑᵣᵣ, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(cache.p, cache.pₑᵣᵣ, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 end
 
 function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK, R::Vector{TT}) where {DT,TT}
-    update_solution!(cache.q, cache.U, R, timestep(int))
-    update_solution!(cache.p, cache.G, R, timestep(int))
+    update_solution!(cache.q, cache.qₑᵣᵣ, cache.U, R, timestep(int))
+    update_solution!(cache.p, cache.pₑᵣᵣ, cache.G, R, timestep(int))
 end
 
 function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK, RU::Vector{TT}, RG::Vector{TT}) where {DT,TT}
-    update_solution!(cache.q, cache.U, RU, timestep(int))
-    update_solution!(cache.p, cache.G, RG, timestep(int))
+    update_solution!(cache.q, cache.qₑᵣᵣ, cache.U, RU, timestep(int))
+    update_solution!(cache.p, cache.pₑᵣᵣ, cache.G, RG, timestep(int))
 end
 
 function CommonFunctions.set_solution!(cache::IntegratorCacheVPRK, sol, n=0)
@@ -195,7 +204,7 @@ function create_integrator_cache(int::AbstractIntegratorVPRKwProjection{DT,TT}) 
 end
 
 
-function initialize!(int::AbstractIntegratorVPRK, cache::IntegratorCacheVPRK)
+function initialize!(int::AbstractIntegratorVPRK{DT}, cache::IntegratorCacheVPRK) where {DT,TT}
     cache.t̅ = cache.t - timestep(int)
 
     equation(int).v(cache.t, cache.q, cache.p, cache.v)

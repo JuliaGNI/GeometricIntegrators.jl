@@ -133,12 +133,12 @@ function integrate_step!(int::AbstractIntegratorVSPARK{DT,TT}, cache::Integrator
     compute_stages!(int.solver.x, cache, int.params)
 
     # compute final update
-    update_solution!(cache.q, cache.Vi, int.params.t_q.b, timestep(int))
-    update_solution!(cache.p, cache.Fi, int.params.t_p.b, timestep(int))
+    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Vi, int.params.t_q.b, timestep(int))
+    update_solution!(cache.p, cache.pₑᵣᵣ, cache.Fi, int.params.t_p.b, timestep(int))
 
     # compute projection
-    update_solution!(cache.q, cache.Up, int.params.t_q.β, timestep(int))
-    update_solution!(cache.p, cache.Gp, int.params.t_p.β, timestep(int))
+    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Up, int.params.t_q.β, timestep(int))
+    update_solution!(cache.p, cache.pₑᵣᵣ, cache.Gp, int.params.t_p.β, timestep(int))
     # TODO # update_multiplier!(cache.λ, cache.Λp, int.params.t_λ.b)
 
     # copy solution to initial guess

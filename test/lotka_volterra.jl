@@ -19,14 +19,6 @@ module LotkaVolterraTest
     const Y0=1.0
 
 
-    using Base: TwicePrecision
-
-    Base.log(x::TwicePrecision) = TwicePrecision(log(x.hi))
-    Base.one(::Type{TwicePrecision{DT}}) where {DT} = TwicePrecision(one(DT))
-    Base.:/(x::Number, y::TwicePrecision{DT}) where {DT} = TwicePrecision(x/y.hi)
-    Base.:^(x::TwicePrecision, p) = TwicePrecision(x.hi^p)
-
-
     function ϑ₁(t, q)
         q[2] + log(q[2]) / q[1]
     end
