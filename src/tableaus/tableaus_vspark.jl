@@ -20,7 +20,7 @@ function getTableauVSPARKGLRK(s)
 end
 
 
-function getTableauMidpointProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function getTableauVSPARKMidpointProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
     @assert q.s == p.s
     s = q.s
 
@@ -60,14 +60,14 @@ function getTableauMidpointProjection(name, q::CoefficientsRK{T}, p::Coefficient
 end
 
 "Tableau for Gauss-Legendre method with s stages and midpoint projection."
-function getTableauGLRKpMidpoint(s)
+function getTableauVSPARKGLRKpMidpoint(s)
     glrk = getCoefficientsGLRK(s)
-    getTableauMidpointProjection(Symbol("vsparkglrk", s, "pMidpoint"), glrk, glrk; R∞=(-1)^s)
+    getTableauVSPARKMidpointProjection(Symbol("vsparkglrk", s, "pMidpoint"), glrk, glrk; R∞=(-1)^s)
 end
 
 
 
-function getTableauSymmetricProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function getTableauVSPARKSymmetricProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 
@@ -107,7 +107,6 @@ function getTableauSymmetricProjection(name, q::CoefficientsRK{T}, p::Coefficien
     δ_λ .= [-1.0 +1.0]
 
 
-
     if length(d) == 0
         return TableauVSPARKprimary(name, o,
                             a_q, a_p, α_q, α_p,
@@ -129,23 +128,22 @@ function getTableauSymmetricProjection(name, q::CoefficientsRK{T}, p::Coefficien
 end
 
 
-
 "Tableau for Gauss-Lobatto IIIA-IIIB method with two stages and symmetric projection."
-function getTableauLobIIIAIIIB2pSymmetric()
+function getTableauVSPARKLobIIIAIIIB2pSymmetric()
     d = [+1.0, -1.0]
-    getTableauSymmetricProjection(:LobIIIAIIIB2pSymmetric, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), d; R∞=-1)
+    getTableauVSPARKSymmetricProjection(:LobIIIAIIIB2pSymmetric, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), d; R∞=-1)
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with three stages and symmetric projection."
-function getTableauLobIIIAIIIB3pSymmetric()
+function getTableauVSPARKLobIIIAIIIB3pSymmetric()
     d = [+0.5, -1.0, +0.5]
-    getTableauSymmetricProjection(:LobIIIAIIIB3pSymmetric, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), d; R∞=+1)
+    getTableauVSPARKSymmetricProjection(:LobIIIAIIIB3pSymmetric, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), d; R∞=+1)
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
-function getTableauGLRKpSymmetric(s)
+function getTableauVSPARKGLRKpSymmetric(s)
     glrk = getCoefficientsGLRK(s)
-    getTableauSymmetricProjection(Symbol("vpglrk", s, "pSymmetric"), glrk, glrk; R∞=(-1)^s)
+    getTableauVSPARKSymmetricProjection(Symbol("vpglrk", s, "pSymmetric"), glrk, glrk; R∞=(-1)^s)
 end
 
 
