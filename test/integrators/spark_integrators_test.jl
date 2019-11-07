@@ -6,8 +6,10 @@ module SPARKIntegratorsTest
     using GeometricIntegrators.Utils
     using Test
 
-    set_config(:nls_solver, NewtonSolver)
-    set_config(:jacobian_autodiff, false)
+    set_config(:nls_atol, 8eps())
+    set_config(:nls_rtol, 2eps())
+    # set_config(:nls_solver, NewtonSolver)
+    # set_config(:jacobian_autodiff, false)
 
     using ..LotkaVolterraTest
     using ..LotkaVolterraTest: Δt, nt
@@ -48,17 +50,17 @@ module SPARKIntegratorsTest
         # println(rel_err(dsol.q, refx))
         @test rel_err(dsol.q, refx) < 1E-11
 
-        # dint = Integrator(idae, getTableauLobIIIAIIIB2pSymplectic(), Δt)
-        # dsol = integrate(dint, nt)
-        #
+        dint = Integrator(idae, getTableauLobIIIAIIIB2pSymplectic(), Δt)
+        dsol = integrate(dint, nt)
+
         # println(rel_err(dsol.q, refx))
-        # @test rel_err(dsol.q, refx) < 8E-4
-        #
-        # dint = Integrator(idae, getTableauLobIIIAIIIB3pSymplectic(), Δt)
-        # dsol = integrate(dint, nt)
-        #
+        @test rel_err(dsol.q, refx) < 2E-6
+
+        dint = Integrator(idae, getTableauLobIIIAIIIB3pSymplectic(), Δt)
+        dsol = integrate(dint, nt)
+
         # println(rel_err(dsol.q, refx))
-        # @test rel_err(dsol.q, refx) < 2E-4
+        @test rel_err(dsol.q, refx) < 8E-5
 
 
         ### VSPARK Integrators ###
@@ -126,17 +128,17 @@ module SPARKIntegratorsTest
         # println(rel_err(dsol.q, refx))
         @test rel_err(dsol.q, refx) < 1E-11
 
-        # dint = IntegratorVSPARKprimary(idae, getTableauLobIIIAIIIB2pSymmetric(), Δt)
-        # dsol = integrate(dint, nt)
-        #
+        dint = IntegratorVSPARKprimary(idae, getTableauLobIIIAIIIB2pSymmetric(), Δt)
+        dsol = integrate(dint, nt)
+
         # println(rel_err(dsol.q, refx))
-        # @test rel_err(dsol.q, refx) < 8E-3
-        #
-        # dint = IntegratorVSPARKprimary(idae, getTableauLobIIIAIIIB3pSymmetric(), Δt)
-        # dsol = integrate(dint, nt)
-        #
+        @test rel_err(dsol.q, refx) < 2E-6
+
+        dint = IntegratorVSPARKprimary(idae, getTableauLobIIIAIIIB3pSymmetric(), Δt)
+        dsol = integrate(dint, nt)
+
         # println(rel_err(dsol.q, refx))
-        # @test rel_err(dsol.q, refx) < 1E-2
+        @test rel_err(dsol.q, refx) < 8E-5
 
 
         ### HPARK Integrator ###
@@ -167,13 +169,13 @@ module SPARKIntegratorsTest
 
         # dint = Integrator(pdae, getTableauHPARKLobIIIAIIIB2(), Δt)
         # dsol = integrate(dint, nt)
-        #
+        # TODO
         # println(rel_err(dsol.q, refx))
         # @test rel_err(dsol.q, refx) < 2E-2
-        #
+
         # dint = Integrator(pdae, getTableauHPARKLobIIIAIIIB3(), Δt)
         # dsol = integrate(dint, nt)
-        #
+        # TODO
         # println(rel_err(dsol.q, refx))
         # @test rel_err(dsol.q, refx) < 2E-4
 

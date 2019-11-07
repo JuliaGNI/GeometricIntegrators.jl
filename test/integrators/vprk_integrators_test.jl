@@ -7,16 +7,13 @@ module VPRKIntegratorsTest
     using GeometricIntegrators.Utils
     using Test
 
-    set_config(:nls_solver, NewtonSolver)
-    set_config(:jacobian_autodiff, false)
+    set_config(:nls_atol, 8eps())
+    set_config(:nls_rtol, 2eps())
 
     using ..LotkaVolterraTest
     using ..LotkaVolterraTest: Δt, nt
-    # using ..OscillatorTest
-    # using ..OscillatorTest: Δt, nt, refx
 
     iode = lotka_volterra_2d_iode()
-    # iode = oscillator_iode()
 
     int = IntegratorFIRK(lotka_volterra_2d_ode(), getTableauGLRK(8), Δt)
     sol = integrate(int, nt)
@@ -43,41 +40,41 @@ module VPRKIntegratorsTest
         # println(rel_err(isol.q, refx))
         @test rel_err(isol.q, refx) < 4E-12
 
-        # vint = Integrator(iode, getTableauVPLobIIIA2(), Δt)
-        # vsol = integrate(vint, nt)
-        #
+        vint = Integrator(iode, getTableauVPLobIIIA2(), Δt)
+        vsol = integrate(vint, nt)
+
         # println(rel_err(isol.q, refx))
-        # @test rel_err(vsol.q, refx) < 5E-3
-        #
-        # vint = Integrator(iode, getTableauVPLobIIIA3(), Δt)
-        # vsol = integrate(vint, nt)
-        #
-        # println(rel_err(isol.q, refx))
-        # @test rel_err(vsol.q, refx) < 5E-4
-        #
-        # vint = Integrator(iode, getTableauVPLobIIIA4(), Δt)
-        # vsol = integrate(vint, nt)
-        #
-        # println(rel_err(isol.q, refx))
-        # @test rel_err(vsol.q, refx) < 1E-7
-        #
-        # vint = Integrator(iode, getTableauVPLobIIIB2(), Δt)
-        # vsol = integrate(vint, nt)
-        #
-        # println(rel_err(isol.q, refx))
-        # @test rel_err(vsol.q, refx) < 5E-3
-        #
-        # vint = Integrator(iode, getTableauVPLobIIIB3(), Δt)
-        # vsol = integrate(vint, nt)
-        #
-        # println(rel_err(isol.q, refx))
-        # @test rel_err(vsol.q, refx) < 5E-4
-        #
-        # vint = Integrator(iode, getTableauVPLobIIIB4(), Δt)
-        # vsol = integrate(vint, nt)
-        #
-        # println(rel_err(isol.q, refx))
-        # @test rel_err(vsol.q, refx) < 1E-7
+        @test rel_err(vsol.q, refx) < 4E-6
+
+        vint = Integrator(iode, getTableauVPLobIIIA3(), Δt)
+        vsol = integrate(vint, nt)
+
+        # println(rel_err(vsol.q, refx))
+        @test rel_err(vsol.q, refx) < 8E-7
+
+        vint = Integrator(iode, getTableauVPLobIIIA4(), Δt)
+        vsol = integrate(vint, nt)
+
+        # println(rel_err(vsol.q, refx))
+        @test rel_err(vsol.q, refx) < 3E-11
+
+        vint = Integrator(iode, getTableauVPLobIIIB2(), Δt)
+        vsol = integrate(vint, nt)
+
+        # println(rel_err(vsol.q, refx))
+        @test rel_err(vsol.q, refx) < 2E-6
+
+        vint = Integrator(iode, getTableauVPLobIIIB3(), Δt)
+        vsol = integrate(vint, nt)
+
+        # println(rel_err(vsol.q, refx))
+        @test rel_err(vsol.q, refx) < 8E-7
+
+        vint = Integrator(iode, getTableauVPLobIIIB4(), Δt)
+        vsol = integrate(vint, nt)
+
+        # println(rel_err(vsol.q, refx))
+        @test rel_err(vsol.q, refx) < 2E-11
 
         vint = IntegratorVPRKpStandard(iode, getTableauVPGLRK(1), Δt)
         isol = integrate(vint, nt)
@@ -95,7 +92,7 @@ module VPRKIntegratorsTest
         isol = integrate(vint, nt)
 
         # println(rel_err(isol.q, refx))
-        @test rel_err(isol.q, refx) < 4E-16
+        @test rel_err(isol.q, refx) < 5E-16
 
         vint = IntegratorVPRKpSymplectic(iode, getTableauVPGLRK(1), Δt)
         isol = integrate(vint, nt)
