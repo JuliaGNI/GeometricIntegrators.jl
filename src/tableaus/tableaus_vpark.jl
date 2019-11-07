@@ -56,21 +56,17 @@ end
 "Tableau for Gauss-Lobatto IIIA-IIIB method with two stages and symplectic projection."
 function getTableauLobIIIAIIIB2pSymplectic()
     d = [+1.0, -1.0]
-
     getTableauSymplecticProjection(:LobIIIAIIIB2pSymplectic, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), d; R∞=-1)
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with three stages and symplectic projection."
 function getTableauLobIIIAIIIB3pSymplectic()
     d = [+0.5, -1.0, +0.5]
-
     getTableauSymplecticProjection(:LobIIIAIIIB3pSymplectic, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), d; R∞=+1)
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function getTableauGLRKpSymplectic(s)
     glrk = getCoefficientsGLRK(s)
-    R∞ = -1^s
-
-    getTableauSymplecticProjection(Symbol("vpglrk", s, "pSymplectic"), glrk, glrk; R∞=R∞)
+    getTableauSymplecticProjection(Symbol("vpglrk", s, "pSymplectic"), glrk, glrk; R∞=(-1)^s)
 end

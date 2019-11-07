@@ -62,8 +62,7 @@ end
 "Tableau for Gauss-Legendre method with s stages and midpoint projection."
 function getTableauGLRKpMidpoint(s)
     glrk = getCoefficientsGLRK(s)
-    R∞ = (-1)^s
-    getTableauMidpointProjection(Symbol("vsparkglrk", s, "pMidpoint"), glrk, glrk; R∞=R∞)
+    getTableauMidpointProjection(Symbol("vsparkglrk", s, "pMidpoint"), glrk, glrk; R∞=(-1)^s)
 end
 
 
@@ -134,23 +133,19 @@ end
 "Tableau for Gauss-Lobatto IIIA-IIIB method with two stages and symmetric projection."
 function getTableauLobIIIAIIIB2pSymmetric()
     d = [+1.0, -1.0]
-
     getTableauSymmetricProjection(:LobIIIAIIIB2pSymmetric, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), d; R∞=-1)
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with three stages and symmetric projection."
 function getTableauLobIIIAIIIB3pSymmetric()
     d = [+0.5, -1.0, +0.5]
-
     getTableauSymmetricProjection(:LobIIIAIIIB3pSymmetric, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), d; R∞=+1)
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function getTableauGLRKpSymmetric(s)
     glrk = getCoefficientsGLRK(s)
-    R∞ = (-1)^s
-
-    getTableauSymmetricProjection(Symbol("vpglrk", s, "pSymmetric"), glrk, glrk; R∞=R∞)
+    getTableauSymmetricProjection(Symbol("vpglrk", s, "pSymmetric"), glrk, glrk; R∞=(-1)^s)
 end
 
 
@@ -242,7 +237,5 @@ end
 
 function getTableauVSPARKGLRKpSymplectic(s)
     glrk = getCoefficientsGLRK(s)
-    R∞ = (-1)^s
-
-    getTableauVSPARKSymplecticProjection(Symbol("VSPARK", s, "pSymplectic"), glrk, glrk; R∞=R∞)
+    getTableauVSPARKSymplecticProjection(Symbol("VSPARK", s, "pSymplectic"), glrk, glrk; R∞=(-1)^s)
 end
