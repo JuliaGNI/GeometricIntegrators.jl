@@ -9,6 +9,8 @@ module VPRKIntegratorsTest
 
     set_config(:nls_atol, 8eps())
     set_config(:nls_rtol, 2eps())
+    set_config(:nls_solver, QuasiNewtonSolver)
+    set_config(:jacobian_autodiff, true)
 
     using ..LotkaVolterraTest
     using ..LotkaVolterraTest: Δt, nt
