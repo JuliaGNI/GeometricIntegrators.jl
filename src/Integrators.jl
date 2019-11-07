@@ -130,6 +130,7 @@ module Integrators
     export CoefficientsARK, CoefficientsPRK, CoefficientsMRK
 
     export AbstractIntegratorSPARK
+    export AbstractTableauSPARK
 
     export IntegratorARK, TableauARK
     export IntegratorPARK, TableauPARK
@@ -138,34 +139,37 @@ module Integrators
     export IntegratorSPARK, TableauSPARK
 
     export IntegratorHPARK, TableauHPARK
-    export IntegratorHSPARK, TableauHSPARK
-
     export IntegratorVPARK, TableauVPARK
-    
-    export AbstractTableauVSPARK
+
+    export IntegratorHSPARK, TableauHSPARK
+    export IntegratorHSPARKprimary, TableauHSPARKprimary
+
     export IntegratorVSPARK, TableauVSPARK
     export IntegratorVSPARKprimary, TableauVSPARKprimary
 
     include("integrators/spark/abstract_integrator_spark.jl")
     include("integrators/spark/coefficients.jl")
-    include("integrators/spark/integrators_spark_common.jl")
 
     include("integrators/spark/integrators_ark.jl")
     include("integrators/spark/integrators_sark.jl")
+
     include("integrators/spark/integrators_park.jl")
     include("integrators/spark/integrators_gpark.jl")
+    include("integrators/spark/integrators_vpark.jl")
+    include("integrators/spark/integrators_hpark.jl")
+
+    include("integrators/spark/integrators_spark_cache.jl")
+    include("integrators/spark/integrators_spark_common.jl")
+    include("integrators/spark/integrators_spark_tableau.jl")
     include("integrators/spark/integrators_spark.jl")
 
-    include("integrators/spark/integrators_vpark.jl")
-
-    include("integrators/spark/integrators_vspark_cache.jl")
     include("integrators/spark/integrators_vspark_common.jl")
-    include("integrators/spark/integrators_vspark_tableau.jl")
     include("integrators/spark/integrators_vspark.jl")
     include("integrators/spark/integrators_vspark_primary.jl")
 
-    include("integrators/spark/integrators_hpark.jl")
+    include("integrators/spark/integrators_hspark_common.jl")
     include("integrators/spark/integrators_hspark.jl")
+    include("integrators/spark/integrators_hspark_primary.jl")
 
 
     export TableauGLM

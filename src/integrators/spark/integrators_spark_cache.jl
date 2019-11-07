@@ -1,5 +1,5 @@
 """
-Cache of a Partitioned Additive Runge-Kutta integrator for Variational systems.
+Cache of a Specialised Partitioned Additive Runge-Kutta integrator.
 
 ### Fields
 
@@ -26,7 +26,7 @@ Cache of a Partitioned Additive Runge-Kutta integrator for Variational systems.
 * `Y`: vector field of internal stages of q
 * `Z`: vector field of internal stages of p
 """
-mutable struct IntegratorCacheVSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
+mutable struct IntegratorCacheSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
     n::Int
     t::TT
     t̅::TT
@@ -78,7 +78,7 @@ mutable struct IntegratorCacheVSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
     Zp::Vector{Vector{ST}}
     Φp::Vector{Vector{ST}}
 
-    function IntegratorCacheVSPARK{ST,TT,D,S,R}() where {ST,TT,D,S,R}
+    function IntegratorCacheSPARK{ST,TT,D,S,R}() where {ST,TT,D,S,R}
         q = zeros(ST,D)
         q̅ = zeros(ST,D)
         p = zeros(ST,D)
@@ -139,7 +139,7 @@ mutable struct IntegratorCacheVSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
     end
 end
 
-function CommonFunctions.reset!(cache::IntegratorCacheVSPARK, Δt)
+function CommonFunctions.reset!(cache::IntegratorCacheSPARK, Δt)
     cache.t̅  = cache.t
     cache.q̅ .= cache.q
     cache.p̅ .= cache.p

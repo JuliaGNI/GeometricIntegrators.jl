@@ -90,6 +90,8 @@ module Tableaus
     export getTableauSymplecticEulerA, getTableauSymplecticEulerB,
            getTableauLobattoIIIAIIIB2, getTableauLobattoIIIBIIIA2
 
+    export getTableauSPARKGLRK
+
     include("tableaus/tableaus_spark.jl")
 
     export getTableauVPGLRK,
@@ -116,7 +118,6 @@ module Tableaus
     export getTableauVSPARKMidpointProjection,
            getTableauVSPARKSymmetricProjection,
            getTableauVSPARKSymplecticProjection,
-           getTableauVSPARKGLRK,
            getTableauVSPARKGLRKpMidpoint,
            getTableauVSPARKGLRKpSymmetric,
            getTableauVSPARKGLRKpSymplectic,
@@ -130,6 +131,12 @@ module Tableaus
 
     include("tableaus/tableaus_hpark.jl")
 
+    export getTableauHSPARKSymmetricProjection,
+           getTableauHSPARKGLRKpSymmetric,
+           getTableauHSPARKLobIIIAIIIB2pSymmetric,
+           getTableauHSPARKLobIIIAIIIB3pSymmetric
+
+    include("tableaus/tableaus_hspark.jl")
 
     export getTableauLieA, getTableauLieB, getTableauStrang,
            getTableauMcLachlan2, getTableauMcLachlan4,

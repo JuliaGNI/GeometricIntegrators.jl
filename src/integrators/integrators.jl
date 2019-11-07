@@ -93,6 +93,16 @@ function Integrator(equation::PDAE, tableau::TableauHPARK, Δt)
     IntegratorHPARK(equation, tableau, Δt)
 end
 
+"Create integrator for Hamiltonian special partitioned additive Runge-Kutta tableau."
+function Integrator(equation::PDAE, tableau::TableauHSPARK, Δt)
+    IntegratorHSPARK(equation, tableau, Δt)
+end
+
+"Create integrator for Hamiltonian special partitioned additive Runge-Kutta tableau with projection on primary constraint."
+function Integrator(equation::PDAE, tableau::TableauHSPARKprimary, Δt)
+    IntegratorHSPARKprimary(equation, tableau, Δt)
+end
+
 "Create integrator for splitting tableau."
 function Integrator(equation::SODE, tableau::AbstractTableauSplitting, Δt)
     IntegratorSplitting(equation, tableau, Δt)

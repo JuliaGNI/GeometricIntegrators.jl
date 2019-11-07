@@ -1,6 +1,6 @@
 
-const TableauVSPARKprimary{TT,DT} = AbstractTableauVSPARK{:vspark_primary,DT}
-const ParametersVSPARKprimary{DT,TT,D,S,R,FT,PT,UT,GT,ϕT} = AbstractParametersVSPARK{:vspark_primary,DT,TT,D,S,R,FT,PT,UT,GT,ϕT}
+const TableauVSPARKprimary{TT,DT} = AbstractTableauSPARK{:vspark_primary,DT}
+const ParametersVSPARKprimary = AbstractParametersVSPARK{:vspark_primary}
 
 
 @doc raw"""
@@ -82,7 +82,7 @@ function IntegratorVSPARKprimary(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
 end
 
 
-function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVSPARK{ST,TT,D,S,R},
+function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
                                         params::ParametersVSPARKprimary{DT,TT,D,S,R,P}) where {ST,DT,TT,D,S,R,P}
     local tpᵢ::TT
     local tλᵢ::TT
@@ -152,7 +152,7 @@ end
 
 "Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems."
 @generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVSPARKprimary{DT,TT,D,S,R,P}) where {ST,DT,TT,D,S,R,P}
-    cache = IntegratorCacheVSPARK{ST,TT,D,S,R}()
+    cache = IntegratorCacheSPARK{ST,TT,D,S,R}()
 
     quote
         compute_stages!(y, $cache, params)

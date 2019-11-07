@@ -1,25 +1,4 @@
 
-
-function getTableauVSPARKGLRK(s)
-    g = getCoefficientsGLRK(s)
-
-    ω = zeros(s-1, s)
-
-    for i in 1:s-1
-        for j in 1:s
-            ω[i,j] = g.b[j] * g.c[j]^(i-1)
-        end
-    end
-
-    return TableauVSPARK(Symbol("vsparkglrk", s), g.o,
-                        g.a, g.a, g.a, g.a,
-                        g.a, g.a, g.a, g.a,
-                        g.b, g.b, g.b, g.b,
-                        g.c, g.c, g.c, g.c,
-                        ω)
-end
-
-
 function getTableauVSPARKMidpointProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
     @assert q.s == p.s
     s = q.s

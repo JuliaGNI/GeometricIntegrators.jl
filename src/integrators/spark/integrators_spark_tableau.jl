@@ -1,5 +1,5 @@
 "Holds the tableau of an Specialised Partitioned Additive Runge-Kutta method for Variational systems."
-struct AbstractTableauVSPARK{IT,DT} <: AbstractTableau{DT}
+struct AbstractTableauSPARK{IT,DT} <: AbstractTableau{DT}
     name::Symbol
     o::Int
     s::Int
@@ -18,7 +18,7 @@ struct AbstractTableauVSPARK{IT,DT} <: AbstractTableau{DT}
     δ::Matrix{DT}
     d::Vector{DT}
 
-    function AbstractTableauVSPARK{IT,DT}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, δ, d) where {IT,DT}
+    function AbstractTableauSPARK{IT,DT}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, δ, d) where {IT,DT}
         @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
@@ -37,7 +37,7 @@ struct AbstractTableauVSPARK{IT,DT} <: AbstractTableau{DT}
         new(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, δ, d)
     end
 
-    function AbstractTableauVSPARK{IT,DT}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, δ) where {IT,DT}
+    function AbstractTableauSPARK{IT,DT}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, δ) where {IT,DT}
         @assert isa(name, Symbol)
         @assert isa(s, Integer)
         @assert isa(r, Integer)
@@ -57,7 +57,7 @@ struct AbstractTableauVSPARK{IT,DT} <: AbstractTableau{DT}
     end
 end
 
-function AbstractTableauVSPARK{IT}(name::Symbol, order::Int,
+function AbstractTableauSPARK{IT}(name::Symbol, order::Int,
                          a_q::Matrix{DT}, a_p::Matrix{DT},
                          α_q::Matrix{DT}, α_p::Matrix{DT},
                          a_q̃::Matrix{DT}, a_p̃::Matrix{DT},
@@ -92,11 +92,11 @@ function AbstractTableauVSPARK{IT}(name::Symbol, order::Int,
     p̃ = CoefficientsPRK{DT}(name, order, s, r, a_p̃, c_λ, α_p̃)
     λ = CoefficientsMRK{DT}(name, r, d_λ, c_λ)
 
-    AbstractTableauVSPARK{IT,DT}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω_λ, δ_λ, d)
+    AbstractTableauSPARK{IT,DT}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω_λ, δ_λ, d)
 end
 
 
-function AbstractTableauVSPARK{IT}(name::Symbol, order::Int,
+function AbstractTableauSPARK{IT}(name::Symbol, order::Int,
                          a_q::Matrix{DT}, a_p::Matrix{DT},
                          α_q::Matrix{DT}, α_p::Matrix{DT},
                          a_q̃::Matrix{DT}, a_p̃::Matrix{DT},
@@ -130,7 +130,7 @@ function AbstractTableauVSPARK{IT}(name::Symbol, order::Int,
     p̃ = CoefficientsPRK{DT}(name, order, s, r, a_p̃, c_λ, α_p̃)
     λ = CoefficientsMRK{DT}(name, r, d_λ, c_λ)
 
-    AbstractTableauVSPARK{IT,DT}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω_λ, δ_λ)
+    AbstractTableauSPARK{IT,DT}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω_λ, δ_λ)
 end
 
-# TODO function readAbstractTableauVSPARKFromFile(dir::AbstractString, name::AbstractString)
+# TODO function readAbstractTableauSPARKFromFile(dir::AbstractString, name::AbstractString)
