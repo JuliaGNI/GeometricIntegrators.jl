@@ -130,7 +130,7 @@ module Integrators
     export CoefficientsARK, CoefficientsPRK, CoefficientsMRK
 
     export AbstractIntegratorSPARK
-    export AbstractTableauSPARK
+    export AbstractTableauSPARK, TableauSPARK
 
 
     export IntegratorHPARK, TableauHPARK

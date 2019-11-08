@@ -134,3 +134,7 @@ function AbstractTableauSPARK{IT}(name::Symbol, order::Int,
 end
 
 # TODO function readAbstractTableauSPARKFromFile(dir::AbstractString, name::AbstractString)
+
+
+"Holds the tableau of an Specialised Partitioned Additive Runge-Kutta method."
+const TableauSPARK{DT} = AbstractTableauSPARK{:spark,DT}
