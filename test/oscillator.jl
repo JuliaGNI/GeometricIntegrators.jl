@@ -25,14 +25,14 @@ module OscillatorTest
     refx = [refq, refp]
 
 
-    function oscillator_ode_f(t, x, f)
-        f[1] = x[2]
-        f[2] = -k*x[1]
+    function oscillator_ode_v(t, x, v)
+        v[1] = x[2]
+        v[2] = -k*x[1]
         nothing
     end
 
     function oscillator_ode(x₀=q₀)
-        ODE(oscillator_ode_f, x₀)
+        ODE(oscillator_ode_v, x₀)
     end
 
 
@@ -68,7 +68,7 @@ module OscillatorTest
     end
 
 
-    function oscillator_iode_α(t, q, v, p)
+    function oscillator_iode_ϑ(t, q, v, p)
         p[1] = q[2]
         p[2] = 0
         nothing
@@ -99,14 +99,14 @@ module OscillatorTest
     function oscillator_iode(q₀)
         v₀ = zeros(q₀)
         p₀ = zeros(q₀)
-        oscillator_iode_α(0, q₀, v₀, p₀)
+        oscillator_iode_ϑ(0, q₀, v₀, p₀)
         oscillator_iode(q₀, p₀)
     end
 
     function oscillator_iode(q₀=q₀, p₀=p₀)
-        IODE(oscillator_iode_α, oscillator_iode_f,
-             oscillator_iode_g, oscillator_iode_v,
-             q₀, p₀)
+        IODE(oscillator_iode_ϑ, oscillator_iode_f,
+             oscillator_iode_g, q₀, p₀;
+             v=oscillator_iode_v)
     end
 
 
@@ -129,10 +129,10 @@ module OscillatorTest
     end
 
     function oscillator_idae(q₀=q₀, p₀=p₀, λ₀=λ₀)
-        IDAE(oscillator_iode_f, oscillator_iode_α,
+        IDAE(oscillator_iode_f, oscillator_iode_ϑ,
              oscillator_idae_u, oscillator_idae_g,
-             oscillator_idae_ϕ, oscillator_iode_v,
-             q₀, p₀, λ₀)
+             oscillator_idae_ϕ, q₀, p₀, λ₀;
+             v=oscillator_iode_v)
     end
 
     function oscillator_pdae_v(t, q, p, v)
@@ -146,18 +146,6 @@ module OscillatorTest
         f[2] = p[1] - q[2]
         nothing
     end
-
-    # function oscillator_pdae_v(t, q, p, v)
-    #     v[1] = q[2]
-    #     v[2] = -k*q[1]
-    #     nothing
-    # end
-    #
-    # function oscillator_pdae_f(t, q, p, f)
-    #     f[1] = -k*p[2]
-    #     f[2] = -p[1]
-    #     nothing
-    # end
 
     function oscillator_pdae(q₀=q₀, p₀=p₀, λ₀=λ₀)
         PDAE(oscillator_pdae_v, oscillator_pdae_f,

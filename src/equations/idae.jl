@@ -21,8 +21,8 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``f`` and ``p``
 * `m`: dimension of algebraic variable ``\lambda`` and the constraint ``\phi``
 * `n`: number of initial conditions
+* `ϑ`: function determining the momentum
 * `f`: function computing the vector field ``f``
-* `p`: function computing ``p``
 * `u`: function computing the projection
 * `g`: function computing the projection
 * `ϕ`: algebraic constraint
@@ -32,12 +32,17 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 * `λ₀`: initial condition for algebraic variable ``\lambda``
 
 """
-struct IDAE{dType <: Number, tType <: Number, fType <: Function, pType <: Function, uType <: Function, gType <: Function, ϕType <: Function, vType <: Function, N} <: Equation{dType, tType}
+struct IDAE{dType <: Number, tType <: Number,
+            ϑType <: Function, fType <: Function,
+            uType <: Function, gType <: Function,
+            ϕType <: Function, vType <: Union{Function,Nothing},
+            pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+
     d::Int
     m::Int
     n::Int
+    ϑ::ϑType
     f::fType
-    p::pType
     u::uType
     g::gType
     ϕ::ϕType
@@ -46,53 +51,49 @@ struct IDAE{dType <: Number, tType <: Number, fType <: Function, pType <: Functi
     q₀::Array{dType, N}
     p₀::Array{dType, N}
     λ₀::Array{dType, N}
+    parameters::pType
     periodicity::Vector{dType}
 
-    function IDAE{dType,tType,fType,pType,uType,gType,ϕType,vType,N}(d, m, n, f, p, u, g, ϕ, v, t₀, q₀, p₀, λ₀; periodicity=[]) where {dType <: Number, tType <: Number, fType <: Function, pType <: Function, uType <: Function, gType <: Function, ϕType <: Function, vType <: Function, N}
+    function IDAE(DT::DataType, N::Int, d::Int, m::Int, n::Int,
+                  ϑ::ϑType, f::fType, u::uType, g::gType, ϕ::ϕType, t₀::tType,
+                  q₀::DenseArray{dType}, p₀::DenseArray{dType}, λ₀::DenseArray{dType};
+                  v=nothing, parameters=nothing, periodicity=zeros(DT,d)) where {
+                        dType <: Number, tType <: Number,
+                        ϑType <: Function, fType <: Function,
+                        uType <: Function, gType <: Function,
+                        ϕType <: Function}
+
         @assert d == size(q₀,1) == size(p₀,1)
         @assert m == size(λ₀,1)
         @assert n == size(q₀,2) == size(p₀,2) == size(λ₀,2)
         @assert 2d ≥ m
-
-        @assert dType == eltype(q₀)
-        @assert dType == eltype(p₀)
-        @assert dType == eltype(λ₀)
-
         @assert ndims(q₀) == ndims(p₀) == ndims(λ₀) == N ∈ (1,2)
 
-        if !(length(periodicity) == d)
-            periodicity = zeros(dType, d)
-        end
-
-        new(d, m, n, f, p, u, g, ϕ, v, t₀, q₀, p₀, λ₀, periodicity)
+        new{DT, tType, ϑType, fType, uType, gType, ϕType, typeof(v), typeof(parameters), N}(d, m, n, ϑ, f, u, g, ϕ, v, t₀,
+                convert(Array{DT}, q₀), convert(Array{DT}, p₀), convert(Array{DT}, λ₀),
+                parameters, periodicity)
     end
 end
 
-function IDAE(f::FT, p::PT, u::UT, g::GT, ϕ::ΦT, v::VT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}; periodicity=[]) where {DT,TT,FT,PT,UT,GT,ΦT,VT}
-    @assert size(q₀) == size(p₀)
-    @assert size(q₀,2) == size(λ₀,2)
-    IDAE{DT, TT, FT, PT, UT, GT, ΦT, VT, ndims(q₀)}(size(q₀, 1), size(λ₀, 1), size(q₀, 2), f, p, u, g, ϕ, v, t₀, q₀, p₀, λ₀, periodicity=periodicity)
+function IDAE(ϑ, f, u, g, ϕ, t₀::Number, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}; kwargs...) where {DT}
+    IDAE(DT, ndims(q₀), size(q₀,1), size(λ₀,1), size(q₀,2), ϑ, f, u, g, ϕ, t₀, q₀, p₀, λ₀; kwargs...)
 end
 
-function IDAE(f::Function, p::Function, u::Function, g::Function, ϕ::Function, t₀::Number, q₀, p₀, λ₀; periodicity=[])
-    IDAE(f, p, u, g, ϕ, function_v_dummy, t₀, q₀, p₀, λ₀, periodicity=periodicity)
+function IDAE(ϑ, f, u, g, ϕ, q₀::DenseArray, p₀::DenseArray, λ₀::DenseArray; kwargs...)
+    IDAE(ϑ, f, u, g, ϕ, zero(eltype(q₀)), q₀, p₀, λ₀; kwargs...)
 end
 
-function IDAE(f::Function, p::Function, u::Function, g::Function, ϕ::Function, v::Function, q₀, p₀, λ₀; periodicity=[])
-    IDAE(f, p, u, g, ϕ, v, zero(Float64), q₀, p₀, λ₀, periodicity=periodicity)
-end
+Base.hash(dae::IDAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n,
+        hash(dae.ϑ, hash(dae.f, hash(dae.u, hash(dae.g, hash(dae.ϕ, hash(dae.v,
+        hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀,
+        hash(dae.periodicity, hash(dae.parameters, h)))))))))))))))
 
-function IDAE(f, p, u, g, ϕ, q₀, p₀, λ₀; periodicity=[])
-    IDAE(f, p, u, g, ϕ, function_v_dummy, zero(Float64), q₀, p₀, λ₀, periodicity=periodicity)
-end
-
-Base.hash(dae::IDAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n, hash(dae.f, hash(dae.p, hash(dae.u, hash(dae.g, hash(dae.ϕ, hash(dae.v, hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, h)))))))))))))
 Base.:(==)(dae1::IDAE, dae2::IDAE) = (
                                 dae1.d == dae2.d
                              && dae1.m == dae2.m
                              && dae1.n == dae2.n
+                             && dae1.ϑ == dae2.ϑ
                              && dae1.f == dae2.f
-                             && dae1.p == dae2.p
                              && dae1.u == dae2.u
                              && dae1.g == dae2.g
                              && dae1.ϕ == dae2.ϕ
@@ -100,6 +101,8 @@ Base.:(==)(dae1::IDAE, dae2::IDAE) = (
                              && dae1.t₀ == dae2.t₀
                              && dae1.q₀ == dae2.q₀
                              && dae1.p₀ == dae2.p₀
-                             && dae1.λ₀ == dae2.λ₀)
+                             && dae1.λ₀ == dae2.λ₀
+                             && dae1.parameters == dae2.parameters
+                             && dae1.periodicity == dae2.periodicity)
 
 Base.ndims(dae::IDAE) = dae.d

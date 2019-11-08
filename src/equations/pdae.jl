@@ -31,7 +31,11 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 * `λ₀`: initial condition for algebraic variable ``\lambda``
 
 """
-struct PDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Function, uType <: Function, gType <: Function, ϕType <: Function, N} <: Equation{dType, tType}
+struct PDAE{dType <: Number, tType <: Number,
+            vType <: Function, fType <: Function,
+            uType <: Function, gType <: Function,
+            ϕType <: Function, pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+
     d::Int
     m::Int
     n::Int
@@ -44,39 +48,42 @@ struct PDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Functi
     q₀::Array{dType, N}
     p₀::Array{dType, N}
     λ₀::Array{dType, N}
+    parameters::pType
     periodicity::Vector{dType}
 
-    function PDAE{dType,tType,vType,fType,uType,gType,ϕType,N}(d, m, n, v, f, u, g, ϕ, t₀, q₀, p₀, λ₀; periodicity=[]) where {dType <: Number, tType <: Number, vType <: Function, fType <: Function, uType <: Function, gType <: Function, ϕType <: Function, N}
+    function PDAE(DT::DataType, N::Int, d::Int, m::Int, n::Int,
+                  v::vType, f::fType, u::uType, g::gType, ϕ::ϕType,
+                  t₀::tType, q₀::DenseArray{dType}, p₀::DenseArray{dType}, λ₀::DenseArray{dType};
+                  parameters=nothing, periodicity=zeros(DT,d)) where {
+                         dType <: Number, tType <: Number,
+                         vType <: Function, fType <: Function,
+                         uType <: Function, gType <: Function,
+                         ϕType <: Function}
+
         @assert d == size(q₀,1) == size(p₀,1)
         @assert m == size(λ₀,1)
         @assert n == size(q₀,2) == size(p₀,2) == size(λ₀,2)
         @assert 2n ≥ m
-
-        @assert dType == eltype(q₀)
-        @assert dType == eltype(p₀)
-        @assert dType == eltype(λ₀)
-
         @assert ndims(q₀) == ndims(p₀) == ndims(λ₀) == N ∈ (1,2)
 
-        if !(length(periodicity) == d)
-            periodicity = zeros(dType, d)
-        end
-
-        new(d, m, n, v, f, u, g, ϕ, t₀, q₀, p₀, λ₀, periodicity)
+        new{DT, tType, vType, fType, uType, gType, ϕType, typeof(parameters), N}(d, m, n, v, f, u, g, ϕ, t₀,
+                convert(Array{DT}, q₀), convert(Array{DT}, p₀), convert(Array{DT}, λ₀),
+                parameters, periodicity)
     end
 end
 
-function PDAE(v::VT, f::FT, u::UT, g::GT, ϕ::ΦT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}; periodicity=[]) where {DT,TT,VT,FT,UT,GT,ΦT}
-    @assert size(q₀) == size(p₀)
-    @assert size(q₀,2) == size(λ₀,2)
-    PDAE{DT, TT, VT, FT, UT, GT, ΦT, ndims(q₀)}(size(q₀, 1), size(λ₀, 1), size(q₀, 2), v, f, u, g, ϕ, t₀, q₀, p₀, λ₀, periodicity=periodicity)
+function PDAE(v, f, u, g, ϕ, t₀, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}; kwargs...) where {DT}
+    PDAE(DT, ndims(q₀), size(q₀,1), size(λ₀,1), size(q₀,2), v, f, u, g, ϕ, t₀, q₀, p₀, λ₀; kwargs...)
 end
 
-function PDAE(v, f, u, g, ϕ, q₀, p₀, λ₀; periodicity=[])
-    PDAE(v, f, u, g, ϕ, zero(eltype(q₀)), q₀, p₀, λ₀, periodicity=periodicity)
+function PDAE(v, f, u, g, ϕ, q₀, p₀, λ₀; kwargs...)
+    PDAE(v, f, u, g, ϕ, zero(eltype(q₀)), q₀, p₀, λ₀; kwargs...)
 end
 
-Base.hash(dae::PDAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n, hash(dae.v, hash(dae.f, hash(dae.u, hash(dae.g, hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, h)))))))))))
+Base.hash(dae::PDAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n,
+        hash(dae.v, hash(dae.f, hash(dae.u, hash(dae.g, hash(dae.t₀,
+        hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, hash(dae.periodicity, hash(dae.parameters, h)))))))))))))
+
 Base.:(==)(dae1::PDAE, dae2::PDAE) = (
                                 dae1.d == dae2.d
                              && dae1.m == dae2.m
@@ -88,6 +95,8 @@ Base.:(==)(dae1::PDAE, dae2::PDAE) = (
                              && dae1.t₀ == dae2.t₀
                              && dae1.q₀ == dae2.q₀
                              && dae1.p₀ == dae2.p₀
-                             && dae1.λ₀ == dae2.λ₀)
+                             && dae1.λ₀ == dae2.λ₀
+                             && dae1.parameters == dae1.parameters
+                             && dae1.periodicity == dae1.periodicity)
 
 Base.ndims(dae::PDAE) = dae.d

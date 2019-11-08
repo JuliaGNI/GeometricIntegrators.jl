@@ -29,43 +29,48 @@ where `t` is the current time, `q` is the current solution vector, and
 on `t` and `q`.
 
 """
-struct ODE{dType <: Number, tType <: Number, vType <: Function, N} <: Equation{dType, tType}
+struct ODE{dType <: Number, tType <: Number,
+           vType <: Function, pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+
     d::Int
     n::Int
     v::vType
     t₀::tType
     q₀::Array{dType,N}
+    parameters::pType
     periodicity::Vector{dType}
 
-    function ODE{dType,tType,vType,N}(d, n, v, t₀, q₀; periodicity=[]) where {dType <: Number, tType <: Number, vType <: Function, N}
+    function ODE(DT::DataType, N::Int, d::Int, n::Int, v::vType, t₀::tType, q₀::DenseArray{dType};
+                 parameters=nothing, periodicity=zeros(DT,d)) where {
+                        dType <: Number, tType <: Number, vType <: Function}
+
         @assert d == size(q₀,1)
         @assert n == size(q₀,2)
-        @assert dType == eltype(q₀)
         @assert ndims(q₀) == N ∈ (1,2)
 
-        if !(length(periodicity) == d)
-            periodicity = zeros(dType, d)
-        end
-
-        new(d, n, v, t₀, q₀, periodicity)
+        new{DT, tType, vType, typeof(parameters), N}(d, n, v, t₀,
+                convert(Array{DT}, q₀), parameters, periodicity)
     end
 end
 
-function ODE(v::VT, t₀::TT, q₀::DenseArray{DT}; periodicity=[]) where {DT,TT,VT}
-    ODE{DT, TT, VT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), v, t₀, q₀, periodicity=periodicity)
+function ODE(v, t₀, q₀::DenseArray{DT}; kwargs...) where {DT}
+    ODE(DT, ndims(q₀), size(q₀,1), size(q₀,2), v, t₀, q₀; kwargs...)
 end
 
-function ODE(v, q₀; periodicity=[])
-    ODE(v, zero(eltype(q₀)), q₀, periodicity=periodicity)
+function ODE(v, q₀; kwargs...)
+    ODE(v, zero(eltype(q₀)), q₀; kwargs...)
 end
 
-Base.hash(ode::ODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.v, hash(ode.t₀, hash(ode.q₀, hash(ode.periodicity, h))))))
+Base.hash(ode::ODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.v, hash(ode.t₀,
+        hash(ode.q₀, hash(ode.periodicity, hash(ode.parameters, h)))))))
+
 Base.:(==)(ode1::ODE, ode2::ODE) = (
                                 ode1.d == ode2.d
                              && ode1.n == ode2.n
                              && ode1.v == ode2.v
                              && ode1.t₀ == ode2.t₀
                              && ode1.q₀ == ode2.q₀
+                             && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
 
 function Base.similar(ode::ODE{DT,TT,VT}, q₀::DenseArray{DT}) where {DT, TT, VT}

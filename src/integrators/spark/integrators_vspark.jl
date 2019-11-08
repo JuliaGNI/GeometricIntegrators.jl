@@ -48,8 +48,8 @@ struct IntegratorVSPARK{DT, TT, tabType,
     iguess::IT
 end
 
-function IntegratorVSPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
-                         tableau::AbstractTableauSPARK{ST,TT}, Δt::TT) where {DT,TT,FT,PT,UT,GT,ϕT,VT,ST}
+function IntegratorVSPARK(equation::IDAE{DT,TT,PT,FT,UT,GT,ϕT,VT},
+                         tableau::AbstractTableauSPARK{ST,TT}, Δt::TT) where {DT,TT,PT,FT,UT,GT,ϕT,VT,ST}
     D = equation.d
     S = tableau.s
     R = tableau.r
@@ -68,7 +68,7 @@ function IntegratorVSPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
 
     # create params
     params = ParametersVSPARK{DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT}(
-                                equation.f, equation.p, equation.u, equation.g, equation.ϕ, Δt,
+                                equation.f, equation.ϑ, equation.u, equation.g, equation.ϕ, Δt,
                                 tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, tableau.ω, tableau.δ, d_v)
 
     # create solver

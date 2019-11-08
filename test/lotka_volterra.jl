@@ -209,15 +209,15 @@ module LotkaVolterraTest
 
     function lotka_volterra_2d_iode(q₀=q₀, p₀=p₀)
         IODE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
-             lotka_volterra_2d_g, lotka_volterra_2d_v,
-             q₀, p₀)
+             lotka_volterra_2d_g, q₀, p₀;
+             v=lotka_volterra_2d_v)
     end
 
     function lotka_volterra_2d_idae(q₀=q₀, p₀=p₀, λ₀=zero(q₀))
-        IDAE(lotka_volterra_2d_f, lotka_volterra_2d_ϑ,
+        IDAE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
              lotka_volterra_2d_u, lotka_volterra_2d_g,
-             lotka_volterra_2d_ϕ, lotka_volterra_2d_v,
-             q₀, p₀, λ₀)
+             lotka_volterra_2d_ϕ, q₀, p₀, λ₀;
+             v=lotka_volterra_2d_v)
     end
 
     function lotka_volterra_2d_pdae(q₀=q₀, p₀=p₀, λ₀=zero(q₀))

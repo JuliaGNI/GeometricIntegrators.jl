@@ -123,9 +123,9 @@ end
 
 
 "Parameters for right-hand side function of variational partitioned additive Runge-Kutta methods."
-mutable struct ParametersVPARK{DT,TT,D,S,R,FT,PT,UT,GT,ϕT} <: Parameters{DT,TT}
+mutable struct ParametersVPARK{DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT} <: Parameters{DT,TT}
+    f_ϑ::ϑT
     f_f::FT
-    f_p::PT
     f_u::UT
     f_g::GT
     f_ϕ::ϕT
@@ -144,13 +144,13 @@ mutable struct ParametersVPARK{DT,TT,D,S,R,FT,PT,UT,GT,ϕT} <: Parameters{DT,TT}
     p::Vector{DT}
     λ::Vector{DT}
 
-    function ParametersVPARK{DT,TT,D,S,R,FT,PT,UT,GT,ϕT}(f_f, f_p, f_u, f_g, f_ϕ, Δt, t_q, t_p, t_q̃, t_p̃, t_λ, d_v) where {DT,TT,D,S,R,FT,PT,UT,GT,ϕT}
+    function ParametersVPARK{DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT}(f_ϑ, f_f, f_u, f_g, f_ϕ, Δt, t_q, t_p, t_q̃, t_p̃, t_λ, d_v) where {DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT}
         # create solution vectors
         q = zeros(DT,D)
         p = zeros(DT,D)
         λ = zeros(DT,D)
 
-        new(f_f, f_p, f_u, f_g, f_ϕ, Δt,
+        new(f_ϑ, f_f, f_u, f_g, f_ϕ, Δt,
             t_q, t_p, t_q̃, t_p̃, t_λ, d_v,
             zero(TT), q, p, λ)
     end
@@ -312,8 +312,8 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVPARK{ST,TT,D,S,R}
 
         # compute f(X)
         tpᵢ = params.t + params.Δt * params.t_p.c[i]
+        params.f_ϑ(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Φi[i])
         params.f_f(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Fi[i])
-        params.f_p(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Φi[i])
 
         cache.Φi[i] .-= cache.Pi[i]
     end
@@ -472,7 +472,7 @@ function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
 
     # create params
     params = ParametersVPARK{DT,TT,D,S,R,FT,PT,UT,GT,ϕT}(
-                                equation.f, equation.p, equation.u, equation.g, equation.ϕ, Δt,
+                                equation.ϑ, equation.f, equation.u, equation.g, equation.ϕ, Δt,
                                 tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, d_v)
 
     # create solver
