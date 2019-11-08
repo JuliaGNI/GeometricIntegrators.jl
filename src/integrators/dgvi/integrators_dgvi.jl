@@ -63,7 +63,7 @@ function ParametersDGVI(equ::IODE{DT,TT,ΘT,FT,GT}, Δt::TT,
     S = length(r⁻)
     R = length(c)
 
-    if get_config(:verbosity)
+    if get_config(:verbosity) > 1
         println()
         println("  Discontinuous Galerkin Variational Integrator")
         println("  =============================================")

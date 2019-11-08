@@ -339,7 +339,7 @@ function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}, 
         end
     end
 
-    if get_config(:verbosity)
+    if get_config(:verbosity) > 1
         println()
         println("  Continuous Galerkin Variational Integrator")
         println("  ==========================================")
