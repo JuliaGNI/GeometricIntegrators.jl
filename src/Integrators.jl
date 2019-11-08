@@ -132,11 +132,6 @@ module Integrators
     export AbstractIntegratorSPARK
     export AbstractTableauSPARK
 
-    export IntegratorARK, TableauARK
-    export IntegratorPARK, TableauPARK
-    export IntegratorSARK, TableauSARK
-    export IntegratorGPARK, TableauGPARK
-    export IntegratorSPARK, TableauSPARK
 
     export IntegratorHPARK, TableauHPARK
     export IntegratorVPARK, TableauVPARK
@@ -150,18 +145,12 @@ module Integrators
     include("integrators/spark/abstract_integrator_spark.jl")
     include("integrators/spark/coefficients.jl")
 
-    include("integrators/spark/integrators_ark.jl")
-    include("integrators/spark/integrators_sark.jl")
-
-    include("integrators/spark/integrators_park.jl")
-    include("integrators/spark/integrators_gpark.jl")
     include("integrators/spark/integrators_vpark.jl")
     include("integrators/spark/integrators_hpark.jl")
 
     include("integrators/spark/integrators_spark_cache.jl")
     include("integrators/spark/integrators_spark_common.jl")
     include("integrators/spark/integrators_spark_tableau.jl")
-    include("integrators/spark/integrators_spark.jl")
 
     include("integrators/spark/integrators_vspark_common.jl")
     include("integrators/spark/integrators_vspark.jl")
