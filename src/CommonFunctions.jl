@@ -1,5 +1,3 @@
-__precompile__()
-
 module CommonFunctions
 
     export nbasis, nnodes, nodes, order, degree

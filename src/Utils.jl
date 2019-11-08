@@ -1,5 +1,3 @@
-__precompile__()
-
 module Utils
 
     export rel_err

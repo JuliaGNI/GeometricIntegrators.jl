@@ -1,5 +1,3 @@
-__precompile__()
-
 module BasisFunctions
 
     export Basis, PolynomialBasis, eval_basis, deriv_basis, int_basis
