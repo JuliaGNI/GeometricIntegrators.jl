@@ -69,11 +69,11 @@ end
 function createHDF5(sol::Solution, file::AbstractString; overwrite=true)
     if overwrite
         flag = "w"
-        @info("Creating HDF5 file ", file)
+        get_config(:verbosity) > 1 ? @info("Creating HDF5 file ", file) : nothing
         isfile(file) ? @warn("Overwriting existing HDF5 file.") : nothing
     else
         flag = "r+"
-        @info("Opening HDF5 file ", file)
+        get_config(:verbosity) > 1 ? @info("Opening HDF5 file ", file) : nothing
     end
 
     # create or open HDF5 file
