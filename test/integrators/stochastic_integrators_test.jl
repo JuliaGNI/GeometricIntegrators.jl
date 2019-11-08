@@ -9,7 +9,7 @@ module StochasticIntegratorsTest
 
     using ..KuboOscillatorTest
     using ..KuboOscillatorTest: Δt, nt
-    
+
     include("utils.jl")
 
     sde1   = kubo_oscillator_sde_1()
@@ -32,123 +32,125 @@ module StochasticIntegratorsTest
 
 
     function test_stochastic_integrators()
-        ### SERK Integrators ###
-        int = Integrator(sde1, getTableauBurrageE1(), Δt)
-        sol = Solution(sde1, Δt, nt, conv="strong")
-        integrate!(int, sol)
+        @testset "$(rpad("Stochastic integrators",80))" begin
+            ### SERK Integrators ###
+            int = Integrator(sde1, getTableauBurrageE1(), Δt)
+            sol = Solution(sde1, Δt, nt, conv="strong")
+            integrate!(int, sol)
 
-        @test rel_energy_err_sde(sol) < 2E-6
+            @test rel_energy_err_sde(sol) < 2E-6
 
-        int = Integrator(sde2, getTableauBurrageE1(), Δt)
-        sol = Solution(sde2, Δt, nt, conv="strong")
-        integrate!(int, sol)
+            int = Integrator(sde2, getTableauBurrageE1(), Δt)
+            sol = Solution(sde2, Δt, nt, conv="strong")
+            integrate!(int, sol)
 
-        @test rel_energy_err_sde(sol) < 2E-6
+            @test rel_energy_err_sde(sol) < 2E-6
 
-        int = Integrator(sde3, getTableauBurrageE1(), Δt)
-        sol = Solution(sde3, Δt, nt, conv="strong")
-        integrate!(int, sol)
+            int = Integrator(sde3, getTableauBurrageE1(), Δt)
+            sol = Solution(sde3, Δt, nt, conv="strong")
+            integrate!(int, sol)
 
-        @test rel_energy_err_sde(sol) < 2E-6
-
-
-        ### SIRK Integrators ###
-        int = Integrator(sde1, getTableauStochasticGLRK(1), Δt)
-        sol = Solution(sde1, Δt, nt, conv="strong")
-        integrate!(int, sol)
-
-        @test rel_energy_err_sde(sol) < 1E-14
-
-        int = Integrator(sde2, getTableauStochasticGLRK(1), Δt)
-        sol = Solution(sde2, Δt, nt, conv="strong")
-        integrate!(int, sol)
-
-        @test rel_energy_err_sde(sol) < 1E-14
-
-        int = Integrator(sde3, getTableauStochasticGLRK(1), Δt)
-        sol = Solution(sde3, Δt, nt, conv="strong")
-        integrate!(int, sol)
-
-        @test rel_energy_err_sde(sol) < 1E-14
+            @test rel_energy_err_sde(sol) < 2E-6
 
 
-        ### WERK Integrators ###
-        int = Integrator(sde1, getTableauRosslerRS1(), Δt)
-        sol = Solution(sde1, Δt, nt, conv="weak")
-        integrate!(int, sol)
+            ### SIRK Integrators ###
+            int = Integrator(sde1, getTableauStochasticGLRK(1), Δt)
+            sol = Solution(sde1, Δt, nt, conv="strong")
+            integrate!(int, sol)
 
-        @test rel_energy_err_sde(sol) < 1E-5
+            @test rel_energy_err_sde(sol) < 1E-14
 
-        int = Integrator(sde2, getTableauRosslerRS1(), Δt)
-        sol = Solution(sde2, Δt, nt, conv="weak")
-        integrate!(int, sol)
+            int = Integrator(sde2, getTableauStochasticGLRK(1), Δt)
+            sol = Solution(sde2, Δt, nt, conv="strong")
+            integrate!(int, sol)
 
-        @test rel_energy_err_sde(sol) < 1E-5
+            @test rel_energy_err_sde(sol) < 1E-14
 
-        int = Integrator(sde3, getTableauRosslerRS1(), Δt)
-        sol = Solution(sde3, Δt, nt, conv="weak")
-        integrate!(int, sol)
+            int = Integrator(sde3, getTableauStochasticGLRK(1), Δt)
+            sol = Solution(sde3, Δt, nt, conv="strong")
+            integrate!(int, sol)
 
-        @test rel_energy_err_sde(sol) < 1E-5
-
-        ### WIRK Integrators ###
-        int = Integrator(sde1, getTableauSRKw1(), Δt)
-        sol = Solution(sde1, Δt, nt, conv="weak")
-        integrate!(int, sol)
-
-        @test rel_energy_err_sde(sol) < 1E-14
-
-        int = Integrator(sde2, getTableauSRKw1(), Δt)
-        sol = Solution(sde2, Δt, nt, conv="weak")
-        integrate!(int, sol)
-
-        @test rel_energy_err_sde(sol) < 1E-14
-
-        int = Integrator(sde3, getTableauSRKw1(), Δt)
-        sol = Solution(sde3, Δt, nt, conv="weak")
-        integrate!(int, sol)
-
-        @test rel_energy_err_sde(sol) < 1E-14
+            @test rel_energy_err_sde(sol) < 1E-14
 
 
-        ### SIPRK Integrators ###
-        int = Integrator(psde1, getTableauStochasticStormerVerlet(), Δt)
-        sol = Solution(psde1, Δt, nt, conv="strong")
-        integrate!(int, sol)
+            ### WERK Integrators ###
+            int = Integrator(sde1, getTableauRosslerRS1(), Δt)
+            sol = Solution(sde1, Δt, nt, conv="weak")
+            integrate!(int, sol)
 
-        @test rel_energy_err_psde(sol) < 1E-5
+            @test rel_energy_err_sde(sol) < 1E-5
 
-        int = Integrator(psde2, getTableauStochasticStormerVerlet(), Δt)
-        sol = Solution(psde2, Δt, nt, conv="strong")
-        integrate!(int, sol)
+            int = Integrator(sde2, getTableauRosslerRS1(), Δt)
+            sol = Solution(sde2, Δt, nt, conv="weak")
+            integrate!(int, sol)
 
-        @test rel_energy_err_psde(sol) < 1E-5
+            @test rel_energy_err_sde(sol) < 1E-5
 
-        int = Integrator(psde3, getTableauStochasticStormerVerlet(), Δt)
-        sol = Solution(psde3, Δt, nt, conv="strong")
-        integrate!(int, sol)
+            int = Integrator(sde3, getTableauRosslerRS1(), Δt)
+            sol = Solution(sde3, Δt, nt, conv="weak")
+            integrate!(int, sol)
 
-        @test rel_energy_err_psde(sol) < 1E-5
+            @test rel_energy_err_sde(sol) < 1E-5
+
+            ### WIRK Integrators ###
+            int = Integrator(sde1, getTableauSRKw1(), Δt)
+            sol = Solution(sde1, Δt, nt, conv="weak")
+            integrate!(int, sol)
+
+            @test rel_energy_err_sde(sol) < 1E-14
+
+            int = Integrator(sde2, getTableauSRKw1(), Δt)
+            sol = Solution(sde2, Δt, nt, conv="weak")
+            integrate!(int, sol)
+
+            @test rel_energy_err_sde(sol) < 1E-14
+
+            int = Integrator(sde3, getTableauSRKw1(), Δt)
+            sol = Solution(sde3, Δt, nt, conv="weak")
+            integrate!(int, sol)
+
+            @test rel_energy_err_sde(sol) < 1E-14
 
 
-        ### SISPRK Integrators ###
-        int = Integrator(spsde1, getTableauModifiedStochasticStormerVerlet(), Δt)
-        sol = Solution(spsde1, Δt, nt, conv="strong")
-        integrate!(int, sol)
+            ### SIPRK Integrators ###
+            int = Integrator(psde1, getTableauStochasticStormerVerlet(), Δt)
+            sol = Solution(psde1, Δt, nt, conv="strong")
+            integrate!(int, sol)
 
-        @test rel_energy_err_psde(sol) < 0.02
+            @test rel_energy_err_psde(sol) < 1E-5
 
-        int = Integrator(spsde2, getTableauModifiedStochasticStormerVerlet(), Δt)
-        sol = Solution(spsde2, Δt, nt, conv="strong")
-        integrate!(int, sol)
+            int = Integrator(psde2, getTableauStochasticStormerVerlet(), Δt)
+            sol = Solution(psde2, Δt, nt, conv="strong")
+            integrate!(int, sol)
 
-        @test rel_energy_err_psde(sol) < 0.02
+            @test rel_energy_err_psde(sol) < 1E-5
 
-        int = Integrator(spsde3, getTableauModifiedStochasticStormerVerlet(), Δt)
-        sol = Solution(spsde3, Δt, nt, conv="strong")
-        integrate!(int, sol)
+            int = Integrator(psde3, getTableauStochasticStormerVerlet(), Δt)
+            sol = Solution(psde3, Δt, nt, conv="strong")
+            integrate!(int, sol)
 
-        @test rel_energy_err_psde(sol) < 0.02
+            @test rel_energy_err_psde(sol) < 1E-5
+
+
+            ### SISPRK Integrators ###
+            int = Integrator(spsde1, getTableauModifiedStochasticStormerVerlet(), Δt)
+            sol = Solution(spsde1, Δt, nt, conv="strong")
+            integrate!(int, sol)
+
+            @test rel_energy_err_psde(sol) < 0.02
+
+            int = Integrator(spsde2, getTableauModifiedStochasticStormerVerlet(), Δt)
+            sol = Solution(spsde2, Δt, nt, conv="strong")
+            integrate!(int, sol)
+
+            @test rel_energy_err_psde(sol) < 0.02
+
+            int = Integrator(spsde3, getTableauModifiedStochasticStormerVerlet(), Δt)
+            sol = Solution(spsde3, Δt, nt, conv="strong")
+            integrate!(int, sol)
+
+            @test rel_energy_err_psde(sol) < 0.02
+        end
     end
 end
 
