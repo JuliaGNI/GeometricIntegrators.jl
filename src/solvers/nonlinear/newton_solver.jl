@@ -31,20 +31,21 @@ end
 function solve!(s::NewtonSolver{T}; n::Int=0) where {T}
     local nmax::Int = n > 0 ? nmax = n : s.params.nmax
 
-    s.F!(s.x, s.linear.b)
-    residual_initial!(s.status, s.x, s.linear.b)
+    s.F!(s.x, s.y₀)
+    residual_initial!(s.status, s.x, s.y₀)
     s.status.i  = 0
 
     if s.status.rₐ ≥ s.params.atol²
         for s.status.i = 1:nmax
-            computeJacobian(s.x, s.linear.A, s.Jparams)
+            computeJacobian(s)
+            s.linear.A .= s.J
+            s.linear.b .= -one(T) .* s.y₀
             factorize!(s.linear)
-            rmul!(s.linear.b, -one(T))
             solve!(s.linear)
             s.δx .= s.linear.b
             s.x .+= s.δx
-            s.F!(s.x, s.linear.b)
-            residual!(s.status, s.δx, s.x, s.linear.b)
+            s.F!(s.x, s.y₀)
+            residual!(s.status, s.δx, s.x, s.y₀)
 
             if check_solver_converged(s.status, s.params) && s.status.i ≥ s.params.nmin && !(n > 0)
                 break

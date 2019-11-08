@@ -273,7 +273,6 @@ end
 equation(integrator::IntegratorWIRK) = integrator.params.equ
 timestep(integrator::IntegratorWIRK) = integrator.params.Δt
 tableau(integrator::IntegratorWIRK) = integrator.params.tab
-dims(integrator::IntegratorWIRK) = integrator.params.equ.d
 noisedims(integrator::IntegratorWIRK) = integrator.params.equ.m
 Base.eltype(integrator::IntegratorWIRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
 
@@ -302,7 +301,7 @@ function initial_guess!(int::IntegratorWIRK{DT,TT}) where {DT,TT}
 
     # SIMPLE SOLUTION
     # The simplest initial guess for Y is 0
-    int.solver.x .= zeros(eltype(int), int.params.tab.s*dims(int)*(noisedims(int)+1) )
+    int.solver.x .= zeros(eltype(int), int.params.tab.s*ndims(int)*(noisedims(int)+1) )
 
     # Using an explicit integrator to predict the next step's value (like in SIRK)
     # does not seem to be a good idea here, because the integrators are convergent
@@ -375,5 +374,5 @@ function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,N
     cut_periodic_solution!(int.q[k,m], int.params.equ.periodicity)
 
     # # copy to solution
-    copy_solution!(sol, int.q[k,m], n, k, m)
+    set_solution!(sol, int.q[k,m], n, k, m)
 end

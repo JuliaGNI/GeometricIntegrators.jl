@@ -1,5 +1,3 @@
-__precompile__()
-
 module Config
 
     export add_config, get_config, set_config,

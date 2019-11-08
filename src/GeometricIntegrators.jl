@@ -1,5 +1,3 @@
-__precompile__()
-
 module GeometricIntegrators
 
     using Reexport

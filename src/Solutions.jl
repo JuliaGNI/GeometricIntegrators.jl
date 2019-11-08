@@ -1,5 +1,3 @@
-__precompile__()
-
 module Solutions
 
     using HDF5
@@ -8,11 +6,23 @@ module Solutions
     using Base: TwicePrecision
 
     using ..CommonFunctions
+    using ..Config
     using ..Equations
 
 
-    export DataSeries, get_data!, set_data!, reset!
-    export PDataSeries, SDataSeries
+    export DEFAULT_NSAVE, DEFAULT_NWRITE
+
+    const DEFAULT_NSAVE = 1
+    const DEFAULT_NWRITE = 0
+
+
+    export SolutionVector
+
+    SolutionVector{DT} = Union{Vector{DT}, Vector{TwicePrecision{DT}}}
+
+
+    export get_data!, set_data!
+    export DataSeries, PDataSeries, SDataSeries
 
     include("solutions/dataseries.jl")
 
@@ -20,8 +30,7 @@ module Solutions
 
     include("solutions/timeseries.jl")
 
-    export StochasticDataSeries, get_data!, set_data!, reset!
-    export SStochasticDataSeries
+    export StochasticDataSeries, SStochasticDataSeries
 
     include("solutions/stochasticdataseries.jl")
 
@@ -31,9 +40,8 @@ module Solutions
     include("solutions/wienerprocess.jl")
 
     export Solution, StochasticSolution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE, SolutionSDE, SolutionPSDE,
-           copy_solution!, reset!,
-           get_initial_conditions!, set_initial_conditions!,
-           create_hdf5, write_to_hdf5
+           get_initial_conditions, get_initial_conditions!, set_initial_conditions!,
+           create_hdf5
     export PSolutionPDAE, SSolutionPDAE
 
     include("solutions/solutions.jl")

@@ -341,7 +341,7 @@ end
 * `p`: current solution vector for one-form
 * `cache`: temporary variables for nonlinear solver
 """
-struct IntegratorDGVIP0{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis} <: Integrator{DT,TT}
+struct IntegratorDGVIP0{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis} <: DeterministicIntegrator{DT,TT}
     equation::IODE{DT,TT,ΘT,FT,GT,VT}
 
     basis::BT
@@ -465,7 +465,6 @@ end
 end
 
 
-"Integrate ODE with variational partitioned Runge-Kutta integrator."
 function integrate_step!(int::IntegratorDGVIP0{DT,TT}, sol::Union{SolutionPODE{DT,TT}, SolutionPDAE{DT,TT}}, m::Int, n::Int) where {DT,TT}
     # set time for nonlinear solver
     int.params.t = sol.t[0] + (n-1)*int.Δt
@@ -487,15 +486,6 @@ function integrate_step!(int::IntegratorDGVIP0{DT,TT}, sol::Union{SolutionPODE{D
 
     # copy solution from cache to integrator
     update_solution!(int, int.cache)
-
-    # # debug output
-    # println("m = ", m, ", n = ", n)
-    # println(int.cache.q⁻)
-    # println(int.cache.q)
-    # println(int.cache.q⁺)
-    # println(int.cache.q⁻ .- int.cache.q)
-    # println(int.cache.q⁺ .- int.cache.q)
-    # println()
 
     # copy solution to initial guess for next time step
     update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q, int.θ)

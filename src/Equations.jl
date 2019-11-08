@@ -1,5 +1,3 @@
-__precompile__()
-
 module Equations
 
     export Equation, ODE, IODE, PODE, SODE, VODE, DAE, HDAE, IDAE, PDAE

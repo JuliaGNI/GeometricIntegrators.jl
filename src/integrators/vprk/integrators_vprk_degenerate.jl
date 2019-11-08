@@ -65,7 +65,7 @@ function compute_solution!(
     q̅ .= x
 
     # compute p̅ = ϑ(q)
-    params.equ.α(params.t + params.Δt, q̅, p̅)
+    params.equ.ϑ(params.t + params.Δt, q̅, p̅)
 
 end
 

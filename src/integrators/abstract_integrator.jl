@@ -1,17 +1,29 @@
 
 abstract type Integrator{dType, tType} end
 
+abstract type DeterministicIntegrator{dType, tType} <: Integrator{dType, tType} end
 abstract type StochasticIntegrator{dType, tType} <: Integrator{dType, tType} end
 
+abstract type ODEIntegrator{dType, tType} <: DeterministicIntegrator{dType, tType} end
+abstract type DAEIntegrator{dType, tType} <: DeterministicIntegrator{dType, tType} end
+abstract type IODEIntegrator{dType, tType} <: DeterministicIntegrator{dType, tType} end
+abstract type IDAEIntegrator{dType, tType} <: DeterministicIntegrator{dType, tType} end
+abstract type PODEIntegrator{dType, tType} <: DeterministicIntegrator{dType, tType} end
+abstract type PDAEIntegrator{dType, tType} <: DeterministicIntegrator{dType, tType} end
 
-# function CommonFunctions.name(int::Integrator)
-#     warn(string(typeof(int)) * ".name() Not implemented!")
-# end
+abstract type HODEIntegrator{dType, tType} <: PODEIntegrator{dType, tType} end
+abstract type HDAEIntegrator{dType, tType} <: PDAEIntegrator{dType, tType} end
+abstract type VODEIntegrator{dType, tType} <: IODEIntegrator{dType, tType} end
+abstract type VDAEIntegrator{dType, tType} <: IDAEIntegrator{dType, tType} end
 
-equation(integrator::Integrator) = integrator.equation
-timestep(integrator::Integrator) = integrator.Δt
-integrate(integrator::Integrator) = error("integrate() not implemented for ", typeof(integrator))
-integrate!(integrator::Integrator) = error("integrate()! not implemented for ", typeof(integrator))
+abstract type SDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType} end
+abstract type PSDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType} end
+abstract type SPSDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType} end
+
+equation(integrator::Integrator) = error("equation() not implemented for ", typeof(integrator))
+timestep(integrator::Integrator) = error("timestep() not implemented for ", typeof(integrator))
+
+Base.ndims(integrator::Integrator) = ndims(equation(integrator))
 
 
 abstract type Parameters{DT,TT} end

@@ -67,7 +67,7 @@ function writeTableauToFile(dir::AbstractString, tab::AbstractTableauRK{T}) wher
     header = string("# ", tab.q.o, " ", tab.q.s, " ", T, "\n")
     file   = string(dir, "/", tab.q.name, ".tsv")
 
-    @info "Writing Runge-Kutta tableau $(tab.q.name) with $(tab.q.s) stages and order $(tab.q.o) to file\n$(file)"
+    get_config(:verbosity) > 1 ? @info("Writing Runge-Kutta tableau $(tab.q.name) with $(tab.q.s) stages and order $(tab.q.o) to file\n$(file)") : nothing
 
     f = open(file, "w")
     write(f, header)

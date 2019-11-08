@@ -226,3 +226,5 @@ function Base.similar(sde::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T}, t₀::TT, q₀::D
     @assert sde.d == size(q₀,1)
     PSDE(sde.m, sde.v, sde.f1, sde.f2, sde.B, sde.G1, sde.G2, t₀, q₀, p₀, periodicity=sde.periodicity)
 end
+
+Base.ndims(sde::SPSDE) = sde.d

@@ -1,4 +1,3 @@
-
 "Holds the tableau of an variational partitioned additive Runge-Kutta method."
 struct TableauVPARK{T} <: AbstractTableau{T}
     name::Symbol
@@ -124,18 +123,14 @@ end
 
 
 "Parameters for right-hand side function of variational partitioned additive Runge-Kutta methods."
-mutable struct ParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: Parameters{DT,TT}
+mutable struct ParametersVPARK{DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT} <: Parameters{DT,TT}
+    f_ϑ::ϑT
     f_f::FT
-    f_p::PT
     f_u::UT
     f_g::GT
     f_ϕ::ϕT
 
     Δt::TT
-
-    d::Int
-    s::Int
-    r::Int
 
     t_q::CoefficientsARK{TT}
     t_p::CoefficientsARK{TT}
@@ -145,239 +140,319 @@ mutable struct ParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT} <: Parameters{DT,TT}
     d_v::Vector{TT}
 
     t::TT
-
     q::Vector{DT}
-    v::Vector{DT}
     p::Vector{DT}
     λ::Vector{DT}
-    μ::Vector{DT}
 
-    y::Vector{DT}
-    z::Vector{DT}
-
-    Qi::Matrix{DT}
-    Pi::Matrix{DT}
-    Λi::Matrix{DT}
-    Vi::Matrix{DT}
-    Fi::Matrix{DT}
-    Yi::Matrix{DT}
-    Zi::Matrix{DT}
-    Φi::Matrix{DT}
-
-    Qp::Matrix{DT}
-    Pp::Matrix{DT}
-    Λp::Matrix{DT}
-    Up::Matrix{DT}
-    Gp::Matrix{DT}
-    Yp::Matrix{DT}
-    Zp::Matrix{DT}
-    Φp::Matrix{DT}
-
-    Qt::Vector{DT}
-    Pt::Vector{DT}
-    Λt::Vector{DT}
-    Vt::Vector{DT}
-    Ft::Vector{DT}
-    Ut::Vector{DT}
-    Gt::Vector{DT}
-    Φt::Vector{DT}
-
-    function ParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT}(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r, t_q, t_p, t_q̃, t_p̃, t_λ, d_v) where {DT,TT,FT,PT,UT,GT,ϕT}
+    function ParametersVPARK{DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT}(f_ϑ, f_f, f_u, f_g, f_ϕ, Δt, t_q, t_p, t_q̃, t_p̃, t_λ, d_v) where {DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT}
         # create solution vectors
-        q = zeros(DT,d)
-        v = zeros(DT,d)
-        p = zeros(DT,d)
-        λ = zeros(DT,d)
-        μ = zeros(DT,d)
+        q = zeros(DT,D)
+        p = zeros(DT,D)
+        λ = zeros(DT,D)
 
-        y = zeros(DT,d)
-        z = zeros(DT,d)
-
-        # create internal stage vectors
-        Qi = zeros(DT,d,s)
-        Pi = zeros(DT,d,s)
-        Λi = zeros(DT,d,s)
-        Vi = zeros(DT,d,s)
-        Fi = zeros(DT,d,s)
-        Yi = zeros(DT,d,s)
-        Zi = zeros(DT,d,s)
-        Φi = zeros(DT,d,s)
-
-        Qp = zeros(DT,d,r)
-        Pp = zeros(DT,d,r)
-        Λp = zeros(DT,d,r)
-        Up = zeros(DT,d,r)
-        Gp = zeros(DT,d,r)
-        Yp = zeros(DT,d,r)
-        Zp = zeros(DT,d,r)
-        Φp = zeros(DT,d,r)
-
-        # create temporary vectors
-        Qt = zeros(DT,d)
-        Pt = zeros(DT,d)
-        Λt = zeros(DT,d)
-        Vt = zeros(DT,d)
-        Ft = zeros(DT,d)
-        Ut = zeros(DT,d)
-        Gt = zeros(DT,d)
-        Φt = zeros(DT,d)
-
-        new(f_f, f_p, f_u, f_g, f_ϕ, Δt, d, s, r,
+        new(f_ϑ, f_f, f_u, f_g, f_ϕ, Δt,
             t_q, t_p, t_q̃, t_p̃, t_λ, d_v,
-            0, q, v, p, λ, μ, y, z,
-            Qi, Pi, Λi, Vi, Fi, Yi, Zi, Φi,
-            Qp, Pp, Λp, Up, Gp, Yp, Zp, Φp,
-            Qt, Pt, Λt, Vt, Ft, Ut, Gt, Φt)
+            zero(TT), q, p, λ)
     end
 end
 
-"Compute stages of variational partitioned additive Runge-Kutta methods."
-function function_stages!(y::Vector{DT}, b::Vector{DT}, params::ParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT}) where {DT,TT,FT,PT,UT,GT,ϕT}
+
+"""
+Variational partitioned additive Runge-Kutta integrator cache.
+
+### Fields
+
+* `n`: time step number
+* `t`: time of current time step
+* `t̅`: time of previous time step
+* `q`: current solution of q
+* `q̅`: previous solution of q
+* `p`: current solution of p
+* `p̅`: previous solution of p
+* `v`: vector field of q
+* `v̅`: vector field of q̅
+* `f`: vector field of p
+* `f̅`: vector field of p̅
+* `q̃`: initial guess of q
+* `p̃`: initial guess of p
+* `ṽ`: initial guess of v
+* `f̃`: initial guess of f
+* `s̃`: holds shift due to periodicity of solution
+* `Q`: internal stages of q
+* `P`: internal stages of p
+* `V`: internal stages of v
+* `F`: internal stages of f
+* `Y`: vector field of internal stages of q
+* `Z`: vector field of internal stages of p
+"""
+mutable struct IntegratorCacheVPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
+    n::Int
+    t::TT
+    t̅::TT
+
+    q::Vector{ST}
+    q̅::Vector{ST}
+    p::Vector{ST}
+    p̅::Vector{ST}
+    λ::Vector{ST}
+    λ̅::Vector{ST}
+    μ::Vector{ST}
+    μ̅::Vector{ST}
+
+    qₑᵣᵣ::Vector{ST}
+    pₑᵣᵣ::Vector{ST}
+
+    v::Vector{ST}
+    v̅::Vector{ST}
+    f::Vector{ST}
+    f̅::Vector{ST}
+    u::Vector{ST}
+    u̅::Vector{ST}
+    g::Vector{ST}
+    g̅::Vector{ST}
+
+    q̃::Vector{ST}
+    p̃::Vector{ST}
+    ṽ::Vector{ST}
+    f̃::Vector{ST}
+    s̃::Vector{ST}
+
+    Qi::Vector{Vector{ST}}
+    Pi::Vector{Vector{ST}}
+    Vi::Vector{Vector{ST}}
+    Fi::Vector{Vector{ST}}
+    Yi::Vector{Vector{ST}}
+    Zi::Vector{Vector{ST}}
+    Φi::Vector{Vector{ST}}
+
+    Qp::Vector{Vector{ST}}
+    Pp::Vector{Vector{ST}}
+    Λp::Vector{Vector{ST}}
+    Up::Vector{Vector{ST}}
+    Gp::Vector{Vector{ST}}
+    Yp::Vector{Vector{ST}}
+    Zp::Vector{Vector{ST}}
+    Φp::Vector{Vector{ST}}
+
+    function IntegratorCacheVPARK{ST,TT,D,S,R}() where {ST,TT,D,S,R}
+        q = zeros(ST,D)
+        q̅ = zeros(ST,D)
+        p = zeros(ST,D)
+        p̅ = zeros(ST,D)
+        λ = zeros(ST,D)
+        λ̅ = zeros(ST,D)
+        μ = zeros(ST,D)
+        μ̅ = zeros(ST,D)
+
+        # create error vectors
+        qₑᵣᵣ = zeros(ST,D)
+        pₑᵣᵣ = zeros(ST,D)
+
+        # create update vectors
+        v = zeros(ST,D)
+        v̅ = zeros(ST,D)
+        f = zeros(ST,D)
+        f̅ = zeros(ST,D)
+        u = zeros(ST,D)
+        u̅ = zeros(ST,D)
+        g = zeros(ST,D)
+        g̅ = zeros(ST,D)
+
+        # create temporary vectors
+        q̃ = zeros(ST,D)
+        p̃ = zeros(ST,D)
+        ṽ = zeros(ST,D)
+        f̃ = zeros(ST,D)
+        s̃ = zeros(ST,D)
+
+        # create internal stage vectors
+        Qi = create_internal_stage_vector(ST, D, S)
+        Pi = create_internal_stage_vector(ST, D, S)
+        Vi = create_internal_stage_vector(ST, D, S)
+        Fi = create_internal_stage_vector(ST, D, S)
+        Yi = create_internal_stage_vector(ST, D, S)
+        Zi = create_internal_stage_vector(ST, D, S)
+        Φi = create_internal_stage_vector(ST, D, S)
+
+        Qp = create_internal_stage_vector(ST, D, R)
+        Pp = create_internal_stage_vector(ST, D, R)
+        Λp = create_internal_stage_vector(ST, D, R)
+        Up = create_internal_stage_vector(ST, D, R)
+        Gp = create_internal_stage_vector(ST, D, R)
+        Yp = create_internal_stage_vector(ST, D, R)
+        Zp = create_internal_stage_vector(ST, D, R)
+        Φp = create_internal_stage_vector(ST, D, R)
+
+        new(0, zero(TT), zero(TT), q, q̅, p, p̅, λ, λ̅, μ, μ̅,
+                                   qₑᵣᵣ, pₑᵣᵣ,
+                                   v, v̅, f, f̅, u, u̅, g, g̅,
+                                   q̃, p̃, ṽ, f̃, s̃,
+                                   Qi, Pi, Vi, Fi, Yi, Zi, Φi,
+                                   Qp, Pp, Λp, Up, Gp, Yp, Zp, Φp)
+    end
+end
+
+
+function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVPARK{ST,TT,D,S,R},
+                                        params::ParametersVPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local tpᵢ::TT
     local tλᵢ::TT
 
-    for i in 1:params.s
-        for k in 1:params.d
-            # copy y to Y, Z
-            params.Yi[k,i] = y[3*(params.d*(i-1)+k-1)+1]
-            params.Zi[k,i] = y[3*(params.d*(i-1)+k-1)+2]
-            params.Vi[k,i] = y[3*(params.d*(i-1)+k-1)+3]
+    for i in 1:S
+        for k in 1:D
+            # copy x to Y, Z
+            cache.Yi[i][k] = x[3*(D*(i-1)+k-1)+1]
+            cache.Zi[i][k] = x[3*(D*(i-1)+k-1)+2]
+            cache.Vi[i][k] = x[3*(D*(i-1)+k-1)+3]
 
             # compute Q and P
-            params.Qi[k,i] = params.q[k] + params.Δt * params.Yi[k,i]
-            params.Pi[k,i] = params.p[k] + params.Δt * params.Zi[k,i]
+            cache.Qi[i][k] = params.q[k] + params.Δt * cache.Yi[i][k]
+            cache.Pi[i][k] = params.p[k] + params.Δt * cache.Zi[i][k]
         end
 
         # compute f(X)
         tpᵢ = params.t + params.Δt * params.t_p.c[i]
+        params.f_ϑ(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Φi[i])
+        params.f_f(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Fi[i])
 
-        simd_copy_xy_first!(params.Qt, params.Qi, i)
-        # simd_copy_xy_first!(params.Pt, params.Pi, i)
-        simd_copy_xy_first!(params.Vt, params.Vi, i)
-        params.f_f(tpᵢ, params.Qt, params.Vt, params.Ft)
-        params.f_p(tpᵢ, params.Qt, params.Vt, params.Pt)
-        # params.f_ϕ(tpᵢ, params.Qt, params.Pt, params.Φt)
-        simd_copy_yx_first!(params.Ft, params.Fi, i)
-        # simd_copy_yx_first!(params.Φt, params.Φi, i)
-        simd_copy_yx_first!(params.Pt, params.Φi, i)
+        cache.Φi[i] .-= cache.Pi[i]
     end
 
-    params.Φi .-= params.Pi
 
-    for i in 1:params.r
-        for k in 1:params.d
-            # copy y to Y and Z
-            params.Yp[k,i] = y[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1]
-            params.Zp[k,i] = y[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2]
-            params.Λp[k,i] = y[3*params.d*params.s+3*(params.d*(i-1)+k-1)+3]
+    for i in 1:R
+        for k in 1:D
+            # copy y to Y, Z and Λ
+            cache.Yp[i][k] = x[3*D*S+3*(D*(i-1)+k-1)+1]
+            cache.Zp[i][k] = x[3*D*S+3*(D*(i-1)+k-1)+2]
+            cache.Λp[i][k] = x[3*D*S+3*(D*(i-1)+k-1)+3]
 
             # compute Q and V
-            params.Qp[k,i] = params.q[k] + params.Δt * params.Yp[k,i]
-            params.Pp[k,i] = params.p[k] + params.Δt * params.Zp[k,i]
+            cache.Qp[i][k] = params.q[k] + params.Δt * cache.Yp[i][k]
+            cache.Pp[i][k] = params.p[k] + params.Δt * cache.Zp[i][k]
         end
 
         # compute f(X)
         tλᵢ = params.t + params.Δt * params.t_λ.c[i]
-
-        simd_copy_xy_first!(params.Qt, params.Qp, i)
-        simd_copy_xy_first!(params.Pt, params.Pp, i)
-        simd_copy_xy_first!(params.Λt, params.Λp, i)
-        params.f_u(tλᵢ, params.Qt, params.Pt, params.Λt, params.Ut)
-        params.f_g(tλᵢ, params.Qt, params.Pt, params.Λt, params.Gt)
-        params.f_ϕ(tλᵢ, params.Qt, params.Pt, params.Φt)
-        simd_copy_yx_first!(params.Ut, params.Up, i)
-        simd_copy_yx_first!(params.Gt, params.Gp, i)
-        simd_copy_yx_first!(params.Φt, params.Φp, i)
+        params.f_u(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Up[i])
+        params.f_g(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Gp[i])
+        params.f_ϕ(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Φp[i])
     end
 
     if length(params.d_v) > 0
-        for k in 1:params.d
-            params.μ[k] = y[3*params.d*params.s+3*params.d*params.r+k]
+        for k in 1:D
+            cache.μ[k] = x[3*D*S+3*D*R+k]
         end
     end
+end
 
-    # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
-    for i in 1:params.s
-        for k in 1:params.d
-            b[3*(params.d*(i-1)+k-1)+1] = - params.Yi[k,i]
-            b[3*(params.d*(i-1)+k-1)+2] = - params.Zi[k,i]
-            b[3*(params.d*(i-1)+k-1)+3] = - params.Φi[k,i]
-            for j in 1:params.s
-                b[3*(params.d*(i-1)+k-1)+1] += params.t_q.a[i,j] * params.Vi[k,j]
-                b[3*(params.d*(i-1)+k-1)+2] += params.t_p.a[i,j] * params.Fi[k,j]
-            end
-            for j in 1:params.r
-                b[3*(params.d*(i-1)+k-1)+1] += params.t_q.α[i,j] * params.Up[k,j]
-                b[3*(params.d*(i-1)+k-1)+2] += params.t_p.α[i,j] * params.Gp[k,j]
-            end
-        end
-    end
 
-    # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
-    for i in 1:params.r
-        for k in 1:params.d
-            b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1] = - params.Yp[k,i]
-            b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2] = - params.Zp[k,i]
-            b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+3] = - params.Φp[k,i]
-            for j in 1:params.s
-                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.t_q̃.a[i,j] * params.Vi[k,j]
-                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * params.Fi[k,j]
-            end
-            for j in 1:params.r
-                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+1] += params.t_q̃.α[i,j] * params.Up[k,j]
-                b[3*params.d*params.s+3*(params.d*(i-1)+k-1)+2] += params.t_p̃.α[i,j] * params.Gp[k,j]
-            end
-        end
-    end
+"Compute stages of variational partitioned additive Runge-Kutta methods."
+@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+    cache = IntegratorCacheVPARK{ST,TT,D,S,R}()
 
-    # compute b = - [Λ₁-λ]
-    if params.t_λ.c[1] == 0
-        for k in 1:params.d
-            b[3*params.d*params.s+3*(k-1)+3] = - params.Λp[k,1] + params.λ[k]
-        end
-    end
+    quote
+        compute_stages!(y, $cache, params)
 
-    if length(params.d_v) > 0
-        for i in 1:params.s
-            for k in 1:params.d
-                b[3*(params.d*(i-1)+k-1)+3] -= params.d_v[i] * params.μ[k]
+        # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
+        for i in 1:S
+            for k in 1:D
+                b[3*(D*(i-1)+k-1)+1] = - $cache.Yi[i][k]
+                b[3*(D*(i-1)+k-1)+2] = - $cache.Zi[i][k]
+                b[3*(D*(i-1)+k-1)+3] = - $cache.Φi[i][k]
+                for j in 1:S
+                    b[3*(D*(i-1)+k-1)+1] += params.t_q.a[i,j] * $cache.Vi[j][k]
+                    b[3*(D*(i-1)+k-1)+2] += params.t_p.a[i,j] * $cache.Fi[j][k]
+                end
+                for j in 1:R
+                    b[3*(D*(i-1)+k-1)+1] += params.t_q.α[i,j] * $cache.Up[j][k]
+                    b[3*(D*(i-1)+k-1)+2] += params.t_p.α[i,j] * $cache.Gp[j][k]
+                end
             end
         end
 
-        for k in 1:params.d
-            b[3*params.d*params.s+3*params.d*params.r+k] = 0
-            for i in 1:params.s
-                b[3*params.d*params.s+3*params.d*params.r+k] -= params.Vi[k,i] * params.d_v[i]
+        # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
+        for i in 1:R
+            for k in 1:D
+                b[3*D*S+3*(D*(i-1)+k-1)+1] = - $cache.Yp[i][k]
+                b[3*D*S+3*(D*(i-1)+k-1)+2] = - $cache.Zp[i][k]
+                b[3*D*S+3*(D*(i-1)+k-1)+3] = - $cache.Φp[i][k]
+                for j in 1:S
+                    b[3*D*S+3*(D*(i-1)+k-1)+1] += params.t_q̃.a[i,j] * $cache.Vi[j][k]
+                    b[3*D*S+3*(D*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * $cache.Fi[j][k]
+                end
+                for j in 1:R
+                    b[3*D*S+3*(D*(i-1)+k-1)+1] += params.t_q̃.α[i,j] * $cache.Up[j][k]
+                    b[3*D*S+3*(D*(i-1)+k-1)+2] += params.t_p̃.α[i,j] * $cache.Gp[j][k]
+                end
+            end
+        end
+
+        # compute b = - [Λ₁-λ]
+        if params.t_λ.c[1] == 0
+            for k in 1:D
+                b[3*D*S+3*(k-1)+3] = - $cache.Λp[1][k] + params.λ[k]
+            end
+        end
+
+        if length(params.d_v) > 0
+            for i in 1:S
+                for k in 1:D
+                    b[3*(D*(i-1)+k-1)+3] -= $cache.μ[k] * params.d_v[i]
+                end
+            end
+
+            for k in 1:D
+                b[3*D*S+3*D*R+k] = 0
+                for i in 1:S
+                    b[3*D*S+3*D*R+k] -= $cache.Vi[i][k] * params.d_v[i]
+                end
             end
         end
     end
 end
 
 
-"Variational partitioned additive Runge-Kutta integrator."
-struct IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, SPT, ST, IT} <: Integrator{DT, TT}
-    equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT}
+@doc raw"""
+Variational partitioned additive Runge-Kutta integrator.
+
+This integrator solves the following system of equations for the internal stages,
+```math
+\begin{align}
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} U_{n,j} , & i &= 1, ..., s , \\
+P_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} a_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} G_{n,j} , & i &= 1, ..., s , \\
+\tilde{Q}_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} U_{n,j} , & i &= 1, ..., r , \\
+\tilde{P}_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} G_{n,j} , & i &= 1, ..., r , \\
+\tilde{\Phi}_{n,i} &= 0 , & i &= 1, ..., r ,
+\end{align}
+```
+with definitions
+```math
+\begin{align}
+P_{n,i} &= \frac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , & i &= 1, ..., s , \\
+F_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i &= 1, ..., s , \\
+U_{n,i} &= \hphantom{-} \frac{\partial \phi}{\partial p} (\tilde{Q}_{n,i}, \tilde{P}_{n,i})^{T} \Lambda_{n,i} , & i &= 1, ..., r , \\
+G_{n,i} &=           -  \frac{\partial \phi}{\partial q} (\tilde{Q}_{n,i}, \tilde{P}_{n,i})^{T} \Lambda_{n,i} , & i &= 1, ..., r , \\
+\tilde{\Phi}_{n,i} &= \phi(\tilde{Q}_{n,i}, \tilde{P}_{n,i}) , & i &= 1, ..., r ,
+\end{align}
+```
+and update rule
+```math
+\begin{align}
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} V_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} U_{n,i} , \\
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} G_{n,i} .
+\end{align}
+```
+"""
+struct IntegratorVPARK{DT, TT, ET <: IDAE{DT,TT},
+                               PT <: ParametersVPARK{DT,TT},
+                               ST <: NonlinearSolver{DT},
+                               IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorSPARK{DT, TT}
+    equation::ET
     tableau::TableauVPARK{TT}
-    Δt::TT
 
-    params::SPT
+    params::PT
     solver::ST
-    iguess::InitialGuessPODE{DT, TT, VT, FT, IT}
-
-    q::Array{DT,1}
-    v::Array{DT,1}
-    p::Array{DT,1}
-    λ::Array{DT,1}
-    y::Array{DT,1}
-    z::Array{DT,1}
-
-    Q::Array{DT,2}
-    P::Array{DT,2}
-    V::Array{DT,2}
-    F::Array{DT,2}
-    Λ::Array{DT,2}
-    U::Array{DT,2}
-    G::Array{DT,2}
+    iguess::IT
 end
 
 function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
@@ -395,110 +470,130 @@ function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
         d_v = DT[]
     end
 
-    # create solution vector for internal stages / nonlinear solver
-    x = zeros(DT, N)
-
     # create params
-    params = ParametersVPARK{DT,TT,FT,PT,UT,GT,ϕT}(
-                                                equation.f, equation.p, equation.u, equation.g, equation.ϕ,
-                                                Δt, D, S, R,
-                                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, d_v)
-
-    # create rhs function for nonlinear solver
-    function_stages = (x,b) -> function_stages!(x, b, params)
+    params = ParametersVPARK{DT,TT,D,S,R,FT,PT,UT,GT,ϕT}(
+                                equation.ϑ, equation.f, equation.u, equation.g, equation.ϕ, Δt,
+                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, d_v)
 
     # create solver
-    solver = get_config(:nls_solver)(x, function_stages)
+    solver = create_nonlinear_solver(DT, N, params)
 
     # create initial guess
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
     # create integrator
-    IntegratorVPARK{DT, TT, FT, PT, UT, GT, ϕT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
-                                        equation, tableau, Δt, params, solver, iguess,
-                                        params.q, params.v, params.p, params.λ,
-                                        params.y, params.z,
-                                        params.Qi, params.Pi, params.Vi, params.Fi,
-                                        params.Λp, params.Up, params.Gp)
+    IntegratorVPARK{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess)}(
+                                        equation, tableau, params, solver, iguess)
+end
+
+equation(int::IntegratorVPARK) = int.equation
+timestep(int::IntegratorVPARK) = int.params.Δt
+tableau(int::IntegratorVPARK) = int.tableau
+nstages(int::IntegratorVPARK) = int.tableau.s
+pstages(int::IntegratorVPARK) = int.tableau.r
+
+
+function create_integrator_cache(int::IntegratorVPARK{DT,TT}) where {DT,TT}
+    IntegratorCacheVPARK{DT, TT, ndims(int), nstages(int), pstages(int)}()
 end
 
 
-function initialize!(int::IntegratorVPARK, sol::Union{SolutionPDAE, PSolutionPDAE}, m::Int)
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q, int.p, int.λ, m)
-
-    # initialise initial guess
-    initialize!(int.iguess, m, sol.t[0], int.q, int.p)
+function update_params!(params::ParametersVPARK, cache::IntegratorCacheVPARK)
+    # set time for nonlinear solver and copy previous solution
+    params.t  = cache.t
+    params.q .= cache.q
+    params.p .= cache.p
+    params.λ .= cache.λ
 end
 
 
-"Integrate DAE with variational partitioned additive Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPARK{DT,TT,FT,PT,UT,GT,ϕT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,FT,PT,UT,GT,ϕT,VT,N}
-    # set time for nonlinear solver
-    int.params.t = sol.t[n]
+function initialize!(int::IntegratorVPARK, cache::IntegratorCacheVPARK)
+    cache.t̅ = cache.t - timestep(int)
 
-    # copy previous solution to initial guess
-    update!(int.iguess, sol.t[n], int.q, int.p)
+    equation(int).v(cache.t, cache.q, cache.p, cache.v)
+    equation(int).f(cache.t, cache.q, cache.p, cache.f)
 
-    # compute initial guess
-    for i in 1:int.tableau.s
-        evaluate!(int.iguess, int.y, int.z, int.v, int.tableau.q.c[i], int.tableau.p.c[i])
-        for k in 1:int.equation.d
-            int.solver.x[3*(int.equation.d*(i-1)+k-1)+1] = (int.y[k] - int.q[k])/(int.Δt)
-            int.solver.x[3*(int.equation.d*(i-1)+k-1)+2] = (int.z[k] - int.p[k])/(int.Δt)
-            int.solver.x[3*(int.equation.d*(i-1)+k-1)+3] = int.v[k]
+    initialize!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f,
+                            cache.t̅, cache.q̅, cache.p̅, cache.v̅, cache.f̅)
+end
+
+
+function initial_guess!(int::IntegratorVPARK, cache::IntegratorCacheVPARK)
+    for i in 1:nstages(int)
+        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
+                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
+                              cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
+                              tableau(int).q.c[i], tableau(int).p.c[i])
+
+        for k in 1:ndims(int)
+            int.solver.x[3*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - cache.q[k])/timestep(int)
+            int.solver.x[3*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - cache.p[k])/timestep(int)
+            int.solver.x[3*(ndims(int)*(i-1)+k-1)+3] = cache.ṽ[k]
         end
     end
 
-    for i in 1:int.tableau.r
-        evaluate!(int.iguess, int.y, int.z, int.v, int.tableau.q̃.c[i], int.tableau.p̃.c[i])
-        for k in 1:int.equation.d
-            int.solver.x[3*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+1] = (int.y[k] - int.q[k])/(int.Δt)
-            int.solver.x[3*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+2] = (int.z[k] - int.p[k])/(int.Δt)
-            int.solver.x[3*int.equation.d*int.tableau.s+3*(int.equation.d*(i-1)+k-1)+3] = 0
+    for i in 1:pstages(int)
+        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
+                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
+                              cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
+                              tableau(int).q̃.c[i], tableau(int).p̃.c[i])
+
+        for k in 1:ndims(int)
+            int.solver.x[3*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - cache.q[k])/timestep(int)
+            int.solver.x[3*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - cache.p[k])/timestep(int)
+            int.solver.x[3*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+3] = 0
         end
     end
 
     if int.params.t_λ.c[1] == 0
-        for k in 1:int.equation.d
-            int.solver.x[3*int.equation.d*int.tableau.s+3*(k-1)+3] = int.λ[k]
+        for k in 1:ndims(int)
+            int.solver.x[3*ndims(int)*nstages(int)+3*(k-1)+3] = cache.λ[k]
         end
     end
 
-    if isdefined(int.tableau, :d)
-        for k in 1:int.equation.d
-            int.solver.x[3*int.equation.d*int.tableau.s+3*int.equation.d*int.tableau.r+k] = 0
+    if isdefined(tableau(int), :d)
+        for k in 1:ndims(int)
+            int.solver.x[3*ndims(int)*nstages(int)+3*ndims(int)*pstages(int)+k] = 0
         end
     end
+end
 
-    # println("ig:  ", join([@sprintf "%8.4e" x for x in int.solver.x], ", "))
+
+"Integrate DAE with variational partitioned additive Runge-Kutta integrator."
+function integrate_step!(int::IntegratorVPARK{DT,TT}, cache::IntegratorCacheVPARK{DT,TT}) where {DT,TT}
+    # update nonlinear solver parameters from cache
+    update_params!(int.params, cache)
+
+    # compute initial guess
+    initial_guess!(int, cache)
+
+    # reset cache
+    reset!(cache, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
 
-    # println("sol: ", join([@sprintf "%8.4e" x for x in int.solver.x], ", "))
-    #
-    # println(int.solver.status)
-    # println()
+    # print solver status
+    print_solver_status(int.solver.status, int.solver.params, cache.n)
 
-    if !check_solver_status(int.solver.status, int.solver.params)
-        println(int.solver.status)
-    end
+    # check if solution contains NaNs or error bounds are violated
+    check_solver_status(int.solver.status, int.solver.params, cache.n)
+
+    # compute vector fields at internal stages
+    compute_stages!(int.solver.x, cache, int.params)
 
     # compute final update
-    simd_mult!(int.y, int.V, int.tableau.q.b)
-    simd_mult!(int.z, int.F, int.tableau.p.b)
-    int.q .+= int.Δt .* int.y
-    int.p .+= int.Δt .* int.z
-    simd_mult!(int.y, int.U, int.tableau.q.β)
-    simd_mult!(int.z, int.G, int.tableau.p.β)
-    int.q .+= int.Δt .* int.y
-    int.p .+= int.Δt .* int.z
-    simd_mult!(int.λ, int.Λ, int.tableau.λ.b)
+    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Vi, int.params.t_q.b, timestep(int))
+    update_solution!(cache.p, cache.pₑᵣᵣ, cache.Fi, int.params.t_p.b, timestep(int))
 
-    # copy to solution
-    copy_solution!(sol, int.q, int.p, int.λ, n, m)
+    # compute projection
+    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Up, int.params.t_q.β, timestep(int))
+    update_solution!(cache.p, cache.pₑᵣᵣ, cache.Gp, int.params.t_p.β, timestep(int))
+    update_multiplier!(cache.λ, cache.Λp, int.params.t_λ.b)
+
+    # copy solution to initial guess
+    update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)
+
+    # take care of periodic solutions
+    cut_periodic_solution!(cache, equation(int).periodicity)
 end

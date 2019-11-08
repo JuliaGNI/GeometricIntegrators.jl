@@ -87,7 +87,7 @@ end
 
 
 "Formal Lagrangian Runge-Kutta integrator."
-struct IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, SPT, ST, IT <: InitialGuessODE{DT,TT,VT}, N} <: Integrator{DT,TT}
+struct IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, SPT, ST, IT <: InitialGuessODE{DT,TT,VT}, N} <: DeterministicIntegrator{DT,TT}
     equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}
     tableau::TableauFIRK{TT}
     Δt::TT

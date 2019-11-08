@@ -194,7 +194,7 @@ end
 
 function SolutionPSDE(file::String)
     # open HDF5 file
-    info("Reading HDF5 file ", file)
+    get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
     h5 = h5open(file, "r")
 
     # read attributes
@@ -303,7 +303,7 @@ function get_initial_conditions!(sol::SolutionPSDE{DT,TT}, q::Union{Vector{DT}, 
 end
 
 
-function copy_solution!(sol::SolutionPSDE{DT,TT,NQ,NW}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k, m) where {DT,TT,NQ,NW}
+function CommonFunctions.set_solution!(sol::SolutionPSDE{DT,TT,NQ,NW}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k, m) where {DT,TT,NQ,NW}
 
     if mod(n, sol.nsave) == 0
 
@@ -344,7 +344,6 @@ function reset!(sol::SolutionPSDE)
 end
 
 
-
 """
 Creates HDF5 file and initialises datasets for SDE solution object.
   It is implemented as one fucntion for all NQ and NW cases, rather than several
@@ -356,19 +355,13 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
     @assert nt ≥ 1
     @assert ntime ≥ 1
 
-    # create HDF5 file and save ntime, nsave as attributes, and t as the dataset called "t"
+    # create HDF5 file
     h5 = createHDF5(solution, file)
 
     # Adding the attributes specific to SolutionSDE that were not added above
-    attrs(h5)["conv"] = solution.conv
-    attrs(h5)["nd"] = solution.nd
-    attrs(h5)["nm"] = solution.nm
-    attrs(h5)["ns"] = solution.ns
-    attrs(h5)["ni"] = solution.ni
+    save_attributes(solution, h5)
     attrs(h5)["nt"] = nt
     attrs(h5)["ntime"] = ntime
-    attrs(h5)["nsave"] = solution.nsave
-    attrs(h5)["K"] = solution.K
 
     # create dataset
     # nt and ntime can be used to set the expected total number of timesteps to be saved,
@@ -376,25 +369,17 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
     # Right now, it has to be set as dynamical size adaptation is not yet
     # working. The default value is the size of the solution structure.
     if NQ==1
-        # COULDN'T FIGURE OUT HOW TO USE d_create FOR A 1D ARRAY - the line below gives errors,
-        # i.e., a 1x1 dataset is created, instead of an array
-        #q = d_create(h5, "q", datatype(DT), dataspace(solution.nt+1,))
-        #q[1] = solution.q.d[1]
-
-        # INSTEAD, ALLOCATING A ZERO ARRAY q AND USING write TO CREATE A DATASET IN THE FILE
-        q = zeros(DT,nt+1)
-        p = zeros(DT,nt+1)
+        q = d_create(h5, "q", datatype(DT), dataspace((nt+1,)), "chunk", (1,))
+        p = d_create(h5, "p", datatype(DT), dataspace((nt+1,)), "chunk", (1,))
         # copy initial conditions
-        q[1] = solution.q.d[1]
-        p[1] = solution.p.d[1]
-        write(h5,"q",q)
-        write(h5,"p",p)
+        q[1] = solution.q[0]
+        p[1] = solution.p[0]
     elseif NQ==2
         q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
         p = d_create(h5, "p", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
         # copy initial conditions
-        q[1:solution.nd, 1] = solution.q.d[1:solution.nd, 1]
-        p[1:solution.nd, 1] = solution.p.d[1:solution.nd, 1]
+        q[:, 1] = solution.q[:, 0]
+        p[:, 1] = solution.p[:, 0]
     elseif NQ==3
         if solution.ns>1
             q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ns), "chunk", (solution.nd,1,1))
@@ -404,24 +389,22 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
             p = d_create(h5, "p", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
         end
         # copy initial conditions
-        q[:, 1, :] = solution.q.d[:, 1, :]
-        p[:, 1, :] = solution.p.d[:, 1, :]
+        q[:, 1, :] = solution.q[:, 0, :]
+        p[:, 1, :] = solution.p[:, 0, :]
     else
         q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ns, solution.ni), "chunk", (solution.nd,1,1,1))
         p = d_create(h5, "p", datatype(DT), dataspace(solution.nd, nt+1, solution.ns, solution.ni), "chunk", (solution.nd,1,1,1))
         # copy initial conditions
-        q[:, 1, :, :] = solution.q.d[:, 1, :, :]
-        p[:, 1, :, :] = solution.p.d[:, 1, :, :]
+        q[:, 1, :, :] = solution.q[:, 0, :, :]
+        p[:, 1, :, :] = solution.p[:, 0, :, :]
     end
 
 
     if save_W==true
         # creating datasets to store the Wiener process increments
         if NW==1
-            # COULDN'T FIGURE OUT HOW TO USE d_create FOR A 1D ARRAY
-            # INSTEAD, ALLOCATING A ZERO ARRAY q AND USING write TO CREATE A DATASET IN THE FILE
-            write(h5,"ΔW",zeros(DT,ntime))
-            write(h5,"ΔZ",zeros(DT,ntime))
+            dW = d_create(h5, "ΔW", datatype(DT), dataspace((ntime,)), "chunk", (1,))
+            dZ = d_create(h5, "ΔZ", datatype(DT), dataspace((ntime,)), "chunk", (1,))
         elseif NW==2
             dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
             dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
@@ -433,9 +416,8 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
 
 
     # Creating a dataset for storing the time series
-    t = zeros(DT,nt+1)
-    t[1] = solution.t.t[1]
-    write(h5,"t",t)
+    t = d_create(h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
+    t[1] = solution.t[0]
 
     return h5
 end
@@ -446,7 +428,7 @@ Append solution to HDF5 file.
   offset - start writing q at the position offset+2
   offset2- start writing ΔW, ΔZ at the position offset2+1
 """
-function CommonFunctions.write_to_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, h5::HDF5.HDF5File, offset=0, offset2=offset) where {DT,TT,NQ,NW}
+function CommonFunctions.write_to_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, h5::HDF5File, offset=0, offset2=offset) where {DT,TT,NQ,NW}
     # set convenience variables and compute ranges
     d   = solution.nd
     m   = solution.nm
@@ -465,21 +447,21 @@ function CommonFunctions.write_to_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, h5::
     # end
 
     # saving the time time series
-    h5["t"][j1:j2] = solution.t.t[2:n+1]
+    h5["t"][j1:j2] = solution.t[1:n]
 
     # copy data from solution to HDF5 dataset
     if NQ==1
-        h5["q"][j1:j2] = solution.q.d[2:n+1]
-        h5["p"][j1:j2] = solution.p.d[2:n+1]
+        h5["q"][j1:j2] = solution.q[1:n]
+        h5["p"][j1:j2] = solution.p[1:n]
     elseif NQ==2
-        h5["q"][1:d, j1:j2] = solution.q.d[1:d, 2:n+1]
-        h5["p"][1:d, j1:j2] = solution.p.d[1:d, 2:n+1]
+        h5["q"][:, j1:j2] = solution.q[:, 1:n]
+        h5["p"][:, j1:j2] = solution.p[:, 1:n]
     elseif NQ==3
-        h5["q"][:, j1:j2, :] = solution.q.d[:, 2:n+1,:]
-        h5["p"][:, j1:j2, :] = solution.p.d[:, 2:n+1,:]
+        h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
+        h5["p"][:, j1:j2, :] = solution.p[:, 1:n, :]
     else
-        h5["q"][:, j1:j2, :, :] = solution.q.d[:, 2:n+1, :, :]
-        h5["p"][:, j1:j2, :, :] = solution.p.d[:, 2:n+1, :, :]
+        h5["q"][:, j1:j2, :, :] = solution.q[:, 1:n, :, :]
+        h5["p"][:, j1:j2, :, :] = solution.p[:, 1:n, :, :]
     end
 
 

@@ -1,160 +1,140 @@
+"""
+`SolutionPDAE`: Solution of a partitioned differential algebraic equation
 
-abstract type SolutionPDAE{dType, tType, N} <: Solution{dType, tType, N} end
+Contains all fields necessary to store the solution of an PDAE.
 
+### Fields
 
-"Serial Solution of a partitioned differential algebraic equation."
-mutable struct SSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
-    nd::Int
-    nm::Int
-    nt::Int
-    ni::Int
-    t::TimeSeries{tType}
-    q::SDataSeries{dType,N}
-    p::SDataSeries{dType,N}
-    λ::SDataSeries{dType,N}
-    ntime::Int
-    nsave::Int
-    counter::Int
+* `nd`: dimension of the dynamical variable ``q``
+* `nm`: dimension of the constraint submanifold
+* `nt`: number of time steps to store
+* `ni`: number of initial conditions
+* `t`:  time steps
+* `q`:  solution `q[nd, nt+1, ni]` with `q[:,0,:]` the initial conditions
+* `p`:  solution `p[nd, nt+1, ni]` with `p[:,0,:]` the initial conditions
+* `λ`:  Lagrange multiplier `λ[nd, nt+1, ni]`
+* `ntime`: number of time steps to compute
+* `nsave`: store every nsave'th time step (default: 1)
+* `nwrite`: save data to disk after every nwrite'th time step (default: ntime)
+* `counter`: counter for copied solution entries
+* `woffset`: counter for file offset
+* `h5`: HDF5 file for storage
+"""
+abstract type SolutionPDAE{dType, tType, N} <: DeterministicSolution{dType, tType, N} end
+
+# Create SolutionPDAEs with serial and parallel data structures.
+for (TSolution, TDataSeries, Tdocstring) in
+    ((:SSolutionPDAE, :SDataSeries, "Serial Solution of a partitioned differential algebraic equation."),
+     (:PSolutionPDAE, :PDataSeries, "Parallel Solution of a partitioned differential algebraic equation."))
+    @eval begin
+        $Tdocstring
+        mutable struct $TSolution{dType, tType, N} <: SolutionPDAE{dType, tType, N}
+            nd::Int
+            nm::Int
+            nt::Int
+            ni::Int
+            t::TimeSeries{tType}
+            q::$TDataSeries{dType,N}
+            p::$TDataSeries{dType,N}
+            λ::$TDataSeries{dType,N}
+            ntime::Int
+            nsave::Int
+            nwrite::Int
+            counter::Vector{Int}
+            woffset::Int
+            h5::HDF5File
+
+            function $TSolution{dType, tType, N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, nwrite) where {dType <: Number, tType <: Real, N}
+                new(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, nwrite, zeros(Int, ni), 0)
+            end
+        end
+
+        function $TSolution(equation::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; filename=nothing) where {DT,TT}
+            @assert nsave > 0
+            @assert ntime == 0 || ntime ≥ nsave
+            @assert nwrite == 0 || nwrite ≥ nsave
+            @assert mod(ntime, nsave) == 0
+
+            if nwrite > 0
+                @assert mod(nwrite, nsave) == 0
+                @assert mod(ntime, nwrite) == 0
+            end
+
+            N  = equation.n > 1 ? 3 : 2
+            nd = equation.d
+            nm = equation.m
+            ni = equation.n
+            nt = div(ntime, nsave)
+            nt = (nwrite == 0 ? nt : div(nwrite, nsave))
+            nw = (nwrite == 0 ? ntime : nwrite)
+
+            @assert nd > 0
+            @assert nm > 0
+            @assert ni > 0
+            @assert nw > 0
+
+            t = TimeSeries{TT}(nt, Δt, nsave)
+            q = $TDataSeries(DT, nd, nt, ni)
+            p = $TDataSeries(DT, nd, nt, ni)
+            λ = $TDataSeries(DT, nm, nt, ni)
+            s = $TSolution{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, nw)
+            set_initial_conditions!(s, equation)
+
+            if !isnothing(filename)
+                isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
+                create_hdf5(s, filename)
+            end
+
+            return s
+        end
+
+        function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,N}, p::$TDataSeries{DT,N}, λ::$TDataSeries{DT,N}, ntime::Int) where {DT,TT,N}
+            @assert q.nd == p.nd >= λ.nd
+            @assert q.nt == p.nt == λ.nt
+            @assert q.ni == p.ni == λ.ni
+
+            # extract parameters
+            nd = q.nd
+            nm = λ.nd
+            ni = q.ni
+            nt = t.n
+            ns = div(ntime, nt)
+
+            @assert mod(ntime, nt) == 0
+
+            # create solution
+            $TSolution{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, ns, 0)
+        end
+
+        function $TSolution(file::String)
+            # open HDF5 file
+            get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
+            h5 = h5open(file, "r")
+
+            # read attributes
+            ntime = read(attrs(h5)["ntime"])
+            nsave = read(attrs(h5)["nsave"])
+
+            # reading data arrays
+            t = TimeSeries(read(h5["t"]), nsave)
+            q = $TDataSeries(read(h5["q"]))
+            p = $TDataSeries(read(h5["p"]))
+            λ = $TDataSeries(read(h5["λ"]))
+
+            # need to close the file
+            close(h5)
+
+            # create solution
+            $TSolution(t, q, p, λ, ntime)
+        end
+    end
 end
 
-function SSolutionPDAE(equation::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
-    N  = equation.n > 1 ? 3 : 2
-    nd = equation.d
-    nm = equation.m
-    ni = equation.n
-    nt = div(ntime, nsave)
-
-    @assert DT <: Number
-    @assert TT <: Real
-    @assert nd > 0
-    @assert nm > 0
-    @assert ni > 0
-    @assert nsave > 0
-    @assert ntime == 0 || ntime ≥ nsave
-    @assert mod(ntime, nsave) == 0
-
-    t = TimeSeries{TT}(nt, Δt, nsave)
-    q = SDataSeries(DT, nd, nt, ni)
-    p = SDataSeries(DT, nd, nt, ni)
-    λ = SDataSeries(DT, nm, nt, ni)
-    s = SSolutionPDAE{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, 0)
-    set_initial_conditions!(s, equation)
-    return s
-end
-
-function SSolutionPDAE(t::TimeSeries{TT}, q::SDataSeries{DT,N}, p::SDataSeries{DT,N}, λ::SDataSeries{DT,N}, ntime::Int, nsave::Int) where {DT,TT,N}
-    @assert q.nd == p.nd
-    @assert q.nt == p.nt == λ.nt
-    @assert q.ni == p.ni == λ.ni
-
-    # extract parameters
-    nd = q.nd
-    nm = λ.nd
-    ni = q.ni
-    nt = t.n
-
-    # create solution
-    SSolutionPDAE{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, 0)
-end
-
-function SSolutionPDAE(file::String)
-    # open HDF5 file
-    info("Reading HDF5 file ", file)
-    h5 = h5open(file, "r")
-
-    # read attributes
-    ntime = read(attrs(h5)["ntime"])
-    nsave = read(attrs(h5)["nsave"])
-
-    # reading data arrays
-    t = TimeSeries(read(h5["t"]), nsave)
-    q = SDataSeries(read(h5["q"]))
-    p = SDataSeries(read(h5["p"]))
-    λ = SDataSeries(read(h5["λ"]))
-
-    # create solution
-    SSolutionPDAE(t, q, p, λ, ntime, nsave)
-end
-
-
-"Parallel Solution of a partitioned differential algebraic equation."
-mutable struct PSolutionPDAE{dType, tType, N} <: SolutionPDAE{dType, tType, N}
-    nd::Int
-    nm::Int
-    nt::Int
-    ni::Int
-    t::TimeSeries{tType}
-    q::PDataSeries{dType,N}
-    p::PDataSeries{dType,N}
-    λ::PDataSeries{dType,N}
-    ntime::Int
-    nsave::Int
-    counter::Int
-end
-
-function PSolutionPDAE(equation::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1) where {DT,TT}
-    N  = equation.n > 1 ? 3 : 2
-    nd = equation.d
-    nm = equation.m
-    ni = equation.n
-    nt = div(ntime, nsave)
-
-    @assert DT <: Number
-    @assert TT <: Real
-    @assert nd > 0
-    @assert nm > 0
-    @assert ni > 0
-    @assert nsave > 0
-    @assert ntime == 0 || ntime ≥ nsave
-    @assert mod(ntime, nsave) == 0
-
-    t = TimeSeries{TT}(nt, Δt, nsave)
-    q = PDataSeries(DT, nd, nt, ni)
-    p = PDataSeries(DT, nd, nt, ni)
-    λ = PDataSeries(DT, nm, nt, ni)
-    s = PSolutionPDAE{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, 0)
-    set_initial_conditions!(s, equation)
-    return s
-end
-
-function PSolutionPDAE(t::TimeSeries{TT}, q::PDataSeries{DT,N}, p::PDataSeries{DT,N}, λ::PDataSeries{DT,N}, ntime::Int, nsave::Int) where {DT,TT,N}
-    @assert q.nd == p.nd
-    @assert q.nt == p.nt == λ.nt
-    @assert q.ni == p.ni == λ.ni
-
-    # extract parameters
-    nd = q.nd
-    nm = λ.nd
-    ni = q.ni
-    nt = t.n
-
-    # create solution
-    PSolutionPDAE{DT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, 0)
-end
-
-function PSolutionPDAE(file::String)
-    # open HDF5 file
-    info("Reading HDF5 file ", file)
-    h5 = h5open(file, "r")
-
-    # read attributes
-    ntime = read(attrs(h5)["ntime"])
-    nsave = read(attrs(h5)["nsave"])
-
-    # reading data arrays
-    t = TimeSeries(read(h5["t"]), nsave)
-    q = PDataSeries(read(h5["q"]))
-    p = PDataSeries(read(h5["p"]))
-    λ = PDataSeries(read(h5["λ"]))
-
-    # create solution
-    PSolutionPDAE(t, q, p, λ, ntime, nsave)
-end
-
-
+hdf5(sol::SolutionPDAE)  = sol.h5
 time(sol::SolutionPDAE)  = sol.t.t
 ntime(sol::SolutionPDAE) = sol.ntime
 nsave(sol::SolutionPDAE) = sol.nsave
+offset(sol::SolutionPDAE) = sol.woffset
 
 
 function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, equ::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}) where {DT,TT}
@@ -166,114 +146,163 @@ function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, t₀::TT, q₀::Union
     set_data!(sol.p, p₀, 0)
     set_data!(sol.λ, λ₀, 0)
     compute_timeseries!(sol.t, t₀)
+    sol.counter .= 1
 end
 
-function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, λ::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, k) where {DT,TT}
-    get_data!(sol.q, q, 0, k)
-    get_data!(sol.p, p, 0, k)
-    get_data!(sol.λ, λ, 0, k)
+function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, k, n=1) where {DT,TT}
+    get_solution!(sol, q, p, λ, n-1, k)
 end
 
-function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, k) where {DT,TT}
-    get_data!(sol.q, q, 0, k)
-    get_data!(sol.p, p, 0, k)
+function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, k, n=1) where {DT,TT}
+    get_solution!(sol, q, p, n-1, k)
 end
 
-function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, λ::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
+function get_initial_conditions(sol::SolutionPDAE, k, n=1)
+    get_solution(sol, n-1, k)
+end
+
+function CommonFunctions.get_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, n, k) where {DT,TT}
+    q .= sol.q[:, n, k]
+    p .= sol.p[:, n, k]
+    λ .= sol.λ[:, n, k]
+end
+
+function CommonFunctions.get_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k) where {DT,TT}
+    q .= sol.q[:, n, k]
+    p .= sol.p[:, n, k]
+end
+
+function CommonFunctions.get_solution(sol::SolutionPDAE, n, k)
+    (sol.t[n], sol.q[:, n, k], sol.p[:, n, k], sol.λ[:, n, k])
+end
+
+function CommonFunctions.set_solution!(sol::SolutionPDAE, t, q, p, n, k)
+    set_solution!(sol, q, p, n, k)
+end
+
+function CommonFunctions.set_solution!(sol::SolutionPDAE, t, q, p, λ, n, k)
+    set_solution!(sol, q, p, λ, n, k)
+end
+
+function CommonFunctions.set_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, n, k) where {DT,TT}
+    @assert n <= sol.ntime
+    @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
-        j = div(n, sol.nsave)
-        set_data!(sol.q, q, j, k)
-        set_data!(sol.p, p, j, k)
-        set_data!(sol.λ, λ, j, k)
-        sol.counter += 1
+        if sol.counter[k] > sol.nt
+            @error("Solution overflow. Call write_to_hdf5() and reset!() before continuing the simulation.")
+        end
+        set_data!(sol.q, q, sol.counter[k], k)
+        set_data!(sol.p, p, sol.counter[k], k)
+        set_data!(sol.λ, λ, sol.counter[k], k)
+        sol.counter[k] += 1
     end
 end
 
-function copy_solution!(sol::SolutionPDAE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k) where {DT,TT}
+function CommonFunctions.set_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k) where {DT,TT}
+    @assert n <= sol.ntime
+    @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
-        j = div(n, sol.nsave)
-        set_data!(sol.q, q, j, k)
-        set_data!(sol.p, p, j, k)
-        sol.counter += 1
+        if sol.counter[k] > sol.nt
+            @error("Solution overflow. Call write_to_hdf5() and reset!() before continuing the simulation.")
+        end
+        set_data!(sol.q, q, sol.counter[k], k)
+        set_data!(sol.p, p, sol.counter[k], k)
+        sol.counter[k] += 1
     end
 end
 
-function reset!(sol::SolutionPDAE)
+function CommonFunctions.reset!(sol::SolutionPDAE)
     reset!(sol.q)
     reset!(sol.p)
     reset!(sol.λ)
     compute_timeseries!(sol.t, sol.t[end])
-    sol.counter = 0
+    sol.counter .= 1
+    sol.woffset += sol.nt
+end
+
+function Base.close(solution::SolutionPDAE)
+    # close(solution.t)
+    # close(solution.q)
+    # close(solution.p)
+    # close(solution.λ)
+    close(solution.h5)
 end
 
 
 "Creates HDF5 file and initialises datasets for PDAE solution object with single initial condition."
 function create_hdf5(solution::SolutionPDAE{DT,TT,2}, file::AbstractString) where {DT,TT}
     # create HDF5 file and save attributes and common parameters
-    h5 = createHDF5(solution, file)
+    solution.h5 = createHDF5(solution, file)
+
+    # save attributes
+    save_attributes(solution)
 
     # create datasets
-    q = d_create(h5, "q", datatype(Float64), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
-    p = d_create(h5, "p", datatype(Float64), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
-    λ = d_create(h5, "λ", datatype(Float64), dataspace(solution.nm, solution.nt+1), "chunk", (solution.nm,1))
+    nt = div(solution.ntime, solution.nsave)
+    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
+    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
+    p = d_create(solution.h5, "p", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
+    λ = d_create(solution.h5, "λ", datatype(DT), dataspace(solution.nm, nt+1), "chunk", (solution.nm,1))
 
     # copy initial conditions
-    q[1:solution.nd, 1] = Array{Float64}(solution.q.d[1:solution.nd, 1])
-    p[1:solution.nd, 1] = Array{Float64}(solution.p.d[1:solution.nd, 1])
-    λ[1:solution.nm, 1] = Array{Float64}(solution.λ.d[1:solution.nm, 1])
+    t[1] = solution.t[0]
+    q[:, 1] = solution.q[:, 0]
+    p[:, 1] = solution.p[:, 0]
+    λ[:, 1] = solution.λ[:, 0]
 
-    return h5
+    return solution.h5
 end
 
 "Creates HDF5 file and initialises datasets for PDAE solution object with multiple initial conditions."
 function create_hdf5(solution::SolutionPDAE{DT,TT,3}, file::AbstractString) where {DT,TT}
     # create HDF5 file and save attributes and common parameters
-    h5 = createHDF5(solution, file)
+    solution.h5 = createHDF5(solution, file)
+
+    # save attributes
+    save_attributes(solution, solution.h5)
 
     # create datasets
-    q = d_create(h5, "q", datatype(Float64), dataspace(solution.nd, solution.nt+1, solution.ni), "chunk", (solution.nd,1,1))
-    p = d_create(h5, "p", datatype(Float64), dataspace(solution.nd, solution.nt+1, solution.ni), "chunk", (solution.nd,1,1))
-    λ = d_create(h5, "λ", datatype(Float64), dataspace(solution.nm, solution.nt+1, solution.ni), "chunk", (solution.nm,1,1))
+    nt = div(solution.ntime, solution.nsave)
+    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
+    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
+    p = d_create(solution.h5, "p", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
+    λ = d_create(solution.h5, "λ", datatype(DT), dataspace(solution.nm, nt+1, solution.ni), "chunk", (solution.nm,1,1))
 
     # copy initial conditions
-    q[1:solution.nd, 1, 1:solution.ni] = Array{Float64}(solution.q.d[1:solution.nd, 1, 1:solution.ni])
-    p[1:solution.nd, 1, 1:solution.ni] = Array{Float64}(solution.p.d[1:solution.nd, 1, 1:solution.ni])
-    λ[1:solution.nm, 1, 1:solution.ni] = Array{Float64}(solution.λ.d[1:solution.nm, 1, 1:solution.ni])
+    t[1] = solution.t[0]
+    q[:, 1, :] = solution.q[:, 0, :]
+    p[:, 1, :] = solution.p[:, 0, :]
+    λ[:, 1, :] = solution.λ[:, 0, :]
 
-    return h5
+    return solution.h5
 end
 
 "Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,2}, h5::HDF5.HDF5File, offset=0) where {DT,TT}
+function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,2}, h5::HDF5File, offset=0) where {DT,TT}
     # set convenience variables and compute ranges
-    d  = solution.nd
-    m  = solution.nm
     n  = solution.nt
     j1 = offset+2
     j2 = offset+1+n
 
     # copy data from solution to HDF5 dataset
-    h5["q"][1:d, j1:j2] = Array{Float64}(solution.q.d[1:d, 2:n+1])
-    h5["p"][1:d, j1:j2] = Array{Float64}(solution.p.d[1:d, 2:n+1])
-    h5["λ"][1:m, j1:j2] = Array{Float64}(solution.λ.d[1:m, 2:n+1])
+    h5["q"][:, j1:j2] = solution.q[:, 1:n]
+    h5["p"][:, j1:j2] = solution.p[:, 1:n]
+    h5["λ"][:, j1:j2] = solution.λ[:, 1:n]
 
     return nothing
 end
 
 "Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,3}, h5::HDF5.HDF5File, offset=0) where {DT,TT}
+function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,3}, h5::HDF5File, offset=0) where {DT,TT}
     # set convenience variables and compute ranges
-    d  = solution.nd
-    m  = solution.nm
     n  = solution.nt
-    i  = solution.ni
     j1 = offset+2
     j2 = offset+1+n
 
     # copy data from solution to HDF5 dataset
-    h5["q"][1:d, j1:j2, 1:i] = Array{Float64}(solution.q.d[1:d, 2:n+1, 1:i])
-    h5["p"][1:d, j1:j2, 1:i] = Array{Float64}(solution.p.d[1:d, 2:n+1, 1:i])
-    h5["λ"][1:m, j1:j2, 1:i] = Array{Float64}(solution.λ.d[1:m, 2:n+1, 1:i])
+    h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
+    h5["p"][:, j1:j2, :] = solution.p[:, 1:n, :]
+    h5["λ"][:, j1:j2, :] = solution.λ[:, 1:n, :]
 
     return nothing
 end

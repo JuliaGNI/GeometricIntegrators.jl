@@ -64,9 +64,9 @@ mutable struct ParametersVPRK{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractParame
     tab::TableauVPRK{TT}
     Δt::TT
 
-    t::TT
-    q::Vector{DT}
-    p::Vector{DT}
+    t̅::TT
+    q̅::Vector{DT}
+    p̅::Vector{DT}
 end
 
 function ParametersVPRK(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
@@ -98,20 +98,13 @@ end
 struct IntegratorVPRK{DT, TT, PT <: ParametersVPRK{DT,TT},
                               ST <: NonlinearSolver{DT},
                               IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT}
-
     params::PT
     solver::ST
     iguess::IT
-
-    cache::NonlinearFunctionCacheVPRK{DT}
-
-    q::Vector{Vector{TwicePrecision{DT}}}
-    p::Vector{Vector{TwicePrecision{DT}}}
 end
 
 function IntegratorVPRK(equation::ET, tableau::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
     D = equation.d
-    M = equation.n
     S = tableau.s
 
     # create params
@@ -123,78 +116,63 @@ function IntegratorVPRK(equation::ET, tableau::TableauVPRK{TT}, Δt::TT) where {
     # create initial guess
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
-    # create cache for internal stage vectors and update vectors
-    cache = NonlinearFunctionCacheVPRK{DT}(D,S)
-
-    # create solution vectors
-    q = create_solution_vector(DT, D, M)
-    p = create_solution_vector(DT, D, M)
-
     # create integrator
-    IntegratorVPRK{DT, TT, typeof(params), typeof(solver), typeof(iguess)}(
-                params, solver, iguess, cache, q, p)
+    IntegratorVPRK{DT, TT, typeof(params), typeof(solver), typeof(iguess)}(params, solver, iguess)
 end
 
 
 IntegratorVPRKpNone = IntegratorVPRK
 
 
-function initialize!(int::AbstractIntegratorVPRK{DT,TT}, sol::SolutionPDAE, m::Int) where {DT,TT}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q[m], int.p[m], m)
-
-    # initialise initial guess
-    initialize!(int.iguess, m, sol.t[0], int.q[m], int.p[m])
-end
+equation(int::IntegratorVPRK) = int.params.equ
+timestep(int::IntegratorVPRK) = int.params.Δt
+tableau(integrator::IntegratorVPRK) = integrator.params.tab
+nstages(integrator::IntegratorVPRK) = integrator.params.tab.s
 
 
-function initial_guess!(int::IntegratorVPRK, m::Int)
-    for i in 1:int.params.tab.s
-        evaluate!(int.iguess, m, int.cache.y, int.cache.z, int.cache.v, int.params.tab.q.c[i], int.params.tab.p.c[i])
-        for k in 1:int.params.equ.d
-            int.solver.x[int.params.equ.d*(i-1)+k] = int.cache.v[k]
+function initial_guess!(int::IntegratorVPRK, cache::IntegratorCacheVPRK)
+    for i in 1:nstages(int)
+        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
+                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
+                              cache.q̃, cache.ṽ,
+                              tableau(int).q.c[i])
+
+        for k in 1:ndims(int)
+            int.solver.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
         end
     end
 end
 
-"Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRK{DT,TT}, sol::SolutionPDAE{DT,TT}, m::Int, n::Int) where {DT,TT}
-    # check if m and n are compatible with solution dimensions
-    check_solution_dimension_asserts(sol, m, n)
 
-    # set time for nonlinear solver
-    int.params.t  = sol.t[0] + (n-1)*int.params.Δt
-    int.params.q .= int.q[m]
-    int.params.p .= int.p[m]
+"Integrate ODE with variational partitioned Runge-Kutta integrator."
+function integrate_step!(int::IntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK{DT,TT}) where {DT,TT}
+    # update nonlinear solver parameters from cache
+    update_params!(int.params, cache)
 
     # compute initial guess
-    initial_guess!(int, m)
+    initial_guess!(int, cache)
+
+    # reset cache
+    reset!(cache, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params, n)
+    print_solver_status(int.solver.status, int.solver.params, cache.n)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params, n)
+    check_solver_status(int.solver.status, int.solver.params, cache.n)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.params)
+    compute_stages!(int.solver.x, cache.Q, cache.V, cache.P, cache.F, int.params)
 
     # compute final update
-    update_solution!(int.q[m], int.cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
-    update_solution!(int.p[m], int.cache.F, int.params.tab.p.b, int.params.tab.p.b̂, int.params.Δt)
+    update_solution!(int, cache)
 
-    # copy solution to initial guess for next time step
-    update!(int.iguess, m, sol.t[0] + n*int.params.Δt, int.q[m], int.p[m])
+    # copy solution to initial guess
+    update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q[m], int.params.equ.periodicity)
-
-    # copy to solution
-    copy_solution!(sol, int.q[m], int.p[m], n, m)
+    cut_periodic_solution!(cache, equation(int).periodicity)
 end

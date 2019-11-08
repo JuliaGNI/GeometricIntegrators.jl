@@ -80,10 +80,10 @@ mutable struct ParametersPGLRK{DT,TT,D,S,ET} <: Parameters{DT,TT}
     a_q::Matrix{TT}
     a_p::Matrix{TT}
 
-    t::TT
+    t̅::TT
 
-    q::Vector{DT}
-    p::Vector{DT}
+    q̅::Vector{DT}
+    p̅::Vector{DT}
 
 
     function ParametersPGLRK{DT,TT,D,S,ET}(equ, tab, Δt) where {DT,TT,D,S,ET}
@@ -93,15 +93,19 @@ mutable struct ParametersPGLRK{DT,TT,D,S,ET} <: Parameters{DT,TT}
         a_q = zero(tab.a)
         a_p = zero(tab.a)
 
-        # create solution vectors
-        q = zeros(DT,D)
-        p = zeros(DT,D)
-
-        new(equ, tab, Δt, A_q, A_p, a_q, a_p, 0, q, p)
+        new(equ, tab, Δt, A_q, A_p, a_q, a_p, zero(TT), zeros(DT,D), zeros(DT,D))
     end
 end
 
-struct NonlinearFunctionCachePGLRK{DT}
+
+struct NonlinearFunctionCachePGLRK{DT,D,S}
+    q̃::Vector{DT}
+    p̃::Vector{DT}
+    ṽ::Vector{DT}
+    f̃::Vector{DT}
+    θ̃::Vector{DT}
+    λ̃::Vector{DT}
+
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
     P::Vector{Vector{DT}}
@@ -109,54 +113,113 @@ struct NonlinearFunctionCachePGLRK{DT}
     Y::Vector{Vector{DT}}
     Z::Vector{Vector{DT}}
 
-    v::Vector{DT}
-    f::Vector{DT}
-    y::Vector{DT}
-    z::Vector{DT}
-
-    q̅::Vector{DT}
-    p̅::Vector{DT}
-    θ::Vector{DT}
-    λ::Vector{DT}
-
-
-    function NonlinearFunctionCachePGLRK{DT}(D,S) where {DT}
+    function NonlinearFunctionCachePGLRK{DT,D,S}() where {DT,D,S}
+        # create temporary vectors
+        q̃ = zeros(DT,D)
+        p̃ = zeros(DT,D)
+        ṽ = zeros(DT,D)
+        f̃ = zeros(DT,D)
+        θ̃ = zeros(DT,D)
+        λ̃ = zeros(DT,D)
 
         # create internal stage vectors
         Q = create_internal_stage_vector(DT, D, S)
-        V = create_internal_stage_vector(DT, D, S)
         P = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
         F = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
         Z = create_internal_stage_vector(DT, D, S)
 
+        new(q̃, p̃, ṽ, f̃, θ̃, λ̃,
+            Q, P, V, F, Y, Z)
+    end
+end
+
+
+mutable struct IntegratorCachePGLRK{DT,TT,D,S} <: IODEIntegratorCache{DT,D}
+    n::Int
+    t::TT
+    t̅::TT
+
+    q::Vector{TwicePrecision{DT}}
+    q̅::Vector{TwicePrecision{DT}}
+    p::Vector{TwicePrecision{DT}}
+    p̅::Vector{TwicePrecision{DT}}
+
+    θ::Vector{DT}
+    θ̅::Vector{DT}
+    λ::Vector{DT}
+    λ̅::Vector{DT}
+
+    v::Vector{DT}
+    v̅::Vector{DT}
+    f::Vector{DT}
+    f̅::Vector{DT}
+
+    s̃::Vector{DT}
+
+    fcache::NonlinearFunctionCachePGLRK{DT,D,S}
+
+    function IntegratorCachePGLRK{DT,TT,D,S}() where {DT,TT,D,S}
+        # create solution vectors
+        q = zeros(TwicePrecision{DT}, D)
+        q̅ = zeros(TwicePrecision{DT}, D)
+        p = zeros(TwicePrecision{DT}, D)
+        p̅ = zeros(TwicePrecision{DT}, D)
+
+        θ = zeros(DT,D)
+        θ̅ = zeros(DT,D)
+        λ = zeros(DT,D)
+        λ̅ = zeros(DT,D)
+
+        # create temporary vectors
+        s̃ = zeros(DT,D)
+
         # create update vectors
         v = zeros(DT,D)
+        v̅ = zeros(DT,D)
         f = zeros(DT,D)
-        y = zeros(DT,D)
-        z = zeros(DT,D)
+        f̅ = zeros(DT,D)
 
-        # create new solution vectors
-        q̅ = zeros(DT,D)
-        p̅ = zeros(DT,D)
-        θ = zeros(DT,D)
-        λ = zeros(DT,D)
+        fcache = NonlinearFunctionCachePGLRK{DT,D,S}()
 
-        new(Q, V, P, F, Y, Z, v, f, y, z, q̅, p̅, θ, λ)
+        new(0, zero(TT), zero(TT),
+            q, q̅, p, p̅, θ, θ̅, λ, λ̅,
+            v, v̅, f, f̅, s̃,
+            fcache)
     end
+end
+
+
+function update_params!(params::ParametersPGLRK, cache::IntegratorCachePGLRK)
+    # set time for nonlinear solver and copy previous solution
+    params.t̅  = cache.t
+    params.q̅ .= cache.q
+    params.p̅ .= cache.p
+end
+
+
+function compute_stages!(x::Vector{ST}, cache::NonlinearFunctionCachePGLRK{ST}, params::ParametersPGLRK) where {ST}
+    compute_stages!(x, cache.Q, cache.V,
+                       cache.P, cache.F,
+                       cache.Y, cache.Z,
+                       cache.q̃, cache.p̃,
+                       cache.θ̃, cache.λ̃,
+                       cache.ṽ, cache.f̃,
+                       params)
 end
 
 function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
                                         P::Vector{Vector{ST}}, F::Vector{Vector{ST}},
                                         Y::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
-                                        q̅::Vector{ST}, p̅::Vector{ST},
+                                        q::Vector{ST}, p::Vector{ST},
                                         θ::Vector{ST}, λ::Vector{ST},
                                         y::Vector{ST}, z::Vector{ST},
                                         params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     local tᵢ::TT
-    local t₀::TT = params.t
-    local t₁::TT = params.t + params.Δt
+    local t₀::TT = params.t̅
+    local t₁::TT = params.t̅ + params.Δt
 
     # copy x to V
     for i in 1:S
@@ -165,10 +228,10 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         end
     end
 
-    # copy x to λ, q̅ and p̅
+    # copy x to λ, q and p
     for k in 1:D
-        q̅[k] = x[D*(S+0)+k]
-        p̅[k] = x[D*(S+1)+k]
+        q[k] = x[D*(S+0)+k]
+        p[k] = x[D*(S+1)+k]
         λ[k] = x[D*(S+2)+k]
     end
 
@@ -191,14 +254,14 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
             for j in 1:S
                 Y[i][k] += params.A_q[i,j,k] * V[j][k]
             end
-            Q[i][k] = params.q[k] + params.Δt * Y[i][k]
+            Q[i][k] = params.q̅[k] + params.Δt * Y[i][k]
         end
     end
 
-    # compute P=α(Q,V) and F=f(Q,V)
+    # compute P=ϑ(Q,V) and F=f(Q,V)
     for i in 1:S
-        tᵢ = params.t + params.Δt * params.tab.c[i]
-        params.equ.α(tᵢ, Q[i], V[i], P[i])
+        tᵢ = params.t̅ + params.Δt * params.tab.c[i]
+        params.equ.ϑ(tᵢ, Q[i], V[i], P[i])
         params.equ.f(tᵢ, Q[i], V[i], F[i])
     end
 
@@ -222,32 +285,30 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         end
     end
 
-    # compute θ=α(q̅,λ)
-    params.equ.α(t₁, q̅, λ, θ)
-
+    # compute θ=ϑ(q,λ)
+    params.equ.ϑ(t₁, q, λ, θ)
 end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    cache = NonlinearFunctionCachePGLRK{ST}(D, S)
+    cache = NonlinearFunctionCachePGLRK{ST,D,S}()
 
     quote
-        compute_stages!(x, $cache.Q, $cache.V, $cache.P, $cache.F, $cache.Y, $cache.Z,
-                           $cache.q̅, $cache.p̅, $cache.θ, $cache.λ, $cache.y, $cache.z, params)
+        compute_stages!(x, $cache, params)
 
         # compute b = [P-p-AF]
         for i in 1:S
             for k in 1:D
-                b[D*(i-1)+k] = $cache.P[i][k] - params.p[k] - params.Δt * $cache.Z[i][k]
+                b[D*(i-1)+k] = $cache.P[i][k] - params.p̅[k] - params.Δt * $cache.Z[i][k]
             end
         end
 
         # compute b = [q̅-q-bV, p̅-p-bF, p̅-α(q̅)]
         for k in 1:D
-            b[D*(S+0)+k] = $cache.q̅[k] - params.q[k] - params.Δt * $cache.y[k]
-            b[D*(S+1)+k] = $cache.p̅[k] - params.p[k] - params.Δt * $cache.z[k]
-            b[D*(S+2)+k] = $cache.p̅[k] - $cache.θ[k]
+            b[D*(S+0)+k] = $cache.q̃[k] - params.q̅[k] - params.Δt * $cache.ṽ[k]
+            b[D*(S+1)+k] = $cache.p̃[k] - params.p̅[k] - params.Δt * $cache.f̃[k]
+            b[D*(S+2)+k] = $cache.p̃[k] - $cache.θ̃[k]
         end
     end
 end
@@ -255,14 +316,10 @@ end
 "Variational partitioned Runge-Kutta integrator."
 struct IntegratorPGLRK{DT, TT, PT <: ParametersPGLRK{DT,TT},
                                ST <: NonlinearSolver{DT},
-                               IT <: InitialGuessPODE{DT,TT}, N} <: Integrator{DT,TT}
+                               IT <: InitialGuessPODE{DT,TT}, N} <: DeterministicIntegrator{DT,TT}
     params::PT
     solver::ST
     iguess::IT
-    fcache::NonlinearFunctionCachePGLRK{DT}
-
-    q::Vector{Vector{TwicePrecision{DT}}}
-    p::Vector{Vector{TwicePrecision{DT}}}
 end
 
 function IntegratorPGLRK(equation::IODE{DT,TT,ΑT,FT,GT,VT,N}, tableau::CoefficientsPGLRK{TT}, Δt::TT) where {DT,TT,ΑT,FT,GT,VT,N}
@@ -279,89 +336,90 @@ function IntegratorPGLRK(equation::IODE{DT,TT,ΑT,FT,GT,VT,N}, tableau::Coeffici
     # create initial guess
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
-    # create cache for internal stage vectors and update vectors
-    fcache = NonlinearFunctionCachePGLRK{DT}(D, S)
-
-    # create solution vectors
-    q = create_solution_vector(DT, D, M)
-    p = create_solution_vector(DT, D, M)
-
-    IntegratorPGLRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), N}(
-                params, solver, iguess, fcache, q, p)
+    IntegratorPGLRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), N}(params, solver, iguess)
 end
 
 equation(integrator::IntegratorPGLRK) = integrator.params.equ
 timestep(integrator::IntegratorPGLRK) = integrator.params.Δt
+tableau(integrator::IntegratorPGLRK) = integrator.params.tab
+nstages(integrator::IntegratorPGLRK) = integrator.params.tab.s
 
 
-function initialize!(int::IntegratorPGLRK{DT,TT}, sol::SolutionPDAE, m::Int) where {DT,TT}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q[m], int.p[m], m)
-
-    # initialise initial guess
-    initialize!(int.iguess, m, sol.t[0], int.q[m], int.p[m])
+function create_integrator_cache(int::IntegratorPGLRK{DT,TT}) where {DT,TT}
+    IntegratorCachePGLRK{DT, TT, ndims(int), nstages(int)}()
 end
 
-function initial_guess!(int::IntegratorPGLRK{DT,TT}, m::Int) where {DT,TT}
-    for i in 1:int.params.tab.s
-        evaluate!(int.iguess, m, int.fcache.y, int.fcache.z, int.fcache.v, int.fcache.f, int.params.tab.c[i], int.params.tab.c[i])
-        for k in 1:int.params.equ.d
-            int.solver.x[int.params.equ.d*(i-1)+k] = int.fcache.v[k]
+
+function initialize!(int::IntegratorPGLRK, cache::IntegratorCachePGLRK)
+    cache.t̅ = cache.t - timestep(int)
+
+    equation(int).v(cache.t, cache.q, cache.p, cache.v)
+    equation(int).f(cache.t, cache.q, cache.p, cache.f)
+
+    initialize!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f,
+                            cache.t̅, cache.q̅, cache.p̅, cache.v̅, cache.f̅)
+end
+
+
+function initial_guess!(int::IntegratorPGLRK{DT,TT}, cache::IntegratorCachePGLRK{DT,TT}) where {DT,TT}
+    for i in 1:nstages(int)
+        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
+                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
+                              cache.fcache.q̃, cache.fcache.ṽ,
+                              tableau(int).c[i])
+
+        for k in 1:ndims(int)
+            int.solver.x[ndims(int)*(i-1)+k] = cache.fcache.ṽ[k]
         end
     end
-    evaluate!(int.iguess, m, int.fcache.y, int.fcache.z, int.fcache.v, int.fcache.f, one(TT), one(TT))
-    for k in 1:int.params.equ.d
-        int.solver.x[int.params.equ.d*(int.params.tab.s+0)+k] = int.fcache.y[k]
+
+    evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
+                          cache.q̅, cache.p̅, cache.v̅, cache.f̅,
+                          cache.fcache.q̃, cache.fcache.p̃,
+                          one(TT), one(TT))
+
+    for k in 1:ndims(int)
+        int.solver.x[ndims(int)*(nstages(int)+0)+k] = cache.fcache.q̃[k]
     end
-    for k in 1:int.params.equ.d
-        int.solver.x[int.params.equ.d*(int.params.tab.s+1)+k] = int.fcache.z[k]
+    for k in 1:ndims(int)
+        int.solver.x[ndims(int)*(nstages(int)+1)+k] = cache.fcache.p̃[k]
     end
-    for k in 1:int.params.equ.d
-        int.solver.x[int.params.equ.d*(int.params.tab.s+2)+k] = 0
+    for k in 1:ndims(int)
+        int.solver.x[ndims(int)*(nstages(int)+2)+k] = 0
     end
 end
 
 
 "Integrate PODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::SolutionPDAE{DT,TT}, m::Int, n::Int) where {DT,TT}
-    # set time for nonlinear solver
-    int.params.t  = sol.t[0] + (n-1)*int.params.Δt
-
-    # copy previous solution
-    int.params.q .= int.q[m]
-    int.params.p .= int.p[m]
+function integrate_step!(int::IntegratorPGLRK{DT,TT}, cache::IntegratorCachePGLRK{DT,TT}) where {DT,TT}
+    # update nonlinear solver parameters from cache
+    update_params!(int.params, cache)
 
     # compute initial guess
-    initial_guess!(int, m)
+    initial_guess!(int, cache)
+
+    # reset cache
+    reset!(cache, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params, n)
+    print_solver_status(int.solver.status, int.solver.params, cache.n)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params, n)
+    check_solver_status(int.solver.status, int.solver.params, cache.n)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, int.fcache.Q, int.fcache.V,
-                                  int.fcache.P, int.fcache.F,
-                                  int.fcache.Y, int.fcache.Z,
-                                  int.fcache.q̅, int.fcache.p̅,
-                                  int.fcache.θ, int.fcache.λ,
-                                  int.fcache.y, int.fcache.z,
-                                  int.params)
+    compute_stages!(int.solver.x, cache.fcache, int.params)
 
     # compute final update
-    update_solution!(int.q[m], int.fcache.V, int.params.tab.b, int.params.Δt)
-    update_solution!(int.p[m], int.fcache.F, int.params.tab.b, int.params.Δt)
+    update_solution!(cache.q, cache.fcache.V, int.params.tab.b, int.params.Δt)
+    update_solution!(cache.p, cache.fcache.F, int.params.tab.b, int.params.Δt)
+
+    # copy solution to initial guess
+    update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q[m], int.params.equ.periodicity)
-
-    # copy to solution
-    copy_solution!(sol, int.q[m], int.p[m], n, m)
+    cut_periodic_solution!(cache, equation(int).periodicity)
 end

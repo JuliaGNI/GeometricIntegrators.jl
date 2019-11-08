@@ -173,5 +173,5 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
     cut_periodic_solution!(int.q[r,m], int.equation.periodicity)
 
     # copy to solution
-    copy_solution!(sol, int.q[r,m], n, r, m)
+    set_solution!(sol, int.q[r,m], n, r, m)
 end

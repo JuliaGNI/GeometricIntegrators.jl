@@ -113,8 +113,8 @@ end
         local tᵢ::TT
         local v = zeros(q̅)
 
-        # compute p̅=α(q̅)
-        params.equ.α(t₁, q̅, v, p̅)
+        # compute p̅=ϑ(q̅)
+        params.equ.ϑ(t₁, q̅, v, p̅)
 
         for i in 1:S
             simd_copy_xy_first!($tQ, Q, i)
@@ -231,52 +231,64 @@ end
 end
 
 
-"""
+@doc raw"""
 Variational partitioned Runge-Kutta integrator with projection on secondary constraint.
 
+The VPRK integrator solves the following system of equations for the internal stages,
 ```math
-\\begin{align*}
-P_{n,i} &= \\dfrac{\\partial L}{\\partial v} (Q_{n,i}, V_{n,i}) , &
-Q_{n,i} &= q_{n} + h \\sum \\limits_{j=1}^{s} a_{ij} \\, \\big( V_{n,j} + \\Lambda_{n,j} \\big) , &
-q_{n+1} &= q_{n} + h \\sum \\limits_{i=1}^{s} b_{i} \\, \\big( V_{n,i} + \\Lambda_{n,i} \\big) , \\\\
-F_{n,i} &= \\dfrac{\\partial L}{\\partial q} (Q_{n,i}, V_{n,i}) , &
-P_{n,i} &= p_{n} + h \\sum \\limits_{i=1}^{s} \\bar{a}_{ij} \\, \\big( F_{n,j} + \\nabla \\vartheta (Q_{n,j}) \\cdot \\Lambda_{n,j} \\big) - d_i \\lambda , &
-p_{n+1} &= p_{n} + h \\sum \\limits_{i=1}^{s} \\bar{b}_{i} \\, \\big( F_{n,i} + \\nabla \\vartheta (Q_{n,j}) \\cdot \\Lambda_{n,j} \\big) , \\\\
-0 &= \\sum \\limits_{i=1}^{s} d_i V_i , &
-0 &= \\sum \\limits_{j=1}^{s} \\omega_{ij} \\Psi_{n,j} , &
-0 &= \\phi (q_{n+1}, p_{n+1}) ,
-\\end{align*}
+\begin{align*}
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, \big( V_{n,j} + \Lambda_{n,j} \big) , \\
+P_{n,i} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{a}_{ij} \, \big( F_{n,j} + \nabla \vartheta (Q_{n,j})^{T} \cdot \Lambda_{n,j} \big) - d_i \lambda , \\
+0 &= \sum \limits_{i=1}^{s} d_i V_i , \\
+0 &= \sum \limits_{j=1}^{s} \omega_{ij} \Psi_{n,j} ,
+\end{align*}
+```
+with definitions
+```math
+\begin{align*}
+P_{n,i} &= \dfrac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , \\
+F_{n,i} &= \dfrac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , \\
+\Psi_{n,i} &= \psi(Q_{n,i}, V_{n,i}, P_{n,i}, F_{n,i}) ,
+\end{align*}
+```
+and update rule
+```math
+\begin{align*}
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, \big( V_{n,i} + \Lambda_{n,i} \big) , \\
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i} \, \big( F_{n,i} + \nabla \vartheta (Q_{n,j})^{T} \cdot \Lambda_{n,j} \big) , \\
+0 &= \phi (q_{n+1}, p_{n+1}) ,
+\end{align*}
 ```
 satisfying the symplecticity conditions
 ```math
-\\begin{align*}
-b_{i} \\bar{a}_{ij} + \\bar{b}_{j} a_{ji} &= b_{i} \\bar{b}_{j} , &
-\\bar{b}_i &= b_i ,
-\\end{align*}
+\begin{align*}
+b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
+\bar{b}_i &= b_i ,
+\end{align*}
 ```
 the primary constraint,
 ```math
-\\begin{align*}
-\\phi(q,p) = p - \\vartheta (q) = 0 ,
-\\end{align*}
+\begin{align*}
+\phi(q,p) = p - \vartheta (q) = 0 ,
+\end{align*}
 ```
 at the final solution ``(q_{n+1}, p_{n+1})``,
 and super positions of the secondary constraints,
 ```math
-\\begin{align*}
-\\psi(q,\\dot{q},p,\\dot{p})
-= \\dot{p} - \\dot{q} \\cdot \\nabla \\vartheta (q)
-= \\big( \\nabla \\vartheta (q) - \\nabla \\vartheta^{T} (q) \\big) \\cdot \\dot{q} - \\nabla H (q)
+\begin{align*}
+\psi(q,\dot{q},p,\dot{p})
+= \dot{p} - \dot{q} \cdot \nabla \vartheta (q)
+= \big( \nabla \vartheta (q) - \nabla \vartheta^{T} (q) \big) \cdot \dot{q} - \nabla H (q)
 = 0,
-\\end{align*}
+\end{align*}
 ```
-at the internal stages,
+which, evaluated at the internal stages, read
 ```math
-\\begin{align*}
-\\Psi_{n,j} = \\big( \\nabla \\vartheta (Q_{n,j}) - \\nabla \\vartheta^{T} (Q_{n,j}) \\big) \\cdot V_{n,j} - \\nabla H (Q_{n,j}) .
-\\end{align*}
+\begin{align*}
+\Psi_{n,j} = \big( \nabla \vartheta (Q_{n,j}) - \nabla \vartheta^{T} (Q_{n,j}) \big) \cdot V_{n,j} - \nabla H (Q_{n,j}) .
+\end{align*}
 ```
-Here, ``\\omega`` is a ``(s-1) \\times s`` matrix, chosen such that the resulting
+Here, ``\omega`` is a ``(s-1) \times s`` matrix, chosen such that the resulting
 method has optimal order.
 The vector ``d`` is zero for Gauss-Legendre methods and needs to be chosen
 appropriately for Gauss-Lobatto methods (for details see documentation of

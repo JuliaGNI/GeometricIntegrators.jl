@@ -1,30 +1,34 @@
 
-n = 1
-T = Float64
+@testset "$(rpad("Nonlinear solvers",80))" begin
 
-function F(x::Vector, b::Vector)
-    b[:] = x.^2
-end
+    n = 1
+    T = Float64
 
-function J(x::Vector, A::Matrix)
-    A[:,:] = 2x
-end
-
-
-for Solver in (NewtonSolver, QuasiNewtonSolver)
-    x = ones(T, n)
-    nl = Solver(x, F)
-    solve!(nl)
-    # println(nl.status.i, ", ", nl.status.rₐ,", ",  nl.status.rᵣ,", ",  nl.status.rₛ)
-    for x in nl.x
-        @test x ≈ 0 atol=1E-7
+    function F(x::Vector, b::Vector)
+        b[:] = x.^2
     end
 
-    x = ones(T, n)
-    nl = Solver(x, F, J=J)
-    solve!(nl)
-    # println(nl.status.i, ", ", nl.status.rₐ,", ",  nl.status.rᵣ,", ",  nl.status.rₛ)
-    for x in nl.x
-        @test x ≈ 0 atol=1E-7
+    function J(x::Vector, A::Matrix)
+        A[:,:] = 2x
     end
+
+
+    for Solver in (NewtonSolver, QuasiNewtonSolver)
+        x = ones(T, n)
+        nl = Solver(x, F)
+        solve!(nl)
+        # println(nl.status.i, ", ", nl.status.rₐ,", ",  nl.status.rᵣ,", ",  nl.status.rₛ)
+        for x in nl.x
+            @test x ≈ 0 atol=1E-7
+        end
+
+        x = ones(T, n)
+        nl = Solver(x, F, J=J)
+        solve!(nl)
+        # println(nl.status.i, ", ", nl.status.rₐ,", ",  nl.status.rᵣ,", ",  nl.status.rₛ)
+        for x in nl.x
+            @test x ≈ 0 atol=1E-7
+        end
+    end
+
 end

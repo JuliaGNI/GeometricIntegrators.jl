@@ -3,14 +3,14 @@ os:
   - linux
   - osx
 julia:
-  - 1.0
   - 1.1
+  - 1.2
+  - 1.3
   - nightly
 matrix:
   fast_finish: true
   allow_failures:
     - julia: nightly
-    - os: osx
 jobs:
   allow_failures:
     - script: bash ./docs/travis.sh

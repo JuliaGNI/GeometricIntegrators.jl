@@ -84,3 +84,5 @@ function Base.similar(SODE::SODE{DT,TT,VT}, t₀::TT, q₀::DenseArray{DT}) wher
     @assert SODE.d == size(q₀,1)
     SODE(SODE.v, t₀, q₀)
 end
+
+Base.ndims(ode::SODE) = ode.d

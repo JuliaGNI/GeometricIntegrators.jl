@@ -320,7 +320,7 @@ end
 * `p`: current solution vector for one-form
 * `cache`: temporary variables for nonlinear solver
 """
-struct IntegratorDGVIEXP{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis} <: Integrator{DT,TT}
+struct IntegratorDGVIEXP{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis} <: DeterministicIntegrator{DT,TT}
     equation::IODE{DT,TT,ΘT,FT,GT,VT}
 
     basis::BT
@@ -432,7 +432,6 @@ end
 end
 
 
-"Integrate ODE with variational partitioned Runge-Kutta integrator."
 function integrate_step!(int::IntegratorDGVIEXP{DT,TT}, sol::Union{SolutionPODE{DT,TT}, SolutionPDAE{DT,TT}}, m::Int, n::Int) where {DT,TT}
     # set time for nonlinear solver
     int.params.t = sol.t[0] + (n-1)*int.Δt

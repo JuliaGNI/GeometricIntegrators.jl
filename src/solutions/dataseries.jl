@@ -34,6 +34,14 @@ for (TDataSeries, TArray) in
         end
 
 
+        function $TDataSeries(T, nt::Int)
+            return $TDataSeries{T,1}(1, nt, 1)
+        end
+
+        function $TDataSeries(T, nd::Int, nt::Int)
+            return $TDataSeries{T,2}(nd, nt, 1)
+        end
+
         function $TDataSeries(T, nd::Int, nt::Int, ni::Int)
             ni == 1 ? N = 2 : N = 3
             return $TDataSeries{T,N}(nd, nt, ni)
@@ -41,40 +49,38 @@ for (TDataSeries, TArray) in
 
         function $TDataSeries(d::AbstractArray{T,1}) where {T}
             nd = 1
-            nt = size(d,1)
+            nt = size(d,1)-1
             ni = 1
-            ds = $TDataSeries{T,1}(nd, nt, ni, d)
-            copy!(ds.d, d)
+            ds = $TDataSeries{T,1}(nd, nt, ni)
+            copy!(ds.d, d[1,:,1])
             return ds
         end
 
         function $TDataSeries(d::AbstractArray{T,2}) where {T}
             nd = size(d,1)
-            nt = size(d,2)
+            nt = size(d,2)-1
             ni = 1
-            ds = $TDataSeries{T,2}(nd, nt, ni, d)
-            copy!(ds.d, d)
+            ds = $TDataSeries{T,2}(nd, nt, ni)
+            copy!(ds.d, d[:,:,1])
             return ds
         end
 
         function $TDataSeries(d::AbstractArray{T,3}) where {T}
             nd = size(d,1)
-            nt = size(d,2)
+            nt = size(d,2)-1
             ni = size(d,3)
-            ds = $TDataSeries{T,3}(nd, nt, ni, d)
+            ds = $TDataSeries{T,3}(nd, nt, ni)
             copy!(ds.d, d)
             return ds
         end
-
-
-        Base.:(==)(ds1::$TDataSeries, ds2::$TDataSeries) = (
-                                        ds1.nd == ds2.nd
-                                     && ds1.nt == ds2.nt
-                                     && ds1.ni == ds2.ni
-                                     && ds1.d  == ds2.d)
     end
 end
 
+Base.:(==)(ds1::DataSeries, ds2::DataSeries) = (
+                                ds1.nd == ds2.nd
+                             && ds1.nt == ds2.nt
+                             && ds1.ni == ds2.ni
+                             && ds1.d  == ds2.d)
 
 function Base.show(io::IO, ds::DataSeries{T,N}) where {T,N}
     print(io, "DataSeries with data type ", T, " and ", N, " dimensions:\n")
@@ -89,9 +95,11 @@ Base.parent(ds::DataSeries) = ds.d
 Base.eltype(ds::DataSeries{T,N}) where {T,N} = T
 Base.ndims(ds::DataSeries{T,N}) where {T,N} = N
 
-errmsg_size(ds::DataSeries) = error("size not supported for data series with axes $(axes(ds))")
-Base.size(ds::DataSeries) = errmsg_size(ds)
-Base.size(ds::DataSeries, d) = errmsg_size(ds)
+# errmsg_size(ds::DataSeries) = error("size not supported for data series with axes $(axes(ds))")
+# Base.size(ds::DataSeries) = errmsg_size(ds)
+# Base.size(ds::DataSeries, d) = errmsg_size(ds)
+Base.size(ds::DataSeries) = size(ds.d)
+Base.size(ds::DataSeries, d) = size(ds.d, d)
 
 Base.eachindex(::IndexCartesian, ds::DataSeries) = CartesianIndices(axes(ds))
 Base.eachindex(::IndexLinear, ds::DataSeries) = axes(ds, 1)
@@ -185,21 +193,17 @@ function set_data!(ds::DataSeries{T,3}, x::Union{Array{T,1}, Array{TwicePrecisio
     end
 end
 
-function reset!(ds::DataSeries{T,1}) where {T}
-    # ds[0]=ds[end-1] was wrong for some reason
-    # ds[0]=ds[end] would be ok, but to be safe below using ds.d
-    @inbounds ds.d[1] = ds.d[end]
+function CommonFunctions.reset!(ds::DataSeries{T,1}) where {T}
+    @inbounds ds[0] = ds[end]
 end
 
-# Corrected the bugs in all reset! functions: changed end to end-1.
-# When 'end' is passed to getindex, because of the shift it becomes end+1.
-function reset!(ds::DataSeries{T,2}) where {T}
+function CommonFunctions.reset!(ds::DataSeries{T,2}) where {T}
     @inbounds for i in axes(ds, 1)
         ds[i,0] = ds[i,end]
     end
 end
 
-function reset!(ds::DataSeries{T,3}) where {T}
+function CommonFunctions.reset!(ds::DataSeries{T,3}) where {T}
     @inbounds for k in axes(ds.d, 3)
         for i in axes(ds.d, 1)
             ds[i,0,k] = ds[i,end,k]

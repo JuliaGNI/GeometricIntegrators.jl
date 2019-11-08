@@ -1,5 +1,3 @@
-__precompile__()
-
 module Tableaus
 
     using ..Config
@@ -91,6 +89,8 @@ module Tableaus
     export getTableauSymplecticEulerA, getTableauSymplecticEulerB,
            getTableauLobattoIIIAIIIB2, getTableauLobattoIIIBIIIA2
 
+    export getTableauSPARKGLRK
+
     include("tableaus/tableaus_spark.jl")
 
     export getTableauVPGLRK,
@@ -105,8 +105,8 @@ module Tableaus
            getTableauVPLobIIIAIIIA2, getTableauVPLobIIIAIIIA3, getTableauVPLobIIIAIIIA4,
            getTableauVPRadIIAIIA2, getTableauVPRadIIAIIA3
 
-
     include("tableaus/tableaus_vprk.jl")
+
 
     export getTableauSymplecticProjection,
            getTableauLobIIIAIIIB2pSymplectic, getTableauLobIIIAIIIB3pSymplectic,
@@ -114,11 +114,28 @@ module Tableaus
 
     include("tableaus/tableaus_vpark.jl")
 
-    export getTableauSymmetricProjection,
-           getTableauLobIIIAIIIB2pSymmetric, getTableauLobIIIAIIIB3pSymmetric,
-           getTableauGLRKpSymmetric
+    export getTableauVSPARKMidpointProjection,
+           getTableauVSPARKSymmetricProjection,
+           getTableauVSPARKSymplecticProjection,
+           getTableauVSPARKGLRKpMidpoint,
+           getTableauVSPARKGLRKpSymmetric,
+           getTableauVSPARKGLRKpSymplectic,
+           getTableauVSPARKLobIIIAIIIB2pSymmetric,
+           getTableauVSPARKLobIIIAIIIB3pSymmetric
 
     include("tableaus/tableaus_vspark.jl")
+
+    export getTableauHPARK, getTableauHPARKGLRK,
+           getTableauHPARKLobIIIAIIIB2, getTableauHPARKLobIIIAIIIB3
+
+    include("tableaus/tableaus_hpark.jl")
+
+    export getTableauHSPARKSymmetricProjection,
+           getTableauHSPARKGLRKpSymmetric,
+           getTableauHSPARKLobIIIAIIIB2pSymmetric,
+           getTableauHSPARKLobIIIAIIIB3pSymmetric
+
+    include("tableaus/tableaus_hspark.jl")
 
     export getTableauLieA, getTableauLieB, getTableauStrang,
            getTableauMcLachlan2, getTableauMcLachlan4,

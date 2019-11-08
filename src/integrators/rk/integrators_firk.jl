@@ -46,9 +46,6 @@ struct NonlinearFunctionCacheFIRK{DT}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
 
-    v::Vector{DT}
-    y::Vector{DT}
-
     function NonlinearFunctionCacheFIRK{DT}(D,S) where {DT}
 
         # create internal stage vectors
@@ -56,11 +53,7 @@ struct NonlinearFunctionCacheFIRK{DT}
         V = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
 
-        # create velocity and update vector
-        v = zeros(DT,D)
-        y = zeros(DT,D)
-
-        new(Q, V, Y, v, y)
+        new(Q, V, Y)
     end
 end
 
@@ -70,10 +63,10 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     local tᵢ::TT
 
     @assert S == length(Q) == length(V) == length(Y)
-    @assert D == length(Q[1]) == length(V[1]) == length(Y[1])
 
     # copy x to Y and compute Q = q + Δt Y
     for i in 1:S
+        @assert D == length(Q[i]) == length(V[i]) == length(Y[i])
         for k in 1:D
             Y[i][k] = x[D*(i-1)+k]
             Q[i][k] = params.q[k] + params.Δt * Y[i][k]
@@ -121,9 +114,6 @@ struct IntegratorFIRK{DT, TT, PT <: ParametersFIRK{DT,TT},
     params::PT
     solver::ST
     iguess::IT
-    fcache::NonlinearFunctionCacheFIRK{DT}
-
-    q::Vector{Vector{TwicePrecision{DT}}}
 end
 
 function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,FT,N}
@@ -140,45 +130,105 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt
     # create initial guess
     iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
 
-    # create cache for internal stage vectors and update vectors
-    fcache = NonlinearFunctionCacheFIRK{DT}(D, S)
-
-    # create solution vectors
-    q = create_solution_vector(DT, D, M)
-
     # create integrator
     IntegratorFIRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), N}(
-                params, solver, iguess, fcache, q)
+                params, solver, iguess)
+end
+
+equation(int::IntegratorFIRK) = int.params.equ
+timestep(int::IntegratorFIRK) = int.params.Δt
+
+
+"""
+Fully implicit Runge-Kutta integrator cache.
+
+### Fields
+
+* `n`: time step number
+* `t`: time of current time step
+* `t̅`: time of previous time step
+* `q`: current solution
+* `q̅`: previous solution
+* `v`: vector field of current solution
+* `v̅`: vector field of previous solution
+* `q̃`: initial guess of solution
+* `ṽ`: initial guess of vector field
+* `s̃`: holds shift due to periodicity of solution
+* `Q`: internal stages of solution
+* `V`: internal stages of vector field
+* `Y`: vector field of internal stages
+"""
+mutable struct IntegratorCacheFIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
+    n::Int
+    t::TT
+    t̅::TT
+
+    q::Vector{DT}
+    q̅::Vector{DT}
+
+    qₑᵣᵣ::Vector{DT}
+
+    v::Vector{DT}
+    v̅::Vector{DT}
+
+    q̃::Vector{DT}
+    ṽ::Vector{DT}
+    s̃::Vector{DT}
+
+    Q::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
+    Y::Vector{Vector{DT}}
+
+    function IntegratorCacheFIRK{DT,TT,D,S}() where {DT,TT,D,S}
+        q = zeros(DT, D)
+        q̅ = zeros(DT, D)
+
+        qₑᵣᵣ = zeros(DT,D)
+
+        Q = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        Y = create_internal_stage_vector(DT, D, S)
+        new(0, zero(TT), zero(TT), q, q̅, qₑᵣᵣ, zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y)
+    end
+end
+
+function create_integrator_cache(int::IntegratorFIRK{DT,TT}) where {DT,TT}
+    IntegratorCacheFIRK{DT, TT, ndims(int), int.params.tab.s}()
+end
+
+function initialize!(int::IntegratorFIRK, cache::IntegratorCacheFIRK)
+    cache.t̅ = cache.t - timestep(int)
+
+    int.params.equ.v(cache.t, cache.q, cache.v)
+
+    initialize!(int.iguess, cache.t, cache.q, cache.v,
+                            cache.t̅, cache.q̅, cache.v̅)
 end
 
 
-function initialize!(int::IntegratorFIRK{DT,TT}, sol::SolutionODE, m::Int) where {DT,TT}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q[m], m)
-
-    # initialise initial guess
-    initialize!(int.iguess, m, sol.t[0], int.q[m])
+function update_params!(int::IntegratorFIRK, cache::IntegratorCacheFIRK)
+    # set time for nonlinear solver and copy previous solution
+    int.params.t  = cache.t
+    int.params.q .= cache.q
 end
 
-function initial_guess!(int::IntegratorFIRK, m::Int)
+
+function initial_guess!(int::IntegratorFIRK, cache::IntegratorCacheFIRK)
     local offset::Int
 
     # compute initial guess for internal stages
     for i in 1:int.params.tab.q.s
-        evaluate!(int.iguess, m, int.fcache.y, int.fcache.v, int.params.tab.q.c[i])
-        for k in eachindex(int.fcache.V[i], int.fcache.v)
-            int.fcache.V[i][k] = int.fcache.v[k]
+        evaluate!(int.iguess, cache.q, cache.v, cache.q̅, cache.v̅, cache.q̃, cache.ṽ, int.params.tab.q.c[i])
+        for k in eachindex(cache.V[i], cache.ṽ)
+            cache.V[i][k] = cache.ṽ[k]
         end
     end
     for i in 1:int.params.tab.q.s
-        offset = dims(int)*(i-1)
-        for k in 1:dims(int)
+        offset = ndims(int)*(i-1)
+        for k in 1:ndims(int)
             int.solver.x[offset+k] = 0
             for j in 1:int.params.tab.q.s
-                int.solver.x[offset+k] += int.params.tab.q.a[i,j] * int.fcache.V[j][k]
+                int.solver.x[offset+k] += int.params.tab.q.a[i,j] * cache.V[j][k]
             end
         end
     end
@@ -186,41 +236,34 @@ end
 
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,N}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    @assert n ≥ 1
-    @assert n ≤ sol.ntime
-
-    # set time for nonlinear solver
-    int.params.t  = sol.t[0] + (n-1)*int.params.Δt
-    int.params.q .= int.q[m]
+function integrate_step!(int::IntegratorFIRK{DT,TT}, cache::IntegratorCacheFIRK{DT,TT}) where {DT,TT}
+    # update nonlinear solver parameters from cache
+    update_params!(int, cache)
 
     # compute initial guess
-    initial_guess!(int, m)
+    initial_guess!(int, cache)
+
+    # reset cache
+    reset!(cache, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params, n)
+    print_solver_status(int.solver.status, int.solver.params, cache.n)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params, n)
+    check_solver_status(int.solver.status, int.solver.params, cache.n)
 
     # compute vector field at internal stages
-    compute_stages!(int.solver.x, int.fcache.Q, int.fcache.V, int.fcache.Y, int.params)
+    compute_stages!(int.solver.x, cache.Q, cache.V, cache.Y, int.params)
 
     # compute final update
-    update_solution!(int.q[m], int.fcache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
+    update_solution!(cache.q, cache.qₑᵣᵣ, cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
 
     # copy solution to initial guess
-    update!(int.iguess, m, sol.t[0] + n*int.params.Δt, int.q[m])
+    update!(int.iguess, cache.t, cache.q, cache.v)
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q[m], int.params.equ.periodicity)
-
-    # copy to solution
-    copy_solution!(sol, int.q[m], n, m)
+    cut_periodic_solution!(cache, int.params.equ.periodicity)
 end
