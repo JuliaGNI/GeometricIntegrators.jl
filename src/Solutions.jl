@@ -6,6 +6,7 @@ module Solutions
     using Base: TwicePrecision
 
     using ..CommonFunctions
+    using ..Config
     using ..Equations
 
 

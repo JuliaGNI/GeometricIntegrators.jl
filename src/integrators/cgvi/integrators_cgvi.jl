@@ -339,19 +339,20 @@ function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}, 
         end
     end
 
-
-    println()
-    println("  Continuous Galerkin Variational Integrator")
-    println("  ==========================================")
-    println()
-    println("    c  = ", nodes(quadrature))
-    println("    b  = ", weights(quadrature))
-    println("    x  = ", nodes(basis))
-    println("    m  = ", m)
-    println("    a  = ", a)
-    println("    r₀ = ", r₀)
-    println("    r₁ = ", r₁)
-    println()
+    if get_config(:verbosity)
+        println()
+        println("  Continuous Galerkin Variational Integrator")
+        println("  ==========================================")
+        println()
+        println("    c  = ", nodes(quadrature))
+        println("    b  = ", weights(quadrature))
+        println("    x  = ", nodes(basis))
+        println("    m  = ", m)
+        println("    a  = ", a)
+        println("    r₀ = ", r₀)
+        println("    r₁ = ", r₁)
+        println()
+    end
 
 
     # create cache for internal stage vectors and update vectors
@@ -385,7 +386,7 @@ end
 
 function initialize!(int::IntegratorCGVI, cache::IntegratorCacheCGVI)
     cache.t̅ = cache.t - timestep(int)
-    
+
     equation(int).v(cache.t, cache.q, cache.p, cache.v)
     equation(int).f(cache.t, cache.q, cache.p, cache.f)
 

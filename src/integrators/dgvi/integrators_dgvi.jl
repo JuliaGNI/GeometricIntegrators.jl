@@ -63,17 +63,19 @@ function ParametersDGVI(equ::IODE{DT,TT,ΘT,FT,GT}, Δt::TT,
     S = length(r⁻)
     R = length(c)
 
-    println()
-    println("  Discontinuous Galerkin Variational Integrator")
-    println("  =============================================")
-    println()
-    println("    b = ", b)
-    println("    c = ", c)
-    println("    m = ", m)
-    println("    a = ", a)
-    println("    r⁻= ", r⁻)
-    println("    r⁺= ", r⁺)
-    println()
+    if get_config(:verbosity)
+        println()
+        println("  Discontinuous Galerkin Variational Integrator")
+        println("  =============================================")
+        println()
+        println("    b = ", b)
+        println("    c = ", c)
+        println("    m = ", m)
+        println("    a = ", a)
+        println("    r⁻= ", r⁻)
+        println("    r⁺= ", r⁺)
+        println()
+    end
 
     ParametersDGVI{DT,TT,D,S,R,ΘT,FT,GT}(equ.ϑ, equ.f, equ.g, Δt, b, c, m, a, r⁻, r⁺)
 end
@@ -703,7 +705,7 @@ function initialize!(int::IntegratorDGVI, cache::IntegratorCacheDGVI)
     cache.t̅ = cache.t - timestep(int)
 
     equation(int).v(cache.t, cache.q, cache.q, cache.v)
-    
+
     initialize!(int.iguess, cache.t, cache.q, cache.v,
                             cache.t̅, cache.q̅, cache.v̅)
 end

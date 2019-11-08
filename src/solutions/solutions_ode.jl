@@ -86,7 +86,7 @@ end
 
 function SolutionODE(file::String)
     # open HDF5 file
-    @info("Reading HDF5 file ", file)
+    get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
     h5 = h5open(file, "r")
 
     # read attributes
