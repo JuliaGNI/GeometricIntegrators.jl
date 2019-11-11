@@ -29,6 +29,8 @@ for (TDataSeries, TArray) in
                     d = $TArray{T}(undef, nd, nt+1, ni)
                 end
 
+                fill!(d,zero(T))
+
                 new(nd, nt, ni, d)
             end
         end
