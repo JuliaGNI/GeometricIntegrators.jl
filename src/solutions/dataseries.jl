@@ -104,11 +104,15 @@ Base.size(ds::DataSeries, d) = size(ds.d, d)
 Base.eachindex(::IndexCartesian, ds::DataSeries) = CartesianIndices(axes(ds))
 Base.eachindex(::IndexLinear, ds::DataSeries) = axes(ds, 1)
 
-Base.lastindex(ds::DataSeries{T,1}) where {T} = (ds.nt)
-Base.lastindex(ds::DataSeries{T,2}) where {T} = (ds.nd, ds.nt)
-Base.lastindex(ds::DataSeries{T,3}) where {T} = (ds.nd, ds.nt, ds.ni)
+Base.lastindex(ds::DataSeries{T,1}) where {T} = ds.nt
+Base.lastindex(ds::DataSeries{T,2}) where {T} = ds.nd*(ds.nt+1)
+Base.lastindex(ds::DataSeries{T,3}) where {T} = ds.nd*(ds.nt+1)*ds.ni
 
-@inline Base.axes(ds::DataSeries{T,1}) where {T} = (0:ds.nt)
+Base.lastindex(ds::DataSeries{T,1}, d) where {T} = d ≥ 1 && d ≤ 1 ? ds.nt : 1
+Base.lastindex(ds::DataSeries{T,2}, d) where {T} = d ≥ 1 && d ≤ 2 ? (ds.nd, ds.nt)[d] : 1
+Base.lastindex(ds::DataSeries{T,3}, d) where {T} = d ≥ 1 && d ≤ 3 ? (ds.nd, ds.nt, ds.ni)[d] : 1
+
+@inline Base.axes(ds::DataSeries{T,1}) where {T} = (0:ds.nt,)
 @inline Base.axes(ds::DataSeries{T,2}) where {T} = (1:ds.nd, 0:ds.nt)
 @inline Base.axes(ds::DataSeries{T,3}) where {T} = (1:ds.nd, 0:ds.nt, 1:ds.ni)
 @inline Base.axes(ds::DataSeries{T,N}, d) where {T,N} = d ≥ 1 && d ≤ N ? axes(ds)[d] : (1:1)

@@ -10,11 +10,15 @@
     @test typeof(ds) != typeof(SDataSeries(dt, nd, nt))
     @test typeof(ds) != typeof(SDataSeries(dt, nd, nt, ni))
     @test typeof(ds) <: AbstractArray{dt,1}
-    @test lastindex(ds) == nt
-    @test axes(ds) == 0:nt
+    @test lastindex(ds)   == nt
+    @test lastindex(ds,1) == lastindex(ds.d,1) - 1
+    @test lastindex(ds,2) == 1
+    @test axes(ds)   == (0:nt,)
+    @test axes(ds,1) == 0:nt
+    @test axes(ds,2) == 1:1
     @test size(ds.d) == (nt+1,)
     @test size(ds.d) == size(ds)
-    @test ndims(ds) == 1
+    @test ndims(ds)  == 1
     @test eltype(ds) == dt
     @test parent(ds) == ds.d
 
@@ -35,15 +39,17 @@
     ds = SDataSeries(dt, nd, nt, ni)
     @test typeof(ds) == typeof(SDataSeries(dt, nd, nt))
     @test typeof(ds) <: AbstractArray{dt,2}
-    @test lastindex(ds) == (nd, nt)
+    @test lastindex(ds)   == lastindex(ds.d)
     @test lastindex(ds,1) == lastindex(ds.d,1)
     @test lastindex(ds,2) == lastindex(ds.d,2) - 1
-    @test axes(ds) == (1:nd, 0:nt)
+    @test lastindex(ds,3) == 1
+    @test axes(ds)   == (1:nd, 0:nt)
     @test axes(ds,1) == 1:nd
     @test axes(ds,2) == 0:nt
+    @test axes(ds,3) == 1:1
     @test size(ds.d) == (nd, nt+1)
     @test size(ds.d) == size(ds)
-    @test ndims(ds) == 2
+    @test ndims(ds)  == 2
     @test eltype(ds) == dt
     @test parent(ds) == ds.d
 
@@ -73,14 +79,16 @@
     ni = 2
     ds = SDataSeries(dt, nd, nt, ni)
     @test typeof(ds) <: AbstractArray{dt,3}
-    @test lastindex(ds) == (nd, nt, ni)
+    @test lastindex(ds) == lastindex(ds.d)
     @test lastindex(ds,1) == lastindex(ds.d,1)
     @test lastindex(ds,2) == lastindex(ds.d,2) - 1
     @test lastindex(ds,3) == lastindex(ds.d,3)
+    @test lastindex(ds,4) == 1
     @test axes(ds) == (1:nd, 0:nt, 1:ni)
     @test axes(ds,1) == 1:nd
     @test axes(ds,2) == 0:nt
     @test axes(ds,3) == 1:ni
+    @test axes(ds,4) == 1:1
     @test size(ds.d) == (nd, nt+1, ni)
     @test size(ds.d) == size(ds)
     @test ndims(ds) == 3

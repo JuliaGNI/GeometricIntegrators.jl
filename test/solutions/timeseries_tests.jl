@@ -7,8 +7,10 @@
     @test typeof(ts) <: AbstractArray
     @test lastindex(ts) == ntime
     @test lastindex(ts,1) == lastindex(ts.t,1) - 1
+    @test lastindex(ts,2) == 1
     @test axes(ts) == (0:ntime,)
     @test axes(ts,1) == 0:ntime
+    @test axes(ts,2) == 1:1
     @test size(ts.t) == (ntime+1,)
 
     compute_timeseries!(ts, 0.)
