@@ -43,13 +43,17 @@ Base.parent(ts::TimeSeries) = ts.t
 Base.eltype(ts::TimeSeries{T}) where {T} = T
 Base.ndims(ts::TimeSeries) = 1
 
-Base.size(ts::TimeSeries) = ts.n+1
+Base.size(ts::TimeSeries) = (ts.n+1,)
 Base.size(ts::TimeSeries, d) = d == 1 ? size(ts) : 0
 
 Base.eachindex(::IndexCartesian, ts::TimeSeries) = CartesianIndices(axes(ts))
 Base.eachindex(::IndexLinear, ts::TimeSeries) = axes(ts, 1)
 
+Base.firstindex(ts::TimeSeries) = 0
+Base.firstindex(ts::TimeSeries,d) = d == 1 ? 0 : 1
+
 Base.lastindex(ts::TimeSeries) = ts.n
+Base.lastindex(ts::TimeSeries,d) = d == 1 ? lastindex(ts) : 1
 
 @inline Base.axes(ts::TimeSeries) = (0:ts.n,)
 @inline Base.axes(ts::TimeSeries, d) = d == 1 ? (axes(parent(ts))[d] .- 1) : (1:1)

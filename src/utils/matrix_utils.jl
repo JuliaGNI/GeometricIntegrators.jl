@@ -23,7 +23,7 @@ end
 "Copy the first dimension of a 2D array y into a 1D array x."
 function simd_copy_xy_first!(x::Array{T,1}, y::Array{T,2}, j) where {T}
     @assert length(x) == size(y, 1)
-    @inbounds for i in 1:length(x)
+    @inbounds for i in eachindex(x)
         x[i] = y[i,j]
     end
     nothing
@@ -32,7 +32,7 @@ end
 "Copy the first dimension of a 3D array y into a 1D array x."
 function simd_copy_xy_first!(x::Array{T,1}, y::Array{T,3}, j, k) where {T}
     @assert length(x) == size(y, 1)
-    @inbounds for i in 1:length(x)
+    @inbounds for i in eachindex(x)
         x[i] = y[i,j,k]
     end
     nothing
@@ -120,9 +120,9 @@ function simd_aXbpy!(a, b::Vector{T}, X::Matrix{T}, y::Vector{T}) where {T}
     @assert length(y) == size(X, 1)
     @assert length(b) == size(X, 2)
     local ty::T
-    @inbounds for i in 1:length(y)
+    @inbounds for i in eachindex(y)
         ty = zero(T)
-        for j=1:length(b)
+        for j=eachindex(b)
             ty += X[i,j] * b[j]
         end
         y[i] = a*ty
@@ -134,9 +134,9 @@ function simd_abXpy!(a::T, b::Vector{T}, X::Matrix{T}, y::Vector{T}) where {T}
     @assert length(y) == size(X, 2)
     @assert length(b) == size(X, 1)
     local ty::T
-    @inbounds for i in 1:length(y)
+    @inbounds for i in eachindex(y)
         ty = zero(T)
-        for j=1:length(b)
+        for j=eachindex(b)
             ty += b[j] * X[j,i]
         end
         y[i] += a*ty
@@ -148,9 +148,9 @@ function simd_mult!(w::Vector{T}, X::Matrix{T}, y::Vector{T}) where {T}
     @assert length(w) == size(X, 1)
     @assert length(y) == size(X, 2)
     local tw::T
-    @inbounds for i in 1:length(w)
+    @inbounds for i in eachindex(w)
         tw = zero(T)
-        for j=1:length(y)
+        for j=eachindex(y)
             tw += X[i,j] * y[j]
         end
         w[i] = tw
@@ -162,9 +162,9 @@ function simd_mult!(w::Vector{T}, y::Vector{T}, X::Matrix{T}) where {T}
     @assert length(w) == size(X, 2)
     @assert length(y) == size(X, 1)
     local tw::T
-    @inbounds for i in 1:length(w)
+    @inbounds for i in eachindex(w)
         tw = 0
-        for j=1:length(y)
+        for j=eachindex(y)
             tw += y[j] * X[j,i]
         end
         w[i] = tw

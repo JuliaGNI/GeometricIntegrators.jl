@@ -320,7 +320,7 @@ function integrate_step!(int::IntegratorSIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,N
 
     # truncate the increments ΔW with A
     if int.params.A>0
-        for i in 1:length(int.params.ΔW)
+        for i in eachindex(int.params.ΔW)
             if int.params.ΔW[i]<-int.params.A
                 int.params.ΔW[i] = -int.params.A
             elseif int.params.ΔW[i]>int.params.A
