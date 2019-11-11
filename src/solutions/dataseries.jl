@@ -104,6 +104,13 @@ Base.size(ds::DataSeries, d) = size(ds.d, d)
 Base.eachindex(::IndexCartesian, ds::DataSeries) = CartesianIndices(axes(ds))
 Base.eachindex(::IndexLinear, ds::DataSeries) = axes(ds, 1)
 
+Base.firstindex(ds::DataSeries{T,1}) where {T}   = 0
+Base.firstindex(ds::DataSeries{T,N}) where {T,N} = 1
+
+Base.firstindex(ds::DataSeries{T,1}, d) where {T} = d ≥ 1 && d ≤ 1 ? 0 : 1
+Base.firstindex(ds::DataSeries{T,2}, d) where {T} = d ≥ 1 && d ≤ 2 ? (1,0)[d] : 1
+Base.firstindex(ds::DataSeries{T,3}, d) where {T} = d ≥ 1 && d ≤ 3 ? (1,0,1)[d] : 1
+
 Base.lastindex(ds::DataSeries{T,1}) where {T} = ds.nt
 Base.lastindex(ds::DataSeries{T,2}) where {T} = ds.nd*(ds.nt+1)
 Base.lastindex(ds::DataSeries{T,3}) where {T} = ds.nd*(ds.nt+1)*ds.ni

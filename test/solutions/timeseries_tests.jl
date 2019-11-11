@@ -5,10 +5,13 @@
 
     ts = TimeSeries{eltype(Δt)}(ntime, Δt, 1)
     @test typeof(ts) <: AbstractArray
-    @test lastindex(ts) == ntime
-    @test lastindex(ts,1) == lastindex(ts.t,1) - 1
-    @test lastindex(ts,2) == 1
-    @test axes(ts) == (0:ntime,)
+    @test firstindex(ts)   == 0
+    @test firstindex(ts,1) == firstindex(ts.t,1) - 1
+    @test firstindex(ts,2) == 1
+    @test lastindex(ts)    == ntime
+    @test lastindex(ts,1)  == lastindex(ts.t,1) - 1
+    @test lastindex(ts,2)  == 1
+    @test axes(ts)   == (0:ntime,)
     @test axes(ts,1) == 0:ntime
     @test axes(ts,2) == 1:1
     @test size(ts.t) == (ntime+1,)
