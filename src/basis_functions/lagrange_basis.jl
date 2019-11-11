@@ -17,9 +17,9 @@ struct LagrangeBasis{T,N} <: PolynomialBasis{T,N}
         denom = zeros(N)
         diffs = zeros(N,N)
 
-        for i in 1:length(x)
+        for i in eachindex(x)
             p = 1
-            for j in 1:length(x)
+            for j in eachindex(x)
                 diffs[i,j] = x[i] - x[j]
                 if i ≠ j
                     p *= diffs[i,j]

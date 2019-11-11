@@ -126,8 +126,8 @@ function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Vector{Vecto
     @assert length(x) == length(ẋ[1])
     @assert length(x) == length(xₑᵣᵣ)
 
-    for i in 1:length(ẋ)
-        for k in 1:length(ẋ[i])
+    for i in eachindex(ẋ)
+        for k in eachindex(ẋ[i])
             x[k], xₑᵣᵣ[k] = compensated_summation(Δt * b[i] * ẋ[i][k], x[k], xₑᵣᵣ[k])
         end
     end
@@ -412,8 +412,8 @@ function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, ẋ::V
     @assert length(b) == length(ẋ)
     @assert length(x) == length(ẋ[1])
 
-    for i in 1:length(ẋ)
-        for k in 1:length(ẋ[i])
+    for i in eachindex(ẋ)
+        for k in eachindex(ẋ[i])
             x[k] += Δt * b[i] * ẋ[i][k]
         end
     end
@@ -468,9 +468,9 @@ end
 function update_multiplier!(λ::SolutionVector{T}, Λ::Vector{Vector{T}}, b::Vector{T}) where {T}
     @assert length(λ) == size(Λ, 1)
     local t::T
-    @inbounds for i in 1:length(λ)
+    @inbounds for i in eachindex(λ)
         t = zero(T)
-        for j=1:length(b)
+        for j=eachindex(b)
             t += b[j] * Λ[j][i]
         end
         λ[i] = t
