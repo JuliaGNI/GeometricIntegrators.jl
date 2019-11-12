@@ -1,39 +1,107 @@
+---
+title: GeometricIntegrators.jl Tutorial
+author: Michael Kraus
+---
 
-# Tutorial
+## Introduction
+
 
 In the simplest cases, the use of `GeometricIntegrators.jl` requires the
-construction of two objects, an equation and an integrator. The integrator
-is usually implicitly selected by specifying an equation and a tableau.
+construction of two objects, an equation and an integrator. For many standard
+methods, the integrator is implicitly selected by specifying an equation and a
+tableau.
+
+Before any use, we need to load GeometricIntegrators,
+```julia
+using GeometricIntegrators
+```
+Then we can create an ODE object for the equation $\dot{x} (t) = x(t)$ with initial condition $x(0) = 1$,
+```julia
+ode = ODE((t, x, ẋ) -> ẋ[1] = x[1], [1.0]);
+```
+create an integrator for this ODE, using the tableau for the explicit Euler method and a time step of $\Delta t = 0.1$,
+```julia
+int = Integrator(ode, getTableauExplicitEuler(), 0.1);
+```
+and compute the solution for $n_t = 10$ time steps,
+```julia
+sol = integrate(int, 10);
+```
+Plot and compare with the exact solution
+```julia
+using Plots
+plot(xlim=[0,1], xlab="t", ylab="x(t)", legend=:bottomright)
+plot!(sol.t.t, sol.q.d[1,:], label="numeric")
+plot!(sol.t.t, exp.(sol.t.t), label="exact")
+```
 
 
 ## Equations
 
 In *GeometricIntegrators.jl* we distinguish between three basic types of equations:
-ordinary differential equations (ODEs), differential algebraic equations (DAEs)
-and stochastic differential equations (SDEs).
-For each type, there are several subtypes like implicit equations (IODE, etc.),
-partitioned equations (PODE, etc.) or split equations (SODE, etc.).
+* ordinary differential equations (ODEs),
+* differential algebraic equations (DAEs),
+* stochastic differential equations (SDEs).
+For each type, there are several subtypes
+* "normal" equations (ODE, DAE, SDE),
+* implicit equations (IODE, IDAE),
+* variational equations (VODE),
+* Hamiltonian equations (HDAE),
+* partitioned equations (PODE, PDAE, PSDE),
+* split equations (SODE).
 
-Instantiating an ODE object for the pendulum problem
-\\[
-\dot{x}_1 = x_2 ,
-\hspace{3em}
-\dot{x}_2 = \sin (x_1) ,
-\\]
-can be achieved by
+
+#### Ordinary differential equations
+
+Consider an ODE of the form
+$$
+\dot{x} (t) = f(t, x(t)) ,
+$$
+where $\dot{x}$ denotes the derivative of $x$ and $f$ the vector field of the
+equation, which is assumed to depend on both $t$ and $x$.
+In the following, we will solve the mathematical pendulum, whose equations are
+given by
+$$
+\begin{pmatrix}
+\dot{x}_1 \\
+\dot{x}_2 \\
+\end{pmatrix}
+=
+\begin{pmatrix}
+x_2 \\
+\sin (x_1) \\
+\end{pmatrix} .
+$$
+
+Creating an `ODE` object requires the prescription of a function that computes
+the vector field $f$, e.g.,
 ```julia
-function pendulum_rhs(t, x, f)
-    f[1] = x[2]
-    f[2] = sin(x[1])
+function ẋ(t, x, v)
+    v[1] = x[2]
+    v[2] = sin(x[1])
 end
-
-ode = ODE(pendulum_rhs, [acos(0.4), 0.0])
 ```
-The first argument to the ODE constructor is the function that determines the
-vector field of the equation $\dot{x} (t) = f(t, x(t))$, and the second argument
-determines the initial conditions.
-The function defining the vector field has to take three arguments, the current
-time `t`, the current solution vector `x` and the output vector `f`.
+which has to take three arguments, the current time `t`, the current solution vector `x` and the output vector `f`.
+Moreover, we need a set of initial conditions,
+```julia
+x₀ = [acos(0.4), 0.0]
+```
+An ODE object is than instantiated by
+```
+ODE(<vector field>, <initial conditions>)
+```
+specifically,
+```julia
+ode = ODE(ẋ, x₀)
+```
+The initial time, `ode.t₀` is assumed to be $0$ be default. It can also be specified explicitly by
+```julia
+t₀  = 1.0
+ode = ODE(ẋ, t₀, x₀)
+```
+
+
+#### Partitioned ordinary differential equations
 
 The pendulum problem is a Hamiltonian system that can also be expressed as
 \\[
@@ -48,15 +116,15 @@ instead of $x$, can be exploited for more efficient integration.
 Such equations can be defined in terms of a partitioned ODE, where the vector
 fields are specified separately,
 ```julia
-function pendulum_v(t, q, p, v)
+function q̇(t, q, p, v)
     v[1] = p[1]
 end
 
-function pendulum_f(t, q, p, f)
+function ṗ(t, q, p, f)
     f[1] = sin(q[1])
 end
 
-pode = PODE(pendulum_v, pendulum_f, [acos(0.4)], [0.0])
+pode = PODE(q̇, ṗ, [acos(0.4)], [0.0])
 ```
 The first two arguments to the PODE constructor are the functions that determine
 the vector fields of the equations $\dot{q} (t) = v(t, q(t), p(t))$ and
@@ -186,11 +254,11 @@ used to copy the solution of the last time step to the initial conditions of the
 solution,
 ```julia
 for i in 1:10
-    integrate!(int, sol)
+    # integrate!(int, sol)
     #
     # save or process solution
     #
-    reset!(sol)
+    ## reset!(sol)
 end
 ```
 All solutions have a `t` field holding the series of time steps that has been

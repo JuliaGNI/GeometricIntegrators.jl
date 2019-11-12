@@ -5,7 +5,7 @@ makedocs(
     sitename = "GeometricIntegrators.jl",
     format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = ["Home" => "index.md",
-             "Tutorial" => "tutorial.md",
+             "Tutorial" => "weave/tutorial.md",
              "Integrators" => [
                 "Overview"    => "integrators.md",
                 "Splitting"   => "integrators/splitting.md",

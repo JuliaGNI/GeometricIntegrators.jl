@@ -7,6 +7,8 @@
 *.jl.*.mem
 docs/build/
 docs/site/
+docs/weave/
+docs/src/weave/
 examples/.ipynb_checkpoints
 examples/*.pdf
 examples/*.png
