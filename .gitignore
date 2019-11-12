@@ -12,3 +12,4 @@ examples/*.png
 examples/*/*.png
 examples/*/*/*.png
 obsolete/
+Manifest.toml
