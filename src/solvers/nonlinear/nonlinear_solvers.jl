@@ -125,7 +125,7 @@ function getLinearSolver(T, n)
 
     if linear_solver == nothing || linear_solver == :lapack
     # if linear_solver == :lapack
-        linear_solver = LUSolverLAPACK{T}(n)
+        linear_solver = LUSolverLAPACK{T}(BlasInt(n))
     elseif linear_solver == :julia
         linear_solver = LUSolver{T}(n)
     # elseif linear_solver == nothing

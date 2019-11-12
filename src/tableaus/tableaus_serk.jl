@@ -1,3 +1,13 @@
+"Tableau for the explicit 1-stage stochastic Euler method"
+function getTableauStochasticEuler()
+  a = zeros(Float64, 1, 1)
+  b = [1.0]
+  c = [0.0]
+
+  TableauSERK(:Stochastic_Euler_explicit_method, 1, a, b, c, 1, a, b, c)
+end
+
+
 "Tableau for the explicit 2-stage stochastic Heun method"
 function getTableauStochasticHeun()
 
