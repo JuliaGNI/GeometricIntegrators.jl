@@ -128,4 +128,14 @@ Base.:(==)(ode1::IODE, ode2::IODE) = (
                              && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
 
+function Base.similar(ode::IODE, q₀, p₀, λ₀=zero(q₀); kwargs...)
+    similar(ode, ode.t₀, q₀, p₀, λ₀; kwargs...)
+end
+
+function Base.similar(ode::IODE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}=zero(q₀);
+                      v=ode.v, parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
+    @assert ode.d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
+    IODE(ode.ϑ, ode.f, ode.g, t₀, q₀, p₀, λ₀; v=v, parameters=parameters, periodicity=periodicity)
+end
+
 Base.ndims(ode::IODE) = ode.d

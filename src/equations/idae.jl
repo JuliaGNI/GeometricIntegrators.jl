@@ -75,11 +75,11 @@ struct IDAE{dType <: Number, tType <: Number,
     end
 end
 
-function IDAE(ϑ, f, u, g, ϕ, t₀::Number, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}; kwargs...) where {DT}
+function IDAE(ϑ, f, u, g, ϕ, t₀::Number, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}=zeros(q₀); kwargs...) where {DT}
     IDAE(DT, ndims(q₀), size(q₀,1), size(λ₀,1), size(q₀,2), ϑ, f, u, g, ϕ, t₀, q₀, p₀, λ₀; kwargs...)
 end
 
-function IDAE(ϑ, f, u, g, ϕ, q₀::DenseArray, p₀::DenseArray, λ₀::DenseArray; kwargs...)
+function IDAE(ϑ, f, u, g, ϕ, q₀::DenseArray, p₀::DenseArray, λ₀::DenseArray=zeros(q₀); kwargs...)
     IDAE(ϑ, f, u, g, ϕ, zero(eltype(q₀)), q₀, p₀, λ₀; kwargs...)
 end
 
@@ -104,5 +104,15 @@ Base.:(==)(dae1::IDAE, dae2::IDAE) = (
                              && dae1.λ₀ == dae2.λ₀
                              && dae1.parameters == dae2.parameters
                              && dae1.periodicity == dae2.periodicity)
+
+function Base.similar(dae::IDAE, q₀, p₀, λ₀=zero(q₀); kwargs...)
+    similar(dae, dae.t₀, q₀, p₀, λ₀; kwargs...)
+end
+
+function Base.similar(dae::IDAE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}=zero(q₀);
+                      v=dae.v, parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
+    @assert dae.d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
+    IDAE(dae.ϑ, dae.f, dae.u, dae.g, dae.ϕ, t₀, q₀, p₀, λ₀; v=v, parameters=parameters, periodicity=periodicity)
+end
 
 Base.ndims(dae::IDAE) = dae.d

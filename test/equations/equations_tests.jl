@@ -24,6 +24,9 @@ x₀ = [1., 1.]
 
     @test hash(ode1) == hash(ode2)
 
+    @test ode == similar(ode, t₀, q₀)
+    @test ode == similar(ode, q₀)
+
 
     ################################################################################
     # Test PODE: Partitioned Ordinary Differential Equation
@@ -45,6 +48,9 @@ x₀ = [1., 1.]
     @test pode == pode2
 
     @test hash(pode1) == hash(pode2)
+
+    @test pode == similar(pode, t₀, q₀, p₀)
+    @test pode == similar(pode, q₀, p₀)
 
 
     ################################################################################
@@ -78,6 +84,10 @@ x₀ = [1., 1.]
 
     @test hash(iode1) == hash(iode2)
 
+    @test iode == similar(iode, t₀, q₀, p₀, λ₀)
+    @test iode == similar(iode, t₀, q₀, p₀)
+    @test iode == similar(iode, q₀, p₀)
+
 
     ################################################################################
     # Test DAE: Differential Algebraic Equation
@@ -105,6 +115,9 @@ x₀ = [1., 1.]
     @test dae == dae2
 
     @test hash(dae1) == hash(dae2)
+
+    @test dae == similar(dae, t₀, x₀, λ₀)
+    @test dae == similar(dae, x₀, λ₀)
 
 
     ################################################################################
@@ -144,6 +157,10 @@ x₀ = [1., 1.]
 
     @test hash(pdae1) == hash(pdae2)
 
+    @test pdae == similar(pdae, t₀, q₀, p₀, λ₀)
+    @test pdae == similar(pdae, t₀, q₀, p₀)
+    @test pdae == similar(pdae, q₀, p₀)
+
 
     idae  = IDAE(eltype(q₀), 1, 1, 1, 1, p_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
     idae1 = IDAE(p_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
@@ -153,6 +170,10 @@ x₀ = [1., 1.]
     @test idae == idae2
 
     @test hash(idae1) == hash(idae2)
+
+    @test idae == similar(idae, t₀, q₀, p₀, λ₀)
+    @test idae == similar(idae, t₀, q₀, p₀)
+    @test idae == similar(idae, q₀, p₀)
 
 end
 

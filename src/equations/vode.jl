@@ -1,5 +1,5 @@
 @doc raw"""
-`VODE`: Variational Ordinary Differential Equation
+`VODE`: Variational Ordinary Differential Equation *EXPERIMENTAL*
 
 Defines an implicit initial value problem
 ```math

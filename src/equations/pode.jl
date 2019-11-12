@@ -93,4 +93,14 @@ Base.:(==)(ode1::PODE{DT1,TT1,VT1,FT1}, ode2::PODE{DT2,TT2,VT2,FT2}) where {DT1,
                              && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
 
+function Base.similar(ode::PODE, q₀, p₀; kwargs...)
+    similar(ode, ode.t₀, q₀, p₀; kwargs...)
+end
+
+function Base.similar(ode::PODE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT};
+                      parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
+    @assert ode.d == size(q₀,1) == size(p₀,1)
+    PODE(ode.v, ode.f, t₀, q₀, p₀; parameters=parameters, periodicity=periodicity)
+end
+
 Base.ndims(ode::PODE) = ode.d
