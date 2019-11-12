@@ -3,7 +3,11 @@ module VPRKIntegratorsTest
 
     export test_vprk_integrators
 
-    using GeometricIntegrators
+    using GeometricIntegrators.Config
+    using GeometricIntegrators.Integrators
+    using GeometricIntegrators.Solvers
+    using GeometricIntegrators.Tableaus
+    using GeometricIntegrators.TestProblems.LotkaVolterra
     using GeometricIntegrators.Utils
     using Test
 
@@ -12,13 +16,12 @@ module VPRKIntegratorsTest
     set_config(:nls_solver, QuasiNewtonSolver)
     set_config(:jacobian_autodiff, true)
 
-    using ..LotkaVolterraTest
-    using ..LotkaVolterraTest: Δt, nt
+    using GeometricIntegrators.TestProblems.LotkaVolterra: Δt, nt
 
     iode = lotka_volterra_2d_iode()
 
-    int = IntegratorFIRK(lotka_volterra_2d_ode(), getTableauGLRK(8), Δt)
-    sol = integrate(int, nt)
+    int  = IntegratorFIRK(lotka_volterra_2d_ode(), getTableauGLRK(8), Δt)
+    sol  = integrate(int, nt)
     refx = sol.q[:,end]
 
 

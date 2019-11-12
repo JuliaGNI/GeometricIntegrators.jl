@@ -1,4 +1,7 @@
 
+using GeometricIntegrators.Equations
+using Test
+
 t₀ = 0.
 q₀ = [1.]
 p₀ = [1.]
@@ -100,7 +103,7 @@ x₀ = [1., 1.]
 
     function u_dae(t, x, λ, u)
         u[1] = +λ[1]
-        u[1] = -λ[1]
+        u[2] = -λ[1]
     end
 
     function ϕ_dae(t, x, λ, ϕ)

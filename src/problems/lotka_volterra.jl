@@ -1,5 +1,4 @@
-
-module LotkaVolterraTest
+module LotkaVolterra
 
     using GeometricIntegrators.Equations
 

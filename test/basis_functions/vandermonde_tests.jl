@@ -1,16 +1,16 @@
 
-n = 11
-x = collect(range(0., stop=1., length=n))
-y = rand(n)
+@testset "$(rpad("Vandermonde Matrix Tests",80))" begin
 
-V = vandermonde_matrix(x)
-Vinv = vandermonde_matrix_inverse(x)
+    n = 11
+    x = collect(range(0., stop=1., length=n))
+    y = rand(n)
 
-lu = LUSolver(V, y)
+    V = vandermonde_matrix(x)
+    Vinv = vandermonde_matrix_inverse(x)
 
-factorize!(lu, false)
-solve!(lu)
+    x = V\y
+    a = *(Vinv, y)
 
-a = *(Vinv, y)
+    @test maximum(abs.((a .- x) ./ a)) < eps(Float32)
 
-@test maximum(abs.((a .- lu.x) ./ a)) < eps(Float32)
+end

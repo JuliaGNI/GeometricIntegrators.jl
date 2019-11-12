@@ -30,6 +30,9 @@ module GeometricIntegrators
     include("Tableaus.jl")
     @reexport using .Tableaus
 
+    include("TestProblems.jl")
+    export TestProblems
+
 
     function __init__()
         add_config(:verbosity, 1)
