@@ -116,11 +116,11 @@ Base.:(==)(dae1::DAE, dae2::DAE) = (
                              && dae1.parameters == dae1.parameters
                              && dae1.periodicity == dae1.periodicity)
 
-function Base.similar(dae::DAE, q₀, λ₀=zeros(q₀); kwargs...)
+function Base.similar(dae::DAE, q₀, λ₀=get_λ₀(q₀, dae.λ₀); kwargs...)
     similar(dae, dae.t₀, q₀, λ₀; kwargs...)
 end
 
-function Base.similar(dae::DAE, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArray{DT}=zeros(q₀);
+function Base.similar(dae::DAE, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArray{DT}=get_λ₀(q₀, dae.λ₀);
                       parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
     @assert dae.d == size(q₀,1)
     @assert dae.m == size(λ₀,1)
