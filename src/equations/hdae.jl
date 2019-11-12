@@ -1,5 +1,5 @@
 @doc raw"""
-`HDAE`: Hamiltonian Differential Algebraic Equation
+`HDAE`: Hamiltonian Differential Algebraic Equation *EXPERIMENTAL*
 
 Defines a Hamiltonian differential algebraic initial value problem, that is
 a canonical Hamiltonian system of equations subject to Dirac constraints,

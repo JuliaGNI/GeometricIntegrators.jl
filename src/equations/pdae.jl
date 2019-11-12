@@ -92,11 +92,23 @@ Base.:(==)(dae1::PDAE, dae2::PDAE) = (
                              && dae1.f == dae2.f
                              && dae1.u == dae2.u
                              && dae1.g == dae2.g
+                             && dae1.ϕ == dae2.ϕ
                              && dae1.t₀ == dae2.t₀
                              && dae1.q₀ == dae2.q₀
                              && dae1.p₀ == dae2.p₀
                              && dae1.λ₀ == dae2.λ₀
                              && dae1.parameters == dae1.parameters
                              && dae1.periodicity == dae1.periodicity)
+
+function Base.similar(dae::PDAE, q₀, p₀, λ₀=get_λ₀(q₀, dae.λ₀); kwargs...)
+    similar(dae, dae.t₀, q₀, p₀, λ₀; kwargs...)
+end
+
+function Base.similar(dae::PDAE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}=get_λ₀(q₀, dae.λ₀);
+                      parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
+    @assert dae.d == size(q₀,1) == size(p₀,1)
+    @assert dae.m == size(λ₀,1)
+    PDAE(dae.v, dae.f, dae.u, dae.g, dae.ϕ, t₀, q₀, p₀, λ₀; parameters=parameters, periodicity=periodicity)
+end
 
 Base.ndims(dae::PDAE) = dae.d

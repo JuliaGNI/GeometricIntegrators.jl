@@ -1,10 +1,10 @@
 
-module OscillatorTest
+module Oscillator
 
     using GeometricIntegrators.Equations
 
-    export oscillator_ode, oscillator_pode, oscillator_sode,
-           oscillator_iode, oscillator_idae, oscillator_pdae
+    export oscillator_ode, oscillator_iode, oscillator_pode, oscillator_sode,
+           oscillator_dae, oscillator_idae, oscillator_pdae
 
 
     Δt  = 0.1
@@ -13,9 +13,18 @@ module OscillatorTest
     k = 0.5
     ω = √k
 
+    t₀=0.0
     q₀=[0.5, 0.0]
-    p₀=[0.0, 0.0]
-    λ₀=[0.0, 0.0]
+    z₀=[0.5, 0.0, 0.5]
+
+    function ϑ(q)
+        p = zero(q)
+        p[1] = q[2]
+        p[2] = 0
+        return p
+    end
+
+    p₀=ϑ(q₀)
 
     A = sqrt(q₀[2]^2 / k + q₀[1]^2)
     ϕ = asin(q₀[1] / A)
@@ -32,6 +41,7 @@ module OscillatorTest
     end
 
     function oscillator_ode(x₀=q₀)
+        @assert size(x₀,1) == 2
         ODE(oscillator_ode_v, x₀)
     end
 
@@ -47,6 +57,7 @@ module OscillatorTest
     end
 
     function oscillator_pode(q₀=[q₀[1]], p₀=[p₀[1]])
+        @assert size(q₀,1) == size(p₀,1) == 1
         PODE(oscillator_pode_v, oscillator_pode_f, q₀, p₀)
     end
 
@@ -96,17 +107,35 @@ module OscillatorTest
         oscillator_iode_v(t, q, v)
     end
 
-    function oscillator_iode(q₀)
-        v₀ = zeros(q₀)
-        p₀ = zeros(q₀)
-        oscillator_iode_ϑ(0, q₀, v₀, p₀)
-        oscillator_iode(q₀, p₀)
-    end
-
-    function oscillator_iode(q₀=q₀, p₀=p₀)
+    function oscillator_iode(q₀=q₀, p₀=ϑ(q₀))
+        @assert size(q₀,1) == size(p₀,1) == 2
         IODE(oscillator_iode_ϑ, oscillator_iode_f,
              oscillator_iode_g, q₀, p₀;
              v=oscillator_iode_v)
+    end
+
+
+    function oscillator_dae_v(t, z, v)
+        v[1] = z[2]
+        v[2] = -k*z[1]
+        v[3] = z[2] - k*z[1]
+        nothing
+    end
+
+    function oscillator_dae_u(t, z, λ, u)
+        u[1] = -λ[1]
+        u[2] = -λ[1]
+        u[3] = +λ[1]
+    end
+
+    function oscillator_dae_ϕ(t, z, λ, ϕ)
+        ϕ[1] = z[3] - z[1] - z[2]
+    end
+
+    function oscillator_dae(z₀=z₀, λ₀=[zero(eltype(z₀))])
+        @assert size(z₀,1) == 3
+        @assert size(λ₀,1) == 1
+        DAE(oscillator_dae_v, oscillator_dae_u, oscillator_dae_ϕ, z₀, λ₀)
     end
 
 
@@ -128,7 +157,8 @@ module OscillatorTest
         nothing
     end
 
-    function oscillator_idae(q₀=q₀, p₀=p₀, λ₀=λ₀)
+    function oscillator_idae(q₀=q₀, p₀=ϑ(q₀), λ₀=zero(q₀))
+        @assert size(q₀,1) == size(p₀,1) == size(λ₀,1) == 2
         IDAE(oscillator_iode_f, oscillator_iode_ϑ,
              oscillator_idae_u, oscillator_idae_g,
              oscillator_idae_ϕ, q₀, p₀, λ₀;
@@ -147,7 +177,8 @@ module OscillatorTest
         nothing
     end
 
-    function oscillator_pdae(q₀=q₀, p₀=p₀, λ₀=λ₀)
+    function oscillator_pdae(q₀=q₀, p₀=ϑ(q₀), λ₀=zero(q₀))
+        @assert size(q₀,1) == size(p₀,1) == 2
         PDAE(oscillator_pdae_v, oscillator_pdae_f,
              oscillator_idae_u, oscillator_idae_g,
              oscillator_idae_ϕ, q₀, p₀, λ₀)
