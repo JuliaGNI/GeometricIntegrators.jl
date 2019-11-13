@@ -180,54 +180,20 @@ Base.:(==)(sde1::SDE, sde2::SDE) = (
                              && sde1.q₀ == sde2.q₀
                              && sde1.periodicity == sde2.periodicity)
 
-function Base.similar(sde::SDE{DT,TT,VT,UT}, q₀::DenseArray{DT,1}) where {DT, TT, VT, UT}
+function Base.similar(sde::SDE, q₀::DenseArray)
     similar(sde, sde.t₀, q₀)
 end
 
-# Assumes q0 represents a single random initial condition (n=1, ns=size(q₀, 2))
-function Base.similar(sde::SDE{DT,TT,VT,UT}, q₀::DenseArray{DT,2}) where {DT, TT, VT, UT}
-    similar(sde, sde.t₀, q₀)
-end
-
-function Base.similar(sde::SDE{DT,TT,VT,UT}, q₀::DenseArray{DT,3}) where {DT, TT, VT, UT}
-    similar(sde, sde.t₀, q₀)
-end
-
-
-function Base.similar(sde::SDE{DT,TT,VT,BT}, t₀::TT, q₀::DenseArray{DT,1}) where {DT, TT, VT, BT}
+function Base.similar(sde::SDE, t₀::TT, q₀::DenseArray{DT}) where {DT <: Number, TT <: Number}
     @assert sde.d == size(q₀,1)
     SDE(sde.m, sde.ns, sde.v, sde.B, t₀, q₀, periodicity=sde.periodicity)
 end
 
-# Assumes q0 represents a single random initial condition (n=1, ns=size(q₀, 2))
-function Base.similar(sde::SDE{DT,TT,VT,BT}, t₀::TT, q₀::DenseArray{DT,2}) where {DT, TT, VT, BT}
-    @assert sde.d == size(q₀,1)
-    SDE(sde.m, sde.ns, sde.v, sde.B, t₀, q₀, periodicity=sde.periodicity)
-end
-
-function Base.similar(sde::SDE{DT,TT,VT,BT}, t₀::TT, q₀::DenseArray{DT,3}) where {DT, TT, VT, BT}
-    @assert sde.d == size(q₀,1)
-    SDE(sde.m, sde.ns, sde.v, sde.B, t₀, q₀, periodicity=sde.periodicity)
-end
-
-
-function Base.similar(sde::SDE{DT,TT,VT,UT}, q₀::DenseArray{DT,1}, ns::Int) where {DT, TT, VT, UT}
+function Base.similar(sde::SDE, q₀::DenseArray, ns::Int)
     similar(sde, sde.t₀, q₀, ns)
 end
 
-# Assumes q₀ represents multiple deterministic initial conditions (n=size(q₀, 2))
-function Base.similar(sde::SDE{DT,TT,VT,UT}, q₀::DenseArray{DT,2}, ns::Int) where {DT, TT, VT, UT}
-    similar(sde, sde.t₀, q₀, ns)
-end
-
-
-function Base.similar(sde::SDE{DT,TT,VT,BT}, t₀::TT, q₀::DenseArray{DT,1}, ns::Int) where {DT, TT, VT, BT}
-    @assert sde.d == size(q₀,1)
-    SDE(sde.m, ns, sde.v, sde.B, t₀, q₀, periodicity=sde.periodicity)
-end
-
-# Assumes q₀ represents multiple deterministic initial conditions (n=size(q₀, 2))
-function Base.similar(sde::SDE{DT,TT,VT,BT}, t₀::TT, q₀::DenseArray{DT,2}, ns::Int) where {DT, TT, VT, BT}
+function Base.similar(sde::SDE, t₀::TT, q₀::DenseArray{DT}, ns::Int) where {DT <: Number, TT <: Number}
     @assert sde.d == size(q₀,1)
     SDE(sde.m, ns, sde.v, sde.B, t₀, q₀, periodicity=sde.periodicity)
 end
