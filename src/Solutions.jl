@@ -45,6 +45,7 @@ module Solutions
     export PSolutionPDAE, SSolutionPDAE
 
     include("solutions/solutions.jl")
+    include("solutions/solutions_common.jl")
     include("solutions/solutions_ode.jl")
     include("solutions/solutions_pode.jl")
     include("solutions/solutions_dae.jl")
