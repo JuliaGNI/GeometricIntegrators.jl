@@ -35,4 +35,45 @@
     @test sde == similar(sde, x₀, 1)
     @test sde == similar(sde, x₀)
 
+
+    ################################################################################
+    # Test PSDE: Partitioned Stochastic Differential Equation
+    ################################################################################
+
+    noise_intensity = 0.1
+
+    q₁ₛ = [0.5  0.0 -0.5]
+    p₁ₛ = [0.0  0.5  0.0]
+
+    function psde_v(t, q, p, v)
+        v[1] = p[1]
+    end
+
+    function psde_f(t, q, p, f)
+        f[1] = - q[1]
+    end
+
+    function psde_B(t, q, p, B)
+        B[1,1] = noise_intensity * p[1]
+    end
+
+    function psde_G(t, q, p, G)
+        G[1,1] = - noise_intensity * q[1]
+    end
+
+    psde  = PSDE{eltype(q₀), typeof(t₀), typeof(psde_v), typeof(psde_f), typeof(psde_B), typeof(psde_G), 1}(1, 1, 1, 1, psde_v, psde_f, psde_B, psde_G, t₀, q₀, p₀)
+    psde1 = PSDE(1, 1, psde_v, psde_f, psde_B, psde_G, t₀, q₀, p₀)
+    psde2 = PSDE(1, 1, psde_v, psde_f, psde_B, psde_G, q₀, p₀)
+
+    @test psde == psde1
+    @test psde == psde2
+
+    @test hash(psde1) == hash(psde2)
+
+    @test psde == similar(psde, t₀, q₀, p₀, 1)
+    @test psde == similar(psde, q₀, p₀, 1)
+
+    @test psde != similar(psde, t₀, q₁ₛ, p₁ₛ)
+    @test psde != similar(psde, q₁ₛ, p₁ₛ)
+
 end
