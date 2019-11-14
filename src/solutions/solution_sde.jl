@@ -43,16 +43,6 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int
     ni = equation.n
     nt = div(ntime, nsave)
 
-    if nd==ns==ni==1
-        NQ = 1
-    elseif ns==ni==1
-        NQ = 2
-    elseif ns==1 || ni==1
-        NQ = 3
-    else
-        NQ = 4
-    end
-
     @assert conv=="strong" || (conv=="weak" && K==0)
     @assert DT <: Number
     @assert TT <: Real
@@ -72,7 +62,7 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int
     W = WienerProcess(DT, nm, ntime, ns, Δt, conv)
     NW = ndims(W.ΔW)
 
-    s = SolutionSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
+    s = SolutionSDE{DT,TT,determine_qdim(equation),NW}(conv, nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
@@ -85,15 +75,6 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, dW::Array{DT, NW}, dZ:
     ni = equation.n
     nt = div(ntime, nsave)
 
-    if nd==ns==ni==1
-        NQ = 1
-    elseif ns==ni==1
-        NQ = 2
-    elseif ns==1 || ni==1
-        NQ = 3
-    else
-        NQ = 4
-    end
 
     @assert size(dW) == size(dZ)
 
@@ -129,7 +110,7 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, dW::Array{DT, NW}, dZ:
     # Wiener process increments are prescribed by the arrays ΔW and ΔZ
     W = WienerProcess(Δt, dW, dZ, conv)
 
-    s = SolutionSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
+    s = SolutionSDE{DT,TT,determine_qdim(equation),NW}(conv, nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
