@@ -21,7 +21,7 @@
     sde_v_params = (t, q, v) -> sde_v(λ, t, q, v)
     sde_u_params = (t, q, v) -> sde_u(μ, t, q, v)
 
-    sde  = SDE{eltype(x₀), typeof(t₀), typeof(sde_v_params), typeof(sde_u_params), 1}(2, 1, 1, 1, sde_v_params, sde_u_params, t₀, x₀)
+    sde  = SDE(1, 1, 1, sde_v_params, sde_u_params, t₀, x₀)
     sde1 = SDE(1, 1, sde_v_params, sde_u_params, t₀, x₀)
     sde2 = SDE(1, 1, sde_v_params, sde_u_params, x₀)
 
