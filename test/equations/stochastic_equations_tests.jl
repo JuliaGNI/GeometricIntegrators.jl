@@ -28,4 +28,11 @@
     @test sde == sde1
     @test sde == sde2
 
+    @test hash(sde1) == hash(sde2)
+
+    @test sde == similar(sde, t₀, x₀, 1)
+    @test sde == similar(sde, t₀, x₀)
+    @test sde == similar(sde, x₀, 1)
+    @test sde == similar(sde, x₀)
+
 end
