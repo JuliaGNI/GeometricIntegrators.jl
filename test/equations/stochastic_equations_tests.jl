@@ -24,9 +24,11 @@
     sde  = SDE(1, 1, 1, sde_v_params, sde_u_params, t₀, x₀)
     sde1 = SDE(1, 1, sde_v_params, sde_u_params, t₀, x₀)
     sde2 = SDE(1, 1, sde_v_params, sde_u_params, x₀)
+    sde3 = SDE(1, sde_v_params, sde_u_params, xₛ)
 
     @test sde == sde1
     @test sde == sde2
+    @test sde != sde3
 
     @test hash(sde1) == hash(sde2)
 
@@ -64,9 +66,11 @@
     psde  = PSDE(1, 1, 1, psde_v, psde_f, psde_B, psde_G, t₀, q₀, p₀)
     psde1 = PSDE(1, 1, psde_v, psde_f, psde_B, psde_G, t₀, q₀, p₀)
     psde2 = PSDE(1, 1, psde_v, psde_f, psde_B, psde_G, q₀, p₀)
+    psde3 = PSDE(1, psde_v, psde_f, psde_B, psde_G, qₛ, pₛ)
 
     @test psde == psde1
     @test psde == psde2
+    @test psde != psde3
 
     @test hash(psde1) == hash(psde2)
 

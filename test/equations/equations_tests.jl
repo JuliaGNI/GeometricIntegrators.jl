@@ -9,6 +9,10 @@ p₀ = [1.]
 x₀ = [1., 1.]
 λ₀ = [0.]
 
+qₛ = rand(1,3,3)
+pₛ = rand(1,3,3)
+xₛ = rand(2,3,3)
+
 
 @testset "$(rpad("General equation functionality",80))" begin
 
