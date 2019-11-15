@@ -61,7 +61,7 @@
         G[1,1] = - noise_intensity * q[1]
     end
 
-    psde  = PSDE{eltype(q₀), typeof(t₀), typeof(psde_v), typeof(psde_f), typeof(psde_B), typeof(psde_G), 1}(1, 1, 1, 1, psde_v, psde_f, psde_B, psde_G, t₀, q₀, p₀)
+    psde  = PSDE(1, 1, 1, psde_v, psde_f, psde_B, psde_G, t₀, q₀, p₀)
     psde1 = PSDE(1, 1, psde_v, psde_f, psde_B, psde_G, t₀, q₀, p₀)
     psde2 = PSDE(1, 1, psde_v, psde_f, psde_B, psde_G, q₀, p₀)
 

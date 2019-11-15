@@ -56,7 +56,9 @@ of evaluating the vector fields ``v``, ``f`` and the matrices ``B``, ``G`` on `t
     sde = SDE(v_sde, B_sde, t₀, q₀)
 ```
 """
-struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Function, BType <: Function, GType <: Function, N} <: Equation{dType, tType}
+struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Function,
+            BType <: Function, GType <: Function, pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+
     d::Int
     m::Int
     n::Int
@@ -68,14 +70,21 @@ struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Functi
     t₀::tType
     q₀::Array{dType, N}           #Initial condition: N=1 - single deterministic, N=2 - single random or multiple deterministic, N=3 - multiple deterministic
     p₀::Array{dType, N}
+    parameters::pType
     periodicity::Vector{dType}
 
-    function PSDE{dType,tType,vType,fType,BType,GType,N}(d, m, n, ns, v, f, B, G, t₀, q₀, p₀; periodicity=[]) where {dType <: Number, tType <: Number, vType <: Function, fType <: Function, BType <: Function, GType <: Function, N}
+    function PSDE(m, n, ns, v::vType, f::fType, B::BType, G::GType,
+                  t₀::tType, q₀::DenseArray{dType}, p₀::DenseArray{dType};
+                  parameters=nothing, periodicity=zeros(dType,size(q₀,1))) where {
+                        dType <: Number, tType <: Number,
+                        vType <: Function, fType <: Function,
+                        BType <: Function, GType <: Function}
 
-        @assert dType == eltype(q₀) == eltype(p₀)
-        @assert tType == typeof(t₀)
-        @assert ndims(q₀) == ndims(p₀) == N
-        @assert d == size(q₀,1) == size(p₀,1)
+        @assert size(q₀)  == size(p₀)
+        @assert ndims(q₀) == ndims(p₀)
+
+        N = ndims(q₀)
+        d = size(q₀,1)
 
         if ns==1 && n==1
             # single sample path and single initial condition, therefore N=1
@@ -103,63 +112,43 @@ struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Functi
             end
         end
 
-        if !(length(periodicity) == d)
-            periodicity = zeros(dType, d)
-        end
-
-        new(d, m, n, ns, v, f, B, G, t₀, q₀, p₀, periodicity)
+        new{dType,tType,vType,fType,BType,GType,typeof(parameters),N}(d, m, n, ns, v, f, B, G, t₀, q₀, p₀, parameters, periodicity)
     end
 end
 
 
-function PSDE(m::Int, ns::Int, v::VT, f::FT, B::BT, G::GT, t₀::TT, q₀::DenseArray{DT,1}, p₀::DenseArray{DT,1}; periodicity=[]) where {DT,TT,VT,FT,BT,GT}
+function PSDE(m::Int, ns::Int, v::Function, f::Function, B::Function, G::Function, t₀::Number, q₀::DenseArray{DT,1}, p₀::DenseArray{DT,1}; kwargs...) where {DT <: Number}
     # A 1D array q₀ contains a single deterministic initial condition, so n=1, but we still need to specify
     # the number of sample paths ns
-    @assert size(q₀) == size(p₀)
-    PSDE{DT, TT, VT, FT, BT, GT, 1}(size(q₀, 1), m, 1, ns, v, f, B, G, t₀, q₀, p₀, periodicity=periodicity)
+    PSDE(m, 1, ns, v, f, B, G, t₀, q₀, p₀; kwargs...)
 end
-
 
 # A 2-dimensional matrix q0 can represent a single random initial condition with ns>1 and n=1,
 # or a set of deterministic initial conditions with n>1 (for which we can have both ns=1 and ns>1)
 # The function below assumes q0 to represent a single random initial condition (n=1, ns=size(q₀, 2))
-function PSDE(m::Int, v::VT, f::FT, B::BT, G::GT, t₀::TT, q₀::DenseArray{DT,2}, p₀::DenseArray{DT,2}; periodicity=[]) where {DT,TT,VT,FT,BT,GT}
-    PSDE{DT, TT, VT, FT, BT, GT, 2}(size(q₀, 1), m, 1, size(q₀, 2), v, f, B, G, t₀, q₀, p₀, periodicity=periodicity)
+function PSDE(m::Int, v::Function, f::Function, B::Function, G::Function, t₀::Number, q₀::DenseArray{DT,2}, p₀::DenseArray{DT,2}; kwargs...) where {DT <: Number}
+    PSDE(m, 1, size(q₀,2), v, f, B, G, t₀, q₀, p₀; kwargs...)
 end
 
 # On the other hand, the function below assumes q₀ represents multiple deterministic initial conditions
 # (n=size(q₀, 2)), but these initial conditions may be run an arbitrary number ns of sample paths, so ns has to be explicitly specified
-function PSDE(m::Int, ns::Int, v::VT, f::FT, B::BT, G::GT, t₀::TT, q₀::DenseArray{DT,2}, p₀::DenseArray{DT,2}; periodicity=[]) where {DT,TT,VT,FT,BT,GT}
-    PSDE{DT, TT, VT, FT, BT, GT, 2}(size(q₀, 1), m, size(q₀, 2), ns, v, f, B, G, t₀, q₀, p₀, periodicity=periodicity)
+function PSDE(m::Int, ns::Int, v::Function, f::Function, B::Function, G::Function, t₀::Number, q₀::DenseArray{DT,2}, p₀::DenseArray{DT,2}; kwargs...) where {DT <: Number}
+    PSDE(m, size(q₀,2), ns, v, f, B, G, t₀, q₀, p₀; kwargs...)
+end
+
+function PSDE(m::Int, v::Function, f::Function, B::Function, G::Function, t₀::Number, q₀::DenseArray{DT,3}, p₀::DenseArray{DT,3}; kwargs...) where {DT <: Number}
+    PSDE(m, size(q₀,3), size(q₀,2), v, f, B, G, t₀, q₀, p₀; kwargs...)
 end
 
 
-function PSDE(m::Int, v::VT, f::FT, B::BT, G::GT, t₀::TT, q₀::DenseArray{DT,3}, p₀::DenseArray{DT,3}; periodicity=[]) where {DT,TT,VT,FT,BT,GT}
-    @assert size(q₀) == size(p₀)
-    PSDE{DT, TT, VT, FT, BT, GT, 3}(size(q₀, 1), m, size(q₀,3), size(q₀,2), v, f, B, G, t₀, q₀, p₀, periodicity=periodicity)
+function PSDE(m::Int, ns::Int, v::Function, f::Function, B::Function, G::Function, q₀::DenseArray{DT}, p₀::DenseArray{DT}; kwargs...) where {DT}
+    PSDE(m, ns, v, f, B, G, zero(DT), q₀, p₀; kwargs...)
 end
 
-
-function PSDE(m::Int, ns::Int, v::VT, f::FT, B::BT, G::GT, q₀::DenseArray{DT,1}, p₀::DenseArray{DT,1}; periodicity=[]) where {DT,VT,FT,BT,GT}
-    PSDE(m, ns, v, f, B, G, zero(DT), q₀, p₀, periodicity=periodicity)
+function PSDE(m::Int, v::Function, f::Function, B::Function, G::Function, q₀::DenseArray{DT}, p₀::DenseArray{DT}; kwargs...) where {DT}
+    PSDE(m, v, f, B, G, zero(DT), q₀, p₀; kwargs...)
 end
 
-
-# Assumes q0 represents a single random initial condition (n=1, ns=size(q₀, 2))
-function PSDE(m::Int, v::VT, f::FT, B::BT, G::GT, q₀::DenseArray{DT,2}, p₀::DenseArray{DT,2}; periodicity=[]) where {DT,VT,FT,BT,GT}
-    PSDE(m, v, f, B, G, zero(DT), q₀, p₀, periodicity=periodicity)
-end
-
-
-# Assumes q₀ represents multiple deterministic initial conditions (n=size(q₀, 2))
-function PSDE(m::Int, ns::Int, v::VT, f::FT, B::BT, G::GT, q₀::DenseArray{DT,2}, p₀::DenseArray{DT,2}; periodicity=[]) where {DT,VT,FT,BT,GT}
-    PSDE(m, ns, v, f, B, G, zero(DT), q₀, p₀, periodicity=periodicity)
-end
-
-
-function PSDE(m::Int, v::VT, f::FT, B::BT, G::GT, q₀::DenseArray{DT,3}, p₀::DenseArray{DT,3}; periodicity=[]) where {DT,VT,FT,BT,GT}
-    PSDE(m, v, f, B, G, zero(DT), q₀, p₀, periodicity=periodicity)
-end
 
 Base.hash(sde::PSDE, h::UInt) = hash(sde.d, hash(sde.m, hash(sde.n, hash(sde.ns, hash(sde.v, hash(sde.f, hash(sde.B, hash(sde.G, hash(sde.t₀, hash(sde.q₀, hash(sde.p₀, hash(sde.periodicity, h))))))))))))
 
