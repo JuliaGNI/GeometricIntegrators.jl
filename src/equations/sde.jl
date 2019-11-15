@@ -109,7 +109,7 @@ struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Functio
 end
 
 
-function SDE(m::Int, ns::Int, v::Function, B::Function, t₀::TT, q₀::DenseArray{DT,1}; kwargs...) where {DT <: Number, TT <: Number}
+function SDE(m::Int, ns::Int, v::Function, B::Function, t₀::Number, q₀::DenseArray{DT,1}; kwargs...) where {DT <: Number}
     # A 1D array q₀ contains a single deterministic initial condition, so n=1, but we still need to specify
     # the number of sample paths ns
     SDE(m, 1, ns, v, B, t₀, q₀; kwargs...)
@@ -118,17 +118,17 @@ end
 # A 2-dimensional matrix q0 can represent a single random initial condition with ns>1 and n=1,
 # or a set of deterministic initial conditions with n>1 (for which we can have both ns=1 and ns>1)
 # The function below assumes q0 to represent a single random initial condition (n=1, ns=size(q₀, 2))
-function SDE(m::Int, v::Function, B::Function, t₀::TT, q₀::DenseArray{DT,2}; kwargs...) where {DT <: Number, TT <: Number}
+function SDE(m::Int, v::Function, B::Function, t₀::Number, q₀::DenseArray{DT,2}; kwargs...) where {DT <: Number}
     SDE(m, 1, size(q₀,2), v, B, t₀, q₀; kwargs...)
 end
 
 # On the other hand, the function below assumes q₀ represents multiple deterministic initial conditions
 # (n=size(q₀, 2)), but these initial conditions may be run an arbitrary number ns of sample paths, so ns has to be explicitly specified
-function SDE(m::Int, ns::Int, v::Function, B::Function, t₀::Number, q₀::DenseArray{DT,2}; kwargs...) where {DT <: Number, TT <: Number}
+function SDE(m::Int, ns::Int, v::Function, B::Function, t₀::Number, q₀::DenseArray{DT,2}; kwargs...) where {DT <: Number}
     SDE(m, size(q₀,2), ns, v, B, t₀, q₀; kwargs...)
 end
 
-function SDE(m::Int, v::Function, B::Function, t₀::Number, q₀::DenseArray{DT,3}; kwargs...) where {DT <: Number, TT <: Number}
+function SDE(m::Int, v::Function, B::Function, t₀::Number, q₀::DenseArray{DT,3}; kwargs...) where {DT <: Number}
     # A 3D array q₀ contains multiple random initial condition, so n=size(q₀,3) and ns=size(q₀,2)
     SDE(m, size(q₀,3), size(q₀,2), v, B, t₀, q₀; kwargs...)
 end
