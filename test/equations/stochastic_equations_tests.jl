@@ -39,6 +39,24 @@
     @test hash(sde1) == hash(sde2)
     @test hash(sde3) != hash(sde4)
 
+    @test sde1.d == 2
+    @test sde2.d == 2
+    @test sde3.d == 2
+    @test sde4.d == 2
+    @test sde5.d == 2
+
+    @test sde1.n == 1
+    @test sde2.n == 1
+    @test sde3.n == 3
+    @test sde4.n == 1
+    @test sde5.n == 3
+
+    @test sde1.ns == 1
+    @test sde2.ns == 1
+    @test sde3.ns == 1
+    @test sde4.ns == 3
+    @test sde5.ns == 3
+
     @test sde == similar(sde, t₀, x₀, 1)
     @test sde == similar(sde, t₀, x₀)
     @test sde == similar(sde, x₀, 1)
@@ -85,6 +103,24 @@
 
     @test hash(psde1) == hash(psde2)
     @test hash(psde3) != hash(psde4)
+
+    @test psde1.d == 1
+    @test psde2.d == 1
+    @test psde3.d == 1
+    @test psde4.d == 1
+    @test psde5.d == 1
+
+    @test psde1.n == 1
+    @test psde2.n == 1
+    @test psde3.n == 3
+    @test psde4.n == 1
+    @test psde5.n == 3
+
+    @test psde1.ns == 1
+    @test psde2.ns == 1
+    @test psde3.ns == 1
+    @test psde4.ns == 3
+    @test psde5.ns == 3
 
     @test psde == similar(psde, t₀, q₀, p₀, 1)
     @test psde == similar(psde, q₀, p₀, 1)
