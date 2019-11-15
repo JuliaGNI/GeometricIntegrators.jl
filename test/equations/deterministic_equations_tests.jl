@@ -84,6 +84,26 @@
 
 
     ################################################################################
+    # Test VODE: Variational Ordinary Differential Equation
+    ################################################################################
+
+    vode  = VODE(eltype(q₀), 1, 1, 1, iode_ϑ, iode_f, iode_g, t₀, q₀, p₀, λ₀; v=iode_v)
+    vode1 = VODE(iode_ϑ, iode_f, iode_g, t₀, q₀, p₀, λ₀; v=iode_v)
+    vode2 = VODE(iode_ϑ, iode_f, iode_g, t₀, q₀, p₀; v=iode_v)
+    vode3 = VODE(iode_ϑ, iode_f, iode_g, q₀, p₀; v=iode_v)
+
+    @test vode == vode1
+    @test vode == vode2
+    @test vode == vode3
+
+    @test hash(vode1) == hash(vode2)
+
+    @test vode == similar(vode, t₀, q₀, p₀, λ₀)
+    @test vode == similar(vode, t₀, q₀, p₀)
+    @test vode == similar(vode, q₀, p₀)
+
+
+    ################################################################################
     # Test DAE: Differential Algebraic Equation
     ################################################################################
 
@@ -118,33 +138,33 @@
     # Test PDAE: Partitioned Differential Algebraic Equation
     ################################################################################
 
-    function v_pdae(t, q, p, v)
+    function pdae_v(t, q, p, v)
         v[1] = q[1]
     end
 
-    function f_pdae(t, q, p, f)
+    function pdae_f(t, q, p, f)
         f[1] = p[1]
     end
 
-    function p_pdae(t, q, v, p)
+    function pdae_p(t, q, v, p)
         p[1] = v[1]
     end
 
-    function u_pdae(t, q, p, λ, u)
+    function pdae_u(t, q, p, λ, u)
         u[1] = λ[1]
     end
 
-    function g_pdae(t, q, p, λ, g)
+    function pdae_g(t, q, p, λ, g)
         g[1] = λ[1]
     end
 
-    function ϕ_pdae(t, q, p, λ, ϕ)
+    function pdae_ϕ(t, q, p, λ, ϕ)
         ϕ[1] = p[1] - q[1]
     end
 
-    pdae  = PDAE(eltype(q₀), 1, 1, 1, 1, v_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
-    pdae1 = PDAE(v_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
-    pdae2 = PDAE(v_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, q₀, p₀, λ₀)
+    pdae  = PDAE(eltype(q₀), 1, 1, 1, 1, pdae_v, pdae_f, pdae_u, pdae_g, pdae_ϕ, t₀, q₀, p₀, λ₀)
+    pdae1 = PDAE(pdae_v, pdae_f, pdae_u, pdae_g, pdae_ϕ, t₀, q₀, p₀, λ₀)
+    pdae2 = PDAE(pdae_v, pdae_f, pdae_u, pdae_g, pdae_ϕ, q₀, p₀, λ₀)
 
     @test pdae == pdae1
     @test pdae == pdae2
@@ -156,9 +176,9 @@
     @test pdae == similar(pdae, q₀, p₀)
 
 
-    idae  = IDAE(eltype(q₀), 1, 1, 1, 1, p_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
-    idae1 = IDAE(p_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, t₀, q₀, p₀, λ₀)
-    idae2 = IDAE(p_pdae, f_pdae, u_pdae, g_pdae, ϕ_pdae, q₀, p₀, λ₀)
+    idae  = IDAE(eltype(q₀), 1, 1, 1, 1, pdae_p, pdae_f, pdae_u, pdae_g, pdae_ϕ, t₀, q₀, p₀, λ₀)
+    idae1 = IDAE(pdae_p, pdae_f, pdae_u, pdae_g, pdae_ϕ, t₀, q₀, p₀, λ₀)
+    idae2 = IDAE(pdae_p, pdae_f, pdae_u, pdae_g, pdae_ϕ, q₀, p₀, λ₀)
 
     @test idae == idae1
     @test idae == idae2
@@ -168,6 +188,34 @@
     @test idae == similar(idae, t₀, q₀, p₀, λ₀)
     @test idae == similar(idae, t₀, q₀, p₀)
     @test idae == similar(idae, q₀, p₀)
+
+
+    ################################################################################
+    # Test VDAE: Variational Differential Algebraic Equation
+    ################################################################################
+
+    function vdae_ψ(t, q, p, λ, μ, ψ)
+        ψ[1] = μ[1] - λ[1]
+    end
+
+    vdae  = VDAE(eltype(q₀), 1, 1, 1, 1, iode_ϑ, iode_f, iode_g, iode_g, pdae_ϕ, vdae_ψ, t₀, q₀, p₀, λ₀, λ₀; v=iode_v)
+    vdae1 = VDAE(iode_ϑ, iode_f, iode_g, iode_g, pdae_ϕ, vdae_ψ, t₀, q₀, p₀, λ₀, λ₀; v=iode_v)
+    vdae2 = VDAE(iode_ϑ, iode_f, iode_g, iode_g, pdae_ϕ, vdae_ψ, t₀, q₀, p₀, λ₀; v=iode_v)
+    vdae3 = VDAE(iode_ϑ, iode_f, iode_g, iode_g, pdae_ϕ, vdae_ψ, t₀, q₀, p₀; v=iode_v)
+    vdae4 = VDAE(iode_ϑ, iode_f, iode_g, iode_g, pdae_ϕ, vdae_ψ, q₀, p₀; v=iode_v)
+
+    @test vdae == vdae1
+    @test vdae == vdae2
+    @test vdae == vdae3
+    @test vdae == vdae4
+
+    @test hash(vdae1) == hash(vdae2)
+    @test hash(vdae3) == hash(vdae4)
+
+    @test vdae == similar(vdae, t₀, q₀, p₀, λ₀, λ₀)
+    @test vdae == similar(vdae, t₀, q₀, p₀, λ₀)
+    @test vdae == similar(vdae, t₀, q₀, p₀)
+    @test vdae == similar(vdae, q₀, p₀)
 
 
     ################################################################################

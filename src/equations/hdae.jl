@@ -8,7 +8,7 @@ a canonical Hamiltonian system of equations subject to Dirac constraints,
 \dot{q} (t) &= v_1(t, q(t), p(t)) + v_2(t, q(t), p(t), \lambda(t)) + v_3(t, q(t), p(t), \lambda(t), \gamma(t)) , & q(t_{0}) &= q_{0} , \\
 \dot{p} (t) &= f_1(t, q(t), p(t)) + f_2(t, q(t), p(t), \lambda(t)) + f_3(t, q(t), p(t), \lambda(t), \gamma(t)) , & p(t_{0}) &= p_{0} , \\
 0 &= \phi (t, q(t), p(t)) , \\
-0 &= \psi (t, q(t), p(t), \lambda(t)) ,
+0 &= \psi (t, q(t), p(t), \dot{q}(t), \dot{p}(t)) ,
 \end{align*}
 ```
 with vector fields ``v_i`` and ``f_i`` for ``i = 1 ... 3``,
