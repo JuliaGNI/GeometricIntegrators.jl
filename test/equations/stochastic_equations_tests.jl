@@ -5,6 +5,8 @@
     # Test SDE: Stochastic Differential Equation
     ################################################################################
 
+    x₁ₛ = [0.5  0.0 -0.5; 0.0  0.5  0.0]
+
     function sde_v(λ, t, q, v)
         v[1] = λ*q[1]
         v[2] = λ*q[2]
@@ -24,13 +26,16 @@
     sde  = SDE(1, 1, 1, sde_v_params, sde_u_params, t₀, x₀)
     sde1 = SDE(1, 1, sde_v_params, sde_u_params, t₀, x₀)
     sde2 = SDE(1, 1, sde_v_params, sde_u_params, x₀)
-    sde3 = SDE(1, sde_v_params, sde_u_params, xₛ)
+    sde3 = SDE(1, sde_v_params, sde_u_params, x₁ₛ)
+    sde4 = SDE(1, sde_v_params, sde_u_params, xₛ)
 
     @test sde == sde1
     @test sde == sde2
     @test sde != sde3
+    @test sde != sde4
 
     @test hash(sde1) == hash(sde2)
+    @test hash(sde3) != hash(sde4)
 
     @test sde == similar(sde, t₀, x₀, 1)
     @test sde == similar(sde, t₀, x₀)
@@ -66,13 +71,16 @@
     psde  = PSDE(1, 1, 1, psde_v, psde_f, psde_B, psde_G, t₀, q₀, p₀)
     psde1 = PSDE(1, 1, psde_v, psde_f, psde_B, psde_G, t₀, q₀, p₀)
     psde2 = PSDE(1, 1, psde_v, psde_f, psde_B, psde_G, q₀, p₀)
-    psde3 = PSDE(1, psde_v, psde_f, psde_B, psde_G, qₛ, pₛ)
+    psde3 = PSDE(1, psde_v, psde_f, psde_B, psde_G, q₁ₛ, p₁ₛ)
+    psde4 = PSDE(1, psde_v, psde_f, psde_B, psde_G, qₛ, pₛ)
 
     @test psde == psde1
     @test psde == psde2
     @test psde != psde3
+    @test psde != psde4
 
     @test hash(psde1) == hash(psde2)
+    @test hash(psde3) != hash(psde4)
 
     @test psde == similar(psde, t₀, q₀, p₀, 1)
     @test psde == similar(psde, q₀, p₀, 1)
