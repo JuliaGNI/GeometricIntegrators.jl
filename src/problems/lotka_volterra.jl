@@ -3,7 +3,8 @@ module LotkaVolterra
     using GeometricIntegrators.Equations
 
     export lotka_volterra_2d_ode, lotka_volterra_2d_iode,
-           lotka_volterra_2d_idae, lotka_volterra_2d_pdae
+           lotka_volterra_2d_idae, lotka_volterra_2d_pdae,
+           lotka_volterra_2d_vdae
 
 
     Δt = 0.01
@@ -184,6 +185,16 @@ module LotkaVolterra
         lotka_volterra_2d_g(t, q, v, g)
     end
 
+    function lotka_volterra_2d_g̅(t::Real, q::Vector, v::Vector, g::Vector)
+        g[1] = g₁(t,q,v)
+        g[2] = g₂(t,q,v)
+        nothing
+    end
+
+    function lotka_volterra_2d_g̅(t::Real, q::Vector, p::Vector, v::Vector, g::Vector)
+        lotka_volterra_2d_g̅(t, q, v, g)
+    end
+
     function lotka_volterra_2d_u(t, q, v, u)
         u[1] = v[1]
         u[2] = v[2]
@@ -197,6 +208,12 @@ module LotkaVolterra
     function lotka_volterra_2d_ϕ(t, q, p, ϕ)
         ϕ[1] = p[1] - ϑ₁(t,q)
         ϕ[2] = p[2] - ϑ₂(t,q)
+        nothing
+    end
+
+    function lotka_volterra_2d_ψ(t, q, p, v, f, ψ)
+        ϕ[1] = f[1] - v[1] * dϑ₁d₁(t,q) - v[2] * dϑ₁d₂(t,q)
+        ϕ[2] = f[2] - v[1] * dϑ₂d₁(t,q) - v[2] * dϑ₂d₂(t,q)
         nothing
     end
 
@@ -225,4 +242,10 @@ module LotkaVolterra
              lotka_volterra_2d_ϕ, q₀, p₀, λ₀)
     end
 
+    function lotka_volterra_2d_vdae(q₀=q₀, p₀=p₀, λ₀=zero(q₀))
+        VDAE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
+             lotka_volterra_2d_g, lotka_volterra_2d_g̅,
+             lotka_volterra_2d_ϕ, lotka_volterra_2d_ψ,
+             q₀, p₀, λ₀; v=lotka_volterra_2d_v)
+    end
 end
