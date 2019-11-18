@@ -136,3 +136,52 @@ function Base.show(io::IO, tab::CoefficientsMRK)
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)
 end
+
+
+"Holds the coefficients of a SPARK method."
+struct CoefficientsSPARK{T,N} <: AbstractCoefficients{T}
+    @HeaderCoefficientsARK
+
+    a::Tuple{Vararg{Matrix{T},N}}
+    b::Tuple{Vararg{Vector{T},N}}
+    c::Vector{T}
+
+    function CoefficientsSPARK(name::Symbol, o::Int, s::Int, r::Int, a::Tuple{Vararg{Matrix{T},N}}, b::Tuple{Vararg{Vector{T},N}}, c::Vector{T}) where {T,N}
+        @assert T <: Real
+        @assert isa(name, Symbol)
+        @assert isa(o, Integer)
+        @assert isa(s, Integer)
+        @assert isa(r, Integer)
+        @assert s > 0 "Number of stages s must be > 0"
+        @assert r > 0 "Number of stages r must be > 0"
+        @assert s==length(c)
+
+        for α in a
+            @assert s==size(α,1)
+            @assert s==size(α,2) || r==size(α,2)
+        end
+
+        for β in b
+            @assert s==length(β) || r==length(β)
+        end
+
+        new{T,N}(name,o,s,r,a,b,c)
+    end
+end
+
+Base.hash(tab::CoefficientsSPARK, h::UInt) = hash(tab.o, hash(tab.s, hash(tab.r, hash(tab.a, hash(tab.b, hash(tab.c, hash(:CoefficientsSPARK, h)))))))
+
+Base.:(==)(tab1::CoefficientsSPARK, tab2::CoefficientsSPARK) = (tab1.o == tab2.o
+                                                             && tab1.s == tab2.s
+                                                             && tab1.r == tab2.r
+                                                             && tab1.a == tab2.a
+                                                             && tab1.b == tab2.b
+                                                             && tab1.c == tab2.c)
+
+"Print SPARK coefficients."
+function Base.show(io::IO, tab::CoefficientsSPARK)
+    print(io, "SPARK Coefficients ", tab.name, "with ", tab.s, " internal stages, ", tab.r, " projective stages and order ", tab.o)
+    print(io, "  a = ", tab.a)
+    print(io, "  b = ", tab.b)
+    print(io, "  c = ", tab.c)
+end
