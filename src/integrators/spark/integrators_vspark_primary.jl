@@ -47,8 +47,8 @@ struct IntegratorVSPARKprimary{DT, TT, ET <: IDAE{DT,TT},
     iguess::IT
 end
 
-function IntegratorVSPARKprimary(equation::IDAE{DT,TT,PT,FT,UT,GT,ϕT,VT},
-                                 tableau::TableauVSPARKprimary{TT}, Δt::TT) where {DT,TT,PT,FT,UT,GT,ϕT,VT}
+function IntegratorVSPARKprimary(equation::IDAE{DT,TT},
+                                 tableau::TableauVSPARKprimary{TT}, Δt::TT) where {DT,TT}
     D = equation.d
     S = tableau.s
     R = tableau.r
@@ -58,17 +58,12 @@ function IntegratorVSPARKprimary(equation::IDAE{DT,TT,PT,FT,UT,GT,ϕT,VT},
 
     N = 3*D*S + 3*D*R
 
-    if isdefined(tableau, :d)
+    if isdefined(tableau, :d) && length(tableau.d) > 0
         N += D
-        d_v = tableau.d
-    else
-        d_v = DT[]
     end
 
     # create params
-    params = ParametersVSPARKprimary{DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT}(
-                                equation.f, equation.ϑ, equation.u, equation.g, equation.ϕ, Δt,
-                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, tableau.ω, tableau.δ, d_v)
+    params = ParametersVSPARKprimary{DT,D,S,R,P}(equation.f, equation.ϑ, equation.u, equation.g, equation.ϕ, Δt, tableau)
 
     # create solver
     solver = create_nonlinear_solver(DT, N, params)
@@ -100,7 +95,7 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R}
         end
 
         # compute f(X)
-        tpᵢ = params.t + params.Δt * params.t_p.c[i]
+        tpᵢ = params.t + params.Δt * params.tab.p.c[i]
         params.f_f(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Fi[i])
         params.f_p(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Φi[i])
 
@@ -120,13 +115,13 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R}
         end
 
         # compute f(X)
-        tλᵢ = params.t + params.Δt * params.t_λ.c[i]
+        tλᵢ = params.t + params.Δt * params.tab.λ.c[i]
         params.f_u(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Up[i])
         params.f_g(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Gp[i])
         params.f_ϕ(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Φp[i])
     end
 
-    if length(params.d_v) > 0
+    if length(params.tab.d) > 0
         for k in 1:D
             cache.μ[k] = x[3*D*S+3*D*R+k]
         end
@@ -136,12 +131,12 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R}
     cache.q̃ .= params.q
     cache.p̃ .= params.p
     for i in 1:S
-        cache.q̃ .+= params.Δt .* params.t_q.b[i] .* cache.Vi[i]
-        cache.p̃ .+= params.Δt .* params.t_p.b[i] .* cache.Fi[i]
+        cache.q̃ .+= params.Δt .* params.tab.q.b[i] .* cache.Vi[i]
+        cache.p̃ .+= params.Δt .* params.tab.p.b[i] .* cache.Fi[i]
     end
     for i in 1:R
-        cache.q̃ .+= params.Δt .* params.t_q.β[i] .* cache.Up[i]
-        cache.p̃ .+= params.Δt .* params.t_p.β[i] .* cache.Gp[i]
+        cache.q̃ .+= params.Δt .* params.tab.q.β[i] .* cache.Up[i]
+        cache.p̃ .+= params.Δt .* params.tab.p.β[i] .* cache.Gp[i]
     end
 
     # compute ϕ(q,p)
@@ -164,12 +159,12 @@ end
                 b[3*(D*(i-1)+k-1)+2] = - $cache.Zi[i][k]
                 b[3*(D*(i-1)+k-1)+3] = - $cache.Φi[i][k]
                 for j in 1:S
-                    b[3*(D*(i-1)+k-1)+1] += params.t_q.a[i,j] * $cache.Vi[j][k]
-                    b[3*(D*(i-1)+k-1)+2] += params.t_p.a[i,j] * $cache.Fi[j][k]
+                    b[3*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * $cache.Vi[j][k]
+                    b[3*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * $cache.Fi[j][k]
                 end
                 for j in 1:R
-                    b[3*(D*(i-1)+k-1)+1] += params.t_q.α[i,j] * $cache.Up[j][k]
-                    b[3*(D*(i-1)+k-1)+2] += params.t_p.α[i,j] * $cache.Gp[j][k]
+                    b[3*(D*(i-1)+k-1)+1] += params.tab.q.α[i,j] * $cache.Up[j][k]
+                    b[3*(D*(i-1)+k-1)+2] += params.tab.p.α[i,j] * $cache.Gp[j][k]
                 end
             end
         end
@@ -180,12 +175,12 @@ end
                 b[3*D*S+3*(D*(i-1)+k-1)+1] = - $cache.Yp[i][k]
                 b[3*D*S+3*(D*(i-1)+k-1)+2] = - $cache.Zp[i][k]
                 for j in 1:S
-                    b[3*D*S+3*(D*(i-1)+k-1)+1] += params.t_q̃.a[i,j] * $cache.Vi[j][k]
-                    b[3*D*S+3*(D*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * $cache.Fi[j][k]
+                    b[3*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.a[i,j] * $cache.Vi[j][k]
+                    b[3*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.a[i,j] * $cache.Fi[j][k]
                 end
                 for j in 1:R
-                    b[3*D*S+3*(D*(i-1)+k-1)+1] += params.t_q̃.α[i,j] * $cache.Up[j][k]
-                    b[3*D*S+3*(D*(i-1)+k-1)+2] += params.t_p̃.α[i,j] * $cache.Gp[j][k]
+                    b[3*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.α[i,j] * $cache.Up[j][k]
+                    b[3*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.α[i,j] * $cache.Gp[j][k]
                 end
             end
         end
@@ -193,9 +188,9 @@ end
             for k in 1:D
                 b[3*D*S+3*(D*(i-1)+k-1)+3] = 0
                 for j in 1:R
-                    b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.t_ω[i,j] * $cache.Φp[j][k]
+                    b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,j] * $cache.Φp[j][k]
                 end
-                b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.t_ω[i,R+1] * $cache.ϕ̃[k]
+                b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,R+1] * $cache.ϕ̃[k]
             end
         end
 
@@ -204,22 +199,22 @@ end
             for k in 1:D
                 b[3*D*S+3*(D*(R-1)+k-1)+3] = 0
                 for j in 1:R
-                    b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.t_δ[j] * $cache.Λp[j][k]
+                    b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.δ[j] * $cache.Λp[j][k]
                 end
             end
         end
 
-        if length(params.d_v) > 0
+        if length(params.tab.d) > 0
             for i in 1:S
                 for k in 1:D
-                    b[3*(D*(i-1)+k-1)+3] -= $cache.μ[k] * params.d_v[i]
+                    b[3*(D*(i-1)+k-1)+3] -= $cache.μ[k] * params.tab.d[i]
                 end
             end
 
             for k in 1:D
                 b[3*D*S+3*D*R+k] = 0
                 for i in 1:S
-                    b[3*D*S+3*D*R+k] -= $cache.Vi[i][k] * params.d_v[i]
+                    b[3*D*S+3*D*R+k] -= $cache.Vi[i][k] * params.tab.d[i]
                 end
             end
         end
