@@ -137,4 +137,4 @@ end
 
 
 "Holds the tableau of an Specialised Partitioned Additive Runge-Kutta method."
-const TableauSPARK{DT} = AbstractTableauSPARK{:spark,DT}
+const TableauSPARK = AbstractTableauSPARK{:spark}

@@ -1,5 +1,5 @@
 
-const TableauVSPARKprimary{TT,DT} = AbstractTableauSPARK{:vspark_primary,DT}
+const TableauVSPARKprimary = AbstractTableauSPARK{:vspark_primary}
 const ParametersVSPARKprimary = AbstractParametersVSPARK{:vspark_primary}
 
 
