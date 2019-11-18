@@ -1,5 +1,5 @@
 
-const TableauHSPARK{DT} = AbstractTableauSPARK{:hspark,DT}
+const TableauHSPARK = AbstractTableauSPARK{:hspark}
 const ParametersHSPARK = AbstractParametersHSPARK{:hspark}
 
 
