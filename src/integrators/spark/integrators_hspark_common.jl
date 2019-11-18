@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of Specialised Partitioned Additive Runge-Kutta methods for Variational systems."
-mutable struct AbstractParametersHSPARK{IT,DT,TT,D,S,R,P,VT,FT,UT,GT,ϕT} <: Parameters{DT,TT}
+mutable struct AbstractParametersHSPARK{IT,DT,TT,D,S,R,P,VT,FT,UT,GT,ϕT,tabType} <: Parameters{DT,TT}
     f_v::VT
     f_f::FT
     f_u::UT
@@ -9,28 +9,20 @@ mutable struct AbstractParametersHSPARK{IT,DT,TT,D,S,R,P,VT,FT,UT,GT,ϕT} <: Par
 
     Δt::TT
 
-    t_q::CoefficientsARK{TT}
-    t_p::CoefficientsARK{TT}
-    t_q̃::CoefficientsPRK{TT}
-    t_p̃::CoefficientsPRK{TT}
-    t_λ::CoefficientsMRK{TT}
-    t_ω::Matrix{TT}
-    t_δ::Matrix{TT}
+    tab::tabType
 
     t::TT
     q::Vector{DT}
     p::Vector{DT}
     λ::Vector{DT}
 
-    function AbstractParametersHSPARK{IT,DT,TT,D,S,R,P,VT,FT,UT,GT,ϕT}(f_v, f_f, f_u, f_g, f_ϕ, Δt, t_q, t_p, t_q̃, t_p̃, t_λ, t_ω, t_δ) where {IT,DT,TT,D,S,R,P,VT,FT,UT,GT,ϕT}
+    function AbstractParametersHSPARK{IT,DT,D,S,R,P}(f_v::VT, f_f::FT, f_u::UT, f_g::GT, f_ϕ::ϕT, Δt::TT, tableau::tabType) where {IT,DT,TT,D,S,R,P,VT,FT,UT,GT,ϕT,tabType}
         # create solution vectors
         q = zeros(DT,D)
         p = zeros(DT,D)
         λ = zeros(DT,D)
 
-        new(f_v, f_f, f_u, f_g, f_ϕ, Δt,
-            t_q, t_p, t_q̃, t_p̃, t_λ, t_ω, t_δ,
-            zero(TT), q, p, λ)
+        new{IT,DT,TT,D,S,R,P,VT,FT,UT,GT,ϕT,tabType}(f_v, f_f, f_u, f_g, f_ϕ, Δt, tableau, zero(TT), q, p, λ)
     end
 end
 
@@ -93,7 +85,7 @@ function initial_guess!(int::AbstractIntegratorHSPARK, cache::IntegratorCacheSPA
         end
     end
 
-    if int.params.t_λ.c[1] == 0
+    if tableau(int).λ.c[1] == 0
         for k in 1:ndims(int)
             int.solver.x[2*ndims(int)*nstages(int)+3*(k-1)+3] = cache.λ[k]
         end
