@@ -214,3 +214,76 @@ end
 function getCoefficientsLobIIIG4(T=Float64)
     symplecticize(getCoefficientsLobIIIF4(Dec128); name=:LobIIIG4, T=T)
 end
+
+
+function getCoefficientsLobIII(s, T=Float64)
+    if s == 2
+        getCoefficientsLobIII2(T)
+    elseif s == 3
+        getCoefficientsLobIII3(T)
+    elseif s == 4
+        getCoefficientsLobIII4(T)
+    else
+        @error "Lobatto III Tableau with " * str(s) * " stages not implemented."
+    end
+end
+
+function getCoefficientsLobIIIA(s, T=Float64)
+    if s == 2
+        getCoefficientsLobIIIA2(T)
+    elseif s == 3
+        getCoefficientsLobIIIA3(T)
+    elseif s == 4
+        getCoefficientsLobIIIA4(T)
+    else
+        @error "Lobatto IIIA Tableau with " * str(s) * " stages not implemented."
+    end
+end
+
+function getCoefficientsLobIIIB(s, T=Float64)
+    if s == 2
+        getCoefficientsLobIIIB2(T)
+    elseif s == 3
+        getCoefficientsLobIIIB3(T)
+    elseif s == 4
+        getCoefficientsLobIIIB4(T)
+    else
+        @error "Lobatto IIIB Tableau with " * str(s) * " stages not implemented."
+    end
+end
+
+function getCoefficientsLobIIIC(s, T=Float64)
+    if s == 2
+        getCoefficientsLobIIIC2(T)
+    elseif s == 3
+        getCoefficientsLobIIIC3(T)
+    elseif s == 4
+        getCoefficientsLobIIIC4(T)
+    else
+        @error "Lobatto IIIC Tableau with " * str(s) * " stages not implemented."
+    end
+end
+
+function getCoefficientsLobIIID(s, T=Float64)
+    if s == 2
+        getCoefficientsLobIIID2(T)
+    elseif s == 3
+        getCoefficientsLobIIID3(T)
+    elseif s == 4
+        getCoefficientsLobIIID4(T)
+    else
+        @error "Lobatto IIID Tableau with " * str(s) * " stages not implemented."
+    end
+end
+
+function getCoefficientsLobIIIE(s, T=Float64)
+    if s == 2
+        getCoefficientsLobIIIE2(T)
+    elseif s == 3
+        getCoefficientsLobIIIE3(T)
+    elseif s == 4
+        getCoefficientsLobIIIE4(T)
+    else
+        @error "Lobatto IIIE Tableau with " * str(s) * " stages not implemented."
+    end
+end
