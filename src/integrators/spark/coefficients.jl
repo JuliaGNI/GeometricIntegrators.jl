@@ -140,20 +140,22 @@ end
 
 "Holds the coefficients of a SPARK method."
 struct CoefficientsSPARK{T,N} <: AbstractCoefficients{T}
-    @HeaderCoefficientsARK
+    @HeaderCoefficientsRK
+
+    σ::Int
 
     a::Tuple{Vararg{Matrix{T},N}}
     b::Tuple{Vararg{Vector{T},N}}
     c::Vector{T}
 
-    function CoefficientsSPARK(name::Symbol, o::Int, s::Int, r::Int, a::Tuple{Vararg{Matrix{T},N}}, b::Tuple{Vararg{Vector{T},N}}, c::Vector{T}) where {T,N}
+    function CoefficientsSPARK(name::Symbol, o::Int, s::Int, σ::Int, a::Tuple{Vararg{Matrix{T},N}}, b::Tuple{Vararg{Vector{T},N}}, c::Vector{T}) where {T,N}
         @assert T <: Real
         @assert isa(name, Symbol)
         @assert isa(o, Integer)
         @assert isa(s, Integer)
-        @assert isa(r, Integer)
+        @assert isa(σ, Integer)
         @assert s > 0 "Number of stages s must be > 0"
-        @assert r > 0 "Number of stages r must be > 0"
+        @assert σ > 0 "Number of stages σ must be > 0"
         @assert s==length(c)
 
         for α in a
@@ -165,7 +167,7 @@ struct CoefficientsSPARK{T,N} <: AbstractCoefficients{T}
             @assert s==length(β) || r==length(β)
         end
 
-        new{T,N}(name,o,s,r,a,b,c)
+        new{T,N}(name,o,s,σ,a,b,c)
     end
 end
 
@@ -173,14 +175,14 @@ Base.hash(tab::CoefficientsSPARK, h::UInt) = hash(tab.o, hash(tab.s, hash(tab.r,
 
 Base.:(==)(tab1::CoefficientsSPARK, tab2::CoefficientsSPARK) = (tab1.o == tab2.o
                                                              && tab1.s == tab2.s
-                                                             && tab1.r == tab2.r
+                                                             && tab1.σ == tab2.σ
                                                              && tab1.a == tab2.a
                                                              && tab1.b == tab2.b
                                                              && tab1.c == tab2.c)
 
 "Print SPARK coefficients."
 function Base.show(io::IO, tab::CoefficientsSPARK)
-    print(io, "SPARK Coefficients ", tab.name, "with ", tab.s, " internal stages, ", tab.r, " projective stages and order ", tab.o)
+    print(io, "SPARK Coefficients ", tab.name, "with ", tab.s, " internal stages, ", tab.σ, " projective stages and order ", tab.o)
     print(io, "  a = ", tab.a)
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)
