@@ -65,18 +65,26 @@ mutable struct IntegratorCacheSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
     Pi::Vector{Vector{ST}}
     Vi::Vector{Vector{ST}}
     Fi::Vector{Vector{ST}}
+    Gi::Vector{Vector{ST}}
+    Hi::Vector{Vector{ST}}
     Yi::Vector{Vector{ST}}
     Zi::Vector{Vector{ST}}
     Φi::Vector{Vector{ST}}
+    Ψi::Vector{Vector{ST}}
 
     Qp::Vector{Vector{ST}}
     Pp::Vector{Vector{ST}}
+    Vp::Vector{Vector{ST}}
     Λp::Vector{Vector{ST}}
     Up::Vector{Vector{ST}}
+    Fp::Vector{Vector{ST}}
     Gp::Vector{Vector{ST}}
+    G̅p::Vector{Vector{ST}}
+    Hp::Vector{Vector{ST}}
     Yp::Vector{Vector{ST}}
     Zp::Vector{Vector{ST}}
     Φp::Vector{Vector{ST}}
+    Ψp::Vector{Vector{ST}}
 
     function IntegratorCacheSPARK{ST,TT,D,S,R}() where {ST,TT,D,S,R}
         q = zeros(ST,D)
@@ -117,25 +125,33 @@ mutable struct IntegratorCacheSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
         Pi = create_internal_stage_vector(ST, D, S)
         Vi = create_internal_stage_vector(ST, D, S)
         Fi = create_internal_stage_vector(ST, D, S)
+        Gi = create_internal_stage_vector(ST, D, S)
+        Hi = create_internal_stage_vector(ST, D, S)
         Yi = create_internal_stage_vector(ST, D, S)
         Zi = create_internal_stage_vector(ST, D, S)
         Φi = create_internal_stage_vector(ST, D, S)
+        Ψi = create_internal_stage_vector(ST, D, S)
 
         Qp = create_internal_stage_vector(ST, D, R)
         Pp = create_internal_stage_vector(ST, D, R)
+        Vp = create_internal_stage_vector(ST, D, R)
         Λp = create_internal_stage_vector(ST, D, R)
         Up = create_internal_stage_vector(ST, D, R)
+        Fp = create_internal_stage_vector(ST, D, R)
         Gp = create_internal_stage_vector(ST, D, R)
+        G̅p = create_internal_stage_vector(ST, D, R)
+        Hp = create_internal_stage_vector(ST, D, R)
         Yp = create_internal_stage_vector(ST, D, R)
         Zp = create_internal_stage_vector(ST, D, R)
         Φp = create_internal_stage_vector(ST, D, R)
+        Ψp = create_internal_stage_vector(ST, D, R)
 
         new(0, zero(TT), zero(TT), q, q̅, p, p̅, λ, λ̅, μ, μ̅,
                                    qₑᵣᵣ, pₑᵣᵣ,
                                    v, v̅, f, f̅, u, u̅, g, g̅, ϕ, ϕ̅,
                                    q̃, p̃, ṽ, f̃, ϕ̃, s̃,
-                                   Qi, Pi, Vi, Fi, Yi, Zi, Φi,
-                                   Qp, Pp, Λp, Up, Gp, Yp, Zp, Φp)
+                                   Qi, Pi, Vi, Fi, Gi, Hi, Yi, Zi, Φi, Ψi,
+                                   Qp, Pp, Vp, Λp, Up, Fp, Gp, G̅p, Hp, Yp, Zp, Φp, Ψp)
     end
 end
 

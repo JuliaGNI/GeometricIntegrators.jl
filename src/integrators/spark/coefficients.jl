@@ -158,14 +158,14 @@ struct CoefficientsSPARK{T,N} <: AbstractCoefficients{T}
         @assert σ > 0 "Number of stages σ must be > 0"
         @assert s==length(c)
 
-        for α in a
-            @assert s==size(α,1)
-            @assert s==size(α,2) || r==size(α,2)
-        end
-
-        for β in b
-            @assert s==length(β) || r==length(β)
-        end
+        # for α in a
+        #     @assert s==size(α,1)
+        #     @assert s==size(α,2) || r==size(α,2)
+        # end
+        #
+        # for β in b
+        #     @assert s==length(β) || r==length(β)
+        # end
 
         new{T,N}(name,o,s,σ,a,b,c)
     end

@@ -86,7 +86,7 @@ function initial_guess!(int::AbstractIntegratorVSPARK, cache::IntegratorCacheSPA
         end
     end
 
-    if tableau(int).λ.c[1] == 0
+    if isdefined(tableau(int), :λ) && tableau(int).λ.c[1] == 0
         for k in 1:ndims(int)
             int.solver.x[3*ndims(int)*nstages(int)+3*(k-1)+3] = cache.λ[k]
         end

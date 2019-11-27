@@ -212,8 +212,8 @@ module LotkaVolterra
     end
 
     function lotka_volterra_2d_ψ(t, q, p, v, f, ψ)
-        ϕ[1] = f[1] - v[1] * dϑ₁d₁(t,q) - v[2] * dϑ₁d₂(t,q)
-        ϕ[2] = f[2] - v[1] * dϑ₂d₁(t,q) - v[2] * dϑ₂d₂(t,q)
+        ψ[1] = f[1] - v[1] * dϑ₁d₁(t,q) - v[2] * dϑ₁d₂(t,q)
+        ψ[2] = f[2] - v[1] * dϑ₂d₁(t,q) - v[2] * dϑ₂d₂(t,q)
         nothing
     end
 
@@ -243,7 +243,7 @@ module LotkaVolterra
     end
 
     function lotka_volterra_2d_vdae(q₀=q₀, p₀=p₀, λ₀=zero(q₀))
-        VDAE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
+        VDAE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f_ham,
              lotka_volterra_2d_g, lotka_volterra_2d_g̅,
              lotka_volterra_2d_ϕ, lotka_volterra_2d_ψ,
              q₀, p₀, λ₀; v=lotka_volterra_2d_v)

@@ -50,6 +50,11 @@ function Solution(equation::IDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwr
     SSolutionPDAE(equation, Δt, ntime, nsave, nwrite)
 end
 
+"Create solution for variational DAE."
+function Solution(equation::VDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+    SSolutionPDAE(equation, Δt, ntime, nsave, nwrite)
+end
+
 "Create solution for SDE."
 function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE; K::Int=0, conv::String="strong")
     SolutionSDE(equation, Δt, ntime, nsave, K=K, conv=conv)
