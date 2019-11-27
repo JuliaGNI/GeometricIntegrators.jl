@@ -108,14 +108,11 @@ function HermiteInterpolation(x₀::T, x₁::T, Δx::T, d::Int) where {T}
 end
 
 
-function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector, y₁::Vector, f₀::Vector, f₁::Vector, x, y::Vector) where {T}
+function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x::T, y::Vector{T}) where {T}
     local a₀::T
     local a₁::T
     local b₀::T
     local b₁::T
-    local den::T
-
-    x = convert(T, x)
 
     # Interpolate y values at required locations
     if x == int.x₀
@@ -131,14 +128,11 @@ function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector, y
     end
 end
 
-function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector, y₁::Vector, f₀::Vector, f₁::Vector, x, y::Vector, f::Vector) where {T}
+function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x::T, y::Vector{T}, f::Vector{T}) where {T}
     local a₀::T
     local a₁::T
     local b₀::T
     local b₁::T
-    local den::T
-
-    x = convert(T, x)
 
     evaluate!(int, y₀, y₁, f₀, f₁, x, y)
 
