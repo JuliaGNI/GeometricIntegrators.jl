@@ -49,7 +49,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             end
         end
 
-        function $TSolution(equation::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; filename=nothing) where {DT,TT}
+        function $TSolution(equation::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT},VDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; filename=nothing) where {DT,TT}
             @assert nsave > 0
             @assert ntime == 0 || ntime ≥ nsave
             @assert nwrite == 0 || nwrite ≥ nsave
@@ -137,7 +137,7 @@ nsave(sol::SolutionPDAE) = sol.nsave
 offset(sol::SolutionPDAE) = sol.woffset
 
 
-function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, equ::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, equ::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT},VDAE{DT,TT}}) where {DT,TT}
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, equ.λ₀)
 end
 
