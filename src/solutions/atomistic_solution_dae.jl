@@ -50,3 +50,14 @@ function CommonFunctions.reset!(cache::AtomisticSolutionDAE, Δt)
     cache.u̅ .= cache.u
     cache.t += Δt
 end
+
+function update!(asol::AtomisticSolutionDAE{DT}, v::Vector{DT}, λ::Vector{DT}) where {DT}
+    for k in eachindex(v)
+        update!(asol, v[k], λ[k])
+    end
+end
+
+function update!(asol::AtomisticSolutionDAE{DT}, v::DT, λ::DT, k::Int) where {DT}
+    asol.q[k], asol.q̃[k] = compensated_summation(v, asol.q[k], asol.q̃[k])
+    asol.λ[k] = λ
+end
