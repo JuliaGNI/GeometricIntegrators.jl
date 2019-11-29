@@ -44,7 +44,7 @@ vector fields ``v`` and ``f`` on `t`, `q` and `p`.
 """
 struct PODE{dType <: Number, tType <: Number,
             vType <: Function, fType <: Function,
-            pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
 
     d::Int
     n::Int
