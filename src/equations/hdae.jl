@@ -84,4 +84,6 @@ Base.:(==)(dae1::HDAE, dae2::HDAE) = (
                              && dae1.q₀ == dae2.q₀
                              && dae1.p₀ == dae2.p₀)
 
-Base.ndims(dae::HDAE) = ode.d
+@inline Base.ndims(dae::HDAE) = ode.d
+
+@inline periodicity(equation::HDAE) = equation.periodicity

@@ -4,6 +4,8 @@ module Equations
     export AbstractEquationODE, AbstractEquationPODE,
            AbstractEquationDAE, AbstractEquationPDAE
 
+    export periodicity
+
     export ODE, IODE, PODE, SODE, VODE
     export DAE, HDAE, IDAE, PDAE
     export SDE, PSDE, SPSDE

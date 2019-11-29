@@ -83,4 +83,6 @@ function Base.similar(ode::ODE, t₀::TT, q₀::DenseArray{DT};
     ODE(ode.v, t₀, q₀; parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(ode::ODE) = ode.d
+@inline Base.ndims(ode::ODE) = ode.d
+
+@inline periodicity(equation::ODE) = equation.periodicity

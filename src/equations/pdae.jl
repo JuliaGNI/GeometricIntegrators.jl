@@ -111,4 +111,6 @@ function Base.similar(dae::PDAE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArra
     PDAE(dae.v, dae.f, dae.u, dae.g, dae.ϕ, t₀, q₀, p₀, λ₀; parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(dae::PDAE) = dae.d
+@inline Base.ndims(dae::PDAE) = dae.d
+
+@inline periodicity(equation::PDAE) = equation.periodicity

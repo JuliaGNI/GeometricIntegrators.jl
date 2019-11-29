@@ -21,4 +21,7 @@ end
 
 Base.ndims(equ::Equation) = error("ndims() not implemented for ", typeof(equ), ".")
 
+periodicity(equ::Equation) = error("periodicity() not implemented for ", typeof(equ), ".")
+
+
 # TODO Add functions and vectors for invariants (momentum maps, energy, ...).
