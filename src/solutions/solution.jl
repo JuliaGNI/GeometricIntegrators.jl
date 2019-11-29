@@ -15,24 +15,14 @@ create_hdf5(sol::Solution, file) = error("create_hdf5() not implemented for ", t
 CommonFunctions.write_to_hdf5(sol::Solution, h5::HDF5File, offset=0) = error("write_to_hdf5() not implemented for ", typeof(sol))
 
 
-"Create solution for ODE and split ODE."
+"Create solution for ODE."
 function Solution(equation::Union{ODE,SODE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
     SolutionODE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for partitioned ODE."
-function Solution(equation::PODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+function Solution(equation::Union{PODE,VODE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
     SolutionPODE(equation, Δt, ntime, nsave, nwrite)
-end
-
-"Create solution for variational ODE."
-function Solution(equation::VODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
-    SolutionPODE(equation, Δt, ntime, nsave, nwrite)
-end
-
-"Create solution for implicit ODE."
-function Solution(equation::IODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
-    SSolutionPDAE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for DAE."
@@ -41,12 +31,7 @@ function Solution(equation::DAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwri
 end
 
 "Create solution for partitioned DAE."
-function Solution(equation::PDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
-    SSolutionPDAE(equation, Δt, ntime, nsave, nwrite)
-end
-
-"Create solution for implicit DAE."
-function Solution(equation::IDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+function Solution(equation::Union{IODE,IDAE,PDAE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
     SSolutionPDAE(equation, Δt, ntime, nsave, nwrite)
 end
 
