@@ -4,11 +4,8 @@ module Equations
     export AbstractEquationODE, AbstractEquationPODE,
            AbstractEquationDAE, AbstractEquationPDAE
 
-<<<<<<< HEAD
     export periodicity
 
-=======
->>>>>>> Introduce abstract super types for equations (ODE, PODE, DAE, PDAE).
     export ODE, IODE, PODE, SODE, VODE
     export DAE, HDAE, IDAE, PDAE
     export SDE, PSDE, SPSDE
