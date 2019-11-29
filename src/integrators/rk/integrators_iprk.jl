@@ -124,10 +124,13 @@ mutable struct IntegratorCacheIPRK{ST,TT,D,S} <: PODEIntegratorCache{ST,D}
     t::TT
     t̅::TT
 
-    q::Vector{TwicePrecision{ST}}
-    q̅::Vector{TwicePrecision{ST}}
-    p::Vector{TwicePrecision{ST}}
-    p̅::Vector{TwicePrecision{ST}}
+    q::Vector{ST}
+    q̅::Vector{ST}
+    p::Vector{ST}
+    p̅::Vector{ST}
+
+    qₑᵣᵣ::Vector{ST}
+    pₑᵣᵣ::Vector{ST}
 
     v::Vector{ST}
     v̅::Vector{ST}
@@ -148,10 +151,13 @@ mutable struct IntegratorCacheIPRK{ST,TT,D,S} <: PODEIntegratorCache{ST,D}
     Z::Vector{Vector{ST}}
 
     function IntegratorCacheIPRK{ST,TT,D,S}() where {ST,TT,D,S}
-        q = zeros(TwicePrecision{ST}, D)
-        q̅ = zeros(TwicePrecision{ST}, D)
-        p = zeros(TwicePrecision{ST}, D)
-        p̅ = zeros(TwicePrecision{ST}, D)
+        q = zeros(ST,D)
+        q̅ = zeros(ST,D)
+        p = zeros(ST,D)
+        p̅ = zeros(ST,D)
+
+        qₑᵣᵣ = zeros(ST,D)
+        pₑᵣᵣ = zeros(ST,D)
 
         # create update vectors
         v = zeros(ST,D)
@@ -174,7 +180,7 @@ mutable struct IntegratorCacheIPRK{ST,TT,D,S} <: PODEIntegratorCache{ST,D}
         Y = create_internal_stage_vector(ST, D, S)
         Z = create_internal_stage_vector(ST, D, S)
 
-        new(0, zero(TT), zero(TT), q, q̅, p, p̅, v, v̅, f, f̅, q̃, p̃, ṽ, f̃, s̃, Q, P, V, F, Y, Z)
+        new(0, zero(TT), zero(TT), q, q̅, p, p̅, qₑᵣᵣ, pₑᵣᵣ, v, v̅, f, f̅, q̃, p̃, ṽ, f̃, s̃, Q, P, V, F, Y, Z)
     end
 end
 
@@ -300,8 +306,8 @@ function integrate_step!(int::IntegratorIPRK{DT,TT}, cache::IntegratorCacheIPRK{
     compute_stages!(int.solver.x, cache, int.params)
 
     # compute final update
-    update_solution!(cache.q, cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
-    update_solution!(cache.p, cache.F, int.params.tab.p.b, int.params.tab.p.b̂, int.params.Δt)
+    update_solution!(cache.q, cache.qₑᵣᵣ, cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
+    update_solution!(cache.p, cache.pₑᵣᵣ, cache.F, int.params.tab.p.b, int.params.tab.p.b̂, int.params.Δt)
 
     # copy solution to initial guess
     update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)

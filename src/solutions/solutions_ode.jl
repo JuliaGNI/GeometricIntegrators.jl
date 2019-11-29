@@ -140,7 +140,8 @@ function get_initial_conditions(sol::SolutionODE, k, n=1)
 end
 
 function CommonFunctions.get_solution!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, n, k) where {DT,TT}
-    q .= sol.q[:, n, k]
+    for i in eachindex(q) q[i] = sol.q[i, n, k] end
+    # q .= sol.q[:, n, k]
 end
 
 function CommonFunctions.get_solution(sol::SolutionODE, n, k)

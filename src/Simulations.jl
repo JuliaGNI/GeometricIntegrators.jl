@@ -1,5 +1,7 @@
 module Simulations
 
+    using ProgressMeter
+    
     using ..Equations
     using ..Integrators
     using ..Solutions

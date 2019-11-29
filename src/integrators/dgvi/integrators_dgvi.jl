@@ -260,10 +260,10 @@ mutable struct IntegratorCacheDGVI{DT,TT,D,S,R} <: IODEIntegratorCache{DT,D}
     t::TT
     t̅::TT
 
-    q::Vector{TwicePrecision{DT}}
-    q̅::Vector{TwicePrecision{DT}}
-    p::Vector{TwicePrecision{DT}}
-    p̅::Vector{TwicePrecision{DT}}
+    q::Vector{DT}
+    q̅::Vector{DT}
+    p::Vector{DT}
+    p̅::Vector{DT}
 
     v::Vector{DT}
     v̅::Vector{DT}
@@ -274,10 +274,10 @@ mutable struct IntegratorCacheDGVI{DT,TT,D,S,R} <: IODEIntegratorCache{DT,D}
 
     function IntegratorCacheDGVI{DT,TT,D,S,R}() where {DT,TT,D,S,R}
         # create solution vectors
-        q = zeros(TwicePrecision{DT}, D)
-        q̅ = zeros(TwicePrecision{DT}, D)
-        p = zeros(TwicePrecision{DT}, D)
-        p̅ = zeros(TwicePrecision{DT}, D)
+        q = zeros(DT,D)
+        q̅ = zeros(DT,D)
+        p = zeros(DT,D)
+        p̅ = zeros(DT,D)
 
         # create temporary vectors
         s̃ = zeros(DT,D)

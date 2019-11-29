@@ -1,8 +1,8 @@
 
-@testset "$(rpad("Dataseries",80))" begin
+dt = Float64
+nt = 10
 
-    dt = Float64
-    nt = 10
+@testset "$(rpad("Dataseries 1d",80))" begin
 
     nd = 1
     ni = 1
@@ -36,6 +36,10 @@
     reset!(ds)
     @test ds[0] == ds[end]
 
+end
+
+
+@testset "$(rpad("Dataseries 2d",80))" begin
 
     nd = 2
     ni = 1
@@ -81,6 +85,10 @@
     ds[:,0] .= tx
     @test ds.d[:,1] == tx
 
+end
+
+
+@testset "$(rpad("Dataseries 3d",80))" begin
 
     nd = 2
     ni = 2

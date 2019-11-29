@@ -27,13 +27,7 @@ Create a solution vector of type `TwicePrecision{DT}` for a problem with `D` dim
 and `M` independent initial conditions.
 """
 function create_solution_vector(DT, D, M)
-    x = Array{Vector{TwicePrecision{DT}}}(undef, M)
-
-    for i in 1:M
-        x[i] = zeros(TwicePrecision{DT}, D)
-    end
-
-    return x
+    [zeros(TwicePrecision{DT}, D) for i in 1:M]
 end
 
 
@@ -42,15 +36,7 @@ Create a solution vector of type `TwicePrecision{DT}` for a problem with `D` dim
 `NS' sample paths, and `NI` independent initial conditions.
 """
 function create_solution_vector(DT, D, NS, NI)
-    x = Array{Vector{TwicePrecision{DT}}}(undef, NS, NI)
-
-    for i in 1:NS
-        for j in 1:NI
-            x[i,j] = zeros(TwicePrecision{DT}, D)
-        end
-    end
-
-    return x
+    [zeros(TwicePrecision{DT}, D) for i in 1:NS, j in 1:NI]
 end
 
 
@@ -59,13 +45,7 @@ Create a vector of S solution vectors of type DT to store the solution of S
 internal stages for a problem with `D` dimensions.
 """
 function create_internal_stage_vector(DT, D, S)
-    a = Array{Vector{DT}}(undef, S)
-
-    for i in 1:S
-        a[i] = zeros(DT,D)
-    end
-
-    return a
+    [zeros(DT,D) for i in 1:S]
 end
 
 
@@ -74,13 +54,7 @@ Create a vector of S solution matrices of type DT to store the solution of S
 internal stages for a problem with `DxM` dimensions.
 """
 function create_internal_stage_vector(DT, D, M, S)
-    a = Array{Matrix{DT}}(undef, S)
-
-    for i in 1:S
-        a[i] = zeros(DT,D,M)
-    end
-
-    return a
+    [zeros(DT,D,M) for i in 1:S]
 end
 
 

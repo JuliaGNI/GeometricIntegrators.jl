@@ -6,7 +6,6 @@ module Integrators
     using Documenter
     using LinearAlgebra
     using OffsetArrays
-    using ProgressMeter
 
     using Base: TwicePrecision
 

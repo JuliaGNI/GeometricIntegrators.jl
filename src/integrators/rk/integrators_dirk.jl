@@ -162,8 +162,12 @@ mutable struct IntegratorCacheDIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
     n::Int
     t::TT
     t̅::TT
-    q::Vector{TwicePrecision{DT}}
-    q̅::Vector{TwicePrecision{DT}}
+
+    q::Vector{DT}
+    q̅::Vector{DT}
+
+    qₑᵣᵣ::Vector{DT}
+
     v::Vector{DT}
     v̅::Vector{DT}
 
@@ -181,7 +185,8 @@ mutable struct IntegratorCacheDIRK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
-        new(0, zero(TT), zero(TT), q, q̅, zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y)
+        new(0, zero(TT), zero(TT), zeros(DT,D), zeros(DT,D), zeros(DT,D),
+            zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y)
     end
 end
 
@@ -247,7 +252,7 @@ function integrate_step!(int::IntegratorDIRK{DT,TT}, cache::IntegratorCacheDIRK{
     end
 
     # compute final update
-    update_solution!(cache.q, cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
+    update_solution!(cache.q, cache.qₑᵣᵣ, cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
 
     # update vector field for initial guess
     update!(int.iguess, cache.t, cache.q, cache.v)

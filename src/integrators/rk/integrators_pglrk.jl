@@ -141,10 +141,13 @@ mutable struct IntegratorCachePGLRK{DT,TT,D,S} <: IODEIntegratorCache{DT,D}
     t::TT
     t̅::TT
 
-    q::Vector{TwicePrecision{DT}}
-    q̅::Vector{TwicePrecision{DT}}
-    p::Vector{TwicePrecision{DT}}
-    p̅::Vector{TwicePrecision{DT}}
+    q::Vector{DT}
+    q̅::Vector{DT}
+    p::Vector{DT}
+    p̅::Vector{DT}
+
+    qₑᵣᵣ::Vector{DT}
+    pₑᵣᵣ::Vector{DT}
 
     θ::Vector{DT}
     θ̅::Vector{DT}
@@ -162,10 +165,13 @@ mutable struct IntegratorCachePGLRK{DT,TT,D,S} <: IODEIntegratorCache{DT,D}
 
     function IntegratorCachePGLRK{DT,TT,D,S}() where {DT,TT,D,S}
         # create solution vectors
-        q = zeros(TwicePrecision{DT}, D)
-        q̅ = zeros(TwicePrecision{DT}, D)
-        p = zeros(TwicePrecision{DT}, D)
-        p̅ = zeros(TwicePrecision{DT}, D)
+        q = zeros(DT,D)
+        q̅ = zeros(DT,D)
+        p = zeros(DT,D)
+        p̅ = zeros(DT,D)
+
+        qₑᵣᵣ = zeros(DT,D)
+        pₑᵣᵣ = zeros(DT,D)
 
         θ = zeros(DT,D)
         θ̅ = zeros(DT,D)
@@ -184,7 +190,8 @@ mutable struct IntegratorCachePGLRK{DT,TT,D,S} <: IODEIntegratorCache{DT,D}
         fcache = NonlinearFunctionCachePGLRK{DT,D,S}()
 
         new(0, zero(TT), zero(TT),
-            q, q̅, p, p̅, θ, θ̅, λ, λ̅,
+            q, q̅, p, p̅, qₑᵣᵣ, pₑᵣᵣ,
+            θ, θ̅, λ, λ̅,
             v, v̅, f, f̅, s̃,
             fcache)
     end
@@ -414,8 +421,8 @@ function integrate_step!(int::IntegratorPGLRK{DT,TT}, cache::IntegratorCachePGLR
     compute_stages!(int.solver.x, cache.fcache, int.params)
 
     # compute final update
-    update_solution!(cache.q, cache.fcache.V, int.params.tab.b, int.params.Δt)
-    update_solution!(cache.p, cache.fcache.F, int.params.tab.b, int.params.Δt)
+    update_solution!(cache.q, cache.qₑᵣᵣ, cache.fcache.V, int.params.tab.b, int.params.Δt)
+    update_solution!(cache.p, cache.pₑᵣᵣ, cache.fcache.F, int.params.tab.b, int.params.Δt)
 
     # copy solution to initial guess
     update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)
