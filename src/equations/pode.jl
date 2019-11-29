@@ -103,4 +103,6 @@ function Base.similar(ode::PODE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArra
     PODE(ode.v, ode.f, t₀, q₀, p₀; parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(ode::PODE) = ode.d
+@inline Base.ndims(ode::PODE) = ode.d
+
+@inline periodicity(equation::PODE) = equation.periodicity

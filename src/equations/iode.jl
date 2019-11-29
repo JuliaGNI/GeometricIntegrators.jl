@@ -138,4 +138,6 @@ function Base.similar(ode::IODE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArra
     IODE(ode.ϑ, ode.f, ode.g, t₀, q₀, p₀, λ₀; v=v, parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(ode::IODE) = ode.d
+@inline Base.ndims(ode::IODE) = ode.d
+
+@inline periodicity(equation::IODE) = equation.periodicity

@@ -128,4 +128,6 @@ Base.:(==)(ode1::VODE, ode2::VODE) = (
                              && ode1.λ₀ == ode2.λ₀
                              && ode1.periodicity == ode2.periodicity)
 
-Base.ndims(ode::VODE) = ode.d
+@inline Base.ndims(ode::VODE) = ode.d
+
+@inline periodicity(equation::VODE) = equation.periodicity
