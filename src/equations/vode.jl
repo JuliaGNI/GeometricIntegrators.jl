@@ -64,7 +64,7 @@ and
     end
 ```
 """
-struct VODE{dType <: Number, tType <: Number, ϑType <: Function, fType <: Function, gType <: Function, vType <: Function, ωType <: Function, dHType <: Function, N} <: Equation{dType, tType}
+struct VODE{dType <: Number, tType <: Number, ϑType <: Function, fType <: Function, gType <: Function, vType <: Function, ωType <: Function, dHType <: Function, N} <: AbstractEquationPODE{dType, tType}
     d::Int
     m::Int
     n::Int

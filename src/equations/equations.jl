@@ -1,6 +1,12 @@
 
 abstract type Equation{dType <: Number, tType <: Real} end
 
+abstract type AbstractEquationODE{dType, tType} <: Equation{dType, tType} end
+abstract type AbstractEquationPODE{dType, tType} <: Equation{dType, tType} end
+abstract type AbstractEquationDAE{dType, tType} <: Equation{dType, tType} end
+abstract type AbstractEquationPDAE{dType, tType} <: Equation{dType, tType} end
+
+
 function function_v_dummy(t, q, p, v)
     nothing
 end

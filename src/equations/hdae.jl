@@ -32,7 +32,7 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `p₀`: initial condition for dynamical variable ``p``
 
 """
-struct HDAE{dType <: Number, tType <: Number, vType <: Tuple, fType <: Tuple, ϕType <: Function, ψType <: Function, N} <: Equation{dType, tType}
+struct HDAE{dType <: Number, tType <: Number, vType <: Tuple, fType <: Tuple, ϕType <: Function, ψType <: Function, N} <: AbstractEquationPDAE{dType, tType}
     d::Int
     m::Int
     n::Int

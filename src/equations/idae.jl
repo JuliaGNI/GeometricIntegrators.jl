@@ -36,7 +36,7 @@ struct IDAE{dType <: Number, tType <: Number,
             ϑType <: Function, fType <: Function,
             uType <: Function, gType <: Function,
             ϕType <: Function, vType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
 
     d::Int
     m::Int
