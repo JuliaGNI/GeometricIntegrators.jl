@@ -42,13 +42,25 @@ end
 
 AtomisticSolutionDAE(DT, TT, nd) = AtomisticSolutionDAE{DT, TT}(nd)
 
-function CommonFunctions.reset!(cache::AtomisticSolutionDAE, Δt)
-    cache.t̅  = cache.t
-    cache.q̅ .= cache.q
-    cache.λ̅ .= cache.λ
-    cache.v̅ .= cache.v
-    cache.u̅ .= cache.u
-    cache.t += Δt
+function CommonFunctions.set_solution!(asol::AtomisticSolutionDAE, sol)
+    t, q, λ = sol
+    asol.t  = t
+    asol.q .= q
+    asol.λ .= λ
+    asol.v .= 0
+end
+
+function CommonFunctions.get_solution(asol::AtomisticSolutionDAE)
+    (asol.t, asol.q, asol.λ)
+end
+
+function CommonFunctions.reset!(asol::AtomisticSolutionDAE, Δt)
+    asol.t̅  = asol.t
+    asol.q̅ .= asol.q
+    asol.λ̅ .= asol.λ
+    asol.v̅ .= asol.v
+    asol.u̅ .= asol.u
+    asol.t += Δt
 end
 
 function update!(asol::AtomisticSolutionDAE{DT}, v::Vector{DT}, λ::Vector{DT}) where {DT}

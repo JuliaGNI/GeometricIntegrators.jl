@@ -135,9 +135,23 @@ function set_initial_conditions!(sol::SolutionDAE{DT,TT}, t₀::TT, q₀::Array{
     sol.counter .= 1
 end
 
+function get_initial_conditions!(sol::SolutionDAE{DT,TT}, asol::AtomisticSolutionDAE{DT,TT}, k, n=1) where {DT,TT}
+    get_solution!(sol, asol.q, asol.λ, n-1, k)
+    asol.t  = sol.t[n-1]
+    asol.q̃ .= 0
+end
+
 function get_initial_conditions!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, k) where {DT,TT}
     get_data!(sol.q, q, 0, k)
     get_data!(sol.λ, λ, 0, k)
+end
+
+function CommonFunctions.set_solution!(sol::SolutionDAE, t, q, λ, n, k)
+    set_solution!(sol, q, λ, n, k)
+end
+
+function CommonFunctions.set_solution!(sol::SolutionDAE{DT,TT}, asol::AtomisticSolutionDAE{DT,TT}, n, k) where {DT,TT}
+    set_solution!(sol, asol.t, asol.q, asol.λ, n, k)
 end
 
 function CommonFunctions.set_solution!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, n, k) where {DT,TT}
