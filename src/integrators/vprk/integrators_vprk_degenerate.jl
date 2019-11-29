@@ -173,10 +173,10 @@ function integrate_step!(int::IntegratorVPRKdegenerate{DT,TT}, sol::SolutionPDAE
         solve!(int.projector)
 
         # print solver status
-        print_solver_status(int.projector.status, int.projector.params, n)
+        print_solver_status(int.projector.status, int.projector.params)
 
         # check if solution contains NaNs or error bounds are violated
-        check_solver_status(int.projector.status, int.projector.params, n)
+        check_solver_status(int.projector.status, int.projector.params)
 
         # copy solution to integrator
         compute_solution!(int.projector.x, int.cache.q̅, int.cache.p̅, int.pparams)

@@ -198,10 +198,10 @@ function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, cache::Integrat
     solve!(int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params, cache.n)
+    print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params, cache.n)
+    check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
     compute_stages!(int.solver.x, cache.Q, cache.V, cache.P, cache.F, int.sparams)
@@ -219,10 +219,10 @@ function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, cache::Integrat
     solve!(int.projector)
 
     # print solver status
-    print_solver_status(int.projector.status, int.projector.params, cache.n)
+    print_solver_status(int.projector.status, int.projector.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.projector.status, int.projector.params, cache.n)
+    check_solver_status(int.projector.status, int.projector.params)
 
     # compute projection vector fields
     compute_projection!(int.projector.x, cache.q̃, cache.p̃, cache.λ, cache.U, cache.G, int.pparams)

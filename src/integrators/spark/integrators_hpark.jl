@@ -281,10 +281,10 @@ function integrate_step!(int::IntegratorHPARK{DT,TT}, cache::IntegratorCacheVPAR
     solve!(int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params, cache.n)
+    print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params, cache.n)
+    check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
     compute_stages!(int.solver.x, cache, int.params)
