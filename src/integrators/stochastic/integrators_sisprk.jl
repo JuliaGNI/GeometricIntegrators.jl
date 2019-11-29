@@ -477,10 +477,10 @@ function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,N
     solve!(int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params, n)
+    print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params, n)
+    check_solver_status(int.solver.status, int.solver.params)
 
     # compute the drift vector field and the diffusion matrix at internal stages
     compute_stages!(int.solver.x, int.fcache.Q, int.fcache.P, int.fcache.V, int.fcache.F1, int.fcache.F2, int.fcache.B, int.fcache.G1, int.fcache.G2, int.fcache.Y, int.fcache.Z, int.params)

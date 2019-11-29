@@ -540,10 +540,10 @@ function integrate_step!(int::IntegratorDGVIPI{DT,TT}, sol::Union{SolutionPODE{D
     solve!(int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params, n)
+    print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params, n)
+    check_solver_status(int.solver.status, int.solver.params)
 
     # compute final update
     compute_stages!(int.solver.x, int.cache, int.params)

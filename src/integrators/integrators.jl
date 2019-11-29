@@ -185,19 +185,39 @@ function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT,N},
 
     cache = create_integrator_cache(int)
 
-    # loop over initial conditions showing progress bar
-    for m in m1:m2
-        # get cache from solution
-        set_solution!(cache, get_initial_conditions(sol, m, n1), n1-1)
-        initialize!(int, cache)
+    try
+        # loop over initial conditions showing progress bar
+        for m in m1:m2
+            # get cache from solution
+            set_solution!(cache, get_initial_conditions(sol, m, n1), n1-1)
+            initialize!(int, cache)
 
-        # loop over time steps
-        for n in n1:n2
-            # integrate one initial condition for one time step
-            integrate_step!(int, cache)
+            # loop over time steps
+            for n in n1:n2
+                # integrate one initial condition for one time step
+                integrate_step!(int, cache)
 
-            # copy solution from cache to solution
-            set_solution!(sol, get_solution(cache)..., n, m)
+                # copy solution from cache to solution
+                set_solution!(sol, get_solution(cache)..., n, m)
+            end
+        end
+    catch ex
+        tstr = " in time step " * string(n)
+
+        if m1 ≠ m2
+            tstr *= " for initial condition " * string(m)
+        end
+
+        tstr *= "."
+
+        if isa(ex, DomainError)
+            @warn("Domain error", tstr)
+        elseif isa(ex, ErrorException)
+            @warn("Simulation exited early", tstr)
+            @warn(ex.msg)
+        else
+            @warn(str(typeof(ex)), tstr)
+            throw(ex)
         end
     end
 end
@@ -237,15 +257,35 @@ function integrate!(int::StochasticIntegrator{DT,TT}, sol::StochasticSolution{DT
     @assert n2 ≥ n1
     @assert n2 ≤ sol.ntime
 
-    # loop over initial conditions
-    for m in m1:m2
-        # loop over sample paths
-        for k in k1:k2
-            # loop over time steps
-            for n in n1:n2
-                # integrate one initial condition for one time step
-                integrate_step!(int, sol, k, m, n)
+    try
+        # loop over initial conditions
+        for m in m1:m2
+            # loop over sample paths
+            for k in k1:k2
+                # loop over time steps
+                for n in n1:n2
+                    # integrate one initial condition for one time step
+                    integrate_step!(int, sol, k, m, n)
+                end
             end
+        end
+    catch ex
+        tstr = " in time step " * string(n)
+
+        if m1 ≠ m2
+            tstr *= " for initial condition " * string(m)
+        end
+
+        tstr *= "."
+
+        if isa(ex, DomainError)
+            @warn("Domain error", tstr)
+        elseif isa(ex, ErrorException)
+            @warn("Simulation exited early", tstr)
+            @warn(ex.msg)
+        else
+            @warn(str(typeof(ex)), tstr)
+            throw(ex)
         end
     end
 end

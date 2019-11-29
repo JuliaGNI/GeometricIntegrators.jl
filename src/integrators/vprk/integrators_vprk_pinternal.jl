@@ -268,10 +268,10 @@ function integrate_step!(int::IntegratorVPRKpInternal{DT,TT}, sol::SolutionPDAE{
     solve!(int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params, n)
+    print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params, n)
+    check_solver_status(int.solver.status, int.solver.params)
 
     # compute final update
     compute_stages_vprk!(int.solver.x, int.pcache.q̅, int.pcache.p̅,
