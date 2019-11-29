@@ -91,4 +91,6 @@ function Base.similar(ode::SODE, t₀::TT, q₀::DenseArray{DT};
     SODE(ode.v, t₀, q₀; parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(ode::SODE) = ode.d
+@inline Base.ndims(ode::SODE) = ode.d
+
+@inline periodicity(equation::SODE) = equation.periodicity
