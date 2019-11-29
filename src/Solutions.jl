@@ -39,7 +39,21 @@ module Solutions
 
     include("solutions/wienerprocess.jl")
 
-    export Solution, StochasticSolution
+
+    export AtomisticSolution, AtomisticSolutionODE, AtomisticSolutionPODE,
+           AtomisticSolutionDAE, AtomisticSolutionPDAE
+
+    include("solutions/atomistic_solution.jl")
+    include("solutions/atomistic_solution_ode.jl")
+    include("solutions/atomistic_solution_pode.jl")
+    include("solutions/atomistic_solution_dae.jl")
+    include("solutions/atomistic_solution_pdae.jl")
+
+
+    export Solution, StochasticSolution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE, SolutionSDE, SolutionPSDE,
+           get_initial_conditions, get_initial_conditions!, set_initial_conditions!,
+           create_hdf5
+    export PSolutionPDAE, SSolutionPDAE
 
     include("solutions/solution.jl")
 
