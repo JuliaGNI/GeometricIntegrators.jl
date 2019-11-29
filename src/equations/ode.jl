@@ -30,7 +30,7 @@ on `t` and `q`.
 
 """
 struct ODE{dType <: Number, tType <: Number,
-           vType <: Function, pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+           vType <: Function, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
 
     d::Int
     n::Int

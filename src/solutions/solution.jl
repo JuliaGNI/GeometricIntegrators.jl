@@ -16,22 +16,22 @@ CommonFunctions.write_to_hdf5(sol::Solution, h5::HDF5File, offset=0) = error("wr
 
 
 "Create solution for ODE."
-function Solution(equation::Union{ODE,SODE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+function Solution(equation::AbstractEquationODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
     SolutionODE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for partitioned ODE."
-function Solution(equation::Union{PODE,VODE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+function Solution(equation::AbstractEquationPODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
     SolutionPODE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for DAE."
-function Solution(equation::DAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+function Solution(equation::AbstractEquationDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
     SolutionDAE(equation, Δt, ntime, nsave, nwrite)
 end
 
 "Create solution for partitioned DAE."
-function Solution(equation::Union{IODE,IDAE,PDAE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
+function Solution(equation::AbstractEquationPDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
     SSolutionPDAE(equation, Δt, ntime, nsave, nwrite)
 end
 

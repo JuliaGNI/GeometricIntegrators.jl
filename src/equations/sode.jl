@@ -38,7 +38,7 @@ methods, e.g., it allows to use another integrator for solving substeps.
 
 """
 struct SODE{dType <: Number, tType <: Number,
-            vType <: Tuple, pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+            vType <: Tuple, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
 
     d::Int
     n::Int
