@@ -181,7 +181,7 @@ function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT,N},
     cache = create_integrator_cache(int)
 
     # loop over initial conditions showing progress bar
-    @showprogress 5 for m in m1:m2
+    for m in m1:m2
         # get cache from solution
         set_solution!(cache, get_initial_conditions(sol, m, n1), n1-1)
         initialize!(int, cache)
@@ -232,27 +232,14 @@ function integrate!(int::StochasticIntegrator{DT,TT}, sol::StochasticSolution{DT
     @assert n2 ≥ n1
     @assert n2 ≤ sol.ntime
 
-    local nshow::Int = get_config(:int_show_progress_nmin)
-    local nrun::Int  = (k2-k1+1)*(m2-m1+1)*(n2-n1+1)
-
-    # initialize progress bar
-    # if nrun ≥ nshow
-    #     p = Progress(nrun, 5)
-    # end
-
     # loop over initial conditions
-    @showprogress 5 for m in m1:m2
+    for m in m1:m2
         # loop over sample paths
         for k in k1:k2
             # loop over time steps
             for n in n1:n2
                 # integrate one initial condition for one time step
                 integrate_step!(int, sol, k, m, n)
-
-                # update progress bar
-                # if nrun ≥ nshow
-                #     next!(p)
-                # end
             end
         end
     end
