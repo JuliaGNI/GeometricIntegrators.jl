@@ -36,3 +36,13 @@ function CommonFunctions.reset!(asol::AtomisticSolutionODE, Δt)
     asol.v̅ .= asol.v
     asol.t += Δt
 end
+
+function update!(asol::AtomisticSolutionODE{DT}, v::Vector{DT}) where {DT}
+    for k in eachindex(v)
+        update!(asol, v[k])
+    end
+end
+
+function update!(asol::AtomisticSolutionODE{DT}, v::DT, k::Int) where {DT}
+    asol.q[k], asol.q̃[k] = compensated_summation(v, asol.q[k], asol.q̃[k])
+end

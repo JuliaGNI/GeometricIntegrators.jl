@@ -50,3 +50,14 @@ function CommonFunctions.reset!(cache::AtomisticSolutionPODE, Δt)
     cache.f̅ .= cache.f
     cache.t += Δt
 end
+
+function update!(asol::AtomisticSolutionPODE{DT}, v::Vector{DT}, f::Vector{DT}) where {DT}
+    for k in eachindex(v,f)
+        update!(asol, v[k], f[k])
+    end
+end
+
+function update!(asol::AtomisticSolutionPODE{DT}, v::DT, f::DT, k::Int) where {DT}
+    asol.q[k], asol.q̃[k] = compensated_summation(v, asol.q[k], asol.q̃[k])
+    asol.p[k], asol.p̃[k] = compensated_summation(f, asol.p[k], asol.p̃[k])
+end
