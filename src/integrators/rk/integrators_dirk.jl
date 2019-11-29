@@ -242,10 +242,10 @@ function integrate_step!(int::IntegratorDIRK{DT,TT}, cache::IntegratorCacheDIRK{
         solve!(int.solver[i])
 
         # print solver status
-        print_solver_status(int.solver[i].status, int.solver[i].params, cache.n)
+        print_solver_status(int.solver[i].status, int.solver[i].params)
 
         # check if solution contains NaNs or error bounds are violated
-        check_solver_status(int.solver[i].status, int.solver[i].params, cache.n)
+        check_solver_status(int.solver[i].status, int.solver[i].params)
 
         # compute vector field at internal stages
         compute_stages!(int.solver[i].x, cache.Q, cache.V, cache.Y, int.params, i)
