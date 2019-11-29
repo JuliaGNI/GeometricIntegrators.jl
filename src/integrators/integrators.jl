@@ -285,6 +285,24 @@ function integrate!(int::StochasticIntegrator{DT,TT}, sol::StochasticSolution{DT
                 end
             end
         end
+    catch ex
+        tstr = " in time step " * string(n)
+
+        if m1 ≠ m2
+            tstr *= " for initial condition " * string(m)
+        end
+
+        tstr *= "."
+
+        if isa(ex, DomainError)
+            @warn("Domain error", tstr)
+        elseif isa(ex, ErrorException)
+            @warn("Simulation exited early", tstr)
+            @warn(ex.msg)
+        else
+            @warn(str(typeof(ex)), tstr)
+            throw(ex)
+        end
     end
 end
 
