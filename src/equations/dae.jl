@@ -60,7 +60,7 @@ on `t`, `q` and `λ`.
 ```
 """
 struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Function,
-           ϕType <: Function, pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+           ϕType <: Function, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationDAE{dType, tType}
 
     d::Int
     m::Int

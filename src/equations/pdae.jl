@@ -34,7 +34,7 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 struct PDAE{dType <: Number, tType <: Number,
             vType <: Function, fType <: Function,
             uType <: Function, gType <: Function,
-            ϕType <: Function, pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+            ϕType <: Function, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
 
     d::Int
     m::Int
