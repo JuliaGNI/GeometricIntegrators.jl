@@ -58,16 +58,30 @@ end
 
 AtomisticSolutionPDAE(DT, TT, nd) = AtomisticSolutionPDAE{DT, TT}(nd)
 
-function CommonFunctions.reset!(cache::AtomisticSolutionPDAE, Δt)
-    cache.t̅  = cache.t
-    cache.q̅ .= cache.q
-    cache.p̅ .= cache.p
-    cache.λ̅ .= cache.λ
-    cache.v̅ .= cache.v
-    cache.f̅ .= cache.f
-    cache.u̅ .= cache.u
-    cache.g̅ .= cache.g
-    cache.t += Δt
+function CommonFunctions.set_solution!(asol::AtomisticSolutionPDAE, sol)
+    t, q, p, λ = sol
+    asol.t  = t
+    asol.q .= q
+    asol.p .= p
+    asol.λ .= λ
+    asol.v .= 0
+    asol.f .= 0
+end
+
+function CommonFunctions.get_solution(asol::AtomisticSolutionPDAE)
+    (asol.t, asol.q, asol.p, asol.λ)
+end
+
+function CommonFunctions.reset!(asol::AtomisticSolutionPDAE, Δt)
+    asol.t̅  = asol.t
+    asol.q̅ .= asol.q
+    asol.p̅ .= asol.p
+    asol.λ̅ .= asol.λ
+    asol.v̅ .= asol.v
+    asol.f̅ .= asol.f
+    asol.u̅ .= asol.u
+    asol.g̅ .= asol.g
+    asol.t += Δt
 end
 
 function update!(asol::AtomisticSolutionPODE{DT}, v::Vector{DT}, f::Vector{DT}, λ::Vector{DT}) where {DT}

@@ -42,13 +42,26 @@ end
 
 AtomisticSolutionPODE(DT, TT, nd) = AtomisticSolutionPODE{DT, TT}(nd)
 
-function CommonFunctions.reset!(cache::AtomisticSolutionPODE, Δt)
-    cache.t̅  = cache.t
-    cache.q̅ .= cache.q
-    cache.p̅ .= cache.p
-    cache.v̅ .= cache.v
-    cache.f̅ .= cache.f
-    cache.t += Δt
+function CommonFunctions.set_solution!(asol::AtomisticSolutionPODE, sol)
+    t, q, p = sol
+    asol.t  = t
+    asol.q .= q
+    asol.p .= p
+    asol.v .= 0
+    asol.f .= 0
+end
+
+function CommonFunctions.get_solution(asol::AtomisticSolutionPODE)
+    (asol.t, asol.q, asol.p)
+end
+
+function CommonFunctions.reset!(asol::AtomisticSolutionPODE, Δt)
+    asol.t̅  = asol.t
+    asol.q̅ .= asol.q
+    asol.p̅ .= asol.p
+    asol.v̅ .= asol.v
+    asol.f̅ .= asol.f
+    asol.t += Δt
 end
 
 function update!(asol::AtomisticSolutionPODE{DT}, v::Vector{DT}, f::Vector{DT}) where {DT}
