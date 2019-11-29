@@ -44,12 +44,12 @@ module Solutions
            create_hdf5
     export PSolutionPDAE, SSolutionPDAE
 
-    include("solutions/solutions.jl")
-    include("solutions/solutions_ode.jl")
-    include("solutions/solutions_pode.jl")
-    include("solutions/solutions_dae.jl")
-    include("solutions/solutions_pdae.jl")
-    include("solutions/solutions_sde.jl")
-    include("solutions/solutions_psde.jl")
+    include("solutions/solution.jl")
+    include("solutions/solution_ode.jl")
+    include("solutions/solution_pode.jl")
+    include("solutions/solution_dae.jl")
+    include("solutions/solution_pdae.jl")
+    include("solutions/solution_sde.jl")
+    include("solutions/solution_psde.jl")
 
 end
