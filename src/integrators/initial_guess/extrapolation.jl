@@ -75,20 +75,20 @@ Midpoint extrapolation method with arbitrary order p.
     x₁: final   value
     s:  number of interpolations (order p=2s+2)
 """
-function midpoint_extrapolation(v::Function, t₀::TT, t₁::TT, x₀::Vector, x₁::Vector, s::Int) where {TT}
+function midpoint_extrapolation(v::Function, t₀::TT, t₁::TT, x₀::Vector{DT}, x₁::Vector{DT}, s::Int) where {DT,TT}
     @assert size(x₀) == size(x₁)
 
-    local F   = 2*collect(1:(s+1))
+    local F   = [2i*one(TT) for i in 1:(s+1)]
     local Δt  = t₁ - t₀
     local σ   = Δt ./ F
     local σ²  = σ.^2
-    local pts = zeros(eltype(x₀), length(x₀), s+1)
+    local pts = zeros(DT, length(x₀), s+1)
 
-    local xᵢ₁= zero(x₀)
-    local xᵢ₂= zero(x₀)
-    local xᵢₜ= zero(x₀)
-    local vᵢ = zero(x₀)
-    local v₀ = zero(x₀)
+    local xᵢ₁ = zero(x₀)
+    local xᵢ₂ = zero(x₀)
+    local xᵢₜ = zero(x₀)
+    local vᵢ  = zero(x₀)
+    local v₀  = zero(x₀)
 
     v(t₀, x₀, v₀)
 
@@ -124,16 +124,16 @@ Midpoint extrapolation method with arbitrary order p.
     p₁: final   momenta
     s:  number of interpolations (order p=2s+2)
 """
-function midpoint_extrapolation(v::Function, f::Function, t₀::TT, t₁::TT, q₀::Vector, q₁::Vector, p₀::Vector, p₁::Vector, s::Int) where {TT}
+function midpoint_extrapolation(v::Function, f::Function, t₀::TT, t₁::TT, q₀::Vector{DT}, q₁::Vector{DT}, p₀::Vector{DT}, p₁::Vector{DT}, s::Int) where {TT,DT}
     @assert size(q₀) == size(q₁) == size(p₀) == size(p₁)
 
-    local F   = 2*collect(1:(s+1))
+    local F   = [2i*one(TT) for i in 1:(s+1)]
     local Δt  = t₁ - t₀
     local σ   = Δt ./ F
     local σ2  = σ.^2
 
-    local qts = zeros(eltype(q₀), length(q₀), s+1)
-    local pts = zeros(eltype(p₀), length(p₀), s+1)
+    local qts = zeros(DT, length(q₀), s+1)
+    local pts = zeros(DT, length(p₀), s+1)
 
     local qᵢ₁= zero(q₀)
     local qᵢ₂= zero(q₀)
