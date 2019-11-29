@@ -221,4 +221,6 @@ function Base.similar(sde::PSDE{DT,TT,VT,FT,BT,GT}, t₀::TT, q₀::DenseArray{D
     PSDE(sde.m, sde.v, sde.f, sde.B, sde.G, t₀, q₀, p₀, periodicity=sde.periodicity)
 end
 
-Base.ndims(sde::PSDE) = sde.d
+@inline Base.ndims(sde::PSDE) = sde.d
+
+@inline periodicity(equation::PSDE) = equation.periodicity
