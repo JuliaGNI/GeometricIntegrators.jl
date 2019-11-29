@@ -219,10 +219,10 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
     solve!(int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params, n)
+    print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params, n)
+    check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector field at internal stages
     compute_stages!(int.solver.x, int.Q, int.V, int.Y, int.params)
