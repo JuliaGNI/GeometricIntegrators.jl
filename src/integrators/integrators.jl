@@ -260,35 +260,35 @@ function integrate!(int::StochasticIntegrator{DT,TT}, sol::StochasticSolution{DT
     @assert n2 ≥ n1
     @assert n2 ≤ sol.ntime
 
-    # loop over initial conditions
-    for m in m1:m2
-        # loop over sample paths
-        for k in k1:k2
-            # loop over time steps
-            for n in n1:n2
-                try
+    try
+        # loop over initial conditions
+        for m in m1:m2
+            # loop over sample paths
+            for k in k1:k2
+                # loop over time steps
+                for n in n1:n2
                     # integrate one initial condition for one time step
                     integrate_step!(int, sol, k, m, n)
-                catch ex
-                    tstr = " in time step " * string(n)
-
-                    if m1 ≠ m2
-                        tstr *= " for initial condition " * string(m)
-                    end
-
-                    tstr *= "."
-
-                    if isa(ex, DomainError)
-                        @warn("Domain error" * tstr)
-                    elseif isa(ex, ErrorException)
-                        @warn("Simulation exited early" * tstr)
-                        @warn(ex.msg)
-                    else
-                        @warn(string(typeof(ex)) * tstr)
-                        throw(ex)
-                    end
                 end
             end
+        end
+    catch ex
+        tstr = " in time step " * string(n)
+
+        if m1 ≠ m2
+            tstr *= " for initial condition " * string(m)
+        end
+
+        tstr *= "."
+
+        if isa(ex, DomainError)
+            @warn("Domain error", tstr)
+        elseif isa(ex, ErrorException)
+            @warn("Simulation exited early", tstr)
+            @warn(ex.msg)
+        else
+            @warn(str(typeof(ex)), tstr)
+            throw(ex)
         end
     end
 end
