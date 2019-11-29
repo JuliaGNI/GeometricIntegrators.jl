@@ -149,6 +149,13 @@ function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, t₀::TT, q₀::Union
     sol.counter .= 1
 end
 
+function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, asol::AtomisticSolutionPDAE{DT,TT}, k, n=1) where {DT,TT}
+    get_solution!(sol, asol.q, asol.p, asol.λ, n-1, k)
+    asol.t  = sol.t[n-1]
+    asol.q̃ .= 0
+    asol.p̃ .= 0
+end
+
 function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, k, n=1) where {DT,TT}
     get_solution!(sol, q, p, λ, n-1, k)
 end
@@ -182,6 +189,10 @@ end
 
 function CommonFunctions.set_solution!(sol::SolutionPDAE, t, q, p, λ, n, k)
     set_solution!(sol, q, p, λ, n, k)
+end
+
+function CommonFunctions.set_solution!(sol::SolutionPDAE{DT,TT}, asol::AtomisticSolutionPDAE{DT,TT}, n, k) where {DT,TT}
+    set_solution!(sol, asol.t, asol.q, asol.p, asol.λ, n, k)
 end
 
 function CommonFunctions.set_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, n, k) where {DT,TT}
