@@ -55,31 +55,39 @@ function TableauSplittingSS(name, o, a::Vector{T}) where {T}
 end
 
 
+"Explicit Runge-Kutta integrator cache."
+mutable struct IntegratorCacheSplitting{DT,TT,D} <: ODEIntegratorCache{DT,D}
+    v::Vector{DT}
+    q̃::Vector{DT}
+    s̃::Vector{DT}
+
+    function IntegratorCacheSplitting{DT,TT,D}() where {DT,TT,D}
+        v = zeros(DT, D)
+        q̃ = zeros(DT, D)
+        s̃ = zeros(DT, D)
+        new(v, q̃, s̃)
+    end
+end
+
 
 "Splitting integrator."
-struct IntegratorSplitting{DT, TT, VT, ST <: AbstractTableauSplitting, FT, CT, N} <: DeterministicIntegrator{DT,TT}
+struct IntegratorSplitting{DT, TT, VT, ST <: AbstractTableauSplitting, FT, CT, N, D} <: DeterministicIntegrator{DT,TT}
     equation::SODE{DT,TT,VT,N}
     tableau::ST
     f::FT
     c::CT
     Δt::TT
 
-    q::Array{DT,1}
-    qₑᵣᵣ::Array{DT,1}
-    v::Array{DT,1}
+    cache::IntegratorCacheSplitting{DT,TT,D}
 
-    function IntegratorSplitting{DT,TT,VT,ST,FT,CT,N}(equation::SODE, tableau::ST, f::FT, c::CT, Δt) where {DT,TT,VT,ST,FT,CT,N}
+    function IntegratorSplitting(equation::SODE{DT,TT,VT,N}, tableau::ST, f::Vector{Int}, c::Vector{TT}, Δt::TT) where {DT, TT, VT, ST <: AbstractTableauSplitting, N}
         @assert length(f) == length(c)
-        D = equation.d
-        new(equation, tableau, f, c, Δt, zeros(DT,D), zeros(DT,D), zeros(DT,D))
+        ft = Tuple(f)
+        ct = Tuple(c)
+        D  = equation.d
+        cache = IntegratorCacheSplitting{DT,TT,D}()
+        new{DT,TT,VT,ST,typeof(ft),typeof(ct),N,D}(equation, tableau, ft, ct, Δt, cache)
     end
-end
-
-
-function IntegratorSplitting(equation::SODE{DT,TT,VT,N}, tableau::ST, f::Vector{Int}, c::Vector{TT}, Δt::TT) where {DT, TT, VT, ST <: AbstractTableauSplitting, N}
-    ft = Tuple(f)
-    ct = Tuple(c)
-    IntegratorSplitting{DT,TT,VT,ST,typeof(ft),typeof(ct),N}(equation, tableau, ft, ct, Δt)
 end
 
 
@@ -205,61 +213,19 @@ equation(int::IntegratorSplitting) = int.equation
 timestep(int::IntegratorSplitting) = int.Δt
 
 
-"Explicit Runge-Kutta integrator cache."
-mutable struct IntegratorCacheSplitting{DT,TT,D} <: ODEIntegratorCache{DT,D}
-    n::Int
-    t::TT
-    t̅::TT
-    q::Vector{TwicePrecision{DT}}
-    q̅::Vector{TwicePrecision{DT}}
-    v::Vector{DT}
-    s̃::Vector{DT}
-
-    function IntegratorCacheSplitting{DT,TT,D}() where {DT,TT,D}
-        q = zeros(TwicePrecision{DT}, D)
-        q̅ = zeros(TwicePrecision{DT}, D)
-        v = zeros(DT, D)
-        s̃ = zeros(DT, D)
-        new(0, zero(TT), zero(TT), q, q̅, v, s̃)
-    end
-end
-
-function create_integrator_cache(int::IntegratorSplitting{DT,TT}) where {DT,TT}
-    IntegratorCacheSplitting{DT, TT, ndims(equation(int))}()
-end
-
-function CommonFunctions.reset!(cache::IntegratorCacheSplitting{DT,TT}, Δt::TT) where {DT,TT}
-    cache.t̅  = cache.t
-    cache.q̅ .= cache.q
-    cache.t += Δt
-    cache.n += 1
-end
-
-
-function CommonFunctions.set_solution!(cache::IntegratorCacheSplitting, sol, n=0)
-    t, q = sol
-    cache.n  = n
-    cache.t  = t
-    cache.q .= q
-end
-
-
 "Integrate ODE with splitting integrator."
-function integrate_step!(int::IntegratorSplitting{DT,TT,FT}, cache::IntegratorCacheSplitting{DT,TT}) where {DT,TT,FT}
+function integrate_step!(int::IntegratorSplitting{DT,TT,FT}, sol::AtomisticSolutionODE{DT,TT}) where {DT,TT,FT}
     local tᵢ::TT
 
     # reset cache
-    reset!(cache, int.Δt)
+    reset!(sol, timestep(int))
 
     # compute internal stages
     for i in eachindex(int.f, int.c)
         if int.c[i] ≠ zero(TT)
-            tᵢ = cache.t̅ + int.Δt * int.c[i]
-            int.equation.v[int.f[i]](tᵢ, cache.q, cache.v, int.c[i] * int.Δt)
-            cache.q .= cache.v
+            tᵢ = sol.t̅ + timestep(int) * int.c[i]
+            int.equation.v[int.f[i]](tᵢ, sol.q, int.cache.q̃, int.c[i] * timestep(int))
+            sol.q .= int.cache.q̃
         end
     end
-
-    # take care of periodic solutions
-    cut_periodic_solution!(cache, equation(int).periodicity)
 end

@@ -103,14 +103,14 @@ end
 
 "Compute stages of variational special partitioned additive Runge-Kutta methods."
 @generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}) where {ST,DT,TT,ΘT,FT,D,S}
-    cache = NonlinearFunctionCacheVPRKpLegendre{ST}(D,S)
+    cache = IntegratorCacheVPRK{ST, D, S}(true)
 
     quote
         @assert length(y) == length(b)
 
-        compute_stages!(y, $cache.Q, $cache.V, $cache.P, $cache.F, $cache.Φ, $cache.q̅, $cache.p̅, $cache.ϕ, $cache.μ, params)
+        compute_stages!(y, $cache.Q, $cache.V, $cache.P, $cache.F, $cache.Φ, $cache.q̃, $cache.p̃, $cache.ϕ, $cache.μ, params)
 
-        compute_rhs!(b, $cache.Q, $cache.V, $cache.P, $cache.F, $cache.Φ, $cache.q̅, $cache.p̅, $cache.ϕ, $cache.μ, params)
+        compute_rhs!(b, $cache.Q, $cache.V, $cache.P, $cache.F, $cache.Φ, $cache.q̃, $cache.p̃, $cache.ϕ, $cache.μ, params)
 
         # debug output
         # println()
@@ -414,10 +414,4 @@ function integrate_step!(int::IntegratorVPRKpLegendre{DT,TT,ΘT,FT,VT}, sol::Sol
 
     # copy solution to initial guess for next time step
     update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q, int.p)
-
-    # take care of periodic solutions
-    # cut_periodic_solution!(int.q, int.equation.periodicity)
-
-    # copy to solution
-    copy_solution!(sol, int.q, int.p, n, m)
 end

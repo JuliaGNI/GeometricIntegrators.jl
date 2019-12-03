@@ -48,88 +48,73 @@ function readTableauERKFromFile(dir::AbstractString, name::AbstractString)
 end
 
 
-
-"Explicit Runge-Kutta integrator."
-struct IntegratorERK{DT,TT,FT} <: DeterministicIntegrator{DT,TT}
-    equation::ODE{DT,TT,FT}
-    tableau::TableauERK{TT}
+"Parameters for right-hand side function of explicit Runge-Kutta methods."
+struct ParametersERK{DT, TT, ET <: ODE{DT,TT}, D, S} <: Parameters{DT,TT}
+    equ::ET
+    tab::TableauERK{TT}
     Δt::TT
-
-    function IntegratorERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
-        new(equation, tableau, Δt)
-    end
 end
 
-function IntegratorERK(equation::ODE{DT,TT,FT}, tableau::TableauERK{TT}, Δt::TT) where {DT,TT,FT}
-    IntegratorERK{DT,TT,FT}(equation, tableau, Δt)
+function ParametersERK(equ::ET, tab::TableauERK{TT}, Δt::TT) where {DT, TT, ET <: ODE{DT,TT}}
+    ParametersERK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt)
 end
-
-equation(int::IntegratorERK) = int.equation
-timestep(int::IntegratorERK) = int.Δt
 
 
 "Explicit Runge-Kutta integrator cache."
-mutable struct IntegratorCacheERK{DT,TT,D,S} <: ODEIntegratorCache{DT,D}
-    n::Int
-    t::TT
-    t̅::TT
-    q::Vector{TwicePrecision{DT}}
-    q̅::Vector{TwicePrecision{DT}}
+struct IntegratorCacheERK{DT,D,S} <: ODEIntegratorCache{DT,D}
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
 
-    function IntegratorCacheERK{DT,TT,D,S}() where {DT,TT,D,S}
-        q = zeros(TwicePrecision{DT}, D)
-        q̅ = zeros(TwicePrecision{DT}, D)
+    function IntegratorCacheERK{DT,D,S}() where {DT,D,S}
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
-        new(0, zero(TT), zero(TT), q, q̅, Q, V)
+        new(Q, V)
     end
 end
 
-function create_integrator_cache(int::IntegratorERK{DT,TT}) where {DT,TT}
-    IntegratorCacheERK{DT, TT, ndims(int), int.tableau.s}()
-end
 
-function CommonFunctions.reset!(cache::IntegratorCacheERK{DT,TT}, Δt::TT) where {DT,TT}
-    cache.t̅  = cache.t
-    cache.q̅ .= cache.q
-    cache.t += Δt
-    cache.n += 1
-end
+"Explicit Runge-Kutta integrator."
+struct IntegratorERK{DT, TT, PT <: ParametersERK{DT,TT}, D, S} <: IntegratorRK{DT,TT}
+    params::PT
+    cache::IntegratorCacheERK{DT,D,S}
 
-function CommonFunctions.set_solution!(cache::IntegratorCacheERK, sol, n=0)
-    t, q = sol
-    cache.n  = n
-    cache.t  = t
-    cache.q .= q
+    function IntegratorERK(equation::ODE{DT,TT,FT}, tableau::TableauERK{TT}, Δt::TT) where {DT,TT,FT}
+        D = equation.d
+        S = tableau.s
+
+        # create params
+        params = ParametersERK(equation, tableau, Δt)
+
+        # create cache
+        cache = IntegratorCacheERK{DT,D,S}()
+
+        # create integrators
+        new{DT, TT, typeof(params), D, S}(params, cache)
+    end
 end
 
 
 "Integrate ODE with explicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorERK{DT,TT}, cache::IntegratorCacheERK{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorERK{DT,TT}, sol::AtomisticSolutionODE{DT,TT}) where {DT,TT}
     local tᵢ::TT
     local yᵢ::DT
 
     # reset cache
-    reset!(cache, int.Δt)
+    reset!(sol, timestep(int))
 
     # compute internal stages
-    for i in 1:int.tableau.q.s
-        @inbounds for k in eachindex(cache.Q[i], cache.V[i])
+    for i in eachstage(int)
+        @inbounds for k in eachindex(int.cache.Q[i], int.cache.V[i])
             yᵢ = 0
             for j in 1:i-1
-                yᵢ += int.tableau.q.a[i,j] * cache.V[j][k]
+                yᵢ += tableau(int).q.a[i,j] * int.cache.V[j][k]
             end
-            cache.Q[i][k] = cache.q̅[k] + int.Δt * yᵢ
+            int.cache.Q[i][k] = sol.q̅[k] + timestep(int) * yᵢ
         end
-        tᵢ = cache.t̅ + int.Δt * int.tableau.q.c[i]
-        int.equation.v(tᵢ, cache.Q[i], cache.V[i])
+        tᵢ = sol.t̅ + timestep(int) * tableau(int).q.c[i]
+        equation(int).v(tᵢ, int.cache.Q[i], int.cache.V[i])
     end
 
     # compute final update
-    update_solution!(cache.q, cache.V, int.tableau.q.b, int.Δt)
-
-    # take care of periodic solutions
-    cut_periodic_solution!(cache.q, int.equation.periodicity)
+    update_solution!(sol.q, sol.q̃, int.cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
 end

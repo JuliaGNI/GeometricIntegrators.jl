@@ -175,7 +175,7 @@ Nonlinear function cache for Discontinuous Galerkin Variational Integrator.
 * `g`:  projection evaluated across the jump at tₙ
 * `g̅`:  projection evaluated across the jump at tₙ₊₁
 """
-struct NonlinearFunctionCacheDGVIPI{ST,D,S,QR,FR}
+struct IntegratorCacheDGVIPI{ST,D,S,QR,FR}
     X::Vector{Vector{ST}}
     Q::Vector{Vector{ST}}
     V::Vector{Vector{ST}}
@@ -198,7 +198,7 @@ struct NonlinearFunctionCacheDGVIPI{ST,D,S,QR,FR}
     g::Vector{Vector{ST}}
     g̅::Vector{Vector{ST}}
 
-    function NonlinearFunctionCacheDGVIPI{ST,D,S,QR,FR}() where {ST,D,S,QR,FR}
+    function IntegratorCacheDGVIPI{ST,D,S,QR,FR}() where {ST,D,S,QR,FR}
         # create internal stage vectors
         X = create_internal_stage_vector(ST,D,S)
         Q = create_internal_stage_vector(ST,D,QR)
@@ -231,7 +231,7 @@ end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVIPI{DT,TT,D,S,QR,FR}) where {ST,DT,TT,D,S,QR,FR}
-    cache = NonlinearFunctionCacheDGVIPI{ST,D,S,QR,FR}()
+    cache = IntegratorCacheDGVIPI{ST,D,S,QR,FR}()
 
     quote
         @assert length(x) == length(b)
@@ -246,7 +246,7 @@ end
 end
 
 
-function compute_stages!(x, cache::NonlinearFunctionCacheDGVIPI{ST,D,S}, params::ParametersDGVIPI{DT,TT,D,S}) where {ST,DT,TT,D,S}
+function compute_stages!(x, cache::IntegratorCacheDGVIPI{ST,D,S}, params::ParametersDGVIPI{DT,TT,D,S}) where {ST,DT,TT,D,S}
     # copy x to X
     for i in 1:S
         for k in 1:D
@@ -274,7 +274,7 @@ end
 
 
 "Compute solution at quadrature nodes and across jump."
-function compute_stages_q!(cache::NonlinearFunctionCacheDGVIPI{ST,D,S,R},
+function compute_stages_q!(cache::IntegratorCacheDGVIPI{ST,D,S,R},
                            params::ParametersDGVIPI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
     local q::ST
@@ -313,7 +313,7 @@ end
 
 
 "Compute velocities at quadrature nodes."
-function compute_stages_v!(cache::NonlinearFunctionCacheDGVIPI{ST,D,S,R},
+function compute_stages_v!(cache::IntegratorCacheDGVIPI{ST,D,S,R},
                            params::ParametersDGVIPI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local v::ST
 
@@ -330,7 +330,7 @@ end
 
 
 "Compute one-form and forces at quadrature nodes."
-function compute_stages_p!(cache::NonlinearFunctionCacheDGVIPI{ST,D,S,R},
+function compute_stages_p!(cache::IntegratorCacheDGVIPI{ST,D,S,R},
                            params::ParametersDGVIPI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
     local tᵢ::TT
@@ -344,7 +344,7 @@ function compute_stages_p!(cache::NonlinearFunctionCacheDGVIPI{ST,D,S,R},
 end
 
 
-function compute_stages_λ!(cache::NonlinearFunctionCacheDGVIPI{ST,D,S,QR,FR},
+function compute_stages_λ!(cache::IntegratorCacheDGVIPI{ST,D,S,QR,FR},
                            params::ParametersDGVIPI{DT,TT,D,S,QR,FR}) where {ST,DT,TT,D,S,QR,FR}
 
     local t₀::TT = params.t
@@ -367,7 +367,7 @@ function compute_stages_λ!(cache::NonlinearFunctionCacheDGVIPI{ST,D,S,QR,FR},
 end
 
 
-function compute_rhs!(b::Vector{ST}, cache::NonlinearFunctionCacheDGVIPI{ST,D,S,QR,FR},
+function compute_rhs!(b::Vector{ST}, cache::IntegratorCacheDGVIPI{ST,D,S,QR,FR},
                 params::ParametersDGVIPI{DT,TT,D,S,QR,FR}) where {ST,DT,TT,D,S,QR,FR}
 
     local z::ST
@@ -435,7 +435,7 @@ struct IntegratorDGVIPI{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis,JT<:Discont
     q⁻::Vector{DT}
     q⁺::Vector{DT}
 
-    cache::NonlinearFunctionCacheDGVIPI{DT}
+    cache::IntegratorCacheDGVIPI{DT}
 end
 
 function IntegratorDGVIPI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P},
@@ -456,7 +456,7 @@ function IntegratorDGVIPI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}
     q⁺ = zeros(DT,D)
 
     # create cache for internal stage vectors and update vectors
-    cache = NonlinearFunctionCacheDGVIPI{DT,D,S,R,QN}()
+    cache = IntegratorCacheDGVIPI{DT,D,S,R,QN}()
 
     # create params
     params = ParametersDGVIPI(equation.α, equation.f, equation.g,
@@ -492,7 +492,7 @@ function initialize!(int::IntegratorDGVIPI, sol::Union{SolutionPODE, SolutionPDA
 end
 
 
-function update_solution!(int::IntegratorDGVIPI{DT,TT}, cache::NonlinearFunctionCacheDGVIPI{DT}) where {DT,TT}
+function update_solution!(int::IntegratorDGVIPI{DT,TT}, cache::IntegratorCacheDGVIPI{DT}) where {DT,TT}
     int.q  .= cache.q̅
     int.q⁻ .= cache.q̅⁻
     int.q⁺ .= cache.q̅⁺

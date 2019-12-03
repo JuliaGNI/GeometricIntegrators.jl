@@ -178,41 +178,44 @@ function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT,N},
     @assert n2 ≥ n1
     @assert n2 ≤ sol.ntime
 
-    cache = create_integrator_cache(int)
+    asol = AtomisticSolution(equation(int))
 
-    try
-        # loop over initial conditions showing progress bar
-        for m in m1:m2
-            # get cache from solution
-            set_solution!(cache, get_initial_conditions(sol, m, n1), n1-1)
-            initialize!(int, cache)
+    # loop over initial conditions showing progress bar
+    for m in m1:m2
+        # get cache from solution
+        get_initial_conditions!(sol, asol, m, n1)
+        initialize!(int, asol)
 
-            # loop over time steps
-            for n in n1:n2
+        # loop over time steps
+        for n in n1:n2
+            # try
                 # integrate one initial condition for one time step
-                integrate_step!(int, cache)
+                integrate_step!(int, asol)
+
+                # take care of periodic solutions
+                cut_periodic_solution!(asol, periodicity(equation(int)))
 
                 # copy solution from cache to solution
-                set_solution!(sol, get_solution(cache)..., n, m)
-            end
-        end
-    catch ex
-        tstr = " in time step " * string(n)
-
-        if m1 ≠ m2
-            tstr *= " for initial condition " * string(m)
-        end
-
-        tstr *= "."
-
-        if isa(ex, DomainError)
-            @warn("Domain error", tstr)
-        elseif isa(ex, ErrorException)
-            @warn("Simulation exited early", tstr)
-            @warn(ex.msg)
-        else
-            @warn(str(typeof(ex)), tstr)
-            throw(ex)
+                set_solution!(sol, asol, n, m)
+            # catch ex
+            #     tstr = " in time step " * string(n)
+            #
+            #     if m1 ≠ m2
+            #         tstr *= " for initial condition " * string(m)
+            #     end
+            #
+            #     tstr *= "."
+            #
+            #     if isa(ex, DomainError)
+            #         @warn("Domain error" * tstr)
+            #     elseif isa(ex, ErrorException)
+            #         @warn("Simulation exited early" * tstr)
+            #         @warn(ex.msg)
+            #     else
+            #         @warn(string(typeof(ex)) * tstr)
+            #         throw(ex)
+            #     end
+            # end
         end
     end
 end
@@ -279,7 +282,7 @@ function integrate!(int::StochasticIntegrator{DT,TT}, sol::StochasticSolution{DT
             @warn("Simulation exited early", tstr)
             @warn(ex.msg)
         else
-            @warn(str(typeof(ex)), tstr)
+            @warn(string(typeof(ex)), tstr)
             throw(ex)
         end
     end
