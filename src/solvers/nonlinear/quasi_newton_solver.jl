@@ -178,7 +178,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
             residual!(s.status, s.δx, s.x, s.y₀)
 
             if check_solver_converged(s.status, s.params) && s.status.i ≥ s.params.nmin && !(n > 0)
-                if s.status.i > DEFAULT_nwarn
+                if s.params.nwarn > 0 && s.status.i ≥ s.params.nwarn
                     println("WARNING: Quasi-Newton Solver took ", s.status.i, " iterations.")
                 end
                 break

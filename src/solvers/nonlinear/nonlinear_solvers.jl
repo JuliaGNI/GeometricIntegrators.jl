@@ -11,13 +11,10 @@ function solve!(s::NonlinearSolver{T}, x₀::Vector{T}) where {T}
 end
 
 
-# default parameters for nonlinear solvers
-const DEFAULT_nwarn=100
-
-
 struct NonlinearSolverParameters{T}
     nmin::Int   # minimum number of iterations
     nmax::Int   # maximum number of iterations
+    nwarn::Int  # warn if number of iterations is larger than nwarn
 
     atol::T     # absolute tolerance
     rtol::T     # relative tolerance
@@ -31,9 +28,10 @@ struct NonlinearSolverParameters{T}
     rtol_break::T
     stol_break::T
 
-    function NonlinearSolverParameters{T}(nmin, nmax, atol, rtol, stol, atol_break, rtol_break, stol_break) where {T}
+    function NonlinearSolverParameters{T}(nmin, nmax, nwarn, atol, rtol, stol, atol_break, rtol_break, stol_break) where {T}
         @assert nmin ≥ 0
         @assert nmax > 0
+        @assert nwarn ≥ 0
         @assert atol > 0
         @assert rtol > 0
         @assert stol > 0
@@ -41,13 +39,14 @@ struct NonlinearSolverParameters{T}
         @assert rtol_break > 0
         @assert stol_break > 0
 
-        new(nmin, nmax, atol, rtol, stol, atol^2, rtol^2, stol^2, atol_break, rtol_break, stol_break)
+        new(nmin, nmax, nwarn, atol, rtol, stol, atol^2, rtol^2, stol^2, atol_break, rtol_break, stol_break)
     end
 end
 
 function NonlinearSolverParameters(T)
     NonlinearSolverParameters{T}(get_config(:nls_nmin),
                                  get_config(:nls_nmax),
+                                 get_config(:nls_nwarn),
                                  get_config(:nls_atol),
                                  get_config(:nls_rtol),
                                  get_config(:nls_stol),
