@@ -157,7 +157,98 @@ mutable struct ParametersVPARK{DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT} <: Parameters{DT,TT
 end
 
 
-function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
+"""
+Variational partitioned additive Runge-Kutta integrator cache.
+
+### Fields
+
+* `n`: time step number
+* `t`: time of current time step
+* `t̅`: time of previous time step
+* `q`: current solution of q
+* `q̅`: previous solution of q
+* `p`: current solution of p
+* `p̅`: previous solution of p
+* `v`: vector field of q
+* `v̅`: vector field of q̅
+* `f`: vector field of p
+* `f̅`: vector field of p̅
+* `q̃`: initial guess of q
+* `p̃`: initial guess of p
+* `ṽ`: initial guess of v
+* `f̃`: initial guess of f
+* `s̃`: holds shift due to periodicity of solution
+* `Q`: internal stages of q
+* `P`: internal stages of p
+* `V`: internal stages of v
+* `F`: internal stages of f
+* `Y`: vector field of internal stages of q
+* `Z`: vector field of internal stages of p
+"""
+mutable struct IntegratorCacheVPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
+    μ::Vector{ST}
+    μ̅::Vector{ST}
+
+    q̃::Vector{ST}
+    p̃::Vector{ST}
+    ṽ::Vector{ST}
+    f̃::Vector{ST}
+    s̃::Vector{ST}
+
+    Qi::Vector{Vector{ST}}
+    Pi::Vector{Vector{ST}}
+    Vi::Vector{Vector{ST}}
+    Fi::Vector{Vector{ST}}
+    Yi::Vector{Vector{ST}}
+    Zi::Vector{Vector{ST}}
+    Φi::Vector{Vector{ST}}
+
+    Qp::Vector{Vector{ST}}
+    Pp::Vector{Vector{ST}}
+    Λp::Vector{Vector{ST}}
+    Up::Vector{Vector{ST}}
+    Gp::Vector{Vector{ST}}
+    Yp::Vector{Vector{ST}}
+    Zp::Vector{Vector{ST}}
+    Φp::Vector{Vector{ST}}
+
+    function IntegratorCacheVPARK{ST,TT,D,S,R}() where {ST,TT,D,S,R}
+        μ = zeros(ST,D)
+        μ̅ = zeros(ST,D)
+
+        # create temporary vectors
+        q̃ = zeros(ST,D)
+        p̃ = zeros(ST,D)
+        ṽ = zeros(ST,D)
+        f̃ = zeros(ST,D)
+        s̃ = zeros(ST,D)
+
+        # create internal stage vectors
+        Qi = create_internal_stage_vector(ST, D, S)
+        Pi = create_internal_stage_vector(ST, D, S)
+        Vi = create_internal_stage_vector(ST, D, S)
+        Fi = create_internal_stage_vector(ST, D, S)
+        Yi = create_internal_stage_vector(ST, D, S)
+        Zi = create_internal_stage_vector(ST, D, S)
+        Φi = create_internal_stage_vector(ST, D, S)
+
+        Qp = create_internal_stage_vector(ST, D, R)
+        Pp = create_internal_stage_vector(ST, D, R)
+        Λp = create_internal_stage_vector(ST, D, R)
+        Up = create_internal_stage_vector(ST, D, R)
+        Gp = create_internal_stage_vector(ST, D, R)
+        Yp = create_internal_stage_vector(ST, D, R)
+        Zp = create_internal_stage_vector(ST, D, R)
+        Φp = create_internal_stage_vector(ST, D, R)
+
+        new(μ, μ̅, q̃, p̃, ṽ, f̃, s̃,
+            Qi, Pi, Vi, Fi, Yi, Zi, Φi,
+            Qp, Pp, Λp, Up, Gp, Yp, Zp, Φp)
+    end
+end
+
+
+function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVPARK{ST,TT,D,S,R},
                                         params::ParametersVPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local tpᵢ::TT
     local tλᵢ::TT

@@ -54,7 +54,7 @@ function integrate_step!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomisticSolu
     compute_stages!(int.solver.x, int.cache, int.params)
 
     # compute final update
-    update_solution!(int, cache)
+    update_solution!(int, sol)
 
     # copy solution to initial guess
     update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
