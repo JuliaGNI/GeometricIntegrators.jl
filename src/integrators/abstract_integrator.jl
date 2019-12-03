@@ -25,6 +25,8 @@ timestep(integrator::Integrator) = error("timestep() not implemented for ", type
 
 Base.ndims(integrator::Integrator) = ndims(equation(integrator))
 
+eachdim(integrator::Integrator) = 1:ndims(integrator)
+
 
 abstract type Parameters{DT,TT} end
 

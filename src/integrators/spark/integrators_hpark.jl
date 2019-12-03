@@ -167,13 +167,14 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 struct IntegratorHPARK{DT, TT, ET <: PDAE{DT,TT},
                                PT <: ParametersHPARK{DT,TT},
                                ST <: NonlinearSolver{DT},
-                               IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorSPARK{DT, TT}
+                               IT <: InitialGuessPODE{DT,TT}, D, S, R} <: AbstractIntegratorSPARK{DT, TT}
     equation::ET
     tableau::TableauHPARK{TT}
 
     params::PT
     solver::ST
     iguess::IT
+    cache::IntegratorCacheVPARK{DT, TT, D, S, R}
 end
 
 function IntegratorHPARK(equation::PDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
@@ -195,87 +196,84 @@ function IntegratorHPARK(equation::PDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
     # create initial guess
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
+    # create cache
+    cache = IntegratorCacheVPARK{DT, TT, D, S, R}()
+
     # create integrator
-    IntegratorHPARK{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess)}(
-                                        equation, tableau, params, solver, iguess)
+    IntegratorHPARK{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, R}(
+                                        equation, tableau, params, solver, iguess, cache)
 end
 
 equation(int::IntegratorHPARK) = int.equation
 timestep(int::IntegratorHPARK) = int.params.Δt
 tableau(int::IntegratorHPARK) = int.tableau
-nstages(int::IntegratorHPARK) = int.tableau.s
 pstages(int::IntegratorHPARK) = int.tableau.r
 
 
-function create_integrator_cache(int::IntegratorHPARK{DT,TT}) where {DT,TT}
-    IntegratorCacheVPARK{DT, TT, ndims(int), nstages(int), pstages(int)}()
-end
-
-
-function update_params!(params::ParametersHPARK, cache::IntegratorCacheVPARK)
+function update_params!(params::ParametersHPARK, sol::AtomisticSolutionPDAE)
     # set time for nonlinear solver and copy previous solution
-    params.t  = cache.t
-    params.q .= cache.q
-    params.p .= cache.p
-    params.λ .= cache.λ
+    params.t  = sol.t
+    params.q .= sol.q
+    params.p .= sol.p
+    params.λ .= sol.λ
 end
 
 
-function initialize!(int::IntegratorHPARK, cache::IntegratorCacheVPARK)
-    cache.t̅ = cache.t - timestep(int)
+function initialize!(int::IntegratorHPARK, sol::AtomisticSolutionPDAE)
+    sol.t̅ = sol.t - timestep(int)
 
-    equation(int).v(cache.t, cache.q, cache.p, cache.v)
-    equation(int).f(cache.t, cache.q, cache.p, cache.f)
+    equation(int).v(sol.t, sol.q, sol.p, sol.v)
+    equation(int).f(sol.t, sol.q, sol.p, sol.f)
 
-    initialize!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f,
-                            cache.t̅, cache.q̅, cache.p̅, cache.v̅, cache.f̅)
+    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
+                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
 end
 
 
-function initial_guess!(int::IntegratorHPARK, cache::IntegratorCacheVPARK)
-    for i in 1:nstages(int)
-        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
-                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
-                              cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
+function initial_guess!(int::IntegratorHPARK, sol::AtomisticSolutionPDAE)
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              int.cache.q̃, int.cache.p̃, int.cache.ṽ, int.cache.f̃,
                               tableau(int).q.c[i], tableau(int).p.c[i])
 
-        for k in 1:ndims(int)
-            int.solver.x[2*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - cache.q[k])/timestep(int)
-            int.solver.x[2*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - cache.p[k])/timestep(int)
+        for k in eachdim(int)
+            int.solver.x[2*(ndims(int)*(i-1)+k-1)+1] = (int.cache.q̃[k] - sol.q[k])/timestep(int)
+            int.solver.x[2*(ndims(int)*(i-1)+k-1)+2] = (int.cache.p̃[k] - sol.p[k])/timestep(int)
         end
     end
 
     for i in 1:pstages(int)
-        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
-                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
-                              cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              int.cache.q̃, int.cache.p̃, int.cache.ṽ, int.cache.f̃,
                               tableau(int).q̃.c[i], tableau(int).p̃.c[i])
 
-        for k in 1:ndims(int)
-            int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - cache.q[k])/timestep(int)
-            int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - cache.p[k])/timestep(int)
+        for k in eachdim(int)
+            int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+1] = (int.cache.q̃[k] - sol.q[k])/timestep(int)
+            int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+2] = (int.cache.p̃[k] - sol.p[k])/timestep(int)
             int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+3] = 0
         end
     end
 
     if int.params.t_λ.c[1] == 0
         for k in 1:ndims(int)
-            int.solver.x[2*ndims(int)*nstages(int)+3*(k-1)+3] = cache.λ[k]
+            int.solver.x[2*ndims(int)*nstages(int)+3*(k-1)+3] = int.cache.λ[k]
         end
     end
 end
 
 
 "Integrate DAE with variational partitioned additive Runge-Kutta integrator."
-function integrate_step!(int::IntegratorHPARK{DT,TT}, cache::IntegratorCacheVPARK{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorHPARK{DT,TT}, sol::AtomisticSolutionPDAE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
-    update_params!(int.params, cache)
+    update_params!(int.params, sol)
 
     # compute initial guess
-    initial_guess!(int, cache)
+    initial_guess!(int, sol)
 
     # reset cache
-    reset!(cache, timestep(int))
+    reset!(sol, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
@@ -287,20 +285,17 @@ function integrate_step!(int::IntegratorHPARK{DT,TT}, cache::IntegratorCacheVPAR
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, cache, int.params)
+    compute_stages!(int.solver.x, int.cache, int.params)
 
     # compute final update
-    update_solution!(cache.q, cache.Vi, int.params.t_q.b, timestep(int))
-    update_solution!(cache.p, cache.Fi, int.params.t_p.b, timestep(int))
+    update_solution!(sol.q, sol.q̃, int.cache.Vi, int.params.t_q.b, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.Fi, int.params.t_p.b, timestep(int))
 
     # compute projection
-    update_solution!(cache.q, cache.Up, int.params.t_q.β, timestep(int))
-    update_solution!(cache.p, cache.Gp, int.params.t_p.β, timestep(int))
-    # TODO # update_multiplier!(cache.λ, cache.Λp, int.params.t_λ.b)
+    update_solution!(sol.q, sol.q̃, int.cache.Up, int.params.t_q.β, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.Gp, int.params.t_p.β, timestep(int))
+    # TODO # update_multiplier!(int.cache.λ, int.cache.Λp, int.params.t_λ.b)
 
     # copy solution to initial guess
-    update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)
-
-    # take care of periodic solutions
-    cut_periodic_solution!(cache, equation(int).periodicity)
+    update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

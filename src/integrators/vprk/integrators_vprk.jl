@@ -82,7 +82,7 @@ end
                 params::ParametersVPRK{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
-    cache = NonlinearFunctionCacheVPRK{ST}(D, S)
+    cache = IntegratorCacheVPRK{ST, D, S}()
 
     quote
         @assert length(x) == length(b)
@@ -97,10 +97,11 @@ end
 "Variational partitioned Runge-Kutta integrator."
 struct IntegratorVPRK{DT, TT, PT <: ParametersVPRK{DT,TT},
                               ST <: NonlinearSolver{DT},
-                              IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT}
+                              IT <: InitialGuessPODE{DT,TT}, D, S} <: AbstractIntegratorVPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
+    cache::IntegratorCacheVPRK{DT,D,S}
 end
 
 function IntegratorVPRK(equation::ET, tableau::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
@@ -116,8 +117,11 @@ function IntegratorVPRK(equation::ET, tableau::TableauVPRK{TT}, Δt::TT) where {
     # create initial guess
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
+    # create cache
+    cache = IntegratorCacheVPRK{DT,D,S}()
+
     # create integrator
-    IntegratorVPRK{DT, TT, typeof(params), typeof(solver), typeof(iguess)}(params, solver, iguess)
+    IntegratorVPRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), D, S}(params, solver, iguess, cache)
 end
 
 
@@ -130,30 +134,30 @@ tableau(integrator::IntegratorVPRK) = integrator.params.tab
 nstages(integrator::IntegratorVPRK) = integrator.params.tab.s
 
 
-function initial_guess!(int::IntegratorVPRK, cache::IntegratorCacheVPRK)
-    for i in 1:nstages(int)
-        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
-                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
-                              cache.q̃, cache.ṽ,
+function initial_guess!(int::IntegratorVPRK, sol::AtomisticSolutionPODE)
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              int.cache.q̃, int.cache.ṽ,
                               tableau(int).q.c[i])
 
-        for k in 1:ndims(int)
-            int.solver.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
+        for k in eachdim(int)
+            int.solver.x[ndims(int)*(i-1)+k] = int.cache.ṽ[k]
         end
     end
 end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorVPRK{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
-    update_params!(int.params, cache)
+    update_params!(int.params, sol)
 
     # compute initial guess
-    initial_guess!(int, cache)
+    initial_guess!(int, sol)
 
-    # reset cache
-    reset!(cache, timestep(int))
+    # reset solution
+    reset!(sol, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
@@ -165,14 +169,11 @@ function integrate_step!(int::IntegratorVPRK{DT,TT}, cache::IntegratorCacheVPRK{
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, cache.Q, cache.V, cache.P, cache.F, int.params)
+    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.params)
 
     # compute final update
-    update_solution!(int, cache)
+    update_solution!(int, sol)
 
     # copy solution to initial guess
-    update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)
-
-    # take care of periodic solutions
-    cut_periodic_solution!(cache, equation(int).periodicity)
+    update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end
