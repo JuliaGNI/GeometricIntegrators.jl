@@ -300,7 +300,7 @@ function integrate!(int::StochasticIntegrator{DT,TT}, sol::StochasticSolution{DT
             @warn("Simulation exited early", tstr)
             @warn(ex.msg)
         else
-            @warn(str(typeof(ex)), tstr)
+            @warn(string(typeof(ex)), tstr)
             throw(ex)
         end
     end
