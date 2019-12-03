@@ -28,22 +28,22 @@ end
 
 
 "Integrate an implicit DAE with a specialised partitioned additive Runge-Kutta integrator."
-function integrate_step!(int::AbstractIntegratorSPARK{DT,TT}, cache::IntegratorCacheSPARK{DT,TT}) where {DT,TT}
+function integrate_step!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomisticSolutionPDAE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
-    update_params!(int.params, cache)
+    update_params!(int.params, sol)
 
     # compute initial guess
-    initial_guess!(int, cache)
+    initial_guess!(int, sol)
 
     # reset cache
-    reset!(cache, timestep(int))
+    reset!(sol, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
 
     # check_jacobian(int.solver)
     # print_jacobian(int.solver)
-    
+
     # print solver status
     print_solver_status(int.solver.status, int.solver.params)
 
@@ -51,14 +51,11 @@ function integrate_step!(int::AbstractIntegratorSPARK{DT,TT}, cache::IntegratorC
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, cache, int.params)
+    compute_stages!(int.solver.x, int.cache, int.params)
 
     # compute final update
     update_solution!(int, cache)
 
     # copy solution to initial guess
-    update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)
-
-    # take care of periodic solutions
-    cut_periodic_solution!(cache, equation(int).periodicity)
+    update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

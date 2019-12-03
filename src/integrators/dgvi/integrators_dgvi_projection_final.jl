@@ -106,7 +106,7 @@ end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVIP1{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
-    cache = NonlinearFunctionCacheDGVI{ST,D,S,R}()
+    cache = IntegratorCacheDGVI{ST,D,S,R}()
 
     quote
         @assert length(x) == length(b)
@@ -118,7 +118,7 @@ end
 end
 
 
-function compute_stages!(x, cache::NonlinearFunctionCacheDGVI{ST,D,S}, params::ParametersDGVIP1{DT,TT,D,S}) where {ST,DT,TT,D,S}
+function compute_stages!(x, cache::IntegratorCacheDGVI{ST,D,S}, params::ParametersDGVIP1{DT,TT,D,S}) where {ST,DT,TT,D,S}
     # copy x to X
     for i in 1:S
         for k in 1:D
@@ -151,7 +151,7 @@ end
 
 
 "Compute solution at quadrature nodes and across jump."
-function compute_stages_q!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
+function compute_stages_q!(cache::IntegratorCacheDGVI{ST,D,S,R},
                            params::ParametersDGVIP1{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
     local q::ST
@@ -191,7 +191,7 @@ end
 
 
 "Compute velocities at quadrature nodes."
-function compute_stages_v!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
+function compute_stages_v!(cache::IntegratorCacheDGVI{ST,D,S,R},
                            params::ParametersDGVIP1{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local v::ST
 
@@ -208,7 +208,7 @@ end
 
 
 "Compute one-form and forces at quadrature nodes."
-function compute_stages_p!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
+function compute_stages_p!(cache::IntegratorCacheDGVI{ST,D,S,R},
                            params::ParametersDGVIP1{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
     local tᵢ::TT
@@ -222,7 +222,7 @@ function compute_stages_p!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
 end
 
 
-function compute_stages_λ!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
+function compute_stages_λ!(cache::IntegratorCacheDGVI{ST,D,S,R},
                            params::ParametersDGVIP1{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
     local t₀::TT = params.t
@@ -276,7 +276,7 @@ function compute_stages_λ!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
 end
 
 
-function compute_rhs!(b::Vector{ST}, cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
+function compute_rhs!(b::Vector{ST}, cache::IntegratorCacheDGVI{ST,D,S,R},
                 params::ParametersDGVIP1{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
     local z::ST
@@ -345,7 +345,7 @@ struct IntegratorDGVIP1{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis} <: Determi
     q⁻::Vector{DT}
     q⁺::Vector{DT}
 
-    cache::NonlinearFunctionCacheDGVI{DT}
+    cache::IntegratorCacheDGVI{DT}
 end
 
 function IntegratorDGVIP1(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P},
@@ -366,7 +366,7 @@ function IntegratorDGVIP1(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}
     q⁺ = zeros(DT,D)
 
     # create cache for internal stage vectors and update vectors
-    cache = NonlinearFunctionCacheDGVI{DT,D,S,R}()
+    cache = IntegratorCacheDGVI{DT,D,S,R}()
 
     # create params
     params = ParametersDGVIP1(equation.α, equation.f, equation.g,
@@ -403,7 +403,7 @@ function initialize!(int::IntegratorDGVIP1, sol::Union{SolutionPODE, SolutionPDA
 end
 
 
-function update_solution!(int::IntegratorDGVIP1{DT,TT}, cache::NonlinearFunctionCacheDGVI{DT}) where {DT,TT}
+function update_solution!(int::IntegratorDGVIP1{DT,TT}, cache::IntegratorCacheDGVI{DT}) where {DT,TT}
     int.q  .= cache.q̅
     int.q⁻ .= cache.q̅⁻
     int.q⁺ .= cache.q̅⁺

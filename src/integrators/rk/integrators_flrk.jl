@@ -318,10 +318,4 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
 
     # copy solution to initial guess
     update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q[m])
-
-    # take care of periodic solutions
-    cut_periodic_solution!(int.q[m], int.equation.periodicity)
-
-    # copy to solution
-    copy_solution!(sol, int.q[m], int.p[m], n, m)
 end

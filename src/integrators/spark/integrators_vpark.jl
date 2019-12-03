@@ -157,101 +157,6 @@ mutable struct ParametersVPARK{DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT} <: Parameters{DT,TT
 end
 
 
-@doc raw"""
-Variational partitioned additive Runge-Kutta integrator.
-
-This integrator solves the following system of equations for the internal stages,
-```math
-\begin{align}
-Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} U_{n,j} , & i &= 1, ..., s , \\
-P_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} a_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} G_{n,j} , & i &= 1, ..., s , \\
-\tilde{Q}_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} U_{n,j} , & i &= 1, ..., r , \\
-\tilde{P}_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} G_{n,j} , & i &= 1, ..., r , \\
-\tilde{\Phi}_{n,i} &= 0 , & i &= 1, ..., r ,
-\end{align}
-```
-with definitions
-```math
-\begin{align}
-P_{n,i} &= \frac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , & i &= 1, ..., s , \\
-F_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i &= 1, ..., s , \\
-U_{n,i} &= \hphantom{-} \frac{\partial \phi}{\partial p} (\tilde{Q}_{n,i}, \tilde{P}_{n,i})^{T} \Lambda_{n,i} , & i &= 1, ..., r , \\
-G_{n,i} &=           -  \frac{\partial \phi}{\partial q} (\tilde{Q}_{n,i}, \tilde{P}_{n,i})^{T} \Lambda_{n,i} , & i &= 1, ..., r , \\
-\tilde{\Phi}_{n,i} &= \phi(\tilde{Q}_{n,i}, \tilde{P}_{n,i}) , & i &= 1, ..., r ,
-\end{align}
-```
-and update rule
-```math
-\begin{align}
-q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} V_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} U_{n,i} , \\
-p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} G_{n,i} .
-\end{align}
-```
-"""
-struct IntegratorVPARK{DT, TT, ET <: IDAE{DT,TT},
-                               PT <: ParametersVPARK{DT,TT},
-                               ST <: NonlinearSolver{DT},
-                               IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVSPARK{DT, TT}
-    equation::ET
-    tableau::TableauVPARK{TT}
-
-    params::PT
-    solver::ST
-    iguess::IT
-end
-
-function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
-                         tableau::TableauVPARK{TT}, Δt::TT) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
-    D = equation.d
-    S = tableau.s
-    R = tableau.r
-
-    N = 3*D*S + 3*D*R
-
-    if isdefined(tableau, :d)
-        N += D
-        d_v = tableau.d
-    else
-        d_v = DT[]
-    end
-
-    # create params
-    params = ParametersVPARK{DT,TT,D,S,R,FT,PT,UT,GT,ϕT}(
-                                equation.ϑ, equation.f, equation.u, equation.g, equation.ϕ, Δt,
-                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, d_v)
-
-    # create solver
-    solver = create_nonlinear_solver(DT, N, params)
-
-    # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
-
-    # create integrator
-    IntegratorVPARK{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess)}(
-                                        equation, tableau, params, solver, iguess)
-end
-
-equation(int::IntegratorVPARK) = int.equation
-timestep(int::IntegratorVPARK) = int.params.Δt
-tableau(int::IntegratorVPARK) = int.tableau
-nstages(int::IntegratorVPARK) = int.tableau.s
-pstages(int::IntegratorVPARK) = int.tableau.r
-
-
-# function create_integrator_cache(int::IntegratorVPARK{DT,TT}) where {DT,TT}
-#     IntegratorCacheSPARK{DT, TT, ndims(int), nstages(int), pstages(int)}()
-# end
-
-
-function update_params!(params::ParametersVPARK, cache::IntegratorCacheSPARK)
-    # set time for nonlinear solver and copy previous solution
-    params.t  = cache.t
-    params.q .= cache.q
-    params.p .= cache.p
-    params.λ .= cache.λ
-end
-
-
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
                                         params::ParametersVPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local tpᵢ::TT
@@ -371,54 +276,158 @@ end
 end
 
 
-function initial_guess!(int::IntegratorVPARK, cache::IntegratorCacheSPARK)
-    for i in 1:nstages(int)
-        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
-                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
-                              cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
+@doc raw"""
+Variational partitioned additive Runge-Kutta integrator.
+
+This integrator solves the following system of equations for the internal stages,
+```math
+\begin{align}
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} U_{n,j} , & i &= 1, ..., s , \\
+P_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} a_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} G_{n,j} , & i &= 1, ..., s , \\
+\tilde{Q}_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} U_{n,j} , & i &= 1, ..., r , \\
+\tilde{P}_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} G_{n,j} , & i &= 1, ..., r , \\
+\tilde{\Phi}_{n,i} &= 0 , & i &= 1, ..., r ,
+\end{align}
+```
+with definitions
+```math
+\begin{align}
+P_{n,i} &= \frac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , & i &= 1, ..., s , \\
+F_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i &= 1, ..., s , \\
+U_{n,i} &= \hphantom{-} \frac{\partial \phi}{\partial p} (\tilde{Q}_{n,i}, \tilde{P}_{n,i})^{T} \Lambda_{n,i} , & i &= 1, ..., r , \\
+G_{n,i} &=           -  \frac{\partial \phi}{\partial q} (\tilde{Q}_{n,i}, \tilde{P}_{n,i})^{T} \Lambda_{n,i} , & i &= 1, ..., r , \\
+\tilde{\Phi}_{n,i} &= \phi(\tilde{Q}_{n,i}, \tilde{P}_{n,i}) , & i &= 1, ..., r ,
+\end{align}
+```
+and update rule
+```math
+\begin{align}
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} V_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} U_{n,i} , \\
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} G_{n,i} .
+\end{align}
+```
+"""
+struct IntegratorVPARK{DT, TT, ET <: IDAE{DT,TT},
+                               PT <: ParametersVPARK{DT,TT},
+                               ST <: NonlinearSolver{DT},
+                               IT <: InitialGuessPODE{DT,TT}, D, S, R} <: AbstractIntegratorSPARK{DT, TT}
+    equation::ET
+    tableau::TableauVPARK{TT}
+
+    params::PT
+    solver::ST
+    iguess::IT
+    cache::IntegratorCacheVPARK{DT, TT, D, S, R}
+end
+
+function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
+                         tableau::TableauVPARK{TT}, Δt::TT) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
+    D = equation.d
+    S = tableau.s
+    R = tableau.r
+
+    N = 3*D*S + 3*D*R
+
+    if isdefined(tableau, :d)
+        N += D
+        d_v = tableau.d
+    else
+        d_v = DT[]
+    end
+
+    # create params
+    params = ParametersVPARK{DT,TT,D,S,R,FT,PT,UT,GT,ϕT}(
+                                equation.ϑ, equation.f, equation.u, equation.g, equation.ϕ, Δt,
+                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, d_v)
+
+    # create solver
+    solver = create_nonlinear_solver(DT, N, params)
+
+    # create initial guess
+    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
+
+    # create cache
+    cache = IntegratorCacheVPARK{DT, TT, D, S, R}()
+
+    # create integrator
+    IntegratorVPARK{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, R}(
+                                        equation, tableau, params, solver, iguess, cache)
+end
+
+equation(int::IntegratorVPARK) = int.equation
+timestep(int::IntegratorVPARK) = int.params.Δt
+tableau(int::IntegratorVPARK) = int.tableau
+pstages(int::IntegratorVPARK) = int.tableau.r
+
+
+function update_params!(params::ParametersVPARK, sol::AtomisticSolutionPDAE)
+    # set time for nonlinear solver and copy previous solution
+    params.t  = sol.t
+    params.q .= sol.q
+    params.p .= sol.p
+    params.λ .= sol.λ
+end
+
+
+function initialize!(int::IntegratorVPARK, sol::AtomisticSolutionPDAE)
+    sol.t̅ = sol.t - timestep(int)
+
+    equation(int).v(sol.t, sol.q, sol.p, sol.v)
+    equation(int).f(sol.t, sol.q, sol.p, sol.f)
+
+    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
+                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+end
+
+
+function initial_guess!(int::IntegratorVPARK, sol::AtomisticSolutionPDAE)
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              int.cache.q̃, int.cache.p̃, int.cache.ṽ, int.cache.f̃,
                               tableau(int).q.c[i], tableau(int).p.c[i])
 
-        for k in 1:ndims(int)
-            int.solver.x[3*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - cache.q[k])/timestep(int)
-            int.solver.x[3*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - cache.p[k])/timestep(int)
-            int.solver.x[3*(ndims(int)*(i-1)+k-1)+3] = cache.ṽ[k]
+        for k in eachdim(int)
+            int.solver.x[3*(ndims(int)*(i-1)+k-1)+1] = (int.cache.q̃[k] - sol.q[k])/timestep(int)
+            int.solver.x[3*(ndims(int)*(i-1)+k-1)+2] = (int.cache.p̃[k] - sol.p[k])/timestep(int)
+            int.solver.x[3*(ndims(int)*(i-1)+k-1)+3] = int.cache.ṽ[k]
         end
     end
 
     for i in 1:pstages(int)
-        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
-                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
-                              cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              int.cache.q̃, int.cache.p̃, int.cache.ṽ, int.cache.f̃,
                               tableau(int).q̃.c[i], tableau(int).p̃.c[i])
 
         for k in 1:ndims(int)
-            int.solver.x[3*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - cache.q[k])/timestep(int)
-            int.solver.x[3*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - cache.p[k])/timestep(int)
+            int.solver.x[3*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+1] = (int.cache.q̃[k] - sol.q[k])/timestep(int)
+            int.solver.x[3*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+2] = (int.cache.p̃[k] - sol.p[k])/timestep(int)
             int.solver.x[3*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+3] = 0
         end
     end
 
     if int.params.t_λ.c[1] == 0
-        for k in 1:ndims(int)
-            int.solver.x[3*ndims(int)*nstages(int)+3*(k-1)+3] = cache.λ[k]
+        for k in eachdim(int)
+            int.solver.x[3*ndims(int)*nstages(int)+3*(k-1)+3] = sol.λ[k]
         end
     end
 
     if isdefined(tableau(int), :d)
-        for k in 1:ndims(int)
+        for k in eachdim(int)
             int.solver.x[3*ndims(int)*nstages(int)+3*ndims(int)*pstages(int)+k] = 0
         end
     end
 end
 
 
-function update_solution!(int::IntegratorVPARK{DT,TT}, cache::IntegratorCacheSPARK{DT,TT}) where {DT,TT}
+function update_solution!(int::IntegratorVPARK{DT,TT}, sol::AtomisticSolutionPDAE{DT,TT}) where {DT,TT}
     # compute final update
-    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Vi, int.params.t_q.b, timestep(int))
-    update_solution!(cache.p, cache.pₑᵣᵣ, cache.Fi, int.params.t_p.b, timestep(int))
+    update_solution!(sol.q, sol.q̃, int.cache.Vi, int.params.t_q.b, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.Fi, int.params.t_p.b, timestep(int))
 
     # compute projection
-    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Up, int.params.t_q.β, timestep(int))
-    update_solution!(cache.p, cache.pₑᵣᵣ, cache.Gp, int.params.t_p.β, timestep(int))
-    update_multiplier!(cache.λ, cache.Λp, int.params.t_λ.b)
+    update_solution!(sol.q, sol.q̃, int.cache.Up, int.params.t_q.β, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.Gp, int.params.t_p.β, timestep(int))
+    update_multiplier!(sol.λ, int.cache.Λp, int.params.t_λ.b)
 end

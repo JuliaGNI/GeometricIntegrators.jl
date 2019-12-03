@@ -27,51 +27,61 @@ mutable struct AbstractParametersHSPARK{IT,DT,TT,D,S,R,P,VT,FT,UT,GT,ϕT,tabType
 end
 
 
-function update_params!(params::AbstractParametersHSPARK, cache::IntegratorCacheSPARK)
+function update_params!(params::AbstractParametersHSPARK, sol::AtomisticSolutionPDAE)
     # set time for nonlinear solver and copy previous solution
-    params.t  = cache.t
-    params.q .= cache.q
-    params.p .= cache.p
-    params.λ .= cache.λ
+    params.t  = sol.t
+    params.q .= sol.q
+    params.p .= sol.p
+    params.λ .= sol.λ
 end
 
 
 equation(int::AbstractIntegratorHSPARK) = int.equation
 timestep(int::AbstractIntegratorHSPARK) = int.params.Δt
 tableau(int::AbstractIntegratorHSPARK) = int.tableau
-nstages(int::AbstractIntegratorHSPARK) = int.tableau.s
 pstages(int::AbstractIntegratorHSPARK) = int.tableau.r
 
 
-function initial_guess!(int::AbstractIntegratorHSPARK, cache::IntegratorCacheSPARK)
-    for i in 1:nstages(int)
-        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
-                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
-                              cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
+function initialize!(int::AbstractIntegratorHSPARK, sol::AtomisticSolutionPDAE)
+    sol.t̅ = sol.t - timestep(int)
+
+    equation(int).v(sol.t, sol.q, sol.p, sol.v)
+    equation(int).f(sol.t, sol.q, sol.p, sol.f)
+
+    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
+                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+end
+
+
+function initial_guess!(int::AbstractIntegratorHSPARK, sol::AtomisticSolutionPDAE)
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              int.cache.q̃, int.cache.p̃, int.cache.ṽ, int.cache.f̃,
                               tableau(int).q.c[i], tableau(int).p.c[i])
 
-        for k in 1:ndims(int)
-            int.solver.x[2*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - cache.q[k])/timestep(int)
-            int.solver.x[2*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - cache.p[k])/timestep(int)
+        for k in eachdim(int)
+            int.solver.x[2*(ndims(int)*(i-1)+k-1)+1] = (int.cache.q̃[k] - sol.q[k])/timestep(int)
+            int.solver.x[2*(ndims(int)*(i-1)+k-1)+2] = (int.cache.p̃[k] - sol.p[k])/timestep(int)
         end
     end
 
     for i in 1:pstages(int)
-        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
-                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
-                              cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              int.cache.q̃, int.cache.p̃, int.cache.ṽ, int.cache.f̃,
                               tableau(int).q̃.c[i], tableau(int).p̃.c[i])
 
-        for k in 1:ndims(int)
-            int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - cache.q[k])/timestep(int)
-            int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - cache.p[k])/timestep(int)
+        for k in eachdim(int)
+            int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+1] = (int.cache.q̃[k] - sol.q[k])/timestep(int)
+            int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+2] = (int.cache.p̃[k] - sol.p[k])/timestep(int)
             int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+3] = 0
         end
     end
 
-    if tableau(int).λ.c[1] == 0
-        for k in 1:ndims(int)
-            int.solver.x[2*ndims(int)*nstages(int)+3*(k-1)+3] = cache.λ[k]
+    if int.params.t_λ.c[1] == 0
+        for k in eachdim(int)
+            int.solver.x[2*ndims(int)*nstages(int)+3*(k-1)+3] = sol.λ[k]
         end
     end
 end
