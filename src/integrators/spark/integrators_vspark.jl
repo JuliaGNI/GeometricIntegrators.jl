@@ -39,13 +39,14 @@ struct IntegratorVSPARK{DT, TT, tabType,
                                 ET <: IDAE{DT,TT},
                                 PT <: ParametersVSPARK{DT,TT},
                                 ST <: NonlinearSolver{DT},
-                                IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVSPARK{DT, TT}
+                                IT <: InitialGuessPODE{DT,TT}, D, S, R} <: AbstractIntegratorVSPARK{DT, TT}
     equation::ET
     tableau::AbstractTableauSPARK{tabType,TT}
 
     params::PT
     solver::ST
     iguess::IT
+    cache::IntegratorCacheSPARK{DT,TT,D,S,R}
 end
 
 function IntegratorVSPARK(equation::IDAE{DT,TT,PT,FT,UT,GT,ϕT,VT},
@@ -77,9 +78,12 @@ function IntegratorVSPARK(equation::IDAE{DT,TT,PT,FT,UT,GT,ϕT,VT},
     # create initial guess
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
+    # create cache
+    cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
+
     # create integrator
-    IntegratorVSPARK{DT, TT, ST, typeof(equation), typeof(params), typeof(solver), typeof(iguess)}(
-                                        equation, tableau, params, solver, iguess)
+    IntegratorVSPARK{DT, TT, ST, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, R}(
+                                        equation, tableau, params, solver, iguess, cache)
 end
 
 

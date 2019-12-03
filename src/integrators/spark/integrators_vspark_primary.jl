@@ -38,13 +38,14 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 struct IntegratorVSPARKprimary{DT, TT, ET <: IDAE{DT,TT},
                                        PT <: ParametersVSPARKprimary{DT,TT},
                                        ST <: NonlinearSolver{DT},
-                                       IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVSPARK{DT, TT}
+                                       IT <: InitialGuessPODE{DT,TT}, D, S, R} <: AbstractIntegratorVSPARK{DT, TT}
     equation::ET
     tableau::TableauVSPARKprimary{TT}
 
     params::PT
     solver::ST
     iguess::IT
+    cache::IntegratorCacheSPARK{DT,TT,D,S,R}
 end
 
 function IntegratorVSPARKprimary(equation::IDAE{DT,TT,PT,FT,UT,GT,ϕT,VT},
@@ -76,9 +77,12 @@ function IntegratorVSPARKprimary(equation::IDAE{DT,TT,PT,FT,UT,GT,ϕT,VT},
     # create initial guess
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
+    # create cache
+    cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
+
     # create integrator
-    IntegratorVSPARKprimary{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess)}(
-                                        equation, tableau, params, solver, iguess)
+    IntegratorVSPARKprimary{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, R}(
+                                        equation, tableau, params, solver, iguess, cache)
 end
 
 

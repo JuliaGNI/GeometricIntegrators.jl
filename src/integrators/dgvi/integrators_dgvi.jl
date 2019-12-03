@@ -132,7 +132,7 @@ Nonlinear function cache for Discontinuous Galerkin Variational Integrator.
 * `g`:  projection evaluated across  at tₙ
 * `g̅`:  projection evaluated across at tₙ₊₁
 """
-struct NonlinearFunctionCacheDGVI{ST,D,S,R}
+struct IntegratorCacheDGVI{ST,D,S,R} <: IODEIntegratorCache{ST,D}
     X::Vector{Vector{ST}}
     Q::Vector{Vector{ST}}
     V::Vector{Vector{ST}}
@@ -143,6 +143,7 @@ struct NonlinearFunctionCacheDGVI{ST,D,S,R}
     p̃::Vector{ST}
     ṽ::Vector{ST}
     f̃::Vector{ST}
+    s̃::Vector{ST}
 
     q::Vector{ST}
     q⁻::Vector{ST}
@@ -185,7 +186,7 @@ struct NonlinearFunctionCacheDGVI{ST,D,S,R}
     h⁺::Vector{ST}
     h̅⁻::Vector{ST}
 
-    function NonlinearFunctionCacheDGVI{ST,D,S,R}() where {ST,D,S,R}
+    function IntegratorCacheDGVI{ST,D,S,R}() where {ST,D,S,R}
         # create internal stage vectors
         X = create_internal_stage_vector(ST,D,S)
         Q = create_internal_stage_vector(ST,D,R)
@@ -198,6 +199,7 @@ struct NonlinearFunctionCacheDGVI{ST,D,S,R}
         p̃ = zeros(ST,D)
         ṽ = zeros(ST,D)
         f̃ = zeros(ST,D)
+        s̃ = zeros(ST,D)
 
         # create solution vectors
         q  = zeros(ST,D)
@@ -243,7 +245,7 @@ struct NonlinearFunctionCacheDGVI{ST,D,S,R}
         h̅⁻ = zeros(ST,D)
 
         new(X, Q, V, P, F,
-            q̃, p̃, ṽ, f̃,
+            q̃, p̃, ṽ, f̃, s̃,
             q, q⁻, q⁺, q̅, q̅⁻, q̅⁺,
             p, p̅,
             ϕ, ϕ⁻, ϕ⁺, ϕ̅, ϕ̅⁻, ϕ̅⁺,
@@ -255,82 +257,17 @@ struct NonlinearFunctionCacheDGVI{ST,D,S,R}
 end
 
 
-mutable struct IntegratorCacheDGVI{DT,TT,D,S,R} <: IODEIntegratorCache{DT,D}
-    n::Int
-    t::TT
-    t̅::TT
-
-    q::Vector{DT}
-    q̅::Vector{DT}
-    p::Vector{DT}
-    p̅::Vector{DT}
-
-    v::Vector{DT}
-    v̅::Vector{DT}
-
-    s̃::Vector{DT}
-
-    fcache::NonlinearFunctionCacheDGVI{DT,D,S,R}
-
-    function IntegratorCacheDGVI{DT,TT,D,S,R}() where {DT,TT,D,S,R}
-        # create solution vectors
-        q = zeros(DT,D)
-        q̅ = zeros(DT,D)
-        p = zeros(DT,D)
-        p̅ = zeros(DT,D)
-
-        # create temporary vectors
-        s̃ = zeros(DT,D)
-
-        # create update vectors
-        v = zeros(DT,D)
-        v̅ = zeros(DT,D)
-
-        fcache = NonlinearFunctionCacheDGVI{DT,D,S,R}()
-
-        new(0, zero(TT), zero(TT), q, q̅, p, p̅, v, v̅, s̃, fcache)
-    end
-end
-
-function CommonFunctions.reset!(cache::IntegratorCacheDGVI{DT,TT}, Δt::TT) where {DT,TT}
-    cache.t̅  = cache.t
-    cache.q̅ .= cache.q
-    cache.p̅ .= cache.p
-    cache.t += Δt
-    cache.n += 1
-end
-
-function cut_periodic_solution!(cache::IntegratorCacheDGVI{DT}, periodicity::Vector{DT}) where {DT}
-    cut_periodic_solution!(cache.q, periodicity, cache.s̃)
-    cache.q .+= cache.s̃
-    cache.q̅ .+= cache.s̃
-end
-
-function CommonFunctions.get_solution(cache::IntegratorCacheDGVI)
-    (cache.t, cache.q, cache.p)
-end
-
-function CommonFunctions.set_solution!(cache::IntegratorCacheDGVI, sol, n=0)
-    t, q, p = sol
-    cache.n  = n
-    cache.t  = t
-    cache.q .= q
-    cache.p .= p
-    cache.v .= 0
-end
-
-
-function update_params!(params::ParametersDGVI, cache::IntegratorCacheDGVI)
+function update_params!(params::ParametersDGVI, sol::AtomisticSolutionPODE)
     # set time for nonlinear solver and copy previous solution
-    params.t  = cache.t
-    params.q .= cache.q
-    params.p .= cache.p
+    params.t  = sol.t
+    params.q .= sol.q
+    params.p .= sol.p
 end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
-    cache = NonlinearFunctionCacheDGVI{ST,D,S,R}()
+    cache = IntegratorCacheDGVI{ST,D,S,R}()
 
     quote
         @assert length(x) == length(b)
@@ -342,7 +279,7 @@ end
 end
 
 
-function compute_stages!(x, cache::NonlinearFunctionCacheDGVI{ST,D,S}, params::ParametersDGVI{DT,TT,D,S}) where {ST,DT,TT,D,S}
+function compute_stages!(x, cache::IntegratorCacheDGVI{ST,D,S}, params::ParametersDGVI{DT,TT,D,S}) where {ST,DT,TT,D,S}
     # copy x to X
     for i in 1:S
         for k in 1:D
@@ -370,7 +307,7 @@ end
 
 
 "Compute solution at quadrature nodes and across jump."
-function compute_stages_q!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
+function compute_stages_q!(cache::IntegratorCacheDGVI{ST,D,S,R},
                            params::ParametersDGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
     local q::ST
@@ -411,7 +348,7 @@ end
 
 
 "Compute velocities at quadrature nodes."
-function compute_stages_v!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
+function compute_stages_v!(cache::IntegratorCacheDGVI{ST,D,S,R},
                            params::ParametersDGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local v::ST
 
@@ -428,7 +365,7 @@ end
 
 
 "Compute one-form and forces at quadrature nodes."
-function compute_stages_p!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
+function compute_stages_p!(cache::IntegratorCacheDGVI{ST,D,S,R},
                            params::ParametersDGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
     local tᵢ::TT
@@ -442,7 +379,7 @@ function compute_stages_p!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
 end
 
 
-function compute_stages_λ!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
+function compute_stages_λ!(cache::IntegratorCacheDGVI{ST,D,S,R},
                            params::ParametersDGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
     local t₀::TT = params.t
@@ -492,7 +429,7 @@ function compute_stages_λ!(cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
 end
 
 
-function compute_rhs!(b::Vector{ST}, cache::NonlinearFunctionCacheDGVI{ST,D,S,R},
+function compute_rhs!(b::Vector{ST}, cache::IntegratorCacheDGVI{ST,D,S,R},
                 params::ParametersDGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
     local z::ST
@@ -660,6 +597,7 @@ struct IntegratorDGVI{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis} <: Determini
     params::FPT
     solver::ST
     iguess::InitialGuessODE{DT,TT,VT,IT}
+    cache::IntegratorCacheDGVI{DT,D,S,R}
 end
 
 function IntegratorDGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P},
@@ -686,10 +624,13 @@ function IntegratorDGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P},
     # create initial guess
     iguess = InitialGuessODE(interpolation, equation, Δt)
 
+    # create cache
+    cache = IntegratorCacheDGVI{DT,D,S,R}()
+
     # create integrator
     IntegratorDGVI{DT, TT, D, S, R, ΘT, FT, GT, VT, typeof(params), typeof(solver),
                 typeof(iguess.int), typeof(basis)}(
-                equation, basis, quadrature, Δt, params, solver, iguess)
+                equation, basis, quadrature, Δt, params, solver, iguess, cache)
 end
 
 equation(integrator::IntegratorDGVI) = integrator.equation
@@ -701,32 +642,32 @@ function create_integrator_cache(int::IntegratorDGVI{DT,TT}) where {DT,TT}
 end
 
 
-function initialize!(int::IntegratorDGVI, cache::IntegratorCacheDGVI)
-    cache.t̅ = cache.t - timestep(int)
+function initialize!(int::IntegratorDGVI, sol::AtomisticSolutionPODE)
+    sol.t̅ = sol.t - timestep(int)
 
-    equation(int).v(cache.t, cache.q, cache.q, cache.v)
+    equation(int).v(sol.t, sol.q, sol.q, sol.v)
 
-    initialize!(int.iguess, cache.t, cache.q, cache.v,
-                            cache.t̅, cache.q̅, cache.v̅)
+    initialize!(int.iguess, sol.t, sol.q, sol.v,
+                            sol.t̅, sol.q̅, sol.v̅)
 end
 
 
-function update_solution!(cache::IntegratorCacheDGVI{DT,TT}) where {DT,TT}
-    cache.q .= cache.fcache.q̅
-    cache.p .= cache.fcache.p̅
+function update_solution!(sol::AtomisticSolutionPODE, cache::IntegratorCacheDGVI)
+    sol.q .= cache.q̅
+    sol.p .= cache.p̅
 end
 
 
-function initial_guess!(int::IntegratorDGVI{DT,TT,D,S,R}, cache::IntegratorCacheDGVI{DT,TT}) where {DT,TT,D,S,R}
+function initial_guess!(int::IntegratorDGVI{DT,TT,D,S,R}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT,D,S,R}
     if nnodes(int.basis) > 0
         for i in 1:S
-            evaluate!(int.iguess, cache.q, cache.v,
-                                  cache.q̅, cache.v̅,
-                                  cache.fcache.q̃,
+            evaluate!(int.iguess, sol.q, sol.v,
+                                  sol.q̅, sol.v̅,
+                                  int.cache.q̃,
                                   nodes(int.basis)[i])
 
             for k in 1:D
-                int.solver.x[D*(i-1)+k] = cache.fcache.q̃[k]
+                int.solver.x[D*(i-1)+k] = int.cache.q̃[k]
             end
         end
     else
@@ -737,26 +678,26 @@ function initial_guess!(int::IntegratorDGVI{DT,TT,D,S,R}, cache::IntegratorCache
         end
     end
 
-    evaluate!(int.iguess, cache.q, cache.v,
-                          cache.q̅, cache.v̅,
-                          cache.fcache.q̃,
+    evaluate!(int.iguess, sol.q, sol.v,
+                          sol.q̅, sol.v̅,
+                          int.cache.q̃,
                           one(TT))
 
     for k in 1:D
-        int.solver.x[D*S+k] = cache.fcache.q̃[k]
+        int.solver.x[D*S+k] = int.cache.q̃[k]
     end
 end
 
 
-function integrate_step!(int::IntegratorDGVI{DT,TT}, cache::IntegratorCacheDGVI{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorDGVI{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
-    update_params!(int.params, cache)
+    update_params!(int.params, sol)
 
     # compute initial guess
-    initial_guess!(int, cache)
+    initial_guess!(int, sol)
 
     # reset cache
-    reset!(cache, timestep(int))
+    reset!(sol, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
@@ -768,14 +709,11 @@ function integrate_step!(int::IntegratorDGVI{DT,TT}, cache::IntegratorCacheDGVI{
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, cache.fcache, int.params)
+    compute_stages!(int.solver.x, int.cache, int.params)
 
     # copy solution from cache to integrator
-    update_solution!(cache)
+    update_solution!(sol, int.cache)
 
     # copy solution to initial guess
-    update!(int.iguess, cache.t, cache.q, cache.v)
-
-    # take care of periodic solutions
-    cut_periodic_solution!(cache, equation(int).periodicity)
+    update!(int.iguess, sol.t, sol.q, sol.v)
 end
