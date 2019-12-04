@@ -76,13 +76,13 @@ mutable struct NonlinearSolverStatus{T}
 end
 
 Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
-                        (@sprintf "    n=%4i" status.i),  ",   ", (@sprintf "rₐ=%14.8e" status.rₐ), ",   ",
+                        (@sprintf "    i=%4i" status.i),  ",   ", (@sprintf "rₐ=%14.8e" status.rₐ), ",   ",
                         (@sprintf "rᵣ=%14.8e" status.rᵣ), ",   ", (@sprintf "rₛ=%14.8e" status.rₛ))
 
 function print_solver_status(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
     if (get_config(:verbosity) == 1 && !(check_solver_converged(status, params) && status.i ≤ params.nmax)) ||
         get_config(:verbosity) > 1
-        println((@sprintf "  i=%07i" status.i), ",", status)
+        println(@sprintf status)
     end
 end
 
