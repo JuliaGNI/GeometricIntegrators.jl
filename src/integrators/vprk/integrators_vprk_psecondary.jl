@@ -203,10 +203,9 @@ end
         local t₀::TT = params.t̅
         local t₁::TT = params.t̅ + params.Δt
         local tᵢ::TT
-        local v = zero(q)
 
         # compute p=ϑ(q)
-        params.equ.ϑ(t₁, q, v, p)
+        params.equ.ϑ(t₁, q, p)
 
         for i in 1:S
             tᵢ = t₀ + params.Δt * params.tab.p.c[i]
