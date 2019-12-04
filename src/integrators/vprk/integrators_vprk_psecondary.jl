@@ -10,9 +10,9 @@ mutable struct ParametersVPRKpSecondary{DT, TT, ET <: VODE{DT,TT}, D, S} <: Abst
     ω::Matrix{TT}
     R::Vector{TT}
 
-    t::TT
-    q::Vector{DT}
-    p::Vector{DT}
+    t̅::TT
+    q̅::Vector{DT}
+    p̅::Vector{DT}
 end
 
 function ParametersVPRKpSecondary(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: VODE{DT,TT}}
@@ -131,7 +131,7 @@ function IntegratorVPRKpSecondary(equation::ET, tableau::TableauVPRK{TT}, Δt::T
 end
 
 
-function compute_stages_vprk!(x, q̅, p̅, Q, V, Λ, P, F, R, Φ, params)
+function compute_stages_vprk!(x, q, p, Q, V, Λ, P, F, R, Φ, params)
     # copy x to V
     compute_stages_v_vprk!(x, V, params)
 
@@ -139,21 +139,22 @@ function compute_stages_vprk!(x, q̅, p̅, Q, V, Λ, P, F, R, Φ, params)
     compute_stages_λ_vprk!(x, Λ, params)
 
     # compute Q
-    compute_stages_q_vprk!(q̅, Q, V, Λ, params)
+    compute_stages_q_vprk!(q, Q, V, Λ, params)
 
     # compute p̅, R and Ψ
-    compute_projection_vprk!(q̅, p̅, Q, V, Λ, R, Φ, params)
+    compute_projection_vprk!(q, p, Q, V, Λ, R, Φ, params)
 
     # compute P and F
     compute_stages_p_vprk!(Q, V, P, F, params)
 end
 
 
-function compute_stages_q_vprk!(q̅::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, Λ::Matrix{ST},
+function compute_stages_q_vprk!(q::Vector{ST}, Q::Vector{Vector{ST}},
+                V::Vector{Vector{ST}}, Λ::Vector{Vector{ST}},
                 params::ParametersVPRKpSecondary{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
 
-    @assert D == size(Q,1) == size(V,1) == size(Λ,1) == length(q̅)
-    @assert S == size(Q,2) == size(V,2) == size(Λ,2)
+    # @assert D == size(Q,1) == size(V,1) == size(Λ,1) == length(q̅)
+    @assert S == length(Q) == length(V) == length(Λ)
 
     local y1::ST
     local y2::ST
@@ -165,78 +166,65 @@ function compute_stages_q_vprk!(q̅::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, �
         for k in 1:D
             y1 = y2 = y3 = y4 = 0
             for j in 1:S
-                y1 += params.tab.q.a[i,j] * V[k,j]
-                y2 += params.tab.q.â[i,j] * V[k,j]
-                y3 += params.tab.q.a[i,j] * Λ[k,j]
-                y4 += params.tab.q.â[i,j] * Λ[k,j]
+                y1 += params.tab.q.a[i,j] * V[j][k]
+                y2 += params.tab.q.â[i,j] * V[j][k]
+                y3 += params.tab.q.a[i,j] * Λ[j][k]
+                y4 += params.tab.q.â[i,j] * Λ[j][k]
             end
-            Q[k,i] = params.q[k] + params.Δt * (y1 + y2 + y3 + y4)
+            Q[i][k] = params.q̅[k] + params.Δt * (y1 + y2 + y3 + y4)
         end
     end
 
-    # compute q̅
+    # compute q
     for k in 1:D
         y1 = y2 = y3 = y4 = 0
         for j in 1:S
-            y1 += params.tab.q.b[j] * V[k,j]
-            y2 += params.tab.q.b̂[j] * V[k,j]
-            y3 += params.tab.q.b[j] * Λ[k,j]
-            y4 += params.tab.q.b̂[j] * Λ[k,j]
+            y1 += params.tab.q.b[j] * V[j][k]
+            y2 += params.tab.q.b̂[j] * V[j][k]
+            y3 += params.tab.q.b[j] * Λ[j][k]
+            y4 += params.tab.q.b̂[j] * Λ[j][k]
         end
-        q̅[k] = params.q[k] + params.Δt * (y1 + y2 + y3 + y4)
+        q[k] = params.q̅[k] + params.Δt * (y1 + y2 + y3 + y4)
     end
 end
 
 
-@generated function compute_projection_vprk!(q̅::Vector{ST}, p̅::Vector{ST},
-                Q::Matrix{ST}, V::Matrix{ST}, Λ::Matrix{ST}, R::Matrix{ST}, Ψ::Matrix{ST},
+@generated function compute_projection_vprk!(q::Vector{ST}, p::Vector{ST},
+                Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Λ::Vector{Vector{ST}},
+                R::Vector{Vector{ST}}, Ψ::Vector{Vector{ST}},
                 params::ParametersVPRKpSecondary{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
     # create temporary vectors
-    tQ = zeros(ST,D)
-    tV = zeros(ST,D)
-    tΛ = zeros(ST,D)
-    tR = zeros(ST,D)
-    tΨ = zeros(ST,D)
-    tH = zeros(ST,D)
-    tΩ = zeros(ST,D,D)
+    dH = zeros(ST,D)
+    Ω = zeros(ST,D,D)
 
     quote
-        local t₀::TT = params.t
-        local t₁::TT = params.t + params.Δt
+        local t₀::TT = params.t̅
+        local t₁::TT = params.t̅ + params.Δt
         local tᵢ::TT
-        local v = zeros(q̅)
+        local v = zero(q)
 
-        # compute p̅=ϑ(q̅)
-        params.equ.ϑ(t₁, q̅, v, p̅)
+        # compute p=ϑ(q)
+        params.equ.ϑ(t₁, q, v, p)
 
         for i in 1:S
-            simd_copy_xy_first!($tQ, Q, i)
-            simd_copy_xy_first!($tV, V, i)
-            simd_copy_xy_first!($tΛ, Λ, i)
-
             tᵢ = t₀ + params.Δt * params.tab.p.c[i]
 
-            params.equ.g(tᵢ, $tQ, $tΛ, $tR)
-            params.equ.ω(tᵢ, $tQ, $tΩ)
-            params.equ.dH(tᵢ, $tQ, $tH)
+            params.equ.g(tᵢ, Q[i], Λ[i], R[i])
+            params.equ.ω(tᵢ, Q[i], $Ω)
+            params.equ.dH(tᵢ, Q[i], $dH)
 
             # TODO Check if ω() returns Ω or Ω^T -> this decides the sign on dH below
             #      Seems to be Ω^T -> then dH should be subtracted
 
-            simd_mult!($tΨ, $tΩ, $tV)
-
-            $tΨ .-= $tH
-
-            simd_copy_yx_first!($tR, R, i)
-            simd_copy_yx_first!($tΨ, Ψ, i)
+            Ψ[i] .= $Ω * V[i] .- $dH
         end
     end
 end
 
 
-function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, R::Matrix{ST},
+function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vector{ST}}, R::Vector{Vector{ST}},
                 params::ParametersVPRKpSecondary{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
 
     local z1::ST
@@ -249,53 +237,53 @@ function compute_rhs_vprk!(b::Vector{ST}, P::Matrix{ST}, F::Matrix{ST}, R::Matri
         for k in 1:D
             z1 = z2 = z3 = z4 = 0
             for j in 1:S
-                z1 += params.tab.p.a[i,j] * F[k,j]
-                z2 += params.tab.p.â[i,j] * F[k,j]
-                z3 += params.tab.p.a[i,j] * R[k,j]
-                z4 += params.tab.p.â[i,j] * R[k,j]
+                z1 += params.tab.p.a[i,j] * F[j][k]
+                z2 += params.tab.p.â[i,j] * F[j][k]
+                z3 += params.tab.p.a[i,j] * R[j][k]
+                z4 += params.tab.p.â[i,j] * R[j][k]
             end
-            b[D*(i-1)+k] = (P[k,i] - params.p[k]) - params.Δt * (z1 + z2 + z3 + z4)
+            b[D*(i-1)+k] = (P[i][k] - params.p̅[k]) - params.Δt * (z1 + z2 + z3 + z4)
         end
     end
 end
 
-function compute_rhs_vprk_projection!(b::Vector{ST}, p̅::Vector{ST},
-                F::Matrix{ST}, R::Matrix{ST}, Ψ::Matrix{ST}, offset::Int,
+function compute_rhs_vprk_projection!(b::Vector{ST}, p::Vector{ST},
+                F::Vector{Vector{ST}}, R::Vector{Vector{ST}}, Ψ::Vector{Vector{ST}}, offset::Int,
                 params::ParametersVPRKpSecondary{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
-    local ψ::ST
     local z1::ST
     local z2::ST
     local z3::ST
     local z4::ST
 
-    # for i in 1:S
+    for i in 1:S
+        for k in 1:D
+            b[offset+D*(i-1)+k] = Ψ[i][k]
+        end
+    end
+
+    # TODO # reactivate averaging of secondary constraints and primary constraint of solution
+
+    # for i in 1:(S-1)
     #     for k in 1:D
-    #         b[offset+D*(i-1)+k] = Ψ[k,i]
+    #         b[offset+D*(i-1)+k] = 0
+    #         for j in 1:S
+    #             b[offset+D*(i-1)+k] += params.ω[i,j] * Ψ[j][k]
+    #         end
     #     end
     # end
-
-    for i in 1:(S-1)
-        for k in 1:D
-            ψ = 0
-            for j in 1:S
-                ψ += params.ω[i,j] * Ψ[k,j]
-            end
-            b[offset+D*(i-1)+k] = ψ
-        end
-    end
-
-    for k in 1:D
-        z1 = z2 = z3 = z4 = 0
-        for j in 1:S
-            z1 += params.tab.p.b[j] * F[k,j]
-            z2 += params.tab.p.b̂[j] * F[k,j]
-            z3 += params.tab.p.b[j] * R[k,j]
-            z4 += params.tab.p.b̂[j] * R[k,j]
-        end
-        b[offset+D*(S-1)+k] = (p̅[k] - params.p[k]) - params.Δt * (z1 + z2 + z3 + z4)
-    end
+    #
+    # for k in 1:D
+    #     z1 = z2 = z3 = z4 = 0
+    #     for j in 1:S
+    #         z1 += params.tab.p.b[j] * F[j][k]
+    #         z2 += params.tab.p.b̂[j] * F[j][k]
+    #         z3 += params.tab.p.b[j] * R[j][k]
+    #         z4 += params.tab.p.b̂[j] * R[j][k]
+    #     end
+    #     b[offset+D*(S-1)+k] = (p[k] - params.p̅[k]) - params.Δt * (z1 + z2 + z3 + z4)
+    # end
 end
 
 
@@ -343,7 +331,7 @@ end
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
 function integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
-    update_params!(int.sparams, sol)
+    update_params!(int.params, sol)
 
     # compute initial guess
     initial_guess!(int, sol)
@@ -367,12 +355,12 @@ function integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::AtomisticSol
                           int.cache.Φ, int.params)
 
     # compute unprojected solution
-    update_solution!(sol.q, int.cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
-    update_solution!(sol.p, int.cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, int.cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 
     # add projection to solution
-    update_solution!(sol.q, int.cache.Λ, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
-    update_solution!(sol.p, int.cache.R, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, int.cache.Λ, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.R, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 
     # copy solution to initial guess
     update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
