@@ -194,6 +194,16 @@ module LotkaVolterra
         lotka_volterra_2d_g(t, q, v, g)
     end
 
+    function lotka_volterra_2d_g̅(t::Real, q::Vector, v::Vector, g̅::Vector)
+        g̅[1] = g₁(t,q,v)
+        g̅[2] = g₂(t,q,v)
+        nothing
+    end
+
+    function lotka_volterra_2d_g̅(t::Real, q::Vector, p::Vector, v::Vector, g̅::Vector)
+        lotka_volterra_2d_g̅(t, q, v, g̅)
+    end
+
     function lotka_volterra_2d_u(t, q, v, u)
         u[1] = v[1]
         u[2] = v[2]
