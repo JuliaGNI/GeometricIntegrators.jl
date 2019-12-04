@@ -82,7 +82,7 @@ Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
 function print_solver_status(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
     if (get_config(:verbosity) == 1 && !(check_solver_converged(status, params) && status.i ≤ params.nmax)) ||
         get_config(:verbosity) > 1
-        println(@sprintf status)
+        println(status)
     end
 end
 
