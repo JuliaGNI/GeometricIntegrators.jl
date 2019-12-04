@@ -77,6 +77,11 @@ refx = sol.q[:,end]
     # println(rel_err(vsol.q, refx))
     @test rel_err(vsol.q, refx) < 2E-11
 
+end
+
+
+@testset "$(rpad("VPRK integrators with standard projection",80))" begin
+
     vint = IntegratorVPRKpStandard(iode, getTableauVPGLRK(1), Δt)
     isol = integrate(vint, nt)
 
@@ -94,6 +99,11 @@ refx = sol.q[:,end]
 
     # println(rel_err(isol.q, refx))
     @test rel_err(isol.q, refx) < 5E-16
+
+end
+
+
+@testset "$(rpad("VPRK integrators with symplectic projection",80))" begin
 
     vint = IntegratorVPRKpSymplectic(iode, getTableauVPGLRK(1), Δt)
     isol = integrate(vint, nt)
@@ -113,6 +123,11 @@ refx = sol.q[:,end]
     # println(rel_err(isol.q, refx))
     @test rel_err(isol.q, refx) < 8E-12
 
+end
+
+
+@testset "$(rpad("VPRK integrators with symmetric projection",80))" begin
+
     vint = IntegratorVPRKpSymmetric(iode, getTableauVPGLRK(1), Δt)
     isol = integrate(vint, nt)
 
@@ -131,6 +146,11 @@ refx = sol.q[:,end]
     # println(rel_err(isol.q, refx))
     @test rel_err(isol.q, refx) < 4E-16
 
+end
+
+
+@testset "$(rpad("VPRK integrators with midpoint projection",80))" begin
+
     vint = IntegratorVPRKpMidpoint(iode, getTableauVPGLRK(1), Δt)
     isol = integrate(vint, nt)
 
@@ -148,6 +168,11 @@ refx = sol.q[:,end]
 
     # println(rel_err(isol.q, refx))
     @test rel_err(isol.q, refx) < 4E-16
+
+end
+
+
+@testset "$(rpad("VPRK integrators with variational projection",80))" begin
 
     vintV1 = IntegratorVPRKpVariational(iode, getTableauVPGLRK(1), Δt)
     isolV1 = integrate(vintV1, nt)
@@ -206,4 +231,5 @@ refx = sol.q[:,end]
     @test rel_err(isolV1.q, isolP1.q[:,end]) == 0
     @test rel_err(isolV2.q, isolP2.q[:,end]) == 0
     @test rel_err(isolV3.q, isolP3.q[:,end]) == 0
+
 end
