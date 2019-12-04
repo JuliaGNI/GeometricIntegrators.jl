@@ -4,7 +4,7 @@ module LotkaVolterra
 
     export lotka_volterra_2d_ode, lotka_volterra_2d_iode,
            lotka_volterra_2d_idae, lotka_volterra_2d_pdae,
-           lotka_volterra_2d_vdae
+           lotka_volterra_2d_vode, lotka_volterra_2d_vdae
 
 
     Δt = 0.01
@@ -139,12 +139,22 @@ module LotkaVolterra
         A2 - B2 / q[2]
     end
 
+    function lotka_volterra_2d_dH(t, q, dH)
+        dH[1] = dHd₁(t, q)
+        dH[2] = dHd₂(t, q)
+        nothing
+    end
+
     function lotka_volterra_2d_ϑ(t, q, Θ)
         ϑ(t, q, Θ)
     end
 
     function lotka_volterra_2d_ϑ(t, q, v, Θ)
         ϑ(t, q, Θ)
+    end
+
+    function lotka_volterra_2d_ω(t, q, Ω)
+        ω(t, q, Ω)
     end
 
     function lotka_volterra_2d_v(t, q, v)
@@ -231,6 +241,13 @@ module LotkaVolterra
         IODE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
              lotka_volterra_2d_g, q₀, p₀;
              v=lotka_volterra_2d_v)
+    end
+
+    function lotka_volterra_2d_vode(q₀=q₀, p₀=p₀)
+        VODE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
+             lotka_volterra_2d_g, lotka_volterra_2d_v,
+             lotka_volterra_2d_ω, lotka_volterra_2d_dH,
+             q₀, p₀)
     end
 
     function lotka_volterra_2d_idae(q₀=q₀, p₀=p₀, λ₀=zero(q₀))
