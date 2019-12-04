@@ -15,6 +15,7 @@ set_config(:jacobian_autodiff, true)
 using GeometricIntegrators.TestProblems.LotkaVolterra: Δt, nt
 
 iode = lotka_volterra_2d_iode()
+vode = lotka_volterra_2d_vode()
 
 int  = IntegratorFIRK(lotka_volterra_2d_ode(), getTableauGLRK(8), Δt)
 sol  = integrate(int, nt)
@@ -168,6 +169,29 @@ end
 
     # println(rel_err(isol.q, refx))
     @test rel_err(isol.q, refx) < 4E-16
+
+end
+
+
+@testset "$(rpad("VPRK integrators with projection on secondary constraint",80))" begin
+
+    vint = IntegratorVPRKpSecondary(vode, getTableauVPGLRK(1), Δt)
+    isol = integrate(vint, nt)
+
+    # println(rel_err(isol.q, refx))
+    @test rel_err(isol.q, refx) < 2E-6
+
+    vint = IntegratorVPRKpSecondary(vode, getTableauVPGLRK(2), Δt)
+    isol = integrate(vint, nt)
+
+    # println(rel_err(isol.q, refx))
+    @test rel_err(isol.q, refx) < 8E-7
+
+    vint = IntegratorVPRKpSecondary(vode, getTableauVPGLRK(3), Δt)
+    isol = integrate(vint, nt)
+
+    # println(rel_err(isol.q, refx))
+    @test rel_err(isol.q, refx) < 4E-12
 
 end
 
