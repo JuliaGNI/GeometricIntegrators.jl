@@ -453,7 +453,7 @@ function update_multiplier!(λ::SolutionVector{T}, Λ::Vector{Vector{T}}, b::Vec
 end
 
 
-function cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}) where {T}
+function CommonFunctions.cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}) where {T}
     @assert length(x) == length(periodicity)
 
     for k in eachindex(x, periodicity)
@@ -468,7 +468,7 @@ function cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}) where {T}
     end
 end
 
-function cut_periodic_solution!(x::Vector{TwicePrecision{T}}, periodicity::Vector{T}) where {T}
+function CommonFunctions.cut_periodic_solution!(x::Vector{TwicePrecision{T}}, periodicity::Vector{T}) where {T}
     @assert length(x) == length(periodicity)
 
     for k in eachindex(x, periodicity)
@@ -483,7 +483,7 @@ function cut_periodic_solution!(x::Vector{TwicePrecision{T}}, periodicity::Vecto
     end
 end
 
-function cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}, shift::Vector{T}) where {T}
+function CommonFunctions.cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}, shift::Vector{T}) where {T}
     @assert length(x) == length(periodicity)
     shift .= 0
     for k in eachindex(x, periodicity, shift)
@@ -498,7 +498,7 @@ function cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}, shift::Vec
     end
 end
 
-function cut_periodic_solution!(x::Vector{TwicePrecision{T}}, periodicity::Vector{T}, shift::Vector{T}) where {T}
+function CommonFunctions.cut_periodic_solution!(x::Vector{TwicePrecision{T}}, periodicity::Vector{T}, shift::Vector{T}) where {T}
     @assert length(x) == length(periodicity)
     shift .= 0
     for k in eachindex(x, periodicity, shift)
