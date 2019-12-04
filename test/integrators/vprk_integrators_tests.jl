@@ -173,6 +173,35 @@ end
 end
 
 
+@testset "$(rpad("VPRK integrators with internal projection",80))" begin
+
+    # vint = IntegratorVPRKpInternal(iode, getTableauVPGLRK(1), Δt)
+    # isol = integrate(vint, nt)
+    #
+    # println(rel_err(isol.q, refx))
+    # @test rel_err(isol.q, refx) < 2E-6
+
+    vint = IntegratorVPRKpInternal(iode, getTableauVPGLRK(2), Δt)
+    isol = integrate(vint, nt)
+
+    println(rel_err(isol.q, refx))
+    @test rel_err(isol.q, refx) < 1E-11
+
+    # vint = IntegratorVPRKpInternal(iode, getTableauVPGLRK(3), Δt)
+    # isol = integrate(vint, nt)
+    #
+    # println(rel_err(isol.q, refx))
+    # @test rel_err(isol.q, refx) < 4E-12
+
+    vint = IntegratorVPRKpInternal(iode, getTableauVPGLRK(4), Δt)
+    isol = integrate(vint, nt)
+
+    println(rel_err(isol.q, refx))
+    # @test rel_err(isol.q, refx) < 8E-16
+
+end
+
+
 @testset "$(rpad("VPRK integrators with projection on secondary constraint",80))" begin
 
     vint = IntegratorVPRKpSecondary(vode, getTableauVPGLRK(1), Δt)
