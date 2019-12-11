@@ -114,6 +114,8 @@ function compute_stages_q_vprk!(q::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{
         for j in 1:S
             y1 += params.tab.q.b[j] * V[j][k]
             y2 += params.tab.q.b̂[j] * V[j][k]
+            # y3 += params.tab.q.b[j] * Λ[j][k]
+            # y4 += params.tab.q.b̂[j] * Λ[j][k]
             # y3 += 0.5 * (1 - params.tab.R∞) * params.tab.q.b[j] * Λ[j][k]
             # y4 += 0.5 * (1 - params.tab.R∞) * params.tab.q.b̂[j] * Λ[j][k]
         end
@@ -181,6 +183,8 @@ function compute_rhs_vprk_projection!(b::Vector{ST}, p::Vector{ST},
         for j in 1:S
             z1 += params.tab.p.b[j] * F[j][k]
             z2 += params.tab.p.b̂[j] * F[j][k]
+            # z3 += params.tab.p.b[j] * R[j][k]
+            # z4 += params.tab.p.b̂[j] * R[j][k]
             # z3 += 0.5 * (1 - params.tab.R∞) * params.tab.p.b[j] * R[j][k]
             # z4 += 0.5 * (1 - params.tab.R∞) * params.tab.p.b̂[j] * R[j][k]
         end
@@ -260,6 +264,8 @@ function integrate_step!(int::IntegratorVPRKpInternal{DT,TT}, sol::AtomisticSolu
     update_solution!(sol.p, sol.p̃, int.cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 
     # add projection to solution
+    # update_solution!(sol.q, sol.q̃, int.cache.Λ, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    # update_solution!(sol.p, sol.p̃, int.cache.R, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
     # R = 0.5 * (1 - tableau(int).R∞)
     # update_solution!(sol.q, sol.q̃, int.cache.Λ, R .* tableau(int).q.b, R .* tableau(int).q.b̂, timestep(int))
     # update_solution!(sol.p, sol.p̃, int.cache.R, R .* tableau(int).p.b, R .* tableau(int).p.b̂, timestep(int))
