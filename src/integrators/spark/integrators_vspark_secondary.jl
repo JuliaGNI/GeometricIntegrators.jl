@@ -184,12 +184,12 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,Σ
         # compute f(X)
         t = params.t + params.Δt * params.tab.p.c[i]
         params.f_f(t, cache.Qi[i], cache.Vi[i], cache.Fi[i])
-        params.f_g(t, cache.Qi[i], cache.Vi[i], cache.Gi[i])
-
-        cache.Hi[i] .= cache.Fi[i] .+ cache.Gi[i]
-
-        params.f_ϕ(t, cache.Qi[i], cache.Pi[i], cache.Φi[i])
-        params.f_ψ(t, cache.Qi[i], cache.Pi[i], cache.Vi[i], cache.Hi[i], cache.Ψi[i])
+        # params.f_g(t, cache.Qi[i], cache.Vi[i], cache.Gi[i])
+        #
+        # cache.Hi[i] .= cache.Fi[i] .+ cache.Gi[i]
+        #
+        # params.f_ϕ(t, cache.Qi[i], cache.Pi[i], cache.Φi[i])
+        # params.f_ψ(t, cache.Qi[i], cache.Pi[i], cache.Vi[i], cache.Hi[i], cache.Ψi[i])
     end
 
     for i in 1:Σ
@@ -227,9 +227,7 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,Σ
     cache.q̃ .= params.q
     cache.p̃ .= params.p
     for i in 1:S
-        # cache.q̃ .+= params.Δt .* params.tab.q.b[1][i] .* cache.Vi[i]
         cache.p̃ .+= params.Δt .* params.tab.p.b[1][i] .* cache.Fi[i]
-        # cache.p̃ .+= params.Δt .* params.tab.p.b[2][i] .* cache.Gi[i]
     end
     for i in 1:Σ
         cache.q̃ .+= params.Δt .* params.tab.q.b[1][i] .* cache.Vp[i]
@@ -256,11 +254,9 @@ end
             for k in 1:D
                 b[3*(D*(i-1)+k-1)+1] = - $cache.Yi[i][k]
                 b[3*(D*(i-1)+k-1)+2] = - $cache.Zi[i][k]
-                b[3*(D*(i-1)+k-1)+3] = - $cache.Φi[i][k]
+                b[3*(D*(i-1)+k-1)+3] = - $cache.Vi[i][k]
                 for j in 1:S
-                    # b[3*(D*(i-1)+k-1)+1] += params.tab.q.a[1][i,j] * $cache.Vi[j][k]
                     b[3*(D*(i-1)+k-1)+2] += params.tab.p.a[1][i,j] * $cache.Fi[j][k]
-                    # b[3*(D*(i-1)+k-1)+2] += params.tab.p.a[2][i,j] * $cache.Gi[j][k]
                 end
                 for j in 1:Σ
                     b[3*(D*(i-1)+k-1)+1] += params.tab.q.a[1][i,j] * $cache.Vp[j][k]
@@ -277,12 +273,10 @@ end
                 b[3*D*S+4*(D*(i-1)+k-1)+1] = - $cache.Yp[i][k]
                 b[3*D*S+4*(D*(i-1)+k-1)+2] = - $cache.Zp[i][k]
                 b[3*D*S+4*(D*(i-1)+k-1)+3] = - $cache.Φp[i][k]
-                # b[3*D*S+4*(D*(i-1)+k-1)+4] = - $cache.Ψp[i][k]
-                b[3*D*S+4*(D*(i-1)+k-1)+4] = 0
+                b[3*D*S+4*(D*(i-1)+k-1)+4] = - $cache.Ψp[i][k]
+                # b[3*D*S+4*(D*(i-1)+k-1)+4] = 0
                 for j in 1:S
-                    # b[3*D*S+4*(D*(i-1)+k-1)+1] += params.tab.q̃.a[1][i,j] * $cache.Vi[j][k]
                     b[3*D*S+4*(D*(i-1)+k-1)+2] += params.tab.p̃.a[1][i,j] * $cache.Fi[j][k]
-                    # b[3*D*S+4*(D*(i-1)+k-1)+2] += params.tab.p̃.a[2][i,j] * $cache.Gi[j][k]
                 end
                 for j in 1:Σ
                     b[3*D*S+4*(D*(i-1)+k-1)+1] += params.tab.q̃.a[1][i,j] * $cache.Vp[j][k]
@@ -290,10 +284,10 @@ end
                     b[3*D*S+4*(D*(i-1)+k-1)+2] += params.tab.p̃.a[2][i,j] * $cache.Gp[j][k]
                     b[3*D*S+4*(D*(i-1)+k-1)+2] += params.tab.p̃.a[3][i,j] * $cache.G̅p[j][k]
                 end
-                for j in 1:Σ
-                    b[3*D*S+4*(D*(i-1)+k-1)+4] -= params.tab.ω[i,j] * $cache.Ψp[j][k]
-                end
-                b[3*D*S+4*(D*(i-1)+k-1)+4] -= params.tab.ω[i,Σ+1] * $cache.ϕ̃[k]
+                # for j in 1:Σ
+                #     b[3*D*S+4*(D*(i-1)+k-1)+4] -= params.tab.ω[i,j] * $cache.Ψp[j][k]
+                # end
+                # b[3*D*S+4*(D*(i-1)+k-1)+4] -= params.tab.ω[i,Σ+1] * $cache.ϕ̃[k]
             end
         end
 
@@ -365,8 +359,8 @@ function integrate_step!(int::IntegratorVSPARKsecondary{DT,TT}, cache::Integrato
     # call nonlinear solver
     solve!(int.solver)
 
-    check_jacobian(int.solver)
-    print_jacobian(int.solver)
+    # check_jacobian(int.solver)
+    # print_jacobian(int.solver)
 
     # print solver status
     print_solver_status(int.solver.status, int.solver.params, cache.n)
@@ -378,9 +372,7 @@ function integrate_step!(int::IntegratorVSPARKsecondary{DT,TT}, cache::Integrato
     compute_stages!(int.solver.x, cache, int.params)
 
     # compute final update
-    # update_solution!(cache.q, cache.qₑᵣᵣ, cache.Vi, int.params.tab.q.b[1], timestep(int))
     update_solution!(cache.p, cache.pₑᵣᵣ, cache.Fi, int.params.tab.p.b[1], timestep(int))
-    # update_solution!(cache.p, cache.pₑᵣᵣ, cache.Gi, int.params.tab.p.b[2], timestep(int))
 
     # compute projection
     update_solution!(cache.q, cache.qₑᵣᵣ, cache.Vp, int.params.tab.q.b[1], timestep(int))
