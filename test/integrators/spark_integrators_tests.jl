@@ -11,7 +11,7 @@ set_config(:nls_atol, 8eps())
 set_config(:nls_rtol, 2eps())
 set_config(:nls_solver, QuasiNewtonSolver)
 set_config(:jacobian_autodiff, true)
-set_config(:nls_nmax, 3)
+# set_config(:nls_nmax, 3)
 
 using GeometricIntegrators.TestProblems.LotkaVolterra: Δt, nt
 
@@ -26,6 +26,7 @@ int  = IntegratorFIRK(lotka_volterra_2d_ode(), getTableauGLRK(8), Δt)
 sol  = integrate(int, nt)
 refx = sol.q[:,end]
 
+# set_config(:nls_nmax, 1)
 
 # @testset "$(rpad("VPARK integrators",80))" begin
 #
