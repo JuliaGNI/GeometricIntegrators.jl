@@ -222,15 +222,35 @@ function getTableauVSPARKGLRKLobIII(s, σ=s+1)
     # -> α_q_1 and α_q_2 need to be identical
     # -> α_p_2 and α_p_3 need to be identical
 
-    α_q_1 = lobIIIA.a
-    α_q_2 = lobIIIA.a
-    α_p_2 = lobIIIB.a
-    α_p_3 = lobIIIB.a
+    # α_q_1 = lobIIIA.a
+    # α_q_2 = lobIIIA.a
+    # α_p_2 = lobIIIB.a
+    # α_p_3 = lobIIIB.a
+    #
+    # b_q_1 = lobIIIA.b
+    # b_q_2 = lobIIIA.b
+    # b_p_2 = lobIIIB.b
+    # b_p_3 = lobIIIB.b
 
-    b_q_1 = lobIIIA.b
-    b_q_2 = lobIIIA.b
-    b_p_2 = lobIIIB.b
-    b_p_3 = lobIIIB.b
+    α_q_1 = lobIIID.a
+    α_q_2 = lobIIID.a
+    α_p_2 = lobIIID.a
+    α_p_3 = lobIIID.a
+
+    b_q_1 = lobIIID.b
+    b_q_2 = lobIIID.b
+    b_p_2 = lobIIID.b
+    b_p_3 = lobIIID.b
+
+    # α_q_1 = lobIIIE.a
+    # α_q_2 = lobIIIE.a
+    # α_p_2 = lobIIIE.a
+    # α_p_3 = lobIIIE.a
+    #
+    # b_q_1 = lobIIIE.b
+    # b_q_2 = lobIIIE.b
+    # b_p_2 = lobIIIE.b
+    # b_p_3 = lobIIIE.b
 
     # α_p_1 is free, but determines a_q_1 and a_q_2
 
@@ -306,7 +326,7 @@ function getTableauVSPARKGLRKLobIII(s, σ=s+1)
     ω[1:σ-1,1:σ] .= lobIIIA.a[2:σ,1:σ]
     ω[σ,σ+1] = 1
 
-    TableauVSPARKsecondary(Symbol("VSPARKGLRKLobIII"), o, s, σ, coeff_q, coeff_p, coeff_q̃, coeff_p̃, ω)#, get_lobatto_d_vector(σ))
+    TableauVSPARKsecondary(Symbol("VSPARKGLRKLobIII"), o, s, σ, coeff_q, coeff_p, coeff_q̃, coeff_p̃, ω, get_lobatto_d_vector(σ))
 end
 
 

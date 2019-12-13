@@ -253,16 +253,16 @@ end
         for i in 1:S
             for k in 1:D
                 b[3*(D*(i-1)+k-1)+1] = - $cache.Yi[i][k]
-                b[3*(D*(i-1)+k-1)+2] = - $cache.Zi[i][k]
+                b[3*(D*(i-1)+k-1)+2] = - $cache.Pi[i][k]
                 b[3*(D*(i-1)+k-1)+3] = - $cache.Vi[i][k]
-                for j in 1:S
-                    b[3*(D*(i-1)+k-1)+2] += params.tab.p.a[1][i,j] * $cache.Fi[j][k]
-                end
+                # for j in 1:S
+                #     b[3*(D*(i-1)+k-1)+2] += params.tab.p.a[1][i,j] * $cache.Fi[j][k]
+                # end
                 for j in 1:Σ
                     b[3*(D*(i-1)+k-1)+1] += params.tab.q.a[1][i,j] * $cache.Vp[j][k]
                     b[3*(D*(i-1)+k-1)+1] += params.tab.q.a[2][i,j] * $cache.Λp[j][k]
-                    b[3*(D*(i-1)+k-1)+2] += params.tab.p.a[2][i,j] * $cache.Gp[j][k]
-                    b[3*(D*(i-1)+k-1)+2] += params.tab.p.a[3][i,j] * $cache.G̅p[j][k]
+                    # b[3*(D*(i-1)+k-1)+2] += params.tab.p.a[2][i,j] * $cache.Gp[j][k]
+                    # b[3*(D*(i-1)+k-1)+2] += params.tab.p.a[3][i,j] * $cache.G̅p[j][k]
                 end
             end
         end
@@ -273,8 +273,8 @@ end
                 b[3*D*S+4*(D*(i-1)+k-1)+1] = - $cache.Yp[i][k]
                 b[3*D*S+4*(D*(i-1)+k-1)+2] = - $cache.Zp[i][k]
                 b[3*D*S+4*(D*(i-1)+k-1)+3] = - $cache.Φp[i][k]
-                b[3*D*S+4*(D*(i-1)+k-1)+4] = - $cache.Ψp[i][k]
-                # b[3*D*S+4*(D*(i-1)+k-1)+4] = 0
+                # b[3*D*S+4*(D*(i-1)+k-1)+4] = - $cache.Ψp[i][k]
+                b[3*D*S+4*(D*(i-1)+k-1)+4] = 0
                 for j in 1:S
                     b[3*D*S+4*(D*(i-1)+k-1)+2] += params.tab.p̃.a[1][i,j] * $cache.Fi[j][k]
                 end
@@ -284,10 +284,10 @@ end
                     b[3*D*S+4*(D*(i-1)+k-1)+2] += params.tab.p̃.a[2][i,j] * $cache.Gp[j][k]
                     b[3*D*S+4*(D*(i-1)+k-1)+2] += params.tab.p̃.a[3][i,j] * $cache.G̅p[j][k]
                 end
-                # for j in 1:Σ
-                #     b[3*D*S+4*(D*(i-1)+k-1)+4] -= params.tab.ω[i,j] * $cache.Ψp[j][k]
-                # end
-                # b[3*D*S+4*(D*(i-1)+k-1)+4] -= params.tab.ω[i,Σ+1] * $cache.ϕ̃[k]
+                for j in 1:Σ
+                    b[3*D*S+4*(D*(i-1)+k-1)+4] -= params.tab.ω[i,j] * $cache.Ψp[j][k]
+                end
+                b[3*D*S+4*(D*(i-1)+k-1)+4] -= params.tab.ω[i,Σ+1] * $cache.ϕ̃[k]
             end
         end
 
@@ -318,8 +318,8 @@ function initial_guess!(int::IntegratorVSPARKsecondary, cache::IntegratorCacheSP
 
         for k in 1:ndims(int)
             int.solver.x[3*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - cache.q[k])/timestep(int)
-            int.solver.x[3*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - cache.p[k])/timestep(int)
-            int.solver.x[3*(ndims(int)*(i-1)+k-1)+3] = cache.ṽ[k]
+            int.solver.x[3*(ndims(int)*(i-1)+k-1)+2] = 0#(cache.p̃[k] - cache.p[k])/timestep(int)
+            int.solver.x[3*(ndims(int)*(i-1)+k-1)+3] = 0#cache.ṽ[k]
         end
     end
 
