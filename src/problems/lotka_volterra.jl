@@ -245,9 +245,8 @@ module LotkaVolterra
 
     function lotka_volterra_2d_vode(q₀=q₀, p₀=p₀)
         VODE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
-             lotka_volterra_2d_g, lotka_volterra_2d_v,
-             lotka_volterra_2d_ω, lotka_volterra_2d_dH,
-             q₀, p₀)
+             lotka_volterra_2d_g, q₀, p₀;
+             v=lotka_volterra_2d_v, Ω=lotka_volterra_2d_ω, ∇H=lotka_volterra_2d_dH)
     end
 
     function lotka_volterra_2d_idae(q₀=q₀, p₀=p₀, λ₀=zero(q₀))

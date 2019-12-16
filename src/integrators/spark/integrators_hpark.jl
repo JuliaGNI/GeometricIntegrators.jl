@@ -37,6 +37,79 @@ mutable struct ParametersHPARK{DT,TT,D,S,R,VT,FT,UT,GT,ϕT} <: Parameters{DT,TT}
 end
 
 
+@doc raw"""
+Partitioned Additive Runge-Kutta integrator for Hamiltonian systems subject
+to Dirac constraints.
+
+This integrator solves the following system of equations for the internal stages,
+```math
+\begin{align}
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} U_{n,j} , & i &= 1, ..., s , \\
+P_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} a_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} G_{n,j} , & i &= 1, ..., s , \\
+\tilde{Q}_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} U_{n,j} , & i &= 1, ..., r , \\
+\tilde{P}_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} G_{n,j} , & i &= 1, ..., r , \\
+\tilde{\Phi}_{n,i} &= 0 , & i &= 1, ..., r ,
+\end{align}
+```
+with definitions
+```math
+\begin{align}
+V_{n,i} &= \hphantom{-} \frac{\partial H}{\partial p} (Q_{n,i}, P_{n,i}) , & i &= 1, ..., s , \\
+F_{n,i} &=           -  \frac{\partial H}{\partial q} (Q_{n,i}, P_{n,i}) , & i &= 1, ..., s , \\
+U_{n,i} &= \hphantom{-} \frac{\partial \phi}{\partial p} (\tilde{Q}_{n,i}, \tilde{P}_{n,i})^{T} \Lambda_{n,i} , & i &= 1, ..., r , \\
+G_{n,i} &=           -  \frac{\partial \phi}{\partial q} (\tilde{Q}_{n,i}, \tilde{P}_{n,i})^{T} \Lambda_{n,i} , & i &= 1, ..., r , \\
+\tilde{\Phi}_{n,i} &= \phi(\tilde{Q}_{n,i}, \tilde{P}_{n,i}) , & i &= 1, ..., r ,
+\end{align}
+```
+and update rule
+```math
+\begin{align}
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} V_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} U_{n,i} , \\
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} G_{n,i} .
+\end{align}
+```
+"""
+struct IntegratorHPARK{DT, TT, ET <: PDAE{DT,TT},
+                               PT <: ParametersHPARK{DT,TT},
+                               ST <: NonlinearSolver{DT},
+                               IT <: InitialGuessPODE{DT,TT}, D, S, R} <: AbstractIntegratorHSPARK{DT, TT}
+    equation::ET
+    tableau::TableauHPARK{TT}
+
+    params::PT
+    solver::ST
+    iguess::IT
+    cache::IntegratorCacheSPARK{DT, TT, D, S, R}
+end
+
+function IntegratorHPARK(equation::PDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
+                         tableau::TableauHPARK{TT}, Δt::TT) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
+    D = equation.d
+    S = tableau.s
+    R = tableau.r
+
+    N = 2*D*S + 3*D*R
+
+    # create params
+    params = ParametersHPARK{DT,TT,D,S,R,FT,PT,UT,GT,ϕT}(
+                                equation.v, equation.f, equation.u, equation.g, equation.ϕ, Δt,
+                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ)
+
+    # create solver
+    solver = create_nonlinear_solver(DT, N, params)
+
+    # create initial guess
+    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
+
+    # create cache
+    cache = IntegratorCacheSPARK{DT, TT, D, S, R}()
+
+    # create integrator
+    IntegratorHPARK{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, R}(
+                                        equation, tableau, params, solver, iguess, cache)
+end
+
+
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
                                         params::ParametersHPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local tqᵢ::TT
@@ -130,84 +203,6 @@ end
         end
     end
 end
-
-
-@doc raw"""
-Partitioned Additive Runge-Kutta integrator for Hamiltonian systems subject
-to Dirac constraints.
-
-This integrator solves the following system of equations for the internal stages,
-```math
-\begin{align}
-Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} U_{n,j} , & i &= 1, ..., s , \\
-P_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} a_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} G_{n,j} , & i &= 1, ..., s , \\
-\tilde{Q}_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} U_{n,j} , & i &= 1, ..., r , \\
-\tilde{P}_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} G_{n,j} , & i &= 1, ..., r , \\
-\tilde{\Phi}_{n,i} &= 0 , & i &= 1, ..., r ,
-\end{align}
-```
-with definitions
-```math
-\begin{align}
-V_{n,i} &= \hphantom{-} \frac{\partial H}{\partial p} (Q_{n,i}, P_{n,i}) , & i &= 1, ..., s , \\
-F_{n,i} &=           -  \frac{\partial H}{\partial q} (Q_{n,i}, P_{n,i}) , & i &= 1, ..., s , \\
-U_{n,i} &= \hphantom{-} \frac{\partial \phi}{\partial p} (\tilde{Q}_{n,i}, \tilde{P}_{n,i})^{T} \Lambda_{n,i} , & i &= 1, ..., r , \\
-G_{n,i} &=           -  \frac{\partial \phi}{\partial q} (\tilde{Q}_{n,i}, \tilde{P}_{n,i})^{T} \Lambda_{n,i} , & i &= 1, ..., r , \\
-\tilde{\Phi}_{n,i} &= \phi(\tilde{Q}_{n,i}, \tilde{P}_{n,i}) , & i &= 1, ..., r ,
-\end{align}
-```
-and update rule
-```math
-\begin{align}
-q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} V_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} U_{n,i} , \\
-p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} G_{n,i} .
-\end{align}
-```
-"""
-struct IntegratorHPARK{DT, TT, ET <: PDAE{DT,TT},
-                               PT <: ParametersHPARK{DT,TT},
-                               ST <: NonlinearSolver{DT},
-                               IT <: InitialGuessPODE{DT,TT}, D, S, R} <: AbstractIntegratorSPARK{DT, TT}
-    equation::ET
-    tableau::TableauHPARK{TT}
-
-    params::PT
-    solver::ST
-    iguess::IT
-    cache::IntegratorCacheVPARK{DT, TT, D, S, R}
-end
-
-function IntegratorHPARK(equation::PDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
-                         tableau::TableauHPARK{TT}, Δt::TT) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
-    D = equation.d
-    S = tableau.s
-    R = tableau.r
-
-    N = 2*D*S + 3*D*R
-
-    # create params
-    params = ParametersHPARK{DT,TT,D,S,R,FT,PT,UT,GT,ϕT}(
-                                equation.v, equation.f, equation.u, equation.g, equation.ϕ, Δt,
-                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ)
-
-    # create solver
-    solver = create_nonlinear_solver(DT, N, params)
-
-    # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
-
-    # create cache
-    cache = IntegratorCacheVPARK{DT, TT, D, S, R}()
-
-    # create integrator
-    IntegratorHPARK{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, R}(
-                                        equation, tableau, params, solver, iguess, cache)
-end
-
-equation(int::IntegratorHPARK) = int.equation
-timestep(int::IntegratorHPARK) = int.params.Δt
-tableau(int::IntegratorHPARK) = int.tableau
-pstages(int::IntegratorHPARK) = int.tableau.r
 
 
 function update_params!(params::ParametersHPARK, sol::AtomisticSolutionPDAE)

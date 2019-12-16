@@ -79,7 +79,7 @@ function initial_guess!(int::AbstractIntegratorHSPARK, sol::AtomisticSolutionPDA
         end
     end
 
-    if int.params.t_λ.c[1] == 0
+    if isdefined(tableau(int), :λ) && tableau(int).λ.c[1] == 0
         for k in eachdim(int)
             int.solver.x[2*ndims(int)*nstages(int)+3*(k-1)+3] = sol.λ[k]
         end

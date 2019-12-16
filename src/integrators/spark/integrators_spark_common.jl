@@ -15,15 +15,15 @@ function initialize!(int::AbstractIntegratorSPARK, cache::IntegratorCacheSPARK)
 end
 
 
-function update_solution!(int::AbstractIntegratorSPARK{DT,TT}, cache::IntegratorCacheSPARK{DT,TT}) where {DT,TT}
+function update_solution!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomisticSolutionPDAE{DT,TT}) where {DT,TT}
     # compute final update
-    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Vi, int.params.tab.q.b, timestep(int))
-    update_solution!(cache.p, cache.pₑᵣᵣ, cache.Fi, int.params.tab.p.b, timestep(int))
+    update_solution!(sol.q, sol.q̃, int.cache.Vi, int.params.tab.q.b, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.Fi, int.params.tab.p.b, timestep(int))
 
     # compute projection
-    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Up, int.params.tab.q.β, timestep(int))
-    update_solution!(cache.p, cache.pₑᵣᵣ, cache.Gp, int.params.tab.p.β, timestep(int))
-    # TODO # update_multiplier!(cache.λ, cache.Λp, int.params.tab.λ.b)
+    update_solution!(sol.q, sol.q̃, int.cache.Up, int.params.tab.q.β, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.Gp, int.params.tab.p.β, timestep(int))
+    # TODO # update_multiplier!(sol.λ, int.cache.Λp, int.params.tab.λ.b)
 end
 
 

@@ -78,7 +78,7 @@ struct VDAE{dType <: Number, tType <: Number, ϑType <: Function,
             fType <: Function, gType <: Function, g̅Type <: Function,
             ϕType <: Function, ψType <: Function, vType <: Function,
             ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
 
     d::Int
     m::Int
@@ -169,4 +169,6 @@ function Base.similar(ode::VDAE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArra
          v=ode.v, Ω=ode.Ω, ∇H=ode.∇H, parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(ode::VDAE) = ode.d
+@inline Base.ndims(ode::VDAE) = ode.d
+
+@inline periodicity(equation::VDAE) = equation.periodicity

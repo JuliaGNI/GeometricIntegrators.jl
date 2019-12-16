@@ -64,12 +64,12 @@ mutable struct ParametersVSPARKsecondary{DT,TT,D,S,Σ,θT,FT,GT,G̅T,ϕT,ψT,tab
 end
 
 
-function update_params!(params::ParametersVSPARKsecondary, cache::IntegratorCacheSPARK)
+function update_params!(params::ParametersVSPARKsecondary, sol::AtomisticSolutionPDAE)
     # set time for nonlinear solver and copy previous solution
-    params.t  = cache.t
-    params.q .= cache.q
-    params.p .= cache.p
-    params.λ .= cache.λ
+    params.t  = sol.t
+    params.q .= sol.q
+    params.p .= sol.p
+    params.λ .= sol.λ
 end
 
 
@@ -125,13 +125,14 @@ F^1_{n,i} + F^2_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i 
 struct IntegratorVSPARKsecondary{DT, TT, ET <: VDAE{DT,TT},
                                          PT <: ParametersVSPARKsecondary{DT,TT},
                                          ST <: NonlinearSolver{DT},
-                                         IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVSPARK{DT, TT}
+                                         IT <: InitialGuessPODE{DT,TT}, D, S, Σ} <: AbstractIntegratorVSPARK{DT, TT}
     equation::ET
     tableau::TableauVSPARKsecondary{TT}
 
     params::PT
     solver::ST
     iguess::IT
+    cache::IntegratorCacheSPARK{DT,TT,D,S,Σ}
 end
 
 function IntegratorVSPARKsecondary(equation::VDAE{DT,TT},
@@ -157,9 +158,12 @@ function IntegratorVSPARKsecondary(equation::VDAE{DT,TT},
     # create initial guess
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
+    # create cache
+    cache = IntegratorCacheSPARK{DT,TT,D,S,Σ}()
+
     # create integrator
-    IntegratorVSPARKsecondary{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess)}(
-                              equation, tableau, params, solver, iguess)
+    IntegratorVSPARKsecondary{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, Σ}(
+                              equation, tableau, params, solver, iguess, cache)
 end
 
 pstages(int::IntegratorVSPARKsecondary) = int.tableau.σ
@@ -283,22 +287,22 @@ end
 end
 
 
-function initial_guess!(int::IntegratorVSPARKsecondary, cache::IntegratorCacheSPARK)
+function initial_guess!(int::IntegratorVSPARKsecondary, sol::AtomisticSolutionPDAE)
     for i in 1:pstages(int)
-        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
-                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
-                              cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              int.cache.q̃, int.cache.p̃, int.cache.ṽ, int.cache.f̃,
                               tableau(int).q̃.c[i], tableau(int).p̃.c[i])
 
         for k in 1:ndims(int)
-            int.solver.x[4*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - cache.q[k])/timestep(int)
-            int.solver.x[4*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - cache.p[k])/timestep(int)
-            int.solver.x[4*(ndims(int)*(i-1)+k-1)+3] = cache.ṽ[k]
+            int.solver.x[4*(ndims(int)*(i-1)+k-1)+1] = (int.cache.q̃[k] - sol.q[k])/timestep(int)
+            int.solver.x[4*(ndims(int)*(i-1)+k-1)+2] = (int.cache.p̃[k] - sol.p[k])/timestep(int)
+            int.solver.x[4*(ndims(int)*(i-1)+k-1)+3] = int.cache.ṽ[k]
             int.solver.x[4*(ndims(int)*(i-1)+k-1)+4] = 0
         end
     end
 
-    if length(tableau(int).d) > 0
+    if isdefined(tableau(int), :d) && length(tableau(int).d) > 0
         for k in 1:ndims(int)
             int.solver.x[4*ndims(int)*pstages(int)+k] = 0
         end
@@ -306,13 +310,13 @@ function initial_guess!(int::IntegratorVSPARKsecondary, cache::IntegratorCacheSP
 end
 
 
-function update_solution!(int::IntegratorVSPARKsecondary{DT,TT}, cache::IntegratorCacheSPARK{DT,TT}) where {DT,TT}
+function update_solution!(int::IntegratorVSPARKsecondary{DT,TT}, sol::AtomisticSolutionPDAE{DT,TT}) where {DT,TT}
     # compute final update
-    update_solution!(cache.p, cache.pₑᵣᵣ, cache.Fi, int.params.tab.p.b[1], timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.Fi, int.params.tab.p.b[1], timestep(int))
 
     # compute projection
-    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Vp, int.params.tab.q.b[1], timestep(int))
-    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Λp, int.params.tab.q.b[2], timestep(int))
-    update_solution!(cache.p, cache.pₑᵣᵣ, cache.Gp, int.params.tab.p.b[2], timestep(int))
-    update_solution!(cache.p, cache.pₑᵣᵣ, cache.G̅p, int.params.tab.p.b[3], timestep(int))
+    update_solution!(sol.q, sol.q̃, int.cache.Vp, int.params.tab.q.b[1], timestep(int))
+    update_solution!(sol.q, sol.q̃, int.cache.Λp, int.params.tab.q.b[2], timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.Gp, int.params.tab.p.b[2], timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.G̅p, int.params.tab.p.b[3], timestep(int))
 end

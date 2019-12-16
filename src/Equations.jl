@@ -6,8 +6,8 @@ module Equations
 
     export periodicity
 
-    export ODE, IODE, PODE, SODE, VODE
-    export DAE, HDAE, IDAE, PDAE
+    export ODE, IODE, PODE, HODE, VODE, SODE
+    export DAE, IDAE, PDAE, HDAE, VDAE
     export SDE, PSDE, SPSDE
 
     include("equations/equations.jl")

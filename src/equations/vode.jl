@@ -69,7 +69,7 @@ and
 struct VODE{dType <: Number, tType <: Number, ϑType <: Function,
             fType <: Function, gType <: Function, vType <: Union{Function,Nothing},
             ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
 
     d::Int
     m::Int

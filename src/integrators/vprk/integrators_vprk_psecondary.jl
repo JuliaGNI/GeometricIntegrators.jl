@@ -211,8 +211,8 @@ end
             tᵢ = t₀ + params.Δt * params.tab.p.c[i]
 
             params.equ.g(tᵢ, Q[i], Λ[i], R[i])
-            params.equ.ω(tᵢ, Q[i], $Ω)
-            params.equ.dH(tᵢ, Q[i], $dH)
+            params.equ.Ω(tᵢ, Q[i], $Ω)
+            params.equ.∇H(tᵢ, Q[i], $dH)
 
             # TODO Check if ω() returns Ω or Ω^T -> this decides the sign on dH below
             #      Seems to be Ω^T -> then dH should be subtracted

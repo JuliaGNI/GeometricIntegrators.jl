@@ -188,18 +188,24 @@ end
                 end
             end
         end
-        for i in 1:R-1
+        for i in 1:R-P
             for k in 1:D
                 b[3*D*S+3*(D*(i-1)+k-1)+3] = 0
                 for j in 1:R
                     b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,j] * $cache.Φp[j][k]
                 end
+                b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,R+1] * $cache.ϕ̃[k]
             end
         end
 
-        # compute b = -ϕ
-        for k in 1:D
-            b[3*D*S+3*(D*(R-1)+k-1)+3] = - $cache.ϕ̃[k]
+        # compute b = d_λ ⋅ Λ
+        for i in R-P+1:R
+            for k in 1:D
+                b[3*D*S+3*(D*(R-1)+k-1)+3] = 0
+                for j in 1:R
+                    b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.δ[j] * $cache.Λp[j][k]
+                end
+            end
         end
 
         if length(params.tab.d) > 0
