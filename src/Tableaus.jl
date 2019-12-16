@@ -124,7 +124,8 @@ module Tableaus
            getTableauVSPARKGLRKpSymmetric,
            getTableauVSPARKGLRKpSymplectic,
            getTableauVSPARKLobIIIAIIIB2pSymmetric,
-           getTableauVSPARKLobIIIAIIIB3pSymmetric
+           getTableauVSPARKLobIIIAIIIB3pSymmetric,
+           getTableauVSPARKLobIIIAIIIB4pSymmetric
 
     include("tableaus/tableaus_vspark.jl")
 

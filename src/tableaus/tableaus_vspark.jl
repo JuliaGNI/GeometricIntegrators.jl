@@ -109,14 +109,17 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with two stages and symmetric projection."
 function getTableauVSPARKLobIIIAIIIB2pSymmetric()
-    d = [+1.0, -1.0]
-    getTableauVSPARKSymmetricProjection(:LobIIIAIIIB2pSymmetric, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), d; R∞=-1)
+    getTableauVSPARKSymmetricProjection(:LobIIIAIIIB2pSymmetric, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), get_lobatto_d_vector(2); R∞=-1)
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with three stages and symmetric projection."
 function getTableauVSPARKLobIIIAIIIB3pSymmetric()
-    d = [+0.5, -1.0, +0.5]
-    getTableauVSPARKSymmetricProjection(:LobIIIAIIIB3pSymmetric, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), d; R∞=+1)
+    getTableauVSPARKSymmetricProjection(:LobIIIAIIIB3pSymmetric, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), get_lobatto_d_vector(3); R∞=-1)
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIB method with four stages and symmetric projection."
+function getTableauVSPARKLobIIIAIIIB4pSymmetric()
+    getTableauVSPARKSymmetricProjection(:LobIIIAIIIB4pSymmetric, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4(), get_lobatto_d_vector(4); R∞=-1)
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."

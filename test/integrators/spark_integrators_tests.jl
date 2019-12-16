@@ -126,8 +126,14 @@ end
     dint = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIB3pSymmetric(), Δt)
     dsol = integrate(dint, nt)
 
-    # println(rel_err(dsol.q, refx))
-    @test rel_err(dsol.q, refx) < 8E-5
+    println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 4E-7
+
+    dint = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIB4pSymmetric(), Δt)
+    dsol = integrate(dint, nt)
+
+    println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 8E-12
 
 
     ### VSPARKsecondary Integrators ###
