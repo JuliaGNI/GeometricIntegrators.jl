@@ -55,8 +55,6 @@ function IntegratorHSPARK(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT},
     R = tableau.r
     P = tableau.ρ
 
-    @assert tableau.ρ == tableau.r-1
-
     N = 2*D*S + 3*D*R
 
     # create params
@@ -75,7 +73,7 @@ end
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
-                                        params::ParametersHSPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+                                        params::ParametersHSPARK{DT,TT,D,S,R,P}) where {ST,DT,TT,D,S,R,P}
     local tqᵢ::TT
     local tpᵢ::TT
     local tλᵢ::TT
@@ -136,7 +134,7 @@ end
 
 
 "Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems."
-@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersHSPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersHSPARK{DT,TT,D,S,R,P}) where {ST,DT,TT,D,S,R,P}
     cache = IntegratorCacheSPARK{ST,TT,D,S,R}()
 
     quote
@@ -173,18 +171,24 @@ end
                 end
             end
         end
-        for i in 1:R-1
+        for i in 1:R-P
             for k in 1:D
                 b[2*D*S+3*(D*(i-1)+k-1)+3] = 0
                 for j in 1:R
                     b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,j] * $cache.Φp[j][k]
                 end
+                b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,R+1] * $cache.ϕ̃[k]
             end
         end
 
-        # compute b = -ϕ
-        for k in 1:D
-            b[2*D*S+3*(D*(R-1)+k-1)+3] = - $cache.ϕ̃[k]
+        # compute b = d_λ ⋅ Λ
+        for i in R-P+1:R
+            for k in 1:D
+                b[2*D*S+3*(D*(R-1)+k-1)+3] = 0
+                for j in 1:R
+                    b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.δ[j] * $cache.Λp[j][k]
+                end
+            end
         end
     end
 end
