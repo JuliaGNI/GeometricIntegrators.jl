@@ -68,7 +68,7 @@ The function `g` is used in projection methods that enforce ``p = ϑ(q)``.
 struct IODE{dType <: Number, tType <: Number,
             ϑType <: Function, fType <: Function,
             gType <: Function, vType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
 
     d::Int
     m::Int
@@ -138,4 +138,6 @@ function Base.similar(ode::IODE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArra
     IODE(ode.ϑ, ode.f, ode.g, t₀, q₀, p₀, λ₀; v=v, parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(ode::IODE) = ode.d
+@inline Base.ndims(ode::IODE) = ode.d
+
+@inline periodicity(equation::IODE) = equation.periodicity

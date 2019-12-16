@@ -36,7 +36,7 @@ struct IDAE{dType <: Number, tType <: Number,
             ϑType <: Function, fType <: Function,
             uType <: Function, gType <: Function,
             ϕType <: Function, vType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
 
     d::Int
     m::Int
@@ -116,4 +116,6 @@ function Base.similar(dae::IDAE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArra
     IDAE(dae.ϑ, dae.f, dae.u, dae.g, dae.ϕ, t₀, q₀, p₀, λ₀; v=v, parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(dae::IDAE) = dae.d
+@inline Base.ndims(dae::IDAE) = dae.d
+
+@inline periodicity(equation::IDAE) = equation.periodicity

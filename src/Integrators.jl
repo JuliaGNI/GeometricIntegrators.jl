@@ -92,6 +92,7 @@ module Integrators
     export IntegratorWERK, TableauWERK
     export IntegratorWIRK, TableauWIRK
 
+    include("integrators/stochastic_integrators_common.jl")
     include("integrators/stochastic/integrators_serk.jl")
     include("integrators/stochastic/integrators_sirk.jl")
     include("integrators/stochastic/integrators_siprk.jl")

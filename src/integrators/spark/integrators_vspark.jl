@@ -39,13 +39,14 @@ struct IntegratorVSPARK{DT, TT, tabType,
                                 ET <: IDAE{DT,TT},
                                 PT <: ParametersVSPARK{DT,TT},
                                 ST <: NonlinearSolver{DT},
-                                IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVSPARK{DT, TT}
+                                IT <: InitialGuessPODE{DT,TT}, D, S, R} <: AbstractIntegratorVSPARK{DT, TT}
     equation::ET
     tableau::AbstractTableauSPARK{tabType,TT}
 
     params::PT
     solver::ST
     iguess::IT
+    cache::IntegratorCacheSPARK{DT,TT,D,S,R}
 end
 
 function IntegratorVSPARK(equation::IDAE{DT,TT},
@@ -72,9 +73,12 @@ function IntegratorVSPARK(equation::IDAE{DT,TT},
     # create initial guess
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
+    # create cache
+    cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
+
     # create integrator
-    IntegratorVSPARK{DT, TT, ST, typeof(equation), typeof(params), typeof(solver), typeof(iguess)}(
-                                        equation, tableau, params, solver, iguess)
+    IntegratorVSPARK{DT, TT, ST, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, R}(
+                                        equation, tableau, params, solver, iguess, cache)
 end
 
 
@@ -184,18 +188,24 @@ end
                 end
             end
         end
-        for i in 1:R-1
+        for i in 1:R-P
             for k in 1:D
                 b[3*D*S+3*(D*(i-1)+k-1)+3] = 0
                 for j in 1:R
                     b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,j] * $cache.Φp[j][k]
                 end
+                b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,R+1] * $cache.ϕ̃[k]
             end
         end
 
-        # compute b = -ϕ
-        for k in 1:D
-            b[3*D*S+3*(D*(R-1)+k-1)+3] = - $cache.ϕ̃[k]
+        # compute b = d_λ ⋅ Λ
+        for i in R-P+1:R
+            for k in 1:D
+                b[3*D*S+3*(D*(R-1)+k-1)+3] = 0
+                for j in 1:R
+                    b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.δ[j] * $cache.Λp[j][k]
+                end
+            end
         end
 
         if length(params.tab.d) > 0

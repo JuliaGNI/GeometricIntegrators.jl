@@ -255,14 +255,14 @@ function initial_guess!(int::IntegratorHSPARKsecondary, cache::IntegratorCacheSP
 end
 
 
-function update_solution!(int::IntegratorHSPARKsecondary{DT,TT}, cache::IntegratorCacheSPARK{DT,TT}) where {DT,TT}
+function update_solution!(int::IntegratorHSPARKsecondary{DT,TT}, sol::AtomisticSolutionPDAE{DT,TT}) where {DT,TT}
     # compute final update
-    update_solution!(cache.p, cache.pₑᵣᵣ, cache.Fi, int.params.tab.p.b[1], timestep(int))
-    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Vi, int.params.tab.q.b[1], timestep(int))
+    update_solution!(sol.q, sol.q̃, int.cache.Vi, int.params.tab.q.b[1], timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.Fi, int.params.tab.p.b[1], timestep(int))
 
     # compute projection
-    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Up, int.params.tab.q.b[2], timestep(int))
-    update_solution!(cache.q, cache.qₑᵣᵣ, cache.Λp, int.params.tab.q.b[3], timestep(int))
-    update_solution!(cache.p, cache.pₑᵣᵣ, cache.Gp, int.params.tab.p.b[2], timestep(int))
-    update_solution!(cache.p, cache.pₑᵣᵣ, cache.G̅p, int.params.tab.p.b[3], timestep(int))
+    update_solution!(sol.q, sol.q̃, int.cache.Up, int.params.tab.q.b[2], timestep(int))
+    update_solution!(sol.q, sol.q̃, int.cache.Λp, int.params.tab.q.b[3], timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.Gp, int.params.tab.p.b[2], timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.G̅p, int.params.tab.p.b[3], timestep(int))
 end

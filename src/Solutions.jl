@@ -39,17 +39,30 @@ module Solutions
 
     include("solutions/wienerprocess.jl")
 
-    export Solution, StochasticSolution, SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE, SolutionSDE, SolutionPSDE,
-           get_initial_conditions, get_initial_conditions!, set_initial_conditions!,
-           create_hdf5
-    export PSolutionPDAE, SSolutionPDAE
+    export Solution, StochasticSolution
 
-    include("solutions/solutions.jl")
-    include("solutions/solutions_ode.jl")
-    include("solutions/solutions_pode.jl")
-    include("solutions/solutions_dae.jl")
-    include("solutions/solutions_pdae.jl")
-    include("solutions/solutions_sde.jl")
-    include("solutions/solutions_psde.jl")
+    include("solutions/solution.jl")
+
+    export AtomisticSolution, AtomisticSolutionODE, AtomisticSolutionPODE,
+           AtomisticSolutionDAE, AtomisticSolutionPDAE
+    export update!, cut_periodic_solution!
+
+    include("solutions/atomistic_solution.jl")
+    include("solutions/atomistic_solution_ode.jl")
+    include("solutions/atomistic_solution_pode.jl")
+    include("solutions/atomistic_solution_dae.jl")
+    include("solutions/atomistic_solution_pdae.jl")
+
+    export SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE, SolutionSDE, SolutionPSDE
+    export PSolutionPDAE, SSolutionPDAE
+    export get_initial_conditions, get_initial_conditions!, set_initial_conditions!,
+           create_hdf5
+
+    include("solutions/solution_ode.jl")
+    include("solutions/solution_pode.jl")
+    include("solutions/solution_dae.jl")
+    include("solutions/solution_pdae.jl")
+    include("solutions/solution_sde.jl")
+    include("solutions/solution_psde.jl")
 
 end
