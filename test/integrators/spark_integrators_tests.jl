@@ -364,30 +364,30 @@ end
     dint = Integrator(pdae, getTableauHSPARKGLRKpSymmetric(1), Δt)
     dsol = integrate(dint, nt)
 
-    println(rel_err(dsol.q, refx))
+    # println(rel_err(dsol.q, refx))
     @test rel_err(dsol.q, refx) < 4E-6
 
     dint = Integrator(pdae, getTableauHSPARKGLRKpSymmetric(2), Δt)
     dsol = integrate(dint, nt)
 
-    println(rel_err(dsol.q, refx))
+    # println(rel_err(dsol.q, refx))
     @test rel_err(dsol.q, refx) < 4E-6
 
     dint = Integrator(pdae, getTableauHSPARKLobIIIAIIIB2pSymmetric(), Δt)
     dsol = integrate(dint, nt)
 
-    println(rel_err(dsol.q, refx))
+    # println(rel_err(dsol.q, refx))
     @test rel_err(dsol.q, refx) < 4E-6
 
     dint = Integrator(pdae, getTableauHSPARKLobIIIAIIIB3pSymmetric(), Δt)
     dsol = integrate(dint, nt)
 
-    println(rel_err(dsol.q, refx))
+    # println(rel_err(dsol.q, refx))
     @test rel_err(dsol.q, refx) < 4E-6
 
     dint = Integrator(pdae, getTableauHSPARKLobIIIAIIIB4pSymmetric(), Δt)
     dsol = integrate(dint, nt)
 
-    println(rel_err(dsol.q, refx))
+    # println(rel_err(dsol.q, refx))
     @test rel_err(dsol.q, refx) < 4E-6
 end
