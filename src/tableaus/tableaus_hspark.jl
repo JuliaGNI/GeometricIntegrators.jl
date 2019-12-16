@@ -62,18 +62,21 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with two stages and symmetric projection."
 function getTableauHSPARKLobIIIAIIIB2pSymmetric()
-    d = [+1.0, -1.0]
-    getTableauHSPARKSymmetricProjection(:HSPARKLobIIIAIIIB2, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), d; R∞=-1)
+    getTableauHSPARKSymmetricProjection(:HSPARKLobIIIAIIIB2, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2())
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with three stages and symmetric projection."
 function getTableauHSPARKLobIIIAIIIB3pSymmetric()
-    d = [+0.5, -1.0, +0.5]
-    getTableauHSPARKSymmetricProjection(:HSPARKLobIIIAIIIB3, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), d; R∞=+1)
+    getTableauHSPARKSymmetricProjection(:HSPARKLobIIIAIIIB3, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3())
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIB method with four stages and symmetric projection."
+function getTableauHSPARKLobIIIAIIIB4pSymmetric()
+    getTableauHSPARKSymmetricProjection(:HSPARKLobIIIAIIIB4, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4())
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function getTableauHSPARKGLRKpSymmetric(s)
     glrk = getCoefficientsGLRK(s)
-    getTableauHSPARKSymmetricProjection(Symbol("HSPARKGLRK", s), glrk, glrk; R∞=(-1)^s)
+    getTableauHSPARKSymmetricProjection(Symbol("HSPARKGLRK", s), glrk, glrk)
 end

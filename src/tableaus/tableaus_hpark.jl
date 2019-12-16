@@ -34,16 +34,17 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB HPARK method with two stages."
 function getTableauHPARKLobIIIAIIIB2()
-    d = [+1.0, -1.0]
-
-    getTableauHPARK(:HPARKLobIIIAIIIB2, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), d)
+    getTableauHPARK(:HPARKLobIIIAIIIB2, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2())
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB HPARK method with three stages."
 function getTableauHPARKLobIIIAIIIB3()
-    d = [+0.5, -1.0, +0.5]
+    getTableauHPARK(:HPARKLobIIIAIIIB3, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3())
+end
 
-    getTableauHPARK(:HPARKLobIIIAIIIB3, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), d)
+"Tableau for Gauss-Lobatto IIIA-IIIB HPARK method with four stages."
+function getTableauHPARKLobIIIAIIIB4()
+    getTableauHPARK(:HPARKLobIIIAIIIB4, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4())
 end
 
 "Tableau for Gauss-Legendre HPARK method with s stages."
