@@ -128,13 +128,14 @@ module Tableaus
 
     include("tableaus/tableaus_vspark.jl")
 
-    export getTableauVSPARKGLRK,
-           getTableauVSPARKLobIII,
-           getTableauVSPARKGLRKLobIII,
+    export getTableauVSPARKLobIIIAB,
+           getTableauVSPARKLobIIIC,
+           getTableauVSPARKLobIIID,
+           getTableauVSPARKLobIIIE,
            getTableauVSPARKGLRKLobIIIAB,
-           getTableauVSPARKGLRKLobIIIAC,
-           getTableauVSPARKGLRKLobIIIAD,
-           getTableauVSPARKGLRKLobIIIAE
+           getTableauVSPARKGLRKLobIIIC,
+           getTableauVSPARKGLRKLobIIID,
+           getTableauVSPARKGLRKLobIIIE
 
     include("tableaus/tableaus_vspark_psecondary.jl")
 
