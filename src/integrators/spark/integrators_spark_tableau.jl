@@ -18,13 +18,7 @@ struct AbstractTableauSPARK{IT, DT <: Number} <: AbstractTableau{DT}
     δ::Matrix{DT}
     d::Vector{DT}
 
-    function AbstractTableauSPARK{IT,DT}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, δ, d=DT[]) where {IT, DT}
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(r, Integer)
-        @assert isa(ρ, Integer)
-        @assert isa(o, Integer)
-
+    function AbstractTableauSPARK{IT,DT}(name::Symbol, o::Int, s::Int, r::Int, ρ::Int, q, p, q̃, p̃, λ, ω, δ, d=DT[]) where {IT, DT}
         @assert s > 0 "Number of stages s must be > 0"
         @assert r > 0 "Number of stages r must be > 0"
         @assert ρ ≥ 0 && ρ ≤ r+1
