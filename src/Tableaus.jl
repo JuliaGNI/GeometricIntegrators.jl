@@ -112,7 +112,9 @@ module Tableaus
 
 
     export getTableauSymplecticProjection,
-           getTableauLobIIIAIIIB2pSymplectic, getTableauLobIIIAIIIB3pSymplectic,
+           getTableauLobIIIAIIIB2pSymplectic,
+           getTableauLobIIIAIIIB3pSymplectic,
+           getTableauLobIIIAIIIB4pSymplectic,
            getTableauGLRKpSymplectic
 
     include("tableaus/tableaus_vpark.jl")
@@ -141,14 +143,17 @@ module Tableaus
     include("tableaus/tableaus_vspark_psecondary.jl")
 
     export getTableauHPARK, getTableauHPARKGLRK,
-           getTableauHPARKLobIIIAIIIB2, getTableauHPARKLobIIIAIIIB3
+           getTableauHPARKLobIIIAIIIB2,
+           getTableauHPARKLobIIIAIIIB3,
+           getTableauHPARKLobIIIAIIIB4
 
     include("tableaus/tableaus_hpark.jl")
 
     export getTableauHSPARKSymmetricProjection,
            getTableauHSPARKGLRKpSymmetric,
            getTableauHSPARKLobIIIAIIIB2pSymmetric,
-           getTableauHSPARKLobIIIAIIIB3pSymmetric
+           getTableauHSPARKLobIIIAIIIB3pSymmetric,
+           getTableauHSPARKLobIIIAIIIB4pSymmetric
 
     include("tableaus/tableaus_hspark.jl")
 
