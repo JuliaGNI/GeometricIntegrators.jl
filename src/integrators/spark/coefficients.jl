@@ -125,6 +125,43 @@ function Base.show(io::IO, tab::CoefficientsMRK)
 end
 
 
+"Holds the coefficients of an additive Runge-Kutta method."
+struct CoefficientsIRK{T} <: AbstractCoefficients{T}
+    @HeaderCoefficientsRK
+    σ::Int
+    @CoefficientsRK
+
+    function CoefficientsIRK{T}(name::Symbol, o::Int, s::Int, σ::Int, a, b, c) where {T <: Real}
+        @assert s > 0 "Number of stages s must be > 0"
+        @assert σ > 0 "Number of stages σ must be > 0"
+        @assert s==size(a,2)
+        @assert σ==size(a,1)==length(b)==length(c)
+        new(name,o,s,σ,a,b,c)
+    end
+end
+
+function CoefficientsIRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}) where {T}
+    CoefficientsIRK{T}(name, order, size(a,2), size(a,1), a, b, c)
+end
+
+Base.hash(tab::CoefficientsIRK, h::UInt) = hash(tab.o, hash(tab.s, hash(tab.σ, hash(tab.a, hash(tab.b, hash(tab.c, hash(:CoefficientsARK, h)))))))
+
+Base.:(==)(tab1::CoefficientsIRK, tab2::CoefficientsIRK) = (tab1.o == tab2.o
+                                                         && tab1.s == tab2.s
+                                                         && tab1.σ == tab2.σ
+                                                         && tab1.a == tab2.a
+                                                         && tab1.b == tab2.b
+                                                         && tab1.c == tab2.c)
+
+"Print additive Runge-Kutta coefficients."
+function Base.show(io::IO, tab::CoefficientsIRK)
+    print(io, "Interstage Runge-Kutta Coefficients ", tab.name, "with ", tab.s, " internal stages, ", tab.σ, " projective stages and order ", tab.o)
+    print(io, "  a = ", tab.a)
+    print(io, "  b = ", tab.b)
+    print(io, "  c = ", tab.c)
+end
+
+
 "Holds the coefficients of a SPARK method."
 struct CoefficientsSPARK{T,N} <: AbstractCoefficients{T}
     @HeaderCoefficientsRK
