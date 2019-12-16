@@ -255,32 +255,7 @@ function initial_guess!(int::IntegratorHSPARKsecondary, cache::IntegratorCacheSP
 end
 
 
-"Integrate an implicit DAE with a specialised partitioned additive Runge-Kutta integrator."
-function integrate_step!(int::IntegratorHSPARKsecondary{DT,TT}, cache::IntegratorCacheSPARK{DT,TT}) where {DT,TT}
-    # update nonlinear solver parameters from cache
-    update_params!(int.params, cache)
-
-    # compute initial guess
-    initial_guess!(int, cache)
-
-    # reset cache
-    reset!(cache, timestep(int))
-
-    # call nonlinear solver
-    solve!(int.solver)
-
-    # check_jacobian(int.solver)
-    # print_jacobian(int.solver)
-
-    # print solver status
-    print_solver_status(int.solver.status, int.solver.params, cache.n)
-
-    # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params, cache.n)
-
-    # compute vector fields at internal stages
-    compute_stages!(int.solver.x, cache, int.params)
-
+function update_solution!(int::IntegratorHSPARKsecondary{DT,TT}, cache::IntegratorCacheSPARK{DT,TT}) where {DT,TT}
     # compute final update
     update_solution!(cache.p, cache.pₑᵣᵣ, cache.Fi, int.params.tab.p.b[1], timestep(int))
     update_solution!(cache.q, cache.qₑᵣᵣ, cache.Vi, int.params.tab.q.b[1], timestep(int))
@@ -290,10 +265,4 @@ function integrate_step!(int::IntegratorHSPARKsecondary{DT,TT}, cache::Integrato
     update_solution!(cache.q, cache.qₑᵣᵣ, cache.Λp, int.params.tab.q.b[3], timestep(int))
     update_solution!(cache.p, cache.pₑᵣᵣ, cache.Gp, int.params.tab.p.b[2], timestep(int))
     update_solution!(cache.p, cache.pₑᵣᵣ, cache.G̅p, int.params.tab.p.b[3], timestep(int))
-
-    # copy solution to initial guess
-    update!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f)
-
-    # take care of periodic solutions
-    cut_periodic_solution!(cache, equation(int).periodicity)
 end

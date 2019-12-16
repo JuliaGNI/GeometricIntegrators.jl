@@ -146,12 +146,12 @@ module Integrators
     include("integrators/spark/abstract_integrator_spark.jl")
     include("integrators/spark/coefficients.jl")
 
-    include("integrators/spark/integrators_vpark.jl")
-    include("integrators/spark/integrators_hpark.jl")
-
     include("integrators/spark/integrators_spark_cache.jl")
     include("integrators/spark/integrators_spark_common.jl")
     include("integrators/spark/integrators_spark_tableau.jl")
+
+    include("integrators/spark/integrators_vpark.jl")
+    include("integrators/spark/integrators_hpark.jl")
 
     include("integrators/spark/integrators_vspark_common.jl")
     include("integrators/spark/integrators_vspark.jl")
