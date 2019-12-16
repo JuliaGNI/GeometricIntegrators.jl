@@ -18,7 +18,7 @@
             lu = solver(AT, bT)
             factorize!(lu)
             solve!(lu)
-            @test lu.b == xT
+            @test lu.b ≈ xT atol=1E-14
         end
     end
 
