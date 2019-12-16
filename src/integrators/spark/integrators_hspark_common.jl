@@ -43,22 +43,6 @@ nstages(int::AbstractIntegratorHSPARK) = int.tableau.s
 pstages(int::AbstractIntegratorHSPARK) = int.tableau.r
 
 
-function create_integrator_cache(int::AbstractIntegratorHSPARK{DT,TT}) where {DT,TT}
-    IntegratorCacheSPARK{DT, TT, ndims(int), nstages(int), pstages(int)}()
-end
-
-
-function initialize!(int::AbstractIntegratorHSPARK, cache::IntegratorCacheSPARK)
-    cache.t̅ = cache.t - timestep(int)
-
-    equation(int).v(cache.t, cache.q, cache.p, cache.v)
-    equation(int).f(cache.t, cache.q, cache.p, cache.f)
-
-    initialize!(int.iguess, cache.t, cache.q, cache.p, cache.v, cache.f,
-                            cache.t̅, cache.q̅, cache.p̅, cache.v̅, cache.f̅)
-end
-
-
 function initial_guess!(int::AbstractIntegratorHSPARK, cache::IntegratorCacheSPARK)
     for i in 1:nstages(int)
         evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
