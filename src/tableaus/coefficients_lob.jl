@@ -306,3 +306,51 @@ function getCoefficientsLobIIIE(s, T=Float64)
         @error "Lobatto IIIE Tableau with " * string(s) * " stages not implemented."
     end
 end
+
+
+function get_lobatto_interstage_coefficients(s, σ=s+1, T=Float64)
+    if s == 1 && σ == 2
+        a = reshape(Array{Dec128}(@dec128 [
+                [0]
+                [1]
+            ]), σ, s)
+    elseif s == 2 && σ == 3
+        a = @dec128 [
+                [0         0       ]
+                [1/4+√3/8  1/4-√3/8]
+                [1/2       1/2     ]
+            ]
+    elseif s == 3 && σ == 4
+        a = @dec128 [
+                [0                     0              0                 ]
+                [5/36-√5/180+√15/30    2/9-4*√5/45    5/36-√15/30-√5/180]
+                [5/36+√5/180+√15/30    2/9+4*√5/45    5/36+√5/180-√15/30]
+                [5/18                  4/9            5/18              ]
+            ]
+    else
+        @error("Number of stages s=" * string(s) * " and σ=" * string(σ) * " is not supported.")
+    end
+
+    CoefficientsIRK{T}(:LobIIIIS, s^2, s, σ, a, get_lobatto_weights(σ), get_lobatto_nodes(σ))
+end
+
+
+function get_lobatto_d_vector(s)
+    if s == 2
+        d = [+1.0, -1.0]
+    elseif s == 3
+        d = [+1.0, -2.0, +1.0]
+    elseif s == 4
+        d = [+1.0, -√5, +√5, -1.0]
+    else
+        @error("We don't have a d vector for s=" * string(s) * " stages.")
+    end
+    return d
+end
+
+function get_lobatto_ω_matrix(s)
+    ω = zeros(s, s+1)
+    ω[1:s-1,1:s] .= getCoefficientsLobIIIA(s).a[2:s,1:s]
+    ω[s,s+1] = 1
+    return ω
+end
