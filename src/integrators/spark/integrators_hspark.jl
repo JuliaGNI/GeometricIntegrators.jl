@@ -1,5 +1,5 @@
 
-const TableauHSPARK{DT} = AbstractTableauSPARK{:hspark,DT}
+const TableauHSPARK = AbstractTableauSPARK{:hspark}
 const ParametersHSPARK = AbstractParametersHSPARK{:hspark}
 
 
@@ -55,14 +55,10 @@ function IntegratorHSPARK(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT},
     R = tableau.r
     P = tableau.ρ
 
-    @assert tableau.ρ == tableau.r-1
-
     N = 2*D*S + 3*D*R
 
     # create params
-    params = ParametersHSPARK{DT,TT,D,S,R,P,VT,FT,UT,GT,ϕT}(
-                                equation.v, equation.f, equation.u, equation.g, equation.ϕ, Δt,
-                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ, tableau.ω, tableau.δ)
+    params = ParametersHSPARK{DT,D,S,R,P}(equation.v, equation.f, equation.u, equation.g, equation.ϕ, Δt, tableau)
 
     # create solver
     solver = create_nonlinear_solver(DT, N, params)
@@ -77,7 +73,7 @@ end
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
-                                        params::ParametersHSPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+                                        params::ParametersHSPARK{DT,TT,D,S,R,P}) where {ST,DT,TT,D,S,R,P}
     local tqᵢ::TT
     local tpᵢ::TT
     local tλᵢ::TT
@@ -94,8 +90,8 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R}
         end
 
         # compute f(X)
-        tqᵢ = params.t + params.Δt * params.t_q.c[i]
-        tpᵢ = params.t + params.Δt * params.t_p.c[i]
+        tqᵢ = params.t + params.Δt * params.tab.q.c[i]
+        tpᵢ = params.t + params.Δt * params.tab.p.c[i]
         params.f_v(tqᵢ, cache.Qi[i], cache.Pi[i], cache.Vi[i])
         params.f_f(tpᵢ, cache.Qi[i], cache.Pi[i], cache.Fi[i])
     end
@@ -113,7 +109,7 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R}
         end
 
         # compute f(X)
-        tλᵢ = params.t + params.Δt * params.t_λ.c[i]
+        tλᵢ = params.t + params.Δt * params.tab.λ.c[i]
         params.f_u(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Up[i])
         params.f_g(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Gp[i])
         params.f_ϕ(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Φp[i])
@@ -123,12 +119,12 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R}
     cache.q̃ .= params.q
     cache.p̃ .= params.p
     for i in 1:S
-        cache.q̃ .+= params.Δt .* params.t_q.b[i] .* cache.Vi[i]
-        cache.p̃ .+= params.Δt .* params.t_p.b[i] .* cache.Fi[i]
+        cache.q̃ .+= params.Δt .* params.tab.q.b[i] .* cache.Vi[i]
+        cache.p̃ .+= params.Δt .* params.tab.p.b[i] .* cache.Fi[i]
     end
     for i in 1:R
-        cache.q̃ .+= params.Δt .* params.t_q.β[i] .* cache.Up[i]
-        cache.p̃ .+= params.Δt .* params.t_p.β[i] .* cache.Gp[i]
+        cache.q̃ .+= params.Δt .* params.tab.q.β[i] .* cache.Up[i]
+        cache.p̃ .+= params.Δt .* params.tab.p.β[i] .* cache.Gp[i]
     end
 
     # compute ϕ(q,p)
@@ -138,7 +134,7 @@ end
 
 
 "Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems."
-@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersHSPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersHSPARK{DT,TT,D,S,R,P}) where {ST,DT,TT,D,S,R,P}
     cache = IntegratorCacheSPARK{ST,TT,D,S,R}()
 
     quote
@@ -150,12 +146,12 @@ end
                 b[2*(D*(i-1)+k-1)+1] = - $cache.Yi[i][k]
                 b[2*(D*(i-1)+k-1)+2] = - $cache.Zi[i][k]
                 for j in 1:S
-                    b[2*(D*(i-1)+k-1)+1] += params.t_q.a[i,j] * $cache.Vi[j][k]
-                    b[2*(D*(i-1)+k-1)+2] += params.t_p.a[i,j] * $cache.Fi[j][k]
+                    b[2*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * $cache.Vi[j][k]
+                    b[2*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * $cache.Fi[j][k]
                 end
                 for j in 1:R
-                    b[2*(D*(i-1)+k-1)+1] += params.t_q.α[i,j] * $cache.Up[j][k]
-                    b[2*(D*(i-1)+k-1)+2] += params.t_p.α[i,j] * $cache.Gp[j][k]
+                    b[2*(D*(i-1)+k-1)+1] += params.tab.q.α[i,j] * $cache.Up[j][k]
+                    b[2*(D*(i-1)+k-1)+2] += params.tab.p.α[i,j] * $cache.Gp[j][k]
                 end
             end
         end
@@ -166,27 +162,33 @@ end
                 b[2*D*S+3*(D*(i-1)+k-1)+1] = - $cache.Yp[i][k]
                 b[2*D*S+3*(D*(i-1)+k-1)+2] = - $cache.Zp[i][k]
                 for j in 1:S
-                    b[2*D*S+3*(D*(i-1)+k-1)+1] += params.t_q̃.a[i,j] * $cache.Vi[j][k]
-                    b[2*D*S+3*(D*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * $cache.Fi[j][k]
+                    b[2*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.a[i,j] * $cache.Vi[j][k]
+                    b[2*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.a[i,j] * $cache.Fi[j][k]
                 end
                 for j in 1:R
-                    b[2*D*S+3*(D*(i-1)+k-1)+1] += params.t_q̃.α[i,j] * $cache.Up[j][k]
-                    b[2*D*S+3*(D*(i-1)+k-1)+2] += params.t_p̃.α[i,j] * $cache.Gp[j][k]
+                    b[2*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.α[i,j] * $cache.Up[j][k]
+                    b[2*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.α[i,j] * $cache.Gp[j][k]
                 end
             end
         end
-        for i in 1:R-1
+        for i in 1:R-P
             for k in 1:D
                 b[2*D*S+3*(D*(i-1)+k-1)+3] = 0
                 for j in 1:R
-                    b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.t_ω[i,j] * $cache.Φp[j][k]
+                    b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,j] * $cache.Φp[j][k]
                 end
+                b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,R+1] * $cache.ϕ̃[k]
             end
         end
 
-        # compute b = -ϕ
-        for k in 1:D
-            b[2*D*S+3*(D*(R-1)+k-1)+3] = - $cache.ϕ̃[k]
+        # compute b = d_λ ⋅ Λ
+        for i in R-P+1:R
+            for k in 1:D
+                b[2*D*S+3*(D*(R-1)+k-1)+3] = 0
+                for j in 1:R
+                    b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.δ[j] * $cache.Λp[j][k]
+                end
+            end
         end
     end
 end

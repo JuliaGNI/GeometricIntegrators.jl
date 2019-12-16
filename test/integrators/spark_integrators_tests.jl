@@ -11,16 +11,22 @@ set_config(:nls_atol, 8eps())
 set_config(:nls_rtol, 2eps())
 set_config(:nls_solver, QuasiNewtonSolver)
 set_config(:jacobian_autodiff, true)
+# set_config(:nls_nmax, 3)
 
 using GeometricIntegrators.TestProblems.LotkaVolterra: Δt, nt
 
+# Δt = 0.001
+# nt = 100
+
 idae = lotka_volterra_2d_idae()
 pdae = lotka_volterra_2d_pdae()
+vdae = lotka_volterra_2d_vdae()
 
 int  = IntegratorFIRK(lotka_volterra_2d_ode(), getTableauGLRK(8), Δt)
 sol  = integrate(int, nt)
 refx = sol.q[:,end]
 
+# set_config(:nls_nmax, 1)
 
 @testset "$(rpad("VPARK integrators",80))" begin
 
@@ -58,7 +64,13 @@ refx = sol.q[:,end]
     dsol = integrate(dint, nt)
 
     # println(rel_err(dsol.q, refx))
-    @test rel_err(dsol.q, refx) < 8E-5
+    @test rel_err(dsol.q, refx) < 2E-5
+
+    dint = Integrator(idae, getTableauLobIIIAIIIB4pSymplectic(), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 8E-12
 
 end
 
@@ -121,8 +133,167 @@ end
     dsol = integrate(dint, nt)
 
     # println(rel_err(dsol.q, refx))
-    @test rel_err(dsol.q, refx) < 8E-5
+    @test rel_err(dsol.q, refx) < 4E-7
 
+    dint = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIB4pSymmetric(), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 8E-12
+
+
+    ### VSPARKsecondary Integrators ###
+
+    dint = Integrator(vdae, getTableauVSPARKLobIIIAB(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 4E-6
+
+    dint = Integrator(vdae, getTableauVSPARKLobIIIAB(3), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 2E-11
+
+    dint = Integrator(vdae, getTableauVSPARKLobIIIAB(4), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-15
+
+
+    dint = Integrator(vdae, getTableauVSPARKLobIIIC(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 4E-6
+
+    dint = Integrator(vdae, getTableauVSPARKLobIIIC(3), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 2E-11
+
+    dint = Integrator(vdae, getTableauVSPARKLobIIIC(4), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-15
+
+
+    dint = Integrator(vdae, getTableauVSPARKLobIIID(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 4E-6
+
+    dint = Integrator(vdae, getTableauVSPARKLobIIID(3), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 2E-11
+
+    dint = Integrator(vdae, getTableauVSPARKLobIIID(4), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-15
+
+
+    dint = Integrator(vdae, getTableauVSPARKLobIIIE(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-6
+
+    dint = Integrator(vdae, getTableauVSPARKLobIIIE(3), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-11
+
+    dint = Integrator(vdae, getTableauVSPARKLobIIIE(4), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-15
+
+
+    dint = Integrator(vdae, getTableauVSPARKGLRKLobIIIAB(1), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 4E-6
+
+    dint = Integrator(vdae, getTableauVSPARKGLRKLobIIIAB(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-11
+
+    dint = Integrator(vdae, getTableauVSPARKGLRKLobIIIAB(3), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-15
+
+
+    dint = Integrator(vdae, getTableauVSPARKGLRKLobIIIC(1), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 4E-6
+
+    dint = Integrator(vdae, getTableauVSPARKGLRKLobIIIC(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-11
+
+    dint = Integrator(vdae, getTableauVSPARKGLRKLobIIIC(3), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-15
+
+
+    dint = Integrator(vdae, getTableauVSPARKGLRKLobIIID(1), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 4E-6
+
+    dint = Integrator(vdae, getTableauVSPARKGLRKLobIIID(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-11
+
+    dint = Integrator(vdae, getTableauVSPARKGLRKLobIIID(3), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-15
+
+
+    dint = Integrator(vdae, getTableauVSPARKGLRKLobIIIE(1), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-6
+
+    dint = Integrator(vdae, getTableauVSPARKGLRKLobIIIE(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-11
+
+    dint = Integrator(vdae, getTableauVSPARKGLRKLobIIIE(3), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-15
 end
 
 
@@ -164,6 +335,11 @@ end
     # println(rel_err(dsol.q, refx))
     # @test rel_err(dsol.q, refx) < 8E-2
 
+    dint = Integrator(pdae, getTableauHPARKLobIIIAIIIB4(), Δt)
+    # dsol = integrate(dint, nt)
+    # TODO
+    # println(rel_err(dsol.q, refx))
+    # @test rel_err(dsol.q, refx) < 8E-2
 end
 
 
@@ -176,6 +352,12 @@ end
     # println(rel_err(dsol.q, refx))
     @test rel_err(dsol.q, refx) < 1E-6
 
+    dint = IntegratorHSPARK(pdae, getTableauSPARKGLRK(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-11
+
 
     ### HSPARKprimary Integrators ###
 
@@ -183,7 +365,7 @@ end
     dsol = integrate(dint, nt)
 
     # println(rel_err(dsol.q, refx))
-    @test rel_err(dsol.q, refx) < 2E-1
+    @test rel_err(dsol.q, refx) < 4E-6
 
     dint = Integrator(pdae, getTableauHSPARKGLRKpSymmetric(2), Δt)
     dsol = integrate(dint, nt)
@@ -195,9 +377,15 @@ end
     dsol = integrate(dint, nt)
 
     # println(rel_err(dsol.q, refx))
-    @test rel_err(dsol.q, refx) < 2E-1
+    @test rel_err(dsol.q, refx) < 4E-6
 
     dint = Integrator(pdae, getTableauHSPARKLobIIIAIIIB3pSymmetric(), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 4E-6
+
+    dint = Integrator(pdae, getTableauHSPARKLobIIIAIIIB4pSymmetric(), Δt)
     dsol = integrate(dint, nt)
 
     # println(rel_err(dsol.q, refx))
