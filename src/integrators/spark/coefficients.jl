@@ -22,12 +22,7 @@ struct CoefficientsARK{T} <: AbstractCoefficients{T}
     @HeaderCoefficientsARK
     @CoefficientsARK
 
-    function CoefficientsARK{T}(name,o,s,r,a,b,c,α,β) where {T}
-        @assert T <: Real
-        @assert isa(name, Symbol)
-        @assert isa(o, Integer)
-        @assert isa(s, Integer)
-        @assert isa(r, Integer)
+    function CoefficientsARK{T}(name::Symbol, o::Int, s::Int, r::Int, a, b, c, α, β) where {T <: Real}
         @assert s > 0 "Number of stages s must be > 0"
         @assert r > 0 "Number of stages r must be > 0"
         @assert s==size(a,1)==size(a,2)==size(α,1)==length(b)==length(c)
@@ -67,12 +62,7 @@ struct CoefficientsPRK{T} <: AbstractCoefficients{T}
     @HeaderCoefficientsARK
     @CoefficientsPRK
 
-    function CoefficientsPRK{T}(name,o,s,r,a,c,α) where {T}
-        @assert T <: Real
-        @assert isa(name, Symbol)
-        @assert isa(o, Integer)
-        @assert isa(s, Integer)
-        @assert isa(r, Integer)
+    function CoefficientsPRK{T}(name::Symbol, o::Int, s::Int, r::Int, a, c, α) where {T <: Real}
         @assert s > 0 "Number of stages s must be > 0"
         @assert r > 0 "Number of stages r must be > 0"
         @assert r==size(a,1)==size(α,1)==size(α,2)==length(c)
@@ -110,10 +100,7 @@ struct CoefficientsMRK{T}
     b::Vector{T}
     c::Vector{T}
 
-    function CoefficientsMRK{T}(name,r,b,c) where {T}
-        @assert T <: Real
-        @assert isa(name, Symbol)
-        @assert isa(r, Integer)
+    function CoefficientsMRK{T}(name::Symbol, r::Int, b, c) where {T <: Real}
         @assert r > 0 "Number of stages r must be > 0"
         @assert r==length(b)==length(c)
         new(name,r,b,c)
