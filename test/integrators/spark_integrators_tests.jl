@@ -352,11 +352,11 @@ end
     # println(rel_err(dsol.q, refx))
     @test rel_err(dsol.q, refx) < 1E-6
 
-    # dint = IntegratorHSPARK(pdae, getTableauSPARKGLRK(2), Δt)
-    # dsol = integrate(dint, nt)
-    # TODO
+    dint = IntegratorHSPARK(pdae, getTableauSPARKGLRK(2), Δt)
+    dsol = integrate(dint, nt)
+
     # println(rel_err(dsol.q, refx))
-    # @test rel_err(dsol.q, refx) < 1E-6
+    @test rel_err(dsol.q, refx) < 1E-11
 
 
     ### HSPARKprimary Integrators ###
