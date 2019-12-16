@@ -127,7 +127,8 @@ module Integrators
     include("integrators/vprk/integrators_vprk_plegendre.jl")
 
 
-    export CoefficientsARK, CoefficientsPRK, CoefficientsMRK, CoefficientsSPARK
+    export CoefficientsARK, CoefficientsPRK, CoefficientsMRK, CoefficientsIRK,
+           CoefficientsSPARK
 
     export AbstractIntegratorSPARK
     export AbstractTableauSPARK, TableauSPARK
