@@ -169,10 +169,14 @@ module LotkaVolterra
         nothing
     end
 
-    function lotka_volterra_2d_f_ham(t::Real, q::Vector, v::Vector, f::Vector)
+    function lotka_volterra_2d_f_ham(t::Real, q::Vector, f::Vector)
         f[1] = - dHd₁(t,q)
         f[2] = - dHd₂(t,q)
         nothing
+    end
+
+    function lotka_volterra_2d_f_ham(t::Real, q::Vector, v::Vector, f::Vector)
+        lotka_volterra_2d_f_ham(t, q, f)
     end
 
     function lotka_volterra_2d_g(t::Real, q::Vector, v::Vector, g::Vector)
