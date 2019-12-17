@@ -48,7 +48,7 @@ struct SODE{dType <: Number, tType <: Number,
     parameters::pType
     periodicity::Vector{dType}
 
-    function SODE(DT::DataType, N::Int, d::Int, n::Int, v::vType, t₀::tType, q₀::DenseArray{dType};
+    function SODE(DT::DataType, N::Int, d::Int, n::Int, v::vType, t₀::tType, q₀::AbstractArray{dType};
                  parameters=nothing, periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number, vType <: Tuple}
 
@@ -61,7 +61,7 @@ struct SODE{dType <: Number, tType <: Number,
     end
 end
 
-function SODE(v, t₀, q₀::DenseArray{DT}; kwargs...) where {DT}
+function SODE(v, t₀, q₀::AbstractArray{DT}; kwargs...) where {DT}
     SODE(DT, ndims(q₀), size(q₀,1), size(q₀,2), v, t₀, q₀; kwargs...)
 end
 
@@ -85,7 +85,7 @@ function Base.similar(ode::SODE, q₀; kwargs...)
     similar(ode, ode.t₀, q₀; kwargs...)
 end
 
-function Base.similar(ode::SODE, t₀::TT, q₀::DenseArray{DT};
+function Base.similar(ode::SODE, t₀::TT, q₀::AbstractArray{DT};
                       parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
     @assert ode.d == size(q₀,1)
     SODE(ode.v, t₀, q₀; parameters=parameters, periodicity=periodicity)

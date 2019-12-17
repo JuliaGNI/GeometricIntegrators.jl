@@ -56,7 +56,7 @@ struct IDAE{dType <: Number, tType <: Number,
 
     function IDAE(DT::DataType, N::Int, d::Int, m::Int, n::Int,
                   ϑ::ϑType, f::fType, u::uType, g::gType, ϕ::ϕType, t₀::tType,
-                  q₀::DenseArray{dType}, p₀::DenseArray{dType}, λ₀::DenseArray{dType};
+                  q₀::AbstractArray{dType}, p₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
                   v=nothing, parameters=nothing, periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number,
                         ϑType <: Function, fType <: Function,
@@ -75,11 +75,11 @@ struct IDAE{dType <: Number, tType <: Number,
     end
 end
 
-function IDAE(ϑ, f, u, g, ϕ, t₀::Number, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}=zeros(q₀); kwargs...) where {DT}
+function IDAE(ϑ, f, u, g, ϕ, t₀::Number, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=zeros(q₀); kwargs...) where {DT}
     IDAE(DT, ndims(q₀), size(q₀,1), size(λ₀,1), size(q₀,2), ϑ, f, u, g, ϕ, t₀, q₀, p₀, λ₀; kwargs...)
 end
 
-function IDAE(ϑ, f, u, g, ϕ, q₀::DenseArray, p₀::DenseArray, λ₀::DenseArray=zeros(q₀); kwargs...)
+function IDAE(ϑ, f, u, g, ϕ, q₀::AbstractArray, p₀::AbstractArray, λ₀::AbstractArray=zeros(q₀); kwargs...)
     IDAE(ϑ, f, u, g, ϕ, zero(eltype(q₀)), q₀, p₀, λ₀; kwargs...)
 end
 
@@ -109,7 +109,7 @@ function Base.similar(dae::IDAE, q₀, p₀, λ₀=get_λ₀(q₀, dae.λ₀); k
     similar(dae, dae.t₀, q₀, p₀, λ₀; kwargs...)
 end
 
-function Base.similar(dae::IDAE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}=get_λ₀(q₀, dae.λ₀);
+function Base.similar(dae::IDAE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=get_λ₀(q₀, dae.λ₀);
                       v=dae.v, parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
     @assert dae.d == size(q₀,1) == size(p₀,1)
     @assert dae.m == size(λ₀,1)
