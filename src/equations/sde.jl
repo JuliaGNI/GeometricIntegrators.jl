@@ -57,7 +57,9 @@ or the column col of the matrix B (if col>0).
     sde = SDE(v_sde, B_sde, t₀, q₀)
 ```
 """
-struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Function, N} <: Equation{dType, tType}
+struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Function,
+           pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+
     d::Int
     m::Int
     n::Int
@@ -66,14 +68,15 @@ struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Functio
     B::BType
     t₀::tType
     q₀::Array{dType, N}           #Initial condition: N=1 - single deterministic, N=2 - single random or multiple deterministic, N=3 - multiple random
+    parameters::pType
     periodicity::Vector{dType}
 
-    function SDE{dType,tType,vType,BType,N}(d, m, n, ns, v, B, t₀, q₀; periodicity=[]) where {dType <: Number, tType <: Number, vType <: Function, BType <: Function, N}
+    function SDE(m, n, ns, v::vType, B::BType, t₀::tType, q₀::DenseArray{dType};
+                 parameters=nothing, periodicity=zeros(dType,size(q₀,1))) where {
+                        dType <: Number, tType <: Number, vType <: Function, BType <: Function}
 
-        @assert dType == eltype(q₀)
-        @assert tType == typeof(t₀)
-        @assert ndims(q₀) == N
-        @assert d == size(q₀,1)
+        N = ndims(q₀)
+        d = size(q₀,1)
 
         if ns==1 && n==1
             # single sample path and single initial condition, therefore N=1
@@ -101,73 +104,48 @@ struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Functio
             end
         end
 
-        if !(length(periodicity) == d)
-            periodicity = zeros(dType, d)
-        end
-
-        new(d, m, n, ns, v, B, t₀, q₀, periodicity)
+        new{dType,tType,vType,BType,typeof(parameters),N}(d, m, n, ns, v, B, t₀, q₀, parameters, periodicity)
     end
 end
 
 
-function SDE(m::Int, ns::Int, v::VT, B::BT, t₀::TT, q₀::DenseArray{DT,1}; periodicity=[]) where {DT,TT,VT,BT}
+function SDE(m::Int, ns::Int, v::Function, B::Function, t₀::Number, q₀::DenseArray{DT,1}; kwargs...) where {DT <: Number}
     # A 1D array q₀ contains a single deterministic initial condition, so n=1, but we still need to specify
     # the number of sample paths ns
-    SDE{DT, TT, VT, BT, 1}(size(q₀, 1), m, 1, ns, v, B, t₀, q₀, periodicity=periodicity)
+    SDE(m, 1, ns, v, B, t₀, q₀; kwargs...)
 end
-
 
 # A 2-dimensional matrix q0 can represent a single random initial condition with ns>1 and n=1,
 # or a set of deterministic initial conditions with n>1 (for which we can have both ns=1 and ns>1)
 # The function below assumes q0 to represent a single random initial condition (n=1, ns=size(q₀, 2))
-function SDE(m::Int, v::VT, B::BT, t₀::TT, q₀::DenseArray{DT,2}; periodicity=[]) where {DT,TT,VT,BT}
-    SDE{DT, TT, VT, BT, 2}(size(q₀, 1), m, 1, size(q₀, 2), v, B, t₀, q₀, periodicity=periodicity)
+function SDE(m::Int, v::Function, B::Function, t₀::Number, q₀::DenseArray{DT,2}; kwargs...) where {DT <: Number}
+    SDE(m, 1, size(q₀,2), v, B, t₀, q₀; kwargs...)
 end
 
 # On the other hand, the function below assumes q₀ represents multiple deterministic initial conditions
 # (n=size(q₀, 2)), but these initial conditions may be run an arbitrary number ns of sample paths, so ns has to be explicitly specified
-function SDE(m::Int, ns::Int, v::VT, B::BT, t₀::TT, q₀::DenseArray{DT,2}; periodicity=[]) where {DT,TT,VT,BT}
-    SDE{DT, TT, VT, BT, 2}(size(q₀, 1), m, size(q₀, 2), ns, v, B, t₀, q₀, periodicity=periodicity)
+function SDE(m::Int, ns::Int, v::Function, B::Function, t₀::Number, q₀::DenseArray{DT,2}; kwargs...) where {DT <: Number}
+    SDE(m, size(q₀,2), ns, v, B, t₀, q₀; kwargs...)
 end
 
-# # OLD FUNCTION FOR A 2D matrix q₀
-# # The argument IC specifies whether there are multiple deterministic initial conditions
-# # (IC=true, so n>1) or a single random one (default IC=false, so n=1)
-# function SDE(m::Int, v::VT, B::BT, t₀::TT, q₀::DenseArray{DT,2}; periodicity=[], IC=false) where {DT,TT,VT,BT}
-#     if IC==true
-#         SDE{DT, TT, VT, BT, 2}(size(q₀, 1), m, size(q₀, 2), 1, v, B, t₀, q₀, periodicity=periodicity)
-#     else
-#         SDE{DT, TT, VT, BT, 2}(size(q₀, 1), m, 1, size(q₀, 2), v, B, t₀, q₀, periodicity=periodicity)
-#     end
-# end
-
-
-function SDE(m::Int, v::VT, B::BT, t₀::TT, q₀::DenseArray{DT,3}; periodicity=[]) where {DT,TT,VT,BT}
+function SDE(m::Int, v::Function, B::Function, t₀::Number, q₀::DenseArray{DT,3}; kwargs...) where {DT <: Number}
     # A 3D array q₀ contains multiple random initial condition, so n=size(q₀,3) and ns=size(q₀,2)
-    SDE{DT, TT, VT, BT, 3}(size(q₀, 1), m, size(q₀,3), size(q₀,2), v, B, t₀, q₀, periodicity=periodicity)
+    SDE(m, size(q₀,3), size(q₀,2), v, B, t₀, q₀; kwargs...)
 end
 
 
-function SDE(m::Int, ns::Int, v::VT, B::BT, q₀::DenseArray{DT,1}; periodicity=[]) where {DT,VT,BT}
-    SDE(m, ns, v, B, zero(DT), q₀, periodicity=periodicity)
+function SDE(m::Int, ns::Int, v::Function, B::Function, q₀::DenseArray{DT}; kwargs...) where {DT}
+    SDE(m, ns, v, B, zero(DT), q₀; kwargs...)
 end
 
-# Assumes q0 represents a single random initial condition (n=1, ns=size(q₀, 2))
-function SDE(m::Int, v::VT, B::BT, q₀::DenseArray{DT,2}; periodicity=[]) where {DT,VT,BT}
-    SDE(m, v, B, zero(DT), q₀, periodicity=periodicity)
-end
-
-# Assumes q₀ represents multiple deterministic initial conditions (n=size(q₀, 2))
-function SDE(m::Int, ns::Int, v::VT, B::BT, q₀::DenseArray{DT,2}; periodicity=[]) where {DT,VT,BT}
-    SDE(m, ns, v, B, zero(DT), q₀, periodicity=periodicity)
+function SDE(m::Int, v::Function, B::Function, q₀::DenseArray{DT}; kwargs...) where {DT}
+    SDE(m, v, B, zero(DT), q₀; kwargs...)
 end
 
 
-function SDE(m::Int, v::VT, B::BT, q₀::DenseArray{DT,3}; periodicity=[]) where {DT,VT,BT}
-    SDE(m, v, B, zero(DT), q₀, periodicity=periodicity)
-end
-
-Base.hash(sde::SDE, h::UInt) = hash(sde.d, hash(sde.m, hash(sde.n, hash(sde.ns, hash(sde.v, hash(sde.B, hash(sde.t₀, hash(sde.q₀, hash(sde.periodicity, h)))))))))
+Base.hash(sde::SDE, h::UInt) = hash(sde.d, hash(sde.m, hash(sde.n, hash(sde.ns,
+                               hash(sde.v, hash(sde.B, hash(sde.t₀, hash(sde.q₀,
+                               hash(sde.parameters, hash(sde.periodicity, h))))))))))
 
 Base.:(==)(sde1::SDE, sde2::SDE) = (
                                 sde1.d == sde2.d
@@ -178,56 +156,23 @@ Base.:(==)(sde1::SDE, sde2::SDE) = (
                              && sde1.B == sde2.B
                              && sde1.t₀ == sde2.t₀
                              && sde1.q₀ == sde2.q₀
+                             && sde1.parameters == sde2.parameters
                              && sde1.periodicity == sde2.periodicity)
 
-function Base.similar(sde::SDE{DT,TT,VT,UT}, q₀::DenseArray{DT,1}) where {DT, TT, VT, UT}
+function Base.similar(sde::SDE, q₀::DenseArray)
     similar(sde, sde.t₀, q₀)
 end
 
-# Assumes q0 represents a single random initial condition (n=1, ns=size(q₀, 2))
-function Base.similar(sde::SDE{DT,TT,VT,UT}, q₀::DenseArray{DT,2}) where {DT, TT, VT, UT}
-    similar(sde, sde.t₀, q₀)
-end
-
-function Base.similar(sde::SDE{DT,TT,VT,UT}, q₀::DenseArray{DT,3}) where {DT, TT, VT, UT}
-    similar(sde, sde.t₀, q₀)
-end
-
-
-function Base.similar(sde::SDE{DT,TT,VT,BT}, t₀::TT, q₀::DenseArray{DT,1}) where {DT, TT, VT, BT}
+function Base.similar(sde::SDE, t₀::TT, q₀::DenseArray{DT}) where {DT <: Number, TT <: Number}
     @assert sde.d == size(q₀,1)
     SDE(sde.m, sde.ns, sde.v, sde.B, t₀, q₀, periodicity=sde.periodicity)
 end
 
-# Assumes q0 represents a single random initial condition (n=1, ns=size(q₀, 2))
-function Base.similar(sde::SDE{DT,TT,VT,BT}, t₀::TT, q₀::DenseArray{DT,2}) where {DT, TT, VT, BT}
-    @assert sde.d == size(q₀,1)
-    SDE(sde.m, sde.ns, sde.v, sde.B, t₀, q₀, periodicity=sde.periodicity)
-end
-
-function Base.similar(sde::SDE{DT,TT,VT,BT}, t₀::TT, q₀::DenseArray{DT,3}) where {DT, TT, VT, BT}
-    @assert sde.d == size(q₀,1)
-    SDE(sde.m, sde.ns, sde.v, sde.B, t₀, q₀, periodicity=sde.periodicity)
-end
-
-
-function Base.similar(sde::SDE{DT,TT,VT,UT}, q₀::DenseArray{DT,1}, ns::Int) where {DT, TT, VT, UT}
+function Base.similar(sde::SDE, q₀::DenseArray, ns::Int)
     similar(sde, sde.t₀, q₀, ns)
 end
 
-# Assumes q₀ represents multiple deterministic initial conditions (n=size(q₀, 2))
-function Base.similar(sde::SDE{DT,TT,VT,UT}, q₀::DenseArray{DT,2}, ns::Int) where {DT, TT, VT, UT}
-    similar(sde, sde.t₀, q₀, ns)
-end
-
-
-function Base.similar(sde::SDE{DT,TT,VT,BT}, t₀::TT, q₀::DenseArray{DT,1}, ns::Int) where {DT, TT, VT, BT}
-    @assert sde.d == size(q₀,1)
-    SDE(sde.m, ns, sde.v, sde.B, t₀, q₀, periodicity=sde.periodicity)
-end
-
-# Assumes q₀ represents multiple deterministic initial conditions (n=size(q₀, 2))
-function Base.similar(sde::SDE{DT,TT,VT,BT}, t₀::TT, q₀::DenseArray{DT,2}, ns::Int) where {DT, TT, VT, BT}
+function Base.similar(sde::SDE, t₀::TT, q₀::DenseArray{DT}, ns::Int) where {DT <: Number, TT <: Number}
     @assert sde.d == size(q₀,1)
     SDE(sde.m, ns, sde.v, sde.B, t₀, q₀, periodicity=sde.periodicity)
 end

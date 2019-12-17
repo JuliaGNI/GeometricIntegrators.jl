@@ -42,6 +42,7 @@ module Solutions
     export Solution, StochasticSolution
 
     include("solutions/solution.jl")
+    include("solutions/solutions_common.jl")
 
     export AtomisticSolution, AtomisticSolutionODE, AtomisticSolutionPODE,
            AtomisticSolutionDAE, AtomisticSolutionPDAE

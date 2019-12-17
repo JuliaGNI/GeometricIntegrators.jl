@@ -275,10 +275,7 @@ Base.eltype(integrator::IntegratorSISPRK{DT, TT, PT, ST, N}) where {DT, TT, PT, 
 
 
 function initialize!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE, k::Int, m::Int) where {DT,TT}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-    @assert k ≥ 1
-    @assert k ≤ sol.ns
+    check_solution_dimension_asserts(sol, k, m)
 
     # copy the m-th initial condition for the k-th sample path
     get_initial_conditions!(sol, int.q[k,m], int.p[k,m], k, m)
@@ -425,16 +422,7 @@ Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator.
  Integrating the k-th sample path for the m-th initial condition
 """
 function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,NQ,NW}, k::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
-
-    @assert k ≥ 1
-    @assert k ≤ sol.ns
-
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    @assert n ≥ 1
-    @assert n ≤ sol.ntime
-
+    check_solution_dimension_asserts(sol, k, m, n)
 
     # set time for nonlinear solver
     int.params.t  = sol.t[0] + (n-1)*int.params.Δt
