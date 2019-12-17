@@ -38,7 +38,7 @@ methods, e.g., it allows to use another integrator for solving substeps.
 
 """
 struct SODE{dType <: Number, tType <: Number,
-            vType <: Tuple, pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+            vType <: Tuple, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
 
     d::Int
     n::Int
@@ -91,4 +91,6 @@ function Base.similar(ode::SODE, t₀::TT, q₀::DenseArray{DT};
     SODE(ode.v, t₀, q₀; parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(ode::SODE) = ode.d
+@inline Base.ndims(ode::SODE) = ode.d
+
+@inline periodicity(equation::SODE) = equation.periodicity

@@ -60,7 +60,7 @@ on `t`, `q` and `λ`.
 ```
 """
 struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Function,
-           ϕType <: Function, pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+           ϕType <: Function, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationDAE{dType, tType}
 
     d::Int
     m::Int
@@ -127,4 +127,6 @@ function Base.similar(dae::DAE, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArra
     DAE(dae.v, dae.u, dae.ϕ, t₀, q₀, λ₀; parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(dae::DAE) = dae.d
+@inline Base.ndims(dae::DAE) = dae.d
+
+@inline periodicity(equation::DAE) = equation.periodicity

@@ -1,9 +1,13 @@
 module Equations
 
     export Equation
-    export ODE, HODE, IODE, PODE, VODE
-    export DAE, HDAE, IDAE, PDAE, VDAE
-    export SODE
+    export AbstractEquationODE, AbstractEquationPODE,
+           AbstractEquationDAE, AbstractEquationPDAE
+
+    export periodicity
+
+    export ODE, IODE, PODE, HODE, VODE, SODE
+    export DAE, IDAE, PDAE, HDAE, VDAE
     export SDE, PSDE, SPSDE
 
     include("equations/equations.jl")

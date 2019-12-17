@@ -32,7 +32,7 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `p₀`: initial condition for dynamical variable ``p``
 
 """
-struct HDAE{dType <: Number, tType <: Number, vType <: Tuple, fType <: Tuple, ϕType <: Function, ψType <: Function, N} <: Equation{dType, tType}
+struct HDAE{dType <: Number, tType <: Number, vType <: Tuple, fType <: Tuple, ϕType <: Function, ψType <: Function, N} <: AbstractEquationPDAE{dType, tType}
     d::Int
     m::Int
     n::Int
@@ -84,4 +84,6 @@ Base.:(==)(dae1::HDAE, dae2::HDAE) = (
                              && dae1.q₀ == dae2.q₀
                              && dae1.p₀ == dae2.p₀)
 
-Base.ndims(dae::HDAE) = ode.d
+@inline Base.ndims(dae::HDAE) = ode.d
+
+@inline periodicity(equation::HDAE) = equation.periodicity

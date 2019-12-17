@@ -39,13 +39,14 @@ struct IntegratorHSPARK{DT, TT, tabType,
                                 ET <: PDAE{DT,TT},
                                 PT <: ParametersHSPARK{DT,TT},
                                 ST <: NonlinearSolver{DT},
-                                IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorHSPARK{DT, TT}
+                                IT <: InitialGuessPODE{DT,TT}, D, S, R} <: AbstractIntegratorHSPARK{DT, TT}
     equation::ET
     tableau::AbstractTableauSPARK{tabType,TT}
 
     params::PT
     solver::ST
     iguess::IT
+    cache::IntegratorCacheSPARK{DT,TT,D,S,R}
 end
 
 function IntegratorHSPARK(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT},
@@ -66,9 +67,12 @@ function IntegratorHSPARK(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT},
     # create initial guess
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
+    # create cache
+    cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
+
     # create integrator
-    IntegratorHSPARK{DT, TT, ST, typeof(equation), typeof(params), typeof(solver), typeof(iguess)}(
-                                        equation, tableau, params, solver, iguess)
+    IntegratorHSPARK{DT, TT, ST, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, R}(
+                                        equation, tableau, params, solver, iguess, cache)
 end
 
 

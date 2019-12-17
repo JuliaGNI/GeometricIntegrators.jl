@@ -69,7 +69,7 @@ and
 struct VODE{dType <: Number, tType <: Number, ϑType <: Function,
             fType <: Function, gType <: Function, vType <: Union{Function,Nothing},
             ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
 
     d::Int
     m::Int
@@ -145,4 +145,6 @@ function Base.similar(ode::VODE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArra
          parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(ode::VODE) = ode.d
+@inline Base.ndims(ode::VODE) = ode.d
+
+@inline periodicity(equation::VODE) = equation.periodicity

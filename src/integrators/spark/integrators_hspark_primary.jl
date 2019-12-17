@@ -38,13 +38,14 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 struct IntegratorHSPARKprimary{DT, TT, ET <: PDAE{DT,TT},
                                        PT <: ParametersHSPARKprimary{DT,TT},
                                        ST <: NonlinearSolver{DT},
-                                       IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorHSPARK{DT, TT}
+                                       IT <: InitialGuessPODE{DT,TT}, D, S, R} <: AbstractIntegratorHSPARK{DT, TT}
     equation::ET
     tableau::TableauHSPARKprimary{TT}
 
     params::PT
     solver::ST
     iguess::IT
+    cache::IntegratorCacheSPARK{DT,TT,D,S,R}
 end
 
 function IntegratorHSPARKprimary(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT},
@@ -67,9 +68,12 @@ function IntegratorHSPARKprimary(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT},
     # create initial guess
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
+    # create cache
+    cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
+
     # create integrator
-    IntegratorHSPARKprimary{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess)}(
-                                        equation, tableau, params, solver, iguess)
+    IntegratorHSPARKprimary{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, R}(
+                                        equation, tableau, params, solver, iguess, cache)
 end
 
 
