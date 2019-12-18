@@ -11,7 +11,7 @@ Atomistic solution for an ODE.
 * `v`: vector field of q
 * `v̅`: vector field of q̅
 """
-mutable struct AtomisticSolutionODE{DT,TT} <: AtomisticSolution{DT,TT}
+mutable struct AtomicSolutionODE{DT,TT} <: AtomicSolution{DT,TT}
     t::TT
     t̅::TT
 
@@ -22,38 +22,38 @@ mutable struct AtomisticSolutionODE{DT,TT} <: AtomisticSolution{DT,TT}
     v::Vector{DT}
     v̅::Vector{DT}
 
-    function AtomisticSolutionODE{DT, TT}(nd) where {DT <: Number, TT <: Real}
+    function AtomicSolutionODE{DT, TT}(nd) where {DT <: Number, TT <: Real}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nd), zeros(DT, nd))
     end
 end
 
-AtomisticSolutionODE(DT, TT, nd) = AtomisticSolutionODE{DT, TT}(nd)
+AtomicSolutionODE(DT, TT, nd) = AtomicSolutionODE{DT, TT}(nd)
 
-function CommonFunctions.set_solution!(asol::AtomisticSolutionODE, sol)
+function CommonFunctions.set_solution!(asol::AtomicSolutionODE, sol)
     t, q = sol
     asol.t  = t
     asol.q .= q
     asol.v .= 0
 end
 
-function CommonFunctions.get_solution(asol::AtomisticSolutionODE)
+function CommonFunctions.get_solution(asol::AtomicSolutionODE)
     (asol.t, asol.q)
 end
 
-function CommonFunctions.reset!(asol::AtomisticSolutionODE, Δt)
+function CommonFunctions.reset!(asol::AtomicSolutionODE, Δt)
     asol.t̅  = asol.t
     asol.q̅ .= asol.q
     asol.v̅ .= asol.v
     asol.t += Δt
 end
 
-function update!(asol::AtomisticSolutionODE{DT}, v::Vector{DT}) where {DT}
+function update!(asol::AtomicSolutionODE{DT}, v::Vector{DT}) where {DT}
     for k in eachindex(v)
         update!(asol, v[k])
     end
 end
 
-function update!(asol::AtomisticSolutionODE{DT}, v::DT, k::Int) where {DT}
+function update!(asol::AtomicSolutionODE{DT}, v::DT, k::Int) where {DT}
     asol.q[k], asol.q̃[k] = compensated_summation(v, asol.q[k], asol.q̃[k])
 end

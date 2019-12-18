@@ -64,7 +64,7 @@ mutable struct ParametersVSPARKsecondary{DT,TT,D,S,Σ,θT,FT,GT,G̅T,ϕT,ψT,tab
 end
 
 
-function update_params!(params::ParametersVSPARKsecondary, sol::AtomisticSolutionPDAE)
+function update_params!(params::ParametersVSPARKsecondary, sol::AtomicSolutionPDAE)
     # set time for nonlinear solver and copy previous solution
     params.t  = sol.t
     params.q .= sol.q
@@ -287,7 +287,7 @@ end
 end
 
 
-function initial_guess!(int::IntegratorVSPARKsecondary, sol::AtomisticSolutionPDAE)
+function initial_guess!(int::IntegratorVSPARKsecondary, sol::AtomicSolutionPDAE)
     for i in 1:pstages(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
                               sol.q̅, sol.p̅, sol.v̅, sol.f̅,
@@ -310,7 +310,7 @@ function initial_guess!(int::IntegratorVSPARKsecondary, sol::AtomisticSolutionPD
 end
 
 
-function update_solution!(int::IntegratorVSPARKsecondary{DT,TT}, sol::AtomisticSolutionPDAE{DT,TT}) where {DT,TT}
+function update_solution!(int::IntegratorVSPARKsecondary{DT,TT}, sol::AtomicSolutionPDAE{DT,TT}) where {DT,TT}
     # compute final update
     update_solution!(sol.p, sol.p̃, int.cache.Fi, int.params.tab.p.b[1], timestep(int))
 

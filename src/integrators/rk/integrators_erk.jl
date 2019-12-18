@@ -95,7 +95,7 @@ end
 
 
 "Integrate ODE with explicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorERK{DT,TT}, sol::AtomisticSolutionODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorERK{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
     local tᵢ::TT
     local yᵢ::DT
 

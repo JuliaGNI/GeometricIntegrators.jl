@@ -125,7 +125,7 @@ end
 
 
 "Compute initial guess for internal stages."
-function initial_guess!(int::IntegratorDIRK, sol::AtomisticSolutionODE)
+function initial_guess!(int::IntegratorDIRK, sol::AtomicSolutionODE)
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, int.cache.q̃, int.cache.ṽ, int.params.tab.q.c[i])
         for k in eachindex(int.cache.V[i], int.cache.ṽ)
@@ -189,7 +189,7 @@ end
 
 
 "Integrate ODE with diagonally implicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomisticSolutionODE{DT,TT}) where {DT,TT,N}
+function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT,N}
     int.params.t  = sol.t
     int.params.q .= sol.q
 

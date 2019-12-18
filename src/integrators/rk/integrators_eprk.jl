@@ -129,7 +129,7 @@ function computeStageP!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{D
 end
 
 "Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     local tqᵢ::TT
     local tpᵢ::TT
 

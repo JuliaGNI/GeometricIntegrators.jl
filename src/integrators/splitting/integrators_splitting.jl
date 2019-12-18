@@ -214,7 +214,7 @@ timestep(int::IntegratorSplitting) = int.Δt
 
 
 "Integrate ODE with splitting integrator."
-function integrate_step!(int::IntegratorSplitting{DT,TT,FT}, sol::AtomisticSolutionODE{DT,TT}) where {DT,TT,FT}
+function integrate_step!(int::IntegratorSplitting{DT,TT,FT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT,FT}
     local tᵢ::TT
 
     # reset cache

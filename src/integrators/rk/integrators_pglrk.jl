@@ -186,7 +186,7 @@ end
 @inline nstages(integrator::IntegratorPGLRK{DT,TT,PT,ST,IT,N,D,S}) where {DT,TT,PT,ST,IT,N,D,S} = S
 
 
-function update_params!(params::ParametersPGLRK, sol::AtomisticSolutionPODE)
+function update_params!(params::ParametersPGLRK, sol::AtomicSolutionPODE)
     # set time for nonlinear solver and copy previous solution
     params.t̅  = sol.t
     params.q̅ .= sol.q
@@ -309,7 +309,7 @@ end
 end
 
 
-function initialize!(int::IntegratorPGLRK, sol::AtomisticSolutionPODE)
+function initialize!(int::IntegratorPGLRK, sol::AtomicSolutionPODE)
     sol.t̅ = sol.t - timestep(int)
 
     equation(int).v(sol.t, sol.q, sol.p, sol.v)
@@ -320,7 +320,7 @@ function initialize!(int::IntegratorPGLRK, sol::AtomisticSolutionPODE)
 end
 
 
-function initial_guess!(int::IntegratorPGLRK{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
+function initial_guess!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
                               sol.q̅, sol.p̅, sol.v̅, sol.f̅,
@@ -350,7 +350,7 @@ end
 
 
 "Integrate PODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 

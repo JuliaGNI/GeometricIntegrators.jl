@@ -27,7 +27,7 @@ mutable struct AbstractParametersHSPARK{IT,DT,TT,D,S,R,P,VT,FT,UT,GT,ϕT,tabType
 end
 
 
-function update_params!(params::AbstractParametersHSPARK, sol::AtomisticSolutionPDAE)
+function update_params!(params::AbstractParametersHSPARK, sol::AtomicSolutionPDAE)
     # set time for nonlinear solver and copy previous solution
     params.t  = sol.t
     params.q .= sol.q
@@ -42,7 +42,7 @@ tableau(int::AbstractIntegratorHSPARK) = int.tableau
 pstages(int::AbstractIntegratorHSPARK) = int.tableau.r
 
 
-function initialize!(int::AbstractIntegratorHSPARK, sol::AtomisticSolutionPDAE)
+function initialize!(int::AbstractIntegratorHSPARK, sol::AtomicSolutionPDAE)
     sol.t̅ = sol.t - timestep(int)
 
     equation(int).v(sol.t, sol.q, sol.p, sol.v)
@@ -53,7 +53,7 @@ function initialize!(int::AbstractIntegratorHSPARK, sol::AtomisticSolutionPDAE)
 end
 
 
-function initial_guess!(int::AbstractIntegratorHSPARK, sol::AtomisticSolutionPDAE)
+function initial_guess!(int::AbstractIntegratorHSPARK, sol::AtomicSolutionPDAE)
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
                               sol.q̅, sol.p̅, sol.v̅, sol.f̅,

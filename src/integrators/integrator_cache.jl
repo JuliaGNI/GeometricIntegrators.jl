@@ -11,7 +11,7 @@ abstract type PDAEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 
 create_integrator_cache(integrator::Integrator) = error("create_integrator_cache()! not implemented for ", typeof(integrator))
 
-initialize!(::Integrator, ::AtomisticSolution) = nothing
+initialize!(::Integrator, ::AtomicSolution) = nothing
 
-integrate_step!(integrator::Integrator, ::AtomisticSolution) = error("integrate_step()! not implemented for ", typeof(integrator))
+integrate_step!(integrator::Integrator, ::AtomicSolution) = error("integrate_step()! not implemented for ", typeof(integrator))
 
