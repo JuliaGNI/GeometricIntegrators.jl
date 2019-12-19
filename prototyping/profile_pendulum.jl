@@ -1,6 +1,9 @@
+# run with julia --track-allocation=user
 
 using Profile
 using GeometricIntegrators
+
+set_config(:nls_solver, NewtonSolver)
 
 const Δt    = 0.1
 const ntime = 10000
