@@ -32,11 +32,10 @@ const DEFAULT_ARMIJO_σ₁ = 0.5
 const DEFAULT_ARMIJO_ϵ  = 0.5
 
 
-function QuasiNewtonSolver(x::Vector, F!::Function; J=nothing)
-    T = eltype(x)
+function QuasiNewtonSolver(x::AbstractVector{T}, F!::Function; J!::Union{Function,Nothing}=nothing) where {T}
     n = length(x)
-    Jparams = getJacobianParameters(J, F!, T, n)
-    linear_solver = getLinearSolver(T, n)
+    Jparams = getJacobianParameters(J!, F!, T, n)
+    linear_solver = getLinearSolver(x)
     QuasiNewtonSolver{T, typeof(F!), typeof(Jparams), typeof(linear_solver)}(x, F!, Jparams, linear_solver)
 end
 

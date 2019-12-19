@@ -112,7 +112,8 @@ function check_solver_status(status::NonlinearSolverStatus, params::NonlinearSol
 end
 
 
-function getLinearSolver(T, n)
+function getLinearSolver(x::AbstractVector{T}) where {T}
+    n = length(x)
     linear_solver = get_config(:ls_solver)
 
     if linear_solver == nothing || linear_solver == :lapack
