@@ -15,7 +15,7 @@ function J(x::Vector, A::Matrix)
 end
 
 
-for Solver in (NewtonSolver, QuasiNewtonSolver)
+for Solver in (NewtonSolver, QuasiNewtonSolver, NLsolveNewton)
     x = ones(T, n)
     nl = Solver(x, F)
     solve!(nl)

@@ -18,7 +18,9 @@ module Solvers
 
     export computeJacobian, check_jacobian, print_jacobian
 
-    export NonlinearSolver, AbstractNewtonSolver, NewtonSolver, QuasiNewtonSolver,
+    export NonlinearSolver, AbstractNewtonSolver,
+           NLsolveNewton,
+           NewtonSolver, QuasiNewtonSolver,
            residual_initial!, residual_absolute!, residual_relative!,
            print_solver_status, check_solver_converged, check_solver_status,
            solve!
@@ -30,6 +32,7 @@ module Solvers
     include("solvers/nonlinear/fixed_point_solver.jl")
     include("solvers/nonlinear/newton_solver.jl")
     include("solvers/nonlinear/quasi_newton_solver.jl")
+    include("solvers/nonlinear/nlsolve_newton.jl")
 
 
     function __init__()
