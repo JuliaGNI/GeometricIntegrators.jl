@@ -33,37 +33,38 @@ end
 function NLsolveNewton(x::AbstractVector{T}, F!::Function; J!::Union{Function,Nothing}=nothing) where {T}
     linear_solver = getLinearSolver(x)
 
-    f  = similar(x)
-    df = zero(linear_solver.A)
-
+    f  = linear_solver.b
+    df = linear_solver.A
     f! = (f, x) -> F!(x, f)
 
     if J! == nothing
         if get_config(:jacobian_autodiff)
-            DF = OnceDifferentiable(f!, x, f, df, :forward)
+            DF = OnceDifferentiable(f!, x, f, df; autodiff=:forward, inplace=true)
         else
-            DF = OnceDifferentiable(f!, x, f, df, :finite)
+            DF = OnceDifferentiable(f!, x, f, df; autodiff=:finite, inplace=true)
         end
     else
         j! = (df, x) -> J!(x, df)
-        DF = OnceDifferentiable(f!, j!, x, f, df)
+        DF = OnceDifferentiable(f!, j!, x, f, df; inplace=true)
     end
 
     NLsolveNewton(x, f, df, F!, DF, NewtonCache(DF), LineSearches.Static(), linear_solver)
 end
 
 
-function solve!(s::NLsolveNewton; n::Int=0)
-    linsolve = (x, A, b) -> begin
-        s.linear_solver.A .= A
-        s.linear_solver.b .= b
-        factorize!(s.linear_solver)
-        solve!(s.linear_solver)
-        x .= s.linear_solver.b
-    end
+function linsolve!(s::NLsolveNewton, x, A, b)
+    copyto!(s.linear_solver.A, A)
+    copyto!(s.linear_solver.b, b)
+    factorize!(s.linear_solver)
+    solve!(s.linear_solver)
+    copyto!(x, s.linear_solver.b)
+end
 
-    res=newton_(s.DF, s.x, s.params.stol, s.params.atol, s.params.nmax, false, false, false,
-                s.line_search, linsolve, s.cache)
+function solve!(s::NLsolveNewton; n::Int=0)
+    local nmax::Int = n > 0 ? nmax = n : s.params.nmax
+
+    res=newton_(s.DF, s.x, s.params.stol, s.params.atol, nmax, false, false, false,
+                s.line_search, (x, A, b) -> linsolve!(s, x, A, b), s.cache)
 
     s.x .= res.zero
     s.status.i  = res.iterations
