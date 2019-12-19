@@ -102,8 +102,8 @@ struct VDAE{dType <: Number, tType <: Number, ϑType <: Function,
 
     function VDAE(DT::DataType, N::Int, d::Int, m::Int, n::Int, ϑ::ϑType, f::fType,
                   g::gType, g̅::g̅Type, ϕ::ϕType, ψ::ψType, t₀::tType,
-                  q₀::DenseArray{dType}, p₀::DenseArray{dType},
-                  λ₀::DenseArray{dType}, μ₀::DenseArray{dType};
+                  q₀::AbstractArray{dType}, p₀::AbstractArray{dType},
+                  λ₀::AbstractArray{dType}, μ₀::AbstractArray{dType};
                   v::vType=nothing, Ω::ΩType=nothing, ∇H::∇HType=nothing,
                   parameters=nothing, periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number, ϑType <: Function,
@@ -122,11 +122,11 @@ struct VDAE{dType <: Number, tType <: Number, ϑType <: Function,
 end
 
 
-function VDAE(ϑ, f, g, g̅, ϕ, ψ, t₀::Number, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}=zero(q₀), μ₀::DenseArray{DT}=zero(q₀); kwargs...) where {DT}
+function VDAE(ϑ, f, g, g̅, ϕ, ψ, t₀::Number, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=zero(q₀), μ₀::AbstractArray{DT}=zero(q₀); kwargs...) where {DT}
     VDAE(DT, ndims(q₀), size(q₀,1), size(μ₀,1), size(q₀,2), ϑ, f, g, g̅, ϕ, ψ, t₀, q₀, p₀, λ₀, μ₀; kwargs...)
 end
 
-function VDAE(ϑ, f, g, g̅, ϕ, ψ, q₀::DenseArray, p₀::DenseArray, λ₀::DenseArray=zero(q₀), μ₀::DenseArray=zero(q₀); kwargs...)
+function VDAE(ϑ, f, g, g̅, ϕ, ψ, q₀::AbstractArray, p₀::AbstractArray, λ₀::AbstractArray=zero(q₀), μ₀::AbstractArray=zero(q₀); kwargs...)
     VDAE(ϑ, f, g, g̅, ϕ, ψ, zero(eltype(q₀)), q₀, p₀, λ₀, μ₀; kwargs...)
 end
 
@@ -161,8 +161,8 @@ function Base.similar(ode::VDAE, q₀, p₀, λ₀=get_λ₀(q₀, ode.λ₀), �
     similar(ode, ode.t₀, q₀, p₀, λ₀, μ₀; kwargs...)
 end
 
-function Base.similar(ode::VDAE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT},
-                      λ₀::DenseArray{DT}=get_λ₀(q₀, ode.λ₀), μ₀=get_λ₀(q₀, ode.μ₀);
+function Base.similar(ode::VDAE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT},
+                      λ₀::AbstractArray{DT}=get_λ₀(q₀, ode.λ₀), μ₀=get_λ₀(q₀, ode.μ₀);
                       parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
     @assert ode.d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
     VDAE(ode.ϑ, ode.f, ode.g, ode.g̅, ode.ϕ, ode.ψ, t₀, q₀, p₀, λ₀, μ₀;

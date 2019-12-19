@@ -355,7 +355,7 @@ end
 end
 
 
-function update_params!(params::ParametersVPARK, sol::AtomisticSolutionPDAE)
+function update_params!(params::ParametersVPARK, sol::AtomicSolutionPDAE)
     # set time for nonlinear solver and copy previous solution
     params.t  = sol.t
     params.q .= sol.q
@@ -364,7 +364,7 @@ function update_params!(params::ParametersVPARK, sol::AtomisticSolutionPDAE)
 end
 
 
-function initialize!(int::IntegratorVPARK, sol::AtomisticSolutionPDAE)
+function initialize!(int::IntegratorVPARK, sol::AtomicSolutionPDAE)
     sol.t̅ = sol.t - timestep(int)
 
     equation(int).v(sol.t, sol.q, sol.p, sol.v)
@@ -375,7 +375,7 @@ function initialize!(int::IntegratorVPARK, sol::AtomisticSolutionPDAE)
 end
 
 
-function initial_guess!(int::IntegratorVPARK, sol::AtomisticSolutionPDAE)
+function initial_guess!(int::IntegratorVPARK, sol::AtomicSolutionPDAE)
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
                               sol.q̅, sol.p̅, sol.v̅, sol.f̅,
@@ -416,7 +416,7 @@ function initial_guess!(int::IntegratorVPARK, sol::AtomisticSolutionPDAE)
 end
 
 
-function update_solution!(int::IntegratorVPARK{DT,TT}, sol::AtomisticSolutionPDAE{DT,TT}) where {DT,TT}
+function update_solution!(int::IntegratorVPARK{DT,TT}, sol::AtomicSolutionPDAE{DT,TT}) where {DT,TT}
     # compute final update
     update_solution!(sol.q, sol.q̃, int.cache.Vi, int.params.t_q.b, timestep(int))
     update_solution!(sol.p, sol.p̃, int.cache.Fi, int.params.t_p.b, timestep(int))

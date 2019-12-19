@@ -15,7 +15,7 @@ function initialize!(int::AbstractIntegratorSPARK, cache::IntegratorCacheSPARK)
 end
 
 
-function update_solution!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomisticSolutionPDAE{DT,TT}) where {DT,TT}
+function update_solution!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomicSolutionPDAE{DT,TT}) where {DT,TT}
     # compute final update
     update_solution!(sol.q, sol.q̃, int.cache.Vi, int.params.tab.q.b, timestep(int))
     update_solution!(sol.p, sol.p̃, int.cache.Fi, int.params.tab.p.b, timestep(int))
@@ -28,7 +28,7 @@ end
 
 
 "Integrate an implicit DAE with a specialised partitioned additive Runge-Kutta integrator."
-function integrate_step!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomisticSolutionPDAE{DT,TT}) where {DT,TT}
+function integrate_step!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomicSolutionPDAE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 

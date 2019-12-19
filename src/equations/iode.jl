@@ -86,7 +86,7 @@ struct IODE{dType <: Number, tType <: Number,
 
     function IODE(DT::DataType, N::Int, d::Int, n::Int,
                   ϑ::ϑType, f::fType, g::gType, t₀::tType,
-                  q₀::DenseArray{dType}, p₀::DenseArray{dType}, λ₀::DenseArray{dType};
+                  q₀::AbstractArray{dType}, p₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
                   v::vType=nothing, parameters=nothing, periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number, ϑType <: Function,
                         fType <: Function, gType <: Function, vType <: Union{Function,Nothing}}
@@ -102,11 +102,11 @@ struct IODE{dType <: Number, tType <: Number,
     end
 end
 
-function IODE(ϑ, f, g, t₀::Number, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}=zero(q₀); kwargs...) where {DT}
+function IODE(ϑ, f, g, t₀::Number, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=zero(q₀); kwargs...) where {DT}
     IODE(DT, ndims(q₀), size(q₀,1), size(q₀,2), ϑ, f, g, t₀, q₀, p₀, λ₀; kwargs...)
 end
 
-function IODE(ϑ, f, g, q₀::DenseArray, p₀::DenseArray, λ₀::DenseArray=zero(q₀); kwargs...)
+function IODE(ϑ, f, g, q₀::AbstractArray, p₀::AbstractArray, λ₀::AbstractArray=zero(q₀); kwargs...)
     IODE(ϑ, f, g, zero(eltype(q₀)), q₀, p₀, λ₀; kwargs...)
 end
 
@@ -132,7 +132,7 @@ function Base.similar(ode::IODE, q₀, p₀, λ₀=get_λ₀(q₀, ode.λ₀); k
     similar(ode, ode.t₀, q₀, p₀, λ₀; kwargs...)
 end
 
-function Base.similar(ode::IODE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}=get_λ₀(q₀, ode.λ₀);
+function Base.similar(ode::IODE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=get_λ₀(q₀, ode.λ₀);
                       v=ode.v, parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
     @assert ode.d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
     IODE(ode.ϑ, ode.f, ode.g, t₀, q₀, p₀, λ₀; v=v, parameters=parameters, periodicity=periodicity)

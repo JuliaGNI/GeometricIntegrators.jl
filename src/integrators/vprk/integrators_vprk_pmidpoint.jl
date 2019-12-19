@@ -132,7 +132,7 @@ end
 end
 
 
-function initial_guess!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
+function initial_guess!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
                               sol.q̅, sol.p̅, sol.v̅, sol.f̅,
@@ -157,7 +157,7 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 

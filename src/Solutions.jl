@@ -44,15 +44,15 @@ module Solutions
     include("solutions/solution.jl")
     include("solutions/solutions_common.jl")
 
-    export AtomisticSolution, AtomisticSolutionODE, AtomisticSolutionPODE,
-           AtomisticSolutionDAE, AtomisticSolutionPDAE
+    export AtomicSolution, AtomicSolutionODE, AtomicSolutionPODE,
+           AtomicSolutionDAE, AtomicSolutionPDAE
     export update!, cut_periodic_solution!
 
-    include("solutions/atomistic_solution.jl")
-    include("solutions/atomistic_solution_ode.jl")
-    include("solutions/atomistic_solution_pode.jl")
-    include("solutions/atomistic_solution_dae.jl")
-    include("solutions/atomistic_solution_pdae.jl")
+    include("solutions/atomic_solution.jl")
+    include("solutions/atomic_solution_ode.jl")
+    include("solutions/atomic_solution_pode.jl")
+    include("solutions/atomic_solution_dae.jl")
+    include("solutions/atomic_solution_pdae.jl")
 
     export SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE, SolutionSDE, SolutionPSDE
     export PSolutionPDAE, SSolutionPDAE

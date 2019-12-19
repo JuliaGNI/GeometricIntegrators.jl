@@ -16,7 +16,7 @@ Atomistic solution for an PODE.
 * `f`: vector field of p
 * `f̅`: vector field of p̅
 """
-mutable struct AtomisticSolutionPODE{DT,TT} <: AtomisticSolution{DT,TT}
+mutable struct AtomicSolutionPODE{DT,TT} <: AtomicSolution{DT,TT}
     t::TT
     t̅::TT
 
@@ -33,16 +33,16 @@ mutable struct AtomisticSolutionPODE{DT,TT} <: AtomisticSolution{DT,TT}
     f::Vector{DT}
     f̅::Vector{DT}
 
-    function AtomisticSolutionPODE{DT, TT}(nd) where {DT <: Number, TT <: Real}
+    function AtomicSolutionPODE{DT, TT}(nd) where {DT <: Number, TT <: Real}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd))
     end
 end
 
-AtomisticSolutionPODE(DT, TT, nd) = AtomisticSolutionPODE{DT, TT}(nd)
+AtomicSolutionPODE(DT, TT, nd) = AtomicSolutionPODE{DT, TT}(nd)
 
-function CommonFunctions.set_solution!(asol::AtomisticSolutionPODE, sol)
+function CommonFunctions.set_solution!(asol::AtomicSolutionPODE, sol)
     t, q, p = sol
     asol.t  = t
     asol.q .= q
@@ -51,11 +51,11 @@ function CommonFunctions.set_solution!(asol::AtomisticSolutionPODE, sol)
     asol.f .= 0
 end
 
-function CommonFunctions.get_solution(asol::AtomisticSolutionPODE)
+function CommonFunctions.get_solution(asol::AtomicSolutionPODE)
     (asol.t, asol.q, asol.p)
 end
 
-function CommonFunctions.reset!(asol::AtomisticSolutionPODE, Δt)
+function CommonFunctions.reset!(asol::AtomicSolutionPODE, Δt)
     asol.t̅  = asol.t
     asol.q̅ .= asol.q
     asol.p̅ .= asol.p
@@ -64,13 +64,13 @@ function CommonFunctions.reset!(asol::AtomisticSolutionPODE, Δt)
     asol.t += Δt
 end
 
-function update!(asol::AtomisticSolutionPODE{DT}, v::Vector{DT}, f::Vector{DT}) where {DT}
+function update!(asol::AtomicSolutionPODE{DT}, v::Vector{DT}, f::Vector{DT}) where {DT}
     for k in eachindex(v,f)
         update!(asol, v[k], f[k])
     end
 end
 
-function update!(asol::AtomisticSolutionPODE{DT}, v::DT, f::DT, k::Int) where {DT}
+function update!(asol::AtomicSolutionPODE{DT}, v::DT, f::DT, k::Int) where {DT}
     asol.q[k], asol.q̃[k] = compensated_summation(v, asol.q[k], asol.q̃[k])
     asol.p[k], asol.p̃[k] = compensated_summation(f, asol.p[k], asol.p̃[k])
 end

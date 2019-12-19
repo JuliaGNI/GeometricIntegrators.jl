@@ -22,7 +22,7 @@ Atomistic solution for an PDAE.
 * `g`: projective vector field of p
 * `g̅`: projective vector field of p̅
 """
-mutable struct AtomisticSolutionPDAE{DT,TT} <: AtomisticSolution{DT,TT}
+mutable struct AtomicSolutionPDAE{DT,TT} <: AtomicSolution{DT,TT}
     t::TT
     t̅::TT
 
@@ -47,7 +47,7 @@ mutable struct AtomisticSolutionPDAE{DT,TT} <: AtomisticSolution{DT,TT}
     g::Vector{DT}
     g̅::Vector{DT}
 
-    function AtomisticSolutionPDAE{DT, TT}(nd) where {DT <: Number, TT <: Real}
+    function AtomicSolutionPDAE{DT, TT}(nd) where {DT <: Number, TT <: Real}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nd), zeros(DT, nd),
@@ -56,9 +56,9 @@ mutable struct AtomisticSolutionPDAE{DT,TT} <: AtomisticSolution{DT,TT}
     end
 end
 
-AtomisticSolutionPDAE(DT, TT, nd) = AtomisticSolutionPDAE{DT, TT}(nd)
+AtomicSolutionPDAE(DT, TT, nd) = AtomicSolutionPDAE{DT, TT}(nd)
 
-function CommonFunctions.set_solution!(asol::AtomisticSolutionPDAE, sol)
+function CommonFunctions.set_solution!(asol::AtomicSolutionPDAE, sol)
     t, q, p, λ = sol
     asol.t  = t
     asol.q .= q
@@ -68,11 +68,11 @@ function CommonFunctions.set_solution!(asol::AtomisticSolutionPDAE, sol)
     asol.f .= 0
 end
 
-function CommonFunctions.get_solution(asol::AtomisticSolutionPDAE)
+function CommonFunctions.get_solution(asol::AtomicSolutionPDAE)
     (asol.t, asol.q, asol.p, asol.λ)
 end
 
-function CommonFunctions.reset!(asol::AtomisticSolutionPDAE, Δt)
+function CommonFunctions.reset!(asol::AtomicSolutionPDAE, Δt)
     asol.t̅  = asol.t
     asol.q̅ .= asol.q
     asol.p̅ .= asol.p
@@ -84,13 +84,13 @@ function CommonFunctions.reset!(asol::AtomisticSolutionPDAE, Δt)
     asol.t += Δt
 end
 
-function update!(asol::AtomisticSolutionPODE{DT}, v::Vector{DT}, f::Vector{DT}, λ::Vector{DT}) where {DT}
+function update!(asol::AtomicSolutionPODE{DT}, v::Vector{DT}, f::Vector{DT}, λ::Vector{DT}) where {DT}
     for k in eachindex(v,f)
         update!(asol, v[k], f[k], λ[k])
     end
 end
 
-function update!(asol::AtomisticSolutionPODE{DT}, v::DT, f::DT, λ::DT, k::Int) where {DT}
+function update!(asol::AtomicSolutionPODE{DT}, v::DT, f::DT, λ::DT, k::Int) where {DT}
     asol.q[k], asol.q̃[k] = compensated_summation(v, asol.q[k], asol.q̃[k])
     asol.p[k], asol.p̃[k] = compensated_summation(f, asol.p[k], asol.p̃[k])
     asol.λ[k] = λ

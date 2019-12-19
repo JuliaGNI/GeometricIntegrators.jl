@@ -53,7 +53,7 @@ struct PDAE{dType <: Number, tType <: Number,
 
     function PDAE(DT::DataType, N::Int, d::Int, m::Int, n::Int,
                   v::vType, f::fType, u::uType, g::gType, ϕ::ϕType,
-                  t₀::tType, q₀::DenseArray{dType}, p₀::DenseArray{dType}, λ₀::DenseArray{dType};
+                  t₀::tType, q₀::AbstractArray{dType}, p₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
                   parameters=nothing, periodicity=zeros(DT,d)) where {
                          dType <: Number, tType <: Number,
                          vType <: Function, fType <: Function,
@@ -72,7 +72,7 @@ struct PDAE{dType <: Number, tType <: Number,
     end
 end
 
-function PDAE(v, f, u, g, ϕ, t₀, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}; kwargs...) where {DT}
+function PDAE(v, f, u, g, ϕ, t₀, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}; kwargs...) where {DT}
     PDAE(DT, ndims(q₀), size(q₀,1), size(λ₀,1), size(q₀,2), v, f, u, g, ϕ, t₀, q₀, p₀, λ₀; kwargs...)
 end
 
@@ -104,7 +104,7 @@ function Base.similar(dae::PDAE, q₀, p₀, λ₀=get_λ₀(q₀, dae.λ₀); k
     similar(dae, dae.t₀, q₀, p₀, λ₀; kwargs...)
 end
 
-function Base.similar(dae::PDAE, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}, λ₀::DenseArray{DT}=get_λ₀(q₀, dae.λ₀);
+function Base.similar(dae::PDAE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=get_λ₀(q₀, dae.λ₀);
                       parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
     @assert dae.d == size(q₀,1) == size(p₀,1)
     @assert dae.m == size(λ₀,1)

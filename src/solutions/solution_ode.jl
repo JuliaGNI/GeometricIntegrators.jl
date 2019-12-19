@@ -131,7 +131,7 @@ function set_initial_conditions!(sol::SolutionODE{DT,TT}, t₀::TT, q₀::Union{
     sol.counter .= 1
 end
 
-function get_initial_conditions!(sol::SolutionODE{DT,TT}, asol::AtomisticSolutionODE{DT,TT}, k, n=1) where {DT,TT}
+function get_initial_conditions!(sol::SolutionODE{DT,TT}, asol::AtomicSolutionODE{DT,TT}, k, n=1) where {DT,TT}
     get_solution!(sol, asol.q, n-1, k)
     asol.t  = sol.t[n-1]
     asol.q̃ .= 0
@@ -157,7 +157,7 @@ function CommonFunctions.set_solution!(sol::SolutionODE, t, q, n, k)
     set_solution!(sol, q, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionODE{DT,TT}, asol::AtomisticSolutionODE{DT,TT}, n, k) where {DT,TT}
+function CommonFunctions.set_solution!(sol::SolutionODE{DT,TT}, asol::AtomicSolutionODE{DT,TT}, n, k) where {DT,TT}
     set_solution!(sol, asol.t, asol.q, n, k)
 end
 

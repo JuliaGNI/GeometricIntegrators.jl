@@ -37,7 +37,7 @@ function ParametersVPRKpStandard(equ::ET, tab::TableauVPRK{TT}, Δt::TT, RU::Vec
     ParametersVPRKpStandard{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, RU, RG, R∞)
 end
 
-function update_params!(params::ParametersVPRKpStandard, sol::AtomisticSolutionPODE)
+function update_params!(params::ParametersVPRKpStandard, sol::AtomicSolutionPODE)
     # set time for nonlinear solver and copy previous solution
     params.t  = sol.t
     params.q .= sol.q
@@ -168,7 +168,7 @@ end
 end
 
 
-function initialize!(int::IntegratorVPRKpStandard, sol::AtomisticSolutionPODE)
+function initialize!(int::IntegratorVPRKpStandard, sol::AtomicSolutionPODE)
     sol.t̅ = sol.t - timestep(int)
 
     equation(int).v(sol.t, sol.q, sol.p, sol.v)
@@ -183,7 +183,7 @@ function initialize!(int::IntegratorVPRKpStandard, sol::AtomisticSolutionPODE)
 end
 
 
-function initial_guess!(int::IntegratorVPRKpStandard, sol::AtomisticSolutionPODE)
+function initial_guess!(int::IntegratorVPRKpStandard, sol::AtomicSolutionPODE)
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
                               sol.q̅, sol.p̅, sol.v̅, sol.f̅,
@@ -196,7 +196,7 @@ function initial_guess!(int::IntegratorVPRKpStandard, sol::AtomisticSolutionPODE
     end
 end
 
-function initial_guess_projection!(int::IntegratorVPRKpStandard, sol::AtomisticSolutionPODE)
+function initial_guess_projection!(int::IntegratorVPRKpStandard, sol::AtomicSolutionPODE)
     offset_q = 0
     offset_λ = ndims(int)
 
@@ -207,7 +207,7 @@ function initial_guess_projection!(int::IntegratorVPRKpStandard, sol::AtomisticS
 end
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRKpStandard{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorVPRKpStandard{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # add perturbation for next time step to solution
     # (same vector field as previous time step)
     project_solution!(int, sol, int.pparams.RU1, int.pparams.RG1)

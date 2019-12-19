@@ -141,7 +141,7 @@ function set_initial_conditions!(sol::SolutionPODE{DT,TT}, t₀::TT, q₀::Union
     sol.counter .= 1
 end
 
-function get_initial_conditions!(sol::SolutionPODE{DT,TT}, asol::AtomisticSolutionPODE{DT,TT}, k, n=1) where {DT,TT}
+function get_initial_conditions!(sol::SolutionPODE{DT,TT}, asol::AtomicSolutionPODE{DT,TT}, k, n=1) where {DT,TT}
     get_solution!(sol, asol.q, asol.p, n-1, k)
     asol.t  = sol.t[n-1]
     asol.q̃ .= 0
@@ -169,7 +169,7 @@ function CommonFunctions.set_solution!(sol::SolutionPODE, t, q, p, n, k)
     set_solution!(sol, q, p, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionPODE{DT,TT}, asol::AtomisticSolutionPODE{DT,TT}, n, k) where {DT,TT}
+function CommonFunctions.set_solution!(sol::SolutionPODE{DT,TT}, asol::AtomicSolutionPODE{DT,TT}, n, k) where {DT,TT}
     set_solution!(sol, asol.t, asol.q, asol.p, n, k)
 end
 

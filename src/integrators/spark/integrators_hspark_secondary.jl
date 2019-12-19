@@ -255,7 +255,7 @@ function initial_guess!(int::IntegratorHSPARKsecondary, cache::IntegratorCacheSP
 end
 
 
-function update_solution!(int::IntegratorHSPARKsecondary{DT,TT}, sol::AtomisticSolutionPDAE{DT,TT}) where {DT,TT}
+function update_solution!(int::IntegratorHSPARKsecondary{DT,TT}, sol::AtomicSolutionPDAE{DT,TT}) where {DT,TT}
     # compute final update
     update_solution!(sol.q, sol.q̃, int.cache.Vi, int.params.tab.q.b[1], timestep(int))
     update_solution!(sol.p, sol.p̃, int.cache.Fi, int.params.tab.p.b[1], timestep(int))

@@ -144,7 +144,7 @@ function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, �
 end
 
 
-function update_params!(int::IntegratorIPRK, sol::AtomisticSolutionPODE)
+function update_params!(int::IntegratorIPRK, sol::AtomicSolutionPODE)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = sol.t
     int.params.q .= sol.q
@@ -201,7 +201,7 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheIPRK{ST,D,S},
 end
 
 
-function initialize!(int::IntegratorIPRK, sol::AtomisticSolutionPODE)
+function initialize!(int::IntegratorIPRK, sol::AtomicSolutionPODE)
     sol.t̅ = sol.t - timestep(int)
 
     int.params.equ.v(sol.t, sol.q, sol.p, sol.v)
@@ -212,7 +212,7 @@ function initialize!(int::IntegratorIPRK, sol::AtomisticSolutionPODE)
 end
 
 
-function initial_guess!(int::IntegratorIPRK, sol::AtomisticSolutionPODE)
+function initial_guess!(int::IntegratorIPRK, sol::AtomicSolutionPODE)
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
                               sol.q̅, sol.p̅, sol.v̅, sol.f̅,
@@ -239,7 +239,7 @@ end
 
 
 "Integrate ODE with implicit partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorIPRK{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorIPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int, sol)
 

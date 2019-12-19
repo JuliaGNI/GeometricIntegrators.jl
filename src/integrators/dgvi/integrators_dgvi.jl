@@ -257,7 +257,7 @@ struct IntegratorCacheDGVI{ST,D,S,R} <: IODEIntegratorCache{ST,D}
 end
 
 
-function update_params!(params::ParametersDGVI, sol::AtomisticSolutionPODE)
+function update_params!(params::ParametersDGVI, sol::AtomicSolutionPODE)
     # set time for nonlinear solver and copy previous solution
     params.t  = sol.t
     params.q .= sol.q
@@ -642,7 +642,7 @@ function create_integrator_cache(int::IntegratorDGVI{DT,TT}) where {DT,TT}
 end
 
 
-function initialize!(int::IntegratorDGVI, sol::AtomisticSolutionPODE)
+function initialize!(int::IntegratorDGVI, sol::AtomicSolutionPODE)
     sol.t̅ = sol.t - timestep(int)
 
     equation(int).v(sol.t, sol.q, sol.q, sol.v)
@@ -652,13 +652,13 @@ function initialize!(int::IntegratorDGVI, sol::AtomisticSolutionPODE)
 end
 
 
-function update_solution!(sol::AtomisticSolutionPODE, cache::IntegratorCacheDGVI)
+function update_solution!(sol::AtomicSolutionPODE, cache::IntegratorCacheDGVI)
     sol.q .= cache.q̅
     sol.p .= cache.p̅
 end
 
 
-function initial_guess!(int::IntegratorDGVI{DT,TT,D,S,R}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT,D,S,R}
+function initial_guess!(int::IntegratorDGVI{DT,TT,D,S,R}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT,D,S,R}
     if nnodes(int.basis) > 0
         for i in 1:S
             evaluate!(int.iguess, sol.q, sol.v,
@@ -689,7 +689,7 @@ function initial_guess!(int::IntegratorDGVI{DT,TT,D,S,R}, sol::AtomisticSolution
 end
 
 
-function integrate_step!(int::IntegratorDGVI{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorDGVI{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 

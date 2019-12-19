@@ -25,7 +25,7 @@ function ParametersVPRKpVariational(equ::ET, tab::TableauVPRK{TT}, Δt::TT, R::V
     ParametersVPRKpVariational{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, R, R1, R2, zero(TT), q, p)
 end
 
-function update_params!(params::ParametersVPRKpVariational, sol::AtomisticSolutionPODE)
+function update_params!(params::ParametersVPRKpVariational, sol::AtomicSolutionPODE)
     # set time for nonlinear solver and copy previous solution
     params.t  = sol.t
     params.q .= sol.q
@@ -144,7 +144,7 @@ end
 end
 
 
-function initial_guess!(int::IntegratorVPRKpVariational, sol::AtomisticSolutionPODE)
+function initial_guess!(int::IntegratorVPRKpVariational, sol::AtomicSolutionPODE)
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
                               sol.q̅, sol.p̅, sol.v̅, sol.f̅,
@@ -157,7 +157,7 @@ function initial_guess!(int::IntegratorVPRKpVariational, sol::AtomisticSolutionP
     end
 end
 
-function initial_guess_projection!(int::IntegratorVPRKpVariational, sol::AtomisticSolutionPODE)
+function initial_guess_projection!(int::IntegratorVPRKpVariational, sol::AtomicSolutionPODE)
     offset_q = 0
     offset_λ = ndims(int)
 
@@ -167,7 +167,7 @@ function initial_guess_projection!(int::IntegratorVPRKpVariational, sol::Atomist
     end
 end
 
-function initialize!(int::IntegratorVPRKpVariational, sol::AtomisticSolutionPODE)
+function initialize!(int::IntegratorVPRKpVariational, sol::AtomicSolutionPODE)
     sol.t̅ = sol.t - timestep(int)
 
     equation(int).v(sol.t, sol.q, sol.p, sol.v)
@@ -183,7 +183,7 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # add perturbation for next time step to solution
     # (same vector field as previous time step)
     project_solution!(int, sol, int.pparams.R1)

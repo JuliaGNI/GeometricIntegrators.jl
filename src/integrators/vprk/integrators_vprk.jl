@@ -134,7 +134,7 @@ tableau(integrator::IntegratorVPRK) = integrator.params.tab
 nstages(integrator::IntegratorVPRK) = integrator.params.tab.s
 
 
-function initial_guess!(int::IntegratorVPRK, sol::AtomisticSolutionPODE)
+function initial_guess!(int::IntegratorVPRK, sol::AtomicSolutionPODE)
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
                               sol.q̅, sol.p̅, sol.v̅, sol.f̅,
@@ -149,7 +149,7 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRK{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 

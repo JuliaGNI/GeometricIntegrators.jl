@@ -80,7 +80,7 @@ struct IntegratorCacheCGVI{ST,D,S,R} <: IODEIntegratorCache{ST,D}
 end
 
 
-function update_params!(params::ParametersCGVI, sol::AtomisticSolutionPODE)
+function update_params!(params::ParametersCGVI, sol::AtomicSolutionPODE)
     # set time for nonlinear solver and copy previous solution
     params.t  = sol.t
     params.q .= sol.q
@@ -317,7 +317,7 @@ function create_integrator_cache(int::IntegratorCGVI{DT,TT}) where {DT,TT}
 end
 
 
-function initialize!(int::IntegratorCGVI, sol::AtomisticSolutionPODE)
+function initialize!(int::IntegratorCGVI, sol::AtomicSolutionPODE)
     sol.t̅ = sol.t - timestep(int)
 
     equation(int).v(sol.t, sol.q, sol.p, sol.v)
@@ -328,7 +328,7 @@ function initialize!(int::IntegratorCGVI, sol::AtomisticSolutionPODE)
 end
 
 
-function initial_guess!(int::IntegratorCGVI{DT,TT,D,S,R}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT,D,S,R}
+function initial_guess!(int::IntegratorCGVI{DT,TT,D,S,R}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT,D,S,R}
     if nnodes(int.basis) > 0
         for i in 1:S
             evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
@@ -360,14 +360,14 @@ function initial_guess!(int::IntegratorCGVI{DT,TT,D,S,R}, sol::AtomisticSolution
 end
 
 
-function update_solution!(sol::AtomisticSolutionPODE, cache::IntegratorCacheCGVI)
+function update_solution!(sol::AtomicSolutionPODE, cache::IntegratorCacheCGVI)
     sol.q .= cache.q̃
     sol.p .= cache.p̃
 end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorCGVI{DT,TT}, sol::AtomisticSolutionPODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorCGVI{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 

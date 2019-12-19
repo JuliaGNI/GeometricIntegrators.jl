@@ -104,7 +104,7 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt
 end
 
 
-function initialize!(int::IntegratorFIRK, sol::AtomisticSolutionODE)
+function initialize!(int::IntegratorFIRK, sol::AtomicSolutionODE)
     sol.t̅ = sol.t - timestep(int)
 
     int.params.equ.v(sol.t, sol.q, sol.v)
@@ -114,14 +114,14 @@ function initialize!(int::IntegratorFIRK, sol::AtomisticSolutionODE)
 end
 
 
-function update_params!(int::IntegratorFIRK, sol::AtomisticSolutionODE)
+function update_params!(int::IntegratorFIRK, sol::AtomicSolutionODE)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = sol.t
     int.params.q .= sol.q
 end
 
 
-function initial_guess!(int::IntegratorFIRK, sol::AtomisticSolutionODE)
+function initial_guess!(int::IntegratorFIRK, sol::AtomicSolutionODE)
     local offset::Int
 
     # compute initial guess for internal stages
@@ -194,7 +194,7 @@ end
 
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::AtomisticSolutionODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int, sol)
 

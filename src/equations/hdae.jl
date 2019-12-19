@@ -58,7 +58,7 @@ struct HDAE{dType <: Number, tType <: Number, vType <: Tuple, fType <: Tuple, ϕ
     end
 end
 
-function HDAE(v::VT, f::FT, ϕ::ΦT, ψ::ΨT, m::Int, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}) where {DT,TT,VT,FT,ΦT,ΨT}
+function HDAE(v::VT, f::FT, ϕ::ΦT, ψ::ΨT, m::Int, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}) where {DT,TT,VT,FT,ΦT,ΨT}
     @assert size(q₀) == size(p₀)
     HDAE{DT, TT, VT, FT, ΦT, ΨT, ndims(q₀)}(size(q₀, 1), m, size(q₀, 2), v, f, ϕ, ψ, t₀, q₀, p₀)
 end
