@@ -7,12 +7,10 @@ using GeometricIntegrators.TestProblems.LotkaVolterra
 using GeometricIntegrators.Utils
 using Test
 
+using GeometricIntegrators.TestProblems.LotkaVolterra: Δt, nt
+
 set_config(:nls_atol, 8eps())
 set_config(:nls_rtol, 2eps())
-set_config(:nls_solver, QuasiNewtonSolver)
-set_config(:jacobian_autodiff, true)
-
-using GeometricIntegrators.TestProblems.LotkaVolterra: Δt, nt
 
 iode = lotka_volterra_2d_iode()
 vode = lotka_volterra_2d_vode()
