@@ -47,7 +47,7 @@ module Solvers
             (:nls_nmax,  10000),
             (:nls_nmin,  0),
             (:nls_nwarn, 100),
-            (:nls_solver, QuasiNewtonSolver),
+            (:nls_solver, NLsolveNewton),
             (:jacobian_autodiff, true),
             (:jacobian_fd_ϵ, 8sqrt(eps())),
             (:quasi_newton_refactorize, 5),

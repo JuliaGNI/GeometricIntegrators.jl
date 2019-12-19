@@ -7,9 +7,6 @@ using GeometricIntegrators.Tableaus
 using GeometricIntegrators.TestProblems.KuboOscillator
 using Test
 
-set_config(:nls_solver, NewtonSolver)
-set_config(:nls_stol_break, 2E-0)
-
 using GeometricIntegrators.TestProblems.KuboOscillator: Δt, nt
 
 include("utils.jl")

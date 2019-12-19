@@ -7,16 +7,10 @@ using GeometricIntegrators.TestProblems.LotkaVolterra
 using GeometricIntegrators.Utils
 using Test
 
-set_config(:nls_atol, 8eps())
-set_config(:nls_rtol, 2eps())
-set_config(:nls_solver, QuasiNewtonSolver)
-set_config(:jacobian_autodiff, true)
-# set_config(:nls_nmax, 3)
-
 using GeometricIntegrators.TestProblems.LotkaVolterra: Δt, nt
 
-# Δt = 0.001
-# nt = 100
+set_config(:nls_atol, 8eps())
+set_config(:nls_rtol, 2eps())
 
 idae = lotka_volterra_2d_idae()
 pdae = lotka_volterra_2d_pdae()
@@ -26,7 +20,6 @@ int  = IntegratorFIRK(lotka_volterra_2d_ode(), getTableauGLRK(8), Δt)
 sol  = integrate(int, nt)
 refx = sol.q[:,end]
 
-# set_config(:nls_nmax, 1)
 
 @testset "$(rpad("VPARK integrators",80))" begin
 
