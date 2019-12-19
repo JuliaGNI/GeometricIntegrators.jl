@@ -1,8 +1,6 @@
 
-using GeometricIntegrators.Config
-using GeometricIntegrators.Solvers
-using Test
+using SafeTestsets
 
-include("linear_solvers_tests.jl")
-include("jacobian_tests.jl")
-include("nonlinear_solvers_tests.jl")
+@safetestset "Linear Solvers                                                                  " begin include("linear_solvers_tests.jl") end
+@safetestset "Jacobians                                                                       " begin include("jacobian_tests.jl") end
+@safetestset "Nonlinear Solvers                                                               " begin include("nonlinear_solvers_tests.jl") end

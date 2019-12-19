@@ -19,11 +19,10 @@ struct NewtonSolver{T, FT, TJ, TL} <: AbstractNewtonSolver{T}
 end
 
 
-function NewtonSolver(x::Vector, F!::Function; J=nothing)
-    T = eltype(x)
+function NewtonSolver(x::AbstractVector{T}, F!::Function; J!::Union{Function,Nothing}=nothing) where {T}
     n = length(x)
-    Jparams = getJacobianParameters(J, F!, T, n)
-    linear_solver = getLinearSolver(T, n)
+    Jparams = getJacobianParameters(J!, F!, T, n)
+    linear_solver = getLinearSolver(x)
     NewtonSolver{T, typeof(F!), typeof(Jparams), typeof(linear_solver)}(x, F!, Jparams, linear_solver)
 end
 
@@ -38,11 +37,11 @@ function solve!(s::NewtonSolver{T}; n::Int=0) where {T}
     if s.status.rₐ ≥ s.params.atol²
         for s.status.i = 1:nmax
             computeJacobian(s)
-            s.linear.A .= s.J
+            copyto!(s.linear.A, s.J)
             s.linear.b .= -one(T) .* s.y₀
             factorize!(s.linear)
             solve!(s.linear)
-            s.δx .= s.linear.b
+            copyto!(s.δx, s.linear.b)
             s.x .+= s.δx
             s.F!(s.x, s.y₀)
             residual!(s.status, s.δx, s.x, s.y₀)

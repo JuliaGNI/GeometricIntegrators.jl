@@ -114,7 +114,7 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with three stages and symmetric projection."
 function getTableauVSPARKLobIIIAIIIB3pSymmetric()
-    getTableauVSPARKSymmetricProjection(:LobIIIAIIIB3pSymmetric, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), get_lobatto_d_vector(3); R∞=-1)
+    getTableauVSPARKSymmetricProjection(:LobIIIAIIIB3pSymmetric, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), get_lobatto_d_vector(3); R∞=+1)
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with four stages and symmetric projection."
