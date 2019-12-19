@@ -89,11 +89,7 @@ function IntegratorSERK(equation::SDE{DT,TT,FT}, tableau::TableauSERK{TT}, Δt::
 end
 
 function initialize!(int::IntegratorSERK, sol::SolutionSDE, k::Int, m::Int)
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-    @assert k ≥ 1
-    @assert k ≤ sol.ns
-
+    check_solution_dimension_asserts(sol, k, m)
 
     # copy initial conditions from solution
     get_initial_conditions!(sol, int.q[k,m], k, m)
