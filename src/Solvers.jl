@@ -34,7 +34,7 @@ module Solvers
 
     function __init__()
         default_params = (
-            (:ls_solver, :lapack),
+            (:ls_solver, :julia),
             (:nls_atol,  2eps()),
             (:nls_rtol,  2eps()),
             (:nls_stol,  2eps()),
