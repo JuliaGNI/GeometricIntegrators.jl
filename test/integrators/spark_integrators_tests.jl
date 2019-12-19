@@ -191,7 +191,7 @@ end
     dsol = integrate(dint, nt)
 
     # println(rel_err(dsol.q, refx))
-    @test rel_err(dsol.q, refx) < 1E-15
+    @test rel_err(dsol.q, refx) < 2E-15
 
 
     dint = Integrator(vdae, getTableauVSPARKLobIIIE(2), Δt)
