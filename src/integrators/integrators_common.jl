@@ -13,12 +13,30 @@ function create_nonlinear_solver(DT, N, params)
     # create solution vector for nonlinear solver
     x = zeros(DT, N)
 
-    # create wrapper function f(x,b) that calls `function_stages!(x, b, params)`
+    # create wrapper function f!(x,b) that calls `function_stages!(x, b, params)`
     # with the appropriate `params`
-    f = (x,b) -> function_stages!(x, b, params)
+    f! = (x,b) -> function_stages!(x, b, params)
 
     # create nonlinear solver with solver type obtained from config dictionary
-    s = get_config(:nls_solver)(x, f)
+    s = get_config(:nls_solver)(x, f!)
+end
+
+
+function create_nonlinear_solver_with_jacobian(DT, N, params)
+    # create solution vector for nonlinear solver
+    x = zeros(DT, N)
+
+    # create wrapper function f!(x,b) that calls `function_stages!(x, b, params)`
+    # with the appropriate `params`
+    f! = (x,b) -> function_stages!(x, b, params)
+
+    # create wrapper function j!(x,df) that calls `jacobian!(x, df, params)`
+    # with the appropriate `params`
+    cache = IntegratorCache(params)
+    j! = (x,df) -> jacobian!(x, df, cache, params)
+
+    # create nonlinear solver with solver type obtained from config dictionary
+    s = get_config(:nls_solver)(x, f!; J=j!)
 end
 
 
