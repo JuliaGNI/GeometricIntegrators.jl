@@ -9,6 +9,8 @@ using Test
 
 using GeometricIntegrators.TestProblems.LotkaVolterra: Δt, nt
 
+set_config(:nls_solver, NewtonSolver)
+set_config(:jacobian_autodiff, true)
 set_config(:nls_atol, 8eps())
 set_config(:nls_rtol, 2eps())
 
