@@ -64,12 +64,16 @@ function Base.show(io::IO, tab::CoefficientsPGLRK)
     print(io, "  A = ", tab.A)
 end
 
-function getTableauPGLRK(coeff::CoefficientsPGLRK{T}, λ::T, a::Matrix{T}) where {T}
+function getTableauPGLRK(coeff::CoefficientsPGLRK{T}, λ, a::Matrix{T}) where {T}
     a .= coeff.a .+ λ .* coeff.A
 end
 
+function getTableauPGLRK(coeff::CoefficientsPGLRK{T}, λ) where {T}
+    coeff.a .+ λ .* coeff.A
+end
 
-"Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
+
+"Parameters for right-hand side function of projected Gauss-Legendre Runge-Kutta methods."
 mutable struct ParametersPGLRK{DT,TT,D,S,ET} <: Parameters{DT,TT}
     equ::ET
     tab::CoefficientsPGLRK{TT}
@@ -151,7 +155,7 @@ mutable struct IntegratorCachePGLRK{DT,D,S} <: IODEIntegratorCache{DT,D}
 end
 
 
-"Variational partitioned Runge-Kutta integrator."
+"Projected Gauss-Legendre Runge-Kutta integrator."
 struct IntegratorPGLRK{DT, TT, PT <: ParametersPGLRK{DT,TT},
                                ST <: NonlinearSolver{DT},
                                IT <: InitialGuessPODE{DT,TT}, N, D, S} <: IntegratorPRK{DT,TT}
@@ -231,13 +235,18 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     end
 
     # compute tableaus
+    A_q = zeros(ST, (S,S,D))
+    A_p = zeros(ST, (S,S,D))
     for k in 1:D
-        getTableauPGLRK(params.tab, λ[k], params.a_q)
+        # getTableauPGLRK(params.tab, λ[k], params.a_q)
+        a_q = getTableauPGLRK(params.tab, λ[k])
         # get_symplectic_conjugate_coefficients(params.a_q, params.tab.b, params.a_p)
         for j=1:S
             for i=1:S
-                params.A_q[i,j,k] = params.a_q[i,j]
-                params.A_p[i,j,k] = params.a_q[i,j]
+                # params.A_q[i,j,k] = params.a_q[i,j]
+                # params.A_p[i,j,k] = params.a_q[i,j]
+                A_q[i,j,k] = a_q[i,j]
+                A_p[i,j,k] = a_q[i,j]
             end
         end
     end
@@ -247,7 +256,8 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         for k in 1:D
             Y[i][k] = 0
             for j in 1:S
-                Y[i][k] += params.A_q[i,j,k] * V[j][k]
+                # Y[i][k] += params.A_q[i,j,k] * V[j][k]
+                Y[i][k] += A_q[i,j,k] * V[j][k]
             end
             Q[i][k] = params.q̅[k] + params.Δt * Y[i][k]
         end
@@ -265,7 +275,8 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         for k in 1:D
             Z[i][k] = 0
             for j in 1:S
-                Z[i][k] += params.A_p[i,j,k] * F[j][k]
+                # Z[i][k] += params.A_p[i,j,k] * F[j][k]
+                Z[i][k] += A_p[i,j,k] * F[j][k]
             end
         end
     end
@@ -284,7 +295,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     params.equ.ϑ(t₁, q, λ, θ)
 end
 
-"Compute stages of variational partitioned Runge-Kutta methods."
+"Compute stages of projected Gauss-Legendre Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     cache = IntegratorCachePGLRK{ST,D,S}()
@@ -349,7 +360,7 @@ function initial_guess!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionPODE{DT,
 end
 
 
-"Integrate PODE with variational partitioned Runge-Kutta integrator."
+"Integrate PODE with projected Gauss-Legendre Runge-Kutta integrator."
 function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
