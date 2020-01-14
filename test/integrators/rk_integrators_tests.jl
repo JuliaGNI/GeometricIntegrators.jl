@@ -9,8 +9,6 @@ using GeometricIntegrators.TestProblems.Oscillator
 using GeometricIntegrators.Utils
 using Test
 
-set_config(:nls_solver, NewtonSolver)
-set_config(:jacobian_autodiff, true)
 set_config(:nls_stol_break, 1E3)
 
 using GeometricIntegrators.TestProblems.Oscillator: Δt, nt, refx, refq, refp, k
