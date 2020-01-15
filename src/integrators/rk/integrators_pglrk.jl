@@ -164,7 +164,20 @@ function IntegratorPGLRK(equation::ODE{DT,TT,VT,HT,N}, tableau::CoefficientsPGLR
 
     # create solvers
     solver  = create_nonlinear_solver(DT, D*S, params)
+
+    nls_rtol_break = get_config(:nls_rtol_break)
+    nls_nmin = get_config(:nls_nmin)
+    nls_nmax = get_config(:nls_nmax)
+
+    set_config(:nls_rtol_break, 1E3)
+    set_config(:nls_nmin, 1)
+    set_config(:nls_nmax, 5)
+
     psolver = create_nonlinear_solver(DT, 1,   params; F=function_projection!)
+
+    set_config(:nls_rtol_break, nls_rtol_break)
+    set_config(:nls_nmin, nls_nmin)
+    set_config(:nls_nmax, nls_nmax)
 
     # create full solution and RHS vector
     x = zeros(DT, D*S+1)

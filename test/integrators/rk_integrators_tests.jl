@@ -9,7 +9,6 @@ using GeometricIntegrators.TestProblems.Oscillator
 using GeometricIntegrators.Utils
 using Test
 
-set_config(:nls_nmin, 1)
 set_config(:nls_stol_break, 1E3)
 
 using GeometricIntegrators.TestProblems.Oscillator: Δt, nt, refx, refq, refp, k
@@ -227,5 +226,11 @@ end
 
     # println(rel_err(pgsol.q, refx))
     @test rel_err(pgsol.q, refx) < 2E-8
+
+    pgint = IntegratorPGLRK(ode, getCoefficientsPGLRK(4), Δt)
+    pgsol = integrate(pgint, nt)
+
+    # println(rel_err(pgsol.q, refx))
+    @test rel_err(pgsol.q, refx) < 5E-13
 
 end
