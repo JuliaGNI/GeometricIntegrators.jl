@@ -13,6 +13,7 @@ with vector field ``v``, initial condition ``q_{0}`` and the solution
 * `d`: dimension of dynamical variable ``q`` and the vector field ``v``
 * `n`: number of initial conditions
 * `v`: function computing the vector field
+* `h`: function computing the Hamiltonian
 * `t₀`: initial time
 * `q₀`: initial condition
 
@@ -29,26 +30,27 @@ where `t` is the current time, `q` is the current solution vector, and
 on `t` and `q`.
 
 """
-struct ODE{dType <: Number, tType <: Number,
-           vType <: Function, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
+struct ODE{dType <: Number, tType <: Number, vType <: Function,
+           hType <: Union{Function,Nothing}, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
 
     d::Int
     n::Int
     v::vType
+    h::hType
     t₀::tType
     q₀::Array{dType,N}
     parameters::pType
     periodicity::Vector{dType}
 
     function ODE(DT::DataType, N::Int, d::Int, n::Int, v::vType, t₀::tType, q₀::AbstractArray{dType};
-                 parameters=nothing, periodicity=zeros(DT,d)) where {
-                        dType <: Number, tType <: Number, vType <: Function}
+                 h::hType=nothing, parameters=nothing, periodicity=zeros(DT,d)) where {
+                        dType <: Number, tType <: Number, vType <: Function, hType <: Union{Function,Nothing}}
 
         @assert d == size(q₀,1)
         @assert n == size(q₀,2)
         @assert ndims(q₀) == N ∈ (1,2)
 
-        new{DT, tType, vType, typeof(parameters), N}(d, n, v, t₀,
+        new{DT, tType, vType, hType, typeof(parameters), N}(d, n, v, h, t₀,
                 convert(Array{DT}, q₀), parameters, periodicity)
     end
 end
@@ -68,6 +70,7 @@ Base.:(==)(ode1::ODE, ode2::ODE) = (
                                 ode1.d == ode2.d
                              && ode1.n == ode2.n
                              && ode1.v == ode2.v
+                             && ode1.h == ode2.h
                              && ode1.t₀ == ode2.t₀
                              && ode1.q₀ == ode2.q₀
                              && ode1.parameters == ode2.parameters
@@ -78,9 +81,9 @@ function Base.similar(ode::ODE, q₀; kwargs...)
 end
 
 function Base.similar(ode::ODE, t₀::TT, q₀::AbstractArray{DT};
-                      parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
+                      h=ode.h, parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
     @assert ode.d == size(q₀,1)
-    ODE(ode.v, t₀, q₀; parameters=parameters, periodicity=periodicity)
+    ODE(ode.v, t₀, q₀; h=h, parameters=parameters, periodicity=periodicity)
 end
 
 @inline Base.ndims(ode::ODE) = ode.d
