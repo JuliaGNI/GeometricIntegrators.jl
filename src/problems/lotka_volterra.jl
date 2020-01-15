@@ -6,6 +6,8 @@ module LotkaVolterra
            lotka_volterra_2d_idae, lotka_volterra_2d_pdae,
            lotka_volterra_2d_vode, lotka_volterra_2d_vdae
 
+    export hamiltonian
+
 
     Δt = 0.01
     nt = 10
@@ -233,14 +235,14 @@ module LotkaVolterra
 
 
     function lotka_volterra_2d_ode(q₀=q₀)
-        ODE(lotka_volterra_2d_v, q₀)
+        ODE(lotka_volterra_2d_v, q₀; h=hamiltonian)
     end
 
 
     function lotka_volterra_2d_iode(q₀=q₀, p₀=p₀)
         IODE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
              lotka_volterra_2d_g, q₀, p₀;
-             v=lotka_volterra_2d_v)
+             h=hamiltonian, v=lotka_volterra_2d_v)
     end
 
     function lotka_volterra_2d_vode(q₀=q₀, p₀=p₀)
