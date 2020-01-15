@@ -9,13 +9,13 @@ the output vector, s.th. ``b = f(x)``. `params` are a set of parameters dependin
 on the equation and integrator that is used.
 The solver type is obtained from the config dictionary (`:nls_solver`).
 """
-function create_nonlinear_solver(DT, N, params)
+function create_nonlinear_solver(DT, N, params; F=function_stages!)
     # create solution vector for nonlinear solver
     x = zeros(DT, N)
 
     # create wrapper function f!(x,b) that calls `function_stages!(x, b, params)`
     # with the appropriate `params`
-    f! = (x,b) -> function_stages!(x, b, params)
+    f! = (x,b) -> F(x, b, params)
 
     # create nonlinear solver with solver type obtained from config dictionary
     s = get_config(:nls_solver)(x, f!)
