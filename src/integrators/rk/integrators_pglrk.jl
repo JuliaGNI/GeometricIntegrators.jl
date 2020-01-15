@@ -79,93 +79,82 @@ mutable struct ParametersPGLRK{DT,TT,D,S,ET} <: Parameters{DT,TT}
     tab::CoefficientsPGLRK{TT}
     Δt::TT
 
-    A_q::Array{TT, 3}
-    A_p::Array{TT, 3}
-    a_q::Matrix{TT}
-    a_p::Matrix{TT}
-
     t̅::TT
+    t::TT
 
     q̅::Vector{DT}
-    p̅::Vector{DT}
 
+    Q::Vector{Vector{DT}}
+    λ::DT
 
     function ParametersPGLRK{DT,TT,D,S,ET}(equ, tab, Δt) where {DT,TT,D,S,ET}
-        # create coefficient matrices
-        A_q = zeros(TT, S, S, D)
-        A_p = zeros(TT, S, S, D)
-        a_q = zero(tab.a)
-        a_p = zero(tab.a)
-
-        new(equ, tab, Δt, A_q, A_p, a_q, a_p, zero(TT), zeros(DT,D), zeros(DT,D))
+        new(equ, tab, Δt, zero(TT), zero(TT), zeros(DT,D),
+            create_internal_stage_vector(DT,D,S), zero(DT))
     end
 end
 
 
-mutable struct IntegratorCachePGLRK{DT,D,S} <: IODEIntegratorCache{DT,D}
-    θ::Vector{DT}
-    θ̅::Vector{DT}
-    λ::Vector{DT}
-    λ̅::Vector{DT}
+mutable struct IntegratorCachePGLRK{DT,D,S} <: ODEIntegratorCache{DT,D}
+    λ::DT
+    λ̅::DT
+    h::DT
+    h̅::DT
 
     q̃::Vector{DT}
-    p̃::Vector{DT}
     ṽ::Vector{DT}
-    f̃::Vector{DT}
-    θ̃::Vector{DT}
-    λ̃::Vector{DT}
     s̃::Vector{DT}
 
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
-    P::Vector{Vector{DT}}
-    F::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
-    Z::Vector{Vector{DT}}
 
     function IntegratorCachePGLRK{DT,D,S}() where {DT,D,S}
-        # create solution vectors
-        θ = zeros(DT,D)
-        θ̅ = zeros(DT,D)
-        λ = zeros(DT,D)
-        λ̅ = zeros(DT,D)
-
         # create temporary vectors
         q̃ = zeros(DT,D)
-        p̃ = zeros(DT,D)
         ṽ = zeros(DT,D)
-        f̃ = zeros(DT,D)
-        θ̃ = zeros(DT,D)
-        λ̃ = zeros(DT,D)
         s̃ = zeros(DT,D)
 
         # create internal stage vectors
         Q = create_internal_stage_vector(DT, D, S)
-        P = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
-        F = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
-        Z = create_internal_stage_vector(DT, D, S)
 
 
-        new(θ, θ̅, λ, λ̅,
-            q̃, p̃, ṽ, f̃, θ̃, λ̃, s̃,
-            Q, P, V, F, Y, Z)
+        new(0, 0, 0, 0,
+            q̃, ṽ, s̃,
+            Q, V, Y)
     end
 end
 
 
-"Projected Gauss-Legendre Runge-Kutta integrator."
+"""
+Projected Gauss-Legendre Runge-Kutta integrator.
+
+    Reference: LUIGI BRUGNANO, FELICE IAVERNARO, AND DONATO TRIGIANTE.
+        ENERGY- AND QUADRATIC INVARIANTS–PRESERVING INTEGRATORS BASED
+        UPON GAUSS COLLOCATION FORMULAE.
+        SIAM J. NUMER. ANAL. Vol. 50, No. 6, pp. 2897–2916, 2012.
+"""
 struct IntegratorPGLRK{DT, TT, PT <: ParametersPGLRK{DT,TT},
                                ST <: NonlinearSolver{DT},
-                               IT <: InitialGuessPODE{DT,TT}, N, D, S} <: IntegratorPRK{DT,TT}
+                               PST <: NonlinearSolver{DT},
+                               IT <: InitialGuessODE{DT,TT}, N, D, S} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
+    psolver::PST
     iguess::IT
     cache::IntegratorCachePGLRK{DT,D,S}
+
+    x::Vector{DT}
+    b::Vector{DT}
+
+    function IntegratorPGLRK(N, params::ParametersPGLRK{DT,TT,D,S,ET}, solver::ST, psolver::PST, iguess::IT, cache,
+                    x::Vector{DT}, b::Vector{DT}) where {DT, TT, D, S, ET, ST, PST, IT}
+        new{DT, TT, typeof(params), ST, PST, IT, N, D, S}(params, solver, psolver, iguess, cache, x, b)
+    end
 end
 
-function IntegratorPGLRK(equation::IODE{DT,TT,ΑT,FT,GT,VT,N}, tableau::CoefficientsPGLRK{TT}, Δt::TT) where {DT,TT,ΑT,FT,GT,VT,N}
+function IntegratorPGLRK(equation::ODE{DT,TT,VT,HT,N}, tableau::CoefficientsPGLRK{TT}, Δt::TT) where {DT,TT,VT,HT,N}
     D = equation.d
     M = equation.n
     S = tableau.s
@@ -173,126 +162,65 @@ function IntegratorPGLRK(equation::IODE{DT,TT,ΑT,FT,GT,VT,N}, tableau::Coeffici
     # create params
     params = ParametersPGLRK{DT,TT,D,S,typeof(equation)}(equation, tableau, Δt)
 
-    # create solver
-    solver = create_nonlinear_solver(DT, D*(S+3), params)
+    # create solvers
+    solver  = create_nonlinear_solver(DT, D*S, params)
+    psolver = create_nonlinear_solver(DT, 1,   params; F=function_projection!)
+
+    # create full solution and RHS vector
+    x = zeros(DT, D*S+1)
+    b = zeros(DT, D*S+1)
 
     # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
+    iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
 
     # create cache
     cache = IntegratorCachePGLRK{DT,D,S}()
 
     # create integrator
-    IntegratorPGLRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), N, D, S}(params, solver, iguess, cache)
+    IntegratorPGLRK(N, params, solver, psolver, iguess, cache, x, b)
 end
 
 
 @inline nstages(integrator::IntegratorPGLRK{DT,TT,PT,ST,IT,N,D,S}) where {DT,TT,PT,ST,IT,N,D,S} = S
 
 
-function update_params!(params::ParametersPGLRK, sol::AtomicSolutionPODE)
+function update_params!(params::ParametersPGLRK, sol::AtomicSolutionODE)
     # set time for nonlinear solver and copy previous solution
     params.t̅  = sol.t
+    params.t  = params.t̅ + params.Δt
     params.q̅ .= sol.q
-    params.p̅ .= sol.p
 end
 
 
-function compute_stages!(x::Vector{ST}, cache::IntegratorCachePGLRK{ST}, params::ParametersPGLRK) where {ST}
-    compute_stages!(x, cache.Q, cache.V,
-                       cache.P, cache.F,
-                       cache.Y, cache.Z,
-                       cache.q̃, cache.p̃,
-                       cache.θ̃, cache.λ̃,
-                       cache.ṽ, cache.f̃,
-                       params)
+function compute_stages!(x::Vector{ST}, cache::IntegratorCachePGLRK{ST}, params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+    compute_stages!(x, cache.Q, cache.V, cache.Y, cache.q̃, cache.ṽ, params)
 end
 
-function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
-                                        P::Vector{Vector{ST}}, F::Vector{Vector{ST}},
-                                        Y::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
-                                        q::Vector{ST}, p::Vector{ST},
-                                        θ::Vector{ST}, λ::Vector{ST},
-                                        y::Vector{ST}, z::Vector{ST},
+function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
+                                        q::Vector{ST}, y::Vector{ST},
                                         params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     local tᵢ::TT
-    local t₀::TT = params.t̅
-    local t₁::TT = params.t̅ + params.Δt
 
-    # copy x to V
+    # copy x to Y
     for i in 1:S
         for k in 1:D
-            V[i][k] = x[D*(i-1)+k]
+            Y[i][k] = x[D*(i-1)+k]
         end
     end
 
-    # copy x to λ, q and p
-    for k in 1:D
-        q[k] = x[D*(S+0)+k]
-        p[k] = x[D*(S+1)+k]
-        λ[k] = x[D*(S+2)+k]
-    end
-
-    # compute tableaus
-    A_q = zeros(ST, (S,S,D))
-    A_p = zeros(ST, (S,S,D))
-    for k in 1:D
-        # getTableauPGLRK(params.tab, λ[k], params.a_q)
-        a_q = getTableauPGLRK(params.tab, λ[k])
-        # get_symplectic_conjugate_coefficients(params.a_q, params.tab.b, params.a_p)
-        for j=1:S
-            for i=1:S
-                # params.A_q[i,j,k] = params.a_q[i,j]
-                # params.A_p[i,j,k] = params.a_q[i,j]
-                A_q[i,j,k] = a_q[i,j]
-                A_p[i,j,k] = a_q[i,j]
-            end
-        end
-    end
-
-    # compute Y and Q
+    # compute Q=q̅+Δt*Y
     for i in 1:S
         for k in 1:D
-            Y[i][k] = 0
-            for j in 1:S
-                # Y[i][k] += params.A_q[i,j,k] * V[j][k]
-                Y[i][k] += A_q[i,j,k] * V[j][k]
-            end
             Q[i][k] = params.q̅[k] + params.Δt * Y[i][k]
         end
     end
 
-    # compute P=ϑ(Q,V) and F=f(Q,V)
+    # compute V=v(T,Q)
     for i in 1:S
         tᵢ = params.t̅ + params.Δt * params.tab.c[i]
-        params.equ.ϑ(tᵢ, Q[i], V[i], P[i])
-        params.equ.f(tᵢ, Q[i], V[i], F[i])
+        params.equ.v(tᵢ, Q[i], V[i])
     end
-
-    # compute Z
-    for i in 1:S
-        for k in 1:D
-            Z[i][k] = 0
-            for j in 1:S
-                # Z[i][k] += params.A_p[i,j,k] * F[j][k]
-                Z[i][k] += A_p[i,j,k] * F[j][k]
-            end
-        end
-    end
-
-    # compute y and z
-    y .= 0
-    z .= 0
-    for k in 1:D
-        for j in 1:S
-            y[k] += params.tab.b[j] * V[j][k]
-            z[k] += params.tab.b[j] * F[j][k]
-        end
-    end
-
-    # compute θ=ϑ(q,λ)
-    params.equ.ϑ(t₁, q, λ, θ)
 end
 
 "Compute stages of projected Gauss-Legendre Runge-Kutta methods."
@@ -303,38 +231,121 @@ end
     quote
         compute_stages!(x, $cache, params)
 
-        # compute b = [P-p-AF]
+        a = getTableauPGLRK(params.tab, params.λ)
+
+        # compute b = [Y-AV]
         for i in 1:S
             for k in 1:D
-                b[D*(i-1)+k] = $cache.P[i][k] - params.p̅[k] - params.Δt * $cache.Z[i][k]
+                b[D*(i-1)+k] = $cache.Y[i][k]
+                for j in 1:S
+                    b[D*(i-1)+k] -= a[i,j] * $cache.V[j][k]
+                end
             end
-        end
-
-        # compute b = [q̅-q-bV, p̅-p-bF, p̅-α(q̅)]
-        for k in 1:D
-            b[D*(S+0)+k] = $cache.q̃[k] - params.q̅[k] - params.Δt * $cache.ṽ[k]
-            b[D*(S+1)+k] = $cache.p̃[k] - params.p̅[k] - params.Δt * $cache.f̃[k]
-            b[D*(S+2)+k] = $cache.p̃[k] - $cache.θ̃[k]
         end
     end
 end
 
 
-function initialize!(int::IntegratorPGLRK, sol::AtomicSolutionPODE)
-    sol.t̅ = sol.t - timestep(int)
+"Compute projection of projected Gauss-Legendre Runge-Kutta methods."
+@generated function function_projection!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    equation(int).v(sol.t, sol.q, sol.p, sol.v)
-    equation(int).f(sol.t, sol.q, sol.p, sol.f)
+    cache = IntegratorCachePGLRK{ST,D,S}()
 
-    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+    quote
+        # copy x to λ
+        $cache.λ = x[1]
+
+        # compute full tableau
+        a = getTableauPGLRK(params.tab, $cache.λ)
+        ainv = inv(a)
+
+        $cache.q̃ .= params.q̅
+        for k in 1:D
+            for i in 1:S
+                for j in 1:S
+                    $cache.q̃[k] += params.tab.b[i] * ainv[i,j] * (params.Q[j][k] - params.q̅[k])
+                end
+            end
+        end
+
+        # compute h and h̅
+        $cache.h = params.equ.h(params.t, $cache.q̃)
+        $cache.h̅ = params.equ.h(params.t̅, params.q̅)
+
+        # compute b = [h̅-h]
+        b[1] = $cache.h̅ - $cache.h
+    end
 end
 
 
-function initial_guess!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+@generated function function_all!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+
+    cache = IntegratorCachePGLRK{ST,D,S}()
+
+    quote
+        compute_stages!(x, $cache, params)
+
+        $cache.λ = x[D*S+1]
+
+        a = getTableauPGLRK(params.tab, $cache.λ)
+
+        # compute b = [Y-AV]
+        for i in 1:S
+            for k in 1:D
+                b[D*(i-1)+k] = $cache.Y[i][k]
+                for j in 1:S
+                    b[D*(i-1)+k] -= a[i,j] * $cache.V[j][k]
+                end
+            end
+        end
+
+        # compute y=B*V
+        $cache.ṽ .= 0
+        for k in 1:D
+            for j in 1:S
+                $cache.ṽ[k] += params.tab.b[j] * $cache.V[j][k]
+            end
+        end
+
+        # compute q=q̅+Δt*y
+        $cache.q̃ .= params.q̅ .+ params.Δt .* $cache.ṽ
+
+        # compute h and h̅
+        $cache.h = params.equ.h(params.t, $cache.q̃)
+        $cache.h̅ = params.equ.h(params.t̅, params.q̅)
+
+        # compute b = [h̅-h]
+        b[D*S+1] = $cache.h̅ - $cache.h
+    end
+end
+
+
+function compute_residuals(int::IntegratorPGLRK{DT,TT}) where {DT,TT}
+    function_all!(int.x, int.b, int.params)
+
+    rₐ²::DT = 0
+    for bᵢ in int.b
+        rₐ² = max(rₐ², bᵢ^2)
+    end
+    rₐ = sqrt(rₐ²)
+
+    return rₐ
+end
+
+
+function initialize!(int::IntegratorPGLRK, sol::AtomicSolutionODE)
+    sol.t̅ = sol.t - timestep(int)
+
+    equation(int).v(sol.t, sol.q, sol.v)
+
+    initialize!(int.iguess, sol.t, sol.q, sol.v,
+                            sol.t̅, sol.q̅, sol.v̅)
+end
+
+
+function initial_guess!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅,
                               int.cache.q̃, int.cache.ṽ,
                               tableau(int).c[i])
 
@@ -343,25 +354,12 @@ function initial_guess!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionPODE{DT,
         end
     end
 
-    evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                          sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                          int.cache.q̃, int.cache.p̃,
-                          one(TT), one(TT))
-
-    for k in eachdim(int)
-        int.solver.x[ndims(int)*(nstages(int)+0)+k] = int.cache.q̃[k]
-    end
-    for k in eachdim(int)
-        int.solver.x[ndims(int)*(nstages(int)+1)+k] = int.cache.p̃[k]
-    end
-    for k in eachdim(int)
-        int.solver.x[ndims(int)*(nstages(int)+2)+k] = 0
-    end
+    int.params.λ = 0
 end
 
 
-"Integrate PODE with projected Gauss-Legendre Runge-Kutta integrator."
-function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+"Integrate ODE with projected Gauss-Legendre Runge-Kutta integrator."
+function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 
@@ -371,22 +369,51 @@ function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionPODE{DT
     # reset cache
     reset!(sol, timestep(int))
 
-    # call nonlinear solver
-    solve!(int.solver)
+    for i = 1:get_config(:nls_nmax)
+        # call nonlinear solver
+        solve!(int.solver)
 
-    # print solver status
-    print_solver_status(int.solver.status, int.solver.params)
+        # print solver status
+        print_solver_status(int.solver.status, int.solver.params)
 
-    # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params)
+        # check if solution contains NaNs or error bounds are violated
+        check_solver_status(int.solver.status, int.solver.params)
+
+        # compute vector fields at internal stages
+        compute_stages!(int.solver.x, int.cache, int.params)
+
+        # copy vector field at internal stages
+        for i in eachstage(int)
+            int.params.Q[i] .= int.cache.Q[i]
+        end
+
+        # call nonlinear solver for projection
+        solve!(int.psolver)
+
+        # print solver status
+        print_solver_status(int.psolver.status, int.psolver.params)
+
+        # check if solution contains NaNs or error bounds are violated
+        check_solver_status(int.psolver.status, int.psolver.params)
+
+        # copy parameter
+        int.params.λ = int.psolver.x[1]
+
+        # check convergence for full system
+        int.x .= vcat(int.solver.x, int.psolver.x)
+        rₐ = compute_residuals(int)
+
+        # println(i, ", ", int.psolver.x, ", ", rₐ)
+
+        rₐ ≤ get_config(:nls_atol) ? break : nothing
+    end
 
     # compute vector fields at internal stages
     compute_stages!(int.solver.x, int.cache, int.params)
 
     # compute final update
     update_solution!(sol.q, sol.q̃, int.cache.V, tableau(int).b, timestep(int))
-    update_solution!(sol.p, sol.p̃, int.cache.F, tableau(int).b, timestep(int))
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
+    update!(int.iguess, sol.t, sol.q, sol.v)
 end

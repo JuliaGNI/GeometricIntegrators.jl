@@ -9,6 +9,7 @@ using GeometricIntegrators.TestProblems.Oscillator
 using GeometricIntegrators.Utils
 using Test
 
+set_config(:nls_nmin, 1)
 set_config(:nls_stol_break, 1E3)
 
 using GeometricIntegrators.TestProblems.Oscillator: Δt, nt, refx, refq, refp, k
@@ -146,6 +147,7 @@ end
 
     @test rel_err(sol.q, refx) < 1E-7
 
+
     # Test integration with exact Jacobian
 
     int = IntegratorFIRK(ode, getTableauGLRK(1), Δt; exact_jacobian=true)
@@ -214,9 +216,16 @@ end
 
 @testset "$(rpad("Special Runge-Kutta integrators",80))" begin
 
-    pgint = IntegratorPGLRK(iode, getCoefficientsPGLRK(2), Δt)
+    pgint = IntegratorPGLRK(ode, getCoefficientsPGLRK(2), Δt)
     pgsol = integrate(pgint, nt)
 
-    @test rel_err(pgsol.q, refx) < 1E-5
+    # println(rel_err(pgsol.q, refx))
+    @test rel_err(pgsol.q, refx) < 4E-8
+
+    pgint = IntegratorPGLRK(ode, getCoefficientsPGLRK(3), Δt)
+    pgsol = integrate(pgint, nt)
+
+    # println(rel_err(pgsol.q, refx))
+    @test rel_err(pgsol.q, refx) < 2E-8
 
 end
