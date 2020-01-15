@@ -51,7 +51,7 @@ end
 end
 
 
-function test_firk_jacobian(ode, tableau, Δt, nt; atol=1E-5)
+function test_firk_jacobian(ode, tableau, Δt, nt; atol=eps())
     int1 = IntegratorFIRK(ode, tableau, Δt; exact_jacobian=false)
     int2 = IntegratorFIRK(ode, tableau, Δt; exact_jacobian=true)
 
@@ -82,7 +82,7 @@ end
 
     int = Integrator(ode, getTableauImplicitMidpoint(), Δt)
     jacobian!(int.solver.x, int.solver.J, IntegratorCache(int.params), int.params)
-    @test int.solver.J == - [1.0  0.0; 0.0  1.0] + Δt * 1//2 * [0.0  1.0; -k  0.0]
+    @test int.solver.J == - [1.0  0.0; 0.0  1.0] + Δt / 2 * [0.0  1.0; -k  0.0]
 
     test_firk_jacobian(ode, getTableauGLRK(1), Δt, nt)
     test_firk_jacobian(ode, getTableauGLRK(2), Δt, nt)
