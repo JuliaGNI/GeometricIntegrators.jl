@@ -25,7 +25,7 @@ function InitialGuessODE(interp, equation::ODE{DT,TT,VT}, Δt::TT) where {DT,TT,
     InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt)
 end
 
-function InitialGuessODE(interp, equation::IODE{DT,TT,ΘT,FT,GT,VT}, Δt::TT) where {DT,TT,ΘT,FT,GT,VT}
+function InitialGuessODE(interp, equation::IODE{DT,TT,ΘT,FT,GT,HT,VT}, Δt::TT) where {DT,TT,ΘT,FT,GT,HT,VT}
     int = interp(zero(DT), one(DT), Δt, ndims(equation))
     InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt)
 end
