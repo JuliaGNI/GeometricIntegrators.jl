@@ -79,26 +79,23 @@ mutable struct ParametersPGLRK{DT,TT,D,S,ET} <: Parameters{DT,TT}
     tab::CoefficientsPGLRK{TT}
     Δt::TT
 
+    h₀::DT
+
     t̅::TT
     t::TT
 
     q̅::Vector{DT}
-
-    Q::Vector{Vector{DT}}
     λ::DT
 
     function ParametersPGLRK{DT,TT,D,S,ET}(equ, tab, Δt) where {DT,TT,D,S,ET}
-        new(equ, tab, Δt, zero(TT), zero(TT), zeros(DT,D),
-            create_internal_stage_vector(DT,D,S), zero(DT))
+        new(equ, tab, Δt, zero(TT), zero(TT), zero(DT), zeros(DT,D), zero(DT))
     end
 end
 
 
 mutable struct IntegratorCachePGLRK{DT,D,S} <: ODEIntegratorCache{DT,D}
-    λ::DT
-    λ̅::DT
     h::DT
-    h̅::DT
+    λ::DT
 
     q̃::Vector{DT}
     ṽ::Vector{DT}
@@ -120,7 +117,7 @@ mutable struct IntegratorCachePGLRK{DT,D,S} <: ODEIntegratorCache{DT,D}
         Y = create_internal_stage_vector(DT, D, S)
 
 
-        new(0, 0, 0, 0,
+        new(0, 0,
             q̃, ṽ, s̃,
             Q, V, Y)
     end
@@ -137,20 +134,18 @@ Projected Gauss-Legendre Runge-Kutta integrator.
 """
 struct IntegratorPGLRK{DT, TT, PT <: ParametersPGLRK{DT,TT},
                                ST <: NonlinearSolver{DT},
-                               PST <: NonlinearSolver{DT},
                                IT <: InitialGuessODE{DT,TT}, N, D, S} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
-    psolver::PST
     iguess::IT
     cache::IntegratorCachePGLRK{DT,D,S}
 
     x::Vector{DT}
     b::Vector{DT}
 
-    function IntegratorPGLRK(N, params::ParametersPGLRK{DT,TT,D,S,ET}, solver::ST, psolver::PST, iguess::IT, cache,
-                    x::Vector{DT}, b::Vector{DT}) where {DT, TT, D, S, ET, ST, PST, IT}
-        new{DT, TT, typeof(params), ST, PST, IT, N, D, S}(params, solver, psolver, iguess, cache, x, b)
+    function IntegratorPGLRK(N, params::ParametersPGLRK{DT,TT,D,S,ET}, solver::ST, iguess::IT, cache,
+                    x::Vector{DT}, b::Vector{DT}) where {DT, TT, D, S, ET, ST, IT}
+        new{DT, TT, typeof(params), ST, IT, N, D, S}(params, solver, iguess, cache, x, b)
     end
 end
 
@@ -162,22 +157,8 @@ function IntegratorPGLRK(equation::ODE{DT,TT,VT,HT,N}, tableau::CoefficientsPGLR
     # create params
     params = ParametersPGLRK{DT,TT,D,S,typeof(equation)}(equation, tableau, Δt)
 
-    # create solvers
+    # create solver
     solver  = create_nonlinear_solver(DT, D*S, params)
-
-    nls_rtol_break = get_config(:nls_rtol_break)
-    nls_nmin = get_config(:nls_nmin)
-    nls_nmax = get_config(:nls_nmax)
-
-    set_config(:nls_rtol_break, 1E3)
-    set_config(:nls_nmin, 1)
-    set_config(:nls_nmax, 5)
-
-    psolver = create_nonlinear_solver(DT, 1,   params; F=function_projection!)
-
-    set_config(:nls_rtol_break, nls_rtol_break)
-    set_config(:nls_nmin, nls_nmin)
-    set_config(:nls_nmax, nls_nmax)
 
     # create full solution and RHS vector
     x = zeros(DT, D*S+1)
@@ -190,7 +171,7 @@ function IntegratorPGLRK(equation::ODE{DT,TT,VT,HT,N}, tableau::CoefficientsPGLR
     cache = IntegratorCachePGLRK{DT,D,S}()
 
     # create integrator
-    IntegratorPGLRK(N, params, solver, psolver, iguess, cache, x, b)
+    IntegratorPGLRK(N, params, solver, iguess, cache, x, b)
 end
 
 
@@ -200,7 +181,7 @@ end
 function update_params!(params::ParametersPGLRK, sol::AtomicSolutionODE)
     # set time for nonlinear solver and copy previous solution
     params.t̅  = sol.t
-    params.t  = params.t̅ + params.Δt
+    params.t  = sol.t + params.Δt
     params.q̅ .= sol.q
 end
 
@@ -234,6 +215,17 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         tᵢ = params.t̅ + params.Δt * params.tab.c[i]
         params.equ.v(tᵢ, Q[i], V[i])
     end
+
+    # compute y=B*V
+    y .= 0
+    for k in 1:D
+        for j in 1:S
+            y[k] += params.tab.b[j] * V[j][k]
+        end
+    end
+
+    # compute q=q̅+Δt*y
+    q .= params.q̅ .+ params.Δt .* y
 end
 
 "Compute stages of projected Gauss-Legendre Runge-Kutta methods."
@@ -259,90 +251,63 @@ end
 end
 
 
-"Compute projection of projected Gauss-Legendre Runge-Kutta methods."
-@generated function function_projection!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+function bisection(f::Function, λmin::DT, λmax::DT;
+                   xtol::AbstractFloat=get_config(:nls_atol),
+                   ftol::AbstractFloat=get_config(:nls_atol),
+                   maxiter::Integer=get_config(:nls_nmax)) where {DT <: Number}
+    a = λmin
+    b = λmax
+    fa = f(a)
+    fb = f(b)
 
-    cache = IntegratorCachePGLRK{ST,D,S}()
+    local λ = zero(DT)
+    local fλ= zero(DT)
 
-    quote
-        # copy x to λ
-        $cache.λ = x[1]
+    for i in 1:maxiter
+        λ  = (a+b)/2
+        fλ = f(λ)
 
-        # compute full tableau
-        a = getTableauPGLRK(params.tab, $cache.λ)
-        ainv = inv(a)
+        !isapprox(fλ, 0, atol=ftol) || break
 
-        $cache.q̃ .= params.q̅
-        for k in 1:D
-            for i in 1:S
-                for j in 1:S
-                    $cache.q̃[k] += params.tab.b[i] * ainv[i,j] * (params.Q[j][k] - params.q̅[k])
-                end
-            end
+        if fa*fλ > 0
+            a  = λ  # Root is in the right half of [a,b].
+            fa = fλ
+        else
+            b = λ  # Root is in the left half of [a,b].
         end
 
-        # compute h and h̅
-        $cache.h = params.equ.h(params.t, $cache.q̃)
-        $cache.h̅ = params.equ.h(params.t̅, params.q̅)
-
-        # compute b = [h̅-h]
-        b[1] = $cache.h̅ - $cache.h
+        abs(b-a) > xtol || break
     end
+
+    return λ
 end
 
 
-@generated function function_all!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+function function_hamiltonian!(λ::Number, int::IntegratorPGLRK{DT,TT}) where {DT,TT}
+    # copy λ to integrator parameters
+    int.params.λ = λ
 
-    cache = IntegratorCachePGLRK{ST,D,S}()
+    # call nonlinear solver
+    solve!(int.solver)
 
-    quote
-        compute_stages!(x, $cache, params)
+    # print solver status
+    print_solver_status(int.solver.status, int.solver.params)
 
-        $cache.λ = x[D*S+1]
+    # check if solution contains NaNs or error bounds are violated
+    check_solver_status(int.solver.status, int.solver.params)
 
-        a = getTableauPGLRK(params.tab, $cache.λ)
+    # compute vector fields at internal stages
+    compute_stages!(int.solver.x, int.cache, int.params)
 
-        # compute b = [Y-AV]
-        for i in 1:S
-            for k in 1:D
-                b[D*(i-1)+k] = $cache.Y[i][k]
-                for j in 1:S
-                    b[D*(i-1)+k] -= a[i,j] * $cache.V[j][k]
-                end
-            end
-        end
+    # compute h
+    int.cache.h = int.params.equ.h(int.params.t, int.cache.q̃)
 
-        # compute y=B*V
-        $cache.ṽ .= 0
-        for k in 1:D
-            for j in 1:S
-                $cache.ṽ[k] += params.tab.b[j] * $cache.V[j][k]
-            end
-        end
-
-        # compute q=q̅+Δt*y
-        $cache.q̃ .= params.q̅ .+ params.Δt .* $cache.ṽ
-
-        # compute h and h̅
-        $cache.h = params.equ.h(params.t, $cache.q̃)
-        $cache.h̅ = params.equ.h(params.t̅, params.q̅)
-
-        # compute b = [h̅-h]
-        b[D*S+1] = $cache.h̅ - $cache.h
-    end
+    # compute and return h₀-h
+    return int.params.h₀ - int.cache.h
 end
 
-
-function compute_residuals(int::IntegratorPGLRK{DT,TT}) where {DT,TT}
-    function_all!(int.x, int.b, int.params)
-
-    rₐ²::DT = 0
-    for bᵢ in int.b
-        rₐ² = max(rₐ², bᵢ^2)
-    end
-    rₐ = sqrt(rₐ²)
-
-    return rₐ
+function function_hamiltonian!(λ::Vector, int::IntegratorPGLRK{DT,TT}) where {DT,TT}
+    [function_hamiltonian!(λ[1], int)]
 end
 
 
@@ -353,6 +318,8 @@ function initialize!(int::IntegratorPGLRK, sol::AtomicSolutionODE)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
                             sol.t̅, sol.q̅, sol.v̅)
+
+    int.params.h₀ = int.params.equ.h(sol.t, sol.q)
 end
 
 
@@ -366,8 +333,6 @@ function initial_guess!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionODE{DT,T
             int.solver.x[ndims(int)*(i-1)+k] = int.cache.ṽ[k]
         end
     end
-
-    int.params.λ = 0
 end
 
 
@@ -379,53 +344,19 @@ function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionODE{DT,
     # compute initial guess
     initial_guess!(int, sol)
 
-    # reset cache
+    # reset solution
     reset!(sol, timestep(int))
 
-    for i = 1:get_config(:nls_nmax)
-        # call nonlinear solver
-        solve!(int.solver)
+    # determine parameter λ
+    λmin = -0.2^nstages(int)
+    λmax = +0.2^nstages(int)
 
-        # print solver status
-        print_solver_status(int.solver.status, int.solver.params)
-
-        # check if solution contains NaNs or error bounds are violated
-        check_solver_status(int.solver.status, int.solver.params)
-
-        # compute vector fields at internal stages
-        compute_stages!(int.solver.x, int.cache, int.params)
-
-        # copy vector field at internal stages
-        for i in eachstage(int)
-            int.params.Q[i] .= int.cache.Q[i]
-        end
-
-        # call nonlinear solver for projection
-        solve!(int.psolver)
-
-        # print solver status
-        print_solver_status(int.psolver.status, int.psolver.params)
-
-        # check if solution contains NaNs or error bounds are violated
-        check_solver_status(int.psolver.status, int.psolver.params)
-
-        # copy parameter
-        int.params.λ = int.psolver.x[1]
-
-        # check convergence for full system
-        int.x .= vcat(int.solver.x, int.psolver.x)
-        rₐ = compute_residuals(int)
-
-        # println(i, ", ", int.psolver.x, ", ", rₐ)
-
-        rₐ ≤ get_config(:nls_atol) ? break : nothing
-    end
-
-    # compute vector fields at internal stages
-    compute_stages!(int.solver.x, int.cache, int.params)
+    int.params.λ = bisection(λ -> function_hamiltonian!(λ, int), λmin, λmax;
+                    xtol=abs(λmax-λmin)*get_config(:nls_atol),
+                    ftol=int.params.h₀*get_config(:nls_atol))
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, int.cache.V, tableau(int).b, timestep(int))
+    update_solution!(sol.q, int.cache.V, tableau(int).b, timestep(int))
 
     # copy solution to initial guess
     update!(int.iguess, sol.t, sol.q, sol.v)

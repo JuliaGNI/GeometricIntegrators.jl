@@ -225,12 +225,12 @@ end
     pgsol = integrate(pgint, nt)
 
     # println(rel_err(pgsol.q, refx))
-    @test rel_err(pgsol.q, refx) < 2E-8
+    @test rel_err(pgsol.q, refx) < 2E-12
 
     pgint = IntegratorPGLRK(ode, getCoefficientsPGLRK(4), Δt)
     pgsol = integrate(pgint, nt)
 
     # println(rel_err(pgsol.q, refx))
-    @test rel_err(pgsol.q, refx) < 5E-13
+    @test rel_err(pgsol.q, refx) < 8E-16
 
 end
