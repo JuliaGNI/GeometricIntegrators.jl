@@ -158,10 +158,14 @@ function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, ẋ::V
     @assert length(b) == length(ẋ)
     @assert length(x) == length(ẋ[1])
 
-    for i in eachindex(ẋ)
-        for k in eachindex(ẋ[i])
-            x[k] += Δt * b[i] * ẋ[i][k]
+    local Δx::T
+
+    for k in eachindex(x)
+        Δx = 0
+        for i in eachindex(ẋ)
+            Δx += b[i] * ẋ[i][k]
         end
+        x[k] += Δt * Δx
     end
 end
 
