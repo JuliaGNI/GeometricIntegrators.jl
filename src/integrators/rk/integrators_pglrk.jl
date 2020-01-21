@@ -1,4 +1,6 @@
 
+using NLsolve
+
 "Holds the coefficients of a projected Gauss-Legendre Runge-Kutta method."
 struct CoefficientsPGLRK{T} <: AbstractCoefficients{T}
     @HeaderCoefficientsRK
@@ -140,12 +142,8 @@ struct IntegratorPGLRK{DT, TT, PT <: ParametersPGLRK{DT,TT},
     iguess::IT
     cache::IntegratorCachePGLRK{DT,D,S}
 
-    x::Vector{DT}
-    b::Vector{DT}
-
-    function IntegratorPGLRK(N, params::ParametersPGLRK{DT,TT,D,S,ET}, solver::ST, iguess::IT, cache,
-                    x::Vector{DT}, b::Vector{DT}) where {DT, TT, D, S, ET, ST, IT}
-        new{DT, TT, typeof(params), ST, IT, N, D, S}(params, solver, iguess, cache, x, b)
+    function IntegratorPGLRK(N, params::ParametersPGLRK{DT,TT,D,S,ET}, solver::ST, iguess::IT, cache) where {DT, TT, D, S, ET, ST, IT}
+        new{DT, TT, typeof(params), ST, IT, N, D, S}(params, solver, iguess, cache)
     end
 end
 
@@ -160,10 +158,6 @@ function IntegratorPGLRK(equation::ODE{DT,TT,VT,HT,N}, tableau::CoefficientsPGLR
     # create solver
     solver  = create_nonlinear_solver(DT, D*S, params)
 
-    # create full solution and RHS vector
-    x = zeros(DT, D*S+1)
-    b = zeros(DT, D*S+1)
-
     # create initial guess
     iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
 
@@ -171,7 +165,7 @@ function IntegratorPGLRK(equation::ODE{DT,TT,VT,HT,N}, tableau::CoefficientsPGLR
     cache = IntegratorCachePGLRK{DT,D,S}()
 
     # create integrator
-    IntegratorPGLRK(N, params, solver, iguess, cache, x, b)
+    IntegratorPGLRK(N, params, solver, iguess, cache)
 end
 
 
@@ -260,10 +254,14 @@ function bisection(f::Function, λmin::DT, λmax::DT;
     fa = f(a)
     fb = f(b)
 
+    # fa*fb ≤ 0 || error("Either no or multiple real roots in [λmin,λmax]")
+
+    # local j = 0
     local λ = zero(DT)
     local fλ= zero(DT)
 
     for i in 1:maxiter
+        # j += 1
         λ  = (a+b)/2
         fλ = f(λ)
 
@@ -278,6 +276,10 @@ function bisection(f::Function, λmin::DT, λmax::DT;
 
         abs(b-a) > xtol || break
     end
+
+    # println(j, " bisection iterations, λ=", λ, ", f(λ)=", fλ, ", ftol=", ftol, ", abs(b-a)=", abs(b-a), ", xtol=", xtol)
+
+    # i != maxiter || error("Max iteration number exceeded")
 
     return λ
 end
@@ -354,6 +356,10 @@ function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionODE{DT,
     int.params.λ = bisection(λ -> function_hamiltonian!(λ, int), λmin, λmax;
                     xtol=abs(λmax-λmin)*get_config(:nls_atol),
                     ftol=int.params.h₀*get_config(:nls_atol))
+    # int.params.λ = nlsolve(λ -> function_hamiltonian!(λ, int), [zero(DT)];
+    #             xtol=abs(λmax-λmin)*get_config(:nls_atol),
+    #             ftol=int.params.h₀*get_config(:nls_atol)).zero[1]
+    # println(int.params.λ)
 
     # compute final update
     update_solution!(sol.q, int.cache.V, tableau(int).b, timestep(int))
