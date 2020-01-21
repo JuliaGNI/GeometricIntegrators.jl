@@ -291,13 +291,13 @@ end
     vint = IntegratorVPRKpTableau(iode, getCoefficientsPGLRK(5), Δt*5)
     isol = integrate(vint, div(nt,5))
 
-    println("error = ", rel_err(isol.q, refx))
+    # println("error = ", rel_err(isol.q, refx))
     @test rel_err(isol.q, refx) < 8E-12
 
     vint = IntegratorVPRKpTableau(iode, getCoefficientsPGLRK(6), Δt*5)
     isol = integrate(vint, div(nt,5))
 
-    println("error = ", rel_err(isol.q, refx))
+    # println("error = ", rel_err(isol.q, refx))
     @test rel_err(isol.q, refx) < 4E-14
 
 end
