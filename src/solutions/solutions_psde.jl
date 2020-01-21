@@ -132,7 +132,7 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Ar
     # Wiener process increments are prescribed by the arrays dW and dZ
     W = WienerProcess(Δt, dW, dZ, conv)
 
-    s = SolutionPSDE{DT,TT,NQ,NW}(nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
+    s = SolutionPSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
     return s
 end
