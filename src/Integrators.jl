@@ -107,7 +107,7 @@ module Integrators
 
     export IntegratorVPRKpStandard, IntegratorVPRKpSymplectic,
            IntegratorVPRKpInternal, IntegratorVPRKpMidpoint,
-           IntegratorVPRKpSymmetric,
+           IntegratorVPRKpSymmetric, IntegratorVPRKpTableau,
            IntegratorVPRKpSecondary, IntegratorVPRKpVariational,
            IntegratorVPRKpVariationalQ, IntegratorVPRKpVariationalP
 
@@ -123,6 +123,7 @@ module Integrators
     include("integrators/vprk/integrators_vprk_pstandard.jl")
     include("integrators/vprk/integrators_vprk_psecondary.jl")
     include("integrators/vprk/integrators_vprk_psymmetric.jl")
+    include("integrators/vprk/integrators_vprk_ptableau.jl")
     include("integrators/vprk/integrators_vprk_pvariational.jl")
     include("integrators/vprk/integrators_vprk_plegendre.jl")
 
