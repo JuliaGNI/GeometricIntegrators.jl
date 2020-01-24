@@ -13,7 +13,6 @@ julia:
 
 matrix:
   allow_failures:
-    - os: windows
     - julia: nightly
   fast_finish: true
 
