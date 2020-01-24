@@ -189,6 +189,7 @@ module Integrators
 
 
     include("integrators/integrators.jl")
+    include("integrators/stochastic_integrators.jl")
 
 
     function __init__()
