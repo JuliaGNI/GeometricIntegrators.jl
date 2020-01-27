@@ -5,13 +5,13 @@ using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Quadratures
 using GeometricIntegrators.Solvers
-using GeometricIntegrators.TestProblems.HarmonicOscillator
+using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
 using GeometricIntegrators.Utils
 using Test
 
-using GeometricIntegrators.TestProblems.HarmonicOscillator: Δt, nt, refx, refq, refp
+using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem: Δt, nt, refx, refq, refp
 
-iode = oscillator_iode()
+iode = harmonic_oscillator_iode()
 
 QGau4 = GaussLegendreQuadrature(4)
 BGau4 = LagrangeBasis(nodes(QGau4))

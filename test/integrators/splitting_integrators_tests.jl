@@ -1,13 +1,13 @@
 
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.TestProblems.HarmonicOscillator
+using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
 using GeometricIntegrators.Utils
 using Test
 
-using GeometricIntegrators.TestProblems.HarmonicOscillator: Δt, nt, refx
+using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem: Δt, nt, refx
 
-sode = oscillator_sode()
+sode = harmonic_oscillator_sode()
 
 
 sint = Integrator(sode, getTableauLieA(), Δt)

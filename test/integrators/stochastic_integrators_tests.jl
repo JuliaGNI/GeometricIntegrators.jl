@@ -4,10 +4,10 @@ using GeometricIntegrators.Integrators
 using GeometricIntegrators.Solutions
 using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.TestProblems.KuboOscillator
+using GeometricIntegrators.TestProblems.KuboOscillatorProblem
 using Test
 
-using GeometricIntegrators.TestProblems.KuboOscillator: Δt, nt
+using GeometricIntegrators.TestProblems.KuboOscillatorProblem: Δt, nt
 
 include("utils.jl")
 
