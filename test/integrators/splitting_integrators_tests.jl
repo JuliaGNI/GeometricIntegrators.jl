@@ -1,11 +1,11 @@
 
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.TestProblems.Oscillator
+using GeometricIntegrators.TestProblems.HarmonicOscillator
 using GeometricIntegrators.Utils
 using Test
 
-using GeometricIntegrators.TestProblems.Oscillator: Δt, nt, refx
+using GeometricIntegrators.TestProblems.HarmonicOscillator: Δt, nt, refx
 
 sode = oscillator_sode()
 

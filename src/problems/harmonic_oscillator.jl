@@ -1,5 +1,5 @@
 
-module Oscillator
+module HarmonicOscillator
 
     using GeometricIntegrators.Equations
 

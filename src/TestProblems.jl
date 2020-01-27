@@ -2,12 +2,12 @@ module TestProblems
 
     using Reexport
 
-    include("problems/oscillator.jl")
+    include("problems/harmonic_oscillator.jl")
     include("problems/kubo_oscillator.jl")
-    include("problems/lotka_volterra.jl")
+    include("problems/lotka_volterra_2d.jl")
 
-    @reexport using .Oscillator
+    @reexport using .HarmonicOscillator
     @reexport using .KuboOscillator
-    @reexport using .LotkaVolterra
+    @reexport using .LotkaVolterra2d
 
 end

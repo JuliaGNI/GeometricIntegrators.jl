@@ -1,4 +1,4 @@
-module LotkaVolterra
+module LotkaVolterra2d
 
     using GeometricIntegrators.Equations
 
