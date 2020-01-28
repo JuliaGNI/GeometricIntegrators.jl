@@ -169,6 +169,17 @@ struct IntegratorSIRK{DT, TT, PT <: ParametersSIRK{DT,TT},
     #iguess::IT
     fcache::NonlinearFunctionCacheSIRK{DT}
 
+    tQ::Vector{DT}
+    ΔQ::Vector{DT}
+    ΔQ1::Vector{DT}
+    ΔQ2::Vector{DT}
+    tV1::Vector{DT}
+    tV2::Vector{DT}
+    tB1::Matrix{DT}
+    tB2::Matrix{DT}
+    tΔW::Vector{DT}
+    Δy::Vector{DT}
+
     q::Matrix{Vector{TwicePrecision{DT}}}
 end
 
@@ -195,11 +206,24 @@ function IntegratorSIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSIRK{TT}, 
     # create cache for internal stage vectors and update vectors
     fcache = NonlinearFunctionCacheSIRK{DT}(D, M, S)
 
+    # create temporary vectors
+    tQ  = zeros(DT,D)
+    ΔQ  = zeros(DT,D)
+    ΔQ1 = zeros(DT,D)
+    ΔQ2 = zeros(DT,D)
+    tV1 = zeros(DT,D)
+    tV2 = zeros(DT,D)
+    tB1 = zeros(DT,D,M)
+    tB2 = zeros(DT,D,M)
+    tΔW = zeros(DT,M)
+    Δy  = zeros(DT,M)
+
     # create solution vectors
     q = create_solution_vector(DT, D, NS, NI)
 
     # create integrator
-    IntegratorSIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q)
+    IntegratorSIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver,
+                    fcache, tQ, ΔQ, ΔQ1, ΔQ2, tV1, tV2, tB1, tB2, tΔW, Δy, q)
 end
 
 equation(integrator::IntegratorSIRK) = integrator.params.equ
@@ -240,14 +264,8 @@ function initial_guess!(int::IntegratorSIRK{DT,TT}) where {DT,TT}
     # time step, use a higher-order explicit method (e.g. CL or G5), or use
     # the simple solution above.
 
-    local tV1 = zeros(DT,int.params.equ.d)
-    local tV2 = zeros(DT,int.params.equ.d)
-    local tB1 = zeros(DT,int.params.equ.d, int.params.equ.m)
-    local tB2 = zeros(DT,int.params.equ.d, int.params.equ.m)
-    local Q   = zeros(DT,int.params.equ.d)
     local t2::TT
     local Δt_local::TT
-    local ΔW_local = zeros(DT,int.params.equ.m)
 
     # When calling this function, int.params should contain the data:
     # int.params.q - the solution at the previous time step
@@ -255,27 +273,29 @@ function initial_guess!(int::IntegratorSIRK{DT,TT}) where {DT,TT}
     # int.params.ΔW- the increment of the Brownian motion for the current step
 
     #Evaluating the functions v and B at t,q - same for all stages
-    int.params.equ.v(int.params.t, int.params.q, tV1)
-    int.params.equ.B(int.params.t, int.params.q, tB1)
+    int.params.equ.v(int.params.t, int.params.q, int.tV1)
+    int.params.equ.B(int.params.t, int.params.q, int.tB1)
 
     for i in 1:int.params.tab.s
 
-        Δt_local  = int.params.tab.qdrift.c[i]*int.params.Δt
-        ΔW_local .= int.params.tab.qdrift.c[i]*int.params.ΔW
+        Δt_local = int.params.tab.qdrift.c[i]  * int.params.Δt
+        int.tΔW .= int.params.tab.qdrift.c[i] .* int.params.ΔW
 
-        Q = int.params.q + 2. / 3. * Δt_local * tV1 + 2. / 3. * tB1 * ΔW_local
+        simd_mult!(int.ΔQ, int.tB1, int.tΔW)
+        int.tQ .= int.params.q .+ 2. ./ 3. .* Δt_local .* int.tV1 .+ 2. ./ 3. .* int.ΔQ
 
-        t2 = int.params.t + 2. / 3. *Δt_local
+        t2 = int.params.t + 2. / 3. * Δt_local
 
-        int.params.equ.v(t2, Q, tV2)
-        int.params.equ.B(t2, Q, tB2)
+        int.params.equ.v(t2, int.tQ, int.tV2)
+        int.params.equ.B(t2, int.tQ, int.tB2)
 
         #Calculating the Y's and assigning them to the array int.solver.x as initial guesses
+        simd_mult!(int.ΔQ1, int.tB1, int.tΔW)
+        simd_mult!(int.ΔQ2, int.tB2, int.tΔW)
         for j in 1:int.params.equ.d
-            int.solver.x[(i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * tV1[j] + 3. / 4. * tV2[j]) + dot( (1. / 4. * tB1[j,:] + 3. / 4. * tB2[j,:]), ΔW_local )
+            int.solver.x[(i-1)*int.params.equ.d+j] = Δt_local*(1. / 4. * int.tV1[j] + 3. / 4. * int.tV2[j]) + 1. / 4. * int.ΔQ1[j] + 3. / 4. * int.ΔQ2[j]
         end
     end
-
 end
 
 
@@ -298,12 +318,16 @@ function integrate_step!(int::IntegratorSIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,N
         int.params.ΔZ[1] = sol.W.ΔZ[n-1]
     elseif NW==2
         #Multidimensional Brownian motion, 1 sample path
-        int.params.ΔW .= sol.W.ΔW[n-1]
-        int.params.ΔZ .= sol.W.ΔZ[n-1]
+        for l = 1:sol.nm
+            int.params.ΔW[l] = sol.W.ΔW[l,n-1]
+            int.params.ΔZ[l] = sol.W.ΔZ[l,n-1]
+        end
     elseif NW==3
         #1D or Multidimensional Brownian motion, k-th sample path
-        int.params.ΔW .= sol.W.ΔW[n-1,k]
-        int.params.ΔZ .= sol.W.ΔZ[n-1,k]
+        for l = 1:sol.nm
+            int.params.ΔW[l] = sol.W.ΔW[l,n-1,k]
+            int.params.ΔZ[l] = sol.W.ΔZ[l,n-1,k]
+        end
     end
 
     # truncate the increments ΔW with A
@@ -333,7 +357,7 @@ function integrate_step!(int::IntegratorSIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,N
     compute_stages!(int.solver.x, int.fcache.Q, int.fcache.V, int.fcache.B, int.fcache.Y, int.params)
 
     # compute final update
-    update_solution!(int.q[k,m], int.fcache.V, int.fcache.B, int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂, int.params.Δt, int.params.ΔW)
+    update_solution!(int.q[k,m], int.fcache.V, int.fcache.B, int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂, int.params.Δt, int.params.ΔW, int.Δy)
 
     # # NOT IMPLEMENTING InitialGuessSDE
     # # # copy solution to initial guess
