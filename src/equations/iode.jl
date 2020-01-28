@@ -22,6 +22,7 @@ variables ``(q,p)`` and algebraic variable ``v``.
 * `ϑ`: function determining the momentum
 * `f`: function computing the vector field
 * `g`: function determining the projection, given by ∇ϑ(q)λ
+* `h`: function computing the Hamiltonian
 * `v`: function computing an initial guess for the velocity field (optional)
 * `t₀`: initial time (optional)
 * `q₀`: initial condition for `q`
@@ -67,7 +68,7 @@ The function `g` is used in projection methods that enforce ``p = ϑ(q)``.
 """
 struct IODE{dType <: Number, tType <: Number,
             ϑType <: Function, fType <: Function,
-            gType <: Function, vType <: Union{Function,Nothing},
+            gType <: Function, hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
             pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
 
     d::Int
@@ -76,6 +77,7 @@ struct IODE{dType <: Number, tType <: Number,
     ϑ::ϑType
     f::fType
     g::gType
+    h::hType
     v::vType
     t₀::tType
     q₀::Array{dType, N}
@@ -87,16 +89,16 @@ struct IODE{dType <: Number, tType <: Number,
     function IODE(DT::DataType, N::Int, d::Int, n::Int,
                   ϑ::ϑType, f::fType, g::gType, t₀::tType,
                   q₀::AbstractArray{dType}, p₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
-                  v::vType=nothing, parameters=nothing, periodicity=zeros(DT,d)) where {
+                  h::hType=nothing, v::vType=nothing, parameters=nothing, periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number, ϑType <: Function,
-                        fType <: Function, gType <: Function, vType <: Union{Function,Nothing}}
+                        fType <: Function, gType <: Function, hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
         @assert n == size(q₀,2) == size(p₀,2) == size(λ₀,2)
         @assert dType == eltype(q₀) == eltype(p₀) == eltype(λ₀)
         @assert ndims(q₀) == ndims(p₀) == ndims(λ₀) == N ∈ (1,2)
 
-        new{DT, tType, ϑType, fType, gType, vType, typeof(parameters), N}(d, d, n, ϑ, f, g, v, t₀,
+        new{DT, tType, ϑType, fType, gType, hType, vType, typeof(parameters), N}(d, d, n, ϑ, f, g, h, v, t₀,
                 convert(Array{DT}, q₀), convert(Array{DT}, p₀), convert(Array{DT}, λ₀),
                 parameters, periodicity)
     end
@@ -111,8 +113,8 @@ function IODE(ϑ, f, g, q₀::AbstractArray, p₀::AbstractArray, λ₀::Abstrac
 end
 
 Base.hash(ode::IODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.ϑ, hash(ode.f,
-        hash(ode.g, hash(ode.v, hash(ode.t₀, hash(ode.q₀, hash(ode.p₀,
-        hash(ode.periodicity, hash(ode.parameters, h)))))))))))
+        hash(ode.g, hash(ode.h, hash(ode.v, hash(ode.t₀, hash(ode.q₀, hash(ode.p₀,
+        hash(ode.periodicity, hash(ode.parameters, h))))))))))))
 
 Base.:(==)(ode1::IODE, ode2::IODE) = (
                                 ode1.d == ode2.d
@@ -120,6 +122,7 @@ Base.:(==)(ode1::IODE, ode2::IODE) = (
                              && ode1.ϑ == ode2.ϑ
                              && ode1.f == ode2.f
                              && ode1.g == ode2.g
+                             && ode1.h == ode2.h
                              && ode1.v == ode2.v
                              && ode1.t₀ == ode2.t₀
                              && ode1.q₀ == ode2.q₀
@@ -133,9 +136,9 @@ function Base.similar(ode::IODE, q₀, p₀, λ₀=get_λ₀(q₀, ode.λ₀); k
 end
 
 function Base.similar(ode::IODE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=get_λ₀(q₀, ode.λ₀);
-                      v=ode.v, parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
+                      h=ode.h, v=ode.v, parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
     @assert ode.d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
-    IODE(ode.ϑ, ode.f, ode.g, t₀, q₀, p₀, λ₀; v=v, parameters=parameters, periodicity=periodicity)
+    IODE(ode.ϑ, ode.f, ode.g, t₀, q₀, p₀, λ₀; h=h, v=v, parameters=parameters, periodicity=periodicity)
 end
 
 @inline Base.ndims(ode::IODE) = ode.d

@@ -33,6 +33,7 @@ mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
     p̃::Vector{ST}
     ṽ::Vector{ST}
     f̃::Vector{ST}
+    θ̃::Vector{ST}
     s̃::Vector{ST}
 
     y::Vector{ST}
@@ -57,6 +58,7 @@ mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
         p̃ = zeros(ST,D)
         ṽ = zeros(ST,D)
         f̃ = zeros(ST,D)
+        θ̃ = zeros(ST,D)
         s̃ = zeros(ST,D)
 
         # create update vectors
@@ -111,7 +113,7 @@ mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
         end
 
         new(λ, λ̅, q₋, q̅₊, p₋, p̅₊,
-            u, g, q̃, p̃, ṽ, f̃, s̃, y, z,
+            u, g, q̃, p̃, ṽ, f̃, θ̃, s̃, y, z,
             Q, P, V, F, Λ, Φ, Y, Z, U, G, R)
     end
 end

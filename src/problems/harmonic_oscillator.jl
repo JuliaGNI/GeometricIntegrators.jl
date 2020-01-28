@@ -1,10 +1,12 @@
 
-module Oscillator
+module HarmonicOscillator
 
     using GeometricIntegrators.Equations
 
     export oscillator_ode, oscillator_iode, oscillator_pode, oscillator_sode,
            oscillator_dae, oscillator_idae, oscillator_pdae
+
+    export hamiltonian
 
 
     Δt  = 0.1
@@ -24,6 +26,10 @@ module Oscillator
         return p
     end
 
+    function hamiltonian(t, q)
+        q[2]^2 / 2 + k * q[1]^2 / 2
+    end
+
     p₀=ϑ(q₀)
 
     A = sqrt(q₀[2]^2 / k + q₀[1]^2)
@@ -34,6 +40,7 @@ module Oscillator
     refx = [refq, refp]
 
 
+
     function oscillator_ode_v(t, x, v)
         v[1] = x[2]
         v[2] = -k*x[1]
@@ -42,7 +49,7 @@ module Oscillator
 
     function oscillator_ode(x₀=q₀)
         @assert size(x₀,1) == 2
-        ODE(oscillator_ode_v, x₀)
+        ODE(oscillator_ode_v, x₀; h=hamiltonian)
     end
 
 
@@ -79,10 +86,14 @@ module Oscillator
     end
 
 
-    function oscillator_iode_ϑ(t, q, v, p)
+    function oscillator_iode_ϑ(t, q, p)
         p[1] = q[2]
         p[2] = 0
         nothing
+    end
+
+    function oscillator_iode_ϑ(t, q, v, p)
+        oscillator_iode_ϑ(t, q, p)
     end
 
     function oscillator_iode_f(t, q, v, f)
@@ -111,7 +122,7 @@ module Oscillator
         @assert size(q₀,1) == size(p₀,1) == 2
         IODE(oscillator_iode_ϑ, oscillator_iode_f,
              oscillator_iode_g, q₀, p₀;
-             v=oscillator_iode_v)
+             h=hamiltonian, v=oscillator_iode_v)
     end
 
 

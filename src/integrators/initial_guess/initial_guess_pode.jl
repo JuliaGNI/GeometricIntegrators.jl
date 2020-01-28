@@ -25,7 +25,7 @@ function InitialGuessPODE(interp, equ::PODE{DT,TT,VT,FT}, Δt::TT) where {DT,TT,
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
-function InitialGuessPODE(interp, equ::IODE{DT,TT,ϑT,FT,GT,VT}, Δt::TT) where {DT,TT,ϑT,FT,GT,VT}
+function InitialGuessPODE(interp, equ::IODE{DT,TT,ϑT,FT,GT,HT,VT}, Δt::TT) where {DT,TT,ϑT,FT,GT,HT,VT}
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 

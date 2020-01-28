@@ -3,11 +3,11 @@ using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.TestProblems.LotkaVolterra
+using GeometricIntegrators.TestProblems.LotkaVolterra2d
 using GeometricIntegrators.Utils
 using Test
 
-using GeometricIntegrators.TestProblems.LotkaVolterra: Δt, nt
+using GeometricIntegrators.TestProblems.LotkaVolterra2d: Δt, nt
 
 set_config(:nls_atol, 8eps())
 set_config(:nls_rtol, 2eps())
@@ -282,5 +282,22 @@ end
     @test rel_err(isolV1.q, isolP1.q[:,end]) == 0
     @test rel_err(isolV2.q, isolP2.q[:,end]) == 0
     @test rel_err(isolV3.q, isolP3.q[:,end]) == 0
+
+end
+
+
+@testset "$(rpad("VPRK integrators with projection on Runge-Kutta tableau",80))" begin
+
+    vint = IntegratorVPRKpTableau(iode, getCoefficientsPGLRK(5), Δt*5)
+    isol = integrate(vint, div(nt,5))
+
+    # println("error = ", rel_err(isol.q, refx))
+    @test rel_err(isol.q, refx) < 8E-12
+
+    vint = IntegratorVPRKpTableau(iode, getCoefficientsPGLRK(6), Δt*5)
+    isol = integrate(vint, div(nt,5))
+
+    # println("error = ", rel_err(isol.q, refx))
+    @test rel_err(isol.q, refx) < 4E-14
 
 end

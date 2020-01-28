@@ -1,4 +1,6 @@
 
+using ForwardDiff
+
 "Holds the tableau of a fully implicit Runge-Kutta method."
 struct TableauFIRK{T} <: AbstractTableauIRK{T}
     @HeaderTableau
@@ -28,17 +30,25 @@ end
 
 
 "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
-mutable struct ParametersFIRK{DT, TT, ET <: ODE{DT,TT}, D, S} <: Parameters{DT,TT}
+mutable struct ParametersFIRK{DT, TT, D, S, ET <: ODE{DT,TT}, FT, JT} <: Parameters{DT,TT}
     equ::ET
     tab::TableauFIRK{TT}
     Δt::TT
+
+    F::FT
+    Jconfig::JT
 
     t::TT
     q::Vector{DT}
 end
 
 function ParametersFIRK(equ::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, ET <: ODE{DT,TT}}
-    ParametersFIRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, zeros(DT, equ.d))
+    F = (v,q) -> equ.v(zero(TT), q, v)
+    tq = zeros(DT, equ.d)
+    tv = zeros(DT, equ.d)
+    Jconfig = ForwardDiff.JacobianConfig(F, tv, tq)
+
+    ParametersFIRK{DT, TT, equ.d, tab.s, ET, typeof(F), typeof(Jconfig)}(equ, tab, Δt, F, Jconfig, 0, zeros(DT, equ.d))
 end
 
 
@@ -62,14 +72,22 @@ struct IntegratorCacheFIRK{DT,D,S} <: ODEIntegratorCache{DT,D}
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
+    J::Vector{Matrix{DT}}
 
     function IntegratorCacheFIRK{DT,D,S}() where {DT,D,S}
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
-        new(zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y)
+        J = [zeros(DT,D,D) for i in 1:S]
+        new(zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y, J)
     end
 end
+
+
+function IntegratorCache(params::ParametersFIRK{DT, TT, D, S}; kwargs...) where {DT, TT, D, S}
+    IntegratorCacheFIRK{DT,D,S}(; kwargs...)
+end
+
 
 "Fully implicit Runge-Kutta integrator."
 struct IntegratorFIRK{DT, TT, PT <: ParametersFIRK{DT,TT},
@@ -81,7 +99,7 @@ struct IntegratorFIRK{DT, TT, PT <: ParametersFIRK{DT,TT},
     cache::IntegratorCacheFIRK{DT,D,S}
 end
 
-function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,FT,N}
+function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt::TT; exact_jacobian=false) where {DT,TT,FT,N}
     D = equation.d
     M = equation.n
     S = tableau.s
@@ -90,7 +108,11 @@ function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt
     params = ParametersFIRK(equation, tableau, Δt)
 
     # create solver
-    solver = create_nonlinear_solver(DT, D*S, params)
+    if exact_jacobian
+        solver = create_nonlinear_solver_with_jacobian(DT, D*S, params)
+    else
+        solver = create_nonlinear_solver(DT, D*S, params)
+    end
 
     # create initial guess
     iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
@@ -144,7 +166,7 @@ end
 
 
 function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
-                                    params::ParametersFIRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+                                    params::ParametersFIRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     local tᵢ::TT
 
@@ -155,7 +177,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         @assert D == length(Q[i]) == length(V[i]) == length(Y[i])
         for k in 1:D
             Y[i][k] = x[D*(i-1)+k]
-            Q[i][k] = params.q[k] + params.Δt * Y[i][k]
+            Q[i][k] = params.q[k] + Y[i][k]
         end
     end
 
@@ -167,7 +189,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
 end
 
 "Compute stages of fully implicit Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     cache = IntegratorCacheFIRK{ST,D,S}()
 
@@ -186,7 +208,42 @@ end
                     y1 += params.tab.q.a[i,j] * $cache.V[j][k]
                     y2 += params.tab.q.â[i,j] * $cache.V[j][k]
                 end
-                b[D*(i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
+                b[D*(i-1)+k] = - $cache.Y[i][k] + params.Δt * (y1 + y2)
+            end
+        end
+    end
+end
+
+"Compute stages of fully implicit Runge-Kutta methods."
+function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT,D,S}, params::ParametersFIRK{DT,TT,D,S}) where {DT,TT,D,S}
+    local tᵢ::TT
+
+    for i in 1:S
+        for k in 1:D
+            cache.Y[i][k] = x[D*(i-1)+k]
+            cache.Q[i][k] = params.q[k] + cache.Y[i][k]
+        end
+        tᵢ = params.t + params.Δt * params.tab.q.c[i]
+        F = (v,q) -> params.equ.v(tᵢ, q, v)
+        ForwardDiff.jacobian!(cache.J[i], params.F, cache.ṽ, cache.Q[i], params.Jconfig)
+    end
+
+    jac .= 0
+
+    for i in 1:S
+        for j in 1:S
+            for k in 1:D
+                for l in 1:D
+                    m = D*(i-1)+k
+                    n = D*(j-1)+l
+
+                    if i == j && k == l
+                        jac[m,n] += -1
+                    end
+
+                    jac[m,n] += params.Δt * params.tab.q.a[i,j] * cache.J[j][k,l]
+                    jac[m,n] += params.Δt * params.tab.q.â[i,j] * cache.J[j][k,l]
+                end
             end
         end
     end

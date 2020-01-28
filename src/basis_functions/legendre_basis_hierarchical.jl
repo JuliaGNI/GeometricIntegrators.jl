@@ -42,7 +42,7 @@ function LegendreBasisHierarchical(T,N)
     end
 
 
-    LegendreBasisHierarchical{T, P, typeof(factors), typeof(polys), typeof(derivs), typeof(ints)}(x, factors, polys, derivs, ints)
+    LegendreBasisHierarchical{T, N, typeof(factors), typeof(polys), typeof(derivs), typeof(ints)}(x, factors, polys, derivs, ints)
 end
 
 nodes(b::LegendreBasisHierarchical{T,N})  where {T,N} = b.x

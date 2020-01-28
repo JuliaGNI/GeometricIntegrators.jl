@@ -230,22 +230,22 @@ end
 
 
 "Continuous Galerkin Variational Integrator."
-struct IntegratorCGVI{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis} <: DeterministicIntegrator{DT,TT}
-    equation::IODE{DT,TT,ΘT,FT,GT,VT}
+struct IntegratorCGVI{DT,TT,D,S,R,ΘT,FT,GT,HT,VT,PT,ST,IT,BT<:Basis} <: DeterministicIntegrator{DT,TT}
+    equation::IODE{DT,TT,ΘT,FT,GT,HT,VT}
 
     basis::BT
     quadrature::Quadrature{TT,R}
 
     Δt::TT
 
-    params::FPT
+    params::PT
     solver::ST
     iguess::InitialGuessPODE{DT,TT,VT,FT,IT}
     cache::IntegratorCacheCGVI{DT,D,S,R}
 end
 
-function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}, quadrature::Quadrature{TT,R}, Δt::TT;
-    interpolation=HermiteInterpolation{DT}) where {DT,TT,ΘT,FT,GT,VT,P,R}
+function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,HT,VT}, basis::Basis{TT,P}, quadrature::Quadrature{TT,R}, Δt::TT;
+    interpolation=HermiteInterpolation{DT}) where {DT,TT,ΘT,FT,GT,HT,VT,P,R}
     D = equation.d
     S = nbasis(basis)
 
@@ -304,7 +304,7 @@ function IntegratorCGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P}, 
     cache = IntegratorCacheCGVI{DT,D,S,R}()
 
     # create integrator
-    IntegratorCGVI{DT, TT, D, S, R, ΘT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int), typeof(basis)}(
+    IntegratorCGVI{DT, TT, D, S, R, ΘT, FT, GT, HT, VT, typeof(params), typeof(solver), typeof(iguess.int), typeof(basis)}(
                 equation, basis, quadrature, Δt, params, solver, iguess, cache)
 end
 

@@ -586,23 +586,23 @@ In order to solve these equations, initial conditions ``q_{0}`` and
 * `p`: current solution vector for one-form
 * `cache`: temporary variables for nonlinear solver
 """
-struct IntegratorDGVI{DT,TT,D,S,R,ΘT,FT,GT,VT,FPT,ST,IT,BT<:Basis} <: DeterministicIntegrator{DT,TT}
-    equation::IODE{DT,TT,ΘT,FT,GT,VT}
+struct IntegratorDGVI{DT,TT,D,S,R,ΘT,FT,GT,HT,VT,PT,ST,IT,BT<:Basis} <: DeterministicIntegrator{DT,TT}
+    equation::IODE{DT,TT,ΘT,FT,GT,HT,VT}
 
     basis::BT
     quadrature::Quadrature{TT,R}
 
     Δt::TT
 
-    params::FPT
+    params::PT
     solver::ST
     iguess::InitialGuessODE{DT,TT,VT,IT}
     cache::IntegratorCacheDGVI{DT,D,S,R}
 end
 
-function IntegratorDGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P},
+function IntegratorDGVI(equation::IODE{DT,TT,ΘT,FT,GT,HT,VT}, basis::Basis{TT,P},
                 quadrature::Quadrature{TT,R}, Δt::TT;
-                interpolation=HermiteInterpolation{DT}) where {DT,TT,ΘT,FT,GT,VT,P,R}
+                interpolation=HermiteInterpolation{DT}) where {DT,TT,ΘT,FT,GT,HT,VT,P,R}
 
     D = equation.d
     S = nbasis(basis)
@@ -628,7 +628,7 @@ function IntegratorDGVI(equation::IODE{DT,TT,ΘT,FT,GT,VT}, basis::Basis{TT,P},
     cache = IntegratorCacheDGVI{DT,D,S,R}()
 
     # create integrator
-    IntegratorDGVI{DT, TT, D, S, R, ΘT, FT, GT, VT, typeof(params), typeof(solver),
+    IntegratorDGVI{DT, TT, D, S, R, ΘT, FT, GT, HT, VT, typeof(params), typeof(solver),
                 typeof(iguess.int), typeof(basis)}(
                 equation, basis, quadrature, Δt, params, solver, iguess, cache)
 end

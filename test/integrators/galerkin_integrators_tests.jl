@@ -5,11 +5,11 @@ using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Quadratures
 using GeometricIntegrators.Solvers
-using GeometricIntegrators.TestProblems.Oscillator
+using GeometricIntegrators.TestProblems.HarmonicOscillator
 using GeometricIntegrators.Utils
 using Test
 
-using GeometricIntegrators.TestProblems.Oscillator: Δt, nt, refx, refq, refp
+using GeometricIntegrators.TestProblems.HarmonicOscillator: Δt, nt, refx, refq, refp
 
 iode = oscillator_iode()
 

@@ -144,7 +144,7 @@ function simd_abXpy!(a::T, b::Vector{T}, X::Matrix{T}, y::Vector{T}) where {T}
     nothing
 end
 
-function simd_mult!(w::Vector{T}, X::Matrix{T}, y::Vector{T}) where {T}
+function simd_mult!(w::Vector{T}, X::Matrix, y::Vector) where {T}
     @assert length(w) == size(X, 1)
     @assert length(y) == size(X, 2)
     local tw::T
@@ -158,7 +158,7 @@ function simd_mult!(w::Vector{T}, X::Matrix{T}, y::Vector{T}) where {T}
     nothing
 end
 
-function simd_mult!(w::Vector{T}, y::Vector{T}, X::Matrix{T}) where {T}
+function simd_mult!(w::Vector{T}, y::Vector, X::Matrix) where {T}
     @assert length(w) == size(X, 2)
     @assert length(y) == size(X, 1)
     local tw::T
@@ -172,7 +172,7 @@ function simd_mult!(w::Vector{T}, y::Vector{T}, X::Matrix{T}) where {T}
     nothing
 end
 
-function simd_mult!(W::Matrix{T}, X::Matrix{T}, Y::Matrix{T}) where {T}
+function simd_mult!(W::Matrix{T}, X::Matrix, Y::Matrix) where {T}
     @assert size(W,1) == size(X, 1)
     @assert size(W,2) == size(Y, 2)
     @assert size(X,2) == size(Y, 1)

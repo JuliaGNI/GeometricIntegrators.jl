@@ -9,23 +9,23 @@ struct JacobianParametersUser{T, JT <: Function} <: JacobianParameters{T}
     J::JT
 end
 
-struct JacobianParametersAD{T, FT <: Function, N} <: JacobianParameters{T}
+struct JacobianParametersAD{T, FT <: Function, JT <: ForwardDiff.JacobianConfig} <: JacobianParameters{T}
     F!::FT
-    Jconfig::ForwardDiff.JacobianConfig{N}
+    Jconfig::JT
     tx::Vector{T}
     ty::Vector{T}
 end
 
-function JacobianParametersAD(F!::FT, Jconfig, tx::Vector{T}, ty::Vector{T}) where {T, FT}
+function JacobianParametersAD(F!::FT, Jconfig::JT, tx::Vector{T}, ty::Vector{T}) where {T, FT, JT}
     @assert length(tx) == length(ty)
-    JacobianParametersAD{T, FT, length(tx)}(F!, Jconfig, tx, ty)
+    JacobianParametersAD{T, FT, JT}(F!, Jconfig, tx, ty)
 end
 
 function JacobianParametersAD(F!::FT, T, n::Int) where {FT <: Function}
     F!rev = (y,x) -> F!(x,y)
     tx = zeros(T, n)
     ty = zeros(T, n)
-    Jconfig = ForwardDiff.JacobianConfig(nothing, ty, tx)
+    Jconfig = ForwardDiff.JacobianConfig(F!rev, ty, tx)
     Jparams = JacobianParametersAD(F!rev, Jconfig, tx, ty)
 end
 
