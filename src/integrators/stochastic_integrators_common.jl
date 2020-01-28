@@ -76,7 +76,9 @@ function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Ve
     for k in eachindex(x)
         Δy .= 0
         for i in eachindex(Bx)
-            Δy .+= bdiff[i] .* Bx[i][k,:]
+            for l in eachindex(Δy)
+                Δy[l] += bdiff[i] * Bx[i][k,l]
+            end
         end
         x[k] += dot(Δy,ΔW)
     end
@@ -85,7 +87,9 @@ function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Ve
     for k in eachindex(x)
         Δy .= 0
         for i in eachindex(Bx)
-            Δy .+= bdiff2[i] .* Bx[i][k,:]
+            for l in eachindex(Δy)
+                Δy[l] += bdiff2[i] * Bx[i][k,l]
+            end
         end
         x[k] += dot(Δy,ΔZ)/Δt
     end
