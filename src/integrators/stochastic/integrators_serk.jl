@@ -64,7 +64,7 @@ struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
     V::Vector{Vector{DT}}     # V[j][k] - the k-th component of v(Q[j])
     B::Vector{Matrix{DT}}     # B[j]    - the diffusion matrix B(Q[j])
 
-    ydiff::Vector{DT}
+    Δy::Vector{DT}
 
 
     function IntegratorSERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
@@ -140,25 +140,25 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
             end
 
             # ΔW contribution from the diffusion part
-            int.ydiff .= 0.
+            int.Δy .= 0.
             for j = 1:i-1
                 for l = 1:sol.nm
-                    int.ydiff[l] += int.tableau.qdiff.a[i,j] * int.B[j][k,l]
+                    int.Δy[l] += int.tableau.qdiff.a[i,j] * int.B[j][k,l]
                 end
             end
 
-            int.Q[i][k] = int.q[r,m][k] + int.Δt * ydrift + dot(int.ydiff,int.ΔW)
+            int.Q[i][k] = int.q[r,m][k] + int.Δt * ydrift + dot(int.Δy,int.ΔW)
 
             # ΔZ contribution from the diffusion part
             if int.tableau.qdiff2.name ≠ :NULL
-                int.ydiff .= 0.
+                int.Δy .= 0.
                 for j = 1:i-1
                     for l = 1:sol.nm
-                        int.ydiff[l] += int.tableau.qdiff2.a[i,j] * int.B[j][k,l]
+                        int.Δy[l] += int.tableau.qdiff2.a[i,j] * int.B[j][k,l]
                     end
                 end
 
-                int.Q[i][k] += dot(int.ydiff,int.ΔZ)/int.Δt
+                int.Q[i][k] += dot(int.Δy,int.ΔZ)/int.Δt
             end
 
         end
@@ -169,9 +169,9 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
 
     # compute final update
     if int.tableau.qdiff2.name == :NULL
-        update_solution!(int.q[r,m], int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.Δt, int.ΔW)
+        update_solution!(int.q[r,m], int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.Δt, int.ΔW, int.Δy)
     else
-        update_solution!(int.q[r,m], int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.tableau.qdiff2.b, int.Δt, int.ΔW, int.ΔZ)
+        update_solution!(int.q[r,m], int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.tableau.qdiff2.b, int.Δt, int.ΔW, int.ΔZ, int.Δy)
     end
 
     # take care of periodic solutions
