@@ -62,7 +62,9 @@ struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
     q ::Matrix{Vector{DT}}    # q[k,m]  - holds the previous time step solution (for k-th sample path and m-th initial condition)
     Q::Vector{Vector{DT}}     # Q[j][k] - the k-th component of the j-th internal stage
     V::Vector{Vector{DT}}     # V[j][k] - the k-th component of v(Q[j])
-    B::Vector{Matrix{DT}}     # B[j]    - the diffucion matrix B(Q[j])
+    B::Vector{Matrix{DT}}     # B[j]    - the diffusion matrix B(Q[j])
+
+    ydiff::Vector{DT}
 
 
     function IntegratorSERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
@@ -80,7 +82,7 @@ struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
         V = create_internal_stage_vector(DT, D, S)
         B = create_internal_stage_vector(DT, D, M, S)
 
-        new(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), q, Q, V, B)
+        new(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), q, Q, V, B, zeros(DT,M))
     end
 end
 
@@ -103,21 +105,24 @@ Integrate SDE with explicit Runge-Kutta integrator.
 function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,NQ,NW}, r::Int, m::Int, n::Int) where {DT,TT,FT,NQ,NW}
     local tᵢ::TT
     local ydrift::DT
-    local ydiff = zeros(DT,sol.nm)
 
     # copy the increments of the Brownian Process
     if NW==1
         #1D Brownian motion, 1 sample path
-        int.ΔW[1] = sol.W.ΔW[n-1]
-        int.ΔZ[1] = sol.W.ΔZ[n-1]
+        int.ΔW[1] = sol.W.ΔW[1,n-1]
+        int.ΔZ[1] = sol.W.ΔZ[1,n-1]
     elseif NW==2
         #Multidimensional Brownian motion, 1 sample path
-        int.ΔW .= sol.W.ΔW[n-1]
-        int.ΔZ .= sol.W.ΔZ[n-1]
+        for l = 1:sol.nm
+            int.ΔW[l] = sol.W.ΔW[l,n-1]
+            int.ΔZ[l] = sol.W.ΔZ[l,n-1]
+        end
     elseif NW==3
         #1D or Multidimensional Brownian motion, r-th sample path
-        int.ΔW .= sol.W.ΔW[n-1,r]
-        int.ΔZ .= sol.W.ΔZ[n-1,r]
+        for l = 1:sol.nm
+            int.ΔW[l] = sol.W.ΔW[l,n-1,r]
+            int.ΔZ[l] = sol.W.ΔZ[l,n-1,r]
+        end
     end
 
     # calculates v(t,tQ) and assigns to the i-th column of V
@@ -126,8 +131,8 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
     int.equation.B(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.B[1])
 
 
-    for i in 2:int.tableau.s
-        @inbounds for k in eachindex(int.Q[i])
+    @inbounds for i in 2:int.tableau.s
+        for k in eachindex(int.Q[i])
             # contribution from the drift part
             ydrift = 0.
             for j = 1:i-1
@@ -135,21 +140,25 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
             end
 
             # ΔW contribution from the diffusion part
-            ydiff .= zeros(DT, sol.nm)
+            int.ydiff .= 0.
             for j = 1:i-1
-                ydiff .+= int.tableau.qdiff.a[i,j] .* int.B[j][k,:]
+                for l = 1:sol.nm
+                    int.ydiff[l] += int.tableau.qdiff.a[i,j] * int.B[j][k,l]
+                end
             end
 
-            int.Q[i][k] = int.q[r,m][k] + int.Δt * ydrift + dot(ydiff,int.ΔW)
+            int.Q[i][k] = int.q[r,m][k] + int.Δt * ydrift + dot(int.ydiff,int.ΔW)
 
             # ΔZ contribution from the diffusion part
             if int.tableau.qdiff2.name ≠ :NULL
-                ydiff .= zeros(DT, sol.nm)
+                int.ydiff .= 0.
                 for j = 1:i-1
-                    ydiff .+= int.tableau.qdiff2.a[i,j] .* int.B[j][k,:]
+                    for l = 1:sol.nm
+                        int.ydiff[l] += int.tableau.qdiff2.a[i,j] * int.B[j][k,l]
+                    end
                 end
 
-                int.Q[i][k] += dot(ydiff,int.ΔZ)/int.Δt
+                int.Q[i][k] += dot(int.ydiff,int.ΔZ)/int.Δt
             end
 
         end
