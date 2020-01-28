@@ -245,7 +245,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.qdrift1.c[i]
 
         for l = 1:sol.nm
-            int.equation.B(tᵢ, int.Q1[l], int.tB, l)
+            int.equation.B(tᵢ, int.Q1[l], int.tB)
             simd_copy_yx_first!(int.tB, int.B1[i], l)
         end
 
@@ -255,7 +255,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
         tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.qdrift2.c[i]
 
         for l = 1:sol.nm
-            int.equation.B(tᵢ, int.Q2[l], int.tB, l)
+            int.equation.B(tᵢ, int.Q2[l], int.tB)
             simd_copy_yx_first!(int.tB, int.B2[i], l)
         end
 
