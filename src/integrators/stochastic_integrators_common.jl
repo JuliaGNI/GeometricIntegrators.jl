@@ -7,7 +7,7 @@
 # bdiff - the Runge-Kutta coefficients for the diffusion part
 # Δt - the time step
 # ΔW - the increments of the Brownian motion (SFIRK) or the increments represented by the random variables \hat I^(k) (WFIRK)
-function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Vector{Vector{T}}, Bx::Vector{Matrix{T}}, bdrift::Vector{T}, bdiff::Vector{T}, Δt::T, ΔW::Vector{T}) where {T}
+function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Vector{Vector{T}}, Bx::Vector{Matrix{T}}, bdrift::Vector{T}, bdiff::Vector{T}, Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW)) where {T}
 
     @assert length(bdrift) == length(bdiff) == length(Vx) == length(Bx)
 
@@ -27,13 +27,13 @@ function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Ve
         x[k] += Δt * Δx
     end
 
-    local Δy = zero(ΔW)
-
     # Contribution from the diffusion part
     for k in eachindex(x)
         Δy .= 0
         for i in eachindex(Bx)
-            Δy .+= bdiff[i] .* Bx[i][k,:]
+            for l in eachindex(Δy)
+                Δy[l] += bdiff[i] * Bx[i][k,l]
+            end
         end
         x[k] += dot(Δy,ΔW)
     end
@@ -50,7 +50,7 @@ end
 # Δt - the time step
 # ΔW - the increments of the Brownian motion
 # ΔZ - the integrals of the increments of the Brownian motion
-function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Vector{Vector{T}}, Bx::Vector{Matrix{T}}, bdrift::Vector{T}, bdiff::Vector{T}, bdiff2::Vector{T}, Δt::T, ΔW::Vector{T}, ΔZ::Vector{T}) where {T}
+function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Vector{Vector{T}}, Bx::Vector{Matrix{T}}, bdrift::Vector{T}, bdiff::Vector{T}, bdiff2::Vector{T}, Δt::T, ΔW::Vector{T}, ΔZ::Vector{T}, Δy::Vector{T}=zero(ΔW)) where {T}
 
     @assert length(bdrift) == length(bdiff) == length(bdiff2) == length(Vx) == length(Bx)
 
@@ -69,8 +69,6 @@ function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Ve
         end
         x[k] += Δt * Δx
     end
-
-    local Δy = zero(ΔW)
 
     # Contribution from the diffusion part (ΔW terms)
     for k in eachindex(x)
@@ -109,7 +107,7 @@ function update_solution!(q::Vector{VT}, p::Vector{VT},
                           Bqp::Vector{Matrix{T}}, Gqp::Vector{Matrix{T}},
                           bqdrift::Vector{T}, bqdiff::Vector{T},
                           bpdrift::Vector{T}, bpdiff::Vector{T},
-                          Δt::T, ΔW::Vector{T}) where {T, VT <: Union{T, TwicePrecision{T}}}
+                          Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW), Δz::Vector{T}=zero(ΔW)) where {T, VT <: Union{T, TwicePrecision{T}}}
 
     @assert length(bqdrift) == length(bqdiff) == length(bpdrift) == length(bpdiff) == length(Vqp) == length(Fqp) == length(Bqp) == length(Gqp)
 
@@ -133,17 +131,16 @@ function update_solution!(q::Vector{VT}, p::Vector{VT},
         p[k] += Δt * Δp
     end
 
-    local Δy = zero(ΔW)
-    local Δz = zero(ΔW)
-
     # Contribution from the diffusion part
     for k in eachindex(q, p)
         Δy .= 0
         Δz .= 0
 
         for i in eachindex(Bqp, Gqp)
-            Δy .+= bqdiff[i] .* Bqp[i][k,:]
-            Δz .+= bpdiff[i] .* Gqp[i][k,:]
+            for l in eachindex(Δy,Δz)
+                Δy[l] += bqdiff[i] * Bqp[i][k,l]
+                Δz[l] += bpdiff[i] * Gqp[i][k,l]
+            end
         end
 
         q[k] += dot(Δy,ΔW)
@@ -166,7 +163,7 @@ function update_solution!(q::Union{Vector{T}, Vector{TwicePrecision{T}}}, p::Uni
                             bqdrift::Vector{T}, bqdiff::Vector{T},
                             bpdrift1::Vector{T}, bpdrift2::Vector{T},
                             bpdiff1::Vector{T}, bpdiff2::Vector{T},
-                            Δt::T, ΔW::Vector{T}) where {T}
+                            Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW), Δz::Vector{T}=zero(ΔW)) where {T}
 
    @assert length(bqdrift) == length(bqdiff) == length(bpdrift1) == length(bpdrift2) == length(bpdiff1) == length(bpdiff2) == length(Vqp) == length(Fqp1) == length(Fqp2) == length(Bqp) == length(Gqp1) == length(Gqp2)
 
@@ -190,17 +187,16 @@ function update_solution!(q::Union{Vector{T}, Vector{TwicePrecision{T}}}, p::Uni
        p[k] += Δt * Δp
    end
 
-   local Δy = zero(ΔW)
-   local Δz = zero(ΔW)
-
    # Contribution from the diffusion part
    for k in eachindex(q, p)
        Δy .= 0
        Δz .= 0
 
        for i in eachindex(Bqp, Gqp1, Gqp2)
-           Δy .+= bqdiff[i]  .* Bqp[i][k,:]
-           Δz .+= bpdiff1[i] .* Gqp1[i][k,:] .+ bpdiff2[i] .* Gqp2[i][k,:]
+           for l in eachindex(Δy,Δz)
+               Δy[l] += bqdiff[i]  * Bqp[i][k,l]
+               Δz[l] += bpdiff1[i] * Gqp1[i][k,l] + bpdiff2[i] * Gqp2[i][k,l]
+           end
        end
 
        q[k] += dot(Δy,ΔW)
@@ -219,7 +215,9 @@ end
 # beta2 - the Runge-Kutta coefficients for the second diffusion term
 # Δt - the time step
 # ΔW - the increments of the Brownian motion represented by the random variables \hat I^(k)
-function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Vector{Vector{T}}, Bx1::Vector{Matrix{T}}, Bx2::Vector{Matrix{T}}, alpha::Vector{T}, beta1::Vector{T}, beta2::Vector{T}, Δt::T, ΔW::Vector{T}) where {T}
+function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Vector{Vector{T}},
+                Bx1::Vector{Matrix{T}}, Bx2::Vector{Matrix{T}}, alpha::Vector{T},
+                beta1::Vector{T}, beta2::Vector{T}, Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW)) where {T}
     @assert length(alpha) == length(beta1) == length(beta2) == length(Vx) == length(Bx1) == length(Bx2)
 
     for i in eachindex(Vx, Bx1, Bx2)
@@ -238,13 +236,13 @@ function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Ve
         x[k] += Δt * Δx
     end
 
-    local Δy = zero(ΔW)
-
     # Contribution from the diffusion term with the random variables I^(k)_i
     for k in eachindex(x)
         Δy .= 0
         for i in eachindex(Bx1)
-            Δy .+= beta1[i] .* Bx1[i][k,:]
+            for l in eachindex(Δy)
+                Δy[l] += beta1[i] * Bx1[i][k,l]
+            end
         end
         x[k] += dot(Δy,ΔW)
     end
@@ -264,18 +262,18 @@ end
 
 # For stochastic Runge-Kutta methods
 function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Vector{Vector{T}}, Bx::Vector{Matrix{T}},
-                            bdrift::Vector{T}, b̂drift::Vector, bdiff::Vector{T}, b̂diff::Vector, Δt::T, ΔW::Vector{T}) where {T}
-    update_solution!(x, Vx, Bx, bdrift, bdiff, Δt, ΔW)
-    update_solution!(x, Vx, Bx, b̂drift, b̂diff, Δt, ΔW)
+                            bdrift::Vector{T}, b̂drift::Vector, bdiff::Vector{T}, b̂diff::Vector, Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW)) where {T}
+    update_solution!(x, Vx, Bx, bdrift, bdiff, Δt, ΔW, Δy)
+    update_solution!(x, Vx, Bx, b̂drift, b̂diff, Δt, ΔW, Δy)
 end
 
 # For stochastic partitioned Runge-Kutta methods
 function update_solution!(q::Union{Vector{T}, Vector{TwicePrecision{T}}}, p::Union{Vector{T}, Vector{TwicePrecision{T}}},
                             Vqp::Vector{Vector{T}}, Fqp::Vector{Vector{T}}, Bqp::Vector{Matrix{T}}, Gqp::Vector{Matrix{T}},
                             bqdrift::Vector{T}, b̂qdrift::Vector, bqdiff::Vector{T}, b̂qdiff::Vector,
-                            bpdrift::Vector{T}, b̂pdrift::Vector, bpdiff::Vector{T}, b̂pdiff::Vector, Δt::T, ΔW::Vector{T}) where {T}
-    update_solution!(q, p, Vqp, Fqp, Bqp, Gqp, bqdrift, bqdiff, bpdrift, bpdiff, Δt, ΔW)
-    update_solution!(q, p, Vqp, Fqp, Bqp, Gqp, b̂qdrift, b̂qdiff, b̂pdrift, b̂pdiff, Δt, ΔW)
+                            bpdrift::Vector{T}, b̂pdrift::Vector, bpdiff::Vector{T}, b̂pdiff::Vector, Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW)) where {T}
+    update_solution!(q, p, Vqp, Fqp, Bqp, Gqp, bqdrift, bqdiff, bpdrift, bpdiff, Δt, ΔW, Δy)
+    update_solution!(q, p, Vqp, Fqp, Bqp, Gqp, b̂qdrift, b̂qdiff, b̂pdrift, b̂pdiff, Δt, ΔW, Δy)
 end
 
 # For stochastic split partitioned Runge-Kutta methods
@@ -285,14 +283,14 @@ function update_solution!(q::Union{Vector{T}, Vector{TwicePrecision{T}}}, p::Uni
                             bqdrift::Vector{T}, b̂qdrift::Vector, bqdiff::Vector{T}, b̂qdiff::Vector,
                             bpdrift1::Vector{T}, b̂pdrift1::Vector, bpdrift2::Vector{T}, b̂pdrift2::Vector,
                             bpdiff1::Vector{T}, b̂pdiff1::Vector, bpdiff2::Vector{T}, b̂pdiff2::Vector,
-                            Δt::T, ΔW::Vector{T}) where {T}
-    update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, bqdrift, bqdiff, bpdrift1, bpdrift2, bpdiff1, bpdiff2, Δt, ΔW)
-    update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, b̂qdrift, b̂qdiff, b̂pdrift1, b̂pdrift2, b̂pdiff1, b̂pdiff2, Δt, ΔW)
+                            Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW)) where {T}
+    update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, bqdrift, bqdiff, bpdrift1, bpdrift2, bpdiff1, bpdiff2, Δt, ΔW, Δy)
+    update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, b̂qdrift, b̂qdiff, b̂pdrift1, b̂pdrift2, b̂pdiff1, b̂pdiff2, Δt, ΔW, Δy)
 end
 
  # For weak Runge-Kutta methods WERK
  function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, Vx::Vector{Vector{T}}, Bx1::Vector{Matrix{T}}, Bx2::Vector{Matrix{T}},
-                             alpha::Vector{T}, âlpha::Vector, beta1::Vector{T}, b̂eta1::Vector, beta2::Vector{T}, b̂eta2::Vector, Δt::T, ΔW::Vector{T}) where {T}
-     update_solution!(x, Vx, Bx1, Bx2, alpha, beta1, beta2, Δt, ΔW)
-     update_solution!(x, Vx, Bx1, Bx2, âlpha, b̂eta1, b̂eta2, Δt, ΔW)
+                             alpha::Vector{T}, âlpha::Vector, beta1::Vector{T}, b̂eta1::Vector, beta2::Vector{T}, b̂eta2::Vector, Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW)) where {T}
+     update_solution!(x, Vx, Bx1, Bx2, alpha, beta1, beta2, Δt, ΔW, Δy)
+     update_solution!(x, Vx, Bx1, Bx2, âlpha, b̂eta1, b̂eta2, Δt, ΔW, Δy)
  end
