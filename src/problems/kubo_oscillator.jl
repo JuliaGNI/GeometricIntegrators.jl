@@ -1,36 +1,37 @@
 module KuboOscillatorProblem
 
+    using GeometricIntegrators.Equations
+
     export kubo_oscillator_sde_1, kubo_oscillator_psde_1, kubo_oscillator_spsde_1
     export kubo_oscillator_sde_2, kubo_oscillator_psde_2, kubo_oscillator_spsde_2
     export kubo_oscillator_sde_3, kubo_oscillator_psde_3, kubo_oscillator_spsde_3
 
-    using GeometricIntegrators.Equations
-
     q_init_A=[0.5, 0.0]
     q_init_B=[0.5 0.0 -0.5; 0.0 0.5 0.0]
 
-    noise_intensity = 0.1
+    const noise_intensity = 0.1
 
-    Δt  = 0.01
-    nt  = 10
+    const Δt = 0.01
+    const nt = 10
 
 
-    function kubo_oscillator_sde_v(t,q, v_out)
+    function kubo_oscillator_sde_v(t, q, v_out)
         v_out[1]=  q[2]
         v_out[2]= -q[1]
+        nothing
     end
 
 
-    function kubo_oscillator_sde_B(t,q, B_out; col=0)
-        noise_intensity = 0.1
+    function kubo_oscillator_sde_B(t, q, B_out::AbstractVector, ν=noise_intensity)
+        B_out[1] = +ν*q[2]
+        B_out[2] = -ν*q[1]
+        nothing
+    end
 
-        if col==0
-            B_out[1,1]=  noise_intensity*q[2]
-            B_out[2,1]= -noise_intensity*q[1]
-        elseif col==1
-            B_out[1]=  noise_intensity*q[2]
-            B_out[2]= -noise_intensity*q[1]
-        end
+    function kubo_oscillator_sde_B(t, q, B_out::AbstractMatrix, ν=noise_intensity)
+        B_out[1,1] = +ν*q[2]
+        B_out[2,1] = -ν*q[1]
+        nothing
     end
 
 
