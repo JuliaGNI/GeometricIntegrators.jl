@@ -28,9 +28,9 @@ module KuboOscillatorProblem
         nothing
     end
 
-    function kubo_oscillator_sde_B(t, q, B_out::AbstractMatrix, ν=noise_intensity)
-        B_out[1,1] = +ν*q[2]
-        B_out[2,1] = -ν*q[1]
+    function kubo_oscillator_sde_B(t, q, B_out::AbstractMatrix, col=1, ν=noise_intensity)
+        B_out[1,col] = +ν*q[2]
+        B_out[2,col] = -ν*q[1]
         nothing
     end
 
