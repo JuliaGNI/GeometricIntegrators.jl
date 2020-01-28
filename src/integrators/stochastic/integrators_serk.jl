@@ -59,7 +59,7 @@ struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
     ΔW::Vector{DT}
     ΔZ::Vector{DT}
 
-    q ::Matrix{Vector{DT}}    # q[k,m]  - holds the previous time step solution (for k-th sample path and m-th initial condition)
+    q::Matrix{Vector{DT}}     # q[k,m]  - holds the previous time step solution (for k-th sample path and m-th initial condition)
     Q::Vector{Vector{DT}}     # Q[j][k] - the k-th component of the j-th internal stage
     V::Vector{Vector{DT}}     # V[j][k] - the k-th component of v(Q[j])
     B::Vector{Matrix{DT}}     # B[j]    - the diffusion matrix B(Q[j])
@@ -127,7 +127,7 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
 
     # calculates v(t,tQ) and assigns to the i-th column of V
     int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.V[1])
-    # calculates B(t,tQ) and assigns to the matrix BQ[:,:,1]
+    # calculates B(t,tQ) and assigns to the matrix BQ[1][:,:]
     int.equation.B(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.B[1])
 
 
