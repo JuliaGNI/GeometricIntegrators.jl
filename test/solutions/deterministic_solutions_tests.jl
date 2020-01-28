@@ -2,7 +2,7 @@
 using GeometricIntegrators.CommonFunctions
 using GeometricIntegrators.Solutions
 using GeometricIntegrators.Solutions: createHDF5
-using GeometricIntegrators.TestProblems.HarmonicOscillator
+using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
 using HDF5: HDF5File
 using Test
 
@@ -30,10 +30,10 @@ z1[3,:] .= z0[1,:] .+ z0[2,:]
 tx    = zero(x0)
 x2    = rand(2, ni)
 
-ode   = oscillator_ode()
-dae   = oscillator_dae()
-pode  = oscillator_pode()
-pdae  = oscillator_pdae()
+ode   = harmonic_oscillator_ode()
+dae   = harmonic_oscillator_dae()
+pode  = harmonic_oscillator_pode()
+pdae  = harmonic_oscillator_pdae()
 
 h5file = "test.hdf5"
 

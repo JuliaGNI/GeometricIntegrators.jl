@@ -5,20 +5,20 @@ using GeometricIntegrators.Integrators: initial_guess!, jacobian!, update_params
 using GeometricIntegrators.Solutions
 using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.TestProblems.HarmonicOscillator
+using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
 using GeometricIntegrators.Utils
 using Test
 
 set_config(:nls_stol_break, 1E3)
 
-using GeometricIntegrators.TestProblems.HarmonicOscillator: Δt, nt, refx, refq, refp, k
+using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem: Δt, nt, refx, refq, refp, k
 
-ode  = oscillator_ode()
-pode = oscillator_pode()
-sode = oscillator_sode()
-iode = oscillator_iode()
-idae = oscillator_idae()
-pdae = oscillator_pdae()
+ode  = harmonic_oscillator_ode()
+pode = harmonic_oscillator_pode()
+sode = harmonic_oscillator_sode()
+iode = harmonic_oscillator_iode()
+idae = harmonic_oscillator_idae()
+pdae = harmonic_oscillator_pdae()
 
 
 @testset "$(rpad("Runge-Kutta integrators",80))" begin

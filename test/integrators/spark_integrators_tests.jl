@@ -3,11 +3,11 @@ using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.TestProblems.LotkaVolterra2d
+using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem
 using GeometricIntegrators.Utils
 using Test
 
-using GeometricIntegrators.TestProblems.LotkaVolterra2d: Δt, nt
+using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem: Δt, nt
 
 set_config(:nls_atol, 8eps())
 set_config(:nls_rtol, 2eps())
