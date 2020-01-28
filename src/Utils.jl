@@ -1,6 +1,6 @@
 module Utils
 
-    export rel_err
+    export rel_err, l2_err
 
     include("utils/diag_utils.jl")
 
