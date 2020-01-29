@@ -284,9 +284,9 @@ function update_solution!(q::Union{Vector{T}, Vector{TwicePrecision{T}}}, p::Uni
                             bqdrift::Vector{T}, b̂qdrift::Vector, bqdiff::Vector{T}, b̂qdiff::Vector,
                             bpdrift1::Vector{T}, b̂pdrift1::Vector, bpdrift2::Vector{T}, b̂pdrift2::Vector,
                             bpdiff1::Vector{T}, b̂pdiff1::Vector, bpdiff2::Vector{T}, b̂pdiff2::Vector,
-                            Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW)) where {T}
-    update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, bqdrift, bqdiff, bpdrift1, bpdrift2, bpdiff1, bpdiff2, Δt, ΔW, Δy)
-    update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, b̂qdrift, b̂qdiff, b̂pdrift1, b̂pdrift2, b̂pdiff1, b̂pdiff2, Δt, ΔW, Δy)
+                            Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW), Δz::Vector{T}=zero(ΔW)) where {T}
+    update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, bqdrift, bqdiff, bpdrift1, bpdrift2, bpdiff1, bpdiff2, Δt, ΔW, Δy, Δz)
+    update_solution!(q, p, Vqp, Fqp1, Fqp2, Bqp, Gqp1, Gqp2, b̂qdrift, b̂qdiff, b̂pdrift1, b̂pdrift2, b̂pdiff1, b̂pdiff2, Δt, ΔW, Δy, Δz)
 end
 
  # For weak Runge-Kutta methods WERK

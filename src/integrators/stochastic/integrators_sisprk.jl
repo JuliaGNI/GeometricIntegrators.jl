@@ -210,12 +210,18 @@ end
                 z1 = 0
                 z2 = 0
                 for j in 1:S
-                    y1 += params.tab.qdrift.a[i,j]  * $cache.V[j][k]  * params.Δt + params.tab.qdiff.a[i,j]  * dot($cache.B[j][k,:], params.ΔW)
-                    y2 += params.tab.qdrift.â[i,j]  * $cache.V[j][k]  * params.Δt + params.tab.qdiff.â[i,j]  * dot($cache.B[j][k,:], params.ΔW)
+                    y1 += params.tab.qdrift.a[i,j]  * $cache.V[j][k]  * params.Δt
+                    y2 += params.tab.qdrift.â[i,j]  * $cache.V[j][k]  * params.Δt
                     z1 += params.tab.pdrift1.a[i,j] * $cache.F1[j][k] * params.Δt + params.tab.pdrift2.a[i,j] * $cache.F2[j][k] * params.Δt
-                        + params.tab.pdiff1.a[i,j]  * dot($cache.G1[j][k,:], params.ΔW) + params.tab.pdiff2.a[i,j] * dot($cache.G2[j][k,:], params.ΔW)
                     z2 += params.tab.pdrift1.â[i,j] * $cache.F1[j][k] * params.Δt + params.tab.pdrift2.â[i,j] * $cache.F2[j][k] * params.Δt
-                        + params.tab.pdiff1.â[i,j]  * dot($cache.G1[j][k,:], params.ΔW) + params.tab.pdiff2.â[i,j] * dot($cache.G2[j][k,:], params.ΔW)
+                    for l in 1:M
+                        y1 += params.tab.qdiff.a[i,j]  * $cache.B[j][k,l]  * params.ΔW[l]
+                        y2 += params.tab.qdiff.â[i,j]  * $cache.B[j][k,l]  * params.ΔW[l]
+                        z1 += params.tab.pdiff1.a[i,j] * $cache.G1[j][k,l] * params.ΔW[l]
+                           +  params.tab.pdiff2.a[i,j] * $cache.G2[j][k,l] * params.ΔW[l]
+                        z2 += params.tab.pdiff1.â[i,j] * $cache.G1[j][k,l] * params.ΔW[l]
+                           +  params.tab.pdiff2.â[i,j] * $cache.G2[j][k,l] * params.ΔW[l]
+                    end
                 end
                 b[D*(  i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
                 b[D*(S+i-1)+k] = - $cache.Z[i][k] + (z1 + z2)
@@ -233,6 +239,9 @@ struct IntegratorSISPRK{DT, TT, PT <: ParametersSISPRK{DT,TT},
     # InitialGuessPSDE not implemented for SFIPRK
     #iguess::IT
     fcache::NonlinearFunctionCacheSISPRK{DT}
+
+    Δy::Vector{DT}
+    Δz::Vector{DT}
 
     q::Matrix{Vector{TwicePrecision{DT}}}
     p::Matrix{Vector{TwicePrecision{DT}}}
@@ -260,12 +269,16 @@ function IntegratorSISPRK(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}, tablea
     # create cache for internal stage vectors and update vectors
     fcache = NonlinearFunctionCacheSISPRK{DT}(D, M, S)
 
+    # create temporary arrays
+    Δy  = zeros(DT,M)
+    Δz  = zeros(DT,M)
+
     # create solution vectors
     q = create_solution_vector(DT, D, NS, NI)
     p = create_solution_vector(DT, D, NS, NI)
 
     # create integrator
-    IntegratorSISPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q, p)
+    IntegratorSISPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, Δy, Δz, q, p)
 end
 
 equation(integrator::IntegratorSISPRK) = integrator.params.equ
@@ -295,7 +308,7 @@ function initial_guess!(int::IntegratorSISPRK{DT,TT}) where {DT,TT}
 
     # SIMPLE SOLUTION
     # The simplest initial guess for Y, Z is 0
-    int.solver.x .= zeros(eltype(int), 2*int.params.tab.s*ndims(int))
+    int.solver.x .= 0
 
 
     # FIX NEEDED !!!
@@ -437,12 +450,16 @@ function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,N
         int.params.ΔZ[1] = sol.W.ΔZ[n-1]
     elseif NW==2
         #Multidimensional Brownian motion, 1 sample path
-        int.params.ΔW .= sol.W.ΔW[n-1]
-        int.params.ΔZ .= sol.W.ΔZ[n-1]
+        for l = 1:sol.nm
+            int.params.ΔW[l] = sol.W.ΔW[l,n-1]
+            int.params.ΔZ[l] = sol.W.ΔZ[l,n-1]
+        end
     elseif NW==3
         #1D or Multidimensional Brownian motion, k-th sample path
-        int.params.ΔW .= sol.W.ΔW[n-1,k]
-        int.params.ΔZ .= sol.W.ΔZ[n-1,k]
+        for l = 1:sol.nm
+            int.params.ΔW[l] = sol.W.ΔW[l,n-1,k]
+            int.params.ΔZ[l] = sol.W.ΔZ[l,n-1,k]
+        end
     end
 
 
@@ -478,7 +495,7 @@ function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,N
                     int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂,
                     int.params.tab.pdrift1.b, int.params.tab.pdrift1.b̂, int.params.tab.pdrift2.b, int.params.tab.pdrift2.b̂,
                     int.params.tab.pdiff1.b, int.params.tab.pdiff1.b̂, int.params.tab.pdiff2.b, int.params.tab.pdiff2.b̂,
-                    int.params.Δt, int.params.ΔW)
+                    int.params.Δt, int.params.ΔW, int.Δy, int.Δz)
 
     # # NOT IMPLEMENTING InitialGuessSDE
     # # # copy solution to initial guess
