@@ -185,7 +185,7 @@ function SolutionPSDE(file::String)
     t = TimeSeries(read(h5["t"]), nsave)
 
     if exists(attrs(h5),"conv")
-        conv = read(attrs(h5)["conv"])
+        conv = Symbol(read(attrs(h5)["conv"]))
     else
         conv = :strong
     end
