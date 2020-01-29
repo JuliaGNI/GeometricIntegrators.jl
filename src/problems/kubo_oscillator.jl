@@ -18,20 +18,17 @@ module KuboOscillatorProblem
     function kubo_oscillator_sde_v(t, q, v_out)
         v_out[1]=  q[2]
         v_out[2]= -q[1]
-        nothing
     end
 
 
     function kubo_oscillator_sde_B(t, q, B_out::AbstractVector, ν=noise_intensity)
         B_out[1] = +ν*q[2]
         B_out[2] = -ν*q[1]
-        nothing
     end
 
     function kubo_oscillator_sde_B(t, q, B_out::AbstractMatrix, col=1, ν=noise_intensity)
         B_out[1,col] = +ν*q[2]
         B_out[2,col] = -ν*q[1]
-        nothing
     end
 
 
@@ -70,19 +67,19 @@ module KuboOscillatorProblem
 
 
     function kubo_oscillator_psde_v(t, q, p, v_out)
-        v_out[1]=  p[1]
+        v_out[1] =  p[1]
     end
 
     function kubo_oscillator_psde_f(t, q, p, f_out)
-        f_out[1]=  -q[1]
+        f_out[1] = -q[1]
     end
 
-    function kubo_oscillator_psde_B(t, q, p, B_out)
-        B_out[1,1]= noise_intensity*p[1]
+    function kubo_oscillator_psde_B(t, q, p, B_out, ν=noise_intensity)
+        B_out[1,1] = +ν*p[1]
     end
 
-    function kubo_oscillator_psde_G(t, q, p, G_out)
-        G_out[1,1]= -noise_intensity*q[1]
+    function kubo_oscillator_psde_G(t, q, p, G_out, ν=noise_intensity)
+        G_out[1,1] = -ν*q[1]
     end
 
 
@@ -114,27 +111,27 @@ module KuboOscillatorProblem
     # SPSDE
 
     function kubo_oscillator_spsde_v(t, q, p, v_out)
-        v_out[1]=  p[1]
+        v_out[1] =  p[1]
     end
 
     function kubo_oscillator_spsde_f1(t, q, p, f_out)
-        f_out[1]=  -q[1]
+        f_out[1] = -q[1]
     end
 
     function kubo_oscillator_spsde_f2(t, q, p, f_out)
-        f_out[1]=  0.0
+        f_out[1] = 0
     end
 
-    function kubo_oscillator_spsde_B(t, q, p, B_out)
-        B_out[1,1]= noise_intensity*p[1]
+    function kubo_oscillator_spsde_B(t, q, p, B_out, ν=noise_intensity)
+        B_out[1,1] = +ν*p[1]
     end
 
-    function kubo_oscillator_spsde_G1(t, q, p, G_out)
-        G_out[1,1]= -noise_intensity*q[1]
+    function kubo_oscillator_spsde_G1(t, q, p, G_out, ν=noise_intensity)
+        G_out[1,1] = -ν*q[1]
     end
 
-    function kubo_oscillator_spsde_G2(t, q, p, G_out)
-        G_out[1,1]= 0.0
+    function kubo_oscillator_spsde_G2(t, q, p, G_out, ν=noise_intensity)
+        G_out[1,1] = 0
     end
 
 
