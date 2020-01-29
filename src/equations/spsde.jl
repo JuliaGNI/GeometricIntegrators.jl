@@ -58,7 +58,7 @@ of evaluating the vector fields ``v``, ``f`` and the matrices ``B``, ``G`` on `t
     sde = SDE(v_sde, B_sde, t₀, q₀)
 ```
 """
-struct SPSDE{dType <: Number, tType <: Number, vType <: Function, f1Type <: Function, f2Type <: Function, BType <: Function, G1Type <: Function, G2Type <: Function, N} <: Equation{dType, tType}
+struct SPSDE{dType <: Number, tType <: Number, vType <: Function, f1Type <: Function, f2Type <: Function, BType <: Function, G1Type <: Function, G2Type <: Function, N} <: AbstractEquationPSDE{dType, tType}
     d::Int
     m::Int
     n::Int

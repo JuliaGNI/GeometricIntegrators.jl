@@ -57,7 +57,7 @@ of evaluating the vector fields ``v``, ``f`` and the matrices ``B``, ``G`` on `t
 ```
 """
 struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Function,
-            BType <: Function, GType <: Function, pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+            BType <: Function, GType <: Function, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPSDE{dType, tType}
 
     d::Int
     m::Int

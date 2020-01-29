@@ -58,7 +58,7 @@ or the column col of the matrix B (if col>0).
 ```
 """
 struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Function,
-           pType <: Union{Tuple,Nothing}, N} <: Equation{dType, tType}
+           pType <: Union{Tuple,Nothing}, N} <: AbstractEquationSDE{dType, tType}
 
     d::Int
     m::Int

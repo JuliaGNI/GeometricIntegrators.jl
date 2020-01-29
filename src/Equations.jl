@@ -2,7 +2,8 @@ module Equations
 
     export Equation
     export AbstractEquationODE, AbstractEquationPODE,
-           AbstractEquationDAE, AbstractEquationPDAE
+           AbstractEquationDAE, AbstractEquationPDAE,
+           AbstractEquationSDE, AbstractEquationPSDE
 
     export periodicity
 
