@@ -150,8 +150,12 @@ end
                 y1 = 0
                 y2 = 0
                 for j in 1:S
-                    y1 += params.tab.qdrift.a[i,j] * $cache.V[j][k] * params.Δt + params.tab.qdiff.a[i,j] * dot($cache.B[j][k,:], params.ΔW)
-                    y2 += params.tab.qdrift.â[i,j] * $cache.V[j][k] * params.Δt + params.tab.qdiff.â[i,j] * dot($cache.B[j][k,:], params.ΔW)
+                    y1 += params.tab.qdrift.a[i,j] * $cache.V[j][k] * params.Δt
+                    y2 += params.tab.qdrift.â[i,j] * $cache.V[j][k] * params.Δt
+                    for l in 1:M
+                        y1 += params.tab.qdiff.a[i,j] * $cache.B[j][k,l] * params.ΔW[l]
+                        y2 += params.tab.qdiff.â[i,j] * $cache.B[j][k,l] * params.ΔW[l]
+                    end
                 end
                 b[D*(i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
             end
