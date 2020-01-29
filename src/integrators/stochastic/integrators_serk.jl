@@ -52,8 +52,8 @@ end
 
 
 "Stochastic Explicit Runge-Kutta integrator."
-struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
-    equation::SDE{DT,TT,FT}
+struct IntegratorSERK{DT, TT, ET <: SDE{DT,TT}} <: StochasticIntegrator{DT,TT}
+    equation::ET
     tableau::TableauSERK{TT}
     Δt::TT
     ΔW::Vector{DT}
@@ -67,7 +67,7 @@ struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
     Δy::Vector{DT}
 
 
-    function IntegratorSERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
+    function IntegratorSERK{DT,TT}(equation::ET, tableau, Δt::TT) where {DT, TT, ET <: SDE{DT,TT}}
         D = equation.d
         M = equation.m
         NS= equation.ns
@@ -82,12 +82,12 @@ struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
         V = create_internal_stage_vector(DT, D, S)
         B = create_internal_stage_vector(DT, D, M, S)
 
-        new(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), q, Q, V, B, zeros(DT,M))
+        new{DT,TT,ET}(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), q, Q, V, B, zeros(DT,M))
     end
 end
 
-function IntegratorSERK(equation::SDE{DT,TT,FT}, tableau::TableauSERK{TT}, Δt::TT) where {DT,TT,FT}
-    IntegratorSERK{DT,TT,FT}(equation, tableau, Δt)
+function IntegratorSERK(equation::SDE{DT,TT}, tableau::TableauSERK{TT}, Δt::TT) where {DT,TT}
+    IntegratorSERK{DT,TT}(equation, tableau, Δt)
 end
 
 function initialize!(int::IntegratorSERK, sol::SolutionSDE, k::Int, m::Int)
