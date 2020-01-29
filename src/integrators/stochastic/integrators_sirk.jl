@@ -82,18 +82,18 @@ struct NonlinearFunctionCacheSIRK{DT}
     b::Matrix{DT}
     y::Vector{DT}
 
-    function NonlinearFunctionCacheSIRK{DT}(d, m, s) where {DT}
+    function NonlinearFunctionCacheSIRK{DT}(D, M, S) where {DT}
 
         # create internal stage vectors
-        Q = create_internal_stage_vector(DT, d, s)
-        V = create_internal_stage_vector(DT, d, s)
-        B = create_internal_stage_vector(DT, d, m, s)
-        Y = create_internal_stage_vector(DT, d, s)
+        Q = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        B = create_internal_stage_vector(DT, D, M, S)
+        Y = create_internal_stage_vector(DT, D, S)
 
         # create velocity and update vector
-        v = zeros(DT,d)
-        b = zeros(DT,d,m)
-        y = zeros(DT,d)
+        v = zeros(DT,D)
+        b = zeros(DT,D,M)
+        y = zeros(DT,D)
 
         new(Q, V, B, Y, v, b, y)
     end
