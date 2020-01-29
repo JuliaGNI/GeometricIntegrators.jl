@@ -36,12 +36,12 @@ function Solution(equation::AbstractEquationPDAE, Δt, ntime::Int, nsave::Int=DE
 end
 
 "Create solution for SDE."
-function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE; K::Int=0, conv::String="strong")
+function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE; K::Int=0, conv=:strong)
     SolutionSDE(equation, Δt, ntime, nsave, K=K, conv=conv)
 end
 
 "Create solution for PSDE."
-function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE; K::Int=0, conv::String="strong")
+function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE; K::Int=0, conv=:strong)
     SolutionPSDE(equation, Δt, ntime, nsave, K=K, conv=conv)
 end
 
