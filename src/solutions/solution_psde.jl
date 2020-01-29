@@ -65,8 +65,11 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime:
     W = WienerProcess(DT, nm, ntime, ns, Δt, conv)
     NW = ndims(W.ΔW)
 
+    @assert NW ∈ (2,3)
+
     s = SolutionPSDE{DT,TT,determine_qdim(equation),NW}(conv, nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
+
     return s
 end
 
@@ -79,11 +82,9 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Ar
     nt = div(ntime, nsave)
 
     @assert size(dW) == size(dZ)
+    @assert NW ∈ (2,3)
 
-    if NW==1
-        @assert ns==nm==1
-        @assert ntime==length(dW)
-    elseif NW==2
+    if NW==2
         @assert nm==size(dW,1)
         @assert ntime==size(dW,2)
         @assert ns==1
@@ -114,6 +115,7 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Ar
 
     s = SolutionPSDE{DT,TT,determine_qdim(equation),NW}(nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
+
     return s
 end
 
@@ -166,6 +168,7 @@ function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SSt
 
     nm = W.nd
     NW = ndims(W.ΔW)
+    @assert NW ∈ (2,3)
 
     # create solution
     SolutionPSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
@@ -254,13 +257,11 @@ function get_initial_conditions!(sol::SolutionPSDE{DT,TT}, q::Union{Vector{DT}, 
     @assert m ≤ sol.ni
 
     N = ndims(sol.q)
+    @assert N ∈ (2,3)
 
-    if N==1
-        # 1D space, 1 sample path and 1 initial condition, k==m==1
-        q[1] = get_data!(sol.q, 0)
-        p[1] = get_data!(sol.p, 0)
-    elseif N==2
+    if N==2
         # Multidimensional space, 1 sample path and 1 initial condition, k==m==1
+        @assert k==m==1
         get_data!(sol.q, q, 0)
         get_data!(sol.p, p, 0)
     elseif N==3
@@ -274,20 +275,14 @@ function get_initial_conditions!(sol::SolutionPSDE{DT,TT}, q::Union{Vector{DT}, 
             get_data!(sol.q, q, 0, k)
             get_data!(sol.p, p, 0, k)
         end
-    elseif N==4
-        # Multidimensional space, multiple sample paths and initial conditions
-        get_data!(sol.q, q, 0, k, m)
-        get_data!(sol.p, p, 0, k, m)
     end
 
 end
 
 
 function CommonFunctions.set_solution!(sol::SolutionPSDE{DT,TT,NQ,NW}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k, m) where {DT,TT,NQ,NW}
-
     if mod(n, sol.nsave) == 0
-
-        if NQ ∈ (1,2)
+        if NQ ==2
             # Single sample path and a single initial condition, k==m==1
             @assert k==m==1
             set_data!(sol.q, q, div(n, sol.nsave))
@@ -304,12 +299,7 @@ function CommonFunctions.set_solution!(sol::SolutionPSDE{DT,TT,NQ,NW}, q::Union{
                 set_data!(sol.q, q, div(n, sol.nsave), m)
                 set_data!(sol.p, p, div(n, sol.nsave), m)
             end
-        elseif NQ==4
-            # Multiple sample paths and initial conditions
-            set_data!(sol.q, q, div(n, sol.nsave), k, m)
-            set_data!(sol.p, p, div(n, sol.nsave), k, m)
         end
-
         sol.counter += 1
     end
 end
@@ -348,13 +338,7 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
     # so that the size of the array does not need to be adapted dynamically.
     # Right now, it has to be set as dynamical size adaptation is not yet
     # working. The default value is the size of the solution structure.
-    if NQ==1
-        q = d_create(h5, "q", datatype(DT), dataspace((nt+1,)), "chunk", (1,))
-        p = d_create(h5, "p", datatype(DT), dataspace((nt+1,)), "chunk", (1,))
-        # copy initial conditions
-        q[1] = solution.q[0]
-        p[1] = solution.p[0]
-    elseif NQ==2
+    if NQ==2
         q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
         p = d_create(h5, "p", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
         # copy initial conditions
@@ -371,21 +355,11 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
         # copy initial conditions
         q[:, 1, :] = solution.q[:, 0, :]
         p[:, 1, :] = solution.p[:, 0, :]
-    else
-        q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ns, solution.ni), "chunk", (solution.nd,1,1,1))
-        p = d_create(h5, "p", datatype(DT), dataspace(solution.nd, nt+1, solution.ns, solution.ni), "chunk", (solution.nd,1,1,1))
-        # copy initial conditions
-        q[:, 1, :, :] = solution.q[:, 0, :, :]
-        p[:, 1, :, :] = solution.p[:, 0, :, :]
     end
-
 
     if save_W==true
         # creating datasets to store the Wiener process increments
-        if NW==1
-            dW = d_create(h5, "ΔW", datatype(DT), dataspace((ntime,)), "chunk", (1,))
-            dZ = d_create(h5, "ΔZ", datatype(DT), dataspace((ntime,)), "chunk", (1,))
-        elseif NW==2
+        if NW==2
             dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
             dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
         elseif NW==3
@@ -393,7 +367,6 @@ function create_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, file::AbstractString, 
             dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, ntime, solution.ns), "chunk", (solution.nm,1,1))
         end
     end
-
 
     # Creating a dataset for storing the time series
     t = d_create(h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
@@ -430,27 +403,17 @@ function CommonFunctions.write_to_hdf5(solution::SolutionPSDE{DT,TT,NQ,NW}, h5::
     h5["t"][j1:j2] = solution.t[1:n]
 
     # copy data from solution to HDF5 dataset
-    if NQ==1
-        h5["q"][j1:j2] = solution.q[1:n]
-        h5["p"][j1:j2] = solution.p[1:n]
-    elseif NQ==2
+    if NQ==2
         h5["q"][:, j1:j2] = solution.q[:, 1:n]
         h5["p"][:, j1:j2] = solution.p[:, 1:n]
     elseif NQ==3
         h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
         h5["p"][:, j1:j2, :] = solution.p[:, 1:n, :]
-    else
-        h5["q"][:, j1:j2, :, :] = solution.q[:, 1:n, :, :]
-        h5["p"][:, j1:j2, :, :] = solution.p[:, 1:n, :, :]
     end
-
 
     if exists(h5, "ΔW") && exists(h5, "ΔZ")
         # copy the Wiener process increments from solution to HDF5 dataset
-        if NW==1
-            h5["ΔW"][jw1:jw2] = solution.W.ΔW.d[1:ntime]
-            h5["ΔZ"][jw1:jw2] = solution.W.ΔZ.d[1:ntime]
-        elseif NW==2
+        if NW==2
             h5["ΔW"][:,jw1:jw2] = solution.W.ΔW.d[:,1:ntime]
             h5["ΔZ"][:,jw1:jw2] = solution.W.ΔZ.d[:,1:ntime]
         elseif NW==3
