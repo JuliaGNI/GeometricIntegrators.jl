@@ -135,19 +135,19 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
     # copy the random variables \hat I and \tilde I representing the Wiener process
     if NW==1
         #1D Brownian motion, 1 sample path
-        int.ΔW[1] = sol.W.ΔW[1,n-1]
-        int.ΔZ[1] = sol.W.ΔZ[1,n-1]
+        int.ΔW[1] = sol.W.ΔW[1,n]
+        int.ΔZ[1] = sol.W.ΔZ[1,n]
     elseif NW==2
         #Multidimensional Brownian motion, 1 sample path
         for l = 1:sol.nm
-            int.ΔW .= sol.W.ΔW[l,n-1]
-            int.ΔZ .= sol.W.ΔZ[l,n-1]
+            int.ΔW .= sol.W.ΔW[l,n]
+            int.ΔZ .= sol.W.ΔZ[l,n]
         end
     elseif NW==3
         #1D or Multidimensional Brownian motion, r-th sample path
         for l = 1:sol.nm
-            int.ΔW .= sol.W.ΔW[l,n-1,r]
-            int.ΔZ .= sol.W.ΔZ[l,n-1,r]
+            int.ΔW .= sol.W.ΔW[l,n,r]
+            int.ΔZ .= sol.W.ΔZ[l,n,r]
         end
     end
 

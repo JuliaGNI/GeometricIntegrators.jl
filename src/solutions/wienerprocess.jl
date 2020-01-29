@@ -18,8 +18,8 @@ struct WienerProcess{dType, tType, N, conv} <: SemiMartingale{dType, tType, N}
     nt::Int
     ns::Int
     Δt::tType
-    ΔW::SStochasticDataSeries{dType,N}
-    ΔZ::SStochasticDataSeries{dType,N}
+    ΔW::Array{dType,N}
+    ΔZ::Array{dType,N}
 
     function WienerProcess{dType, tType, N, conv}(nd, nt, ns, Δt) where {dType, tType, N, conv}
 
@@ -43,45 +43,45 @@ struct WienerProcess{dType, tType, N, conv} <: SemiMartingale{dType, tType, N}
                 eta = randn(nd, nt, ns)
             end
 
-            dW = chi*√Δt
-            dZ = Δt^(3/2)/2 * (chi+eta/√3)
+            ΔW = chi*√Δt
+            ΔZ = Δt^(3/2)/2 * (chi+eta/√3)
         else
             if N == 1
                 chi = rand(dType,nt)
                 eta = rand(dType,nt)
                 dW  = zeros(dType,nt)
-                dZ  = sqrt(Δt)*ones(dType,nt)
+                ΔZ  = sqrt(Δt)*ones(dType,nt)
             elseif N == 2
                 chi = rand(dType, nd, nt)
                 eta = rand(dType, nd, nt)
-                dW  = zeros(dType, nd, nt)
-                dZ  = sqrt(Δt)*ones(dType, nd, nt)
+                ΔW  = zeros(dType, nd, nt)
+                ΔZ  = sqrt(Δt)*ones(dType, nd, nt)
             elseif N == 3
                 chi = rand(dType, nd, nt, ns)
                 eta = rand(dType, nd, nt, ns)
-                dW  = zeros(dType, nd, nt, ns)
-                dZ  = sqrt(Δt)*ones(dType, nd, nt, ns)
+                ΔW  = zeros(dType, nd, nt, ns)
+                ΔZ  = sqrt(Δt)*ones(dType, nd, nt, ns)
             end
 
             # Generating the random variable \hat I
             # P(\\hat I=+-sqrt(3*Δt)) = 1/6
             # P(\\hat I=0) = 2/3
             indx      = findall(x->x<1. / 6., chi)
-            dW[indx] .= -sqrt(3*Δt)
+            ΔW[indx] .= -sqrt(3*Δt)
             indx      = findall(x->x>5. / 6., chi)
-            dW[indx] .= sqrt(3*Δt)
+            ΔW[indx] .= sqrt(3*Δt)
 
             # Generating the random variable \tilde I
             # P(\tilde I=+-sqrt(Δt)) = 1/2
             indx      = findall(x->x<0.5, eta)
-            dZ[indx] .= -sqrt(Δt)
+            ΔZ[indx] .= -sqrt(Δt)
         end
 
         # Creating ΔW, ΔZ
         # nt-1, because SStochasticDataSeries adds one time step
         # ni=1, because we cosider a single IC for the Wiener process
-        ΔW = SStochasticDataSeries{dType,N}(nd, nt-1, ns, 1, dW)
-        ΔZ = SStochasticDataSeries{dType,N}(nd, nt-1, ns, 1, dZ)
+        # ΔW = SStochasticDataSeries{dType,N}(nd, nt-1, ns, 1, dW)
+        # ΔZ = SStochasticDataSeries{dType,N}(nd, nt-1, ns, 1, dZ)
 
         new(nd, nt, ns, Δt, ΔW, ΔZ)
     end
