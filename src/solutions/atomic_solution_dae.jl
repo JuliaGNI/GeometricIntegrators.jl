@@ -65,7 +65,7 @@ end
 
 function update!(asol::AtomicSolutionDAE{DT}, v::Vector{DT}, λ::Vector{DT}) where {DT}
     for k in eachindex(v)
-        update!(asol, v[k], λ[k])
+        update!(asol, v[k], λ[k], k)
     end
 end
 

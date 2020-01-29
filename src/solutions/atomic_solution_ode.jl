@@ -50,7 +50,7 @@ end
 
 function update!(asol::AtomicSolutionODE{DT}, v::Vector{DT}) where {DT}
     for k in eachindex(v)
-        update!(asol, v[k])
+        update!(asol, v[k], k)
     end
 end
 

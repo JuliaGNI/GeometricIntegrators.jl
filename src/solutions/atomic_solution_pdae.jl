@@ -86,7 +86,7 @@ end
 
 function update!(asol::AtomicSolutionPODE{DT}, v::Vector{DT}, f::Vector{DT}, λ::Vector{DT}) where {DT}
     for k in eachindex(v,f)
-        update!(asol, v[k], f[k], λ[k])
+        update!(asol, v[k], f[k], λ[k], k)
     end
 end
 
