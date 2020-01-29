@@ -185,10 +185,16 @@ end
                 z1 = 0
                 z2 = 0
                 for j in 1:S
-                    y1 += params.tab.qdrift.a[i,j] * $cache.V[j][k] * params.Δt + params.tab.qdiff.a[i,j] * dot($cache.B[j][k,:], params.ΔW)
-                    y2 += params.tab.qdrift.â[i,j] * $cache.V[j][k] * params.Δt + params.tab.qdiff.â[i,j] * dot($cache.B[j][k,:], params.ΔW)
-                    z1 += params.tab.pdrift.a[i,j] * $cache.F[j][k] * params.Δt + params.tab.pdiff.a[i,j] * dot($cache.G[j][k,:], params.ΔW)
-                    z2 += params.tab.pdrift.â[i,j] * $cache.F[j][k] * params.Δt + params.tab.pdiff.â[i,j] * dot($cache.G[j][k,:], params.ΔW)
+                    y1 += params.tab.qdrift.a[i,j] * $cache.V[j][k] * params.Δt
+                    y2 += params.tab.qdrift.â[i,j] * $cache.V[j][k] * params.Δt
+                    z1 += params.tab.pdrift.a[i,j] * $cache.F[j][k] * params.Δt
+                    z2 += params.tab.pdrift.â[i,j] * $cache.F[j][k] * params.Δt
+                    for l in 1:M
+                        y1 += params.tab.qdiff.a[i,j] * $cache.B[j][k,l] * params.ΔW[l]
+                        y2 += params.tab.qdiff.â[i,j] * $cache.B[j][k,l] * params.ΔW[l]
+                        z1 += params.tab.pdiff.a[i,j] * $cache.G[j][k,l] * params.ΔW[l]
+                        z2 += params.tab.pdiff.â[i,j] * $cache.G[j][k,l] * params.ΔW[l]
+                    end
                 end
                 b[D*(  i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
                 b[D*(S+i-1)+k] = - $cache.Z[i][k] + (z1 + z2)
@@ -206,6 +212,26 @@ struct IntegratorSIPRK{DT, TT, PT <: ParametersSIPRK{DT,TT},
     # InitialGuessPSDE not implemented for SIPRK
     #iguess::IT
     fcache::NonlinearFunctionCacheSIPRK{DT}
+
+    Q::Vector{DT}
+    P::Vector{DT}
+    tV1::Vector{DT}
+    tV2::Vector{DT}
+    tF1::Vector{DT}
+    tF2::Vector{DT}
+    tB1::Matrix{DT}
+    tB2::Matrix{DT}
+    tG1::Matrix{DT}
+    tG2::Matrix{DT}
+    tΔW::Vector{DT}
+    ΔQ::Vector{DT}
+    ΔQ1::Vector{DT}
+    ΔQ2::Vector{DT}
+    ΔP::Vector{DT}
+    ΔP1::Vector{DT}
+    ΔP2::Vector{DT}
+    Δy::Vector{DT}
+    Δz::Vector{DT}
 
     q::Matrix{Vector{TwicePrecision{DT}}}
     p::Matrix{Vector{TwicePrecision{DT}}}
@@ -233,12 +259,34 @@ function IntegratorSIPRK(equation::PSDE{DT,TT,VT,BT,N}, tableau::TableauSIPRK{TT
     # create cache for internal stage vectors and update vectors
     fcache = NonlinearFunctionCacheSIPRK{DT}(D, M, S)
 
+    # create temporary arrays
+    Q   = zeros(DT,D)
+    P   = zeros(DT,D)
+    tV1 = zeros(DT,D)
+    tV2 = zeros(DT,D)
+    tF1 = zeros(DT,D)
+    tF2 = zeros(DT,D)
+    tB1 = zeros(DT,D,M)
+    tB2 = zeros(DT,D,M)
+    tG1 = zeros(DT,D,M)
+    tG2 = zeros(DT,D,M)
+    tΔW = zeros(DT,M)
+    ΔQ  = zeros(DT,D)
+    ΔQ1 = zeros(DT,D)
+    ΔQ2 = zeros(DT,D)
+    ΔP  = zeros(DT,D)
+    ΔP1 = zeros(DT,D)
+    ΔP2 = zeros(DT,D)
+    Δy  = zeros(DT,M)
+    Δz  = zeros(DT,M)
+
     # create solution vectors
     q = create_solution_vector(DT, D, NS, NI)
     p = create_solution_vector(DT, D, NS, NI)
 
     # create integrator
-    IntegratorSIPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q, p)
+    IntegratorSIPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver,
+                fcache, Q, P, tV1, tV2, tF1, tF2, tB1, tB2, tG1, tG2, tΔW, ΔQ, ΔQ1, ΔQ2, ΔP, ΔP1, ΔP2, Δy, Δz, q, p)
 end
 
 equation(integrator::IntegratorSIPRK) = integrator.params.equ
@@ -279,19 +327,8 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}) where {DT,TT}
     # time step, use a higher-order explicit method (e.g. CL or G5), or use
     # the simple solution above.
 
-    local tV1 = zeros(DT,int.params.equ.d)
-    local tV2 = zeros(DT,int.params.equ.d)
-    local tF1 = zeros(DT,int.params.equ.d)
-    local tF2 = zeros(DT,int.params.equ.d)
-    local tB1 = zeros(DT,int.params.equ.d, int.params.equ.m)
-    local tB2 = zeros(DT,int.params.equ.d, int.params.equ.m)
-    local tG1 = zeros(DT,int.params.equ.d, int.params.equ.m)
-    local tG2 = zeros(DT,int.params.equ.d, int.params.equ.m)
-    local Q   = zeros(DT,int.params.equ.d)
-    local P   = zeros(DT,int.params.equ.d)
     local t2::TT
     local Δt_local::TT
-    local ΔW_local = zeros(DT,int.params.equ.m)
 
     # When calling this function, int.params should contain the data:
     # int.params.q - the q solution at the previous time step
@@ -300,10 +337,10 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}) where {DT,TT}
     # int.params.ΔW- the increment of the Brownian motion for the current step
 
     #Evaluating the functions v and B at t,q - same for all stages
-    int.params.equ.v(int.params.t, int.params.q, int.params.p, tV1)
-    int.params.equ.B(int.params.t, int.params.q, int.params.p, tB1)
-    int.params.equ.f(int.params.t, int.params.q, int.params.p, tF1)
-    int.params.equ.G(int.params.t, int.params.q, int.params.p, tG1)
+    int.params.equ.v(int.params.t, int.params.q, int.params.p, int.tV1)
+    int.params.equ.B(int.params.t, int.params.q, int.params.p, int.tB1)
+    int.params.equ.f(int.params.t, int.params.q, int.params.p, int.tF1)
+    int.params.equ.G(int.params.t, int.params.q, int.params.p, int.tG1)
 
 
     # Calculating the positions q at the points qdrift.c[i]
@@ -311,28 +348,34 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}) where {DT,TT}
     for i in 1:int.params.tab.s
 
         # Taking the c[i] from the qdrift tableau.
-        Δt_local  = int.params.tab.qdrift.c[i]*int.params.Δt
-        ΔW_local .= int.params.tab.qdrift.c[i]*int.params.ΔW
+        Δt_local = int.params.tab.qdrift.c[i]  * int.params.Δt
+        int.tΔW .= int.params.tab.qdrift.c[i] .* int.params.ΔW
 
-        Q = int.params.q + 2. / 3. * Δt_local * tV1 + 2. / 3. * tB1 * ΔW_local
-        P = int.params.p + 2. / 3. * Δt_local * tF1 + 2. / 3. * tG1 * ΔW_local
+        simd_mult!(int.ΔQ, int.tB1, int.tΔW)
+        simd_mult!(int.ΔP, int.tG1, int.tΔW)
+        @. int.Q = int.params.q + 2. / 3. * Δt_local * int.tV1 + 2. / 3. * int.ΔQ
+        @. int.P = int.params.p + 2. / 3. * Δt_local * int.tF1 + 2. / 3. * int.ΔP
 
         t2 = int.params.t + 2. / 3. * Δt_local
 
-        int.params.equ.v(t2, Q, P, tV2)
-        int.params.equ.B(t2, Q, P, tB2)
-        int.params.equ.f(t2, Q, P, tF2)
-        int.params.equ.G(t2, Q, P, tG2)
+        int.params.equ.v(t2, int.Q, int.P, int.tV2)
+        int.params.equ.B(t2, int.Q, int.P, int.tB2)
+        int.params.equ.f(t2, int.Q, int.P, int.tF2)
+        int.params.equ.G(t2, int.Q, int.P, int.tG2)
 
         #Calculating the Y's and assigning them to the array int.solver.x as initial guesses
+        simd_mult!(int.ΔQ1, int.tB1, int.tΔW)
+        simd_mult!(int.ΔQ2, int.tB2, int.tΔW)
         for j in 1:int.params.equ.d
-            int.solver.x[(i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * tV1[j] + 3. / 4. * tV2[j]) + dot( (1. / 4. * tB1[j,:] + 3. / 4. * tB2[j,:]), ΔW_local )
+            int.solver.x[(i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * int.tV1[j] + 3. / 4. * int.tV2[j]) + 1. / 4. * int.ΔQ1[j] + 3. / 4. * int.ΔQ2[j]
         end
 
         # if the collocation points are the same for both q and p parts
+        simd_mult!(int.ΔP1, int.tG1, int.tΔW)
+        simd_mult!(int.ΔP2, int.tG2, int.tΔW)
         if int.params.tab.qdrift.c==int.params.tab.pdrift.c
             for j in 1:int.params.equ.d
-                int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * tF1[j] + 3. / 4. * tF2[j]) + dot( (1. / 4. * tG1[j,:] + 3. / 4. * tG2[j,:]), ΔW_local )
+                int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * int.tF1[j] + 3. / 4. * int.tF2[j]) + 1. / 4. * int.ΔP1[j] + 3. / 4. * int.ΔP2[j]
             end
         end
     end
@@ -344,23 +387,27 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}) where {DT,TT}
         for i in 1:int.params.tab.s
 
             # Taking the c[i] from the pdrift tableau.
-            Δt_local  = int.params.tab.pdrift.c[i]*int.params.Δt
-            ΔW_local .= int.params.tab.pdrift.c[i]*int.params.ΔW
+            Δt_local = int.params.tab.pdrift.c[i]  * int.params.Δt
+            int.tΔW .= int.params.tab.pdrift.c[i] .* int.params.ΔW
 
-            Q = int.params.q + 2. / 3. * Δt_local * tV1 + 2. / 3. * tB1 * ΔW_local
-            P = int.params.p + 2. / 3. * Δt_local * tF1 + 2. / 3. * tG1 * ΔW_local
+            simd_mult!(int.ΔQ, int.tB1, int.tΔW)
+            simd_mult!(int.ΔP, int.tG1, int.tΔW)
+            @. int.Q = int.params.q + 2. / 3. * Δt_local * int.tV1 + 2. / 3. * int.ΔQ
+            @. int.P = int.params.p + 2. / 3. * Δt_local * int.tF1 + 2. / 3. * int.ΔP
 
             t2 = int.params.t + 2. / 3. * Δt_local
 
-            int.params.equ.v(t2, Q, P, tV2)
-            int.params.equ.B(t2, Q, P, tB2)
-            int.params.equ.f(t2, Q, P, tF2)
-            int.params.equ.G(t2, Q, P, tG2)
+            int.params.equ.v(t2, int.Q, int.P, int.tV2)
+            int.params.equ.B(t2, int.Q, int.P, int.tB2)
+            int.params.equ.f(t2, int.Q, int.P, int.tF2)
+            int.params.equ.G(t2, int.Q, int.P, int.tG2)
 
             # Calculating the Z's and assigning them to the array int.solver.x as initial guesses
             # The guesses for the Y's have already been written to x above
+            simd_mult!(int.ΔP1, int.tG1, int.tΔW)
+            simd_mult!(int.ΔP2, int.tG2, int.tΔW)
             for j in 1:int.params.equ.d
-                int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * tF1[j] + 3. / 4. * tF2[j]) + dot( (1. / 4. * tG1[j,:] + 3. / 4. * tG2[j,:]), ΔW_local )
+                int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * int.tF1[j] + 3. / 4. * int.tF2[j]) + 1. / 4. * int.ΔP1[j] + 3. / 4. * int.ΔP2[j]
             end
         end
     end
@@ -380,7 +427,6 @@ function integrate_step!(int::IntegratorSIPRK{DT,TT}, sol::SolutionPSDE{DT,TT,NQ
     int.params.q .= int.q[k, m]
     int.params.p .= int.p[k, m]
 
-
     # copy the increments of the Brownian Process
     if NW==1
         #1D Brownian motion, 1 sample path
@@ -388,12 +434,16 @@ function integrate_step!(int::IntegratorSIPRK{DT,TT}, sol::SolutionPSDE{DT,TT,NQ
         int.params.ΔZ[1] = sol.W.ΔZ[n-1]
     elseif NW==2
         #Multidimensional Brownian motion, 1 sample path
-        int.params.ΔW .= sol.W.ΔW[n-1]
-        int.params.ΔZ .= sol.W.ΔZ[n-1]
+        for l = 1:sol.nm
+            int.params.ΔW[l] = sol.W.ΔW[l,n-1]
+            int.params.ΔZ[l] = sol.W.ΔZ[l,n-1]
+        end
     elseif NW==3
         #1D or Multidimensional Brownian motion, k-th sample path
-        int.params.ΔW .= sol.W.ΔW[n-1,k]
-        int.params.ΔZ .= sol.W.ΔZ[n-1,k]
+        for l = 1:sol.nm
+            int.params.ΔW[l] = sol.W.ΔW[l,n-1,k]
+            int.params.ΔZ[l] = sol.W.ΔZ[l,n-1,k]
+        end
     end
 
 
@@ -428,7 +478,7 @@ function integrate_step!(int::IntegratorSIPRK{DT,TT}, sol::SolutionPSDE{DT,TT,NQ
     update_solution!(int.q[k,m], int.p[k,m], int.fcache.V, int.fcache.F, int.fcache.B, int.fcache.G,
                     int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂,
                     int.params.tab.pdrift.b, int.params.tab.pdrift.b̂, int.params.tab.pdiff.b, int.params.tab.pdiff.b̂,
-                    int.params.Δt, int.params.ΔW)
+                    int.params.Δt, int.params.ΔW, int.Δy, int.Δz)
 
     # # NOT IMPLEMENTING InitialGuessSDE
     # # # copy solution to initial guess

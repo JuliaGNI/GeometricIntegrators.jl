@@ -271,9 +271,10 @@ end
 function update_solution!(q::Union{Vector{T}, Vector{TwicePrecision{T}}}, p::Union{Vector{T}, Vector{TwicePrecision{T}}},
                             Vqp::Vector{Vector{T}}, Fqp::Vector{Vector{T}}, Bqp::Vector{Matrix{T}}, Gqp::Vector{Matrix{T}},
                             bqdrift::Vector{T}, b̂qdrift::Vector, bqdiff::Vector{T}, b̂qdiff::Vector,
-                            bpdrift::Vector{T}, b̂pdrift::Vector, bpdiff::Vector{T}, b̂pdiff::Vector, Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW)) where {T}
-    update_solution!(q, p, Vqp, Fqp, Bqp, Gqp, bqdrift, bqdiff, bpdrift, bpdiff, Δt, ΔW, Δy)
-    update_solution!(q, p, Vqp, Fqp, Bqp, Gqp, b̂qdrift, b̂qdiff, b̂pdrift, b̂pdiff, Δt, ΔW, Δy)
+                            bpdrift::Vector{T}, b̂pdrift::Vector, bpdiff::Vector{T}, b̂pdiff::Vector,
+                            Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW), Δz::Vector{T}=zero(ΔW)) where {T}
+    update_solution!(q, p, Vqp, Fqp, Bqp, Gqp, bqdrift, bqdiff, bpdrift, bpdiff, Δt, ΔW, Δy, Δz)
+    update_solution!(q, p, Vqp, Fqp, Bqp, Gqp, b̂qdrift, b̂qdiff, b̂pdrift, b̂pdiff, Δt, ΔW, Δy, Δz)
 end
 
 # For stochastic split partitioned Runge-Kutta methods
