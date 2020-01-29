@@ -29,13 +29,10 @@ struct WienerProcess{dType, tType, N, conv} <: SemiMartingale{dType, tType, N}
         @assert nd > 0
         @assert nt ≥ 1
         @assert ns > 0
-        @assert N ∈ (1,2,3)
+        @assert N ∈ (2,3)
 
         if conv==:strong
-            if N == 1
-                chi = randn(nt)
-                eta = randn(nt)
-            elseif N == 2
+            if N == 2
                 chi = randn(nd, nt)
                 eta = randn(nd, nt)
             elseif N == 3
@@ -46,12 +43,7 @@ struct WienerProcess{dType, tType, N, conv} <: SemiMartingale{dType, tType, N}
             ΔW = chi*√Δt
             ΔZ = Δt^(3/2)/2 * (chi+eta/√3)
         else
-            if N == 1
-                chi = rand(dType,nt)
-                eta = rand(dType,nt)
-                ΔW  = zeros(dType,nt)
-                ΔZ  = sqrt(Δt)*ones(dType,nt)
-            elseif N == 2
+            if N == 2
                 chi = rand(dType, nd, nt)
                 eta = rand(dType, nd, nt)
                 ΔW  = zeros(dType, nd, nt)
@@ -98,15 +90,7 @@ end
 
 
 function WienerProcess(dType, nd::Int, nt::Int, ns::Int, Δt::tType, conv=:strong) where {tType}
-
-    if nd==ns==1
-        N=1
-    elseif ns==1
-        N=2
-    else
-        N=3
-    end
-
+    ns==1 ? N=2 : N=3
     WienerProcess{dType, tType, N, conv}(nd, nt, ns, Δt)
 end
 
@@ -119,7 +103,7 @@ function WienerProcess(Δt::tType, dW::Array{dType,1}, dZ::Array{dType,1}, conv=
     nt = size(dW,1)
     ns = 1
 
-    return WienerProcess{dType, tType, 1, conv}(nd, nt, ns, Δt, dW, dZ)
+    return WienerProcess{dType, tType, 2, conv}(nd, nt, ns, Δt, reshape(dW, (1,nt)), reshape(dZ, (1,nt)))
 end
 
 
@@ -152,10 +136,9 @@ end
 
 # Generates a new series of increments for the strong Wiener process W
 function generate_wienerprocess!(W::WienerProcess{dType, tType, N, :strong}) where {dType, tType, N}
-    if N == 1
-        chi = randn(W.nt)
-        eta = randn(W.nt)
-    elseif N == 2
+    @assert N ∈ (2,3)
+
+    if N == 2
         chi = randn(W.nd, W.nt)
         eta = randn(W.nd, W.nt)
     elseif N == 3
@@ -175,12 +158,9 @@ end
 
 # Generates a new series of increments for the weak Wiener process W
 function generate_wienerprocess!(W::WienerProcess{dType, tType, N, :weak}) where {dType, tType, N}
-    if N == 1
-        chi = rand(dType,W.nt)
-        eta = rand(dType,W.nt)
-        dW  = zeros(dType,W.nt)
-        dZ  = sqrt(W.Δt)*ones(dType,W.nt)
-    elseif N == 2
+    @assert N ∈ (2,3)
+
+    if N == 2
         chi = rand(dType, W.nd, W.nt)
         eta = rand(dType, W.nd, W.nt)
         dW  = zeros(dType, W.nd, W.nt)

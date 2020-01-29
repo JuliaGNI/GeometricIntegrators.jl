@@ -444,11 +444,7 @@ function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,N
 
 
     # copy the increments of the Brownian Process
-    if NW==1
-        #1D Brownian motion, 1 sample path
-        int.params.ΔW[1] = sol.W.ΔW[n]
-        int.params.ΔZ[1] = sol.W.ΔZ[n]
-    elseif NW==2
+    if NW==2
         #Multidimensional Brownian motion, 1 sample path
         for l = 1:sol.nm
             int.params.ΔW[l] = sol.W.ΔW[l,n]

@@ -106,11 +106,7 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
     local ydrift::DT
 
     # copy the increments of the Brownian Process
-    if NW==1
-        #1D Brownian motion, 1 sample path
-        int.ΔW[1] = sol.W.ΔW[n]
-        int.ΔZ[1] = sol.W.ΔZ[n]
-    elseif NW==2
+    if NW==2
         #Multidimensional Brownian motion, 1 sample path
         for l = 1:sol.nm
             int.ΔW[l] = sol.W.ΔW[l,n]
