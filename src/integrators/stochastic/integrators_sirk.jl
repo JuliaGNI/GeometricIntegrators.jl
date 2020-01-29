@@ -286,7 +286,7 @@ function initial_guess!(int::IntegratorSIRK{DT,TT}) where {DT,TT}
         int.tΔW .= int.params.tab.qdrift.c[i] .* int.params.ΔW
 
         simd_mult!(int.ΔQ, int.tB1, int.tΔW)
-        int.tQ .= int.params.q .+ 2. ./ 3. .* Δt_local .* int.tV1 .+ 2. ./ 3. .* int.ΔQ
+        @. int.tQ = int.params.q + 2. / 3. * Δt_local * int.tV1 + 2. / 3. * int.ΔQ
 
         t2 = int.params.t + 2. / 3. * Δt_local
 
@@ -313,7 +313,6 @@ function integrate_step!(int::IntegratorSIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,N
     # set time for nonlinear solver
     int.params.t  = sol.t[0] + (n-1)*int.params.Δt
     int.params.q .= int.q[k, m]
-
 
     # copy the increments of the Brownian Process
     if NW==1
