@@ -192,8 +192,12 @@ end
                 y1 = 0
                 y2 = 0
                 for j in 1:S
-                    y1 += params.tab.qdrift0.a[i,j] * $cache.V[j][k] * params.Δt + params.tab.qdiff0.a[i,j] * dot($cache.B[j][k,:], params.ΔW)
-                    y2 += params.tab.qdrift0.â[i,j] * $cache.V[j][k] * params.Δt + params.tab.qdiff0.â[i,j] * dot($cache.B[j][k,:], params.ΔW)
+                    y1 += params.tab.qdrift0.a[i,j] * $cache.V[j][k] * params.Δt
+                    y2 += params.tab.qdrift0.â[i,j] * $cache.V[j][k] * params.Δt
+                    for l in 1:M
+                        y1 += params.tab.qdiff0.a[i,j] * $cache.B[j][k,l] * params.ΔW[l]
+                        y2 += params.tab.qdiff0.â[i,j] * $cache.B[j][k,l] * params.ΔW[l]
+                    end
                 end
                 b[D*(i-1)+k] = - $cache.Y0[i][k] + (y1 + y2)
             end
@@ -239,6 +243,8 @@ struct IntegratorWIRK{DT, TT, PT <: ParametersWIRK{DT,TT},
     #iguess::IT
     fcache::NonlinearFunctionCacheWIRK{DT}
 
+    Δy::Vector{DT}
+
     q::Matrix{Vector{TwicePrecision{DT}}}
 end
 
@@ -263,11 +269,14 @@ function IntegratorWIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauWIRK{TT}, 
     # create cache for internal stage vectors and update vectors
     fcache = NonlinearFunctionCacheWIRK{DT}(D, M, S)
 
+    # create temporary vectors
+    Δy  = zeros(DT,M)
+
     # create solution vectors
     q = create_solution_vector(DT, D, NS, NI)
 
     # create integrator
-    IntegratorWIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q)
+    IntegratorWIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, Δy, q)
 end
 
 equation(integrator::IntegratorWIRK) = integrator.params.equ
@@ -298,7 +307,7 @@ function initial_guess!(int::IntegratorWIRK{DT,TT}) where {DT,TT}
 
     # SIMPLE SOLUTION
     # The simplest initial guess for Y is 0
-    int.solver.x .= zeros(eltype(int), int.params.tab.s*ndims(int)*(noisedims(int)+1) )
+    int.solver.x .= 0
 
     # Using an explicit integrator to predict the next step's value (like in SIRK)
     # does not seem to be a good idea here, because the integrators are convergent
@@ -312,27 +321,31 @@ end
 Integrate SDE with a stochastic implicit Runge-Kutta integrator.
   Integrating the k-th sample path for the m-th initial condition
 """
-function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,NW}, k::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
-    check_solution_dimension_asserts(sol, k, m, n)
+function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,NW}, r::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
+    check_solution_dimension_asserts(sol, r, m, n)
 
     # set time for nonlinear solver
     int.params.t  = sol.t[0] + (n-1)*int.params.Δt
-    int.params.q .= int.q[k, m]
+    int.params.q .= int.q[r, m]
 
 
     # copy the random variables \hat I and \tilde I representing the Wiener process
     if NW==1
         #1D Brownian motion, 1 sample path
-        int.params.ΔW[1] = sol.W.ΔW[n-1]
-        int.params.ΔZ[1] = sol.W.ΔZ[n-1]
+        int.params.ΔW[1] = sol.W.ΔW[1,n-1]
+        int.params.ΔZ[1] = sol.W.ΔZ[1,n-1]
     elseif NW==2
         #Multidimensional Brownian motion, 1 sample path
-        int.params.ΔW .= sol.W.ΔW[n-1]
-        int.params.ΔZ .= sol.W.ΔZ[n-1]
+        for l = 1:sol.nm
+            int.params.ΔW .= sol.W.ΔW[l,n-1]
+            int.params.ΔZ .= sol.W.ΔZ[l,n-1]
+        end
     elseif NW==3
-        #1D or Multidimensional Brownian motion, k-th sample path
-        int.params.ΔW .= sol.W.ΔW[n-1,k]
-        int.params.ΔZ .= sol.W.ΔZ[n-1,k]
+        #1D or Multidimensional Brownian motion, r-th sample path
+        for l = 1:sol.nm
+            int.params.ΔW .= sol.W.ΔW[l,n-1,r]
+            int.params.ΔZ .= sol.W.ΔZ[l,n-1,r]
+        end
     end
 
 
@@ -352,15 +365,15 @@ function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,N
     compute_stages!(int.solver.x, int.fcache.Q0, int.fcache.Q1, int.fcache.V, int.fcache.B, int.fcache.Y0, int.fcache.Y1, int.params)
 
     # compute final update (same update function as for SIRK)
-    update_solution!(int.q[k,m], int.fcache.V, int.fcache.B, int.params.tab.qdrift0.b, int.params.tab.qdrift0.b̂, int.params.tab.qdiff0.b, int.params.tab.qdiff0.b̂, int.params.Δt, int.params.ΔW)
+    update_solution!(int.q[r,m], int.fcache.V, int.fcache.B, int.params.tab.qdrift0.b, int.params.tab.qdrift0.b̂, int.params.tab.qdiff0.b, int.params.tab.qdiff0.b̂, int.params.Δt, int.params.ΔW, int.Δy)
 
     # # NOT IMPLEMENTING InitialGuessSDE
     # # # copy solution to initial guess
     # # update!(int.iguess, m, sol.t[0] + n*int.params.Δt, int.q[m])
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q[k,m], int.params.equ.periodicity)
+    cut_periodic_solution!(int.q[r,m], int.params.equ.periodicity)
 
     # # copy to solution
-    set_solution!(sol, int.q[k,m], n, k, m)
+    set_solution!(sol, int.q[r,m], n, r, m)
 end

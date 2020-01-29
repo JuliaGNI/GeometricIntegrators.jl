@@ -72,12 +72,13 @@ end
 
 
 "Stochastic Explicit Runge-Kutta integrator."
-struct IntegratorWERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
-    equation::SDE{DT,TT,FT}
+struct IntegratorWERK{DT, TT, ET <: SDE{DT,TT}} <: StochasticIntegrator{DT,TT}
+    equation::ET
     tableau::TableauWERK{TT}
     Δt::TT
     ΔW::Vector{DT}
     ΔZ::Vector{DT}
+    Δy::Vector{DT}
 
     q ::Matrix{Vector{DT}}
     Q0::Vector{DT}           # Q0[1..n]      - the internal stage H^(0)_i for a given i
@@ -89,7 +90,7 @@ struct IntegratorWERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
     tB::Vector{DT}           # the value of the l-th column of the diffusion term evaluated at the internal stage H^(l)_i for given i and l
 
 
-    function IntegratorWERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
+    function IntegratorWERK{DT,TT}(equation::ET, tableau, Δt::TT) where {DT, TT, ET <: SDE{DT,TT}}
         D = equation.d
         M = equation.m
         NS= equation.ns
@@ -107,12 +108,12 @@ struct IntegratorWERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
         B1 = create_internal_stage_vector(DT, D, M, S)
         B2 = create_internal_stage_vector(DT, D, M, S)
 
-        new(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), q, Q0, Q1, Q2, V, B1, B2, zeros(DT,D))
+        new{DT,TT,ET}(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), zeros(DT,M), q, Q0, Q1, Q2, V, B1, B2, zeros(DT,D))
     end
 end
 
-function IntegratorWERK(equation::SDE{DT,TT,FT}, tableau::TableauWERK{TT}, Δt::TT) where {DT,TT,FT}
-    IntegratorWERK{DT,TT,FT}(equation, tableau, Δt)
+function IntegratorWERK(equation::SDE{DT,TT}, tableau::TableauWERK{TT}, Δt::TT) where {DT,TT}
+    IntegratorWERK{DT,TT}(equation, tableau, Δt)
 end
 
 function initialize!(int::IntegratorWERK, sol::SolutionSDE, k::Int, m::Int)
@@ -129,22 +130,25 @@ Integrate SDE with explicit Runge-Kutta integrator.
 function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,NQ,NW}, r::Int, m::Int, n::Int) where {DT,TT,FT,NQ,NW}
     local tᵢ::TT
     local ydrift::DT
-    local ydiff  = zeros(DT,sol.nm)
     local ydiff2::DT
 
     # copy the random variables \hat I and \tilde I representing the Wiener process
     if NW==1
         #1D Brownian motion, 1 sample path
-        int.ΔW[1] = sol.W.ΔW[n-1]
-        int.ΔZ[1] = sol.W.ΔZ[n-1]
+        int.ΔW[1] = sol.W.ΔW[1,n-1]
+        int.ΔZ[1] = sol.W.ΔZ[1,n-1]
     elseif NW==2
         #Multidimensional Brownian motion, 1 sample path
-        int.ΔW .= sol.W.ΔW[n-1]
-        int.ΔZ .= sol.W.ΔZ[n-1]
+        for l = 1:sol.nm
+            int.ΔW .= sol.W.ΔW[l,n-1]
+            int.ΔZ .= sol.W.ΔZ[l,n-1]
+        end
     elseif NW==3
         #1D or Multidimensional Brownian motion, r-th sample path
-        int.ΔW .= sol.W.ΔW[n-1,r]
-        int.ΔZ .= sol.W.ΔZ[n-1,r]
+        for l = 1:sol.nm
+            int.ΔW .= sol.W.ΔW[l,n-1,r]
+            int.ΔZ .= sol.W.ΔZ[l,n-1,r]
+        end
     end
 
     # THE FIRST INTERNAL STAGES ARE ALL EQUAL TO THE PREVIOUS STEP SOLUTION
@@ -169,12 +173,14 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
             end
 
             # ΔW contribution from the diffusion part
-            ydiff .= zeros(DT, sol.nm)
+            int.Δy .= 0
             for j = 1:i-1
-                ydiff += int.tableau.qdiff0.a[i,j] * int.B1[j][k,:]
+                for l = 1:sol.nm
+                    int.Δy[l] += int.tableau.qdiff0.a[i,j] * int.B1[j][k,l]
+                end
             end
 
-            int.Q0[k] = int.q[r,m][k] + int.Δt * ydrift + dot(ydiff,int.ΔW)
+            int.Q0[k] = int.q[r,m][k] + int.Δt * ydrift + dot(int.Δy,int.ΔW)
 
         end
 
@@ -191,18 +197,18 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
             @inbounds for noise_idx in eachindex(int.Q1)
 
                 # ΔW contribution from the diffusion part
-                ydiff .= zeros(DT, sol.nm)
+                int.Δy .= 0
                 for j = 1:i-1
                     for l = 1:sol.nm
                         if l==noise_idx
-                            ydiff[l] += int.tableau.qdiff1.a[i,j] * int.B1[j][k,l]
+                            int.Δy[l] += int.tableau.qdiff1.a[i,j] * int.B1[j][k,l]
                         else
-                            ydiff[l] += int.tableau.qdiff3.a[i,j] * int.B1[j][k,l]
+                            int.Δy[l] += int.tableau.qdiff3.a[i,j] * int.B1[j][k,l]
                         end
                     end
                 end
 
-                int.Q1[noise_idx][k] = int.q[r,m][k] + int.Δt * ydrift + dot(ydiff,int.ΔW)
+                int.Q1[noise_idx][k] = int.q[r,m][k] + int.Δt * ydrift + dot(int.Δy,int.ΔW)
             end
         end
 
@@ -262,7 +268,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
     end
 
     # compute final update
-    update_solution!(int.q[r,m], int.V, int.B1, int.B2, int.tableau.qdrift0.b, int.tableau.qdiff0.b, int.tableau.qdiff3.b, int.Δt, int.ΔW)
+    update_solution!(int.q[r,m], int.V, int.B1, int.B2, int.tableau.qdrift0.b, int.tableau.qdiff0.b, int.tableau.qdiff3.b, int.Δt, int.ΔW, int.Δy)
 
     # take care of periodic solutions
     cut_periodic_solution!(int.q[r,m], int.equation.periodicity)
