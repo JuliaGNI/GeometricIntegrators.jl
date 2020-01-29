@@ -242,7 +242,7 @@ function IntegratorSIPRK(equation::PSDE{DT,TT,VT,BT,N}, tableau::TableauSIPRK{TT
     D = equation.d
     M = equation.m
     NS= equation.ns
-    NI= equation.n
+    NI= equation.ni
     S = tableau.s
 
     # create params

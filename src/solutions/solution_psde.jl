@@ -42,7 +42,7 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime:
     nd = equation.d
     nm = equation.m
     ns = equation.ns
-    ni = equation.n
+    ni = equation.ni
     nt = div(ntime, nsave)
 
     @assert conv==:strong || (conv==:weak && K==0)
@@ -75,7 +75,7 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Ar
     nd = equation.d
     nm = equation.m
     ns = equation.ns
-    ni = equation.n
+    ni = equation.ni
     nt = div(ntime, nsave)
 
     @assert size(dW) == size(dZ)

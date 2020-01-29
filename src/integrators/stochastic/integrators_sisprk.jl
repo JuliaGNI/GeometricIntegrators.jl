@@ -252,7 +252,7 @@ function IntegratorSISPRK(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}, tablea
     D = equation.d
     M = equation.m
     NS= equation.ns
-    NI= equation.n
+    NI= equation.ni
     S = tableau.s
 
     # create params

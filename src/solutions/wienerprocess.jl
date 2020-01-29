@@ -49,7 +49,7 @@ struct WienerProcess{dType, tType, N, conv} <: SemiMartingale{dType, tType, N}
             if N == 1
                 chi = rand(dType,nt)
                 eta = rand(dType,nt)
-                dW  = zeros(dType,nt)
+                ΔW  = zeros(dType,nt)
                 ΔZ  = sqrt(Δt)*ones(dType,nt)
             elseif N == 2
                 chi = rand(dType, nd, nt)

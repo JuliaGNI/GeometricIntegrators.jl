@@ -70,7 +70,7 @@ struct IntegratorSERK{DT, TT, ET <: SDE{DT,TT}} <: StochasticIntegrator{DT,TT}
         D = equation.d
         M = equation.m
         NS= equation.ns
-        NI= equation.n
+        NI= equation.ni
         S = tableau.s
 
         # create solution vectors
@@ -108,8 +108,8 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
     # copy the increments of the Brownian Process
     if NW==1
         #1D Brownian motion, 1 sample path
-        int.ΔW[1] = sol.W.ΔW[1,n]
-        int.ΔZ[1] = sol.W.ΔZ[1,n]
+        int.ΔW[1] = sol.W.ΔW[n]
+        int.ΔZ[1] = sol.W.ΔZ[n]
     elseif NW==2
         #Multidimensional Brownian motion, 1 sample path
         for l = 1:sol.nm

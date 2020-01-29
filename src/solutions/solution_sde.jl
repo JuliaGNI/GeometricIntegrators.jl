@@ -40,7 +40,7 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int
     nd = equation.d
     nm = equation.m
     ns = equation.ns
-    ni = equation.n
+    ni = equation.ni
     nt = div(ntime, nsave)
 
     @assert conv==:strong || (conv==:weak && K==0)
@@ -72,7 +72,7 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, dW::Array{DT, NW}, dZ:
     nd = equation.d
     nm = equation.m
     ns = equation.ns
-    ni = equation.n
+    ni = equation.ni
     nt = div(ntime, nsave)
 
 

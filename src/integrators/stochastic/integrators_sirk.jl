@@ -193,7 +193,7 @@ function IntegratorSIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSIRK{TT}, 
     D = equation.d
     M = equation.m
     NS= equation.ns
-    NI= equation.n
+    NI= equation.ni
     S = tableau.s
 
     # create params

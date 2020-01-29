@@ -16,7 +16,7 @@ values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``, and the m-dimensional Wiener
 
 * `d`:  dimension of dynamical variable ``q`` and the vector fields ``vi``
 * `m`:  dimension of the Wiener process
-* `n`:  number of initial conditions
+* `ni`: number of initial conditions
 * `ns`: number of sample paths
 * `v` :  function computing the drift vector field for the position variable q
 * `f1`:  function computing the drift vector field for the momentum variable p
@@ -58,10 +58,10 @@ of evaluating the vector fields ``v``, ``f`` and the matrices ``B``, ``G`` on `t
     sde = SDE(v_sde, B_sde, t₀, q₀)
 ```
 """
-struct SPSDE{dType <: Number, tType <: Number, vType <: Function, f1Type <: Function, f2Type <: Function, BType <: Function, G1Type <: Function, G2Type <: Function, N} <: AbstractEquationPSDE{dType, tType}
+struct SPSDE{dType <: Number, tType <: Number, vType <: Function, f1Type <: Function, f2Type <: Function, BType <: Function, G1Type <: Function, G2Type <: Function, pType, N} <: AbstractEquationPSDE{dType, tType}
     d::Int
     m::Int
-    n::Int
+    ni::Int
     ns::Int
     v ::vType
     f1::f1Type
@@ -72,105 +72,53 @@ struct SPSDE{dType <: Number, tType <: Number, vType <: Function, f1Type <: Func
     t₀::tType
     q₀::Array{dType, N}           #Initial condition: N=1 - single deterministic, N=2 - single random or multiple deterministic, N=3 - multiple deterministic
     p₀::Array{dType, N}
+    parameters::pType
     periodicity::Vector{dType}
 
-    function SPSDE{dType,tType,vType,f1Type,f2Type,BType,G1Type,G2Type,N}(d, m, n, ns, v, f1, f2, B, G1, G2, t₀, q₀, p₀; periodicity=[]) where {dType <: Number, tType <: Number, vType <: Function, f1Type <: Function, f2Type <: Function, BType <: Function, G1Type <: Function, G2Type <: Function, N}
+    function SPSDE(m, ns, v::vType, f1::f1Type, f2::f2Type,
+                    B::BType, G1::G1Type, G2::G2Type, t₀::tType,
+                    q₀::AbstractArray{dType}, p₀::AbstractArray{dType};
+                    parameters=nothing, periodicity=zeros(dType,size(q₀,1))) where {
+                    dType <: Number, tType <: Number, vType <: Function, f1Type <: Function, f2Type <: Function,
+                    BType <: Function, G1Type <: Function, G2Type <: Function}
 
-        @assert dType == eltype(q₀) == eltype(p₀)
-        @assert tType == typeof(t₀)
-        @assert ndims(q₀) == ndims(p₀) == N
-        @assert d == size(q₀,1) == size(p₀,1)
+        @assert size(q₀)  == size(p₀)
+        @assert ndims(q₀) == ndims(p₀)
 
-        if ns==1 && n==1
-            # single sample path and single initial condition, therefore N=1
-            @assert N == 1
-        elseif ns>1 && n==1
-            # single initial condition, but may be random (N=2) or deterministic (N=1)
-            @assert N ∈ (1,2)
-            if N==2
-                @assert ns == size(q₀,2)
-            end
-        elseif ns==1 && n>1
-            # multiple  deterministic initial conditions, so N=2
-            @assert N == 2
-            @assert n == size(q₀,2)
-        elseif ns>1 && n>1
-            # either multiple random initial conditions (N=3),
-            # or multiple deterministic initial conditions (N=2)
-            @assert N ∈ (2,3)
+        N  = ndims(q₀)
+        d  = size(q₀,1)
+        ni = size(q₀,2)
 
-            if N==2
-                @assert n == size(q₀,2)
-            else
-                @assert ns == size(q₀,2)
-                @assert n == size(q₀,3)
-            end
-        end
+        @assert N ∈ (1,2)
+        @assert ns ≥ 1
+        @assert ni == 1 || ns == 1
+        # either multiple deterministic initial conditions and one sample path
+        # or one deterministic initial condition and multiple sample paths
 
         if !(length(periodicity) == d)
             periodicity = zeros(dType, d)
         end
 
-        new(d, m, n, ns, v, f1, f2, B, G1, G2, t₀, q₀, p₀, periodicity)
+        new{dType,tType,vType,f1Type,f2Type,BType,G1Type,G2Type,typeof(parameters),N}(d, m, ni, ns, v, f1, f2, B, G1, G2, t₀, q₀, p₀, parameters, periodicity)
     end
 end
 
 
-function SPSDE(m::Int, ns::Int, v::VT, f1::F1T, f2::F2T, B::BT, G1::G1T, G2::G2T, t₀::TT, q₀::AbstractArray{DT,1}, p₀::AbstractArray{DT,1}; periodicity=[]) where {DT,TT,VT,F1T,F2T,BT,G1T,G2T}
-    # A 1D array q₀ contains a single deterministic initial condition, so n=1, but we still need to specify
-    # the number of sample paths ns
-    @assert size(q₀) == size(p₀)
-    SPSDE{DT, TT, VT, F1T, F2T, BT, G1T, G2T, 1}(size(q₀, 1), m, 1, ns, v, f1, f2, B, G1, G2, t₀, q₀, p₀, periodicity=periodicity)
+function SPSDE(m::Int, ns::Int, v::Function, f1::Function, f2::Function,
+                                B::Function, G1::Function, G2::Function,
+                                q₀::AbstractArray{DT,N}, p₀::AbstractArray{DT,N}; kwargs...) where {DT,N}
+    SPSDE(m, ns, v, f1, f2, B, G1, G2, zero(DT), q₀, p₀; kwargs...)
 end
 
 
-# A 2-dimensional matrix q0 can represent a single random initial condition with ns>1 and n=1,
-# or a set of deterministic initial conditions with n>1 (for which we can have both ns=1 and ns>1)
-# The function below assumes q0 to represent a single random initial condition (n=1, ns=size(q₀, 2))
-function SPSDE(m::Int, v::VT, f1::F1T, f2::F2T, B::BT, G1::G1T, G2::G2T, t₀::TT, q₀::AbstractArray{DT,2}, p₀::AbstractArray{DT,2}; periodicity=[]) where {DT,TT,VT,F1T,F2T,BT,G1T,G2T}
-    SPSDE{DT, TT, VT, F1T, F2T, BT, G1T, G2T, 2}(size(q₀, 1), m, 1, size(q₀, 2), v, f1, f2, B, G1, G2, t₀, q₀, p₀, periodicity=periodicity)
-end
-
-# On the other hand, the function below assumes q₀ represents multiple deterministic initial conditions
-# (n=size(q₀, 2)), but these initial conditions may be run an arbitrary number ns of sample paths, so ns has to be explicitly specified
-function SPSDE(m::Int, ns::Int, v::VT, f1::F1T, f2::F2T, B::BT, G1::G1T, G2::G2T, t₀::TT, q₀::AbstractArray{DT,2}, p₀::AbstractArray{DT,2}; periodicity=[]) where {DT,TT,VT,F1T,F2T,BT,G1T,G2T}
-    SPSDE{DT, TT, VT, F1T, F2T, BT, G1T, G2T, 2}(size(q₀, 1), m, size(q₀, 2), ns, v, f1, f2, B, G1, G2, t₀, q₀, p₀, periodicity=periodicity)
-end
-
-
-function SPSDE(m::Int, v::VT, f1::F1T, f2::F2T, B::BT, G1::G1T, G2::G2T, t₀::TT, q₀::AbstractArray{DT,3}, p₀::AbstractArray{DT,3}; periodicity=[]) where {DT,TT,VT,F1T,F2T,BT,G1T,G2T}
-    @assert size(q₀) == size(p₀)
-    SPSDE{DT, TT, VT, F1T, F2T, BT, G1T, G2T, 3}(size(q₀, 1), m, size(q₀,3), size(q₀,2), v, f1, f2, B, G1, G2, t₀, q₀, p₀, periodicity=periodicity)
-end
-
-
-function SPSDE(m::Int, ns::Int, v::VT, f1::F1T, f2::F2T, B::BT, G1::G1T, G2::G2T, q₀::AbstractArray{DT,1}, p₀::AbstractArray{DT,1}; periodicity=[]) where {DT,VT,F1T,F2T,BT,G1T,G2T}
-    SPSDE(m, ns, v, f1, f2, B, G1, G2, zero(DT), q₀, p₀, periodicity=periodicity)
-end
-
-
-# Assumes q0 represents a single random initial condition (n=1, ns=size(q₀, 2))
-function SPSDE(m::Int, v::VT, f1::F1T, f2::F2T, B::BT, G1::G1T, G2::G2T, q₀::AbstractArray{DT,2}, p₀::AbstractArray{DT,2}; periodicity=[]) where {DT,VT,F1T,F2T,BT,G1T,G2T}
-    SPSDE(m, v, f1, f2, B, G1, G2, zero(DT), q₀, p₀, periodicity=periodicity)
-end
-
-
-# Assumes q₀ represents multiple deterministic initial conditions (n=size(q₀, 2))
-function SPSDE(m::Int, ns::Int, v::VT, f1::F1T, f2::F2T, B::BT, G1::G1T, G2::G2T, q₀::AbstractArray{DT,2}, p₀::AbstractArray{DT,2}; periodicity=[]) where {DT,VT,F1T,F2T,BT,G1T,G2T}
-    SPSDE(m, ns, v, f1, f2, B, G1, G2, zero(DT), q₀, p₀, periodicity=periodicity)
-end
-
-
-function SPSDE(m::Int, v::VT, f1::F1T, f2::F2T, B::BT, G1::G1T, G2::G2T, q₀::AbstractArray{DT,3}, p₀::AbstractArray{DT,3}; periodicity=[]) where {DT,VT,F1T,F2T,BT,G1T,G2T}
-    SPSDE(m, v, f1, f2, B, G1, G2, zero(DT), q₀, p₀, periodicity=periodicity)
-end
-
-Base.hash(sde::SPSDE, h::UInt) = hash(sde.d, hash(sde.m, hash(sde.n, hash(sde.ns, hash(sde.v, hash(sde.f1, hash(sde.f2, hash(sde.B, hash(sde.G1, hash(sde.G2, hash(sde.t₀, hash(sde.q₀, hash(sde.p₀, hash(sde.periodicity, h))))))))))))))
+Base.hash(sde::SPSDE, h::UInt) = hash(sde.d, hash(sde.m, hash(sde.ni, hash(sde.ns,
+                                 hash(sde.v, hash(sde.f1, hash(sde.f2, hash(sde.B, hash(sde.G1, hash(sde.G2,
+                                 hash(sde.t₀, hash(sde.q₀, hash(sde.p₀, hash(sde.parameters, hash(sde.periodicity, h)))))))))))))))
 
 Base.:(==)(sde1::SPSDE, sde2::SPSDE) = (
                                 sde1.d == sde2.d
                              && sde1.m == sde2.m
-                             && sde1.n == sde2.n
+                             && sde1.ni == sde2.ni
                              && sde1.ns == sde2.ns
                              && sde1.v  == sde2.v
                              && sde1.f1 == sde2.f1
@@ -181,50 +129,21 @@ Base.:(==)(sde1::SPSDE, sde2::SPSDE) = (
                              && sde1.t₀ == sde2.t₀
                              && sde1.q₀ == sde2.q₀
                              && sde1.p₀ == sde2.p₀
+                             && sde1.parameters  == sde2.parameters
                              && sde1.periodicity == sde2.periodicity)
 
-function Base.similar(sde::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T}, q₀::AbstractArray{DT,1}, p₀::AbstractArray{DT,1}, ns::Int) where {DT, TT, VT, F1T, F2T, BT, G1T, G2T}
+function Base.similar(sde::SPSDE, q₀::AbstractArray, p₀::AbstractArray, ns::Int)
     similar(sde, sde.t₀, q₀, p₀, ns)
 end
 
-# Assumes q0 represents a single random initial condition (n=1, ns=size(q₀, 2))
-function Base.similar(sde::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T}, q₀::AbstractArray{DT,2}, p₀::AbstractArray{DT,2}) where {DT, TT, VT, F1T, F2T, BT, G1T, G2T}
+function Base.similar(sde::SPSDE, q₀::AbstractArray, p₀::AbstractArray)
     similar(sde, sde.t₀, q₀, p₀)
 end
 
-# Assumes q₀ represents multiple deterministic initial conditions (n=size(q₀, 2))
-function Base.similar(sde::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T}, q₀::AbstractArray{DT,2}, p₀::AbstractArray{DT,2}, ns::Int) where {DT, TT, VT, F1T, F2T, BT, G1T, G2T}
-    similar(sde, sde.t₀, q₀, p₀, ns)
-end
-
-function Base.similar(sde::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T}, q₀::AbstractArray{DT,3}, p₀::AbstractArray{DT,3}) where {DT, TT, VT, F1T, F2T, BT, G1T, G2T}
-    similar(sde, sde.t₀, q₀, p₀)
-end
-
-function Base.similar(sde::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T}, t₀::TT, q₀::AbstractArray{DT,1}, p₀::AbstractArray{DT,1}, ns::Int) where {DT, TT, VT, F1T, F2T, BT, G1T, G2T}
+function Base.similar(sde::SPSDE, t₀::TT, q₀::AbstractArray{DT,N}, p₀::AbstractArray{DT,N}, ns::Int=sde.ns) where {DT <: Number, TT <: Number, N}
     @assert size(q₀) == size(p₀)
     @assert sde.d == size(q₀,1)
-    SPSDE(sde.m, ns, sde.v, sde.f1, sde.f2, sde.B, sde.G1, sde.G2, t₀, q₀, p₀, periodicity=sde.periodicity)
-end
-
-# Assumes q0 represents a single random initial condition (n=1, ns=size(q₀, 2))
-function Base.similar(sde::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T}, t₀::TT, q₀::AbstractArray{DT,2}, p₀::AbstractArray{DT,2}) where {DT, TT, VT, F1T, F2T, BT, G1T, G2T}
-    @assert size(q₀) == size(p₀)
-    @assert sde.d == size(q₀,1)
-    SPSDE(sde.m, sde.v, sde.f1, sde.f2, sde.B, sde.G1, sde.G2, t₀, q₀, p₀, periodicity=sde.periodicity)
-end
-
-# Assumes q₀ represents multiple deterministic initial conditions (n=size(q₀, 2))
-function Base.similar(sde::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T}, t₀::TT, q₀::AbstractArray{DT,2}, p₀::AbstractArray{DT,2}, ns::Int) where {DT, TT, VT, F1T, F2T, BT, G1T, G2T}
-    @assert size(q₀) == size(p₀)
-    @assert sde.d == size(q₀,1)
-    SPSDE(sde.m, ns, sde.v, sde.f1, sde.f2, sde.B, sde.G1, sde.G2, t₀, q₀, p₀, periodicity=sde.periodicity)
-end
-
-function Base.similar(sde::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T}, t₀::TT, q₀::AbstractArray{DT,3}, p₀::AbstractArray{DT,3}) where {DT, TT, VT, F1T, F2T, BT, G1T, G2T}
-    @assert size(q₀) == size(p₀)
-    @assert sde.d == size(q₀,1)
-    PSDE(sde.m, sde.v, sde.f1, sde.f2, sde.B, sde.G1, sde.G2, t₀, q₀, p₀, periodicity=sde.periodicity)
+    SPSDE(sde.m, ns, sde.v, sde.f1, sde.f2, sde.B, sde.G1, sde.G2, t₀, q₀, p₀; parameters=sde.parameters, periodicity=sde.periodicity)
 end
 
 @inline Base.ndims(sde::SPSDE) = sde.d

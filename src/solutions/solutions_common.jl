@@ -2,7 +2,7 @@
 function determine_qdim(equation::Union{SDE,PSDE,SPSDE})
     nd = equation.d
     ns = equation.ns
-    ni = equation.n
+    ni = equation.ni
 
     if nd==ns==ni==1
         NQ = 1
