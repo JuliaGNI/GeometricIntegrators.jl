@@ -222,10 +222,8 @@ end
 
 function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT,1}, Array{TwicePrecision{DT},1}}) where {DT,TT}
     # Sets the initial conditions sol.q[0] with the data from q₀
-    # q₀ may be 1D (nd elements - single deterministic initial condition),
-    # 2D (nd x ns or nd x ni matrix - single random or multiple deterministic initial condition),
-    # or 3D (nd x ns x ni matrix - multiple random initial condition)
-
+    # Here, q₀ is 1D (nd elements) representing a single deterministic or
+    # multiple random initial conditions.
     if sol.ns == 1
         set_data!(sol.q, q₀, 0)
     else
@@ -239,14 +237,8 @@ end
 
 function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT,2}, Array{TwicePrecision{DT},2}}) where {DT,TT}
     # Sets the initial conditions sol.q[0] with the data from q₀
-    # q₀ may be 1D (nd elements - single deterministic initial condition),
-    # 2D (nd x ns or nd x ni matrix - single random or multiple deterministic initial condition),
-    # or 3D (nd x ns x ni matrix - multiple random initial condition)
-
+    # Here, q₀ is a 2D (nd x ni) matrix representing multiple deterministic initial conditions.
     @assert sol.ns == 1
-    # for m in 1:sol.ni
-    #     set_data!(sol.q, q₀[:,m], 0, m)
-    # end
     set_data!(sol.q, q₀, 0)
     compute_timeseries!(sol.t, t₀)
 end

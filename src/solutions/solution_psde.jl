@@ -238,11 +238,26 @@ function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, equ::Union{PSDE{DT,TT
 end
 
 
-function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT}, Array{TwicePrecision{DT}}}, p₀::Union{Array{DT}, Array{TwicePrecision{DT}}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT,1}, Array{TwicePrecision{DT},1}}, p₀::Union{Array{DT,1}, Array{TwicePrecision{DT},1}}) where {DT,TT}
     # Sets the initial conditions sol.q[0] with the data from q₀
-    # q₀ may be 1D (nd elements - single deterministic initial condition),
-    # 2D (nd x ns or nd x ni matrix - single random or multiple deterministic initial condition),
-    # or 3D (nd x ns x ni matrix - multiple random initial condition).
+    # Here, q₀ is 1D (nd elements) representing a single deterministic or
+    # multiple random initial conditions.
+    # Similar for sol.p[0].
+    if sol.ns == 1
+        set_data!(sol.q, q₀, 0)
+        set_data!(sol.p, p₀, 0)
+    else
+        for k in 1:sol.ns
+            set_data!(sol.q, q₀, 0, k)
+            set_data!(sol.p, p₀, 0, k)
+        end
+    end
+    compute_timeseries!(sol.t, t₀)
+end
+
+function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT,2}, Array{TwicePrecision{DT},2}}, p₀::Union{Array{DT,2}, Array{TwicePrecision{DT},2}}) where {DT,TT}
+    # Sets the initial conditions sol.q[0] with the data from q₀
+    # Here, q₀ is a 2D (nd x ni) matrix representing multiple deterministic initial conditions.
     # Similar for sol.p[0].
     set_data!(sol.q, q₀, 0)
     set_data!(sol.p, p₀, 0)
