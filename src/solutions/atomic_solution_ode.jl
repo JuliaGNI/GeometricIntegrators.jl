@@ -30,14 +30,14 @@ end
 
 AtomicSolutionODE(DT, TT, nd) = AtomicSolutionODE{DT, TT}(nd)
 
-function CommonFunctions.set_solution!(asol::AtomicSolutionODE, sol)
+function set_solution!(asol::AtomicSolutionODE, sol)
     t, q = sol
     asol.t  = t
     asol.q .= q
     asol.v .= 0
 end
 
-function CommonFunctions.get_solution(asol::AtomicSolutionODE)
+function get_solution(asol::AtomicSolutionODE)
     (asol.t, asol.q)
 end
 

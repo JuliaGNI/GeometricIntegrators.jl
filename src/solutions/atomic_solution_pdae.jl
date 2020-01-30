@@ -58,7 +58,7 @@ end
 
 AtomicSolutionPDAE(DT, TT, nd) = AtomicSolutionPDAE{DT, TT}(nd)
 
-function CommonFunctions.set_solution!(asol::AtomicSolutionPDAE, sol)
+function set_solution!(asol::AtomicSolutionPDAE, sol)
     t, q, p, λ = sol
     asol.t  = t
     asol.q .= q
@@ -68,7 +68,7 @@ function CommonFunctions.set_solution!(asol::AtomicSolutionPDAE, sol)
     asol.f .= 0
 end
 
-function CommonFunctions.get_solution(asol::AtomicSolutionPDAE)
+function get_solution(asol::AtomicSolutionPDAE)
     (asol.t, asol.q, asol.p, asol.λ)
 end
 

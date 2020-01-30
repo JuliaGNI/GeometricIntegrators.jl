@@ -42,7 +42,7 @@ end
 
 AtomicSolutionPODE(DT, TT, nd) = AtomicSolutionPODE{DT, TT}(nd)
 
-function CommonFunctions.set_solution!(asol::AtomicSolutionPODE, sol)
+function set_solution!(asol::AtomicSolutionPODE, sol)
     t, q, p = sol
     asol.t  = t
     asol.q .= q
@@ -51,7 +51,7 @@ function CommonFunctions.set_solution!(asol::AtomicSolutionPODE, sol)
     asol.f .= 0
 end
 
-function CommonFunctions.get_solution(asol::AtomicSolutionPODE)
+function get_solution(asol::AtomicSolutionPODE)
     (asol.t, asol.q, asol.p)
 end
 

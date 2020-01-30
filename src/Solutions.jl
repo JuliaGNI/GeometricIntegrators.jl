@@ -41,6 +41,7 @@ module Solutions
     include("solutions/wienerprocess.jl")
 
     export Solution, StochasticSolution
+    export get_solution, get_solution!, set_solution!
 
     include("solutions/solution.jl")
     include("solutions/solutions_common.jl")

@@ -238,7 +238,7 @@ function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, equ::Union{PSDE{DT,TT
 end
 
 
-function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT,1}, Array{TwicePrecision{DT},1}}, p₀::Union{Array{DT,1}, Array{TwicePrecision{DT},1}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, t₀::TT, q₀::SolutionVector{DT}, p₀::SolutionVector{DT}) where {DT,TT}
     # Sets the initial conditions sol.q[0] with the data from q₀
     # Here, q₀ is 1D (nd elements) representing a single deterministic or
     # multiple random initial conditions.
@@ -266,7 +266,7 @@ end
 
 
 "copies the m-th initial condition for the k-th sample path from sol.q to q"
-function get_initial_conditions!(sol::SolutionPSDE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, k, m) where {DT,TT}
+function get_initial_conditions!(sol::SolutionPSDE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, k, m) where {DT,TT}
 
     @assert k ≤ sol.ns
     @assert m ≤ sol.ni
@@ -295,7 +295,7 @@ function get_initial_conditions!(sol::SolutionPSDE{DT,TT}, q::Union{Vector{DT}, 
 end
 
 
-function CommonFunctions.set_solution!(sol::SolutionPSDE{DT,TT,NQ,NW}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, p::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, n, k, m) where {DT,TT,NQ,NW}
+function set_solution!(sol::SolutionPSDE{DT,TT,NQ,NW}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k, m) where {DT,TT,NQ,NW}
     if mod(n, sol.nsave) == 0
         if NQ ==2
             # Single sample path and a single initial condition, k==m==1

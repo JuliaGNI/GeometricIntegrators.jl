@@ -130,7 +130,7 @@ nsave(sol::SolutionPODE) = sol.nsave
 offset(sol::SolutionPODE) = sol.woffset
 
 
-function set_initial_conditions!(sol::SolutionPODE{DT,TT}, equ::Union{PODE{DT,TT},IODE{DT,TT},VODE{DT,TT}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPODE, equ::Union{PODE,IODE,VODE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end
 
@@ -156,24 +156,24 @@ function get_initial_conditions(sol::SolutionPODE, k, n=1)
     get_solution(sol, n-1, k)
 end
 
-function CommonFunctions.get_solution!(sol::SolutionPODE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k) where {DT,TT}
+function get_solution!(sol::SolutionPODE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k) where {DT,TT}
     for i in eachindex(q) q[i] = sol.q[i, n, k] end
     for i in eachindex(p) p[i] = sol.p[i, n, k] end
 end
 
-function CommonFunctions.get_solution(sol::SolutionPODE, n, k)
+function get_solution(sol::SolutionPODE, n, k)
     (sol.t[n], sol.q[:, n, k], sol.p[:, n, k])
 end
 
-function CommonFunctions.set_solution!(sol::SolutionPODE, t, q, p, n, k)
+function set_solution!(sol::SolutionPODE, t, q, p, n, k)
     set_solution!(sol, q, p, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionPODE{DT,TT}, asol::AtomicSolutionPODE{DT,TT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionPODE{DT,TT}, asol::AtomicSolutionPODE{DT,TT}, n, k) where {DT,TT}
     set_solution!(sol, asol.t, asol.q, asol.p, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionPODE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionPODE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0

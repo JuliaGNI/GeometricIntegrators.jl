@@ -23,11 +23,8 @@ module CommonFunctions
     write_to_hdf5() = nothing
 
 
-    export get_solution, get_solution!, set_solution!, reset!, cut_periodic_solution!
+    export reset!, cut_periodic_solution!
 
-    get_solution() = nothing
-    get_solution!() = nothing
-    set_solution!() = nothing
     reset!() = nothing
     cut_periodic_solution!() = nothing
 

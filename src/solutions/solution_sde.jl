@@ -36,7 +36,7 @@ mutable struct SolutionSDE{dType, tType, NQ, NW} <: StochasticSolution{dType, tT
 end
 
 
-function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0, conv=:strong) where {DT,TT,VT,BT}
+function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0, conv=:strong) where {DT,TT}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -215,12 +215,12 @@ ntime(sol::SolutionSDE) = sol.ntime
 nsave(sol::SolutionSDE) = sol.nsave
 
 
-function set_initial_conditions!(sol::SolutionSDE{DT,TT}, equ::SDE{DT,TT}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionSDE, equ::SDE)
     set_initial_conditions!(sol, equ.t₀, equ.q₀)
 end
 
 
-function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT,1}, Array{TwicePrecision{DT},1}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::AbstractArray{DT,1}) where {DT,TT}
     # Sets the initial conditions sol.q[0] with the data from q₀
     # Here, q₀ is 1D (nd elements) representing a single deterministic or
     # multiple random initial conditions.
@@ -232,15 +232,17 @@ function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{
         end
     end
     compute_timeseries!(sol.t, t₀)
+    sol.counter .= 1
 end
 
 
-function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT,2}, Array{TwicePrecision{DT},2}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::AbstractArray{DT,2}) where {DT,TT}
     # Sets the initial conditions sol.q[0] with the data from q₀
     # Here, q₀ is a 2D (nd x ni) matrix representing multiple deterministic initial conditions.
     @assert sol.ns == 1
     set_data!(sol.q, q₀, 0)
     compute_timeseries!(sol.t, t₀)
+    sol.counter .= 1
 end
 
 # copies the m-th initial condition from sol.q to q

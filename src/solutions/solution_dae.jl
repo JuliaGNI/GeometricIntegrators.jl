@@ -124,7 +124,7 @@ nsave(sol::SolutionDAE) = sol.nsave
 offset(sol::SolutionDAE) = sol.woffset
 
 
-function set_initial_conditions!(sol::SolutionDAE{DT,TT}, equ::DAE{DT,TT}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionDAE, equ::DAE)
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.λ₀)
 end
 
@@ -146,15 +146,15 @@ function get_initial_conditions!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vec
     get_data!(sol.λ, λ, 0, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionDAE, t, q, λ, n, k)
+function set_solution!(sol::SolutionDAE, t, q, λ, n, k)
     set_solution!(sol, q, λ, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionDAE{DT,TT}, asol::AtomicSolutionDAE{DT,TT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionDAE{DT,TT}, asol::AtomicSolutionDAE{DT,TT}, n, k) where {DT,TT}
     set_solution!(sol, asol.t, asol.q, asol.λ, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, n, k) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
