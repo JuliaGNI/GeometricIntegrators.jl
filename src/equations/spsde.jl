@@ -90,6 +90,7 @@ struct SPSDE{dType <: Number, tType <: Number, vType <: Function, f1Type <: Func
         ni = size(q₀,2)
 
         @assert N ∈ (1,2)
+        @assert ni ≥ 1
         @assert ns ≥ 1
         @assert ni == 1 || ns == 1
         # either multiple deterministic initial conditions and one sample path
