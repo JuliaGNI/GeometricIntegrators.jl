@@ -66,6 +66,7 @@ function SolutionSDE(equation::SDE{DT,TT,VT,BT}, Δt::TT, ntime::Int, nsave::Int
 
     s = SolutionSDE{DT,TT,determine_qdim(equation),NW}(conv, nd, nm, nt, ns, ni, t, q, W, K, ntime, nsave, 0)
     set_initial_conditions!(s, equation)
+
     return s
 end
 
@@ -219,15 +220,36 @@ function set_initial_conditions!(sol::SolutionSDE{DT,TT}, equ::SDE{DT,TT}) where
 end
 
 
-function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT}, Array{TwicePrecision{DT}}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT,1}, Array{TwicePrecision{DT},1}}) where {DT,TT}
     # Sets the initial conditions sol.q[0] with the data from q₀
     # q₀ may be 1D (nd elements - single deterministic initial condition),
     # 2D (nd x ns or nd x ni matrix - single random or multiple deterministic initial condition),
     # or 3D (nd x ns x ni matrix - multiple random initial condition)
-    set_data!(sol.q, q₀, 0)
+
+    if sol.ns == 1
+        set_data!(sol.q, q₀, 0)
+    else
+        for k in 1:sol.ns
+            set_data!(sol.q, q₀, 0, k)
+        end
+    end
     compute_timeseries!(sol.t, t₀)
 end
 
+
+function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT,2}, Array{TwicePrecision{DT},2}}) where {DT,TT}
+    # Sets the initial conditions sol.q[0] with the data from q₀
+    # q₀ may be 1D (nd elements - single deterministic initial condition),
+    # 2D (nd x ns or nd x ni matrix - single random or multiple deterministic initial condition),
+    # or 3D (nd x ns x ni matrix - multiple random initial condition)
+
+    @assert sol.ns == 1
+    # for m in 1:sol.ni
+    #     set_data!(sol.q, q₀[:,m], 0, m)
+    # end
+    set_data!(sol.q, q₀, 0)
+    compute_timeseries!(sol.t, t₀)
+end
 
 # copies the m-th initial condition from sol.q to q
 function get_initial_conditions!(sol::SolutionSDE{DT,TT}, q::Union{Vector{DT}, Vector{TwicePrecision{DT}}}, k, m) where {DT,TT}

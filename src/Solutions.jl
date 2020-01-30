@@ -4,6 +4,7 @@ module Solutions
     using SharedArrays
 
     using Base: TwicePrecision
+    using Random
 
     using ..CommonFunctions
     using ..Config

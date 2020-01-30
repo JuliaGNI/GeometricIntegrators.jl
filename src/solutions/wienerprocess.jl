@@ -21,11 +21,9 @@ struct WienerProcess{dType, tType, N, conv} <: SemiMartingale{dType, tType, N}
     ΔW::Array{dType,N}
     ΔZ::Array{dType,N}
 
-    function WienerProcess{dType, tType, N, conv}(nd, nt, ns, Δt) where {dType, tType, N, conv}
+    function WienerProcess{dType, tType, N, conv}(nd, nt, ns, Δt, rng=MersenneTwister()) where {dType <: Number, tType <: Number, N, conv}
 
         @assert conv==:strong || conv==:weak
-        @assert dType <: Number
-        @assert tType <: Number
         @assert nd > 0
         @assert nt ≥ 1
         @assert ns > 0
@@ -33,24 +31,24 @@ struct WienerProcess{dType, tType, N, conv} <: SemiMartingale{dType, tType, N}
 
         if conv==:strong
             if N == 2
-                chi = randn(nd, nt)
-                eta = randn(nd, nt)
+                chi = randn(rng, dType, nd, nt)
+                eta = randn(rng, dType, nd, nt)
             elseif N == 3
-                chi = randn(nd, nt, ns)
-                eta = randn(nd, nt, ns)
+                chi = randn(rng, dType, nd, nt, ns)
+                eta = randn(rng, dType, nd, nt, ns)
             end
 
             ΔW = chi*√Δt
             ΔZ = Δt^(3/2)/2 * (chi+eta/√3)
         else
             if N == 2
-                chi = rand(dType, nd, nt)
-                eta = rand(dType, nd, nt)
+                chi = rand(rng, dType, nd, nt)
+                eta = rand(rng, dType, nd, nt)
                 ΔW  = zeros(dType, nd, nt)
                 ΔZ  = sqrt(Δt)*ones(dType, nd, nt)
             elseif N == 3
-                chi = rand(dType, nd, nt, ns)
-                eta = rand(dType, nd, nt, ns)
+                chi = rand(rng, dType, nd, nt, ns)
+                eta = rand(rng, dType, nd, nt, ns)
                 ΔW  = zeros(dType, nd, nt, ns)
                 ΔZ  = sqrt(Δt)*ones(dType, nd, nt, ns)
             end
@@ -68,12 +66,6 @@ struct WienerProcess{dType, tType, N, conv} <: SemiMartingale{dType, tType, N}
             indx      = findall(x->x<0.5, eta)
             ΔZ[indx] .= -sqrt(Δt)
         end
-
-        # Creating ΔW, ΔZ
-        # nt-1, because SStochasticDataSeries adds one time step
-        # ni=1, because we cosider a single IC for the Wiener process
-        # ΔW = SStochasticDataSeries{dType,N}(nd, nt-1, ns, 1, dW)
-        # ΔZ = SStochasticDataSeries{dType,N}(nd, nt-1, ns, 1, dZ)
 
         new(nd, nt, ns, Δt, ΔW, ΔZ)
     end
@@ -135,15 +127,15 @@ end
 
 
 # Generates a new series of increments for the strong Wiener process W
-function generate_wienerprocess!(W::WienerProcess{dType, tType, N, :strong}) where {dType, tType, N}
+function generate_wienerprocess!(W::WienerProcess{dType, tType, N, :strong}, rng=MersenneTwister()) where {dType, tType, N}
     @assert N ∈ (2,3)
 
     if N == 2
-        chi = randn(W.nd, W.nt)
-        eta = randn(W.nd, W.nt)
+        chi = randn(rng, dType, W.nd, W.nt)
+        eta = randn(rng, dType, W.nd, W.nt)
     elseif N == 3
-        chi = randn(W.nd, W.nt, W.ns)
-        eta = randn(W.nd, W.nt, W.ns)
+        chi = randn(rng, dType, W.nd, W.nt, W.ns)
+        eta = randn(rng, dType, W.nd, W.nt, W.ns)
     end
 
     dW = chi*√W.Δt
@@ -157,17 +149,17 @@ end
 
 
 # Generates a new series of increments for the weak Wiener process W
-function generate_wienerprocess!(W::WienerProcess{dType, tType, N, :weak}) where {dType, tType, N}
+function generate_wienerprocess!(W::WienerProcess{dType, tType, N, :weak}, rng=MersenneTwister()) where {dType, tType, N}
     @assert N ∈ (2,3)
 
     if N == 2
-        chi = rand(dType, W.nd, W.nt)
-        eta = rand(dType, W.nd, W.nt)
+        chi = rand(rng, dType, W.nd, W.nt)
+        eta = rand(rng, dType, W.nd, W.nt)
         dW  = zeros(dType, W.nd, W.nt)
         dZ  = sqrt(W.Δt)*ones(dType, W.nd, W.nt)
     elseif N == 3
-        chi = rand(dType, W.nd, W.nt, W.ns)
-        eta = rand(dType, W.nd, W.nt, W.ns)
+        chi = rand(rng, dType, W.nd, W.nt, W.ns)
+        eta = rand(rng, dType, W.nd, W.nt, W.ns)
         dW  = zeros(dType, W.nd, W.nt, W.ns)
         dZ  = sqrt(W.Δt)*ones(dType, W.nd, W.nt, W.ns)
     end
