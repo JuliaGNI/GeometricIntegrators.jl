@@ -28,8 +28,9 @@ using Test
     @test eltype(ts) == typeof(Δt)
     @test ndims(ts)  == 1
 
-    # @test eachindex(ts) == 0
-    # @test eachindex(ts) == 0
+    @test eachindex(ts) == 0:ntime
+    @test eachindex(IndexLinear(), ts) == 0:ntime
+    @test eachindex(IndexCartesian(), ts) == CartesianIndices((0:ntime,))
 
     compute_timeseries!(ts, 0.)
     t = collect(0:Δt:ntime*Δt)
