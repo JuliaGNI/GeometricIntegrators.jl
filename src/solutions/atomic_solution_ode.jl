@@ -48,12 +48,12 @@ function CommonFunctions.reset!(asol::AtomicSolutionODE, Δt)
     asol.t += Δt
 end
 
-function update!(asol::AtomicSolutionSDE{DT}, y::Vector{DT}) where {DT}
+function update!(asol::AtomicSolutionODE{DT}, y::Vector{DT}) where {DT}
     for k in eachindex(y)
         update!(asol, y[k], k)
     end
 end
 
-function update!(asol::AtomicSolutionSDE{DT}, y::DT, k::Int) where {DT}
+function update!(asol::AtomicSolutionODE{DT}, y::DT, k::Int) where {DT}
     asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
 end
