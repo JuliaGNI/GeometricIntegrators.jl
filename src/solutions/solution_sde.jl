@@ -249,9 +249,6 @@ function set_solution!(sol::SolutionSDE, t, q, n, k)
     set_solution!(sol, q, n, k)
 end
 
-function set_solution!(sol::SolutionSDE{DT,TT}, asol::AtomicSolutionSDE{DT,TT}, n, k) where {DT,TT}
-    set_solution!(sol, asol.t, asol.q, n, k)
-end
 
 function set_solution!(sol::SolutionSDE{DT,TT}, q::SolutionVector{DT}, n, k) where {DT,TT}
     @assert n <= sol.ntime
