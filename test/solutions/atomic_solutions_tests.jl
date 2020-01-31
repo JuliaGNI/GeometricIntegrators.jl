@@ -61,6 +61,10 @@ end
     update!(asol, v0)
     @test asol.t == t0  + Δt
     @test asol.q == x0 .+ v0
+
+    set_solution!(asol, (t0, [2π,2π]))
+    cut_periodic_solution!(asol, [2π, 0.])
+    @test asol.q  == [0., 2π]
 end
 
 
@@ -86,6 +90,11 @@ end
     @test asol.t == t0  + Δt
     @test asol.q == q0 .+ y0
     @test asol.p == p0 .+ z0
+
+    set_solution!(asol, (t0, [2π], [2π]))
+    cut_periodic_solution!(asol, [2π])
+    @test asol.q  == [0.]
+    @test asol.p  == [2π]
 end
 
 
