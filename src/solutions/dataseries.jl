@@ -217,8 +217,8 @@ function CommonFunctions.reset!(ds::DataSeries{T,2}) where {T}
 end
 
 function CommonFunctions.reset!(ds::DataSeries{T,3}) where {T}
-    @inbounds for k in axes(ds.d, 3)
-        for i in axes(ds.d, 1)
+    @inbounds for k in axes(ds, 3)
+        for i in axes(ds, 1)
             ds[i,0,k] = ds[i,end,k]
         end
     end

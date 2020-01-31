@@ -124,7 +124,7 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
                              && sol1.counter == sol2.counter)
 
 hdf5(sol::SolutionPODE)  = sol.h5
-time(sol::SolutionPODE)  = sol.t.t
+timesteps(sol::SolutionPODE)  = sol.t.t
 ntime(sol::SolutionPODE) = sol.ntime
 nsave(sol::SolutionPODE) = sol.nsave
 offset(sol::SolutionPODE) = sol.woffset
@@ -255,8 +255,9 @@ function CommonFunctions.write_to_hdf5(solution::SolutionPODE{DT,TT,2}, h5::HDF5
     j2 = offset+1+n
 
     # copy data from solution to HDF5 dataset
-    h5["q"][1:d, j1:j2] = solution.q.d[1:d, 2:n+1]
-    h5["p"][1:d, j1:j2] = solution.p.d[1:d, 2:n+1]
+    h5["t"][j1:j2] = solution.t[1:n]
+    h5["q"][:, j1:j2] = solution.q[:, 1:n]
+    h5["p"][:, j1:j2] = solution.p[:, 1:n]
 
     return nothing
 end
@@ -271,8 +272,9 @@ function CommonFunctions.write_to_hdf5(solution::SolutionPODE{DT,TT,3}, h5::HDF5
     j2 = offset+1+n
 
     # copy data from solution to HDF5 dataset
-    h5["q"][1:d, j1:j2, 1:i] = solution.q.d[1:d, 2:n+1, 1:i]
-    h5["p"][1:d, j1:j2, 1:i] = solution.p.d[1:d, 2:n+1, 1:i]
+    h5["t"][j1:j2] = solution.t[1:n]
+    h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
+    h5["p"][:, j1:j2, :] = solution.p[:, 1:n, :]
 
     return nothing
 end

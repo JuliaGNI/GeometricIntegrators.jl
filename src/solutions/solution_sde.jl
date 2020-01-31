@@ -191,7 +191,7 @@ function SolutionSDE(file::String)
 end
 
 
-time(sol::SolutionSDE)  = sol.t.t
+timesteps(sol::SolutionSDE)  = sol.t.t
 ntime(sol::SolutionSDE) = sol.ntime
 nsave(sol::SolutionSDE) = sol.nsave
 
@@ -270,8 +270,7 @@ function set_solution!(sol::SolutionSDE{DT,TT}, q::SolutionVector{DT}, n, k) whe
     end
 end
 
-
-function reset!(sol::SolutionSDE)
+function CommonFunctions.reset!(sol::SolutionSDE)
     reset!(sol.q)
     compute_timeseries!(sol.t, sol.t[end])
     generate_wienerprocess!(sol.W)

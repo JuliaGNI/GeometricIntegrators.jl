@@ -38,6 +38,7 @@ module Solutions
     include("solutions/wienerprocess.jl")
 
     export Solution, StochasticSolution
+    export nsave, ntime, timesteps, offset, hdf5
     export get_solution, get_solution!, set_solution!
 
     include("solutions/solution.jl")

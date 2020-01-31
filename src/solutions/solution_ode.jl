@@ -115,7 +115,7 @@ Base.:(==)(sol1::SolutionODE, sol2::SolutionODE) = (
                              && sol1.counter == sol2.counter)
 
 hdf5(sol::SolutionODE)  = sol.h5
-time(sol::SolutionODE)  = sol.t.t
+timesteps(sol::SolutionODE)  = sol.t.t
 ntime(sol::SolutionODE) = sol.ntime
 nsave(sol::SolutionODE) = sol.nsave
 offset(sol::SolutionODE) = sol.woffset

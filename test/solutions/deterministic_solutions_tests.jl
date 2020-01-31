@@ -7,7 +7,7 @@ using HDF5: HDF5File
 using Test
 
 
-ntime = 10
+nt    = 10
 Δt    = .1
 ni    = 5
 
@@ -28,7 +28,14 @@ z1    = rand(3, ni)
 z1[3,:] .= z0[1,:] .+ z0[2,:]
 
 tx    = zero(x0)
+tq    = zero(q0)
+tp    = zero(p0)
+
+t2    = t1 + (t1-t0)
 x2    = rand(2, ni)
+q2    = rand(1, ni)
+p2    = rand(1, ni)
+
 
 ode   = harmonic_oscillator_ode()
 dae   = harmonic_oscillator_dae()
@@ -39,29 +46,42 @@ h5file = "test.hdf5"
 
 
 @testset "$(rpad("ODE Solution",80))" begin
-    sol = Solution(ode, Δt, ntime)
+    sol = Solution(ode, Δt, nt)
     @test typeof(sol) <: SolutionODE
 
-    sol0 = Solution(similar(ode, x0), Δt, ntime)
+    sol0 = Solution(similar(ode, x0), Δt, nt)
     @test typeof(sol0) <: SolutionODE
 
-    sol1 = Solution(similar(ode, x1), Δt, ntime)
+    sol1 = Solution(similar(ode, x1), Δt, nt)
     @test typeof(sol1) <: SolutionODE
 
     @test sol != sol0
     @test sol != sol1
 
+    @test nsave(sol) == 1
+    @test ntime(sol) == nt
+    @test timesteps(sol) == Δt .* collect(0:nt)
+
     set_initial_conditions!(sol, t0, x0)
     get_initial_conditions!(sol, tx, 1)
 
-    # @test sol != sol0
     @test tx == x0
+
+    δt, δx = get_initial_conditions(sol, 1)
+    @test δt == t0
+    @test δx == x0
 
     set_initial_conditions!(sol1, similar(ode, t1, x2))
     get_initial_conditions!(sol1, tx, 1)
     @test tx == x2[:,1]
 
+    reset!(sol)
+    @test sol.t[0]   == t1
+    @test sol.t[end] == t2
+    @test offset(sol) == nt
+
     # test hdf5 in- and output
+    sol = Solution(ode, Δt, nt)
     h5 = createHDF5(sol, h5file)
     @test typeof(h5) == HDF5File
     close(h5)
@@ -82,7 +102,9 @@ h5file = "test.hdf5"
     close(sol)
 
     sol2 = SolutionODE(h5file)
-    @test sol != sol2
+    @test sol   != sol2
+    @test sol.t == sol2.t
+    @test sol.q == sol2.q
     rm(h5file)
 
     # test nsave and nwrite parameters
@@ -95,41 +117,74 @@ end
 
 
 @testset "$(rpad("PODE Solution",80))" begin
-    psol = Solution(pode, Δt, ntime)
-    @test typeof(psol) <: SolutionPODE
+    sol = Solution(pode, Δt, nt)
+    @test typeof(sol) <: SolutionPODE
 
-    psol0 = Solution(similar(pode, q0, p0), Δt, ntime)
-    @test typeof(psol0) <: SolutionPODE
+    sol0 = Solution(similar(pode, q0, p0), Δt, nt)
+    @test typeof(sol0) <: SolutionPODE
 
-    psol1 = Solution(similar(pode, q1, p1), Δt, ntime)
-    @test typeof(psol1) <: SolutionPODE
+    sol1 = Solution(similar(pode, q1, p1), Δt, nt)
+    @test typeof(sol1) <: SolutionPODE
 
-    @test psol != psol0
-    @test psol != psol1
+    @test sol != sol0
+    @test sol != sol1
+
+    @test nsave(sol) == 1
+    @test ntime(sol) == nt
+    @test timesteps(sol) == Δt .* collect(0:nt)
+
+    set_initial_conditions!(sol, t0, q0, p0)
+    get_initial_conditions!(sol, tq, tp, 1)
+
+    @test tq == q0
+    @test tp == p0
+
+    δt, δq, δp = get_initial_conditions(sol, 1)
+    @test δt == t0
+    @test δq == q0
+    @test δp == p0
+
+    set_initial_conditions!(sol1, similar(pode, t1, q2, p2))
+    get_initial_conditions!(sol1, tq, tp, 1)
+    @test tq == q2[:,1]
+    @test tp == p2[:,1]
+
+    reset!(sol)
+    @test sol.t[0]   == t1
+    @test sol.t[end] == t2
+    @test offset(sol) == nt
 
     # test hdf5 in- and output
-    create_hdf5(psol, "test.hdf5")
-    write_to_hdf5(psol)
-    close(psol)
+    sol = Solution(pode, Δt, nt)
+    create_hdf5(sol, "test.hdf5")
+    write_to_hdf5(sol)
+    close(sol)
 
-    psol2 = SolutionPODE("test.hdf5")
-    @test psol != psol2
+    sol2 = SolutionPODE("test.hdf5")
+    @test sol   != sol2
+    @test sol.t == sol2.t
+    @test sol.q == sol2.q
+    @test sol.p == sol2.p
     rm("test.hdf5")
 end
 
 
 @testset "$(rpad("DAE Solution",80))" begin
-    sol = Solution(dae, Δt, ntime)
+    sol = Solution(dae, Δt, nt)
     @test typeof(sol) <: SolutionDAE
 
-    sol0 = Solution(similar(dae, z0, λ0), Δt, ntime)
+    sol0 = Solution(similar(dae, z0, λ0), Δt, nt)
     @test typeof(sol0) <: SolutionDAE
 
-    sol1 = Solution(similar(dae, z1, λ1), Δt, ntime)
+    sol1 = Solution(similar(dae, z1, λ1), Δt, nt)
     @test typeof(sol1) <: SolutionDAE
 
     @test sol != sol0
     @test sol != sol1
+
+    @test nsave(sol) == 1
+    @test ntime(sol) == nt
+    @test timesteps(sol) == Δt .* collect(0:nt)
 
     # test hdf5 in- and output
     create_hdf5(sol, "test.hdf5")
@@ -143,24 +198,28 @@ end
 
 
 @testset "$(rpad("PDAE Solution",80))" begin
-    psol = Solution(pdae, Δt, ntime)
-    @test typeof(psol) <: SolutionPDAE
+    sol = Solution(pdae, Δt, nt)
+    @test typeof(sol) <: SolutionPDAE
 
-    psol0 = Solution(similar(pdae, x0, x0.^2, zero(x0)), Δt, ntime)
-    @test typeof(psol0) <: SolutionPDAE
+    sol0 = Solution(similar(pdae, x0, x0.^2, zero(x0)), Δt, nt)
+    @test typeof(sol0) <: SolutionPDAE
 
-    psol1 = Solution(similar(pdae, x1, x1.^2, zero(x1)), Δt, ntime)
-    @test typeof(psol1) <: SolutionPDAE
+    sol1 = Solution(similar(pdae, x1, x1.^2, zero(x1)), Δt, nt)
+    @test typeof(sol1) <: SolutionPDAE
 
-    @test psol != psol0
-    @test psol != psol1
+    @test sol != sol0
+    @test sol != sol1
+
+    @test nsave(sol) == 1
+    @test ntime(sol) == nt
+    @test timesteps(sol) == Δt .* collect(0:nt)
 
     # test hdf5 in- and output
-    create_hdf5(psol, "test.hdf5")
-    write_to_hdf5(psol)
-    close(psol)
+    create_hdf5(sol, "test.hdf5")
+    write_to_hdf5(sol)
+    close(sol)
 
-    psol2 = SSolutionPDAE("test.hdf5")
-    @test psol != psol2
+    sol2 = SSolutionPDAE("test.hdf5")
+    @test sol != sol2
     rm("test.hdf5")
 end

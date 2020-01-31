@@ -202,7 +202,7 @@ function SolutionPSDE(file::String)
 end
 
 
-time(sol::SolutionPSDE)  = sol.t.t
+timesteps(sol::SolutionPSDE)  = sol.t.t
 ntime(sol::SolutionPSDE) = sol.ntime
 nsave(sol::SolutionPSDE) = sol.nsave
 
@@ -290,7 +290,7 @@ function set_solution!(sol::SolutionPSDE{DT,TT}, q::SolutionVector{DT}, p::Solut
 end
 
 
-function reset!(sol::SolutionPSDE)
+function CommonFunctions.reset!(sol::SolutionPSDE)
     reset!(sol.q)
     reset!(sol.p)
     compute_timeseries!(sol.t, sol.t[end])
