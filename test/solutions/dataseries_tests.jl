@@ -44,6 +44,7 @@ nt = 10
     @test ds.d[1] == ds[0]
     @test ds.d[end] == ds[nt]
     @test ds.d[end] == ds[end]
+    @test ds.d == collect(0:nt)
 
     reset!(ds)
     @test ds[0] == ds[end]
@@ -53,6 +54,12 @@ nt = 10
     @test ds.d == d
 
     @test similar(ds).d == zero(d)
+
+    for i in 0:nt
+        set_data!(ds, dt(i), i)
+    end
+
+   @test ds.d == collect(0:nt)
 end
 
 
@@ -161,11 +168,17 @@ end
     end
 
     tx = zeros(nd)
-    for j in 1:ni
-        for i in 1:nt
+    ty = zeros(nd,ni)
+    tz = zeros(nd,ni)
+    for i in 1:nt
+        for j in 1:ni
             get_data!(ds, tx, i, j)
             @test tx == Array{eltype(tx)}([j*i, j*i^2])
+            tz[1,j] = j*i
+            tz[2,j] = j*i^2
         end
+        get_data!(ds, ty, i)
+        @test ty == tz
     end
 
     @test ds.d[1,1,1] == ds[1,0,1]

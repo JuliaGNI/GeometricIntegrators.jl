@@ -171,7 +171,7 @@ function set_data!(ds::DataSeries{T,1}, x::Union{T, TwicePrecision{T}}, n, k=1) 
     @assert n ≥ 0 && n ≤ ds.nt
     @assert k == 1
     j = n+1
-    @inbounds ds.d[j] = x[i]
+    @inbounds ds.d[j] = x[j]
 end
 
 function set_data!(ds::DataSeries{T,2}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n, k=1) where {T}
