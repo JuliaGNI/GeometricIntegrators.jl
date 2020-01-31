@@ -146,6 +146,10 @@ function get_initial_conditions!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vec
     get_data!(sol.λ, λ, 0, k)
 end
 
+function get_initial_conditions(sol::SolutionDAE, k, n=1)
+    get_solution(sol, n-1, k)
+end
+
 function set_solution!(sol::SolutionDAE, t, q, λ, n, k)
     set_solution!(sol, q, λ, n, k)
 end
@@ -165,6 +169,10 @@ function set_solution!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, n
         set_data!(sol.λ, λ, sol.counter[k], k)
         sol.counter[k] += 1
     end
+end
+
+function get_solution(sol::SolutionDAE, n, k)
+    (sol.t[n], sol.q[:, n, k], sol.λ[:, n, k])
 end
 
 function CommonFunctions.reset!(sol::SolutionDAE)
@@ -235,6 +243,7 @@ function CommonFunctions.write_to_hdf5(solution::SolutionDAE{DT,TT,2}, h5::HDF5F
     j2 = offset+1+n
 
     # copy data from solution to HDF5 dataset
+    h5["t"][j1:j2] = solution.t[1:n]
     h5["q"][:, j1:j2] = solution.q[:, 1:n]
     h5["λ"][:, j1:j2] = solution.λ[:, 1:n]
 
@@ -249,6 +258,7 @@ function CommonFunctions.write_to_hdf5(solution::SolutionDAE{DT,TT,3}, h5::HDF5F
     j2 = offset+1+n
 
     # copy data from solution to HDF5 dataset
+    h5["t"][j1:j2] = solution.t[1:n]
     h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
     h5["λ"][:, j1:j2, :] = solution.λ[:, 1:n, :]
 
