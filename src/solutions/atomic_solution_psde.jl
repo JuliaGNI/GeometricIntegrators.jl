@@ -1,5 +1,5 @@
 """
-Atomistic solution for an SDE.
+Atomic solution for an SDE.
 
 ### Fields
 

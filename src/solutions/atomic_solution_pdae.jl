@@ -1,5 +1,5 @@
 """
-Atomistic solution for an PDAE.
+Atomic solution for an PDAE.
 
 ### Fields
 
@@ -84,14 +84,14 @@ function CommonFunctions.reset!(asol::AtomicSolutionPDAE, Δt)
     asol.t += Δt
 end
 
-function update!(asol::AtomicSolutionPODE{DT}, v::Vector{DT}, f::Vector{DT}, λ::Vector{DT}) where {DT}
-    for k in eachindex(v,f)
-        update!(asol, v[k], f[k], λ[k], k)
+function update!(asol::AtomicSolutionPODE{DT}, y::Vector{DT}, z::Vector{DT}, λ::Vector{DT}) where {DT}
+    for k in eachindex(y,z,λ)
+        update!(asol, y[k], z[k], λ[k], k)
     end
 end
 
-function update!(asol::AtomicSolutionPODE{DT}, v::DT, f::DT, λ::DT, k::Int) where {DT}
-    asol.q[k], asol.q̃[k] = compensated_summation(v, asol.q[k], asol.q̃[k])
-    asol.p[k], asol.p̃[k] = compensated_summation(f, asol.p[k], asol.p̃[k])
+function update!(asol::AtomicSolutionPODE{DT}, y::DT, z::DT, λ::DT, k::Int) where {DT}
+    asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
+    asol.p[k], asol.p̃[k] = compensated_summation(z, asol.p[k], asol.p̃[k])
     asol.λ[k] = λ
 end

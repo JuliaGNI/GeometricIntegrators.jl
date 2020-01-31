@@ -1,5 +1,5 @@
 """
-Atomistic solution for an DAE.
+Atomic solution for an DAE.
 
 ### Fields
 
@@ -63,13 +63,13 @@ function CommonFunctions.reset!(asol::AtomicSolutionDAE, Δt)
     asol.t += Δt
 end
 
-function update!(asol::AtomicSolutionDAE{DT}, v::Vector{DT}, λ::Vector{DT}) where {DT}
-    for k in eachindex(v)
-        update!(asol, v[k], λ[k], k)
+function update!(asol::AtomicSolutionDAE{DT}, y::Vector{DT}, λ::Vector{DT}) where {DT}
+    for k in eachindex(y,λ)
+        update!(asol, y[k], λ[k], k)
     end
 end
 
-function update!(asol::AtomicSolutionDAE{DT}, v::DT, λ::DT, k::Int) where {DT}
-    asol.q[k], asol.q̃[k] = compensated_summation(v, asol.q[k], asol.q̃[k])
+function update!(asol::AtomicSolutionDAE{DT}, y::DT, λ::DT, k::Int) where {DT}
+    asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
     asol.λ[k] = λ
 end
