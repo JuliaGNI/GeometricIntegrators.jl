@@ -65,6 +65,10 @@ end
     set_solution!(asol, (t0, [2π,2π]))
     cut_periodic_solution!(asol, [2π, 0.])
     @test asol.q  == [0., 2π]
+
+    set_solution!(asol, (t0, [-2π,2π]))
+    cut_periodic_solution!(asol, [2π, 0.])
+    @test asol.q  == [0., 2π]
 end
 
 
