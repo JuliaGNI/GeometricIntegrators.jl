@@ -451,6 +451,12 @@ end
     @test asol.p == y0
     @test asol.λ == μ0
 
+    tx .= 0
+    ty .= 0
+    get_initial_conditions!(sol, tx, ty, 1)
+    @test tx == x0
+    @test ty == y0
+
     δt, δx, δy, δμ = get_initial_conditions(sol, 1)
     @test δt == t0
     @test δx == x0
