@@ -226,11 +226,6 @@ function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Abstra
     sol.counter .= 1
 end
 
-function get_initial_conditions!(sol::SolutionSDE{DT,TT}, asol::AtomicSolutionSDE{DT,TT}, k, n=1) where {DT,TT}
-    get_solution!(sol, asol.q, n-1, k)
-    asol.t  = sol.t[n-1]
-    asol.q̃ .= 0
-end
 
 # copies the m-th initial condition from sol.q to q
 function get_initial_conditions!(sol::SolutionSDE{DT}, q::SolutionVector{DT}, k, n=1) where {DT}
