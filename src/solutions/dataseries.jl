@@ -129,11 +129,11 @@ Base.lastindex(ds::DataSeries{T,3}, d) where {T} = d ≥ 1 && d ≤ 3 ? (ds.nd, 
 Base.strides(ds::DataSeries) = strides(ds.d)
 
 
-function get_data!(ds::DataSeries{T,1}, n, k=1) where {T}
-    @assert n ≥ 0 && n ≤ ds.nt
-    @assert k == 1
-    @inbounds return ds.d[n+1]
-end
+# function get_data!(ds::DataSeries{T,1}, n, k=1) where {T}
+#     @assert n ≥ 0 && n ≤ ds.nt
+#     @assert k == 1
+#     @inbounds return ds.d[n+1]
+# end
 
 function get_data!(ds::DataSeries{T,2}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n, k=1) where {T}
     @assert size(x,1) == ds.nd
@@ -236,11 +236,11 @@ end
     return r
 end
 
-@inline function Base.getindex(ds::DataSeries{T,2}, j::Union{UnitRange,Int}) where {T}
-    @boundscheck checkbounds(ds.d, :, j.+1)
-    @inbounds r = getindex(ds.d, :, j+1)
-    return r
-end
+# @inline function Base.getindex(ds::DataSeries{T,2}, j::Union{UnitRange,Int}) where {T}
+#     @boundscheck checkbounds(ds.d, :, j.+1)
+#     @inbounds r = getindex(ds.d, :, j+1)
+#     return r
+# end
 
 @inline function Base.getindex(ds::DataSeries{T,3}, i::Union{UnitRange,Int}, j::Union{UnitRange,Int}, k::Union{UnitRange,Int}) where {T}
     @boundscheck checkbounds(ds.d, i, j.+1, k)
@@ -248,17 +248,17 @@ end
     return r
 end
 
-@inline function Base.getindex(ds::DataSeries{T,3}, j::Union{UnitRange,Int}, k::Union{UnitRange,Int}) where {T}
-    @boundscheck checkbounds(ds.d, :, j.+1, k)
-    @inbounds r = getindex(ds.d, :, j.+1, k)
-    return r
-end
+# @inline function Base.getindex(ds::DataSeries{T,3}, j::Union{UnitRange,Int}, k::Union{UnitRange,Int}) where {T}
+#     @boundscheck checkbounds(ds.d, :, j.+1, k)
+#     @inbounds r = getindex(ds.d, :, j.+1, k)
+#     return r
+# end
 
-@inline function Base.getindex(ds::DataSeries{T,3}, k::Union{UnitRange,Int}) where {T}
-    @boundscheck checkbounds(ds.d, :, :, k)
-    @inbounds r = getindex(ds.d, :, :, k)
-    return r
-end
+# @inline function Base.getindex(ds::DataSeries{T,3}, k::Union{UnitRange,Int}) where {T}
+#     @boundscheck checkbounds(ds.d, :, :, k)
+#     @inbounds r = getindex(ds.d, :, :, k)
+#     return r
+# end
 
 @inline function Base.setindex!(ds::DataSeries{T,1}, x, j::Union{UnitRange,Int}) where {T}
     @assert length(x) == 1
@@ -272,12 +272,12 @@ end
     @inbounds setindex!(ds.d, x, i, j.+1)
 end
 
-@inline function Base.setindex!(ds::DataSeries{T,2}, x, j::Union{UnitRange,Int}) where {T}
-    @assert ndims(x) == 1
-    @assert length(x) == size(ds.d, 1)
-    @boundscheck checkbounds(ds.d, :, j.+1)
-    @inbounds setindex!(ds.d, x, :, j.+1)
-end
+# @inline function Base.setindex!(ds::DataSeries{T,2}, x, j::Union{UnitRange,Int}) where {T}
+#     @assert ndims(x) == 1
+#     @assert length(x) == size(ds.d, 1)
+#     @boundscheck checkbounds(ds.d, :, j.+1)
+#     @inbounds setindex!(ds.d, x, :, j.+1)
+# end
 
 @inline function Base.setindex!(ds::DataSeries{T,3}, x, i::Union{UnitRange,Int}, j::Union{UnitRange,Int}, k::Union{UnitRange,Int}) where {T}
     @assert length(x) == 1
@@ -285,19 +285,19 @@ end
     @inbounds setindex!(ds.d, x, i, j.+1, k)
 end
 
-@inline function Base.setindex!(ds::DataSeries{T,3}, x, j::Union{UnitRange,Int}, k::Union{UnitRange,Int}) where {T}
-    @assert ndims(x) == 1
-    @assert length(x) == size(ds.d, 1)
-    @boundscheck checkbounds(ds.d, :, j.+1, k)
-    @inbounds setindex!(ds.d, x, :, j.+1, k)
-end
+# @inline function Base.setindex!(ds::DataSeries{T,3}, x, j::Union{UnitRange,Int}, k::Union{UnitRange,Int}) where {T}
+#     @assert ndims(x) == 1
+#     @assert length(x) == size(ds.d, 1)
+#     @boundscheck checkbounds(ds.d, :, j.+1, k)
+#     @inbounds setindex!(ds.d, x, :, j.+1, k)
+# end
 
-@inline function Base.setindex!(ds::DataSeries{T,3}, x, k::Union{UnitRange,Int}) where {T}
-    @assert ndims(x) == 2
-    @assert size(x,1) == size(ds.d, 1)
-    @assert size(x,2) == size(ds.d, 2)
-    @boundscheck checkbounds(ds.d, :, :, k)
-    @inbounds setindex!(ds.d, x, :, :, k)
-end
+# @inline function Base.setindex!(ds::DataSeries{T,3}, x, k::Union{UnitRange,Int}) where {T}
+#     @assert ndims(x) == 2
+#     @assert size(x,1) == size(ds.d, 1)
+#     @assert size(x,2) == size(ds.d, 2)
+#     @boundscheck checkbounds(ds.d, :, :, k)
+#     @inbounds setindex!(ds.d, x, :, :, k)
+# end
 
 # TODO Implement convert() to/from array.

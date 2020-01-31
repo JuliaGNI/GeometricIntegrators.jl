@@ -90,6 +90,12 @@ end
         ds[2,i] = 2^i
     end
 
+    tx = zeros(nd)
+    for i in 0:nt
+        get_data!(ds, tx, i)
+        @test tx == Array{eltype(tx)}([i, 2^i])
+    end
+
     @test ds.d[1,1] == ds[1,0]
     @test ds.d[1:ds.nd,1] == ds[1:ds.nd,0]
 
@@ -150,6 +156,15 @@ end
     for j in 1:ni
         for i in 1:nt
             ds[1,i,j] = j*i
+            ds[2,i,j] = j*i^2
+        end
+    end
+
+    tx = zeros(nd)
+    for j in 1:ni
+        for i in 1:nt
+            get_data!(ds, tx, i, j)
+            @test tx == Array{eltype(tx)}([j*i, j*i^2])
         end
     end
 
