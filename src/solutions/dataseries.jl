@@ -54,7 +54,7 @@ for (TDataSeries, TArray) in
             nt = size(d,1)-1
             ni = 1
             ds = $TDataSeries{T,1}(nd, nt, ni)
-            copy!(ds.d, d[1,:,1])
+            copy!(ds.d, d)
             return ds
         end
 
@@ -63,7 +63,7 @@ for (TDataSeries, TArray) in
             nt = size(d,2)-1
             ni = 1
             ds = $TDataSeries{T,2}(nd, nt, ni)
-            copy!(ds.d, d[:,:,1])
+            copy!(ds.d, d)
             return ds
         end
 
@@ -89,8 +89,8 @@ function Base.show(io::IO, ds::DataSeries{T,N}) where {T,N}
     print(io, ds.d)
 end
 
-function similar(ds::DataSeries{T,N}) where {T,N}
-    typeof(ds){T,N}(ds.nd, ds.nt, ds.ni)
+function Base.similar(ds::DS) where {DS <: DataSeries}
+    DS(ds.nd, ds.nt, ds.ni)
 end
 
 Base.parent(ds::DataSeries) = ds.d
@@ -104,7 +104,7 @@ Base.size(ds::DataSeries) = size(ds.d)
 Base.size(ds::DataSeries, d) = size(ds.d, d)
 
 Base.eachindex(::IndexCartesian, ds::DataSeries) = CartesianIndices(axes(ds))
-Base.eachindex(::IndexLinear, ds::DataSeries) = axes(ds, 1)
+# Base.eachindex(::IndexLinear, ds::DataSeries) = axes(ds, 1)
 
 Base.firstindex(ds::DataSeries{T,1}) where {T}   = 0
 Base.firstindex(ds::DataSeries{T,N}) where {T,N} = 1
