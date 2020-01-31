@@ -468,6 +468,7 @@ end
     # test set/get solution
     sol1 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
     sol2 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
+    sol3 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
     for i in 1:nt
         tx .= xs[:,i]
         ty .= ys[:,i]
@@ -476,17 +477,21 @@ end
         asol.p .= ys[:,i]
         asol.λ .= μs[:,i]
         set_solution!(sol1, tx, ty, tμ, i)
-        set_solution!(sol2, asol, i)
+        set_solution!(sol2, tx, ty, i)
+        set_solution!(sol3, asol, i)
     end
     @test sol1.q[:,1:nt] == xs
     @test sol1.p[:,1:nt] == ys
     @test sol1.λ[:,1:nt] == μs
     @test sol2.q[:,1:nt] == xs
     @test sol2.p[:,1:nt] == ys
-    @test sol2.λ[:,1:nt] == μs
+    @test sol3.q[:,1:nt] == xs
+    @test sol3.p[:,1:nt] == ys
+    @test sol3.λ[:,1:nt] == μs
 
     sol1 = Solution(similar(pdae, x1, y1, μ1), Δt, nt)
     sol2 = Solution(similar(pdae, x1, y1, μ1), Δt, nt)
+    sol3 = Solution(similar(pdae, x1, y1, μ1), Δt, nt)
     for i in 1:nt
         for k in 1:ni
             tx .= Xs[:,i,k]
@@ -496,7 +501,8 @@ end
             asol.p .= Ys[:,i,k]
             asol.λ .= Ms[:,i,k]
             set_solution!(sol1, tx, ty, tμ, i, k)
-            set_solution!(sol2, asol, i, k)
+            set_solution!(sol2, tx, ty, i, k)
+            set_solution!(sol3, asol, i, k)
         end
     end
     @test sol1.q[:,1:nt,:] == Xs
@@ -504,7 +510,9 @@ end
     @test sol1.λ[:,1:nt,:] == Ms
     @test sol2.q[:,1:nt,:] == Xs
     @test sol2.p[:,1:nt,:] == Ys
-    @test sol2.λ[:,1:nt,:] == Ms
+    @test sol3.q[:,1:nt,:] == Xs
+    @test sol3.p[:,1:nt,:] == Ys
+    @test sol3.λ[:,1:nt,:] == Ms
 
     # test reset
     reset!(sol)
