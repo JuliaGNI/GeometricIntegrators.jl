@@ -1,11 +1,7 @@
 
-using GeometricIntegrators
-using GeometricIntegrators.Solutions
 using SafeTestsets
-using Test
 
-include("dataseries_tests.jl")
-include("timeseries_tests.jl")
-
+@safetestset "Data Series                                                                     " begin include("dataseries_tests.jl") end
+@safetestset "Time Series                                                                     " begin include("timeseries_tests.jl") end
 @safetestset "Deterministic Solutions                                                         " begin include("deterministic_solutions_tests.jl") end
 @safetestset "Stochastic Solutions                                                            " begin include("stochastic_solutions_tests.jl") end

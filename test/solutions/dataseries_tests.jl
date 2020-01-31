@@ -1,4 +1,9 @@
 
+using GeometricIntegrators
+using GeometricIntegrators.Solutions
+using Test
+
+
 dt = Float64
 nt = 10
 

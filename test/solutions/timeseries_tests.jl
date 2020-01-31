@@ -1,4 +1,9 @@
 
+using GeometricIntegrators
+using GeometricIntegrators.Solutions
+using Test
+
+
 @testset "$(rpad("Timeseries",80))" begin
     ntime = 10
     Δt = 0.1
