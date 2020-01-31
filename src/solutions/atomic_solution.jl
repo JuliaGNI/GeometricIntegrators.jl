@@ -25,6 +25,16 @@ function AtomicSolution(equation::AbstractEquationPDAE{DT,TT}) where {DT,TT}
     AtomicSolutionPDAE{DT,TT}(ndims(equation))
 end
 
+"Create AtomicSolution for SDE."
+function AtomicSolution(equation::AbstractEquationSDE{DT,TT}) where {DT,TT}
+    AtomicSolutionSDE{DT,TT}(ndims(equation))
+end
+
+"Create AtomicSolution for PSDE."
+function AtomicSolution(equation::AbstractEquationPSDE{DT,TT}) where {DT,TT}
+    AtomicSolutionPSDE{DT,TT}(ndims(equation))
+end
+
 "Print error for AtomicSolutions of equations not implemented, yet."
 function AtomicSolution(equation::Equation)
     error("No AtomicSolution found for equation ", equation)

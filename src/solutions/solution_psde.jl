@@ -242,6 +242,13 @@ function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, t₀::TT, q₀::Abstr
 end
 
 
+function get_initial_conditions!(sol::SolutionPSDE{DT,TT}, asol::AtomicSolutionPSDE{DT,TT}, k, n=1) where {DT,TT}
+    get_solution!(sol, asol.q, n-1, k)
+    get_solution!(sol, asol.p, n-1, k)
+    asol.t  = sol.t[n-1]
+    asol.q̃ .= 0
+    asol.p̃ .= 0
+end
 
 function get_initial_conditions!(sol::SolutionPSDE{DT}, q::SolutionVector{DT}, p::SolutionVector{DT}, k, n=1) where {DT}
     get_solution!(sol, q, p, n-1, k)
@@ -263,6 +270,10 @@ end
 
 function set_solution!(sol::SolutionPSDE, t, q, p, n, k)
     set_solution!(sol, q, p, n, k)
+end
+
+function set_solution!(sol::SolutionPSDE{DT,TT}, asol::AtomicSolutionPSDE{DT,TT}, n, k) where {DT,TT}
+    set_solution!(sol, asol.t, asol.q, asol.p, n, k)
 end
 
 function set_solution!(sol::SolutionPSDE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k) where {DT,TT}
