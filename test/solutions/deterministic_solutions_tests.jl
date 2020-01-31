@@ -81,30 +81,37 @@ h5file = "test.hdf5"
     @test offset(sol) == nt
 
     # test hdf5 in- and output
-    sol = Solution(ode, Δt, nt)
-    h5 = createHDF5(sol, h5file)
+    sol1 = Solution(ode, Δt, nt)
+    h5 = createHDF5(sol1, h5file)
     @test typeof(h5) == HDF5File
     close(h5)
     @test isfile(h5file)
 
-    h5 = createHDF5(sol, h5file; overwrite=false)
+    sol1 = Solution(ode, Δt, nt)
+    h5 = createHDF5(sol1, h5file; overwrite=false)
     @test typeof(h5) == HDF5File
     close(h5)
     @test isfile(h5file)
     rm(h5file)
 
-    write_to_hdf5(sol, h5file)
-    @test isfile(h5file)
-    rm(h5file)
-
-    create_hdf5(sol, h5file)
-    write_to_hdf5(sol)
-    close(sol)
-
+    sol1 = Solution(harmonic_oscillator_ode(x0), Δt, nt)
+    create_hdf5(sol1, h5file)
+    write_to_hdf5(sol1)
+    close(sol1)
     sol2 = SolutionODE(h5file)
-    @test sol   != sol2
-    @test sol.t == sol2.t
-    @test sol.q == sol2.q
+    @test sol1   != sol2
+    @test sol1.t == sol2.t
+    @test sol1.q == sol2.q
+    rm(h5file)
+
+    sol1 = Solution(harmonic_oscillator_ode(x1), Δt, nt)
+    create_hdf5(sol1, h5file)
+    write_to_hdf5(sol1)
+    close(sol1)
+    sol2 = SolutionODE(h5file)
+    @test sol1   != sol2
+    @test sol1.t == sol2.t
+    @test sol1.q == sol2.q
     rm(h5file)
 
     # test nsave and nwrite parameters
@@ -155,17 +162,40 @@ end
     @test offset(sol) == nt
 
     # test hdf5 in- and output
-    sol = Solution(pode, Δt, nt)
-    create_hdf5(sol, "test.hdf5")
-    write_to_hdf5(sol)
-    close(sol)
+    sol1 = Solution(pode, Δt, nt)
+    h5 = createHDF5(sol1, h5file)
+    @test typeof(h5) == HDF5File
+    close(h5)
+    @test isfile(h5file)
 
-    sol2 = SolutionPODE("test.hdf5")
-    @test sol   != sol2
-    @test sol.t == sol2.t
-    @test sol.q == sol2.q
-    @test sol.p == sol2.p
-    rm("test.hdf5")
+    sol1 = Solution(pode, Δt, nt)
+    h5 = createHDF5(sol1, h5file; overwrite=false)
+    @test typeof(h5) == HDF5File
+    close(h5)
+    @test isfile(h5file)
+    rm(h5file)
+
+    sol1 = Solution(harmonic_oscillator_pode(q0, p0), Δt, nt)
+    create_hdf5(sol1, h5file)
+    write_to_hdf5(sol1)
+    close(sol1)
+    sol2 = SolutionPODE(h5file)
+    @test sol1   != sol2
+    @test sol1.t == sol2.t
+    @test sol1.q == sol2.q
+    @test sol1.p == sol2.p
+    rm(h5file)
+
+    sol1 = Solution(harmonic_oscillator_pode(q1, p1), Δt, nt)
+    create_hdf5(sol1, h5file)
+    write_to_hdf5(sol1)
+    close(sol1)
+    sol2 = SolutionPODE(h5file)
+    @test sol1   != sol2
+    @test sol1.t == sol2.t
+    @test sol1.q == sol2.q
+    @test sol1.p == sol2.p
+    rm(h5file)
 end
 
 

@@ -86,7 +86,6 @@ function save_attributes(sol::StochasticSolution, h5::HDF5File)
     attrs(h5)["nd"] = solution.nd
     attrs(h5)["nm"] = solution.nm
     attrs(h5)["ns"] = solution.ns
-    attrs(h5)["ni"] = solution.ni
     attrs(h5)["K"] = solution.K
 end
 
