@@ -245,15 +245,14 @@ struct IntegratorWIRK{DT, TT, PT <: ParametersWIRK{DT,TT},
 
     Δy::Vector{DT}
 
-    q::Matrix{Vector{TwicePrecision{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
 end
 
 
 function IntegratorWIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauWIRK{TT}, Δt::TT) where {DT,TT,VT,BT,N}
     D = equation.d
     M = equation.m
-    NS= equation.ns
-    NI= equation.ni
+    NS= max(equation.ns,equation.ni)
     S = tableau.s
 
     # create params
@@ -273,7 +272,7 @@ function IntegratorWIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauWIRK{TT}, 
     Δy  = zeros(DT,M)
 
     # create solution vectors
-    q = create_solution_vector(DT, D, NS, NI)
+    q = create_solution_vector(DT, D, NS)
 
     # create integrator
     IntegratorWIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, Δy, q)
@@ -286,11 +285,11 @@ noisedims(integrator::IntegratorWIRK) = integrator.params.equ.m
 Base.eltype(integrator::IntegratorWIRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
 
 
-function initialize!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE, k::Int, m::Int) where {DT,TT}
-    check_solution_dimension_asserts(sol, k, m)
+function initialize!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE, m::Int) where {DT,TT}
+    check_solution_dimension_asserts(sol, m)
 
     # copy the m-th initial condition for the k-th sample path
-    get_initial_conditions!(sol, int.q[k,m], k, m)
+    get_initial_conditions!(sol, int.q[m], m)
 
     # Not implementing InitialGuessSDE
     # # initialise initial guess
@@ -319,14 +318,14 @@ end
 
 """
 Integrate SDE with a stochastic implicit Runge-Kutta integrator.
-  Integrating the k-th sample path for the m-th initial condition
+  Integrating the m-th sample path
 """
-function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,NW}, r::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
-    check_solution_dimension_asserts(sol, r, m, n)
+function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,NW}, m::Int, n::Int) where {DT,TT,NQ,NW}
+    check_solution_dimension_asserts(sol, m, n)
 
     # set time for nonlinear solver
     int.params.t  = sol.t[0] + (n-1)*int.params.Δt
-    int.params.q .= int.q[r, m]
+    int.params.q .= int.q[m]
 
 
     # copy the random variables \hat I and \tilde I representing the Wiener process
@@ -337,10 +336,10 @@ function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,N
             int.params.ΔZ .= sol.W.ΔZ[l,n]
         end
     elseif NW==3
-        #1D or Multidimensional Brownian motion, r-th sample path
+        #1D or Multidimensional Brownian motion, m-th sample path
         for l = 1:sol.nm
-            int.params.ΔW .= sol.W.ΔW[l,n,r]
-            int.params.ΔZ .= sol.W.ΔZ[l,n,r]
+            int.params.ΔW .= sol.W.ΔW[l,n,m]
+            int.params.ΔZ .= sol.W.ΔZ[l,n,m]
         end
     end
 
@@ -361,15 +360,15 @@ function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,N
     compute_stages!(int.solver.x, int.fcache.Q0, int.fcache.Q1, int.fcache.V, int.fcache.B, int.fcache.Y0, int.fcache.Y1, int.params)
 
     # compute final update (same update function as for SIRK)
-    update_solution!(int.q[r,m], int.fcache.V, int.fcache.B, int.params.tab.qdrift0.b, int.params.tab.qdrift0.b̂, int.params.tab.qdiff0.b, int.params.tab.qdiff0.b̂, int.params.Δt, int.params.ΔW, int.Δy)
+    update_solution!(int.q[m], int.fcache.V, int.fcache.B, int.params.tab.qdrift0.b, int.params.tab.qdrift0.b̂, int.params.tab.qdiff0.b, int.params.tab.qdiff0.b̂, int.params.Δt, int.params.ΔW, int.Δy)
 
     # # NOT IMPLEMENTING InitialGuessSDE
     # # # copy solution to initial guess
     # # update!(int.iguess, m, sol.t[0] + n*int.params.Δt, int.q[m])
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q[r,m], int.params.equ.periodicity)
+    cut_periodic_solution!(int.q[m], int.params.equ.periodicity)
 
     # # copy to solution
-    set_solution!(sol, int.q[r,m], n, r, m)
+    set_solution!(sol, int.q[m], n, m)
 end

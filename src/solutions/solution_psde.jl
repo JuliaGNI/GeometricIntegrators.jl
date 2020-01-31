@@ -20,21 +20,64 @@ Contains all fields necessary to store the solution of a PSDE or SPSDE
 * `nsave`: save every nsave'th time step
 
 """
-mutable struct SolutionPSDE{dType, tType, NQ, NW} <: StochasticSolution{dType, tType, NQ, NW}
-    conv::Symbol
+mutable struct SolutionPSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dType, tType, NQ, NW}
     nd::Int
     nm::Int
     nt::Int
     ns::Int
-    ni::Int
     t::TimeSeries{tType}
-    q::SStochasticDataSeries{dType,NQ}
-    p::SStochasticDataSeries{dType,NQ}
-    W::WienerProcess{dType,tType,NW}
+    q::SDataSeries{dType,NQ}
+    p::SDataSeries{dType,NQ}
+    W::WienerProcess{dType,tType,NW,CONV}
     K::Int
     ntime::Int
     nsave::Int
-    counter::Int
+    counter::Vector{Int}
+    woffset::Int
+    h5::HDF5File
+
+
+    function SolutionPSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}, p::SDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}
+        # extract parameters
+        nd = q.nd
+        ns = q.ni
+        nt = q.nt
+        nm = W.nd
+        ntime = W.nt
+        nsave = t.step
+
+        @assert CONV==:strong || (CONV==:weak && K==0)
+        @assert ntime==nt*nsave
+        @assert q.ni == p.ni
+        @assert q.nd == p.nd
+        @assert q.nt == p.nt == t.n
+        @assert W.ns == q.ni
+
+        new{DT,TT,NQ,NW,CONV}(nd, nm, nt, ns, t, q, p, W, K, ntime, nsave, zeros(Int, ns), 0)
+    end
+
+    function SolutionPSDE(nd::Int, nm::Int, nt::Int, ns::Int, ni::Int, Δt::tType,
+                W::WienerProcess{dType,tType,NW,CONV}, K::Int, ntime::Int, nsave::Int) where {dType <: Number, tType <: Real, NW, CONV}
+
+        @assert CONV==:strong || (CONV==:weak && K==0)
+        @assert nd > 0
+        @assert ns > 0
+        @assert ni > 0
+        @assert ni == 1 || ns == 1
+        @assert nsave > 0
+        @assert ntime == 0 || ntime ≥ nsave
+        @assert mod(ntime, nsave) == 0
+
+        @assert NW ∈ (2,3)
+
+        t = TimeSeries{tType}(nt, Δt, nsave)
+        q = SDataSeries(dType, nd, nt, max(ns,ni))
+        p = SDataSeries(dType, nd, nt, max(ns,ni))
+        NQ = ns==ni==1 ? 2 : 3
+
+        new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, p, W, K, ntime, nsave, zeros(Int, max(ns,ni)), 0)
+    end
+
 end
 
 
@@ -45,29 +88,11 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime:
     ni = equation.ni
     nt = div(ntime, nsave)
 
-    @assert conv==:strong || (conv==:weak && K==0)
-    @assert DT <: Number
-    @assert TT <: Real
-    @assert nd > 0
-    @assert ns > 0
-    @assert ni > 0
-    @assert nsave > 0
-    @assert ntime == 0 || ntime ≥ nsave
-    @assert mod(ntime, nsave) == 0
-
-    t = TimeSeries{TT}(nt, Δt, nsave)
-
-    q = SStochasticDataSeries(DT, nd, nt, ns, ni)
-    p = SStochasticDataSeries(DT, nd, nt, ns, ni)
-
     # Holds the Wiener process data for ALL computed time steps
     # Wiener process increments are automatically generated here
     W = WienerProcess(DT, nm, ntime, ns, Δt, conv)
-    NW = ndims(W.ΔW)
 
-    @assert NW ∈ (2,3)
-
-    s = SolutionPSDE{DT,TT,determine_qdim(equation),NW}(conv, nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
+    s = SolutionPSDE(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave)
     set_initial_conditions!(s, equation)
 
     return s
@@ -94,84 +119,33 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Ar
         @assert ns==size(dW,3)
     end
 
-    @assert conv==:strong || (conv==:weak && K==0)
-    @assert DT <: Number
-    @assert TT <: Real
-    @assert nd > 0
-    @assert ns > 0
-    @assert ni > 0
-    @assert nsave > 0
-    @assert ntime == 0 || ntime ≥ nsave
-    @assert mod(ntime, nsave) == 0
-
-    t = TimeSeries{TT}(nt, Δt, nsave)
-
-    q = SStochasticDataSeries(DT, nd, nt, ns, ni)
-    p = SStochasticDataSeries(DT, nd, nt, ns, ni)
-
     # Holds the Wiener process data for ALL computed time steps
     # Wiener process increments are prescribed by the arrays dW and dZ
     W = WienerProcess(Δt, dW, dZ, conv)
 
-    s = SolutionPSDE{DT,TT,determine_qdim(equation),NW}(nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
+    s = SolutionPSDE(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave)
     set_initial_conditions!(s, equation)
 
     return s
 end
 
 
-function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SStochasticDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW}; K::Int=0) where {DT,TT,NQ,NW}
-    # extract parameters
-    conv = W.conv
-    nd = q.nd
-    ns = q.ns
-    ni = q.ni
-    nt = t.n
-    nm = W.nd
-    ntime = W.nt
-    nsave = t.step
-
-    @assert conv==:strong || (conv==:weak && K==0)
-    @assert ntime==nt*nsave
-    @assert q.nt == nt
-    @assert W.ns == q.ns
-
-    @assert q.nd == p.nd
-    @assert q.nt == p.nt
-    @assert q.ni == p.ni
-    @assert q.ns == p.ns
-
-    # create solution
-    SolutionPSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
-end
 
 
 # If the Wiener process W data are not available, creates a one-element zero array instead
 # For instance used when reading a file with no Wiener process data saved
-function SolutionPSDE(t::TimeSeries{TT}, q::SStochasticDataSeries{DT,NQ}, p::SStochasticDataSeries{DT,NQ}; K::Int=0, conv=:strong) where {DT,TT,NQ}
+function SolutionPSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}, p::SDataSeries{DT,NQ}; K::Int=0, conv=:strong) where {DT,TT,NQ}
     # extract parameters
     nd = q.nd
-    ns = q.ns
-    ni = q.ni
+    ns = q.ni
     nt = t.n
     nsave = t.step
     ntime = nt*nsave
 
-    @assert conv==:strong || (conv==:weak && K==0)
-    @assert q.nt == nt
-    @assert q.nd == p.nd
-    @assert q.nt == p.nt
-    @assert q.ni == p.ni
-    @assert q.ns == p.ns
-
     W = WienerProcess(t.Δt, [0.0], [0.0], conv)
 
-    nm = W.nd
-    NW = ndims(W.ΔW)
-    @assert NW ∈ (2,3)
-
     # create solution
-    SolutionPSDE{DT,TT,NQ,NW}(conv, nd, nm, nt, ns, ni, t, q, p, W, K, ntime, nsave, 0)
+    SolutionPSDE(nd, W.nd, nt, ns, 1, t, q, p, W, K, ntime, nsave)
 end
 
 
@@ -233,12 +207,12 @@ ntime(sol::SolutionPSDE) = sol.ntime
 nsave(sol::SolutionPSDE) = sol.nsave
 
 
-function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, equ::Union{PSDE{DT,TT},SPSDE{DT,TT}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPSDE, equ::Union{PSDE,SPSDE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end
 
 
-function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, t₀::TT, q₀::SolutionVector{DT}, p₀::SolutionVector{DT}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, t₀::TT, q₀::AbstractArray{DT,1}, p₀::AbstractArray{DT,1}) where {DT,TT}
     # Sets the initial conditions sol.q[0] with the data from q₀
     # Here, q₀ is 1D (nd elements) representing a single deterministic or
     # multiple random initial conditions.
@@ -253,69 +227,54 @@ function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, t₀::TT, q₀::Solut
         end
     end
     compute_timeseries!(sol.t, t₀)
+    sol.counter .= 1
 end
 
-function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, t₀::TT, q₀::Union{Array{DT,2}, Array{TwicePrecision{DT},2}}, p₀::Union{Array{DT,2}, Array{TwicePrecision{DT},2}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPSDE{DT,TT}, t₀::TT, q₀::AbstractArray{DT,2}, p₀::AbstractArray{DT,2}) where {DT,TT}
     # Sets the initial conditions sol.q[0] with the data from q₀
     # Here, q₀ is a 2D (nd x ni) matrix representing multiple deterministic initial conditions.
     # Similar for sol.p[0].
+    @assert sol.ns == size(q₀,2) == size(p₀,2)
     set_data!(sol.q, q₀, 0)
     set_data!(sol.p, p₀, 0)
     compute_timeseries!(sol.t, t₀)
+    sol.counter .= 1
 end
 
 
-"copies the m-th initial condition for the k-th sample path from sol.q to q"
-function get_initial_conditions!(sol::SolutionPSDE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, k, m) where {DT,TT}
 
-    @assert k ≤ sol.ns
-    @assert m ≤ sol.ni
+function get_initial_conditions!(sol::SolutionPSDE{DT}, q::SolutionVector{DT}, p::SolutionVector{DT}, k, n=1) where {DT}
+    get_solution!(sol, q, p, n-1, k)
+end
 
-    N = ndims(sol.q)
-    @assert N ∈ (2,3)
-
-    if N==2
-        # Multidimensional space, 1 sample path and 1 initial condition, k==m==1
-        @assert k==m==1
-        get_data!(sol.q, q, 0)
-        get_data!(sol.p, p, 0)
-    elseif N==3
-        # Multidimensional space, with either 1 sample path or 1 initial condition
-        if sol.ns==1
-            # 1 sample path, k==1, reading the m-th initial condition
-            get_data!(sol.q, q, 0, m)
-            get_data!(sol.p, p, 0, m)
-        else
-            #1 initial condition, m==1, reading the k-th sample path
-            get_data!(sol.q, q, 0, k)
-            get_data!(sol.p, p, 0, k)
-        end
-    end
-
+function get_initial_conditions(sol::SolutionPSDE, k, n=1)
+    get_solution(sol, n-1, k)
 end
 
 
-function set_solution!(sol::SolutionPSDE{DT,TT,NQ,NW}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k, m) where {DT,TT,NQ,NW}
+function get_solution!(sol::SolutionPSDE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k) where {DT,TT}
+    for i in eachindex(q) q[i] = sol.q[i, n, k] end
+    for i in eachindex(p) p[i] = sol.p[i, n, k] end
+end
+
+function get_solution(sol::SolutionPSDE, n, k)
+    (sol.t[n], sol.q[:, n, k], sol.p[:, n, k])
+end
+
+function set_solution!(sol::SolutionPSDE, t, q, p, n, k)
+    set_solution!(sol, q, p, n, k)
+end
+
+function set_solution!(sol::SolutionPSDE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k) where {DT,TT}
+    @assert n <= sol.ntime
+    @assert k <= sol.ns
     if mod(n, sol.nsave) == 0
-        if NQ ==2
-            # Single sample path and a single initial condition, k==m==1
-            @assert k==m==1
-            set_data!(sol.q, q, div(n, sol.nsave))
-            set_data!(sol.p, p, div(n, sol.nsave))
-        elseif NQ==3
-            if sol.ni==1
-                #Single initial condition, multiple sample paths, m==1
-                @assert m==1
-                set_data!(sol.q, q, div(n, sol.nsave), k)
-                set_data!(sol.p, p, div(n, sol.nsave), k)
-            else
-                #Single sample path, multiple initial conditions, k==1
-                @assert k==1
-                set_data!(sol.q, q, div(n, sol.nsave), m)
-                set_data!(sol.p, p, div(n, sol.nsave), m)
-            end
+        if sol.counter[k] > sol.nt
+            @error("Solution overflow. Call write_to_hdf5() and reset!() before continuing the simulation.")
         end
-        sol.counter += 1
+        set_data!(sol.q, q, sol.counter[k], k)
+        set_data!(sol.p, p, sol.counter[k], k)
+        sol.counter[k] += 1
     end
 end
 
@@ -325,8 +284,16 @@ function reset!(sol::SolutionPSDE)
     reset!(sol.p)
     compute_timeseries!(sol.t, sol.t[end])
     generate_wienerprocess!(sol.W)
-    sol.counter = 0
+    sol.counter .= 1
+    sol.woffset += sol.nt
 end
+
+function Base.close(solution::SolutionPSDE)
+    # close(solution.t)
+    # close(solution.q)
+    close(solution.h5)
+end
+
 
 
 """

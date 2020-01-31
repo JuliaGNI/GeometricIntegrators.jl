@@ -243,16 +243,15 @@ struct IntegratorSISPRK{DT, TT, PT <: ParametersSISPRK{DT,TT},
     Δy::Vector{DT}
     Δz::Vector{DT}
 
-    q::Matrix{Vector{TwicePrecision{DT}}}
-    p::Matrix{Vector{TwicePrecision{DT}}}
+    q::Vector{Vector{TwicePrecision{DT}}}
+    p::Vector{Vector{TwicePrecision{DT}}}
 end
 
 # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
 function IntegratorSISPRK(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}, tableau::TableauSISPRK{TT}, Δt::TT; K::Int=0) where {DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}
     D = equation.d
     M = equation.m
-    NS= equation.ns
-    NI= equation.ni
+    NS= max(equation.ns,equation.ni)
     S = tableau.s
 
     # create params
@@ -274,8 +273,8 @@ function IntegratorSISPRK(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}, tablea
     Δz  = zeros(DT,M)
 
     # create solution vectors
-    q = create_solution_vector(DT, D, NS, NI)
-    p = create_solution_vector(DT, D, NS, NI)
+    q = create_solution_vector(DT, D, NS)
+    p = create_solution_vector(DT, D, NS)
 
     # create integrator
     IntegratorSISPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, Δy, Δz, q, p)
@@ -287,11 +286,11 @@ tableau(integrator::IntegratorSISPRK) = integrator.params.tab
 Base.eltype(integrator::IntegratorSISPRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
 
 
-function initialize!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE, k::Int, m::Int) where {DT,TT}
-    check_solution_dimension_asserts(sol, k, m)
+function initialize!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE, m::Int) where {DT,TT}
+    check_solution_dimension_asserts(sol, m)
 
     # copy the m-th initial condition for the k-th sample path
-    get_initial_conditions!(sol, int.q[k,m], int.p[k,m], k, m)
+    get_initial_conditions!(sol, int.q[m], int.p[m], m)
 
     # Not implementing InitialGuessSDE
     # # initialise initial guess
@@ -432,15 +431,15 @@ end
 
 """
 Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator.
- Integrating the k-th sample path for the m-th initial condition
+ Integrating the m-th sample path
 """
-function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,NQ,NW}, k::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
-    check_solution_dimension_asserts(sol, k, m, n)
+function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,NQ,NW}, m::Int, n::Int) where {DT,TT,NQ,NW}
+    check_solution_dimension_asserts(sol, m, n)
 
     # set time for nonlinear solver
     int.params.t  = sol.t[0] + (n-1)*int.params.Δt
-    int.params.q .= int.q[k, m]
-    int.params.p .= int.p[k, m]
+    int.params.q .= int.q[m]
+    int.params.p .= int.p[m]
 
 
     # copy the increments of the Brownian Process
@@ -453,8 +452,8 @@ function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,N
     elseif NW==3
         #1D or Multidimensional Brownian motion, k-th sample path
         for l = 1:sol.nm
-            int.params.ΔW[l] = sol.W.ΔW[l,n,k]
-            int.params.ΔZ[l] = sol.W.ΔZ[l,n,k]
+            int.params.ΔW[l] = sol.W.ΔW[l,n,m]
+            int.params.ΔZ[l] = sol.W.ΔZ[l,n,m]
         end
     end
 
@@ -487,7 +486,7 @@ function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,N
     compute_stages!(int.solver.x, int.fcache.Q, int.fcache.P, int.fcache.V, int.fcache.F1, int.fcache.F2, int.fcache.B, int.fcache.G1, int.fcache.G2, int.fcache.Y, int.fcache.Z, int.params)
 
     # compute final update
-    update_solution!(int.q[k,m], int.p[k,m], int.fcache.V, int.fcache.F1, int.fcache.F2, int.fcache.B, int.fcache.G1, int.fcache.G2,
+    update_solution!(int.q[m], int.p[m], int.fcache.V, int.fcache.F1, int.fcache.F2, int.fcache.B, int.fcache.G1, int.fcache.G2,
                     int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂,
                     int.params.tab.pdrift1.b, int.params.tab.pdrift1.b̂, int.params.tab.pdrift2.b, int.params.tab.pdrift2.b̂,
                     int.params.tab.pdiff1.b, int.params.tab.pdiff1.b̂, int.params.tab.pdiff2.b, int.params.tab.pdiff2.b̂,
@@ -498,8 +497,8 @@ function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,N
     # # update!(int.iguess, m, sol.t[0] + n*int.params.Δt, int.q[m])
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q[k,m], int.params.equ.periodicity)
+    cut_periodic_solution!(int.q[m], int.params.equ.periodicity)
 
     # # copy to solution
-    set_solution!(sol, int.q[k,m], int.p[k,m], n, k, m)
+    set_solution!(sol, int.q[m], int.p[m], n, m)
 end

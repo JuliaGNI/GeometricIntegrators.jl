@@ -31,10 +31,6 @@ module Solutions
 
     include("solutions/timeseries.jl")
 
-    export StochasticDataSeries, SStochasticDataSeries
-
-    include("solutions/stochasticdataseries.jl")
-
     export SemiMartingale
     export WienerProcess, generate_wienerprocess!
 

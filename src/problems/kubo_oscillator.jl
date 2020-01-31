@@ -40,7 +40,7 @@ module KuboOscillatorProblem
 
 
     function kubo_oscillator_sde_2()
-        # q_init_B - interpreted as a single random initial condition
+        # q_init_B - interpreted as three random initial conditions
         # The 3 columns correspond to 3 sample paths
         # 1-dimensional noise
         SDE(1, 1, kubo_oscillator_sde_v, kubo_oscillator_sde_B, q_init_B)

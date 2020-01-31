@@ -100,12 +100,9 @@ function check_solution_dimension_asserts(sol::Solution, m::Int, n::Int)
     @assert n ≤ sol.ntime
 end
 
-function check_solution_dimension_asserts(sol::StochasticSolution, k::Int, m::Int, n::Int=0)
-    @assert k ≥ 1
-    @assert k ≤ sol.ns
-
+function check_solution_dimension_asserts(sol::StochasticSolution, m::Int, n::Int=0)
     @assert m ≥ 1
-    @assert m ≤ sol.ni
+    @assert m ≤ sol.ns
 
     @assert n ≥ 0
     @assert n ≤ sol.ntime

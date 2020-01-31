@@ -80,7 +80,8 @@ struct IntegratorWERK{DT, TT, ET <: SDE{DT,TT}} <: StochasticIntegrator{DT,TT}
     ΔZ::Vector{DT}
     Δy::Vector{DT}
 
-    q ::Matrix{Vector{DT}}
+    q ::Vector{Vector{DT}}
+
     Q0::Vector{DT}           # Q0[1..n]      - the internal stage H^(0)_i for a given i
     Q1::Vector{Vector{DT}}   # Q1[1..m][1..n] - the internal stages H^(l)_i for a given i
     Q2::Vector{Vector{DT}}   # Q2[1..m][1..n] - the internal stages \hat H^(l)_i for a given i
@@ -93,12 +94,11 @@ struct IntegratorWERK{DT, TT, ET <: SDE{DT,TT}} <: StochasticIntegrator{DT,TT}
     function IntegratorWERK{DT,TT}(equation::ET, tableau, Δt::TT) where {DT, TT, ET <: SDE{DT,TT}}
         D = equation.d
         M = equation.m
-        NS= equation.ns
-        NI= equation.ni
+        NS= max(equation.ns,equation.ni)
         S = tableau.s
 
         # create solution vectors
-        q = create_solution_vector(DT, D, NS, NI)
+        q = create_solution_vector(DT, D, NS)
 
         # create internal stage vectors
         Q0 = zeros(DT, D)
@@ -116,18 +116,18 @@ function IntegratorWERK(equation::SDE{DT,TT}, tableau::TableauWERK{TT}, Δt::TT)
     IntegratorWERK{DT,TT}(equation, tableau, Δt)
 end
 
-function initialize!(int::IntegratorWERK, sol::SolutionSDE, k::Int, m::Int)
-    check_solution_dimension_asserts(sol, k, m)
+function initialize!(int::IntegratorWERK, sol::SolutionSDE, m::Int)
+    check_solution_dimension_asserts(sol, m)
 
     # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q[k,m], k, m)
+    get_initial_conditions!(sol, int.q[m], m)
 end
 
 """
 Integrate SDE with explicit Runge-Kutta integrator.
- Calculating the n-th time step of the explicit integrator for the sample path r and the initial condition m
+ Calculating the n-th time step of the explicit integrator for the sample path m
 """
-function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,NQ,NW}, r::Int, m::Int, n::Int) where {DT,TT,FT,NQ,NW}
+function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,NQ,NW}, m::Int, n::Int) where {DT,TT,FT,NQ,NW}
     local tᵢ::TT
     local ydrift::DT
     local ydiff2::DT
@@ -140,20 +140,20 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
             int.ΔZ .= sol.W.ΔZ[l,n]
         end
     elseif NW==3
-        #1D or Multidimensional Brownian motion, r-th sample path
+        #1D or Multidimensional Brownian motion, m-th sample path
         for l = 1:sol.nm
-            int.ΔW .= sol.W.ΔW[l,n,r]
-            int.ΔZ .= sol.W.ΔZ[l,n,r]
+            int.ΔW .= sol.W.ΔW[l,n,m]
+            int.ΔZ .= sol.W.ΔZ[l,n,m]
         end
     end
 
     # THE FIRST INTERNAL STAGES ARE ALL EQUAL TO THE PREVIOUS STEP SOLUTION
     # calculates v(t,tQ0) and assigns to the 1st column of V
-    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.V[1])
+    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[m], int.V[1])
     # calculates B(t,Q) and assigns to the matrix B1[1]
     # no need to calculate the columns of B separately, because all internal stages
     # for i=1 are equal to int.q[r,m]
-    int.equation.B(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.B1[1])
+    int.equation.B(sol.t[0] + (n-1)*int.Δt, int.q[m], int.B1[1])
     # copy B1[i] to B2[i] (they're equal for i=1)
     int.B2[1] .= int.B1[1]
 
@@ -176,7 +176,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
                 end
             end
 
-            int.Q0[k] = int.q[r,m][k] + int.Δt * ydrift + dot(int.Δy,int.ΔW)
+            int.Q0[k] = int.q[m][k] + int.Δt * ydrift + dot(int.Δy,int.ΔW)
 
         end
 
@@ -204,7 +204,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
                     end
                 end
 
-                int.Q1[noise_idx][k] = int.q[r,m][k] + int.Δt * ydrift + dot(int.Δy,int.ΔW)
+                int.Q1[noise_idx][k] = int.q[m][k] + int.Δt * ydrift + dot(int.Δy,int.ΔW)
             end
         end
 
@@ -234,7 +234,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
                     end
                 end
 
-                int.Q2[noise_idx][k] = int.q[r,m][k] + int.Δt * ydrift + ydiff2/sqrt(int.Δt)
+                int.Q2[noise_idx][k] = int.q[m][k] + int.Δt * ydrift + ydiff2/sqrt(int.Δt)
             end
         end
 
@@ -264,11 +264,11 @@ function integrate_step!(int::IntegratorWERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
     end
 
     # compute final update
-    update_solution!(int.q[r,m], int.V, int.B1, int.B2, int.tableau.qdrift0.b, int.tableau.qdiff0.b, int.tableau.qdiff3.b, int.Δt, int.ΔW, int.Δy)
+    update_solution!(int.q[m], int.V, int.B1, int.B2, int.tableau.qdrift0.b, int.tableau.qdiff0.b, int.tableau.qdiff3.b, int.Δt, int.ΔW, int.Δy)
 
     # take care of periodic solutions
-    cut_periodic_solution!(int.q[r,m], int.equation.periodicity)
+    cut_periodic_solution!(int.q[m], int.equation.periodicity)
 
     # copy to solution
-    set_solution!(sol, int.q[r,m], n, r, m)
+    set_solution!(sol, int.q[m], n, m)
 end
