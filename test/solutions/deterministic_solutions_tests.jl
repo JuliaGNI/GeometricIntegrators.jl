@@ -46,6 +46,23 @@ tz    = zero(z0)
 tλ    = zero(λ0)
 tμ    = zero(μ0)
 
+xs    = rand(2,nt)
+ys    = rand(2,nt)
+qs    = rand(1,nt)
+ps    = rand(1,nt)
+zs    = rand(3,nt)
+λs    = rand(1,nt)
+μs    = rand(2,nt)
+
+Xs    = rand(2,nt,ni)
+Ys    = rand(2,nt,ni)
+Qs    = rand(1,nt,ni)
+Ps    = rand(1,nt,ni)
+Zs    = rand(3,nt,ni)
+Λs    = rand(1,nt,ni)
+Ms    = rand(2,nt,ni)
+
+
 
 ode   = harmonic_oscillator_ode()
 dae   = harmonic_oscillator_dae()
@@ -56,6 +73,9 @@ h5file = "test.hdf5"
 
 
 @testset "$(rpad("ODE Solution",80))" begin
+    asol = AtomicSolution(ode)
+
+    # test constructors and general functionality
     sol = Solution(ode, Δt, nt)
     @test typeof(sol) <: SolutionODE
 
@@ -72,10 +92,14 @@ h5file = "test.hdf5"
     @test ntime(sol) == nt
     @test timesteps(sol) == Δt .* collect(0:nt)
 
+    # test initial conditions
     set_initial_conditions!(sol, t0, x0)
     get_initial_conditions!(sol, tx, 1)
+    get_initial_conditions!(sol, asol, 1)
 
     @test tx == x0
+    @test asol.t == t0
+    @test asol.q == x0
 
     δt, δx = get_initial_conditions(sol, 1)
     @test δt == t0
@@ -87,12 +111,38 @@ h5file = "test.hdf5"
         @test tx == x2[:,i]
     end
 
+    # test set/get solution
+    sol1 = Solution(similar(ode, x0), Δt, nt)
+    sol2 = Solution(similar(ode, x0), Δt, nt)
+    for i in 1:nt
+        tx .= xs[:,i]
+        asol.q .= xs[:,i]
+        set_solution!(sol1, tx, i)
+        set_solution!(sol2, asol, i)
+    end
+    @test sol1.q[:,1:nt] == xs
+    @test sol2.q[:,1:nt] == xs
+
+    sol1 = Solution(similar(ode, x1), Δt, nt)
+    sol2 = Solution(similar(ode, x1), Δt, nt)
+    for i in 1:nt
+        for k in 1:ni
+            tx .= Xs[:,i,k]
+            asol.q .= Xs[:,i,k]
+            set_solution!(sol1, tx, i, k)
+            set_solution!(sol2, asol, i, k)
+        end
+    end
+    @test sol1.q[:,1:nt,:] == Xs
+    @test sol2.q[:,1:nt,:] == Xs
+
+    # test reset
     reset!(sol)
     @test sol.t[0]   == t1
     @test sol.t[end] == t2
     @test offset(sol) == nt
 
-    # test hdf5 in- and output
+    # test general hdf5 functions
     sol1 = Solution(ode, Δt, nt)
     h5 = createHDF5(sol1, h5file)
     @test typeof(h5) == HDF5File
@@ -106,6 +156,7 @@ h5file = "test.hdf5"
     @test isfile(h5file)
     rm(h5file)
 
+    # test hdf5 in- and output
     sol1 = Solution(harmonic_oscillator_ode(x0), Δt, nt)
     create_hdf5(sol1, h5file)
     write_to_hdf5(sol1)
@@ -142,6 +193,9 @@ end
 
 
 @testset "$(rpad("PODE Solution",80))" begin
+    asol = AtomicSolution(pode)
+
+    # test constructors and general functionality
     sol = Solution(pode, Δt, nt)
     @test typeof(sol) <: SolutionPODE
 
@@ -158,11 +212,16 @@ end
     @test ntime(sol) == nt
     @test timesteps(sol) == Δt .* collect(0:nt)
 
+    # test initial conditions
     set_initial_conditions!(sol, t0, q0, p0)
     get_initial_conditions!(sol, tq, tp, 1)
+    get_initial_conditions!(sol, asol, 1)
 
     @test tq == q0
     @test tp == p0
+    @test asol.t == t0
+    @test asol.q == q0
+    @test asol.p == p0
 
     δt, δq, δp = get_initial_conditions(sol, 1)
     @test δt == t0
@@ -176,6 +235,40 @@ end
         @test tp == p2[:,i]
     end
 
+    # test set/get solution
+    sol1 = Solution(similar(pode, q0, p0), Δt, nt)
+    sol2 = Solution(similar(pode, q0, p0), Δt, nt)
+    for i in 1:nt
+        tq .= qs[:,i]
+        tp .= ps[:,i]
+        asol.q .= qs[:,i]
+        asol.p .= ps[:,i]
+        set_solution!(sol1, tq, tp, i)
+        set_solution!(sol2, asol, i)
+    end
+    @test sol1.q[:,1:nt] == qs
+    @test sol1.p[:,1:nt] == ps
+    @test sol2.q[:,1:nt] == qs
+    @test sol2.p[:,1:nt] == ps
+
+    sol1 = Solution(similar(pode, q1, p1), Δt, nt)
+    sol2 = Solution(similar(pode, q1, p1), Δt, nt)
+    for i in 1:nt
+        for k in 1:ni
+            tq .= Qs[:,i,k]
+            tp .= Ps[:,i,k]
+            asol.q .= Qs[:,i,k]
+            asol.p .= Ps[:,i,k]
+            set_solution!(sol1, tq, tp, i, k)
+            set_solution!(sol2, asol, i, k)
+        end
+    end
+    @test sol1.q[:,1:nt,:] == Qs
+    @test sol1.p[:,1:nt,:] == Ps
+    @test sol2.q[:,1:nt,:] == Qs
+    @test sol2.p[:,1:nt,:] == Ps
+
+    # test reset
     reset!(sol)
     @test sol.t[0]   == t1
     @test sol.t[end] == t2
@@ -213,6 +306,9 @@ end
 
 
 @testset "$(rpad("DAE Solution",80))" begin
+    asol = AtomicSolution(dae)
+
+    # test constructors and general functionality
     sol = Solution(dae, Δt, nt)
     @test typeof(sol) <: SolutionDAE
 
@@ -229,11 +325,16 @@ end
     @test ntime(sol) == nt
     @test timesteps(sol) == Δt .* collect(0:nt)
 
+    # test initial conditions
     set_initial_conditions!(sol, t0, z0, λ0)
     get_initial_conditions!(sol, tz, tλ, 1)
+    get_initial_conditions!(sol, asol, 1)
 
     @test tz == z0
     @test tλ == λ0
+    @test asol.t == t0
+    @test asol.q == z0
+    @test asol.λ == λ0
 
     δt, δz, δλ = get_initial_conditions(sol, 1)
     @test δt == t0
@@ -247,6 +348,40 @@ end
         @test tλ == λ2[:,i]
     end
 
+    # test set/get solution
+    sol1 = Solution(similar(dae, z0, λ0), Δt, nt)
+    sol2 = Solution(similar(dae, z0, λ0), Δt, nt)
+    for i in 1:nt
+        tz .= zs[:,i]
+        tλ .= λs[:,i]
+        asol.q .= zs[:,i]
+        asol.λ .= λs[:,i]
+        set_solution!(sol1, tz, tλ, i)
+        set_solution!(sol2, asol, i)
+    end
+    @test sol1.q[:,1:nt] == zs
+    @test sol1.λ[:,1:nt] == λs
+    @test sol2.q[:,1:nt] == zs
+    @test sol2.λ[:,1:nt] == λs
+
+    sol1 = Solution(similar(dae, z1, λ1), Δt, nt)
+    sol2 = Solution(similar(dae, z1, λ1), Δt, nt)
+    for i in 1:nt
+        for k in 1:ni
+            tz .= Zs[:,i,k]
+            tλ .= Λs[:,i,k]
+            asol.q .= Zs[:,i,k]
+            asol.λ .= Λs[:,i,k]
+            set_solution!(sol1, tz, tλ, i, k)
+            set_solution!(sol2, asol, i, k)
+        end
+    end
+    @test sol1.q[:,1:nt,:] == Zs
+    @test sol1.λ[:,1:nt,:] == Λs
+    @test sol2.q[:,1:nt,:] == Zs
+    @test sol2.λ[:,1:nt,:] == Λs
+
+    # test reset
     reset!(sol)
     @test sol.t[0]   == t1
     @test sol.t[end] == t2
@@ -284,6 +419,9 @@ end
 
 
 @testset "$(rpad("PDAE Solution",80))" begin
+    asol = AtomicSolution(pdae)
+
+    # test constructors and general functionality
     sol = Solution(pdae, Δt, nt)
     @test typeof(sol) <: SolutionPDAE
 
@@ -300,12 +438,18 @@ end
     @test ntime(sol) == nt
     @test timesteps(sol) == Δt .* collect(0:nt)
 
+    # test initial conditions
     set_initial_conditions!(sol, t0, x0, y0, μ0)
     get_initial_conditions!(sol, tx, ty, tμ, 1)
+    get_initial_conditions!(sol, asol, 1)
 
     @test tx == x0
     @test ty == y0
     @test tμ == μ0
+    @test asol.t == t0
+    @test asol.q == x0
+    @test asol.p == y0
+    @test asol.λ == μ0
 
     δt, δx, δy, δμ = get_initial_conditions(sol, 1)
     @test δt == t0
@@ -318,9 +462,51 @@ end
         get_initial_conditions!(sol1, tx, ty, tμ, i)
         @test tx == x2[:,i]
         @test ty == y2[:,i]
-        @test tμ == μ2[:,i]#
+        @test tμ == μ2[:,i]
     end
 
+    # test set/get solution
+    sol1 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
+    sol2 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
+    for i in 1:nt
+        tx .= xs[:,i]
+        ty .= ys[:,i]
+        tμ .= μs[:,i]
+        asol.q .= xs[:,i]
+        asol.p .= ys[:,i]
+        asol.λ .= μs[:,i]
+        set_solution!(sol1, tx, ty, tμ, i)
+        set_solution!(sol2, asol, i)
+    end
+    @test sol1.q[:,1:nt] == xs
+    @test sol1.p[:,1:nt] == ys
+    @test sol1.λ[:,1:nt] == μs
+    @test sol2.q[:,1:nt] == xs
+    @test sol2.p[:,1:nt] == ys
+    @test sol2.λ[:,1:nt] == μs
+
+    sol1 = Solution(similar(pdae, x1, y1, μ1), Δt, nt)
+    sol2 = Solution(similar(pdae, x1, y1, μ1), Δt, nt)
+    for i in 1:nt
+        for k in 1:ni
+            tx .= Xs[:,i,k]
+            ty .= Ys[:,i,k]
+            tμ .= Ms[:,i,k]
+            asol.q .= Xs[:,i,k]
+            asol.p .= Ys[:,i,k]
+            asol.λ .= Ms[:,i,k]
+            set_solution!(sol1, tx, ty, tμ, i, k)
+            set_solution!(sol2, asol, i, k)
+        end
+    end
+    @test sol1.q[:,1:nt,:] == Xs
+    @test sol1.p[:,1:nt,:] == Ys
+    @test sol1.λ[:,1:nt,:] == Ms
+    @test sol2.q[:,1:nt,:] == Xs
+    @test sol2.p[:,1:nt,:] == Ys
+    @test sol2.λ[:,1:nt,:] == Ms
+
+    # test reset
     reset!(sol)
     @test sol.t[0]   == t1
     @test sol.t[end] == t2

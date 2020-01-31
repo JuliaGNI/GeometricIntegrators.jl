@@ -145,23 +145,23 @@ function get_initial_conditions(sol::SolutionODE, k, n=1)
     get_solution(sol, n-1, k)
 end
 
-function get_solution!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, n, k) where {DT,TT}
+function get_solution!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, n, k=1) where {DT,TT}
     for i in eachindex(q) q[i] = sol.q[i, n, k] end
 end
 
-function get_solution(sol::SolutionODE, n, k)
+function get_solution(sol::SolutionODE, n, k=1)
     (sol.t[n], sol.q[:, n, k])
 end
 
-function set_solution!(sol::SolutionODE, t, q, n, k)
+function set_solution!(sol::SolutionODE, t, q, n, k=1)
     set_solution!(sol, q, n, k)
 end
 
-function set_solution!(sol::SolutionODE{DT,TT}, asol::AtomicSolutionODE{DT,TT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionODE{DT,TT}, asol::AtomicSolutionODE{DT,TT}, n, k=1) where {DT,TT}
     set_solution!(sol, asol.t, asol.q, n, k)
 end
 
-function set_solution!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, n, k=1) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
