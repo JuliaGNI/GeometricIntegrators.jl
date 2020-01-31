@@ -47,7 +47,8 @@ module Solutions
            AtomicSolutionODE, AtomicSolutionPODE,
            AtomicSolutionDAE, AtomicSolutionPDAE,
            AtomicSolutionSDE, AtomicSolutionPSDE
-    export update!, cut_periodic_solution!
+    export update!, cut_periodic_solution!,
+           get_increments, get_increments!, set_increments!
 
     include("solutions/atomic_solution.jl")
     include("solutions/atomic_solution_ode.jl")
