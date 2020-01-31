@@ -9,6 +9,7 @@ module Solutions
     using ..CommonFunctions
     using ..Config
     using ..Equations
+    using ..Utils
 
 
     export DEFAULT_NSAVE, DEFAULT_NWRITE

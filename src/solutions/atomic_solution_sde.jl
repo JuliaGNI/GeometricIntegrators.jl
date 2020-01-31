@@ -24,13 +24,13 @@ mutable struct AtomicSolutionSDE{DT,TT} <: AtomicSolution{DT,TT}
     ΔZ::Vector{DT}
     K::Int
 
-    function AtomicSolutionSDE{DT, TT}(nd) where {DT <: Number, TT <: Real}
+    function AtomicSolutionSDE{DT, TT}(nd, nm) where {DT <: Number, TT <: Real}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd))
+                                zeros(DT, nm), zeros(DT, nm))
     end
 end
 
-AtomicSolutionSDE(DT, TT, nd) = AtomicSolutionSDE{DT, TT}(nd)
+AtomicSolutionSDE(DT, TT, nd, nm) = AtomicSolutionSDE{DT, TT}(nd, nm)
 
 function set_solution!(asol::AtomicSolutionSDE, sol)
     t, q = sol
@@ -38,16 +38,23 @@ function set_solution!(asol::AtomicSolutionSDE, sol)
     asol.q .= q
 end
 
-
 function set_increments!(asol::AtomicSolutionSDE, incs)
-    ΔW, ΔZ = sol
+    ΔW, ΔZ = incs
     asol.ΔW .= ΔW
     asol.ΔZ .= ΔZ
 end
 
-
 function get_solution(asol::AtomicSolutionSDE)
     (asol.t, asol.q)
+end
+
+function get_increments(asol::AtomicSolutionSDE)
+    (asol.ΔW, asol.ΔZ)
+end
+
+function get_increments!(asol::AtomicSolutionSDE, ΔW, ΔZ)
+    ΔW .= asol.ΔW
+    ΔZ .= asol.ΔZ
 end
 
 function CommonFunctions.reset!(asol::AtomicSolutionSDE, Δt)

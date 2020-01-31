@@ -31,14 +31,14 @@ mutable struct AtomicSolutionPSDE{DT,TT} <: AtomicSolution{DT,TT}
     ΔZ::Vector{DT}
     K::Int
 
-    function AtomicSolutionPSDE{DT, TT}(nd) where {DT <: Number, TT <: Real}
+    function AtomicSolutionPSDE{DT, TT}(nd, nm) where {DT <: Number, TT <: Real}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd))
+                                zeros(DT, nm), zeros(DT, nm))
     end
 end
 
-AtomicSolutionPSDE(DT, TT, nd) = AtomicSolutionPSDE{DT, TT}(nd)
+AtomicSolutionPSDE(DT, TT, nd, nm) = AtomicSolutionPSDE{DT, TT}(nd, nm)
 
 function set_solution!(asol::AtomicSolutionPSDE, sol)
     t, q, p = sol
@@ -47,16 +47,23 @@ function set_solution!(asol::AtomicSolutionPSDE, sol)
     asol.p .= p
 end
 
-
 function set_increments!(asol::AtomicSolutionPSDE, incs)
-    ΔW, ΔZ = sol
+    ΔW, ΔZ = incs
     asol.ΔW .= ΔW
     asol.ΔZ .= ΔZ
 end
 
-
 function get_solution(asol::AtomicSolutionPSDE)
     (asol.t, asol.q, asol.p)
+end
+
+function get_increments(asol::AtomicSolutionPSDE)
+    (asol.ΔW, asol.ΔZ)
+end
+
+function get_increments!(asol::AtomicSolutionPSDE, ΔW, ΔZ)
+    ΔW .= asol.ΔW
+    ΔZ .= asol.ΔZ
 end
 
 function CommonFunctions.reset!(asol::AtomicSolutionPSDE, Δt)

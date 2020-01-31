@@ -32,15 +32,15 @@ mutable struct AtomicSolutionDAE{DT,TT} <: AtomicSolution{DT,TT}
     u::Vector{DT}
     u̅::Vector{DT}
 
-    function AtomicSolutionDAE{DT, TT}(nd) where {DT <: Number, TT <: Real}
+    function AtomicSolutionDAE{DT, TT}(nd, nm) where {DT <: Number, TT <: Real}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd),
+                                zeros(DT, nm), zeros(DT, nm),
                                 zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nd), zeros(DT, nd))
     end
 end
 
-AtomicSolutionDAE(DT, TT, nd) = AtomicSolutionDAE{DT, TT}(nd)
+AtomicSolutionDAE(DT, TT, nd, nm) = AtomicSolutionDAE{DT, TT}(nd, nm)
 
 function set_solution!(asol::AtomicSolutionDAE, sol)
     t, q, λ = sol
@@ -64,12 +64,14 @@ function CommonFunctions.reset!(asol::AtomicSolutionDAE, Δt)
 end
 
 function update!(asol::AtomicSolutionDAE{DT}, y::Vector{DT}, λ::Vector{DT}) where {DT}
-    for k in eachindex(y,λ)
-        update!(asol, y[k], λ[k], k)
+    for k in eachindex(y)
+        update!(asol, y[k], k)
+    end
+    for k in eachindex(λ)
+        asol.λ[k] = λ[k]
     end
 end
 
-function update!(asol::AtomicSolutionDAE{DT}, y::DT, λ::DT, k::Int) where {DT}
+function update!(asol::AtomicSolutionDAE{DT}, y::DT, k::Int) where {DT}
     asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
-    asol.λ[k] = λ
 end
