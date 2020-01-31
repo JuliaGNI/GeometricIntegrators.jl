@@ -194,6 +194,7 @@ end
 timesteps(sol::SolutionSDE)  = sol.t.t
 ntime(sol::SolutionSDE) = sol.ntime
 nsave(sol::SolutionSDE) = sol.nsave
+conv(sol::SolutionSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
 
 
 function set_initial_conditions!(sol::SolutionSDE, equ::SDE)

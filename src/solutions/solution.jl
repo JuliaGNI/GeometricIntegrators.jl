@@ -81,8 +81,9 @@ end
 
 "save_attributes: Saves attributes of Stochastic Solutions to HDF5 file."
 function save_attributes(sol::StochasticSolution, h5::HDF5File)
-    attrs(h5)["nsave"] = solution.nsave
-    attrs(h5)["conv"] = solution.conv
+    attrs(h5)["ntime"] = ntime(sol)
+    attrs(h5)["nsave"] = nsave(sol)
+    attrs(h5)["conv"] = conv(solution)
     attrs(h5)["nd"] = solution.nd
     attrs(h5)["nm"] = solution.nm
     attrs(h5)["ns"] = solution.ns
@@ -99,4 +100,23 @@ function CommonFunctions.write_to_hdf5(solution::Solution, file::AbstractString)
     h5 = create_hdf5(solution, file)
     write_to_hdf5(solution, h5)
     close(h5)
+end
+
+
+function determine_qdim(equation::Union{SDE,PSDE,SPSDE})
+    ns = equation.ns
+    ni = equation.ni
+
+    @assert ns ≥ 1
+    @assert ni ≥ 1
+
+    if ns==ni==1
+        NQ = 2
+    elseif ns==1 || ni==1
+        NQ = 3
+    else
+        @error("Both the number of sample paths and the number of initial conditions is larger than one!")
+    end
+
+    return NQ
 end

@@ -205,6 +205,7 @@ end
 timesteps(sol::SolutionPSDE)  = sol.t.t
 ntime(sol::SolutionPSDE) = sol.ntime
 nsave(sol::SolutionPSDE) = sol.nsave
+conv(sol::SolutionPSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
 
 
 function set_initial_conditions!(sol::SolutionPSDE, equ::Union{PSDE,SPSDE})
