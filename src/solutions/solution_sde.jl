@@ -379,12 +379,3 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString; s
 
     return solution.h5
 end
-
-
-function copy_solution_to_hdf5(solution::SolutionSDE{DT,TT,2,NW}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT,NW}
-    h5["q"][:, j1:j2] = solution.q[:, n1:n2]
-end
-
-function copy_solution_to_hdf5(solution::SolutionSDE{DT,TT,3,NW}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT,NW}
-    h5["q"][:, j1:j2, :] = solution.q[:, n1:n2, :]
-end

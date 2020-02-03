@@ -243,36 +243,3 @@ function create_hdf5(solution::SolutionPODE{DT,TT,3}, file::AbstractString) wher
 
     return solution.h5
 end
-
-"Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionPODE{DT,TT,2}, h5::HDF5File, offset=0) where {DT,TT}
-    # set convenience variables and compute ranges
-    d  = solution.nd
-    n  = solution.nt
-    j1 = offset+2
-    j2 = offset+1+n
-
-    # copy data from solution to HDF5 dataset
-    copy_timeteps_to_hdf5(solution, h5, j1, j2, 1, solution.nt)
-    h5["q"][:, j1:j2] = solution.q[:, 1:n]
-    h5["p"][:, j1:j2] = solution.p[:, 1:n]
-
-    return nothing
-end
-
-"Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionPODE{DT,TT,3}, h5::HDF5File, offset=0) where {DT,TT}
-    # set convenience variables and compute ranges
-    d  = solution.nd
-    n  = solution.nt
-    i  = solution.ni
-    j1 = offset+2
-    j2 = offset+1+n
-
-    # copy data from solution to HDF5 dataset
-    copy_timeteps_to_hdf5(solution, h5, j1, j2, 1, solution.nt)
-    h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
-    h5["p"][:, j1:j2, :] = solution.p[:, 1:n, :]
-
-    return nothing
-end

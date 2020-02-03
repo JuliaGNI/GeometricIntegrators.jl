@@ -70,4 +70,6 @@ module Solutions
     include("solutions/solution_sde.jl")
     include("solutions/solution_psde.jl")
 
+    include("solutions/solution_hdf5.jl")
+
 end
