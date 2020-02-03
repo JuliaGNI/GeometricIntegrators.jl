@@ -155,7 +155,7 @@ end
 
     # test hdf5 in- and output
     sol1 = Solution(kubo_oscillator_sde_2(x0), Δt, nt)
-    create_hdf5(sol1, h5file)
+    create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
@@ -173,7 +173,7 @@ end
     rm(h5file)
 
     sol1 = Solution(kubo_oscillator_sde_2(x1), Δt, nt)
-    create_hdf5(sol1, h5file)
+    create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
@@ -285,7 +285,7 @@ end
 
     # test hdf5 in- and output
     sol1 = Solution(kubo_oscillator_psde_2(q0, p0), Δt, nt)
-    create_hdf5(sol1, h5file)
+    create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
@@ -304,7 +304,7 @@ end
     rm(h5file)
 
     sol1 = Solution(kubo_oscillator_psde_2(q1, p1), Δt, nt)
-    create_hdf5(sol1, h5file)
+    create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)

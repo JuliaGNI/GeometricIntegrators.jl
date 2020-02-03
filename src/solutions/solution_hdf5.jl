@@ -52,58 +52,216 @@ function CommonFunctions.write_to_hdf5(solution::Solution, file::AbstractString)
 end
 
 
-# saving the time time series
+
+"Creates HDF5 file and initialises datasets for solution object."
+function create_hdf5!(solution::Solution, file::AbstractString)
+    solution.h5 = create_hdf5(solution, file)
+end
+
+"Creates HDF5 file and initialises datasets for deterministic solution object."
+function create_hdf5(solution::DeterministicSolution, file::AbstractString)
+    # create HDF5 file and save attributes and common parameters
+    h5 = createHDF5(solution, file)
+
+    # save attributes
+    save_attributes(solution, h5)
+
+    # create dataset
+    init_timeteps_in_hdf5(solution, h5)
+    init_solution_in_hdf5(solution, h5)
+
+    return h5
+end
+
+"Creates HDF5 file and initialises datasets for stochastic solution object."
+function create_hdf5(solution::StochasticSolution, file::AbstractString; save_W=true)
+    # create HDF5 file and save attributes and common parameters
+    h5 = createHDF5(solution, file)
+
+    # save attributes
+    save_attributes(solution, h5)
+
+    # create dataset
+    init_timeteps_in_hdf5(solution, h5)
+    init_solution_in_hdf5(solution, h5)
+
+    if save_W
+        init_increments_in_hdf5(solution, h5)
+    end
+
+    return h5
+end
+
+function init_timeteps_in_hdf5(solution::Solution{DT,TT}, h5::HDF5File) where {DT,TT}
+    t = d_create(h5, "t", TT, ((solution.nt+1,), (-1,)), "chunk", (1,))
+    t[1] = timesteps(solution)[0]
+end
+
+function init_solution_in_hdf5(solution::SolutionODE{DT,TT,2}, h5::HDF5File) where {DT,TT}
+    q = d_create(h5, "q", DT, ((solution.nd, solution.nt+1), (solution.nd, -1)), "chunk", (solution.nd,1))
+    q[:, 1] = solution.q[:, 0]
+end
+
+function init_solution_in_hdf5(solution::SolutionDAE{DT,TT,2}, h5::HDF5File) where {DT,TT}
+    q = d_create(h5, "q", DT, ((solution.nd, solution.nt+1), (solution.nd, -1)), "chunk", (solution.nd,1))
+    λ = d_create(h5, "λ", DT, ((solution.nm, solution.nt+1), (solution.nm, -1)), "chunk", (solution.nm,1))
+    q[:, 1] = solution.q[:, 0]
+    λ[:, 1] = solution.λ[:, 0]
+end
+
+function init_solution_in_hdf5(solution::SolutionSDE{DT,TT,2}, h5::HDF5File) where {DT,TT}
+    q = d_create(h5, "q", DT, ((solution.nd, solution.nt+1), (solution.nd, -1)), "chunk", (solution.nd,1))
+    q[:,1] = solution.q[:,0]
+end
+
+function init_solution_in_hdf5(solution::SolutionODE{DT,TT,3}, h5::HDF5File) where {DT,TT}
+    q = d_create(h5, "q", DT, ((solution.nd, solution.nt+1, solution.ni),(solution.nd, -1, solution.ni)), "chunk", (solution.nd,1,1))
+    q[:, 1, :] = solution.q[:, 0, :]
+end
+
+function init_solution_in_hdf5(solution::SolutionDAE{DT,TT,3}, h5::HDF5File) where {DT,TT}
+    q = d_create(h5, "q", DT, ((solution.nd, solution.nt+1, solution.ni),(solution.nd, -1, solution.ni)), "chunk", (solution.nd,1,1))
+    λ = d_create(h5, "λ", DT, ((solution.nm, solution.nt+1, solution.ni),(solution.nm, -1, solution.ni)), "chunk", (solution.nm,1,1))
+    q[:, 1, :] = solution.q[:, 0, :]
+    λ[:, 1, :] = solution.λ[:, 0, :]
+end
+
+function init_solution_in_hdf5(solution::SolutionSDE{DT,TT,3}, h5::HDF5File) where {DT,TT}
+    q = d_create(h5, "q", DT, ((solution.nd, solution.nt+1, solution.ns),(solution.nd, -1, solution.ns)), "chunk", (solution.nd,1,1))
+    q[:,1,:] = solution.q[:,0,:]
+end
+
+function init_solution_in_hdf5(solution::SolutionPODE{DT,TT,2}, h5::HDF5File) where {DT,TT}
+    q = d_create(h5, "q", DT, ((solution.nd, solution.nt+1), (solution.nd, -1)), "chunk", (solution.nd,1))
+    p = d_create(h5, "p", DT, ((solution.nd, solution.nt+1), (solution.nd, -1)), "chunk", (solution.nd,1))
+    q[:, 1] = solution.q[:, 0]
+    p[:, 1] = solution.p[:, 0]
+end
+
+function init_solution_in_hdf5(solution::SolutionPDAE{DT,TT,2}, h5::HDF5File) where {DT,TT}
+    q = d_create(h5, "q", DT, ((solution.nd, solution.nt+1), (solution.nd, -1)), "chunk", (solution.nd,1))
+    p = d_create(h5, "p", DT, ((solution.nd, solution.nt+1), (solution.nd, -1)), "chunk", (solution.nd,1))
+    λ = d_create(h5, "λ", DT, ((solution.nm, solution.nt+1), (solution.nm, -1)), "chunk", (solution.nm,1))
+    q[:, 1] = solution.q[:, 0]
+    p[:, 1] = solution.p[:, 0]
+    λ[:, 1] = solution.λ[:, 0]
+end
+
+function init_solution_in_hdf5(solution::SolutionPSDE{DT,TT,2}, h5::HDF5File) where {DT,TT}
+    q = d_create(h5, "q", DT, ((solution.nd, solution.nt+1), (solution.nd, -1)), "chunk", (solution.nd,1))
+    p = d_create(h5, "p", DT, ((solution.nd, solution.nt+1), (solution.nd, -1)), "chunk", (solution.nd,1))
+    q[:,1] = solution.q[:,0]
+    p[:, 1] = solution.p[:, 0]
+end
+
+function init_solution_in_hdf5(solution::SolutionPODE{DT,TT,3}, h5::HDF5File) where {DT,TT}
+    q = d_create(h5, "q", DT, ((solution.nd, solution.nt+1, solution.ni),(solution.nd, -1, solution.ni)), "chunk", (solution.nd,1,1))
+    p = d_create(h5, "p", DT, ((solution.nd, solution.nt+1, solution.ni),(solution.nd, -1, solution.ni)), "chunk", (solution.nd,1,1))
+    q[:, 1, :] = solution.q[:, 0, :]
+    p[:, 1, :] = solution.p[:, 0, :]
+end
+
+function init_solution_in_hdf5(solution::SolutionPDAE{DT,TT,3}, h5::HDF5File) where {DT,TT}
+    q = d_create(h5, "q", DT, ((solution.nd, solution.nt+1, solution.ni),(solution.nd, -1, solution.ni)), "chunk", (solution.nd,1,1))
+    p = d_create(h5, "p", DT, ((solution.nd, solution.nt+1, solution.ni),(solution.nd, -1, solution.ni)), "chunk", (solution.nd,1,1))
+    λ = d_create(h5, "λ", DT, ((solution.nm, solution.nt+1, solution.ni),(solution.nm, -1, solution.ni)), "chunk", (solution.nm,1,1))
+    q[:, 1, :] = solution.q[:, 0, :]
+    p[:, 1, :] = solution.p[:, 0, :]
+    λ[:, 1, :] = solution.λ[:, 0, :]
+end
+
+function init_solution_in_hdf5(solution::SolutionPSDE{DT,TT,3}, h5::HDF5File) where {DT,TT}
+    q = d_create(h5, "q", DT, ((solution.nd, solution.nt+1, solution.ns),(solution.nd, -1, solution.ns)), "chunk", (solution.nd,1,1))
+    p = d_create(h5, "p", DT, ((solution.nd, solution.nt+1, solution.ns),(solution.nd, -1, solution.ns)), "chunk", (solution.nd,1,1))
+    q[:,1,:] = solution.q[:,0,:]
+    p[:, 1, :] = solution.p[:, 0, :]
+end
+
+function init_increments_in_hdf5(solution::StochasticSolution{DT,TT,NQ,2}, h5::HDF5File) where {DT,TT,NQ}
+    dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, solution.ntime), "chunk", (solution.nm,1))
+    dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, solution.ntime), "chunk", (solution.nm,1))
+end
+
+function init_increments_in_hdf5(solution::StochasticSolution{DT,TT,NQ,3}, h5::HDF5File) where {DT,TT,NQ}
+    dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, solution.ntime, solution.ns), "chunk", (solution.nm,1,1))
+    dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, solution.ntime, solution.ns), "chunk", (solution.nm,1,1))
+end
+
 function copy_timeteps_to_hdf5(sol::Solution, h5::HDF5File, j1, j2, n1, n2)
-    # j1=offset(sol)+2, j2=offset(sol)+1+solution.nt, n1=1, n2=solution.nt
-    set_dims!(h5["t"], (j2,))
+    if size(h5["t"],1) < j2
+        set_dims!(h5["t"], (j2,))
+    end
     h5["t"][j1:j2] = timesteps(sol)[n1:n2]
 end
 
-
 function copy_solution_to_hdf5(solution::Union{SolutionODE{DT,TT,2},SolutionDAE{DT,TT,2},SolutionSDE{DT,TT,2}}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT}
-    set_dims!(h5["q"], (size(h5["q"],1), j2))
+    if size(h5["q"],2) < j2
+        set_dims!(h5["q"], (size(h5["q"],1), j2))
+    end
     h5["q"][:, j1:j2] = solution.q[:, n1:n2]
 end
 
 function copy_solution_to_hdf5(solution::Union{SolutionODE{DT,TT,3},SolutionDAE{DT,TT,3},SolutionSDE{DT,TT,3}}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT}
-    set_dims!(h5["q"], (size(h5["q"],1), j2, size(h5["q"],3)))
+    if size(h5["q"],2) < j2
+        set_dims!(h5["q"], (size(h5["q"],1), j2, size(h5["q"],3)))
+    end
     h5["q"][:, j1:j2, :] = solution.q[:, n1:n2, :]
 end
 
 function copy_solution_to_hdf5(solution::Union{SolutionPODE{DT,TT,2},SolutionPDAE{DT,TT,2},SolutionPSDE{DT,TT,2}}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT}
-    set_dims!(h5["q"], (size(h5["q"],1), j2))
-    set_dims!(h5["p"], (size(h5["p"],1), j2))
+    if size(h5["q"],2) < j2
+        set_dims!(h5["q"], (size(h5["q"],1), j2))
+    end
+    if size(h5["p"],2) < j2
+        set_dims!(h5["p"], (size(h5["p"],1), j2))
+    end
     h5["q"][:, j1:j2] = solution.q[:, n1:n2]
     h5["p"][:, j1:j2] = solution.p[:, n1:n2]
 end
 
 function copy_solution_to_hdf5(solution::Union{SolutionPODE{DT,TT,3},SolutionPDAE{DT,TT,3},SolutionPSDE{DT,TT,3}}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT}
-    set_dims!(h5["q"], (size(h5["q"],1), j2, size(h5["q"],3)))
-    set_dims!(h5["p"], (size(h5["p"],1), j2, size(h5["p"],3)))
+    if size(h5["q"],2) < j2
+        set_dims!(h5["q"], (size(h5["q"],1), j2, size(h5["q"],3)))
+    end
+    if size(h5["p"],2) < j2
+        set_dims!(h5["p"], (size(h5["p"],1), j2, size(h5["p"],3)))
+    end
     h5["q"][:, j1:j2, :] = solution.q[:, n1:n2, :]
     h5["p"][:, j1:j2, :] = solution.p[:, n1:n2, :]
 end
 
 function copy_multiplier_to_hdf5(solution::Union{SolutionDAE{DT,TT,2},SolutionPDAE{DT,TT,2}}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT}
-    set_dims!(h5["λ"], (size(h5["λ"],1), j2))
+    if size(h5["λ"],2) < j2
+        set_dims!(h5["λ"], (size(h5["λ"],1), j2))
+    end
     h5["λ"][:, j1:j2] = solution.λ[:, n1:n2]
 end
 
 function copy_multiplier_to_hdf5(solution::Union{SolutionDAE{DT,TT,3},SolutionPDAE{DT,TT,3}}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT}
-    set_dims!(h5["λ"], (size(h5["λ"],1), j2, size(h5["λ"],3)))
+    if size(h5["λ"],2) < j2
+        set_dims!(h5["λ"], (size(h5["λ"],1), j2, size(h5["λ"],3)))
+    end
     h5["λ"][:, j1:j2, :] = solution.λ[:, n1:n2, :]
 end
 
 function copy_increments_to_hdf5(solution::StochasticSolution{DT,TT,NQ,2}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT,NQ}
-    set_dims!(h5["ΔW"], (size(h5["ΔW"],1), j2))
-    set_dims!(h5["ΔZ"], (size(h5["ΔZ"],1), j2))
+    if size(h5["ΔW"],2) < j2
+        set_dims!(h5["ΔW"], (size(h5["ΔW"],1), j2))
+    end
+    if size(h5["ΔZ"],2) < j2
+        set_dims!(h5["ΔZ"], (size(h5["ΔZ"],1), j2))
+    end
     h5["ΔW"][:,j1:j2] = solution.W.ΔW[:,n1:n2]
     h5["ΔZ"][:,j1:j2] = solution.W.ΔZ[:,n1:n2]
 end
 
 function copy_increments_to_hdf5(solution::StochasticSolution{DT,TT,NQ,3}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT,NQ}
-    set_dims!(h5["ΔW"], (size(h5["ΔW"],1), j2, size(h5["ΔW"],3)))
-    set_dims!(h5["ΔZ"], (size(h5["ΔZ"],1), j2, size(h5["ΔZ"],3)))
+    if size(h5["ΔW"],2) < j2
+        set_dims!(h5["ΔW"], (size(h5["ΔW"],1), j2, size(h5["ΔW"],3)))
+    end
+    if size(h5["ΔZ"],2) < j2
+        set_dims!(h5["ΔZ"], (size(h5["ΔZ"],1), j2, size(h5["ΔZ"],3)))
+    end
     h5["ΔW"][:,j1:j2,:] = solution.W.ΔW[:,n1:n2,:]
     h5["ΔZ"][:,j1:j2,:] = solution.W.ΔZ[:,n1:n2,:]
 end
@@ -113,11 +271,6 @@ function CommonFunctions.write_to_hdf5(solution::DeterministicSolution, h5::HDF5
     # set convenience variables and compute ranges
     j1 = offset+2
     j2 = offset+1+solution.nt
-
-    # TODO # extend dataset if necessary
-    # if size(x, 2) < j2
-    #     set_dims!(x, (d, j2))
-    # end
 
     # copy data from solution to HDF5 dataset
     copy_timeteps_to_hdf5(solution, h5, j1, j2, 1, solution.nt)
@@ -131,11 +284,6 @@ function CommonFunctions.write_to_hdf5(solution::Union{SolutionDAE,SolutionPDAE}
     # set convenience variables and compute ranges
     j1 = offset+2
     j2 = offset+1+solution.nt
-
-    # TODO # extend dataset if necessary
-    # if size(x, 2) < j2
-    #     set_dims!(x, (d, j2))
-    # end
 
     # copy data from solution to HDF5 dataset
     copy_timeteps_to_hdf5(solution, h5, j1, j2, 1, solution.nt)
@@ -155,11 +303,6 @@ function CommonFunctions.write_to_hdf5(solution::StochasticSolution, h5::HDF5Fil
     j2  = offset+1+solution.nt
     jw1 = offset2+1
     jw2 = offset2+solution.ntime
-
-    # TODO # extend dataset if necessary
-    # if size(x, 2) < j2
-    #     set_dims!(x, (d, j2))
-    # end
 
     # copy data from solution to HDF5 dataset
     copy_timeteps_to_hdf5(solution, h5, j1, j2, 1, solution.nt)

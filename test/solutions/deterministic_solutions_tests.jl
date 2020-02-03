@@ -161,7 +161,7 @@ h5file = "test.hdf5"
 
     # test hdf5 in- and output
     sol1 = Solution(harmonic_oscillator_ode(x0), Δt, nt)
-    create_hdf5(sol1, h5file)
+    create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
@@ -174,7 +174,7 @@ h5file = "test.hdf5"
     rm(h5file)
 
     sol1 = Solution(harmonic_oscillator_ode(x1), Δt, nt)
-    create_hdf5(sol1, h5file)
+    create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
@@ -279,7 +279,7 @@ end
 
     # test hdf5 in- and output
     sol1 = Solution(harmonic_oscillator_pode(q0, p0), Δt, nt)
-    create_hdf5(sol1, h5file)
+    create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
@@ -293,7 +293,7 @@ end
     rm(h5file)
 
     sol1 = Solution(harmonic_oscillator_pode(q1, p1), Δt, nt)
-    create_hdf5(sol1, h5file)
+    create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
@@ -392,7 +392,7 @@ end
 
     # test hdf5 in- and output
     sol1 = Solution(harmonic_oscillator_dae(z0, λ0), Δt, nt)
-    create_hdf5(sol1, h5file)
+    create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
@@ -406,7 +406,7 @@ end
     rm(h5file)
 
     sol1 = Solution(harmonic_oscillator_dae(z1, λ1), Δt, nt)
-    create_hdf5(sol1, h5file)
+    create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
@@ -531,7 +531,7 @@ end
 
     # test hdf5 in- and output
     sol1 = Solution(harmonic_oscillator_pdae(x0, y0, μ0), Δt, nt)
-    create_hdf5(sol1, h5file)
+    create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
@@ -546,7 +546,7 @@ end
     rm(h5file)
 
     sol1 = Solution(harmonic_oscillator_pdae(x1, y1, μ1), Δt, nt)
-    create_hdf5(sol1, h5file)
+    create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)

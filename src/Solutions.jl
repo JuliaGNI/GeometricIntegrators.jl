@@ -61,7 +61,7 @@ module Solutions
     export SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE, SolutionSDE, SolutionPSDE
     export PSolutionPDAE, SSolutionPDAE
     export get_initial_conditions, get_initial_conditions!, set_initial_conditions!,
-           create_hdf5
+           create_hdf5, create_hdf5!
 
     include("solutions/solution_ode.jl")
     include("solutions/solution_pode.jl")
