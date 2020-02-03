@@ -313,7 +313,5 @@ function CommonFunctions.reset!(sol::SolutionPSDE)
 end
 
 function Base.close(solution::SolutionPSDE)
-    # close(solution.t)
-    # close(solution.q)
     close(solution.h5)
 end

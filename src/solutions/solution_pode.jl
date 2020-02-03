@@ -195,8 +195,5 @@ function CommonFunctions.reset!(sol::SolutionPODE)
 end
 
 function Base.close(solution::SolutionPODE)
-    # close(solution.t)
-    # close(solution.q)
-    # close(solution.p)
     close(solution.h5)
 end

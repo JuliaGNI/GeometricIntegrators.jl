@@ -232,9 +232,5 @@ function CommonFunctions.reset!(sol::SolutionPDAE)
 end
 
 function Base.close(solution::SolutionPDAE)
-    # close(solution.t)
-    # close(solution.q)
-    # close(solution.p)
-    # close(solution.λ)
     close(solution.h5)
 end
