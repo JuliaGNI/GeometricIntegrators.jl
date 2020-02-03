@@ -294,7 +294,7 @@ function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,2}, h5::HDF5
     j2 = offset+1+n
 
     # copy data from solution to HDF5 dataset
-    h5["t"][j1:j2] = solution.t[1:n]
+    copy_timeteps_to_hdf5(solution, h5, j1, j2, 1, solution.nt)
     h5["q"][:, j1:j2] = solution.q[:, 1:n]
     h5["p"][:, j1:j2] = solution.p[:, 1:n]
     h5["λ"][:, j1:j2] = solution.λ[:, 1:n]
@@ -310,7 +310,7 @@ function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,3}, h5::HDF5
     j2 = offset+1+n
 
     # copy data from solution to HDF5 dataset
-    h5["t"][j1:j2] = solution.t[1:n]
+    copy_timeteps_to_hdf5(solution, h5, j1, j2, 1, solution.nt)
     h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
     h5["p"][:, j1:j2, :] = solution.p[:, 1:n, :]
     h5["λ"][:, j1:j2, :] = solution.λ[:, 1:n, :]

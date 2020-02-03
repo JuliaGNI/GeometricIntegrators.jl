@@ -104,6 +104,11 @@ function CommonFunctions.write_to_hdf5(solution::Solution, file::AbstractString)
     close(h5)
 end
 
+# saving the time time series
+function copy_timeteps_to_hdf5(sol::Solution, h5::HDF5File, j1, j2, n1, n2)
+    h5["t"][j1:j2] = timesteps(sol)[n1:n2]
+end
+
 
 function determine_qdim(equation::Union{SDE,PSDE,SPSDE})
     ns = equation.ns

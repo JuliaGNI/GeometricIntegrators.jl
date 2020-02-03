@@ -390,7 +390,6 @@ function CommonFunctions.write_to_hdf5(solution::SolutionSDE, h5::HDF5File=hdf5(
     # set convenience variables and compute ranges
     d   = solution.nd
     m   = solution.nm
-    n   = solution.nt
     s   = solution.ns
 
     j1  = offset+2
@@ -404,7 +403,7 @@ function CommonFunctions.write_to_hdf5(solution::SolutionSDE, h5::HDF5File=hdf5(
     # end
 
     # saving the time time series
-    h5["t"][j1:j2] = solution.t[1:n]
+    copy_timeteps_to_hdf5(solution, h5, j1, j2, 1, solution.nt)
 
     # copy data from solution to HDF5 dataset
     copy_solution_to_hdf5(solution, h5, j1, j2, 1, solution.nt)
