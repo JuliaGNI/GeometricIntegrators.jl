@@ -65,28 +65,14 @@ function WienerProcess(Δt::tType, dW::Array{dType,1}, dZ::Array{dType,1}, conv=
 end
 
 
-function WienerProcess(Δt::tType, dW::Array{dType,2}, dZ::Array{dType,2}, conv=:strong) where {dType, tType}
-    @assert size(dW,1) == size(dZ,1)
-    @assert size(dW,2) == size(dZ,2)
-
-    nd = size(dW,1)
-    nt = size(dW,2)
-    ns = 1
-
-    return WienerProcess{dType, tType, 2, conv}(nd, nt, ns, Δt, dW, dZ)
-end
-
-
-function WienerProcess(Δt::tType, dW::Array{dType,3}, dZ::Array{dType,3}, conv=:strong) where {dType, tType}
-    @assert size(dW,1) == size(dZ,1)
-    @assert size(dW,2) == size(dZ,2)
-    @assert size(dW,3) == size(dZ,3)
+function WienerProcess(Δt::tType, dW::Array{dType,N}, dZ::Array{dType,N}, conv=:strong) where {dType, tType, N}
+    @assert size(dW) == size(dZ)
 
     nd = size(dW,1)
     nt = size(dW,2)
     ns = size(dW,3)
 
-    return WienerProcess{dType, tType, 3, conv}(nd, nt, ns, Δt, dW, dZ)
+    return WienerProcess{dType, tType, N, conv}(nd, nt, ns, Δt, dW, dZ)
 end
 
 
