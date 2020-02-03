@@ -46,9 +46,6 @@ end
 
 "Integrate SDE for the sample paths m with m₁ ≤ m ≤ m₂."
 function integrate!(int::StochasticIntegrator, sol::StochasticSolution, m1::Int, m2::Int)
-    # initialize integrator for samples paths m with m₁ ≤ m ≤ m₂ and time step 0
-    initialize!(int, sol, m1, m2)
-
     # integrate sample paths m with m₁ ≤ m ≤ m₂ for all time steps
     integrate!(int, sol, m1, m2, 1, sol.ntime)
 end
@@ -64,42 +61,48 @@ function integrate!(int::StochasticIntegrator{DT,TT}, sol::StochasticSolution{DT
     @assert n2 ≥ n1
     @assert n2 ≤ sol.ntime
 
+    asol = AtomicSolution(equation(int))
+
     # loop over sample paths
     for m in m1:m2
-            # loop over time steps
-            for n in n1:n2
-                # try
-                    # integrate one initial condition for one time step
-                    integrate_step!(int, sol, m, n)
-                # catch ex
-                #     tstr = " in time step " * string(n)
-                #
-                #     if m1 ≠ m2
-                #         tstr *= " for initial condition " * string(m)
-                #     end
-                #
-                #     tstr *= "."
-                #
-                #     if isa(ex, DomainError)
-                #         @warn("Domain error" * tstr)
-                #     elseif isa(ex, ErrorException)
-                #         @warn("Simulation exited early" * tstr)
-                #         @warn(ex.msg)
-                #         throw(ex)
-                #     else
-                #         @warn(string(typeof(ex)) * tstr)
-                #         throw(ex)
-                #     end
-                # end
+        get_initial_conditions!(sol, asol, m, n1)
+        initialize!(int, asol)
+
+        # loop over time steps
+        for n in n1:n2
+            # try
+                # copy the increments of the Brownian Process
+                get_increments!(sol, asol, n, m)
+
+                # integrate one initial condition for one time step
+                integrate_step!(int, asol)
+
+                # take care of periodic solutions
+                cut_periodic_solution!(asol, periodicity(equation(int)))
+
+                # copy solution from cache to solution
+                set_solution!(sol, asol, n, m)
+
+            # catch ex
+            #     tstr = " in time step " * string(n)
+            #
+            #     if m1 ≠ m2
+            #         tstr *= " for initial condition " * string(m)
+            #     end
+            #
+            #     tstr *= "."
+            #
+            #     if isa(ex, DomainError)
+            #         @warn("Domain error" * tstr)
+            #     elseif isa(ex, ErrorException)
+            #         @warn("Simulation exited early" * tstr)
+            #         @warn(ex.msg)
+            #         throw(ex)
+            #     else
+            #         @warn(string(typeof(ex)) * tstr)
+            #         throw(ex)
+            #     end
+            # end
         end
-    end
-end
-
-
-"Initialize stochastic integrator for the sample paths m with m₁ ≤ m ≤ m₂ and time step 0."
-function initialize!(int::StochasticIntegrator, sol::StochasticSolution, m1::Int, m2::Int)
-    for m in m1:m2
-        # initialize integrator for the sample path m and time step 0
-        initialize!(int, sol, m)
     end
 end

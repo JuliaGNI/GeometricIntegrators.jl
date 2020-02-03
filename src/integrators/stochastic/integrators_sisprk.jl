@@ -139,6 +139,78 @@ struct NonlinearFunctionCacheSISPRK{DT}
     end
 end
 
+
+"Stochastic implicit partitioned Runge-Kutta integrator."
+struct IntegratorSISPRK{DT, TT, PT <: ParametersSISPRK{DT,TT},
+                                ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
+    params::PT
+    solver::ST
+    # InitialGuessPSDE not implemented for SFIPRK
+    #iguess::IT
+    fcache::NonlinearFunctionCacheSISPRK{DT}
+
+    Δy::Vector{DT}
+    Δz::Vector{DT}
+end
+
+# K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
+function IntegratorSISPRK(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}, tableau::TableauSISPRK{TT}, Δt::TT; K::Int=0) where {DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}
+    D = equation.d
+    M = equation.m
+    NS= max(equation.ns,equation.ni)
+    S = tableau.s
+
+    # create params
+    K==0 ? A = 0.0 : A = sqrt( 2*K*Δt*abs(log(Δt)) )
+    params = ParametersSISPRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), A)
+
+    # create solver
+    solver = create_nonlinear_solver(DT, 2*D*S, params)
+
+    # Not implementing InitialGuessSDE
+    # create initial guess
+    #iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
+
+    # create cache for internal stage vectors and update vectors
+    fcache = NonlinearFunctionCacheSISPRK{DT}(D, M, S)
+
+    # create temporary arrays
+    Δy  = zeros(DT,M)
+    Δz  = zeros(DT,M)
+
+    # create integrator
+    IntegratorSISPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, Δy, Δz)
+end
+
+@inline equation(integrator::IntegratorSISPRK) = integrator.params.equ
+@inline timestep(integrator::IntegratorSISPRK) = integrator.params.Δt
+@inline tableau(integrator::IntegratorSISPRK) = integrator.params.tab
+@inline nstages(integrator::IntegratorSISPRK)  = nstages(tableau(integrator))
+@inline eachstage(integrator::IntegratorSISPRK) = 1:nstages(integrator)
+Base.eltype(integrator::IntegratorSISPRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
+
+
+function update_params!(int::IntegratorSISPRK, sol::AtomicSolutionPSDE)
+    # set time for nonlinear solver and copy previous solution
+    int.params.t  = sol.t
+    int.params.q .= sol.q
+    int.params.p .= sol.p
+    int.params.ΔW .= sol.ΔW
+    int.params.ΔZ .= sol.ΔZ
+
+    # truncate the increments ΔW with A
+    if int.params.A>0
+        for i in eachindex(int.params.ΔW)
+            if int.params.ΔW[i]<-int.params.A
+                int.params.ΔW[i] = -int.params.A
+            elseif int.params.ΔW[i]>int.params.A
+                int.params.ΔW[i] = int.params.A
+            end
+        end
+    end
+end
+
+
 """
 Unpacks the data stored in x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ..., Z[1][1], Z[1][2], ... Z[1][D], Z[2][1], ...)
 into Y, Z::Vector{Vector}, calculates the internal stages Q, P, the values of the RHS
@@ -231,77 +303,11 @@ end
 end
 
 
-"Stochastic implicit partitioned Runge-Kutta integrator."
-struct IntegratorSISPRK{DT, TT, PT <: ParametersSISPRK{DT,TT},
-                                ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
-    params::PT
-    solver::ST
-    # InitialGuessPSDE not implemented for SFIPRK
-    #iguess::IT
-    fcache::NonlinearFunctionCacheSISPRK{DT}
-
-    Δy::Vector{DT}
-    Δz::Vector{DT}
-
-    q::Vector{Vector{TwicePrecision{DT}}}
-    p::Vector{Vector{TwicePrecision{DT}}}
-end
-
-# K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
-function IntegratorSISPRK(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}, tableau::TableauSISPRK{TT}, Δt::TT; K::Int=0) where {DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}
-    D = equation.d
-    M = equation.m
-    NS= max(equation.ns,equation.ni)
-    S = tableau.s
-
-    # create params
-    K==0 ? A = 0.0 : A = sqrt( 2*K*Δt*abs(log(Δt)) )
-    params = ParametersSISPRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), A)
-
-    # create solver
-    solver = create_nonlinear_solver(DT, 2*D*S, params)
-
-    # Not implementing InitialGuessSDE
-    # create initial guess
-    #iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
-
-    # create cache for internal stage vectors and update vectors
-    fcache = NonlinearFunctionCacheSISPRK{DT}(D, M, S)
-
-    # create temporary arrays
-    Δy  = zeros(DT,M)
-    Δz  = zeros(DT,M)
-
-    # create solution vectors
-    q = create_solution_vector(DT, D, NS)
-    p = create_solution_vector(DT, D, NS)
-
-    # create integrator
-    IntegratorSISPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, Δy, Δz, q, p)
-end
-
-equation(integrator::IntegratorSISPRK) = integrator.params.equ
-timestep(integrator::IntegratorSISPRK) = integrator.params.Δt
-tableau(integrator::IntegratorSISPRK) = integrator.params.tab
-Base.eltype(integrator::IntegratorSISPRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
-
-
-function initialize!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE, m::Int) where {DT,TT}
-    check_solution_dimension_asserts(sol, m)
-
-    # copy the m-th initial condition for the k-th sample path
-    get_initial_conditions!(sol, int.q[m], int.p[m], m)
-
-    # Not implementing InitialGuessSDE
-    # # initialise initial guess
-    # initialize!(int.iguess, m, sol.t[0], int.q[m])
-end
-
 """
 This function computes initial guesses for Y, Z and assigns them to int.solver.x
 The prediction is calculated using an explicit integrator.
 """
-function initial_guess!(int::IntegratorSISPRK{DT,TT}) where {DT,TT}
+function initial_guess!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
 
     # NOT IMPLEMENTING InitialGuessSDE
 
@@ -433,45 +439,15 @@ end
 Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator.
  Integrating the m-th sample path
 """
-function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,NQ,NW}, m::Int, n::Int) where {DT,TT,NQ,NW}
-    check_solution_dimension_asserts(sol, m, n)
-
-    # set time for nonlinear solver
-    int.params.t  = sol.t[0] + (n-1)*int.params.Δt
-    int.params.q .= int.q[m]
-    int.params.p .= int.p[m]
-
-
-    # copy the increments of the Brownian Process
-    if NW==2
-        #Multidimensional Brownian motion, 1 sample path
-        for l = 1:sol.nm
-            int.params.ΔW[l] = sol.W.ΔW[l,n]
-            int.params.ΔZ[l] = sol.W.ΔZ[l,n]
-        end
-    elseif NW==3
-        #1D or Multidimensional Brownian motion, k-th sample path
-        for l = 1:sol.nm
-            int.params.ΔW[l] = sol.W.ΔW[l,n,m]
-            int.params.ΔZ[l] = sol.W.ΔZ[l,n,m]
-        end
-    end
-
-
-    # truncate the increments ΔW with A
-    if int.params.A>0
-        for i in eachindex(int.params.ΔW)
-            if int.params.ΔW[i]<-int.params.A
-                int.params.ΔW[i] = -int.params.A
-            elseif int.params.ΔW[i]>int.params.A
-                int.params.ΔW[i] = int.params.A
-            end
-        end
-    end
-
+function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
+    # update nonlinear solver parameters from cache
+    update_params!(int, sol)
 
     # compute initial guess and assign to int.solver.x
-    initial_guess!(int)
+    initial_guess!(int, sol)
+
+    # reset cache
+    reset!(sol, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
@@ -486,19 +462,9 @@ function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::SolutionPSDE{DT,TT,N
     compute_stages!(int.solver.x, int.fcache.Q, int.fcache.P, int.fcache.V, int.fcache.F1, int.fcache.F2, int.fcache.B, int.fcache.G1, int.fcache.G2, int.fcache.Y, int.fcache.Z, int.params)
 
     # compute final update
-    update_solution!(int.q[m], int.p[m], int.fcache.V, int.fcache.F1, int.fcache.F2, int.fcache.B, int.fcache.G1, int.fcache.G2,
+    update_solution!(sol.q, sol.p, int.fcache.V, int.fcache.F1, int.fcache.F2, int.fcache.B, int.fcache.G1, int.fcache.G2,
                     int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂,
                     int.params.tab.pdrift1.b, int.params.tab.pdrift1.b̂, int.params.tab.pdrift2.b, int.params.tab.pdrift2.b̂,
                     int.params.tab.pdiff1.b, int.params.tab.pdiff1.b̂, int.params.tab.pdiff2.b, int.params.tab.pdiff2.b̂,
                     int.params.Δt, int.params.ΔW, int.Δy, int.Δz)
-
-    # # NOT IMPLEMENTING InitialGuessSDE
-    # # # copy solution to initial guess
-    # # update!(int.iguess, m, sol.t[0] + n*int.params.Δt, int.q[m])
-
-    # take care of periodic solutions
-    cut_periodic_solution!(int.q[m], int.params.equ.periodicity)
-
-    # # copy to solution
-    set_solution!(sol, int.q[m], int.p[m], n, m)
 end

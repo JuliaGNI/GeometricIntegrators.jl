@@ -183,8 +183,6 @@ struct IntegratorSIRK{DT, TT, PT <: ParametersSIRK{DT,TT},
     tB2::Matrix{DT}
     tΔW::Vector{DT}
     Δy::Vector{DT}
-
-    q::Vector{Vector{TwicePrecision{DT}}}
 end
 
 
@@ -221,36 +219,44 @@ function IntegratorSIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSIRK{TT}, 
     tΔW = zeros(DT,M)
     Δy  = zeros(DT,M)
 
-    # create solution vectors
-    q = create_solution_vector(DT, D, NS)
-
     # create integrator
     IntegratorSIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver,
-                    fcache, tQ, ΔQ, ΔQ1, ΔQ2, tV1, tV2, tB1, tB2, tΔW, Δy, q)
+                    fcache, tQ, ΔQ, ΔQ1, ΔQ2, tV1, tV2, tB1, tB2, tΔW, Δy)
 end
 
-equation(integrator::IntegratorSIRK) = integrator.params.equ
-timestep(integrator::IntegratorSIRK) = integrator.params.Δt
-tableau(integrator::IntegratorSIRK) = integrator.params.tab
+@inline equation(integrator::IntegratorSIRK) = integrator.params.equ
+@inline timestep(integrator::IntegratorSIRK) = integrator.params.Δt
+@inline tableau(integrator::IntegratorSIRK) = integrator.params.tab
+@inline nstages(integrator::IntegratorSIRK)  = nstages(tableau(integrator))
+@inline eachstage(integrator::IntegratorSIRK) = 1:nstages(integrator)
 Base.eltype(integrator::IntegratorSIRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
 
 
-function initialize!(int::IntegratorSIRK{DT,TT}, sol::SolutionSDE, m::Int) where {DT,TT}
-    check_solution_dimension_asserts(sol, m)
+function update_params!(int::IntegratorSIRK, sol::AtomicSolutionSDE)
+    # set time for nonlinear solver and copy previous solution
+    int.params.t  = sol.t
+    int.params.q .= sol.q
+    int.params.ΔW .= sol.ΔW
+    int.params.ΔZ .= sol.ΔZ
 
-    # copy the m-th initial condition for the k-th sample path
-    get_initial_conditions!(sol, int.q[m], m)
-
-    # Not implementing InitialGuessSDE
-    # # initialise initial guess
-    # initialize!(int.iguess, m, sol.t[0], int.q[m])
+    # truncate the increments ΔW with A
+    if int.params.A>0
+        for i in eachindex(int.params.ΔW)
+            if int.params.ΔW[i]<-int.params.A
+                int.params.ΔW[i] = -int.params.A
+            elseif int.params.ΔW[i]>int.params.A
+                int.params.ΔW[i] = int.params.A
+            end
+        end
+    end
 end
+
 
 """
 This function computes initial guesses for Y and assigns them to int.solver.x
 The prediction is calculated using an explicit integrator.
 """
-function initial_guess!(int::IntegratorSIRK{DT,TT}) where {DT,TT}
+function initial_guess!(int::IntegratorSIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
 
     # NOT IMPLEMENTING InitialGuessSDE
 
@@ -306,41 +312,15 @@ end
 Integrate SDE with a stochastic implicit Runge-Kutta integrator.
   Integrating the m-th sample path
 """
-function integrate_step!(int::IntegratorSIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,NW}, m::Int, n::Int) where {DT,TT,NQ,NW}
-    check_solution_dimension_asserts(sol, m, n)
-
-    # set time for nonlinear solver
-    int.params.t  = sol.t[0] + (n-1)*int.params.Δt
-    int.params.q .= int.q[m]
-
-    # copy the increments of the Brownian Process
-    if NW==2
-        #Multidimensional Brownian motion, 1 sample path
-        for l = 1:sol.nm
-            int.params.ΔW[l] = sol.W.ΔW[l,n]
-            int.params.ΔZ[l] = sol.W.ΔZ[l,n]
-        end
-    elseif NW==3
-        #1D or Multidimensional Brownian motion, m-th sample path
-        for l = 1:sol.nm
-            int.params.ΔW[l] = sol.W.ΔW[l,n,m]
-            int.params.ΔZ[l] = sol.W.ΔZ[l,n,m]
-        end
-    end
-
-    # truncate the increments ΔW with A
-    if int.params.A>0
-        for i in eachindex(int.params.ΔW)
-            if int.params.ΔW[i]<-int.params.A
-                int.params.ΔW[i] = -int.params.A
-            elseif int.params.ΔW[i]>int.params.A
-                int.params.ΔW[i] = int.params.A
-            end
-        end
-    end
+function integrate_step!(int::IntegratorSIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
+    # update nonlinear solver parameters from cache
+    update_params!(int, sol)
 
     # compute initial guess and assign to int.solver.x
-    initial_guess!(int)
+    initial_guess!(int, sol)
+
+    # reset cache
+    reset!(sol, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
@@ -355,15 +335,5 @@ function integrate_step!(int::IntegratorSIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,N
     compute_stages!(int.solver.x, int.fcache.Q, int.fcache.V, int.fcache.B, int.fcache.Y, int.params)
 
     # compute final update
-    update_solution!(int.q[m], int.fcache.V, int.fcache.B, int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂, int.params.Δt, int.params.ΔW, int.Δy)
-
-    # # NOT IMPLEMENTING InitialGuessSDE
-    # # # copy solution to initial guess
-    # # update!(int.iguess, m, sol.t[0] + n*int.params.Δt, int.q[m])
-
-    # take care of periodic solutions
-    cut_periodic_solution!(int.q[m], int.params.equ.periodicity)
-
-    # # copy to solution
-    set_solution!(sol, int.q[m], n, m)
+    update_solution!(sol.q, int.fcache.V, int.fcache.B, int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂, int.params.Δt, int.params.ΔW, int.Δy)
 end

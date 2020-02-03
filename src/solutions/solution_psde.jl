@@ -303,6 +303,35 @@ function set_solution!(sol::SolutionPSDE{DT,TT}, q::SolutionVector{DT}, p::Solut
 end
 
 
+# copy increments of the Brownian Process for multidimensional Brownian motion, 1 sample path
+function get_increment(sol::SolutionPSDE{DT,TT,NQ,2}, k=1) where {DT,TT,NQ}
+    @assert k==1
+    return (sol.W.ΔW[:,n], sol.W.ΔZ[:,n-1])
+end
+
+# copy increments of the Brownian Process for multidimensional Brownian motion, r-th sample path
+function get_increment(sol::SolutionPSDE{DT,TT,NQ,3}, k) where {DT,TT,NQ}
+    return (sol.W.ΔW[:,n,k], sol.W.ΔZ[:,n-1,k])
+end
+
+# copy increments of the Brownian Process for multidimensional Brownian motion, 1 sample path
+function get_increments!(sol::SolutionPSDE{DT,TT,NQ,2}, asol::AtomicSolutionPSDE{DT,TT}, n, k=1) where {DT,TT,NQ}
+    @assert k==1
+    for l = 1:sol.nm
+        asol.ΔW[l] = sol.W.ΔW[l,n]
+        asol.ΔZ[l] = sol.W.ΔZ[l,n]
+    end
+end
+
+# copy increments of the Brownian Process for multidimensional Brownian motion, r-th sample path
+function get_increments!(sol::SolutionPSDE{DT,TT,NQ,3}, asol::AtomicSolutionPSDE{DT,TT}, n, k) where {DT,TT,NQ}
+    for l = 1:sol.nm
+        asol.ΔW[l] = sol.W.ΔW[l,n,k]
+        asol.ΔZ[l] = sol.W.ΔZ[l,n,k]
+    end
+end
+
+
 function CommonFunctions.reset!(sol::SolutionPSDE)
     reset!(sol.q)
     reset!(sol.p)
