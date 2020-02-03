@@ -367,17 +367,17 @@ Append solution to HDF5 file.
   offset - start writing q at the position offset+2
   offset2- start writing ΔW, ΔZ at the position offset2+1
 """
-function CommonFunctions.write_to_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, h5::HDF5File=hdf5(solution), offset=0, offset2=offset) where {DT,TT,NQ,NW}
+function CommonFunctions.write_to_hdf5(solution::SolutionSDE, h5::HDF5File=hdf5(solution), offset=0, offset2=offset)
     # set convenience variables and compute ranges
     d   = solution.nd
     m   = solution.nm
     n   = solution.nt
     s   = solution.ns
-    ntime = solution.ntime
+
     j1  = offset+2
-    j2  = offset+1+n
+    j2  = offset+1+solution.nt
     jw1 = offset2+1
-    jw2 = offset2+ntime
+    jw2 = offset2+solution.ntime
 
     # # extend dataset if necessary
     # if size(x, 2) < j2
@@ -388,22 +388,30 @@ function CommonFunctions.write_to_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, h5::H
     h5["t"][j1:j2] = solution.t[1:n]
 
     # copy data from solution to HDF5 dataset
-    if NQ==2
-        h5["q"][:, j1:j2] = solution.q[:, 1:n]
-    elseif NQ==3
-        h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
-    end
+    copy_solution_to_hdf5(solution, h5, j1, j2, 1, solution.nt)
 
     if exists(h5, "ΔW") && exists(h5, "ΔZ")
         # copy the Wiener process increments from solution to HDF5 dataset
-        if NW==2
-            h5["ΔW"][:,jw1:jw2] = solution.W.ΔW[:,1:ntime]
-            h5["ΔZ"][:,jw1:jw2] = solution.W.ΔZ[:,1:ntime]
-        elseif NW==3
-            h5["ΔW"][:,jw1:jw2,:] = solution.W.ΔW[:,1:ntime,:]
-            h5["ΔZ"][:,jw1:jw2,:] = solution.W.ΔZ[:,1:ntime,:]
-        end
+        copy_increments_to_hdf5(solution, h5, jw1, jw2, 1, solution.ntime)
     end
 
     return nothing
+end
+
+function copy_solution_to_hdf5(solution::SolutionSDE{DT,TT,2,NW}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT,NW}
+    h5["q"][:, j1:j2] = solution.q[:, n1:n2]
+end
+
+function copy_solution_to_hdf5(solution::SolutionSDE{DT,TT,3,NW}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT,NW}
+    h5["q"][:, j1:j2, :] = solution.q[:, n1:n2, :]
+end
+
+function copy_increments_to_hdf5(solution::SolutionSDE{DT,TT,NQ,2}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT,NQ}
+    h5["ΔW"][:,j1:j2] = solution.W.ΔW[:,n1:n2]
+    h5["ΔZ"][:,j1:j2] = solution.W.ΔZ[:,n1:n2]
+end
+
+function copy_increments_to_hdf5(solution::SolutionSDE{DT,TT,NQ,3}, h5::HDF5File, j1, j2, n1, n2) where {DT,TT,NQ}
+    h5["ΔW"][:,j1:j2,:] = solution.W.ΔW[:,n1:n2,:]
+    h5["ΔZ"][:,j1:j2,:] = solution.W.ΔZ[:,n1:n2,:]
 end
