@@ -201,13 +201,11 @@ function create_hdf5(solution::SolutionODE{DT,TT,2}, file::AbstractString) where
     save_attributes(solution)
 
     # create dataset
-    nt = div(solution.ntime, solution.nsave)
-
     # nt can be used to set the expected total number of timesteps
     # so that the size of the array does not need to be adapted dynamically.
     # Right now, the size has to be set to nt as dynamical size adaptation is
     # not yet working.
-    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
+    t = d_create(solution.h5, "t", datatype(TT), dataspace((solution.nt+1,)), "chunk", (1,))
     q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
 
     # copy initial conditions
@@ -226,14 +224,12 @@ function create_hdf5(solution::SolutionODE{DT,TT,3}, file::AbstractString) where
     save_attributes(solution)
 
     # create dataset
-    nt = div(solution.ntime, solution.nsave)
-
     # nt can be used to set the expected total number of timesteps
     # so that the size of the array does not need to be adapted dynamically.
     # Right now, the size has to be set to nt as dynamical size adaptation is
     # not yet working.
-    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
-    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
+    t = d_create(solution.h5, "t", datatype(TT), dataspace((solution.nt+1,)), "chunk", (1,))
+    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ni), "chunk", (solution.nd,1,1))
 
     # copy initial conditions
     t[1] = solution.t[0]

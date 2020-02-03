@@ -300,19 +300,16 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString; s
     save_attributes(solution, solution.h5)
 
     # create dataset
-    nt = div(solution.ntime, solution.nsave)
-
-    # create dataset
     # nt and ntime can be used to set the expected total number of timesteps to be saved,
     # so that the size of the array does not need to be adapted dynamically.
     # Right now, it has to be set as dynamical size adaptation is not yet
     # working. The default value is the size of the solution structure.
     if NQ==2
-        q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
+        q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
         # copy initial conditions
         q[:,1] = solution.q[:,0]
     elseif NQ==3
-        q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ns), "chunk", (solution.nd,1,1))
+        q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ns), "chunk", (solution.nd,1,1))
         # copy initial conditions
         q[:,1,:] = solution.q[:,0,:]
     end

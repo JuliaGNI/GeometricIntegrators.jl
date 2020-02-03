@@ -249,11 +249,10 @@ function create_hdf5(solution::SolutionPDAE{DT,TT,2}, file::AbstractString) wher
     save_attributes(solution)
 
     # create datasets
-    nt = div(solution.ntime, solution.nsave)
-    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
-    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
-    p = d_create(solution.h5, "p", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
-    λ = d_create(solution.h5, "λ", datatype(DT), dataspace(solution.nm, nt+1), "chunk", (solution.nm,1))
+    t = d_create(solution.h5, "t", datatype(TT), dataspace((solution.nt+1,)), "chunk", (1,))
+    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
+    p = d_create(solution.h5, "p", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
+    λ = d_create(solution.h5, "λ", datatype(DT), dataspace(solution.nm, solution.nt+1), "chunk", (solution.nm,1))
 
     # copy initial conditions
     t[1] = solution.t[0]
@@ -273,11 +272,10 @@ function create_hdf5(solution::SolutionPDAE{DT,TT,3}, file::AbstractString) wher
     save_attributes(solution, solution.h5)
 
     # create datasets
-    nt = div(solution.ntime, solution.nsave)
-    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
-    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
-    p = d_create(solution.h5, "p", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
-    λ = d_create(solution.h5, "λ", datatype(DT), dataspace(solution.nm, nt+1, solution.ni), "chunk", (solution.nm,1,1))
+    t = d_create(solution.h5, "t", datatype(TT), dataspace((solution.nt+1,)), "chunk", (1,))
+    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ni), "chunk", (solution.nd,1,1))
+    p = d_create(solution.h5, "p", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ni), "chunk", (solution.nd,1,1))
+    λ = d_create(solution.h5, "λ", datatype(DT), dataspace(solution.nm, solution.nt+1, solution.ni), "chunk", (solution.nm,1,1))
 
     # copy initial conditions
     t[1] = solution.t[0]
