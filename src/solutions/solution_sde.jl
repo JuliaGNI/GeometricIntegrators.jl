@@ -29,6 +29,7 @@ mutable struct SolutionSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dTy
     K::Int
     ntime::Int
     nsave::Int
+    nwrite::Int
     counter::Vector{Int}
     woffset::Int
     h5::HDF5File
@@ -41,17 +42,18 @@ mutable struct SolutionSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dTy
         nm = W.nd
         ntime = W.nt
         nsave = t.step
+        nwrite = ntime
 
         @assert CONV==:strong || (CONV==:weak && K==0)
         @assert ntime==nt*nsave
         @assert q.nt == t.n
         @assert W.ns == q.ni
 
-        new{DT,TT,NQ,NW,CONV}(nd, nm, nt, ns, t, q, W, K, ntime, nsave, zeros(Int, ns), 0)
+        new{DT,TT,NQ,NW,CONV}(nd, nm, nt, ns, t, q, W, K, ntime, nsave, nwrite, zeros(Int, ns), 0)
     end
 
     function SolutionSDE(nd::Int, nm::Int, nt::Int, ns::Int, ni::Int, Δt::tType,
-                W::WienerProcess{dType,tType,NW,CONV}, K::Int, ntime::Int, nsave::Int) where {dType <: Number, tType <: Real, NW, CONV}
+                W::WienerProcess{dType,tType,NW,CONV}, K::Int, ntime::Int, nsave::Int, nwrite::Int) where {dType <: Number, tType <: Real, NW, CONV}
 
         @assert CONV==:strong || (CONV==:weak && K==0)
         @assert nd > 0
@@ -62,42 +64,56 @@ mutable struct SolutionSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dTy
         @assert ntime == 0 || ntime ≥ nsave
         @assert mod(ntime, nsave) == 0
 
+        if nwrite > 0
+            @assert mod(nwrite, nsave) == 0
+            @assert mod(ntime, nwrite) == 0
+        end
+
         @assert NW ∈ (2,3)
 
         t = TimeSeries{tType}(nt, Δt, nsave)
         q = SDataSeries(dType, nd, nt, max(ns,ni))
         NQ = ns==ni==1 ? 2 : 3
 
-        new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, W, K, ntime, nsave, zeros(Int, max(ns,ni)), 0)
+        new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, W, K, ntime, nsave, nwrite, zeros(Int, max(ns,ni)), 0)
     end
 
 end
 
 
-function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0, conv=:strong) where {DT,TT}
+function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; K::Int=0, conv=:strong, filename=nothing) where {DT,TT}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
     ni = equation.ni
     nt = div(ntime, nsave)
+    nt = (nwrite == 0 ? nt : div(nwrite, nsave))
+    nw = (nwrite == 0 ? ntime : nwrite)
 
     # Holds the Wiener process data for ALL computed time steps
     # Wiener process increments are automatically generated here
     W = WienerProcess(DT, nm, ntime, max(ni,ns), Δt, conv)
 
-    s = SolutionSDE(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave)
+    s = SolutionSDE(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw)
     set_initial_conditions!(s, equation)
+
+    if !isnothing(filename)
+        isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
+        create_hdf5(s, filename)
+    end
 
     return s
 end
 
 
-function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1; K::Int=0, conv=:strong) where {DT,TT,NW}
+function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; K::Int=0, conv=:strong, filename=nothing) where {DT,TT,NW}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
     ni = equation.ni
     nt = div(ntime, nsave)
+    nt = (nwrite == 0 ? nt : div(nwrite, nsave))
+    nw = (nwrite == 0 ? ntime : nwrite)
 
     @assert size(dW) == size(dZ)
     @assert NW ∈ (2,3)
@@ -116,8 +132,13 @@ function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, dW::Array{DT, NW}, dZ::Array
     # Wiener process increments are prescribed by the arrays ΔW and ΔZ
     W = WienerProcess(Δt, dW, dZ, conv)
 
-    s = SolutionSDE(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave)
+    s = SolutionSDE(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw)
     set_initial_conditions!(s, equation)
+
+    if !isnothing(filename)
+        isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
+        create_hdf5(s, filename)
+    end
 
     return s
 end
@@ -149,7 +170,7 @@ function SolutionSDE(file::String)
 
     # read attributes
     nsave = read(attrs(h5)["nsave"])
-    ni    = read(attrs(h5)["ni"])
+    ns    = read(attrs(h5)["ns"])
 
     # reading data arrays
     t = TimeSeries(read(h5["t"]), nsave)
@@ -176,10 +197,10 @@ function SolutionSDE(file::String)
 
     close(h5)
 
-    if ndims(q_array)==3 && ni>1
-        q = SStochasticDataSeries(q_array,IC=true)
+    if ndims(q_array)==3
+        q = SDataSeries(q_array)
     else
-        q = SStochasticDataSeries(q_array)
+        q = SDataSeries(q_array)
     end
 
     # create solution
@@ -191,9 +212,11 @@ function SolutionSDE(file::String)
 end
 
 
-timesteps(sol::SolutionSDE)  = sol.t.t
+hdf5(sol::SolutionSDE) = sol.h5
+timesteps(sol::SolutionSDE) = sol.t.t
 ntime(sol::SolutionSDE) = sol.ntime
 nsave(sol::SolutionSDE) = sol.nsave
+offset(sol::SolutionSDE) = sol.woffset
 conv(sol::SolutionSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
 
 
@@ -242,24 +265,23 @@ function get_initial_conditions(sol::SolutionSDE, k, n=1)
     get_solution(sol, n-1, k)
 end
 
-
-function get_solution!(sol::SolutionSDE{DT,TT}, q::SolutionVector{DT}, n, k) where {DT,TT}
+function get_solution!(sol::SolutionSDE{DT}, q::SolutionVector{DT}, n, k=1) where {DT}
     for i in eachindex(q) q[i] = sol.q[i, n, k] end
 end
 
-function get_solution(sol::SolutionSDE, n, k)
+function get_solution(sol::SolutionSDE, n, k=1)
     (sol.t[n], sol.q[:, n, k])
 end
 
-function set_solution!(sol::SolutionSDE, t, q, n, k)
+function set_solution!(sol::SolutionSDE, t, q, n, k=1)
     set_solution!(sol, q, n, k)
 end
 
-function set_solution!(sol::SolutionSDE{DT,TT}, asol::AtomicSolutionSDE{DT,TT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionSDE{DT,TT}, asol::AtomicSolutionSDE{DT,TT}, n, k=1) where {DT,TT}
     set_solution!(sol, asol.t, asol.q, n, k)
 end
 
-function set_solution!(sol::SolutionSDE{DT,TT}, q::SolutionVector{DT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionSDE{DT}, q::SolutionVector{DT}, n, k=1) where {DT}
     @assert n <= sol.ntime
     @assert k <= sol.ns
     if mod(n, sol.nsave) == 0
@@ -293,17 +315,15 @@ Creates HDF5 file and initialises datasets for SDE solution object.
   nt - the total number of time steps to store
   ntime - the total number of timesteps to be computed
 """
-function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString, nt::Int=solution.nt, ntime::Int=solution.ntime; save_W=true) where {DT,TT,NQ,NW}
-    @assert nt ≥ 1
-    @assert ntime ≥ 1
-
+function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString; save_W=true) where {DT,TT,NQ,NW}
     # create HDF5 file
-    h5 = createHDF5(solution, file)
+    solution.h5 = createHDF5(solution, file)
 
     # Adding the attributes specific to SolutionSDE that were not added above
-    save_attributes(solution, h5)
-    attrs(h5)["nt"] = nt
-    attrs(h5)["ntime"] = ntime
+    save_attributes(solution, solution.h5)
+
+    # create dataset
+    nt = div(solution.ntime, solution.nsave)
 
     # create dataset
     # nt and ntime can be used to set the expected total number of timesteps to be saved,
@@ -311,14 +331,14 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString, n
     # Right now, it has to be set as dynamical size adaptation is not yet
     # working. The default value is the size of the solution structure.
     if NQ==2
-        q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
+        q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
         # copy initial conditions
         q[1:solution.nd, 1] = solution.q[1:solution.nd, 0]
     elseif NQ==3
         if solution.ns>1
-            q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ns), "chunk", (solution.nd,1,1))
+            q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ns), "chunk", (solution.nd,1,1))
         else
-            q = d_create(h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
+            q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
         end
         # copy initial conditions
         q[:, 1, :] = solution.q.d[:, 1, :]
@@ -327,19 +347,19 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString, n
     if save_W==true
         # creating datasets to store the Wiener process increments
         if NW==2
-            dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
-            dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, ntime), "chunk", (solution.nm,1))
+            dW = d_create(solution.h5, "ΔW", datatype(DT), dataspace(solution.nm, solution.ntime), "chunk", (solution.nm,1))
+            dZ = d_create(solution.h5, "ΔZ", datatype(DT), dataspace(solution.nm, solution.ntime), "chunk", (solution.nm,1))
         elseif NW==3
-            dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, ntime, solution.ns), "chunk", (solution.nm,1,1))
-            dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, ntime, solution.ns), "chunk", (solution.nm,1,1))
+            dW = d_create(solution.h5, "ΔW", datatype(DT), dataspace(solution.nm, solution.ntime, solution.ns), "chunk", (solution.nm,1,1))
+            dZ = d_create(solution.h5, "ΔZ", datatype(DT), dataspace(solution.nm, solution.ntime, solution.ns), "chunk", (solution.nm,1,1))
         end
     end
 
     # Creating a dataset for storing the time series
-    t = d_create(h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
+    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
     t[1] = solution.t[0]
 
-    return h5
+    return solution.h5
 end
 
 
@@ -354,7 +374,6 @@ function CommonFunctions.write_to_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, h5::H
     m   = solution.nm
     n   = solution.nt
     s   = solution.ns
-    i   = solution.ni
     ntime = solution.ntime
     j1  = offset+2
     j2  = offset+1+n
@@ -379,11 +398,11 @@ function CommonFunctions.write_to_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, h5::H
     if exists(h5, "ΔW") && exists(h5, "ΔZ")
         # copy the Wiener process increments from solution to HDF5 dataset
         if NW==2
-            h5["ΔW"][:,jw1:jw2] = solution.W.ΔW.d[:,1:ntime]
-            h5["ΔZ"][:,jw1:jw2] = solution.W.ΔZ.d[:,1:ntime]
+            h5["ΔW"][:,jw1:jw2] = solution.W.ΔW[:,1:ntime]
+            h5["ΔZ"][:,jw1:jw2] = solution.W.ΔZ[:,1:ntime]
         elseif NW==3
-            h5["ΔW"][:,jw1:jw2,:] = solution.W.ΔW.d[:,1:ntime,:]
-            h5["ΔZ"][:,jw1:jw2,:] = solution.W.ΔZ.d[:,1:ntime,:]
+            h5["ΔW"][:,jw1:jw2,:] = solution.W.ΔW[:,1:ntime,:]
+            h5["ΔZ"][:,jw1:jw2,:] = solution.W.ΔZ[:,1:ntime,:]
         end
     end
 

@@ -14,6 +14,8 @@ offset(sol::Solution) = error("offset() not implemented for ", typeof(sol))
 create_hdf5(sol::Solution, file) = error("create_hdf5() not implemented for ", typeof(sol))
 CommonFunctions.write_to_hdf5(sol::Solution, h5::HDF5File, offset=0) = error("write_to_hdf5() not implemented for ", typeof(sol))
 
+conv(sol::StochasticSolution) = error("conv() not implemented for ", typeof(sol))
+
 
 "Create solution for ODE."
 function Solution(equation::AbstractEquationODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
@@ -36,12 +38,12 @@ function Solution(equation::AbstractEquationPDAE, Δt, ntime::Int, nsave::Int=DE
 end
 
 "Create solution for SDE."
-function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE; K::Int=0, conv=:strong)
-    SolutionSDE(equation, Δt, ntime, nsave, K=K, conv=conv)
+function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; K::Int=0, conv=:strong)
+    SolutionSDE(equation, Δt, ntime, nsave, nwrite, K=K, conv=conv)
 end
 
 "Create solution for PSDE."
-function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE; K::Int=0, conv=:strong)
+function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; K::Int=0, conv=:strong)
     SolutionPSDE(equation, Δt, ntime, nsave, K=K, conv=conv)
 end
 
@@ -83,11 +85,11 @@ end
 function save_attributes(sol::StochasticSolution, h5::HDF5File)
     attrs(h5)["ntime"] = ntime(sol)
     attrs(h5)["nsave"] = nsave(sol)
-    attrs(h5)["conv"] = conv(solution)
-    attrs(h5)["nd"] = solution.nd
-    attrs(h5)["nm"] = solution.nm
-    attrs(h5)["ns"] = solution.ns
-    attrs(h5)["K"] = solution.K
+    attrs(h5)["conv"]  = string(conv(sol))
+    attrs(h5)["nd"] = sol.nd
+    attrs(h5)["nm"] = sol.nm
+    attrs(h5)["ns"] = sol.ns
+    attrs(h5)["K"]  = sol.K
 end
 
 "write_to_hdf5: Wrapper for saving Solution to HDF5 file."
