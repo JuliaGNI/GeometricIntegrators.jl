@@ -200,20 +200,126 @@ end
 
 
 @testset "$(rpad("PSDE Solution",80))" begin
-    psde  = kubo_oscillator_psde_1()
+    asol = AtomicSolution(psde)
+
+    # test constructors and general functionality
     sol = Solution(psde, Δt, nt)
     @test typeof(sol) <: SolutionPSDE
 
-    # test hdf5 in- and output
-    h5 = createHDF5(sol, h5file)
-    @test typeof(h5) == HDF5File
-    close(h5)
-    @test isfile(h5file)
+    sol0 = Solution(similar(psde, q0, p0), Δt, nt)
+    @test typeof(sol0) <: SolutionPSDE
 
-    h5 = createHDF5(sol, h5file, overwrite=false)
-    @test typeof(h5) == HDF5File
-    close(h5)
+    sol1 = Solution(similar(psde, q1, p1), Δt, nt)
+    @test typeof(sol1) <: SolutionPSDE
+
+    @test sol != sol0
+    @test sol != sol1
+
+    @test sol == SolutionPSDE(psde, Δt, sol.W.ΔW, sol.W.ΔZ, sol.ntime)
+
+    @test nsave(sol) == 1
+    @test ntime(sol) == nt
+    @test timesteps(sol) == Δt .* collect(0:nt)
+
+    # test initial conditions
+    set_initial_conditions!(sol, t0, q0, p0)
+    get_initial_conditions!(sol, tq, tp, 1)
+    get_initial_conditions!(sol, asol, 1)
+
+    @test tq == q0
+    @test tp == p0
+    @test asol.t == t0
+    @test asol.q == q0
+    @test asol.p == p0
+
+    δt, δq, δp = get_initial_conditions(sol, 1)
+    @test δt == t0
+    @test δq == q0
+    @test δp == p0
+
+    set_initial_conditions!(sol1, similar(psde, t1, q2, p2))
+    for i in 1:ns
+        get_initial_conditions!(sol1, tq, tp, i)
+        @test tq == q2[:,i]
+        @test tp == p2[:,i]
+    end
+
+    # test set/get solution
+    sol1 = Solution(similar(kubo_oscillator_psde_2(), q0, p0), Δt, nt)
+    sol2 = Solution(similar(kubo_oscillator_psde_2(), q0, p0), Δt, nt)
+    for i in 1:nt
+        tq .= qs[:,i]
+        tp .= ps[:,i]
+        asol.q .= qs[:,i]
+        asol.p .= ps[:,i]
+        set_solution!(sol1, tq, tp, i)
+        set_solution!(sol2, asol, i)
+    end
+    @test sol1.q[:,1:nt] == qs
+    @test sol1.p[:,1:nt] == ps
+    @test sol2.q[:,1:nt] == qs
+    @test sol2.p[:,1:nt] == ps
+
+    sol1 = Solution(similar(kubo_oscillator_psde_2(), q1, p1), Δt, nt)
+    sol2 = Solution(similar(kubo_oscillator_psde_2(), q1, p1), Δt, nt)
+    for i in 1:nt
+        for k in 1:ns
+            tq .= Qs[:,i,k]
+            tp .= Ps[:,i,k]
+            asol.q .= Qs[:,i,k]
+            asol.p .= Ps[:,i,k]
+            set_solution!(sol1, tq, tp, i, k)
+            set_solution!(sol2, asol, i, k)
+        end
+    end
+    @test sol1.q[:,1:nt,:] == Qs
+    @test sol1.p[:,1:nt,:] == Ps
+    @test sol2.q[:,1:nt,:] == Qs
+    @test sol2.p[:,1:nt,:] == Ps
+
+    # test reset
+    reset!(sol)
+    @test sol.t[0]   == t1
+    @test sol.t[end] == t2
+    @test offset(sol) == nt
+
+    # test hdf5 in- and output
+    sol1 = Solution(kubo_oscillator_psde_2(q0, p0), Δt, nt)
+    create_hdf5(sol1, h5file)
+    write_to_hdf5(sol1)
+    close(sol1)
     @test isfile(h5file)
+    sol2 = SolutionPSDE(h5file)
+    @test sol1   != sol2
+    @test sol1.t == sol2.t
+    @test sol1.q == sol2.q
+    @test sol1.p == sol2.p
+    @test sol1.ntime == sol2.ntime
+    @test sol1.nsave == sol2.nsave
+    @test sol1.nd == sol2.nd
+    @test sol1.nm == sol2.nm
+    @test sol1.ns == sol2.ns
+    @test sol1.K  == sol2.K
+    @test conv(sol1) == conv(sol2)
+    rm(h5file)
+
+    sol1 = Solution(kubo_oscillator_psde_2(q1, p1), Δt, nt)
+    create_hdf5(sol1, h5file)
+    write_to_hdf5(sol1)
+    close(sol1)
+    @test isfile(h5file)
+    sol2 = SolutionPSDE(h5file)
+    @test sol1   != sol2
+    @test sol1.t == sol2.t
+    @test sol1.q == sol2.q
+    @test sol1.p == sol2.p
+    @test sol1.ntime == sol2.ntime
+    @test sol1.nsave == sol2.nsave
+    @test sol1.nd == sol2.nd
+    @test sol1.nm == sol2.nm
+    @test sol1.ns == sol2.ns
+    @test sol1.K  == sol2.K
+    @test conv(sol1) == conv(sol2)
     rm(h5file)
 end
 
