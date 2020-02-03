@@ -97,9 +97,8 @@ end
 "Append solution to HDF5 file."
 function CommonFunctions.write_to_hdf5(solution::DeterministicSolution, h5::HDF5File=hdf5(solution), offset=offset(solution))
     # set convenience variables and compute ranges
-    n  = solution.nt
     j1 = offset+2
-    j2 = offset+1+n
+    j2 = offset+1+solution.nt
 
     # TODO # extend dataset if necessary
     # if size(x, 2) < j2
@@ -116,9 +115,8 @@ end
 "Append solution to HDF5 file."
 function CommonFunctions.write_to_hdf5(solution::Union{SolutionDAE,SolutionPDAE}, h5::HDF5File=hdf5(solution), offset=offset(solution))
     # set convenience variables and compute ranges
-    n  = solution.nt
     j1 = offset+2
-    j2 = offset+1+n
+    j2 = offset+1+solution.nt
 
     # TODO # extend dataset if necessary
     # if size(x, 2) < j2
@@ -139,10 +137,6 @@ Append solution to HDF5 file.
 """
 function CommonFunctions.write_to_hdf5(solution::StochasticSolution, h5::HDF5File=hdf5(solution), offset=offset(solution), offset2=offset)
     # set convenience variables and compute ranges
-    d   = solution.nd
-    m   = solution.nm
-    s   = solution.ns
-
     j1  = offset+2
     j2  = offset+1+solution.nt
     jw1 = offset2+1
