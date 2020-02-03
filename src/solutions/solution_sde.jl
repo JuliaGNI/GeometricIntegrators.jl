@@ -217,6 +217,25 @@ function SolutionSDE(file::String)
     end
 end
 
+Base.:(==)(sol1::SolutionSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionSDE{DT2,TT2,NQ2,NW2,C2}) where {DT1,TT1,NQ1,NW1,C1,DT2,TT2,NQ2,NW2,C2} = (
+                                DT1 == DT2
+                             && TT1 == TT2
+                             && NQ1 == NQ2
+                             && NW1 == NW2
+                             && C1  == C2
+                             && sol1.nd == sol2.nd
+                             && sol1.nm == sol2.nm
+                             && sol1.nt == sol2.nt
+                             && sol1.ns == sol2.ns
+                             && sol1.t  == sol2.t
+                             && sol1.q  == sol2.q
+                             && sol1.W  == sol2.W
+                             && sol1.K  == sol2.K
+                             && sol1.ntime == sol2.ntime
+                             && sol1.nsave == sol2.nsave
+                             && sol1.nwrite == sol2.nwrite
+                             && sol1.counter == sol2.counter
+                             && sol1.woffset == sol2.woffset)
 
 hdf5(sol::SolutionSDE) = sol.h5
 timesteps(sol::SolutionSDE) = sol.t.t
