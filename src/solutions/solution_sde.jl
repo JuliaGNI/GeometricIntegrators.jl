@@ -77,7 +77,6 @@ mutable struct SolutionSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dTy
 
         new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, W, K, ntime, nsave, nwrite, zeros(Int, max(ns,ni)), 0)
     end
-
 end
 
 
@@ -208,11 +207,7 @@ function SolutionSDE(file::String)
 
     close(h5)
 
-    if ndims(q_array)==3
-        q = SDataSeries(q_array)
-    else
-        q = SDataSeries(q_array)
-    end
+    q = SDataSeries(q_array)
 
     # create solution
     if W_exists == true
@@ -372,7 +367,7 @@ Append solution to HDF5 file.
   offset - start writing q at the position offset+2
   offset2- start writing ΔW, ΔZ at the position offset2+1
 """
-function CommonFunctions.write_to_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, h5::HDF5File, offset=0, offset2=offset) where {DT,TT,NQ,NW}
+function CommonFunctions.write_to_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, h5::HDF5File=hdf5(solution), offset=0, offset2=offset) where {DT,TT,NQ,NW}
     # set convenience variables and compute ranges
     d   = solution.nd
     m   = solution.nm
