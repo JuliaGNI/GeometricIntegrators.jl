@@ -62,8 +62,6 @@ Zs    = rand(3,nt,ni)
 Λs    = rand(1,nt,ni)
 Ms    = rand(2,nt,ni)
 
-
-
 ode   = harmonic_oscillator_ode()
 dae   = harmonic_oscillator_dae()
 pode  = harmonic_oscillator_pode()
@@ -153,6 +151,11 @@ h5file = "test.hdf5"
     h5 = createHDF5(sol1, h5file; overwrite=false)
     @test typeof(h5) == HDF5File
     close(h5)
+    @test isfile(h5file)
+    rm(h5file)
+
+    sol1 = Solution(ode, Δt, nt)
+    write_to_hdf5(sol1, h5file)
     @test isfile(h5file)
     rm(h5file)
 
