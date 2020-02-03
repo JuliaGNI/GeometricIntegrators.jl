@@ -104,15 +104,20 @@ function SolutionODE(file::String)
     SolutionODE(t, q, ntime)
 end
 
-Base.:(==)(sol1::SolutionODE, sol2::SolutionODE) = (
-                                sol1.nd == sol2.nd
+Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {DT1,TT1,N1,DT2,TT2,N2} = (
+                                DT1 == DT2
+                             && TT1 == TT2
+                             && N1  == N2
+                             && sol1.nd == sol2.nd
                              && sol1.nt == sol2.nt
                              && sol1.ni == sol2.ni
                              && sol1.t  == sol2.t
                              && sol1.q  == sol2.q
                              && sol1.ntime == sol2.ntime
                              && sol1.nsave == sol2.nsave
-                             && sol1.counter == sol2.counter)
+                             && sol1.nwrite == sol2.nwrite
+                             && sol1.counter == sol2.counter
+                             && sol1.woffset == sol2.woffset)
 
 hdf5(sol::SolutionODE)  = sol.h5
 timesteps(sol::SolutionODE)  = sol.t.t
