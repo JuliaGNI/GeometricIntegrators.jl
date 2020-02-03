@@ -132,7 +132,7 @@ function Base.similar(sde::PSDE, q₀::AbstractArray, p₀::AbstractArray)
     similar(sde, sde.t₀, q₀, p₀)
 end
 
-function Base.similar(sde::PSDE, t₀::TT, q₀::AbstractArray{DT,N}, p₀::AbstractArray{DT,N}, ns::Int=sde.ns) where {DT <: Number, TT <: Number, N}
+function Base.similar(sde::PSDE, t₀::TT, q₀::AbstractArray{DT,N}, p₀::AbstractArray{DT,N}, ns::Int=(N > 1 ? 1 : sde.ns)) where {DT <: Number, TT <: Number, N}
     @assert size(q₀) == size(p₀)
     @assert sde.d == size(q₀,1) == size(p₀,1)
     PSDE(sde.m, ns, sde.v, sde.f, sde.B, sde.G, t₀, q₀, p₀; parameters=sde.parameters, periodicity=sde.periodicity)

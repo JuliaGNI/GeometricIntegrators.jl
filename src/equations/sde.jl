@@ -124,7 +124,7 @@ function Base.similar(sde::SDE, q₀::AbstractArray, ns::Int)
     similar(sde, sde.t₀, q₀, ns)
 end
 
-function Base.similar(sde::SDE, t₀::TT, q₀::AbstractArray{DT}, ns::Int=sde.ns) where {DT <: Number, TT <: Number}
+function Base.similar(sde::SDE, t₀::TT, q₀::AbstractArray{DT,N}, ns::Int=(N > 1 ? 1 : sde.ns)) where {DT <: Number, TT <: Number, N}
     @assert sde.d == size(q₀,1)
     SDE(sde.m, ns, sde.v, sde.B, t₀, q₀; parameters=sde.parameters, periodicity=sde.periodicity)
 end
