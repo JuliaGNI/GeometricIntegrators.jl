@@ -60,6 +60,9 @@ Base.lastindex(ts::TimeSeries,d) = d == 1 ? lastindex(ts) : 1
 
 Base.strides(ts::TimeSeries) = strides(ts.t)
 
+Base.:(==)(ts::TimeSeries{T1}, vec::AbstractVector{T2}) where {T1,T2} = (T1 == T2 && ts.t == vec)
+Base.:(==)(vec::AbstractVector, ts::TimeSeries) = (ts == vec)
+
 
 @inline function Base.setindex!(ts::TimeSeries, t, i::Int)
     @boundscheck checkbounds(ts.t, i.+1)
