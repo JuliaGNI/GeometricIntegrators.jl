@@ -90,6 +90,19 @@ function WienerProcess(Δt::tType, dW::Array{dType,3}, dZ::Array{dType,3}, conv=
 end
 
 
+Base.:(==)(wp1::WienerProcess{DT1, TT1, N1, C1}, wp2::WienerProcess{DT2, TT2, N2, C2}) where {DT1, TT1, N1, C1, DT2, TT2, N2, C2} = (
+                                DT1 == DT2
+                             && TT1 == TT2
+                             && N1  == N2
+                             && C1  == C2
+                             && wp1.nd == wp2.nd
+                             && wp1.nt == wp2.nt
+                             && wp1.ns == wp2.ns
+                             && wp1.Δt == wp2.Δt
+                             && wp1.ΔW == wp2.ΔW
+                             && wp1.ΔZ == wp2.ΔZ)
+
+
 function set_chi_and_eta!(W::WienerProcess{dType, tType, N, :strong}, chi::AbstractArray{dType}, eta::AbstractArray{dType}) where {dType, tType, N}
     @. W.ΔW = chi * √W.Δt
     @. W.ΔZ = W.Δt^(3/2)/2 * (chi+eta/√3)

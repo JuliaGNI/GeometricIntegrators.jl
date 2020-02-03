@@ -10,24 +10,36 @@ nd = 3
 ns = 5
 nt = 10
 Δt = .1
+dt = Float64
 
-dType  = Float64
 h5file = "test.hdf5"
 
 
 @testset "$(rpad("Wiener Process",80))" begin
 
-    wp = WienerProcess(dType, nd, nt, 1,  Δt, :strong)
+    wp = WienerProcess(dt, 1, nt, 1,  Δt, :strong)
+    @test wp == WienerProcess(Δt, wp.ΔW[:], wp.ΔZ[:], :strong)
+    @test ndims(wp) == 2
+
+    wp = WienerProcess(dt, 1, nt, 1,  Δt, :weak)
+    @test wp == WienerProcess(Δt, wp.ΔW[:], wp.ΔZ[:], :weak)
+    @test ndims(wp) == 2
+
+    wp = WienerProcess(dt, nd, nt, 1,  Δt, :strong)
     @test wp == WienerProcess(Δt, wp.ΔW, wp.ΔZ, :strong)
+    @test ndims(wp) == 2
 
-    wp = WienerProcess(dType, nd, nt, 1,  Δt, :weak)
+    wp = WienerProcess(dt, nd, nt, 1,  Δt, :weak)
     @test wp == WienerProcess(Δt, wp.ΔW, wp.ΔZ, :weak)
+    @test ndims(wp) == 2
 
-    wp = WienerProcess(dType, nd, nt, ns, Δt, :strong)
+    wp = WienerProcess(dt, nd, nt, ns, Δt, :strong)
     @test wp == WienerProcess(Δt, wp.ΔW, wp.ΔZ, :strong)
+    @test ndims(wp) == 3
 
-    wp = WienerProcess(dType, nd, nt, ns, Δt, :weak)
+    wp = WienerProcess(dt, nd, nt, ns, Δt, :weak)
     @test wp == WienerProcess(Δt, wp.ΔW, wp.ΔZ, :weak)
+    @test ndims(wp) == 3
 
 end
 
