@@ -214,7 +214,7 @@ Base.:(==)(sol1::SolutionPSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionPSDE{DT2,TT2,NQ
                              && sol1.woffset == sol2.woffset)
 
 hdf5(sol::SolutionPSDE) = sol.h5
-timesteps(sol::SolutionPSDE)  = sol.t.t
+timesteps(sol::SolutionPSDE)  = sol.t
 ntime(sol::SolutionPSDE) = sol.ntime
 nsave(sol::SolutionPSDE) = sol.nsave
 offset(sol::SolutionPSDE) = sol.woffset

@@ -118,7 +118,7 @@ end
 
 
 hdf5(sol::SolutionDAE)  = sol.h5
-timesteps(sol::SolutionDAE)  = sol.t.t
+timesteps(sol::SolutionDAE)  = sol.t
 ntime(sol::SolutionDAE) = sol.ntime
 nsave(sol::SolutionDAE) = sol.nsave
 offset(sol::SolutionDAE) = sol.woffset

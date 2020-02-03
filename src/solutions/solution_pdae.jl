@@ -131,7 +131,7 @@ for (TSolution, TDataSeries, Tdocstring) in
 end
 
 hdf5(sol::SolutionPDAE)  = sol.h5
-timesteps(sol::SolutionPDAE)  = sol.t.t
+timesteps(sol::SolutionPDAE)  = sol.t
 ntime(sol::SolutionPDAE) = sol.ntime
 nsave(sol::SolutionPDAE) = sol.nsave
 offset(sol::SolutionPDAE) = sol.woffset

@@ -120,7 +120,7 @@ Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {
                              && sol1.woffset == sol2.woffset)
 
 hdf5(sol::SolutionODE)  = sol.h5
-timesteps(sol::SolutionODE)  = sol.t.t
+timesteps(sol::SolutionODE)  = sol.t
 ntime(sol::SolutionODE) = sol.ntime
 nsave(sol::SolutionODE) = sol.nsave
 offset(sol::SolutionODE) = sol.woffset
