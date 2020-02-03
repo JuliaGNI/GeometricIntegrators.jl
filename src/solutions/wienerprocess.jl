@@ -47,14 +47,14 @@ struct WienerProcess{dType, tType, N, CONV} <: SemiMartingale{dType, tType, N}
 end
 
 
-function WienerProcess(dType, nd, nt, ns, Δt::tType, conv=:strong; rng=MersenneTwister()) where {tType <: Number}
+function WienerProcess(dType, nd, nt, ns, Δt::tType, conv=DEFAULT_SCONV; rng=MersenneTwister()) where {tType <: Number}
     wp = WienerProcess{dType, tType, ns==1 ? 2 : 3, conv}(nd, nt, ns, Δt)
     generate_wienerprocess!(wp, rng)
     return wp
 end
 
 
-function WienerProcess(Δt::tType, dW::Array{dType,1}, dZ::Array{dType,1}, conv=:strong) where {dType, tType}
+function WienerProcess(Δt::tType, dW::Array{dType,1}, dZ::Array{dType,1}, conv=DEFAULT_SCONV) where {dType, tType}
     @assert size(dW,1) == size(dZ,1)
 
     nd = 1
@@ -65,7 +65,7 @@ function WienerProcess(Δt::tType, dW::Array{dType,1}, dZ::Array{dType,1}, conv=
 end
 
 
-function WienerProcess(Δt::tType, dW::Array{dType,N}, dZ::Array{dType,N}, conv=:strong) where {dType, tType, N}
+function WienerProcess(Δt::tType, dW::Array{dType,N}, dZ::Array{dType,N}, conv=DEFAULT_SCONV) where {dType, tType, N}
     @assert size(dW) == size(dZ)
 
     nd = size(dW,1)

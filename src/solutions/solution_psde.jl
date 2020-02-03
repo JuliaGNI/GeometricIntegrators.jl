@@ -81,7 +81,7 @@ mutable struct SolutionPSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dT
 end
 
 
-function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0, conv=:strong) where {DT,TT}
+function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=1; K::Int=0, conv=DEFAULT_SCONV) where {DT,TT}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -99,7 +99,7 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime:
 end
 
 
-function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1; K::Int=0, conv=:strong) where {DT,TT,NW}
+function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=1; K::Int=0, conv=DEFAULT_SCONV) where {DT,TT,NW}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -134,7 +134,7 @@ end
 
 # If the Wiener process W data are not available, creates a one-element zero array instead
 # For instance used when reading a file with no Wiener process data saved
-function SolutionPSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}, p::SDataSeries{DT,NQ}; K::Int=0, conv=:strong) where {DT,TT,NQ}
+function SolutionPSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}, p::SDataSeries{DT,NQ}; K::Int=0, conv=DEFAULT_SCONV) where {DT,TT,NQ}
     # extract parameters
     nd = q.nd
     ns = q.ni
@@ -164,7 +164,7 @@ function SolutionPSDE(file::String)
     if exists(attrs(h5),"conv")
         conv = Symbol(read(attrs(h5)["conv"]))
     else
-        conv = :strong
+        conv = DEFAULT_SCONV
     end
 
     W_exists = exists(h5, "ΔW") && exists(h5, "ΔZ")
