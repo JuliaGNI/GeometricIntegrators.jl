@@ -138,6 +138,40 @@ function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, dW::Array{DT, NW}, dZ::Array
 end
 
 
+# function SolutionSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}
+#     # extract parameters
+#     nd = q.nd
+#     ns = q.ni
+#     nt = t.nt
+#     nm = W.nd
+#     ntime = W.nt
+#     nsave = t.step
+#
+#     @assert conv==:strong || (conv==:weak && K==0)
+#     @assert ntime==nt*nsave
+#     @assert q.nt == nt
+#     @assert W.ns == q.ns
+#
+#     # create solution
+#     SolutionSDE{DT,TT,NQ,NW}(CONV, nd, nm, nt, ns, 1, t, q, W, K, ntime, nsave)
+# end
+
+
+# # If the Wiener process W data are not available, creates a one-element zero array instead
+# # For instance used when reading a file with no Wiener process data saved
+# function SolutionSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}; K::Int=0, conv=DEFAULT_SCONV) where {DT,TT,NQ}
+#     # extract parameters
+#     nd = q.nd
+#     ni = q.ni
+#     nt = q.nt
+#     nsave = t.step
+#     ntime = nt*nsave
+#
+#     W = WienerProcess(t.Δt, [0.0], [0.0], conv)
+#
+#     # create solution
+#     SolutionSDE(nd, W.nd, nt, 1, ni, t, q, W, K, ntime, nsave, ntime)
+# end
 
 
 function SolutionSDE(file::String)
@@ -326,7 +360,7 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString; s
     end
 
     # Creating a dataset for storing the time series
-    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
+    t = d_create(solution.h5, "t", datatype(TT), dataspace((solution.nt+1,)), "chunk", (1,))
     t[1] = solution.t[0]
 
     return solution.h5
