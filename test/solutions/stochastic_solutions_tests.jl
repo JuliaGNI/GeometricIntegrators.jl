@@ -97,6 +97,8 @@ end
     @test sol != sol0
     @test sol != sol1
 
+    @test sol == SolutionSDE(sde, Δt, sol.W.ΔW, sol.W.ΔZ, sol.ntime)
+
     @test nsave(sol) == 1
     @test ntime(sol) == nt
     @test timesteps(sol) == Δt .* collect(0:nt)

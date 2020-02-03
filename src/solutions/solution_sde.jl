@@ -118,15 +118,9 @@ function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, dW::Array{DT, NW}, dZ::Array
     @assert size(dW) == size(dZ)
     @assert NW ∈ (2,3)
 
-    if NW==2
-        @assert nm==size(dW,1)
-        @assert ntime==size(dW,2)
-        @assert ns==1
-    elseif NW==3
-        @assert nm==size(dW,1)
-        @assert ntime==size(dW,2)
-        @assert ns==size(dW,3)
-    end
+    @assert nm == size(dW,1)
+    @assert ntime == size(dW,2)
+    @assert ns == size(dW,3)
 
     # Holds the Wiener process data for ALL computed time steps
     # Wiener process increments are prescribed by the arrays ΔW and ΔZ
@@ -144,23 +138,6 @@ function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, dW::Array{DT, NW}, dZ::Array
 end
 
 
-
-
-# If the Wiener process W data are not available, creates a one-element zero array instead
-# For instance used when reading a file with no Wiener process data saved
-function SolutionSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}; K::Int=0, conv=:strong) where {DT,TT,NQ}
-    # extract parameters
-    nd = q.nd
-    ns = q.ni
-    nt = q.nt
-    nsave = t.step
-    ntime = nt*nsave
-
-    W = WienerProcess(t.Δt, [0.0], [0.0], conv)
-
-    # create solution
-    SolutionSDE(nd, W.nd, nt, ns, 1, t, q, W, K, ntime, nsave)
-end
 
 
 function SolutionSDE(file::String)
@@ -333,15 +310,11 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString; s
     if NQ==2
         q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
         # copy initial conditions
-        q[1:solution.nd, 1] = solution.q[1:solution.nd, 0]
+        q[:,1] = solution.q[:,0]
     elseif NQ==3
-        if solution.ns>1
-            q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ns), "chunk", (solution.nd,1,1))
-        else
-            q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
-        end
+        q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ns), "chunk", (solution.nd,1,1))
         # copy initial conditions
-        q[:, 1, :] = solution.q.d[:, 1, :]
+        q[:,1,:] = solution.q[:,0,:]
     end
 
     if save_W==true
