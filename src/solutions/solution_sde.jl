@@ -348,16 +348,15 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString; s
     save_attributes(solution, solution.h5)
 
     # create dataset
-    # nt and ntime can be used to set the expected total number of timesteps to be saved,
-    # so that the size of the array does not need to be adapted dynamically.
-    # Right now, it has to be set as dynamical size adaptation is not yet
-    # working. The default value is the size of the solution structure.
+    t = d_create(solution.h5, "t", TT, ((solution.nt+1,), (-1,)), "chunk", (1,))
+    t[1] = solution.t[0]
+
     if NQ==2
-        q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
+        q = d_create(solution.h5, "q", DT, ((solution.nd, solution.nt+1), (solution.nd, -1)), "chunk", (solution.nd,1))
         # copy initial conditions
         q[:,1] = solution.q[:,0]
     elseif NQ==3
-        q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1, solution.ns), "chunk", (solution.nd,1,1))
+        q = d_create(solution.h5, "q", DT, ((solution.nd, solution.nt+1, solution.ns),(solution.nd, -1, solution.ns)), "chunk", (solution.nd,1,1))
         # copy initial conditions
         q[:,1,:] = solution.q[:,0,:]
     end
@@ -372,10 +371,6 @@ function create_hdf5(solution::SolutionSDE{DT,TT,NQ,NW}, file::AbstractString; s
             dZ = d_create(solution.h5, "ΔZ", datatype(DT), dataspace(solution.nm, solution.ntime, solution.ns), "chunk", (solution.nm,1,1))
         end
     end
-
-    # Creating a dataset for storing the time series
-    t = d_create(solution.h5, "t", datatype(TT), dataspace((solution.nt+1,)), "chunk", (1,))
-    t[1] = solution.t[0]
 
     return solution.h5
 end
