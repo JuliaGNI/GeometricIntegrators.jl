@@ -44,7 +44,7 @@ end
 
 "Create solution for PSDE."
 function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; K::Int=0, conv=:strong)
-    SolutionPSDE(equation, Δt, ntime, nsave, K=K, conv=conv)
+    SolutionPSDE(equation, Δt, ntime, nsave, nwrite, K=K, conv=conv)
 end
 
 "Print error for solutions of equations not implemented, yet."
