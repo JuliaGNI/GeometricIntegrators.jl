@@ -37,7 +37,7 @@ mutable struct SolutionPODE{dType, tType, N} <: DeterministicSolution{dType, tTy
     end
 end
 
-function SolutionPODE(equation::Union{PODE{DT,TT}, IODE{DT,TT}, VODE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; filename=nothing) where {DT,TT}
+function SolutionPODE(equation::Union{PODE{DT,TT}, IODE{DT,TT}, VODE{DT,TT}}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT}
     @assert nsave > 0
     @assert ntime == 0 || ntime ≥ nsave
     @assert nwrite == 0 || nwrite ≥ nsave

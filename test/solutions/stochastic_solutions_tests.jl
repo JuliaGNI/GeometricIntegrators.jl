@@ -185,10 +185,10 @@ end
     rm(h5file)
 
     # test nsave and nwrite parameters
-    sol = Solution(sde, Δt, 20, 2)
+    sol = Solution(sde, Δt, 20, nsave=2)
     @test sol.nt == 10
 
-    sol = Solution(sde, Δt, 20, 2, 10)
+    sol = Solution(sde, Δt, 20, nsave=2, nwrite=10)
     @test sol.nt == 5
 
     # test reset
@@ -319,10 +319,10 @@ end
     rm(h5file)
 
     # test nsave and nwrite parameters
-    sol = Solution(psde, Δt, 20, 2)
+    sol = Solution(psde, Δt, 20, nsave=2)
     @test sol.nt == 10
 
-    sol = Solution(psde, Δt, 20, 2, 10)
+    sol = Solution(psde, Δt, 20, nsave=2, nwrite=10)
     @test sol.nt == 5
 
     # test reset

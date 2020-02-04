@@ -18,36 +18,36 @@ conv(sol::StochasticSolution) = error("conv() not implemented for ", typeof(sol)
 
 
 "Create solution for ODE."
-function Solution(equation::AbstractEquationODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
-    SolutionODE(equation, Δt, ntime, nsave, nwrite)
+function Solution(equation::AbstractEquationODE, Δt, ntime::Int; kwargs...)
+    SolutionODE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for partitioned ODE."
-function Solution(equation::AbstractEquationPODE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
-    SolutionPODE(equation, Δt, ntime, nsave, nwrite)
+function Solution(equation::AbstractEquationPODE, Δt, ntime::Int; kwargs...)
+    SolutionPODE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for DAE."
-function Solution(equation::AbstractEquationDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
-    SolutionDAE(equation, Δt, ntime, nsave, nwrite)
+function Solution(equation::AbstractEquationDAE, Δt, ntime::Int; kwargs...)
+    SolutionDAE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for partitioned DAE."
-function Solution(equation::AbstractEquationPDAE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE)
-    SSolutionPDAE(equation, Δt, ntime, nsave, nwrite)
+function Solution(equation::AbstractEquationPDAE, Δt, ntime::Int; kwargs...)
+    SSolutionPDAE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for SDE."
-function Solution(equation::SDE, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; K::Int=0, conv=:strong)
-    SolutionSDE(equation, Δt, ntime, nsave, nwrite, K=K, conv=conv)
+function Solution(equation::SDE, Δt, ntime::Int; kwargs...)
+    SolutionSDE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for PSDE."
-function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; K::Int=0, conv=:strong)
-    SolutionPSDE(equation, Δt, ntime, nsave, nwrite, K=K, conv=conv)
+function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int; kwargs...)
+    SolutionPSDE(equation, Δt, ntime; kwargs...)
 end
 
 "Print error for solutions of equations not implemented, yet."
-function Solution(equation::Equation, Δt, ntime::Int, nsave::Int=DEFAULT_NSAVE)
+function Solution(equation::Equation, Δt, ntime::Int; kwargs...)
     error("No solution found for equation ", equation)
 end

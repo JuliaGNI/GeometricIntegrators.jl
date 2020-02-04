@@ -35,7 +35,7 @@ mutable struct SolutionODE{dType, tType, N} <: DeterministicSolution{dType, tTyp
     end
 end
 
-function SolutionODE(equation::Union{ODE{DT,TT,FT},SODE{DT,TT,FT}}, Δt::TT, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; filename=nothing) where {DT,TT,FT}
+function SolutionODE(equation::Union{ODE{DT,TT,FT},SODE{DT,TT,FT}}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,FT}
     @assert nsave > 0
     @assert ntime == 0 || ntime ≥ nsave
     @assert nwrite == 0 || nwrite ≥ nsave

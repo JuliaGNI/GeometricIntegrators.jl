@@ -39,7 +39,7 @@ mutable struct SolutionDAE{dType, tType, N} <: DeterministicSolution{dType, tTyp
     end
 end
 
-function SolutionDAE(equation::DAE{DT,TT}, Δt::TT, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; filename=nothing) where {DT,TT}
+function SolutionDAE(equation::DAE{DT,TT}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT}
     @assert nsave > 0
     @assert ntime == 0 || ntime ≥ nsave
     @assert nwrite == 0 || nwrite ≥ nsave

@@ -80,7 +80,7 @@ mutable struct SolutionSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dTy
 end
 
 
-function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; K::Int=0, conv=DEFAULT_SCONV, filename=nothing) where {DT,TT}
+function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, K::Int=0, conv=DEFAULT_SCONV, filename=nothing) where {DT,TT}
     nd = equation.d
     nm = equation.m
     ns = equation.ns
@@ -105,7 +105,7 @@ function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, ntime::Int, nsave::Int=DEFAU
 end
 
 
-function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; K::Int=0, conv=DEFAULT_SCONV, filename=nothing) where {DT,TT,NW}
+function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, K::Int=0, conv=DEFAULT_SCONV, filename=nothing) where {DT,TT,NW}
     nd = equation.d
     nm = equation.m
     ns = equation.ns

@@ -181,10 +181,10 @@ h5file = "test.hdf5"
     rm(h5file)
 
     # test nsave and nwrite parameters
-    sol = Solution(ode, Δt, 20, 2)
+    sol = Solution(ode, Δt, 20, nsave=2)
     @test sol.nt == 10
 
-    sol = Solution(ode, Δt, 20, 2, 10)
+    sol = Solution(ode, Δt, 20, nsave=2, nwrite=10)
     @test sol.nt == 5
 
     # test reset
@@ -303,10 +303,10 @@ end
     rm(h5file)
 
     # test nsave and nwrite parameters
-    sol = Solution(pode, Δt, 20, 2)
+    sol = Solution(pode, Δt, 20, nsave=2)
     @test sol.nt == 10
 
-    sol = Solution(pode, Δt, 20, 2, 10)
+    sol = Solution(pode, Δt, 20, nsave=2, nwrite=10)
     @test sol.nt == 5
 
     # test reset
@@ -425,10 +425,10 @@ end
     rm(h5file)
 
     # test nsave and nwrite parameters
-    sol = Solution(dae, Δt, 20, 2)
+    sol = Solution(dae, Δt, 20, nsave=2)
     @test sol.nt == 10
 
-    sol = Solution(dae, Δt, 20, 2, 10)
+    sol = Solution(dae, Δt, 20, nsave=2, nwrite=10)
     @test sol.nt == 5
 
     # test reset
@@ -575,10 +575,10 @@ end
     rm(h5file)
 
     # test nsave and nwrite parameters
-    sol = Solution(pdae, Δt, 20, 2)
+    sol = Solution(pdae, Δt, 20, nsave=2)
     @test sol.nt == 10
 
-    sol = Solution(pdae, Δt, 20, 2, 10)
+    sol = Solution(pdae, Δt, 20, nsave=2, nwrite=10)
     @test sol.nt == 5
 
     # test reset
