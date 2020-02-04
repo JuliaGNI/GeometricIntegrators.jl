@@ -100,7 +100,7 @@ end
     sol = Solution(psde2, Δt, nt, conv=:strong)
     integrate!(int, sol)
 
-    @test rel_energy_err_psde(sol) < 1E-5
+    @test rel_energy_err_psde(sol) < 2E-5
 end
 
 
