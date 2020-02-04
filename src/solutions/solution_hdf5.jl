@@ -178,13 +178,13 @@ function init_solution_in_hdf5(solution::SolutionPSDE{DT,TT,3}, h5::HDF5File) wh
 end
 
 function init_increments_in_hdf5(solution::StochasticSolution{DT,TT,NQ,2}, h5::HDF5File) where {DT,TT,NQ}
-    dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, solution.ntime), "chunk", (solution.nm,1))
-    dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, solution.ntime), "chunk", (solution.nm,1))
+    dW = d_create(h5, "ΔW", DT, ((solution.nm, solution.ntime),(solution.nm, -1)), "chunk", (solution.nm,1))
+    dZ = d_create(h5, "ΔZ", DT, ((solution.nm, solution.ntime),(solution.nm, -1)), "chunk", (solution.nm,1))
 end
 
 function init_increments_in_hdf5(solution::StochasticSolution{DT,TT,NQ,3}, h5::HDF5File) where {DT,TT,NQ}
-    dW = d_create(h5, "ΔW", datatype(DT), dataspace(solution.nm, solution.ntime, solution.ns), "chunk", (solution.nm,1,1))
-    dZ = d_create(h5, "ΔZ", datatype(DT), dataspace(solution.nm, solution.ntime, solution.ns), "chunk", (solution.nm,1,1))
+    dW = d_create(h5, "ΔW", DT, ((solution.nm, solution.ntime, solution.ns),(solution.nm, -1, solution.ns)), "chunk", (solution.nm,1,1))
+    dZ = d_create(h5, "ΔZ", DT, ((solution.nm, solution.ntime, solution.ns),(solution.nm, -1, solution.ns)), "chunk", (solution.nm,1,1))
 end
 
 function copy_timeteps_to_hdf5(sol::Solution, h5::HDF5File, j1, j2, n1, n2)
