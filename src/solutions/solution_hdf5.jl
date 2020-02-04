@@ -54,8 +54,8 @@ end
 
 
 "Creates HDF5 file and initialises datasets for solution object."
-function create_hdf5!(solution::Solution, file::AbstractString)
-    solution.h5 = create_hdf5(solution, file)
+function create_hdf5!(solution::Solution, file::AbstractString; kwargs...)
+    solution.h5 = create_hdf5(solution, file; kwargs...)
 end
 
 "Creates HDF5 file and initialises datasets for deterministic solution object."
