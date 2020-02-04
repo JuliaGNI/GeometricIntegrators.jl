@@ -49,6 +49,10 @@ Ps    = rand(1,nt,ns)
 sde  = kubo_oscillator_sde_1()
 psde = kubo_oscillator_psde_1()
 
+x100  = rand(ndims(sde),  100)
+q100  = rand(ndims(psde), 100)
+p100  = rand(ndims(psde), 100)
+
 h5file = "test.hdf5"
 
 
@@ -198,6 +202,52 @@ end
     @test sol.t[end] == t2
     @test offset(sol) == nt
 
+    sde1 = kubo_oscillator_sde_3()
+    sol1 = Solution(sde1, Δt, 100, nwrite=10)
+    create_hdf5!(sol1, h5file)
+    ΔW = zeros(sde1.m, 100)
+    ΔZ = zeros(sde1.m, 100)
+    for i in 1:10
+        ΔW[:,(i-1)*10+1:i*10] .= sol1.W.ΔW
+        ΔZ[:,(i-1)*10+1:i*10] .= sol1.W.ΔZ
+        for j in 1:10
+            set_solution!(sol1, x100[:,(i-1)*10+j], j)
+        end
+        write_to_hdf5(sol1)
+        reset!(sol1)
+    end
+    close(sol1)
+    sol2 = SolutionSDE(h5file)
+    @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
+    @test sol2.q.d == hcat(reshape(sde1.q₀, (ndims(sde1),1)), x100)
+    @test sol2.W.ΔW == ΔW
+    @test sol2.W.ΔZ == ΔZ
+    @test sol2.ntime == 100
+    @test sol2.nsave == 1
+    rm(h5file)
+
+    sol1 = Solution(sde1, Δt, 100, nsave=2, nwrite=10)
+    create_hdf5!(sol1, h5file)
+    ΔW = zeros(sde1.m, 100)
+    ΔZ = zeros(sde1.m, 100)
+    for i in 1:10
+        ΔW[:,(i-1)*10+1:i*10] .= sol1.W.ΔW
+        ΔZ[:,(i-1)*10+1:i*10] .= sol1.W.ΔZ
+        for j in 1:10
+            set_solution!(sol1, x100[:,(i-1)*10+j], j)
+        end
+        write_to_hdf5(sol1)
+        reset!(sol1)
+    end
+    close(sol1)
+    sol2 = SolutionSDE(h5file)
+    @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
+    @test sol2.q.d == hcat(reshape(sde1.q₀, (ndims(sde1),1)), x100)[:,1:2:end]
+    @test sol2.W.ΔW == ΔW
+    @test sol2.W.ΔZ == ΔZ
+    @test sol2.ntime == 100
+    @test sol2.nsave == 2
+    rm(h5file)
 end
 
 
@@ -332,6 +382,56 @@ end
     @test sol.t[end] == t2
     @test offset(sol) == nt
 
+    psde1 = kubo_oscillator_psde_3()
+    sol1 = Solution(psde1, Δt, 100, nwrite=10)
+    create_hdf5!(sol1, h5file)
+    ΔW = zeros(psde1.m, 100)
+    ΔZ = zeros(psde1.m, 100)
+    for i in 1:10
+        ΔW[:,(i-1)*10+1:i*10] .= sol1.W.ΔW
+        ΔZ[:,(i-1)*10+1:i*10] .= sol1.W.ΔZ
+        for j in 1:10
+            oj = (i-1)*10+j
+            set_solution!(sol1, q100[:,oj], p100[:,oj], j)
+        end
+        write_to_hdf5(sol1)
+        reset!(sol1)
+    end
+    close(sol1)
+    sol2 = SolutionPSDE(h5file)
+    @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
+    @test sol2.q.d == hcat(reshape(psde1.q₀, (ndims(psde1),1)), q100)
+    @test sol2.p.d == hcat(reshape(psde1.p₀, (ndims(psde1),1)), p100)
+    @test sol2.W.ΔW == ΔW
+    @test sol2.W.ΔZ == ΔZ
+    @test sol2.ntime == 100
+    @test sol2.nsave == 1
+    rm(h5file)
+
+    sol1 = Solution(psde1, Δt, 100, nsave=2, nwrite=10)
+    create_hdf5!(sol1, h5file)
+    ΔW = zeros(psde1.m, 100)
+    ΔZ = zeros(psde1.m, 100)
+    for i in 1:10
+        ΔW[:,(i-1)*10+1:i*10] .= sol1.W.ΔW
+        ΔZ[:,(i-1)*10+1:i*10] .= sol1.W.ΔZ
+        for j in 1:10
+            oj = (i-1)*10+j
+            set_solution!(sol1, q100[:,oj], p100[:,oj], j)
+        end
+        write_to_hdf5(sol1)
+        reset!(sol1)
+    end
+    close(sol1)
+    sol2 = SolutionPSDE(h5file)
+    @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
+    @test sol2.q.d == hcat(reshape(psde1.q₀, (ndims(psde1),1)), q100)[:,1:2:end]
+    @test sol2.p.d == hcat(reshape(psde1.p₀, (ndims(psde1),1)), p100)[:,1:2:end]
+    @test sol2.W.ΔW == ΔW
+    @test sol2.W.ΔZ == ΔZ
+    @test sol2.ntime == 100
+    @test sol2.nsave == 2
+    rm(h5file)
 end
 
 

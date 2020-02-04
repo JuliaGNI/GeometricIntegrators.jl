@@ -67,6 +67,14 @@ dae   = harmonic_oscillator_dae()
 pode  = harmonic_oscillator_pode()
 pdae  = harmonic_oscillator_pdae()
 
+x100  = rand(ndims(ode),  100)
+y100  = rand(ndims(ode),  100)
+z100  = rand(ndims(dae),  100)
+q100  = rand(ndims(pode), 100)
+p100  = rand(ndims(pode), 100)
+λ100  = rand(dae.m,  100)
+μ100  = rand(pdae.m, 100)
+
 h5file = "test.hdf5"
 
 
@@ -194,6 +202,39 @@ h5file = "test.hdf5"
     @test sol.t[end] == t2
     @test offset(sol) == nt
 
+    sol1 = Solution(ode, Δt, 100, nwrite=10)
+    create_hdf5!(sol1, h5file)
+    for i in 1:10
+        for j in 1:10
+            set_solution!(sol1, x100[:,(i-1)*10+j], j)
+        end
+        write_to_hdf5(sol1)
+        reset!(sol1)
+    end
+    close(sol1)
+    sol2 = SolutionODE(h5file)
+    @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
+    @test sol2.q.d == hcat(reshape(ode.q₀, (ndims(ode),1)), x100)
+    @test sol2.ntime == 100
+    @test sol2.nsave == 1
+    rm(h5file)
+
+    sol1 = Solution(ode, Δt, 100, nsave=2, nwrite=10)
+    create_hdf5!(sol1, h5file)
+    for i in 1:10
+        for j in 1:10
+            set_solution!(sol1, x100[:,(i-1)*10+j], j)
+        end
+        write_to_hdf5(sol1)
+        reset!(sol1)
+    end
+    close(sol1)
+    sol2 = SolutionODE(h5file)
+    @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
+    @test sol2.q.d == hcat(reshape(ode.q₀, (ndims(ode),1)), x100)[:,1:2:end]
+    @test sol2.ntime == 100
+    @test sol2.nsave == 2
+    rm(h5file)
 end
 
 
@@ -316,6 +357,43 @@ end
     @test sol.t[end] == t2
     @test offset(sol) == nt
 
+    sol1 = Solution(pode, Δt, 100, nwrite=10)
+    create_hdf5!(sol1, h5file)
+    for i in 1:10
+        for j in 1:10
+            oj = (i-1)*10+j
+            set_solution!(sol1, q100[:,oj], p100[:,oj], j)
+        end
+        write_to_hdf5(sol1)
+        reset!(sol1)
+    end
+    close(sol1)
+    sol2 = SolutionPODE(h5file)
+    @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
+    @test sol2.q.d == hcat(reshape(pode.q₀, (ndims(pode),1)), q100)
+    @test sol2.p.d == hcat(reshape(pode.p₀, (ndims(pode),1)), p100)
+    @test sol2.ntime == 100
+    @test sol2.nsave == 1
+    rm(h5file)
+
+    sol1 = Solution(pode, Δt, 100, nsave=2, nwrite=10)
+    create_hdf5!(sol1, h5file)
+    for i in 1:10
+        for j in 1:10
+            oj = (i-1)*10+j
+            set_solution!(sol1, q100[:,oj], p100[:,oj], j)
+        end
+        write_to_hdf5(sol1)
+        reset!(sol1)
+    end
+    close(sol1)
+    sol2 = SolutionPODE(h5file)
+    @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
+    @test sol2.q.d == hcat(reshape(pode.q₀, (ndims(pode),1)), q100)[:,1:2:end]
+    @test sol2.p.d == hcat(reshape(pode.p₀, (ndims(pode),1)), p100)[:,1:2:end]
+    @test sol2.ntime == 100
+    @test sol2.nsave == 2
+    rm(h5file)
 end
 
 
@@ -438,6 +516,43 @@ end
     @test sol.t[end] == t2
     @test offset(sol) == nt
 
+    sol1 = Solution(dae, Δt, 100, nwrite=10)
+    create_hdf5!(sol1, h5file)
+    for i in 1:10
+        for j in 1:10
+            oj = (i-1)*10+j
+            set_solution!(sol1, z100[:,oj], λ100[:,oj], j)
+        end
+        write_to_hdf5(sol1)
+        reset!(sol1)
+    end
+    close(sol1)
+    sol2 = SolutionDAE(h5file)
+    @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
+    @test sol2.q.d == hcat(reshape(dae.q₀, (ndims(dae),1)), z100)
+    @test sol2.λ.d == hcat(reshape(dae.λ₀, (dae.m,1)), λ100)
+    @test sol2.ntime == 100
+    @test sol2.nsave == 1
+    rm(h5file)
+
+    sol1 = Solution(dae, Δt, 100, nsave=2, nwrite=10)
+    create_hdf5!(sol1, h5file)
+    for i in 1:10
+        for j in 1:10
+            oj = (i-1)*10+j
+            set_solution!(sol1, z100[:,oj], λ100[:,oj], j)
+        end
+        write_to_hdf5(sol1)
+        reset!(sol1)
+    end
+    close(sol1)
+    sol2 = SolutionDAE(h5file)
+    @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
+    @test sol2.q.d == hcat(reshape(dae.q₀, (ndims(dae),1)), z100)[:,1:2:end]
+    @test sol2.λ.d == hcat(reshape(dae.λ₀, (dae.m,1)), λ100)[:,1:2:end]
+    @test sol2.ntime == 100
+    @test sol2.nsave == 2
+    rm(h5file)
 end
 
 
@@ -588,4 +703,43 @@ end
     @test sol.t[end] == t2
     @test offset(sol) == nt
 
+    sol1 = Solution(pdae, Δt, 100, nwrite=10)
+    create_hdf5!(sol1, h5file)
+    for i in 1:10
+        for j in 1:10
+            oj = (i-1)*10+j
+            set_solution!(sol1, x100[:,oj], y100[:,oj], μ100[:,oj], j)
+        end
+        write_to_hdf5(sol1)
+        reset!(sol1)
+    end
+    close(sol1)
+    sol2 = SSolutionPDAE(h5file)
+    @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
+    @test sol2.q.d == hcat(reshape(pdae.q₀, (ndims(pdae),1)), x100)
+    @test sol2.p.d == hcat(reshape(pdae.p₀, (ndims(pdae),1)), y100)
+    @test sol2.λ.d == hcat(reshape(pdae.λ₀, (pdae.m,1)), μ100)
+    @test sol2.ntime == 100
+    @test sol2.nsave == 1
+    rm(h5file)
+
+    sol1 = Solution(pdae, Δt, 100, nsave=2, nwrite=10)
+    create_hdf5!(sol1, h5file)
+    for i in 1:10
+        for j in 1:10
+            oj = (i-1)*10+j
+            set_solution!(sol1, x100[:,oj], y100[:,oj], μ100[:,oj], j)
+        end
+        write_to_hdf5(sol1)
+        reset!(sol1)
+    end
+    close(sol1)
+    sol2 = SSolutionPDAE(h5file)
+    @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
+    @test sol2.q.d == hcat(reshape(pdae.q₀, (ndims(pdae),1)), x100)[:,1:2:end]
+    @test sol2.p.d == hcat(reshape(pdae.p₀, (ndims(pdae),1)), y100)[:,1:2:end]
+    @test sol2.λ.d == hcat(reshape(pdae.λ₀, (pdae.m,1)), μ100)[:,1:2:end]
+    @test sol2.ntime == 100
+    @test sol2.nsave == 2
+    rm(h5file)
 end
