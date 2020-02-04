@@ -144,6 +144,23 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Ar
 end
 
 
+# If the Wiener process W data are not available, creates a one-element zero array instead
+# For instance used when reading a file with no Wiener process data saved
+function SolutionPSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}, p::SDataSeries{DT,NQ}; K::Int=0, conv=DEFAULT_SCONV) where {DT,TT,NQ}
+    # extract parameters
+    nd = q.nd
+    ns = q.ni
+    nt = t.n
+    nsave = t.step
+
+    ΔW = (ns == 1 ? zeros(DT,1,nt*nsave) : zeros(DT,1,nt*nsave,ns))
+    ΔZ = (ns == 1 ? zeros(DT,1,nt*nsave) : zeros(DT,1,nt*nsave,ns))
+
+    W = WienerProcess(t.Δt, ΔW, ΔZ, conv)
+
+    # create solution
+    SolutionPSDE(t, q, p, W, K=K)
+end
 
 
 function SolutionPSDE(file::String)
@@ -186,9 +203,9 @@ function SolutionPSDE(file::String)
 
     # create solution
     if W_exists == true
-        SolutionPSDE(t, q, p, W, K=K)
+        SolutionPSDE(t, q, p, W; K=K)
     else
-        SolutionPSDE(t, q, p, ntime, K=K, conv=conv)
+        SolutionPSDE(t, q, p; K=K, conv=conv)
     end
 
 end

@@ -188,6 +188,17 @@ end
     @test conv(sol1) == conv(sol2)
     rm(h5file)
 
+    sde1 = kubo_oscillator_sde_2(x1)
+    sol1 = Solution(sde1, Δt, nt)
+    create_hdf5!(sol1, h5file; save_W=false)
+    write_to_hdf5(sol1)
+    close(sol1)
+    @test isfile(h5file)
+    sol2 = SolutionSDE(h5file)
+    @test sol2.W.ΔW == zeros(eltype(q1), 1, nt, sde1.ni)
+    @test sol2.W.ΔZ == zeros(eltype(q1), 1, nt, sde1.ni)
+    rm(h5file)
+
     # test nsave and nwrite parameters
     sol = Solution(sde, Δt, 20, nsave=2)
     @test sol.nt == 10
@@ -366,6 +377,17 @@ end
     @test sol1.ns == sol2.ns
     @test sol1.K  == sol2.K
     @test conv(sol1) == conv(sol2)
+    rm(h5file)
+
+    psde1 = kubo_oscillator_psde_2(q1, p1)
+    sol1 = Solution(psde1, Δt, nt)
+    create_hdf5!(sol1, h5file; save_W=false)
+    write_to_hdf5(sol1)
+    close(sol1)
+    @test isfile(h5file)
+    sol2 = SolutionPSDE(h5file)
+    @test sol2.W.ΔW == zeros(eltype(q1), 1, nt, psde1.ni)
+    @test sol2.W.ΔZ == zeros(eltype(q1), 1, nt, psde1.ni)
     rm(h5file)
 
     # test nsave and nwrite parameters

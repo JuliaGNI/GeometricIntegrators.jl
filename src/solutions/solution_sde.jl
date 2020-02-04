@@ -157,21 +157,23 @@ end
 # end
 
 
-# # If the Wiener process W data are not available, creates a one-element zero array instead
-# # For instance used when reading a file with no Wiener process data saved
-# function SolutionSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}; K::Int=0, conv=DEFAULT_SCONV) where {DT,TT,NQ}
-#     # extract parameters
-#     nd = q.nd
-#     ni = q.ni
-#     nt = q.nt
-#     nsave = t.step
-#     ntime = nt*nsave
-#
-#     W = WienerProcess(t.Δt, [0.0], [0.0], conv)
-#
-#     # create solution
-#     SolutionSDE(nd, W.nd, nt, 1, ni, t, q, W, K, ntime, nsave, ntime)
-# end
+# If the Wiener process W data are not available, creates a one-element zero array instead
+# For instance used when reading a file with no Wiener process data saved
+function SolutionSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}; K::Int=0, conv=DEFAULT_SCONV) where {DT,TT,NQ}
+    # extract parameters
+    nd = q.nd
+    ns = q.ni
+    nt = q.nt
+    nsave = t.step
+
+    ΔW = (ns == 1 ? zeros(DT,1,nt*nsave) : zeros(DT,1,nt*nsave,ns))
+    ΔZ = (ns == 1 ? zeros(DT,1,nt*nsave) : zeros(DT,1,nt*nsave,ns))
+
+    W = WienerProcess(t.Δt, ΔW, ΔZ, conv)
+
+    # create solution
+    SolutionSDE(t, q, W, K=K)
+end
 
 
 function SolutionSDE(file::String)
@@ -214,7 +216,7 @@ function SolutionSDE(file::String)
     if W_exists == true
         return SolutionSDE(t, q, W, K=K)
     else
-        return SolutionSDE(t, q, ntime, K=K, conv=conv)
+        return SolutionSDE(t, q; K=K, conv=conv)
     end
 end
 
