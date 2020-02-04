@@ -195,8 +195,8 @@ end
     close(sol1)
     @test isfile(h5file)
     sol2 = SolutionSDE(h5file)
-    @test sol2.W.ΔW == zeros(eltype(q1), 1, nt, sde1.ni)
-    @test sol2.W.ΔZ == zeros(eltype(q1), 1, nt, sde1.ni)
+    @test sol2.W.ΔW == zeros(eltype(q1), 0, 0, 0)
+    @test sol2.W.ΔZ == zeros(eltype(q1), 0, 0, 0)
     rm(h5file)
 
     # test nsave and nwrite parameters
@@ -386,8 +386,8 @@ end
     close(sol1)
     @test isfile(h5file)
     sol2 = SolutionPSDE(h5file)
-    @test sol2.W.ΔW == zeros(eltype(q1), 1, nt, psde1.ni)
-    @test sol2.W.ΔZ == zeros(eltype(q1), 1, nt, psde1.ni)
+    @test sol2.W.ΔW == zeros(eltype(q1), 0, 0, 0)
+    @test sol2.W.ΔZ == zeros(eltype(q1), 0, 0, 0)
     rm(h5file)
 
     # test nsave and nwrite parameters

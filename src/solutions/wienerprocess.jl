@@ -31,15 +31,17 @@ struct WienerProcess{dType, tType, N, CONV} <: SemiMartingale{dType, tType, N}
                     ΔW = (ns == 1 ? zeros(dType, nd, nt) : zeros(dType, nd, nt, ns)),
                     ΔZ = (ns == 1 ? zeros(dType, nd, nt) : zeros(dType, nd, nt, ns))) where {dType, tType, N, CONV}
 
-        @assert CONV==:strong || CONV==:weak
+        @assert CONV==:strong || CONV==:weak || CONV==:null
         @assert nd > 0
         @assert nt ≥ 1
         @assert ns > 0
         @assert N ∈ (2,3)
 
-        @assert nd == size(ΔW, 1) == size(ΔZ, 1)
-        @assert nt == size(ΔW, 2) == size(ΔZ, 2)
-        @assert ns == size(ΔW, 3) == size(ΔZ, 3)
+        if CONV != :null
+            @assert nd == size(ΔW, 1) == size(ΔZ, 1)
+            @assert nt == size(ΔW, 2) == size(ΔZ, 2)
+            @assert ns == size(ΔW, 3) == size(ΔZ, 3)
+        end
 
         new(nd, nt, ns, Δt, ΔW, ΔZ)
     end

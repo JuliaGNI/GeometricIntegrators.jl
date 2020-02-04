@@ -45,7 +45,7 @@ mutable struct SolutionSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dTy
         nsave = t.step
         nwrite = ntime
 
-        @assert CONV==:strong || (CONV==:weak && K==0)
+        @assert CONV==:strong || (CONV==:weak && K==0) || CONV==:null
         @assert ntime==nt*nsave
         @assert q.nt == t.n
         @assert W.ns == q.ni
@@ -56,7 +56,7 @@ mutable struct SolutionSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dTy
     function SolutionSDE(nd::Int, nm::Int, nt::Int, ns::Int, ni::Int, Δt::tType,
                 W::WienerProcess{dType,tType,NW,CONV}, K::Int, ntime::Int, nsave::Int, nwrite::Int) where {dType <: Number, tType <: Real, NW, CONV}
 
-        @assert CONV==:strong || (CONV==:weak && K==0)
+        @assert CONV==:strong || (CONV==:weak && K==0) || CONV==:null
         @assert nd > 0
         @assert ns > 0
         @assert ni > 0
@@ -140,17 +140,17 @@ end
 
 # If the Wiener process W data are not available, creates a one-element zero array instead
 # For instance used when reading a file with no Wiener process data saved
-function SolutionSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}; K::Int=0, conv=DEFAULT_SCONV) where {DT,TT,NQ}
+function SolutionSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}; K::Int=0) where {DT,TT,NQ}
     # extract parameters
     nd = q.nd
     ns = q.ni
     nt = q.nt
     nsave = t.step
 
-    ΔW = (ns == 1 ? zeros(DT,1,nt*nsave) : zeros(DT,1,nt*nsave,ns))
-    ΔZ = (ns == 1 ? zeros(DT,1,nt*nsave) : zeros(DT,1,nt*nsave,ns))
+    ΔW = (ns == 1 ? zeros(DT,0,0) : zeros(DT,0,0,0))
+    ΔZ = (ns == 1 ? zeros(DT,0,0) : zeros(DT,0,0,0))
 
-    W = WienerProcess(t.Δt, ΔW, ΔZ, conv)
+    W = WienerProcess{DT,TT,ns == 1 ? 2 : 3,:null}(nd, nt ,ns, t.Δt, ΔW, ΔZ)
 
     # create solution
     SolutionSDE(t, q, W, K=K)
@@ -197,7 +197,7 @@ function SolutionSDE(file::String)
     if W_exists == true
         return SolutionSDE(t, q, W, K=K)
     else
-        return SolutionSDE(t, q; K=K, conv=conv)
+        return SolutionSDE(t, q; K=K)
     end
 end
 

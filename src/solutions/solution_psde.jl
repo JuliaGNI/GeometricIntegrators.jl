@@ -48,7 +48,7 @@ mutable struct SolutionPSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dT
         nsave = t.step
         nwrite = ntime
 
-        @assert CONV==:strong || (CONV==:weak && K==0)
+        @assert CONV==:strong || (CONV==:weak && K==0) || CONV==:null
         @assert ntime==nt*nsave
         @assert q.ni == p.ni
         @assert q.nd == p.nd
@@ -61,7 +61,7 @@ mutable struct SolutionPSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dT
     function SolutionPSDE(nd::Int, nm::Int, nt::Int, ns::Int, ni::Int, Δt::tType,
                 W::WienerProcess{dType,tType,NW,CONV}, K::Int, ntime::Int, nsave::Int, nwrite::Int) where {dType <: Number, tType <: Real, NW, CONV}
 
-        @assert CONV==:strong || (CONV==:weak && K==0)
+        @assert CONV==:strong || (CONV==:weak && K==0) || CONV==:null
         @assert nd > 0
         @assert ns > 0
         @assert ni > 0
@@ -153,10 +153,10 @@ function SolutionPSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}, p::SDataSeries{D
     nt = t.n
     nsave = t.step
 
-    ΔW = (ns == 1 ? zeros(DT,1,nt*nsave) : zeros(DT,1,nt*nsave,ns))
-    ΔZ = (ns == 1 ? zeros(DT,1,nt*nsave) : zeros(DT,1,nt*nsave,ns))
+    ΔW = (ns == 1 ? zeros(DT,0,0) : zeros(DT,0,0,0))
+    ΔZ = (ns == 1 ? zeros(DT,0,0) : zeros(DT,0,0,0))
 
-    W = WienerProcess(t.Δt, ΔW, ΔZ, conv)
+    W = WienerProcess{DT,TT,ns == 1 ? 2 : 3,:null}(nd, nt ,ns, t.Δt, ΔW, ΔZ)
 
     # create solution
     SolutionPSDE(t, q, p, W, K=K)
