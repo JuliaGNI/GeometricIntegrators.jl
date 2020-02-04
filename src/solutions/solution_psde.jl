@@ -35,6 +35,7 @@ mutable struct SolutionPSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dT
     nwrite::Int
     counter::Vector{Int}
     woffset::Int
+    ioffset::Int
     h5::HDF5File
 
     function SolutionPSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}, p::SDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}
@@ -54,7 +55,7 @@ mutable struct SolutionPSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dT
         @assert q.nt == p.nt == t.n
         @assert W.ns == q.ni
 
-        new{DT,TT,NQ,NW,CONV}(nd, nm, nt, ns, t, q, p, W, K, ntime, nsave, nwrite, zeros(Int, ns), 0)
+        new{DT,TT,NQ,NW,CONV}(nd, nm, nt, ns, t, q, p, W, K, ntime, nsave, nwrite, zeros(Int, ns), 0, 0)
     end
 
     function SolutionPSDE(nd::Int, nm::Int, nt::Int, ns::Int, ni::Int, Δt::tType,
@@ -81,7 +82,7 @@ mutable struct SolutionPSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dT
         p = SDataSeries(dType, nd, nt, max(ns,ni))
         NQ = ns==ni==1 ? 2 : 3
 
-        new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, p, W, K, ntime, nsave, nwrite, zeros(Int, max(ns,ni)), 0)
+        new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, p, W, K, ntime, nsave, nwrite, zeros(Int, max(ns,ni)), 0, 0)
     end
 end
 
@@ -97,7 +98,7 @@ function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime:
 
     # Holds the Wiener process data for ALL computed time steps
     # Wiener process increments are automatically generated here
-    W = WienerProcess(DT, nm, ntime, max(ni,ns), Δt, conv)
+    W = WienerProcess(DT, nm, nw, max(ni,ns), Δt, conv)
 
     s = SolutionPSDE(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw)
     set_initial_conditions!(s, equation)
@@ -151,8 +152,8 @@ function SolutionPSDE(file::String)
     h5 = h5open(file, "r")
 
     # read attributes
+    ntime = read(attrs(h5)["ntime"])
     nsave = read(attrs(h5)["nsave"])
-    ns    = read(attrs(h5)["ns"])
 
     # reading data arrays
     t = TimeSeries(read(h5["t"]), nsave)
@@ -187,7 +188,7 @@ function SolutionPSDE(file::String)
     if W_exists == true
         SolutionPSDE(t, q, p, W, K=K)
     else
-        SolutionPSDE(t, q, p, K=K, conv=conv)
+        SolutionPSDE(t, q, p, ntime, K=K, conv=conv)
     end
 
 end
@@ -218,6 +219,7 @@ timesteps(sol::SolutionPSDE)  = sol.t
 ntime(sol::SolutionPSDE) = sol.ntime
 nsave(sol::SolutionPSDE) = sol.nsave
 offset(sol::SolutionPSDE) = sol.woffset
+ioffset(sol::SolutionPSDE) = sol.ioffset
 conv(sol::SolutionPSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
 
 
@@ -339,6 +341,7 @@ function CommonFunctions.reset!(sol::SolutionPSDE)
     generate_wienerprocess!(sol.W)
     sol.counter .= 1
     sol.woffset += sol.nt
+    sol.ioffset += sol.nwrite
 end
 
 function Base.close(solution::SolutionPSDE)

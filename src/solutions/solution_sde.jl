@@ -32,6 +32,7 @@ mutable struct SolutionSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dTy
     nwrite::Int
     counter::Vector{Int}
     woffset::Int
+    ioffset::Int
     h5::HDF5File
 
     function SolutionSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}
@@ -49,7 +50,7 @@ mutable struct SolutionSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dTy
         @assert q.nt == t.n
         @assert W.ns == q.ni
 
-        new{DT,TT,NQ,NW,CONV}(nd, nm, nt, ns, t, q, W, K, ntime, nsave, nwrite, zeros(Int, ns), 0)
+        new{DT,TT,NQ,NW,CONV}(nd, nm, nt, ns, t, q, W, K, ntime, nsave, nwrite, zeros(Int, ns), 0, 0)
     end
 
     function SolutionSDE(nd::Int, nm::Int, nt::Int, ns::Int, ni::Int, Δt::tType,
@@ -75,7 +76,7 @@ mutable struct SolutionSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dTy
         q = SDataSeries(dType, nd, nt, max(ns,ni))
         NQ = ns==ni==1 ? 2 : 3
 
-        new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, W, K, ntime, nsave, nwrite, zeros(Int, max(ns,ni)), 0)
+        new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, W, K, ntime, nsave, nwrite, zeros(Int, max(ns,ni)), 0, 0)
     end
 end
 
@@ -91,7 +92,7 @@ function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, ntime::Int; nsave::Int=DEFAU
 
     # Holds the Wiener process data for ALL computed time steps
     # Wiener process increments are automatically generated here
-    W = WienerProcess(DT, nm, ntime, max(ni,ns), Δt, conv)
+    W = WienerProcess(DT, nm, nw, max(ni,ns), Δt, conv)
 
     s = SolutionSDE(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw)
     set_initial_conditions!(s, equation)
@@ -118,7 +119,7 @@ function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, dW::Array{DT, NW}, dZ::Array
     @assert NW ∈ (2,3)
 
     @assert nm == size(dW,1)
-    @assert ntime == size(dW,2)
+    @assert nw == size(dW,2)
     @assert ns == size(dW,3)
 
     # Holds the Wiener process data for ALL computed time steps
@@ -179,8 +180,8 @@ function SolutionSDE(file::String)
     h5 = h5open(file, "r")
 
     # read attributes
+    ntime = read(attrs(h5)["ntime"])
     nsave = read(attrs(h5)["nsave"])
-    ns    = read(attrs(h5)["ns"])
 
     # reading data arrays
     t = TimeSeries(read(h5["t"]), nsave)
@@ -213,7 +214,7 @@ function SolutionSDE(file::String)
     if W_exists == true
         return SolutionSDE(t, q, W, K=K)
     else
-        return SolutionSDE(t, q, K=K, conv=conv)
+        return SolutionSDE(t, q, ntime, K=K, conv=conv)
     end
 end
 
@@ -242,6 +243,7 @@ timesteps(sol::SolutionSDE) = sol.t
 ntime(sol::SolutionSDE) = sol.ntime
 nsave(sol::SolutionSDE) = sol.nsave
 offset(sol::SolutionSDE) = sol.woffset
+ioffset(sol::SolutionSDE) = sol.ioffset
 conv(sol::SolutionSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
 
 
@@ -353,6 +355,7 @@ function CommonFunctions.reset!(sol::SolutionSDE)
     generate_wienerprocess!(sol.W)
     sol.counter .= 1
     sol.woffset += sol.nt
+    sol.ioffset += sol.nwrite
 end
 
 function Base.close(solution::SolutionSDE)
