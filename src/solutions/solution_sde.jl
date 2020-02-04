@@ -138,25 +138,6 @@ function SolutionSDE(equation::SDE{DT,TT}, Δt::TT, dW::Array{DT, NW}, dZ::Array
 end
 
 
-# function SolutionSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}
-#     # extract parameters
-#     nd = q.nd
-#     ns = q.ni
-#     nt = t.nt
-#     nm = W.nd
-#     ntime = W.nt
-#     nsave = t.step
-#
-#     @assert conv==:strong || (conv==:weak && K==0)
-#     @assert ntime==nt*nsave
-#     @assert q.nt == nt
-#     @assert W.ns == q.ns
-#
-#     # create solution
-#     SolutionSDE{DT,TT,NQ,NW}(CONV, nd, nm, nt, ns, 1, t, q, W, K, ntime, nsave)
-# end
-
-
 # If the Wiener process W data are not available, creates a one-element zero array instead
 # For instance used when reading a file with no Wiener process data saved
 function SolutionSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}; K::Int=0, conv=DEFAULT_SCONV) where {DT,TT,NQ}
@@ -321,6 +302,7 @@ function set_solution!(sol::SolutionSDE{DT}, q::SolutionVector{DT}, n, k=1) wher
         sol.counter[k] += 1
     end
 end
+
 
 # copy increments of the Brownian Process for multidimensional Brownian motion, 1 sample path
 function get_increment(sol::SolutionSDE{DT,TT,NQ,2}, k=1) where {DT,TT,NQ}
