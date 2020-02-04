@@ -134,12 +134,6 @@ h5file = "test.hdf5"
     @test sol1.q[:,1:nt,:] == Xs
     @test sol2.q[:,1:nt,:] == Xs
 
-    # test reset
-    reset!(sol)
-    @test sol.t[0]   == t1
-    @test sol.t[end] == t2
-    @test offset(sol) == nt
-
     # test general hdf5 functions
     sol1 = Solution(ode, Δt, nt)
     h5 = createHDF5(sol1, h5file)
@@ -192,6 +186,14 @@ h5file = "test.hdf5"
 
     sol = Solution(ode, Δt, 20, 2, 10)
     @test sol.nt == 5
+
+    # test reset
+    sol = Solution(ode, Δt, nt)
+    reset!(sol)
+    @test sol.t[0]   == t1
+    @test sol.t[end] == t2
+    @test offset(sol) == nt
+
 end
 
 
@@ -271,12 +273,6 @@ end
     @test sol2.q[:,1:nt,:] == Qs
     @test sol2.p[:,1:nt,:] == Ps
 
-    # test reset
-    reset!(sol)
-    @test sol.t[0]   == t1
-    @test sol.t[end] == t2
-    @test offset(sol) == nt
-
     # test hdf5 in- and output
     sol1 = Solution(harmonic_oscillator_pode(q0, p0), Δt, nt)
     create_hdf5!(sol1, h5file)
@@ -305,6 +301,21 @@ end
     @test sol1.ntime == sol2.ntime
     @test sol1.nsave == sol2.nsave
     rm(h5file)
+
+    # test nsave and nwrite parameters
+    sol = Solution(pode, Δt, 20, 2)
+    @test sol.nt == 10
+
+    sol = Solution(pode, Δt, 20, 2, 10)
+    @test sol.nt == 5
+
+    # test reset
+    sol = Solution(pode, Δt, nt)
+    reset!(sol)
+    @test sol.t[0]   == t1
+    @test sol.t[end] == t2
+    @test offset(sol) == nt
+
 end
 
 
@@ -384,12 +395,6 @@ end
     @test sol2.q[:,1:nt,:] == Zs
     @test sol2.λ[:,1:nt,:] == Λs
 
-    # test reset
-    reset!(sol)
-    @test sol.t[0]   == t1
-    @test sol.t[end] == t2
-    @test offset(sol) == nt
-
     # test hdf5 in- and output
     sol1 = Solution(harmonic_oscillator_dae(z0, λ0), Δt, nt)
     create_hdf5!(sol1, h5file)
@@ -418,6 +423,21 @@ end
     @test sol1.ntime == sol2.ntime
     @test sol1.nsave == sol2.nsave
     rm(h5file)
+
+    # test nsave and nwrite parameters
+    sol = Solution(dae, Δt, 20, 2)
+    @test sol.nt == 10
+
+    sol = Solution(dae, Δt, 20, 2, 10)
+    @test sol.nt == 5
+
+    # test reset
+    sol = Solution(dae, Δt, nt)
+    reset!(sol)
+    @test sol.t[0]   == t1
+    @test sol.t[end] == t2
+    @test offset(sol) == nt
+
 end
 
 
@@ -523,12 +543,6 @@ end
     @test sol3.p[:,1:nt,:] == Ys
     @test sol3.λ[:,1:nt,:] == Ms
 
-    # test reset
-    reset!(sol)
-    @test sol.t[0]   == t1
-    @test sol.t[end] == t2
-    @test offset(sol) == nt
-
     # test hdf5 in- and output
     sol1 = Solution(harmonic_oscillator_pdae(x0, y0, μ0), Δt, nt)
     create_hdf5!(sol1, h5file)
@@ -559,4 +573,19 @@ end
     @test sol1.ntime == sol2.ntime
     @test sol1.nsave == sol2.nsave
     rm(h5file)
+
+    # test nsave and nwrite parameters
+    sol = Solution(pdae, Δt, 20, 2)
+    @test sol.nt == 10
+
+    sol = Solution(pdae, Δt, 20, 2, 10)
+    @test sol.nt == 5
+
+    # test reset
+    sol = Solution(pdae, Δt, nt)
+    reset!(sol)
+    @test sol.t[0]   == t1
+    @test sol.t[end] == t2
+    @test offset(sol) == nt
+
 end

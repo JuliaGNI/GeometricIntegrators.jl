@@ -147,12 +147,6 @@ end
     @test sol1.q[:,1:nt,:] == Xs
     @test sol2.q[:,1:nt,:] == Xs
 
-    # test reset
-    reset!(sol)
-    @test sol.t[0]   == t1
-    @test sol.t[end] == t2
-    @test offset(sol) == nt
-
     # test hdf5 in- and output
     sol1 = Solution(kubo_oscillator_sde_2(x0), Δt, nt)
     create_hdf5!(sol1, h5file)
@@ -196,6 +190,14 @@ end
 
     sol = Solution(sde, Δt, 20, 2, 10)
     @test sol.nt == 5
+
+    # test reset
+    sol = Solution(sde, Δt, nt)
+    reset!(sol)
+    @test sol.t[0]   == t1
+    @test sol.t[end] == t2
+    @test offset(sol) == nt
+
 end
 
 
@@ -277,12 +279,6 @@ end
     @test sol2.q[:,1:nt,:] == Qs
     @test sol2.p[:,1:nt,:] == Ps
 
-    # test reset
-    reset!(sol)
-    @test sol.t[0]   == t1
-    @test sol.t[end] == t2
-    @test offset(sol) == nt
-
     # test hdf5 in- and output
     sol1 = Solution(kubo_oscillator_psde_2(q0, p0), Δt, nt)
     create_hdf5!(sol1, h5file)
@@ -321,6 +317,21 @@ end
     @test sol1.K  == sol2.K
     @test conv(sol1) == conv(sol2)
     rm(h5file)
+
+    # test nsave and nwrite parameters
+    sol = Solution(psde, Δt, 20, 2)
+    @test sol.nt == 10
+
+    sol = Solution(psde, Δt, 20, 2, 10)
+    @test sol.nt == 5
+
+    # test reset
+    sol = Solution(psde, Δt, nt)
+    reset!(sol)
+    @test sol.t[0]   == t1
+    @test sol.t[end] == t2
+    @test offset(sol) == nt
+
 end
 
 
