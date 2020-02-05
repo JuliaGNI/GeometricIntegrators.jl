@@ -16,6 +16,12 @@ CommonFunctions.write_to_hdf5(sol::Solution, h5::HDF5File, offset=0) = error("wr
 
 conv(sol::StochasticSolution) = error("conv() not implemented for ", typeof(sol))
 
+nsamples(sol::DeterministicSolution) = sol.ni
+nsamples(sol::StochasticSolution) = sol.ns
+
+eachtimestep(sol::Solution) = 1:ntime(sol)
+eachsample(sol::Solution) = 1:nsamples(sol)
+
 
 "Create solution for ODE."
 function Solution(equation::AbstractEquationODE, Δt, ntime::Int; kwargs...)

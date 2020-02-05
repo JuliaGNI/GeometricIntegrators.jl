@@ -127,14 +127,14 @@ end
 
 "Integrate equation for all initial conditions."
 function integrate!(int::DeterministicIntegrator, sol::Solution)
-    integrate!(int, sol, 1, sol.ni)
+    integrate!(int, sol, 1, nsamples(sol))
 end
 
 
 "Integrate ODE for initial conditions m with m₁ ≤ m ≤ m₂."
 function integrate!(int::DeterministicIntegrator, sol::Solution, m1, m2)
     # integrate initial conditions m with m₁ ≤ m ≤ m₂ for all time steps
-    integrate!(int, sol, m1, m2, 1, sol.ntime)
+    integrate!(int, sol, m1, m2, 1, ntime(sol))
 end
 
 
@@ -142,11 +142,11 @@ end
 function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT,N}, m1::Int, m2::Int, n1::Int, n2::Int) where {DT,TT,N}
     @assert m1 ≥ 1
     @assert m2 ≥ m1
-    @assert m2 ≤ sol.ni
+    @assert m2 ≤ nsamples(sol)
 
     @assert n1 ≥ 1
     @assert n2 ≥ n1
-    @assert n2 ≤ sol.ntime
+    @assert n2 ≤ ntime(sol)
 
     asol = AtomicSolution(equation(int))
 
