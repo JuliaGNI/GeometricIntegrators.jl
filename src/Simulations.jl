@@ -1,7 +1,8 @@
 module Simulations
 
     using ProgressMeter
-    
+
+    using ..CommonFunctions
     using ..Equations
     using ..Integrators
     using ..Solutions
