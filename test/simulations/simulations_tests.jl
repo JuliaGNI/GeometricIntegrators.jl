@@ -46,8 +46,8 @@ end
 
 
 
-nt = 1000
-ns = 100
+nt = 10000
+ns = 10
 
 ode = harmonic_oscillator_ode(vcat(rand(1,ns), zeros(1,ns)))
 
