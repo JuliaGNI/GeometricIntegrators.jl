@@ -8,24 +8,23 @@ set_config(:nls_rtol_break, Inf)
 set_config(:nls_stol_break, Inf)
 
 
-const Δt = 0.1
-const nt = 100000
-const ns = 100
+Δt = 0.1
+nt = 100000
 
-const nsave1 = 1
-const nwrte1 = 1000
+nsave1 = 1
+nwrte1 = 1000
 
-const nsave2 = 10
-const nwrte2 = 1000
+nsave2 = 10
+nwrte2 = 1000
 
-const h5file = "test.hdf5"
+h5file = "test.hdf5"
 
 
 tab = getTableauImplicitMidpoint()
+ode = harmonic_oscillator_ode()
 
 
 @testset "$(rpad("Serial Simulation",80))" begin
-    ode = harmonic_oscillator_ode()
 
     sim1 = Simulation(ode, tab, Δt, "Harmonic Oscillator Test 1", h5file, nt; nsave=nsave1, nwrite=nwrte1)
     run!(sim1)
@@ -46,8 +45,14 @@ tab = getTableauImplicitMidpoint()
 end
 
 
+
+nt = 1000
+ns = 100
+
+ode = harmonic_oscillator_ode(vcat(rand(1,ns), zeros(1,ns)))
+
+
 @testset "$(rpad("Parallel Simulation",80))" begin
-    ode = harmonic_oscillator_ode(vcat(rand(1,ns), zeros(1,ns)))
 
     sim1 = ParallelSimulation(ode, tab, Δt, "Harmonic Oscillator Test 1", h5file, nt; nsave=nsave1, nwrite=nwrte1)
     run!(sim1)
