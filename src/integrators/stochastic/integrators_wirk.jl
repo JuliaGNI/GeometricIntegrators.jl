@@ -77,7 +77,7 @@ function ParametersWIRK(equ::ET, tab::TableauWIRK{TT}, Δt::TT, ΔW::Vector{DT},
 end
 
 
-struct NonlinearFunctionCacheWIRK{DT}
+struct IntegratorCacheWIRK{DT}
     # Structure for holding the internal stages Q0, and Q1 the values of the drift vector
     # and the diffusion matrix evaluated at the internal stages V=v(Q0), B=B(Q1),
     # and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
@@ -92,7 +92,9 @@ struct NonlinearFunctionCacheWIRK{DT}
     b::Matrix{DT}
     y::Vector{DT}
 
-    function NonlinearFunctionCacheWIRK{DT}(D, M, S) where {DT}
+    Δy::Vector{DT}
+
+    function IntegratorCacheWIRK{DT}(D, M, S) where {DT}
         # create internal stage vectors
         Q0 = create_internal_stage_vector(DT, D, S)
         Q1 = create_internal_stage_vector(DT, D, M, S)
@@ -106,7 +108,10 @@ struct NonlinearFunctionCacheWIRK{DT}
         b = zeros(DT,D,M)
         y = zeros(DT,D)
 
-        new(Q0, Q1, V, B, Y0, Y1, v, b, y)
+        # create temporary vectors
+        Δy  = zeros(DT,M)
+
+        new(Q0, Q1, V, B, Y0, Y1, v, b, y, Δy)
     end
 end
 
@@ -115,11 +120,7 @@ struct IntegratorWIRK{DT, TT, PT <: ParametersWIRK{DT,TT},
                               ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
     params::PT
     solver::ST
-    # InitialGuessSDE not implemented for WIRK
-    #iguess::IT
-    fcache::NonlinearFunctionCacheWIRK{DT}
-
-    Δy::Vector{DT}
+    cache::IntegratorCacheWIRK{DT}
 end
 
 
@@ -135,18 +136,11 @@ function IntegratorWIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauWIRK{TT}, 
     # create solver
     solver = create_nonlinear_solver(DT, D*S*(M+1), params)
 
-    # Not implementing InitialGuessSDE
-    # create initial guess
-    #iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
-
     # create cache for internal stage vectors and update vectors
-    fcache = NonlinearFunctionCacheWIRK{DT}(D, M, S)
-
-    # create temporary vectors
-    Δy  = zeros(DT,M)
+    cache = IntegratorCacheWIRK{DT}(D, M, S)
 
     # create integrator
-    IntegratorWIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, Δy,)
+    IntegratorWIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, cache)
 end
 
 equation(integrator::IntegratorWIRK) = integrator.params.equ
@@ -233,7 +227,7 @@ end
 "Compute stages of weak implicit Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersWIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
-    cache = NonlinearFunctionCacheWIRK{ST}(D, M, S)
+    cache = IntegratorCacheWIRK{ST}(D, M, S)
 
     quote
         compute_stages!(x, $cache.Q0, $cache.Q1, $cache.V, $cache.B, $cache.Y0, $cache.Y1, params)
@@ -292,13 +286,9 @@ end
 
 """
 This function computes initial guesses for Y and assigns them to int.solver.x
-The prediction is calculated using an explicit integrator.
+For WIRK we are NOT IMPLEMENTING an InitialGuess.
 """
 function initial_guess!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
-
-    # NOT IMPLEMENTING InitialGuessSDE
-
-    # SIMPLE SOLUTION
     # The simplest initial guess for Y is 0
     int.solver.x .= 0
 
@@ -306,7 +296,6 @@ function initial_guess!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT
     # does not seem to be a good idea here, because the integrators are convergent
     # in the weak sense only, and there is no guarantee that the explicit integrator
     # will produce anything close to the desired solution...
-
 end
 
 
@@ -334,8 +323,8 @@ function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,T
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute the drift vector field and the diffusion matrix at internal stages
-    compute_stages!(int.solver.x, int.fcache.Q0, int.fcache.Q1, int.fcache.V, int.fcache.B, int.fcache.Y0, int.fcache.Y1, int.params)
+    compute_stages!(int.solver.x, int.cache.Q0, int.cache.Q1, int.cache.V, int.cache.B, int.cache.Y0, int.cache.Y1, int.params)
 
     # compute final update (same update function as for SIRK)
-    update_solution!(sol.q, int.fcache.V, int.fcache.B, int.params.tab.qdrift0.b, int.params.tab.qdrift0.b̂, int.params.tab.qdiff0.b, int.params.tab.qdiff0.b̂, int.params.Δt, int.params.ΔW, int.Δy)
+    update_solution!(sol.q, int.cache.V, int.cache.B, int.params.tab.qdrift0.b, int.params.tab.qdrift0.b̂, int.params.tab.qdiff0.b, int.params.tab.qdiff0.b̂, int.params.Δt, int.params.ΔW, int.cache.Δy)
 end

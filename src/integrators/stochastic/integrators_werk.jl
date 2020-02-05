@@ -69,8 +69,6 @@ end
 
 
 
-
-
 "Stochastic Explicit Runge-Kutta integrator."
 struct IntegratorWERK{DT, TT, ET <: SDE{DT,TT}} <: StochasticIntegrator{DT,TT}
     equation::ET
@@ -138,7 +136,6 @@ function integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolutionSDE{DT,T
     # copy B1[i] to B2[i] (they're equal for i=1)
     int.B2[1] .= int.B1[1]
 
-
     for i in 2:int.tableau.s
 
         # Calculating the internal stage H^(0)_i
@@ -158,9 +155,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolutionSDE{DT,T
             end
 
             int.Q0[k] = sol.q̅[k] + int.Δt * ydrift + dot(int.Δy,sol.ΔW)
-
         end
-
 
         # Calculating the internal stages H^(l)_i for l=1..sol.nm
         @inbounds for k in eachindex(int.Q1[1])
@@ -188,7 +183,6 @@ function integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolutionSDE{DT,T
                 int.Q1[noise_idx][k] = sol.q̅[k] + int.Δt * ydrift + dot(int.Δy,sol.ΔW)
             end
         end
-
 
         # Calculating the internal stages \hat H^(l)_i for l=1..sol.nm
         @inbounds for k in eachindex(int.Q2[1])
@@ -232,8 +226,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolutionSDE{DT,T
             simd_copy_yx_first!(int.tB, int.B1[i], l)
         end
 
-
-        #CALCULATING THE NEW VALUES OF B2
+        # CALCULATING THE NEW VALUES OF B2
         # each column of B evaluated at a different internal stage
         tᵢ = sol.t̅ + int.Δt * int.tableau.qdrift2.c[i]
 

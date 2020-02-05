@@ -19,7 +19,6 @@ struct TableauSISPRK{T} <: AbstractTableauIRK{T}
     #
     # Orders stored in qdrift and qdiff are understood as the classical orders of these methods.
 
-
     function TableauSISPRK{T}(name, s, qdrift, qdiff, pdrift1, pdrift2, pdiff1, pdiff2) where {T}
         # THE COMMENTED OUT PART WAS FOR TableauFIRK. MAY IMPLEMENT SOMETHING
         # SIMILAR FOR TableauSFIRK LATER.
@@ -90,7 +89,7 @@ Structure for holding the internal stages Q, the values of the drift vector
 and the diffusion matrix evaluated at the internal stages V=v(Q), B=B(Q),
 and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
 """
-struct NonlinearFunctionCacheSISPRK{DT}
+struct IntegratorCacheSISPRK{DT}
     Q ::Vector{Vector{DT}}
     P ::Vector{Vector{DT}}
     V ::Vector{Vector{DT}}
@@ -111,7 +110,10 @@ struct NonlinearFunctionCacheSISPRK{DT}
     y ::Vector{DT}
     z ::Vector{DT}
 
-    function NonlinearFunctionCacheSISPRK{DT}(D, M, S) where {DT}
+    Δy::Vector{DT}
+    Δz::Vector{DT}
+
+    function IntegratorCacheSISPRK{DT}(D, M, S) where {DT}
 
         # create internal stage vectors
         Q  = create_internal_stage_vector(DT, D, S)
@@ -135,7 +137,11 @@ struct NonlinearFunctionCacheSISPRK{DT}
         y  = zeros(DT,D)
         z  = zeros(DT,D)
 
-        new(Q, P, V, F1, F2, B, G1, G2, Y, Z, v, f1, f2, b, g1, g2, y, z)
+        # create temporary arrays
+        Δy  = zeros(DT,M)
+        Δz  = zeros(DT,M)
+
+        new(Q, P, V, F1, F2, B, G1, G2, Y, Z, v, f1, f2, b, g1, g2, y, z, Δy, Δz)
     end
 end
 
@@ -145,12 +151,7 @@ struct IntegratorSISPRK{DT, TT, PT <: ParametersSISPRK{DT,TT},
                                 ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
     params::PT
     solver::ST
-    # InitialGuessPSDE not implemented for SFIPRK
-    #iguess::IT
-    fcache::NonlinearFunctionCacheSISPRK{DT}
-
-    Δy::Vector{DT}
-    Δz::Vector{DT}
+    cache::IntegratorCacheSISPRK{DT}
 end
 
 # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
@@ -167,19 +168,11 @@ function IntegratorSISPRK(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}, tablea
     # create solver
     solver = create_nonlinear_solver(DT, 2*D*S, params)
 
-    # Not implementing InitialGuessSDE
-    # create initial guess
-    #iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
-
     # create cache for internal stage vectors and update vectors
-    fcache = NonlinearFunctionCacheSISPRK{DT}(D, M, S)
-
-    # create temporary arrays
-    Δy  = zeros(DT,M)
-    Δz  = zeros(DT,M)
+    cache = IntegratorCacheSISPRK{DT}(D, M, S)
 
     # create integrator
-    IntegratorSISPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, Δy, Δz)
+    IntegratorSISPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, cache)
 end
 
 @inline equation(integrator::IntegratorSISPRK) = integrator.params.equ
@@ -264,7 +257,7 @@ end
 "Compute stages of stochastic implicit split partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSISPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
-    cache = NonlinearFunctionCacheSISPRK{ST}(D, M, S)
+    cache = IntegratorCacheSISPRK{ST}(D, M, S)
 
     quote
         compute_stages!(x, $cache.Q, $cache.P, $cache.V, $cache.F1, $cache.F2, $cache.B, $cache.G1, $cache.G2, $cache.Y, $cache.Z, params)
@@ -305,12 +298,9 @@ end
 
 """
 This function computes initial guesses for Y, Z and assigns them to int.solver.x
-The prediction is calculated using an explicit integrator.
+For SISPRK we are NOT IMPLEMENTING an InitialGuess.
 """
 function initial_guess!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
-
-    # NOT IMPLEMENTING InitialGuessSDE
-
     # SIMPLE SOLUTION
     # The simplest initial guess for Y, Z is 0
     int.solver.x .= 0
@@ -459,12 +449,12 @@ function integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSolutionPSDE{D
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute the drift vector field and the diffusion matrix at internal stages
-    compute_stages!(int.solver.x, int.fcache.Q, int.fcache.P, int.fcache.V, int.fcache.F1, int.fcache.F2, int.fcache.B, int.fcache.G1, int.fcache.G2, int.fcache.Y, int.fcache.Z, int.params)
+    compute_stages!(int.solver.x, int.cache.Q, int.cache.P, int.cache.V, int.cache.F1, int.cache.F2, int.cache.B, int.cache.G1, int.cache.G2, int.cache.Y, int.cache.Z, int.params)
 
     # compute final update
-    update_solution!(sol.q, sol.p, int.fcache.V, int.fcache.F1, int.fcache.F2, int.fcache.B, int.fcache.G1, int.fcache.G2,
+    update_solution!(sol.q, sol.p, int.cache.V, int.cache.F1, int.cache.F2, int.cache.B, int.cache.G1, int.cache.G2,
                     int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂,
                     int.params.tab.pdrift1.b, int.params.tab.pdrift1.b̂, int.params.tab.pdrift2.b, int.params.tab.pdrift2.b̂,
                     int.params.tab.pdiff1.b, int.params.tab.pdiff1.b̂, int.params.tab.pdiff2.b, int.params.tab.pdiff2.b̂,
-                    int.params.Δt, int.params.ΔW, int.Δy, int.Δz)
+                    int.params.Δt, int.params.ΔW, int.cache.Δy, int.cache.Δz)
 end

@@ -15,7 +15,6 @@ struct TableauSIRK{T} <: AbstractTableauIRK{T}
     #
     # Orders stored in qdrift and qdiff are understood as the classical orders of these methods.
 
-
     function TableauSIRK{T}(name, s, qdrift, qdiff) where {T}
         # THE COMMENTED OUT PART WAS FOR TableauFIRK. MAY IMPLEMENT SOMETHING
         # SIMILAR FOR TableauSIRK LATER.
@@ -72,7 +71,7 @@ Structure for holding the internal stages Q, the values of the drift vector
 and the diffusion matrix evaluated at the internal stages V=v(Q), B=B(Q),
 and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
 """
-struct NonlinearFunctionCacheSIRK{DT}
+struct IntegratorCacheSIRK{DT}
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
     B::Vector{Matrix{DT}}
@@ -82,7 +81,17 @@ struct NonlinearFunctionCacheSIRK{DT}
     b::Matrix{DT}
     y::Vector{DT}
 
-    function NonlinearFunctionCacheSIRK{DT}(D, M, S) where {DT}
+    ΔQ::Vector{DT}
+    Y1::Vector{DT}
+    Y2::Vector{DT}
+    V1::Vector{DT}
+    V2::Vector{DT}
+    B1::Matrix{DT}
+    B2::Matrix{DT}
+    Δw::Vector{DT}
+    Δy::Vector{DT}
+
+    function IntegratorCacheSIRK{DT}(D, M, S) where {DT}
 
         # create internal stage vectors
         Q = create_internal_stage_vector(DT, D, S)
@@ -95,94 +104,27 @@ struct NonlinearFunctionCacheSIRK{DT}
         b = zeros(DT,D,M)
         y = zeros(DT,D)
 
-        new(Q, V, B, Y, v, b, y)
+        # create temporary vectors
+        ΔQ = zeros(DT,D)
+        Y1 = zeros(DT,D)
+        Y2 = zeros(DT,D)
+        V1 = zeros(DT,D)
+        V2 = zeros(DT,D)
+        B1 = zeros(DT,D,M)
+        B2 = zeros(DT,D,M)
+        Δw = zeros(DT,M)
+        Δy = zeros(DT,M)
+
+        new(Q, V, B, Y, v, b, y, ΔQ, Y1, Y2, V1, V2, B1, B2, Δw, Δy)
     end
 end
-
-"""
-Unpacks the data stored in x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ...)
-into Y::Vector{Vector}, calculates the internal stages Q, the values of the RHS
-of the SDE ( v(Q) and B(Q) ), and assigns them to V and B.
-Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
-"""
-function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, B::Vector{Matrix{ST}}, Y::Vector{Vector{ST}},
-                         params::ParametersSIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
-
-    local tᵢ::TT
-
-    @assert S == length(Q) == length(V) == length(B)
-
-
-    # copy x to Y and calculate Q
-    for i in eachindex(Q)
-        @assert D == size(B[i],1) == length(Q[i]) == length(V[i])
-        @assert M == size(B[i],2)
-        for k in eachindex(Q[i])
-            Y[i][k] = x[D*(i-1)+k]
-        end
-        Q[i] .= params.q .+ Y[i]
-    end
-
-    # compute VQ = v(Q) and BQ=B(Q)
-    for i in eachindex(Q,V,B)
-        tᵢ = params.t + params.Δt * params.tab.qdrift.c[i]
-        # calculates v(t,Q[i]) and assigns to the i-th column of V
-        params.equ.v(tᵢ, Q[i], V[i])
-        # calculates B(t,Q[i]) and assigns to the matrix B[i]
-        params.equ.B(tᵢ, Q[i], B[i])
-    end
-end
-
-"Compute stages of stochastic implicit Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
-
-    cache = NonlinearFunctionCacheSIRK{ST}(D, M, S)
-
-    quote
-        compute_stages!(x, $cache.Q, $cache.V, $cache.B, $cache.Y, params)
-
-        local y1::ST
-        local y2::ST
-
-        # compute b = - (Y-AV)
-        for i in 1:S
-            for k in 1:D
-                y1 = 0
-                y2 = 0
-                for j in 1:S
-                    y1 += params.tab.qdrift.a[i,j] * $cache.V[j][k] * params.Δt
-                    y2 += params.tab.qdrift.â[i,j] * $cache.V[j][k] * params.Δt
-                    for l in 1:M
-                        y1 += params.tab.qdiff.a[i,j] * $cache.B[j][k,l] * params.ΔW[l]
-                        y2 += params.tab.qdiff.â[i,j] * $cache.B[j][k,l] * params.ΔW[l]
-                    end
-                end
-                b[D*(i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
-            end
-        end
-    end
-end
-
 
 "Stochastic implicit Runge-Kutta integrator."
 struct IntegratorSIRK{DT, TT, PT <: ParametersSIRK{DT,TT},
                               ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
     params::PT
     solver::ST
-    # InitialGuessSDE not implemented for SIRK
-    #iguess::IT
-    fcache::NonlinearFunctionCacheSIRK{DT}
-
-    tQ::Vector{DT}
-    ΔQ::Vector{DT}
-    ΔQ1::Vector{DT}
-    ΔQ2::Vector{DT}
-    tV1::Vector{DT}
-    tV2::Vector{DT}
-    tB1::Matrix{DT}
-    tB2::Matrix{DT}
-    tΔW::Vector{DT}
-    Δy::Vector{DT}
+    cache::IntegratorCacheSIRK{DT}
 end
 
 
@@ -200,28 +142,11 @@ function IntegratorSIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSIRK{TT}, 
     # create solver
     solver = create_nonlinear_solver(DT, D*S, params)
 
-    # Not implementing InitialGuessSDE
-    # create initial guess
-    #iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
-
     # create cache for internal stage vectors and update vectors
-    fcache = NonlinearFunctionCacheSIRK{DT}(D, M, S)
-
-    # create temporary vectors
-    tQ  = zeros(DT,D)
-    ΔQ  = zeros(DT,D)
-    ΔQ1 = zeros(DT,D)
-    ΔQ2 = zeros(DT,D)
-    tV1 = zeros(DT,D)
-    tV2 = zeros(DT,D)
-    tB1 = zeros(DT,D,M)
-    tB2 = zeros(DT,D,M)
-    tΔW = zeros(DT,M)
-    Δy  = zeros(DT,M)
+    cache = IntegratorCacheSIRK{DT}(D, M, S)
 
     # create integrator
-    IntegratorSIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver,
-                    fcache, tQ, ΔQ, ΔQ1, ΔQ2, tV1, tV2, tB1, tB2, tΔW, Δy)
+    IntegratorSIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, cache)
 end
 
 @inline equation(integrator::IntegratorSIRK) = integrator.params.equ
@@ -253,13 +178,74 @@ end
 
 
 """
+Unpacks the data stored in x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ...)
+into Y::Vector{Vector}, calculates the internal stages Q, the values of the RHS
+of the SDE ( v(Q) and B(Q) ), and assigns them to V and B.
+Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
+"""
+function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, B::Vector{Matrix{ST}}, Y::Vector{Vector{ST}},
+                         params::ParametersSIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+
+    local tᵢ::TT
+
+    @assert S == length(Q) == length(V) == length(B)
+
+    # copy x to Y and calculate Q
+    for i in eachindex(Q)
+        @assert D == size(B[i],1) == length(Q[i]) == length(V[i])
+        @assert M == size(B[i],2)
+        for k in eachindex(Q[i])
+            Y[i][k] = x[D*(i-1)+k]
+        end
+        Q[i] .= params.q .+ Y[i]
+    end
+
+    # compute VQ = v(Q) and BQ=B(Q)
+    for i in eachindex(Q,V,B)
+        tᵢ = params.t + params.Δt * params.tab.qdrift.c[i]
+        # calculates v(t,Q[i]) and assigns to the i-th column of V
+        params.equ.v(tᵢ, Q[i], V[i])
+        # calculates B(t,Q[i]) and assigns to the matrix B[i]
+        params.equ.B(tᵢ, Q[i], B[i])
+    end
+end
+
+"Compute stages of stochastic implicit Runge-Kutta methods."
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+
+    cache = IntegratorCacheSIRK{ST}(D, M, S)
+
+    quote
+        compute_stages!(x, $cache.Q, $cache.V, $cache.B, $cache.Y, params)
+
+        local y1::ST
+        local y2::ST
+
+        # compute b = - (Y-AV)
+        for i in 1:S
+            for k in 1:D
+                y1 = 0
+                y2 = 0
+                for j in 1:S
+                    y1 += params.tab.qdrift.a[i,j] * $cache.V[j][k] * params.Δt
+                    y2 += params.tab.qdrift.â[i,j] * $cache.V[j][k] * params.Δt
+                    for l in 1:M
+                        y1 += params.tab.qdiff.a[i,j] * $cache.B[j][k,l] * params.ΔW[l]
+                        y2 += params.tab.qdiff.â[i,j] * $cache.B[j][k,l] * params.ΔW[l]
+                    end
+                end
+                b[D*(i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
+            end
+        end
+    end
+end
+
+
+"""
 This function computes initial guesses for Y and assigns them to int.solver.x
 The prediction is calculated using an explicit integrator.
 """
 function initial_guess!(int::IntegratorSIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
-
-    # NOT IMPLEMENTING InitialGuessSDE
-
     # SIMPLE SOLUTION
     # The simplest initial guess for Y is 0
     # int.solver.x .= zeros(eltype(int), int.params.tab.s*ndims(int))
@@ -282,27 +268,27 @@ function initial_guess!(int::IntegratorSIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT
     # int.params.ΔW- the increment of the Brownian motion for the current step
 
     #Evaluating the functions v and B at t,q - same for all stages
-    int.params.equ.v(int.params.t, int.params.q, int.tV1)
-    int.params.equ.B(int.params.t, int.params.q, int.tB1)
+    int.params.equ.v(int.params.t, int.params.q, int.cache.V1)
+    int.params.equ.B(int.params.t, int.params.q, int.cache.B1)
 
     for i in 1:int.params.tab.s
-
         Δt_local = int.params.tab.qdrift.c[i]  * int.params.Δt
-        int.tΔW .= int.params.tab.qdrift.c[i] .* int.params.ΔW
+        int.cache.Δw .= int.params.tab.qdrift.c[i] .* int.params.ΔW
 
-        simd_mult!(int.ΔQ, int.tB1, int.tΔW)
-        @. int.tQ = int.params.q + 2. / 3. * Δt_local * int.tV1 + 2. / 3. * int.ΔQ
+        simd_mult!(int.cache.ΔQ, int.cache.B1, int.cache.Δw)
+        @. int.cache.Q[i] = int.params.q + 2. / 3. * Δt_local * int.cache.V1 + 2. / 3. * int.cache.ΔQ
 
         t2 = int.params.t + 2. / 3. * Δt_local
 
-        int.params.equ.v(t2, int.tQ, int.tV2)
-        int.params.equ.B(t2, int.tQ, int.tB2)
+        int.params.equ.v(t2, int.cache.Q[i], int.cache.V2)
+        int.params.equ.B(t2, int.cache.Q[i], int.cache.B2)
 
         #Calculating the Y's and assigning them to the array int.solver.x as initial guesses
-        simd_mult!(int.ΔQ1, int.tB1, int.tΔW)
-        simd_mult!(int.ΔQ2, int.tB2, int.tΔW)
+        simd_mult!(int.cache.Y1, int.cache.B1, int.cache.Δw)
+        simd_mult!(int.cache.Y2, int.cache.B2, int.cache.Δw)
+
         for j in 1:int.params.equ.d
-            int.solver.x[(i-1)*int.params.equ.d+j] = Δt_local*(1. / 4. * int.tV1[j] + 3. / 4. * int.tV2[j]) + 1. / 4. * int.ΔQ1[j] + 3. / 4. * int.ΔQ2[j]
+            int.solver.x[(i-1)*int.params.equ.d+j] = Δt_local*(1. / 4. * int.cache.V1[j] + 3. / 4. * int.cache.V2[j]) + 1. / 4. * int.cache.Y1[j] + 3. / 4. * int.cache.Y2[j]
         end
     end
 end
@@ -332,8 +318,8 @@ function integrate_step!(int::IntegratorSIRK{DT,TT}, sol::AtomicSolutionSDE{DT,T
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute the drift vector field and the diffusion matrix at internal stages
-    compute_stages!(int.solver.x, int.fcache.Q, int.fcache.V, int.fcache.B, int.fcache.Y, int.params)
+    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.B, int.cache.Y, int.params)
 
     # compute final update
-    update_solution!(sol.q, int.fcache.V, int.fcache.B, int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂, int.params.Δt, int.params.ΔW, int.Δy)
+    update_solution!(sol.q, int.cache.V, int.cache.B, int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂, int.params.Δt, int.params.ΔW, int.cache.Δy)
 end
