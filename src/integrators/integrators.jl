@@ -159,14 +159,7 @@ function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT,N},
         # loop over time steps
         for n in n1:n2
             # try
-                # integrate one initial condition for one time step
-                integrate_step!(int, asol)
-
-                # take care of periodic solutions
-                cut_periodic_solution!(asol, periodicity(equation(int)))
-
-                # copy solution from cache to solution
-                set_solution!(sol, asol, n, m)
+            integrate!(int, asol, m, n)
             # catch ex
             #     tstr = " in time step " * string(n)
             #
@@ -188,6 +181,18 @@ function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT,N},
             # end
         end
     end
+end
+
+
+function integrate!(int::DeterministicIntegrator{DT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT,TT}
+    # integrate one initial condition for one time step
+    integrate_step!(int, asol)
+
+    # take care of periodic solutions
+    cut_periodic_solution!(asol, periodicity(equation(int)))
+
+    # copy solution from cache to solution
+    set_solution!(sol, asol, n, m)
 end
 
 
