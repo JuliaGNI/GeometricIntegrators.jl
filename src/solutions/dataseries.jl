@@ -21,12 +21,22 @@ for (TDataSeries, TArray) in
 
                 @assert N ∈ (1,2,3)
 
-                if N == 1
-                    d = $TArray{T}(undef, nt+1)
-                elseif N == 2
-                    d = $TArray{T}(undef, nd, nt+1)
-                elseif N == 3
-                    d = $TArray{T}(undef, nd, nt+1, ni)
+                if $TArray == Array
+                    if N == 1
+                        d = $TArray{T}(undef, nt+1)
+                    elseif N == 2
+                        d = $TArray{T}(undef, nd, nt+1)
+                    elseif N == 3
+                        d = $TArray{T}(undef, nd, nt+1, ni)
+                    end
+                elseif $TArray == SharedArray
+                    if N == 1
+                        d = $TArray{T,N}(nt+1)
+                    elseif N == 2
+                        d = $TArray{T,N}(nd, nt+1)
+                    elseif N == 3
+                        d = $TArray{T,N}(nd, nt+1, ni)
+                    end
                 end
 
                 fill!(d,zero(T))
