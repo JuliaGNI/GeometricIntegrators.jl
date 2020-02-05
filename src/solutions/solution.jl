@@ -19,17 +19,17 @@ conv(sol::StochasticSolution) = error("conv() not implemented for ", typeof(sol)
 
 "Create solution for ODE."
 function Solution(equation::AbstractEquationODE, Δt, ntime::Int; kwargs...)
-    SolutionODE(equation, Δt, ntime; kwargs...)
+    SSolutionODE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for partitioned ODE."
 function Solution(equation::AbstractEquationPODE, Δt, ntime::Int; kwargs...)
-    SolutionPODE(equation, Δt, ntime; kwargs...)
+    SSolutionPODE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for DAE."
 function Solution(equation::AbstractEquationDAE, Δt, ntime::Int; kwargs...)
-    SolutionDAE(equation, Δt, ntime; kwargs...)
+    SSolutionDAE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for partitioned DAE."
@@ -39,12 +39,12 @@ end
 
 "Create solution for SDE."
 function Solution(equation::SDE, Δt, ntime::Int; kwargs...)
-    SolutionSDE(equation, Δt, ntime; kwargs...)
+    SSolutionSDE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for PSDE."
 function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int; kwargs...)
-    SolutionPSDE(equation, Δt, ntime; kwargs...)
+    SSolutionPSDE(equation, Δt, ntime; kwargs...)
 end
 
 "Print error for solutions of equations not implemented, yet."

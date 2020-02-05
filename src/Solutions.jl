@@ -58,8 +58,9 @@ module Solutions
     include("solutions/atomic_solution_sde.jl")
     include("solutions/atomic_solution_psde.jl")
 
-    export SolutionODE, SolutionPODE, SolutionDAE, SolutionPDAE, SolutionSDE, SolutionPSDE
-    export PSolutionPDAE, SSolutionPDAE
+    export SolutionODE, SSolutionODE, PSolutionODE, SolutionPODE, SSolutionPODE, PSolutionPODE
+    export SolutionDAE, SSolutionDAE, PSolutionDAE, SolutionPDAE, SSolutionPDAE, PSolutionPDAE
+    export SolutionSDE, SSolutionSDE, PSolutionSDE, SolutionPSDE, SSolutionPSDE, PSolutionPSDE
     export get_initial_conditions, get_initial_conditions!, set_initial_conditions!,
            create_hdf5, create_hdf5!
 
