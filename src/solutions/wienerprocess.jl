@@ -1,4 +1,6 @@
 
+using Random: GLOBAL_RNG
+
 abstract type SemiMartingale{dType, tType, N} end
 
 
@@ -49,7 +51,7 @@ struct WienerProcess{dType, tType, N, CONV} <: SemiMartingale{dType, tType, N}
 end
 
 
-function WienerProcess(dType, nd, nt, ns, Δt::tType, conv=DEFAULT_SCONV; rng=MersenneTwister()) where {tType <: Number}
+function WienerProcess(dType, nd, nt, ns, Δt::tType, conv=DEFAULT_SCONV; rng=GLOBAL_RNG) where {tType <: Number}
     wp = WienerProcess{dType, tType, ns==1 ? 2 : 3, conv}(nd, nt, ns, Δt)
     generate_wienerprocess!(wp, rng)
     return wp
@@ -119,28 +121,28 @@ end
 
 
 # Generates a new series of increments for the strong Wiener process W
-function generate_wienerprocess!(W::WienerProcess{DT, TT, 2, :strong}, rng=MersenneTwister()) where {DT,TT}
+function generate_wienerprocess!(W::WienerProcess{DT, TT, 2, :strong}, rng=GLOBAL_RNG) where {DT,TT}
     chi = randn(rng, DT, W.nd, W.nt)
     eta = randn(rng, DT, W.nd, W.nt)
     set_chi_and_eta!(W, chi, eta)
 end
 
 # Generates a new series of increments for the strong Wiener process W
-function generate_wienerprocess!(W::WienerProcess{DT, TT, 3, :strong}, rng=MersenneTwister()) where {DT,TT}
+function generate_wienerprocess!(W::WienerProcess{DT, TT, 3, :strong}, rng=GLOBAL_RNG) where {DT,TT}
     chi = randn(rng, DT, W.nd, W.nt, W.ns)
     eta = randn(rng, DT, W.nd, W.nt, W.ns)
     set_chi_and_eta!(W, chi, eta)
 end
 
 # Generates a new series of increments for the weak Wiener process W
-function generate_wienerprocess!(W::WienerProcess{DT, TT, 2, :weak}, rng=MersenneTwister()) where {DT,TT}
+function generate_wienerprocess!(W::WienerProcess{DT, TT, 2, :weak}, rng=GLOBAL_RNG) where {DT,TT}
     chi = rand(rng, DT, W.nd, W.nt)
     eta = rand(rng, DT, W.nd, W.nt)
     set_chi_and_eta!(W, chi, eta)
 end
 
 # Generates a new series of increments for the weak Wiener process W
-function generate_wienerprocess!(W::WienerProcess{DT, TT, 3, :weak}, rng=MersenneTwister()) where {DT,TT}
+function generate_wienerprocess!(W::WienerProcess{DT, TT, 3, :weak}, rng=GLOBAL_RNG) where {DT,TT}
     chi = rand(rng, DT, W.nd, W.nt, W.ns)
     eta = rand(rng, DT, W.nd, W.nt, W.ns)
     set_chi_and_eta!(W, chi, eta)
