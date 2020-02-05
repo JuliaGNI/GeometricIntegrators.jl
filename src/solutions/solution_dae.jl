@@ -127,6 +127,23 @@ for (TSolution, TDataSeries, Tdocstring) in
 end
 
 
+Base.:(==)(sol1::SolutionDAE{DT1,TT1,N1}, sol2::SolutionDAE{DT2,TT2,N2}) where {DT1,TT1,N1,DT2,TT2,N2} = (
+                                DT1 == DT2
+                             && TT1 == TT2
+                             && N1  == N2
+                             && sol1.nd == sol2.nd
+                             && sol1.nm == sol2.nm
+                             && sol1.nt == sol2.nt
+                             && sol1.ni == sol2.ni
+                             && sol1.t  == sol2.t
+                             && sol1.q  == sol2.q
+                             && sol1.λ  == sol2.λ
+                             && sol1.ntime == sol2.ntime
+                             && sol1.nsave == sol2.nsave
+                             && sol1.nwrite == sol2.nwrite
+                             && sol1.counter == sol2.counter
+                             && sol1.woffset == sol2.woffset)
+
 hdf5(sol::SolutionDAE)  = sol.h5
 timesteps(sol::SolutionDAE)  = sol.t
 ntime(sol::SolutionDAE) = sol.ntime
