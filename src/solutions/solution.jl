@@ -57,3 +57,39 @@ end
 function Solution(equation::Equation, Δt, ntime::Int; kwargs...)
     error("No solution found for equation ", equation)
 end
+
+
+"Create parallel solution for ODE."
+function ParallelSolution(equation::AbstractEquationODE, Δt, ntime::Int; kwargs...)
+    PSolutionODE(equation, Δt, ntime; kwargs...)
+end
+
+"Create parallel solution for partitioned ODE."
+function ParallelSolution(equation::AbstractEquationPODE, Δt, ntime::Int; kwargs...)
+    PSolutionPODE(equation, Δt, ntime; kwargs...)
+end
+
+"Create parallel solution for DAE."
+function ParallelSolution(equation::AbstractEquationDAE, Δt, ntime::Int; kwargs...)
+    PSolutionDAE(equation, Δt, ntime; kwargs...)
+end
+
+"Create parallel solution for partitioned DAE."
+function ParallelSolution(equation::AbstractEquationPDAE, Δt, ntime::Int; kwargs...)
+    PSolutionPDAE(equation, Δt, ntime; kwargs...)
+end
+
+"Create parallel solution for SDE."
+function ParallelSolution(equation::SDE, Δt, ntime::Int; kwargs...)
+    PSolutionSDE(equation, Δt, ntime; kwargs...)
+end
+
+"Create parallel solution for PSDE."
+function ParallelSolution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int; kwargs...)
+    PSolutionPSDE(equation, Δt, ntime; kwargs...)
+end
+
+"Print error for parallel solutions of equations not implemented, yet."
+function ParallelSolution(equation::Equation, Δt, ntime::Int; kwargs...)
+    error("No parallel solution found for equation ", equation)
+end
