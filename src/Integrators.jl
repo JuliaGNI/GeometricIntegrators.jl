@@ -23,7 +23,6 @@ module Integrators
 
 
 
-
     export InitialGuessODE, InitialGuessPODE, initialize!, update!
 
     include("integrators/initial_guess/extrapolation.jl")
@@ -189,7 +188,6 @@ module Integrators
 
 
     include("integrators/integrators.jl")
-    include("integrators/stochastic_integrators.jl")
 
 
     function __init__()

@@ -95,6 +95,41 @@ end
 
 
 #*****************************************************************************#
+# Initialization functions for stochastic integrators                         #
+#*****************************************************************************#
+
+"Create integrator for stochastic explicit Runge-Kutta tableau."
+function Integrator(equation::SDE, tableau::TableauSERK, Δt)
+    IntegratorSERK(equation, tableau, Δt)
+end
+
+"Create integrator for weak explicit Runge-Kutta tableau."
+function Integrator(equation::SDE, tableau::TableauWERK, Δt)
+    IntegratorWERK(equation, tableau, Δt)
+end
+
+"Create integrator for stochastic fully implicit Runge-Kutta tableau."
+function Integrator(equation::SDE, tableau::TableauSIRK, Δt; K::Int=0)
+    IntegratorSIRK(equation, tableau, Δt, K=K)
+end
+
+"Create integrator for stochastic fully implicit partitioned Runge-Kutta tableau."
+function Integrator(equation::PSDE, tableau::TableauSIPRK, Δt; K::Int=0)
+    IntegratorSIPRK(equation, tableau, Δt, K=K)
+end
+
+"Create integrator for stochastic fully implicit split partitioned Runge-Kutta tableau."
+function Integrator(equation::SPSDE, tableau::TableauSISPRK, Δt; K::Int=0)
+    IntegratorSISPRK(equation, tableau, Δt, K=K)
+end
+
+"Create integrator for weak fully implicit Runge-Kutta tableau."
+function Integrator(equation::SDE, tableau::TableauWIRK, Δt)
+    IntegratorWIRK(equation, tableau, Δt)
+end
+
+
+#*****************************************************************************#
 # General integration functions for all integrators                           #
 #*****************************************************************************#
 
@@ -126,20 +161,20 @@ end
 #*****************************************************************************#
 
 "Integrate equation for all initial conditions."
-function integrate!(int::DeterministicIntegrator, sol::Solution)
+function integrate!(int::Integrator, sol::Solution)
     integrate!(int, sol, 1, nsamples(sol))
 end
 
 
 "Integrate ODE for initial conditions m with m₁ ≤ m ≤ m₂."
-function integrate!(int::DeterministicIntegrator, sol::Solution, m1, m2)
-    # integrate initial conditions m with m₁ ≤ m ≤ m₂ for all time steps
+function integrate!(int::Integrator, sol::Solution, m1, m2)
+    # integrate samples m with m₁ ≤ m ≤ m₂ for all time steps
     integrate!(int, sol, m1, m2, 1, ntime(sol))
 end
 
 
 "Integrate ODE for initial conditions m with m₁ ≤ m ≤ m₂ for time steps n with n₁ ≤ n ≤ n₂."
-function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT,N}, m1::Int, m2::Int, n1::Int, n2::Int) where {DT,TT,N}
+function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT}, m1::Int, m2::Int, n1::Int, n2::Int) where {DT,TT}
     @assert m1 ≥ 1
     @assert m2 ≥ m1
     @assert m2 ≤ nsamples(sol)
@@ -159,7 +194,7 @@ function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT,N},
         # loop over time steps
         for n in n1:n2
             # try
-            integrate!(int, asol, m, n)
+            integrate!(int, sol, asol, m, n)
             # catch ex
             #     tstr = " in time step " * string(n)
             #
@@ -184,7 +219,22 @@ function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT,N},
 end
 
 
-function integrate!(int::DeterministicIntegrator{DT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT,TT}
+function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT,TT}
+    # integrate one initial condition for one time step
+    integrate_step!(int, asol)
+
+    # take care of periodic solutions
+    cut_periodic_solution!(asol, periodicity(equation(int)))
+
+    # copy solution from cache to solution
+    set_solution!(sol, asol, n, m)
+end
+
+
+function integrate!(int::StochasticIntegrator{DT,TT}, sol::Solution{DT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT,TT}
+    # copy the increments of the Brownian Process
+    get_increments!(sol, asol, n, m)
+
     # integrate one initial condition for one time step
     integrate_step!(int, asol)
 
