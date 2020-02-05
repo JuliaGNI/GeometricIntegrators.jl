@@ -197,7 +197,5 @@ function CommonFunctions.reset!(sol::SolutionODE)
 end
 
 function Base.close(solution::SolutionODE)
-    # close(solution.t)
-    # close(solution.q)
     close(solution.h5)
 end

@@ -19,7 +19,7 @@ conv(sol::StochasticSolution) = error("conv() not implemented for ", typeof(sol)
 nsamples(sol::DeterministicSolution) = sol.ni
 nsamples(sol::StochasticSolution) = sol.ns
 
-eachtimestep(sol::Solution) = 1:ntime(sol)
+eachtimestep(sol::Solution) = 1:sol.nt
 eachsample(sol::Solution) = 1:nsamples(sol)
 
 
