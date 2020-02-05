@@ -92,28 +92,6 @@ function create_internal_stage_vector_with_zero(DT, D, S)
 end
 
 
-function check_solution_dimension_asserts(sol::Solution, m::Int, n::Int)
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    @assert n ≥ 1
-    @assert n ≤ sol.ntime
-end
-
-function check_solution_dimension_asserts(sol::StochasticSolution, k::Int, m::Int, n::Int=0)
-    @assert k ≥ 1
-    @assert k ≤ sol.ns
-
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    @assert n ≥ 0
-    @assert n ≤ sol.ntime
-end
-
-
-
-
 function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b::Vector{T}, Δt::T) where {T}
     @assert length(x) == length(xₑᵣᵣ)
     @assert length(x) == size(ẋ, 1)

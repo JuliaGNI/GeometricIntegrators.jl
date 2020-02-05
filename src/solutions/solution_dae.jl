@@ -39,7 +39,7 @@ mutable struct SolutionDAE{dType, tType, N} <: DeterministicSolution{dType, tTyp
     end
 end
 
-function SolutionDAE(equation::DAE{DT,TT}, Δt::TT, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; filename=nothing) where {DT,TT}
+function SolutionDAE(equation::DAE{DT,TT}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT}
     @assert nsave > 0
     @assert ntime == 0 || ntime ≥ nsave
     @assert nwrite == 0 || nwrite ≥ nsave
@@ -118,13 +118,13 @@ end
 
 
 hdf5(sol::SolutionDAE)  = sol.h5
-time(sol::SolutionDAE)  = sol.t.t
+timesteps(sol::SolutionDAE)  = sol.t
 ntime(sol::SolutionDAE) = sol.ntime
 nsave(sol::SolutionDAE) = sol.nsave
 offset(sol::SolutionDAE) = sol.woffset
 
 
-function set_initial_conditions!(sol::SolutionDAE{DT,TT}, equ::DAE{DT,TT}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionDAE, equ::DAE)
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.λ₀)
 end
 
@@ -141,20 +141,24 @@ function get_initial_conditions!(sol::SolutionDAE{DT,TT}, asol::AtomicSolutionDA
     asol.q̃ .= 0
 end
 
-function get_initial_conditions!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, k) where {DT,TT}
-    get_data!(sol.q, q, 0, k)
-    get_data!(sol.λ, λ, 0, k)
+function get_initial_conditions!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, k, n=1) where {DT,TT}
+    get_data!(sol.q, q, n-1, k)
+    get_data!(sol.λ, λ, n-1, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionDAE, t, q, λ, n, k)
+function get_initial_conditions(sol::SolutionDAE, k, n=1)
+    get_solution(sol, n-1, k)
+end
+
+function set_solution!(sol::SolutionDAE, t, q, λ, n, k=1)
     set_solution!(sol, q, λ, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionDAE{DT,TT}, asol::AtomicSolutionDAE{DT,TT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionDAE{DT,TT}, asol::AtomicSolutionDAE{DT,TT}, n, k=1) where {DT,TT}
     set_solution!(sol, asol.t, asol.q, asol.λ, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, λ::Vector{DT}, n, k=1) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
@@ -165,6 +169,15 @@ function CommonFunctions.set_solution!(sol::SolutionDAE{DT,TT}, q::Vector{DT}, �
         set_data!(sol.λ, λ, sol.counter[k], k)
         sol.counter[k] += 1
     end
+end
+
+function get_solution!(sol::SolutionDAE{DT,TT}, q::SolutionVector{DT}, λ::SolutionVector{DT}, n, k=1) where {DT,TT}
+    for i in eachindex(q) q[i] = sol.q[i, n, k] end
+    for i in eachindex(λ) λ[i] = sol.λ[i, n, k] end
+end
+
+function get_solution(sol::SolutionDAE, n, k=1)
+    (sol.t[n], sol.q[:, n, k], sol.λ[:, n, k])
 end
 
 function CommonFunctions.reset!(sol::SolutionDAE)
@@ -180,77 +193,4 @@ function Base.close(solution::SolutionDAE)
     # close(solution.q)
     # close(solution.λ)
     close(solution.h5)
-end
-
-
-"Creates HDF5 file and initialises datasets for DAE solution object."
-function create_hdf5(solution::SolutionDAE{DT,TT,2}, file::AbstractString) where {DT,TT}
-    # create HDF5 file and save attributes and common parameters
-    solution.h5 = createHDF5(solution, file)
-
-    # save attributes
-    save_attributes(solution)
-
-    # create datasets
-    nt = div(solution.ntime, solution.nsave)
-    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
-    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
-    λ = d_create(solution.h5, "λ", datatype(DT), dataspace(solution.nm, nt+1), "chunk", (solution.nm,1))
-
-    # copy initial conditions
-    t[1] = solution.t[0]
-    q[:, 1] = solution.q[:, 0]
-    λ[:, 1] = solution.λ[:, 0]
-
-    return solution.h5
-end
-
-"Creates HDF5 file and initialises datasets for DAE solution object."
-function create_hdf5(solution::SolutionDAE{DT,TT,3}, file::AbstractString) where {DT,TT}
-    # create HDF5 file and save attributes and common parameters
-    solution.h5 = createHDF5(solution, file)
-
-    # save attributes
-    save_attributes(solution)
-
-    # create datasets
-    nt = div(solution.ntime, solution.nsave)
-    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
-    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
-    λ = d_create(solution.h5, "λ", datatype(DT), dataspace(solution.nm, nt+1, solution.ni), "chunk", (solution.nm,1,1))
-
-    # copy initial conditions
-    t[1] = solution.t[0]
-    q[:, 1, :] = solution.q[:, 0, :]
-    λ[:, 1, :] = solution.λ[:, 0, :]
-
-    return solution.h5
-end
-
-"Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionDAE{DT,TT,2}, h5::HDF5File, offset=0) where {DT,TT}
-    # set convenience variables and compute ranges
-    n  = solution.nt
-    j1 = offset+2
-    j2 = offset+1+n
-
-    # copy data from solution to HDF5 dataset
-    h5["q"][:, j1:j2] = solution.q[:, 1:n]
-    h5["λ"][:, j1:j2] = solution.λ[:, 1:n]
-
-    return nothing
-end
-
-"Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionDAE{DT,TT,3}, h5::HDF5File, offset=0) where {DT,TT}
-    # set convenience variables and compute ranges
-    n  = solution.nt
-    j1 = offset+2
-    j2 = offset+1+n
-
-    # copy data from solution to HDF5 dataset
-    h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
-    h5["λ"][:, j1:j2, :] = solution.λ[:, 1:n, :]
-
-    return nothing
 end

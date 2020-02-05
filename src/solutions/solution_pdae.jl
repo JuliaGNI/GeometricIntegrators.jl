@@ -49,7 +49,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             end
         end
 
-        function $TSolution(equation::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT},VDAE{DT,TT}}, Δt::TT, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; filename=nothing) where {DT,TT}
+        function $TSolution(equation::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT},VDAE{DT,TT}}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT}
             @assert nsave > 0
             @assert ntime == 0 || ntime ≥ nsave
             @assert nwrite == 0 || nwrite ≥ nsave
@@ -131,13 +131,13 @@ for (TSolution, TDataSeries, Tdocstring) in
 end
 
 hdf5(sol::SolutionPDAE)  = sol.h5
-time(sol::SolutionPDAE)  = sol.t.t
+timesteps(sol::SolutionPDAE)  = sol.t
 ntime(sol::SolutionPDAE) = sol.ntime
 nsave(sol::SolutionPDAE) = sol.nsave
 offset(sol::SolutionPDAE) = sol.woffset
 
 
-function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, equ::Union{IODE{DT,TT},VODE{DT,TT},PDAE{DT,TT},IDAE{DT,TT},VDAE{DT,TT}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPDAE, equ::Union{IODE,VODE,PDAE,IDAE,VDAE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, equ.λ₀)
 end
 
@@ -168,34 +168,34 @@ function get_initial_conditions(sol::SolutionPDAE, k, n=1)
     get_solution(sol, n-1, k)
 end
 
-function CommonFunctions.get_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, n, k) where {DT,TT}
+function get_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, n, k=1) where {DT,TT}
     q .= sol.q[:, n, k]
     p .= sol.p[:, n, k]
     λ .= sol.λ[:, n, k]
 end
 
-function CommonFunctions.get_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k) where {DT,TT}
+function get_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k=1) where {DT,TT}
     q .= sol.q[:, n, k]
     p .= sol.p[:, n, k]
 end
 
-function CommonFunctions.get_solution(sol::SolutionPDAE, n, k)
+function get_solution(sol::SolutionPDAE, n, k=1)
     (sol.t[n], sol.q[:, n, k], sol.p[:, n, k], sol.λ[:, n, k])
 end
 
-function CommonFunctions.set_solution!(sol::SolutionPDAE, t, q, p, n, k)
+function set_solution!(sol::SolutionPDAE, t::Real, q::Vector, p::Vector, n::Int, k::Int=1)
     set_solution!(sol, q, p, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionPDAE, t, q, p, λ, n, k)
+function set_solution!(sol::SolutionPDAE, t::Real, q::Vector, p::Vector, λ::Vector, n::Int, k::Int=1)
     set_solution!(sol, q, p, λ, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionPDAE{DT,TT}, asol::AtomicSolutionPDAE{DT,TT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionPDAE{DT,TT}, asol::AtomicSolutionPDAE{DT,TT}, n::Int, k::Int=1) where {DT,TT}
     set_solution!(sol, asol.t, asol.q, asol.p, asol.λ, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, λ::SolutionVector{DT}, n::Int, k::Int=1) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
@@ -209,7 +209,7 @@ function CommonFunctions.set_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVect
     end
 end
 
-function CommonFunctions.set_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n::Int, k::Int=1) where {DT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
@@ -232,88 +232,5 @@ function CommonFunctions.reset!(sol::SolutionPDAE)
 end
 
 function Base.close(solution::SolutionPDAE)
-    # close(solution.t)
-    # close(solution.q)
-    # close(solution.p)
-    # close(solution.λ)
     close(solution.h5)
-end
-
-
-"Creates HDF5 file and initialises datasets for PDAE solution object with single initial condition."
-function create_hdf5(solution::SolutionPDAE{DT,TT,2}, file::AbstractString) where {DT,TT}
-    # create HDF5 file and save attributes and common parameters
-    solution.h5 = createHDF5(solution, file)
-
-    # save attributes
-    save_attributes(solution)
-
-    # create datasets
-    nt = div(solution.ntime, solution.nsave)
-    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
-    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
-    p = d_create(solution.h5, "p", datatype(DT), dataspace(solution.nd, nt+1), "chunk", (solution.nd,1))
-    λ = d_create(solution.h5, "λ", datatype(DT), dataspace(solution.nm, nt+1), "chunk", (solution.nm,1))
-
-    # copy initial conditions
-    t[1] = solution.t[0]
-    q[:, 1] = solution.q[:, 0]
-    p[:, 1] = solution.p[:, 0]
-    λ[:, 1] = solution.λ[:, 0]
-
-    return solution.h5
-end
-
-"Creates HDF5 file and initialises datasets for PDAE solution object with multiple initial conditions."
-function create_hdf5(solution::SolutionPDAE{DT,TT,3}, file::AbstractString) where {DT,TT}
-    # create HDF5 file and save attributes and common parameters
-    solution.h5 = createHDF5(solution, file)
-
-    # save attributes
-    save_attributes(solution, solution.h5)
-
-    # create datasets
-    nt = div(solution.ntime, solution.nsave)
-    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
-    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
-    p = d_create(solution.h5, "p", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
-    λ = d_create(solution.h5, "λ", datatype(DT), dataspace(solution.nm, nt+1, solution.ni), "chunk", (solution.nm,1,1))
-
-    # copy initial conditions
-    t[1] = solution.t[0]
-    q[:, 1, :] = solution.q[:, 0, :]
-    p[:, 1, :] = solution.p[:, 0, :]
-    λ[:, 1, :] = solution.λ[:, 0, :]
-
-    return solution.h5
-end
-
-"Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,2}, h5::HDF5File, offset=0) where {DT,TT}
-    # set convenience variables and compute ranges
-    n  = solution.nt
-    j1 = offset+2
-    j2 = offset+1+n
-
-    # copy data from solution to HDF5 dataset
-    h5["q"][:, j1:j2] = solution.q[:, 1:n]
-    h5["p"][:, j1:j2] = solution.p[:, 1:n]
-    h5["λ"][:, j1:j2] = solution.λ[:, 1:n]
-
-    return nothing
-end
-
-"Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionPDAE{DT,TT,3}, h5::HDF5File, offset=0) where {DT,TT}
-    # set convenience variables and compute ranges
-    n  = solution.nt
-    j1 = offset+2
-    j2 = offset+1+n
-
-    # copy data from solution to HDF5 dataset
-    h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
-    h5["p"][:, j1:j2, :] = solution.p[:, 1:n, :]
-    h5["λ"][:, j1:j2, :] = solution.λ[:, 1:n, :]
-
-    return nothing
 end

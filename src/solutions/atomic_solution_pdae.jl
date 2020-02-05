@@ -1,5 +1,5 @@
 """
-Atomistic solution for an PDAE.
+Atomic solution for an PDAE.
 
 ### Fields
 
@@ -47,18 +47,18 @@ mutable struct AtomicSolutionPDAE{DT,TT} <: AtomicSolution{DT,TT}
     g::Vector{DT}
     g̅::Vector{DT}
 
-    function AtomicSolutionPDAE{DT, TT}(nd) where {DT <: Number, TT <: Real}
+    function AtomicSolutionPDAE{DT, TT}(nd, nm) where {DT <: Number, TT <: Real}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd),
+                                zeros(DT, nm), zeros(DT, nm),
                                 zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd))
     end
 end
 
-AtomicSolutionPDAE(DT, TT, nd) = AtomicSolutionPDAE{DT, TT}(nd)
+AtomicSolutionPDAE(DT, TT, nd, nm) = AtomicSolutionPDAE{DT, TT}(nd, nm)
 
-function CommonFunctions.set_solution!(asol::AtomicSolutionPDAE, sol)
+function set_solution!(asol::AtomicSolutionPDAE, sol)
     t, q, p, λ = sol
     asol.t  = t
     asol.q .= q
@@ -68,7 +68,7 @@ function CommonFunctions.set_solution!(asol::AtomicSolutionPDAE, sol)
     asol.f .= 0
 end
 
-function CommonFunctions.get_solution(asol::AtomicSolutionPDAE)
+function get_solution(asol::AtomicSolutionPDAE)
     (asol.t, asol.q, asol.p, asol.λ)
 end
 
@@ -84,14 +84,16 @@ function CommonFunctions.reset!(asol::AtomicSolutionPDAE, Δt)
     asol.t += Δt
 end
 
-function update!(asol::AtomicSolutionPODE{DT}, v::Vector{DT}, f::Vector{DT}, λ::Vector{DT}) where {DT}
-    for k in eachindex(v,f)
-        update!(asol, v[k], f[k], λ[k])
+function update!(asol::AtomicSolutionPDAE{DT}, y::Vector{DT}, z::Vector{DT}, λ::Vector{DT}) where {DT}
+    for k in eachindex(y,z)
+        update!(asol, y[k], z[k], k)
+    end
+    for k in eachindex(λ)
+        asol.λ[k] = λ[k]
     end
 end
 
-function update!(asol::AtomicSolutionPODE{DT}, v::DT, f::DT, λ::DT, k::Int) where {DT}
-    asol.q[k], asol.q̃[k] = compensated_summation(v, asol.q[k], asol.q̃[k])
-    asol.p[k], asol.p̃[k] = compensated_summation(f, asol.p[k], asol.p̃[k])
-    asol.λ[k] = λ
+function update!(asol::AtomicSolutionPDAE{DT}, y::DT, z::DT, k::Int) where {DT}
+    asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
+    asol.p[k], asol.p̃[k] = compensated_summation(z, asol.p[k], asol.p̃[k])
 end

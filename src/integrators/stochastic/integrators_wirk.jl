@@ -76,7 +76,8 @@ function ParametersWIRK(equ::ET, tab::TableauWIRK{TT}, Δt::TT, ΔW::Vector{DT},
     ParametersWIRK{DT, TT, ET, equ.d, equ.m, tab.s}(equ, tab, Δt, ΔW, ΔZ, 0, zeros(DT, equ.d))
 end
 
-struct NonlinearFunctionCacheWIRK{DT}
+
+struct IntegratorCacheWIRK{DT}
     # Structure for holding the internal stages Q0, and Q1 the values of the drift vector
     # and the diffusion matrix evaluated at the internal stages V=v(Q0), B=B(Q1),
     # and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
@@ -91,7 +92,9 @@ struct NonlinearFunctionCacheWIRK{DT}
     b::Matrix{DT}
     y::Vector{DT}
 
-    function NonlinearFunctionCacheWIRK{DT}(D, M, S) where {DT}
+    Δy::Vector{DT}
+
+    function IntegratorCacheWIRK{DT}(D, M, S) where {DT}
         # create internal stage vectors
         Q0 = create_internal_stage_vector(DT, D, S)
         Q1 = create_internal_stage_vector(DT, D, M, S)
@@ -105,9 +108,56 @@ struct NonlinearFunctionCacheWIRK{DT}
         b = zeros(DT,D,M)
         y = zeros(DT,D)
 
-        new(Q0, Q1, V, B, Y0, Y1, v, b, y)
+        # create temporary vectors
+        Δy  = zeros(DT,M)
+
+        new(Q0, Q1, V, B, Y0, Y1, v, b, y, Δy)
     end
 end
+
+"Stochastic implicit Runge-Kutta integrator."
+struct IntegratorWIRK{DT, TT, PT <: ParametersWIRK{DT,TT},
+                              ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
+    params::PT
+    solver::ST
+    cache::IntegratorCacheWIRK{DT}
+end
+
+
+function IntegratorWIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauWIRK{TT}, Δt::TT) where {DT,TT,VT,BT,N}
+    D = equation.d
+    M = equation.m
+    NS= max(equation.ns,equation.ni)
+    S = tableau.s
+
+    # create params
+    params = ParametersWIRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M))
+
+    # create solver
+    solver = create_nonlinear_solver(DT, D*S*(M+1), params)
+
+    # create cache for internal stage vectors and update vectors
+    cache = IntegratorCacheWIRK{DT}(D, M, S)
+
+    # create integrator
+    IntegratorWIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, cache)
+end
+
+equation(integrator::IntegratorWIRK) = integrator.params.equ
+timestep(integrator::IntegratorWIRK) = integrator.params.Δt
+tableau(integrator::IntegratorWIRK) = integrator.params.tab
+noisedims(integrator::IntegratorWIRK) = integrator.params.equ.m
+Base.eltype(integrator::IntegratorWIRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
+
+
+function update_params!(int::IntegratorWIRK, sol::AtomicSolutionSDE)
+    # set time for nonlinear solver and copy previous solution
+    int.params.t  = sol.t
+    int.params.q .= sol.q
+    int.params.ΔW .= sol.ΔW
+    int.params.ΔZ .= sol.ΔZ
+end
+
 
 """
 Unpacks the data stored in
@@ -166,7 +216,7 @@ Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
                 # copies Q1[i][:,l] to the vector tQ
                 simd_copy_xy_first!($tQ, Q1[i], l)
                 # calculates the l-th column of B(t,tQ) and assigns to the vector tB
-                params.equ.B(tᵢ, $tQ, $tB, col=l)
+                params.equ.B(tᵢ, $tQ, $tB)
                 # copies the vector tB to B[i][:,l]
                 simd_copy_yx_first!($tB, B[i], l)
             end
@@ -177,7 +227,7 @@ end
 "Compute stages of weak implicit Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersWIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
-    cache = NonlinearFunctionCacheWIRK{ST}(D, M, S)
+    cache = IntegratorCacheWIRK{ST}(D, M, S)
 
     quote
         compute_stages!(x, $cache.Q0, $cache.Q1, $cache.V, $cache.B, $cache.Y0, $cache.Y1, params)
@@ -192,8 +242,12 @@ end
                 y1 = 0
                 y2 = 0
                 for j in 1:S
-                    y1 += params.tab.qdrift0.a[i,j] * $cache.V[j][k] * params.Δt + params.tab.qdiff0.a[i,j] * dot($cache.B[j][k,:], params.ΔW)
-                    y2 += params.tab.qdrift0.â[i,j] * $cache.V[j][k] * params.Δt + params.tab.qdiff0.â[i,j] * dot($cache.B[j][k,:], params.ΔW)
+                    y1 += params.tab.qdrift0.a[i,j] * $cache.V[j][k] * params.Δt
+                    y2 += params.tab.qdrift0.â[i,j] * $cache.V[j][k] * params.Δt
+                    for l in 1:M
+                        y1 += params.tab.qdiff0.a[i,j] * $cache.B[j][k,l] * params.ΔW[l]
+                        y2 += params.tab.qdiff0.â[i,j] * $cache.B[j][k,l] * params.ΔW[l]
+                    end
                 end
                 b[D*(i-1)+k] = - $cache.Y0[i][k] + (y1 + y2)
             end
@@ -230,114 +284,34 @@ end
 end
 
 
-"Stochastic implicit Runge-Kutta integrator."
-struct IntegratorWIRK{DT, TT, PT <: ParametersWIRK{DT,TT},
-                              ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
-    params::PT
-    solver::ST
-    # InitialGuessSDE not implemented for WIRK
-    #iguess::IT
-    fcache::NonlinearFunctionCacheWIRK{DT}
-
-    q::Matrix{Vector{TwicePrecision{DT}}}
-end
-
-
-function IntegratorWIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauWIRK{TT}, Δt::TT) where {DT,TT,VT,BT,N}
-    D = equation.d
-    M = equation.m
-    NS= equation.ns
-    NI= equation.n
-    S = tableau.s
-
-    # create params
-    params = ParametersWIRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M))
-
-    # create solver
-    solver = create_nonlinear_solver(DT, D*S*(M+1), params)
-
-    # Not implementing InitialGuessSDE
-    # create initial guess
-    #iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
-
-    # create cache for internal stage vectors and update vectors
-    fcache = NonlinearFunctionCacheWIRK{DT}(D, M, S)
-
-    # create solution vectors
-    q = create_solution_vector(DT, D, NS, NI)
-
-    # create integrator
-    IntegratorWIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, fcache, q)
-end
-
-equation(integrator::IntegratorWIRK) = integrator.params.equ
-timestep(integrator::IntegratorWIRK) = integrator.params.Δt
-tableau(integrator::IntegratorWIRK) = integrator.params.tab
-noisedims(integrator::IntegratorWIRK) = integrator.params.equ.m
-Base.eltype(integrator::IntegratorWIRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
-
-
-function initialize!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE, k::Int, m::Int) where {DT,TT}
-    check_solution_dimension_asserts(sol, k, m)
-
-    # copy the m-th initial condition for the k-th sample path
-    get_initial_conditions!(sol, int.q[k,m], k, m)
-
-    # Not implementing InitialGuessSDE
-    # # initialise initial guess
-    # initialize!(int.iguess, m, sol.t[0], int.q[m])
-end
-
 """
 This function computes initial guesses for Y and assigns them to int.solver.x
-The prediction is calculated using an explicit integrator.
+For WIRK we are NOT IMPLEMENTING an InitialGuess.
 """
-function initial_guess!(int::IntegratorWIRK{DT,TT}) where {DT,TT}
-
-    # NOT IMPLEMENTING InitialGuessSDE
-
-    # SIMPLE SOLUTION
+function initial_guess!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
     # The simplest initial guess for Y is 0
-    int.solver.x .= zeros(eltype(int), int.params.tab.s*ndims(int)*(noisedims(int)+1) )
+    int.solver.x .= 0
 
     # Using an explicit integrator to predict the next step's value (like in SIRK)
     # does not seem to be a good idea here, because the integrators are convergent
     # in the weak sense only, and there is no guarantee that the explicit integrator
     # will produce anything close to the desired solution...
-
 end
 
 
 """
 Integrate SDE with a stochastic implicit Runge-Kutta integrator.
-  Integrating the k-th sample path for the m-th initial condition
+  Integrating the m-th sample path
 """
-function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,NW}, k::Int, m::Int, n::Int) where {DT,TT,NQ,NW}
-    check_solution_dimension_asserts(sol, k, m, n)
-
-    # set time for nonlinear solver
-    int.params.t  = sol.t[0] + (n-1)*int.params.Δt
-    int.params.q .= int.q[k, m]
-
-
-    # copy the random variables \hat I and \tilde I representing the Wiener process
-    if NW==1
-        #1D Brownian motion, 1 sample path
-        int.params.ΔW[1] = sol.W.ΔW[n-1]
-        int.params.ΔZ[1] = sol.W.ΔZ[n-1]
-    elseif NW==2
-        #Multidimensional Brownian motion, 1 sample path
-        int.params.ΔW .= sol.W.ΔW[n-1]
-        int.params.ΔZ .= sol.W.ΔZ[n-1]
-    elseif NW==3
-        #1D or Multidimensional Brownian motion, k-th sample path
-        int.params.ΔW .= sol.W.ΔW[n-1,k]
-        int.params.ΔZ .= sol.W.ΔZ[n-1,k]
-    end
-
+function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
+    # update nonlinear solver parameters from cache
+    update_params!(int, sol)
 
     # compute initial guess and assign to int.solver.x
-    initial_guess!(int)
+    initial_guess!(int, sol)
+
+    # reset cache
+    reset!(sol, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
@@ -349,18 +323,8 @@ function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::SolutionSDE{DT,TT,NQ,N
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute the drift vector field and the diffusion matrix at internal stages
-    compute_stages!(int.solver.x, int.fcache.Q0, int.fcache.Q1, int.fcache.V, int.fcache.B, int.fcache.Y0, int.fcache.Y1, int.params)
+    compute_stages!(int.solver.x, int.cache.Q0, int.cache.Q1, int.cache.V, int.cache.B, int.cache.Y0, int.cache.Y1, int.params)
 
     # compute final update (same update function as for SIRK)
-    update_solution!(int.q[k,m], int.fcache.V, int.fcache.B, int.params.tab.qdrift0.b, int.params.tab.qdrift0.b̂, int.params.tab.qdiff0.b, int.params.tab.qdiff0.b̂, int.params.Δt, int.params.ΔW)
-
-    # # NOT IMPLEMENTING InitialGuessSDE
-    # # # copy solution to initial guess
-    # # update!(int.iguess, m, sol.t[0] + n*int.params.Δt, int.q[m])
-
-    # take care of periodic solutions
-    cut_periodic_solution!(int.q[k,m], int.params.equ.periodicity)
-
-    # # copy to solution
-    set_solution!(sol, int.q[k,m], n, k, m)
+    update_solution!(sol.q, int.cache.V, int.cache.B, int.params.tab.qdrift0.b, int.params.tab.qdrift0.b̂, int.params.tab.qdiff0.b, int.params.tab.qdiff0.b̂, int.params.Δt, int.params.ΔW, int.cache.Δy)
 end

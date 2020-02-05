@@ -1,5 +1,5 @@
 """
-Atomistic solution for an ODE.
+Atomic solution for an ODE.
 
 ### Fields
 
@@ -30,14 +30,14 @@ end
 
 AtomicSolutionODE(DT, TT, nd) = AtomicSolutionODE{DT, TT}(nd)
 
-function CommonFunctions.set_solution!(asol::AtomicSolutionODE, sol)
+function set_solution!(asol::AtomicSolutionODE, sol)
     t, q = sol
     asol.t  = t
     asol.q .= q
     asol.v .= 0
 end
 
-function CommonFunctions.get_solution(asol::AtomicSolutionODE)
+function get_solution(asol::AtomicSolutionODE)
     (asol.t, asol.q)
 end
 
@@ -48,12 +48,12 @@ function CommonFunctions.reset!(asol::AtomicSolutionODE, Δt)
     asol.t += Δt
 end
 
-function update!(asol::AtomicSolutionODE{DT}, v::Vector{DT}) where {DT}
-    for k in eachindex(v)
-        update!(asol, v[k])
+function update!(asol::AtomicSolutionODE{DT}, y::Vector{DT}) where {DT}
+    for k in eachindex(y)
+        update!(asol, y[k], k)
     end
 end
 
-function update!(asol::AtomicSolutionODE{DT}, v::DT, k::Int) where {DT}
-    asol.q[k], asol.q̃[k] = compensated_summation(v, asol.q[k], asol.q̃[k])
+function update!(asol::AtomicSolutionODE{DT}, y::DT, k::Int) where {DT}
+    asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
 end

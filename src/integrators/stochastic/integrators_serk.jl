@@ -50,85 +50,59 @@ end
 
 
 
-
 "Stochastic Explicit Runge-Kutta integrator."
-struct IntegratorSERK{DT,TT,FT} <: StochasticIntegrator{DT,TT}
-    equation::SDE{DT,TT,FT}
+struct IntegratorSERK{DT, TT, ET <: SDE{DT,TT}} <: StochasticIntegrator{DT,TT}
+    equation::ET
     tableau::TableauSERK{TT}
     Δt::TT
-    ΔW::Vector{DT}
-    ΔZ::Vector{DT}
 
-    q ::Matrix{Vector{DT}}    # q[k,m]  - holds the previous time step solution (for k-th sample path and m-th initial condition)
+    Δy::Vector{DT}
+
     Q::Vector{Vector{DT}}     # Q[j][k] - the k-th component of the j-th internal stage
     V::Vector{Vector{DT}}     # V[j][k] - the k-th component of v(Q[j])
     B::Vector{Matrix{DT}}     # B[j]    - the diffusion matrix B(Q[j])
 
-    ydiff::Vector{DT}
-
-
-    function IntegratorSERK{DT,TT,FT}(equation, tableau, Δt) where {DT,TT,FT}
+    function IntegratorSERK{DT,TT}(equation::ET, tableau, Δt::TT) where {DT, TT, ET <: SDE{DT,TT}}
         D = equation.d
         M = equation.m
-        NS= equation.ns
-        NI= equation.n
+        NS= max(equation.ns,equation.ni)
         S = tableau.s
-
-        # create solution vectors
-        q = create_solution_vector(DT, D, NS, NI)
 
         # create internal stage vectors
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         B = create_internal_stage_vector(DT, D, M, S)
 
-        new(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), q, Q, V, B, zeros(DT,M))
+        new{DT,TT,ET}(equation, tableau, Δt, zeros(DT,M), Q, V, B)
     end
 end
 
-function IntegratorSERK(equation::SDE{DT,TT,FT}, tableau::TableauSERK{TT}, Δt::TT) where {DT,TT,FT}
-    IntegratorSERK{DT,TT,FT}(equation, tableau, Δt)
+function IntegratorSERK(equation::SDE{DT,TT}, tableau::TableauSERK{TT}, Δt::TT) where {DT,TT}
+    IntegratorSERK{DT,TT}(equation, tableau, Δt)
 end
 
-function initialize!(int::IntegratorSERK, sol::SolutionSDE, k::Int, m::Int)
-    check_solution_dimension_asserts(sol, k, m)
+@inline equation(integrator::IntegratorSERK) = integrator.equation
+@inline timestep(integrator::IntegratorSERK) = integrator.Δt
+@inline tableau(integrator::IntegratorSERK)  = integrator.tableau
+@inline nstages(integrator::IntegratorSERK)  = nstages(tableau(integrator))
+@inline eachstage(integrator::IntegratorSERK) = 1:nstages(integrator)
 
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q[k,m], k, m)
-end
 
 """
 Integrate SDE with explicit Runge-Kutta integrator.
-  Calculating the n-th time step of the explicit integrator for the
-  sample path r and the initial condition m
+  Calculating the n-th time step of the explicit integrator for the sample path m
 """
-function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,NQ,NW}, r::Int, m::Int, n::Int) where {DT,TT,FT,NQ,NW}
+function integrate_step!(int::IntegratorSERK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
     local tᵢ::TT
     local ydrift::DT
 
-    # copy the increments of the Brownian Process
-    if NW==1
-        #1D Brownian motion, 1 sample path
-        int.ΔW[1] = sol.W.ΔW[1,n-1]
-        int.ΔZ[1] = sol.W.ΔZ[1,n-1]
-    elseif NW==2
-        #Multidimensional Brownian motion, 1 sample path
-        for l = 1:sol.nm
-            int.ΔW[l] = sol.W.ΔW[l,n-1]
-            int.ΔZ[l] = sol.W.ΔZ[l,n-1]
-        end
-    elseif NW==3
-        #1D or Multidimensional Brownian motion, r-th sample path
-        for l = 1:sol.nm
-            int.ΔW[l] = sol.W.ΔW[l,n-1,r]
-            int.ΔZ[l] = sol.W.ΔZ[l,n-1,r]
-        end
-    end
+    # reset cache
+    reset!(sol, timestep(int))
 
     # calculates v(t,tQ) and assigns to the i-th column of V
-    int.equation.v(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.V[1])
-    # calculates B(t,tQ) and assigns to the matrix BQ[:,:,1]
-    int.equation.B(sol.t[0] + (n-1)*int.Δt, int.q[r,m], int.B[1])
+    int.equation.v(sol.t̅, sol.q̅, int.V[1])
+    # calculates B(t,tQ) and assigns to the matrix BQ[1][:,:]
+    int.equation.B(sol.t̅, sol.q̅, int.B[1])
 
 
     @inbounds for i in 2:int.tableau.s
@@ -140,43 +114,37 @@ function integrate_step!(int::IntegratorSERK{DT,TT,FT}, sol::SolutionSDE{DT,TT,N
             end
 
             # ΔW contribution from the diffusion part
-            int.ydiff .= 0.
+            int.Δy .= 0.
             for j = 1:i-1
-                for l = 1:sol.nm
-                    int.ydiff[l] += int.tableau.qdiff.a[i,j] * int.B[j][k,l]
+                for l = 1:equation(int).m
+                    int.Δy[l] += int.tableau.qdiff.a[i,j] * int.B[j][k,l]
                 end
             end
 
-            int.Q[i][k] = int.q[r,m][k] + int.Δt * ydrift + dot(int.ydiff,int.ΔW)
+            int.Q[i][k] = sol.q̅[k] + int.Δt * ydrift + dot(int.Δy,sol.ΔW)
 
             # ΔZ contribution from the diffusion part
             if int.tableau.qdiff2.name ≠ :NULL
-                int.ydiff .= 0.
+                int.Δy .= 0.
                 for j = 1:i-1
-                    for l = 1:sol.nm
-                        int.ydiff[l] += int.tableau.qdiff2.a[i,j] * int.B[j][k,l]
+                    for l = 1:equation(int).m
+                        int.Δy[l] += int.tableau.qdiff2.a[i,j] * int.B[j][k,l]
                     end
                 end
 
-                int.Q[i][k] += dot(int.ydiff,int.ΔZ)/int.Δt
+                int.Q[i][k] += dot(int.Δy,sol.ΔZ)/int.Δt
             end
 
         end
-        tᵢ = sol.t[0] + (n-1)*int.Δt + int.Δt * int.tableau.qdrift.c[i]
+        tᵢ = sol.t̅ + int.Δt * int.tableau.qdrift.c[i]
         int.equation.v(tᵢ, int.Q[i], int.V[i])
         int.equation.B(tᵢ, int.Q[i], int.B[i])
     end
 
     # compute final update
     if int.tableau.qdiff2.name == :NULL
-        update_solution!(int.q[r,m], int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.Δt, int.ΔW)
+        update_solution!(sol.q, int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.Δt, sol.ΔW, int.Δy)
     else
-        update_solution!(int.q[r,m], int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.tableau.qdiff2.b, int.Δt, int.ΔW, int.ΔZ)
+        update_solution!(sol.q, int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.tableau.qdiff2.b, int.Δt, sol.ΔW, sol.ΔZ, int.Δy)
     end
-
-    # take care of periodic solutions
-    cut_periodic_solution!(int.q[r,m], int.equation.periodicity)
-
-    # copy to solution
-    set_solution!(sol, int.q[r,m], n, r, m)
 end

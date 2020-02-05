@@ -1,5 +1,5 @@
 """
-Atomistic solution for an PODE.
+Atomic solution for an PODE.
 
 ### Fields
 
@@ -42,7 +42,7 @@ end
 
 AtomicSolutionPODE(DT, TT, nd) = AtomicSolutionPODE{DT, TT}(nd)
 
-function CommonFunctions.set_solution!(asol::AtomicSolutionPODE, sol)
+function set_solution!(asol::AtomicSolutionPODE, sol)
     t, q, p = sol
     asol.t  = t
     asol.q .= q
@@ -51,7 +51,7 @@ function CommonFunctions.set_solution!(asol::AtomicSolutionPODE, sol)
     asol.f .= 0
 end
 
-function CommonFunctions.get_solution(asol::AtomicSolutionPODE)
+function get_solution(asol::AtomicSolutionPODE)
     (asol.t, asol.q, asol.p)
 end
 
@@ -64,13 +64,13 @@ function CommonFunctions.reset!(asol::AtomicSolutionPODE, Δt)
     asol.t += Δt
 end
 
-function update!(asol::AtomicSolutionPODE{DT}, v::Vector{DT}, f::Vector{DT}) where {DT}
-    for k in eachindex(v,f)
-        update!(asol, v[k], f[k])
+function update!(asol::AtomicSolutionPODE{DT}, y::Vector{DT}, z::Vector{DT}) where {DT}
+    for k in eachindex(y,z)
+        update!(asol, y[k], z[k], k)
     end
 end
 
-function update!(asol::AtomicSolutionPODE{DT}, v::DT, f::DT, k::Int) where {DT}
-    asol.q[k], asol.q̃[k] = compensated_summation(v, asol.q[k], asol.q̃[k])
-    asol.p[k], asol.p̃[k] = compensated_summation(f, asol.p[k], asol.p̃[k])
+function update!(asol::AtomicSolutionPODE{DT}, y::DT, z::DT, k::Int) where {DT}
+    asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
+    asol.p[k], asol.p̃[k] = compensated_summation(z, asol.p[k], asol.p̃[k])
 end

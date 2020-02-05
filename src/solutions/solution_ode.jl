@@ -35,7 +35,7 @@ mutable struct SolutionODE{dType, tType, N} <: DeterministicSolution{dType, tTyp
     end
 end
 
-function SolutionODE(equation::Union{ODE{DT,TT,FT},SODE{DT,TT,FT}}, Δt::TT, ntime::Int, nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE; filename=nothing) where {DT,TT,FT}
+function SolutionODE(equation::Union{ODE{DT,TT,FT},SODE{DT,TT,FT}}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,FT}
     @assert nsave > 0
     @assert ntime == 0 || ntime ≥ nsave
     @assert nwrite == 0 || nwrite ≥ nsave
@@ -104,24 +104,29 @@ function SolutionODE(file::String)
     SolutionODE(t, q, ntime)
 end
 
-Base.:(==)(sol1::SolutionODE, sol2::SolutionODE) = (
-                                sol1.nd == sol2.nd
+Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {DT1,TT1,N1,DT2,TT2,N2} = (
+                                DT1 == DT2
+                             && TT1 == TT2
+                             && N1  == N2
+                             && sol1.nd == sol2.nd
                              && sol1.nt == sol2.nt
                              && sol1.ni == sol2.ni
                              && sol1.t  == sol2.t
                              && sol1.q  == sol2.q
                              && sol1.ntime == sol2.ntime
                              && sol1.nsave == sol2.nsave
-                             && sol1.counter == sol2.counter)
+                             && sol1.nwrite == sol2.nwrite
+                             && sol1.counter == sol2.counter
+                             && sol1.woffset == sol2.woffset)
 
 hdf5(sol::SolutionODE)  = sol.h5
-time(sol::SolutionODE)  = sol.t.t
+timesteps(sol::SolutionODE)  = sol.t
 ntime(sol::SolutionODE) = sol.ntime
 nsave(sol::SolutionODE) = sol.nsave
 offset(sol::SolutionODE) = sol.woffset
 
 
-function set_initial_conditions!(sol::SolutionODE{DT,TT}, equ::Union{ODE{DT,TT},SODE{DT,TT}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionODE, equ::Union{ODE,SODE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀)
 end
 
@@ -137,7 +142,7 @@ function get_initial_conditions!(sol::SolutionODE{DT,TT}, asol::AtomicSolutionOD
     asol.q̃ .= 0
 end
 
-function get_initial_conditions!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, k, n=1) where {DT,TT}
+function get_initial_conditions!(sol::SolutionODE{DT}, q::SolutionVector{DT}, k, n=1) where {DT}
     get_solution!(sol, q, n-1, k)
 end
 
@@ -145,23 +150,23 @@ function get_initial_conditions(sol::SolutionODE, k, n=1)
     get_solution(sol, n-1, k)
 end
 
-function CommonFunctions.get_solution!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, n, k) where {DT,TT}
+function get_solution!(sol::SolutionODE{DT}, q::SolutionVector{DT}, n, k=1) where {DT}
     for i in eachindex(q) q[i] = sol.q[i, n, k] end
 end
 
-function CommonFunctions.get_solution(sol::SolutionODE, n, k)
+function get_solution(sol::SolutionODE, n, k=1)
     (sol.t[n], sol.q[:, n, k])
 end
 
-function CommonFunctions.set_solution!(sol::SolutionODE, t, q, n, k)
+function set_solution!(sol::SolutionODE, t, q, n, k=1)
     set_solution!(sol, q, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionODE{DT,TT}, asol::AtomicSolutionODE{DT,TT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionODE{DT,TT}, asol::AtomicSolutionODE{DT,TT}, n, k=1) where {DT,TT}
     set_solution!(sol, asol.t, asol.q, n, k)
 end
 
-function CommonFunctions.set_solution!(sol::SolutionODE{DT,TT}, q::SolutionVector{DT}, n, k) where {DT,TT}
+function set_solution!(sol::SolutionODE{DT}, q::SolutionVector{DT}, n, k=1) where {DT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
@@ -184,90 +189,4 @@ function Base.close(solution::SolutionODE)
     # close(solution.t)
     # close(solution.q)
     close(solution.h5)
-end
-
-
-"Creates HDF5 file and initialises datasets for ODE solution object."
-function create_hdf5(solution::SolutionODE{DT,TT,2}, file::AbstractString) where {DT,TT}
-    # create HDF5 file and save attributes and common parameters
-    solution.h5 = createHDF5(solution, file)
-
-    # save attributes
-    save_attributes(solution)
-
-    # create dataset
-    nt = div(solution.ntime, solution.nsave)
-
-    # nt can be used to set the expected total number of timesteps
-    # so that the size of the array does not need to be adapted dynamically.
-    # Right now, the size has to be set to nt as dynamical size adaptation is
-    # not yet working.
-    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
-    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, solution.nt+1), "chunk", (solution.nd,1))
-
-    # copy initial conditions
-    t[1] = solution.t[0]
-    q[:, 1] = solution.q[:, 0]
-
-    return solution.h5
-end
-
-"Creates HDF5 file and initialises datasets for ODE solution object."
-function create_hdf5(solution::SolutionODE{DT,TT,3}, file::AbstractString) where {DT,TT}
-    # create HDF5 file and save attributes and common parameters
-    solution.h5 = createHDF5(solution, file)
-
-    # create dataset
-    nt = div(solution.ntime, solution.nsave)
-
-    # nt can be used to set the expected total number of timesteps
-    # so that the size of the array does not need to be adapted dynamically.
-    # Right now, the size has to be set to nt as dynamical size adaptation is
-    # not yet working.
-    t = d_create(solution.h5, "t", datatype(TT), dataspace((nt+1,)), "chunk", (1,))
-    q = d_create(solution.h5, "q", datatype(DT), dataspace(solution.nd, nt+1, solution.ni), "chunk", (solution.nd,1,1))
-
-    # copy initial conditions
-    t[1] = solution.t[0]
-    q[:, 1, :] = solution.q[:, 0, :]
-
-    return solution.h5
-end
-
-"Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionODE{DT,TT,2}, h5::HDF5File, offset=0) where {DT,TT}
-    # set convenience variables and compute ranges
-    n  = solution.nt
-    j1 = offset+2
-    j2 = offset+1+n
-
-    # TODO # extend dataset if necessary
-    # if size(x, 2) < j2
-    #     set_dims!(x, (d, j2))
-    # end
-
-    # copy data from solution to HDF5 dataset
-    h5["t"][j1:j2] = solution.t[1:n]
-    h5["q"][:, j1:j2] = solution.q[:, 1:n]
-
-    return nothing
-end
-
-"Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::SolutionODE{DT,TT,3}, h5::HDF5File, offset=0) where {DT,TT}
-    # set convenience variables and compute ranges
-    n  = solution.nt
-    j1 = offset+2
-    j2 = offset+1+n
-
-    # TODO # extend dataset if necessary
-    # if size(x, 2) < j2
-    #     set_dims!(x, (d, j2))
-    # end
-
-    # copy data from solution to HDF5 dataset
-    h5["t"][j1:j2] = solution.t[1:n]
-    h5["q"][:, j1:j2, :] = solution.q[:, 1:n, :]
-
-    return nothing
 end

@@ -1,5 +1,5 @@
 """
-Atomistic solution for an DAE.
+Atomic solution for an DAE.
 
 ### Fields
 
@@ -32,17 +32,17 @@ mutable struct AtomicSolutionDAE{DT,TT} <: AtomicSolution{DT,TT}
     u::Vector{DT}
     u̅::Vector{DT}
 
-    function AtomicSolutionDAE{DT, TT}(nd) where {DT <: Number, TT <: Real}
+    function AtomicSolutionDAE{DT, TT}(nd, nm) where {DT <: Number, TT <: Real}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd),
+                                zeros(DT, nm), zeros(DT, nm),
                                 zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nd), zeros(DT, nd))
     end
 end
 
-AtomicSolutionDAE(DT, TT, nd) = AtomicSolutionDAE{DT, TT}(nd)
+AtomicSolutionDAE(DT, TT, nd, nm) = AtomicSolutionDAE{DT, TT}(nd, nm)
 
-function CommonFunctions.set_solution!(asol::AtomicSolutionDAE, sol)
+function set_solution!(asol::AtomicSolutionDAE, sol)
     t, q, λ = sol
     asol.t  = t
     asol.q .= q
@@ -50,7 +50,7 @@ function CommonFunctions.set_solution!(asol::AtomicSolutionDAE, sol)
     asol.v .= 0
 end
 
-function CommonFunctions.get_solution(asol::AtomicSolutionDAE)
+function get_solution(asol::AtomicSolutionDAE)
     (asol.t, asol.q, asol.λ)
 end
 
@@ -63,13 +63,15 @@ function CommonFunctions.reset!(asol::AtomicSolutionDAE, Δt)
     asol.t += Δt
 end
 
-function update!(asol::AtomicSolutionDAE{DT}, v::Vector{DT}, λ::Vector{DT}) where {DT}
-    for k in eachindex(v)
-        update!(asol, v[k], λ[k])
+function update!(asol::AtomicSolutionDAE{DT}, y::Vector{DT}, λ::Vector{DT}) where {DT}
+    for k in eachindex(y)
+        update!(asol, y[k], k)
+    end
+    for k in eachindex(λ)
+        asol.λ[k] = λ[k]
     end
 end
 
-function update!(asol::AtomicSolutionDAE{DT}, v::DT, λ::DT, k::Int) where {DT}
-    asol.q[k], asol.q̃[k] = compensated_summation(v, asol.q[k], asol.q̃[k])
-    asol.λ[k] = λ
+function update!(asol::AtomicSolutionDAE{DT}, y::DT, k::Int) where {DT}
+    asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
 end
