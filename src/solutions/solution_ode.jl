@@ -73,7 +73,7 @@ for (TSolution, TDataSeries, Tdocstring) in
 
             if !isnothing(filename)
                 isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
-                create_hdf5(s, filename)
+                create_hdf5!(s, filename)
             end
 
             return s
