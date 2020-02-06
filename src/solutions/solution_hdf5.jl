@@ -299,8 +299,8 @@ Append solution to HDF5 file.
 """
 function CommonFunctions.write_to_hdf5(solution::StochasticSolution, h5::HDF5File=hdf5(solution), soffset=offset(solution), woffset=ioffset(solution))
     # set convenience variables and compute ranges
-    js1  = soffset+2
-    js2  = soffset+1+solution.nt
+    js1 = soffset+2
+    js2 = soffset+1+solution.nt
     jw1 = woffset+1
     jw2 = woffset+solution.nwrite
 
