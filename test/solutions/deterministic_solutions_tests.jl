@@ -167,7 +167,7 @@ h5file = "test.hdf5"
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
-    sol2 = SolutionODE(h5file)
+    sol2 = SSolutionODE(h5file)
     @test sol1   != sol2
     @test sol1.t == sol2.t
     @test sol1.q == sol2.q
@@ -180,7 +180,7 @@ h5file = "test.hdf5"
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
-    sol2 = SolutionODE(h5file)
+    sol2 = SSolutionODE(h5file)
     @test sol1   != sol2
     @test sol1.t == sol2.t
     @test sol1.q == sol2.q
@@ -212,7 +212,7 @@ h5file = "test.hdf5"
         reset!(sol1)
     end
     close(sol1)
-    sol2 = SolutionODE(h5file)
+    sol2 = SSolutionODE(h5file)
     @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
     @test sol2.q.d == hcat(reshape(ode.q₀, (ndims(ode),1)), x100)
     @test sol2.ntime == 100
@@ -229,7 +229,7 @@ h5file = "test.hdf5"
         reset!(sol1)
     end
     close(sol1)
-    sol2 = SolutionODE(h5file)
+    sol2 = SSolutionODE(h5file)
     @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
     @test sol2.q.d == hcat(reshape(ode.q₀, (ndims(ode),1)), x100)[:,1:2:end]
     @test sol2.ntime == 100
@@ -320,7 +320,7 @@ end
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
-    sol2 = SolutionPODE(h5file)
+    sol2 = SSolutionPODE(h5file)
     @test sol1   != sol2
     @test sol1.t == sol2.t
     @test sol1.q == sol2.q
@@ -334,7 +334,7 @@ end
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
-    sol2 = SolutionPODE(h5file)
+    sol2 = SSolutionPODE(h5file)
     @test sol1   != sol2
     @test sol1.t == sol2.t
     @test sol1.q == sol2.q
@@ -368,7 +368,7 @@ end
         reset!(sol1)
     end
     close(sol1)
-    sol2 = SolutionPODE(h5file)
+    sol2 = SSolutionPODE(h5file)
     @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
     @test sol2.q.d == hcat(reshape(pode.q₀, (ndims(pode),1)), q100)
     @test sol2.p.d == hcat(reshape(pode.p₀, (ndims(pode),1)), p100)
@@ -387,7 +387,7 @@ end
         reset!(sol1)
     end
     close(sol1)
-    sol2 = SolutionPODE(h5file)
+    sol2 = SSolutionPODE(h5file)
     @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
     @test sol2.q.d == hcat(reshape(pode.q₀, (ndims(pode),1)), q100)[:,1:2:end]
     @test sol2.p.d == hcat(reshape(pode.p₀, (ndims(pode),1)), p100)[:,1:2:end]
@@ -479,7 +479,7 @@ end
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
-    sol2 = SolutionDAE(h5file)
+    sol2 = SSolutionDAE(h5file)
     @test sol1   != sol2
     @test sol1.t == sol2.t
     @test sol1.q == sol2.q
@@ -493,7 +493,7 @@ end
     write_to_hdf5(sol1)
     close(sol1)
     @test isfile(h5file)
-    sol2 = SolutionDAE(h5file)
+    sol2 = SSolutionDAE(h5file)
     @test sol1   != sol2
     @test sol1.t == sol2.t
     @test sol1.q == sol2.q
@@ -527,7 +527,7 @@ end
         reset!(sol1)
     end
     close(sol1)
-    sol2 = SolutionDAE(h5file)
+    sol2 = SSolutionDAE(h5file)
     @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
     @test sol2.q.d == hcat(reshape(dae.q₀, (ndims(dae),1)), z100)
     @test sol2.λ.d == hcat(reshape(dae.λ₀, (dae.m,1)), λ100)
@@ -546,7 +546,7 @@ end
         reset!(sol1)
     end
     close(sol1)
-    sol2 = SolutionDAE(h5file)
+    sol2 = SSolutionDAE(h5file)
     @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
     @test sol2.q.d == hcat(reshape(dae.q₀, (ndims(dae),1)), z100)[:,1:2:end]
     @test sol2.λ.d == hcat(reshape(dae.λ₀, (dae.m,1)), λ100)[:,1:2:end]

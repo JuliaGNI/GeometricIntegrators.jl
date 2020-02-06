@@ -16,20 +16,26 @@ CommonFunctions.write_to_hdf5(sol::Solution, h5::HDF5File, offset=0) = error("wr
 
 conv(sol::StochasticSolution) = error("conv() not implemented for ", typeof(sol))
 
+nsamples(sol::DeterministicSolution) = sol.ni
+nsamples(sol::StochasticSolution) = sol.ns
+
+eachtimestep(sol::Solution) = 1:sol.nt*sol.nsave
+eachsample(sol::Solution) = 1:nsamples(sol)
+
 
 "Create solution for ODE."
 function Solution(equation::AbstractEquationODE, Δt, ntime::Int; kwargs...)
-    SolutionODE(equation, Δt, ntime; kwargs...)
+    SSolutionODE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for partitioned ODE."
 function Solution(equation::AbstractEquationPODE, Δt, ntime::Int; kwargs...)
-    SolutionPODE(equation, Δt, ntime; kwargs...)
+    SSolutionPODE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for DAE."
 function Solution(equation::AbstractEquationDAE, Δt, ntime::Int; kwargs...)
-    SolutionDAE(equation, Δt, ntime; kwargs...)
+    SSolutionDAE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for partitioned DAE."
@@ -39,15 +45,51 @@ end
 
 "Create solution for SDE."
 function Solution(equation::SDE, Δt, ntime::Int; kwargs...)
-    SolutionSDE(equation, Δt, ntime; kwargs...)
+    SSolutionSDE(equation, Δt, ntime; kwargs...)
 end
 
 "Create solution for PSDE."
 function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int; kwargs...)
-    SolutionPSDE(equation, Δt, ntime; kwargs...)
+    SSolutionPSDE(equation, Δt, ntime; kwargs...)
 end
 
 "Print error for solutions of equations not implemented, yet."
 function Solution(equation::Equation, Δt, ntime::Int; kwargs...)
     error("No solution found for equation ", equation)
+end
+
+
+"Create parallel solution for ODE."
+function ParallelSolution(equation::AbstractEquationODE, Δt, ntime::Int; kwargs...)
+    PSolutionODE(equation, Δt, ntime; kwargs...)
+end
+
+"Create parallel solution for partitioned ODE."
+function ParallelSolution(equation::AbstractEquationPODE, Δt, ntime::Int; kwargs...)
+    PSolutionPODE(equation, Δt, ntime; kwargs...)
+end
+
+"Create parallel solution for DAE."
+function ParallelSolution(equation::AbstractEquationDAE, Δt, ntime::Int; kwargs...)
+    PSolutionDAE(equation, Δt, ntime; kwargs...)
+end
+
+"Create parallel solution for partitioned DAE."
+function ParallelSolution(equation::AbstractEquationPDAE, Δt, ntime::Int; kwargs...)
+    PSolutionPDAE(equation, Δt, ntime; kwargs...)
+end
+
+"Create parallel solution for SDE."
+function ParallelSolution(equation::SDE, Δt, ntime::Int; kwargs...)
+    PSolutionSDE(equation, Δt, ntime; kwargs...)
+end
+
+"Create parallel solution for PSDE."
+function ParallelSolution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int; kwargs...)
+    PSolutionPSDE(equation, Δt, ntime; kwargs...)
+end
+
+"Print error for parallel solutions of equations not implemented, yet."
+function ParallelSolution(equation::Equation, Δt, ntime::Int; kwargs...)
+    error("No parallel solution found for equation ", equation)
 end

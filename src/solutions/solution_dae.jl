@@ -19,103 +19,130 @@ Contains all fields necessary to store the solution of an DAE.
 * `woffset`: counter for file offset
 * `h5`: HDF5 file for storage
 """
-mutable struct SolutionDAE{dType, tType, N} <: DeterministicSolution{dType, tType, N}
-    nd::Int
-    nm::Int
-    nt::Int
-    ni::Int
-    t::TimeSeries{tType}
-    q::SDataSeries{dType,N}
-    λ::SDataSeries{dType,N}
-    ntime::Int
-    nsave::Int
-    nwrite::Int
-    counter::Vector{Int}
-    woffset::Int
-    h5::HDF5File
+abstract type SolutionDAE{dType, tType, N} <: DeterministicSolution{dType, tType, N} end
 
-    function SolutionDAE{dType, tType, N}(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite) where {dType <: Number, tType <: Real, N}
-        new(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite, zeros(Int, ni), 0)
+# Create SolutionPDAEs with serial and parallel data structures.
+for (TSolution, TDataSeries, Tdocstring) in
+    ((:SSolutionDAE, :SDataSeries, "Serial Solution of a differential algebraic equation."),
+     (:PSolutionDAE, :PDataSeries, "Parallel Solution of a differential algebraic equation."))
+    @eval begin
+        $Tdocstring
+        mutable struct $TSolution{dType, tType, N} <: SolutionDAE{dType, tType, N}
+            nd::Int
+            nm::Int
+            nt::Int
+            ni::Int
+            t::TimeSeries{tType}
+            q::$TDataSeries{dType,N}
+            λ::$TDataSeries{dType,N}
+            ntime::Int
+            nsave::Int
+            nwrite::Int
+            counter::Vector{Int}
+            woffset::Int
+            h5::HDF5File
+
+            function $TSolution{dType, tType, N}(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite) where {dType <: Number, tType <: Real, N}
+                new(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite, zeros(Int, ni), 0)
+            end
+        end
+
+        function $TSolution(equation::DAE{DT,TT}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT}
+            @assert nsave > 0
+            @assert ntime == 0 || ntime ≥ nsave
+            @assert nwrite == 0 || nwrite ≥ nsave
+            @assert mod(ntime, nsave) == 0
+
+            if nwrite > 0
+                @assert mod(nwrite, nsave) == 0
+                @assert mod(ntime, nwrite) == 0
+            end
+
+            N  = equation.n > 1 ? 3 : 2
+            nd = equation.d
+            nm = equation.m
+            ni = equation.n
+            nt = div(ntime, nsave)
+            nt = (nwrite == 0 ? nt : div(nwrite, nsave))
+            nw = (nwrite == 0 ? ntime : nwrite)
+
+            @assert nd > 0
+            @assert nm > 0
+            @assert ni > 0
+            @assert nw > 0
+
+            t = TimeSeries{TT}(nt, Δt, nsave)
+            q = $TDataSeries(DT, nd, nt, ni)
+            λ = $TDataSeries(DT, nm, nt, ni)
+            s = $TSolution{DT,TT,N}(nd, nm, nt, ni, t, q, λ, ntime, nsave, nw)
+            set_initial_conditions!(s, equation)
+
+            if !isnothing(filename)
+                isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
+                create_hdf5!(s, filename)
+            end
+
+            return s
+        end
+
+        function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,N}, λ::$TDataSeries{DT,N}, ntime::Int) where {DT,TT,N}
+            @assert q.nd >= λ.nd
+            @assert q.nt == λ.nt
+            @assert q.ni == λ.ni
+
+            # extract parameters
+            nd = q.nd
+            nm = λ.nd
+            ni = q.ni
+            nt = t.n
+            ns = div(ntime, nt)
+
+            @assert mod(ntime, nt) == 0
+
+            # create solution
+            $TSolution{DT,TT,N}(nd, nm, nt, ni, t, q, λ, ntime, ns, 0)
+        end
+
+        function $TSolution(file::String)
+            # open HDF5 file
+            get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
+            h5 = h5open(file, "r")
+
+            # read attributes
+            ntime = read(attrs(h5)["ntime"])
+            nsave = read(attrs(h5)["nsave"])
+
+            # reading data arrays
+            t = TimeSeries(read(h5["t"]), nsave)
+            q = $TDataSeries(read(h5["q"]))
+            λ = $TDataSeries(read(h5["λ"]))
+
+            # need to close the file
+            close(h5)
+
+            # create solution
+            $TSolution(t, q, λ, ntime)
+        end
     end
 end
 
-function SolutionDAE(equation::DAE{DT,TT}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT}
-    @assert nsave > 0
-    @assert ntime == 0 || ntime ≥ nsave
-    @assert nwrite == 0 || nwrite ≥ nsave
-    @assert mod(ntime, nsave) == 0
 
-    if nwrite > 0
-        @assert mod(nwrite, nsave) == 0
-        @assert mod(ntime, nwrite) == 0
-    end
-
-    N  = equation.n > 1 ? 3 : 2
-    nd = equation.d
-    nm = equation.m
-    ni = equation.n
-    nt = div(ntime, nsave)
-    nt = (nwrite == 0 ? nt : div(nwrite, nsave))
-    nw = (nwrite == 0 ? ntime : nwrite)
-
-    @assert nd > 0
-    @assert nm > 0
-    @assert ni > 0
-    @assert nw > 0
-
-    t = TimeSeries{TT}(nt, Δt, nsave)
-    q = SDataSeries(DT, nd, nt, ni)
-    λ = SDataSeries(DT, nm, nt, ni)
-    s = SolutionDAE{DT,TT,N}(nd, nm, nt, ni, t, q, λ, ntime, nsave, nw)
-    set_initial_conditions!(s, equation)
-
-    if !isnothing(filename)
-        isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
-        create_hdf5(s, filename)
-    end
-
-    return s
-end
-
-function SolutionDAE(t::TimeSeries{TT}, q::SDataSeries{DT,N}, λ::SDataSeries{DT,N}, ntime::Int) where {DT,TT,N}
-    @assert q.nd >= λ.nd
-    @assert q.nt == λ.nt
-    @assert q.ni == λ.ni
-
-    # extract parameters
-    nd = q.nd
-    nm = λ.nd
-    ni = q.ni
-    nt = t.n
-    ns = div(ntime, nt)
-
-    @assert mod(ntime, nt) == 0
-
-    # create solution
-    SolutionDAE{DT,TT,N}(nd, nm, nt, ni, t, q, λ, ntime, ns, 0)
-end
-
-function SolutionDAE(file::String)
-    # open HDF5 file
-    get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
-    h5 = h5open(file, "r")
-
-    # read attributes
-    ntime = read(attrs(h5)["ntime"])
-    nsave = read(attrs(h5)["nsave"])
-
-    # reading data arrays
-    t = TimeSeries(read(h5["t"]), nsave)
-    q = SDataSeries(read(h5["q"]))
-    λ = SDataSeries(read(h5["λ"]))
-
-    # need to close the file
-    close(h5)
-
-    # create solution
-    SolutionDAE(t, q, λ, ntime)
-end
-
+Base.:(==)(sol1::SolutionDAE{DT1,TT1,N1}, sol2::SolutionDAE{DT2,TT2,N2}) where {DT1,TT1,N1,DT2,TT2,N2} = (
+                                DT1 == DT2
+                             && TT1 == TT2
+                             && N1  == N2
+                             && sol1.nd == sol2.nd
+                             && sol1.nm == sol2.nm
+                             && sol1.nt == sol2.nt
+                             && sol1.ni == sol2.ni
+                             && sol1.t  == sol2.t
+                             && sol1.q  == sol2.q
+                             && sol1.λ  == sol2.λ
+                             && sol1.ntime == sol2.ntime
+                             && sol1.nsave == sol2.nsave
+                             && sol1.nwrite == sol2.nwrite
+                             && sol1.counter == sol2.counter
+                             && sol1.woffset == sol2.woffset)
 
 hdf5(sol::SolutionDAE)  = sol.h5
 timesteps(sol::SolutionDAE)  = sol.t

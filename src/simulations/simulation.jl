@@ -8,20 +8,28 @@ struct Simulation{ET <: Equation, IT <: Integrator, ST <: Solution}
     filename::String
 end
 
-function Simulation(equ::ET, int::IT, sol::ST, run_id::String, filename::String; ncycle=1) where {ET,IT,ST}
-    Simulation{ET,IT,TT}(equ, int, sol, ncycle, run_id, filename)
+@inline equation(sim::Simulation) = sim.equation
+@inline integrator(sim::Simulation) = sim.integrator
+@inline solution(sim::Simulation) = sim.solution
+@inline cycles(sim::Simulation) = 1:sim.ncycle
+
+
+function Simulation(equ::ET, int::IT, sol::ST, run_id::String, filename::String) where {ET,IT,ST}
+    @assert mod(sol.ntime, sol.nwrite) == 0
+    ncycle = div(sol.ntime, sol.nwrite)
+    Simulation{ET,IT,ST}(equ, int, sol, ncycle, run_id, filename)
 end
 
-function Simulation(equ::Equation, int::Integrator, Δt, run_id, filename, ntime, nsave; ncycle=1)
-    Simulation(equ, int, Solution(equ, Δt, ntime, nsave), run_id, filename; ncycle=ncycle)
+function Simulation(equ::Equation, int::Integrator, Δt, run_id, filename, ntime; nsave=1, nwrite=1)
+    Simulation(equ, int, Solution(equ, Δt, ntime; nsave=nsave, nwrite=nwrite), run_id, filename)
 end
 
-function Simulation(equ::Equation, tableau::AbstractTableau, Δt, run_id, filename, ntime, nsave; ncycle=1)
-    Simulation(equ, Integrator(equ, tableau, Δt), Δt, run_id, filename, ntime, nsave; ncycle=ncycle)
+function Simulation(equ::Equation, tableau::AbstractTableau, Δt, run_id, filename, ntime; kwargs...)
+    Simulation(equ, Integrator(equ, tableau, Δt), Δt, run_id, filename, ntime; kwargs...)
 end
 
-function Simulation(equ::Equation, integrator, tableau::AbstractTableau, Δt, run_id, filename, ntime, nsave; ncycle=1)
-    Simulation(equ, integrator(equ, tableau, Δt), Δt, run_id, filename, ntime, nsave; ncycle=ncycle)
+function Simulation(equ::Equation, integrator, tableau::AbstractTableau, Δt, run_id, filename, ntime; kwargs...)
+    Simulation(equ, integrator(equ, tableau, Δt), Δt, run_id, filename, ntime; kwargs...)
 end
 
 
@@ -29,26 +37,44 @@ function run!(sim::Simulation)
 
     println("Running ", sim.run_id, "...")
 
-    h5 = create_hdf5(sim.solution, sim.filename)
+    create_hdf5!(solution(sim), sim.filename)
+
+    # create atomic solution
+    asol = AtomicSolution(equation(sim))
 
     try
-        @showprogress 5 for c in 1:sim.ncycle
-            integrate!(sim.integrator, sim.solution)
-            write_to_hdf5(sim.solution, h5)
-            reset!(sim.solution)
+        # loop over integration cycles showing progress bar
+        @showprogress 5 for c in cycles(sim)
+            # loop over samples
+            for m in eachsample(solution(sim))
+                # get cache from solution
+                get_initial_conditions!(solution(sim), asol, m)
+
+                # initilize integrator
+                initialize!(integrator(sim), asol)
+
+                # loop over time steps
+                for n in eachtimestep(solution(sim))
+                    integrate!(integrator(sim), solution(sim), asol, m, n)
+                end
+            end
+
+            write_to_hdf5(solution(sim))
+            reset!(solution(sim))
         end
     catch ex
         if isa(ex, DomainError)
-            warn("DOMAIN ERROR")
+            @warn("DOMAIN ERROR")
         elseif isa(ex, ErrorException)
-            warn("Simulation exited early.")
-            warn(ex.msg)
+            @warn("Simulation exited early.")
+            @warn(ex.msg)
         else
+            close(solution(sim))
             throw(ex)
         end
     end
 
-    close(h5)
+    close(solution(sim))
 
-    return sim.solution
+    return solution(sim)
 end

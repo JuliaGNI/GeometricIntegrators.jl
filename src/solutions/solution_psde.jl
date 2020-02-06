@@ -20,195 +20,205 @@ Contains all fields necessary to store the solution of a PSDE or SPSDE
 * `nsave`: save every nsave'th time step
 
 """
-mutable struct SolutionPSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dType, tType, NQ, NW}
-    nd::Int
-    nm::Int
-    nt::Int
-    ns::Int
-    t::TimeSeries{tType}
-    q::SDataSeries{dType,NQ}
-    p::SDataSeries{dType,NQ}
-    W::WienerProcess{dType,tType,NW,CONV}
-    K::Int
-    ntime::Int
-    nsave::Int
-    nwrite::Int
-    counter::Vector{Int}
-    woffset::Int
-    ioffset::Int
-    h5::HDF5File
+abstract type SolutionPSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dType, tType, NQ, NW} end
 
-    function SolutionPSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}, p::SDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}
-        # extract parameters
-        nd = q.nd
-        ns = q.ni
-        nt = q.nt
-        nm = W.nd
-        ntime = W.nt
-        nsave = t.step
-        nwrite = ntime
+# Create SolutionPSDEs with serial and parallel data structures.
+for (TSolution, TDataSeries, Tdocstring) in
+    ((:SSolutionPSDE, :SDataSeries, "Serial Solution of a partitioned stochastic differential equation."),
+     (:PSolutionPSDE, :PDataSeries, "Parallel Solution of a partitioned stochastic differential equation."))
+    @eval begin
+        $Tdocstring
+        mutable struct $TSolution{dType, tType, NQ, NW, CONV} <: SolutionPSDE{dType, tType, NQ, NW, CONV}
+            nd::Int
+            nm::Int
+            nt::Int
+            ns::Int
+            t::TimeSeries{tType}
+            q::$TDataSeries{dType,NQ}
+            p::$TDataSeries{dType,NQ}
+            W::WienerProcess{dType,tType,NW,CONV}
+            K::Int
+            ntime::Int
+            nsave::Int
+            nwrite::Int
+            counter::Vector{Int}
+            woffset::Int
+            ioffset::Int
+            h5::HDF5File
 
-        @assert CONV==:strong || (CONV==:weak && K==0) || CONV==:null
-        @assert ntime==nt*nsave
-        @assert q.ni == p.ni
-        @assert q.nd == p.nd
-        @assert q.nt == p.nt == t.n
-        @assert W.ns == q.ni
+            function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,NQ}, p::$TDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}
+                # extract parameters
+                nd = q.nd
+                ns = q.ni
+                nt = q.nt
+                nm = W.nd
+                ntime = W.nt
+                nsave = t.step
+                nwrite = ntime
 
-        new{DT,TT,NQ,NW,CONV}(nd, nm, nt, ns, t, q, p, W, K, ntime, nsave, nwrite, zeros(Int, ns), 0, 0)
-    end
+                @assert CONV==:strong || (CONV==:weak && K==0) || CONV==:null
+                @assert ntime==nt*nsave
+                @assert q.ni == p.ni
+                @assert q.nd == p.nd
+                @assert q.nt == p.nt == t.n
+                @assert W.ns == q.ni
 
-    function SolutionPSDE(nd::Int, nm::Int, nt::Int, ns::Int, ni::Int, Δt::tType,
-                W::WienerProcess{dType,tType,NW,CONV}, K::Int, ntime::Int, nsave::Int, nwrite::Int) where {dType <: Number, tType <: Real, NW, CONV}
+                new{DT,TT,NQ,NW,CONV}(nd, nm, nt, ns, t, q, p, W, K, ntime, nsave, nwrite, zeros(Int, ns), 0, 0)
+            end
 
-        @assert CONV==:strong || (CONV==:weak && K==0) || CONV==:null
-        @assert nd > 0
-        @assert ns > 0
-        @assert ni > 0
-        @assert ni == 1 || ns == 1
-        @assert nsave > 0
-        @assert ntime == 0 || ntime ≥ nsave
-        @assert mod(ntime, nsave) == 0
+            function $TSolution(nd::Int, nm::Int, nt::Int, ns::Int, ni::Int, Δt::tType,
+                        W::WienerProcess{dType,tType,NW,CONV}, K::Int, ntime::Int, nsave::Int, nwrite::Int) where {dType <: Number, tType <: Real, NW, CONV}
 
-        if nwrite > 0
-            @assert mod(nwrite, nsave) == 0
-            @assert mod(ntime, nwrite) == 0
+                @assert CONV==:strong || (CONV==:weak && K==0) || CONV==:null
+                @assert nd > 0
+                @assert ns > 0
+                @assert ni > 0
+                @assert ni == 1 || ns == 1
+                @assert nsave > 0
+                @assert ntime == 0 || ntime ≥ nsave
+                @assert mod(ntime, nsave) == 0
+
+                if nwrite > 0
+                    @assert mod(nwrite, nsave) == 0
+                    @assert mod(ntime, nwrite) == 0
+                end
+
+                @assert NW ∈ (2,3)
+
+                t = TimeSeries{tType}(nt, Δt, nsave)
+                q = $TDataSeries(dType, nd, nt, max(ns,ni))
+                p = $TDataSeries(dType, nd, nt, max(ns,ni))
+                NQ = ns==ni==1 ? 2 : 3
+
+                new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, p, W, K, ntime, nsave, nwrite, zeros(Int, max(ns,ni)), 0, 0)
+            end
         end
 
-        @assert NW ∈ (2,3)
 
-        t = TimeSeries{tType}(nt, Δt, nsave)
-        q = SDataSeries(dType, nd, nt, max(ns,ni))
-        p = SDataSeries(dType, nd, nt, max(ns,ni))
-        NQ = ns==ni==1 ? 2 : 3
+        function $TSolution(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, K::Int=0, conv=DEFAULT_SCONV, filename=nothing) where {DT,TT}
+            nd = equation.d
+            nm = equation.m
+            ns = equation.ns
+            ni = equation.ni
+            nt = div(ntime, nsave)
+            nt = (nwrite == 0 ? nt : div(nwrite, nsave))
+            nw = (nwrite == 0 ? ntime : nwrite)
 
-        new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, p, W, K, ntime, nsave, nwrite, zeros(Int, max(ns,ni)), 0, 0)
+            # Holds the Wiener process data for ALL computed time steps
+            # Wiener process increments are automatically generated here
+            W = WienerProcess(DT, nm, nw, max(ni,ns), Δt, conv)
+
+            s = $TSolution(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw)
+            set_initial_conditions!(s, equation)
+
+            if !isnothing(filename)
+                isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
+                create_hdf5!(s, filename)
+            end
+
+            return s
+        end
+
+
+        function $TSolution(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, K::Int=0, conv=DEFAULT_SCONV, filename=nothing) where {DT,TT,NW}
+            nd = equation.d
+            nm = equation.m
+            ns = equation.ns
+            ni = equation.ni
+            nt = div(ntime, nsave)
+            nt = (nwrite == 0 ? nt : div(nwrite, nsave))
+            nw = (nwrite == 0 ? ntime : nwrite)
+
+            @assert size(dW) == size(dZ)
+            @assert NW ∈ (2,3)
+
+            @assert nm == size(dW,1)
+            @assert ntime == size(dW,2)
+            @assert ns == size(dW,3)
+
+            # Holds the Wiener process data for ALL computed time steps
+            # Wiener process increments are prescribed by the arrays dW and dZ
+            W = WienerProcess(Δt, dW, dZ, conv)
+
+            s = $TSolution(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw)
+            set_initial_conditions!(s, equation)
+
+            if !isnothing(filename)
+                isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
+                create_hdf5!(s, filename)
+            end
+
+            return s
+        end
+
+
+        # If the Wiener process W data are not available, creates a one-element zero array instead
+        # For instance used when reading a file with no Wiener process data saved
+        function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,NQ}, p::$TDataSeries{DT,NQ}; K::Int=0, conv=DEFAULT_SCONV) where {DT,TT,NQ}
+            # extract parameters
+            nd = q.nd
+            ns = q.ni
+            nt = t.n
+            nsave = t.step
+
+            ΔW = (ns == 1 ? zeros(DT,0,0) : zeros(DT,0,0,0))
+            ΔZ = (ns == 1 ? zeros(DT,0,0) : zeros(DT,0,0,0))
+
+            W = WienerProcess{DT,TT,ns == 1 ? 2 : 3,:null}(nd, nt ,ns, t.Δt, ΔW, ΔZ)
+
+            # create solution
+            $TSolution(t, q, p, W, K=K)
+        end
+
+
+        function $TSolution(file::String)
+            # open HDF5 file
+            get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
+            h5 = h5open(file, "r")
+
+            # read attributes
+            ntime = read(attrs(h5)["ntime"])
+            nsave = read(attrs(h5)["nsave"])
+
+            # reading data arrays
+            t = TimeSeries(read(h5["t"]), nsave)
+
+            if exists(attrs(h5),"conv")
+                conv = Symbol(read(attrs(h5)["conv"]))
+            else
+                conv = DEFAULT_SCONV
+            end
+
+            W_exists = exists(h5, "ΔW") && exists(h5, "ΔZ")
+
+            if W_exists == true
+                W = WienerProcess(t.Δt, read(h5["ΔW"]), read(h5["ΔZ"]), conv)
+            end
+
+            if exists(attrs(h5),"K")
+                K = read(attrs(h5)["K"])
+            else
+                K=0
+            end
+
+            q_array = read(h5["q"])
+            p_array = read(h5["p"])
+
+            close(h5)
+
+            q = $TDataSeries(q_array)
+            p = $TDataSeries(p_array)
+
+            # create solution
+            if W_exists == true
+                $TSolution(t, q, p, W; K=K)
+            else
+                $TSolution(t, q, p; K=K, conv=conv)
+            end
+        end
     end
 end
 
-
-function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, K::Int=0, conv=DEFAULT_SCONV, filename=nothing) where {DT,TT}
-    nd = equation.d
-    nm = equation.m
-    ns = equation.ns
-    ni = equation.ni
-    nt = div(ntime, nsave)
-    nt = (nwrite == 0 ? nt : div(nwrite, nsave))
-    nw = (nwrite == 0 ? ntime : nwrite)
-
-    # Holds the Wiener process data for ALL computed time steps
-    # Wiener process increments are automatically generated here
-    W = WienerProcess(DT, nm, nw, max(ni,ns), Δt, conv)
-
-    s = SolutionPSDE(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw)
-    set_initial_conditions!(s, equation)
-
-    if !isnothing(filename)
-        isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
-        create_hdf5(s, filename)
-    end
-
-    return s
-end
-
-
-function SolutionPSDE(equation::Union{PSDE{DT,TT},SPSDE{DT,TT}}, Δt::TT, dW::Array{DT, NW}, dZ::Array{DT, NW}, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, K::Int=0, conv=DEFAULT_SCONV, filename=nothing) where {DT,TT,NW}
-    nd = equation.d
-    nm = equation.m
-    ns = equation.ns
-    ni = equation.ni
-    nt = div(ntime, nsave)
-    nt = (nwrite == 0 ? nt : div(nwrite, nsave))
-    nw = (nwrite == 0 ? ntime : nwrite)
-
-    @assert size(dW) == size(dZ)
-    @assert NW ∈ (2,3)
-
-    @assert nm == size(dW,1)
-    @assert ntime == size(dW,2)
-    @assert ns == size(dW,3)
-
-    # Holds the Wiener process data for ALL computed time steps
-    # Wiener process increments are prescribed by the arrays dW and dZ
-    W = WienerProcess(Δt, dW, dZ, conv)
-
-    s = SolutionPSDE(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw)
-    set_initial_conditions!(s, equation)
-
-    if !isnothing(filename)
-        isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
-        create_hdf5(s, filename)
-    end
-
-    return s
-end
-
-
-# If the Wiener process W data are not available, creates a one-element zero array instead
-# For instance used when reading a file with no Wiener process data saved
-function SolutionPSDE(t::TimeSeries{TT}, q::SDataSeries{DT,NQ}, p::SDataSeries{DT,NQ}; K::Int=0, conv=DEFAULT_SCONV) where {DT,TT,NQ}
-    # extract parameters
-    nd = q.nd
-    ns = q.ni
-    nt = t.n
-    nsave = t.step
-
-    ΔW = (ns == 1 ? zeros(DT,0,0) : zeros(DT,0,0,0))
-    ΔZ = (ns == 1 ? zeros(DT,0,0) : zeros(DT,0,0,0))
-
-    W = WienerProcess{DT,TT,ns == 1 ? 2 : 3,:null}(nd, nt ,ns, t.Δt, ΔW, ΔZ)
-
-    # create solution
-    SolutionPSDE(t, q, p, W, K=K)
-end
-
-
-function SolutionPSDE(file::String)
-    # open HDF5 file
-    get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
-    h5 = h5open(file, "r")
-
-    # read attributes
-    ntime = read(attrs(h5)["ntime"])
-    nsave = read(attrs(h5)["nsave"])
-
-    # reading data arrays
-    t = TimeSeries(read(h5["t"]), nsave)
-
-    if exists(attrs(h5),"conv")
-        conv = Symbol(read(attrs(h5)["conv"]))
-    else
-        conv = DEFAULT_SCONV
-    end
-
-    W_exists = exists(h5, "ΔW") && exists(h5, "ΔZ")
-
-    if W_exists == true
-        W = WienerProcess(t.Δt, read(h5["ΔW"]), read(h5["ΔZ"]), conv)
-    end
-
-    if exists(attrs(h5),"K")
-        K = read(attrs(h5)["K"])
-    else
-        K=0
-    end
-
-    q_array = read(h5["q"])
-    p_array = read(h5["p"])
-
-    close(h5)
-
-    q = SDataSeries(q_array)
-    p = SDataSeries(p_array)
-
-    # create solution
-    if W_exists == true
-        SolutionPSDE(t, q, p, W; K=K)
-    else
-        SolutionPSDE(t, q, p; K=K, conv=conv)
-    end
-
-end
 
 Base.:(==)(sol1::SolutionPSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionPSDE{DT2,TT2,NQ2,NW2,C2}) where {DT1,TT1,NQ1,NW1,C1,DT2,TT2,NQ2,NW2,C2} = (
                                 DT1 == DT2

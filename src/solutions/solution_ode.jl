@@ -17,92 +17,103 @@ Contains all fields necessary to store the solution of an ODE.
 * `woffset`: counter for file offset
 * `h5`: HDF5 file for storage
 """
-mutable struct SolutionODE{dType, tType, N} <: DeterministicSolution{dType, tType, N}
-    nd::Int
-    nt::Int
-    ni::Int
-    t::TimeSeries{tType}
-    q::SDataSeries{dType,N}
-    ntime::Int
-    nsave::Int
-    nwrite::Int
-    counter::Vector{Int}
-    woffset::Int
-    h5::HDF5File
+abstract type SolutionODE{dType, tType, N} <: DeterministicSolution{dType, tType, N} end
 
-    function SolutionODE{dType, tType, N}(nd, nt, ni, t, q, ntime, nsave, nwrite) where {dType <: Number, tType <: Real, N}
-        new(nd, nt, ni, t, q, ntime, nsave, nwrite, zeros(Int, ni), 0)
+# Create SolutionODEs with serial and parallel data structures.
+for (TSolution, TDataSeries, Tdocstring) in
+    ((:SSolutionODE, :SDataSeries, "Serial Solution of a ordinary differential equation."),
+     (:PSolutionODE, :PDataSeries, "Parallel Solution of a ordinary differential equation."))
+    @eval begin
+        $Tdocstring
+        mutable struct $TSolution{dType, tType, N} <: SolutionODE{dType, tType, N}
+            nd::Int
+            nt::Int
+            ni::Int
+            t::TimeSeries{tType}
+            q::$TDataSeries{dType,N}
+            ntime::Int
+            nsave::Int
+            nwrite::Int
+            counter::Vector{Int}
+            woffset::Int
+            h5::HDF5File
+
+            function $TSolution{dType, tType, N}(nd, nt, ni, t, q, ntime, nsave, nwrite) where {dType <: Number, tType <: Real, N}
+                new(nd, nt, ni, t, q, ntime, nsave, nwrite, zeros(Int, ni), 0)
+            end
+        end
+
+        function $TSolution(equation::Union{ODE{DT,TT,FT},SODE{DT,TT,FT}}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,FT}
+            @assert nsave > 0
+            @assert ntime == 0 || ntime ≥ nsave
+            @assert nwrite == 0 || nwrite ≥ nsave
+            @assert mod(ntime, nsave) == 0
+
+            if nwrite > 0
+                @assert mod(nwrite, nsave) == 0
+                @assert mod(ntime, nwrite) == 0
+            end
+
+            N  = (equation.n > 1 ? 3 : 2)
+            nd = equation.d
+            ni = equation.n
+            nt = div(ntime, nsave)
+            nt = (nwrite == 0 ? nt : div(nwrite, nsave))
+            nw = (nwrite == 0 ? ntime : nwrite)
+
+            @assert nd > 0
+            @assert ni > 0
+            @assert nt > 0
+            @assert nw > 0
+
+            t = TimeSeries{TT}(nt, Δt, nsave)
+            q = $TDataSeries(DT, nd, nt, ni)
+            s = $TSolution{DT,TT,N}(nd, nt, ni, t, q, ntime, nsave, nw)
+            set_initial_conditions!(s, equation)
+
+            if !isnothing(filename)
+                isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
+                create_hdf5!(s, filename)
+            end
+
+            return s
+        end
+
+        function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,N}, ntime::Int) where {DT,TT,N}
+            # extract parameters
+            nd = q.nd
+            ni = q.ni
+            nt = t.n
+            ns = div(ntime, nt)
+
+            @assert mod(ntime, nt) == 0
+
+            # create solution
+            $TSolution{DT,TT,N}(nd, nt, ni, t, q, ntime, ns, 0)
+        end
+
+        function $TSolution(file::String)
+            # open HDF5 file
+            get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
+            h5 = h5open(file, "r")
+
+            # read attributes
+            ntime = read(attrs(h5)["ntime"])
+            nsave = read(attrs(h5)["nsave"])
+
+            # reading data arrays
+            t = TimeSeries(read(h5["t"]), nsave)
+            q = $TDataSeries(read(h5["q"]))
+
+            # need to close the file
+            close(h5)
+
+            # create solution
+            $TSolution(t, q, ntime)
+        end
     end
 end
 
-function SolutionODE(equation::Union{ODE{DT,TT,FT},SODE{DT,TT,FT}}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,FT}
-    @assert nsave > 0
-    @assert ntime == 0 || ntime ≥ nsave
-    @assert nwrite == 0 || nwrite ≥ nsave
-    @assert mod(ntime, nsave) == 0
-
-    if nwrite > 0
-        @assert mod(nwrite, nsave) == 0
-        @assert mod(ntime, nwrite) == 0
-    end
-
-    N  = (equation.n > 1 ? 3 : 2)
-    nd = equation.d
-    ni = equation.n
-    nt = div(ntime, nsave)
-    nt = (nwrite == 0 ? nt : div(nwrite, nsave))
-    nw = (nwrite == 0 ? ntime : nwrite)
-
-    @assert nd > 0
-    @assert ni > 0
-    @assert nt > 0
-    @assert nw > 0
-
-    t = TimeSeries{TT}(nt, Δt, nsave)
-    q = SDataSeries(DT, nd, nt, ni)
-    s = SolutionODE{DT,TT,N}(nd, nt, ni, t, q, ntime, nsave, nw)
-    set_initial_conditions!(s, equation)
-
-    if !isnothing(filename)
-        isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
-        create_hdf5(s, filename)
-    end
-
-    return s
-end
-
-function SolutionODE(t::TimeSeries{TT}, q::SDataSeries{DT,N}, ntime::Int) where {DT,TT,N}
-    # extract parameters
-    nd = q.nd
-    ni = q.ni
-    nt = t.n
-    ns = div(ntime, nt)
-
-    @assert mod(ntime, nt) == 0
-
-    # create solution
-    SolutionODE{DT,TT,N}(nd, nt, ni, t, q, ntime, ns, 0)
-end
-
-function SolutionODE(file::String)
-    # open HDF5 file
-    get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
-    h5 = h5open(file, "r")
-
-    # read attributes
-    ntime = read(attrs(h5)["ntime"])
-    nsave = read(attrs(h5)["nsave"])
-
-    # reading data arrays
-    t = TimeSeries(read(h5["t"]), nsave)
-    q = SDataSeries(read(h5["q"]))
-
-    # need to close the file
-    close(h5)
-
-    # create solution
-    SolutionODE(t, q, ntime)
-end
 
 Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {DT1,TT1,N1,DT2,TT2,N2} = (
                                 DT1 == DT2
@@ -186,7 +197,5 @@ function CommonFunctions.reset!(sol::SolutionODE)
 end
 
 function Base.close(solution::SolutionODE)
-    # close(solution.t)
-    # close(solution.q)
     close(solution.h5)
 end
