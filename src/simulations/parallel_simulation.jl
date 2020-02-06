@@ -39,14 +39,14 @@ function run!(sim::ParallelSimulation)
 
     create_hdf5!(solution(sim), sim.filename)
 
-    # create atomic solution
-    asol = AtomicSolution(equation(sim))
-
     try
         # loop over integration cycles showing progress bar
         @showprogress 5 for c in cycles(sim)
             # loop over samples
-            for m in eachsample(solution(sim))
+            Threads.@threads for m in eachsample(solution(sim))
+                # create atomic solution
+                asol = AtomicSolution(equation(sim))
+
                 # get cache from solution
                 get_initial_conditions!(solution(sim), asol, m)
 
