@@ -36,10 +36,11 @@ mutable struct ParametersDIRK{DT, TT, ET <: ODE{DT,TT}, D, S} <: Parameters{DT,T
 
     t::TT
     q::Vector{DT}
+    V::Vector{Vector{DT}}
 end
 
 function ParametersDIRK(equ::ET, tab::TableauDIRK{TT}, Δt::TT) where {DT, TT, ET <: ODE{DT,TT}}
-    ParametersDIRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, zeros(DT, equ.d))
+    ParametersDIRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, zeros(DT, equ.d), create_internal_stage_vector(DT, equ.d, tab.s))
 end
 
 
@@ -143,47 +144,45 @@ function initial_guess!(int::IntegratorDIRK, sol::AtomicSolutionODE)
 end
 
 
-function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
+function compute_stages!(x::Vector{ST}, Q::Vector{ST}, V::Vector{ST}, Y::Vector{ST},
                                     params::ParametersDIRK{DT,TT,ET,D,S}, i::Int) where {ST,DT,TT,ET,D,S}
 
     local tᵢ::TT
 
-    @assert S == length(Q) == length(V) == length(Y)
-    @assert D == length(Q[1]) == length(V[1]) == length(Y[1])
+    @assert D == length(Q) == length(V) == length(Y)
 
     # copy x to Y and compute Q = q + Δt Y
     for k in 1:D
-        Y[i][k] = x[k]
-        Q[i][k] = params.q[k] + params.Δt * Y[i][k]
+        Y[k] = x[k]
+        Q[k] = params.q[k] + params.Δt * Y[k]
     end
 
     # compute V = v(Q)
     tᵢ = params.t + params.Δt * params.tab.q.c[i]
-    params.equ.v(tᵢ, Q[i], V[i])
+    params.equ.v(tᵢ, Q, V)
 end
 
 
 "Compute stages of fully implicit Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{DT,TT,ET,D,S}, i::Int) where {ST,DT,TT,ET,D,S}
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{DT,TT,ET,D,S}, i::Int) where {ST,DT,TT,ET,D,S}
+    local Q = zeros(ST,D)
+    local V = zeros(ST,D)
+    local Y = zeros(ST,D)
 
-    cache = IntegratorCacheDIRK{ST,D,S}()
+    local y1::ST
+    local y2::ST
 
-    quote
-        compute_stages!(x, $cache.Q, $cache.V, $cache.Y, params, i)
+    compute_stages!(x, Q, V, Y, params, i)
 
-        local y1::ST
-        local y2::ST
-
-        # compute b = - (Y-AV)
-        for k in 1:D
-            y1 = 0
-            y2 = 0
-            for j in 1:S
-                y1 += params.tab.q.a[i,j] * $cache.V[j][k]
-                y2 += params.tab.q.â[i,j] * $cache.V[j][k]
-            end
-            b[k] = - $cache.Y[i][k] + (y1 + y2)
+    # compute b = - (Y-AV)
+    for k in 1:D
+        y1 = params.tab.q.a[i,i] * V[k]
+        y2 = params.tab.q.â[i,i] * V[k]
+        for j in 1:i-1
+            y1 += params.tab.q.a[i,j] * params.V[j][k]
+            y2 += params.tab.q.â[i,j] * params.V[j][k]
         end
+        b[k] = - Y[k] + (y1 + y2)
     end
 end
 
@@ -211,7 +210,10 @@ function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,T
         check_solver_status(int.solver[i].status, int.solver[i].params)
 
         # compute vector field at internal stages
-        compute_stages!(int.solver[i].x, int.cache.Q, int.cache.V, int.cache.Y, int.params, i)
+        compute_stages!(int.solver[i].x, int.cache.Q[i], int.cache.V[i], int.cache.Y[i], int.params, i)
+
+        # copy velocity field to parameters
+        int.params.V[i] .= int.cache.V[i]
     end
 
     # compute final update

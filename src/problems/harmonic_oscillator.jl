@@ -6,11 +6,11 @@ module HarmonicOscillatorProblem
            harmonic_oscillator_dae, harmonic_oscillator_idae, harmonic_oscillator_pdae
 
 
-    Δt  = 0.1
-    nt  = 10
+    const Δt = 0.1
+    const nt = 10
 
-    k = 0.5
-    ω = √k
+    const k = 0.5
+    const ω = √k
 
     t₀=0.0
     q₀=[0.5, 0.0]

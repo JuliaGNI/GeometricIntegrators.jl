@@ -189,27 +189,29 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
 end
 
 "Compute stages of fully implicit Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+    # temporary variables
+    local y1::ST
+    local y2::ST
 
-    cache = IntegratorCacheFIRK{ST,D,S}()
+    # create caches for internal stages
+    Q = create_internal_stage_vector(ST, D, S)
+    V = create_internal_stage_vector(ST, D, S)
+    Y = create_internal_stage_vector(ST, D, S)
 
-    quote
-        compute_stages!(x, $cache.Q, $cache.V, $cache.Y, params)
+    # compute stages from nonlinear solver solution x
+    compute_stages!(x, Q, V, Y, params)
 
-        local y1::ST
-        local y2::ST
-
-        # compute b = - (Y-AV)
-        for i in 1:S
-            for k in 1:D
-                y1 = 0
-                y2 = 0
-                for j in 1:S
-                    y1 += params.tab.q.a[i,j] * $cache.V[j][k]
-                    y2 += params.tab.q.â[i,j] * $cache.V[j][k]
-                end
-                b[D*(i-1)+k] = - $cache.Y[i][k] + params.Δt * (y1 + y2)
+    # compute b = - (Y-AV)
+    for i in 1:S
+        for k in 1:D
+            y1 = 0
+            y2 = 0
+            for j in 1:S
+                y1 += params.tab.q.a[i,j] * V[j][k]
+                y2 += params.tab.q.â[i,j] * V[j][k]
             end
+            b[D*(i-1)+k] = - Y[i][k] + params.Δt * (y1 + y2)
         end
     end
 end
