@@ -52,7 +52,7 @@ ns = 10
 ode = harmonic_oscillator_ode(vcat(rand(1,ns), zeros(1,ns)))
 
 
-@testset "$(rpad("Parallel Simulation",80))" begin
+@testset "$(rpad("Parallel Simulation (" * str(Threads.nthreads()) * " Threads)",80))" begin
 
     sim1 = ParallelSimulation(ode, tab, Δt, "Harmonic Oscillator Test 1", h5file, nt; nsave=nsave1, nwrite=nwrte1)
     run!(sim1)
