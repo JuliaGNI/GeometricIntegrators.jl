@@ -22,10 +22,14 @@ module CommonFunctions
 
     write_to_hdf5() = nothing
 
-
     export reset!, cut_periodic_solution!
 
     reset!() = nothing
     cut_periodic_solution!() = nothing
+
+    export eachsample, eachtimestep
+
+    eachsample() = nothing
+    eachtimestep() = nothing
 
 end

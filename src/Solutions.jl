@@ -39,7 +39,6 @@ module Solutions
 
     export Solution, ParallelSolution, DeterministicSolution, StochasticSolution
     export nsave, nsamples, ntime, timesteps, offset, conv, hdf5
-    export eachsample, eachtimestep
     export get_solution, get_solution!, set_solution!
 
     include("solutions/solution.jl")

@@ -19,8 +19,8 @@ conv(sol::StochasticSolution) = error("conv() not implemented for ", typeof(sol)
 nsamples(sol::DeterministicSolution) = sol.ni
 nsamples(sol::StochasticSolution) = sol.ns
 
-eachtimestep(sol::Solution) = 1:sol.nt*sol.nsave
-eachsample(sol::Solution) = 1:nsamples(sol)
+CommonFunctions.eachtimestep(sol::Solution) = 1:sol.nt*sol.nsave
+CommonFunctions.eachsample(sol::Solution) = 1:nsamples(sol)
 
 
 "Create solution for ODE."
