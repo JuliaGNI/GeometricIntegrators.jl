@@ -12,6 +12,7 @@ end
 @inline integrator(sim::Simulation) = sim.integrator
 @inline solution(sim::Simulation) = sim.solution
 @inline cycles(sim::Simulation) = 1:sim.ncycle
+@inline CommonFunctions.eachsample(sim::Simulation) = eachsample(solution(sim))
 
 
 function Simulation(equ::ET, int::IT, sol::ST, run_id::String, filename::String) where {ET,IT,ST}
@@ -46,7 +47,7 @@ function run!(sim::Simulation)
         # loop over integration cycles showing progress bar
         @showprogress 5 for c in cycles(sim)
             # loop over samples
-            for m in eachsample(solution(sim))
+            for m in eachsample(sim)
                 # get cache from solution
                 get_initial_conditions!(solution(sim), asol, m)
 

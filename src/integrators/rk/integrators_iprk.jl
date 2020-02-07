@@ -153,28 +153,34 @@ end
 
 
 "Compute stages of implicit partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
-    cache = IntegratorCacheIPRK{ST,D,S}()
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+    # create caches for internal stages
+    Q = create_internal_stage_vector(ST, D, S)
+    P = create_internal_stage_vector(ST, D, S)
+    V = create_internal_stage_vector(ST, D, S)
+    F = create_internal_stage_vector(ST, D, S)
+    Y = create_internal_stage_vector(ST, D, S)
+    Z = create_internal_stage_vector(ST, D, S)
 
-    quote
-        compute_stages!(x, $cache, params)
+    # compute stages from nonlinear solver solution x
+    compute_stages!(x, Q, V, Y, P, F, Z, params)
 
-        # compute b = - [(Y-AV), (Z-AF)]
-        for i in 1:S
-            for k in 1:D
-                b[2*(D*(i-1)+k-1)+1] = - $cache.Y[i][k]
-                b[2*(D*(i-1)+k-1)+2] = - $cache.Z[i][k]
-                for j in 1:S
-                    b[2*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * $cache.V[j][k]
-                    b[2*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * $cache.F[j][k]
-                end
+    # compute b = - [(Y-AV), (Z-AF)]
+    for i in 1:S
+        for k in 1:D
+            b[2*(D*(i-1)+k-1)+1] = - Y[i][k]
+            b[2*(D*(i-1)+k-1)+2] = - Z[i][k]
+            for j in 1:S
+                b[2*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * V[j][k]
+                b[2*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * F[j][k]
             end
         end
     end
 end
 
 
-function compute_stages!(x::Vector{ST}, cache::IntegratorCacheIPRK{ST,D,S},
+function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
+                                        P::Vector{Vector{ST}}, F::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
                                         params::ParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
     local tqᵢ::TT
     local tpᵢ::TT
@@ -182,12 +188,12 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheIPRK{ST,D,S},
     for i in 1:S
         for k in 1:D
             # copy y to Y and Z
-            cache.Y[i][k] = x[2*(D*(i-1)+k-1)+1]
-            cache.Z[i][k] = x[2*(D*(i-1)+k-1)+2]
+            Y[i][k] = x[2*(D*(i-1)+k-1)+1]
+            Z[i][k] = x[2*(D*(i-1)+k-1)+2]
 
             # compute Q and P
-            cache.Q[i][k] = params.q[k] + params.Δt * cache.Y[i][k]
-            cache.P[i][k] = params.p[k] + params.Δt * cache.Z[i][k]
+            Q[i][k] = params.q[k] + params.Δt * Y[i][k]
+            P[i][k] = params.p[k] + params.Δt * Z[i][k]
         end
 
         # compute time of internal stage
@@ -195,8 +201,8 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheIPRK{ST,D,S},
         tpᵢ = params.t + params.Δt * params.tab.p.c[i]
 
         # compute v(Q,P) and f(Q,P)
-        params.equ.v(tqᵢ, cache.Q[i], cache.P[i], cache.V[i])
-        params.equ.f(tpᵢ, cache.Q[i], cache.P[i], cache.F[i])
+        params.equ.v(tqᵢ, Q[i], P[i], V[i])
+        params.equ.f(tpᵢ, Q[i], P[i], F[i])
     end
 end
 
@@ -259,7 +265,8 @@ function integrate_step!(int::IntegratorIPRK{DT,TT}, sol::AtomicSolutionPODE{DT,
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, int.cache, int.params)
+    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.Y,
+                                  int.cache.P, int.cache.F, int.cache.Z, int.params)
 
     # compute final update
     update_solution!(sol.q, sol.q̃, int.cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
