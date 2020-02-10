@@ -12,13 +12,19 @@ julia:
   - 1.4
   - nightly
 
-matrix:
+jobs:
   allow_failures:
     - julia: nightly
+    - stage: "Documentation"
+  include:
+    - stage: "Documentation"
+      julia: 1.1
+      os: linux
+      script:
+        - julia --color=yes --project=. -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+        - julia --color=yes --project=. docs/make.jl
+      after_success: skip
   fast_finish: true
-
-after_script:
-  - bash ./docs/travis.sh
 
 notifications:
   email: false
