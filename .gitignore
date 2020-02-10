@@ -4,6 +4,7 @@
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
+*.jl.*.mem
 docs/build/
 docs/site/
 examples/.ipynb_checkpoints
