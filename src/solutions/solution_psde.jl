@@ -86,7 +86,6 @@ for (TSolution, TDataSeries, Tdocstring) in
                 @assert ni > 0
                 @assert ni == 1 || ns == 1
                 @assert nt ≥ 0
-                @assert nw ≥ 0
 
                 @assert NW ∈ (2,3)
 
