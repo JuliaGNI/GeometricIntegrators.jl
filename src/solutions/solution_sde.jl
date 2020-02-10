@@ -67,6 +67,7 @@ for (TSolution, TDataSeries, Tdocstring) in
                 @assert CONV==:strong || (CONV==:weak && K==0) || CONV==:null
                 @assert nd > 0
                 @assert ns > 0
+                @assert nt ≥ 0
                 @assert ni > 0
                 @assert ni == 1 || ns == 1
                 @assert nsave > 0
