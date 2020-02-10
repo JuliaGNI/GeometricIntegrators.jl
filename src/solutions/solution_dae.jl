@@ -69,7 +69,8 @@ for (TSolution, TDataSeries, Tdocstring) in
             @assert nd > 0
             @assert nm > 0
             @assert ni > 0
-            @assert nw > 0
+            @assert nt ≥ 0
+            @assert nw ≥ 0
 
             t = TimeSeries{TT}(nt, Δt, nsave)
             q = $TDataSeries(DT, nd, nt, ni)

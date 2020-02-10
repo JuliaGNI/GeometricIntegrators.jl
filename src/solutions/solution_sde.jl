@@ -65,18 +65,22 @@ for (TSolution, TDataSeries, Tdocstring) in
                         W::WienerProcess{dType,tType,NW,CONV}, K::Int, ntime::Int, nsave::Int, nwrite::Int) where {dType <: Number, tType <: Real, NW, CONV}
 
                 @assert CONV==:strong || (CONV==:weak && K==0) || CONV==:null
-                @assert nd > 0
-                @assert ns > 0
-                @assert ni > 0
-                @assert ni == 1 || ns == 1
+
                 @assert nsave > 0
                 @assert ntime == 0 || ntime ≥ nsave
+                @assert nwrite == 0 || nwrite ≥ nsave
                 @assert mod(ntime, nsave) == 0
 
                 if nwrite > 0
                     @assert mod(nwrite, nsave) == 0
                     @assert mod(ntime, nwrite) == 0
                 end
+
+                @assert nd > 0
+                @assert ns > 0
+                @assert ni > 0
+                @assert ni == 1 || ns == 1
+                @assert nt ≥ 0
 
                 @assert NW ∈ (2,3)
 
