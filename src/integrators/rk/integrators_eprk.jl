@@ -40,18 +40,23 @@ function TableauEPRK(name::Symbol, order::Int, q::CoefficientsRK{T}) where {T}
     TableauEPRK{T}(name, order, q, q)
 end
 
-# TODO function readAbstractTableauPRKFromFile(dir::AbstractString, name::AbstractString)
+# TODO function readAbstractTableauEPRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-"Explicit partitioned Runge-Kutta integrator."
-struct IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
-    equation::PODE{DT,TT,VT,FT}
-    tableau::TableauEPRK{TT}
+"Parameters for right-hand side function of explicit partitioned Runge-Kutta methods."
+struct ParametersEPRK{DT, TT, ET <: PODE{DT,TT}, D, S} <: Parameters{DT,TT}
+    equ::ET
+    tab::TableauEPRK{TT}
     Δt::TT
+end
 
-    q::Vector{Vector{TwicePrecision{DT}}}
-    p::Vector{Vector{TwicePrecision{DT}}}
+function ParametersEPRK(equ::ET, tab::TableauEPRK{TT}, Δt::TT) where {DT, TT, ET <: PODE{DT,TT}}
+    ParametersEPRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt)
+end
 
+
+"Explicit Runge-Kutta integrator cache."
+struct IntegratorCacheEPRK{DT,D,S} <: PODEIntegratorCache{DT,D}
     Q::OffsetArray{Array{DT,1},1,Array{Array{DT,1},1}}
     P::OffsetArray{Array{DT,1},1,Array{Array{DT,1},1}}
 
@@ -60,14 +65,7 @@ struct IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
     V::Vector{Vector{DT}}
     F::Vector{Vector{DT}}
 
-    function IntegratorEPRK{DT,TT,VT,FT}(equation, tableau, Δt) where {DT,TT,VT,FT}
-        D = equation.d
-        M = equation.n
-        S = tableau.s
-
-        q = create_solution_vector(DT, D, M)
-        p = create_solution_vector(DT, D, M)
-
+    function IntegratorCacheEPRK{DT,D,S}() where {DT,D,S}
         Q = create_internal_stage_vector_with_zero(DT, D, S)
         P = create_internal_stage_vector_with_zero(DT, D, S)
 
@@ -76,87 +74,92 @@ struct IntegratorEPRK{DT,TT,VT,FT} <: Integrator{DT,TT}
         V = create_internal_stage_vector(DT, D, S)
         F = create_internal_stage_vector(DT, D, S)
 
-        new(equation, tableau, Δt, q, p, Q, P, Y, Z, V, F)
+        new(Q, P, Y, Z, V, F)
     end
 end
 
-function IntegratorEPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauEPRK{TT}, Δt::TT) where {DT,TT,VT,FT}
-    IntegratorEPRK{DT,TT,VT,FT}(equation, tableau, Δt)
+
+"Explicit partitioned Runge-Kutta integrator."
+struct IntegratorEPRK{DT, TT, PT <: ParametersEPRK{DT,TT}, D, S} <: IntegratorPRK{DT,TT}
+    params::PT
+    cache::IntegratorCacheEPRK{DT,D,S}
+
+    function IntegratorEPRK(equation::PODE{DT,TT}, tableau::TableauEPRK{TT}, Δt::TT) where {DT,TT}
+        D = equation.d
+        S = tableau.s
+
+        # create params
+        params = ParametersEPRK(equation, tableau, Δt)
+
+        # create cache
+        cache = IntegratorCacheEPRK{DT,D,S}()
+
+        # create integrators
+        new{DT, TT, typeof(params), D, S}(params, cache)
+    end
 end
 
 
 "Compute Q stages of explicit partitioned Runge-Kutta methods."
-function computeStageQ!(int::IntegratorEPRK{DT,TT}, m::Int, i::Int, jmax::Int, t) where {DT,TT}
-    fill!(int.Y[i], zero(DT))
+function computeStageQ!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{DT}, i::Int, jmax::Int, t::TT) where {DT,TT}
+    fill!(cache.Y[i], zero(DT))
     for j in 1:jmax
-        for k in 1:int.equation.d
-            int.Y[i][k] += int.tableau.q.a[i,j] * int.V[j][k]
+        for k in eachdim(int)
+            cache.Y[i][k] += tableau(int).q.a[i,j] * cache.V[j][k]
         end
     end
-    for k in 1:int.equation.d
-        int.Q[i][k] = int.q[m][k] + int.Δt * int.Y[i][k]
+    for k in eachdim(int)
+        cache.Q[i][k] = cache.Q[0][k] + timestep(int) * cache.Y[i][k]
     end
-    int.equation.f(t, int.Q[i], int.P[jmax], int.F[i])
+    equation(int).f(t, cache.Q[i], cache.P[jmax], cache.F[i])
 end
 
 "Compute P stages of explicit partitioned Runge-Kutta methods."
-function computeStageP!(int::IntegratorEPRK{DT,TT}, m::Int, i::Int, jmax::Int, t) where {DT,TT}
-    fill!(int.Z[i], zero(DT))
+function computeStageP!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{DT}, i::Int, jmax::Int, t::TT) where {DT,TT}
+    fill!(cache.Z[i], zero(DT))
     for j in 1:jmax
-        for k in 1:int.equation.d
-            int.Z[i][k] += int.tableau.p.a[i,j] * int.F[j][k]
+        for k in eachdim(int)
+            cache.Z[i][k] += tableau(int).p.a[i,j] * cache.F[j][k]
         end
     end
-    for k in 1:int.equation.d
-        int.P[i][k] = int.p[m][k] + int.Δt * int.Z[i][k]
+    for k in eachdim(int)
+        cache.P[i][k] = cache.P[0][k] + timestep(int) * cache.Z[i][k]
     end
-    int.equation.v(t, int.Q[jmax], int.P[i], int.V[i])
-end
-
-function initialize!(int::IntegratorEPRK, sol::SolutionPODE, m::Int)
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q[m], int.p[m], m)
+    equation(int).v(t, cache.Q[jmax], cache.P[i], cache.V[i])
 end
 
 "Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::SolutionPODE{DT,TT}, m::Int, n::Int) where {DT,TT}
-    local j::Int
+function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     local tqᵢ::TT
     local tpᵢ::TT
 
     # store previous solution
-    int.Q[0] .= int.q[m]
-    int.P[0] .= int.p[m]
+    int.cache.Q[0] .= sol.q
+    int.cache.P[0] .= sol.p
+
+    # reset cache
+    reset!(sol, timestep(int))
 
     # compute internal stages
-    for i in 1:int.tableau.s
-        tqᵢ = sol.t[n] + int.Δt * int.tableau.q.c[i]
-        tpᵢ = sol.t[n] + int.Δt * int.tableau.p.c[i]
+    for i in eachstage(int)
+        tqᵢ = sol.t̅ + timestep(int) * tableau(int).q.c[i]
+        tpᵢ = sol.t̅ + timestep(int) * tableau(int).p.c[i]
 
-        if int.tableau.q.a[i,i] ≠ zero(TT) && int.tableau.p.a[i,i] ≠ zero(TT)
+        if tableau(int).q.a[i,i] ≠ zero(TT) && tableau(int).p.a[i,i] ≠ zero(TT)
             error("This is an implicit method!")
-        elseif int.tableau.q.a[i,i] ≠ zero(TT)
-            computeStageP!(int, m, i, i-1, tpᵢ)
-            computeStageQ!(int, m, i, i, tqᵢ)
-        elseif int.tableau.p.a[i,i] ≠ zero(TT)
-            computeStageQ!(int, m, i, i-1, tqᵢ)
-            computeStageP!(int, m, i, i, tpᵢ)
+        elseif tableau(int).q.a[i,i] ≠ zero(TT)
+            computeStageP!(int, int.cache, i, i-1, tpᵢ)
+            computeStageQ!(int, int.cache, i, i, tqᵢ)
+        elseif tableau(int).p.a[i,i] ≠ zero(TT)
+            computeStageQ!(int, int.cache, i, i-1, tqᵢ)
+            computeStageP!(int, int.cache, i, i, tpᵢ)
         else
-            computeStageQ!(int, m, i, i-1, tqᵢ)
-            computeStageP!(int, m, i, i-1, tpᵢ)
+            computeStageQ!(int, int.cache, i, i-1, tqᵢ)
+            computeStageP!(int, int.cache, i, i-1, tpᵢ)
         end
     end
 
     # compute final update
-    update_solution!(int.q[m], int.V, int.tableau.q.b, int.Δt)
-    update_solution!(int.p[m], int.F, int.tableau.p.b, int.Δt)
-
-    # take care of periodic solutions
-    cut_periodic_solution!(int.q[m], int.equation.periodicity)
-
-    # copy to solution
-    copy_solution!(sol, int.q[m], int.p[m], n, m)
+    update_solution!(sol.q, sol.q̃, int.cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 end

@@ -1,146 +1,226 @@
-"Holds the tableau of an Variational Specialised Partitioned Additive Runge-Kutta method."
-struct TableauVSPARK{T} <: AbstractTableau{T}
-    name::Symbol
-    o::Int
-    s::Int
-    r::Int
-    ρ::Int
 
-    q::CoefficientsARK{T}
-    p::CoefficientsARK{T}
+const TableauVSPARK = AbstractTableauSPARK{:vspark}
+const ParametersVSPARK = AbstractParametersVSPARK{:vspark}
 
-    q̃::CoefficientsPRK{T}
-    p̃::CoefficientsPRK{T}
 
-    λ::CoefficientsMRK{T}
+@doc raw"""
+Specialised Partitioned Additive Runge-Kutta integrator for Variational systems.
 
-    ω::Matrix{T}
-    d::Vector{T}
+This integrator solves the following system of equations for the internal stages,
+```math
+\begin{align}
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} U_{n,j} , & i &= 1, ..., s , \\
+P_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} a_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \alpha_{ij} G_{n,j} , & i &= 1, ..., s , \\
+\tilde{Q}_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} V_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} U_{n,j} , & i &= 1, ..., r , \\
+\tilde{P}_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} \tilde{a}_{ij} F_{n,j} + h \sum \limits_{j=1}^{r} \tilde{\alpha}_{ij} G_{n,j} , & i &= 1, ..., r , \\
+0 &= \sum \limits_{j=1}^{r} \omega_{ij} \tilde{\Phi}_{n,j} , & i &= 1, ..., r-1 ,
+\end{align}
+```
+with definitions
+```math
+\begin{align}
+P_{n,i} &= \frac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , & i &= 1, ..., s , \\
+F_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i &= 1, ..., s , \\
+U_{n,i} &= \hphantom{-} \frac{\partial \phi}{\partial p} (\tilde{Q}_{n,i}, \tilde{P}_{n,i})^{T} \Lambda_{n,i} , & i &= 1, ..., r , \\
+G_{n,i} &=           -  \frac{\partial \phi}{\partial q} (\tilde{Q}_{n,i}, \tilde{P}_{n,i})^{T} \Lambda_{n,i} , & i &= 1, ..., r , \\
+\tilde{\Phi}_{n,i} &= \phi(\tilde{Q}_{n,i}, \tilde{P}_{n,i}) , & i &= 1, ..., r ,
+\end{align}
+```
+and update rule
+```math
+\begin{align}
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} V_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} U_{n,i} , \\
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}^{r} \beta_{i} G_{n,i} , \\
+0 &= \phi (q_{n+1}, p_{n+1}) .
+\end{align}
+```
+"""
+struct IntegratorVSPARK{DT, TT, tabType,
+                                ET <: IDAE{DT,TT},
+                                PT <: ParametersVSPARK{DT,TT},
+                                ST <: NonlinearSolver{DT},
+                                IT <: InitialGuessPODE{DT,TT}, D, S, R} <: AbstractIntegratorVSPARK{DT, TT}
+    equation::ET
+    tableau::AbstractTableauSPARK{tabType,TT}
 
-    function TableauVSPARK{T}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, d) where {T}
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(r, Integer)
-        @assert isa(ρ, Integer)
-        @assert isa(o, Integer)
+    params::PT
+    solver::ST
+    iguess::IT
+    cache::IntegratorCacheSPARK{DT,TT,D,S,R}
+end
 
-        @assert s > 0 "Number of stages s must be > 0"
-        @assert r > 0 "Number of stages r must be > 0"
-        @assert ρ > 0 && ρ ≤ r
+function IntegratorVSPARK(equation::IDAE{DT,TT},
+                         tableau::AbstractTableauSPARK{ST,TT}, Δt::TT) where {DT,TT,ST}
+    D = equation.d
+    S = tableau.s
+    R = tableau.r
+    P = tableau.ρ
 
-        @assert s==q.s==p.s==q̃.s==p̃.s==length(d)
-        @assert r==q.r==p.r==q̃.r==p̃.r==λ.r
-        @assert ρ==size(ω, 1)
-        @assert r==size(ω, 2)
+    @assert tableau.ρ == tableau.r-1
 
-        new(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, d)
+    N = 3*D*S + 3*D*R
+
+    if isdefined(tableau, :d) && length(tableau.d) > 0
+        N += D
     end
 
-    function TableauVSPARK{T}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω) where {T}
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(r, Integer)
-        @assert isa(ρ, Integer)
-        @assert isa(o, Integer)
+    # create params
+    params = ParametersVSPARK{DT,D,S,R,P}(equation.f, equation.ϑ, equation.u, equation.g, equation.ϕ, Δt, tableau)
 
-        @assert s > 0 "Number of stages s must be > 0"
-        @assert r > 0 "Number of stages r must be > 0"
-        @assert ρ > 0 && ρ ≤ r
+    # create solver
+    solver = create_nonlinear_solver(DT, N, params)
 
-        @assert s==q.s==p.s==q̃.s==p̃.s
-        @assert r==q.r==p.r==q̃.r==p̃.r==λ.r
-        @assert ρ==size(ω, 1)
-        @assert r==size(ω, 2)
+    # create initial guess
+    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
-        new(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω)
+    # create cache
+    cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
+
+    # create integrator
+    IntegratorVSPARK{DT, TT, ST, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, R}(
+                                        equation, tableau, params, solver, iguess, cache)
+end
+
+
+function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
+                                        params::ParametersVSPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+    local tpᵢ::TT
+    local tλᵢ::TT
+
+    for i in 1:S
+        for k in 1:D
+            # copy x to Y, Z
+            cache.Yi[i][k] = x[3*(D*(i-1)+k-1)+1]
+            cache.Zi[i][k] = x[3*(D*(i-1)+k-1)+2]
+            cache.Vi[i][k] = x[3*(D*(i-1)+k-1)+3]
+
+            # compute Q and P
+            cache.Qi[i][k] = params.q[k] + params.Δt * cache.Yi[i][k]
+            cache.Pi[i][k] = params.p[k] + params.Δt * cache.Zi[i][k]
+        end
+
+        # compute f(X)
+        tpᵢ = params.t + params.Δt * params.tab.p.c[i]
+        params.f_f(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Fi[i])
+        params.f_p(tpᵢ, cache.Qi[i], cache.Vi[i], cache.Φi[i])
+        cache.Φi[i] .-= cache.Pi[i]
     end
-end
 
-function TableauVSPARK(name::Symbol, order::Int,
-                         a_q::Matrix{T}, a_p::Matrix{T},
-                         α_q::Matrix{T}, α_p::Matrix{T},
-                         a_q̃::Matrix{T}, a_p̃::Matrix{T},
-                         α_q̃::Matrix{T}, α_p̃::Matrix{T},
-                         b_q::Vector{T}, b_p::Vector{T},
-                         β_q::Vector{T}, β_p::Vector{T},
-                         c_q::Vector{T}, c_p::Vector{T},
-                         c_λ::Vector{T}, d_λ::Vector{T},
-                         ω_λ::Matrix{T}, d::Vector{T}) where {T <: Real}
+    for i in 1:R
+        for k in 1:D
+            # copy y to Y, Z and Λ
+            cache.Yp[i][k] = x[3*D*S+3*(D*(i-1)+k-1)+1]
+            cache.Zp[i][k] = x[3*D*S+3*(D*(i-1)+k-1)+2]
+            cache.Λp[i][k] = x[3*D*S+3*(D*(i-1)+k-1)+3]
 
-    s = length(c_q)
-    r = length(c_λ)
-    ρ = size(ω_λ, 1)
+            # compute Q and V
+            cache.Qp[i][k] = params.q[k] + params.Δt * cache.Yp[i][k]
+            cache.Pp[i][k] = params.p[k] + params.Δt * cache.Zp[i][k]
+        end
 
-    @assert s > 0 "Number of stages s must be > 0"
-    @assert r > 0 "Number of stages r must be > 0"
+        # compute f(X)
+        tλᵢ = params.t + params.Δt * params.tab.λ.c[i]
+        params.f_u(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Up[i])
+        params.f_g(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Gp[i])
+        params.f_ϕ(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Φp[i])
+    end
 
-    @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
-    @assert s==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
-    @assert s==size(α_q,1)==size(α_p,1)
-    @assert r==size(α_q,2)==size(α_p,2)
-    @assert s==length(d)
-    @assert r==length(c_λ)==length(d_λ)
-    @assert r==size(a_q̃,1)==size(a_p̃,1)
-    @assert s==size(a_q̃,2)==size(a_p̃,2)
-    @assert r==size(α_q̃,1)==size(α_q̃,2)==length(β_q)
-    @assert r==size(α_p̃,1)==size(α_p̃,2)==length(β_p)
+    if length(params.tab.d) > 0
+        for k in 1:D
+            cache.μ[k] = x[3*D*S+3*D*R+k]
+        end
+    end
 
-    q = CoefficientsARK{T}(name, order, s, r, a_q, b_q, c_q, α_q, β_q)
-    p = CoefficientsARK{T}(name, order, s, r, a_p, b_p, c_p, α_p, β_p)
-    q̃ = CoefficientsPRK{T}(name, order, s, r, a_q̃, c_λ, α_q̃)
-    p̃ = CoefficientsPRK{T}(name, order, s, r, a_p̃, c_λ, α_p̃)
-    λ = CoefficientsMRK{T}(name, r, d_λ, c_λ)
+    # compute q and p
+    cache.q̃ .= params.q
+    cache.p̃ .= params.p
+    for i in 1:S
+        cache.q̃ .+= params.Δt .* params.tab.q.b[i] .* cache.Vi[i]
+        cache.p̃ .+= params.Δt .* params.tab.p.b[i] .* cache.Fi[i]
+    end
+    for i in 1:R
+        cache.q̃ .+= params.Δt .* params.tab.q.β[i] .* cache.Up[i]
+        cache.p̃ .+= params.Δt .* params.tab.p.β[i] .* cache.Gp[i]
+    end
 
-    TableauVSPARK{T}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω_λ, d)
-end
-
-
-function TableauVSPARK(name::Symbol, order::Int,
-                         a_q::Matrix{T}, a_p::Matrix{T},
-                         α_q::Matrix{T}, α_p::Matrix{T},
-                         a_q̃::Matrix{T}, a_p̃::Matrix{T},
-                         α_q̃::Matrix{T}, α_p̃::Matrix{T},
-                         b_q::Vector{T}, b_p::Vector{T},
-                         β_q::Vector{T}, β_p::Vector{T},
-                         c_q::Vector{T}, c_p::Vector{T},
-                         c_λ::Vector{T}, d_λ::Vector{T},
-                         ω_λ::Matrix{T}) where {T <: Real}
-
-    s = length(c_q)
-    r = length(c_λ)
-    ρ = size(ω_λ, 1)
-
-    @assert s > 0 "Number of stages s must be > 0"
-    @assert r > 0 "Number of stages r must be > 0"
-
-    @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
-    @assert s==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
-    @assert s==size(α_q,1)==size(α_p,1)
-    @assert r==size(α_q,2)==size(α_p,2)
-    @assert r==length(c_λ)==length(d_λ)
-    @assert r==size(a_q̃,1)==size(a_p̃,1)
-    @assert s==size(a_q̃,2)==size(a_p̃,2)
-    @assert r==size(α_q̃,1)==size(α_q̃,2)==length(β_q)
-    @assert r==size(α_p̃,1)==size(α_p̃,2)==length(β_p)
-
-    q = CoefficientsARK{T}(name, order, s, r, a_q, b_q, c_q, α_q, β_q)
-    p = CoefficientsARK{T}(name, order, s, r, a_p, b_p, c_p, α_p, β_p)
-    q̃ = CoefficientsPRK{T}(name, order, s, r, a_q̃, c_λ, α_q̃)
-    p̃ = CoefficientsPRK{T}(name, order, s, r, a_p̃, c_λ, α_p̃)
-    λ = CoefficientsMRK{T}(name, r, d_λ, c_λ)
-
-    TableauVSPARK{T}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω_λ)
-end
-
-# TODO function readTableauVSPARKFromFile(dir::AbstractString, name::AbstractString)
-
-
-
-"Parameters for right-hand side function of Variational Specialised Partitioned Additive Runge-Kutta methods."
-mutable struct ParametersVSPARK{DT,TT,VT,FT,ϕT,ψT} <: Parameters{DT,TT}
+    # compute ϕ(q,p)
+    tλᵢ = params.t + params.Δt
+    params.f_ϕ(tλᵢ, cache.q̃, cache.p̃, cache.ϕ̃)
 end
 
 
-"Variational Specialised Partitioned Additive Runge-Kutta integrator."
-mutable struct IntegratorVSPARK{DT, TT, VT, FT, ϕT, ψT, SPT, ST, IT} <: Integrator{DT, TT}
+"Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems."
+@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVSPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+    cache = IntegratorCacheSPARK{ST,TT,D,S,R}()
+
+    quote
+        compute_stages!(y, $cache, params)
+
+        # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
+        for i in 1:S
+            for k in 1:D
+                b[3*(D*(i-1)+k-1)+1] = - $cache.Yi[i][k]
+                b[3*(D*(i-1)+k-1)+2] = - $cache.Zi[i][k]
+                b[3*(D*(i-1)+k-1)+3] = - $cache.Φi[i][k]
+                for j in 1:S
+                    b[3*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * $cache.Vi[j][k]
+                    b[3*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * $cache.Fi[j][k]
+                end
+                for j in 1:R
+                    b[3*(D*(i-1)+k-1)+1] += params.tab.q.α[i,j] * $cache.Up[j][k]
+                    b[3*(D*(i-1)+k-1)+2] += params.tab.p.α[i,j] * $cache.Gp[j][k]
+                end
+            end
+        end
+
+        # compute b = - [(Y-AV-AU), (Z-AF-AG), ωΦ]
+        for i in 1:R
+            for k in 1:D
+                b[3*D*S+3*(D*(i-1)+k-1)+1] = - $cache.Yp[i][k]
+                b[3*D*S+3*(D*(i-1)+k-1)+2] = - $cache.Zp[i][k]
+                for j in 1:S
+                    b[3*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.a[i,j] * $cache.Vi[j][k]
+                    b[3*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.a[i,j] * $cache.Fi[j][k]
+                end
+                for j in 1:R
+                    b[3*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.α[i,j] * $cache.Up[j][k]
+                    b[3*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.α[i,j] * $cache.Gp[j][k]
+                end
+            end
+        end
+        for i in 1:R-P
+            for k in 1:D
+                b[3*D*S+3*(D*(i-1)+k-1)+3] = 0
+                for j in 1:R
+                    b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,j] * $cache.Φp[j][k]
+                end
+                b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,R+1] * $cache.ϕ̃[k]
+            end
+        end
+
+        # compute b = d_λ ⋅ Λ
+        for i in R-P+1:R
+            for k in 1:D
+                b[3*D*S+3*(D*(R-1)+k-1)+3] = 0
+                for j in 1:R
+                    b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.δ[j] * $cache.Λp[j][k]
+                end
+            end
+        end
+
+        if length(params.tab.d) > 0
+            for i in 1:S
+                for k in 1:D
+                    b[3*(D*(i-1)+k-1)+3] -= $cache.μ[k] * params.tab.d[i]
+                end
+            end
+
+            for k in 1:D
+                b[3*D*S+3*D*R+k] = 0
+                for i in 1:S
+                    b[3*D*S+3*D*R+k] -= $cache.Vi[i][k] * params.tab.d[i]
+                end
+            end
+        end
+    end
 end

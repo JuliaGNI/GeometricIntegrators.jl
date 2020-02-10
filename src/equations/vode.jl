@@ -1,5 +1,5 @@
 @doc raw"""
-`VODE`: Variational Ordinary Differential Equation
+`VODE`: Variational Ordinary Differential Equation *EXPERIMENTAL*
 
 Defines an implicit initial value problem
 ```math
@@ -8,7 +8,7 @@ Defines an implicit initial value problem
 q(t_{0}) &= q_{0} , \\
 \dot{p} (t) &= f(t, q(t), v(t)) , &
 p(t_{0}) &= p_{0} , \\
-p(t) &= α(t, q(t), v(t))
+p(t) &= ϑ(t, q(t), v(t))
 \end{align*}
 ```
 with vector field ``f``, the momentum defined by ``p``, initial conditions ``(q_{0}, p_{0})`` and the solution
@@ -19,18 +19,20 @@ variables ``(q,p)`` and algebraic variable ``v``.
 ### Fields
 
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``f`` and ``p``
-* `α`: function determining the momentum
+* `ϑ`: function determining the momentum
 * `f`: function computing the vector field
-* `g`: function determining the projection, given by ∇α(q)λ
+* `g`: function determining the projection, given by ∇ϑ(q)⋅λ
 * `v`: function computing an initial guess for the velocity field (optional)
+* `Ω`: symplectic matrix (optional)
+* `∇H`: gradient of the Hamiltonian (optional)
 * `t₀`: initial time (optional)
 * `q₀`: initial condition for `q`
 * `p₀`: initial condition for `p`
-* `λ₀`: initial condition for `λ`
+* `λ₀`: initial condition for `λ` (optional)
 
-The functions `α` and `f` must have the interface
+The functions `ϑ` and `f` must have the interface
 ```julia
-    function α(t, q, v, p)
+    function ϑ(t, q, v, p)
         p[1] = ...
         p[2] = ...
         ...
@@ -46,7 +48,7 @@ and
 ```
 where `t` is the current time, `q` is the current solution vector, `v` is the
 current velocity and `f` and `p` are the vectors which hold the result of
-evaluating the functions ``f`` and ``α`` on `t`, `q` and `v`.
+evaluating the functions ``f`` and ``ϑ`` on `t`, `q` and `v`.
 The funtions `g` and `v` are specified by
 ```julia
     function g(t, q, λ, g)
@@ -64,66 +66,85 @@ and
     end
 ```
 """
-struct VODE{dType <: Number, tType <: Number, αType <: Function, fType <: Function, gType <: Function, vType <: Function, ωType <: Function, dHType <: Function, N} <: Equation{dType, tType}
+struct VODE{dType <: Number, tType <: Number, ϑType <: Function,
+            fType <: Function, gType <: Function, vType <: Union{Function,Nothing},
+            ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing},
+            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
+
     d::Int
     m::Int
     n::Int
-    α::αType
+    ϑ::ϑType
     f::fType
     g::gType
     v::vType
-    ω::ωType
-    dH::dHType
+    Ω::ΩType
+    ∇H::∇HType
     t₀::tType
     q₀::Array{dType, N}
     p₀::Array{dType, N}
     λ₀::Array{dType, N}
+    parameters::pType
     periodicity::Vector{dType}
 
-    function VODE{dType,tType,αType,fType,gType,vType,ωType,dHType,N}(d, n, α, f, g, v, ω, dH, t₀, q₀, p₀; periodicity=[]) where {dType <: Number, tType <: Number, αType <: Function, fType <: Function, gType <: Function, vType <: Function, ωType <: Function, dHType <: Function, N}
-        @assert d == size(q₀,1) == size(p₀,1)
+    function VODE(DT::DataType, N::Int, d::Int, n::Int, ϑ::ϑType, f::fType, g::gType,
+                  t₀::tType, q₀::AbstractArray{dType}, p₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
+                  v::vType=nothing, Ω::ΩType=nothing, ∇H::∇HType=nothing,
+                  parameters=nothing, periodicity=zeros(DT,d)) where {
+                        dType <: Number, tType <: Number, ϑType <: Function,
+                        fType <: Function, gType <: Function, vType <: Function,
+                        ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing}}
+
+        @assert d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
         @assert n == size(q₀,2) == size(p₀,2)
-        @assert dType == eltype(q₀) == eltype(p₀)
         @assert ndims(q₀) == ndims(p₀) == N ∈ (1,2)
 
-        λ₀ = zero(q₀)
-
-        if !(length(periodicity) == d)
-            periodicity = zeros(dType, d)
-        end
-
-        new(d, d, n, α, f, g, v, ω, dH, t₀, q₀, p₀, λ₀, periodicity)
+        new{DT, tType, ϑType, fType, gType, vType, ΩType, ∇HType, typeof(parameters), N}(d, d, n, ϑ, f, g, v, Ω, ∇H, t₀,
+                convert(Array{DT}, q₀), convert(Array{DT}, p₀), convert(Array{DT}, λ₀), parameters, periodicity)
     end
 end
 
-function VODE(α::ΑT, f::FT, g::GT, v::VT, ω::ΩT, dH::HT, t₀::TT, q₀::DenseArray{DT}, p₀::DenseArray{DT}; periodicity=[]) where {DT,TT,ΑT,FT,GT,VT,ΩT,HT}
-    @assert size(q₀) == size(p₀)
-    VODE{DT, TT, ΑT, FT, GT, VT, ΩT, HT, ndims(q₀)}(size(q₀, 1), size(q₀, 2), α, f, g, v, ω, dH, t₀, q₀, p₀, periodicity=periodicity)
+function VODE(ϑ, f, g, t₀::Number, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=zero(q₀); kwargs...) where {DT}
+    VODE(DT, ndims(q₀), size(q₀,1), size(q₀,2), ϑ, f, g, t₀, q₀, p₀, λ₀; kwargs...)
 end
 
-function VODE(α::Function, f::Function, g::Function, ω::Function, dH::Function, t₀::Number, q₀::DenseArray, p₀::DenseArray; periodicity=[])
-    VODE(α, f, g, function_v_dummy, ω, dH, t₀, q₀, p₀, periodicity=periodicity)
+function VODE(ϑ, f, g, q₀::AbstractArray, p₀::AbstractArray, λ₀::AbstractArray=zero(q₀); kwargs...)
+    VODE(ϑ, f, g, zero(eltype(q₀)), q₀, p₀, λ₀; kwargs...)
 end
 
-function VODE(α::Function, f::Function, g::Function, v::Function, ω::Function, dH::Function, q₀::DenseArray, p₀::DenseArray; periodicity=[])
-    VODE(α, f, g, v, ω, dH, zero(Float64), q₀, p₀, periodicity=periodicity)
-end
+Base.hash(ode::VODE, h::UInt) = hash(ode.d, hash(ode.m, hash(ode.n,
+          hash(ode.ϑ, hash(ode.f, hash(ode.g, hash(ode.v, hash(ode.Ω, hash(ode.∇H,
+          hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, hash(ode.λ₀,
+          hash(ode.parameters, hash(ode.periodicity, h)))))))))))))))
 
-function VODE(α::Function, f::Function, g::Function, ω::Function, dH::Function, q₀::DenseArray, p₀::DenseArray; periodicity=[])
-    VODE(α, f, g, function_v_dummy, ω, dH, zero(Float64), q₀, p₀, periodicity=periodicity)
-end
-
-Base.hash(ode::VODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.α, hash(ode.f, hash(ode.g, hash(ode.v, hash(ode.ω, hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, hash(ode.λ₀, hash(ode.periodicity, h))))))))))))
 Base.:(==)(ode1::VODE, ode2::VODE) = (
                                 ode1.d == ode2.d
+                             && ode1.m == ode2.m
                              && ode1.n == ode2.n
-                             && ode1.α == ode2.α
+                             && ode1.ϑ == ode2.ϑ
                              && ode1.f == ode2.f
                              && ode1.g == ode2.g
                              && ode1.v == ode2.v
-                             && ode1.ω == ode2.ω
+                             && ode1.Ω == ode2.Ω
+                             && ode1.∇H == ode2.∇H
                              && ode1.t₀ == ode2.t₀
                              && ode1.q₀ == ode2.q₀
                              && ode1.p₀ == ode2.p₀
                              && ode1.λ₀ == ode2.λ₀
+                             && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
+
+function Base.similar(ode::VODE, q₀, p₀, λ₀=get_λ₀(q₀, ode.λ₀); kwargs...)
+    similar(ode, ode.t₀, q₀, p₀, λ₀; kwargs...)
+end
+
+function Base.similar(ode::VODE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=get_λ₀(q₀, ode.λ₀);
+                      parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
+    @assert ode.d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
+    VODE(ode.ϑ, ode.f, ode.g, t₀, q₀, p₀, λ₀; v=ode.v, Ω=ode.Ω, ∇H=ode.∇H,
+         parameters=parameters, periodicity=periodicity)
+end
+
+@inline Base.ndims(ode::VODE) = ode.d
+
+@inline periodicity(equation::VODE) = equation.periodicity

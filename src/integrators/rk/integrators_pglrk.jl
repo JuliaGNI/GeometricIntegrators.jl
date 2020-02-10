@@ -1,4 +1,6 @@
 
+using NLsolve
+
 "Holds the coefficients of a projected Gauss-Legendre Runge-Kutta method."
 struct CoefficientsPGLRK{T} <: AbstractCoefficients{T}
     @HeaderCoefficientsRK
@@ -64,208 +66,88 @@ function Base.show(io::IO, tab::CoefficientsPGLRK)
     print(io, "  A = ", tab.A)
 end
 
-function getTableauPGLRK(coeff::CoefficientsPGLRK{T}, λ::T, a::Matrix{T}) where {T}
+function getTableauPGLRK(coeff::CoefficientsPGLRK{T}, λ, a::Matrix{T}) where {T}
     a .= coeff.a .+ λ .* coeff.A
 end
 
+function getTableauPGLRK(coeff::CoefficientsPGLRK{T}, λ) where {T}
+    coeff.a .+ λ .* coeff.A
+end
 
-"Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
+
+"Parameters for right-hand side function of projected Gauss-Legendre Runge-Kutta methods."
 mutable struct ParametersPGLRK{DT,TT,D,S,ET} <: Parameters{DT,TT}
     equ::ET
     tab::CoefficientsPGLRK{TT}
     Δt::TT
 
-    A_q::Array{TT, 3}
-    A_p::Array{TT, 3}
-    a_q::Matrix{TT}
-    a_p::Matrix{TT}
+    h₀::DT
 
+    t̅::TT
     t::TT
 
-    q::Vector{DT}
-    p::Vector{DT}
-
+    q̅::Vector{DT}
+    λ::DT
 
     function ParametersPGLRK{DT,TT,D,S,ET}(equ, tab, Δt) where {DT,TT,D,S,ET}
-        # create coefficient matrices
-        A_q = zeros(TT, S, S, D)
-        A_p = zeros(TT, S, S, D)
-        a_q = zero(tab.a)
-        a_p = zero(tab.a)
-
-        # create solution vectors
-        q = zeros(DT,D)
-        p = zeros(DT,D)
-
-        new(equ, tab, Δt, A_q, A_p, a_q, a_p, 0, q, p)
+        new(equ, tab, Δt, zero(TT), zero(TT), zero(DT), zeros(DT,D), zero(DT))
     end
 end
 
-struct NonlinearFunctionCachePGLRK{DT}
+
+mutable struct IntegratorCachePGLRK{DT,D,S} <: ODEIntegratorCache{DT,D}
+    h::DT
+    λ::DT
+
+    q̃::Vector{DT}
+    ṽ::Vector{DT}
+    s̃::Vector{DT}
+
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
-    P::Vector{Vector{DT}}
-    F::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
-    Z::Vector{Vector{DT}}
 
-    v::Vector{DT}
-    f::Vector{DT}
-    y::Vector{DT}
-    z::Vector{DT}
-
-    q̅::Vector{DT}
-    p̅::Vector{DT}
-    θ::Vector{DT}
-    λ::Vector{DT}
-
-
-    function NonlinearFunctionCachePGLRK{DT}(D,S) where {DT}
+    function IntegratorCachePGLRK{DT,D,S}() where {DT,D,S}
+        # create temporary vectors
+        q̃ = zeros(DT,D)
+        ṽ = zeros(DT,D)
+        s̃ = zeros(DT,D)
 
         # create internal stage vectors
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
-        P = create_internal_stage_vector(DT, D, S)
-        F = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
-        Z = create_internal_stage_vector(DT, D, S)
 
-        # create update vectors
-        v = zeros(DT,D)
-        f = zeros(DT,D)
-        y = zeros(DT,D)
-        z = zeros(DT,D)
 
-        # create new solution vectors
-        q̅ = zeros(DT,D)
-        p̅ = zeros(DT,D)
-        θ = zeros(DT,D)
-        λ = zeros(DT,D)
-
-        new(Q, V, P, F, Y, Z, v, f, y, z, q̅, p̅, θ, λ)
+        new(0, 0,
+            q̃, ṽ, s̃,
+            Q, V, Y)
     end
 end
 
-function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
-                                        P::Vector{Vector{ST}}, F::Vector{Vector{ST}},
-                                        Y::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
-                                        q̅::Vector{ST}, p̅::Vector{ST},
-                                        θ::Vector{ST}, λ::Vector{ST},
-                                        y::Vector{ST}, z::Vector{ST},
-                                        params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    local tᵢ::TT
-    local t₀::TT = params.t
-    local t₁::TT = params.t + params.Δt
+"""
+Projected Gauss-Legendre Runge-Kutta integrator.
 
-    # copy x to V
-    for i in 1:S
-        for k in 1:D
-            V[i][k] = x[D*(i-1)+k]
-        end
-    end
-
-    # copy x to λ, q̅ and p̅
-    for k in 1:D
-        q̅[k] = x[D*(S+0)+k]
-        p̅[k] = x[D*(S+1)+k]
-        λ[k] = x[D*(S+2)+k]
-    end
-
-    # compute tableaus
-    for k in 1:D
-        getTableauPGLRK(params.tab, λ[k], params.a_q)
-        # get_symplectic_conjugate_coefficients(params.a_q, params.tab.b, params.a_p)
-        for j=1:S
-            for i=1:S
-                params.A_q[i,j,k] = params.a_q[i,j]
-                params.A_p[i,j,k] = params.a_q[i,j]
-            end
-        end
-    end
-
-    # compute Y and Q
-    for i in 1:S
-        for k in 1:D
-            Y[i][k] = 0
-            for j in 1:S
-                Y[i][k] += params.A_q[i,j,k] * V[j][k]
-            end
-            Q[i][k] = params.q[k] + params.Δt * Y[i][k]
-        end
-    end
-
-    # compute P=α(Q,V) and F=f(Q,V)
-    for i in 1:S
-        tᵢ = params.t + params.Δt * params.tab.c[i]
-        params.equ.α(tᵢ, Q[i], V[i], P[i])
-        params.equ.f(tᵢ, Q[i], V[i], F[i])
-    end
-
-    # compute Z
-    for i in 1:S
-        for k in 1:D
-            Z[i][k] = 0
-            for j in 1:S
-                Z[i][k] += params.A_p[i,j,k] * F[j][k]
-            end
-        end
-    end
-
-    # compute y and z
-    y .= 0
-    z .= 0
-    for k in 1:D
-        for j in 1:S
-            y[k] += params.tab.b[j] * V[j][k]
-            z[k] += params.tab.b[j] * F[j][k]
-        end
-    end
-
-    # compute θ=α(q̅,λ)
-    params.equ.α(t₁, q̅, λ, θ)
-
-end
-
-"Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
-
-    cache = NonlinearFunctionCachePGLRK{ST}(D, S)
-
-    quote
-        compute_stages!(x, $cache.Q, $cache.V, $cache.P, $cache.F, $cache.Y, $cache.Z,
-                           $cache.q̅, $cache.p̅, $cache.θ, $cache.λ, $cache.y, $cache.z, params)
-
-        # compute b = [P-p-AF]
-        for i in 1:S
-            for k in 1:D
-                b[D*(i-1)+k] = $cache.P[i][k] - params.p[k] - params.Δt * $cache.Z[i][k]
-            end
-        end
-
-        # compute b = [q̅-q-bV, p̅-p-bF, p̅-α(q̅)]
-        for k in 1:D
-            b[D*(S+0)+k] = $cache.q̅[k] - params.q[k] - params.Δt * $cache.y[k]
-            b[D*(S+1)+k] = $cache.p̅[k] - params.p[k] - params.Δt * $cache.z[k]
-            b[D*(S+2)+k] = $cache.p̅[k] - $cache.θ[k]
-        end
-    end
-end
-
-"Variational partitioned Runge-Kutta integrator."
+    Reference: LUIGI BRUGNANO, FELICE IAVERNARO, AND DONATO TRIGIANTE.
+        ENERGY- AND QUADRATIC INVARIANTS–PRESERVING INTEGRATORS BASED
+        UPON GAUSS COLLOCATION FORMULAE.
+        SIAM J. NUMER. ANAL. Vol. 50, No. 6, pp. 2897–2916, 2012.
+"""
 struct IntegratorPGLRK{DT, TT, PT <: ParametersPGLRK{DT,TT},
                                ST <: NonlinearSolver{DT},
-                               IT <: InitialGuessPODE{DT,TT}, N} <: Integrator{DT,TT}
+                               IT <: InitialGuessODE{DT,TT}, N, D, S} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
-    fcache::NonlinearFunctionCachePGLRK{DT}
+    cache::IntegratorCachePGLRK{DT,D,S}
 
-    q::Vector{Vector{TwicePrecision{DT}}}
-    p::Vector{Vector{TwicePrecision{DT}}}
+    function IntegratorPGLRK(N, params::ParametersPGLRK{DT,TT,D,S,ET}, solver::ST, iguess::IT, cache) where {DT, TT, D, S, ET, ST, IT}
+        new{DT, TT, typeof(params), ST, IT, N, D, S}(params, solver, iguess, cache)
+    end
 end
 
-function IntegratorPGLRK(equation::IODE{DT,TT,ΑT,FT,GT,VT,N}, tableau::CoefficientsPGLRK{TT}, Δt::TT) where {DT,TT,ΑT,FT,GT,VT,N}
+function IntegratorPGLRK(equation::ODE{DT,TT,VT,HT,N}, tableau::CoefficientsPGLRK{TT}, Δt::TT) where {DT,TT,VT,HT,N}
     D = equation.d
     M = equation.n
     S = tableau.s
@@ -274,94 +156,214 @@ function IntegratorPGLRK(equation::IODE{DT,TT,ΑT,FT,GT,VT,N}, tableau::Coeffici
     params = ParametersPGLRK{DT,TT,D,S,typeof(equation)}(equation, tableau, Δt)
 
     # create solver
-    solver = create_nonlinear_solver(DT, D*(S+3), params)
+    solver  = create_nonlinear_solver(DT, D*S, params)
 
     # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
+    iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
 
-    # create cache for internal stage vectors and update vectors
-    fcache = NonlinearFunctionCachePGLRK{DT}(D, S)
+    # create cache
+    cache = IntegratorCachePGLRK{DT,D,S}()
 
-    # create solution vectors
-    q = create_solution_vector(DT, D, M)
-    p = create_solution_vector(DT, D, M)
-
-    IntegratorPGLRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), N}(
-                params, solver, iguess, fcache, q, p)
+    # create integrator
+    IntegratorPGLRK(N, params, solver, iguess, cache)
 end
 
-equation(integrator::IntegratorPGLRK) = integrator.params.equ
-timestep(integrator::IntegratorPGLRK) = integrator.params.Δt
+
+@inline nstages(integrator::IntegratorPGLRK{DT,TT,PT,ST,IT,N,D,S}) where {DT,TT,PT,ST,IT,N,D,S} = S
 
 
-function initialize!(int::IntegratorPGLRK{DT,TT}, sol::SolutionPDAE, m::Int) where {DT,TT}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q[m], int.p[m], m)
-
-    # initialise initial guess
-    initialize!(int.iguess, m, sol.t[0], int.q[m], int.p[m])
+function update_params!(params::ParametersPGLRK, sol::AtomicSolutionODE)
+    # set time for nonlinear solver and copy previous solution
+    params.t̅  = sol.t
+    params.t  = sol.t + params.Δt
+    params.q̅ .= sol.q
 end
 
-function initial_guess!(int::IntegratorPGLRK{DT,TT}, m::Int) where {DT,TT}
-    for i in 1:int.params.tab.s
-        evaluate!(int.iguess, m, int.fcache.y, int.fcache.z, int.fcache.v, int.fcache.f, int.params.tab.c[i], int.params.tab.c[i])
-        for k in 1:int.params.equ.d
-            int.solver.x[int.params.equ.d*(i-1)+k] = int.fcache.v[k]
+
+function compute_stages!(x::Vector{ST}, cache::IntegratorCachePGLRK{ST}, params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+    compute_stages!(x, cache.Q, cache.V, cache.Y, cache.q̃, cache.ṽ, params)
+end
+
+function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
+                                        q::Vector{ST}, y::Vector{ST},
+                                        params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+
+    local tᵢ::TT
+
+    # copy x to Y
+    for i in 1:S
+        for k in 1:D
+            Y[i][k] = x[D*(i-1)+k]
         end
     end
-    evaluate!(int.iguess, m, int.fcache.y, int.fcache.z, int.fcache.v, int.fcache.f, one(TT), one(TT))
-    for k in 1:int.params.equ.d
-        int.solver.x[int.params.equ.d*(int.params.tab.s+0)+k] = int.fcache.y[k]
+
+    # compute Q=q̅+Δt*Y
+    for i in 1:S
+        for k in 1:D
+            Q[i][k] = params.q̅[k] + params.Δt * Y[i][k]
+        end
     end
-    for k in 1:int.params.equ.d
-        int.solver.x[int.params.equ.d*(int.params.tab.s+1)+k] = int.fcache.z[k]
+
+    # compute V=v(T,Q)
+    for i in 1:S
+        tᵢ = params.t̅ + params.Δt * params.tab.c[i]
+        params.equ.v(tᵢ, Q[i], V[i])
     end
-    for k in 1:int.params.equ.d
-        int.solver.x[int.params.equ.d*(int.params.tab.s+2)+k] = 0
+
+    # compute y=B*V
+    y .= 0
+    for k in 1:D
+        for j in 1:S
+            y[k] += params.tab.b[j] * V[j][k]
+        end
+    end
+
+    # compute q=q̅+Δt*y
+    q .= params.q̅ .+ params.Δt .* y
+end
+
+"Compute stages of projected Gauss-Legendre Runge-Kutta methods."
+@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+
+    cache = IntegratorCachePGLRK{ST,D,S}()
+
+    quote
+        compute_stages!(x, $cache, params)
+
+        a = getTableauPGLRK(params.tab, params.λ)
+
+        # compute b = [Y-AV]
+        for i in 1:S
+            for k in 1:D
+                b[D*(i-1)+k] = $cache.Y[i][k]
+                for j in 1:S
+                    b[D*(i-1)+k] -= a[i,j] * $cache.V[j][k]
+                end
+            end
+        end
     end
 end
 
 
-"Integrate PODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::SolutionPDAE{DT,TT}, m::Int, n::Int) where {DT,TT}
-    # set time for nonlinear solver
-    int.params.t  = sol.t[0] + (n-1)*int.params.Δt
+function bisection(f::Function, λmin::DT, λmax::DT;
+                   xtol::AbstractFloat=get_config(:nls_atol),
+                   ftol::AbstractFloat=get_config(:nls_atol),
+                   maxiter::Integer=get_config(:nls_nmax)) where {DT <: Number}
+    a = λmin
+    b = λmax
+    fa = f(a)
+    fb = f(b)
 
-    # copy previous solution
-    int.params.q .= int.q[m]
-    int.params.p .= int.p[m]
+    # fa*fb ≤ 0 || error("Either no or multiple real roots in [λmin,λmax]")
 
-    # compute initial guess
-    initial_guess!(int, m)
+    # local j = 0
+    local λ = zero(DT)
+    local fλ= zero(DT)
+
+    for i in 1:maxiter
+        # j += 1
+        λ  = (a+b)/2
+        fλ = f(λ)
+
+        !isapprox(fλ, 0, atol=ftol) || break
+
+        if fa*fλ > 0
+            a  = λ  # Root is in the right half of [a,b].
+            fa = fλ
+        else
+            b = λ  # Root is in the left half of [a,b].
+        end
+
+        abs(b-a) > xtol || break
+    end
+
+    # println(j, " bisection iterations, λ=", λ, ", f(λ)=", fλ, ", ftol=", ftol, ", abs(b-a)=", abs(b-a), ", xtol=", xtol)
+
+    # i != maxiter || error("Max iteration number exceeded")
+
+    return λ
+end
+
+
+function function_hamiltonian!(λ::Number, int::IntegratorPGLRK{DT,TT}) where {DT,TT}
+    # copy λ to integrator parameters
+    int.params.λ = λ
 
     # call nonlinear solver
     solve!(int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params, n)
+    print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params, n)
+    check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, int.fcache.Q, int.fcache.V,
-                                  int.fcache.P, int.fcache.F,
-                                  int.fcache.Y, int.fcache.Z,
-                                  int.fcache.q̅, int.fcache.p̅,
-                                  int.fcache.θ, int.fcache.λ,
-                                  int.fcache.y, int.fcache.z,
-                                  int.params)
+    compute_stages!(int.solver.x, int.cache, int.params)
+
+    # compute h
+    int.cache.h = int.params.equ.h(int.params.t, int.cache.q̃)
+
+    # compute and return h₀-h
+    return int.params.h₀ - int.cache.h
+end
+
+function function_hamiltonian!(λ::Vector, int::IntegratorPGLRK{DT,TT}) where {DT,TT}
+    [function_hamiltonian!(λ[1], int)]
+end
+
+
+function initialize!(int::IntegratorPGLRK, sol::AtomicSolutionODE)
+    sol.t̅ = sol.t - timestep(int)
+
+    equation(int).v(sol.t, sol.q, sol.v)
+
+    initialize!(int.iguess, sol.t, sol.q, sol.v,
+                            sol.t̅, sol.q̅, sol.v̅)
+
+    int.params.h₀ = int.params.equ.h(sol.t, sol.q)
+end
+
+
+function initial_guess!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅,
+                              int.cache.q̃, int.cache.ṽ,
+                              tableau(int).c[i])
+
+        for k in eachdim(int)
+            int.solver.x[ndims(int)*(i-1)+k] = int.cache.ṽ[k]
+        end
+    end
+end
+
+
+"Integrate ODE with projected Gauss-Legendre Runge-Kutta integrator."
+function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
+    # update nonlinear solver parameters from cache
+    update_params!(int.params, sol)
+
+    # compute initial guess
+    initial_guess!(int, sol)
+
+    # reset solution
+    reset!(sol, timestep(int))
+
+    # determine parameter λ
+    λmin = -0.2^nstages(int)
+    λmax = +0.2^nstages(int)
+
+    int.params.λ = bisection(λ -> function_hamiltonian!(λ, int), λmin, λmax;
+                    xtol=abs(λmax-λmin)*get_config(:nls_atol),
+                    ftol=int.params.h₀*get_config(:nls_atol))
+    # int.params.λ = nlsolve(λ -> function_hamiltonian!(λ, int), [zero(DT)];
+    #             xtol=abs(λmax-λmin)*get_config(:nls_atol),
+    #             ftol=int.params.h₀*get_config(:nls_atol)).zero[1]
+    # println(int.params.λ)
 
     # compute final update
-    update_solution!(int.q[m], int.fcache.V, int.params.tab.b, int.params.Δt)
-    update_solution!(int.p[m], int.fcache.F, int.params.tab.b, int.params.Δt)
+    update_solution!(sol.q, int.cache.V, tableau(int).b, timestep(int))
 
-    # take care of periodic solutions
-    cut_periodic_solution!(int.q[m], int.params.equ.periodicity)
-
-    # copy to solution
-    copy_solution!(sol, int.q[m], int.p[m], n, m)
+    # copy solution to initial guess
+    update!(int.iguess, sol.t, sol.q, sol.v)
 end

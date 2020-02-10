@@ -59,7 +59,9 @@ on `t`, `q` and `λ`.
 
 ```
 """
-struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Function, ϕType <: Function, N} <: Equation{dType, tType}
+struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Function,
+           ϕType <: Function, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationDAE{dType, tType}
+
     d::Int
     m::Int
     n::Int
@@ -69,33 +71,39 @@ struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Functio
     t₀::tType
     q₀::Array{dType, N}
     λ₀::Array{dType, N}
+    parameters::pType
+    periodicity::Vector{dType}
 
-    function DAE{dType,tType,vType,uType,ϕType,N}(d, m, n, v, u, ϕ, t₀, q₀, λ₀) where {dType <: Number, tType <: Number, vType <: Function, uType <: Function, ϕType <: Function, N}
+    function DAE(DT::DataType, N::Int, d::Int, m::Int, n::Int,
+                 v::vType, u::uType, ϕ::ϕType, t₀::tType,
+                 q₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
+                 parameters=nothing, periodicity=zeros(DT,d)) where {
+                        dType <: Number, tType <: Number, vType <: Function,
+                        uType <: Function, ϕType <: Function}
+
         @assert d == size(q₀,1)
         @assert m == size(λ₀,1)
         @assert n == size(q₀,2) == size(λ₀,2)
         @assert d ≥ m
-
-        @assert dType == eltype(q₀)
-        @assert dType == eltype(λ₀)
-        @assert tType == typeof(t₀)
-
         @assert ndims(q₀) == ndims(λ₀) == N ∈ (1,2)
 
-        new(d, m, n, v, u, ϕ, t₀, q₀, λ₀)
+        new{DT, tType, vType, uType, ϕType, typeof(parameters), N}(d, m, n, v, u, ϕ, t₀,
+                convert(Array{DT}, q₀), convert(Array{DT}, λ₀), parameters, periodicity)
     end
 end
 
-function DAE(v::VT, u::UT, ϕ::ΦT, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArray{DT}) where {DT,TT,VT,UT,ΦT}
-    @assert size(q₀,2) == size(λ₀,2)
-    DAE{DT, TT, VT, UT, ΦT, ndims(q₀)}(size(q₀, 1), size(λ₀, 1), size(q₀, 2), v, u, ϕ, t₀, q₀, λ₀)
+function DAE(v, u, ϕ, t₀, q₀::AbstractArray{DT}, λ₀::AbstractArray{DT}; kwargs...) where {DT}
+    DAE(DT, ndims(q₀), size(q₀,1), size(λ₀,1), size(q₀,2), v, u, ϕ, t₀, q₀, λ₀; kwargs...)
 end
 
-function DAE(v, u, ϕ, q₀, λ₀)
-    DAE(v, u, ϕ, zero(eltype(q₀)), q₀, λ₀)
+function DAE(v, u, ϕ, q₀, λ₀; kwargs...)
+    DAE(v, u, ϕ, zero(eltype(q₀)), q₀, λ₀; kwargs...)
 end
 
-Base.hash(dae::DAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n, hash(dae.v, hash(dae.u, hash(dae.t₀, hash(dae.q₀, hash(dae.λ₀, h))))))))
+Base.hash(dae::DAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n, hash(dae.v,
+        hash(dae.u, hash(dae.t₀, hash(dae.q₀, hash(dae.λ₀,
+        hash(dae.periodicity, hash(dae.parameters, h))))))))))
+
 Base.:(==)(dae1::DAE, dae2::DAE) = (
                                 dae1.d == dae2.d
                              && dae1.m == dae2.m
@@ -104,14 +112,21 @@ Base.:(==)(dae1::DAE, dae2::DAE) = (
                              && dae1.u == dae2.u
                              && dae1.t₀ == dae2.t₀
                              && dae1.q₀ == dae2.q₀
-                             && dae1.λ₀ == dae2.λ₀)
+                             && dae1.λ₀ == dae2.λ₀
+                             && dae1.parameters == dae1.parameters
+                             && dae1.periodicity == dae1.periodicity)
 
-function Base.similar(dae::DAE{DT,TT,VT,UT,ΦT}, q₀::DenseArray{DT}, λ₀::DenseArray{DT}) where {DT, TT, VT, UT, ΦT}
-    similar(dae, dae.t₀, q₀, λ₀)
+function Base.similar(dae::DAE, q₀, λ₀=get_λ₀(q₀, dae.λ₀); kwargs...)
+    similar(dae, dae.t₀, q₀, λ₀; kwargs...)
 end
 
-function Base.similar(dae::DAE{DT,TT,VT,UT,ΦT}, t₀::TT, q₀::DenseArray{DT}, λ₀::DenseArray{DT}) where {DT, TT, VT, UT, ΦT}
+function Base.similar(dae::DAE, t₀::TT, q₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=get_λ₀(q₀, dae.λ₀);
+                      parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
     @assert dae.d == size(q₀,1)
     @assert dae.m == size(λ₀,1)
-    DAE(dae.v, t₀, q₀, λ₀)
+    DAE(dae.v, dae.u, dae.ϕ, t₀, q₀, λ₀; parameters=parameters, periodicity=periodicity)
 end
+
+@inline Base.ndims(dae::DAE) = dae.d
+
+@inline periodicity(equation::DAE) = equation.periodicity

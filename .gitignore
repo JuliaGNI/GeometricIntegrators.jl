@@ -1,11 +1,9 @@
-build
 .ipynb_checkpoints
 .tags
 .tags1
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
-deps/deps.jl
 docs/build/
 docs/site/
 examples/.ipynb_checkpoints
@@ -14,3 +12,4 @@ examples/*.png
 examples/*/*.png
 examples/*/*/*.png
 obsolete/
+Manifest.toml

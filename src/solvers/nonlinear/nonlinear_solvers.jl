@@ -11,13 +11,10 @@ function solve!(s::NonlinearSolver{T}, x₀::Vector{T}) where {T}
 end
 
 
-# default parameters for nonlinear solvers
-const DEFAULT_nwarn=100
-
-
 struct NonlinearSolverParameters{T}
     nmin::Int   # minimum number of iterations
     nmax::Int   # maximum number of iterations
+    nwarn::Int  # warn if number of iterations is larger than nwarn
 
     atol::T     # absolute tolerance
     rtol::T     # relative tolerance
@@ -31,9 +28,10 @@ struct NonlinearSolverParameters{T}
     rtol_break::T
     stol_break::T
 
-    function NonlinearSolverParameters{T}(nmin, nmax, atol, rtol, stol, atol_break, rtol_break, stol_break) where {T}
+    function NonlinearSolverParameters{T}(nmin, nmax, nwarn, atol, rtol, stol, atol_break, rtol_break, stol_break) where {T}
         @assert nmin ≥ 0
         @assert nmax > 0
+        @assert nwarn ≥ 0
         @assert atol > 0
         @assert rtol > 0
         @assert stol > 0
@@ -41,13 +39,14 @@ struct NonlinearSolverParameters{T}
         @assert rtol_break > 0
         @assert stol_break > 0
 
-        new(nmin, nmax, atol, rtol, stol, atol^2, rtol^2, stol^2, atol_break, rtol_break, stol_break)
+        new(nmin, nmax, nwarn, atol, rtol, stol, atol^2, rtol^2, stol^2, atol_break, rtol_break, stol_break)
     end
 end
 
 function NonlinearSolverParameters(T)
     NonlinearSolverParameters{T}(get_config(:nls_nmin),
                                  get_config(:nls_nmax),
+                                 get_config(:nls_nwarn),
                                  get_config(:nls_atol),
                                  get_config(:nls_rtol),
                                  get_config(:nls_stol),
@@ -76,15 +75,8 @@ mutable struct NonlinearSolverStatus{T}
 end
 
 Base.show(io::IO, status::NonlinearSolverStatus) = print(io,
-                        (@sprintf "    n=%4i" status.i),  ",   ", (@sprintf "rₐ=%14.8e" status.rₐ), ",   ",
+                        (@sprintf "    i=%4i" status.i),  ",   ", (@sprintf "rₐ=%14.8e" status.rₐ), ",   ",
                         (@sprintf "rᵣ=%14.8e" status.rᵣ), ",   ", (@sprintf "rₛ=%14.8e" status.rₛ))
-
-function print_solver_status(status::NonlinearSolverStatus, params::NonlinearSolverParameters, n::Int)
-    if (get_config(:verbosity) == 1 && !(check_solver_converged(status, params) && status.i ≤ params.nmax)) ||
-        get_config(:verbosity) > 1
-        println((@sprintf "  i=%07i" n), ",", status)
-    end
-end
 
 function print_solver_status(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
     if (get_config(:verbosity) == 1 && !(check_solver_converged(status, params) && status.i ≤ params.nmax)) ||
@@ -101,31 +93,32 @@ function check_solver_converged(status::NonlinearSolverStatus, params::Nonlinear
         #    maximum(status.Δx) / maximum(abs.(status.xₚ)) ≤ params.stol
 end
 
-function check_solver_status(status::NonlinearSolverStatus, params::NonlinearSolverParameters, n::Int)
+function check_solver_status(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
     if any(x -> isnan(x), status.xₚ)
-        error("Detected NaN in it=", n)
+        error("Detected NaN")
     end
 
     if status.rₐ > params.atol_break
-        error("Absolute error of nonlinear solver ($(status.rₐ)) larger than allowed ($(params.atol_break)) in it=", n)
+        error("Absolute error of nonlinear solver ($(status.rₐ)) larger than allowed ($(params.atol_break))")
     end
 
     if status.rᵣ > params.rtol_break
-        error("Relative error of nonlinear solver ($(status.rᵣ)) larger than allowed ($(params.rtol_break)) in it=", n)
+        error("Relative error of nonlinear solver ($(status.rᵣ)) larger than allowed ($(params.rtol_break))")
     end
 
     if status.rₛ > params.stol_break
-        error("Succesive error of nonlinear solver ($(status.rₛ)) larger than allowed ($(params.stol_break)) in it=", n)
+        error("Succesive error of nonlinear solver ($(status.rₛ)) larger than allowed ($(params.stol_break))")
     end
 end
 
 
-function getLinearSolver(T, n)
+function getLinearSolver(x::AbstractVector{T}) where {T}
+    n = length(x)
     linear_solver = get_config(:ls_solver)
 
     if linear_solver == nothing || linear_solver == :lapack
     # if linear_solver == :lapack
-        linear_solver = LUSolverLAPACK{T}(n)
+        linear_solver = LUSolverLAPACK{T}(BlasInt(n))
     elseif linear_solver == :julia
         linear_solver = LUSolver{T}(n)
     # elseif linear_solver == nothing

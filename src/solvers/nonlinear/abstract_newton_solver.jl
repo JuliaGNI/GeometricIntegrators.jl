@@ -25,3 +25,20 @@ end
 function setInitialConditions!(s::AbstractNewtonSolver{T}, x₀::Vector{T}) where {T}
     s.x[:] = x₀
 end
+
+function computeJacobian(s::AbstractNewtonSolver)
+    computeJacobian(s.x, s.J, s.Jparams)
+end
+
+function check_jacobian(s::AbstractNewtonSolver)
+    println("Condition Number of Jacobian: ", cond(s.J))
+    println("Determinant of Jacobian:      ", det(s.J))
+    println("minimum(|Jacobian|):          ", minimum(abs.(s.J)))
+    println("maximum(|Jacobian|):          ", maximum(abs.(s.J)))
+    println()
+end
+
+function print_jacobian(s::AbstractNewtonSolver)
+    display(s.J)
+    println()
+end

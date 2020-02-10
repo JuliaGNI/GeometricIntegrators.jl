@@ -69,7 +69,7 @@ function LobattoLegendreQuadrature(s, T=Float64; shift=true)
 end
 
 
-function get_nodes_gauss_chebychev(s, k=1, T=Float64)
+function get_nodes_gauss_chebyshev(s, k=1, T=Float64)
     x = zeros(T, s)
     if k == 1
         for i in eachindex(x)
@@ -85,7 +85,7 @@ function get_nodes_gauss_chebychev(s, k=1, T=Float64)
 end
 
 function GaussChebyshevQuadrature(s, k=1, T=Float64; shift=true)
-    c = get_nodes_gauss_chebychev(s,k,T)
+    c = get_nodes_gauss_chebyshev(s,k,T)
     b = zeros(c)
 
     tj::Dec128 = 0
@@ -119,7 +119,7 @@ function GaussChebyshevQuadrature(s, k=1, T=Float64; shift=true)
 end
 
 
-function get_nodes_lobatto_chebychev(s, T=Float64)
+function get_nodes_lobatto_chebyshev(s, T=Float64)
     x = zeros(T, s)
     for i in eachindex(x)
         x[i] = @dec128 ( cos( (i-1)*π / (s-1) ) + 1 ) / 2
@@ -128,7 +128,7 @@ function get_nodes_lobatto_chebychev(s, T=Float64)
 end
 
 function LobattoChebyshevQuadrature(s, T=Float64)
-    c = get_nodes_lobatto_chebychev(s)
+    c = get_nodes_lobatto_chebyshev(s)
     b = zeros(c)
 
     # TODO compute weights

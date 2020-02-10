@@ -1,9 +1,7 @@
-__precompile__()
-
 module Solvers
 
     using LinearAlgebra
-    
+
     using ..Config
     using ..Utils
 
@@ -18,7 +16,11 @@ module Solvers
            JacobianParametersUser, getJacobianParameters,
            computeJacobian, computeJacobianAD, computeJacobianFD
 
-    export NonlinearSolver, AbstractNewtonSolver, NewtonSolver, QuasiNewtonSolver,
+    export computeJacobian, check_jacobian, print_jacobian
+
+    export NonlinearSolver, AbstractNewtonSolver,
+           NLsolveNewton,
+           NewtonSolver, QuasiNewtonSolver,
            residual_initial!, residual_absolute!, residual_relative!,
            print_solver_status, check_solver_converged, check_solver_status,
            solve!
@@ -30,11 +32,12 @@ module Solvers
     include("solvers/nonlinear/fixed_point_solver.jl")
     include("solvers/nonlinear/newton_solver.jl")
     include("solvers/nonlinear/quasi_newton_solver.jl")
+    include("solvers/nonlinear/nlsolve_newton.jl")
 
 
     function __init__()
         default_params = (
-            (:ls_solver, :lapack),
+            (:ls_solver, :julia),
             (:nls_atol,  2eps()),
             (:nls_rtol,  2eps()),
             (:nls_stol,  2eps()),
@@ -44,7 +47,7 @@ module Solvers
             (:nls_nmax,  10000),
             (:nls_nmin,  0),
             (:nls_nwarn, 100),
-            (:nls_solver, QuasiNewtonSolver),
+            (:nls_solver, NewtonSolver),
             (:jacobian_autodiff, true),
             (:jacobian_fd_ϵ, 8sqrt(eps())),
             (:quasi_newton_refactorize, 5),

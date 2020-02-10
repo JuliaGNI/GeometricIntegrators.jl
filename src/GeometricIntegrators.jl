@@ -1,5 +1,3 @@
-__precompile__()
-
 module GeometricIntegrators
 
     using Reexport
@@ -31,6 +29,9 @@ module GeometricIntegrators
     @reexport using .Simulations
     include("Tableaus.jl")
     @reexport using .Tableaus
+
+    include("TestProblems.jl")
+    export TestProblems
 
 
     function __init__()

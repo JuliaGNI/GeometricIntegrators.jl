@@ -32,30 +32,11 @@ const DEFAULT_ARMIJO_σ₁ = 0.5
 const DEFAULT_ARMIJO_ϵ  = 0.5
 
 
-function QuasiNewtonSolver(x::Vector, F!::Function; J=nothing)
-    T = eltype(x)
+function QuasiNewtonSolver(x::AbstractVector{T}, F!::Function; J!::Union{Function,Nothing}=nothing) where {T}
     n = length(x)
-    Jparams = getJacobianParameters(J, F!, T, n)
-    linear_solver = getLinearSolver(T, n)
+    Jparams = getJacobianParameters(J!, F!, T, n)
+    linear_solver = getLinearSolver(x)
     QuasiNewtonSolver{T, typeof(F!), typeof(Jparams), typeof(linear_solver)}(x, F!, Jparams, linear_solver)
-end
-
-
-function computeJacobian(s::QuasiNewtonSolver)
-    computeJacobian(s.x, s.J, s.Jparams)
-end
-
-function check_jacobian(s::QuasiNewtonSolver)
-    println("Condition Number of Jacobian: ", cond(s.J))
-    println("Determinant of Jacobian:      ", det(s.J))
-    println("minimum(|Jacobian|):          ", minimum(abs.(s.J)))
-    println("maximum(|Jacobian|):          ", maximum(abs.(s.J)))
-    println()
-end
-
-function print_jacobian(s::QuasiNewtonSolver)
-    println(s.J)
-    println()
 end
 
 
@@ -196,14 +177,14 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
             residual!(s.status, s.δx, s.x, s.y₀)
 
             if check_solver_converged(s.status, s.params) && s.status.i ≥ s.params.nmin && !(n > 0)
-                if s.status.i > DEFAULT_nwarn
+                if s.params.nwarn > 0 && s.status.i ≥ s.params.nwarn
                     println("WARNING: Quasi-Newton Solver took ", s.status.i, " iterations.")
                 end
                 break
             end
 
             if mod(s.status.i, refactorize) == 0
-                computeJacobian(s.x, s.J, s.Jparams)
+                computeJacobian(s)
                 s.linear.A .= s.J
                 factorize!(s.linear)
             end

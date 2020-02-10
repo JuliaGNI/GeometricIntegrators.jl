@@ -48,10 +48,9 @@ The following list provides and overview of supported and planned features.
 - [x] Explicit Partitioned Runge-Kutta Methods (EPRK),
 - [x] Implicit Partitioned Runge-Kutta Methods (IPRK),
 - [ ] Additive Runge-Kutta Methods (ARK),
-- [ ] Specialised Additive Runge-Kutta Methods (SARK),
-- [x] Partitioned Additive Runge-Kutta Methods (PARK),
-- [ ] Specialised Partitioned Additive Runge-Kutta Methods (SPARK),
-- [ ] Generalised Partitioned Additive Runge-Kutta Methods (GPARK),
+- [ ] Partitioned Additive Runge-Kutta Methods (PARK),
+- [ ] Generalised Additive Runge-Kutta Methods (GARK),
+- [ ] Continuous-stage Runge-Kutta Methods (CSRK),
 - [ ] Two-step Runge-Kutta Methods (TSRK),
 - [ ] General Linear Methods (GLM).
 
@@ -59,8 +58,9 @@ The following list provides and overview of supported and planned features.
 
 - [x] Gauss-Legendre Runge-Kutta Methods (GLRK),
 - [x] Variational Partitioned Runge-Kutta Methods (VPRK),
-- [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK),
-- [ ] Hamiltonian Partitioned Additive Runge-Kutta Methods (HPARK),
+- [ ] Specialised Partitioned Additive Runge-Kutta Methods (SPARK),
+- [x] Hamiltonian Partitioned Additive Runge-Kutta Methods (HPARK, HSPARK),
+- [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK, VSPARK),
 - [x] Continuous Galerkin Variational Integrators (CGVI),
 - [x] Discontinuous Galerkin Variational Integrators (DGVI),
 - [ ] Hamilton-Pontryagin-Galerkin Integrators (HPGI),
@@ -71,12 +71,12 @@ The following list provides and overview of supported and planned features.
 
 #### Families of Stochastic Integrators
 
-- [x] Stochastic Explicit Runge-Kutta Methods,
-- [x] Stochastic Implicit Runge-Kutta Methods,
-- [x] Stochastic Implicit Partitioned Runge-Kutta Methods,
-- [x] Stochastic Implicit Split Partitioned Runge-Kutta Methods,
-- [x] Stochastic Weak Explicit Runge-Kutta Methods,
-- [x] Stochastic Weak Implicit Runge-Kutta Methods.
+- [x] Stochastic Explicit Runge-Kutta Methods (SERK),
+- [x] Stochastic Implicit Runge-Kutta Methods (SIRK),
+- [x] Stochastic Implicit Partitioned Runge-Kutta Methods (SIPRK),
+- [x] Stochastic Implicit Partitioned Additive Runge-Kutta Methods,
+- [x] Stochastic Weak Explicit Runge-Kutta Methods (WERK),
+- [x] Stochastic Weak Implicit Runge-Kutta Methods (WIRK).
 
 #### Families of Equations
 
@@ -92,23 +92,8 @@ The following list provides and overview of supported and planned features.
 - [x] Variational ODEs,
 - [x] Hamiltonian DAEs,
 - [x] Split ODEs,
-- [x] Split Partitioned SDEs,
-
-which can be prescribed manually or obtained as
-
-- [ ] Euler-Lagrange Equations,
-- [ ] Hamilton Equations,
-- [ ] Hamilton-Pontryagin Equations,
-- [ ] Lagrange-d'Alembert Equations,
-- [ ] Hamilton-d'Alembert Equations,
-- [ ] Symplectic Equations,
-- [ ] Poisson Equations,
-
-with
-
-- [ ] Holonomic Constraints,
-- [ ] Nonholonomic Constraints,
-- [ ] Dirac Constraints.
+- [ ] Split Partitioned ODEs,
+- [x] Split Partitioned SDEs.
 
 #### Linear Solvers
 
@@ -174,7 +159,7 @@ with
 
 ## License
 
-> Copyright (c) 2016-2018 Michael Kraus <michael.kraus@ipp.mpg.de>
+> Copyright (c) Michael Kraus <michael.kraus@ipp.mpg.de>
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal

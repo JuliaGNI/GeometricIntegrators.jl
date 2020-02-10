@@ -1,45 +1,39 @@
 
 "Tableau for variational Gauss-Lobatto IIIA-IIIB method with two stages"
 function getTableauVPLobIIIA2()
-    d = [+1.0, -1.0]
     R∞ = -1
-    TableauVPRK(:LobIIIA2, 2, getCoefficientsLobIIIA2(), R∞, d)
+    TableauVPRK(:LobIIIA2, 2, getCoefficientsLobIIIA2(), R∞, get_lobatto_d_vector(2))
 end
 
 "Tableau for variational Gauss-Lobatto IIIA-IIIB method with three stages"
 function getTableauVPLobIIIA3()
-    d = [+1.0, -2.0, +1.0]
     R∞ = +1
-    TableauVPRK(:LobIIIA3, 4, getCoefficientsLobIIIA3(), R∞, d)
+    TableauVPRK(:LobIIIA3, 4, getCoefficientsLobIIIA3(), R∞, get_lobatto_d_vector(3))
 end
 
 "Tableau for variational Gauss-Lobatto IIIA-IIIB method with four stages"
 function getTableauVPLobIIIA4()
-    d = [+1.0, -√5, +√5, -1.0]
     R∞ = -1
-    TableauVPRK(:LobIIIA4, 6, getCoefficientsLobIIIA4(), R∞, d)
+    TableauVPRK(:LobIIIA4, 6, getCoefficientsLobIIIA4(), R∞, get_lobatto_d_vector(4))
 end
 
 
 "Tableau for variational Gauss-Lobatto IIIA-IIIB method with two stages"
 function getTableauVPLobIIIB2()
-    d = [+1.0, -1.0]
     R∞ = -1
-    TableauVPRK(:LobIIIB2, 2, getCoefficientsLobIIIB2(), R∞, d)
+    TableauVPRK(:LobIIIB2, 2, getCoefficientsLobIIIB2(), R∞, get_lobatto_d_vector(2))
 end
 
 "Tableau for variational Gauss-Lobatto IIIA-IIIB method with three stages"
 function getTableauVPLobIIIB3()
-    d = [+1.0, -2.0, +1.0]
     R∞ = +1
-    TableauVPRK(:LobIIIB3, 4, getCoefficientsLobIIIB3(), R∞, d)
+    TableauVPRK(:LobIIIB3, 4, getCoefficientsLobIIIB3(), R∞, get_lobatto_d_vector(3))
 end
 
 "Tableau for variational Gauss-Lobatto IIIA-IIIB method with four stages"
 function getTableauVPLobIIIB4()
-    d = [+1.0, -√5, +√5, -1.0]
     R∞ = -1
-    TableauVPRK(:LobIIIB4, 6, getCoefficientsLobIIIB4(), R∞, d)
+    TableauVPRK(:LobIIIB4, 6, getCoefficientsLobIIIB4(), R∞, get_lobatto_d_vector(4))
 end
 
 

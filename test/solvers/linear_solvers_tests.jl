@@ -1,4 +1,8 @@
 
+using GeometricIntegrators.Solvers
+using Test
+
+
 A = [[+4.  +5.  -2.]
      [+7.  -1.  +2.]
      [+3.  +1.  +4.]]
@@ -16,7 +20,7 @@ function test_lu_solver(solver, A, b, x)
         lu = solver(AT, bT)
         factorize!(lu)
         solve!(lu)
-        @test lu.b == xT
+        @test lu.b ≈ xT atol=1E-14
     end
 end
 

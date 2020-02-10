@@ -23,11 +23,7 @@ struct CoefficientsRK{T} <: AbstractCoefficients{T}
         new(name,o,s,a,b,c,zero(a),zero(b),zero(c))
     end
 
-    function CoefficientsRK{T}(name,o,s,a,b,c,â,b̂,ĉ) where {T}
-        @assert T <: Real
-        @assert isa(name, Symbol)
-        @assert isa(o, Integer)
-        @assert isa(s, Integer)
+    function CoefficientsRK{T}(name::Symbol, o::Int, s::Int, a, b, c, â, b̂, ĉ) where {T <: Real}
         @assert s > 0 "Number of stages must be > 0"
         @assert s==size(a,1)==size(a,2)==length(b)==length(c)
         @assert s==size(â,1)==size(â,2)==length(b̂)==length(ĉ)

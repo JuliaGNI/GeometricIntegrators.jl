@@ -1,4 +1,8 @@
 
+using GeometricIntegrators.Solvers
+using Test
+
+
 n = 1
 T = Float64
 
@@ -11,7 +15,7 @@ function J(x::Vector, A::Matrix)
 end
 
 
-for Solver in (NewtonSolver, QuasiNewtonSolver)
+for Solver in (NewtonSolver, QuasiNewtonSolver, NLsolveNewton)
     x = ones(T, n)
     nl = Solver(x, F)
     solve!(nl)
@@ -21,7 +25,7 @@ for Solver in (NewtonSolver, QuasiNewtonSolver)
     end
 
     x = ones(T, n)
-    nl = Solver(x, F, J=J)
+    nl = Solver(x, F; J! = J)
     solve!(nl)
     # println(nl.status.i, ", ", nl.status.rₐ,", ",  nl.status.rᵣ,", ",  nl.status.rₛ)
     for x in nl.x

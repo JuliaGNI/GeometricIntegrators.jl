@@ -1,7 +1,7 @@
 name = "GeometricIntegrators"
 uuid = "dcce2d33-59f6-5b8d-9047-0defad88ae06"
 authors = ["Michael Kraus <michael.kraus@ipp.mpg.de>"]
-version = "0.1.0"
+version = "0.2.2"
 
 [deps]
 DecFP = "55939f99-70c6-5e9b-8bb0-5071ed7d61fd"
@@ -11,11 +11,37 @@ FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 FastTransforms = "057dd010-8810-581a-b7be-e3fc3b93f78c"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+LineSearches = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 Polynomials = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 SharedArrays = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
+
+[compat]
+DecFP = "^0.4.7"
+Documenter = "^0.23, 0.24"
+FastGaussQuadrature = "^0.4"
+FastTransforms = "0.6, 0.8"
+ForwardDiff = "^0.10"
+HDF5 = "^0.10, 0.12"
+LineSearches = "^7.0"
+NLsolve = "^4.0"
+OffsetArrays = "0.10, 0.11, ^1.0"
+Polynomials = "^0.5, 0.6"
+ProgressMeter = "^1.0"
+Reexport = "^0.2"
+SafeTestsets = "^0.0.1"
+julia = "^1.1"
+
+[extras]
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "SafeTestsets"]

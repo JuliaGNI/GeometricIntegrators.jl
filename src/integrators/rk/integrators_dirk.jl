@@ -36,76 +36,32 @@ mutable struct ParametersDIRK{DT, TT, ET <: ODE{DT,TT}, D, S} <: Parameters{DT,T
 
     t::TT
     q::Vector{DT}
+    V::Vector{Vector{DT}}
 end
 
 function ParametersDIRK(equ::ET, tab::TableauDIRK{TT}, Δt::TT) where {DT, TT, ET <: ODE{DT,TT}}
-    ParametersDIRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, zeros(DT, equ.d))
+    ParametersDIRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, zeros(DT, equ.d), create_internal_stage_vector(DT, equ.d, tab.s))
 end
 
 
-struct NonlinearFunctionCacheDIRK{DT}
+"""
+Diagonally implicit Runge-Kutta integrator cache.
+"""
+struct IntegratorCacheDIRK{DT,D,S} <: ODEIntegratorCache{DT,D}
+    q̃::Vector{DT}
+    ṽ::Vector{DT}
+    s̃::Vector{DT}
+    y::Vector{DT}
+
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
 
-    v::Vector{DT}
-    y::Vector{DT}
-
-    function NonlinearFunctionCacheDIRK{DT}(D,S) where {DT}
-        # create internal stage vectors
+    function IntegratorCacheDIRK{DT,D,S}() where {DT,D,S}
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
-
-        # create velocity and update vector
-        v = zeros(DT,D)
-        y = zeros(DT,D)
-
-        new(Q, V, Y, v, y)
-    end
-end
-
-function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
-                                    params::ParametersDIRK{DT,TT,ET,D,S}, i::Int) where {ST,DT,TT,ET,D,S}
-
-    local tᵢ::TT
-
-    @assert S == length(Q) == length(V) == length(Y)
-    @assert D == length(Q[1]) == length(V[1]) == length(Y[1])
-
-    # copy x to Y and compute Q = q + Δt Y
-    for k in 1:D
-        Y[i][k] = x[k]
-        Q[i][k] = params.q[k] + params.Δt * Y[i][k]
-    end
-
-    # compute V = v(Q)
-    tᵢ = params.t + params.Δt * params.tab.q.c[i]
-    params.equ.v(tᵢ, Q[i], V[i])
-end
-
-
-"Compute stages of fully implicit Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{DT,TT,ET,D,S}, i::Int) where {ST,DT,TT,ET,D,S}
-
-    cache = NonlinearFunctionCacheDIRK{ST}(D, S)
-
-    quote
-        compute_stages!(x, $cache.Q, $cache.V, $cache.Y, params, i)
-
-        local y1::ST
-        local y2::ST
-
-        # compute b = - (Y-AV)
-        for k in 1:D
-            y1 = 0
-            y2 = 0
-            for j in 1:S
-                y1 += params.tab.q.a[i,j] * $cache.V[j][k]
-                y2 += params.tab.q.â[i,j] * $cache.V[j][k]
-            end
-            b[k] = - $cache.Y[i][k] + (y1 + y2)
-        end
+        new(zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y)
     end
 end
 
@@ -113,13 +69,11 @@ end
 "Diagonally implicit Runge-Kutta integrator."
 struct IntegratorDIRK{DT, TT, PT <: ParametersDIRK{DT,TT},
                               ST,# <: NonlinearSolver{DT},
-                              IT <: InitialGuessODE{DT,TT}, N} <: IntegratorRK{DT,TT}
+                              IT <: InitialGuessODE{DT,TT}, N, D, S} <: IntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
-    fcache::NonlinearFunctionCacheDIRK{DT}
-
-    q::Vector{Vector{TwicePrecision{DT}}}
+    cache::IntegratorCacheDIRK{DT,D,S}
 end
 
 function IntegratorDIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauDIRK{TT}, Δt::TT) where {DT,TT,FT,N}
@@ -148,88 +102,123 @@ function IntegratorDIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauDIRK{TT}, Δt
     # create initial guess
     iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
 
-    # create cache for internal stage vectors and update vectors
-    fcache = NonlinearFunctionCacheDIRK{DT}(D, S)
-
-    # solution vectors
-    q = create_solution_vector(DT,D,M)
+    # create cache
+    cache = IntegratorCacheDIRK{DT,D,S}()
 
     # create integrator
-    IntegratorDIRK{DT, TT, typeof(params), typeof(solvers), typeof(iguess), N}(
-                params, solvers, iguess, fcache, q)
+    IntegratorDIRK{DT, TT, typeof(params), typeof(solvers), typeof(iguess), N, D, S}(
+                params, solvers, iguess, cache)
 
 end
 
+has_initial_guess(int::IntegratorDIRK) = true
 
-function initialize!(int::IntegratorDIRK{DT,TT}, sol::SolutionODE, m::Int) where {DT,TT}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
 
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q[m], m)
-
+"Initialise initial guess"
+function initialize!(int::IntegratorDIRK, cache::IntegratorCacheDIRK)
     # initialise initial guess
-    initialize!(int.iguess, m, sol.t[0], int.q[m])
+    cache.t̅ = cache.t - timestep(int)
+
+    int.params.equ.v(cache.t, cache.q, cache.v)
+
+    initialize!(int.iguess, cache.t, cache.q, cache.v, cache.t̅, cache.q̅, cache.v̅)
 end
+
 
 "Compute initial guess for internal stages."
-function initial_guess!(int::IntegratorDIRK, m::Int)
-    for i in 1:int.params.tab.q.s
-        evaluate!(int.iguess, m, int.fcache.y, int.fcache.v, int.params.tab.q.c[i])
-        for k in eachindex(int.fcache.V[i], int.fcache.v)
-            int.fcache.V[i][k] = int.fcache.v[k]
+function initial_guess!(int::IntegratorDIRK, sol::AtomicSolutionODE)
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, int.cache.q̃, int.cache.ṽ, int.params.tab.q.c[i])
+        for k in eachindex(int.cache.V[i], int.cache.ṽ)
+            int.cache.V[i][k] = int.cache.ṽ[k]
         end
     end
-    for i in 1:int.params.tab.q.s
-        for k in 1:dims(int)
+    for i in eachstage(int)
+        for k in eachdim(int)
             int.solver[i].x[k] = 0
-            for j in 1:int.params.tab.q.s
-                int.solver[i].x[k] += int.params.tab.q.a[i,j] * int.fcache.V[j][k]
+            for j in eachstage(int)
+                int.solver[i].x[k] += int.params.tab.q.a[i,j] * int.cache.V[j][k]
             end
         end
     end
 end
 
 
+function compute_stages!(x::Vector{ST}, Q::Vector{ST}, V::Vector{ST}, Y::Vector{ST},
+                                    params::ParametersDIRK{DT,TT,ET,D,S}, i::Int) where {ST,DT,TT,ET,D,S}
+
+    local tᵢ::TT
+
+    @assert D == length(Q) == length(V) == length(Y)
+
+    # copy x to Y and compute Q = q + Δt Y
+    for k in 1:D
+        Y[k] = x[k]
+        Q[k] = params.q[k] + params.Δt * Y[k]
+    end
+
+    # compute V = v(Q)
+    tᵢ = params.t + params.Δt * params.tab.q.c[i]
+    params.equ.v(tᵢ, Q, V)
+end
+
+
+"Compute stages of fully implicit Runge-Kutta methods."
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{DT,TT,ET,D,S}, i::Int) where {ST,DT,TT,ET,D,S}
+    local Q = zeros(ST,D)
+    local V = zeros(ST,D)
+    local Y = zeros(ST,D)
+
+    local y1::ST
+    local y2::ST
+
+    compute_stages!(x, Q, V, Y, params, i)
+
+    # compute b = - (Y-AV)
+    for k in 1:D
+        y1 = params.tab.q.a[i,i] * V[k]
+        y2 = params.tab.q.â[i,i] * V[k]
+        for j in 1:i-1
+            y1 += params.tab.q.a[i,j] * params.V[j][k]
+            y2 += params.tab.q.â[i,j] * params.V[j][k]
+        end
+        b[k] = - Y[k] + (y1 + y2)
+    end
+end
+
+
 "Integrate ODE with diagonally implicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::SolutionODE{DT,TT,N}, m::Int, n::Int) where {DT,TT,N}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
+function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT,N}
+    int.params.t  = sol.t
+    int.params.q .= sol.q
 
-    @assert n ≥ 1
-    @assert n ≤ sol.ntime
+    # compute initial guess
+    initial_guess!(int, sol)
 
-    # set time for nonlinear solver
-    int.params.t  = sol.t[0] + (n-1)*int.params.Δt
-    int.params.q .= int.q[m]
-
-    # compute initial guesses
-    initial_guess!(int, m)
+    # reset cache
+    reset!(sol, timestep(int))
 
     # consecutively solve for all stages
-    for i in 1:nstages(int)
+    for i in eachstage(int)
         # call nonlinear solver
         solve!(int.solver[i])
 
         # print solver status
-        print_solver_status(int.solver[i].status, int.solver[i].params, n)
+        print_solver_status(int.solver[i].status, int.solver[i].params)
 
         # check if solution contains NaNs or error bounds are violated
-        check_solver_status(int.solver[i].status, int.solver[i].params, n)
+        check_solver_status(int.solver[i].status, int.solver[i].params)
 
         # compute vector field at internal stages
-        compute_stages!(int.solver[i].x, int.fcache.Q, int.fcache.V, int.fcache.Y, int.params, i)
+        compute_stages!(int.solver[i].x, int.cache.Q[i], int.cache.V[i], int.cache.Y[i], int.params, i)
+
+        # copy velocity field to parameters
+        int.params.V[i] .= int.cache.V[i]
     end
 
     # compute final update
-    update_solution!(int.q[m], int.fcache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
+    update_solution!(sol.q, sol.q̃, int.cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
 
-    # copy solution to initial guess
-    update!(int.iguess, m, sol.t[0] + n*int.params.Δt, int.q[m])
-
-    # take care of periodic solutions
-    cut_periodic_solution!(int.q[m], int.params.equ.periodicity)
-
-    # copy to solution
-    copy_solution!(sol, int.q[m], n, m)
+    # update vector field for initial guess
+    update!(int.iguess, sol.t, sol.q, sol.v)
 end

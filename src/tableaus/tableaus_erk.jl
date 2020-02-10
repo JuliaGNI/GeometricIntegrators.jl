@@ -20,6 +20,17 @@ function getTableauExplicitMidpoint()
     TableauERK(:explicit_midpoint, o, a, b, c)
 end
 
+"Tableau for Runge's method"
+function getTableauRunge()
+    a = [[0.0 0.0]
+         [1.0 0.0]]
+    b = [0.5, 0.5]
+    c = [0.0, 1.0]
+    o = 2
+
+    TableauERK(:runge, o, a, b, c)
+end
+
 "Tableau for Heun's method"
 function getTableauHeun()
     a = [[0.0 0.0]

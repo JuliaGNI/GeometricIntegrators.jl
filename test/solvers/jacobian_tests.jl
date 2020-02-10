@@ -1,4 +1,9 @@
 
+using GeometricIntegrators.Config
+using GeometricIntegrators.Solvers
+using Test
+
+
 n = 1
 T = Float64
 
@@ -21,6 +26,7 @@ JPAD = getJacobianParameters(nothing, F, T, n)
 set_config(:jacobian_autodiff, false)
 JPFD = getJacobianParameters(nothing, F, T, n)
 
+set_config(:jacobian_autodiff, true)
 JPUS = getJacobianParameters(J, F, T, n)
 
 @test typeof(JPAD) <: JacobianParametersAD
