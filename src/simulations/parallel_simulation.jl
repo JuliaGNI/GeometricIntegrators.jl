@@ -74,7 +74,7 @@ function run!(sim::ParallelSimulation)
             end
 
             write_to_hdf5(solution(sim))
-            reset!(solution(sim))
+            c == sim.ncycle || reset!(solution(sim))
         end
     catch ex
         if isa(ex, DomainError)
