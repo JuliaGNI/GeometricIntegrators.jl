@@ -138,7 +138,7 @@ for (TSolution, TDataSeries, Tdocstring) in
 
             @assert nm == size(dW,1)
             @assert ntime == size(dW,2)
-            @assert ns == size(dW,3)
+            @assert max(ni,ns) == size(dW,3)
 
             # Holds the Wiener process data for ALL computed time steps
             # Wiener process increments are prescribed by the arrays dW and dZ
