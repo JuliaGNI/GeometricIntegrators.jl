@@ -93,7 +93,7 @@ module LotkaVolterra2dProblem
     end
 
 
-    function ϑ(t, q, Θ)
+    function ϑ(t::Number, q::AbstractVector, Θ::AbstractVector)
         Θ[1] = ϑ₁(t,q)
         Θ[2] = ϑ₂(t,q)
         nothing
