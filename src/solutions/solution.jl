@@ -48,9 +48,17 @@ function Solution(equation::SDE, Δt, ntime::Int; kwargs...)
     SSolutionSDE(equation, Δt, ntime; kwargs...)
 end
 
+function Solution(equation::SDE, Δt, dW, dZ, ntime::Int; kwargs...)
+    SSolutionSDE(equation, Δt, dW, dZ, ntime; kwargs...)
+end
+
 "Create solution for PSDE."
 function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int; kwargs...)
     SSolutionPSDE(equation, Δt, ntime; kwargs...)
+end
+
+function Solution(equation::Union{PSDE,SPSDE}, Δt, dW, dZ, ntime::Int; kwargs...)
+    SSolutionPSDE(equation, Δt, dW, dZ, ntime; kwargs...)
 end
 
 "Print error for solutions of equations not implemented, yet."
