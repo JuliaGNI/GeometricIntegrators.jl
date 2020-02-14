@@ -201,11 +201,11 @@ function update_params!(int::IntegratorSIPRK, sol::AtomicSolutionPSDE)
     int.params.ΔZ .= sol.ΔZ
 
     # truncate the increments ΔW with A
-    if int.params.A>0
+    if int.params.A > 0
         for i in eachindex(int.params.ΔW)
-            if int.params.ΔW[i]<-int.params.A
+            if int.params.ΔW[i] <- int.params.A
                 int.params.ΔW[i] = -int.params.A
-            elseif int.params.ΔW[i]>int.params.A
+            elseif int.params.ΔW[i] > int.params.A
                 int.params.ΔW[i] = int.params.A
             end
         end
