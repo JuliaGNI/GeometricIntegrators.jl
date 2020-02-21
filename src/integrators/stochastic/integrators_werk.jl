@@ -141,7 +141,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolutionSDE{DT,T
         # Calculating the internal stage H^(0)_i
         @inbounds for k in eachindex(int.Q0)
             # contribution from the drift part
-            ydrift = 0.
+            ydrift = 0
             for j = 1:i-1
                 ydrift += int.tableau.qdrift0.a[i,j] * int.V[j][k]
             end
@@ -160,7 +160,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolutionSDE{DT,T
         # Calculating the internal stages H^(l)_i for l=1..sol.nm
         @inbounds for k in eachindex(int.Q1[1])
             # contribution from the drift part (same for all noises)
-            ydrift = 0.
+            ydrift = 0
             for j = 1:i-1
                 ydrift += int.tableau.qdrift1.a[i,j] * int.V[j][k]
             end
@@ -187,7 +187,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolutionSDE{DT,T
         # Calculating the internal stages \hat H^(l)_i for l=1..sol.nm
         @inbounds for k in eachindex(int.Q2[1])
             # contribution from the drift part (same for all noises)
-            ydrift = 0.
+            ydrift = 0
             for j = 1:i-1
                 ydrift += int.tableau.qdrift2.a[i,j] * int.V[j][k]
             end
@@ -196,7 +196,7 @@ function integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolutionSDE{DT,T
             @inbounds for noise_idx in eachindex(int.Q2)
 
                 # ΔW contribution from the diffusion part
-                ydiff2 = 0.0
+                ydiff2 = 0
 
                 for j = 1:i-1
                     for l in eachindex(sol.ΔW, sol.ΔZ)

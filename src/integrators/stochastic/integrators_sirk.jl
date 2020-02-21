@@ -220,21 +220,25 @@ end
 
         local y1::ST
         local y2::ST
+        local y3::ST
+        local y4::ST
 
         # compute b = - (Y-AV)
         for i in 1:S
             for k in 1:D
                 y1 = 0
                 y2 = 0
+                y3 = 0
+                y4 = 0
                 for j in 1:S
                     y1 += params.tab.qdrift.a[i,j] * $cache.V[j][k] * params.Δt
                     y2 += params.tab.qdrift.â[i,j] * $cache.V[j][k] * params.Δt
                     for l in 1:M
-                        y1 += params.tab.qdiff.a[i,j] * $cache.B[j][k,l] * params.ΔW[l]
-                        y2 += params.tab.qdiff.â[i,j] * $cache.B[j][k,l] * params.ΔW[l]
+                        y3 += params.tab.qdiff.a[i,j] * $cache.B[j][k,l] * params.ΔW[l]
+                        y4 += params.tab.qdiff.â[i,j] * $cache.B[j][k,l] * params.ΔW[l]
                     end
                 end
-                b[D*(i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
+                b[D*(i-1)+k] = - $cache.Y[i][k] + (y1 + y2) + (y3 + y4)
             end
         end
     end
@@ -321,5 +325,6 @@ function integrate_step!(int::IntegratorSIRK{DT,TT}, sol::AtomicSolutionSDE{DT,T
     compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.B, int.cache.Y, int.params)
 
     # compute final update
-    update_solution!(sol.q, int.cache.V, int.cache.B, int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂, int.params.Δt, int.params.ΔW, int.cache.Δy)
+    update_solution!(sol.q, int.cache.V, int.cache.B, int.params.tab.qdrift.b, int.params.tab.qdiff.b, int.params.Δt, int.params.ΔW, int.cache.Δy)
+    update_solution!(sol.q, int.cache.V, int.cache.B, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b̂, int.params.Δt, int.params.ΔW, int.cache.Δy)
 end
