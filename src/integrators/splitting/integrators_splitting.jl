@@ -2,7 +2,12 @@
 abstract type AbstractTableauSplitting{T <: Real} <: AbstractTableau{T} end
 
 
-"Tableau for non-symmetric splitting methods."
+"""
+Tableau for non-symmetric splitting methods.
+    See McLachlan, Quispel, 2003, Equ. (4.10).
+    The methods A and B are the composition of all vector fields in the SODE
+    and its adjoint, respectively.
+"""
 struct TableauSplittingNS{T} <: AbstractTableauSplitting{T}
     @HeaderTableau
 
@@ -20,7 +25,10 @@ function TableauSplittingNS(name, o, a::Vector{T}, b::Vector{T}) where {T}
 end
 
 
-"Tableau for symmetric splitting methods with general stages."
+"""
+Tableau for symmetric splitting methods with general stages.
+    See McLachlan, Quispel, 2003, Equ. (4.11).
+"""
 struct TableauSplittingGS{T} <: AbstractTableauSplitting{T}
     @HeaderTableau
 
@@ -38,7 +46,10 @@ function TableauSplittingGS(name, o, a::Vector{T}, b::Vector{T}) where {T}
 end
 
 
-"Tableau for symmetric splitting methods with symmetric stages."
+"""
+Tableau for symmetric splitting methods with symmetric stages.
+    See McLachlan, Quispel, 2003, Equ. (4.6).
+"""
 struct TableauSplittingSS{T} <: AbstractTableauSplitting{T}
     @HeaderTableau
 
@@ -55,7 +66,7 @@ function TableauSplittingSS(name, o, a::Vector{T}) where {T}
 end
 
 
-"Explicit Runge-Kutta integrator cache."
+"Splitting integrator cache."
 mutable struct IntegratorCacheSplitting{DT,TT,D} <: ODEIntegratorCache{DT,D}
     v::Vector{DT}
     q̃::Vector{DT}
