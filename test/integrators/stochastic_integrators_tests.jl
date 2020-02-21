@@ -30,90 +30,90 @@ spsde2  = kubo_oscillator_spsde_2()
 
 
 @testset "$(rpad("SERK integrators",80))" begin
+
     int = Integrator(sde1, getTableauBurrageE1(), Δt)
     sol = Solution(sde1, Δt, nt, conv=:strong)
     integrate!(int, sol)
-
     @test rel_energy_err_sde(sol) < 2E-6
 
     int = Integrator(sde2, getTableauBurrageE1(), Δt)
     sol = Solution(sde2, Δt, nt, conv=:strong)
     integrate!(int, sol)
-
     @test rel_energy_err_sde(sol) < 2E-6
+
 end
 
 
 @testset "$(rpad("SIRK integrators",80))" begin
+
     int = Integrator(sde1, getTableauStochasticGLRK(1), Δt)
     sol = Solution(sde1, Δt, nt, conv=:strong)
     integrate!(int, sol)
-
     @test rel_energy_err_sde(sol) < 1E-14
 
     int = Integrator(sde2, getTableauStochasticGLRK(1), Δt)
     sol = Solution(sde2, Δt, nt, conv=:strong)
     integrate!(int, sol)
-
     @test rel_energy_err_sde(sol) < 1E-14
+
 end
 
 
 @testset "$(rpad("WERK integrators",80))" begin
+
     int = Integrator(sde1, getTableauRosslerRS1(), Δt)
     sol = Solution(sde1, Δt, nt, conv=:weak)
     integrate!(int, sol)
-
     @test rel_energy_err_sde(sol) < 1E-5
 
     int = Integrator(sde2, getTableauRosslerRS1(), Δt)
     sol = Solution(sde2, Δt, nt, conv=:weak)
     integrate!(int, sol)
-
     @test rel_energy_err_sde(sol) < 1E-5
+
 end
 
 
 @testset "$(rpad("WIRK integrators",80))" begin
+
     int = Integrator(sde1, getTableauSRKw1(), Δt)
     sol = Solution(sde1, Δt, nt, conv=:weak)
     integrate!(int, sol)
-
     @test rel_energy_err_sde(sol) < 1E-14
 
     int = Integrator(sde2, getTableauSRKw1(), Δt)
     sol = Solution(sde2, Δt, nt, conv=:weak)
     integrate!(int, sol)
-
     @test rel_energy_err_sde(sol) < 1E-14
+
 end
 
 
 @testset "$(rpad("SIPRK integrators",80))" begin
+
     int = Integrator(psde1, getTableauStochasticStormerVerlet(), Δt)
     sol = Solution(psde1, Δt, nt, conv=:strong)
     integrate!(int, sol)
-
     @test rel_energy_err_psde(sol) < 1E-5
 
     int = Integrator(psde2, getTableauStochasticStormerVerlet(), Δt)
     sol = Solution(psde2, Δt, nt, conv=:strong)
     integrate!(int, sol)
-
     @test rel_energy_err_psde(sol) < 2E-5
+
 end
 
 
 @testset "$(rpad("SISPRK integrators",80))" begin
+
     int = Integrator(spsde1, getTableauModifiedStochasticStormerVerlet(), Δt)
     sol = Solution(spsde1, Δt, nt, conv=:strong)
     integrate!(int, sol)
-
-    @test rel_energy_err_psde(sol) < 0.02
+    @test rel_energy_err_psde(sol) < 2E-2
 
     int = Integrator(spsde2, getTableauModifiedStochasticStormerVerlet(), Δt)
     sol = Solution(spsde2, Δt, nt, conv=:strong)
     integrate!(int, sol)
-
-    @test rel_energy_err_psde(sol) < 0.02
+    @test rel_energy_err_psde(sol) < 2E-2
+    
 end

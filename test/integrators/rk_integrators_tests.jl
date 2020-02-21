@@ -33,19 +33,13 @@ end
 
 @testset "$(rpad("Explicit Runge-Kutta integrators",80))" begin
 
-    int = Integrator(ode, getTableauExplicitEuler(), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauExplicitEuler(), Δt, nt)
     @test rel_err(sol.q, refx) < 5E-2
 
-    int = Integrator(ode, getTableauExplicitMidpoint(), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauExplicitMidpoint(), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-3
 
-    int = Integrator(ode, getTableauERK4(), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauERK4(), Δt, nt)
     @test rel_err(sol.q, refx) < 5E-7
 
 end
@@ -92,81 +86,56 @@ end
 
     # check integrators
 
-    int = Integrator(ode, getTableauCrouzeix(), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauCrouzeix(), Δt, nt)
     @test rel_err(sol.q, refx) < 5E-5
 
-    int = Integrator(ode, getTableauImplicitEuler(), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauImplicitEuler(), Δt, nt)
     @test rel_err(sol.q, refx) < 5E-2
 
-    int = Integrator(ode, getTableauImplicitMidpoint(), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauImplicitMidpoint(), Δt, nt)
     @test rel_err(sol.q, refx) < 5E-4
 
-    int = Integrator(ode, getTableauGLRK(1), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauGLRK(1), Δt, nt)
     @test rel_err(sol.q, refx) < 5E-4
 
-    int = Integrator(ode, getTableauGLRK(2), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauGLRK(2), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-7
 
-    int = Integrator(ode, getTableauGLRK(3), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauGLRK(3), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = Integrator(ode, getTableauGLRK(4), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauGLRK(4), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
-    int = Integrator(ode, getTableauGLRK(5), Δt)
-
+    sol = integrate(ode, getTableauGLRK(5), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
-    int = Integrator(ode, getTableauGLRK(6), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauGLRK(6), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
-    int = Integrator(ode, getTableauGLRK(7), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauGLRK(7), Δt, nt)
     @test rel_err(sol.q, refx) < 5E-15
 
-    int = Integrator(ode, getTableauSRK3(), Δt)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, getTableauSRK3(), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-7
 
 
     # Test integration with exact Jacobian
 
     int = IntegratorFIRK(ode, getTableauGLRK(1), Δt; exact_jacobian=true)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, int, nt)
     @test rel_err(sol.q, refx) < 5E-4
 
     int = IntegratorFIRK(ode, getTableauGLRK(2), Δt; exact_jacobian=true)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, int, nt)
     @test rel_err(sol.q, refx) < 1E-7
 
     int = IntegratorFIRK(ode, getTableauGLRK(3), Δt; exact_jacobian=true)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
     int = IntegratorFIRK(ode, getTableauGLRK(4), Δt; exact_jacobian=true)
-    sol = integrate(int, nt)
-
+    sol = integrate(ode, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 end
@@ -174,39 +143,27 @@ end
 
 @testset "$(rpad("Partitioned Runge-Kutta integrators",80))" begin
 
-    pint = Integrator(pode, getTableauSymplecticEulerA(), Δt)
-    psol = integrate(pint, nt)
-
+    psol = integrate(pode, getTableauSymplecticEulerA(), Δt, nt)
     @test rel_err(psol.q, refq) < 5E-2
     @test rel_err(psol.p, refp) < 1E-3
 
-    pint = Integrator(pode, getTableauSymplecticEulerB(), Δt)
-    psol = integrate(pint, nt)
-
+    psol = integrate(pode, getTableauSymplecticEulerB(), Δt, nt)
     @test rel_err(psol.q, refq) < 5E-2
     @test rel_err(psol.p, refp) < 1E-3
 
-    pint = Integrator(pode, TableauEPRK(:prk4, 4, getTableauERK4().q), Δt)
-    psol = integrate(pint, nt)
-
+    psol = integrate(pode, TableauEPRK(:prk4, 4, getTableauERK4().q), Δt, nt)
     @test rel_err(psol.q, refq) < 5E-7
     @test rel_err(psol.p, refp) < 5E-7
 
-    pint = Integrator(pode, TableauIPRK(:pglrk, 2, getCoefficientsGLRK(1)), Δt)
-    psol = integrate(pint, nt)
-
+    psol = integrate(pode, TableauIPRK(:pglrk, 2, getCoefficientsGLRK(1)), Δt, nt)
     @test rel_err(psol.q, refq) < 5E-4
     @test rel_err(psol.p, refp) < 5E-4
 
-    pint = Integrator(pode, TableauIPRK(:pglrk, 4, getCoefficientsGLRK(2)), Δt)
-    psol = integrate(pint, nt)
-
+    psol = integrate(pode, TableauIPRK(:pglrk, 4, getCoefficientsGLRK(2)), Δt, nt)
     @test rel_err(psol.q, refq) < 1E-7
     @test rel_err(psol.p, refp) < 1E-7
 
-    pint = Integrator(pode, TableauIPRK(:pglrk, 6, getCoefficientsGLRK(3)), Δt)
-    psol = integrate(pint, nt)
-
+    psol = integrate(pode, TableauIPRK(:pglrk, 6, getCoefficientsGLRK(3)), Δt, nt)
     @test rel_err(psol.q, refq) < 1E-11
     @test rel_err(psol.p, refp) < 1E-11
 
@@ -216,21 +173,15 @@ end
 @testset "$(rpad("Special Runge-Kutta integrators",80))" begin
 
     pgint = IntegratorPGLRK(ode, getCoefficientsPGLRK(2), Δt)
-    pgsol = integrate(pgint, nt)
-
-    # println(rel_err(pgsol.q, refx))
+    pgsol = integrate(ode, pgint, nt)
     @test rel_err(pgsol.q, refx) < 4E-8
 
     pgint = IntegratorPGLRK(ode, getCoefficientsPGLRK(3), Δt)
-    pgsol = integrate(pgint, nt)
-
-    # println(rel_err(pgsol.q, refx))
+    pgsol = integrate(ode, pgint, nt)
     @test rel_err(pgsol.q, refx) < 2E-12
 
     pgint = IntegratorPGLRK(ode, getCoefficientsPGLRK(4), Δt)
-    pgsol = integrate(pgint, nt)
-
-    # println(rel_err(pgsol.q, refx))
+    pgsol = integrate(ode, pgint, nt)
     @test rel_err(pgsol.q, refx) < 8E-16
 
 end

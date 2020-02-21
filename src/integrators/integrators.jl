@@ -134,15 +134,15 @@ end
 #*****************************************************************************#
 
 "Apply integrator for ntime time steps and return solution."
-function integrate(integrator::Integrator, ntime::Int; kwargs...)
-    solution = Solution(equation(integrator), timestep(integrator), ntime; kwargs...)
+function integrate(equation::Equation, integrator::Integrator, ntime::Int; kwargs...)
+    solution = Solution(equation, timestep(integrator), ntime; kwargs...)
     integrate!(integrator, solution)
     return solution
 end
 
 "Integrate given equation with given tableau for ntime time steps and return solution."
 function integrate(equation::Equation, tableau::AbstractTableau, Δt, ntime; kwargs...)
-    return integrate(Integrator(equation, tableau, Δt), ntime; kwargs...)
+    return integrate(equation, Integrator(equation, tableau, Δt), ntime; kwargs...)
 end
 
 "Integrate ODE specified by vector field and initial condition with given tableau for ntime time steps and return solution."
