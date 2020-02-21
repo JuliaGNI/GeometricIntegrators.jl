@@ -37,7 +37,7 @@ module Integrators
 
 
     export Integrator, DeterministicIntegrator, StochasticIntegrator, IntegratorCache
-    export integrate, integrate!, equation, timestep
+    export integrate, integrate!, integrate_step!, equation, timestep
     export NonlinearFunctionParameters, function_stages!
 
     include("integrators/abstract_integrator.jl")
