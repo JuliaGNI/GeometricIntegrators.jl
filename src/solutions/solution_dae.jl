@@ -40,10 +40,11 @@ for (TSolution, TDataSeries, Tdocstring) in
             nwrite::Int
             counter::Vector{Int}
             woffset::Int
+            periodicity::Vector{dType}
             h5::HDF5File
 
-            function $TSolution{dType, tType, N}(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite) where {dType <: Number, tType <: Real, N}
-                new(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite, zeros(Int, ni), 0)
+            function $TSolution{dType, tType, N}(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite, periodicity=zeros(dType, nd)) where {dType <: Number, tType <: Real, N}
+                new(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite, zeros(Int, ni), 0, periodicity)
             end
         end
 
@@ -75,7 +76,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             t = TimeSeries{TT}(nt, Δt, nsave)
             q = $TDataSeries(DT, nd, nt, ni)
             λ = $TDataSeries(DT, nm, nt, ni)
-            s = $TSolution{DT,TT,N}(nd, nm, nt, ni, t, q, λ, ntime, nsave, nw)
+            s = $TSolution{DT,TT,N}(nd, nm, nt, ni, t, q, λ, ntime, nsave, nw, periodicity(equation))
             set_initial_conditions!(s, equation)
 
             if !isnothing(filename)
@@ -143,13 +144,15 @@ Base.:(==)(sol1::SolutionDAE{DT1,TT1,N1}, sol2::SolutionDAE{DT2,TT2,N2}) where {
                              && sol1.nsave == sol2.nsave
                              && sol1.nwrite == sol2.nwrite
                              && sol1.counter == sol2.counter
-                             && sol1.woffset == sol2.woffset)
+                             && sol1.woffset == sol2.woffset
+                             && sol1.periodicity == sol2.periodicity)
 
-hdf5(sol::SolutionDAE)  = sol.h5
-timesteps(sol::SolutionDAE)  = sol.t
-ntime(sol::SolutionDAE) = sol.ntime
-nsave(sol::SolutionDAE) = sol.nsave
-offset(sol::SolutionDAE) = sol.woffset
+@inline hdf5(sol::SolutionDAE)  = sol.h5
+@inline timesteps(sol::SolutionDAE)  = sol.t
+@inline ntime(sol::SolutionDAE) = sol.ntime
+@inline nsave(sol::SolutionDAE) = sol.nsave
+@inline offset(sol::SolutionDAE) = sol.woffset
+@inline CommonFunctions.periodicity(sol::SolutionDAE) = sol.periodicity
 
 
 "Create AtomicSolution for DAE."

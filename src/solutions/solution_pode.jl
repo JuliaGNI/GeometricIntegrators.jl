@@ -38,14 +38,16 @@ for (TSolution, TDataSeries, Tdocstring) in
             nwrite::Int
             counter::Vector{Int}
             woffset::Int
+            periodicity::Vector{dType}
             h5::HDF5File
 
-            function $TSolution{dType, tType, N}(nd, nt, ni, t, q, p, ntime, nsave, nwrite) where {dType <: Number, tType <: Real, N}
-                new(nd, nt, ni, t, q, p, ntime, nsave, nwrite, zeros(Int, ni), 0)
+            function $TSolution{dType, tType, N}(nd, nt, ni, t, q, p, ntime, nsave, nwrite, periodicity=zeros(dType, nd)) where {dType <: Number, tType <: Real, N}
+                new(nd, nt, ni, t, q, p, ntime, nsave, nwrite, zeros(Int, ni), 0, periodicity)
             end
         end
 
-        function $TSolution(equation::Union{PODE{DT,TT}, IODE{DT,TT}, VODE{DT,TT}}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT}
+        function $TSolution(equation::Union{PODE{DT,TT}, IODE{DT,TT}, VODE{DT,TT}}, Δt::TT, ntime::Int;
+                            nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT}
             @assert nsave > 0
             @assert ntime == 0 || ntime ≥ nsave
             @assert nwrite == 0 || nwrite ≥ nsave
@@ -71,7 +73,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             t = TimeSeries{TT}(nt, Δt, nsave)
             q = $TDataSeries(DT, nd, nt, ni)
             p = $TDataSeries(DT, nd, nt, ni)
-            s = $TSolution{DT,TT,N}(nd, nt, ni, t, q, p, ntime, nsave, nw)
+            s = $TSolution{DT,TT,N}(nd, nt, ni, t, q, p, ntime, nsave, nw, periodicity(equation))
             set_initial_conditions!(s, equation)
 
             if !isnothing(filename)
@@ -132,13 +134,15 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
                              && sol1.p  == sol2.p
                              && sol1.ntime == sol2.ntime
                              && sol1.nsave == sol2.nsave
-                             && sol1.counter == sol2.counter)
+                             && sol1.counter == sol2.counter
+                             && sol1.periodicity == sol2.periodicity)
 
-hdf5(sol::SolutionPODE)  = sol.h5
-timesteps(sol::SolutionPODE)  = sol.t
-ntime(sol::SolutionPODE) = sol.ntime
-nsave(sol::SolutionPODE) = sol.nsave
-offset(sol::SolutionPODE) = sol.woffset
+@inline hdf5(sol::SolutionPODE)  = sol.h5
+@inline timesteps(sol::SolutionPODE)  = sol.t
+@inline ntime(sol::SolutionPODE) = sol.ntime
+@inline nsave(sol::SolutionPODE) = sol.nsave
+@inline offset(sol::SolutionPODE) = sol.woffset
+@inline CommonFunctions.periodicity(sol::SolutionPODE) = sol.periodicity
 
 
 "Create AtomicSolution for partitioned ODE."

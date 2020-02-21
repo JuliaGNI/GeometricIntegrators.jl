@@ -140,4 +140,4 @@ end
 
 @inline Base.ndims(sde::PSDE) = sde.d
 
-@inline periodicity(equation::PSDE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::PSDE) = equation.periodicity

@@ -1,11 +1,11 @@
 module Equations
 
+    using ..CommonFunctions
+    
     export Equation
     export AbstractEquationODE, AbstractEquationPODE,
            AbstractEquationDAE, AbstractEquationPDAE,
            AbstractEquationSDE, AbstractEquationPSDE
-
-    export periodicity
 
     export ODE, IODE, PODE, HODE, VODE, SODE
     export DAE, IDAE, PDAE, HDAE, VDAE

@@ -147,4 +147,4 @@ end
 
 @inline Base.ndims(ode::VODE) = ode.d
 
-@inline periodicity(equation::VODE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::VODE) = equation.periodicity

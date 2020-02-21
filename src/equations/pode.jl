@@ -105,4 +105,4 @@ end
 
 @inline Base.ndims(ode::PODE) = ode.d
 
-@inline periodicity(equation::PODE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::PODE) = equation.periodicity

@@ -224,7 +224,7 @@ function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT}, a
     integrate_step!(int, asol)
 
     # take care of periodic solutions
-    cut_periodic_solution!(asol, periodicity(equation(int)))
+    cut_periodic_solution!(asol, periodicity(sol))
 
     # copy solution from cache to solution
     set_solution!(sol, asol, n, m)
@@ -239,7 +239,7 @@ function integrate!(int::StochasticIntegrator{DT,TT}, sol::Solution{DT,TT}, asol
     integrate_step!(int, asol)
 
     # take care of periodic solutions
-    cut_periodic_solution!(asol, periodicity(equation(int)))
+    cut_periodic_solution!(asol, periodicity(sol))
 
     # copy solution from cache to solution
     set_solution!(sol, asol, n, m)

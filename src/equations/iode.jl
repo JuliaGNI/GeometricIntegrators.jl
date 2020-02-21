@@ -143,4 +143,4 @@ end
 
 @inline Base.ndims(ode::IODE) = ode.d
 
-@inline periodicity(equation::IODE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::IODE) = equation.periodicity

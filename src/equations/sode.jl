@@ -93,4 +93,4 @@ end
 
 @inline Base.ndims(ode::SODE) = ode.d
 
-@inline periodicity(equation::SODE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::SODE) = equation.periodicity

@@ -171,4 +171,4 @@ end
 
 @inline Base.ndims(ode::VDAE) = ode.d
 
-@inline periodicity(equation::VDAE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::VDAE) = equation.periodicity

@@ -44,6 +44,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             counter::Vector{Int}
             woffset::Int
             ioffset::Int
+            periodicity::Vector{dType}
             h5::HDF5File
 
             function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,NQ}, p::$TDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}
@@ -67,7 +68,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             end
 
             function $TSolution(nd::Int, nm::Int, nt::Int, ns::Int, ni::Int, Δt::tType,
-                        W::WienerProcess{dType,tType,NW,CONV}, K::Int, ntime::Int, nsave::Int, nwrite::Int) where {dType <: Number, tType <: Real, NW, CONV}
+                        W::WienerProcess{dType,tType,NW,CONV}, K::Int, ntime::Int, nsave::Int, nwrite::Int, periodicity=zeros(dType, nd)) where {dType <: Number, tType <: Real, NW, CONV}
 
                 @assert CONV==:strong || (CONV==:weak && K==0) || CONV==:null
 
@@ -94,7 +95,7 @@ for (TSolution, TDataSeries, Tdocstring) in
                 p = $TDataSeries(dType, nd, nt, max(ns,ni))
                 NQ = ns==ni==1 ? 2 : 3
 
-                new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, p, W, K, ntime, nsave, nwrite, zeros(Int, max(ns,ni)), 0, 0)
+                new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, p, W, K, ntime, nsave, nwrite, zeros(Int, max(ns,ni)), 0, 0, periodicity)
             end
         end
 
@@ -112,7 +113,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             # Wiener process increments are automatically generated here
             W = WienerProcess(DT, nm, nw, max(ni,ns), Δt, conv)
 
-            s = $TSolution(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw)
+            s = $TSolution(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw, periodicity(equation))
             set_initial_conditions!(s, equation)
 
             if !isnothing(filename)
@@ -144,7 +145,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             # Wiener process increments are prescribed by the arrays dW and dZ
             W = WienerProcess(Δt, dW, dZ, conv)
 
-            s = $TSolution(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw)
+            s = $TSolution(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw, periodicity(equation))
             set_initial_conditions!(s, equation)
 
             if !isnothing(filename)
@@ -243,15 +244,17 @@ Base.:(==)(sol1::SolutionPSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionPSDE{DT2,TT2,NQ
                              && sol1.nsave == sol2.nsave
                              && sol1.nwrite == sol2.nwrite
                              && sol1.counter == sol2.counter
-                             && sol1.woffset == sol2.woffset)
+                             && sol1.woffset == sol2.woffset
+                             && sol1.periodicity == sol2.periodicity)
 
-hdf5(sol::SolutionPSDE) = sol.h5
-timesteps(sol::SolutionPSDE)  = sol.t
-ntime(sol::SolutionPSDE) = sol.ntime
-nsave(sol::SolutionPSDE) = sol.nsave
-offset(sol::SolutionPSDE) = sol.woffset
-ioffset(sol::SolutionPSDE) = sol.ioffset
-conv(sol::SolutionPSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
+@inline hdf5(sol::SolutionPSDE) = sol.h5
+@inline timesteps(sol::SolutionPSDE)  = sol.t
+@inline ntime(sol::SolutionPSDE) = sol.ntime
+@inline nsave(sol::SolutionPSDE) = sol.nsave
+@inline offset(sol::SolutionPSDE) = sol.woffset
+@inline ioffset(sol::SolutionPSDE) = sol.ioffset
+@inline conv(sol::SolutionPSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
+@inline CommonFunctions.periodicity(sol::SolutionPSDE) = sol.periodicity
 
 
 "Create AtomicSolution for PSDE."

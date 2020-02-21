@@ -129,4 +129,4 @@ end
 
 @inline Base.ndims(dae::DAE) = dae.d
 
-@inline periodicity(equation::DAE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::DAE) = equation.periodicity

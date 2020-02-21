@@ -39,12 +39,13 @@ for (TSolution, TDataSeries, Tdocstring) in
             periodicity::Vector{dType}
             h5::HDF5File
 
-            function $TSolution{dType, tType, N}(nd, nt, ni, t, q, ntime, nsave, nwrite) where {dType <: Number, tType <: Real, N}
-                new(nd, nt, ni, t, q, ntime, nsave, nwrite, zeros(Int, ni), 0)
+            function $TSolution{dType, tType, N}(nd, nt, ni, t, q, ntime, nsave, nwrite, periodicity=zeros(dType, nd)) where {dType <: Number, tType <: Real, N}
+                new(nd, nt, ni, t, q, ntime, nsave, nwrite, zeros(Int, ni), 0, periodicity)
             end
         end
 
-        function $TSolution(equation::Union{ODE{DT,TT,FT},SODE{DT,TT,FT}}, Δt::TT, ntime::Int; nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,FT}
+        function $TSolution(equation::Union{ODE{DT,TT,FT},SODE{DT,TT,FT}}, Δt::TT, ntime::Int;
+                            nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,FT}
             @assert nsave > 0
             @assert ntime == 0 || ntime ≥ nsave
             @assert nwrite == 0 || nwrite ≥ nsave
@@ -69,7 +70,7 @@ for (TSolution, TDataSeries, Tdocstring) in
 
             t = TimeSeries{TT}(nt, Δt, nsave)
             q = $TDataSeries(DT, nd, nt, ni)
-            s = $TSolution{DT,TT,N}(nd, nt, ni, t, q, ntime, nsave, nw)
+            s = $TSolution{DT,TT,N}(nd, nt, ni, t, q, ntime, nsave, nw, periodicity(equation))
             set_initial_conditions!(s, equation)
 
             if !isnothing(filename)
@@ -129,14 +130,15 @@ Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {
                              && sol1.nsave == sol2.nsave
                              && sol1.nwrite == sol2.nwrite
                              && sol1.counter == sol2.counter
-                             && sol1.woffset == sol2.woffset)
+                             && sol1.woffset == sol2.woffset
+                             && sol1.periodicity == sol2.periodicity)
 
-hdf5(sol::SolutionODE)  = sol.h5
-timesteps(sol::SolutionODE)  = sol.t
-ntime(sol::SolutionODE) = sol.ntime
-nsave(sol::SolutionODE) = sol.nsave
-offset(sol::SolutionODE) = sol.woffset
-
+@inline hdf5(sol::SolutionODE)  = sol.h5
+@inline timesteps(sol::SolutionODE)  = sol.t
+@inline ntime(sol::SolutionODE) = sol.ntime
+@inline nsave(sol::SolutionODE) = sol.nsave
+@inline offset(sol::SolutionODE) = sol.woffset
+@inline CommonFunctions.periodicity(sol::SolutionODE) = sol.periodicity
 
 "Create AtomicSolution for ODE."
 function AtomicSolution(solution::SolutionODE{DT,TT}) where {DT,TT}
