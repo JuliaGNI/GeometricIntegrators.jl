@@ -36,6 +36,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             nwrite::Int
             counter::Vector{Int}
             woffset::Int
+            periodicity::Vector{dType}
             h5::HDF5File
 
             function $TSolution{dType, tType, N}(nd, nt, ni, t, q, ntime, nsave, nwrite) where {dType <: Number, tType <: Real, N}
@@ -135,6 +136,12 @@ timesteps(sol::SolutionODE)  = sol.t
 ntime(sol::SolutionODE) = sol.ntime
 nsave(sol::SolutionODE) = sol.nsave
 offset(sol::SolutionODE) = sol.woffset
+
+
+"Create AtomicSolution for ODE."
+function AtomicSolution(solution::SolutionODE{DT,TT}) where {DT,TT}
+    AtomicSolutionODE{DT,TT}(solution.nd)
+end
 
 
 function set_initial_conditions!(sol::SolutionODE, equ::Union{ODE,SODE})

@@ -141,6 +141,12 @@ nsave(sol::SolutionPODE) = sol.nsave
 offset(sol::SolutionPODE) = sol.woffset
 
 
+"Create AtomicSolution for partitioned ODE."
+function AtomicSolution(solution::SolutionPODE{DT,TT}) where {DT,TT}
+    AtomicSolutionPODE{DT,TT}(solution.nd)
+end
+
+
 function set_initial_conditions!(sol::SolutionPODE, equ::Union{PODE,IODE,VODE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end

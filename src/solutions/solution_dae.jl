@@ -152,6 +152,12 @@ nsave(sol::SolutionDAE) = sol.nsave
 offset(sol::SolutionDAE) = sol.woffset
 
 
+"Create AtomicSolution for DAE."
+function AtomicSolution(solution::SolutionDAE{DT,TT}) where {DT,TT}
+    AtomicSolutionDAE{DT,TT}(solution.nd, solution.nm)
+end
+
+
 function set_initial_conditions!(sol::SolutionDAE, equ::DAE)
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.λ₀)
 end

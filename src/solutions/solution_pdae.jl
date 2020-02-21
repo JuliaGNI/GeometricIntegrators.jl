@@ -157,6 +157,12 @@ nsave(sol::SolutionPDAE) = sol.nsave
 offset(sol::SolutionPDAE) = sol.woffset
 
 
+"Create AtomicSolution for partitioned DAE."
+function AtomicSolution(solution::SolutionPDAE{DT,TT}) where {DT,TT}
+    AtomicSolutionPDAE{DT,TT}(solution.nd, solution.nm)
+end
+
+
 function set_initial_conditions!(sol::SolutionPDAE, equ::Union{IODE,VODE,PDAE,IDAE,VDAE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, equ.λ₀)
 end

@@ -183,7 +183,7 @@ function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT}, m1::Int, m2::I
     @assert n2 ≥ n1
     @assert n2 ≤ ntime(sol)
 
-    asol = AtomicSolution(equation(int))
+    asol = AtomicSolution(sol)
 
     # loop over initial conditions showing progress bar
     for m in m1:m2

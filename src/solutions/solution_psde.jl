@@ -254,6 +254,12 @@ ioffset(sol::SolutionPSDE) = sol.ioffset
 conv(sol::SolutionPSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
 
 
+"Create AtomicSolution for PSDE."
+function AtomicSolution(solution::SolutionPSDE{DT,TT}) where {DT,TT}
+    AtomicSolutionPSDE{DT,TT}(solution.nd, solution.nm)
+end
+
+
 function set_initial_conditions!(sol::SolutionPSDE, equ::Union{PSDE,SPSDE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end
