@@ -5,7 +5,7 @@ module LotkaVolterra2dProblem
     export lotka_volterra_2d_ode,  lotka_volterra_2d_pdae,
            lotka_volterra_2d_iode, lotka_volterra_2d_idae,
            lotka_volterra_2d_vode, lotka_volterra_2d_vdae,
-           lotka_volterra_2d_dg
+           lotka_volterra_2d_dg, lotka_volterra_2d_vdae_slrk
 
 
     Δt = 0.01
@@ -265,8 +265,8 @@ module LotkaVolterra2dProblem
     end
 
     function lotka_volterra_2d_ψ(t, q, p, v, f, ψ)
-        ψ[1] = f[1] - v[1] * dϑ₁d₁(t,q) - v[2] * dϑ₁d₂(t,q)
-        ψ[2] = f[2] - v[1] * dϑ₂d₁(t,q) - v[2] * dϑ₂d₂(t,q)
+        ψ[1] = f[1] - g₁(t,q,v)
+        ψ[2] = f[2] - g₂(t,q,v)
         nothing
     end
 
@@ -303,6 +303,13 @@ module LotkaVolterra2dProblem
 
     function lotka_volterra_2d_vdae(q₀=q₀, p₀=p₀, λ₀=zero(q₀))
         VDAE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f_ham,
+             lotka_volterra_2d_g, lotka_volterra_2d_g̅,
+             lotka_volterra_2d_ϕ, lotka_volterra_2d_ψ,
+             q₀, p₀, λ₀; v=lotka_volterra_2d_v)
+    end
+
+    function lotka_volterra_2d_vdae_slrk(q₀=q₀, p₀=p₀, λ₀=zero(q₀))
+        VDAE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
              lotka_volterra_2d_g, lotka_volterra_2d_g̅,
              lotka_volterra_2d_ϕ, lotka_volterra_2d_ψ,
              q₀, p₀, λ₀; v=lotka_volterra_2d_v)
