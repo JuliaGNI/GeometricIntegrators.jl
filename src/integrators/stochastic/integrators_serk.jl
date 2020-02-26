@@ -108,13 +108,13 @@ function integrate_step!(int::IntegratorSERK{DT,TT}, sol::AtomicSolutionSDE{DT,T
     @inbounds for i in 2:int.tableau.s
         for k in eachindex(int.Q[i])
             # contribution from the drift part
-            ydrift = 0.
+            ydrift = 0
             for j = 1:i-1
                 ydrift += int.tableau.qdrift.a[i,j] * int.V[j][k]
             end
 
             # ΔW contribution from the diffusion part
-            int.Δy .= 0.
+            int.Δy .= 0
             for j = 1:i-1
                 for l = 1:equation(int).m
                     int.Δy[l] += int.tableau.qdiff.a[i,j] * int.B[j][k,l]
@@ -125,7 +125,7 @@ function integrate_step!(int::IntegratorSERK{DT,TT}, sol::AtomicSolutionSDE{DT,T
 
             # ΔZ contribution from the diffusion part
             if int.tableau.qdiff2.name ≠ :NULL
-                int.Δy .= 0.
+                int.Δy .= 0
                 for j = 1:i-1
                     for l = 1:equation(int).m
                         int.Δy[l] += int.tableau.qdiff2.a[i,j] * int.B[j][k,l]

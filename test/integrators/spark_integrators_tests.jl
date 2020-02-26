@@ -15,10 +15,92 @@ set_config(:nls_rtol, 2eps())
 idae = lotka_volterra_2d_idae()
 pdae = lotka_volterra_2d_pdae()
 vdae = lotka_volterra_2d_vdae()
+vdae_slrk = lotka_volterra_2d_vdae_slrk()
 
 int  = IntegratorFIRK(lotka_volterra_2d_ode(), getTableauGLRK(8), Δt)
 sol  = integrate(int, nt)
 refx = sol.q[:,end]
+
+
+
+@testset "$(rpad("SLRK integrators",80))" begin
+
+    dint = IntegratorSLRK(vdae_slrk, getTableauSLRKLobIIIAB(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 4E-6
+
+    dint = IntegratorSLRK(vdae_slrk, getTableauSLRKLobIIIAB(3), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 2E-11
+
+    dint = IntegratorSLRK(vdae_slrk, getTableauSLRKLobIIIAB(4), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-15
+
+
+    dint = IntegratorSLRK(vdae_slrk, getTableauSLRKLobIIIC(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 4E-6
+
+    dint = IntegratorSLRK(vdae_slrk, getTableauSLRKLobIIIC(3), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 2E-11
+
+    dint = IntegratorSLRK(vdae_slrk, getTableauSLRKLobIIIC(4), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-15
+
+
+    dint = IntegratorSLRK(vdae_slrk, getTableauSLRKLobIIID(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 4E-6
+
+    dint = IntegratorSLRK(vdae_slrk, getTableauSLRKLobIIID(3), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 2E-11
+
+    dint = IntegratorSLRK(vdae_slrk, getTableauSLRKLobIIID(4), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 2E-15
+
+
+    dint = IntegratorSLRK(vdae_slrk, getTableauSLRKLobIIIE(2), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-6
+
+    dint = IntegratorSLRK(vdae_slrk, getTableauSLRKLobIIIE(3), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-11
+
+    dint = IntegratorSLRK(vdae_slrk, getTableauSLRKLobIIIE(4), Δt)
+    dsol = integrate(dint, nt)
+
+    # println(rel_err(dsol.q, refx))
+    @test rel_err(dsol.q, refx) < 1E-15
+
+end
 
 
 @testset "$(rpad("VPARK integrators",80))" begin
@@ -248,7 +330,7 @@ end
     dsol = integrate(dint, nt)
 
     # println(rel_err(dsol.q, refx))
-    @test rel_err(dsol.q, refx) < 1E-15
+    @test rel_err(dsol.q, refx) < 2E-15
 
 
     dint = Integrator(vdae, getTableauVSPARKGLRKLobIIID(1), Δt)

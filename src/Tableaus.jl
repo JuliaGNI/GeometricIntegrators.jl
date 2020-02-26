@@ -157,6 +157,13 @@ module Tableaus
 
     include("tableaus/tableaus_hspark.jl")
 
+    export getTableauSLRKLobIIIAB,
+           getTableauSLRKLobIIIC,
+           getTableauSLRKLobIIID,
+           getTableauSLRKLobIIIE
+
+    include("tableaus/tableaus_slrk.jl")
+
     export getTableauLieA, getTableauLieB, getTableauStrang,
            getTableauMcLachlan2, getTableauMcLachlan4,
            getTableauTripleJump, getTableauSuzukiFractal

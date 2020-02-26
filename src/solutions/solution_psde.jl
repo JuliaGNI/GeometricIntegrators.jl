@@ -337,14 +337,14 @@ end
 
 
 # copy increments of the Brownian Process for multidimensional Brownian motion, 1 sample path
-function get_increment(sol::SolutionPSDE{DT,TT,NQ,2}, k=1) where {DT,TT,NQ}
+function get_increment(sol::SolutionPSDE{DT,TT,NQ,2}, n, k=1) where {DT,TT,NQ}
     @assert k==1
-    return (sol.W.ΔW[:,n], sol.W.ΔZ[:,n-1])
+    return (sol.W.ΔW[:,n], sol.W.ΔZ[:,n])
 end
 
 # copy increments of the Brownian Process for multidimensional Brownian motion, r-th sample path
-function get_increment(sol::SolutionPSDE{DT,TT,NQ,3}, k) where {DT,TT,NQ}
-    return (sol.W.ΔW[:,n,k], sol.W.ΔZ[:,n-1,k])
+function get_increment(sol::SolutionPSDE{DT,TT,NQ,3}, n, k) where {DT,TT,NQ}
+    return (sol.W.ΔW[:,n,k], sol.W.ΔZ[:,n,k])
 end
 
 # copy increments of the Brownian Process for multidimensional Brownian motion, 1 sample path

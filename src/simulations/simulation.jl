@@ -21,7 +21,7 @@ function Simulation(equ::ET, int::IT, sol::ST, run_id::String, filename::String)
     Simulation{ET,IT,ST}(equ, int, sol, ncycle, run_id, filename)
 end
 
-function Simulation(equ::Equation, int::Integrator, Δt, run_id, filename, ntime; nsave=1, nwrite=1)
+function Simulation(equ::Equation, int::Integrator, Δt, run_id, filename, ntime; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE)
     Simulation(equ, int, Solution(equ, Δt, ntime; nsave=nsave, nwrite=nwrite), run_id, filename)
 end
 
@@ -61,7 +61,7 @@ function run!(sim::Simulation)
             end
 
             write_to_hdf5(solution(sim))
-            reset!(solution(sim))
+            c == sim.ncycle || reset!(solution(sim))
         end
     catch ex
         if isa(ex, DomainError)

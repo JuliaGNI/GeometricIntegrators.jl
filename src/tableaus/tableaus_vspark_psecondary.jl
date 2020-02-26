@@ -24,6 +24,9 @@ function getTableauVSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
     a_p_1 = g.a
     b_p_1 = g.b
 
+    a_p_2 = g.a
+    a_p_3 = g.a
+
     β_q_1 = lq.b
     β_q_2 = lq.b
 
@@ -46,9 +49,6 @@ function getTableauVSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
             a_q_2[i,j] = b_q_2[j] / b_p_1[i] * (b_p_1[i] - α_p_1[j,i])
         end
     end
-
-    a_p_2 = a_q_1
-    a_p_3 = a_q_2
 
 
     a_q = (a_q_1, a_q_2)
@@ -89,8 +89,9 @@ function getTableauVSPARKLobIIIAB(s)
 end
 
 function getTableauVSPARKLobIIIC(s)
-    l = getCoefficientsLobIII(s)
-    getTableauVSPARKLobIII(s, l, l)
+    lq = getCoefficientsLobIII(s)
+    lp = getCoefficientsLobIIIC(s)
+    getTableauVSPARKLobIII(s, lq, lp)
 end
 
 function getTableauVSPARKLobIIID(s)

@@ -30,7 +30,7 @@ function ParallelSimulation(equ::ET, ints::IT, sol::ST, run_id::String, filename
     ParallelSimulation{ET,IT,ST}(equ, ints, sol, ncycle, run_id, filename)
 end
 
-function ParallelSimulation(equ::Equation, ints::Tuple, Δt, run_id, filename, ntime; nsave=1, nwrite=1)
+function ParallelSimulation(equ::Equation, ints::Tuple, Δt, run_id, filename, ntime; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE)
     ParallelSimulation(equ, ints, ParallelSolution(equ, Δt, ntime; nsave=nsave, nwrite=nwrite), run_id, filename)
 end
 
@@ -74,7 +74,7 @@ function run!(sim::ParallelSimulation)
             end
 
             write_to_hdf5(solution(sim))
-            reset!(solution(sim))
+            c == sim.ncycle || reset!(solution(sim))
         end
     catch ex
         if isa(ex, DomainError)
