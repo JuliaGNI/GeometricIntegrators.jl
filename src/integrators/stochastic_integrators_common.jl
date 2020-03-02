@@ -21,7 +21,7 @@ function update_solution!(x::SolutionVector{T}, V::Vector{Vector{T}}, B::Vector{
     # Contribution from the drift part
     for k in eachindex(x)
         Δx = 0
-        for i in eachindex(V)
+        for i in eachindex(bdrift, V)
             Δx += bdrift[i] * V[i][k]
         end
         x[k] += Δt * Δx
@@ -30,7 +30,7 @@ function update_solution!(x::SolutionVector{T}, V::Vector{Vector{T}}, B::Vector{
     # Contribution from the diffusion part
     for k in eachindex(x)
         Δy .= 0
-        for i in eachindex(B)
+        for i in eachindex(bdiff, B)
             for l in eachindex(Δy)
                 Δy[l] += bdiff[i] * B[i][k,l]
             end
@@ -66,7 +66,7 @@ function update_solution!(x::SolutionVector{T}, V::Vector{Vector{T}}, B::Vector{
     # Contribution from the drift part
     for k in eachindex(x)
         Δx = 0
-        for i in eachindex(V)
+        for i in eachindex(bdrift, V)
             Δx += bdrift[i] * V[i][k]
         end
         x[k] += Δt * Δx
@@ -75,7 +75,7 @@ function update_solution!(x::SolutionVector{T}, V::Vector{Vector{T}}, B::Vector{
     # Contribution from the diffusion part (ΔW terms)
     for k in eachindex(x)
         Δy .= 0
-        for i in eachindex(B)
+        for i in eachindex(bdiff, B)
             for l in eachindex(Δy)
                 Δy[l] += bdiff[i] * B[i][k,l]
             end
@@ -86,7 +86,7 @@ function update_solution!(x::SolutionVector{T}, V::Vector{Vector{T}}, B::Vector{
     # Contribution from the diffusion part (ΔZ terms)
     for k in eachindex(x)
         Δy .= 0
-        for i in eachindex(B)
+        for i in eachindex(bdiff2, B)
             for l in eachindex(Δy)
                 Δy[l] += bdiff2[i] * B[i][k,l]
             end
@@ -125,7 +125,7 @@ function update_solution!(q::SolutionVector{T}, p::SolutionVector{T},
     for k in eachindex(q, p)
         Δq = 0
         Δp = 0
-        for i in eachindex(V, F)
+        for i in eachindex(bqdrift, bpdrift, V, F)
             Δq += bqdrift[i] * V[i][k]
             Δp += bpdrift[i] * F[i][k]
         end
@@ -138,8 +138,8 @@ function update_solution!(q::SolutionVector{T}, p::SolutionVector{T},
         Δy .= 0
         Δz .= 0
 
-        for i in eachindex(B, G)
-            for l in eachindex(Δy,Δz)
+        for i in eachindex(bqdiff, bpdiff, B, G)
+            for l in eachindex(Δy, Δz)
                 Δy[l] += bqdiff[i] * B[i][k,l]
                 Δz[l] += bpdiff[i] * G[i][k,l]
             end
@@ -181,7 +181,7 @@ function update_solution!(q::SolutionVector{T}, p::SolutionVector{T},
    for k in eachindex(q, p)
        Δq = 0
        Δp = 0
-       for i in eachindex(V, F1, F2)
+       for i in eachindex(bqdrift, bpdrift1, bpdrift2, V, F1, F2)
            Δq += bqdrift[i] * V[i][k]
            Δp += bpdrift1[i] * F1[i][k] + bpdrift2[i] * F2[i][k]
        end
@@ -194,7 +194,7 @@ function update_solution!(q::SolutionVector{T}, p::SolutionVector{T},
        Δy .= 0
        Δz .= 0
 
-       for i in eachindex(B, G1, G2)
+       for i in eachindex(bqdiff, bpdiff1, bpdiff2, B, G1, G2)
            for l in eachindex(Δy,Δz)
                Δy[l] += bqdiff[i]  * B[i][k,l]
                Δz[l] += bpdiff1[i] * G1[i][k,l] + bpdiff2[i] * G2[i][k,l]
@@ -232,7 +232,7 @@ function update_solution!(x::SolutionVector{T}, V::Vector{Vector{T}},
     # Contribution from the drift part
     for k in eachindex(x)
         Δx = 0
-        for i in eachindex(V)
+        for i in eachindex(α, V)
             Δx += α[i] * V[i][k]
         end
         x[k] += Δt * Δx
@@ -241,7 +241,7 @@ function update_solution!(x::SolutionVector{T}, V::Vector{Vector{T}},
     # Contribution from the diffusion term with the random variables I^(k)_i
     for k in eachindex(x)
         Δy .= 0
-        for i in eachindex(B1)
+        for i in eachindex(β1, B1)
             for l in eachindex(Δy)
                 Δy[l] += β1[i] * B1[i][k,l]
             end
@@ -252,7 +252,7 @@ function update_solution!(x::SolutionVector{T}, V::Vector{Vector{T}},
     # Contribution from the second diffusion term
     for k in eachindex(x)
         Δx = 0
-        for i in eachindex(B2)
+        for i in eachindex(β2, B2)
             for l in axes(B2[i], 2)
                 Δx += β2[i] * B2[i][k,l]
             end
