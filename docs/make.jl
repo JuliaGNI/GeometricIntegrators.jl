@@ -1,4 +1,5 @@
-using Documenter, GeometricIntegrators
+using Documenter
+using GeometricIntegrators
 
 makedocs(
     sitename = "GeometricIntegrators.jl",
