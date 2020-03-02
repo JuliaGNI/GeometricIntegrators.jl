@@ -79,9 +79,10 @@ function IntegratorVPRKpVariational(equation::ET, tableau::TableauVPRK{TT}, Δt:
             sparams, pparams, solver, projector, iguess, cache)
 end
 
-equation(integrator::IntegratorVPRKpVariational) = integrator.sparams.equ
-timestep(integrator::IntegratorVPRKpVariational) = integrator.sparams.Δt
-tableau(integrator::IntegratorVPRKpVariational) = integrator.sparams.tab
+@inline equation(integrator::IntegratorVPRKpVariational) = integrator.sparams.equ
+@inline timestep(integrator::IntegratorVPRKpVariational) = integrator.sparams.Δt
+@inline tableau(integrator::IntegratorVPRKpVariational) = integrator.sparams.tab
+@inline Base.ndims(int::IntegratorVPRKpVariational{DT,TT,SPT,PPT,SST,STP,IT,D,S}) where {DT,TT,SPT,PPT,SST,STP,IT,D,S} = D
 
 
 function compute_projection!(

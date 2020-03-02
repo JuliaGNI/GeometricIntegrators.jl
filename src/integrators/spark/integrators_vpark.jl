@@ -236,6 +236,9 @@ function IntegratorVPARK(equation::IDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
 end
 
 
+@inline Base.ndims(int::IntegratorVPARK{DT,TT,ET,PT,ST,IT,D,S}) where {DT,TT,ET,PT,ST,IT,D,S} = D
+
+
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
                                         params::ParametersVPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local tpᵢ::TT

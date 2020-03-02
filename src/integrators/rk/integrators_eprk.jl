@@ -44,14 +44,14 @@ end
 
 
 "Parameters for right-hand side function of explicit partitioned Runge-Kutta methods."
-struct ParametersEPRK{DT, TT, ET <: PODE{DT,TT}, D, S} <: Parameters{DT,TT}
-    equ::ET
+struct ParametersEPRK{DT, TT, ET <: NamedTuple, D, S} <: Parameters{DT,TT}
+    equs::ET
     tab::TableauEPRK{TT}
     Δt::TT
-end
 
-function ParametersEPRK(equ::ET, tab::TableauEPRK{TT}, Δt::TT) where {DT, TT, ET <: PODE{DT,TT}}
-    ParametersEPRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt)
+    function ParametersEPRK{DT,D}(equs::ET, tab::TableauEPRK{TT}, Δt::TT) where {D, DT, TT, ET <: NamedTuple}
+        new{DT, TT, ET, D, tab.s}(equs, tab, Δt)
+    end
 end
 
 
@@ -84,12 +84,15 @@ struct IntegratorEPRK{DT, TT, PT <: ParametersEPRK{DT,TT}, D, S} <: IntegratorPR
     params::PT
     cache::IntegratorCacheEPRK{DT,D,S}
 
-    function IntegratorEPRK(equation::PODE{DT,TT}, tableau::TableauEPRK{TT}, Δt::TT) where {DT,TT}
-        D = equation.d
+    function IntegratorEPRK{DT,D}(v::Function, f::Function, tableau::TableauEPRK{TT}, Δt::TT) where {DT,TT,D}
+        # get number of stages
         S = tableau.s
 
+        # create equation tuple
+        equs = NamedTuple{(:v,:f)}((v,f))
+
         # create params
-        params = ParametersEPRK(equation, tableau, Δt)
+        params = ParametersEPRK{DT,D}(equs, tableau, Δt)
 
         # create cache
         cache = IntegratorCacheEPRK{DT,D,S}()
@@ -97,7 +100,14 @@ struct IntegratorEPRK{DT, TT, PT <: ParametersEPRK{DT,TT}, D, S} <: IntegratorPR
         # create integrators
         new{DT, TT, typeof(params), D, S}(params, cache)
     end
+
+    function IntegratorEPRK(equation::PODE{DT,TT}, tableau::TableauEPRK{TT}, Δt::TT) where {DT,TT}
+        IntegratorEPRK{DT, equation.d}(equation.v, equation.f, tableau, Δt)
+    end
 end
+
+
+@inline Base.ndims(int::IntegratorEPRK{DT,TT,PT,D,S}) where {DT,TT,PT,D,S} = D
 
 
 "Compute Q stages of explicit partitioned Runge-Kutta methods."
@@ -111,7 +121,7 @@ function computeStageQ!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{D
     for k in eachdim(int)
         cache.Q[i][k] = cache.Q[0][k] + timestep(int) * cache.Y[i][k]
     end
-    equation(int).f(t, cache.Q[i], cache.P[jmax], cache.F[i])
+    equations(int)[:f](t, cache.Q[i], cache.P[jmax], cache.F[i])
 end
 
 "Compute P stages of explicit partitioned Runge-Kutta methods."
@@ -125,7 +135,7 @@ function computeStageP!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{D
     for k in eachdim(int)
         cache.P[i][k] = cache.P[0][k] + timestep(int) * cache.Z[i][k]
     end
-    equation(int).v(t, cache.Q[jmax], cache.P[i], cache.V[i])
+    equations(int)[:v](t, cache.Q[jmax], cache.P[i], cache.V[i])
 end
 
 "Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."

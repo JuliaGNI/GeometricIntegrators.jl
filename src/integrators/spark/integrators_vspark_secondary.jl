@@ -166,7 +166,8 @@ function IntegratorVSPARKsecondary(equation::VDAE{DT,TT},
                               equation, tableau, params, solver, iguess, cache)
 end
 
-pstages(int::IntegratorVSPARKsecondary) = int.tableau.σ
+@inline pstages(int::IntegratorVSPARKsecondary) = int.tableau.σ
+@inline Base.ndims(int::IntegratorVSPARKsecondary{DT,TT,ET,PT,ST,IT,D,S,Σ}) where {DT,TT,ET,PT,ST,IT,D,S,Σ} = D
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,Σ},

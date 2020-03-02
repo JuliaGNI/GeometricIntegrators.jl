@@ -28,22 +28,22 @@ Projected Variational Gauss-Legendre Runge-Kutta integrator.
 """
 struct IntegratorVPRKpTableau{DT, TT, PT <: ParametersVPRKpTableau{DT,TT},
                                ST <: NonlinearSolver{DT},
-                               IT <: InitialGuessPODE{DT,TT}, N, D, S} <: IntegratorPRK{DT,TT}
+                               IT <: InitialGuessPODE{DT,TT}, D, S} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCacheVPRK{DT,D,S}
 
-    function IntegratorVPRKpTableau(N, params::ParametersVPRKpTableau{DT,TT,D,S,ET}, solver::ST, iguess::IT) where {DT, TT, D, S, ET, ST, IT}
+    function IntegratorVPRKpTableau(params::ParametersVPRKpTableau{DT,TT,D,S,ET}, solver::ST, iguess::IT) where {DT, TT, D, S, ET, ST, IT}
         # create cache
         cache = IntegratorCacheVPRK{DT,D,S}()
 
         # create integrator
-        new{DT, TT, typeof(params), ST, IT, N, D, S}(params, solver, iguess, cache)
+        new{DT, TT, typeof(params), ST, IT, D, S}(params, solver, iguess, cache)
     end
 end
 
-function IntegratorVPRKpTableau(equation::IODE{DT,TT,ΑT,FT,GT,HT,VT,N}, tableau::CoefficientsPGLRK{TT}, Δt::TT) where {DT,TT,ΑT,FT,GT,HT,VT,N}
+function IntegratorVPRKpTableau(equation::IODE{DT,TT,ΑT,FT,GT,HT,VT}, tableau::CoefficientsPGLRK{TT}, Δt::TT) where {DT,TT,ΑT,FT,GT,HT,VT}
     D = equation.d
     M = equation.n
     S = tableau.s
@@ -58,11 +58,12 @@ function IntegratorVPRKpTableau(equation::IODE{DT,TT,ΑT,FT,GT,HT,VT,N}, tableau
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
     # create integrator
-    IntegratorVPRKpTableau(N, params, solver, iguess)
+    IntegratorVPRKpTableau(params, solver, iguess)
 end
 
-
-@inline nstages(integrator::IntegratorVPRKpTableau{DT,TT,PT,ST,IT,N,D,S}) where {DT,TT,PT,ST,IT,N,D,S} = S
+@inline equation(integrator::IntegratorVPRKpTableau) = integrator.params.equ
+@inline nstages(integrator::IntegratorVPRKpTableau{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = S
+@inline Base.ndims(int::IntegratorVPRKpTableau{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
 
 
 function update_params!(params::ParametersVPRKpTableau, sol::AtomicSolutionPODE)

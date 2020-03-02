@@ -73,6 +73,9 @@ function IntegratorVPRKdegenerate(equation::ET, tableau::TableauVPRK{TT}, Δt::T
 end
 
 
+@inline Base.ndims(int::IntegratorVPRKdegenerate{DT,TT,SPT,PPT,SST,STP,IT,D,S}) where {DT,TT,SPT,PPT,SST,STP,IT,D,S} = D
+
+
 "Compute solution of degenerate symplectic partitioned Runge-Kutta methods."
 @generated function function_stages!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKdegenerate{DT,TT,ET,D,S}

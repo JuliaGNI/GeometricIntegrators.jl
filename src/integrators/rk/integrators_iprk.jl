@@ -42,21 +42,21 @@ end
 
 
 "Parameters for right-hand side function of implicit partitioned Runge-Kutta methods."
-mutable struct ParametersIPRK{DT, TT, ET <: PODE{DT,TT}, D, S} <: Parameters{DT,TT}
-    equ::ET
+mutable struct ParametersIPRK{DT, TT, ET <: NamedTuple, D, S} <: Parameters{DT,TT}
+    equs::ET
     tab::TableauIPRK{TT}
     Δt::TT
 
     t::TT
     q::Vector{DT}
     p::Vector{DT}
-end
 
-function ParametersIPRK(equ::ET, tab::TableauIPRK{TT}, Δt::TT) where {DT, TT, ET <: PODE{DT,TT}}
-    q = zeros(DT, equ.d)
-    p = zeros(DT, equ.d)
 
-    ParametersIPRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, q, p)
+    function ParametersIPRK{DT,D}(equs::ET, tab::TableauIPRK{TT}, Δt::TT) where {D, DT, TT, ET <: NamedTuple}
+        q = zeros(DT,D)
+        p = zeros(DT,D)
+        new{DT, TT, ET, D, tab.s}(equs, tab, Δt, 0, q, p)
+    end
 end
 
 
@@ -120,28 +120,37 @@ struct IntegratorIPRK{DT, TT, PT <: ParametersIPRK{DT,TT},
     solver::ST
     iguess::IT
     cache::IntegratorCacheIPRK{DT,D,S}
+
+    function IntegratorIPRK{DT,D}(v::Function, f::Function, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT,D}
+        # get number of stages
+        S = tableau.s
+
+        # create equation tuple
+        equs = NamedTuple{(:v,:f)}((v,f))
+
+        # create params
+        params = ParametersIPRK{DT,D}(equs, tableau, Δt)
+
+        # create solver
+        solver = create_nonlinear_solver(DT, 2*D*S, params)
+
+        # create initial guess
+        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), v, f, Δt)
+
+        # create cache
+        cache = IntegratorCacheIPRK{DT,D,S}()
+
+        # create integrator
+        new{DT, TT, typeof(params), typeof(solver), typeof(iguess), D, S}(params, solver, iguess, cache)
+    end
+
+    function IntegratorIPRK(equation::PODE{DT,TT}, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT}
+        IntegratorIPRK{DT, equation.d}(equation.v, equation.f, tableau, Δt)
+    end
 end
 
-function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT,VT,FT}
-    D = equation.d
-    M = equation.n
-    S = tableau.s
 
-    # create params
-    params = ParametersIPRK(equation, tableau, Δt)
-
-    # create solver
-    solver = create_nonlinear_solver(DT, 2*D*S, params)
-
-    # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
-
-    # create cache
-    cache = IntegratorCacheIPRK{DT,D,S}()
-
-    # create integrator
-    IntegratorIPRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), D, S}(params, solver, iguess, cache)
-end
+@inline Base.ndims(int::IntegratorIPRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
 
 
 function update_params!(int::IntegratorIPRK, sol::AtomicSolutionPODE)
@@ -201,8 +210,8 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         tpᵢ = params.t + params.Δt * params.tab.p.c[i]
 
         # compute v(Q,P) and f(Q,P)
-        params.equ.v(tqᵢ, Q[i], P[i], V[i])
-        params.equ.f(tpᵢ, Q[i], P[i], F[i])
+        params.equs[:v](tqᵢ, Q[i], P[i], V[i])
+        params.equs[:f](tpᵢ, Q[i], P[i], F[i])
     end
 end
 
@@ -210,8 +219,8 @@ end
 function initialize!(int::IntegratorIPRK, sol::AtomicSolutionPODE)
     sol.t̅ = sol.t - timestep(int)
 
-    int.params.equ.v(sol.t, sol.q, sol.p, sol.v)
-    int.params.equ.f(sol.t, sol.q, sol.p, sol.f)
+    equations(int)[:v](sol.t, sol.q, sol.p, sol.v)
+    equations(int)[:f](sol.t, sol.q, sol.p, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)

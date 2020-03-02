@@ -111,9 +111,10 @@ function IntegratorVPRKpStandardConstructor(equation::ET, tableau::TableauVPRK{T
                 sparams, pparams, solver, projector, iguess, cache)
 end
 
-equation(integrator::IntegratorVPRKpStandard) = integrator.sparams.equ
-timestep(integrator::IntegratorVPRKpStandard) = integrator.sparams.Δt
-tableau(integrator::IntegratorVPRKpStandard) = integrator.sparams.tab
+@inline equation(integrator::IntegratorVPRKpStandard) = integrator.sparams.equ
+@inline timestep(integrator::IntegratorVPRKpStandard) = integrator.sparams.Δt
+@inline tableau(integrator::IntegratorVPRKpStandard) = integrator.sparams.tab
+@inline Base.ndims(int::IntegratorVPRKpStandard{DT,TT,SPT,PPT,SST,STP,IT,D,S}) where {DT,TT,SPT,PPT,SST,STP,IT,D,S} = D
 
 
 function compute_projection!(

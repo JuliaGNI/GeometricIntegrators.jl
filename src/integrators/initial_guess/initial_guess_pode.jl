@@ -21,6 +21,10 @@ mutable struct InitialGuessPODE{DT, TT, VT, FT, IT <: Interpolator}
     end
 end
 
+function InitialGuessPODE{DT,D}(interp, v::VT, f::FT, Δt::TT) where {D, DT, TT, VT <: Function, FT <: Function}
+    InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, D), v, f, Δt)
+end
+
 function InitialGuessPODE(interp, equ::PODE{DT,TT,VT,FT}, Δt::TT) where {DT,TT,VT,FT}
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end

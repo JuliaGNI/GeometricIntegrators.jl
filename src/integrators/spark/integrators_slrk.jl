@@ -162,7 +162,8 @@ function IntegratorSLRK(equation::VDAE{DT,TT},
                               equation, tableau, params, solver, iguess, cache)
 end
 
-pstages(int::IntegratorSLRK) = int.tableau.s
+@inline pstages(int::IntegratorSLRK) = int.tableau.s
+@inline Base.ndims(int::IntegratorSLRK{DT,TT,ET,PT,ST,IT,D,S}) where {DT,TT,ET,PT,ST,IT,D,S} = D
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S},

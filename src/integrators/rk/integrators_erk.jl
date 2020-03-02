@@ -49,14 +49,14 @@ end
 
 
 "Parameters for right-hand side function of explicit Runge-Kutta methods."
-struct ParametersERK{DT, TT, ET <: ODE{DT,TT}, D, S} <: Parameters{DT,TT}
-    equ::ET
+struct ParametersERK{DT, TT, ET <: NamedTuple, D, S} <: Parameters{DT,TT}
+    equs::ET
     tab::TableauERK{TT}
     Δt::TT
-end
 
-function ParametersERK(equ::ET, tab::TableauERK{TT}, Δt::TT) where {DT, TT, ET <: ODE{DT,TT}}
-    ParametersERK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt)
+    function ParametersERK{DT,D}(equs::ET, tab::TableauERK{TT}, Δt::TT) where {D, DT, TT, ET <: NamedTuple}
+        new{DT, TT, ET, D, tab.s}(equs, tab, Δt)
+    end
 end
 
 
@@ -78,12 +78,16 @@ struct IntegratorERK{DT, TT, PT <: ParametersERK{DT,TT}, D, S} <: IntegratorRK{D
     params::PT
     cache::IntegratorCacheERK{DT,D,S}
 
-    function IntegratorERK(equation::ODE{DT,TT,FT}, tableau::TableauERK{TT}, Δt::TT) where {DT,TT,FT}
-        D = equation.d
+
+    function IntegratorERK{DT,D}(v::Function, tableau::TableauERK{TT}, Δt::TT) where {DT,TT,D}
+        # get number of stages
         S = tableau.s
 
+        # create equation tuple
+        equs = NamedTuple{(:v,)}((v,))
+
         # create params
-        params = ParametersERK(equation, tableau, Δt)
+        params = ParametersERK{DT,D}(equs, tableau, Δt)
 
         # create cache
         cache = IntegratorCacheERK{DT,D,S}()
@@ -91,7 +95,14 @@ struct IntegratorERK{DT, TT, PT <: ParametersERK{DT,TT}, D, S} <: IntegratorRK{D
         # create integrators
         new{DT, TT, typeof(params), D, S}(params, cache)
     end
+
+    function IntegratorERK(equation::ODE{DT,TT}, tableau::TableauERK{TT}, Δt::TT) where {DT,TT}
+        IntegratorERK{DT, equation.d}(equation.v, tableau, Δt)
+    end
 end
+
+
+@inline Base.ndims(int::IntegratorERK{DT,TT,PT,D,S}) where {DT,TT,PT,D,S} = D
 
 
 "Integrate ODE with explicit Runge-Kutta integrator."
@@ -112,7 +123,7 @@ function integrate_step!(int::IntegratorERK{DT,TT}, sol::AtomicSolutionODE{DT,TT
             int.cache.Q[i][k] = sol.q̅[k] + timestep(int) * yᵢ
         end
         tᵢ = sol.t̅ + timestep(int) * tableau(int).q.c[i]
-        equation(int).v(tᵢ, int.cache.Q[i], int.cache.V[i])
+        equations(int)[:v](tᵢ, int.cache.Q[i], int.cache.V[i])
     end
 
     # compute final update

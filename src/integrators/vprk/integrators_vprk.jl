@@ -128,10 +128,11 @@ end
 IntegratorVPRKpNone = IntegratorVPRK
 
 
-equation(int::IntegratorVPRK) = int.params.equ
-timestep(int::IntegratorVPRK) = int.params.Δt
-tableau(integrator::IntegratorVPRK) = integrator.params.tab
-nstages(integrator::IntegratorVPRK) = integrator.params.tab.s
+@inline equation(int::IntegratorVPRK) = int.params.equ
+@inline timestep(int::IntegratorVPRK) = int.params.Δt
+@inline tableau(integrator::IntegratorVPRK) = integrator.params.tab
+@inline nstages(integrator::IntegratorVPRK) = integrator.params.tab.s
+@inline Base.ndims(int::IntegratorVPRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
 
 
 function initial_guess!(int::IntegratorVPRK, sol::AtomicSolutionPODE)

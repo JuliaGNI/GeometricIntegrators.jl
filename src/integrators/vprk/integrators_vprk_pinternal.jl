@@ -22,8 +22,8 @@ end
 
 
 struct IntegratorVPRKpInternal{DT, TT, PT <: ParametersVPRKpInternal{DT,TT},
-                                        ST <: NonlinearSolver{DT},
-                                        IT <: InitialGuessPODE{DT,TT}, D, S} <: AbstractIntegratorVPRK{DT,TT}
+                                       ST <: NonlinearSolver{DT},
+                                       IT <: InitialGuessPODE{DT,TT}, D, S} <: AbstractIntegratorVPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -51,6 +51,9 @@ function IntegratorVPRKpInternal(equation::ET, tableau::TableauVPRK{TT}, Δt::TT
     IntegratorVPRKpInternal{DT, TT, typeof(params), typeof(solver), typeof(iguess), D, S}(
                 params, solver, iguess, cache)
 end
+
+
+@inline Base.ndims(int::IntegratorVPRKpInternal{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
 
 
 function compute_stages_vprk!(x, q, p, Q, V, Λ, P, F, R, params::ParametersVPRKpInternal)

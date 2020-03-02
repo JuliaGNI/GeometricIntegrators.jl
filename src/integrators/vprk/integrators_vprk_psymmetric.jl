@@ -54,6 +54,9 @@ function IntegratorVPRKpSymmetric(equation::ET, tableau::TableauVPRK{TT}, Δt::T
 end
 
 
+@inline Base.ndims(int::IntegratorVPRKpSymmetric{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
+
+
 function compute_projection_vprk!(x::Vector{ST},
                 q::SolutionVector{ST}, p::SolutionVector{ST}, λ::SolutionVector{ST},
                 V::Vector{Vector{ST}}, U::Vector{Vector{ST}}, G::Vector{Vector{ST}},

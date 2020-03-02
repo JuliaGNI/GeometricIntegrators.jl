@@ -131,6 +131,9 @@ function IntegratorVPRKpSecondary(equation::ET, tableau::TableauVPRK{TT}, Δt::T
 end
 
 
+@inline Base.ndims(int::IntegratorVPRKpSecondary{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
+
+
 function compute_stages_vprk!(x, q, p, Q, V, Λ, P, F, R, Φ, params)
     # copy x to V
     compute_stages_v_vprk!(x, V, params)

@@ -110,6 +110,9 @@ function IntegratorHPARK(equation::PDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
 end
 
 
+@inline Base.ndims(int::IntegratorHPARK{DT,TT,ET,PT,ST,IT,D,S,R}) where {DT,TT,ET,PT,ST,IT,D,S,R} = D
+
+
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
                                         params::ParametersHPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local tqᵢ::TT

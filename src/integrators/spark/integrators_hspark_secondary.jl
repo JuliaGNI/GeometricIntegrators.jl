@@ -37,9 +37,9 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 ```
 """
 struct IntegratorHSPARKsecondary{DT, TT, ET <: PDAE{DT,TT},
-                                       PT <: ParametersHSPARKsecondary{DT,TT},
-                                       ST <: NonlinearSolver{DT},
-                                       IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorHSPARK{DT, TT}
+                                         PT <: ParametersHSPARKsecondary{DT,TT},
+                                         ST <: NonlinearSolver{DT},
+                                         IT <: InitialGuessPODE{DT,TT}, D, S, Σ} <: AbstractIntegratorHSPARK{DT, TT}
     equation::ET
     tableau::TableauHSPARKsecondary{TT}
 
@@ -73,11 +73,12 @@ function IntegratorHSPARKsecondary(equation::VDAE{DT,TT},
     iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
 
     # create integrator
-    IntegratorHSPARKsecondary{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess)}(
+    IntegratorHSPARKsecondary{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, Σ}(
                               equation, tableau, params, solver, iguess)
 end
 
-pstages(int::IntegratorHSPARKsecondary) = int.tableau.σ
+@inline pstages(int::IntegratorHSPARKsecondary) = int.tableau.σ
+@inline Base.ndims(int::IntegratorHSPARKsecondary{DT,TT,ET,PT,ST,IT,D,S,Σ}) where {DT,TT,ET,PT,ST,IT,D,S,Σ} = D
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,Σ},

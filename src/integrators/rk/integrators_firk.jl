@@ -30,8 +30,8 @@ end
 
 
 "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
-mutable struct ParametersFIRK{DT, TT, D, S, ET <: ODE{DT,TT}, FT, JT} <: Parameters{DT,TT}
-    equ::ET
+mutable struct ParametersFIRK{DT, TT, D, S, ET <: NamedTuple, FT, JT} <: Parameters{DT,TT}
+    equs::ET
     tab::TableauFIRK{TT}
     Δt::TT
 
@@ -40,15 +40,15 @@ mutable struct ParametersFIRK{DT, TT, D, S, ET <: ODE{DT,TT}, FT, JT} <: Paramet
 
     t::TT
     q::Vector{DT}
-end
 
-function ParametersFIRK(equ::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, ET <: ODE{DT,TT}}
-    F = (v,q) -> equ.v(zero(TT), q, v)
-    tq = zeros(DT, equ.d)
-    tv = zeros(DT, equ.d)
-    Jconfig = ForwardDiff.JacobianConfig(F, tv, tq)
+    function ParametersFIRK{DT,D}(equs::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+        F = (v,q) -> equs[:v](zero(TT), q, v)
+        tq = zeros(DT,D)
+        tv = zeros(DT,D)
+        Jconfig = ForwardDiff.JacobianConfig(F, tv, tq)
 
-    ParametersFIRK{DT, TT, equ.d, tab.s, ET, typeof(F), typeof(Jconfig)}(equ, tab, Δt, F, Jconfig, 0, zeros(DT, equ.d))
+        new{DT, TT, D, tab.s, ET, typeof(F), typeof(Jconfig)}(equs, tab, Δt, F, Jconfig, 0, zeros(DT,D))
+    end
 end
 
 
@@ -92,44 +92,56 @@ end
 "Fully implicit Runge-Kutta integrator."
 struct IntegratorFIRK{DT, TT, PT <: ParametersFIRK{DT,TT},
                               ST <: NonlinearSolver{DT},
-                              IT <: InitialGuessODE{DT,TT}, N, D, S} <: IntegratorRK{DT,TT}
+                              IT <: InitialGuessODE{DT,TT}, D, S} <: IntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCacheFIRK{DT,D,S}
-end
 
-function IntegratorFIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauFIRK{TT}, Δt::TT; exact_jacobian=false) where {DT,TT,FT,N}
-    D = equation.d
-    M = equation.n
-    S = tableau.s
-
-    # create params
-    params = ParametersFIRK(equation, tableau, Δt)
-
-    # create solver
-    if exact_jacobian
-        solver = create_nonlinear_solver_with_jacobian(DT, D*S, params)
-    else
-        solver = create_nonlinear_solver(DT, D*S, params)
+    function IntegratorFIRK(params::ParametersFIRK{DT,TT,D,S,ET}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ET,ST,IT}
+        new{DT, TT, typeof(params), ST, IT, D, S}(params, solver, iguess, cache)
     end
 
-    # create initial guess
-    iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
+    function IntegratorFIRK{DT,D}(v::Function, tableau::TableauFIRK{TT}, Δt::TT; exact_jacobian=false) where {D,DT,TT}
+        # get number of stages
+        S = tableau.s
 
-    # create cache
-    cache = IntegratorCacheFIRK{DT,D,S}()
+        # create equation tuple
+        equs = NamedTuple{(:v,)}((v,))
 
-    # create integrator
-    IntegratorFIRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), N, D, S}(
-                params, solver, iguess, cache)
+        # create params
+        params = ParametersFIRK{DT,D}(equs, tableau, Δt)
+
+        # create solver
+        if exact_jacobian
+            solver = create_nonlinear_solver_with_jacobian(DT, D*S, params)
+        else
+            solver = create_nonlinear_solver(DT, D*S, params)
+        end
+
+        # create initial guess
+        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), v, Δt)
+
+        # create cache
+        cache = IntegratorCacheFIRK{DT,D,S}()
+
+        # create integrator
+        IntegratorFIRK(params, solver, iguess, cache)
+    end
+
+    function IntegratorFIRK(equation::ODE{DT,TT}, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorFIRK{DT, equation.d}(equation.v, tableau, Δt; kwargs...)
+    end
 end
+
+
+@inline Base.ndims(int::IntegratorFIRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
 
 
 function initialize!(int::IntegratorFIRK, sol::AtomicSolutionODE)
     sol.t̅ = sol.t - timestep(int)
 
-    int.params.equ.v(sol.t, sol.q, sol.v)
+    equations(int)[:v](sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
                             sol.t̅, sol.q̅, sol.v̅)
@@ -166,7 +178,7 @@ end
 
 
 function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
-                                    params::ParametersFIRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+                         params::ParametersFIRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     local tᵢ::TT
 
@@ -184,7 +196,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     # compute V = v(Q)
     for i in 1:S
         tᵢ = params.t + params.Δt * params.tab.q.c[i]
-        params.equ.v(tᵢ, Q[i], V[i])
+        params.equs[:v](tᵢ, Q[i], V[i])
     end
 end
 
@@ -226,7 +238,7 @@ function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT
             cache.Q[i][k] = params.q[k] + cache.Y[i][k]
         end
         tᵢ = params.t + params.Δt * params.tab.q.c[i]
-        F = (v,q) -> params.equ.v(tᵢ, q, v)
+        F = (v,q) -> params.equs[:v](tᵢ, q, v)
         ForwardDiff.jacobian!(cache.J[i], params.F, cache.ṽ, cache.Q[i], params.Jconfig)
     end
 

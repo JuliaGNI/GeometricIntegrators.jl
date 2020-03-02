@@ -29,18 +29,18 @@ end
 
 
 "Parameters for right-hand side function of diagonally implicit Runge-Kutta methods."
-mutable struct ParametersDIRK{DT, TT, ET <: ODE{DT,TT}, D, S} <: Parameters{DT,TT}
-    equ::ET
+mutable struct ParametersDIRK{DT, TT, ET <: NamedTuple, D, S} <: Parameters{DT,TT}
+    equs::ET
     tab::TableauDIRK{TT}
     Δt::TT
 
     t::TT
     q::Vector{DT}
     V::Vector{Vector{DT}}
-end
 
-function ParametersDIRK(equ::ET, tab::TableauDIRK{TT}, Δt::TT) where {DT, TT, ET <: ODE{DT,TT}}
-    ParametersDIRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, zeros(DT, equ.d), create_internal_stage_vector(DT, equ.d, tab.s))
+    function ParametersDIRK{DT,D}(equs::ET, tab::TableauDIRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+        new{DT, TT, ET, D, tab.s}(equs, tab, Δt, 0, zeros(DT,D), create_internal_stage_vector(DT, D, tab.s))
+    end
 end
 
 
@@ -69,49 +69,56 @@ end
 "Diagonally implicit Runge-Kutta integrator."
 struct IntegratorDIRK{DT, TT, PT <: ParametersDIRK{DT,TT},
                               ST,# <: NonlinearSolver{DT},
-                              IT <: InitialGuessODE{DT,TT}, N, D, S} <: IntegratorRK{DT,TT}
+                              IT <: InitialGuessODE{DT,TT}, D, S} <: IntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCacheDIRK{DT,D,S}
-end
 
-function IntegratorDIRK(equation::ODE{DT,TT,FT,N}, tableau::TableauDIRK{TT}, Δt::TT) where {DT,TT,FT,N}
-    D = equation.d
-    M = equation.n
-    S = tableau.q.s
+    function IntegratorDIRK{DT,D}(v::Function, tableau::TableauDIRK{TT}, Δt::TT) where {DT, TT, D}
+        # get number of stages
+        S = tableau.q.s
 
-    # create params
-    params = ParametersDIRK(equation, tableau, Δt)
+        # create equation tuple
+        equs = NamedTuple{(:v,)}((v,))
 
-    # create solvers
-    function create_nonlinear_solver(DT, N, params, i)
-        # create solution vector for nonlinear solver
-        x = zeros(DT, N)
+        # create params
+        params = ParametersDIRK{DT,D}(equs, tableau, Δt)
 
-        # create wrapper function f(x,b) that calls `function_stages!(x, b, params)`
-        # with the appropriate `params`
-        f = (x,b) -> function_stages!(x, b, params, i)
+        # create solvers
+        function create_nonlinear_solver(DT, N, params, i)
+            # create solution vector for nonlinear solver
+            x = zeros(DT, N)
 
-        # create nonlinear solver with solver type obtained from config dictionary
-        s = get_config(:nls_solver)(x, f)
+            # create wrapper function f(x,b) that calls `function_stages!(x, b, params)`
+            # with the appropriate `params`
+            f = (x,b) -> function_stages!(x, b, params, i)
+
+            # create nonlinear solver with solver type obtained from config dictionary
+            s = get_config(:nls_solver)(x, f)
+        end
+
+        solvers = [create_nonlinear_solver(DT, D, params, i) for i in 1:S]
+
+        # create initial guess
+        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), v, Δt)
+
+        # create cache
+        cache = IntegratorCacheDIRK{DT,D,S}()
+
+        # create integrator
+        new{DT, TT, typeof(params), typeof(solvers), typeof(iguess), D, S}(
+                    params, solvers, iguess, cache)
     end
 
-    solvers = [create_nonlinear_solver(DT, D, params, i) for i in 1:S]
-
-    # create initial guess
-    iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
-
-    # create cache
-    cache = IntegratorCacheDIRK{DT,D,S}()
-
-    # create integrator
-    IntegratorDIRK{DT, TT, typeof(params), typeof(solvers), typeof(iguess), N, D, S}(
-                params, solvers, iguess, cache)
-
+    function IntegratorDIRK(equation::ODE{DT,TT}, tableau::TableauDIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorDIRK{DT, equation.d}(equation.v, tableau, Δt; kwargs...)
+    end
 end
 
-has_initial_guess(int::IntegratorDIRK) = true
+
+@inline Base.ndims(int::IntegratorDIRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
+@inline has_initial_guess(int::IntegratorDIRK) = true
 
 
 "Initialise initial guess"
@@ -119,7 +126,7 @@ function initialize!(int::IntegratorDIRK, cache::IntegratorCacheDIRK)
     # initialise initial guess
     cache.t̅ = cache.t - timestep(int)
 
-    int.params.equ.v(cache.t, cache.q, cache.v)
+    int.params.equs[:v](cache.t, cache.q, cache.v)
 
     initialize!(int.iguess, cache.t, cache.q, cache.v, cache.t̅, cache.q̅, cache.v̅)
 end
@@ -159,7 +166,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{ST}, V::Vector{ST}, Y::Vector{
 
     # compute V = v(Q)
     tᵢ = params.t + params.Δt * params.tab.q.c[i]
-    params.equ.v(tᵢ, Q, V)
+    params.equs[:v](tᵢ, Q, V)
 end
 
 

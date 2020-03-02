@@ -77,6 +77,9 @@ function IntegratorHSPARKprimary(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT},
 end
 
 
+@inline Base.ndims(int::IntegratorHSPARKprimary{DT,TT,ET,PT,ST,IT,D,S,R}) where {DT,TT,ET,PT,ST,IT,D,S,R} = D
+
+
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
                                         params::ParametersHSPARKprimary{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local tqᵢ::TT

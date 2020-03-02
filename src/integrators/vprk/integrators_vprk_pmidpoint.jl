@@ -53,9 +53,10 @@ function IntegratorVPRKpMidpoint(equation::ET, tableau::TableauVPRK{TT}, Δt::TT
     IntegratorVPRKpMidpoint{DT, TT, typeof(params), typeof(solver), typeof(iguess), D, S}(params, solver, iguess, cache)
 end
 
-equation(integrator::IntegratorVPRKpMidpoint) = integrator.params.equ
-timestep(integrator::IntegratorVPRKpMidpoint) = integrator.params.Δt
-tableau(integrator::IntegratorVPRKpMidpoint) = integrator.params.tab
+@inline equation(integrator::IntegratorVPRKpMidpoint) = integrator.params.equ
+@inline timestep(integrator::IntegratorVPRKpMidpoint) = integrator.params.Δt
+@inline tableau(integrator::IntegratorVPRKpMidpoint) = integrator.params.tab
+@inline Base.ndims(int::IntegratorVPRKpMidpoint{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
 
 
 @generated function compute_projection_vprk!(x::Vector{ST},

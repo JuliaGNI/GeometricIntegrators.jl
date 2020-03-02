@@ -76,8 +76,8 @@ end
 
 
 "Parameters for right-hand side function of projected Gauss-Legendre Runge-Kutta methods."
-mutable struct ParametersPGLRK{DT,TT,D,S,ET} <: Parameters{DT,TT}
-    equ::ET
+mutable struct ParametersPGLRK{DT,TT,D,S,ET <: NamedTuple} <: Parameters{DT,TT}
+    equs::ET
     tab::CoefficientsPGLRK{TT}
     Δt::TT
 
@@ -89,8 +89,8 @@ mutable struct ParametersPGLRK{DT,TT,D,S,ET} <: Parameters{DT,TT}
     q̅::Vector{DT}
     λ::DT
 
-    function ParametersPGLRK{DT,TT,D,S,ET}(equ, tab, Δt) where {DT,TT,D,S,ET}
-        new(equ, tab, Δt, zero(TT), zero(TT), zero(DT), zeros(DT,D), zero(DT))
+    function ParametersPGLRK{DT,D}(equs::ET, tab::CoefficientsPGLRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+        new{DT, TT, D, tab.s, ET}(equs, tab, Δt, zero(TT), zero(TT), zero(DT), zeros(DT,D), zero(DT))
     end
 end
 
@@ -136,40 +136,47 @@ Projected Gauss-Legendre Runge-Kutta integrator.
 """
 struct IntegratorPGLRK{DT, TT, PT <: ParametersPGLRK{DT,TT},
                                ST <: NonlinearSolver{DT},
-                               IT <: InitialGuessODE{DT,TT}, N, D, S} <: IntegratorPRK{DT,TT}
+                               IT <: InitialGuessODE{DT,TT}, D, S} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCachePGLRK{DT,D,S}
 
-    function IntegratorPGLRK(N, params::ParametersPGLRK{DT,TT,D,S,ET}, solver::ST, iguess::IT, cache) where {DT, TT, D, S, ET, ST, IT}
-        new{DT, TT, typeof(params), ST, IT, N, D, S}(params, solver, iguess, cache)
+    function IntegratorPGLRK(params::ParametersPGLRK{DT,TT,D,S,ET}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ET,ST,IT}
+        new{DT, TT, typeof(params), ST, IT, D, S}(params, solver, iguess, cache)
+    end
+
+    function IntegratorPGLRK{DT,D}(v::Function, h::Function, tableau::CoefficientsPGLRK{TT}, Δt::TT) where {D,DT,TT}
+        # get number of stages
+        S = tableau.s
+
+        # create equation tuple
+        equs = NamedTuple{(:v,:h)}((v,h))
+
+        # create params
+        params = ParametersPGLRK{DT,D}(equs, tableau, Δt)
+
+        # create solver
+        solver  = create_nonlinear_solver(DT, D*S, params)
+
+        # create initial guess
+        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), v, Δt)
+
+        # create cache
+        cache = IntegratorCachePGLRK{DT,D,S}()
+
+        # create integrator
+        IntegratorPGLRK(params, solver, iguess, cache)
+    end
+
+    function IntegratorPGLRK(equation::ODE{DT,TT}, tableau::CoefficientsPGLRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorPGLRK{DT, equation.d}(equation.v, equation.h, tableau, Δt; kwargs...)
     end
 end
 
-function IntegratorPGLRK(equation::ODE{DT,TT,VT,HT,N}, tableau::CoefficientsPGLRK{TT}, Δt::TT) where {DT,TT,VT,HT,N}
-    D = equation.d
-    M = equation.n
-    S = tableau.s
 
-    # create params
-    params = ParametersPGLRK{DT,TT,D,S,typeof(equation)}(equation, tableau, Δt)
-
-    # create solver
-    solver  = create_nonlinear_solver(DT, D*S, params)
-
-    # create initial guess
-    iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
-
-    # create cache
-    cache = IntegratorCachePGLRK{DT,D,S}()
-
-    # create integrator
-    IntegratorPGLRK(N, params, solver, iguess, cache)
-end
-
-
-@inline nstages(integrator::IntegratorPGLRK{DT,TT,PT,ST,IT,N,D,S}) where {DT,TT,PT,ST,IT,N,D,S} = S
+@inline Base.ndims(int::IntegratorPGLRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
+@inline nstages(integrator::IntegratorPGLRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = S
 
 
 function update_params!(params::ParametersPGLRK, sol::AtomicSolutionODE)
@@ -207,7 +214,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     # compute V=v(T,Q)
     for i in 1:S
         tᵢ = params.t̅ + params.Δt * params.tab.c[i]
-        params.equ.v(tᵢ, Q[i], V[i])
+        params.equs[:v](tᵢ, Q[i], V[i])
     end
 
     # compute y=B*V
@@ -302,7 +309,7 @@ function function_hamiltonian!(λ::Number, int::IntegratorPGLRK{DT,TT}) where {D
     compute_stages!(int.solver.x, int.cache, int.params)
 
     # compute h
-    int.cache.h = int.params.equ.h(int.params.t, int.cache.q̃)
+    int.cache.h = int.params.equs[:h](int.params.t, int.cache.q̃)
 
     # compute and return h₀-h
     return int.params.h₀ - int.cache.h
@@ -316,12 +323,12 @@ end
 function initialize!(int::IntegratorPGLRK, sol::AtomicSolutionODE)
     sol.t̅ = sol.t - timestep(int)
 
-    equation(int).v(sol.t, sol.q, sol.v)
+    equations(int)[:v](sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
                             sol.t̅, sol.q̅, sol.v̅)
 
-    int.params.h₀ = int.params.equ.h(sol.t, sol.q)
+    int.params.h₀ = equations(int)[:h](sol.t, sol.q)
 end
 
 
