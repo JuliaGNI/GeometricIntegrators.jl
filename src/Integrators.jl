@@ -23,7 +23,7 @@ module Integrators
 
 
 
-    export InitialGuessODE, InitialGuessPODE, initialize!, update!
+    export InitialGuessODE, InitialGuessPODE, initialize!
 
     include("integrators/initial_guess/extrapolation.jl")
     include("integrators/initial_guess/initial_guess_ode.jl")
