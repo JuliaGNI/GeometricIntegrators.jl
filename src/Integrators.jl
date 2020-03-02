@@ -1,9 +1,7 @@
-__precompile__()
-
 module Integrators
 
     using DelimitedFiles
-    using Documenter
+    using Documenter: @doc
     using LinearAlgebra
     using OffsetArrays
 
