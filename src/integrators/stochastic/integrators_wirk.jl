@@ -117,14 +117,14 @@ end
 
 "Stochastic implicit Runge-Kutta integrator."
 struct IntegratorWIRK{DT, TT, PT <: ParametersWIRK{DT,TT},
-                              ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
+                              ST <: NonlinearSolver{DT}} <: StochasticIntegrator{DT,TT}
     params::PT
     solver::ST
     cache::IntegratorCacheWIRK{DT}
 end
 
 
-function IntegratorWIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauWIRK{TT}, Δt::TT) where {DT,TT,VT,BT,N}
+function IntegratorWIRK(equation::SDE{DT,TT}, tableau::TableauWIRK{TT}, Δt::TT) where {DT,TT}
     D = equation.d
     M = equation.m
     NS= max(equation.ns,equation.ni)
@@ -140,14 +140,16 @@ function IntegratorWIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauWIRK{TT}, 
     cache = IntegratorCacheWIRK{DT}(D, M, S)
 
     # create integrator
-    IntegratorWIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, cache)
+    IntegratorWIRK{DT, TT, typeof(params), typeof(solver)}(params, solver, cache)
 end
 
-equation(integrator::IntegratorWIRK) = integrator.params.equ
-timestep(integrator::IntegratorWIRK) = integrator.params.Δt
-tableau(integrator::IntegratorWIRK) = integrator.params.tab
-noisedims(integrator::IntegratorWIRK) = integrator.params.equ.m
-Base.eltype(integrator::IntegratorWIRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
+@inline equation(integrator::IntegratorWIRK) = integrator.params.equ
+@inline timestep(integrator::IntegratorWIRK) = integrator.params.Δt
+@inline tableau(integrator::IntegratorWIRK) = integrator.params.tab
+@inline nstages(integrator::IntegratorWIRK)  = nstages(tableau(integrator))
+@inline eachstage(integrator::IntegratorWIRK) = 1:nstages(integrator)
+@inline noisedims(integrator::IntegratorWIRK) = integrator.params.equ.m
+@inline Base.eltype(integrator::IntegratorWIRK{DT}) where {DT} = DT
 
 
 function update_params!(int::IntegratorWIRK, sol::AtomicSolutionSDE)

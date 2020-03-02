@@ -148,14 +148,14 @@ end
 
 "Stochastic implicit partitioned Runge-Kutta integrator."
 struct IntegratorSISPRK{DT, TT, PT <: ParametersSISPRK{DT,TT},
-                                ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
+                                ST <: NonlinearSolver{DT}} <: StochasticIntegrator{DT,TT}
     params::PT
     solver::ST
     cache::IntegratorCacheSISPRK{DT}
 end
 
 # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
-function IntegratorSISPRK(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}, tableau::TableauSISPRK{TT}, Δt::TT; K::Int=0) where {DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}
+function IntegratorSISPRK(equation::SPSDE{DT,TT}, tableau::TableauSISPRK{TT}, Δt::TT; K::Int=0) where {DT,TT}
     D = equation.d
     M = equation.m
     NS= max(equation.ns,equation.ni)
@@ -172,7 +172,7 @@ function IntegratorSISPRK(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,N}, tablea
     cache = IntegratorCacheSISPRK{DT}(D, M, S)
 
     # create integrator
-    IntegratorSISPRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, cache)
+    IntegratorSISPRK{DT, TT, typeof(params), typeof(solver)}(params, solver, cache)
 end
 
 @inline equation(integrator::IntegratorSISPRK) = integrator.params.equ
@@ -180,7 +180,7 @@ end
 @inline tableau(integrator::IntegratorSISPRK) = integrator.params.tab
 @inline nstages(integrator::IntegratorSISPRK)  = nstages(tableau(integrator))
 @inline eachstage(integrator::IntegratorSISPRK) = 1:nstages(integrator)
-Base.eltype(integrator::IntegratorSISPRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
+@inline Base.eltype(integrator::IntegratorSISPRK{DT}) where {DT} = DT
 
 
 function update_params!(int::IntegratorSISPRK, sol::AtomicSolutionPSDE)

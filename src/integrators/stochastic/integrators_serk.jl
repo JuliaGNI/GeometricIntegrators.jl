@@ -86,6 +86,7 @@ end
 @inline tableau(integrator::IntegratorSERK)  = integrator.tableau
 @inline nstages(integrator::IntegratorSERK)  = nstages(tableau(integrator))
 @inline eachstage(integrator::IntegratorSERK) = 1:nstages(integrator)
+@inline Base.eltype(integrator::IntegratorSERK{DT}) where {DT} = DT
 
 
 """

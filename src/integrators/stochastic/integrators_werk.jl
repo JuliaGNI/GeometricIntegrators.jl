@@ -112,6 +112,7 @@ end
 @inline tableau(integrator::IntegratorWERK)  = integrator.tableau
 @inline nstages(integrator::IntegratorWERK)  = nstages(tableau(integrator))
 @inline eachstage(integrator::IntegratorWERK) = 1:nstages(integrator)
+@inline Base.eltype(integrator::IntegratorWERK{DT}) where {DT} = DT
 
 
 """

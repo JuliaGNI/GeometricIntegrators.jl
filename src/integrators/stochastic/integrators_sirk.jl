@@ -121,7 +121,7 @@ end
 
 "Stochastic implicit Runge-Kutta integrator."
 struct IntegratorSIRK{DT, TT, PT <: ParametersSIRK{DT,TT},
-                              ST <: NonlinearSolver{DT}, N} <: StochasticIntegrator{DT,TT}
+                              ST <: NonlinearSolver{DT}} <: StochasticIntegrator{DT,TT}
     params::PT
     solver::ST
     cache::IntegratorCacheSIRK{DT}
@@ -129,7 +129,7 @@ end
 
 
 # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
-function IntegratorSIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSIRK{TT}, Δt::TT; K::Int=0) where {DT,TT,VT,BT,N}
+function IntegratorSIRK(equation::SDE{DT,TT}, tableau::TableauSIRK{TT}, Δt::TT; K::Int=0) where {DT,TT}
     D = equation.d
     M = equation.m
     NS= max(equation.ns,equation.ni)
@@ -146,7 +146,7 @@ function IntegratorSIRK(equation::SDE{DT,TT,VT,BT,N}, tableau::TableauSIRK{TT}, 
     cache = IntegratorCacheSIRK{DT}(D, M, S)
 
     # create integrator
-    IntegratorSIRK{DT, TT, typeof(params), typeof(solver), N}(params, solver, cache)
+    IntegratorSIRK{DT, TT, typeof(params), typeof(solver)}(params, solver, cache)
 end
 
 @inline equation(integrator::IntegratorSIRK) = integrator.params.equ
@@ -154,7 +154,7 @@ end
 @inline tableau(integrator::IntegratorSIRK) = integrator.params.tab
 @inline nstages(integrator::IntegratorSIRK)  = nstages(tableau(integrator))
 @inline eachstage(integrator::IntegratorSIRK) = 1:nstages(integrator)
-Base.eltype(integrator::IntegratorSIRK{DT, TT, PT, ST, N}) where {DT, TT, PT, ST, N} = DT
+@inline Base.eltype(integrator::IntegratorSIRK{DT}) where {DT} = DT
 
 
 function update_params!(int::IntegratorSIRK, sol::AtomicSolutionSDE)
