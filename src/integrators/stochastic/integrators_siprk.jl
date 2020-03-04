@@ -261,7 +261,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, P::Vector{Vector{
 end
 
 "Compute stages of implicit Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSIPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSIPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
     cache = IntegratorCacheSIPRK{ST}(D, M, S)
 
@@ -408,7 +408,7 @@ end
 Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator.
 Integrating the m-th sample path
 """
-function integrate_step!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int, sol)
 

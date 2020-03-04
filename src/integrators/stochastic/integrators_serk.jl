@@ -93,7 +93,7 @@ end
 Integrate SDE with explicit Runge-Kutta integrator.
   Calculating the n-th time step of the explicit integrator for the sample path m
 """
-function integrate_step!(int::IntegratorSERK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorSERK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
     local tᵢ::TT
     local ydrift::DT
 

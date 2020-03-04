@@ -1,8 +1,8 @@
 
 using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
+using GeometricIntegrators.Integrators.Stochastic
 using GeometricIntegrators.Solutions
-using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
 using GeometricIntegrators.TestProblems.KuboOscillatorProblem
 using Test

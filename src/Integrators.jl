@@ -20,7 +20,6 @@ module Integrators
     using ..Solvers
 
 
-
     export InitialGuessODE, InitialGuessPODE, initialize!
 
     include("integrators/initial_guess/extrapolation.jl")
@@ -80,22 +79,6 @@ module Integrators
     export IntegratorPGLRK, CoefficientsPGLRK
 
     include("integrators/rk/integrators_pglrk.jl")
-
-
-    export IntegratorSERK, TableauSERK
-    export IntegratorSIRK, TableauSIRK
-    export IntegratorSIPRK, TableauSIPRK
-    export IntegratorSISPRK, TableauSISPRK
-    export IntegratorWERK, TableauWERK
-    export IntegratorWIRK, TableauWIRK
-
-    include("integrators/stochastic/common.jl")
-    include("integrators/stochastic/integrators_serk.jl")
-    include("integrators/stochastic/integrators_sirk.jl")
-    include("integrators/stochastic/integrators_siprk.jl")
-    include("integrators/stochastic/integrators_sisprk.jl")
-    include("integrators/stochastic/integrators_werk.jl")
-    include("integrators/stochastic/integrators_wirk.jl")
 
 
     export IntegratorVPRK, IntegratorVPRKpNone, TableauVPRK
@@ -187,6 +170,9 @@ module Integrators
     include("integrators/dgvi/integrators_dgvi_path_integral.jl")
     include("integrators/dgvi/integrators_dgvi_projection_initial.jl")
     include("integrators/dgvi/integrators_dgvi_projection_final.jl")
+
+
+    include("integrators/Stochastic.jl")
 
 
     include("integrators/integrators.jl")

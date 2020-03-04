@@ -227,7 +227,7 @@ Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
 end
 
 "Compute stages of weak implicit Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersWIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersWIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
     cache = IntegratorCacheWIRK{ST}(D, M, S)
 
@@ -305,7 +305,7 @@ end
 Integrate SDE with a stochastic implicit Runge-Kutta integrator.
   Integrating the m-th sample path
 """
-function integrate_step!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int, sol)
 
