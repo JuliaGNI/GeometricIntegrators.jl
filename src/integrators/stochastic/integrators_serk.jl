@@ -1,5 +1,13 @@
+"""
+Holds the tableau of a stochastic explicit Runge-Kutta method.
 
-"Holds the tableau of a stochastic explicit Runge-Kutta method."
+Order of the tableau is not included, because unlike in the deterministic
+setting, it depends on the properties of the noise (e.g., the dimension of
+the Wiener process and the commutativity properties of the diffusion matrix)
+
+Orders stored in qdrift, qdiff and qdiff2 are understood as the classical orders of these methods.
+
+"""
 struct TableauSERK{T} <: AbstractTableauERK{T}
     name::Symbol
     s::Int
@@ -7,12 +15,6 @@ struct TableauSERK{T} <: AbstractTableauERK{T}
     qdrift::CoefficientsRK{T}
     qdiff::CoefficientsRK{T}
     qdiff2::CoefficientsRK{T}
-
-    # Order of the tableau is not included, because unlike in the deterministic
-    # setting, it depends on the properties of the noise (e.g., the dimension of
-    # the Wiener process and the commutativity properties of the diffusion matrix)
-    #
-    # Orders stored in qdrift, qdiff and qdiff2 are understood as the classical orders of these methods.
 
     function TableauSERK{T}(name, qdrift, qdiff, qdiff2) where {T}
         @assert qdrift.s == qdiff.s == qdiff2.s
@@ -91,7 +93,6 @@ end
 
 """
 Integrate SDE with explicit Runge-Kutta integrator.
-  Calculating the n-th time step of the explicit integrator for the sample path m
 """
 function Integrators.integrate_step!(int::IntegratorSERK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
     local tᵢ::TT

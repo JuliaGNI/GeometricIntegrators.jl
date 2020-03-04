@@ -1,8 +1,22 @@
 """
- Holds the tableau of a weak implicit Runge-Kutta method.
+Holds the tableau of a weak implicit Runge-Kutta method.
 
-   According to Wang, Hong, Xu, "Construction of Symplectic Runge-Kutta Methods for Stochastic Hamiltonian Systems",
-   Commun. Comput. Phys. 21(1), 2017
+    Reference: Wang, Hong, Xu, "Construction of Symplectic Runge-Kutta Methods for Stochastic Hamiltonian Systems",
+    Commun. Comput. Phys. 21(1), 2017
+
+Order of the tableau is not included, because unlike in the deterministic
+setting, it depends on the properties of the noise (e.g., the dimension of
+the Wiener process and the commutativity properties of the diffusion matrix)
+
+Orders stored in qdrift and qdiff are understood as the classical orders of these methods.
+
+qdrift0, qdrift1 correspond to A0, A1 in the paper
+qdiff0, qdiff1, qdiff3 correspond to B0, B1, B3
+qdrift0.b = alpha
+qdiff0.b  = beta
+qdrift0.c = c0
+qdrift1.c = c1
+
 """
 struct TableauWIRK{T} <: AbstractTableauIRK{T}
     name::Symbol
@@ -13,34 +27,8 @@ struct TableauWIRK{T} <: AbstractTableauIRK{T}
     qdiff1::CoefficientsRK{T}
     qdiff3::CoefficientsRK{T}
 
-    # Order of the tableau is not included, because unlike in the deterministic
-    # setting, it depends on the properties of the noise (e.g., the dimension of
-    # the Wiener process and the commutativity properties of the diffusion matrix)
-    #
-    # Orders stored in qdrift and qdiff are understood as the classical orders of these methods.
-    #
-    # qdrift0, qdrift1 correspond to A0, A1 in the paper
-    # qdiff0, qdiff1, qdiff3 correspond to B0, B1, B3
-    # qdrift0.b = alpha
-    # qdiff0.b  = beta
-    # qdrift0.c = c0
-    # qdrift1.c = c1
-
-
     function TableauWIRK{T}(name, s, qdrift0, qdrift1, qdiff0, qdiff1, qdiff3) where {T}
-        # THE COMMENTED OUT PART WAS FOR TableauFIRK. MAY IMPLEMENT SOMETHING
-        # SIMILAR FOR TableauSFIRK LATER.
-
-        # if (q.s > 1 && istrilstrict(q.a)) || (q.s==1 && q.a[1,1] == 0)
-        #     warn("Initializing TableauFIRK with explicit tableau ", q.name, ".\n",
-        #          "You might want to use TableauERK instead.")
-        # elseif q.s > 1 && istril(q.a)
-        #     warn("Initializing TableauFIRK with diagonally implicit tableau ", q.name, ".\n",
-        #          "You might want to use TableauDIRK instead.")
-        # end
-
         @assert s == qdrift0.s == qdrift1.s == qdiff0.s == qdiff1.s == qdiff3.s
-
         new(name, s, qdrift0, qdrift1, qdiff0, qdiff1, qdiff3)
     end
 end
@@ -77,10 +65,12 @@ function ParametersWIRK(equ::ET, tab::TableauWIRK{TT}, Δt::TT, ΔW::Vector{DT},
 end
 
 
+"""
+Structure for holding the internal stages Q0, and Q1 the values of the drift vector
+and the diffusion matrix evaluated at the internal stages V=v(Q0), B=B(Q1),
+and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
+"""
 struct IntegratorCacheWIRK{DT}
-    # Structure for holding the internal stages Q0, and Q1 the values of the drift vector
-    # and the diffusion matrix evaluated at the internal stages V=v(Q0), B=B(Q1),
-    # and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
     Q0::Vector{Vector{DT}}     # Q0[i][k]   - the k-th component of the internal stage Q^(0)_i
     Q1::Vector{Matrix{DT}}     # Q1[i][k,l] - the k-th component of the internal stage Q^(l)_i
     V ::Vector{Vector{DT}}     # V [i][k]   - the k-th component of the drift vector v(Q0[i][:])
@@ -164,9 +154,9 @@ end
 """
 Unpacks the data stored in
 x = (Y0[1][1], Y0[1][2]], ... Y0[1][D], ... Y0[S][D], Y1[1][1,1], Y1[1][2,1], ... Y1[1][D,1], Y1[1][1,2], Y1[1][2,2], ... Y1[1][D,2], ... Y1[S][D,M]  )
-into Y0::Vector{Vector} and Y1::Vector{Matrix}, calculates the internal stages Q0 and Q1, the values of the RHS
+into Y0 and Y1, calculates the internal stages Q0 and Q1, the values of the RHS
 of the SDE ( v(Q0) and B(Q1) ), and assigns them to V and B.
-Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
+Unlike for FIRK, here Y = Δt a v(Q) + â B(Q) ΔW
 """
 @generated function compute_stages!(x::Vector{ST}, Q0::Vector{Vector{ST}}, Q1::Vector{Matrix{ST}}, V::Vector{Vector{ST}},
                                                    B::Vector{Matrix{ST}}, Y0::Vector{Vector{ST}}, Y1::Vector{Matrix{ST}},
@@ -289,21 +279,22 @@ end
 """
 This function computes initial guesses for Y and assigns them to int.solver.x
 For WIRK we are NOT IMPLEMENTING an InitialGuess.
+
+Using an explicit integrator to predict the next step's value (like in SIRK)
+does not seem to be a good idea here, because the integrators are convergent
+in the weak sense only, and there is no guarantee that the explicit integrator
+will produce anything close to the desired solution...
+
+The simplest initial guess for Y is 0
+
 """
 function initial_guess!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
-    # The simplest initial guess for Y is 0
     int.solver.x .= 0
-
-    # Using an explicit integrator to predict the next step's value (like in SIRK)
-    # does not seem to be a good idea here, because the integrators are convergent
-    # in the weak sense only, and there is no guarantee that the explicit integrator
-    # will produce anything close to the desired solution...
 end
 
 
 """
 Integrate SDE with a stochastic implicit Runge-Kutta integrator.
-  Integrating the m-th sample path
 """
 function Integrators.integrate_step!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache

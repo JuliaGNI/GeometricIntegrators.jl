@@ -280,18 +280,6 @@ function update_solution!(q::SolutionVector{T}, p::SolutionVector{T},
     update_solution!(q, p, V, F, B, G, b̂qdrift, b̂qdiff, b̂pdrift, b̂pdiff, Δt, ΔW, Δy, Δz)
 end
 
-# For stochastic split partitioned Runge-Kutta methods
-function update_solution!(q::SolutionVector{T}, p::SolutionVector{T},
-                            V::Vector{Vector{T}}, F1::Vector{Vector{T}}, F2::Vector{Vector{T}},
-                            B::Vector{Matrix{T}}, G1::Vector{Matrix{T}}, G2::Vector{Matrix{T}},
-                            bqdrift::Vector{T}, b̂qdrift::Vector, bqdiff::Vector{T}, b̂qdiff::Vector,
-                            bpdrift1::Vector{T}, b̂pdrift1::Vector, bpdrift2::Vector{T}, b̂pdrift2::Vector,
-                            bpdiff1::Vector{T}, b̂pdiff1::Vector, bpdiff2::Vector{T}, b̂pdiff2::Vector,
-                            Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW), Δz::Vector{T}=zero(ΔW)) where {T}
-    update_solution!(q, p, V, F1, F2, B, G1, G2, bqdrift, bqdiff, bpdrift1, bpdrift2, bpdiff1, bpdiff2, Δt, ΔW, Δy, Δz)
-    update_solution!(q, p, V, F1, F2, B, G1, G2, b̂qdrift, b̂qdiff, b̂pdrift1, b̂pdrift2, b̂pdiff1, b̂pdiff2, Δt, ΔW, Δy, Δz)
-end
-
  # For weak Runge-Kutta methods WERK
  function update_solution!(x::SolutionVector{T}, V::Vector{Vector{T}}, B1::Vector{Matrix{T}}, B2::Vector{Matrix{T}},
                              α::Vector{T}, α̂::Vector, β1::Vector{T}, β̂1::Vector, β2::Vector{T}, β̂2::Vector,

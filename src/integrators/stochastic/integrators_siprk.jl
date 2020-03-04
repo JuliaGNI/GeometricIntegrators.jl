@@ -1,7 +1,14 @@
 """
- Holds the tableau of a stochastic implicit partitioned Runge-Kutta method.
- qdrift, pdrift hold the RK coefficients for the drift part,
- and qdiff, pdiff hold the RK coefficients for the diffusion part of the SDE.
+Holds the tableau of a stochastic implicit partitioned Runge-Kutta method.
+qdrift, pdrift hold the RK coefficients for the drift part,
+and qdiff, pdiff hold the RK coefficients for the diffusion part of the SDE.
+
+Order of the tableau is not included, because unlike in the deterministic
+setting, it depends on the properties of the noise (e.g., the dimension of
+the Wiener process and the commutativity properties of the diffusion matrix)
+
+Orders stored in qdrift and qdiff are understood as the classical orders of these methods.
+
 """
 struct TableauSIPRK{T} <: AbstractTableauIRK{T}
     name::Symbol
@@ -11,27 +18,8 @@ struct TableauSIPRK{T} <: AbstractTableauIRK{T}
     pdrift::CoefficientsRK{T}
     pdiff::CoefficientsRK{T}
 
-    # Order of the tableau is not included, because unlike in the deterministic
-    # setting, it depends on the properties of the noise (e.g., the dimension of
-    # the Wiener process and the commutativity properties of the diffusion matrix)
-    #
-    # Orders stored in qdrift and qdiff are understood as the classical orders of these methods.
-
-
     function TableauSIPRK{T}(name, s, qdrift, qdiff, pdrift, pdiff) where {T}
-        # THE COMMENTED OUT PART WAS FOR TableauFIRK. MAY IMPLEMENT SOMETHING
-        # SIMILAR FOR TableauSFIRK LATER.
-
-        # if (q.s > 1 && istrilstrict(q.a)) || (q.s==1 && q.a[1,1] == 0)
-        #     warn("Initializing TableauFIRK with explicit tableau ", q.name, ".\n",
-        #          "You might want to use TableauERK instead.")
-        # elseif q.s > 1 && istril(q.a)
-        #     warn("Initializing TableauFIRK with diagonally implicit tableau ", q.name, ".\n",
-        #          "You might want to use TableauDIRK instead.")
-        # end
-
         @assert s == qdrift.s == qdiff.s == pdrift.s == pdiff.s
-
         new(name, s, qdrift, qdiff, pdrift, pdiff)
     end
 end
@@ -50,7 +38,7 @@ end
 
 """
 Parameters for right-hand side function of implicit Runge-Kutta methods.
-  A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
+A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
 """
 mutable struct ParametersSIPRK{DT, TT, ET <: PSDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
     equ::ET
@@ -163,8 +151,9 @@ struct IntegratorSIPRK{DT, TT, PT <: ParametersSIPRK{DT,TT},
     cache::IntegratorCacheSIPRK{DT}
 end
 
-# K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
 function IntegratorSIPRK(equation::PSDE{DT,TT}, tableau::TableauSIPRK{TT}, Δt::TT; K::Int=0) where {DT,TT}
+    # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
+
     D = equation.d
     M = equation.m
     NS= max(equation.ns,equation.ni)
@@ -215,11 +204,11 @@ end
 
 """
 Unpacks the data stored in x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ..., Z[1][1], Z[1][2], ... Z[1][D], Z[2][1], ...)
-into Y, Z::Vector{Vector}, calculates the internal stages Q, P, the values of the RHS
+into Y, Z, calculates the internal stages Q, P, the values of the RHS
 of the SDE ( v(Q,P), f(Q,P), B(Q,P) and G(Q,P) ), and assigns them to V, F, B and G.
 Unlike for FIRK, here
 Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW,
-Z = Δt ̃a_drift v(Q,P) + ̃a_diff B(Q,P) ΔW.
+Z = Δt â_drift v(Q,P) + â_diff B(Q,P) ΔW.
 """
 function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, P::Vector{Vector{ST}},
                                         V::Vector{Vector{ST}}, F::Vector{Vector{ST}},
@@ -303,30 +292,31 @@ end
 """
 This function computes initial guesses for Y, Z and assigns them to int.solver.x
 The prediction is calculated using an explicit integrator.
+
+SIMPLE SOLUTION
+The simplest initial guess for Y, Z is 0
+int.solver.x .= zeros(eltype(int), 2*int.params.tab.s*ndims(int))
+
+USING AN EXPLICIT INTEGRATOR TO COMPUTE AN INITIAL GUESS
+Below we use the R2 method of Burrage & Burrage to calculate
+the internal stages at the times c[1]...c[s].
+This approach seems to give very good approximations if the time step
+and magnitude of noise are not too large. If the noise intensity is too big,
+one may have to perform a few iterations of the explicit method with a smaller
+time step, use a higher-order explicit method (e.g. CL or G5), or use
+the simple solution above.
+
+When calling this function, int.params should contain the data:
+int.params.q - the q solution at the previous time step
+int.params.p - the p solution at the previous time step
+int.params.t - the time of the previous step
+int.params.ΔW- the increment of the Brownian motion for the current step
+
 """
 function initial_guess!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
 
-    # SIMPLE SOLUTION
-    # The simplest initial guess for Y, Z is 0
-    # int.solver.x .= zeros(eltype(int), 2*int.params.tab.s*ndims(int))
-
-    # USING AN EXPLICIT INTEGRATOR TO COMPUTE AN INITIAL GUESS
-    # Below we use the R2 method of Burrage & Burrage to calculate
-    # the internal stages at the times c[1]...c[s].
-    # This approach seems to give very good approximations if the time step
-    # and magnitude of noise are not too large. If the noise intensity is too big,
-    # one may have to perform a few iterations of the explicit method with a smaller
-    # time step, use a higher-order explicit method (e.g. CL or G5), or use
-    # the simple solution above.
-
     local t2::TT
     local Δt_local::TT
-
-    # When calling this function, int.params should contain the data:
-    # int.params.q - the q solution at the previous time step
-    # int.params.p - the p solution at the previous time step
-    # int.params.t - the time of the previous step
-    # int.params.ΔW- the increment of the Brownian motion for the current step
 
     # Evaluating the functions v and B at t,q - same for all stages
     int.params.equ.v(int.params.t, int.params.q, int.params.p, int.cache.V1)
@@ -406,7 +396,6 @@ end
 
 """
 Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator.
-Integrating the m-th sample path
 """
 function Integrators.integrate_step!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
