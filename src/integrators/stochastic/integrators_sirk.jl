@@ -185,7 +185,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     for i in eachindex(Q,Y)
         @assert size(B[i],1) == length(Q[i]) == length(V[i])
         for k in eachindex(Q[i])
-            Y[i][k] = x[D*(i-1)+k]
+            Y[i][k] = x[params.equ.d*(i-1)+k]
         end
         Q[i] .= params.q .+ Y[i]
     end
