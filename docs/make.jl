@@ -3,7 +3,7 @@ using GeometricIntegrators
 
 makedocs(
     sitename = "GeometricIntegrators.jl",
-    format = Documenter.HTML(),
+    format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = ["Home" => "index.md",
              "Tutorial" => "tutorial.md",
              "Integrators" => [
