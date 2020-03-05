@@ -30,3 +30,7 @@ eachdim(integrator::Integrator) = 1:ndims(integrator)
 abstract type Parameters{DT,TT} end
 
 function_stages!(x::Vector{DT}, b::Vector{DT}, params::PT) where {DT, TT, PT <: Parameters{DT,TT}} = error("function_stages!() not implemented for ", PT)
+
+initialize!(::Integrator, ::AtomicSolution) = nothing
+
+integrate_step!(integrator::Integrator, ::AtomicSolution) = error("integrate_step()! not implemented for ", typeof(integrator))
