@@ -10,5 +10,5 @@ abstract type PDAEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 
 
 IntegratorCache(params::Parameters) = error("IntegratorCache(params) not implemented for ", typeof(params))
+IntegratorCache(integrator::Integrator) = error("IntegratorCache(int)! not implemented for ", typeof(integrator))
 
-create_integrator_cache(integrator::Integrator) = error("create_integrator_cache()! not implemented for ", typeof(integrator))

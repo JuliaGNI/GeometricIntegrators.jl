@@ -126,11 +126,10 @@ function IntegratorCacheVPRKwProjection(ST,D,S)
     IntegratorCacheVPRK{ST,D,S}(true)
 end
 
-function create_integrator_cache(int::AbstractIntegratorVPRK{DT,TT}) where {DT,TT}
+function IntegratorCache(int::AbstractIntegratorVPRK{DT,TT}) where {DT,TT}
     IntegratorCacheVPRK(DT, TT, ndims(int), nstages(int))
 end
 
-
-function create_integrator_cache(int::AbstractIntegratorVPRKwProjection{DT,TT}) where {DT,TT}
+function IntegratorCache(int::AbstractIntegratorVPRKwProjection{DT,TT}) where {DT,TT}
     IntegratorCacheVPRKwProjection(DT, TT, ndims(int), nstages(int))
 end

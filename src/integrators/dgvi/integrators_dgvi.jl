@@ -637,7 +637,7 @@ equation(integrator::IntegratorDGVI) = integrator.equation
 timestep(integrator::IntegratorDGVI) = integrator.Δt
 
 
-function create_integrator_cache(int::IntegratorDGVI{DT,TT}) where {DT,TT}
+function IntegratorCache(int::IntegratorDGVI{DT,TT}) where {DT,TT}
     IntegratorCacheDGVI{DT, TT, ndims(int), nbasis(int.basis), nnodes(int.quadrature)}()
 end
 

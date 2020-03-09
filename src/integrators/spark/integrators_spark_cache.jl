@@ -155,6 +155,10 @@ mutable struct IntegratorCacheSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
     end
 end
 
+function IntegratorCache(int::AbstractIntegratorSPARK{DT,TT}) where {DT,TT}
+    IntegratorCacheSPARK{DT, TT, ndims(int), nstages(int), pstages(int)}()
+end
+
 function CommonFunctions.reset!(cache::IntegratorCacheSPARK, Δt)
     cache.t̅  = cache.t
     cache.q̅ .= cache.q

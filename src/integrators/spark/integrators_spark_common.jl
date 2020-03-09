@@ -1,9 +1,4 @@
 
-function create_integrator_cache(int::AbstractIntegratorSPARK{DT,TT}) where {DT,TT}
-    IntegratorCacheSPARK{DT, TT, ndims(int), nstages(int), pstages(int)}()
-end
-
-
 function initialize!(int::AbstractIntegratorSPARK, cache::IntegratorCacheSPARK)
     cache.t̅ = cache.t - timestep(int)
 
