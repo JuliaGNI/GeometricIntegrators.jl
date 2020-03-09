@@ -1,7 +1,7 @@
 module Equations
 
     using ..CommonFunctions
-    
+
     export Equation
     export AbstractEquationODE, AbstractEquationPODE,
            AbstractEquationDAE, AbstractEquationPDAE,
@@ -10,6 +10,8 @@ module Equations
     export ODE, IODE, PODE, HODE, VODE, SODE
     export DAE, IDAE, PDAE, HDAE, VDAE
     export SDE, PSDE, SPSDE
+
+    export get_function_tuple
 
     include("equations/equations.jl")
 

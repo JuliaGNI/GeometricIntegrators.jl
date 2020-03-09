@@ -22,7 +22,7 @@ variables ``(q,p)`` and algebraic variable ``v``.
 * `ϑ`: function determining the momentum
 * `f`: function computing the vector field
 * `g`: function determining the projection, given by ∇ϑ(q)λ
-* `h`: function computing the Hamiltonian
+* `h`: function computing the Hamiltonian (optional)
 * `v`: function computing an initial guess for the velocity field (optional)
 * `t₀`: initial time (optional)
 * `q₀`: initial condition for `q`
@@ -89,16 +89,19 @@ struct IODE{dType <: Number, tType <: Number,
     function IODE(DT::DataType, N::Int, d::Int, n::Int,
                   ϑ::ϑType, f::fType, g::gType, t₀::tType,
                   q₀::AbstractArray{dType}, p₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
-                  h::hType=nothing, v::vType=nothing, parameters=nothing, periodicity=zeros(DT,d)) where {
+                  h::hType=nothing, v::vType=nothing, parameters::pType=nothing,
+                  periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number, ϑType <: Function,
-                        fType <: Function, gType <: Function, hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing}}
+                        fType <: Function, gType <: Function,
+                        hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
+                        pType <: Union{Tuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
         @assert n == size(q₀,2) == size(p₀,2) == size(λ₀,2)
         @assert dType == eltype(q₀) == eltype(p₀) == eltype(λ₀)
         @assert ndims(q₀) == ndims(p₀) == ndims(λ₀) == N ∈ (1,2)
 
-        new{DT, tType, ϑType, fType, gType, hType, vType, typeof(parameters), N}(d, d, n, ϑ, f, g, h, v, t₀,
+        new{DT, tType, ϑType, fType, gType, hType, vType, pType, N}(d, d, n, ϑ, f, g, h, v, t₀,
                 convert(Array{DT}, q₀), convert(Array{DT}, p₀), convert(Array{DT}, λ₀),
                 parameters, periodicity)
     end
@@ -144,3 +147,36 @@ end
 @inline Base.ndims(ode::IODE) = ode.d
 
 @inline CommonFunctions.periodicity(equation::IODE) = equation.periodicity
+
+function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT, VT}
+    names = (:ϑ,:f,:g)
+    equs  = (equation.ϑ, equation.f, equation.g)
+
+    if HT != Nothing
+        names = (names..., :h)
+        equs  = (equs..., equation.h)
+    end
+
+    if VT != Nothing
+        names = (names..., :v)
+        equs  = (equs..., equation.v)
+    end
+
+    NamedTuple{names}(equs)
+end
+
+# function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT <: Function, VT <: Function}
+#     NamedTuple{(:ϑ,:f,:g,:h,:v)}((equation.ϑ, equation.f, equation.g, equation.h, equation.v))
+# end
+#
+# function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT <: Function, VT <: Nothing}
+#     NamedTuple{(:ϑ,:f,:g,:h)}((equation.ϑ, equation.f, equation.g, equation.h))
+# end
+#
+# function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT <: Nothing, VT <: Function}
+#     NamedTuple{(:ϑ,:f,:g,:v)}((equation.ϑ, equation.f, equation.g, equation.v))
+# end
+#
+# function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT <: Nothing, VT <: Nothing}
+#     NamedTuple{(:ϑ,:f,:g)}((equation.ϑ, equation.f, equation.g))
+# end
