@@ -44,13 +44,13 @@ end
 
 
 "Parameters for right-hand side function of explicit partitioned Runge-Kutta methods."
-struct ParametersEPRK{DT, TT, ET <: NamedTuple, D, S} <: Parameters{DT,TT}
+struct ParametersEPRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equs::ET
     tab::TableauEPRK{TT}
     Δt::TT
 
-    function ParametersEPRK{DT,D}(equs::ET, tab::TableauEPRK{TT}, Δt::TT) where {D, DT, TT, ET <: NamedTuple}
-        new{DT, TT, ET, D, tab.s}(equs, tab, Δt)
+    function ParametersEPRK{DT,D}(equs::ET, tab::TableauEPRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+        new{DT, TT, D, tab.s, ET}(equs, tab, Δt)
     end
 end
 
@@ -80,34 +80,43 @@ end
 
 
 "Explicit partitioned Runge-Kutta integrator."
-struct IntegratorEPRK{DT, TT, PT <: ParametersEPRK{DT,TT}, D, S} <: IntegratorPRK{DT,TT}
-    params::PT
+struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: IntegratorPRK{DT,TT}
+    params::ParametersEPRK{DT, TT, D, S, ET}
     cache::IntegratorCacheEPRK{DT,D,S}
 
-    function IntegratorEPRK{DT,D}(v::Function, f::Function, tableau::TableauEPRK{TT}, Δt::TT) where {DT,TT,D}
+    function IntegratorEPRK(params::ParametersEPRK{DT,TT,D,S,ET}, cache) where {DT,TT,D,S,ET}
+        new{DT, TT, D, S, ET}(params, cache)
+    end
+
+    function IntegratorEPRK{DT,D}(equations::ET, tableau::TableauEPRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
         # get number of stages
         S = tableau.s
 
-        # create equation tuple
-        equs = NamedTuple{(:v,:f)}((v,f))
-
         # create params
-        params = ParametersEPRK{DT,D}(equs, tableau, Δt)
+        params = ParametersEPRK{DT,D}(equations, tableau, Δt)
 
         # create cache
         cache = IntegratorCacheEPRK{DT,D,S}()
 
-        # create integrators
-        new{DT, TT, typeof(params), D, S}(params, cache)
+        # create integrator
+        IntegratorEPRK(params, cache)
     end
 
-    function IntegratorEPRK(equation::PODE{DT,TT}, tableau::TableauEPRK{TT}, Δt::TT) where {DT,TT}
-        IntegratorEPRK{DT, equation.d}(equation.v, equation.f, tableau, Δt)
+    function IntegratorEPRK{DT,D}(v::Function, f::Function, tableau::TableauEPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorEPRK{DT,D}(NamedTuple{(:v,:f)}((v,f)), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorEPRK{DT,D}(v::Function, f::Function, h::Function, tableau::TableauEPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorEPRK{DT,D}(NamedTuple{(:v,:f,:h)}((v,f,h)), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorEPRK(equation::PODE{DT,TT}, tableau::TableauEPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorEPRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 
 
-@inline Base.ndims(int::IntegratorEPRK{DT,TT,PT,D,S}) where {DT,TT,PT,D,S} = D
+@inline Base.ndims(int::IntegratorEPRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
 "Compute Q stages of explicit partitioned Runge-Kutta methods."
@@ -156,7 +165,7 @@ function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomicSolutionPODE{DT,
         tpᵢ = sol.t̅ + timestep(int) * tableau(int).p.c[i]
 
         if tableau(int).q.a[i,i] ≠ zero(TT) && tableau(int).p.a[i,i] ≠ zero(TT)
-            error("This is an implicit method!")
+            error("This is a fully implicit method!")
         elseif tableau(int).q.a[i,i] ≠ zero(TT)
             computeStageP!(int, int.cache, i, i-1, tpᵢ)
             computeStageQ!(int, int.cache, i, i, tqᵢ)

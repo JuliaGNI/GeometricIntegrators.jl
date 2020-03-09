@@ -29,7 +29,7 @@ end
 
 
 "Parameters for right-hand side function of diagonally implicit Runge-Kutta methods."
-mutable struct ParametersDIRK{DT, TT, ET <: NamedTuple, D, S} <: Parameters{DT,TT}
+mutable struct ParametersDIRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equs::ET
     tab::TableauDIRK{TT}
     Δt::TT
@@ -39,7 +39,7 @@ mutable struct ParametersDIRK{DT, TT, ET <: NamedTuple, D, S} <: Parameters{DT,T
     V::Vector{Vector{DT}}
 
     function ParametersDIRK{DT,D}(equs::ET, tab::TableauDIRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
-        new{DT, TT, ET, D, tab.s}(equs, tab, Δt, 0, zeros(DT,D), create_internal_stage_vector(DT, D, tab.s))
+        new{DT, TT, D, tab.s, ET}(equs, tab, Δt, 0, zeros(DT,D), create_internal_stage_vector(DT, D, tab.s))
     end
 end
 
@@ -67,23 +67,24 @@ end
 
 
 "Diagonally implicit Runge-Kutta integrator."
-struct IntegratorDIRK{DT, TT, PT <: ParametersDIRK{DT,TT},
-                              ST,# <: NonlinearSolver{DT},
-                              IT <: InitialGuessODE{DT,TT}, D, S} <: IntegratorRK{DT,TT}
+struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
+                                    ST,# <: NonlinearSolver{DT},
+                                    IT <: InitialGuessODE{DT,TT}} <: IntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCacheDIRK{DT,D,S}
 
-    function IntegratorDIRK{DT,D}(v::Function, tableau::TableauDIRK{TT}, Δt::TT) where {DT, TT, D}
+    function IntegratorDIRK(params::ParametersDIRK{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
+    end
+
+    function IntegratorDIRK{DT,D}(equations::NamedTuple, tableau::TableauDIRK{TT}, Δt::TT) where {DT, TT, D}
         # get number of stages
         S = tableau.q.s
 
-        # create equation tuple
-        equs = NamedTuple{(:v,)}((v,))
-
         # create params
-        params = ParametersDIRK{DT,D}(equs, tableau, Δt)
+        params = ParametersDIRK{DT,D}(equations, tableau, Δt)
 
         # create solvers
         function create_nonlinear_solver(DT, N, params, i)
@@ -101,23 +102,30 @@ struct IntegratorDIRK{DT, TT, PT <: ParametersDIRK{DT,TT},
         solvers = [create_nonlinear_solver(DT, D, params, i) for i in 1:S]
 
         # create initial guess
-        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), v, Δt)
+        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
 
         # create cache
         cache = IntegratorCacheDIRK{DT,D,S}()
 
         # create integrator
-        new{DT, TT, typeof(params), typeof(solvers), typeof(iguess), D, S}(
-                    params, solvers, iguess, cache)
+        IntegratorDIRK(params, solvers, iguess, cache)
+    end
+
+    function IntegratorDIRK{DT,D}(v::Function, tableau::TableauDIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorDIRK{DT,D}(NamedTuple{(:v,)}((v,)), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorDIRK{DT,D}(v::Function, h::Function, tableau::TableauDIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorDIRK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     end
 
     function IntegratorDIRK(equation::ODE{DT,TT}, tableau::TableauDIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorDIRK{DT, equation.d}(equation.v, tableau, Δt; kwargs...)
+        IntegratorDIRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 
 
-@inline Base.ndims(int::IntegratorDIRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
+@inline Base.ndims(int::IntegratorDIRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 @inline has_initial_guess(int::IntegratorDIRK) = true
 
 
@@ -152,7 +160,7 @@ end
 
 
 function compute_stages!(x::Vector{ST}, Q::Vector{ST}, V::Vector{ST}, Y::Vector{ST},
-                                    params::ParametersDIRK{DT,TT,ET,D,S}, i::Int) where {ST,DT,TT,ET,D,S}
+                                    params::ParametersDIRK{DT,TT,D,S}, i::Int) where {ST,DT,TT,D,S}
 
     local tᵢ::TT
 
@@ -171,7 +179,7 @@ end
 
 
 "Compute stages of fully implicit Runge-Kutta methods."
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{DT,TT,ET,D,S}, i::Int) where {ST,DT,TT,ET,D,S}
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{DT,TT,D,S}, i::Int) where {ST,DT,TT,D,S}
     local Q = zeros(ST,D)
     local V = zeros(ST,D)
     local Y = zeros(ST,D)

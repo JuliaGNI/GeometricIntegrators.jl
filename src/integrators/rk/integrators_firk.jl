@@ -90,27 +90,24 @@ end
 
 
 "Fully implicit Runge-Kutta integrator."
-struct IntegratorFIRK{DT, TT, PT <: ParametersFIRK{DT,TT},
-                              ST <: NonlinearSolver{DT},
-                              IT <: InitialGuessODE{DT,TT}, D, S} <: IntegratorRK{DT,TT}
+struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
+                                    ST <: NonlinearSolver{DT},
+                                    IT <: InitialGuessODE{DT,TT}} <: IntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCacheFIRK{DT,D,S}
 
-    function IntegratorFIRK(params::ParametersFIRK{DT,TT,D,S,ET}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ET,ST,IT}
-        new{DT, TT, typeof(params), ST, IT, D, S}(params, solver, iguess, cache)
+    function IntegratorFIRK(params::ParametersFIRK{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
     end
 
-    function IntegratorFIRK{DT,D}(v::Function, tableau::TableauFIRK{TT}, Δt::TT; exact_jacobian=false) where {D,DT,TT}
+    function IntegratorFIRK{DT,D}(equations::NamedTuple, tableau::TableauFIRK{TT}, Δt::TT; exact_jacobian=false) where {DT,TT,D}
         # get number of stages
         S = tableau.s
 
-        # create equation tuple
-        equs = NamedTuple{(:v,)}((v,))
-
         # create params
-        params = ParametersFIRK{DT,D}(equs, tableau, Δt)
+        params = ParametersFIRK{DT,D}(equations, tableau, Δt)
 
         # create solver
         if exact_jacobian
@@ -120,7 +117,7 @@ struct IntegratorFIRK{DT, TT, PT <: ParametersFIRK{DT,TT},
         end
 
         # create initial guess
-        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), v, Δt)
+        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
 
         # create cache
         cache = IntegratorCacheFIRK{DT,D,S}()
@@ -129,13 +126,21 @@ struct IntegratorFIRK{DT, TT, PT <: ParametersFIRK{DT,TT},
         IntegratorFIRK(params, solver, iguess, cache)
     end
 
+    function IntegratorFIRK{DT,D}(v::Function, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorFIRK{DT,D}(NamedTuple{(:v,)}((v,)), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorFIRK{DT,D}(v::Function, h::Function, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorFIRK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
+    end
+
     function IntegratorFIRK(equation::ODE{DT,TT}, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorFIRK{DT, equation.d}(equation.v, tableau, Δt; kwargs...)
+        IntegratorFIRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 
 
-@inline Base.ndims(int::IntegratorFIRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
+@inline Base.ndims(int::IntegratorFIRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
 function initialize!(int::IntegratorFIRK, sol::AtomicSolutionODE)

@@ -42,7 +42,7 @@ end
 
 
 "Parameters for right-hand side function of implicit partitioned Runge-Kutta methods."
-mutable struct ParametersIPRK{DT, TT, ET <: NamedTuple, D, S} <: Parameters{DT,TT}
+mutable struct ParametersIPRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equs::ET
     tab::TableauIPRK{TT}
     Δt::TT
@@ -55,7 +55,7 @@ mutable struct ParametersIPRK{DT, TT, ET <: NamedTuple, D, S} <: Parameters{DT,T
     function ParametersIPRK{DT,D}(equs::ET, tab::TableauIPRK{TT}, Δt::TT) where {D, DT, TT, ET <: NamedTuple}
         q = zeros(DT,D)
         p = zeros(DT,D)
-        new{DT, TT, ET, D, tab.s}(equs, tab, Δt, 0, q, p)
+        new{DT, TT, D, tab.s, ET}(equs, tab, Δt, 0, q, p)
     end
 end
 
@@ -113,44 +113,53 @@ end
 
 
 "Implicit partitioned Runge-Kutta integrator."
-struct IntegratorIPRK{DT, TT, PT <: ParametersIPRK{DT,TT},
-                              ST <: NonlinearSolver{DT},
-                              IT <: InitialGuessPODE{DT,TT}, D, S} <: IntegratorPRK{DT,TT}
+struct IntegratorIPRK{DT, TT, D, S, PT <: ParametersIPRK{DT,TT},
+                                    ST <: NonlinearSolver{DT},
+                                    IT <: InitialGuessPODE{DT,TT}} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCacheIPRK{DT,D,S}
 
-    function IntegratorIPRK{DT,D}(v::Function, f::Function, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT,D}
+    function IntegratorIPRK(params::ParametersIPRK{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
+    end
+
+    function IntegratorIPRK{DT,D}(equations::NamedTuple, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT,D}
         # get number of stages
         S = tableau.s
 
-        # create equation tuple
-        equs = NamedTuple{(:v,:f)}((v,f))
-
         # create params
-        params = ParametersIPRK{DT,D}(equs, tableau, Δt)
+        params = ParametersIPRK{DT,D}(equations, tableau, Δt)
 
         # create solver
         solver = create_nonlinear_solver(DT, 2*D*S, params)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), v, f, Δt)
+        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create cache
         cache = IntegratorCacheIPRK{DT,D,S}()
 
         # create integrator
-        new{DT, TT, typeof(params), typeof(solver), typeof(iguess), D, S}(params, solver, iguess, cache)
+        IntegratorIPRK(params, solver, iguess, cache)
     end
 
-    function IntegratorIPRK(equation::PODE{DT,TT}, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT}
-        IntegratorIPRK{DT, equation.d}(equation.v, equation.f, tableau, Δt)
+    function IntegratorIPRK{DT,D}(v::Function, f::Function, tableau::TableauIPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorIPRK{DT,D}(NamedTuple{(:v,:f)}((v,f)), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorIPRK{DT,D}(v::Function, f::Function, h::Function, tableau::TableauIPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorIPRK{DT,D}(NamedTuple{(:v,:f,:h)}((v,f,h)), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorIPRK(equation::PODE{DT,TT}, tableau::TableauIPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorIPRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 
 
-@inline Base.ndims(int::IntegratorIPRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
+@inline Base.ndims(int::IntegratorIPRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
 function update_params!(int::IntegratorIPRK, sol::AtomicSolutionPODE)
@@ -162,7 +171,7 @@ end
 
 
 "Compute stages of implicit partitioned Runge-Kutta methods."
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersIPRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
     # create caches for internal stages
     Q = create_internal_stage_vector(ST, D, S)
     P = create_internal_stage_vector(ST, D, S)
@@ -190,7 +199,7 @@ end
 
 function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
                                         P::Vector{Vector{ST}}, F::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
-                                        params::ParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+                                        params::ParametersIPRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
     local tqᵢ::TT
     local tpᵢ::TT
 

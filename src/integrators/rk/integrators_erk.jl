@@ -49,13 +49,13 @@ end
 
 
 "Parameters for right-hand side function of explicit Runge-Kutta methods."
-struct ParametersERK{DT, TT, ET <: NamedTuple, D, S} <: Parameters{DT,TT}
+struct ParametersERK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equs::ET
     tab::TableauERK{TT}
     Δt::TT
 
-    function ParametersERK{DT,D}(equs::ET, tab::TableauERK{TT}, Δt::TT) where {D, DT, TT, ET <: NamedTuple}
-        new{DT, TT, ET, D, tab.s}(equs, tab, Δt)
+    function ParametersERK{DT,D}(equs::ET, tab::TableauERK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+        new{DT, TT, D, tab.s, ET}(equs, tab, Δt)
     end
 end
 
@@ -74,30 +74,39 @@ end
 
 
 "Explicit Runge-Kutta integrator."
-struct IntegratorERK{DT, TT, PT <: ParametersERK{DT,TT}, D, S} <: IntegratorRK{DT,TT}
-    params::PT
+struct IntegratorERK{DT, TT, D, S, ET} <: IntegratorRK{DT,TT}
+    params::ParametersERK{DT,TT,D,S,ET}
     cache::IntegratorCacheERK{DT,D,S}
 
 
-    function IntegratorERK{DT,D}(v::Function, tableau::TableauERK{TT}, Δt::TT) where {DT,TT,D}
+    function IntegratorERK(params::ParametersERK{DT,TT,D,S,ET}, cache) where {DT,TT,D,S,ET}
+        new{DT, TT, D, S, ET}(params, cache)
+    end
+
+    function IntegratorERK{DT,D}(equations::ET, tableau::TableauERK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
         # get number of stages
         S = tableau.s
 
-        # create equation tuple
-        equs = NamedTuple{(:v,)}((v,))
-
         # create params
-        params = ParametersERK{DT,D}(equs, tableau, Δt)
+        params = ParametersERK{DT,D}(equations, tableau, Δt)
 
         # create cache
         cache = IntegratorCacheERK{DT,D,S}()
 
-        # create integrators
-        new{DT, TT, typeof(params), D, S}(params, cache)
+        # create integrator
+        new{DT, TT, D, S, ET}(params, cache)
     end
 
-    function IntegratorERK(equation::ODE{DT,TT}, tableau::TableauERK{TT}, Δt::TT) where {DT,TT}
-        IntegratorERK{DT, equation.d}(equation.v, tableau, Δt)
+    function IntegratorERK{DT,D}(v::Function, tableau::TableauERK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorERK{DT,D}(NamedTuple{(:v,)}((v,)), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorERK{DT,D}(v::Function, h::Function, tableau::TableauERK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorERK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorERK(equation::ODE{DT,TT}, tableau::TableauERK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorERK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 
