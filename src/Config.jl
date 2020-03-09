@@ -4,7 +4,7 @@ module Config
            get_config_dictionary
 
     if !(@isdefined GICONFIG)
-        global GICONFIG = Dict()
+        const global GICONFIG = Dict()
     end
 
     function add_config(name, value)
