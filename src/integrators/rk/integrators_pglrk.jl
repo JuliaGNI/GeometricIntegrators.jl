@@ -134,33 +134,30 @@ Projected Gauss-Legendre Runge-Kutta integrator.
         UPON GAUSS COLLOCATION FORMULAE.
         SIAM J. NUMER. ANAL. Vol. 50, No. 6, pp. 2897–2916, 2012.
 """
-struct IntegratorPGLRK{DT, TT, PT <: ParametersPGLRK{DT,TT},
-                               ST <: NonlinearSolver{DT},
-                               IT <: InitialGuessODE{DT,TT}, D, S} <: IntegratorPRK{DT,TT}
+struct IntegratorPGLRK{DT, TT, D, S, PT <: ParametersPGLRK{DT,TT},
+                                     ST <: NonlinearSolver{DT},
+                                     IT <: InitialGuessODE{DT,TT}} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCachePGLRK{DT,D,S}
 
     function IntegratorPGLRK(params::ParametersPGLRK{DT,TT,D,S,ET}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ET,ST,IT}
-        new{DT, TT, typeof(params), ST, IT, D, S}(params, solver, iguess, cache)
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
     end
 
-    function IntegratorPGLRK{DT,D}(v::Function, h::Function, tableau::CoefficientsPGLRK{TT}, Δt::TT) where {D,DT,TT}
+    function IntegratorPGLRK{DT,D}(equations::NamedTuple, tableau::CoefficientsPGLRK{TT}, Δt::TT) where {D,DT,TT}
         # get number of stages
         S = tableau.s
 
-        # create equation tuple
-        equs = NamedTuple{(:v,:h)}((v,h))
-
         # create params
-        params = ParametersPGLRK{DT,D}(equs, tableau, Δt)
+        params = ParametersPGLRK{DT,D}(equations, tableau, Δt)
 
         # create solver
         solver  = create_nonlinear_solver(DT, D*S, params)
 
         # create initial guess
-        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), v, Δt)
+        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
 
         # create cache
         cache = IntegratorCachePGLRK{DT,D,S}()
@@ -169,14 +166,18 @@ struct IntegratorPGLRK{DT, TT, PT <: ParametersPGLRK{DT,TT},
         IntegratorPGLRK(params, solver, iguess, cache)
     end
 
+    function IntegratorPGLRK{DT,D}(v::Function, h::Function, tableau::CoefficientsPGLRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorPGLRK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
+    end
+
     function IntegratorPGLRK(equation::ODE{DT,TT}, tableau::CoefficientsPGLRK{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorPGLRK{DT, equation.d}(equation.v, equation.h, tableau, Δt; kwargs...)
+        IntegratorPGLRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 
 
-@inline Base.ndims(int::IntegratorPGLRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
-@inline nstages(integrator::IntegratorPGLRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = S
+@inline Base.ndims(int::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
+@inline nstages(integrator::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = S
 
 
 function update_params!(params::ParametersPGLRK, sol::AtomicSolutionODE)
