@@ -288,7 +288,7 @@ module LotkaVolterra2dProblem
     function lotka_volterra_2d_vode(q₀=q₀, p₀=ϑ(0, q₀))
         VODE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
              lotka_volterra_2d_g, q₀, p₀;
-             v=lotka_volterra_2d_v, Ω=lotka_volterra_2d_ω, ∇H=lotka_volterra_2d_dH)
+             h=hamiltonian, v=lotka_volterra_2d_v, Ω=lotka_volterra_2d_ω, ∇H=lotka_volterra_2d_dH)
     end
 
     function lotka_volterra_2d_idae(q₀=q₀, p₀=ϑ(0, q₀), λ₀=zero(q₀))
