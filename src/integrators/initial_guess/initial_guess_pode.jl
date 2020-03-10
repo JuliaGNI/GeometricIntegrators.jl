@@ -33,7 +33,7 @@ function InitialGuessPODE(interp, equ::IODE{DT,TT,ϑT,FT,GT,HT,VT}, Δt::TT) whe
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
-function InitialGuessPODE(interp, equ::VODE{DT,TT,ϑT,FT,GT,VT}, Δt::TT) where {DT,TT,ϑT,FT,GT,VT}
+function InitialGuessPODE(interp, equ::VODE{DT,TT,ϑT,FT,GT,HT,VT}, Δt::TT) where {DT,TT,ϑT,FT,GT,HT,VT}
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
@@ -45,7 +45,7 @@ function InitialGuessPODE(interp, equ::PDAE{DT,TT,VT,FT,UT,GT,ϕT}, Δt::TT) whe
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
-function InitialGuessPODE(interp, equ::VDAE{DT,TT,θT,FT,GT,G̅T,ϕT,ψT,VT}, Δt::TT) where {DT,TT,θT,FT,GT,G̅T,ϕT,ψT,VT}
+function InitialGuessPODE(interp, equ::VDAE{DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT}, Δt::TT) where {DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT}
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 

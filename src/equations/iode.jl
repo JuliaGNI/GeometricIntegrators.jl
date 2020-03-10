@@ -67,8 +67,8 @@ The function `v` is used for initial guesses in nonlinear implicit solvers.
 The function `g` is used in projection methods that enforce ``p = ϑ(q)``.
 """
 struct IODE{dType <: Number, tType <: Number,
-            ϑType <: Function, fType <: Function,
-            gType <: Function, hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
+            ϑType <: Function, fType <: Function, gType <: Function,
+            hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
             pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
 
     d::Int
