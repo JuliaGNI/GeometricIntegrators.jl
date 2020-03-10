@@ -2,218 +2,215 @@
 using ForwardDiff
 
 "Parameters for right-hand side function of formal Lagrangian Runge-Kutta methods."
-mutable struct ParametersFLRK{DT,TT,VT,D,S} <: Parameters{DT,TT}
-    v::VT
+mutable struct ParametersFLRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
+    equs::ET
+    tab::TableauFIRK{TT}
     Δt::TT
 
-    a::Matrix{TT}
-    â::Matrix{TT}
-    c::Vector{TT}
-
     t::TT
-
     q::Vector{DT}
     p::Vector{DT}
+
+    function ParametersFLRK{DT,D}(equs::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+        new{DT,TT,D,tab.s,ET}(equs, tab, Δt, 0, zeros(DT,D), zeros(DT,D))
+    end
 end
 
-function ParametersFLRK(DT, D, v::VT, Δt::TT, tab) where {TT,VT}
-    ParametersFLRK{DT,TT,VT,D,tab.s}(v, Δt, tab.a, tab.â, tab.c, 0, zeros(DT,D), zeros(DT,D))
-end
+struct IntegratorCacheFLRK{DT,D,S}
+    q̃::Vector{DT}
+    ṽ::Vector{DT}
+    s̃::Vector{DT}
 
-struct NonlinearFunctionCacheFLRK{DT}
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
 
-    function NonlinearFunctionCacheFLRK{DT}(d, s) where {DT}
-
+    function IntegratorCacheFLRK{DT,D,S}() where {DT,D,S}
         # create internal stage vectors
-        Q = create_internal_stage_vector(DT, d, s)
-        V = create_internal_stage_vector(DT, d, s)
-        Y = create_internal_stage_vector(DT, d, s)
+        Q = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        Y = create_internal_stage_vector(DT, D, S)
 
-        new(Q, V, Y)
-    end
-end
-
-function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
-                                    params::ParametersFLRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
-    local tᵢ::TT
-
-    @assert S == length(Q) == length(V) == length(Y)
-
-    for i in 1:S
-        @assert D == length(Q[i]) == length(V[i]) == length(Y[i])
-        tᵢ = params.t + params.Δt * params.c[i]
-
-        # copy x to Y
-        for k in 1:D
-            Y[i][k] = x[D*(i-1)+k]
-        end
-
-        # compute Q = q + Δt Y
-        Q[i] .= params.q .+ params.Δt .* Y[i]
-
-        # compute V = v(Q)
-        params.v(tᵢ, Q[i], V[i])
-    end
-end
-
-"Compute stages of formal Lagrangian Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFLRK{DT,TT,VT,D,S}) where {ST,DT,TT,VT,D,S}
-
-    cache = NonlinearFunctionCacheFLRK{ST}(D, S)
-
-    quote
-        compute_stages!(x, $cache.Q, $cache.V, $cache.Y, params)
-
-        local y1::ST
-        local y2::ST
-
-        # compute b = - (Y-AV)
-        for i in 1:S
-            for k in 1:D
-                y1 = 0
-                y2 = 0
-                for j in 1:S
-                    y1 += params.a[i,j] * $cache.V[j][k]
-                    y2 += params.â[i,j] * $cache.V[j][k]
-                end
-                b[D*(i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
-            end
-        end
+        new(zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y)
     end
 end
 
 
 "Formal Lagrangian Runge-Kutta integrator."
-struct IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, SPT, ST, IT <: InitialGuessODE{DT,TT,VT}, N} <: DeterministicIntegrator{DT,TT}
-    equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}
-    tableau::TableauFIRK{TT}
-    Δt::TT
-
-    params::SPT
+struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
+                                    ST <: NonlinearSolver{DT},
+                                    IT <: InitialGuessODE{DT,TT}} <: IntegratorRK{DT,TT}
+    params::PT
     solver::ST
     iguess::IT
+    cache::IntegratorCacheFLRK{DT,D,S}
 
-    q::Vector{Vector{TwicePrecision{DT}}}
-    p::Vector{Vector{TwicePrecision{DT}}}
-
-    v::Vector{DT}
-    y::Vector{DT}
-
-    Q::Vector{Vector{DT}}
-    V::Vector{Vector{DT}}
+    ϑ::Vector{Vector{DT}}
     P::Vector{Vector{DT}}
     F::Vector{Vector{DT}}
     G::Vector{Vector{DT}}
-    ϑ::Vector{Vector{DT}}
-    Y::Vector{Vector{DT}}
     Z::Vector{Vector{DT}}
-
     J::Vector{Matrix{DT}}
     A::Array{DT,2}
-end
 
-function IntegratorFLRK(equation::VODE{DT,TT,AT,FT,GT,VT,ΩT,dHT,N}, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,AT,FT,GT,VT,ΩT,dHT,N}
-    D = equation.d
-    M = equation.n
-    S = tableau.q.s
+    function IntegratorFLRK(params::ParametersFLRK{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
+        # create internal stage vectors
+        ϑ = create_internal_stage_vector(DT, D, S)
+        P = create_internal_stage_vector(DT, D, S)
+        F = create_internal_stage_vector(DT, D, S)
+        G = create_internal_stage_vector(DT, D, S)
+        Z = create_internal_stage_vector(DT, D, S)
 
-    # create solution vector for internal stages / nonlinear solver
-    x = zeros(DT, D*S)
+        J = [zeros(DT,D,D) for i in 1:S]
+        A = zeros(DT,D*S,D*S)
 
-    # create solution vectors
-    q = create_solution_vector(DT, D, M)
-    p = create_solution_vector(DT, D, M)
-
-    # create velocity and update vector
-    v = zeros(DT,D)
-    y = zeros(DT,D)
-
-    # create internal stage vectors
-    Q = create_internal_stage_vector(DT, D, S)
-    V = create_internal_stage_vector(DT, D, S)
-    P = create_internal_stage_vector(DT, D, S)
-    F = create_internal_stage_vector(DT, D, S)
-    G = create_internal_stage_vector(DT, D, S)
-    ϑ = create_internal_stage_vector(DT, D, S)
-    Y = create_internal_stage_vector(DT, D, S)
-    Z = create_internal_stage_vector(DT, D, S)
-
-    J = Array{Matrix{DT}}(undef, S)
-    # J = Vector{Matrix{DT}}(S)
-    for i in 1:S
-        J[i] = zeros(DT,D,D)
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache, ϑ, P, F, G, Z, J, A)
     end
 
-    A = zeros(DT,D*S,D*S)
+    function IntegratorFLRK{DT,D}(equations::NamedTuple, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,D}
+        # get number of stages
+        S = tableau.s
 
+        # create params
+        params = ParametersFLRK{DT,D}(equations, tableau, Δt)
 
-    # create params
-    params = ParametersFLRK(DT, D, equation.v, Δt, tableau.q)
+        # create solver
+        solver = create_nonlinear_solver(DT, D*S, params)
 
-    # create rhs function for nonlinear solver
-    function_stages = (x,b) -> function_stages!(x, b, params)
+        # create initial guess
+        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
 
-    # create solver
-    solver = get_config(:nls_solver)(x, function_stages)
+        # create cache
+        cache = IntegratorCacheFLRK{DT,D,S}()
 
-    # create initial guess
-    iguess = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
+        # create integrator
+        IntegratorFLRK(params, solver, iguess, cache)
+    end
 
-    # create integrator
-    IntegratorFLRK{DT, TT, AT, FT, GT, VT, ΩT, dHT, typeof(params), typeof(solver), typeof(iguess), N}(
-                                        equation, tableau, Δt, params, solver, iguess,
-                                        q, p, v, y, Q, V, P, F, G, ϑ, Y, Z, J, A)
+    function IntegratorFLRK(equation::VODE{DT,TT}, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorFLRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorFLRK(equation::ODE{DT,TT}, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorFLRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
 end
 
 
-function initialize!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE, m::Int) where {DT,TT}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
+@inline Base.ndims(int::IntegratorFLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q[m], int.p[m], m)
 
-    # initialise initial guess
-    initialize!(int.iguess, m, sol.t[0], int.q[m])
+function initialize!(int::IntegratorFLRK, sol::AtomicSolutionODE)
+    sol.t̅ = sol.t - timestep(int)
+
+    equations(int)[:v](sol.t, sol.q, sol.v)
+
+    initialize!(int.iguess, sol.t, sol.q, sol.v,
+                            sol.t̅, sol.q̅, sol.v̅)
 end
 
-function initial_guess!(int::IntegratorFLRK, m::Int)
+
+function update_params!(int::IntegratorFLRK, sol::AtomicSolutionODE)
+    # set time for nonlinear solver and copy previous solution
+    int.params.t  = sol.t
+    int.params.q .= sol.q
+end
+
+function update_params!(int::IntegratorFLRK, sol::AtomicSolutionPODE)
+    # set time for nonlinear solver and copy previous solution
+    int.params.t  = sol.t
+    int.params.q .= sol.q
+    int.params.p .= sol.p
+end
+
+
+function initial_guess!(int::IntegratorFLRK, sol::Union{AtomicSolutionODE,AtomicSolutionPODE})
+    local offset::Int
+
     # compute initial guess for internal stages
-    for i in 1:int.tableau.q.s
-        evaluate!(int.iguess, m, int.y, int.v, int.tableau.q.c[i])
-        for k in 1:int.equation.d
-            int.V[i][k] = int.v[k]
-        end
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, int.cache.Q[i], int.cache.V[i], tableau(int).q.c[i])
     end
-    for i in 1:int.tableau.q.s
-        for k in 1:int.equation.d
-            int.solver.x[int.equation.d*(i-1)+k] = 0
-            for j in 1:int.tableau.q.s
-                int.solver.x[int.equation.d*(i-1)+k] += int.tableau.q.a[i,j] * int.V[j][k]
+    for i in eachstage(int)
+        offset = ndims(int)*(i-1)
+        for k in eachdim(int)
+            int.solver.x[offset+k] = 0
+            for j in eachstage(int)
+                int.solver.x[offset+k] += timestep(int) * tableau(int).q.a[i,j] * int.cache.V[j][k]
             end
         end
     end
 end
 
 
-"Integrate ODE with fully implicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m::Int, n::Int) where {DT,TT}
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
+function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
+                         params::ParametersFLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    @assert n ≥ 1
-    @assert n ≤ sol.ntime
+    local tᵢ::TT
 
-    # set time for nonlinear solver
-    int.params.t  = sol.t[0] + (n-1)*int.Δt
-    int.params.q .= int.q[m]
-    int.params.p .= int.p[m]
+    @assert S == length(Q) == length(V) == length(Y)
+
+    # copy x to Y and compute Q = q + Δt Y
+    for i in 1:S
+        @assert D == length(Q[i]) == length(V[i]) == length(Y[i])
+        for k in 1:D
+            Y[i][k] = x[D*(i-1)+k]
+            Q[i][k] = params.q[k] + Y[i][k]
+        end
+    end
+
+    # compute V = v(Q)
+    for i in 1:S
+        tᵢ = params.t + params.Δt * params.tab.q.c[i]
+        params.equs[:v](tᵢ, Q[i], V[i])
+    end
+end
+
+"Compute stages of formal Lagrangian Runge-Kutta methods."
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+    # temporary variables
+    local y1::ST
+    local y2::ST
+
+    # create cache for internal stages
+    cache = IntegratorCacheFLRK{ST,D,S}()
+
+    # compute stages from nonlinear solver solution x
+    compute_stages!(x, cache.Q, cache.V, cache.Y, params)
+
+    # compute b = - (Y-AV)
+    for i in 1:S
+        for k in 1:D
+            y1 = 0
+            y2 = 0
+            for j in 1:S
+                y1 += params.tab.q.a[i,j] * cache.V[j][k]
+                y2 += params.tab.q.â[i,j] * cache.V[j][k]
+            end
+            b[D*(i-1)+k] = - cache.Y[i][k] + params.Δt * (y1 + y2)
+        end
+    end
+end
+
+
+function integrate_step!(int::IntegratorFLRK, sol::AtomicSolutionODE)
+    integrate_step_flrk!(int, sol)
+end
+
+function integrate_step!(int::IntegratorFLRK, sol::AtomicSolutionPODE)
+    integrate_step_flrk!(int, sol)
+    integrate_diag_flrk!(int, sol)
+end
+
+function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::Union{AtomicSolutionODE{DT,TT},AtomicSolutionPODE{DT,TT}}) where {DT,TT}
+    # update nonlinear solver parameters from cache
+    update_params!(int, sol)
 
     # compute initial guess
-    initial_guess!(int, m)
+    initial_guess!(int, sol)
+
+    # reset cache
+    reset!(sol, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
@@ -225,36 +222,40 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector field at internal stages
-    compute_stages!(int.solver.x, int.Q, int.V, int.Y, int.params)
+    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.Y, int.params)
 
-    # compute final update for q
-    update_solution!(int.q[m], int.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
+    # compute final update
+    update_solution!(sol.q, sol.q̃, int.cache.V, int.params.tab.q.b, int.params.tab.q.b̂, timestep(int))
 
+    # copy solution to initial guess
+    update!(int.iguess, sol.t, sol.q, sol.v)
+end
+
+function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT,D,S}
     # create temporary arrays
-    tV = zeros(DT, int.equation.d)
-    δP = zeros(DT, int.equation.d*int.tableau.q.s)
+    δP = zeros(DT, D*S)
 
-    # compute ϑ = α(Q), V(Q) = int.equation.v(t, Q, V)
-    # and f_0(Q, V(Q)) = int.equation.f(t, Q, V, F)
-    for i in 1:int.tableau.q.s
-        tᵢ = int.params.t + int.Δt * int.tableau.q.c[i]
-        int.equation.α(tᵢ, int.Q[i], int.ϑ[i])
-        int.equation.v(tᵢ, int.Q[i], int.V[i])
-        int.equation.g(tᵢ, int.Q[i], int.V[i], int.F[i])
+    # compute ϑ = ϑ(t,Q), V(Q) = v(t, Q, V)
+    # and f_0(Q, V(Q)) = f(t, Q, V, F)
+    for i in 1:S
+        tᵢ = int.params.t + timestep(int) * int.params.tab.q.c[i]
+        int.params.equs[:ϑ](tᵢ, int.cache.Q[i], int.ϑ[i])
+        int.params.equs[:v](tᵢ, int.cache.Q[i], int.cache.V[i])
+        int.params.equs[:g](tᵢ, int.cache.Q[i], int.cache.V[i], int.F[i])
     end
 
     # compute Jacobian of v via ForwardDiff
-    for i in 1:int.tableau.q.s
-        tᵢ = int.params.t + int.Δt * int.tableau.q.c[i]
-        v_rev! = (v,q) -> int.equation.v(tᵢ,q,v)
-        ForwardDiff.jacobian!(int.J[i], v_rev!, tV, int.Q[i])
+    for i in 1:S
+        tᵢ = int.params.t + timestep(int) * int.params.tab.q.c[i]
+        v_rev! = (v,q) -> int.params.equs[:v](tᵢ,q,v)
+        ForwardDiff.jacobian!(int.J[i], v_rev!, int.cache.ṽ, int.cache.Q[i])
     end
 
     # contract J with ϑ and add to G
-    for l in 1:int.tableau.q.s
-        for i in 1:int.equation.d
+    for l in 1:S
+        for i in 1:D
             int.G[l][i] = 0
-            for j in 1:int.equation.d
+            for j in 1:D
                 int.G[l][i] += int.ϑ[l][j] * int.J[l][j,i]
             end
         end
@@ -263,28 +264,28 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
     # solve linear system AP=δP for P
 
     # compute δP
-    for l in 1:int.tableau.q.s
-        for i in 1:int.equation.d
+    for l in 1:S
+        for i in 1:D
             # set δP = p
-            δP[(l-1)*int.equation.d+i] = int.params.p[i]
+            δP[(l-1)*D+i] = int.params.p[i]
             # add A(F+G) to δP
-            for k in 1:int.tableau.q.s
-                δP[(l-1)*int.equation.d+i] += int.Δt * int.tableau.q.a[l,k] * (int.F[k][i] + int.G[k][i])
+            for k in 1:S
+                δP[(l-1)*D+i] += timestep(int) * int.params.tab.q.a[l,k] * (int.F[k][i] + int.G[k][i])
             end
         end
     end
 
     # construct A = identity(sd×sd) + A ⊗ J
-    for k in 1:int.tableau.q.s
-        for l in 1:int.tableau.q.s
-            for i in 1:int.equation.d
-                for j in 1:int.equation.d
-                    int.A[(k-1)*int.equation.d+i, (l-1)*int.equation.d+j] = int.Δt * int.tableau.q.a[k,l] * int.J[l][j,i]
+    for k in 1:S
+        for l in 1:S
+            for i in 1:D
+                for j in 1:D
+                    int.A[(k-1)*D+i, (l-1)*D+j] = timestep(int) * int.params.tab.q.a[k,l] * int.J[l][j,i]
                 end
             end
         end
     end
-    for i in 1:int.equation.d*int.tableau.q.s
+    for i in 1:D*S
         int.A[i,i] += one(DT)
     end
 
@@ -292,16 +293,16 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
     lu = LUSolver(int.A, δP)
     factorize!(lu)
     solve!(lu)
-    tP = reshape(lu.x, (int.equation.d, int.tableau.q.s))
-    for l in 1:int.tableau.q.s
+    tP = reshape(lu.x, (D,S))
+    for l in 1:S
         int.P[l] .= tP[:,l]
     end
 
     # contract J with P and subtract from G, so that G = (ϑ-P)J
-    for l in 1:int.tableau.q.s
-        for i in 1:int.equation.d
+    for l in 1:S
+        for i in 1:D
             int.G[l][i] = 0
-            for j in 1:int.equation.d
+            for j in 1:D
                 int.G[l][i] += (int.ϑ[l][j] - int.P[l][j]) * int.J[l][j,i]
             end
         end
@@ -313,9 +314,6 @@ function integrate_step!(int::IntegratorFLRK{DT,TT}, sol::SolutionPODE{DT,TT}, m
     # println()
 
     # compute final update for p
-    update_solution!(int.p[m], int.F, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
-    update_solution!(int.p[m], int.G, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
-
-    # copy solution to initial guess
-    update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q[m])
+    update_solution!(sol.p, sol.p̃, int.F, int.params.tab.q.b, int.params.tab.q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.G, int.params.tab.q.b, int.params.tab.q.b̂, timestep(int))
 end
