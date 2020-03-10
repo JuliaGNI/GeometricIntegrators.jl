@@ -165,17 +165,14 @@ function initial_guess!(int::IntegratorFIRK, sol::AtomicSolutionODE)
 
     # compute initial guess for internal stages
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, int.cache.q̃, int.cache.ṽ, tableau(int).q.c[i])
-        for k in eachindex(int.cache.V[i], int.cache.ṽ)
-            int.cache.V[i][k] = int.cache.ṽ[k]
-        end
+        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, int.cache.Q[i], int.cache.V[i], tableau(int).q.c[i])
     end
     for i in eachstage(int)
         offset = ndims(int)*(i-1)
         for k in eachdim(int)
             int.solver.x[offset+k] = 0
             for j in eachstage(int)
-                int.solver.x[offset+k] += tableau(int).q.a[i,j] * int.cache.V[j][k]
+                int.solver.x[offset+k] += timestep(int) * tableau(int).q.a[i,j] * int.cache.V[j][k]
             end
         end
     end
