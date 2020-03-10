@@ -306,14 +306,14 @@ function initial_guess!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSolutionPSDE{DT
 end
 
 
-function update_solution!(q::SolutionVector{T}, p::SolutionVector{T},
+function update_solution!(sol::AtomicSolutionPSDE{T},
                           cache::IntegratorCacheSISPRK{T}, tab::TableauSISPRK{T},
                           Δt::T, ΔW::Vector{T}) where {T}
 
-    update_solution!(q, p, cache.V, cache.F1, cache.F2, cache.B, cache.G1, cache.G2,
+    update_solution!(sol, cache.V, cache.F1, cache.F2, cache.B, cache.G1, cache.G2,
                      tab.qdrift.b, tab.qdiff.b, tab.pdrift1.b, tab.pdrift2.b, tab.pdiff1.b, tab.pdiff2.b,
                      Δt, ΔW, cache.Δy, cache.Δz)
-    update_solution!(q, p, cache.V, cache.F1, cache.F2, cache.B, cache.G1, cache.G2,
+    update_solution!(sol, cache.V, cache.F1, cache.F2, cache.B, cache.G1, cache.G2,
                      tab.qdrift.b̂, tab.qdiff.b̂, tab.pdrift1.b̂, tab.pdrift2.b̂, tab.pdiff1.b̂, tab.pdiff2.b̂,
                      Δt, ΔW, cache.Δy, cache.Δz)
 end
@@ -345,5 +345,5 @@ function Integrators.integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSo
     compute_stages!(int.solver.x, int.cache, int.params)
 
     # compute final update
-    update_solution!(sol.q, sol.p, int.cache, int.params.tab, int.params.Δt, int.params.ΔW)
+    update_solution!(sol, int.cache, int.params.tab, int.params.Δt, int.params.ΔW)
 end

@@ -11,6 +11,7 @@ module Stochastic
 
     import ..Equations: SDE, PSDE, SPSDE
     import ..Solutions: AtomicSolutionSDE, AtomicSolutionPSDE, SolutionVector
+    import ..Solutions: update!
 
     import ..Integrators: StochasticIntegrator, Parameters
     import ..Integrators: CoefficientsRK, AbstractTableauERK, AbstractTableauIRK

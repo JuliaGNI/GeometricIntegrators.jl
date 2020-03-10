@@ -420,8 +420,12 @@ function Integrators.integrate_step!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSol
     compute_stages!(int.solver.x, int.cache.Q, int.cache.P, int.cache.V, int.cache.F, int.cache.B, int.cache.G, int.cache.Y, int.cache.Z, int.params)
 
     # compute final update
-    update_solution!(sol.q, sol.p, int.cache.V, int.cache.F, int.cache.B, int.cache.G,
-                    int.params.tab.qdrift.b, int.params.tab.qdrift.b̂, int.params.tab.qdiff.b, int.params.tab.qdiff.b̂,
-                    int.params.tab.pdrift.b, int.params.tab.pdrift.b̂, int.params.tab.pdiff.b, int.params.tab.pdiff.b̂,
-                    int.params.Δt, int.params.ΔW, int.cache.Δy, int.cache.Δz)
+    update_solution!(sol, int.cache.V, int.cache.F, int.cache.B, int.cache.G,
+                     int.params.tab.qdrift.b, int.params.tab.qdiff.b,
+                     int.params.tab.pdrift.b, int.params.tab.pdiff.b,
+                     int.params.Δt, int.params.ΔW, int.cache.Δy, int.cache.Δz)
+    update_solution!(sol, int.cache.V, int.cache.F, int.cache.B, int.cache.G,
+                     int.params.tab.qdrift.b̂, int.params.tab.qdiff.b̂,
+                     int.params.tab.pdrift.b̂, int.params.tab.pdiff.b̂,
+                     int.params.Δt, int.params.ΔW, int.cache.Δy, int.cache.Δz)
 end

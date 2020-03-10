@@ -145,8 +145,10 @@ function Integrators.integrate_step!(int::IntegratorSERK{DT,TT}, sol::AtomicSolu
 
     # compute final update
     if int.tableau.qdiff2.name == :NULL
-        update_solution!(sol.q, int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.Δt, sol.ΔW, int.Δy)
+        update_solution!(sol, int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.Δt, sol.ΔW, int.Δy)
+        # update_solution!(sol, int.V, int.B, int.tableau.qdrift.b̂, int.tableau.qdiff.b̂, int.Δt, int.ΔW, int.Δy)
     else
-        update_solution!(sol.q, int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.tableau.qdiff2.b, int.Δt, sol.ΔW, sol.ΔZ, int.Δy)
+        update_solution!(sol, int.V, int.B, int.tableau.qdrift.b, int.tableau.qdiff.b, int.tableau.qdiff2.b, int.Δt, sol.ΔW, sol.ΔZ, int.Δy)
+        # update_solution!(sol, int.V, int.B, int.tableau.qdrift.b̂, int.tableau.qdiff.b̂, int.tableau.qdiff2.b̂, int.Δt, sol.ΔW, sol.ΔZ, int.Δy)
     end
 end

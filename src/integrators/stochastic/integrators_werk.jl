@@ -238,5 +238,6 @@ function Integrators.integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolu
     end
 
     # compute final update
-    update_solution!(sol.q, int.V, int.B1, int.B2, int.tableau.qdrift0.b, int.tableau.qdiff0.b, int.tableau.qdiff3.b, int.Δt, sol.ΔW, int.Δy)
+    update_solution!(sol, int.V, int.B1, int.B2, int.tableau.qdrift0.b, int.tableau.qdiff0.b, int.tableau.qdiff3.b, int.Δt, sol.ΔW, int.Δy)
+    # update_solution!(sol, int.V, int.B1, int.B2, int.tableau.qdrift0.b̂, int.tableau.qdiff0.b̂, int.tableau.qdiff3.b̂, int.Δt, sol.ΔW, int.Δy)
 end

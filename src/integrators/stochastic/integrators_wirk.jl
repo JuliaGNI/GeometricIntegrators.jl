@@ -319,5 +319,6 @@ function Integrators.integrate_step!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolu
     compute_stages!(int.solver.x, int.cache.Q0, int.cache.Q1, int.cache.V, int.cache.B, int.cache.Y0, int.cache.Y1, int.params)
 
     # compute final update (same update function as for SIRK)
-    update_solution!(sol.q, int.cache.V, int.cache.B, int.params.tab.qdrift0.b, int.params.tab.qdrift0.b̂, int.params.tab.qdiff0.b, int.params.tab.qdiff0.b̂, int.params.Δt, int.params.ΔW, int.cache.Δy)
+    update_solution!(sol, int.cache.V, int.cache.B, int.params.tab.qdrift0.b, int.params.tab.qdiff0.b, int.params.Δt, int.params.ΔW, int.cache.Δy)
+    update_solution!(sol, int.cache.V, int.cache.B, int.params.tab.qdrift0.b̂, int.params.tab.qdiff0.b̂, int.params.Δt, int.params.ΔW, int.cache.Δy)
 end
