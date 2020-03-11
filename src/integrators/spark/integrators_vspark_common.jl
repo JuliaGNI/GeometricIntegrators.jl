@@ -24,10 +24,10 @@ mutable struct AbstractParametersVSPARK{IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT,tabType
 end
 
 
-equation(int::AbstractIntegratorVSPARK) = int.equation
-timestep(int::AbstractIntegratorVSPARK) = int.params.Δt
-tableau(int::AbstractIntegratorVSPARK) = int.tableau
-pstages(int::AbstractIntegratorVSPARK) = int.tableau.r
+@inline equation(int::AbstractIntegratorVSPARK) = int.equation
+@inline timestep(int::AbstractIntegratorVSPARK) = int.params.Δt
+@inline tableau(int::AbstractIntegratorVSPARK) = int.tableau
+@inline pstages(int::AbstractIntegratorVSPARK) = int.tableau.r
 
 
 function initial_guess!(int::AbstractIntegratorVSPARK, sol::AtomicSolutionPDAE)

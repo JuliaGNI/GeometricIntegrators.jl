@@ -4,35 +4,20 @@ TableauHPARK = TableauVPARK
 
 
 "Parameters for right-hand side function of Hamiltonian partitioned additive Runge-Kutta methods."
-mutable struct ParametersHPARK{DT,TT,D,S,R,VT,FT,UT,GT,ϕT} <: AbstractParametersSPARK{DT,TT}
-    f_v::VT
-    f_f::FT
-    f_u::UT
-    f_g::GT
-    f_ϕ::ϕT
-
+mutable struct ParametersHPARK{DT, TT, D, S, R, ET <: NamedTuple} <: AbstractParametersSPARK{DT,TT}
+    equs::ET
+    tab::TableauHPARK{TT}
     Δt::TT
 
-    t_q::CoefficientsARK{TT}
-    t_p::CoefficientsARK{TT}
-    t_q̃::CoefficientsPRK{TT}
-    t_p̃::CoefficientsPRK{TT}
-    t_λ::CoefficientsMRK{TT}
+    @ParametersSPARK
 
-    t::TT
-    q::Vector{DT}
-    p::Vector{DT}
-    λ::Vector{DT}
-
-    function ParametersHPARK{DT,TT,D,S,R,VT,FT,UT,GT,ϕT}(f_v, f_f, f_u, f_g, f_ϕ, Δt, t_q, t_p, t_q̃, t_p̃, t_λ) where {DT,TT,D,S,R,VT,FT,UT,GT,ϕT}
+    function ParametersHPARK{DT,D}(equs::ET, tab::TableauVPARK{TT}, Δt::TT) where {DT,TT,D,S,R,ET <: NamedTuple}
         # create solution vectors
         q = zeros(DT,D)
         p = zeros(DT,D)
         λ = zeros(DT,D)
 
-        new(f_v, f_f, f_u, f_g, f_ϕ, Δt,
-            t_q, t_p, t_q̃, t_p̃, t_λ,
-            zero(TT), q, p, λ)
+        new{DT,TT,D,tab.s,tab.r,ET}(equs, tab, Δt, zero(TT), q, p, λ)
     end
 end
 
@@ -69,48 +54,64 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{align}
 ```
 """
-struct IntegratorHPARK{DT, TT, ET <: PDAE{DT,TT},
-                               PT <: ParametersHPARK{DT,TT},
-                               ST <: NonlinearSolver{DT},
-                               IT <: InitialGuessPODE{DT,TT}, D, S, R} <: AbstractIntegratorHSPARK{DT, TT}
-    equation::ET
-    tableau::TableauHPARK{TT}
-
+struct IntegratorHPARK{DT, TT, D, S, R, PT <: ParametersHPARK{DT,TT},
+                                        ST <: NonlinearSolver{DT},
+                                        IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorHSPARK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCacheSPARK{DT, TT, D, S, R}
+
+    function IntegratorHPARK(params::ParametersHPARK{DT,TT,D,S,R}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,R,ST,IT}
+        new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, cache)
+    end
+
+    function IntegratorHPARK{DT,D}(equations::NamedTuple, tableau::TableauHPARK{TT}, Δt::TT) where {DT,TT,D}
+        # get number of stages
+        S = tableau.s
+        R = tableau.r
+
+        N = 2*D*S + 3*D*R
+
+        # create params
+        params = ParametersHPARK{DT,D}(equations, tableau, Δt)
+
+        # create solver
+        solver = create_nonlinear_solver(DT, N, params)
+
+        # create initial guess
+        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+
+        # create cache
+        cache = IntegratorCacheSPARK{DT, TT, D, S, R}()
+
+        # create integrator
+        IntegratorHPARK(params, solver, iguess, cache)
+    end
+
+    function IntegratorHPARK(equation::PDAE{DT,TT}, tableau::TableauHPARK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorHPARK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
 end
 
-function IntegratorHPARK(equation::PDAE{DT,TT,FT,PT,UT,GT,ϕT,VT},
-                         tableau::TableauHPARK{TT}, Δt::TT) where {DT,TT,FT,PT,UT,GT,ϕT,VT}
-    D = equation.d
-    S = tableau.s
-    R = tableau.r
 
-    N = 2*D*S + 3*D*R
+@inline equation(int::IntegratorHPARK, i::Symbol) = int.params.equs[i]
+@inline equations(int::IntegratorHPARK) = int.params.equs
+@inline tableau(int::IntegratorHPARK) = int.params.tab
+@inline nstages(int::IntegratorHPARK{DT,TT,D,S,R}) where {DT,TT,D,S,R} = S
+@inline pstages(int::IntegratorHPARK{DT,TT,D,S,R}) where {DT,TT,D,S,R} = R
+@inline Base.ndims(int::IntegratorHPARK{DT,TT,D,S,R}) where {DT,TT,D,S,R} = D
 
-    # create params
-    params = ParametersHPARK{DT,TT,D,S,R,FT,PT,UT,GT,ϕT}(
-                                equation.v, equation.f, equation.u, equation.g, equation.ϕ, Δt,
-                                tableau.q, tableau.p, tableau.q̃, tableau.p̃, tableau.λ)
 
-    # create solver
-    solver = create_nonlinear_solver(DT, N, params)
+function Integrators.initialize!(int::IntegratorHPARK, sol::AtomicSolutionPDAE)
+    sol.t̅ = sol.t - timestep(int)
 
-    # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
+    equation(int, :v)(sol.t, sol.q, sol.p, sol.v)
+    equation(int, :f)(sol.t, sol.q, sol.p, sol.f)
 
-    # create cache
-    cache = IntegratorCacheSPARK{DT, TT, D, S, R}()
-
-    # create integrator
-    IntegratorHPARK{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, R}(
-                                        equation, tableau, params, solver, iguess, cache)
+    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
+                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
 end
-
-
-@inline Base.ndims(int::IntegratorHPARK{DT,TT,ET,PT,ST,IT,D,S,R}) where {DT,TT,ET,PT,ST,IT,D,S,R} = D
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
@@ -131,10 +132,10 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R}
         end
 
         # compute f(X)
-        tqᵢ = params.t + params.Δt * params.t_q.c[i]
-        tpᵢ = params.t + params.Δt * params.t_p.c[i]
-        params.f_v(tqᵢ, cache.Qi[i], cache.Pi[i], cache.Vi[i])
-        params.f_f(tpᵢ, cache.Qi[i], cache.Pi[i], cache.Fi[i])
+        tqᵢ = params.t + params.Δt * params.tab.q.c[i]
+        tpᵢ = params.t + params.Δt * params.tab.p.c[i]
+        params.equs[:v](tqᵢ, cache.Qi[i], cache.Pi[i], cache.Vi[i])
+        params.equs[:f](tpᵢ, cache.Qi[i], cache.Pi[i], cache.Fi[i])
     end
 
     for i in 1:R
@@ -150,10 +151,10 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R}
         end
 
         # compute f(X)
-        tλᵢ = params.t + params.Δt * params.t_λ.c[i]
-        params.f_u(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Up[i])
-        params.f_g(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Gp[i])
-        params.f_ϕ(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Φp[i])
+        tλᵢ = params.t + params.Δt * params.tab.λ.c[i]
+        params.equs[:u](tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Up[i])
+        params.equs[:g](tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Gp[i])
+        params.equs[:ϕ](tλᵢ, cache.Qp[i], cache.Pp[i], cache.Φp[i])
     end
 end
 
@@ -171,12 +172,12 @@ end
                 b[2*(D*(i-1)+k-1)+1] = - $cache.Yi[i][k]
                 b[2*(D*(i-1)+k-1)+2] = - $cache.Zi[i][k]
                 for j in 1:S
-                    b[2*(D*(i-1)+k-1)+1] += params.t_q.a[i,j] * $cache.Vi[j][k]
-                    b[2*(D*(i-1)+k-1)+2] += params.t_p.a[i,j] * $cache.Fi[j][k]
+                    b[2*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * $cache.Vi[j][k]
+                    b[2*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * $cache.Fi[j][k]
                 end
                 for j in 1:R
-                    b[2*(D*(i-1)+k-1)+1] += params.t_q.α[i,j] * $cache.Up[j][k]
-                    b[2*(D*(i-1)+k-1)+2] += params.t_p.α[i,j] * $cache.Gp[j][k]
+                    b[2*(D*(i-1)+k-1)+1] += params.tab.q.α[i,j] * $cache.Up[j][k]
+                    b[2*(D*(i-1)+k-1)+2] += params.tab.p.α[i,j] * $cache.Gp[j][k]
                 end
             end
         end
@@ -188,18 +189,18 @@ end
                 b[2*D*S+3*(D*(i-1)+k-1)+2] = - $cache.Zp[i][k]
                 b[2*D*S+3*(D*(i-1)+k-1)+3] = - $cache.Φp[i][k]
                 for j in 1:S
-                    b[2*D*S+3*(D*(i-1)+k-1)+1] += params.t_q̃.a[i,j] * $cache.Vi[j][k]
-                    b[2*D*S+3*(D*(i-1)+k-1)+2] += params.t_p̃.a[i,j] * $cache.Fi[j][k]
+                    b[2*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.a[i,j] * $cache.Vi[j][k]
+                    b[2*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.a[i,j] * $cache.Fi[j][k]
                 end
                 for j in 1:R
-                    b[2*D*S+3*(D*(i-1)+k-1)+1] += params.t_q̃.α[i,j] * $cache.Up[j][k]
-                    b[2*D*S+3*(D*(i-1)+k-1)+2] += params.t_p̃.α[i,j] * $cache.Gp[j][k]
+                    b[2*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.α[i,j] * $cache.Up[j][k]
+                    b[2*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.α[i,j] * $cache.Gp[j][k]
                 end
             end
         end
 
         # compute b = - [Λ₁-λ]
-        if params.t_λ.c[1] == 0
+        if params.tab.λ.c[1] == 0
             for k in 1:D
                 b[2*D*S+3*(k-1)+3] = - $cache.Λp[1][k] + params.λ[k]
             end
@@ -210,11 +211,11 @@ end
 
 function update_solution!(int::IntegratorHPARK{DT,TT}, sol::AtomicSolutionPDAE{DT,TT}) where {DT,TT}
     # compute final update
-    update_solution!(sol.q, sol.q̃, int.cache.Vi, int.params.t_q.b, timestep(int))
-    update_solution!(sol.p, sol.p̃, int.cache.Fi, int.params.t_p.b, timestep(int))
+    update_solution!(sol.q, sol.q̃, int.cache.Vi, int.params.tab.q.b, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.Fi, int.params.tab.p.b, timestep(int))
 
     # compute projection
-    update_solution!(sol.q, sol.q̃, int.cache.Up, int.params.t_q.β, timestep(int))
-    update_solution!(sol.p, sol.p̃, int.cache.Gp, int.params.t_p.β, timestep(int))
-    # TODO # update_multiplier!(int.cache.λ, int.cache.Λp, int.params.t_λ.b)
+    update_solution!(sol.q, sol.q̃, int.cache.Up, int.params.tab.q.β, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.cache.Gp, int.params.tab.p.β, timestep(int))
+    # update_multiplier!(sol.λ, int.cache.Λp, int.params.tab.λ.b)
 end

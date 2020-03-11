@@ -24,10 +24,10 @@ mutable struct AbstractParametersHSPARK{IT,DT,TT,D,S,R,P,VT,FT,UT,GT,ϕT,tabType
 end
 
 
-equation(int::AbstractIntegratorHSPARK) = int.equation
-timestep(int::AbstractIntegratorHSPARK) = int.params.Δt
-tableau(int::AbstractIntegratorHSPARK) = int.tableau
-pstages(int::AbstractIntegratorHSPARK) = int.tableau.r
+@inline equation(int::AbstractIntegratorHSPARK) = int.equation
+@inline timestep(int::AbstractIntegratorHSPARK) = int.params.Δt
+@inline tableau(int::AbstractIntegratorHSPARK) = int.tableau
+@inline pstages(int::AbstractIntegratorHSPARK) = int.tableau.r
 
 
 function initial_guess!(int::AbstractIntegratorHSPARK, sol::AtomicSolutionPDAE)

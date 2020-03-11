@@ -4,12 +4,11 @@ module SPARK
 
     using ..CommonFunctions
     using ..Config
+    using ..Equations
     using ..Solvers
     using ..Utils
 
-    import ..Equations: IODE, VODE, IDAE, PDAE, HDAE, VDAE
-    import ..Solutions: AtomicSolutionPDAE, SolutionVector
-    import ..Solutions: update!
+    import ..Solutions: AtomicSolutionPDAE, SolutionVector, update!
 
     import ..Integrators
 
