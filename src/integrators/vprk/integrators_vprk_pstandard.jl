@@ -145,7 +145,7 @@ function compute_projection!(
 end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST},
+@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpStandard{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
@@ -169,7 +169,7 @@ end
 end
 
 
-function initialize!(int::IntegratorVPRKpStandard, sol::AtomicSolutionPODE)
+function Integrators.initialize!(int::IntegratorVPRKpStandard, sol::AtomicSolutionPODE)
     sol.t̅ = sol.t - timestep(int)
 
     equation(int).v(sol.t, sol.q, sol.p, sol.v)
@@ -208,7 +208,7 @@ function initial_guess_projection!(int::IntegratorVPRKpStandard, sol::AtomicSolu
 end
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRKpStandard{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorVPRKpStandard{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # add perturbation for next time step to solution
     # (same vector field as previous time step)
     project_solution!(int, sol, int.pparams.RU1, int.pparams.RG1)

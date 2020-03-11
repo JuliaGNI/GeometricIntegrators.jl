@@ -77,23 +77,6 @@ function ParametersVPRK(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, E
 end
 
 
-"Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST},
-                params::ParametersVPRK{DT,TT,ET,D,S}
-            ) where {ST,DT,TT,ET,D,S}
-
-    cache = IntegratorCacheVPRK{ST, D, S}()
-
-    quote
-        @assert length(x) == length(b)
-
-        compute_stages!(x, $cache.Q, $cache.V, $cache.P, $cache.F, params)
-        compute_rhs_vprk!(b, $cache.P, $cache.F, params)
-        compute_rhs_vprk_correction!(b, $cache.V, params)
-    end
-end
-
-
 "Variational partitioned Runge-Kutta integrator."
 struct IntegratorVPRK{DT, TT, PT <: ParametersVPRK{DT,TT},
                               ST <: NonlinearSolver{DT},
@@ -135,6 +118,23 @@ IntegratorVPRKpNone = IntegratorVPRK
 @inline Base.ndims(int::IntegratorVPRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
 
 
+"Compute stages of variational partitioned Runge-Kutta methods."
+@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+                params::ParametersVPRK{DT,TT,ET,D,S}
+            ) where {ST,DT,TT,ET,D,S}
+
+    cache = IntegratorCacheVPRK{ST, D, S}()
+
+    quote
+        @assert length(x) == length(b)
+
+        compute_stages!(x, $cache.Q, $cache.V, $cache.P, $cache.F, params)
+        compute_rhs_vprk!(b, $cache.P, $cache.F, params)
+        compute_rhs_vprk_correction!(b, $cache.V, params)
+    end
+end
+
+
 function initial_guess!(int::IntegratorVPRK, sol::AtomicSolutionPODE)
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
@@ -150,7 +150,7 @@ end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 

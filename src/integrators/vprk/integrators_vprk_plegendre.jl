@@ -102,7 +102,7 @@ end
 
 
 "Compute stages of variational special partitioned additive Runge-Kutta methods."
-@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}) where {ST,DT,TT,ΘT,FT,D,S}
+@generated function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}) where {ST,DT,TT,ΘT,FT,D,S}
     cache = IntegratorCacheVPRK{ST, D, S}(true)
 
     quote
@@ -285,7 +285,7 @@ end
 
 
 "Variational special partitioned additive Runge-Kutta integrator."
-mutable struct IntegratorVPRKpLegendre{DT, TT, ΘT, FT, GT, VT, SPT, ST, IT} <: Integrator{DT, TT}
+mutable struct IntegratorVPRKpLegendre{DT, TT, ΘT, FT, GT, VT, SPT, ST, IT} <: IntegratorPRK{DT, TT}
     equation::IODE{DT,TT,ΘT,FT,GT,VT}
     tableau::TableauVPRK{TT}
     Δt::TT
@@ -342,7 +342,7 @@ function IntegratorVPRKpLegendre(equation::IODE{DT,TT,ΘT,FT,GT,VT}, tableau::Ta
 end
 
 
-function initialize!(int::IntegratorVPRKpLegendre, sol::SolutionPDAE, m::Int)
+function Integrators.initialize!(int::IntegratorVPRKpLegendre, sol::SolutionPDAE, m::Int)
     @assert m ≥ 1
     @assert m ≤ sol.ni
 
@@ -361,7 +361,7 @@ end
 
 
 "Integrate DAE with variational special partitioned additive Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRKpLegendre{DT,TT,ΘT,FT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΘT,FT,VT,N}
+function Integrators.integrate_step!(int::IntegratorVPRKpLegendre{DT,TT,ΘT,FT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΘT,FT,VT,N}
     local offset::Int
 
     # set time for nonlinear solver

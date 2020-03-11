@@ -5,8 +5,9 @@ module Tableaus
     using ..BasisFunctions
     using ..Quadratures
     using ..Integrators
-    using ..Integrators.SPARK
     using ..Integrators.Stochastic
+    using ..Integrators.SPARK
+    using ..Integrators.VPRK
     using ..Utils
 
 

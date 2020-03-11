@@ -1,6 +1,7 @@
 
 using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
+using GeometricIntegrators.Integrators.VPRK
 using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
 using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem

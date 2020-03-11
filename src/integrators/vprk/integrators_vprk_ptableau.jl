@@ -180,7 +180,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
 end
 
 "Compute stages of projected Gauss-Legendre Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersVPRKpTableau{DT,TT,D,S}) where {ST,DT,TT,D,S}
+@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersVPRKpTableau{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     cache = IntegratorCacheVPRK{ST,D,S}()
 
@@ -220,7 +220,7 @@ function function_dirac_constraint!(λ::Vector, int::IntegratorVPRKpTableau{DT,T
 end
 
 
-function initialize!(int::IntegratorVPRKpTableau, sol::AtomicSolutionPODE)
+function Integrators.initialize!(int::IntegratorVPRKpTableau, sol::AtomicSolutionPODE)
     sol.t̅ = sol.t - timestep(int)
 
     equation(int).v(sol.t, sol.q, sol.p, sol.v)
@@ -246,7 +246,7 @@ end
 
 
 "Integrate ODE with projected Gauss-Legendre Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 

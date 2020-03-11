@@ -1,6 +1,7 @@
 
-using .SPARK
 using .Stochastic
+using .SPARK
+using .VPRK
 
 #*****************************************************************************#
 # General initialization functions for all integrators                        #

@@ -79,33 +79,6 @@ module Integrators
     include("integrators/rk/integrators_pglrk.jl")
 
 
-    export IntegratorVPRK, IntegratorVPRKpNone, TableauVPRK
-
-    export IntegratorVPRKdegenerate
-
-    export IntegratorVPRKpStandard, IntegratorVPRKpSymplectic,
-           IntegratorVPRKpInternal, IntegratorVPRKpMidpoint,
-           IntegratorVPRKpSymmetric, IntegratorVPRKpTableau,
-           IntegratorVPRKpSecondary, IntegratorVPRKpVariational,
-           IntegratorVPRKpVariationalQ, IntegratorVPRKpVariationalP
-
-    export IntegratorVPRKpLegendre, TableauVPRKpLegendre
-
-    include("integrators/vprk/integrators_vprk_abstract.jl")
-    include("integrators/vprk/integrators_vprk_cache.jl")
-    include("integrators/vprk/integrators_vprk_common.jl")
-    include("integrators/vprk/integrators_vprk.jl")
-    include("integrators/vprk/integrators_vprk_degenerate.jl")
-    include("integrators/vprk/integrators_vprk_pinternal.jl")
-    include("integrators/vprk/integrators_vprk_pmidpoint.jl")
-    include("integrators/vprk/integrators_vprk_pstandard.jl")
-    include("integrators/vprk/integrators_vprk_psecondary.jl")
-    include("integrators/vprk/integrators_vprk_psymmetric.jl")
-    include("integrators/vprk/integrators_vprk_ptableau.jl")
-    include("integrators/vprk/integrators_vprk_pvariational.jl")
-    include("integrators/vprk/integrators_vprk_plegendre.jl")
-
-
     export TableauGLM
 
     include("integrators/glm/integrators_glm.jl")
@@ -128,8 +101,9 @@ module Integrators
     include("integrators/dgvi/integrators_dgvi_projection_final.jl")
 
 
-    include("integrators/Spark.jl")
     include("integrators/Stochastic.jl")
+    include("integrators/SPARK.jl")
+    include("integrators/VPRK.jl")
 
 
     include("integrators/integrators.jl")

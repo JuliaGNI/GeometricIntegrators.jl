@@ -33,7 +33,7 @@ function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSoluti
     update_solution!(sol.p, sol.p̃, int.cache.G, RG, timestep(int))
 end
 
-function initialize!(int::AbstractIntegratorVPRK{DT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+function Integrators.initialize!(int::AbstractIntegratorVPRK{DT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     sol.t̅ = sol.t - timestep(int)
 
     equation(int).v(sol.t, sol.q, sol.p, sol.v)

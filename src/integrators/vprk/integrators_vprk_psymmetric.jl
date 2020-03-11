@@ -86,7 +86,7 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST},
+@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpSymmetric{DT,TT,ET,D,S}
             ) where {ST,DT,TT,ET,D,S}
 
@@ -133,7 +133,7 @@ function initial_guess!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::AtomicSolutio
 end
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 
