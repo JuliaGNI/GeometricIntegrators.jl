@@ -5,8 +5,6 @@ module Integrators
     using LinearAlgebra
     using OffsetArrays
 
-    using Base: TwicePrecision
-
     using ..CommonFunctions
     using ..Config
     using ..Interpolation

@@ -41,24 +41,6 @@ end
 
 
 """
-Create a solution vector of type `TwicePrecision{DT}` for a problem with `D` dimensions
-and `M` independent initial conditions.
-"""
-function create_solution_vector(DT, D, M)
-    [zeros(TwicePrecision{DT}, D) for i in 1:M]
-end
-
-
-"""
-Create a solution vector of type `TwicePrecision{DT}` for a problem with `D` dimensions,
-`NS' sample paths, and `NI` independent initial conditions.
-"""
-function create_solution_vector(DT, D, NS, NI)
-    [zeros(TwicePrecision{DT}, D) for i in 1:NS, j in 1:NI]
-end
-
-
-"""
 Create a vector of S solution vectors of type DT to store the solution of S
 internal stages for a problem with `D` dimensions.
 """
@@ -116,7 +98,7 @@ function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Vector{Vecto
     end
 end
 
-function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, ẋ::Matrix{T}, b::Vector{T}, Δt::T) where {T}
+function update_solution!(x::SolutionVector{T}, ẋ::Matrix{T}, b::Vector{T}, Δt::T) where {T}
     @assert length(x) == size(ẋ, 1)
     @assert length(b) == size(ẋ, 2)
 
@@ -132,7 +114,7 @@ function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, ẋ::M
 end
 
 
-function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, ẋ::Vector{Vector{T}}, b::Vector{T}, Δt::T) where {T}
+function update_solution!(x::SolutionVector{T}, ẋ::Vector{Vector{T}}, b::Vector{T}, Δt::T) where {T}
     @assert length(b) == length(ẋ)
     @assert length(x) == length(ẋ[1])
 
@@ -152,7 +134,7 @@ function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Union{Matrix
     update_solution!(x, xₑᵣᵣ, ẋ, b̂, Δt)
 end
 
-function update_solution!(x::Union{Vector{T}, Vector{TwicePrecision{T}}}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
+function update_solution!(x::SolutionVector{T}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::Vector{T}, b̂::Vector, Δt::T) where {T}
     update_solution!(x, ẋ, b, Δt)
     update_solution!(x, ẋ, b̂, Δt)
 end
@@ -171,7 +153,7 @@ function update_multiplier!(λ::SolutionVector{T}, Λ::Vector{Vector{T}}, b::Vec
 end
 
 
-function CommonFunctions.cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}) where {T}
+function CommonFunctions.cut_periodic_solution!(x::SolutionVector{T}, periodicity::Vector{T}) where {T}
     @assert length(x) == length(periodicity)
 
     for k in eachindex(x, periodicity)
@@ -186,22 +168,7 @@ function CommonFunctions.cut_periodic_solution!(x::Vector{T}, periodicity::Vecto
     end
 end
 
-function CommonFunctions.cut_periodic_solution!(x::Vector{TwicePrecision{T}}, periodicity::Vector{T}) where {T}
-    @assert length(x) == length(periodicity)
-
-    for k in eachindex(x, periodicity)
-        if periodicity[k] ≠ 0
-            while x[k].hi < 0
-                x[k] += periodicity[k]
-            end
-            while x[k].hi ≥ periodicity[k]
-                x[k] -= periodicity[k]
-            end
-        end
-    end
-end
-
-function CommonFunctions.cut_periodic_solution!(x::Vector{T}, periodicity::Vector{T}, shift::Vector{T}) where {T}
+function CommonFunctions.cut_periodic_solution!(x::SolutionVector{T}, periodicity::Vector{T}, shift::Vector{T}) where {T}
     @assert length(x) == length(periodicity)
     shift .= 0
     for k in eachindex(x, periodicity, shift)
@@ -210,21 +177,6 @@ function CommonFunctions.cut_periodic_solution!(x::Vector{T}, periodicity::Vecto
                 shift[k] += periodicity[k]
             end
             while x[k] + shift[k] ≥ periodicity[k]
-                shift[k] -= periodicity[k]
-            end
-        end
-    end
-end
-
-function CommonFunctions.cut_periodic_solution!(x::Vector{TwicePrecision{T}}, periodicity::Vector{T}, shift::Vector{T}) where {T}
-    @assert length(x) == length(periodicity)
-    shift .= 0
-    for k in eachindex(x, periodicity, shift)
-        if periodicity[k] ≠ 0
-            while x[k].hi + shift[k] < 0
-                shift[k] += periodicity[k]
-            end
-            while x[k].hi + shift[k] ≥ periodicity[k]
                 shift[k] -= periodicity[k]
             end
         end
