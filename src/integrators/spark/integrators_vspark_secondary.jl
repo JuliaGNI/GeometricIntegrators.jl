@@ -241,7 +241,7 @@ end
 
 
 "Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems."
-@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVSPARKsecondary{DT,TT,D,S,Σ}) where {ST,DT,TT,D,S,Σ}
+@generated function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVSPARKsecondary{DT,TT,D,S,Σ}) where {ST,DT,TT,D,S,Σ}
     cache = IntegratorCacheSPARK{ST,TT,D,S,Σ}()
 
     quote

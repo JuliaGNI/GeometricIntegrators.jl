@@ -42,17 +42,6 @@ tableau(int::AbstractIntegratorVSPARK) = int.tableau
 pstages(int::AbstractIntegratorVSPARK) = int.tableau.r
 
 
-function initialize!(int::AbstractIntegratorVSPARK, sol::AtomicSolutionPDAE)
-    sol.t̅ = sol.t - timestep(int)
-
-    equation(int).v(sol.t, sol.q, sol.p, sol.v)
-    equation(int).f(sol.t, sol.q, sol.p, sol.f)
-
-    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
-end
-
-
 function initial_guess!(int::AbstractIntegratorVSPARK, sol::AtomicSolutionPDAE)
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,

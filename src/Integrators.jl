@@ -108,48 +108,6 @@ module Integrators
     include("integrators/vprk/integrators_vprk_plegendre.jl")
 
 
-    export CoefficientsARK, CoefficientsPRK, CoefficientsMRK, CoefficientsIRK,
-           CoefficientsSPARK
-
-    export AbstractIntegratorSPARK
-    export AbstractTableauSPARK, TableauSPARK
-
-    export IntegratorHPARK, TableauHPARK
-    export IntegratorVPARK, TableauVPARK
-
-    export IntegratorHSPARK, TableauHSPARK
-    export IntegratorHSPARKprimary, TableauHSPARKprimary
-    export IntegratorHSPARKsecondary, TableauHSPARKsecondary
-
-    export IntegratorVSPARK, TableauVSPARK
-    export IntegratorVSPARKprimary, TableauVSPARKprimary
-    export IntegratorVSPARKsecondary, TableauVSPARKsecondary
-
-    export IntegratorSLRK, TableauSLRK
-
-    include("integrators/spark/abstract_integrator_spark.jl")
-    include("integrators/spark/coefficients.jl")
-
-    include("integrators/spark/integrators_spark_cache.jl")
-    include("integrators/spark/integrators_spark_common.jl")
-    include("integrators/spark/integrators_spark_tableau.jl")
-
-    include("integrators/spark/integrators_vpark.jl")
-    include("integrators/spark/integrators_hpark.jl")
-
-    include("integrators/spark/integrators_vspark_common.jl")
-    include("integrators/spark/integrators_vspark.jl")
-    include("integrators/spark/integrators_vspark_primary.jl")
-    include("integrators/spark/integrators_vspark_secondary.jl")
-
-    include("integrators/spark/integrators_hspark_common.jl")
-    include("integrators/spark/integrators_hspark.jl")
-    include("integrators/spark/integrators_hspark_primary.jl")
-    include("integrators/spark/integrators_hspark_secondary.jl")
-
-    include("integrators/spark/integrators_slrk.jl")
-
-
     export TableauGLM
 
     include("integrators/glm/integrators_glm.jl")
@@ -172,6 +130,7 @@ module Integrators
     include("integrators/dgvi/integrators_dgvi_projection_final.jl")
 
 
+    include("integrators/Spark.jl")
     include("integrators/Stochastic.jl")
 
 

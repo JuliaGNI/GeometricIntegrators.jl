@@ -293,7 +293,7 @@ end
 
 
 "Compute stages of variational partitioned additive Runge-Kutta methods."
-@generated function function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+@generated function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     cache = IntegratorCacheSPARK{ST,TT,D,S,R}()
 
     quote
@@ -364,17 +364,6 @@ function update_params!(params::ParametersVPARK, sol::AtomicSolutionPDAE)
     params.q .= sol.q
     params.p .= sol.p
     params.λ .= sol.λ
-end
-
-
-function initialize!(int::IntegratorVPARK, sol::AtomicSolutionPDAE)
-    sol.t̅ = sol.t - timestep(int)
-
-    equation(int).v(sol.t, sol.q, sol.p, sol.v)
-    equation(int).f(sol.t, sol.q, sol.p, sol.f)
-
-    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
 end
 
 

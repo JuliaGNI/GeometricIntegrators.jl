@@ -49,29 +49,6 @@ Pages   = ["integrators/rk/bstract_integrator_rk.jl",
 ```
 
 
-## SPARK Methods
-
-```@autodocs
-Modules = [GeometricIntegrators.Integrators]
-Pages   = ["integrators/spark/abstract_integrator_spark.jl",
-           "integrators/spark/coefficients.jl",
-           "integrators/spark/integrators_hpark.jl",
-           "integrators/spark/integrators_hspark_common.jl",
-           "integrators/spark/integrators_hspark.jl",
-           "integrators/spark/integrators_hspark_primary.jl",
-           "integrators/spark/integrators_hspark_secondary.jl",
-           "integrators/spark/integrators_spark_cache.jl",
-           "integrators/spark/integrators_spark_common.jl",
-           "integrators/spark/integrators_spark_tableau.jl",
-           "integrators/spark/integrators_vpark.jl",
-           "integrators/spark/integrators_vspark_common.jl",
-           "integrators/spark/integrators_vspark.jl",
-           "integrators/spark/integrators_vspark_primary.jl",
-           "integrators/spark/integrators_vspark_secondary.jl",
-           "integrators/spark/integrators_slrk.jl"]
-```
-
-
 ## Galerkin Variational Integrators
 
 ```@autodocs

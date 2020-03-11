@@ -1,0 +1,70 @@
+module SPARK
+
+    using Documenter: @doc
+
+    using ..CommonFunctions
+    using ..Config
+    using ..Solvers
+    using ..Utils
+
+    import ..Equations: IODE, VODE, IDAE, PDAE, HDAE, VDAE
+    import ..Solutions: AtomicSolutionPDAE, SolutionVector
+    import ..Solutions: update!
+
+    import ..Integrators
+
+    import ..Integrators: DeterministicIntegrator, IntegratorPRK, Parameters,
+                          IDAEIntegratorCache, InitialGuessPODE
+    import ..Integrators: AbstractTableau, AbstractTableauERK, AbstractTableauIRK,
+                          AbstractCoefficients, CoefficientsRK,
+                          @CoefficientsRK, @HeaderCoefficientsRK
+    import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
+                          update_vector_fields!, update_solution!, update_multiplier!,
+                          initialize!
+    import ..Integrators: equation, equations, tableau, timestep,
+                          eachdim, eachstage, nstages
+
+
+    export CoefficientsARK, CoefficientsPRK, CoefficientsMRK, CoefficientsIRK,
+           CoefficientsSPARK
+
+    export AbstractIntegratorSPARK
+    export AbstractTableauSPARK, TableauSPARK
+
+    export IntegratorHPARK, TableauHPARK
+    export IntegratorVPARK, TableauVPARK
+
+    export IntegratorHSPARK, TableauHSPARK
+    export IntegratorHSPARKprimary, TableauHSPARKprimary
+    export IntegratorHSPARKsecondary, TableauHSPARKsecondary
+
+    export IntegratorVSPARK, TableauVSPARK
+    export IntegratorVSPARKprimary, TableauVSPARKprimary
+    export IntegratorVSPARKsecondary, TableauVSPARKsecondary
+
+    export IntegratorSLRK, TableauSLRK
+
+
+    include("spark/abstract_integrator_spark.jl")
+    include("spark/coefficients.jl")
+
+    include("spark/integrators_spark_cache.jl")
+    include("spark/integrators_spark_common.jl")
+    include("spark/integrators_spark_tableau.jl")
+
+    include("spark/integrators_vpark.jl")
+    include("spark/integrators_hpark.jl")
+
+    include("spark/integrators_vspark_common.jl")
+    include("spark/integrators_vspark.jl")
+    include("spark/integrators_vspark_primary.jl")
+    include("spark/integrators_vspark_secondary.jl")
+
+    include("spark/integrators_hspark_common.jl")
+    include("spark/integrators_hspark.jl")
+    include("spark/integrators_hspark_primary.jl")
+    include("spark/integrators_hspark_secondary.jl")
+
+    include("spark/integrators_slrk.jl")
+
+end
