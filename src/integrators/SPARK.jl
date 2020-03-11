@@ -1,6 +1,7 @@
 module SPARK
 
     using Documenter: @doc
+    using LinearAlgebra: Diagonal
 
     using ..CommonFunctions
     using ..Config
@@ -50,6 +51,7 @@ module SPARK
     include("spark/integrators_spark_cache.jl")
     include("spark/integrators_spark_common.jl")
     include("spark/integrators_spark_tableau.jl")
+    include("spark/integrators_spark_parameters.jl")
 
     include("spark/integrators_vpark.jl")
     include("spark/integrators_hpark.jl")

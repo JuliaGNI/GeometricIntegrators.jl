@@ -1,35 +1,4 @@
 
-"Parameters for right-hand side function of Specialised Partitioned Additive Runge-Kutta methods for Variational systems."
-mutable struct AbstractParametersVSPARK{IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT,tabType} <: AbstractParametersSPARK{DT,TT}
-    f_f::FT
-    f_p::PT
-    f_u::UT
-    f_g::GT
-    f_ϕ::ϕT
-
-    Δt::TT
-
-    tab::tabType
-
-    @ParametersSPARK
-
-    function AbstractParametersVSPARK{IT,DT,D,S,R,P}(f_f::FT, f_p::PT, f_u::UT, f_g::GT, f_ϕ::ϕT, Δt::TT, tableau::tabType) where {IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT,tabType}
-        # create solution vectors
-        q = zeros(DT,D)
-        p = zeros(DT,D)
-        λ = zeros(DT,D)
-
-        new{IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT,tabType}(f_f, f_p, f_u, f_g, f_ϕ, Δt, tableau, zero(TT), q, p, λ)
-    end
-end
-
-
-@inline equation(int::AbstractIntegratorVSPARK) = int.equation
-@inline timestep(int::AbstractIntegratorVSPARK) = int.params.Δt
-@inline tableau(int::AbstractIntegratorVSPARK) = int.tableau
-@inline pstages(int::AbstractIntegratorVSPARK) = int.tableau.r
-
-
 function initial_guess!(int::AbstractIntegratorVSPARK, sol::AtomicSolutionPDAE)
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,

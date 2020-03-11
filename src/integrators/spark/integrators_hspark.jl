@@ -1,6 +1,6 @@
 
 const TableauHSPARK = AbstractTableauSPARK{:hspark}
-const ParametersHSPARK = AbstractParametersHSPARK{:hspark}
+const ParametersHSPARK = AbstractParametersSPARK{:hspark}
 
 
 @doc raw"""
@@ -35,48 +35,46 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{align}
 ```
 """
-struct IntegratorHSPARK{DT, TT, tabType,
-                                ET <: PDAE{DT,TT},
-                                PT <: ParametersHSPARK{DT,TT},
-                                ST <: NonlinearSolver{DT},
-                                IT <: InitialGuessPODE{DT,TT}, D, S, R} <: AbstractIntegratorHSPARK{DT, TT}
-    equation::ET
-    tableau::AbstractTableauSPARK{tabType,TT}
-
+struct IntegratorHSPARK{DT, TT, D, S, R, PT <: ParametersHSPARK{DT,TT,D,S,R},
+                                         ST <: NonlinearSolver{DT},
+                                         IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorHSPARK{DT,TT,D,S,R}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCacheSPARK{DT,TT,D,S,R}
+
+    function IntegratorHSPARK(params::ParametersHSPARK{DT,TT,D,S,R}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,R,ST,IT}
+        new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, cache)
+    end
+
+    function IntegratorHSPARK{DT,D}(equations::NamedTuple, tableau::Union{TableauSPARK{TT},TableauHSPARK{TT}}, Δt::TT) where {DT,TT,D,ST}
+        # get number of stages
+        S = tableau.s
+        R = tableau.r
+        P = tableau.ρ
+
+        N = 2*D*S + 3*D*R
+
+        # create params
+        params = ParametersHSPARK{DT,D}(equations, tableau, Δt)
+
+        # create solver
+        solver = create_nonlinear_solver(DT, N, params)
+
+        # create initial guess
+        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+
+        # create cache
+        cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
+
+        # create integrator
+        IntegratorHSPARK(params, solver, iguess, cache)
+    end
+
+    function IntegratorHSPARK(equation::PDAE{DT,TT}, tableau::Union{TableauSPARK{TT},TableauHSPARK{TT}}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorHSPARK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
 end
-
-function IntegratorHSPARK(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT},
-                          tableau::AbstractTableauSPARK{ST,TT}, Δt::TT) where {DT,TT,VT,FT,UT,GT,ϕT,ST}
-    D = equation.d
-    S = tableau.s
-    R = tableau.r
-    P = tableau.ρ
-
-    N = 2*D*S + 3*D*R
-
-    # create params
-    params = ParametersHSPARK{DT,D,S,R,P}(equation.v, equation.f, equation.u, equation.g, equation.ϕ, Δt, tableau)
-
-    # create solver
-    solver = create_nonlinear_solver(DT, N, params)
-
-    # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
-
-    # create cache
-    cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
-
-    # create integrator
-    IntegratorHSPARK{DT, TT, ST, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S, R}(
-                                        equation, tableau, params, solver, iguess, cache)
-end
-
-
-@inline Base.ndims(int::IntegratorHSPARK{DT,TT,tabT,ET,PT,ST,IT,D,S,R}) where {DT,TT,tabT,ET,PT,ST,IT,D,S,R} = D
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
@@ -99,8 +97,8 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R}
         # compute f(X)
         tqᵢ = params.t + params.Δt * params.tab.q.c[i]
         tpᵢ = params.t + params.Δt * params.tab.p.c[i]
-        params.f_v(tqᵢ, cache.Qi[i], cache.Pi[i], cache.Vi[i])
-        params.f_f(tpᵢ, cache.Qi[i], cache.Pi[i], cache.Fi[i])
+        params.equs[:v](tqᵢ, cache.Qi[i], cache.Pi[i], cache.Vi[i])
+        params.equs[:f](tpᵢ, cache.Qi[i], cache.Pi[i], cache.Fi[i])
     end
 
     for i in 1:R
@@ -117,9 +115,9 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R}
 
         # compute f(X)
         tλᵢ = params.t + params.Δt * params.tab.λ.c[i]
-        params.f_u(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Up[i])
-        params.f_g(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Gp[i])
-        params.f_ϕ(tλᵢ, cache.Qp[i], cache.Pp[i], cache.Φp[i])
+        params.equs[:u](tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Up[i])
+        params.equs[:g](tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Gp[i])
+        params.equs[:ϕ](tλᵢ, cache.Qp[i], cache.Pp[i], cache.Φp[i])
     end
 
     # compute q and p
@@ -136,7 +134,7 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R}
 
     # compute ϕ(q,p)
     tλᵢ = params.t + params.Δt
-    params.f_ϕ(tλᵢ, cache.q̃, cache.p̃, cache.ϕ̃)
+    params.equs[:ϕ](tλᵢ, cache.q̃, cache.p̃, cache.ϕ̃)
 end
 
 

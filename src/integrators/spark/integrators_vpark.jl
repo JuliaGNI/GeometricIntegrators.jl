@@ -1,144 +1,10 @@
-"Holds the tableau of an variational partitioned additive Runge-Kutta method."
-struct TableauVPARK{T} <: AbstractTableau{T}
-    name::Symbol
-    o::Int
-    s::Int
-    r::Int
 
-    q::CoefficientsARK{T}
-    p::CoefficientsARK{T}
+"Holds the tableau of an Variational Partitioned Additive Runge-Kutta method."
+const TableauVPARK = AbstractTableauSPARK{:vpark}
 
-    q̃::CoefficientsPRK{T}
-    p̃::CoefficientsPRK{T}
+"Parameters for right-hand side function of Variational Partitioned Additive Runge-Kutta methods."
+const ParametersVPARK = AbstractParametersSPARK{:vpark}
 
-    λ::CoefficientsMRK{T}
-
-    d::Vector{T}
-
-    function TableauVPARK{T}(name, o, s, r, q, p, q̃, p̃, λ, d) where {T}
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(r, Integer)
-        @assert isa(o, Integer)
-
-        @assert s > 0 "Number of stages s must be > 0"
-        @assert r > 0 "Number of stages r must be > 0"
-
-        @assert s==q.s==p.s==q̃.s==p̃.s==length(d)
-        @assert r==q.r==p.r==q̃.r==p̃.r==λ.r
-
-        new(name, o, s, r, q, p, q̃, p̃, λ, d)
-    end
-
-    function TableauVPARK{T}(name, o, s, r, q, p, q̃, p̃, λ) where {T}
-        @assert isa(name, Symbol)
-        @assert isa(s, Integer)
-        @assert isa(r, Integer)
-        @assert isa(o, Integer)
-
-        @assert s > 0 "Number of stages s must be > 0"
-        @assert r > 0 "Number of stages r must be > 0"
-
-        @assert s==q.s==p.s==q̃.s==p̃.s
-        @assert r==q.r==p.r==q̃.r==p̃.r==λ.r
-
-        new(name, o, s, r, q, p, q̃, p̃, λ)
-    end
-end
-
-function TableauVPARK(name::Symbol, order::Int,
-                        a_q::Matrix{T}, a_p::Matrix{T},
-                        α_q::Matrix{T}, α_p::Matrix{T},
-                        a_q̃::Matrix{T}, a_p̃::Matrix{T},
-                        α_q̃::Matrix{T}, α_p̃::Matrix{T},
-                        b_q::Vector{T}, b_p::Vector{T},
-                        β_q::Vector{T}, β_p::Vector{T},
-                        c_q::Vector{T}, c_p::Vector{T},
-                        c_λ::Vector{T}, d_λ::Vector{T},
-                        d::Vector{T}) where {T <: Real}
-
-    s = length(c_q)
-    r = length(c_λ)
-
-    @assert s > 0 "Number of stages s must be > 0"
-    @assert r > 0 "Number of stages r must be > 0"
-
-    @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
-    @assert s==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
-    @assert s==size(α_q,1)==size(α_p,1)
-    @assert r==size(α_q,2)==size(α_p,2)
-    @assert s==length(d)
-    @assert r==length(c_λ)==length(d_λ)
-    @assert r==size(a_q̃,1)==size(a_p̃,1)
-    @assert s==size(a_q̃,2)==size(a_p̃,2)
-    @assert r==size(α_q̃,1)==size(α_q̃,2)==length(β_q)
-    @assert r==size(α_p̃,1)==size(α_p̃,2)==length(β_p)
-
-    q = CoefficientsARK{T}(name, order, s, r, a_q, b_q, c_q, α_q, β_q)
-    p = CoefficientsARK{T}(name, order, s, r, a_p, b_p, c_p, α_p, β_p)
-    q̃ = CoefficientsPRK{T}(name, order, s, r, a_q̃, c_λ, α_q̃)
-    p̃ = CoefficientsPRK{T}(name, order, s, r, a_p̃, c_λ, α_p̃)
-    λ = CoefficientsMRK{T}(name, r, d_λ, c_λ)
-
-    TableauVPARK{T}(name, order, s, r, q, p, q̃, p̃, λ, d)
-end
-
-
-function TableauVPARK(name::Symbol, order::Int,
-                        a_q::Matrix{T}, a_p::Matrix{T},
-                        α_q::Matrix{T}, α_p::Matrix{T},
-                        a_q̃::Matrix{T}, a_p̃::Matrix{T},
-                        α_q̃::Matrix{T}, α_p̃::Matrix{T},
-                        b_q::Vector{T}, b_p::Vector{T},
-                        β_q::Vector{T}, β_p::Vector{T},
-                        c_q::Vector{T}, c_p::Vector{T},
-                        c_λ::Vector{T}, d_λ::Vector{T}) where {T <: Real}
-
-    s = length(c_q)
-    r = length(c_λ)
-
-    @assert s > 0 "Number of stages s must be > 0"
-    @assert r > 0 "Number of stages r must be > 0"
-
-    @assert s==size(a_q,1)==size(a_q,2)==length(b_q)==length(c_q)
-    @assert s==size(a_p,1)==size(a_p,2)==length(b_p)==length(c_p)
-    @assert s==size(α_q,1)==size(α_p,1)
-    @assert r==size(α_q,2)==size(α_p,2)
-    @assert r==length(c_λ)==length(d_λ)
-    @assert r==size(a_q̃,1)==size(a_p̃,1)
-    @assert s==size(a_q̃,2)==size(a_p̃,2)
-    @assert r==size(α_q̃,1)==size(α_q̃,2)==length(β_q)
-    @assert r==size(α_p̃,1)==size(α_p̃,2)==length(β_p)
-
-    q = CoefficientsARK{T}(name, order, s, r, a_q, b_q, c_q, α_q, β_q)
-    p = CoefficientsARK{T}(name, order, s, r, a_p, b_p, c_p, α_p, β_p)
-    q̃ = CoefficientsPRK{T}(name, order, s, r, a_q̃, c_λ, α_q̃)
-    p̃ = CoefficientsPRK{T}(name, order, s, r, a_p̃, c_λ, α_p̃)
-    λ = CoefficientsMRK{T}(name, r, d_λ, c_λ)
-
-    TableauVPARK{T}(name, order, s, r, q, p, q̃, p̃, λ)
-end
-
-# TODO function readTableauVPARKFromFile(dir::AbstractString, name::AbstractString)
-
-
-"Parameters for right-hand side function of variational partitioned additive Runge-Kutta methods."
-mutable struct ParametersVPARK{DT, TT, D, S, R, ET <: NamedTuple} <: AbstractParametersSPARK{DT,TT}
-    equs::ET
-    tab::TableauVPARK{TT}
-    Δt::TT
-
-    @ParametersSPARK
-
-    function ParametersVPARK{DT,D}(equs::ET, tab::TableauVPARK{TT}, Δt::TT) where {DT,TT,D,S,R,ET <: NamedTuple}
-        # create solution vectors
-        q = zeros(DT,D)
-        p = zeros(DT,D)
-        λ = zeros(DT,D)
-
-        new{DT,TT,D,tab.s,tab.r,ET}(equs, tab, Δt, zero(TT), q, p, λ)
-    end
-end
 
 
 @doc raw"""
@@ -172,9 +38,9 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{align}
 ```
 """
-struct IntegratorVPARK{DT, TT, D, S, R, PT <: ParametersVPARK{DT,TT},
+struct IntegratorVPARK{DT, TT, D, S, R, PT <: ParametersVPARK{DT,TT,D,S,R},
                                         ST <: NonlinearSolver{DT},
-                                        IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVSPARK{DT,TT}
+                                        IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,R}
     params::PT
     solver::ST
     iguess::IT
@@ -191,7 +57,7 @@ struct IntegratorVPARK{DT, TT, D, S, R, PT <: ParametersVPARK{DT,TT},
 
         N = 3*D*S + 3*D*R
 
-        if isdefined(tableau, :d)
+        if isdefined(tableau, :d) && length(tableau.d) > 0
             N += D
         end
 
@@ -205,7 +71,7 @@ struct IntegratorVPARK{DT, TT, D, S, R, PT <: ParametersVPARK{DT,TT},
         iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create cache
-        cache = IntegratorCacheSPARK{DT, TT, D, S, R}()
+        cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
 
         # create integrator
         IntegratorVPARK(params, solver, iguess, cache)
@@ -214,25 +80,6 @@ struct IntegratorVPARK{DT, TT, D, S, R, PT <: ParametersVPARK{DT,TT},
     function IntegratorVPARK(equation::IDAE{DT,TT}, tableau::TableauVPARK{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorVPARK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
-end
-
-
-@inline equation(int::IntegratorVPARK, i::Symbol) = int.params.equs[i]
-@inline equations(int::IntegratorVPARK) = int.params.equs
-@inline tableau(int::IntegratorVPARK) = int.params.tab
-@inline nstages(int::IntegratorVPARK{DT,TT,D,S,R}) where {DT,TT,D,S,R} = S
-@inline pstages(int::IntegratorVPARK{DT,TT,D,S,R}) where {DT,TT,D,S,R} = R
-@inline Base.ndims(int::IntegratorVPARK{DT,TT,D,S,R}) where {DT,TT,D,S,R} = D
-
-
-function Integrators.initialize!(int::IntegratorVPARK, sol::AtomicSolutionPDAE)
-    sol.t̅ = sol.t - timestep(int)
-
-    equation(int, :v)(sol.t, sol.q, sol.p, sol.v)
-    equation(int, :f)(sol.t, sol.q, sol.p, sol.f)
-
-    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
 end
 
 
@@ -375,20 +222,20 @@ function initial_guess!(int::IntegratorVPARK, sol::AtomicSolutionPDAE)
                               int.cache.q̃, int.cache.p̃, int.cache.ṽ, int.cache.f̃,
                               tableau(int).q̃.c[i], tableau(int).p̃.c[i])
 
-        for k in 1:ndims(int)
+        for k in eachdim(int)
             int.solver.x[3*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+1] = (int.cache.q̃[k] - sol.q[k])/timestep(int)
             int.solver.x[3*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+2] = (int.cache.p̃[k] - sol.p[k])/timestep(int)
             int.solver.x[3*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+3] = 0
         end
     end
 
-    if int.params.tab.λ.c[1] == 0
+    if tableau(int).λ.c[1] == 0
         for k in eachdim(int)
             int.solver.x[3*ndims(int)*nstages(int)+3*(k-1)+3] = sol.λ[k]
         end
     end
 
-    if isdefined(tableau(int), :d)
+    if isdefined(tableau(int), :d) && length(tableau(int).d) > 0
         for k in eachdim(int)
             int.solver.x[3*ndims(int)*nstages(int)+3*ndims(int)*pstages(int)+k] = 0
         end

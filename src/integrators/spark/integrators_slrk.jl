@@ -4,6 +4,7 @@ struct TableauSLRK{DT <: Number} <: AbstractTableau{DT}
     name::Symbol
     o::Int
     s::Int
+    r::Int
 
     q::CoefficientsRK{DT}
     p::CoefficientsRK{DT}
@@ -27,35 +28,13 @@ struct TableauSLRK{DT <: Number} <: AbstractTableau{DT}
 
         @assert length(d)==0 || length(d)==s
 
-        new{DT}(name, o, s, q, p, q̃, p̃, ω, d)
+        new{DT}(name, o, s, s, q, p, q̃, p̃, ω, d)
     end
 end
 
 
 "Parameters for right-hand side function of Specialised Partitioned Additive Runge-Kutta methods for Variational systems."
-mutable struct ParametersSLRK{DT,TT,D,S,θT,FT,GT,G̅T,ϕT,ψT,tabType} <: AbstractParametersSPARK{DT,TT}
-    f_ϑ::θT
-    f_f::FT
-    f_g::GT
-    f_g̅::G̅T
-    f_ϕ::ϕT
-    f_ψ::ψT
-
-    Δt::TT
-
-    tab::tabType
-
-    @ParametersSPARK
-
-    function ParametersSLRK{DT,D,S}(f_ϑ::θT, f_f::FT, f_g::GT, f_g̅::G̅T, f_ϕ::ϕT, f_ψ::ψT, Δt::TT, tab::tabType) where {DT,TT,D,S,θT,FT,GT,G̅T,ϕT,ψT,tabType}
-        # create solution vectors
-        q = zeros(DT,D)
-        p = zeros(DT,D)
-        λ = zeros(DT,D)
-
-        new{DT,TT,D,S,θT,FT,GT,G̅T,ϕT,ψT,tabType}(f_ϑ, f_f, f_g, f_g̅, f_ϕ, f_ψ, Δt, tab, zero(TT), q, p, λ)
-    end
-end
+const ParametersSLRK = AbstractParametersSPARK{:slrk}
 
 
 @doc raw"""
@@ -107,51 +86,48 @@ F^1_{n,i} + F^2_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i 
 \end{align}
 ```
 """
-struct IntegratorSLRK{DT, TT, ET <: VDAE{DT,TT},
-                              PT <: ParametersSLRK{DT,TT},
-                              ST <: NonlinearSolver{DT},
-                              IT <: InitialGuessPODE{DT,TT}, D, S} <: AbstractIntegratorVSPARK{DT, TT}
-    equation::ET
-    tableau::TableauSLRK{TT}
-
+struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
+                                    ST <: NonlinearSolver{DT},
+                                    IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,S}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCacheSPARK{DT,TT,D,S,S}
-end
 
-function IntegratorSLRK(equation::VDAE{DT,TT},
-                        tableau::TableauSLRK{TT}, Δt::TT) where {DT,TT}
-    D = equation.d
-    S = tableau.s
-
-    # println(tableau)
-
-    N = 4*D*S
-
-    if isdefined(tableau, :d) && length(tableau.d) > 0
-        N += D
+    function IntegratorSLRK(params::ParametersSLRK{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
     end
 
-    # create params
-    params = ParametersSLRK{DT,D,S}(equation.ϑ, equation.f, equation.g, equation.g̅, equation.ϕ, equation.ψ, Δt, tableau)
+    function IntegratorSLRK{DT,D}(equations::NamedTuple, tableau::TableauSLRK{TT}, Δt::TT) where {DT,TT,D,ST}
+        # get number of stages
+        S = tableau.s
 
-    # create solver
-    solver = create_nonlinear_solver(DT, N, params)
+        N = 4*D*S
 
-    # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
+        if isdefined(tableau, :d) && length(tableau.d) > 0
+            N += D
+        end
 
-    # create cache
-    cache = IntegratorCacheSPARK{DT,TT,D,S,S}()
+        # create params
+        params = ParametersSLRK{DT,D}(equations, tableau, Δt)
 
-    # create integrator
-    IntegratorSLRK{DT, TT, typeof(equation), typeof(params), typeof(solver), typeof(iguess), D, S}(
-                              equation, tableau, params, solver, iguess, cache)
+        # create solver
+        solver = create_nonlinear_solver(DT, N, params)
+
+        # create initial guess
+        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+
+        # create cache
+        cache = IntegratorCacheSPARK{DT,TT,D,S,S}()
+
+        # create integrator
+        IntegratorSLRK(params, solver, iguess, cache)
+    end
+
+    function IntegratorSLRK(equation::VDAE{DT,TT}, tableau::TableauSLRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorSLRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
 end
-
-@inline pstages(int::IntegratorSLRK) = int.tableau.s
-@inline Base.ndims(int::IntegratorSLRK{DT,TT,ET,PT,ST,IT,D,S}) where {DT,TT,ET,PT,ST,IT,D,S} = D
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S},
@@ -173,10 +149,10 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S},
 
         # compute f(X)
         t = params.t + params.Δt * params.tab.p.c[i]
-        params.f_f(t, cache.Qp[i], cache.Vp[i], cache.Fp[i])
-        params.f_g(t, cache.Qp[i], cache.Λp[i], cache.Gp[i])
-        params.f_ϕ(t, cache.Qp[i], cache.Pp[i], cache.Φp[i])
-        params.f_ψ(t, cache.Qp[i], cache.Pp[i], cache.Vp[i], cache.Fp[i], cache.Ψp[i])
+        params.equs[:f](t, cache.Qp[i], cache.Vp[i], cache.Fp[i])
+        params.equs[:g](t, cache.Qp[i], cache.Λp[i], cache.Gp[i])
+        params.equs[:ϕ](t, cache.Qp[i], cache.Pp[i], cache.Φp[i])
+        params.equs[:ψ](t, cache.Qp[i], cache.Pp[i], cache.Vp[i], cache.Fp[i], cache.Ψp[i])
     end
 
     if length(params.tab.d) > 0
@@ -197,7 +173,7 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S},
 
     # compute ϕ(q,p)
     t = params.t + params.Δt
-    params.f_ϕ(t, cache.q̃, cache.p̃, cache.ϕ̃)
+    params.equs[:ϕ](t, cache.q̃, cache.p̃, cache.ϕ̃)
 end
 
 

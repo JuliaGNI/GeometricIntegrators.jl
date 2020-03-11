@@ -48,7 +48,7 @@ Base.:(==)(tab1::CoefficientsARK, tab2::CoefficientsARK) = (tab1.o == tab2.o
 
 "Print additive Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsARK)
-    print(io, "Additive Runge-Kutta Coefficients ", tab.name, "with ", tab.s, " internal stages, ", tab.r, " projective stages and order ", tab.o)
+    print(io, "Additive Runge-Kutta Coefficients ", tab.name, " with ", tab.s, " internal stages, ", tab.r, " projective stages and order ", tab.o)
     print(io, "  a = ", tab.a)
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)
@@ -86,7 +86,7 @@ Base.:(==)(tab1::CoefficientsPRK, tab2::CoefficientsPRK) = (tab1.o == tab2.o
 
 "Print projective Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsPRK)
-    print(io, "Projective Runge-Kutta Coefficients ", tab.name, "with ", tab.s, " internal stages, ", tab.r, " projective stages and order ", tab.o)
+    print(io, "Projective Runge-Kutta Coefficients ", tab.name, " with ", tab.s, " internal stages, ", tab.r, " projective stages and order ", tab.o)
     print(io, "  a = ", tab.a)
     print(io, "  c = ", tab.c)
     print(io, "  α = ", tab.α)
@@ -119,7 +119,7 @@ Base.:(==)(tab1::CoefficientsMRK, tab2::CoefficientsMRK) = (tab1.r == tab2.r
 
 "Print multiplier Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsMRK)
-    print(io, "Multiplier Runge-Kutta coefficients ", tab.name, "with ", tab.r, " projective stages")
+    print(io, "Multiplier Runge-Kutta coefficients ", tab.name, " with ", tab.r, " projective stages")
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)
 end
@@ -155,7 +155,7 @@ Base.:(==)(tab1::CoefficientsIRK, tab2::CoefficientsIRK) = (tab1.o == tab2.o
 
 "Print additive Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsIRK)
-    print(io, "Interstage Runge-Kutta Coefficients ", tab.name, "with ", tab.s, " internal stages, ", tab.σ, " projective stages and order ", tab.o)
+    print(io, "Interstage Runge-Kutta Coefficients ", tab.name, " with ", tab.s, " internal stages, ", tab.σ, " projective stages and order ", tab.o)
     print(io, "  a = ", tab.a)
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)
@@ -206,7 +206,7 @@ Base.:(==)(tab1::CoefficientsSPARK, tab2::CoefficientsSPARK) = (tab1.o == tab2.o
 
 "Print SPARK coefficients."
 function Base.show(io::IO, tab::CoefficientsSPARK)
-    print(io, "SPARK Coefficients ", tab.name, "with ", tab.s, " internal stages, ", tab.σ, " projective stages and order ", tab.o)
+    print(io, "SPARK Coefficients ", tab.name, " with ", tab.s, " internal stages, ", tab.σ, " projective stages and order ", tab.o)
     print(io, "  a = ", tab.a)
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)

@@ -1,25 +1,9 @@
 
-"Holds the tableau of an Partitioned Additive Runge-Kutta method for Hamiltonian systems."
-TableauHPARK = TableauVPARK
+"Holds the tableau of a Hamiltonian Partitioned Additive Runge-Kutta methods."
+const TableauHPARK = AbstractTableauSPARK{:hpark}
 
-
-"Parameters for right-hand side function of Hamiltonian partitioned additive Runge-Kutta methods."
-mutable struct ParametersHPARK{DT, TT, D, S, R, ET <: NamedTuple} <: AbstractParametersSPARK{DT,TT}
-    equs::ET
-    tab::TableauHPARK{TT}
-    Δt::TT
-
-    @ParametersSPARK
-
-    function ParametersHPARK{DT,D}(equs::ET, tab::TableauVPARK{TT}, Δt::TT) where {DT,TT,D,S,R,ET <: NamedTuple}
-        # create solution vectors
-        q = zeros(DT,D)
-        p = zeros(DT,D)
-        λ = zeros(DT,D)
-
-        new{DT,TT,D,tab.s,tab.r,ET}(equs, tab, Δt, zero(TT), q, p, λ)
-    end
-end
+"Parameters for right-hand side function of Hamiltonian Partitioned Additive Runge-Kutta methods."
+const ParametersHPARK = AbstractParametersSPARK{:hpark}
 
 
 @doc raw"""
@@ -54,9 +38,9 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{align}
 ```
 """
-struct IntegratorHPARK{DT, TT, D, S, R, PT <: ParametersHPARK{DT,TT},
+struct IntegratorHPARK{DT, TT, D, S, R, PT <: ParametersHPARK{DT,TT,D,S,R},
                                         ST <: NonlinearSolver{DT},
-                                        IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorHSPARK{DT,TT}
+                                        IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorHSPARK{DT,TT,D,S,R}
     params::PT
     solver::ST
     iguess::IT
@@ -83,7 +67,7 @@ struct IntegratorHPARK{DT, TT, D, S, R, PT <: ParametersHPARK{DT,TT},
         iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create cache
-        cache = IntegratorCacheSPARK{DT, TT, D, S, R}()
+        cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
 
         # create integrator
         IntegratorHPARK(params, solver, iguess, cache)
@@ -92,25 +76,6 @@ struct IntegratorHPARK{DT, TT, D, S, R, PT <: ParametersHPARK{DT,TT},
     function IntegratorHPARK(equation::PDAE{DT,TT}, tableau::TableauHPARK{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorHPARK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
-end
-
-
-@inline equation(int::IntegratorHPARK, i::Symbol) = int.params.equs[i]
-@inline equations(int::IntegratorHPARK) = int.params.equs
-@inline tableau(int::IntegratorHPARK) = int.params.tab
-@inline nstages(int::IntegratorHPARK{DT,TT,D,S,R}) where {DT,TT,D,S,R} = S
-@inline pstages(int::IntegratorHPARK{DT,TT,D,S,R}) where {DT,TT,D,S,R} = R
-@inline Base.ndims(int::IntegratorHPARK{DT,TT,D,S,R}) where {DT,TT,D,S,R} = D
-
-
-function Integrators.initialize!(int::IntegratorHPARK, sol::AtomicSolutionPDAE)
-    sol.t̅ = sol.t - timestep(int)
-
-    equation(int, :v)(sol.t, sol.q, sol.p, sol.v)
-    equation(int, :f)(sol.t, sol.q, sol.p, sol.f)
-
-    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
 end
 
 
