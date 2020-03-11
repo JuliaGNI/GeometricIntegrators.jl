@@ -222,8 +222,7 @@ function Integrators.integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolu
         tᵢ = sol.t̅ + int.Δt * int.tableau.qdrift1.c[i]
 
         for l = 1:equation(int).m
-            int.equation.B(tᵢ, int.Q1[l], int.tB, l)
-            simd_copy_yx_first!(int.tB, int.B1[i], l)
+            int.equation.B(tᵢ, int.Q1[l], int.B1[i], l)
         end
 
         # CALCULATING THE NEW VALUES OF B2
@@ -231,8 +230,7 @@ function Integrators.integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolu
         tᵢ = sol.t̅ + int.Δt * int.tableau.qdrift2.c[i]
 
         for l = 1:equation(int).m
-            int.equation.B(tᵢ, int.Q2[l], int.tB, l)
-            simd_copy_yx_first!(int.tB, int.B2[i], l)
+            int.equation.B(tᵢ, int.Q2[l], int.B2[i], l)
         end
 
     end

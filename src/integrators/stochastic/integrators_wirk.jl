@@ -208,9 +208,7 @@ Unlike for FIRK, here Y = Δt a v(Q) + â B(Q) ΔW
                 # copies Q1[i][:,l] to the vector tQ
                 simd_copy_xy_first!($tQ, Q1[i], l)
                 # calculates the l-th column of B(t,tQ) and assigns to the vector tB
-                params.equ.B(tᵢ, $tQ, $tB, l)
-                # copies the vector tB to B[i][:,l]
-                simd_copy_yx_first!($tB, B[i], l)
+                params.equ.B(tᵢ, $tQ, B[i], l)
             end
         end
     end
