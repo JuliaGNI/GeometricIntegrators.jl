@@ -235,5 +235,5 @@ function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,T
     update_solution!(sol.q, sol.q̃, int.cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
 
     # update vector field for initial guess
-    update!(int.iguess, sol.t, sol.q, sol.v)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)
 end

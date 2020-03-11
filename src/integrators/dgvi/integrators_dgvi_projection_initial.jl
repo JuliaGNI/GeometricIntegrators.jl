@@ -488,7 +488,7 @@ function integrate_step!(int::IntegratorDGVIP0{DT,TT}, sol::Union{SolutionPODE{D
     update_solution!(int, int.cache)
 
     # copy solution to initial guess for next time step
-    update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q, int.θ)
+    update_vector_fields!(int.iguess, m, sol.t[0] + n*int.Δt, int.q, int.θ)
 
     # take care of periodic solutions
     cut_periodic_solution!(int.q,  int.equation.periodicity)

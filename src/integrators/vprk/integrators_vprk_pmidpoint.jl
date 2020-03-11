@@ -190,5 +190,5 @@ function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::AtomicSolutio
     project_solution!(int, sol, int.params.R)
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

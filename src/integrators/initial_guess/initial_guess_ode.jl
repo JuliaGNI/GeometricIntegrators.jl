@@ -56,7 +56,9 @@ end
 
 
 "compute vector field of new solution"
-function update!(ig::InitialGuessODE{DT,TT}, t₁::TT, q₁::SolutionVector{DT}, v₁::Vector{DT}) where {DT,TT}
+function update_vector_fields!(ig::InitialGuessODE{DT,TT}, t₁::TT,
+                               q₁::SolutionVector{DT},
+                               v₁::Vector{DT}) where {DT,TT}
     ig.v(t₁, q₁, v₁)
 end
 

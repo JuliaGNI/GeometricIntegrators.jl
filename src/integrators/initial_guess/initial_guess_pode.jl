@@ -72,11 +72,11 @@ function initialize!(ig::InitialGuessPODE{DT,TT,VT,IT},
 end
 
 
-function update!(ig::InitialGuessPODE{DT,TT}, t₁::TT,
-                q₁::SolutionVector{DT},
-                p₁::SolutionVector{DT},
-                v₁::Vector{DT},
-                f₁::Vector{DT}) where {DT,TT}
+function update_vector_fields!(ig::InitialGuessPODE{DT,TT}, t₁::TT,
+                               q₁::SolutionVector{DT},
+                               p₁::SolutionVector{DT},
+                               v₁::Vector{DT},
+                               f₁::Vector{DT}) where {DT,TT}
     ig.v(t₁, q₁, p₁, v₁)
     ig.f(t₁, q₁, v₁, f₁)
 end

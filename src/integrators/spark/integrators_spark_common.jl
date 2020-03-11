@@ -52,5 +52,5 @@ function integrate_step!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomicSolutio
     update_solution!(int, sol)
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

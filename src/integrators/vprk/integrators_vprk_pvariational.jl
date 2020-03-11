@@ -235,5 +235,5 @@ function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::AtomicSolu
     project_solution!(int, sol, int.pparams.R2)
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

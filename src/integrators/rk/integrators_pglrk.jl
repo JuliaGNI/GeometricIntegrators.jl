@@ -373,5 +373,5 @@ function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionODE{DT,
     update_solution!(sol.q, int.cache.V, tableau(int).b, timestep(int))
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t, sol.q, sol.v)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)
 end

@@ -184,5 +184,5 @@ function integrate_step!(int::IntegratorVPRKdegenerate{DT,TT}, sol::AtomicSoluti
     compute_projection!(int.projector.x, sol.q, sol.p, int.pparams)
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

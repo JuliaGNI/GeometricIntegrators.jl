@@ -176,5 +176,5 @@ function integrate_step!(int::IntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,
     update_solution!(int, sol)
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

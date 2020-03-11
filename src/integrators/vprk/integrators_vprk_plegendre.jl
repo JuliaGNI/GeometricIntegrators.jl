@@ -413,5 +413,5 @@ function integrate_step!(int::IntegratorVPRKpLegendre{DT,TT,ΘT,FT,VT}, sol::Sol
     # println()
 
     # copy solution to initial guess for next time step
-    update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q, int.p)
+    update_vector_fields!(int.iguess, m, sol.t[0] + n*int.Δt, int.q, int.p)
 end

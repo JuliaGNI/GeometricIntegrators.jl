@@ -228,7 +228,7 @@ function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::Union{AtomicSolut
     update_solution!(sol.q, sol.q̃, int.cache.V, int.params.tab.q.b, int.params.tab.q.b̂, timestep(int))
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t, sol.q, sol.v)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)
 end
 
 function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT,D,S}
