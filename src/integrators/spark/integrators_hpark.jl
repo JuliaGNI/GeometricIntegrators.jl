@@ -4,7 +4,7 @@ TableauHPARK = TableauVPARK
 
 
 "Parameters for right-hand side function of Hamiltonian partitioned additive Runge-Kutta methods."
-mutable struct ParametersHPARK{DT,TT,D,S,R,VT,FT,UT,GT,ϕT} <: Parameters{DT,TT}
+mutable struct ParametersHPARK{DT,TT,D,S,R,VT,FT,UT,GT,ϕT} <: AbstractParametersSPARK{DT,TT}
     f_v::VT
     f_f::FT
     f_u::UT
@@ -205,15 +205,6 @@ end
             end
         end
     end
-end
-
-
-function update_params!(params::ParametersHPARK, sol::AtomicSolutionPDAE)
-    # set time for nonlinear solver and copy previous solution
-    params.t  = sol.t
-    params.q .= sol.q
-    params.p .= sol.p
-    params.λ .= sol.λ
 end
 
 

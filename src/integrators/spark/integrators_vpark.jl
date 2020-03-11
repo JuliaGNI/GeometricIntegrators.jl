@@ -123,7 +123,7 @@ end
 
 
 "Parameters for right-hand side function of variational partitioned additive Runge-Kutta methods."
-mutable struct ParametersVPARK{DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT} <: Parameters{DT,TT}
+mutable struct ParametersVPARK{DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT} <: AbstractParametersSPARK{DT,TT}
     f_ϑ::ϑT
     f_f::FT
     f_u::UT
@@ -139,10 +139,7 @@ mutable struct ParametersVPARK{DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT} <: Parameters{DT,TT
     t_λ::CoefficientsMRK{TT}
     d_v::Vector{TT}
 
-    t::TT
-    q::Vector{DT}
-    p::Vector{DT}
-    λ::Vector{DT}
+    @ParametersSPARK
 
     function ParametersVPARK{DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT}(f_ϑ, f_f, f_u, f_g, f_ϕ, Δt, t_q, t_p, t_q̃, t_p̃, t_λ, d_v) where {DT,TT,D,S,R,ϑT,FT,UT,GT,ϕT}
         # create solution vectors
@@ -355,15 +352,6 @@ end
             end
         end
     end
-end
-
-
-function update_params!(params::ParametersVPARK, sol::AtomicSolutionPDAE)
-    # set time for nonlinear solver and copy previous solution
-    params.t  = sol.t
-    params.q .= sol.q
-    params.p .= sol.p
-    params.λ .= sol.λ
 end
 
 

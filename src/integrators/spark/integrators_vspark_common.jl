@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of Specialised Partitioned Additive Runge-Kutta methods for Variational systems."
-mutable struct AbstractParametersVSPARK{IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT,tabType} <: Parameters{DT,TT}
+mutable struct AbstractParametersVSPARK{IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT,tabType} <: AbstractParametersSPARK{DT,TT}
     f_f::FT
     f_p::PT
     f_u::UT
@@ -11,10 +11,7 @@ mutable struct AbstractParametersVSPARK{IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT,tabType
 
     tab::tabType
 
-    t::TT
-    q::Vector{DT}
-    p::Vector{DT}
-    λ::Vector{DT}
+    @ParametersSPARK
 
     function AbstractParametersVSPARK{IT,DT,D,S,R,P}(f_f::FT, f_p::PT, f_u::UT, f_g::GT, f_ϕ::ϕT, Δt::TT, tableau::tabType) where {IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT,tabType}
         # create solution vectors
@@ -24,15 +21,6 @@ mutable struct AbstractParametersVSPARK{IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT,tabType
 
         new{IT,DT,TT,D,S,R,P,FT,PT,UT,GT,ϕT,tabType}(f_f, f_p, f_u, f_g, f_ϕ, Δt, tableau, zero(TT), q, p, λ)
     end
-end
-
-
-function update_params!(params::AbstractParametersVSPARK, sol::AtomicSolutionPDAE)
-    # set time for nonlinear solver and copy previous solution
-    params.t  = sol.t
-    params.q .= sol.q
-    params.p .= sol.p
-    params.λ .= sol.λ
 end
 
 

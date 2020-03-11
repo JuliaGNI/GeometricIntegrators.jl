@@ -36,7 +36,7 @@ end
 
 
 "Parameters for right-hand side function of Specialised Partitioned Additive Runge-Kutta methods for Variational systems."
-mutable struct ParametersVSPARKsecondary{DT,TT,D,S,Σ,θT,FT,GT,G̅T,ϕT,ψT,tabType} <: Parameters{DT,TT}
+mutable struct ParametersVSPARKsecondary{DT,TT,D,S,Σ,θT,FT,GT,G̅T,ϕT,ψT,tabType} <: AbstractParametersSPARK{DT,TT}
     f_ϑ::θT
     f_f::FT
     f_g::GT
@@ -48,10 +48,7 @@ mutable struct ParametersVSPARKsecondary{DT,TT,D,S,Σ,θT,FT,GT,G̅T,ϕT,ψT,tab
 
     tab::tabType
 
-    t::TT
-    q::Vector{DT}
-    p::Vector{DT}
-    λ::Vector{DT}
+    @ParametersSPARK
 
     function ParametersVSPARKsecondary{DT,D,S,Σ}(f_ϑ::θT, f_f::FT, f_g::GT, f_g̅::G̅T, f_ϕ::ϕT, f_ψ::ψT, Δt::TT, tab::tabType) where {DT,TT,D,S,Σ,θT,FT,GT,G̅T,ϕT,ψT,tabType}
         # create solution vectors
@@ -61,15 +58,6 @@ mutable struct ParametersVSPARKsecondary{DT,TT,D,S,Σ,θT,FT,GT,G̅T,ϕT,ψT,tab
 
         new{DT,TT,D,S,Σ,θT,FT,GT,G̅T,ϕT,ψT,tabType}(f_ϑ, f_f, f_g, f_g̅, f_ϕ, f_ψ, Δt, tab, zero(TT), q, p, λ)
     end
-end
-
-
-function update_params!(params::ParametersVSPARKsecondary, sol::AtomicSolutionPDAE)
-    # set time for nonlinear solver and copy previous solution
-    params.t  = sol.t
-    params.q .= sol.q
-    params.p .= sol.p
-    params.λ .= sol.λ
 end
 
 
