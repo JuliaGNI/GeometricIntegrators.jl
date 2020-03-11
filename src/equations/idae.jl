@@ -128,7 +128,7 @@ end
 
 function get_function_tuple(equation::IDAE{DT,TT,ϑT,FT,UT,GT,ϕT,HT,VT}) where {DT, TT, ϑT, FT, UT, GT, ϕT, HT, VT}
     names = (:ϑ,:f,:u,:g,:ϕ)
-    equs  = (equation.ϑ, equation.f, equation.u, equation.g, equaiton.ϕ)
+    equs  = (equation.ϑ, equation.f, equation.u, equation.g, equation.ϕ)
 
     if HT != Nothing
         names = (names..., :h)
