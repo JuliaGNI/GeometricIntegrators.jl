@@ -216,7 +216,7 @@ Unlike for FIRK, here Y = Δt a v(Q) + ̃a B(Q) ΔW
                 # copies Q1[i][:,l] to the vector tQ
                 simd_copy_xy_first!($tQ, Q1[i], l)
                 # calculates the l-th column of B(t,tQ) and assigns to the vector tB
-                params.equ.B(tᵢ, $tQ, $tB)
+                params.equ.B(tᵢ, $tQ, $tB, col=l)
                 # copies the vector tB to B[i][:,l]
                 simd_copy_yx_first!($tB, B[i], l)
             end
@@ -271,8 +271,8 @@ end
                                 y1 += params.tab.qdiff1.a[i,j] * $cache.B[j][k,noise_idx] * params.ΔW[noise_idx]
                                 y2 += params.tab.qdiff1.â[i,j] * $cache.B[j][k,noise_idx] * params.ΔW[noise_idx]
                             else
-                                y1 += params.tab.qdiff3.a[i,j] * $cache.BQ[j][k,noise_idx] * params.ΔW[noise_idx]
-                                y2 += params.tab.qdiff3.â[i,j] * $cache.BQ[j][k,noise_idx] * params.ΔW[noise_idx]
+                                y1 += params.tab.qdiff3.a[i,j] * $cache.B[j][k,noise_idx] * params.ΔW[noise_idx]
+                                y2 += params.tab.qdiff3.â[i,j] * $cache.B[j][k,noise_idx] * params.ΔW[noise_idx]
                             end
                         end
                     end
