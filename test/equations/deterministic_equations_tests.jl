@@ -214,6 +214,34 @@
 
 
     ################################################################################
+    # Test HDAE: Hamiltonian Differential Algebraic Equation
+    ################################################################################
+
+    hdae_eqs = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_u, pdae_g, pdae_ϕ, pdae_ψ, pdae_h)
+
+    hdae  = HDAE(eltype(q₀), 1, 1, 1, 1, hdae_eqs..., t₀, q₀, p₀, λ₀)
+    hdae1 = HDAE(hdae_eqs..., t₀, q₀, p₀, λ₀)
+    hdae2 = HDAE(hdae_eqs..., t₀, q₀, p₀)
+    hdae3 = HDAE(hdae_eqs..., q₀, p₀)
+
+    @test ndims(hdae) == 1
+    @test periodicity(hdae) == zero(q₀)
+    @test get_function_tuple(hdae) == NamedTuple{(:v, :f, :u, :g, :u̅, :g̅, :ϕ, :ψ, :h)}(hdae_eqs)
+
+    @test hdae == hdae1
+    @test hdae == hdae2
+    @test hdae == hdae3
+
+    @test hash(hdae) == hash(hdae1)
+    @test hash(hdae) == hash(hdae2)
+    @test hash(hdae) == hash(hdae3)
+
+    @test hdae == similar(hdae, t₀, q₀, p₀, λ₀)
+    @test hdae == similar(hdae, t₀, q₀, p₀)
+    @test hdae == similar(hdae, q₀, p₀)
+
+
+    ################################################################################
     # Test VDAE: Variational Differential Algebraic Equation
     ################################################################################
 
