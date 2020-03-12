@@ -49,10 +49,31 @@ Pages   = ["integrators/rk/bstract_integrator_rk.jl",
 ```
 
 
+## SPARK Methods
+
+```@autodocs
+Modules = [GeometricIntegrators.Integrators.SPARK]
+```
+
+
+## VPRK Methods
+
+```@autodocs
+Modules = [GeometricIntegrators.Integrators.VPRK]
+```
+
+
 ## Galerkin Variational Integrators
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
 Pages   = ["integrators/cgvi/integrators_cgvi.jl",
            "integrators/dgvi/integrators_dgvi.jl"]
+```
+
+
+## Stochastic Integrators
+
+```@autodocs
+Modules = [GeometricIntegrators.Integrators.Stochastic]
 ```
