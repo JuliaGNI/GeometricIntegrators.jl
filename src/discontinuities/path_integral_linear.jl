@@ -1,8 +1,8 @@
-"""
+@doc raw"""
 PathIntegralLinear is a path integral along a linear path
 
 ```math
-\\phi (\\tau; q^-, q^+) = (1-\\tau) q^- + \\tau q^+ .
+\phi (\tau; q^-, q^+) = (1-\tau) q^- + \tau q^+ .
 ```
 """
 struct PathIntegralLinear <: PathIntegral end

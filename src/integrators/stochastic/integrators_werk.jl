@@ -1,24 +1,23 @@
-"""
+@doc raw"""
 Holds the tableau of a weak explicit Runge-Kutta method.
 
     Reference: Andreas Rossler, "Second order Runge-Kutta methods for Stratonovich stochastic differential equations",
-    BIT Numerical Mathematics (2007) 47, equation (5.1)
+    BIT Numerical Mathematics (2007) 47, equation (5.1).
 
 Order of the tableau is not included, because unlike in the deterministic
 setting, it depends on the properties of the noise (e.g., the dimension of
 the Wiener process and the commutativity properties of the diffusion matrix)
 
-Orders stored in qdrift, qdiff are irrelevant and set to 0
+Orders stored in `qdrift`, `qdiff` are irrelevant and set to 0.
 
-qdrift0, qdrift1, qdrift2 correspond to A0, A1, A2 in the paper
-qdiff0, qdiff1, qdiff2, qdiff3 correspond to B0, B1, B2, B3
-qdrift0.b = alpha
-qdiff0.b  = beta1
-qdiff3.b  = beta2
-qdrift0.c = c0
-qdrift1.c = c1
-qdrift2.c = c2
-
+`qdrift0`, `qdrift1`, `qdrift2` correspond to A0, A1, A2 in the paper
+`qdiff0`, `qdiff1`, `qdiff2`, `qdiff3` correspond to B0, B1, B2, B3
+`qdrift0.b = alpha`
+`qdiff0.b  = beta1`
+`qdiff3.b  = beta2`
+`qdrift0.c = c0`
+`qdrift1.c = c1`
+`qdrift2.c = c2`
 """
 struct TableauWERK{T} <: AbstractTableauERK{T}
     name::Symbol
@@ -115,9 +114,7 @@ end
 @inline Base.eltype(integrator::IntegratorWERK{DT}) where {DT} = DT
 
 
-"""
-Integrate SDE with explicit Runge-Kutta integrator.
-"""
+"Integrate SDE with explicit Runge-Kutta integrator."
 function Integrators.integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
     local tᵢ::TT
     local ydrift::DT

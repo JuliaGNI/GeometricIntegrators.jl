@@ -1,4 +1,4 @@
-"""
+@doc raw"""
 `ParametersDGVIPI`: Parameters for right-hand side function of Discontinuous
 Galerkin Variational Integrator with Path Integral approximation of the jump.
 
@@ -150,7 +150,7 @@ function ParametersDGVIPI(Θ::ΘT, f::FT, g::GT, Δt::TT,
 end
 
 
-"""
+@doc raw"""
 Nonlinear function cache for Discontinuous Galerkin Variational Integrator.
 
 ### Parameters
@@ -398,7 +398,7 @@ function compute_rhs!(b::Vector{ST}, cache::IntegratorCacheDGVIPI{ST,D,S,QR,FR},
 end
 
 
-"""
+@doc raw"""
 `IntegratorDGVIPI`: Discontinuous Galerkin Variational Integrator.
 
 ### Parameters

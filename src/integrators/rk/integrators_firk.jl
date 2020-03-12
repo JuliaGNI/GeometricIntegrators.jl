@@ -52,7 +52,7 @@ mutable struct ParametersFIRK{DT, TT, D, S, ET <: NamedTuple, FT, JT} <: Paramet
 end
 
 
-"""
+@doc raw"""
 Fully implicit Runge-Kutta integrator cache.
 
 ### Fields

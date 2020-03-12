@@ -1,4 +1,4 @@
-"""
+@doc raw"""
 `ParametersDGVI`: Parameters for right-hand side function of Discontinuous Galerkin Variational Integrator.
 
 ### Parameters
@@ -100,7 +100,7 @@ function ParametersDGVI(equ::IODE{DT,TT}, Δt::TT, basis::Basis{TT}, quadrature:
 end
 
 
-"""
+@doc raw"""
 Nonlinear function cache for Discontinuous Galerkin Variational Integrator.
 
 ### Parameters
@@ -117,20 +117,20 @@ Nonlinear function cache for Discontinuous Galerkin Variational Integrator.
 * `V`: velocity at quadrature nodes
 * `P`: one-form at quadrature nodes
 * `F`: forces at quadrature nodes
-* `q`:  current solution of qₙ
-* `q⁻`: current solution of qₙ⁻
-* `q⁺`: current solution of qₙ⁺
-* `q̅`:  current solution of qₙ₊₁
-* `q̅⁻`: current solution of qₙ₊₁⁻
-* `q̅⁺`: current solution of qₙ₊₁⁺
-* `ϕ`:  average of the solution at tₙ
-* `ϕ̅`:  average of the solution at tₙ₊₁
-* `λ`:  jump of the solution at tₙ
-* `λ̅`:  jump of the solution at tₙ₊₁
-* `θ`:  one-form evaluated across at tₙ
-* `Θ̅`:  one-form evaluated across at tₙ₊₁
-* `g`:  projection evaluated across  at tₙ
-* `g̅`:  projection evaluated across at tₙ₊₁
+* `q`:  current solution of ``q_{n}``
+* `q⁻`: current solution of ``q_{n}^{-}``
+* `q⁺`: current solution of ``q_{n}^{+}``
+* `q̅`:  current solution of ``q_{n+1}``
+* `q̅⁻`: current solution of ``q_{n+1}^{-}``
+* `q̅⁺`: current solution of ``q_{n+1}^{+}``
+* `ϕ`:  average of the solution at ``t_{n}``
+* `ϕ̅`:  average of the solution at ``t_{n+1}``
+* `λ`:  jump of the solution at ``t_{n}``
+* `λ̅`:  jump of the solution at ``t_{n+1}``
+* `θ`:  one-form evaluated across at ``t_{n}``
+* `Θ̅`:  one-form evaluated across at ``t_{n+1}``
+* `g`:  projection evaluated across at ``t_{n}``
+* `g̅`:  projection evaluated across at ``t_{n+1}``
 """
 struct IntegratorCacheDGVI{ST,D,S,R} <: IODEIntegratorCache{ST,D}
     X::Vector{Vector{ST}}

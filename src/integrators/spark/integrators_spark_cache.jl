@@ -1,4 +1,4 @@
-"""
+@doc raw"""
 Cache of a Specialised Partitioned Additive Runge-Kutta integrator.
 
 ### Fields

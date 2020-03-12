@@ -1,4 +1,4 @@
-"""
+@doc raw"""
 `ParametersCGVI`: Parameters for right-hand side function of continuous Galerkin variational Integrator.
 
 ### Parameters

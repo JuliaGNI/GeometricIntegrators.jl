@@ -1,15 +1,14 @@
-"""
+@doc raw"""
 Holds the tableau of a stochastic implicit split partitioned Runge-Kutta method.
 
-qdrift, pdrift1, pdrift2 hold the RK coefficients for the drift parts,
-and qdiff, pdiff1, pdiff2 hold the RK coefficients for the diffusion part of the SDE.
+`qdrift`, `pdrift1`, `pdrift2` hold the RK coefficients for the drift parts,
+and `qdiff`, `pdiff1`, `pdiff2` hold the RK coefficients for the diffusion part of the SDE.
 
 Order of the tableau is not included, because unlike in the deterministic
 setting, it depends on the properties of the noise (e.g., the dimension of
 the Wiener process and the commutativity properties of the diffusion matrix)
 
-Orders stored in qdrift and qdiff are understood as the classical orders of these methods.
-
+Orders stored in `qdrift` and `qdiff` are understood as the classical orders of these methods.
 """
 struct TableauSISPRK{T} <: AbstractTableauIRK{T}
     name::Symbol
@@ -51,9 +50,10 @@ end
 # TODO function readTableauSFIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-"""
+@doc raw"""
 Parameters for right-hand side function of implicit Runge-Kutta methods.
-  A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
+
+`A` - if positive, the upper bound of the Wiener process increments; if `A=0.0`, no truncation.
 """
 mutable struct ParametersSISPRK{DT, TT, ET <: SPSDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
     equ::ET
@@ -74,10 +74,10 @@ function ParametersSISPRK(equ::ET, tab::TableauSISPRK{TT}, Δt::TT, ΔW::Vector{
 end
 
 
-"""
-Structure for holding the internal stages Q, the values of the drift vector
-and the diffusion matrix evaluated at the internal stages V=v(Q), B=B(Q),
-and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
+@doc raw"""
+Structure for holding the internal stages `Q`, the values of the drift vector
+and the diffusion matrix evaluated at the internal stages `V=v(Q)`, `B=B(Q)`,
+and the increments `Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW`.
 """
 struct IntegratorCacheSISPRK{DT}
     Q ::Vector{Vector{DT}}
@@ -195,13 +195,14 @@ function update_params!(int::IntegratorSISPRK, sol::AtomicSolutionPSDE)
 end
 
 
-"""
-Unpacks the data stored in x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ..., Z[1][1], Z[1][2], ... Z[1][D], Z[2][1], ...)
-into Y, Z, calculates the internal stages Q, P, the values of the RHS
-of the SDE ( vi(Q,P), fi(Q,P), Bi(Q,P) and Gi(Q,P) ), and assigns them to V[i], F[i], B[i] and G[i].
+@doc raw"""
+Unpacks the data stored in `x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ..., Z[1][1], Z[1][2], ... Z[1][D], Z[2][1], ...)`
+into `Y`, `Z`, calculates the internal stages `Q`, `P`, the values of the RHS
+of the SDE ( `vi(Q,P)`, `fi(Q,P)`, `Bi(Q,P)` and `Gi(Q,P)` ), and assigns them
+to `V[i]`, `F[i]`, `B[i]` and `G[i]`.
 Unlike for FIRK, here
-Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW,
-Z = Δt â1_drift f1(Q,P) + Δt â2_drift f2(Q,P) + â1_diff G1(Q,P) ΔW + â2_diff G2(Q,P) ΔW.
+`Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW`,
+`Z = Δt â1_drift f1(Q,P) + Δt â2_drift f2(Q,P) + â1_diff G1(Q,P) ΔW + â2_diff G2(Q,P) ΔW`.
 """
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSISPRK{ST},
                          params::ParametersSISPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
@@ -293,13 +294,13 @@ end
 end
 
 
-"""
-This function computes initial guesses for Y, Z and assigns them to int.solver.x
+@doc raw"""
+This function computes initial guesses for `Y`, `Z` and assigns them to `int.solver.x`.
 
 For SISPRK we are NOT IMPLEMENTING an InitialGuess.
 
 SIMPLE SOLUTION
-The simplest initial guess for Y, Z is 0
+The simplest initial guess for `Y`, `Z` is 0.
 """
 function initial_guess!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
     int.solver.x .= 0
@@ -319,9 +320,7 @@ function update_solution!(sol::AtomicSolutionPSDE{T},
 end
 
 
-"""
-Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator.
-"""
+"Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator."
 function Integrators.integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int, sol)

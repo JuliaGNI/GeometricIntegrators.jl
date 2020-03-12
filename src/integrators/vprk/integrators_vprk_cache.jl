@@ -1,4 +1,4 @@
-"""
+@doc raw"""
 Variational partitioned Runge-Kutta integrator cache.
 
 ### Fields

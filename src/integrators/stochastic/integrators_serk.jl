@@ -1,12 +1,11 @@
-"""
+@doc raw"""
 Holds the tableau of a stochastic explicit Runge-Kutta method.
 
 Order of the tableau is not included, because unlike in the deterministic
 setting, it depends on the properties of the noise (e.g., the dimension of
-the Wiener process and the commutativity properties of the diffusion matrix)
+the Wiener process and the commutativity properties of the diffusion matrix).
 
-Orders stored in qdrift, qdiff and qdiff2 are understood as the classical orders of these methods.
-
+Orders stored in `qdrift`, `qdiff` and `qdiff2` are understood as the classical orders of these methods.
 """
 struct TableauSERK{T} <: AbstractTableauERK{T}
     name::Symbol
@@ -91,9 +90,7 @@ end
 @inline Base.eltype(integrator::IntegratorSERK{DT}) where {DT} = DT
 
 
-"""
-Integrate SDE with explicit Runge-Kutta integrator.
-"""
+"Integrate SDE with explicit Runge-Kutta integrator."
 function Integrators.integrate_step!(int::IntegratorSERK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
     local tᵢ::TT
     local ydrift::DT

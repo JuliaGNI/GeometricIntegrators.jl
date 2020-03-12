@@ -1,4 +1,4 @@
-"""
+@doc raw"""
 `ParametersDGVIP0`: Parameters for right-hand side function of Discontinuous Galerkin Variational Integrator.
 
 ### Parameters
@@ -323,7 +323,7 @@ function compute_rhs!(b::Vector{ST}, cache::IntegratorCacheDGVI{ST,D,S,R},
 end
 
 
-"""
+@doc raw"""
 `IntegratorDGVIP0`: Discontinuous Galerkin Variational Integrator.
 
 ### Parameters

@@ -1,14 +1,14 @@
-"""
+@doc raw"""
 Holds the tableau of a stochastic implicit Runge-Kutta method.
 
-qdrift holds the RK coefficients for the drift part,
-qdiff holds the RK coefficients for the diffusion part of the SDE.
+`qdrift` holds the RK coefficients for the drift part,
+`qdiff` holds the RK coefficients for the diffusion part of the SDE.
 
 Order of the tableau is not included, because unlike in the deterministic
 setting, it depends on the properties of the noise (e.g., the dimension of
-the Wiener process and the commutativity properties of the diffusion matrix)
+the Wiener process and the commutativity properties of the diffusion matrix).
 
-Orders stored in qdrift and qdiff are understood as the classical orders of these methods.
+Orders stored in `qdrift` and `qdiff` are understood as the classical orders of these methods.
 """
 struct TableauSIRK{T} <: AbstractTableauIRK{T}
     name::Symbol
@@ -33,10 +33,10 @@ end
 # TODO function readTableauSIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-"""
+@doc raw"""
 Parameters for right-hand side function of implicit Runge-Kutta methods.
 
-A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
+`A` - if positive, the upper bound of the Wiener process increments; if `A=0.0`, no truncation
 """
 mutable struct ParametersSIRK{DT, TT, ET <: SDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
     equ::ET
@@ -56,10 +56,10 @@ function ParametersSIRK(equ::ET, tab::TableauSIRK{TT}, Δt::TT, ΔW::Vector{DT},
 end
 
 
-"""
-Structure for holding the internal stages Q, the values of the drift vector
-and the diffusion matrix evaluated at the internal stages V=v(Q), B=B(Q),
-and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
+@doc raw"""
+Structure for holding the internal stages `Q`, the values of the drift vector
+and the diffusion matrix evaluated at the internal stages `V=v(Q)`, `B=B(Q)`,
+and the increments `Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW`.
 """
 struct IntegratorCacheSIRK{DT}
     Q::Vector{Vector{DT}}
@@ -168,11 +168,11 @@ function update_params!(int::IntegratorSIRK, sol::AtomicSolutionSDE)
 end
 
 
-"""
-Unpacks the data stored in x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ...)
-into Y, calculates the internal stages Q, the values of the RHS
-of the SDE ( v(Q) and B(Q) ), and assigns them to V and B.
-Unlike for FIRK, here Y = Δt a v(Q) + â B(Q) ΔW
+@doc raw"""
+Unpacks the data stored in `x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ...)`
+into `Y`, calculates the internal stages `Q`, the values of the RHS
+of the SDE ( v(Q) and B(Q) ), and assigns them to `V` and `B`.
+Unlike for FIRK, here `Y = Δt a v(Q) + â B(Q) ΔW`
 """
 function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, B::Vector{Matrix{ST}}, Y::Vector{Vector{ST}},
                          params::ParametersSIRK{DT,TT}) where {ST,DT,TT}
@@ -235,17 +235,17 @@ end
 end
 
 
-"""
-This function computes initial guesses for Y and assigns them to int.solver.x
+@doc raw"""
+This function computes initial guesses for Y and assigns them to `int.solver.x`.
 The prediction is calculated using an explicit integrator.
 
 SIMPLE SOLUTION
-The simplest initial guess for Y is 0
-int.solver.x .= zeros(eltype(int), int.params.tab.s*ndims(int))
+The simplest initial guess for `Y` is 0:
+`int.solver.x .= zeros(eltype(int), int.params.tab.s*ndims(int))`
 
 USING AN EXPLICIT INTEGRATOR TO COMPUTE AN INITIAL GUESS
 Below we use the R2 method of Burrage & Burrage to calculate
-the internal stages at the times c[1]...c[s].
+the internal stages at the times `c[1]...c[s]`.
 This approach seems to give very good approximations if the time step
 and magnitude of noise are not too large. If the noise intensity is too big,
 one may have to perform a few iterations of the explicit method with a smaller
@@ -253,10 +253,9 @@ time step, use a higher-order explicit method (e.g. CL or G5), or use
 the simple solution above.
 
 When calling this function, int.params should contain the data:
-int.params.q - the solution at the previous time step
-int.params.t - the time of the previous step
-int.params.ΔW- the increment of the Brownian motion for the current step
-
+`int.params.q`  - the solution at the previous time step
+`int.params.t`  - the time of the previous step
+`int.params.ΔW` - the increment of the Brownian motion for the current step
 """
 function initial_guess!(int::IntegratorSIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
     local t2::TT
@@ -289,9 +288,7 @@ function initial_guess!(int::IntegratorSIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT
 end
 
 
-"""
-Integrate SDE with a stochastic implicit Runge-Kutta integrator.
-"""
+"Integrate SDE with a stochastic implicit Runge-Kutta integrator."
 function Integrators.integrate_step!(int::IntegratorSIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int, sol)

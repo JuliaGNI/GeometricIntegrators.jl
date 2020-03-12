@@ -126,7 +126,7 @@ mutable struct IntegratorCachePGLRK{DT,D,S} <: ODEIntegratorCache{DT,D}
 end
 
 
-"""
+@doc raw"""
 Projected Gauss-Legendre Runge-Kutta integrator.
 
     Reference: LUIGI BRUGNANO, FELICE IAVERNARO, AND DONATO TRIGIANTE.

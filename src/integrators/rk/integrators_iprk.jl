@@ -60,7 +60,7 @@ mutable struct ParametersIPRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,T
 end
 
 
-"""
+@doc raw"""
 Implicit partitioned Runge-Kutta integrator cache.
 
 ### Fields

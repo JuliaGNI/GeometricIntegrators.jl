@@ -1,14 +1,13 @@
-"""
+@doc raw"""
 Holds the tableau of a stochastic implicit partitioned Runge-Kutta method.
 qdrift, pdrift hold the RK coefficients for the drift part,
 and qdiff, pdiff hold the RK coefficients for the diffusion part of the SDE.
 
 Order of the tableau is not included, because unlike in the deterministic
 setting, it depends on the properties of the noise (e.g., the dimension of
-the Wiener process and the commutativity properties of the diffusion matrix)
+the Wiener process and the commutativity properties of the diffusion matrix).
 
 Orders stored in qdrift and qdiff are understood as the classical orders of these methods.
-
 """
 struct TableauSIPRK{T} <: AbstractTableauIRK{T}
     name::Symbol
@@ -36,9 +35,10 @@ end
 # TODO function readTableauSFIRKFromFile(dir::AbstractString, name::AbstractString)
 
 
-"""
+@doc raw"""
 Parameters for right-hand side function of implicit Runge-Kutta methods.
-A - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
+
+`A` - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
 """
 mutable struct ParametersSIPRK{DT, TT, ET <: PSDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
     equ::ET
@@ -59,10 +59,10 @@ function ParametersSIPRK(equ::ET, tab::TableauSIPRK{TT}, Δt::TT, ΔW::Vector{DT
 end
 
 
-"""
+@doc raw"""
 Structure for holding the internal stages Q, the values of the drift vector
-and the diffusion matrix evaluated at the internal stages VQ=v(Q), BQ=B(Q),
-and the increments Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW
+and the diffusion matrix evaluated at the internal stages `V=v(Q)`, `B=B(Q)`,
+and the increments `Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW`.
 """
 struct IntegratorCacheSIPRK{DT}
     Q::Vector{Vector{DT}}
@@ -202,13 +202,13 @@ function update_params!(int::IntegratorSIPRK, sol::AtomicSolutionPSDE)
 end
 
 
-"""
-Unpacks the data stored in x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ..., Z[1][1], Z[1][2], ... Z[1][D], Z[2][1], ...)
-into Y, Z, calculates the internal stages Q, P, the values of the RHS
-of the SDE ( v(Q,P), f(Q,P), B(Q,P) and G(Q,P) ), and assigns them to V, F, B and G.
+@doc raw"""
+Unpacks the data stored in `x = (Y[1][1], Y[1][2], ... Y[1][D], Y[2][1], ..., Z[1][1], Z[1][2], ... Z[1][D], Z[2][1], ...)`
+into `Y`, `Z`, calculates the internal stages `Q`, `P`, the values of the RHS
+of the SDE ( `v(Q,P)`, `f(Q,P)`, `B(Q,P)` and `G(Q,P)` ), and assigns them to `V`, `F`, `B` and `G`.
 Unlike for FIRK, here
-Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW,
-Z = Δt â_drift v(Q,P) + â_diff B(Q,P) ΔW.
+`Y = Δt a_drift v(Q,P) + a_diff B(Q,P) ΔW`,
+`Z = Δt â_drift v(Q,P) + â_diff B(Q,P) ΔW`.
 """
 function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, P::Vector{Vector{ST}},
                                         V::Vector{Vector{ST}}, F::Vector{Vector{ST}},
@@ -289,13 +289,13 @@ end
 end
 
 
-"""
-This function computes initial guesses for Y, Z and assigns them to int.solver.x
+@doc raw"""
+This function computes initial guesses for `Y`, `Z` and assigns them to int.solver.x
 The prediction is calculated using an explicit integrator.
 
 SIMPLE SOLUTION
-The simplest initial guess for Y, Z is 0
-int.solver.x .= zeros(eltype(int), 2*int.params.tab.s*ndims(int))
+The simplest initial guess for `Y`, `Z` is 0:
+`int.solver.x .= zeros(eltype(int), 2*int.params.tab.s*ndims(int))`
 
 USING AN EXPLICIT INTEGRATOR TO COMPUTE AN INITIAL GUESS
 Below we use the R2 method of Burrage & Burrage to calculate
@@ -307,11 +307,10 @@ time step, use a higher-order explicit method (e.g. CL or G5), or use
 the simple solution above.
 
 When calling this function, int.params should contain the data:
-int.params.q - the q solution at the previous time step
-int.params.p - the p solution at the previous time step
-int.params.t - the time of the previous step
-int.params.ΔW- the increment of the Brownian motion for the current step
-
+`int.params.q` - the q solution at the previous time step
+`int.params.p` - the p solution at the previous time step
+`int.params.t` - the time of the previous step
+`int.params.ΔW`- the increment of the Brownian motion for the current step
 """
 function initial_guess!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
 
@@ -394,9 +393,7 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,
 end
 
 
-"""
-Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator.
-"""
+"Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator."
 function Integrators.integrate_step!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int, sol)

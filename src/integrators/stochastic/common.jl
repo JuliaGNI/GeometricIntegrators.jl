@@ -1,13 +1,13 @@
-"""
+@doc raw"""
 Update solution for stochastic Runge-Kutta methods (SIRK and WIRK)
 
-- x: the solution vector to be updated
-- V: the matrix containing the drift vector evaluated at the internal stages v(Q_i) (SIRK) or v(Q0_i) (WIRK)
-- B: the array containing the diffusion matrix evaluated at the internal stages B(Q_i) (SIRK) or B(Q1^(l)_i) (WIRK)
-- bdrift: the Runge-Kutta coefficients for the drift part
-- bdiff:  the Runge-Kutta coefficients for the diffusion part
-- Δt: the time step
-- ΔW: the increments of the Brownian motion (SFIRK) or the increments represented by the random variables Î^(k) (WFIRK)
+- `x`: the solution vector to be updated
+- `V`: the matrix containing the drift vector evaluated at the internal stages v(Q_i) (SIRK) or v(Q0_i) (WIRK)
+- `B`: the array containing the diffusion matrix evaluated at the internal stages B(Q_i) (SIRK) or B(Q1^(l)_i) (WIRK)
+- `bdrift`: the Runge-Kutta coefficients for the drift part
+- `bdiff`:  the Runge-Kutta coefficients for the diffusion part
+- `Δt`: the time step
+- `ΔW`: the increments of the Brownian motion (SFIRK) or the increments represented by the random variables Î^(k) (WFIRK)
 """
 function update_solution!(sol::AtomicSolutionSDE{T}, V::Vector{Vector{T}}, B::Vector{Matrix{T}},
                             bdrift::Vector{T}, bdiff::Vector{T}, Δt::T, ΔW::Vector{T}, Δy::Vector{T}=zero(ΔW)) where {T}
@@ -43,18 +43,18 @@ function update_solution!(sol::AtomicSolutionSDE{T}, V::Vector{Vector{T}}, B::Ve
 end
 
 
-"""
+@doc raw"""
 Update solution for stochastic Runge-Kutta methods (SERK)
 
-- x: the solution vector to be updated
-- V: the matrix containing the drift vector evaluated at the internal stages v(Q_i)
-- B: the array containing the diffusion matrix evaluated at the internal stages B(Q_i)
-- bdrift: the Runge-Kutta coefficients for the drift part
-- bdiff:  the Runge-Kutta coefficients for the ΔW terms of the diffusion part
-- bdiff2: the Runge-Kutta coefficients for the ΔZ terms of the diffusion part
-- Δt: the time step
-- ΔW: the increments of the Brownian motion
-- ΔZ: the integrals of the increments of the Brownian motion
+- `x`: the solution vector to be updated
+- `V`: the matrix containing the drift vector evaluated at the internal stages v(Q_i)
+- `B`: the array containing the diffusion matrix evaluated at the internal stages B(Q_i)
+- `bdrift`: the Runge-Kutta coefficients for the drift part
+- `bdiff`:  the Runge-Kutta coefficients for the ΔW terms of the diffusion part
+- `bdiff2`: the Runge-Kutta coefficients for the ΔZ terms of the diffusion part
+- `Δt`: the time step
+- `ΔW`: the increments of the Brownian motion
+- `ΔZ`: the integrals of the increments of the Brownian motion
 """
 function update_solution!(sol::AtomicSolutionSDE{T}, V::Vector{Vector{T}}, B::Vector{Matrix{T}},
                             bdrift::Vector{T}, bdiff::Vector{T}, bdiff2::Vector{T},
@@ -82,16 +82,16 @@ function update_solution!(sol::AtomicSolutionSDE{T}, V::Vector{Vector{T}}, B::Ve
 end
 
 
-"""
+@doc raw"""
 Update solution for stochastic partitioned Runge-Kutta methods
 
-- q, p: the solution vector to be updated
-- V, F: the matrix containing the drift vectors evaluated at the internal stages v(Q_i), f(Q_i)
-- B, G: the array containing the diffusion matrices evaluated at the internal stages B(Q_i), G(Q_i)
-- bqdrift, bpdrift: the Runge-Kutta coefficients for the drift parts of the q and p equations
-- bqdiff, bpdiff:   the Runge-Kutta coefficients for the diffusion parts of the q and p equations
-- Δt: the time step
-- ΔW: the increments of the Brownian motion
+- `q`, `p`: the solution vector to be updated
+- `V`, `F`: the matrix containing the drift vectors evaluated at the internal stages v(Q_i), f(Q_i)
+- `B`, `G`: the array containing the diffusion matrices evaluated at the internal stages B(Q_i), G(Q_i)
+- `bqdrift`, `bpdrift`: the Runge-Kutta coefficients for the drift parts of the q and p equations
+- `bqdiff`, `bpdiff`:   the Runge-Kutta coefficients for the diffusion parts of the q and p equations
+- `Δt`: the time step
+- `ΔW`: the increments of the Brownian motion
 """
 function update_solution!(sol::AtomicSolutionPSDE{T},
                           V::Vector{Vector{T}}, F::Vector{Vector{T}},
@@ -136,16 +136,16 @@ function update_solution!(sol::AtomicSolutionPSDE{T},
 end
 
 
-"""
+@doc raw"""
 Update solution for stochastic split partitioned Runge-Kutta methods
 
-- q, p: the solution vector to be updated
-- V, F1, F2: the matrix containing the drift vectors evaluated at the internal stages v(Q_i), fi(Q_i)
-- B, G1, G2: the array containing the diffusion matrices evaluated at the internal stages B(Q_i), Gi(Q_i)
-- bqdrift, bpdrift1, bpdrift2: the Runge-Kutta coefficients for the drift parts of the q and p equations
-- bqdiff, bpdiff1, bpdiff2:    the Runge-Kutta coefficients for the diffusion parts of the q and p equations
-- Δt: the time step
-- ΔW: the increments of the Brownian motion
+- `q`, `p`: the solution vector to be updated
+- `V`, `F1`, `F2`: the matrix containing the drift vectors evaluated at the internal stages v(Q_i), fi(Q_i)
+- `B`, `G1`, `G2`: the array containing the diffusion matrices evaluated at the internal stages B(Q_i), Gi(Q_i)
+- `bqdrift`, `bpdrift1`, `bpdrift2`: the Runge-Kutta coefficients for the drift parts of the q and p equations
+- `bqdiff`, `bpdiff1`, `bpdiff2`:    the Runge-Kutta coefficients for the diffusion parts of the q and p equations
+- `Δt`: the time step
+- `ΔW`: the increments of the Brownian motion
 """
 function update_solution!(sol::AtomicSolutionPSDE{T},
                             V::Vector{Vector{T}}, F1::Vector{Vector{T}}, F2::Vector{Vector{T}},
@@ -191,18 +191,18 @@ function update_solution!(sol::AtomicSolutionPSDE{T},
 end
 
 
-"""
+@doc raw"""
 Update solution for weak Runge-Kutta methods WERK
 
-- x:  the solution vector to be updated
-- V:  the matrix containing the drift vector evaluated at the internal stages v(Q_i)
-- B1: the array containing the diffusion matrix evaluated at the internal stages H^(l)_i, such that B1[:,l,i] is evaluated at H^(l)_i
-- B2: the array containing the diffusion matrix evaluated at the internal stages Ĥ^(l)_i, such that B2[:,l,i] is evaluated at Ĥ^(l)_i
-- α:  the Runge-Kutta coefficients for the drift part
-- β1: the Runge-Kutta coefficients for the diffusion term with the random increments
-- β2: the Runge-Kutta coefficients for the second diffusion term
-- Δt: the time step
-- ΔW: the increments of the Brownian motion represented by the random variables Î^(k)
+- `x`:  the solution vector to be updated
+- `V`:  the matrix containing the drift vector evaluated at the internal stages v(Q_i)
+- `B1`: the array containing the diffusion matrix evaluated at the internal stages H^(l)_i, such that B1[:,l,i] is evaluated at H^(l)_i
+- `B2`: the array containing the diffusion matrix evaluated at the internal stages Ĥ^(l)_i, such that B2[:,l,i] is evaluated at Ĥ^(l)_i
+- `α`:  the Runge-Kutta coefficients for the drift part
+- `β1`: the Runge-Kutta coefficients for the diffusion term with the random increments
+- `β2`: the Runge-Kutta coefficients for the second diffusion term
+- `Δt`: the time step
+- `ΔW`: the increments of the Brownian motion represented by the random variables Î^(k)
 """
 function update_solution!(sol::AtomicSolutionSDE{T}, V::Vector{Vector{T}},
                             B1::Vector{Matrix{T}}, B2::Vector{Matrix{T}}, α::Vector{T},
