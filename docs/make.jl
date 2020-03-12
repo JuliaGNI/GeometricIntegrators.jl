@@ -43,3 +43,5 @@ makedocs(
 deploydocs(
     repo   = "github.com/DDMGNI/GeometricIntegrators.jl.git",
 )
+
+rm("src/tutorial", recursive=true)
