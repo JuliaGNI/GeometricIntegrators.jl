@@ -121,10 +121,10 @@ end
 
 @inline CommonFunctions.periodicity(equation::PDAE) = equation.periodicity
 
-function get_function_tuple(equation::PDAE{DT,TT,VT,FT,HT}) where {DT, TT, VT, FT, UT, GT, ϕT, HT <: Function}
+function get_function_tuple(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT,HT}) where {DT, TT, VT, FT, UT, GT, ϕT, HT <: Function}
     NamedTuple{(:v,:f,:u,:g,:ϕ,:h)}((equation.v, equation.f, equation.u, equation.g, equation.ϕ, equation.h))
 end
 
-function get_function_tuple(equation::PDAE{DT,TT,VT,FT,HT}) where {DT, TT, VT, FT, UT, GT, ϕT, HT <: Nothing}
+function get_function_tuple(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT,HT}) where {DT, TT, VT, FT, UT, GT, ϕT, HT <: Nothing}
     NamedTuple{(:v,:f,:u,:g,:ϕ)}((equation.v, equation.f, equation.u, equation.g, equation.ϕ))
 end
