@@ -84,6 +84,29 @@
 
 
     ################################################################################
+    # Test HODE: Hamiltonian Ordinary Differential Equation
+    ################################################################################
+
+    hode_eqs = (iode_v, iode_f, iode_h)
+
+    hode  = HODE(eltype(q₀), 1, 1, 1, hode_eqs..., t₀, q₀, p₀)
+    hode1 = HODE(hode_eqs..., t₀, q₀, p₀)
+    hode2 = HODE(hode_eqs..., q₀, p₀)
+
+    @test ndims(hode) == 1
+    @test periodicity(hode) == zero(q₀)
+    @test get_function_tuple(hode) == NamedTuple{(:v, :f, :h)}(hode_eqs)
+
+    @test hode == hode1
+    @test hode == hode2
+
+    @test hash(hode1) == hash(hode2)
+
+    @test hode == similar(hode, t₀, q₀, p₀)
+    @test hode == similar(hode, q₀, p₀)
+
+
+    ################################################################################
     # Test VODE: Variational Ordinary Differential Equation
     ################################################################################
 
