@@ -5,13 +5,13 @@
     # Test ODE: Ordinary Differential Equation
     ################################################################################
 
-    function f_ode(t, x, f)
+    function ode_v(t, x, f)
         f[1] = x[1]
     end
 
-    ode  = ODE(eltype(q₀), 1, 1, 1, f_ode, t₀, q₀)
-    ode1 = ODE(f_ode, t₀, q₀)
-    ode2 = ODE(f_ode, q₀)
+    ode  = ODE(eltype(q₀), 1, 1, 1, ode_v, t₀, q₀)
+    ode1 = ODE(ode_v, t₀, q₀)
+    ode2 = ODE(ode_v, q₀)
 
     @test ode == ode1
     @test ode == ode2
@@ -26,17 +26,17 @@
     # Test PODE: Partitioned Ordinary Differential Equation
     ################################################################################
 
-    function v_pode(t, q, p, v)
+    function pode_v(t, q, p, v)
         v[1] = q[1]
     end
 
-    function f_pode(t, q, p, f)
+    function pode_f(t, q, p, f)
         f[1] = 2p[1]
     end
 
-    pode  = PODE(eltype(q₀), 1, 1, 1, v_pode, f_pode, t₀, q₀, p₀)
-    pode1 = PODE(v_pode, f_pode, t₀, q₀, p₀)
-    pode2 = PODE(v_pode, f_pode, q₀, p₀)
+    pode  = PODE(eltype(q₀), 1, 1, 1, pode_v, pode_f, t₀, q₀, p₀)
+    pode1 = PODE(pode_v, pode_f, t₀, q₀, p₀)
+    pode2 = PODE(pode_v, pode_f, q₀, p₀)
 
     @test pode == pode1
     @test pode == pode2
@@ -107,23 +107,23 @@
     # Test DAE: Differential Algebraic Equation
     ################################################################################
 
-    function v_dae(t, x, v)
+    function dae_v(t, x, v)
         v[1] = x[1]
         v[2] = x[2]
     end
 
-    function u_dae(t, x, λ, u)
+    function dae_u(t, x, λ, u)
         u[1] = +λ[1]
         u[2] = -λ[1]
     end
 
-    function ϕ_dae(t, x, λ, ϕ)
+    function dae_ϕ(t, x, λ, ϕ)
         ϕ[1] = x[2] - x[1]
     end
 
-    dae  = DAE(eltype(q₀), 1, 2, 1, 1, v_dae, u_dae, ϕ_dae, t₀, x₀, λ₀)
-    dae1 = DAE(v_dae, u_dae, ϕ_dae, t₀, x₀, λ₀)
-    dae2 = DAE(v_dae, u_dae, ϕ_dae, x₀, λ₀)
+    dae  = DAE(eltype(q₀), 1, 2, 1, 1, dae_v, dae_u, dae_ϕ, t₀, x₀, λ₀)
+    dae1 = DAE(dae_v, dae_u, dae_ϕ, t₀, x₀, λ₀)
+    dae2 = DAE(dae_v, dae_u, dae_ϕ, x₀, λ₀)
 
     @test dae == dae1
     @test dae == dae2
@@ -139,11 +139,11 @@
     ################################################################################
 
     function pdae_v(t, q, p, v)
-        v[1] = q[1]
+        v[1] = p[1]
     end
 
     function pdae_f(t, q, p, f)
-        f[1] = p[1]
+        f[1] = q[1]
     end
 
     function pdae_p(t, q, v, p)
