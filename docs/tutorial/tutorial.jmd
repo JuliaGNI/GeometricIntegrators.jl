@@ -3,6 +3,8 @@ title: GeometricIntegrators.jl Tutorial
 author: Michael Kraus
 ---
 
+# Tutorial
+
 ## Introduction
 
 
@@ -25,7 +27,7 @@ int = Integrator(ode, getTableauExplicitEuler(), 0.1);
 ```
 and compute the solution for $n_t = 10$ time steps,
 ```julia
-sol = integrate(int, 10);
+sol = integrate(ode, int, 10);
 ```
 Plot and compare with the exact solution
 ```julia
@@ -42,26 +44,27 @@ In *GeometricIntegrators.jl* we distinguish between three basic types of equatio
 * ordinary differential equations (ODEs),
 * differential algebraic equations (DAEs),
 * stochastic differential equations (SDEs).
+
 For each type, there are several subtypes
 * "normal" equations (ODE, DAE, SDE),
 * implicit equations (IODE, IDAE),
-* variational equations (VODE),
-* Hamiltonian equations (HDAE),
+* variational equations (VODE, VDAE),
+* Hamiltonian equations (HODE, HDAE),
 * partitioned equations (PODE, PDAE, PSDE),
-* split equations (SODE).
+* split equations (SODE, SPDAE).
 
 
 #### Ordinary differential equations
 
 Consider an ODE of the form
-$$
+```math
 \dot{x} (t) = f(t, x(t)) ,
-$$
+```
 where $\dot{x}$ denotes the derivative of $x$ and $f$ the vector field of the
 equation, which is assumed to depend on both $t$ and $x$.
 In the following, we will solve the mathematical pendulum, whose equations are
 given by
-$$
+```math
 \begin{pmatrix}
 \dot{x}_1 \\
 \dot{x}_2 \\
@@ -71,7 +74,7 @@ $$
 x_2 \\
 \sin (x_1) \\
 \end{pmatrix} .
-$$
+```
 
 Creating an `ODE` object requires the prescription of a function that computes
 the vector field $f$, e.g.,
@@ -92,25 +95,25 @@ ODE(<vector field>, <initial conditions>)
 ```
 specifically,
 ```julia
-ode = ODE(ẋ, x₀)
+ode = ODE(ẋ, x₀);
 ```
 The initial time, `ode.t₀` is assumed to be $0$ be default. It can also be specified explicitly by
 ```julia
 t₀  = 1.0
-ode = ODE(ẋ, t₀, x₀)
+ode = ODE(ẋ, t₀, x₀);
 ```
 
 
 #### Partitioned ordinary differential equations
 
 The pendulum problem is a Hamiltonian system that can also be expressed as
-\\[
+```math
 \dot{q} = \frac{\partial H}{\partial p} = p ,
 \hspace{3em}
 \dot{p} = - \frac{\partial H}{\partial q} = \sin (q) ,
 \hspace{3em}
 H (q,p) = \frac{1}{2} p^2 + \cos (q) .
-\\]
+```
 This structure, namely the partitioning into two sets of variables $(q,p)$
 instead of $x$, can be exploited for more efficient integration.
 Such equations can be defined in terms of a partitioned ODE, where the vector
@@ -124,7 +127,7 @@ function ṗ(t, q, p, f)
     f[1] = sin(q[1])
 end
 
-pode = PODE(q̇, ṗ, [acos(0.4)], [0.0])
+pode = PODE(q̇, ṗ, [acos(0.4)], [0.0]);
 ```
 The first two arguments to the PODE constructor are the functions that determine
 the vector fields of the equations $\dot{q} (t) = v(t, q(t), p(t))$ and
@@ -144,12 +147,12 @@ general linear methods (_planned_).
 In order to instantiate many of the standard integrators, one needs to specify
 an ODE, a tableau and a timestep, e.g.,
 ```julia
-int = Integrator(ode, getTableauExplicitEuler(), 0.1)
+int = Integrator(ode, getTableauExplicitEuler(), 0.1);
 ```
 In order to run the integrator, the `integrate()` functions is called, passing
 an integrator object and the number of time steps to integrate:
 ```julia
-sol = integrate(int, 10)
+sol = integrate(ode, int, 10);
 ```
 The integrate function automatically creates an appropriate solution object,
 that contains the result of the integration.
@@ -158,7 +161,7 @@ For a Hamiltonian system, defined as a PODE, a different tableau might be more
 appropriate, for example a symplectic Euler method,
 ```julia
 int = Integrator(pode, getTableauSymplecticEulerA(), 0.1)
-sol = integrate(int, 10)
+sol = integrate(pode, int, 10);
 ```
 This creates a different integrator, which exploits the partitioned structure
 of the system. The solution return by the integrate step will also be a different
@@ -172,36 +175,36 @@ like outlined above. In particular, this includes the following methods:
 
 #### Explicit Runge-Kutta Methods
 
-| Function           | Order | Method             |
-|--------------------|-------|--------------------|
-| `getTableauExplicitEuler()`    | 1 | Explicit / Forward Euler    |
-| `getTableauExplicitMidpoint()` | 2 | Explicit Midpoint |
-| `getTableauHeun()`   | 2 | Heun's Method  |
-| `getTableauKutta()`  | 3 | Kutta's Method |
-| `getTableauERK4()`   | 4 | Explicit 4th order Runge-Kutta (1/6 rule) |
-| `getTableauERK438()` | 4 | Explicit 4th order Runge-Kutta (3/8 rule) |
+| Function                       | Order | Method                      |
+|--------------------------------|-------|-----------------------------|
+| `getTableauExplicitEuler()`    | 1     | Explicit / Forward Euler    |
+| `getTableauExplicitMidpoint()` | 2     | Explicit Midpoint           |
+| `getTableauHeun()`             | 2     | Heun's Method               |
+| `getTableauKutta()`            | 3     | Kutta's Method              |
+| `getTableauERK4()`             | 4     | Explicit 4th order Runge-Kutta (1/6 rule) |
+| `getTableauERK438()`           | 4     | Explicit 4th order Runge-Kutta (3/8 rule) |
 
 
 #### Fully Implicit Runge-Kutta Methods
 
-| Function           | Order | Method             |
-|--------------------|-------|--------------------|
-| `getTableauImplicitEuler()`    | 1  | Implicit / Backward Euler  |
-| `getTableauImplicitMidpoint()` | 2  | Implicit Midpoint          |
-| `getTableauRadIIA2()`          | 3  | Radau-IIA s=2              |
-| `getTableauRadIIA3()`          | 5  | Radau-IIA s=3              |
-| `getTableauSRK3()`             | 4  | Symmetric Runge-Kutta s=3  |
-| `getTableauGLRK(s)`            | 2s | Gauss-Legendre Runge-Kutta |
+| Function                       | Order | Method                      |
+|--------------------------------|-------|-----------------------------|
+| `getTableauImplicitEuler()`    | 1     | Implicit / Backward Euler   |
+| `getTableauImplicitMidpoint()` | 2     | Implicit Midpoint           |
+| `getTableauRadIIA2()`          | 3     | Radau-IIA s=2               |
+| `getTableauRadIIA3()`          | 5     | Radau-IIA s=3               |
+| `getTableauSRK3()`             | 4     | Symmetric Runge-Kutta s=3   |
+| `getTableauGLRK(s)`            | 2s    | Gauss-Legendre Runge-Kutta  |
 
 
 #### Explicit Partitioned Runge-Kutta Methods
 
-| Function           | Order | Method             |
-|--------------------|-------|--------------------|
-| `getTableauSymplecticEulerA()` | 1 | Symplectic Euler A |
-| `getTableauSymplecticEulerB()` | 1 | Symplectic Euler B |
-| `getTableauLobattoIIIAIIIB2()` | 2 | Lobatto-IIIA-IIIB  |
-| `getTableauLobattoIIIBIIIA2()` | 2 | Lobatto-IIIB-IIIA  |
+| Function                       | Order | Method             |
+|--------------------------------|-------|--------------------|
+| `getTableauSymplecticEulerA()` | 1     | Symplectic Euler A |
+| `getTableauSymplecticEulerB()` | 1     | Symplectic Euler B |
+| `getTableauLobattoIIIAIIIB2()` | 2     | Lobatto-IIIA-IIIB  |
+| `getTableauLobattoIIIBIIIA2()` | 2     | Lobatto-IIIB-IIIA  |
 
 
 #### Custom Tableaus
@@ -227,7 +230,7 @@ assigns a name to the tableau.
 Such custom tableaus can be used in exactly the same as standard tableaus, e.g., by
 ```julia
 int = Integrator(ode, tab, 0.1)
-sol = integrate(int, 10)
+sol = integrate(ode, int, 10)
 ```
 making it very easy to implement and test new methods.
 
@@ -240,7 +243,7 @@ performant, e.g., when carrying out long-time simulations with intermediate
 saving of the solution.
 In such cases, it is better to preallocate a solution object by
 ```julia
-sol = Solution(ode, 0.1, 10)
+sol = Solution(ode, 0.1, 10);
 ```
 where the first argument is an equation, the second argument is the time step
 and the third argument is the number of time steps that will be computed in one

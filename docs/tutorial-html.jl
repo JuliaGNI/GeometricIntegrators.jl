@@ -1,8 +1,8 @@
 using Weave, GeometricIntegrators
 
-tutorial_path = "src/tutorial.jmd"
+tutorial_path = "tutorial/tutorial.jmd"
 
 # HTML
 weave(tutorial_path,
-  out_path="weave/html",
+  out_path="tutorial/html",
   doctype = "md2html")

@@ -13,7 +13,7 @@ GeometricIntegrators.jl is a library of geometric integrators for ordinary diffe
 ## Manual
 
 ```@contents
-Pages = ["weave/tutorial.md",
+Pages = ["tutorial/tutorial.md",
          "integrators.md"]
 ```
 

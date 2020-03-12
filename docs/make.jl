@@ -1,11 +1,17 @@
 using Documenter
+using Weave
 using GeometricIntegrators
+
+
+weave("tutorial/tutorial.jmd",
+  out_path="src/tutorial",
+  doctype = "multimarkdown")
 
 makedocs(
     sitename = "GeometricIntegrators.jl",
     format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = ["Home" => "index.md",
-             "Tutorial" => "weave/tutorial.md",
+             "Tutorial" => "tutorial/tutorial.md",
              "Integrators" => [
                 "Overview"    => "integrators.md",
                 "Splitting"   => "integrators/splitting.md",
