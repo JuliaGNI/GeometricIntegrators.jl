@@ -1,4 +1,5 @@
 
+using GeometricIntegrators.CommonFunctions
 using GeometricIntegrators.Equations
 using GeometricIntegrators.Equations: function_v_dummy, get_λ₀
 using Test
