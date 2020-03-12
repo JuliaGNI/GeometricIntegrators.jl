@@ -14,13 +14,13 @@ makedocs(
              "Tutorial" => "tutorial/tutorial.md",
              "Integrators" => [
                 "Overview"    => "integrators.md",
-                "Splitting"   => "integrators/splitting.md",
                 "Runge-Kutta" => "integrators/rk.md",
-                "VPRK"        => "integrators/vprk.md",
                 "SPARK"       => "integrators/spark.md",
+                "VPRK"        => "integrators/vprk.md",
                 "CGVI"        => "integrators/cgvi.md",
                 "DGVI"        => "integrators/dgvi.md",
                 "HPG"         => "integrators/hpg.md",
+                "Splitting"   => "integrators/splitting.md",
                 "Stochastic"  => "integrators/stochastic.md"],
              "Modules"  => [
                 "Basis Functions"   => "modules/basis_functions.md",

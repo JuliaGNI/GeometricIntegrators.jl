@@ -51,8 +51,9 @@ The following list provides and overview of supported and planned features.
 - [x] Explicit Partitioned Runge-Kutta Methods (EPRK),
 - [x] Implicit Partitioned Runge-Kutta Methods (IPRK),
 - [ ] Additive Runge-Kutta Methods (ARK),
-- [ ] Partitioned Additive Runge-Kutta Methods (PARK),
+- [x] Partitioned Additive Runge-Kutta Methods (PARK),
 - [ ] Generalised Additive Runge-Kutta Methods (GARK),
+- [ ] Specialised Partitioned Additive Runge-Kutta Methods (SPARK),
 - [ ] Continuous-stage Runge-Kutta Methods (CSRK),
 - [ ] Two-step Runge-Kutta Methods (TSRK),
 - [ ] General Linear Methods (GLM).
@@ -61,7 +62,6 @@ The following list provides and overview of supported and planned features.
 
 - [x] Gauss-Legendre Runge-Kutta Methods (GLRK),
 - [x] Variational Partitioned Runge-Kutta Methods (VPRK),
-- [ ] Specialised Partitioned Additive Runge-Kutta Methods (SPARK),
 - [x] Hamiltonian Partitioned Additive Runge-Kutta Methods (HPARK, HSPARK),
 - [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK, VSPARK),
 - [x] Continuous Galerkin Variational Integrators (CGVI),
