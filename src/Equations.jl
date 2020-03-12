@@ -8,7 +8,7 @@ module Equations
            AbstractEquationSDE, AbstractEquationPSDE
 
     export ODE, IODE, PODE, HODE, VODE, SODE
-    export DAE, IDAE, PDAE, HDAE, VDAE
+    export DAE, IDAE, PDAE, HDAE, VDAE, SPDAE
     export SDE, PSDE, SPSDE
 
     export get_function_tuple
@@ -28,6 +28,7 @@ module Equations
     include("equations/vdae.jl")
 
     include("equations/sode.jl")
+    include("equations/spdae.jl")
 
     include("equations/sde.jl")
     include("equations/psde.jl")

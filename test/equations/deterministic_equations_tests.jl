@@ -295,4 +295,32 @@
     @test sode == similar(sode, t₀, q₀)
     @test sode == similar(sode, q₀)
 
+
+    ################################################################################
+    # Test SPDAE: Split Partitioned Differential Algebraic Equation
+    ################################################################################
+
+    spdae_eqs = ((pdae_v, pdae_u, pdae_u), (pdae_f, pdae_g, pdae_g), pdae_ϕ, pdae_ψ)
+
+    spdae  = SPDAE(eltype(q₀), 1, 1, 1, 1, spdae_eqs..., t₀, q₀, p₀, λ₀)
+    spdae1 = SPDAE(spdae_eqs..., t₀, q₀, p₀, λ₀)
+    spdae2 = SPDAE(spdae_eqs..., t₀, q₀, p₀)
+    spdae3 = SPDAE(spdae_eqs..., q₀, p₀)
+
+    @test ndims(spdae) == 1
+    @test periodicity(spdae) == zero(q₀)
+    @test get_function_tuple(spdae) == NamedTuple{(:v, :f, :ϕ, :ψ)}(spdae_eqs)
+
+    @test spdae == spdae1
+    @test spdae == spdae2
+    @test spdae == spdae3
+
+    @test hash(spdae) == hash(spdae1)
+    @test hash(spdae) == hash(spdae2)
+    @test hash(spdae) == hash(spdae3)
+
+    @test spdae == similar(spdae, t₀, q₀, p₀, λ₀)
+    @test spdae == similar(spdae, t₀, q₀, p₀)
+    @test spdae == similar(spdae, q₀, p₀)
+
 end
