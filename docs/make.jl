@@ -5,7 +5,7 @@ using GeometricIntegrators
 
 weave("tutorial/tutorial.jmd",
   out_path="src/tutorial",
-  doctype = "multimarkdown")
+  doctype = "github")
 
 makedocs(
     sitename = "GeometricIntegrators.jl",

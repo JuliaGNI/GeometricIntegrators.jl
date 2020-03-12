@@ -230,7 +230,7 @@ assigns a name to the tableau.
 Such custom tableaus can be used in exactly the same as standard tableaus, e.g., by
 ```julia
 int = Integrator(ode, tab, 0.1)
-sol = integrate(ode, int, 10)
+sol = integrate(ode, int, 10);
 ```
 making it very easy to implement and test new methods.
 
@@ -261,7 +261,7 @@ for i in 1:10
     #
     # save or process solution
     #
-    ## reset!(sol)
+    # reset!(sol)
 end
 ```
 All solutions have a `t` field holding the series of time steps that has been
