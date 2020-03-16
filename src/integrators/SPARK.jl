@@ -5,9 +5,9 @@ module SPARK
 
     using ..CommonFunctions
     using ..Config
-    using ..Equations
     using ..Solvers
-    using ..Utils
+
+    import ..Equations: VODE, VDAE, HDAE, IDAE, PDAE, get_function_tuple
 
     import ..Solutions: AtomicSolutionPDAE, SolutionVector, update!
 
@@ -23,6 +23,8 @@ module SPARK
                           initialize!
     import ..Integrators: equation, equations, tableau, timestep,
                           eachdim, eachstage, nstages
+
+    import ..Utils: @define
 
 
     export CoefficientsARK, CoefficientsPRK, CoefficientsMRK, CoefficientsIRK,
