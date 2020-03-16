@@ -1,4 +1,4 @@
-@doc raw"""
+"""
 Holds the tableau of a weak implicit Runge-Kutta method.
 
     Reference: Wang, Hong, Xu, "Construction of Symplectic Runge-Kutta Methods for Stochastic Hamiltonian Systems",
@@ -16,7 +16,6 @@ Orders stored in qdrift and qdiff are understood as the classical orders of thes
 `qdiff0.b  = beta`
 `qdrift0.c = c0`
 `qdrift1.c = c1`
-
 """
 struct TableauWIRK{T} <: AbstractTableauIRK{T}
     name::Symbol
@@ -41,13 +40,18 @@ function TableauWIRK(name::Symbol, A0::Matrix{T}, A1::Matrix{T},
                                    B0::Matrix{T}, B1::Matrix{T}, B3::Matrix{T},
                                     α::Vector{T}, β1::Vector{T},
                                    c0::Vector{T}, c1::Vector{T} ) where {T}
-    TableauWIRK(name, CoefficientsRK(name, 0, A0, α, c0), CoefficientsRK(name, 0, A1, α, c1),
-                         CoefficientsRK(name, 0, B0, β1, c0), CoefficientsRK(name, 0, B1, β1, c1), CoefficientsRK(name, 0, B3, β1, c1))
+    TableauWIRK(name, CoefficientsRK(name, 0, A0, α, c0),
+                      CoefficientsRK(name, 0, A1, α, c1),
+                      CoefficientsRK(name, 0, B0, β1, c0),
+                      CoefficientsRK(name, 0, B1, β1, c1),
+                      CoefficientsRK(name, 0, B3, β1, c1))
 end
 
 
 
-"Parameters for right-hand side function of weak implicit Runge-Kutta methods."
+"""
+Parameters for right-hand side function of weak implicit Runge-Kutta methods.
+"""
 mutable struct ParametersWIRK{DT, TT, ET <: SDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
     equ::ET
     tab::TableauWIRK{TT}
@@ -65,7 +69,7 @@ function ParametersWIRK(equ::ET, tab::TableauWIRK{TT}, Δt::TT, ΔW::Vector{DT},
 end
 
 
-@doc raw"""
+"""
 Structure for holding the internal stages `Q0`, and `Q1` the values of the drift vector
 and the diffusion matrix evaluated at the internal stages `V=v(Q0)`, `B=B(Q1)`,
 and the increments `Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW`.
@@ -105,7 +109,9 @@ struct IntegratorCacheWIRK{DT}
     end
 end
 
-"Stochastic implicit Runge-Kutta integrator."
+"""
+Stochastic implicit Runge-Kutta integrator.
+"""
 struct IntegratorWIRK{DT, TT, PT <: ParametersWIRK{DT,TT},
                               ST <: NonlinearSolver{DT}} <: StochasticIntegrator{DT,TT}
     params::PT
@@ -151,7 +157,7 @@ function update_params!(int::IntegratorWIRK, sol::AtomicSolutionSDE)
 end
 
 
-@doc raw"""
+"""
 Unpacks the data stored in
 `x = (Y0[1][1], Y0[1][2]], ... Y0[1][D], ... Y0[S][D], Y1[1][1,1], Y1[1][2,1], ... Y1[1][D,1], Y1[1][1,2], Y1[1][2,2], ... Y1[1][D,2], ... Y1[S][D,M] )`
 into `Y0` and `Y1`, calculates the internal stages `Q0` and `Q1`, the values of the RHS
@@ -214,7 +220,9 @@ Unlike for FIRK, here `Y = Δt a v(Q) + â B(Q) ΔW`.
     end
 end
 
-"Compute stages of weak implicit Runge-Kutta methods."
+"""
+Compute stages of weak implicit Runge-Kutta methods.
+"""
 @generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersWIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
 
     cache = IntegratorCacheWIRK{ST}(D, M, S)
@@ -274,7 +282,7 @@ end
 end
 
 
-@doc raw"""
+"""
 This function computes initial guesses for `Y` and assigns them to int.solver.x
 For WIRK we are NOT IMPLEMENTING an InitialGuess.
 
@@ -290,7 +298,9 @@ function initial_guess!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT
 end
 
 
-"Integrate SDE with a stochastic implicit Runge-Kutta integrator."
+"""
+Integrate SDE with a stochastic implicit Runge-Kutta integrator.
+"""
 function Integrators.integrate_step!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int, sol)
