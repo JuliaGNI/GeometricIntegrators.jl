@@ -83,16 +83,15 @@ struct IntegratorCacheFIRK{DT,D,S} <: ODEIntegratorCache{DT,D}
     end
 end
 
-
-function IntegratorCache(params::ParametersFIRK{DT, TT, D, S}; kwargs...) where {DT, TT, D, S}
+function IntegratorCache(params::ParametersFIRK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
     IntegratorCacheFIRK{DT,D,S}(; kwargs...)
 end
 
-function IntegratorCache{ST}(params::ParametersFIRK{DT, TT, D, S}; kwargs...) where {ST, DT, TT, D, S}
+function IntegratorCache{ST}(params::ParametersFIRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
     IntegratorCacheFIRK{ST,D,S}(; kwargs...)
 end
 
-@inline CacheType(ST, params::ParametersFIRK{DT, TT, D, S}) where {DT, TT, D, S} = IntegratorCacheFIRK{ST,D,S}
+@inline CacheType(ST, params::ParametersFIRK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheFIRK{ST,D,S}
 
 
 "Fully implicit Runge-Kutta integrator."
