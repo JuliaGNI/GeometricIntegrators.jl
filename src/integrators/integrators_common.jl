@@ -60,8 +60,7 @@ function create_nonlinear_solver_with_jacobian(DT, N, params, caches)
 
     # create wrapper function j!(x,df) that calls `jacobian!(x, df, params)`
     # with the appropriate `params`
-    cache = IntegratorCache(params)
-    j! = (x,df) -> jacobian!(x, df, cache, params)
+    j! = (x,df) -> jacobian!(x, df, caches[DT], params)
 
     # create nonlinear solver with solver type obtained from config dictionary
     s = get_config(:nls_solver)(x, f!; J! = j!)
