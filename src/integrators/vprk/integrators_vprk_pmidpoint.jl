@@ -1,69 +1,79 @@
 
-"Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-mutable struct ParametersVPRKpMidpoint{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractParametersVPRK{DT,TT,ET,D,S}
-    equ::ET
-    tab::TableauVPRK{TT}
-    Δt::TT
-
-    R::Vector{TT}
-
-    t̅::TT
-    q̅::Vector{DT}
-    p̅::Vector{DT}
-end
-
-function ParametersVPRKpMidpoint(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
-    R = convert(Vector{TT}, [1, tab.R∞])
-    q̅ = zeros(DT, ndims(equ))
-    p̅ = zeros(DT, ndims(equ))
-
-    ParametersVPRKpMidpoint{DT, TT, ET, ndims(equ), tab.s}(equ, tab, Δt, R, zero(TT), q̅, p̅)
-end
+"Parameters for right-hand side function of Variational Partitioned Runge-Kutta methods."
+const ParametersVPRKpMidpoint = AbstractParametersVPRK{:vprk_pmidpoint}
 
 
 "Variational partitioned Runge-Kutta integrator."
-struct IntegratorVPRKpMidpoint{DT, TT, PT <: ParametersVPRKpMidpoint{DT,TT},
-                                       ST <: NonlinearSolver{DT},
-                                       IT <: InitialGuessPODE{DT,TT}, D, S} <: AbstractIntegratorVPRKwProjection{DT,TT}
+struct IntegratorVPRKpMidpoint{DT, TT, D, S,
+                PT <: ParametersVPRKpMidpoint{DT,TT},
+                ST <: NonlinearSolver{DT},
+                IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
 
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCacheVPRK{DT,D,S}
+
+    function IntegratorVPRKpMidpoint(params::ParametersVPRKpMidpoint{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
+    end
+
+    function IntegratorVPRKpMidpoint{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,D}
+        # get number of stages
+        S = tableau.s
+
+        # create params
+        R = convert(Vector{TT}, [1, tableau.R∞])
+        params = ParametersVPRKpMidpoint{DT,D}(equations, tableau, Δt, NamedTuple{(:R,)}((R,)))
+
+        # create solver
+        solver = create_nonlinear_solver(DT, D*(S+2), params)
+
+        # create initial guess
+        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+
+        # create cache
+        cache = IntegratorCacheVPRK{DT,D,S}(true)
+
+        # create integrator
+        IntegratorVPRKpMidpoint(params, solver, iguess, cache)
+    end
+
+    function IntegratorVPRKpMidpoint(equation::IODE{DT,TT}, tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorVPRKpMidpoint{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
 end
 
-function IntegratorVPRKpMidpoint(equation::ET, tableau::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
-    D = equation.d
-    M = equation.n
-    S = tableau.s
 
-    # create params
-    params = ParametersVPRKpMidpoint(equation, tableau, Δt)
+function initial_guess!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              int.cache.q̃, int.cache.ṽ,
+                              tableau(int).q.c[i])
 
-    # create solver
-    solver = create_nonlinear_solver(DT, D*(S+2), params)
+        for k in eachdim(int)
+            int.solver.x[ndims(int)*(i-1)+k] = int.cache.ṽ[k]
+        end
+    end
 
-    # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
-
-    # create cache
-    cache = IntegratorCacheVPRK{DT,D,S}(true)
-
-    # create integrator
-    IntegratorVPRKpMidpoint{DT, TT, typeof(params), typeof(solver), typeof(iguess), D, S}(params, solver, iguess, cache)
+    evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                          sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                          int.cache.q̃, one(TT))
+    for k in eachdim(int)
+        int.solver.x[ndims(int)*(nstages(int)+0)+k] = int.cache.q̃[k]
+    end
+    for k in 1:ndims(int)
+        int.solver.x[ndims(int)*(nstages(int)+1)+k] = 0
+    end
 end
-
-@inline equation(integrator::IntegratorVPRKpMidpoint) = integrator.params.equ
-@inline timestep(integrator::IntegratorVPRKpMidpoint) = integrator.params.Δt
-@inline tableau(integrator::IntegratorVPRKpMidpoint) = integrator.params.tab
-@inline Base.ndims(int::IntegratorVPRKpMidpoint{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
 
 
 @generated function compute_projection_vprk!(x::Vector{ST},
                 q::SolutionVector{ST}, p::SolutionVector{ST}, λ::SolutionVector{ST},
                 V::Vector{Vector{ST}}, U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
-                params::ParametersVPRKpMidpoint{DT,TT,ET,D,S}
-            ) where {ST,DT,TT,ET,D,S}
+                params::ParametersVPRKpMidpoint{DT,TT,D,S}
+            ) where {ST,DT,TT,D,S}
 
     # create temporary vectors
     q̃  = zeros(ST,D)
@@ -91,7 +101,7 @@ end
             for j in 1:S
                 y += params.tab.q.b[j] * V[j][k]
             end
-            $q̃[k] = params.q̅[k] + 0.5 * params.Δt * y + params.Δt * params.R[1] * U[1][k]
+            $q̃[k] = params.q̅[k] + 0.5 * params.Δt * y + params.Δt * params.pparams[:R][1] * U[1][k]
             # $qm[k] = params.q̅[k] + 0.5 * params.Δt * y + 0.5 * params.Δt * params.R[1] * U[k,1] + 0.5 * params.Δt * params.R[2] * U[k,2]
         end
 
@@ -109,8 +119,8 @@ end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
-                params::ParametersVPRKpMidpoint{DT,TT,ET,D,S}
-            ) where {ST,DT,TT,ET,D,S}
+                params::ParametersVPRKpMidpoint{DT,TT,D,S}
+            ) where {ST,DT,TT,D,S}
 
     cache = IntegratorCacheVPRK{ST, D, S}(true)
 
@@ -130,30 +140,6 @@ end
     end
 
     return function_stages
-end
-
-
-function initial_guess!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
-    for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                              int.cache.q̃, int.cache.ṽ,
-                              tableau(int).q.c[i])
-
-        for k in eachdim(int)
-            int.solver.x[ndims(int)*(i-1)+k] = int.cache.ṽ[k]
-        end
-    end
-
-    evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                          sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                          int.cache.q̃, one(TT))
-    for k in eachdim(int)
-        int.solver.x[ndims(int)*(nstages(int)+0)+k] = int.cache.q̃[k]
-    end
-    for k in 1:ndims(int)
-        int.solver.x[ndims(int)*(nstages(int)+1)+k] = 0
-    end
 end
 
 
@@ -187,7 +173,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::A
     update_solution!(int, sol)
 
     # add projection to solution
-    project_solution!(int, sol, int.params.R)
+    project_solution!(int, sol, int.params.pparams[:R])
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)

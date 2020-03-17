@@ -1,190 +1,206 @@
 
-struct TableauVPRKpLegendre{T} <: AbstractTableauPRK{T}
-    @HeaderTableau
+# struct TableauVPRKpLegendre{T} <: AbstractTableauPRK{T}
+#     @HeaderTableau
+#
+#     q::CoefficientsRK{T}
+#     p::CoefficientsRK{T}
+#
+#     R∞::Int
+#
+#     ω::Matrix{T}
+#     d::Vector{T}
+#
+#     function TableauVPRKpLegendre{T}(name, o, q, p, R∞, ω, d) where {T}
+#         @assert q.s == p.s == length(d)
+#         new(name, o, q.s, q, p, R∞, ω, d)
+#     end
+#
+#     function TableauVPRKpLegendre{T}(name, o, q, p, R∞, ω) where {T}
+#         @assert q.s == p.s
+#         new(name, o, q.s, q, p, R∞, ω)
+#     end
+# end
+#
+# function TableauVPRKpLegendre(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int, ω::Matrix{T}, d::Vector{T}) where {T}
+#     TableauVPRKpLegendre{T}(name, order, q, p, R∞, ω, d)
+# end
+#
+# function TableauVPRKpLegendre(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int, ω::Matrix{T}) where {T}
+#     TableauVPRKpLegendre{T}(name, order, q, p, R∞, ω)
+# end
+#
+# function TableauVPRKpLegendre(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int, ω::Matrix{T}, d::Vector{T}) where {T}
+#     TableauVPRKpLegendre{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞, ω, d)
+# end
+#
+# function TableauVPRKpLegendre(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int, ω::Matrix{T}) where {T}
+#     TableauVPRKpLegendre{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞, ω)
+# end
 
-    q::CoefficientsRK{T}
-    p::CoefficientsRK{T}
 
-    R∞::Int
+"Parameters for right-hand side function of Variational Partitioned Runge-Kutta methods."
+const ParametersVPRKpLegendre = AbstractParametersVPRK{:vprk_plegendre}
 
-    ω::Matrix{T}
-    d::Vector{T}
 
-    function TableauVPRKpLegendre{T}(name, o, q, p, R∞, ω, d) where {T}
-        @assert q.s == p.s == length(d)
-        new(name, o, q.s, q, p, R∞, ω, d)
+"Variational special partitioned additive Runge-Kutta integrator."
+struct IntegratorVPRKpLegendre{DT, TT, D, S,
+                PT <: ParametersVPRKpLegendre{DT,TT},
+                ST <: NonlinearSolver{DT},
+                IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
+    params::PT
+    solver::ST
+    iguess::IT
+    cache::IntegratorCacheVPRK{DT,D,S}
+
+    function IntegratorVPRKpLegendre(params::ParametersVPRKpLegendre{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
     end
 
-    function TableauVPRKpLegendre{T}(name, o, q, p, R∞, ω) where {T}
-        @assert q.s == p.s
-        new(name, o, q.s, q, p, R∞, ω)
-    end
-end
+    function IntegratorVPRKpLegendre{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,D}
+        # get number of stages
+        S = tableau.s
 
-function TableauVPRKpLegendre(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int, ω::Matrix{T}, d::Vector{T}) where {T}
-    TableauVPRKpLegendre{T}(name, order, q, p, R∞, ω, d)
-end
+        N = (3*S+2)*D
 
-function TableauVPRKpLegendre(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int, ω::Matrix{T}) where {T}
-    TableauVPRKpLegendre{T}(name, order, q, p, R∞, ω)
-end
-
-function TableauVPRKpLegendre(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int, ω::Matrix{T}, d::Vector{T}) where {T}
-    TableauVPRKpLegendre{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞, ω, d)
-end
-
-function TableauVPRKpLegendre(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int, ω::Matrix{T}) where {T}
-    TableauVPRKpLegendre{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞, ω)
-end
-
-
-"Parameters for right-hand side function of variational special partitioned additive Runge-Kutta methods."
-mutable struct ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S} <: Parameters{DT,TT}
-    f_θ::ΘT
-    f_f::FT
-
-    Δt::TT
-
-    t_q::CoefficientsRK{TT}
-    t_p::CoefficientsRK{TT}
-    d_v::Vector{TT}
-
-    t::TT
-
-    q::Vector{DT}
-    p::Vector{DT}
-
-
-    function ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}(f_θ, f_f, Δt, t_q, t_p, d_v, q, p) where {DT,TT,ΘT,FT,D,S}
-        new(f_θ, f_f, Δt, t_q, t_p, d_v, 0, q, p)
-    end
-end
-
-
-struct NonlinearFunctionCacheVPRKpLegendre{ST}
-
-    q̅::Vector{ST}
-    p̅::Vector{ST}
-    ϕ::Vector{ST}
-    μ::Vector{ST}
-
-    v::Vector{ST}
-    y::Vector{ST}
-    z::Vector{ST}
-
-    Q::Matrix{ST}
-    P::Matrix{ST}
-    V::Matrix{ST}
-    F::Matrix{ST}
-    Φ::Matrix{ST}
-
-    function NonlinearFunctionCacheVPRKpLegendre{ST}(d,s) where {ST}
-        # create solution vectors
-        q̅ = zeros(ST,d)
-        p̅ = zeros(ST,d)
-        ϕ = zeros(ST,d)
-        μ = zeros(ST,d)
-
-        v = zeros(ST,d)
-        y = zeros(ST,d)
-        z = zeros(ST,d)
-
-        # create internal stage vectors
-        Q = zeros(ST,d,s)
-        P = zeros(ST,d,s)
-        V = zeros(ST,d,s)
-        F = zeros(ST,d,s)
-        Φ = zeros(ST,d,s)
-
-        new(q̅, p̅, ϕ, μ, v, y, z, Q, P, V, F, Φ)
-    end
-end
-
-
-"Compute stages of variational special partitioned additive Runge-Kutta methods."
-@generated function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}) where {ST,DT,TT,ΘT,FT,D,S}
-    cache = IntegratorCacheVPRK{ST, D, S}(true)
-
-    quote
-        @assert length(y) == length(b)
-
-        compute_stages!(y, $cache.Q, $cache.V, $cache.P, $cache.F, $cache.Φ, $cache.q̃, $cache.p̃, $cache.ϕ, $cache.μ, params)
-
-        compute_rhs!(b, $cache.Q, $cache.V, $cache.P, $cache.F, $cache.Φ, $cache.q̃, $cache.p̃, $cache.ϕ, $cache.μ, params)
-
-        # debug output
-        # println()
-        # for k in 1:D
-        #     println(params.q[k], ",  ", params.p[k], ",  ", $cache.Q[k,1], ",  ", $cache.P[k,1], ",  ", $cache.q̅[k], ",  ", $cache.p̅[k])
-        # end
-        # println()
-    end
-end
-
-@generated function compute_stages!(y::Vector{ST}, Q, V, P, F, Φ, q̅, p̅, ϕ, μ, params::ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}) where {ST,DT,TT,ΘT,FT,D,S}
-    # create temporary vectors
-    Qt = zeros(ST,D)
-    Pt = zeros(ST,D)
-    Vt = zeros(ST,D)
-    Ft = zeros(ST,D)
-
-    quote
-        local offset::Int
-        local tqᵢ::TT
-
-        for i in 1:S
-            # copy y to Q and V
-            for k in 1:D
-                offset = 3*(D*(i-1)+k-1)
-                Q[k,i] = y[offset+1]
-                V[k,i] = y[offset+2]
-                P[k,i] = y[offset+3]
-            end
-
-            # compute P=p(t,Q) and F=f(t,Q,V)
-            tqᵢ = params.t + params.Δt * params.t_q.c[i]
-            simd_copy_xy_first!($Qt, Q, i)
-            simd_copy_xy_first!($Vt, V, i)
-            params.f_θ(tqᵢ, $Qt, $Vt, $Pt)
-            params.f_f(tqᵢ, $Qt, $Vt, $Ft)
-            simd_copy_yx_first!($Pt, Φ, i)
-            simd_copy_yx_first!($Ft, F, i)
+        if isdefined(tableau, :d) && length(tableau.d) > 0
+            N += D
         end
 
-        # copy y to q̅ and p̅
+        # create cache for internal stage vectors and update vectors
+        cache = IntegratorCacheVPRK{DT,D,S}(true)
+
+        # create params
+        params = ParametersVPRKpLegendre{DT,D}(equations, tableau, Δt)
+
+        # create solver
+        solver = create_nonlinear_solver(DT, N, params)
+
+        # create initial guess
+        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+
+        # create integrator
+        IntegratorVPRKpLegendre(params, solver, iguess, cache)
+    end
+
+    function IntegratorVPRKpLegendre(equation::IODE{DT,TT}, tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorVPRKpLegendre{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
+end
+
+
+function Integrators.initialize!(int::IntegratorVPRKpLegendre, sol::AtomicSolutionPODE)
+    sol.t̅ = sol.t - timestep(int)
+
+    equation(int, :v)(sol.t, sol.q, sol.p, sol.v)
+    equation(int, :f)(sol.t, sol.q, sol.p, sol.f)
+
+    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
+                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+end
+
+
+function initial_guess!(int::IntegratorVPRKpLegendre{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              int.cache.q̃, int.cache.p̃, int.cache.v, int.cache.f,
+                              tableau(int).q.c[i], tableau(int).p.c[i])
+
+        for k in eachdim(int)
+            offset = 3*(ndims(int)*(i-1)+k-1)
+            int.solver.x[offset+1] = (int.cache.q̃[k] - sol.q[k]) / timestep(int)
+            int.solver.x[offset+2] = (int.cache.p̃[k] - sol.p[k]) / timestep(int)
+            int.solver.x[offset+3] = int.cache.v[k]
+        end
+    end
+
+    evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                          sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                          int.cache.q̃, int.cache.p̃,
+                          one(TT), one(TT))
+
+    offset = (3*nstages(int)+0)*ndims(int)
+    for k in eachdim(int)
+        int.solver.x[offset+k] = int.cache.q̃[k]
+    end
+
+    offset = (3*nstages(int)+1)*ndims(int)
+    for k in eachdim(int)
+        int.solver.x[offset+k] = int.cache.p̃[k]
+    end
+
+    if isdefined(tableau(int), :d)  && length(tableau(int).d) > 0
+        offset = (3*nstages(int)+2)*ndims(int)
+        for k in eachdim(int)
+            int.solver.x[offset+k] = 0
+        end
+    end
+end
+
+
+function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, p, ϕ, μ,
+                params::ParametersVPRKpLegendre{DT,TT,D,S}) where {ST,DT,TT,D,S}
+
+    local offset::Int
+    local tqᵢ::TT
+
+    for i in 1:S
+        # copy y to Q and V
         for k in 1:D
-            q̅[k] = y[(3*S+0)*D+k]
-            p̅[k] = y[(3*S+1)*D+k]
+            offset = 3*(D*(i-1)+k-1)
+            Y[i][k] = y[offset+1]
+            Z[i][k] = y[offset+2]
+            V[i][k] = y[offset+3]
+
+            Q[i][k] = params.q̅[k] + params.Δt * Y[i][k]
+            P[i][k] = params.p̅[k] + params.Δt * Z[i][k]
         end
 
-        # compute p̅=p(t,q̅)
-        $Vt .= 0
-        params.f_θ(params.t + params.Δt, q̅, $Vt, ϕ)
+        # compute P=p(t,Q) and F=f(t,Q,V)
+        tqᵢ = params.t̅ + params.Δt * params.tab.q.c[i]
+        params.equ[:ϑ](tqᵢ, Q[i], V[i], Φ[i])
+        params.equ[:f](tqᵢ, Q[i], V[i], F[i])
+    end
 
-        # for Lobatto-type methods, copy y to μ
-        # if length(params.d_v) > 0
-        #     offset = (3*S+2)*D
-        #     for k in 1:D
-        #         μ[k] = y[offset+k]
-        #     end
-        # end
+    # copy y to q and p
+    for k in 1:D
+        q[k] = y[(3*S+0)*D+k]
+        p[k] = y[(3*S+1)*D+k]
+    end
+
+    # compute p=p(t,q)
+    params.equ[:ϑ](params.t̅ + params.Δt, q, ϕ)
+
+    # for Lobatto-type methods, copy y to μ
+    if isdefined(params.tab, :d) && length(params.tab.d) > 0
+        offset = (3*S+2)*D
+        for k in 1:D
+            μ[k] = y[offset+k]
+        end
     end
 end
 
 
-function compute_rhs!(b::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}, F::Matrix{ST}, Φ::Matrix{ST}, q̅::Vector{ST}, p̅::Vector{ST}, ϕ::Vector{ST}, μ::Vector{ST}, params::ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}) where {ST,DT,TT,ΘT,FT,D,S}
+function compute_rhs!(b::Vector{ST},
+                      Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
+                      P::Vector{Vector{ST}}, F::Vector{Vector{ST}},
+                      Y::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
+                      Φ::Vector{Vector{ST}},
+                      q::Vector{ST}, p::Vector{ST}, ϕ::Vector{ST}, μ::Vector{ST},
+                      params::ParametersVPRKpLegendre{DT,TT,D,S}) where {ST,DT,TT,D,S}
     local ω::ST
+    local y::ST
     local z::ST
 
     # compute b = - (Q-q-AV)
     for i in 1:S
         offset = 0*S*D + D*(i-1)
         for k in 1:D
-            z = 0
+            y = 0
             for j in 1:S
-                z += params.t_q.a[i,j] * V[k,j]
+                y += params.tab.q.a[i,j] * V[j][k]
             end
-            b[offset+k] = (params.q[k] - Q[k,i]) + params.Δt * z
+            b[offset+k] = Y[i][k] - y
         end
     end
 
@@ -194,9 +210,9 @@ function compute_rhs!(b::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}
         for k in 1:D
             z = 0
             for j in 1:S
-                z += params.t_p.a[i,j] * F[k,j]
+                z += params.tab.p.a[i,j] * F[j][k]
             end
-            b[offset+k] = (params.p[k] - P[k,i]) + params.Δt * z
+            b[offset+k] = Z[i][k] - z
         end
     end
 
@@ -206,56 +222,56 @@ function compute_rhs!(b::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}
         for k in 1:D
             z = 0
             for j in 1:S
-                ω = params.t_p.b[j] * params.t_p.c[j]^(i-1)
-                # ω = params.t_q.a[i+1,j]
-                z += ω * (Φ[k,j] - P[k,j])
+                ω = params.tab.p.b[j] * params.tab.p.c[j]^(i-1)
+                # ω = params.tab.q.a[i+1,j]
+                z += ω * (Φ[j][k] - P[j][k])
             end
             b[offset+k] = z
         end
     end
 
-    # compute b = - (q̅-q-AV)
+    # compute b = - (p-ϕ)
     offset = (3*S-1)*D
     for k in 1:D
-        z = 0
+        b[offset+k] = ϕ[k] - p[k]
+    end
+
+    # compute b = - (q-q-AV)
+    offset = (3*S+0)*D
+    for k in 1:D
+        y = 0
         for j in 1:S
-            z += params.t_q.b[j] * V[k,j]
+            y += params.tab.q.b[j] * V[j][k]
         end
-        b[offset+k] = (params.q[k] - q̅[k]) + params.Δt * z
+        b[offset+k] = (params.q̅[k] - q[k]) + params.Δt * y
     end
 
     # compute b = - (p̅-p-AF)
-    offset = (3*S+0)*D
+    offset = (3*S+1)*D
     for k in 1:D
         z = 0
         for j in 1:S
-            z += params.t_p.b[j] * F[k,j]
+            z += params.tab.p.b[j] * F[j][k]
         end
-        b[offset+k] = (params.p[k] - p̅[k]) + params.Δt * z
+        b[offset+k] = (params.p̅[k] - p[k]) + params.Δt * z
     end
 
-    # compute b = - (p̅-ϕ)
-    offset = (3*S+1)*D
-    for k in 1:D
-        b[offset+k] = ϕ[k] - p̅[k]
-    end
-
-    # if length(params.d_v) > 0
+    # if isdefined(params.tab, :d) && length(params.tab.d) > 0
     #     offset = (3*S+2)*D
     #     for k in 1:D
     #         b[offset+k] = 0
     #         for i in 1:S
-    #             b[offset+k] -= V[k,i] * params.d_v[i]
+    #             b[offset+k] -= V[k,i] * params.tab.d[i]
     #         end
     #     end
     # end
 
-    if length(params.d_v) > 0
+    if isdefined(params.tab, :d) && length(params.tab.d) > 0
         sl     = div(S+1, 2)
         offset = D*(S+sl-1)
 
         # compute μ
-        z = params.t_p.b[sl] / params.d_v[sl]
+        z = params.tab.p.b[sl] / params.tab.d[sl]
         for k in 1:D
             μ[k] = z * b[offset+k]
         end
@@ -264,7 +280,7 @@ function compute_rhs!(b::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}
         for k in 1:D
             z = 0
             for i in 1:S
-                z += V[k,i] * params.d_v[i]
+                z += V[k,i] * params.tab.d[i]
             end
             b[offset+k] = z
         end
@@ -273,7 +289,7 @@ function compute_rhs!(b::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}
         for i in 1:S
             if i ≠ sl
                 offset = D*(S+i-1)
-                z = params.d_v[i] / params.t_p.b[i]
+                z = params.tab.d[i] / params.tab.p.b[i]
                 for k in 1:D
                     b[offset+k] -= z * μ[k]
                 end
@@ -282,118 +298,44 @@ function compute_rhs!(b::Vector{ST}, Q::Matrix{ST}, V::Matrix{ST}, P::Matrix{ST}
     end
 end
 
+"Compute stages of variational special partitioned additive Runge-Kutta methods."
+@generated function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST},
+                params::ParametersVPRKpLegendre{DT,TT,D,S}) where {ST,DT,TT,D,S}
+    cache = IntegratorCacheVPRK{ST, D, S}(true)
 
+    quote
+        @assert length(y) == length(b)
 
-"Variational special partitioned additive Runge-Kutta integrator."
-mutable struct IntegratorVPRKpLegendre{DT, TT, ΘT, FT, GT, VT, SPT, ST, IT} <: IntegratorPRK{DT, TT}
-    equation::IODE{DT,TT,ΘT,FT,GT,VT}
-    tableau::TableauVPRK{TT}
-    Δt::TT
+        compute_stages!(y, $cache.Q, $cache.V, $cache.P, $cache.F, $cache.Y, $cache.Z, $cache.Φ, $cache.q̃, $cache.p̃, $cache.ϕ, $cache.μ, params)
 
-    params::SPT
-    solver::ST
-    iguess::InitialGuessPODE{DT, TT, VT, FT, IT}
+        compute_rhs!(b, $cache.Q, $cache.V, $cache.P, $cache.F, $cache.Y, $cache.Z, $cache.Φ, $cache.q̃, $cache.p̃, $cache.ϕ, $cache.μ, params)
 
-    q::Vector{DT}
-    p::Vector{DT}
-
-    cache::NonlinearFunctionCacheVPRKpLegendre{DT}
-end
-
-function IntegratorVPRKpLegendre(equation::IODE{DT,TT,ΘT,FT,GT,VT}, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,ΘT,FT,GT,VT}
-    D = equation.d
-    S = tableau.s
-
-    N = (3*S+2)*D
-
-    if isdefined(tableau, :d)
-        d_v = tableau.d
-    else
-        d_v = DT[]
+        # debug output
+        # println()
+        # for k in 1:D
+        #     println(params.q[k], ",  ", params.p[k], ",  ", $cache.Q[k,1], ",  ", $cache.P[k,1], ",  ", $cache.q[k], ",  ", $cache.p[k])
+        # end
+        # println()
     end
-
-    # create solution vectors
-    q = zeros(DT,D)
-    p = zeros(DT,D)
-
-    # create solution vector for internal stages / nonlinear solver
-    z = zeros(DT,N)
-
-    # create cache for internal stage vectors and update vectors
-    cache = NonlinearFunctionCacheVPRKpLegendre{DT}(D,S)
-
-    # create params
-    params = ParametersVPRKpLegendre{DT,TT,ΘT,FT,D,S}(
-                                                equation.ϑ, equation.f,
-                                                Δt, tableau.q, tableau.p, d_v, q, p)
-
-    # create rhs function for nonlinear solver
-    function_stages = (x,b) -> function_stages!(x, b, params)
-
-    # create solver
-    solver = get_config(:nls_solver)(z, function_stages)
-
-    # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
-
-    # create integrator
-    IntegratorVPRKpLegendre{DT, TT, ΘT, FT, GT, VT, typeof(params), typeof(solver), typeof(iguess.int)}(
-                equation, tableau, Δt, params, solver, iguess, q, p, cache)
-end
-
-
-function Integrators.initialize!(int::IntegratorVPRKpLegendre, sol::SolutionPDAE, m::Int)
-    @assert m ≥ 1
-    @assert m ≤ sol.ni
-
-    # copy initial conditions from solution
-    get_initial_conditions!(sol, int.q, int.p, m)
-
-    # initialise initial guess
-    initialize!(int.iguess, m, sol.t[0], int.q, int.p)
-end
-
-
-function update_solution!(int::IntegratorVPRKpLegendre{DT,TT}, cache::NonlinearFunctionCacheVPRKpLegendre{DT}) where {DT,TT}
-    update_solution!(int.q, cache.V, int.tableau.q.b, int.tableau.q.b̂, int.Δt)
-    update_solution!(int.p, cache.F, int.tableau.p.b, int.tableau.p.b̂, int.Δt)
 end
 
 
 "Integrate DAE with variational special partitioned additive Runge-Kutta integrator."
-function Integrators.integrate_step!(int::IntegratorVPRKpLegendre{DT,TT,ΘT,FT,VT}, sol::SolutionPDAE{DT,TT,N}, m::Int, n::Int) where {DT,TT,ΘT,FT,VT,N}
+function Integrators.integrate_step!(int::IntegratorVPRKpLegendre{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
     local offset::Int
 
-    # set time for nonlinear solver
-    int.params.t = sol.t[0] + (n-1)*int.Δt
+    # update nonlinear solver parameters from cache
+    update_params!(int.params, sol)
 
     # compute initial guess
-    for i in 1:int.tableau.s
-        evaluate!(int.iguess, m, int.cache.y, int.cache.z, int.cache.v, int.tableau.q.c[i], int.tableau.p.c[i])
-        for k in 1:int.equation.d
-            offset = 3*(int.equation.d*(i-1)+k-1)
-            int.solver.x[offset+1] = int.cache.y[k]
-            int.solver.x[offset+2] = int.cache.v[k]
-            int.solver.x[offset+3] = int.cache.z[k]
-        end
-    end
-
-    evaluate!(int.iguess, m, int.cache.y, int.cache.z, int.cache.v, one(TT), one(TT))
-    for k in 1:int.equation.d
-        int.solver.x[(3*int.tableau.s+0)*int.equation.d+k] = int.cache.y[k]
-        int.solver.x[(3*int.tableau.s+1)*int.equation.d+k] = int.cache.z[k]
-    end
-
-    # if isdefined(int.tableau, :d)
-    #     offset = (3*int.tableau.s+2)*int.equation.d
-    #     for k in 1:int.equation.d
-    #         int.solver.x[offset+k] = 0
-    #     end
-    # end
+    initial_guess!(int, sol)
 
     # debug output
     # println()
     # println(int.solver.x)
+
+    # reset solution
+    reset!(sol, timestep(int))
 
     # call nonlinear solver
     solve!(int.solver)
@@ -404,14 +346,16 @@ function Integrators.integrate_step!(int::IntegratorVPRKpLegendre{DT,TT,ΘT,FT,V
     # check if solution contains NaNs or error bounds are violated
     check_solver_status(int.solver.status, int.solver.params)
 
-    # compute final update
-    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.cache.Φ, int.cache.q̅, int.cache.p̅, int.cache.ϕ, int.cache.μ, int.params)
-    update_solution!(int, int.cache)
+    # compute vector fields at internal stages
+    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P,
+                    int.cache.F, int.cache.Y, int.cache.Z,
+                    int.cache.Φ, int.cache.q̃, int.cache.p̃,
+                    int.cache.ϕ, int.cache.μ, int.params)
 
-    # debug output
-    # println(int.solver.x)
-    # println()
+    # compute final update
+    update_solution!(sol.q, int.cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, int.cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 
     # copy solution to initial guess for next time step
-    update_vector_fields!(int.iguess, m, sol.t[0] + n*int.Δt, int.q, int.p)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

@@ -216,3 +216,37 @@ end
     @test rel_err(sol.q, refx) < 4E-14
 
 end
+
+
+@testset "$(rpad("Degenerate symplectic partitioned Runge-Kutta methods",80))" begin
+
+    int = IntegratorVPRKdegenerate(iode, getTableauVPGLRK(1), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 2E-5
+
+    int = IntegratorVPRKdegenerate(iode, getTableauVPGLRK(2), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 4E-7
+
+    int = IntegratorVPRKdegenerate(iode, getTableauVPGLRK(3), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 2E-10
+
+end
+
+
+@testset "$(rpad("VSPRK integrators with Legendre projection",80))" begin
+
+    int = IntegratorVPRKpLegendre(iode, getTableauVPGLRK(1), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 1E-6
+
+    int = IntegratorVPRKpLegendre(iode, getTableauVPGLRK(2), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 1E-11
+
+    int = IntegratorVPRKpLegendre(iode, getTableauVPGLRK(3), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 4E-16
+
+end

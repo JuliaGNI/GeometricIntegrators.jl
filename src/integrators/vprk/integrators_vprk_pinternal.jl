@@ -1,59 +1,61 @@
 
-"Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-mutable struct ParametersVPRKpInternal{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractParametersVPRK{DT,TT,ET,D,S}
-    equ::ET
-    tab::TableauVPRK{TT}
-    Δt::TT
-
-    t̅::TT
-    q̅::Vector{DT}
-    p̅::Vector{DT}
-end
-
-function ParametersVPRKpInternal(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
-    D = equ.d
-    S = tab.s
-
-    q = zeros(DT,D)
-    p = zeros(DT,D)
-
-    ParametersVPRKpInternal{DT,TT,ET,D,S}(equ, tab, Δt, 0, q, p)
-end
+"Parameters for right-hand side function of Variational Partitioned Runge-Kutta methods."
+const ParametersVPRKpInternal = AbstractParametersVPRK{:vprk_pinternal}
 
 
-struct IntegratorVPRKpInternal{DT, TT, PT <: ParametersVPRKpInternal{DT,TT},
-                                       ST <: NonlinearSolver{DT},
-                                       IT <: InitialGuessPODE{DT,TT}, D, S} <: AbstractIntegratorVPRK{DT,TT}
+struct IntegratorVPRKpInternal{DT, TT, D, S,
+                PT <: ParametersVPRKpInternal{DT,TT},
+                ST <: NonlinearSolver{DT},
+                IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCacheVPRK{DT,D,S}
+
+    function IntegratorVPRKpInternal(params::ParametersVPRKpInternal{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
+    end
+
+    function IntegratorVPRKpInternal{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,D}
+        # get number of stages
+        S = tableau.s
+
+        # create params
+        params = ParametersVPRKpInternal{DT,D}(equations, tableau, Δt)
+
+        # create solver
+        solver = create_nonlinear_solver(DT, D*(S+1), params)
+
+        # create initial guess
+        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+
+        # create cache for internal stage vectors and update vectors
+        cache = IntegratorCacheVPRK{DT,D,S}(true)
+
+        # create integrator
+        IntegratorVPRKpInternal(params, solver, iguess, cache)
+    end
+
+    function IntegratorVPRKpInternal(equation::IODE{DT,TT}, tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorVPRKpInternal{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
 end
 
-function IntegratorVPRKpInternal(equation::ET, tableau::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
-    D = equation.d
-    M = equation.n
-    S = tableau.s
 
-    # create params
-    params = ParametersVPRKpInternal(equation, tableau, Δt)
-
-    # create solver
-    solver = create_nonlinear_solver(DT, D*(S+1), params)
-
-    # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
-
-    # create cache for internal stage vectors and update vectors
-    cache = IntegratorCacheVPRK{DT,D,S}(true)
-
-    # create integrator
-    IntegratorVPRKpInternal{DT, TT, typeof(params), typeof(solver), typeof(iguess), D, S}(
-                params, solver, iguess, cache)
+function initial_guess!(int::IntegratorVPRKpInternal{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              int.cache.q̃, int.cache.ṽ,
+                              tableau(int).q.c[i])
+        for k in eachdim(int)
+            int.solver.x[ndims(int)*(i-1)+k] = int.cache.ṽ[k]
+        end
+    end
+    for k in eachdim(int)
+        int.solver.x[ndims(int)*nstages(int)+k] = 0
+    end
 end
-
-
-@inline Base.ndims(int::IntegratorVPRKpInternal{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
 
 
 function compute_stages_vprk!(x, q, p, Q, V, Λ, P, F, R, params::ParametersVPRKpInternal)
@@ -75,7 +77,7 @@ end
 
 
 function compute_stages_λ_vprk!(x::Vector{ST}, Λ::Vector{Vector{ST}},
-                params::ParametersVPRKpInternal{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+                params::ParametersVPRKpInternal{DT,TT,D,S}) where {ST,DT,TT,D,S}
     # @assert D == size(Λ,1)
     @assert S == length(Λ)
 
@@ -88,7 +90,7 @@ function compute_stages_λ_vprk!(x::Vector{ST}, Λ::Vector{Vector{ST}},
 end
 
 function compute_stages_q_vprk!(q::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
-                Λ::Vector{Vector{ST}}, params::ParametersVPRKpInternal{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+                Λ::Vector{Vector{ST}}, params::ParametersVPRKpInternal{DT,TT,D,S}) where {ST,DT,TT,D,S}
     # @assert D == size(Q,1) == size(V,1) == size(Λ,1) == length(q)
     @assert S == length(Q) == length(V) == length(Λ)
 
@@ -128,8 +130,8 @@ end
 function compute_projection_vprk!(q::Vector{ST}, p::Vector{ST},
                 Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
                 Λ::Vector{Vector{ST}}, R::Vector{Vector{ST}},
-                params::ParametersVPRKpInternal{DT,TT,ET,D,S}
-            ) where {ST,DT,TT,ET,D,S}
+                params::ParametersVPRKpInternal{DT,TT,D,S}
+            ) where {ST,DT,TT,D,S}
 
     local t₀::TT = params.t̅
     local t₁::TT = params.t̅ + params.Δt
@@ -147,7 +149,7 @@ end
 
 function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}},
                 F::Vector{Vector{ST}}, R::Vector{Vector{ST}},
-                params::ParametersVPRKpInternal{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+                params::ParametersVPRKpInternal{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     local z1::ST
     local z2::ST
@@ -171,8 +173,8 @@ end
 
 function compute_rhs_vprk_projection!(b::Vector{ST}, p::Vector{ST},
                 F::Vector{Vector{ST}}, R::Vector{Vector{ST}}, offset::Int,
-                params::ParametersVPRKpInternal{DT,TT,ET,D,S}
-            ) where {ST,DT,TT,ET,D,S}
+                params::ParametersVPRKpInternal{DT,TT,D,S}
+            ) where {ST,DT,TT,D,S}
 
     local z1::ST
     local z2::ST
@@ -194,8 +196,8 @@ end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 @generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
-                params::ParametersVPRKpInternal{DT,TT,ET,D,S}
-            ) where {ST,DT,TT,ET,D,S}
+                params::ParametersVPRKpInternal{DT,TT,D,S}
+            ) where {ST,DT,TT,D,S}
 
     cache = IntegratorCacheVPRK{ST, D, S}(true)
 
@@ -212,22 +214,6 @@ end
         compute_rhs_vprk_projection!(b, $cache.p̃, $cache.F, $cache.R, D*S, params)
 
         compute_rhs_vprk_correction!(b, $cache.V, params)
-    end
-end
-
-
-function initial_guess!(int::IntegratorVPRKpInternal{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
-    for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                              int.cache.q̃, int.cache.ṽ,
-                              tableau(int).q.c[i])
-        for k in eachdim(int)
-            int.solver.x[ndims(int)*(i-1)+k] = int.cache.ṽ[k]
-        end
-    end
-    for k in eachdim(int)
-        int.solver.x[ndims(int)*nstages(int)+k] = 0
     end
 end
 

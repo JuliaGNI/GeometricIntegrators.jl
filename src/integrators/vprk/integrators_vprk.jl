@@ -1,138 +1,58 @@
-@doc raw"""
-`TableauVPRK`: Tableau of a Variational Partitioned Runge-Kutta method
-```math
-\begin{align*}
-P_{n,i} &= \dfrac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , &
-Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
-q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} , \\
-F_{n,i} &= \dfrac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , &
-P_{n,i} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{a}_{ij} \, F_{n,j} - d_i \lambda , &
-p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i} \, F_{n,i} , \\
-&&
-0 &= \sum \limits_{i=1}^{s} d_i V_i , &&
-\end{align*}
-```
-satisfying the symplecticity conditions
-```math
-\begin{align*}
-b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
-\bar{b}_i &= b_i .
-\end{align*}
-```
-"""
-struct TableauVPRK{T} <: AbstractTableauPRK{T}
-    @HeaderTableau
 
-    q::CoefficientsRK{T}
-    p::CoefficientsRK{T}
-
-    R∞::Int
-
-    d::Vector{T}
-
-    function TableauVPRK{T}(name, o, q, p, R∞, d) where {T}
-        @assert q.s == p.s == length(d)
-        new(name, o, q.s, q, p, R∞, d)
-    end
-
-    function TableauVPRK{T}(name, o, q, p, R∞) where {T}
-        @assert q.s == p.s
-        new(name, o, q.s, q, p, R∞)
-    end
-end
-
-function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int, d::Vector{T}) where {T}
-    TableauVPRK{T}(name, order, q, p, R∞, d)
-end
-
-function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int) where {T}
-    TableauVPRK{T}(name, order, q, p, R∞)
-end
-
-function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int, d::Vector{T}) where {T}
-    TableauVPRK{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞, d)
-end
-
-function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int) where {T}
-    TableauVPRK{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞)
-end
-
-
-"Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-mutable struct ParametersVPRK{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractParametersVPRK{DT,TT,ET,D,S}
-    equ::ET
-    tab::TableauVPRK{TT}
-    Δt::TT
-
-    t̅::TT
-    q̅::Vector{DT}
-    p̅::Vector{DT}
-end
-
-function ParametersVPRK(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
-    q = zeros(DT, equ.d)
-    p = zeros(DT, equ.d)
-
-    ParametersVPRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, q, p)
-end
+"Parameters for right-hand side function of Variational Partitioned Runge-Kutta methods."
+const ParametersVPRK = AbstractParametersVPRK{:vprk}
 
 
 "Variational partitioned Runge-Kutta integrator."
-struct IntegratorVPRK{DT, TT, PT <: ParametersVPRK{DT,TT},
-                              ST <: NonlinearSolver{DT},
-                              IT <: InitialGuessPODE{DT,TT}, D, S} <: AbstractIntegratorVPRK{DT,TT}
+struct IntegratorVPRK{DT, TT, D, S, PT <: ParametersVPRK{DT,TT},
+                                    ST <: NonlinearSolver{DT},
+                                    IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT
     cache::IntegratorCacheVPRK{DT,D,S}
-end
 
-function IntegratorVPRK(equation::ET, tableau::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
-    D = equation.d
-    S = tableau.s
+    function IntegratorVPRK(params::ParametersVPRK{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
+    end
 
-    # create params
-    params = ParametersVPRK(equation, tableau, Δt)
+    function IntegratorVPRK{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,D}
+        # get number of stages
+        S = tableau.s
 
-    # create nonlinear solver
-    solver = create_nonlinear_solver(DT, D*S, params)
+        # create params
+        params = ParametersVPRK{DT,D}(equations, tableau, Δt)
 
-    # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
+        # create nonlinear solver
+        solver = create_nonlinear_solver(DT, D*S, params)
 
-    # create cache
-    cache = IntegratorCacheVPRK{DT,D,S}()
+        # create initial guess
+        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
-    # create integrator
-    IntegratorVPRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), D, S}(params, solver, iguess, cache)
+        # create cache
+        cache = IntegratorCacheVPRK{DT,D,S}()
+
+        # create integrator
+        IntegratorVPRK(params, solver, iguess, cache)
+    end
+
+    function IntegratorVPRK{DT,D}(ϑ::Function, f::Function, g::Function, v::Function,
+                    tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorVPRK{DT,D}(NamedTuple{(:ϑ,:f,:g,:v)}((ϑ, f, g, v)), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorVPRK{DT,D}(ϑ::Function, f::Function, g::Function, v::Function, h::Function,
+                    tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorVPRK{DT,D}(NamedTuple{(:ϑ,:f,:g,:v,:h)}((ϑ, f, g, v, h)), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorVPRK(equation::IODE{DT,TT}, tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorVPRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
 end
 
 
 IntegratorVPRKpNone = IntegratorVPRK
-
-
-@inline equation(int::IntegratorVPRK) = int.params.equ
-@inline timestep(int::IntegratorVPRK) = int.params.Δt
-@inline tableau(integrator::IntegratorVPRK) = integrator.params.tab
-@inline nstages(integrator::IntegratorVPRK) = integrator.params.tab.s
-@inline Base.ndims(int::IntegratorVPRK{DT,TT,PT,ST,IT,D,S}) where {DT,TT,PT,ST,IT,D,S} = D
-
-
-"Compute stages of variational partitioned Runge-Kutta methods."
-@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
-                params::ParametersVPRK{DT,TT,ET,D,S}
-            ) where {ST,DT,TT,ET,D,S}
-
-    cache = IntegratorCacheVPRK{ST, D, S}()
-
-    quote
-        @assert length(x) == length(b)
-
-        compute_stages!(x, $cache.Q, $cache.V, $cache.P, $cache.F, params)
-        compute_rhs_vprk!(b, $cache.P, $cache.F, params)
-        compute_rhs_vprk_correction!(b, $cache.V, params)
-    end
-end
 
 
 function initial_guess!(int::IntegratorVPRK, sol::AtomicSolutionPODE)
@@ -145,6 +65,23 @@ function initial_guess!(int::IntegratorVPRK, sol::AtomicSolutionPODE)
         for k in eachdim(int)
             int.solver.x[ndims(int)*(i-1)+k] = int.cache.ṽ[k]
         end
+    end
+end
+
+
+"Compute stages of variational partitioned Runge-Kutta methods."
+@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+                params::ParametersVPRK{DT,TT,D,S}
+            ) where {ST,DT,TT,D,S}
+
+    cache = IntegratorCacheVPRK{ST, D, S}()
+
+    quote
+        @assert length(x) == length(b)
+
+        compute_stages!(x, $cache.Q, $cache.V, $cache.P, $cache.F, params)
+        compute_rhs_vprk!(b, $cache.P, $cache.F, params)
+        compute_rhs_vprk_correction!(b, $cache.V, params)
     end
 end
 

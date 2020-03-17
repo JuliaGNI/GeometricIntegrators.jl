@@ -7,7 +7,7 @@ module VPRK
     using ..Solvers
     using ..Utils
 
-    import ..Equations: IODE, VODE
+    import ..Equations: IODE, VODE, get_function_tuple
     import ..Solutions: AtomicSolutionPODE, SolutionPDAE, SolutionVector
     import ..Solutions: update!
 
@@ -40,6 +40,8 @@ module VPRK
 
     include("vprk/integrators_vprk_abstract.jl")
     include("vprk/integrators_vprk_cache.jl")
+    include("vprk/integrators_vprk_tableau.jl")
+    include("vprk/integrators_vprk_parameters.jl")
     include("vprk/integrators_vprk_common.jl")
     include("vprk/integrators_vprk.jl")
     include("vprk/integrators_vprk_degenerate.jl")
