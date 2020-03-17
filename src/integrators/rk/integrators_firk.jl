@@ -88,6 +88,12 @@ function IntegratorCache(params::ParametersFIRK{DT, TT, D, S}; kwargs...) where 
     IntegratorCacheFIRK{DT,D,S}(; kwargs...)
 end
 
+function IntegratorCache{ST}(params::ParametersFIRK{DT, TT, D, S}; kwargs...) where {ST, DT, TT, D, S}
+    IntegratorCacheFIRK{ST,D,S}(; kwargs...)
+end
+
+CacheType(ST, params::ParametersFIRK{DT, TT, D, S}) where {DT, TT, D, S} = IntegratorCacheFIRK{ST,D,S}
+
 
 "Fully implicit Runge-Kutta integrator."
 struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
@@ -109,11 +115,15 @@ struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
         # create params
         params = ParametersFIRK{DT,D}(equations, tableau, Δt)
 
+        # create cache dict
+        # caches = Dict{DataType, IntegratorCache}()
+        caches = CacheDict(params)
+
         # create solver
         if exact_jacobian
-            solver = create_nonlinear_solver_with_jacobian(DT, D*S, params)
+            solver = create_nonlinear_solver_with_jacobian(DT, D*S, params, caches)
         else
-            solver = create_nonlinear_solver(DT, D*S, params)
+            solver = create_nonlinear_solver(DT, D*S, params, caches)
         end
 
         # create initial guess
@@ -203,15 +213,17 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
 end
 
 "Compute stages of fully implicit Runge-Kutta methods."
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,D,S}, caches::CacheDict) where {ST,DT,TT,D,S}
     # temporary variables
     local y1::ST
     local y2::ST
 
+    cache = caches[ST]
+
     # create caches for internal stages
-    Q = create_internal_stage_vector(ST, D, S)
-    V = create_internal_stage_vector(ST, D, S)
-    Y = create_internal_stage_vector(ST, D, S)
+    Q = cache.Q
+    V = cache.V
+    Y = cache.Y
 
     # compute stages from nonlinear solver solution x
     compute_stages!(x, Q, V, Y, params)
