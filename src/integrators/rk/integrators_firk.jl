@@ -165,8 +165,8 @@ function update_params!(int::IntegratorFIRK, sol::AtomicSolutionODE)
 end
 
 
-function initial_guess!(int::IntegratorFIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
-                        cache::IntegratorCacheFIRK{DT}=int.caches[DT]) where {DT,TT}
+function initial_guess!(int::IntegratorFIRK{DT}, sol::AtomicSolutionODE{DT},
+                        cache::IntegratorCacheFIRK{DT}=int.caches[DT]) where {DT}
 
     local offset::Int
 
@@ -281,7 +281,7 @@ function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::AtomicSolutionODE{DT,T
     update_params!(int, sol)
 
     # compute initial guess
-    initial_guess!(int, sol)
+    initial_guess!(int, sol, cache)
 
     # reset atomic solution
     reset!(sol, timestep(int))
