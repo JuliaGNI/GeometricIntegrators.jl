@@ -72,15 +72,25 @@ struct IntegratorCacheERK{DT,D,S} <: ODEIntegratorCache{DT,D}
     end
 end
 
+function IntegratorCache(params::ParametersERK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
+    IntegratorCacheERK{DT,D,S}(; kwargs...)
+end
+
+function IntegratorCache{ST}(params::ParametersERK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+    IntegratorCacheERK{ST,D,S}(; kwargs...)
+end
+
+@inline CacheType(ST, params::ParametersERK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheERK{ST,D,S}
+
 
 "Explicit Runge-Kutta integrator."
 struct IntegratorERK{DT, TT, D, S, ET} <: IntegratorRK{DT,TT}
     params::ParametersERK{DT,TT,D,S,ET}
-    cache::IntegratorCacheERK{DT,D,S}
+    caches::CacheDict{ParametersERK{DT,TT,D,S,ET}}
 
 
-    function IntegratorERK(params::ParametersERK{DT,TT,D,S,ET}, cache) where {DT,TT,D,S,ET}
-        new{DT, TT, D, S, ET}(params, cache)
+    function IntegratorERK(params::ParametersERK{DT,TT,D,S,ET}, caches) where {DT,TT,D,S,ET}
+        new{DT, TT, D, S, ET}(params, caches)
     end
 
     function IntegratorERK{DT,D}(equations::ET, tableau::TableauERK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
@@ -90,11 +100,11 @@ struct IntegratorERK{DT, TT, D, S, ET} <: IntegratorRK{DT,TT}
         # create params
         params = ParametersERK{DT,D}(equations, tableau, Δt)
 
-        # create cache
-        cache = IntegratorCacheERK{DT,D,S}()
+        # create cache dict
+        caches = CacheDict(params)
 
         # create integrator
-        new{DT, TT, D, S, ET}(params, cache)
+        IntegratorERK(params, caches)
     end
 
     function IntegratorERK{DT,D}(v::Function, tableau::TableauERK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
@@ -115,26 +125,28 @@ end
 
 
 "Integrate ODE with explicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorERK{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorERK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
+                         cache::IntegratorCacheERK{DT}=int.caches[DT]) where {DT,TT}
+    # temporary variables
     local tᵢ::TT
     local yᵢ::DT
 
-    # reset cache
+    # reset atomic solution
     reset!(sol, timestep(int))
 
     # compute internal stages
     for i in eachstage(int)
-        @inbounds for k in eachindex(int.cache.Q[i], int.cache.V[i])
+        @inbounds for k in eachindex(cache.Q[i], cache.V[i])
             yᵢ = 0
             for j in 1:i-1
-                yᵢ += tableau(int).q.a[i,j] * int.cache.V[j][k]
+                yᵢ += tableau(int).q.a[i,j] * cache.V[j][k]
             end
-            int.cache.Q[i][k] = sol.q̅[k] + timestep(int) * yᵢ
+            cache.Q[i][k] = sol.q̅[k] + timestep(int) * yᵢ
         end
         tᵢ = sol.t̅ + timestep(int) * tableau(int).q.c[i]
-        equations(int)[:v](tᵢ, int.cache.Q[i], int.cache.V[i])
+        equations(int)[:v](tᵢ, cache.Q[i], cache.V[i])
     end
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, int.cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
 end

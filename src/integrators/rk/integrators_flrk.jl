@@ -16,7 +16,7 @@ mutable struct ParametersFLRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,T
     end
 end
 
-struct IntegratorCacheFLRK{DT,D,S}
+struct IntegratorCacheFLRK{DT,D,S} <: ODEIntegratorCache{DT,D}
     q̃::Vector{DT}
     ṽ::Vector{DT}
     s̃::Vector{DT}
@@ -35,6 +35,16 @@ struct IntegratorCacheFLRK{DT,D,S}
     end
 end
 
+function IntegratorCache(params::ParametersFLRK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
+    IntegratorCacheFLRK{DT,D,S}(; kwargs...)
+end
+
+function IntegratorCache{ST}(params::ParametersFLRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+    IntegratorCacheFLRK{ST,D,S}(; kwargs...)
+end
+
+@inline CacheType(ST, params::ParametersFLRK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheFLRK{ST,D,S}
+
 
 "Formal Lagrangian Runge-Kutta integrator."
 struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
@@ -43,7 +53,7 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
     params::PT
     solver::ST
     iguess::IT
-    cache::IntegratorCacheFLRK{DT,D,S}
+    caches::CacheDict{PT}
 
     ϑ::Vector{Vector{DT}}
     P::Vector{Vector{DT}}
@@ -53,7 +63,7 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
     J::Vector{Matrix{DT}}
     A::Array{DT,2}
 
-    function IntegratorFLRK(params::ParametersFLRK{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
+    function IntegratorFLRK(params::ParametersFLRK{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
         # create internal stage vectors
         ϑ = create_internal_stage_vector(DT, D, S)
         P = create_internal_stage_vector(DT, D, S)
@@ -64,7 +74,7 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
         J = [zeros(DT,D,D) for i in 1:S]
         A = zeros(DT,D*S,D*S)
 
-        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache, ϑ, P, F, G, Z, J, A)
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches, ϑ, P, F, G, Z, J, A)
     end
 
     function IntegratorFLRK{DT,D}(equations::NamedTuple, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,D}
@@ -74,17 +84,17 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
         # create params
         params = ParametersFLRK{DT,D}(equations, tableau, Δt)
 
+        # create cache dict
+        caches = CacheDict(params)
+
         # create solver
-        solver = create_nonlinear_solver(DT, D*S, params)
+        solver = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create initial guess
         iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
 
-        # create cache
-        cache = IntegratorCacheFLRK{DT,D,S}()
-
         # create integrator
-        IntegratorFLRK(params, solver, iguess, cache)
+        IntegratorFLRK(params, solver, iguess, caches)
     end
 
     function IntegratorFLRK(equation::VODE{DT,TT}, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
@@ -124,19 +134,20 @@ function update_params!(int::IntegratorFLRK, sol::AtomicSolutionPODE)
 end
 
 
-function initial_guess!(int::IntegratorFLRK, sol::Union{AtomicSolutionODE,AtomicSolutionPODE})
+function initial_guess!(int::IntegratorFLRK{DT}, sol::Union{AtomicSolutionODE{DT},AtomicSolutionPODE{DT}},
+                        cache::IntegratorCacheFLRK{DT}=int.caches[DT]) where {DT}
     local offset::Int
 
     # compute initial guess for internal stages
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, int.cache.Q[i], int.cache.V[i], tableau(int).q.c[i])
+        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, cache.Q[i], cache.V[i], tableau(int).q.c[i])
     end
     for i in eachstage(int)
         offset = ndims(int)*(i-1)
         for k in eachdim(int)
             int.solver.x[offset+k] = 0
             for j in eachstage(int)
-                int.solver.x[offset+k] += timestep(int) * tableau(int).q.a[i,j] * int.cache.V[j][k]
+                int.solver.x[offset+k] += timestep(int) * tableau(int).q.a[i,j] * cache.V[j][k]
             end
         end
     end
@@ -167,13 +178,14 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
 end
 
 "Compute stages of formal Lagrangian Runge-Kutta methods."
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFLRK{DT,TT,D,S},
+                          caches::CacheDict) where {ST,DT,TT,D,S}
     # temporary variables
     local y1::ST
     local y2::ST
 
-    # create cache for internal stages
-    cache = IntegratorCacheFLRK{ST,D,S}()
+    # get cache for internal stages
+    cache = caches[ST]
 
     # compute stages from nonlinear solver solution x
     compute_stages!(x, cache.Q, cache.V, cache.Y, params)
@@ -202,14 +214,15 @@ function integrate_step!(int::IntegratorFLRK, sol::AtomicSolutionPODE)
     integrate_diag_flrk!(int, sol)
 end
 
-function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::Union{AtomicSolutionODE{DT,TT},AtomicSolutionPODE{DT,TT}}) where {DT,TT}
-    # update nonlinear solver parameters from cache
+function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::Union{AtomicSolutionODE{DT,TT},AtomicSolutionPODE{DT,TT}},
+                              cache::IntegratorCacheFLRK{DT}=int.caches[DT]) where {DT,TT}
+    # update nonlinear solver parameters from atomic solution
     update_params!(int, sol)
 
     # compute initial guess
-    initial_guess!(int, sol)
+    initial_guess!(int, sol, cache)
 
-    # reset cache
+    # reset atomic solution
     reset!(sol, timestep(int))
 
     # call nonlinear solver
@@ -222,33 +235,34 @@ function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::Union{AtomicSolut
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector field at internal stages
-    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.Y, int.params)
+    compute_stages!(int.solver.x, cache.Q, cache.V, cache.Y, int.params)
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, int.cache.V, int.params.tab.q.b, int.params.tab.q.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)
 end
 
-function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT,D,S}
+function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutionPODE{DT,TT},
+                              cache::IntegratorCacheFLRK{DT}=int.caches[DT]) where {DT,TT,D,S}
     # create temporary arrays
     δP = zeros(DT, D*S)
 
     # compute ϑ = ϑ(t,Q), V(Q) = v(t, Q, V)
     # and f_0(Q, V(Q)) = f(t, Q, V, F)
     for i in 1:S
-        tᵢ = int.params.t + timestep(int) * int.params.tab.q.c[i]
-        int.params.equs[:ϑ](tᵢ, int.cache.Q[i], int.ϑ[i])
-        int.params.equs[:v](tᵢ, int.cache.Q[i], int.cache.V[i])
-        int.params.equs[:g](tᵢ, int.cache.Q[i], int.cache.V[i], int.F[i])
+        tᵢ = int.params.t + timestep(int) * tableau(int).q.c[i]
+        int.params.equs[:ϑ](tᵢ, cache.Q[i], int.ϑ[i])
+        int.params.equs[:v](tᵢ, cache.Q[i], cache.V[i])
+        int.params.equs[:g](tᵢ, cache.Q[i], cache.V[i], int.F[i])
     end
 
     # compute Jacobian of v via ForwardDiff
     for i in 1:S
-        tᵢ = int.params.t + timestep(int) * int.params.tab.q.c[i]
+        tᵢ = int.params.t + timestep(int) * tableau(int).q.c[i]
         v_rev! = (v,q) -> int.params.equs[:v](tᵢ,q,v)
-        ForwardDiff.jacobian!(int.J[i], v_rev!, int.cache.ṽ, int.cache.Q[i])
+        ForwardDiff.jacobian!(int.J[i], v_rev!, cache.ṽ, cache.Q[i])
     end
 
     # contract J with ϑ and add to G
@@ -270,7 +284,7 @@ function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutio
             δP[(l-1)*D+i] = int.params.p[i]
             # add A(F+G) to δP
             for k in 1:S
-                δP[(l-1)*D+i] += timestep(int) * int.params.tab.q.a[l,k] * (int.F[k][i] + int.G[k][i])
+                δP[(l-1)*D+i] += timestep(int) * tableau(int).q.a[l,k] * (int.F[k][i] + int.G[k][i])
             end
         end
     end
@@ -280,7 +294,7 @@ function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutio
         for l in 1:S
             for i in 1:D
                 for j in 1:D
-                    int.A[(k-1)*D+i, (l-1)*D+j] = timestep(int) * int.params.tab.q.a[k,l] * int.J[l][j,i]
+                    int.A[(k-1)*D+i, (l-1)*D+j] = timestep(int) * tableau(int).q.a[k,l] * int.J[l][j,i]
                 end
             end
         end
@@ -314,6 +328,6 @@ function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutio
     # println()
 
     # compute final update for p
-    update_solution!(sol.p, sol.p̃, int.F, int.params.tab.q.b, int.params.tab.q.b̂, timestep(int))
-    update_solution!(sol.p, sol.p̃, int.G, int.params.tab.q.b, int.params.tab.q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.F, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.G, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
 end

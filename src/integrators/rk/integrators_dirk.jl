@@ -85,8 +85,8 @@ struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
     iguess::IT
     caches::CacheDict{PT}
 
-    function IntegratorDIRK(params::ParametersDIRK{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
-        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
+    function IntegratorDIRK(params::ParametersDIRK{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
     function IntegratorDIRK{DT,D}(equations::NamedTuple, tableau::TableauDIRK{TT}, Δt::TT) where {DT, TT, D}
@@ -146,8 +146,8 @@ end
 
 
 "Compute initial guess for internal stages."
-function initial_guess!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
-                        cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT,TT}
+function initial_guess!(int::IntegratorDIRK{DT}, sol::AtomicSolutionODE{DT},
+                        cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT}
 
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, cache.q̃, cache.ṽ, int.params.tab.q.c[i])
@@ -220,9 +220,9 @@ function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,T
      update_params!(int, sol)
 
     # compute initial guess
-    initial_guess!(int, sol)
+    initial_guess!(int, sol, cache)
 
-    # reset cache
+    # reset atomic solution
     reset!(sol, timestep(int))
 
     # consecutively solve for all stages
