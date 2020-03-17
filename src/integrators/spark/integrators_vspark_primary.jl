@@ -41,7 +41,7 @@ struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT
     params::PT
     solver::ST
     iguess::IT
-    cache::IntegratorCacheSPARK{DT,TT,D,S,R}
+    cache::IntegratorCacheSPARK{DT,D,S,R}
 
     function IntegratorVSPARKprimary(params::ParametersVSPARKprimary{DT,TT,D,S,R}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,R,ST,IT}
         new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, cache)
@@ -71,7 +71,7 @@ struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT
         iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create cache
-        cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
+        cache = IntegratorCacheSPARK{DT,D,S,R}()
 
         # create integrator
         IntegratorVSPARKprimary(params, solver, iguess, cache)
@@ -83,7 +83,7 @@ struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT
 end
 
 
-function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
+function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
                                         params::ParametersVSPARKprimary{DT,TT,D,S,R,P}) where {ST,DT,TT,D,S,R,P}
     local tpᵢ::TT
     local tλᵢ::TT
@@ -175,7 +175,7 @@ end
 
 "Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems."
 @generated function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVSPARKprimary{DT,TT,D,S,R,P}) where {ST,DT,TT,D,S,R,P}
-    cache = IntegratorCacheSPARK{ST,TT,D,S,R}()
+    cache = IntegratorCacheSPARK{ST,D,S,R}()
 
     quote
         compute_stages!(y, $cache, params)

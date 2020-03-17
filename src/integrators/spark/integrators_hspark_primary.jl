@@ -41,7 +41,7 @@ struct IntegratorHSPARKprimary{DT, TT, D, S, R, PT <: ParametersHSPARKprimary{DT
     params::PT
     solver::ST
     iguess::IT
-    cache::IntegratorCacheSPARK{DT,TT,D,S,R}
+    cache::IntegratorCacheSPARK{DT,D,S,R}
 
     function IntegratorHSPARKprimary(params::ParametersHSPARKprimary{DT,TT,D,S,R}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,R,ST,IT}
         new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, cache)
@@ -67,7 +67,7 @@ struct IntegratorHSPARKprimary{DT, TT, D, S, R, PT <: ParametersHSPARKprimary{DT
         iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create cache
-        cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
+        cache = IntegratorCacheSPARK{DT,D,S,R}()
 
         # create integrator
         IntegratorHSPARKprimary(params, solver, iguess, cache)
@@ -79,7 +79,7 @@ struct IntegratorHSPARKprimary{DT, TT, D, S, R, PT <: ParametersHSPARKprimary{DT
 end
 
 
-function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
+function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
                                         params::ParametersHSPARKprimary{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local tqᵢ::TT
     local tpᵢ::TT
@@ -142,7 +142,7 @@ end
 
 "Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems."
 @generated function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersHSPARKprimary{DT,TT,D,S,R,P}) where {ST,DT,TT,D,S,R,P}
-    cache = IntegratorCacheSPARK{ST,TT,D,S,R}()
+    cache = IntegratorCacheSPARK{ST,D,S,R}()
 
     quote
         compute_stages!(y, $cache, params)

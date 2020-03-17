@@ -92,7 +92,7 @@ struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
     params::PT
     solver::ST
     iguess::IT
-    cache::IntegratorCacheSPARK{DT,TT,D,S,S}
+    cache::IntegratorCacheSPARK{DT,D,S,S}
 
     function IntegratorSLRK(params::ParametersSLRK{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
@@ -118,7 +118,7 @@ struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
         iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create cache
-        cache = IntegratorCacheSPARK{DT,TT,D,S,S}()
+        cache = IntegratorCacheSPARK{DT,D,S,S}()
 
         # create integrator
         IntegratorSLRK(params, solver, iguess, cache)
@@ -130,7 +130,7 @@ struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
 end
 
 
-function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S},
+function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S},
                                         params::ParametersSLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
     local t::TT
 
@@ -179,7 +179,7 @@ end
 
 "Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems."
 @generated function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersSLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
-    cache = IntegratorCacheSPARK{ST,TT,D,S,S}()
+    cache = IntegratorCacheSPARK{ST,D,S,S}()
 
     quote
         compute_stages!(y, $cache, params)

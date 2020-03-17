@@ -41,7 +41,7 @@ struct IntegratorVSPARK{DT, TT, D, S, R, PT <: ParametersVSPARK{DT,TT,D,S,R},
     params::PT
     solver::ST
     iguess::IT
-    cache::IntegratorCacheSPARK{DT,TT,D,S,R}
+    cache::IntegratorCacheSPARK{DT,D,S,R}
 
     function IntegratorVSPARK(params::ParametersVSPARK{DT,TT,D,S,R}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,R,ST,IT}
         new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, cache)
@@ -71,7 +71,7 @@ struct IntegratorVSPARK{DT, TT, D, S, R, PT <: ParametersVSPARK{DT,TT,D,S,R},
         iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create cache
-        cache = IntegratorCacheSPARK{DT,TT,D,S,R}()
+        cache = IntegratorCacheSPARK{DT,D,S,R}()
 
         # create integrator
         IntegratorVSPARK(params, solver, iguess, cache)
@@ -83,7 +83,7 @@ struct IntegratorVSPARK{DT, TT, D, S, R, PT <: ParametersVSPARK{DT,TT,D,S,R},
 end
 
 
-function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,TT,D,S,R},
+function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
                                         params::ParametersVSPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local tpᵢ::TT
     local tλᵢ::TT
