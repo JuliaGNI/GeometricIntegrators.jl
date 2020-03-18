@@ -52,7 +52,7 @@ end
 """
 Parameters for right-hand side function of weak implicit Runge-Kutta methods.
 """
-mutable struct ParametersWIRK{DT, TT, ET <: SDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
+mutable struct ParametersWIRK{DT, TT, D, M, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equ::ET
     tab::TableauWIRK{TT}
     Δt::TT
@@ -61,11 +61,11 @@ mutable struct ParametersWIRK{DT, TT, ET <: SDE{DT,TT}, D, M, S} <: Parameters{D
 
     t::TT
     q::Vector{DT}
-end
 
-function ParametersWIRK(equ::ET, tab::TableauWIRK{TT}, Δt::TT, ΔW::Vector{DT}, ΔZ::Vector{DT}) where {DT, TT, ET <: SDE{DT,TT}}
-    @assert equ.m == length(ΔW) == length(ΔZ)
-    ParametersWIRK{DT, TT, ET, equ.d, equ.m, tab.s}(equ, tab, Δt, ΔW, ΔZ, 0, zeros(DT, equ.d))
+    function ParametersWIRK{DT,D,M}(equ::ET, tab::TableauWIRK{TT}, Δt::TT, ΔW::Vector{DT}, ΔZ::Vector{DT}) where {DT, TT, D, M, ET <: NamedTuple}
+        @assert M == length(ΔW) == length(ΔZ)
+        new{DT, TT, D, M, tab.s, ET}(equ, tab, Δt, ΔW, ΔZ, zero(TT), zeros(DT,D))
+    end
 end
 
 
@@ -74,7 +74,7 @@ Structure for holding the internal stages `Q0`, and `Q1` the values of the drift
 and the diffusion matrix evaluated at the internal stages `V=v(Q0)`, `B=B(Q1)`,
 and the increments `Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW`.
 """
-struct IntegratorCacheWIRK{DT}
+struct IntegratorCacheWIRK{DT,D,M,S}
     Q0::Vector{Vector{DT}}     # Q0[i][k]   - the k-th component of the internal stage Q^(0)_i
     Q1::Vector{Matrix{DT}}     # Q1[i][k,l] - the k-th component of the internal stage Q^(l)_i
     V ::Vector{Vector{DT}}     # V [i][k]   - the k-th component of the drift vector v(Q0[i][:])
@@ -88,7 +88,7 @@ struct IntegratorCacheWIRK{DT}
 
     Δy::Vector{DT}
 
-    function IntegratorCacheWIRK{DT}(D, M, S) where {DT}
+    function IntegratorCacheWIRK{DT,D,M,S}() where {DT,D,M,S}
         # create internal stage vectors
         Q0 = create_internal_stage_vector(DT, D, S)
         Q1 = create_internal_stage_vector(DT, D, M, S)
@@ -112,48 +112,37 @@ end
 """
 Stochastic implicit Runge-Kutta integrator.
 """
-struct IntegratorWIRK{DT, TT, PT <: ParametersWIRK{DT,TT},
-                              ST <: NonlinearSolver{DT}} <: StochasticIntegrator{DT,TT}
+struct IntegratorWIRK{DT, TT, D, M, S,
+                PT <: ParametersWIRK{DT,TT},
+                ST <: NonlinearSolver{DT}} <: StochasticIntegratorRK{DT,TT,D,M,S}
     params::PT
     solver::ST
     cache::IntegratorCacheWIRK{DT}
-end
 
+    function IntegratorWIRK(params::ParametersWIRK{DT,TT,D,M,S}, solver::ST, cache) where {DT,TT,D,M,S,ST}
+        new{DT, TT, D, M, S, typeof(params), ST}(params, solver, cache)
+    end
 
-function IntegratorWIRK(equation::SDE{DT,TT}, tableau::TableauWIRK{TT}, Δt::TT) where {DT,TT}
-    D = equation.d
-    M = equation.m
-    NS= max(equation.ns,equation.ni)
-    S = tableau.s
+    function IntegratorWIRK{DT,D,M}(equations::NamedTuple, tableau::TableauWIRK{TT}, Δt::TT) where {DT,TT,D,M}
+        # get number of stages
+        S = tableau.s
 
-    # create params
-    params = ParametersWIRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M))
+        # create params
+        params = ParametersWIRK{DT,D,M}(equations, tableau, Δt, zeros(DT,M), zeros(DT,M))
 
-    # create solver
-    solver = create_nonlinear_solver(DT, D*S*(M+1), params)
+        # create solver
+        solver = create_nonlinear_solver(DT, D*S*(M+1), params)
 
-    # create cache for internal stage vectors and update vectors
-    cache = IntegratorCacheWIRK{DT}(D, M, S)
+        # create cache for internal stage vectors and update vectors
+        cache = IntegratorCacheWIRK{DT,D,M,S}()
 
-    # create integrator
-    IntegratorWIRK{DT, TT, typeof(params), typeof(solver)}(params, solver, cache)
-end
+        # create integrator
+        IntegratorWIRK(params, solver, cache)
+    end
 
-@inline equation(integrator::IntegratorWIRK) = integrator.params.equ
-@inline timestep(integrator::IntegratorWIRK) = integrator.params.Δt
-@inline tableau(integrator::IntegratorWIRK) = integrator.params.tab
-@inline nstages(integrator::IntegratorWIRK)  = nstages(tableau(integrator))
-@inline eachstage(integrator::IntegratorWIRK) = 1:nstages(integrator)
-@inline noisedims(integrator::IntegratorWIRK) = integrator.params.equ.m
-@inline Base.eltype(integrator::IntegratorWIRK{DT}) where {DT} = DT
-
-
-function update_params!(int::IntegratorWIRK, sol::AtomicSolutionSDE)
-    # set time for nonlinear solver and copy previous solution
-    int.params.t  = sol.t
-    int.params.q .= sol.q
-    int.params.ΔW .= sol.ΔW
-    int.params.ΔZ .= sol.ΔZ
+    function IntegratorWIRK(equation::SDE{DT,TT}, tableau::TableauWIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorWIRK{DT, ndims(equation), equation.m}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
 end
 
 
@@ -166,7 +155,7 @@ Unlike for FIRK, here `Y = Δt a v(Q) + â B(Q) ΔW`.
 """
 @generated function compute_stages!(x::Vector{ST}, Q0::Vector{Vector{ST}}, Q1::Vector{Matrix{ST}}, V::Vector{Vector{ST}},
                                                    B::Vector{Matrix{ST}}, Y0::Vector{Vector{ST}}, Y1::Vector{Matrix{ST}},
-                                                   params::ParametersWIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+                                                   params::ParametersWIRK{DT,TT,D,M,S}) where {ST,DT,TT,D,M,S}
 
     tQ::Vector{ST} = zeros(ST,D)
     tV::Vector{ST} = zeros(ST,D)
@@ -205,7 +194,7 @@ Unlike for FIRK, here `Y = Δt a v(Q) + â B(Q) ΔW`.
             # time point with the coefficient c0
             tᵢ = params.t + params.Δt * params.tab.qdrift0.c[i]
             # calculates v(t,tQ) and assigns to the i-th column of V
-            params.equ.v(tᵢ, Q0[i], V[i])
+            params.equ[:v](tᵢ, Q0[i], V[i])
 
             # time point with the coefficient c1
             tᵢ = params.t + params.Δt * params.tab.qdrift1.c[i]
@@ -214,7 +203,7 @@ Unlike for FIRK, here `Y = Δt a v(Q) + â B(Q) ΔW`.
                 # copies Q1[i][:,l] to the vector tQ
                 simd_copy_xy_first!($tQ, Q1[i], l)
                 # calculates the l-th column of B(t,tQ) and assigns to the vector tB
-                params.equ.B(tᵢ, $tQ, B[i], l)
+                params.equ[:B](tᵢ, $tQ, B[i], l)
             end
         end
     end
@@ -223,9 +212,9 @@ end
 """
 Compute stages of weak implicit Runge-Kutta methods.
 """
-@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersWIRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersWIRK{DT,TT,D,M,S}) where {ST,DT,TT,D,M,S}
 
-    cache = IntegratorCacheWIRK{ST}(D, M, S)
+    cache = IntegratorCacheWIRK{ST,D,M,S}()
 
     quote
         compute_stages!(x, $cache.Q0, $cache.Q1, $cache.V, $cache.B, $cache.Y0, $cache.Y1, params)
@@ -324,6 +313,6 @@ function Integrators.integrate_step!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolu
     compute_stages!(int.solver.x, int.cache.Q0, int.cache.Q1, int.cache.V, int.cache.B, int.cache.Y0, int.cache.Y1, int.params)
 
     # compute final update (same update function as for SIRK)
-    update_solution!(sol, int.cache.V, int.cache.B, int.params.tab.qdrift0.b, int.params.tab.qdiff0.b, int.params.Δt, int.params.ΔW, int.cache.Δy)
-    update_solution!(sol, int.cache.V, int.cache.B, int.params.tab.qdrift0.b̂, int.params.tab.qdiff0.b̂, int.params.Δt, int.params.ΔW, int.cache.Δy)
+    update_solution!(sol, int.cache.V, int.cache.B, tableau(int).qdrift0.b, tableau(int).qdiff0.b, timestep(int), int.params.ΔW, int.cache.Δy)
+    update_solution!(sol, int.cache.V, int.cache.B, tableau(int).qdrift0.b̂, tableau(int).qdiff0.b̂, timestep(int), int.params.ΔW, int.cache.Δy)
 end

@@ -1,3 +1,48 @@
+
+function truncate_increments!(ΔW, A)
+    if A > 0
+        for i in eachindex(ΔW)
+            if ΔW[i] < -A
+                ΔW[i] = -A
+            elseif ΔW[i] > A
+                ΔW[i] = A
+            end
+        end
+    end
+end
+
+function update_params!(int::IntegratorSIRK, sol::AtomicSolutionSDE)
+    # set time for nonlinear solver and copy previous solution
+    int.params.t  = sol.t
+    int.params.q .= sol.q
+    int.params.ΔW .= sol.ΔW
+    int.params.ΔZ .= sol.ΔZ
+
+    # truncate the increments ΔW with A
+    truncate_increments!(int.params.ΔW, int.params.A)
+end
+
+function update_params!(int::Union{IntegratorSIPRK,IntegratorSISPRK}, sol::AtomicSolutionPSDE)
+    # set time for nonlinear solver and copy previous solution
+    int.params.t  = sol.t
+    int.params.q .= sol.q
+    int.params.p .= sol.p
+    int.params.ΔW .= sol.ΔW
+    int.params.ΔZ .= sol.ΔZ
+
+    # truncate the increments ΔW with A
+    truncate_increments!(int.params.ΔW, int.params.A)
+end
+
+function update_params!(int::IntegratorWIRK, sol::AtomicSolutionSDE)
+    # set time for nonlinear solver and copy previous solution
+    int.params.t  = sol.t
+    int.params.q .= sol.q
+    int.params.ΔW .= sol.ΔW
+    int.params.ΔZ .= sol.ΔZ
+end
+
+
 @doc raw"""
 Update solution for stochastic Runge-Kutta methods (SIRK and WIRK)
 

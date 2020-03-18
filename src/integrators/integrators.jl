@@ -103,33 +103,33 @@ end
 #*****************************************************************************#
 
 "Create integrator for stochastic explicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauSERK, Δt)
-    IntegratorSERK(equation, tableau, Δt)
+function Integrator(equation::SDE, tableau::TableauSERK, Δt; kwargs...)
+    IntegratorSERK(equation, tableau, Δt; kwargs...)
 end
 
 "Create integrator for weak explicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauWERK, Δt)
-    IntegratorWERK(equation, tableau, Δt)
+function Integrator(equation::SDE, tableau::TableauWERK, Δt; kwargs...)
+    IntegratorWERK(equation, tableau, Δt; kwargs...)
 end
 
 "Create integrator for stochastic fully implicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauSIRK, Δt; K::Int=0)
-    IntegratorSIRK(equation, tableau, Δt, K=K)
+function Integrator(equation::SDE, tableau::TableauSIRK, Δt; kwargs...)
+    IntegratorSIRK(equation, tableau, Δt; kwargs...)
 end
 
 "Create integrator for stochastic fully implicit partitioned Runge-Kutta tableau."
-function Integrator(equation::PSDE, tableau::TableauSIPRK, Δt; K::Int=0)
-    IntegratorSIPRK(equation, tableau, Δt, K=K)
+function Integrator(equation::PSDE, tableau::TableauSIPRK, Δt; kwargs...)
+    IntegratorSIPRK(equation, tableau, Δt; kwargs...)
 end
 
 "Create integrator for stochastic fully implicit split partitioned Runge-Kutta tableau."
-function Integrator(equation::SPSDE, tableau::TableauSISPRK, Δt; K::Int=0)
-    IntegratorSISPRK(equation, tableau, Δt, K=K)
+function Integrator(equation::SPSDE, tableau::TableauSISPRK, Δt; kwargs...)
+    IntegratorSISPRK(equation, tableau, Δt; kwargs...)
 end
 
 "Create integrator for weak fully implicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauWIRK, Δt)
-    IntegratorWIRK(equation, tableau, Δt)
+function Integrator(equation::SDE, tableau::TableauWIRK, Δt; kwargs...)
+    IntegratorWIRK(equation, tableau, Δt; kwargs...)
 end
 
 

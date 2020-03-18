@@ -55,7 +55,7 @@ Parameters for right-hand side function of implicit Runge-Kutta methods.
 
 `A` - if positive, the upper bound of the Wiener process increments; if `A=0.0`, no truncation.
 """
-mutable struct ParametersSISPRK{DT, TT, ET <: SPSDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
+mutable struct ParametersSISPRK{DT, TT, D, M, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equ::ET
     tab::TableauSISPRK{TT}
     Δt::TT
@@ -66,11 +66,11 @@ mutable struct ParametersSISPRK{DT, TT, ET <: SPSDE{DT,TT}, D, M, S} <: Paramete
     t::TT
     q::Vector{DT}
     p::Vector{DT}
-end
 
-function ParametersSISPRK(equ::ET, tab::TableauSISPRK{TT}, Δt::TT, ΔW::Vector{DT}, ΔZ::Vector{DT}, A::DT) where {DT, TT, ET <: SPSDE{DT,TT}}
-    @assert equ.m == length(ΔW) == length(ΔZ)
-    ParametersSISPRK{DT, TT, ET, equ.d, equ.m, tab.s}(equ, tab, Δt, ΔW, ΔZ, A, 0, zeros(DT, equ.d), zeros(DT, equ.d))
+    function ParametersSISPRK{DT,D,M}(equ::ET, tab::TableauSISPRK{TT}, Δt::TT, ΔW::Vector{DT}, ΔZ::Vector{DT}, A::DT) where {DT, TT, D, M, ET <: NamedTuple}
+        @assert M == length(ΔW) == length(ΔZ)
+        new{DT, TT, D, M, tab.s, ET}(equ, tab, Δt, ΔW, ΔZ, A, zero(TT), zeros(DT,D), zeros(DT,D))
+    end
 end
 
 
@@ -79,7 +79,7 @@ Structure for holding the internal stages `Q`, the values of the drift vector
 and the diffusion matrix evaluated at the internal stages `V=v(Q)`, `B=B(Q)`,
 and the increments `Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW`.
 """
-struct IntegratorCacheSISPRK{DT}
+struct IntegratorCacheSISPRK{DT,D,M,S}
     Q ::Vector{Vector{DT}}
     P ::Vector{Vector{DT}}
     V ::Vector{Vector{DT}}
@@ -103,7 +103,7 @@ struct IntegratorCacheSISPRK{DT}
     Δy::Vector{DT}
     Δz::Vector{DT}
 
-    function IntegratorCacheSISPRK{DT}(D, M, S) where {DT}
+    function IntegratorCacheSISPRK{DT,D,M,S}() where {DT,D,M,S}
 
         # create internal stage vectors
         Q  = create_internal_stage_vector(DT, D, S)
@@ -137,60 +137,39 @@ end
 
 
 "Stochastic implicit partitioned Runge-Kutta integrator."
-struct IntegratorSISPRK{DT, TT, PT <: ParametersSISPRK{DT,TT},
-                                ST <: NonlinearSolver{DT}} <: StochasticIntegrator{DT,TT}
+struct IntegratorSISPRK{DT, TT, D, M, S,
+                PT <: ParametersSISPRK{DT,TT},
+                ST <: NonlinearSolver{DT}} <: StochasticIntegratorRK{DT,TT,D,M,S}
     params::PT
     solver::ST
-    cache::IntegratorCacheSISPRK{DT}
-end
+    cache::IntegratorCacheSISPRK{DT,D,M,S}
 
-function IntegratorSISPRK(equation::SPSDE{DT,TT}, tableau::TableauSISPRK{TT}, Δt::TT; K::Int=0) where {DT,TT}
-    # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
+    function IntegratorSISPRK(params::ParametersSISPRK{DT,TT,D,M,S}, solver::ST, cache) where {DT,TT,D,M,S,ST}
+        new{DT, TT, D, M, S, typeof(params), ST}(params, solver, cache)
+    end
 
-    D = equation.d
-    M = equation.m
-    NS= max(equation.ns,equation.ni)
-    S = tableau.s
+    function IntegratorSISPRK{DT,D,M}(equations::NamedTuple, tableau::TableauSISPRK{TT}, Δt::TT; K::Int=0) where {DT,TT,D,M}
+        # get number of stages
+        S = tableau.s
 
-    # create params
-    K==0 ? A = 0.0 : A = sqrt( 2*K*Δt*abs(log(Δt)) )
-    params = ParametersSISPRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), A)
+        # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
+        K==0 ? A = 0.0 : A = sqrt( 2*K*Δt*abs(log(Δt)) )
 
-    # create solver
-    solver = create_nonlinear_solver(DT, 2*D*S, params)
+        # create params
+        params = ParametersSISPRK{DT,D,M}(equations, tableau, Δt, zeros(DT,M), zeros(DT,M), A)
 
-    # create cache for internal stage vectors and update vectors
-    cache = IntegratorCacheSISPRK{DT}(D, M, S)
+        # create solver
+        solver = create_nonlinear_solver(DT, 2*D*S, params)
 
-    # create integrator
-    IntegratorSISPRK{DT, TT, typeof(params), typeof(solver)}(params, solver, cache)
-end
+        # create cache for internal stage vectors and update vectors
+        cache = IntegratorCacheSISPRK{DT,D,M,S}()
 
-@inline equation(integrator::IntegratorSISPRK) = integrator.params.equ
-@inline timestep(integrator::IntegratorSISPRK) = integrator.params.Δt
-@inline tableau(integrator::IntegratorSISPRK) = integrator.params.tab
-@inline nstages(integrator::IntegratorSISPRK)  = nstages(tableau(integrator))
-@inline eachstage(integrator::IntegratorSISPRK) = 1:nstages(integrator)
-@inline Base.eltype(integrator::IntegratorSISPRK{DT}) where {DT} = DT
+        # create integrator
+        IntegratorSISPRK(params, solver, cache)
+    end
 
-
-function update_params!(int::IntegratorSISPRK, sol::AtomicSolutionPSDE)
-    # set time for nonlinear solver and copy previous solution
-    int.params.t  = sol.t
-    int.params.q .= sol.q
-    int.params.p .= sol.p
-    int.params.ΔW .= sol.ΔW
-    int.params.ΔZ .= sol.ΔZ
-
-    # truncate the increments ΔW with A
-    if int.params.A>0
-        for i in eachindex(int.params.ΔW)
-            if int.params.ΔW[i]<-int.params.A
-                int.params.ΔW[i] = -int.params.A
-            elseif int.params.ΔW[i]>int.params.A
-                int.params.ΔW[i] = int.params.A
-            end
-        end
+    function IntegratorSISPRK(equation::SPSDE{DT,TT}, tableau::TableauSISPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorSISPRK{DT, ndims(equation), equation.m}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 
@@ -205,7 +184,7 @@ Unlike for FIRK, here
 `Z = Δt â1_drift f1(Q,P) + Δt â2_drift f2(Q,P) + â1_diff G1(Q,P) ΔW + â2_diff G2(Q,P) ΔW`.
 """
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSISPRK{ST},
-                         params::ParametersSISPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+                         params::ParametersSISPRK{DT,TT,D,M,S}) where {ST,DT,TT,D,M,S}
 
     local tqᵢ::TT       #times for the q internal stages
     local tpᵢ₁::TT      #times for the p internal stages
@@ -239,21 +218,21 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSISPRK{ST},
         tpᵢ₂ = params.t + params.Δt * params.tab.pdrift2.c[i]
 
         # calculates v(t,Q,P), f1(t,Q,P), f2(t,Q,P) and assigns to V, F1, F2
-        params.equ.v(tqᵢ, Q[i], P[i], V[i])
-        params.equ.f1(tpᵢ₁, Q[i], P[i], F1[i])
-        params.equ.f2(tpᵢ₂, Q[i], P[i], F2[i])
+        params.equ[:v](tqᵢ, Q[i], P[i], V[i])
+        params.equ[:f1](tpᵢ₁, Q[i], P[i], F1[i])
+        params.equ[:f2](tpᵢ₂, Q[i], P[i], F2[i])
 
         # calculates B(t,Q,P), G1(t,Q,P), G2(t,Q,P) and assigns to the matrices B[i], G1[i], G2[i]
-        params.equ.B(tqᵢ, Q[i], P[i], B[i])
-        params.equ.G1(tpᵢ₁, Q[i], P[i], G1[i])
-        params.equ.G2(tpᵢ₂, Q[i], P[i], G2[i])
+        params.equ[:B](tqᵢ, Q[i], P[i], B[i])
+        params.equ[:G1](tpᵢ₁, Q[i], P[i], G1[i])
+        params.equ[:G2](tpᵢ₂, Q[i], P[i], G2[i])
     end
 end
 
 "Compute stages of stochastic implicit split partitioned Runge-Kutta methods."
-@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSISPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSISPRK{DT,TT,D,M,S}) where {ST,DT,TT,D,M,S}
 
-    cache = IntegratorCacheSISPRK{ST}(D, M, S)
+    cache = IntegratorCacheSISPRK{ST,D,M,S}()
 
     quote
         compute_stages!(x, $cache, params)
@@ -344,5 +323,5 @@ function Integrators.integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSo
     compute_stages!(int.solver.x, int.cache, int.params)
 
     # compute final update
-    update_solution!(sol, int.cache, int.params.tab, int.params.Δt, int.params.ΔW)
+    update_solution!(sol, int.cache, tableau(int), timestep(int), int.params.ΔW)
 end

@@ -67,29 +67,32 @@ function TableauWERK(name::Symbol, A0::Matrix{T}, A1::Matrix{T}, A2::Matrix{T},
 end
 
 
-
-"Stochastic Explicit Runge-Kutta integrator."
-struct IntegratorWERK{DT, TT, ET <: SDE{DT,TT}} <: StochasticIntegrator{DT,TT}
-    equation::ET
-    tableau::TableauWERK{TT}
+"Parameters for weak stochastic explicit Runge-Kutta methods."
+struct ParametersWERK{DT, TT, D, M, S, ET <: NamedTuple} <: Parameters{DT,TT}
+    equs::ET
+    tab::TableauWERK{TT}
     Δt::TT
 
+    function ParametersWERK{DT,D,M}(equs::ET, tab::TableauWERK{TT}, Δt::TT) where {DT, TT, D, M, ET <: NamedTuple}
+        new{DT, TT, D, M, tab.s, ET}(equs, tab, Δt)
+    end
+end
+
+
+"Weak Stochastic Explicit Runge-Kutta integrator cache."
+struct IntegratorCacheWERK{DT,D,M,S} <: SDEIntegratorCache{DT,D,M}
     Δy::Vector{DT}
 
-    Q0::Vector{DT}           # Q0[1..n]      - the internal stage H^(0)_i for a given i
+    Q0::Vector{DT}           # Q0[1..n]       - the internal stage H^(0)_i for a given i
     Q1::Vector{Vector{DT}}   # Q1[1..m][1..n] - the internal stages H^(l)_i for a given i
     Q2::Vector{Vector{DT}}   # Q2[1..m][1..n] - the internal stages \hat H^(l)_i for a given i
     V ::Vector{Vector{DT}}
     B1::Vector{Matrix{DT}}   # B1[i] holds the values of the diffusion matrix such that B1[i][:,l] is evaluated at H^(l)_i
     B2::Vector{Matrix{DT}}   # B2[i] holds the values of the diffusion matrix such that B2[i][:,l] is evaluated at \hat H^(l)_i
+
     tB::Vector{DT}           # the value of the l-th column of the diffusion term evaluated at the internal stage H^(l)_i for given i and l
 
-    function IntegratorWERK{DT,TT}(equation::ET, tableau, Δt::TT) where {DT, TT, ET <: SDE{DT,TT}}
-        D = equation.d
-        M = equation.m
-        NS= max(equation.ns,equation.ni)
-        S = tableau.s
-
+    function IntegratorCacheWERK{DT,D,M,S}() where {DT,D,M,S}
         # create internal stage vectors
         Q0 = zeros(DT, D)
         Q1 = create_internal_stage_vector(DT, D, M)
@@ -98,20 +101,39 @@ struct IntegratorWERK{DT, TT, ET <: SDE{DT,TT}} <: StochasticIntegrator{DT,TT}
         B1 = create_internal_stage_vector(DT, D, M, S)
         B2 = create_internal_stage_vector(DT, D, M, S)
 
-        new{DT,TT,ET}(equation, tableau, Δt, zeros(DT,M), Q0, Q1, Q2, V, B1, B2, zeros(DT,D))
+        new(zeros(DT,M), Q0, Q1, Q2, V, B1, B2, zeros(DT,D))
     end
 end
 
-function IntegratorWERK(equation::SDE{DT,TT}, tableau::TableauWERK{TT}, Δt::TT) where {DT,TT}
-    IntegratorWERK{DT,TT}(equation, tableau, Δt)
-end
 
-@inline equation(integrator::IntegratorWERK) = integrator.equation
-@inline timestep(integrator::IntegratorWERK) = integrator.Δt
-@inline tableau(integrator::IntegratorWERK)  = integrator.tableau
-@inline nstages(integrator::IntegratorWERK)  = nstages(tableau(integrator))
-@inline eachstage(integrator::IntegratorWERK) = 1:nstages(integrator)
-@inline Base.eltype(integrator::IntegratorWERK{DT}) where {DT} = DT
+"Weak Stochastic Explicit Runge-Kutta integrator."
+struct IntegratorWERK{DT, TT, D, M, S, ET} <: StochasticIntegratorRK{DT,TT,D,M,S}
+    params::ParametersWERK{DT,TT,D,M,S,ET}
+    cache::IntegratorCacheWERK{DT,D,M,S}
+
+
+    function IntegratorWERK(params::ParametersWERK{DT,TT,D,M,S,ET}, cache) where {DT,TT,D,M,S,ET}
+        new{DT, TT, D, M, S, ET}(params, cache)
+    end
+
+    function IntegratorWERK{DT,D,M}(equations::ET, tableau::TableauWERK{TT}, Δt::TT) where {DT, TT, D, M, ET <: NamedTuple}
+        # get number of stages
+        S = tableau.s
+
+        # create params
+        params = ParametersWERK{DT,D,M}(equations, tableau, Δt)
+
+        # create cache
+        cache = IntegratorCacheWERK{DT,D,M,S}()
+
+        # create integrator
+        IntegratorWERK(params, cache)
+    end
+
+    function IntegratorWERK(equation::SDE{DT,TT}, tableau::TableauWERK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorWERK{DT, ndims(equation), equation.m}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
+end
 
 
 "Integrate SDE with explicit Runge-Kutta integrator."
@@ -125,72 +147,71 @@ function Integrators.integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolu
 
     # THE FIRST INTERNAL STAGES ARE ALL EQUAL TO THE PREVIOUS STEP SOLUTION
     # calculates v(t,tQ0) and assigns to the 1st column of V
-    int.equation.v(sol.t̅, sol.q̅, int.V[1])
+    equation(int, :v)(sol.t̅, sol.q̅, int.cache.V[1])
     # calculates B(t,Q) and assigns to the matrix B1[1]
     # no need to calculate the columns of B separately, because all internal stages
     # for i=1 are equal to int.q[r,m]
-    int.equation.B(sol.t̅, sol.q̅, int.B1[1])
+    equation(int, :B)(sol.t̅, sol.q̅, int.cache.B1[1])
     # copy B1[i] to B2[i] (they're equal for i=1)
-    int.B2[1] .= int.B1[1]
+    int.cache.B2[1] .= int.cache.B1[1]
 
-    for i in 2:int.tableau.s
-
+    for i in 2:tableau(int).s
         # Calculating the internal stage H^(0)_i
-        @inbounds for k in eachindex(int.Q0)
+        for k in eachindex(int.cache.Q0)
             # contribution from the drift part
             ydrift = 0
             for j = 1:i-1
-                ydrift += int.tableau.qdrift0.a[i,j] * int.V[j][k]
+                ydrift += tableau(int).qdrift0.a[i,j] * int.cache.V[j][k]
             end
 
             # ΔW contribution from the diffusion part
-            int.Δy .= 0
+            int.cache.Δy .= 0
             for j = 1:i-1
-                for l in eachindex(int.Δy)
-                    int.Δy[l] += int.tableau.qdiff0.a[i,j] * int.B1[j][k,l]
+                for l in eachindex(int.cache.Δy)
+                    int.cache.Δy[l] += tableau(int).qdiff0.a[i,j] * int.cache.B1[j][k,l]
                 end
             end
 
-            int.Q0[k] = sol.q̅[k] + int.Δt * ydrift + dot(int.Δy,sol.ΔW)
+            int.cache.Q0[k] = sol.q̅[k] + timestep(int) * ydrift + dot(int.cache.Δy, sol.ΔW)
         end
 
         # Calculating the internal stages H^(l)_i for l=1..sol.nm
-        @inbounds for k in eachindex(int.Q1[1])
+        for k in eachindex(int.cache.Q1[1])
             # contribution from the drift part (same for all noises)
             ydrift = 0
             for j = 1:i-1
-                ydrift += int.tableau.qdrift1.a[i,j] * int.V[j][k]
+                ydrift += tableau(int).qdrift1.a[i,j] * int.cache.V[j][k]
             end
 
             # contribution from the diffusion part is different for each noise
-            @inbounds for noise_idx in eachindex(int.Q1)
+            for noise_idx in eachindex(int.cache.Q1)
 
                 # ΔW contribution from the diffusion part
-                int.Δy .= 0
+                int.cache.Δy .= 0
                 for j = 1:i-1
-                    for l in eachindex(int.Δy)
+                    for l in eachindex(int.cache.Δy)
                         if l==noise_idx
-                            int.Δy[l] += int.tableau.qdiff1.a[i,j] * int.B1[j][k,l]
+                            int.cache.Δy[l] += tableau(int).qdiff1.a[i,j] * int.cache.B1[j][k,l]
                         else
-                            int.Δy[l] += int.tableau.qdiff3.a[i,j] * int.B1[j][k,l]
+                            int.cache.Δy[l] += tableau(int).qdiff3.a[i,j] * int.cache.B1[j][k,l]
                         end
                     end
                 end
 
-                int.Q1[noise_idx][k] = sol.q̅[k] + int.Δt * ydrift + dot(int.Δy,sol.ΔW)
+                int.cache.Q1[noise_idx][k] = sol.q̅[k] + timestep(int) * ydrift + dot(int.cache.Δy, sol.ΔW)
             end
         end
 
         # Calculating the internal stages \hat H^(l)_i for l=1..sol.nm
-        @inbounds for k in eachindex(int.Q2[1])
+        for k in eachindex(int.cache.Q2[1])
             # contribution from the drift part (same for all noises)
             ydrift = 0
             for j = 1:i-1
-                ydrift += int.tableau.qdrift2.a[i,j] * int.V[j][k]
+                ydrift += tableau(int).qdrift2.a[i,j] * int.cache.V[j][k]
             end
 
             # contribution from the diffusion part is different for each noise
-            @inbounds for noise_idx in eachindex(int.Q2)
+            for noise_idx in eachindex(int.cache.Q2)
 
                 # ΔW contribution from the diffusion part
                 ydiff2 = 0
@@ -199,40 +220,39 @@ function Integrators.integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolu
                     for l in eachindex(sol.ΔW, sol.ΔZ)
                         # calculating the terms with the random variables \hat I_{noise_idx,l}
                         if l<noise_idx
-                            ydiff2 += int.tableau.qdiff2.a[i,j] * int.B1[j][k,l] * sol.ΔW[noise_idx] * sol.ΔZ[l]
+                            ydiff2 += tableau(int).qdiff2.a[i,j] * int.cache.B1[j][k,l] * sol.ΔW[noise_idx] * sol.ΔZ[l]
                         elseif l>noise_idx
-                            ydiff2 += -int.tableau.qdiff2.a[i,j] * int.B1[j][k,l] * sol.ΔW[l] * sol.ΔZ[noise_idx]
+                            ydiff2 += -tableau(int).qdiff2.a[i,j] * int.cache.B1[j][k,l] * sol.ΔW[l] * sol.ΔZ[noise_idx]
                         end
                     end
                 end
 
-                int.Q2[noise_idx][k] = sol.q̅[k] + int.Δt * ydrift + ydiff2/sqrt(int.Δt)
+                int.cache.Q2[noise_idx][k] = sol.q̅[k] + timestep(int) * ydrift + ydiff2/sqrt(timestep(int))
             end
         end
 
         # CALCULATING THE NEW VALUES OF V
-        tᵢ = sol.t̅ + int.Δt * int.tableau.qdrift0.c[i]
-        int.equation.v(tᵢ, int.Q0, int.V[i])
+        tᵢ = sol.t̅ + timestep(int) * tableau(int).qdrift0.c[i]
+        equation(int, :v)(tᵢ, int.cache.Q0, int.cache.V[i])
 
         # CALCULATING THE NEW VALUES OF B1
         # each column of B evaluated at a different internal stage
-        tᵢ = sol.t̅ + int.Δt * int.tableau.qdrift1.c[i]
+        tᵢ = sol.t̅ + timestep(int) * tableau(int).qdrift1.c[i]
 
-        for l = 1:equation(int).m
-            int.equation.B(tᵢ, int.Q1[l], int.B1[i], l)
+        for l in eachnoise(int)
+            equation(int, :B)(tᵢ, int.cache.Q1[l], int.cache.B1[i], l)
         end
 
         # CALCULATING THE NEW VALUES OF B2
         # each column of B evaluated at a different internal stage
-        tᵢ = sol.t̅ + int.Δt * int.tableau.qdrift2.c[i]
+        tᵢ = sol.t̅ + timestep(int) * tableau(int).qdrift2.c[i]
 
-        for l = 1:equation(int).m
-            int.equation.B(tᵢ, int.Q2[l], int.B2[i], l)
+        for l in eachnoise(int)
+            equation(int, :B)(tᵢ, int.cache.Q2[l], int.cache.B2[i], l)
         end
-
     end
 
     # compute final update
-    update_solution!(sol, int.V, int.B1, int.B2, int.tableau.qdrift0.b, int.tableau.qdiff0.b, int.tableau.qdiff3.b, int.Δt, sol.ΔW, int.Δy)
-    # update_solution!(sol, int.V, int.B1, int.B2, int.tableau.qdrift0.b̂, int.tableau.qdiff0.b̂, int.tableau.qdiff3.b̂, int.Δt, sol.ΔW, int.Δy)
+    update_solution!(sol, int.cache.V, int.cache.B1, int.cache.B2, tableau(int).qdrift0.b, tableau(int).qdiff0.b, tableau(int).qdiff3.b, timestep(int), sol.ΔW, int.cache.Δy)
+    # update_solution!(sol, int.cache.V, int.cache.B1, int.cache.B2, tableau(int).qdrift0.b̂, tableau(int).qdiff0.b̂, tableau(int).qdiff3.b̂, timestep(int), sol.ΔW, int.cache.Δy)
 end

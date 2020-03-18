@@ -40,7 +40,7 @@ Parameters for right-hand side function of implicit Runge-Kutta methods.
 
 `A` - if positive, the upper bound of the Wiener process increments; if A=0.0, no truncation
 """
-mutable struct ParametersSIPRK{DT, TT, ET <: PSDE{DT,TT}, D, M, S} <: Parameters{DT,TT}
+mutable struct ParametersSIPRK{DT, TT, D, M, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equ::ET
     tab::TableauSIPRK{TT}
     Δt::TT
@@ -51,11 +51,11 @@ mutable struct ParametersSIPRK{DT, TT, ET <: PSDE{DT,TT}, D, M, S} <: Parameters
     t::TT
     q::Vector{DT}
     p::Vector{DT}
-end
 
-function ParametersSIPRK(equ::ET, tab::TableauSIPRK{TT}, Δt::TT, ΔW::Vector{DT}, ΔZ::Vector{DT}, A::DT) where {DT, TT, ET <: PSDE{DT,TT}}
-    @assert equ.m == length(ΔW) == length(ΔZ)
-    ParametersSIPRK{DT, TT, ET, equ.d, equ.m, tab.s}(equ, tab, Δt, ΔW, ΔZ, A, 0, zeros(DT, equ.d), zeros(DT, equ.d))
+    function ParametersSIPRK{DT,D,M}(equ::ET, tab::TableauSIPRK{TT}, Δt::TT, ΔW::Vector{DT}, ΔZ::Vector{DT}, A::DT) where {DT, TT, D, M, ET <: NamedTuple}
+        @assert M == length(ΔW) == length(ΔZ)
+        new{DT, TT, D, M, tab.s, ET}(equ, tab, Δt, ΔW, ΔZ, A, zero(TT), zeros(DT,D), zeros(DT,D))
+    end
 end
 
 
@@ -64,7 +64,7 @@ Structure for holding the internal stages Q, the values of the drift vector
 and the diffusion matrix evaluated at the internal stages `V=v(Q)`, `B=B(Q)`,
 and the increments `Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW`.
 """
-struct IntegratorCacheSIPRK{DT}
+struct IntegratorCacheSIPRK{DT,D,M,S}
     Q::Vector{Vector{DT}}
     P::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
@@ -99,7 +99,7 @@ struct IntegratorCacheSIPRK{DT}
     Δy::Vector{DT}
     Δz::Vector{DT}
 
-    function IntegratorCacheSIPRK{DT}(D, M, S) where {DT}
+    function IntegratorCacheSIPRK{DT,D,M,S}() where {DT,D,M,S}
 
         # create internal stage vectors
         Q = create_internal_stage_vector(DT, D, S)
@@ -144,60 +144,39 @@ end
 
 
 "Stochastic implicit partitioned Runge-Kutta integrator."
-struct IntegratorSIPRK{DT, TT, PT <: ParametersSIPRK{DT,TT},
-                               ST <: NonlinearSolver{DT}} <: StochasticIntegrator{DT,TT}
+struct IntegratorSIPRK{DT, TT, D, M, S,
+                PT <: ParametersSIPRK{DT,TT},
+                ST <: NonlinearSolver{DT}} <: StochasticIntegratorRK{DT,TT,D,M,S}
     params::PT
     solver::ST
-    cache::IntegratorCacheSIPRK{DT}
-end
+    cache::IntegratorCacheSIPRK{DT,D,M,S}
 
-function IntegratorSIPRK(equation::PSDE{DT,TT}, tableau::TableauSIPRK{TT}, Δt::TT; K::Int=0) where {DT,TT}
-    # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
+    function IntegratorSIPRK(params::ParametersSIPRK{DT,TT,D,M,S}, solver::ST, cache) where {DT,TT,D,M,S,ST}
+        new{DT, TT, D, M, S, typeof(params), ST}(params, solver, cache)
+    end
 
-    D = equation.d
-    M = equation.m
-    NS= max(equation.ns,equation.ni)
-    S = tableau.s
+    function IntegratorSIPRK{DT,D,M}(equations::NamedTuple, tableau::TableauSIPRK{TT}, Δt::TT; K::Int=0) where {DT,TT,D,M}
+        # get number of stages
+        S = tableau.s
 
-    # create params
-    K==0 ? A = 0.0 : A = sqrt( 2*K*Δt*abs(log(Δt)) )
-    params = ParametersSIPRK(equation, tableau, Δt, zeros(DT,M), zeros(DT,M), A)
+        # K - the integer in the bound A = √(2 K Δt |log Δt|) due to Milstein & Tretyakov; K=0 no truncation
+        K==0 ? A = 0.0 : A = sqrt( 2*K*Δt*abs(log(Δt)) )
 
-    # create solver
-    solver = create_nonlinear_solver(DT, 2*D*S, params)
+        # create params
+        params = ParametersSIPRK{DT,D,M}(equations, tableau, Δt, zeros(DT,M), zeros(DT,M), A)
 
-    # create cache for internal stage vectors and update vectors
-    cache = IntegratorCacheSIPRK{DT}(D, M, S)
+        # create solver
+        solver = create_nonlinear_solver(DT, 2*D*S, params)
 
-    # create integrator
-    IntegratorSIPRK{DT, TT, typeof(params), typeof(solver)}(params, solver, cache)
-end
+        # create cache for internal stage vectors and update vectors
+        cache = IntegratorCacheSIPRK{DT,D,M,S}()
 
-@inline equation(integrator::IntegratorSIPRK) = integrator.params.equ
-@inline timestep(integrator::IntegratorSIPRK) = integrator.params.Δt
-@inline tableau(integrator::IntegratorSIPRK) = integrator.params.tab
-@inline nstages(integrator::IntegratorSIPRK)  = nstages(tableau(integrator))
-@inline eachstage(integrator::IntegratorSIPRK) = 1:nstages(integrator)
-@inline Base.eltype(integrator::IntegratorSIPRK{DT}) where {DT} = DT
+        # create integrator
+        IntegratorSIPRK(params, solver, cache)
+    end
 
-
-function update_params!(int::IntegratorSIPRK, sol::AtomicSolutionPSDE)
-    # set time for nonlinear solver and copy previous solution
-    int.params.t  = sol.t
-    int.params.q .= sol.q
-    int.params.p .= sol.p
-    int.params.ΔW .= sol.ΔW
-    int.params.ΔZ .= sol.ΔZ
-
-    # truncate the increments ΔW with A
-    if int.params.A > 0
-        for i in eachindex(int.params.ΔW)
-            if int.params.ΔW[i] <- int.params.A
-                int.params.ΔW[i] = -int.params.A
-            elseif int.params.ΔW[i] > int.params.A
-                int.params.ΔW[i] = int.params.A
-            end
-        end
+    function IntegratorSIPRK(equation::PSDE{DT,TT}, tableau::TableauSIPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorSIPRK{DT, ndims(equation), equation.m}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 
@@ -214,7 +193,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, P::Vector{Vector{
                                         V::Vector{Vector{ST}}, F::Vector{Vector{ST}},
                                         B::Vector{Matrix{ST}}, G::Vector{Matrix{ST}},
                                         Y::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
-                                        params::ParametersSIPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+                                        params::ParametersSIPRK{DT,TT,D,M,S}) where {ST,DT,TT,D,M,S}
 
     local tqᵢ::TT       #times for the q internal stages
     local tpᵢ::TT       #times for the p internal stages
@@ -241,18 +220,18 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, P::Vector{Vector{
         tqᵢ = params.t + params.Δt * params.tab.qdrift.c[i]
         tpᵢ = params.t + params.Δt * params.tab.pdrift.c[i]
         # calculates v(t,Q,P) and f(t,Q,P) and assigns to the i-th column of V and F
-        params.equ.v(tqᵢ, Q[i], P[i], V[i])
-        params.equ.f(tpᵢ, Q[i], P[i], F[i])
+        params.equ[:v](tqᵢ, Q[i], P[i], V[i])
+        params.equ[:f](tpᵢ, Q[i], P[i], F[i])
         # calculates B(t,Q,P) and assigns to the matrices B[i] and G[i]
-        params.equ.B(tqᵢ, Q[i], P[i], B[i])
-        params.equ.G(tpᵢ, Q[i], P[i], G[i])
+        params.equ[:B](tqᵢ, Q[i], P[i], B[i])
+        params.equ[:G](tpᵢ, Q[i], P[i], G[i])
     end
 end
 
 "Compute stages of implicit Runge-Kutta methods."
-@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSIPRK{DT,TT,ET,D,M,S}) where {ST,DT,TT,ET,D,M,S}
+@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSIPRK{DT,TT,D,M,S}) where {ST,DT,TT,D,M,S}
 
-    cache = IntegratorCacheSIPRK{ST}(D, M, S)
+    cache = IntegratorCacheSIPRK{ST,D,M,S}()
 
     quote
         compute_stages!(x, $cache.Q, $cache.P, $cache.V, $cache.F, $cache.B, $cache.G, $cache.Y, $cache.Z, params)
@@ -295,7 +274,7 @@ The prediction is calculated using an explicit integrator.
 
 SIMPLE SOLUTION
 The simplest initial guess for `Y`, `Z` is 0:
-`int.solver.x .= zeros(eltype(int), 2*int.params.tab.s*ndims(int))`
+`int.solver.x .= zeros(eltype(int), 2*tableau(int).s*ndims(int))`
 
 USING AN EXPLICIT INTEGRATOR TO COMPUTE AN INITIAL GUESS
 Below we use the R2 method of Burrage & Burrage to calculate
@@ -318,18 +297,17 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,
     local Δt_local::TT
 
     # Evaluating the functions v and B at t,q - same for all stages
-    int.params.equ.v(int.params.t, int.params.q, int.params.p, int.cache.V1)
-    int.params.equ.B(int.params.t, int.params.q, int.params.p, int.cache.B1)
-    int.params.equ.f(int.params.t, int.params.q, int.params.p, int.cache.F1)
-    int.params.equ.G(int.params.t, int.params.q, int.params.p, int.cache.G1)
+    int.params.equ[:v](int.params.t, int.params.q, int.params.p, int.cache.V1)
+    int.params.equ[:B](int.params.t, int.params.q, int.params.p, int.cache.B1)
+    int.params.equ[:f](int.params.t, int.params.q, int.params.p, int.cache.F1)
+    int.params.equ[:G](int.params.t, int.params.q, int.params.p, int.cache.G1)
 
     # Calculating the positions q at the points qdrift.c[i]
     # if qdrift.c==pdrift.c, then also calculating the momenta
-    for i in 1:int.params.tab.s
-
+    for i in eachstage(int)
         # Taking the c[i] from the qdrift tableau.
-        Δt_local = int.params.tab.qdrift.c[i]  * int.params.Δt
-        int.cache.Δw .= int.params.tab.qdrift.c[i] .* int.params.ΔW
+        Δt_local = tableau(int).qdrift.c[i]  * timestep(int)
+        int.cache.Δw .= tableau(int).qdrift.c[i] .* int.params.ΔW
 
         simd_mult!(int.cache.ΔQ, int.cache.B1, int.cache.Δw)
         simd_mult!(int.cache.ΔP, int.cache.G1, int.cache.Δw)
@@ -346,27 +324,26 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,
         #Calculating the Y's and assigning them to the array int.solver.x as initial guesses
         simd_mult!(int.cache.Y1, int.cache.B1, int.cache.Δw)
         simd_mult!(int.cache.Y2, int.cache.B2, int.cache.Δw)
-        for j in 1:int.params.equ.d
-            int.solver.x[(i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * int.cache.V1[j] + 3. / 4. * int.cache.V2[j]) + 1. / 4. * int.cache.Y1[j] + 3. / 4. * int.cache.Y2[j]
+        for j in eachdim(int)
+            int.solver.x[(i-1)*ndims(int)+j] =  Δt_local*(1. / 4. * int.cache.V1[j] + 3. / 4. * int.cache.V2[j]) + 1. / 4. * int.cache.Y1[j] + 3. / 4. * int.cache.Y2[j]
         end
 
         # if the collocation points are the same for both q and p parts
         simd_mult!(int.cache.Z1, int.cache.G1, int.cache.Δw)
         simd_mult!(int.cache.Z2, int.cache.G2, int.cache.Δw)
-        if int.params.tab.qdrift.c==int.params.tab.pdrift.c
-            for j in 1:int.params.equ.d
-                int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * int.cache.F1[j] + 3. / 4. * int.cache.F2[j]) + 1. / 4. * int.cache.Z1[j] + 3. / 4. * int.cache.Z2[j]
+        if tableau(int).qdrift.c==tableau(int).pdrift.c
+            for j in 1:ndims(int)
+                int.solver.x[(tableau(int).s+i-1)*ndims(int)+j] =  Δt_local*(1. / 4. * int.cache.F1[j] + 3. / 4. * int.cache.F2[j]) + 1. / 4. * int.cache.Z1[j] + 3. / 4. * int.cache.Z2[j]
             end
         end
     end
 
     # If qdrift.c != pdrift.c, then calculating the momenta p at the points pdrift.c[i]
-    if int.params.tab.qdrift.c != int.params.tab.pdrift.c
-
-        for i in 1:int.params.tab.s
+    if tableau(int).qdrift.c != tableau(int).pdrift.c
+        for i in eachstage(int)
             # Taking the c[i] from the pdrift tableau.
-            Δt_local = int.params.tab.pdrift.c[i]  * int.params.Δt
-            int.cache.Δw .= int.params.tab.pdrift.c[i] .* int.params.ΔW
+            Δt_local = tableau(int).pdrift.c[i]  * timestep(int)
+            int.cache.Δw .= tableau(int).pdrift.c[i] .* int.params.ΔW
 
             simd_mult!(int.cache.ΔQ, int.cache.B1, int.cache.Δw)
             simd_mult!(int.cache.ΔP, int.cache.G1, int.cache.Δw)
@@ -375,21 +352,20 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,
 
             t2 = int.params.t + 2. / 3. * Δt_local
 
-            int.params.equ.v(t2, int.cache.Q[i], int.cache.P[i], int.cache.V2)
-            int.params.equ.B(t2, int.cache.Q[i], int.cache.P[i], int.cache.B2)
-            int.params.equ.f(t2, int.cache.Q[i], int.cache.P[i], int.cache.F2)
-            int.params.equ.G(t2, int.cache.Q[i], int.cache.P[i], int.cache.G2)
+            int.params.equ[:v](t2, int.cache.Q[i], int.cache.P[i], int.cache.V2)
+            int.params.equ[:B](t2, int.cache.Q[i], int.cache.P[i], int.cache.B2)
+            int.params.equ[:f](t2, int.cache.Q[i], int.cache.P[i], int.cache.F2)
+            int.params.equ[:G](t2, int.cache.Q[i], int.cache.P[i], int.cache.G2)
 
             # Calculating the Z's and assigning them to the array int.solver.x as initial guesses
             # The guesses for the Y's have already been written to x above
             simd_mult!(int.cache.Z1, int.cache.G1, int.cache.Δw)
             simd_mult!(int.cache.Z2, int.cache.G2, int.cache.Δw)
-            for j in 1:int.params.equ.d
-                int.solver.x[(int.params.tab.s+i-1)*int.params.equ.d+j] =  Δt_local*(1. / 4. * int.cache.F1[j] + 3. / 4. * int.cache.F2[j]) + 1. / 4. * int.cache.Z1[j] + 3. / 4. * int.cache.Z2[j]
+            for j in eachdim(int)
+                int.solver.x[(tableau(int).s+i-1)*ndims(int)+j] =  Δt_local*(1. / 4. * int.cache.F1[j] + 3. / 4. * int.cache.F2[j]) + 1. / 4. * int.cache.Z1[j] + 3. / 4. * int.cache.Z2[j]
             end
         end
     end
-
 end
 
 
@@ -418,11 +394,11 @@ function Integrators.integrate_step!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSol
 
     # compute final update
     update_solution!(sol, int.cache.V, int.cache.F, int.cache.B, int.cache.G,
-                     int.params.tab.qdrift.b, int.params.tab.qdiff.b,
-                     int.params.tab.pdrift.b, int.params.tab.pdiff.b,
-                     int.params.Δt, int.params.ΔW, int.cache.Δy, int.cache.Δz)
+                     tableau(int).qdrift.b, tableau(int).qdiff.b,
+                     tableau(int).pdrift.b, tableau(int).pdiff.b,
+                     timestep(int), int.params.ΔW, int.cache.Δy, int.cache.Δz)
     update_solution!(sol, int.cache.V, int.cache.F, int.cache.B, int.cache.G,
-                     int.params.tab.qdrift.b̂, int.params.tab.qdiff.b̂,
-                     int.params.tab.pdrift.b̂, int.params.tab.pdiff.b̂,
-                     int.params.Δt, int.params.ΔW, int.cache.Δy, int.cache.Δz)
+                     tableau(int).qdrift.b̂, tableau(int).qdiff.b̂,
+                     tableau(int).pdrift.b̂, tableau(int).pdiff.b̂,
+                     timestep(int), int.params.ΔW, int.cache.Δy, int.cache.Δz)
 end
