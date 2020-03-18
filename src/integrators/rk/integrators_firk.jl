@@ -135,7 +135,7 @@ struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
     end
 
     function IntegratorFIRK(equation::ODE{DT,TT}, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorFIRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorFIRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 

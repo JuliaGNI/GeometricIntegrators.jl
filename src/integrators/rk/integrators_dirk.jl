@@ -120,7 +120,7 @@ struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
     end
 
     function IntegratorDIRK(equation::ODE{DT,TT}, tableau::TableauDIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorDIRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorDIRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 

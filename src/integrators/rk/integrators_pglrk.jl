@@ -171,7 +171,7 @@ struct IntegratorPGLRK{DT, TT, D, S, PT <: ParametersPGLRK{DT,TT},
     end
 
     function IntegratorPGLRK(equation::ODE{DT,TT}, tableau::CoefficientsPGLRK{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorPGLRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorPGLRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 

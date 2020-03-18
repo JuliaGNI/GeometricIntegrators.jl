@@ -92,7 +92,7 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
     end
 
     function IntegratorFLRK(equation::ODE{DT,TT}, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorFLRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorFLRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 

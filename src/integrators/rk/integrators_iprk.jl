@@ -154,7 +154,7 @@ struct IntegratorIPRK{DT, TT, D, S, PT <: ParametersIPRK{DT,TT},
     end
 
     function IntegratorIPRK(equation::PODE{DT,TT}, tableau::TableauIPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorIPRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorIPRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 

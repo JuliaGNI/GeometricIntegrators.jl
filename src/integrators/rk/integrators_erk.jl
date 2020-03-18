@@ -94,7 +94,7 @@ struct IntegratorERK{DT, TT, D, S, ET} <: IntegratorRK{DT,TT}
         cache = IntegratorCacheERK{DT,D,S}()
 
         # create integrator
-        new{DT, TT, D, S, ET}(params, cache)
+        IntegratorERK(params, cache)
     end
 
     function IntegratorERK{DT,D}(v::Function, tableau::TableauERK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
@@ -106,7 +106,7 @@ struct IntegratorERK{DT, TT, D, S, ET} <: IntegratorRK{DT,TT}
     end
 
     function IntegratorERK(equation::ODE{DT,TT}, tableau::TableauERK{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorERK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorERK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 
