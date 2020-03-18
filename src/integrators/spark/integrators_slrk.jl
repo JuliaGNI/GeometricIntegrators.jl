@@ -92,10 +92,10 @@ struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
     params::PT
     solver::ST
     iguess::IT
-    cache::IntegratorCacheSPARK{DT,D,S,S}
+    caches::CacheDict{PT}
 
-    function IntegratorSLRK(params::ParametersSLRK{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
-        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
+    function IntegratorSLRK(params::ParametersSLRK{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
     function IntegratorSLRK{DT,D}(equations::NamedTuple, tableau::TableauSLRK{TT}, Δt::TT) where {DT,TT,D,ST}
@@ -111,21 +111,45 @@ struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
         # create params
         params = ParametersSLRK{DT,D}(equations, tableau, Δt)
 
+        # create cache dict
+        caches = CacheDict(params)
+
         # create solver
-        solver = create_nonlinear_solver(DT, N, params)
+        solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
         iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
-        # create cache
-        cache = IntegratorCacheSPARK{DT,D,S,S}()
-
         # create integrator
-        IntegratorSLRK(params, solver, iguess, cache)
+        IntegratorSLRK(params, solver, iguess, caches)
     end
 
     function IntegratorSLRK(equation::VDAE{DT,TT}, tableau::TableauSLRK{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorSLRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
+end
+
+
+function initial_guess!(int::IntegratorSLRK{DT}, sol::AtomicSolutionPDAE{DT},
+                        cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT}
+    for i in 1:nstages(int)
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
+                              tableau(int).q̃.c[i], tableau(int).p̃.c[i])
+
+        for k in 1:ndims(int)
+            int.solver.x[4*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - sol.q[k])/timestep(int)
+            int.solver.x[4*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - sol.p[k])/timestep(int)
+            int.solver.x[4*(ndims(int)*(i-1)+k-1)+3] = cache.ṽ[k]
+            int.solver.x[4*(ndims(int)*(i-1)+k-1)+4] = 0
+        end
+    end
+
+    if isdefined(tableau(int), :d) && length(tableau(int).d) > 0
+        for k in 1:ndims(int)
+            int.solver.x[4*ndims(int)*pstages(int)+k] = 0
+        end
     end
 end
 
@@ -178,75 +202,54 @@ end
 
 
 "Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems."
-@generated function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersSLRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
-    cache = IntegratorCacheSPARK{ST,D,S,S}()
+function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersSLRK{DT,TT,D,S},
+                                      caches::CacheDict) where {ST,DT,TT,D,S}
 
-    quote
-        compute_stages!(y, $cache, params)
+    # get cache for internal stages
+    cache = caches[ST]
 
-        # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ, ωΨ]
+    compute_stages!(y, cache, params)
+
+    # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ, ωΨ]
+    for i in 1:S
+        for k in 1:D
+            b[4*(D*(i-1)+k-1)+1] = - cache.Yp[i][k]
+            b[4*(D*(i-1)+k-1)+2] = - cache.Zp[i][k]
+            b[4*(D*(i-1)+k-1)+3] = - cache.Φp[i][k]
+            b[4*(D*(i-1)+k-1)+4] = params.tab.ω[i,S+1] * cache.ϕ̃[k]
+            for j in 1:S
+                b[4*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * cache.Vp[j][k]
+                b[4*(D*(i-1)+k-1)+1] += params.tab.q̃.a[i,j] * cache.Λp[j][k]
+                b[4*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * cache.Fp[j][k]
+                b[4*(D*(i-1)+k-1)+2] += params.tab.p̃.a[i,j] * cache.Gp[j][k]
+                b[4*(D*(i-1)+k-1)+4] += params.tab.ω[i,j]   * cache.Ψp[j][k]
+            end
+        end
+    end
+
+    if length(params.tab.d) > 0
         for i in 1:S
             for k in 1:D
-                b[4*(D*(i-1)+k-1)+1] = - $cache.Yp[i][k]
-                b[4*(D*(i-1)+k-1)+2] = - $cache.Zp[i][k]
-                b[4*(D*(i-1)+k-1)+3] = - $cache.Φp[i][k]
-                b[4*(D*(i-1)+k-1)+4] = params.tab.ω[i,S+1] * $cache.ϕ̃[k]
-                for j in 1:S
-                    b[4*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * $cache.Vp[j][k]
-                    b[4*(D*(i-1)+k-1)+1] += params.tab.q̃.a[i,j] * $cache.Λp[j][k]
-                    b[4*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * $cache.Fp[j][k]
-                    b[4*(D*(i-1)+k-1)+2] += params.tab.p̃.a[i,j] * $cache.Gp[j][k]
-                    b[4*(D*(i-1)+k-1)+4] += params.tab.ω[i,j]   * $cache.Ψp[j][k]
-                end
+                b[4*(D*(i-1)+k-1)+2] += cache.μ[k] * params.tab.d[i] / params.tab.p.b[i]
+                b[4*(D*(i-1)+k-1)+3] += cache.μ[k] * params.tab.d[i] / params.tab.p.b[i]
             end
         end
 
-        if length(params.tab.d) > 0
+        for k in 1:D
+            b[4*D*S+k] = 0
             for i in 1:S
-                for k in 1:D
-                    b[4*(D*(i-1)+k-1)+2] += $cache.μ[k] * params.tab.d[i] / params.tab.p.b[i]
-                    b[4*(D*(i-1)+k-1)+3] += $cache.μ[k] * params.tab.d[i] / params.tab.p.b[i]
-                end
-            end
-
-            for k in 1:D
-                b[4*D*S+k] = 0
-                for i in 1:S
-                    b[4*D*S+k] -= $cache.Vp[i][k] * params.tab.d[i]
-                end
+                b[4*D*S+k] -= cache.Vp[i][k] * params.tab.d[i]
             end
         end
     end
 end
 
 
-function initial_guess!(int::IntegratorSLRK, sol::AtomicSolutionPDAE)
-    for i in 1:nstages(int)
-        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                              int.cache.q̃, int.cache.p̃, int.cache.ṽ, int.cache.f̃,
-                              tableau(int).q̃.c[i], tableau(int).p̃.c[i])
-
-        for k in 1:ndims(int)
-            int.solver.x[4*(ndims(int)*(i-1)+k-1)+1] = (int.cache.q̃[k] - sol.q[k])/timestep(int)
-            int.solver.x[4*(ndims(int)*(i-1)+k-1)+2] = (int.cache.p̃[k] - sol.p[k])/timestep(int)
-            int.solver.x[4*(ndims(int)*(i-1)+k-1)+3] = int.cache.ṽ[k]
-            int.solver.x[4*(ndims(int)*(i-1)+k-1)+4] = 0
-        end
-    end
-
-    if isdefined(tableau(int), :d) && length(tableau(int).d) > 0
-        for k in 1:ndims(int)
-            int.solver.x[4*ndims(int)*pstages(int)+k] = 0
-        end
-    end
-end
-
-
-function update_solution!(int::IntegratorSLRK{DT,TT}, sol::AtomicSolutionPDAE{DT,TT}) where {DT,TT}
+function update_solution!(int::IntegratorSLRK{DT,TT}, sol::AtomicSolutionPDAE{DT,TT},
+                          cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT,TT}
     # compute final update
-    update_solution!(sol.q, int.cache.Vp, int.params.tab.q.b, timestep(int))
-    update_solution!(sol.q, int.cache.Λp, int.params.tab.q̃.b, timestep(int))
-    update_solution!(sol.p, int.cache.Fp, int.params.tab.p.b, timestep(int))
-    update_solution!(sol.p, int.cache.Gp, int.params.tab.p̃.b, timestep(int))
+    update_solution!(sol.q, cache.Vp, int.params.tab.q.b, timestep(int))
+    update_solution!(sol.q, cache.Λp, int.params.tab.q̃.b, timestep(int))
+    update_solution!(sol.p, cache.Fp, int.params.tab.p.b, timestep(int))
+    update_solution!(sol.p, cache.Gp, int.params.tab.p̃.b, timestep(int))
 end

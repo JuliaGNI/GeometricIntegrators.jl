@@ -15,6 +15,7 @@ module SPARK
 
     import ..Integrators: DeterministicIntegrator, IntegratorPRK, Parameters,
                           IDAEIntegratorCache, InitialGuessPODE
+    import ..Integrators: IntegratorCache, CacheDict, CacheType
     import ..Integrators: AbstractTableau, AbstractTableauERK, AbstractTableauIRK,
                           AbstractCoefficients, CoefficientsRK,
                           @CoefficientsRK, @HeaderCoefficientsRK

@@ -16,12 +16,12 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
     solver::ST
     projector::PST
     iguess::IT
-    cache::IntegratorCacheVPRK{DT,D,S}
+    caches::CacheDict{PPT}
 
     function IntegratorVPRKpVariational(params::ParametersVPRK{DT,TT,D,S},
                     pparams::ParametersVPRKpVariational{DT,TT,D,S},
-                    solver::ST, projector::PST, iguess::IT, cache) where {DT,TT,D,S,ST,PST,IT}
-        new{DT, TT, D, S, typeof(params), typeof(pparams), ST, PST, IT}(params, pparams, solver, projector, iguess, cache)
+                    solver::ST, projector::PST, iguess::IT, caches) where {DT,TT,D,S,ST,PST,IT}
+        new{DT, TT, D, S, typeof(params), typeof(pparams), ST, PST, IT}(params, pparams, solver, projector, iguess, caches)
     end
 
     function IntegratorVPRKpVariational{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT; R=[1,1]) where {DT, TT, D}
@@ -37,20 +37,20 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
         R2 = [zero(TT), R[2]]
         pparams = ParametersVPRKpVariational{DT,D}(equations, tableau, Δt, NamedTuple{(:R,:R1,:R2)}((R,R1,R2)))
 
+        # create cache dict
+        caches = CacheDict(pparams)
+
         # create nonlinear solver
-        solver = create_nonlinear_solver(DT, D*S, params)
+        solver = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create projector
-        projector = create_nonlinear_solver(DT, 2*D, pparams)
+        projector = create_nonlinear_solver(DT, 2*D, pparams, caches)
 
         # create initial guess
         iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
-        # create cache
-        cache = IntegratorCacheVPRK{DT,D,S}(true)
-
         # create integrator
-        IntegratorVPRKpVariational(params, pparams, solver, projector, iguess, cache)
+        IntegratorVPRKpVariational(params, pparams, solver, projector, iguess, caches)
     end
 
     function IntegratorVPRKpVariational(equation::IODE{DT,TT}, tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
@@ -59,11 +59,51 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
 end
 
 
+function Integrators.initialize!(int::IntegratorVPRKpVariational{DT}, sol::AtomicSolutionPODE{DT},
+                                 cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
+    sol.t̅ = sol.t - timestep(int)
+
+    equation(int, :v)(sol.t, sol.q, sol.p, sol.v)
+    equation(int, :f)(sol.t, sol.q, sol.p, sol.f)
+
+    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
+                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+
+    # initialise projector
+    equation(int, :g)(sol.t, sol.q, cache.λ, cache.G[1])
+    # cache.U[1] .= cache.λ
+end
+
+
+function initial_guess!(int::IntegratorVPRKpVariational{DT}, sol::AtomicSolutionPODE{DT},
+                        cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              cache.q̃, cache.ṽ,
+                              tableau(int).q.c[i])
+
+        for k in eachdim(int)
+            int.solver.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
+        end
+    end
+end
+
+function initial_guess_projection!(int::IntegratorVPRKpVariational, sol::AtomicSolutionPODE)
+    offset_q = 0
+    offset_λ = ndims(int)
+
+    for k in eachdim(int)
+        int.projector.x[offset_q+k] = sol.q[k]
+        int.projector.x[offset_λ+k] = 0
+    end
+end
+
+
 function compute_projection!(
                 x::Vector{ST}, q::SolutionVector{ST}, p::SolutionVector{ST}, λ::SolutionVector{ST},
                 U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
-                params::ParametersVPRKpVariational{DT,TT,D,S}
-            ) where {ST,DT,TT,D,S}
+                params::ParametersVPRKpVariational{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     @assert D == length(q) == length(p) == length(λ)
     @assert D == length(U[1]) == length(U[2])
@@ -91,83 +131,43 @@ function compute_projection!(
 end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."
-@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
-                params::ParametersVPRKpVariational{DT,TT,D,S}
-            ) where {ST,DT,TT,D,S}
+function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+                params::ParametersVPRKpVariational{DT,TT,D,S},
+                caches::CacheDict) where {ST,DT,TT,D,S}
 
-    cache = IntegratorCacheVPRK{ST, D, S}(true)
+    @assert length(x) == length(b)
 
-    function_stages = quote
-        @assert length(x) == length(b)
+    # get cache for internal stages
+    cache = caches[ST]
 
-        compute_projection!(x, $cache.q̃, $cache.p̃, $cache.λ, $cache.U, $cache.G, params)
+    compute_projection!(x, cache.q̃, cache.p̃, cache.λ, cache.U, cache.G, params)
 
-        # # compute b = - [q̅-q-U]
-        for k in 1:D
-            b[0*D+k] = - ($cache.q̃[k] - params.q̅[k]) + params.Δt * params.pparams[:R][2] * $cache.U[2][k]
-            # b[0*D+k] = - ($cache.q[k] - params.q̅[k])
-        end
-
-        # compute b = - [p̅-p-G]
-        for k in 1:D
-            b[1*D+k] = - ($cache.p̃[k] - params.p̅[k])
-            # b[1*D+k] = - ($cache.p[k] - params.p̅[k]) + params.Δt * params.R[2] * $cache.G[2][k]
-        end
+    # # compute b = - [q̅-q-U]
+    for k in 1:D
+        b[0*D+k] = - (cache.q̃[k] - params.q̅[k]) + params.Δt * params.pparams[:R][2] * cache.U[2][k]
+        # b[0*D+k] = - (cache.q[k] - params.q̅[k])
     end
 
-    return function_stages
-end
-
-
-function initial_guess!(int::IntegratorVPRKpVariational, sol::AtomicSolutionPODE)
-    for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                              int.cache.q̃, int.cache.ṽ,
-                              tableau(int).q.c[i])
-
-        for k in eachdim(int)
-            int.solver.x[ndims(int)*(i-1)+k] = int.cache.ṽ[k]
-        end
+    # compute b = - [p̅-p-G]
+    for k in 1:D
+        b[1*D+k] = - (cache.p̃[k] - params.p̅[k])
+        # b[1*D+k] = - (cache.p[k] - params.p̅[k]) + params.Δt * params.R[2] * cache.G[2][k]
     end
-end
-
-function initial_guess_projection!(int::IntegratorVPRKpVariational, sol::AtomicSolutionPODE)
-    offset_q = 0
-    offset_λ = ndims(int)
-
-    for k in eachdim(int)
-        int.projector.x[offset_q+k] = sol.q[k]
-        int.projector.x[offset_λ+k] = 0
-    end
-end
-
-function Integrators.initialize!(int::IntegratorVPRKpVariational, sol::AtomicSolutionPODE)
-    sol.t̅ = sol.t - timestep(int)
-
-    equation(int, :v)(sol.t, sol.q, sol.p, sol.v)
-    equation(int, :f)(sol.t, sol.q, sol.p, sol.f)
-
-    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
-
-    # initialise projector
-    equation(int, :g)(sol.t, sol.q, int.cache.λ, int.cache.G[1])
-    # cache.U[1] .= int.cache.λ
 end
 
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function Integrators.integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+                                     cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # add perturbation for next time step to solution
     # (same vector field as previous time step)
-    project_solution!(int, sol, int.pparams.pparams[:R1])
+    project_solution!(int, sol, int.pparams.pparams[:R1], cache)
 
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 
     # compute initial guess
-    initial_guess!(int, sol)
+    initial_guess!(int, sol, cache)
 
     # reset solution
     reset!(sol, timestep(int))
@@ -182,10 +182,10 @@ function Integrators.integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.P, int.cache.F, int.params)
+    compute_stages!(int.solver.x, cache.Q, cache.V, cache.P, cache.F, int.params)
 
     # compute unprojected solution
-    update_solution!(int, sol)
+    update_solution!(int, sol, cache)
 
     # set time and solution for projection solver
     update_params!(int.pparams, sol)
@@ -203,11 +203,11 @@ function Integrators.integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol
     check_solver_status(int.projector.status, int.projector.params)
 
     # compute projection vector fields
-    compute_projection!(int.projector.x, int.cache.q̃, int.cache.p̃, int.cache.λ,
-                                         int.cache.U, int.cache.G, int.pparams)
+    compute_projection!(int.projector.x, cache.q̃, cache.p̃, cache.λ,
+                                         cache.U, cache.G, int.pparams)
 
     # add projection to solution
-    project_solution!(int, sol, int.pparams.pparams[:R2])
+    project_solution!(int, sol, int.pparams.pparams[:R2], cache)
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)

@@ -1,4 +1,34 @@
 
+function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+                          cache::IntegratorCacheVPRK{DT}) where {DT,TT}
+    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+end
+
+function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}, R::Vector{TT},
+                           cache::IntegratorCacheVPRK{DT}) where {DT,TT}
+    update_solution!(sol.q, sol.q̃, cache.U, R, timestep(int))
+    update_solution!(sol.p, sol.p̃, cache.G, R, timestep(int))
+end
+
+function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}, RU::Vector{TT}, RG::Vector{TT},
+                           cache::IntegratorCacheVPRK{DT}) where {DT,TT}
+    update_solution!(sol.q, sol.q̃, cache.U, RU, timestep(int))
+    update_solution!(sol.p, sol.p̃, cache.G, RG, timestep(int))
+end
+
+
+function Integrators.initialize!(int::AbstractIntegratorVPRK{DT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+    sol.t̅ = sol.t - timestep(int)
+
+    equation(int, :v)(sol.t, sol.q, sol.p, sol.v)
+    equation(int, :f)(sol.t, sol.q, sol.p, sol.f)
+
+    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
+                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+end
+
+
 function compute_stages!(x, Q, V, P, F, params::AbstractParametersVPRK)
     # copy x to V
     compute_stages_v_vprk!(x, V, params)

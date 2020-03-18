@@ -23,6 +23,17 @@ mutable struct ParametersVPRKpTableau{DT, TT, D, S, ET <: NamedTuple} <: Paramet
 end
 
 
+function Integrators.IntegratorCache(params::ParametersVPRKpTableau{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
+    IntegratorCacheVPRK{DT,D,S}(true; kwargs...)
+end
+
+function Integrators.IntegratorCache{ST}(params::ParametersVPRKpTableau{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+    IntegratorCacheVPRK{ST,D,S}(true; kwargs...)
+end
+
+@inline Integrators.CacheType(ST, params::ParametersVPRKpTableau{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheVPRK{ST,D,S}
+
+
 function update_params!(params::ParametersVPRKpTableau, sol::AtomicSolutionPODE)
     # set time for nonlinear solver and copy previous solution
     params.t̅  = sol.t
@@ -59,10 +70,10 @@ struct IntegratorVPRKpTableau{DT, TT, D, S,
     params::PT
     solver::ST
     iguess::IT
-    cache::IntegratorCacheVPRK{DT,D,S}
+    caches::CacheDict{PT}
 
-    function IntegratorVPRKpTableau(params::ParametersVPRKpTableau{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT, TT, D, S, ST, IT}
-        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
+    function IntegratorVPRKpTableau(params::ParametersVPRKpTableau{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT, TT, D, S, ST, IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
     function IntegratorVPRKpTableau{DT,D}(equations::NamedTuple, tableau::CoefficientsPGLRK{TT}, Δt::TT) where {DT,TT,D}
@@ -72,17 +83,17 @@ struct IntegratorVPRKpTableau{DT, TT, D, S,
         # create params
         params = ParametersVPRKpTableau{DT,D}(equations, tableau, Δt)
 
+        # create cache dict
+        caches = CacheDict(params)
+
         # create solver
-        solver  = create_nonlinear_solver(DT, D*S, params)
+        solver  = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create initial guess
         iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
-        # create cache
-        cache = IntegratorCacheVPRK{DT,D,S}()
-
         # create integrator
-        IntegratorVPRKpTableau(params, solver, iguess, cache)
+        IntegratorVPRKpTableau(params, solver, iguess, caches)
     end
 
     function IntegratorVPRKpTableau(equation::IODE{DT,TT}, tableau::CoefficientsPGLRK{TT}, Δt::TT; kwargs...) where {DT,TT}
@@ -106,15 +117,16 @@ function Integrators.initialize!(int::IntegratorVPRKpTableau, sol::AtomicSolutio
 end
 
 
-function initial_guess!(int::IntegratorVPRKpTableau, sol::AtomicSolutionPODE)
+function initial_guess!(int::IntegratorVPRKpTableau{DT}, sol::AtomicSolutionPODE{DT},
+                        cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
                               sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                              int.cache.q̃, int.cache.ṽ,
+                              cache.q̃, cache.ṽ,
                               tableau(int).c[i])
 
         for k in eachdim(int)
-            int.solver.x[ndims(int)*(i-1)+k] = int.cache.ṽ[k]
+            int.solver.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
         end
     end
 end
@@ -209,24 +221,26 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
 end
 
 "Compute stages of projected Gauss-Legendre Runge-Kutta methods."
-@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersVPRKpTableau{DT,TT,D,S}) where {ST,DT,TT,D,S}
+function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+                params::ParametersVPRKpTableau{DT,TT,D,S},
+                caches::CacheDict) where {ST,DT,TT,D,S}
 
-    cache = IntegratorCacheVPRK{ST,D,S}()
+    # get cache for internal stages
+    cache = caches[ST]
 
-    quote
-        compute_stages!(x, $cache, params)
+    compute_stages!(x, cache, params)
 
-        # compute b = [P-p-AF]
-        for i in 1:S
-            for k in 1:D
-                b[D*(i-1)+k] = $cache.P[i][k] - params.p̅[k] - params.Δt * $cache.Z[i][k]
-            end
+    # compute b = [P-p-AF]
+    for i in 1:S
+        for k in 1:D
+            b[D*(i-1)+k] = cache.P[i][k] - params.p̅[k] - params.Δt * cache.Z[i][k]
         end
     end
 end
 
 
-function function_dirac_constraint!(λ::Vector, int::IntegratorVPRKpTableau{DT,TT}) where {DT,TT}
+function function_dirac_constraint!(λ::Vector, int::IntegratorVPRKpTableau{DT,TT},
+                                    cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # copy λ to integrator parameters
     update_tableau!(int.params, λ)
 
@@ -242,26 +256,28 @@ function function_dirac_constraint!(λ::Vector, int::IntegratorVPRKpTableau{DT,T
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, int.cache, int.params)
+    compute_stages!(int.solver.x, cache, int.params)
 
     # compute and return ϑ(t,q)-p
-    return int.cache.θ̃ .- int.cache.p̃
+    return cache.θ̃ .- cache.p̃
 end
 
 
 "Integrate ODE with projected Gauss-Legendre Runge-Kutta integrator."
-function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+                                     cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
+
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 
     # compute initial guess
-    initial_guess!(int, sol)
+    initial_guess!(int, sol, cache)
 
     # reset solution
     reset!(sol, timestep(int))
 
     # determine parameter λ
-    nlres = nlsolve(λ -> function_dirac_constraint!(λ, int), zero(int.params.λ);
+    nlres = nlsolve(λ -> function_dirac_constraint!(λ, int, cache), zero(int.params.λ);
                 xtol=get_config(:nls_atol),
                 ftol=maximum(int.params.p̅)*get_config(:nls_atol),
                 iterations=100)
@@ -275,13 +291,13 @@ function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::At
     #         "iterations = ", nlres.iterations)
     #
     # println("λ = ", int.params.λ)
-    # println("Δ = ", int.cache.θ̃ .- int.cache.p̃)
-    # println("p = ", int.cache.p̃)
+    # println("Δ = ", cache.θ̃ .- cache.p̃)
+    # println("p = ", cache.p̃)
     # println()
 
     # compute final update
-    update_solution!(sol.q, int.cache.V, tableau(int).b, timestep(int))
-    update_solution!(sol.p, int.cache.F, tableau(int).b, timestep(int))
+    update_solution!(sol.q, cache.V, tableau(int).b, timestep(int))
+    update_solution!(sol.p, cache.F, tableau(int).b, timestep(int))
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
