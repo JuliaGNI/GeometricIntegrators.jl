@@ -63,7 +63,7 @@ function initial_guess!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::AtomicSolution
     for k in eachdim(int)
         int.solver.x[ndims(int)*(nstages(int)+0)+k] = int.cache.q̃[k]
     end
-    for k in 1:ndims(int)
+    for k in eachdim(int)
         int.solver.x[ndims(int)*(nstages(int)+1)+k] = 0
     end
 end
@@ -108,11 +108,11 @@ end
         # println("q̃mid = ", $q̃)
         # println("qmid = ", $qm)
 
-        params.equ.g(tₘ, $q̃, λ, G[1])
+        params.equ[:g](tₘ, $q̃, λ, G[1])
         G[2] .= G[1]
 
         # compute p=ϑ(q)
-        params.equ.ϑ(t₁, q, λ, p)
+        params.equ[:ϑ](t₁, q, λ, p)
     end
 end
 
