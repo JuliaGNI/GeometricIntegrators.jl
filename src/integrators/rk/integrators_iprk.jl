@@ -51,11 +51,8 @@ mutable struct ParametersIPRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,T
     q::Vector{DT}
     p::Vector{DT}
 
-
     function ParametersIPRK{DT,D}(equs::ET, tab::TableauIPRK{TT}, Δt::TT) where {D, DT, TT, ET <: NamedTuple}
-        q = zeros(DT,D)
-        p = zeros(DT,D)
-        new{DT, TT, D, tab.s, ET}(equs, tab, Δt, 0, q, p)
+        new{DT, TT, D, tab.s, ET}(equs, tab, Δt, zero(TT), zeros(DT,D), zeros(DT,D))
     end
 end
 

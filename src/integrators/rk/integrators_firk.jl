@@ -47,7 +47,7 @@ mutable struct ParametersFIRK{DT, TT, D, S, ET <: NamedTuple, FT, JT} <: Paramet
         tv = zeros(DT,D)
         Jconfig = ForwardDiff.JacobianConfig(F, tv, tq)
 
-        new{DT, TT, D, tab.s, ET, typeof(F), typeof(Jconfig)}(equs, tab, Δt, F, Jconfig, 0, zeros(DT,D))
+        new{DT, TT, D, tab.s, ET, typeof(F), typeof(Jconfig)}(equs, tab, Δt, F, Jconfig, zero(TT), zeros(DT,D))
     end
 end
 

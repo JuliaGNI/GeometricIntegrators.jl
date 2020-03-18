@@ -124,7 +124,7 @@ function integrate_step!(int::IntegratorERK{DT,TT}, sol::AtomicSolutionODE{DT,TT
 
     # compute internal stages
     for i in eachstage(int)
-        @inbounds for k in eachindex(int.cache.Q[i], int.cache.V[i])
+        for k in eachindex(int.cache.Q[i], int.cache.V[i])
             yᵢ = 0
             for j in 1:i-1
                 yᵢ += tableau(int).q.a[i,j] * int.cache.V[j][k]

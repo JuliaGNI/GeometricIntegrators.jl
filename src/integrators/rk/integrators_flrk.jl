@@ -12,7 +12,7 @@ mutable struct ParametersFLRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,T
     p::Vector{DT}
 
     function ParametersFLRK{DT,D}(equs::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
-        new{DT,TT,D,tab.s,ET}(equs, tab, Δt, 0, zeros(DT,D), zeros(DT,D))
+        new{DT,TT,D,tab.s,ET}(equs, tab, Δt, zero(TT), zeros(DT,D), zeros(DT,D))
     end
 end
 

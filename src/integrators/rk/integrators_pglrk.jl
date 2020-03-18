@@ -118,10 +118,7 @@ mutable struct IntegratorCachePGLRK{DT,D,S} <: ODEIntegratorCache{DT,D}
         V = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
 
-
-        new(0, 0,
-            q̃, ṽ, s̃,
-            Q, V, Y)
+        new(zero(DT), zero(DT), q̃, ṽ, s̃, Q, V, Y)
     end
 end
 
