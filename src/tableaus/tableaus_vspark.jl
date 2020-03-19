@@ -153,8 +153,8 @@ function getTableauVSPARKSymplecticProjection(name, q::CoefficientsRK{T}, p::Coe
 
     # β_q = la.b
     # β_p = lb.b
-   β_q = [0.5, R∞*0.5]
-   β_p = [0.5, R∞*0.5]
+    β_q = [0.5, R∞*0.5]
+    β_p = [0.5, R∞*0.5]
 
     α_q = zeros(T, s, 2)
     α_q[:,1] .= 0.5
@@ -186,11 +186,11 @@ function getTableauVSPARKSymplecticProjection(name, q::CoefficientsRK{T}, p::Coe
     c_q = q.c
     c_p = p.c
     c_λ = la.c
-    d_λ = [ 0.5, 0.5]
+    d_λ = [0.5, 0.5]
 
 
     ω_λ = [0.5 0.5 0.0
-            0.0 0.0 1.0]
+           0.0 0.0 1.0]
 
     δ_λ = zeros(T, ρ, σ)
 

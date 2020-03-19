@@ -22,6 +22,7 @@ variables ``(q,p)`` and algebraic variable ``v``.
 * `ϑ`: function determining the momentum
 * `f`: function computing the vector field
 * `g`: function determining the projection, given by ∇ϑ(q)⋅λ
+* `h`: function computing the Hamiltonian (optional)
 * `v`: function computing an initial guess for the velocity field (optional)
 * `Ω`: symplectic matrix (optional)
 * `∇H`: gradient of the Hamiltonian (optional)
@@ -66,8 +67,8 @@ and
     end
 ```
 """
-struct VODE{dType <: Number, tType <: Number, ϑType <: Function,
-            fType <: Function, gType <: Function, vType <: Union{Function,Nothing},
+struct VODE{dType <: Number, tType <: Number, ϑType <: Function, fType <: Function, gType <: Function,
+            hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
             ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing},
             pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
 
@@ -77,6 +78,7 @@ struct VODE{dType <: Number, tType <: Number, ϑType <: Function,
     ϑ::ϑType
     f::fType
     g::gType
+    h::hType
     v::vType
     Ω::ΩType
     ∇H::∇HType
@@ -89,18 +91,20 @@ struct VODE{dType <: Number, tType <: Number, ϑType <: Function,
 
     function VODE(DT::DataType, N::Int, d::Int, n::Int, ϑ::ϑType, f::fType, g::gType,
                   t₀::tType, q₀::AbstractArray{dType}, p₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
-                  v::vType=nothing, Ω::ΩType=nothing, ∇H::∇HType=nothing,
-                  parameters=nothing, periodicity=zeros(DT,d)) where {
+                  h::hType=nothing, v::vType=nothing, Ω::ΩType=nothing, ∇H::∇HType=nothing,
+                  parameters::pType=nothing, periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number, ϑType <: Function,
-                        fType <: Function, gType <: Function, vType <: Function,
-                        ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing}}
+                        fType <: Function, gType <: Function,
+                        hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
+                        ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing},
+                        pType <: Union{Tuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
         @assert n == size(q₀,2) == size(p₀,2)
         @assert ndims(q₀) == ndims(p₀) == N ∈ (1,2)
 
-        new{DT, tType, ϑType, fType, gType, vType, ΩType, ∇HType, typeof(parameters), N}(d, d, n, ϑ, f, g, v, Ω, ∇H, t₀,
-                convert(Array{DT}, q₀), convert(Array{DT}, p₀), convert(Array{DT}, λ₀), parameters, periodicity)
+        new{DT, tType, ϑType, fType, gType, hType, vType, ΩType, ∇HType, pType, N}(d, d, n, ϑ, f, g, h, v, Ω, ∇H,
+                t₀, convert(Array{DT}, q₀), convert(Array{DT}, p₀), convert(Array{DT}, λ₀), parameters, periodicity)
     end
 end
 
@@ -113,9 +117,9 @@ function VODE(ϑ, f, g, q₀::AbstractArray, p₀::AbstractArray, λ₀::Abstrac
 end
 
 Base.hash(ode::VODE, h::UInt) = hash(ode.d, hash(ode.m, hash(ode.n,
-          hash(ode.ϑ, hash(ode.f, hash(ode.g, hash(ode.v, hash(ode.Ω, hash(ode.∇H,
+          hash(ode.ϑ, hash(ode.f, hash(ode.g, hash(ode.h, hash(ode.v, hash(ode.Ω, hash(ode.∇H,
           hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, hash(ode.λ₀,
-          hash(ode.parameters, hash(ode.periodicity, h)))))))))))))))
+          hash(ode.parameters, hash(ode.periodicity, h))))))))))))))))
 
 Base.:(==)(ode1::VODE, ode2::VODE) = (
                                 ode1.d == ode2.d
@@ -124,6 +128,7 @@ Base.:(==)(ode1::VODE, ode2::VODE) = (
                              && ode1.ϑ == ode2.ϑ
                              && ode1.f == ode2.f
                              && ode1.g == ode2.g
+                             && ode1.h == ode2.h
                              && ode1.v == ode2.v
                              && ode1.Ω == ode2.Ω
                              && ode1.∇H == ode2.∇H
@@ -139,12 +144,39 @@ function Base.similar(ode::VODE, q₀, p₀, λ₀=get_λ₀(q₀, ode.λ₀); k
 end
 
 function Base.similar(ode::VODE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=get_λ₀(q₀, ode.λ₀);
-                      parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
+                      h=ode.h, v=ode.v, Ω=ode.Ω, ∇H=ode.∇H, parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
     @assert ode.d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
-    VODE(ode.ϑ, ode.f, ode.g, t₀, q₀, p₀, λ₀; v=ode.v, Ω=ode.Ω, ∇H=ode.∇H,
+    VODE(ode.ϑ, ode.f, ode.g, t₀, q₀, p₀, λ₀; h=h, v=v, Ω=Ω, ∇H=∇H,
          parameters=parameters, periodicity=periodicity)
 end
 
 @inline Base.ndims(ode::VODE) = ode.d
 
-@inline periodicity(equation::VODE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::VODE) = equation.periodicity
+
+function get_function_tuple(equation::VODE{DT,TT,ϑT,FT,GT,HT,VT,ΩT,∇HT}) where {DT,TT,ϑT,FT,GT,HT,VT,ΩT,∇HT}
+    names = (:ϑ,:f,:g)
+    equs  = (equation.ϑ, equation.f, equation.g)
+
+    if HT != Nothing
+        names = (names..., :h)
+        equs  = (equs..., equation.h)
+    end
+
+    if VT != Nothing
+        names = (names..., :v)
+        equs  = (equs..., equation.v)
+    end
+
+    if ΩT != Nothing
+        names = (names..., :Ω)
+        equs  = (equs..., equation.Ω)
+    end
+
+    if ∇HT != Nothing
+        names = (names..., :∇H)
+        equs  = (equs..., equation.∇H)
+    end
+
+    NamedTuple{names}(equs)
+end

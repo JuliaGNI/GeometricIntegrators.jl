@@ -1,4 +1,4 @@
-"""
+@doc raw"""
 `ParametersCGVI`: Parameters for right-hand side function of continuous Galerkin variational Integrator.
 
 ### Parameters
@@ -89,16 +89,14 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersCGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersCGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+    @assert length(x) == length(b)
+
     cache = IntegratorCacheCGVI{ST,D,S,R}()
 
-    quote
-        @assert length(x) == length(b)
+    compute_stages!(x, cache, params)
 
-        compute_stages!(x, $cache, params)
-
-        compute_rhs!(b, $cache.X, $cache.Q, $cache.P, $cache.F, $cache.p̃, params)
-    end
+    compute_rhs!(b, cache.X, cache.Q, cache.P, cache.F, cache.p̃, params)
 end
 
 
@@ -312,7 +310,7 @@ equation(integrator::IntegratorCGVI) = integrator.equation
 timestep(integrator::IntegratorCGVI) = integrator.Δt
 
 
-function create_integrator_cache(int::IntegratorCGVI{DT,TT}) where {DT,TT}
+function IntegratorCache(int::IntegratorCGVI{DT,TT}) where {DT,TT}
     IntegratorCacheCGVI{DT, TT, ndims(int), nbasis(int.basis), nnodes(int.quadrature)}()
 end
 
@@ -393,5 +391,5 @@ function integrate_step!(int::IntegratorCGVI{DT,TT}, sol::AtomicSolutionPODE{DT,
     update_solution!(sol, int.cache)
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

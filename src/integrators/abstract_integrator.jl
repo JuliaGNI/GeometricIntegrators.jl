@@ -22,8 +22,7 @@ abstract type SPSDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType
 
 equation(integrator::Integrator) = error("equation() not implemented for ", typeof(integrator))
 timestep(integrator::Integrator) = error("timestep() not implemented for ", typeof(integrator))
-
-Base.ndims(integrator::Integrator) = ndims(equation(integrator))
+Base.ndims(integrator::Integrator) = error("ndims() not implemented for ", typeof(integrator))
 
 eachdim(integrator::Integrator) = 1:ndims(integrator)
 
@@ -31,3 +30,7 @@ eachdim(integrator::Integrator) = 1:ndims(integrator)
 abstract type Parameters{DT,TT} end
 
 function_stages!(x::Vector{DT}, b::Vector{DT}, params::PT) where {DT, TT, PT <: Parameters{DT,TT}} = error("function_stages!() not implemented for ", PT)
+
+initialize!(::Integrator, ::AtomicSolution) = nothing
+
+integrate_step!(integrator::Integrator, ::AtomicSolution) = error("integrate_step()! not implemented for ", typeof(integrator))

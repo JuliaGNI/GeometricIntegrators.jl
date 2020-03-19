@@ -39,6 +39,8 @@ profile_pendulum(getTableauExplicitMidpoint())
 profile_pendulum(getTableauKutta())
 profile_pendulum(getTableauERK4())
 
+profile_pendulum(getTableauCrouzeix())
+
 profile_pendulum(getTableauGLRK(1))
 profile_pendulum(getTableauGLRK(2))
 profile_pendulum(getTableauGLRK(3))

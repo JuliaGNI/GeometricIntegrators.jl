@@ -14,7 +14,7 @@ function getTableauHPARK(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[])
 
 
     if length(d) == 0
-        return TableauVPARK(name, o,
+        return TableauHPARK(name, o,
                             a_q, a_p, a_q, a_p,
                             a_q, a_p, a_q, a_p,
                             b_q, b_p, b_q, b_p,
@@ -22,7 +22,7 @@ function getTableauHPARK(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[])
     else
         @assert length(d) == q.s == p.s
 
-        return TableauVPARK(name, o,
+        return TableauHPARK(name, o,
                             a_q, a_p, a_q, a_p,
                             a_q, a_p, a_q, a_p,
                             b_q, b_p, b_q, b_p,

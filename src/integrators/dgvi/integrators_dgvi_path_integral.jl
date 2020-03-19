@@ -1,4 +1,4 @@
-"""
+@doc raw"""
 `ParametersDGVIPI`: Parameters for right-hand side function of Discontinuous
 Galerkin Variational Integrator with Path Integral approximation of the jump.
 
@@ -150,7 +150,7 @@ function ParametersDGVIPI(Θ::ΘT, f::FT, g::GT, Δt::TT,
 end
 
 
-"""
+@doc raw"""
 Nonlinear function cache for Discontinuous Galerkin Variational Integrator.
 
 ### Parameters
@@ -230,19 +230,17 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVIPI{DT,TT,D,S,QR,FR}) where {ST,DT,TT,D,S,QR,FR}
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVIPI{DT,TT,D,S,QR,FR}) where {ST,DT,TT,D,S,QR,FR}
+    @assert length(x) == length(b)
+
     cache = IntegratorCacheDGVIPI{ST,D,S,QR,FR}()
 
-    quote
-        @assert length(x) == length(b)
+    cache.q  .= params.q
+    cache.q⁻ .= params.q⁻
 
-        $cache.q  .= params.q
-        $cache.q⁻ .= params.q⁻
+    compute_stages!(x, cache, params)
 
-        compute_stages!(x, $cache, params)
-
-        compute_rhs!(b, $cache, params)
-    end
+    compute_rhs!(b, cache, params)
 end
 
 
@@ -398,7 +396,7 @@ function compute_rhs!(b::Vector{ST}, cache::IntegratorCacheDGVIPI{ST,D,S,QR,FR},
 end
 
 
-"""
+@doc raw"""
 `IntegratorDGVIPI`: Discontinuous Galerkin Variational Integrator.
 
 ### Parameters
@@ -499,32 +497,30 @@ function update_solution!(int::IntegratorDGVIPI{DT,TT}, cache::IntegratorCacheDG
 end
 
 
-@generated function initial_guess!(int::IntegratorDGVIPI{DT,TT,D,S,R}, m::Int) where {DT,TT,D,S,R}
+function initial_guess!(int::IntegratorDGVIPI{DT,TT,D,S,R}, m::Int) where {DT,TT,D,S,R}
     v = zeros(DT,D)
     y = zeros(DT,D)
     z = zeros(DT,D)
 
-    quote
-        # compute initial guess
-        if nnodes(int.basis) > 0
-            for i in 1:S
-                evaluate!(int.iguess, m, $y, $z, $v, nodes(int.basis)[i], nodes(int.basis)[i])
-                for k in 1:D
-                    int.solver.x[D*(i-1)+k] = $y[k]
-                end
-            end
-        else
-            for i in 1:S
-                for k in 1:D
-                    int.solver.x[D*(i-1)+k] = 0
-                end
+    # compute initial guess
+    if nnodes(int.basis) > 0
+        for i in 1:S
+            evaluate!(int.iguess, m, y, z, v, nodes(int.basis)[i], nodes(int.basis)[i])
+            for k in 1:D
+                int.solver.x[D*(i-1)+k] = y[k]
             end
         end
+    else
+        for i in 1:S
+            for k in 1:D
+                int.solver.x[D*(i-1)+k] = 0
+            end
+        end
+    end
 
-        evaluate!(int.iguess, m, $y, $z, $v, one(TT), one(TT))
-        for k in 1:D
-            int.solver.x[D*S+k] = $y[k]
-        end
+    evaluate!(int.iguess, m, y, z, v, one(TT), one(TT))
+    for k in 1:D
+        int.solver.x[D*S+k] = y[k]
     end
 end
 
@@ -552,7 +548,7 @@ function integrate_step!(int::IntegratorDGVIPI{DT,TT}, sol::Union{SolutionPODE{D
     update_solution!(int, int.cache)
 
     # copy solution to initial guess for next time step
-    update!(int.iguess, m, sol.t[0] + n*int.Δt, int.q, int.q⁻)
+    update_vector_fields!(int.iguess, m, sol.t[0] + n*int.Δt, int.q, int.q⁻)
 
     # take care of periodic solutions
     cut_periodic_solution!(int.q,  int.equation.periodicity)

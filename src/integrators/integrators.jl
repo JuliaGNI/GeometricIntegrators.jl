@@ -1,4 +1,8 @@
 
+using .Stochastic
+using .SPARK
+using .VPRK
+
 #*****************************************************************************#
 # General initialization functions for all integrators                        #
 #*****************************************************************************#
@@ -99,33 +103,33 @@ end
 #*****************************************************************************#
 
 "Create integrator for stochastic explicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauSERK, Δt)
-    IntegratorSERK(equation, tableau, Δt)
+function Integrator(equation::SDE, tableau::TableauSERK, Δt; kwargs...)
+    IntegratorSERK(equation, tableau, Δt; kwargs...)
 end
 
 "Create integrator for weak explicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauWERK, Δt)
-    IntegratorWERK(equation, tableau, Δt)
+function Integrator(equation::SDE, tableau::TableauWERK, Δt; kwargs...)
+    IntegratorWERK(equation, tableau, Δt; kwargs...)
 end
 
 "Create integrator for stochastic fully implicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauSIRK, Δt; K::Int=0)
-    IntegratorSIRK(equation, tableau, Δt, K=K)
+function Integrator(equation::SDE, tableau::TableauSIRK, Δt; kwargs...)
+    IntegratorSIRK(equation, tableau, Δt; kwargs...)
 end
 
 "Create integrator for stochastic fully implicit partitioned Runge-Kutta tableau."
-function Integrator(equation::PSDE, tableau::TableauSIPRK, Δt; K::Int=0)
-    IntegratorSIPRK(equation, tableau, Δt, K=K)
+function Integrator(equation::PSDE, tableau::TableauSIPRK, Δt; kwargs...)
+    IntegratorSIPRK(equation, tableau, Δt; kwargs...)
 end
 
 "Create integrator for stochastic fully implicit split partitioned Runge-Kutta tableau."
-function Integrator(equation::SPSDE, tableau::TableauSISPRK, Δt; K::Int=0)
-    IntegratorSISPRK(equation, tableau, Δt, K=K)
+function Integrator(equation::SPSDE, tableau::TableauSISPRK, Δt; kwargs...)
+    IntegratorSISPRK(equation, tableau, Δt; kwargs...)
 end
 
 "Create integrator for weak fully implicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauWIRK, Δt)
-    IntegratorWIRK(equation, tableau, Δt)
+function Integrator(equation::SDE, tableau::TableauWIRK, Δt; kwargs...)
+    IntegratorWIRK(equation, tableau, Δt; kwargs...)
 end
 
 
@@ -134,15 +138,15 @@ end
 #*****************************************************************************#
 
 "Apply integrator for ntime time steps and return solution."
-function integrate(integrator::Integrator, ntime::Int; kwargs...)
-    solution = Solution(equation(integrator), timestep(integrator), ntime; kwargs...)
+function integrate(equation::Equation, integrator::Integrator, ntime::Int; kwargs...)
+    solution = Solution(equation, timestep(integrator), ntime; kwargs...)
     integrate!(integrator, solution)
     return solution
 end
 
 "Integrate given equation with given tableau for ntime time steps and return solution."
 function integrate(equation::Equation, tableau::AbstractTableau, Δt, ntime; kwargs...)
-    return integrate(Integrator(equation, tableau, Δt), ntime; kwargs...)
+    return integrate(equation, Integrator(equation, tableau, Δt), ntime; kwargs...)
 end
 
 "Integrate ODE specified by vector field and initial condition with given tableau for ntime time steps and return solution."
@@ -183,7 +187,7 @@ function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT}, m1::Int, m2::I
     @assert n2 ≥ n1
     @assert n2 ≤ ntime(sol)
 
-    asol = AtomicSolution(equation(int))
+    asol = AtomicSolution(sol)
 
     # loop over initial conditions showing progress bar
     for m in m1:m2
@@ -224,7 +228,7 @@ function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT}, a
     integrate_step!(int, asol)
 
     # take care of periodic solutions
-    cut_periodic_solution!(asol, periodicity(equation(int)))
+    cut_periodic_solution!(asol, periodicity(sol))
 
     # copy solution from cache to solution
     set_solution!(sol, asol, n, m)
@@ -239,7 +243,7 @@ function integrate!(int::StochasticIntegrator{DT,TT}, sol::Solution{DT,TT}, asol
     integrate_step!(int, asol)
 
     # take care of periodic solutions
-    cut_periodic_solution!(asol, periodicity(equation(int)))
+    cut_periodic_solution!(asol, periodicity(sol))
 
     # copy solution from cache to solution
     set_solution!(sol, asol, n, m)

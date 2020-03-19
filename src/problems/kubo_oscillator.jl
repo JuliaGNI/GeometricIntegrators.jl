@@ -5,6 +5,7 @@ module KuboOscillatorProblem
     export kubo_oscillator_sde_1, kubo_oscillator_psde_1, kubo_oscillator_spsde_1
     export kubo_oscillator_sde_2, kubo_oscillator_psde_2, kubo_oscillator_spsde_2
     export kubo_oscillator_sde_3, kubo_oscillator_psde_3, kubo_oscillator_spsde_3
+    export kubo_oscillator_ode
 
     q_init_A=[0.5, 0.0]
     q_init_B=[0.5 0.0 -0.5; 0.0 0.5 0.0]
@@ -50,6 +51,13 @@ module KuboOscillatorProblem
         # q_init_A - interpreted as one random initial conditions with one sample path
         # 1-dimensional noise
         SDE(1, 1, kubo_oscillator_sde_v, kubo_oscillator_sde_B, q₀)
+    end
+
+
+    # ODE
+
+    function kubo_oscillator_ode(q₀=q_init_A)
+        ODE(kubo_oscillator_sde_v, q₀)
     end
 
 

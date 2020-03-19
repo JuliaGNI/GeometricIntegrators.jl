@@ -21,10 +21,10 @@ taking values in ``\mathbb{R}^{n}``.
 * `v`: function computing the vector field
 * `u`: function computing the projection
 * `ϕ`: algebraic constraint
+* `h`: function computing the Hamiltonian (optional)
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q``
 * `λ₀`: initial condition for algebraic variable ``\lambda``
-
 
 The function `v`, providing the vector field, takes three arguments,
 `v(t, q, v)`, the functions `u` and `ϕ`, providing the projection and the
@@ -60,7 +60,8 @@ on `t`, `q` and `λ`.
 ```
 """
 struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Function,
-           ϕType <: Function, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationDAE{dType, tType}
+           ϕType <: Function, hType <: Union{Function,Nothing},
+           pType <: Union{Tuple,Nothing}, N} <: AbstractEquationDAE{dType, tType}
 
     d::Int
     m::Int
@@ -68,6 +69,7 @@ struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Functio
     v::vType
     u::uType
     ϕ::ϕType
+    h::hType
     t₀::tType
     q₀::Array{dType, N}
     λ₀::Array{dType, N}
@@ -77,9 +79,10 @@ struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Functio
     function DAE(DT::DataType, N::Int, d::Int, m::Int, n::Int,
                  v::vType, u::uType, ϕ::ϕType, t₀::tType,
                  q₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
-                 parameters=nothing, periodicity=zeros(DT,d)) where {
+                 h::hType=nothing, parameters::pType=nothing, periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number, vType <: Function,
-                        uType <: Function, ϕType <: Function}
+                        uType <: Function, ϕType <: Function,
+                        hType <: Union{Function,Nothing}, pType <: Union{Tuple,Nothing}}
 
         @assert d == size(q₀,1)
         @assert m == size(λ₀,1)
@@ -87,7 +90,7 @@ struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Functio
         @assert d ≥ m
         @assert ndims(q₀) == ndims(λ₀) == N ∈ (1,2)
 
-        new{DT, tType, vType, uType, ϕType, typeof(parameters), N}(d, m, n, v, u, ϕ, t₀,
+        new{DT, tType, vType, uType, ϕType, hType, pType, N}(d, m, n, v, u, ϕ, h, t₀,
                 convert(Array{DT}, q₀), convert(Array{DT}, λ₀), parameters, periodicity)
     end
 end
@@ -101,8 +104,8 @@ function DAE(v, u, ϕ, q₀, λ₀; kwargs...)
 end
 
 Base.hash(dae::DAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n, hash(dae.v,
-        hash(dae.u, hash(dae.t₀, hash(dae.q₀, hash(dae.λ₀,
-        hash(dae.periodicity, hash(dae.parameters, h))))))))))
+        hash(dae.u, hash(dae.ϕ, hash(dae.h, hash(dae.t₀, hash(dae.q₀, hash(dae.λ₀,
+        hash(dae.periodicity, hash(dae.parameters, h))))))))))))
 
 Base.:(==)(dae1::DAE, dae2::DAE) = (
                                 dae1.d == dae2.d
@@ -110,6 +113,8 @@ Base.:(==)(dae1::DAE, dae2::DAE) = (
                              && dae1.n == dae2.n
                              && dae1.v == dae2.v
                              && dae1.u == dae2.u
+                             && dae1.ϕ == dae2.ϕ
+                             && dae1.h == dae2.h
                              && dae1.t₀ == dae2.t₀
                              && dae1.q₀ == dae2.q₀
                              && dae1.λ₀ == dae2.λ₀
@@ -121,12 +126,20 @@ function Base.similar(dae::DAE, q₀, λ₀=get_λ₀(q₀, dae.λ₀); kwargs..
 end
 
 function Base.similar(dae::DAE, t₀::TT, q₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=get_λ₀(q₀, dae.λ₀);
-                      parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
+                      h=dae.h, parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
     @assert dae.d == size(q₀,1)
     @assert dae.m == size(λ₀,1)
-    DAE(dae.v, dae.u, dae.ϕ, t₀, q₀, λ₀; parameters=parameters, periodicity=periodicity)
+    DAE(dae.v, dae.u, dae.ϕ, t₀, q₀, λ₀; h=h, parameters=parameters, periodicity=periodicity)
 end
 
 @inline Base.ndims(dae::DAE) = dae.d
 
-@inline periodicity(equation::DAE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::DAE) = equation.periodicity
+
+function get_function_tuple(equation::DAE{DT,TT,VT,UT,ϕT,HT}) where {DT, TT, VT, UT, ϕT, HT <: Function}
+    NamedTuple{(:v,:u,:ϕ,:h)}((equation.v, equation.u, equation.ϕ, equation.h))
+end
+
+function get_function_tuple(equation::DAE{DT,TT,VT,UT,ϕT,HT}) where {DT, TT, VT, UT, ϕT, HT <: Nothing}
+    NamedTuple{(:v,:u,:ϕ)}((equation.v, equation.u, equation.ϕ))
+end

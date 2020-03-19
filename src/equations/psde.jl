@@ -140,4 +140,8 @@ end
 
 @inline Base.ndims(sde::PSDE) = sde.d
 
-@inline periodicity(equation::PSDE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::PSDE) = equation.periodicity
+
+function get_function_tuple(equation::PSDE)
+    NamedTuple{(:v,:f,:B,:G)}((equation.v, equation.f, equation.B, equation.G))
+end

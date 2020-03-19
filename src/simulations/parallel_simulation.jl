@@ -1,4 +1,10 @@
+"""
+   ParallelSimulation: collects all data structures that are necessary for a
+   simulation run in parallel.
 
+   WARNING: Many integrators are not thread-safe at this point!
+
+"""
 struct ParallelSimulation{ET <: Equation, IT <: Tuple, ST <: Solution}
     equation::ET
     integrators::IT

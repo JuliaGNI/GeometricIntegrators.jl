@@ -42,25 +42,22 @@ end
 
 
 "Parameters for right-hand side function of implicit partitioned Runge-Kutta methods."
-mutable struct ParametersIPRK{DT, TT, ET <: PODE{DT,TT}, D, S} <: Parameters{DT,TT}
-    equ::ET
+mutable struct ParametersIPRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
+    equs::ET
     tab::TableauIPRK{TT}
     Δt::TT
 
     t::TT
     q::Vector{DT}
     p::Vector{DT}
-end
 
-function ParametersIPRK(equ::ET, tab::TableauIPRK{TT}, Δt::TT) where {DT, TT, ET <: PODE{DT,TT}}
-    q = zeros(DT, equ.d)
-    p = zeros(DT, equ.d)
-
-    ParametersIPRK{DT, TT, ET, equ.d, tab.s}(equ, tab, Δt, 0, q, p)
+    function ParametersIPRK{DT,D}(equs::ET, tab::TableauIPRK{TT}, Δt::TT) where {D, DT, TT, ET <: NamedTuple}
+        new{DT, TT, D, tab.s, ET}(equs, tab, Δt, zero(TT), zeros(DT,D), zeros(DT,D))
+    end
 end
 
 
-"""
+@doc raw"""
 Implicit partitioned Runge-Kutta integrator cache.
 
 ### Fields
@@ -111,36 +108,75 @@ struct IntegratorCacheIPRK{ST,D,S} <: PODEIntegratorCache{ST,D}
     end
 end
 
+function IntegratorCache(params::ParametersIPRK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
+    IntegratorCacheIPRK{DT,D,S}(; kwargs...)
+end
+
+function IntegratorCache{ST}(params::ParametersIPRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+    IntegratorCacheIPRK{ST,D,S}(; kwargs...)
+end
+
+@inline CacheType(ST, params::ParametersIPRK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheIPRK{ST,D,S}
+
 
 "Implicit partitioned Runge-Kutta integrator."
-struct IntegratorIPRK{DT, TT, PT <: ParametersIPRK{DT,TT},
-                              ST <: NonlinearSolver{DT},
-                              IT <: InitialGuessPODE{DT,TT}, D, S} <: IntegratorPRK{DT,TT}
+struct IntegratorIPRK{DT, TT, D, S, PT <: ParametersIPRK{DT,TT},
+                                    ST <: NonlinearSolver{DT},
+                                    IT <: InitialGuessPODE{DT,TT}} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
-    cache::IntegratorCacheIPRK{DT,D,S}
+    caches::CacheDict{PT}
+
+    function IntegratorIPRK(params::ParametersIPRK{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
+    end
+
+    function IntegratorIPRK{DT,D}(equations::NamedTuple, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT,D}
+        # get number of stages
+        S = tableau.s
+
+        # create params
+        params = ParametersIPRK{DT,D}(equations, tableau, Δt)
+
+        # create cache dict
+        caches = CacheDict(params)
+
+        # create solver
+        solver = create_nonlinear_solver(DT, 2*D*S, params, caches)
+
+        # create initial guess
+        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+
+        # create integrator
+        IntegratorIPRK(params, solver, iguess, caches)
+    end
+
+    function IntegratorIPRK{DT,D}(v::Function, f::Function, tableau::TableauIPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorIPRK{DT,D}(NamedTuple{(:v,:f)}((v,f)), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorIPRK{DT,D}(v::Function, f::Function, h::Function, tableau::TableauIPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorIPRK{DT,D}(NamedTuple{(:v,:f,:h)}((v,f,h)), tableau, Δt; kwargs...)
+    end
+
+    function IntegratorIPRK(equation::PODE{DT,TT}, tableau::TableauIPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorIPRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
 end
 
-function IntegratorIPRK(equation::PODE{DT,TT,VT,FT}, tableau::TableauIPRK{TT}, Δt::TT) where {DT,TT,VT,FT}
-    D = equation.d
-    M = equation.n
-    S = tableau.s
 
-    # create params
-    params = ParametersIPRK(equation, tableau, Δt)
+@inline Base.ndims(int::IntegratorIPRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
-    # create solver
-    solver = create_nonlinear_solver(DT, 2*D*S, params)
 
-    # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
+function initialize!(int::IntegratorIPRK, sol::AtomicSolutionPODE)
+    sol.t̅ = sol.t - timestep(int)
 
-    # create cache
-    cache = IntegratorCacheIPRK{DT,D,S}()
+    equations(int)[:v](sol.t, sol.q, sol.p, sol.v)
+    equations(int)[:f](sol.t, sol.q, sol.p, sol.f)
 
-    # create integrator
-    IntegratorIPRK{DT, TT, typeof(params), typeof(solver), typeof(iguess), D, S}(params, solver, iguess, cache)
+    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
+                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
 end
 
 
@@ -152,27 +188,22 @@ function update_params!(int::IntegratorIPRK, sol::AtomicSolutionPODE)
 end
 
 
-"Compute stages of implicit partitioned Runge-Kutta methods."
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
-    # create caches for internal stages
-    Q = create_internal_stage_vector(ST, D, S)
-    P = create_internal_stage_vector(ST, D, S)
-    V = create_internal_stage_vector(ST, D, S)
-    F = create_internal_stage_vector(ST, D, S)
-    Y = create_internal_stage_vector(ST, D, S)
-    Z = create_internal_stage_vector(ST, D, S)
+function initial_guess!(int::IntegratorIPRK{DT}, sol::AtomicSolutionPODE{DT},
+                        cache::IntegratorCacheIPRK{DT}=int.caches[DT]) where {DT}
 
-    # compute stages from nonlinear solver solution x
-    compute_stages!(x, Q, V, Y, P, F, Z, params)
-
-    # compute b = - [(Y-AV), (Z-AF)]
-    for i in 1:S
-        for k in 1:D
-            b[2*(D*(i-1)+k-1)+1] = - Y[i][k]
-            b[2*(D*(i-1)+k-1)+2] = - Z[i][k]
-            for j in 1:S
-                b[2*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * V[j][k]
-                b[2*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * F[j][k]
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              cache.Q[i], cache.P[i], cache.V[i], cache.F[i],
+                              tableau(int).q.c[i], tableau(int).p.c[i])
+    end
+    for i in eachstage(int)
+        for k in eachdim(int)
+            int.solver.x[2*(ndims(int)*(i-1)+k-1)+1] = 0
+            int.solver.x[2*(ndims(int)*(i-1)+k-1)+2] = 0
+            for j in eachstage(int)
+                int.solver.x[2*(ndims(int)*(i-1)+k-1)+1] += tableau(int).q.a[i,j] * cache.V[j][k]
+                int.solver.x[2*(ndims(int)*(i-1)+k-1)+2] += tableau(int).p.a[i,j] * cache.F[j][k]
             end
         end
     end
@@ -181,7 +212,7 @@ end
 
 function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
                                         P::Vector{Vector{ST}}, F::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
-                                        params::ParametersIPRK{DT,TT,ET,D,S}) where {ST,DT,TT,ET,D,S}
+                                        params::ParametersIPRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
     local tqᵢ::TT
     local tpᵢ::TT
 
@@ -201,43 +232,30 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         tpᵢ = params.t + params.Δt * params.tab.p.c[i]
 
         # compute v(Q,P) and f(Q,P)
-        params.equ.v(tqᵢ, Q[i], P[i], V[i])
-        params.equ.f(tpᵢ, Q[i], P[i], F[i])
+        params.equs[:v](tqᵢ, Q[i], P[i], V[i])
+        params.equs[:f](tpᵢ, Q[i], P[i], F[i])
     end
 end
 
 
-function initialize!(int::IntegratorIPRK, sol::AtomicSolutionPODE)
-    sol.t̅ = sol.t - timestep(int)
+"Compute stages of implicit partitioned Runge-Kutta methods."
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersIPRK{DT,TT,D,S},
+                          caches::CacheDict) where {ST,DT,TT,D,S}
 
-    int.params.equ.v(sol.t, sol.q, sol.p, sol.v)
-    int.params.equ.f(sol.t, sol.q, sol.p, sol.f)
+    # get cache for internal stages
+    cache = caches[ST]
 
-    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
-end
+    # compute stages from nonlinear solver solution x
+    compute_stages!(x, cache.Q, cache.V, cache.Y, cache.P, cache.F, cache.Z, params)
 
-
-function initial_guess!(int::IntegratorIPRK, sol::AtomicSolutionPODE)
-    for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                              int.cache.q̃, int.cache.p̃, int.cache.ṽ, int.cache.f̃,
-                              tableau(int).q.c[i],
-                              tableau(int).p.c[i])
-
-        for k in eachdim(int)
-            int.cache.V[i][k] = int.cache.ṽ[k]
-            int.cache.F[i][k] = int.cache.f̃[k]
-        end
-    end
-    for i in eachstage(int)
-        for k in eachdim(int)
-            int.solver.x[2*(ndims(int)*(i-1)+k-1)+1] = 0
-            int.solver.x[2*(ndims(int)*(i-1)+k-1)+2] = 0
-            for j in eachstage(int)
-                int.solver.x[2*(ndims(int)*(i-1)+k-1)+1] += tableau(int).q.a[i,j] * int.cache.V[j][k]
-                int.solver.x[2*(ndims(int)*(i-1)+k-1)+2] += tableau(int).p.a[i,j] * int.cache.F[j][k]
+    # compute b = - [(Y-AV), (Z-AF)]
+    for i in 1:S
+        for k in 1:D
+            b[2*(D*(i-1)+k-1)+1] = - cache.Y[i][k]
+            b[2*(D*(i-1)+k-1)+2] = - cache.Z[i][k]
+            for j in 1:S
+                b[2*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * cache.V[j][k]
+                b[2*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * cache.F[j][k]
             end
         end
     end
@@ -245,14 +263,15 @@ end
 
 
 "Integrate ODE with implicit partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorIPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
-    # update nonlinear solver parameters from cache
+function integrate_step!(int::IntegratorIPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+                         cache::IntegratorCacheIPRK{DT}=int.caches[DT]) where {DT,TT}
+    # update nonlinear solver parameters from atomic solution
     update_params!(int, sol)
 
     # compute initial guess
-    initial_guess!(int, sol)
+    initial_guess!(int, sol, cache)
 
-    # reset cache
+    # reset atomic solution
     reset!(sol, timestep(int))
 
     # call nonlinear solver
@@ -265,13 +284,13 @@ function integrate_step!(int::IntegratorIPRK{DT,TT}, sol::AtomicSolutionPODE{DT,
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.Y,
-                                  int.cache.P, int.cache.F, int.cache.Z, int.params)
+    compute_stages!(int.solver.x, cache.Q, cache.V, cache.Y,
+                                  cache.P, cache.F, cache.Z, int.params)
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, int.cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
-    update_solution!(sol.p, sol.p̃, int.cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

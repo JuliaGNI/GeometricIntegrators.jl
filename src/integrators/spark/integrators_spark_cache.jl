@@ -1,4 +1,4 @@
-"""
+@doc raw"""
 Cache of a Specialised Partitioned Additive Runge-Kutta integrator.
 
 ### Fields
@@ -26,11 +26,7 @@ Cache of a Specialised Partitioned Additive Runge-Kutta integrator.
 * `Y`: vector field of internal stages of q
 * `Z`: vector field of internal stages of p
 """
-mutable struct IntegratorCacheSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
-    n::Int
-    t::TT
-    t̅::TT
-
+mutable struct IntegratorCacheSPARK{ST,D,S,R} <: IDAEIntegratorCache{ST,D}
     q::Vector{ST}
     q̅::Vector{ST}
     p::Vector{ST}
@@ -39,9 +35,6 @@ mutable struct IntegratorCacheSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
     λ̅::Vector{ST}
     μ::Vector{ST}
     μ̅::Vector{ST}
-
-    qₑᵣᵣ::Vector{ST}
-    pₑᵣᵣ::Vector{ST}
 
     v::Vector{ST}
     v̅::Vector{ST}
@@ -86,7 +79,7 @@ mutable struct IntegratorCacheSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
     Φp::Vector{Vector{ST}}
     Ψp::Vector{Vector{ST}}
 
-    function IntegratorCacheSPARK{ST,TT,D,S,R}() where {ST,TT,D,S,R}
+    function IntegratorCacheSPARK{ST,D,S,R}() where {ST,D,S,R}
         q = zeros(ST,D)
         q̅ = zeros(ST,D)
         p = zeros(ST,D)
@@ -95,10 +88,6 @@ mutable struct IntegratorCacheSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
         λ̅ = zeros(ST,D)
         μ = zeros(ST,D)
         μ̅ = zeros(ST,D)
-
-        # create error vectors
-        qₑᵣᵣ = zeros(ST,D)
-        pₑᵣᵣ = zeros(ST,D)
 
         # create update vectors
         v = zeros(ST,D)
@@ -146,13 +135,16 @@ mutable struct IntegratorCacheSPARK{ST,TT,D,S,R} <: IDAEIntegratorCache{ST,D}
         Φp = create_internal_stage_vector(ST, D, R)
         Ψp = create_internal_stage_vector(ST, D, R)
 
-        new(0, zero(TT), zero(TT), q, q̅, p, p̅, λ, λ̅, μ, μ̅,
-                                   qₑᵣᵣ, pₑᵣᵣ,
-                                   v, v̅, f, f̅, u, u̅, g, g̅, ϕ, ϕ̅,
-                                   q̃, p̃, ṽ, f̃, ϕ̃, s̃,
-                                   Qi, Pi, Vi, Fi, Gi, Hi, Yi, Zi, Φi, Ψi,
-                                   Qp, Pp, Vp, Λp, Up, Fp, Gp, G̅p, Hp, Yp, Zp, Φp, Ψp)
+        new(q, q̅, p, p̅, λ, λ̅, μ, μ̅,
+            v, v̅, f, f̅, u, u̅, g, g̅, ϕ, ϕ̅,
+            q̃, p̃, ṽ, f̃, ϕ̃, s̃,
+            Qi, Pi, Vi, Fi, Gi, Hi, Yi, Zi, Φi, Ψi,
+            Qp, Pp, Vp, Λp, Up, Fp, Gp, G̅p, Hp, Yp, Zp, Φp, Ψp)
     end
+end
+
+function IntegratorCache(int::AbstractIntegratorSPARK{DT,TT}) where {DT,TT}
+    IntegratorCacheSPARK{DT, ndims(int), nstages(int), pstages(int)}()
 end
 
 function CommonFunctions.reset!(cache::IntegratorCacheSPARK, Δt)
@@ -165,6 +157,4 @@ function CommonFunctions.reset!(cache::IntegratorCacheSPARK, Δt)
     cache.u̅ .= cache.u
     cache.g̅ .= cache.g
     cache.ϕ̅ .= cache.ϕ
-    cache.t += Δt
-    cache.n += 1
 end

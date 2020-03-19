@@ -13,7 +13,7 @@ with vector field ``v``, initial condition ``q_{0}`` and the solution
 * `d`: dimension of dynamical variable ``q`` and the vector field ``v``
 * `n`: number of initial conditions
 * `v`: function computing the vector field
-* `h`: function computing the Hamiltonian
+* `h`: function computing the Hamiltonian (optional)
 * `t₀`: initial time
 * `q₀`: initial condition
 
@@ -43,14 +43,15 @@ struct ODE{dType <: Number, tType <: Number, vType <: Function,
     periodicity::Vector{dType}
 
     function ODE(DT::DataType, N::Int, d::Int, n::Int, v::vType, t₀::tType, q₀::AbstractArray{dType};
-                 h::hType=nothing, parameters=nothing, periodicity=zeros(DT,d)) where {
-                        dType <: Number, tType <: Number, vType <: Function, hType <: Union{Function,Nothing}}
+                 h::hType=nothing, parameters::pType=nothing, periodicity=zeros(DT,d)) where {
+                        dType <: Number, tType <: Number, vType <: Function,
+                        hType <: Union{Function,Nothing}, pType <: Union{Tuple,Nothing}}
 
         @assert d == size(q₀,1)
         @assert n == size(q₀,2)
         @assert ndims(q₀) == N ∈ (1,2)
 
-        new{DT, tType, vType, hType, typeof(parameters), N}(d, n, v, h, t₀,
+        new{DT, tType, vType, hType, pType, N}(d, n, v, h, t₀,
                 convert(Array{DT}, q₀), parameters, periodicity)
     end
 end
@@ -88,4 +89,12 @@ end
 
 @inline Base.ndims(ode::ODE) = ode.d
 
-@inline periodicity(equation::ODE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::ODE) = equation.periodicity
+
+function get_function_tuple(equation::ODE{DT,TT,VT,HT}) where {DT, TT, VT, HT <: Function}
+    NamedTuple{(:v,:h)}((equation.v, equation.h))
+end
+
+function get_function_tuple(equation::ODE{DT,TT,VT,HT}) where {DT, TT, VT, HT <: Nothing}
+    NamedTuple{(:v,)}((equation.v,))
+end

@@ -12,7 +12,7 @@
         v[2] = λ*q[2]
     end
 
-    function sde_u(μ, t, q, u)
+    function sde_B(μ, t, q, u)
         u[1] = μ*q[1]
         u[2] = μ*q[2]
     end
@@ -21,12 +21,16 @@
     μ  = 1.
 
     sde_v_params = (t, q, v) -> sde_v(λ, t, q, v)
-    sde_u_params = (t, q, v) -> sde_u(μ, t, q, v)
+    sde_B_params = (t, q, v) -> sde_B(μ, t, q, v)
 
-    sde  = SDE(1, 1, sde_v_params, sde_u_params, t₀, x₀)
-    sde1 = SDE(1, 1, sde_v_params, sde_u_params, x₀)
-    sde2 = SDE(1, 3, sde_v_params, sde_u_params, x₀)
-    sde3 = SDE(1, 1, sde_v_params, sde_u_params, x₁ₛ)
+    sde  = SDE(1, 1, sde_v_params, sde_B_params, t₀, x₀)
+    sde1 = SDE(1, 1, sde_v_params, sde_B_params, x₀)
+    sde2 = SDE(1, 3, sde_v_params, sde_B_params, x₀)
+    sde3 = SDE(1, 1, sde_v_params, sde_B_params, x₁ₛ)
+
+    @test ndims(sde) == 2
+    @test periodicity(sde) == zero(x₀)
+    @test get_function_tuple(sde) == NamedTuple{(:v,:B)}((sde_v_params, sde_B_params))
 
     @test sde == sde1
     @test sde != sde2
@@ -83,6 +87,10 @@
     psde1 = PSDE(1, 1, psde_v, psde_f, psde_B, psde_G, q₀, p₀)
     psde2 = PSDE(1, 3, psde_v, psde_f, psde_B, psde_G, q₀, p₀)
     psde3 = PSDE(1, 1, psde_v, psde_f, psde_B, psde_G, q₁ₛ, p₁ₛ)
+
+    @test ndims(psde) == 1
+    @test periodicity(psde) == zero(q₀)
+    @test get_function_tuple(psde) == NamedTuple{(:v,:f,:B,:G)}((psde_v,psde_f,psde_B,psde_G))
 
     @test psde == psde1
     @test psde != psde2
@@ -148,6 +156,10 @@
     spsde1 = SPSDE(1, 1, spsde_v, spsde_f1, spsde_f2, spsde_B, spsde_G1, spsde_G2, q₀, p₀)
     spsde2 = SPSDE(1, 3, spsde_v, spsde_f1, spsde_f2, spsde_B, spsde_G1, spsde_G2, q₀, p₀)
     spsde3 = SPSDE(1, 1, spsde_v, spsde_f1, spsde_f2, spsde_B, spsde_G1, spsde_G2, q₁ₛ, p₁ₛ)
+
+    @test ndims(spsde) == 1
+    @test periodicity(spsde) == zero(q₀)
+    @test get_function_tuple(spsde) == NamedTuple{(:v,:f1,:f2,:B,:G1,:G2)}((spsde_v,spsde_f1,spsde_f2,spsde_B,spsde_G1,spsde_G2))
 
     @test spsde == spsde1
     @test spsde != spsde2

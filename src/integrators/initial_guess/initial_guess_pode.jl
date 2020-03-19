@@ -21,6 +21,10 @@ mutable struct InitialGuessPODE{DT, TT, VT, FT, IT <: Interpolator}
     end
 end
 
+function InitialGuessPODE{DT,D}(interp, v::VT, f::FT, Δt::TT) where {D, DT, TT, VT <: Function, FT <: Function}
+    InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, D), v, f, Δt)
+end
+
 function InitialGuessPODE(interp, equ::PODE{DT,TT,VT,FT}, Δt::TT) where {DT,TT,VT,FT}
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
@@ -29,11 +33,11 @@ function InitialGuessPODE(interp, equ::IODE{DT,TT,ϑT,FT,GT,HT,VT}, Δt::TT) whe
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
-function InitialGuessPODE(interp, equ::VODE{DT,TT,ϑT,FT,GT,VT}, Δt::TT) where {DT,TT,ϑT,FT,GT,VT}
+function InitialGuessPODE(interp, equ::VODE{DT,TT,ϑT,FT,GT,HT,VT}, Δt::TT) where {DT,TT,ϑT,FT,GT,HT,VT}
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
-function InitialGuessPODE(interp, equ::IDAE{DT,TT,ϑT,FT,UT,GT,ϕT,VT}, Δt::TT) where {DT,TT,ϑT,FT,UT,GT,ϕT,VT}
+function InitialGuessPODE(interp, equ::IDAE{DT,TT,ϑT,FT,UT,GT,ϕT,HT,VT}, Δt::TT) where {DT,TT,ϑT,FT,UT,GT,ϕT,HT,VT}
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
@@ -41,7 +45,7 @@ function InitialGuessPODE(interp, equ::PDAE{DT,TT,VT,FT,UT,GT,ϕT}, Δt::TT) whe
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
-function InitialGuessPODE(interp, equ::VDAE{DT,TT,θT,FT,GT,G̅T,ϕT,ψT,VT}, Δt::TT) where {DT,TT,θT,FT,GT,G̅T,ϕT,ψT,VT}
+function InitialGuessPODE(interp, equ::VDAE{DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT}, Δt::TT) where {DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT}
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
@@ -68,11 +72,11 @@ function initialize!(ig::InitialGuessPODE{DT,TT,VT,IT},
 end
 
 
-function update!(ig::InitialGuessPODE{DT,TT}, t₁::TT,
-                q₁::SolutionVector{DT},
-                p₁::SolutionVector{DT},
-                v₁::Vector{DT},
-                f₁::Vector{DT}) where {DT,TT}
+function update_vector_fields!(ig::InitialGuessPODE{DT,TT}, t₁::TT,
+                               q₁::SolutionVector{DT},
+                               p₁::SolutionVector{DT},
+                               v₁::Vector{DT},
+                               f₁::Vector{DT}) where {DT,TT}
     ig.v(t₁, q₁, p₁, v₁)
     ig.f(t₁, q₁, v₁, f₁)
 end

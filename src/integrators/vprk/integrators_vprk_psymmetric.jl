@@ -1,64 +1,79 @@
 
-"Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-mutable struct ParametersVPRKpSymmetric{DT, TT, ET <: IODE{DT,TT}, D, S} <: AbstractParametersVPRK{DT,TT,ET,D,S}
-    equ::ET
-    tab::TableauVPRK{TT}
-    Δt::TT
-
-    R::Vector{TT}
-
-    t̅::TT
-    q̅::Vector{DT}
-    p̅::Vector{DT}
-end
-
-function ParametersVPRKpSymmetric(equ::ET, tab::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
-    R = convert(Vector{TT}, [1, tab.R∞])
-    q̅ = zeros(DT, ndims(equ))
-    p̅ = zeros(DT, ndims(equ))
-
-    ParametersVPRKpSymmetric{DT, TT, ET, ndims(equ), tab.s}(equ, tab, Δt, R, zero(TT), q̅, p̅)
-end
+"Parameters for right-hand side function of Variational Partitioned Runge-Kutta methods."
+const ParametersVPRKpSymmetric = AbstractParametersVPRK{:vprk_psymmetric}
 
 
 "Variational partitioned Runge-Kutta integrator."
-struct IntegratorVPRKpSymmetric{DT, TT, PT <: ParametersVPRKpSymmetric{DT,TT},
-                                        ST <: NonlinearSolver{DT},
-                                        IT <: InitialGuessPODE{DT,TT}, D, S} <: AbstractIntegratorVPRKwProjection{DT,TT}
+struct IntegratorVPRKpSymmetric{DT, TT, D, S,
+                PT <: ParametersVPRKpSymmetric{DT,TT},
+                ST <: NonlinearSolver{DT},
+                IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
 
     params::PT
     solver::ST
     iguess::IT
-    cache::IntegratorCacheVPRK{DT,D,S}
+    caches::CacheDict{PT}
+
+    function IntegratorVPRKpSymmetric(params::ParametersVPRKpSymmetric{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
+    end
+
+    function IntegratorVPRKpSymmetric{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,D}
+        # get number of stages
+        S = tableau.s
+
+        # create params
+        R = convert(Vector{TT}, [1, tableau.R∞])
+        params = ParametersVPRKpSymmetric{DT,D}(equations, tableau, Δt, NamedTuple{(:R,)}((R,)))
+
+        # create cache dict
+        caches = CacheDict(params)
+
+        # create solver
+        solver = create_nonlinear_solver(DT, D*(S+2), params, caches)
+
+        # create initial guess
+        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+
+        # create integrator
+        IntegratorVPRKpSymmetric(params, solver, iguess, caches)
+    end
+
+    function IntegratorVPRKpSymmetric(equation::IODE{DT,TT}, tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+        IntegratorVPRKpSymmetric{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+    end
 end
 
-function IntegratorVPRKpSymmetric(equation::ET, tableau::TableauVPRK{TT}, Δt::TT) where {DT, TT, ET <: IODE{DT,TT}}
-    D = equation.d
-    M = equation.n
-    S = tableau.s
 
-    # create params
-    params = ParametersVPRKpSymmetric(equation, tableau, Δt)
+function initial_guess!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+                        cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
+    for i in eachstage(int)
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              cache.q̃, cache.ṽ,
+                              tableau(int).q.c[i])
 
-    # create solver
-    solver = create_nonlinear_solver(DT, D*(S+2), params)
+        for k in eachdim(int)
+            int.solver.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
+        end
+    end
 
-    # create initial guess
-    iguess = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
-
-    # create cache
-    cache = IntegratorCacheVPRK{DT,D,S}(true)
-
-    # create integrator
-    IntegratorVPRKpSymmetric{DT, TT, typeof(params), typeof(solver), typeof(iguess), D, S}(params, solver, iguess, cache)
+    evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                          sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                          cache.q̃, one(TT))
+    for k in eachdim(int)
+        int.solver.x[ndims(int)*(nstages(int)+0)+k] = cache.q̃[k]
+    end
+    for k in eachdim(int)
+        int.solver.x[ndims(int)*(nstages(int)+1)+k] = 0
+    end
 end
 
 
 function compute_projection_vprk!(x::Vector{ST},
                 q::SolutionVector{ST}, p::SolutionVector{ST}, λ::SolutionVector{ST},
                 V::Vector{Vector{ST}}, U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
-                params::ParametersVPRKpSymmetric{DT,TT,ET,D,S}
-            ) where {ST,DT,TT,ET,D,S}
+                params::ParametersVPRKpSymmetric{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     local t₀::TT = params.t̅
     local t₁::TT = params.t̅ + params.Δt
@@ -74,68 +89,45 @@ function compute_projection_vprk!(x::Vector{ST},
     U[2] .= λ
 
     # compute G=g(q,λ)
-    params.equ.g(t₀, params.q̅, λ, G[1])
-    params.equ.g(t₁, q, λ, G[2])
+    params.equ[:g](t₀, params.q̅, λ, G[1])
+    params.equ[:g](t₁, q, λ, G[2])
 
     # compute p=ϑ(q)⋅p
-    params.equ.ϑ(t₁, q, λ, p)
+    params.equ[:ϑ](t₁, q, λ, p)
 end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST},
-                params::ParametersVPRKpSymmetric{DT,TT,ET,D,S}
-            ) where {ST,DT,TT,ET,D,S}
+function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+                params::ParametersVPRKpSymmetric{DT,TT,D,S},
+                caches::CacheDict) where {ST,DT,TT,D,S}
 
-    cache = IntegratorCacheVPRK{ST, D, S}(true)
+    # get cache for internal stages
+    cache = caches[ST]
 
-    quote
-        compute_stages!(x, $cache.q̃, $cache.p̃, $cache.λ, $cache.Q, $cache.V, $cache.U, $cache.P, $cache.F, $cache.G, params)
+    compute_stages!(x, cache.q̃, cache.p̃, cache.λ, cache.Q, cache.V, cache.U, cache.P, cache.F, cache.G, params)
 
-        # compute b = - [P-AF-U]
-        compute_rhs_vprk!(b, $cache.P, $cache.F, $cache.G, params)
+    # compute b = - [P-AF-U]
+    compute_rhs_vprk!(b, cache.P, cache.F, cache.G, params)
 
-        # compute b = - [p-bF-G]
-        compute_rhs_vprk_projection_p!(b, $cache.p̃, $cache.F, $cache.G, D*(S+0), params)
+    # compute b = - [p-bF-G]
+    compute_rhs_vprk_projection_p!(b, cache.p̃, cache.F, cache.G, D*(S+0), params)
 
-        # compute b = - [q-bV-U]
-        compute_rhs_vprk_projection_q!(b, $cache.q̃, $cache.V, $cache.U, D*(S+1), params)
+    # compute b = - [q-bV-U]
+    compute_rhs_vprk_projection_q!(b, cache.q̃, cache.V, cache.U, D*(S+1), params)
 
-        compute_rhs_vprk_correction!(b, $cache.V, params)
-    end
+    compute_rhs_vprk_correction!(b, cache.V, params)
 end
 
-
-function initial_guess!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
-    for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                              int.cache.q̃, int.cache.ṽ,
-                              tableau(int).q.c[i])
-
-        for k in eachdim(int)
-            int.solver.x[ndims(int)*(i-1)+k] = int.cache.ṽ[k]
-        end
-    end
-
-    evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                          sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                          int.cache.q̃, one(TT))
-    for k in eachdim(int)
-        int.solver.x[ndims(int)*(nstages(int)+0)+k] = int.cache.q̃[k]
-    end
-    for k in eachdim(int)
-        int.solver.x[ndims(int)*(nstages(int)+1)+k] = 0
-    end
-end
 
 "Integrate ODE with variational partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+                                     cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 
     # compute initial guess
-    initial_guess!(int, sol)
+    initial_guess!(int, sol, cache)
 
     # reset solution
     reset!(sol, timestep(int))
@@ -151,16 +143,16 @@ function integrate_step!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::AtomicSoluti
 
     # compute vector fields at internal stages and projection vector fields
     compute_stages!(int.solver.x,
-                    int.cache.q̃, int.cache.p̃, int.cache.λ,
-                    int.cache.Q, int.cache.V, int.cache.U,
-                    int.cache.P, int.cache.F, int.cache.G, int.params)
+                    cache.q̃, cache.p̃, cache.λ,
+                    cache.Q, cache.V, cache.U,
+                    cache.P, cache.F, cache.G, int.params)
 
     # compute unprojected solution
-    update_solution!(int, sol)
+    update_solution!(int, sol, cache)
 
     # add projection to solution
-    project_solution!(int, sol, int.params.R)
+    project_solution!(int, sol, int.params.pparams[:R], cache)
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

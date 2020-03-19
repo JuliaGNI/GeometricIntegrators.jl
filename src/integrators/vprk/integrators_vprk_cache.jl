@@ -1,4 +1,4 @@
-"""
+@doc raw"""
 Variational partitioned Runge-Kutta integrator cache.
 
 ### Fields
@@ -36,6 +36,10 @@ mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
     θ̃::Vector{ST}
     s̃::Vector{ST}
 
+    μ::Vector{ST}
+    ϕ::Vector{ST}
+    v::Vector{ST}
+    f::Vector{ST}
     y::Vector{ST}
     z::Vector{ST}
 
@@ -61,7 +65,12 @@ mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
         θ̃ = zeros(ST,D)
         s̃ = zeros(ST,D)
 
+        ϕ = zeros(ST,D)
+        μ = zeros(ST,D)
+
         # create update vectors
+        v = zeros(ST,D)
+        f = zeros(ST,D)
         y = zeros(ST,D)
         z = zeros(ST,D)
 
@@ -113,7 +122,7 @@ mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
         end
 
         new(λ, λ̅, q₋, q̅₊, p₋, p̅₊,
-            u, g, q̃, p̃, ṽ, f̃, θ̃, s̃, y, z,
+            u, g, q̃, p̃, ṽ, f̃, θ̃, s̃, ϕ, μ, v, f, y, z,
             Q, P, V, F, Λ, Φ, Y, Z, U, G, R)
     end
 end
@@ -126,11 +135,10 @@ function IntegratorCacheVPRKwProjection(ST,D,S)
     IntegratorCacheVPRK{ST,D,S}(true)
 end
 
-function create_integrator_cache(int::AbstractIntegratorVPRK{DT,TT}) where {DT,TT}
+function IntegratorCache(int::AbstractIntegratorVPRK{DT,TT}) where {DT,TT}
     IntegratorCacheVPRK(DT, TT, ndims(int), nstages(int))
 end
 
-
-function create_integrator_cache(int::AbstractIntegratorVPRKwProjection{DT,TT}) where {DT,TT}
+function IntegratorCache(int::AbstractIntegratorVPRKwProjection{DT,TT}) where {DT,TT}
     IntegratorCacheVPRKwProjection(DT, TT, ndims(int), nstages(int))
 end

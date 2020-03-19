@@ -1,4 +1,4 @@
-"""
+@doc raw"""
 `ParametersDGVI`: Parameters for right-hand side function of Discontinuous Galerkin Variational Integrator.
 
 ### Parameters
@@ -100,7 +100,7 @@ function ParametersDGVI(equ::IODE{DT,TT}, Δt::TT, basis::Basis{TT}, quadrature:
 end
 
 
-"""
+@doc raw"""
 Nonlinear function cache for Discontinuous Galerkin Variational Integrator.
 
 ### Parameters
@@ -117,20 +117,20 @@ Nonlinear function cache for Discontinuous Galerkin Variational Integrator.
 * `V`: velocity at quadrature nodes
 * `P`: one-form at quadrature nodes
 * `F`: forces at quadrature nodes
-* `q`:  current solution of qₙ
-* `q⁻`: current solution of qₙ⁻
-* `q⁺`: current solution of qₙ⁺
-* `q̅`:  current solution of qₙ₊₁
-* `q̅⁻`: current solution of qₙ₊₁⁻
-* `q̅⁺`: current solution of qₙ₊₁⁺
-* `ϕ`:  average of the solution at tₙ
-* `ϕ̅`:  average of the solution at tₙ₊₁
-* `λ`:  jump of the solution at tₙ
-* `λ̅`:  jump of the solution at tₙ₊₁
-* `θ`:  one-form evaluated across at tₙ
-* `Θ̅`:  one-form evaluated across at tₙ₊₁
-* `g`:  projection evaluated across  at tₙ
-* `g̅`:  projection evaluated across at tₙ₊₁
+* `q`:  current solution of ``q_{n}``
+* `q⁻`: current solution of ``q_{n}^{-}``
+* `q⁺`: current solution of ``q_{n}^{+}``
+* `q̅`:  current solution of ``q_{n+1}``
+* `q̅⁻`: current solution of ``q_{n+1}^{-}``
+* `q̅⁺`: current solution of ``q_{n+1}^{+}``
+* `ϕ`:  average of the solution at ``t_{n}``
+* `ϕ̅`:  average of the solution at ``t_{n+1}``
+* `λ`:  jump of the solution at ``t_{n}``
+* `λ̅`:  jump of the solution at ``t_{n+1}``
+* `θ`:  one-form evaluated across at ``t_{n}``
+* `Θ̅`:  one-form evaluated across at ``t_{n+1}``
+* `g`:  projection evaluated across at ``t_{n}``
+* `g̅`:  projection evaluated across at ``t_{n+1}``
 """
 struct IntegratorCacheDGVI{ST,D,S,R} <: IODEIntegratorCache{ST,D}
     X::Vector{Vector{ST}}
@@ -266,16 +266,14 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+    @assert length(x) == length(b)
+
     cache = IntegratorCacheDGVI{ST,D,S,R}()
 
-    quote
-        @assert length(x) == length(b)
+    compute_stages!(x, cache, params)
 
-        compute_stages!(x, $cache, params)
-
-        compute_rhs!(b, $cache, params)
-    end
+    compute_rhs!(b, cache, params)
 end
 
 
@@ -637,7 +635,7 @@ equation(integrator::IntegratorDGVI) = integrator.equation
 timestep(integrator::IntegratorDGVI) = integrator.Δt
 
 
-function create_integrator_cache(int::IntegratorDGVI{DT,TT}) where {DT,TT}
+function IntegratorCache(int::IntegratorDGVI{DT,TT}) where {DT,TT}
     IntegratorCacheDGVI{DT, TT, ndims(int), nbasis(int.basis), nnodes(int.quadrature)}()
 end
 
@@ -715,5 +713,5 @@ function integrate_step!(int::IntegratorDGVI{DT,TT}, sol::AtomicSolutionPODE{DT,
     update_solution!(sol, int.cache)
 
     # copy solution to initial guess
-    update!(int.iguess, sol.t, sol.q, sol.v)
+    update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)
 end

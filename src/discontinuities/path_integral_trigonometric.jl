@@ -1,8 +1,8 @@
-"""
+@doc raw"""
 PathIntegralTrigonometric is a path integral along a cos^2/sin^2 path
 
 ```math
-\\phi (\\tau; q^-, q^+) = \\cos^2 (\\pi \\tau / 2) q^- + \\sin^2 (\\pi \\tau / 2) q^+ .
+\phi (\tau; q^-, q^+) = \cos^2 (\pi \tau / 2) q^- + \sin^2 (\pi \tau / 2) q^+ .
 ```
 """
 struct PathIntegralTrigonometric <: PathIntegral end

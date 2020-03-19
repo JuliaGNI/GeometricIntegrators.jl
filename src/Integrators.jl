@@ -1,13 +1,9 @@
-__precompile__()
-
 module Integrators
 
     using DelimitedFiles
-    using Documenter
+    using Documenter: @doc
     using LinearAlgebra
     using OffsetArrays
-
-    using Base: TwicePrecision
 
     using ..CommonFunctions
     using ..Config
@@ -22,8 +18,7 @@ module Integrators
     using ..Solvers
 
 
-
-    export InitialGuessODE, InitialGuessPODE, initialize!, update!
+    export InitialGuessODE, InitialGuessPODE, initialize!
 
     include("integrators/initial_guess/extrapolation.jl")
     include("integrators/initial_guess/initial_guess_ode.jl")
@@ -84,96 +79,6 @@ module Integrators
     include("integrators/rk/integrators_pglrk.jl")
 
 
-    export IntegratorSERK, TableauSERK
-    export IntegratorSIRK, TableauSIRK
-    export IntegratorSIPRK, TableauSIPRK
-    export IntegratorSISPRK, TableauSISPRK
-    export IntegratorWERK, TableauWERK
-    export IntegratorWIRK, TableauWIRK
-
-    include("integrators/stochastic_integrators_common.jl")
-    include("integrators/stochastic/integrators_serk.jl")
-    include("integrators/stochastic/integrators_sirk.jl")
-    include("integrators/stochastic/integrators_siprk.jl")
-    include("integrators/stochastic/integrators_sisprk.jl")
-    include("integrators/stochastic/integrators_werk.jl")
-    include("integrators/stochastic/integrators_wirk.jl")
-
-
-    export IntegratorVPRK, IntegratorVPRKpNone, TableauVPRK
-
-    export IntegratorVPRKdegenerate
-
-    export IntegratorVPRKpStandard, IntegratorVPRKpSymplectic,
-           IntegratorVPRKpInternal, IntegratorVPRKpMidpoint,
-           IntegratorVPRKpSymmetric, IntegratorVPRKpTableau,
-           IntegratorVPRKpSecondary, IntegratorVPRKpVariational,
-           IntegratorVPRKpVariationalQ, IntegratorVPRKpVariationalP
-
-    export IntegratorVPRKpLegendre, TableauVPRKpLegendre
-
-    include("integrators/vprk/integrators_vprk_abstract.jl")
-    include("integrators/vprk/integrators_vprk_cache.jl")
-    include("integrators/vprk/integrators_vprk_common.jl")
-    include("integrators/vprk/integrators_vprk.jl")
-    include("integrators/vprk/integrators_vprk_degenerate.jl")
-    include("integrators/vprk/integrators_vprk_pinternal.jl")
-    include("integrators/vprk/integrators_vprk_pmidpoint.jl")
-    include("integrators/vprk/integrators_vprk_pstandard.jl")
-    include("integrators/vprk/integrators_vprk_psecondary.jl")
-    include("integrators/vprk/integrators_vprk_psymmetric.jl")
-    include("integrators/vprk/integrators_vprk_ptableau.jl")
-    include("integrators/vprk/integrators_vprk_pvariational.jl")
-    include("integrators/vprk/integrators_vprk_plegendre.jl")
-
-
-    export CoefficientsARK, CoefficientsPRK, CoefficientsMRK, CoefficientsIRK,
-           CoefficientsSPARK
-
-    export AbstractIntegratorSPARK
-    export AbstractTableauSPARK, TableauSPARK
-
-    export IntegratorHPARK, TableauHPARK
-    export IntegratorVPARK, TableauVPARK
-
-    export IntegratorHSPARK, TableauHSPARK
-    export IntegratorHSPARKprimary, TableauHSPARKprimary
-    export IntegratorHSPARKsecondary, TableauHSPARKsecondary
-
-    export IntegratorVSPARK, TableauVSPARK
-    export IntegratorVSPARKprimary, TableauVSPARKprimary
-    export IntegratorVSPARKsecondary, TableauVSPARKsecondary
-
-    export IntegratorSLRK, TableauSLRK
-
-    include("integrators/spark/abstract_integrator_spark.jl")
-    include("integrators/spark/coefficients.jl")
-
-    include("integrators/spark/integrators_spark_cache.jl")
-    include("integrators/spark/integrators_spark_common.jl")
-    include("integrators/spark/integrators_spark_tableau.jl")
-
-    include("integrators/spark/integrators_vpark.jl")
-    include("integrators/spark/integrators_hpark.jl")
-
-    include("integrators/spark/integrators_vspark_common.jl")
-    include("integrators/spark/integrators_vspark.jl")
-    include("integrators/spark/integrators_vspark_primary.jl")
-    include("integrators/spark/integrators_vspark_secondary.jl")
-
-    include("integrators/spark/integrators_hspark_common.jl")
-    include("integrators/spark/integrators_hspark.jl")
-    include("integrators/spark/integrators_hspark_primary.jl")
-    include("integrators/spark/integrators_hspark_secondary.jl")
-
-    include("integrators/spark/integrators_slrk.jl")
-
-
-    export TableauGLM
-
-    include("integrators/glm/integrators_glm.jl")
-
-
     export IntegratorSplitting, AbstractTableauSplitting,
            TableauSplittingGS, TableauSplittingNS, TableauSplittingSS
 
@@ -189,6 +94,11 @@ module Integrators
     include("integrators/dgvi/integrators_dgvi_path_integral.jl")
     include("integrators/dgvi/integrators_dgvi_projection_initial.jl")
     include("integrators/dgvi/integrators_dgvi_projection_final.jl")
+
+
+    include("integrators/Stochastic.jl")
+    include("integrators/SPARK.jl")
+    include("integrators/VPRK.jl")
 
 
     include("integrators/integrators.jl")

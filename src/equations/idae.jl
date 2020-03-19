@@ -23,9 +23,11 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 * `n`: number of initial conditions
 * `ϑ`: function determining the momentum
 * `f`: function computing the vector field ``f``
-* `u`: function computing the projection
-* `g`: function computing the projection
+* `u`: function computing the projection for ``q``
+* `g`: function computing the projection for ``p``
 * `ϕ`: algebraic constraint
+* `h`: function computing the Hamiltonian (optional)
+* `v`: function computing an initial guess for the velocity field (optional)
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q``
 * `p₀`: initial condition for dynamical variable ``p``
@@ -35,8 +37,8 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 struct IDAE{dType <: Number, tType <: Number,
             ϑType <: Function, fType <: Function,
             uType <: Function, gType <: Function,
-            ϕType <: Function, vType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
+            ϕType <: Function, hType <: Union{Function,Nothing},
+            vType <: Union{Function,Nothing}, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
 
     d::Int
     m::Int
@@ -46,6 +48,7 @@ struct IDAE{dType <: Number, tType <: Number,
     u::uType
     g::gType
     ϕ::ϕType
+    h::hType
     v::vType
     t₀::tType
     q₀::Array{dType, N}
@@ -57,11 +60,13 @@ struct IDAE{dType <: Number, tType <: Number,
     function IDAE(DT::DataType, N::Int, d::Int, m::Int, n::Int,
                   ϑ::ϑType, f::fType, u::uType, g::gType, ϕ::ϕType, t₀::tType,
                   q₀::AbstractArray{dType}, p₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
-                  v=nothing, parameters=nothing, periodicity=zeros(DT,d)) where {
+                  h::hType=nothing, v::vType=nothing, parameters::pType=nothing,
+                  periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number,
                         ϑType <: Function, fType <: Function,
                         uType <: Function, gType <: Function,
-                        ϕType <: Function}
+                        ϕType <: Function, hType <: Union{Function,Nothing},
+                        vType <: Union{Function,Nothing}, pType <: Union{Tuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1)
         @assert m == size(λ₀,1)
@@ -69,7 +74,7 @@ struct IDAE{dType <: Number, tType <: Number,
         @assert 2d ≥ m
         @assert ndims(q₀) == ndims(p₀) == ndims(λ₀) == N ∈ (1,2)
 
-        new{DT, tType, ϑType, fType, uType, gType, ϕType, typeof(v), typeof(parameters), N}(d, m, n, ϑ, f, u, g, ϕ, v, t₀,
+        new{DT, tType, ϑType, fType, uType, gType, ϕType, hType, vType, pType, N}(d, m, n, ϑ, f, u, g, ϕ, h, v, t₀,
                 convert(Array{DT}, q₀), convert(Array{DT}, p₀), convert(Array{DT}, λ₀),
                 parameters, periodicity)
     end
@@ -84,9 +89,9 @@ function IDAE(ϑ, f, u, g, ϕ, q₀::AbstractArray, p₀::AbstractArray, λ₀::
 end
 
 Base.hash(dae::IDAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n,
-        hash(dae.ϑ, hash(dae.f, hash(dae.u, hash(dae.g, hash(dae.ϕ, hash(dae.v,
-        hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀,
-        hash(dae.periodicity, hash(dae.parameters, h)))))))))))))))
+        hash(dae.ϑ, hash(dae.f, hash(dae.u, hash(dae.g, hash(dae.ϕ,
+        hash(dae.h, hash(dae.v, hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀,
+        hash(dae.periodicity, hash(dae.parameters, h))))))))))))))))
 
 Base.:(==)(dae1::IDAE, dae2::IDAE) = (
                                 dae1.d == dae2.d
@@ -97,6 +102,7 @@ Base.:(==)(dae1::IDAE, dae2::IDAE) = (
                              && dae1.u == dae2.u
                              && dae1.g == dae2.g
                              && dae1.ϕ == dae2.ϕ
+                             && dae1.h == dae2.h
                              && dae1.v == dae2.v
                              && dae1.t₀ == dae2.t₀
                              && dae1.q₀ == dae2.q₀
@@ -110,12 +116,29 @@ function Base.similar(dae::IDAE, q₀, p₀, λ₀=get_λ₀(q₀, dae.λ₀); k
 end
 
 function Base.similar(dae::IDAE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=get_λ₀(q₀, dae.λ₀);
-                      v=dae.v, parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
+                      h=dae.h, v=dae.v, parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
     @assert dae.d == size(q₀,1) == size(p₀,1)
     @assert dae.m == size(λ₀,1)
-    IDAE(dae.ϑ, dae.f, dae.u, dae.g, dae.ϕ, t₀, q₀, p₀, λ₀; v=v, parameters=parameters, periodicity=periodicity)
+    IDAE(dae.ϑ, dae.f, dae.u, dae.g, dae.ϕ, t₀, q₀, p₀, λ₀; h=h, v=v, parameters=parameters, periodicity=periodicity)
 end
 
 @inline Base.ndims(dae::IDAE) = dae.d
 
-@inline periodicity(equation::IDAE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::IDAE) = equation.periodicity
+
+function get_function_tuple(equation::IDAE{DT,TT,ϑT,FT,UT,GT,ϕT,HT,VT}) where {DT, TT, ϑT, FT, UT, GT, ϕT, HT, VT}
+    names = (:ϑ,:f,:u,:g,:ϕ)
+    equs  = (equation.ϑ, equation.f, equation.u, equation.g, equation.ϕ)
+
+    if HT != Nothing
+        names = (names..., :h)
+        equs  = (equs..., equation.h)
+    end
+
+    if VT != Nothing
+        names = (names..., :v)
+        equs  = (equs..., equation.v)
+    end
+
+    NamedTuple{names}(equs)
+end

@@ -29,6 +29,7 @@ variables ``(q,p)`` and algebraic variables ``v``, ``\lambda`` and ``\mu``.
 * `g̅`: function determining the secondary projection, usually given by λ⋅∇ϑ(q)
 * `ϕ`: primary constraints, usually given by p-ϑ(q)
 * `ψ`: secondary constraints, usually given by ṗ-q̇⋅∇ϑ(q)
+* `h`: function computing the Hamiltonian (optional)
 * `v`: function computing an initial guess for the velocity field (optional)
 * `Ω`: symplectic matrix (optional)
 * `∇H`: gradient of the Hamiltonian (optional)
@@ -76,7 +77,8 @@ and
 """
 struct VDAE{dType <: Number, tType <: Number, ϑType <: Function,
             fType <: Function, gType <: Function, g̅Type <: Function,
-            ϕType <: Function, ψType <: Function, vType <: Function,
+            ϕType <: Function, ψType <: Function,
+            hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
             ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing},
             pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
 
@@ -89,6 +91,7 @@ struct VDAE{dType <: Number, tType <: Number, ϑType <: Function,
     g̅::g̅Type
     ϕ::ϕType
     ψ::ψType
+    h::hType
     v::vType
     Ω::ΩType
     ∇H::∇HType
@@ -104,19 +107,21 @@ struct VDAE{dType <: Number, tType <: Number, ϑType <: Function,
                   g::gType, g̅::g̅Type, ϕ::ϕType, ψ::ψType, t₀::tType,
                   q₀::AbstractArray{dType}, p₀::AbstractArray{dType},
                   λ₀::AbstractArray{dType}, μ₀::AbstractArray{dType};
-                  v::vType=nothing, Ω::ΩType=nothing, ∇H::∇HType=nothing,
-                  parameters=nothing, periodicity=zeros(DT,d)) where {
-                        dType <: Number, tType <: Number, ϑType <: Function,
-                        fType <: Function, gType <: Function, g̅Type <: Function,
-                        ϕType <: Function, ψType <: Function, vType <: Function,
-                        ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing}}
+                  h::hType=nothing, v::vType=nothing, Ω::ΩType=nothing, ∇H::∇HType=nothing,
+                  parameters::pType=nothing, periodicity=zeros(DT,d)) where {
+                        dType <: Number, tType <: Number,
+                        ϑType <: Function, fType <: Function, gType <: Function,
+                        g̅Type <: Function, ϕType <: Function, ψType <: Function,
+                        hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
+                        ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing},
+                        pType <: Union{Tuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
         @assert m == size(μ₀,1)
         @assert n == size(q₀,2) == size(p₀,2)
         @assert ndims(q₀) == ndims(p₀) == N ∈ (1,2)
 
-        new{DT, tType, ϑType, fType, gType, g̅Type, ϕType, ψType, vType, ΩType, ∇HType, typeof(parameters), N}(d, m, n, ϑ, f, g, g̅, ϕ, ψ, v, Ω, ∇H, t₀,
+        new{DT, tType, ϑType, fType, gType, g̅Type, ϕType, ψType, hType, vType, ΩType, ∇HType, pType, N}(d, m, n, ϑ, f, g, g̅, ϕ, ψ, h, v, Ω, ∇H, t₀,
                 convert(Array{DT}, q₀), convert(Array{DT}, p₀), convert(Array{DT}, λ₀), convert(Array{DT}, μ₀), parameters, periodicity)
     end
 end
@@ -130,45 +135,74 @@ function VDAE(ϑ, f, g, g̅, ϕ, ψ, q₀::AbstractArray, p₀::AbstractArray, �
     VDAE(ϑ, f, g, g̅, ϕ, ψ, zero(eltype(q₀)), q₀, p₀, λ₀, μ₀; kwargs...)
 end
 
-Base.hash(ode::VDAE, h::UInt) = hash(ode.d, hash(ode.m, hash(ode.n,
-          hash(ode.ϑ, hash(ode.f, hash(ode.g, hash(ode.g̅, hash(ode.ϕ,
-          hash(ode.ψ, hash(ode.v, hash(ode.Ω, hash(ode.∇H,
-          hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, hash(ode.λ₀, hash(ode.μ₀,
-          hash(ode.parameters, hash(ode.periodicity, h)))))))))))))))))))
+Base.hash(dae::VDAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n,
+          hash(dae.ϑ, hash(dae.f, hash(dae.g, hash(dae.g̅, hash(dae.ϕ,
+          hash(dae.ψ, hash(dae.h, hash(dae.v, hash(dae.Ω, hash(dae.∇H,
+          hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, hash(dae.μ₀,
+          hash(dae.parameters, hash(dae.periodicity, h))))))))))))))))))))
 
-Base.:(==)(ode1::VDAE, ode2::VDAE) = (
-                                ode1.d == ode2.d
-                             && ode1.m == ode2.m
-                             && ode1.n == ode2.n
-                             && ode1.ϑ == ode2.ϑ
-                             && ode1.f == ode2.f
-                             && ode1.g == ode2.g
-                             && ode1.g̅ == ode2.g̅
-                             && ode1.ϕ == ode2.ϕ
-                             && ode1.ψ == ode2.ψ
-                             && ode1.v == ode2.v
-                             && ode1.Ω == ode2.Ω
-                             && ode1.∇H == ode2.∇H
-                             && ode1.t₀ == ode2.t₀
-                             && ode1.q₀ == ode2.q₀
-                             && ode1.p₀ == ode2.p₀
-                             && ode1.λ₀ == ode2.λ₀
-                             && ode1.μ₀ == ode2.μ₀
-                             && ode1.parameters == ode2.parameters
-                             && ode1.periodicity == ode2.periodicity)
+Base.:(==)(dae1::VDAE, dae2::VDAE) = (
+                                dae1.d == dae2.d
+                             && dae1.m == dae2.m
+                             && dae1.n == dae2.n
+                             && dae1.ϑ == dae2.ϑ
+                             && dae1.f == dae2.f
+                             && dae1.g == dae2.g
+                             && dae1.g̅ == dae2.g̅
+                             && dae1.ϕ == dae2.ϕ
+                             && dae1.ψ == dae2.ψ
+                             && dae1.h == dae2.h
+                             && dae1.v == dae2.v
+                             && dae1.Ω == dae2.Ω
+                             && dae1.∇H == dae2.∇H
+                             && dae1.t₀ == dae2.t₀
+                             && dae1.q₀ == dae2.q₀
+                             && dae1.p₀ == dae2.p₀
+                             && dae1.λ₀ == dae2.λ₀
+                             && dae1.μ₀ == dae2.μ₀
+                             && dae1.parameters == dae2.parameters
+                             && dae1.periodicity == dae2.periodicity)
 
-function Base.similar(ode::VDAE, q₀, p₀, λ₀=get_λ₀(q₀, ode.λ₀), μ₀=get_λ₀(q₀, ode.μ₀); kwargs...)
-    similar(ode, ode.t₀, q₀, p₀, λ₀, μ₀; kwargs...)
+function Base.similar(dae::VDAE, q₀, p₀, λ₀=get_λ₀(q₀, dae.λ₀), μ₀=get_λ₀(q₀, dae.μ₀); kwargs...)
+    similar(dae, dae.t₀, q₀, p₀, λ₀, μ₀; kwargs...)
 end
 
-function Base.similar(ode::VDAE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT},
-                      λ₀::AbstractArray{DT}=get_λ₀(q₀, ode.λ₀), μ₀=get_λ₀(q₀, ode.μ₀);
-                      parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
-    @assert ode.d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
-    VDAE(ode.ϑ, ode.f, ode.g, ode.g̅, ode.ϕ, ode.ψ, t₀, q₀, p₀, λ₀, μ₀;
-         v=ode.v, Ω=ode.Ω, ∇H=ode.∇H, parameters=parameters, periodicity=periodicity)
+function Base.similar(dae::VDAE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT},
+                      λ₀::AbstractArray{DT}=get_λ₀(q₀, dae.λ₀), μ₀=get_λ₀(q₀, dae.μ₀);
+                      h=dae.h, v=dae.v, Ω=dae.Ω, ∇H=dae.∇H, parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
+    @assert dae.d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
+    VDAE(dae.ϑ, dae.f, dae.g, dae.g̅, dae.ϕ, dae.ψ, t₀, q₀, p₀, λ₀, μ₀;
+         h=h, v=v, Ω=Ω, ∇H=∇H, parameters=parameters, periodicity=periodicity)
 end
 
-@inline Base.ndims(ode::VDAE) = ode.d
+@inline Base.ndims(dae::VDAE) = dae.d
 
-@inline periodicity(equation::VDAE) = equation.periodicity
+@inline CommonFunctions.periodicity(equation::VDAE) = equation.periodicity
+
+
+function get_function_tuple(equation::VDAE{DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇HT}) where {DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇HT}
+    names = (:ϑ,:f,:g,:g̅,:ϕ,:ψ)
+    equs  = (equation.ϑ, equation.f, equation.g, equation.g̅, equation.ϕ, equation.ψ)
+
+    if HT != Nothing
+        names = (names..., :h)
+        equs  = (equs..., equation.h)
+    end
+
+    if VT != Nothing
+        names = (names..., :v)
+        equs  = (equs..., equation.v)
+    end
+
+    if ΩT != Nothing
+        names = (names..., :Ω)
+        equs  = (equs..., equation.Ω)
+    end
+
+    if ∇HT != Nothing
+        names = (names..., :∇H)
+        equs  = (equs..., equation.∇H)
+    end
+
+    NamedTuple{names}(equs)
+end

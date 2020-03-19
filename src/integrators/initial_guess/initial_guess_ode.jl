@@ -20,6 +20,11 @@ mutable struct InitialGuessODE{DT, TT, VT, IT <: Interpolator}
 end
 
 
+function InitialGuessODE{DT,D}(interp, v::VT, Δt::TT) where {D, DT, TT, VT <: Function}
+    int = interp(zero(DT), one(DT), Δt, D)
+    InitialGuessODE{DT, TT, VT, interp}(int, v, Δt)
+end
+
 function InitialGuessODE(interp, equation::ODE{DT,TT,VT}, Δt::TT) where {DT,TT,VT}
     int = interp(zero(DT), one(DT), Δt, ndims(equation))
     InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt)
@@ -51,7 +56,9 @@ end
 
 
 "compute vector field of new solution"
-function update!(ig::InitialGuessODE{DT,TT}, t₁::TT, q₁::SolutionVector{DT}, v₁::Vector{DT}) where {DT,TT}
+function update_vector_fields!(ig::InitialGuessODE{DT,TT}, t₁::TT,
+                               q₁::SolutionVector{DT},
+                               v₁::Vector{DT}) where {DT,TT}
     ig.v(t₁, q₁, v₁)
 end
 
