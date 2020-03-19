@@ -74,7 +74,7 @@ Structure for holding the internal stages `Q0`, and `Q1` the values of the drift
 and the diffusion matrix evaluated at the internal stages `V=v(Q0)`, `B=B(Q1)`,
 and the increments `Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW`.
 """
-struct IntegratorCacheWIRK{DT,D,M,S}
+struct IntegratorCacheWIRK{DT,D,M,S} <: SDEIntegratorCache{DT,D,M}
     Q0::Vector{Vector{DT}}     # Q0[i][k]   - the k-th component of the internal stage Q^(0)_i
     Q1::Vector{Matrix{DT}}     # Q1[i][k,l] - the k-th component of the internal stage Q^(l)_i
     V ::Vector{Vector{DT}}     # V [i][k]   - the k-th component of the drift vector v(Q0[i][:])
@@ -109,6 +109,17 @@ struct IntegratorCacheWIRK{DT,D,M,S}
     end
 end
 
+function Integrators.IntegratorCache(params::ParametersWIRK{DT,TT,D,M,S}; kwargs...) where {DT,TT,D,M,S}
+    IntegratorCacheWIRK{DT,D,M,S}(; kwargs...)
+end
+
+function Integrators.IntegratorCache{ST}(params::ParametersWIRK{DT,TT,D,M,S}; kwargs...) where {ST,DT,TT,D,M,S}
+    IntegratorCacheWIRK{ST,D,M,S}(; kwargs...)
+end
+
+@inline Integrators.CacheType(ST, params::ParametersWIRK{DT,TT,D,M,S}) where {DT,TT,D,M,S} = IntegratorCacheWIRK{ST,D,M,S}
+
+
 """
 Stochastic implicit Runge-Kutta integrator.
 """
@@ -117,10 +128,10 @@ struct IntegratorWIRK{DT, TT, D, M, S,
                 ST <: NonlinearSolver{DT}} <: StochasticIntegratorRK{DT,TT,D,M,S}
     params::PT
     solver::ST
-    cache::IntegratorCacheWIRK{DT}
+    caches::CacheDict{PT}
 
-    function IntegratorWIRK(params::ParametersWIRK{DT,TT,D,M,S}, solver::ST, cache) where {DT,TT,D,M,S,ST}
-        new{DT, TT, D, M, S, typeof(params), ST}(params, solver, cache)
+    function IntegratorWIRK(params::ParametersWIRK{DT,TT,D,M,S}, solver::ST, caches) where {DT,TT,D,M,S,ST}
+        new{DT, TT, D, M, S, typeof(params), ST}(params, solver, caches)
     end
 
     function IntegratorWIRK{DT,D,M}(equations::NamedTuple, tableau::TableauWIRK{TT}, Δt::TT) where {DT,TT,D,M}
@@ -130,143 +141,18 @@ struct IntegratorWIRK{DT, TT, D, M, S,
         # create params
         params = ParametersWIRK{DT,D,M}(equations, tableau, Δt, zeros(DT,M), zeros(DT,M))
 
-        # create solver
-        solver = create_nonlinear_solver(DT, D*S*(M+1), params)
+        # create cache dict
+        caches = CacheDict(params)
 
-        # create cache for internal stage vectors and update vectors
-        cache = IntegratorCacheWIRK{DT,D,M,S}()
+        # create solver
+        solver = create_nonlinear_solver(DT, D*S*(M+1), params, caches)
 
         # create integrator
-        IntegratorWIRK(params, solver, cache)
+        IntegratorWIRK(params, solver, caches)
     end
 
     function IntegratorWIRK(equation::SDE{DT,TT}, tableau::TableauWIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorWIRK{DT, ndims(equation), equation.m}(get_function_tuple(equation), tableau, Δt; kwargs...)
-    end
-end
-
-
-"""
-Unpacks the data stored in
-`x = (Y0[1][1], Y0[1][2]], ... Y0[1][D], ... Y0[S][D], Y1[1][1,1], Y1[1][2,1], ... Y1[1][D,1], Y1[1][1,2], Y1[1][2,2], ... Y1[1][D,2], ... Y1[S][D,M] )`
-into `Y0` and `Y1`, calculates the internal stages `Q0` and `Q1`, the values of the RHS
-of the SDE ( `v(Q0)` and `B(Q1)` ), and assigns them to `V` and `B`.
-Unlike for FIRK, here `Y = Δt a v(Q) + â B(Q) ΔW`.
-"""
-@generated function compute_stages!(x::Vector{ST}, Q0::Vector{Vector{ST}}, Q1::Vector{Matrix{ST}}, V::Vector{Vector{ST}},
-                                                   B::Vector{Matrix{ST}}, Y0::Vector{Vector{ST}}, Y1::Vector{Matrix{ST}},
-                                                   params::ParametersWIRK{DT,TT,D,M,S}) where {ST,DT,TT,D,M,S}
-
-    tQ::Vector{ST} = zeros(ST,D)
-    tV::Vector{ST} = zeros(ST,D)
-    tB::Vector{ST} = zeros(ST,D)    # This was tB::Matrix{ST} = zeros(ST,D,M) for SIRK, but here we calculate B column by column.
-                                    # tB is actually superfluous, could just use tV; keeping tB for clarity though
-
-    quote
-        local tᵢ::TT
-
-        @assert S == length(Q0) == length(Q1) == length(V) == length(B)
-
-        # copy x to Y0 and Y1, and calculate Q0 and Q1
-        for i in eachindex(Q0)
-
-            @assert D == length(Q0[i]) == size(Q1[i],1) == length(V[i]) == size(B[i],1)
-            @assert M == size(Q1[i],2) == size(B[i],2)
-
-            for k in eachindex(Q0[i])
-                Y0[i][k] = x[D*(i-1)+k]
-                Q0[i][k] = params.q[k] + Y0[i][k]
-            end
-        end
-
-        for i in eachindex(Q1)
-            for l in 1:size(Q1[i],2)
-                for k in 1:size(Q1[i],1)
-                    Y1[i][k,l] = x[ D*S + D*M*(i-1) + D*(l-1) + k ]
-                    Q1[i][k,l] = params.q[k] + Y1[i][k,l]
-                end
-            end
-        end
-
-
-        # compute V = v(Q0) and B=B(Q1)
-        for i in 1:S
-            # time point with the coefficient c0
-            tᵢ = params.t + params.Δt * params.tab.qdrift0.c[i]
-            # calculates v(t,tQ) and assigns to the i-th column of V
-            params.equ[:v](tᵢ, Q0[i], V[i])
-
-            # time point with the coefficient c1
-            tᵢ = params.t + params.Δt * params.tab.qdrift1.c[i]
-
-            for l=1:M
-                # copies Q1[i][:,l] to the vector tQ
-                simd_copy_xy_first!($tQ, Q1[i], l)
-                # calculates the l-th column of B(t,tQ) and assigns to the vector tB
-                params.equ[:B](tᵢ, $tQ, B[i], l)
-            end
-        end
-    end
-end
-
-"""
-Compute stages of weak implicit Runge-Kutta methods.
-"""
-@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersWIRK{DT,TT,D,M,S}) where {ST,DT,TT,D,M,S}
-
-    cache = IntegratorCacheWIRK{ST,D,M,S}()
-
-    quote
-        compute_stages!(x, $cache.Q0, $cache.Q1, $cache.V, $cache.B, $cache.Y0, $cache.Y1, params)
-
-        local y1::ST
-        local y2::ST
-
-        # compute b = - (Y-AV)
-        # the terms corresponding to Y0
-        for i in 1:S
-            for k in 1:D
-                y1 = 0
-                y2 = 0
-                for j in 1:S
-                    y1 += params.tab.qdrift0.a[i,j] * $cache.V[j][k] * params.Δt
-                    y2 += params.tab.qdrift0.â[i,j] * $cache.V[j][k] * params.Δt
-                    for l in 1:M
-                        y1 += params.tab.qdiff0.a[i,j] * $cache.B[j][k,l] * params.ΔW[l]
-                        y2 += params.tab.qdiff0.â[i,j] * $cache.B[j][k,l] * params.ΔW[l]
-                    end
-                end
-                b[D*(i-1)+k] = - $cache.Y0[i][k] + (y1 + y2)
-            end
-        end
-
-        # compute b = - (Y-AV)
-        # the terms corresponding to Y1
-        for i in 1:S
-            for l in 1:M
-                for k in 1:D
-                    y1 = 0
-                    y2 = 0
-                    for j in 1:S
-                        # The drift terms
-                        y1 += params.tab.qdrift1.a[i,j] * $cache.V[j][k] * params.Δt
-                        y2 += params.tab.qdrift1.â[i,j] * $cache.V[j][k] * params.Δt
-
-                        # The noise terms, calculated either with the B1 or B3 tableau
-                        for noise_idx in 1:M
-                            if noise_idx==l
-                                y1 += params.tab.qdiff1.a[i,j] * $cache.B[j][k,noise_idx] * params.ΔW[noise_idx]
-                                y2 += params.tab.qdiff1.â[i,j] * $cache.B[j][k,noise_idx] * params.ΔW[noise_idx]
-                            else
-                                y1 += params.tab.qdiff3.a[i,j] * $cache.B[j][k,noise_idx] * params.ΔW[noise_idx]
-                                y2 += params.tab.qdiff3.â[i,j] * $cache.B[j][k,noise_idx] * params.ΔW[noise_idx]
-                            end
-                        end
-                    end
-                    b[D*S + D*M*(i-1) + D*(l-1) + k] = - $cache.Y1[i][k,l] + (y1 + y2)
-                end
-            end
-        end
     end
 end
 
@@ -282,20 +168,140 @@ will produce anything close to the desired solution...
 
 The simplest initial guess for `Y` is 0.
 """
-function initial_guess!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
+function initial_guess!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT},
+                        cache::IntegratorCacheWIRK{DT}=int.caches[DT]) where {DT,TT}
     int.solver.x .= 0
+end
+
+
+"""
+Unpacks the data stored in
+`x = (Y0[1][1], Y0[1][2]], ... Y0[1][D], ... Y0[S][D], Y1[1][1,1], Y1[1][2,1], ... Y1[1][D,1], Y1[1][1,2], Y1[1][2,2], ... Y1[1][D,2], ... Y1[S][D,M] )`
+into `Y0` and `Y1`, calculates the internal stages `Q0` and `Q1`, the values of the RHS
+of the SDE ( `v(Q0)` and `B(Q1)` ), and assigns them to `V` and `B`.
+Unlike for FIRK, here `Y = Δt a v(Q) + â B(Q) ΔW`.
+"""
+function compute_stages!(x::Vector{ST}, Q0::Vector{Vector{ST}}, Q1::Vector{Matrix{ST}}, V::Vector{Vector{ST}},
+                                        B::Vector{Matrix{ST}}, Y0::Vector{Vector{ST}}, Y1::Vector{Matrix{ST}},
+                                        params::ParametersWIRK{DT,TT,D,M,S}) where {ST,DT,TT,D,M,S}
+
+    @assert S == length(Q0) == length(Q1) == length(V) == length(B)
+
+    local tᵢ::TT
+    local tQ::Vector{ST} = zeros(ST,D)
+
+    # copy x to Y0 and Y1, and calculate Q0 and Q1
+    for i in eachindex(Q0)
+        @assert D == length(Q0[i]) == size(Q1[i],1) == length(V[i]) == size(B[i],1)
+        @assert M == size(Q1[i],2) == size(B[i],2)
+
+        for k in eachindex(Q0[i])
+            Y0[i][k] = x[D*(i-1)+k]
+            Q0[i][k] = params.q[k] + Y0[i][k]
+        end
+    end
+
+    for i in eachindex(Q1)
+        for l in 1:size(Q1[i],2)
+            for k in 1:size(Q1[i],1)
+                Y1[i][k,l] = x[ D*S + D*M*(i-1) + D*(l-1) + k ]
+                Q1[i][k,l] = params.q[k] + Y1[i][k,l]
+            end
+        end
+    end
+
+    # compute V = v(Q0) and B=B(Q1)
+    for i in 1:S
+        # time point with the coefficient c0
+        tᵢ = params.t + params.Δt * params.tab.qdrift0.c[i]
+        # calculates v(t,tQ) and assigns to the i-th column of V
+        params.equ[:v](tᵢ, Q0[i], V[i])
+
+        # time point with the coefficient c1
+        tᵢ = params.t + params.Δt * params.tab.qdrift1.c[i]
+
+        for l=1:M
+            # copies Q1[i][:,l] to the vector tQ
+            simd_copy_xy_first!(tQ, Q1[i], l)
+            # calculates the l-th column of B(t,tQ) and assigns to the vector tB
+            params.equ[:B](tᵢ, tQ, B[i], l)
+        end
+    end
+end
+
+"""
+Compute stages of weak implicit Runge-Kutta methods.
+"""
+function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+                params::ParametersWIRK{DT,TT,D,M,S},
+                caches::CacheDict) where {ST,DT,TT,D,M,S}
+
+    # get cache for internal stages
+    cache = caches[ST]
+
+    compute_stages!(x, cache.Q0, cache.Q1, cache.V, cache.B, cache.Y0, cache.Y1, params)
+
+    local y1::ST
+    local y2::ST
+
+    # compute b = - (Y-AV)
+    # the terms corresponding to Y0
+    for i in 1:S
+        for k in 1:D
+            y1 = 0
+            y2 = 0
+            for j in 1:S
+                y1 += params.tab.qdrift0.a[i,j] * cache.V[j][k] * params.Δt
+                y2 += params.tab.qdrift0.â[i,j] * cache.V[j][k] * params.Δt
+                for l in 1:M
+                    y1 += params.tab.qdiff0.a[i,j] * cache.B[j][k,l] * params.ΔW[l]
+                    y2 += params.tab.qdiff0.â[i,j] * cache.B[j][k,l] * params.ΔW[l]
+                end
+            end
+            b[D*(i-1)+k] = - cache.Y0[i][k] + (y1 + y2)
+        end
+    end
+
+    # compute b = - (Y-AV)
+    # the terms corresponding to Y1
+    for i in 1:S
+        for l in 1:M
+            for k in 1:D
+                y1 = 0
+                y2 = 0
+                for j in 1:S
+                    # The drift terms
+                    y1 += params.tab.qdrift1.a[i,j] * cache.V[j][k] * params.Δt
+                    y2 += params.tab.qdrift1.â[i,j] * cache.V[j][k] * params.Δt
+
+                    # The noise terms, calculated either with the B1 or B3 tableau
+                    for noise_idx in 1:M
+                        if noise_idx==l
+                            y1 += params.tab.qdiff1.a[i,j] * cache.B[j][k,noise_idx] * params.ΔW[noise_idx]
+                            y2 += params.tab.qdiff1.â[i,j] * cache.B[j][k,noise_idx] * params.ΔW[noise_idx]
+                        else
+                            y1 += params.tab.qdiff3.a[i,j] * cache.B[j][k,noise_idx] * params.ΔW[noise_idx]
+                            y2 += params.tab.qdiff3.â[i,j] * cache.B[j][k,noise_idx] * params.ΔW[noise_idx]
+                        end
+                    end
+                end
+                b[D*S + D*M*(i-1) + D*(l-1) + k] = - cache.Y1[i][k,l] + (y1 + y2)
+            end
+        end
+    end
 end
 
 
 """
 Integrate SDE with a stochastic implicit Runge-Kutta integrator.
 """
-function Integrators.integrate_step!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT},
+                                     cache::IntegratorCacheWIRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int, sol)
 
     # compute initial guess and assign to int.solver.x
-    initial_guess!(int, sol)
+    initial_guess!(int, sol, cache)
 
     # reset cache
     reset!(sol, timestep(int))
@@ -310,9 +316,9 @@ function Integrators.integrate_step!(int::IntegratorWIRK{DT,TT}, sol::AtomicSolu
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute the drift vector field and the diffusion matrix at internal stages
-    compute_stages!(int.solver.x, int.cache.Q0, int.cache.Q1, int.cache.V, int.cache.B, int.cache.Y0, int.cache.Y1, int.params)
+    compute_stages!(int.solver.x, cache.Q0, cache.Q1, cache.V, cache.B, cache.Y0, cache.Y1, int.params)
 
     # compute final update (same update function as for SIRK)
-    update_solution!(sol, int.cache.V, int.cache.B, tableau(int).qdrift0.b, tableau(int).qdiff0.b, timestep(int), int.params.ΔW, int.cache.Δy)
-    update_solution!(sol, int.cache.V, int.cache.B, tableau(int).qdrift0.b̂, tableau(int).qdiff0.b̂, timestep(int), int.params.ΔW, int.cache.Δy)
+    update_solution!(sol, cache.V, cache.B, tableau(int).qdrift0.b, tableau(int).qdiff0.b, timestep(int), int.params.ΔW, cache.Δy)
+    update_solution!(sol, cache.V, cache.B, tableau(int).qdrift0.b̂, tableau(int).qdiff0.b̂, timestep(int), int.params.ΔW, cache.Δy)
 end

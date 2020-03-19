@@ -65,6 +65,16 @@ struct IntegratorCacheDIRK{DT,D,S} <: ODEIntegratorCache{DT,D}
     end
 end
 
+function IntegratorCache(params::ParametersDIRK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
+    IntegratorCacheDIRK{DT,D,S}(; kwargs...)
+end
+
+function IntegratorCache{ST}(params::ParametersDIRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+    IntegratorCacheDIRK{ST,D,S}(; kwargs...)
+end
+
+@inline CacheType(ST, params::ParametersDIRK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheDIRK{ST,D,S}
+
 
 "Diagonally implicit Runge-Kutta integrator."
 struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
@@ -73,10 +83,10 @@ struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
     params::PT
     solver::ST
     iguess::IT
-    cache::IntegratorCacheDIRK{DT,D,S}
+    caches::CacheDict{PT}
 
-    function IntegratorDIRK(params::ParametersDIRK{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
-        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
+    function IntegratorDIRK(params::ParametersDIRK{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
     function IntegratorDIRK{DT,D}(equations::NamedTuple, tableau::TableauDIRK{TT}, Δt::TT) where {DT, TT, D}
@@ -86,29 +96,17 @@ struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
         # create params
         params = ParametersDIRK{DT,D}(equations, tableau, Δt)
 
+        # create cache dict
+        caches = CacheDict(params)
+
         # create solvers
-        function create_nonlinear_solver(DT, N, params, i)
-            # create solution vector for nonlinear solver
-            x = zeros(DT, N)
-
-            # create wrapper function f(x,b) that calls `function_stages!(x, b, params)`
-            # with the appropriate `params`
-            f = (x,b) -> function_stages!(x, b, params, i)
-
-            # create nonlinear solver with solver type obtained from config dictionary
-            s = get_config(:nls_solver)(x, f)
-        end
-
-        solvers = [create_nonlinear_solver(DT, D, params, i) for i in 1:S]
+        solvers = [create_nonlinear_solver(DT, D, params, caches, i) for i in 1:S]
 
         # create initial guess
         iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
 
-        # create cache
-        cache = IntegratorCacheDIRK{DT,D,S}()
-
         # create integrator
-        IntegratorDIRK(params, solvers, iguess, cache)
+        IntegratorDIRK(params, solvers, iguess, caches)
     end
 
     function IntegratorDIRK{DT,D}(v::Function, tableau::TableauDIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
@@ -140,19 +138,28 @@ function initialize!(int::IntegratorDIRK, cache::IntegratorCacheDIRK)
 end
 
 
+function update_params!(int::IntegratorDIRK, sol::AtomicSolutionODE)
+    # set time for nonlinear solver and copy previous solution
+    int.params.t  = sol.t
+    int.params.q .= sol.q
+end
+
+
 "Compute initial guess for internal stages."
-function initial_guess!(int::IntegratorDIRK, sol::AtomicSolutionODE)
+function initial_guess!(int::IntegratorDIRK{DT}, sol::AtomicSolutionODE{DT},
+                        cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT}
+
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, int.cache.q̃, int.cache.ṽ, int.params.tab.q.c[i])
-        for k in eachindex(int.cache.V[i], int.cache.ṽ)
-            int.cache.V[i][k] = int.cache.ṽ[k]
+        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, cache.q̃, cache.ṽ, int.params.tab.q.c[i])
+        for k in eachindex(cache.V[i], cache.ṽ)
+            cache.V[i][k] = cache.ṽ[k]
         end
     end
     for i in eachstage(int)
         for k in eachdim(int)
             int.solver[i].x[k] = 0
             for j in eachstage(int)
-                int.solver[i].x[k] += int.params.tab.q.a[i,j] * int.cache.V[j][k]
+                int.solver[i].x[k] += int.params.tab.q.a[i,j] * cache.V[j][k]
             end
         end
     end
@@ -160,7 +167,7 @@ end
 
 
 function compute_stages!(x::Vector{ST}, Q::Vector{ST}, V::Vector{ST}, Y::Vector{ST},
-                                    params::ParametersDIRK{DT,TT,D,S}, i::Int) where {ST,DT,TT,D,S}
+                         params::ParametersDIRK{DT,TT,D,S}, i::Int) where {ST,DT,TT,D,S}
 
     local tᵢ::TT
 
@@ -179,38 +186,43 @@ end
 
 
 "Compute stages of fully implicit Runge-Kutta methods."
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{DT,TT,D,S}, i::Int) where {ST,DT,TT,D,S}
-    local Q = zeros(ST,D)
-    local V = zeros(ST,D)
-    local Y = zeros(ST,D)
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{DT,TT,D,S},
+                          caches::CacheDict, i::Int) where {ST,DT,TT,D,S}
 
+    # temporary variables
     local y1::ST
     local y2::ST
 
-    compute_stages!(x, Q, V, Y, params, i)
+    # get cache for internal stages
+    cache = caches[ST]
+
+    # compute stages from nonlinear solver solution x
+    compute_stages!(x, cache.Q[i], cache.V[i], cache.Y[i], params, i)
 
     # compute b = - (Y-AV)
     for k in 1:D
-        y1 = params.tab.q.a[i,i] * V[k]
-        y2 = params.tab.q.â[i,i] * V[k]
+        y1 = params.tab.q.a[i,i] * cache.V[i][k]
+        y2 = params.tab.q.â[i,i] * cache.V[i][k]
         for j in 1:i-1
             y1 += params.tab.q.a[i,j] * params.V[j][k]
             y2 += params.tab.q.â[i,j] * params.V[j][k]
         end
-        b[k] = - Y[k] + (y1 + y2)
+        b[k] = - cache.Y[i][k] + (y1 + y2)
     end
 end
 
 
 "Integrate ODE with diagonally implicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT,N}
-    int.params.t  = sol.t
-    int.params.q .= sol.q
+function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
+                         cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT,TT,N}
+
+     # update nonlinear solver parameters from atomic solution
+     update_params!(int, sol)
 
     # compute initial guess
-    initial_guess!(int, sol)
+    initial_guess!(int, sol, cache)
 
-    # reset cache
+    # reset atomic solution
     reset!(sol, timestep(int))
 
     # consecutively solve for all stages
@@ -225,14 +237,14 @@ function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,T
         check_solver_status(int.solver[i].status, int.solver[i].params)
 
         # compute vector field at internal stages
-        compute_stages!(int.solver[i].x, int.cache.Q[i], int.cache.V[i], int.cache.Y[i], int.params, i)
+        compute_stages!(int.solver[i].x, cache.Q[i], cache.V[i], cache.Y[i], int.params, i)
 
         # copy velocity field to parameters
-        int.params.V[i] .= int.cache.V[i]
+        int.params.V[i] .= cache.V[i]
     end
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, int.cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
+    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
 
     # update vector field for initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)

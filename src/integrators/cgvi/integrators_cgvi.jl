@@ -89,16 +89,14 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-@generated function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersCGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersCGVI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
+    @assert length(x) == length(b)
+
     cache = IntegratorCacheCGVI{ST,D,S,R}()
 
-    quote
-        @assert length(x) == length(b)
+    compute_stages!(x, cache, params)
 
-        compute_stages!(x, $cache, params)
-
-        compute_rhs!(b, $cache.X, $cache.Q, $cache.P, $cache.F, $cache.p̃, params)
-    end
+    compute_rhs!(b, cache.X, cache.Q, cache.P, cache.F, cache.p̃, params)
 end
 
 

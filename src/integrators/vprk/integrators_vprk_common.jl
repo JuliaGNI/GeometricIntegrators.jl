@@ -1,4 +1,34 @@
 
+function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+                          cache::IntegratorCacheVPRK{DT}) where {DT,TT}
+    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+end
+
+function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}, R::Vector{TT},
+                           cache::IntegratorCacheVPRK{DT}) where {DT,TT}
+    update_solution!(sol.q, sol.q̃, cache.U, R, timestep(int))
+    update_solution!(sol.p, sol.p̃, cache.G, R, timestep(int))
+end
+
+function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}, RU::Vector{TT}, RG::Vector{TT},
+                           cache::IntegratorCacheVPRK{DT}) where {DT,TT}
+    update_solution!(sol.q, sol.q̃, cache.U, RU, timestep(int))
+    update_solution!(sol.p, sol.p̃, cache.G, RG, timestep(int))
+end
+
+
+function Integrators.initialize!(int::AbstractIntegratorVPRK{DT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+    sol.t̅ = sol.t - timestep(int)
+
+    equation(int, :v)(sol.t, sol.q, sol.p, sol.v)
+    equation(int, :f)(sol.t, sol.q, sol.p, sol.f)
+
+    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
+                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+end
+
+
 function compute_stages!(x, Q, V, P, F, params::AbstractParametersVPRK)
     # copy x to V
     compute_stages_v_vprk!(x, V, params)
@@ -240,36 +270,34 @@ function compute_rhs_vprk_projection_p!(b::Vector{ST}, p::Vector{ST},
 end
 
 
-@generated function compute_rhs_vprk_correction!(b::Vector{ST}, V::Vector{Vector{ST}},
-                                    params::AbstractParametersVPRK{IT,DT,TT,D,S}) where {IT,ST,DT,TT,D,S}
-    μ = zeros(ST,D)
+function compute_rhs_vprk_correction!(b::Vector{ST}, V::Vector{Vector{ST}},
+                params::AbstractParametersVPRK{IT,DT,TT,D,S}) where {IT,ST,DT,TT,D,S}
 
-    quote
-        @assert S == length(V)
+    @assert S == length(V)
 
-        local sl::Int = div(S+1, 2)
+    local sl::Int = div(S+1, 2)
+    local μ = zeros(ST,D)
 
-        if isdefined(params.tab, :d)
-            # compute μ
-            for k in 1:D
-                $μ[k] = params.tab.p.b[sl] / params.tab.d[sl] * b[D*(sl-1)+k]
-            end
+    if isdefined(params.tab, :d)
+        # compute μ
+        for k in 1:D
+            μ[k] = params.tab.p.b[sl] / params.tab.d[sl] * b[D*(sl-1)+k]
+        end
 
-            # replace equation for Pₗ with constraint on V
-            for k in 1:D
-                b[D*(sl-1)+k] = 0
-                for i in 1:S
-                    b[D*(sl-1)+k] += V[i][k] * params.tab.d[i]
-                end
-            end
-
-            # modify P₁, ..., Pₛ except for Pₗ
+        # replace equation for Pₗ with constraint on V
+        for k in 1:D
+            b[D*(sl-1)+k] = 0
             for i in 1:S
-                if i ≠ sl
-                    z = params.tab.d[i] / params.tab.p.b[i]
-                    for k in 1:D
-                        b[D*(i-1)+k] -= z * $μ[k]
-                    end
+                b[D*(sl-1)+k] += V[i][k] * params.tab.d[i]
+            end
+        end
+
+        # modify P₁, ..., Pₛ except for Pₗ
+        for i in 1:S
+            if i ≠ sl
+                z = params.tab.d[i] / params.tab.p.b[i]
+                for k in 1:D
+                    b[D*(i-1)+k] -= z * μ[k]
                 end
             end
         end

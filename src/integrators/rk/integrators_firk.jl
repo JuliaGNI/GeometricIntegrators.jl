@@ -83,10 +83,15 @@ struct IntegratorCacheFIRK{DT,D,S} <: ODEIntegratorCache{DT,D}
     end
 end
 
-
-function IntegratorCache(params::ParametersFIRK{DT, TT, D, S}; kwargs...) where {DT, TT, D, S}
+function IntegratorCache(params::ParametersFIRK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
     IntegratorCacheFIRK{DT,D,S}(; kwargs...)
 end
+
+function IntegratorCache{ST}(params::ParametersFIRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+    IntegratorCacheFIRK{ST,D,S}(; kwargs...)
+end
+
+@inline CacheType(ST, params::ParametersFIRK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheFIRK{ST,D,S}
 
 
 "Fully implicit Runge-Kutta integrator."
@@ -96,10 +101,10 @@ struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
     params::PT
     solver::ST
     iguess::IT
-    cache::IntegratorCacheFIRK{DT,D,S}
+    caches::CacheDict{PT}
 
-    function IntegratorFIRK(params::ParametersFIRK{DT,TT,D,S}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,ST,IT}
-        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, cache)
+    function IntegratorFIRK(params::ParametersFIRK{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
     function IntegratorFIRK{DT,D}(equations::NamedTuple, tableau::TableauFIRK{TT}, Δt::TT; exact_jacobian=false) where {DT,TT,D}
@@ -109,21 +114,21 @@ struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
         # create params
         params = ParametersFIRK{DT,D}(equations, tableau, Δt)
 
+        # create cache dict
+        caches = CacheDict(params)
+
         # create solver
         if exact_jacobian
-            solver = create_nonlinear_solver_with_jacobian(DT, D*S, params)
+            solver = create_nonlinear_solver_with_jacobian(DT, D*S, params, caches)
         else
-            solver = create_nonlinear_solver(DT, D*S, params)
+            solver = create_nonlinear_solver(DT, D*S, params, caches)
         end
 
         # create initial guess
         iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
 
-        # create cache
-        cache = IntegratorCacheFIRK{DT,D,S}()
-
         # create integrator
-        IntegratorFIRK(params, solver, iguess, cache)
+        IntegratorFIRK(params, solver, iguess, caches)
     end
 
     function IntegratorFIRK{DT,D}(v::Function, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
@@ -160,19 +165,21 @@ function update_params!(int::IntegratorFIRK, sol::AtomicSolutionODE)
 end
 
 
-function initial_guess!(int::IntegratorFIRK, sol::AtomicSolutionODE)
+function initial_guess!(int::IntegratorFIRK{DT}, sol::AtomicSolutionODE{DT},
+                        cache::IntegratorCacheFIRK{DT}=int.caches[DT]) where {DT}
+
     local offset::Int
 
     # compute initial guess for internal stages
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, int.cache.Q[i], int.cache.V[i], tableau(int).q.c[i])
+        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, cache.Q[i], cache.V[i], tableau(int).q.c[i])
     end
     for i in eachstage(int)
         offset = ndims(int)*(i-1)
         for k in eachdim(int)
             int.solver.x[offset+k] = 0
             for j in eachstage(int)
-                int.solver.x[offset+k] += timestep(int) * tableau(int).q.a[i,j] * int.cache.V[j][k]
+                int.solver.x[offset+k] += timestep(int) * tableau(int).q.a[i,j] * cache.V[j][k]
             end
         end
     end
@@ -203,18 +210,17 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
 end
 
 "Compute stages of fully implicit Runge-Kutta methods."
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,D,S},
+                          caches::CacheDict) where {ST,DT,TT,D,S}
     # temporary variables
     local y1::ST
     local y2::ST
 
-    # create caches for internal stages
-    Q = create_internal_stage_vector(ST, D, S)
-    V = create_internal_stage_vector(ST, D, S)
-    Y = create_internal_stage_vector(ST, D, S)
+    # get cache for internal stages
+    cache = caches[ST]
 
     # compute stages from nonlinear solver solution x
-    compute_stages!(x, Q, V, Y, params)
+    compute_stages!(x, cache.Q, cache.V, cache.Y, params)
 
     # compute b = - (Y-AV)
     for i in 1:S
@@ -222,16 +228,17 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{D
             y1 = 0
             y2 = 0
             for j in 1:S
-                y1 += params.tab.q.a[i,j] * V[j][k]
-                y2 += params.tab.q.â[i,j] * V[j][k]
+                y1 += params.tab.q.a[i,j] * cache.V[j][k]
+                y2 += params.tab.q.â[i,j] * cache.V[j][k]
             end
-            b[D*(i-1)+k] = - Y[i][k] + params.Δt * (y1 + y2)
+            b[D*(i-1)+k] = - cache.Y[i][k] + params.Δt * (y1 + y2)
         end
     end
 end
 
 "Compute stages of fully implicit Runge-Kutta methods."
-function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT,D,S}, params::ParametersFIRK{DT,TT,D,S}) where {DT,TT,D,S}
+function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT,D,S},
+                   params::ParametersFIRK{DT,TT,D,S}) where {DT,TT,D,S}
     local tᵢ::TT
 
     for i in 1:S
@@ -267,14 +274,16 @@ end
 
 
 "Integrate ODE with fully implicit Runge-Kutta integrator."
-function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
-    # update nonlinear solver parameters from cache
+function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
+                         cache::IntegratorCacheFIRK{DT}=int.caches[DT]) where {DT,TT}
+
+    # update nonlinear solver parameters from atomic solution
     update_params!(int, sol)
 
     # compute initial guess
-    initial_guess!(int, sol)
+    initial_guess!(int, sol, cache)
 
-    # reset cache
+    # reset atomic solution
     reset!(sol, timestep(int))
 
     # call nonlinear solver
@@ -287,10 +296,10 @@ function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::AtomicSolutionODE{DT,T
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector field at internal stages
-    compute_stages!(int.solver.x, int.cache.Q, int.cache.V, int.cache.Y, int.params)
+    compute_stages!(int.solver.x, cache.Q, cache.V, cache.Y, int.params)
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, int.cache.V, int.params.tab.q.b, int.params.tab.q.b̂, int.params.Δt)
+    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)

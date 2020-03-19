@@ -78,14 +78,24 @@ struct IntegratorCacheEPRK{DT,D,S} <: PODEIntegratorCache{DT,D}
     end
 end
 
+function IntegratorCache(params::ParametersEPRK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
+    IntegratorCacheEPRK{DT,D,S}(; kwargs...)
+end
+
+function IntegratorCache{ST}(params::ParametersEPRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+    IntegratorCacheEPRK{ST,D,S}(; kwargs...)
+end
+
+@inline CacheType(ST, params::ParametersEPRK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheEPRK{ST,D,S}
+
 
 "Explicit partitioned Runge-Kutta integrator."
 struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: IntegratorPRK{DT,TT}
     params::ParametersEPRK{DT, TT, D, S, ET}
-    cache::IntegratorCacheEPRK{DT,D,S}
+    caches::CacheDict{ParametersEPRK{DT, TT, D, S, ET}}
 
-    function IntegratorEPRK(params::ParametersEPRK{DT,TT,D,S,ET}, cache) where {DT,TT,D,S,ET}
-        new{DT, TT, D, S, ET}(params, cache)
+    function IntegratorEPRK(params::ParametersEPRK{DT,TT,D,S,ET}, caches) where {DT,TT,D,S,ET}
+        new{DT, TT, D, S, ET}(params, caches)
     end
 
     function IntegratorEPRK{DT,D}(equations::ET, tableau::TableauEPRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
@@ -95,11 +105,11 @@ struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: IntegratorPRK{DT,TT}
         # create params
         params = ParametersEPRK{DT,D}(equations, tableau, Δt)
 
-        # create cache
-        cache = IntegratorCacheEPRK{DT,D,S}()
+        # create cache dict
+        caches = CacheDict(params)
 
         # create integrator
-        IntegratorEPRK(params, cache)
+        IntegratorEPRK(params, caches)
     end
 
     function IntegratorEPRK{DT,D}(v::Function, f::Function, tableau::TableauEPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
@@ -148,15 +158,17 @@ function computeStageP!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{D
 end
 
 "Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
-function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+                         cache::IntegratorCacheEPRK{DT}=int.caches[DT]) where {DT,TT}
+    # temporary variables
     local tqᵢ::TT
     local tpᵢ::TT
 
     # store previous solution
-    int.cache.Q[0] .= sol.q
-    int.cache.P[0] .= sol.p
+    cache.Q[0] .= sol.q
+    cache.P[0] .= sol.p
 
-    # reset cache
+    # reset atomic solution
     reset!(sol, timestep(int))
 
     # compute internal stages
@@ -167,18 +179,18 @@ function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomicSolutionPODE{DT,
         if tableau(int).q.a[i,i] ≠ zero(TT) && tableau(int).p.a[i,i] ≠ zero(TT)
             error("This is a fully implicit method!")
         elseif tableau(int).q.a[i,i] ≠ zero(TT)
-            computeStageP!(int, int.cache, i, i-1, tpᵢ)
-            computeStageQ!(int, int.cache, i, i, tqᵢ)
+            computeStageP!(int, cache, i, i-1, tpᵢ)
+            computeStageQ!(int, cache, i, i, tqᵢ)
         elseif tableau(int).p.a[i,i] ≠ zero(TT)
-            computeStageQ!(int, int.cache, i, i-1, tqᵢ)
-            computeStageP!(int, int.cache, i, i, tpᵢ)
+            computeStageQ!(int, cache, i, i-1, tqᵢ)
+            computeStageP!(int, cache, i, i, tpᵢ)
         else
-            computeStageQ!(int, int.cache, i, i-1, tqᵢ)
-            computeStageP!(int, int.cache, i, i-1, tpᵢ)
+            computeStageQ!(int, cache, i, i-1, tqᵢ)
+            computeStageP!(int, cache, i, i-1, tpᵢ)
         end
     end
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, int.cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
-    update_solution!(sol.p, sol.p̃, int.cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 end

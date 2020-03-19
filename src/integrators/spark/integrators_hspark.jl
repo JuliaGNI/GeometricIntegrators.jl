@@ -41,10 +41,10 @@ struct IntegratorHSPARK{DT, TT, D, S, R, PT <: ParametersHSPARK{DT,TT,D,S,R},
     params::PT
     solver::ST
     iguess::IT
-    cache::IntegratorCacheSPARK{DT,D,S,R}
+    caches::CacheDict{PT}
 
-    function IntegratorHSPARK(params::ParametersHSPARK{DT,TT,D,S,R}, solver::ST, iguess::IT, cache) where {DT,TT,D,S,R,ST,IT}
-        new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, cache)
+    function IntegratorHSPARK(params::ParametersHSPARK{DT,TT,D,S,R}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,R,ST,IT}
+        new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
     function IntegratorHSPARK{DT,D}(equations::NamedTuple, tableau::Union{TableauSPARK{TT},TableauHSPARK{TT}}, Δt::TT) where {DT,TT,D,ST}
@@ -58,17 +58,17 @@ struct IntegratorHSPARK{DT, TT, D, S, R, PT <: ParametersHSPARK{DT,TT,D,S,R},
         # create params
         params = ParametersHSPARK{DT,D}(equations, tableau, Δt)
 
+        # create cache dict
+        caches = CacheDict(params)
+
         # create solver
-        solver = create_nonlinear_solver(DT, N, params)
+        solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
         iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
-        # create cache
-        cache = IntegratorCacheSPARK{DT,D,S,R}()
-
         # create integrator
-        IntegratorHSPARK(params, solver, iguess, cache)
+        IntegratorHSPARK(params, solver, iguess, caches)
     end
 
     function IntegratorHSPARK(equation::PDAE{DT,TT}, tableau::Union{TableauSPARK{TT},TableauHSPARK{TT}}, Δt::TT; kwargs...) where {DT,TT}
@@ -139,60 +139,61 @@ end
 
 
 "Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems."
-@generated function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersHSPARK{DT,TT,D,S,R,P}) where {ST,DT,TT,D,S,R,P}
-    cache = IntegratorCacheSPARK{ST,D,S,R}()
+function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersHSPARK{DT,TT,D,S,R,P},
+                                      caches::CacheDict) where {ST,DT,TT,D,S,R,P}
 
-    quote
-        compute_stages!(y, $cache, params)
+    # get cache for internal stages
+    cache = caches[ST]
 
-        # compute b = - [(Y-AV-AU), (Z-AF-AG)]
-        for i in 1:S
-            for k in 1:D
-                b[2*(D*(i-1)+k-1)+1] = - $cache.Yi[i][k]
-                b[2*(D*(i-1)+k-1)+2] = - $cache.Zi[i][k]
-                for j in 1:S
-                    b[2*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * $cache.Vi[j][k]
-                    b[2*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * $cache.Fi[j][k]
-                end
-                for j in 1:R
-                    b[2*(D*(i-1)+k-1)+1] += params.tab.q.α[i,j] * $cache.Up[j][k]
-                    b[2*(D*(i-1)+k-1)+2] += params.tab.p.α[i,j] * $cache.Gp[j][k]
-                end
+    compute_stages!(y, cache, params)
+
+    # compute b = - [(Y-AV-AU), (Z-AF-AG)]
+    for i in 1:S
+        for k in 1:D
+            b[2*(D*(i-1)+k-1)+1] = - cache.Yi[i][k]
+            b[2*(D*(i-1)+k-1)+2] = - cache.Zi[i][k]
+            for j in 1:S
+                b[2*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * cache.Vi[j][k]
+                b[2*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * cache.Fi[j][k]
+            end
+            for j in 1:R
+                b[2*(D*(i-1)+k-1)+1] += params.tab.q.α[i,j] * cache.Up[j][k]
+                b[2*(D*(i-1)+k-1)+2] += params.tab.p.α[i,j] * cache.Gp[j][k]
             end
         end
+    end
 
-        # compute b = - [(Y-AV-AU), (Z-AF-AG), ωΦ]
-        for i in 1:R
-            for k in 1:D
-                b[2*D*S+3*(D*(i-1)+k-1)+1] = - $cache.Yp[i][k]
-                b[2*D*S+3*(D*(i-1)+k-1)+2] = - $cache.Zp[i][k]
-                for j in 1:S
-                    b[2*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.a[i,j] * $cache.Vi[j][k]
-                    b[2*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.a[i,j] * $cache.Fi[j][k]
-                end
-                for j in 1:R
-                    b[2*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.α[i,j] * $cache.Up[j][k]
-                    b[2*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.α[i,j] * $cache.Gp[j][k]
-                end
+    # compute b = - [(Y-AV-AU), (Z-AF-AG), ωΦ]
+    for i in 1:R
+        for k in 1:D
+            b[2*D*S+3*(D*(i-1)+k-1)+1] = - cache.Yp[i][k]
+            b[2*D*S+3*(D*(i-1)+k-1)+2] = - cache.Zp[i][k]
+            for j in 1:S
+                b[2*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.a[i,j] * cache.Vi[j][k]
+                b[2*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.a[i,j] * cache.Fi[j][k]
+            end
+            for j in 1:R
+                b[2*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.α[i,j] * cache.Up[j][k]
+                b[2*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.α[i,j] * cache.Gp[j][k]
             end
         end
-        for i in 1:R-P
-            for k in 1:D
-                b[2*D*S+3*(D*(i-1)+k-1)+3] = 0
-                for j in 1:R
-                    b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,j] * $cache.Φp[j][k]
-                end
-                b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,R+1] * $cache.ϕ̃[k]
+    end
+    for i in 1:R-P
+        for k in 1:D
+            b[2*D*S+3*(D*(i-1)+k-1)+3] = 0
+            for j in 1:R
+                b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,j] * cache.Φp[j][k]
             end
+            b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,R+1] * cache.ϕ̃[k]
         end
+    end
 
-        # compute b = d_λ ⋅ Λ
-        for i in R-P+1:R
-            for k in 1:D
-                b[2*D*S+3*(D*(R-1)+k-1)+3] = 0
-                for j in 1:R
-                    b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.δ[j] * $cache.Λp[j][k]
-                end
+    # compute b = d_λ ⋅ Λ
+    for i in R-P+1:R
+        for k in 1:D
+            b[2*D*S+3*(D*(R-1)+k-1)+3] = 0
+            for j in 1:R
+                b[2*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.δ[j] * cache.Λp[j][k]
             end
         end
     end

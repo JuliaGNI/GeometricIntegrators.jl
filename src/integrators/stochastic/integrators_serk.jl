@@ -80,14 +80,24 @@ struct IntegratorCacheSERK{DT,D,M,S} <: SDEIntegratorCache{DT,D,M}
     end
 end
 
+function Integrators.IntegratorCache(params::ParametersSERK{DT,TT,D,M,S}; kwargs...) where {DT,TT,D,M,S}
+    IntegratorCacheSERK{DT,D,M,S}(; kwargs...)
+end
+
+function Integrators.IntegratorCache{ST}(params::ParametersSERK{DT,TT,D,M,S}; kwargs...) where {ST,DT,TT,D,M,S}
+    IntegratorCacheSERK{ST,D,M,S}(; kwargs...)
+end
+
+@inline Integrators.CacheType(ST, params::ParametersSERK{DT,TT,D,M,S}) where {DT,TT,D,M,S} = IntegratorCacheSERK{ST,D,M,S}
+
 
 "Stochastic Explicit Runge-Kutta integrator."
 struct IntegratorSERK{DT, TT, D, M, S, ET <: NamedTuple} <: StochasticIntegratorRK{DT,TT,D,M,S}
     params::ParametersSERK{DT,TT,D,M,S,ET}
-    cache::IntegratorCacheSERK{DT,D,M,S}
+    caches::CacheDict{ParametersSERK{DT,TT,D,M,S,ET}}
 
-    function IntegratorSERK(params::ParametersSERK{DT,TT,D,M,S,ET}, cache) where {DT,TT,D,M,S,ET}
-        new{DT, TT, D, M, S, ET}(params, cache)
+    function IntegratorSERK(params::ParametersSERK{DT,TT,D,M,S,ET}, caches) where {DT,TT,D,M,S,ET}
+        new{DT, TT, D, M, S, ET}(params, caches)
     end
 
     function IntegratorSERK{DT,D,M}(equations::ET, tableau::TableauSERK{TT}, Δt::TT) where {DT, TT, D, M, ET <: NamedTuple}
@@ -97,11 +107,11 @@ struct IntegratorSERK{DT, TT, D, M, S, ET <: NamedTuple} <: StochasticIntegrator
         # create params
         params = ParametersSERK{DT,D,M}(equations, tableau, Δt)
 
-        # create cache
-        cache = IntegratorCacheSERK{DT,D,M,S}()
+        # create cache dict
+        caches = CacheDict(params)
 
         # create integrator
-        IntegratorSERK(params, cache)
+        IntegratorSERK(params, caches)
     end
 
     function IntegratorSERK(equation::SDE{DT,TT}, tableau::TableauSERK{TT}, Δt::TT; kwargs...) where {DT,TT}
@@ -111,7 +121,8 @@ end
 
 
 "Integrate SDE with explicit Runge-Kutta integrator."
-function Integrators.integrate_step!(int::IntegratorSERK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorSERK{DT,TT}, sol::AtomicSolutionSDE{DT,TT},
+                                     cache::IntegratorCacheSERK{DT}=int.caches[DT]) where {DT,TT}
     local tᵢ::TT
     local ydrift::DT
 
@@ -119,48 +130,48 @@ function Integrators.integrate_step!(int::IntegratorSERK{DT,TT}, sol::AtomicSolu
     reset!(sol, timestep(int))
 
     for i in eachstage(int)
-        for k in eachindex(int.cache.Q[i])
+        for k in eachindex(cache.Q[i])
             # contribution from the drift part
             ydrift = 0
             for j = 1:i-1
-                ydrift += tableau(int).qdrift.a[i,j] * int.cache.V[j][k]
+                ydrift += tableau(int).qdrift.a[i,j] * cache.V[j][k]
             end
 
             # ΔW contribution from the diffusion part
-            int.cache.Δy .= 0
+            cache.Δy .= 0
             for j = 1:i-1
                 for l in eachnoise(int)
-                    int.cache.Δy[l] += tableau(int).qdiff.a[i,j] * int.cache.B[j][k,l]
+                    cache.Δy[l] += tableau(int).qdiff.a[i,j] * cache.B[j][k,l]
                 end
             end
 
-            int.cache.Q[i][k] = sol.q̅[k] + timestep(int) * ydrift + dot(int.cache.Δy, sol.ΔW)
+            cache.Q[i][k] = sol.q̅[k] + timestep(int) * ydrift + dot(cache.Δy, sol.ΔW)
 
             # ΔZ contribution from the diffusion part
             if tableau(int).qdiff2.name ≠ :NULL
-                int.cache.Δy .= 0
+                cache.Δy .= 0
                 for j = 1:i-1
                     for l in eachnoise(int)
-                        int.cache.Δy[l] += tableau(int).qdiff2.a[i,j] * int.cache.B[j][k,l]
+                        cache.Δy[l] += tableau(int).qdiff2.a[i,j] * cache.B[j][k,l]
                     end
                 end
 
-                int.cache.Q[i][k] += dot(int.cache.Δy, sol.ΔZ)/timestep(int)
+                cache.Q[i][k] += dot(cache.Δy, sol.ΔZ)/timestep(int)
             end
 
         end
 
         tᵢ = sol.t̅ + timestep(int) * tableau(int).qdrift.c[i]
-        equation(int, :v)(tᵢ, int.cache.Q[i], int.cache.V[i])
-        equation(int, :B)(tᵢ, int.cache.Q[i], int.cache.B[i])
+        equation(int, :v)(tᵢ, cache.Q[i], cache.V[i])
+        equation(int, :B)(tᵢ, cache.Q[i], cache.B[i])
     end
 
     # compute final update
     if tableau(int).qdiff2.name == :NULL
-        update_solution!(sol, int.cache.V, int.cache.B, tableau(int).qdrift.b, tableau(int).qdiff.b, timestep(int), sol.ΔW, int.cache.Δy)
-        # update_solution!(sol, int.cache.V, int.cache.B, tableau(int).qdrift.b̂, tableau(int).qdiff.b̂, timestep(int), int.ΔW, int.cache.Δy)
+        update_solution!(sol, cache.V, cache.B, tableau(int).qdrift.b, tableau(int).qdiff.b, timestep(int), sol.ΔW, cache.Δy)
+        # update_solution!(sol, cache.V, cache.B, tableau(int).qdrift.b̂, tableau(int).qdiff.b̂, timestep(int), int.ΔW, cache.Δy)
     else
-        update_solution!(sol, int.cache.V, int.cache.B, tableau(int).qdrift.b, tableau(int).qdiff.b, tableau(int).qdiff2.b, timestep(int), sol.ΔW, sol.ΔZ, int.cache.Δy)
-        # update_solution!(sol, int.cache.V, int.cache.B, tableau(int).qdrift.b̂, tableau(int).qdiff.b̂, tableau(int).qdiff2.b̂, timestep(int), sol.ΔW, sol.ΔZ, int.cache.Δy)
+        update_solution!(sol, cache.V, cache.B, tableau(int).qdrift.b, tableau(int).qdiff.b, tableau(int).qdiff2.b, timestep(int), sol.ΔW, sol.ΔZ, cache.Δy)
+        # update_solution!(sol, cache.V, cache.B, tableau(int).qdrift.b̂, tableau(int).qdiff.b̂, tableau(int).qdiff2.b̂, timestep(int), sol.ΔW, sol.ΔZ, cache.Δy)
     end
 end

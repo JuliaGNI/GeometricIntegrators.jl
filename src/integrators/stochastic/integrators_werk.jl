@@ -105,15 +105,25 @@ struct IntegratorCacheWERK{DT,D,M,S} <: SDEIntegratorCache{DT,D,M}
     end
 end
 
+function Integrators.IntegratorCache(params::ParametersWERK{DT,TT,D,M,S}; kwargs...) where {DT,TT,D,M,S}
+    IntegratorCacheWERK{DT,D,M,S}(; kwargs...)
+end
+
+function Integrators.IntegratorCache{ST}(params::ParametersWERK{DT,TT,D,M,S}; kwargs...) where {ST,DT,TT,D,M,S}
+    IntegratorCacheWERK{ST,D,M,S}(; kwargs...)
+end
+
+@inline Integrators.CacheType(ST, params::ParametersWERK{DT,TT,D,M,S}) where {DT,TT,D,M,S} = IntegratorCacheWERK{ST,D,M,S}
+
 
 "Weak Stochastic Explicit Runge-Kutta integrator."
 struct IntegratorWERK{DT, TT, D, M, S, ET} <: StochasticIntegratorRK{DT,TT,D,M,S}
     params::ParametersWERK{DT,TT,D,M,S,ET}
-    cache::IntegratorCacheWERK{DT,D,M,S}
+    caches::CacheDict{ParametersWERK{DT,TT,D,M,S,ET}}
 
 
-    function IntegratorWERK(params::ParametersWERK{DT,TT,D,M,S,ET}, cache) where {DT,TT,D,M,S,ET}
-        new{DT, TT, D, M, S, ET}(params, cache)
+    function IntegratorWERK(params::ParametersWERK{DT,TT,D,M,S,ET}, caches) where {DT,TT,D,M,S,ET}
+        new{DT, TT, D, M, S, ET}(params, caches)
     end
 
     function IntegratorWERK{DT,D,M}(equations::ET, tableau::TableauWERK{TT}, Δt::TT) where {DT, TT, D, M, ET <: NamedTuple}
@@ -123,11 +133,11 @@ struct IntegratorWERK{DT, TT, D, M, S, ET} <: StochasticIntegratorRK{DT,TT,D,M,S
         # create params
         params = ParametersWERK{DT,D,M}(equations, tableau, Δt)
 
-        # create cache
-        cache = IntegratorCacheWERK{DT,D,M,S}()
+        # create cache dict
+        caches = CacheDict(params)
 
         # create integrator
-        IntegratorWERK(params, cache)
+        IntegratorWERK(params, caches)
     end
 
     function IntegratorWERK(equation::SDE{DT,TT}, tableau::TableauWERK{TT}, Δt::TT; kwargs...) where {DT,TT}
@@ -137,7 +147,8 @@ end
 
 
 "Integrate SDE with explicit Runge-Kutta integrator."
-function Integrators.integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolutionSDE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolutionSDE{DT,TT},
+                                     cache::IntegratorCacheWERK{DT}=int.caches[DT]) where {DT,TT}
     local tᵢ::TT
     local ydrift::DT
     local ydiff2::DT
@@ -147,71 +158,71 @@ function Integrators.integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolu
 
     # THE FIRST INTERNAL STAGES ARE ALL EQUAL TO THE PREVIOUS STEP SOLUTION
     # calculates v(t,tQ0) and assigns to the 1st column of V
-    equation(int, :v)(sol.t̅, sol.q̅, int.cache.V[1])
+    equation(int, :v)(sol.t̅, sol.q̅, cache.V[1])
     # calculates B(t,Q) and assigns to the matrix B1[1]
     # no need to calculate the columns of B separately, because all internal stages
     # for i=1 are equal to int.q[r,m]
-    equation(int, :B)(sol.t̅, sol.q̅, int.cache.B1[1])
+    equation(int, :B)(sol.t̅, sol.q̅, cache.B1[1])
     # copy B1[i] to B2[i] (they're equal for i=1)
-    int.cache.B2[1] .= int.cache.B1[1]
+    cache.B2[1] .= cache.B1[1]
 
     for i in 2:tableau(int).s
         # Calculating the internal stage H^(0)_i
-        for k in eachindex(int.cache.Q0)
+        for k in eachindex(cache.Q0)
             # contribution from the drift part
             ydrift = 0
             for j = 1:i-1
-                ydrift += tableau(int).qdrift0.a[i,j] * int.cache.V[j][k]
+                ydrift += tableau(int).qdrift0.a[i,j] * cache.V[j][k]
             end
 
             # ΔW contribution from the diffusion part
-            int.cache.Δy .= 0
+            cache.Δy .= 0
             for j = 1:i-1
-                for l in eachindex(int.cache.Δy)
-                    int.cache.Δy[l] += tableau(int).qdiff0.a[i,j] * int.cache.B1[j][k,l]
+                for l in eachindex(cache.Δy)
+                    cache.Δy[l] += tableau(int).qdiff0.a[i,j] * cache.B1[j][k,l]
                 end
             end
 
-            int.cache.Q0[k] = sol.q̅[k] + timestep(int) * ydrift + dot(int.cache.Δy, sol.ΔW)
+            cache.Q0[k] = sol.q̅[k] + timestep(int) * ydrift + dot(cache.Δy, sol.ΔW)
         end
 
         # Calculating the internal stages H^(l)_i for l=1..sol.nm
-        for k in eachindex(int.cache.Q1[1])
+        for k in eachindex(cache.Q1[1])
             # contribution from the drift part (same for all noises)
             ydrift = 0
             for j = 1:i-1
-                ydrift += tableau(int).qdrift1.a[i,j] * int.cache.V[j][k]
+                ydrift += tableau(int).qdrift1.a[i,j] * cache.V[j][k]
             end
 
             # contribution from the diffusion part is different for each noise
-            for noise_idx in eachindex(int.cache.Q1)
+            for noise_idx in eachindex(cache.Q1)
 
                 # ΔW contribution from the diffusion part
-                int.cache.Δy .= 0
+                cache.Δy .= 0
                 for j = 1:i-1
-                    for l in eachindex(int.cache.Δy)
+                    for l in eachindex(cache.Δy)
                         if l==noise_idx
-                            int.cache.Δy[l] += tableau(int).qdiff1.a[i,j] * int.cache.B1[j][k,l]
+                            cache.Δy[l] += tableau(int).qdiff1.a[i,j] * cache.B1[j][k,l]
                         else
-                            int.cache.Δy[l] += tableau(int).qdiff3.a[i,j] * int.cache.B1[j][k,l]
+                            cache.Δy[l] += tableau(int).qdiff3.a[i,j] * cache.B1[j][k,l]
                         end
                     end
                 end
 
-                int.cache.Q1[noise_idx][k] = sol.q̅[k] + timestep(int) * ydrift + dot(int.cache.Δy, sol.ΔW)
+                cache.Q1[noise_idx][k] = sol.q̅[k] + timestep(int) * ydrift + dot(cache.Δy, sol.ΔW)
             end
         end
 
         # Calculating the internal stages \hat H^(l)_i for l=1..sol.nm
-        for k in eachindex(int.cache.Q2[1])
+        for k in eachindex(cache.Q2[1])
             # contribution from the drift part (same for all noises)
             ydrift = 0
             for j = 1:i-1
-                ydrift += tableau(int).qdrift2.a[i,j] * int.cache.V[j][k]
+                ydrift += tableau(int).qdrift2.a[i,j] * cache.V[j][k]
             end
 
             # contribution from the diffusion part is different for each noise
-            for noise_idx in eachindex(int.cache.Q2)
+            for noise_idx in eachindex(cache.Q2)
 
                 # ΔW contribution from the diffusion part
                 ydiff2 = 0
@@ -220,27 +231,27 @@ function Integrators.integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolu
                     for l in eachindex(sol.ΔW, sol.ΔZ)
                         # calculating the terms with the random variables \hat I_{noise_idx,l}
                         if l<noise_idx
-                            ydiff2 += tableau(int).qdiff2.a[i,j] * int.cache.B1[j][k,l] * sol.ΔW[noise_idx] * sol.ΔZ[l]
+                            ydiff2 += tableau(int).qdiff2.a[i,j] * cache.B1[j][k,l] * sol.ΔW[noise_idx] * sol.ΔZ[l]
                         elseif l>noise_idx
-                            ydiff2 += -tableau(int).qdiff2.a[i,j] * int.cache.B1[j][k,l] * sol.ΔW[l] * sol.ΔZ[noise_idx]
+                            ydiff2 += -tableau(int).qdiff2.a[i,j] * cache.B1[j][k,l] * sol.ΔW[l] * sol.ΔZ[noise_idx]
                         end
                     end
                 end
 
-                int.cache.Q2[noise_idx][k] = sol.q̅[k] + timestep(int) * ydrift + ydiff2/sqrt(timestep(int))
+                cache.Q2[noise_idx][k] = sol.q̅[k] + timestep(int) * ydrift + ydiff2/sqrt(timestep(int))
             end
         end
 
         # CALCULATING THE NEW VALUES OF V
         tᵢ = sol.t̅ + timestep(int) * tableau(int).qdrift0.c[i]
-        equation(int, :v)(tᵢ, int.cache.Q0, int.cache.V[i])
+        equation(int, :v)(tᵢ, cache.Q0, cache.V[i])
 
         # CALCULATING THE NEW VALUES OF B1
         # each column of B evaluated at a different internal stage
         tᵢ = sol.t̅ + timestep(int) * tableau(int).qdrift1.c[i]
 
         for l in eachnoise(int)
-            equation(int, :B)(tᵢ, int.cache.Q1[l], int.cache.B1[i], l)
+            equation(int, :B)(tᵢ, cache.Q1[l], cache.B1[i], l)
         end
 
         # CALCULATING THE NEW VALUES OF B2
@@ -248,11 +259,11 @@ function Integrators.integrate_step!(int::IntegratorWERK{DT,TT}, sol::AtomicSolu
         tᵢ = sol.t̅ + timestep(int) * tableau(int).qdrift2.c[i]
 
         for l in eachnoise(int)
-            equation(int, :B)(tᵢ, int.cache.Q2[l], int.cache.B2[i], l)
+            equation(int, :B)(tᵢ, cache.Q2[l], cache.B2[i], l)
         end
     end
 
     # compute final update
-    update_solution!(sol, int.cache.V, int.cache.B1, int.cache.B2, tableau(int).qdrift0.b, tableau(int).qdiff0.b, tableau(int).qdiff3.b, timestep(int), sol.ΔW, int.cache.Δy)
-    # update_solution!(sol, int.cache.V, int.cache.B1, int.cache.B2, tableau(int).qdrift0.b̂, tableau(int).qdiff0.b̂, tableau(int).qdiff3.b̂, timestep(int), sol.ΔW, int.cache.Δy)
+    update_solution!(sol, cache.V, cache.B1, cache.B2, tableau(int).qdrift0.b, tableau(int).qdiff0.b, tableau(int).qdiff3.b, timestep(int), sol.ΔW, cache.Δy)
+    # update_solution!(sol, cache.V, cache.B1, cache.B2, tableau(int).qdrift0.b̂, tableau(int).qdiff0.b̂, tableau(int).qdiff3.b̂, timestep(int), sol.ΔW, cache.Δy)
 end
