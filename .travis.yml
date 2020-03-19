@@ -19,8 +19,8 @@ jobs:
       julia: 1.3
       os: linux
       script:
-        - julia --color=yes --project=. -e 'using Pkg; Pkg.instantiate()'
-        - travis_wait 30 julia --color=yes --project=. docs/make.jl
+        - julia --color=yes --project=docs -e 'using Pkg; Pkg.instantiate()'
+        - travis_wait 30 julia --color=yes --project=docs docs/make.jl
       after_success: skip
   fast_finish: true
 
