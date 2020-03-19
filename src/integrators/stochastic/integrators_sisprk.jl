@@ -79,7 +79,7 @@ Structure for holding the internal stages `Q`, the values of the drift vector
 and the diffusion matrix evaluated at the internal stages `V=v(Q)`, `B=B(Q)`,
 and the increments `Y = Δt*a_drift*v(Q) + a_diff*B(Q)*ΔW`.
 """
-struct IntegratorCacheSISPRK{DT,D,M,S}
+struct IntegratorCacheSISPRK{DT,D,M,S} <: SDEIntegratorCache{DT,D,M}
     Q ::Vector{Vector{DT}}
     P ::Vector{Vector{DT}}
     V ::Vector{Vector{DT}}
@@ -135,6 +135,16 @@ struct IntegratorCacheSISPRK{DT,D,M,S}
     end
 end
 
+function Integrators.IntegratorCache(params::ParametersSISPRK{DT,TT,D,M,S}; kwargs...) where {DT,TT,D,M,S}
+    IntegratorCacheSISPRK{DT,D,M,S}(; kwargs...)
+end
+
+function Integrators.IntegratorCache{ST}(params::ParametersSISPRK{DT,TT,D,M,S}; kwargs...) where {ST,DT,TT,D,M,S}
+    IntegratorCacheSISPRK{ST,D,M,S}(; kwargs...)
+end
+
+@inline Integrators.CacheType(ST, params::ParametersSISPRK{DT,TT,D,M,S}) where {DT,TT,D,M,S} = IntegratorCacheSISPRK{ST,D,M,S}
+
 
 "Stochastic implicit partitioned Runge-Kutta integrator."
 struct IntegratorSISPRK{DT, TT, D, M, S,
@@ -142,10 +152,10 @@ struct IntegratorSISPRK{DT, TT, D, M, S,
                 ST <: NonlinearSolver{DT}} <: StochasticIntegratorRK{DT,TT,D,M,S}
     params::PT
     solver::ST
-    cache::IntegratorCacheSISPRK{DT,D,M,S}
+    caches::CacheDict{PT}
 
-    function IntegratorSISPRK(params::ParametersSISPRK{DT,TT,D,M,S}, solver::ST, cache) where {DT,TT,D,M,S,ST}
-        new{DT, TT, D, M, S, typeof(params), ST}(params, solver, cache)
+    function IntegratorSISPRK(params::ParametersSISPRK{DT,TT,D,M,S}, solver::ST, caches) where {DT,TT,D,M,S,ST}
+        new{DT, TT, D, M, S, typeof(params), ST}(params, solver, caches)
     end
 
     function IntegratorSISPRK{DT,D,M}(equations::NamedTuple, tableau::TableauSISPRK{TT}, Δt::TT; K::Int=0) where {DT,TT,D,M}
@@ -158,19 +168,33 @@ struct IntegratorSISPRK{DT, TT, D, M, S,
         # create params
         params = ParametersSISPRK{DT,D,M}(equations, tableau, Δt, zeros(DT,M), zeros(DT,M), A)
 
-        # create solver
-        solver = create_nonlinear_solver(DT, 2*D*S, params)
+        # create cache dict
+        caches = CacheDict(params)
 
-        # create cache for internal stage vectors and update vectors
-        cache = IntegratorCacheSISPRK{DT,D,M,S}()
+        # create solver
+        solver = create_nonlinear_solver(DT, 2*D*S, params, caches)
 
         # create integrator
-        IntegratorSISPRK(params, solver, cache)
+        IntegratorSISPRK(params, solver, caches)
     end
 
     function IntegratorSISPRK(equation::SPSDE{DT,TT}, tableau::TableauSISPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorSISPRK{DT, ndims(equation), equation.m}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
+end
+
+
+@doc raw"""
+This function computes initial guesses for `Y`, `Z` and assigns them to `int.solver.x`.
+
+For SISPRK we are NOT IMPLEMENTING an InitialGuess.
+
+SIMPLE SOLUTION
+The simplest initial guess for `Y`, `Z` is 0.
+"""
+function initial_guess!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT},
+                        cache::IntegratorCacheSISPRK{DT}=int.caches[DT]) where {DT,TT}
+    int.solver.x .= 0
 end
 
 
@@ -230,69 +254,57 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSISPRK{ST},
 end
 
 "Compute stages of stochastic implicit split partitioned Runge-Kutta methods."
-@generated function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSISPRK{DT,TT,D,M,S}) where {ST,DT,TT,D,M,S}
+function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+                params::ParametersSISPRK{DT,TT,D,M,S},
+                caches::CacheDict) where {ST,DT,TT,D,M,S}
 
-    cache = IntegratorCacheSISPRK{ST,D,M,S}()
+    # get cache for internal stages
+    cache = caches[ST]
 
-    quote
-        compute_stages!(x, $cache, params)
+    compute_stages!(x, cache, params)
 
-        local y1::ST
-        local y2::ST
-        local z1::ST
-        local z2::ST
+    local y1::ST
+    local y2::ST
+    local z1::ST
+    local z2::ST
 
-        # compute b = - (Y-AV)
-        for i in 1:S
-            for k in 1:D
-                y1 = 0
-                y2 = 0
-                z1 = 0
-                z2 = 0
-                for j in 1:S
-                    y1 += params.tab.qdrift.a[i,j]  * $cache.V[j][k]  * params.Δt
-                    y2 += params.tab.qdrift.â[i,j]  * $cache.V[j][k]  * params.Δt
-                    z1 += params.tab.pdrift1.a[i,j] * $cache.F1[j][k] * params.Δt
-                       +  params.tab.pdrift2.a[i,j] * $cache.F2[j][k] * params.Δt
-                    z2 += params.tab.pdrift1.â[i,j] * $cache.F1[j][k] * params.Δt
-                       +  params.tab.pdrift2.â[i,j] * $cache.F2[j][k] * params.Δt
-                    for l in 1:M
-                        y1 += params.tab.qdiff.a[i,j]  * $cache.B[j][k,l]  * params.ΔW[l]
-                        y2 += params.tab.qdiff.â[i,j]  * $cache.B[j][k,l]  * params.ΔW[l]
-                        z1 += params.tab.pdiff1.a[i,j] * $cache.G1[j][k,l] * params.ΔW[l]
-                           +  params.tab.pdiff2.a[i,j] * $cache.G2[j][k,l] * params.ΔW[l]
-                        z2 += params.tab.pdiff1.â[i,j] * $cache.G1[j][k,l] * params.ΔW[l]
-                           +  params.tab.pdiff2.â[i,j] * $cache.G2[j][k,l] * params.ΔW[l]
-                    end
+    # compute b = - (Y-AV)
+    for i in 1:S
+        for k in 1:D
+            y1 = 0
+            y2 = 0
+            z1 = 0
+            z2 = 0
+            for j in 1:S
+                y1 += params.tab.qdrift.a[i,j]  * cache.V[j][k]  * params.Δt
+                y2 += params.tab.qdrift.â[i,j]  * cache.V[j][k]  * params.Δt
+                z1 += params.tab.pdrift1.a[i,j] * cache.F1[j][k] * params.Δt
+                   +  params.tab.pdrift2.a[i,j] * cache.F2[j][k] * params.Δt
+                z2 += params.tab.pdrift1.â[i,j] * cache.F1[j][k] * params.Δt
+                   +  params.tab.pdrift2.â[i,j] * cache.F2[j][k] * params.Δt
+                for l in 1:M
+                    y1 += params.tab.qdiff.a[i,j]  * cache.B[j][k,l]  * params.ΔW[l]
+                    y2 += params.tab.qdiff.â[i,j]  * cache.B[j][k,l]  * params.ΔW[l]
+                    z1 += params.tab.pdiff1.a[i,j] * cache.G1[j][k,l] * params.ΔW[l]
+                       +  params.tab.pdiff2.a[i,j] * cache.G2[j][k,l] * params.ΔW[l]
+                    z2 += params.tab.pdiff1.â[i,j] * cache.G1[j][k,l] * params.ΔW[l]
+                       +  params.tab.pdiff2.â[i,j] * cache.G2[j][k,l] * params.ΔW[l]
                 end
-                b[D*(  i-1)+k] = - $cache.Y[i][k] + (y1 + y2)
-                b[D*(S+i-1)+k] = - $cache.Z[i][k] + (z1 + z2)
             end
+            b[D*(  i-1)+k] = - cache.Y[i][k] + (y1 + y2)
+            b[D*(S+i-1)+k] = - cache.Z[i][k] + (z1 + z2)
         end
     end
 end
 
 
-@doc raw"""
-This function computes initial guesses for `Y`, `Z` and assigns them to `int.solver.x`.
-
-For SISPRK we are NOT IMPLEMENTING an InitialGuess.
-
-SIMPLE SOLUTION
-The simplest initial guess for `Y`, `Z` is 0.
-"""
-function initial_guess!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
-    int.solver.x .= 0
-end
-
-
-function update_solution!(sol::AtomicSolutionPSDE{T},
-                          cache::IntegratorCacheSISPRK{T}, tab::TableauSISPRK{T},
-                          Δt::T, ΔW::Vector{T}) where {T}
+function update_solution!(sol::AtomicSolutionPSDE{T}, tab::TableauSISPRK{T}, Δt::T, ΔW::Vector{T},
+                          cache::IntegratorCacheSISPRK{T}) where {T}
 
     update_solution!(sol, cache.V, cache.F1, cache.F2, cache.B, cache.G1, cache.G2,
                      tab.qdrift.b, tab.qdiff.b, tab.pdrift1.b, tab.pdrift2.b, tab.pdiff1.b, tab.pdiff2.b,
                      Δt, ΔW, cache.Δy, cache.Δz)
+
     update_solution!(sol, cache.V, cache.F1, cache.F2, cache.B, cache.G1, cache.G2,
                      tab.qdrift.b̂, tab.qdiff.b̂, tab.pdrift1.b̂, tab.pdrift2.b̂, tab.pdiff1.b̂, tab.pdiff2.b̂,
                      Δt, ΔW, cache.Δy, cache.Δz)
@@ -300,12 +312,13 @@ end
 
 
 "Integrate PSDE with a stochastic implicit partitioned Runge-Kutta integrator."
-function Integrators.integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT}) where {DT,TT}
+function Integrators.integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,TT},
+                                     cache::IntegratorCacheSISPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int, sol)
 
     # compute initial guess and assign to int.solver.x
-    initial_guess!(int, sol)
+    initial_guess!(int, sol, cache)
 
     # reset cache
     reset!(sol, timestep(int))
@@ -320,8 +333,8 @@ function Integrators.integrate_step!(int::IntegratorSISPRK{DT,TT}, sol::AtomicSo
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute the drift vector field and the diffusion matrix at internal stages
-    compute_stages!(int.solver.x, int.cache, int.params)
+    compute_stages!(int.solver.x, cache, int.params)
 
     # compute final update
-    update_solution!(sol, int.cache, tableau(int), timestep(int), int.params.ΔW)
+    update_solution!(sol, tableau(int), timestep(int), int.params.ΔW, cache)
 end

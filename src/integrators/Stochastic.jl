@@ -14,7 +14,8 @@ module Stochastic
     import ..Solutions: update!
 
     import ..Integrators: StochasticIntegrator, Parameters
-    import ..Integrators: SDEIntegratorCache, PSDEIntegratorCache
+    import ..Integrators: SDEIntegratorCache, PSDEIntegratorCache,
+                          IntegratorCache, CacheDict, CacheType
     import ..Integrators: CoefficientsRK, AbstractTableauERK, AbstractTableauIRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver
 
