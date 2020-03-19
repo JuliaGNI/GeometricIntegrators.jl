@@ -181,58 +181,50 @@ into `Y0` and `Y1`, calculates the internal stages `Q0` and `Q1`, the values of 
 of the SDE ( `v(Q0)` and `B(Q1)` ), and assigns them to `V` and `B`.
 Unlike for FIRK, here `Y = Δt a v(Q) + â B(Q) ΔW`.
 """
-@generated function compute_stages!(x::Vector{ST}, Q0::Vector{Vector{ST}}, Q1::Vector{Matrix{ST}}, V::Vector{Vector{ST}},
-                                                   B::Vector{Matrix{ST}}, Y0::Vector{Vector{ST}}, Y1::Vector{Matrix{ST}},
-                                                   params::ParametersWIRK{DT,TT,D,M,S}) where {ST,DT,TT,D,M,S}
+function compute_stages!(x::Vector{ST}, Q0::Vector{Vector{ST}}, Q1::Vector{Matrix{ST}}, V::Vector{Vector{ST}},
+                                        B::Vector{Matrix{ST}}, Y0::Vector{Vector{ST}}, Y1::Vector{Matrix{ST}},
+                                        params::ParametersWIRK{DT,TT,D,M,S}) where {ST,DT,TT,D,M,S}
 
-    tQ::Vector{ST} = zeros(ST,D)
-    tV::Vector{ST} = zeros(ST,D)
-    tB::Vector{ST} = zeros(ST,D)    # This was tB::Matrix{ST} = zeros(ST,D,M) for SIRK, but here we calculate B column by column.
-                                    # tB is actually superfluous, could just use tV; keeping tB for clarity though
+    @assert S == length(Q0) == length(Q1) == length(V) == length(B)
 
-    quote
-        local tᵢ::TT
+    local tᵢ::TT
+    local tQ::Vector{ST} = zeros(ST,D)
 
-        @assert S == length(Q0) == length(Q1) == length(V) == length(B)
+    # copy x to Y0 and Y1, and calculate Q0 and Q1
+    for i in eachindex(Q0)
+        @assert D == length(Q0[i]) == size(Q1[i],1) == length(V[i]) == size(B[i],1)
+        @assert M == size(Q1[i],2) == size(B[i],2)
 
-        # copy x to Y0 and Y1, and calculate Q0 and Q1
-        for i in eachindex(Q0)
+        for k in eachindex(Q0[i])
+            Y0[i][k] = x[D*(i-1)+k]
+            Q0[i][k] = params.q[k] + Y0[i][k]
+        end
+    end
 
-            @assert D == length(Q0[i]) == size(Q1[i],1) == length(V[i]) == size(B[i],1)
-            @assert M == size(Q1[i],2) == size(B[i],2)
-
-            for k in eachindex(Q0[i])
-                Y0[i][k] = x[D*(i-1)+k]
-                Q0[i][k] = params.q[k] + Y0[i][k]
+    for i in eachindex(Q1)
+        for l in 1:size(Q1[i],2)
+            for k in 1:size(Q1[i],1)
+                Y1[i][k,l] = x[ D*S + D*M*(i-1) + D*(l-1) + k ]
+                Q1[i][k,l] = params.q[k] + Y1[i][k,l]
             end
         end
+    end
 
-        for i in eachindex(Q1)
-            for l in 1:size(Q1[i],2)
-                for k in 1:size(Q1[i],1)
-                    Y1[i][k,l] = x[ D*S + D*M*(i-1) + D*(l-1) + k ]
-                    Q1[i][k,l] = params.q[k] + Y1[i][k,l]
-                end
-            end
-        end
+    # compute V = v(Q0) and B=B(Q1)
+    for i in 1:S
+        # time point with the coefficient c0
+        tᵢ = params.t + params.Δt * params.tab.qdrift0.c[i]
+        # calculates v(t,tQ) and assigns to the i-th column of V
+        params.equ[:v](tᵢ, Q0[i], V[i])
 
+        # time point with the coefficient c1
+        tᵢ = params.t + params.Δt * params.tab.qdrift1.c[i]
 
-        # compute V = v(Q0) and B=B(Q1)
-        for i in 1:S
-            # time point with the coefficient c0
-            tᵢ = params.t + params.Δt * params.tab.qdrift0.c[i]
-            # calculates v(t,tQ) and assigns to the i-th column of V
-            params.equ[:v](tᵢ, Q0[i], V[i])
-
-            # time point with the coefficient c1
-            tᵢ = params.t + params.Δt * params.tab.qdrift1.c[i]
-
-            for l=1:M
-                # copies Q1[i][:,l] to the vector tQ
-                simd_copy_xy_first!($tQ, Q1[i], l)
-                # calculates the l-th column of B(t,tQ) and assigns to the vector tB
-                params.equ[:B](tᵢ, $tQ, B[i], l)
-            end
+        for l=1:M
+            # copies Q1[i][:,l] to the vector tQ
+            simd_copy_xy_first!(tQ, Q1[i], l)
+            # calculates the l-th column of B(t,tQ) and assigns to the vector tB
+            params.equ[:B](tᵢ, tQ, B[i], l)
         end
     end
 end

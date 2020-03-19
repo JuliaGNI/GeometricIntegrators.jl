@@ -70,50 +70,46 @@ function initial_guess!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::AtomicSolution
 end
 
 
-@generated function compute_projection_vprk!(x::Vector{ST},
+function compute_projection_vprk!(x::Vector{ST},
                 q::SolutionVector{ST}, p::SolutionVector{ST}, λ::SolutionVector{ST},
                 V::Vector{Vector{ST}}, U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
                 params::ParametersVPRKpMidpoint{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    # create temporary vectors
-    q̃  = zeros(ST,D)
-    # qm = zeros(ST,D)
+    # create temporary variables
+    local t₀::TT = params.t̅
+    local t₁::TT = params.t̅ + params.Δt
+    local tₘ::TT = (t₀+t₁)/2
+    local y::ST
+    local q̃ = zeros(ST,D)
 
-    quote
-        local t₀::TT = params.t̅
-        local t₁::TT = params.t̅ + params.Δt
-        local tₘ::TT = (t₀+t₁)/2
-        local y::ST
-
-        # copy x to λ and q̅
-        for k in 1:D
-            q[k] = x[D*(S+0)+k]
-            λ[k] = x[D*(S+1)+k]
-        end
-
-        # compute U=λ
-        U[1] .= λ
-        U[2] .= λ
-
-        # compute G=g(q,λ)
-        for k in 1:D
-            y = 0
-            for j in 1:S
-                y += params.tab.q.b[j] * V[j][k]
-            end
-            $q̃[k] = params.q̅[k] + 0.5 * params.Δt * y + params.Δt * params.pparams[:R][1] * U[1][k]
-            # $qm[k] = params.q̅[k] + 0.5 * params.Δt * y + 0.5 * params.Δt * params.R[1] * U[k,1] + 0.5 * params.Δt * params.R[2] * U[k,2]
-        end
-
-        # println("q̃mid = ", $q̃)
-        # println("qmid = ", $qm)
-
-        params.equ[:g](tₘ, $q̃, λ, G[1])
-        G[2] .= G[1]
-
-        # compute p=ϑ(q)
-        params.equ[:ϑ](t₁, q, λ, p)
+    # copy x to λ and q̅
+    for k in 1:D
+        q[k] = x[D*(S+0)+k]
+        λ[k] = x[D*(S+1)+k]
     end
+
+    # compute U=λ
+    U[1] .= λ
+    U[2] .= λ
+
+    # compute G=g(q,λ)
+    for k in 1:D
+        y = 0
+        for j in 1:S
+            y += params.tab.q.b[j] * V[j][k]
+        end
+        q̃[k] = params.q̅[k] + 0.5 * params.Δt * y + params.Δt * params.pparams[:R][1] * U[1][k]
+        # qm[k] = params.q̅[k] + 0.5 * params.Δt * y + 0.5 * params.Δt * params.R[1] * U[k,1] + 0.5 * params.Δt * params.R[2] * U[k,2]
+    end
+
+    # println("q̃mid = ", q̃)
+    # println("qmid = ", qm)
+
+    params.equ[:g](tₘ, q̃, λ, G[1])
+    G[2] .= G[1]
+
+    # compute p=ϑ(q)
+    params.equ[:ϑ](t₁, q, λ, p)
 end
 
 

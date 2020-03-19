@@ -190,35 +190,32 @@ function compute_stages_q_vprk!(q::Vector{ST}, Q::Vector{Vector{ST}},
 end
 
 
-@generated function compute_projection_vprk!(q::Vector{ST}, p::Vector{ST},
+function compute_projection_vprk!(q::Vector{ST}, p::Vector{ST},
                 Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Λ::Vector{Vector{ST}},
                 R::Vector{Vector{ST}}, Ψ::Vector{Vector{ST}},
                 params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    # create temporary vectors
-    dH = zeros(ST,D)
-    Ω = zeros(ST,D,D)
+    # create temporary variables
+    local t₀::TT = params.t̅
+    local t₁::TT = params.t̅ + params.Δt
+    local tᵢ::TT
+    local dH = zeros(ST,D)
+    local Ω  = zeros(ST,D,D)
 
-    quote
-        local t₀::TT = params.t̅
-        local t₁::TT = params.t̅ + params.Δt
-        local tᵢ::TT
+    # compute p=ϑ(q)
+    params.equ[:ϑ](t₁, q, p)
 
-        # compute p=ϑ(q)
-        params.equ[:ϑ](t₁, q, p)
+    for i in 1:S
+        tᵢ = t₀ + params.Δt * params.tab.p.c[i]
 
-        for i in 1:S
-            tᵢ = t₀ + params.Δt * params.tab.p.c[i]
+        params.equ[:g](tᵢ, Q[i], Λ[i], R[i])
+        params.equ[:Ω](tᵢ, Q[i], Ω)
+        params.equ[:∇H](tᵢ, Q[i], dH)
 
-            params.equ[:g](tᵢ, Q[i], Λ[i], R[i])
-            params.equ[:Ω](tᵢ, Q[i], $Ω)
-            params.equ[:∇H](tᵢ, Q[i], $dH)
+        # TODO Check if ω() returns Ω or Ω^T -> this decides the sign on dH below
+        #      Seems to be Ω^T -> then dH should be subtracted
 
-            # TODO Check if ω() returns Ω or Ω^T -> this decides the sign on dH below
-            #      Seems to be Ω^T -> then dH should be subtracted
-
-            Ψ[i] .= $Ω * V[i] .- $dH
-        end
+        Ψ[i] .= Ω * V[i] .- dH
     end
 end
 
