@@ -1,8 +1,9 @@
-using Weave, GeometricIntegrators
+using GeometricIntegrators
+using Weave
 
-tutorial_path = "tutorial/tutorial.jmd"
+tutorial_path = joinpath(dirname(pathof(GeometricIntegrators)), "../docs/tutorial", "tutorial.jmd")
+build_path = joinpath(dirname(pathof(GeometricIntegrators)), "../docs/build/tutorial")
 
-# HTML
 weave(tutorial_path,
-  out_path="tutorial/html",
+  out_path=build_path,
   doctype = "md2html")
