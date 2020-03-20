@@ -6,10 +6,7 @@
 *.jl.mem
 *.jl.*.mem
 docs/build/
-docs/site/
-docs/weave/
-docs/src/weave/
-examples/.ipynb_checkpoints
+docs/src/tutorial/
 examples/*.pdf
 examples/*.png
 examples/*/*.png
