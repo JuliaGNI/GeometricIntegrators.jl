@@ -223,21 +223,11 @@ function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT}, m1::Int, m2::I
 end
 
 
-function integrate!(int::DeterministicIntegrator{DT,TT}, sol::Solution{DT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT,TT}
-    # integrate one initial condition for one time step
-    integrate_step!(int, asol)
-
-    # take care of periodic solutions
-    cut_periodic_solution!(asol, periodicity(sol))
-
-    # copy solution from cache to solution
-    set_solution!(sol, asol, n, m)
-end
-
-
-function integrate!(int::StochasticIntegrator{DT,TT}, sol::Solution{DT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT,TT}
-    # copy the increments of the Brownian Process
-    get_increments!(sol, asol, n, m)
+function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT,TT}
+    if isa(int, StochasticIntegrator)
+        # copy the increments of the Brownian Process
+        get_increments!(sol, asol, n, m)
+    end
 
     # integrate one initial condition for one time step
     integrate_step!(int, asol)
