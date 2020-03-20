@@ -108,6 +108,7 @@
     @test typeof(getTableauExplicitMidpoint()) <: TableauERK
     @test typeof(getTableauHeun()) <: TableauERK
     @test typeof(getTableauKutta()) <: TableauERK
+    @test typeof(getTableauRunge()) <: TableauERK
     @test typeof(getTableauERK4()) <: TableauERK
     @test typeof(getTableauERK438()) <: TableauERK
 
@@ -149,6 +150,8 @@
     # instatiate all partitioned tableaus
     @test typeof(getTableauSymplecticEulerA()) <: TableauEPRK
     @test typeof(getTableauSymplecticEulerB()) <: TableauEPRK
+    @test typeof(getTableauLobattoIIIAIIIB2()) <: TableauEPRK
+    @test typeof(getTableauLobattoIIIBIIIA2()) <: TableauEPRK
 
     # test instatiation of partioned tableau by composition of two RK tableaus
     @test typeof(TableauEPRK(:PERK4, 4, getTableauERK4().q, getTableauERK4().q)) <: TableauEPRK
