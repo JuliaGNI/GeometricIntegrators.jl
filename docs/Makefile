@@ -1,4 +1,6 @@
 
+.PHONY: documenter tutorial tutorial-html
+
 all: tutorial documenter
 
 documenter: tutorial
