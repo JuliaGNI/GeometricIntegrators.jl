@@ -187,31 +187,28 @@ end
 
 
 function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Y::Vector{Vector{ST}},
-                         params::ParametersFIRK{DT,TT,D,S}) where {ST,DT,TT,D,S}
+                         params::ParametersFIRK{DT,TT,D}) where {ST,DT,TT,D}
 
     local tᵢ::TT
 
-    @assert S == length(Q) == length(V) == length(Y)
-
     # copy x to Y and compute Q = q + Δt Y
-    for i in 1:S
-        @assert D == length(Q[i]) == length(V[i]) == length(Y[i])
-        for k in 1:D
+    for i in eachindex(Q,Y)
+        for k in eachindex(Q[i],Y[i])
             Y[i][k] = x[D*(i-1)+k]
             Q[i][k] = params.q[k] + Y[i][k]
         end
     end
 
     # compute V = v(Q)
-    for i in 1:S
+    for i in eachindex(Q,V)
         tᵢ = params.t + params.Δt * params.tab.q.c[i]
         params.equs[:v](tᵢ, Q[i], V[i])
     end
 end
 
 "Compute stages of fully implicit Runge-Kutta methods."
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,D,S},
-                          caches::CacheDict) where {ST,DT,TT,D,S}
+function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,D},
+                          caches::CacheDict) where {ST,DT,TT,D}
     # temporary variables
     local y1::ST
     local y2::ST
@@ -223,11 +220,11 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{D
     compute_stages!(x, cache.Q, cache.V, cache.Y, params)
 
     # compute b = - (Y-AV)
-    for i in 1:S
-        for k in 1:D
+    for i in eachindex(cache.Y)
+        for k in eachindex(cache.Y[i])
             y1 = 0
             y2 = 0
-            for j in 1:S
+            for j in eachindex(cache.V)
                 y1 += params.tab.q.a[i,j] * cache.V[j][k]
                 y2 += params.tab.q.â[i,j] * cache.V[j][k]
             end
