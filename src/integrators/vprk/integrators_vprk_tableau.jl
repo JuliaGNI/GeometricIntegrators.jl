@@ -1,7 +1,7 @@
 @doc raw"""
 `TableauVPRK`: Tableau of a Variational Partitioned Runge-Kutta method
 ```math
-\begin{align*}
+\begin{aligned}
 P_{n,i} &= \dfrac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , &
 Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
 q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} , \\
@@ -10,14 +10,14 @@ P_{n,i} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{a}_{ij} \, F_{n,j} - d_i \lambd
 p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i} \, F_{n,i} , \\
 &&
 0 &= \sum \limits_{i=1}^{s} d_i V_i , &&
-\end{align*}
+\end{aligned}
 ```
 satisfying the symplecticity conditions
 ```math
-\begin{align*}
+\begin{aligned}
 b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 \bar{b}_i &= b_i .
-\end{align*}
+\end{aligned}
 ```
 """
 struct TableauVPRK{T} <: AbstractTableauPRK{T}

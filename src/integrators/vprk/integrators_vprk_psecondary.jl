@@ -10,57 +10,57 @@ Variational partitioned Runge-Kutta integrator with projection on secondary cons
 
 The VPRK integrator solves the following system of equations for the internal stages,
 ```math
-\begin{align*}
+\begin{aligned}
 Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, \big( V_{n,j} + \Lambda_{n,j} \big) , \\
 P_{n,i} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{a}_{ij} \, \big( F_{n,j} + \nabla \vartheta (Q_{n,j})^{T} \cdot \Lambda_{n,j} \big) - d_i \lambda , \\
 0 &= \sum \limits_{i=1}^{s} d_i V_i , \\
 0 &= \sum \limits_{j=1}^{s} \omega_{ij} \Psi_{n,j} ,
-\end{align*}
+\end{aligned}
 ```
 with definitions
 ```math
-\begin{align*}
+\begin{aligned}
 P_{n,i} &= \dfrac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , \\
 F_{n,i} &= \dfrac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , \\
 \Psi_{n,i} &= \psi(Q_{n,i}, V_{n,i}, P_{n,i}, F_{n,i}) ,
-\end{align*}
+\end{aligned}
 ```
 and update rule
 ```math
-\begin{align*}
+\begin{aligned}
 q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, \big( V_{n,i} + \Lambda_{n,i} \big) , \\
 p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i} \, \big( F_{n,i} + \nabla \vartheta (Q_{n,j})^{T} \cdot \Lambda_{n,j} \big) , \\
 0 &= \phi (q_{n+1}, p_{n+1}) ,
-\end{align*}
+\end{aligned}
 ```
 satisfying the symplecticity conditions
 ```math
-\begin{align*}
+\begin{aligned}
 b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 \bar{b}_i &= b_i ,
-\end{align*}
+\end{aligned}
 ```
 the primary constraint,
 ```math
-\begin{align*}
+\begin{aligned}
 \phi(q,p) = p - \vartheta (q) = 0 ,
-\end{align*}
+\end{aligned}
 ```
 at the final solution ``(q_{n+1}, p_{n+1})``,
 and super positions of the secondary constraints,
 ```math
-\begin{align*}
+\begin{aligned}
 \psi(q,\dot{q},p,\dot{p})
 = \dot{p} - \dot{q} \cdot \nabla \vartheta (q)
 = \big( \nabla \vartheta (q) - \nabla \vartheta^{T} (q) \big) \cdot \dot{q} - \nabla H (q)
 = 0,
-\end{align*}
+\end{aligned}
 ```
 which, evaluated at the internal stages, read
 ```math
-\begin{align*}
+\begin{aligned}
 \Psi_{n,j} = \big( \nabla \vartheta (Q_{n,j}) - \nabla \vartheta^{T} (Q_{n,j}) \big) \cdot V_{n,j} - \nabla H (Q_{n,j}) .
-\end{align*}
+\end{aligned}
 ```
 Here, ``\omega`` is a ``(s-1) \times s`` matrix, chosen such that the resulting
 method has optimal order.
