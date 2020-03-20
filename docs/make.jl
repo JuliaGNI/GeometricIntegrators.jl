@@ -3,10 +3,6 @@ using Weave
 using GeometricIntegrators
 
 
-weave("tutorial/tutorial.jmd",
-  out_path="src/tutorial",
-  doctype = "github")
-
 makedocs(
     sitename = "GeometricIntegrators.jl",
     format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
@@ -40,5 +36,3 @@ makedocs(
 deploydocs(
     repo   = "github.com/DDMGNI/GeometricIntegrators.jl.git",
 )
-
-rm("src/tutorial", recursive=true)

@@ -1,8 +1,9 @@
-using Weave, GeometricIntegrators
+using GeometricIntegrators
+using Weave
 
-tutorial_path = joinpath(dirname(pathof(GeometricIntegrators)), "../docs/src", "tutorial.jmd")
+tutorial_path = joinpath(dirname(pathof(GeometricIntegrators)), "../docs/tutorial", "tutorial.jmd")
+build_path = joinpath(dirname(pathof(GeometricIntegrators)), "../docs/src/tutorial")
 
-# Markdown
 weave(tutorial_path,
-  out_path="src/weave",
-  doctype="pandoc")
+  out_path=build_path,
+  doctype = "github")
