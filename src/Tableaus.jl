@@ -113,7 +113,6 @@ module Tableaus
 
     include("tableaus/tableaus_vprk.jl")
 
-
     export getTableauSymplecticProjection,
            getTableauLobIIIAIIIB2pSymplectic,
            getTableauLobIIIAIIIB3pSymplectic,
