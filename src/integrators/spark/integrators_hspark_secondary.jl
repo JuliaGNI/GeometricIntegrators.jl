@@ -81,12 +81,11 @@ struct IntegratorHSPARKsecondary{DT, TT, D, S, R, PT <: ParametersHSPARKsecondar
 end
 
 
-function initial_guess!(int::IntegratorHSPARKsecondary{DT},
+function initial_guess!(int::IntegratorHSPARKsecondary{DT}, sol::AtomicSolutionPDAE{DT},
                         cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT}
-
     for i in eachstage(int)
-        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
-                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
                               cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
                               tableau(int).q.c[i], tableau(int).p.c[i])
 
@@ -97,8 +96,8 @@ function initial_guess!(int::IntegratorHSPARKsecondary{DT},
     end
 
     for i in 1:pstages(int)
-        evaluate!(int.iguess, cache.q, cache.p, cache.v, cache.f,
-                              cache.q̅, cache.p̅, cache.v̅, cache.f̅,
+        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
+                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
                               cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
                               tableau(int).q̃.c[i], tableau(int).p̃.c[i])
 
@@ -110,7 +109,7 @@ function initial_guess!(int::IntegratorHSPARKsecondary{DT},
         end
     end
 
-    if length(tableau(int).d) > 0
+    if isdefined(tableau(int), :λ) && tableau(int).λ.c[1] == 0
         for k in eachdim(int)
             int.solver.x[2*ndims(int)*nstages(int)+4*ndims(int)*pstages(int)+k] = 0
         end

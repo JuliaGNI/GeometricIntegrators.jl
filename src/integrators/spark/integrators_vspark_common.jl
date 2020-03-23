@@ -29,7 +29,7 @@ function initial_guess!(int::AbstractIntegratorVSPARK{DT}, sol::AtomicSolutionPD
 
     if isdefined(tableau(int), :λ) && tableau(int).λ.c[1] == 0
         for k in eachdim(int)
-            int.solver.x[3*ndims(int)*nstages(int)+3*(k-1)+3] = cache.λ[k]
+            int.solver.x[3*ndims(int)*nstages(int)+3*(k-1)+3] = sol.λ[k]
         end
     end
 
