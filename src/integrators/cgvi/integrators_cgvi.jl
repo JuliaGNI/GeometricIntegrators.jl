@@ -37,6 +37,40 @@ mutable struct ParametersCGVI{DT, TT, D, S, R, ET <: NamedTuple} <: Parameters{D
     function ParametersCGVI{DT,D}(equs::ET, Δt::TT, b, c, x, m, a, r₀, r₁) where {DT, TT, D, ET <: NamedTuple}
         new{DT,TT,D,length(x),length(c),ET}(equs, Δt, b, c, x, m, a, r₀, r₁, zero(TT), zeros(DT,D), zeros(DT,D))
     end
+
+    function ParametersCGVI{DT,D}(equs::NamedTuple, Δt::TT, basis::Basis{TT}, quadrature::Quadrature{TT}) where {DT,TT,D}
+        # compute coefficients
+        r₀ = zeros(TT, nbasis(basis))
+        r₁ = zeros(TT, nbasis(basis))
+        m  = zeros(TT, nnodes(quadrature), nbasis(basis))
+        a  = zeros(TT, nnodes(quadrature), nbasis(basis))
+
+        for i in 1:nbasis(basis)
+            r₀[i] = evaluate(basis, i, zero(TT))
+            r₁[i] = evaluate(basis, i, one(TT))
+            for j in 1:nnodes(quadrature)
+                m[j,i] = evaluate(basis, i, nodes(quadrature)[j])
+                a[j,i] = derivative(basis, i, nodes(quadrature)[j])
+            end
+        end
+
+        if get_config(:verbosity) > 1
+            println()
+            println("  Continuous Galerkin Variational Integrator")
+            println("  ==========================================")
+            println()
+            println("    c  = ", nodes(quadrature))
+            println("    b  = ", weights(quadrature))
+            println("    x  = ", nodes(basis))
+            println("    m  = ", m)
+            println("    a  = ", a)
+            println("    r₀ = ", r₀)
+            println("    r₁ = ", r₁)
+            println()
+        end
+
+        ParametersCGVI{DT,D}(equs, Δt, weights(quadrature), nodes(quadrature), nodes(basis), m, a, r₀, r₁)
+    end
 end
 
 
@@ -108,43 +142,13 @@ struct IntegratorCGVI{DT,TT,D,S,R,BT<:Basis,PT,ST,IT} <: DeterministicIntegrator
     end
 
     function IntegratorCGVI{DT,D}(equations::NamedTuple, basis::Basis{TT,P}, quadrature::Quadrature{TT,R}, Δt::TT;
-        interpolation=HermiteInterpolation{DT}) where {DT,TT,D,P,R}
+                                  interpolation=HermiteInterpolation{DT}) where {DT,TT,D,P,R}
 
+        # get number of stages
         S = nbasis(basis)
 
-        # compute coefficients
-        r₀ = zeros(TT, nbasis(basis))
-        r₁ = zeros(TT, nbasis(basis))
-        m  = zeros(TT, nnodes(quadrature), S)
-        a  = zeros(TT, nnodes(quadrature), S)
-
-        for i in 1:nbasis(basis)
-            r₀[i] = evaluate(basis, i, zero(TT))
-            r₁[i] = evaluate(basis, i, one(TT))
-            for j in 1:nnodes(quadrature)
-                m[j,i] = evaluate(basis, i, nodes(quadrature)[j])
-                a[j,i] = derivative(basis, i, nodes(quadrature)[j])
-            end
-        end
-
-        if get_config(:verbosity) > 1
-            println()
-            println("  Continuous Galerkin Variational Integrator")
-            println("  ==========================================")
-            println()
-            println("    c  = ", nodes(quadrature))
-            println("    b  = ", weights(quadrature))
-            println("    x  = ", nodes(basis))
-            println("    m  = ", m)
-            println("    a  = ", a)
-            println("    r₀ = ", r₀)
-            println("    r₁ = ", r₁)
-            println()
-        end
-
-
         # create params
-        params = ParametersCGVI{DT,D}(equations, Δt, weights(quadrature), nodes(quadrature), nodes(basis), m, a, r₀, r₁)
+        params = ParametersCGVI{DT,D}(equations, Δt, basis, quadrature)
 
         # create cache dict
         caches = CacheDict(params)
@@ -167,7 +171,6 @@ end
 @inline equation(integrator::IntegratorCGVI, i::Symbol) = integrator.params.equs[i]
 @inline equations(integrator::IntegratorCGVI) = integrator.params.equs
 @inline timestep(integrator::IntegratorCGVI) = integrator.params.Δt
-
 
 function IntegratorCache(int::IntegratorCGVI{DT,TT}) where {DT,TT}
     IntegratorCacheCGVI{DT, TT, ndims(int), nbasis(int.basis), nnodes(int.quadrature)}()
@@ -229,7 +232,7 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersCGVI{D
     # compute stages from nonlinear solver solution x
     compute_stages!(x, cache, params)
 
-    # compute rhs b of nonlinear solver solution
+    # compute rhs b of nonlinear solver
     compute_rhs!(b, cache.X, cache.Q, cache.P, cache.F, cache.p̃, params)
 end
 
