@@ -36,11 +36,8 @@ Galerkin Variational Integrator with Path Integral approximation of the jump.
 * `q⁻`: current solution of qₙ⁻
 * `q⁺`: current solution of qₙ⁺
 """
-mutable struct ParametersDGVIPI{DT,TT,D,S,QR,FR,ΘT,FT,GT} <: Parameters{DT,TT}
-    Θ::ΘT
-    f::FT
-    g::GT
-
+mutable struct ParametersDGVIPI{DT, TT, D, S, QR, FR, ET <: NamedTuple} <: Parameters{DT,TT}
+    equs::ET
     Δt::TT
 
     b::Vector{TT}
@@ -64,89 +61,80 @@ mutable struct ParametersDGVIPI{DT,TT,D,S,QR,FR,ΘT,FT,GT} <: Parameters{DT,TT}
     q::Vector{DT}
     q⁻::Vector{DT}
     q⁺::Vector{DT}
-end
 
-function ParametersDGVIPI(Θ::ΘT, f::FT, g::GT, Δt::TT,
-                b::Vector{TT}, c::Vector{TT}, m::Matrix{TT}, a::Matrix{TT},
-                r⁻::Vector{TT}, r⁺::Vector{TT}, β::Vector{TT}, γ::Vector{TT},
-                μ⁻::Vector{TT}, μ⁺::Vector{TT}, α⁻::Vector{TT}, α⁺::Vector{TT}, ρ⁻::TT, ρ⁺::TT,
-                q::Vector{DT}, q⁻::Vector{DT}, q⁺::Vector{DT}) where {DT,TT,ΘT,FT,GT}
+    function ParametersDGVIPI{DT,D}(equs::ET, Δt::TT, b, c, m, a, r⁻, r⁺, β, γ, μ⁻, μ⁺, α⁻, α⁺, ρ⁻, ρ⁺, q, q⁻, q⁺) where {DT, TT, D, ET <: NamedTuple}
+        @assert length(b)  == length(c)
+        @assert length(β)  == length(γ)
+        @assert length(r⁻) == length(r⁺)
+        new{DT,TT,D,length(r⁻),length(c),length(γ),ET}(equs, Δt, b, c, m, a, r⁻, r⁺, β, γ, μ⁻, μ⁺, α⁻, α⁺, ρ⁻, ρ⁺,
+                    zero(TT), q, q⁻, q⁺)
+    end
 
-    @assert length(q)  == length(q⁻) == length(q⁺)
-    @assert length(b)  == length(c)
-    @assert length(β)  == length(γ)
-    @assert length(r⁻) == length(r⁺)
+    function ParametersDGVIPI{DT,D}(equs::NamedTuple, Δt::TT,
+                    basis::Basis{TT}, quadrature::Quadrature{TT}, jump::Discontinuity{TT},
+                    q::Vector{DT}, q⁻::Vector{DT}) where {DT,TT,D}
 
-    D  = length(q)
-    S  = length(r⁻)
-    QR = length(c)
-    FR = length(γ)
+        # compute coefficients
+        b = weights(quadrature)
+        c = nodes(quadrature)
+        m = zeros(TT, nnodes(quadrature), nbasis(basis))
+        a = zeros(TT, nnodes(quadrature), nbasis(basis))
+        r⁻= zeros(TT, nbasis(basis))
+        r⁺= zeros(TT, nbasis(basis))
 
-    println()
-    println("  Discontinuous Galerkin Variational Integrator")
-    println("  =============================================")
-    println()
-    println("    b = ", b)
-    println("    c = ", c)
-    println("    m = ", m)
-    println("    a = ", a)
-    println("    r⁻= ", r⁻)
-    println("    r⁺= ", r⁺)
-    println("    β = ", β)
-    println("    γ = ", γ)
-    println("    μ⁻= ", μ⁻)
-    println("    μ⁺= ", μ⁺)
-    println("    α⁻= ", α⁻)
-    println("    α⁺= ", α⁺)
-    println("    ρ⁻= ", ρ⁻)
-    println("    ρ⁺= ", ρ⁺)
-    println()
-
-    ParametersDGVIPI{DT,TT,D,S,QR,FR,ΘT,FT,GT}(
-                Θ, f, g, Δt, b, c, m, a, r⁻, r⁺, β, γ, μ⁻, μ⁺, α⁻, α⁺, ρ⁻, ρ⁺, 0, q, q⁻, q⁺)
-end
-
-
-function ParametersDGVIPI(Θ::ΘT, f::FT, g::GT, Δt::TT,
-                basis::Basis{TT}, quadrature::Quadrature{TT}, jump::Discontinuity{TT},
-                q::Vector{DT}, q⁻::Vector{DT}) where {DT,TT,ΘT,FT,GT}
-
-    # compute coefficients
-    m = zeros(TT, nnodes(quadrature), nbasis(basis))
-    a = zeros(TT, nnodes(quadrature), nbasis(basis))
-    r⁻= zeros(TT, nbasis(basis))
-    r⁺= zeros(TT, nbasis(basis))
-
-    for i in 1:nbasis(basis)
-        for j in 1:nnodes(quadrature)
-            m[j,i] = evaluate(basis, i, nodes(quadrature)[j])
-            a[j,i] = derivative(basis, i, nodes(quadrature)[j])
+        for i in 1:nbasis(basis)
+            for j in 1:nnodes(quadrature)
+                m[j,i] = evaluate(basis, i, nodes(quadrature)[j])
+                a[j,i] = derivative(basis, i, nodes(quadrature)[j])
+            end
+            r⁻[i] = evaluate(basis, i, one(TT))
+            r⁺[i] = evaluate(basis, i, zero(TT))
         end
-        r⁻[i] = evaluate(basis, i, one(TT))
-        r⁺[i] = evaluate(basis, i, zero(TT))
+
+        β  = weights(jump.quadrature)
+        γ  = nodes(jump.quadrature)
+        μ⁰ = zeros(TT, 2)
+        μ⁻ = zeros(TT, nnodes(jump.quadrature))
+        μ⁺ = zeros(TT, nnodes(jump.quadrature))
+        α⁻ = zeros(TT, nnodes(jump.quadrature))
+        α⁺ = zeros(TT, nnodes(jump.quadrature))
+
+        ρ⁻ = evaluate_l(jump.path, TT(0.5))
+        ρ⁺ = evaluate_r(jump.path, TT(0.5))
+
+        for i in 1:nnodes(jump.quadrature)
+            μ⁻[i] = evaluate_l(jump.path, nodes(jump.quadrature)[i])
+            μ⁺[i] = evaluate_r(jump.path, nodes(jump.quadrature)[i])
+            α⁻[i] = derivative_l(jump.path, nodes(jump.quadrature)[i])
+            α⁺[i] = derivative_r(jump.path, nodes(jump.quadrature)[i])
+        end
+
+        println()
+        println("  Discontinuous Galerkin Variational Integrator")
+        println("  =============================================")
+        println()
+        println("    b = ", b)
+        println("    c = ", c)
+        println("    m = ", m)
+        println("    a = ", a)
+        println("    r⁻= ", r⁻)
+        println("    r⁺= ", r⁺)
+        println("    β = ", β)
+        println("    γ = ", γ)
+        println("    μ⁻= ", μ⁻)
+        println("    μ⁺= ", μ⁺)
+        println("    α⁻= ", α⁻)
+        println("    α⁺= ", α⁺)
+        println("    ρ⁻= ", ρ⁻)
+        println("    ρ⁺= ", ρ⁺)
+        println()
+
+        q⁺ = (q .- ρ⁻ .* q⁻) ./ ρ⁺
+
+        ParametersDGVIPI{DT,D}(equs, Δt, b, c, m, a, r⁻, r⁺,
+                    β, γ, μ⁻, μ⁺, α⁻, α⁺, ρ⁻, ρ⁺,
+                    q, q⁻, q⁺)
     end
-
-    μ⁰ = zeros(TT, 2)
-    μ⁻ = zeros(TT, nnodes(jump.quadrature))
-    μ⁺ = zeros(TT, nnodes(jump.quadrature))
-    α⁻ = zeros(TT, nnodes(jump.quadrature))
-    α⁺ = zeros(TT, nnodes(jump.quadrature))
-
-    ρ⁻ = evaluate_l(jump.path, TT(0.5))
-    ρ⁺ = evaluate_r(jump.path, TT(0.5))
-
-    for i in 1:nnodes(jump.quadrature)
-        μ⁻[i] = evaluate_l(jump.path, nodes(jump.quadrature)[i])
-        μ⁺[i] = evaluate_r(jump.path, nodes(jump.quadrature)[i])
-        α⁻[i] = derivative_l(jump.path, nodes(jump.quadrature)[i])
-        α⁺[i] = derivative_r(jump.path, nodes(jump.quadrature)[i])
-    end
-
-    q⁺ = (q .- ρ⁻ .* q⁻) ./ ρ⁺
-
-    ParametersDGVIPI(Θ, f, g, Δt, weights(quadrature), nodes(quadrature), m, a, r⁻, r⁺,
-                weights(jump.quadrature), nodes(jump.quadrature), μ⁻, μ⁺, α⁻, α⁺, ρ⁻, ρ⁺,
-                q, q⁻, q⁺)
 end
 
 # function update_params!(params::ParametersDGVIPI, sol::AtomicSolutionPODE)
@@ -308,8 +296,7 @@ function IntegratorDGVIPI(equation::IODE{DT,TT,ΘT,FT,GT,HT,VT}, basis::Basis{TT
     cache = IntegratorCacheDGVIPI{DT,D,S,R,QN}()
 
     # create params
-    params = ParametersDGVIPI(equation.ϑ, equation.f, equation.g,
-                Δt, basis, quadrature, jump, q, q⁻)
+    params = ParametersDGVIPI{DT,D}(get_function_tuple(equation), Δt, basis, quadrature, jump, q, q⁻)
 
     # create nonlinear solver
     solver = create_nonlinear_solver(DT, N, params)
@@ -492,8 +479,8 @@ function compute_stages_p!(cache::IntegratorCacheDGVIPI{ST,D,S,R},
     # compute P=ϑ(Q) and F=f(Q)
     for i in 1:R
         tᵢ = params.t + params.Δt * params.c[i]
-        params.Θ(tᵢ, cache.Q[i], cache.V[i], cache.P[i])
-        params.f(tᵢ, cache.Q[i], cache.V[i], cache.F[i])
+        params.equs[:ϑ](tᵢ, cache.Q[i], cache.V[i], cache.P[i])
+        params.equs[:f](tᵢ, cache.Q[i], cache.V[i], cache.F[i])
     end
 end
 
@@ -513,10 +500,10 @@ function compute_stages_λ!(cache::IntegratorCacheDGVIPI{ST,D,S,QR,FR},
     end
 
     for i in 1:FR
-        params.Θ(t₀, cache.ϕ[i], cache.λ[i], cache.θ[i])
-        params.Θ(t₁, cache.ϕ̅[i], cache.λ̅[i], cache.Θ̅[i])
-        params.g(t₀, cache.ϕ[i], cache.λ[i], cache.g[i])
-        params.g(t₁, cache.ϕ̅[i], cache.λ̅[i], cache.g̅[i])
+        params.equs[:ϑ](t₀, cache.ϕ[i], cache.λ[i], cache.θ[i])
+        params.equs[:ϑ](t₁, cache.ϕ̅[i], cache.λ̅[i], cache.Θ̅[i])
+        params.equs[:g](t₀, cache.ϕ[i], cache.λ[i], cache.g[i])
+        params.equs[:g](t₁, cache.ϕ̅[i], cache.λ̅[i], cache.g̅[i])
     end
 end
 
