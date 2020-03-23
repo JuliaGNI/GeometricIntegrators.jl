@@ -103,7 +103,7 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
         # compute f(X)
         tpᵢ = params.t + params.Δt * params.tab.p.c[i]
         params.equs[:f](tpᵢ, cache.Qi[i], cache.Vi[i], cache.Fi[i])
-        params.equs[:p](tpᵢ, cache.Qi[i], cache.Vi[i], cache.Φi[i])
+        params.equs[:ϑ](tpᵢ, cache.Qi[i], cache.Vi[i], cache.Φi[i])
         cache.Φi[i] .-= cache.Pi[i]
     end
 
@@ -151,8 +151,8 @@ end
 
 
 "Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems."
-function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVSPARK{DT,TT,D,S,R},
-                                      caches::CacheDict) where {ST,DT,TT,D,S,R}
+function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVSPARK{DT,TT,D,S,R,P},
+                                      caches::CacheDict) where {ST,DT,TT,D,S,R,P}
 
     # get cache for internal stages
     cache = caches[ST]
@@ -181,6 +181,7 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
         for k in 1:D
             b[3*D*S+3*(D*(i-1)+k-1)+1] = - cache.Yp[i][k]
             b[3*D*S+3*(D*(i-1)+k-1)+2] = - cache.Zp[i][k]
+            b[3*D*S+3*(D*(i-1)+k-1)+3] = 0
             for j in 1:S
                 b[3*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.a[i,j] * cache.Vi[j][k]
                 b[3*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.a[i,j] * cache.Fi[j][k]
@@ -193,7 +194,6 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
     end
     for i in 1:R-P
         for k in 1:D
-            b[3*D*S+3*(D*(i-1)+k-1)+3] = 0
             for j in 1:R
                 b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.ω[i,j] * cache.Φp[j][k]
             end
@@ -204,7 +204,6 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
     # compute b = d_λ ⋅ Λ
     for i in R-P+1:R
         for k in 1:D
-            b[3*D*S+3*(D*(R-1)+k-1)+3] = 0
             for j in 1:R
                 b[3*D*S+3*(D*(i-1)+k-1)+3] -= params.tab.δ[j] * cache.Λp[j][k]
             end
