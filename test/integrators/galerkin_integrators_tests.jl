@@ -39,10 +39,10 @@ dgint = IntegratorDGVIP1(iode, BGau4, QGau4, Δt)
 dgsol = integrate(iode, dgint, nt)
 @test rel_err(dgsol.q, refx) < 1E-7
 
-dgint = IntegratorDGVIPI(iode, BGau4, QGau4, Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2)), Δt)
+dgint = IntegratorDGVIEXP(iode, BGau4, QGau4, Δt)
 dgsol = integrate(iode, dgint, nt)
 @test rel_err(dgsol.q, refx) < 1E-7
 
-dgint = IntegratorDGVIEXP(iode, BGau4, QGau4, Δt)
+dgint = IntegratorDGVIPI(iode, BGau4, QGau4, Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2)), Δt)
 dgsol = integrate(iode, dgint, nt)
 @test rel_err(dgsol.q, refx) < 1E-7

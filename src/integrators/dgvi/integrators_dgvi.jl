@@ -380,7 +380,11 @@ In order to solve these equations, initial conditions ``q_{0}`` and
 * `p`: current solution vector for one-form
 * `cache`: temporary variables for nonlinear solver
 """
-struct IntegratorDGVI{DT,TT,D,S,R,BT<:Basis,PT,ST,IT} <: DeterministicIntegrator{DT,TT}
+struct IntegratorDGVI{DT, TT, D, S, R,
+                BT <: Basis,
+                PT <: ParametersDGVI{DT,TT,D,S},
+                ST <: NonlinearSolver{DT},
+                IT <: InitialGuessODE{DT,TT}} <: DeterministicIntegrator{DT,TT}
     basis::BT
     quadrature::Quadrature{TT,R}
 
