@@ -48,7 +48,7 @@ module Tableaus
     include("tableaus/tableaus_erk.jl")
 
     export getTableauExplicitEuler, getTableauExplicitMidpoint, getTableauHeun,
-           getTableauKutta, getTableauERK4, getTableauERK438
+           getTableauKutta, getTableauRunge, getTableauERK4, getTableauERK438
 
     include("tableaus/tableaus_dirk.jl")
 
@@ -112,7 +112,6 @@ module Tableaus
            getTableauVPRadIIAIIA2, getTableauVPRadIIAIIA3
 
     include("tableaus/tableaus_vprk.jl")
-
 
     export getTableauSymplecticProjection,
            getTableauLobIIIAIIIB2pSymplectic,

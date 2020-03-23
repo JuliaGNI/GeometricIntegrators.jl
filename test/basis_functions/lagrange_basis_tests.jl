@@ -1,7 +1,10 @@
 
 @testset "$(rpad("Lagrange Basis Tests",80))" begin
 
-    b = LagrangeBasis([0.0, 1.0])
+    x = [0.0, 1.0]
+    b = LagrangeBasis(x)
+
+    @test nodes(b) == x
 
     @test evaluate(b, 1, 0.0) == 1.0
     @test evaluate(b, 1, 0.5) == 0.5

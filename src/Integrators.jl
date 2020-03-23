@@ -41,7 +41,8 @@ module Integrators
     include("integrators/integrators_common.jl")
 
 
-    export CoefficientsRK, AbstractTableauRK, AbstractTableauIRK, AbstractTableauPRK,
+    export CoefficientsRK, HeaderCoefficientsRK,
+           AbstractTableauRK, AbstractTableauIRK, AbstractTableauPRK,
            IntegratorRK, writeTableauToFile
 
     export get_symplectic_conjugate_coefficients, symplecticize,

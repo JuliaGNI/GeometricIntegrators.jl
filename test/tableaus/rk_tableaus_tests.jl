@@ -108,6 +108,7 @@
     @test typeof(getTableauExplicitMidpoint()) <: TableauERK
     @test typeof(getTableauHeun()) <: TableauERK
     @test typeof(getTableauKutta()) <: TableauERK
+    @test typeof(getTableauRunge()) <: TableauERK
     @test typeof(getTableauERK4()) <: TableauERK
     @test typeof(getTableauERK438()) <: TableauERK
 
@@ -119,10 +120,38 @@
     @test typeof(getTableauImplicitMidpoint()) <: TableauFIRK
     @test typeof(getTableauGLRK(1)) <: TableauFIRK
     @test typeof(getTableauGLRK(2)) <: TableauFIRK
+    @test typeof(getTableauSRK3()) <: TableauFIRK
+
+    @test typeof(getTableauLobIIIA2()) <: TableauFIRK
+    @test typeof(getTableauLobIIIA3()) <: TableauFIRK
+    @test typeof(getTableauLobIIIA4()) <: TableauFIRK
+    @test typeof(getTableauLobIIIB2()) <: TableauFIRK
+    @test typeof(getTableauLobIIIB3()) <: TableauFIRK
+    @test typeof(getTableauLobIIIB4()) <: TableauFIRK
+    @test typeof(getTableauLobIIIC2()) <: TableauFIRK
+    @test typeof(getTableauLobIIIC3()) <: TableauFIRK
+    @test typeof(getTableauLobIIIC4()) <: TableauFIRK
+    @test typeof(getTableauLobIIID2()) <: TableauFIRK
+    @test typeof(getTableauLobIIID3()) <: TableauFIRK
+    @test typeof(getTableauLobIIID4()) <: TableauFIRK
+    @test typeof(getTableauLobIIIE2()) <: TableauFIRK
+    @test typeof(getTableauLobIIIE3()) <: TableauFIRK
+    @test typeof(getTableauLobIIIE4()) <: TableauFIRK
+    @test typeof(getTableauLobIIIF2()) <: TableauFIRK
+    @test typeof(getTableauLobIIIF3()) <: TableauFIRK
+    @test typeof(getTableauLobIIIF4()) <: TableauFIRK
+    @test typeof(getTableauLobIIIG2()) <: TableauFIRK
+    @test typeof(getTableauLobIIIG3()) <: TableauFIRK
+    @test typeof(getTableauLobIIIG4()) <: TableauFIRK
+
+    @test typeof(getTableauRadIIA2()) <: TableauFIRK
+    @test typeof(getTableauRadIIA3()) <: TableauFIRK
 
     # instatiate all partitioned tableaus
     @test typeof(getTableauSymplecticEulerA()) <: TableauEPRK
     @test typeof(getTableauSymplecticEulerB()) <: TableauEPRK
+    @test typeof(getTableauLobattoIIIAIIIB2()) <: TableauEPRK
+    @test typeof(getTableauLobattoIIIBIIIA2()) <: TableauEPRK
 
     # test instatiation of partioned tableau by composition of two RK tableaus
     @test typeof(TableauEPRK(:PERK4, 4, getTableauERK4().q, getTableauERK4().q)) <: TableauEPRK

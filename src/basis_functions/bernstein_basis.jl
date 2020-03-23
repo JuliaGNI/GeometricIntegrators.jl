@@ -52,7 +52,7 @@ function deriv_basis(b::BernsteinBasis{T,N}, i::Int, x::T) where {T,N}
     (N-1) * ( bernstein(b, i-2, N-2, x) - bernstein(b, i-1, N-2, x) )
 end
 
-deriv_basis(b::BernsteinBasis, i::Int, j::Int) = derivative(b, i, b.x[j])
+deriv_basis(b::BernsteinBasis, i::Int, j::Int) = deriv_basis(b, i, b.x[j-1])
 
 
 # function int_basis(b::BernsteinBasis{T,N}, i::Int, x::T) where {T,N}

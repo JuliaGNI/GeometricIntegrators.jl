@@ -72,10 +72,6 @@ struct IntegratorCacheERK{DT,D,S} <: ODEIntegratorCache{DT,D}
     end
 end
 
-function IntegratorCache(params::ParametersERK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
-    IntegratorCacheERK{DT,D,S}(; kwargs...)
-end
-
 function IntegratorCache{ST}(params::ParametersERK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
     IntegratorCacheERK{ST,D,S}(; kwargs...)
 end

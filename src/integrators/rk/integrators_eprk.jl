@@ -1,21 +1,21 @@
 @doc raw"""
 `TableauEPRK`: Tableau of an Explicit Partitioned Runge-Kutta method
 ```math
-\begin{align*}
+\begin{aligned}
 V_{n,i} &= \hphantom{-} \dfrac{\partial H}{\partial p} (Q_{n,i}, P_{n,i}) , &
 Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
 q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} , \\
 F_{n,i} &= - \dfrac{\partial H}{\partial q} (Q_{n,i}, P_{n,i}) , &
 P_{n,i} &= p_{n} + h  \sum \limits_{i=1}^{s} \bar{a}_{ij} \, F_{n,j} , &
 p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i} \, F_{n,i} ,
-\end{align*}
+\end{aligned}
 ```
 usually satisfying the symplecticity conditions
 ```math
-\begin{align*}
+\begin{aligned}
 b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 \bar{b}_i &= b_i .
-\end{align*}
+\end{aligned}
 ```
 """
 struct TableauEPRK{T} <: AbstractTableauPRK{T}
@@ -76,10 +76,6 @@ struct IntegratorCacheEPRK{DT,D,S} <: PODEIntegratorCache{DT,D}
 
         new(Q, P, Y, Z, V, F)
     end
-end
-
-function IntegratorCache(params::ParametersEPRK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
-    IntegratorCacheEPRK{DT,D,S}(; kwargs...)
 end
 
 function IntegratorCache{ST}(params::ParametersEPRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}

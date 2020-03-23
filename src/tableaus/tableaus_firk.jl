@@ -19,10 +19,10 @@ function getTableauImplicitMidpoint()
     TableauFIRK(:implicit_midpoint, o, a, b, c)
 end
 
+"Gauss-Legendre Runge-Kutta"
 function getTableauGLRK(s::Int)
     TableauFIRK(getCoefficientsGLRK(s))
 end
-
 
 "Gauss-Lobatto-IIIA Runge-Kutta, s=2"
 function getTableauLobIIIA2()
