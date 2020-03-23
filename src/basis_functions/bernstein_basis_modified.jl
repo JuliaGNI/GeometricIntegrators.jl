@@ -62,7 +62,7 @@ function deriv_basis(b::BernsteinBasisModified{T,N}, i::Int, x::T) where {T,N}
     end
 end
 
-deriv_basis(b::BernsteinBasisModified, i::Int, j::Int) = derivative(b, i, b.x[j])
+deriv_basis(b::BernsteinBasisModified, i::Int, j::Int) = deriv_basis(b, i, b.x[j-1])
 
 
 # function int_basis(b::BernsteinBasisModified{T,N}, i::Int, x::T) where {T,N}
