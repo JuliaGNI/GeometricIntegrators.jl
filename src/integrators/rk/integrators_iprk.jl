@@ -30,10 +30,6 @@ struct TableauIPRK{T} <: AbstractTableauPRK{T}
     end
 end
 
-function TableauIPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}) where {T}
-    TableauIPRK{T}(name, order, q, p)
-end
-
 function TableauIPRK(name::Symbol, order::Int, q::CoefficientsRK{T}) where {T}
     TableauIPRK{T}(name, order, q, q)
 end

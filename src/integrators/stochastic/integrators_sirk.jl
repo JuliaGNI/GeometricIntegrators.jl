@@ -109,10 +109,6 @@ struct IntegratorCacheSIRK{DT,D,M,S} <: SDEIntegratorCache{DT,D,M}
     end
 end
 
-function Integrators.IntegratorCache(params::ParametersSIRK{DT,TT,D,M,S}; kwargs...) where {DT,TT,D,M,S}
-    IntegratorCacheSIRK{DT,D,M,S}(; kwargs...)
-end
-
 function Integrators.IntegratorCache{ST}(params::ParametersSIRK{DT,TT,D,M,S}; kwargs...) where {ST,DT,TT,D,M,S}
     IntegratorCacheSIRK{ST,D,M,S}(; kwargs...)
 end

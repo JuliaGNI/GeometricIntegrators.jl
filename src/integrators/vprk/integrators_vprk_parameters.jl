@@ -29,10 +29,6 @@ end
 @inline tableau(int::AbstractIntegratorVPRK) = parameters(int).tab
 
 
-function Integrators.IntegratorCache(params::AbstractParametersVPRK{IT,DT,TT,D,S}; kwargs...) where {IT,DT,TT,D,S}
-    IntegratorCacheVPRK{DT,D,S}(true; kwargs...)
-end
-
 function Integrators.IntegratorCache{ST}(params::AbstractParametersVPRK{IT,DT,TT,D,S}; kwargs...) where {IT,ST,DT,TT,D,S}
     IntegratorCacheVPRK{ST,D,S}(true; kwargs...)
 end

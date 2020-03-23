@@ -78,10 +78,6 @@ struct IntegratorCacheEPRK{DT,D,S} <: PODEIntegratorCache{DT,D}
     end
 end
 
-function IntegratorCache(params::ParametersEPRK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
-    IntegratorCacheEPRK{DT,D,S}(; kwargs...)
-end
-
 function IntegratorCache{ST}(params::ParametersEPRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
     IntegratorCacheEPRK{ST,D,S}(; kwargs...)
 end

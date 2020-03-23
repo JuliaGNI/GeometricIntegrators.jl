@@ -65,10 +65,6 @@ struct IntegratorCacheDIRK{DT,D,S} <: ODEIntegratorCache{DT,D}
     end
 end
 
-function IntegratorCache(params::ParametersDIRK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
-    IntegratorCacheDIRK{DT,D,S}(; kwargs...)
-end
-
 function IntegratorCache{ST}(params::ParametersDIRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
     IntegratorCacheDIRK{ST,D,S}(; kwargs...)
 end

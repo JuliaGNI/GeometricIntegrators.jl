@@ -11,8 +11,12 @@ abstract type PDAEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 abstract type PSDEIntegratorCache{DT,D,M} <: IntegratorCache{DT,D} end
 
 
-IntegratorCache(params::Parameters) = error("IntegratorCache(params) not implemented for ", typeof(params))
-IntegratorCache(integrator::Integrator) = error("IntegratorCache(int)! not implemented for ", typeof(integrator))
+IntegratorCache(params::Parameters{DT}) where {DT} = IntegratorCache{DT}(params)
+IntegratorCache{ST}(params::Parameters) where {ST} = error("IntegratorCache{ST}(params) not implemented for ", typeof(params))
+
+IntegratorCache(integrator::Integrator{DT}) where {DT} = IntegratorCache{DT}(integrator)
+IntegratorCache{ST}(integrator::Integrator) where {ST} = error("IntegratorCache{ST}(int)! not implemented for ", typeof(integrator))
+
 CacheType(T, params::Parameters) = error("CacheType(T, params) not implemented for ", typeof(params))
 
 

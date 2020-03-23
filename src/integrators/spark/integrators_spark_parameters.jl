@@ -42,10 +42,6 @@ end
 @inline tableau(int::AbstractIntegratorSPARK) = parameters(int).tab
 
 
-function Integrators.IntegratorCache(params::AbstractParametersSPARK{IT,DT,TT,D,S,R}; kwargs...) where {IT,DT,TT,D,S,R}
-    IntegratorCacheSPARK{DT,D,S,R}(; kwargs...)
-end
-
 function Integrators.IntegratorCache{ST}(params::AbstractParametersSPARK{IT,DT,TT,D,S,R}; kwargs...) where {IT,ST,DT,TT,D,S,R}
     IntegratorCacheSPARK{ST,D,S,R}(; kwargs...)
 end

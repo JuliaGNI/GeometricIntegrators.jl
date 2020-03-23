@@ -122,10 +122,6 @@ mutable struct IntegratorCachePGLRK{DT,D,S} <: ODEIntegratorCache{DT,D}
     end
 end
 
-function IntegratorCache(params::ParametersPGLRK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
-    IntegratorCachePGLRK{DT,D,S}(; kwargs...)
-end
-
 function IntegratorCache{ST}(params::ParametersPGLRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
     IntegratorCachePGLRK{ST,D,S}(; kwargs...)
 end

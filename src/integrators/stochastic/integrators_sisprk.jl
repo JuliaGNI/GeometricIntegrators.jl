@@ -135,10 +135,6 @@ struct IntegratorCacheSISPRK{DT,D,M,S} <: SDEIntegratorCache{DT,D,M}
     end
 end
 
-function Integrators.IntegratorCache(params::ParametersSISPRK{DT,TT,D,M,S}; kwargs...) where {DT,TT,D,M,S}
-    IntegratorCacheSISPRK{DT,D,M,S}(; kwargs...)
-end
-
 function Integrators.IntegratorCache{ST}(params::ParametersSISPRK{DT,TT,D,M,S}; kwargs...) where {ST,DT,TT,D,M,S}
     IntegratorCacheSISPRK{ST,D,M,S}(; kwargs...)
 end

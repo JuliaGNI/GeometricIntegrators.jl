@@ -35,10 +35,6 @@ struct IntegratorCacheFLRK{DT,D,S} <: ODEIntegratorCache{DT,D}
     end
 end
 
-function IntegratorCache(params::ParametersFLRK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
-    IntegratorCacheFLRK{DT,D,S}(; kwargs...)
-end
-
 function IntegratorCache{ST}(params::ParametersFLRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
     IntegratorCacheFLRK{ST,D,S}(; kwargs...)
 end
