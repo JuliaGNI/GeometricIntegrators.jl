@@ -26,11 +26,8 @@
 * `q⁻`: current solution of qₙ⁻
 * `q⁺`: current solution of qₙ⁺
 """
-mutable struct ParametersDGVIEXP{DT,TT,D,S,R,ΘT,FT,GT} <: Parameters{DT,TT}
-    Θ::ΘT
-    f::FT
-    g::GT
-
+mutable struct ParametersDGVIEXP{DT, TT, D, S, R, ET <: NamedTuple} <: Parameters{DT,TT}
+    equs::ET
     Δt::TT
 
     b::Vector{TT}
@@ -45,63 +42,55 @@ mutable struct ParametersDGVIEXP{DT,TT,D,S,R,ΘT,FT,GT} <: Parameters{DT,TT}
     q::Vector{DT}
     q⁻::Vector{DT}
     q⁺::Vector{DT}
-end
 
-function ParametersDGVIEXP(Θ::ΘT, f::FT, g::GT, Δt::TT,
-                b::Vector{TT}, c::Vector{TT}, m::Matrix{TT}, a::Matrix{TT}, r⁻::Vector{TT}, r⁺::Vector{TT},
-                q::Vector{DT}, q⁻::Vector{DT}, q⁺::Vector{DT}) where {DT,TT,ΘT,FT,GT}
-
-    @assert length(q)  == length(q⁻)  == length(q⁺)
-    @assert length(b)  == length(c)
-    @assert length(r⁻) == length(r⁺)
-
-    D = length(q)
-    S = length(r⁻)
-    R = length(c)
-
-    println()
-    println("  Discontinuous Galerkin Variational Integrator")
-    println("  =============================================")
-    println()
-    println("    b = ", b)
-    println("    c = ", c)
-    println("    m = ", m)
-    println("    a = ", a)
-    println("    r⁻= ", r⁻)
-    println("    r⁺= ", r⁺)
-    println()
-
-    ParametersDGVIEXP{DT,TT,D,S,R,ΘT,FT,GT}(
-                Θ, f, g, Δt, b, c, m, a, r⁻, r⁺, 0, q, q⁻, q⁺)
-end
-
-function ParametersDGVIEXP(Θ::ΘT, f::FT, g::GT, Δt::TT,
-                basis::Basis{TT}, quadrature::Quadrature{TT},
-                q::Vector{DT}, q⁻::Vector{DT}, q⁺::Vector{DT}) where {DT,TT,ΘT,FT,GT}
-
-    # compute coefficients
-    m = zeros(TT, nnodes(quadrature), nbasis(basis))
-    a = zeros(TT, nnodes(quadrature), nbasis(basis))
-    r⁻= zeros(TT, nbasis(basis))
-    r⁺= zeros(TT, nbasis(basis))
-
-    for i in 1:nbasis(basis)
-        for j in 1:nnodes(quadrature)
-            m[j,i] = evaluate(basis, i, nodes(quadrature)[j])
-            a[j,i] = derivative(basis, i, nodes(quadrature)[j])
-        end
-        r⁻[i] = evaluate(basis, i, one(TT))
-        r⁺[i] = evaluate(basis, i, zero(TT))
+    function ParametersDGVIEXP{DT,D}(equs::ET, Δt::TT, b, c, m, a, r⁻, r⁺) where {DT, TT, D, ET <: NamedTuple}
+        @assert length(b)  == length(c)
+        @assert length(r⁻) == length(r⁺)
+        new{DT,TT,D,length(r⁻),length(c),ET}(equs, Δt, b, c, m, a, r⁻, r⁺, zero(TT), zeros(DT,D), zeros(DT,D), zeros(DT,D))
     end
 
-    ParametersDGVIEXP(Θ, f, g, Δt, weights(quadrature), nodes(quadrature), m, a, r⁻, r⁺, q, q⁻, q⁺)
+    function ParametersDGVIEXP{DT,D}(equs::NamedTuple, Δt::TT,
+                    basis::Basis{TT}, quadrature::Quadrature{TT}) where {DT,TT,D}
+
+        # compute coefficients
+        b = weights(quadrature)
+        c = nodes(quadrature)
+        m = zeros(TT, nnodes(quadrature), nbasis(basis))
+        a = zeros(TT, nnodes(quadrature), nbasis(basis))
+        r⁻= zeros(TT, nbasis(basis))
+        r⁺= zeros(TT, nbasis(basis))
+
+        for i in 1:nbasis(basis)
+            for j in 1:nnodes(quadrature)
+                m[j,i] = evaluate(basis, i, nodes(quadrature)[j])
+                a[j,i] = derivative(basis, i, nodes(quadrature)[j])
+            end
+            r⁻[i] = evaluate(basis, i, one(TT))
+            r⁺[i] = evaluate(basis, i, zero(TT))
+        end
+
+        println()
+        println("  Discontinuous Galerkin Variational Integrator")
+        println("  =============================================")
+        println()
+        println("    b = ", b)
+        println("    c = ", c)
+        println("    m = ", m)
+        println("    a = ", a)
+        println("    r⁻= ", r⁻)
+        println("    r⁺= ", r⁺)
+        println()
+
+        ParametersDGVIEXP{DT,D}(equs, Δt, b, c, m, a, r⁻, r⁺)
+    end
 end
 
-function ParametersDGVIEXP(Θ, f, g, Δt, basis, quadrature, q, q⁻)
-    q⁺ = zero(q)
-    q⁺ .= q
-    ParametersDGVIEXP(Θ, f, g, Δt, basis, quadrature, q, q⁻, q⁺)
-end
+# function update_params!(params::ParametersDGVIEXP, sol::AtomicSolutionPODE)
+#     # set time for nonlinear solver and copy previous solution
+#     params.t  = sol.t
+#     params.q .= sol.q
+#     # params.p .= sol.p
+# end
 
 
 @doc raw"""
@@ -160,8 +149,7 @@ function IntegratorDGVIEXP(equation::IODE{DT,TT,ΘT,FT,GT,HT,VT}, basis::Basis{T
     cache = IntegratorCacheDGVI{DT,D,S,R}()
 
     # create params
-    params = ParametersDGVIEXP(equation.ϑ, equation.f, equation.g,
-                Δt, basis, quadrature, q, q⁻, q⁺)
+    params = ParametersDGVIEXP{DT,D}(get_function_tuple(equation), Δt, basis, quadrature)
 
     # create nonlinear solver
     solver = create_nonlinear_solver(DT, N, params)
@@ -348,8 +336,8 @@ function compute_stages_p!(cache::IntegratorCacheDGVI{ST,D,S,R},
     # compute P=ϑ(Q) and F=f(Q)
     for i in 1:R
         tᵢ = params.t + params.Δt * params.c[i]
-        params.Θ(tᵢ, cache.Q[i], cache.V[i], cache.P[i])
-        params.f(tᵢ, cache.Q[i], cache.V[i], cache.F[i])
+        params.equs[:ϑ](tᵢ, cache.Q[i], cache.V[i], cache.P[i])
+        params.equs[:f](tᵢ, cache.Q[i], cache.V[i], cache.F[i])
     end
 end
 
@@ -379,22 +367,22 @@ function compute_stages_λ!(cache::IntegratorCacheDGVI{ST,D,S,R},
     # cache.λ̅⁺ .= cache.q̅⁺ .- cache.q̅
 
     # compute ϑ
-    params.Θ(t₀, cache.ϕ,  cache.ϕ,  cache.θ)
-    # params.Θ(t₀, cache.q⁻, cache.q⁻, cache.θ⁻)
-    # params.Θ(t₀, cache.q⁺, cache.q⁺, cache.θ⁺)
+    params.equs[:ϑ](t₀, cache.ϕ,  cache.ϕ,  cache.θ)
+    # params.equs[:ϑ](t₀, cache.q⁻, cache.q⁻, cache.θ⁻)
+    # params.equs[:ϑ](t₀, cache.q⁺, cache.q⁺, cache.θ⁺)
 
-    params.Θ(t₁, cache.ϕ̅,  cache.ϕ̅,  cache.Θ̅)
-    # params.Θ(t₁, cache.q̅⁻, cache.q̅⁻, cache.Θ̅⁻)
-    # params.Θ(t₁, cache.q̅⁺, cache.q̅⁺, cache.Θ̅⁺)
+    params.equs[:ϑ](t₁, cache.ϕ̅,  cache.ϕ̅,  cache.Θ̅)
+    # params.equs[:ϑ](t₁, cache.q̅⁻, cache.q̅⁻, cache.Θ̅⁻)
+    # params.equs[:ϑ](t₁, cache.q̅⁺, cache.q̅⁺, cache.Θ̅⁺)
 
     # compute projection
-    params.g(t₀, cache.ϕ,  cache.λ,  cache.g)
-    # params.g(t₀, cache.q⁻, cache.λ⁻, cache.g⁻)
-    # params.g(t₀, cache.q⁺, cache.λ⁺, cache.g⁺)
+    params.equs[:g](t₀, cache.ϕ,  cache.λ,  cache.g)
+    # params.equs[:g](t₀, cache.q⁻, cache.λ⁻, cache.g⁻)
+    # params.equs[:g](t₀, cache.q⁺, cache.λ⁺, cache.g⁺)
 
-    params.g(t₁, cache.ϕ̅,  cache.λ̅,  cache.g̅)
-    # params.g(t₁, cache.q̅⁻, cache.λ̅⁻, cache.g̅⁻)
-    # params.g(t₁, cache.q̅⁺, cache.λ̅⁺, cache.g̅⁺)
+    params.equs[:g](t₁, cache.ϕ̅,  cache.λ̅,  cache.g̅)
+    # params.equs[:g](t₁, cache.q̅⁻, cache.λ̅⁻, cache.g̅⁻)
+    # params.equs[:g](t₁, cache.q̅⁺, cache.λ̅⁺, cache.g̅⁺)
 end
 
 
