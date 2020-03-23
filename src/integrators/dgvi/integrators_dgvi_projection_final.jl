@@ -93,10 +93,6 @@ end
 # end
 
 
-function IntegratorCache(params::ParametersDGVIP1{DT,TT,D,S,R}; kwargs...) where {DT,TT,D,S,R}
-    IntegratorCacheDGVI{DT,D,S,R}(; kwargs...)
-end
-
 function IntegratorCache{ST}(params::ParametersDGVIP1{DT,TT,D,S,R}; kwargs...) where {ST,DT,TT,D,S,R}
     IntegratorCacheDGVI{ST,D,S,R}(; kwargs...)
 end

@@ -115,10 +115,6 @@ struct IntegratorCacheCGVI{ST,D,S,R} <: IODEIntegratorCache{ST,D}
     end
 end
 
-function IntegratorCache(params::ParametersCGVI{DT,TT,D,S,R}; kwargs...) where {DT,TT,D,S,R}
-    IntegratorCacheCGVI{DT,D,S,R}(; kwargs...)
-end
-
 function IntegratorCache{ST}(params::ParametersCGVI{DT,TT,D,S,R}; kwargs...) where {ST,DT,TT,D,S,R}
     IntegratorCacheCGVI{ST,D,S,R}(; kwargs...)
 end

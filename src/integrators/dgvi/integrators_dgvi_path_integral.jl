@@ -232,10 +232,6 @@ struct IntegratorCacheDGVIPI{ST,D,S,QR,FR} <: IODEIntegratorCache{ST,D}
     end
 end
 
-function IntegratorCache(params::ParametersDGVIPI{DT,TT,D,S,QR,FR}; kwargs...) where {DT,TT,D,S,QR,FR}
-    IntegratorCacheDGVIPI{DT,D,S,QR,FR}(; kwargs...)
-end
-
 function IntegratorCache{ST}(params::ParametersDGVIPI{DT,TT,D,S,QR,FR}; kwargs...) where {ST,DT,TT,D,S,QR,FR}
     IntegratorCacheDGVIPI{ST,D,S,QR,FR}(; kwargs...)
 end
