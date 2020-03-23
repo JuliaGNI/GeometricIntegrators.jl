@@ -487,7 +487,7 @@ function integrate_step!(int::IntegratorDGVIEXP{DT,TT}, sol::AtomicSolutionPODE{
     # cut_periodic_solution!(int.q,  int.equation.periodicity)
     # cut_periodic_solution!(int.q⁻, int.equation.periodicity)
     # cut_periodic_solution!(int.q⁺, int.equation.periodicity)
- 
+
     # copy to solution
     # copy_solution!(sol, int.q, int.q⁺)
 end

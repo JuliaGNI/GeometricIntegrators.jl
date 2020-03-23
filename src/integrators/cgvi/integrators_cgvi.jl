@@ -120,7 +120,7 @@ function IntegratorCache{ST}(params::ParametersCGVI{DT,TT,D,S,R}; kwargs...) whe
 end
 
 @inline CacheType(ST, params::ParametersCGVI{DT,TT,D,S,R}) where {DT,TT,D,S,R} = IntegratorCacheCGVI{ST,D,S,R}
-    
+
 
 "Continuous Galerkin Variational Integrator."
 struct IntegratorCGVI{DT,TT,D,S,R,BT<:Basis,PT,ST,IT} <: DeterministicIntegrator{DT,TT}

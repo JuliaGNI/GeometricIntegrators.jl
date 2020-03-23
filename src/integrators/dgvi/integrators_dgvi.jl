@@ -254,7 +254,7 @@ function IntegratorCache{ST}(params::ParametersDGVI{DT,TT,D,S,R}; kwargs...) whe
 end
 
 @inline CacheType(ST, params::ParametersDGVI{DT,TT,D,S,R}) where {DT,TT,D,S,R} = IntegratorCacheDGVI{ST,D,S,R}
-    
+
 
 @doc raw"""
 `IntegratorDGVI`: Discontinuous Galerkin Variational Integrator.
