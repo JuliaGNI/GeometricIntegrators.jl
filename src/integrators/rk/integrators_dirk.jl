@@ -9,7 +9,7 @@ struct TableauDIRK{T} <: AbstractTableauIRK{T}
         @assert istril(q.a)
         @assert !(q.s==1 && q.a[1,1] ≠ 0)
 
-        if q.s > 1 && istrilstrict(q.a)
+        if get_config(:verbosity) ≥ 1 && q.s > 1 && istrilstrict(q.a)
             @warn "Initializing TableauDIRK with explicit tableau $(q.name).\nYou might want to use TableauERK instead."
         end
 
