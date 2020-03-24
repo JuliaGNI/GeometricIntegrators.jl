@@ -78,7 +78,7 @@ struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT
     end
 
     function IntegratorVSPARKprimary(equation::IDAE{DT,TT}, tableau::TableauVSPARKprimary{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorVSPARKprimary{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorVSPARKprimary{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 

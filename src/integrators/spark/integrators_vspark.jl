@@ -78,7 +78,7 @@ struct IntegratorVSPARK{DT, TT, D, S, R, PT <: ParametersVSPARK{DT,TT,D,S,R},
     end
 
     function IntegratorVSPARK(equation::IDAE{DT,TT}, tableau::Union{TableauSPARK{TT},TableauVSPARK{TT}}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorVSPARK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorVSPARK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 
