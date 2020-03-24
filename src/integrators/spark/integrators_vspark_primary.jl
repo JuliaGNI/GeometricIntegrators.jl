@@ -271,7 +271,7 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
     if isdefined(params.tab, :d) && length(params.tab.d) > 0
         for i in 1:S
             for k in 1:D
-                b[2*(D*(i-1)+k-1)+2] -= cache.μ[k] * params.tab.d[i]
+                b[2*(D*(i-1)+k-1)+2] -= cache.μ[k] * params.tab.d[i] / params.tab.p.b[i]
             end
         end
 

@@ -105,11 +105,11 @@ end
 
     int = Integrator(idae, getTableauLobIIIAIIIB3pSymplectic(), Δt)
     sol = integrate(idae, int, nt)
-    @test rel_err(sol.q, refx) < 8E-5
+    @test rel_err(sol.q, refx) < 2E-11
 
     int = Integrator(idae, getTableauLobIIIAIIIB4pSymplectic(), Δt)
     sol = integrate(idae, int, nt)
-    @test rel_err(sol.q, refx) < 8E-12
+    @test rel_err(sol.q, refx) < 4E-16
 
 end
 
@@ -156,11 +156,11 @@ end
 
     int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIB3pSymmetric(), Δt)
     sol = integrate(idae, int, nt)
-    @test rel_err(sol.q, refx) < 8E-5
+    @test rel_err(sol.q, refx) < 2E-11
 
     int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIB4pSymmetric(), Δt)
     sol = integrate(idae, int, nt)
-    @test rel_err(sol.q, refx) < 8E-12
+    @test rel_err(sol.q, refx) < 8E-16
 
 
     ### VSPARKsecondary Integrators ###
