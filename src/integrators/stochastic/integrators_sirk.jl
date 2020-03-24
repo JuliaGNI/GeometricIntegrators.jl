@@ -86,7 +86,7 @@ struct IntegratorCacheSIRK{DT,D,M,S} <: SDEIntegratorCache{DT,D,M}
         # create internal stage vectors
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
-        B = create_internal_stage_vector(DT, D, M, S)
+        B = create_internal_stage_matrix(DT, D, M, S)
         Y = create_internal_stage_vector(DT, D, S)
 
         # create velocity and update vector

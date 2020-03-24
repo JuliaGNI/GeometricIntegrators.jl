@@ -111,9 +111,9 @@ struct IntegratorCacheSISPRK{DT,D,M,S} <: SDEIntegratorCache{DT,D,M}
         V  = create_internal_stage_vector(DT, D, S)
         F1 = create_internal_stage_vector(DT, D, S)
         F2 = create_internal_stage_vector(DT, D, S)
-        B  = create_internal_stage_vector(DT, D, M, S)
-        G1 = create_internal_stage_vector(DT, D, M, S)
-        G2 = create_internal_stage_vector(DT, D, M, S)
+        B  = create_internal_stage_matrix(DT, D, M, S)
+        G1 = create_internal_stage_matrix(DT, D, M, S)
+        G2 = create_internal_stage_matrix(DT, D, M, S)
         Y  = create_internal_stage_vector(DT, D, S)
         Z  = create_internal_stage_vector(DT, D, S)
 

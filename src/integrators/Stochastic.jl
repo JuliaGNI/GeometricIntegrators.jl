@@ -1,6 +1,7 @@
 module Stochastic
 
     using LinearAlgebra: dot, mul!
+    using OffsetArrays
 
     using ..CommonFunctions
     using ..Config
@@ -17,7 +18,8 @@ module Stochastic
     import ..Integrators: SDEIntegratorCache, PSDEIntegratorCache,
                           IntegratorCache, CacheDict, CacheType
     import ..Integrators: CoefficientsRK, AbstractTableauERK, AbstractTableauIRK
-    import ..Integrators: create_internal_stage_vector, create_nonlinear_solver
+    import ..Integrators: create_internal_stage_vector, create_internal_stage_matrix,
+                          create_internal_stage_vector_with_zero, create_nonlinear_solver
 
 
     export StochasticIntegrator, StochasticIntegratorRK, StochasticIntegratorPRK

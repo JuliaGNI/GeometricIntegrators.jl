@@ -106,8 +106,8 @@ struct IntegratorCacheSIPRK{DT,D,M,S} <: PSDEIntegratorCache{DT,D,M}
         P = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         F = create_internal_stage_vector(DT, D, S)
-        B = create_internal_stage_vector(DT, D, M, S)
-        G = create_internal_stage_vector(DT, D, M, S)
+        B = create_internal_stage_matrix(DT, D, M, S)
+        G = create_internal_stage_matrix(DT, D, M, S)
         Y = create_internal_stage_vector(DT, D, S)
         Z = create_internal_stage_vector(DT, D, S)
 
