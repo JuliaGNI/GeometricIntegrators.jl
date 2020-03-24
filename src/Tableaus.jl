@@ -132,7 +132,7 @@ module Tableaus
            getTableauVSPARKLobIIIAIIIB3pSymmetric,
            getTableauVSPARKLobIIIAIIIB4pSymmetric
 
-    include("tableaus/tableaus_vspark.jl")
+    include("tableaus/tableaus_vspark_primary.jl")
 
     export getTableauVSPARKLobIIIAB,
            getTableauVSPARKLobIIIC,
@@ -143,7 +143,7 @@ module Tableaus
            getTableauVSPARKGLRKLobIIID,
            getTableauVSPARKGLRKLobIIIE
 
-    include("tableaus/tableaus_vspark_psecondary.jl")
+    include("tableaus/tableaus_vspark_secondary.jl")
 
     export getTableauHPARK, getTableauHPARKGLRK,
            getTableauHPARKLobIIIAIIIB2,
