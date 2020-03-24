@@ -115,13 +115,20 @@ end
 
 
 @testset "$(rpad("VSPARK integrators",80))" begin
+
     ### VSPARK Integrators ###
 
-    int = IntegratorVSPARK(idae, getTableauSPARKGLRK(1), Δt)
-    # sol = integrate(idae, int, nt)
-    # TODO
-    # println(rel_err(sol.q, refx))
-    # @test rel_err(sol.q, refx) < 1E-6
+    int = IntegratorVSPARK(idae, getTableauSPARKGLRKLobIIIAIIIB(1), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 1E-6
+
+    int = IntegratorVSPARK(idae, getTableauSPARKGLRKLobIIIAIIIB(2), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 1E-11
+
+    int = IntegratorVSPARK(idae, getTableauSPARKGLRKLobIIIAIIIB(3), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 2E-16
 
 
     ### VSPARKprimary Integrators ###

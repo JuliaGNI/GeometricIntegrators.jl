@@ -47,8 +47,8 @@ struct IntegratorVSPARK{DT, TT, D, S, R, PT <: ParametersVSPARK{DT,TT,D,S,R},
         new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorVSPARK{DT,D}(equations::NamedTuple, tableau::Union{TableauSPARK{TT},TableauVSPARK{TT}}, Δt::TT) where {DT,TT,D,ST}
-        @assert tableau.ρ == tableau.r-1
+    function IntegratorVSPARK{DT,D}(equations::NamedTuple, tableau::Union{TableauSPARK{TT},TableauVSPARK{TT}}, Δt::TT) where {DT,TT,D}
+        # @assert tableau.ρ == tableau.r-1
 
         # get number of stages
         S = tableau.s
@@ -176,7 +176,7 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
         end
     end
 
-    # compute b = - [(Y-AV-AU), (Z-AF-AG), ωΦ]
+    # compute b = - [(Y-AV-AU), (Z-AF-AG)]
     for i in 1:R
         for k in 1:D
             b[3*D*S+3*(D*(i-1)+k-1)+1] = - cache.Yp[i][k]
@@ -192,6 +192,8 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
             end
         end
     end
+
+    # compute b = - ωΦ
     for i in 1:R-P
         for k in 1:D
             for j in 1:R

@@ -95,7 +95,8 @@ module Tableaus
     export getTableauSymplecticEulerA, getTableauSymplecticEulerB,
            getTableauLobattoIIIAIIIB2, getTableauLobattoIIIBIIIA2
 
-    export getTableauSPARKGLRK
+    export getTableauSPARKGLRK, getTableauSPARKLobIIIAIIIB,
+           getTableauSPARKGLRKLobIIIAIIIB
 
     include("tableaus/tableaus_spark.jl")
 
