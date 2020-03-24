@@ -35,10 +35,19 @@ function InitialGuessODE(interp, equation::IODE{DT,TT,ΘT,FT,GT,HT,VT}, Δt::TT)
     InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt)
 end
 
-function InitialGuessODE(interp, equation::VODE{DT,TT,AT,FT,GT,VT}, Δt::TT) where {DT,TT,AT,FT,GT,VT}
+function InitialGuessODE(interp, equation::VODE{DT,TT,AT,FT,GT,HT,VT}, Δt::TT) where {DT,TT,AT,FT,GT,HT,VT}
     int = interp(zero(DT), one(DT), Δt, ndims(equation))
     InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt)
 end
+
+
+Base.:(==)(ig1::InitialGuessODE{DT1,TT1}, ig2::InitialGuessODE{DT2,TT2}) where {DT1,DT2,TT1,TT2}= (
+                                DT1 == DT2
+                             && TT1 == TT2
+                             && ig1.int == ig2.int
+                             && ig1.v   == ig2.v
+                             && ig1.Δt  == ig2.Δt
+                             && ig1.s   == ig2.s)
 
 
 "Initialise initial guess, i.e., given t₀, t₁, q₁ compute q₀, v₀, v₁."

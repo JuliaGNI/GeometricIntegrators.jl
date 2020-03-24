@@ -50,6 +50,16 @@ function InitialGuessPODE(interp, equ::VDAE{DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT},
 end
 
 
+Base.:(==)(ig1::InitialGuessPODE{DT1,TT1}, ig2::InitialGuessPODE{DT2,TT2}) where {DT1,DT2,TT1,TT2}= (
+                                DT1 == DT2
+                             && TT1 == TT2
+                             && ig1.int == ig2.int
+                             && ig1.v   == ig2.v
+                             && ig1.f   == ig2.f
+                             && ig1.Δt  == ig2.Δt
+                             && ig1.s   == ig2.s)
+
+
 "Initialise initial guess, i.e., given t₀, t₁, q₁ compute q₀, v₀, v₁."
 function initialize!(ig::InitialGuessPODE{DT,TT,VT,IT},
                 t₁::TT,
