@@ -27,8 +27,8 @@ struct CoefficientsPGLRK{T} <: AbstractCoefficients{T}
         A = zero(a)
         B = zero(a)
 
-        simd_mult!(B, W, Q)
-        simd_mult!(A, P, B)
+        mul!(B, W, Q)
+        mul!(A, P, B)
 
         new(name,o,s,a,b,c,P,Q,X,W,A)
     end

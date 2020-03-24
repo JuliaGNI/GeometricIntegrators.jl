@@ -189,7 +189,7 @@ function initial_guess!(int::IntegratorSIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT
         Δt_local = tableau(int).qdrift.c[i]  * int.params.Δt
         cache.Δw .= tableau(int).qdrift.c[i] .* int.params.ΔW
 
-        simd_mult!(cache.ΔQ, cache.B1, cache.Δw)
+        mul!(cache.ΔQ, cache.B1, cache.Δw)
         @. cache.Q[i] = int.params.q + 2. / 3. * Δt_local * cache.V1 + 2. / 3. * cache.ΔQ
 
         t2 = int.params.t + 2. / 3. * Δt_local
@@ -198,8 +198,8 @@ function initial_guess!(int::IntegratorSIRK{DT,TT}, sol::AtomicSolutionSDE{DT,TT
         int.params.equ[:B](t2, cache.Q[i], cache.B2)
 
         # Calculating the Y's and assigning them to the array int.solver.x as initial guesses
-        simd_mult!(cache.Y1, cache.B1, cache.Δw)
-        simd_mult!(cache.Y2, cache.B2, cache.Δw)
+        mul!(cache.Y1, cache.B1, cache.Δw)
+        mul!(cache.Y2, cache.B2, cache.Δw)
 
         for j in eachdim(int)
             int.solver.x[(i-1)*ndims(int)+j] = Δt_local*(1. / 4. * cache.V1[j] + 3. / 4. * cache.V2[j]) + 1. / 4. * cache.Y1[j] + 3. / 4. * cache.Y2[j]

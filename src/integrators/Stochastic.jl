@@ -1,6 +1,6 @@
 module Stochastic
 
-    using LinearAlgebra: dot
+    using LinearAlgebra: dot, mul!
 
     using ..CommonFunctions
     using ..Config

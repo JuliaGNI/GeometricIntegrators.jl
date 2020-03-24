@@ -1,5 +1,7 @@
 module Tableaus
 
+    using LinearAlgebra: mul!
+
     using ..Config
     using ..CommonFunctions
     using ..BasisFunctions

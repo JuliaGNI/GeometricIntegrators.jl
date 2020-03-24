@@ -77,7 +77,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
             s.δx .= s.linear.b
 
             # δy = Jδx
-            simd_mult!(s.δy, s.J, s.δx)
+            mul!(s.δy, s.J, s.δx)
 
             # set λ to default initial value
             λ = DEFAULT_ARMIJO_λ₀

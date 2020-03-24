@@ -218,7 +218,7 @@ function compute_stages!(x::Vector{ST}, Q0::Vector{Vector{ST}}, Q1::Vector{Matri
 
         for l=1:M
             # copies Q1[i][:,l] to the vector tQ
-            simd_copy_xy_first!(tQ, Q1[i], l)
+            @views tQ .= Q1[i][:,l]
             # calculates the l-th column of B(t,tQ) and assigns to the vector tB
             params.equ[:B](tᵢ, tQ, B[i], l)
         end

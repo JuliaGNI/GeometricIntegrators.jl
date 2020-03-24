@@ -46,8 +46,8 @@ function getCoefficientsPGLRK(s::Int)
     W[s, s-1] = +1
     W[s-1, s] = -1
 
-    simd_mult!(t, X, Q)
-    simd_mult!(a, P, t)
+    mul!(t, X, Q)
+    mul!(a, P, t)
 
     CoefficientsPGLRK(Symbol("pglrk", s), o, a, b, c, P, X, W)
 end
