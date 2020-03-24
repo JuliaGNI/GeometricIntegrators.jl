@@ -113,6 +113,23 @@ function create_internal_stage_vector_with_zero(DT, D, S)
 end
 
 
+"""
+Create a vector of (S,M+1) solution vectors of type DT to store the solution of S
+internal stages and M random processes for a problem with `D` dimensions.
+"""
+function create_internal_stage_vector_with_zero(DT, D, M, S)
+    a = OffsetArray{Vector{DT}}(undef, 1:S, 0:M)
+
+    for i in 1:S
+        for j in 0:M
+            a[i,j] = zeros(DT,D)
+        end
+    end
+
+    return a
+end
+
+
 function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b::Vector{T}, Δt::T) where {T}
     @assert length(x) == length(xₑᵣᵣ)
     @assert length(x) == size(ẋ, 1)

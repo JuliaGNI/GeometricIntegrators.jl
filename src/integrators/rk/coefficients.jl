@@ -115,11 +115,11 @@ function get_symplectic_conjugate_coefficients(coeff::CoefficientsRK)
 end
 
 
-function symplecticize(coeff::CoefficientsRK; name=nothing)
+function symplecticize(coeff::CoefficientsRK; name=nothing, T=Float64)
     name == nothing ? name = Symbol(string(coeff.name)*"S") : nothing
     a̅ = zero(coeff.a)
     get_symplectic_conjugate_coefficients(coeff.a, coeff.b, a̅)
-    CoefficientsRK(name, coeff.o, 0.5*(coeff.a + a̅), coeff.b, coeff.c)
+    CoefficientsRK(T, name, coeff.o, 0.5*(coeff.a + a̅), coeff.b, coeff.c)
 end
 
 
