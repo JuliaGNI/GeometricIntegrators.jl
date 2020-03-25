@@ -51,7 +51,7 @@ ode = harmonic_oscillator_ode(vcat(rand(1,ns), zeros(1,ns)))
     sim1 = ParallelSimulation(ode, tab, Δt, "Harmonic Oscillator Test 1 (" * string(Threads.nthreads()) * " Threads)", h5file, nt; nsave=nsave1, nwrite=nwrte1)
     run!(sim1)
     @test isfile(h5file)
-    psol1 = SSolutionODE(h5file)
+    psol1 = PSolutionODE(h5file)
     @test psol1.ntime == nt
     @test psol1.nsave == nsave1
     rm(h5file)
@@ -59,7 +59,7 @@ ode = harmonic_oscillator_ode(vcat(rand(1,ns), zeros(1,ns)))
     sim2 = ParallelSimulation(ode, tab, Δt, "Harmonic Oscillator Test 2 (" * string(Threads.nthreads()) * " Threads)", h5file, nt; nsave=nsave2, nwrite=nwrte2)
     run!(sim2)
     @test isfile(h5file)
-    psol2 = SSolutionODE(h5file)
+    psol2 = PSolutionODE(h5file)
     @test psol2.ntime == nt
     @test psol2.nsave == nsave2
     rm(h5file)
