@@ -366,4 +366,23 @@ end
 
     # println(rel_err(sol.q, refx))
     @test rel_err(sol.q, refx) < 4E-6
+
+
+    ### HSPARKsecondary Integrators ###
+
+    # int = IntegratorHSPARKsecondary(vdae, getTableauHSPARKLobIIIAB(2), Δt)
+    # sol = integrate(vdae, int, nt)
+    # println(rel_err(sol.q, refx))
+    # @test rel_err(sol.q, refx) < 4E-6
+
+    # int = IntegratorHSPARKsecondary(vdae, getTableauHSPARKLobIIIAB(3), Δt)
+    # sol = integrate(vdae, int, nt)
+    # println(rel_err(sol.q, refx))
+    # @test rel_err(sol.q, refx) < 2E-11
+
+    # int = IntegratorHSPARKsecondary(vdae, getTableauHSPARKLobIIIAB(4), Δt)
+    # sol = integrate(vdae, int, nt)
+    # println(rel_err(sol.q, refx))
+    # @test rel_err(sol.q, refx) < 1E-15
+
 end

@@ -1,4 +1,3 @@
-
 "Holds the tableau of an Specialised Partitioned Additive Runge-Kutta method for Variational systems."
 struct TableauVSPARKsecondary{DT <: Number} <: AbstractTableau{DT}
     name::Symbol

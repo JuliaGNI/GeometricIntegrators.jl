@@ -1,5 +1,6 @@
 
-const TableauHSPARKsecondary = AbstractTableauSPARK{:hspark_secondary}
+#const TableauHSPARKsecondary = AbstractTableauSPARK{:hspark_secondary}
+const TableauHSPARKsecondary = TableauVSPARKsecondary
 const ParametersHSPARKsecondary = AbstractParametersSPARK{:hspark_secondary}
 
 

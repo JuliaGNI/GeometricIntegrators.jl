@@ -162,6 +162,17 @@ module Tableaus
 
     include("tableaus/tableaus_hspark.jl")
 
+    export getTableauHSPARKLobIIIAB,
+           getTableauHSPARKLobIIIC,
+           getTableauHSPARKLobIIID,
+           getTableauHSPARKLobIIIE,
+           getTableauHSPARKGLRKLobIIIAB,
+           getTableauHSPARKGLRKLobIIIC,
+           getTableauHSPARKGLRKLobIIID,
+           getTableauHSPARKGLRKLobIIIE
+
+    include("tableaus/tableaus_hspark_secondary.jl")
+
     export getTableauSLRKLobIIIAB,
            getTableauSLRKLobIIIC,
            getTableauSLRKLobIIID,
