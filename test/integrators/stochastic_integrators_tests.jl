@@ -20,9 +20,9 @@ sde3   = kubo_oscillator_sde_3()
 psde1  = kubo_oscillator_psde_1()
 psde2  = kubo_oscillator_psde_2()
 psde3  = kubo_oscillator_psde_3()
-spsde1  = kubo_oscillator_spsde_1()
-spsde2  = kubo_oscillator_spsde_2()
-spsde3  = kubo_oscillator_spsde_3()
+spsde1 = kubo_oscillator_spsde_1()
+spsde2 = kubo_oscillator_spsde_2()
+spsde3 = kubo_oscillator_spsde_3()
 
 
 @test typeof(Integrator(sde1, getTableauBurrageE1(), Δt)) <: IntegratorSERK
