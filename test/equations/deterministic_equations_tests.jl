@@ -99,7 +99,6 @@ end
 
 
 
-
 @testset "$(rpad("Ordinary Differential Equations (ODE)",80))" begin
 
     ode  = ODE(eltype(q₀), 1, 1, 1, ode_v, t₀, q₀)

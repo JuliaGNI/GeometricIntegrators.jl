@@ -27,6 +27,10 @@ module HarmonicOscillatorProblem
         q[2]^2 / 2 + k * q[1]^2 / 2
     end
 
+    function hamiltonian(t, q, p)
+        p[1]^2 / 2 + k * q[1]^2 / 2
+    end
+
     p₀=ϑ(q₀)
 
     A = sqrt(q₀[2]^2 / k + q₀[1]^2)
@@ -46,7 +50,7 @@ module HarmonicOscillatorProblem
 
     function harmonic_oscillator_ode(x₀=q₀)
         @assert size(x₀,1) == 2
-        ODE(oscillator_ode_v, x₀; h=hamiltonian)
+        ODE(oscillator_ode_v, x₀)
     end
 
 
@@ -119,7 +123,7 @@ module HarmonicOscillatorProblem
         @assert size(q₀,1) == size(p₀,1) == 2
         IODE(oscillator_iode_ϑ, oscillator_iode_f,
              oscillator_iode_g, q₀, p₀;
-             h=hamiltonian, v=oscillator_iode_v)
+             v=oscillator_iode_v)
     end
 
 
@@ -136,7 +140,7 @@ module HarmonicOscillatorProblem
         u[3] = +λ[1]
     end
 
-    function oscillator_dae_ϕ(t, z, λ, ϕ)
+    function oscillator_dae_ϕ(t, z, ϕ)
         ϕ[1] = z[3] - z[1] - z[2]
     end
 
