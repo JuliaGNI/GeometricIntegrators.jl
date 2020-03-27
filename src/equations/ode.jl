@@ -31,7 +31,7 @@ on `t` and `q`.
 
 """
 struct ODE{dType <: Number, tType <: Number, vType <: Function,
-           hType <: Union{Function,Nothing}, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
+           hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
 
     d::Int
     n::Int
@@ -45,7 +45,7 @@ struct ODE{dType <: Number, tType <: Number, vType <: Function,
     function ODE(DT::DataType, N::Int, d::Int, n::Int, v::vType, t₀::tType, q₀::AbstractArray{dType};
                  h::hType=nothing, parameters::pType=nothing, periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number, vType <: Function,
-                        hType <: Union{Function,Nothing}, pType <: Union{Tuple,Nothing}}
+                        hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1)
         @assert n == size(q₀,2)

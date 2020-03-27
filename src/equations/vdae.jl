@@ -80,7 +80,7 @@ struct VDAE{dType <: Number, tType <: Number, ϑType <: Function,
             ϕType <: Function, ψType <: Function,
             hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
             ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
+            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
 
     d::Int
     m::Int
@@ -114,7 +114,7 @@ struct VDAE{dType <: Number, tType <: Number, ϑType <: Function,
                         g̅Type <: Function, ϕType <: Function, ψType <: Function,
                         hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
                         ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing},
-                        pType <: Union{Tuple,Nothing}}
+                        pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
         @assert m == size(μ₀,1)

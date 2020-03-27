@@ -61,7 +61,7 @@ on `t`, `q` and `λ`.
 """
 struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Function,
            ϕType <: Function, hType <: Union{Function,Nothing},
-           pType <: Union{Tuple,Nothing}, N} <: AbstractEquationDAE{dType, tType}
+           pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationDAE{dType, tType}
 
     d::Int
     m::Int
@@ -82,7 +82,7 @@ struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Functio
                  h::hType=nothing, parameters::pType=nothing, periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number, vType <: Function,
                         uType <: Function, ϕType <: Function,
-                        hType <: Union{Function,Nothing}, pType <: Union{Tuple,Nothing}}
+                        hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1)
         @assert m == size(λ₀,1)

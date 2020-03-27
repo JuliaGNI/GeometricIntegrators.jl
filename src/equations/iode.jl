@@ -69,7 +69,7 @@ The function `g` is used in projection methods that enforce ``p = ϑ(q)``.
 struct IODE{dType <: Number, tType <: Number,
             ϑType <: Function, fType <: Function, gType <: Function,
             hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
+            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
 
     d::Int
     m::Int
@@ -94,7 +94,7 @@ struct IODE{dType <: Number, tType <: Number,
                         dType <: Number, tType <: Number, ϑType <: Function,
                         fType <: Function, gType <: Function,
                         hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
-                        pType <: Union{Tuple,Nothing}}
+                        pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
         @assert n == size(q₀,2) == size(p₀,2) == size(λ₀,2)

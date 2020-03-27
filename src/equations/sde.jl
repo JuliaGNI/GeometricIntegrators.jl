@@ -62,7 +62,7 @@ or the column col of the matrix B (if col>0).
 ```
 """
 struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Function,
-           pType <: Union{Tuple,Nothing}, N} <: AbstractEquationSDE{dType, tType}
+           pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationSDE{dType, tType}
 
     d::Int
     m::Int
@@ -76,8 +76,9 @@ struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Functio
     periodicity::Vector{dType}
 
     function SDE(m, ns, v::vType, B::BType, t₀::tType, q₀::DenseArray{dType};
-                 parameters=nothing, periodicity=zeros(dType,size(q₀,1))) where {
-                        dType <: Number, tType <: Number, vType <: Function, BType <: Function}
+                 parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
+                        dType <: Number, tType <: Number, vType <: Function, BType <: Function,
+                        pType <: Union{NamedTuple,Nothing}}
 
         N  = ndims(q₀)
         d  = size(q₀,1)
@@ -90,7 +91,7 @@ struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Functio
         # either multiple deterministic initial conditions and one sample path
         # or one deterministic initial condition and multiple sample paths
 
-        new{dType,tType,vType,BType,typeof(parameters),N}(d, m, ni, ns, v, B, t₀, q₀, parameters, periodicity)
+        new{dType,tType,vType,BType,pType,N}(d, m, ni, ns, v, B, t₀, q₀, parameters, periodicity)
     end
 end
 

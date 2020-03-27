@@ -38,7 +38,7 @@ methods, e.g., it allows to use another integrator for solving substeps.
 
 """
 struct SODE{dType <: Number, tType <: Number,
-            vType <: Tuple, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
+            vType <: Tuple, pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
 
     d::Int
     n::Int
@@ -49,14 +49,15 @@ struct SODE{dType <: Number, tType <: Number,
     periodicity::Vector{dType}
 
     function SODE(DT::DataType, N::Int, d::Int, n::Int, v::vType, t₀::tType, q₀::AbstractArray{dType};
-                 parameters=nothing, periodicity=zeros(DT,d)) where {
-                        dType <: Number, tType <: Number, vType <: Tuple}
+                 parameters::pType=nothing, periodicity=zeros(DT,d)) where {
+                        dType <: Number, tType <: Number, vType <: Tuple,
+                        pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1)
         @assert n == size(q₀,2)
         @assert ndims(q₀) == N ∈ (1,2)
 
-        new{DT, tType, vType, typeof(parameters), N}(d, n, v, t₀,
+        new{DT, tType, vType, pType, N}(d, n, v, t₀,
                 convert(Array{DT}, q₀), parameters, periodicity)
     end
 end

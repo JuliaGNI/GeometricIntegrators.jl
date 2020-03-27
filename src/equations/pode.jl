@@ -45,7 +45,7 @@ vector fields ``v`` and ``f`` on `t`, `q` and `p`.
 """
 struct PODE{dType <: Number, tType <: Number,
             vType <: Function, fType <: Function, hType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
+            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
 
     d::Int
     n::Int
@@ -63,7 +63,7 @@ struct PODE{dType <: Number, tType <: Number,
                   h::hType=nothing, parameters::pType=nothing, periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number, vType <: Function,
                         fType <: Function, hType <: Union{Function,Nothing},
-                        pType <: Union{Tuple,Nothing}}
+                        pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1)
         @assert n == size(q₀,2) == size(p₀,2)

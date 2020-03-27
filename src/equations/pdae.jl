@@ -36,7 +36,7 @@ struct PDAE{dType <: Number, tType <: Number,
             vType <: Function, fType <: Function,
             uType <: Function, gType <: Function,
             ϕType <: Function, hType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
+            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
 
     d::Int
     m::Int
@@ -62,7 +62,7 @@ struct PDAE{dType <: Number, tType <: Number,
                          vType <: Function, fType <: Function,
                          uType <: Function, gType <: Function,
                          ϕType <: Function, hType <: Union{Function,Nothing},
-                         pType <: Union{Tuple,Nothing}}
+                         pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1)
         @assert m == size(λ₀,1)
