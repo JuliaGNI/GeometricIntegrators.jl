@@ -85,6 +85,7 @@ module Integrators
     export IntegratorSplitting, AbstractTableauSplitting,
            TableauSplittingGS, TableauSplittingNS, TableauSplittingSS
 
+    include("integrators/splitting/integrators_composition.jl")
     include("integrators/splitting/integrators_splitting.jl")
 
 
