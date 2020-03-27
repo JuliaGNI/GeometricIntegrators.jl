@@ -248,10 +248,10 @@ function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT
 
     jac .= 0
 
-    for i in 1:S
-        for j in 1:S
-            for k in 1:D
-                for l in 1:D
+    @inbounds for j in 1:S
+        for i in 1:S
+            for l in 1:D
+                for k in 1:D
                     m = D*(i-1)+k
                     n = D*(j-1)+l
 
