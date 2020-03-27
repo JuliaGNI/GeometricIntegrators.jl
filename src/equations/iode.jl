@@ -164,19 +164,3 @@ function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT
 
     NamedTuple{names}(equs)
 end
-
-# function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT <: Function, VT <: Function}
-#     NamedTuple{(:ϑ,:f,:g,:h,:v)}((equation.ϑ, equation.f, equation.g, equation.h, equation.v))
-# end
-#
-# function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT <: Function, VT <: Nothing}
-#     NamedTuple{(:ϑ,:f,:g,:h)}((equation.ϑ, equation.f, equation.g, equation.h))
-# end
-#
-# function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT <: Nothing, VT <: Function}
-#     NamedTuple{(:ϑ,:f,:g,:v)}((equation.ϑ, equation.f, equation.g, equation.v))
-# end
-#
-# function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT <: Nothing, VT <: Nothing}
-#     NamedTuple{(:ϑ,:f,:g)}((equation.ϑ, equation.f, equation.g))
-# end
