@@ -36,7 +36,7 @@ struct PDAE{dType <: Number, tType <: Number,
             vType <: Function, fType <: Function,
             uType <: Function, gType <: Function,
             ϕType <: Function, hType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
+            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
 
     d::Int
     m::Int
@@ -62,7 +62,7 @@ struct PDAE{dType <: Number, tType <: Number,
                          vType <: Function, fType <: Function,
                          uType <: Function, gType <: Function,
                          ϕType <: Function, hType <: Union{Function,Nothing},
-                         pType <: Union{Tuple,Nothing}}
+                         pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1)
         @assert m == size(λ₀,1)
@@ -121,10 +121,14 @@ end
 
 @inline CommonFunctions.periodicity(equation::PDAE) = equation.periodicity
 
-function get_function_tuple(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT,HT}) where {DT, TT, VT, FT, UT, GT, ϕT, HT <: Function}
-    NamedTuple{(:v,:f,:u,:g,:ϕ,:h)}((equation.v, equation.f, equation.u, equation.g, equation.ϕ, equation.h))
-end
+function get_function_tuple(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT,HT}) where {DT, TT, VT, FT, UT, GT, ϕT, HT}
+    names = (:v,:f,:u,:g,:ϕ)
+    equs  = (equation.v, equation.f, equation.u, equation.g, equation.ϕ)
 
-function get_function_tuple(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT,HT}) where {DT, TT, VT, FT, UT, GT, ϕT, HT <: Nothing}
-    NamedTuple{(:v,:f,:u,:g,:ϕ)}((equation.v, equation.f, equation.u, equation.g, equation.ϕ))
+    if HT != Nothing
+        names = (names..., :h)
+        equs  = (equs..., equation.h)
+    end
+
+    NamedTuple{names}(equs)
 end

@@ -69,17 +69,19 @@ mutable struct ParametersDGVIEXP{DT, TT, D, S, R, ET <: NamedTuple} <: Parameter
             r⁺[i] = evaluate(basis, i, zero(TT))
         end
 
-        println()
-        println("  Discontinuous Galerkin Variational Integrator")
-        println("  =============================================")
-        println()
-        println("    b = ", b)
-        println("    c = ", c)
-        println("    m = ", m)
-        println("    a = ", a)
-        println("    r⁻= ", r⁻)
-        println("    r⁺= ", r⁺)
-        println()
+        if get_config(:verbosity) > 1
+            println()
+            println("  Discontinuous Galerkin Variational Integrator")
+            println("  =============================================")
+            println()
+            println("    b = ", b)
+            println("    c = ", c)
+            println("    m = ", m)
+            println("    a = ", a)
+            println("    r⁻= ", r⁻)
+            println("    r⁺= ", r⁺)
+            println()
+        end
 
         ParametersDGVIEXP{DT,D}(equs, Δt, b, c, m, a, r⁻, r⁺)
     end

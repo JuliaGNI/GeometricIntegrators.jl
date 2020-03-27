@@ -33,7 +33,7 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `λ₀`: initial condition for algebraic variable ``λ``
 """
 struct SPDAE{dType <: Number, tType <: Number, vType <: Tuple, fType <: Tuple,
-             ϕType <: Function, ψType <: Function, pType <: Union{Tuple,Nothing},
+             ϕType <: Function, ψType <: Function, pType <: Union{NamedTuple,Nothing},
              N} <: AbstractEquationPDAE{dType, tType}
     d::Int
     m::Int
@@ -56,7 +56,7 @@ struct SPDAE{dType <: Number, tType <: Number, vType <: Tuple, fType <: Tuple,
                         dType <: Number, tType <: Number,
                         vType <: Tuple, fType <: Tuple,
                         ϕType <: Function, ψType <: Function,
-                        pType <: Union{Tuple,Nothing}}
+                        pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1)
         @assert n == size(q₀,2) == size(p₀,2)

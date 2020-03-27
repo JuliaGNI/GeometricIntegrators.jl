@@ -106,8 +106,8 @@ struct IntegratorCacheSIPRK{DT,D,M,S} <: PSDEIntegratorCache{DT,D,M}
         P = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         F = create_internal_stage_vector(DT, D, S)
-        B = create_internal_stage_vector(DT, D, M, S)
-        G = create_internal_stage_vector(DT, D, M, S)
+        B = create_internal_stage_matrix(DT, D, M, S)
+        G = create_internal_stage_matrix(DT, D, M, S)
         Y = create_internal_stage_vector(DT, D, S)
         Z = create_internal_stage_vector(DT, D, S)
 
@@ -229,8 +229,8 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,
         Δt_local = tableau(int).qdrift.c[i]  * timestep(int)
         cache.Δw .= tableau(int).qdrift.c[i] .* int.params.ΔW
 
-        simd_mult!(cache.ΔQ, cache.B1, cache.Δw)
-        simd_mult!(cache.ΔP, cache.G1, cache.Δw)
+        mul!(cache.ΔQ, cache.B1, cache.Δw)
+        mul!(cache.ΔP, cache.G1, cache.Δw)
         @. cache.Q[i] = int.params.q + 2. / 3. * Δt_local * cache.V1 + 2. / 3. * cache.ΔQ
         @. cache.P[i] = int.params.p + 2. / 3. * Δt_local * cache.F1 + 2. / 3. * cache.ΔP
 
@@ -242,15 +242,15 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,
         int.params.equ.G(t2, cache.Q[i], cache.P[i], cache.G2)
 
         #Calculating the Y's and assigning them to the array int.solver.x as initial guesses
-        simd_mult!(cache.Y1, cache.B1, cache.Δw)
-        simd_mult!(cache.Y2, cache.B2, cache.Δw)
+        mul!(cache.Y1, cache.B1, cache.Δw)
+        mul!(cache.Y2, cache.B2, cache.Δw)
         for j in eachdim(int)
             int.solver.x[(i-1)*ndims(int)+j] =  Δt_local*(1. / 4. * cache.V1[j] + 3. / 4. * cache.V2[j]) + 1. / 4. * cache.Y1[j] + 3. / 4. * cache.Y2[j]
         end
 
         # if the collocation points are the same for both q and p parts
-        simd_mult!(cache.Z1, cache.G1, cache.Δw)
-        simd_mult!(cache.Z2, cache.G2, cache.Δw)
+        mul!(cache.Z1, cache.G1, cache.Δw)
+        mul!(cache.Z2, cache.G2, cache.Δw)
         if tableau(int).qdrift.c==tableau(int).pdrift.c
             for j in 1:ndims(int)
                 int.solver.x[(tableau(int).s+i-1)*ndims(int)+j] =  Δt_local*(1. / 4. * cache.F1[j] + 3. / 4. * cache.F2[j]) + 1. / 4. * cache.Z1[j] + 3. / 4. * cache.Z2[j]
@@ -265,8 +265,8 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,
             Δt_local = tableau(int).pdrift.c[i]  * timestep(int)
             cache.Δw .= tableau(int).pdrift.c[i] .* int.params.ΔW
 
-            simd_mult!(cache.ΔQ, cache.B1, cache.Δw)
-            simd_mult!(cache.ΔP, cache.G1, cache.Δw)
+            mul!(cache.ΔQ, cache.B1, cache.Δw)
+            mul!(cache.ΔP, cache.G1, cache.Δw)
             @. cache.Q[i] = int.params.q + 2. / 3. * Δt_local * cache.V1 + 2. / 3. * cache.ΔQ
             @. cache.P[i] = int.params.p + 2. / 3. * Δt_local * cache.F1 + 2. / 3. * cache.ΔP
 
@@ -279,8 +279,8 @@ function initial_guess!(int::IntegratorSIPRK{DT,TT}, sol::AtomicSolutionPSDE{DT,
 
             # Calculating the Z's and assigning them to the array int.solver.x as initial guesses
             # The guesses for the Y's have already been written to x above
-            simd_mult!(cache.Z1, cache.G1, cache.Δw)
-            simd_mult!(cache.Z2, cache.G2, cache.Δw)
+            mul!(cache.Z1, cache.G1, cache.Δw)
+            mul!(cache.Z2, cache.G2, cache.Δw)
             for j in eachdim(int)
                 int.solver.x[(tableau(int).s+i-1)*ndims(int)+j] =  Δt_local*(1. / 4. * cache.F1[j] + 3. / 4. * cache.F2[j]) + 1. / 4. * cache.Z1[j] + 3. / 4. * cache.Z2[j]
             end

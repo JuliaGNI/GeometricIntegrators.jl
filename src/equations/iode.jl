@@ -69,7 +69,7 @@ The function `g` is used in projection methods that enforce ``p = ϑ(q)``.
 struct IODE{dType <: Number, tType <: Number,
             ϑType <: Function, fType <: Function, gType <: Function,
             hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
-            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
+            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
 
     d::Int
     m::Int
@@ -94,7 +94,7 @@ struct IODE{dType <: Number, tType <: Number,
                         dType <: Number, tType <: Number, ϑType <: Function,
                         fType <: Function, gType <: Function,
                         hType <: Union{Function,Nothing}, vType <: Union{Function,Nothing},
-                        pType <: Union{Tuple,Nothing}}
+                        pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
         @assert n == size(q₀,2) == size(p₀,2) == size(λ₀,2)
@@ -164,19 +164,3 @@ function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT
 
     NamedTuple{names}(equs)
 end
-
-# function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT <: Function, VT <: Function}
-#     NamedTuple{(:ϑ,:f,:g,:h,:v)}((equation.ϑ, equation.f, equation.g, equation.h, equation.v))
-# end
-#
-# function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT <: Function, VT <: Nothing}
-#     NamedTuple{(:ϑ,:f,:g,:h)}((equation.ϑ, equation.f, equation.g, equation.h))
-# end
-#
-# function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT <: Nothing, VT <: Function}
-#     NamedTuple{(:ϑ,:f,:g,:v)}((equation.ϑ, equation.f, equation.g, equation.v))
-# end
-#
-# function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,HT,VT}) where {DT, TT, ϑT, FT, GT, HT <: Nothing, VT <: Nothing}
-#     NamedTuple{(:ϑ,:f,:g)}((equation.ϑ, equation.f, equation.g))
-# end

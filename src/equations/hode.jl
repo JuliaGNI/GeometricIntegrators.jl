@@ -33,7 +33,7 @@ taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``.
 """
 struct HODE{dType <: Number, tType <: Number,
             vType <: Function, fType <: Function, hType <: Function,
-            pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
+            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
 
     d::Int
     n::Int
@@ -51,7 +51,7 @@ struct HODE{dType <: Number, tType <: Number,
                   parameters::pType=nothing, periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number, vType <: Function,
                         fType <: Function, hType <: Function,
-                        pType <: Union{Tuple,Nothing}}
+                        pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1)
         @assert n == size(q₀,2) == size(p₀,2)

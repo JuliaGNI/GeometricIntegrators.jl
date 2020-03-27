@@ -8,10 +8,12 @@ struct TableauFIRK{T} <: AbstractTableauIRK{T}
     q::CoefficientsRK{T}
 
     function TableauFIRK{T}(q) where {T}
-        if (q.s > 1 && istrilstrict(q.a)) || (q.s==1 && q.a[1,1] == 0)
-            @warn "Initializing TableauFIRK with explicit tableau $(q.name).\nYou might want to use TableauERK instead."
-        elseif q.s > 1 && istril(q.a)
-            @warn "Initializing TableauFIRK with diagonally implicit tableau $(q.name).\nYou might want to use TableauDIRK instead."
+        if get_config(:verbosity) ≥ 1
+            if (q.s > 1 && istrilstrict(q.a)) || (q.s==1 && q.a[1,1] == 0)
+                @warn "Initializing TableauFIRK with explicit tableau $(q.name).\nYou might want to use TableauERK instead."
+            elseif q.s > 1 && istril(q.a)
+                @warn "Initializing TableauFIRK with diagonally implicit tableau $(q.name).\nYou might want to use TableauDIRK instead."
+            end
         end
 
         new(q.name, q.o, q.s, q)
@@ -246,10 +248,10 @@ function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT
 
     jac .= 0
 
-    for i in 1:S
-        for j in 1:S
-            for k in 1:D
-                for l in 1:D
+    @inbounds for j in 1:S
+        for i in 1:S
+            for l in 1:D
+                for k in 1:D
                     m = D*(i-1)+k
                     n = D*(j-1)+l
 

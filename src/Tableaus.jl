@@ -1,5 +1,7 @@
 module Tableaus
 
+    using LinearAlgebra: mul!
+
     using ..Config
     using ..CommonFunctions
     using ..BasisFunctions
@@ -95,7 +97,8 @@ module Tableaus
     export getTableauSymplecticEulerA, getTableauSymplecticEulerB,
            getTableauLobattoIIIAIIIB2, getTableauLobattoIIIBIIIA2
 
-    export getTableauSPARKGLRK
+    export getTableauSPARKGLRK, getTableauSPARKLobIIIAIIIB,
+           getTableauSPARKGLRKLobIIIAIIIB
 
     include("tableaus/tableaus_spark.jl")
 
@@ -131,7 +134,7 @@ module Tableaus
            getTableauVSPARKLobIIIAIIIB3pSymmetric,
            getTableauVSPARKLobIIIAIIIB4pSymmetric
 
-    include("tableaus/tableaus_vspark.jl")
+    include("tableaus/tableaus_vspark_primary.jl")
 
     export getTableauVSPARKLobIIIAB,
            getTableauVSPARKLobIIIC,
@@ -142,7 +145,7 @@ module Tableaus
            getTableauVSPARKGLRKLobIIID,
            getTableauVSPARKGLRKLobIIIE
 
-    include("tableaus/tableaus_vspark_psecondary.jl")
+    include("tableaus/tableaus_vspark_secondary.jl")
 
     export getTableauHPARK, getTableauHPARKGLRK,
            getTableauHPARKLobIIIAIIIB2,
@@ -158,6 +161,17 @@ module Tableaus
            getTableauHSPARKLobIIIAIIIB4pSymmetric
 
     include("tableaus/tableaus_hspark.jl")
+
+    export getTableauHSPARKLobIIIAB,
+           getTableauHSPARKLobIIIC,
+           getTableauHSPARKLobIIID,
+           getTableauHSPARKLobIIIE,
+           getTableauHSPARKGLRKLobIIIAB,
+           getTableauHSPARKGLRKLobIIIC,
+           getTableauHSPARKGLRKLobIIID,
+           getTableauHSPARKGLRKLobIIIE
+
+    include("tableaus/tableaus_hspark_secondary.jl")
 
     export getTableauSLRKLobIIIAB,
            getTableauSLRKLobIIIC,

@@ -74,7 +74,7 @@ struct IntegratorHSPARKprimary{DT, TT, D, S, R, PT <: ParametersHSPARKprimary{DT
     end
 
     function IntegratorHSPARKprimary(equation::PDAE{DT,TT}, tableau::TableauHSPARKprimary{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorHSPARKprimary{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorHSPARKprimary{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 

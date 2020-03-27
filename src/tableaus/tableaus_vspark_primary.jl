@@ -205,7 +205,7 @@ function getTableauVSPARKSymplecticProjection(name, q::CoefficientsRK{T}, p::Coe
     else
         @assert length(d) == s
 
-        return TableauVSPARKprimary(name, o,
+        return TableauVSPARKprimary(name, min(q.o, p.o),
                             a_q, a_p, α_q, α_p,
                             a_q̃, a_p̃, α_q̃, α_p̃,
                             b_q, b_p, β_q, β_p,

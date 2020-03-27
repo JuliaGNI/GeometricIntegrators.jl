@@ -57,7 +57,7 @@ of evaluating the vector fields ``v``, ``f`` and the matrices ``B``, ``G`` on `t
 ```
 """
 struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Function,
-            BType <: Function, GType <: Function, pType <: Union{Tuple,Nothing}, N} <: AbstractEquationPSDE{dType, tType}
+            BType <: Function, GType <: Function, pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPSDE{dType, tType}
 
     d::Int
     m::Int
@@ -75,10 +75,11 @@ struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Functi
 
     function PSDE(m, ns, v::vType, f::fType, B::BType, G::GType,
                   t₀::tType, q₀::DenseArray{dType}, p₀::DenseArray{dType};
-                  parameters=nothing, periodicity=zeros(dType,size(q₀,1))) where {
+                  parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
                         dType <: Number, tType <: Number,
                         vType <: Function, fType <: Function,
-                        BType <: Function, GType <: Function}
+                        BType <: Function, GType <: Function,
+                        pType <: Union{NamedTuple,Nothing}}
 
         @assert size(q₀)  == size(p₀)
         @assert ndims(q₀) == ndims(p₀)
@@ -94,7 +95,7 @@ struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Functi
         # either multiple deterministic initial conditions and one sample path
         # or one deterministic initial condition and multiple sample paths
 
-        new{dType,tType,vType,fType,BType,GType,typeof(parameters),N}(d, m, ni, ns, v, f, B, G, t₀, q₀, p₀, parameters, periodicity)
+        new{dType,tType,vType,fType,BType,GType,pType,N}(d, m, ni, ns, v, f, B, G, t₀, q₀, p₀, parameters, periodicity)
     end
 end
 

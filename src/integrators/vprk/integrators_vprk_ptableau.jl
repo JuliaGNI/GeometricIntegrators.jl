@@ -15,10 +15,11 @@ mutable struct ParametersVPRKpTableau{DT, TT, D, S, ET <: NamedTuple} <: Paramet
     λ::Vector{DT}
     A::Matrix{DT}
     W::Matrix{DT}
+    T::Matrix{DT}
 
     function ParametersVPRKpTableau{DT,D}(equs::ET, tab::CoefficientsPGLRK{TT}, Δt::TT) where {DT,TT,D,ET}
         S = tab.s
-        new{DT, TT, D, S, ET}(equs, tab, Δt, zero(TT), zero(TT), zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,S,S), zeros(DT,S,S))
+        new{DT, TT, D, S, ET}(equs, tab, Δt, zero(TT), zero(TT), zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,S,S), zeros(DT,S,S), zeros(DT,S,S))
     end
 end
 
@@ -53,10 +54,9 @@ function update_tableau!(params::ParametersVPRKpTableau{DT,TT,D,S}, λ::Vector) 
         params.W[S-k, S-k+1] = -λ[k]
     end
 
-    # TODO make this more allocation-efficient
-    params.A .= params.tab.P * params.W * params.tab.Q
-    # simd_mult!(params.T, params.W, params.tab.Q)
-    # simd_mult!(params.A, params.tab.P, params.T)
+    # params.A .= params.tab.P * params.W * params.tab.Q
+    mul!(params.T, params.W, params.tab.Q)
+    mul!(params.A, params.tab.P, params.T)
 end
 
 

@@ -1,4 +1,3 @@
-
 "Holds the tableau of an Specialised Partitioned Additive Runge-Kutta method for Variational systems."
 struct TableauVSPARKsecondary{DT <: Number} <: AbstractTableau{DT}
     name::Symbol
@@ -130,7 +129,7 @@ struct IntegratorVSPARKsecondary{DT, TT, D, S, R,
     end
 
     function IntegratorVSPARKsecondary(equation::VDAE{DT,TT}, tableau::TableauVSPARKsecondary{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorVSPARKsecondary{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorVSPARKsecondary{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 

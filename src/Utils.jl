@@ -13,10 +13,7 @@ module Utils
     include("utils/sum_utils.jl")
 
     export istriustrict, istrilstrict
-    export simd_copy_xy_first!, simd_copy_yx_first!, simd_copy_yx_second!,
-           simd_copy_yx_first_last!,
-           simd_axpy!, simd_aXbpy!, simd_abXpy!, simd_mult!
-
+    
     include("utils/matrix_utils.jl")
 
 end

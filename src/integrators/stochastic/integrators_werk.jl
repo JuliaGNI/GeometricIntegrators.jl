@@ -98,8 +98,8 @@ struct IntegratorCacheWERK{DT,D,M,S} <: SDEIntegratorCache{DT,D,M}
         Q1 = create_internal_stage_vector(DT, D, M)
         Q2 = create_internal_stage_vector(DT, D, M)
         V  = create_internal_stage_vector(DT, D, S)
-        B1 = create_internal_stage_vector(DT, D, M, S)
-        B2 = create_internal_stage_vector(DT, D, M, S)
+        B1 = create_internal_stage_matrix(DT, D, M, S)
+        B2 = create_internal_stage_matrix(DT, D, M, S)
 
         new(zeros(DT,M), Q0, Q1, Q2, V, B1, B2, zeros(DT,D))
     end

@@ -20,7 +20,7 @@ function getTableauVSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
     # α_p_1 is free, but determines a_q_1 and a_q_2
     α_p_1 = h.a
 
-    # a_p_1, a_p_2 and a_p_3 are free (they are not used in VPSARKpSecondary integrators anymore)
+    # a_p_1, a_p_2 and a_p_3 are free (they are not used in VSPARKpSecondary integrators anymore)
     a_p_1 = g.a
     b_p_1 = g.b
 

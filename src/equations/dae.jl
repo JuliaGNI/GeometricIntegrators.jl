@@ -61,7 +61,7 @@ on `t`, `q` and `λ`.
 """
 struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Function,
            ϕType <: Function, hType <: Union{Function,Nothing},
-           pType <: Union{Tuple,Nothing}, N} <: AbstractEquationDAE{dType, tType}
+           pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationDAE{dType, tType}
 
     d::Int
     m::Int
@@ -82,7 +82,7 @@ struct DAE{dType <: Number, tType <: Number, vType <: Function, uType <: Functio
                  h::hType=nothing, parameters::pType=nothing, periodicity=zeros(DT,d)) where {
                         dType <: Number, tType <: Number, vType <: Function,
                         uType <: Function, ϕType <: Function,
-                        hType <: Union{Function,Nothing}, pType <: Union{Tuple,Nothing}}
+                        hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1)
         @assert m == size(λ₀,1)
@@ -136,10 +136,14 @@ end
 
 @inline CommonFunctions.periodicity(equation::DAE) = equation.periodicity
 
-function get_function_tuple(equation::DAE{DT,TT,VT,UT,ϕT,HT}) where {DT, TT, VT, UT, ϕT, HT <: Function}
-    NamedTuple{(:v,:u,:ϕ,:h)}((equation.v, equation.u, equation.ϕ, equation.h))
-end
+function get_function_tuple(equation::DAE{DT,TT,VT,UT,ϕT,HT}) where {DT, TT, VT, UT, ϕT, HT}
+    names = (:v,:u,:ϕ)
+    equs  = (equation.v, equation.u, equation.ϕ)
 
-function get_function_tuple(equation::DAE{DT,TT,VT,UT,ϕT,HT}) where {DT, TT, VT, UT, ϕT, HT <: Nothing}
-    NamedTuple{(:v,:u,:ϕ)}((equation.v, equation.u, equation.ϕ))
+    if HT != Nothing
+        names = (names..., :h)
+        equs  = (equs..., equation.h)
+    end
+
+    NamedTuple{names}(equs)
 end

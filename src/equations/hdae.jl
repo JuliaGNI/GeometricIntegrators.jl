@@ -39,7 +39,7 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 """
 struct HDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Function,
             uType <: Function, gType <: Function, u̅Type <: Function, g̅Type <: Function,
-            ϕType <: Function, ψType <: Function, hType <: Function, pType <: Union{Tuple,Nothing},
+            ϕType <: Function, ψType <: Function, hType <: Function, pType <: Union{NamedTuple,Nothing},
             N} <: AbstractEquationPDAE{dType, tType}
     d::Int
     m::Int
@@ -67,7 +67,7 @@ struct HDAE{dType <: Number, tType <: Number, vType <: Function, fType <: Functi
                parameters::pType=nothing, periodicity=zeros(DT,d)) where {
                     dType <: Number, tType <: Number, vType <: Function, fType <: Function,
                     uType <: Function, gType <: Function, u̅Type <: Function, g̅Type <: Function,
-                    ϕType <: Function, ψType <: Function, hType <: Function, pType <: Union{Tuple,Nothing}}
+                    ϕType <: Function, ψType <: Function, hType <: Function, pType <: Union{NamedTuple,Nothing}}
 
         @assert d == size(q₀,1) == size(p₀,1)
         @assert n == size(q₀,2) == size(p₀,2)
