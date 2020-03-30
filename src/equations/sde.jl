@@ -75,12 +75,11 @@ struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Functio
     parameters::pType
     periodicity::Vector{dType}
 
-    function SDE(m, ns, v::vType, B::BType, t₀::tType, q₀::DenseArray{dType};
+    function SDE(m, ns, v::vType, B::BType, t₀::tType, q₀::AbstractArray{dType,N};
                  parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
                         dType <: Number, tType <: Number, vType <: Function, BType <: Function,
-                        pType <: Union{NamedTuple,Nothing}}
+                        pType <: Union{NamedTuple,Nothing}, N}
 
-        N  = ndims(q₀)
         d  = size(q₀,1)
         ni = size(q₀,2)
 

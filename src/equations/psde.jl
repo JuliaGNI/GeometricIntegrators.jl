@@ -74,17 +74,15 @@ struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Functi
     periodicity::Vector{dType}
 
     function PSDE(m, ns, v::vType, f::fType, B::BType, G::GType,
-                  t₀::tType, q₀::DenseArray{dType}, p₀::DenseArray{dType};
+                  t₀::tType, q₀::AbstractArray{dType,N}, p₀::AbstractArray{dType,N};
                   parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
                         dType <: Number, tType <: Number,
                         vType <: Function, fType <: Function,
                         BType <: Function, GType <: Function,
-                        pType <: Union{NamedTuple,Nothing}}
+                        pType <: Union{NamedTuple,Nothing}, N}
 
         @assert size(q₀)  == size(p₀)
-        @assert ndims(q₀) == ndims(p₀)
 
-        N  = ndims(q₀)
         d  = size(q₀,1)
         ni = size(q₀,2)
 

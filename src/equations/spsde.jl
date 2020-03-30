@@ -77,15 +77,13 @@ struct SPSDE{dType <: Number, tType <: Number, vType <: Function, f1Type <: Func
 
     function SPSDE(m, ns, v::vType, f1::f1Type, f2::f2Type,
                     B::BType, G1::G1Type, G2::G2Type, t₀::tType,
-                    q₀::AbstractArray{dType}, p₀::AbstractArray{dType};
+                    q₀::AbstractArray{dType,N}, p₀::AbstractArray{dType,N};
                     parameters=nothing, periodicity=zeros(dType,size(q₀,1))) where {
                     dType <: Number, tType <: Number, vType <: Function, f1Type <: Function, f2Type <: Function,
-                    BType <: Function, G1Type <: Function, G2Type <: Function}
+                    BType <: Function, G1Type <: Function, G2Type <: Function, N}
 
         @assert size(q₀)  == size(p₀)
-        @assert ndims(q₀) == ndims(p₀)
 
-        N  = ndims(q₀)
         d  = size(q₀,1)
         ni = size(q₀,2)
 
@@ -107,7 +105,7 @@ end
 
 function SPSDE(m::Int, ns::Int, v::Function, f1::Function, f2::Function,
                                 B::Function, G1::Function, G2::Function,
-                                q₀::AbstractArray{DT,N}, p₀::AbstractArray{DT,N}; kwargs...) where {DT,N}
+                                q₀::AbstractArray{DT}, p₀::AbstractArray{DT}; kwargs...) where {DT}
     SPSDE(m, ns, v, f1, f2, B, G1, G2, zero(DT), q₀, p₀; kwargs...)
 end
 
