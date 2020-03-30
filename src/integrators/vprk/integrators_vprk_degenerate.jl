@@ -9,7 +9,7 @@ mutable struct IntegratorVPRKdegenerate{DT, TT, D, S,
                 PPT <: ParametersVPRKdegenerate{DT,TT},
                 ST  <: NonlinearSolver{DT},
                 PST <: NonlinearSolver{DT},
-                IT  <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
+                IT  <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
 
     params::PT
     pparams::PPT
@@ -44,7 +44,7 @@ mutable struct IntegratorVPRKdegenerate{DT, TT, D, S,
         projector = create_nonlinear_solver(DT, D, pparams, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create integrator
         IntegratorVPRKdegenerate(sparams, pparams, solver, projector, iguess, caches)
@@ -78,7 +78,7 @@ function initial_guess_projection!(int::IntegratorVPRKdegenerate{DT}, sol::Atomi
 end
 
 
-function compute_solution!(x::Vector{ST}, q̅::Vector{ST}, p̅::Vector{ST},
+function compute_solution!(x::Vector{ST}, q̅::Vector{ST}, v̅::Vector{ST}, p̅::Vector{ST},
                            params::ParametersVPRKdegenerate{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     @assert length(x) == length(q̅) == length(p̅)
@@ -87,7 +87,7 @@ function compute_solution!(x::Vector{ST}, q̅::Vector{ST}, p̅::Vector{ST},
     q̅ .= x
 
     # compute p̅ = ϑ(q)
-    params.equ[:ϑ](params.t̅ + params.Δt, q̅, p̅)
+    params.equ[:ϑ](params.t̅ + params.Δt, q̅, v̅, p̅)
 end
 
 
@@ -101,7 +101,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_solution!(x, cache.q̃, cache.p̃, params)
+    compute_solution!(x, cache.q̃, cache.ṽ, cache.p̃, params)
 
     # compute b = - [q̅-q-BV]
     for k in 1:div(D,2)
@@ -168,7 +168,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKdegenerate{DT,TT}, sol::
     check_solver_status(int.projector.status, int.projector.params)
 
     # compute projection vector fields
-    compute_solution!(int.projector.x, sol.q, sol.p, int.pparams)
+    compute_solution!(int.projector.x, sol.q, cache.ṽ, sol.p, int.pparams)
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)

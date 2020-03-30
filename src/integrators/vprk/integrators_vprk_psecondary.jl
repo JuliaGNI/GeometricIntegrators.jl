@@ -71,7 +71,7 @@ VPRK methods).
 struct IntegratorVPRKpSecondary{DT, TT, D, S,
                 PT <: ParametersVPRKpSecondary{DT,TT},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
+                IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT
@@ -104,7 +104,7 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
         solver = create_nonlinear_solver(DT, 2*D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create integrator
         IntegratorVPRKpSecondary(params, solver, iguess, caches)
@@ -132,7 +132,7 @@ function initial_guess!(int::IntegratorVPRKpSecondary{DT}, sol::AtomicSolutionPO
 end
 
 
-function compute_stages_vprk!(x, q, p, Q, V, Λ, P, F, R, Φ, params)
+function compute_stages_vprk!(x, q, v, p, Q, V, Λ, P, F, R, Φ, params)
     # copy x to V
     compute_stages_v_vprk!(x, V, params)
 
@@ -143,7 +143,7 @@ function compute_stages_vprk!(x, q, p, Q, V, Λ, P, F, R, Φ, params)
     compute_stages_q_vprk!(q, Q, V, Λ, params)
 
     # compute p̅, R and Ψ
-    compute_projection_vprk!(q, p, Q, V, Λ, R, Φ, params)
+    compute_projection_vprk!(q, v, p, Q, V, Λ, R, Φ, params)
 
     # compute P and F
     compute_stages_p_vprk!(Q, V, P, F, params)
@@ -190,7 +190,7 @@ function compute_stages_q_vprk!(q::Vector{ST}, Q::Vector{Vector{ST}},
 end
 
 
-function compute_projection_vprk!(q::Vector{ST}, p::Vector{ST},
+function compute_projection_vprk!(q::Vector{ST}, v::Vector{ST}, p::Vector{ST},
                 Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Λ::Vector{Vector{ST}},
                 R::Vector{Vector{ST}}, Ψ::Vector{Vector{ST}},
                 params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
@@ -203,7 +203,7 @@ function compute_projection_vprk!(q::Vector{ST}, p::Vector{ST},
     local Ω  = zeros(ST,D,D)
 
     # compute p=ϑ(q)
-    params.equ[:ϑ](t₁, q, p)
+    params.equ[:ϑ](t₁, q, v, p)
 
     for i in 1:S
         tᵢ = t₀ + params.Δt * params.tab.p.c[i]
@@ -290,7 +290,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_stages_vprk!(x, cache.q̃, cache.p̃,
+    compute_stages_vprk!(x, cache.q̃, cache.ṽ, cache.p̃,
                             cache.Q, cache.V, cache.Λ,
                             cache.P, cache.F, cache.R,
                             cache.Φ, params)
@@ -327,10 +327,11 @@ function Integrators.integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute final update
-    compute_stages_vprk!(int.solver.x, cache.q̃, cache.p̃,
-                          cache.Q, cache.V, cache.Λ,
-                          cache.P, cache.F, cache.R,
-                          cache.Φ, int.params)
+    compute_stages_vprk!(int.solver.x,
+                         cache.q̃, cache.ṽ, cache.p̃,
+                         cache.Q, cache.V, cache.Λ,
+                         cache.P, cache.F, cache.R,
+                         cache.Φ, int.params)
 
     # compute unprojected solution
     update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))

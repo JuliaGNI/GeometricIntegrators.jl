@@ -15,7 +15,7 @@ module VPRK
     import ..Integrators
 
     import ..Integrators: DeterministicIntegrator, IntegratorPRK, Parameters,
-                          IODEIntegratorCache, InitialGuessPODE
+                          IODEIntegratorCache, InitialGuessIODE
     import ..Integrators: IntegratorCache, CacheDict, CacheType
     import ..Integrators: AbstractTableauPRK, AbstractCoefficients,
                           CoefficientsRK, CoefficientsPGLRK,
