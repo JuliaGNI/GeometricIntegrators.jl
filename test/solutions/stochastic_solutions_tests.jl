@@ -46,8 +46,8 @@ Ys    = rand(2,nt,ns)
 Qs    = rand(1,nt,ns)
 Ps    = rand(1,nt,ns)
 
-sde  = kubo_oscillator_sde_1()
-psde = kubo_oscillator_psde_1()
+sde  = kubo_oscillator_sde_2()
+psde = kubo_oscillator_psde_2()
 
 x100  = rand(ndims(sde),  100)
 q100  = rand(ndims(psde), 100)
@@ -89,13 +89,32 @@ end
     asol = AtomicSolution(sde)
 
     # test constructors and general functionality
-    sol = Solution(sde, Δt, nt)
+    sol = Solution(kubo_oscillator_sde_1(), Δt, nt)
     @test typeof(sol) <: SolutionSDE
+    @test sol.nd == 2
+    @test sol.nm == 1
+    @test sol.ns == 1
+    @test sol.nt == nt
 
+    sol = Solution(kubo_oscillator_sde_2(), Δt, nt)
+    @test typeof(sol) <: SolutionSDE
+    @test sol.nd == 2
+    @test sol.nm == 1
+    @test sol.ns == 3
+    @test sol.nt == nt
+
+    sol = Solution(kubo_oscillator_sde_3(), Δt, nt)
+    @test typeof(sol) <: SolutionSDE
+    @test sol.nd == 2
+    @test sol.nm == 1
+    @test sol.ns == 3
+    @test sol.nt == nt
+
+    sol  = Solution(sde, Δt, nt)
     sol0 = Solution(similar(sde, x0), Δt, nt)
-    @test typeof(sol0) <: SolutionSDE
-
     sol1 = Solution(similar(sde, x1), Δt, nt)
+
+    @test typeof(sol0) <: SolutionSDE
     @test typeof(sol1) <: SolutionSDE
 
     @test sol != sol0
@@ -126,9 +145,10 @@ end
         @test tx == x2[:,i]
     end
 
+
     # test set/get solution
-    sol1 = Solution(similar(kubo_oscillator_sde_2(), x0), Δt, nt)
-    sol2 = Solution(similar(kubo_oscillator_sde_2(), x0), Δt, nt)
+    sol1 = Solution(similar(kubo_oscillator_sde_3(), x0), Δt, nt)
+    sol2 = Solution(similar(kubo_oscillator_sde_3(), x0), Δt, nt)
     for i in 1:nt
         tx .= xs[:,i]
         asol.q .= xs[:,i]
@@ -152,7 +172,7 @@ end
     @test sol2.q[:,1:nt,:] == Xs
 
     # test hdf5 in- and output
-    sol1 = Solution(kubo_oscillator_sde_2(x0), Δt, nt)
+    sol1 = Solution(kubo_oscillator_sde_3(x0), Δt, nt)
     create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
@@ -170,7 +190,7 @@ end
     @test conv(sol1) == conv(sol2)
     rm(h5file)
 
-    sol1 = Solution(kubo_oscillator_sde_2(x1), Δt, nt)
+    sol1 = Solution(kubo_oscillator_sde_3(x1), Δt, nt)
     create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
@@ -188,7 +208,7 @@ end
     @test conv(sol1) == conv(sol2)
     rm(h5file)
 
-    sde1 = kubo_oscillator_sde_2(x1)
+    sde1 = kubo_oscillator_sde_3(x1)
     sol1 = Solution(sde1, Δt, nt)
     create_hdf5!(sol1, h5file; save_W=false)
     write_to_hdf5(sol1)
@@ -213,7 +233,7 @@ end
     @test sol.t[end] == t2
     @test offset(sol) == nt
 
-    sde1 = kubo_oscillator_sde_3()
+    sde1 = kubo_oscillator_sde_1()
     sol1 = Solution(sde1, Δt, 100, nwrite=10)
     create_hdf5!(sol1, h5file)
     ΔW = zeros(sde1.m, 100)
@@ -266,13 +286,32 @@ end
     asol = AtomicSolution(psde)
 
     # test constructors and general functionality
-    sol = Solution(psde, Δt, nt)
+    sol = Solution(kubo_oscillator_psde_1(), Δt, nt)
     @test typeof(sol) <: SolutionPSDE
+    @test sol.nd == 1
+    @test sol.nm == 1
+    @test sol.ns == 1
+    @test sol.nt == nt
 
+    sol = Solution(kubo_oscillator_psde_2(), Δt, nt)
+    @test typeof(sol) <: SolutionPSDE
+    @test sol.nd == 1
+    @test sol.nm == 1
+    @test sol.ns == 3
+    @test sol.nt == nt
+
+    sol = Solution(kubo_oscillator_psde_3(), Δt, nt)
+    @test typeof(sol) <: SolutionPSDE
+    @test sol.nd == 1
+    @test sol.nm == 1
+    @test sol.ns == 3
+    @test sol.nt == nt
+
+    sol  = Solution(psde, Δt, nt)
     sol0 = Solution(similar(psde, q0, p0), Δt, nt)
-    @test typeof(sol0) <: SolutionPSDE
-
     sol1 = Solution(similar(psde, q1, p1), Δt, nt)
+
+    @test typeof(sol0) <: SolutionPSDE
     @test typeof(sol1) <: SolutionPSDE
 
     @test sol != sol0
@@ -308,8 +347,8 @@ end
     end
 
     # test set/get solution
-    sol1 = Solution(similar(kubo_oscillator_psde_2(), q0, p0), Δt, nt)
-    sol2 = Solution(similar(kubo_oscillator_psde_2(), q0, p0), Δt, nt)
+    sol1 = Solution(similar(kubo_oscillator_psde_3(), q0, p0), Δt, nt)
+    sol2 = Solution(similar(kubo_oscillator_psde_3(), q0, p0), Δt, nt)
     for i in 1:nt
         tq .= qs[:,i]
         tp .= ps[:,i]
@@ -323,8 +362,8 @@ end
     @test sol2.q[:,1:nt] == qs
     @test sol2.p[:,1:nt] == ps
 
-    sol1 = Solution(similar(kubo_oscillator_psde_2(), q1, p1), Δt, nt)
-    sol2 = Solution(similar(kubo_oscillator_psde_2(), q1, p1), Δt, nt)
+    sol1 = Solution(similar(kubo_oscillator_psde_3(), q1, p1), Δt, nt)
+    sol2 = Solution(similar(kubo_oscillator_psde_3(), q1, p1), Δt, nt)
     for i in 1:nt
         for k in 1:ns
             tq .= Qs[:,i,k]
@@ -341,7 +380,7 @@ end
     @test sol2.p[:,1:nt,:] == Ps
 
     # test hdf5 in- and output
-    sol1 = Solution(kubo_oscillator_psde_2(q0, p0), Δt, nt)
+    sol1 = Solution(kubo_oscillator_psde_3(q0, p0), Δt, nt)
     create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
@@ -360,7 +399,7 @@ end
     @test conv(sol1) == conv(sol2)
     rm(h5file)
 
-    sol1 = Solution(kubo_oscillator_psde_2(q1, p1), Δt, nt)
+    sol1 = Solution(kubo_oscillator_psde_3(q1, p1), Δt, nt)
     create_hdf5!(sol1, h5file)
     write_to_hdf5(sol1)
     close(sol1)
@@ -379,7 +418,7 @@ end
     @test conv(sol1) == conv(sol2)
     rm(h5file)
 
-    psde1 = kubo_oscillator_psde_2(q1, p1)
+    psde1 = kubo_oscillator_psde_3(q1, p1)
     sol1 = Solution(psde1, Δt, nt)
     create_hdf5!(sol1, h5file; save_W=false)
     write_to_hdf5(sol1)
@@ -404,7 +443,7 @@ end
     @test sol.t[end] == t2
     @test offset(sol) == nt
 
-    psde1 = kubo_oscillator_psde_3()
+    psde1 = kubo_oscillator_psde_1()
     sol1 = Solution(psde1, Δt, 100, nwrite=10)
     create_hdf5!(sol1, h5file)
     ΔW = zeros(psde1.m, 100)
@@ -458,7 +497,26 @@ end
 
 
 @testset "$(rpad("SPSDE Solution",80))" begin
-    spsde  = kubo_oscillator_spsde_1()
-    sol = Solution(spsde, Δt, nt)
+
+    sol = Solution(kubo_oscillator_spsde_1(), Δt, nt)
     @test typeof(sol) <: SolutionPSDE
+    @test sol.nd == 1
+    @test sol.nm == 1
+    @test sol.ns == 1
+    @test sol.nt == nt
+
+    sol = Solution(kubo_oscillator_spsde_2(), Δt, nt)
+    @test typeof(sol) <: SolutionPSDE
+    @test sol.nd == 1
+    @test sol.nm == 1
+    @test sol.ns == 3
+    @test sol.nt == nt
+
+    sol = Solution(kubo_oscillator_spsde_3(), Δt, nt)
+    @test typeof(sol) <: SolutionPSDE
+    @test sol.nd == 1
+    @test sol.nm == 1
+    @test sol.ns == 3
+    @test sol.nt == nt
+
 end
