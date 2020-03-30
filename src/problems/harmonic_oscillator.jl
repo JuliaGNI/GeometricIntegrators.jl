@@ -50,7 +50,7 @@ module HarmonicOscillatorProblem
 
     function harmonic_oscillator_ode(x₀=q₀)
         @assert size(x₀,1) == 2
-        ODE(oscillator_ode_v, x₀)
+        ODE(oscillator_ode_v, x₀; h=hamiltonian)
     end
 
 
