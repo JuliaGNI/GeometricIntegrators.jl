@@ -151,6 +151,20 @@ end
 
 @inline CommonFunctions.periodicity(equation::SPSDE) = equation.periodicity
 
-function get_function_tuple(equation::SPSDE)
+function get_function_tuple(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,Nothing}) where {DT, TT, VT, F1T, F2T, BT, G1T, G2T}
     NamedTuple{(:v,:f1,:f2,:B,:G1,:G2)}((equation.v, equation.f1, equation.f2, equation.B, equation.G1, equation.G2))
+end
+
+function get_function_tuple(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,PT}) where {DT, TT, VT, F1T, F2T, BT, G1T, G2T, PT <: NamedTuple}
+    vₚ  = (t,q,p,v) -> equation.v(t, q, p, v, equation.parameters)
+    f1ₚ = (t,q,p,f) -> equation.f1(t, q, p, f, equation.parameters)
+    f2ₚ = (t,q,p,f) -> equation.f2(t, q, p, f, equation.parameters)
+    Bₚ  = (t,q,p,B) -> equation.B(t, q, p, B, equation.parameters)
+    G1ₚ = (t,q,p,G) -> equation.G1(t, q, p, G, equation.parameters)
+    G2ₚ = (t,q,p,G) -> equation.G2(t, q, p, G, equation.parameters)
+
+    names = (:v,:f1,:f2,:B,:G1,:G2)
+    equs  = (vₚ, f1ₚ, f2ₚ, Bₚ, G1ₚ, G2ₚ)
+
+    NamedTuple{names}(equs)
 end

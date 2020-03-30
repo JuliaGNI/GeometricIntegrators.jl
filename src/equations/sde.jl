@@ -96,7 +96,7 @@ struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Functio
 end
 
 
-function SDE(m::Int, ns::Int, v::Function, B::Function, q₀::DenseArray{DT}; kwargs...) where {DT}
+function SDE(m::Int, ns::Int, v::Function, B::Function, q₀::AbstractArray{DT}; kwargs...) where {DT}
     SDE(m, ns, v, B, zero(DT), q₀; kwargs...)
 end
 
@@ -134,6 +134,16 @@ end
 
 @inline CommonFunctions.periodicity(equation::SDE) = equation.periodicity
 
-function get_function_tuple(equation::SDE)
+function get_function_tuple(equation::SDE{DT,TT,VT,BT,Nothing}) where {DT, TT, VT, BT}
     NamedTuple{(:v,:B)}((equation.v, equation.B))
+end
+
+function get_function_tuple(equation::SDE{DT,TT,VT,BT,PT}) where {DT, TT, VT, BT, PT <: NamedTuple}
+    vₚ = (t,q,v) -> equation.v(t, q, v, equation.parameters)
+    Bₚ = (t,q,B,col=0) -> equation.B(t, q, B, equation.parameters, col)
+
+    names = (:v,:B)
+    equs  = (vₚ,Bₚ)
+
+    NamedTuple{names}(equs)
 end

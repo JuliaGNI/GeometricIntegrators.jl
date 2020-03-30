@@ -127,9 +127,26 @@ end
 
 @inline CommonFunctions.periodicity(equation::HDAE) = equation.periodicity
 
-function get_function_tuple(equation::HDAE)
+function get_function_tuple(equation::HDAE{DT,TT,VT,FT,UT,GT,U̅T,G̅T,ϕT,ψT,HT,Nothing}) where {DT, TT, VT, FT, UT, GT, U̅T, G̅T, ϕT, ψT, HT}
     NamedTuple{(:v, :f, :u, :g, :u̅, :g̅, :ϕ, :ψ, :h)}((
         equation.v, equation.f, equation.u, equation.g,
         equation.u̅, equation.g̅, equation.ϕ, equation.ψ,
         equation.h))
+end
+
+function get_function_tuple(equation::HDAE{DT,TT,VT,FT,UT,GT,U̅T,G̅T,ϕT,ψT,HT,PT}) where {DT, TT, VT, FT, UT, GT, U̅T, G̅T, ϕT, ψT, HT, PT <: NamedTuple}
+    vₚ = (t,q,p,v)   -> equation.v(t, q, p, v, equation.parameters)
+    fₚ = (t,q,p,f)   -> equation.f(t, q, p, f, equation.parameters)
+    uₚ = (t,q,p,λ,u) -> equation.u(t, q, p, λ, u, equation.parameters)
+    gₚ = (t,q,p,λ,g) -> equation.g(t, q, p, λ, g, equation.parameters)
+    u̅ₚ = (t,q,p,λ,u̅) -> equation.u̅(t, q, p, λ, u̅, equation.parameters)
+    g̅ₚ = (t,q,p,λ,g̅) -> equation.g̅(t, q, p, λ, g̅, equation.parameters)
+    ϕₚ = (t,q,p,ϕ)   -> equation.ϕ(t, q, p, ϕ, equation.parameters)
+    ψₚ = (t,q,p,v,f,ψ) -> equation.ψ(t, q, p, v, f, ψ, equation.parameters)
+    hₚ = (t,q,p) -> equation.h(t, q, p, equation.parameters)
+
+    names = (:v, :f, :u, :g, :u̅, :g̅, :ϕ, :ψ, :h)
+    equs  = (vₚ, fₚ, uₚ, gₚ, u̅ₚ, g̅ₚ, ϕₚ, ψₚ, hₚ)
+
+    NamedTuple{names}(equs)
 end
