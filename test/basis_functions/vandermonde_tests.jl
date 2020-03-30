@@ -11,6 +11,6 @@
     x = V\y
     a = *(Vinv, y)
 
-    @test maximum(abs.((a .- x) ./ a)) < eps(Float32)
+    @test maximum(abs.((a .- x) ./ a)) < 4*eps(Float32)
 
 end
