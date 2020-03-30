@@ -36,12 +36,14 @@ or the column col of the matrix B (if col>0).
 ### Example
 
 ```julia
-    function v(λ, t, q, v)
+    function v(t, q, v, p)
+        λ = p[:λ]
         v[1] = λ*q[1]
         v[2] = λ*q[2]
     end
 
-    function B(μ, t, q, B; col=0)
+    function B(t, q, B, p, col=0)
+        μ = p[:μ]
         if col==0 #whole matrix
             B[1,1] = μ*q[1]
             B[2,1] = μ*q[2]
@@ -54,11 +56,9 @@ or the column col of the matrix B (if col>0).
     q₀ = [1., 1.]
     λ  = 2.
     μ  = 1.
+    p = (λ=λ, μ=μ)
 
-    v_sde = (t, q, v) -> v(λ, t, q, v)
-    B_sde = (t, q, B) -> B(μ, t, q, B)
-
-    sde = SDE(v_sde, B_sde, t₀, q₀)
+    sde = SDE(v, B, t₀, q₀; parameters=p)
 ```
 """
 struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Function,
