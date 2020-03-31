@@ -1,19 +1,4 @@
 
-"Splitting integrator cache."
-mutable struct IntegratorCacheSplitting{DT,TT,D} <: ODEIntegratorCache{DT,D}
-    v::Vector{DT}
-    q̃::Vector{DT}
-    s̃::Vector{DT}
-
-    function IntegratorCacheSplitting{DT,TT,D}() where {DT,TT,D}
-        v = zeros(DT, D)
-        q̃ = zeros(DT, D)
-        s̃ = zeros(DT, D)
-        new(v, q̃, s̃)
-    end
-end
-
-
 "Splitting integrator."
 struct IntegratorSplitting{DT, TT, D, S, QT <: Tuple} <: DeterministicIntegrator{DT,TT}
     q::QT
@@ -21,14 +6,11 @@ struct IntegratorSplitting{DT, TT, D, S, QT <: Tuple} <: DeterministicIntegrator
     c::NTuple{S,TT}
     Δt::TT
 
-    cache::IntegratorCacheSplitting{DT,TT,D}
-
     function IntegratorSplitting{DT,D}(solutions::solType, f::Vector{Int}, c::Vector{TT}, Δt::TT) where {DT, TT, D, solType <: Tuple}
         @assert length(f) == length(c)
         ft = Tuple(f)
         ct = Tuple(c)
-        cache = IntegratorCacheSplitting{DT,TT,D}()
-        new{DT,TT,D,length(f),solType}(solutions, ft, ct, Δt, cache)
+        new{DT,TT,D,length(f),solType}(solutions, ft, ct, Δt)
     end
 end
 
