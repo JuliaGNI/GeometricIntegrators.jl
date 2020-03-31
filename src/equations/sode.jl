@@ -38,36 +38,45 @@ methods, e.g., it allows to use another integrator for solving substeps.
 
 """
 struct SODE{dType <: Number, tType <: Number,
-            vType <: Tuple, pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
+            vType <: Tuple, qType <: Union{Tuple,Nothing},
+            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
 
     d::Int
     n::Int
     v::vType
+    q::qType
     t₀::tType
     q₀::Array{dType,N}
     parameters::pType
     periodicity::Vector{dType}
 
-    function SODE(DT::DataType, N::Int, d::Int, n::Int, v::vType, t₀::tType, q₀::AbstractArray{dType};
-                 parameters::pType=nothing, periodicity=zeros(DT,d)) where {
-                        dType <: Number, tType <: Number, vType <: Tuple,
+    function SODE(v::vType, q::qType, t₀::tType, q₀::AbstractArray{dType};
+                 parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
+                        dType <: Number, tType <: Number,
+                        vType <: Tuple, qType <: Union{Tuple,Nothing},
                         pType <: Union{NamedTuple,Nothing}}
 
-        @assert d == size(q₀,1)
-        @assert n == size(q₀,2)
-        @assert ndims(q₀) == N ∈ (1,2)
+        d = size(q₀,1)
+        n = size(q₀,2)
+        N = ndims(q₀)
 
-        new{DT, tType, vType, pType, N}(d, n, v, t₀,
-                convert(Array{DT}, q₀), parameters, periodicity)
+        @assert N ∈ (1,2)
+
+        new{dType, tType, vType, qType, pType, N}(d, n, v, q, t₀,
+                convert(Array{dType}, q₀), parameters, periodicity)
     end
-end
 
-function SODE(v, t₀, q₀::AbstractArray{DT}; kwargs...) where {DT}
-    SODE(DT, ndims(q₀), size(q₀,1), size(q₀,2), v, t₀, q₀; kwargs...)
-end
+    function SODE(v, t₀::Number, q₀::AbstractArray; kwargs...)
+        SODE(v, nothing, t₀, q₀; kwargs...)
+    end
 
-function SODE(v, q₀; kwargs...)
-    SODE(v, zero(eltype(q₀)), q₀; kwargs...)
+    function SODE(v, q, q₀::AbstractArray; kwargs...)
+        SODE(v, q, zero(eltype(q₀)), q₀; kwargs...)
+    end
+
+    function SODE(v, q₀::AbstractArray; kwargs...)
+        SODE(v, zero(eltype(q₀)), q₀; kwargs...)
+    end
 end
 
 Base.hash(ode::SODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.v, hash(ode.t₀,
@@ -95,3 +104,15 @@ end
 @inline Base.ndims(ode::SODE) = ode.d
 
 @inline CommonFunctions.periodicity(equation::SODE) = equation.periodicity
+
+@inline has_exact_solution(equation::SODE{DT,TT,VT,QT}) where {DT, TT, VT, QT <: Nothing} = false
+@inline has_exact_solution(equation::SODE{DT,TT,VT,QT}) where {DT, TT, VT, QT <: Tuple} = all(Q ≠ nothing for Q in equation.q)
+
+@inline has_exact_solution(equation::SODE{DT,TT,VT,QT}, i) where {DT, TT, VT, QT <: Nothing} = false
+@inline has_exact_solution(equation::SODE{DT,TT,VT,QT}, i) where {DT, TT, VT, QT <: Tuple} = i ≤ length(equation.q) && equation.q[i] ≠ nothing
+
+get_function_tuple(equation::SODE{DT,TT,VT,QT,Nothing}) where {DT, TT, VT, QT} = equation.v
+get_function_tuple(equation::SODE{DT,TT,VT,QT,PT}) where {DT, TT, VT, QT, PT <: NamedTuple} = Tuple((t,q,v) -> V(t, q, v, equation.parameters) for V in equation.v)
+
+get_solution_tuple(equation::SODE{DT,TT,VT,QT,Nothing}) where {DT, TT, VT, QT} = equation.q
+get_solution_tuple(equation::SODE{DT,TT,VT,QT,PT}) where {DT, TT, VT, QT, PT <: NamedTuple} = Tuple(Q == nothing ? Q : (t,q̄,q,h) -> Q(t, q̄, q, h, equation.parameters) for Q in equation.q)
