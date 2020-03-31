@@ -47,16 +47,17 @@ function integrate_step!(int::IntegratorSplitting{DT,TT}, sol::AtomicSolutionODE
     local cᵢ::TT
     local tᵢ::TT
 
-    # reset atomic solution
-    reset!(sol, timestep(int))
-
     # compute splitting steps
     for i in eachindex(int.f, int.c)
         if int.c[i] ≠ zero(TT)
             cᵢ = timestep(int) * int.c[i]
             tᵢ = sol.t̅ + cᵢ
-            int.q[int.f[i]](tᵢ, sol.q, int.cache.q̃, cᵢ)
-            sol.q .= int.cache.q̃
+
+            # reset atomic solution
+            reset!(sol, cᵢ)
+
+            # compute new solution
+            int.q[int.f[i]](tᵢ, sol.q̅, sol.q, cᵢ)
         end
     end
 end
