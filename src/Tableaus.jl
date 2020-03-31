@@ -160,7 +160,7 @@ module Tableaus
            getTableauHSPARKLobIIIAIIIB3pSymmetric,
            getTableauHSPARKLobIIIAIIIB4pSymmetric
 
-    include("tableaus/tableaus_hspark.jl")
+    include("tableaus/tableaus_hspark_primary.jl")
 
     export getTableauHSPARKLobIIIAB,
            getTableauHSPARKLobIIIC,
