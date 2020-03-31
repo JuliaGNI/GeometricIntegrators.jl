@@ -16,12 +16,21 @@ v (t) = v_1 (t) + ... + v_r (t) .
 
 * `d`: dimension of dynamical variable ``q`` and the vector field ``v``
 * `v`: tuple of functions computing the vector field
+* `q`: tuple of functions computing the solution
 * `t₀`: initial time
 * `q₀`: initial condition
 
 The functions `v_i` providing the vector field must have the interface
 ```julia
-    function v_i(t, q₀, q₁, h)
+    function v_i(t, q, v)
+        v[1] = ...
+        v[2] = ...
+        ...
+    end
+```
+and the functions `q_i` providing the solutions must have the interface
+```julia
+    function q_i(t, q₀, q₁, h)
         q₁[1] = q₀[1] + ...
         q₁[2] = q₀[2] + ...
         ...
