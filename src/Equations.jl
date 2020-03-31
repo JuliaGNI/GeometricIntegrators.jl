@@ -11,7 +11,7 @@ module Equations
     export DAE, IDAE, PDAE, HDAE, VDAE, SPDAE
     export SDE, PSDE, SPSDE
 
-    export get_function_tuple
+    export get_function_tuple, get_solution_tuple, has_exact_solution
 
     include("equations/equations.jl")
 
