@@ -49,18 +49,20 @@ function getTableauHSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
     # end
 
     # a_q_1_ij = b_q_1_j / b_p_1_i * (b_p_1_i - α_p_1_ji)
+    # TODO check this
     a_q_2 = zeros(s,σ)
     for i in 1:s
         for j in 1:σ
-            a_q_2[i,j] = b_q_1[j] / b_p_1[i] * (b_p_1[i] - α_p_2[j,i])
+            a_q_2[i,j] = b_q_2[j] / b_p_1[i] * (b_p_1[i] - α_p_2[j,i])
         end
     end
 
     # a_q_2_ij = b_q_2_j / b_p_1_i * (b_p_1_i - α_p_1_ji)
+    # TODO check this
     a_q_3 = zeros(s,σ)
     for i in 1:s
         for j in 1:σ
-            a_q_3[i,j] = b_q_2[j] / b_p_1[i] * (b_p_1[i] - α_p_2[j,i])
+            a_q_3[i,j] = b_q_3[j] / b_p_1[i] * (b_p_1[i] - α_p_3[j,i])
         end
     end
 
