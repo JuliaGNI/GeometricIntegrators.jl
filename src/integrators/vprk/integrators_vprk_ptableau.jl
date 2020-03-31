@@ -66,7 +66,7 @@ Projected Variational Gauss-Legendre Runge-Kutta integrator.
 struct IntegratorVPRKpTableau{DT, TT, D, S,
                 PT <: ParametersVPRKpTableau{DT,TT},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessPODE{DT,TT}} <: IntegratorPRK{DT,TT}
+                IT <: InitialGuessIODE{DT,TT}} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -90,7 +90,7 @@ struct IntegratorVPRKpTableau{DT, TT, D, S,
         solver  = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create integrator
         IntegratorVPRKpTableau(params, solver, iguess, caches)
@@ -109,8 +109,8 @@ end
 function Integrators.initialize!(int::IntegratorVPRKpTableau, sol::AtomicSolutionPODE)
     sol.t̅ = sol.t - timestep(int)
 
-    equation(int, :v)(sol.t, sol.q, sol.p, sol.v)
-    equation(int, :f)(sol.t, sol.q, sol.p, sol.f)
+    equation(int, :v)(sol.t, sol.q, sol.v)
+    equation(int, :f)(sol.t, sol.q, sol.v, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
@@ -136,16 +136,16 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVPRK{ST}, params::
     compute_stages!(x, cache.Q, cache.V,
                        cache.P, cache.F,
                        cache.Y, cache.Z,
-                       cache.q̃, cache.p̃, cache.θ̃,
-                       cache.ṽ, cache.f̃,
+                       cache.q̃, cache.ṽ, cache.p̃,
+                       cache.θ̃, cache.y, cache.z,
                        params)
 end
 
 function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
                                         P::Vector{Vector{ST}}, F::Vector{Vector{ST}},
                                         Y::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
-                                        q::Vector{ST}, p::Vector{ST}, θ::Vector{ST},
-                                        y::Vector{ST}, z::Vector{ST},
+                                        q::Vector{ST}, v::Vector{ST}, p::Vector{ST},
+                                        θ::Vector{ST}, y::Vector{ST}, z::Vector{ST},
                                         params::ParametersVPRKpTableau{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     local tᵢ::TT
@@ -217,7 +217,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     p .= params.p̅ .+ params.Δt .* z
 
     # compute θ=ϑ(t,q)
-    params.equs[:ϑ](params.t, q, θ)
+    params.equs[:ϑ](params.t, q, v, θ)
 end
 
 "Compute stages of projected Gauss-Legendre Runge-Kutta methods."

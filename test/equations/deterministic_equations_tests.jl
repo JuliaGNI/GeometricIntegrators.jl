@@ -1,13 +1,105 @@
 
-@testset "$(rpad("Deterministic equations",80))" begin
+using GeometricIntegrators.CommonFunctions
+using GeometricIntegrators.Equations
+using Test
 
-    ################################################################################
-    # Test ODE: Ordinary Differential Equation
-    ################################################################################
+include("initial_conditions.jl")
 
-    function ode_v(t, x, f)
-        f[1] = x[1]
-    end
+
+function ode_v(t, x, f)
+    f[1] = x[1]
+end
+
+
+function pode_v(t, q, p, v)
+    v[1] = q[1]
+end
+
+function pode_f(t, q, p, f)
+    f[1] = 2p[1]
+end
+
+
+function iode_ϑ(t, q, v, p)
+    p[1] = v[1]
+end
+
+function iode_f(t, q, v, f)
+    f[1] = sin(q[1])
+end
+
+function iode_g(t, q, λ, g)
+    g[1] = λ[1]
+end
+
+function iode_v(t, q, p, v)
+    v[1] = p[1]
+end
+
+function iode_h(t, q, v)
+    v[1]^2/2 + cos(q[1])
+end
+
+
+function f_sode_1(t, x, f)
+    f[1] = x[1]
+end
+
+function f_sode_2(t, x, f)
+    f[1] = x[1]^2
+end
+
+
+function dae_v(t, x, v)
+    v[1] = x[1]
+    v[2] = x[2]
+end
+
+function dae_u(t, x, λ, u)
+    u[1] = +λ[1]
+    u[2] = -λ[1]
+end
+
+function dae_ϕ(t, x, λ, ϕ)
+    ϕ[1] = x[2] - x[1]
+end
+
+
+function pdae_v(t, q, p, v)
+    v[1] = p[1]
+end
+
+function pdae_f(t, q, p, f)
+    f[1] = q[1]
+end
+
+function pdae_p(t, q, v, p)
+    p[1] = v[1]
+end
+
+function pdae_u(t, q, p, λ, u)
+    u[1] = λ[1]
+end
+
+function pdae_g(t, q, p, λ, g)
+    g[1] = λ[1]
+end
+
+function pdae_ϕ(t, q, p, λ, ϕ)
+    ϕ[1] = p[1] - q[1]
+end
+
+function pdae_ψ(t, q, p, λ, μ, ψ)
+    ψ[1] = μ[1] - λ[1]
+end
+
+function pdae_h(t, q, p)
+    p[1]^2/2 + q[1]^2/2
+end
+
+
+
+@testset "$(rpad("Ordinary Differential Equations (ODE)",80))" begin
 
     ode  = ODE(eltype(q₀), 1, 1, 1, ode_v, t₀, q₀)
     ode1 = ODE(ode_v, t₀, q₀)
@@ -25,18 +117,10 @@
     @test ode == similar(ode, t₀, q₀)
     @test ode == similar(ode, q₀)
 
+end
 
-    ################################################################################
-    # Test PODE: Partitioned Ordinary Differential Equation
-    ################################################################################
 
-    function pode_v(t, q, p, v)
-        v[1] = q[1]
-    end
-
-    function pode_f(t, q, p, f)
-        f[1] = 2p[1]
-    end
+@testset "$(rpad("Partitioned Ordinary Differential Equations (PODE)",80))" begin
 
     pode_eqs = (pode_v, pode_f)
 
@@ -56,30 +140,10 @@
     @test pode == similar(pode, t₀, q₀, p₀)
     @test pode == similar(pode, q₀, p₀)
 
+end
 
-    ################################################################################
-    # Test IODE: Implicit Ordinary Differential Equation
-    ################################################################################
 
-    function iode_ϑ(t, q, v, p)
-        p[1] = v[1]
-    end
-
-    function iode_f(t, q, v, f)
-        f[1] = sin(q[1])
-    end
-
-    function iode_g(t, q, λ, g)
-        g[1] = λ[1]
-    end
-
-    function iode_v(t, q, p, v)
-        v[1] = p[1]
-    end
-
-    function iode_h(t, q, v)
-        v[1]^2/2 + cos(q[1])
-    end
+@testset "$(rpad("Implicit Ordinary Differential Equations (IODE)",80))" begin
 
     iode_eqs = (iode_ϑ, iode_f, iode_g)
 
@@ -102,10 +166,10 @@
     @test iode == similar(iode, t₀, q₀, p₀)
     @test iode == similar(iode, q₀, p₀)
 
+end
 
-    ################################################################################
-    # Test HODE: Hamiltonian Ordinary Differential Equation
-    ################################################################################
+
+@testset "$(rpad("Hamiltonian Ordinary Differential Equations (HODE)",80))" begin
 
     hode_eqs = (iode_v, iode_f, iode_h)
 
@@ -125,10 +189,10 @@
     @test hode == similar(hode, t₀, q₀, p₀)
     @test hode == similar(hode, q₀, p₀)
 
+end
 
-    ################################################################################
-    # Test VODE: Variational Ordinary Differential Equation
-    ################################################################################
+
+@testset "$(rpad("Variational Ordinary Differential Equations (VODE)",80))" begin
 
     vode_eqs = (iode_ϑ, iode_f, iode_g)
 
@@ -151,24 +215,10 @@
     @test vode == similar(vode, t₀, q₀, p₀)
     @test vode == similar(vode, q₀, p₀)
 
+end
 
-    ################################################################################
-    # Test DAE: Differential Algebraic Equation
-    ################################################################################
 
-    function dae_v(t, x, v)
-        v[1] = x[1]
-        v[2] = x[2]
-    end
-
-    function dae_u(t, x, λ, u)
-        u[1] = +λ[1]
-        u[2] = -λ[1]
-    end
-
-    function dae_ϕ(t, x, λ, ϕ)
-        ϕ[1] = x[2] - x[1]
-    end
+@testset "$(rpad("Differential Algebraic Equations (DAE)",80))" begin
 
     dae_eqs = (dae_v, dae_u, dae_ϕ)
 
@@ -188,42 +238,10 @@
     @test dae == similar(dae, t₀, x₀, λ₀)
     @test dae == similar(dae, x₀, λ₀)
 
+end
 
-    ################################################################################
-    # Test PDAE: Partitioned Differential Algebraic Equation
-    ################################################################################
 
-    function pdae_v(t, q, p, v)
-        v[1] = p[1]
-    end
-
-    function pdae_f(t, q, p, f)
-        f[1] = q[1]
-    end
-
-    function pdae_p(t, q, v, p)
-        p[1] = v[1]
-    end
-
-    function pdae_u(t, q, p, λ, u)
-        u[1] = λ[1]
-    end
-
-    function pdae_g(t, q, p, λ, g)
-        g[1] = λ[1]
-    end
-
-    function pdae_ϕ(t, q, p, λ, ϕ)
-        ϕ[1] = p[1] - q[1]
-    end
-
-    function pdae_ψ(t, q, p, λ, μ, ψ)
-        ψ[1] = μ[1] - λ[1]
-    end
-
-    function pdae_h(t, q, p)
-        p[1]^2/2 + q[1]^2/2
-    end
+@testset "$(rpad("Partitioned Differential Algebraic Equations (PDAE)",80))" begin
 
     pdae_eqs = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_ϕ)
 
@@ -244,10 +262,10 @@
     @test pdae == similar(pdae, t₀, q₀, p₀)
     @test pdae == similar(pdae, q₀, p₀)
 
+end
 
-    ################################################################################
-    # Test IDAE: Implicit Differential Algebraic Equation
-    ################################################################################
+
+@testset "$(rpad("Implicit Differential Algebraic Equations (IDAE)",80))" begin
 
     idae_eqs = (pdae_p, pdae_f, pdae_u, pdae_g, pdae_ϕ)
 
@@ -268,10 +286,10 @@
     @test idae == similar(idae, t₀, q₀, p₀)
     @test idae == similar(idae, q₀, p₀)
 
+end
 
-    ################################################################################
-    # Test HDAE: Hamiltonian Differential Algebraic Equation
-    ################################################################################
+
+@testset "$(rpad("Hamiltonian Differential Algebraic Equations (HDAE)",80))" begin
 
     hdae_eqs = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_u, pdae_g, pdae_ϕ, pdae_ψ, pdae_h)
 
@@ -296,10 +314,10 @@
     @test hdae == similar(hdae, t₀, q₀, p₀)
     @test hdae == similar(hdae, q₀, p₀)
 
+end
 
-    ################################################################################
-    # Test VDAE: Variational Differential Algebraic Equation
-    ################################################################################
+
+@testset "$(rpad("Variational Differential Algebraic Equations (VDAE)",80))" begin
 
     vdae_eqs = (iode_ϑ, iode_f, iode_g, iode_g, pdae_ϕ, pdae_ψ)
 
@@ -326,18 +344,10 @@
     @test vdae == similar(vdae, t₀, q₀, p₀)
     @test vdae == similar(vdae, q₀, p₀)
 
+end
 
-    ################################################################################
-    # Test SODE: Split Ordinary Differential Equation
-    ################################################################################
 
-    function f_sode_1(t, x, f)
-        f[1] = x[1]
-    end
-
-    function f_sode_2(t, x, f)
-        f[1] = x[1]^2
-    end
+@testset "$(rpad("Split Ordinary Differential Equations (SODE)",80))" begin
 
     f_sode = (f_sode_1, f_sode_2)
 
@@ -353,10 +363,10 @@
     @test sode == similar(sode, t₀, q₀)
     @test sode == similar(sode, q₀)
 
+end
 
-    ################################################################################
-    # Test SPDAE: Split Partitioned Differential Algebraic Equation
-    ################################################################################
+
+@testset "$(rpad("Split Partitioned Differential Algebraic Equations (SPDAE)",80))" begin
 
     spdae_eqs = ((pdae_v, pdae_u, pdae_u), (pdae_f, pdae_g, pdae_g), pdae_ϕ, pdae_ψ)
 

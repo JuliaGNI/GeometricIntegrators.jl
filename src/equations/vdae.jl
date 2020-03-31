@@ -180,7 +180,7 @@ end
 @inline CommonFunctions.periodicity(equation::VDAE) = equation.periodicity
 
 
-function get_function_tuple(equation::VDAE{DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇HT}) where {DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇HT}
+function get_function_tuple(equation::VDAE{DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇HT,Nothing}) where {DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇HT}
     names = (:ϑ,:f,:g,:g̅,:ϕ,:ψ)
     equs  = (equation.ϑ, equation.f, equation.g, equation.g̅, equation.ϕ, equation.ψ)
 
@@ -202,6 +202,44 @@ function get_function_tuple(equation::VDAE{DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT,Ω
     if ∇HT != Nothing
         names = (names..., :∇H)
         equs  = (equs..., equation.∇H)
+    end
+
+    NamedTuple{names}(equs)
+end
+
+function get_function_tuple(equation::VDAE{DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇HT,PT}) where {DT, TT, θT, FT, GT, G̅T, ϕT, ψT, HT, VT, ΩT, ∇HT, PT <: NamedTuple}
+    ϑₚ = (t,q,v,ϑ) -> equation.ϑ(t, q, v, ϑ, equation.parameters)
+    fₚ = (t,q,v,f) -> equation.f(t, q, v, f, equation.parameters)
+    gₚ = (t,q,λ,g) -> equation.g(t, q, λ, g, equation.parameters)
+    g̅ₚ = (t,q,λ,g̅) -> equation.g̅(t, q, λ, g̅, equation.parameters)
+    ϕₚ = (t,q,v,ϕ) -> equation.ϕ(t, q, v, ϕ, equation.parameters)
+    ψₚ = (t,q,v,p,f,ψ) -> equation.ψ(t, q, v, p, f, ψ, equation.parameters)
+
+    names = (:ϑ, :f, :g, :g̅, :ϕ, :ψ)
+    equs  = (ϑₚ, fₚ, gₚ, g̅ₚ, ϕₚ, ψₚ)
+
+    if HT != Nothing
+        hₚ = (t,q) -> equation.h(t, q, equation.parameters)
+        names = (names..., :h)
+        equs  = (equs..., hₚ)
+    end
+
+    if VT != Nothing
+        vₚ = (t,q,v) -> equation.v(t, q, v, equation.parameters)
+        names = (names..., :v)
+        equs  = (equs..., vₚ)
+    end
+
+    if ΩT != Nothing
+        Ωₚ = (t,q,Ω) -> equation.Ω(t, q, Ω, equation.parameters)
+        names = (names..., :Ω)
+        equs  = (equs..., Ωₚ)
+    end
+
+    if ∇HT != Nothing
+        ∇Hₚ = (t,q,∇H) -> equation.∇H(t, q, ∇H, equation.parameters)
+        names = (names..., :∇H)
+        equs  = (equs..., ∇Hₚ)
     end
 
     NamedTuple{names}(equs)

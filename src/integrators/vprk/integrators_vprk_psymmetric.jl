@@ -7,7 +7,7 @@ const ParametersVPRKpSymmetric = AbstractParametersVPRK{:vprk_psymmetric}
 struct IntegratorVPRKpSymmetric{DT, TT, D, S,
                 PT <: ParametersVPRKpSymmetric{DT,TT},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
+                IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
 
     params::PT
     solver::ST
@@ -33,7 +33,7 @@ struct IntegratorVPRKpSymmetric{DT, TT, D, S,
         solver = create_nonlinear_solver(DT, D*(S+2), params, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create integrator
         IntegratorVPRKpSymmetric(params, solver, iguess, caches)

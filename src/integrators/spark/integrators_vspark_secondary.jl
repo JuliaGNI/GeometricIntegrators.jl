@@ -91,7 +91,7 @@ F^1_{n,i} + F^2_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i 
 struct IntegratorVSPARKsecondary{DT, TT, D, S, R,
                                          PT <: ParametersVSPARKsecondary{DT,TT,D,S,R},
                                          ST <: NonlinearSolver{DT},
-                                         IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,R}
+                                         IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,R}
     params::PT
     solver::ST
     iguess::IT
@@ -122,7 +122,7 @@ struct IntegratorVSPARKsecondary{DT, TT, D, S, R,
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create integrator
         IntegratorVSPARKsecondary(params, solver, iguess, caches)
@@ -177,9 +177,9 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
 
         # compute f(X)
         t = params.t + params.Δt * params.tab.p̃.c[i]
-        params.equs[:f](t, cache.Qp[i], cache.Pp[i], cache.Fp[i])
-        params.equs[:g](t, cache.Qp[i], cache.Pp[i], cache.Vp[i], cache.Gp[i])
-        params.equs[:g](t, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.G̅p[i])
+        params.equs[:f](t, cache.Qp[i], cache.Vp[i], cache.Fp[i])
+        params.equs[:g](t, cache.Qp[i], cache.Vp[i], cache.Gp[i])
+        params.equs[:g](t, cache.Qp[i], cache.Λp[i], cache.G̅p[i])
 
         cache.Hp[i] .= cache.Fp[i] .+ cache.Gp[i]
 
@@ -206,7 +206,7 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
 
         # compute f(X)
         t = params.t + params.Δt * params.tab.p.c[i]
-        params.equs[:f](t, cache.Qi[i], cache.Fi[i])
+        params.equs[:f](t, cache.Qi[i], cache.Vi[i], cache.Fi[i])
     end
 
     # compute q and p

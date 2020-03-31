@@ -77,15 +77,13 @@ struct SPSDE{dType <: Number, tType <: Number, vType <: Function, f1Type <: Func
 
     function SPSDE(m, ns, v::vType, f1::f1Type, f2::f2Type,
                     B::BType, G1::G1Type, G2::G2Type, t₀::tType,
-                    q₀::AbstractArray{dType}, p₀::AbstractArray{dType};
+                    q₀::AbstractArray{dType,N}, p₀::AbstractArray{dType,N};
                     parameters=nothing, periodicity=zeros(dType,size(q₀,1))) where {
                     dType <: Number, tType <: Number, vType <: Function, f1Type <: Function, f2Type <: Function,
-                    BType <: Function, G1Type <: Function, G2Type <: Function}
+                    BType <: Function, G1Type <: Function, G2Type <: Function, N}
 
         @assert size(q₀)  == size(p₀)
-        @assert ndims(q₀) == ndims(p₀)
 
-        N  = ndims(q₀)
         d  = size(q₀,1)
         ni = size(q₀,2)
 
@@ -107,7 +105,7 @@ end
 
 function SPSDE(m::Int, ns::Int, v::Function, f1::Function, f2::Function,
                                 B::Function, G1::Function, G2::Function,
-                                q₀::AbstractArray{DT,N}, p₀::AbstractArray{DT,N}; kwargs...) where {DT,N}
+                                q₀::AbstractArray{DT}, p₀::AbstractArray{DT}; kwargs...) where {DT}
     SPSDE(m, ns, v, f1, f2, B, G1, G2, zero(DT), q₀, p₀; kwargs...)
 end
 
@@ -151,6 +149,20 @@ end
 
 @inline CommonFunctions.periodicity(equation::SPSDE) = equation.periodicity
 
-function get_function_tuple(equation::SPSDE)
+function get_function_tuple(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,Nothing}) where {DT, TT, VT, F1T, F2T, BT, G1T, G2T}
     NamedTuple{(:v,:f1,:f2,:B,:G1,:G2)}((equation.v, equation.f1, equation.f2, equation.B, equation.G1, equation.G2))
+end
+
+function get_function_tuple(equation::SPSDE{DT,TT,VT,F1T,F2T,BT,G1T,G2T,PT}) where {DT, TT, VT, F1T, F2T, BT, G1T, G2T, PT <: NamedTuple}
+    vₚ  = (t,q,p,v) -> equation.v(t, q, p, v, equation.parameters)
+    f1ₚ = (t,q,p,f) -> equation.f1(t, q, p, f, equation.parameters)
+    f2ₚ = (t,q,p,f) -> equation.f2(t, q, p, f, equation.parameters)
+    Bₚ  = (t,q,p,B) -> equation.B(t, q, p, B, equation.parameters)
+    G1ₚ = (t,q,p,G) -> equation.G1(t, q, p, G, equation.parameters)
+    G2ₚ = (t,q,p,G) -> equation.G2(t, q, p, G, equation.parameters)
+
+    names = (:v,:f1,:f2,:B,:G1,:G2)
+    equs  = (vₚ, f1ₚ, f2ₚ, Bₚ, G1ₚ, G2ₚ)
+
+    NamedTuple{names}(equs)
 end

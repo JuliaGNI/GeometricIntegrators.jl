@@ -74,17 +74,15 @@ struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Functi
     periodicity::Vector{dType}
 
     function PSDE(m, ns, v::vType, f::fType, B::BType, G::GType,
-                  t₀::tType, q₀::DenseArray{dType}, p₀::DenseArray{dType};
+                  t₀::tType, q₀::AbstractArray{dType,N}, p₀::AbstractArray{dType,N};
                   parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
                         dType <: Number, tType <: Number,
                         vType <: Function, fType <: Function,
                         BType <: Function, GType <: Function,
-                        pType <: Union{NamedTuple,Nothing}}
+                        pType <: Union{NamedTuple,Nothing}, N}
 
         @assert size(q₀)  == size(p₀)
-        @assert ndims(q₀) == ndims(p₀)
 
-        N  = ndims(q₀)
         d  = size(q₀,1)
         ni = size(q₀,2)
 
@@ -100,7 +98,7 @@ struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Functi
 end
 
 
-function PSDE(m::Int, ns::Int, v::Function, f::Function, B::Function, G::Function, q₀::DenseArray{DT}, p₀::DenseArray{DT}; kwargs...) where {DT}
+function PSDE(m::Int, ns::Int, v::Function, f::Function, B::Function, G::Function, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}; kwargs...) where {DT}
     PSDE(m, ns, v, f, B, G, zero(DT), q₀, p₀; kwargs...)
 end
 
@@ -143,6 +141,18 @@ end
 
 @inline CommonFunctions.periodicity(equation::PSDE) = equation.periodicity
 
-function get_function_tuple(equation::PSDE)
+function get_function_tuple(equation::PSDE{DT,TT,VT,FT,BT,GT,Nothing}) where {DT, TT, VT, FT, BT, GT}
     NamedTuple{(:v,:f,:B,:G)}((equation.v, equation.f, equation.B, equation.G))
+end
+
+function get_function_tuple(equation::PSDE{DT,TT,VT,FT,BT,GT,PT}) where {DT, TT, VT, FT, BT, GT, PT <: NamedTuple}
+    vₚ = (t,q,p,v) -> equation.v(t, q, p, v, equation.parameters)
+    fₚ = (t,q,p,f) -> equation.f(t, q, p, f, equation.parameters)
+    Bₚ = (t,q,p,B) -> equation.B(t, q, p, B, equation.parameters)
+    Gₚ = (t,q,p,G) -> equation.G(t, q, p, G, equation.parameters)
+
+    names = (:v, :f, :B, :G)
+    equs  = (vₚ, fₚ, Bₚ, Gₚ)
+
+    NamedTuple{names}(equs)
 end

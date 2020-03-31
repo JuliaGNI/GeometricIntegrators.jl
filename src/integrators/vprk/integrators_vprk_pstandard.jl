@@ -9,7 +9,7 @@ struct IntegratorVPRKpStandard{DT, TT, D, S,
                 PPT <: ParametersVPRKpStandard{DT,TT},
                 ST  <: NonlinearSolver{DT},
                 PST <: NonlinearSolver{DT},
-                IT  <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
+                IT  <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
 
     params::PT
     pparams::PPT
@@ -53,7 +53,7 @@ struct IntegratorVPRKpStandard{DT, TT, D, S,
         projector = create_nonlinear_solver(DT, 2*D, pparams, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create integrator
         IntegratorVPRKpStandard(params, pparams, solver, projector, iguess, caches)
@@ -89,7 +89,7 @@ function Integrators.initialize!(int::IntegratorVPRKpStandard{DT}, sol::AtomicSo
                                  cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     sol.t̅ = sol.t - timestep(int)
 
-    equation(int, :v)(sol.t, sol.q, sol.p, sol.v)
+    equation(int, :v)(sol.t, sol.q, sol.v)
     equation(int, :f)(sol.t, sol.q, sol.p, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,

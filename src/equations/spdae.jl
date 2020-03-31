@@ -109,6 +109,18 @@ end
 
 @inline CommonFunctions.periodicity(equation::SPDAE) = equation.periodicity
 
-function get_function_tuple(equation::SPDAE)
+function get_function_tuple(equation::SPDAE{DT,TT,VT,FT,ϕT,ψT,Nothing}) where {DT, TT, VT, FT, ϕT, ψT}
     NamedTuple{(:v, :f, :ϕ, :ψ)}((equation.v, equation.f, equation.ϕ, equation.ψ))
+end
+
+function get_function_tuple(equation::SPDAE{DT,TT,VT,FT,ϕT,ψT,PT}) where {DT, TT, VT, FT, ϕT, ψT, PT <: NamedTuple}
+    vₚ = (t,q,p,v)   -> equation.v(t, q, p, v, equation.parameters)
+    fₚ = (t,q,p,f)   -> equation.f(t, q, p, f, equation.parameters)
+    ϕₚ = (t,q,p,ϕ)   -> equation.ϕ(t, q, p, ϕ, equation.parameters)
+    ψₚ = (t,q,p,v,f,ψ) -> equation.ψ(t, q, p, v, f, ψ, equation.parameters)
+
+    names = (:v, :f, :ϕ, :ψ)
+    equs  = (vₚ, fₚ, ϕₚ, ψₚ)
+
+    NamedTuple{names}(equs)
 end
