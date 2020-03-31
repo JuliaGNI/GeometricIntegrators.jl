@@ -18,10 +18,12 @@ module Integrators
     using ..Solvers
 
 
-    export InitialGuessODE, InitialGuessPODE, initialize!
+    export InitialGuess, InitialGuessODE, InitialGuessIODE, InitialGuessPODE,
+           initialize!
 
     include("integrators/initial_guess/extrapolation.jl")
     include("integrators/initial_guess/initial_guess_ode.jl")
+    include("integrators/initial_guess/initial_guess_iode.jl")
     include("integrators/initial_guess/initial_guess_pode.jl")
 
 

@@ -100,6 +100,17 @@ end
 
 @inline CommonFunctions.periodicity(equation::HODE) = equation.periodicity
 
-function get_function_tuple(equation::HODE)
+function get_function_tuple(equation::HODE{DT,TT,VT,FT,HT,Nothing}) where {DT, TT, VT, FT, HT}
     NamedTuple{(:v,:f,:h)}((equation.v, equation.f, equation.h))
+end
+
+function get_function_tuple(equation::HODE{DT,TT,VT,FT,HT,PT}) where {DT, TT, VT, FT, HT, PT <: NamedTuple}
+    vₚ = (t,q,p,v) -> equation.v(t, q, p, v, equation.parameters)
+    fₚ = (t,q,p,f) -> equation.f(t, q, p, f, equation.parameters)
+    hₚ = (t,q,p) -> equation.h(t, q, p, equation.parameters)
+
+    names = (:v, :f, :h)
+    equs  = (vₚ, fₚ, hₚ)
+
+    NamedTuple{names}(equs)
 end

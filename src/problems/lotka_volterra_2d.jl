@@ -1,5 +1,6 @@
 module LotkaVolterra2dProblem
 
+    using Parameters
     using GeometricIntegrators.Equations
 
     export lotka_volterra_2d_ode, 
@@ -19,6 +20,9 @@ module LotkaVolterra2dProblem
 
     const X0=1.0
     const Y0=1.0
+
+    const p = (A1=A1, A2=A2, B1=B1, B2=B2)
+
 
 
     function ϑ₁(t, q)
@@ -99,169 +103,178 @@ module LotkaVolterra2dProblem
     end
 
 
-    function hamiltonian(t, q)
+    function hamiltonian(t, q, params)
+        @unpack A1, A2, B1, B2 = params
         A1*q[1] + A2*q[2] - B1*log(q[1]) - B2*log(q[2])
     end
 
+    function hamiltonian(t, q, p, params)
+        hamiltonian(t, q, params)
+    end
 
-    function dHd₁(t, q)
+
+    function dHd₁(t, q, params)
+        @unpack A1, B1 = params
         A1 - B1 / q[1]
     end
 
-    function dHd₂(t, q)
+    function dHd₂(t, q, params)
+        @unpack A2, B2 = params
         A2 - B2 / q[2]
     end
 
-    function lotka_volterra_2d_dH(t, q, dH)
-        dH[1] = dHd₁(t, q)
-        dH[2] = dHd₂(t, q)
+    function lotka_volterra_2d_dH(t, q, dH, params)
+        dH[1] = dHd₁(t, q, params)
+        dH[2] = dHd₂(t, q, params)
         nothing
     end
 
 
-    function lotka_volterra_2d_ϑ(t, q, Θ)
+    function lotka_volterra_2d_ϑ(t, q, Θ, params)
         ϑ(t, q, Θ)
     end
 
-    function lotka_volterra_2d_ϑ(t, q, v, Θ)
+    function lotka_volterra_2d_ϑ(t, q, v, Θ, params)
         ϑ(t, q, Θ)
     end
 
 
-    function lotka_volterra_2d_ω(t, q, Ω)
+    function lotka_volterra_2d_ω(t, q, Ω, params)
         ω(t, q, Ω)
     end
 
 
-    function lotka_volterra_2d_v(t, q, v)
+    function lotka_volterra_2d_v(t, q, v, params)
         v[1] = v₁(t, q)
         v[2] = v₂(t, q)
         nothing
     end
 
-    function lotka_volterra_2d_v(t, q, p, v)
-        lotka_volterra_2d_v(t, q, v)
+    function lotka_volterra_2d_v(t, q, p, v, params)
+        lotka_volterra_2d_v(t, q, v, params)
     end
 
-    function lotka_volterra_2d_v_ham(t, q, p, v)
+    function lotka_volterra_2d_v_ham(t, q, p, v, params)
         v[1] = 0
         v[2] = 0
         nothing
     end
 
-    function lotka_volterra_2d_f(t::Real, q::Vector, v::Vector, f::Vector)
-        f[1] = f₁(t,q,v) - dHd₁(t,q)
-        f[2] = f₂(t,q,v) - dHd₂(t,q)
+    function lotka_volterra_2d_f(t::Real, q::Vector, v::Vector, f::Vector, params)
+        f[1] = f₁(t,q,v) - dHd₁(t, q, params)
+        f[2] = f₂(t,q,v) - dHd₂(t, q, params)
         nothing
     end
 
-    function lotka_volterra_2d_f_ham(t::Real, q::Vector, f::Vector)
-        f[1] = - dHd₁(t,q)
-        f[2] = - dHd₂(t,q)
+    function lotka_volterra_2d_f_ham(t::Real, q::Vector, f::Vector, params)
+        f[1] = - dHd₁(t, q, params)
+        f[2] = - dHd₂(t, q, params)
         nothing
     end
 
-    function lotka_volterra_2d_f_ham(t::Real, q::Vector, v::Vector, f::Vector)
-        lotka_volterra_2d_f_ham(t, q, f)
+    function lotka_volterra_2d_f_ham(t::Real, q::Vector, v::Vector, f::Vector, params)
+        lotka_volterra_2d_f_ham(t, q, f, params)
     end
 
-    function lotka_volterra_2d_g(t::Real, q::Vector, v::Vector, g::Vector)
+    function lotka_volterra_2d_g(t::Real, q::Vector, v::Vector, g::Vector, params)
         g[1] = f₁(t,q,v)
         g[2] = f₂(t,q,v)
         nothing
     end
 
-    function lotka_volterra_2d_g(t::Real, q::Vector, p::Vector, v::Vector, g::Vector)
-        lotka_volterra_2d_g(t, q, v, g)
+    function lotka_volterra_2d_g(t::Real, q::Vector, p::Vector, v::Vector, g::Vector, params)
+        lotka_volterra_2d_g(t, q, v, g, params)
     end
 
-    function lotka_volterra_2d_g̅(t::Real, q::Vector, v::Vector, g::Vector)
+    function lotka_volterra_2d_g̅(t::Real, q::Vector, v::Vector, g::Vector, params)
         g[1] = g₁(t,q,v)
         g[2] = g₂(t,q,v)
         nothing
     end
 
-    function lotka_volterra_2d_g̅(t::Real, q::Vector, p::Vector, v::Vector, g::Vector)
-        lotka_volterra_2d_g̅(t, q, v, g)
+    function lotka_volterra_2d_g̅(t::Real, q::Vector, p::Vector, v::Vector, g::Vector, params)
+        lotka_volterra_2d_g̅(t, q, v, g, params)
     end
 
-    function lotka_volterra_2d_u(t, q, v, u)
+    function lotka_volterra_2d_u(t, q, v, u, params)
         u[1] = v[1]
         u[2] = v[2]
         nothing
     end
 
-    function lotka_volterra_2d_u(t, q, p, v, u)
-        lotka_volterra_2d_u(t, q, v, u)
+    function lotka_volterra_2d_u(t, q, p, v, u, params)
+        lotka_volterra_2d_u(t, q, v, u, params)
     end
 
 
-    function lotka_volterra_2d_ϕ(t, q, p, ϕ)
+    function lotka_volterra_2d_ϕ(t, q, p, ϕ, params)
         ϕ[1] = p[1] - ϑ₁(t,q)
         ϕ[2] = p[2] - ϑ₂(t,q)
         nothing
     end
 
-    function lotka_volterra_2d_ψ(t, q, p, v, f, ψ)
+    function lotka_volterra_2d_ψ(t, q, p, v, f, ψ, params)
         ψ[1] = f[1] - g₁(t,q,v)
         ψ[2] = f[2] - g₂(t,q,v)
         nothing
     end
 
 
-    function lotka_volterra_2d_ode(q₀=q₀)
-        ODE(lotka_volterra_2d_v, q₀; h=hamiltonian)
+    function lotka_volterra_2d_ode(q₀=q₀, params=p)
+        ODE(lotka_volterra_2d_v, q₀; parameters=params, h=hamiltonian)
     end
 
 
-    function lotka_volterra_2d_pode(q₀=q₀, p₀=ϑ(0, q₀))
+    function lotka_volterra_2d_pode(q₀=q₀, p₀=ϑ(0, q₀), params=p)
         PODE(lotka_volterra_2d_v, lotka_volterra_2d_f,
-             q₀, p₀; h=hamiltonian)
+             q₀, p₀; parameters=params, h=hamiltonian)
     end
 
-    function lotka_volterra_2d_iode(q₀=q₀, p₀=ϑ(0, q₀))
+    function lotka_volterra_2d_iode(q₀=q₀, p₀=ϑ(0, q₀), params=p)
         IODE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
              lotka_volterra_2d_g, q₀, p₀;
-             h=hamiltonian, v=lotka_volterra_2d_v)
+             parameters=params, h=hamiltonian, v=lotka_volterra_2d_v)
     end
 
-    function lotka_volterra_2d_vode(q₀=q₀, p₀=ϑ(0, q₀))
+    function lotka_volterra_2d_vode(q₀=q₀, p₀=ϑ(0, q₀), params=p)
         VODE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
              lotka_volterra_2d_g, q₀, p₀;
-             h=hamiltonian, v=lotka_volterra_2d_v, Ω=lotka_volterra_2d_ω, ∇H=lotka_volterra_2d_dH)
+             parameters=params, h=hamiltonian, v=lotka_volterra_2d_v,
+             Ω=lotka_volterra_2d_ω, ∇H=lotka_volterra_2d_dH)
     end
 
-    function lotka_volterra_2d_idae(q₀=q₀, p₀=ϑ(0, q₀), λ₀=zero(q₀))
+    function lotka_volterra_2d_idae(q₀=q₀, p₀=ϑ(0, q₀), λ₀=zero(q₀), params=p)
         IDAE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
              lotka_volterra_2d_u, lotka_volterra_2d_g,
              lotka_volterra_2d_ϕ, q₀, p₀, λ₀;
-             v=lotka_volterra_2d_v)
+             parameters=params, h=hamiltonian, v=lotka_volterra_2d_v)
     end
 
-    function lotka_volterra_2d_pdae(q₀=q₀, p₀=ϑ(0, q₀), λ₀=zero(q₀))
+    function lotka_volterra_2d_pdae(q₀=q₀, p₀=ϑ(0, q₀), λ₀=zero(q₀), params=p)
         PDAE(lotka_volterra_2d_v_ham, lotka_volterra_2d_f_ham,
              lotka_volterra_2d_u, lotka_volterra_2d_g,
-             lotka_volterra_2d_ϕ, q₀, p₀, λ₀)
+             lotka_volterra_2d_ϕ, q₀, p₀, λ₀;
+             parameters=params, h=hamiltonian)
     end
 
-    function lotka_volterra_2d_vdae(q₀=q₀, p₀=ϑ(0, q₀), λ₀=zero(q₀))
+    function lotka_volterra_2d_vdae(q₀=q₀, p₀=ϑ(0, q₀), λ₀=zero(q₀), params=p)
         VDAE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f_ham,
              lotka_volterra_2d_g, lotka_volterra_2d_g̅,
              lotka_volterra_2d_ϕ, lotka_volterra_2d_ψ,
-             q₀, p₀, λ₀; v=lotka_volterra_2d_v)
+             q₀, p₀, λ₀; parameters=params, h=hamiltonian, v=lotka_volterra_2d_v)
     end
 
-    function lotka_volterra_2d_vdae_slrk(q₀=q₀, p₀=ϑ(0, q₀), λ₀=zero(q₀))
+    function lotka_volterra_2d_vdae_slrk(q₀=q₀, p₀=ϑ(0, q₀), λ₀=zero(q₀), params=p)
         VDAE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
              lotka_volterra_2d_g, lotka_volterra_2d_g̅,
              lotka_volterra_2d_ϕ, lotka_volterra_2d_ψ,
-             q₀, p₀, λ₀; v=lotka_volterra_2d_v)
+             q₀, p₀, λ₀; parameters=params, h=hamiltonian, v=lotka_volterra_2d_v)
     end
 
-    function lotka_volterra_2d_dg(q₀=q₀, p₀=ϑ(0, q₀))
+    function lotka_volterra_2d_dg(q₀=q₀, p₀=ϑ(0, q₀), params=p)
         IODE(lotka_volterra_2d_ϑ, lotka_volterra_2d_f,
              lotka_volterra_2d_g, q₀, p₀;
-             v=lotka_volterra_2d_v)
+             parameters=params, h=hamiltonian, v=lotka_volterra_2d_v)
     end
 
 end

@@ -154,7 +154,7 @@ end
 
 @inline CommonFunctions.periodicity(equation::VODE) = equation.periodicity
 
-function get_function_tuple(equation::VODE{DT,TT,ϑT,FT,GT,HT,VT,ΩT,∇HT}) where {DT,TT,ϑT,FT,GT,HT,VT,ΩT,∇HT}
+function get_function_tuple(equation::VODE{DT,TT,ϑT,FT,GT,HT,VT,ΩT,∇HT,Nothing}) where {DT,TT,ϑT,FT,GT,HT,VT,ΩT,∇HT}
     names = (:ϑ,:f,:g)
     equs  = (equation.ϑ, equation.f, equation.g)
 
@@ -176,6 +176,41 @@ function get_function_tuple(equation::VODE{DT,TT,ϑT,FT,GT,HT,VT,ΩT,∇HT}) whe
     if ∇HT != Nothing
         names = (names..., :∇H)
         equs  = (equs..., equation.∇H)
+    end
+
+    NamedTuple{names}(equs)
+end
+
+function get_function_tuple(equation::VODE{DT,TT,ϑT,FT,GT,HT,VT,ΩT,∇HT,PT}) where {DT, TT, ϑT, FT, GT, HT, VT, ΩT, ∇HT, PT <: NamedTuple}
+    ϑₚ = (t,q,v,ϑ) -> equation.ϑ(t, q, v, ϑ, equation.parameters)
+    fₚ = (t,q,v,f) -> equation.f(t, q, v, f, equation.parameters)
+    gₚ = (t,q,v,g) -> equation.g(t, q, v, g, equation.parameters)
+
+    names = (:ϑ, :f, :g)
+    equs  = (ϑₚ, fₚ, gₚ)
+
+    if HT != Nothing
+        hₚ = (t,q) -> equation.h(t, q, equation.parameters)
+        names = (names..., :h)
+        equs  = (equs..., hₚ)
+    end
+
+    if VT != Nothing
+        vₚ = (t,q,v) -> equation.v(t, q, v, equation.parameters)
+        names = (names..., :v)
+        equs  = (equs..., vₚ)
+    end
+
+    if ΩT != Nothing
+        Ωₚ = (t,q,Ω) -> equation.Ω(t, q, Ω, equation.parameters)
+        names = (names..., :Ω)
+        equs  = (equs..., Ωₚ)
+    end
+
+    if ∇HT != Nothing
+        ∇Hₚ = (t,q,∇H) -> equation.∇H(t, q, ∇H, equation.parameters)
+        names = (names..., :∇H)
+        equs  = (equs..., ∇Hₚ)
     end
 
     NamedTuple{names}(equs)

@@ -91,13 +91,28 @@ end
 
 @inline CommonFunctions.periodicity(equation::ODE) = equation.periodicity
 
-function get_function_tuple(equation::ODE{DT,TT,VT,HT}) where {DT, TT, VT, HT}
+function get_function_tuple(equation::ODE{DT,TT,VT,HT,Nothing}) where {DT, TT, VT, HT}
     names = (:v,)
     equs  = (equation.v,)
 
     if HT != Nothing
         names = (names..., :h)
         equs  = (equs..., equation.h)
+    end
+
+    NamedTuple{names}(equs)
+end
+
+function get_function_tuple(equation::ODE{DT,TT,VT,HT,PT}) where {DT, TT, VT, HT, PT <: NamedTuple}
+    vₚ = (t,q,v) -> equation.v(t, q, v, equation.parameters)
+
+    names = (:v,)
+    equs  = (vₚ,)
+
+    if HT != Nothing
+        hₚ = (t,q) -> equation.h(t, q, equation.parameters)
+        names = (names..., :h)
+        equs  = (equs..., hₚ)
     end
 
     NamedTuple{names}(equs)

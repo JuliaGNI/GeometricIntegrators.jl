@@ -88,7 +88,7 @@ F^1_{n,i} + F^2_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i 
 """
 struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
                                     ST <: NonlinearSolver{DT},
-                                    IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,S}
+                                    IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,S}
     params::PT
     solver::ST
     iguess::IT
@@ -118,7 +118,7 @@ struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create integrator
         IntegratorSLRK(params, solver, iguess, caches)

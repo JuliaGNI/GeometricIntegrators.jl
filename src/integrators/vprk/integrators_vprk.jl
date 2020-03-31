@@ -14,7 +14,7 @@ end
 "Variational partitioned Runge-Kutta integrator."
 struct IntegratorVPRK{DT, TT, D, S, PT <: ParametersVPRK{DT,TT},
                                     ST <: NonlinearSolver{DT},
-                                    IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
+                                    IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT
@@ -38,7 +38,7 @@ struct IntegratorVPRK{DT, TT, D, S, PT <: ParametersVPRK{DT,TT},
         solver = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create integrator
         IntegratorVPRK(params, solver, iguess, caches)

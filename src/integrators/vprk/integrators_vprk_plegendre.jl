@@ -46,7 +46,7 @@ const ParametersVPRKpLegendre = AbstractParametersVPRK{:vprk_plegendre}
 struct IntegratorVPRKpLegendre{DT, TT, D, S,
                 PT <: ParametersVPRKpLegendre{DT,TT},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
+                IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT
@@ -76,7 +76,7 @@ struct IntegratorVPRKpLegendre{DT, TT, D, S,
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create integrator
         IntegratorVPRKpLegendre(params, solver, iguess, caches)
@@ -91,8 +91,8 @@ end
 function Integrators.initialize!(int::IntegratorVPRKpLegendre, sol::AtomicSolutionPODE)
     sol.t̅ = sol.t - timestep(int)
 
-    equation(int, :v)(sol.t, sol.q, sol.p, sol.v)
-    equation(int, :f)(sol.t, sol.q, sol.p, sol.f)
+    equation(int, :v)(sol.t, sol.q, sol.v)
+    equation(int, :f)(sol.t, sol.q, sol.v, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
@@ -139,7 +139,7 @@ function initial_guess!(int::IntegratorVPRKpLegendre{DT,TT}, sol::AtomicSolution
 end
 
 
-function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, p, ϕ, μ,
+function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
                 params::ParametersVPRKpLegendre{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     local offset::Int
@@ -170,7 +170,7 @@ function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, p, ϕ, μ,
     end
 
     # compute p=p(t,q)
-    params.equ[:ϑ](params.t̅ + params.Δt, q, ϕ)
+    params.equ[:ϑ](params.t̅ + params.Δt, q, v, ϕ)
 
     # for Lobatto-type methods, copy y to μ
     if isdefined(params.tab, :d) && length(params.tab.d) > 0
@@ -309,7 +309,7 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST},
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_stages!(y, cache.Q, cache.V, cache.P, cache.F, cache.Y, cache.Z, cache.Φ, cache.q̃, cache.p̃, cache.ϕ, cache.μ, params)
+    compute_stages!(y, cache.Q, cache.V, cache.P, cache.F, cache.Y, cache.Z, cache.Φ, cache.q̃, cache.ṽ, cache.p̃, cache.ϕ, cache.μ, params)
 
     compute_rhs!(b, cache.Q, cache.V, cache.P, cache.F, cache.Y, cache.Z, cache.Φ, cache.q̃, cache.p̃, cache.ϕ, cache.μ, params)
 
@@ -351,9 +351,9 @@ function Integrators.integrate_step!(int::IntegratorVPRKpLegendre{DT,TT}, sol::A
 
     # compute vector fields at internal stages
     compute_stages!(int.solver.x, cache.Q, cache.V, cache.P,
-                    cache.F, cache.Y, cache.Z,
-                    cache.Φ, cache.q̃, cache.p̃,
-                    cache.ϕ, cache.μ, int.params)
+                    cache.F, cache.Y, cache.Z, cache.Φ,
+                    cache.q̃, cache.ṽ, cache.p̃, cache.ϕ,
+                    cache.μ, int.params)
 
     # compute final update
     update_solution!(sol.q, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))

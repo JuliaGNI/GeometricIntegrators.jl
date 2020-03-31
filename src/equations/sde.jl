@@ -36,12 +36,14 @@ or the column col of the matrix B (if col>0).
 ### Example
 
 ```julia
-    function v(λ, t, q, v)
+    function v(t, q, v, p)
+        λ = p[:λ]
         v[1] = λ*q[1]
         v[2] = λ*q[2]
     end
 
-    function B(μ, t, q, B; col=0)
+    function B(t, q, B, p, col=0)
+        μ = p[:μ]
         if col==0 #whole matrix
             B[1,1] = μ*q[1]
             B[2,1] = μ*q[2]
@@ -54,11 +56,9 @@ or the column col of the matrix B (if col>0).
     q₀ = [1., 1.]
     λ  = 2.
     μ  = 1.
+    p = (λ=λ, μ=μ)
 
-    v_sde = (t, q, v) -> v(λ, t, q, v)
-    B_sde = (t, q, B) -> B(μ, t, q, B)
-
-    sde = SDE(v_sde, B_sde, t₀, q₀)
+    sde = SDE(v, B, t₀, q₀; parameters=p)
 ```
 """
 struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Function,
@@ -75,12 +75,11 @@ struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Functio
     parameters::pType
     periodicity::Vector{dType}
 
-    function SDE(m, ns, v::vType, B::BType, t₀::tType, q₀::DenseArray{dType};
+    function SDE(m, ns, v::vType, B::BType, t₀::tType, q₀::AbstractArray{dType,N};
                  parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
                         dType <: Number, tType <: Number, vType <: Function, BType <: Function,
-                        pType <: Union{NamedTuple,Nothing}}
+                        pType <: Union{NamedTuple,Nothing}, N}
 
-        N  = ndims(q₀)
         d  = size(q₀,1)
         ni = size(q₀,2)
 
@@ -96,7 +95,7 @@ struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Functio
 end
 
 
-function SDE(m::Int, ns::Int, v::Function, B::Function, q₀::DenseArray{DT}; kwargs...) where {DT}
+function SDE(m::Int, ns::Int, v::Function, B::Function, q₀::AbstractArray{DT}; kwargs...) where {DT}
     SDE(m, ns, v, B, zero(DT), q₀; kwargs...)
 end
 
@@ -134,6 +133,16 @@ end
 
 @inline CommonFunctions.periodicity(equation::SDE) = equation.periodicity
 
-function get_function_tuple(equation::SDE)
+function get_function_tuple(equation::SDE{DT,TT,VT,BT,Nothing}) where {DT, TT, VT, BT}
     NamedTuple{(:v,:B)}((equation.v, equation.B))
+end
+
+function get_function_tuple(equation::SDE{DT,TT,VT,BT,PT}) where {DT, TT, VT, BT, PT <: NamedTuple}
+    vₚ = (t,q,v) -> equation.v(t, q, v, equation.parameters)
+    Bₚ = (t,q,B,col=0) -> equation.B(t, q, B, equation.parameters, col)
+
+    names = (:v,:B)
+    equs  = (vₚ,Bₚ)
+
+    NamedTuple{names}(equs)
 end

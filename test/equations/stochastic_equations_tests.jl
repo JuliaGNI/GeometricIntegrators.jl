@@ -1,9 +1,12 @@
 
-@testset "$(rpad("Stochastic equations",80))" begin
+using GeometricIntegrators.CommonFunctions
+using GeometricIntegrators.Equations
+using Test
 
-    ################################################################################
-    # Test SDE: Stochastic Differential Equation
-    ################################################################################
+include("initial_conditions.jl")
+
+
+@testset "$(rpad("Stochastic Differential Equations (SDE)",80))" begin
 
     x₁ₛ = [0.5  0.0 -0.5; 0.0  0.5  0.0]
 
@@ -57,10 +60,10 @@
     @test sde == similar(sde, x₀, 1)
     @test sde == similar(sde, x₀)
 
+end
 
-    ################################################################################
-    # Test PSDE: Partitioned Stochastic Differential Equation
-    ################################################################################
+
+@testset "$(rpad("Partitioned Stochastic Differential Equations (PSDE)",80))" begin
 
     noise_intensity = 0.1
 
@@ -118,10 +121,10 @@
     @test psde != similar(psde, t₀, q₁ₛ, p₁ₛ)
     @test psde != similar(psde, q₁ₛ, p₁ₛ)
 
+end
 
-    ################################################################################
-    # Test SPSDE: Split Partitioned Stochastic Differential Equation
-    ################################################################################
+
+@testset "$(rpad("Split Partitioned Stochastic Differential Equations (SPSDE)",80))" begin
 
     noise_intensity = 0.1
 

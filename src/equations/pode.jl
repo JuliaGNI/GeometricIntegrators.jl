@@ -112,13 +112,29 @@ end
 
 @inline CommonFunctions.periodicity(equation::PODE) = equation.periodicity
 
-function get_function_tuple(equation::PODE{DT,TT,VT,FT,HT}) where {DT, TT, VT, FT, HT}
+function get_function_tuple(equation::PODE{DT,TT,VT,FT,HT,Nothing}) where {DT, TT, VT, FT, HT}
     names = (:v,:f)
     equs  = (equation.v, equation.f)
 
     if HT != Nothing
         names = (names..., :h)
         equs  = (equs..., equation.h)
+    end
+
+    NamedTuple{names}(equs)
+end
+
+function get_function_tuple(equation::PODE{DT,TT,VT,FT,HT,PT}) where {DT, TT, VT, FT, HT, PT <: NamedTuple}
+    vₚ = (t,q,p,v) -> equation.v(t, q, p, v, equation.parameters)
+    fₚ = (t,q,p,f) -> equation.f(t, q, p, f, equation.parameters)
+
+    names = (:v, :f)
+    equs  = (vₚ, fₚ)
+
+    if HT != Nothing
+        hₚ = (t,q,p) -> equation.h(t, q, p, equation.parameters)
+        names = (names..., :h)
+        equs  = (equs..., hₚ)
     end
 
     NamedTuple{names}(equs)

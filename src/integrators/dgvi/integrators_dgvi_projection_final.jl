@@ -196,8 +196,7 @@ function initialize!(int::IntegratorDGVIP1, sol::AtomicSolutionPODE)
 
     sol.t̅ = sol.t - timestep(int)
 
-    # equation(int, :v)(sol.t, sol.q, sol.q, sol.v)
-    equation(int, :v)(sol.t, sol.q, sol.q, sol.v)
+    equation(int, :v)(sol.t, sol.q, sol.v)
 
     # initialise initial guess
     initialize!(int.iguess, sol.t, sol.q, sol.v,

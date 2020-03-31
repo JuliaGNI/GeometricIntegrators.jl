@@ -136,13 +136,30 @@ end
 
 @inline CommonFunctions.periodicity(equation::DAE) = equation.periodicity
 
-function get_function_tuple(equation::DAE{DT,TT,VT,UT,ϕT,HT}) where {DT, TT, VT, UT, ϕT, HT}
+function get_function_tuple(equation::DAE{DT,TT,VT,UT,ϕT,HT,Nothing}) where {DT, TT, VT, UT, ϕT, HT}
     names = (:v,:u,:ϕ)
     equs  = (equation.v, equation.u, equation.ϕ)
 
     if HT != Nothing
         names = (names..., :h)
         equs  = (equs..., equation.h)
+    end
+
+    NamedTuple{names}(equs)
+end
+
+function get_function_tuple(equation::DAE{DT,TT,VT,UT,ϕT,HT,PT}) where {DT, TT, VT, UT, ϕT, HT, PT <: NamedTuple}
+    vₚ = (t,q,v) -> equation.v(t, q, v, equation.parameters)
+    uₚ = (t,q,λ,u) -> equation.u(t, q, λ, u, equation.parameters)
+    ϕₚ = (t,q,ϕ) -> equation.ϕ(t, q, ϕ, equation.parameters)
+
+    names = (:v, :u, :ϕ)
+    equs  = (vₚ, uₚ, ϕₚ)
+
+    if HT != Nothing
+        hₚ = (t,q,v) -> equation.h(t, q, v, equation.parameters)
+        names = (names..., :h)
+        equs  = (equs..., hₚ)
     end
 
     NamedTuple{names}(equs)

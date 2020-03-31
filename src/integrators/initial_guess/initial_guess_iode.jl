@@ -1,5 +1,5 @@
 """
-`InitialGuessPODE`: Initial guess for partitioned ordinary differential equations
+`InitialGuessIODE`: Initial guess for partitioned ordinary differential equations
 
 ### Fields
 
@@ -9,32 +9,40 @@
 * `Δt`:  time step
 * `s`:   number of extrapolation stages (for initialisation)
 """
-mutable struct InitialGuessPODE{DT, TT, VT, FT, IT <: Interpolator}
+mutable struct InitialGuessIODE{DT, TT, VT, FT, IT <: Interpolator}
     int::IT
     v::VT
     f::FT
     Δt::TT
     s::Int
 
-    function InitialGuessPODE{DT,TT,VT,FT,IT}(interp, v, f, Δt) where {DT,TT,VT,FT,IT}
+    function InitialGuessIODE{DT,TT,VT,FT,IT}(interp, v, f, Δt) where {DT,TT,VT,FT,IT}
         new(interp, v, f, Δt, get_config(:ig_extrapolation_stages))
     end
 end
 
-function InitialGuessPODE{DT,D}(interp, v::VT, f::FT, Δt::TT) where {D, DT, TT, VT <: Function, FT <: Function}
-    InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, D), v, f, Δt)
+function InitialGuessIODE{DT,D}(interp, v::VT, f::FT, Δt::TT) where {D, DT, TT, VT <: Function, FT <: Function}
+    InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, D), v, f, Δt)
 end
 
-function InitialGuess(interp, equ::PODE{DT,TT,VT,FT}, Δt::TT) where {DT,TT,VT,FT}
-    InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
+function InitialGuess(interp, equ::IODE{DT,TT,ϑT,FT,GT,HT,VT}, Δt::TT) where {DT,TT,ϑT,FT,GT,HT,VT}
+    InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
-function InitialGuess(interp, equ::PDAE{DT,TT,VT,FT,UT,GT,ϕT}, Δt::TT) where {DT,TT,VT,FT,UT,GT,ϕT}
-    InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
+function InitialGuess(interp, equ::VODE{DT,TT,ϑT,FT,GT,HT,VT}, Δt::TT) where {DT,TT,ϑT,FT,GT,HT,VT}
+    InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
+end
+
+function InitialGuess(interp, equ::IDAE{DT,TT,ϑT,FT,UT,GT,ϕT,HT,VT}, Δt::TT) where {DT,TT,ϑT,FT,UT,GT,ϕT,HT,VT}
+    InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
+end
+
+function InitialGuess(interp, equ::VDAE{DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT}, Δt::TT) where {DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT}
+    InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
 
-Base.:(==)(ig1::InitialGuessPODE{DT1,TT1}, ig2::InitialGuessPODE{DT2,TT2}) where {DT1,DT2,TT1,TT2}= (
+Base.:(==)(ig1::InitialGuessIODE{DT1,TT1}, ig2::InitialGuessIODE{DT2,TT2}) where {DT1,DT2,TT1,TT2}= (
                                 DT1 == DT2
                              && TT1 == TT2
                              && ig1.int == ig2.int
@@ -45,7 +53,7 @@ Base.:(==)(ig1::InitialGuessPODE{DT1,TT1}, ig2::InitialGuessPODE{DT2,TT2}) where
 
 
 "Initialise initial guess, i.e., given t₀, t₁, q₁ compute q₀, v₀, v₁."
-function initialize!(ig::InitialGuessPODE{DT,TT,VT,IT},
+function initialize!(ig::InitialGuessIODE{DT,TT,VT,IT},
                 t₁::TT,
                 q₁::SolutionVector{DT},
                 p₁::SolutionVector{DT},
@@ -57,26 +65,26 @@ function initialize!(ig::InitialGuessPODE{DT,TT,VT,IT},
                 v₀::SolutionVector{DT},
                 f₀::SolutionVector{DT}) where {DT,TT,VT,IT}
 
-    midpoint_extrapolation(ig.v, ig.f, t₁, t₀, q₁, q₀, p₁, p₀, ig.s)
+    midpoint_extrapolation((t,q,p,v)->ig.v(t,q,v), ig.f, t₁, t₀, q₁, q₀, p₁, p₀, ig.s)
 
-    ig.v(t₀, q₀, p₀, v₀)
-    ig.v(t₁, q₁, p₁, v₁)
+    ig.v(t₀, q₀, v₀)
+    ig.v(t₁, q₁, v₁)
     ig.f(t₀, q₀, v₀, f₀)
     ig.f(t₁, q₁, v₁, f₁)
 end
 
 
-function update_vector_fields!(ig::InitialGuessPODE{DT,TT}, t₁::TT,
+function update_vector_fields!(ig::InitialGuessIODE{DT,TT}, t₁::TT,
                                q₁::SolutionVector{DT},
                                p₁::SolutionVector{DT},
                                v₁::Vector{DT},
                                f₁::Vector{DT}) where {DT,TT}
-    ig.v(t₁, q₁, p₁, v₁)
+    ig.v(t₁, q₁, v₁)
     ig.f(t₁, q₁, v₁, f₁)
 end
 
 
-function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
+function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT},
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},
@@ -97,7 +105,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
 end
 
 
-function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
+function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT},
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},
@@ -121,7 +129,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
 end
 
 
-function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
+function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT},
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},
@@ -151,7 +159,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
 end
 
 
-function CommonFunctions.evaluate!(ig::InitialGuessPODE{DT,TT},
+function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT},
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},

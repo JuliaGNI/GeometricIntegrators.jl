@@ -1,15 +1,4 @@
 
-function Integrators.initialize!(int::AbstractIntegratorSPARK, sol::AtomicSolutionPDAE)
-    sol.t̅ = sol.t - timestep(int)
-
-    equation(int, :v)(sol.t, sol.q, sol.p, sol.v)
-    equation(int, :f)(sol.t, sol.q, sol.p, sol.f)
-
-    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
-end
-
-
 function update_solution!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomicSolutionPDAE{DT,TT},
                           cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT,TT}
     # compute final update

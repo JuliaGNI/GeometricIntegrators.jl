@@ -40,6 +40,10 @@ function InitialGuessODE(interp, equation::VODE{DT,TT,AT,FT,GT,HT,VT}, Δt::TT) 
     InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt)
 end
 
+function InitialGuess(interp, equation::ODE, Δt)
+    InitialGuessODE(interp, equation, Δt)
+end
+
 
 Base.:(==)(ig1::InitialGuessODE{DT1,TT1}, ig2::InitialGuessODE{DT2,TT2}) where {DT1,DT2,TT1,TT2}= (
                                 DT1 == DT2

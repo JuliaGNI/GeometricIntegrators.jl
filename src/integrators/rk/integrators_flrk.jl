@@ -249,7 +249,7 @@ function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutio
     # and f_0(Q, V(Q)) = f(t, Q, V, F)
     for i in 1:S
         tᵢ = int.params.t + timestep(int) * tableau(int).q.c[i]
-        int.params.equs[:ϑ](tᵢ, cache.Q[i], int.ϑ[i])
+        int.params.equs[:ϑ](tᵢ, cache.Q[i], cache.V[i], int.ϑ[i])
         int.params.equs[:v](tᵢ, cache.Q[i], cache.V[i])
         int.params.equs[:g](tᵢ, cache.Q[i], cache.V[i], int.F[i])
     end
