@@ -86,6 +86,7 @@ Base.:(==)(ode1::SODE, ode2::SODE) = (
                                 ode1.d == ode2.d
                              && ode1.n == ode2.n
                              && ode1.v == ode2.v
+                             && ode1.q == ode2.q
                              && ode1.t₀ == ode2.t₀
                              && ode1.q₀ == ode2.q₀
                              && ode1.parameters == ode2.parameters
@@ -98,7 +99,7 @@ end
 function Base.similar(ode::SODE, t₀::TT, q₀::AbstractArray{DT};
                       parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
     @assert ode.d == size(q₀,1)
-    SODE(ode.v, t₀, q₀; parameters=parameters, periodicity=periodicity)
+    SODE(ode.v, ode.q, t₀, q₀; parameters=parameters, periodicity=periodicity)
 end
 
 @inline Base.ndims(ode::SODE) = ode.d
