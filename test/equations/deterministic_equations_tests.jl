@@ -49,6 +49,14 @@ function f_sode_2(t, x, f)
     f[1] = x[1]^2
 end
 
+function q_sode_1(t, x̄, x)
+    x[1] = x̄[1]
+end
+
+function q_sode_2(t, x̄, x)
+    x[1] = x̄[1]
+end
+
 
 function dae_v(t, x, v)
     v[1] = x[1]
@@ -350,19 +358,28 @@ end
 @testset "$(rpad("Split Ordinary Differential Equations (SODE)",80))" begin
 
     f_sode = (f_sode_1, f_sode_2)
+    q_sode = (q_sode_1, q_sode_2)
 
-    sode  = SODE(eltype(q₀), 1, 1, 1, f_sode, t₀, q₀)
     sode1 = SODE(f_sode, t₀, q₀)
     sode2 = SODE(f_sode, q₀)
 
-    @test sode == sode1
-    @test sode == sode2
+    @test sode1 == sode2
 
     @test hash(sode1) == hash(sode2)
 
-    @test sode == similar(sode, t₀, q₀)
-    @test sode == similar(sode, q₀)
+    @test sode1 == similar(sode1, t₀, q₀)
+    @test sode1 == similar(sode1, q₀)
 
+
+    sode1 = SODE(f_sode, q_sode, t₀, q₀)
+    sode2 = SODE(f_sode, q_sode, q₀)
+
+    @test sode1 == sode2
+
+    @test hash(sode1) == hash(sode2)
+
+    @test sode1 == similar(sode1, t₀, q₀)
+    @test sode1 == similar(sode1, q₀)
 end
 
 
