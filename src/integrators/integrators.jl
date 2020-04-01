@@ -134,6 +134,32 @@ end
 
 
 #*****************************************************************************#
+# Constructor wrappers for deterministic integrators                          #
+#*****************************************************************************#
+
+"Create integrator constructor for exact solution."
+function IntegratorConstructor(DT, D)
+    (v::Function, Δt::Number; kwargs...) -> IntegratorExactODE{DT,D}(v, Δt; kwargs...)
+end
+
+"Create integrator constructor for explicit Runge-Kutta tableau."
+function IntegratorConstructor(DT, D, tableau::TableauERK)
+    (v::Function, Δt::Number; kwargs...) -> IntegratorERK{DT,D}(v, tableau, Δt; kwargs...)
+end
+
+"Create integrator constructor for diagonally implicit Runge-Kutta tableau."
+function IntegratorConstructor(DT, D, tableau::TableauDIRK)
+    (v::Function, Δt::Number; kwargs...) -> IntegratorDIRK{DT,D}(v, tableau, Δt; kwargs...)
+end
+
+"Create integrator constructor for fully implicit Runge-Kutta tableau."
+function IntegratorConstructor(DT, D, tableau::TableauFIRK)
+    (v::Function, Δt::Number; kwargs...) -> IntegratorFIRK{DT,D}(v, tableau, Δt; kwargs...)
+end
+
+
+
+#*****************************************************************************#
 # General integration functions for all integrators                           #
 #*****************************************************************************#
 

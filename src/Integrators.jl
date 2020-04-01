@@ -33,13 +33,13 @@ module Integrators
     include("integrators/abstract_tableau.jl")
 
 
-    export Integrator, DeterministicIntegrator, StochasticIntegrator, IntegratorCache
+    export Integrator, DeterministicIntegrator, StochasticIntegrator, IntegratorCache,
+           IntegratorConstructor
     export integrate, integrate!, integrate_step!, equation, timestep
     export NonlinearFunctionParameters, function_stages!
 
     include("integrators/abstract_integrator.jl")
     include("integrators/integrator_cache.jl")
-
     include("integrators/integrators_common.jl")
 
 

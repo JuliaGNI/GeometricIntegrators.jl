@@ -1,9 +1,12 @@
 
+using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Tableaus
 using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
 using GeometricIntegrators.Utils
 using Test
+
+set_config(:nls_stol_break, 1E3)
 
 using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem: Δt, nt, refx
 
@@ -65,3 +68,20 @@ ssol = integrate(sode, sint, nt)
 sintc = IntegratorComposition(sode, getTableauSuzukiFractal(), Δt)
 ssolc = integrate(sode, sintc, nt)
 @test ssol.q == ssolc.q
+
+
+DT = eltype(sode.q₀)
+D  = ndims(sode)
+
+ints_glrk1 = (IntegratorConstructor(DT, D, getTableauGLRK(1)), IntegratorConstructor(DT, D, getTableauGLRK(1)))
+ints_erk4  = (IntegratorConstructor(DT, D, getTableauERK4()), IntegratorConstructor(DT, D, getTableauERK4()))
+
+sint = IntegratorComposition(sode, ints_erk4, getTableauLieA(), Δt)
+ssol = integrate(sode, sint, nt)
+# println(rel_err(ssol.q, refx))
+@test rel_err(ssol.q, refx) < 5E-2
+
+sint = IntegratorComposition(sode, ints_glrk1, getTableauStrang(), Δt)
+ssol = integrate(sode, sint, nt)
+# println(rel_err(ssol.q, refx))
+@test rel_err(ssol.q, refx) < 1E-3
