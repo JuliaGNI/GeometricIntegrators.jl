@@ -77,20 +77,36 @@ module HarmonicOscillatorProblem
     end
 
 
-    function oscillator_sode_v_1(t, q, v, h)
-        v[1] = q[1] + h * q[2]
-        v[2] = q[2]
+    function oscillator_sode_v_1(t, q, v, params)
+        v[1] = q[2]
+        v[2] = 0
         nothing
     end
 
-    function oscillator_sode_v_2(t, q, v, h)
-        v[1] = q[1]
-        v[2] = q[2] - h * k*q[1]
+    function oscillator_sode_v_2(t, q, v, params)
+        @unpack k = params
+        v[1] = 0
+        v[2] = -k*q[1]
         nothing
     end
 
-    function harmonic_oscillator_sode(q₀=q₀)
-        SODE((oscillator_sode_v_1, oscillator_sode_v_2), q₀)
+    function oscillator_sode_q_1(t, q̄, q, h, params)
+        q[1] = q̄[1] + h * q̄[2]
+        q[2] = q̄[2]
+        nothing
+    end
+
+    function oscillator_sode_q_2(t, q̄, q, h, params)
+        @unpack k = params
+        q[1] = q̄[1]
+        q[2] = q̄[2] - h * k*q̄[1]
+        nothing
+    end
+
+    function harmonic_oscillator_sode(q₀=q₀, params=p)
+        SODE((oscillator_sode_v_1, oscillator_sode_v_2),
+             (oscillator_sode_q_1, oscillator_sode_q_2),
+             q₀; parameters=params)
     end
 
 

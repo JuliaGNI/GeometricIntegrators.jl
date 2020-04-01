@@ -18,7 +18,11 @@ idae = lotka_volterra_2d_idae()
 vdae = lotka_volterra_2d_vdae()
 
 
-@test InitialGuess(int,  ode, Δt) == InitialGuessODE{eltype(ode.q₀), ndims(ode)}(int,  ode.v, Δt)
+@test InitialGuessODE(int,  ode, Δt) == InitialGuessODE{eltype( ode.q₀), ndims( ode)}(int,  ode.v, Δt)
+@test InitialGuessODE(int, iode, Δt) == InitialGuessODE{eltype(iode.q₀), ndims(iode)}(int, iode.v, Δt)
+@test InitialGuessODE(int, vode, Δt) == InitialGuessODE{eltype(vode.q₀), ndims(vode)}(int, vode.v, Δt)
+
+@test InitialGuess(int, ode, Δt) == InitialGuessODE{eltype(ode.q₀), ndims(ode)}(int, ode.v, Δt)
 
 @test InitialGuess(int, iode, Δt) == InitialGuessIODE{eltype(iode.q₀), ndims(iode)}(int, iode.v, iode.f, Δt)
 @test InitialGuess(int, idae, Δt) == InitialGuessIODE{eltype(idae.q₀), ndims(idae)}(int, idae.v, idae.f, Δt)

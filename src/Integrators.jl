@@ -33,13 +33,13 @@ module Integrators
     include("integrators/abstract_tableau.jl")
 
 
-    export Integrator, DeterministicIntegrator, StochasticIntegrator, IntegratorCache
+    export Integrator, DeterministicIntegrator, StochasticIntegrator, IntegratorCache,
+           IntegratorConstructor
     export integrate, integrate!, integrate_step!, equation, timestep
     export NonlinearFunctionParameters, function_stages!
 
     include("integrators/abstract_integrator.jl")
     include("integrators/integrator_cache.jl")
-
     include("integrators/integrators_common.jl")
 
 
@@ -82,9 +82,12 @@ module Integrators
     include("integrators/rk/integrators_pglrk.jl")
 
 
-    export IntegratorSplitting, AbstractTableauSplitting,
-           TableauSplittingGS, TableauSplittingNS, TableauSplittingSS
-
+    export IntegratorSplitting, IntegratorComposition, IntegratorExactODE,
+           AbstractTableauSplitting, TableauSplittingGS, TableauSplittingNS, TableauSplittingSS
+           
+    include("integrators/splitting/integrators_exact_ode.jl")
+    include("integrators/splitting/splitting_tableau.jl")
+    include("integrators/splitting/integrators_composition.jl")
     include("integrators/splitting/integrators_splitting.jl")
 
 

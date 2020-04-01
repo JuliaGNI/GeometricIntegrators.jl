@@ -105,7 +105,7 @@ struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorFIRK{DT,D}(equations::NamedTuple, tableau::TableauFIRK{TT}, Δt::TT; exact_jacobian=false) where {DT,TT,D}
+    function IntegratorFIRK{DT,D}(equations::NamedTuple, tableau::TableauFIRK{TT}, Δt::TT; exact_jacobian=true) where {DT,TT,D}
         # get number of stages
         S = tableau.s
 
