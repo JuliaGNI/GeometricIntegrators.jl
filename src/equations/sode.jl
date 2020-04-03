@@ -124,5 +124,6 @@ end
 get_function_tuple(equation::SODE{DT,TT,VT,QT,Nothing}) where {DT, TT, VT, QT} = equation.v
 get_function_tuple(equation::SODE{DT,TT,VT,QT,PT}) where {DT, TT, VT, QT, PT <: NamedTuple} = Tuple((t,q,v) -> V(t, q, v, equation.parameters) for V in equation.v)
 
-get_solution_tuple(equation::SODE{DT,TT,VT,QT,Nothing}) where {DT, TT, VT, QT} = equation.q
-get_solution_tuple(equation::SODE{DT,TT,VT,QT,PT}) where {DT, TT, VT, QT, PT <: NamedTuple} = Tuple(Q == nothing ? Q : (t,q̄,q,h) -> Q(t, q̄, q, h, equation.parameters) for Q in equation.q)
+get_solution_tuple(equation::SODE{DT,TT,VT,Nothing}) where {DT, TT, VT} = ()
+get_solution_tuple(equation::SODE{DT,TT,VT,QT,PT}) where {DT, TT, VT, QT <: Tuple, PT <: Nothing} = equation.q
+get_solution_tuple(equation::SODE{DT,TT,VT,QT,PT}) where {DT, TT, VT, QT <: Tuple, PT <: NamedTuple} = Tuple(Q == nothing ? Q : (t,q̄,q,h) -> Q(t, q̄, q, h, equation.parameters) for Q in equation.q)
