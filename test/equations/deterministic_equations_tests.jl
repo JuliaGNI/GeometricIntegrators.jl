@@ -109,21 +109,19 @@ end
 
 @testset "$(rpad("Ordinary Differential Equations (ODE)",80))" begin
 
-    ode  = ODE(eltype(q₀), 1, 1, 1, ode_v, t₀, q₀)
     ode1 = ODE(ode_v, t₀, q₀)
     ode2 = ODE(ode_v, q₀)
 
-    @test ndims(ode) == 1
-    @test periodicity(ode) == zero(q₀)
-    @test get_function_tuple(ode) == NamedTuple{(:v,)}((ode_v,))
+    @test ndims(ode1) == ndims(ode2) == 1
+    @test periodicity(ode1) == periodicity(ode2) == zero(q₀)
+    @test get_function_tuple(ode1) == get_function_tuple(ode2) == NamedTuple{(:v,)}((ode_v,))
 
-    @test ode == ode1
-    @test ode == ode2
+    @test ode1 == ode2
 
     @test hash(ode1) == hash(ode2)
 
-    @test ode == similar(ode, t₀, q₀)
-    @test ode == similar(ode, q₀)
+    @test ode1 == similar(ode1, t₀, q₀)
+    @test ode1 == similar(ode1, q₀)
 
 end
 
