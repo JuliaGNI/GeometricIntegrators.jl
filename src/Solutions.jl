@@ -73,4 +73,6 @@ module Solutions
 
     include("solutions/solution_hdf5.jl")
 
+    include("solutions/atomic_solution_constructors.jl")
+    
 end

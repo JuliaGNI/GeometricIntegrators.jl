@@ -142,11 +142,6 @@ Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {
 @inline lastentry(sol::SolutionODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline CommonFunctions.periodicity(sol::SolutionODE) = sol.periodicity
 
-"Create AtomicSolution for ODE."
-function AtomicSolution(solution::SolutionODE{DT,TT}) where {DT,TT}
-    AtomicSolutionODE(DT, TT, solution.nd)
-end
-
 
 function set_initial_conditions!(sol::SolutionODE, equ::Union{ODE,SODE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀)
@@ -177,7 +172,7 @@ function get_solution!(sol::SolutionODE{DT}, q::SolutionVector{DT}, n, k=1) wher
 end
 
 function get_solution(sol::SolutionODE, n, k=1)
-    (sol.t[n], sol.q[:, n, k])
+    (sol.t[n], Array(sol.q[:, n, k]))
 end
 
 function set_solution!(sol::SolutionODE, t, q, n, k=1)

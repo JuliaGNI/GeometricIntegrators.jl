@@ -163,12 +163,6 @@ Base.:(==)(sol1::SolutionPDAE{DT1,TT1,N1}, sol2::SolutionPDAE{DT2,TT2,N2}) where
 @inline CommonFunctions.periodicity(sol::SolutionPDAE) = sol.periodicity
 
 
-"Create AtomicSolution for partitioned DAE."
-function AtomicSolution(solution::SolutionPDAE{DT,TT}) where {DT,TT}
-    AtomicSolutionPDAE(DT, TT, solution.nd, solution.nm)
-end
-
-
 function set_initial_conditions!(sol::SolutionPDAE, equ::Union{IODE,VODE,PDAE,IDAE,VDAE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, equ.λ₀)
 end
@@ -212,7 +206,7 @@ function get_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::Solut
 end
 
 function get_solution(sol::SolutionPDAE, n, k=1)
-    (sol.t[n], sol.q[:, n, k], sol.p[:, n, k], sol.λ[:, n, k])
+    (sol.t[n], Array(sol.q[:, n, k]), Array(sol.p[:, n, k]), Array(sol.λ[:, n, k]))
 end
 
 function set_solution!(sol::SolutionPDAE, t::Real, q::Vector, p::Vector, n::Int, k::Int=1)

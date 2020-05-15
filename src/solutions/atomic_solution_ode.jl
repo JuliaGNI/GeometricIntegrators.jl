@@ -1,6 +1,13 @@
 """
 Atomic solution for an ODE.
 
+### Parameters
+
+* `DT`: data type
+* `TT`: time step type
+* `AT`: array type
+* `IT`: internal variable types
+
 ### Fields
 
 * `t`: time of current time step
@@ -11,26 +18,36 @@ Atomic solution for an ODE.
 * `v`: vector field of q
 * `v̅`: vector field of q̅
 """
-mutable struct AtomicSolutionODE{DT,TT,IT} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionODE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT}
     t::TT
     t̅::TT
 
-    q::Vector{DT}
-    q̅::Vector{DT}
-    q̃::Vector{DT}
+    q::AT
+    q̅::AT
+    q̃::AT
 
-    v::Vector{DT}
-    v̅::Vector{DT}
+    v::AT
+    v̅::AT
 
     internal::IT
 
-    function AtomicSolutionODE{DT, TT, IT}(nd, internal::IT) where {DT <: Number, TT <: Real, IT <: NamedTuple}
-        new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd), internal)
+    function AtomicSolutionODE{DT,TT,AT,IT}(nd, internal::IT) where {DT,TT,AT,IT}
+        new(zero(TT), zero(TT),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            internal)
+    end
+
+    function AtomicSolutionODE{DT,TT,AT,IT}(t::TT, q::AT, internal::IT) where {DT,TT,AT,IT}
+        new(zero(t), zero(t),
+            zero(q), zero(q), zero(q),
+            zero(q), zero(q),
+            internal)
     end
 end
 
-AtomicSolutionODE(DT, TT, nd, internal::IT=NamedTuple()) where {IT} = AtomicSolutionODE{DT, TT, IT}(nd, internal)
+AtomicSolutionODE(DT, TT, AT, nd, internal::IT=NamedTuple()) where {IT} = AtomicSolutionODE{DT,TT,AT,IT}(nd, internal)
+AtomicSolutionODE(t::TT, q::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionODE{DT,TT,AT,IT}(t, q, internal)
 
 
 function set_solution!(asol::AtomicSolutionODE, sol)
@@ -57,6 +74,6 @@ function update!(asol::AtomicSolutionODE{DT}, y::Vector{DT}) where {DT}
     end
 end
 
-function update!(asol::AtomicSolutionODE{DT}, y::DT, k::Int) where {DT}
+function update!(asol::AtomicSolutionODE{DT}, y::DT, k::Union{Int,CartesianIndex}) where {DT}
     asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
 end

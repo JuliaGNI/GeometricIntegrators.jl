@@ -250,12 +250,6 @@ Base.:(==)(sol1::SolutionSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionSDE{DT2,TT2,NQ2,
 @inline CommonFunctions.periodicity(sol::SolutionSDE) = sol.periodicity
 
 
-"Create AtomicSolution for SDE."
-function AtomicSolution(solution::SolutionSDE{DT,TT}) where {DT,TT}
-    AtomicSolutionSDE(DT, TT, solution.nd, solution.nm)
-end
-
-
 function set_initial_conditions!(sol::SolutionSDE, equ::SDE)
     set_initial_conditions!(sol, equ.t₀, equ.q₀)
 end
@@ -306,7 +300,7 @@ function get_solution!(sol::SolutionSDE{DT}, q::SolutionVector{DT}, n, k=1) wher
 end
 
 function get_solution(sol::SolutionSDE, n, k=1)
-    (sol.t[n], sol.q[:, n, k])
+    (sol.t[n], Array(sol.q[:, n, k]))
 end
 
 function set_solution!(sol::SolutionSDE, t, q, n, k=1)

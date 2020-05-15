@@ -1,6 +1,13 @@
 """
 Atomic solution for an DAE.
 
+### Parameters
+
+* `DT`: data type
+* `TT`: time step type
+* `AT`: array type
+* `IT`: internal variable types
+
 ### Fields
 
 * `t`: time of current time step
@@ -15,35 +22,46 @@ Atomic solution for an DAE.
 * `u`: projective vector field of q
 * `u̅`: projective vector field of q̅
 """
-mutable struct AtomicSolutionDAE{DT,TT,IT} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionDAE{DT, TT, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT}
     t::TT
     t̅::TT
 
-    q::Vector{DT}
-    q̅::Vector{DT}
-    q̃::Vector{DT}
+    q::AT
+    q̅::AT
+    q̃::AT
 
-    λ::Vector{DT}
-    λ̅::Vector{DT}
+    λ::AT
+    λ̅::AT
 
-    v::Vector{DT}
-    v̅::Vector{DT}
+    v::AT
+    v̅::AT
 
-    u::Vector{DT}
-    u̅::Vector{DT}
+    u::AT
+    u̅::AT
 
     internal::IT
 
-    function AtomicSolutionDAE{DT, TT, IT}(nd, nm, internal::IT) where {DT <: Number, TT <: Real, IT <: NamedTuple}
-        new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nm), zeros(DT, nm),
-                                zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd),
-                                internal)
+    function AtomicSolutionDAE{DT,TT,AT,IT}(nd, nm, internal::IT) where {DT <: Number, TT <: Real, AT, IT <: NamedTuple}
+        new(zero(TT), zero(TT),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nm)), AT(zeros(DT, nm)),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            internal)
+    end
+
+    function AtomicSolutionDAE{DT,TT,AT,IT}(t::TT, q::AT, λ::AT, internal::IT) where {DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple}
+        new(zero(t), zero(t),
+            zero(q), zero(q), zero(q),
+            zero(λ), zero(λ),
+            zero(q), zero(q),
+            zero(λ), zero(λ),
+            internal)
     end
 end
 
-AtomicSolutionDAE(DT, TT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionDAE{DT, TT, IT}(nd, nm, internal)
+AtomicSolutionDAE(DT, TT, AT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionDAE{DT,TT,AT,IT}(nd, nm, internal)
+AtomicSolutionDAE(t::TT, q::AT, λ::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionDAE{DT,TT,AT,IT}(t, q, λ, internal)
 
 function set_solution!(asol::AtomicSolutionDAE, sol)
     t, q, λ = sol
@@ -75,6 +93,6 @@ function update!(asol::AtomicSolutionDAE{DT}, y::Vector{DT}, λ::Vector{DT}) whe
     end
 end
 
-function update!(asol::AtomicSolutionDAE{DT}, y::DT, k::Int) where {DT}
+function update!(asol::AtomicSolutionDAE{DT}, y::DT, k::Union{Int,CartesianIndex}) where {DT}
     asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
 end

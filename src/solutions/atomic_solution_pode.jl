@@ -1,6 +1,13 @@
 """
 Atomic solution for an PODE.
 
+### Parameters
+
+* `DT`: data type
+* `TT`: time step type
+* `AT`: array type
+* `IT`: internal variable types
+
 ### Fields
 
 * `t`: time of current time step
@@ -16,34 +23,44 @@ Atomic solution for an PODE.
 * `f`: vector field of p
 * `f̅`: vector field of p̅
 """
-mutable struct AtomicSolutionPODE{DT,TT,IT} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionPODE{DT,TT,AT <: AbstractArray{DT},IT} <: AtomicSolution{DT,TT}
     t::TT
     t̅::TT
 
-    q::Vector{DT}
-    q̅::Vector{DT}
-    q̃::Vector{DT}
+    q::AT
+    q̅::AT
+    q̃::AT
 
-    p::Vector{DT}
-    p̅::Vector{DT}
-    p̃::Vector{DT}
+    p::AT
+    p̅::AT
+    p̃::AT
 
-    v::Vector{DT}
-    v̅::Vector{DT}
-    f::Vector{DT}
-    f̅::Vector{DT}
+    v::AT
+    v̅::AT
+    f::AT
+    f̅::AT
 
     internal::IT
 
-    function AtomicSolutionPODE{DT, TT, IT}(nd, internal::IT) where {DT <: Number, TT <: Real, IT <: NamedTuple}
-        new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                internal)
+    function AtomicSolutionPODE{DT,TT,AT,IT}(nd, internal::IT) where {DT <: Number, TT <: Real, AT, IT <: NamedTuple}
+        new(zero(TT), zero(TT),
+            zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
+            zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
+            zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
+            internal)
+    end
+
+    function AtomicSolutionPODE{DT,TT,AT,IT}(t::TT, q::AT, p::AT, internal::IT) where {DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT}
+        new(zero(t), zero(t),
+            zero(q), zero(q), zero(q),
+            zero(p), zero(p), zero(p),
+            zero(q), zero(q), zero(p), zero(p),
+            internal)
     end
 end
 
-AtomicSolutionPODE(DT, TT, nd, internal::IT=NamedTuple()) where {IT} = AtomicSolutionPODE{DT, TT, IT}(nd, internal)
+AtomicSolutionPODE(DT, TT, AT, nd, internal::IT=NamedTuple()) where {IT} = AtomicSolutionPODE{DT,TT,AT,IT}(nd, internal)
+AtomicSolutionPODE(t::TT, q::AT, p::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionPODE{DT,TT,AT,IT}(t, q, p, internal)
 
 function set_solution!(asol::AtomicSolutionPODE, sol)
     t, q, p = sol
@@ -73,7 +90,7 @@ function update!(asol::AtomicSolutionPODE{DT}, y::Vector{DT}, z::Vector{DT}) whe
     end
 end
 
-function update!(asol::AtomicSolutionPODE{DT}, y::DT, z::DT, k::Int) where {DT}
+function update!(asol::AtomicSolutionPODE{DT}, y::DT, z::DT, k::Union{Int,CartesianIndex}) where {DT}
     asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
     asol.p[k], asol.p̃[k] = compensated_summation(z, asol.p[k], asol.p̃[k])
 end

@@ -157,12 +157,6 @@ Base.:(==)(sol1::SolutionDAE{DT1,TT1,N1}, sol2::SolutionDAE{DT2,TT2,N2}) where {
 @inline CommonFunctions.periodicity(sol::SolutionDAE) = sol.periodicity
 
 
-"Create AtomicSolution for DAE."
-function AtomicSolution(solution::SolutionDAE{DT,TT}) where {DT,TT}
-    AtomicSolutionDAE(DT, TT, solution.nd, solution.nm)
-end
-
-
 function set_initial_conditions!(sol::SolutionDAE, equ::DAE)
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.λ₀)
 end
@@ -216,7 +210,7 @@ function get_solution!(sol::SolutionDAE{DT,TT}, q::SolutionVector{DT}, λ::Solut
 end
 
 function get_solution(sol::SolutionDAE, n, k=1)
-    (sol.t[n], sol.q[:, n, k], sol.λ[:, n, k])
+    (sol.t[n], Array(sol.q[:, n, k]), Array(sol.λ[:, n, k]))
 end
 
 function CommonFunctions.reset!(sol::SolutionDAE)

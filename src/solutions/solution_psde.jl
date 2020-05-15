@@ -259,12 +259,6 @@ Base.:(==)(sol1::SolutionPSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionPSDE{DT2,TT2,NQ
 @inline CommonFunctions.periodicity(sol::SolutionPSDE) = sol.periodicity
 
 
-"Create AtomicSolution for PSDE."
-function AtomicSolution(solution::SolutionPSDE{DT,TT}) where {DT,TT}
-    AtomicSolutionPSDE(DT, TT, solution.nd, solution.nm)
-end
-
-
 function set_initial_conditions!(sol::SolutionPSDE, equ::Union{PSDE,SPSDE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end
@@ -322,7 +316,7 @@ function get_solution!(sol::SolutionPSDE{DT,TT}, q::SolutionVector{DT}, p::Solut
 end
 
 function get_solution(sol::SolutionPSDE, n, k=1)
-    (sol.t[n], sol.q[:, n, k], sol.p[:, n, k])
+    (sol.t[n], Array(sol.q[:, n, k]), Array(sol.p[:, n, k]))
 end
 
 function set_solution!(sol::SolutionPSDE, t, q, p, n, k=1)

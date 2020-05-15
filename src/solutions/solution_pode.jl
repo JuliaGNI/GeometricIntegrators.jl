@@ -147,12 +147,6 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
 @inline CommonFunctions.periodicity(sol::SolutionPODE) = sol.periodicity
 
 
-"Create AtomicSolution for partitioned ODE."
-function AtomicSolution(solution::SolutionPODE{DT,TT}) where {DT,TT}
-    AtomicSolutionPODE(DT, TT, solution.nd)
-end
-
-
 function set_initial_conditions!(sol::SolutionPODE, equ::Union{PODE,IODE,VODE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end
@@ -185,7 +179,7 @@ function get_solution!(sol::SolutionPODE{DT,TT}, q::SolutionVector{DT}, p::Solut
 end
 
 function get_solution(sol::SolutionPODE, n, k)
-    (sol.t[n], sol.q[:, n, k], sol.p[:, n, k])
+    (sol.t[n], Array(sol.q[:, n, k]), Array(sol.p[:, n, k]))
 end
 
 function set_solution!(sol::SolutionPODE, t, q, p, n, k)
