@@ -1,5 +1,7 @@
 
-using Polynomials: Poly, polyder, polyint
+import Polynomials 
+
+using Polynomials: derivative, integrate
 
 
 struct LegendreBasisHierarchical{T, N, fT, pT, dT, iT} <: PolynomialBasis{T,N}
@@ -24,8 +26,8 @@ function LegendreBasisHierarchical(T,N)
 
     for p in 0:N-1
         tfac, tpol = legendre_polynomial_hierarchical(p, T)
-        tder = polyder(tpol)
-        tint = polyint(tpol)
+        tder = derivative(tpol)
+        tint = integrate(tpol)
 
         if p == 0
             x[p+1] = zero(T)
@@ -56,9 +58,9 @@ Base.isequal(b1::LegendreBasisHierarchical{T1,N1}, b2::LegendreBasisHierarchical
 
 function legendre_polynomial_hierarchical(p, T=Float64)
     if p == 0
-        (one(T), Poly([+1, -1]))
+        (one(T), Polynomials.Polynomial([+1, -1]))
     elseif p == 1
-        (one(T), Poly([ 0, +1]))
+        (one(T), Polynomials.Polynomial([ 0, +1]))
     else
         l1 = legendre_polynomial(p,   T)
         l2 = legendre_polynomial(p-2, T)

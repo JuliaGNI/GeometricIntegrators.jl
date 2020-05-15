@@ -1,6 +1,7 @@
 
+import Polynomials
+
 using FastGaussQuadrature
-using Polynomials
 
 using DecFP: Dec128
 
@@ -226,7 +227,7 @@ function getCoefficientsGLRK(s::Int; T=Float64, high_precision=true)
         y = zeros(s)
         y[i] = 1
         mon = *(vdm, y)
-        push!(poly_ints, polyint(Poly(mon)))
+        push!(poly_ints, Polynomials.integrate(Polynomials.Polynomial(mon)))
     end
 
     # compute Runge-Kutta coefficients
