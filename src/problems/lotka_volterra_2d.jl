@@ -24,7 +24,6 @@ module LotkaVolterra2dProblem
     const p = (A1=A1, A2=A2, B1=B1, B2=B2)
 
 
-
     function ϑ₁(t, q)
         q[2] + log(q[2]) / q[1]
     end
