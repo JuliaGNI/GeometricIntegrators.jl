@@ -42,22 +42,20 @@ struct ODE{dType <: Number, tType <: Number, vType <: Function,
     parameters::pType
     periodicity::Vector{dType}
 
-    function ODE(DT::DataType, N::Int, d::Int, n::Int, v::vType, t₀::tType, q₀::AbstractArray{dType};
-                 h::hType=nothing, parameters::pType=nothing, periodicity=zeros(DT,d)) where {
+    function ODE(v::vType, t₀::tType, q₀::AbstractArray{dType,N};
+                 h::hType=nothing, parameters::pType=nothing,
+                 periodicity=zeros(dType,size(q₀,1))) where {
                         dType <: Number, tType <: Number, vType <: Function,
-                        hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}}
+                        hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}, N}
 
-        @assert d == size(q₀,1)
-        @assert n == size(q₀,2)
-        @assert ndims(q₀) == N ∈ (1,2)
+        @assert N ∈ (1,2)
 
-        new{DT, tType, vType, hType, pType, N}(d, n, v, h, t₀,
-                convert(Array{DT}, q₀), parameters, periodicity)
+        d = size(q₀,1)
+        n = size(q₀,2)
+
+        new{dType, tType, vType, hType, pType, N}(d, n, v, h, t₀,
+                convert(Array{dType}, q₀), parameters, periodicity)
     end
-end
-
-function ODE(v, t₀, q₀::AbstractArray{DT}; kwargs...) where {DT}
-    ODE(DT, ndims(q₀), size(q₀,1), size(q₀,2), v, t₀, q₀; kwargs...)
 end
 
 function ODE(v, q₀; kwargs...)

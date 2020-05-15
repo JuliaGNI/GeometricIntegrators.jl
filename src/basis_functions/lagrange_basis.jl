@@ -1,5 +1,5 @@
 
-using Polynomials: Poly, polyint
+import Polynomials
 
 
 struct LagrangeBasis{T,N} <: PolynomialBasis{T,N}
@@ -78,7 +78,7 @@ deriv_basis(b::LagrangeBasis, j::Int, i::Int) = deriv_basis(b, j, b.x[i])
 function int_basis(b::LagrangeBasis{T,N}, j::Int, x::T) where {T,N}
     y = zero(b.x)
     y[j] = 1
-    lint = polyint(Poly(*(b.vdminv, y)))
+    lint = Polynomials.integrate(Polynomials.Polynomial(*(b.vdminv, y)))
     return lint(x)
 end
 

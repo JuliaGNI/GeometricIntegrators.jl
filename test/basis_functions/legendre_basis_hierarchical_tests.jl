@@ -1,5 +1,6 @@
 
-using Polynomials: polyint
+import Polynomials
+
 using GeometricIntegrators.BasisFunctions: legendre_polynomial
 
 @testset "$(rpad("Hierarchical Legendre Basis Tests",80))" begin
@@ -41,7 +42,7 @@ using GeometricIntegrators.BasisFunctions: legendre_polynomial
     for q in 1:10, p in 1:10
         f1, p1 = legendre_polynomial(q)
         f2, p2 = legendre_polynomial(p)
-        int = polyint(p1 * p2)
+        int = Polynomials.integrate(p1 * p2)
         @test f1 * f2 * (int(1.0) - int(0.0)) ≈ (q == p ? 1.0 : 0.0) atol=1e-3
     end
 
