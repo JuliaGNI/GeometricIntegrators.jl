@@ -113,7 +113,7 @@ end
 
 @inline Base.ndims(ode::SODE) = ode.d
 
-@inline CommonFunctions.periodicity(equation::SODE) = equation.periodicity
+@inline Common.periodicity(equation::SODE) = equation.periodicity
 
 @inline has_exact_solution(equation::SODE{DT,TT,VT,QT}) where {DT, TT, VT, QT <: Nothing} = false
 @inline has_exact_solution(equation::SODE{DT,TT,VT,QT}) where {DT, TT, VT, QT <: Tuple} = all(Q ≠ nothing for Q in equation.q)

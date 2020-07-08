@@ -1,6 +1,6 @@
 
 using GeometricIntegrators.BasisFunctions
-using GeometricIntegrators.CommonFunctions
+using GeometricIntegrators.Common
 using GeometricIntegrators.Config
 using GeometricIntegrators.Discontinuities
 using GeometricIntegrators.Integrators

@@ -155,7 +155,7 @@ end
 
 @inline Base.ndims(ode::IODE) = ode.d
 
-@inline CommonFunctions.periodicity(equation::IODE) = equation.periodicity
+@inline Common.periodicity(equation::IODE) = equation.periodicity
 
 function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,V̄T,F̄T,HT,Nothing}) where {DT, TT, ϑT, FT, GT, V̄T, F̄T, HT}
     names = (:ϑ, :f, :g, :v̄, :f̄)

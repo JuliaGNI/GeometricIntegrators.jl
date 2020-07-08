@@ -12,7 +12,7 @@ end
 @inline integrator(sim::Simulation) = sim.integrator
 @inline solution(sim::Simulation) = sim.solution
 @inline cycles(sim::Simulation) = 1:sim.ncycle
-@inline CommonFunctions.eachsample(sim::Simulation) = eachsample(solution(sim))
+@inline Common.eachsample(sim::Simulation) = eachsample(solution(sim))
 
 
 function Simulation(equ::ET, int::IT, sol::ST, run_id::String, filename::String) where {ET,IT,ST}

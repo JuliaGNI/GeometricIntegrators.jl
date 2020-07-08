@@ -248,7 +248,7 @@ function set_solution!(sol::SolutionPDAE{DT,TT}, q::SolutionVector{DT}, p::Solut
     end
 end
 
-function CommonFunctions.reset!(sol::SolutionPDAE)
+function Common.reset!(sol::SolutionPDAE)
     reset!(sol.q)
     reset!(sol.p)
     reset!(sol.λ)

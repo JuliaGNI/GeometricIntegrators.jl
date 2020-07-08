@@ -84,7 +84,7 @@ function update_vector_fields!(ig::InitialGuessIODE{DT,TT}, t₁::TT,
 end
 
 
-function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT},
+function Common.evaluate!(ig::InitialGuessIODE{DT,TT},
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},
@@ -105,7 +105,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT},
 end
 
 
-function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT},
+function Common.evaluate!(ig::InitialGuessIODE{DT,TT},
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},
@@ -129,7 +129,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT},
 end
 
 
-function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT},
+function Common.evaluate!(ig::InitialGuessIODE{DT,TT},
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},
@@ -159,7 +159,7 @@ function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT},
 end
 
 
-function CommonFunctions.evaluate!(ig::InitialGuessIODE{DT,TT},
+function Common.evaluate!(ig::InitialGuessIODE{DT,TT},
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},

@@ -10,7 +10,7 @@ function copy_solution!(sol::Solution, asol::AtomicSolution, n, m)
     copy_solution!(sol, get_solution(asol)..., n, m)
 end
 
-function CommonFunctions.cut_periodic_solution!(asol::AtomicSolution{DT}, periodicity::Vector{DT}) where {DT}
+function Common.cut_periodic_solution!(asol::AtomicSolution{DT}, periodicity::Vector{DT}) where {DT}
     @assert length(asol.q) == length(periodicity)
     for k in eachindex(asol.q, asol.q̅, periodicity)
         if periodicity[k] ≠ 0

@@ -1,6 +1,6 @@
 
 using GeometricIntegrators.BasisFunctions
-using GeometricIntegrators.CommonFunctions
+using GeometricIntegrators.Common
 using Test
 
 include("vandermonde_tests.jl")

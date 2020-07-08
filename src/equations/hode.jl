@@ -98,7 +98,7 @@ end
 
 @inline Base.ndims(ode::HODE) = ode.d
 
-@inline CommonFunctions.periodicity(equation::HODE) = equation.periodicity
+@inline Common.periodicity(equation::HODE) = equation.periodicity
 
 function get_function_tuple(equation::HODE{DT,TT,VT,FT,HT,Nothing}) where {DT, TT, VT, FT, HT}
     NamedTuple{(:v,:f,:h)}((equation.v, equation.f, equation.h))

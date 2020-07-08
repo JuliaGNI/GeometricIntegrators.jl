@@ -256,7 +256,7 @@ Base.:(==)(sol1::SolutionPSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionPSDE{DT2,TT2,NQ
 @inline ioffset(sol::SolutionPSDE) = sol.ioffset
 @inline lastentry(sol::SolutionPSDE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline conv(sol::SolutionPSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
-@inline CommonFunctions.periodicity(sol::SolutionPSDE) = sol.periodicity
+@inline Common.periodicity(sol::SolutionPSDE) = sol.periodicity
 
 
 function set_initial_conditions!(sol::SolutionPSDE, equ::Union{PSDE,SPSDE})
@@ -370,7 +370,7 @@ function get_increments!(sol::SolutionPSDE{DT,TT,NQ,3}, asol::AtomicSolutionPSDE
 end
 
 
-function CommonFunctions.reset!(sol::SolutionPSDE)
+function Common.reset!(sol::SolutionPSDE)
     reset!(sol.q)
     reset!(sol.p)
     compute_timeseries!(sol.t, sol.t[end])

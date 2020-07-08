@@ -109,8 +109,8 @@ function Base.similar(ode::PODE, t₀::TT, q₀::AbstractArray{DT}, p₀::Abstra
 end
 
 @inline Base.ndims(ode::PODE) = ode.d
+Common.periodicity(equation::PODE) = equation.periodicity
 
-@inline CommonFunctions.periodicity(equation::PODE) = equation.periodicity
 
 function get_function_tuple(equation::PODE{DT,TT,VT,FT,HT,Nothing}) where {DT, TT, VT, FT, HT}
     names = (:v,:f)

@@ -86,7 +86,7 @@ function get_increments!(asol::AtomicSolutionPSDE, ΔW, ΔZ)
     ΔZ .= asol.ΔZ
 end
 
-function CommonFunctions.reset!(asol::AtomicSolutionPSDE, Δt)
+function Common.reset!(asol::AtomicSolutionPSDE, Δt)
     asol.t̅  = asol.t
     asol.q̅ .= asol.q
     asol.p̅ .= asol.p

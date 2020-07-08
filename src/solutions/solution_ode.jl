@@ -195,7 +195,7 @@ function set_solution!(sol::SolutionODE{DT}, q::SolutionVector{DT}, n, k=1) wher
     end
 end
 
-function CommonFunctions.reset!(sol::SolutionODE)
+function Common.reset!(sol::SolutionODE)
     reset!(sol.q)
     compute_timeseries!(sol.t, sol.t[end])
     sol.counter .= 1

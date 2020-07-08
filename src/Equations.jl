@@ -1,6 +1,6 @@
 module Equations
 
-    using ..CommonFunctions
+    using ..Common
 
     export Equation
     export AbstractEquationODE, AbstractEquationPODE,

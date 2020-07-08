@@ -75,7 +75,7 @@ function get_solution(asol::AtomicSolutionPODE)
     (asol.t, asol.q, asol.p)
 end
 
-function CommonFunctions.reset!(asol::AtomicSolutionPODE, Δt)
+function Common.reset!(asol::AtomicSolutionPODE, Δt)
     asol.t̅  = asol.t
     asol.q̅ .= asol.q
     asol.p̅ .= asol.p

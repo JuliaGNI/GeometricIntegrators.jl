@@ -6,7 +6,7 @@ module Integrators
     using OffsetArrays
     using SimpleSolvers
 
-    using ..CommonFunctions
+    using ..Common
     using ..Config
     using ..Interpolation
     using ..Utils

@@ -40,12 +40,12 @@ function save_attributes(sol::StochasticSolution, h5::HDF5.File)
 end
 
 "write_to_hdf5: Wrapper for saving Solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::Solution)
+function Common.write_to_hdf5(solution::Solution)
     write_to_hdf5(solution, hdf5(solution), offset(solution))
 end
 
 "Creates HDF5 file, writes solution to file, and closes file."
-function CommonFunctions.write_to_hdf5(solution::Solution, file::AbstractString)
+function Common.write_to_hdf5(solution::Solution, file::AbstractString)
     h5 = create_hdf5(solution, file)
     write_to_hdf5(solution, h5)
     close(h5)

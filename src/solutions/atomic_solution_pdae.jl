@@ -94,7 +94,7 @@ function get_solution(asol::AtomicSolutionPDAE)
     (asol.t, asol.q, asol.p, asol.λ)
 end
 
-function CommonFunctions.reset!(asol::AtomicSolutionPDAE, Δt)
+function Common.reset!(asol::AtomicSolutionPDAE, Δt)
     asol.t̅  = asol.t
     asol.q̅ .= asol.q
     asol.p̅ .= asol.p

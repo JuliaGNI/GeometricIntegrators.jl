@@ -203,7 +203,7 @@ function set_solution!(sol::SolutionPODE{DT,TT}, q::SolutionVector{DT}, p::Solut
     end
 end
 
-function CommonFunctions.reset!(sol::SolutionPODE)
+function Common.reset!(sol::SolutionPODE)
     reset!(sol.q)
     reset!(sol.p)
     compute_timeseries!(sol.t, sol.t[end])

@@ -1,8 +1,8 @@
-module CommonFunctions
+module Common
 
     export State, StateVector
 
-    State{DT} = AbstractArray{DT<:Number}
+    State{DT <: Number} = AbstractArray{DT}
     StateVector{DT} = AbstractVector{State{DT}}
 
     export nbasis, nnodes, nodes, order, degree

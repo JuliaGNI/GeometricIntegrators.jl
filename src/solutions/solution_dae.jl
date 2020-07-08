@@ -213,7 +213,7 @@ function get_solution(sol::SolutionDAE, n, k=1)
     (sol.t[n], Array(sol.q[:, n, k]), Array(sol.λ[:, n, k]))
 end
 
-function CommonFunctions.reset!(sol::SolutionDAE)
+function Common.reset!(sol::SolutionDAE)
     reset!(sol.q)
     reset!(sol.λ)
     compute_timeseries!(sol.t, sol.t[end])
