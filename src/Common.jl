@@ -13,7 +13,7 @@ module Common
     Base.zero(X::ST) where {DT, VT, ST <: StateVector{DT,VT}} = VT[zero(x) for x in X]
 
 
-    Base.zero(X::AT) where {AT <: StateVector} = AT[zero(X) for x in X]
+    Base.zero(X::AT) where {AT <: StateVector} = AT[zero(x) for x in X]
 
 
     export nbasis, nnodes, nodes, order, degree
