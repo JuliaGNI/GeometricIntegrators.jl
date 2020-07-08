@@ -199,7 +199,11 @@ end
 @inline Common.nconstraints(equation::VDAE) = equation.m
 @inline Common.periodicity(equation::VDAE) = equation.periodicity
 
+<<<<<<< HEAD
 initial_conditions(equation::VDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀, equation.μ₀)
+=======
+@inline Common.periodicity(equation::VDAE) = equation.periodicity
+>>>>>>> 03de891... Rename CommonFunctions to Common.
 
 hashamiltonian(::VDAEHT{<:Nothing}) = false
 hashamiltonian(::VDAEHT{<:Function}) = true

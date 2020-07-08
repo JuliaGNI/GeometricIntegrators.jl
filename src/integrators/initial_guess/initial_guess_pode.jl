@@ -75,7 +75,11 @@ function update_vector_fields!(ig::InitialGuessPODE{TT}, t₁::TT,
 end
 
 
+<<<<<<< HEAD
 function Common.evaluate!(ig::InitialGuessPODE{TT},
+=======
+function Common.evaluate!(ig::InitialGuessPODE{DT,TT},
+>>>>>>> 03de891... Rename CommonFunctions to Common.
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},
@@ -96,7 +100,11 @@ function Common.evaluate!(ig::InitialGuessPODE{TT},
 end
 
 
+<<<<<<< HEAD
 function Common.evaluate!(ig::InitialGuessPODE{TT},
+=======
+function Common.evaluate!(ig::InitialGuessPODE{DT,TT},
+>>>>>>> 03de891... Rename CommonFunctions to Common.
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},
@@ -120,7 +128,11 @@ function Common.evaluate!(ig::InitialGuessPODE{TT},
 end
 
 
+<<<<<<< HEAD
 function Common.evaluate!(ig::InitialGuessPODE{TT},
+=======
+function Common.evaluate!(ig::InitialGuessPODE{DT,TT},
+>>>>>>> 03de891... Rename CommonFunctions to Common.
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},
@@ -150,7 +162,11 @@ function Common.evaluate!(ig::InitialGuessPODE{TT},
 end
 
 
+<<<<<<< HEAD
 function Common.evaluate!(ig::InitialGuessPODE{TT},
+=======
+function Common.evaluate!(ig::InitialGuessPODE{DT,TT},
+>>>>>>> 03de891... Rename CommonFunctions to Common.
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},

@@ -1,46 +1,41 @@
 module Common
 
-    export OptionalFunction
-    
-    const OptionalFunction = Union{Function,Nothing}
-
-    
     export State, StateVector
 
-    const State{DT <: Number} = AbstractArray{DT}
-    const StateVector{DT,VT} = VT where {DT, VT <: AbstractVector{<:State{DT}}}
+    State{DT <: Number} = AbstractArray{DT}
+    StateVector{DT} = AbstractVector{State{DT}}
 
-    Base.zero(X::ST) where {DT, VT, ST <: StateVector{DT,VT}} = VT[zero(x) for x in X]
+    export nbasis, nnodes, nodes, order, degree
 
+    nbasis() = nothing
+    nnodes() = nothing
+    nodes()  = nothing
+    order()  = nothing
+    degree() = nothing
 
     export evaluate, evaluate!
 
-    function evaluate end
-    function evaluate! end
+    evaluate() = nothing
+    evaluate!() = nothing
 
     export derivative, integral
 
-    function derivative end
-    function integral end
+    derivative() = nothing
+    integral() = nothing
 
     export write_to_hdf5
 
-    function write_to_hdf5 end
+    write_to_hdf5() = nothing
 
     export periodicity, reset!, cut_periodic_solution!
 
-    function periodicity end
-    function reset! end
-    function cut_periodic_solution! end
+    periodicity() = nothing
+    reset!() = nothing
+    cut_periodic_solution!() = nothing
 
-    export nsamples, ntime, eachsample, eachtimestep
+    export eachsample, eachtimestep
 
-    function nsamples end
-    function ntime end
-    function eachsample end
-    function eachtimestep end
-
-    export nconstraints
-    function nconstraints end
+    eachsample() = nothing
+    eachtimestep() = nothing
 
 end
