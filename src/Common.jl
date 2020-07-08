@@ -7,35 +7,35 @@ module Common
 
     export nbasis, nnodes, nodes, order, degree
 
-    nbasis() = nothing
-    nnodes() = nothing
-    nodes()  = nothing
-    order()  = nothing
-    degree() = nothing
+    function nbasis end
+    function nnodes end
+    function nodes end
+    function order end
+    function degree end
 
     export evaluate, evaluate!
 
-    evaluate() = nothing
-    evaluate!() = nothing
+    function evaluate end
+    function evaluate! end
 
     export derivative, integral
 
-    derivative() = nothing
-    integral() = nothing
+    function derivative end
+    function integral end
 
     export write_to_hdf5
 
-    write_to_hdf5() = nothing
+    function write_to_hdf5 end
 
     export periodicity, reset!, cut_periodic_solution!
 
-    periodicity() = nothing
-    reset!() = nothing
-    cut_periodic_solution!() = nothing
+    function periodicity end
+    function reset! end
+    function cut_periodic_solution! end
 
     export eachsample, eachtimestep
 
-    eachsample() = nothing
-    eachtimestep() = nothing
+    function eachsample end
+    function eachtimestep end
 
 end
