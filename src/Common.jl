@@ -3,7 +3,7 @@ module Common
     export State, StateVector
 
     State{DT <: Number} = AbstractArray{DT}
-    StateVector{DT} = AbstractVector{State{DT}}
+    StateVector{DT} = AbstractVector{<:State{DT}}
 
     export nbasis, nnodes, nodes, order, degree
 
