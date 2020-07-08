@@ -1,5 +1,10 @@
 module CommonFunctions
 
+    export State, StateVector
+
+    State{DT} = AbstractArray{DT<:Number}
+    StateVector{DT} = AbstractVector{State{DT}}
+
     export nbasis, nnodes, nodes, order, degree
 
     nbasis() = nothing
