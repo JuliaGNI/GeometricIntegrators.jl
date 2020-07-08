@@ -109,6 +109,7 @@ end
 Base.ndims(ode::PODE) = ode.d
 Common.nsamples(equ::PODE) = length(equ.q₀)
 Common.periodicity(equation::PODE) = equation.periodicity
+
 initial_conditions(equation::PODE) = (equation.t₀, equation.q₀, equation.p₀)
 
 hashamiltonian(::PODEHT{<:Nothing}) = false

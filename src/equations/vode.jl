@@ -163,6 +163,7 @@ end
 Base.ndims(equ::VODE) = equ.d
 Common.nsamples(equ::VODE) = length(equ.q₀)
 Common.periodicity(equ::VODE) = equ.periodicity
+
 initial_conditions(equation::VODE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
 
 hashamiltonian(::VODEHT{<:Nothing}) = false

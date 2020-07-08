@@ -160,8 +160,8 @@ Base.:(==)(sol1::SolutionPDAE{DT1,TT1,N1}, sol2::SolutionPDAE{DT2,TT2,N2}) where
 @inline counter(sol::SolutionPDAE) = sol.counter
 @inline offset(sol::SolutionPDAE) = sol.woffset
 @inline lastentry(sol::SolutionPDAE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
-@inline CommonFunctions.ntime(sol::SolutionPDAE) = sol.ntime
-@inline CommonFunctions.periodicity(sol::SolutionPDAE) = sol.periodicity
+@inline Common.ntime(sol::SolutionPDAE) = sol.ntime
+@inline Common.periodicity(sol::SolutionPDAE) = sol.periodicity
 
 
 function set_initial_conditions!(sol::SolutionPDAE, equ::Union{IODE,VODE,PDAE,IDAE,VDAE})

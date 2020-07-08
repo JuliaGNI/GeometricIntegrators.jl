@@ -157,6 +157,7 @@ end
 Base.ndims(ode::IODE) = ode.d
 Common.nsamples(equ::IODE) = length(eachindex(equation.q₀))
 Common.periodicity(equation::IODE) = equation.periodicity
+
 initial_conditions(equation::IODE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
 
 hashamiltonian(::IODEHT{<:Nothing}) = false

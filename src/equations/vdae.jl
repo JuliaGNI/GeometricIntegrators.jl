@@ -195,9 +195,9 @@ function Base.similar(equ::VDAE, t₀::Real, q₀::StateVector, p₀::StateVecto
 end
 
 @inline Base.ndims(equation::VDAE) = equation.d
-@inline CommonFunctions.nsamples(equ::VDAE) = length(eachindex(equ.q₀))
-@inline CommonFunctions.nconstraints(equation::VDAE) = equation.m
-@inline CommonFunctions.periodicity(equation::VDAE) = equation.periodicity
+@inline Common.nsamples(equ::VDAE) = length(eachindex(equ.q₀))
+@inline Common.nconstraints(equation::VDAE) = equation.m
+@inline Common.periodicity(equation::VDAE) = equation.periodicity
 
 initial_conditions(equation::VDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀, equation.μ₀)
 

@@ -141,9 +141,9 @@ end
 
 
 @inline Base.ndims(equation::HDAE) = equation.d
-@inline CommonFunctions.nsamples(equation::HDAE) = length(eachindex(equation.q₀))
-@inline CommonFunctions.nconstraints(equation::HDAE) = equation.m
-@inline CommonFunctions.periodicity(equation::HDAE) = equation.periodicity
+@inline Common.nsamples(equation::HDAE) = length(eachindex(equation.q₀))
+@inline Common.nconstraints(equation::HDAE) = equation.m
+@inline Common.periodicity(equation::HDAE) = equation.periodicity
 
 initial_conditions(equation::HDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
 

@@ -106,9 +106,9 @@ function Base.similar(dae::SPDAE, t₀::TT, q₀::AbstractArray{DT}, p₀::Abstr
 end
 
 @inline Base.ndims(equation::SPDAE) = equation.d
-@inline CommonFunctions.nsamples(equ::SPDAE) = equ.n#length(equ.q₀)
-@inline CommonFunctions.nconstraints(equation::SPDAE) = equation.m
-@inline CommonFunctions.periodicity(equation::SPDAE) = equation.periodicity
+@inline Common.nsamples(equ::SPDAE) = equ.n#length(equ.q₀)
+@inline Common.nconstraints(equation::SPDAE) = equation.m
+@inline Common.periodicity(equation::SPDAE) = equation.periodicity
 
 function get_function_tuple(equation::SPDAE{DT,TT,VT,FT,ϕT,ψT,Nothing}) where {DT, TT, VT, FT, ϕT, ψT}
     NamedTuple{(:v, :f, :ϕ, :ψ)}((equation.v, equation.f, equation.ϕ, equation.ψ))

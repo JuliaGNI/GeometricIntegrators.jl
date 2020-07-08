@@ -140,8 +140,8 @@ Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {
 @inline counter(sol::SolutionODE) = sol.counter
 @inline offset(sol::SolutionODE) = sol.woffset
 @inline lastentry(sol::SolutionODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
-@inline CommonFunctions.ntime(sol::SolutionODE) = sol.ntime
-@inline CommonFunctions.periodicity(sol::SolutionODE) = sol.periodicity
+@inline Common.ntime(sol::SolutionODE) = sol.ntime
+@inline Common.periodicity(sol::SolutionODE) = sol.periodicity
 
 
 function set_initial_conditions!(sol::SolutionODE, equ::Union{ODE,SODE})

@@ -14,7 +14,7 @@ lastentry(sol::Solution) = error("lastentry() not implemented for ", typeof(sol)
 Common.ntime(sol::Solution)  = error("ntime() not implemented for ", typeof(sol))
 
 create_hdf5(sol::Solution, file) = error("create_hdf5() not implemented for ", typeof(sol))
-CommonFunctions.write_to_hdf5(sol::Solution, h5::HDF5.File, offset=0) = error("write_to_hdf5() not implemented for ", typeof(sol))
+Common.write_to_hdf5(sol::Solution, h5::HDF5.File, offset=0) = error("write_to_hdf5() not implemented for ", typeof(sol))
 
 conv(sol::StochasticSolution) = error("conv() not implemented for ", typeof(sol))
 

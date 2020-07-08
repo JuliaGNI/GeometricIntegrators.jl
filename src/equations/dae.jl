@@ -132,8 +132,8 @@ end
 
 @inline Base.ndims(equation::DAE) = equation.d
 @inline Common.nsamples(equation::DAE) = length(eachindex(equation.q₀))
-@inline CommonFunctions.nconstraints(equation::DAE) = equation.m
-@inline CommonFunctions.periodicity(equation::DAE) = equation.periodicity
+@inline Common.nconstraints(equation::DAE) = equation.m
+@inline Common.periodicity(equation::DAE) = equation.periodicity
 
 initial_conditions(equation::DAE) = (equation.t₀, equation.q₀, equation.λ₀)
 

@@ -94,6 +94,7 @@ end
 Base.ndims(equ::HODE) = equ.d
 Common.nsamples(equ::HODE) = length(equ.q₀)
 Common.periodicity(equ::HODE) = equ.periodicity
+
 initial_conditions(equation::HODE) = (equation.t₀, equation.q₀, equation.p₀)
 
 hashamiltonian(::HODE) = true

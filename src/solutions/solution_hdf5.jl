@@ -491,7 +491,7 @@ function copy_increments_to_hdf5(solution::StochasticSolution{DT,TT,NQ,3}, h5::H
 end
 
 "Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::DeterministicSolution, h5::HDF5.File=hdf5(solution), offset=offset(solution))
+function Common.write_to_hdf5(solution::DeterministicSolution, h5::HDF5.File=hdf5(solution), offset=offset(solution))
     # set convenience variables and compute ranges
     j1 = offset+2
     j2 = offset+1+solution.nt
@@ -504,7 +504,7 @@ function CommonFunctions.write_to_hdf5(solution::DeterministicSolution, h5::HDF5
 end
 
 "Append solution to HDF5 file."
-function CommonFunctions.write_to_hdf5(solution::Union{SolutionDAE,SolutionPDAE}, h5::HDF5.File=hdf5(solution), offset=offset(solution))
+function Common.write_to_hdf5(solution::Union{SolutionDAE,SolutionPDAE}, h5::HDF5.File=hdf5(solution), offset=offset(solution))
     # set convenience variables and compute ranges
     j1 = offset+2
     j2 = offset+1+solution.nt
@@ -521,7 +521,7 @@ Append solution to HDF5 file.
   soffset - start writing the solution q at the position soffset+2
   woffset - start writing the increments ΔW, ΔZ at the position woffset+1
 """
-function CommonFunctions.write_to_hdf5(solution::StochasticSolution, h5::HDF5.File=hdf5(solution), soffset=offset(solution), woffset=ioffset(solution))
+function Common.write_to_hdf5(solution::StochasticSolution, h5::HDF5.File=hdf5(solution), soffset=offset(solution), woffset=ioffset(solution))
     # set convenience variables and compute ranges
     js1 = soffset+2
     js2 = soffset+1+solution.nt

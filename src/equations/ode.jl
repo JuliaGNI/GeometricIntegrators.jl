@@ -86,6 +86,7 @@ end
 Base.ndims(equ::ODE) = equ.d
 Common.nsamples(equ::ODE) = length(equ.q₀)
 Common.periodicity(equ::ODE) = equ.periodicity
+
 initial_conditions(equ::ODE) = (equ.t₀, equ.q₀)
 
 hashamiltonian(::ODEHT{<:Nothing}) = false
