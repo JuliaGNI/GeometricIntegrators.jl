@@ -41,6 +41,6 @@ module Common
     function eachtimestep end
 
     export nconstraints
-    nconstraints() = nothing
+    function nconstraints end
 
 end
