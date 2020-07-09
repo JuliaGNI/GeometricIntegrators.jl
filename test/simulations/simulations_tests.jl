@@ -21,11 +21,7 @@ nwrte2 = 100
 h5file = "test.hdf5"
 
 
-<<<<<<< HEAD
 tab = TableauImplicitMidpoint()
-=======
-tab = getTableauImplicitMidpoint()
->>>>>>> 6ae975c... Revise integrators.
 ode = harmonic_oscillator_ode([rand(2) for i in 1:ns])
 
 
