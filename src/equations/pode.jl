@@ -43,52 +43,50 @@ where `t` is the current time, `q` and `p` are the current solution vectors
 and `v` and `f` are the vectors which hold the result of evaluating the
 vector fields ``v`` and ``f`` on `t`, `q` and `p`.
 """
-struct PODE{dType <: Number, tType <: Number,
+struct PODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             vType <: Function, fType <: Function, hType <: Union{Function,Nothing},
-            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
+            pType <: Union{NamedTuple,Nothing}} <: AbstractEquationPODE{dType, tType}
 
     d::Int
-    n::Int
     v::vType
     f::fType
     h::hType
     t₀::tType
-    q₀::Array{dType, N}
-    p₀::Array{dType, N}
+    q₀::Vector{arrayType}
+    p₀::Vector{arrayType}
     parameters::pType
     periodicity::Vector{dType}
 
-    function PODE(DT::DataType, N::Int, d::Int, n::Int, v::vType, f::fType,
-                  t₀::tType, q₀::AbstractArray{dType}, p₀::AbstractArray{dType};
-                  h::hType=nothing, parameters::pType=nothing, periodicity=zeros(DT,d)) where {
-                        dType <: Number, tType <: Number, vType <: Function,
-                        fType <: Function, hType <: Union{Function,Nothing},
-                        pType <: Union{NamedTuple,Nothing}}
+    function PODE(v::vType, f::fType, t₀::tType, q₀::Vector{arrayType}, p₀::Vector{arrayType};
+                h::hType=nothing, parameters::pType=nothing,
+                periodicity=zero(q₀[begin])) where {
+                    dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
+                    vType <: Function, fType <: Function,
+                    hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}}
 
-        @assert d == size(q₀,1) == size(p₀,1)
-        @assert n == size(q₀,2) == size(p₀,2)
-        @assert ndims(q₀) == ndims(p₀) == N ∈ (1,2)
+        d = length(q₀[begin])
 
-        new{DT, tType, vType, fType, hType, pType, N}(d, n, v, f, h, t₀,
-                convert(Array{DT}, q₀), convert(Array{DT}, p₀),
-                parameters, periodicity)
+        @assert length(q₀) == length(p₀)
+        @assert all([length(q) == d for q in q₀])
+        @assert all([length(p) == d for p in p₀])
+
+        new{dType, tType, arrayType, vType, fType, hType, pType}(d, v, f, h, t₀, q₀, p₀, parameters, periodicity)
     end
 end
 
-function PODE(v, f, t₀, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}; kwargs...) where {DT}
-    PODE(DT, ndims(q₀), size(q₀,1), size(q₀,2), v, f, t₀, q₀, p₀; kwargs...)
-end
+PODE(v, f, q₀::StateVector, p₀::StateVector; kwargs...) = PODE(v, f, 0.0, q₀, p₀; kwargs...)
+PODE(v, f, t₀, q₀::State, p₀::State; kwargs...) = PODE(v, f, t₀, [q₀], [p₀]; kwargs...)
+PODE(v, f, q₀::State, p₀::State; kwargs...) = PODE(v, f, 0.0, q₀, p₀; kwargs...)
 
-function PODE(v, f, q₀, p₀; kwargs...)
-    PODE(v, f, zero(eltype(q₀)), q₀, p₀; kwargs...)
-end
+const PODEHT{HT,DT,TT,AT,VT,FT,PT} = PODE{DT,TT,AT,VT,FT,HT,PT} # type alias for dispatch on Hamiltonian type parameter
+const PODEPT{PT,DT,TT,AT,VT,FT,HT} = PODE{DT,TT,AT,VT,FT,HT,PT} # type alias for dispatch on parameters type parameter
 
-Base.hash(ode::PODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.v, hash(ode.f, hash(ode.h,
-        hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, hash(ode.periodicity, hash(ode.parameters, h))))))))))
+
+Base.hash(ode::PODE, h::UInt) = hash(ode.d, hash(ode.v, hash(ode.f, hash(ode.h,
+        hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, hash(ode.periodicity, hash(ode.parameters, h)))))))))
 
 Base.:(==)(ode1::PODE, ode2::PODE) = (
                                 ode1.d == ode2.d
-                             && ode1.n == ode2.n
                              && ode1.v == ode2.v
                              && ode1.f == ode2.f
                              && ode1.h == ode2.h
@@ -98,43 +96,39 @@ Base.:(==)(ode1::PODE, ode2::PODE) = (
                              && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
 
-function Base.similar(ode::PODE, q₀, p₀; kwargs...)
-    similar(ode, ode.t₀, q₀, p₀; kwargs...)
+Base.similar(equ::PODE, q₀, p₀; kwargs...) = similar(equ, equ.t₀, q₀, p₀; kwargs...)
+Base.similar(equ::PODE, t₀::Real, q₀::State, p₀::State; kwargs...) = similar(equ, t₀, [q₀], [p₀]; kwargs...)
+
+function Base.similar(equ::PODE, t₀::Real, q₀::StateVector, p₀::StateVector;
+                      h=equ.h, parameters=equ.parameters, periodicity=equ.periodicity)
+    @assert all([length(q) == ndims(equ) for q in q₀])
+    @assert all([length(p) == ndims(equ) for p in p₀])
+    PODE(equ.v, equ.f, t₀, q₀, p₀; h=h, parameters=parameters, periodicity=periodicity)
 end
 
-function Base.similar(ode::PODE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT};
-                      h=ode.h, parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
-    @assert ode.d == size(q₀,1) == size(p₀,1)
-    PODE(ode.v, ode.f, t₀, q₀, p₀; h=h, parameters=parameters, periodicity=periodicity)
-end
-
-@inline Base.ndims(ode::PODE) = ode.d
+Base.ndims(ode::PODE) = ode.d
+Common.nsamples(equ::PODE) = length(equ.q₀)
 Common.periodicity(equation::PODE) = equation.periodicity
+initial_conditions(equation::PODE) = (equation.t₀, equation.q₀, equation.p₀)
+
+hashamiltonian(::PODEHT{<:Nothing}) = false
+hashamiltonian(::PODEHT{<:Function}) = true
+
+hasparameters(::PODEPT{<:Nothing}) = false
+hasparameters(::PODEPT{<:NamedTuple}) = true
+
+_get_v(equ::PODE) = hasparameters(equ) ? (t,q,p,v) -> equ.v(t, q, p, v, equ.parameters) : equ.v
+_get_f(equ::PODE) = hasparameters(equ) ? (t,q,p,f) -> equ.f(t, q, p, f, equ.parameters) : equ.f
+_get_h(equ::PODE) = hasparameters(equ) ? (t,q,p) -> equ.h(t, q, p, equ.parameters) : equ.h
 
 
-function get_function_tuple(equation::PODE{DT,TT,VT,FT,HT,Nothing}) where {DT, TT, VT, FT, HT}
+function get_function_tuple(equ::PODE)
     names = (:v,:f)
-    equs  = (equation.v, equation.f)
+    equs  = (_get_v(equ), _get_f(equ))
 
-    if HT != Nothing
+    if hashamiltonian(equ)
         names = (names..., :h)
-        equs  = (equs..., equation.h)
-    end
-
-    NamedTuple{names}(equs)
-end
-
-function get_function_tuple(equation::PODE{DT,TT,VT,FT,HT,PT}) where {DT, TT, VT, FT, HT, PT <: NamedTuple}
-    vₚ = (t,q,p,v) -> equation.v(t, q, p, v, equation.parameters)
-    fₚ = (t,q,p,f) -> equation.f(t, q, p, f, equation.parameters)
-
-    names = (:v, :f)
-    equs  = (vₚ, fₚ)
-
-    if HT != Nothing
-        hₚ = (t,q,p) -> equation.h(t, q, p, equation.parameters)
-        names = (names..., :h)
-        equs  = (equs..., hₚ)
+        equs  = (equs..., _get_h(equ))
     end
 
     NamedTuple{names}(equs)

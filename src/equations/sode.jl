@@ -46,7 +46,7 @@ field for each substep increases the flexibility for the use of splitting
 methods, e.g., it allows to use another integrator for solving substeps.
 
 """
-struct SODE{dType <: Number, tType <: Number,
+struct SODE{dType <: Number, tType <: Real,
             vType <: Tuple, qType <: Union{Tuple,Nothing},
             pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
 
@@ -61,7 +61,7 @@ struct SODE{dType <: Number, tType <: Number,
 
     function SODE(v::vType, q::qType, t₀::tType, q₀::AbstractArray{dType};
                  parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
-                        dType <: Number, tType <: Number,
+                        dType <: Number, tType <: Real,
                         vType <: Tuple, qType <: Union{Tuple,Nothing},
                         pType <: Union{NamedTuple,Nothing}}
 

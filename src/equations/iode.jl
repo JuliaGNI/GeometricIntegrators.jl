@@ -71,15 +71,14 @@ In addition, the functions `g`, `v̄` and `f̄` are specified by
 The function `g` is used in projection methods that enforce ``p = ϑ(q)``.
 The functions `v̄` and `f̄` are used for initial guesses in nonlinear implicit solvers.
 """
-struct IODE{dType <: Number, tType <: Number,
+struct IODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             ϑType <: Function, fType <: Function, gType <: Function,
             v̄Type <: Function, f̄Type <: Function,
             hType <: Union{Function,Nothing},
-            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPODE{dType, tType}
+            pType <: Union{NamedTuple,Nothing}} <: AbstractEquationPODE{dType, tType}
 
     d::Int
     m::Int
-    n::Int
     ϑ::ϑType
     f::fType
     g::gType
@@ -87,49 +86,50 @@ struct IODE{dType <: Number, tType <: Number,
     f̄::f̄Type
     h::hType
     t₀::tType
-    q₀::Array{dType, N}
-    p₀::Array{dType, N}
-    λ₀::Array{dType, N}
+    q₀::Vector{arrayType}
+    p₀::Vector{arrayType}
+    λ₀::Vector{arrayType}
     parameters::pType
     periodicity::Vector{dType}
 
-    function IODE(DT::DataType, N::Int, d::Int, n::Int,
-                  ϑ::ϑType, f::fType, g::gType, t₀::tType,
-                  q₀::AbstractArray{dType}, p₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
-                  v̄::v̄Type=(t,q,v)->nothing, f̄::f̄Type=f, h::hType=nothing, parameters::pType=nothing,
-                  periodicity=zeros(DT,d)) where {
-                        dType <: Number, tType <: Number, ϑType <: Function,
-                        fType <: Function, gType <: Function,
-                        v̄Type <: Function, f̄Type <: Function,
-                        hType <: Union{Function,Nothing},
-                        pType <: Union{NamedTuple,Nothing}}
+    function IODE(ϑ::ϑType, f::fType, g::gType, t₀::tType,
+                q₀::Vector{arrayType}, p₀::Vector{arrayType}, λ₀::Vector{arrayType};
+                v̄::v̄Type=(t,q,v)->nothing, f̄::f̄Type=f, h::hType=nothing, parameters::pType=nothing,
+                periodicity=zero(q₀[begin])) where {
+                    dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
+                    ϑType <: Function, fType <: Function, gType <: Function,
+                    v̄Type <: Function, f̄Type <: Function,
+                    hType <: Union{Function,Nothing},
+                    pType <: Union{NamedTuple,Nothing}}
 
-        @assert d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
-        @assert n == size(q₀,2) == size(p₀,2) == size(λ₀,2)
-        @assert dType == eltype(q₀) == eltype(p₀) == eltype(λ₀)
-        @assert ndims(q₀) == ndims(p₀) == ndims(λ₀) == N ∈ (1,2)
+        d = length(q₀[begin])
+        m = length(λ₀[begin])
 
-        new{DT, tType, ϑType, fType, gType, v̄Type, f̄Type, hType, pType, N}(d, d, n, ϑ, f, g, v̄, f̄, h, t₀,
-                convert(Array{DT}, q₀), convert(Array{DT}, p₀), convert(Array{DT}, λ₀),
-                parameters, periodicity)
+        @assert length(q₀) == length(p₀)
+        @assert all([length(q) == d for q in q₀])
+        @assert all([length(p) == d for p in p₀])
+        @assert all([length(λ) == m for λ in λ₀])
+
+        new{dType, tType, arrayType, ϑType, fType, gType, v̄Type, f̄Type, hType, pType}(d, m, ϑ, f, g, v̄, f̄, h, t₀, q₀, p₀, λ₀, parameters, periodicity)
     end
 end
 
-function IODE(ϑ, f, g, t₀::Number, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=zero(q₀); kwargs...) where {DT}
-    IODE(DT, ndims(q₀), size(q₀,1), size(q₀,2), ϑ, f, g, t₀, q₀, p₀, λ₀; kwargs...)
-end
+IODE(ϑ, f, g, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀); kwargs...) = IODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
+IODE(ϑ, f, g, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = IODE(ϑ, f, g, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+IODE(ϑ, f, g, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = IODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
 
-function IODE(ϑ, f, g, q₀::AbstractArray, p₀::AbstractArray, λ₀::AbstractArray=zero(q₀); kwargs...)
-    IODE(ϑ, f, g, zero(eltype(q₀)), q₀, p₀, λ₀; kwargs...)
-end
+const IODEHT{HT,DT,TT,AT,ϑT,FT,GT,VT,PT} = IODE{DT,TT,AT,ϑT,FT,GT,HT,VT,PT} # type alias for dispatch on Hamiltonian type parameter
+const IODEVT{VT,DT,TT,AT,ϑT,FT,GT,HT,PT} = IODE{DT,TT,AT,ϑT,FT,GT,HT,VT,PT} # type alias for dispatch on vector field type parameter
+const IODEPT{PT,DT,TT,AT,ϑT,FT,GT,HT,VT} = IODE{DT,TT,AT,ϑT,FT,GT,HT,VT,PT} # type alias for dispatch on parameters type parameter
 
-Base.hash(ode::IODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.ϑ, hash(ode.f, hash(ode.g,
-        hash(ode.v̄, hash(ode.f̄, hash(ode.h, hash(ode.t₀, hash(ode.q₀, hash(ode.p₀,
-        hash(ode.periodicity, hash(ode.parameters, h)))))))))))))
+Base.hash(ode::IODE, h::UInt) = hash(ode.d, 
+        hash(ode.ϑ, hash(ode.f, hash(ode.g,
+        hash(ode.v̄, hash(ode.f̄, hash(ode.h,
+        hash(ode.t₀, hash(ode.q₀, hash(ode.p₀,
+        hash(ode.periodicity, hash(ode.parameters, h)))))))))))
 
 Base.:(==)(ode1::IODE, ode2::IODE) = (
                                 ode1.d == ode2.d
-                             && ode1.n == ode2.n
                              && ode1.ϑ == ode2.ϑ
                              && ode1.f == ode2.f
                              && ode1.g == ode2.g
@@ -143,46 +143,44 @@ Base.:(==)(ode1::IODE, ode2::IODE) = (
                              && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
 
-function Base.similar(ode::IODE, q₀, p₀, λ₀=get_λ₀(q₀, ode.λ₀); kwargs...)
-    similar(ode, ode.t₀, q₀, p₀, λ₀; kwargs...)
+Base.similar(equ::IODE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀; kwargs...)
+Base.similar(equ::IODE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+
+function Base.similar(equ::IODE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector;
+                      v̄=equ.v̄, f̄=equ.f̄, h=equ.h, parameters=equ.parameters, periodicity=equ.periodicity)
+    @assert all([length(q) == ndims(equ) for q in q₀])
+    @assert all([length(p) == ndims(equ) for p in p₀])
+    @assert all([length(λ) == equ.m for λ in λ₀])
+    IODE(equ.ϑ, equ.f, equ.g, t₀, q₀, p₀, λ₀; v̄=v̄, f̄=f̄, h=h, parameters=parameters, periodicity=periodicity)
 end
 
-function Base.similar(ode::IODE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=get_λ₀(q₀, ode.λ₀);
-                      v̄=ode.v̄, f̄=ode.f̄, h=ode.h, parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
-    @assert ode.d == size(q₀,1) == size(p₀,1) == size(λ₀,1)
-    IODE(ode.ϑ, ode.f, ode.g, t₀, q₀, p₀, λ₀; v̄=v̄, f̄=f̄, h=h, parameters=parameters, periodicity=periodicity)
-end
+Base.ndims(ode::IODE) = ode.d
+Common.nsamples(equ::IODE) = length(eachindex(equation.q₀))
+Common.periodicity(equation::IODE) = equation.periodicity
+initial_conditions(equation::IODE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
 
-@inline Base.ndims(ode::IODE) = ode.d
+hashamiltonian(::IODEHT{<:Nothing}) = false
+hashamiltonian(::IODEHT{<:Function}) = true
 
-@inline Common.periodicity(equation::IODE) = equation.periodicity
+hasvectorfield(::IODEVT{<:Nothing}) = false
+hasvectorfield(::IODEVT{<:Function}) = true
 
-function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,V̄T,F̄T,HT,Nothing}) where {DT, TT, ϑT, FT, GT, V̄T, F̄T, HT}
-    names = (:ϑ, :f, :g, :v̄, :f̄)
-    equs  = (equation.ϑ, equation.f, equation.g, equation.v̄, equation.f̄)
+hasparameters(::IODEPT{<:Nothing}) = false
+hasparameters(::IODEPT{<:NamedTuple}) = true
 
-    if HT != Nothing
+_get_ϑ(equ::IODE) = hasparameters(equ) ? (t,q,v,ϑ) -> equ.ϑ(t, q, v, ϑ, equ.parameters) : equ.ϑ
+_get_f(equ::IODE) = hasparameters(equ) ? (t,q,v,f) -> equ.f(t, q, v, f, equ.parameters) : equ.f
+_get_g(equ::IODE) = hasparameters(equ) ? (t,q,v,g) -> equ.g(t, q, v, g, equ.parameters) : equ.g
+_get_v̄(equ::IODE) = hasparameters(equ) ? (t,q,v) -> equ.v̄(t, q, v, equ.parameters) : equ.v̄
+_get_h(equ::IODE) = hasparameters(equ) ? (t,q) -> equ.h(t, q, equ.parameters) : equ.h
+
+function get_function_tuple(equ::IODE)
+    names = (:ϑ, :f, :g, :v̄)
+    equs  = (_get_ϑ(equ), _get_f(equ), _get_g(equ), _get_v̄(equ))
+
+    if hashamiltonian(equ)
         names = (names..., :h)
-        equs  = (equs..., equation.h)
-    end
-
-    NamedTuple{names}(equs)
-end
-
-function get_function_tuple(equation::IODE{DT,TT,ϑT,FT,GT,V̄T,F̄T,HT,PT}) where {DT, TT, ϑT, FT, GT, V̄T, F̄T, HT, PT <: NamedTuple}
-    ϑₚ = (t,q,v,ϑ) -> equation.ϑ(t, q, v, ϑ, equation.parameters)
-    fₚ = (t,q,v,f) -> equation.f(t, q, v, f, equation.parameters)
-    gₚ = (t,q,v,g) -> equation.g(t, q, v, g, equation.parameters)
-    v̄ₚ = (t,q,v)   -> equation.v̄(t, q, v, equation.parameters)
-    f̄ₚ = (t,q,v,f) -> equation.f̄(t, q, v, f, equation.parameters)
-
-    names = (:ϑ, :f, :g, :v̄, :f̄)
-    equs  = (ϑₚ, fₚ, gₚ, v̄ₚ, f̄ₚ)
-
-    if HT != Nothing
-        hₚ = (t,q) -> equation.h(t, q, equation.parameters)
-        names = (names..., :h)
-        equs  = (equs..., hₚ)
+        equs  = (equs..., _get_h(equ))
     end
 
     NamedTuple{names}(equs)

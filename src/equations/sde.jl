@@ -61,7 +61,7 @@ or the column col of the matrix B (if col>0).
     sde = SDE(v, B, t₀, q₀; parameters=p)
 ```
 """
-struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Function,
+struct SDE{dType <: Number, tType <: Real, vType <: Function, BType <: Function,
            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationSDE{dType, tType}
 
     d::Int
@@ -77,7 +77,7 @@ struct SDE{dType <: Number, tType <: Number, vType <: Function, BType <: Functio
 
     function SDE(m, ns, v::vType, B::BType, t₀::tType, q₀::AbstractArray{dType,N};
                  parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
-                        dType <: Number, tType <: Number, vType <: Function, BType <: Function,
+                        dType <: Number, tType <: Real, vType <: Function, BType <: Function,
                         pType <: Union{NamedTuple,Nothing}, N}
 
         d  = size(q₀,1)

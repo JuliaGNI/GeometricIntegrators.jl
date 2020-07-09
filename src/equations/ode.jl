@@ -11,7 +11,6 @@ with vector field ``v``, initial condition ``q_{0}`` and the solution
 ### Fields
 
 * `d`: dimension of dynamical variable ``q`` and the vector field ``v``
-* `n`: number of initial conditions
 * `v`: function computing the vector field
 * `h`: function computing the Hamiltonian (optional)
 * `t₀`: initial time
@@ -30,44 +29,44 @@ where `t` is the current time, `q` is the current solution vector, and
 on `t` and `q`.
 
 """
-struct ODE{dType <: Number, tType <: Number, vType <: Function,
-           hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
+struct ODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType}, vType <: Function,
+           hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}} <: AbstractEquationODE{dType, tType}
 
     d::Int
-    n::Int
     v::vType
     h::hType
     t₀::tType
-    q₀::Array{dType,N}
+    q₀::Vector{arrayType}
     parameters::pType
     periodicity::Vector{dType}
 
-    function ODE(v::vType, t₀::tType, q₀::AbstractArray{dType,N};
+    function ODE(v::vType, t₀::tType, q₀::Vector{arrayType};
                  h::hType=nothing, parameters::pType=nothing,
-                 periodicity=zeros(dType,size(q₀,1))) where {
-                        dType <: Number, tType <: Number, vType <: Function,
-                        hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}, N}
+                 periodicity=zero(q₀[begin])) where {
+                        dType <: Number, tType <: Real, arrayType <: AbstractArray{dType}, vType <: Function,
+                        hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}}
 
-        @assert N ∈ (1,2)
+        d = length(q₀[begin])
 
-        d = size(q₀,1)
-        n = size(q₀,2)
+        @assert all([length(q) == d for q in q₀])
 
-        new{dType, tType, vType, hType, pType, N}(d, n, v, h, t₀,
-                convert(Array{dType}, q₀), parameters, periodicity)
+        new{dType, tType, arrayType, vType, hType, pType}(d, v, h, t₀, q₀, parameters, periodicity)
     end
 end
 
-function ODE(v, q₀; kwargs...)
-    ODE(v, zero(eltype(q₀)), q₀; kwargs...)
-end
+ODE(v, q₀::StateVector; kwargs...) = ODE(v, 0.0, q₀; kwargs...)
+ODE(v, t₀, q₀::State; kwargs...) = ODE(v, t₀, [q₀]; kwargs...)
+ODE(v, q₀::State; kwargs...) = ODE(v, 0.0, q₀; kwargs...)
 
-Base.hash(ode::ODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.v, hash(ode.t₀,
-        hash(ode.q₀, hash(ode.periodicity, hash(ode.parameters, h)))))))
+const ODEHT{HT,DT,TT,AT,VT,PT} = ODE{DT,TT,AT,VT,HT,PT} # type alias for dispatch on Hamiltonian type parameter
+const ODEPT{PT,DT,TT,AT,VT,HT} = ODE{DT,TT,AT,VT,HT,PT} # type alias for dispatch on parameters type parameter
+
+
+Base.hash(ode::ODE, h::UInt) = hash(ode.d, hash(ode.v, hash(ode.t₀,
+        hash(ode.q₀, hash(ode.periodicity, hash(ode.parameters, h))))))
 
 Base.:(==)(ode1::ODE, ode2::ODE) = (
                                 ode1.d == ode2.d
-                             && ode1.n == ode2.n
                              && ode1.v == ode2.v
                              && ode1.h == ode2.h
                              && ode1.t₀ == ode2.t₀
@@ -75,42 +74,37 @@ Base.:(==)(ode1::ODE, ode2::ODE) = (
                              && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
 
-function Base.similar(ode::ODE, q₀; kwargs...)
-    similar(ode, ode.t₀, q₀; kwargs...)
+Base.similar(equ::ODE, q₀; kwargs...) = similar(equ, equ.t₀, q₀; kwargs...)
+Base.similar(equ::ODE, t₀::Real, q₀::State; kwargs...) = similar(equ, t₀, [q₀]; kwargs...)
+
+function Base.similar(equ::ODE, t₀::Real, q₀::StateVector;
+                      h=equ.h, parameters=equ.parameters, periodicity=equ.periodicity)
+    @assert all([length(q) == ndims(equ) for q in q₀])
+    ODE(equ.v, t₀, q₀; h=h, parameters=parameters, periodicity=periodicity)
 end
 
-function Base.similar(ode::ODE, t₀::TT, q₀::AbstractArray{DT};
-                      h=ode.h, parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
-    @assert ode.d == size(q₀,1)
-    ODE(ode.v, t₀, q₀; h=h, parameters=parameters, periodicity=periodicity)
-end
-
-@inline Base.ndims(ode::ODE) = ode.d
-
+Base.ndims(equ::ODE) = equ.d
+Common.nsamples(equ::ODE) = length(equ.q₀)
 Common.periodicity(equ::ODE) = equ.periodicity
+initial_conditions(equ::ODE) = (equ.t₀, equ.q₀)
 
-function get_function_tuple(equation::ODE{DT,TT,VT,HT,Nothing}) where {DT, TT, VT, HT}
+hashamiltonian(::ODEHT{<:Nothing}) = false
+hashamiltonian(::ODEHT{<:Function}) = true
+
+hasparameters(::ODEPT{<:Nothing}) = false
+hasparameters(::ODEPT{<:NamedTuple}) = true
+
+_get_v(equ::ODE) = hasparameters(equ) ? (t,q,v) -> equ.v(t, q, v, equ.parameters) : equ.v
+_get_h(equ::ODE) = hasparameters(equ) ? (t,q) -> equ.h(t, q, equ.parameters) : equ.h
+
+
+function get_function_tuple(equ::ODE)
     names = (:v,)
-    equs  = (equation.v,)
+    equs  = (_get_v(equ),)
 
-    if HT != Nothing
+    if hashamiltonian(equ)
         names = (names..., :h)
-        equs  = (equs..., equation.h)
-    end
-
-    NamedTuple{names}(equs)
-end
-
-function get_function_tuple(equation::ODE{DT,TT,VT,HT,PT}) where {DT, TT, VT, HT, PT <: NamedTuple}
-    vₚ = (t,q,v) -> equation.v(t, q, v, equation.parameters)
-
-    names = (:v,)
-    equs  = (vₚ,)
-
-    if HT != Nothing
-        hₚ = (t,q) -> equation.h(t, q, equation.parameters)
-        names = (names..., :h)
-        equs  = (equs..., hₚ)
+        equs  = (equs..., _get_h(equ))
     end
 
     NamedTuple{names}(equs)

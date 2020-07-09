@@ -19,7 +19,6 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``f`` and ``p``
 * `m`: dimension of algebraic variable ``\lambda`` and the constraint ``\phi``
-* `n`: number of initial conditions
 * `v`: function computing the vector field ``v``
 * `f`: function computing the vector field ``f``
 * `u`: function computing the projection for ``q``
@@ -34,17 +33,16 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 * `λ₀`: initial condition for algebraic variable ``\lambda``
 
 """
-struct PDAE{dType <: Number, tType <: Number,
+struct PDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             vType <: Function, fType <: Function,
             uType <: Function, gType <: Function,
             ϕType <: Function,
             v̄Type <: Function, f̄Type <: Function,
             hType <: Union{Function,Nothing},
-            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
+            pType <: Union{NamedTuple,Nothing}} <: AbstractEquationPDAE{dType, tType}
 
     d::Int
     m::Int
-    n::Int
     v::vType
     f::fType
     u::uType
@@ -54,54 +52,57 @@ struct PDAE{dType <: Number, tType <: Number,
     f̄::f̄Type
     h::hType
     t₀::tType
-    q₀::Array{dType, N}
-    p₀::Array{dType, N}
-    λ₀::Array{dType, N}
+    q₀::Vector{arrayType}
+    p₀::Vector{arrayType}
+    λ₀::Vector{arrayType}
     parameters::pType
     periodicity::Vector{dType}
 
-    function PDAE(DT::DataType, N::Int, d::Int, m::Int, n::Int,
-                  v::vType, f::fType, u::uType, g::gType, ϕ::ϕType,
-                  t₀::tType, q₀::AbstractArray{dType}, p₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
-                  v̄::v̄Type=v, f̄::f̄Type=f, h::hType=nothing, parameters::pType=nothing, periodicity=zeros(DT,d)) where {
-                         dType <: Number, tType <: Number,
-                         vType <: Function, fType <: Function,
-                         uType <: Function, gType <: Function,
-                         ϕType <: Function,
-                         v̄Type <: Function, f̄Type <: Function,
-                         hType <: Union{Function,Nothing},
-                         pType <: Union{NamedTuple,Nothing}}
+    function PDAE(v::vType, f::fType, u::uType, g::gType, ϕ::ϕType,
+                  t₀::tType, q₀::Vector{arrayType}, p₀::Vector{arrayType}, λ₀::Vector{arrayType};
+                  v̄::v̄Type=v, f̄::f̄Type=f, h::hType=nothing, parameters::pType=nothing,
+                  periodicity=zero(q₀[begin])) where {
+                        dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
+                        vType <: Function, fType <: Function,
+                        uType <: Function, gType <: Function,
+                        ϕType <: Function,
+                        v̄Type <: Function, f̄Type <: Function,
+                        hType <: Union{Function,Nothing},
+                        pType <: Union{NamedTuple,Nothing}}
 
-        @assert d == size(q₀,1) == size(p₀,1)
-        @assert m == size(λ₀,1)
-        @assert n == size(q₀,2) == size(p₀,2) == size(λ₀,2)
-        @assert 2n ≥ m
-        @assert ndims(q₀) == ndims(p₀) == ndims(λ₀) == N ∈ (1,2)
+        d = length(q₀[begin])
+        m = length(λ₀[begin])
 
-        new{DT, tType, vType, fType, uType, gType, ϕType, v̄Type, f̄Type, hType, pType, N}(d, m, n, v, f, u, g, ϕ, v̄, f̄, h, t₀,
-                convert(Array{DT}, q₀), convert(Array{DT}, p₀), convert(Array{DT}, λ₀),
-                parameters, periodicity)
+        @assert 2d ≥ m
+
+        @assert length(q₀) == length(p₀) == length(λ₀)
+
+        @assert all([length(q) == d for q in q₀])
+        @assert all([length(p) == d for p in p₀])
+        @assert all([length(λ) == m for λ in λ₀])
+
+        @assert all([ndims(q) == ndims(p) == ndims(λ) for (q,p,λ) in zip(q₀,p₀,λ₀)])
+
+        new{dType, tType, arrayType, vType, fType, uType, gType, v̄Type, f̄Type, hType, pType}(d, m, v, f, u, g, ϕ, v̄, f̄, h, t₀, q₀, p₀, λ₀, parameters, periodicity)
     end
 end
 
-function PDAE(v, f, u, g, ϕ, t₀, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}; kwargs...) where {DT}
-    PDAE(DT, ndims(q₀), size(q₀,1), size(λ₀,1), size(q₀,2), v, f, u, g, ϕ, t₀, q₀, p₀, λ₀; kwargs...)
-end
+PDAE(v, f, u, g, ϕ, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = PDAE(v, f, u, g, ϕ, 0.0, q₀, p₀, λ₀; kwargs...)
+PDAE(v, f, u, g, ϕ, t₀, q₀::State, p₀::State, λ₀::State; kwargs...) = PDAE(v, f, u, g, ϕ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+PDAE(v, f, u, g, ϕ, q₀::State, p₀::State, λ₀::State; kwargs...) = PDAE(v, f, u, g, ϕ, 0.0, q₀, p₀, λ₀; kwargs...)
 
-function PDAE(v, f, u, g, ϕ, q₀, p₀, λ₀; kwargs...)
-    PDAE(v, f, u, g, ϕ, zero(eltype(q₀)), q₀, p₀, λ₀; kwargs...)
-end
+const PDAEHT{HT,DT,TT,AT,VT,FT,UT,GT,ΦT,PT} = PDAE{DT,TT,AT,VT,FT,UT,GT,ΦT,HT,PT} # type alias for dispatch on Hamiltonian type parameter
+const PDAEPT{PT,DT,TT,AT,VT,FT,UT,GT,ΦT,HT} = PDAE{DT,TT,AT,VT,FT,UT,GT,ΦT,HT,PT} # type alias for dispatch on parameters type parameter
 
-Base.hash(dae::PDAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n,
-        hash(dae.v, hash(dae.f, hash(dae.u, hash(dae.g, 
+Base.hash(dae::PDAE, h::UInt) = hash(dae.d, hash(dae.m,
+        hash(dae.v, hash(dae.f, hash(dae.u, hash(dae.g,
         hash(dae.v̄, hash(dae.f̄, hash(dae.h,
         hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀,
-        hash(dae.periodicity, hash(dae.parameters, h))))))))))))))))
+        hash(dae.periodicity, hash(dae.parameters, h)))))))))))))))
 
 Base.:(==)(dae1::PDAE, dae2::PDAE) = (
                                 dae1.d == dae2.d
                              && dae1.m == dae2.m
-                             && dae1.n == dae2.n
                              && dae1.v == dae2.v
                              && dae1.f == dae2.f
                              && dae1.u == dae2.u
@@ -117,49 +118,47 @@ Base.:(==)(dae1::PDAE, dae2::PDAE) = (
                              && dae1.parameters == dae1.parameters
                              && dae1.periodicity == dae1.periodicity)
 
-function Base.similar(dae::PDAE, q₀, p₀, λ₀=get_λ₀(q₀, dae.λ₀); kwargs...)
-    similar(dae, dae.t₀, q₀, p₀, λ₀; kwargs...)
-end
+Base.similar(equ::PDAE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀; kwargs...)
+Base.similar(equ::PDAE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
 
-function Base.similar(dae::PDAE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=get_λ₀(q₀, dae.λ₀);
-                      v̄=dae.v̄, f̄=dae.f̄, h=dae.h, parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
-    @assert dae.d == size(q₀,1) == size(p₀,1)
-    @assert dae.m == size(λ₀,1)
-    PDAE(dae.v, dae.f, dae.u, dae.g, dae.ϕ, t₀, q₀, p₀, λ₀; v̄=v̄, f̄=f̄, h=h, parameters=parameters, periodicity=periodicity)
+function Base.similar(equ::PDAE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector;
+                      v̄=equ.v̄, f̄=equ.f̄, h=equ.h, parameters=equ.parameters, periodicity=equ.periodicity)
+    @assert all([length(q) == equ.d for q in q₀])
+    @assert all([length(p) == equ.d for p in p₀])
+    @assert all([length(λ) == equ.m for λ in λ₀])
+    PDAE(equ.v, equ.f, equ.u, equ.g, equ.ϕ, t₀, q₀, p₀, λ₀; v̄=v̄, f̄=f̄, h=h, parameters=parameters, periodicity=periodicity)
 end
 
 @inline Base.ndims(equation::PDAE) = equation.d
+@inline CommonFunctions.nsamples(equation::PDAE) = length(eachindex(equation.q₀))
 @inline CommonFunctions.nconstraints(equation::PDAE) = equation.m
 @inline CommonFunctions.periodicity(equation::PDAE) = equation.periodicity
 
-function get_function_tuple(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT,V̄T,F̄T,HT,Nothing}) where {DT, TT, VT, FT, UT, GT, ϕT, V̄T, F̄T, HT}
+initial_conditions(equation::PDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
+
+hashamiltonian(::PDAEHT{<:Nothing}) = false
+hashamiltonian(::PDAEHT{<:Function}) = true
+
+hasparameters(::PDAEPT{<:Nothing}) = false
+hasparameters(::PDAEPT{<:NamedTuple}) = true
+
+_get_v(equ::PDAE) = hasparameters(equ) ? (t,q,p,v) -> equ.v(t, q, p, v, equ.parameters) : equ.v
+_get_f(equ::PDAE) = hasparameters(equ) ? (t,q,p,f) -> equ.f(t, q, p, f, equ.parameters) : equ.f
+_get_u(equ::PDAE) = hasparameters(equ) ? (t,q,p,λ,u) -> equ.u(t, q, p, λ, u, equ.parameters) : equ.u
+_get_g(equ::PDAE) = hasparameters(equ) ? (t,q,p,λ,g) -> equ.g(t, q, p, λ, g, equ.parameters) : equ.g
+_get_ϕ(equ::PDAE) = hasparameters(equ) ? (t,q,p,ϕ) -> equ.ϕ(t, q, p, ϕ, equ.parameters) : equ.ϕ
+_get_v̄(equ::PDAE) = hasparameters(equ) ? (t,q,p,v) -> equ.v̄(t, q, p, v, equ.parameters) : equ.v̄
+_get_f̄(equ::PDAE) = hasparameters(equ) ? (t,q,p,f) -> equ.f̄(t, q, p, f, equ.parameters) : equ.f̄
+_get_h(equ::PDAE) = hasparameters(equ) ? (t,q,p) -> equ.h(t, q, p, equ.parameters) : equ.h
+
+
+function get_function_tuple(equ::PDAE)
     names = (:v,:f,:u,:g,:ϕ,:v̄,:f̄)
-    equs  = (equation.v, equation.f, equation.u, equation.g, equation.ϕ, equation.v̄, equation.f̄)
+    equs  = (_get_v(equ), _get_f(equ), _get_u(equ), _get_g(equ), _get_ϕ(equ), _get_v̄(equ), _get_f̄(equ))
 
-    if HT != Nothing
+    if hashamiltonian(equ)
         names = (names..., :h)
-        equs  = (equs..., equation.h)
-    end
-
-    NamedTuple{names}(equs)
-end
-
-function get_function_tuple(equation::PDAE{DT,TT,VT,FT,UT,GT,ϕT,V̄T,F̄T,HT,PT}) where {DT, TT, VT, FT, UT, GT, ϕT, V̄T, F̄T, HT, PT <: NamedTuple}
-    vₚ = (t,q,p,v) -> equation.v(t, q, p, v, equation.parameters)
-    fₚ = (t,q,p,f) -> equation.f(t, q, p, f, equation.parameters)
-    uₚ = (t,q,p,λ,u) -> equation.u(t, q, p, λ, u, equation.parameters)
-    gₚ = (t,q,p,λ,g) -> equation.g(t, q, p, λ, g, equation.parameters)
-    ϕₚ = (t,q,p,ϕ) -> equation.ϕ(t, q, p, ϕ, equation.parameters)
-    v̄ₚ = (t,q,p,v) -> equation.v̄(t, q, p, v, equation.parameters)
-    f̄ₚ = (t,q,p,f) -> equation.f̄(t, q, p, f, equation.parameters)
-
-    names = (:v, :f, :u, :g, :ϕ, :v̄, :f̄)
-    equs  = (vₚ, fₚ, uₚ, gₚ, ϕₚ, v̄ₚ, f̄ₚ)
-
-    if HT != Nothing
-        hₚ = (t,q,p) -> equation.h(t, q, p, equation.parameters)
-        names = (names..., :h)
-        equs  = (equs..., hₚ)
+        equs  = (equs..., _get_h(equ))
     end
 
     NamedTuple{names}(equs)

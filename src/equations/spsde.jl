@@ -58,7 +58,7 @@ of evaluating the vector fields ``v``, ``f`` and the matrices ``B``, ``G`` on `t
     sde = SDE(v_sde, B_sde, t₀, q₀)
 ```
 """
-struct SPSDE{dType <: Number, tType <: Number, vType <: Function, f1Type <: Function, f2Type <: Function, BType <: Function, G1Type <: Function, G2Type <: Function, pType, N} <: AbstractEquationPSDE{dType, tType}
+struct SPSDE{dType <: Number, tType <: Real, vType <: Function, f1Type <: Function, f2Type <: Function, BType <: Function, G1Type <: Function, G2Type <: Function, pType, N} <: AbstractEquationPSDE{dType, tType}
     d::Int
     m::Int
     ni::Int
@@ -79,7 +79,7 @@ struct SPSDE{dType <: Number, tType <: Number, vType <: Function, f1Type <: Func
                     B::BType, G1::G1Type, G2::G2Type, t₀::tType,
                     q₀::AbstractArray{dType,N}, p₀::AbstractArray{dType,N};
                     parameters=nothing, periodicity=zeros(dType,size(q₀,1))) where {
-                    dType <: Number, tType <: Number, vType <: Function, f1Type <: Function, f2Type <: Function,
+                    dType <: Number, tType <: Real, vType <: Function, f1Type <: Function, f2Type <: Function,
                     BType <: Function, G1Type <: Function, G2Type <: Function, N}
 
         @assert size(q₀)  == size(p₀)
