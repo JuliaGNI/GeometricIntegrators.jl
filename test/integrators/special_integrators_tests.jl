@@ -19,7 +19,7 @@ ode  = lotka_volterra_2d_ode(q₀; params=parameters)
 vode = lotka_volterra_2d_vode(q₀; params=parameters)
 int  = IntegratorFIRK(ode, TableauGLRK(8), Δt)
 sol  = integrate(ode, int, nt)
-refx = sol.q[:,end]
+refx = sol.q[end]
 
 
 @testset "$(rpad("Special integrators",80))" begin

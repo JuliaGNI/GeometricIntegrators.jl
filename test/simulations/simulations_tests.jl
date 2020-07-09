@@ -21,8 +21,8 @@ nwrte2 = 100
 h5file = "test.hdf5"
 
 
-tab = TableauImplicitMidpoint()
-ode = harmonic_oscillator_ode(vcat(rand(1,ns), zeros(1,ns)))
+tab = getTableauImplicitMidpoint()
+ode = harmonic_oscillator_ode([rand(2) for i in 1:ns])
 
 
 # @testset "$(rpad("Serial Simulation",80))" begin

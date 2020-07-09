@@ -7,7 +7,7 @@ const ParametersVPRKpMidpoint = AbstractParametersVPRK{:vprk_pmidpoint}
 struct IntegratorVPRKpMidpoint{DT, TT, D, S,
                 PT <: ParametersVPRKpMidpoint{DT,TT},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
+                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
 
     params::PT
     solver::ST

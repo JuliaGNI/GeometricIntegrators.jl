@@ -209,7 +209,7 @@ end
 
 
 "Integrate ODE for initial conditions m with m₁ ≤ m ≤ m₂ for time steps n with n₁ ≤ n ≤ n₂."
-function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT}, m1::Int, m2::Int, n1::Int, n2::Int) where {DT,TT}
+function integrate!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, m1::Int, m2::Int, n1::Int, n2::Int) where {DT, TT, AT <: AbstractArray{DT}}
     @assert m1 ≥ 1
     @assert m2 ≥ m1
     @assert m2 ≤ nsamples(sol)
@@ -254,7 +254,7 @@ function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT}, m1::Int, m2::I
 end
 
 
-function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT,TT}
+function integrate!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT, TT, AT <: AbstractArray{DT}}
     if isa(int, StochasticIntegrator)
         # copy the increments of the Brownian Process
         get_increments!(sol, asol, n, m)

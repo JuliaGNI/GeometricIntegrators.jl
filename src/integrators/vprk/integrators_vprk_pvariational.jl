@@ -9,7 +9,7 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
                 PPT <: ParametersVPRKpVariational{DT,TT},
                 ST  <: NonlinearSolver{DT},
                 PST <: NonlinearSolver{DT},
-                IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
+                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
 
     params::PT
     pparams::PPT

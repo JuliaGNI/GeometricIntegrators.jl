@@ -14,7 +14,7 @@ end
 "Variational partitioned Runge-Kutta integrator."
 struct IntegratorVPRK{DT, TT, D, S, PT <: ParametersVPRK{DT,TT},
                                     ST <: NonlinearSolver{DT},
-                                    IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
+                                    IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT

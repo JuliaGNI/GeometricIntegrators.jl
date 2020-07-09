@@ -75,7 +75,7 @@ end
 "Diagonally implicit Runge-Kutta integrator."
 struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
                                     ST,# <: NonlinearSolver{DT},
-                                    IT <: InitialGuessODE{DT,TT}} <: IntegratorRK{DT,TT}
+                                    IT <: InitialGuessODE{TT}} <: IntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -99,7 +99,7 @@ struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
         solvers = [create_nonlinear_solver(DT, D, params, caches, i) for i in 1:S]
 
         # create initial guess
-        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
+        iguess = InitialGuessODE(get_config(:ig_interpolation), equations[:v], Δt)
 
         # create integrator
         IntegratorDIRK(params, solvers, iguess, caches)

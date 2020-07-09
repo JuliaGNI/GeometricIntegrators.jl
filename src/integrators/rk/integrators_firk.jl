@@ -95,7 +95,7 @@ end
 "Fully implicit Runge-Kutta integrator."
 struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
                                     ST <: NonlinearSolver{DT},
-                                    IT <: InitialGuessODE{DT,TT}} <: IntegratorRK{DT,TT}
+                                    IT <: InitialGuessODE{TT}} <: IntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -123,7 +123,7 @@ struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
         end
 
         # create initial guess
-        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
+        iguess = InitialGuessODE(get_config(:ig_interpolation), equations[:v], Δt)
 
         # create integrator
         IntegratorFIRK(params, solver, iguess, caches)

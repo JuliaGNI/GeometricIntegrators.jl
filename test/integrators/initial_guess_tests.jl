@@ -22,20 +22,24 @@ idae = lotka_volterra_2d_idae(q₀; params=parameters)
 vdae = lotka_volterra_2d_vdae(q₀; params=parameters)
 
 
-@test InitialGuessODE(int,  ode, Δt) == InitialGuessODE{eltype( ode.q₀), ndims( ode)}(int,  ode.v, Δt)
-@test InitialGuessODE(int, iode, Δt) == InitialGuessODE{eltype(iode.q₀), ndims(iode)}(int, iode.v̄, Δt)
-@test InitialGuessODE(int, vode, Δt) == InitialGuessODE{eltype(vode.q₀), ndims(vode)}(int, vode.v̄, Δt)
+@test InitialGuessODE(int,  ode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v( ode), Δt)
+@test InitialGuessODE(int, iode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v(iode), Δt)
+@test InitialGuessODE(int, vode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v(vode), Δt)
 
-@test InitialGuess(int, ode, Δt) == InitialGuessODE{eltype(ode.q₀), ndims(ode)}(int, ode.v, Δt)
+@test InitialGuess(int, ode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v(ode), Δt)
+@test InitialGuess(int, dae, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v(dae), Δt)
 
-@test InitialGuess(int, iode, Δt) == InitialGuessIODE{eltype(iode.q₀), ndims(iode)}(int, iode.v̄, iode.f̄, Δt)
-@test InitialGuess(int, idae, Δt) == InitialGuessIODE{eltype(idae.q₀), ndims(idae)}(int, idae.v̄, idae.f̄, Δt)
+@test InitialGuess(int, hode, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v(hode), _get_f(hode), Δt)
+@test InitialGuess(int, hdae, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v(hdae), _get_f(hdae), Δt)
 
-@test InitialGuess(int, vode, Δt) == InitialGuessIODE{eltype(vode.q₀), ndims(vode)}(int, vode.v̄, vode.f̄, Δt)
-@test InitialGuess(int, vdae, Δt) == InitialGuessIODE{eltype(vdae.q₀), ndims(vdae)}(int, vdae.v̄, vdae.f̄, Δt)
+@test InitialGuess(int, iode, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v(iode), _get_f(iode), Δt)
+@test InitialGuess(int, idae, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v(idae), _get_f(idae), Δt)
 
-@test InitialGuess(int, pode, Δt) == InitialGuessPODE{eltype(pode.q₀), ndims(pode)}(int, pode.v, pode.f, Δt)
-@test InitialGuess(int, pdae, Δt) == InitialGuessPODE{eltype(pdae.q₀), ndims(pdae)}(int, pdae.v̄, pdae.f̄, Δt)
+@test InitialGuess(int, pode, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v(pode), _get_f(pode), Δt)
+@test InitialGuess(int, pdae, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v(pdae), _get_f(pdae), Δt)
+
+@test InitialGuess(int, vode, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v(vode), _get_f(vode), Δt)
+@test InitialGuess(int, vdae, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v(vdae), _get_f(vdae), Δt)
 
 
 # Reference Solution

@@ -9,7 +9,7 @@ mutable struct IntegratorVPRKdegenerate{DT, TT, D, S,
                 PPT <: ParametersVPRKdegenerate{DT,TT},
                 ST  <: NonlinearSolver{DT},
                 PST <: NonlinearSolver{DT},
-                IT  <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
+                IT  <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
 
     params::PT
     pparams::PPT

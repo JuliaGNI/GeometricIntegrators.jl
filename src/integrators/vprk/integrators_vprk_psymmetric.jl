@@ -7,7 +7,7 @@ const ParametersVPRKpSymmetric = AbstractParametersVPRK{:vprk_psymmetric}
 struct IntegratorVPRKpSymmetric{DT, TT, D, S,
                 PT <: ParametersVPRKpSymmetric{DT,TT},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
+                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
 
     params::PT
     solver::ST

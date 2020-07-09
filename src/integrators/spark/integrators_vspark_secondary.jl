@@ -91,7 +91,7 @@ F^1_{n,i} + F^2_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i 
 struct IntegratorVSPARKsecondary{DT, TT, D, S, R,
                                          PT <: ParametersVSPARKsecondary{DT,TT,D,S,R},
                                          ST <: NonlinearSolver{DT},
-                                         IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,R}
+                                         IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,R}
     params::PT
     solver::ST
     iguess::IT

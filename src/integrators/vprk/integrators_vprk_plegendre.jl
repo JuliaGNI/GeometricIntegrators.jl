@@ -46,7 +46,7 @@ const ParametersVPRKpLegendre = AbstractParametersVPRK{:vprk_plegendre}
 struct IntegratorVPRKpLegendre{DT, TT, D, S,
                 PT <: ParametersVPRKpLegendre{DT,TT},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
+                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT
