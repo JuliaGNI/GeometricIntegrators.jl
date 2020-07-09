@@ -163,9 +163,6 @@ initial_conditions(equation::IODE) = (equation.t₀, equation.q₀, equation.p�
 hashamiltonian(::IODEHT{<:Nothing}) = false
 hashamiltonian(::IODEHT{<:Function}) = true
 
-hasvectorfield(::IODEVT{<:Nothing}) = false
-hasvectorfield(::IODEVT{<:Function}) = true
-
 hasparameters(::IODEPT{<:Nothing}) = false
 hasparameters(::IODEPT{<:NamedTuple}) = true
 

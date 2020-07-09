@@ -158,7 +158,7 @@ Base.hash(dae::VDAE, h::UInt) = hash(dae.d, hash(dae.m,
           hash(dae.ϑ, hash(dae.f, hash(dae.g, hash(dae.g̅, hash(dae.ϕ,
           hash(dae.ψ, hash(dae.v̄, hash(dae.f̄, hash(dae.h, hash(dae.Ω, hash(dae.∇H,
           hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, hash(dae.μ₀,
-          hash(dae.parameters, hash(dae.periodicity, h))))))))))))))))))))
+          hash(dae.parameters, hash(dae.periodicity, h)))))))))))))))))))
 
 Base.:(==)(dae1::VDAE, dae2::VDAE) = (
                                 dae1.d == dae2.d

@@ -102,9 +102,9 @@ DAE(v, u, ϕ, q₀::State, λ₀::State; kwargs...) = DAE(v, u, ϕ, 0.0, q₀, �
 const DAEHT{HT,DT,TT,AT,VT,UT,ΦT,PT} = DAE{DT,TT,AT,VT,UT,ΦT,HT,PT} # type alias for dispatch on Hamiltonian type parameter
 const DAEPT{PT,DT,TT,AT,VT,UT,ΦT,HT} = DAE{DT,TT,AT,VT,UT,ΦT,HT,PT} # type alias for dispatch on parameters type parameter
 
-Base.hash(dae::DAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.n, hash(dae.v,
+Base.hash(dae::DAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.v,
         hash(dae.u, hash(dae.ϕ, hash(dae.v̄, hash(dae.h, hash(dae.t₀, hash(dae.q₀, hash(dae.λ₀,
-        hash(dae.periodicity, hash(dae.parameters, h)))))))))))))
+        hash(dae.periodicity, hash(dae.parameters, h))))))))))))
 
 Base.:(==)(dae1::DAE, dae2::DAE) = (
                                 dae1.d == dae2.d
