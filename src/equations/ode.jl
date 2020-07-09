@@ -87,6 +87,7 @@ Base.ndims(equ::ODE) = equ.d
 Base.axes(equ::ODE) = axes(equ.q₀[begin])
 Common.nsamples(equ::ODE) = length(equ.q₀)
 Common.periodicity(equ::ODE) = equ.periodicity
+initial_conditions(equ::ODE) = (equ.t₀, equ.q₀)
 
 initial_conditions(equ::ODE) = (equ.t₀, equ.q₀)
 
