@@ -21,6 +21,9 @@ module Integrators
     export InitialGuess, InitialGuessODE, InitialGuessIODE, InitialGuessPODE,
            initialize!
 
+
+    using ..Equations: _get_v, _get_f
+
     include("integrators/initial_guess/extrapolation.jl")
     include("integrators/initial_guess/initial_guess_ode.jl")
     include("integrators/initial_guess/initial_guess_iode.jl")
