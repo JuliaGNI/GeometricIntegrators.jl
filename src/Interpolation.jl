@@ -1,5 +1,6 @@
 module Interpolation
 
+    using ..Common
     using ..Utils
 
     export Interpolator, HermiteInterpolation

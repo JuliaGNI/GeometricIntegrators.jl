@@ -1,7 +1,3 @@
-
-using ..Common
-
-
 @doc raw"""
 # Hermite's Interpolating Polynomials
 
@@ -98,21 +94,21 @@ struct HermiteInterpolation{T} <: Interpolator{T}
     x₁::T
     Δx::T
 
-    function HermiteInterpolation{T}(x₀, x₁, Δx, d) where {T}
+    function HermiteInterpolation{T}(x₀, x₁, Δx) where {T}
         new(x₀, x₁, Δx)
     end
 end
 
-function HermiteInterpolation(x₀::T, x₁::T, Δx::T, d::Int) where {T}
-    HermiteInterpolation{T}(x₀, x₁, Δx, d)
+function HermiteInterpolation(x₀::T, x₁::T, Δx::T) where {T}
+    HermiteInterpolation{T}(x₀, x₁, Δx)
 end
 
 
-function Common.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x::T, y::Vector{T}) where {T}
-    local a₀::T
-    local a₁::T
-    local b₀::T
-    local b₁::T
+function Common.evaluate!(int::HermiteInterpolation{TT}, y₀::AbstractArray{DT}, y₁::AbstractArray{DT}, f₀::AbstractArray{DT}, f₁::AbstractArray{DT}, x::TT, y::AbstractArray{DT}) where {DT,TT}
+    local a₀::TT
+    local a₁::TT
+    local b₀::TT
+    local b₁::TT
 
     # Interpolate y values at required locations
     if x == int.x₀
@@ -128,11 +124,11 @@ function Common.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::V
     end
 end
 
-function Common.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}, y₁::Vector{T}, f₀::Vector{T}, f₁::Vector{T}, x::T, y::Vector{T}, f::Vector{T}) where {T}
-    local a₀::T
-    local a₁::T
-    local b₀::T
-    local b₁::T
+function Common.evaluate!(int::HermiteInterpolation{TT}, y₀::AbstractArray{DT}, y₁::AbstractArray{DT}, f₀::AbstractArray{DT}, f₁::AbstractArray{DT}, x::TT, y::AbstractArray{DT}, f::AbstractArray{DT}) where {DT,TT}
+    local a₀::TT
+    local a₁::TT
+    local b₀::TT
+    local b₁::TT
 
     evaluate!(int, y₀, y₁, f₀, f₁, x, y)
 
