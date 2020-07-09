@@ -1,7 +1,7 @@
 
 "Create AtomicSolution for ODE."
 function AtomicSolution(equation::AbstractEquationODE)
-    AtomicSolutionODE(equation.t₀, equation.q₀)
+    AtomicSolutionODE(equation.t₀, equation.q₀[begin])
 end
 
 "Create AtomicSolution for ODE."
@@ -11,7 +11,7 @@ end
 
 "Create AtomicSolution for partitioned ODE."
 function AtomicSolution(equation::AbstractEquationPODE)
-    AtomicSolutionPODE(equation.t₀, equation.q₀, equation.p₀)
+    AtomicSolutionPODE(equation.t₀, equation.q₀[begin], equation.p₀[begin])
 end
 
 "Create AtomicSolution for partitioned ODE."
@@ -21,7 +21,7 @@ end
 
 "Create AtomicSolution for DAE."
 function AtomicSolution(equation::AbstractEquationDAE)
-    AtomicSolutionDAE(equation.t₀, equation.q₀, equation.λ₀)
+    AtomicSolutionDAE(equation.t₀, equation.q₀[begin], equation.λ₀[begin])
 end
 
 "Create AtomicSolution for DAE."
@@ -31,7 +31,7 @@ end
 
 "Create AtomicSolution for partitioned DAE."
 function AtomicSolution(equation::AbstractEquationPDAE)
-    AtomicSolutionPDAE(equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
+    AtomicSolutionPDAE(equation.t₀, equation.q₀[begin], equation.p₀[begin], equation.λ₀[begin])
 end
 
 "Create AtomicSolution for partitioned DAE."

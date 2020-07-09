@@ -1,111 +1,113 @@
 
-using Base: Indices, tail
+using Base: Indices
 
-abstract type DataSeries{T,N} <: AbstractArray{T,N} end
+abstract type DataSeries{T <: Union{Number,AbstractArray}, N} <: AbstractArray{T,N} end
+
+function initialize!(ds::DataSeries{T,1}, q₀::T) where {T}
+    for j in eachindex(ds)
+        ds[j] = zero(q₀)
+    end
+    return ds
+end
+
+function initialize!(ds::DataSeries{T,1}, q₀::Vector{T}) where {T}
+    @assert nsamples(ds) == length(q₀) == 1
+    initialize!(ds, q₀[begin])
+end
+
+function initialize!(ds::DataSeries{T,2}, q₀::Vector{T}) where {T}
+    @assert nsamples(ds) == length(q₀)
+    for k in axes(ds,2)
+        for j in axes(ds,1)
+            ds[j,k] = zero(q₀[k])
+        end
+    end
+    return ds
+end
+
 
 for (TDataSeries, TArray) in
     ((:SDataSeries, :Array),
      (:PDataSeries, :SharedArray))
     @eval begin
-        struct $TDataSeries{T,N} <: DataSeries{T,N}
-            nd::Int
-            nt::Int
-            ni::Int
+        struct $TDataSeries{T <: Union{Number,AbstractArray},N} <: DataSeries{T,N}
+        # struct $TDataSeries{T,N} <: DataSeries{T,N}
             d::$TArray{T,N}
 
-            function $TDataSeries{T,N}(nd, nt, ni) where {T,N}
-                @assert T <: Number
-                @assert nd > 0
+            function $TDataSeries{T,N}(nt, ni) where {T <: Union{Number,AbstractArray}, N}
                 @assert nt ≥ 0
                 @assert ni > 0
 
-                @assert N ∈ (1,2,3)
+                @assert N ∈ (1,2)
 
                 if $TArray == Array
                     if N == 1
-                        d = $TArray{T}(undef, nt+1)
+                        d = $TArray{T,N}(undef, nt+1)
                     elseif N == 2
-                        d = $TArray{T}(undef, nd, nt+1)
-                    elseif N == 3
-                        d = $TArray{T}(undef, nd, nt+1, ni)
+                        d = $TArray{T,N}(undef, nt+1, ni)
                     end
                 elseif $TArray == SharedArray
                     if N == 1
                         d = $TArray{T,N}(nt+1)
                     elseif N == 2
-                        d = $TArray{T,N}(nd, nt+1)
-                    elseif N == 3
-                        d = $TArray{T,N}(nd, nt+1, ni)
+                        d = $TArray{T,N}(nt+1, ni)
                     end
                 end
 
-                fill!(d,zero(T))
-
-                new(nd, nt, ni, d)
+                new(d)
             end
         end
 
-
-        function $TDataSeries(T, nt::Int)
-            return $TDataSeries{T,1}(1, nt, 1)
+        function $TDataSeries(q₀::T, nt::Int, ni::Int=1) where {T <: Union{Number,AbstractArray{<:Number}}}
+            @assert ni == 1
+            ds = $TDataSeries{T,1}(nt, ni)
+            initialize!(ds, q₀)
         end
 
-        function $TDataSeries(T, nd::Int, nt::Int)
-            return $TDataSeries{T,2}(nd, nt, 1)
+        function $TDataSeries(q₀::Vector{T}, nt::Int, ni::Int=1) where {T <: Union{Number}}
+            @assert ni == 1 || ni == length(q₀)
+            ds = ( ni == 1 ? $TDataSeries{Vector{T},1}(nt, ni) : $TDataSeries{T,2}(nt, ni) )
+            initialize!(ds, q₀)
         end
 
-        function $TDataSeries(T, nd::Int, nt::Int, ni::Int)
-            ni == 1 ? N = 2 : N = 3
-            return $TDataSeries{T,N}(nd, nt, ni)
+        function $TDataSeries(q₀::Vector{T}, nt::Int, ni::Int=length(q₀)) where {T <: AbstractArray{<:Number}}
+            @assert ni == length(q₀)
+            ds = $TDataSeries{T, ni == 1 ? 1 : 2}(nt, ni)
+            initialize!(ds, q₀)
         end
 
         function $TDataSeries(d::AbstractArray{T,1}) where {T}
-            nd = 1
             nt = size(d,1)-1
             ni = 1
-            ds = $TDataSeries{T,1}(nd, nt, ni)
+            ds = $TDataSeries{T,1}(nt, ni)
             copy!(ds.d, d)
             return ds
         end
 
         function $TDataSeries(d::AbstractArray{T,2}) where {T}
-            nd = size(d,1)
-            nt = size(d,2)-1
-            ni = 1
-            ds = $TDataSeries{T,2}(nd, nt, ni)
-            copy!(ds.d, d)
-            return ds
-        end
-
-        function $TDataSeries(d::AbstractArray{T,3}) where {T}
-            nd = size(d,1)
-            nt = size(d,2)-1
-            ni = size(d,3)
-            ds = $TDataSeries{T,3}(nd, nt, ni)
+            nt = size(d,1)-1
+            ni = size(d,2)
+            ds = $TDataSeries{T,2}(nt, ni)
             copy!(ds.d, d)
             return ds
         end
     end
 end
 
-Base.:(==)(ds1::DataSeries, ds2::DataSeries) = (
-                                ds1.nd == ds2.nd
-                             && ds1.nt == ds2.nt
-                             && ds1.ni == ds2.ni
-                             && ds1.d  == ds2.d)
+Base.:(==)(ds1::DataSeries, ds2::DataSeries) = (ds1.d == ds2.d)
 
 function Base.show(io::IO, ds::DataSeries{T,N}) where {T,N}
     print(io, "DataSeries with data type ", T, " and ", N, " dimensions:\n")
     print(io, ds.d)
 end
 
-function Base.similar(ds::DS) where {DS <: DataSeries}
-    DS(ds.nd, ds.nt, ds.ni)
-end
 
 Base.parent(ds::DataSeries) = ds.d
 Base.eltype(ds::DataSeries{T,N}) where {T,N} = T
 Base.ndims(ds::DataSeries{T,N}) where {T,N} = N
+
+Common.ntime(ds::DataSeries) = lastindex(ds.d, 1) - 1
+Common.nsamples(ds::DataSeries) = size(ds.d, 2)
 
 # errmsg_size(ds::DataSeries) = error("size not supported for data series with axes $(axes(ds))")
 # Base.size(ds::DataSeries) = errmsg_size(ds)
@@ -113,201 +115,202 @@ Base.ndims(ds::DataSeries{T,N}) where {T,N} = N
 Base.size(ds::DataSeries) = size(ds.d)
 Base.size(ds::DataSeries, d) = size(ds.d, d)
 
+
+function Base.similar(ds::DS) where {T, DS <: DataSeries{T,1}}
+    newds = DS(ntime(ds), nsamples(ds))
+    for j in eachindex(ds)
+        newds[j] = zero(ds[j])
+    end
+    return newds
+end
+
+function Base.similar(ds::DS) where {T, DS <: DataSeries{T,2}}
+    newds = DS(ntime(ds), nsamples(ds))
+    for k in axes(ds,2)
+        for j in axes(ds,1)
+            newds[j,k] = zero(ds[j,k])
+        end
+    end
+    return newds
+end
+
 Base.eachindex(::IndexCartesian, ds::DataSeries) = CartesianIndices(axes(ds))
 # Base.eachindex(::IndexLinear, ds::DataSeries) = axes(ds, 1)
 
-Base.firstindex(ds::DataSeries{T,1}) where {T}   = 0
-Base.firstindex(ds::DataSeries{T,N}) where {T,N} = 1
+Base.firstindex(ds::DataSeries{T,1}) where {T} = 0
+Base.firstindex(ds::DataSeries{T,N}) where {T,N} = firstindex(ds.d)
 
 Base.firstindex(ds::DataSeries{T,1}, d) where {T} = d ≥ 1 && d ≤ 1 ? 0 : 1
-Base.firstindex(ds::DataSeries{T,2}, d) where {T} = d ≥ 1 && d ≤ 2 ? (1,0)[d] : 1
-Base.firstindex(ds::DataSeries{T,3}, d) where {T} = d ≥ 1 && d ≤ 3 ? (1,0,1)[d] : 1
+Base.firstindex(ds::DataSeries{T,2}, d) where {T} = d ≥ 1 && d ≤ 2 ? (0, 1)[d] : 1
 
-Base.lastindex(ds::DataSeries{T,1}) where {T} = ds.nt
-Base.lastindex(ds::DataSeries{T,2}) where {T} = ds.nd*(ds.nt+1)
-Base.lastindex(ds::DataSeries{T,3}) where {T} = ds.nd*(ds.nt+1)*ds.ni
+Base.lastindex(ds::DataSeries{T,1}) where {T} = ntime(ds)
+Base.lastindex(ds::DataSeries{T,N}) where {T,N} = lastindex(ds.d)
 
-Base.lastindex(ds::DataSeries{T,1}, d) where {T} = d ≥ 1 && d ≤ 1 ? ds.nt : 1
-Base.lastindex(ds::DataSeries{T,2}, d) where {T} = d ≥ 1 && d ≤ 2 ? (ds.nd, ds.nt)[d] : 1
-Base.lastindex(ds::DataSeries{T,3}, d) where {T} = d ≥ 1 && d ≤ 3 ? (ds.nd, ds.nt, ds.ni)[d] : 1
+Base.lastindex(ds::DataSeries{T,1}, d) where {T} = d ≥ 1 && d ≤ 1 ? ntime(ds) : 1
+Base.lastindex(ds::DataSeries{T,2}, d) where {T} = d ≥ 1 && d ≤ 2 ? (ntime(ds), nsamples(ds))[d] : 1
 
-@inline Base.axes(ds::DataSeries{T,1}) where {T} = (0:ds.nt,)
-@inline Base.axes(ds::DataSeries{T,2}) where {T} = (1:ds.nd, 0:ds.nt)
-@inline Base.axes(ds::DataSeries{T,3}) where {T} = (1:ds.nd, 0:ds.nt, 1:ds.ni)
+@inline Base.axes(ds::DataSeries{T,1}) where {T} = (0:ntime(ds),)
+@inline Base.axes(ds::DataSeries{T,2}) where {T} = (0:ntime(ds), 1:nsamples(ds))
 @inline Base.axes(ds::DataSeries{T,N}, d) where {T,N} = d ≥ 1 && d ≤ N ? axes(ds)[d] : (1:1)
 
 Base.strides(ds::DataSeries) = strides(ds.d)
 
 
-# function get_data!(ds::DataSeries{T,1}, n, k=1) where {T}
-#     @assert n ≥ 0 && n ≤ ds.nt
-#     @assert k == 1
-#     @inbounds return ds.d[n+1]
-# end
-
-function get_data!(ds::DataSeries{T,2}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n, k=1) where {T}
-    @assert size(x,1) == ds.nd
-    @assert n ≥ 0 && n ≤ ds.nt
+function get_data!(ds::DataSeries{T,1}, x::T, n::Int, k::Int=1) where {T}
+    @assert n ≥ 0 && n ≤ ntime(ds)
     @assert k == 1
-    j = n+1
-    @inbounds for i in eachindex(x)
-        x[i] = ds.d[i,j]
+    x .= ds.d[n+1]
+end
+
+function get_data!(ds::DataSeries{T,2}, x::T, n::Int, k::Int) where {T}
+    @assert n ≥ 0 && n ≤ ntime(ds)
+    @assert k ≥ 1 && k ≤ nsamples(ds)
+    x .= ds.d[n+1,k]
+end
+
+function get_data!(ds::DataSeries{T,2}, x::Vector{T}, n::Int) where {T}
+    @assert length(x) == nsamples(ds)
+    @assert n ≥ 0 && n ≤ ntime(ds)
+    @inbounds for k in eachindex(x)
+        x[k] = ds.d[n+1,k]
     end
 end
 
-function get_data!(ds::DataSeries{T,3}, x::Union{Array{T,2}, Array{TwicePrecision{T},2}}, n) where {T}
-    @assert size(x,1) == ds.nd
-    @assert size(x,2) == ds.ni
-    @assert n ≥ 0 && n ≤ ds.nt
-    j = n+1
-    @inbounds for k in axes(x, 2)
-        for i in axes(x, 1)
-            x[i,k] = ds.d[i,j,k]
+function set_data!(ds::DataSeries{T,1}, x::T, n::Int, k::Int=1) where {T}
+    @assert n ≥ 0 && n ≤ ntime(ds)
+    @assert k == 1
+    if T <: Number
+        ds.d[n+1] = x
+    elseif T <: AbstractArray
+        ds.d[n+1] .= x
+    end
+end
+
+function set_data!(ds::DataSeries{T,1}, x::Vector{T}, n::Int, k::Int=1) where {T}
+    @assert nsamples(ds) == length(x) == 1
+    set_data!(ds, x[begin], n, k)
+end
+
+function set_data!(ds::DataSeries{T,2}, x::T, n::Int, k::Int) where {T}
+    @assert n ≥ 0 && n ≤ ntime(ds)
+    if T <: Number
+        ds.d[n+1,k] = x
+    elseif T <: AbstractArray
+        ds.d[n+1,k] .= x
+    end
+end
+
+function set_data!(ds::DataSeries{T,2}, x::Vector{T}, n::Int) where {T}
+    @assert length(x) == nsamples(ds)
+    @assert n ≥ 0 && n ≤ ntime(ds)
+    @inbounds for k in axes(ds.d, 2)
+        if T isa Number
+            ds.d[n+1,k] = x[k]
+        elseif T isa AbstractArray
+            ds.d[n+1,k] .= x[k]
         end
     end
 end
 
-function get_data!(ds::DataSeries{T,3}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n, k) where {T}
-    @assert size(x,1) == ds.nd
-    @assert n ≥ 0 && n ≤ ds.nt
-    @assert k ≥ 1 && k ≤ ds.ni
-    j = n+1
-    @inbounds for i in eachindex(x)
-        x[i] = ds.d[i,j,k]
+function Common.reset!(ds::DataSeries{T,1}) where {T}
+    @inbounds ds[begin] = ds[end]
+end
+
+function Common.reset!(ds::DataSeries{T,2}) where {T}
+    @inbounds for k in axes(ds,2)
+        ds[begin,k] = ds[end,k]
     end
 end
 
-function set_data!(ds::DataSeries{T,1}, x::Union{T, TwicePrecision{T}}, n, k=1) where {T}
-    @assert n ≥ 0 && n ≤ ds.nt
-    @assert k == 1
-    j = n+1
-    @inbounds ds.d[j] = x
-end
-
-function set_data!(ds::DataSeries{T,2}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n, k=1) where {T}
-    @assert size(x,1) == ds.nd
-    @assert n ≥ 0 && n ≤ ds.nt
-    @assert k == 1
-    j = n+1
-    @inbounds for i in axes(ds.d, 1)
-        ds.d[i,j] = x[i]
-    end
-end
-
-function set_data!(ds::DataSeries{T,3}, x::Union{Array{T,2}, Array{TwicePrecision{T},2}}, n) where {T}
-    @assert size(x,1) == ds.nd
-    @assert size(x,2) == ds.ni
-    @assert n ≥ 0 && n ≤ ds.nt
-    j = n+1
-    @inbounds for k in axes(ds.d, 3)
-        for i in axes(ds.d, 1)
-            ds.d[i,j,k] = x[i,k]
-        end
-    end
-end
-
-function set_data!(ds::DataSeries{T,3}, x::Union{Array{T,1}, Array{TwicePrecision{T},1}}, n, k) where {T}
-    @assert size(x,1) == ds.nd
-    @assert n ≥ 0 && n ≤ ds.nt
-    @assert k ≥ 1 && k ≤ ds.ni
-    j = n+1
-    @inbounds for i in axes(ds.d, 1)
-        ds.d[i,j,k] = x[i]
-    end
-end
-
-function CommonFunctions.reset!(ds::DataSeries{T,1}) where {T}
-    @inbounds ds[0] = ds[end]
-end
-
-function CommonFunctions.reset!(ds::DataSeries{T,2}) where {T}
-    @inbounds for i in axes(ds, 1)
-        ds[i,0] = ds[i,end]
-    end
-end
-
-function CommonFunctions.reset!(ds::DataSeries{T,3}) where {T}
-    @inbounds for k in axes(ds, 3)
-        for i in axes(ds, 1)
-            ds[i,0,k] = ds[i,end,k]
-        end
-    end
-end
 
 @inline function Base.getindex(ds::DataSeries{T,1}, j::Union{UnitRange,Int}) where {T}
-    @boundscheck checkbounds(ds.d, j.+1)
-    @inbounds r = getindex(ds.d, j.+1)
-    return r
+    getindex(ds.d, j.+1)
 end
 
-@inline function Base.getindex(ds::DataSeries{T,2}, i::Union{UnitRange,Int}, j::Union{UnitRange,Int}) where {T}
-    @boundscheck checkbounds(ds.d, i, j.+1)
-    @inbounds r = getindex(ds.d, i, j.+1)
-    return r
+@inline function Base.getindex(ds::DataSeries{T,1}, i::Union{Int,CartesianIndex}, j::Union{Int,CartesianIndex}) where {T}
+    ds[j][i]
 end
 
-# @inline function Base.getindex(ds::DataSeries{T,2}, j::Union{UnitRange,Int}) where {T}
-#     @boundscheck checkbounds(ds.d, :, j.+1)
-#     @inbounds r = getindex(ds.d, :, j+1)
-#     return r
-# end
-
-@inline function Base.getindex(ds::DataSeries{T,3}, i::Union{UnitRange,Int}, j::Union{UnitRange,Int}, k::Union{UnitRange,Int}) where {T}
-    @boundscheck checkbounds(ds.d, i, j.+1, k)
-    @inbounds r = getindex(ds.d, i, j.+1, k)
-    return r
+@inline function Base.getindex(ds::DataSeries{T,1}, i::Union{Int,CartesianIndex}, J::AbstractRange{Int}) where {T}
+    [ds[j][i] for j in J]
 end
 
-# @inline function Base.getindex(ds::DataSeries{T,3}, j::Union{UnitRange,Int}, k::Union{UnitRange,Int}) where {T}
-#     @boundscheck checkbounds(ds.d, :, j.+1, k)
-#     @inbounds r = getindex(ds.d, :, j.+1, k)
-#     return r
-# end
+@inline Base.getindex(ds::DataSeries{T,1}, I, J::Colon) where {T} = getindex(ds, I, axes(ds,1))
 
-# @inline function Base.getindex(ds::DataSeries{T,3}, k::Union{UnitRange,Int}) where {T}
-#     @boundscheck checkbounds(ds.d, :, :, k)
-#     @inbounds r = getindex(ds.d, :, :, k)
-#     return r
-# end
+
+@inline function Base.getindex(ds::DataSeries{T,2}, j::Union{UnitRange,Int}, k::Union{UnitRange,Int}) where {T}
+    getindex(ds.d, j.+1, k)
+end
+
+@inline function Base.getindex(ds::DataSeries{T,2}, i::Union{Int,CartesianIndex}, j::Union{Int,CartesianIndex}, k::Union{Int,CartesianIndex}) where {T}
+    ds[j,k][i]
+end
+
+@inline function Base.getindex(ds::DataSeries{T,2}, i::Union{Int,CartesianIndex}, J::AbstractRange{Int}, K::AbstractRange{Int}) where {T}
+    [ds[j,k][i] for j in J, k in K]
+end
+
+@inline function Base.getindex(ds::DataSeries{T,2}, i::Union{Int,CartesianIndex}, J::AbstractRange{Int}, k::Union{Int,CartesianIndex}) where {T}
+    [ds[j,k][i] for j in J]
+end
+
+@inline function Base.getindex(ds::DataSeries{T,2}, i::Union{Int,CartesianIndex}, j::Union{Int,CartesianIndex}, K::AbstractRange{Int}) where {T}
+    [ds[j,k][i] for k in K]
+end
+
+@inline Base.getindex(ds::DataSeries{T,2}, I, J::Colon, K::Colon) where {T} = getindex(ds, I, axes(ds,1), axes(ds,2))
+@inline Base.getindex(ds::DataSeries{T,2}, I, J::Colon, K) where {T} = getindex(ds, I, axes(ds,1), K)
+@inline Base.getindex(ds::DataSeries{T,2}, I, J, K::Colon) where {T} = getindex(ds, I, J, axes(ds,2))
+
 
 @inline function Base.setindex!(ds::DataSeries{T,1}, x, j::Union{UnitRange,Int}) where {T}
-    @assert length(x) == 1
-    @boundscheck checkbounds(ds.d, j.+1)
-    @inbounds setindex!(ds.d, x, j.+1)
+    setindex!(ds.d, x, j.+1)
 end
 
-@inline function Base.setindex!(ds::DataSeries{T,2}, x, i::Union{UnitRange,Int}, j::Union{UnitRange,Int}) where {T}
-    @assert length(x) == 1
-    @boundscheck checkbounds(ds.d, i, j.+1)
-    @inbounds setindex!(ds.d, x, i, j.+1)
+@inline function Base.setindex!(ds::DataSeries{T,2}, x, j::Union{UnitRange,Int}, k::Union{UnitRange,Int}) where {T}
+    setindex!(ds.d, x, j.+1, k)
 end
 
-# @inline function Base.setindex!(ds::DataSeries{T,2}, x, j::Union{UnitRange,Int}) where {T}
-#     @assert ndims(x) == 1
-#     @assert length(x) == size(ds.d, 1)
-#     @boundscheck checkbounds(ds.d, :, j.+1)
-#     @inbounds setindex!(ds.d, x, :, j.+1)
-# end
 
-@inline function Base.setindex!(ds::DataSeries{T,3}, x, i::Union{UnitRange,Int}, j::Union{UnitRange,Int}, k::Union{UnitRange,Int}) where {T}
-    @assert length(x) == 1
-    @boundscheck checkbounds(ds.d, i, j.+1, k)
-    @inbounds setindex!(ds.d, x, i, j.+1, k)
+# 
+# @inline function Base.getindex(ds::DataSeries{T,2}, I::Union{Int,CartesianIndex}, J::Union{Int,CartesianIndex,AbstractRange{Int}}, K::Union{Int,CartesianIndex,AbstractRange{Int}}) where {T}
+#     x = zeros(eltype(ds.d[begin]), (1 for i in 1:length(I))..., length(J))
+#     for j in J
+#         x[Tuple(I)..., j] = ds[j][I]
+#     end
+# end
+# 
+# similar(storagetype, shape)
+# 
+
+
+function fromarray(::Type{dsType}, d::AbstractArray{T,1}, ni::Int=1) where {dsType <: DataSeries, T <: Number}
+    @assert ni == 1
+    return dsType(d)
 end
 
-# @inline function Base.setindex!(ds::DataSeries{T,3}, x, j::Union{UnitRange,Int}, k::Union{UnitRange,Int}) where {T}
-#     @assert ndims(x) == 1
-#     @assert length(x) == size(ds.d, 1)
-#     @boundscheck checkbounds(ds.d, :, j.+1, k)
-#     @inbounds setindex!(ds.d, x, :, j.+1, k)
-# end
+function fromarray(::Type{dsType}, d::AbstractArray{T,2}, ni::Int=1) where {dsType <: DataSeries, T <: Number}
+    @assert ni == 1 || ni == size(d,2)
+    
+    if ni == 1
+        ds = [Vector{T}(d[:,n]) for n in axes(d,2)]
+    else
+        ds = Array(d)
+    end
 
-# @inline function Base.setindex!(ds::DataSeries{T,3}, x, k::Union{UnitRange,Int}) where {T}
-#     @assert ndims(x) == 2
-#     @assert size(x,1) == size(ds.d, 1)
-#     @assert size(x,2) == size(ds.d, 2)
-#     @boundscheck checkbounds(ds.d, :, :, k)
-#     @inbounds setindex!(ds.d, x, :, :, k)
-# end
+    return dsType(ds)
+end
 
-# TODO Implement convert() to/from array.
+function fromarray(::Type{dsType}, d::AbstractArray{T,N}, ni::Int=1) where {dsType <: DataSeries, T <: Number, N}
+    @assert ni == 1 || ni == size(d)[end]
+    @assert N ≥ 3
+    if ni == 1
+        AT = Array{T,ndims(d)-1}
+        ds = [AT(d[axes(d)[1:end-1]..., n]) for n in axes(d)[end]]
+    else
+        AT = Array{T,ndims(d)-2}
+        ds = [AT(d[axes(d)[1:end-2]..., n, k]) for n in axes(d)[end-1], k in axes(d)[end]]
+    end
+
+    return dsType(ds)
+end

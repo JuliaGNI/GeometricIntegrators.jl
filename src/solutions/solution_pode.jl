@@ -41,29 +41,29 @@ for (TSolution, TDataSeries, Tdocstring) in
             periodicity::Vector{dType}
             h5::HDF5.File
 
-            function $TSolution{dType, tType, N}(nd, nt, ni, t, q, p, ntime, nsave, nwrite, periodicity=zeros(dType, nd)) where {dType <: Number, tType <: Real, N}
+            function $TSolution{dType, tType, N}(nd, nt, ni, t, q, p, ntime, nsave, nwrite, periodicity=zero(q[begin])) where {dType <: Union{Number,AbstractArray}, tType <: Real, N}
                 new(nd, nt, ni, t, q, p, ntime, nsave, nwrite, zeros(Int, ni), 0, periodicity)
             end
         end
 
-        function $TSolution(equation::Union{PODE{DT,TT}, IODE{DT,TT}, VODE{DT,TT}}, Δt::TT, ntime::Int;
-                            nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT}
+        function $TSolution(equation::Union{PODE{DT,TT,AT}, IODE{DT,TT,AT}, VODE{DT,TT,AT}}, Δt::TT, ntimesteps::Int;
+                            nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,AT}
             @assert nsave > 0
-            @assert ntime == 0 || ntime ≥ nsave
+            @assert ntimesteps == 0 || ntimesteps ≥ nsave
             @assert nwrite == 0 || nwrite ≥ nsave
-            @assert mod(ntime, nsave) == 0
+            @assert mod(ntimesteps, nsave) == 0
 
             if nwrite > 0
                 @assert mod(nwrite, nsave) == 0
-                @assert mod(ntime, nwrite) == 0
+                @assert mod(ntimesteps, nwrite) == 0
             end
 
-            N  = equation.n > 1 ? 3 : 2
-            nd = equation.d
-            ni = equation.n
-            nt = div(ntime, nsave)
+            N  = (nsamples(equation) > 1 ? 2 : 1)
+            nd = ndims(equation)
+            ni = nsamples(equation)
+            nt = div(ntimesteps, nsave)
             nt = (nwrite == 0 ? nt : div(nwrite, nsave))
-            nw = (nwrite == 0 ? ntime : nwrite)
+            nw = (nwrite == 0 ? ntimesteps : nwrite)
 
             @assert nd > 0
             @assert ni > 0
@@ -71,9 +71,9 @@ for (TSolution, TDataSeries, Tdocstring) in
             @assert nw ≥ 0
 
             t = TimeSeries{TT}(nt, Δt, nsave)
-            q = $TDataSeries(DT, nd, nt, ni)
-            p = $TDataSeries(DT, nd, nt, ni)
-            s = $TSolution{DT,TT,N}(nd, nt, ni, t, q, p, ntime, nsave, nw, periodicity(equation))
+            q = $TDataSeries(equation.q₀, nt, ni)
+            p = $TDataSeries(equation.p₀, nt, ni)
+            s = $TSolution{AT,TT,N}(nd, nt, ni, t, q, p, ntimesteps, nsave, nw, periodicity(equation))
             set_initial_conditions!(s, equation)
 
             if !isnothing(filename)
@@ -84,21 +84,21 @@ for (TSolution, TDataSeries, Tdocstring) in
             return s
         end
 
-        function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,N}, p::$TDataSeries{DT,N}, ntime::Int) where {DT,TT,N}
-            @assert q.nd == p.nd
-            @assert q.nt == p.nt
-            @assert q.ni == p.ni
+        function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{AT,N}, p::$TDataSeries{AT,N}, ntimesteps::Int) where {AT,TT,N}
+            @assert ndims(q) == ndims(p)
+            @assert ntime(q) == ntime(p)
+            @assert nsamples(q) == nsamples(p)
 
             # extract parameters
-            nd = q.nd
-            ni = q.ni
+            nd = ndims(q)
+            ni = nsamples(q)
             nt = t.n
-            ns = div(ntime, nt)
+            ns = div(ntimesteps, nt)
 
-            @assert mod(ntime, nt) == 0
+            @assert mod(ntimesteps, nt) == 0
 
             # create solution
-            $TSolution{DT,TT,N}(nd, nt, ni, t, q, p, ntime, ns, 0)
+            $TSolution{AT,TT,N}(nd, nt, ni, t, q, p, ntimesteps, ns, 0)
         end
 
         function $TSolution(file::String)
@@ -107,19 +107,20 @@ for (TSolution, TDataSeries, Tdocstring) in
             h5 = h5open(file, "r")
 
             # read attributes
-            ntime = read(attributes(h5)["ntime"])
+            ntimesteps = read(attributes(h5)["ntime"])
             nsave = read(attributes(h5)["nsave"])
+            nsamples = read(attributes(h5)["nsamples"])
 
             # reading data arrays
             t = TimeSeries(read(h5["t"]), nsave)
-            q = $TDataSeries(read(h5["q"]))
-            p = $TDataSeries(read(h5["p"]))
+            q = fromarray($TDataSeries, read(h5["q"]), nsamples)
+            p = fromarray($TDataSeries, read(h5["p"]), nsamples)
 
             # need to close the file
             close(h5)
 
             # create solution
-            $TSolution(t, q, p, ntime)
+            $TSolution(t, q, p, ntimesteps)
         end
     end
 end
@@ -139,11 +140,11 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
 
 @inline hdf5(sol::SolutionPODE)  = sol.h5
 @inline timesteps(sol::SolutionPODE)  = sol.t
-@inline ntime(sol::SolutionPODE) = sol.ntime
 @inline nsave(sol::SolutionPODE) = sol.nsave
 @inline counter(sol::SolutionPODE) = sol.counter
 @inline offset(sol::SolutionPODE) = sol.woffset
 @inline lastentry(sol::SolutionPODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+@inline CommonFunctions.ntime(sol::SolutionPODE) = sol.ntime
 @inline CommonFunctions.periodicity(sol::SolutionPODE) = sol.periodicity
 
 
@@ -151,21 +152,30 @@ function set_initial_conditions!(sol::SolutionPODE, equ::Union{PODE,IODE,VODE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end
 
-function set_initial_conditions!(sol::SolutionPODE{DT,TT}, t₀::TT, q₀::Union{Array{DT}, Array{TwicePrecision{DT}}}, p₀::Union{Array{DT}, Array{TwicePrecision{DT}}}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPODE{AT,TT}, t₀::TT, q₀::AT, p₀::AT) where {AT,TT}
     set_data!(sol.q, q₀, 0)
     set_data!(sol.p, p₀, 0)
     compute_timeseries!(sol.t, t₀)
     sol.counter .= 1
 end
 
-function get_initial_conditions!(sol::SolutionPODE{DT,TT}, asol::AtomicSolutionPODE{DT,TT}, k, n=1) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPODE{AT,TT}, t₀::TT, q₀::AbstractVector{AT}, p₀::AbstractVector{AT}) where {AT,TT}
+    for i in eachindex(q₀,p₀)
+        set_data!(sol.q, q₀[i], 0, i)
+        set_data!(sol.p, p₀[i], 0, i)
+    end
+    compute_timeseries!(sol.t, t₀)
+    sol.counter .= 1
+end
+
+function get_initial_conditions!(sol::SolutionPODE{AT,TT}, asol::AtomicSolutionPODE{DT,TT,AT}, k, n=1) where {DT, TT, AT <: AbstractArray{DT}}
     get_solution!(sol, asol.q, asol.p, n-1, k)
     asol.t  = sol.t[n-1]
     asol.q̃ .= 0
     asol.p̃ .= 0
 end
 
-function get_initial_conditions!(sol::SolutionPODE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, k, n=1) where {DT,TT}
+function get_initial_conditions!(sol::SolutionPODE{AT,TT}, q::AT, p::AT, k, n=1) where {AT,TT}
     get_solution!(sol, q, p, n-1, k)
 end
 
@@ -173,24 +183,29 @@ function get_initial_conditions(sol::SolutionPODE, k, n=1)
     get_solution(sol, n-1, k)
 end
 
-function get_solution!(sol::SolutionPODE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k=1) where {DT,TT}
-    for i in eachindex(q) q[i] = sol.q[i, n, k] end
-    for i in eachindex(p) p[i] = sol.p[i, n, k] end
+function get_solution!(sol::SolutionPODE{AT,TT}, q::AT, p::AT, n, k=1) where {AT,TT}
+    get_data!(sol.q, q, n, k)
+    get_data!(sol.p, p, n, k)
 end
 
-function get_solution(sol::SolutionPODE, n, k)
-    (sol.t[n], Array(sol.q[:, n, k]), Array(sol.p[:, n, k]))
+function get_solution(sol::SolutionPODE{AT,TT,1}, n, k=1) where {AT,TT}
+    @assert k == 1
+    (sol.t[n], sol.q[n], sol.p[n])
+end
+
+function get_solution(sol::SolutionPODE{AT,TT,2}, n, k=1) where {AT,TT}
+    (sol.t[n], sol.q[n,k], sol.p[n,k])
 end
 
 function set_solution!(sol::SolutionPODE, t, q, p, n, k)
     set_solution!(sol, q, p, n, k)
 end
 
-function set_solution!(sol::SolutionPODE{DT,TT}, asol::AtomicSolutionPODE{DT,TT}, n, k=1) where {DT,TT}
+function set_solution!(sol::SolutionPODE{AT,TT}, asol::AtomicSolutionPODE{DT,TT,AT}, n, k=1) where {DT, TT, AT <: AbstractArray{DT}}
     set_solution!(sol, asol.t, asol.q, asol.p, n, k)
 end
 
-function set_solution!(sol::SolutionPODE{DT,TT}, q::SolutionVector{DT}, p::SolutionVector{DT}, n, k=1) where {DT,TT}
+function set_solution!(sol::SolutionPODE{AT,TT}, q::AT, p::AT, n, k=1) where {AT,TT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0

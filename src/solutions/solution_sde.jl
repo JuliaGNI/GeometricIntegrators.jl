@@ -240,13 +240,13 @@ Base.:(==)(sol1::SolutionSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionSDE{DT2,TT2,NQ2,
 
 @inline hdf5(sol::SolutionSDE) = sol.h5
 @inline timesteps(sol::SolutionSDE) = sol.t
-@inline ntime(sol::SolutionSDE) = sol.ntime
 @inline nsave(sol::SolutionSDE) = sol.nsave
 @inline counter(sol::SolutionSDE) = sol.counter
 @inline offset(sol::SolutionSDE) = sol.woffset
 @inline ioffset(sol::SolutionSDE) = sol.ioffset
 @inline lastentry(sol::SolutionSDE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline conv(sol::SolutionSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
+@inline Common.ntime(sol::SolutionSDE) = sol.ntime
 @inline Common.periodicity(sol::SolutionSDE) = sol.periodicity
 
 
