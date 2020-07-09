@@ -164,11 +164,7 @@ Base.axes(equ::VODE) = axes(equ.q₀[begin])
 Common.nsamples(equ::VODE) = length(equ.q₀)
 Common.periodicity(equ::VODE) = equ.periodicity
 
-<<<<<<< HEAD
 initial_conditions(equation::VODE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
-=======
-@inline Common.periodicity(equation::VODE) = equation.periodicity
->>>>>>> 03de891... Rename CommonFunctions to Common.
 
 hashamiltonian(::VODEHT{<:Nothing}) = false
 hashamiltonian(::VODEHT{<:Function}) = true
