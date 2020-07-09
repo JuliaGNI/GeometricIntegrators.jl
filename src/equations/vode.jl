@@ -70,8 +70,8 @@ and
 """
 struct VODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             ϑType <: Function, fType <: Function, gType <: Function,
-            v̄Type <: Function, f̄Type <: Function, hType <: Union{Function,Nothing},
-            ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing},
+            v̄Type <: Function, f̄Type <: Function, hType <: OptionalFunction,
+            ΩType <: OptionalFunction, ∇HType <: OptionalFunction,
             pType <: Union{NamedTuple,Nothing}} <: AbstractEquationPODE{dType, tType}
 
     d::Int
@@ -98,9 +98,9 @@ struct VODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
                     dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
                     ϑType <: Function, fType <: Function, gType <: Function,
                     v̄Type <: Function, f̄Type <: Function,
-                    hType <: Union{Function,Nothing},
-                    ΩType <: Union{Function,Nothing},
-                    ∇HType <: Union{Function,Nothing},
+                    hType <: OptionalFunction,
+                    ΩType <: OptionalFunction,
+                    ∇HType <: OptionalFunction,
                     pType <: Union{NamedTuple,Nothing}}
 
         d = length(q₀[begin])

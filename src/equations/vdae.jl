@@ -85,8 +85,8 @@ struct VDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             gType <: Function, g̅Type <: Function,
             ϕType <: Function, ψType <: Function,
             v̄Type <: Function, f̄Type <: Function,
-            hType <: Union{Function,Nothing},
-            ΩType <: Union{Function,Nothing}, ∇HType <: Union{Function,Nothing},
+            hType <: OptionalFunction,
+            ΩType <: OptionalFunction, ∇HType <: OptionalFunction,
             pType <: Union{NamedTuple,Nothing}} <: AbstractEquationPDAE{dType, tType}
 
     d::Int
@@ -120,9 +120,9 @@ struct VDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
                         gType <: Function, g̅Type <: Function,
                         ϕType <: Function, ψType <: Function,
                         v̄Type <: Function, f̄Type <: Function,
-                        hType <: Union{Function,Nothing},
-                        ΩType <: Union{Function,Nothing},
-                        ∇HType <: Union{Function,Nothing},
+                        hType <: OptionalFunction,
+                        ΩType <: OptionalFunction,
+                        ∇HType <: OptionalFunction,
                         pType <: Union{NamedTuple,Nothing}}
 
         d = length(q₀[begin])

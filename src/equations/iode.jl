@@ -74,7 +74,7 @@ The functions `v̄` and `f̄` are used for initial guesses in nonlinear implicit
 struct IODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             ϑType <: Function, fType <: Function, gType <: Function,
             v̄Type <: Function, f̄Type <: Function,
-            hType <: Union{Function,Nothing},
+            hType <: OptionalFunction,
             pType <: Union{NamedTuple,Nothing}} <: AbstractEquationPODE{dType, tType}
 
     d::Int
@@ -99,7 +99,7 @@ struct IODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
                     dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
                     ϑType <: Function, fType <: Function, gType <: Function,
                     v̄Type <: Function, f̄Type <: Function,
-                    hType <: Union{Function,Nothing},
+                    hType <: OptionalFunction,
                     pType <: Union{NamedTuple,Nothing}}
 
         d = length(q₀[begin])

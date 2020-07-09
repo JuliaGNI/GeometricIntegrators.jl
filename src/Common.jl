@@ -1,5 +1,10 @@
 module Common
 
+    export OptionalFunction
+    
+    const OptionalFunction = Union{Function,Nothing}
+
+    
     export State, StateVector
 
     const State{DT <: Number} = AbstractArray{DT}

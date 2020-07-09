@@ -62,7 +62,7 @@ on `t`, `q` and `λ`.
 """
 struct DAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
            vType <: Function, uType <: Function,
-           ϕType <: Function, v̄Type <: Function, hType <: Union{Function,Nothing},
+           ϕType <: Function, v̄Type <: Function, hType <: OptionalFunction,
            pType <: Union{NamedTuple,Nothing}} <: AbstractEquationDAE{dType, tType}
 
     d::Int
@@ -83,7 +83,7 @@ struct DAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             periodicity=zero(q₀[begin])) where {
                 dType <: Number, tType <: Number, arrayType <: AbstractArray{dType},
                 vType <: Function, uType <: Function, ϕType <: Function,
-                v̄Type <: Function, hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}}
+                v̄Type <: Function, hType <: OptionalFunction, pType <: Union{NamedTuple,Nothing}}
 
         d = length(q₀[begin])
         m = length(λ₀[begin])

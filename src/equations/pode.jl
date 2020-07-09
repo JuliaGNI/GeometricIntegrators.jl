@@ -44,7 +44,7 @@ and `v` and `f` are the vectors which hold the result of evaluating the
 vector fields ``v`` and ``f`` on `t`, `q` and `p`.
 """
 struct PODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
-            vType <: Function, fType <: Function, hType <: Union{Function,Nothing},
+            vType <: Function, fType <: Function, hType <: OptionalFunction,
             pType <: Union{NamedTuple,Nothing}} <: AbstractEquationPODE{dType, tType}
 
     d::Int
@@ -62,7 +62,7 @@ struct PODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
                 periodicity=zero(q₀[begin])) where {
                     dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
                     vType <: Function, fType <: Function,
-                    hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}}
+                    hType <: OptionalFunction, pType <: Union{NamedTuple,Nothing}}
 
         d = length(q₀[begin])
 

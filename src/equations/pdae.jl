@@ -38,7 +38,7 @@ struct PDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             uType <: Function, gType <: Function,
             ϕType <: Function,
             v̄Type <: Function, f̄Type <: Function,
-            hType <: Union{Function,Nothing},
+            hType <: OptionalFunction,
             pType <: Union{NamedTuple,Nothing}} <: AbstractEquationPDAE{dType, tType}
 
     d::Int
@@ -67,7 +67,7 @@ struct PDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
                         uType <: Function, gType <: Function,
                         ϕType <: Function,
                         v̄Type <: Function, f̄Type <: Function,
-                        hType <: Union{Function,Nothing},
+                        hType <: OptionalFunction,
                         pType <: Union{NamedTuple,Nothing}}
 
         d = length(q₀[begin])

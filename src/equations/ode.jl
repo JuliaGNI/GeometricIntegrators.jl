@@ -30,7 +30,7 @@ on `t` and `q`.
 
 """
 struct ODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType}, vType <: Function,
-           hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}} <: AbstractEquationODE{dType, tType}
+           hType <: OptionalFunction, pType <: Union{NamedTuple,Nothing}} <: AbstractEquationODE{dType, tType}
 
     d::Int
     v::vType
@@ -44,7 +44,7 @@ struct ODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType}, vT
                  h::hType=nothing, parameters::pType=nothing,
                  periodicity=zero(q₀[begin])) where {
                         dType <: Number, tType <: Real, arrayType <: AbstractArray{dType}, vType <: Function,
-                        hType <: Union{Function,Nothing}, pType <: Union{NamedTuple,Nothing}}
+                        hType <: OptionalFunction, pType <: Union{NamedTuple,Nothing}}
 
         d = length(q₀[begin])
 
