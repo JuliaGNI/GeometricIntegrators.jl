@@ -36,8 +36,10 @@ module Common
     function reset! end
     function cut_periodic_solution! end
 
-    export eachsample, eachtimestep
+    export nsamples, ntime, eachsample, eachtimestep
 
+    function nsamples end
+    function ntime end
     function eachsample end
     function eachtimestep end
 
