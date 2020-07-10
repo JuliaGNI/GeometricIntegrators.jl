@@ -44,7 +44,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             end
         end
 
-        function $TSolution(equation::Union{ODE{DT,TT,AT},SODE{DT,TT}}, Δt::TT, ntimesteps::Int;
+        function $TSolution(equation::Union{ODE{DT,TT,AT},SODE{DT,TT,AT}}, Δt::TT, ntimesteps::Int;
                             nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,AT}
             @assert nsave > 0
             @assert ntimesteps == 0 || ntimesteps ≥ nsave
