@@ -132,10 +132,10 @@ struct VDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
 
         @assert length(q₀) == length(p₀) == length(λ₀) == length(μ₀)
 
-        @assert all([length(q) == d for q in q₀])
-        @assert all([length(p) == d for p in p₀])
-        @assert all([length(λ) == d for λ in λ₀])
-        @assert all([length(μ) == m for μ in μ₀])
+        @assert all(length(q) == d for q in q₀)
+        @assert all(length(p) == d for p in p₀)
+        @assert all(length(λ) == d for λ in λ₀)
+        @assert all(length(μ) == m for μ in μ₀)
 
         @assert all([ndims(q) == ndims(p) == ndims(λ) == ndims(μ) for (q,p,λ,μ) in zip(q₀,p₀,λ₀,μ₀)])
         

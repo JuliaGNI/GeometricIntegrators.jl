@@ -106,9 +106,9 @@ struct VODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
         d = length(q₀[begin])
 
         @assert length(q₀) == length(p₀)
-        @assert all([length(q) == d for q in q₀])
-        @assert all([length(p) == d for p in p₀])
-        @assert all([length(λ) == d for λ in λ₀])
+        @assert all(length(q) == d for q in q₀)
+        @assert all(length(p) == d for p in p₀)
+        @assert all(length(λ) == d for λ in λ₀)
 
         new{dType, tType, arrayType, ϑType, fType, gType, v̄Type, f̄Type, hType, ΩType, ∇HType, pType}(d, d, ϑ, f, g, v̄, f̄, h, Ω, ∇H,
                 t₀, q₀, p₀, λ₀, parameters, periodicity)

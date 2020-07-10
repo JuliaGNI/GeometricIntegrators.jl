@@ -77,9 +77,9 @@ struct PDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
 
         @assert length(q₀) == length(p₀) == length(λ₀)
 
-        @assert all([length(q) == d for q in q₀])
-        @assert all([length(p) == d for p in p₀])
-        @assert all([length(λ) == m for λ in λ₀])
+        @assert all(length(q) == d for q in q₀)
+        @assert all(length(p) == d for p in p₀)
+        @assert all(length(λ) == m for λ in λ₀)
 
         @assert all([ndims(q) == ndims(p) == ndims(λ) for (q,p,λ) in zip(q₀,p₀,λ₀)])
 

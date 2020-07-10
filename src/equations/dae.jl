@@ -88,8 +88,8 @@ struct DAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
         d = length(q₀[begin])
         m = length(λ₀[begin])
 
-        @assert all([length(q) == d for q in q₀])
-        @assert all([length(λ) == m for λ in λ₀])
+        @assert all(length(q) == d for q in q₀)
+        @assert all(length(λ) == m for λ in λ₀)
 
         new{dType, tType, arrayType, vType, uType, ϕType, hType, pType}(d, m, v, u, ϕ, v̄, h, t₀, q₀, λ₀, parameters, periodicity)
     end

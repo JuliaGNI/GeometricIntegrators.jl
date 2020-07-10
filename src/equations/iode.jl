@@ -106,9 +106,9 @@ struct IODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
         m = length(λ₀[begin])
 
         @assert length(q₀) == length(p₀)
-        @assert all([length(q) == d for q in q₀])
-        @assert all([length(p) == d for p in p₀])
-        @assert all([length(λ) == m for λ in λ₀])
+        @assert all(length(q) == d for q in q₀)
+        @assert all(length(p) == d for p in p₀)
+        @assert all(length(λ) == m for λ in λ₀)
 
         new{dType, tType, arrayType, ϑType, fType, gType, v̄Type, f̄Type, hType, pType}(d, m, ϑ, f, g, v̄, f̄, h, t₀, q₀, p₀, λ₀, parameters, periodicity)
     end

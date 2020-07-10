@@ -54,8 +54,8 @@ struct HODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
         d = length(q₀[begin])
 
         @assert length(q₀) == length(p₀)
-        @assert all([length(q) == d for q in q₀])
-        @assert all([length(p) == d for p in p₀])
+        @assert all(length(q) == d for q in q₀)
+        @assert all(length(p) == d for p in p₀)
 
         new{dType, tType, arrayType, vType, fType, hType, pType}(d, v, f, h, t₀, q₀, p₀, parameters, periodicity)
     end

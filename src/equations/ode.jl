@@ -43,12 +43,12 @@ struct ODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType}, vT
     function ODE(v::vType, t₀::tType, q₀::Vector{arrayType};
                  h::hType=nothing, parameters::pType=nothing,
                  periodicity=zero(q₀[begin])) where {
-                        dType <: Number, tType <: Real, arrayType <: AbstractArray{dType}, vType <: Function,
-                        hType <: OptionalFunction, pType <: Union{NamedTuple,Nothing}}
+                        dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
+                        vType <: Function, hType <: OptionalFunction, pType <: Union{NamedTuple,Nothing}}
 
         d = length(q₀[begin])
 
-        @assert all([length(q) == d for q in q₀])
+        @assert all(length(q) == d for q in q₀)
 
         new{dType, tType, arrayType, vType, hType, pType}(d, v, h, t₀, q₀, parameters, periodicity)
     end
