@@ -91,6 +91,16 @@ function set_initial_conditions!(asol::AtomicSolutionPDAE, equ::AbstractEquation
     asol.f .= 0
 end
 
+function set_initial_conditions!(asol::AtomicSolutionPDAE, equ::AbstractEquationPDAE)
+    t, q, p, λ = initial_conditions(equ)
+    asol.t  = t
+    asol.q .= q
+    asol.p .= p
+    asol.λ .= λ
+    asol.v .= 0
+    asol.f .= 0
+end
+
 function set_solution!(asol::AtomicSolutionPDAE, sol)
     t, q, p, λ = sol
     asol.t  = t
