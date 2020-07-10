@@ -46,54 +46,52 @@ field for each substep increases the flexibility for the use of splitting
 methods, e.g., it allows to use another integrator for solving substeps.
 
 """
-struct SODE{dType <: Number, tType <: Real,
-            vType <: Tuple, qType <: Union{Tuple,Nothing},
-            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationODE{dType, tType}
+struct SODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
+            vType <: Union{Tuple,Nothing}, qType <: Union{Tuple,Nothing},
+            pType <: Union{NamedTuple,Nothing}} <: AbstractEquationODE{dType, tType}
 
     d::Int
-    n::Int
     v::vType
     q::qType
     t₀::tType
-    q₀::Array{dType,N}
+    q₀::Vector{arrayType}
     parameters::pType
     periodicity::Vector{dType}
 
-    function SODE(v::vType, q::qType, t₀::tType, q₀::AbstractArray{dType};
-                 parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
-                        dType <: Number, tType <: Real,
-                        vType <: Tuple, qType <: Union{Tuple,Nothing},
+    function SODE(v::vType, q::qType, t₀::tType, q₀::Vector{arrayType};
+                 parameters::pType=nothing, periodicity=zero(q₀[begin])) where {
+                        dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
+                        vType <: Union{Tuple,Nothing}, qType <: Union{Tuple,Nothing},
                         pType <: Union{NamedTuple,Nothing}}
 
-        d = size(q₀,1)
-        n = size(q₀,2)
-        N = ndims(q₀)
+        d = length(q₀[begin])
 
-        @assert N ∈ (1,2)
+        @assert all(length(q) == d for q in q₀)
+        @assert v == nothing || all(typeof(V) <: OptionalFunction for V in v)
+        @assert q == nothing || all(typeof(Q) <: OptionalFunction for Q in q)
 
-        new{dType, tType, vType, qType, pType, N}(d, n, v, q, t₀,
-                convert(Array{dType}, q₀), parameters, periodicity)
-    end
-
-    function SODE(v, t₀::Number, q₀::AbstractArray; kwargs...)
-        SODE(v, nothing, t₀, q₀; kwargs...)
-    end
-
-    function SODE(v, q, q₀::AbstractArray; kwargs...)
-        SODE(v, q, zero(eltype(q₀)), q₀; kwargs...)
-    end
-
-    function SODE(v, q₀::AbstractArray; kwargs...)
-        SODE(v, zero(eltype(q₀)), q₀; kwargs...)
+        new{dType, tType, arrayType, vType, qType, pType}(d, v, q, t₀, q₀, parameters, periodicity)
     end
 end
 
-Base.hash(ode::SODE, h::UInt) = hash(ode.d, hash(ode.n, hash(ode.v, hash(ode.t₀,
-        hash(ode.q₀, hash(ode.periodicity, hash(ode.parameters, h)))))))
+SODE(v, q::Union{Tuple,Nothing}, t₀::Real, q₀::State; kwargs...) = SODE(v, q, t₀, [q₀]; kwargs...)
+SODE(v, q::Union{Tuple,Nothing}, q₀::StateVector; kwargs...) = SODE(v, q, 0.0, q₀; kwargs...)
+SODE(v, q::Union{Tuple,Nothing}, q₀::State; kwargs...) = SODE(v, q, 0.0, q₀; kwargs...)
+
+SODE(v, t₀::Real, q₀::StateVector; kwargs...) = SODE(v, nothing, t₀, q₀; kwargs...)
+SODE(v, t₀::Real, q₀::State; kwargs...) = SODE(v, nothing, t₀, [q₀]; kwargs...)
+SODE(v, q₀::StateVector; kwargs...) = SODE(v, nothing, 0.0, q₀; kwargs...)
+SODE(v, q₀::State; kwargs...) = SODE(v, nothing, 0.0, q₀; kwargs...)
+
+const SODEPT{PT,DT,TT,VT,QT} = SODE{DT,TT,VT,QT,PT} # type alias for dispatch on parameters type parameter
+const SODEQT{QT,DT,TT,VT,PT} = SODE{DT,TT,VT,QT,PT} # type alias for dispatch on solution type parameter
+const SODEVT{VT,DT,TT,QT,PT} = SODE{DT,TT,VT,QT,PT} # type alias for dispatch on vector field type parameter
+
+Base.hash(ode::SODE, h::UInt) = hash(ode.d, hash(ode.v, hash(ode.t₀,
+        hash(ode.q₀, hash(ode.periodicity, hash(ode.parameters, h))))))
 
 Base.:(==)(ode1::SODE, ode2::SODE) = (
                                 ode1.d == ode2.d
-                             && ode1.n == ode2.n
                              && ode1.v == ode2.v
                              && ode1.q == ode2.q
                              && ode1.t₀ == ode2.t₀
@@ -101,29 +99,37 @@ Base.:(==)(ode1::SODE, ode2::SODE) = (
                              && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
 
-function Base.similar(ode::SODE, q₀; kwargs...)
-    similar(ode, ode.t₀, q₀; kwargs...)
+Base.similar(equ::SODE, q₀; kwargs...) = similar(equ, equ.t₀, q₀; kwargs...)
+Base.similar(equ::SODE, t₀::Real, q₀::State; kwargs...) = similar(equ, t₀, [q₀]; kwargs...)
+
+function Base.similar(equ::SODE, t₀::Real, q₀::StateVector;
+                      parameters=equ.parameters, periodicity=equ.periodicity)
+    @assert all([length(q) == ndims(equ) for q in q₀])
+    SODE(equ.v, equ.q, t₀, q₀; parameters=parameters, periodicity=periodicity)
 end
 
-function Base.similar(ode::SODE, t₀::TT, q₀::AbstractArray{DT};
-                      parameters=ode.parameters, periodicity=ode.periodicity) where {DT  <: Number, TT <: Number}
-    @assert ode.d == size(q₀,1)
-    SODE(ode.v, ode.q, t₀, q₀; parameters=parameters, periodicity=periodicity)
-end
+Base.ndims(equ::SODE) = equ.d
+Common.nsamples(equ::SODE) = length(equ.q₀)
+Common.periodicity(equ::SODE) = equ.periodicity
+initial_conditions(equ::SODE) = (equ.t₀, equ.q₀)
 
-@inline Base.ndims(ode::SODE) = ode.d
+hasparameters(::SODEPT{<:Nothing}) = false
+hasparameters(::SODEPT{<:NamedTuple}) = true
 
-@inline Common.periodicity(equation::SODE) = equation.periodicity
+hassolution(::SODEQT{<:Nothing}) = false
+hassolution(::SODEQT{<:Tuple}) = true # && all(typeof(Q) <: Functiong for Q in equ.q)
 
-@inline has_exact_solution(equation::SODE{DT,TT,VT,QT}) where {DT, TT, VT, QT <: Nothing} = false
-@inline has_exact_solution(equation::SODE{DT,TT,VT,QT}) where {DT, TT, VT, QT <: Tuple} = all(Q ≠ nothing for Q in equation.q)
+hassolution(::SODEQT{<:Nothing}, i) = false
+hassolution(equ::SODEQT{<:Tuple}, i) = i ≤ length(equ.q) && typeof(equ.q[i]) <: Function
 
-@inline has_exact_solution(equation::SODE{DT,TT,VT,QT}, i) where {DT, TT, VT, QT <: Nothing} = false
-@inline has_exact_solution(equation::SODE{DT,TT,VT,QT}, i) where {DT, TT, VT, QT <: Tuple} = i ≤ length(equation.q) && equation.q[i] ≠ nothing
+hasvectorfield(::SODEVT{<:Nothing}) = false
+hasvectorfield(::SODEVT{<:Tuple}) = true # && all(typeof(V) <: Function for V in equ.v)
 
-get_function_tuple(equation::SODE{DT,TT,VT,QT,Nothing}) where {DT, TT, VT, QT} = equation.v
-get_function_tuple(equation::SODE{DT,TT,VT,QT,PT}) where {DT, TT, VT, QT, PT <: NamedTuple} = Tuple((t,q,v) -> V(t, q, v, equation.parameters) for V in equation.v)
+hasvectorfield(::SODEVT{<:Nothing}, i) = false
+hasvectorfield(equ::SODEVT{<:Tuple}, i) = i ≤ length(equ.v) && typeof(equ.v[i]) <: Function
 
-get_solution_tuple(equation::SODE{DT,TT,VT,Nothing}) where {DT, TT, VT} = ()
-get_solution_tuple(equation::SODE{DT,TT,VT,QT,PT}) where {DT, TT, VT, QT <: Tuple, PT <: Nothing} = equation.q
-get_solution_tuple(equation::SODE{DT,TT,VT,QT,PT}) where {DT, TT, VT, QT <: Tuple, PT <: NamedTuple} = Tuple(Q == nothing ? Q : (t,q̄,q,h) -> Q(t, q̄, q, h, equation.parameters) for Q in equation.q)
+_get_v(equ::SODE) = hasparameters(equ) ? Tuple(typeof(V) <: Function ? (t,q,v) -> V(t, q, v, equ.parameters) : V for V in equ.v) : equ.v
+_get_q(equ::SODE) = hasparameters(equ) ? Tuple(typeof(Q) <: Function ? (t,q̄,q,h) -> Q(t, q̄, q, h, equ.parameters) : Q for Q in equ.q) : equ.q
+
+get_function_tuple(equ::SODE) = hasvectorfield(equ) ? _get_v(equ) : ()
+get_solution_tuple(equ::SODE) = hassolution(equ) ? _get_q(equ) : ()

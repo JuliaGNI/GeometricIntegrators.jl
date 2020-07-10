@@ -397,31 +397,36 @@ end
     f_sode = (f_sode_1, f_sode_2)
     q_sode = (q_sode_1, q_sode_2)
 
-    # sode  = SODE(f_sode, t₀, [q₀])
+    sode  = SODE(f_sode, t₀, [q₀])
     sode1 = SODE(f_sode, t₀, q₀)
     sode2 = SODE(f_sode, q₀)
 
-    # @test ndims(sode) == 1
-    # @test nsamples(sode) == 1
-    # @test periodicity(sode) == zero(q₀)
+    @test ndims(sode) == 1
+    @test nsamples(sode) == 1
+    @test periodicity(sode) == zero(q₀)
 
-    @test sode1 == sode2
+    @test sode == sode1
+    @test sode == sode2
 
-    @test hash(sode1) == hash(sode2)
+    @test hash(sode) == hash(sode1)
+    @test hash(sode) == hash(sode2)
 
-    @test sode1 == similar(sode1, t₀, q₀)
-    @test sode1 == similar(sode1, q₀)
+    @test sode == similar(sode, t₀, q₀)
+    @test sode == similar(sode, q₀)
 
 
+    sode  = SODE(f_sode, q_sode, t₀, [q₀])
     sode1 = SODE(f_sode, q_sode, t₀, q₀)
     sode2 = SODE(f_sode, q_sode, q₀)
 
-    @test sode1 == sode2
+    @test sode == sode1
+    @test sode == sode2
 
-    @test hash(sode1) == hash(sode2)
+    @test hash(sode) == hash(sode1)
+    @test hash(sode) == hash(sode2)
 
-    @test sode1 == similar(sode1, t₀, q₀)
-    @test sode1 == similar(sode1, q₀)
+    @test sode == similar(sode, t₀, q₀)
+    @test sode == similar(sode, q₀)
 end
 
 
