@@ -108,7 +108,7 @@ struct VDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     λ₀::Vector{arrayType}
     μ₀::Vector{arrayType}
     parameters::pType
-    periodicity::Vector{dType}
+    periodicity::arrayType
 
     function VDAE(ϑ::ϑType, f::fType, g::gType, g̅::g̅Type, ϕ::ϕType, ψ::ψType, t₀::tType,
                   q₀::Vector{arrayType}, p₀::Vector{arrayType},

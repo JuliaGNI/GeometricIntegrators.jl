@@ -64,7 +64,7 @@ struct HDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     p₀::Vector{arrayType}
     λ₀::Vector{arrayType}
     parameters::pType
-    periodicity::Vector{dType}
+    periodicity::arrayType
 
     function HDAE(v::vType, f::fType, u::uType, g::gType,
                   u̅::u̅Type, g̅::g̅Type, ϕ::ϕType, ψ::ψType, h::hType,

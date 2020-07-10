@@ -56,7 +56,7 @@ struct SODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     t₀::tType
     q₀::Vector{arrayType}
     parameters::pType
-    periodicity::Vector{dType}
+    periodicity::arrayType
 
     function SODE(v::vType, q::qType, t₀::tType, q₀::Vector{arrayType};
                  parameters::pType=nothing, periodicity=zero(q₀[begin])) where {

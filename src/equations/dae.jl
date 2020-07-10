@@ -76,7 +76,7 @@ struct DAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     q₀::Vector{arrayType}
     λ₀::Vector{arrayType}
     parameters::pType
-    periodicity::Vector{dType}
+    periodicity::arrayType
 
     function DAE(v::vType, u::uType, ϕ::ϕType, t₀::tType, q₀::Vector{arrayType}, λ₀::Vector{arrayType};
             v̄::v̄Type=v, h::hType=nothing, parameters::pType=nothing,

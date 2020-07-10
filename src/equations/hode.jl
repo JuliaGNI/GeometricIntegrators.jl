@@ -42,7 +42,7 @@ struct HODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     q₀::Vector{arrayType}
     p₀::Vector{arrayType}
     parameters::pType
-    periodicity::Vector{dType}
+    periodicity::arrayType
 
     function HODE(v::vType, f::fType, h::hType,
                   t₀::tType, q₀::Vector{arrayType}, p₀::Vector{arrayType};

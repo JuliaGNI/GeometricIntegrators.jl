@@ -56,7 +56,7 @@ struct PDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     p₀::Vector{arrayType}
     λ₀::Vector{arrayType}
     parameters::pType
-    periodicity::Vector{dType}
+    periodicity::arrayType
 
     function PDAE(v::vType, f::fType, u::uType, g::gType, ϕ::ϕType,
                   t₀::tType, q₀::Vector{arrayType}, p₀::Vector{arrayType}, λ₀::Vector{arrayType};

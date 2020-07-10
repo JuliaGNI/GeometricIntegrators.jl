@@ -55,7 +55,7 @@ struct PODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     q₀::Vector{arrayType}
     p₀::Vector{arrayType}
     parameters::pType
-    periodicity::Vector{dType}
+    periodicity::arrayType
 
     function PODE(v::vType, f::fType, t₀::tType, q₀::Vector{arrayType}, p₀::Vector{arrayType};
                 h::hType=nothing, parameters::pType=nothing,

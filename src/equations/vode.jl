@@ -89,7 +89,7 @@ struct VODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     p₀::Vector{arrayType}
     λ₀::Vector{arrayType}
     parameters::pType
-    periodicity::Vector{dType}
+    periodicity::arrayType
 
     function VODE(ϑ::ϑType, f::fType, g::gType, t₀::tType,
                 q₀::Vector{arrayType}, p₀::Vector{arrayType}, λ₀::Vector{arrayType};

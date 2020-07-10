@@ -38,7 +38,7 @@ struct ODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType}, vT
     t₀::tType
     q₀::Vector{arrayType}
     parameters::pType
-    periodicity::Vector{dType}
+    periodicity::arrayType
 
     function ODE(v::vType, t₀::tType, q₀::Vector{arrayType};
                  h::hType=nothing, parameters::pType=nothing,

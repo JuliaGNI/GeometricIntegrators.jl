@@ -11,6 +11,7 @@ module Equations
     export DAE, IDAE, PDAE, HDAE, VDAE, SPDAE
     export SDE, PSDE, SPSDE
 
+    export initial_conditions
     export get_function_tuple, get_solution_tuple, hassolution, hasvectorfield
 
     include("equations/equations.jl")
