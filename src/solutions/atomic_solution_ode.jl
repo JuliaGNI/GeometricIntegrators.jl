@@ -50,10 +50,11 @@ AtomicSolutionODE(DT, TT, AT, nd, internal::IT=NamedTuple()) where {IT} = Atomic
 AtomicSolutionODE(t::TT, q::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionODE{DT,TT,AT,IT}(t, q, internal)
 
 
-function set_initial_conditions!(asol::AtomicSolutionODE, equ::AbstractEquationODE)
+function set_initial_conditions!(asol::AtomicSolutionODE, equ::AbstractEquationODE, i::Int=1)
+    @assert i ≥ nsamples(equ)
     t, q = initial_conditions(equ)
     asol.t  = t
-    asol.q .= q
+    asol.q .= q[i]
     asol.v .= 0
 end
 

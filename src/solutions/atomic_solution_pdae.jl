@@ -80,12 +80,13 @@ end
 AtomicSolutionPDAE(DT, TT, AT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionPDAE{DT,TT,AT,IT}(nd, nm, internal)
 AtomicSolutionPDAE(t::TT, q::AT, p::AT, λ::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionPDAE{DT,TT,AT,IT}(t, q, p, λ, internal)
 
-function set_initial_conditions!(asol::AtomicSolutionPDAE, equ::AbstractEquationPDAE)
+function set_initial_conditions!(asol::AtomicSolutionPDAE, equ::AbstractEquationPDAE, i::Int=1)
+    @assert i ≥ nsamples(equ)
     t, q, p, λ = initial_conditions(equ)
     asol.t  = t
-    asol.q .= q
-    asol.p .= p
-    asol.λ .= λ
+    asol.q .= q[i]
+    asol.p .= p[i]
+    asol.λ .= λ[i]
     asol.v .= 0
     asol.f .= 0
 end

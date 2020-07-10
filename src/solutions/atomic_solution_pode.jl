@@ -62,11 +62,12 @@ end
 AtomicSolutionPODE(DT, TT, AT, nd, internal::IT=NamedTuple()) where {IT} = AtomicSolutionPODE{DT,TT,AT,IT}(nd, internal)
 AtomicSolutionPODE(t::TT, q::AT, p::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionPODE{DT,TT,AT,IT}(t, q, p, internal)
 
-function set_initial_conditions!(asol::AtomicSolutionPODE, equ::AbstractEquationPODE)
+function set_initial_conditions!(asol::AtomicSolutionPODE, equ::AbstractEquationPODE, i::Int=1)
+    @assert i ≥ nsamples(equ)
     t, q, p = initial_conditions(equ)
     asol.t  = t
-    asol.q .= q
-    asol.p .= p
+    asol.q .= q[i]
+    asol.p .= p[i]
     asol.v .= 0
     asol.f .= 0
 end
