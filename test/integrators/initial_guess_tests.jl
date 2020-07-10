@@ -6,16 +6,11 @@ using GeometricIntegrators.Tableaus
 using GeometricProblems.LotkaVolterra2d
 using Test
 
-<<<<<<< HEAD
 using GeometricIntegrators.Equations: _get_v̄, _get_f̄
-=======
-using GeometricIntegrators.Equations: _get_v, _get_f
->>>>>>> 6ae975c... Revise integrators.
 using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem: Δt
 
 int = get_config(:ig_interpolation)
 
-<<<<<<< HEAD
 const Δt = 0.01
 const q₀ = [1.0, 1.0]
 const parameters = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
@@ -24,26 +19,11 @@ ode  = lotka_volterra_2d_ode(q₀; params=parameters)
 pode = lotka_volterra_2d_pode(q₀; params=parameters)
 iode = lotka_volterra_2d_iode(q₀; params=parameters)
 vode = lotka_volterra_2d_vode(q₀; params=parameters)
-=======
-ode  = lotka_volterra_2d_ode()
-dae  = lotka_volterra_2d_dae()
-
-hode = lotka_volterra_2d_hode()
-iode = lotka_volterra_2d_iode()
-pode = lotka_volterra_2d_pode()
-vode = lotka_volterra_2d_vode()
-
-hdae = lotka_volterra_2d_hdae()
-idae = lotka_volterra_2d_idae()
-pdae = lotka_volterra_2d_pdae()
-vdae = lotka_volterra_2d_vdae()
->>>>>>> 6ae975c... Revise integrators.
 
 pdae = lotka_volterra_2d_pdae(q₀; params=parameters)
 idae = lotka_volterra_2d_idae(q₀; params=parameters)
 vdae = lotka_volterra_2d_vdae(q₀; params=parameters)
 
-<<<<<<< HEAD
 
 @test InitialGuessODE(int,  ode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄( ode), Δt)
 @test InitialGuessODE(int, iode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄(iode), Δt)
@@ -179,22 +159,3 @@ evaluate!(igpode, q₁, p₁, v₁, f₁, q₀, p₀, v₀, f₀, q₂, v₂, t�
 
 @test q₂ ≈ qₙ atol=1E-6
 @test v₂ ≈ vₙ atol=1E-3
-=======
-@test InitialGuessODE(int, iode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v(iode), Δt)
-@test InitialGuessODE(int, vode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v(vode), Δt)
-
-@test InitialGuess(int, ode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v(ode), Δt)
-@test InitialGuess(int, dae, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v(dae), Δt)
-
-@test InitialGuess(int, hode, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v(hode), _get_f(hode), Δt)
-@test InitialGuess(int, hdae, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v(hdae), _get_f(hdae), Δt)
-
-@test InitialGuess(int, iode, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v(iode), _get_f(iode), Δt)
-@test InitialGuess(int, idae, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v(idae), _get_f(idae), Δt)
-
-@test InitialGuess(int, pode, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v(pode), _get_f(pode), Δt)
-@test InitialGuess(int, pdae, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v(pdae), _get_f(pdae), Δt)
-
-@test InitialGuess(int, vode, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v(vode), _get_f(vode), Δt)
-@test InitialGuess(int, vdae, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v(vdae), _get_f(vdae), Δt)
->>>>>>> 6ae975c... Revise integrators.
