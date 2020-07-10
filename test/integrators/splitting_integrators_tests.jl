@@ -70,7 +70,7 @@ ssolc = integrate(sode, sintc, nt)
 @test ssol.q == ssolc.q
 
 
-DT = eltype(sode.q₀)
+DT = eltype(sode)
 D  = ndims(sode)
 
 ints_glrk1 = (IntegratorConstructor(DT, D, TableauGLRK(1)), IntegratorConstructor(DT, D, TableauGLRK(1)))

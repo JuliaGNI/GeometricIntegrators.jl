@@ -16,7 +16,7 @@ end
 
 "Construct splitting integrator."
 function IntegratorSplitting(equation::SODE{DT,TT}, tableau::ST, Δt::TT) where {DT, TT, ST <: AbstractTableauSplitting{TT}}
-    @assert has_exact_solution(equation)
+    @assert hassolution(equation)
     IntegratorSplitting{DT, ndims(equation)}(get_solution_tuple(equation), get_splitting_coefficients(length(equation.q), tableau)..., Δt)
 end
 
