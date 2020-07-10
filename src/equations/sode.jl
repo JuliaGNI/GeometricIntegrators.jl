@@ -83,9 +83,9 @@ SODE(v, t₀::Real, q₀::State; kwargs...) = SODE(v, nothing, t₀, [q₀]; kwa
 SODE(v, q₀::StateVector; kwargs...) = SODE(v, nothing, 0.0, q₀; kwargs...)
 SODE(v, q₀::State; kwargs...) = SODE(v, nothing, 0.0, q₀; kwargs...)
 
-const SODEPT{PT,DT,TT,VT,QT} = SODE{DT,TT,VT,QT,PT} # type alias for dispatch on parameters type parameter
-const SODEQT{QT,DT,TT,VT,PT} = SODE{DT,TT,VT,QT,PT} # type alias for dispatch on solution type parameter
-const SODEVT{VT,DT,TT,QT,PT} = SODE{DT,TT,VT,QT,PT} # type alias for dispatch on vector field type parameter
+const SODEPT{PT,DT,TT,AT,VT,QT} = SODE{DT,TT,AT,VT,QT,PT} # type alias for dispatch on parameters type parameter
+const SODEQT{QT,DT,TT,AT,VT,PT} = SODE{DT,TT,AT,VT,QT,PT} # type alias for dispatch on solution type parameter
+const SODEVT{VT,DT,TT,AT,QT,PT} = SODE{DT,TT,AT,VT,QT,PT} # type alias for dispatch on vector field type parameter
 
 Base.hash(ode::SODE, h::UInt) = hash(ode.d, hash(ode.v, hash(ode.t₀,
         hash(ode.q₀, hash(ode.periodicity, hash(ode.parameters, h))))))
