@@ -36,5 +36,5 @@ function integrate_step!(int::IntegratorExplicitEuler{DT,TT,AT}, sol::AtomicSolu
     equations(int)[:v](sol.t̅, sol.q, int.v)
 
     # compute update
-    sol.q .+= int.v
+    sol.q .+= timestep(int) .* int.v
 end
