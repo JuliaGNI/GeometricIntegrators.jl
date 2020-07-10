@@ -72,11 +72,12 @@ function set_initial_conditions!(asol::AtomicSolutionDAE, equ::AbstractEquationD
     asol.v .= 0
 end
 
-function set_initial_conditions!(asol::AtomicSolutionDAE, equ::AbstractEquationDAE)
+function set_initial_conditions!(asol::AtomicSolutionDAE, equ::AbstractEquationDAE, i::Int=1)
+    @assert i ≥ nsamples(equ)
     t, q, λ = initial_conditions(equ)
     asol.t  = t
-    asol.q .= q
-    asol.λ .= λ
+    asol.q .= q[i]
+    asol.λ .= λ[i]
     asol.v .= 0
 end
 
