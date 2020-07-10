@@ -190,7 +190,6 @@ function Base.similar(equ::VDAE, t₀::Real, q₀::StateVector, p₀::StateVecto
     @assert all([length(p) == ndims(equ) for p in p₀])
     @assert all([length(λ) == ndims(equ) for λ in λ₀])
     @assert all([length(μ) == ndims(equ) for μ in μ₀])
-<<<<<<< HEAD
     VDAE(equ.ϑ, equ.f, equ.g, equ.g̅, equ.ϕ, equ.ψ, t₀, q₀, p₀, λ₀, μ₀; v̄=v̄, f̄=f̄, h=h, Ω=Ω, ∇H=∇H, parameters=parameters, periodicity=periodicity)
 end
 
@@ -200,11 +199,7 @@ end
 @inline Common.nconstraints(equation::VDAE) = equation.m
 @inline Common.periodicity(equation::VDAE) = equation.periodicity
 
-<<<<<<< HEAD
 initial_conditions(equation::VDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀, equation.μ₀)
-=======
-@inline Common.periodicity(equation::VDAE) = equation.periodicity
->>>>>>> 03de891... Rename CommonFunctions to Common.
 
 hashamiltonian(::VDAEHT{<:Nothing}) = false
 hashamiltonian(::VDAEHT{<:Function}) = true
@@ -234,70 +229,17 @@ _get_Ω(equ::VDAE) = hasparameters(equ) ? (t,q,Ω) -> equ.Ω(t, q, Ω, equ.param
 function get_function_tuple(equ::VDAE)
     names = (:ϑ, :f, :g, :g̅, :ϕ, :ψ, :v̄, :f̄)
     equs  = (_get_ϑ(equ), _get_f(equ), _get_g(equ), _get_g̅(equ), _get_ϕ(equ), _get_ψ(equ), _get_v̄(equ), _get_f̄(equ))
-=======
-    VDAE(equ.ϑ, equ.f, equ.g, equ.g̅, equ.ϕ, equ.ψ, t₀, q₀, p₀, λ₀, μ₀; h=h, v=v, Ω=Ω, ∇H=∇H, parameters=parameters, periodicity=periodicity)
-end
-
-Base.ndims(equ::VDAE) = equ.d
-Common.nsamples(equ::VDAE) = length(equ.q₀)
-Common.periodicity(equ::VDAE) = equ.periodicity
-initial_conditions(equation::VDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀, equation.μ₀)
-
-hashamiltonian(::VDAEHT{<:Nothing}) = false
-hashamiltonian(::VDAEHT{<:Function}) = true
-
-hasvectorfield(::VDAEVT{<:Nothing}) = false
-hasvectorfield(::VDAEVT{<:Function}) = true
-
-hasgradientham(::VDAE∇T{<:Nothing}) = false
-hasgradientham(::VDAE∇T{<:Function}) = true
-
-hassymplecticform(::VDAEΩT{<:Nothing}) = false
-hassymplecticform(::VDAEΩT{<:Function}) = true
-
-hasparameters(::VDAEPT{<:Nothing}) = false
-hasparameters(::VDAEPT{<:NamedTuple}) = true
-
-_get_ϑ(equ::VDAE) = hasparameters(equ) ? (t,q,v,ϑ) -> equ.ϑ(t, q, v, ϑ, equ.parameters) : equ.ϑ
-_get_f(equ::VDAE) = hasparameters(equ) ? (t,q,v,f) -> equ.f(t, q, v, f, equ.parameters) : equ.f
-_get_g(equ::VDAE) = hasparameters(equ) ? (t,q,v,g) -> equ.g(t, q, v, g, equ.parameters) : equ.g
-_get_g̅(equ::VDAE) = hasparameters(equ) ? (t,q,λ,g̅) -> equ.g̅(t, q, λ, g̅, equ.parameters) : equ.g̅
-_get_ϕ(equ::VDAE) = hasparameters(equ) ? (t,q,v,ϕ) -> equ.ϕ(t, q, v, ϕ, equ.parameters) : equ.ϕ
-_get_ψ(equ::VDAE) = hasparameters(equ) ? (t,q,v,p,f,ψ) -> equ.ψ(t, q, v, p, f, ψ, equ.parameters) : equ.ψ
-_get_v(equ::VDAE) = hasparameters(equ) ? (t,q,v) -> equ.v(t, q, v, equ.parameters) : equ.v
-_get_∇(equ::VDAE) = hasparameters(equ) ? (t,q,∇H) -> equ.∇H(t, q, ∇H, equ.parameters) : equ.∇H
-_get_Ω(equ::VDAE) = hasparameters(equ) ? (t,q,Ω) -> equ.Ω(t, q, Ω, equ.parameters) : equ.Ω
-_get_h(equ::VDAE) = hasparameters(equ) ? (t,q) -> equ.h(t, q, equ.parameters) : equ.h
-
-
-function get_function_tuple(equ::VDAE)
-    names = (:ϑ, :f, :g, :g̅, :ϕ, :ψ)
-    equs  = (_get_ϑ(equ), _get_f(equ), _get_g(equ), _get_g̅(equ), _get_ϕ(equ), _get_ψ(equ))
->>>>>>> 74b5963... Major revision of equations (everything except splitting and stochastic equations).
 
     if hashamiltonian(equ)
         names = (names..., :h)
         equs  = (equs..., _get_h(equ))
     end
 
-<<<<<<< HEAD
     if hasgradientham(equ)
         names = (names..., :∇H)
         equs  = (equs..., _get_∇(equ))
     end
 
-=======
-    if hasvectorfield(equ)
-        names = (names..., :v)
-        equs  = (equs..., _get_v(equ))
-    end
-
-    if hasgradientham(equ)
-        names = (names..., :∇H)
-        equs  = (equs..., _get_∇(equ))
-    end
-
->>>>>>> 74b5963... Major revision of equations (everything except splitting and stochastic equations).
     if hassymplecticform(equ)
         names = (names..., :Ω)
         equs  = (equs..., _get_Ω(equ))
