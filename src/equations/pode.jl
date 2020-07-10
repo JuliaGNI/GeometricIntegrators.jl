@@ -106,7 +106,8 @@ function Base.similar(equ::PODE, t₀::Real, q₀::StateVector, p₀::StateVecto
     PODE(equ.v, equ.f, t₀, q₀, p₀; h=h, parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(ode::PODE) = ode.d
+Base.ndims(equ::PODE) = equ.d
+Base.axes(equ::PODE) = axes(equ.q₀[begin])
 Common.nsamples(equ::PODE) = length(equ.q₀)
 Common.periodicity(equation::PODE) = equation.periodicity
 

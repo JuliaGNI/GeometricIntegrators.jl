@@ -92,6 +92,7 @@ function Base.similar(equ::HODE, t₀::Real, q₀::StateVector, p₀::StateVecto
 end
 
 Base.ndims(equ::HODE) = equ.d
+Base.axes(equ::HODE) = axes(equ.q₀[begin])
 Common.nsamples(equ::HODE) = length(equ.q₀)
 Common.periodicity(equ::HODE) = equ.periodicity
 

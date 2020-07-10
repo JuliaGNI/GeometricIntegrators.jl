@@ -141,6 +141,7 @@ end
 
 
 @inline Base.ndims(equation::HDAE) = equation.d
+@inline Base.axes(equation::HDAE) = axes(equation.q₀[begin])
 @inline Common.nsamples(equation::HDAE) = length(eachindex(equation.q₀))
 @inline Common.nconstraints(equation::HDAE) = equation.m
 @inline Common.periodicity(equation::HDAE) = equation.periodicity

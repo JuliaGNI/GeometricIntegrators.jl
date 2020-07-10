@@ -161,6 +161,7 @@ function Base.similar(equ::VODE, t₀::Real, q₀::StateVector, p₀::StateVecto
 end
 
 Base.ndims(equ::VODE) = equ.d
+Base.axes(equ::VODE) = axes(equ.q₀[begin])
 Common.nsamples(equ::VODE) = length(equ.q₀)
 Common.periodicity(equ::VODE) = equ.periodicity
 

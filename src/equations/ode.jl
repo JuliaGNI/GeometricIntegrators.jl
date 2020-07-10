@@ -84,6 +84,7 @@ function Base.similar(equ::ODE, t₀::Real, q₀::StateVector;
 end
 
 Base.ndims(equ::ODE) = equ.d
+Base.axes(equ::ODE) = axes(equ.q₀[begin])
 Common.nsamples(equ::ODE) = length(equ.q₀)
 Common.periodicity(equ::ODE) = equ.periodicity
 

@@ -154,9 +154,10 @@ function Base.similar(equ::IODE, t₀::Real, q₀::StateVector, p₀::StateVecto
     IODE(equ.ϑ, equ.f, equ.g, t₀, q₀, p₀, λ₀; v̄=v̄, f̄=f̄, h=h, parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(ode::IODE) = ode.d
-Common.nsamples(equ::IODE) = length(eachindex(equation.q₀))
-Common.periodicity(equation::IODE) = equation.periodicity
+@inline Base.ndims(equation::IODE) = equation.d
+@inline Base.axes(equation::IODE) = axes(equation.q₀[begin])
+@inline Common.nsamples(equation::IODE) = length(eachindex(equation.q₀))
+@inline Common.periodicity(equation::IODE) = equation.periodicity
 
 initial_conditions(equation::IODE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
 

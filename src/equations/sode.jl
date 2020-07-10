@@ -109,6 +109,7 @@ function Base.similar(equ::SODE, t₀::Real, q₀::StateVector;
 end
 
 Base.ndims(equ::SODE) = equ.d
+Base.axes(equ::SODE) = axes(equ.q₀[begin])
 Common.nsamples(equ::SODE) = length(equ.q₀)
 Common.periodicity(equ::SODE) = equ.periodicity
 initial_conditions(equ::SODE) = (equ.t₀, equ.q₀)
