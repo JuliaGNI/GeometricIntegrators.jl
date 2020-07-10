@@ -62,6 +62,15 @@ end
 AtomicSolutionPODE(DT, TT, AT, nd, internal::IT=NamedTuple()) where {IT} = AtomicSolutionPODE{DT,TT,AT,IT}(nd, internal)
 AtomicSolutionPODE(t::TT, q::AT, p::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionPODE{DT,TT,AT,IT}(t, q, p, internal)
 
+function set_initial_conditions!(asol::AtomicSolutionPODE, equ::AbstractEquationPODE)
+    t, q, p = initial_conditions(equ)
+    asol.t  = t
+    asol.q .= q
+    asol.p .= p
+    asol.v .= 0
+    asol.f .= 0
+end
+
 function set_solution!(asol::AtomicSolutionPODE, sol)
     t, q, p = sol
     asol.t  = t

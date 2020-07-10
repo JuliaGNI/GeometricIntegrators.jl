@@ -63,6 +63,14 @@ end
 AtomicSolutionDAE(DT, TT, AT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionDAE{DT,TT,AT,IT}(nd, nm, internal)
 AtomicSolutionDAE(t::TT, q::AT, λ::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionDAE{DT,TT,AT,IT}(t, q, λ, internal)
 
+function set_initial_conditions!(asol::AtomicSolutionDAE, equ::AbstractEquationDAE)
+    t, q, λ = initial_conditions(equ)
+    asol.t  = t
+    asol.q .= q
+    asol.λ .= λ
+    asol.v .= 0
+end
+
 function set_solution!(asol::AtomicSolutionDAE, sol)
     t, q, λ = sol
     asol.t  = t

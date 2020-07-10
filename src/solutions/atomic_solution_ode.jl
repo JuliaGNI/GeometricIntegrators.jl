@@ -50,6 +50,13 @@ AtomicSolutionODE(DT, TT, AT, nd, internal::IT=NamedTuple()) where {IT} = Atomic
 AtomicSolutionODE(t::TT, q::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionODE{DT,TT,AT,IT}(t, q, internal)
 
 
+function set_initial_conditions!(asol::AtomicSolutionODE, equ::AbstractEquationODE)
+    t, q = initial_conditions(equ)
+    asol.t  = t
+    asol.q .= q
+    asol.v .= 0
+end
+
 function set_solution!(asol::AtomicSolutionODE, sol)
     t, q = sol
     asol.t  = t
