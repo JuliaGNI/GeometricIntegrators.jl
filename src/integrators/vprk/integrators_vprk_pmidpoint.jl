@@ -23,7 +23,7 @@ struct IntegratorVPRKpMidpoint{DT, TT, D, S,
         S = tableau.s
 
         # create params
-        R = convert(Vector{TT}, [1, tableau.R∞])
+        R = TT[1, tableau.R∞]
         params = ParametersVPRKpMidpoint{DT,D}(equations, tableau, Δt, NamedTuple{(:R,)}((R,)))
 
         # create cache dict
