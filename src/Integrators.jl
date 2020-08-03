@@ -63,9 +63,13 @@ module Integrators
 
     export IntegratorDIRK, TableauDIRK
     export IntegratorFIRK, TableauFIRK
+    export IntegratorFIRKimplicit, IntegratorMidpointImplicit, IntegratorSRKimplicit
 
     include("integrators/rk/integrators_dirk.jl")
     include("integrators/rk/integrators_firk.jl")
+    include("integrators/rk/integrators_firk_implicit.jl")
+    include("integrators/rk/integrators_midpoint_implicit.jl")
+    include("integrators/rk/integrators_srk_implicit.jl")
 
 
     export IntegratorEPRK, TableauEPRK
