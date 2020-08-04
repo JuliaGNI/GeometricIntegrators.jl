@@ -37,11 +37,11 @@ function solve!(s::NewtonSolver{T}; n::Int=0) where {T}
     if s.status.rₐ ≥ s.params.atol²
         for s.status.i = 1:nmax
             computeJacobian(s)
-            copyto!(s.linear.A, s.J)
-            s.linear.b .= -one(T) .* s.y₀
+            s.linear.A .= s.J
+            s.linear.b .= -s.y₀
             factorize!(s.linear)
             solve!(s.linear)
-            copyto!(s.δx, s.linear.b)
+            s.δx .= s.linear.b
             s.x .+= s.δx
             s.F!(s.x, s.y₀)
             residual!(s.status, s.δx, s.x, s.y₀)
