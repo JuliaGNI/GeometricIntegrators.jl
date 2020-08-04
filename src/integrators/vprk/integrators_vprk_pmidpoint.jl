@@ -30,7 +30,7 @@ struct IntegratorVPRKpMidpoint{DT, TT, D, S,
         caches = CacheDict(params)
 
         # create solver
-        solver = create_nonlinear_solver(DT, D*(S+2), params, caches)
+        solver = create_nonlinear_solver(DT, D*(S+1), params, caches)
 
         # create initial guess
         iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
@@ -47,6 +47,7 @@ end
 
 function initial_guess!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
+
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
                               sol.q, sol.p, sol.v, sol.f,
@@ -58,14 +59,8 @@ function initial_guess!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::AtomicSolution
         end
     end
 
-    evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                          sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                          cache.q̃, one(TT))
     for k in eachdim(int)
-        int.solver.x[ndims(int)*(nstages(int)+0)+k] = cache.q̃[k]
-    end
-    for k in eachdim(int)
-        int.solver.x[ndims(int)*(nstages(int)+1)+k] = 0
+        int.solver.x[ndims(int)*nstages(int)+k] = 0
     end
 end
 
@@ -79,13 +74,13 @@ function compute_projection_vprk!(x::Vector{ST},
     local t₀::TT = params.t̅
     local t₁::TT = params.t̅ + params.Δt
     local tₘ::TT = (t₀+t₁)/2
-    local y::ST
+    local y1::ST
+    local y2::ST
     local q̃ = zeros(ST,D)
 
     # copy x to λ and q̅
     for k in 1:D
-        q[k] = x[D*(S+0)+k]
-        λ[k] = x[D*(S+1)+k]
+        λ[k] = x[D*S+k]
     end
 
     # compute U=λ
@@ -94,16 +89,15 @@ function compute_projection_vprk!(x::Vector{ST},
 
     # compute G=g(q,λ)
     for k in 1:D
-        y = 0
+        y1 = 0
+        y2 = 0
         for j in 1:S
-            y += params.tab.q.b[j] * V[j][k]
+            y1 += params.tab.q.b[j] * V[j][k]
+            y2 += params.tab.q.b̂[j] * V[j][k]
         end
-        q̃[k] = params.q̅[k] + 0.5 * params.Δt * y + params.Δt * params.pparams[:R][1] * U[1][k]
-        # qm[k] = params.q̅[k] + 0.5 * params.Δt * y + 0.5 * params.Δt * params.R[1] * U[k,1] + 0.5 * params.Δt * params.R[2] * U[k,2]
+        q̃[k] = params.q̅[k] + 0.5 * params.Δt * (y1 + y2) + params.Δt *  params.pparams[:R][1] * U[1][k]
+        q[k] = params.q̅[k] + 1.0 * params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
     end
-
-    # println("q̃mid = ", q̃)
-    # println("qmid = ", qm)
 
     params.equ[:g](tₘ, q̃, λ, G[1])
     G[2] .= G[1]
@@ -128,9 +122,6 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 
     # compute b = - [p-bF-G]
     compute_rhs_vprk_projection_p!(b, cache.p̃, cache.F, cache.G, D*(S+0), params)
-
-    # compute b = - [q-bV-U]
-    compute_rhs_vprk_projection_q!(b, cache.q̃, cache.V, cache.U, D*(S+1), params)
 
     compute_rhs_vprk_correction!(b, cache.V, params)
 end

@@ -30,7 +30,7 @@ struct IntegratorVPRKpSymmetric{DT, TT, D, S,
         caches = CacheDict(params)
 
         # create solver
-        solver = create_nonlinear_solver(DT, D*(S+2), params, caches)
+        solver = create_nonlinear_solver(DT, D*(S+1), params, caches)
 
         # create initial guess
         iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
@@ -58,14 +58,8 @@ function initial_guess!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::AtomicSolutio
         end
     end
 
-    evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                          sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                          cache.q̃, one(TT))
     for k in eachdim(int)
-        int.solver.x[ndims(int)*(nstages(int)+0)+k] = cache.q̃[k]
-    end
-    for k in eachdim(int)
-        int.solver.x[ndims(int)*(nstages(int)+1)+k] = 0
+        int.solver.x[ndims(int)*nstages(int)+k] = 0
     end
 end
 
@@ -77,17 +71,29 @@ function compute_projection_vprk!(x::Vector{ST},
 
     local t₀::TT = params.t̅
     local t₁::TT = params.t̅ + params.Δt
+    local y1::ST
+    local y2::ST
 
     # copy x to λ and q̅
     for k in 1:D
-        q[k] = x[D*(S+0)+k]
-        λ[k] = x[D*(S+1)+k]
+        λ[k] = x[D*S+k]
     end
 
     # compute U=λ
     U[1] .= λ
     U[2] .= λ
 
+    # compute G=g(q,λ)
+    for k in 1:D
+        y1 = 0
+        y2 = 0
+        for j in 1:S
+            y1 += params.tab.q.b[j] * V[j][k]
+            y2 += params.tab.q.b̂[j] * V[j][k]
+        end
+        q[k] = params.q̅[k] + params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
+    end
+    
     # compute G=g(q,λ)
     params.equ[:g](t₀, params.q̅, λ, G[1])
     params.equ[:g](t₁, q, λ, G[2])
@@ -112,9 +118,6 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 
     # compute b = - [p-bF-G]
     compute_rhs_vprk_projection_p!(b, cache.p̃, cache.F, cache.G, D*(S+0), params)
-
-    # compute b = - [q-bV-U]
-    compute_rhs_vprk_projection_q!(b, cache.q̃, cache.V, cache.U, D*(S+1), params)
 
     compute_rhs_vprk_correction!(b, cache.V, params)
 end
