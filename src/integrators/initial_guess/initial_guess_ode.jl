@@ -21,23 +21,19 @@ end
 
 
 function InitialGuessODE{DT,D}(interp, v::VT, Δt::TT) where {D, DT, TT, VT <: Function}
-    int = interp(zero(DT), one(DT), Δt, D)
-    InitialGuessODE{DT, TT, VT, interp}(int, v, Δt)
+    InitialGuessODE{DT, TT, VT, interp}(interp(zero(DT), one(DT), Δt, D), v, Δt)
 end
 
 function InitialGuessODE(interp, equation::ODE{DT,TT,VT}, Δt::TT) where {DT,TT,VT}
-    int = interp(zero(DT), one(DT), Δt, ndims(equation))
-    InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt)
+    InitialGuessODE{DT, TT, VT, interp}(interp(zero(DT), one(DT), Δt, ndims(equation)), equation.v, Δt)
 end
 
 function InitialGuessODE(interp, equation::IODE{DT,TT,ΘT,FT,GT,HT,VT}, Δt::TT) where {DT,TT,ΘT,FT,GT,HT,VT}
-    int = interp(zero(DT), one(DT), Δt, ndims(equation))
-    InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt)
+    InitialGuessODE{DT, TT, VT, interp}(interp(zero(DT), one(DT), Δt, ndims(equation)), equation.v, Δt)
 end
 
 function InitialGuessODE(interp, equation::VODE{DT,TT,AT,FT,GT,HT,VT}, Δt::TT) where {DT,TT,AT,FT,GT,HT,VT}
-    int = interp(zero(DT), one(DT), Δt, ndims(equation))
-    InitialGuessODE{DT, TT, VT, interp}(int, equation.v, Δt)
+    InitialGuessODE{DT, TT, VT, interp}(interp(zero(DT), one(DT), Δt, ndims(equation)), equation.v, Δt)
 end
 
 function InitialGuess(interp, equation::ODE, Δt)
