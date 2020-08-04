@@ -45,8 +45,8 @@ end
 function initial_guess!(int::IntegratorVPRKpInternal{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
         for k in eachdim(int)

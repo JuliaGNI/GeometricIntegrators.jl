@@ -207,7 +207,7 @@ function initial_guess!(int::IntegratorPGLRK{DT}, sol::AtomicSolutionODE{DT},
                         cache::IntegratorCachePGLRK{DT}=int.caches[DT]) where {DT}
 
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅,
+        evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v,
                               cache.q̃, cache.ṽ,
                               tableau(int).c[i])
 

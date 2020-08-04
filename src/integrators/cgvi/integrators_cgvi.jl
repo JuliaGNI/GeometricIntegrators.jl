@@ -192,8 +192,8 @@ function initial_guess!(int::IntegratorCGVI{DT,TT,D,S,R}, sol::AtomicSolutionPOD
                         cache::IntegratorCacheCGVI{DT}=int.caches[DT]) where {DT,TT,D,S,R}
     if nnodes(int.basis) > 0
         for i in 1:S
-            evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                                  sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+            evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                                  sol.q, sol.p, sol.v, sol.f,
                                   cache.q̃, cache.p̃,
                                   cache.ṽ, cache.f̃,
                                   nodes(int.basis)[i], nodes(int.basis)[i])
@@ -210,8 +210,8 @@ function initial_guess!(int::IntegratorCGVI{DT,TT,D,S,R}, sol::AtomicSolutionPOD
         end
     end
 
-    evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                          sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+    evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                          sol.q, sol.p, sol.v, sol.f,
                           cache.q̃, cache.p̃,
                           one(TT), one(TT))
 

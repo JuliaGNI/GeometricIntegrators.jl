@@ -107,8 +107,8 @@ function initialize!(int::IntegratorMidpointImplicit, sol::AtomicSolutionODE)
 
     equations(int)[:v](sol.t, sol.q, sol.v)
 
-    # initialize!(int.iguess, sol.t, sol.q, sol.v,
-    #                         sol.t̅, sol.q̅, sol.v̅)
+    initialize!(int.iguess, sol.t, sol.q, sol.v,
+                            sol.t̅, sol.q̅, sol.v̅)
 end
 
 
@@ -123,26 +123,9 @@ end
 function initial_guess!(int::IntegratorMidpointImplicit{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                         cache::IntegratorCacheMidpointImplicit{DT}=int.caches[DT]) where {DT,TT}
 
-    # compute initial guess for internal stages
-    # for i in eachstage(int)
-    #     evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, cache.Q[i], cache.V[i], tableau(int).q.c[i])
-    # end
-    # for i in eachstage(int)
-    #     for k in eachdim(int)
-    #         # int.solver.x[ndims(int)*(i-1)+k] = cache.V[i][k]
-    #         int.solver.x[ndims(int)*(i-1)+k] = sol.v[k]
-    #     end
-    # end
-
     # compute initial guess for solution
-    # evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, cache.q, cache.v, one(TT))
-    # for k in eachdim(int)
-        # int.solver.x[ndims(int)*nstages(int)+k] = cache.q[k]
-        # int.solver.x[ndims(int)*nstages(int)+k] = sol.q[k]
-    # end
-    # int.solver.x .= sol.q
-    # int.solver.x .= cache.q 
-    int.solver.x .= sol.q #.+ timestep(int) .* sol.v
+    evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.q, cache.v, one(TT))
+    int.solver.x .= cache.q 
 end
 
 
