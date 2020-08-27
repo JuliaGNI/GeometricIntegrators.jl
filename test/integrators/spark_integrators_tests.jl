@@ -128,7 +128,7 @@ end
 
     int = IntegratorVSPARK(idae, getTableauSPARKGLRKLobIIIAIIIB(3), Δt)
     sol = integrate(idae, int, nt)
-    @test rel_err(sol.q, refx) < 2E-16
+    @test rel_err(sol.q, refx) < 4E-16
 
 
     ### VSPARKprimary Integrators ###

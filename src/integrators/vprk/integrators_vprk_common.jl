@@ -45,7 +45,7 @@ function compute_stages!(x, q, p, λ, Q, V, U, P, F, G, params::AbstractParamete
     compute_stages_v_vprk!(x, V, params)
 
     # compute U, G and p̅
-    compute_projection_vprk!(x, q, p, λ, V, U, G, params)
+    compute_projection_vprk!(x, q, p, λ, Q, V, U, G, params)
 
     # compute Q
     compute_stages_q_vprk!(Q, V, U, params)
@@ -148,7 +148,7 @@ function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vecto
     local z1::ST
     local z2::ST
 
-    # compute b = - [(P-AF)]
+    # compute b = - [(P-p-AF)]
     for i in 1:S
         @assert D == length(P[i]) == length(F[i])
         for k in 1:D
@@ -166,22 +166,14 @@ end
 
 function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vector{ST}}, G::Vector{Vector{ST}},
                                     params::AbstractParametersVPRK{IT,DT,TT,D,S}) where {IT,ST,DT,TT,D,S}
-    @assert S == length(P) == length(F)
 
-    local z1::ST
-    local z2::ST
+    # compute b = - [(P-p-AF)]
+    compute_rhs_vprk!(b, P, F, params)
 
-    # compute b = - [(P-G-AF)]
+    # compute b += G
     for i in 1:S
-        @assert D == length(P[i]) == length(F[i])
         for k in 1:D
-            z1 = 0
-            z2 = 0
-            for j in 1:S
-                z1 += params.tab.p.a[i,j] * F[j][k]
-                z2 += params.tab.p.â[i,j] * F[j][k]
-            end
-            b[D*(i-1)+k] = - (P[i][k] - params.p̅[k]) + params.Δt * (z1 + z2 + params.pparams[:R][1] * G[1][k])
+            b[D*(i-1)+k] += params.Δt * params.pparams[:R][1] * G[1][k]
         end
     end
 end

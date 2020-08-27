@@ -188,8 +188,8 @@ function initial_guess!(int::IntegratorIPRK{DT}, sol::AtomicSolutionPODE{DT},
                         cache::IntegratorCacheIPRK{DT}=int.caches[DT]) where {DT}
 
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                              sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                              sol.q, sol.p, sol.v, sol.f,
                               cache.Q[i], cache.P[i], cache.V[i], cache.F[i],
                               tableau(int).q.c[i], tableau(int).p.c[i])
     end

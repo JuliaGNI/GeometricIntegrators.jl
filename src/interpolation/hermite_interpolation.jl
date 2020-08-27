@@ -146,6 +146,6 @@ function CommonFunctions.evaluate!(int::HermiteInterpolation{T}, y₀::Vector{T}
         a₀ = - a₁
         b₁ = x*(3x-2)
         b₀ = 1-2x+b₁
-        f .= b₀ .* f₀ .+ b₁ .* f₁ .+ a₀ .* y₀ .+ a₁ .* y₁
+        f .= a₀ .* y₀ .+ a₁ .* y₁ .+ b₀ .* f₀ .+ b₁ .* f₁
     end
 end

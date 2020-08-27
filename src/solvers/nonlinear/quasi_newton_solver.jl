@@ -66,7 +66,7 @@ function solve!(s::QuasiNewtonSolver{T}; n::Int=0) where {T}
             y₀norm = l2norm(s.y₀)
 
             # b = - y₀
-            s.linear.b .= -one(T) .* s.y₀
+            s.linear.b .= -s.y₀
 
             # solve J δx = -f(x)
             solve!(s.linear)

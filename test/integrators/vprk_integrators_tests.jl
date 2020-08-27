@@ -247,6 +247,6 @@ end
 
     int = IntegratorVPRKpLegendre(iode, getTableauVPGLRK(3), Δt)
     sol = integrate(iode, int, nt)
-    @test rel_err(sol.q, refx) < 4E-16
+    @test rel_err(sol.q, refx) < 8E-16
 
 end

@@ -146,7 +146,7 @@ function initial_guess!(int::IntegratorDIRK{DT}, sol::AtomicSolutionODE{DT},
                         cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT}
 
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q, sol.v, sol.q̅, sol.v̅, cache.q̃, cache.ṽ, int.params.tab.q.c[i])
+        evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.q̃, cache.ṽ, int.params.tab.q.c[i])
         for k in eachindex(cache.V[i], cache.ṽ)
             cache.V[i][k] = cache.ṽ[k]
         end

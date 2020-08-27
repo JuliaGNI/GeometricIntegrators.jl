@@ -130,13 +130,16 @@ with
 
 - Michael Kraus. Hamilton-Pontryagin-Galerkin Integrators.
 - Michael Kraus. Projected Variational Integrators for Degenerate Lagrangian Systems.
-- Michael Kraus. Variational Integrators for Noncanonical Hamiltonian Systems.
 - Michael Kraus. Discontinuous Galerkin Variational Integrators for Degenerate Lagrangian Systems.
 - Michael Kraus. Discontinuous Galerkin Variational Integrators for Hamiltonian Systems subject to Dirac Constraints.
 - Michael Kraus. SPARK Methods for Degenerate Lagrangian Systems.
 - Michael Kraus. SPARK Methods for Hamiltonian Systems subject to Dirac Constraints.
-- Michael Kraus. Symplectic Runge-Kutta Methods for Certain Degenerate Lagrangian Systems.
-- Michael Kraus and Tomasz M. Tyranowski􏰁. Variational Integrators for Stochastic Dissipative Hamiltonian Systems.
+- Michael Kraus. Symplectic Gauß-Legendre Runge-Kutta Methods for Degenerate Lagrangian Systems.
+- Michael Kraus. Symplectic Lobatto Runge-Kutta Methods for Degenerate Lagrangian Systems.
+- Michael Kraus. Variational Integrators for Degenerate Lagrangians.
+- Michael Kraus. Variational Integrators for Noncanonical Hamiltonian Systems.
+- Michael Kraus and Tomasz M. Tyranowski. Variational Integrators for Stochastic Dissipative Hamiltonian Systems.
+- Michael Kraus, Joshua Burby. Conservation of Poincaré Integral Invariants in Numerical Simulations.
 
 
 ## Background Material
