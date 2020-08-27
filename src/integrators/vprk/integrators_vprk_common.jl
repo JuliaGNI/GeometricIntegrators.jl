@@ -45,7 +45,7 @@ function compute_stages!(x, q, p, λ, Q, V, U, P, F, G, params::AbstractParamete
     compute_stages_v_vprk!(x, V, params)
 
     # compute U, G and p̅
-    compute_projection_vprk!(x, q, p, λ, V, U, G, params)
+    compute_projection_vprk!(x, q, p, λ, Q, V, U, G, params)
 
     # compute Q
     compute_stages_q_vprk!(Q, V, U, params)

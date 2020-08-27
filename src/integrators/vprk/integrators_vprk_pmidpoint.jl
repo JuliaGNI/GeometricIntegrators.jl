@@ -67,7 +67,7 @@ end
 
 function compute_projection_vprk!(x::Vector{ST},
                 q::SolutionVector{ST}, p::SolutionVector{ST}, λ::SolutionVector{ST},
-                V::Vector{Vector{ST}}, U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
+                Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
                 params::ParametersVPRKpMidpoint{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     # create temporary variables
