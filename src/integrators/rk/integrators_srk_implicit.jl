@@ -110,8 +110,8 @@ function initialize!(int::IntegratorSRKimplicit, sol::AtomicSolutionODE)
 
     equations(int)[:v](sol.t, sol.q, sol.v)
 
-    # initialize!(int.iguess, sol.t, sol.q, sol.v,
-    #                         sol.t̅, sol.q̅, sol.v̅)
+    initialize!(int.iguess, sol.t, sol.q, sol.v,
+                            sol.t̅, sol.q̅, sol.v̅)
 end
 
 
@@ -179,11 +179,6 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         params.equs[:ϑ](tᵢ, Q[i], V[i], Θ[i])
         params.equs[:f](tᵢ, Q[i], V[i], F[i])
     end
-    # if ST == Float64
-    #     println(Q)
-    #     println(q)
-    #     println()
-    # end
 
     # compute q̄ = q + Δt B V, Θ = ϑ(q̄)
     tᵢ = params.t + params.Δt
