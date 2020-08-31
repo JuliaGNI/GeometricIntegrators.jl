@@ -7,32 +7,32 @@ abstract type AtomicSolution{dType <: Number, tType <: Real} end
 
 "Create AtomicSolution for ODE."
 function AtomicSolution(equation::AbstractEquationODE{DT,TT}) where {DT,TT}
-    AtomicSolutionODE{DT,TT}(ndims(equation))
+    AtomicSolutionODE(DT, TT, ndims(equation))
 end
 
 "Create AtomicSolution for partitioned ODE."
 function AtomicSolution(equation::AbstractEquationPODE{DT,TT}) where {DT,TT}
-    AtomicSolutionPODE{DT,TT}(ndims(equation))
+    AtomicSolutionPODE(DT, TT, ndims(equation))
 end
 
 "Create AtomicSolution for DAE."
 function AtomicSolution(equation::AbstractEquationDAE{DT,TT}) where {DT,TT}
-    AtomicSolutionDAE{DT,TT}(ndims(equation), equation.m)
+    AtomicSolutionDAE(DT, TT, ndims(equation), equation.m)
 end
 
 "Create AtomicSolution for partitioned DAE."
 function AtomicSolution(equation::AbstractEquationPDAE{DT,TT}) where {DT,TT}
-    AtomicSolutionPDAE{DT,TT}(ndims(equation), equation.m)
+    AtomicSolutionPDAE(DT, TT, ndims(equation), equation.m)
 end
 
 "Create AtomicSolution for SDE."
 function AtomicSolution(equation::AbstractEquationSDE{DT,TT}) where {DT,TT}
-    AtomicSolutionSDE{DT,TT}(ndims(equation), equation.m)
+    AtomicSolutionSDE(DT, TT, ndims(equation), equation.m)
 end
 
 "Create AtomicSolution for PSDE."
 function AtomicSolution(equation::AbstractEquationPSDE{DT,TT}) where {DT,TT}
-    AtomicSolutionPSDE{DT,TT}(ndims(equation), equation.m)
+    AtomicSolutionPSDE(DT, TT, ndims(equation), equation.m)
 end
 
 "Print error for AtomicSolutions of equations not implemented, yet."

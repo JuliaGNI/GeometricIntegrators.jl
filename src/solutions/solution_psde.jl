@@ -259,7 +259,7 @@ Base.:(==)(sol1::SolutionPSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionPSDE{DT2,TT2,NQ
 
 "Create AtomicSolution for PSDE."
 function AtomicSolution(solution::SolutionPSDE{DT,TT}) where {DT,TT}
-    AtomicSolutionPSDE{DT,TT}(solution.nd, solution.nm)
+    AtomicSolutionPSDE(DT, TT, solution.nd, solution.nm)
 end
 
 
