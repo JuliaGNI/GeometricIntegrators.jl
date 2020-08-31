@@ -119,7 +119,7 @@ struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
 end
 
 
-@inline Base.ndims(int::IntegratorDIRK{DT,TT,D,S}) where {DT,TT,D,S} = D
+@inline Base.ndims(::IntegratorDIRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 @inline has_initial_guess(int::IntegratorDIRK) = true
 
 

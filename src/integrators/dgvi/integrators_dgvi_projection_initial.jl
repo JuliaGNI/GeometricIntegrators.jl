@@ -188,6 +188,7 @@ end
 @inline equation(integrator::IntegratorDGVIP0, i::Symbol) = integrator.params.equs[i]
 @inline equations(integrator::IntegratorDGVIP0) = integrator.params.equs
 @inline timestep(integrator::IntegratorDGVIP0) = integrator.params.Δt
+@inline Base.ndims(::IntegratorDGVIP0{DT,TT,D}) where {DT,TT,D} = D
 
 
 function update_params!(params::ParametersDGVIP0, int::IntegratorDGVIP0)

@@ -171,6 +171,8 @@ end
 @inline equation(integrator::IntegratorCGVI, i::Symbol) = integrator.params.equs[i]
 @inline equations(integrator::IntegratorCGVI) = integrator.params.equs
 @inline timestep(integrator::IntegratorCGVI) = integrator.params.Δt
+@inline Base.ndims(::IntegratorCGVI{DT,TT,D}) where {DT,TT,D} = D
+
 
 function IntegratorCache(int::IntegratorCGVI{DT,TT}) where {DT,TT}
     IntegratorCacheCGVI{DT, TT, ndims(int), nbasis(int.basis), nnodes(int.quadrature)}()

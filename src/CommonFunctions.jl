@@ -33,4 +33,7 @@ module CommonFunctions
     eachsample() = nothing
     eachtimestep() = nothing
 
+    export nconstraints
+    nconstraints() = nothing
+
 end

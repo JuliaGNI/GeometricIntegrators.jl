@@ -175,8 +175,8 @@ function Base.similar(dae::VDAE, t₀::TT, q₀::AbstractArray{DT}, p₀::Abstra
          h=h, v=v, Ω=Ω, ∇H=∇H, parameters=parameters, periodicity=periodicity)
 end
 
-@inline Base.ndims(dae::VDAE) = dae.d
-
+@inline Base.ndims(equation::VDAE) = equation.d
+@inline CommonFunctions.nconstraints(equation::VDAE) = equation.m
 @inline CommonFunctions.periodicity(equation::VDAE) = equation.periodicity
 
 

@@ -10,6 +10,7 @@ struct IntegratorExactODE{DT, TT, D, QT <: Function} <: DeterministicIntegrator{
 end
 
 
+@inline Base.ndims(::IntegratorExactODE{DT,TT,D}) where {DT,TT,D} = D
 timestep(int::IntegratorExactODE) = int.Δt
 
 

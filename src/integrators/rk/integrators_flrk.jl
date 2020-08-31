@@ -103,7 +103,7 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
 end
 
 
-@inline Base.ndims(int::IntegratorFLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
+@inline Base.ndims(::IntegratorFLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
 function initialize!(int::IntegratorFLRK, sol::AtomicSolutionODE)

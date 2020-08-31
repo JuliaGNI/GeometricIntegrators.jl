@@ -82,6 +82,9 @@ struct IntegratorHSPARKsecondary{DT, TT, D, S, R, PT <: ParametersHSPARKsecondar
 end
 
 
+CommonFunctions.nconstraints(::IntegratorHSPARKsecondary{DT,TT,D}) where {DT,TT,D} = D
+
+
 function initial_guess!(int::IntegratorHSPARKsecondary{DT}, sol::AtomicSolutionPDAE{DT},
                         cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)

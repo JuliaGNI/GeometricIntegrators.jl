@@ -179,8 +179,8 @@ struct IntegratorPGLRK{DT, TT, D, S, PT <: ParametersPGLRK{DT,TT},
 end
 
 
-@inline Base.ndims(int::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
-@inline nstages(integrator::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = S
+@inline Base.ndims(::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
+@inline nstages(::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = S
 
 
 function initialize!(int::IntegratorPGLRK, sol::AtomicSolutionODE)

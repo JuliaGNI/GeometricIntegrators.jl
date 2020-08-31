@@ -48,6 +48,7 @@ function IntegratorComposition(equation::SODE{DT}, tableau::AbstractTableauSplit
 end
 
 
+@inline Base.ndims(::IntegratorComposition{DT,TT,D}) where {DT,TT,D} = D
 timestep(int::IntegratorComposition) = int.Δt
 
 

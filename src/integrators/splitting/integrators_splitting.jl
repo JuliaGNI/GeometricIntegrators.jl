@@ -21,6 +21,7 @@ function IntegratorSplitting(equation::SODE{DT,TT}, tableau::ST, Δt::TT) where 
 end
 
 
+@inline Base.ndims(::IntegratorSplitting{DT,TT,D}) where {DT,TT,D} = D
 timestep(int::IntegratorSplitting) = int.Δt
 
 

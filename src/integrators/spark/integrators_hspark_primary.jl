@@ -79,6 +79,9 @@ struct IntegratorHSPARKprimary{DT, TT, D, S, R, PT <: ParametersHSPARKprimary{DT
 end
 
 
+CommonFunctions.nconstraints(::IntegratorHSPARKprimary{DT,TT,D}) where {DT,TT,D} = D
+
+
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
                                         params::ParametersHSPARKprimary{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local tqᵢ::TT

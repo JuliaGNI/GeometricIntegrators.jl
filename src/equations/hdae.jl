@@ -123,8 +123,8 @@ function Base.similar(dae::HDAE, t₀::TT, q₀::AbstractArray{DT}, p₀::Abstra
          parameters=parameters, periodicity=periodicity)
 end
 
-@inline Base.ndims(dae::HDAE) = dae.d
-
+@inline Base.ndims(equation::HDAE) = equation.d
+@inline CommonFunctions.nconstraints(equation::HDAE) = equation.m
 @inline CommonFunctions.periodicity(equation::HDAE) = equation.periodicity
 
 function get_function_tuple(equation::HDAE{DT,TT,VT,FT,UT,GT,U̅T,G̅T,ϕT,ψT,HT,Nothing}) where {DT, TT, VT, FT, UT, GT, U̅T, G̅T, ϕT, ψT, HT}

@@ -83,6 +83,9 @@ struct IntegratorVPARK{DT, TT, D, S, R, PT <: ParametersVPARK{DT,TT,D,S,R},
 end
 
 
+CommonFunctions.nconstraints(::IntegratorVPARK{DT,TT,D}) where {DT,TT,D} = D
+
+
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
                                         params::ParametersVPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local tpᵢ::TT

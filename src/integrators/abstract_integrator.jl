@@ -23,6 +23,7 @@ abstract type SPSDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType
 equation(integrator::Integrator) = error("equation() not implemented for ", typeof(integrator))
 timestep(integrator::Integrator) = error("timestep() not implemented for ", typeof(integrator))
 Base.ndims(integrator::Integrator) = error("ndims() not implemented for ", typeof(integrator))
+CommonFunctions.nconstraints(integrator::Integrator) = error("nconstraints() not implemented for ", typeof(integrator))
 
 eachdim(integrator::Integrator) = 1:ndims(integrator)
 
