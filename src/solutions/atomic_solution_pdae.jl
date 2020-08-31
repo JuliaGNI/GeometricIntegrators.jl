@@ -22,7 +22,7 @@ Atomic solution for an PDAE.
 * `g`: projective vector field of p
 * `g̅`: projective vector field of p̅
 """
-mutable struct AtomicSolutionPDAE{DT,TT} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionPDAE{DT,TT,IT} <: AtomicSolution{DT,TT}
     t::TT
     t̅::TT
 
@@ -47,16 +47,19 @@ mutable struct AtomicSolutionPDAE{DT,TT} <: AtomicSolution{DT,TT}
     g::Vector{DT}
     g̅::Vector{DT}
 
-    function AtomicSolutionPDAE{DT, TT}(nd, nm) where {DT <: Number, TT <: Real}
+    internal::IT
+
+    function AtomicSolutionPDAE{DT, TT, IT}(nd, nm, internal::IT) where {DT <: Number, TT <: Real, IT <: NamedTuple}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nm), zeros(DT, nm),
                                 zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd))
+                                zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
+                                internal)
     end
 end
 
-AtomicSolutionPDAE(DT, TT, nd, nm) = AtomicSolutionPDAE{DT, TT}(nd, nm)
+AtomicSolutionPDAE(DT, TT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionPDAE{DT, TT, IT}(nd, nm, internal)
 
 function set_solution!(asol::AtomicSolutionPDAE, sol)
     t, q, p, λ = sol

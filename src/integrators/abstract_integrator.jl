@@ -27,6 +27,21 @@ CommonFunctions.nconstraints(integrator::Integrator) = error("nconstraints() not
 
 eachdim(integrator::Integrator) = 1:ndims(integrator)
 
+get_internal_variables(::Integrator) = NamedTuple()
+
+
+Solutions.AtomicSolution(integrator::ODEIntegrator{DT,TT}) where {DT,TT} =
+    AtomicSolutionODE(DT, TT, ndims(integrator), get_internal_variables(integrator))
+
+Solutions.AtomicSolution(integrator::PODEIntegrator{DT,TT}) where {DT,TT} =
+    AtomicSolutionPODE(DT, TT, ndims(integrator), get_internal_variables(integrator))
+
+Solutions.AtomicSolution(integrator::DAEIntegrator{DT,TT}) where {DT,TT} =
+    AtomicSolutionDAE(DT, TT, ndims(integrator), nconstraints(integrator), get_internal_variables(integrator))
+
+Solutions.AtomicSolution(integrator::PDAEIntegrator{DT,TT}) where {DT,TT} =
+    AtomicSolutionPDAE(DT, TT, ndims(integrator), nconstraints(integrator), get_internal_variables(integrator))
+
 
 abstract type Parameters{DT,TT} end
 
