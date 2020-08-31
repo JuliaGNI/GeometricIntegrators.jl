@@ -1,6 +1,6 @@
 
 "Splitting integrator."
-struct IntegratorSplitting{DT, TT, D, S, QT <: Tuple} <: DeterministicIntegrator{DT,TT}
+struct IntegratorSplitting{DT, TT, D, S, QT <: Tuple} <: ODEIntegrator{DT,TT}
     q::QT
     f::NTuple{S,Int64}
     c::NTuple{S,TT}

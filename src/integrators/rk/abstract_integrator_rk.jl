@@ -1,11 +1,13 @@
 
-abstract type IntegratorRK{dType, tType} <: DeterministicIntegrator{dType, tType} end
-abstract type IntegratorPRK{dType, tType} <: IntegratorRK{dType, tType} end
+abstract type IntegratorRK{dType, tType} <: ODEIntegrator{dType, tType} end
+abstract type IntegratorPRK{dType, tType} <: PODEIntegrator{dType, tType} end
 
-@inline equation(integrator::IntegratorRK, i::Symbol) = integrator.params.equs[i]
-@inline equations(integrator::IntegratorRK) = integrator.params.equs
-@inline timestep(integrator::IntegratorRK) = integrator.params.Δt
-@inline tableau(integrator::IntegratorRK)  = integrator.params.tab
+AbstractIntegratorRK = Union{IntegratorRK,IntegratorPRK}
 
-@inline nstages(integrator::IntegratorRK)  = nstages(tableau(integrator))
-@inline eachstage(integrator::IntegratorRK) = 1:nstages(integrator)
+@inline equation(integrator::AbstractIntegratorRK, i::Symbol) = integrator.params.equs[i]
+@inline equations(integrator::AbstractIntegratorRK) = integrator.params.equs
+@inline timestep(integrator::AbstractIntegratorRK) = integrator.params.Δt
+@inline tableau(integrator::AbstractIntegratorRK)  = integrator.params.tab
+
+@inline nstages(integrator::AbstractIntegratorRK)  = nstages(tableau(integrator))
+@inline eachstage(integrator::AbstractIntegratorRK) = 1:nstages(integrator)

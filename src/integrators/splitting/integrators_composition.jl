@@ -1,6 +1,6 @@
 
 "Composition integrator."
-struct IntegratorComposition{DT, TT, D, S, IT <: Tuple} <: DeterministicIntegrator{DT,TT}
+struct IntegratorComposition{DT, TT, D, S, IT <: Tuple} <: ODEIntegrator{DT,TT}
     ints::IT
     Δt::TT
     q̅::Vector{DT}
