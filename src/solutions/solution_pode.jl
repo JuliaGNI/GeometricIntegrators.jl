@@ -147,7 +147,7 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
 
 "Create AtomicSolution for partitioned ODE."
 function AtomicSolution(solution::SolutionPODE{DT,TT}) where {DT,TT}
-    AtomicSolutionPODE{DT,TT}(solution.nd)
+    AtomicSolutionPODE(DT, TT, solution.nd)
 end
 
 

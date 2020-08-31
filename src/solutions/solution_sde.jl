@@ -250,7 +250,7 @@ Base.:(==)(sol1::SolutionSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionSDE{DT2,TT2,NQ2,
 
 "Create AtomicSolution for SDE."
 function AtomicSolution(solution::SolutionSDE{DT,TT}) where {DT,TT}
-    AtomicSolutionSDE{DT,TT}(solution.nd, solution.nm)
+    AtomicSolutionSDE(DT, TT, solution.nd, solution.nm)
 end
 
 
