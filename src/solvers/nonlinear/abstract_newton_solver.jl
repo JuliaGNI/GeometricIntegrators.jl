@@ -21,16 +21,14 @@ abstract type AbstractNewtonSolver{T} <: NonlinearSolver{T} end
     status::NonlinearSolverStatus{T}
 end
 
-
 function setInitialConditions!(s::AbstractNewtonSolver{T}, x₀::Vector{T}) where {T}
     s.x[:] = x₀
 end
 
-function computeJacobian(s::AbstractNewtonSolver)
-    computeJacobian(s.x, s.J, s.Jparams)
-end
 status(solver::AbstractNewtonSolver) = solver.status
 params(solver::AbstractNewtonSolver) = solver.params
+
+computeJacobian(s::AbstractNewtonSolver) = computeJacobian(s.x, s.J, s.Jparams)
 
 function check_jacobian(s::AbstractNewtonSolver)
     println("Condition Number of Jacobian: ", cond(s.J))
