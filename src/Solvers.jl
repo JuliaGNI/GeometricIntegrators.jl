@@ -23,6 +23,7 @@ module Solvers
            params, status,
            residual_initial!, residual_absolute!, residual_relative!,
            print_solver_status, check_solver_converged, check_solver_status,
+           get_solver_status, get_solver_status!,
            solve!
 
     include("solvers/nonlinear/nonlinear_solvers.jl")
