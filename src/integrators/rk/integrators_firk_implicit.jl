@@ -127,19 +127,19 @@ function initial_guess!(int::IntegratorFIRKimplicit{DT,TT}, sol::AtomicSolutionP
                         cache::IntegratorCacheFIRKimplicit{DT}=int.caches[DT]) where {DT,TT}
 
     # compute initial guess for internal stages
-    for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).q.c[i])
-    end
+    # for i in eachstage(int)
+    #     evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).q.c[i])
+    # end
     for i in eachstage(int)
         for k in eachdim(int)
-            int.solver.x[ndims(int)*(i-1)+k] = cache.V[i][k]
+            int.solver.x[ndims(int)*(i-1)+k] = 0#cache.V[i][k]
         end
     end
 
     # compute initial guess for solution
-    evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.q, cache.v, one(TT))
+    # evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.q, cache.v, one(TT))
     for k in eachdim(int)
-        int.solver.x[ndims(int)*nstages(int)+k] = cache.q[k]
+        int.solver.x[ndims(int)*nstages(int)+k] = sol.q[k]#cache.q[k]
     end
 end
 
