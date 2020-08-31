@@ -113,6 +113,26 @@ function check_solver_status(status::NonlinearSolverStatus, params::NonlinearSol
     end
 end
 
+function get_solver_status!(status::NonlinearSolverStatus, params::NonlinearSolverParameters, status_dict::Dict)
+    status_dict[:nls_niter] = status.i
+    status_dict[:nls_atol] = status.rₐ
+    status_dict[:nls_rtol] = status.rᵣ
+    status_dict[:nls_stol] = status.rₛ
+    status_dict[:nls_converged] = check_solver_converged(status, params)
+    return status_dict
+end
+
+get_solver_status!(solver::NonlinearSolver{T}, status_dict::Dict) where {T} =
+            get_solver_status!(status(solver), params(solver), status_dict)
+
+get_solver_status(solver::NonlinearSolver{T}) where {T} = get_solver_status!(solver,
+            Dict(:nls_niter => 0,
+                 :nls_atol => zero(T),
+                 :nls_rtol => zero(T),
+                 :nls_stol => zero(T),
+                 :nls_converged => false)
+            )
+
 
 function getLinearSolver(x::AbstractVector{T}) where {T}
     n = length(x)
