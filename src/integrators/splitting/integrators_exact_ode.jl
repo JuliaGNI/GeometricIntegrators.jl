@@ -1,6 +1,6 @@
 
 "Exact solution of an ODE."
-struct IntegratorExactODE{DT, TT, D, QT <: Function} <: DeterministicIntegrator{DT,TT}
+struct IntegratorExactODE{DT, TT, D, QT <: Function} <: ODEIntegrator{DT,TT}
     q::QT
     Δt::TT
 

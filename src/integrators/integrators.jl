@@ -213,7 +213,7 @@ function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT}, m1::Int, m2::I
     @assert n2 ≥ n1
     @assert n2 ≤ ntime(sol)
 
-    asol = AtomicSolution(sol)
+    asol = AtomicSolution(int)
 
     # loop over initial conditions showing progress bar
     for m in m1:m2
@@ -264,6 +264,3 @@ function integrate!(int::Integrator{DT,TT}, sol::Solution{DT,TT}, asol::AtomicSo
     # copy solution from cache to solution
     set_solution!(sol, asol, n, m)
 end
-
-
-# TODO Add solver status information to all integrators (if requested).

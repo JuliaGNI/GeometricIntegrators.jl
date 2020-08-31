@@ -145,7 +145,7 @@ end
 "Stochastic implicit partitioned Runge-Kutta integrator."
 struct IntegratorSISPRK{DT, TT, D, M, S,
                 PT <: ParametersSISPRK{DT,TT},
-                ST <: NonlinearSolver{DT}} <: StochasticIntegratorRK{DT,TT,D,M,S}
+                ST <: NonlinearSolver{DT}} <: StochasticIntegratorPRK{DT,TT,D,M,S}
     params::PT
     solver::ST
     caches::CacheDict{PT}

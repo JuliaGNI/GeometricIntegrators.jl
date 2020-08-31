@@ -21,10 +21,6 @@ refx = sol.q[:,end]
 
 @testset "$(rpad("Special integrators",80))" begin
 
-    flint = IntegratorFLRK(ode, getTableauGLRK(2), Δt)
-    flsol = integrate(ode, flint, nt)
-    @test rel_err(flsol.q, refx) < 4E-12
-
     flint = IntegratorFLRK(vode, getTableauGLRK(2), Δt)
     flsol = integrate(vode, flint, nt)
     @test rel_err(flsol.q, refx) < 4E-12
