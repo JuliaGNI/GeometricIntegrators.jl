@@ -16,7 +16,7 @@ Atomic solution for an PODE.
 * `f`: vector field of p
 * `f̅`: vector field of p̅
 """
-mutable struct AtomicSolutionPODE{DT,TT} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionPODE{DT,TT,IT} <: AtomicSolution{DT,TT}
     t::TT
     t̅::TT
 
@@ -33,14 +33,17 @@ mutable struct AtomicSolutionPODE{DT,TT} <: AtomicSolution{DT,TT}
     f::Vector{DT}
     f̅::Vector{DT}
 
-    function AtomicSolutionPODE{DT, TT}(nd) where {DT <: Number, TT <: Real}
+    internal::IT
+
+    function AtomicSolutionPODE{DT, TT, IT}(nd, internal::IT) where {DT <: Number, TT <: Real, IT <: NamedTuple}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd))
+                                zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
+                                internal)
     end
 end
 
-AtomicSolutionPODE(DT, TT, nd) = AtomicSolutionPODE{DT, TT}(nd)
+AtomicSolutionPODE(DT, TT, nd, internal::IT=NamedTuple()) where {IT} = AtomicSolutionPODE{DT, TT, IT}(nd, internal)
 
 function set_solution!(asol::AtomicSolutionPODE, sol)
     t, q, p = sol
