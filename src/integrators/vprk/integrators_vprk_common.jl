@@ -118,7 +118,7 @@ function compute_stages_q_vprk!(Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, U:
                 y1 += params.tab.q.a[i,j] * V[j][k]
                 y2 += params.tab.q.â[i,j] * V[j][k]
             end
-            Q[i][k] = params.q̅[k] + params.Δt * (y1 + y2 + params.pparams[:R][1] * U[1][k])
+            Q[i][k] = params.q̅[k] + params.Δt * (y1 + y2) + params.Δt * params.pparams[:R][1] * U[1][k]
         end
     end
 end
@@ -198,7 +198,7 @@ function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vecto
                 z1 += params.tab.p.a[i,j] * (F[j][k] + R[j][k])
                 z2 += params.tab.p.â[i,j] * (F[j][k] + R[j][k])
             end
-            b[D*(i-1)+k] = - (P[i][k] - params.p̅[k]) + params.Δt * (z1 + z2 + params.pparams[:R][1] * G[1][k])
+            b[D*(i-1)+k] = - (P[i][k] - params.p̅[k]) + params.Δt * (z1 + z2) + params.Δt * params.pparams[:R][1] * G[1][k]
         end
     end
 end
