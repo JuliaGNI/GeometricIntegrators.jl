@@ -132,8 +132,8 @@ function Base.similar(dae::DAE, t₀::TT, q₀::AbstractArray{DT}, λ₀::Abstra
     DAE(dae.v, dae.u, dae.ϕ, t₀, q₀, λ₀; h=h, parameters=parameters, periodicity=periodicity)
 end
 
-@inline Base.ndims(dae::DAE) = dae.d
-
+@inline Base.ndims(equation::DAE) = equation.d
+@inline CommonFunctions.nconstraints(equation::DAE) = equation.m
 @inline CommonFunctions.periodicity(equation::DAE) = equation.periodicity
 
 function get_function_tuple(equation::DAE{DT,TT,VT,UT,ϕT,HT,Nothing}) where {DT, TT, VT, UT, ϕT, HT}
