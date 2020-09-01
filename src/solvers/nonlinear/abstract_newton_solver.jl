@@ -29,6 +29,8 @@ end
 function computeJacobian(s::AbstractNewtonSolver)
     computeJacobian(s.x, s.J, s.Jparams)
 end
+status(solver::AbstractNewtonSolver) = solver.status
+params(solver::AbstractNewtonSolver) = solver.params
 
 function check_jacobian(s::AbstractNewtonSolver)
     println("Condition Number of Jacobian: ", cond(s.J))

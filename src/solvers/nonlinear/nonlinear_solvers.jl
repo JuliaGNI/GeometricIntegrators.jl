@@ -4,6 +4,8 @@ using Printf
 abstract type NonlinearSolver{T} end
 
 solve!(s::NonlinearSolver) = error("solve! not implemented for $(typeof(s))")
+status(s::NonlinearSolver) = error("status not implemented for $(typeof(s))")
+params(s::NonlinearSolver) = error("params not implemented for $(typeof(s))")
 
 function solve!(s::NonlinearSolver{T}, x₀::Vector{T}) where {T}
     setInitialConditions!(s, x₀)
