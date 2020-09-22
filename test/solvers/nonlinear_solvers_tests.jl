@@ -18,6 +18,10 @@ end
 for Solver in (NewtonSolver, QuasiNewtonSolver, NLsolveNewton)
     x = ones(T, n)
     nl = Solver(x, F)
+
+    @test params(nl) == nl.params
+    @test status(nl) == nl.status
+
     solve!(nl)
     # println(nl.status.i, ", ", nl.status.rₐ,", ",  nl.status.rᵣ,", ",  nl.status.rₛ)
     for x in nl.x

@@ -124,7 +124,7 @@ struct IntegratorDGVIEXP{DT, TT, D, S, R,
                 BT <: Basis,
                 PT <: ParametersDGVIEXP{DT,TT,D,S},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessODE{DT,TT}} <: DeterministicIntegrator{DT,TT}
+                IT <: InitialGuessODE{DT,TT}} <: IODEIntegrator{DT,TT}
     basis::BT
     quadrature::Quadrature{TT,R}
 
@@ -177,6 +177,7 @@ end
 @inline equation(integrator::IntegratorDGVIEXP, i::Symbol) = integrator.params.equs[i]
 @inline equations(integrator::IntegratorDGVIEXP) = integrator.params.equs
 @inline timestep(integrator::IntegratorDGVIEXP) = integrator.params.Δt
+@inline Base.ndims(::IntegratorDGVIEXP{DT,TT,D}) where {DT,TT,D} = D
 
 
 function update_params!(params::ParametersDGVIEXP, int::IntegratorDGVIEXP)

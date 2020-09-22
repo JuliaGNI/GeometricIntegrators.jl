@@ -15,7 +15,7 @@ Atomic solution for an DAE.
 * `u`: projective vector field of q
 * `u̅`: projective vector field of q̅
 """
-mutable struct AtomicSolutionDAE{DT,TT} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionDAE{DT,TT,IT} <: AtomicSolution{DT,TT}
     t::TT
     t̅::TT
 
@@ -32,15 +32,18 @@ mutable struct AtomicSolutionDAE{DT,TT} <: AtomicSolution{DT,TT}
     u::Vector{DT}
     u̅::Vector{DT}
 
-    function AtomicSolutionDAE{DT, TT}(nd, nm) where {DT <: Number, TT <: Real}
+    internal::IT
+
+    function AtomicSolutionDAE{DT, TT, IT}(nd, nm, internal::IT) where {DT <: Number, TT <: Real, IT <: NamedTuple}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
                                 zeros(DT, nm), zeros(DT, nm),
                                 zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd))
+                                zeros(DT, nd), zeros(DT, nd),
+                                internal)
     end
 end
 
-AtomicSolutionDAE(DT, TT, nd, nm) = AtomicSolutionDAE{DT, TT}(nd, nm)
+AtomicSolutionDAE(DT, TT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionDAE{DT, TT, IT}(nd, nm, internal)
 
 function set_solution!(asol::AtomicSolutionDAE, sol)
     t, q, λ = sol

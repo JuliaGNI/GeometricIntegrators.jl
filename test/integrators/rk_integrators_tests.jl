@@ -77,7 +77,20 @@ end
     @test typeof(Integrator(ode, getTableauExplicitMidpoint(), Δt)) <: IntegratorERK
     @test typeof(Integrator(ode, getTableauCrouzeix(), Δt)) <: IntegratorDIRK
     @test typeof(Integrator(ode, getTableauImplicitMidpoint(), Δt)) <: IntegratorFIRK
-    @test typeof(Integrator(ode, getTableauGLRK(1), Δt)) <: IntegratorFIRK
+    @test typeof(Integrator(pode, TableauEPRK(:eprk_midpoint, 2, getTableauExplicitMidpoint().q), Δt)) <: IntegratorEPRK
+    @test typeof(Integrator(pode, TableauIPRK(:iprk_midpoint, 2, getTableauImplicitMidpoint().q), Δt)) <: IntegratorIPRK
+
+    int_erk  = Integrator(ode, getTableauExplicitMidpoint(), Δt)
+    int_dirk = Integrator(ode, getTableauCrouzeix(), Δt)
+    int_firk = Integrator(ode, getTableauImplicitMidpoint(), Δt)
+    int_eprk = Integrator(pode, TableauEPRK(:eprk_midpoint, 2, getTableauExplicitMidpoint().q), Δt)
+    int_iprk = Integrator(pode, TableauIPRK(:iprk_midpoint, 2, getTableauImplicitMidpoint().q), Δt)
+
+    @test ndims(ode) == ndims(int_erk)
+    @test ndims(ode) == ndims(int_dirk)
+    @test ndims(ode) == ndims(int_firk)
+    @test ndims(pode) == ndims(int_eprk)
+    @test ndims(pode) == ndims(int_iprk)
 
 end
 

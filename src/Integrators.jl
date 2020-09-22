@@ -33,8 +33,15 @@ module Integrators
     include("integrators/abstract_tableau.jl")
 
 
-    export Integrator, DeterministicIntegrator, StochasticIntegrator, IntegratorCache,
-           IntegratorConstructor
+    export Integrator, DeterministicIntegrator, StochasticIntegrator
+    export ODEIntegrator, DAEIntegrator, SDEIntegrator,
+           PODEIntegrator, PDAEIntegrator, PSDEIntegrator,
+           IODEIntegrator, IDAEIntegrator,
+           HODEIntegrator, HDAEIntegrator,
+           VODEIntegrator, VDAEIntegrator,
+           SPSDEIntegrator
+
+    export IntegratorCache, IntegratorConstructor
     export integrate, integrate!, integrate_step!, equation, timestep
     export NonlinearFunctionParameters, function_stages!
 

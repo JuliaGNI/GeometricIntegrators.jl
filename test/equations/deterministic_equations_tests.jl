@@ -233,6 +233,7 @@ end
     dae2 = DAE(dae_eqs..., x₀, λ₀)
 
     @test ndims(dae) == 2
+    @test nconstraints(dae) == 1
     @test periodicity(dae) == zero(x₀)
     @test get_function_tuple(dae) == NamedTuple{(:v, :u, :ϕ)}(dae_eqs)
 
@@ -256,6 +257,7 @@ end
     pdae2 = PDAE(pdae_eqs..., q₀, p₀, λ₀)
 
     @test ndims(pdae) == 1
+    @test nconstraints(pdae) == 1
     @test periodicity(pdae) == zero(q₀)
     @test get_function_tuple(pdae) == NamedTuple{(:v, :f, :u, :g, :ϕ)}(pdae_eqs)
 
@@ -280,6 +282,7 @@ end
     idae2 = IDAE(idae_eqs..., q₀, p₀, λ₀; v=pdae_v)
 
     @test ndims(idae) == 1
+    @test nconstraints(idae) == 1
     @test periodicity(idae) == zero(q₀)
     @test get_function_tuple(idae) == NamedTuple{(:ϑ, :f, :u, :g, :ϕ, :v)}((idae_eqs..., pdae_v))
 
@@ -305,6 +308,7 @@ end
     hdae3 = HDAE(hdae_eqs..., q₀, p₀)
 
     @test ndims(hdae) == 1
+    @test nconstraints(hdae) == 1
     @test periodicity(hdae) == zero(q₀)
     @test get_function_tuple(hdae) == NamedTuple{(:v, :f, :u, :g, :u̅, :g̅, :ϕ, :ψ, :h)}(hdae_eqs)
 
@@ -334,6 +338,7 @@ end
     vdae4 = VDAE(vdae_eqs..., q₀, p₀; v=iode_v)
 
     @test ndims(vdae) == 1
+    @test nconstraints(vdae) == 1
     @test periodicity(vdae) == zero(q₀)
     @test get_function_tuple(vdae) == NamedTuple{(:ϑ, :f, :g, :g̅, :ϕ, :ψ, :v)}((vdae_eqs..., iode_v))
 
@@ -391,6 +396,7 @@ end
     spdae3 = SPDAE(spdae_eqs..., q₀, p₀)
 
     @test ndims(spdae) == 1
+    @test nconstraints(spdae) == 1
     @test periodicity(spdae) == zero(q₀)
     @test get_function_tuple(spdae) == NamedTuple{(:v, :f, :ϕ, :ψ)}(spdae_eqs)
 

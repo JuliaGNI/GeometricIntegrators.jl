@@ -134,6 +134,9 @@ struct IntegratorVSPARKsecondary{DT, TT, D, S, R,
 end
 
 
+CommonFunctions.nconstraints(::IntegratorVSPARKsecondary{DT,TT,D}) where {DT,TT,D} = D
+
+
 function initial_guess!(int::IntegratorVSPARKsecondary{DT}, sol::AtomicSolutionPDAE{DT},
                         cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT}
     for i in 1:pstages(int)

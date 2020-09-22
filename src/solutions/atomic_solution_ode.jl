@@ -11,7 +11,7 @@ Atomic solution for an ODE.
 * `v`: vector field of q
 * `v̅`: vector field of q̅
 """
-mutable struct AtomicSolutionODE{DT,TT} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionODE{DT,TT,IT} <: AtomicSolution{DT,TT}
     t::TT
     t̅::TT
 
@@ -22,13 +22,16 @@ mutable struct AtomicSolutionODE{DT,TT} <: AtomicSolution{DT,TT}
     v::Vector{DT}
     v̅::Vector{DT}
 
-    function AtomicSolutionODE{DT, TT}(nd) where {DT <: Number, TT <: Real}
+    internal::IT
+
+    function AtomicSolutionODE{DT, TT, IT}(nd, internal::IT) where {DT <: Number, TT <: Real, IT <: NamedTuple}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd))
+                                zeros(DT, nd), zeros(DT, nd), internal)
     end
 end
 
-AtomicSolutionODE(DT, TT, nd) = AtomicSolutionODE{DT, TT}(nd)
+AtomicSolutionODE(DT, TT, nd, internal::IT=NamedTuple()) where {IT} = AtomicSolutionODE{DT, TT, IT}(nd, internal)
+
 
 function set_solution!(asol::AtomicSolutionODE, sol)
     t, q = sol

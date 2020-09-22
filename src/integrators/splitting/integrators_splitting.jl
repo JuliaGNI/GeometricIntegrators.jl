@@ -1,6 +1,6 @@
 
 "Splitting integrator."
-struct IntegratorSplitting{DT, TT, D, S, QT <: Tuple} <: DeterministicIntegrator{DT,TT}
+struct IntegratorSplitting{DT, TT, D, S, QT <: Tuple} <: ODEIntegrator{DT,TT}
     q::QT
     f::NTuple{S,Int64}
     c::NTuple{S,TT}
@@ -21,6 +21,7 @@ function IntegratorSplitting(equation::SODE{DT,TT}, tableau::ST, Δt::TT) where 
 end
 
 
+@inline Base.ndims(::IntegratorSplitting{DT,TT,D}) where {DT,TT,D} = D
 timestep(int::IntegratorSplitting) = int.Δt
 
 

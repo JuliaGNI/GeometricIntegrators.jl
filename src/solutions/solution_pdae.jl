@@ -163,7 +163,7 @@ Base.:(==)(sol1::SolutionPDAE{DT1,TT1,N1}, sol2::SolutionPDAE{DT2,TT2,N2}) where
 
 "Create AtomicSolution for partitioned DAE."
 function AtomicSolution(solution::SolutionPDAE{DT,TT}) where {DT,TT}
-    AtomicSolutionPDAE{DT,TT}(solution.nd, solution.nm)
+    AtomicSolutionPDAE(DT, TT, solution.nd, solution.nm)
 end
 
 

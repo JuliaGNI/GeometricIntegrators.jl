@@ -1,6 +1,6 @@
 
 "Exact solution of an ODE."
-struct IntegratorExactODE{DT, TT, D, QT <: Function} <: DeterministicIntegrator{DT,TT}
+struct IntegratorExactODE{DT, TT, D, QT <: Function} <: ODEIntegrator{DT,TT}
     q::QT
     Δt::TT
 
@@ -10,6 +10,7 @@ struct IntegratorExactODE{DT, TT, D, QT <: Function} <: DeterministicIntegrator{
 end
 
 
+@inline Base.ndims(::IntegratorExactODE{DT,TT,D}) where {DT,TT,D} = D
 timestep(int::IntegratorExactODE) = int.Δt
 
 

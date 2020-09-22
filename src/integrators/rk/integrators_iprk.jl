@@ -162,7 +162,7 @@ struct IntegratorIPRK{DT, TT, D, S, PT <: ParametersIPRK{DT,TT},
 end
 
 
-@inline Base.ndims(int::IntegratorIPRK{DT,TT,D,S}) where {DT,TT,D,S} = D
+@inline Base.ndims(::IntegratorIPRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
 function initialize!(int::IntegratorIPRK, sol::AtomicSolutionPODE)

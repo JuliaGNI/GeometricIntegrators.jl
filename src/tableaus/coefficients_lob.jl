@@ -307,6 +307,30 @@ function getCoefficientsLobIIIE(s, T=Float64)
     end
 end
 
+function getCoefficientsLobIIIF(s, T=Float64)
+    if s == 2
+        getCoefficientsLobIIIF2(T)
+    elseif s == 3
+        getCoefficientsLobIIIF3(T)
+    elseif s == 4
+        getCoefficientsLobIIIF4(T)
+    else
+        @error "Lobatto IIIF Tableau with " * string(s) * " stages not implemented."
+    end
+end
+
+function getCoefficientsLobIIIG(s, T=Float64)
+    if s == 2
+        getCoefficientsLobIIIG2(T)
+    elseif s == 3
+        getCoefficientsLobIIIG3(T)
+    elseif s == 4
+        getCoefficientsLobIIIG4(T)
+    else
+        @error "Lobatto IIIG Tableau with " * string(s) * " stages not implemented."
+    end
+end
+
 
 function get_lobatto_interstage_coefficients(s, σ=s+1, T=Float64)
     if s == 1 && σ == 2
@@ -349,8 +373,13 @@ function get_lobatto_d_vector(s)
 end
 
 function get_lobatto_ω_matrix(s)
-    ω = zeros(s, s+1)
-    ω[1:s-1,1:s] .= getCoefficientsLobIIIA(s).a[2:s,1:s]
-    ω[s,s+1] = 1
+    as = getCoefficientsLobIIIA(s).a[2:s,1:s]
+    es = zeros(s)
+    es[s] = 1
+
+    Q = vcat( hcat(as, zeros(s-1)), hcat(zeros(s)', 1) )
+    L = vcat( as, es' )
+    ω = inv(L) * Q
+    
     return ω
 end

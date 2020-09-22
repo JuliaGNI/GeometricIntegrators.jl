@@ -266,7 +266,7 @@ struct IntegratorDGVIPI{DT, TT, D, S, R,
                 JT <: Discontinuity,
                 PT <: ParametersDGVIPI{DT,TT,D,S},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessODE{DT,TT}} <: DeterministicIntegrator{DT,TT}
+                IT <: InitialGuessODE{DT,TT}} <: IODEIntegrator{DT,TT}
     basis::BT
     quadrature::Quadrature{TT,R}
     jump::JT
@@ -321,6 +321,7 @@ end
 @inline equation(integrator::IntegratorDGVIPI, i::Symbol) = integrator.params.equs[i]
 @inline equations(integrator::IntegratorDGVIPI) = integrator.params.equs
 @inline timestep(integrator::IntegratorDGVIPI) = integrator.params.Δt
+@inline Base.ndims(::IntegratorDGVIPI{DT,TT,D}) where {DT,TT,D} = D
 
 
 function update_params!(params::ParametersDGVIPI, int::IntegratorDGVIPI)

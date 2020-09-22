@@ -127,7 +127,7 @@ struct IntegratorCGVI{DT, TT, D, S, R,
                       BT <: Basis,
                       PT <: ParametersCGVI{DT,TT,D,S,R},
                       ST <: NonlinearSolver{DT},
-                      IT <: InitialGuessIODE{DT,TT}} <: DeterministicIntegrator{DT,TT}
+                      IT <: InitialGuessIODE{DT,TT}} <: IODEIntegrator{DT,TT}
     basis::BT
     quadrature::Quadrature{TT,R}
 
@@ -171,6 +171,8 @@ end
 @inline equation(integrator::IntegratorCGVI, i::Symbol) = integrator.params.equs[i]
 @inline equations(integrator::IntegratorCGVI) = integrator.params.equs
 @inline timestep(integrator::IntegratorCGVI) = integrator.params.Δt
+@inline Base.ndims(::IntegratorCGVI{DT,TT,D}) where {DT,TT,D} = D
+
 
 function IntegratorCache(int::IntegratorCGVI{DT,TT}) where {DT,TT}
     IntegratorCacheCGVI{DT, TT, ndims(int), nbasis(int.basis), nnodes(int.quadrature)}()

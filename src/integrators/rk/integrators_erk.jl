@@ -117,7 +117,7 @@ struct IntegratorERK{DT, TT, D, S, ET} <: IntegratorRK{DT,TT}
 end
 
 
-@inline Base.ndims(int::IntegratorERK{DT,TT,PT,D,S}) where {DT,TT,PT,D,S} = D
+@inline Base.ndims(::IntegratorERK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
 "Integrate ODE with explicit Runge-Kutta integrator."

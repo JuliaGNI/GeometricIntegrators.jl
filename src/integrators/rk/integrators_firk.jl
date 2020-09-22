@@ -143,7 +143,7 @@ struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
 end
 
 
-@inline Base.ndims(int::IntegratorFIRK{DT,TT,D,S}) where {DT,TT,D,S} = D
+@inline Base.ndims(::IntegratorFIRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
 function initialize!(int::IntegratorFIRK, sol::AtomicSolutionODE)

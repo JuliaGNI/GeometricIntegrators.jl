@@ -4,6 +4,8 @@ using Printf
 abstract type NonlinearSolver{T} end
 
 solve!(s::NonlinearSolver) = error("solve! not implemented for $(typeof(s))")
+status(s::NonlinearSolver) = error("status not implemented for $(typeof(s))")
+params(s::NonlinearSolver) = error("params not implemented for $(typeof(s))")
 
 function solve!(s::NonlinearSolver{T}, x₀::Vector{T}) where {T}
     setInitialConditions!(s, x₀)
@@ -110,6 +112,26 @@ function check_solver_status(status::NonlinearSolverStatus, params::NonlinearSol
         error("Succesive error of nonlinear solver ($(status.rₛ)) larger than allowed ($(params.stol_break))")
     end
 end
+
+function get_solver_status!(status::NonlinearSolverStatus, params::NonlinearSolverParameters, status_dict::Dict)
+    status_dict[:nls_niter] = status.i
+    status_dict[:nls_atol] = status.rₐ
+    status_dict[:nls_rtol] = status.rᵣ
+    status_dict[:nls_stol] = status.rₛ
+    status_dict[:nls_converged] = check_solver_converged(status, params)
+    return status_dict
+end
+
+get_solver_status!(solver::NonlinearSolver{T}, status_dict::Dict) where {T} =
+            get_solver_status!(status(solver), params(solver), status_dict)
+
+get_solver_status(solver::NonlinearSolver{T}) where {T} = get_solver_status!(solver,
+            Dict(:nls_niter => 0,
+                 :nls_atol => zero(T),
+                 :nls_rtol => zero(T),
+                 :nls_stol => zero(T),
+                 :nls_converged => false)
+            )
 
 
 function getLinearSolver(x::AbstractVector{T}) where {T}

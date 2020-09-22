@@ -380,7 +380,7 @@ struct IntegratorDGVI{DT, TT, D, S, R,
                 BT <: Basis,
                 PT <: ParametersDGVI{DT,TT,D,S},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessODE{DT,TT}} <: DeterministicIntegrator{DT,TT}
+                IT <: InitialGuessODE{DT,TT}} <: IODEIntegrator{DT,TT}
     basis::BT
     quadrature::Quadrature{TT,R}
 
@@ -424,6 +424,8 @@ end
 @inline equation(integrator::IntegratorDGVI, i::Symbol) = integrator.params.equs[i]
 @inline equations(integrator::IntegratorDGVI) = integrator.params.equs
 @inline timestep(integrator::IntegratorDGVI) = integrator.params.Δt
+@inline Base.ndims(::IntegratorDGVI{DT,TT,D}) where {DT,TT,D} = D
+
 
 function IntegratorCache(int::IntegratorDGVI{DT,TT}) where {DT,TT}
     IntegratorCacheDGVI{DT, TT, ndims(int), nbasis(int.basis), nnodes(int.quadrature)}()

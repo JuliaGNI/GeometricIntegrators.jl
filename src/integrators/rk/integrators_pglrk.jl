@@ -139,7 +139,7 @@ Projected Gauss-Legendre Runge-Kutta integrator.
 """
 struct IntegratorPGLRK{DT, TT, D, S, PT <: ParametersPGLRK{DT,TT},
                                      ST <: NonlinearSolver{DT},
-                                     IT <: InitialGuessODE{DT,TT}} <: IntegratorPRK{DT,TT}
+                                     IT <: InitialGuessODE{DT,TT}} <: IntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -179,8 +179,8 @@ struct IntegratorPGLRK{DT, TT, D, S, PT <: ParametersPGLRK{DT,TT},
 end
 
 
-@inline Base.ndims(int::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
-@inline nstages(integrator::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = S
+@inline Base.ndims(::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
+@inline nstages(::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = S
 
 
 function initialize!(int::IntegratorPGLRK, sol::AtomicSolutionODE)

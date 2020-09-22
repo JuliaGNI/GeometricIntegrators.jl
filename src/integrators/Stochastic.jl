@@ -9,12 +9,13 @@ module Stochastic
     using ..Utils
 
     import ..Integrators
+    import ..Integrators: nstages, noisedims
 
     import ..Equations: SDE, PSDE, SPSDE, get_function_tuple
     import ..Solutions: AtomicSolutionSDE, AtomicSolutionPSDE, SolutionVector
     import ..Solutions: update!
 
-    import ..Integrators: StochasticIntegrator, Parameters
+    import ..Integrators: StochasticIntegrator, SDEIntegrator, PSDEIntegrator, Parameters
     import ..Integrators: SDEIntegratorCache, PSDEIntegratorCache,
                           IntegratorCache, CacheDict, CacheType
     import ..Integrators: CoefficientsRK, AbstractTableauERK, AbstractTableauIRK

@@ -45,7 +45,7 @@ end
 "Formal Lagrangian Runge-Kutta integrator."
 struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
                                     ST <: NonlinearSolver{DT},
-                                    IT <: InitialGuessODE{DT,TT}} <: IntegratorRK{DT,TT}
+                                    IT <: InitialGuessODE{DT,TT}} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -97,13 +97,10 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
         IntegratorFLRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 
-    function IntegratorFLRK(equation::ODE{DT,TT}, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorFLRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
-    end
 end
 
 
-@inline Base.ndims(int::IntegratorFLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
+@inline Base.ndims(::IntegratorFLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
 function initialize!(int::IntegratorFLRK, sol::AtomicSolutionODE)
@@ -210,7 +207,7 @@ function integrate_step!(int::IntegratorFLRK, sol::AtomicSolutionPODE)
     integrate_diag_flrk!(int, sol)
 end
 
-function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::Union{AtomicSolutionODE{DT,TT},AtomicSolutionPODE{DT,TT}},
+function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                               cache::IntegratorCacheFLRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from atomic solution
     update_params!(int, sol)

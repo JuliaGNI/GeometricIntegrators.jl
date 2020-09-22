@@ -12,7 +12,7 @@ Atomic solution for an SDE.
 * `ΔZ`: Wiener process driving the stochastic process q
 * `K`:  integer parameter defining the truncation of the increments of the Wiener process (for strong solutions)
 """
-mutable struct AtomicSolutionSDE{DT,TT} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionSDE{DT,TT,IT} <: AtomicSolution{DT,TT}
     t::TT
     t̅::TT
 
@@ -24,13 +24,15 @@ mutable struct AtomicSolutionSDE{DT,TT} <: AtomicSolution{DT,TT}
     ΔZ::Vector{DT}
     K::Int
 
-    function AtomicSolutionSDE{DT, TT}(nd, nm) where {DT <: Number, TT <: Real}
+    internal::IT
+
+    function AtomicSolutionSDE{DT, TT, IT}(nd, nm, internal::IT) where {DT <: Number, TT <: Real, IT <: NamedTuple}
         new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nm), zeros(DT, nm))
+                                zeros(DT, nm), zeros(DT, nm), 0, internal)
     end
 end
 
-AtomicSolutionSDE(DT, TT, nd, nm) = AtomicSolutionSDE{DT, TT}(nd, nm)
+AtomicSolutionSDE(DT, TT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionSDE{DT, TT, IT}(nd, nm, internal)
 
 function set_solution!(asol::AtomicSolutionSDE, sol)
     t, q = sol

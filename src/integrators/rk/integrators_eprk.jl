@@ -122,7 +122,7 @@ struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: IntegratorPRK{DT,TT}
 end
 
 
-@inline Base.ndims(int::IntegratorEPRK{DT,TT,D,S}) where {DT,TT,D,S} = D
+@inline Base.ndims(::IntegratorEPRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
 "Compute Q stages of explicit partitioned Runge-Kutta methods."

@@ -157,7 +157,7 @@ Base.:(==)(sol1::SolutionDAE{DT1,TT1,N1}, sol2::SolutionDAE{DT2,TT2,N2}) where {
 
 "Create AtomicSolution for DAE."
 function AtomicSolution(solution::SolutionDAE{DT,TT}) where {DT,TT}
-    AtomicSolutionDAE{DT,TT}(solution.nd, solution.nm)
+    AtomicSolutionDAE(DT, TT, solution.nd, solution.nm)
 end
 
 

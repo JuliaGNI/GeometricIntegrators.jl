@@ -30,7 +30,8 @@ module Tableaus
            getCoefficientsLobIIIG2, getCoefficientsLobIIIG3, getCoefficientsLobIIIG4
 
     export getCoefficientsLobIII,  getCoefficientsLobIIIA, getCoefficientsLobIIIB,
-           getCoefficientsLobIIIC, getCoefficientsLobIIID, getCoefficientsLobIIIE
+           getCoefficientsLobIIIC, getCoefficientsLobIIID, getCoefficientsLobIIIE,
+           getCoefficientsLobIIIF, getCoefficientsLobIIIG
 
     include("tableaus/coefficients_lob.jl")
 
@@ -100,6 +101,10 @@ module Tableaus
     export getTableauSPARKGLRK, getTableauSPARKLobIIIAIIIB,
            getTableauSPARKGLRKLobIIIAIIIB
 
+    include("tableaus/tableaus_iprk.jl")
+
+    export getTableauIPGLRK           
+    
     include("tableaus/tableaus_spark.jl")
 
     export getTableauVPGLRK,
@@ -124,15 +129,25 @@ module Tableaus
 
     include("tableaus/tableaus_vpark.jl")
 
-    export getTableauVSPARKMidpointProjection,
+    export getTableauVSPARKLobIIIAIIIBProjection,
+           getTableauVSPARKMidpointProjection,
            getTableauVSPARKSymmetricProjection,
+           getTableauVSPARKSymmetricLobProjection,
            getTableauVSPARKSymplecticProjection,
+           getTableauVSPARKGLRKpLobIIIAIIIB,
            getTableauVSPARKGLRKpMidpoint,
            getTableauVSPARKGLRKpSymmetric,
+           getTableauVSPARKGLRKpSymmetricLob,
            getTableauVSPARKGLRKpSymplectic,
+           getTableauVSPARKLobIIIAIIIB2pLobIIIAIIIB,
+           getTableauVSPARKLobIIIAIIIB3pLobIIIAIIIB,
+           getTableauVSPARKLobIIIAIIIB4pLobIIIAIIIB,
            getTableauVSPARKLobIIIAIIIB2pSymmetric,
            getTableauVSPARKLobIIIAIIIB3pSymmetric,
-           getTableauVSPARKLobIIIAIIIB4pSymmetric
+           getTableauVSPARKLobIIIAIIIB4pSymmetric,
+           getTableauVSPARKLobIIIAIIIB2pSymmetricLob,
+           getTableauVSPARKLobIIIAIIIB3pSymmetricLob,
+           getTableauVSPARKLobIIIAIIIB4pSymmetricLob
 
     include("tableaus/tableaus_vspark_primary.jl")
 

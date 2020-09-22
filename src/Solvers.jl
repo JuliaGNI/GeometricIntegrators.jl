@@ -19,10 +19,11 @@ module Solvers
     export computeJacobian, check_jacobian, print_jacobian
 
     export NonlinearSolver, AbstractNewtonSolver,
-           NLsolveNewton,
-           NewtonSolver, QuasiNewtonSolver,
+           NLsolveNewton, NewtonSolver, QuasiNewtonSolver,
+           params, status,
            residual_initial!, residual_absolute!, residual_relative!,
            print_solver_status, check_solver_converged, check_solver_status,
+           get_solver_status, get_solver_status!,
            solve!
 
     include("solvers/nonlinear/nonlinear_solvers.jl")

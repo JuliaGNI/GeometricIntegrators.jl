@@ -1,6 +1,19 @@
 
 # Release Notes
 
+## 0.4.1
+
+### New Features
+
+* Atomic solutions can now store a NamedTuple of internal variables of the integrator, including nonlinear solver output
+* Output of internal variables has been added to VPRK integrators
+* Add Gauss-Legendre tableaus for implicit partitioned Runge-Kutta methods
+
+### Fixes
+
+* Revision of integrator type hierarchy
+
+
 ## 0.4.0
 
 ### New Integrators
