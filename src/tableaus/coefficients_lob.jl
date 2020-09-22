@@ -349,8 +349,13 @@ function get_lobatto_d_vector(s)
 end
 
 function get_lobatto_ω_matrix(s)
-    ω = zeros(s, s+1)
-    ω[1:s-1,1:s] .= getCoefficientsLobIIIA(s).a[2:s,1:s]
-    ω[s,s+1] = 1
+    as = getCoefficientsLobIIIA(s).a[2:s,1:s]
+    es = zeros(s)
+    es[s] = 1
+
+    Q = vcat( hcat(as, zeros(s-1)), hcat(zeros(s)', 1) )
+    L = vcat( as, es' )
+    ω = inv(L) * Q
+    
     return ω
 end
