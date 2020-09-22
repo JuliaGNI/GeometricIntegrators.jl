@@ -61,8 +61,8 @@ function getTableauVSPARKSymmetricProjection(name, q::CoefficientsRK{T}, p::Coef
     α_p = zeros(T, p.s, 2)
     α_p[:,1] .= 0.5
 
-    a_q̃ = Array(transpose(hcat(zero(q.b), q.b)))
-    a_p̃ = Array(transpose(hcat(zero(p.b), p.b)))
+    a_q̃ = vcat(zero(q.b)', q.b')
+    a_p̃ = vcat(zero(p.b)', p.b')
 
     α_q̃ = [[0.0  0.0]
            [0.5  R∞*0.5]]
@@ -79,11 +79,8 @@ function getTableauVSPARKSymmetricProjection(name, q::CoefficientsRK{T}, p::Coef
     c_λ = [ 0.0, 1.0]
     d_λ = [ 0.5, 0.5]
 
-    ω_λ  = zeros(T, 1, 3)
-    ω_λ .= [0.5 R∞*0.5 0.0]
-
-    δ_λ  = zeros(T, 1, 2)
-    δ_λ .= [-1.0 +1.0]
+    ω_λ = T[0.5 R∞*0.5 0.0]
+    δ_λ = T[-1.0 +1.0]
 
 
     if length(d) == 0
