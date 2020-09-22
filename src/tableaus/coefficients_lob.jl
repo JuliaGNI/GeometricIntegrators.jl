@@ -307,6 +307,30 @@ function getCoefficientsLobIIIE(s, T=Float64)
     end
 end
 
+function getCoefficientsLobIIIF(s, T=Float64)
+    if s == 2
+        getCoefficientsLobIIIF2(T)
+    elseif s == 3
+        getCoefficientsLobIIIF3(T)
+    elseif s == 4
+        getCoefficientsLobIIIF4(T)
+    else
+        @error "Lobatto IIIF Tableau with " * string(s) * " stages not implemented."
+    end
+end
+
+function getCoefficientsLobIIIG(s, T=Float64)
+    if s == 2
+        getCoefficientsLobIIIG2(T)
+    elseif s == 3
+        getCoefficientsLobIIIG3(T)
+    elseif s == 4
+        getCoefficientsLobIIIG4(T)
+    else
+        @error "Lobatto IIIG Tableau with " * string(s) * " stages not implemented."
+    end
+end
+
 
 function get_lobatto_interstage_coefficients(s, σ=s+1, T=Float64)
     if s == 1 && σ == 2
