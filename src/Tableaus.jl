@@ -101,6 +101,10 @@ module Tableaus
     export getTableauSPARKGLRK, getTableauSPARKLobIIIAIIIB,
            getTableauSPARKGLRKLobIIIAIIIB
 
+    include("tableaus/tableaus_iprk.jl")
+
+    export getTableauIPGLRK           
+    
     include("tableaus/tableaus_spark.jl")
 
     export getTableauVPGLRK,
