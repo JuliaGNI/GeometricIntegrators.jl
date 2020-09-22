@@ -125,15 +125,25 @@ module Tableaus
 
     include("tableaus/tableaus_vpark.jl")
 
-    export getTableauVSPARKMidpointProjection,
+    export getTableauVSPARKLobIIIAIIIBProjection,
+           getTableauVSPARKMidpointProjection,
            getTableauVSPARKSymmetricProjection,
+           getTableauVSPARKSymmetricLobProjection,
            getTableauVSPARKSymplecticProjection,
+           getTableauVSPARKGLRKpLobIIIAIIIB,
            getTableauVSPARKGLRKpMidpoint,
            getTableauVSPARKGLRKpSymmetric,
+           getTableauVSPARKGLRKpSymmetricLob,
            getTableauVSPARKGLRKpSymplectic,
+           getTableauVSPARKLobIIIAIIIB2pLobIIIAIIIB,
+           getTableauVSPARKLobIIIAIIIB3pLobIIIAIIIB,
+           getTableauVSPARKLobIIIAIIIB4pLobIIIAIIIB,
            getTableauVSPARKLobIIIAIIIB2pSymmetric,
            getTableauVSPARKLobIIIAIIIB3pSymmetric,
-           getTableauVSPARKLobIIIAIIIB4pSymmetric
+           getTableauVSPARKLobIIIAIIIB4pSymmetric,
+           getTableauVSPARKLobIIIAIIIB2pSymmetricLob,
+           getTableauVSPARKLobIIIAIIIB3pSymmetricLob,
+           getTableauVSPARKLobIIIAIIIB4pSymmetricLob
 
     include("tableaus/tableaus_vspark_primary.jl")
 
