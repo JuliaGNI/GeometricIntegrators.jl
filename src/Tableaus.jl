@@ -30,7 +30,8 @@ module Tableaus
            getCoefficientsLobIIIG2, getCoefficientsLobIIIG3, getCoefficientsLobIIIG4
 
     export getCoefficientsLobIII,  getCoefficientsLobIIIA, getCoefficientsLobIIIB,
-           getCoefficientsLobIIIC, getCoefficientsLobIIID, getCoefficientsLobIIIE
+           getCoefficientsLobIIIC, getCoefficientsLobIIID, getCoefficientsLobIIIE,
+           getCoefficientsLobIIIF, getCoefficientsLobIIIG
 
     include("tableaus/coefficients_lob.jl")
 
