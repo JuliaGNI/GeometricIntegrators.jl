@@ -79,8 +79,8 @@ function getTableauVSPARKSymmetricProjection(name, q::CoefficientsRK{T}, p::Coef
     c_λ = [ 0.0, 1.0]
     d_λ = [ 0.5, 0.5]
 
-    ω_λ = T[0.5 R∞*0.5 0.0]
-    δ_λ = T[-1.0 +1.0]
+    ω_λ = reshape(T[1  R∞  0], (1,3))
+    δ_λ = reshape(T[-1  +1], (1,2))
 
 
     if length(d) == 0
@@ -166,8 +166,8 @@ function getTableauVSPARKSymmetricLobProjection(name, q::CoefficientsRK{T}, p::C
     c_λ = [ 0.0, 1.0]
     d_λ = [ 0.5, 0.5]
 
-    ω_λ = T[0  0  1]
-    δ_λ = T[-1   +1]
+    ω_λ = reshape(T[0  0  1], (1,3))
+    δ_λ = reshape(T[-1  +1], (1,2))
 
 
     if length(d) == 0
@@ -285,20 +285,19 @@ function getTableauVSPARKLobIIIAIIIBProjection(name, q::CoefficientsRK{T}, p::Co
 
 end
 
-
 "Tableau for Gauss-Lobatto IIIA-IIIB method with two stages and symmetric projection."
 function getTableauVSPARKLobIIIAIIIB2pLobIIIAIIIB()
-    getTableauVSPARKSymmetricLobProjection(:LobIIIAIIIB2pSymmetricLob, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), get_lobatto_d_vector(2); R∞=-1)
+    getTableauVSPARKLobIIIAIIIBProjection(:LobIIIAIIIB2pLobIIIAIIIB, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), get_lobatto_d_vector(2); R∞=-1)
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with three stages and symmetric projection."
 function getTableauVSPARKLobIIIAIIIB3pLobIIIAIIIB()
-    getTableauVSPARKSymmetricLobProjection(:LobIIIAIIIB3pSymmetricLob, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), get_lobatto_d_vector(3); R∞=+1)
+    getTableauVSPARKLobIIIAIIIBProjection(:LobIIIAIIIB3pLobIIIAIIIB, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), get_lobatto_d_vector(3); R∞=+1)
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with four stages and symmetric projection."
 function getTableauVSPARKLobIIIAIIIB4pLobIIIAIIIB()
-    getTableauVSPARKSymmetricLobProjection(:LobIIIAIIIB4pSymmetricLob, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4(), get_lobatto_d_vector(4); R∞=-1)
+    getTableauVSPARKLobIIIAIIIBProjection(:LobIIIAIIIB4pLobIIIAIIIB, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4(), get_lobatto_d_vector(4); R∞=-1)
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."

@@ -225,48 +225,50 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
 
     compute_stages!(y, cache, params)
 
-    # compute b = - [Φ, (Z-AF-AG)]
+    # compute b = [Φ, (Z-AF-AG)]
     for i in 1:S
         for k in 1:D
-            b[2*(D*(i-1)+k-1)+1] = - cache.Φi[i][k]
-            b[2*(D*(i-1)+k-1)+2] = - cache.Zi[i][k]
+            b[2*(D*(i-1)+k-1)+1] = cache.Φi[i][k]
+            b[2*(D*(i-1)+k-1)+2] = cache.Zi[i][k]
             for j in 1:S
-                b[2*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * cache.Fi[j][k]
+                b[2*(D*(i-1)+k-1)+2] -= params.tab.p.a[i,j] * cache.Fi[j][k]
             end
             for j in 1:R
-                b[2*(D*(i-1)+k-1)+2] += params.tab.p.α[i,j] * cache.Gp[j][k]
+                b[2*(D*(i-1)+k-1)+2] -= params.tab.p.α[i,j] * cache.Gp[j][k]
             end
         end
     end
 
-    # compute b = - [ωΦ, (Z-AF-AG)]
+    # compute b = Z-AF-AG
     for i in 1:R
         for k in 1:D
-            b[2*D*S+2*(D*(i-1)+k-1)+2] = - cache.Zp[i][k]
+            b[2*D*S+2*(D*(i-1)+k-1)+2] = cache.Zp[i][k]
             for j in 1:S
-                b[2*D*S+2*(D*(i-1)+k-1)+2] += params.tab.p̃.a[i,j] * cache.Fi[j][k]
+                b[2*D*S+2*(D*(i-1)+k-1)+2] -= params.tab.p̃.a[i,j] * cache.Fi[j][k]
             end
             for j in 1:R
-                b[2*D*S+2*(D*(i-1)+k-1)+2] += params.tab.p̃.α[i,j] * cache.Gp[j][k]
+                b[2*D*S+2*(D*(i-1)+k-1)+2] -= params.tab.p̃.α[i,j] * cache.Gp[j][k]
             end
         end
     end
+
+    # compute b = ωΦ
     for i in 1:R-P
         for k in 1:D
             b[2*D*S+2*(D*(i-1)+k-1)+1] = 0
             for j in 1:R
-                b[2*D*S+2*(D*(i-1)+k-1)+1] -= params.tab.ω[i,j] * cache.Φp[j][k]
+                b[2*D*S+2*(D*(i-1)+k-1)+1] += params.tab.ω[i,j] * cache.Φp[j][k]
             end
-            b[2*D*S+2*(D*(i-1)+k-1)+1] -= params.tab.ω[i,R+1] * cache.ϕ̃[k]
+            b[2*D*S+2*(D*(i-1)+k-1)+1] += params.tab.ω[i,R+1] * cache.ϕ̃[k]
         end
     end
 
     # compute b = d_λ ⋅ Λ
-    for i in R-P+1:R
+    for i in 1:P
         for k in 1:D
-            b[2*D*S+2*(D*(R-1)+k-1)+1] = 0
+            b[2*D*S+2*(D*(R-P+i-1)+k-1)+1] = 0
             for j in 1:R
-                b[2*D*S+2*(D*(i-1)+k-1)+1] -= params.tab.δ[j] * cache.Λp[j][k]
+                b[2*D*S+2*(D*(R-P+i-1)+k-1)+1] += params.tab.δ[i,j] * cache.Λp[j][k]
             end
         end
     end
@@ -274,14 +276,14 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
     if isdefined(params.tab, :d) && length(params.tab.d) > 0
         for i in 1:S
             for k in 1:D
-                b[2*(D*(i-1)+k-1)+2] -= cache.μ[k] * params.tab.d[i] / params.tab.p.b[i]
+                b[2*(D*(i-1)+k-1)+2] += cache.μ[k] * params.tab.d[i] / params.tab.p.b[i]
             end
         end
 
         for k in 1:D
             b[2*D*S+2*D*R+k] = 0
             for i in 1:S
-                b[2*D*S+2*D*R+k] -= cache.Vi[i][k] * params.tab.d[i]
+                b[2*D*S+2*D*R+k] += cache.Vi[i][k] * params.tab.d[i]
             end
         end
     end

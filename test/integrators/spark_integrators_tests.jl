@@ -13,6 +13,10 @@ using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem: Δt, nt
 set_config(:nls_atol, 8eps())
 set_config(:nls_rtol, 2eps())
 
+set_config(:nls_atol_break, Inf)
+set_config(:nls_rtol_break, Inf)
+set_config(:nls_stol_break, Inf)
+
 ode  = lotka_volterra_2d_ode()
 idae = lotka_volterra_2d_idae()
 pdae = lotka_volterra_2d_pdae()
