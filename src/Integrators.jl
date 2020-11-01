@@ -43,15 +43,14 @@ module Integrators
 
     export IntegratorCache, IntegratorConstructor
     export integrate, integrate!, integrate_step!, equation, timestep
-    export NonlinearFunctionParameters, function_stages!
+    export function_stages!#, NonlinearFunctionParameters
 
     include("integrators/abstract_integrator.jl")
     include("integrators/integrator_cache.jl")
     include("integrators/integrators_common.jl")
 
 
-    export CoefficientsRK, HeaderCoefficientsRK,
-           AbstractTableauRK, AbstractTableauIRK, AbstractTableauPRK,
+    export CoefficientsRK, AbstractTableauRK, AbstractTableauIRK, AbstractTableauPRK,
            IntegratorRK, writeTableauToFile
 
     export get_symplectic_conjugate_coefficients, symplecticize,

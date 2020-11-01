@@ -176,12 +176,12 @@ function integrate(equation::Equation, tableau::AbstractTableau, Δt, ntime; kwa
 end
 
 "Integrate ODE specified by vector field and initial condition with given tableau for ntime time steps and return solution."
-function integrate(f::Function, x₀::Vector, tableau::AbstractTableau, Δt, ntime; t₀=0, kwargs...)
+function integrate(f::Function, x₀::Vector, tableau::AbstractTableau, Δt, ntime; t₀=0., kwargs...)
     return integrate(ODE(f, t₀, x₀), tableau, Δt, ntime; kwargs...)
 end
 
 "Integrate PODE specified by two vector fields and initial conditions with given tableau for ntime time steps and return solution."
-function integrate(v::Function, f::Function, q₀::Vector, p₀::Vector, tableau::AbstractTableau, Δt, ntime; t₀=0, kwargs...)
+function integrate(v::Function, f::Function, q₀::Vector, p₀::Vector, tableau::AbstractTableau, Δt, ntime; t₀=0., kwargs...)
     return integrate(PODE(v, f, t₀, q₀, p₀), tableau, Δt, ntime; kwargs...)
 end
 
