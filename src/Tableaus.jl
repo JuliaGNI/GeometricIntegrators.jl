@@ -135,6 +135,7 @@ module Tableaus
            getTableauVSPARKSymmetricLobProjection,
            getTableauVSPARKSymplecticProjection,
            getTableauVSPARKGLRKpLobIIIAIIIB,
+           getTableauVSPARKGLRKpLobIIIBIIIA,
            getTableauVSPARKGLRKpMidpoint,
            getTableauVSPARKGLRKpSymmetric,
            getTableauVSPARKGLRKpSymmetricLob,
@@ -142,6 +143,9 @@ module Tableaus
            getTableauVSPARKLobIIIAIIIB2pLobIIIAIIIB,
            getTableauVSPARKLobIIIAIIIB3pLobIIIAIIIB,
            getTableauVSPARKLobIIIAIIIB4pLobIIIAIIIB,
+           getTableauVSPARKLobIIIAIIIB2pLobIIIBIIIA,
+           getTableauVSPARKLobIIIAIIIB3pLobIIIBIIIA,
+           getTableauVSPARKLobIIIAIIIB4pLobIIIBIIIA,
            getTableauVSPARKLobIIIAIIIB2pSymmetric,
            getTableauVSPARKLobIIIAIIIB3pSymmetric,
            getTableauVSPARKLobIIIAIIIB4pSymmetric,
@@ -158,7 +162,15 @@ module Tableaus
            getTableauVSPARKGLRKLobIIIAB,
            getTableauVSPARKGLRKLobIIIC,
            getTableauVSPARKGLRKLobIIID,
-           getTableauVSPARKGLRKLobIIIE
+           getTableauVSPARKGLRKLobIIIE,
+           getTableauVSPARKLobABCCD,
+           getTableauVSPARKLobABCCE,
+           getTableauVSPARKLobABDE,
+           getTableauVSPARKLobABED,
+           getTableauVSPARKLobABD,
+           getTableauVSPARKLobABE,
+           getTableauVSPARKLobDE,
+           getTableauVSPARKLobED
 
     include("tableaus/tableaus_vspark_secondary.jl")
 
