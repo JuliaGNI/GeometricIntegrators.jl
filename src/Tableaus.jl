@@ -130,6 +130,7 @@ module Tableaus
     include("tableaus/tableaus_vpark.jl")
 
     export getTableauVSPARKLobIIIAIIIBProjection,
+           getTableauVSPARKLobIIIBIIIAProjection,
            getTableauVSPARKInternalProjection,
            getTableauVSPARKMidpointProjection,
            getTableauVSPARKSymmetricProjection,
@@ -140,20 +141,29 @@ module Tableaus
            getTableauVSPARKGLRKpInternal,
            getTableauVSPARKGLRKpMidpoint,
            getTableauVSPARKGLRKpSymmetric,
-           getTableauVSPARKGLRKpSymmetricLob,
+           getTableauVSPARKGLRKpSymmetricLobAB,
+           getTableauVSPARKGLRKpSymmetricLobBA,
            getTableauVSPARKGLRKpSymplectic,
            getTableauVSPARKLobIIIAIIIB2pLobIIIAIIIB,
            getTableauVSPARKLobIIIAIIIB3pLobIIIAIIIB,
            getTableauVSPARKLobIIIAIIIB4pLobIIIAIIIB,
+           getTableauVSPARKLobIIIAIIIB5pLobIIIAIIIB,
            getTableauVSPARKLobIIIAIIIB2pLobIIIBIIIA,
            getTableauVSPARKLobIIIAIIIB3pLobIIIBIIIA,
            getTableauVSPARKLobIIIAIIIB4pLobIIIBIIIA,
+           getTableauVSPARKLobIIIAIIIB5pLobIIIBIIIA,
            getTableauVSPARKLobIIIAIIIB2pSymmetric,
            getTableauVSPARKLobIIIAIIIB3pSymmetric,
            getTableauVSPARKLobIIIAIIIB4pSymmetric,
-           getTableauVSPARKLobIIIAIIIB2pSymmetricLob,
-           getTableauVSPARKLobIIIAIIIB3pSymmetricLob,
-           getTableauVSPARKLobIIIAIIIB4pSymmetricLob
+           getTableauVSPARKLobIIIAIIIB5pSymmetric,
+           getTableauVSPARKLobIIIAIIIB2pSymmetricLobAB,
+           getTableauVSPARKLobIIIAIIIB3pSymmetricLobAB,
+           getTableauVSPARKLobIIIAIIIB4pSymmetricLobAB,
+           getTableauVSPARKLobIIIAIIIB5pSymmetricLobAB,
+           getTableauVSPARKLobIIIAIIIB2pSymmetricLobBA,
+           getTableauVSPARKLobIIIAIIIB3pSymmetricLobBA,
+           getTableauVSPARKLobIIIAIIIB4pSymmetricLobBA,
+           getTableauVSPARKLobIIIAIIIB5pSymmetricLobBA
 
     include("tableaus/tableaus_vspark_primary.jl")
 

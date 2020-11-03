@@ -68,8 +68,7 @@ function getTableauVSPARKMidpointProjection(name, q::CoefficientsRK{T}, p::Coeff
     β = g.b
     γ = g.c
 
-    α  = zeros(T, s, 1)
-    α .= 0.5
+    α = 0.5 * ones(T, s, 1)
 
     q_ã = zeros(T, 1, s)
     for i in 1:s
@@ -81,13 +80,9 @@ function getTableauVSPARKMidpointProjection(name, q::CoefficientsRK{T}, p::Coeff
         p_ã[1,i] = p.b[i] / β[1] * ( β[1] - α[i,1] )
     end
 
-    β  = zero(g.b)
     β .= α̃[1,1] * (1 + R∞)
-
-    d = ones(T, 1)
-
-    ω  = zeros(T, 1, 2)
-    ω .= [0.0  1.0]
+    d  = ones(T, 1)
+    ω  = reshape(T[0  1], (1,2))
     δ  = zeros(T, 0, 1)
 
     return TableauVSPARKprimary(name, min(q.o, p.o),
@@ -179,6 +174,11 @@ function getTableauVSPARKLobIIIAIIIB4pSymmetric()
     getTableauVSPARKSymmetricProjection(:LobIIIAIIIB4pSymmetric, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4(), get_lobatto_d_vector(4); R∞=-1)
 end
 
+"Tableau for Gauss-Lobatto IIIA-IIIB method with five stages and symmetric projection."
+function getTableauVSPARKLobIIIAIIIB5pSymmetric()
+    getTableauVSPARKSymmetricProjection(:LobIIIAIIIB5pSymmetric, getCoefficientsLobIIIA5(), getCoefficientsLobIIIB5(), get_lobatto_d_vector(5); R∞=+1)
+end
+
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function getTableauVSPARKGLRKpSymmetric(s)
     glrk = getCoefficientsGLRK(s)
@@ -187,7 +187,7 @@ end
 
 
 
-function getTableauVSPARKSymmetricLobProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function getTableauVSPARKSymmetricLobABProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 
@@ -252,24 +252,121 @@ end
 
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with two stages and symmetric projection."
-function getTableauVSPARKLobIIIAIIIB2pSymmetricLob()
-    getTableauVSPARKSymmetricLobProjection(:LobIIIAIIIB2pSymmetricLob, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), get_lobatto_d_vector(2); R∞=-1)
+function getTableauVSPARKLobIIIAIIIB2pSymmetricLobAB()
+    getTableauVSPARKSymmetricLobABProjection(:LobIIIAIIIB2pSymmetricLobAB, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), get_lobatto_d_vector(2); R∞=-1)
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with three stages and symmetric projection."
-function getTableauVSPARKLobIIIAIIIB3pSymmetricLob()
-    getTableauVSPARKSymmetricLobProjection(:LobIIIAIIIB3pSymmetricLob, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), get_lobatto_d_vector(3); R∞=+1)
+function getTableauVSPARKLobIIIAIIIB3pSymmetricLobAB()
+    getTableauVSPARKSymmetricLobABProjection(:LobIIIAIIIB3pSymmetricLobAB, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), get_lobatto_d_vector(3); R∞=+1)
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with four stages and symmetric projection."
-function getTableauVSPARKLobIIIAIIIB4pSymmetricLob()
-    getTableauVSPARKSymmetricLobProjection(:LobIIIAIIIB4pSymmetricLob, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4(), get_lobatto_d_vector(4); R∞=-1)
+function getTableauVSPARKLobIIIAIIIB4pSymmetricLobAB()
+    getTableauVSPARKSymmetricLobABProjection(:LobIIIAIIIB4pSymmetricLobAB, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4(), get_lobatto_d_vector(4); R∞=-1)
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIB method with five stages and symmetric projection."
+function getTableauVSPARKLobIIIAIIIB5pSymmetricLobAB()
+    getTableauVSPARKSymmetricLobABProjection(:LobIIIAIIIB5pSymmetricLobAB, getCoefficientsLobIIIA5(), getCoefficientsLobIIIB5(), get_lobatto_d_vector(5); R∞=+1)
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
-function getTableauVSPARKGLRKpSymmetricLob(s)
+function getTableauVSPARKGLRKpSymmetricLobAB(s)
     glrk = getCoefficientsGLRK(s)
-    getTableauVSPARKSymmetricLobProjection(Symbol("vpglrk", s, "pSymmetricLob"), glrk, glrk; R∞=(-1)^s)
+    getTableauVSPARKSymmetricLobABProjection(Symbol("vpglrk", s, "pSymmetricLobAB"), glrk, glrk; R∞=(-1)^s)
+end
+
+
+
+function getTableauVSPARKSymmetricLobBAProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+
+    @assert q.s == p.s
+
+    o = min(q.o, p.o)
+
+    loba = getCoefficientsLobIIIA2()
+    lobb = getCoefficientsLobIIIB2()
+
+    a_q = q.a
+    a_p = p.a
+    b_q = q.b
+    b_p = p.b
+
+    a_q̃ = vcat(zero(q.b)', q.b')
+    a_p̃ = vcat(zero(p.b)', p.b')
+#    a_p̃ = vcat(p.b' ./ 2, p.b' ./ 2)
+
+    β_q = [0.5, R∞*0.5]
+    β_p = [0.5, R∞*0.5]
+
+    α_q̃ = lobb.a
+    α_p̃ = loba.a
+
+    α_q = zeros(T, q.s, 2)
+    α_p = zeros(T, p.s, 2)
+
+    for i in 1:q.s
+        for j in 1:2
+            α_q[i,j] = β_q[j] / b_p[i] * ( b_p[i] - a_p̃[j,i] )
+            α_p[i,j] = β_p[j] / b_q[i] * ( b_q[i] - a_q̃[j,i] )
+        end
+    end
+
+    c_q = q.c
+    c_p = p.c
+    c_λ = [ 0.0, 1.0]
+    d_λ = [ 0.5, 0.5]
+
+    ω_λ = reshape(T[0  0  1], (1,3))
+    δ_λ = reshape(T[-1  +1], (1,2))
+
+
+    if length(d) == 0
+        return TableauVSPARKprimary(name, o,
+                            a_q, a_p, α_q, α_p,
+                            a_q̃, a_p̃, α_q̃, α_p̃,
+                            b_q, b_p, β_q, β_p,
+                            c_q, c_p, c_λ, d_λ,
+                            ω_λ, δ_λ)
+    else
+        @assert length(d) == q.s == p.s
+
+        return TableauVSPARKprimary(name, o,
+                            a_q, a_p, α_q, α_p,
+                            a_q̃, a_p̃, α_q̃, α_p̃,
+                            b_q, b_p, β_q, β_p,
+                            c_q, c_p, c_λ, d_λ,
+                            ω_λ, δ_λ, d)
+    end
+
+end
+
+
+"Tableau for Gauss-Lobatto IIIA-IIIB method with two stages and symmetric projection."
+function getTableauVSPARKLobIIIAIIIB2pSymmetricLobBA()
+    getTableauVSPARKSymmetricLobBAProjection(:LobIIIAIIIB2pSymmetricLobBA, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), get_lobatto_d_vector(2); R∞=-1)
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIB method with three stages and symmetric projection."
+function getTableauVSPARKLobIIIAIIIB3pSymmetricLobBA()
+    getTableauVSPARKSymmetricLobBAProjection(:LobIIIAIIIB3pSymmetricLobBA, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), get_lobatto_d_vector(3); R∞=+1)
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIB method with four stages and symmetric projection."
+function getTableauVSPARKLobIIIAIIIB4pSymmetricLobBA()
+    getTableauVSPARKSymmetricLobBAProjection(:LobIIIAIIIB4pSymmetricLobBA, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4(), get_lobatto_d_vector(4); R∞=-1)
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIB method with five stages and symmetric projection."
+function getTableauVSPARKLobIIIAIIIB5pSymmetricLobBA()
+    getTableauVSPARKSymmetricLobBAProjection(:LobIIIAIIIB5pSymmetricLobBA, getCoefficientsLobIIIA5(), getCoefficientsLobIIIB5(), get_lobatto_d_vector(5); R∞=+1)
+end
+
+"Tableau for Gauss-Legendre method with s stages and symplectic projection."
+function getTableauVSPARKGLRKpSymmetricLobBA(s)
+    glrk = getCoefficientsGLRK(s)
+    getTableauVSPARKSymmetricLobBAProjection(Symbol("vpglrk", s, "pSymmetricLobBA"), glrk, glrk; R∞=(-1)^s)
 end
 
 
@@ -358,6 +455,11 @@ end
 "Tableau for Gauss-Lobatto IIIA-IIIB method with four stages and symmetric projection."
 function getTableauVSPARKLobIIIAIIIB4pLobIIIAIIIB()
     getTableauVSPARKLobIIIAIIIBProjection(:LobIIIAIIIB4pLobIIIAIIIB, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4(), get_lobatto_d_vector(4); R∞=-1)
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIB method with five stages and symmetric projection."
+function getTableauVSPARKLobIIIAIIIB5pLobIIIAIIIB()
+    getTableauVSPARKLobIIIAIIIBProjection(:LobIIIAIIIB5pLobIIIAIIIB, getCoefficientsLobIIIA5(), getCoefficientsLobIIIB5(), get_lobatto_d_vector(5); R∞=+1)
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
@@ -453,6 +555,11 @@ end
 "Tableau for Gauss-Lobatto IIIA-IIIB method with four stages and symmetric projection."
 function getTableauVSPARKLobIIIAIIIB4pLobIIIBIIIA()
     getTableauVSPARKLobIIIBIIIAProjection(:LobIIIAIIIB4pLobIIIBIIIA, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4(), get_lobatto_d_vector(4); R∞=-1)
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIB method with five stages and symmetric projection."
+function getTableauVSPARKLobIIIAIIIB5pLobIIIBIIIA()
+    getTableauVSPARKLobIIIBIIIAProjection(:LobIIIAIIIB5pLobIIIBIIIA, getCoefficientsLobIIIA5(), getCoefficientsLobIIIB5(), get_lobatto_d_vector(5); R∞=+1)
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
