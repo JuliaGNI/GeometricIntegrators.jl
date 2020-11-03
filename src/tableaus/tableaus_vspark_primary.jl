@@ -1,4 +1,64 @@
 
+function getTableauVSPARKInternalProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+
+    @assert q.s == p.s
+
+    s = q.s
+    o = min(q.o, p.o)
+
+    α_q = zeros(T, s, s)
+    α_p = zeros(T, s, s)
+
+    for i in 1:s
+        α_q[i,:] .= q.b
+        α_p[i,:] .= p.b
+    end
+
+    β_q = q.b .* (1 + R∞)
+    β_p = p.b .* (1 + R∞)
+    
+    c_λ = q.c
+    d_λ = q.b
+    ω_λ = zeros(T, 1, s+1)
+    δ_λ = zeros(T, s-1, s)
+    
+    ω_λ[1,s+1] = 1
+    
+    for i in 1:s-1
+        δ_λ[i,i] = +1
+        δ_λ[i,s] = -1
+    end
+
+
+    if length(d) == 0
+        return TableauVSPARKprimary(name, o,
+                            q.a, p.a, α_q, α_p,
+                            q.a, p.a, α_q, α_p,
+                            q.b, p.b, β_q, β_p,
+                            q.c, p.c, c_λ, d_λ,
+                            ω_λ, δ_λ)
+    else
+        @assert length(d) == q.s == p.s
+
+        return TableauVSPARKprimary(name, o,
+                            q.a, p.a, α_q, α_p,
+                            q.a, p.a, α_q, α_p,
+                            q.b, p.b, β_q, β_p,
+                            q.c, p.c, c_λ, d_λ,
+                            ω_λ, δ_λ, d)
+    end
+
+end
+
+"Tableau for Gauss-Legendre method with s stages and symplectic projection."
+function getTableauVSPARKGLRKpInternal(s)
+    glrk = getCoefficientsGLRK(s)
+    getTableauVSPARKInternalProjection(Symbol("vpglrk", s, "pInternal"), glrk, glrk; R∞=(-1)^s)
+end
+
+
+
+
 function getTableauVSPARKMidpointProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
     @assert q.s == p.s
     s = q.s

@@ -130,12 +130,14 @@ module Tableaus
     include("tableaus/tableaus_vpark.jl")
 
     export getTableauVSPARKLobIIIAIIIBProjection,
+           getTableauVSPARKInternalProjection,
            getTableauVSPARKMidpointProjection,
            getTableauVSPARKSymmetricProjection,
            getTableauVSPARKSymmetricLobProjection,
            getTableauVSPARKSymplecticProjection,
            getTableauVSPARKGLRKpLobIIIAIIIB,
            getTableauVSPARKGLRKpLobIIIBIIIA,
+           getTableauVSPARKGLRKpInternal,
            getTableauVSPARKGLRKpMidpoint,
            getTableauVSPARKGLRKpSymmetric,
            getTableauVSPARKGLRKpSymmetricLob,
