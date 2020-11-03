@@ -4,9 +4,11 @@ function get_lobatto_nodes(s)
     if s == 2
         c = @dec128 [0, 1]
     elseif s == 3
-        c = @dec128 [0,     1/2,  1   ]
+        c = @dec128 [0,    1/2,    1]
     elseif s == 4
-        c = @dec128 [0,    (5-√5)/10, (5+√5)/10,   1   ]
+        c = @dec128 [0,    (5-√5)/10,    (5+√5)/10,    1]
+    elseif s == 5
+        c = @dec128 [0,    1/2-√21/14,    1/2,    1/2+√21/14,    1]
     else
         @error "Lobatto nodes for " * string(s) * " stages not implemented."
     end
@@ -21,6 +23,8 @@ function get_lobatto_weights(s)
         b = @dec128 [1/6,  2/3,  1/6]
     elseif s == 4
         b = @dec128 [1/12,   5/12,   5/12,   1/12]
+    elseif s == 5
+        b = @dec128 [1/20,   49/180,   16/45,   49/180,   1/20]
     else
         @error "Lobatto weights for " * string(s) * " stages not implemented."
     end
@@ -60,6 +64,19 @@ function getCoefficientsLobIII4(T=Float64)
 end
 
 
+function getCoefficientsLobIII5(T=Float64)
+    a = @dec128 [
+         [ 0     0                0              0                0 ]
+         [ 1/14            1/9    (13-3*√21)/63  (14- 3*√21)/126  0 ]
+         [ 1/32  (91+21*√21)/576          11/72  (91-21*√21)/576  0 ]
+         [ 1/14  (14+ 3*√21)/126  (13+3*√21)/63            1/9    0 ]
+         [ 0               7/18            2/9             7/18   0 ]
+        ]
+
+    CoefficientsRK(T, :LobIII5, 8, a, get_lobatto_weights(5), get_lobatto_nodes(5))
+end
+
+
 function getCoefficientsLobIIIA2(T=Float64)
     a = @dec128 [
             [0     0   ]
@@ -88,6 +105,19 @@ function getCoefficientsLobIIIA4(T=Float64)
         ]
 
     CoefficientsRK(T, :LobIIIA4, 6, a, get_lobatto_weights(4), get_lobatto_nodes(4))
+end
+
+
+function getCoefficientsLobIIIA5(T=Float64)
+    a = @dec128 [
+         [0                 0                   0                  0                   0               ]
+         [(119+3*√21)/1960  (343-  9*√21)/2520  (392-96*√21)/2205  (343- 69*√21)/2520  (-21+3*√21)/1960]
+         [         13/320   (392+105*√21)/2880             8/45    (392-105*√21)/2880            3/320 ]
+         [(119-3*√21)/1960  (343+ 69*√21)/2520  (392+96*√21)/2205  (343+  9*√21)/2520  (-21-3*√21)/1960]
+         [          1/20               49/180             16/45               49/180             1/20  ]
+        ]
+
+    CoefficientsRK(T, :LobIIIA5, 8, a, get_lobatto_weights(5), get_lobatto_nodes(5))
 end
 
 
@@ -122,6 +152,19 @@ function getCoefficientsLobIIIB4(T=Float64)
 end
 
 
+function getCoefficientsLobIIIB5(T=Float64)
+    a = @dec128 [
+         [ 1/20  ( -7-   √21)/120             1/15   ( -7+   √21)/120    0 ]
+         [ 1/20  (343+ 9*√21)/2520  (56-15*√21)/315  (343-69*√21)/2520   0 ]
+         [ 1/20  ( 49+12*√21)/360             8/45   ( 49-12*√21)/360    0 ]
+         [ 1/20  (343+69*√21)/2520  (56+15*√21)/315  (343- 9*√21)/2520   0 ]
+         [ 1/20  (119- 3*√21)/360            13/45   (119+ 3*√21)/360    0 ]
+        ]
+
+    CoefficientsRK(T, :LobIIIB5, 8, a, get_lobatto_weights(5), get_lobatto_nodes(5))
+end
+
+
 function getCoefficientsLobIIIC2(T=Float64)
     a = @dec128 [
             [1/2  -1/2 ]
@@ -150,6 +193,19 @@ function getCoefficientsLobIIIC4(T=Float64)
         ]
 
     CoefficientsRK(T, :LobIIIC4, 6, a, get_lobatto_weights(4), get_lobatto_nodes(4))
+end
+
+
+function getCoefficientsLobIIIC5(T=Float64)
+    a = @dec128 [
+         [ 1/20            -21/180             2/15             -21/180     1/20  ]
+         [ 1/20             29/180   (47-15*√21)/315  (203- 30*√21)/1260   -3/140 ]
+         [ 1/20  (329+105*√21)/2880           73/360  (329-105*√21)/2880    3/160 ]
+         [ 1/20  (203+ 30*√21)/1260  (47+15*√21)/315             29/180    -3/140 ]
+         [ 1/20             49/180            16/45              49/180     1/20  ]
+        ]
+
+    CoefficientsRK(T, :LobIIIC5, 8, a, get_lobatto_weights(5), get_lobatto_nodes(5))
 end
 
 
@@ -202,6 +258,12 @@ function getCoefficientsLobIIID4(T=Float64)
     CoefficientsRK(T, :LobIIID4, lobC.o, (lob.a + lobC.a)/2, lobC.b, lobC.c)
 end
 
+function getCoefficientsLobIIID5(T=Float64)
+    lob  = getCoefficientsLobIII5(Dec128)
+    lobC = getCoefficientsLobIIIC5(Dec128)
+    CoefficientsRK(T, :LobIIID5, lobC.o, (lob.a + lobC.a)/2, lobC.b, lobC.c)
+end
+
 
 function getCoefficientsLobIIIE2(T=Float64)
     lobA = getCoefficientsLobIIIA2(Dec128)
@@ -219,6 +281,12 @@ function getCoefficientsLobIIIE4(T=Float64)
     lobA = getCoefficientsLobIIIA4(Dec128)
     lobB = getCoefficientsLobIIIB4(Dec128)
     CoefficientsRK(T, :LobIIIE4, lobA.o, (lobA.a + lobB.a)/2, lobA.b, lobA.c)
+end
+
+function getCoefficientsLobIIIE5(T=Float64)
+    lobA = getCoefficientsLobIIIA5(Dec128)
+    lobB = getCoefficientsLobIIIB5(Dec128)
+    CoefficientsRK(T, :LobIIIE5, lobA.o, (lobA.a + lobB.a)/2, lobA.b, lobA.c)
 end
 
 
@@ -242,6 +310,8 @@ function getCoefficientsLobIII(s, T=Float64)
         getCoefficientsLobIII3(T)
     elseif s == 4
         getCoefficientsLobIII4(T)
+    elseif s == 5
+        getCoefficientsLobIII5(T)
     else
         @error "Lobatto III Tableau with " * string(s) * " stages not implemented."
     end
@@ -254,6 +324,8 @@ function getCoefficientsLobIIIA(s, T=Float64)
         getCoefficientsLobIIIA3(T)
     elseif s == 4
         getCoefficientsLobIIIA4(T)
+    elseif s == 5
+        getCoefficientsLobIIIA5(T)
     else
         @error "Lobatto IIIA Tableau with " * string(s) * " stages not implemented."
     end
@@ -266,6 +338,8 @@ function getCoefficientsLobIIIB(s, T=Float64)
         getCoefficientsLobIIIB3(T)
     elseif s == 4
         getCoefficientsLobIIIB4(T)
+    elseif s == 5
+        getCoefficientsLobIIIB5(T)
     else
         @error "Lobatto IIIB Tableau with " * string(s) * " stages not implemented."
     end
@@ -278,6 +352,8 @@ function getCoefficientsLobIIIC(s, T=Float64)
         getCoefficientsLobIIIC3(T)
     elseif s == 4
         getCoefficientsLobIIIC4(T)
+    elseif s == 5
+        getCoefficientsLobIIIC5(T)
     else
         @error "Lobatto IIIC Tableau with " * string(s) * " stages not implemented."
     end
@@ -290,6 +366,8 @@ function getCoefficientsLobIIID(s, T=Float64)
         getCoefficientsLobIIID3(T)
     elseif s == 4
         getCoefficientsLobIIID4(T)
+    elseif s == 5
+        getCoefficientsLobIIID5(T)
     else
         @error "Lobatto IIID Tableau with " * string(s) * " stages not implemented."
     end
@@ -302,6 +380,8 @@ function getCoefficientsLobIIIE(s, T=Float64)
         getCoefficientsLobIIIE3(T)
     elseif s == 4
         getCoefficientsLobIIIE4(T)
+    elseif s == 5
+        getCoefficientsLobIIIE5(T)
     else
         @error "Lobatto IIIE Tableau with " * string(s) * " stages not implemented."
     end
@@ -366,6 +446,8 @@ function get_lobatto_d_vector(s)
         d = [+1.0, -2.0, +1.0]
     elseif s == 4
         d = [+1.0, -√5, +√5, -1.0]
+    elseif s == 5
+        d = [+3.0, -7.0, +8.0, -7.0, +3.0]
     else
         @error("We don't have a d vector for s=" * string(s) * " stages.")
     end

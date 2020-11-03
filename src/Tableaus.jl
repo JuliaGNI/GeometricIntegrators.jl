@@ -20,12 +20,12 @@ module Tableaus
     include("tableaus/coefficients_glrk.jl")
 
 
-    export getCoefficientsLobIII2,  getCoefficientsLobIII3,  getCoefficientsLobIII4,
-           getCoefficientsLobIIIA2, getCoefficientsLobIIIA3, getCoefficientsLobIIIA4,
-           getCoefficientsLobIIIB2, getCoefficientsLobIIIB3, getCoefficientsLobIIIB4,
-           getCoefficientsLobIIIC2, getCoefficientsLobIIIC3, getCoefficientsLobIIIC4,
-           getCoefficientsLobIIID2, getCoefficientsLobIIID3, getCoefficientsLobIIID4,
-           getCoefficientsLobIIIE2, getCoefficientsLobIIIE3, getCoefficientsLobIIIE4,
+    export getCoefficientsLobIII2,  getCoefficientsLobIII3,  getCoefficientsLobIII4,  getCoefficientsLobIII5,
+           getCoefficientsLobIIIA2, getCoefficientsLobIIIA3, getCoefficientsLobIIIA4, getCoefficientsLobIIIA5,
+           getCoefficientsLobIIIB2, getCoefficientsLobIIIB3, getCoefficientsLobIIIB4, getCoefficientsLobIIIB5,
+           getCoefficientsLobIIIC2, getCoefficientsLobIIIC3, getCoefficientsLobIIIC4, getCoefficientsLobIIIC5,
+           getCoefficientsLobIIID2, getCoefficientsLobIIID3, getCoefficientsLobIIID4, getCoefficientsLobIIID5,
+           getCoefficientsLobIIIE2, getCoefficientsLobIIIE3, getCoefficientsLobIIIE4, getCoefficientsLobIIIE5,
            getCoefficientsLobIIIF2, getCoefficientsLobIIIF3, getCoefficientsLobIIIF4,
            getCoefficientsLobIIIG2, getCoefficientsLobIIIG3, getCoefficientsLobIIIG4
 
