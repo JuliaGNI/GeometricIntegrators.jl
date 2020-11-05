@@ -10,12 +10,12 @@ function getTableauVSPARKInternalProjection(name, q::CoefficientsRK{T}, p::Coeff
     α_p = zeros(T, s, s)
 
     for i in 1:s
-        α_q[i,:] .= q.b
-        α_p[i,:] .= p.b
+        α_q[i,:] .= q.b ./ 2
+        α_p[i,:] .= p.b ./ 2
     end
 
-    β_q = q.b .* (1 + R∞)
-    β_p = p.b .* (1 + R∞)
+    β_q = q.b .* (1 + R∞) ./ 2
+    β_p = p.b .* (1 + R∞) ./ 2
     
     c_λ = q.c
     d_λ = q.b
@@ -80,7 +80,7 @@ function getTableauVSPARKMidpointProjection(name, q::CoefficientsRK{T}, p::Coeff
         p_ã[1,i] = p.b[i] / β[1] * ( β[1] - α[i,1] )
     end
 
-    β .= α̃[1,1] * (1 + R∞)
+    β .= (1 + R∞) / 2
     d  = ones(T, 1)
     ω  = reshape(T[0  1], (1,2))
     δ  = zeros(T, 0, 1)
