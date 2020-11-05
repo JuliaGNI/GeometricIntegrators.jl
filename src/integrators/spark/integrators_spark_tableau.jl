@@ -93,6 +93,20 @@ struct AbstractTableauSPARK{IT, DT <: Number} <: AbstractTableau{DT}
     end
 end
 
+Base.:(==)(tab1::AbstractTableauSPARK, tab2::AbstractTableauSPARK) = (tab1.o == tab2.o
+                                                       && tab1.s == tab2.s
+                                                       && tab1.r == tab2.r
+                                                       && tab1.ρ == tab2.ρ
+                                                       && tab1.q == tab2.q
+                                                       && tab1.p == tab2.p
+                                                       && tab1.q̃ == tab2.q̃
+                                                       && tab1.p̃ == tab2.p̃
+                                                       && tab1.λ == tab2.λ
+                                                       && tab1.ω == tab2.ω
+                                                       && tab1.δ == tab2.δ
+                                                       && tab1.d == tab2.d)
+
+
 # TODO function readAbstractTableauSPARKFromFile(dir::AbstractString, name::AbstractString)
 
 
