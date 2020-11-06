@@ -106,6 +106,20 @@ Base.:(==)(tab1::AbstractTableauSPARK, tab2::AbstractTableauSPARK) = (tab1.o == 
                                                        && tab1.δ == tab2.δ
                                                        && tab1.d == tab2.d)
 
+Base.isapprox(tab1::AbstractTableauSPARK, tab2::AbstractTableauSPARK; kwargs...) = (
+                                                          tab1.o == tab2.o
+                                                       && tab1.s == tab2.s
+                                                       && tab1.r == tab2.r
+                                                       && tab1.ρ == tab2.ρ
+                                                       && isapprox(tab1.q, tab2.q; kwargs...)
+                                                       && isapprox(tab1.p, tab2.p; kwargs...)
+                                                       && isapprox(tab1.q̃, tab2.q̃; kwargs...)
+                                                       && isapprox(tab1.p̃, tab2.p̃; kwargs...)
+                                                       && isapprox(tab1.λ, tab2.λ; kwargs...)
+                                                       && isapprox(tab1.ω, tab2.ω; kwargs...)
+                                                       && isapprox(tab1.δ, tab2.δ; kwargs...)
+                                                       && isapprox(tab1.d, tab2.d; kwargs...))
+
 
 # TODO function readAbstractTableauSPARKFromFile(dir::AbstractString, name::AbstractString)
 

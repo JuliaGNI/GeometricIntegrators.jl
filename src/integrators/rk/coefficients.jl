@@ -74,6 +74,13 @@ Base.:(==)(tab1::CoefficientsRK, tab2::CoefficientsRK) = (tab1.o == tab2.o
                                                        && tab1.b == tab2.b
                                                        && tab1.c == tab2.c)
 
+Base.isapprox(tab1::CoefficientsRK, tab2::CoefficientsRK; kwargs...) = (
+                                                          tab1.o == tab2.o
+                                                       && tab1.s == tab2.s
+                                                       && isapprox(tab1.a, tab2.a; kwargs...)
+                                                       && isapprox(tab1.b, tab2.b; kwargs...)
+                                                       && isapprox(tab1.c, tab2.c; kwargs...))
+
 Base.isequal(tab1::CoefficientsRK{T1}, tab2::CoefficientsRK{T2}) where {T1,T2} = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
 
 "Print Runge-Kutta coefficients."
@@ -83,9 +90,6 @@ function Base.show(io::IO, tab::CoefficientsRK)
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)
 end
-
-
-
 
 
 function get_symplectic_conjugate_coefficients(a::Matrix{T}, b::Vector{T}, a̅::Matrix{T}) where {T}
