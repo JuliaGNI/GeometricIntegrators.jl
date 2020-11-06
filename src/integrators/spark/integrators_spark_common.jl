@@ -8,7 +8,7 @@ function update_solution!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomicSoluti
     # compute projection
     update_solution!(sol.q, sol.q̃, cache.Up, int.params.tab.q.β, timestep(int))
     update_solution!(sol.p, sol.p̃, cache.Gp, int.params.tab.p.β, timestep(int))
-    # TODO # update_multiplier!(sol.λ, cache.Λp, int.params.tab.λ.b)
+    update_multiplier!(sol.λ, cache.Λp, int.params.tab.λ.b)
 end
 
 
