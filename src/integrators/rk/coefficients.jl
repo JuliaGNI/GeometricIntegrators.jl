@@ -132,12 +132,12 @@ function compute_symplecticity_error(coeff::CoefficientsRK)
 end
 
 
-function check_symplecticity(coeff::CoefficientsRK{T}) where {T}
+function check_symplecticity(coeff::CoefficientsRK{T}; atol=16*eps(T), rtol=16*eps(T)) where {T}
     symplectic = falses(coeff.s, coeff.s)
 
     for i in 1:size(coeff.a, 1)
         for j in 1:size(coeff.a, 2)
-            symplectic[i,j] = isapprox(coeff.b[i] * coeff.a[i,j] + coeff.b[j] * coeff.a[j,i], coeff.b[i] * coeff.b[j], atol=16*eps(T), rtol=16*eps(T))
+            symplectic[i,j] = isapprox(coeff.b[i] * coeff.a[i,j] + coeff.b[j] * coeff.a[j,i], coeff.b[i] * coeff.b[j], atol=atol, rtol=rtol)
         end
     end
 
