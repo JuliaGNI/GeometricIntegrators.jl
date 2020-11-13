@@ -26,6 +26,52 @@ function Integrators.symplecticity_conditions(::TableauVSPARKprimary)
 end
 
 
+function compute_conjugate_vspark_primary(a, b, b̄)
+    ā = zero(a)
+    for i in axes(ā,1)
+        for j in axes(ā,2)
+            ā[i,j] = b̄[j] / b[i] * ( b[i] - a[j,i] )
+        end
+    end
+    return ā
+end
+
+function compute_ã_vspark_primary(α, β, b)
+    s = length(b)
+    s̃ = length(β)
+    ã = zeros(eltype(α), s̃, s)
+    for i in 1:s̃
+        for j in 1:s
+            ã[i,j] = b[j] / β[i] * ( β[i] - α[j,i] )
+        end
+    end
+    return ã
+end
+
+function get_ã_vspark_primary(α_q, β_q, b_q, α_p, β_p, b_p)
+    ã_q = compute_ã_vspark_primary(α_p, β_p, b_q)
+    ã_p = compute_ã_vspark_primary(α_q, β_q, b_p)
+    return (ã_q, ã_p)
+end
+
+function compute_α_vspark_primary(ã, b, β)
+    s = length(b)
+    s̃ = length(β)
+    α = zeros(eltype(ã), s, s̃)
+    for i in 1:s
+        for j in 1:s̃
+            α[i,j] = β[j] / b[i] * ( b[i] - ã[j,i] )
+        end
+    end
+    return α
+end
+
+function get_α_vspark_primary(ã_q, b_q, β_q, ã_p, b_p, β_p)
+    α_q = compute_α_vspark_primary(ã_p, b_p, β_q)
+    α_p = compute_α_vspark_primary(ã_q, b_q, β_p)
+    return (α_q, α_p)
+end
+
 @doc raw"""
 Specialised Partitioned Additive Runge-Kutta integrator for Variational systems.
 
