@@ -14,6 +14,17 @@ function Integrators.check_symplecticity(tab::TableauVSPARKprimary{T}; atol=16*e
 end
 
 
+function Integrators.symplecticity_conditions(::TableauVSPARKprimary)
+    (
+        """`` b^{p}_{i} b^{q}_{j} = b^{p}_{i} a^{q}_{ij} + b^{q}_{j} a^{p}_{ji} ``""",
+        """`` \\beta^{p}_{i} \\beta^{q}_{j} = \\beta^{p}_{i} \\tilde{\\alpha}^{q}_{ij} + \\beta^{q}_{j} \\tilde{\\alpha}^{p}_{ji} ``""",
+        """`` b^{p}_{i} \\beta^{q}_{j} = b^{p}_{i} \\alpha^{q}_{ij} + \\beta^{q}_{j} \\tilde{a}^{p}_{ji} ``""",
+        """`` b^{q}_{i} \\beta^{p}_{j} = b^{q}_{i} \\alpha^{p}_{ij} + \\beta^{p}_{j} \\tilde{a}^{q}_{ji} ``""",
+        """`` b^{q}_{i} = b^{p}_{i} ``""",
+        """`` \\beta^{q}_{i} = \\beta^{p}_{i} ``""",
+    )
+end
+
 
 @doc raw"""
 Specialised Partitioned Additive Runge-Kutta integrator for Variational systems.

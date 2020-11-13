@@ -54,7 +54,8 @@ module Integrators
            IntegratorRK, writeTableauToFile
 
     export get_symplectic_conjugate_coefficients, symplecticize,
-           check_symplecticity, check_symmetry, compute_symplecticity_error,
+           check_symplecticity, symplecticity_conditions, 
+           check_symmetry, compute_symplecticity_error,
            check_order_conditions_B, check_order_conditions_C, check_order_conditions_D
 
     include("integrators/rk/abstract_integrator_rk.jl")
