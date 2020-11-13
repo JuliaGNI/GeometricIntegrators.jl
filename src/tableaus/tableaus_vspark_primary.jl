@@ -1,4 +1,58 @@
+@doc raw"""
 
+Consider a symplectic pair of tableaus $(a^{1}, b^{1}, c^{1})$ and $(a^{3}, b^{3}, c^{3})$, i.e., satsifying $b^{1}_{i} b^{3}_{j} = b^{1}_{i} a^{3}_{ij} + b^{3}_{j} a^{1}_{ji}$, with an arbitrary number of stages $s$.
+Use the same tableaus for $\tilde{a}^{1}$ and $\tilde{a}^{3}$, so that $\tilde{s} = s$, as well as
+
+```math
+\begin{aligned}
+\begin{array}{c|cc}
+& \tfrac{1}{2} b^{1} \\
+& \vdots \\
+& \tfrac{1}{2} b^{1} \\
+\hline
+a^{2} & \\
+\end{array}
+&&
+\begin{array}{c|cc}
+& \tfrac{1}{2} b^{3} \\
+& \vdots \\
+& \tfrac{1}{2} b^{3} \\
+\hline
+a^{4} & \\
+\end{array}
+&&
+\begin{array}{c|cc}
+& \tfrac{1}{2} b^{1} \\
+c^{1} & \vdots \\
+& \tfrac{1}{2} b^{1} \\
+\hline
+\tilde{a}^{2} & \tfrac{1}{2} (1 + R(\infty)) \, b^{1} \\
+\end{array}
+&&
+\begin{array}{c|cc}
+& \tfrac{1}{2} b^{3} \\
+c^{3} & \vdots \\
+& \tfrac{1}{2} b^{3} \\
+\hline
+\tilde{a}^{4} & \tfrac{1}{2} (1 + R(\infty)) \, b^{3} \\
+\end{array}
+\end{aligned}
+```
+
+Set $\omega = [0, ..., 0, 1]$ and
+```math
+\delta_{ij} = \begin{cases}
++1 & j = i , \\
+-1 & j = \tilde{s} , \\
+ 0 & \text{else} ,
+\end{cases}
+```
+so that $\Lambda_{1} = \Lambda_{2} = ... = \Lambda_{\tilde{s}}$.
+
+This methods is constructed to satisfy the constraint on the projective stages, $\phi(\tilde{Q}_{n,i}, \tilde{P}_{n,i}) = 0$ for $i = 1, \, ..., \, \tilde{s}$.
+Note, however, that it violates the symplecticity conditions $b^{1}_{i} b^{4}_{j} = b^{1}_{i} a^{4}_{ij} + b^{4}_{j} \tilde{a}^{1}_{ji}$ and $b^{2}_{i} b^{3}_{j} = b^{2}_{i} \tilde{a}^{3}_{ij} + b^{3}_{j} a^{2}_{ji}$.
+
+"""
 function getTableauVSPARKInternalProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
@@ -58,7 +112,62 @@ end
 
 
 
+@doc raw"""
 
+Consider a symplectic pair of tableaus $(a^{1}, b^{1}, c^{1})$ and $(a^{3}, b^{3}, c^{3})$, i.e., satsifying $b^{1}_{i} b^{3}_{j} = b^{1}_{i} a^{3}_{ij} + b^{3}_{j} a^{1}_{ji}$, with an arbitrary number of stages $s$, and set
+
+```math
+\begin{aligned}
+\begin{array}{c|cc}
+& \tfrac{1}{2} b^{1} \\
+& \vdots \\
+& \tfrac{1}{2} b^{1} \\
+\hline
+a^{2} & \\
+\end{array}
+&&
+\begin{array}{c|cc}
+& \tfrac{1}{2} b^{4} \\
+& \vdots \\
+& \tfrac{1}{2} b^{4} \\
+\hline
+a^{4} & \\
+\end{array}
+&&
+\begin{array}{c|cc}
+& \tfrac{1}{2} b^{1} \\
+c^{1} & \vdots \\
+& \tfrac{1}{2} b^{1} \\
+\hline
+\tilde{a}^{2} & \tfrac{1}{2} (1 + R(\infty)) \, b^{1} \\
+\end{array}
+&&
+\begin{array}{c|cc}
+& \tfrac{1}{2} b^{3} \\
+c^{3} & \vdots \\
+& \tfrac{1}{2} b^{3} \\
+\hline
+\tilde{a}^{4} & \tfrac{1}{2} (1 + R(\infty)) \, b^{3} \\
+\end{array}
+\end{aligned}
+```
+
+Note that by this definition $\tilde{s} = s$.
+The coefficients $\tilde{a}^{1}$ and $\tilde{a}^{3}$ are determined by the (modified) symplecticity conditions, specifically $a^{4}_{ij} = b^{3}_{j} ( b^{1}_{i} - \tilde{a}^{1}_{ji}) / b^{1}_{i}$ and $a^{2}_{ij} = b^{1}_{j} ( b^{3}_{i} - \tilde{a}^{3}_{ji} ) / b^{3}_{i}$, where $b^{2}$ has been replaced with $b^{1}$ and $b^{4}$ with $b^{3}$, respectively.
+Set $\omega = [0, ..., 0, 1]$ and
+```math
+\delta_{ij} = \begin{cases}
++1 & j = i , \\
+-1 & j = \tilde{s} , \\
+ 0 & \text{else} ,
+\end{cases}
+```
+so that $\Lambda_{1} = \Lambda_{2} = ... = \Lambda_{\tilde{s}}$.
+
+Note that this method satisfies the symplecticity conditions $b^{1}_{i} b^{4}_{j} = b^{1}_{i} a^{4}_{ij} + b^{4}_{j} \tilde{a}^{1}_{ji}$ and $b^{2}_{i} b^{3}_{j} = b^{2}_{i} \tilde{a}^{3}_{ij} + b^{3}_{j} a^{2}_{ji}$ only if $R(\infty) = 1$ due to the definitions of $b^{2}$ and $b^{4}$.
+Moreover, it does usually not satisfy the constraint on the projective stages, $\phi(\tilde{Q}_{n,i}, \tilde{P}_{n,i}) = 0$ for $i = 1, \, ..., \, \tilde{s}$, exactly, but only approximately with bounded error, thus implying a residual in the symplecticity equation even if $R(\infty) = 1$.
+
+"""
 function getTableauVSPARKModifiedInternalProjection(name, q, p, d=[]; R∞=1)
     T = eltype(q.a)
 
@@ -121,7 +230,46 @@ end
 
 
 
+@doc raw"""
 
+Consider a symplectic pair of tableaus $(a^{1}, b^{1}, c^{1})$ and $(a^{3}, b^{3}, c^{3})$, i.e., satsifying $b^{1}_{i} b^{3}_{j} = b^{1}_{i} a^{3}_{ij} + b^{3}_{j} a^{1}_{ji}$, with an arbitrary number of stages $s$.
+For the projection, choose the tableau with $\tilde{s} = 1$ and $\rho = 0$, such that $\tilde{Q}_{n,1} = \tfrac{1}{2} ( q_{n} + q_{n+1})$, $\tilde{P}_{n,1} = \tfrac{1}{2} ( p_{n} + p_{n+1})$, i.e.,
+
+```math
+\begin{aligned}
+\begin{array}{c|cc}
+& \tfrac{1}{2} \\
+& \vdots \\
+& \tfrac{1}{2} \\
+\hline
+a^{2} & \\
+\end{array}
+&&
+\begin{array}{c|cc}
+& \tfrac{1}{2} \\
+& \vdots \\
+& \tfrac{1}{2} \\
+\hline
+a^{4} & \\
+\end{array}
+&&
+\begin{array}{c|cc}
+\tfrac{1}{2} & \tfrac{1}{2} \\
+\hline
+\tilde{a}^{2} & \tfrac{1}{2} (1 + R(\infty))\\
+\end{array}
+&&
+\begin{array}{c|cc}
+\tfrac{1}{2} & \tfrac{1}{2} \\
+\hline
+\tilde{a}^{4} & \tfrac{1}{2} (1 + R(\infty))\\
+\end{array}
+\end{aligned}
+```
+
+The coefficients $\tilde{a}^{1}$ and $\tilde{a}^{3}$ are determined by the symplecticity conditions, specifically $a^{4}_{ij} = b^{4}_{j} ( b^{1}_{i} - \tilde{a}^{1}_{ji}) / b^{1}_{i}$ and $a^{2}_{ij} = b^{2}_{j} ( b^{3}_{i} - \tilde{a}^{3}_{ji} ) / b^{3}_{i}$, and $\omega = [0, 1]$.
+
+"""
 function getTableauVSPARKMidpointProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
     @assert q.s == p.s
     s = q.s
@@ -185,7 +333,42 @@ end
 
 
 
+@doc raw"""
 
+Consider a symplectic pair of tableaus $(a^{1}, b^{1}, c^{1})$ and $(a^{3}, b^{3}, c^{3})$, i.e., satsifying $b^{1}_{i} b^{3}_{j} = b^{1}_{i} a^{3}_{ij} + b^{3}_{j} a^{1}_{ji}$, with an arbitrary number of stages $s$.
+For the projection, choose the tableau with $\tilde{s} = 1$ and $\rho = 0$, such that $\tilde{Q}_{n,1} = \tfrac{1}{2} ( q_{n} + q_{n+1})$, $\tilde{P}_{n,1} = \tfrac{1}{2} ( p_{n} + p_{n+1})$, i.e.,
+
+```math
+\begin{aligned}
+\begin{array}{c|cc}
+\tfrac{1}{2} & \tfrac{1}{2} b^{1} \\
+\hline
+\tilde{a}^{1} & \\
+\end{array}
+&&
+\begin{array}{c|cc}
+\tfrac{1}{2} & \tfrac{1}{2} \\
+\hline
+\tilde{a}^{2} & \tfrac{1}{2} ( 1 + R (\infty) ) \\
+\end{array}
+&&
+\begin{array}{c|cc}
+\tfrac{1}{2} & \tfrac{1}{2} b^{3} \\
+\hline
+\tilde{a}^{3} & \\
+\end{array}
+&&
+\begin{array}{c|cc}
+\tfrac{1}{2} & \tfrac{1}{2} \\
+\hline
+\tilde{a}^{4} & \tfrac{1}{2} ( 1 + R (\infty) ) \\
+\end{array}
+\end{aligned}
+```
+
+The coefficients $a^{2}$ and $a^{4}$ are determined by the symplecticity conditions, specifically $a^{4}_{ij} = b^{4}_{j} ( b^{1}_{i} - \tilde{a}^{1}_{ji}) / b^{1}_{i}$ and $a^{2}_{ij} = b^{2}_{j} ( b^{3}_{i} - \tilde{a}^{3}_{ji} ) / b^{3}_{i}$, and $\omega = [0, 1]$.
+
+"""
 function getTableauVSPARKModifiedMidpointProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
     @assert q.s == p.s
     s = q.s
@@ -248,7 +431,56 @@ end
 
 
 
+@doc raw"""
 
+Consider a symplectic pair of tableaus $(a^{1}, b^{1}, c^{1})$ and $(a^{3}, b^{3}, c^{3})$, i.e., satsifying $b^{1}_{i} b^{3}_{j} = b^{1}_{i} a^{3}_{ij} + b^{3}_{j} a^{1}_{ji}$, with an arbitrary number of stages $s$.
+For the projection, choose the tableau with $\tilde{s} = 2$ and $\rho = 1$, such that $\tilde{Q}_{n,1} = q_{n}$, $\tilde{Q}_{n,2} = q_{n+1}$, $\tilde{P}_{n,1} = p_{n}$, $\tilde{P}_{n,2} = p_{n+1}$, i.e.,
+
+```math
+\begin{aligned}
+\begin{array}{c|cc}
+0 & 0 \\
+1 & b^{1} \\
+\hline
+\tilde{a}^{1} & \\
+\end{array}
+&&
+\begin{array}{c|cc}
+& 0 & 0 \\
+& \tfrac{1}{2} & \tfrac{1}{2} \\
+\hline
+\tilde{a}^{2} & \tfrac{1}{2} & \tfrac{1}{2} \\
+\end{array}
+&&
+\begin{array}{c|cc}
+0 & 0 \\
+1 & b^{3} \\
+\hline
+\tilde{a}^{3} & \\
+\end{array}
+&&
+\begin{array}{c|cc}
+& 0 & 0 \\
+& \tfrac{1}{2} & \tfrac{1}{2} \\
+\hline
+\tilde{a}^{4} & \tfrac{1}{2} & \tfrac{1}{2} \\
+\end{array}
+\end{aligned}
+```
+
+The coefficients $a^{2}$ and $a^{4}$ are determined by the symplecticity conditions, specifically $a^{4}_{ij} = b^{4}_{j} ( b^{1}_{i} - \tilde{a}^{1}_{ji}) / b^{1}_{i}$ and $a^{2}_{ij} = b^{2}_{j} ( b^{3}_{i} - \tilde{a}^{3}_{ji} ) / b^{3}_{i}$.
+Further choose $\omega = [1, 1, 0]$ and $\delta = [-1, R_{\infty}]$, so that $\tilde{\Lambda}_{n,1} = R_{\infty} \tilde{\Lambda}_{n,2}$ and
+```math
+\tilde{P}_{n,1} - \vartheta (\tilde{Q}_{n,1}) + R_{\infty} ( \tilde{P}_{n,2} - \vartheta (\tilde{Q}_{n,2}) ) = 0 .
+```
+Due to the particular choice of projective stages, this is equivalent to
+```math
+p_{n} - \vartheta (q_{n}) + R_{\infty} ( p_{n+1} - \vartheta (q_{n+1}) ) = 0 ,
+```
+so that the constraint $\phi(q_{n+1}, p_{n+1}) = 0$ is satisfied if $\phi(q_{n}, p_{n}) = 0$.
+Note that the choice of $\tilde{a}^{2}$ and $\tilde{a}^{4}$ violates the symplecticity condition $b^{2}_{i} b^{4}_{j} = b^{2}_{i} \tilde{a}^{4}_{ij} + b^{4}_{j} \tilde{a}^{2}_{ji}$.
+
+"""
 function getTableauVSPARKSymmetricProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
@@ -323,7 +555,50 @@ end
 
 
 
+@doc raw"""
 
+Consider a symplectic pair of tableaus $(a^{1}, b^{1}, c^{1})$ and $(a^{3}, b^{3}, c^{3})$, i.e., satsifying $b^{1}_{i} b^{3}_{j} = b^{1}_{i} a^{3}_{ij} + b^{3}_{j} a^{1}_{ji}$, with an arbitrary number of stages $s$.
+For the projection, choose the Lobatto-IIIA and IIIB tableaus with $\tilde{s} = 2$ stages for $(\tilde{a}^{4}, b^{4})$ and $(\tilde{a}^{2}, b^{2})$, respectively, and choose $\tilde{a}^{1}$ and $\tilde{a}^{3}$ such that the projective stages correspond to the initial condition and the solution, i.e.,
+
+```math
+\begin{aligned}
+\begin{array}{c|cc}
+0 & 0 \\
+1 & b^{1} \\
+\hline
+\tilde{a}^{1} & \\
+\end{array}
+&&
+\begin{aligned}
+\begin{array}{c|cc}
+0 & \tfrac{1}{2} & 0 \\
+1 & \tfrac{1}{2} & 0 \\
+\hline
+\tilde{a}^{2} & \\
+\end{array}
+&&
+\begin{array}{c|cc}
+0 & 0 \\
+1 & b^{3} \\
+\hline
+\tilde{a}^{3} & \\
+\end{array}
+&&
+\begin{aligned}
+\begin{array}{c|cc}
+0 & 0 & 0 \\
+1 & \tfrac{1}{2} & \tfrac{1}{2} \\
+\hline
+\tilde{a}^{4} & \\
+\end{array}
+\end{aligned}
+```
+
+and compute $a^{2}$ and $a^{4}$ by the symplecticity conditions, that is $a^{2}_{ij} = b^{2}_{j} ( b^{3}_{i} - \tilde{a}^{3}_{ji} ) / b^{3}_{i}$ and $a^{4}_{ij} = b^{4}_{j} ( b^{1}_{i} - \tilde{a}^{1}_{ji}) / b^{1}_{i}$.
+Finally choose $\omega = [0, 0, 1]$ and $\delta = [-1, R_{\infty}]$, implying that $\rho = 1$.
+By construction, this method satisfies all symplecticity conditions, but the constraint on the projection stages, $\phi(\tilde{Q}_{n,i}, \tilde{P}_{n,i}) = 0$ for $i = 1, \, ..., \, \tilde{s}$, is not satisfied exactly, but only approximately, although with bounded error.
+
+"""
 function getTableauVSPARKLobIIIAIIIBProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
@@ -396,6 +671,11 @@ end
 
 
 
+@doc raw"""
+
+This methods is the same as `getTableauVSPARKLobIIIAIIIBProjection`, except for using Lobatto-IIIA and IIIB tableaus with $\tilde{s} = 2$ stages for $(\tilde{a}^{2}, b^{2})$, and $(\tilde{a}^{4}, b^{4})$ respectively, instead of the other way around.
+
+"""
 function getTableauVSPARKLobIIIBIIIAProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
@@ -468,7 +748,26 @@ end
 
 
 
+@doc raw"""
 
+Consider a symplectic pair of tableaus $(a^{1}, b^{1}, c^{1})$ and $(a^{3}, b^{3}, c^{3})$, i.e., satsifying $b^{1}_{i} b^{3}_{j} = b^{1}_{i} a^{3}_{ij} + b^{3}_{j} a^{1}_{ji}$, with an arbitrary number of stages $s$.
+For the projection, choose the Lobatto-IIIA and IIIB tableaus with $\tilde{s} = 2$ stages for $(\tilde{a}^{4}, b^{4})$ and $(\tilde{a}^{2}, b^{2})$, respectively.
+
+The coefficients $\tilde{a}^{1}$ and $\tilde{a}^{3}$ are determined by the relations
+```math
+\begin{aligned}
+\sum \limits_{j=1}^{s} \tilde{a}^{1}_{ij} (c_{j}^{1})^{k-1} &= \frac{(c_{i}^{2})^k}{k} , \qquad &
+\sum \limits_{j=1}^{s} \tilde{a}^{3}_{ij} (c_{j}^{3})^{k-1} &= \frac{(c_{i}^{4})^k}{k} , \qquad &
+i &= 1 , \, ... , \, \tilde{s} , \qquad &
+k &= 1 , \, ... , \, s .
+\end{aligned}
+```
+
+The coefficients $a^{2}$ and $a^{4}$ by the symplecticity conditions, that is $a^{2}_{ij} = b^{2}_{j} ( b^{3}_{i} - \tilde{a}^{3}_{ji} ) / b^{3}_{i}$ and $a^{4}_{ij} = b^{4}_{j} ( b^{1}_{i} - \tilde{a}^{1}_{ji}) / b^{1}_{i}$.
+Finally choose $\omega = [0, 0, 1]$ and $\delta = [-1, R_{\infty}]$, implying that $\rho = 1$.
+By construction, this method satisfies all symplecticity conditions, but the constraint on the projection stages, $\phi(\tilde{Q}_{n,i}, \tilde{P}_{n,i}) = 0$ for $i = 1, \, ..., \, \tilde{s}$, is not satisfied exactly, but only approximately, although with bounded error.
+
+"""
 function getTableauVSPARKModifiedLobIIIAIIIBProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
@@ -532,7 +831,11 @@ end
 
 
 
+@doc raw"""
 
+This methods is the same as `getTableauVSPARKModifiedLobIIIAIIIBProjection`, except for using Lobatto-IIIA and IIIB tableaus with $\tilde{s} = 2$ stages for $(\tilde{a}^{2}, b^{2})$, and $(\tilde{a}^{4}, b^{4})$ respectively, instead of the other way around.
+
+"""
 function getTableauVSPARKModifiedLobIIIBIIIAProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
