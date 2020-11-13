@@ -37,7 +37,7 @@ module VPRK
          IntegratorVPRKpSecondary, IntegratorVPRKpVariational,
          IntegratorVPRKpVariationalQ, IntegratorVPRKpVariationalP
 
-    export IntegratorVPRKpLegendre, TableauVPRKpLegendre
+    export IntegratorVPRKpLegendre#, TableauVPRKpLegendre
 
     include("vprk/integrators_vprk_abstract.jl")
     include("vprk/integrators_vprk_cache.jl")

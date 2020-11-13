@@ -39,7 +39,7 @@ module Tableaus
 
     include("tableaus/coefficients_rad.jl")
 
-    export getCoefficientsPGLRK, getTableauPGLRK
+    export getCoefficientsPGLRK #, getTableauPGLRK
 
     include("tableaus/coefficients_pglrk.jl")
 
