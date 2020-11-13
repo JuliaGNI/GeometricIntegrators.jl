@@ -45,6 +45,19 @@ struct IntegratorVPRKpInternal{DT, TT, D, S,
 end
 
 
+function Integrators.get_internal_variables(int::IntegratorVPRKpInternal{DT,TT,D,S}) where {DT, TT, D, S}
+    Q = create_internal_stage_vector(DT, D, S)
+    P = create_internal_stage_vector(DT, D, S)
+    V = create_internal_stage_vector(DT, D, S)
+    F = create_internal_stage_vector(DT, D, S)
+    λ = zeros(DT,D)
+
+    solver = get_solver_status(int.solver)
+
+    (Q=Q, P=P, V=V, F=F, λ=λ, solver=solver)
+end
+
+
 function initial_guess!(int::IntegratorVPRKpInternal{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
 
@@ -182,4 +195,14 @@ function Integrators.integrate_step!(int::IntegratorVPRKpInternal{DT,TT}, sol::A
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
+
+    # copy internal stage variables
+    sol.internal.Q .= cache.Q
+    sol.internal.P .= cache.P
+    sol.internal.V .= cache.V
+    sol.internal.F .= cache.F
+    sol.internal.λ .= cache.λ
+
+    # copy solver status
+    get_solver_status!(int.solver, sol.internal[:solver])
 end

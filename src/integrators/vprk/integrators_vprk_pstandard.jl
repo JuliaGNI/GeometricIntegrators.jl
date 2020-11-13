@@ -85,6 +85,19 @@ function IntegratorVPRKpVariationalP(args...)
 end
 
 
+function Integrators.get_internal_variables(int::IntegratorVPRKpStandard{DT,TT,D,S}) where {DT, TT, D, S}
+    Q = create_internal_stage_vector(DT, D, S)
+    P = create_internal_stage_vector(DT, D, S)
+    V = create_internal_stage_vector(DT, D, S)
+    F = create_internal_stage_vector(DT, D, S)
+    λ = zeros(DT,D)
+
+    solver = get_solver_status(int.solver)
+
+    (Q=Q, P=P, V=V, F=F, λ=λ, solver=solver)
+end
+
+
 function Integrators.initialize!(int::IntegratorVPRKpStandard{DT}, sol::AtomicSolutionPODE{DT},
                                  cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     sol.t̅ = sol.t - timestep(int)
@@ -230,4 +243,14 @@ function Integrators.integrate_step!(int::IntegratorVPRKpStandard{DT,TT}, sol::A
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
+
+    # copy internal stage variables
+    sol.internal.Q .= cache.Q
+    sol.internal.P .= cache.P
+    sol.internal.V .= cache.V
+    sol.internal.F .= cache.F
+    sol.internal.λ .= cache.λ
+
+    # copy solver status
+    get_solver_status!(int.solver, sol.internal[:solver])
 end
