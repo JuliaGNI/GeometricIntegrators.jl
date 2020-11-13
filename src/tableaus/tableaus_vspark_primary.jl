@@ -823,6 +823,16 @@ function getTableauVSPARKModifiedLobIIIAIIIBProjection(name, q::CoefficientsRK{T
 
 end
 
+"Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and Lobatto-IIIA-IIIB projection."
+function getTableauVSPARKLobIIIAIIIBpModifiedLobIIIAIIIB(s)
+    getTableauVSPARKModifiedLobIIIAIIIBProjection(Symbol("LobIIIAIIIB$(s)pLobIIIAIIIB"), getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+end
+
+"Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and Lobatto-IIIA-IIIB projection."
+function getTableauVSPARKLobIIIBIIIApModifiedLobIIIAIIIB(s)
+    getTableauVSPARKModifiedLobIIIAIIIBProjection(Symbol("LobIIIBIIIA$(s)pLobIIIAIIIB"), getCoefficientsLobIIIB(s), getCoefficientsLobIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+end
+
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function getTableauVSPARKGLRKpModifiedLobIIIAIIIB(s)
     glrk = getCoefficientsGLRK(s)
@@ -889,6 +899,16 @@ function getTableauVSPARKModifiedLobIIIBIIIAProjection(name, q::CoefficientsRK{T
                             ω_λ, δ_λ, d)
     end
 
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and Lobatto-IIIB-IIIA projection."
+function getTableauVSPARKLobIIIAIIIBpModifiedLobIIIBIIIA(s)
+    getTableauVSPARKModifiedLobIIIBIIIAProjection(Symbol("LobIIIAIIIB$(s)pLobIIIBIIIA"), getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+end
+
+"Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and Lobatto-IIIB-IIIA projection."
+function getTableauVSPARKLobIIIBIIIApModifiedLobIIIBIIIA(s)
+    getTableauVSPARKModifiedLobIIIBIIIAProjection(Symbol("LobIIIBIIIA$(s)pLobIIIBIIIA"), getCoefficientsLobIIIB(s), getCoefficientsLobIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."

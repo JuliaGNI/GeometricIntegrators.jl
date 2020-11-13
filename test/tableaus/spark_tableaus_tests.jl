@@ -36,6 +36,16 @@
     @test typeof(getTableauVSPARKLobIIIAIIIBpLobIIIBIIIA(3))      <: TableauVSPARKprimary
     @test typeof(getTableauVSPARKLobIIIBIIIApLobIIIBIIIA(2))      <: TableauVSPARKprimary
     @test typeof(getTableauVSPARKLobIIIBIIIApLobIIIBIIIA(3))      <: TableauVSPARKprimary
+
+    @test typeof(getTableauVSPARKLobIIIAIIIBpModifiedLobIIIAIIIB(2))      <: TableauVSPARKprimary
+    @test typeof(getTableauVSPARKLobIIIAIIIBpModifiedLobIIIAIIIB(3))      <: TableauVSPARKprimary
+    @test typeof(getTableauVSPARKLobIIIAIIIBpModifiedLobIIIBIIIA(2))      <: TableauVSPARKprimary
+    @test typeof(getTableauVSPARKLobIIIAIIIBpModifiedLobIIIBIIIA(3))      <: TableauVSPARKprimary
+    @test typeof(getTableauVSPARKLobIIIBIIIApModifiedLobIIIAIIIB(2))      <: TableauVSPARKprimary
+    @test typeof(getTableauVSPARKLobIIIBIIIApModifiedLobIIIAIIIB(3))      <: TableauVSPARKprimary
+    @test typeof(getTableauVSPARKLobIIIBIIIApModifiedLobIIIBIIIA(2))      <: TableauVSPARKprimary
+    @test typeof(getTableauVSPARKLobIIIBIIIApModifiedLobIIIBIIIA(3))      <: TableauVSPARKprimary
+
     @test typeof(getTableauVSPARKLobIIIAIIIBpMidpoint(2))         <: TableauVSPARKprimary
     @test typeof(getTableauVSPARKLobIIIAIIIBpMidpoint(3))         <: TableauVSPARKprimary
     @test typeof(getTableauVSPARKLobIIIBIIIApMidpoint(2))         <: TableauVSPARKprimary
