@@ -161,17 +161,17 @@ end
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIB2pSymmetric(), Δt)
+    int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIBpSymmetric(2), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 2E-6
 
-    int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIB3pSymmetric(), Δt)
+    int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIBpSymmetric(3), Δt)
     sol = integrate(idae, int, nt)
-    @test rel_err(sol.q, refx) < 2E-11
+    @test rel_err(sol.q, refx) < 5E-11
 
-    int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIB4pSymmetric(), Δt)
+    int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIBpSymmetric(4), Δt)
     sol = integrate(idae, int, nt)
-    @test rel_err(sol.q, refx) < 8E-16
+    @test rel_err(sol.q, refx) < 2E-15
 
 
     ### VSPARKsecondary Integrators ###
