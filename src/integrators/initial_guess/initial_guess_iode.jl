@@ -33,8 +33,8 @@ function InitialGuess(interp, equ::VODE{DT,TT,ϑT,FT,GT,HT,VT}, Δt::TT) where {
     InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
-function InitialGuess(interp, equ::IDAE{DT,TT,ϑT,FT,UT,GT,ϕT,HT,VT}, Δt::TT) where {DT,TT,ϑT,FT,UT,GT,ϕT,HT,VT}
-    InitialGuessIODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
+function InitialGuess(interp, equ::IDAE{DT,TT,ϑT,FT,UT,GT,ϕT,F̄T,HT,VT}, Δt::TT) where {DT,TT,ϑT,FT,UT,GT,ϕT,F̄T,HT,VT}
+    InitialGuessIODE{DT,TT,VT,F̄T,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f̄, Δt)
 end
 
 function InitialGuess(interp, equ::VDAE{DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT}, Δt::TT) where {DT,TT,θT,FT,GT,G̅T,ϕT,ψT,HT,VT}

@@ -27,7 +27,7 @@ vdae = lotka_volterra_2d_vdae()
 @test InitialGuess(int, ode, Δt) == InitialGuessODE{eltype(ode.q₀), ndims(ode)}(int, ode.v, Δt)
 
 @test InitialGuess(int, iode, Δt) == InitialGuessIODE{eltype(iode.q₀), ndims(iode)}(int, iode.v, iode.f, Δt)
-@test InitialGuess(int, idae, Δt) == InitialGuessIODE{eltype(idae.q₀), ndims(idae)}(int, idae.v, idae.f, Δt)
+@test InitialGuess(int, idae, Δt) == InitialGuessIODE{eltype(idae.q₀), ndims(idae)}(int, idae.v, idae.f̄, Δt)
 
 @test InitialGuess(int, vode, Δt) == InitialGuessIODE{eltype(vode.q₀), ndims(vode)}(int, vode.v, vode.f, Δt)
 @test InitialGuess(int, vdae, Δt) == InitialGuessIODE{eltype(vdae.q₀), ndims(vdae)}(int, vdae.v, vdae.f, Δt)
@@ -83,7 +83,7 @@ evaluate!(igode, q₁, v₁, q₀, v₀, q₂, v₂, t₂)
 
 # InitialGuessIODE
 
-igiode = InitialGuessIODE{eltype(iode.q₀), ndims(iode)}(int, (t,q,v) -> iode.v(t, q, v, iode.parameters), (t,q,p,v) -> pode.f(t, q, p, v, iode.parameters), Δt)
+igiode = InitialGuessIODE{eltype(iode.q₀), ndims(iode)}(int, (t,q,v) -> iode.v(t, q, v, iode.parameters), (t,q,p,v) -> iode.f(t, q, p, v, iode.parameters), Δt)
 
 t₀ = iode.t₀
 q₀ = iode.q₀
