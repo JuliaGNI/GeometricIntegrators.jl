@@ -155,7 +155,7 @@ function compute_stages_q_vprk!(q::Vector{ST}, Q::Vector{Vector{ST}},
                 params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     for (Qᵢ,Vᵢ,Λᵢ) in zip(Q,V,Λ)
-        @assert D == length(Qᵢ) == length(Vᵢ) == length(Λᵢ) == length(q̅)
+        @assert D == length(Qᵢ) == length(Vᵢ) == length(Λᵢ) == length(q)
     end
 
     @assert S == length(Q) == length(V) == length(Λ)
