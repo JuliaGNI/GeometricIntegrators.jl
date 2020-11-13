@@ -33,6 +33,8 @@ module SPARK
     export AbstractIntegratorSPARK
     export AbstractTableauSPARK, TableauSPARK
 
+    export IntegratorSPARK, TableauSPARK
+
     export IntegratorHPARK, TableauHPARK
     export IntegratorVPARK, TableauVPARK
 
@@ -55,6 +57,8 @@ module SPARK
     include("spark/integrators_spark_tableau.jl")
     include("spark/integrators_spark_parameters.jl")
 
+    include("spark/integrators_spark.jl")
+    
     include("spark/integrators_vpark.jl")
     include("spark/integrators_hpark.jl")
 

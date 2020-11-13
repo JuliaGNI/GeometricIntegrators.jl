@@ -122,7 +122,3 @@ Base.isapprox(tab1::AbstractTableauSPARK, tab2::AbstractTableauSPARK; kwargs...)
 
 
 # TODO function readAbstractTableauSPARKFromFile(dir::AbstractString, name::AbstractString)
-
-
-"Holds the tableau of an Specialised Partitioned Additive Runge-Kutta method."
-const TableauSPARK = AbstractTableauSPARK{:spark}
