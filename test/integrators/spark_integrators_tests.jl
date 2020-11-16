@@ -85,6 +85,51 @@ refx = sol.q[:,end]
 end
 
 
+@testset "$(rpad("SPARK integrators",80))" begin
+
+    int = Integrator(idae, TableauSPARKGLRK(1), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 1E-6
+
+    int = Integrator(idae, TableauSPARKGLRK(2), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 1E-11
+
+    int = Integrator(idae, TableauSPARKLobIIIAIIIB(3), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 1E-6
+
+    int = Integrator(idae, TableauSPARKLobIIIAIIIB(4), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 2E-10
+
+    int = Integrator(idae, TableauSPARKGLRKLobIIIAIIIB(1), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 5E-4
+
+    int = Integrator(idae, TableauSPARKGLRKLobIIIAIIIB(2), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 3E-4
+
+    int = Integrator(idae, TableauSPARKGLRKLobIIIAIIIB(3), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 2E-4
+
+    int = Integrator(idae, TableauSPARKGLRKLobIIIBIIIA(1), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 5E-4
+
+    int = Integrator(idae, TableauSPARKGLRKLobIIIBIIIA(2), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 3E-4
+
+    int = Integrator(idae, TableauSPARKGLRKLobIIIBIIIA(3), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 2E-4
+
+end
+
+
 @testset "$(rpad("VPARK integrators",80))" begin
 
     int = Integrator(idae, TableauSymplecticProjection(:glrk1ps, getCoefficientsGLRK(1), getCoefficientsGLRK(1)), Δt)
