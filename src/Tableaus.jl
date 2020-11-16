@@ -110,7 +110,9 @@ module Tableaus
 
     export TableauSPARKGLRK,
            TableauSPARKLobIIIAIIIB,
+           TableauSPARKLobIIIBIIIA,
            TableauSPARKGLRKLobIIIAIIIB,
+           TableauSPARKGLRKLobIIIBIIIA,
            TableauSPARKLobatto,
            TableauSPARKLobABC,
            TableauSPARKLobABD,

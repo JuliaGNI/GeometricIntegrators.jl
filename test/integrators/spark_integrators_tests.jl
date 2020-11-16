@@ -134,15 +134,27 @@ end
 
     ### VSPARK Integrators ###
 
-    int = IntegratorVSPARK(idae, getTableauSPARKGLRKLobIIIAIIIB(1), Δt)
+    int = IntegratorVSPARK(idae, TableauSPARKGLRKLobIIIAIIIB(1), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 1E-6
 
-    int = IntegratorVSPARK(idae, getTableauSPARKGLRKLobIIIAIIIB(2), Δt)
+    int = IntegratorVSPARK(idae, TableauSPARKGLRKLobIIIAIIIB(2), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = IntegratorVSPARK(idae, getTableauSPARKGLRKLobIIIAIIIB(3), Δt)
+    int = IntegratorVSPARK(idae, TableauSPARKGLRKLobIIIAIIIB(3), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 5E-16
+
+    int = IntegratorVSPARK(idae, TableauSPARKGLRKLobIIIBIIIA(1), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 1E-6
+
+    int = IntegratorVSPARK(idae, TableauSPARKGLRKLobIIIBIIIA(2), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 1E-11
+
+    int = IntegratorVSPARK(idae, TableauSPARKGLRKLobIIIBIIIA(3), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 5E-16
 

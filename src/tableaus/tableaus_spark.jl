@@ -35,7 +35,12 @@ function TableauSPARKLobIIIAIIIB(s)
     TableauSPARKLobatto(getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s); name=Symbol("LobIIIAIIIB($s)"))
 end
 
-"SPARK tableau for Gauss-Legendre/Gauss-Lobatto methods."
+"SPARK tableau for Gauss-Lobatto IIIB-IIIA method with s stages."
+function TableauSPARKLobIIIBIIIA(s)
+    TableauSPARKLobatto(getCoefficientsLobIIIB(s), getCoefficientsLobIIIA(s); name=Symbol("LobIIIBIIIA($s)"))
+end
+
+"SPARK tableau for Gauss-Legendre/Gauss-Lobatto-IIIA-IIIB methods."
 function TableauSPARKGLRKLobIIIAIIIB(s, σ=s+1)
     g = getCoefficientsGLRK(s)
     A = getCoefficientsLobIIIA(σ)
@@ -51,6 +56,26 @@ function TableauSPARKGLRKLobIIIAIIIB(s, σ=s+1)
                         g.a, g.a, α,   α,
                         ã,   ã,   A.a, B.a,
                         g.b, g.b, A.b, B.b,
+                        g.c, g.c, A.c, A.b,
+                        get_lobatto_ω_matrix(σ), δ)
+end
+
+"SPARK tableau for Gauss-Legendre/Gauss-Lobatto-IIIB-IIIA methods."
+function TableauSPARKGLRKLobIIIBIIIA(s, σ=s+1)
+    g = getCoefficientsGLRK(s)
+    A = getCoefficientsLobIIIA(σ)
+    B = getCoefficientsLobIIIB(σ)
+
+    α = B.a[2:σ, 1:σ]
+    ã = A.a[1:σ, 1:s]
+
+    o = min(g.o, B.o, A.o)
+    δ = zeros(0, σ)
+
+    return TableauSPARK(Symbol("GLRK($s)LobIIIAIIIB($σ)"), o,
+                        g.a, g.a, α,   α,
+                        ã,   ã,   B.a, A.a,
+                        g.b, g.b, B.b, A.b,
                         g.c, g.c, A.c, A.b,
                         get_lobatto_ω_matrix(σ), δ)
 end
