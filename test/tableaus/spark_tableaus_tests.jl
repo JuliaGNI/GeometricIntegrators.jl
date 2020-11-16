@@ -109,14 +109,16 @@
     @test typeof(TableauHSPARKLobIIIBIIIApSymmetric(3))            <: TableauHSPARKprimary
     @test typeof(TableauHSPARKLobIIIBIIIApSymmetric(4))            <: TableauHSPARKprimary
 
-    @test typeof(getTableauHSPARKLobIIIAB(2))     <: TableauHSPARKsecondary
-    @test typeof(getTableauHSPARKLobIIIC(2))      <: TableauHSPARKsecondary
-    @test typeof(getTableauHSPARKLobIIID(2))      <: TableauHSPARKsecondary
-    @test typeof(getTableauHSPARKLobIIIE(2))      <: TableauHSPARKsecondary
-    @test typeof(getTableauHSPARKGLRKLobIIIAB(1)) <: TableauHSPARKsecondary
-    @test typeof(getTableauHSPARKGLRKLobIIIC(1))  <: TableauHSPARKsecondary
-    @test typeof(getTableauHSPARKGLRKLobIIID(1))  <: TableauHSPARKsecondary
-    @test typeof(getTableauHSPARKGLRKLobIIIE(1))  <: TableauHSPARKsecondary
+    @test typeof(TableauHSPARKLobIIIAB(2))                         <: TableauHSPARKsecondary
+    @test typeof(TableauHSPARKLobIIIBA(2))                         <: TableauHSPARKsecondary
+    @test typeof(TableauHSPARKLobIIIC(2))                          <: TableauHSPARKsecondary
+    @test typeof(TableauHSPARKLobIIID(2))                          <: TableauHSPARKsecondary
+    @test typeof(TableauHSPARKLobIIIE(2))                          <: TableauHSPARKsecondary
+    @test typeof(TableauHSPARKGLRKLobIIIAB(1))                     <: TableauHSPARKsecondary
+    @test typeof(TableauHSPARKGLRKLobIIIBA(1))                     <: TableauHSPARKsecondary
+    @test typeof(TableauHSPARKGLRKLobIIIC(1))                      <: TableauHSPARKsecondary
+    @test typeof(TableauHSPARKGLRKLobIIID(1))                      <: TableauHSPARKsecondary
+    @test typeof(TableauHSPARKGLRKLobIIIE(1))                      <: TableauHSPARKsecondary
 
     @test typeof(getTableauSLRKLobIIIAB(2)) <: TableauSLRK
     @test typeof(getTableauSLRKLobIIIC(2))  <: TableauSLRK

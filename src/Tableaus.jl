@@ -210,14 +210,16 @@ module Tableaus
 
     include("tableaus/tableaus_hspark_primary.jl")
 
-    export getTableauHSPARKLobIIIAB,
-           getTableauHSPARKLobIIIC,
-           getTableauHSPARKLobIIID,
-           getTableauHSPARKLobIIIE,
-           getTableauHSPARKGLRKLobIIIAB,
-           getTableauHSPARKGLRKLobIIIC,
-           getTableauHSPARKGLRKLobIIID,
-           getTableauHSPARKGLRKLobIIIE
+    export TableauHSPARKLobIIIAB,
+           TableauHSPARKLobIIIBA,
+           TableauHSPARKLobIIIC,
+           TableauHSPARKLobIIID,
+           TableauHSPARKLobIIIE,
+           TableauHSPARKGLRKLobIIIAB,
+           TableauHSPARKGLRKLobIIIBA,
+           TableauHSPARKGLRKLobIIIC,
+           TableauHSPARKGLRKLobIIID,
+           TableauHSPARKGLRKLobIIIE
 
     include("tableaus/tableaus_hspark_secondary.jl")
 
