@@ -3,8 +3,23 @@
 const TableauSPARK = AbstractTableauSPARK{:spark}
 const ParametersSPARK = AbstractParametersSPARK{:spark}
 
-Integrators.check_symplecticity(::TableauSPARK{T}; atol=16*eps(T), rtol=16*eps(T)) where {T} = ()
-Integrators.symplecticity_conditions(::TableauSPARK) = ()
+function Integrators.check_symplecticity(tab::TableauSPARK{T}; atol=16*eps(T), rtol=16*eps(T)) where {T}
+    s_αa_qp̃ = [isapprox(tab.q.b[i] * tab.p.α[i,j] + tab.p.β[j] * tab.q̃.a[j,i], tab.q.b[i] * tab.p.β[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.r]
+    s_α_q̃p̃  = [isapprox(tab.p.β[i] * tab.q̃.α[i,j] + tab.q.β[j] * tab.p̃.α[j,i], tab.p.β[i] * tab.q.β[j]; atol=atol, rtol=rtol) for i in 1:tab.r, j in 1:tab.r]
+    s_b_qp  = isapprox.(tab.q.b, tab.p.b; atol=atol, rtol=rtol)
+    s_ω     = [isapprox(tab.ω[i,j], (i == j ? 1 : 0); atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.s+1]
+
+    return (s_αa_qp̃, s_α_q̃p̃, s_b_qp, s_ω)
+end
+
+function Integrators.symplecticity_conditions(::TableauSPARK)
+    (
+        """`` b^{1}_{i} b^{3}_{j} = b^{3}_{j} \\tilde{a}^{1}_{ji} + b^{1}_{i} a^{3}_{ij} ``""",
+        """`` b^{2}_{i} b^{3}_{j} = b^{3}_{j} \\tilde{a}^{2}_{ji} + b^{2}_{i} \\tilde{a}^{3}_{ij} ``""",
+        """`` b^{3}_{i} = b^{2}_{i} ``""",
+        """`` \\omega_{ij} = \\begin{cases}  1 & i = j , \\\\  0 & i \\ne j . \\\\  \\end{cases} `` """,
+    )
+end
 
 
 @doc raw"""
