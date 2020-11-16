@@ -84,14 +84,16 @@
     @test typeof(TableauVSPARKLobDE(2))           <: TableauVSPARKprimary
     @test typeof(TableauVSPARKLobED(2))           <: TableauVSPARKprimary
 
-    @test typeof(getTableauVSPARKLobIIIAB(2))     <: TableauVSPARKsecondary
-    @test typeof(getTableauVSPARKLobIIIC(2))      <: TableauVSPARKsecondary
-    @test typeof(getTableauVSPARKLobIIID(2))      <: TableauVSPARKsecondary
-    @test typeof(getTableauVSPARKLobIIIE(2))      <: TableauVSPARKsecondary
-    @test typeof(getTableauVSPARKGLRKLobIIIAB(2)) <: TableauVSPARKsecondary
-    @test typeof(getTableauVSPARKGLRKLobIIIC(2))  <: TableauVSPARKsecondary
-    @test typeof(getTableauVSPARKGLRKLobIIID(2))  <: TableauVSPARKsecondary
-    @test typeof(getTableauVSPARKGLRKLobIIIE(2))  <: TableauVSPARKsecondary
+    @test typeof(TableauVSPARKLobIIIAB(2))        <: TableauVSPARKsecondary
+    @test typeof(TableauVSPARKLobIIIBA(2))        <: TableauVSPARKsecondary
+    @test typeof(TableauVSPARKLobIIIC(2))         <: TableauVSPARKsecondary
+    @test typeof(TableauVSPARKLobIIID(2))         <: TableauVSPARKsecondary
+    @test typeof(TableauVSPARKLobIIIE(2))         <: TableauVSPARKsecondary
+    @test typeof(TableauVSPARKGLRKLobIIIAB(2))    <: TableauVSPARKsecondary
+    @test typeof(TableauVSPARKGLRKLobIIIBA(2))    <: TableauVSPARKsecondary
+    @test typeof(TableauVSPARKGLRKLobIIIC(2))     <: TableauVSPARKsecondary
+    @test typeof(TableauVSPARKGLRKLobIIID(2))     <: TableauVSPARKsecondary
+    @test typeof(TableauVSPARKGLRKLobIIIE(2))     <: TableauVSPARKsecondary
 
     @test typeof(TableauHPARKGLRK(1))             <: TableauHPARK
     @test typeof(TableauHPARKGLRK(2))             <: TableauHPARK

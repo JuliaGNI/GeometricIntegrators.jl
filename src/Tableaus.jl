@@ -185,14 +185,16 @@ module Tableaus
 
     include("tableaus/tableaus_vspark_primary.jl")
 
-    export getTableauVSPARKLobIIIAB,
-           getTableauVSPARKLobIIIC,
-           getTableauVSPARKLobIIID,
-           getTableauVSPARKLobIIIE,
-           getTableauVSPARKGLRKLobIIIAB,
-           getTableauVSPARKGLRKLobIIIC,
-           getTableauVSPARKGLRKLobIIID,
-           getTableauVSPARKGLRKLobIIIE
+    export TableauVSPARKLobIIIAB,
+           TableauVSPARKLobIIIBA,
+           TableauVSPARKLobIIIC,
+           TableauVSPARKLobIIID,
+           TableauVSPARKLobIIIE,
+           TableauVSPARKGLRKLobIIIAB,
+           TableauVSPARKGLRKLobIIIBA,
+           TableauVSPARKGLRKLobIIIC,
+           TableauVSPARKGLRKLobIIID,
+           TableauVSPARKGLRKLobIIIE
 
     include("tableaus/tableaus_vspark_secondary.jl")
 
