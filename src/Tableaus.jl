@@ -203,11 +203,10 @@ module Tableaus
 
     include("tableaus/tableaus_hpark.jl")
 
-    export getTableauHSPARKSymmetricProjection,
-           getTableauHSPARKGLRKpSymmetric,
-           getTableauHSPARKLobIIIAIIIB2pSymmetric,
-           getTableauHSPARKLobIIIAIIIB3pSymmetric,
-           getTableauHSPARKLobIIIAIIIB4pSymmetric
+    export TableauHSPARKSymmetricProjection,
+           TableauHSPARKGLRKpSymmetric,
+           TableauHSPARKLobIIIAIIIBpSymmetric,
+           TableauHSPARKLobIIIBIIIApSymmetric
 
     include("tableaus/tableaus_hspark_primary.jl")
 

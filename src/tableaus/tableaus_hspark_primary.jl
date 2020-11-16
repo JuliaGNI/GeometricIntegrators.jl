@@ -1,5 +1,5 @@
 
-function getTableauHSPARKSymmetricProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function TableauHSPARKSymmetricProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 
@@ -14,29 +14,26 @@ function getTableauHSPARKSymmetricProjection(name, q::CoefficientsRK{T}, p::Coef
     α_p = zeros(T, p.s, 2)
     α_p[:,1] .= 0.5
 
-    a_q̃ = Array(transpose(hcat(zero(q.b), q.b)))
-    a_p̃ = Array(transpose(hcat(zero(p.b), p.b)))
+    a_q̃ = vcat(zero(q.b)', q.b')
+    a_p̃ = vcat(zero(p.b)', p.b')
 
     α_q̃ = [[0.0  0.0]
-           [0.5  R∞*0.5]]
+           [0.5  0.5]]
     α_p̃ = [[0.0  0.0]
-           [0.5  R∞*0.5]]
+           [0.5  0.5]]
 
     b_q = q.b
     b_p = p.b
-    β_q = [0.5, R∞*0.5]
-    β_p = [0.5, R∞*0.5]
+    β_q = [0.5, 0.5]
+    β_p = [0.5, 0.5]
 
     c_q = q.c
     c_p = p.c
     c_λ = [ 0.0, 1.0]
-    d_λ = [ 0.5, 0.5]
+    d_λ = [ 0.5, 0.5*R∞]
 
-    ω_λ  = zeros(T, 1, 3)
-    ω_λ .= [0.5 R∞*0.5 0.0]
-
-    δ_λ  = zeros(T, 1, 2)
-    δ_λ .= [-1.0 +1.0]
+    ω_λ = reshape(T[1  1  0], (1,3))
+    δ_λ = reshape(T[-1   R∞], (1,2))
 
 
     if length(d) == 0
@@ -59,24 +56,18 @@ function getTableauHSPARKSymmetricProjection(name, q::CoefficientsRK{T}, p::Coef
 
 end
 
-
-"Tableau for Gauss-Lobatto IIIA-IIIB method with two stages and symmetric projection."
-function getTableauHSPARKLobIIIAIIIB2pSymmetric()
-    getTableauHSPARKSymmetricProjection(:HSPARKLobIIIAIIIB2, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2())
+"Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and symmetric projection."
+function TableauHSPARKLobIIIAIIIBpSymmetric(s)
+    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobIIIAIIIB($s)pSymmetric"), getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
-"Tableau for Gauss-Lobatto IIIA-IIIB method with three stages and symmetric projection."
-function getTableauHSPARKLobIIIAIIIB3pSymmetric()
-    getTableauHSPARKSymmetricProjection(:HSPARKLobIIIAIIIB3, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3())
-end
-
-"Tableau for Gauss-Lobatto IIIA-IIIB method with four stages and symmetric projection."
-function getTableauHSPARKLobIIIAIIIB4pSymmetric()
-    getTableauHSPARKSymmetricProjection(:HSPARKLobIIIAIIIB4, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4())
+"Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and symmetric projection."
+function TableauHSPARKLobIIIBIIIApSymmetric(s)
+    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobIIIBIIIA($s)pSymmetric"), getCoefficientsLobIIIB(s), getCoefficientsLobIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
-function getTableauHSPARKGLRKpSymmetric(s)
+function TableauHSPARKGLRKpSymmetric(s)
     glrk = getCoefficientsGLRK(s)
-    getTableauHSPARKSymmetricProjection(Symbol("HSPARKGLRK", s), glrk, glrk)
+    TableauHSPARKSymmetricProjection(Symbol("HSPARKGLRK($s)"), glrk, glrk)
 end
