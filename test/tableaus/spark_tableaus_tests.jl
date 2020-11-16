@@ -14,11 +14,14 @@
     @test typeof(TableauSPARKGLVPRK(1))               <: TableauSPARK
     @test typeof(TableauSPARKGLVPRK(2))               <: TableauSPARK
 
-    @test typeof(getTableauGLRKpSymplectic(1))        <: TableauVPARK
-    @test typeof(getTableauGLRKpSymplectic(2))        <: TableauVPARK
-    @test typeof(getTableauLobIIIAIIIB2pSymplectic()) <: TableauVPARK
-    @test typeof(getTableauLobIIIAIIIB3pSymplectic()) <: TableauVPARK
-    @test typeof(getTableauLobIIIAIIIB4pSymplectic()) <: TableauVPARK
+    @test typeof(TableauGLRKpSymplectic(1))           <: TableauVPARK
+    @test typeof(TableauGLRKpSymplectic(2))           <: TableauVPARK
+    @test typeof(TableauLobIIIAIIIBpSymplectic(2))    <: TableauVPARK
+    @test typeof(TableauLobIIIAIIIBpSymplectic(3))    <: TableauVPARK
+    @test typeof(TableauLobIIIAIIIBpSymplectic(4))    <: TableauVPARK
+    @test typeof(TableauLobIIIBIIIApSymplectic(2))    <: TableauVPARK
+    @test typeof(TableauLobIIIBIIIApSymplectic(3))    <: TableauVPARK
+    @test typeof(TableauLobIIIBIIIApSymplectic(4))    <: TableauVPARK
 
     @test typeof(TableauVSPARKGLRKpLobIIIAIIIB(1))                 <: TableauVSPARKprimary
     @test typeof(TableauVSPARKGLRKpLobIIIAIIIB(2))                 <: TableauVSPARKprimary

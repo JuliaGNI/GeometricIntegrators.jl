@@ -131,11 +131,10 @@ module Tableaus
            getTableauVPLobIIIAIIIA2, getTableauVPLobIIIAIIIA3, getTableauVPLobIIIAIIIA4,
            getTableauVPRadIIAIIA2, getTableauVPRadIIAIIA3
 
-    export getTableauSymplecticProjection,
-           getTableauLobIIIAIIIB2pSymplectic,
-           getTableauLobIIIAIIIB3pSymplectic,
-           getTableauLobIIIAIIIB4pSymplectic,
-           getTableauGLRKpSymplectic
+    export TableauSymplecticProjection,
+           TableauLobIIIAIIIBpSymplectic,
+           TableauLobIIIBIIIApSymplectic,
+           TableauGLRKpSymplectic
 
     include("tableaus/tableaus_vpark.jl")
 

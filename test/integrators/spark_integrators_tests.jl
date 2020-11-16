@@ -87,31 +87,43 @@ end
 
 @testset "$(rpad("VPARK integrators",80))" begin
 
-    int = Integrator(idae, getTableauSymplecticProjection(:pglrk1ps, getCoefficientsGLRK(1), getCoefficientsGLRK(1)), Δt)
+    int = Integrator(idae, TableauSymplecticProjection(:glrk1ps, getCoefficientsGLRK(1), getCoefficientsGLRK(1)), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 1E-6
 
-    int = Integrator(idae, getTableauSymplecticProjection(:pglrk2ps, getCoefficientsGLRK(2), getCoefficientsGLRK(2)), Δt)
+    int = Integrator(idae, TableauSymplecticProjection(:glrk2ps, getCoefficientsGLRK(2), getCoefficientsGLRK(2)), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = Integrator(idae, getTableauGLRKpSymplectic(1), Δt)
+    int = Integrator(idae, TableauGLRKpSymplectic(1), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 1E-6
 
-    int = Integrator(idae, getTableauGLRKpSymplectic(2), Δt)
+    int = Integrator(idae, TableauGLRKpSymplectic(2), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = Integrator(idae, getTableauLobIIIAIIIB2pSymplectic(), Δt)
+    int = Integrator(idae, TableauLobIIIAIIIBpSymplectic(2), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 2E-6
 
-    int = Integrator(idae, getTableauLobIIIAIIIB3pSymplectic(), Δt)
+    int = Integrator(idae, TableauLobIIIAIIIBpSymplectic(3), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
-    int = Integrator(idae, getTableauLobIIIAIIIB4pSymplectic(), Δt)
+    int = Integrator(idae, TableauLobIIIAIIIBpSymplectic(4), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 4E-16
+
+    int = Integrator(idae, TableauLobIIIBIIIApSymplectic(2), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 2E-6
+
+    int = Integrator(idae, TableauLobIIIBIIIApSymplectic(3), Δt)
+    sol = integrate(idae, int, nt)
+    @test rel_err(sol.q, refx) < 4E-11
+
+    int = Integrator(idae, TableauLobIIIBIIIApSymplectic(4), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 4E-16
 
