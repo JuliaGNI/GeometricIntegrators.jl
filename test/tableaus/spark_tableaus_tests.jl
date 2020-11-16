@@ -1,6 +1,19 @@
 
 @testset "$(rpad("Special Partitioned Additive Runge-Kutta Tableaus",80))" begin
 
+    @test typeof(TableauSPARKGLRK(1))                 <: TableauSPARK
+    @test typeof(TableauSPARKGLRK(2))                 <: TableauSPARK
+    @test typeof(TableauSPARKLobIIIAIIIB(2))          <: TableauSPARK
+    @test typeof(TableauSPARKLobIIIAIIIB(3))          <: TableauSPARK
+    @test typeof(TableauSPARKGLRKLobIIIAIIIB(1))      <: TableauSPARK
+    @test typeof(TableauSPARKGLRKLobIIIAIIIB(2))      <: TableauSPARK
+    @test typeof(TableauSPARKLobABC(2))               <: TableauSPARK
+    @test typeof(TableauSPARKLobABC(3))               <: TableauSPARK
+    @test typeof(TableauSPARKLobABD(2))               <: TableauSPARK
+    @test typeof(TableauSPARKLobABD(3))               <: TableauSPARK
+    @test typeof(TableauSPARKGLVPRK(1))               <: TableauSPARK
+    @test typeof(TableauSPARKGLVPRK(2))               <: TableauSPARK
+
     @test typeof(getTableauGLRKpSymplectic(1))        <: TableauVPARK
     @test typeof(getTableauGLRKpSymplectic(2))        <: TableauVPARK
     @test typeof(getTableauLobIIIAIIIB2pSymplectic()) <: TableauVPARK
