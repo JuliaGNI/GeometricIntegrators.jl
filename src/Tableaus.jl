@@ -196,10 +196,10 @@ module Tableaus
 
     include("tableaus/tableaus_vspark_secondary.jl")
 
-    export getTableauHPARK, getTableauHPARKGLRK,
-           getTableauHPARKLobIIIAIIIB2,
-           getTableauHPARKLobIIIAIIIB3,
-           getTableauHPARKLobIIIAIIIB4
+    export getTableauHPARK,
+           TableauHPARKGLRK,
+           TableauHPARKLobIIIAIIIB,
+           TableauHPARKLobIIIBIIIA
 
     include("tableaus/tableaus_hpark.jl")
 

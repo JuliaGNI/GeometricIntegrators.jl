@@ -93,11 +93,12 @@
     @test typeof(getTableauVSPARKGLRKLobIIID(2))  <: TableauVSPARKsecondary
     @test typeof(getTableauVSPARKGLRKLobIIIE(2))  <: TableauVSPARKsecondary
 
-    @test typeof(getTableauHPARKGLRK(1))          <: TableauHPARK
-    @test typeof(getTableauHPARKGLRK(2))          <: TableauHPARK
-    @test typeof(getTableauHPARKLobIIIAIIIB2())   <: TableauHPARK
-    @test typeof(getTableauHPARKLobIIIAIIIB3())   <: TableauHPARK
-    @test typeof(getTableauHPARKLobIIIAIIIB4())   <: TableauHPARK
+    @test typeof(TableauHPARKGLRK(1))             <: TableauHPARK
+    @test typeof(TableauHPARKGLRK(2))             <: TableauHPARK
+    @test typeof(TableauHPARKLobIIIAIIIB(2))      <: TableauHPARK
+    @test typeof(TableauHPARKLobIIIAIIIB(3))      <: TableauHPARK
+    @test typeof(TableauHPARKLobIIIBIIIA(2))      <: TableauHPARK
+    @test typeof(TableauHPARKLobIIIBIIIA(3))      <: TableauHPARK
 
     @test typeof(getTableauHSPARKGLRKpSymmetric(1))        <: TableauHSPARKprimary
     @test typeof(getTableauHSPARKGLRKpSymmetric(2))        <: TableauHSPARKprimary
