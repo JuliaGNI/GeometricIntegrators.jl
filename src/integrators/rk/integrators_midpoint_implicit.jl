@@ -79,7 +79,7 @@ struct IntegratorMidpointImplicit{DT, TT, D, S, PT <: ParametersMidpointImplicit
         solver = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
+        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], Δt)
 
         # create integrator
         IntegratorMidpointImplicit(params, solver, iguess, caches)

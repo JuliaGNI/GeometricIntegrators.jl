@@ -29,8 +29,8 @@ function InitialGuess(interp, equ::PODE{DT,TT,VT,FT}, Δt::TT) where {DT,TT,VT,F
     InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
 end
 
-function InitialGuess(interp, equ::PDAE{DT,TT,VT,FT,UT,GT,ϕT}, Δt::TT) where {DT,TT,VT,FT,UT,GT,ϕT}
-    InitialGuessPODE{DT,TT,VT,FT,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v, equ.f, Δt)
+function InitialGuess(interp, equ::PDAE{DT,TT,VT,FT,UT,GT,ϕT,V̄T,F̄T}, Δt::TT) where {DT,TT,VT,FT,UT,GT,ϕT,V̄T,F̄T}
+    InitialGuessPODE{DT,TT,V̄T,F̄T,interp}(interp(zero(DT), one(DT), Δt, equ.d), equ.v̄, equ.f̄, Δt)
 end
 
 

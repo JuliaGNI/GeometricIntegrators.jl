@@ -28,17 +28,20 @@ function InitialGuessODE(interp, equation::ODE{DT,TT,VT}, Δt::TT) where {DT,TT,
     InitialGuessODE{DT, TT, VT, interp}(interp(zero(DT), one(DT), Δt, ndims(equation)), equation.v, Δt)
 end
 
-function InitialGuessODE(interp, equation::IODE{DT,TT,ΘT,FT,GT,HT,VT}, Δt::TT) where {DT,TT,ΘT,FT,GT,HT,VT}
-    InitialGuessODE{DT, TT, VT, interp}(interp(zero(DT), one(DT), Δt, ndims(equation)), equation.v, Δt)
+function InitialGuessODE(interp, equation::IODE{DT,TT,ΘT,FT,GT,V̄T}, Δt::TT) where {DT,TT,ΘT,FT,GT,V̄T}
+    InitialGuessODE{DT, TT, V̄T, interp}(interp(zero(DT), one(DT), Δt, ndims(equation)), equation.v̄, Δt)
 end
 
-function InitialGuessODE(interp, equation::VODE{DT,TT,AT,FT,GT,HT,VT}, Δt::TT) where {DT,TT,AT,FT,GT,HT,VT}
-    InitialGuessODE{DT, TT, VT, interp}(interp(zero(DT), one(DT), Δt, ndims(equation)), equation.v, Δt)
+function InitialGuessODE(interp, equation::VODE{DT,TT,AT,FT,GT,V̄T}, Δt::TT) where {DT,TT,AT,FT,GT,V̄T}
+    InitialGuessODE{DT, TT, V̄T, interp}(interp(zero(DT), one(DT), Δt, ndims(equation)), equation.v̄, Δt)
 end
 
-function InitialGuess(interp, equation::ODE, Δt)
-    InitialGuessODE(interp, equation, Δt)
+function InitialGuessODE(interp, equation::DAE{DT,TT,VT,UT,ϕT,V̄T}, Δt::TT) where {DT,TT,VT,UT,ϕT,V̄T}
+    InitialGuessODE{DT, TT, V̄T, interp}(interp(zero(DT), one(DT), Δt, ndims(equation)), equation.v̄, Δt)
 end
+
+InitialGuess(interp, equation::ODE, Δt) = InitialGuessODE(interp, equation, Δt)
+InitialGuess(interp, equation::DAE, Δt) = InitialGuessODE(interp, equation, Δt)
 
 
 Base.:(==)(ig1::InitialGuessODE{DT1,TT1}, ig2::InitialGuessODE{DT2,TT2}) where {DT1,DT2,TT1,TT2}= (
