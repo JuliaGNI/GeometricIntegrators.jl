@@ -1,11 +1,11 @@
 
 "SPARK tableau for Gauss-Legendre Runge-Kutta method with s stages."
-function getTableauSPARKGLRK(s)
+function TableauSPARKGLRK(s; name=Symbol("GLRK($s)"))
     g = getCoefficientsGLRK(s)
     ω = get_GLRK_ω_matrix(s)
     δ = zeros(0, s)
 
-    return TableauSPARK(Symbol("sparkglrk", s), g.o,
+    return TableauSPARK(name, g.o,
                         g.a, g.a, g.a, g.a,
                         g.a, g.a, g.a, g.a,
                         g.b, g.b, g.b, g.b,
@@ -14,14 +14,14 @@ function getTableauSPARKGLRK(s)
 end
 
 "SPARK tableau for Gauss-Lobatto methods."
-function getTableauSPARKLob(A, B)
+function TableauSPARKLobatto(A, B; name=Symbol("Lobatto($s)"))
     @assert A.s == B.s
 
     s = A.s
     o = min(A.o, B.o)
     δ = zeros(0, s)
 
-    return TableauSPARK(Symbol("sparklob", s), o,
+    return TableauSPARK(name, o,
                         A.a, B.a, A.a, B.a,
                         A.a, B.a, A.a, B.a,
                         A.b, B.b, A.b, B.b,
@@ -31,12 +31,12 @@ function getTableauSPARKLob(A, B)
 end
 
 "SPARK tableau for Gauss-Lobatto IIIA-IIIB method with s stages."
-function getTableauSPARKLobIIIAIIIB(s)
-    getTableauSPARKLob(getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s))
+function TableauSPARKLobIIIAIIIB(s)
+    TableauSPARKLobatto(getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s); name=Symbol("LobIIIAIIIB($s)"))
 end
 
 "SPARK tableau for Gauss-Legendre/Gauss-Lobatto methods."
-function getTableauSPARKGLRKLobIIIAIIIB(s, σ=s+1)
+function TableauSPARKGLRKLobIIIAIIIB(s, σ=s+1)
     g = getCoefficientsGLRK(s)
     A = getCoefficientsLobIIIA(σ)
     B = getCoefficientsLobIIIB(σ)
@@ -47,7 +47,7 @@ function getTableauSPARKGLRKLobIIIAIIIB(s, σ=s+1)
     o = min(g.o, A.o, B.o)
     δ = zeros(0, σ)
 
-    return TableauSPARK(Symbol("spark_glrk_lob", s), o,
+    return TableauSPARK(Symbol("GLRK($s)LobIIIAIIIB($σ)"), o,
                         g.a, g.a, α,   α,
                         ã,   ã,   A.a, B.a,
                         g.b, g.b, A.b, B.b,
@@ -57,8 +57,8 @@ end
 
 
 
-function getTableauSPARKLobatto(name, l1::CoefficientsRK{T}, l2::CoefficientsRK{T},
-                                      l3::CoefficientsRK{T}, l4::CoefficientsRK{T}=l3, d=[]; R∞=1) where {T}
+function TableauSPARKLobatto(name, l1::CoefficientsRK{T}, l2::CoefficientsRK{T},
+                                   l3::CoefficientsRK{T}, l4::CoefficientsRK{T}=l3, d=[]; R∞=1) where {T}
 
     @assert l1.s == l2.s == l3.s == l4.s
 
@@ -85,23 +85,23 @@ function getTableauSPARKLobatto(name, l1::CoefficientsRK{T}, l2::CoefficientsRK{
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB-IIIC method with s stages."
-function getTableauSPARKLobABC(s)
+function TableauSPARKLobABC(s)
     loba = getCoefficientsLobIIIA(s)
     lobb = getCoefficientsLobIIIB(s)
     lobc = getCoefficientsLobIIIC(s)
-    getTableauSPARKLobatto(Symbol("Lob($s)"), loba, lobc, lobb; R∞=(-1)^(s+1))
+    TableauSPARKLobatto(Symbol("LobattoIIIABC($s)"), loba, lobc, lobb; R∞=(-1)^(s+1))
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB-IIID method with s stages."
-function getTableauSPARKLobABD(s)
+function TableauSPARKLobABD(s)
     loba = getCoefficientsLobIIIA(s)
     lobb = getCoefficientsLobIIIB(s)
     lobd = getCoefficientsLobIIID(s)
-    getTableauSPARKLobatto(Symbol("Lob($s)"), loba, lobd, lobb; R∞=(-1)^(s+1))
+    TableauSPARKLobatto(Symbol("LobattoIIIABD($s)"), loba, lobd, lobb; R∞=(-1)^(s+1))
 end
 
 "SPARK Tableau for Variational Partitioned Runge-Kutta Methods."
-function getTableauSPARKVPRK(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function TableauSPARKVPRK(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 
@@ -132,8 +132,8 @@ function getTableauSPARKVPRK(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d
 end
 
 "Tableau for Variational Gauss-Legendre method with s stages."
-function getTableauSPARKGLVPRK(s)
+function TableauSPARKGLVPRK(s)
     glrk = getCoefficientsGLRK(s)
-    getTableauSPARKVPRK(Symbol("GLVPRK($s)"), glrk, glrk; R∞=(-1)^s)
+    TableauSPARKVPRK(Symbol("GLVPRK($s)"), glrk, glrk; R∞=(-1)^s)
 end
 

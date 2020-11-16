@@ -108,14 +108,14 @@ module Tableaus
     
     include("tableaus/tableaus_spark.jl")
 
-    export getTableauSPARKGLRK,
-           getTableauSPARKLobIIIAIIIB,
-           getTableauSPARKGLRKLobIIIAIIIB,
-           getTableauSPARKLobatto,
-           getTableauSPARKLobABC,
-           getTableauSPARKLobABD,
-           getTableauSPARKVPRK,
-           getTableauSPARKGLVPRK
+    export TableauSPARKGLRK,
+           TableauSPARKLobIIIAIIIB,
+           TableauSPARKGLRKLobIIIAIIIB,
+           TableauSPARKLobatto,
+           TableauSPARKLobABC,
+           TableauSPARKLobABD,
+           TableauSPARKVPRK,
+           TableauSPARKGLVPRK
 
     include("tableaus/tableaus_vprk.jl")
 
