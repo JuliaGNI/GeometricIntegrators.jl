@@ -92,54 +92,62 @@ function getTableauHSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
 end
 
 
-function getTableauHSPARKLobIII(s, lq, lp)
+function TableauHSPARKLobIII(s, lq, lp; name = Symbol("HSPARKLobattoIII"))
     o = 2s-2
-    tsym = Symbol("HSPARKLobIII")
-    getTableauHSPARK(s, s, o, tsym, lq, lp, lq, lp, get_lobatto_ω_matrix(s), get_lobatto_d_vector(s))
+    getTableauHSPARK(s, s, o, name, lq, lp, lq, lp, get_lobatto_ω_matrix(s), get_lobatto_d_vector(s))
 end
 
-function getTableauHSPARKLobIIIAB(s)
+function TableauHSPARKLobIIIAB(s)
     lq = getCoefficientsLobIIIA(s)
     lp = getCoefficientsLobIIIB(s)
-    getTableauHSPARKLobIII(s, lq, lp)
+    TableauHSPARKLobIII(s, lq, lp; name = Symbol("HSPARKLobIIIAIIIB"))
 end
 
-function getTableauHSPARKLobIIIC(s)
+function TableauHSPARKLobIIIBA(s)
+    lq = getCoefficientsLobIIIB(s)
+    lp = getCoefficientsLobIIIA(s)
+    TableauHSPARKLobIII(s, lq, lp; name = Symbol("HSPARKLobIIIBIIIA"))
+end
+
+function TableauHSPARKLobIIIC(s)
     lq = getCoefficientsLobIII(s)
     lp = getCoefficientsLobIIIC(s)
-    getTableauHSPARKLobIII(s, lq, lp)
+    TableauHSPARKLobIII(s, lq, lp; name = Symbol("HSPARKLobIIIC"))
 end
 
-function getTableauHSPARKLobIIID(s)
+function TableauHSPARKLobIIID(s)
     l = getCoefficientsLobIIID(s)
-    getTableauHSPARKLobIII(s, l, l)
+    TableauHSPARKLobIII(s, l, l; name = Symbol("HSPARKLobIIID"))
 end
 
-function getTableauHSPARKLobIIIE(s)
+function TableauHSPARKLobIIIE(s)
     l = getCoefficientsLobIIIE(s)
-    getTableauHSPARKLobIII(s, l, l)
+    TableauHSPARKLobIII(s, l, l; name = Symbol("HSPARKLobIIIE"))
 end
 
 
-function getTableauHSPARKGLRKLobIII(s, σ, lq, lp)
+function TableauHSPARKGLRKLobIII(s, σ, lq, lp; name = Symbol("HSPARKGLRKLobattoIII"))
     o = 2s
     g = getCoefficientsGLRK(s)
-    tsym = Symbol("HSPARKGLRKLobIII")
-    getTableauHSPARK(s, σ, o, tsym, g, get_lobatto_interstage_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_d_vector(σ))
+    getTableauHSPARK(s, σ, o, name, g, get_lobatto_interstage_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_d_vector(σ))
 end
 
-function getTableauHSPARKGLRKLobIIIAB(s, σ=s+1)
-    getTableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIA(σ), getCoefficientsLobIIIB(σ))
+function TableauHSPARKGLRKLobIIIAB(s, σ=s+1)
+    TableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIA(σ), getCoefficientsLobIIIB(σ); name = Symbol("HSPARKGLRKLobIIIAIIIB"))
 end
 
-function getTableauHSPARKGLRKLobIIIC(s, σ=s+1)
-    getTableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIII(σ), getCoefficientsLobIIIC(σ))
+function TableauHSPARKGLRKLobIIIBA(s, σ=s+1)
+    TableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIB(σ), getCoefficientsLobIIIA(σ); name = Symbol("HSPARKGLRKLobIIIBIIIA"))
 end
 
-function getTableauHSPARKGLRKLobIIID(s, σ=s+1)
-    getTableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIIID(σ), getCoefficientsLobIIID(σ))
+function TableauHSPARKGLRKLobIIIC(s, σ=s+1)
+    TableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIII(σ), getCoefficientsLobIIIC(σ); name = Symbol("HSPARKGLRKLobIIIC"))
 end
 
-function getTableauHSPARKGLRKLobIIIE(s, σ=s+1)
-    getTableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIE(σ), getCoefficientsLobIIIE(σ))
+function TableauHSPARKGLRKLobIIID(s, σ=s+1)
+    TableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIIID(σ), getCoefficientsLobIIID(σ); name = Symbol("HSPARKGLRKLobIIID"))
+end
+
+function TableauHSPARKGLRKLobIIIE(s, σ=s+1)
+    TableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIE(σ), getCoefficientsLobIIIE(σ); name = Symbol("HSPARKGLRKLobIIIE"))
 end

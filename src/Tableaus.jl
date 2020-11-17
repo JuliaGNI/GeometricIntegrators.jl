@@ -108,14 +108,16 @@ module Tableaus
     
     include("tableaus/tableaus_spark.jl")
 
-    export getTableauSPARKGLRK,
-           getTableauSPARKLobIIIAIIIB,
-           getTableauSPARKGLRKLobIIIAIIIB,
-           getTableauSPARKLobatto,
-           getTableauSPARKLobABC,
-           getTableauSPARKLobABD,
-           getTableauSPARKVPRK,
-           getTableauSPARKGLVPRK
+    export TableauSPARKGLRK,
+           TableauSPARKLobIIIAIIIB,
+           TableauSPARKLobIIIBIIIA,
+           TableauSPARKGLRKLobIIIAIIIB,
+           TableauSPARKGLRKLobIIIBIIIA,
+           TableauSPARKLobatto,
+           TableauSPARKLobABC,
+           TableauSPARKLobABD,
+           TableauSPARKVPRK,
+           TableauSPARKGLVPRK
 
     include("tableaus/tableaus_vprk.jl")
 
@@ -131,93 +133,95 @@ module Tableaus
            getTableauVPLobIIIAIIIA2, getTableauVPLobIIIAIIIA3, getTableauVPLobIIIAIIIA4,
            getTableauVPRadIIAIIA2, getTableauVPRadIIAIIA3
 
-    export getTableauSymplecticProjection,
-           getTableauLobIIIAIIIB2pSymplectic,
-           getTableauLobIIIAIIIB3pSymplectic,
-           getTableauLobIIIAIIIB4pSymplectic,
-           getTableauGLRKpSymplectic
+    export TableauSymplecticProjection,
+           TableauLobIIIAIIIBpSymplectic,
+           TableauLobIIIBIIIApSymplectic,
+           TableauGLRKpSymplectic
 
     include("tableaus/tableaus_vpark.jl")
 
-    export getTableauVSPARKLobIIIAIIIBProjection,
-           getTableauVSPARKLobIIIBIIIAProjection,
-           getTableauVSPARKModifiedLobIIIAIIIBProjection,
-           getTableauVSPARKModifiedLobIIIBIIIAProjection,
-           getTableauVSPARKInternalProjection,
-           getTableauVSPARKModifiedInternalProjection,
-           getTableauVSPARKMidpointProjection,
-           getTableauVSPARKModifiedMidpointProjection,
-           getTableauVSPARKSymmetricProjection,
-           getTableauVSPARKSymplecticProjection,
-           getTableauVSPARKGLRKpLobIIIAIIIB,
-           getTableauVSPARKGLRKpLobIIIBIIIA,
-           getTableauVSPARKGLRKpModifiedLobIIIAIIIB,
-           getTableauVSPARKGLRKpModifiedLobIIIBIIIA,
-           getTableauVSPARKGLRKpInternal,
-           getTableauVSPARKGLRKpModifiedInternal,
-           getTableauVSPARKGLRKpMidpoint,
-           getTableauVSPARKGLRKpModifiedMidpoint,
-           getTableauVSPARKGLRKpSymmetric,
-           getTableauVSPARKGLRKpSymplectic,
-           getTableauVSPARKLobIIIAIIIBpLobIIIAIIIB,
-           getTableauVSPARKLobIIIBIIIApLobIIIAIIIB,
-           getTableauVSPARKLobIIIAIIIBpLobIIIBIIIA,
-           getTableauVSPARKLobIIIBIIIApLobIIIBIIIA,
-           getTableauVSPARKLobIIIAIIIBpModifiedLobIIIAIIIB,
-           getTableauVSPARKLobIIIAIIIBpModifiedLobIIIBIIIA,
-           getTableauVSPARKLobIIIBIIIApModifiedLobIIIAIIIB,
-           getTableauVSPARKLobIIIBIIIApModifiedLobIIIBIIIA,
-           getTableauVSPARKLobIIIAIIIBpMidpoint,
-           getTableauVSPARKLobIIIBIIIApMidpoint,
-           getTableauVSPARKLobIIIAIIIBpModifiedMidpoint,
-           getTableauVSPARKLobIIIBIIIApModifiedMidpoint,
-           getTableauVSPARKLobIIIAIIIBpSymmetric,
-           getTableauVSPARKLobIIIBIIIApSymmetric,
-           getTableauVSPARKLobABCCD,
-           getTableauVSPARKLobABCCE,
-           getTableauVSPARKLobABDE,
-           getTableauVSPARKLobABED,
-           getTableauVSPARKLobABD,
-           getTableauVSPARKLobABE,
-           getTableauVSPARKLobDE,
-           getTableauVSPARKLobED
+    export TableauVSPARKLobIIIAIIIBProjection,
+           TableauVSPARKLobIIIBIIIAProjection,
+           TableauVSPARKModifiedLobIIIAIIIBProjection,
+           TableauVSPARKModifiedLobIIIBIIIAProjection,
+           TableauVSPARKInternalProjection,
+           TableauVSPARKModifiedInternalProjection,
+           TableauVSPARKMidpointProjection,
+           TableauVSPARKModifiedMidpointProjection,
+           TableauVSPARKSymmetricProjection,
+           TableauVSPARKSymplecticProjection,
+           TableauVSPARKGLRKpLobIIIAIIIB,
+           TableauVSPARKGLRKpLobIIIBIIIA,
+           TableauVSPARKGLRKpModifiedLobIIIAIIIB,
+           TableauVSPARKGLRKpModifiedLobIIIBIIIA,
+           TableauVSPARKGLRKpInternal,
+           TableauVSPARKGLRKpModifiedInternal,
+           TableauVSPARKGLRKpMidpoint,
+           TableauVSPARKGLRKpModifiedMidpoint,
+           TableauVSPARKGLRKpSymmetric,
+           TableauVSPARKGLRKpSymplectic,
+           TableauVSPARKLobIIIAIIIBpLobIIIAIIIB,
+           TableauVSPARKLobIIIBIIIApLobIIIAIIIB,
+           TableauVSPARKLobIIIAIIIBpLobIIIBIIIA,
+           TableauVSPARKLobIIIBIIIApLobIIIBIIIA,
+           TableauVSPARKLobIIIAIIIBpModifiedLobIIIAIIIB,
+           TableauVSPARKLobIIIAIIIBpModifiedLobIIIBIIIA,
+           TableauVSPARKLobIIIBIIIApModifiedLobIIIAIIIB,
+           TableauVSPARKLobIIIBIIIApModifiedLobIIIBIIIA,
+           TableauVSPARKLobIIIAIIIBpMidpoint,
+           TableauVSPARKLobIIIBIIIApMidpoint,
+           TableauVSPARKLobIIIAIIIBpModifiedMidpoint,
+           TableauVSPARKLobIIIBIIIApModifiedMidpoint,
+           TableauVSPARKLobIIIAIIIBpSymmetric,
+           TableauVSPARKLobIIIBIIIApSymmetric,
+           TableauVSPARKLobABCCD,
+           TableauVSPARKLobABCCE,
+           TableauVSPARKLobABDE,
+           TableauVSPARKLobABED,
+           TableauVSPARKLobABD,
+           TableauVSPARKLobABE,
+           TableauVSPARKLobDE,
+           TableauVSPARKLobED
 
     include("tableaus/tableaus_vspark_primary.jl")
 
-    export getTableauVSPARKLobIIIAB,
-           getTableauVSPARKLobIIIC,
-           getTableauVSPARKLobIIID,
-           getTableauVSPARKLobIIIE,
-           getTableauVSPARKGLRKLobIIIAB,
-           getTableauVSPARKGLRKLobIIIC,
-           getTableauVSPARKGLRKLobIIID,
-           getTableauVSPARKGLRKLobIIIE
+    export TableauVSPARKLobIIIAB,
+           TableauVSPARKLobIIIBA,
+           TableauVSPARKLobIIIC,
+           TableauVSPARKLobIIID,
+           TableauVSPARKLobIIIE,
+           TableauVSPARKGLRKLobIIIAB,
+           TableauVSPARKGLRKLobIIIBA,
+           TableauVSPARKGLRKLobIIIC,
+           TableauVSPARKGLRKLobIIID,
+           TableauVSPARKGLRKLobIIIE
 
     include("tableaus/tableaus_vspark_secondary.jl")
 
-    export getTableauHPARK, getTableauHPARKGLRK,
-           getTableauHPARKLobIIIAIIIB2,
-           getTableauHPARKLobIIIAIIIB3,
-           getTableauHPARKLobIIIAIIIB4
+    export getTableauHPARK,
+           TableauHPARKGLRK,
+           TableauHPARKLobIIIAIIIB,
+           TableauHPARKLobIIIBIIIA
 
     include("tableaus/tableaus_hpark.jl")
 
-    export getTableauHSPARKSymmetricProjection,
-           getTableauHSPARKGLRKpSymmetric,
-           getTableauHSPARKLobIIIAIIIB2pSymmetric,
-           getTableauHSPARKLobIIIAIIIB3pSymmetric,
-           getTableauHSPARKLobIIIAIIIB4pSymmetric
+    export TableauHSPARKSymmetricProjection,
+           TableauHSPARKGLRKpSymmetric,
+           TableauHSPARKLobIIIAIIIBpSymmetric,
+           TableauHSPARKLobIIIBIIIApSymmetric
 
     include("tableaus/tableaus_hspark_primary.jl")
 
-    export getTableauHSPARKLobIIIAB,
-           getTableauHSPARKLobIIIC,
-           getTableauHSPARKLobIIID,
-           getTableauHSPARKLobIIIE,
-           getTableauHSPARKGLRKLobIIIAB,
-           getTableauHSPARKGLRKLobIIIC,
-           getTableauHSPARKGLRKLobIIID,
-           getTableauHSPARKGLRKLobIIIE
+    export TableauHSPARKLobIIIAB,
+           TableauHSPARKLobIIIBA,
+           TableauHSPARKLobIIIC,
+           TableauHSPARKLobIIID,
+           TableauHSPARKLobIIIE,
+           TableauHSPARKGLRKLobIIIAB,
+           TableauHSPARKGLRKLobIIIBA,
+           TableauHSPARKGLRKLobIIIC,
+           TableauHSPARKGLRKLobIIID,
+           TableauHSPARKGLRKLobIIIE
 
     include("tableaus/tableaus_hspark_secondary.jl")
 
