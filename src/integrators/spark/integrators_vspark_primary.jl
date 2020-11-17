@@ -2,6 +2,75 @@
 const TableauVSPARKprimary = AbstractTableauSPARK{:vspark_primary}
 const ParametersVSPARKprimary = AbstractParametersSPARK{:vspark_primary}
 
+function Integrators.check_symplecticity(tab::TableauVSPARKprimary{T}; atol=16*eps(T), rtol=16*eps(T)) where {T}
+    s_a_qp  = [isapprox(tab.p.b[i] * tab.q.a[i,j] + tab.q.b[j] * tab.p.a[j,i], tab.p.b[i] * tab.q.b[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.s]
+    s_α_q̃p̃  = [isapprox(tab.p.β[i] * tab.q̃.α[i,j] + tab.q.β[j] * tab.p̃.α[j,i], tab.p.β[i] * tab.q.β[j]; atol=atol, rtol=rtol) for i in 1:tab.r, j in 1:tab.r]
+    s_αa_q̃p = [isapprox(tab.p.b[i] * tab.q.α[i,j] + tab.q.β[j] * tab.p̃.a[j,i], tab.p.b[i] * tab.q.β[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.r]
+    s_αa_qp̃ = [isapprox(tab.q.b[i] * tab.p.α[i,j] + tab.p.β[j] * tab.q̃.a[j,i], tab.q.b[i] * tab.p.β[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.r]
+    s_b_qp  = isapprox.(tab.q.b, tab.p.b; atol=atol, rtol=rtol)
+    s_β_qp  = isapprox.(tab.q.β, tab.p.β; atol=atol, rtol=rtol)
+
+    return (s_a_qp, s_α_q̃p̃, s_αa_q̃p, s_αa_qp̃, s_b_qp, s_β_qp)
+end
+
+
+function Integrators.symplecticity_conditions(::TableauVSPARKprimary)
+    (
+        """`` b^{p}_{i} b^{q}_{j} = b^{p}_{i} a^{q}_{ij} + b^{q}_{j} a^{p}_{ji} ``""",
+        """`` \\beta^{p}_{i} \\beta^{q}_{j} = \\beta^{p}_{i} \\tilde{\\alpha}^{q}_{ij} + \\beta^{q}_{j} \\tilde{\\alpha}^{p}_{ji} ``""",
+        """`` b^{p}_{i} \\beta^{q}_{j} = b^{p}_{i} \\alpha^{q}_{ij} + \\beta^{q}_{j} \\tilde{a}^{p}_{ji} ``""",
+        """`` b^{q}_{i} \\beta^{p}_{j} = b^{q}_{i} \\alpha^{p}_{ij} + \\beta^{p}_{j} \\tilde{a}^{q}_{ji} ``""",
+        """`` b^{q}_{i} = b^{p}_{i} ``""",
+        """`` \\beta^{q}_{i} = \\beta^{p}_{i} ``""",
+    )
+end
+
+
+function compute_conjugate_vspark_primary(a, b, b̄)
+    ā = zero(a)
+    for i in axes(ā,1)
+        for j in axes(ā,2)
+            ā[i,j] = b̄[j] / b[i] * ( b[i] - a[j,i] )
+        end
+    end
+    return ā
+end
+
+function compute_ã_vspark_primary(α, β, b)
+    s = length(b)
+    s̃ = length(β)
+    ã = zeros(eltype(α), s̃, s)
+    for i in 1:s̃
+        for j in 1:s
+            ã[i,j] = b[j] / β[i] * ( β[i] - α[j,i] )
+        end
+    end
+    return ã
+end
+
+function get_ã_vspark_primary(α_q, β_q, b_q, α_p, β_p, b_p)
+    ã_q = compute_ã_vspark_primary(α_p, β_p, b_q)
+    ã_p = compute_ã_vspark_primary(α_q, β_q, b_p)
+    return (ã_q, ã_p)
+end
+
+function compute_α_vspark_primary(ã, b, β)
+    s = length(b)
+    s̃ = length(β)
+    α = zeros(eltype(ã), s, s̃)
+    for i in 1:s
+        for j in 1:s̃
+            α[i,j] = β[j] / b[i] * ( b[i] - ã[j,i] )
+        end
+    end
+    return α
+end
+
+function get_α_vspark_primary(ã_q, b_q, β_q, ã_p, b_p, β_p)
+    α_q = compute_α_vspark_primary(ã_p, b_p, β_q)
+    α_p = compute_α_vspark_primary(ã_q, b_q, β_p)
+    return (α_q, α_p)
+end
 
 @doc raw"""
 Specialised Partitioned Additive Runge-Kutta integrator for Variational systems.
@@ -225,48 +294,50 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
 
     compute_stages!(y, cache, params)
 
-    # compute b = - [Φ, (Z-AF-AG)]
+    # compute b = [Φ, (Z-AF-AG)]
     for i in 1:S
         for k in 1:D
-            b[2*(D*(i-1)+k-1)+1] = - cache.Φi[i][k]
-            b[2*(D*(i-1)+k-1)+2] = - cache.Zi[i][k]
+            b[2*(D*(i-1)+k-1)+1] = cache.Φi[i][k]
+            b[2*(D*(i-1)+k-1)+2] = cache.Zi[i][k]
             for j in 1:S
-                b[2*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * cache.Fi[j][k]
+                b[2*(D*(i-1)+k-1)+2] -= params.tab.p.a[i,j] * cache.Fi[j][k]
             end
             for j in 1:R
-                b[2*(D*(i-1)+k-1)+2] += params.tab.p.α[i,j] * cache.Gp[j][k]
+                b[2*(D*(i-1)+k-1)+2] -= params.tab.p.α[i,j] * cache.Gp[j][k]
             end
         end
     end
 
-    # compute b = - [ωΦ, (Z-AF-AG)]
+    # compute b = Z-AF-AG
     for i in 1:R
         for k in 1:D
-            b[2*D*S+2*(D*(i-1)+k-1)+2] = - cache.Zp[i][k]
+            b[2*D*S+2*(D*(i-1)+k-1)+2] = cache.Zp[i][k]
             for j in 1:S
-                b[2*D*S+2*(D*(i-1)+k-1)+2] += params.tab.p̃.a[i,j] * cache.Fi[j][k]
+                b[2*D*S+2*(D*(i-1)+k-1)+2] -= params.tab.p̃.a[i,j] * cache.Fi[j][k]
             end
             for j in 1:R
-                b[2*D*S+2*(D*(i-1)+k-1)+2] += params.tab.p̃.α[i,j] * cache.Gp[j][k]
+                b[2*D*S+2*(D*(i-1)+k-1)+2] -= params.tab.p̃.α[i,j] * cache.Gp[j][k]
             end
         end
     end
+
+    # compute b = ωΦ
     for i in 1:R-P
         for k in 1:D
             b[2*D*S+2*(D*(i-1)+k-1)+1] = 0
             for j in 1:R
-                b[2*D*S+2*(D*(i-1)+k-1)+1] -= params.tab.ω[i,j] * cache.Φp[j][k]
+                b[2*D*S+2*(D*(i-1)+k-1)+1] += params.tab.ω[i,j] * cache.Φp[j][k]
             end
-            b[2*D*S+2*(D*(i-1)+k-1)+1] -= params.tab.ω[i,R+1] * cache.ϕ̃[k]
+            b[2*D*S+2*(D*(i-1)+k-1)+1] += params.tab.ω[i,R+1] * cache.ϕ̃[k]
         end
     end
 
     # compute b = d_λ ⋅ Λ
-    for i in R-P+1:R
+    for i in 1:P
         for k in 1:D
-            b[2*D*S+2*(D*(R-1)+k-1)+1] = 0
+            b[2*D*S+2*(D*(R-P+i-1)+k-1)+1] = 0
             for j in 1:R
-                b[2*D*S+2*(D*(i-1)+k-1)+1] -= params.tab.δ[j] * cache.Λp[j][k]
+                b[2*D*S+2*(D*(R-P+i-1)+k-1)+1] += params.tab.δ[i,j] * cache.Λp[j][k]
             end
         end
     end
@@ -274,14 +345,14 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
     if isdefined(params.tab, :d) && length(params.tab.d) > 0
         for i in 1:S
             for k in 1:D
-                b[2*(D*(i-1)+k-1)+2] -= cache.μ[k] * params.tab.d[i] / params.tab.p.b[i]
+                b[2*(D*(i-1)+k-1)+2] += cache.μ[k] * params.tab.d[i] / params.tab.p.b[i]
             end
         end
 
         for k in 1:D
             b[2*D*S+2*D*R+k] = 0
             for i in 1:S
-                b[2*D*S+2*D*R+k] -= cache.Vi[i][k] * params.tab.d[i]
+                b[2*D*S+2*D*R+k] += cache.Vi[i][k] * params.tab.d[i]
             end
         end
     end

@@ -46,6 +46,16 @@ Base.:(==)(tab1::CoefficientsARK, tab2::CoefficientsARK) = (tab1.o == tab2.o
                                                          && tab1.α == tab2.α
                                                          && tab1.β == tab2.β)
 
+Base.isapprox(tab1::CoefficientsARK, tab2::CoefficientsARK; kwargs...) = (
+                                                          tab1.o == tab2.o
+                                                       && tab1.s == tab2.s
+                                                       && tab1.r == tab2.r
+                                                       && isapprox(tab1.a, tab2.a; kwargs...)
+                                                       && isapprox(tab1.b, tab2.b; kwargs...)
+                                                       && isapprox(tab1.c, tab2.c; kwargs...)
+                                                       && isapprox(tab1.α, tab2.α; kwargs...)
+                                                       && isapprox(tab1.β, tab2.β; kwargs...))
+
 "Print additive Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsARK)
     print(io, "Additive Runge-Kutta Coefficients ", tab.name, " with ", tab.s, " internal stages, ", tab.r, " projective stages and order ", tab.o)
@@ -84,6 +94,14 @@ Base.:(==)(tab1::CoefficientsPRK, tab2::CoefficientsPRK) = (tab1.o == tab2.o
                                                          && tab1.c == tab2.c
                                                          && tab1.α == tab2.α)
 
+Base.isapprox(tab1::CoefficientsPRK, tab2::CoefficientsPRK; kwargs...) = (
+                                                          tab1.o == tab2.o
+                                                       && tab1.s == tab2.s
+                                                       && tab1.r == tab2.r
+                                                       && isapprox(tab1.a, tab2.a; kwargs...)
+                                                       && isapprox(tab1.c, tab2.c; kwargs...)
+                                                       && isapprox(tab1.α, tab2.α; kwargs...))
+
 "Print projective Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsPRK)
     print(io, "Projective Runge-Kutta Coefficients ", tab.name, " with ", tab.s, " internal stages, ", tab.r, " projective stages and order ", tab.o)
@@ -116,6 +134,11 @@ Base.hash(tab::CoefficientsMRK, h::UInt) = hash(tab.r, hash(tab.b, hash(tab.c, h
 Base.:(==)(tab1::CoefficientsMRK, tab2::CoefficientsMRK) = (tab1.r == tab2.r
                                                          && tab1.b == tab2.b
                                                          && tab1.c == tab2.c)
+
+Base.isapprox(tab1::CoefficientsMRK, tab2::CoefficientsMRK; kwargs...) = (
+                                                          tab1.r == tab2.r
+                                                       && isapprox(tab1.b, tab2.b; kwargs...)
+                                                       && isapprox(tab1.c, tab2.c; kwargs...))
 
 "Print multiplier Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsMRK)
@@ -152,6 +175,14 @@ Base.:(==)(tab1::CoefficientsIRK, tab2::CoefficientsIRK) = (tab1.o == tab2.o
                                                          && tab1.a == tab2.a
                                                          && tab1.b == tab2.b
                                                          && tab1.c == tab2.c)
+
+Base.isapprox(tab1::CoefficientsIRK, tab2::CoefficientsIRK; kwargs...) = (
+                                                          tab1.o == tab2.o
+                                                       && tab1.s == tab2.s
+                                                       && tab1.σ == tab2.σ
+                                                       && isapprox(tab1.a, tab2.a; kwargs...)
+                                                       && isapprox(tab1.b, tab2.b; kwargs...)
+                                                       && isapprox(tab1.c, tab2.c; kwargs...))
 
 "Print additive Runge-Kutta coefficients."
 function Base.show(io::IO, tab::CoefficientsIRK)
@@ -203,6 +234,14 @@ Base.:(==)(tab1::CoefficientsSPARK, tab2::CoefficientsSPARK) = (tab1.o == tab2.o
                                                              && tab1.a == tab2.a
                                                              && tab1.b == tab2.b
                                                              && tab1.c == tab2.c)
+
+Base.isapprox(tab1::CoefficientsSPARK, tab2::CoefficientsSPARK; kwargs...) = (
+                                                          tab1.o == tab2.o
+                                                       && tab1.s == tab2.s
+                                                       && tab1.σ == tab2.σ
+                                                       && isapprox(tab1.a, tab2.a; kwargs...)
+                                                       && isapprox(tab1.b, tab2.b; kwargs...)
+                                                       && isapprox(tab1.c, tab2.c; kwargs...))
 
 "Print SPARK coefficients."
 function Base.show(io::IO, tab::CoefficientsSPARK)

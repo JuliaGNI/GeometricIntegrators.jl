@@ -284,7 +284,7 @@ end
     @test ndims(idae) == 1
     @test nconstraints(idae) == 1
     @test periodicity(idae) == zero(q₀)
-    @test get_function_tuple(idae) == NamedTuple{(:ϑ, :f, :u, :g, :ϕ, :v)}((idae_eqs..., pdae_v))
+    @test get_function_tuple(idae) == NamedTuple{(:ϑ, :f, :u, :g, :ϕ, :f̄, :v)}((idae_eqs..., pdae_f, pdae_v))
 
     @test idae == idae1
     @test idae == idae2

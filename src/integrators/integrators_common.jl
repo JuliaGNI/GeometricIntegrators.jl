@@ -167,11 +167,13 @@ function update_solution!(x::SolutionVector{T}, ẋ::Union{Matrix{T},Vector{Vect
 end
 
 function update_multiplier!(λ::SolutionVector{T}, Λ::Vector{Vector{T}}, b::Vector{T}) where {T}
-    @assert length(λ) == size(Λ, 1)
+    for Λᵢ in Λ
+        @assert length(λ) == length(Λᵢ)
+    end
     local t::T
     @inbounds for i in eachindex(λ)
         t = zero(T)
-        for j=eachindex(b)
+        for j in eachindex(b,Λ)
             t += b[j] * Λ[j][i]
         end
         λ[i] = t

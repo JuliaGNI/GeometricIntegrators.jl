@@ -74,6 +74,13 @@ Base.:(==)(tab1::CoefficientsRK, tab2::CoefficientsRK) = (tab1.o == tab2.o
                                                        && tab1.b == tab2.b
                                                        && tab1.c == tab2.c)
 
+Base.isapprox(tab1::CoefficientsRK, tab2::CoefficientsRK; kwargs...) = (
+                                                          tab1.o == tab2.o
+                                                       && tab1.s == tab2.s
+                                                       && isapprox(tab1.a, tab2.a; kwargs...)
+                                                       && isapprox(tab1.b, tab2.b; kwargs...)
+                                                       && isapprox(tab1.c, tab2.c; kwargs...))
+
 Base.isequal(tab1::CoefficientsRK{T1}, tab2::CoefficientsRK{T2}) where {T1,T2} = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
 
 "Print Runge-Kutta coefficients."
@@ -83,9 +90,6 @@ function Base.show(io::IO, tab::CoefficientsRK)
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)
 end
-
-
-
 
 
 function get_symplectic_conjugate_coefficients(a::Matrix{T}, b::Vector{T}, a̅::Matrix{T}) where {T}
@@ -128,12 +132,12 @@ function compute_symplecticity_error(coeff::CoefficientsRK)
 end
 
 
-function check_symplecticity(coeff::CoefficientsRK{T}) where {T}
+function check_symplecticity(coeff::CoefficientsRK{T}; atol=16*eps(T), rtol=16*eps(T)) where {T}
     symplectic = falses(coeff.s, coeff.s)
 
     for i in 1:size(coeff.a, 1)
         for j in 1:size(coeff.a, 2)
-            symplectic[i,j] = isapprox(coeff.b[i] * coeff.a[i,j] + coeff.b[j] * coeff.a[j,i], coeff.b[i] * coeff.b[j], atol=16*eps(T), rtol=16*eps(T))
+            symplectic[i,j] = isapprox(coeff.b[i] * coeff.a[i,j] + coeff.b[j] * coeff.a[j,i], coeff.b[i] * coeff.b[j], atol=atol, rtol=rtol)
         end
     end
 

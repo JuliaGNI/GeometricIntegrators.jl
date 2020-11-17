@@ -13,6 +13,10 @@ using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem: Δt, nt
 set_config(:nls_atol, 8eps())
 set_config(:nls_rtol, 2eps())
 
+set_config(:nls_atol_break, Inf)
+set_config(:nls_rtol_break, Inf)
+set_config(:nls_stol_break, Inf)
+
 ode  = lotka_volterra_2d_ode()
 idae = lotka_volterra_2d_idae()
 pdae = lotka_volterra_2d_pdae()
@@ -128,7 +132,7 @@ end
 
     int = IntegratorVSPARK(idae, getTableauSPARKGLRKLobIIIAIIIB(3), Δt)
     sol = integrate(idae, int, nt)
-    @test rel_err(sol.q, refx) < 4E-16
+    @test rel_err(sol.q, refx) < 5E-16
 
 
     ### VSPARKprimary Integrators ###
@@ -157,17 +161,17 @@ end
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIB2pSymmetric(), Δt)
+    int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIBpSymmetric(2), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 2E-6
 
-    int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIB3pSymmetric(), Δt)
+    int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIBpSymmetric(3), Δt)
     sol = integrate(idae, int, nt)
-    @test rel_err(sol.q, refx) < 2E-11
+    @test rel_err(sol.q, refx) < 5E-11
 
-    int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIB4pSymmetric(), Δt)
+    int = IntegratorVSPARKprimary(idae, getTableauVSPARKLobIIIAIIIBpSymmetric(4), Δt)
     sol = integrate(idae, int, nt)
-    @test rel_err(sol.q, refx) < 8E-16
+    @test rel_err(sol.q, refx) < 2E-15
 
 
     ### VSPARKsecondary Integrators ###

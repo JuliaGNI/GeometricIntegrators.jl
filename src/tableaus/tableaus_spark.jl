@@ -2,6 +2,7 @@
 "SPARK tableau for Gauss-Legendre Runge-Kutta method with s stages."
 function getTableauSPARKGLRK(s)
     g = getCoefficientsGLRK(s)
+    ω = get_GLRK_ω_matrix(s)
     δ = zeros(0, s)
 
     return TableauSPARK(Symbol("sparkglrk", s), g.o,
@@ -9,7 +10,7 @@ function getTableauSPARKGLRK(s)
                         g.a, g.a, g.a, g.a,
                         g.b, g.b, g.b, g.b,
                         g.c, g.c, g.c, g.b,
-                        get_GLRK_ω_matrix(s), δ)
+                        ω, δ)
 end
 
 "SPARK tableau for Gauss-Lobatto methods."
@@ -52,5 +53,87 @@ function getTableauSPARKGLRKLobIIIAIIIB(s, σ=s+1)
                         g.b, g.b, A.b, B.b,
                         g.c, g.c, A.c, A.b,
                         get_lobatto_ω_matrix(σ), δ)
+end
+
+
+
+function getTableauSPARKLobatto(name, l1::CoefficientsRK{T}, l2::CoefficientsRK{T},
+                                      l3::CoefficientsRK{T}, l4::CoefficientsRK{T}=l3, d=[]; R∞=1) where {T}
+
+    @assert l1.s == l2.s == l3.s == l4.s
+
+    ω = get_lobatto_ω_matrix(l3.s)
+    δ = zeros(T, 0, 1)
+
+    if length(d) == 0
+        return TableauSPARK(name, min(l1.o, l2.o, l3.o, l4.o),
+                            l3.a, l1.a, l4.a, l2.a,
+                            l3.a, l1.a, l4.a, l2.a,
+                            l3.b, l1.b, l4.b, l2.b,
+                            l3.c, l1.c, l4.c, l4.b,
+                            ω, δ)
+    else
+        @assert length(d) == q.s == p.s
+
+        return TableauSPARK(name, min(l1.o, l2.o, l3.o, l4.o),
+                            l3.a, l1.a, l4.a, l2.a,
+                            l3.a, l1.a, l4.a, l2.a,
+                            l3.b, l1.b, l4.b, l2.b,
+                            l3.c, l1.c, l4.c, l4.b,
+                            ω, δ, d)
+    end
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIB-IIIC method with s stages."
+function getTableauSPARKLobABC(s)
+    loba = getCoefficientsLobIIIA(s)
+    lobb = getCoefficientsLobIIIB(s)
+    lobc = getCoefficientsLobIIIC(s)
+    getTableauSPARKLobatto(Symbol("Lob($s)"), loba, lobc, lobb; R∞=(-1)^(s+1))
+end
+
+"Tableau for Gauss-Lobatto IIIA-IIIB-IIID method with s stages."
+function getTableauSPARKLobABD(s)
+    loba = getCoefficientsLobIIIA(s)
+    lobb = getCoefficientsLobIIIB(s)
+    lobd = getCoefficientsLobIIID(s)
+    getTableauSPARKLobatto(Symbol("Lob($s)"), loba, lobd, lobb; R∞=(-1)^(s+1))
+end
+
+"SPARK Tableau for Variational Partitioned Runge-Kutta Methods."
+function getTableauSPARKVPRK(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+
+    @assert q.s == p.s
+
+    ω = zeros(T, q.s, q.s+1)
+    δ = zeros(T, 0, 1)
+
+    for i in 1:q.s
+        ω[i,i] = 1
+    end
+
+    if length(d) == 0
+        return TableauSPARK(name, min(q.o, p.o),
+                            q.a, p.a, q.a, p.a,
+                            q.a, p.a, q.a, p.a,
+                            q.b, p.b, q.b, p.b,
+                            q.c, p.c, q.c, q.b,
+                            ω, δ)
+    else
+        @assert length(d) == q.s == p.s
+
+        return TableauSPARK(name, min(q.o, p.o),
+                            q.a, p.a, q.a, p.a,
+                            q.a, p.a, q.a, p.a,
+                            q.b, p.b, q.b, p.b,
+                            q.c, p.c, q.c, q.b,
+                            ω, δ, d)
+    end
+end
+
+"Tableau for Variational Gauss-Legendre method with s stages."
+function getTableauSPARKGLVPRK(s)
+    glrk = getCoefficientsGLRK(s)
+    getTableauSPARKVPRK(Symbol("GLVPRK($s)"), glrk, glrk; R∞=(-1)^s)
 end
 

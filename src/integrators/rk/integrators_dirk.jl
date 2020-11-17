@@ -210,7 +210,7 @@ end
 
 "Integrate ODE with diagonally implicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
-                         cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT,TT,N}
+                         cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT,TT}
 
      # update nonlinear solver parameters from atomic solution
      update_params!(int, sol)

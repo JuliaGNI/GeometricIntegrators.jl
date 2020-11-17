@@ -12,6 +12,10 @@ module Tableaus
     using ..Integrators.VPRK
     using ..Utils
 
+    using GeometricIntegrators.Integrators.SPARK: get_ã_vspark_primary,
+                                                  get_α_vspark_primary,
+                                                  compute_ã_vspark_primary,
+                                                  compute_α_vspark_primary
 
     export getCoefficientsGLRK,
            getCoefficientsGLRK1, getCoefficientsGLRK2, getCoefficientsGLRK3,
@@ -20,12 +24,12 @@ module Tableaus
     include("tableaus/coefficients_glrk.jl")
 
 
-    export getCoefficientsLobIII2,  getCoefficientsLobIII3,  getCoefficientsLobIII4,
-           getCoefficientsLobIIIA2, getCoefficientsLobIIIA3, getCoefficientsLobIIIA4,
-           getCoefficientsLobIIIB2, getCoefficientsLobIIIB3, getCoefficientsLobIIIB4,
-           getCoefficientsLobIIIC2, getCoefficientsLobIIIC3, getCoefficientsLobIIIC4,
-           getCoefficientsLobIIID2, getCoefficientsLobIIID3, getCoefficientsLobIIID4,
-           getCoefficientsLobIIIE2, getCoefficientsLobIIIE3, getCoefficientsLobIIIE4,
+    export getCoefficientsLobIII2,  getCoefficientsLobIII3,  getCoefficientsLobIII4,  getCoefficientsLobIII5,
+           getCoefficientsLobIIIA2, getCoefficientsLobIIIA3, getCoefficientsLobIIIA4, getCoefficientsLobIIIA5,
+           getCoefficientsLobIIIB2, getCoefficientsLobIIIB3, getCoefficientsLobIIIB4, getCoefficientsLobIIIB5,
+           getCoefficientsLobIIIC2, getCoefficientsLobIIIC3, getCoefficientsLobIIIC4, getCoefficientsLobIIIC5,
+           getCoefficientsLobIIID2, getCoefficientsLobIIID3, getCoefficientsLobIIID4, getCoefficientsLobIIID5,
+           getCoefficientsLobIIIE2, getCoefficientsLobIIIE3, getCoefficientsLobIIIE4, getCoefficientsLobIIIE5,
            getCoefficientsLobIIIF2, getCoefficientsLobIIIF3, getCoefficientsLobIIIF4,
            getCoefficientsLobIIIG2, getCoefficientsLobIIIG3, getCoefficientsLobIIIG4
 
@@ -39,7 +43,7 @@ module Tableaus
 
     include("tableaus/coefficients_rad.jl")
 
-    export getCoefficientsPGLRK, getTableauPGLRK
+    export getCoefficientsPGLRK #, getTableauPGLRK
 
     include("tableaus/coefficients_pglrk.jl")
 
@@ -98,14 +102,22 @@ module Tableaus
     export getTableauSymplecticEulerA, getTableauSymplecticEulerB,
            getTableauLobattoIIIAIIIB2, getTableauLobattoIIIBIIIA2
 
-    export getTableauSPARKGLRK, getTableauSPARKLobIIIAIIIB,
-           getTableauSPARKGLRKLobIIIAIIIB
-
     include("tableaus/tableaus_iprk.jl")
 
     export getTableauIPGLRK           
     
     include("tableaus/tableaus_spark.jl")
+
+    export getTableauSPARKGLRK,
+           getTableauSPARKLobIIIAIIIB,
+           getTableauSPARKGLRKLobIIIAIIIB,
+           getTableauSPARKLobatto,
+           getTableauSPARKLobABC,
+           getTableauSPARKLobABD,
+           getTableauSPARKVPRK,
+           getTableauSPARKGLVPRK
+
+    include("tableaus/tableaus_vprk.jl")
 
     export getTableauVPGLRK,
            getTableauVPLobIIIA2, getTableauVPLobIIIA3, getTableauVPLobIIIA4,
@@ -119,8 +131,6 @@ module Tableaus
            getTableauVPLobIIIAIIIA2, getTableauVPLobIIIAIIIA3, getTableauVPLobIIIAIIIA4,
            getTableauVPRadIIAIIA2, getTableauVPRadIIAIIA3
 
-    include("tableaus/tableaus_vprk.jl")
-
     export getTableauSymplecticProjection,
            getTableauLobIIIAIIIB2pSymplectic,
            getTableauLobIIIAIIIB3pSymplectic,
@@ -130,24 +140,47 @@ module Tableaus
     include("tableaus/tableaus_vpark.jl")
 
     export getTableauVSPARKLobIIIAIIIBProjection,
+           getTableauVSPARKLobIIIBIIIAProjection,
+           getTableauVSPARKModifiedLobIIIAIIIBProjection,
+           getTableauVSPARKModifiedLobIIIBIIIAProjection,
+           getTableauVSPARKInternalProjection,
+           getTableauVSPARKModifiedInternalProjection,
            getTableauVSPARKMidpointProjection,
+           getTableauVSPARKModifiedMidpointProjection,
            getTableauVSPARKSymmetricProjection,
-           getTableauVSPARKSymmetricLobProjection,
            getTableauVSPARKSymplecticProjection,
            getTableauVSPARKGLRKpLobIIIAIIIB,
+           getTableauVSPARKGLRKpLobIIIBIIIA,
+           getTableauVSPARKGLRKpModifiedLobIIIAIIIB,
+           getTableauVSPARKGLRKpModifiedLobIIIBIIIA,
+           getTableauVSPARKGLRKpInternal,
+           getTableauVSPARKGLRKpModifiedInternal,
            getTableauVSPARKGLRKpMidpoint,
+           getTableauVSPARKGLRKpModifiedMidpoint,
            getTableauVSPARKGLRKpSymmetric,
-           getTableauVSPARKGLRKpSymmetricLob,
            getTableauVSPARKGLRKpSymplectic,
-           getTableauVSPARKLobIIIAIIIB2pLobIIIAIIIB,
-           getTableauVSPARKLobIIIAIIIB3pLobIIIAIIIB,
-           getTableauVSPARKLobIIIAIIIB4pLobIIIAIIIB,
-           getTableauVSPARKLobIIIAIIIB2pSymmetric,
-           getTableauVSPARKLobIIIAIIIB3pSymmetric,
-           getTableauVSPARKLobIIIAIIIB4pSymmetric,
-           getTableauVSPARKLobIIIAIIIB2pSymmetricLob,
-           getTableauVSPARKLobIIIAIIIB3pSymmetricLob,
-           getTableauVSPARKLobIIIAIIIB4pSymmetricLob
+           getTableauVSPARKLobIIIAIIIBpLobIIIAIIIB,
+           getTableauVSPARKLobIIIBIIIApLobIIIAIIIB,
+           getTableauVSPARKLobIIIAIIIBpLobIIIBIIIA,
+           getTableauVSPARKLobIIIBIIIApLobIIIBIIIA,
+           getTableauVSPARKLobIIIAIIIBpModifiedLobIIIAIIIB,
+           getTableauVSPARKLobIIIAIIIBpModifiedLobIIIBIIIA,
+           getTableauVSPARKLobIIIBIIIApModifiedLobIIIAIIIB,
+           getTableauVSPARKLobIIIBIIIApModifiedLobIIIBIIIA,
+           getTableauVSPARKLobIIIAIIIBpMidpoint,
+           getTableauVSPARKLobIIIBIIIApMidpoint,
+           getTableauVSPARKLobIIIAIIIBpModifiedMidpoint,
+           getTableauVSPARKLobIIIBIIIApModifiedMidpoint,
+           getTableauVSPARKLobIIIAIIIBpSymmetric,
+           getTableauVSPARKLobIIIBIIIApSymmetric,
+           getTableauVSPARKLobABCCD,
+           getTableauVSPARKLobABCCE,
+           getTableauVSPARKLobABDE,
+           getTableauVSPARKLobABED,
+           getTableauVSPARKLobABD,
+           getTableauVSPARKLobABE,
+           getTableauVSPARKLobDE,
+           getTableauVSPARKLobED
 
     include("tableaus/tableaus_vspark_primary.jl")
 
