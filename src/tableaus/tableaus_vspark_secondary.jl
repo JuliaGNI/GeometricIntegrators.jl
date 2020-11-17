@@ -76,54 +76,62 @@ function getTableauVSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
 end
 
 
-function getTableauVSPARKLobIII(s, lq, lp)
+function TableauVSPARKLobIII(s, lq, lp; name = Symbol("VSPARKLobattoIII"))
     o = 2s-2
-    tsym = Symbol("VSPARKLobIII")
-    getTableauVSPARK(s, s, o, tsym, lq, lp, lq, lp, get_lobatto_ω_matrix(s), get_lobatto_d_vector(s))
+    getTableauVSPARK(s, s, o, name, lq, lp, lq, lp, get_lobatto_ω_matrix(s), get_lobatto_d_vector(s))
 end
 
-function getTableauVSPARKLobIIIAB(s)
+function TableauVSPARKLobIIIAB(s)
     lq = getCoefficientsLobIIIA(s)
     lp = getCoefficientsLobIIIB(s)
-    getTableauVSPARKLobIII(s, lq, lp)
+    TableauVSPARKLobIII(s, lq, lp; name = Symbol("VSPARKLobIIIAIIIB"))
 end
 
-function getTableauVSPARKLobIIIC(s)
+function TableauVSPARKLobIIIBA(s)
+    lq = getCoefficientsLobIIIB(s)
+    lp = getCoefficientsLobIIIA(s)
+    TableauVSPARKLobIII(s, lq, lp; name = Symbol("VSPARKLobIIIBIIIA"))
+end
+
+function TableauVSPARKLobIIIC(s)
     lq = getCoefficientsLobIII(s)
     lp = getCoefficientsLobIIIC(s)
-    getTableauVSPARKLobIII(s, lq, lp)
+    TableauVSPARKLobIII(s, lq, lp; name = Symbol("VSPARKLobIIIC"))
 end
 
-function getTableauVSPARKLobIIID(s)
+function TableauVSPARKLobIIID(s)
     l = getCoefficientsLobIIID(s)
-    getTableauVSPARKLobIII(s, l, l)
+    TableauVSPARKLobIII(s, l, l; name = Symbol("VSPARKLobIIID"))
 end
 
-function getTableauVSPARKLobIIIE(s)
+function TableauVSPARKLobIIIE(s)
     l = getCoefficientsLobIIIE(s)
-    getTableauVSPARKLobIII(s, l, l)
+    TableauVSPARKLobIII(s, l, l; name = Symbol("VSPARKLobIIIE"))
 end
 
 
-function getTableauVSPARKGLRKLobIII(s, σ, lq, lp)
+function TableauVSPARKGLRKLobIII(s, σ, lq, lp; name = Symbol("VSPARKGLRKLobattoIII"))
     o = 2s
     g = getCoefficientsGLRK(s)
-    tsym = Symbol("VSPARKGLRKLobIII")
-    getTableauVSPARK(s, σ, o, tsym, g, get_lobatto_interstage_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_d_vector(σ))
+    getTableauVSPARK(s, σ, o, name, g, get_lobatto_interstage_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_d_vector(σ))
 end
 
-function getTableauVSPARKGLRKLobIIIAB(s, σ=s+1)
-    getTableauVSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIA(σ), getCoefficientsLobIIIB(σ))
+function TableauVSPARKGLRKLobIIIAB(s, σ=s+1)
+    TableauVSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIA(σ), getCoefficientsLobIIIB(σ); name = Symbol("VSPARKGLRKLobIIIAIIIB"))
 end
 
-function getTableauVSPARKGLRKLobIIIC(s, σ=s+1)
-    getTableauVSPARKGLRKLobIII(s, σ, getCoefficientsLobIII(σ), getCoefficientsLobIIIC(σ))
+function TableauVSPARKGLRKLobIIIBA(s, σ=s+1)
+    TableauVSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIB(σ), getCoefficientsLobIIIA(σ); name = Symbol("VSPARKGLRKLobIIIBIIIA"))
 end
 
-function getTableauVSPARKGLRKLobIIID(s, σ=s+1)
-    getTableauVSPARKGLRKLobIII(s, σ, getCoefficientsLobIIID(σ), getCoefficientsLobIIID(σ))
+function TableauVSPARKGLRKLobIIIC(s, σ=s+1)
+    TableauVSPARKGLRKLobIII(s, σ, getCoefficientsLobIII(σ), getCoefficientsLobIIIC(σ); name = Symbol("VSPARKGLRKLobIIIC"))
 end
 
-function getTableauVSPARKGLRKLobIIIE(s, σ=s+1)
-    getTableauVSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIE(σ), getCoefficientsLobIIIE(σ))
+function TableauVSPARKGLRKLobIIID(s, σ=s+1)
+    TableauVSPARKGLRKLobIII(s, σ, getCoefficientsLobIIID(σ), getCoefficientsLobIIID(σ); name = Symbol("VSPARKGLRKLobIIID"))
+end
+
+function TableauVSPARKGLRKLobIIIE(s, σ=s+1)
+    TableauVSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIE(σ), getCoefficientsLobIIIE(σ); name = Symbol("VSPARKGLRKLobIIIE"))
 end

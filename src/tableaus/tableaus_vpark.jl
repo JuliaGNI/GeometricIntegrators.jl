@@ -1,5 +1,5 @@
 
-function getTableauSymplecticProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function TableauSymplecticProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 
@@ -53,23 +53,18 @@ function getTableauSymplecticProjection(name, q::CoefficientsRK{T}, p::Coefficie
 end
 
 
-"Tableau for Gauss-Lobatto IIIA-IIIB method with two stages and symplectic projection."
-function getTableauLobIIIAIIIB2pSymplectic()
-    getTableauSymplecticProjection(:LobIIIAIIIB2pSymplectic, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2(), get_lobatto_d_vector(2); R∞=-1)
+"Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and symplectic projection."
+function TableauLobIIIAIIIBpSymplectic(s)
+    TableauSymplecticProjection(Symbol("LobIIIAIIIB($s)pSymplectic"), getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
-"Tableau for Gauss-Lobatto IIIA-IIIB method with three stages and symplectic projection."
-function getTableauLobIIIAIIIB3pSymplectic()
-    getTableauSymplecticProjection(:LobIIIAIIIB3pSymplectic, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3(), get_lobatto_d_vector(3); R∞=+1)
-end
-
-"Tableau for Gauss-Lobatto IIIA-IIIB method with four stages and symplectic projection."
-function getTableauLobIIIAIIIB4pSymplectic()
-    getTableauSymplecticProjection(:LobIIIAIIIB4pSymplectic, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4(), get_lobatto_d_vector(4); R∞=-1)
+"Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and symplectic projection."
+function TableauLobIIIBIIIApSymplectic(s)
+    TableauSymplecticProjection(Symbol("LobIIIBIIIA($s)pSymplectic"), getCoefficientsLobIIIB(s), getCoefficientsLobIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
-function getTableauGLRKpSymplectic(s)
+function TableauGLRKpSymplectic(s)
     glrk = getCoefficientsGLRK(s)
-    getTableauSymplecticProjection(Symbol("vpglrk", s, "pSymplectic"), glrk, glrk; R∞=(-1)^s)
+    TableauSymplecticProjection(Symbol("GLRK($s)pSymplectic"), glrk, glrk; R∞=(-1)^s)
 end

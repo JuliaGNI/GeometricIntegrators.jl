@@ -32,23 +32,18 @@ function getTableauHPARK(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[])
 end
 
 
-"Tableau for Gauss-Lobatto IIIA-IIIB HPARK method with two stages."
-function getTableauHPARKLobIIIAIIIB2()
-    getTableauHPARK(:HPARKLobIIIAIIIB2, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2())
+"SPARK tableau for Gauss-Lobatto IIIA-IIIB HPARK method with s stages."
+function TableauHPARKLobIIIAIIIB(s)
+    getTableauHPARK(Symbol("HPARKLobIIIAIIIB($s)"), getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s))
 end
 
-"Tableau for Gauss-Lobatto IIIA-IIIB HPARK method with three stages."
-function getTableauHPARKLobIIIAIIIB3()
-    getTableauHPARK(:HPARKLobIIIAIIIB3, getCoefficientsLobIIIA3(), getCoefficientsLobIIIB3())
-end
-
-"Tableau for Gauss-Lobatto IIIA-IIIB HPARK method with four stages."
-function getTableauHPARKLobIIIAIIIB4()
-    getTableauHPARK(:HPARKLobIIIAIIIB4, getCoefficientsLobIIIA4(), getCoefficientsLobIIIB4())
+"SPARK tableau for Gauss-Lobatto IIIB-IIIA  method with s stages."
+function TableauHPARKLobIIIBIIIA(s)
+    getTableauHPARK(Symbol("HPARKLobIIIBIIIA($s)"), getCoefficientsLobIIIB(s), getCoefficientsLobIIIA(s))
 end
 
 "Tableau for Gauss-Legendre HPARK method with s stages."
-function getTableauHPARKGLRK(s)
+function TableauHPARKGLRK(s)
     glrk = getCoefficientsGLRK(s)
     getTableauHPARK(Symbol("HPARKGLRK", s), glrk, glrk)
 end
