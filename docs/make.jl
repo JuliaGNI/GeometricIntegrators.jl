@@ -34,5 +34,5 @@ makedocs(
 )
 
 deploydocs(
-    repo   = "github.com/DDMGNI/GeometricIntegrators.jl.git",
+    repo   = "github.com/JuliaGNI/GeometricIntegrators.jl.git",
 )
