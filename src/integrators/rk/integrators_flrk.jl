@@ -87,7 +87,7 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
         solver = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
+        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], Δt)
 
         # create integrator
         IntegratorFLRK(params, solver, iguess, caches)
@@ -106,7 +106,7 @@ end
 function initialize!(int::IntegratorFLRK, sol::AtomicSolutionODE)
     sol.t̅ = sol.t - timestep(int)
 
-    equations(int)[:v](sol.t, sol.q, sol.v)
+    equations(int)[:v̄](sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
                             sol.t̅, sol.q̅, sol.v̅)
@@ -166,7 +166,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     # compute V = v(Q)
     for i in 1:S
         tᵢ = params.t + params.Δt * params.tab.q.c[i]
-        params.equs[:v](tᵢ, Q[i], V[i])
+        params.equs[:v̄](tᵢ, Q[i], V[i])
     end
 end
 
@@ -247,14 +247,14 @@ function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutio
     for i in 1:S
         tᵢ = int.params.t + timestep(int) * tableau(int).q.c[i]
         int.params.equs[:ϑ](tᵢ, cache.Q[i], cache.V[i], int.ϑ[i])
-        int.params.equs[:v](tᵢ, cache.Q[i], cache.V[i])
+        int.params.equs[:v̄](tᵢ, cache.Q[i], cache.V[i])
         int.params.equs[:g](tᵢ, cache.Q[i], cache.V[i], int.F[i])
     end
 
     # compute Jacobian of v via ForwardDiff
     for i in 1:S
         tᵢ = int.params.t + timestep(int) * tableau(int).q.c[i]
-        v_rev! = (v,q) -> int.params.equs[:v](tᵢ,q,v)
+        v_rev! = (v,q) -> int.params.equs[:v̄](tᵢ,q,v)
         ForwardDiff.jacobian!(int.J[i], v_rev!, cache.ṽ, cache.Q[i])
     end
 

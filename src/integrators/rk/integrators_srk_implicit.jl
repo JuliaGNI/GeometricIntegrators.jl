@@ -82,7 +82,7 @@ struct IntegratorSRKimplicit{DT, TT, D, S, PT <: ParametersSRKimplicit{DT,TT},
         solver = create_nonlinear_solver(DT, D*(S+1), params, caches)
 
         # create initial guess
-        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
+        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], Δt)
 
         # create integrator
         IntegratorSRKimplicit(params, solver, iguess, caches)

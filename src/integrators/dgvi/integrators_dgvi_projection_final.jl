@@ -163,7 +163,7 @@ struct IntegratorDGVIP1{DT, TT, D, S, R,
         solver = create_nonlinear_solver(DT, D*(S+2), params, caches)
 
         # create initial guess
-        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
+        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], Δt)
 
         # create integrator
         IntegratorDGVIP1(basis, quadrature, params, solver, iguess, caches)
@@ -197,7 +197,7 @@ function initialize!(int::IntegratorDGVIP1, sol::AtomicSolutionPODE)
 
     sol.t̅ = sol.t - timestep(int)
 
-    equation(int, :v)(sol.t, sol.q, sol.v)
+    equation(int, :v̄)(sol.t, sol.q, sol.v)
 
     # initialise initial guess
     initialize!(int.iguess, sol.t, sol.q, sol.v,
