@@ -4,7 +4,7 @@ const ParametersHSPARKprimary = AbstractParametersSPARK{:hspark_primary}
 
 
 @doc raw"""
-Specialised Partitioned Additive Runge-Kutta integrator for Hamiltonian systems.
+Specialised Partitioned Additive Runge-Kutta integrator for Hamiltonian systems *EXPERIMENTAL*.
 
 This integrator solves the following system of equations for the internal stages,
 ```math

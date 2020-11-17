@@ -8,7 +8,7 @@ const ParametersHPARK = AbstractParametersSPARK{:hpark}
 
 @doc raw"""
 Partitioned Additive Runge-Kutta integrator for Hamiltonian systems subject
-to Dirac constraints.
+to Dirac constraints *EXPERIMENTAL*.
 
 This integrator solves the following system of equations for the internal stages,
 ```math

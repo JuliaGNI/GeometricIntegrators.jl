@@ -6,7 +6,7 @@ const ParametersHSPARKsecondary = AbstractParametersSPARK{:hspark_secondary}
 
 @doc raw"""
 Specialised Partitioned Additive Runge-Kutta integrator for Hamiltonian systems
-subject to Dirac constraints with projection on secondary constraint.
+subject to Dirac constraints with projection on secondary constraint *EXPERIMENTAL*.
 
 This integrator solves the following system of equations for the internal stages,
 ```math
