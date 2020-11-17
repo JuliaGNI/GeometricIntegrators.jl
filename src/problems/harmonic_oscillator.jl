@@ -145,7 +145,7 @@ module HarmonicOscillatorProblem
         IODE(oscillator_iode_ϑ, oscillator_iode_f,
              oscillator_iode_g, q₀, p₀;
              parameters=params,
-             v=oscillator_iode_v)
+             v̄=oscillator_iode_v)
     end
 
 
@@ -170,7 +170,8 @@ module HarmonicOscillatorProblem
     function harmonic_oscillator_dae(z₀=z₀, λ₀=[zero(eltype(z₀))], params=p)
         @assert size(z₀,1) == 3
         @assert size(λ₀,1) == 1
-        DAE(oscillator_dae_v, oscillator_dae_u, oscillator_dae_ϕ, z₀, λ₀; parameters=params)
+        DAE(oscillator_dae_v, oscillator_dae_u, oscillator_dae_ϕ, z₀, λ₀;
+            v̄=oscillator_ode_v, parameters=params)
     end
 
 
@@ -197,7 +198,7 @@ module HarmonicOscillatorProblem
         IDAE(oscillator_iode_ϑ, oscillator_iode_f,
              oscillator_idae_u, oscillator_idae_g,
              oscillator_idae_ϕ, q₀, p₀, λ₀;
-             parameters=params, v=oscillator_iode_v)
+             parameters=params, v̄=oscillator_iode_v)
     end
 
     function oscillator_pdae_v(t, q, p, v, params)

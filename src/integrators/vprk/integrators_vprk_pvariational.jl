@@ -47,7 +47,7 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
         projector = create_nonlinear_solver(DT, 2*D, pparams, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVPRKpVariational(params, pparams, solver, projector, iguess, caches)
@@ -63,8 +63,8 @@ function Integrators.initialize!(int::IntegratorVPRKpVariational{DT}, sol::Atomi
                                  cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     sol.t̅ = sol.t - timestep(int)
 
-    equation(int, :v)(sol.t, sol.q, sol.v)
-    equation(int, :f)(sol.t, sol.q, sol.v, sol.f)
+    equation(int, :v̄)(sol.t, sol.q, sol.v)
+    equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)

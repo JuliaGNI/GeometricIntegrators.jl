@@ -410,8 +410,8 @@ end
     # println(rel_err(sol.q, refx))
     @test rel_err(sol.q, refx) < 8E-7
 
-    int = Integrator(pdae, TableauHPARKLobIIIAIIIB(2), Δt)
-    sol = integrate(pdae, int, nt)
+    # int = Integrator(pdae, TableauHPARKLobIIIAIIIB(2), Δt)
+    # sol = integrate(pdae, int, nt)
     # TODO
     # println(rel_err(sol.q, refx))
     # @test rel_err(sol.q, refx) < 2E-2
@@ -428,8 +428,8 @@ end
     # println(rel_err(sol.q, refx))
     @test rel_err(sol.q, refx) < 8E-4
 
-    int = Integrator(pdae, TableauHPARKLobIIIBIIIA(2), Δt)
-    sol = integrate(pdae, int, nt)
+    # int = Integrator(pdae, TableauHPARKLobIIIBIIIA(2), Δt)
+    # sol = integrate(pdae, int, nt)
     # TODO
     # println(rel_err(sol.q, refx))
     # @test rel_err(sol.q, refx) < 2E-2
@@ -465,11 +465,13 @@ end
 
     int = Integrator(pdae, TableauHSPARKGLRKpSymmetric(1), Δt)
     sol = integrate(pdae, int, nt)
+    # TODO
     # println(rel_err(sol.q, refx))
     @test rel_err(sol.q, refx) < 4E-6
 
     int = Integrator(pdae, TableauHSPARKGLRKpSymmetric(2), Δt)
     sol = integrate(pdae, int, nt)
+    # TODO
     # println(rel_err(sol.q, refx))
     @test rel_err(sol.q, refx) < 4E-6
 
@@ -477,37 +479,37 @@ end
     sol = integrate(pdae, int, nt)
     # TODO
     # println(rel_err(sol.q, refx))
-    # @test rel_err(sol.q, refx) < 4E-6
+    @test rel_err(sol.q, refx) < 4E-6
 
     int = Integrator(pdae, TableauHSPARKLobIIIAIIIBpSymmetric(3), Δt)
     sol = integrate(pdae, int, nt)
     # TODO
     # println(rel_err(sol.q, refx))
-    # @test rel_err(sol.q, refx) < 4E-6
+    @test rel_err(sol.q, refx) < 4E-6
 
     int = Integrator(pdae, TableauHSPARKLobIIIAIIIBpSymmetric(4), Δt)
     sol = integrate(pdae, int, nt)
     # TODO
     # println(rel_err(sol.q, refx))
-    # @test rel_err(sol.q, refx) < 4E-6
+    @test rel_err(sol.q, refx) < 4E-6
 
     int = Integrator(pdae, TableauHSPARKLobIIIBIIIApSymmetric(2), Δt)
     sol = integrate(pdae, int, nt)
     # TODO
     # println(rel_err(sol.q, refx))
-    # @test rel_err(sol.q, refx) < 4E-6
+    @test rel_err(sol.q, refx) < 4E-6
 
     int = Integrator(pdae, TableauHSPARKLobIIIBIIIApSymmetric(3), Δt)
     sol = integrate(pdae, int, nt)
     # TODO
     # println(rel_err(sol.q, refx))
-    # @test rel_err(sol.q, refx) < 4E-6
+    @test rel_err(sol.q, refx) < 4E-6
 
     int = Integrator(pdae, TableauHSPARKLobIIIBIIIApSymmetric(4), Δt)
     sol = integrate(pdae, int, nt)
     # TODO
     # println(rel_err(sol.q, refx))
-    # @test rel_err(sol.q, refx) < 4E-6
+    @test rel_err(sol.q, refx) < 4E-6
 
 
     ### HSPARKsecondary Integrators ###

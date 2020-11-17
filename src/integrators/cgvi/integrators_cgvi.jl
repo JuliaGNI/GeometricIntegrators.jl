@@ -157,7 +157,7 @@ struct IntegratorCGVI{DT, TT, D, S, R,
         solver = create_nonlinear_solver(DT, D*(S+1), params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorCGVI(basis, quadrature, params, solver, iguess, caches)
@@ -182,8 +182,8 @@ end
 function initialize!(int::IntegratorCGVI, sol::AtomicSolutionPODE)
     sol.t̅ = sol.t - timestep(int)
 
-    equation(int, :v)(sol.t, sol.q, sol.v)
-    equation(int, :f)(sol.t, sol.q, sol.v, sol.f)
+    equation(int, :v̄)(sol.t, sol.q, sol.v)
+    equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)

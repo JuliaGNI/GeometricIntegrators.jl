@@ -25,12 +25,14 @@ using Test
     iode_equs = get_function_tuple(iode)
     @test_nowarn iode_equs[:ϑ](iode.t₀, iode.q₀, iode.p₀, zero(iode.q₀))
     @test_nowarn iode_equs[:f](iode.t₀, iode.q₀, iode.p₀, zero(iode.p₀))
-    @test_nowarn iode_equs[:v](iode.t₀, iode.q₀, zero(iode.q₀))
+    @test_nowarn iode_equs[:v̄](iode.t₀, iode.q₀, zero(iode.q₀))
+    @test_nowarn iode_equs[:f̄](iode.t₀, iode.q₀, iode.p₀, zero(iode.p₀))
 
     dae_equs = get_function_tuple(dae)
     @test_nowarn dae_equs[:v](dae.t₀, dae.q₀, zero(dae.q₀))
     @test_nowarn dae_equs[:u](dae.t₀, dae.q₀, dae.λ₀, zero(dae.q₀))
     @test_nowarn dae_equs[:ϕ](dae.t₀, dae.q₀, zero(dae.λ₀))
+    @test_nowarn dae_equs[:v̄](dae.t₀, dae.q₀, zero(dae.q₀))
 
     pdae_equs = get_function_tuple(pdae)
     @test_nowarn pdae_equs[:v](pdae.t₀, pdae.q₀, pdae.p₀, zero(pdae.q₀))
@@ -38,6 +40,8 @@ using Test
     @test_nowarn pdae_equs[:u](pdae.t₀, pdae.q₀, pdae.p₀, pdae.λ₀, zero(pdae.q₀))
     @test_nowarn pdae_equs[:g](pdae.t₀, pdae.q₀, pdae.p₀, pdae.λ₀, zero(pdae.p₀))
     @test_nowarn pdae_equs[:ϕ](pdae.t₀, pdae.q₀, pdae.p₀, zero(pdae.λ₀))
+    @test_nowarn pdae_equs[:v̄](pdae.t₀, pdae.q₀, pdae.p₀, zero(pdae.q₀))
+    @test_nowarn pdae_equs[:f̄](pdae.t₀, pdae.q₀, pdae.p₀, zero(pdae.p₀))
 
     idae_equs = get_function_tuple(idae)
     @test_nowarn idae_equs[:ϑ](idae.t₀, idae.q₀, idae.λ₀, zero(idae.q₀))
@@ -45,7 +49,8 @@ using Test
     @test_nowarn idae_equs[:u](idae.t₀, idae.q₀, pdae.p₀, idae.λ₀, zero(idae.q₀))
     @test_nowarn idae_equs[:g](idae.t₀, idae.q₀, pdae.p₀, idae.λ₀, zero(idae.p₀))
     @test_nowarn idae_equs[:ϕ](idae.t₀, idae.q₀, idae.p₀, zero(idae.λ₀))
-    @test_nowarn idae_equs[:v](idae.t₀, idae.q₀, zero(idae.q₀))
+    @test_nowarn idae_equs[:v̄](idae.t₀, idae.q₀, zero(idae.q₀))
+    @test_nowarn idae_equs[:f̄](idae.t₀, idae.q₀, idae.p₀, zero(idae.p₀))
 
 end
 
@@ -74,13 +79,15 @@ end
     iode_equs = get_function_tuple(iode)
     @test_nowarn iode_equs[:ϑ](iode.t₀, iode.q₀, iode.p₀, zero(iode.q₀))
     @test_nowarn iode_equs[:f](iode.t₀, iode.q₀, iode.p₀, zero(iode.p₀))
-    @test_nowarn iode_equs[:v](iode.t₀, iode.q₀, zero(iode.q₀))
+    @test_nowarn iode_equs[:v̄](iode.t₀, iode.q₀, zero(iode.q₀))
+    @test_nowarn iode_equs[:f̄](iode.t₀, iode.q₀, iode.p₀, zero(iode.p₀))
     @test_nowarn iode_equs[:h](iode.t₀, iode.q₀)
 
     vode_equs = get_function_tuple(vode)
     @test_nowarn vode_equs[:ϑ](vode.t₀, vode.q₀, vode.p₀, zero(vode.q₀))
     @test_nowarn vode_equs[:f](vode.t₀, vode.q₀, vode.p₀, zero(vode.p₀))
-    @test_nowarn vode_equs[:v](vode.t₀, vode.q₀, zero(vode.q₀))
+    @test_nowarn vode_equs[:v̄](vode.t₀, vode.q₀, zero(vode.q₀))
+    @test_nowarn vode_equs[:f̄](vode.t₀, vode.q₀, vode.p₀, zero(vode.p₀))
     @test_nowarn vode_equs[:h](vode.t₀, vode.q₀)
 
     pdae_equs = get_function_tuple(pdae)
@@ -89,6 +96,8 @@ end
     @test_nowarn pdae_equs[:u](pdae.t₀, pdae.q₀, pdae.p₀, pdae.λ₀, zero(pdae.q₀))
     @test_nowarn pdae_equs[:g](pdae.t₀, pdae.q₀, pdae.p₀, pdae.λ₀, zero(pdae.p₀))
     @test_nowarn pdae_equs[:ϕ](pdae.t₀, pdae.q₀, pdae.p₀, zero(pdae.λ₀))
+    @test_nowarn pdae_equs[:v̄](pdae.t₀, pdae.q₀, pdae.p₀, zero(pdae.q₀))
+    @test_nowarn pdae_equs[:f̄](pdae.t₀, pdae.q₀, pdae.p₀, zero(pdae.p₀))
     @test_nowarn pdae_equs[:h](pdae.t₀, pdae.q₀, pdae.p₀)
 
     idae_equs = get_function_tuple(idae)
@@ -97,7 +106,8 @@ end
     @test_nowarn idae_equs[:u](idae.t₀, idae.q₀, idae.p₀, idae.λ₀, zero(idae.q₀))
     @test_nowarn idae_equs[:g](idae.t₀, idae.q₀, idae.p₀, idae.λ₀, zero(idae.p₀))
     @test_nowarn idae_equs[:ϕ](idae.t₀, idae.q₀, idae.p₀, zero(idae.λ₀))
-    @test_nowarn idae_equs[:v](idae.t₀, idae.q₀, zero(idae.q₀))
+    @test_nowarn idae_equs[:v̄](idae.t₀, idae.q₀, zero(idae.q₀))
+    @test_nowarn idae_equs[:f̄](idae.t₀, idae.q₀, idae.p₀, zero(idae.p₀))
     @test_nowarn idae_equs[:h](idae.t₀, idae.q₀)
 
     vdae_equs = get_function_tuple(vdae)
@@ -107,7 +117,8 @@ end
     @test_nowarn vdae_equs[:g̅](vdae.t₀, vdae.q₀, vdae.λ₀, zero(vdae.p₀))
     @test_nowarn vdae_equs[:ϕ](vdae.t₀, vdae.q₀, vdae.p₀, zero(vdae.λ₀))
     @test_nowarn vdae_equs[:ψ](vdae.t₀, vdae.q₀, vdae.p₀, zero(vdae.q₀), zero(vdae.p₀), zero(vdae.λ₀))
-    @test_nowarn vdae_equs[:v](vdae.t₀, vdae.q₀, zero(vdae.q₀))
+    @test_nowarn vdae_equs[:v̄](vdae.t₀, vdae.q₀, zero(vdae.q₀))
+    @test_nowarn vdae_equs[:f̄](vdae.t₀, vdae.q₀, vdae.p₀, zero(vdae.p₀))
     @test_nowarn vdae_equs[:h](vdae.t₀, vdae.q₀)
 
 end

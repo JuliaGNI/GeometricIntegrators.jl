@@ -58,12 +58,12 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and symmetric projection."
 function TableauHSPARKLobIIIAIIIBpSymmetric(s)
-    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobIIIAIIIB($s)pSymmetric"), getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobIIIAIIIB($s)pSymmetric"), getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s), get_lobatto_d_vector(s))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and symmetric projection."
 function TableauHSPARKLobIIIBIIIApSymmetric(s)
-    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobIIIBIIIA($s)pSymmetric"), getCoefficientsLobIIIB(s), getCoefficientsLobIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobIIIBIIIA($s)pSymmetric"), getCoefficientsLobIIIB(s), getCoefficientsLobIIIA(s), get_lobatto_d_vector(s))
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."

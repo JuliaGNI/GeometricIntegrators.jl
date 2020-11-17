@@ -21,19 +21,19 @@ vdae = lotka_volterra_2d_vdae()
 
 
 @test InitialGuessODE(int,  ode, Δt) == InitialGuessODE{eltype( ode.q₀), ndims( ode)}(int,  ode.v, Δt)
-@test InitialGuessODE(int, iode, Δt) == InitialGuessODE{eltype(iode.q₀), ndims(iode)}(int, iode.v, Δt)
-@test InitialGuessODE(int, vode, Δt) == InitialGuessODE{eltype(vode.q₀), ndims(vode)}(int, vode.v, Δt)
+@test InitialGuessODE(int, iode, Δt) == InitialGuessODE{eltype(iode.q₀), ndims(iode)}(int, iode.v̄, Δt)
+@test InitialGuessODE(int, vode, Δt) == InitialGuessODE{eltype(vode.q₀), ndims(vode)}(int, vode.v̄, Δt)
 
 @test InitialGuess(int, ode, Δt) == InitialGuessODE{eltype(ode.q₀), ndims(ode)}(int, ode.v, Δt)
 
-@test InitialGuess(int, iode, Δt) == InitialGuessIODE{eltype(iode.q₀), ndims(iode)}(int, iode.v, iode.f, Δt)
-@test InitialGuess(int, idae, Δt) == InitialGuessIODE{eltype(idae.q₀), ndims(idae)}(int, idae.v, idae.f̄, Δt)
+@test InitialGuess(int, iode, Δt) == InitialGuessIODE{eltype(iode.q₀), ndims(iode)}(int, iode.v̄, iode.f̄, Δt)
+@test InitialGuess(int, idae, Δt) == InitialGuessIODE{eltype(idae.q₀), ndims(idae)}(int, idae.v̄, idae.f̄, Δt)
 
-@test InitialGuess(int, vode, Δt) == InitialGuessIODE{eltype(vode.q₀), ndims(vode)}(int, vode.v, vode.f, Δt)
-@test InitialGuess(int, vdae, Δt) == InitialGuessIODE{eltype(vdae.q₀), ndims(vdae)}(int, vdae.v, vdae.f, Δt)
+@test InitialGuess(int, vode, Δt) == InitialGuessIODE{eltype(vode.q₀), ndims(vode)}(int, vode.v̄, vode.f̄, Δt)
+@test InitialGuess(int, vdae, Δt) == InitialGuessIODE{eltype(vdae.q₀), ndims(vdae)}(int, vdae.v̄, vdae.f̄, Δt)
 
 @test InitialGuess(int, pode, Δt) == InitialGuessPODE{eltype(pode.q₀), ndims(pode)}(int, pode.v, pode.f, Δt)
-@test InitialGuess(int, pdae, Δt) == InitialGuessPODE{eltype(pdae.q₀), ndims(pdae)}(int, pdae.v, pdae.f, Δt)
+@test InitialGuess(int, pdae, Δt) == InitialGuessPODE{eltype(pdae.q₀), ndims(pdae)}(int, pdae.v̄, pdae.f̄, Δt)
 
 
 # Reference Solution
@@ -83,7 +83,7 @@ evaluate!(igode, q₁, v₁, q₀, v₀, q₂, v₂, t₂)
 
 # InitialGuessIODE
 
-igiode = InitialGuessIODE{eltype(iode.q₀), ndims(iode)}(int, (t,q,v) -> iode.v(t, q, v, iode.parameters), (t,q,p,v) -> iode.f(t, q, p, v, iode.parameters), Δt)
+igiode = InitialGuessIODE{eltype(iode.q₀), ndims(iode)}(int, (t,q,v) -> iode.v̄(t, q, v, iode.parameters), (t,q,p,v) -> iode.f̄(t, q, p, v, iode.parameters), Δt)
 
 t₀ = iode.t₀
 q₀ = iode.q₀
@@ -103,7 +103,7 @@ p₂ = zero(p₀)
 v₂ = zero(v₀)
 f₂ = zero(f₀)
 
-iode.v(t₀, q₀, v₀, iode.parameters)
+iode.v̄(t₀, q₀, v₀, iode.parameters)
 
 initialize!(igiode, t₀, q₀, p₀, v₀, f₀, t₁, q₁, p₁, v₁, f₁)
 evaluate!(igiode, q₁, p₁, v₁, f₁, q₀, p₀, v₀, f₀, q₂, v₂, t₂)
