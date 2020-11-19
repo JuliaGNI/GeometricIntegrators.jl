@@ -39,6 +39,8 @@ Base.:(==)(ts1::TimeSeries, ts2::TimeSeries) = (
                              && ts1.Δt == ts2.Δt
                              && ts1.step == ts2.step)
 
+ntime(ts::TimeSeries) = ts.n
+
 Base.parent(ts::TimeSeries) = ts.t
 Base.eltype(ts::TimeSeries{T}) where {T} = T
 Base.ndims(ts::TimeSeries) = 1

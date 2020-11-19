@@ -251,8 +251,10 @@ Base.:(==)(sol1::SolutionPSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionPSDE{DT2,TT2,NQ
 @inline timesteps(sol::SolutionPSDE)  = sol.t
 @inline ntime(sol::SolutionPSDE) = sol.ntime
 @inline nsave(sol::SolutionPSDE) = sol.nsave
+@inline counter(sol::SolutionPSDE) = sol.counter
 @inline offset(sol::SolutionPSDE) = sol.woffset
 @inline ioffset(sol::SolutionPSDE) = sol.ioffset
+@inline lastentry(sol::SolutionPSDE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline conv(sol::SolutionPSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
 @inline CommonFunctions.periodicity(sol::SolutionPSDE) = sol.periodicity
 

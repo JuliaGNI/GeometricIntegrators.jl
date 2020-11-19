@@ -569,7 +569,6 @@ For the projection, choose the Lobatto-IIIA and IIIB tableaus with $\tilde{s} = 
 \tilde{a}^{1} & \\
 \end{array}
 &&
-\begin{aligned}
 \begin{array}{c|cc}
 0 & \tfrac{1}{2} & 0 \\
 1 & \tfrac{1}{2} & 0 \\
@@ -584,7 +583,6 @@ For the projection, choose the Lobatto-IIIA and IIIB tableaus with $\tilde{s} = 
 \tilde{a}^{3} & \\
 \end{array}
 &&
-\begin{aligned}
 \begin{array}{c|cc}
 0 & 0 & 0 \\
 1 & \tfrac{1}{2} & \tfrac{1}{2} \\

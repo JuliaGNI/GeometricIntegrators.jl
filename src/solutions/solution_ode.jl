@@ -137,7 +137,9 @@ Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {
 @inline timesteps(sol::SolutionODE)  = sol.t
 @inline ntime(sol::SolutionODE) = sol.ntime
 @inline nsave(sol::SolutionODE) = sol.nsave
+@inline counter(sol::SolutionODE) = sol.counter
 @inline offset(sol::SolutionODE) = sol.woffset
+@inline lastentry(sol::SolutionODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline CommonFunctions.periodicity(sol::SolutionODE) = sol.periodicity
 
 "Create AtomicSolution for ODE."

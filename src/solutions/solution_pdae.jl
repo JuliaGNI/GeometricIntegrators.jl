@@ -157,7 +157,9 @@ Base.:(==)(sol1::SolutionPDAE{DT1,TT1,N1}, sol2::SolutionPDAE{DT2,TT2,N2}) where
 @inline timesteps(sol::SolutionPDAE)  = sol.t
 @inline ntime(sol::SolutionPDAE) = sol.ntime
 @inline nsave(sol::SolutionPDAE) = sol.nsave
+@inline counter(sol::SolutionPDAE) = sol.counter
 @inline offset(sol::SolutionPDAE) = sol.woffset
+@inline lastentry(sol::SolutionPDAE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline CommonFunctions.periodicity(sol::SolutionPDAE) = sol.periodicity
 
 

@@ -141,7 +141,9 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
 @inline timesteps(sol::SolutionPODE)  = sol.t
 @inline ntime(sol::SolutionPODE) = sol.ntime
 @inline nsave(sol::SolutionPODE) = sol.nsave
+@inline counter(sol::SolutionPODE) = sol.counter
 @inline offset(sol::SolutionPODE) = sol.woffset
+@inline lastentry(sol::SolutionPODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline CommonFunctions.periodicity(sol::SolutionPODE) = sol.periodicity
 
 
