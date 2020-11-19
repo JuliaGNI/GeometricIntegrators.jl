@@ -122,8 +122,8 @@ module Tableaus
     include("tableaus/tableaus_vprk.jl")
 
     export getTableauVPGLRK,
-           getTableauVPLobIIIA2, getTableauVPLobIIIA3, getTableauVPLobIIIA4,
-           getTableauVPLobIIIB2, getTableauVPLobIIIB3, getTableauVPLobIIIB4,
+           getTableauVPLobIIIA2, getTableauVPLobIIIA3, getTableauVPLobIIIA4, getTableauVPLobIIIA5,
+           getTableauVPLobIIIB2, getTableauVPLobIIIB3, getTableauVPLobIIIB4, getTableauVPLobIIIB5,
            getTableauVPLobIIIC2, getTableauVPLobIIIC3, getTableauVPLobIIIC4,
            getTableauVPLobIIID2, getTableauVPLobIIID3, getTableauVPLobIIID4,
            getTableauVPLobIIIE2, getTableauVPLobIIIE3, getTableauVPLobIIIE4,
