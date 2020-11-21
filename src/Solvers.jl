@@ -18,8 +18,8 @@ module Solvers
 
     export computeJacobian, check_jacobian, print_jacobian
 
-    export NonlinearSolver, AbstractNewtonSolver,
-           NLsolveNewton, NewtonSolver, QuasiNewtonSolver,
+    export NonlinearSolver, NonlinearSolverException,
+           AbstractNewtonSolver, NLsolveNewton, NewtonSolver, QuasiNewtonSolver,
            params, status,
            residual_initial!, residual_absolute!, residual_relative!,
            print_solver_status, check_solver_converged, check_solver_status,
