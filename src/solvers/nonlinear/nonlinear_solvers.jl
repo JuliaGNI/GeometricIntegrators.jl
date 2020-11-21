@@ -13,6 +13,13 @@ function solve!(s::NonlinearSolver{T}, x₀::Vector{T}) where {T}
 end
 
 
+struct NonlinearSolverException <: Exception
+    msg::String
+end
+
+Base.showerror(io::IO, e::NonlinearSolverException) = print(io, "Nonlinear Solver Exception: ", e.msg, "!")
+
+
 struct NonlinearSolverParameters{T}
     nmin::Int   # minimum number of iterations
     nmax::Int   # maximum number of iterations
@@ -97,19 +104,19 @@ end
 
 function check_solver_status(status::NonlinearSolverStatus, params::NonlinearSolverParameters)
     if any(x -> isnan(x), status.xₚ)
-        error("Detected NaN")
+        throw(NonlinearSolverException("Detected NaN"))
     end
 
     if status.rₐ > params.atol_break
-        error("Absolute error of nonlinear solver ($(status.rₐ)) larger than allowed ($(params.atol_break))")
+        throw(NonlinearSolverException("Absolute error ($(status.rₐ)) larger than allowed ($(params.atol_break))"))
     end
 
     if status.rᵣ > params.rtol_break
-        error("Relative error of nonlinear solver ($(status.rᵣ)) larger than allowed ($(params.rtol_break))")
+        throw(NonlinearSolverException("Relative error ($(status.rᵣ)) larger than allowed ($(params.rtol_break))"))
     end
 
     if status.rₛ > params.stol_break
-        error("Succesive error of nonlinear solver ($(status.rₛ)) larger than allowed ($(params.stol_break))")
+        throw(NonlinearSolverException("Succesive error ($(status.rₛ)) larger than allowed ($(params.stol_break))"))
     end
 end
 
