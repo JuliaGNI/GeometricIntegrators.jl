@@ -105,10 +105,14 @@ end
 @inline Base.ndims(::IntegratorSRKimplicit{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
+Solutions.AtomicSolution(integrator::IntegratorSRKimplicit{DT,TT}) where {DT,TT} =
+    AtomicSolutionPODE(DT, TT, ndims(integrator), get_internal_variables(integrator))
+
+
 function initialize!(int::IntegratorSRKimplicit, sol::AtomicSolutionODE)
     sol.t̅ = sol.t - timestep(int)
 
-    equations(int)[:v](sol.t, sol.q, sol.v)
+    equations(int)[:v̄](sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
                             sol.t̅, sol.q̅, sol.v̅)
@@ -261,6 +265,6 @@ function integrate_step!(int::IntegratorSRKimplicit{DT,TT}, sol::AtomicSolutionP
     sol.p .= cache.θ
 
     # compute vector field for initial guess
-    equations(int)[:v](sol.t, sol.q, sol.v)
+    equations(int)[:v̄](sol.t, sol.q, sol.v)
     # update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)
 end

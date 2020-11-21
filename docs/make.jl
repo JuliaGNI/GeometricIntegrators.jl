@@ -30,6 +30,7 @@ makedocs(
                 "Simulations"       => "modules/simulations.md",
                 "Solutions"         => "modules/solutions.md",
                 "Tableaus"          => "modules/tableaus.md"],
+             "Release Notes" => "releasenotes.md",
              ]
 )
 
