@@ -33,22 +33,22 @@ refx = sol.q[:,end]
     sol = integrate(iode, TableauVPRK(:pglrk, 6, getCoefficientsGLRK(3), -1), Δt, nt)
     @test rel_err(sol.q, refx) < 4E-12
 
-    sol = integrate(iode, getTableauVPLobIIIA2(), Δt, nt)
+    sol = integrate(iode, TableauVPLobIIIA(2), Δt, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    sol = integrate(iode, getTableauVPLobIIIA3(), Δt, nt)
+    sol = integrate(iode, TableauVPLobIIIA(3), Δt, nt)
     @test rel_err(sol.q, refx) < 8E-7
 
-    sol = integrate(iode, getTableauVPLobIIIA4(), Δt, nt)
+    sol = integrate(iode, TableauVPLobIIIA(4), Δt, nt)
     @test rel_err(sol.q, refx) < 3E-11
 
-    sol = integrate(iode, getTableauVPLobIIIB2(), Δt, nt)
+    sol = integrate(iode, TableauVPLobIIIB(2), Δt, nt)
     @test rel_err(sol.q, refx) < 2E-6
 
-    sol = integrate(iode, getTableauVPLobIIIB3(), Δt, nt)
+    sol = integrate(iode, TableauVPLobIIIB(3), Δt, nt)
     @test rel_err(sol.q, refx) < 8E-7
 
-    sol = integrate(iode, getTableauVPLobIIIB4(), Δt, nt)
+    sol = integrate(iode, TableauVPLobIIIB(4), Δt, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
 end
@@ -56,15 +56,15 @@ end
 
 @testset "$(rpad("VPRK integrators with standard projection",80))" begin
 
-    int = IntegratorVPRKpStandard(iode, getTableauVPGLRK(1), Δt)
+    int = IntegratorVPRKpStandard(iode, TableauVPGLRK(1), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 1E-6
 
-    int = IntegratorVPRKpStandard(iode, getTableauVPGLRK(2), Δt)
+    int = IntegratorVPRKpStandard(iode, TableauVPGLRK(2), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = IntegratorVPRKpStandard(iode, getTableauVPGLRK(3), Δt)
+    int = IntegratorVPRKpStandard(iode, TableauVPGLRK(3), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 5E-16
 
@@ -73,15 +73,15 @@ end
 
 @testset "$(rpad("VPRK integrators with symplectic projection",80))" begin
 
-    int = IntegratorVPRKpSymplectic(iode, getTableauVPGLRK(1), Δt)
+    int = IntegratorVPRKpSymplectic(iode, TableauVPGLRK(1), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = IntegratorVPRKpSymplectic(iode, getTableauVPGLRK(2), Δt)
+    int = IntegratorVPRKpSymplectic(iode, TableauVPGLRK(2), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = IntegratorVPRKpSymplectic(iode, getTableauVPGLRK(3), Δt)
+    int = IntegratorVPRKpSymplectic(iode, TableauVPGLRK(3), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 8E-12
 
@@ -90,15 +90,15 @@ end
 
 @testset "$(rpad("VPRK integrators with symmetric projection",80))" begin
 
-    int = IntegratorVPRKpSymmetric(iode, getTableauVPGLRK(1), Δt)
+    int = IntegratorVPRKpSymmetric(iode, TableauVPGLRK(1), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 1E-6
 
-    int = IntegratorVPRKpSymmetric(iode, getTableauVPGLRK(2), Δt)
+    int = IntegratorVPRKpSymmetric(iode, TableauVPGLRK(2), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = IntegratorVPRKpSymmetric(iode, getTableauVPGLRK(3), Δt)
+    int = IntegratorVPRKpSymmetric(iode, TableauVPGLRK(3), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 4E-16
 
@@ -107,15 +107,15 @@ end
 
 @testset "$(rpad("VPRK integrators with midpoint projection",80))" begin
 
-    int = IntegratorVPRKpMidpoint(iode, getTableauVPGLRK(1), Δt)
+    int = IntegratorVPRKpMidpoint(iode, TableauVPGLRK(1), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 1E-6
 
-    int = IntegratorVPRKpMidpoint(iode, getTableauVPGLRK(2), Δt)
+    int = IntegratorVPRKpMidpoint(iode, TableauVPGLRK(2), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = IntegratorVPRKpMidpoint(iode, getTableauVPGLRK(3), Δt)
+    int = IntegratorVPRKpMidpoint(iode, TableauVPGLRK(3), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 4E-16
 
@@ -124,19 +124,19 @@ end
 
 @testset "$(rpad("VPRK integrators with internal projection",80))" begin
 
-    int = IntegratorVPRKpInternal(iode, getTableauVPGLRK(1), Δt)
+    int = IntegratorVPRKpInternal(iode, TableauVPGLRK(1), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 2E-6
 
-    int = IntegratorVPRKpInternal(iode, getTableauVPGLRK(2), Δt)
+    int = IntegratorVPRKpInternal(iode, TableauVPGLRK(2), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = IntegratorVPRKpInternal(iode, getTableauVPGLRK(3), Δt)
+    int = IntegratorVPRKpInternal(iode, TableauVPGLRK(3), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 4E-12
 
-    int = IntegratorVPRKpInternal(iode, getTableauVPGLRK(4), Δt)
+    int = IntegratorVPRKpInternal(iode, TableauVPGLRK(4), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 8E-16
 
@@ -145,15 +145,15 @@ end
 
 @testset "$(rpad("VPRK integrators with projection on secondary constraint",80))" begin
 
-    int = IntegratorVPRKpSecondary(vode, getTableauVPGLRK(1), Δt)
+    int = IntegratorVPRKpSecondary(vode, TableauVPGLRK(1), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 2E-6
 
-    int = IntegratorVPRKpSecondary(vode, getTableauVPGLRK(2), Δt)
+    int = IntegratorVPRKpSecondary(vode, TableauVPGLRK(2), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 8E-7
 
-    int = IntegratorVPRKpSecondary(vode, getTableauVPGLRK(3), Δt)
+    int = IntegratorVPRKpSecondary(vode, TableauVPGLRK(3), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 4E-12
 
@@ -162,39 +162,39 @@ end
 
 @testset "$(rpad("VPRK integrators with variational projection",80))" begin
 
-    intV1 = IntegratorVPRKpVariational(iode, getTableauVPGLRK(1), Δt)
+    intV1 = IntegratorVPRKpVariational(iode, TableauVPGLRK(1), Δt)
     solV1 = integrate(iode, intV1, nt)
     @test rel_err(solV1.q, refx) < 8E-7
 
-    intV2 = IntegratorVPRKpVariational(iode, getTableauVPGLRK(2), Δt)
+    intV2 = IntegratorVPRKpVariational(iode, TableauVPGLRK(2), Δt)
     solV2 = integrate(iode, intV2, nt)
     @test rel_err(solV2.q, refx) < 8E-8
 
-    intV3 = IntegratorVPRKpVariational(iode, getTableauVPGLRK(3), Δt)
+    intV3 = IntegratorVPRKpVariational(iode, TableauVPGLRK(3), Δt)
     solV3 = integrate(iode, intV3, nt)
     @test rel_err(solV3.q, refx) < 1E-11
 
-    intQ1 = IntegratorVPRKpVariationalQ(iode, getTableauVPGLRK(1), Δt)
+    intQ1 = IntegratorVPRKpVariationalQ(iode, TableauVPGLRK(1), Δt)
     solQ1 = integrate(iode, intQ1, nt)
     @test rel_err(solQ1.q, refx) < 4E-5
 
-    intQ2 = IntegratorVPRKpVariationalQ(iode, getTableauVPGLRK(2), Δt)
+    intQ2 = IntegratorVPRKpVariationalQ(iode, TableauVPGLRK(2), Δt)
     solQ2 = integrate(iode, intQ2, nt)
     @test rel_err(solQ2.q, refx) < 2E-4
 
-    intQ3 = IntegratorVPRKpVariationalQ(iode, getTableauVPGLRK(3), Δt)
+    intQ3 = IntegratorVPRKpVariationalQ(iode, TableauVPGLRK(3), Δt)
     solQ3 = integrate(iode, intQ3, nt)
     @test rel_err(solQ3.q, refx) < 1E-8
 
-    intP1 = IntegratorVPRKpVariationalP(iode, getTableauVPGLRK(1), Δt)
+    intP1 = IntegratorVPRKpVariationalP(iode, TableauVPGLRK(1), Δt)
     solP1 = integrate(iode, intP1, nt)
     @test rel_err(solP1.q, refx) < 8E-7
 
-    intP2 = IntegratorVPRKpVariationalP(iode, getTableauVPGLRK(2), Δt)
+    intP2 = IntegratorVPRKpVariationalP(iode, TableauVPGLRK(2), Δt)
     solP2 = integrate(iode, intP2, nt)
     @test rel_err(solP2.q, refx) < 8E-8
 
-    intP3 = IntegratorVPRKpVariationalP(iode, getTableauVPGLRK(3), Δt)
+    intP3 = IntegratorVPRKpVariationalP(iode, TableauVPGLRK(3), Δt)
     solP3 = integrate(iode, intP3, nt)
     @test rel_err(solP3.q, refx) < 1E-11
 
@@ -220,15 +220,15 @@ end
 
 @testset "$(rpad("Degenerate symplectic partitioned Runge-Kutta methods",80))" begin
 
-    int = IntegratorVPRKdegenerate(iode, getTableauVPGLRK(1), Δt)
+    int = IntegratorVPRKdegenerate(iode, TableauVPGLRK(1), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 2E-5
 
-    int = IntegratorVPRKdegenerate(iode, getTableauVPGLRK(2), Δt)
+    int = IntegratorVPRKdegenerate(iode, TableauVPGLRK(2), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 4E-7
 
-    int = IntegratorVPRKdegenerate(iode, getTableauVPGLRK(3), Δt)
+    int = IntegratorVPRKdegenerate(iode, TableauVPGLRK(3), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 2E-10
 
@@ -237,15 +237,15 @@ end
 
 @testset "$(rpad("VSPRK integrators with Legendre projection",80))" begin
 
-    int = IntegratorVPRKpLegendre(iode, getTableauVPGLRK(1), Δt)
+    int = IntegratorVPRKpLegendre(iode, TableauVPGLRK(1), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 1E-6
 
-    int = IntegratorVPRKpLegendre(iode, getTableauVPGLRK(2), Δt)
+    int = IntegratorVPRKpLegendre(iode, TableauVPGLRK(2), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = IntegratorVPRKpLegendre(iode, getTableauVPGLRK(3), Δt)
+    int = IntegratorVPRKpLegendre(iode, TableauVPGLRK(3), Δt)
     sol = integrate(iode, int, nt)
     @test rel_err(sol.q, refx) < 8E-16
 
