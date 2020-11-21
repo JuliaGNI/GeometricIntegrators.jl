@@ -121,17 +121,18 @@ module Tableaus
 
     include("tableaus/tableaus_vprk.jl")
 
-    export getTableauVPGLRK,
-           getTableauVPLobIIIA2, getTableauVPLobIIIA3, getTableauVPLobIIIA4, getTableauVPLobIIIA5,
-           getTableauVPLobIIIB2, getTableauVPLobIIIB3, getTableauVPLobIIIB4, getTableauVPLobIIIB5,
-           getTableauVPLobIIIC2, getTableauVPLobIIIC3, getTableauVPLobIIIC4,
-           getTableauVPLobIIID2, getTableauVPLobIIID3, getTableauVPLobIIID4,
-           getTableauVPLobIIIE2, getTableauVPLobIIIE3, getTableauVPLobIIIE4,
-           getTableauVPLobIIIF2, getTableauVPLobIIIF3, getTableauVPLobIIIF4,
-           getTableauVPLobIIIG2, getTableauVPLobIIIG3, getTableauVPLobIIIG4,
-           getTableauVPSRK3,
-           getTableauVPLobIIIAIIIA2, getTableauVPLobIIIAIIIA3, getTableauVPLobIIIAIIIA4,
-           getTableauVPRadIIAIIA2, getTableauVPRadIIAIIA3
+    export TableauVPGLRK,
+           TableauVPLobIIIA,
+           TableauVPLobIIIB,
+           TableauVPLobIIIC,
+           TableauVPLobIIID,
+           TableauVPLobIIIE,
+           TableauVPLobIIIF,
+           TableauVPLobIIIG,
+           TableauVPSRK3,
+           TableauVPLobIIIAIIIA,
+           TableauVPLobIIIBIIIB,
+           TableauVPRadIIAIIA2, TableauVPRadIIAIIA3
 
     export TableauSymplecticProjection,
            TableauLobIIIAIIIBpSymplectic,
