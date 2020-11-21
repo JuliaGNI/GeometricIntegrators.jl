@@ -37,7 +37,7 @@ function NLsolveNewton(x::AbstractVector{T}, F!::Function; J!::Union{Function,No
     df = linear_solver.A
     f! = (f, x) -> F!(x, f)
 
-    if J! == nothing
+    if J! === nothing
         if get_config(:jacobian_autodiff)
             DF = OnceDifferentiable(f!, x, f, df; autodiff=:forward, inplace=true)
         else

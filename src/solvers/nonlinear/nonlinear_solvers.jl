@@ -145,7 +145,7 @@ function getLinearSolver(x::AbstractVector{T}) where {T}
     n = length(x)
     linear_solver = get_config(:ls_solver)
 
-    if linear_solver == nothing || linear_solver == :lapack
+    if linear_solver === nothing || linear_solver == :lapack
     # if linear_solver == :lapack
         linear_solver = LUSolverLAPACK{T}(BlasInt(n))
     elseif linear_solver == :julia
