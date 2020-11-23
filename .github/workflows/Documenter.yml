@@ -16,10 +16,12 @@ jobs:
         with:
           version: 1.5
       - name: Install dependencies
-        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+        run: julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate(); Pkg.build(); Pkg.precompile();'
       - name: Build Tutorial
-        run: julia --project=docs/ docs/tutorial.jl
+        run: julia --project tutorial.jl
+        working-directory: docs
       - name: Build and deploy Documentation
+        run: julia --project make.jl
+        working-directory: docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: julia --project=docs/ docs/make.jl

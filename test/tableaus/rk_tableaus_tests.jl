@@ -64,7 +64,7 @@
          [-2.0*fac 0.5+fac]]
     b = [0.5,     0.5    ]
     c = [0.5+fac, 0.5-fac]
-    o = 2
+    o = 3
 
     @test TableauDIRK(:crouzeix, o, a, b, c) == getTableauCrouzeix()
 

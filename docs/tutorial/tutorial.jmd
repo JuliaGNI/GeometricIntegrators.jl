@@ -1,7 +1,3 @@
----
-title: GeometricIntegrators.jl Tutorial
-author: Michael Kraus
----
 
 # Tutorial
 
@@ -32,9 +28,9 @@ sol = integrate(ode, int, 10);
 Plot and compare with the exact solution
 ```julia
 using Plots
-plot(xlim=[0,1], xlab="t", ylab="x(t)", legend=:bottomright)
-plot!(sol.t.t, sol.q.d[1,:], label="numeric")
-plot!(sol.t.t, exp.(sol.t.t), label="exact")
+plot(xlims=[0,1], xlab="t", ylab="x(t)", legend=:bottomright)
+plot!(sol.t, sol.q[1,:], label="numeric")
+plot!(sol.t, exp.(sol.t), label="exact")
 ```
 
 
@@ -91,7 +87,7 @@ x₀ = [acos(0.4), 0.0]
 ```
 An ODE object is than instantiated by
 ```
-ODE(<vector field>, <initial conditions>)
+ODE(<vector field>, <initial conditions>; kwargs...)
 ```
 specifically,
 ```julia
@@ -152,20 +148,34 @@ int = Integrator(ode, getTableauExplicitEuler(), 0.1);
 In order to run the integrator, the `integrate()` functions is called, passing
 an integrator object and the number of time steps to integrate:
 ```julia
-sol = integrate(ode, int, 10);
+sol = integrate(ode, int, 250);
 ```
 The integrate function automatically creates an appropriate solution object,
 that contains the result of the integration.
+
+```julia
+plot(sol.q[1,:], sol.q[2,:], xlab="x(t)", ylab="y(t)", legend=:none)
+```
+
+Observe that the explicit Euler method is not well suited for integrating this
+system. The solutions drifts away although it should follow closed orbits.
 
 For a Hamiltonian system, defined as a PODE, a different tableau might be more
 appropriate, for example a symplectic Euler method,
 ```julia
 int = Integrator(pode, getTableauSymplecticEulerA(), 0.1)
-sol = integrate(pode, int, 10);
+sol = integrate(pode, int, 250);
 ```
 This creates a different integrator, which exploits the partitioned structure
 of the system. The solution return by the integrate step will also be a different
 solution, adapted to the partitioned system.
+
+```julia
+plot(sol.q[1,:], sol.p[1,:], xlab="q(t)", ylab="p(t)", legend=:none)
+```
+
+Moreover, this method respects the Hamiltonian structure of the system, resulting
+in closed orbits following the contours of the system's energy.
 
 
 ## Tableaus
@@ -180,9 +190,17 @@ like outlined above. In particular, this includes the following methods:
 | `getTableauExplicitEuler()`    | 1     | Explicit / Forward Euler    |
 | `getTableauExplicitMidpoint()` | 2     | Explicit Midpoint           |
 | `getTableauHeun()`             | 2     | Heun's Method               |
+| `getTableauRunge()`            | 2     | Runge's Method              |
 | `getTableauKutta()`            | 3     | Kutta's Method              |
 | `getTableauERK4()`             | 4     | Explicit 4th order Runge-Kutta (1/6 rule) |
 | `getTableauERK438()`           | 4     | Explicit 4th order Runge-Kutta (3/8 rule) |
+
+
+#### Diagonally Implicit Runge-Kutta Methods
+
+| Function                       | Order | Method                      |
+|--------------------------------|-------|-----------------------------|
+| `getTableauCrouzeix()`         | 3     | Crouzeix's Method           |
 
 
 #### Fully Implicit Runge-Kutta Methods

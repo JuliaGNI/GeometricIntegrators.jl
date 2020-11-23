@@ -10,7 +10,9 @@
 [![codecov Status](https://codecov.io/gh/JuliaGNI/GeometricIntegrators.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaGNI/GeometricIntegrators.jl)
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3648325.svg)](https://doi.org/10.5281/zenodo.3648325)
 
-GeometricIntegrators.jl is a library of geometric integrators for ordinary differential equations and differential algebraic equations in Julia. Its main aim is the implementation and verification of novel geometric integrators, especially with respect to long-time stability and conservation of geometric structures. In order to be able to perform simulations with millions or billions of time steps, the design of the library tries to minimize overhead and maximize performance. For example, all data structures are preallocated and reused so that all runtime allocations are eliminated. GeometricIntegrators.jl provides solvers for various families of integrators as well as facilities to derive such integrators of arbitrary order, e.g., via discrete variational principles.
+GeometricIntegrators.jl is a library of geometric integrators for ordinary differential equations, stochastic differential equations and differential algebraic equations in Julia. Its main aim is the democratization and proliferation of geometric integrators, providing a comprehensive collection of standard and structure-preserving algorithms under a unified interface. Furthermore it serves as testbed for the implementation and verification of novel geometric integrators, in particular their analysis with respect to long-time stability and conservation of geometric structures. 
+GeometricIntegrators.jl can be used either interactively or as computational core in other codes. It provides both, a high-level interface that requires only very few lines of code to solve an actual problem, and a lean low-level interface that allows for straightforward integration into application codes via the exchange of very small data structures.
+Due to the modular structure and the use of the multiple dispatch paradigm, the library can easily be extended, e.g., towards new algorithms or new types of equations. GeometricIntegrators.jl is designed to minimize overhead and maximize performance in order to be able to perform simulations with millions or even billions of time steps to facilitate the study of the long-time behaviour of both numerical algorithms and dynamical systems.
 
 
 ## Manual
@@ -39,109 +41,16 @@ Pages = ["modules/basis_functions.md",
 ```
 
 
-## Features
-
-The following list provides and overview of supported and planned features.
-
-#### Families of Standard Methods
-
-- [x] Explicit Runge-Kutta Methods (ERK),
-- [x] Diagonally Implicit Runge-Kutta Methods (DIRK),
-- [x] Fully Implicit Runge-Kutta Methods (FIRK),
-- [x] Explicit Partitioned Runge-Kutta Methods (EPRK),
-- [x] Implicit Partitioned Runge-Kutta Methods (IPRK),
-- [ ] Additive Runge-Kutta Methods (ARK),
-- [x] Partitioned Additive Runge-Kutta Methods (PARK),
-- [ ] Generalised Additive Runge-Kutta Methods (GARK),
-- [ ] Specialised Partitioned Additive Runge-Kutta Methods (SPARK),
-- [ ] Continuous-stage Runge-Kutta Methods (CSRK),
-- [ ] Two-step Runge-Kutta Methods (TSRK),
-- [ ] General Linear Methods (GLM).
-
-#### Families of Geometric Integrators
-
-- [x] Gauss-Legendre Runge-Kutta Methods (GLRK),
-- [x] Variational Partitioned Runge-Kutta Methods (VPRK),
-- [x] Hamiltonian Partitioned Additive Runge-Kutta Methods (HPARK, HSPARK),
-- [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK, VSPARK),
-- [x] Continuous Galerkin Variational Integrators (CGVI),
-- [x] Discontinuous Galerkin Variational Integrators (DGVI),
-- [ ] Hamilton-Pontryagin-Galerkin Integrators (HPGI),
-- [ ] Spline Variational Integrators (SVI),
-- [ ] Taylor Variational Integrators (TVI),
-- [x] Splitting Methods (SM),
-- [ ] Hamiltonian Boundary Value Methods (HBVM).
-
-#### Families of Stochastic Integrators
-
-- [x] Stochastic Explicit Runge-Kutta Methods (SERK),
-- [x] Stochastic Implicit Runge-Kutta Methods (SIRK),
-- [x] Stochastic Implicit Partitioned Runge-Kutta Methods (SIPRK),
-- [x] Stochastic Implicit Partitioned Additive Runge-Kutta Methods,
-- [x] Stochastic Weak Explicit Runge-Kutta Methods (WERK),
-- [x] Stochastic Weak Implicit Runge-Kutta Methods (WIRK).
-
-#### Families of Equations
-
-- [x] Systems of ODEs,
-- [x] Systems of DAEs,
-- [x] Systems of SDEs,
-- [x] Partitioned ODEs,
-- [x] Partitioned DAEs,
-- [x] Partitioned SDEs,
-- [x] Implicit ODEs,
-- [x] Implicit DAEs,
-- [ ] Implicit SDEs,
-- [x] Variational ODEs,
-- [x] Hamiltonian DAEs,
-- [x] Split ODEs,
-- [ ] Split Partitioned ODEs,
-- [x] Split Partitioned SDEs.
-
-#### Linear Solvers
-
-- [x] LU decomposition (LAPACK),
-- [x] LU decomposition (native Julia),
-- [ ] Krylov,
-
-#### Nonlinear Solvers
-
-- [ ] Fixed-Point Iteration,
-- [ ] Fixed-Point Iteration with Aitken Acceleration,
-- [ ] Fixed-Point Iteration with Anderson Acceleration,
-- [ ] Jacobian-free Newton-Krylov,
-- [x] Newton's method,
-- [x] Newton's method with line search (Armijo, quadratic),
-- [x] Quasi-Newton,
-
-with
-
-- [x] Analytic Jacobian,
-- [x] Finite Difference Jacobian,
-- [x] Jacobian obtained via Automatic Differentiation.
-
-#### Diagnostics
-
-- [x] Symplecticity Conditions,
-- [ ] Runge-Kutta Stability Area,
-- [ ] Convergence Analysis,
-- [x] First Poincaré Integral Invariant,
-- [x] Second Poincaré Integral Invariant.
-
-
-## References (mostly in preparation)
+## References
 
 - Michael Kraus. Hamilton-Pontryagin-Galerkin Integrators.
-- Michael Kraus. Projected Variational Integrators for Degenerate Lagrangian Systems.
-- Michael Kraus. Discontinuous Galerkin Variational Integrators for Degenerate Lagrangian Systems.
-- Michael Kraus. Discontinuous Galerkin Variational Integrators for Hamiltonian Systems subject to Dirac Constraints.
+- Michael Kraus. Projected Variational Integrators for Degenerate Lagrangian Systems. [arXiv:1708.07356](https://arxiv.org/abs/1708.07356).
 - Michael Kraus. SPARK Methods for Degenerate Lagrangian Systems.
 - Michael Kraus. SPARK Methods for Hamiltonian Systems subject to Dirac Constraints.
-- Michael Kraus. Symplectic Gauß-Legendre Runge-Kutta Methods for Degenerate Lagrangian Systems.
-- Michael Kraus. Symplectic Lobatto Runge-Kutta Methods for Degenerate Lagrangian Systems.
-- Michael Kraus. Variational Integrators for Degenerate Lagrangians.
+- Michael Kraus. Symplectic Runge-Kutta Methods for Degenerate Lagrangian Systems.
 - Michael Kraus. Variational Integrators for Noncanonical Hamiltonian Systems.
-- Michael Kraus and Tomasz M. Tyranowski. Variational Integrators for Stochastic Dissipative Hamiltonian Systems.
+- Michael Kraus and Tomasz M. Tyranowski. Variational Integrators for Stochastic Dissipative Hamiltonian Systems. [arXiv:1909.07202](https://arxiv.org/abs/1909.07202),
+  [Journal](https://doi.org/10.1088/1742-6596/1391/1/012037).
 - Michael Kraus, Joshua Burby. Conservation of Poincaré Integral Invariants in Numerical Simulations.
 
 

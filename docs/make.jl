@@ -8,6 +8,7 @@ makedocs(
     format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = ["Home" => "index.md",
              "Tutorial" => "tutorial/tutorial.md",
+             "Features" => "features.md",
              "Integrators" => [
                 "Overview"    => "integrators.md",
                 "Runge-Kutta" => "integrators/rk.md",
@@ -35,5 +36,5 @@ makedocs(
 )
 
 deploydocs(
-    repo   = "github.com/JuliaGNI/GeometricIntegrators.jl.git",
+    repo   = "github.com/JuliaGNI/GeometricIntegrators.jl",
 )
