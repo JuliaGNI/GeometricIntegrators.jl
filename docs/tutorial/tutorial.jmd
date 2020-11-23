@@ -28,7 +28,7 @@ sol = integrate(ode, int, 10);
 Plot and compare with the exact solution
 ```julia
 using Plots
-plot(xlim=[0,1], xlab="t", ylab="x(t)", legend=:bottomright)
+plot(xlims=[0,1], xlab="t", ylab="x(t)", legend=:bottomright)
 plot!(sol.t, sol.q[1,:], label="numeric")
 plot!(sol.t, exp.(sol.t), label="exact")
 ```
