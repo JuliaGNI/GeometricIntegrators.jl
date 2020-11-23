@@ -33,15 +33,15 @@ Before any use, we need to load `GeometricIntegrators`,
 ```julia
 using GeometricIntegrators
 ```
-Then we can create an `ODE` object for the equation $\dot{x} (t) = x(t)$ with initial condition $x(0) = 1$ by
+Then we can create an `ODE` object for the equation ẋ(t) = x(t) with initial condition x(0)=1 by
 ```julia
 ode = ODE((t, x, ẋ) -> ẋ[1] = x[1], [1.0]);
 ```
-An integrator for this ODE, using the tableau for the explicit Euler method and a time step of $\Delta t = 0.1$, is obtained by
+An integrator for this ODE, using the tableau for the explicit Euler method and a time step of Δt=0.1, is obtained by
 ```julia
 int = Integrator(ode, TableauExplicitEuler(), 0.1);
 ```
-With that, the solution for $n_t = 10$ time steps is simply computed by
+With that, the solution for nₜ=10 time steps is simply computed by
 ```julia
 sol = integrate(ode, int, 10);
 ```
