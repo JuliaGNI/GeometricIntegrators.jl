@@ -59,6 +59,20 @@ Pages = ["modules/basis_functions.md",
 
 ## References
 
+If you use *GeometricIntegrators.jl* in your work, please consider citing it by
+
+```
+@misc{Kraus:2020:GeometricIntegrators,
+  title={GeometricIntegrators.jl: Geometric Numerical Integration in Julia},
+  author={Kraus, Michael},
+  year={2020},
+  howpublished={\url{https://github.com/JuliaGNI/GeometricIntegrators.jl}},
+  doi={10.5281/zenodo.3648325}
+}
+```
+
+*GeometricIntegrators.jl* contains reference implementation for the methods described in the following articles:
+
 - Michael Kraus. Hamilton-Pontryagin-Galerkin Integrators.
 - Michael Kraus. Projected Variational Integrators for Degenerate Lagrangian Systems. [arXiv:1708.07356](https://arxiv.org/abs/1708.07356).
 - Michael Kraus. SPARK Methods for Degenerate Lagrangian Systems.
