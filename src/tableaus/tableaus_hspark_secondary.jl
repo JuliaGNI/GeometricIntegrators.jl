@@ -92,62 +92,72 @@ function getTableauHSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
 end
 
 
-function TableauHSPARKLobIII(s, lq, lp; name = Symbol("HSPARKLobattoIII"))
+function TableauHSPARKLobattoIII(s, lq, lp; name = Symbol("HSPARKLobattoIII"))
     o = 2s-2
     getTableauHSPARK(s, s, o, name, lq, lp, lq, lp, get_lobatto_ω_matrix(s), get_lobatto_d_vector(s))
 end
 
-function TableauHSPARKLobIIIAB(s)
-    lq = getCoefficientsLobIIIA(s)
-    lp = getCoefficientsLobIIIB(s)
-    TableauHSPARKLobIII(s, lq, lp; name = Symbol("HSPARKLobIIIAIIIB"))
+function TableauHSPARKLobattoIIIAB(s)
+    lq = CoefficientsLobattoIIIA(s)
+    lp = CoefficientsLobattoIIIB(s)
+    TableauHSPARKLobattoIII(s, lq, lp; name = Symbol("HSPARKLobattoIIIAIIIB"))
 end
 
-function TableauHSPARKLobIIIBA(s)
-    lq = getCoefficientsLobIIIB(s)
-    lp = getCoefficientsLobIIIA(s)
-    TableauHSPARKLobIII(s, lq, lp; name = Symbol("HSPARKLobIIIBIIIA"))
+function TableauHSPARKLobattoIIIBA(s)
+    lq = CoefficientsLobattoIIIB(s)
+    lp = CoefficientsLobattoIIIA(s)
+    TableauHSPARKLobattoIII(s, lq, lp; name = Symbol("HSPARKLobattoIIIBIIIA"))
 end
 
-function TableauHSPARKLobIIIC(s)
-    lq = getCoefficientsLobIII(s)
-    lp = getCoefficientsLobIIIC(s)
-    TableauHSPARKLobIII(s, lq, lp; name = Symbol("HSPARKLobIIIC"))
+function TableauHSPARKLobattoIIICC̄(s)
+    lq = CoefficientsLobattoIIIC(s)
+    lp = CoefficientsLobattoIIIC̄(s)
+    TableauHSPARKLobattoIII(s, lq, lp; name = Symbol("HSPARKLobattoIIICIIIC̄"))
 end
 
-function TableauHSPARKLobIIID(s)
-    l = getCoefficientsLobIIID(s)
-    TableauHSPARKLobIII(s, l, l; name = Symbol("HSPARKLobIIID"))
+function TableauHSPARKLobattoIIIC̄C(s)
+    lq = CoefficientsLobattoIIIC̄(s)
+    lp = CoefficientsLobattoIIIC(s)
+    TableauHSPARKLobattoIII(s, lq, lp; name = Symbol("HSPARKLobattoIIIC̄IIIC"))
 end
 
-function TableauHSPARKLobIIIE(s)
-    l = getCoefficientsLobIIIE(s)
-    TableauHSPARKLobIII(s, l, l; name = Symbol("HSPARKLobIIIE"))
+function TableauHSPARKLobattoIIID(s)
+    l = CoefficientsLobattoIIID(s)
+    TableauHSPARKLobattoIII(s, l, l; name = Symbol("HSPARKLobattoIIID"))
+end
+
+function TableauHSPARKLobattoIIIE(s)
+    l = CoefficientsLobattoIIIE(s)
+    TableauHSPARKLobattoIII(s, l, l; name = Symbol("HSPARKLobattoIIIE"))
 end
 
 
-function TableauHSPARKGLRKLobIII(s, σ, lq, lp; name = Symbol("HSPARKGLRKLobattoIII"))
+function TableauHSPARKGLRKLobattoIII(s, σ, lq, lp; name = Symbol("HSPARKGLRKLobattoIII"))
     o = 2s
-    g = getCoefficientsGLRK(s)
+    g = CoefficientsGLRK(s)
     getTableauHSPARK(s, σ, o, name, g, get_lobatto_interstage_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_d_vector(σ))
 end
 
-function TableauHSPARKGLRKLobIIIAB(s, σ=s+1)
-    TableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIA(σ), getCoefficientsLobIIIB(σ); name = Symbol("HSPARKGLRKLobIIIAIIIB"))
+function TableauHSPARKGLRKLobattoIIIAB(s, σ=s+1)
+    TableauHSPARKGLRKLobattoIII(s, σ, CoefficientsLobattoIIIA(σ), CoefficientsLobattoIIIB(σ); name = Symbol("HSPARKGLRKLobattoIIIAIIIB"))
 end
 
-function TableauHSPARKGLRKLobIIIBA(s, σ=s+1)
-    TableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIB(σ), getCoefficientsLobIIIA(σ); name = Symbol("HSPARKGLRKLobIIIBIIIA"))
+function TableauHSPARKGLRKLobattoIIIBA(s, σ=s+1)
+    TableauHSPARKGLRKLobattoIII(s, σ, CoefficientsLobattoIIIB(σ), CoefficientsLobattoIIIA(σ); name = Symbol("HSPARKGLRKLobattoIIIBIIIA"))
 end
 
-function TableauHSPARKGLRKLobIIIC(s, σ=s+1)
-    TableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIII(σ), getCoefficientsLobIIIC(σ); name = Symbol("HSPARKGLRKLobIIIC"))
+function TableauHSPARKGLRKLobattoIIICC̄(s, σ=s+1)
+    TableauHSPARKGLRKLobattoIII(s, σ, CoefficientsLobattoIIIC(σ), CoefficientsLobattoIIIC̄(σ); name = Symbol("HSPARKGLRKLobattoIIICIIIC̄"))
 end
 
-function TableauHSPARKGLRKLobIIID(s, σ=s+1)
-    TableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIIID(σ), getCoefficientsLobIIID(σ); name = Symbol("HSPARKGLRKLobIIID"))
+function TableauHSPARKGLRKLobattoIIIC̄C(s, σ=s+1)
+    TableauHSPARKGLRKLobattoIII(s, σ, CoefficientsLobattoIIIC̄(σ), CoefficientsLobattoIIIC(σ); name = Symbol("HSPARKGLRKLobattoIIIC̄IIIC"))
 end
 
-function TableauHSPARKGLRKLobIIIE(s, σ=s+1)
-    TableauHSPARKGLRKLobIII(s, σ, getCoefficientsLobIIIE(σ), getCoefficientsLobIIIE(σ); name = Symbol("HSPARKGLRKLobIIIE"))
+function TableauHSPARKGLRKLobattoIIID(s, σ=s+1)
+    TableauHSPARKGLRKLobattoIII(s, σ, CoefficientsLobattoIIID(σ), CoefficientsLobattoIIID(σ); name = Symbol("HSPARKGLRKLobattoIIID"))
+end
+
+function TableauHSPARKGLRKLobattoIIIE(s, σ=s+1)
+    TableauHSPARKGLRKLobattoIII(s, σ, CoefficientsLobattoIIIE(σ), CoefficientsLobattoIIIE(σ); name = Symbol("HSPARKGLRKLobattoIIIE"))
 end

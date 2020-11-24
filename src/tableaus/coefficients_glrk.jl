@@ -7,9 +7,9 @@ using DecFP: Dec128
 
 
 function getCoefficientsGLRK1(T=Float64)
-    a = reshape(Array([1//2]), (1,1))
-    b = Vector([1//1])
-    c = Vector([1//2])
+    a = reshape([1//2], (1,1))
+    b = [1//1]
+    c = [1//2]
     o = 2
 
     CoefficientsRK(T, :GLRK1, o, a, b, c)
@@ -193,7 +193,7 @@ function getCoefficientsGLRK6(T=Float64)
 end
 
 
-function getCoefficientsGLRK(s::Int; T=Float64, high_precision=true)
+function CoefficientsGLRK(s::Int; T=Float64, high_precision=true)
 
     if high_precision == true
         if s == 1
@@ -208,6 +208,8 @@ function getCoefficientsGLRK(s::Int; T=Float64, high_precision=true)
             return getCoefficientsGLRK5(T)
         elseif s == 6
             return getCoefficientsGLRK6(T)
+        else
+            @warn("High-precision GLRK coefficients requested for s=$(s), but only standard-precision coefficients are available.")
         end
     end
 
@@ -244,7 +246,7 @@ end
 
 function get_GLRK_ω_matrix(s)
     ω = zeros(s, s+1)
-    g = getCoefficientsGLRK(s)
+    g = CoefficientsGLRK(s)
     ω[s,s+1] = 1
     for i in 1:s-1
         for j in 1:s

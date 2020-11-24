@@ -17,38 +17,38 @@ ode  = lotka_volterra_2d_ode()
 iode = lotka_volterra_2d_iode()
 vode = lotka_volterra_2d_vode()
 
-int  = IntegratorFIRK(ode, getTableauGLRK(8), Δt)
+int  = IntegratorFIRK(ode, TableauGLRK(8), Δt)
 sol  = integrate(ode, int, nt)
 refx = sol.q[:,end]
 
 
 @testset "$(rpad("VPRK integrators",80))" begin
 
-    sol = integrate(iode, TableauVPRK(:pglrk, 2, getCoefficientsGLRK(1), -1), Δt, nt)
+    sol = integrate(iode, TableauVPRK(:pglrk, 2, CoefficientsGLRK(1), -1), Δt, nt)
     @test rel_err(sol.q, refx) < 2E-6
 
-    sol = integrate(iode, TableauVPRK(:pglrk, 4, getCoefficientsGLRK(2), +1), Δt, nt)
+    sol = integrate(iode, TableauVPRK(:pglrk, 4, CoefficientsGLRK(2), +1), Δt, nt)
     @test rel_err(sol.q, refx) < 8E-7
 
-    sol = integrate(iode, TableauVPRK(:pglrk, 6, getCoefficientsGLRK(3), -1), Δt, nt)
+    sol = integrate(iode, TableauVPRK(:pglrk, 6, CoefficientsGLRK(3), -1), Δt, nt)
     @test rel_err(sol.q, refx) < 4E-12
 
-    sol = integrate(iode, TableauVPLobIIIA(2), Δt, nt)
+    sol = integrate(iode, TableauVPLobattoIIIA(2), Δt, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    sol = integrate(iode, TableauVPLobIIIA(3), Δt, nt)
+    sol = integrate(iode, TableauVPLobattoIIIA(3), Δt, nt)
     @test rel_err(sol.q, refx) < 8E-7
 
-    sol = integrate(iode, TableauVPLobIIIA(4), Δt, nt)
+    sol = integrate(iode, TableauVPLobattoIIIA(4), Δt, nt)
     @test rel_err(sol.q, refx) < 3E-11
 
-    sol = integrate(iode, TableauVPLobIIIB(2), Δt, nt)
+    sol = integrate(iode, TableauVPLobattoIIIB(2), Δt, nt)
     @test rel_err(sol.q, refx) < 2E-6
 
-    sol = integrate(iode, TableauVPLobIIIB(3), Δt, nt)
+    sol = integrate(iode, TableauVPLobattoIIIB(3), Δt, nt)
     @test rel_err(sol.q, refx) < 8E-7
 
-    sol = integrate(iode, TableauVPLobIIIB(4), Δt, nt)
+    sol = integrate(iode, TableauVPLobattoIIIB(4), Δt, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
 end
@@ -207,11 +207,11 @@ end
 
 @testset "$(rpad("VPRK integrators with projection on Runge-Kutta tableau",80))" begin
 
-    int = IntegratorVPRKpTableau(iode, getCoefficientsPGLRK(5), Δt*5)
+    int = IntegratorVPRKpTableau(iode, CoefficientsPGLRK(5), Δt*5)
     sol = integrate(iode, int, div(nt,5))
     @test rel_err(sol.q, refx) < 8E-12
 
-    int = IntegratorVPRKpTableau(iode, getCoefficientsPGLRK(6), Δt*5)
+    int = IntegratorVPRKpTableau(iode, CoefficientsPGLRK(6), Δt*5)
     sol = integrate(iode, int, div(nt,5))
     @test rel_err(sol.q, refx) < 4E-14
 

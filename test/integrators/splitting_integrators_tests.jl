@@ -13,59 +13,59 @@ using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem: Δt, nt, refx
 sode = harmonic_oscillator_sode()
 
 
-sint = Integrator(sode, getTableauLieA(), Δt)
+sint = Integrator(sode, TableauLieA(), Δt)
 ssol = integrate(sode, sint, nt)
 @test rel_err(ssol.q, refx) < 5E-2
 
-sintc = IntegratorComposition(sode, getTableauLieA(), Δt)
+sintc = IntegratorComposition(sode, TableauLieA(), Δt)
 ssolc = integrate(sode, sintc, nt)
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, getTableauLieB(), Δt)
+sint = Integrator(sode, TableauLieB(), Δt)
 ssol = integrate(sode, sint, nt)
 @test rel_err(ssol.q, refx) < 5E-2
 
-sintc = IntegratorComposition(sode, getTableauLieB(), Δt)
+sintc = IntegratorComposition(sode, TableauLieB(), Δt)
 ssolc = integrate(sode, sintc, nt)
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, getTableauStrang(), Δt)
+sint = Integrator(sode, TableauStrang(), Δt)
 ssol = integrate(sode, sint, nt)
 @test rel_err(ssol.q, refx) < 1E-3
 
-sintc = IntegratorComposition(sode, getTableauStrang(), Δt)
+sintc = IntegratorComposition(sode, TableauStrang(), Δt)
 ssolc = integrate(sode, sintc, nt)
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, getTableauMcLachlan2(), Δt)
+sint = Integrator(sode, TableauMcLachlan2(), Δt)
 ssol = integrate(sode, sint, nt)
 @test rel_err(ssol.q, refx) < 1E-4
 
-sintc = IntegratorComposition(sode, getTableauMcLachlan2(), Δt)
+sintc = IntegratorComposition(sode, TableauMcLachlan2(), Δt)
 ssolc = integrate(sode, sintc, nt)
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, getTableauMcLachlan4(), Δt)
+sint = Integrator(sode, TableauMcLachlan4(), Δt)
 ssol = integrate(sode, sint, nt)
 @test rel_err(ssol.q, refx) < 5E-4
 
-sintc = IntegratorComposition(sode, getTableauMcLachlan4(), Δt)
+sintc = IntegratorComposition(sode, TableauMcLachlan4(), Δt)
 ssolc = integrate(sode, sintc, nt)
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, getTableauTripleJump(), Δt)
+sint = Integrator(sode, TableauTripleJump(), Δt)
 ssol = integrate(sode, sint, nt)
 @test rel_err(ssol.q, refx) < 5E-6
 
-sintc = IntegratorComposition(sode, getTableauTripleJump(), Δt)
+sintc = IntegratorComposition(sode, TableauTripleJump(), Δt)
 ssolc = integrate(sode, sintc, nt)
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, getTableauSuzukiFractal(), Δt)
+sint = Integrator(sode, TableauSuzukiFractal(), Δt)
 ssol = integrate(sode, sint, nt)
 @test rel_err(ssol.q, refx) < 5E-7
 
-sintc = IntegratorComposition(sode, getTableauSuzukiFractal(), Δt)
+sintc = IntegratorComposition(sode, TableauSuzukiFractal(), Δt)
 ssolc = integrate(sode, sintc, nt)
 @test ssol.q == ssolc.q
 
@@ -73,15 +73,15 @@ ssolc = integrate(sode, sintc, nt)
 DT = eltype(sode.q₀)
 D  = ndims(sode)
 
-ints_glrk1 = (IntegratorConstructor(DT, D, getTableauGLRK(1)), IntegratorConstructor(DT, D, getTableauGLRK(1)))
-ints_erk4  = (IntegratorConstructor(DT, D, getTableauERK4()), IntegratorConstructor(DT, D, getTableauERK4()))
+ints_glrk1 = (IntegratorConstructor(DT, D, TableauGLRK(1)), IntegratorConstructor(DT, D, TableauGLRK(1)))
+ints_erk4  = (IntegratorConstructor(DT, D, TableauERK4()), IntegratorConstructor(DT, D, TableauERK4()))
 
-sint = IntegratorComposition(sode, ints_erk4, getTableauLieA(), Δt)
+sint = IntegratorComposition(sode, ints_erk4, TableauLieA(), Δt)
 ssol = integrate(sode, sint, nt)
 # println(rel_err(ssol.q, refx))
 @test rel_err(ssol.q, refx) < 5E-2
 
-sint = IntegratorComposition(sode, ints_glrk1, getTableauStrang(), Δt)
+sint = IntegratorComposition(sode, ints_glrk1, TableauStrang(), Δt)
 ssol = integrate(sode, sint, nt)
 # println(rel_err(ssol.q, refx))
 @test rel_err(ssol.q, refx) < 1E-3

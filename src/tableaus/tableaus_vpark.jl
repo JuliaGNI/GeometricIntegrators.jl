@@ -54,17 +54,17 @@ end
 
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and symplectic projection."
-function TableauLobIIIAIIIBpSymplectic(s)
-    TableauSymplecticProjection(Symbol("LobIIIAIIIB($s)pSymplectic"), getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+function TableauLobattoIIIAIIIBpSymplectic(s)
+    TableauSymplecticProjection(Symbol("LobattoIIIAIIIB($s)pSymplectic"), CoefficientsLobattoIIIA(s), CoefficientsLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and symplectic projection."
-function TableauLobIIIBIIIApSymplectic(s)
-    TableauSymplecticProjection(Symbol("LobIIIBIIIA($s)pSymplectic"), getCoefficientsLobIIIB(s), getCoefficientsLobIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+function TableauLobattoIIIBIIIApSymplectic(s)
+    TableauSymplecticProjection(Symbol("LobattoIIIBIIIA($s)pSymplectic"), CoefficientsLobattoIIIB(s), CoefficientsLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function TableauGLRKpSymplectic(s)
-    glrk = getCoefficientsGLRK(s)
+    glrk = CoefficientsGLRK(s)
     TableauSymplecticProjection(Symbol("GLRK($s)pSymplectic"), glrk, glrk; R∞=(-1)^s)
 end

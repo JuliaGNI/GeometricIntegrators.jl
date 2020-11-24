@@ -8,7 +8,7 @@
     c = Rational{Int64}[0, 1//2]
     o = 2
 
-    @test TableauERK(:explicit_midpoint, o, a, b, c) == getTableauExplicitMidpoint()
+    @test TableauERK(:explicit_midpoint, o, a, b, c) == TableauExplicitMidpoint()
 
     tab_explicit_midpoint1 = @test_nowarn TableauERK(:explicit_midpoint, o, a, b, c)
     tab_explicit_midpoint2 = @test_logs (:warn, r"Initializing TableauDIRK with explicit tableau explicit_midpoint.*") TableauDIRK(:explicit_midpoint, o, a, b, c)
@@ -47,7 +47,7 @@
     @test_logs (:warn, r"Initializing TableauDIRK with explicit tableau heun.*") TableauDIRK(:heun, o, a, b, c)
     @test_logs (:warn, r"Initializing TableauFIRK with explicit tableau heun.*") TableauFIRK(:heun, o, a, b, c)
 
-    @test TableauERK(:heun, o, a, b, c) == getTableauHeun()
+    @test TableauERK(:heun, o, a, b, c) == TableauHeun()
 
     tmp = mktempdir()
     tab_explicit_heun1 = TableauERK(:heun, o, a, b, c)
@@ -66,7 +66,7 @@
     c = [0.5+fac, 0.5-fac]
     o = 3
 
-    @test TableauDIRK(:crouzeix, o, a, b, c) == getTableauCrouzeix()
+    @test TableauDIRK(:crouzeix, o, a, b, c) == TableauCrouzeix()
 
     @test_throws AssertionError tab_explicit_crouzeix = TableauERK(:crouzeix, o, a, b, c)
     @test_nowarn tab_explicit_crouzeix = TableauDIRK(:crouzeix, o, a, b, c)
@@ -79,8 +79,8 @@
     c = Rational{Int64}[1//2]
     o = 2
 
-    @test TableauFIRK(:implicit_midpoint, o, a, b, c) == getTableauImplicitMidpoint()
-    @test TableauFIRK(:implicit_midpoint, o, a, b, c) == getTableauGLRK(1)
+    @test TableauFIRK(:implicit_midpoint, o, a, b, c) == TableauImplicitMidpoint()
+    @test TableauFIRK(:implicit_midpoint, o, a, b, c) == TableauGLRK(1)
 
     @test_throws AssertionError tab_implicit_midpoint = TableauERK(:implicit_midpoint, o, a, b, c)
     @test_throws AssertionError tab_implicit_midpoint = TableauDIRK(:implicit_midpoint, o, a, b, c)
@@ -96,7 +96,7 @@
     c = Array{Float64}(@dec128 [0.5-√3/6, 0.5+√3/6])
     o = 4
 
-    @test TableauFIRK(:glrk2, o, a, b, c) == getTableauGLRK(2)
+    @test TableauFIRK(:glrk2, o, a, b, c) == TableauGLRK(2)
 
     @test_throws AssertionError tab_explicit_glrk2 = TableauERK(:glrk2, o, a, b, c)
     @test_throws AssertionError tab_explicit_glrk2 = TableauDIRK(:glrk2, o, a, b, c)
@@ -104,58 +104,62 @@
 
 
     # instantiate all explicit tableaus
-    @test typeof(getTableauExplicitEuler()) <: TableauERK
-    @test typeof(getTableauExplicitMidpoint()) <: TableauERK
-    @test typeof(getTableauHeun()) <: TableauERK
-    @test typeof(getTableauKutta()) <: TableauERK
-    @test typeof(getTableauRunge()) <: TableauERK
-    @test typeof(getTableauERK4()) <: TableauERK
-    @test typeof(getTableauERK438()) <: TableauERK
+    @test typeof(TableauExplicitEuler()) <: TableauERK
+    @test typeof(TableauExplicitMidpoint()) <: TableauERK
+    @test typeof(TableauHeun()) <: TableauERK
+    @test typeof(TableauKutta()) <: TableauERK
+    @test typeof(TableauRunge()) <: TableauERK
+    @test typeof(TableauERK4()) <: TableauERK
+    @test typeof(TableauERK416()) <: TableauERK
+    @test typeof(TableauERK438()) <: TableauERK
 
     # instantiate all diagonally implicit tableaus
-    @test typeof(getTableauCrouzeix()) <: TableauDIRK
+    @test typeof(TableauCrouzeix()) <: TableauDIRK
 
     # instantiate all fully implicit tableaus
-    @test typeof(getTableauImplicitEuler()) <: TableauFIRK
-    @test typeof(getTableauImplicitMidpoint()) <: TableauFIRK
-    @test typeof(getTableauGLRK(1)) <: TableauFIRK
-    @test typeof(getTableauGLRK(2)) <: TableauFIRK
-    @test typeof(getTableauSRK3()) <: TableauFIRK
+    @test typeof(TableauImplicitEuler()) <: TableauFIRK
+    @test typeof(TableauImplicitMidpoint()) <: TableauFIRK
+    @test typeof(TableauGLRK(1)) <: TableauFIRK
+    @test typeof(TableauGLRK(2)) <: TableauFIRK
+    @test typeof(TableauSRK3()) <: TableauFIRK
 
-    @test typeof( @test_logs (:warn, r"Initializing TableauFIRK with diagonally implicit tableau LobIIIA2.*") getTableauLobIIIA2() ) <: TableauFIRK
-    @test typeof(getTableauLobIIIA3()) <: TableauFIRK
-    @test typeof(getTableauLobIIIA4()) <: TableauFIRK
-    @test typeof( @test_logs (:warn, r"Initializing TableauFIRK with explicit tableau LobIIIB2.*") getTableauLobIIIB2() ) <: TableauFIRK
-    @test typeof(getTableauLobIIIB3()) <: TableauFIRK
-    @test typeof(getTableauLobIIIB4()) <: TableauFIRK
-    @test typeof(getTableauLobIIIC2()) <: TableauFIRK
-    @test typeof(getTableauLobIIIC3()) <: TableauFIRK
-    @test typeof(getTableauLobIIIC4()) <: TableauFIRK
-    @test typeof(getTableauLobIIID2()) <: TableauFIRK
-    @test typeof(getTableauLobIIID3()) <: TableauFIRK
-    @test typeof(getTableauLobIIID4()) <: TableauFIRK
-    @test typeof( @test_logs (:warn, r"Initializing TableauFIRK with diagonally implicit tableau LobIIIE2.*") getTableauLobIIIE2() ) <: TableauFIRK
-    @test typeof(getTableauLobIIIE3()) <: TableauFIRK
-    @test typeof(getTableauLobIIIE4()) <: TableauFIRK
-    @test typeof(getTableauLobIIIF2()) <: TableauFIRK
-    @test typeof(getTableauLobIIIF3()) <: TableauFIRK
-    @test typeof(getTableauLobIIIF4()) <: TableauFIRK
-    @test typeof(getTableauLobIIIG2()) <: TableauFIRK
-    @test typeof(getTableauLobIIIG3()) <: TableauFIRK
-    @test typeof(getTableauLobIIIG4()) <: TableauFIRK
+    @test typeof( @test_logs (:warn, r"Initializing TableauFIRK with diagonally implicit tableau LobattoIIIA\(2\).*") TableauLobattoIIIA(2) ) <: TableauFIRK
+    @test typeof(TableauLobattoIIIA(3)) <: TableauFIRK
+    @test typeof(TableauLobattoIIIA(4)) <: TableauFIRK
+    @test typeof( @test_logs (:warn, r"Initializing TableauFIRK with explicit tableau LobattoIIIB\(2\).*") TableauLobattoIIIB(2) ) <: TableauFIRK
+    @test typeof(TableauLobattoIIIB(3)) <: TableauFIRK
+    @test typeof(TableauLobattoIIIB(4)) <: TableauFIRK
+    @test typeof(TableauLobattoIIIC(2)) <: TableauFIRK
+    @test typeof(TableauLobattoIIIC(3)) <: TableauFIRK
+    @test typeof(TableauLobattoIIIC(4)) <: TableauFIRK
+    @test typeof( @test_logs (:warn, r"Initializing TableauFIRK with explicit tableau LobattoIIIC̄\(2\).*") TableauLobattoIIIC̄(2) ) <: TableauFIRK
+    @test typeof( @test_logs (:warn, r"Initializing TableauFIRK with diagonally implicit tableau LobattoIIIC̄\(3\).*") TableauLobattoIIIC̄(3) ) <: TableauFIRK
+    @test typeof(TableauLobattoIIIC̄(4)) <: TableauFIRK
+    @test typeof(TableauLobattoIIID(2)) <: TableauFIRK
+    @test typeof(TableauLobattoIIID(3)) <: TableauFIRK
+    @test typeof(TableauLobattoIIID(4)) <: TableauFIRK
+    @test typeof( @test_logs (:warn, r"Initializing TableauFIRK with diagonally implicit tableau LobattoIIIE\(2\).*") TableauLobattoIIIE(2) ) <: TableauFIRK
+    @test typeof(TableauLobattoIIIE(3)) <: TableauFIRK
+    @test typeof(TableauLobattoIIIE(4)) <: TableauFIRK
+    @test typeof(TableauLobattoIIIF(2)) <: TableauFIRK
+    @test typeof(TableauLobattoIIIF(3)) <: TableauFIRK
+    @test typeof(TableauLobattoIIIF(4)) <: TableauFIRK
+    @test typeof(TableauLobattoIIIG(2)) <: TableauFIRK
+    @test typeof(TableauLobattoIIIG(3)) <: TableauFIRK
+    @test typeof(TableauLobattoIIIG(4)) <: TableauFIRK
 
-    @test typeof(getTableauRadIIA2()) <: TableauFIRK
-    @test typeof(getTableauRadIIA3()) <: TableauFIRK
+    @test typeof(TableauRadauIIA2()) <: TableauFIRK
+    @test typeof(TableauRadauIIA3()) <: TableauFIRK
 
     # instatiate all partitioned tableaus
-    @test typeof(getTableauSymplecticEulerA()) <: TableauEPRK
-    @test typeof(getTableauSymplecticEulerB()) <: TableauEPRK
-    @test typeof(getTableauLobattoIIIAIIIB2()) <: TableauEPRK
-    @test typeof(getTableauLobattoIIIBIIIA2()) <: TableauEPRK
+    @test typeof(TableauSymplecticEulerA()) <: TableauEPRK
+    @test typeof(TableauSymplecticEulerB()) <: TableauEPRK
+    @test typeof(TableauLobattoIIIAIIIB2()) <: TableauEPRK
+    @test typeof(TableauLobattoIIIBIIIA2()) <: TableauEPRK
 
     # test instatiation of partioned tableau by composition of two RK tableaus
-    @test typeof(TableauEPRK(:PERK4, 4, getTableauERK4().q, getTableauERK4().q)) <: TableauEPRK
-    @test TableauEPRK(:PERK4, 4, getTableauERK4().q, getTableauERK4().q) == TableauEPRK(:PERK4, 4, getTableauERK4().q)
+    @test typeof(TableauEPRK(:PERK4, 4, TableauERK4().q, TableauERK4().q)) <: TableauEPRK
+    @test TableauEPRK(:PERK4, 4, TableauERK4().q, TableauERK4().q) == TableauEPRK(:PERK4, 4, TableauERK4().q)
 
 
     # TODO Add tests for TableauIPRK, TableauSARK, TableauSPARK and TableauGLM.

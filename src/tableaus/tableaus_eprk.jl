@@ -1,5 +1,5 @@
 
-function getCoefficientsSymplecticEulerForward()
+function CoefficientsSymplecticEulerForward()
     a = [[0.0 0.0]
          [1.0 0.0]]
     b = [1.0, 0.0]
@@ -10,7 +10,7 @@ function getCoefficientsSymplecticEulerForward()
     CoefficientsRK(:symplectic_euler_forward, o, a, b, c)
 end
 
-function getCoefficientsSymplecticEulerBackward()
+function CoefficientsSymplecticEulerBackward()
     a = [[0.0 0.0]
          [0.0 1.0]]
     b = [0.0, 1.0]
@@ -22,24 +22,24 @@ function getCoefficientsSymplecticEulerBackward()
 end
 
 "Tableau for symplectic Euler-A method"
-function getTableauSymplecticEulerA()
-    TableauEPRK(:symplectic_euler_a, 1, getCoefficientsSymplecticEulerForward(), getCoefficientsSymplecticEulerBackward())
+function TableauSymplecticEulerA()
+    TableauEPRK(:symplectic_euler_a, 1, CoefficientsSymplecticEulerForward(), CoefficientsSymplecticEulerBackward())
 end
 
 "Tableau for symplectic Euler-B method"
-function getTableauSymplecticEulerB()
-    TableauEPRK(:symplectic_euler_b, 1, getCoefficientsSymplecticEulerBackward(), getCoefficientsSymplecticEulerForward())
+function TableauSymplecticEulerB()
+    TableauEPRK(:symplectic_euler_b, 1, CoefficientsSymplecticEulerBackward(), CoefficientsSymplecticEulerForward())
 end
 
 
 "Tableau for Gauss-Lobatto IIIAIIIB method with s=2 stages"
-function getTableauLobattoIIIAIIIB2()
-    TableauEPRK(:lobatto_IIIA_IIIB_2, 2, getCoefficientsLobIIIA2(), getCoefficientsLobIIIB2())
+function TableauLobattoIIIAIIIB2()
+    TableauEPRK(:lobatto_IIIA_IIIB_2, 2, CoefficientsLobattoIIIA(2), CoefficientsLobattoIIIB(2))
 end
 
 
 "Tableau for Gauss-Lobatto IIIBIIIA method with s=2 stages"
-function getTableauLobattoIIIBIIIA2()
-    TableauEPRK(:lobatto_IIIB_IIIA_2, 2, getCoefficientsLobIIIB2(), getCoefficientsLobIIIA2())
+function TableauLobattoIIIBIIIA2()
+    TableauEPRK(:lobatto_IIIB_IIIA_2, 2, CoefficientsLobattoIIIB(2), CoefficientsLobattoIIIA(2))
 end
 
