@@ -4,30 +4,42 @@ function getTableauSLRK(s, o, tsym, q, p, q̃, p̃, ω, d=Nothing)
 end
 
 
-function getTableauSLRKLobIII(s, q, p)
+function TableauSLRKLobattoIII(s, q, p)
     o = 2s-2
-    tsym = Symbol("SLRKLobIII")
+    tsym = Symbol("SLRKLobattoIII")
     getTableauSLRK(s, o, tsym, q, p, q, p, get_lobatto_ω_matrix(s), get_lobatto_d_vector(s))
 end
 
-function getTableauSLRKLobIIIAB(s)
-    q = getCoefficientsLobIIIA(s)
-    p = getCoefficientsLobIIIB(s)
-    getTableauSLRKLobIII(s, q, p)
+function TableauSLRKLobattoIIIAB(s)
+    q = CoefficientsLobattoIIIA(s)
+    p = CoefficientsLobattoIIIB(s)
+    TableauSLRKLobattoIII(s, q, p)
 end
 
-function getTableauSLRKLobIIIC(s)
-    q = getCoefficientsLobIII(s)
-    p = getCoefficientsLobIIIC(s)
-    getTableauSLRKLobIII(s, q, p)
+function TableauSLRKLobattoIIIBA(s)
+    q = CoefficientsLobattoIIIB(s)
+    p = CoefficientsLobattoIIIA(s)
+    TableauSLRKLobattoIII(s, q, p)
 end
 
-function getTableauSLRKLobIIID(s)
-    l = getCoefficientsLobIIID(s)
-    getTableauSLRKLobIII(s, l, l)
+function TableauSLRKLobattoIIICC̄(s)
+    q = CoefficientsLobattoIIIC(s)
+    p = CoefficientsLobattoIIIC̄(s)
+    TableauSLRKLobattoIII(s, q, p)
 end
 
-function getTableauSLRKLobIIIE(s)
-    l = getCoefficientsLobIIIE(s)
-    getTableauSLRKLobIII(s, l, l)
+function TableauSLRKLobattoIIIC̄C(s)
+    q = CoefficientsLobattoIIIC̄(s)
+    p = CoefficientsLobattoIIIC(s)
+    TableauSLRKLobattoIII(s, q, p)
+end
+
+function TableauSLRKLobattoIIID(s)
+    l = CoefficientsLobattoIIID(s)
+    TableauSLRKLobattoIII(s, l, l)
+end
+
+function TableauSLRKLobattoIIIE(s)
+    l = CoefficientsLobattoIIIE(s)
+    TableauSLRKLobattoIII(s, l, l)
 end
