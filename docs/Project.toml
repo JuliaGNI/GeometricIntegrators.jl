@@ -1,5 +1,6 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+DocumenterCitations = "daee34ce-89f3-4625-b898-19384cb65244"
 GeometricIntegrators = "dcce2d33-59f6-5b8d-9047-0defad88ae06"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Weave = "44d3d7a6-8a23-5bf8-98c5-b353f8df5ec9"
