@@ -1,5 +1,5 @@
 ---
-title: 'GeometricIntegrators.jl: A Julia Library for the Geometric Numerical Integration of Differential Equations'
+title: 'GeometricIntegrators.jl: Geometric Numerical Integration in Julia'
 tags:
   - Julia
   - differential equations
