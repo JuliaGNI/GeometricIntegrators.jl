@@ -77,15 +77,21 @@ Pages = ["modules/basis_functions.md",
 - Laurent O. Jay. Lobatto Methods. Encyclopedia of Applied and Computational Mathematics, 817–826. Springer, 2015. ([Article](http://dx.doi.org/10.1007/978-3-540-70529-1_123))
 
 
-## Books on the Numerical Integration of Ordinary Differential Equations
+## Books on Geometric Numerical Integration
+
+- Sergio Blanes, Fernando Casas. A Concise Introduction to Geometric Numerical Integration. CRC Press, 2016. ([eBook](http://dx.doi.org/10.1201/b21563))
+- Ernst Hairer, Christian Lubich and Gerhard Wanner. Geometric Numerical Integration. Springer, 2006. ([eBook](http://link.springer.com/book/10.1007%2F3-540-30666-8))
+- Benedict Leimkuhler and Sebastian Reich. Simulating Hamiltonian Dynamics. Cambridge University Press, 2005. ([eBook](http://ebooks.cambridge.org/ebook.jsf?bid=CBO9780511614118))
+- Jesús Maria Sanz-Serna, Manuel P. Calvo. Numerical Hamiltonian Problems. Chapman Hall, 1994.
+
+
+## Books on the Numerical Integration of Differential Equations
 
 - Ernst Hairer, Syvert P. Nørsett and Gerhard Wanner. Solving Ordinary Differential Equations I: Nonstiff Problems. Springer, 1993. ([eBook](http://link.springer.com/book/10.1007%2F978-3-540-78862-1))
 - Ernst Hairer and Gerhard Wanner. Solving Ordinary Differential Equations II: Stiff and Differential-Algebraic Problems. Springer, 1996. ([eBook](http://link.springer.com/book/10.1007%2F978-3-642-05221-7))
+- Ernst Hairer, Christian Lubich, Michel Roche. The Numerical Solution of Differential-Algebraic Systems by Runge-Kutta Methods. Springer, 1989. ([eBook](https://link.springer.com/book/10.1007/BFb0093947))
 - Peter Deuflhard, Folkmar Bornemann. Scientific Computing with Ordinary Differential Equations. Springer, 2002. ([eBook](http://link.springer.com/book/10.1007/978-0-387-21582-2))
 - John C. Butcher. Numerical Methods for Ordinary Differential Equations. Wiley, 2016. ([eBook](http://onlinelibrary.wiley.com/book/10.1002/9781119121534))
-- Ernst Hairer, Christian Lubich and Gerhard Wanner. Geometric Numerical Integration. Springer, 2006. ([eBook](http://link.springer.com/book/10.1007%2F3-540-30666-8))
-- Benedict Leimkuhler and Sebastian Reich. Simulating Hamiltonian Dynamics. Cambridge University Press, 2005. ([eBook](http://ebooks.cambridge.org/ebook.jsf?bid=CBO9780511614118))
-- Sergio Blanes, Fernando Casas. A Concise Introduction to Geometric Numerical Integration. CRC Press, 2016. ([eBook](http://dx.doi.org/10.1201/b21563))
 
 
 ## License
