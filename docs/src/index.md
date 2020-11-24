@@ -84,14 +84,14 @@ If you use *GeometricIntegrators.jl* in your work, please consider citing it by
 - Michael Kraus, Joshua Burby. Conservation of Poincaré Integral Invariants in Numerical Simulations.
 
 
-## Background Material
+### Background Material
 
 - Ernst Hairer and Christian Lubich. Numerical Solution of Ordinary Differential Equations. The Princeton Companion to Applied Mathematics, 293-305, 2015. Princeton University Press. ([Author's Web Site](https://na.uni-tuebingen.de/~lubich/pcam-ode.pdf))
 - Ernst Hairer, Christian Lubich and Gerhard Wanner. Geometric Numerical Integration Illustrated by the Störmer–Verlet Method. Acta Numerica 12, 399-450, 2003. ([Journal](http://dx.doi.org/10.1017/S0962492902000144))
 - Laurent O. Jay. Lobatto Methods. Encyclopedia of Applied and Computational Mathematics, 817–826. Springer, 2015. ([Article](http://dx.doi.org/10.1007/978-3-540-70529-1_123))
 
 
-## Books on Geometric Numerical Integration
+### Books on Geometric Numerical Integration
 
 - Sergio Blanes, Fernando Casas. A Concise Introduction to Geometric Numerical Integration. CRC Press, 2016. ([eBook](http://dx.doi.org/10.1201/b21563))
 - Ernst Hairer, Christian Lubich and Gerhard Wanner. Geometric Numerical Integration. Springer, 2006. ([eBook](http://link.springer.com/book/10.1007%2F3-540-30666-8))
@@ -99,7 +99,7 @@ If you use *GeometricIntegrators.jl* in your work, please consider citing it by
 - Jesús Maria Sanz-Serna, Manuel P. Calvo. Numerical Hamiltonian Problems. Chapman Hall, 1994.
 
 
-## Books on the Numerical Integration of Differential Equations
+### Books on the Numerical Integration of Differential Equations
 
 - Ernst Hairer, Syvert P. Nørsett and Gerhard Wanner. Solving Ordinary Differential Equations I: Nonstiff Problems. Springer, 1993. ([eBook](http://link.springer.com/book/10.1007%2F978-3-540-78862-1))
 - Ernst Hairer and Gerhard Wanner. Solving Ordinary Differential Equations II: Stiff and Differential-Algebraic Problems. Springer, 1996. ([eBook](http://link.springer.com/book/10.1007%2F978-3-642-05221-7))
