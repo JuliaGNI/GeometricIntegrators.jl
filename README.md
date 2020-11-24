@@ -18,7 +18,7 @@ Due to the modular structure and the use of the multiple dispatch paradigm, the 
 
 ## Installation
 
-*GeometricIntegrators.jl* is registered in the Julia package registry and can thus easily be installed in the Julia REPL by typing 
+*GeometricIntegrators.jl* and all of its dependencies can be installed via the Julia REPL by typing 
 ```
 ]add GeometricIntegrators
 ```
