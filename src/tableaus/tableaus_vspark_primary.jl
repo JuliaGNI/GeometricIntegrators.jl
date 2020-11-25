@@ -784,8 +784,8 @@ function TableauVSPARKModifiedLobattoIIIAIIIBProjection(name, q::CoefficientsRK{
     β_q = loba.b
     β_p = lobb.b
 
-    a_q̃ = get_lobatto_projective_stage(s, T)
-    a_p̃ = get_lobatto_projective_stage(s, T)
+    a_q̃ = get_lobatto_glrk_coefficients(s, 2, T).a
+    a_p̃ = get_lobatto_glrk_coefficients(s, 2, T).a
 
     α_q̃ = loba.a
     α_p̃ = lobb.a
@@ -862,8 +862,8 @@ function TableauVSPARKModifiedLobattoIIIBIIIAProjection(name, q::CoefficientsRK{
     β_q = loba.b
     β_p = lobb.b
 
-    a_q̃ = get_lobatto_projective_stage(s, T)
-    a_p̃ = get_lobatto_projective_stage(s, T)
+    a_q̃ = get_lobatto_glrk_coefficients(s, 2, T).a
+    a_p̃ = get_lobatto_glrk_coefficients(s, 2, T).a
 
     α_q̃ = lobb.a
     α_p̃ = loba.a

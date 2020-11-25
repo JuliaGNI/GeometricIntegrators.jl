@@ -135,7 +135,7 @@ end
 function TableauHSPARKGLRKLobattoIII(s, σ, lq, lp; name = Symbol("HSPARKGLRKLobattoIII"))
     o = 2s
     g = CoefficientsGLRK(s)
-    getTableauHSPARK(s, σ, o, name, g, get_lobatto_interstage_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_d_vector(σ))
+    getTableauHSPARK(s, σ, o, name, g, get_lobatto_glrk_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_d_vector(σ))
 end
 
 function TableauHSPARKGLRKLobattoIIIAB(s, σ=s+1)

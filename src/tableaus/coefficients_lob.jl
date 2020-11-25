@@ -1,7 +1,8 @@
 
-import GeometricIntegrators.Quadratures: LobattoLegendreQuadrature, weights
-import DecFP: Dec128
+import LinearAlgebra
 import Polynomials
+
+import GeometricIntegrators.Quadratures: GaussLegendreQuadrature
 
 
 @doc raw"""
@@ -192,79 +193,63 @@ function CoefficientsLobattoIIIG(s, T=Float64)
 end
 
 
-
-function get_lobatto_projective_stage(s, T=Float64)
-    if s == 1
-        a = reshape(T[0,1], (2,1))
-    elseif s == 2
-        a = T[ 0     0
-               1//2  1//2 ]
-    elseif s == 3
-        a = T[ 0      0      0
-               5//18  8//18  5//18 ]
-    elseif s == 4
-        a = T[ 0            0            0            0
-               1//4-√30/72  1//4+√30/72  1//4+√30/72  1//4-√30/72 ]
-    elseif s == 5
-        a = T[ 0            0            0            0            0
-               (-5797*√70 - 19635*√6 + 3297*√105 + 34069)/(900*(-31*√70 - 105*√6 + 12*√105 + 124))  3*(-155*√70 - 525*√6 + 21*√105 + 217)/(100*(-31*√70 - 105*√6 + 12*√105 + 124))  64/225  3*(-155*√70 - 525*√6 + 21*√105 + 217)/(100*(-31*√70 - 105*√6 + 12*√105 + 124))  (-5797*√70 - 19635*√6 + 3297*√105 + 34069)/(900*(-31*√70 - 105*√6 + 12*√105 + 124)) ]
-    else
-        @error "Lobatto projective coefficients for " * string(s) * " stages not implemented."
+@doc raw"""
+The projective Lobatto-GLRK coefficients are implicitly given by
+```math
+\sum \limits_{j=1}^{s} a_{ij} c_{j}^{k-1} = \frac{\bar{c}_i^k}{k}  \qquad i = 1 , \, ... , \, \sigma , \; k = 1 , \, ... , \, s ,
+```
+where $c$ are Gauß-Legendre nodes with $s$ stages and $\bar{c}$ are Gauß-Lobatto nodes with $\sigma$ stages.
+"""
+function get_lobatto_glrk_coefficients(s, σ=s+1, T=Float64)
+    if σ == 1
+        @error "Lobatto III coefficients for one stage are not defined."
     end
 
-    return a
+    function get_glrk_nodes(s)
+        if s == 1
+            c = [1//2]
+        elseif s == 2
+            c = [1/2-√3/6, 1/2+√3/6]
+        elseif s == 3
+            c = [1/2-√15/10,  1/2,        1/2+√15/10 ]
+        elseif s == 4
+            c = [
+                    1/2-√(3/7+2*√30/35)/2,
+                    1/2-√(3/7-2*√30/35)/2,
+                    1/2+√(3/7-2*√30/35)/2,
+                    1/2+√(3/7+2*√30/35)/2
+                ]
+        else
+            c = nodes(GaussLegendreQuadrature(s))
+        end
+
+        return big.(c)
+    end
+
+    c = get_glrk_nodes(s)
+    b̄ = get_lobatto_weights(σ)
+    c̄ = get_lobatto_nodes(σ)
+    M = [ c[j]^(k-1) for k in 1:s, j in 1:s ]
+    
+    row(i) = begin
+        r = [ c̄[i]^k / k for k in 1:s ]
+        M \ r
+    end
+    
+    ā = vcat([row(i)' for i in 1:σ]...)
+
+    CoefficientsIRK{T}(:LobattoIIIGLRK, s^2, s, σ, ā, b̄, c̄)
 end
 
 
-function get_lobatto_interstage_coefficients(s, σ=s+1, T=Float64)
-    if s == 1 && σ == 2
-        a = reshape(Array{Dec128}(@dec128 [
-                [0]
-                [1]
-            ]), σ, s)
-    elseif s == 2 && σ == 3
-        a = @dec128 [
-                [0         0       ]
-                [1/4+√3/8  1/4-√3/8]
-                [1/2       1/2     ]
-            ]
-    elseif s == 3 && σ == 4
-        a = @dec128 [
-                [0                     0              0                 ]
-                [5/36-√5/180+√15/30    2/9-4*√5/45    5/36-√15/30-√5/180]
-                [5/36+√5/180+√15/30    2/9+4*√5/45    5/36+√5/180-√15/30]
-                [5/18                  4/9            5/18              ]
-            ]
-    elseif s == 4 && σ == 5
-        a = @dec128[
-                [ 0  0  0  0 ]
-                [ 0.1591671294900345358547852036503968244037099929876660089701433805420016628303049  0.01565551541810189985834126767767053597372403599533987485875443079743596295789264  -0.002649931830622319490548503812025451589560291885905677307276227674989121280824921  0.0005004515684973118782758043605289134275222217051875147207182646279180365249293946 ]
-                [ 0.176105937938662021225385981377510389121610166295011341406551070207182545793024   0.3049159394838621526624258370570061164298248408582482915516281042450345033436905    0.02115663794741091865104218833199417995250081122480493820210723599558956292335403  -0.002178515369935092538854006766510685503935818378064571160286410447806612060067542  ]
-                [ 0.1734269710002296168082561702504707901901521262117592555255463951314578972080256  0.3287225092618953908040165292010257479718859439689589070610115679156131875478712    0.3104170620131711714551267577113297604086016160877133548949809094431881033091524    0.01476029307869239283174677096060287921396435492928076127612127921737427090265032   ]
-                [ 0.1739274225687269286865319746109997036176743479169467702462646597593759337329541  0.3260725774312730713134680253890002963823256520830532297537353402406240662670459    0.3260725774312730713134680253890002963823256520830532297537353402406240662670459    0.1739274225687269286865319746109997036176743479169467702462646597593759337329541    ]
-            ]            
-    else
-        @error("Number of stages s=$(s) and σ=$(σ) is not supported.")
-    end
-
-    CoefficientsIRK{T}(:LobattoIIIIS, s^2, s, σ, a, get_lobatto_weights(σ), get_lobatto_nodes(σ))
+function get_lobatto_d_vector(s, T=Float64; normalize=false)
+    q = get_lobatto_nodes(s)
+    l = LagrangeBasis(q)
+    v = [deriv_basis(l, j, i) for i in 1:s, j in 1:s]
+    w = LinearAlgebra.nullspace(v')[:,begin]
+    normalize ? T.(LinearAlgebra.normalize(w) .* sign(w[begin])) : T.(w)
 end
 
-
-function get_lobatto_d_vector(s)
-    if s == 2
-        d = [+1.0, -1.0]
-    elseif s == 3
-        d = [+1.0, -2.0, +1.0]
-    elseif s == 4
-        d = [+1.0, -√5, +√5, -1.0]
-    elseif s == 5
-        d = [+3.0, -7.0, +8.0, -7.0, +3.0]
-    else
-        @error("We don't have a d vector for s=$(s) stages.")
-    end
-    return d
-end
 
 function get_lobatto_ω_matrix(s)
     as = CoefficientsLobattoIIIA(s).a[2:s,1:s]
