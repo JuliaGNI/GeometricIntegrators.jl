@@ -41,7 +41,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             counter::Vector{Int}
             woffset::Int
             periodicity::Vector{dType}
-            h5::HDF5File
+            h5::HDF5.File
 
             function $TSolution{dType, tType, N}(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite, periodicity=zeros(dType, nd)) where {dType <: Number, tType <: Real, N}
                 new(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite, zeros(Int, ni), 0, periodicity)
@@ -111,8 +111,8 @@ for (TSolution, TDataSeries, Tdocstring) in
             h5 = h5open(file, "r")
 
             # read attributes
-            ntime = read(attrs(h5)["ntime"])
-            nsave = read(attrs(h5)["nsave"])
+            ntime = read(attributes(h5)["ntime"])
+            nsave = read(attributes(h5)["nsave"])
 
             # reading data arrays
             t = TimeSeries(read(h5["t"]), nsave)

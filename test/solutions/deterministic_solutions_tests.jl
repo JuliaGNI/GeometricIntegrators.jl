@@ -3,8 +3,8 @@ using GeometricIntegrators.CommonFunctions
 using GeometricIntegrators.Solutions
 using GeometricIntegrators.Solutions: createHDF5
 using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
-using HDF5: HDF5File
 using Test
+import HDF5
 
 
 nt    = 10
@@ -145,13 +145,13 @@ h5file = "test.hdf5"
     # test general hdf5 functions
     sol1 = Solution(ode, Δt, nt)
     h5 = createHDF5(sol1, h5file)
-    @test typeof(h5) == HDF5File
+    @test typeof(h5) == HDF5.File
     close(h5)
     @test isfile(h5file)
 
     sol1 = Solution(ode, Δt, nt)
     h5 = createHDF5(sol1, h5file; overwrite=false)
-    @test typeof(h5) == HDF5File
+    @test typeof(h5) == HDF5.File
     close(h5)
     @test isfile(h5file)
     rm(h5file)

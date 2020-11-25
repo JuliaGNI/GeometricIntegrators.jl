@@ -3,7 +3,6 @@ using GeometricIntegrators.CommonFunctions
 using GeometricIntegrators.Solutions
 using GeometricIntegrators.Solutions: createHDF5
 using GeometricIntegrators.TestProblems.KuboOscillatorProblem
-using HDF5: HDF5File
 using Test
 
 
