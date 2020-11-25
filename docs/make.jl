@@ -1,9 +1,11 @@
 using Documenter
+using DocumenterCitations
 using Weave
 using GeometricIntegrators
 
+bib = CitationBibliography("GeometricIntegrators.bib")
 
-makedocs(
+makedocs(bib,
     sitename = "GeometricIntegrators.jl",
     format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = ["Home" => "index.md",
@@ -32,6 +34,7 @@ makedocs(
                 "Solutions"         => "modules/solutions.md",
                 "Tableaus"          => "modules/tableaus.md"],
              "Release Notes" => "releasenotes.md",
+             "Bibliography" => "bibliography.md",
              ]
 )
 

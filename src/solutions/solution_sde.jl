@@ -42,7 +42,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             woffset::Int
             ioffset::Int
             periodicity::Vector{dType}
-            h5::HDF5File
+            h5::HDF5.File
 
             function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}
                 # extract parameters
@@ -176,26 +176,26 @@ for (TSolution, TDataSeries, Tdocstring) in
             h5 = h5open(file, "r")
 
             # read attributes
-            ntime = read(attrs(h5)["ntime"])
-            nsave = read(attrs(h5)["nsave"])
+            ntime = read(attributes(h5)["ntime"])
+            nsave = read(attributes(h5)["nsave"])
 
             # reading data arrays
             t = TimeSeries(read(h5["t"]), nsave)
 
-            if exists(attrs(h5),"conv")
-                conv = Symbol(read(attrs(h5)["conv"]))
+            if haskey(attributes(h5),"conv")
+                conv = Symbol(read(attributes(h5)["conv"]))
             else
                 conv = DEFAULT_SCONV
             end
 
-            W_exists = exists(h5, "ΔW") && exists(h5, "ΔZ")
+            W_exists = haskey(h5, "ΔW") && haskey(h5, "ΔZ")
 
             if W_exists == true
                 W = WienerProcess(t.Δt, read(h5["ΔW"]), read(h5["ΔZ"]), conv)
             end
 
-            if exists(attrs(h5),"K")
-                K = read(attrs(h5)["K"])
+            if haskey(attributes(h5),"K")
+                K = read(attributes(h5)["K"])
             else
                 K=0
             end

@@ -18,7 +18,7 @@ Due to the modular structure and the use of the multiple dispatch paradigm, the 
 
 ## Installation
 
-*GeometricIntegrators.jl* is registered in the Julia package registry and can thus easily be installed in the Julia REPL by typing 
+*GeometricIntegrators.jl* and all of its dependencies can be installed via the Julia REPL by typing 
 ```
 ]add GeometricIntegrators
 ```
@@ -58,3 +58,17 @@ plot!(sol.t, exp.(sol.t), label="exact")
 
 ![expontential_growth](https://user-images.githubusercontent.com/21168502/100005439-3e30e400-2dc9-11eb-97a9-d485f4e56d86.png)
 
+
+## References
+
+If you use *GeometricIntegrators.jl* in your work, please consider citing it by
+
+```
+@misc{Kraus:2020:GeometricIntegrators,
+  title={GeometricIntegrators.jl: Geometric Numerical Integration in Julia},
+  author={Kraus, Michael},
+  year={2020},
+  howpublished={\url{https://github.com/JuliaGNI/GeometricIntegrators.jl}},
+  doi={10.5281/zenodo.3648325}
+}
+```

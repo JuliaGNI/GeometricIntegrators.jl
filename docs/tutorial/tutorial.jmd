@@ -1,8 +1,25 @@
 
 # Tutorial
 
-## Introduction
+In this tutorial, we try to give an overview of the basic usage of GeometricIntegrators and its main components.
 
+
+## Installation
+
+*GeometricIntegrators.jl* can be installed using Julia's built-in package manager in the command line interface by
+```julia; eval=false
+julia> ]
+(v1.5) pkg> add GeometricIntegrators
+```
+In a Jupyter notebook, *GeometricIntegrators.jl* can be installed by explicitly using the `Pkg` module as
+```julia; eval=false
+using Pkg
+Pkg.add("GeometricIntegrators")
+```
+This will install the library itself as well as all dependencies.
+
+
+## Basic usage
 
 In the simplest cases, the use of `GeometricIntegrators.jl` requires the
 construction of two objects, an equation and an integrator. For many standard
