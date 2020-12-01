@@ -4,7 +4,7 @@ module Utils
 
     include("utils/diag_utils.jl")
 
-    export @define, @reexport, @dec128
+    export @define, @dec128, @big
 
     include("utils/macro_utils.jl")
 
