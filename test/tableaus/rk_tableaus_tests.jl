@@ -148,8 +148,13 @@
     @test typeof(TableauLobattoIIIG(3)) <: TableauFIRK
     @test typeof(TableauLobattoIIIG(4)) <: TableauFIRK
 
-    @test typeof(TableauRadauIIA2()) <: TableauFIRK
-    @test typeof(TableauRadauIIA3()) <: TableauFIRK
+    @test typeof(TableauRadauIA(2)) <: TableauFIRK
+    @test typeof(TableauRadauIA(3)) <: TableauFIRK
+    @test typeof(TableauRadauIA(4)) <: TableauFIRK
+
+    @test typeof(TableauRadauIIA(2)) <: TableauFIRK
+    @test typeof(TableauRadauIIA(3)) <: TableauFIRK
+    @test typeof(TableauRadauIIA(4)) <: TableauFIRK
 
     # instatiate all partitioned tableaus
     @test typeof(TableauSymplecticEulerA()) <: TableauEPRK

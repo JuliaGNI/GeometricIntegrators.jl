@@ -36,10 +36,12 @@
     @test typeof(TableauVPLobattoIIIF(2)) <: TableauVPRK
     @test typeof(TableauVPLobattoIIIF(3)) <: TableauVPRK
     @test typeof(TableauVPLobattoIIIF(4)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIF(5)) <: TableauVPRK
 
     @test typeof(TableauVPLobattoIIIG(2)) <: TableauVPRK
     @test typeof(TableauVPLobattoIIIG(3)) <: TableauVPRK
     @test typeof(TableauVPLobattoIIIG(4)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIG(5)) <: TableauVPRK
 
     @test typeof(TableauVPLobattoIIIAIIIA(2)) <: TableauVPRK
     @test typeof(TableauVPLobattoIIIAIIIA(3)) <: TableauVPRK
@@ -51,7 +53,9 @@
     @test typeof(TableauVPLobattoIIIBIIIB(4)) <: TableauVPRK
     @test typeof(TableauVPLobattoIIIBIIIB(5)) <: TableauVPRK
 
-    @test typeof(TableauVPRadauIIAIIA2()) <: TableauVPRK
-    @test typeof(TableauVPRadauIIAIIA3()) <: TableauVPRK
+    @test typeof(TableauVPRadauIIAIIA(2)) <: TableauVPRK
+    @test typeof(TableauVPRadauIIAIIA(3)) <: TableauVPRK
+    @test typeof(TableauVPRadauIIAIIA(4)) <: TableauVPRK
+    @test typeof(TableauVPRadauIIAIIA(5)) <: TableauVPRK
 
 end

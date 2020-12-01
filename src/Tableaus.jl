@@ -1,7 +1,5 @@
 module Tableaus
 
-    using LinearAlgebra: mul!
-
     using ..Config
     using ..CommonFunctions
     using ..BasisFunctions
@@ -17,9 +15,9 @@ module Tableaus
                                                   compute_ã_vspark_primary,
                                                   compute_α_vspark_primary
 
-    export CoefficientsGLRK,
-           getCoefficientsGLRK1, getCoefficientsGLRK2, getCoefficientsGLRK3,
-           getCoefficientsGLRK4, getCoefficientsGLRK5, getCoefficientsGLRK6
+    include("tableaus/coefficients_sa.jl")
+
+    export CoefficientsGLRK
 
     include("tableaus/coefficients_glrk.jl")
 
@@ -31,7 +29,7 @@ module Tableaus
 
     include("tableaus/coefficients_lob.jl")
 
-    export CoefficientsRadauIIA2, CoefficientsRadauIIA3
+    export CoefficientsRadauIA, CoefficientsRadauIIA
 
     include("tableaus/coefficients_rad.jl")
 
@@ -53,7 +51,7 @@ module Tableaus
     include("tableaus/tableaus_firk.jl")
 
     export TableauImplicitEuler, TableauImplicitMidpoint,
-           TableauGLRK, TableauRadauIIA2,  TableauRadauIIA3, TableauSRK3,
+           TableauGLRK, TableauRadauIA,  TableauRadauIIA, TableauSRK3,
            TableauLobattoIIIA, TableauLobattoIIIB, TableauLobattoIIIC, TableauLobattoIIIC̄,
            TableauLobattoIIID, TableauLobattoIIIE, TableauLobattoIIIF, TableauLobattoIIIG
            
@@ -115,7 +113,7 @@ module Tableaus
            TableauVPSRK3,
            TableauVPLobattoIIIAIIIA,
            TableauVPLobattoIIIBIIIB,
-           TableauVPRadauIIAIIA2, TableauVPRadauIIAIIA3
+           TableauVPRadauIIAIIA
 
     export TableauSymplecticProjection,
            TableauLobattoIIIAIIIBpSymplectic,

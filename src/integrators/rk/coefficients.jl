@@ -38,7 +38,7 @@ struct CoefficientsRK{T} <: AbstractCoefficients{T}
     end
 end
 
-function CoefficientsRK(T::Type, name::Symbol, order::Int, a::AbstractArray{CT,2}, b::AbstractArray{CT,1}, c::AbstractArray{CT,1}) where {CT}
+function CoefficientsRK(T::Type, name::Symbol, order::Int, a::AbstractMatrix, b::AbstractVector, c::AbstractVector)
     a̅ = Matrix{T}(a)
     b̅ = Vector{T}(b)
     c̅ = Vector{T}(c)
