@@ -49,22 +49,17 @@ end
 "Tableau for Gauss-Lobatto IIIA-IIIA method with s stages"
 function TableauVPLobattoIIIAIIIA(s)
     lob = CoefficientsLobattoIIIA(s)
-    TableauVPRK(Symbol("LobattoIIIAIIIA$s"), 2s-s, lob, lob, (-1)^(s+1))
+    TableauVPRK(Symbol("LobattoIIIAIIIA$s"), 2s-2, lob, lob, (-1)^(s+1))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIB method with s stages"
 function TableauVPLobattoIIIBIIIB(s)
     lob = CoefficientsLobattoIIIB(s)
-    TableauVPRK(Symbol("LobattoIIIBIIIB$s"), 2s-s, lob, lob, (-1)^(s+1))
+    TableauVPRK(Symbol("LobattoIIIBIIIB$s"), 2s-2, lob, lob, (-1)^(s+1))
 end
 
 
 "Tableau for Gauss-Radau IIA-IIA method with two stages"
-function TableauVPRadauIIAIIA2()
-    TableauVPRK(:RadauIIAIIA2, 2, CoefficientsRadauIIA2(), CoefficientsRadauIIA2(), -1)
-end
-
-"Tableau for Gauss-Radau IIA-IIA method with three stages"
-function TableauVPRadauIIAIIA3()
-    TableauVPRK(:RadauIIAIIA3, 4, CoefficientsRadauIIA3(), CoefficientsRadauIIA3(), +1)
+function TableauVPRadauIIAIIA(s)
+    TableauVPRK(Symbol("RadauIIAIIA$s"), 2s-1, CoefficientsRadauIIA(s), CoefficientsRadauIIA(s), (-1)^(s+1))
 end

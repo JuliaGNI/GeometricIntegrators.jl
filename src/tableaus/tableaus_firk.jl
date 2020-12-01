@@ -64,13 +64,13 @@ function TableauLobattoIIIG(s)
 end
 
 "Gauss-Radau-IIA Runge-Kutta tableau with s=2 stages."
-function TableauRadauIIA2()
-    TableauFIRK(CoefficientsRadauIIA2())
+function TableauRadauIA(s)
+    TableauFIRK(CoefficientsRadauIA(s))
 end
 
 "Gauss-Radau-IIA Runge-Kutta tableau with s=3 stages."
-function TableauRadauIIA3()
-    TableauFIRK(CoefficientsRadauIIA3())
+function TableauRadauIIA(s)
+    TableauFIRK(CoefficientsRadauIIA(s))
 end
 
 "Symmetric Runge-Kutta tableau with three stages."

@@ -25,6 +25,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 SharedArrays = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
+SpecialPolynomials = "a25cea48-d430-424a-8ee7-0d3ad3742e9e"
 
 [compat]
 Aqua = "0.5"
@@ -42,6 +43,7 @@ Polynomials = "1"
 ProgressMeter = "1"
 Reexport = "0.2"
 SafeTestsets = "0.0.1"
+SpecialPolynomials = "0.1"
 julia = "^1.4"
 
 [extras]
