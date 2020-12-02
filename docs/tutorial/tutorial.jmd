@@ -202,44 +202,44 @@ like outlined above. In particular, this includes the following methods:
 
 #### Explicit Runge-Kutta Methods
 
-| Function                     | Order | Method                      |
-|------------------------------|-------|-----------------------------|
-| `TableauExplicitEuler()`     | 1     | Explicit / Forward Euler    |
-| `TableauExplicitMidpoint()`  | 2     | Explicit Midpoint           |
-| `TableauHeun()`              | 2     | Heun's Method               |
-| `TableauRunge()`             | 2     | Runge's Method              |
-| `TableauKutta()`             | 3     | Kutta's Method              |
-| `TableauERK4()`              | 4     | Explicit 4th order Runge-Kutta (1/6 rule) |
-| `TableauERK438()`            | 4     | Explicit 4th order Runge-Kutta (3/8 rule) |
+| Function                            | Order | Method                      |
+|:------------------------------------|:------|:----------------------------|
+| [`TableauExplicitEuler()`](@ref)    | 1     | Explicit / Forward Euler    |
+| [`TableauExplicitMidpoint()`](@ref) | 2     | Explicit Midpoint           |
+| [`TableauHeun()`](@ref)             | 2     | Heun's Method               |
+| [`TableauRunge()`](@ref)            | 2     | Runge's Method              |
+| [`TableauKutta()`](@ref)            | 3     | Kutta's Method              |
+| [`TableauERK4()`](@ref)             | 4     | Explicit 4th order Runge-Kutta (1/6 rule) |
+| [`TableauERK438()`](@ref)           | 4     | Explicit 4th order Runge-Kutta (3/8 rule) |
 
 
 #### Diagonally Implicit Runge-Kutta Methods
 
-| Function                     | Order | Method                      |
-|------------------------------|-------|-----------------------------|
-| `TableauCrouzeix()`          | 3     | Crouzeix's Method           |
+| Function                            | Order | Method                      |
+|:------------------------------------|:------|:----------------------------|
+| [`TableauCrouzeix()`](@ref)         | 3     | Crouzeix's Method           |
 
 
 #### Fully Implicit Runge-Kutta Methods
 
-| Function                     | Order | Method                      |
-|------------------------------|-------|-----------------------------|
-| `TableauImplicitEuler()`     | 1     | Implicit / Backward Euler   |
-| `TableauImplicitMidpoint()`  | 2     | Implicit Midpoint           |
-| `TableauRadauIIA2()`         | 3     | Radau-IIA s=2               |
-| `TableauRadauIIA3()`         | 5     | Radau-IIA s=3               |
-| `TableauSRK3()`              | 4     | Symmetric Runge-Kutta s=3   |
-| `TableauGLRK(s)`             | 2s    | Gauss-Legendre Runge-Kutta  |
+| Function                            | Order | Method                      |
+|:------------------------------------|:------|:----------------------------|
+| [`TableauImplicitEuler()`](@ref)    | 1     | Implicit / Backward Euler   |
+| [`TableauImplicitMidpoint()`](@ref) | 2     | Implicit Midpoint           |
+| [`TableauRadIIA2()`](@ref)          | 3     | Radau-IIA s=2               |
+| [`TableauRadIIA3()`](@ref)          | 5     | Radau-IIA s=3               |
+| [`TableauSRK3()`](@ref)             | 4     | Symmetric Runge-Kutta s=3   |
+| [`TableauGLRK(s`](@ref))            | 2s    | Gauss-Legendre Runge-Kutta  |
 
 
 #### Explicit Partitioned Runge-Kutta Methods
 
-| Function                     | Order | Method             |
-|------------------------------|-------|--------------------|
-| `TableauSymplecticEulerA()`  | 1     | Symplectic Euler A |
-| `TableauSymplecticEulerB()`  | 1     | Symplectic Euler B |
-| `TableauLobattoIIIAIIIB2()`  | 2     | Lobatto-IIIA-IIIB  |
-| `TableauLobattoIIIBIIIA2()`  | 2     | Lobatto-IIIB-IIIA  |
+| Function                            | Order | Method             |
+|:------------------------------------|:------|:-------------------|
+| [`TableauSymplecticEulerA()`](@ref) | 1     | Symplectic Euler A |
+| [`TableauSymplecticEulerB()`](@ref) | 1     | Symplectic Euler B |
+| [`TableauLobattoIIIAIIIB2()`](@ref) | 2     | Lobatto-IIIA-IIIB  |
+| [`TableauLobattoIIIBIIIA2()`](@ref) | 2     | Lobatto-IIIB-IIIA  |
 
 
 #### Custom Tableaus
