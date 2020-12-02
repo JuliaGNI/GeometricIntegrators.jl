@@ -70,26 +70,26 @@ For many methods, tabulated coefficients are included, namely
 | Function and Aliases                                           | Stages | Order |
 |:---------------------------------------------------------------|:-------|:------|
 | **Explicit Methods**                                           |        |       |
-| [`TableauExplicitEuler`](@ref), [`TableauForwardEuler`](@ref)  |        |       |
-| [`TableauExplicitMidpoint`](@ref)                              |        |       |
-| [`TableauHeun2`](@ref)                                         |        |       |
-| [`TableauHeun3`](@ref)                                         |        |       |
-| [`TableauRalston2`](@ref)                                      |        |       |
-| [`TableauRalston3`](@ref)                                      |        |       |
-| [`TableauRunge`](@ref), [`TableauRunge2`](@ref)                |        |       |
-| [`TableauKutta`](@ref), [`TableauKutta3`](@ref)                |        |       |
-| [`TableauRK416`](@ref), [`TableauRK4`](@ref)                   |        |       |
-| [`TableauRK438`](@ref)                                         |        |       |
-| [`TableauSSPRK3`](@ref)                                        |        |       |
+| [`TableauExplicitEuler`](@ref), [`TableauForwardEuler`](@ref)  | 1      | 1     |
+| [`TableauExplicitMidpoint`](@ref)                              | 2      | 2     |
+| [`TableauHeun2`](@ref)                                         | 2      | 2     |
+| [`TableauHeun3`](@ref)                                         | 3      | 3     |
+| [`TableauRalston2`](@ref)                                      | 2      | 2     |
+| [`TableauRalston3`](@ref)                                      | 3      | 3     |
+| [`TableauRunge`](@ref), [`TableauRunge2`](@ref)                | 2      | 2     |
+| [`TableauKutta`](@ref), [`TableauKutta3`](@ref)                | 3      | 3     |
+| [`TableauRK416`](@ref), [`TableauRK4`](@ref)                   | 4      | 4     |
+| [`TableauRK438`](@ref)                                         | 4      | 4     |
+| [`TableauSSPRK3`](@ref)                                        | 3      | 3     |
 | **Diagonally Implicit Methods**                                |        |       |
-| [`TableauCrankNicolson`](@ref)                                 |        |       |
-| [`TableauKraaijevangerSpijker`](@ref)                          |        |       |
-| [`TableauQinZhang`](@ref)                                      |        |       |
-| [`TableauCrouzeix`](@ref)                                      |        |       |
+| [`TableauCrankNicolson`](@ref)                                 | 2      | 2     |
+| [`TableauKraaijevangerSpijker`](@ref)                          | 2      | 2     |
+| [`TableauQinZhang`](@ref)                                      | 2      | 2     |
+| [`TableauCrouzeix`](@ref)                                      | 2      | 3     |
 | **Fully Implicit Methods**                                     |        |       |
-| [`TableauImplicitEuler`](@ref), [`TableauBackwardEuler`](@ref) |        |       |
-| [`TableauImplicitMidpoint`](@ref)                              |        |       |
-| [`TableauSRK3`](@ref)                                          |        |       |
+| [`TableauImplicitEuler`](@ref), [`TableauBackwardEuler`](@ref) | 1      | 1     |
+| [`TableauImplicitMidpoint`](@ref)                              | 2      | 2     |
+| [`TableauSRK3`](@ref)                                          | 3      | 4     |
 
 The coefficients of other methods are computed on-the-fly as described in the following.
 
@@ -147,7 +147,7 @@ a_{ij}^{E} &= \tfrac{1}{2} ( a_{ij}^{A} + a_{ij}^{B} ) .
 ```
 While the Lobatto IIIA, IIIB, IIIC and IIIC̄ methods are not symplectic on their own (although the Lobatto IIIA-IIIB and IIIC-IIIC̄ pairs constitute symplectic partitioned Runge-Kutta methods), the Lobatto IIID and IIIE methods are each symplectic by themselves.
 
-The Gauß methods are of order $2s$, the Radau methods or order $2s-1$ and the Lobatto methods are of order $2s-2$, with the exception of the Lobatto IIIF method. This method has been specifically constructed to be of order $2s$ as described in [Fangzong:2016](@cite).
+The Gauß methods are of order $2s$, the Radau methods or order $2s-1$ and the Lobatto methods are of order $2s-2$, with the exception of the Lobatto IIIF method. This method has been specifically constructed to be of order $2s$ as described in [[Fangzong:2016](@cite)].
 The Lobatto IIIG method is constructed in a similar fashion as the Lobatto IIID and IIIE methods by averaging the coefficients of the Lobatto IIIF method with its symplectic complement, i.e.,
 ```math
 a_{ij}^{G} = \tfrac{1}{2} ( a_{ij}^{F} + \bar{a}_{ij}^{F} ) ,
