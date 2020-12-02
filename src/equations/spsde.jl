@@ -3,10 +3,10 @@
 
 Defines a partitioned stochastic differential initial value problem
 ```math
-\begin{align*}
+\begin{aligned}
 \dq (t) &=   v(t, q(t)) \, dt + B(t, q(t)) \circ dW , & q(t_{0}) &= q_{0} ,
 \dp (t) &= [ f1(t, q(t)) + f2(t, q(t)) ] \, dt + [ G1(t, q(t)) + G2(t, q(t)) ] \circ dW , & p(t_{0}) &= p_{0}
-\end{align*}
+\end{aligned}
 ```
 with the drift vector fields ``v`` and ``fi``, diffusion matrices ``B`` and ``Gi``,
 initial conditions ``q_{0}`` and ``p_{0}``, the dynamical variables ``(q,p)`` taking

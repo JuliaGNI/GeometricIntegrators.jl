@@ -3,13 +3,13 @@
 
 Defines an implicit initial value problem
 ```math
-\begin{align*}
+\begin{aligned}
 \dot{q} (t) &= v(t) , &
 q(t_{0}) &= q_{0} , \\
 \dot{p} (t) &= f(t, q(t), v(t)) , &
 p(t_{0}) &= p_{0} , \\
 p(t) &= ϑ(t, q(t), v(t))
-\end{align*}
+\end{aligned}
 ```
 with vector field ``f``, the momentum defined by ``p``, initial conditions ``(q_{0}, p_{0})`` and the solution
 ``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``.
