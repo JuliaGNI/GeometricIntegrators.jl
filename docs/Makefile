@@ -3,7 +3,7 @@
 
 all: tutorial documenter
 
-documenter: tutorial
+documenter:
 	julia --color=yes --project=. make.jl
 
 tutorial:
