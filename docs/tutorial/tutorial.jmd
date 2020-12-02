@@ -59,12 +59,12 @@ In *GeometricIntegrators.jl* we distinguish between three basic types of equatio
 * stochastic differential equations (SDEs).
 
 For each type, there are several subtypes
-* "normal" equations (ODE, DAE, SDE),
-* implicit equations (IODE, IDAE),
-* variational equations (VODE, VDAE),
-* Hamiltonian equations (HODE, HDAE),
-* partitioned equations (PODE, PDAE, PSDE),
-* split equations (SODE, SPDAE).
+* "normal" equations ([`ODE`](@ref), [`DAE`](@ref), [`SDE`](@ref)),
+* implicit equations ([`IODE`](@ref), [`IDAE`](@ref)),
+* variational equations ([`VODE`](@ref), [`VDAE`](@ref)),
+* Hamiltonian equations ([`HODE`](@ref), [`HDAE`](@ref)),
+* partitioned equations ([`PODE`](@ref), [`PDAE`](@ref), [`PSDE`](@ref)),
+* split equations ([`SODE`](@ref), [`SPDAE`](@ref)).
 
 
 #### Ordinary differential equations
@@ -202,44 +202,44 @@ like outlined above. In particular, this includes the following methods:
 
 #### Explicit Runge-Kutta Methods
 
-| Function                       | Order | Method                      |
-|--------------------------------|-------|-----------------------------|
-| `getTableauExplicitEuler()`    | 1     | Explicit / Forward Euler    |
-| `getTableauExplicitMidpoint()` | 2     | Explicit Midpoint           |
-| `getTableauHeun()`             | 2     | Heun's Method               |
-| `getTableauRunge()`            | 2     | Runge's Method              |
-| `getTableauKutta()`            | 3     | Kutta's Method              |
-| `getTableauERK4()`             | 4     | Explicit 4th order Runge-Kutta (1/6 rule) |
-| `getTableauERK438()`           | 4     | Explicit 4th order Runge-Kutta (3/8 rule) |
+| Function                               | Order | Method                      |
+|:---------------------------------------|:------|:----------------------------|
+| [`getTableauExplicitEuler()`](@ref)    | 1     | Explicit / Forward Euler    |
+| [`getTableauExplicitMidpoint()`](@ref) | 2     | Explicit Midpoint           |
+| [`getTableauHeun()`](@ref)             | 2     | Heun's Method               |
+| [`getTableauRunge()`](@ref)            | 2     | Runge's Method              |
+| [`getTableauKutta()`](@ref)            | 3     | Kutta's Method              |
+| [`getTableauERK4()`](@ref)             | 4     | Explicit 4th order Runge-Kutta (1/6 rule) |
+| [`getTableauERK438()`](@ref)           | 4     | Explicit 4th order Runge-Kutta (3/8 rule) |
 
 
 #### Diagonally Implicit Runge-Kutta Methods
 
-| Function                       | Order | Method                      |
-|--------------------------------|-------|-----------------------------|
-| `getTableauCrouzeix()`         | 3     | Crouzeix's Method           |
+| Function                               | Order | Method                      |
+|:---------------------------------------|:------|:----------------------------|
+| [`getTableauCrouzeix()`](@ref)         | 3     | Crouzeix's Method           |
 
 
 #### Fully Implicit Runge-Kutta Methods
 
-| Function                       | Order | Method                      |
-|--------------------------------|-------|-----------------------------|
-| `getTableauImplicitEuler()`    | 1     | Implicit / Backward Euler   |
-| `getTableauImplicitMidpoint()` | 2     | Implicit Midpoint           |
-| `getTableauRadIIA2()`          | 3     | Radau-IIA s=2               |
-| `getTableauRadIIA3()`          | 5     | Radau-IIA s=3               |
-| `getTableauSRK3()`             | 4     | Symmetric Runge-Kutta s=3   |
-| `getTableauGLRK(s)`            | 2s    | Gauss-Legendre Runge-Kutta  |
+| Function                               | Order | Method                      |
+|:---------------------------------------|:------|:----------------------------|
+| [`getTableauImplicitEuler()`](@ref)    | 1     | Implicit / Backward Euler   |
+| [`getTableauImplicitMidpoint()`](@ref) | 2     | Implicit Midpoint           |
+| [`getTableauRadIIA2()`](@ref)          | 3     | Radau-IIA s=2               |
+| [`getTableauRadIIA3()`](@ref)          | 5     | Radau-IIA s=3               |
+| [`getTableauSRK3()`](@ref)             | 4     | Symmetric Runge-Kutta s=3   |
+| [`getTableauGLRK(s`](@ref))            | 2s    | Gauss-Legendre Runge-Kutta  |
 
 
 #### Explicit Partitioned Runge-Kutta Methods
 
-| Function                       | Order | Method             |
-|--------------------------------|-------|--------------------|
-| `getTableauSymplecticEulerA()` | 1     | Symplectic Euler A |
-| `getTableauSymplecticEulerB()` | 1     | Symplectic Euler B |
-| `getTableauLobattoIIIAIIIB2()` | 2     | Lobatto-IIIA-IIIB  |
-| `getTableauLobattoIIIBIIIA2()` | 2     | Lobatto-IIIB-IIIA  |
+| Function                               | Order | Method             |
+|:---------------------------------------|:------|:-------------------|
+| [`getTableauSymplecticEulerA()`](@ref) | 1     | Symplectic Euler A |
+| [`getTableauSymplecticEulerB()`](@ref) | 1     | Symplectic Euler B |
+| [`getTableauLobattoIIIAIIIB2()`](@ref) | 2     | Lobatto-IIIA-IIIB  |
+| [`getTableauLobattoIIIBIIIA2()`](@ref) | 2     | Lobatto-IIIB-IIIA  |
 
 
 #### Custom Tableaus
