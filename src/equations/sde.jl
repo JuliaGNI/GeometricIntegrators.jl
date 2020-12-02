@@ -3,9 +3,9 @@
 
 Defines a stochastic differential initial value problem
 ```math
-\begin{align*}
+\begin{aligned}
 \dq (t) &= v(t, q(t)) \, dt + B(t, q(t)) \circ dW , & q(t_{0}) &= q_{0} ,
-\end{align*}
+\end{aligned}
 ```
 with drift vector field ``v``, diffusion matrix ``B``,
 initial conditions ``q_{0}``, the dynamical variable ``q``

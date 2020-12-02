@@ -3,12 +3,12 @@
 
 Defines a partitioned initial value problem
 ```math
-\begin{align*}
+\begin{aligned}
 \dot{q} (t) &= v(t, q(t), p(t)) , &
 q(t_{0}) &= q_{0} , \\
 \dot{p} (t) &= f(t, q(t), p(t)) , &
 p(t_{0}) &= p_{0} ,
-\end{align*}
+\end{aligned}
 ```
 with vector fields ``v`` and ``f``, initial conditions ``(q_{0}, p_{0})`` and the solution
 ``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``.
