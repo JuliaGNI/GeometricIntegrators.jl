@@ -3,10 +3,10 @@
 
 Defines a differential algebraic initial value problem
 ```math
-\begin{align*}
+\begin{aligned}
 \dot{q} (t) &= v(t, q(t)) + u(t, q(t), \lambda(t)) , & q(t_{0}) &= q_{0} , \\
 0 &= \phi (t, q(t), \lambda(t)) , & \lambda(t_{0}) &= \lambda_{0} ,
-\end{align*}
+\end{aligned}
 ```
 with vector field ``v``, projection ``u``, algebraic constraint ``\phi=0``,
 initial conditions ``q_{0}`` and ``\lambda_{0}``, the dynamical variable ``q``

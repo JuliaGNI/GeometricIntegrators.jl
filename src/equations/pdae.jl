@@ -3,11 +3,11 @@
 
 Defines a partitioned differential algebraic initial value problem
 ```math
-\begin{align*}
+\begin{aligned}
 \dot{q} (t) &= v(t, q(t), p(t)) + u(t, q(t), p(t), \lambda(t)) , & q(t_{0}) &= q_{0} , \\
 \dot{p} (t) &= f(t, q(t), p(t)) + r(t, q(t), p(t), \lambda(t)) , & p(t_{0}) &= p_{0} , \\
 0 &= \phi (t, q(t), p(t), \lambda(t)) , & \lambda(t_{0}) &= \lambda_{0} ,
-\end{align*}
+\end{aligned}
 ```
 with vector fields ``v`` and ``f``, projection ``u`` and ``r``,
 algebraic constraint ``\phi=0``,

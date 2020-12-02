@@ -3,7 +3,7 @@
 
 Defines an implicit initial value problem
 ```math
-\begin{align*}
+\begin{aligned}
 \dot{q} (t) &= v(t) + λ(t), &
 q(t_{0}) &= q_{0} , \\
 \dot{p} (t) &= f(t, q(t), v(t)) + g(t, q(t), λ(t)) + \obar{g}(t, q(t), μ(t)) , &
@@ -11,7 +11,7 @@ p(t_{0}) &= p_{0} , \\
 p(t) &= ϑ(t, q(t), v(t)) , \\
 0 &= \phi (t, q(t), p(t)) , \\
 0 &= \psi (t, q(t), p(t), \dot{q}(t), \dot{p}(t)) ,
-\end{align*}
+\end{aligned}
 ```
 with vector field ``f``, the momentum defined by ``p``, initial conditions ``(q_{0}, p_{0})`` and the solution
 ``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}`` and
