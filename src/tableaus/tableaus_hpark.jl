@@ -33,17 +33,17 @@ end
 
 
 "SPARK tableau for Gauss-Lobatto IIIA-IIIB HPARK method with s stages."
-function TableauHPARKLobIIIAIIIB(s)
-    getTableauHPARK(Symbol("HPARKLobIIIAIIIB($s)"), getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s))
+function TableauHPARKLobattoIIIAIIIB(s)
+    getTableauHPARK(Symbol("HPARKLobattoIIIAIIIB($s)"), CoefficientsLobattoIIIA(s), CoefficientsLobattoIIIB(s))
 end
 
 "SPARK tableau for Gauss-Lobatto IIIB-IIIA  method with s stages."
-function TableauHPARKLobIIIBIIIA(s)
-    getTableauHPARK(Symbol("HPARKLobIIIBIIIA($s)"), getCoefficientsLobIIIB(s), getCoefficientsLobIIIA(s))
+function TableauHPARKLobattoIIIBIIIA(s)
+    getTableauHPARK(Symbol("HPARKLobattoIIIBIIIA($s)"), CoefficientsLobattoIIIB(s), CoefficientsLobattoIIIA(s))
 end
 
 "Tableau for Gauss-Legendre HPARK method with s stages."
 function TableauHPARKGLRK(s)
-    glrk = getCoefficientsGLRK(s)
+    glrk = CoefficientsGLRK(s)
     getTableauHPARK(Symbol("HPARKGLRK", s), glrk, glrk)
 end

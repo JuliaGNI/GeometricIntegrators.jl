@@ -36,7 +36,7 @@ ode = ODE((t, x, ẋ) -> ẋ[1] = x[1], [1.0]);
 ```
 create an integrator for this ODE, using the tableau for the explicit Euler method and a time step of $\Delta t = 0.1$,
 ```julia
-int = Integrator(ode, getTableauExplicitEuler(), 0.1);
+int = Integrator(ode, TableauExplicitEuler(), 0.1);
 ```
 and compute the solution for $n_t = 10$ time steps,
 ```julia
@@ -160,7 +160,7 @@ general linear methods (_planned_).
 In order to instantiate many of the standard integrators, one needs to specify
 an ODE, a tableau and a timestep, e.g.,
 ```julia
-int = Integrator(ode, getTableauExplicitEuler(), 0.1);
+int = Integrator(ode, TableauExplicitEuler(), 0.1);
 ```
 In order to run the integrator, the `integrate()` functions is called, passing
 an integrator object and the number of time steps to integrate:
@@ -180,7 +180,7 @@ system. The solutions drifts away although it should follow closed orbits.
 For a Hamiltonian system, defined as a PODE, a different tableau might be more
 appropriate, for example a symplectic Euler method,
 ```julia
-int = Integrator(pode, getTableauSymplecticEulerA(), 0.1)
+int = Integrator(pode, TableauSymplecticEulerA(), 0.1)
 sol = integrate(pode, int, 250);
 ```
 This creates a different integrator, which exploits the partitioned structure
@@ -202,44 +202,44 @@ like outlined above. In particular, this includes the following methods:
 
 #### Explicit Runge-Kutta Methods
 
-| Function                       | Order | Method                      |
-|--------------------------------|-------|-----------------------------|
-| `getTableauExplicitEuler()`    | 1     | Explicit / Forward Euler    |
-| `getTableauExplicitMidpoint()` | 2     | Explicit Midpoint           |
-| `getTableauHeun()`             | 2     | Heun's Method               |
-| `getTableauRunge()`            | 2     | Runge's Method              |
-| `getTableauKutta()`            | 3     | Kutta's Method              |
-| `getTableauERK4()`             | 4     | Explicit 4th order Runge-Kutta (1/6 rule) |
-| `getTableauERK438()`           | 4     | Explicit 4th order Runge-Kutta (3/8 rule) |
+| Function                     | Order | Method                      |
+|------------------------------|-------|-----------------------------|
+| `TableauExplicitEuler()`     | 1     | Explicit / Forward Euler    |
+| `TableauExplicitMidpoint()`  | 2     | Explicit Midpoint           |
+| `TableauHeun()`              | 2     | Heun's Method               |
+| `TableauRunge()`             | 2     | Runge's Method              |
+| `TableauKutta()`             | 3     | Kutta's Method              |
+| `TableauERK4()`              | 4     | Explicit 4th order Runge-Kutta (1/6 rule) |
+| `TableauERK438()`            | 4     | Explicit 4th order Runge-Kutta (3/8 rule) |
 
 
 #### Diagonally Implicit Runge-Kutta Methods
 
-| Function                       | Order | Method                      |
-|--------------------------------|-------|-----------------------------|
-| `getTableauCrouzeix()`         | 3     | Crouzeix's Method           |
+| Function                     | Order | Method                      |
+|------------------------------|-------|-----------------------------|
+| `TableauCrouzeix()`          | 3     | Crouzeix's Method           |
 
 
 #### Fully Implicit Runge-Kutta Methods
 
-| Function                       | Order | Method                      |
-|--------------------------------|-------|-----------------------------|
-| `getTableauImplicitEuler()`    | 1     | Implicit / Backward Euler   |
-| `getTableauImplicitMidpoint()` | 2     | Implicit Midpoint           |
-| `getTableauRadIIA2()`          | 3     | Radau-IIA s=2               |
-| `getTableauRadIIA3()`          | 5     | Radau-IIA s=3               |
-| `getTableauSRK3()`             | 4     | Symmetric Runge-Kutta s=3   |
-| `getTableauGLRK(s)`            | 2s    | Gauss-Legendre Runge-Kutta  |
+| Function                     | Order | Method                      |
+|------------------------------|-------|-----------------------------|
+| `TableauImplicitEuler()`     | 1     | Implicit / Backward Euler   |
+| `TableauImplicitMidpoint()`  | 2     | Implicit Midpoint           |
+| `TableauRadauIIA2()`         | 3     | Radau-IIA s=2               |
+| `TableauRadauIIA3()`         | 5     | Radau-IIA s=3               |
+| `TableauSRK3()`              | 4     | Symmetric Runge-Kutta s=3   |
+| `TableauGLRK(s)`             | 2s    | Gauss-Legendre Runge-Kutta  |
 
 
 #### Explicit Partitioned Runge-Kutta Methods
 
-| Function                       | Order | Method             |
-|--------------------------------|-------|--------------------|
-| `getTableauSymplecticEulerA()` | 1     | Symplectic Euler A |
-| `getTableauSymplecticEulerB()` | 1     | Symplectic Euler B |
-| `getTableauLobattoIIIAIIIB2()` | 2     | Lobatto-IIIA-IIIB  |
-| `getTableauLobattoIIIBIIIA2()` | 2     | Lobatto-IIIB-IIIA  |
+| Function                     | Order | Method             |
+|------------------------------|-------|--------------------|
+| `TableauSymplecticEulerA()`  | 1     | Symplectic Euler A |
+| `TableauSymplecticEulerB()`  | 1     | Symplectic Euler B |
+| `TableauLobattoIIIAIIIB2()`  | 2     | Lobatto-IIIA-IIIB  |
+| `TableauLobattoIIIBIIIA2()`  | 2     | Lobatto-IIIB-IIIA  |
 
 
 #### Custom Tableaus

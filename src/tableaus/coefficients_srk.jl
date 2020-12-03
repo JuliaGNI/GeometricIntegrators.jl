@@ -1,5 +1,5 @@
 
-function getCoefficientsSRK3(T=Float64)
+function CoefficientsSRK3(T=Float64)
     a = @dec128 [
          [5/36         2/9        5/36-√15/10]
          [5/36         2/9        5/36       ]

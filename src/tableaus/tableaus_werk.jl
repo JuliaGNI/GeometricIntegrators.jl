@@ -5,7 +5,7 @@ Tableau for the explicit 4-stage RS1 method due to Andreas Rossler
   BIT Numerical Mathematics (2007) 47
   According to the paper, the method has weak order 2.0.
 """
-function getTableauRosslerRS1()
+function TableauRosslerRS1()
 
     A0 = [[0.0   0.0   0.0   0.0]
           [0.0   0.0   0.0   0.0]
@@ -58,7 +58,7 @@ Tableau for the explicit 4-stage RS2 method due to Andreas Rossler
   BIT Numerical Mathematics (2007) 47
   According to the paper, the method has weak order 2.0.
 """
-function getTableauRosslerRS2()
+function TableauRosslerRS2()
 
     A0 = [[0.0      0.0      0.0   0.0]
           [2. / 3.  0.0      0.0   0.0]

@@ -5,7 +5,7 @@ Tableau for the stochastic symplectic Euler method
   Satisfies the conditions for strong convergence of order 1.0 for one Wiener process
   for special choices of the stochastic Hamiltonians and forces, e.g., h=h(q), f=0.
 """
-function getTableauStochasticSymplecticEuler()
+function TableauStochasticSymplecticEuler()
 
     a_q = ones(Float64, 1, 1)
     b_q = [1.0]
@@ -21,7 +21,9 @@ end
 
 
 "Tableau for the 2-stage stochastic LobattoIIA-IIB method (Stormer-Verlet)"
-function getTableauStochasticStormerVerlet()
+function TableauStochasticStormerVerlet()
 
-    TableauSIPRK(:StochasticStormerVerlet,getCoefficientsLobIIIA2(),getCoefficientsLobIIIA2(),getCoefficientsLobIIIB2(),getCoefficientsLobIIIB2())
+    TableauSIPRK(:StochasticStormerVerlet,
+                 CoefficientsLobattoIIIA(2), CoefficientsLobattoIIIA(2),
+                 CoefficientsLobattoIIIB(2), CoefficientsLobattoIIIB(2))
 end

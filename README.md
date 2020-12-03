@@ -6,8 +6,8 @@
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliagni.github.io/GeometricIntegrators.jl/stable/)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://juliagni.github.io/GeometricIntegrators.jl/latest/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
-![CI](https://github.com/JuliaGNI/GeometricIntegrators.jl/workflows/CI/badge.svg)
 [![PkgEval Status](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/G/GeometricIntegrators.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/G/GeometricIntegrators.html)
+![CI](https://github.com/JuliaGNI/GeometricIntegrators.jl/workflows/CI/badge.svg)
 [![codecov Status](https://codecov.io/gh/JuliaGNI/GeometricIntegrators.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaGNI/GeometricIntegrators.jl)
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3648325.svg)](https://doi.org/10.5281/zenodo.3648325)
 
