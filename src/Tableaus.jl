@@ -40,18 +40,26 @@ module Tableaus
 
     include("tableaus/tableaus_erk.jl")
 
-    export TableauExplicitEuler, TableauExplicitMidpoint,
-           TableauHeun, TableauRunge, TableauKutta,
+    export TableauExplicitEuler, TableauForwardEuler,
+           TableauExplicitMidpoint,
+           TableauHeun2, TableauHeun3,
+           TableauRalston2, TableauRalston3,
+           TableauRunge2, TableauRunge,
+           TableauKutta3, TableauKutta,
            TableauERK4, TableauERK416, TableauERK438
 
     include("tableaus/tableaus_dirk.jl")
 
-    export TableauCrouzeix
+    export TableauCrankNicolson,
+           TableauKraaijevangerSpijker,
+           TableauQinZhang,
+           TableauCrouzeix
 
     include("tableaus/tableaus_firk.jl")
 
-    export TableauImplicitEuler, TableauImplicitMidpoint,
-           TableauGLRK, TableauRadauIA,  TableauRadauIIA, TableauSRK3,
+    export TableauImplicitEuler, TableauBackwardEuler,
+           TableauImplicitMidpoint, TableauSRK3,
+           TableauGLRK, TableauRadauIA, TableauRadauIIA,
            TableauLobattoIIIA, TableauLobattoIIIB, TableauLobattoIIIC, TableauLobattoIIIC̄,
            TableauLobattoIIID, TableauLobattoIIIE, TableauLobattoIIIF, TableauLobattoIIIG
            

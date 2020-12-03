@@ -9,6 +9,9 @@ function TableauImplicitEuler()
     TableauFIRK(:implicit_euler, o, a, b, c)
 end
 
+"Alias for [`TableauImplicitEuler`](@ref)"
+TableauBackwardEuler = TableauImplicitEuler
+
 "Implicit Midpoint"
 function TableauImplicitMidpoint()
     a = 0.5*ones(Float64, 1, 1)
