@@ -27,8 +27,8 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `f`: function computing the Hamiltonian vector field ``f``
 * `u`: function computing the primary projection field ``u``
 * `g`: function computing the primary projection field ``g``
-* `u̅`: function computing the secondary projection field ``u̅``
-* `g̅`: function computing the secondary projection field ``g̅``
+* `u̅`: function computing the secondary projection field ``\bar{u}``
+* `g̅`: function computing the secondary projection field ``\bar{g}``
 * `ϕ`: primary constraints
 * `ψ`: secondary constraints
 * `v̄`: function computing an initial guess for the velocity field ``v``` (optional)

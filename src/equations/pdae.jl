@@ -25,7 +25,7 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 * `u`: function computing the projection for ``q``
 * `g`: function computing the projection for ``p``
 * `ϕ`: algebraic constraint
-* `v̄`: function computing an initial guess for the velocity field ``v``` (optional)
+* `v̄`: function computing an initial guess for the velocity field ``v`` (optional)
 * `f̄`: function computing an initial guess for the force field ``f`` (optional)
 * `h`: function computing the Hamiltonian (optional)
 * `t₀`: initial time

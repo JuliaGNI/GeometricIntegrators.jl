@@ -21,7 +21,7 @@ taking values in ``\mathbb{R}^{n}``.
 * `v`: function computing the vector field
 * `u`: function computing the projection
 * `ϕ`: algebraic constraint
-* `v̄`: function computing an initial guess for the velocity field ``v``` (optional)
+* `v̄`: function computing an initial guess for the velocity field ``v`` (optional)
 * `h`: function computing the Hamiltonian (optional)
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q``

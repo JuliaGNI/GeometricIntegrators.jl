@@ -21,8 +21,8 @@ variables ``(q,p)`` and algebraic variable ``v``.
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``f`` and ``p``
 * `ϑ`: function determining the momentum
 * `f`: function computing the vector field
-* `g`: function determining the projection, given by ∇ϑ(q)λ
-* `v̄`: function computing an initial guess for the velocity field ``v``` (optional)
+* `g`: function determining the projection, given by ``\nabla \vartheta (q) \cdot \lambda``
+* `v̄`: function computing an initial guess for the velocity field ``v`` (optional)
 * `f̄`: function computing an initial guess for the force field ``f`` (optional)
 * `h`: function computing the Hamiltonian (optional)
 * `t₀`: initial time (optional)
