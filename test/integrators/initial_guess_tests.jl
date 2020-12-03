@@ -38,8 +38,8 @@ vdae = lotka_volterra_2d_vdae()
 
 # Reference Solution
 
-ref_prev = integrate(ode, getTableauERK4(), -Δt/10, 10)
-ref_next = integrate(ode, getTableauERK4(), +Δt/10, 10)
+ref_prev = integrate(ode, TableauERK4(), -Δt/10, 10)
+ref_next = integrate(ode, TableauERK4(), +Δt/10, 10)
 
 tₚ = ref_prev.t[end]
 qₚ = ref_prev.q[:,end]

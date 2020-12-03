@@ -1,7 +1,7 @@
 
 "SPARK tableau for Gauss-Legendre Runge-Kutta method with s stages."
 function TableauSPARKGLRK(s; name=Symbol("GLRK($s)"))
-    g = getCoefficientsGLRK(s)
+    g = CoefficientsGLRK(s)
     ω = get_GLRK_ω_matrix(s)
     δ = zeros(0, s)
 
@@ -31,20 +31,20 @@ function TableauSPARKLobatto(A, B; name=Symbol("Lobatto($s)"))
 end
 
 "SPARK tableau for Gauss-Lobatto IIIA-IIIB method with s stages."
-function TableauSPARKLobIIIAIIIB(s)
-    TableauSPARKLobatto(getCoefficientsLobIIIA(s), getCoefficientsLobIIIB(s); name=Symbol("LobIIIAIIIB($s)"))
+function TableauSPARKLobattoIIIAIIIB(s)
+    TableauSPARKLobatto(CoefficientsLobattoIIIA(s), CoefficientsLobattoIIIB(s); name=Symbol("LobattoIIIAIIIB($s)"))
 end
 
 "SPARK tableau for Gauss-Lobatto IIIB-IIIA method with s stages."
-function TableauSPARKLobIIIBIIIA(s)
-    TableauSPARKLobatto(getCoefficientsLobIIIB(s), getCoefficientsLobIIIA(s); name=Symbol("LobIIIBIIIA($s)"))
+function TableauSPARKLobattoIIIBIIIA(s)
+    TableauSPARKLobatto(CoefficientsLobattoIIIB(s), CoefficientsLobattoIIIA(s); name=Symbol("LobattoIIIBIIIA($s)"))
 end
 
 "SPARK tableau for Gauss-Legendre/Gauss-Lobatto-IIIA-IIIB methods."
-function TableauSPARKGLRKLobIIIAIIIB(s, σ=s+1)
-    g = getCoefficientsGLRK(s)
-    A = getCoefficientsLobIIIA(σ)
-    B = getCoefficientsLobIIIB(σ)
+function TableauSPARKGLRKLobattoIIIAIIIB(s, σ=s+1)
+    g = CoefficientsGLRK(s)
+    A = CoefficientsLobattoIIIA(σ)
+    B = CoefficientsLobattoIIIB(σ)
 
     α = A.a[2:σ, 1:σ]
     ã = B.a[1:σ, 1:s]
@@ -52,7 +52,7 @@ function TableauSPARKGLRKLobIIIAIIIB(s, σ=s+1)
     o = min(g.o, A.o, B.o)
     δ = zeros(0, σ)
 
-    return TableauSPARK(Symbol("GLRK($s)LobIIIAIIIB($σ)"), o,
+    return TableauSPARK(Symbol("GLRK($s)LobattoIIIAIIIB($σ)"), o,
                         g.a, g.a, α,   α,
                         ã,   ã,   A.a, B.a,
                         g.b, g.b, A.b, B.b,
@@ -61,10 +61,10 @@ function TableauSPARKGLRKLobIIIAIIIB(s, σ=s+1)
 end
 
 "SPARK tableau for Gauss-Legendre/Gauss-Lobatto-IIIB-IIIA methods."
-function TableauSPARKGLRKLobIIIBIIIA(s, σ=s+1)
-    g = getCoefficientsGLRK(s)
-    A = getCoefficientsLobIIIA(σ)
-    B = getCoefficientsLobIIIB(σ)
+function TableauSPARKGLRKLobattoIIIBIIIA(s, σ=s+1)
+    g = CoefficientsGLRK(s)
+    A = CoefficientsLobattoIIIA(σ)
+    B = CoefficientsLobattoIIIB(σ)
 
     α = B.a[2:σ, 1:σ]
     ã = A.a[1:σ, 1:s]
@@ -72,7 +72,7 @@ function TableauSPARKGLRKLobIIIBIIIA(s, σ=s+1)
     o = min(g.o, B.o, A.o)
     δ = zeros(0, σ)
 
-    return TableauSPARK(Symbol("GLRK($s)LobIIIAIIIB($σ)"), o,
+    return TableauSPARK(Symbol("GLRK($s)LobattoIIIAIIIB($σ)"), o,
                         g.a, g.a, α,   α,
                         ã,   ã,   B.a, A.a,
                         g.b, g.b, B.b, A.b,
@@ -111,17 +111,17 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB-IIIC method with s stages."
 function TableauSPARKLobABC(s)
-    loba = getCoefficientsLobIIIA(s)
-    lobb = getCoefficientsLobIIIB(s)
-    lobc = getCoefficientsLobIIIC(s)
+    loba = CoefficientsLobattoIIIA(s)
+    lobb = CoefficientsLobattoIIIB(s)
+    lobc = CoefficientsLobattoIIIC(s)
     TableauSPARKLobatto(Symbol("LobattoIIIABC($s)"), loba, lobc, lobb; R∞=(-1)^(s+1))
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB-IIID method with s stages."
 function TableauSPARKLobABD(s)
-    loba = getCoefficientsLobIIIA(s)
-    lobb = getCoefficientsLobIIIB(s)
-    lobd = getCoefficientsLobIIID(s)
+    loba = CoefficientsLobattoIIIA(s)
+    lobb = CoefficientsLobattoIIIB(s)
+    lobd = CoefficientsLobattoIIID(s)
     TableauSPARKLobatto(Symbol("LobattoIIIABD($s)"), loba, lobd, lobb; R∞=(-1)^(s+1))
 end
 
@@ -158,7 +158,7 @@ end
 
 "Tableau for Variational Gauss-Legendre method with s stages."
 function TableauSPARKGLVPRK(s)
-    glrk = getCoefficientsGLRK(s)
+    glrk = CoefficientsGLRK(s)
     TableauSPARKVPRK(Symbol("GLVPRK($s)"), glrk, glrk; R∞=(-1)^s)
 end
 

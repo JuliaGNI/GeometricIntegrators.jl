@@ -1,5 +1,5 @@
 "Tableau for the explicit 1-stage stochastic Euler method"
-function getTableauStochasticEuler()
+function TableauStochasticEuler()
   a = zeros(Float64, 1, 1)
   b = [1.0]
   c = [0.0]
@@ -9,7 +9,7 @@ end
 
 
 "Tableau for the explicit 2-stage stochastic Heun method"
-function getTableauStochasticHeun()
+function TableauStochasticHeun()
 
     a = [[0.0 0.0]
          [1.0 0.0]]
@@ -27,7 +27,7 @@ Tableau for the explicit Platen method
   According to the paper, the method has strong order 1.0 for one-dimensional Brownian motion.
   Appears to have a rather poor long-time performance.
 """
-function getTableauPlaten()
+function TableauPlaten()
 
     a_drift = [[0.0 0.0]
                [1.0 0.0]]
@@ -49,7 +49,7 @@ Tableau for the explicit 2-stage R2 method due to K. Burrage and P. Burrage
    K. Burrage, P. Burrage (1996) "High strong order explicit Runge-Kutta methods for stochastic ordinary differential equations".
   According to the paper, the method has strong order 1.0 for one-dimensional Brownian motion
 """
-function getTableauBurrageR2()
+function TableauBurrageR2()
 
     a = [[0.0 0.0]
          [2. / 3. 0.0]]
@@ -67,7 +67,7 @@ Tableau for the explicit 4-stage CL method due to K. Burrage and P. Burrage
   According to the paper, the method has strong order 1.5 for one-dimensional Brownian motion. Reduces to the classical R-K method
   of order 4 when noise is zero.
 """
-function getTableauBurrageCL()
+function TableauBurrageCL()
 
     a_drift = [[0.0 0.0 0.0 0.0]
                [0.5 0.0 0.0 0.0]
@@ -100,7 +100,7 @@ Tableau for the explicit 4-stage E1 method due to K. Burrage and P. Burrage
    K. Burrage, P. Burrage (2000) "Order conditions for stochastic Runge-Kutta methods by B-series".
   According to the paper, the method has strong order 1.0 for one-dimensional Brownian motion.
 """
-function getTableauBurrageE1()
+function TableauBurrageE1()
 
     a_drift = [[0.0      0.0     0.0 0.0]
                [2. / 3.  0.0     0.0 0.0]
@@ -133,7 +133,7 @@ Tableau for the explicit 5-stage G5 method due to K. Burrage and P. Burrage
    K. Burrage, P. Burrage (2000) "Order conditions for stochastic Runge-Kutta methods by B-series".
   According to the paper, the method has strong order 1.5 for one-dimensional Brownian motion.
 """
-function getTableauBurrageG5()
+function TableauBurrageG5()
 
     a_drift = [[ 0.0               0.0               0.0               0.0              0.0]
                [ 0.52494822322232  0.0               0.0               0.0              0.0]

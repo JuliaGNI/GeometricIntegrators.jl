@@ -1,6 +1,6 @@
 
 "Implicit Euler"
-function getTableauImplicitEuler()
+function TableauImplicitEuler()
     a = ones(Float64, 1, 1)
     b = [1.0]
     c = [1.0]
@@ -9,8 +9,11 @@ function getTableauImplicitEuler()
     TableauFIRK(:implicit_euler, o, a, b, c)
 end
 
+"Alias for [`TableauImplicitEuler`](@ref)"
+TableauBackwardEuler = TableauImplicitEuler
+
 "Implicit Midpoint"
-function getTableauImplicitMidpoint()
+function TableauImplicitMidpoint()
     a = 0.5*ones(Float64, 1, 1)
     b = [1.0]
     c = [0.5]
@@ -20,126 +23,60 @@ function getTableauImplicitMidpoint()
 end
 
 "Gauss-Legendre Runge-Kutta"
-function getTableauGLRK(s::Int)
-    TableauFIRK(getCoefficientsGLRK(s))
+function TableauGLRK(s::Int)
+    TableauFIRK(CoefficientsGLRK(s))
 end
 
-"Gauss-Lobatto-IIIA Runge-Kutta, s=2"
-function getTableauLobIIIA2()
-    TableauFIRK(getCoefficientsLobIIIA2())
+"Gauss-Lobatto-IIIA Runge-Kutta tableau with s stages."
+function TableauLobattoIIIA(s)
+    TableauFIRK(CoefficientsLobattoIIIA(s))
 end
 
-"Gauss-Lobatto-IIIA Runge-Kutta, s=3"
-function getTableauLobIIIA3()
-    TableauFIRK(getCoefficientsLobIIIA3())
+"Gauss-Lobatto-IIIB Runge-Kutta tableau with s stages."
+function TableauLobattoIIIB(s)
+    TableauFIRK(CoefficientsLobattoIIIB(s))
 end
 
-"Gauss-Lobatto-IIIA Runge-Kutta, s=4"
-function getTableauLobIIIA4()
-    TableauFIRK(getCoefficientsLobIIIA4())
+"Gauss-Lobatto-IIIC Runge-Kutta tableau with s stages."
+function TableauLobattoIIIC(s)
+    TableauFIRK(CoefficientsLobattoIIIC(s))
+end
+"Gauss-Lobatto-IIIC̄ Runge-Kutta tableau with s stages."
+function TableauLobattoIIIC̄(s)
+    TableauFIRK(CoefficientsLobattoIIIC̄(s))
 end
 
-"Gauss-Lobatto-IIIB Runge-Kutta, s=2"
-function getTableauLobIIIB2()
-    TableauFIRK(getCoefficientsLobIIIB2())
+"Gauss-Lobatto-IIID Runge-Kutta tableau with s stages."
+function TableauLobattoIIID(s)
+    TableauFIRK(CoefficientsLobattoIIID(s))
 end
 
-"Gauss-Lobatto-IIIB Runge-Kutta, s=3"
-function getTableauLobIIIB3()
-    TableauFIRK(getCoefficientsLobIIIB3())
+"Gauss-Lobatto-IIIE Runge-Kutta tableau with s stages."
+function TableauLobattoIIIE(s)
+    TableauFIRK(CoefficientsLobattoIIIE(s))
 end
 
-"Gauss-Lobatto-IIIB Runge-Kutta, s=4"
-function getTableauLobIIIB4()
-    TableauFIRK(getCoefficientsLobIIIB4())
+"Gauss-Lobatto-IIIF Runge-Kutta tableau with s stages."
+function TableauLobattoIIIF(s)
+    TableauFIRK(CoefficientsLobattoIIIF(s))
 end
 
-"Gauss-Lobatto-IIIC Runge-Kutta, s=2"
-function getTableauLobIIIC2()
-    TableauFIRK(getCoefficientsLobIIIC2())
+"Gauss-Lobatto-IIIG Runge-Kutta tableau with s stages."
+function TableauLobattoIIIG(s)
+    TableauFIRK(CoefficientsLobattoIIIG(s))
 end
 
-"Gauss-Lobatto-IIIC Runge-Kutta, s=3"
-function getTableauLobIIIC3()
-    TableauFIRK(getCoefficientsLobIIIC3())
+"Gauss-Radau-IIA Runge-Kutta tableau with s=2 stages."
+function TableauRadauIA(s)
+    TableauFIRK(CoefficientsRadauIA(s))
 end
 
-"Gauss-Lobatto-IIIC Runge-Kutta, s=4"
-function getTableauLobIIIC4()
-    TableauFIRK(getCoefficientsLobIIIC4())
+"Gauss-Radau-IIA Runge-Kutta tableau with s=3 stages."
+function TableauRadauIIA(s)
+    TableauFIRK(CoefficientsRadauIIA(s))
 end
 
-"Gauss-Lobatto-IIID Runge-Kutta, s=2"
-function getTableauLobIIID2()
-    TableauFIRK(getCoefficientsLobIIID2())
-end
-
-"Gauss-Lobatto-IIID Runge-Kutta, s=3"
-function getTableauLobIIID3()
-    TableauFIRK(getCoefficientsLobIIID3())
-end
-
-"Gauss-Lobatto-IIID Runge-Kutta, s=4"
-function getTableauLobIIID4()
-    TableauFIRK(getCoefficientsLobIIID4())
-end
-
-"Gauss-Lobatto-IIIE Runge-Kutta, s=2"
-function getTableauLobIIIE2()
-    TableauFIRK(getCoefficientsLobIIIE2())
-end
-
-"Gauss-Lobatto-IIIE Runge-Kutta, s=3"
-function getTableauLobIIIE3()
-    TableauFIRK(getCoefficientsLobIIIE3())
-end
-
-"Gauss-Lobatto-IIIE Runge-Kutta, s=4"
-function getTableauLobIIIE4()
-    TableauFIRK(getCoefficientsLobIIIE4())
-end
-
-"Gauss-Lobatto-IIIF Runge-Kutta, s=2"
-function getTableauLobIIIF2()
-    TableauFIRK(getCoefficientsLobIIIF2())
-end
-
-"Gauss-Lobatto-IIIF Runge-Kutta, s=3"
-function getTableauLobIIIF3()
-    TableauFIRK(getCoefficientsLobIIIF3())
-end
-
-"Gauss-Lobatto-IIIF Runge-Kutta, s=4"
-function getTableauLobIIIF4()
-    TableauFIRK(getCoefficientsLobIIIF4())
-end
-
-"Gauss-Lobatto-IIIG Runge-Kutta, s=2"
-function getTableauLobIIIG2()
-    TableauFIRK(getCoefficientsLobIIIG2())
-end
-
-"Gauss-Lobatto-IIIG Runge-Kutta, s=3"
-function getTableauLobIIIG3()
-    TableauFIRK(getCoefficientsLobIIIG3())
-end
-
-"Gauss-Lobatto-IIIG Runge-Kutta, s=4"
-function getTableauLobIIIG4()
-    TableauFIRK(getCoefficientsLobIIIG4())
-end
-
-"Gauss-Radau-IIA Runge-Kutta, s=2"
-function getTableauRadIIA2()
-    TableauFIRK(getCoefficientsRadIIA2())
-end
-
-"Gauss-Radau-IIA Runge-Kutta, s=3"
-function getTableauRadIIA3()
-    TableauFIRK(getCoefficientsRadIIA3())
-end
-
-"Gauss-Legendre Runge-Kutta, s=3"
-function getTableauSRK3()
-    TableauFIRK(getCoefficientsSRK3())
+"Symmetric Runge-Kutta tableau with three stages."
+function TableauSRK3()
+    TableauFIRK(CoefficientsSRK3())
 end

@@ -5,7 +5,7 @@ Tableau for the 1-stage SRKw1 method due to Wang, Hong & Xu
   Commun. Comput. Phys. 21(1), 2017
   According to the paper, the method has weak order 1.0.
 """
-function getTableauSRKw1(x::Number=0.0)
+function TableauSRKw1(x::Number=0.0)
 
     A0 = 0.5*ones(typeof(x),1,1)
 
@@ -35,7 +35,7 @@ Tableau for the 4-stage SRKw2 method due to Wang, Hong & Xu
   According to the paper, the method has weak order 2.0 when applied to systems
   driven by one-dimensional noise.
 """
-function getTableauSRKw2(x1::Number=0.0, x2::Number=0.0, x3::Number=0.0)
+function TableauSRKw2(x1::Number=0.0, x2::Number=0.0, x3::Number=0.0)
 
     A0 = [[1. / 8.   0.0        0.0       0.0]
           [1. / 4.   1. / 8.    0.0       0.0]
