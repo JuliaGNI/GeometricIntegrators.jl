@@ -3,13 +3,13 @@
 
 Defines an implicit initial value problem
 ```math
-\begin{align*}
+\begin{aligned}
 \dot{q} (t) &= v(t) , &
 q(t_{0}) &= q_{0} , \\
 \dot{p} (t) &= f(t, q(t), v(t)) , &
 p(t_{0}) &= p_{0} , \\
 p(t) &= ϑ(t, q(t), v(t))
-\end{align*}
+\end{aligned}
 ```
 with vector field ``f``, the momentum defined by ``p``, initial conditions ``(q_{0}, p_{0})`` and the solution
 ``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``.
@@ -21,8 +21,8 @@ variables ``(q,p)`` and algebraic variable ``v``.
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``f`` and ``p``
 * `ϑ`: function determining the momentum
 * `f`: function computing the vector field
-* `g`: function determining the projection, given by ∇ϑ(q)λ
-* `v̄`: function computing an initial guess for the velocity field ``v``` (optional)
+* `g`: function determining the projection, given by ``\nabla \vartheta (q) \cdot \lambda``
+* `v̄`: function computing an initial guess for the velocity field ``v`` (optional)
 * `f̄`: function computing an initial guess for the force field ``f`` (optional)
 * `h`: function computing the Hamiltonian (optional)
 * `t₀`: initial time (optional)

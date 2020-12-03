@@ -3,15 +3,15 @@
 
 Defines an implicit initial value problem
 ```math
-\begin{align*}
-\dot{q} (t) &= v(t) + λ(t), &
+\begin{aligned}
+\dot{q} (t) &= v(t) + \lambda(t), &
 q(t_{0}) &= q_{0} , \\
-\dot{p} (t) &= f(t, q(t), v(t)) + g(t, q(t), λ(t)) + \obar{g}(t, q(t), μ(t)) , &
+\dot{p} (t) &= f(t, q(t), v(t)) + g(t, q(t), \lambda(t)) + \bar{g} (t, q(t), \mu(t)) , &
 p(t_{0}) &= p_{0} , \\
 p(t) &= ϑ(t, q(t), v(t)) , \\
 0 &= \phi (t, q(t), p(t)) , \\
 0 &= \psi (t, q(t), p(t), \dot{q}(t), \dot{p}(t)) ,
-\end{align*}
+\end{aligned}
 ```
 with vector field ``f``, the momentum defined by ``p``, initial conditions ``(q_{0}, p_{0})`` and the solution
 ``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}`` and
@@ -25,11 +25,11 @@ variables ``(q,p)`` and algebraic variables ``v``, ``\lambda`` and ``\mu``.
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``f`` and ``p``
 * `ϑ`: function determining the momentum
 * `f`: function computing the vector field
-* `g`: function determining the primary projection, usually given by ∇ϑ(q)⋅λ
-* `g̅`: function determining the secondary projection, usually given by λ⋅∇ϑ(q)
-* `ϕ`: primary constraints, usually given by p-ϑ(q)
-* `ψ`: secondary constraints, usually given by ṗ-q̇⋅∇ϑ(q)
-* `v̄`: function computing an initial guess for the velocity field ``v``` (optional)
+* `g`: function determining the primary projection, usually given by ``\nabla \vartheta (q) \cdot \lambda``
+* `g̅`: function determining the secondary projection, usually given by ``\lambda \cdot \nabla \vartheta (q)``
+* `ϕ`: primary constraints, usually given by ``p - \vartheta (q)``
+* `ψ`: secondary constraints, usually given by ``\dot{p} - \dot{q} \cdot \nabla \vartheta (q)``
+* `v̄`: function computing an initial guess for the velocity field ``v`` (optional)
 * `f̄`: function computing an initial guess for the force field ``f`` (optional)
 * `h`: function computing the Hamiltonian (optional)
 * `Ω`: symplectic matrix (optional)
@@ -78,7 +78,7 @@ The funtions `g`, `v̄` and `f̄` are specified by
         f[2] = ...
         ...
     end
-    ```
+```
 """
 struct VDAE{dType <: Number, tType <: Number,
             ϑType <: Function, fType <: Function,

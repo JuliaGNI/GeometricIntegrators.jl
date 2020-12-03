@@ -4,17 +4,17 @@
 Defines a Hamiltonian ordinary differential initial value problem, that is
 a canonical Hamiltonian system of equations,
 ```math
-\begin{align*}
+\begin{aligned}
 \dot{q} (t) &= v(t, q(t), p(t)) , & q(t_{0}) &= q_{0} , \\
 \dot{p} (t) &= f(t, q(t), p(t)) , & p(t_{0}) &= p_{0} ,
-\end{align*}
+\end{aligned}
 ```
 with vector fields ``v`` and ``f``, given by
 ```math
-\begin{align*}
+\begin{aligned}
 v &=   \frac{\partial H}{\partial p} , &
 f &= - \frac{\partial H}{\partial q} ,
-\end{align*}
+\end{aligned}
 ```
 initial conditions ``(q_{0}, p_{0})`` and the dynamical variables ``(q,p)``
 taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``.

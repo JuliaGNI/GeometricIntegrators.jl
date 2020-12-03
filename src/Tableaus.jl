@@ -46,7 +46,8 @@ module Tableaus
            TableauRalston2, TableauRalston3,
            TableauRunge2, TableauRunge,
            TableauKutta3, TableauKutta,
-           TableauERK4, TableauERK416, TableauERK438
+           TableauRK4, TableauRK416, TableauRK438,
+           TableauSSPRK3
 
     include("tableaus/tableaus_dirk.jl")
 

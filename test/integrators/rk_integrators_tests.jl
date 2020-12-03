@@ -103,7 +103,7 @@ end
     sol = integrate(ode, TableauExplicitMidpoint(), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-3
 
-    sol = integrate(ode, TableauERK4(), Δt, nt)
+    sol = integrate(ode, TableauRK4(), Δt, nt)
     @test rel_err(sol.q, refx) < 5E-7
 
 end
@@ -215,7 +215,7 @@ end
     @test rel_err(psol.q, refq) < 5E-2
     @test rel_err(psol.p, refp) < 1E-3
 
-    psol = integrate(pode, TableauEPRK(:prk4, 4, TableauERK4().q), Δt, nt)
+    psol = integrate(pode, TableauEPRK(:prk4, 4, TableauRK4().q), Δt, nt)
     @test rel_err(psol.q, refq) < 5E-7
     @test rel_err(psol.p, refp) < 5E-7
 

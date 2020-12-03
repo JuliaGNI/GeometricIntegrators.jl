@@ -115,9 +115,10 @@
     @test typeof(TableauRunge())                <: TableauERK
     @test typeof(TableauKutta3())               <: TableauERK
     @test typeof(TableauKutta())                <: TableauERK
-    @test typeof(TableauERK4())                 <: TableauERK
-    @test typeof(TableauERK416())               <: TableauERK
-    @test typeof(TableauERK438())               <: TableauERK
+    @test typeof(TableauRK4())                  <: TableauERK
+    @test typeof(TableauRK416())                <: TableauERK
+    @test typeof(TableauRK438())                <: TableauERK
+    @test typeof(TableauSSPRK3())               <: TableauERK
 
     # instantiate all diagonally implicit tableaus
     @test typeof(TableauCrankNicolson())        <: TableauDIRK
@@ -174,8 +175,8 @@
     @test typeof(TableauLobattoIIIBIIIA2())     <: TableauEPRK
 
     # test instatiation of partioned tableau by composition of two RK tableaus
-    @test typeof(TableauEPRK(:PERK4, 4, TableauERK4().q, TableauERK4().q)) <: TableauEPRK
-    @test TableauEPRK(:PERK4, 4, TableauERK4().q, TableauERK4().q) == TableauEPRK(:PERK4, 4, TableauERK4().q)
+    @test typeof(TableauEPRK(:PERK4, 4, TableauRK4().q, TableauRK4().q)) <: TableauEPRK
+    @test TableauEPRK(:PERK4, 4, TableauRK4().q, TableauRK4().q) == TableauEPRK(:PERK4, 4, TableauRK4().q)
 
 
     # TODO Add tests for TableauIPRK, TableauSARK, TableauSPARK and TableauGLM.
