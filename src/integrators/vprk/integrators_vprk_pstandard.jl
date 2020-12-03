@@ -64,10 +64,12 @@ struct IntegratorVPRKpStandard{DT, TT, D, S,
     end
 end
 
+"Variational partitioned Runge-Kutta integrator with standard projection."
 function IntegratorVPRKpStandard(args...)
     IntegratorVPRKpStandardConstructor(args..., [0,1]; R∞=1)
 end
 
+"Variational partitioned Runge-Kutta integrator with symplectic projection."
 function IntegratorVPRKpSymplectic(args...)
     IntegratorVPRKpStandardConstructor(args..., [1,1])
 end
@@ -76,10 +78,16 @@ function IntegratorVPRKpStandardConstructor(equation, tableau, Δt, R; R∞=tabl
     IntegratorVPRKpStandard(equation, tableau, Δt, R, R; R∞=R∞)
 end
 
+@doc raw"""
+Variational partitioned Runge-Kutta integrator with variational projection on $(q_{n}, p_{n+1})$.
+"""
 function IntegratorVPRKpVariationalQ(args...)
     IntegratorVPRKpStandard(args..., [1,0], [0,1]; R∞=1)
 end
 
+@doc raw"""
+Variational partitioned Runge-Kutta integrator with variational projection on $(p_{n}, q_{n+1})$.
+"""
 function IntegratorVPRKpVariationalP(args...)
     IntegratorVPRKpStandard(args..., [0,1], [1,0]; R∞=1)
 end
