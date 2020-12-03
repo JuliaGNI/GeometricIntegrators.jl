@@ -99,7 +99,7 @@ end
 TableauKutta3 = TableauKutta
 
 "Tableau for explicit Runge-Kutta method of order four (1/6 rule)"
-function TableauERK416()
+function TableauRK416()
     a = [[0.0  0.0  0.0  0.0]
          [0.5  0.0  0.0  0.0]
          [0.0  0.5  0.0  0.0]
@@ -108,21 +108,33 @@ function TableauERK416()
     c =  [0.0, 0.5, 0.5, 1.0]
     o = 4
 
-    TableauERK(:erk4, o, a, b, c)
+    TableauERK(:rk416, o, a, b, c)
 end
 
 "Alias for [`TableauRK416`](@ref)"
-TableauERK4 = TableauERK416
+TableauRK4 = TableauRK416
 
 "Tableau for explicit Runge-Kutta method of order four (3/8 rule)"
-function TableauERK438()
+function TableauRK438()
     a = [[ 0.0  0.0  0.0  0.0]
          [ 1/3  0.0  0.0  0.0]
          [-1/3  1.0  0.0  0.0]
          [ 1.0 -1.0  1.0  0.0]]
-    b = [1/8, 3/8, 3/8, 1/8]
-    c = [0.0, 1/3, 2/3, 1.0]
+    b =  [1/8, 3/8, 3/8, 1/8]
+    c =  [0.0, 1/3, 2/3, 1.0]
     o = 4
 
-    TableauERK(:erk438, o, a, b, c)
+    TableauERK(:rk438, o, a, b, c)
+end
+
+"Tableau of 3rd order Strong Stability Preserving method with three stages"
+function TableauSSPRK3(T=Float64)
+    a = [[ 0.0  0.0  0.0 ]
+         [ 1.0  0.0  0.0 ]
+         [ 1/4  1/4  0.0 ]]
+    b =  [ 1/6, 1/6, 4/6 ]
+    c =  [ 0.0, 1.0, 1/2 ]
+    o = 3
+
+    TableauERK(:ssprk3, o, a, b, c)
 end
