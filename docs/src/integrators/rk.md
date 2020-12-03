@@ -1,5 +1,5 @@
 ```@meta
-CurrentModule = GeometricIntegrators.Integrators
+CurrentModule = GeometricIntegrators.Tableaus
 ```
 
 # Runge-Kutta Methods

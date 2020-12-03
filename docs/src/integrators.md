@@ -23,7 +23,7 @@ ode = TestProblems.HarmonicOscillatorProblem.harmonic_oscillator_ode()
 ```
 Create an explicit Euler tableau:
 ```@example 1
-tab = getTableauExplicitEuler()
+tab = TableauExplicitEuler()
 ```
 And now create an Integrator with the general `Integrator` constructor:
 ```@example 1
@@ -32,7 +32,7 @@ int = Integrator(ode, tab, 0.1)
 We see that we obtained an `IntegratorERK`, i.e., an explicit Runge-Kutta integrator.
 If instead we choose the implicit Euler tableau:
 ```@example 1
-tab = getTableauImplicitEuler()
+tab = TableauImplicitEuler()
 ```
 the general `Integrator` constructor creates a different integrator:
 ```@example 1
@@ -80,7 +80,7 @@ using GeometricIntegrators
 ode = TestProblems.HarmonicOscillatorProblem.harmonic_oscillator_ode()
 ```
 ```@example 3
-tab = getTableauExplicitEuler()
+tab = TableauExplicitEuler()
 int = Integrator(ode, tab, 0.1)
 sol = integrate(ode, int, 100)
 ```
