@@ -3,12 +3,12 @@
 
 Defines a partitioned differential algebraic initial value problem
 ```math
-\begin{align*}
+\begin{aligned}
 \dot{q} (t) &= v(t) + u(t, q(t), p(t), \lambda(t)) , & q(t_{0}) &= q_{0} , \\
 \dot{p} (t) &= f(t, q(t), v(t)) + r(t, q(t), p(t), \lambda(t)) , & p(t_{0}) &= p_{0} , \\
-p(t) &= p(t, q(t), v(t)) , && \
+p(t) &= p(t, q(t), v(t)) , && \\
 0 &= \phi (t, q(t), p(t), \lambda(t)) , & \lambda(t_{0}) &= \lambda_{0} ,
-\end{align*}
+\end{aligned}
 ```
 with vector field ``f``, the momentum defined by ``p``, projection ``u`` and ``r``,
 algebraic constraint ``\phi=0``,
@@ -26,7 +26,7 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 * `u`: function computing the projection for ``q``
 * `g`: function computing the projection for ``p``
 * `ϕ`: algebraic constraint
-* `v̄`: function computing an initial guess for the velocity field ``v``` (optional)
+* `v̄`: function computing an initial guess for the velocity field ``v`` (optional)
 * `f̄`: function computing an initial guess for the force field ``f`` (optional)
 * `h`: function computing the Hamiltonian (optional)
 * `t₀`: initial time

@@ -3,10 +3,10 @@
 
 Defines a partitioned stochastic differential initial value problem
 ```math
-\begin{align*}
-\dq (t) &= v(t, q(t)) \, dt + B(t, q(t)) \circ dW , & q(t_{0}) &= q_{0} ,
-\dp (t) &= f(t, q(t)) \, dt + G(t, q(t)) \circ dW , & p(t_{0}) &= p_{0}
-\end{align*}
+\begin{aligned}
+dq (t) &= v(t, q(t)) \, dt + B(t, q(t)) \circ dW , & q(t_{0}) &= q_{0} , \\
+dp (t) &= f(t, q(t)) \, dt + G(t, q(t)) \circ dW , & p(t_{0}) &= p_{0}
+\end{aligned}
 ```
 with the drift vector fields ``v`` and ``f``, diffusion matrices ``B`` and ``G``,
 initial conditions ``q_{0}`` and ``p_{0}``, the dynamical variables ``(q,p)`` taking
@@ -18,18 +18,18 @@ values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``, and the m-dimensional Wiener
 * `m`:  dimension of the Wiener process
 * `ni`: number of initial conditions
 * `ns`: number of sample paths
-* `v`:  function computing the drift vector field for the position variable q
-* `f`:  function computing the drift vector field for the momentum variable p
-* `B`:  function computing the d x m diffusion matrix for the position variable q
-* `G`:  function computing the d x m diffusion matrix for the momentum variable p
+* `v`:  function computing the drift vector field for the position variable ``q``
+* `f`:  function computing the drift vector field for the momentum variable ``p``
+* `B`:  function computing the d x m diffusion matrix for the position variable ``q``
+* `G`:  function computing the d x m diffusion matrix for the momentum variable ``p``
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q`` (may be a random variable itself)
 * `p₀`: initial condition for dynamical variable ``p`` (may be a random variable itself)
 
 
-The functions `v`, `f`, 'B' and `G`, providing the drift vector fields and diffusion matrices, take four arguments,
+The functions `v`, `f`, `B` and `G`, providing the drift vector fields and diffusion matrices, take four arguments,
 `v(t, q, p, v)`, `f(t, q, p, f)`, `B(t, q, p,  B)` and `G(t, q, p, G)`, where `t` is the current time, `(q, p)` is the
-current solution vector, and `v`, `f`, 'B' and `G` are the variables which hold the result
+current solution vector, and `v`, `f`, `B` and `G` are the variables which hold the result
 of evaluating the vector fields ``v``, ``f`` and the matrices ``B``, ``G`` on `t` and `(q,p)`.
 
 ### Example

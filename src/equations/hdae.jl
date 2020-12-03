@@ -4,12 +4,12 @@
 Defines a Hamiltonian differential algebraic initial value problem, that is
 a canonical Hamiltonian system of equations subject to Dirac constraints,
 ```math
-\begin{align*}
+\begin{aligned}
 \dot{q} (t) &= v(t, q(t), p(t)) + u(t, q(t), p(t), \lambda(t)) + \bar{g}(t, q(t), p(t), \lambda(t), \gamma(t)) , & q(t_{0}) &= q_{0} , \\
 \dot{p} (t) &= f(t, q(t), p(t)) + g(t, q(t), p(t), \lambda(t)) + \bar{f}(t, q(t), p(t), \lambda(t), \gamma(t)) , & p(t_{0}) &= p_{0} , \\
 0 &= \phi (t, q(t), p(t)) , \\
 0 &= \psi (t, q(t), p(t), \dot{q}(t), \dot{p}(t)) ,
-\end{align*}
+\end{aligned}
 ```
 with vector fields ``v``, ``u``, ``\bar{u}`` and ``f``, ``g``, ``\bar{g}``,
 primary constraint ``\phi(q,p)=0`` and secondary constraint ``\psi(q,p,\lambda)=0``,
@@ -27,8 +27,8 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `f`: function computing the Hamiltonian vector field ``f``
 * `u`: function computing the primary projection field ``u``
 * `g`: function computing the primary projection field ``g``
-* `u̅`: function computing the secondary projection field ``u̅``
-* `g̅`: function computing the secondary projection field ``g̅``
+* `u̅`: function computing the secondary projection field ``\bar{u}``
+* `g̅`: function computing the secondary projection field ``\bar{g}``
 * `ϕ`: primary constraints
 * `ψ`: secondary constraints
 * `v̄`: function computing an initial guess for the velocity field ``v``` (optional)

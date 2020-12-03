@@ -1,7 +1,5 @@
 
-# GeometricIntegrators.jl
-
-## Features
+# GeometricIntegrators.jl • Features
 
 The following list provides and overview of supported and planned features.
 
@@ -10,19 +8,20 @@ The following list provides and overview of supported and planned features.
 - [x] Explicit Runge-Kutta Methods (ERK),
 - [x] Diagonally Implicit Runge-Kutta Methods (DIRK),
 - [x] Fully Implicit Runge-Kutta Methods (FIRK),
+- [x] Gauss-Legendre Runge-Kutta Methods (GLRK),
+- [x] Radau I, Radau II and Lobatto III Runge-Kutta Methods,
 - [x] Explicit Partitioned Runge-Kutta Methods (EPRK),
 - [x] Implicit Partitioned Runge-Kutta Methods (IPRK),
 - [ ] Additive Runge-Kutta Methods (ARK),
 - [x] Partitioned Additive Runge-Kutta Methods (PARK),
 - [ ] Generalised Additive Runge-Kutta Methods (GARK),
-- [ ] Specialised Partitioned Additive Runge-Kutta Methods (SPARK),
+- [x] Specialised Partitioned Additive Runge-Kutta Methods (SPARK),
 - [ ] Continuous-stage Runge-Kutta Methods (CSRK),
 - [ ] Two-step Runge-Kutta Methods (TSRK),
 - [ ] General Linear Methods (GLM).
 
 #### Families of Geometric Integrators
 
-- [x] Gauss-Legendre Runge-Kutta Methods (GLRK),
 - [x] Variational Partitioned Runge-Kutta Methods (VPRK),
 - [x] Hamiltonian Partitioned Additive Runge-Kutta Methods (HPARK, HSPARK),
 - [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK, VSPARK),
