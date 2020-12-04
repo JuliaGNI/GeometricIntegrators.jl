@@ -53,7 +53,7 @@ struct IntegratorVPRKpStandard{DT, TT, D, S,
         projector = create_nonlinear_solver(DT, 2*D, pparams, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVPRKpStandard(params, pparams, solver, projector, iguess, caches)

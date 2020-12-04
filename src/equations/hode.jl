@@ -106,6 +106,8 @@ hasparameters(::HODEPT{<:NamedTuple}) = true
 _get_v(equ::HODE) = hasparameters(equ) ? (t,q,p,v) -> equ.v(t, q, p, v, equ.parameters) : equ.v
 _get_f(equ::HODE) = hasparameters(equ) ? (t,q,p,f) -> equ.f(t, q, p, f, equ.parameters) : equ.f
 _get_h(equ::HODE) = hasparameters(equ) ? (t,q,p) -> equ.h(t, q, p, equ.parameters) : equ.h
+_get_v̄(equ::HODE) = _get_v(equ)
+_get_f̄(equ::HODE) = _get_f(equ)
 
 function get_function_tuple(equ::HODE)
     names = (:v,:f,:h)

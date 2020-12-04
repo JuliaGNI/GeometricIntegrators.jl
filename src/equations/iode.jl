@@ -118,15 +118,14 @@ IODE(ϑ, f, g, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q�
 IODE(ϑ, f, g, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = IODE(ϑ, f, g, t₀, [q₀], [p₀], [λ₀]; kwargs...)
 IODE(ϑ, f, g, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = IODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
 
-const IODEHT{HT,DT,TT,AT,ϑT,FT,GT,VT,PT} = IODE{DT,TT,AT,ϑT,FT,GT,HT,VT,PT} # type alias for dispatch on Hamiltonian type parameter
-const IODEVT{VT,DT,TT,AT,ϑT,FT,GT,HT,PT} = IODE{DT,TT,AT,ϑT,FT,GT,HT,VT,PT} # type alias for dispatch on vector field type parameter
-const IODEPT{PT,DT,TT,AT,ϑT,FT,GT,HT,VT} = IODE{DT,TT,AT,ϑT,FT,GT,HT,VT,PT} # type alias for dispatch on parameters type parameter
+const IODEHT{HT,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,PT} = IODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,PT} # type alias for dispatch on Hamiltonian type parameter
+const IODEPT{PT,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT} = IODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,PT} # type alias for dispatch on parameters type parameter
 
 Base.hash(ode::IODE, h::UInt) = hash(ode.d, 
         hash(ode.ϑ, hash(ode.f, hash(ode.g,
         hash(ode.v̄, hash(ode.f̄, hash(ode.h,
         hash(ode.t₀, hash(ode.q₀, hash(ode.p₀,
-        hash(ode.periodicity, hash(ode.parameters, h)))))))))))
+        hash(ode.periodicity, hash(ode.parameters, h))))))))))))
 
 Base.:(==)(ode1::IODE, ode2::IODE) = (
                                 ode1.d == ode2.d
@@ -171,11 +170,12 @@ _get_ϑ(equ::IODE) = hasparameters(equ) ? (t,q,v,ϑ) -> equ.ϑ(t, q, v, ϑ, equ.
 _get_f(equ::IODE) = hasparameters(equ) ? (t,q,v,f) -> equ.f(t, q, v, f, equ.parameters) : equ.f
 _get_g(equ::IODE) = hasparameters(equ) ? (t,q,v,g) -> equ.g(t, q, v, g, equ.parameters) : equ.g
 _get_v̄(equ::IODE) = hasparameters(equ) ? (t,q,v) -> equ.v̄(t, q, v, equ.parameters) : equ.v̄
+_get_f̄(equ::IODE) = hasparameters(equ) ? (t,q,v,f) -> equ.f̄(t, q, v, f, equ.parameters) : equ.f̄
 _get_h(equ::IODE) = hasparameters(equ) ? (t,q) -> equ.h(t, q, equ.parameters) : equ.h
 
 function get_function_tuple(equ::IODE)
-    names = (:ϑ, :f, :g, :v̄)
-    equs  = (_get_ϑ(equ), _get_f(equ), _get_g(equ), _get_v̄(equ))
+    names = (:ϑ, :f, :g, :v̄, :f̄)
+    equs  = (_get_ϑ(equ), _get_f(equ), _get_g(equ), _get_v̄(equ), _get_f̄(equ))
 
     if hashamiltonian(equ)
         names = (names..., :h)

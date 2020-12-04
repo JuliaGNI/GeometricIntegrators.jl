@@ -119,17 +119,16 @@ VODE(ϑ, f, g, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q�
 VODE(ϑ, f, g, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = VODE(ϑ, f, g, t₀, [q₀], [p₀], [λ₀]; kwargs...)
 VODE(ϑ, f, g, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = VODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
 
-const VODEHT{HT,DT,TT,AT,ϑT,FT,GT,VT,ΩT,∇T,PT} = VODE{DT,TT,AT,ϑT,FT,GT,HT,VT,ΩT,∇T,PT} # type alias for dispatch on Hamiltonian type parameter
-const VODEVT{VT,DT,TT,AT,ϑT,FT,GT,HT,ΩT,∇T,PT} = VODE{DT,TT,AT,ϑT,FT,GT,HT,VT,ΩT,∇T,PT} # type alias for dispatch on vector field type parameter
-const VODE∇T{∇T,DT,TT,AT,ϑT,FT,GT,HT,VT,ΩT,PT} = VODE{DT,TT,AT,ϑT,FT,GT,HT,VT,ΩT,∇T,PT} # type alias for dispatch on gradient of Hamiltonian type parameter
-const VODEΩT{ΩT,DT,TT,AT,ϑT,FT,GT,HT,VT,∇T,PT} = VODE{DT,TT,AT,ϑT,FT,GT,HT,VT,ΩT,∇T,PT} # type alias for dispatch on symplectic two-form type parameter
-const VODEPT{PT,DT,TT,AT,ϑT,FT,GT,HT,VT,ΩT,∇T} = VODE{DT,TT,AT,ϑT,FT,GT,HT,VT,ΩT,∇T,PT} # type alias for dispatch on parameters type parameter
+const VODEHT{HT,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,ΩT,∇T,PT} = VODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on Hamiltonian type parameter
+const VODE∇T{∇T,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,PT} = VODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on gradient of Hamiltonian type parameter
+const VODEΩT{ΩT,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,∇T,PT} = VODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on symplectic two-form type parameter
+const VODEPT{PT,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T} = VODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on parameters type parameter
 
 Base.hash(ode::VODE, h::UInt) = hash(ode.d, hash(ode.m,
           hash(ode.ϑ, hash(ode.f, hash(ode.g, hash(ode.v̄, hash(ode.f̄,
           hash(ode.h, hash(ode.Ω, hash(ode.∇H,
           hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, hash(ode.λ₀,
-          hash(ode.parameters, hash(ode.periodicity, h)))))))))))))))
+          hash(ode.parameters, hash(ode.periodicity, h))))))))))))))))
 
 Base.:(==)(ode1::VODE, ode2::VODE) = (
                                 ode1.d == ode2.d

@@ -29,7 +29,7 @@ Atomic solution for an PDAE.
 * `g`: projective vector field of p
 * `g̅`: projective vector field of p̅
 """
-mutable struct AtomicSolutionPDAE{DT, TT, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionPDAE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT
     t̅::TT
 
@@ -56,17 +56,17 @@ mutable struct AtomicSolutionPDAE{DT, TT, AT <: AbstractArray{DT}, IT <: NamedTu
 
     internal::IT
 
-    function AtomicSolutionPDAE{DT,TT,AT,IT}(nd, nm, internal::IT) where {DT <: Number, TT <: Real, AT, IT <: NamedTuple}
+    function AtomicSolutionPDAE{DT,TT,AT,IT}(nd, nm, internal::IT) where {DT,TT,AT,IT}
         new(zero(TT), zero(TT),
-            zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-            zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-            zeros(DT, nm), zeros(DT, nm),
-            zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-            zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nm)), AT(zeros(DT, nm)),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
             internal)
     end
 
-    function AtomicSolutionPDAE{DT,TT,AT,IT}(t::TT, q::AT, p::AT, λ::AT, internal::IT) where {DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple}
+    function AtomicSolutionPDAE{DT,TT,AT,IT}(t::TT, q::AT, p::AT, λ::AT, internal::IT) where {DT,TT,AT,IT}
         new(zero(t), zero(t),
             zero(q), zero(q), zero(q),
             zero(p), zero(p), zero(p),

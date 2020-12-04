@@ -40,7 +40,7 @@ struct IDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             ϕType <: Function,
             v̄Type <: Function, f̄Type <: Function,
             hType <: OptionalFunction,
-            pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPDAE{dType, tType}
+            pType <: Union{NamedTuple,Nothing}} <: AbstractEquationPDAE{dType, tType}
 
     d::Int
     m::Int
@@ -92,9 +92,8 @@ IDAE(ϑ, f, u, g, ϕ, q₀::StateVector, p₀::StateVector, λ₀::StateVector=z
 IDAE(ϑ, f, u, g, ϕ, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = IDAE(ϑ, f, u, g, ϕ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
 IDAE(ϑ, f, u, g, ϕ, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = IDAE(ϑ, f, u, g, ϕ, 0.0, q₀, p₀, λ₀; kwargs...)
 
-const IDAEHT{HT,DT,TT,AT,ϑT,FT,UT,GT,ϕT,VT,PT} = IDAE{DT,TT,AT,ϑT,FT,UT,GT,ϕT,HT,VT,PT} # type alias for dispatch on Hamiltonian type parameter
-const IDAEVT{VT,DT,TT,AT,ϑT,FT,UT,GT,ϕT,HT,PT} = IDAE{DT,TT,AT,ϑT,FT,UT,GT,ϕT,HT,VT,PT} # type alias for dispatch on vector field type parameter
-const IDAEPT{PT,DT,TT,AT,ϑT,FT,UT,GT,ϕT,HT,VT} = IDAE{DT,TT,AT,ϑT,FT,UT,GT,ϕT,HT,VT,PT} # type alias for dispatch on parameters type parameter
+const IDAEHT{HT,DT,TT,AT,ϑT,FT,UT,GT,ϕT,V̄T,F̄T,PT} = IDAE{DT,TT,AT,ϑT,FT,UT,GT,ϕT,V̄T,F̄T,HT,PT} # type alias for dispatch on Hamiltonian type parameter
+const IDAEPT{PT,DT,TT,AT,ϑT,FT,UT,GT,ϕT,V̄T,F̄T,HT} = IDAE{DT,TT,AT,ϑT,FT,UT,GT,ϕT,V̄T,F̄T,HT,PT} # type alias for dispatch on parameters type parameter
 
 Base.hash(dae::IDAE, h::UInt) = hash(dae.d, hash(dae.m,
         hash(dae.ϑ, hash(dae.f, hash(dae.u, hash(dae.g, hash(dae.ϕ,

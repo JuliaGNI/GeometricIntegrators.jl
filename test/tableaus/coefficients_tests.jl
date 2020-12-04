@@ -2,7 +2,7 @@
 @testset "$(rpad("Tableau coefficients",80))" begin
 
     using LinearAlgebra: normalize
-    using GeometricIntegrators.CommonFunctions
+    using GeometricIntegrators.Common
     using GeometricIntegrators.Utils
     import GeometricIntegrators.Quadratures: LobattoLegendreQuadrature, weights
     import GeometricIntegrators.Tableaus: get_lobatto_nodes, get_lobatto_weights,

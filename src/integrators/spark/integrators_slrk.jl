@@ -118,7 +118,7 @@ struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorSLRK(params, solver, iguess, caches)
@@ -130,7 +130,7 @@ struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
 end
 
 
-CommonFunctions.nconstraints(::IntegratorSLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
+Common.nconstraints(::IntegratorSLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
 function initial_guess!(int::IntegratorSLRK{DT}, sol::AtomicSolutionPDAE{DT},

@@ -65,7 +65,7 @@ struct IntegratorHSPARK{DT, TT, D, S, R, PT <: ParametersHSPARK{DT,TT,D,S,R},
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessPODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorHSPARK(params, solver, iguess, caches)
@@ -77,7 +77,7 @@ struct IntegratorHSPARK{DT, TT, D, S, R, PT <: ParametersHSPARK{DT,TT,D,S,R},
 end
 
 
-CommonFunctions.nconstraints(::IntegratorHSPARK{DT,TT,D}) where {DT,TT,D} = D
+Common.nconstraints(::IntegratorHSPARK{DT,TT,D}) where {DT,TT,D} = D
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},

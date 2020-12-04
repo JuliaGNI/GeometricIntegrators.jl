@@ -65,7 +65,7 @@ function run!(sim::ParallelSimulation)
                 id = Threads.threadid()
 
                 # create atomic solution
-                asol = AtomicSolution(equation(sim))
+                asol = AtomicSolution(solution(sim), integrator(sim))
 
                 # get cache from solution
                 get_initial_conditions!(solution(sim), asol, m)

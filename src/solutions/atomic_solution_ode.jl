@@ -18,7 +18,7 @@ Atomic solution for an ODE.
 * `v`: vector field of q
 * `v̅`: vector field of q̅
 """
-mutable struct AtomicSolutionODE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionODE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT
     t̅::TT
 

@@ -7,7 +7,7 @@ const ParametersVPRKpInternal = AbstractParametersVPRK{:vprk_pinternal}
 struct IntegratorVPRKpInternal{DT, TT, D, S,
                 PT <: ParametersVPRKpInternal{DT,TT},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
+                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
 
     params::PT
     solver::ST
@@ -33,7 +33,7 @@ struct IntegratorVPRKpInternal{DT, TT, D, S,
         solver = create_nonlinear_solver(DT, D*(S+1), params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVPRKpInternal(params, solver, iguess, caches)

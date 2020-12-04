@@ -91,7 +91,7 @@ struct IntegratorVPRKpTableau{DT, TT, D, S,
         solver  = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVPRKpTableau(params, solver, iguess, caches)

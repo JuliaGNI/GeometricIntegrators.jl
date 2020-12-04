@@ -101,7 +101,7 @@ HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, q₀::StateVector, p₀::StateVector, λ�
 HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, t₀, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, t₀, [q₀], [p₀], [λ₀]; kwargs...)
 HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
 
-const HDAEPT{PT,DT,TT,AT,VT,FT,UT,GT,U̅T,G̅T,ΦT,ΨT,HT} = HDAE{DT,TT,AT,VT,FT,UT,GT,U̅T,G̅T,ΦT,ΨT,HT,PT} # type alias for dispatch on parameters type parameter
+const HDAEPT{PT,DT,TT,AT,VT,FT,UT,GT,U̅T,G̅T,ΦT,ΨT,HT,V̄T,F̄T} = HDAE{DT,TT,AT,VT,FT,UT,GT,U̅T,G̅T,ΦT,ΨT,HT,V̄T,F̄T,PT} # type alias for dispatch on parameters type parameter
 
 Base.hash(dae::HDAE, h::UInt) = hash(dae.d, hash(dae.m,
                         hash(dae.v, hash(dae.f, hash(dae.u, hash(dae.g,

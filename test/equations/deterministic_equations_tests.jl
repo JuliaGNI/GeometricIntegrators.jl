@@ -159,7 +159,7 @@ end
 
     # test without Hamiltonian
 
-    iode  = IODE(eltype(q₀), 1, 1, 1, iode_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v)
+    iode  = IODE(iode_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v)
     iode1 = IODE(iode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
     iode2 = IODE(iode_eqs..., t₀, q₀, p₀; v̄=iode_v)
     iode3 = IODE(iode_eqs..., q₀, p₀; v̄=iode_v)

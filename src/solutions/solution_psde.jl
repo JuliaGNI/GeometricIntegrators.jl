@@ -44,7 +44,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             counter::Vector{Int}
             woffset::Int
             ioffset::Int
-            periodicity::Vector{dType}
+            periodicity::dType
             h5::HDF5.File
 
             function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,NQ}, p::$TDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}

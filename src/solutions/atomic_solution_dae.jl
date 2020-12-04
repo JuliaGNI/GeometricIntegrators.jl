@@ -22,7 +22,7 @@ Atomic solution for an DAE.
 * `u`: projective vector field of q
 * `u̅`: projective vector field of q̅
 """
-mutable struct AtomicSolutionDAE{DT, TT, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionDAE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT
     t̅::TT
 
@@ -41,7 +41,7 @@ mutable struct AtomicSolutionDAE{DT, TT, AT <: AbstractArray{DT}, IT <: NamedTup
 
     internal::IT
 
-    function AtomicSolutionDAE{DT,TT,AT,IT}(nd, nm, internal::IT) where {DT <: Number, TT <: Real, AT, IT <: NamedTuple}
+    function AtomicSolutionDAE{DT,TT,AT,IT}(nd, nm, internal::IT) where {DT,TT,AT,IT}
         new(zero(TT), zero(TT),
             AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
             AT(zeros(DT, nm)), AT(zeros(DT, nm)),
@@ -50,7 +50,7 @@ mutable struct AtomicSolutionDAE{DT, TT, AT <: AbstractArray{DT}, IT <: NamedTup
             internal)
     end
 
-    function AtomicSolutionDAE{DT,TT,AT,IT}(t::TT, q::AT, λ::AT, internal::IT) where {DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple}
+    function AtomicSolutionDAE{DT,TT,AT,IT}(t::TT, q::AT, λ::AT, internal::IT) where {DT,TT,AT,IT}
         new(zero(t), zero(t),
             zero(q), zero(q), zero(q),
             zero(λ), zero(λ),

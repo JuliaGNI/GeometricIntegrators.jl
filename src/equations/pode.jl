@@ -122,6 +122,8 @@ hasparameters(::PODEPT{<:NamedTuple}) = true
 _get_v(equ::PODE) = hasparameters(equ) ? (t,q,p,v) -> equ.v(t, q, p, v, equ.parameters) : equ.v
 _get_f(equ::PODE) = hasparameters(equ) ? (t,q,p,f) -> equ.f(t, q, p, f, equ.parameters) : equ.f
 _get_h(equ::PODE) = hasparameters(equ) ? (t,q,p) -> equ.h(t, q, p, equ.parameters) : equ.h
+_get_v̄(equ::PODE) = _get_v(equ)
+_get_f̄(equ::PODE) = _get_f(equ)
 
 
 function get_function_tuple(equ::PODE)

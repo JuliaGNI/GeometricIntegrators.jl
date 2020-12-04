@@ -56,7 +56,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 """
 struct IntegratorSPARK{DT, TT, D, S, R, PT <: ParametersSPARK{DT,TT,D,S,R},
                                         ST <: NonlinearSolver{DT},
-                                        IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorSPARK{DT,TT,D,S,R}
+                                        IT <: InitialGuessIODE{TT}} <: AbstractIntegratorSPARK{DT,TT,D,S,R}
     params::PT
     solver::ST
     iguess::IT
@@ -90,7 +90,7 @@ struct IntegratorSPARK{DT, TT, D, S, R, PT <: ParametersSPARK{DT,TT,D,S,R},
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorSPARK(params, solver, iguess, caches)
@@ -102,7 +102,7 @@ struct IntegratorSPARK{DT, TT, D, S, R, PT <: ParametersSPARK{DT,TT,D,S,R},
 end
 
 
-CommonFunctions.nconstraints(::IntegratorSPARK{DT,TT,D}) where {DT,TT,D} = D
+Common.nconstraints(::IntegratorSPARK{DT,TT,D}) where {DT,TT,D} = D
 
 
 function Integrators.initialize!(int::IntegratorSPARK, sol::AtomicSolutionPDAE)

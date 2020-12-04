@@ -23,35 +23,35 @@ abstract type SPSDEIntegrator{dType, tType} <: StochasticIntegrator{dType, tType
 equation(integrator::Integrator) = error("equation() not implemented for ", typeof(integrator))
 timestep(integrator::Integrator) = error("timestep() not implemented for ", typeof(integrator))
 Base.ndims(integrator::Integrator) = error("ndims() not implemented for ", typeof(integrator))
-CommonFunctions.nconstraints(integrator::Integrator) = error("nconstraints() not implemented for ", typeof(integrator))
+Common.nconstraints(integrator::Integrator) = error("nconstraints() not implemented for ", typeof(integrator))
 noisedims(integrator::Integrator) = error("noisedims() not implemented for ", typeof(integrator))
 nstages(integrator::Integrator) = error("nstages() not implemented for ", typeof(integrator))
 
 eachdim(integrator::Integrator) = 1:ndims(integrator)
 
 get_internal_variables(::Integrator) = NamedTuple()
+get_internal_variables(::Nothing) = NamedTuple()
 
 
-Solutions.AtomicSolution(integrator::ODEIntegrator{DT,TT}) where {DT,TT} =
-    AtomicSolutionODE(DT, TT, ndims(integrator), get_internal_variables(integrator))
+"Create AtomicSolution for ODE."
+function Solutions.AtomicSolution(solution::SolutionODE, integrator::Integrator)
+    AtomicSolutionODE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
+end
 
-Solutions.AtomicSolution(integrator::PODEIntegrator{DT,TT}) where {DT,TT} =
-    AtomicSolutionPODE(DT, TT, ndims(integrator), get_internal_variables(integrator))
+"Create AtomicSolution for partitioned ODE."
+function Solutions.AtomicSolution(solution::SolutionPODE, integrator::Integrator)
+    AtomicSolutionPODE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
+end
 
-Solutions.AtomicSolution(integrator::DAEIntegrator{DT,TT}) where {DT,TT} =
-    AtomicSolutionDAE(DT, TT, ndims(integrator), nconstraints(integrator), get_internal_variables(integrator))
+"Create AtomicSolution for DAE."
+function Solutions.AtomicSolution(solution::SolutionDAE, integrator::Integrator)
+    AtomicSolutionDAE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
+end
 
-Solutions.AtomicSolution(integrator::PDAEIntegrator{DT,TT}) where {DT,TT} =
-    AtomicSolutionPDAE(DT, TT, ndims(integrator), nconstraints(integrator), get_internal_variables(integrator))
-
-Solutions.AtomicSolution(integrator::SDEIntegrator{DT,TT}) where {DT,TT} =
-    AtomicSolutionSDE(DT, TT, ndims(integrator), noisedims(integrator), get_internal_variables(integrator))
-
-Solutions.AtomicSolution(integrator::PSDEIntegrator{DT,TT}) where {DT,TT} =
-    AtomicSolutionPSDE(DT, TT, ndims(integrator), noisedims(integrator), get_internal_variables(integrator))
-
-Solutions.AtomicSolution(integrator::SPSDEIntegrator{DT,TT}) where {DT,TT} =
-    AtomicSolutionPSDE(DT, TT, ndims(integrator), noisedims(integrator), get_internal_variables(integrator))
+"Create AtomicSolution for partitioned DAE."
+function Solutions.AtomicSolution(solution::SolutionPDAE, integrator::Integrator)
+    AtomicSolutionPDAE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
+end
 
 
 abstract type Parameters{DT,TT} end

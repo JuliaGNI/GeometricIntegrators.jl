@@ -41,7 +41,7 @@ function run!(sim::Simulation)
     create_hdf5!(solution(sim), sim.filename)
 
     # create atomic solution
-    asol = AtomicSolution(equation(sim))
+    asol = AtomicSolution(solution(sim), integrator(sim))
 
     try
         # loop over integration cycles showing progress bar

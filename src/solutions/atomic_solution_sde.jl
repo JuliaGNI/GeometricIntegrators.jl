@@ -19,7 +19,7 @@ Atomic solution for an SDE.
 * `ΔZ`: Wiener process driving the stochastic process q
 * `K`:  integer parameter defining the truncation of the increments of the Wiener process (for strong solutions)
 """
-mutable struct AtomicSolutionSDE{DT, TT, AT <: AbstractArray{DT}, IT} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionSDE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT
     t̅::TT
 
@@ -34,14 +34,14 @@ mutable struct AtomicSolutionSDE{DT, TT, AT <: AbstractArray{DT}, IT} <: AtomicS
 
     internal::IT
 
-    function AtomicSolutionSDE{DT,TT,AT,IT}(nd, nm, internal::IT) where {DT <: Number, TT <: Real, AT, IT <: NamedTuple}
+    function AtomicSolutionSDE{DT,TT,AT,IT}(nd, nm, internal::IT) where {DT,TT,AT,IT}
         new(zero(TT), zero(TT),
-            zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-            zeros(DT, nm), zeros(DT, nm), 0,
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nm)), AT(zeros(DT, nm)), 0,
             internal)
     end
 
-    function AtomicSolutionSDE{DT,TT,AT,IT}(t::TT, q::AT, ΔW::AT, ΔZ::AT, internal::IT) where {DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT}
+    function AtomicSolutionSDE{DT,TT,AT,IT}(t::TT, q::AT, ΔW::AT, ΔZ::AT, internal::IT) where {DT,TT,AT,IT}
         new(zero(t), zero(t),
             zero(q), zero(q), zero(q),
             zero(ΔW), zero(ΔZ), 0,

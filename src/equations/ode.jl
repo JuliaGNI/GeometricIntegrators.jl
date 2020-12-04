@@ -98,7 +98,7 @@ hasparameters(::ODEPT{<:NamedTuple}) = true
 
 _get_v(equ::ODE) = hasparameters(equ) ? (t,q,v) -> equ.v(t, q, v, equ.parameters) : equ.v
 _get_h(equ::ODE) = hasparameters(equ) ? (t,q) -> equ.h(t, q, equ.parameters) : equ.h
-
+_get_v̄(equ::ODE) = _get_v(equ)
 
 function get_function_tuple(equ::ODE)
     names = (:v,)

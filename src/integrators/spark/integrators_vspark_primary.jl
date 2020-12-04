@@ -140,7 +140,7 @@ struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVSPARKprimary(params, solver, iguess, caches)
@@ -152,7 +152,7 @@ struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT
 end
 
 
-CommonFunctions.nconstraints(::IntegratorVSPARKprimary{DT,TT,D}) where {DT,TT,D} = D
+Common.nconstraints(::IntegratorVSPARKprimary{DT,TT,D}) where {DT,TT,D} = D
 
 
 function initial_guess!(int::IntegratorVSPARKprimary{DT}, sol::AtomicSolutionPDAE{DT},

@@ -22,7 +22,8 @@ module Integrators
            initialize!
 
 
-    using ..Equations: _get_v, _get_f
+    import ..Equations: _get_v̄, _get_f̄
+
 
     include("integrators/initial_guess/extrapolation.jl")
     include("integrators/initial_guess/initial_guess_ode.jl")

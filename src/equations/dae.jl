@@ -91,7 +91,7 @@ struct DAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
         @assert all(length(q) == d for q in q₀)
         @assert all(length(λ) == m for λ in λ₀)
 
-        new{dType, tType, arrayType, vType, uType, ϕType, hType, pType}(d, m, v, u, ϕ, v̄, h, t₀, q₀, λ₀, parameters, periodicity)
+        new{dType, tType, arrayType, vType, uType, ϕType, v̄Type, hType, pType}(d, m, v, u, ϕ, v̄, h, t₀, q₀, λ₀, parameters, periodicity)
     end
 end
 
@@ -99,8 +99,8 @@ DAE(v, u, ϕ, q₀::StateVector, λ₀::StateVector; kwargs...) = DAE(v, u, ϕ, 
 DAE(v, u, ϕ, t₀, q₀::State, λ₀::State; kwargs...) = DAE(v, u, ϕ, t₀, [q₀], [λ₀]; kwargs...)
 DAE(v, u, ϕ, q₀::State, λ₀::State; kwargs...) = DAE(v, u, ϕ, 0.0, q₀, λ₀; kwargs...)
 
-const DAEHT{HT,DT,TT,AT,VT,UT,ΦT,PT} = DAE{DT,TT,AT,VT,UT,ΦT,HT,PT} # type alias for dispatch on Hamiltonian type parameter
-const DAEPT{PT,DT,TT,AT,VT,UT,ΦT,HT} = DAE{DT,TT,AT,VT,UT,ΦT,HT,PT} # type alias for dispatch on parameters type parameter
+const DAEHT{HT,DT,TT,AT,VT,UT,ΦT,V̄T,PT} = DAE{DT,TT,AT,VT,UT,ΦT,V̄T,HT,PT} # type alias for dispatch on Hamiltonian type parameter
+const DAEPT{PT,DT,TT,AT,VT,UT,ΦT,V̄T,HT} = DAE{DT,TT,AT,VT,UT,ΦT,V̄T,HT,PT} # type alias for dispatch on parameters type parameter
 
 Base.hash(dae::DAE, h::UInt) = hash(dae.d, hash(dae.m, hash(dae.v,
         hash(dae.u, hash(dae.ϕ, hash(dae.v̄, hash(dae.h, hash(dae.t₀, hash(dae.q₀, hash(dae.λ₀,

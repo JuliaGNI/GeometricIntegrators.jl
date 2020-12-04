@@ -148,17 +148,16 @@ VDAE(ϑ, f, g, g̅, ϕ, ψ, q₀::StateVector, p₀::StateVector, λ₀::StateVe
 VDAE(ϑ, f, g, g̅, ϕ, ψ, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀), μ₀::State=zero(q₀); kwargs...) = VDAE(ϑ, f, g, g̅, ϕ, ψ, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
 VDAE(ϑ, f, g, g̅, ϕ, ψ, q₀::State, p₀::State, λ₀::State=zero(q₀), μ₀::State=zero(q₀); kwargs...) = VDAE(ϑ, f, g, g̅, ϕ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
 
-const VDAEHT{HT,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,VT,ΩT,∇T,PT} = VDAE{DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇T,PT} # type alias for dispatch on Hamiltonian type parameter
-const VDAEVT{VT,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,HT,ΩT,∇T,PT} = VDAE{DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇T,PT} # type alias for dispatch on vector field type parameter
-const VDAE∇T{∇T,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,PT} = VDAE{DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇T,PT} # type alias for dispatch on parameters type parameter
-const VDAEΩT{ΩT,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,HT,VT,∇T,PT} = VDAE{DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇T,PT} # type alias for dispatch on symplectic two-form type parameter
-const VDAEPT{PT,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇T} = VDAE{DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,HT,VT,ΩT,∇T,PT} # type alias for dispatch on parameters type parameter
+const VDAEHT{HT,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,ΩT,∇T,PT} = VDAE{DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on Hamiltonian type parameter
+const VDAE∇T{∇T,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,ΩT,PT} = VDAE{DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on parameters type parameter
+const VDAEΩT{ΩT,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,∇T,PT} = VDAE{DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on symplectic two-form type parameter
+const VDAEPT{PT,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,ΩT,∇T} = VDAE{DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on parameters type parameter
 
 Base.hash(dae::VDAE, h::UInt) = hash(dae.d, hash(dae.m,
           hash(dae.ϑ, hash(dae.f, hash(dae.g, hash(dae.g̅, hash(dae.ϕ,
           hash(dae.ψ, hash(dae.v̄, hash(dae.f̄, hash(dae.h, hash(dae.Ω, hash(dae.∇H,
           hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, hash(dae.μ₀,
-          hash(dae.parameters, hash(dae.periodicity, h)))))))))))))))))))
+          hash(dae.parameters, hash(dae.periodicity, h))))))))))))))))))))
 
 Base.:(==)(dae1::VDAE, dae2::VDAE) = (
                                 dae1.d == dae2.d

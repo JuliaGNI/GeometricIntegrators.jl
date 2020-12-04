@@ -36,7 +36,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             nwrite::Int
             counter::Vector{Int}
             woffset::Int
-            periodicity::Vector{dType}
+            periodicity::dType
             h5::HDF5.File
 
             function $TSolution{dType, tType, N}(nd, nt, ni, t, q, ntime, nsave, nwrite, periodicity=zero(q[begin])) where {dType <: Union{Number,AbstractArray}, tType <: Real, N}

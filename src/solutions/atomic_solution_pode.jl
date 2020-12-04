@@ -23,7 +23,7 @@ Atomic solution for an PODE.
 * `f`: vector field of p
 * `f̅`: vector field of p̅
 """
-mutable struct AtomicSolutionPODE{DT,TT,AT <: AbstractArray{DT},IT} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionPODE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT
     t̅::TT
 
@@ -42,15 +42,15 @@ mutable struct AtomicSolutionPODE{DT,TT,AT <: AbstractArray{DT},IT} <: AtomicSol
 
     internal::IT
 
-    function AtomicSolutionPODE{DT,TT,AT,IT}(nd, internal::IT) where {DT <: Number, TT <: Real, AT, IT <: NamedTuple}
+    function AtomicSolutionPODE{DT,TT,AT,IT}(nd, internal::IT) where {DT,TT,AT,IT}
         new(zero(TT), zero(TT),
-            zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-            zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-            zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
             internal)
     end
 
-    function AtomicSolutionPODE{DT,TT,AT,IT}(t::TT, q::AT, p::AT, internal::IT) where {DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT}
+    function AtomicSolutionPODE{DT,TT,AT,IT}(t::TT, q::AT, p::AT, internal::IT) where {DT,TT,AT,IT}
         new(zero(t), zero(t),
             zero(q), zero(q), zero(q),
             zero(p), zero(p), zero(p),

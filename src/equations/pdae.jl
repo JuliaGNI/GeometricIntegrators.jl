@@ -83,7 +83,7 @@ struct PDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
 
         @assert all([ndims(q) == ndims(p) == ndims(λ) for (q,p,λ) in zip(q₀,p₀,λ₀)])
 
-        new{dType, tType, arrayType, vType, fType, uType, gType, v̄Type, f̄Type, hType, pType}(d, m, v, f, u, g, ϕ, v̄, f̄, h, t₀, q₀, p₀, λ₀, parameters, periodicity)
+        new{dType, tType, arrayType, vType, fType, uType, gType, ϕType, v̄Type, f̄Type, hType, pType}(d, m, v, f, u, g, ϕ, v̄, f̄, h, t₀, q₀, p₀, λ₀, parameters, periodicity)
     end
 end
 
@@ -91,8 +91,8 @@ PDAE(v, f, u, g, ϕ, q₀::StateVector, p₀::StateVector, λ₀::StateVector; k
 PDAE(v, f, u, g, ϕ, t₀, q₀::State, p₀::State, λ₀::State; kwargs...) = PDAE(v, f, u, g, ϕ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
 PDAE(v, f, u, g, ϕ, q₀::State, p₀::State, λ₀::State; kwargs...) = PDAE(v, f, u, g, ϕ, 0.0, q₀, p₀, λ₀; kwargs...)
 
-const PDAEHT{HT,DT,TT,AT,VT,FT,UT,GT,ΦT,PT} = PDAE{DT,TT,AT,VT,FT,UT,GT,ΦT,HT,PT} # type alias for dispatch on Hamiltonian type parameter
-const PDAEPT{PT,DT,TT,AT,VT,FT,UT,GT,ΦT,HT} = PDAE{DT,TT,AT,VT,FT,UT,GT,ΦT,HT,PT} # type alias for dispatch on parameters type parameter
+const PDAEHT{HT,DT,TT,AT,VT,FT,UT,GT,ΦT,V̄T,F̄T,PT} = PDAE{DT,TT,AT,VT,FT,UT,GT,ΦT,V̄T,F̄T,HT,PT} # type alias for dispatch on Hamiltonian type parameter
+const PDAEPT{PT,DT,TT,AT,VT,FT,UT,GT,ΦT,V̄T,F̄T,HT} = PDAE{DT,TT,AT,VT,FT,UT,GT,ΦT,V̄T,F̄T,HT,PT} # type alias for dispatch on parameters type parameter
 
 Base.hash(dae::PDAE, h::UInt) = hash(dae.d, hash(dae.m,
         hash(dae.v, hash(dae.f, hash(dae.u, hash(dae.g,
