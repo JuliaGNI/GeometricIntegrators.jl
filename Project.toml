@@ -30,7 +30,7 @@ SpecialPolynomials = "a25cea48-d430-424a-8ee7-0d3ad3742e9e"
 [compat]
 Aqua = "0.5"
 DecFP = "^0.4.9, 1.0"
-Documenter = "0.23, 0.24, 0.25"
+Documenter = "0.23, 0.24, 0.25, 0.26"
 DocumenterCitations = "0.2"
 FastGaussQuadrature = "0.4"
 FastTransforms = "0.6, 0.8, 0.9, 0.10, 0.11"
