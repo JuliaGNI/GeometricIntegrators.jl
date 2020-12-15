@@ -1,5 +1,7 @@
 module Tableaus
 
+    import GenericLinearAlgebra
+
     using ..Config
     using ..CommonFunctions
     using ..BasisFunctions
