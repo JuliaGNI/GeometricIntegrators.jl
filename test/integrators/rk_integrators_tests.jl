@@ -3,13 +3,11 @@ using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Integrators: initial_guess!, jacobian!, update_params!
 using GeometricIntegrators.Solutions
-using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
 using GeometricIntegrators.Utils
 using GeometricProblems.HarmonicOscillator
+using SimpleSolvers
 using Test
-
-set_config(:nls_stol_break, 1E3)
 
 using GeometricProblems.HarmonicOscillator: Δt, nt, refx, refq, refp, k
 
