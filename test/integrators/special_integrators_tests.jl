@@ -7,8 +7,6 @@ using GeometricProblems.LotkaVolterra2d
 using SimpleSolvers
 using Test
 
-using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem: Δt, nt
-
 SimpleSolvers.set_config(:nls_atol, 8eps())
 SimpleSolvers.set_config(:nls_rtol, 2eps())
 
