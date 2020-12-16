@@ -2,13 +2,13 @@
 using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
 using GeometricIntegrators.Utils
+using GeometricProblems.HarmonicOscillator
 using Test
 
 set_config(:nls_stol_break, 1E3)
 
-using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem: Δt, nt, refx
+using GeometricProblems.HarmonicOscillator: Δt, nt, refx
 
 sode = harmonic_oscillator_sode()
 

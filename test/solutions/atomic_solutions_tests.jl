@@ -1,8 +1,8 @@
 
 using GeometricIntegrators.CommonFunctions
 using GeometricIntegrators.Solutions
-using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
-using GeometricIntegrators.TestProblems.KuboOscillatorProblem
+using GeometricProblems.HarmonicOscillator
+using GeometricProblems.KuboOscillator
 using Test
 
 
