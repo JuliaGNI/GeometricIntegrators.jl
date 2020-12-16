@@ -1,6 +1,8 @@
 
 # general helper functions for integrators.
 
+_default_solver() = SimpleSolvers.get_config(:nls_solver)
+
 """
 Create nonlinear solver object for a system of `N` equations with data type `DT`.
 The function ``f(x)=0`` to be solved for is determined by a julia function
@@ -9,44 +11,44 @@ the output vector, s.th. ``b = f(x)``. `params` are a set of parameters dependin
 on the equation and integrator that is used.
 The solver type is obtained from the config dictionary (`:nls_solver`).
 """
-function create_nonlinear_solver(DT, N, params, caches; F=function_stages!)
+function create_nonlinear_solver(DT, N, params, caches, solver::Type{<:NonlinearSolver}=_default_solver(), F::Function=function_stages!)
     # create solution vector for nonlinear solver
     x = zeros(DT, N)
 
-    # create wrapper function f!(x,b) that calls `function_stages!(x, b, params)`
+    # create wrapper function f!(x,b) that calls `F(x, b, params)`
     # with the appropriate `params`
     f! = (x,b) -> F(x, b, params, caches)
 
     # create nonlinear solver with solver type obtained from config dictionary
-    s = get_config(:nls_solver)(x, f!)
+    s = solver(x, f!)
 end
 
-function create_nonlinear_solver(DT, N, params, caches, i)
+function create_nonlinear_solver(DT, N, params, caches, i::Int, solver::Type{<:NonlinearSolver}=_default_solver(), F::Function=function_stages!)
     # create solution vector for nonlinear solver
     x = zeros(DT, N)
 
-    # create wrapper function f(x,b) that calls `function_stages!(x, b, params)`
+    # create wrapper function f(x,b) that calls `F(x, b, params)`
     # with the appropriate `params`
-    f = (x,b) -> function_stages!(x, b, params, caches, i)
+    f = (x,b) -> F(x, b, params, caches, i)
 
     # create nonlinear solver with solver type obtained from config dictionary
-    s = get_config(:nls_solver)(x, f)
+    s = solver(x, f)
 end
 
-function create_nonlinear_solver_with_jacobian(DT, N, params, caches)
+function create_nonlinear_solver_with_jacobian(DT, N, params, caches, solver::Type{<:NonlinearSolver}=_default_solver(), F=function_stages!, J=jacobian!)
     # create solution vector for nonlinear solver
     x = zeros(DT, N)
 
-    # create wrapper function f!(x,b) that calls `function_stages!(x, b, params)`
+    # create wrapper function f!(x,b) that calls `F(x, b, params)`
     # with the appropriate `params`
-    f! = (x,b) -> function_stages!(x, b, params, caches)
+    f! = (x,b) -> F(x, b, params, caches)
 
-    # create wrapper function j!(x,df) that calls `jacobian!(x, df, params)`
+    # create wrapper function j!(x,df) that calls `J(x, df, params)`
     # with the appropriate `params`
-    j! = (x,df) -> jacobian!(x, df, caches[DT], params)
+    j! = (x,df) -> J(x, df, caches[DT], params)
 
     # create nonlinear solver with solver type obtained from config dictionary
-    s = get_config(:nls_solver)(x, f!; J! = j!)
+    s = solver(x, f!; J! = j!)
 end
 
 

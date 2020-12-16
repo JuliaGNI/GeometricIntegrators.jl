@@ -5,7 +5,6 @@ using GeometricIntegrators.Config
 using GeometricIntegrators.Discontinuities
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Quadratures
-using GeometricIntegrators.Solvers
 using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
 using GeometricIntegrators.Utils
 using Test

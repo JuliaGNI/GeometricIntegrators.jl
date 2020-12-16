@@ -2,16 +2,16 @@
 using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Integrators.VPRK
-using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
 using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem
 using GeometricIntegrators.Utils
+using SimpleSolvers
 using Test
 
 using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem: Δt, nt
 
-set_config(:nls_atol, 8eps())
-set_config(:nls_rtol, 2eps())
+SimpleSolvers.set_config(:nls_atol, 8eps())
+SimpleSolvers.set_config(:nls_rtol, 2eps())
 
 ode  = lotka_volterra_2d_ode()
 iode = lotka_volterra_2d_iode()

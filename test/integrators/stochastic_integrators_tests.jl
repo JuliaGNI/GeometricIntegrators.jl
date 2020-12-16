@@ -9,8 +9,6 @@ using Test
 
 using GeometricIntegrators.TestProblems.KuboOscillatorProblem: Δt, nt
 
-set_config(:nls_stol_break, 1E3)
-
 include("utils.jl")
 
 ode    = kubo_oscillator_ode()

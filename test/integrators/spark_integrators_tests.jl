@@ -2,20 +2,20 @@
 using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Integrators.SPARK
-using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
 using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem
 using GeometricIntegrators.Utils
+using SimpleSolvers
 using Test
 
 using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem: Δt, nt
 
-set_config(:nls_atol, 8eps())
-set_config(:nls_rtol, 2eps())
+SimpleSolvers.set_config(:nls_atol, 8eps())
+SimpleSolvers.set_config(:nls_rtol, 2eps())
 
-set_config(:nls_atol_break, Inf)
-set_config(:nls_rtol_break, Inf)
-set_config(:nls_stol_break, Inf)
+SimpleSolvers.set_config(:nls_atol_break, Inf)
+SimpleSolvers.set_config(:nls_rtol_break, Inf)
+SimpleSolvers.set_config(:nls_stol_break, Inf)
 
 ode  = lotka_volterra_2d_ode()
 idae = lotka_volterra_2d_idae()

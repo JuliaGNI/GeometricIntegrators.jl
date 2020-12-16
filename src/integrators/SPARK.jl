@@ -2,10 +2,10 @@ module SPARK
 
     using Documenter: @doc
     using LinearAlgebra: Diagonal
+    using SimpleSolvers
 
     using ..CommonFunctions
     using ..Config
-    using ..Solvers
 
     import ..Equations: VODE, VDAE, HDAE, IDAE, PDAE, get_function_tuple
 
