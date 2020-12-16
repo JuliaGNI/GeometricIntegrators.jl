@@ -5,13 +5,13 @@ using GeometricIntegrators.Integrators: initial_guess!, jacobian!, update_params
 using GeometricIntegrators.Solutions
 using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
 using GeometricIntegrators.Utils
+using GeometricProblems.HarmonicOscillator
 using Test
 
 set_config(:nls_stol_break, 1E3)
 
-using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem: Δt, nt, refx, refq, refp, k
+using GeometricProblems.HarmonicOscillator: Δt, nt, refx, refq, refp, k
 
 ode  = harmonic_oscillator_ode()
 pode = harmonic_oscillator_pode()

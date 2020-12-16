@@ -6,11 +6,11 @@ using GeometricIntegrators.Discontinuities
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Quadratures
 using GeometricIntegrators.Solvers
-using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
 using GeometricIntegrators.Utils
+using GeometricProblems.HarmonicOscillator
 using Test
 
-using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem: Δt, nt, refx, refq, refp
+using GeometricProblems.HarmonicOscillator: Δt, nt, refx, refq, refp
 
 iode = harmonic_oscillator_iode()
 

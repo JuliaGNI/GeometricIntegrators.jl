@@ -6,7 +6,7 @@ using Test
 
 @testset "$(rpad("Harmonic Oscillator",80))" begin
 
-    using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
+    using GeometricProblems.HarmonicOscillator
 
     ode  = harmonic_oscillator_ode()
     pode = harmonic_oscillator_pode()
@@ -57,7 +57,7 @@ end
 
 @testset "$(rpad("Lotka-Volterra 2d",80))" begin
 
-    using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem
+    using GeometricProblems.LotkaVolterra2d
 
     ode  = lotka_volterra_2d_ode()
     pode = lotka_volterra_2d_pode()
@@ -126,7 +126,7 @@ end
 
 @testset "$(rpad("Kubo Oscillator",80))" begin
 
-    using GeometricIntegrators.TestProblems.KuboOscillatorProblem
+    using GeometricProblems.KuboOscillator
 
     sde   = kubo_oscillator_sde_1()
     psde  = kubo_oscillator_psde_1()

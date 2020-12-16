@@ -48,8 +48,9 @@ SpecialPolynomials = "0.1"
 julia = "^1.4"
 
 [extras]
+GeometricProblems = "18cb22b4-ad41-5c80-9c5f-710df63fbdc9"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "SafeTestsets"]
+test = ["GeometricProblems", "SafeTestsets", "Test"]

@@ -4,10 +4,10 @@ using GeometricIntegrators.Integrators
 using GeometricIntegrators.Integrators.Stochastic
 using GeometricIntegrators.Solutions
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.TestProblems.KuboOscillatorProblem
+using GeometricProblems.KuboOscillator
 using Test
 
-using GeometricIntegrators.TestProblems.KuboOscillatorProblem: Δt, nt
+using GeometricProblems.KuboOscillator: Δt, nt
 
 set_config(:nls_stol_break, 1E3)
 

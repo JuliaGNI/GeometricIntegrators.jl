@@ -4,11 +4,9 @@ using GeometricIntegrators.Integrators
 using GeometricIntegrators.Integrators.SPARK
 using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem
 using GeometricIntegrators.Utils
+using GeometricProblems.LotkaVolterra2d
 using Test
-
-using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem: Δt, nt
 
 set_config(:nls_atol, 8eps())
 set_config(:nls_rtol, 2eps())
@@ -17,11 +15,16 @@ set_config(:nls_atol_break, Inf)
 set_config(:nls_rtol_break, Inf)
 set_config(:nls_stol_break, Inf)
 
-ode  = lotka_volterra_2d_ode()
-idae = lotka_volterra_2d_idae()
-pdae = lotka_volterra_2d_pdae()
-vdae = lotka_volterra_2d_vdae()
-vdae_slrk = lotka_volterra_2d_vdae_slrk()
+const Δt = 0.01
+const nt = 10
+const q₀ = [1.0, 1.0]
+const parameters = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
+
+ode  = lotka_volterra_2d_ode(q₀; params=parameters)
+idae = lotka_volterra_2d_idae(q₀; params=parameters)
+pdae = lotka_volterra_2d_pdae(q₀; params=parameters)
+vdae = lotka_volterra_2d_vdae(q₀; params=parameters)
+vdae_slrk = lotka_volterra_2d_slrk(q₀; params=parameters)
 
 int  = IntegratorFIRK(ode, TableauGLRK(8), Δt)
 sol  = integrate(ode, int, nt)

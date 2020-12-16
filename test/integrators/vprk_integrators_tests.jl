@@ -4,18 +4,21 @@ using GeometricIntegrators.Integrators
 using GeometricIntegrators.Integrators.VPRK
 using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem
 using GeometricIntegrators.Utils
+using GeometricProblems.LotkaVolterra2d
 using Test
-
-using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem: Δt, nt
 
 set_config(:nls_atol, 8eps())
 set_config(:nls_rtol, 2eps())
 
-ode  = lotka_volterra_2d_ode()
-iode = lotka_volterra_2d_iode()
-vode = lotka_volterra_2d_vode()
+const Δt = 0.01
+const nt = 10
+const q₀ = [1.0, 1.0]
+const parameters = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
+
+ode  = lotka_volterra_2d_ode(q₀; params=parameters)
+iode = lotka_volterra_2d_iode(q₀; params=parameters)
+vode = lotka_volterra_2d_vode(q₀; params=parameters)
 
 int  = IntegratorFIRK(ode, TableauGLRK(8), Δt)
 sol  = integrate(ode, int, nt)

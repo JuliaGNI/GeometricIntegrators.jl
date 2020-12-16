@@ -3,21 +3,23 @@ using GeometricIntegrators.CommonFunctions
 using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem
+using GeometricProblems.LotkaVolterra2d
 using Test
-
-using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem: Δt
 
 int = get_config(:ig_interpolation)
 
-ode  = lotka_volterra_2d_ode()
-pode = lotka_volterra_2d_pode()
-iode = lotka_volterra_2d_iode()
-vode = lotka_volterra_2d_vode()
+const Δt = 0.01
+const q₀ = [1.0, 1.0]
+const parameters = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
-pdae = lotka_volterra_2d_pdae()
-idae = lotka_volterra_2d_idae()
-vdae = lotka_volterra_2d_vdae()
+ode  = lotka_volterra_2d_ode(q₀; params=parameters)
+pode = lotka_volterra_2d_pode(q₀; params=parameters)
+iode = lotka_volterra_2d_iode(q₀; params=parameters)
+vode = lotka_volterra_2d_vode(q₀; params=parameters)
+
+pdae = lotka_volterra_2d_pdae(q₀; params=parameters)
+idae = lotka_volterra_2d_idae(q₀; params=parameters)
+vdae = lotka_volterra_2d_vdae(q₀; params=parameters)
 
 
 @test InitialGuessODE(int,  ode, Δt) == InitialGuessODE{eltype( ode.q₀), ndims( ode)}(int,  ode.v, Δt)
@@ -38,8 +40,8 @@ vdae = lotka_volterra_2d_vdae()
 
 # Reference Solution
 
-ref_prev = integrate(ode, TableauRK4(), -Δt/10, 10)
-ref_next = integrate(ode, TableauRK4(), +Δt/10, 10)
+ref_prev = integrate(ode, TableauGLRK(8), -Δt, 1)
+ref_next = integrate(ode, TableauGLRK(8), +Δt, 1)
 
 tₚ = ref_prev.t[end]
 qₚ = ref_prev.q[:,end]
@@ -74,11 +76,11 @@ ode.v(t₀, q₀, v₀, ode.parameters)
 initialize!(igode, t₀, q₀, v₀, t₁, q₁, v₁)
 evaluate!(igode, q₁, v₁, q₀, v₀, q₂, v₂, t₂)
 
-@test q₁ ≈ qₚ atol=1E-5
-@test v₁ ≈ vₚ atol=1E-5
+@test q₁ ≈ qₚ atol=1E-6
+@test v₁ ≈ vₚ atol=1E-6
 
-@test q₂ ≈ qₙ atol=1E-4
-@test v₂ ≈ vₙ atol=1E-2
+@test q₂ ≈ qₙ atol=1E-6
+@test v₂ ≈ vₙ atol=1E-3
 
 
 # InitialGuessIODE
@@ -108,11 +110,11 @@ iode.v̄(t₀, q₀, v₀, iode.parameters)
 initialize!(igiode, t₀, q₀, p₀, v₀, f₀, t₁, q₁, p₁, v₁, f₁)
 evaluate!(igiode, q₁, p₁, v₁, f₁, q₀, p₀, v₀, f₀, q₂, v₂, t₂)
 
-@test q₁ ≈ qₚ atol=1E-5
-@test v₁ ≈ vₚ atol=1E-5
+@test q₁ ≈ qₚ atol=1E-6
+@test v₁ ≈ vₚ atol=1E-6
 
-@test q₂ ≈ qₙ atol=1E-4
-@test v₂ ≈ vₙ atol=1E-2
+@test q₂ ≈ qₙ atol=1E-6
+@test v₂ ≈ vₙ atol=1E-3
 
 
 # InitialGuessPODE
@@ -145,8 +147,8 @@ pode.f(t₀, q₀, p₀, f₀, pode.parameters)
 initialize!(igpode, t₀, q₀, p₀, v₀, f₀, t₁, q₁, p₁, v₁, f₁)
 evaluate!(igpode, q₁, p₁, v₁, f₁, q₀, p₀, v₀, f₀, q₂, v₂, t₂)
 
-@test q₁ ≈ qₚ atol=1E-5
-@test v₁ ≈ vₚ atol=1E-5
+@test q₁ ≈ qₚ atol=1E-6
+@test v₁ ≈ vₚ atol=1E-6
 
-@test q₂ ≈ qₙ atol=1E-4
-@test v₂ ≈ vₙ atol=1E-2
+@test q₂ ≈ qₙ atol=1E-6
+@test v₂ ≈ vₙ atol=1E-3

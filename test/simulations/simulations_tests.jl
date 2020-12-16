@@ -1,6 +1,6 @@
 
 using GeometricIntegrators
-using GeometricIntegrators.TestProblems.HarmonicOscillatorProblem
+using GeometricProblems.HarmonicOscillator
 using Test
 
 set_config(:nls_atol_break, Inf)
