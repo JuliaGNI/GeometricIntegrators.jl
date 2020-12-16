@@ -4,6 +4,7 @@ module Integrators
     using Documenter: @doc
     using LinearAlgebra
     using OffsetArrays
+    using SimpleSolvers
 
     using ..CommonFunctions
     using ..Config
@@ -15,7 +16,6 @@ module Integrators
     using ..Discontinuities
     using ..Equations
     using ..Solutions
-    using ..Solvers
 
 
     export InitialGuess, InitialGuessODE, InitialGuessIODE, InitialGuessPODE,

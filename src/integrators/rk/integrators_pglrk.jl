@@ -337,9 +337,9 @@ end
 
 
 function bisection(f::Function, λmin::DT, λmax::DT;
-                   xtol::AbstractFloat=get_config(:nls_atol),
-                   ftol::AbstractFloat=get_config(:nls_atol),
-                   maxiter::Integer=get_config(:nls_nmax)) where {DT <: Number}
+                   xtol::AbstractFloat=SimpleSolvers.get_config(:nls_atol),
+                   ftol::AbstractFloat=SimpleSolvers.get_config(:nls_atol),
+                   maxiter::Integer=SimpleSolvers.get_config(:nls_nmax)) where {DT <: Number}
     a = λmin
     b = λmax
     fa = f(a)
@@ -422,12 +422,14 @@ function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionODE{DT,
     λmin = -0.2^nstages(int)
     λmax = +0.2^nstages(int)
 
+    nls_atol = SimpleSolvers.get_config(:nls_atol)
+
     int.params.λ = bisection(λ -> function_hamiltonian!(λ, int, cache), λmin, λmax;
-                    xtol=abs(λmax-λmin)*get_config(:nls_atol),
-                    ftol=int.params.h₀*get_config(:nls_atol))
+                    xtol=abs(λmax-λmin)*nls_atol,
+                    ftol=int.params.h₀*nls_atol)
     # int.params.λ = nlsolve(λ -> function_hamiltonian!(λ, int, cache), [zero(DT)];
-    #             xtol=abs(λmax-λmin)*get_config(:nls_atol),
-    #             ftol=int.params.h₀*get_config(:nls_atol)).zero[1]
+    #             xtol=abs(λmax-λmin)*nls_atol,
+    #             ftol=int.params.h₀*nls_atol).zero[1]
     # println(int.params.λ)
 
     # compute final update

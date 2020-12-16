@@ -1,5 +1,6 @@
 
 using NLsolve
+using SimpleSolvers
 
 "Parameters for right-hand side function of projected Gauss-Legendre Runge-Kutta methods."
 mutable struct ParametersVPRKpTableau{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
@@ -278,10 +279,10 @@ function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::At
 
     # determine parameter λ
     nlres = nlsolve(λ -> function_dirac_constraint!(λ, int, cache), zero(int.params.λ);
-                xtol=get_config(:nls_atol),
-                ftol=maximum(int.params.p̅)*get_config(:nls_atol),
+                xtol=SimpleSolvers.get_config(:nls_atol),
+                ftol=maximum(int.params.p̅)*SimpleSolvers.get_config(:nls_atol),
                 iterations=100)
-                #xtol=timestep(int)^nstages(int)*get_config(:nls_atol),
+                #xtol=timestep(int)^nstages(int)*SimpleSolvers.get_config(:nls_atol),
 
     int.params.λ .= nlres.zero
 

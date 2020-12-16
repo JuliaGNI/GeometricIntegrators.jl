@@ -2,10 +2,10 @@ module VPRK
 
     using Documenter: @doc
     using LinearAlgebra: mul!
+    using SimpleSolvers
 
     using ..CommonFunctions
     using ..Config
-    using ..Solvers
     using ..Utils
 
     import ..Equations: IODE, VODE, get_function_tuple
