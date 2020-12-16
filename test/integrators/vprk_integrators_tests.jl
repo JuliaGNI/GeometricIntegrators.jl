@@ -2,14 +2,14 @@
 using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Integrators.VPRK
-using GeometricIntegrators.Solvers
 using GeometricIntegrators.Tableaus
 using GeometricIntegrators.Utils
 using GeometricProblems.LotkaVolterra2d
+using SimpleSolvers
 using Test
 
-set_config(:nls_atol, 8eps())
-set_config(:nls_rtol, 2eps())
+SimpleSolvers.set_config(:nls_atol, 8eps())
+SimpleSolvers.set_config(:nls_rtol, 2eps())
 
 const Δt = 0.01
 const nt = 10

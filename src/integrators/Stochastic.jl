@@ -2,10 +2,10 @@ module Stochastic
 
     using LinearAlgebra: dot, mul!
     using OffsetArrays
+    using SimpleSolvers
 
     using ..CommonFunctions
     using ..Config
-    using ..Solvers
     using ..Utils
 
     import ..Integrators
