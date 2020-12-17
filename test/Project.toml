@@ -1,8 +1,0 @@
-[deps]
-CompactBasisFunctions = "a09551c4-f815-4143-809e-dd1986753ba7"
-GeometricIntegrators = "dcce2d33-59f6-5b8d-9047-0defad88ae06"
-GeometricProblems = "18cb22b4-ad41-5c80-9c5f-710df63fbdc9"
-QuadratureRules = "a08977f5-a20d-4b99-b11f-f5ea535e0575"
-SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
-SimpleSolvers = "36b790f5-6434-4fbe-b711-1f64a1e2f6a2"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
