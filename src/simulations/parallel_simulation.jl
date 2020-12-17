@@ -37,7 +37,7 @@ function ParallelSimulation(equ::ET, ints::IT, sol::ST, run_id::String, filename
 end
 
 function ParallelSimulation(equ::Equation, ints::Tuple, Δt, run_id, filename, ntime; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE)
-    ParallelSimulation(equ, ints, ParallelSolution(equ, Δt, ntime; nsave=nsave, nwrite=nwrite), run_id, filename)
+    ParallelSimulation(equ, ints, Solution(equ, Δt, ntime; nsave=nsave, nwrite=nwrite), run_id, filename)
 end
 
 function ParallelSimulation(equ::Equation, tableau::AbstractTableau, Δt, run_id, filename, ntime; kwargs...)
@@ -65,7 +65,7 @@ function run!(sim::ParallelSimulation)
                 id = Threads.threadid()
 
                 # create atomic solution
-                asol = AtomicSolution(solution(sim), integrator(sim))
+                asol = AtomicSolution(solution(sim), integrator(sim, id))
 
                 # get cache from solution
                 get_initial_conditions!(solution(sim), asol, m)
