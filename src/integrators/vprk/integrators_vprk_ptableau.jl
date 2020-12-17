@@ -67,7 +67,7 @@ Projected Variational Gauss-Legendre Runge-Kutta integrator.
 struct IntegratorVPRKpTableau{DT, TT, D, S,
                 PT <: ParametersVPRKpTableau{DT,TT},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessIODE{DT,TT}} <: IntegratorPRK{DT,TT}
+                IT <: InitialGuessIODE{TT}} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -91,7 +91,7 @@ struct IntegratorVPRKpTableau{DT, TT, D, S,
         solver  = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVPRKpTableau(params, solver, iguess, caches)

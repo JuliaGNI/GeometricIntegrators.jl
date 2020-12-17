@@ -41,7 +41,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             counter::Vector{Int}
             woffset::Int
             ioffset::Int
-            periodicity::Vector{dType}
+            periodicity::dType
             h5::HDF5.File
 
             function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}
@@ -240,20 +240,14 @@ Base.:(==)(sol1::SolutionSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionSDE{DT2,TT2,NQ2,
 
 @inline hdf5(sol::SolutionSDE) = sol.h5
 @inline timesteps(sol::SolutionSDE) = sol.t
-@inline ntime(sol::SolutionSDE) = sol.ntime
 @inline nsave(sol::SolutionSDE) = sol.nsave
 @inline counter(sol::SolutionSDE) = sol.counter
 @inline offset(sol::SolutionSDE) = sol.woffset
 @inline ioffset(sol::SolutionSDE) = sol.ioffset
 @inline lastentry(sol::SolutionSDE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline conv(sol::SolutionSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
-@inline CommonFunctions.periodicity(sol::SolutionSDE) = sol.periodicity
-
-
-"Create AtomicSolution for SDE."
-function AtomicSolution(solution::SolutionSDE{DT,TT}) where {DT,TT}
-    AtomicSolutionSDE(DT, TT, solution.nd, solution.nm)
-end
+@inline Common.ntime(sol::SolutionSDE) = sol.ntime
+@inline Common.periodicity(sol::SolutionSDE) = sol.periodicity
 
 
 function set_initial_conditions!(sol::SolutionSDE, equ::SDE)
@@ -306,7 +300,7 @@ function get_solution!(sol::SolutionSDE{DT}, q::SolutionVector{DT}, n, k=1) wher
 end
 
 function get_solution(sol::SolutionSDE, n, k=1)
-    (sol.t[n], sol.q[:, n, k])
+    (sol.t[n], Array(sol.q[:, n, k]))
 end
 
 function set_solution!(sol::SolutionSDE, t, q, n, k=1)
@@ -359,7 +353,7 @@ function get_increments!(sol::SolutionSDE{DT,TT,NQ,3}, asol::AtomicSolutionSDE{D
 end
 
 
-function CommonFunctions.reset!(sol::SolutionSDE)
+function Common.reset!(sol::SolutionSDE)
     reset!(sol.q)
     compute_timeseries!(sol.t, sol.t[end])
     generate_wienerprocess!(sol.W)

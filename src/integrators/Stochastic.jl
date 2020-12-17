@@ -4,7 +4,7 @@ module Stochastic
     using OffsetArrays
     using SimpleSolvers
 
-    using ..CommonFunctions
+    using ..Common
     using ..Config
     using ..Utils
 

@@ -1,5 +1,5 @@
 
-using GeometricIntegrators.CommonFunctions
+using GeometricIntegrators.Common
 using GeometricIntegrators.Equations
 using Test
 

@@ -28,7 +28,7 @@ vdae_slrk = lotka_volterra_2d_slrk(q₀; params=parameters)
 
 int  = IntegratorFIRK(ode, TableauGLRK(8), Δt)
 sol  = integrate(ode, int, nt)
-refx = sol.q[:,end]
+refx = sol.q[end]
 
 
 

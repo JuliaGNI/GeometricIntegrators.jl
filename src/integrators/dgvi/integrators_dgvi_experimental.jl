@@ -124,7 +124,7 @@ struct IntegratorDGVIEXP{DT, TT, D, S, R,
                 BT <: Basis,
                 PT <: ParametersDGVIEXP{DT,TT,D,S},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessODE{DT,TT}} <: IODEIntegrator{DT,TT}
+                IT <: InitialGuessODE{TT}} <: IODEIntegrator{DT,TT}
     basis::BT
     quadrature::Quadrature{TT,R}
 
@@ -163,7 +163,7 @@ struct IntegratorDGVIEXP{DT, TT, D, S, R,
         solver = create_nonlinear_solver(DT, D*(S+2), params, caches)
 
         # create initial guess
-        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], Δt)
+        iguess = InitialGuessODE(get_config(:ig_interpolation), equations[:v̄], Δt)
 
         # create integrator
         IntegratorDGVIEXP(basis, quadrature, params, solver, iguess, caches)

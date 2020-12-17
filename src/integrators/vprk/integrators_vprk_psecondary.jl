@@ -71,7 +71,7 @@ VPRK methods).
 struct IntegratorVPRKpSecondary{DT, TT, D, S,
                 PT <: ParametersVPRKpSecondary{DT,TT},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
+                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT
@@ -104,7 +104,7 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
         solver = create_nonlinear_solver(DT, 2*D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVPRKpSecondary(params, solver, iguess, caches)

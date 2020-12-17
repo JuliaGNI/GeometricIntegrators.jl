@@ -56,7 +56,7 @@ of evaluating the vector fields ``v``, ``f`` and the matrices ``B``, ``G`` on `t
     sde = SDE(v_sde, B_sde, t₀, q₀)
 ```
 """
-struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Function,
+struct PSDE{dType <: Number, tType <: Real, vType <: Function, fType <: Function,
             BType <: Function, GType <: Function, pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPSDE{dType, tType}
 
     d::Int
@@ -76,7 +76,7 @@ struct PSDE{dType <: Number, tType <: Number, vType <: Function, fType <: Functi
     function PSDE(m, ns, v::vType, f::fType, B::BType, G::GType,
                   t₀::tType, q₀::AbstractArray{dType,N}, p₀::AbstractArray{dType,N};
                   parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
-                        dType <: Number, tType <: Number,
+                        dType <: Number, tType <: Real,
                         vType <: Function, fType <: Function,
                         BType <: Function, GType <: Function,
                         pType <: Union{NamedTuple,Nothing}, N}
@@ -139,7 +139,7 @@ end
 
 @inline Base.ndims(sde::PSDE) = sde.d
 
-@inline CommonFunctions.periodicity(equation::PSDE) = equation.periodicity
+@inline Common.periodicity(equation::PSDE) = equation.periodicity
 
 function get_function_tuple(equation::PSDE{DT,TT,VT,FT,BT,GT,Nothing}) where {DT, TT, VT, FT, BT, GT}
     NamedTuple{(:v,:f,:B,:G)}((equation.v, equation.f, equation.B, equation.G))

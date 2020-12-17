@@ -118,7 +118,7 @@ end
 "Implicit partitioned Runge-Kutta integrator."
 struct IntegratorIPRK{DT, TT, D, S, PT <: ParametersIPRK{DT,TT},
                                     ST <: NonlinearSolver{DT},
-                                    IT <: InitialGuessPODE{DT,TT}} <: IntegratorPRK{DT,TT}
+                                    IT <: InitialGuessPODE{TT}} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -142,7 +142,7 @@ struct IntegratorIPRK{DT, TT, D, S, PT <: ParametersIPRK{DT,TT},
         solver = create_nonlinear_solver(DT, 2*D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessPODE(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
 
         # create integrator
         IntegratorIPRK(params, solver, iguess, caches)

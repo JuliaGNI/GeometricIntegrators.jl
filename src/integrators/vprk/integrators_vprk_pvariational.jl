@@ -9,7 +9,7 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
                 PPT <: ParametersVPRKpVariational{DT,TT},
                 ST  <: NonlinearSolver{DT},
                 PST <: NonlinearSolver{DT},
-                IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
+                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
 
     params::PT
     pparams::PPT
@@ -47,7 +47,7 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
         projector = create_nonlinear_solver(DT, 2*D, pparams, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVPRKpVariational(params, pparams, solver, projector, iguess, caches)

@@ -106,7 +106,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 """
 struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT,TT,D,S,R},
                                                 ST <: NonlinearSolver{DT},
-                                                IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,R}
+                                                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,R}
     params::PT
     solver::ST
     iguess::IT
@@ -140,7 +140,7 @@ struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVSPARKprimary(params, solver, iguess, caches)
@@ -152,7 +152,7 @@ struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT
 end
 
 
-CommonFunctions.nconstraints(::IntegratorVSPARKprimary{DT,TT,D}) where {DT,TT,D} = D
+Common.nconstraints(::IntegratorVSPARKprimary{DT,TT,D}) where {DT,TT,D} = D
 
 
 function initial_guess!(int::IntegratorVSPARKprimary{DT}, sol::AtomicSolutionPDAE{DT},

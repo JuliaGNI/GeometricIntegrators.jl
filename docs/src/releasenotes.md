@@ -1,6 +1,41 @@
 
 # Release Notes
 
+## 0.7.0
+
+* Extract TestProblems into GeometricProblems.jl
+* Use SimpleSolvers instead of Solvers submodule
+
+
+## 0.6.2
+
+* Bugfix release
+
+
+## 0.6.1
+
+* Bugfix release
+
+
+## 0.6.0
+
+### Breaking Changes
+
+* Revise tableaus: align constructor names with RungeKutta.jl
+
+### New Features
+
+* Add new Runge-Kutta tableaus
+* Generalise Lobatto and Radau tableaus to arbitrary number of stages
+* Extend documentation on integrators and tableaus
+
+
+## 0.5.1
+
+* Update documentation
+* Fix HDF5 v0.14 deprecations
+
+
 ## 0.5.0
 
 * Moved repository to JuliaGNI

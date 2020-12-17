@@ -45,7 +45,7 @@ end
 "Formal Lagrangian Runge-Kutta integrator."
 struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
                                     ST <: NonlinearSolver{DT},
-                                    IT <: InitialGuessODE{DT,TT}} <: IntegratorPRK{DT,TT}
+                                    IT <: InitialGuessODE{TT}} <: IntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -87,7 +87,7 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
         solver = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], Δt)
+        iguess = InitialGuessODE(get_config(:ig_interpolation), equations[:v̄], Δt)
 
         # create integrator
         IntegratorFLRK(params, solver, iguess, caches)

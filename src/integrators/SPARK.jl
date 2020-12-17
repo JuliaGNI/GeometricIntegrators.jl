@@ -4,7 +4,7 @@ module SPARK
     using LinearAlgebra: Diagonal
     using SimpleSolvers
 
-    using ..CommonFunctions
+    using ..Common
     using ..Config
 
     import ..Equations: VODE, VDAE, HDAE, IDAE, PDAE, get_function_tuple

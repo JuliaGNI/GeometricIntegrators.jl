@@ -44,7 +44,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             counter::Vector{Int}
             woffset::Int
             ioffset::Int
-            periodicity::Vector{dType}
+            periodicity::dType
             h5::HDF5.File
 
             function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,NQ}, p::$TDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}
@@ -249,20 +249,14 @@ Base.:(==)(sol1::SolutionPSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionPSDE{DT2,TT2,NQ
 
 @inline hdf5(sol::SolutionPSDE) = sol.h5
 @inline timesteps(sol::SolutionPSDE)  = sol.t
-@inline ntime(sol::SolutionPSDE) = sol.ntime
 @inline nsave(sol::SolutionPSDE) = sol.nsave
 @inline counter(sol::SolutionPSDE) = sol.counter
 @inline offset(sol::SolutionPSDE) = sol.woffset
 @inline ioffset(sol::SolutionPSDE) = sol.ioffset
 @inline lastentry(sol::SolutionPSDE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline conv(sol::SolutionPSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
-@inline CommonFunctions.periodicity(sol::SolutionPSDE) = sol.periodicity
-
-
-"Create AtomicSolution for PSDE."
-function AtomicSolution(solution::SolutionPSDE{DT,TT}) where {DT,TT}
-    AtomicSolutionPSDE(DT, TT, solution.nd, solution.nm)
-end
+@inline Common.ntime(sol::SolutionPSDE) = sol.ntime
+@inline Common.periodicity(sol::SolutionPSDE) = sol.periodicity
 
 
 function set_initial_conditions!(sol::SolutionPSDE, equ::Union{PSDE,SPSDE})
@@ -322,7 +316,7 @@ function get_solution!(sol::SolutionPSDE{DT,TT}, q::SolutionVector{DT}, p::Solut
 end
 
 function get_solution(sol::SolutionPSDE, n, k=1)
-    (sol.t[n], sol.q[:, n, k], sol.p[:, n, k])
+    (sol.t[n], Array(sol.q[:, n, k]), Array(sol.p[:, n, k]))
 end
 
 function set_solution!(sol::SolutionPSDE, t, q, p, n, k=1)
@@ -376,7 +370,7 @@ function get_increments!(sol::SolutionPSDE{DT,TT,NQ,3}, asol::AtomicSolutionPSDE
 end
 
 
-function CommonFunctions.reset!(sol::SolutionPSDE)
+function Common.reset!(sol::SolutionPSDE)
     reset!(sol.q)
     reset!(sol.p)
     compute_timeseries!(sol.t, sol.t[end])

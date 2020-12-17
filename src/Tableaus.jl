@@ -3,7 +3,7 @@ module Tableaus
     import GenericLinearAlgebra
 
     using ..Config
-    using ..CommonFunctions
+    using ..Common
     using ..BasisFunctions
     using ..Quadratures
     using ..Integrators

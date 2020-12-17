@@ -1,5 +1,5 @@
 
-using GeometricIntegrators.CommonFunctions
+using GeometricIntegrators.Common
 using GeometricIntegrators.Solutions
 using GeometricProblems.HarmonicOscillator
 using GeometricProblems.KuboOscillator
@@ -44,7 +44,7 @@ end
 
 
 @testset "$(rpad("Atomic ODE Solution",80))" begin
-    asol = AtomicSolutionODE(eltype(x0), typeof(t0), 2)
+    asol = AtomicSolutionODE(t0, x0)
     @test get_solution(asol) == (zero(t0), zero(x0))
 
     set_solution!(asol, (t0, x0))
@@ -73,7 +73,7 @@ end
 
 
 @testset "$(rpad("Atomic PODE Solution",80))" begin
-    asol = AtomicSolutionPODE(eltype(q0), typeof(t0), 1)
+    asol = AtomicSolutionPODE(t0, q0, p0)
     @test get_solution(asol) == (zero(t0), zero(q0), zero(p0))
 
     set_solution!(asol, (t0, q0, p0))
@@ -104,7 +104,7 @@ end
 
 
 @testset "$(rpad("Atomic DAE Solution",80))" begin
-    asol = AtomicSolutionDAE(eltype(x0), typeof(t0), 2, 1)
+    asol = AtomicSolutionDAE(t0, x0, λ0)
     @test get_solution(asol) == (zero(t0), zero(x0), zero(λ0))
 
     set_solution!(asol, (t0, x0, λ0))
@@ -130,7 +130,7 @@ end
 
 
 @testset "$(rpad("Atomic PDAE Solution",80))" begin
-    asol = AtomicSolutionPDAE(eltype(q0), typeof(t0), 1, 1)
+    asol = AtomicSolutionPDAE(t0, q0, p0, λ0)
     @test get_solution(asol) == (zero(t0), zero(q0), zero(p0), zero(λ0))
 
     set_solution!(asol, (t0, q0, p0, λ0))
@@ -160,7 +160,7 @@ end
 
 
 @testset "$(rpad("Atomic SDE Solution",80))" begin
-    asol = AtomicSolutionSDE(eltype(x0), typeof(t0), 2, 3)
+    asol = AtomicSolutionSDE(t0, x0, ΔW, ΔZ)
     @test get_solution(asol) == (zero(t0), zero(x0))
 
     set_solution!(asol, (t0, x0))
@@ -192,7 +192,7 @@ end
 
 
 @testset "$(rpad("Atomic PSDE Solution",80))" begin
-    asol = AtomicSolutionPSDE(eltype(q0), typeof(t0), 1, 3)
+    asol = AtomicSolutionPSDE(t0, q0, p0, ΔW, ΔZ)
     @test get_solution(asol) == (zero(t0), zero(q0), zero(p0))
     @test get_increments(asol) == (zero(ΔW), zero(ΔZ))
 

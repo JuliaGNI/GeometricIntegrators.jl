@@ -39,7 +39,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 """
 struct IntegratorHSPARKsecondary{DT, TT, D, S, R, PT <: ParametersHSPARKsecondary{DT,TT,D,S,R},
                                                   ST <: NonlinearSolver{DT},
-                                                  IT <: InitialGuessPODE{DT,TT}} <: AbstractIntegratorHSPARK{DT,TT,D,S,R}
+                                                  IT <: InitialGuessPODE{TT}} <: AbstractIntegratorHSPARK{DT,TT,D,S,R}
     params::PT
     solver::ST
     iguess::IT
@@ -70,7 +70,7 @@ struct IntegratorHSPARKsecondary{DT, TT, D, S, R, PT <: ParametersHSPARKsecondar
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessPODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorHSPARKsecondary(params, solver, iguess, caches)
@@ -82,7 +82,7 @@ struct IntegratorHSPARKsecondary{DT, TT, D, S, R, PT <: ParametersHSPARKsecondar
 end
 
 
-CommonFunctions.nconstraints(::IntegratorHSPARKsecondary{DT,TT,D}) where {DT,TT,D} = D
+Common.nconstraints(::IntegratorHSPARKsecondary{DT,TT,D}) where {DT,TT,D} = D
 
 
 function initial_guess!(int::IntegratorHSPARKsecondary{DT}, sol::AtomicSolutionPDAE{DT},

@@ -40,7 +40,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 """
 struct IntegratorVPARK{DT, TT, D, S, R, PT <: ParametersVPARK{DT,TT,D,S,R},
                                         ST <: NonlinearSolver{DT},
-                                        IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,R}
+                                        IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,R}
     params::PT
     solver::ST
     iguess::IT
@@ -71,7 +71,7 @@ struct IntegratorVPARK{DT, TT, D, S, R, PT <: ParametersVPARK{DT,TT,D,S,R},
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVPARK(params, solver, iguess, caches)
@@ -83,7 +83,7 @@ struct IntegratorVPARK{DT, TT, D, S, R, PT <: ParametersVPARK{DT,TT,D,S,R},
 end
 
 
-CommonFunctions.nconstraints(::IntegratorVPARK{DT,TT,D}) where {DT,TT,D} = D
+Common.nconstraints(::IntegratorVPARK{DT,TT,D}) where {DT,TT,D} = D
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},

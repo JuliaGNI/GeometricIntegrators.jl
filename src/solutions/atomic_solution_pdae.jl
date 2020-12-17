@@ -1,6 +1,13 @@
 """
 Atomic solution for an PDAE.
 
+### Parameters
+
+* `DT`: data type
+* `TT`: time step type
+* `AT`: array type
+* `IT`: internal variable types
+
 ### Fields
 
 * `t`: time of current time step
@@ -22,44 +29,67 @@ Atomic solution for an PDAE.
 * `g`: projective vector field of p
 * `g̅`: projective vector field of p̅
 """
-mutable struct AtomicSolutionPDAE{DT,TT,IT} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionPDAE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT
     t̅::TT
 
-    q::Vector{DT}
-    q̅::Vector{DT}
-    q̃::Vector{DT}
+    q::AT
+    q̅::AT
+    q̃::AT
 
-    p::Vector{DT}
-    p̅::Vector{DT}
-    p̃::Vector{DT}
+    p::AT
+    p̅::AT
+    p̃::AT
 
-    λ::Vector{DT}
-    λ̅::Vector{DT}
+    λ::AT
+    λ̅::AT
 
-    v::Vector{DT}
-    v̅::Vector{DT}
-    f::Vector{DT}
-    f̅::Vector{DT}
+    v::AT
+    v̅::AT
+    f::AT
+    f̅::AT
 
-    u::Vector{DT}
-    u̅::Vector{DT}
-    g::Vector{DT}
-    g̅::Vector{DT}
+    u::AT
+    u̅::AT
+    g::AT
+    g̅::AT
 
     internal::IT
 
-    function AtomicSolutionPDAE{DT, TT, IT}(nd, nm, internal::IT) where {DT <: Number, TT <: Real, IT <: NamedTuple}
-        new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nm), zeros(DT, nm),
-                                zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nd), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                internal)
+    function AtomicSolutionPDAE{DT,TT,AT,IT}(nd, nm, internal::IT) where {DT,TT,AT,IT}
+        new(zero(TT), zero(TT),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nm)), AT(zeros(DT, nm)),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            internal)
+    end
+
+    function AtomicSolutionPDAE{DT,TT,AT,IT}(t::TT, q::AT, p::AT, λ::AT, internal::IT) where {DT,TT,AT,IT}
+        new(zero(t), zero(t),
+            zero(q), zero(q), zero(q),
+            zero(p), zero(p), zero(p),
+            zero(λ), zero(λ),
+            zero(q), zero(q), zero(p), zero(p),
+            zero(λ), zero(λ), zero(λ), zero(λ),
+            internal)
     end
 end
 
-AtomicSolutionPDAE(DT, TT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionPDAE{DT, TT, IT}(nd, nm, internal)
+AtomicSolutionPDAE(DT, TT, AT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionPDAE{DT,TT,AT,IT}(nd, nm, internal)
+AtomicSolutionPDAE(t::TT, q::AT, p::AT, λ::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionPDAE{DT,TT,AT,IT}(t, q, p, λ, internal)
+
+function set_initial_conditions!(asol::AtomicSolutionPDAE, equ::AbstractEquationPDAE, i::Int=1)
+    @assert i ≥ nsamples(equ)
+    t, q, p, λ = initial_conditions(equ)
+    asol.t  = t
+    asol.q .= q[i]
+    asol.p .= p[i]
+    asol.λ .= λ[i]
+    asol.v .= 0
+    asol.f .= 0
+end
 
 function set_solution!(asol::AtomicSolutionPDAE, sol)
     t, q, p, λ = sol
@@ -75,7 +105,7 @@ function get_solution(asol::AtomicSolutionPDAE)
     (asol.t, asol.q, asol.p, asol.λ)
 end
 
-function CommonFunctions.reset!(asol::AtomicSolutionPDAE, Δt)
+function Common.reset!(asol::AtomicSolutionPDAE, Δt)
     asol.t̅  = asol.t
     asol.q̅ .= asol.q
     asol.p̅ .= asol.p
@@ -96,7 +126,7 @@ function update!(asol::AtomicSolutionPDAE{DT}, y::Vector{DT}, z::Vector{DT}, λ:
     end
 end
 
-function update!(asol::AtomicSolutionPDAE{DT}, y::DT, z::DT, k::Int) where {DT}
+function update!(asol::AtomicSolutionPDAE{DT}, y::DT, z::DT, k::Union{Int,CartesianIndex}) where {DT}
     asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
     asol.p[k], asol.p̃[k] = compensated_summation(z, asol.p[k], asol.p̃[k])
 end

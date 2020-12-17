@@ -7,8 +7,8 @@ module GeometricIntegrators
 
     include("Config.jl")
     @reexport using .Config
-    include("CommonFunctions.jl")
-    @reexport using .CommonFunctions
+    include("Common.jl")
+    @reexport using .Common
     include("Equations.jl")
     @reexport using .Equations
     include("Solutions.jl")

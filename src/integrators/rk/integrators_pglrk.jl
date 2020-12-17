@@ -191,7 +191,7 @@ Projected Gauss-Legendre Runge-Kutta integrator.
 """
 struct IntegratorPGLRK{DT, TT, D, S, PT <: ParametersPGLRK{DT,TT},
                                      ST <: NonlinearSolver{DT},
-                                     IT <: InitialGuessODE{DT,TT}} <: IntegratorRK{DT,TT}
+                                     IT <: InitialGuessODE{TT}} <: IntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -215,7 +215,7 @@ struct IntegratorPGLRK{DT, TT, D, S, PT <: ParametersPGLRK{DT,TT},
         solver  = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessODE{DT,D}(get_config(:ig_interpolation), equations[:v], Δt)
+        iguess = InitialGuessODE(get_config(:ig_interpolation), equations[:v], Δt)
 
         # create integrator
         IntegratorPGLRK(params, solver, iguess, caches)

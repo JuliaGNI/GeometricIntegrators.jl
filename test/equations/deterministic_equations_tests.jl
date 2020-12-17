@@ -1,5 +1,5 @@
 
-using GeometricIntegrators.CommonFunctions
+using GeometricIntegrators.Common
 using GeometricIntegrators.Equations
 using Test
 
@@ -109,19 +109,22 @@ end
 
 @testset "$(rpad("Ordinary Differential Equations (ODE)",80))" begin
 
+    ode  = ODE(ode_v, t₀, [q₀])
     ode1 = ODE(ode_v, t₀, q₀)
     ode2 = ODE(ode_v, q₀)
 
-    @test ndims(ode1) == ndims(ode2) == 1
-    @test periodicity(ode1) == periodicity(ode2) == zero(q₀)
-    @test get_function_tuple(ode1) == get_function_tuple(ode2) == NamedTuple{(:v,)}((ode_v,))
+    @test ndims(ode) == 1
+    @test nsamples(ode) == 1
+    @test periodicity(ode) == zero(q₀)
+    @test get_function_tuple(ode) == NamedTuple{(:v,)}((ode_v,))
 
-    @test ode1 == ode2
+    @test ode == ode1
+    @test ode == ode2
 
     @test hash(ode1) == hash(ode2)
 
-    @test ode1 == similar(ode1, t₀, q₀)
-    @test ode1 == similar(ode1, q₀)
+    @test ode == similar(ode, t₀, q₀)
+    @test ode == similar(ode, q₀)
 
 end
 
@@ -130,11 +133,12 @@ end
 
     pode_eqs = (pode_v, pode_f)
 
-    pode  = PODE(eltype(q₀), 1, 1, 1, pode_eqs..., t₀, q₀, p₀)
+    pode  = PODE(pode_eqs..., t₀, [q₀], [p₀])
     pode1 = PODE(pode_eqs..., t₀, q₀, p₀)
     pode2 = PODE(pode_eqs..., q₀, p₀)
 
     @test ndims(pode) == 1
+    @test nsamples(pode) == 1
     @test periodicity(pode) == zero(q₀)
     @test get_function_tuple(pode) == NamedTuple{(:v, :f)}(pode_eqs)
 
@@ -155,12 +159,13 @@ end
 
     # test without Hamiltonian
 
-    iode  = IODE(eltype(q₀), 1, 1, 1, iode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
+    iode  = IODE(iode_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v)
     iode1 = IODE(iode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
     iode2 = IODE(iode_eqs..., t₀, q₀, p₀; v̄=iode_v)
     iode3 = IODE(iode_eqs..., q₀, p₀; v̄=iode_v)
 
     @test ndims(iode) == 1
+    @test nsamples(iode) == 1
     @test periodicity(iode) == zero(q₀)
     @test get_function_tuple(iode) == NamedTuple{(:ϑ, :f, :g, :v̄, :f̄)}((iode_eqs..., iode_v, iode_f))
 
@@ -177,12 +182,13 @@ end
 
     # test with Hamiltonian
 
-    iode  = IODE(eltype(q₀), 1, 1, 1, iode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v, h=iode_h)
+    iode  = IODE(iode_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v, h=iode_h)
     iode1 = IODE(iode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v, h=iode_h)
     iode2 = IODE(iode_eqs..., t₀, q₀, p₀; v̄=iode_v, h=iode_h)
     iode3 = IODE(iode_eqs..., q₀, p₀; v̄=iode_v, h=iode_h)
 
     @test ndims(iode) == 1
+    @test nsamples(iode) == 1
     @test periodicity(iode) == zero(q₀)
     @test get_function_tuple(iode) == NamedTuple{(:ϑ, :f, :g, :v̄, :f̄, :h)}((iode_eqs..., iode_v, iode_f, iode_h))
 
@@ -203,11 +209,12 @@ end
 
     hode_eqs = (iode_v, iode_f, iode_h)
 
-    hode  = HODE(eltype(q₀), 1, 1, 1, hode_eqs..., t₀, q₀, p₀)
+    hode  = HODE(hode_eqs..., t₀, [q₀], [p₀])
     hode1 = HODE(hode_eqs..., t₀, q₀, p₀)
     hode2 = HODE(hode_eqs..., q₀, p₀)
 
     @test ndims(hode) == 1
+    @test nsamples(hode) == 1
     @test periodicity(hode) == zero(q₀)
     @test get_function_tuple(hode) == NamedTuple{(:v, :f, :h)}(hode_eqs)
 
@@ -226,12 +233,13 @@ end
 
     vode_eqs = (iode_ϑ, iode_f, iode_g)
 
-    vode  = VODE(eltype(q₀), 1, 1, 1, vode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
+    vode  = VODE(vode_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v)
     vode1 = VODE(vode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
     vode2 = VODE(vode_eqs..., t₀, q₀, p₀; v̄=iode_v)
     vode3 = VODE(vode_eqs..., q₀, p₀; v̄=iode_v)
 
     @test ndims(vode) == 1
+    @test nsamples(vode) == 1
     @test periodicity(vode) == zero(q₀)
     @test get_function_tuple(vode) == NamedTuple{(:ϑ, :f, :g, :v̄, :f̄)}((vode_eqs..., iode_v, iode_f))
 
@@ -252,11 +260,12 @@ end
 
     dae_eqs = (dae_v, dae_u, dae_ϕ)
 
-    dae  = DAE(eltype(q₀), 1, 2, 1, 1, dae_eqs..., t₀, x₀, λ₀)
+    dae  = DAE(dae_eqs..., t₀, [x₀], [λ₀])
     dae1 = DAE(dae_eqs..., t₀, x₀, λ₀)
     dae2 = DAE(dae_eqs..., x₀, λ₀)
 
     @test ndims(dae) == 2
+    @test nsamples(dae) == 1
     @test nconstraints(dae) == 1
     @test periodicity(dae) == zero(x₀)
     @test get_function_tuple(dae) == NamedTuple{(:v, :u, :ϕ, :v̄)}((dae_eqs..., dae_v))
@@ -276,11 +285,12 @@ end
 
     pdae_eqs = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_ϕ)
 
-    pdae  = PDAE(eltype(q₀), 1, 1, 1, 1, pdae_eqs..., t₀, q₀, p₀, λ₀)
+    pdae  = PDAE(pdae_eqs..., t₀, [q₀], [p₀], [λ₀])
     pdae1 = PDAE(pdae_eqs..., t₀, q₀, p₀, λ₀)
     pdae2 = PDAE(pdae_eqs..., q₀, p₀, λ₀)
 
     @test ndims(pdae) == 1
+    @test nsamples(pdae) == 1
     @test nconstraints(pdae) == 1
     @test periodicity(pdae) == zero(q₀)
     @test get_function_tuple(pdae) == NamedTuple{(:v, :f, :u, :g, :ϕ, :v̄, :f̄)}((pdae_eqs..., pdae_v, pdae_f))
@@ -301,11 +311,12 @@ end
 
     idae_eqs = (pdae_p, pdae_f, pdae_u, pdae_g, pdae_ϕ)
 
-    idae  = IDAE(eltype(q₀), 1, 1, 1, 1, idae_eqs..., t₀, q₀, p₀, λ₀; v̄=pdae_v)
+    idae  = IDAE(idae_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=pdae_v)
     idae1 = IDAE(idae_eqs..., t₀, q₀, p₀, λ₀; v̄=pdae_v)
     idae2 = IDAE(idae_eqs..., q₀, p₀, λ₀; v̄=pdae_v)
 
     @test ndims(idae) == 1
+    @test nsamples(idae) == 1
     @test nconstraints(idae) == 1
     @test periodicity(idae) == zero(q₀)
     @test get_function_tuple(idae) == NamedTuple{(:ϑ, :f, :u, :g, :ϕ, :v̄, :f̄)}((idae_eqs..., pdae_v, pdae_f))
@@ -326,23 +337,21 @@ end
 
     hdae_eqs = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_u, pdae_g, pdae_ϕ, pdae_ψ, pdae_h)
 
-    hdae  = HDAE(eltype(q₀), 1, 1, 1, 1, hdae_eqs..., t₀, q₀, p₀, λ₀)
+    hdae  = HDAE(hdae_eqs..., t₀, [q₀], [p₀], [λ₀])
     hdae1 = HDAE(hdae_eqs..., t₀, q₀, p₀, λ₀)
-    hdae2 = HDAE(hdae_eqs..., t₀, q₀, p₀)
-    hdae3 = HDAE(hdae_eqs..., q₀, p₀)
+    hdae2 = HDAE(hdae_eqs..., q₀, p₀, λ₀)
 
     @test ndims(hdae) == 1
+    @test nsamples(hdae) == 1
     @test nconstraints(hdae) == 1
     @test periodicity(hdae) == zero(q₀)
     @test get_function_tuple(hdae) == NamedTuple{(:v, :f, :u, :g, :u̅, :g̅, :ϕ, :ψ, :h, :v̄, :f̄)}((hdae_eqs..., pdae_v, pdae_f))
 
     @test hdae == hdae1
     @test hdae == hdae2
-    @test hdae == hdae3
 
     @test hash(hdae) == hash(hdae1)
     @test hash(hdae) == hash(hdae2)
-    @test hash(hdae) == hash(hdae3)
 
     @test hdae == similar(hdae, t₀, q₀, p₀, λ₀)
     @test hdae == similar(hdae, t₀, q₀, p₀)
@@ -355,13 +364,14 @@ end
 
     vdae_eqs = (iode_ϑ, iode_f, iode_g, iode_g, pdae_ϕ, pdae_ψ)
 
-    vdae  = VDAE(eltype(q₀), 1, 1, 1, 1, vdae_eqs..., t₀, q₀, p₀, λ₀, λ₀; v̄=iode_v)
+    vdae  = VDAE(vdae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀]; v̄=iode_v)
     vdae1 = VDAE(vdae_eqs..., t₀, q₀, p₀, λ₀, λ₀; v̄=iode_v)
     vdae2 = VDAE(vdae_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
     vdae3 = VDAE(vdae_eqs..., t₀, q₀, p₀; v̄=iode_v)
     vdae4 = VDAE(vdae_eqs..., q₀, p₀; v̄=iode_v)
 
     @test ndims(vdae) == 1
+    @test nsamples(vdae) == 1
     @test nconstraints(vdae) == 1
     @test periodicity(vdae) == zero(q₀)
     @test get_function_tuple(vdae) == NamedTuple{(:ϑ, :f, :g, :g̅, :ϕ, :ψ, :v̄, :f̄)}((vdae_eqs..., iode_v, iode_f))
@@ -387,26 +397,36 @@ end
     f_sode = (f_sode_1, f_sode_2)
     q_sode = (q_sode_1, q_sode_2)
 
+    sode  = SODE(f_sode, t₀, [q₀])
     sode1 = SODE(f_sode, t₀, q₀)
     sode2 = SODE(f_sode, q₀)
 
-    @test sode1 == sode2
+    @test ndims(sode) == 1
+    @test nsamples(sode) == 1
+    @test periodicity(sode) == zero(q₀)
 
-    @test hash(sode1) == hash(sode2)
+    @test sode == sode1
+    @test sode == sode2
 
-    @test sode1 == similar(sode1, t₀, q₀)
-    @test sode1 == similar(sode1, q₀)
+    @test hash(sode) == hash(sode1)
+    @test hash(sode) == hash(sode2)
+
+    @test sode == similar(sode, t₀, q₀)
+    @test sode == similar(sode, q₀)
 
 
+    sode  = SODE(f_sode, q_sode, t₀, [q₀])
     sode1 = SODE(f_sode, q_sode, t₀, q₀)
     sode2 = SODE(f_sode, q_sode, q₀)
 
-    @test sode1 == sode2
+    @test sode == sode1
+    @test sode == sode2
 
-    @test hash(sode1) == hash(sode2)
+    @test hash(sode) == hash(sode1)
+    @test hash(sode) == hash(sode2)
 
-    @test sode1 == similar(sode1, t₀, q₀)
-    @test sode1 == similar(sode1, q₀)
+    @test sode == similar(sode, t₀, q₀)
+    @test sode == similar(sode, q₀)
 end
 
 
@@ -420,6 +440,7 @@ end
     spdae3 = SPDAE(spdae_eqs..., q₀, p₀)
 
     @test ndims(spdae) == 1
+    @test nsamples(spdae) == 1
     @test nconstraints(spdae) == 1
     @test periodicity(spdae) == zero(q₀)
     @test get_function_tuple(spdae) == NamedTuple{(:v, :f, :ϕ, :ψ)}(spdae_eqs)

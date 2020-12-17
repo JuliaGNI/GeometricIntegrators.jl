@@ -4,7 +4,7 @@ module VPRK
     using LinearAlgebra: mul!
     using SimpleSolvers
 
-    using ..CommonFunctions
+    using ..Common
     using ..Config
     using ..Utils
 

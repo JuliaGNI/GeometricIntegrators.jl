@@ -1,5 +1,5 @@
 
-using GeometricIntegrators.CommonFunctions
+using GeometricIntegrators.Common
 using GeometricIntegrators.Solutions
 using GeometricIntegrators.Solutions: createHDF5
 using GeometricProblems.KuboOscillator

@@ -32,7 +32,7 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `p₀`: initial condition for dynamical variable ``p``
 * `λ₀`: initial condition for algebraic variable ``λ``
 """
-struct SPDAE{dType <: Number, tType <: Number, vType <: Tuple, fType <: Tuple,
+struct SPDAE{dType <: Number, tType <: Real, vType <: Tuple, fType <: Tuple,
              ϕType <: Function, ψType <: Function, pType <: Union{NamedTuple,Nothing},
              N} <: AbstractEquationPDAE{dType, tType}
     d::Int
@@ -53,7 +53,7 @@ struct SPDAE{dType <: Number, tType <: Number, vType <: Tuple, fType <: Tuple,
                    v::vType, f::fType, ϕ::ϕType, ψ::ψType, t₀::tType,
                    q₀::AbstractArray{dType}, p₀::AbstractArray{dType}, λ₀::AbstractArray{dType};
                    parameters::pType=nothing, periodicity=zeros(DT,d)) where {
-                        dType <: Number, tType <: Number,
+                        dType <: Number, tType <: Real,
                         vType <: Tuple, fType <: Tuple,
                         ϕType <: Function, ψType <: Function,
                         pType <: Union{NamedTuple,Nothing}}
@@ -106,8 +106,9 @@ function Base.similar(dae::SPDAE, t₀::TT, q₀::AbstractArray{DT}, p₀::Abstr
 end
 
 @inline Base.ndims(equation::SPDAE) = equation.d
-@inline CommonFunctions.nconstraints(equation::SPDAE) = equation.m
-@inline CommonFunctions.periodicity(equation::SPDAE) = equation.periodicity
+@inline Common.nsamples(equ::SPDAE) = equ.n#length(equ.q₀)
+@inline Common.nconstraints(equation::SPDAE) = equation.m
+@inline Common.periodicity(equation::SPDAE) = equation.periodicity
 
 function get_function_tuple(equation::SPDAE{DT,TT,VT,FT,ϕT,ψT,Nothing}) where {DT, TT, VT, FT, ϕT, ψT}
     NamedTuple{(:v, :f, :ϕ, :ψ)}((equation.v, equation.f, equation.ϕ, equation.ψ))

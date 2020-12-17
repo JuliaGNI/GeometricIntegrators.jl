@@ -22,7 +22,7 @@ vode = lotka_volterra_2d_vode(q₀; params=parameters)
 
 int  = IntegratorFIRK(ode, TableauGLRK(8), Δt)
 sol  = integrate(ode, int, nt)
-refx = sol.q[:,end]
+refx = sol.q[end]
 
 
 @testset "$(rpad("VPRK integrators",80))" begin
@@ -201,9 +201,9 @@ end
     solP3 = integrate(iode, intP3, nt)
     @test rel_err(solP3.q, refx) < 1E-11
 
-    @test rel_err(solV1.q, solP1.q[:,end]) == 0
-    @test rel_err(solV2.q, solP2.q[:,end]) == 0
-    @test rel_err(solV3.q, solP3.q[:,end]) == 0
+    @test rel_err(solV1.q, solP1.q[end]) == 0
+    @test rel_err(solV2.q, solP2.q[end]) == 0
+    @test rel_err(solV3.q, solP3.q[end]) == 0
 
 end
 

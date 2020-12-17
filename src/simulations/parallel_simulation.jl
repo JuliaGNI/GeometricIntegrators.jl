@@ -19,8 +19,8 @@ end
 @inline integrator(sim::ParallelSimulation, id) = sim.integrators[id]
 @inline solution(sim::ParallelSimulation) = sim.solution
 @inline cycles(sim::ParallelSimulation) = 1:sim.ncycle
-@inline CommonFunctions.eachsample(sim::ParallelSimulation) = eachsample(solution(sim))
-@inline CommonFunctions.eachsample(sim::ParallelSimulation, id::Int) = begin
+@inline Common.eachsample(sim::ParallelSimulation) = eachsample(solution(sim))
+@inline Common.eachsample(sim::ParallelSimulation, id::Int) = begin
     nthreads = Threads.nthreads()
     ns = nsamples(solution(sim))
     ns_thread = div(ns, nthreads)
@@ -65,7 +65,7 @@ function run!(sim::ParallelSimulation)
                 id = Threads.threadid()
 
                 # create atomic solution
-                asol = AtomicSolution(equation(sim))
+                asol = AtomicSolution(solution(sim), integrator(sim))
 
                 # get cache from solution
                 get_initial_conditions!(solution(sim), asol, m)

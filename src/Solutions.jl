@@ -6,7 +6,7 @@ module Solutions
     using Base: TwicePrecision
     using Random
 
-    using ..CommonFunctions
+    using ..Common
     using ..Config
     using ..Equations
     using ..Utils
@@ -38,7 +38,7 @@ module Solutions
     include("solutions/wienerprocess.jl")
 
     export Solution, ParallelSolution, DeterministicSolution, StochasticSolution
-    export nsave, nsamples, ntime, timesteps, counter, offset, lastentry, conv, hdf5
+    export nsave, nsamples, timesteps, counter, offset, lastentry, conv, hdf5
     export get_solution, get_solution!, set_solution!
 
     include("solutions/solution.jl")
@@ -73,4 +73,6 @@ module Solutions
 
     include("solutions/solution_hdf5.jl")
 
+    include("solutions/atomic_solution_constructors.jl")
+    
 end

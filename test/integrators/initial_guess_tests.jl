@@ -1,10 +1,12 @@
 
-using GeometricIntegrators.CommonFunctions
+using GeometricIntegrators.Common
 using GeometricIntegrators.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Tableaus
 using GeometricProblems.LotkaVolterra2d
 using Test
+
+using GeometricIntegrators.Equations: _get_v̄, _get_f̄
 
 int = get_config(:ig_interpolation)
 
@@ -14,28 +16,35 @@ const parameters = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
 ode  = lotka_volterra_2d_ode(q₀; params=parameters)
 pode = lotka_volterra_2d_pode(q₀; params=parameters)
+hode = lotka_volterra_2d_hode(q₀; params=parameters)
 iode = lotka_volterra_2d_iode(q₀; params=parameters)
 vode = lotka_volterra_2d_vode(q₀; params=parameters)
 
+dae  = lotka_volterra_2d_dae(q₀; params=parameters)
 pdae = lotka_volterra_2d_pdae(q₀; params=parameters)
+hdae = lotka_volterra_2d_hdae(q₀; params=parameters)
 idae = lotka_volterra_2d_idae(q₀; params=parameters)
 vdae = lotka_volterra_2d_vdae(q₀; params=parameters)
 
 
-@test InitialGuessODE(int,  ode, Δt) == InitialGuessODE{eltype( ode.q₀), ndims( ode)}(int,  ode.v, Δt)
-@test InitialGuessODE(int, iode, Δt) == InitialGuessODE{eltype(iode.q₀), ndims(iode)}(int, iode.v̄, Δt)
-@test InitialGuessODE(int, vode, Δt) == InitialGuessODE{eltype(vode.q₀), ndims(vode)}(int, vode.v̄, Δt)
+@test InitialGuessODE(int,  ode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄( ode), Δt)
+@test InitialGuessODE(int, iode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄(iode), Δt)
+@test InitialGuessODE(int, vode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄(vode), Δt)
 
-@test InitialGuess(int, ode, Δt) == InitialGuessODE{eltype(ode.q₀), ndims(ode)}(int, ode.v, Δt)
+@test InitialGuess(int, ode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄(ode), Δt)
+@test InitialGuess(int, dae, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄(dae), Δt)
 
-@test InitialGuess(int, iode, Δt) == InitialGuessIODE{eltype(iode.q₀), ndims(iode)}(int, iode.v̄, iode.f̄, Δt)
-@test InitialGuess(int, idae, Δt) == InitialGuessIODE{eltype(idae.q₀), ndims(idae)}(int, idae.v̄, idae.f̄, Δt)
+@test InitialGuess(int, hode, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v̄(hode), _get_f̄(hode), Δt)
+@test InitialGuess(int, hdae, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v̄(hdae), _get_f̄(hdae), Δt)
 
-@test InitialGuess(int, vode, Δt) == InitialGuessIODE{eltype(vode.q₀), ndims(vode)}(int, vode.v̄, vode.f̄, Δt)
-@test InitialGuess(int, vdae, Δt) == InitialGuessIODE{eltype(vdae.q₀), ndims(vdae)}(int, vdae.v̄, vdae.f̄, Δt)
+@test InitialGuess(int, iode, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v̄(iode), _get_f̄(iode), Δt)
+@test InitialGuess(int, idae, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v̄(idae), _get_f̄(idae), Δt)
 
-@test InitialGuess(int, pode, Δt) == InitialGuessPODE{eltype(pode.q₀), ndims(pode)}(int, pode.v, pode.f, Δt)
-@test InitialGuess(int, pdae, Δt) == InitialGuessPODE{eltype(pdae.q₀), ndims(pdae)}(int, pdae.v̄, pdae.f̄, Δt)
+@test InitialGuess(int, pode, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v̄(pode), _get_f̄(pode), Δt)
+@test InitialGuess(int, pdae, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v̄(pdae), _get_f̄(pdae), Δt)
+
+@test InitialGuess(int, vode, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v̄(vode), _get_f̄(vode), Δt)
+@test InitialGuess(int, vdae, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v̄(vdae), _get_f̄(vdae), Δt)
 
 
 # Reference Solution
@@ -44,11 +53,11 @@ ref_prev = integrate(ode, TableauGLRK(8), -Δt, 1)
 ref_next = integrate(ode, TableauGLRK(8), +Δt, 1)
 
 tₚ = ref_prev.t[end]
-qₚ = ref_prev.q[:,end]
+qₚ = ref_prev.q[end]
 vₚ = zero(qₚ)
 
 tₙ = ref_next.t[end]
-qₙ = ref_next.q[:,end]
+qₙ = ref_next.q[end]
 vₙ = zero(qₙ)
 
 ode.v(tₚ, qₚ, vₚ, ode.parameters)
@@ -57,10 +66,10 @@ ode.v(tₙ, qₙ, vₙ, ode.parameters)
 
 # InitialGuessODE
 
-igode = InitialGuessODE{eltype(ode.q₀), ndims(ode)}(int, (t,q,v) -> ode.v(t, q, v, ode.parameters), Δt)
+igode = InitialGuessODE(int, (t,q,v) -> ode.v(t, q, v, ode.parameters), Δt)
 
 t₀ = ode.t₀
-q₀ = ode.q₀
+q₀ = ode.q₀[begin]
 v₀ = zero(q₀)
 
 t₁ = ode.t₀ - Δt
@@ -85,11 +94,11 @@ evaluate!(igode, q₁, v₁, q₀, v₀, q₂, v₂, t₂)
 
 # InitialGuessIODE
 
-igiode = InitialGuessIODE{eltype(iode.q₀), ndims(iode)}(int, (t,q,v) -> iode.v̄(t, q, v, iode.parameters), (t,q,p,v) -> iode.f̄(t, q, p, v, iode.parameters), Δt)
+igiode = InitialGuessIODE(int, (t,q,v) -> iode.v̄(t, q, v, iode.parameters), (t,q,p,v) -> iode.f̄(t, q, p, v, iode.parameters), Δt)
 
 t₀ = iode.t₀
-q₀ = iode.q₀
-p₀ = iode.p₀
+q₀ = iode.q₀[begin]
+p₀ = iode.p₀[begin]
 v₀ = zero(q₀)
 f₀ = zero(p₀)
 
@@ -119,13 +128,13 @@ evaluate!(igiode, q₁, p₁, v₁, f₁, q₀, p₀, v₀, f₀, q₂, v₂, t�
 
 # InitialGuessPODE
 
-igpode = InitialGuessPODE{eltype(pode.q₀), ndims(pode)}(int,
+igpode = InitialGuessPODE(int,
             (t,q,p,v) -> pode.v(t, q, p, v, pode.parameters),
             (t,q,p,v) -> pode.f(t, q, p, v, pode.parameters), Δt)
 
 t₀ = pode.t₀
-q₀ = pode.q₀
-p₀ = pode.p₀
+q₀ = pode.q₀[begin]
+p₀ = pode.p₀[begin]
 v₀ = zero(q₀)
 f₀ = zero(p₀)
 

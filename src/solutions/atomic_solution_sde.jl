@@ -1,6 +1,13 @@
 """
 Atomic solution for an SDE.
 
+### Parameters
+
+* `DT`: data type
+* `TT`: time step type
+* `AT`: array type
+* `IT`: internal variable types
+
 ### Fields
 
 * `t`: time of current time step
@@ -12,27 +19,38 @@ Atomic solution for an SDE.
 * `ΔZ`: Wiener process driving the stochastic process q
 * `K`:  integer parameter defining the truncation of the increments of the Wiener process (for strong solutions)
 """
-mutable struct AtomicSolutionSDE{DT,TT,IT} <: AtomicSolution{DT,TT}
+mutable struct AtomicSolutionSDE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT
     t̅::TT
 
-    q::Vector{DT}
-    q̅::Vector{DT}
-    q̃::Vector{DT}
+    q::AT
+    q̅::AT
+    q̃::AT
 
-    ΔW::Vector{DT}
-    ΔZ::Vector{DT}
+    ΔW::AT
+    ΔZ::AT
+
     K::Int
 
     internal::IT
 
-    function AtomicSolutionSDE{DT, TT, IT}(nd, nm, internal::IT) where {DT <: Number, TT <: Real, IT <: NamedTuple}
-        new(zero(TT), zero(TT), zeros(DT, nd), zeros(DT, nd), zeros(DT, nd),
-                                zeros(DT, nm), zeros(DT, nm), 0, internal)
+    function AtomicSolutionSDE{DT,TT,AT,IT}(nd, nm, internal::IT) where {DT,TT,AT,IT}
+        new(zero(TT), zero(TT),
+            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
+            AT(zeros(DT, nm)), AT(zeros(DT, nm)), 0,
+            internal)
+    end
+
+    function AtomicSolutionSDE{DT,TT,AT,IT}(t::TT, q::AT, ΔW::AT, ΔZ::AT, internal::IT) where {DT,TT,AT,IT}
+        new(zero(t), zero(t),
+            zero(q), zero(q), zero(q),
+            zero(ΔW), zero(ΔZ), 0,
+            internal)
     end
 end
 
-AtomicSolutionSDE(DT, TT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionSDE{DT, TT, IT}(nd, nm, internal)
+AtomicSolutionSDE(DT, TT, AT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionSDE{DT,TT,AT,IT}(nd, nm, internal)
+AtomicSolutionSDE(t::TT, q::AT, ΔW::AT, ΔZ::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionSDE{DT,TT,AT,IT}(t, q, ΔW, ΔZ, internal)
 
 function set_solution!(asol::AtomicSolutionSDE, sol)
     t, q = sol
@@ -59,7 +77,7 @@ function get_increments!(asol::AtomicSolutionSDE, ΔW, ΔZ)
     ΔZ .= asol.ΔZ
 end
 
-function CommonFunctions.reset!(asol::AtomicSolutionSDE, Δt)
+function Common.reset!(asol::AtomicSolutionSDE, Δt)
     asol.t̅  = asol.t
     asol.q̅ .= asol.q
     asol.t += Δt
@@ -71,6 +89,6 @@ function update!(asol::AtomicSolutionSDE{DT}, y::Vector{DT}) where {DT}
     end
 end
 
-function update!(asol::AtomicSolutionSDE{DT}, y::DT, k::Int) where {DT}
+function update!(asol::AtomicSolutionSDE{DT}, y::DT, k::Union{Int,CartesianIndex}) where {DT}
     asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
 end

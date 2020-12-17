@@ -6,7 +6,7 @@ module Integrators
     using OffsetArrays
     using SimpleSolvers
 
-    using ..CommonFunctions
+    using ..Common
     using ..Config
     using ..Interpolation
     using ..Utils
@@ -20,6 +20,10 @@ module Integrators
 
     export InitialGuess, InitialGuessODE, InitialGuessIODE, InitialGuessPODE,
            initialize!
+
+
+    import ..Equations: _get_v̄, _get_f̄
+
 
     include("integrators/initial_guess/extrapolation.jl")
     include("integrators/initial_guess/initial_guess_ode.jl")
@@ -50,7 +54,13 @@ module Integrators
     include("integrators/integrators_common.jl")
 
 
-    export CoefficientsRK, AbstractTableauRK, AbstractTableauIRK, AbstractTableauPRK,
+    export IntegratorExplicitEuler
+    
+    include("integrators/various/integrators_explicit_euler.jl")
+
+
+    export CoefficientsRK, HeaderCoefficientsRK,
+           AbstractTableauRK, AbstractTableauIRK, AbstractTableauPRK,
            IntegratorRK, writeTableauToFile
 
     export get_symplectic_conjugate_coefficients, symplecticize,

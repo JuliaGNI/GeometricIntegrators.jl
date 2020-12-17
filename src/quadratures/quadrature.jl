@@ -4,7 +4,7 @@ import FastTransforms
 
 using DecFP: Dec128
 
-using ..CommonFunctions
+using ..Common
 
 
 struct Quadrature{T,N}
@@ -18,9 +18,9 @@ function Quadrature(order, nodes::Vector{T}, weights::Vector{T}) where {T}
     Quadrature{T, length(nodes)}(order, nodes, weights)
 end
 
-CommonFunctions.nnodes(Q::Quadrature{T,N}) where {T,N} = N
-CommonFunctions.nodes(Q::Quadrature) = Q.nodes
-CommonFunctions.order(Q::Quadrature) = Q.order
+Common.nnodes(Q::Quadrature{T,N}) where {T,N} = N
+Common.nodes(Q::Quadrature) = Q.nodes
+Common.order(Q::Quadrature) = Q.order
 weights(Q::Quadrature) = Q.weights
 Base.eachindex(Q::Quadrature) = eachindex(Q.nodes, Q.weights)
 

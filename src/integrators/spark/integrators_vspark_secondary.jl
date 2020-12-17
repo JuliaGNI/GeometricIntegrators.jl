@@ -91,7 +91,7 @@ F^1_{n,i} + F^2_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i 
 struct IntegratorVSPARKsecondary{DT, TT, D, S, R,
                                          PT <: ParametersVSPARKsecondary{DT,TT,D,S,R},
                                          ST <: NonlinearSolver{DT},
-                                         IT <: InitialGuessIODE{DT,TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,R}
+                                         IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,R}
     params::PT
     solver::ST
     iguess::IT
@@ -122,7 +122,7 @@ struct IntegratorVSPARKsecondary{DT, TT, D, S, R,
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE{DT,D}(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVSPARKsecondary(params, solver, iguess, caches)
@@ -134,7 +134,7 @@ struct IntegratorVSPARKsecondary{DT, TT, D, S, R,
 end
 
 
-CommonFunctions.nconstraints(::IntegratorVSPARKsecondary{DT,TT,D}) where {DT,TT,D} = D
+Common.nconstraints(::IntegratorVSPARKsecondary{DT,TT,D}) where {DT,TT,D} = D
 
 
 function initial_guess!(int::IntegratorVSPARKsecondary{DT}, sol::AtomicSolutionPDAE{DT},

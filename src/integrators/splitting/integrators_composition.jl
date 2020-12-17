@@ -27,9 +27,10 @@ function IntegratorComposition(equation::SODE{DT,TT}, integrators::Tuple, tablea
             cᵢ = Δt * c[i]
 
             if integrators[f[i]] == IntegratorExactODE
-                @assert has_exact_solution(equation, f[i])
+                @assert hassolution(equation, f[i])
                 subint = integrators[f[i]]{DT,D}(solutions[f[i]], cᵢ)
             else
+                @assert hasvectorfield(equation, f[i])
                 subint = integrators[f[i]](functions[f[i]], cᵢ)
             end
 
@@ -41,7 +42,7 @@ function IntegratorComposition(equation::SODE{DT,TT}, integrators::Tuple, tablea
 end
 
 function IntegratorComposition(equation::SODE{DT}, tableau::AbstractTableauSplitting, Δt::Number) where {DT}
-    @assert has_exact_solution(equation)
+    @assert hassolution(equation)
     # integrators = Tuple(IntegratorConstructor(DT,ndims(equation)) for q in equation.q)
     integrators = Tuple(IntegratorExactODE for q in equation.q)
     IntegratorComposition(equation, integrators, tableau, Δt)
