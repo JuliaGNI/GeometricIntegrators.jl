@@ -13,23 +13,10 @@ module Common
     Base.zero(X::ST) where {DT, VT, ST <: StateVector{DT,VT}} = VT[zero(x) for x in X]
 
 
-    export nbasis, nnodes, nodes, order, degree
-
-    function nbasis end
-    function nnodes end
-    function nodes end
-    function order end
-    function degree end
-
     export evaluate, evaluate!
 
     function evaluate end
     function evaluate! end
-
-    export derivative, integral
-
-    function derivative end
-    function integral end
 
     export write_to_hdf5
 
