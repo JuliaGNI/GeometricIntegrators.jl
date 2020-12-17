@@ -17,7 +17,7 @@ module Config
         if haskey(GICONFIG, name)
             GICONFIG[name] = value
         else
-            println("  WARNING: Unknown parameter name.")
+            println("  WARNING: Unknown parameter $name.")
         end
     end
 
@@ -25,7 +25,7 @@ module Config
         if haskey(GICONFIG, name)
             return GICONFIG[name]
         else
-            println("  WARNING: Unknown parameter name.")
+            println("  WARNING: Unknown parameter $name.")
             return nothing
         end
     end
