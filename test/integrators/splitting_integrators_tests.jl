@@ -4,9 +4,10 @@ using GeometricIntegrators.Integrators
 using GeometricIntegrators.Tableaus
 using GeometricIntegrators.Utils
 using GeometricProblems.HarmonicOscillator
+using SimpleSolvers
 using Test
 
-set_config(:nls_stol_break, 1E3)
+SimpleSolvers.set_config(:nls_stol_break, 1E3)
 
 using GeometricProblems.HarmonicOscillator: Δt, nt, refx
 

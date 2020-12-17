@@ -58,6 +58,10 @@ for (TDataSeries, TArray) in
             end
         end
 
+        function $TDataSeries(::Type{T}, nt::Int, ni::Int=1) where {T <: Union{Number,AbstractArray{<:Number}}}
+            $TDataSeries{T, ni == 1 ? 1 : 2}(nt, ni)
+        end
+
         function $TDataSeries(q₀::T, nt::Int, ni::Int=1) where {T <: Union{Number,AbstractArray{<:Number}}}
             @assert ni == 1
             ds = $TDataSeries{T,1}(nt, ni)
@@ -257,6 +261,9 @@ end
 @inline function Base.getindex(ds::DataSeries{T,2}, i::Union{Int,CartesianIndex}, j::Union{Int,CartesianIndex}, K::AbstractRange{Int}) where {T}
     [ds[j,k][i] for k in K]
 end
+
+@inline Base.getindex(ds::DataSeries{T,2}, J, K::Colon) where {T} = getindex(ds, J, axes(ds,2))
+@inline Base.getindex(ds::DataSeries{T,2}, J::Colon, K) where {T} = getindex(ds, axes(ds,1), K)
 
 @inline Base.getindex(ds::DataSeries{T,2}, I, J::Colon, K::Colon) where {T} = getindex(ds, I, axes(ds,1), axes(ds,2))
 @inline Base.getindex(ds::DataSeries{T,2}, I, J::Colon, K) where {T} = getindex(ds, I, axes(ds,1), K)

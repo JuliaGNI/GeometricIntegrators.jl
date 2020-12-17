@@ -1,6 +1,5 @@
 
 using QuadratureRules
-using NLsolve
 
 "Holds the coefficients of a projected Gauss-Legendre Runge-Kutta method."
 struct CoefficientsPGLRK{T} <: AbstractCoefficients{T}
