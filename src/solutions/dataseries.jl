@@ -58,6 +58,10 @@ for (TDataSeries, TArray) in
             end
         end
 
+        function $TDataSeries(::Type{T}, nt::Int, ni::Int=1) where {T <: Union{Number,AbstractArray{<:Number}}}
+            $TDataSeries{T, ni == 1 ? 1 : 2}(nt, ni)
+        end
+
         function $TDataSeries(q₀::T, nt::Int, ni::Int=1) where {T <: Union{Number,AbstractArray{<:Number}}}
             @assert ni == 1
             ds = $TDataSeries{T,1}(nt, ni)
