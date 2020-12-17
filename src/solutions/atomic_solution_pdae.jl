@@ -91,17 +91,6 @@ function set_initial_conditions!(asol::AtomicSolutionPDAE, equ::AbstractEquation
     asol.f .= 0
 end
 
-function set_initial_conditions!(asol::AtomicSolutionPDAE, equ::AbstractEquationPDAE, i::Int=1)
-    @assert i ≥ nsamples(equ)
-    t, q, p, λ = initial_conditions(equ)
-    asol.t  = t
-    asol.q .= q[i]
-    asol.p .= p[i]
-    asol.λ .= λ[i]
-    asol.v .= 0
-    asol.f .= 0
-end
-
 function set_solution!(asol::AtomicSolutionPDAE, sol)
     t, q, p, λ = sol
     asol.t  = t

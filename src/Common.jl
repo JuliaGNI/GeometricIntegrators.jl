@@ -1,5 +1,10 @@
 module Common
 
+    export OptionalFunction
+    
+    const OptionalFunction = Union{Function,Nothing}
+
+
     export State, StateVector
 
     const State{DT <: Number} = AbstractArray{DT}
@@ -36,9 +41,10 @@ module Common
     function reset! end
     function cut_periodic_solution! end
 
-    export nsamples, ntime, eachsample, eachtimestep
+    export nsamples, nconstraints, ntime, eachsample, eachtimestep
 
     function nsamples end
+    function nconstraints end
     function ntime end
     function eachsample end
     function eachtimestep end

@@ -128,7 +128,7 @@ Base.hash(ode::VODE, h::UInt) = hash(ode.d, hash(ode.m,
           hash(ode.ϑ, hash(ode.f, hash(ode.g, hash(ode.v̄, hash(ode.f̄,
           hash(ode.h, hash(ode.Ω, hash(ode.∇H,
           hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, hash(ode.λ₀,
-          hash(ode.parameters, hash(ode.periodicity, h)))))))))))))))
+          hash(ode.parameters, hash(ode.periodicity, h))))))))))))))))
 
 Base.:(==)(ode1::VODE, ode2::VODE) = (
                                 ode1.d == ode2.d

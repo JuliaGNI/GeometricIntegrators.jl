@@ -110,7 +110,6 @@ Base.ndims(equ::PODE) = equ.d
 Base.axes(equ::PODE) = axes(equ.q₀[begin])
 Common.nsamples(equ::PODE) = length(equ.q₀)
 Common.periodicity(equation::PODE) = equation.periodicity
-initial_conditions(equation::PODE) = (equation.t₀, equation.q₀, equation.p₀)
 
 initial_conditions(equation::PODE) = (equation.t₀, equation.q₀, equation.p₀)
 

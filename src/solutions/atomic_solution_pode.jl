@@ -72,16 +72,6 @@ function set_initial_conditions!(asol::AtomicSolutionPODE, equ::AbstractEquation
     asol.f .= 0
 end
 
-function set_initial_conditions!(asol::AtomicSolutionPODE, equ::AbstractEquationPODE, i::Int=1)
-    @assert i ≥ nsamples(equ)
-    t, q, p = initial_conditions(equ)
-    asol.t  = t
-    asol.q .= q[i]
-    asol.p .= p[i]
-    asol.v .= 0
-    asol.f .= 0
-end
-
 function set_solution!(asol::AtomicSolutionPODE, sol)
     t, q, p = sol
     asol.t  = t

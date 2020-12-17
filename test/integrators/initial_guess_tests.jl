@@ -7,7 +7,6 @@ using GeometricProblems.LotkaVolterra2d
 using Test
 
 using GeometricIntegrators.Equations: _get_v̄, _get_f̄
-using GeometricIntegrators.TestProblems.LotkaVolterra2dProblem: Δt
 
 int = get_config(:ig_interpolation)
 
@@ -17,10 +16,13 @@ const parameters = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
 ode  = lotka_volterra_2d_ode(q₀; params=parameters)
 pode = lotka_volterra_2d_pode(q₀; params=parameters)
+hode = lotka_volterra_2d_hode(q₀; params=parameters)
 iode = lotka_volterra_2d_iode(q₀; params=parameters)
 vode = lotka_volterra_2d_vode(q₀; params=parameters)
 
+dae  = lotka_volterra_2d_dae(q₀; params=parameters)
 pdae = lotka_volterra_2d_pdae(q₀; params=parameters)
+hdae = lotka_volterra_2d_hdae(q₀; params=parameters)
 idae = lotka_volterra_2d_idae(q₀; params=parameters)
 vdae = lotka_volterra_2d_vdae(q₀; params=parameters)
 
