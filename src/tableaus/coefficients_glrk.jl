@@ -2,12 +2,22 @@
 import Polynomials
 import Polynomials: Polynomial
 import Polynomials: Polynomial
-import SpecialPolynomials: ShiftedLegendre
 
 
-function _ShiftedLegendre(s, T=BigFloat)
-    p = vcat([zero(T) for _ in 1:s], one(T))
-    ShiftedLegendre(p)
+"Legendre polynomial P_s(x) of degree s defined on the interval [-1..+1]."
+function _legendre(j::Int, x::T) where {T}
+    if j <= 0
+        return one(T)
+    elseif j == 1
+        return x
+    else
+        return ( (2j-1) * _legendre(j-1, x) * x - (j-1) * _legendre(j-2, x) ) / j
+    end
+end
+
+"Legendre polynomial of degree s shifted to the interval [0..1], i.e., P_s(2x-1)."
+function _shifted_legendre(s, T=BigFloat)
+    _legendre(s, Polynomial(T[-1, 2]))
 end
 
 
@@ -16,7 +26,7 @@ The Gauss nodes are given by the roots of the shifted Legendre polynomial
 $P_s (2x-1)$ with $s$ the number of stages.
 """
 function get_glrk_nodes(s, T=BigFloat)
-    sort(T.(Polynomials.roots(convert(Polynomial, _ShiftedLegendre(s,T)))))
+    sort(T.(Polynomials.roots(_shifted_legendre(s,T))))
 end
 
 @doc raw"""
@@ -29,7 +39,7 @@ $P(x) = P_s (2x-1)$ with $s$ the number of stages.
 """
 function get_glrk_weights(s, T=BigFloat)
     c = get_glrk_nodes(s,T)
-    P = convert(Polynomial, _ShiftedLegendre(s,T))
+    P = convert(Polynomial, _shifted_legendre(s,T))
     D = Polynomials.derivative(P)
     
     inti(i) = begin
