@@ -1,11 +1,12 @@
 
 using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
+using SimpleSolvers
 using Test
 
-set_config(:nls_atol_break, Inf)
-set_config(:nls_rtol_break, Inf)
-set_config(:nls_stol_break, Inf)
+SimpleSolvers.set_config(:nls_atol_break, Inf)
+SimpleSolvers.set_config(:nls_rtol_break, Inf)
+SimpleSolvers.set_config(:nls_stol_break, Inf)
 
 
 Δt = 0.1
