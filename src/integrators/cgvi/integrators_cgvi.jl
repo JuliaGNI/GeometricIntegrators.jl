@@ -38,19 +38,19 @@ mutable struct ParametersCGVI{DT, TT, D, S, R, ET <: NamedTuple} <: Parameters{D
         new{DT,TT,D,length(x),length(c),ET}(equs, Δt, b, c, x, m, a, r₀, r₁, zero(TT), zeros(DT,D), zeros(DT,D))
     end
 
-    function ParametersCGVI{DT,D}(equs::NamedTuple, Δt::TT, basis::Basis{TT}, quadrature::Quadrature{TT}) where {DT,TT,D}
+    function ParametersCGVI{DT,D}(equs::NamedTuple, Δt::TT, basis::Basis{TT}, quadrature::QuadratureRule{TT}) where {DT,TT,D}
         # compute coefficients
         r₀ = zeros(TT, nbasis(basis))
         r₁ = zeros(TT, nbasis(basis))
         m  = zeros(TT, nnodes(quadrature), nbasis(basis))
         a  = zeros(TT, nnodes(quadrature), nbasis(basis))
 
-        for i in 1:nbasis(basis)
-            r₀[i] = evaluate(basis, i, zero(TT))
-            r₁[i] = evaluate(basis, i, one(TT))
-            for j in 1:nnodes(quadrature)
-                m[j,i] = evaluate(basis, i, nodes(quadrature)[j])
-                a[j,i] = derivative(basis, i, nodes(quadrature)[j])
+        for i in eachindex(basis)
+            r₀[i] = basis[zero(TT), i]
+            r₁[i] = basis[one(TT), i]
+            for j in eachindex(quadrature)
+                m[j,i] = basis[nodes(quadrature)[j], i]
+                a[j,i] = basis'[nodes(quadrature)[j], i]
             end
         end
 
@@ -69,7 +69,7 @@ mutable struct ParametersCGVI{DT, TT, D, S, R, ET <: NamedTuple} <: Parameters{D
             println()
         end
 
-        ParametersCGVI{DT,D}(equs, Δt, weights(quadrature), nodes(quadrature), nodes(basis), m, a, r₀, r₁)
+        ParametersCGVI{DT,D}(equs, Δt, weights(quadrature), nodes(quadrature), grid(basis), m, a, r₀, r₁)
     end
 end
 
@@ -129,20 +129,20 @@ struct IntegratorCGVI{DT, TT, D, S, R,
                       ST <: NonlinearSolver{DT},
                       IT <: InitialGuessIODE{TT}} <: IODEIntegrator{DT,TT}
     basis::BT
-    quadrature::Quadrature{TT,R}
+    quadrature::QuadratureRule{TT,R}
 
     params::PT
     solver::ST
     iguess::IT
     caches::CacheDict{PT}
 
-    function IntegratorCGVI(basis::BT, quadrature::Quadrature{TT,R}, params::ParametersCGVI{DT,TT,D,S},
+    function IntegratorCGVI(basis::BT, quadrature::QuadratureRule{TT,R}, params::ParametersCGVI{DT,TT,D,S},
                     solver::ST, iguess::IT, caches) where {DT,TT,D,S,R,BT,ST,IT}
         new{DT, TT, D, S, R, BT, typeof(params), ST, IT}(basis, quadrature, params, solver, iguess, caches)
     end
 
-    function IntegratorCGVI{DT,D}(equations::NamedTuple, basis::Basis{TT,P}, quadrature::Quadrature{TT,R}, Δt::TT;
-                                  interpolation=HermiteInterpolation{DT}) where {DT,TT,D,P,R}
+    function IntegratorCGVI{DT,D}(equations::NamedTuple, basis::Basis{TT}, quadrature::QuadratureRule{TT,R}, Δt::TT;
+                                  interpolation=HermiteInterpolation{DT}) where {DT,TT,D,R}
 
         # get number of stages
         S = nbasis(basis)
@@ -163,7 +163,7 @@ struct IntegratorCGVI{DT, TT, D, S, R,
         IntegratorCGVI(basis, quadrature, params, solver, iguess, caches)
     end
 
-    function IntegratorCGVI(equation::IODE{DT,TT}, basis::Basis{TT}, quadrature::Quadrature{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorCGVI(equation::IODE{DT,TT}, basis::Basis{TT}, quadrature::QuadratureRule{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorCGVI{DT, ndims(equation)}(get_function_tuple(equation), basis, quadrature, Δt; kwargs...)
     end
 end
@@ -192,23 +192,17 @@ end
 
 function initial_guess!(int::IntegratorCGVI{DT,TT,D,S,R}, sol::AtomicSolutionPODE{DT,TT},
                         cache::IntegratorCacheCGVI{DT}=int.caches[DT]) where {DT,TT,D,S,R}
-    if nnodes(int.basis) > 0
-        for i in 1:S
-            evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
-                                  sol.q, sol.p, sol.v, sol.f,
-                                  cache.q̃, cache.p̃,
-                                  cache.ṽ, cache.f̃,
-                                  nodes(int.basis)[i], nodes(int.basis)[i])
+    int.solver.x .= 0
 
-            for k in 1:D
-                int.solver.x[D*(i-1)+k] = cache.q̃[k]
-            end
-        end
-    else
-        for i in 1:S
-            for k in 1:D
-                int.solver.x[D*(i-1)+k] = 0
-            end
+    for i in eachindex(int.basis)
+        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                                sol.q, sol.p, sol.v, sol.f,
+                                cache.q̃, cache.p̃,
+                                cache.ṽ, cache.f̃,
+                                grid(int.basis)[i], grid(int.basis)[i])
+
+        for k in 1:D
+            int.solver.x[D*(i-1)+k] = cache.q̃[k]
         end
     end
 

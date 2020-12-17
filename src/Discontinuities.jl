@@ -1,6 +1,6 @@
 module Discontinuities
 
-    using ..Quadratures
+    using QuadratureRules
 
     export Discontinuity, PathIntegral, PathIntegralLinear, PathIntegralTrigonometric
 

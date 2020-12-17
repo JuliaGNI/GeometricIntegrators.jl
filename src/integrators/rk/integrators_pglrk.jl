@@ -1,5 +1,5 @@
 
-using FastGaussQuadrature
+using QuadratureRules
 using NLsolve
 
 "Holds the coefficients of a projected Gauss-Legendre Runge-Kutta method."
@@ -39,24 +39,17 @@ function CoefficientsPGLRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T},
     CoefficientsPGLRK{T}(name, order, length(c), a, b, c, P, X, W)
 end
 
-function CoefficientsPGLRK(s::Int)
+function CoefficientsPGLRK(::Type{T}, s::Int) where {T}
     @assert s ≥ 2
+
+    local ξᵢ::T
 
     # order
     o = 2s
 
     # obtain Gauss-Legendre nodes and weights
-    gl = gausslegendre(s)
-
-    # scale from [-1,+1] to [0,1]
-    c = (gl[1] .+ 1) ./ 2
-    b = gl[2] ./ 2
-
-    T = eltype(c)
-
-    local ξᵢ::T
-
-    leg_basis = LegendreBasis(T,s)
+    gl_quad = GaussLegendreQuadrature(T,s)
+    leg_basis = Legendre(T,s)
 
     a = zeros(T, s, s)
     t = zeros(T, s, s)
@@ -65,17 +58,15 @@ function CoefficientsPGLRK(s::Int)
     W = zeros(T, s, s)
 
     for j in 1:s
-        for i in 1:s
-            P[i,j] = evaluate(leg_basis, j, c[i])
-        end
+        P[:,j] .= leg_basis[nodes(gl_quad), j-1]
     end
 
     Q = inv(P)
 
-    X[1,1] = 1/2
+    X[1,1] = 0.5
 
     for i in 1:s-1
-        ξᵢ = one(T)/sqrt(convert(T, 4i^2-1))/2
+        ξᵢ = one(T) / sqrt(convert(T, 4i^2-1)) / 2
         X[i+1,i] = +ξᵢ
         X[i,i+1] = -ξᵢ
     end
@@ -86,8 +77,10 @@ function CoefficientsPGLRK(s::Int)
     mul!(t, X, Q)
     mul!(a, P, t)
 
-    CoefficientsPGLRK(Symbol("PGLRK", s), o, a, b, c, P, X, W)
+    CoefficientsPGLRK(Symbol("PGLRK", s), o, a, weights(gl_quad), nodes(gl_quad), P, X, W)
 end
+
+CoefficientsPGLRK(s::Int) = CoefficientsPGLRK(Float64, s)
 
 
 Base.hash(tab::CoefficientsPGLRK, h::UInt) = hash(tab.o, hash(tab.s, hash(tab.a, hash(tab.b, hash(tab.c, hash(tab.P, hash(tab.Q, hash(tab.X, hash(tab.W, hash(tab.A, h))))))))))

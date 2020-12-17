@@ -1,9 +1,11 @@
 module Integrators
 
+    using CompactBasisFunctions
     using DelimitedFiles
     using Documenter: @doc
     using LinearAlgebra
     using OffsetArrays
+    using QuadratureRules
     using SimpleSolvers
 
     using ..Common
@@ -11,8 +13,6 @@ module Integrators
     using ..Interpolation
     using ..Utils
 
-    using ..BasisFunctions
-    using ..Quadratures
     using ..Discontinuities
     using ..Equations
     using ..Solutions

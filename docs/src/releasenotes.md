@@ -3,8 +3,10 @@
 
 ## 0.7.0
 
-* Extract TestProblems into GeometricProblems.jl
-* Use SimpleSolvers instead of Solvers submodule
+* use CompactBasisFunctions.jl instead of BasisFunctions submodule
+* use QuadratureRules.jl instead of Quadratures submodule
+* Use SimpleSolvers.jl instead of Solvers submodule
+* Use GeometricProblems.jl instead of TestProblems submodule
 
 
 ## 0.6.2

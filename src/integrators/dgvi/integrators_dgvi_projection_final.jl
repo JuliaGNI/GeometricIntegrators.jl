@@ -50,7 +50,7 @@ mutable struct ParametersDGVIP1{DT, TT, D, S, R, ET <: NamedTuple} <: Parameters
     end
 
     function ParametersDGVIP1{DT,D}(equs::NamedTuple, Δt::TT,
-                    basis::Basis{TT}, quadrature::Quadrature{TT}) where {DT,TT,D}
+                    basis::Basis{TT}, quadrature::QuadratureRule{TT}) where {DT,TT,D}
 
         # compute coefficients
         b = weights(quadrature)
@@ -60,13 +60,13 @@ mutable struct ParametersDGVIP1{DT, TT, D, S, R, ET <: NamedTuple} <: Parameters
         r⁻= zeros(TT, nbasis(basis))
         r⁺= zeros(TT, nbasis(basis))
 
-        for i in 1:nbasis(basis)
-            for j in 1:nnodes(quadrature)
-                m[j,i] = evaluate(basis, i, nodes(quadrature)[j])
-                a[j,i] = derivative(basis, i, nodes(quadrature)[j])
+        for i in eachindex(basis)
+            for j in eachindex(quadrature)
+                m[j,i] = basis[nodes(quadrature)[j], i]
+                a[j,i] = basis'[nodes(quadrature)[j], i]
             end
-            r⁻[i] = evaluate(basis, i, one(TT))
-            r⁺[i] = evaluate(basis, i, zero(TT))
+            r⁻[i] = basis[one(TT), i]
+            r⁺[i] = basis[zero(TT), i]
         end
 
         if get_config(:verbosity) > 1
@@ -126,7 +126,7 @@ struct IntegratorDGVIP1{DT, TT, D, S, R,
                 ST <: NonlinearSolver{DT},
                 IT <: InitialGuessODE{TT}} <: IODEIntegrator{DT,TT}
     basis::BT
-    quadrature::Quadrature{TT,R}
+    quadrature::QuadratureRule{TT,R}
 
     params::PT
     solver::ST
@@ -137,7 +137,7 @@ struct IntegratorDGVIP1{DT, TT, D, S, R,
     q⁻::Vector{DT}
     q⁺::Vector{DT}
 
-    function IntegratorDGVIP1(basis::BT, quadrature::Quadrature{TT,R}, params::ParametersDGVIP1{DT,TT,D,S},
+    function IntegratorDGVIP1(basis::BT, quadrature::QuadratureRule{TT,R}, params::ParametersDGVIP1{DT,TT,D,S},
                     solver::ST, iguess::IT, caches) where {DT,TT,D,S,R,BT,ST,IT}
         # create solution vectors
         q  = zeros(DT,D)
@@ -147,8 +147,8 @@ struct IntegratorDGVIP1{DT, TT, D, S, R,
         new{DT, TT, D, S, R, BT, typeof(params), ST, IT}(basis, quadrature, params, solver, iguess, caches, q, q⁻, q⁺)
     end
 
-    function IntegratorDGVIP1{DT,D}(equations::NamedTuple, basis::Basis{TT,P}, quadrature::Quadrature{TT,R}, Δt::TT;
-                                  interpolation=HermiteInterpolation{DT}) where {DT,TT,D,P,R}
+    function IntegratorDGVIP1{DT,D}(equations::NamedTuple, basis::Basis{TT}, quadrature::QuadratureRule{TT,R}, Δt::TT;
+                                  interpolation=HermiteInterpolation{DT}) where {DT,TT,D,R}
 
         # get number of stages
         S = nbasis(basis)
@@ -169,7 +169,7 @@ struct IntegratorDGVIP1{DT, TT, D, S, R,
         IntegratorDGVIP1(basis, quadrature, params, solver, iguess, caches)
     end
 
-    function IntegratorDGVIP1(equation::IODE{DT,TT}, basis::Basis{TT}, quadrature::Quadrature{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorDGVIP1(equation::IODE{DT,TT}, basis::Basis{TT}, quadrature::QuadratureRule{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorDGVIP1{DT, ndims(equation)}(get_function_tuple(equation), basis, quadrature, Δt; kwargs...)
     end
 end
@@ -207,12 +207,12 @@ end
 
 function initial_guess!(int::IntegratorDGVIP1{DT,TT, D, S, R}, sol::AtomicSolutionPODE{DT,TT},
                         cache::IntegratorCacheDGVI{DT}=int.caches[DT]) where {DT,TT,D,S,R}
-    if nnodes(int.basis) > 0
-        for i in 1:S
+    if nbasis(int.basis) > 0
+        for i in eachindex(int.basis)
             evaluate!(int.iguess, sol.q̅, sol.v̅,
                                   sol.q, sol.v,
                                   cache.q̃,
-                                  nodes(int.basis)[i])
+                                  grid(int.basis)[i])
 
             for k in 1:D
                 int.solver.x[D*(i-1)+k] = cache.q̃[k]
