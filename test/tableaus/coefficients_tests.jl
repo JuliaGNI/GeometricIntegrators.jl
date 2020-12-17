@@ -4,9 +4,10 @@
     using LinearAlgebra: normalize
     using GeometricIntegrators.Common
     using GeometricIntegrators.Utils
-    import GeometricIntegrators.Quadratures: LobattoLegendreQuadrature, weights
+    
     import GeometricIntegrators.Tableaus: get_lobatto_nodes, get_lobatto_weights,
                                           get_lobatto_glrk_coefficients, get_lobatto_d_vector
+    import QuadratureRules: LobattoLegendreQuadrature, nodes, weights
 
 
     # test Gauss-Legendre Runge-Kutta coefficients

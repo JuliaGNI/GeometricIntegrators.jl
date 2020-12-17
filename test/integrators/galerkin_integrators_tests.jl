@@ -1,20 +1,21 @@
 
-using GeometricIntegrators.BasisFunctions
 using GeometricIntegrators.Common
 using GeometricIntegrators.Config
 using GeometricIntegrators.Discontinuities
 using GeometricIntegrators.Integrators
-using GeometricIntegrators.Quadratures
 using GeometricIntegrators.Utils
 using GeometricProblems.HarmonicOscillator
 using Test
+
+using CompactBasisFunctions
+using QuadratureRules
 
 using GeometricProblems.HarmonicOscillator: Δt, nt, refx, refq, refp
 
 iode = harmonic_oscillator_iode()
 
 QGau4 = GaussLegendreQuadrature(4)
-BGau4 = LagrangeBasis(nodes(QGau4))
+BGau4 = Lagrange(nodes(QGau4))
 
 
 ### CGVI Integrators ###

@@ -1,8 +1,7 @@
 
 import LinearAlgebra
 import Polynomials
-
-import GeometricIntegrators.Quadratures: GaussLegendreQuadrature
+import QuadratureRules: GaussLegendreQuadrature
 
 
 @doc raw"""
@@ -220,8 +219,8 @@ end
 
 function get_lobatto_d_vector(s, T=Float64; normalize=false)
     q = get_lobatto_nodes(s)
-    l = LagrangeBasis(q)
-    v = [deriv_basis(l, j, i) for i in 1:s, j in 1:s]
+    l = Lagrange(q)
+    v = [l'[x, j] for x in q, j in eachindex(l)]
     w = LinearAlgebra.nullspace(v')[:,begin]
     normalize ? T.(LinearAlgebra.normalize(w) .* sign(w[begin])) : T.(w)
 end

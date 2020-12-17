@@ -1,11 +1,12 @@
 module Tableaus
 
     import GenericLinearAlgebra
+    
+    using CompactBasisFunctions
+    using QuadratureRules
 
     using ..Config
     using ..Common
-    using ..BasisFunctions
-    using ..Quadratures
     using ..Integrators
     using ..Integrators.Stochastic
     using ..Integrators.SPARK

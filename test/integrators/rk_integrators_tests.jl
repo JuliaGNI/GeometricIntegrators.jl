@@ -236,7 +236,7 @@ end
 
     pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(2), Δt)
     pgsol = integrate(ode, pgint, nt)
-    @test rel_err(pgsol.q, refx) < 4E-8
+    @test rel_err(pgsol.q, refx) < 6E-6
 
     pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(3), Δt)
     pgsol = integrate(ode, pgint, nt)
