@@ -31,7 +31,6 @@ for (TDataSeries, TArray) in
      (:PDataSeries, :SharedArray))
     @eval begin
         struct $TDataSeries{T <: Union{Number,AbstractArray},N} <: DataSeries{T,N}
-        # struct $TDataSeries{T,N} <: DataSeries{T,N}
             d::$TArray{T,N}
 
             function $TDataSeries{T,N}(nt, ni) where {T <: Union{Number,AbstractArray}, N}
@@ -58,8 +57,14 @@ for (TDataSeries, TArray) in
             end
         end
 
-        function $TDataSeries(::Type{T}, nt::Int, ni::Int=1) where {T <: Union{Number,AbstractArray{<:Number}}}
-            $TDataSeries{T, ni == 1 ? 1 : 2}(nt, ni)
+        function $TDataSeries(::Type{T}, nt::Int, ni::Int=1) where {T <: Number}
+            ds = $TDataSeries{T, ni == 1 ? 1 : 2}(nt, ni)
+            initialize!(ds, zero(T))
+        end
+
+        function $TDataSeries(::Type{T}, nd::Int, nt::Int, ni::Int) where {T <: Number}
+            ds = $TDataSeries{Vector{T}, ni == 1 ? 1 : 2}(nt, ni)
+            initialize!(ds, [zeros(T, nd) for _ in 1:ni])
         end
 
         function $TDataSeries(q₀::T, nt::Int, ni::Int=1) where {T <: Union{Number,AbstractArray{<:Number}}}
@@ -262,6 +267,7 @@ end
     [ds[j,k][i] for k in K]
 end
 
+@inline Base.getindex(ds::DataSeries{T,2}, J::Colon, K::Colon) where {T} = getindex(ds, axes(ds,1), axes(ds,2))
 @inline Base.getindex(ds::DataSeries{T,2}, J, K::Colon) where {T} = getindex(ds, J, axes(ds,2))
 @inline Base.getindex(ds::DataSeries{T,2}, J::Colon, K) where {T} = getindex(ds, axes(ds,1), K)
 

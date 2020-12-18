@@ -23,12 +23,16 @@ spsde2 = kubo_oscillator_spsde_2()
 spsde3 = kubo_oscillator_spsde_3()
 
 
-@test typeof(Integrator(sde1, TableauBurrageE1(), Δt)) <: IntegratorSERK
-@test typeof(Integrator(sde1, TableauStochasticGLRK(1), Δt)) <: IntegratorSIRK
-@test typeof(Integrator(sde1, TableauRosslerRS1(), Δt)) <: IntegratorWERK
-@test typeof(Integrator(sde1, TableauSRKw1(), Δt)) <: IntegratorWIRK
-@test typeof(Integrator(psde1, TableauStochasticStormerVerlet(), Δt)) <: IntegratorSIPRK
-@test typeof(Integrator(spsde1, TableauModifiedStochasticStormerVerlet(), Δt)) <: IntegratorSISPRK
+@testset "$(rpad("Stochastic integrator constructors",80))" begin
+
+    @test typeof(Integrator(sde1, TableauBurrageE1(), Δt)) <: IntegratorSERK
+    @test typeof(Integrator(sde1, TableauStochasticGLRK(1), Δt)) <: IntegratorSIRK
+    @test typeof(Integrator(sde1, TableauRosslerRS1(), Δt)) <: IntegratorWERK
+    @test typeof(Integrator(sde1, TableauSRKw1(), Δt)) <: IntegratorWIRK
+    @test typeof(Integrator(psde1, TableauStochasticStormerVerlet(), Δt)) <: IntegratorSIPRK
+    @test typeof(Integrator(spsde1, TableauModifiedStochasticStormerVerlet(), Δt)) <: IntegratorSISPRK
+
+end
 
 
 @testset "$(rpad("SERK integrators",80))" begin
@@ -36,17 +40,17 @@ spsde3 = kubo_oscillator_spsde_3()
     int = Integrator(sde1, TableauBurrageE1(), Δt)
     sol = Solution(sde1, Δt, nt, conv=:strong)
     integrate!(int, sol)
-    @test rel_energy_err_sde(sol) < 2E-6
+    @test rel_energy_err(sol) < 2E-6
 
     int = Integrator(sde2, TableauBurrageE1(), Δt)
     sol = Solution(sde2, Δt, nt, conv=:strong)
     integrate!(int, sol)
-    @test rel_energy_err_sde(sol) < 2E-6
+    @test rel_energy_err(sol) < 2E-6
 
     int = Integrator(sde3, TableauBurrageE1(), Δt)
     sol = Solution(sde3, Δt, nt, conv=:strong)
     integrate!(int, sol)
-    @test rel_energy_err_sde(sol) < 2E-6
+    @test rel_energy_err(sol) < 2E-6
 
 end
 
@@ -56,17 +60,17 @@ end
     int = Integrator(sde1, TableauStochasticGLRK(1), Δt)
     sol = Solution(sde1, Δt, nt, conv=:strong)
     integrate!(int, sol)
-    @test rel_energy_err_sde(sol) < 1E-14
+    @test rel_energy_err(sol) < 1E-14
 
     int = Integrator(sde2, TableauStochasticGLRK(1), Δt)
     sol = Solution(sde2, Δt, nt, conv=:strong)
     integrate!(int, sol)
-    @test rel_energy_err_sde(sol) < 1E-14
+    @test rel_energy_err(sol) < 1E-14
 
     int = Integrator(sde3, TableauStochasticGLRK(1), Δt)
     sol = Solution(sde3, Δt, nt, conv=:strong)
     integrate!(int, sol)
-    @test rel_energy_err_sde(sol) < 1E-14
+    @test rel_energy_err(sol) < 1E-14
 
     # check deterministic part of SIRK integrator to correspond to FIRK integrator
     int_sto = Integrator(sde1, TableauStochasticGLRK(1), Δt)
@@ -77,7 +81,7 @@ end
     sol_det = Solution(ode, Δt, nt)
     integrate!(int_det, sol_det)
 
-    @test sol_sto.q[:,end] ≈ sol_det.q[:,end] atol=1E-14
+    @test sol_sto.q[end] ≈ sol_det.q[end] atol=1E-14
 end
 
 
@@ -86,17 +90,17 @@ end
     int = Integrator(sde1, TableauRosslerRS1(), Δt)
     sol = Solution(sde1, Δt, nt, conv=:weak)
     integrate!(int, sol)
-    @test rel_energy_err_sde(sol) < 1E-5
+    @test rel_energy_err(sol) < 1E-5
 
     int = Integrator(sde2, TableauRosslerRS1(), Δt)
     sol = Solution(sde2, Δt, nt, conv=:weak)
     integrate!(int, sol)
-    @test rel_energy_err_sde(sol) < 1E-5
+    @test rel_energy_err(sol) < 1E-5
 
     int = Integrator(sde3, TableauRosslerRS1(), Δt)
     sol = Solution(sde3, Δt, nt, conv=:weak)
     integrate!(int, sol)
-    @test rel_energy_err_sde(sol) < 1E-5
+    @test rel_energy_err(sol) < 1E-5
 
 end
 
@@ -106,17 +110,17 @@ end
     int = Integrator(sde1, TableauSRKw1(), Δt)
     sol = Solution(sde1, Δt, nt, conv=:weak)
     integrate!(int, sol)
-    @test rel_energy_err_sde(sol) < 1E-14
+    @test rel_energy_err(sol) < 1E-14
 
     int = Integrator(sde2, TableauSRKw1(), Δt)
     sol = Solution(sde2, Δt, nt, conv=:weak)
     integrate!(int, sol)
-    @test rel_energy_err_sde(sol) < 1E-14
+    @test rel_energy_err(sol) < 1E-14
 
     int = Integrator(sde3, TableauSRKw1(), Δt)
     sol = Solution(sde3, Δt, nt, conv=:weak)
     integrate!(int, sol)
-    @test rel_energy_err_sde(sol) < 1E-14
+    @test rel_energy_err(sol) < 1E-14
 
 end
 
@@ -126,17 +130,17 @@ end
     int = Integrator(psde1, TableauStochasticStormerVerlet(), Δt)
     sol = Solution(psde1, Δt, nt, conv=:strong)
     integrate!(int, sol)
-    @test rel_energy_err_psde(sol) < 1E-5
+    @test rel_energy_err(sol) < 1E-5
 
     int = Integrator(psde2, TableauStochasticStormerVerlet(), Δt)
     sol = Solution(psde2, Δt, nt, conv=:strong)
     integrate!(int, sol)
-    @test rel_energy_err_psde(sol) < 2E-5
+    @test rel_energy_err(sol) < 2E-5
 
     int = Integrator(psde3, TableauStochasticStormerVerlet(), Δt)
     sol = Solution(psde3, Δt, nt, conv=:strong)
     integrate!(int, sol)
-    @test rel_energy_err_psde(sol) < 2E-5
+    @test rel_energy_err(sol) < 2E-5
 
 end
 
@@ -146,16 +150,16 @@ end
     int = Integrator(spsde1, TableauModifiedStochasticStormerVerlet(), Δt)
     sol = Solution(spsde1, Δt, nt, conv=:strong)
     integrate!(int, sol)
-    @test rel_energy_err_psde(sol) < 2E-2
+    @test rel_energy_err(sol) < 2E-2
 
     int = Integrator(spsde2, TableauModifiedStochasticStormerVerlet(), Δt)
     sol = Solution(spsde2, Δt, nt, conv=:strong)
     integrate!(int, sol)
-    @test rel_energy_err_psde(sol) < 2E-2
+    @test rel_energy_err(sol) < 2E-2
 
     int = Integrator(spsde3, TableauModifiedStochasticStormerVerlet(), Δt)
     sol = Solution(spsde3, Δt, nt, conv=:strong)
     integrate!(int, sol)
-    @test rel_energy_err_psde(sol) < 2E-2
+    @test rel_energy_err(sol) < 2E-2
 
 end

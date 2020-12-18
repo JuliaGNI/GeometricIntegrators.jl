@@ -53,6 +53,16 @@ function Solutions.AtomicSolution(solution::SolutionPDAE, integrator::Integrator
     AtomicSolutionPDAE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
 end
 
+"Create AtomicSolution for SDE."
+function Solutions.AtomicSolution(solution::SolutionSDE{AT,TT}, integrator::Integrator) where {DT, TT, AT <: AbstractArray{DT}}
+    AtomicSolutionSDE(get_initial_conditions(solution, 1)..., zeros(DT,solution.nm), zeros(DT,solution.nm), get_internal_variables(integrator))
+end
+
+"Create AtomicSolution for partitioned SDE."
+function Solutions.AtomicSolution(solution::SolutionPSDE{AT,TT}, integrator::Integrator) where {DT, TT, AT <: AbstractArray{DT}}
+    AtomicSolutionPSDE(get_initial_conditions(solution, 1)..., zeros(DT,solution.nm), zeros(DT,solution.nm), get_internal_variables(integrator))
+end
+
 
 abstract type Parameters{DT,TT} end
 

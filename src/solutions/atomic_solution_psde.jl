@@ -57,7 +57,7 @@ mutable struct AtomicSolutionPSDE{DT <: Number, TT <: Real, AT <: AbstractArray{
     end
 end
 
-AtomicSolutionPSDE(DT, TT, AT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionPSDE{DT,TT,AT,IT}(nd, nm, internal)
+AtomicSolutionPSDE(::Type{DT}, ::Type{TT}, ::Type{AT}, nd, nm, internal::IT=NamedTuple()) where {DT,TT,AT,IT} = AtomicSolutionPSDE{DT,TT,AT,IT}(nd, nm, internal)
 AtomicSolutionPSDE(t::TT, q::AT, p::AT, ΔW::AT, ΔZ::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionPSDE{DT,TT,AT,IT}(t, q, p, ΔW, ΔZ, internal)
 
 function set_solution!(asol::AtomicSolutionPSDE, sol)

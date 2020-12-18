@@ -1,44 +1,31 @@
+using GeometricIntegrators.Utils
 
+function rel_energy_err(sol::SolutionSDE{AT,TT,WT,1}) where {AT,TT,WT}
+    en_ref  = 0.5 * L2norm(sol.q[begin])
+    en_last = 0.5 * L2norm(sol.q[end])
 
-function rel_energy_err_sde(sol)
-
-    NQ = ndims(sol.q)
-
-    if NQ==2
-
-        en_ref  = 0.5 * ( sol.q[1,0]^2 + sol.q[2,0]^2 )
-        en_last = 0.5 * ( sol.q[1,end]^2 + sol.q[2,end]^2 )
-
-        return abs((en_last-en_ref)/en_ref)
-
-    elseif NQ==3
-
-        en_ref  = 0.5 * ( sol.q[1,0,:].^2 + sol.q[2,0,:].^2 )
-        en_last = 0.5 * ( sol.q[1,end,:].^2 + sol.q[2,end,:].^2 )
-
-        return maximum(abs.( (en_last .- en_ref) ./ en_ref ))
-
-    end
+    return abs((en_last-en_ref)/en_ref)
 end
 
+function rel_energy_err(sol::SolutionSDE{AT,TT,WT,2}) where {AT,TT,WT}
+    en_ref  = 0.5 .* map(q -> L2norm(q), sol.q[begin,:])
+    en_last = 0.5 .* map(q -> L2norm(q), sol.q[end,:])
 
-function rel_energy_err_psde(sol)
+    return maximum(abs.( (en_last .- en_ref) ./ en_ref ))
+end
 
-    NQ = ndims(sol.q)
+function rel_energy_err(sol::SolutionPSDE{AT,TT,WT,1}) where {AT,TT,WT}
+    en_ref  = 0.5 * ( L2norm(sol.q[begin]) + L2norm(sol.p[begin]) )
+    en_last = 0.5 * ( L2norm(sol.q[end])   + L2norm(sol.p[end])   )
 
-    if NQ==2
+    return abs((en_last-en_ref)/en_ref)
+end
 
-        en_ref  = 0.5 * ( sol.q[1,0]^2 + sol.p[1,0]^2 )
-        en_last = 0.5 * ( sol.q[1,end]^2 + sol.p[1,end]^2 )
+function rel_energy_err(sol::SolutionPSDE{AT,TT,WT,2}) where {AT,TT,WT}
+    en_ref  = 0.5 .* map(q -> L2norm(q), sol.q[begin,:]) .+
+              0.5 .* map(p -> L2norm(p), sol.p[begin,:])
+    en_last = 0.5 .* map(q -> L2norm(q), sol.q[end,:]) .+
+              0.5 .* map(p -> L2norm(p), sol.p[end,:])
 
-        return abs((en_last-en_ref)/en_ref)
-
-    elseif NQ==3
-
-        en_ref  = 0.5 * ( sol.q[1,0,:].^2 + sol.p[1,0,:].^2 )
-        en_last = 0.5 * ( sol.q[1,end,:].^2 + sol.p[1,end,:].^2 )
-
-        return maximum(abs.( (en_last .- en_ref) ./ en_ref ))
-
-    end
+    return maximum(abs.( (en_last .- en_ref) ./ en_ref ))
 end

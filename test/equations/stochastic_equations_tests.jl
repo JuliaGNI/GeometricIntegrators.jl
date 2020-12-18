@@ -8,7 +8,9 @@ include("initial_conditions.jl")
 
 @testset "$(rpad("Stochastic Differential Equations (SDE)",80))" begin
 
-    x₁ₛ = [0.5  0.0 -0.5; 0.0  0.5  0.0]
+    x₁ₛ = [[ 0.5, 0.0],
+           [ 0.0, 0.5],
+           [-0.5, 0.0]]
 
     function sde_v(λ, t, q, v)
         v[1] = λ*q[1]
@@ -47,13 +49,13 @@ include("initial_conditions.jl")
     @test sde2.d == 2
     @test sde3.d == 2
 
-    @test sde1.ni == 1
-    @test sde2.ni == 1
-    @test sde3.ni == 3
-
     @test sde1.ns == 1
     @test sde2.ns == 3
     @test sde3.ns == 1
+
+    @test nsamples(sde1) == 1
+    @test nsamples(sde2) == 1
+    @test nsamples(sde3) == 3
 
     @test sde == similar(sde, t₀, x₀, 1)
     @test sde == similar(sde, t₀, x₀)
@@ -67,8 +69,8 @@ end
 
     noise_intensity = 0.1
 
-    q₁ₛ = [0.5  0.0 -0.5]
-    p₁ₛ = [0.0  0.5  0.0]
+    q₁ₛ = [[0.5], [0.0], [-0.5]]
+    p₁ₛ = [[0.0], [0.5], [ 0.0]]
 
     function psde_v(t, q, p, v)
         v[1] = p[1]
@@ -107,13 +109,13 @@ end
     @test psde2.d == 1
     @test psde3.d == 1
 
-    @test psde1.ni == 1
-    @test psde2.ni == 1
-    @test psde3.ni == 3
-
     @test psde1.ns == 1
     @test psde2.ns == 3
     @test psde3.ns == 1
+
+    @test nsamples(psde1) == 1
+    @test nsamples(psde2) == 1
+    @test nsamples(psde3) == 3
 
     @test psde == similar(psde, t₀, q₀, p₀, 1)
     @test psde == similar(psde, q₀, p₀, 1)
@@ -128,8 +130,8 @@ end
 
     noise_intensity = 0.1
 
-    q₁ₛ = [0.5  0.0 -0.5]
-    p₁ₛ = [0.0  0.5  0.0]
+    q₁ₛ = [[0.5], [0.0], [-0.5]]
+    p₁ₛ = [[0.0], [0.5], [ 0.0]]
 
     function spsde_v(t, q, p, v)
         v[1] = p[1]
@@ -176,13 +178,13 @@ end
     @test spsde2.d == 1
     @test spsde3.d == 1
 
-    @test spsde1.ni == 1
-    @test spsde2.ni == 1
-    @test spsde3.ni == 3
-
     @test spsde1.ns == 1
     @test spsde2.ns == 3
     @test spsde3.ns == 1
+
+    @test nsamples(spsde1) == 1
+    @test nsamples(spsde2) == 1
+    @test nsamples(spsde3) == 3
 
     @test spsde == similar(spsde, t₀, q₀, p₀, 1)
     @test spsde == similar(spsde, q₀, p₀, 1)

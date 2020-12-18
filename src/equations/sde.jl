@@ -15,7 +15,6 @@ taking values in ``\mathbb{R}^{d}``, and the m-dimensional Wiener process W
 
 * `d`:  dimension of dynamical variable ``q`` and the vector field ``v``
 * `m`:  dimension of the Wiener process
-* `ni`: number of initial conditions
 * `ns`: number of sample paths
 * `v`:  function computing the deterministic vector field
 * `B`:  function computing the d x m diffusion matrix
@@ -61,53 +60,56 @@ or the column col of the matrix B (if col>0).
     sde = SDE(v, B, t₀, q₀; parameters=p)
 ```
 """
-struct SDE{dType <: Number, tType <: Real, vType <: Function, BType <: Function,
-           pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationSDE{dType, tType}
+struct SDE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
+           vType <: Function, BType <: Function,
+           pType <: Union{NamedTuple,Nothing}} <: AbstractEquationSDE{dType, tType}
 
     d::Int
     m::Int
-    ni::Int
     ns::Int
     v::vType
     B::BType
     t₀::tType
-    q₀::Array{dType, N}
+    q₀::Vector{arrayType}
     parameters::pType
-    periodicity::Vector{dType}
+    periodicity::arrayType
 
-    function SDE(m, ns, v::vType, B::BType, t₀::tType, q₀::AbstractArray{dType,N};
-                 parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
-                        dType <: Number, tType <: Real, vType <: Function, BType <: Function,
-                        pType <: Union{NamedTuple,Nothing}, N}
+    function SDE(m, ns, v::vType, B::BType, t₀::tType, q₀::Vector{arrayType};
+                 parameters::pType=nothing, periodicity=zero(q₀[begin])) where {
+                        dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
+                        vType <: Function, BType <: Function,
+                        pType <: Union{NamedTuple,Nothing}}
 
-        d  = size(q₀,1)
-        ni = size(q₀,2)
+        d  = length(q₀[begin])
+        ni = length(q₀)
 
-        @assert N ∈ (1,2)
-        @assert ni ≥ 1
+        @assert all(length(q) == d for q in q₀)
+
         @assert ns ≥ 1
         @assert ni == 1 || ns == 1
         # either multiple deterministic initial conditions and one sample path
         # or one deterministic initial condition and multiple sample paths
 
-        new{dType,tType,vType,BType,pType,N}(d, m, ni, ns, v, B, t₀, q₀, parameters, periodicity)
+        new{dType,tType,arrayType,vType,BType,pType}(d, m, ns, v, B, t₀, q₀, parameters, periodicity)
     end
 end
 
 
-function SDE(m::Int, ns::Int, v::Function, B::Function, q₀::AbstractArray{DT}; kwargs...) where {DT}
-    SDE(m, ns, v, B, zero(DT), q₀; kwargs...)
-end
+SDE(m, ns, v, B, q₀::StateVector; kwargs...) = SDE(m, ns, v, B, 0.0, q₀; kwargs...)
+SDE(m, ns, v, B, t₀, q₀::State; kwargs...) = SDE(m, ns, v, B, t₀, [q₀]; kwargs...)
+SDE(m, ns, v, B, q₀::State; kwargs...) = SDE(m, ns, v, B, 0.0, q₀; kwargs...)
 
+# const SDEHT{HT,DT,TT,AT,VT,BT,PT} = SDE{DT,TT,AT,VT,BT,HT,PT} # type alias for dispatch on Hamiltonian type parameter
+# const SDEPT{PT,DT,TT,AT,VT,BT,HT} = SDE{DT,TT,AT,VT,BT,HT,PT} # type alias for dispatch on parameters type parameter
+const SDEPT{PT,DT,TT,AT,VT,BT} = SDE{DT,TT,AT,VT,BT,PT} # type alias for dispatch on parameters type parameter
 
-Base.hash(sde::SDE, h::UInt) = hash(sde.d, hash(sde.m, hash(sde.ni, hash(sde.ns,
+Base.hash(sde::SDE, h::UInt) = hash(sde.d, hash(sde.m, hash(sde.ns,
                                hash(sde.v, hash(sde.B, hash(sde.t₀, hash(sde.q₀,
-                               hash(sde.parameters, hash(sde.periodicity, h))))))))))
+                               hash(sde.parameters, hash(sde.periodicity, h)))))))))
 
 Base.:(==)(sde1::SDE, sde2::SDE) = (
                                 sde1.d == sde2.d
                              && sde1.m == sde2.m
-                             && sde1.ni == sde2.ni
                              && sde1.ns == sde2.ns
                              && sde1.v == sde2.v
                              && sde1.B == sde2.B
@@ -116,33 +118,39 @@ Base.:(==)(sde1::SDE, sde2::SDE) = (
                              && sde1.parameters == sde2.parameters
                              && sde1.periodicity == sde2.periodicity)
 
-function Base.similar(sde::SDE, q₀::AbstractArray)
-    similar(sde, sde.t₀, q₀)
+function Base.similar(equ::SDE, t₀::Real, q₀::StateVector, ns::Int=equ.ns)
+    @assert all([length(q) == ndims(equ) for q in q₀])
+    SDE(equ.m, ns, equ.v, equ.B, t₀, q₀; parameters=equ.parameters, periodicity=equ.periodicity)
 end
 
-function Base.similar(sde::SDE, q₀::AbstractArray, ns::Int)
-    similar(sde, sde.t₀, q₀, ns)
-end
+Base.similar(equ::SDE, t₀::Real, q₀::State, ns::Int=equ.ns; kwargs...) = similar(equ, t₀, [q₀], ns; kwargs...)
+Base.similar(equ::SDE, q₀::Union{State,StateVector}, ns::Int=equ.ns; kwargs...) = similar(equ, equ.t₀, q₀, ns; kwargs...)
 
-function Base.similar(sde::SDE, t₀::TT, q₀::AbstractArray{DT,N}, ns::Int=(N > 1 ? 1 : sde.ns)) where {DT <: Number, TT <: Number, N}
-    @assert sde.d == size(q₀,1)
-    SDE(sde.m, ns, sde.v, sde.B, t₀, q₀; parameters=sde.parameters, periodicity=sde.periodicity)
-end
+Base.ndims(sde::SDE) = sde.d
+Base.axes(equ::SDE) = axes(equ.q₀[begin])
+Common.nsamples(equ::SDE) = length(equ.q₀)
+Common.periodicity(equ::SDE) = equ.periodicity
 
-@inline Base.ndims(sde::SDE) = sde.d
+initial_conditions(equ::SDE) = (equ.t₀, equ.q₀)
 
-@inline Common.periodicity(equation::SDE) = equation.periodicity
+# hashamiltonian(::SDEHT{<:Nothing}) = false
+# hashamiltonian(::SDEHT{<:Function}) = true
 
-function get_function_tuple(equation::SDE{DT,TT,VT,BT,Nothing}) where {DT, TT, VT, BT}
-    NamedTuple{(:v,:B)}((equation.v, equation.B))
-end
+hasparameters(::SDEPT{<:Nothing}) = false
+hasparameters(::SDEPT{<:NamedTuple}) = true
 
-function get_function_tuple(equation::SDE{DT,TT,VT,BT,PT}) where {DT, TT, VT, BT, PT <: NamedTuple}
-    vₚ = (t,q,v) -> equation.v(t, q, v, equation.parameters)
-    Bₚ = (t,q,B,col=0) -> equation.B(t, q, B, equation.parameters, col)
+_get_v(equ::SDE) = hasparameters(equ) ? (t,q,v) -> equ.v(t, q, v, equ.parameters) : equ.v
+_get_B(equ::SDE) = hasparameters(equ) ? (t,q,B,col=0) -> equ.B(t, q, B, equ.parameters, col) : equ.B
+# _get_h(equ::SDE) = hasparameters(equ) ? (t,q) -> equ.h(t, q, equ.parameters) : equ.h
 
+function get_function_tuple(equ::SDE)
     names = (:v,:B)
-    equs  = (vₚ,Bₚ)
+    equs  = (_get_v(equ), _get_B(equ))
+
+    # if hashamiltonian(equ)
+    #     names = (names..., :h)
+    #     equs  = (equs..., _get_h(equ))
+    # end
 
     NamedTuple{names}(equs)
 end

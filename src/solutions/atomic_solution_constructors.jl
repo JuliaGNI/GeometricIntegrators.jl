@@ -41,21 +41,21 @@ end
 
 "Create AtomicSolution for SDE."
 function AtomicSolution(equation::AbstractEquationSDE{DT,TT}) where {DT,TT}
-    AtomicSolutionSDE(equation.t₀, equation.q₀, zeros(DT,equation.m), zeros(DT,equation.m))
+    AtomicSolutionSDE(equation.t₀, equation.q₀[begin], zeros(DT,equation.m), zeros(DT,equation.m))
 end
 
 "Create AtomicSolution for SDE."
-function AtomicSolution(solution::SolutionSDE{DT,TT}) where {DT,TT}
+function AtomicSolution(solution::SolutionSDE{AT,TT}) where {DT, TT, AT <: AbstractArray{DT}}
     AtomicSolutionSDE(get_initial_conditions(solution, 1)..., zeros(DT,solution.nm), zeros(DT,solution.nm))
 end
 
 "Create AtomicSolution for partitioned SDE."
 function AtomicSolution(equation::AbstractEquationPSDE{DT,TT}) where {DT,TT}
-    AtomicSolutionPSDE(equation.t₀, equation.q₀, equation.p₀, zeros(DT,equation.m), zeros(DT,equation.m))
+    AtomicSolutionPSDE(equation.t₀, equation.q₀[begin], equation.p₀[begin], zeros(DT,equation.m), zeros(DT,equation.m))
 end
 
 "Create AtomicSolution for partitioned SDE."
-function AtomicSolution(solution::SolutionPSDE{DT,TT}) where {DT,TT}
+function AtomicSolution(solution::SolutionPSDE{AT,TT}) where {DT, TT, AT <: AbstractArray{DT}}
     AtomicSolutionPSDE(get_initial_conditions(solution, 1)..., zeros(DT,solution.nm), zeros(DT,solution.nm))
 end
 

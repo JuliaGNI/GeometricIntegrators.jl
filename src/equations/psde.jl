@@ -16,7 +16,6 @@ values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``, and the m-dimensional Wiener
 
 * `d`:  dimension of dynamical variable ``q`` and the vector field ``v``
 * `m`:  dimension of the Wiener process
-* `ni`: number of initial conditions
 * `ns`: number of sample paths
 * `v`:  function computing the drift vector field for the position variable ``q``
 * `f`:  function computing the drift vector field for the momentum variable ``p``
@@ -56,62 +55,65 @@ of evaluating the vector fields ``v``, ``f`` and the matrices ``B``, ``G`` on `t
     sde = SDE(v_sde, B_sde, t₀, q₀)
 ```
 """
-struct PSDE{dType <: Number, tType <: Real, vType <: Function, fType <: Function,
-            BType <: Function, GType <: Function, pType <: Union{NamedTuple,Nothing}, N} <: AbstractEquationPSDE{dType, tType}
+struct PSDE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
+            vType <: Function, fType <: Function,
+            BType <: Function, GType <: Function,
+            pType <: Union{NamedTuple,Nothing}} <: AbstractEquationPSDE{dType, tType}
 
     d::Int
     m::Int
-    ni::Int
     ns::Int
     v::vType
     f::fType
     B::BType
     G::GType
     t₀::tType
-    q₀::Array{dType, N}           #Initial condition: N=1 - single deterministic, N=2 - single random or multiple deterministic, N=3 - multiple deterministic
-    p₀::Array{dType, N}
+    q₀::Vector{arrayType}
+    p₀::Vector{arrayType}
     parameters::pType
-    periodicity::Vector{dType}
+    periodicity::arrayType
 
     function PSDE(m, ns, v::vType, f::fType, B::BType, G::GType,
-                  t₀::tType, q₀::AbstractArray{dType,N}, p₀::AbstractArray{dType,N};
-                  parameters::pType=nothing, periodicity=zeros(dType,size(q₀,1))) where {
-                        dType <: Number, tType <: Real,
+                  t₀::tType, q₀::Vector{arrayType}, p₀::Vector{arrayType};
+                  parameters::pType=nothing, periodicity=zero(q₀[begin])) where {
+                        dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
                         vType <: Function, fType <: Function,
                         BType <: Function, GType <: Function,
-                        pType <: Union{NamedTuple,Nothing}, N}
+                        pType <: Union{NamedTuple,Nothing}}
 
-        @assert size(q₀)  == size(p₀)
+        d  = length(q₀[begin])
+        ni = length(q₀)
 
-        d  = size(q₀,1)
-        ni = size(q₀,2)
+        @assert length(q₀) == length(p₀)
+        @assert all(length(q) == d for q in q₀)
+        @assert all(length(p) == d for p in p₀)
 
-        @assert N ∈ (1,2)
-        @assert ni ≥ 1
         @assert ns ≥ 1
         @assert ni == 1 || ns == 1
         # either multiple deterministic initial conditions and one sample path
         # or one deterministic initial condition and multiple sample paths
 
-        new{dType,tType,vType,fType,BType,GType,pType,N}(d, m, ni, ns, v, f, B, G, t₀, q₀, p₀, parameters, periodicity)
+        new{dType, tType, arrayType, vType, fType, BType, GType, pType}(d, m, ns, v, f, B, G, t₀, q₀, p₀, parameters, periodicity)
     end
 end
 
+PSDE(m, ns, v, f, B, G, q₀::StateVector, p₀::StateVector; kwargs...) = PSDE(m, ns, v, f, B, G, 0.0, q₀, p₀; kwargs...)
+PSDE(m, ns, v, f, B, G, t₀, q₀::State, p₀::State; kwargs...) = PSDE(m, ns, v, f, B, G, t₀, [q₀], [p₀]; kwargs...)
+PSDE(m, ns, v, f, B, G, q₀::State, p₀::State; kwargs...) = PSDE(m, ns, v, f, B, G, 0.0, q₀, p₀; kwargs...)
 
-function PSDE(m::Int, ns::Int, v::Function, f::Function, B::Function, G::Function, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}; kwargs...) where {DT}
-    PSDE(m, ns, v, f, B, G, zero(DT), q₀, p₀; kwargs...)
-end
+# const PSDEHT{HT,DT,TT,AT,VT,FT,BT,GT,PT} = PSDE{DT,TT,AT,VT,FT,BT,GT,HT,PT} # type alias for dispatch on Hamiltonian type parameter
+# const PSDEPT{PT,DT,TT,AT,VT,FT,BT,GT,HT} = PSDE{DT,TT,AT,VT,FT,BT,GT,HT,PT} # type alias for dispatch on parameters type parameter
+const PSDEPT{PT,DT,TT,AT,VT,FT,BT,GT} = PSDE{DT,TT,AT,VT,FT,BT,GT,PT} # type alias for dispatch on parameters type parameter
 
 
-Base.hash(sde::PSDE, h::UInt) = hash(sde.d, hash(sde.m, hash(sde.ni, hash(sde.ns,
+Base.hash(sde::PSDE, h::UInt) = hash(sde.d, hash(sde.m, hash(sde.ns,
                                 hash(sde.v, hash(sde.f, hash(sde.B, hash(sde.G,
                                 hash(sde.t₀, hash(sde.q₀, hash(sde.p₀,
-                                hash(sde.parameters, hash(sde.periodicity, h)))))))))))))
+                                hash(sde.parameters, hash(sde.periodicity, h))))))))))))
 
 Base.:(==)(sde1::PSDE, sde2::PSDE) = (
                                 sde1.d == sde2.d
                              && sde1.m == sde2.m
-                             && sde1.ni == sde2.ni
                              && sde1.ns == sde2.ns
                              && sde1.v == sde2.v
                              && sde1.f == sde2.f
@@ -123,36 +125,43 @@ Base.:(==)(sde1::PSDE, sde2::PSDE) = (
                              && sde1.parameters  == sde2.parameters
                              && sde1.periodicity == sde2.periodicity)
 
-function Base.similar(sde::PSDE, q₀::AbstractArray, p₀::AbstractArray, ns::Int)
-    similar(sde, sde.t₀, q₀, p₀, ns)
+function Base.similar(equ::PSDE, t₀::Real, q₀::StateVector, p₀::StateVector, ns::Int=equ.ns)
+    @assert all([length(q) == ndims(equ) for q in q₀])
+    @assert all([length(p) == ndims(equ) for p in p₀])
+    PSDE(equ.m, ns, equ.v, equ.f, equ.B, equ.G, t₀, q₀, p₀; parameters=equ.parameters, periodicity=equ.periodicity)
 end
 
-function Base.similar(sde::PSDE, q₀::AbstractArray, p₀::AbstractArray)
-    similar(sde, sde.t₀, q₀, p₀)
-end
+Base.similar(equ::PSDE, t₀::Real, q₀::State, p₀::State, ns::Int=equ.ns; kwargs...) = similar(equ, t₀, [q₀], [p₀], ns; kwargs...)
+Base.similar(equ::PSDE, q₀::Union{State,StateVector}, p₀::Union{State,StateVector}, ns::Int=equ.ns; kwargs...) = similar(equ, equ.t₀, q₀, p₀, ns; kwargs...)
 
-function Base.similar(sde::PSDE, t₀::TT, q₀::AbstractArray{DT,N}, p₀::AbstractArray{DT,N}, ns::Int=(N > 1 ? 1 : sde.ns)) where {DT <: Number, TT <: Number, N}
-    @assert size(q₀) == size(p₀)
-    @assert sde.d == size(q₀,1) == size(p₀,1)
-    PSDE(sde.m, ns, sde.v, sde.f, sde.B, sde.G, t₀, q₀, p₀; parameters=sde.parameters, periodicity=sde.periodicity)
-end
+Base.ndims(equ::PSDE) = equ.d
+Base.axes(equ::PSDE) = axes(equ.q₀[begin])
+Common.nsamples(equ::PSDE) = length(equ.q₀)
+Common.periodicity(equ::PSDE) = equ.periodicity
 
-@inline Base.ndims(sde::PSDE) = sde.d
+initial_conditions(equ::PSDE) = (equ.t₀, equ.q₀, equ.p₀)
 
-@inline Common.periodicity(equation::PSDE) = equation.periodicity
+# hashamiltonian(::PSDEHT{<:Nothing}) = false
+# hashamiltonian(::PSDEHT{<:Function}) = true
 
-function get_function_tuple(equation::PSDE{DT,TT,VT,FT,BT,GT,Nothing}) where {DT, TT, VT, FT, BT, GT}
-    NamedTuple{(:v,:f,:B,:G)}((equation.v, equation.f, equation.B, equation.G))
-end
+hasparameters(::PSDEPT{<:Nothing}) = false
+hasparameters(::PSDEPT{<:NamedTuple}) = true
 
-function get_function_tuple(equation::PSDE{DT,TT,VT,FT,BT,GT,PT}) where {DT, TT, VT, FT, BT, GT, PT <: NamedTuple}
-    vₚ = (t,q,p,v) -> equation.v(t, q, p, v, equation.parameters)
-    fₚ = (t,q,p,f) -> equation.f(t, q, p, f, equation.parameters)
-    Bₚ = (t,q,p,B) -> equation.B(t, q, p, B, equation.parameters)
-    Gₚ = (t,q,p,G) -> equation.G(t, q, p, G, equation.parameters)
+_get_v(equ::PSDE) = hasparameters(equ) ? (t,q,p,v) -> equ.v(t, q, p, v, equ.parameters) : equ.v
+_get_f(equ::PSDE) = hasparameters(equ) ? (t,q,p,f) -> equ.f(t, q, p, f, equ.parameters) : equ.f
+_get_B(equ::PSDE) = hasparameters(equ) ? (t,q,p,B) -> equ.B(t, q, p, B, equ.parameters) : equ.B
+_get_G(equ::PSDE) = hasparameters(equ) ? (t,q,p,G) -> equ.G(t, q, p, G, equ.parameters) : equ.G
+# _get_h(equ::PSDE) = hasparameters(equ) ? (t,q,p) -> equ.h(t, q, p, equ.parameters) : equ.h
 
-    names = (:v, :f, :B, :G)
-    equs  = (vₚ, fₚ, Bₚ, Gₚ)
+
+function get_function_tuple(equ::PSDE)
+    names = (:v,:f,:B,:G)
+    equs  = (_get_v(equ), _get_f(equ), _get_B(equ), _get_G(equ))
+
+    # if hashamiltonian(equ)
+    #     names = (names..., :h)
+    #     equs  = (equs..., _get_h(equ))
+    # end
 
     NamedTuple{names}(equs)
 end
