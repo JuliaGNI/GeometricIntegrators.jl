@@ -3,7 +3,7 @@ using HDF5
 
 abstract type Solution{dType, tType, N} end
 abstract type DeterministicSolution{dType, tType, N} <: Solution{dType, tType, N} end
-abstract type StochasticSolution{dType, tType, NQ, NW} <: Solution{dType, tType, NQ} end
+abstract type StochasticSolution{dType, tType, wType, NQ, NW} <: Solution{dType, tType, NQ} end
 
 timesteps(sol::Solution) = error("time() not implemented for ", typeof(sol))
 hdf5(sol::Solution)   = error("hdf5() not implemented for ", typeof(sol))

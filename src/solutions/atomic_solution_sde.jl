@@ -49,7 +49,7 @@ mutable struct AtomicSolutionSDE{DT <: Number, TT <: Real, AT <: AbstractArray{D
     end
 end
 
-AtomicSolutionSDE(DT, TT, AT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionSDE{DT,TT,AT,IT}(nd, nm, internal)
+AtomicSolutionSDE(::Type{DT}, ::Type{TT}, ::Type{AT}, nd, nm, internal::IT=NamedTuple()) where {DT,TT,AT,IT} = AtomicSolutionSDE{DT,TT,AT,IT}(nd, nm, internal)
 AtomicSolutionSDE(t::TT, q::AT, ΔW::AT, ΔZ::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionSDE{DT,TT,AT,IT}(t, q, ΔW, ΔZ, internal)
 
 function set_solution!(asol::AtomicSolutionSDE, sol)

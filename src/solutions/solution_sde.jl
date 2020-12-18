@@ -18,7 +18,7 @@ Contains all fields necessary to store the solution of an SDE.
 * `nsave`: save every nsave'th time step
 
 """
-abstract type SolutionSDE{dType, tType, NQ, NW, CONV} <: StochasticSolution{dType, tType, NQ, NW} end
+abstract type SolutionSDE{dType, tType, wType, NQ, NW, CONV} <: StochasticSolution{dType, tType, wType, NQ, NW} end
 
 # Create SolutionSDEs with serial and parallel data structures.
 for (TSolution, TDataSeries, Tdocstring) in
@@ -26,14 +26,14 @@ for (TSolution, TDataSeries, Tdocstring) in
      (:PSolutionSDE, :PDataSeries, "Parallel Solution of a stochastic differential equation."))
     @eval begin
         $Tdocstring
-        mutable struct $TSolution{dType, tType, NQ, NW, CONV} <: SolutionSDE{dType, tType, NQ, NW, CONV}
+        mutable struct $TSolution{dType, tType, wType, NQ, NW, CONV} <: SolutionSDE{dType, tType, wType, NQ, NW, CONV}
             nd::Int
             nm::Int
             nt::Int
             ns::Int
             t::TimeSeries{tType}
             q::$TDataSeries{dType,NQ}
-            W::WienerProcess{dType,tType,NW,CONV}
+            W::WienerProcess{wType,tType,NW,CONV}
             K::Int
             ntime::Int
             nsave::Int
@@ -44,7 +44,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             periodicity::dType
             h5::HDF5.File
 
-            function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,NQ}, W::WienerProcess{DT,TT,NW,CONV}; K::Int=0) where {DT,TT,NQ,NW,CONV}
+            function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,NQ}, W::WienerProcess{WT,TT,NW,CONV}; K::Int=0) where {DT,TT,WT,NQ,NW,CONV}
                 # extract parameters
                 nd = q.nd
                 ns = q.ni
@@ -59,11 +59,11 @@ for (TSolution, TDataSeries, Tdocstring) in
                 @assert q.nt == t.n
                 @assert W.ns == q.ni
 
-                new{DT,TT,NQ,NW,CONV}(nd, nm, nt, ns, t, q, W, K, ntime, nsave, nwrite, zeros(Int, ns), 0, 0)
+                new{DT,TT,WT,NQ,NW,CONV}(nd, nm, nt, ns, t, q, W, K, ntime, nsave, nwrite, zeros(Int, ns), 0, 0)
             end
 
-            function $TSolution(nd::Int, nm::Int, nt::Int, ns::Int, ni::Int, Δt::tType,
-                        W::WienerProcess{dType,tType,NW,CONV}, K::Int, ntime::Int, nsave::Int, nwrite::Int, periodicity=zeros(dType, nd)) where {dType <: Number, tType <: Real, NW, CONV}
+            function $TSolution(::Type{dType}, nd::Int, nm::Int, nt::Int, ns::Int, ni::Int, Δt::tType,
+                        W::WienerProcess{wType,tType,NW,CONV}, K::Int, ntime::Int, nsave::Int, nwrite::Int, periodicity=zeros(dType, nd)) where {dType <: Union{Number,AbstractArray}, tType <: Real, wType <: Number, NW, CONV}
 
                 @assert CONV==:strong || (CONV==:weak && K==0) || CONV==:null
 
@@ -87,9 +87,9 @@ for (TSolution, TDataSeries, Tdocstring) in
 
                 t = TimeSeries{tType}(nt, Δt, nsave)
                 q = $TDataSeries(dType, nd, nt, max(ns,ni))
-                NQ = ns==ni==1 ? 2 : 3
+                NQ = ns==ni==1 ? 1 : 2
 
-                new{dType, tType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, W, K, ntime, nsave, nwrite, zeros(Int, max(ns,ni)), 0, 0, periodicity)
+                new{Vector{dType}, tType, wType, NQ, NW, CONV}(nd, nm, nt, max(ns,ni), t, q, W, K, ntime, nsave, nwrite, zeros(Int, max(ns,ni)), 0, 0, periodicity)
             end
         end
 
@@ -98,7 +98,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             nd = equation.d
             nm = equation.m
             ns = equation.ns
-            ni = equation.ni
+            ni = nsamples(equation)
             nt = div(ntime, nsave)
             nt = (nwrite == 0 ? nt : div(nwrite, nsave))
             nw = (nwrite == 0 ? ntime : nwrite)
@@ -107,7 +107,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             # Wiener process increments are automatically generated here
             W = WienerProcess(DT, nm, nw, max(ni,ns), Δt, conv)
 
-            s = $TSolution(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw, periodicity(equation))
+            s = $TSolution(DT, nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw, periodicity(equation))
             set_initial_conditions!(s, equation)
 
             if !isnothing(filename)
@@ -123,7 +123,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             nd = equation.d
             nm = equation.m
             ns = equation.ns
-            ni = equation.ni
+            ni = nsamples(equation)
             nt = div(ntime, nsave)
             nt = (nwrite == 0 ? nt : div(nwrite, nsave))
             nw = (nwrite == 0 ? ntime : nwrite)
@@ -139,7 +139,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             # Wiener process increments are prescribed by the arrays ΔW and ΔZ
             W = WienerProcess(Δt, dW, dZ, conv)
 
-            s = $TSolution(nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw, periodicity(equation))
+            s = $TSolution(DT, nd, nm, nt, ns, ni, Δt, W, K, ntime, nsave, nw, periodicity(equation))
             set_initial_conditions!(s, equation)
 
             if !isnothing(filename)
@@ -245,7 +245,7 @@ Base.:(==)(sol1::SolutionSDE{DT1,TT1,NQ1,NW1,C1}, sol2::SolutionSDE{DT2,TT2,NQ2,
 @inline offset(sol::SolutionSDE) = sol.woffset
 @inline ioffset(sol::SolutionSDE) = sol.ioffset
 @inline lastentry(sol::SolutionSDE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
-@inline conv(sol::SolutionSDE{DT,TT,NQ,NW,CONV}) where {DT,TT,NQ,NW,CONV} = CONV
+@inline conv(sol::SolutionSDE{DT,TT,WT,NQ,NW,CONV}) where {DT,TT,WT,NQ,NW,CONV} = CONV
 @inline Common.ntime(sol::SolutionSDE) = sol.ntime
 @inline Common.periodicity(sol::SolutionSDE) = sol.periodicity
 
@@ -254,16 +254,33 @@ function set_initial_conditions!(sol::SolutionSDE, equ::SDE)
     set_initial_conditions!(sol, equ.t₀, equ.q₀)
 end
 
+function set_initial_conditions!(sol::SolutionSDE{AT,TT,WT,1}, t₀::TT, q₀::AT) where {AT,TT,WT}
+    set_data!(sol.q, q₀, 0)
+    compute_timeseries!(sol.t, t₀)
+    sol.counter .= 1
+end
 
-function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::AbstractArray{DT,1}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionSDE{AT,TT,WT,2}, t₀::TT, q₀::AT) where {AT,TT,WT}
+    for k in 1:sol.ns
+        set_data!(sol.q, q₀, 0, k)
+    end
+    compute_timeseries!(sol.t, t₀)
+    sol.counter .= 1
+end
+
+function set_initial_conditions!(sol::SolutionSDE{AT,TT,WT}, t₀::TT, q₀::AbstractVector{AT}) where {AT,TT,WT}
     # Sets the initial conditions sol.q[0] with the data from q₀
     # Here, q₀ is 1D (nd elements) representing a single deterministic or
     # multiple random initial conditions.
-    if sol.ns == 1
-        set_data!(sol.q, q₀, 0)
-    else
+
+    if length(eachindex(q₀)) == 1
         for k in 1:sol.ns
-            set_data!(sol.q, q₀, 0, k)
+            set_data!(sol.q, q₀[begin], 0, k)
+        end
+    else
+        @assert length(eachindex(q₀)) == length(axes(sol.q,2))
+        for k in eachindex(q₀)
+            set_data!(sol.q, q₀[k], 0, k)
         end
     end
     compute_timeseries!(sol.t, t₀)
@@ -271,23 +288,14 @@ function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::Abstra
 end
 
 
-function set_initial_conditions!(sol::SolutionSDE{DT,TT}, t₀::TT, q₀::AbstractArray{DT,2}) where {DT,TT}
-    # Sets the initial conditions sol.q[0] with the data from q₀
-    # Here, q₀ is a 2D (nd x ni) matrix representing multiple deterministic initial conditions.
-    @assert sol.ns == size(q₀,2)
-    set_data!(sol.q, q₀, 0)
-    compute_timeseries!(sol.t, t₀)
-    sol.counter .= 1
-end
-
-function get_initial_conditions!(sol::SolutionSDE{DT,TT}, asol::AtomicSolutionSDE{DT,TT}, k, n=1) where {DT,TT}
+function get_initial_conditions!(sol::SolutionSDE{AT,TT}, asol::AtomicSolutionSDE{DT,TT,AT}, k, n=1) where {DT, TT, AT <: AbstractArray{DT}}
     get_solution!(sol, asol.q, n-1, k)
     asol.t  = sol.t[n-1]
     asol.q̃ .= 0
 end
 
 # copies the m-th initial condition from sol.q to q
-function get_initial_conditions!(sol::SolutionSDE{DT}, q::SolutionVector{DT}, k, n=1) where {DT}
+function get_initial_conditions!(sol::SolutionSDE{AT}, q::AT, k, n=1) where {AT}
     get_solution!(sol, q, n-1, k)
 end
 
@@ -295,23 +303,16 @@ function get_initial_conditions(sol::SolutionSDE, k, n=1)
     get_solution(sol, n-1, k)
 end
 
-function get_solution!(sol::SolutionSDE{DT}, q::SolutionVector{DT}, n, k=1) where {DT}
-    for i in eachindex(q) q[i] = sol.q[i, n, k] end
-end
-
-function get_solution(sol::SolutionSDE, n, k=1)
-    (sol.t[n], Array(sol.q[:, n, k]))
-end
 
 function set_solution!(sol::SolutionSDE, t, q, n, k=1)
     set_solution!(sol, q, n, k)
 end
 
-function set_solution!(sol::SolutionSDE{DT,TT}, asol::AtomicSolutionSDE{DT,TT}, n, k=1) where {DT,TT}
+function set_solution!(sol::SolutionSDE{AT,TT}, asol::AtomicSolutionSDE{DT,TT,AT}, n, k=1) where {DT, TT, AT <: AbstractArray{DT}}
     set_solution!(sol, asol.t, asol.q, n, k)
 end
 
-function set_solution!(sol::SolutionSDE{DT}, q::SolutionVector{DT}, n, k=1) where {DT}
+function set_solution!(sol::SolutionSDE{AT}, q::AT, n, k=1) where {AT}
     @assert n <= sol.ntime
     @assert k <= sol.ns
     if mod(n, sol.nsave) == 0
@@ -324,19 +325,33 @@ function set_solution!(sol::SolutionSDE{DT}, q::SolutionVector{DT}, n, k=1) wher
 end
 
 
+function get_solution!(sol::SolutionSDE{AT}, q::AT, n, k=1) where {AT}
+    get_data!(sol.q, q, n, k)
+end
+
+function get_solution(sol::SolutionSDE{AT,TT,WT,1}, n, k=1) where {AT,TT,WT}
+    @assert k == 1
+    (sol.t[n], sol.q[n])
+end
+
+function get_solution(sol::SolutionSDE{AT,TT,WT,2}, n, k=1) where {AT,TT,WT}
+    (sol.t[n], sol.q[n,k])
+end
+
+
 # copy increments of the Brownian Process for multidimensional Brownian motion, 1 sample path
-function get_increment(sol::SolutionSDE{DT,TT,NQ,2}, n, k=1) where {DT,TT,NQ}
+function get_increment(sol::SolutionSDE{AT,TT,WT,NQ,2}, n, k=1) where {AT,TT,WT,NQ}
     @assert k==1
     return (sol.W.ΔW[:,n], sol.W.ΔZ[:,n])
 end
 
 # copy increments of the Brownian Process for multidimensional Brownian motion, r-th sample path
-function get_increment(sol::SolutionSDE{DT,TT,NQ,3}, n, k) where {DT,TT,NQ}
+function get_increment(sol::SolutionSDE{AT,TT,WT,NQ,3}, n, k) where {AT,TT,WT,NQ}
     return (sol.W.ΔW[:,n,k], sol.W.ΔZ[:,n,k])
 end
 
 # copy increments of the Brownian Process for multidimensional Brownian motion, 1 sample path
-function get_increments!(sol::SolutionSDE{DT,TT,NQ,2}, asol::AtomicSolutionSDE{DT,TT}, n, k=1) where {DT,TT,NQ}
+function get_increments!(sol::SolutionSDE{AT,TT,WT,NQ,2}, asol::AtomicSolutionSDE{DT,TT,AT}, n, k=1) where {DT,TT,AT,WT,NQ}
     @assert k==1
     for l = 1:sol.nm
         asol.ΔW[l] = sol.W.ΔW[l,n]
@@ -345,7 +360,7 @@ function get_increments!(sol::SolutionSDE{DT,TT,NQ,2}, asol::AtomicSolutionSDE{D
 end
 
 # copy increments of the Brownian Process for multidimensional Brownian motion, r-th sample path
-function get_increments!(sol::SolutionSDE{DT,TT,NQ,3}, asol::AtomicSolutionSDE{DT,TT}, n, k) where {DT,TT,NQ}
+function get_increments!(sol::SolutionSDE{AT,TT,WT,NQ,3}, asol::AtomicSolutionSDE{DT,TT,AT}, n, k) where {DT,TT,AT,WT,NQ}
     for l = 1:sol.nm
         asol.ΔW[l] = sol.W.ΔW[l,n,k]
         asol.ΔZ[l] = sol.W.ΔZ[l,n,k]
