@@ -38,6 +38,8 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      - name: Set environment variables
+        run: echo "JULIA_NUM_THREADS=2" >> $GITHUB_ENV
       - uses: actions/cache@v1
         env:
           cache-name: cache-artifacts
