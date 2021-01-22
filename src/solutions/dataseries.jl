@@ -244,6 +244,10 @@ end
     [ds[j][i] for j in J]
 end
 
+@inline function Base.getindex(ds::DataSeries{T,1}, i::Union{Int,CartesianIndex}, J::Colon) where {T}
+    OffsetArray([ds[j][i] for j in axes(ds,1)], axes(ds,1))
+end
+
 @inline Base.getindex(ds::DataSeries{T,1}, I, J::Colon) where {T} = getindex(ds, I, axes(ds,1))
 
 
@@ -259,8 +263,16 @@ end
     [ds[j,k][i] for j in J, k in K]
 end
 
+@inline function Base.getindex(ds::DataSeries{T,2}, i::Union{Int,CartesianIndex}, J::Colon, K::AbstractRange{Int}) where {T}
+    OffsetArray([ds[j,k][i] for j in axes(ds,1), k in K], axes(ds,1), K)
+end
+
 @inline function Base.getindex(ds::DataSeries{T,2}, i::Union{Int,CartesianIndex}, J::AbstractRange{Int}, k::Union{Int,CartesianIndex}) where {T}
     [ds[j,k][i] for j in J]
+end
+
+@inline function Base.getindex(ds::DataSeries{T,2}, i::Union{Int,CartesianIndex}, J::Colon, k::Union{Int,CartesianIndex}) where {T}
+    OffsetArray([ds[j,k][i] for j in axes(ds,1)], axes(ds,1))
 end
 
 @inline function Base.getindex(ds::DataSeries{T,2}, i::Union{Int,CartesianIndex}, j::Union{Int,CartesianIndex}, K::AbstractRange{Int}) where {T}

@@ -1,6 +1,7 @@
 module Solutions
 
     using HDF5
+    using OffsetArrays
     using SharedArrays
 
     using Base: TwicePrecision
