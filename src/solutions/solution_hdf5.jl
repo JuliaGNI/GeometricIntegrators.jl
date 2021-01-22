@@ -309,7 +309,7 @@ end
 
 function copy_timeteps_to_hdf5(sol::Solution, h5::HDF5.File, j1, j2, n1, n2)
     if size(h5["t"],1) < j2
-        HDF5.set_dims!(h5["t"], (j2,))
+        HDF5.set_extent_dims(h5["t"], (j2,))
     end
     h5["t"][j1:j2] = timesteps(sol)[n1:n2]
 end
@@ -317,7 +317,7 @@ end
 
 function copy_solution_to_hdf5(solution::Union{SolutionODE{DT,TT,1},SolutionDAE{DT,TT,1},SolutionSDE{DT,TT,1}}, h5::HDF5.File, j1, j2, n1, n2) where {DT <: Number, TT}
     if size(h5["q"])[end] < j2
-        HDF5.set_dims!(h5["q"], (j2,))
+        HDF5.set_extent_dims(h5["q"], (j2,))
     end
     h5["q"][j1:j2] = solution.q[n1:n2]
 end
@@ -325,7 +325,7 @@ end
 function copy_solution_to_hdf5(solution::Union{SolutionODE{AT,TT,1},SolutionDAE{AT,TT,1},SolutionSDE{AT,TT,1}}, h5::HDF5.File, j1, j2, n1, n2) where {DT, AT <: Array{DT}, TT}
     elaxes = axes(solution.q[begin])
     if size(h5["q"])[end] < j2
-        HDF5.set_dims!(h5["q"], (size(h5["q"])[1:end-1]..., j2))
+        HDF5.set_extent_dims(h5["q"], (size(h5["q"])[1:end-1]..., j2))
     end
     for i in eachindex(j1:j2, n1:n2)
         j = (j1:j2)[i]
@@ -336,7 +336,7 @@ end
 
 function copy_solution_to_hdf5(solution::Union{SolutionODE{DT,TT,2},SolutionDAE{DT,TT,2},SolutionSDE{DT,TT,2}}, h5::HDF5.File, j1, j2, n1, n2) where {DT <: Number, TT}
     if size(h5["q"],1) < j2
-        HDF5.set_dims!(h5["q"], (j2, size(h5["q"],2)))
+        HDF5.set_extent_dims(h5["q"], (j2, size(h5["q"],2)))
     end
     h5["q"][j1:j2, :] = solution.q[n1:n2, :]
 end
@@ -344,7 +344,7 @@ end
 function copy_solution_to_hdf5(solution::Union{SolutionODE{AT,TT,2},SolutionDAE{AT,TT,2},SolutionSDE{AT,TT,2}}, h5::HDF5.File, j1, j2, n1, n2) where {DT, AT <: Array{DT}, TT}
     elaxes = axes(solution.q[begin,begin])
     if size(h5["q"])[end-1] < j2
-        HDF5.set_dims!(h5["q"], (size(h5["q"])[begin:end-2]..., j2, size(h5["q"])[end]))
+        HDF5.set_extent_dims(h5["q"], (size(h5["q"])[begin:end-2]..., j2, size(h5["q"])[end]))
     end
     for k in 1:nsamples(solution.q)
         for i in eachindex(j1:j2, n1:n2)
@@ -358,10 +358,10 @@ end
 
 function copy_solution_to_hdf5(solution::Union{SolutionPODE{DT,TT,1},SolutionPDAE{DT,TT,1},SolutionPSDE{DT,TT,1}}, h5::HDF5.File, j1, j2, n1, n2) where {DT <: Number, TT}
     if size(h5["q"])[end] < j2
-        HDF5.set_dims!(h5["q"], (j2,))
+        HDF5.set_extent_dims(h5["q"], (j2,))
     end
     if size(h5["p"])[end] < j2
-        HDF5.set_dims!(h5["p"], (j2,))
+        HDF5.set_extent_dims(h5["p"], (j2,))
     end
     h5["q"][j1:j2] = solution.q[n1:n2]
     h5["p"][j1:j2] = solution.p[n1:n2]
@@ -370,7 +370,7 @@ end
 function copy_solution_to_hdf5(solution::Union{SolutionPODE{AT,TT,1},SolutionPDAE{AT,TT,1},SolutionPSDE{AT,TT,1}}, h5::HDF5.File, j1, j2, n1, n2) where {DT, AT <: Array{DT}, TT}
     elaxes = axes(solution.q[begin])
     if size(h5["q"])[end] < j2
-        HDF5.set_dims!(h5["q"], (size(h5["q"])[1:end-1]..., j2))
+        HDF5.set_extent_dims(h5["q"], (size(h5["q"])[1:end-1]..., j2))
     end
     for i in eachindex(j1:j2, n1:n2)
         j = (j1:j2)[i]
@@ -380,7 +380,7 @@ function copy_solution_to_hdf5(solution::Union{SolutionPODE{AT,TT,1},SolutionPDA
 
     elaxes = axes(solution.p[begin])
     if size(h5["p"])[end] < j2
-        HDF5.set_dims!(h5["p"], (size(h5["p"])[1:end-1]..., j2))
+        HDF5.set_extent_dims(h5["p"], (size(h5["p"])[1:end-1]..., j2))
     end
     for i in eachindex(j1:j2, n1:n2)
         j = (j1:j2)[i]
@@ -391,10 +391,10 @@ end
 
 function copy_solution_to_hdf5(solution::Union{SolutionPODE{DT,TT,2},SolutionPDAE{DT,TT,2},SolutionPSDE{DT,TT,2}}, h5::HDF5.File, j1, j2, n1, n2) where {DT <: Number, TT}
     if size(h5["p"],1) < j2
-        HDF5.set_dims!(h5["p"], (j2, size(h5["p"],2)))
+        HDF5.set_extent_dims(h5["p"], (j2, size(h5["p"],2)))
     end
     if size(h5["p"],1) < j2
-        HDF5.set_dims!(h5["p"], (j2, size(h5["p"],2)))
+        HDF5.set_extent_dims(h5["p"], (j2, size(h5["p"],2)))
     end
     h5["q"][j1:j2, :] = solution.q[n1:n2, :]
     h5["p"][j1:j2, :] = solution.p[n1:n2, :]
@@ -403,7 +403,7 @@ end
 function copy_solution_to_hdf5(solution::Union{SolutionPODE{AT,TT,2},SolutionPDAE{AT,TT,2},SolutionPSDE{AT,TT,2}}, h5::HDF5.File, j1, j2, n1, n2) where {DT, AT <: Array{DT}, TT}
     elaxes = axes(solution.q[begin,begin])
     if size(h5["q"])[end-1] < j2
-        HDF5.set_dims!(h5["q"], (size(h5["q"])[begin:end-2]..., j2, size(h5["q"])[end]))
+        HDF5.set_extent_dims(h5["q"], (size(h5["q"])[begin:end-2]..., j2, size(h5["q"])[end]))
     end
     for k in 1:nsamples(solution.q)
         for i in eachindex(j1:j2, n1:n2)
@@ -415,7 +415,7 @@ function copy_solution_to_hdf5(solution::Union{SolutionPODE{AT,TT,2},SolutionPDA
 
     elaxes = axes(solution.p[begin,begin])
     if size(h5["p"])[end-1] < j2
-        HDF5.set_dims!(h5["p"], (size(h5["p"])[begin:end-2]..., j2, size(h5["p"])[end]))
+        HDF5.set_extent_dims(h5["p"], (size(h5["p"])[begin:end-2]..., j2, size(h5["p"])[end]))
     end
     for k in 1:nsamples(solution.p)
         for i in eachindex(j1:j2, n1:n2)
@@ -429,7 +429,7 @@ end
 
 function copy_multiplier_to_hdf5(solution::Union{SolutionDAE{DT,TT,1},SolutionPDAE{DT,TT,1}}, h5::HDF5.File, j1, j2, n1, n2) where {DT <: Number, TT}
     if size(h5["λ"])[end] < j2
-        HDF5.set_dims!(h5["λ"], (j2,))
+        HDF5.set_extent_dims(h5["λ"], (j2,))
     end
     h5["λ"][j1:j2] = solution.λ[n1:n2]
 end
@@ -437,7 +437,7 @@ end
 function copy_multiplier_to_hdf5(solution::Union{SolutionDAE{AT,TT,1},SolutionPDAE{AT,TT,1}}, h5::HDF5.File, j1, j2, n1, n2) where {DT, AT <: Array{DT}, TT}
     elaxes = axes(solution.λ[begin])
     if size(h5["λ"])[end] < j2
-        HDF5.set_dims!(h5["λ"], (size(h5["λ"])[1:end-1]..., j2))
+        HDF5.set_extent_dims(h5["λ"], (size(h5["λ"])[1:end-1]..., j2))
     end
     for i in eachindex(j1:j2, n1:n2)
         j = (j1:j2)[i]
@@ -448,7 +448,7 @@ end
 
 function copy_multiplier_to_hdf5(solution::Union{SolutionDAE{DT,TT,2},SolutionPDAE{DT,TT,2}}, h5::HDF5.File, j1, j2, n1, n2) where {DT <: Number, TT}
     if size(h5["λ"],1) < j2
-        HDF5.set_dims!(h5["λ"], (j2, size(h5["λ"],2)))
+        HDF5.set_extent_dims(h5["λ"], (j2, size(h5["λ"],2)))
     end
     h5["λ"][j1:j2, :] = solution.λ[n1:n2, :]
 end
@@ -456,7 +456,7 @@ end
 function copy_multiplier_to_hdf5(solution::Union{SolutionDAE{AT,TT,2},SolutionPDAE{AT,TT,2}}, h5::HDF5.File, j1, j2, n1, n2) where {DT, AT <: Array{DT}, TT}
     elaxes = axes(solution.λ[begin,begin])
     if size(h5["λ"])[end-1] < j2
-        HDF5.set_dims!(h5["λ"], (size(h5["λ"])[begin:end-2]..., j2, size(h5["λ"])[end]))
+        HDF5.set_extent_dims(h5["λ"], (size(h5["λ"])[begin:end-2]..., j2, size(h5["λ"])[end]))
     end
     for k in 1:nsamples(solution.λ)
         for i in eachindex(j1:j2, n1:n2)
@@ -470,10 +470,10 @@ end
 
 function copy_increments_to_hdf5(solution::StochasticSolution{DT,TT,NQ,2}, h5::HDF5.File, j1, j2, n1, n2) where {DT,TT,NQ}
     if size(h5["ΔW"],2) < j2
-        HDF5.set_dims!(h5["ΔW"], (size(h5["ΔW"],1), j2))
+        HDF5.set_extent_dims(h5["ΔW"], (size(h5["ΔW"],1), j2))
     end
     if size(h5["ΔZ"],2) < j2
-        HDF5.set_dims!(h5["ΔZ"], (size(h5["ΔZ"],1), j2))
+        HDF5.set_extent_dims(h5["ΔZ"], (size(h5["ΔZ"],1), j2))
     end
     h5["ΔW"][:,j1:j2] = solution.W.ΔW[:,n1:n2]
     h5["ΔZ"][:,j1:j2] = solution.W.ΔZ[:,n1:n2]
@@ -481,10 +481,10 @@ end
 
 function copy_increments_to_hdf5(solution::StochasticSolution{DT,TT,NQ,3}, h5::HDF5.File, j1, j2, n1, n2) where {DT,TT,NQ}
     if size(h5["ΔW"],2) < j2
-        HDF5.set_dims!(h5["ΔW"], (size(h5["ΔW"],1), j2, size(h5["ΔW"],3)))
+        HDF5.set_extent_dims(h5["ΔW"], (size(h5["ΔW"],1), j2, size(h5["ΔW"],3)))
     end
     if size(h5["ΔZ"],2) < j2
-        HDF5.set_dims!(h5["ΔZ"], (size(h5["ΔZ"],1), j2, size(h5["ΔZ"],3)))
+        HDF5.set_extent_dims(h5["ΔZ"], (size(h5["ΔZ"],1), j2, size(h5["ΔZ"],3)))
     end
     h5["ΔW"][:,j1:j2,:] = solution.W.ΔW[:,n1:n2,:]
     h5["ΔZ"][:,j1:j2,:] = solution.W.ΔZ[:,n1:n2,:]
