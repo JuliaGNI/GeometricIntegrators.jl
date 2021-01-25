@@ -8,7 +8,6 @@ module Tableaus
     using ..Config
     using ..Common
     using ..Integrators
-    using ..Integrators.Stochastic
     using ..Integrators.SPARK
     using ..Integrators.VPRK
     using ..Utils
@@ -67,28 +66,6 @@ module Tableaus
            TableauLobattoIIIA, TableauLobattoIIIB, TableauLobattoIIIC, TableauLobattoIIIC̄,
            TableauLobattoIIID, TableauLobattoIIIE, TableauLobattoIIIF, TableauLobattoIIIG
            
-
-    include("tableaus/tableaus_sirk.jl")
-    include("tableaus/tableaus_siprk.jl")
-    include("tableaus/tableaus_sisprk.jl")
-
-    export  TableauStochasticGLRK, TableauStochasticDIRK
-    export  TableauStochasticStormerVerlet, TableauStochasticSymplecticEuler
-    export  TableauStochasticLobattoIIIABD2, TableauModifiedStochasticStormerVerlet
-
-    include("tableaus/tableaus_serk.jl")
-
-    export TableauPlaten, TableauBurrageR2, TableauBurrageCL
-    export TableauBurrageE1, TableauBurrageG5, TableauStochasticHeun
-    export TableauStochasticEuler
-
-    include("tableaus/tableaus_werk.jl")
-
-    export TableauRosslerRS1, TableauRosslerRS2
-
-    include("tableaus/tableaus_wirk.jl")
-
-    export TableauSRKw1, TableauSRKw2
 
     include("tableaus/tableaus_eprk.jl")
 

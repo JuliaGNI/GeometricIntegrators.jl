@@ -33,35 +33,25 @@ module Solutions
 
     include("solutions/timeseries.jl")
 
-    export SemiMartingale
-    export WienerProcess, generate_wienerprocess!
-
-    include("solutions/wienerprocess.jl")
-
     export Solution, ParallelSolution, DeterministicSolution, StochasticSolution
-    export nsave, nsamples, timesteps, counter, offset, lastentry, conv, hdf5
+    export nsave, nsamples, timesteps, counter, offset, lastentry, hdf5
     export get_solution, get_solution!, set_solution!
 
     include("solutions/solution.jl")
 
     export AtomicSolution,
            AtomicSolutionODE, AtomicSolutionPODE,
-           AtomicSolutionDAE, AtomicSolutionPDAE,
-           AtomicSolutionSDE, AtomicSolutionPSDE
-    export update!, cut_periodic_solution!,
-           get_increments, get_increments!, set_increments!
+           AtomicSolutionDAE, AtomicSolutionPDAE
+    export update!, cut_periodic_solution!
 
     include("solutions/atomic_solution.jl")
     include("solutions/atomic_solution_ode.jl")
     include("solutions/atomic_solution_pode.jl")
     include("solutions/atomic_solution_dae.jl")
     include("solutions/atomic_solution_pdae.jl")
-    include("solutions/atomic_solution_sde.jl")
-    include("solutions/atomic_solution_psde.jl")
 
     export SolutionODE, SSolutionODE, PSolutionODE, SolutionPODE, SSolutionPODE, PSolutionPODE
     export SolutionDAE, SSolutionDAE, PSolutionDAE, SolutionPDAE, SSolutionPDAE, PSolutionPDAE
-    export SolutionSDE, SSolutionSDE, PSolutionSDE, SolutionPSDE, SSolutionPSDE, PSolutionPSDE
     export get_initial_conditions, get_initial_conditions!, set_initial_conditions!,
            create_hdf5, create_hdf5!
 
@@ -69,8 +59,6 @@ module Solutions
     include("solutions/solution_pode.jl")
     include("solutions/solution_dae.jl")
     include("solutions/solution_pdae.jl")
-    include("solutions/solution_sde.jl")
-    include("solutions/solution_psde.jl")
 
     include("solutions/solution_hdf5.jl")
 

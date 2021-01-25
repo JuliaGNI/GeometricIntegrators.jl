@@ -123,7 +123,6 @@ module Integrators
     include("integrators/dgvi/integrators_dgvi_projection_final.jl")
 
 
-    include("integrators/Stochastic.jl")
     include("integrators/SPARK.jl")
     include("integrators/VPRK.jl")
 

@@ -2,7 +2,6 @@
 using GeometricIntegrators.Common
 using GeometricIntegrators.Solutions
 using GeometricProblems.HarmonicOscillator
-using GeometricProblems.KuboOscillator
 using Test
 
 
@@ -27,9 +26,6 @@ z0 = rand(1)
     pdae  = harmonic_oscillator_pdae()
     iode  = harmonic_oscillator_iode()
     idae  = harmonic_oscillator_idae()
-    sde   = kubo_oscillator_sde_1()
-    psde  = kubo_oscillator_psde_1()
-    spsde = kubo_oscillator_spsde_1()
 
     @test typeof(AtomicSolution(ode))   <: AtomicSolutionODE
     @test typeof(AtomicSolution(dae))   <: AtomicSolutionDAE
@@ -37,9 +33,6 @@ z0 = rand(1)
     @test typeof(AtomicSolution(iode))  <: AtomicSolutionPODE
     @test typeof(AtomicSolution(pdae))  <: AtomicSolutionPDAE
     @test typeof(AtomicSolution(idae))  <: AtomicSolutionPDAE
-    @test typeof(AtomicSolution(sde))   <: AtomicSolutionSDE
-    @test typeof(AtomicSolution(psde))  <: AtomicSolutionPSDE
-    @test typeof(AtomicSolution(spsde)) <: AtomicSolutionPSDE
 end
 
 
@@ -155,73 +148,4 @@ end
     @test asol.q == q0 .+ y0
     @test asol.p == p0 .+ z0
     @test asol.λ == λ1
-end
-
-
-
-@testset "$(rpad("Atomic SDE Solution",80))" begin
-    asol = AtomicSolutionSDE(t0, x0, ΔW, ΔZ)
-    @test get_solution(asol) == (zero(t0), zero(x0))
-
-    set_solution!(asol, (t0, x0))
-    @test get_solution(asol) == (t0, x0)
-    @test asol.t  == t0
-    @test asol.q  == x0
-    @test asol.t̅ == zero(t0)
-    @test asol.q̅ == zero(x0)
-
-    set_increments!(asol, (ΔW, ΔZ))
-    δW = zero(ΔW)
-    δZ = zero(ΔZ)
-    get_increments!(asol, δW, δZ)
-    @test get_increments(asol) == (ΔW, ΔZ)
-    @test asol.ΔW == ΔW
-    @test asol.ΔZ == ΔZ
-    @test δW == ΔW
-    @test δZ == ΔZ
-
-    reset!(asol, Δt)
-    @test asol.t̅ == t0
-    @test asol.q̅ == x0
-
-    update!(asol, v0)
-    @test asol.t == t0  + Δt
-    @test asol.q == x0 .+ v0
-end
-
-
-
-@testset "$(rpad("Atomic PSDE Solution",80))" begin
-    asol = AtomicSolutionPSDE(t0, q0, p0, ΔW, ΔZ)
-    @test get_solution(asol) == (zero(t0), zero(q0), zero(p0))
-    @test get_increments(asol) == (zero(ΔW), zero(ΔZ))
-
-    set_solution!(asol, (t0, q0, p0))
-    @test get_solution(asol) == (t0, q0, p0)
-    @test asol.t  == t0
-    @test asol.q  == q0
-    @test asol.p  == p0
-    @test asol.t̅  == zero(t0)
-    @test asol.q̅  == zero(q0)
-    @test asol.p̅  == zero(p0)
-
-    set_increments!(asol, (ΔW, ΔZ))
-    δW = zero(ΔW)
-    δZ = zero(ΔZ)
-    get_increments!(asol, δW, δZ)
-    @test get_increments(asol) == (ΔW, ΔZ)
-    @test asol.ΔW == ΔW
-    @test asol.ΔZ == ΔZ
-    @test δW == ΔW
-    @test δZ == ΔZ
-
-    reset!(asol, Δt)
-    @test asol.t̅ == t0
-    @test asol.q̅ == q0
-    @test asol.p̅ == p0
-
-    update!(asol, y0, z0)
-    @test asol.t == t0  + Δt
-    @test asol.q == q0 .+ y0
-    @test asol.p == p0 .+ z0
 end
