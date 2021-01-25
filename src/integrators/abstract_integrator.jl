@@ -15,11 +15,13 @@ abstract type HDAEIntegrator{dType, tType} <: PDAEIntegrator{dType, tType} end
 abstract type VODEIntegrator{dType, tType} <: IODEIntegrator{dType, tType} end
 abstract type VDAEIntegrator{dType, tType} <: IDAEIntegrator{dType, tType} end
 
+parameters(integrator::Integrator) = error("parameters() not implemented for ", typeof(integrator))
+equations(integrator::Integrator) = error("equations() not implemented for ", typeof(integrator))
 equation(integrator::Integrator) = error("equation() not implemented for ", typeof(integrator))
+equation(integrator::Integrator, i::Int) = error("equation() not implemented for ", typeof(integrator))
 timestep(integrator::Integrator) = error("timestep() not implemented for ", typeof(integrator))
 Base.ndims(integrator::Integrator) = error("ndims() not implemented for ", typeof(integrator))
 Common.nconstraints(integrator::Integrator) = error("nconstraints() not implemented for ", typeof(integrator))
-noisedims(integrator::Integrator) = error("noisedims() not implemented for ", typeof(integrator))
 nstages(integrator::Integrator) = error("nstages() not implemented for ", typeof(integrator))
 
 eachdim(integrator::Integrator) = 1:ndims(integrator)

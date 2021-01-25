@@ -5,7 +5,6 @@ module Solutions
     using SharedArrays
 
     using Base: TwicePrecision
-    using Random
 
     using ..Common
     using ..Config
@@ -17,7 +16,6 @@ module Solutions
 
     const DEFAULT_NSAVE = 1
     const DEFAULT_NWRITE = 0
-    const DEFAULT_SCONV = :strong
 
     export SolutionVector
 
@@ -33,7 +31,7 @@ module Solutions
 
     include("solutions/timeseries.jl")
 
-    export Solution, ParallelSolution, DeterministicSolution, StochasticSolution
+    export Solution, ParallelSolution, DeterministicSolution
     export nsave, nsamples, timesteps, counter, offset, lastentry, hdf5
     export get_solution, get_solution!, set_solution!
 
