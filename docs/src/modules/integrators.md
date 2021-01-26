@@ -70,10 +70,3 @@ Modules = [GeometricIntegrators.Integrators]
 Pages   = ["integrators/cgvi/integrators_cgvi.jl",
            "integrators/dgvi/integrators_dgvi.jl"]
 ```
-
-
-## Stochastic Integrators
-
-```@autodocs
-Modules = [GeometricIntegrators.Integrators.Stochastic]
-```

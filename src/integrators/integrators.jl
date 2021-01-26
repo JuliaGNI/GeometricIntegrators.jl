@@ -1,5 +1,4 @@
 
-using .Stochastic
 using .SPARK
 using .VPRK
 
@@ -104,41 +103,6 @@ end
 
 
 #*****************************************************************************#
-# Initialization functions for stochastic integrators                         #
-#*****************************************************************************#
-
-"Create integrator for stochastic explicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauSERK, Δt; kwargs...)
-    IntegratorSERK(equation, tableau, Δt; kwargs...)
-end
-
-"Create integrator for weak explicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauWERK, Δt; kwargs...)
-    IntegratorWERK(equation, tableau, Δt; kwargs...)
-end
-
-"Create integrator for stochastic fully implicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauSIRK, Δt; kwargs...)
-    IntegratorSIRK(equation, tableau, Δt; kwargs...)
-end
-
-"Create integrator for stochastic fully implicit partitioned Runge-Kutta tableau."
-function Integrator(equation::PSDE, tableau::TableauSIPRK, Δt; kwargs...)
-    IntegratorSIPRK(equation, tableau, Δt; kwargs...)
-end
-
-"Create integrator for stochastic fully implicit split partitioned Runge-Kutta tableau."
-function Integrator(equation::SPSDE, tableau::TableauSISPRK, Δt; kwargs...)
-    IntegratorSISPRK(equation, tableau, Δt; kwargs...)
-end
-
-"Create integrator for weak fully implicit Runge-Kutta tableau."
-function Integrator(equation::SDE, tableau::TableauWIRK, Δt; kwargs...)
-    IntegratorWIRK(equation, tableau, Δt; kwargs...)
-end
-
-
-#*****************************************************************************#
 # Constructor wrappers for deterministic integrators                          #
 #*****************************************************************************#
 
@@ -161,7 +125,6 @@ end
 function IntegratorConstructor(DT, D, tableau::TableauFIRK)
     (v::Function, Δt::Number; kwargs...) -> IntegratorFIRK{DT,D}(v, tableau, Δt; kwargs...)
 end
-
 
 
 #*****************************************************************************#
@@ -254,12 +217,7 @@ function integrate!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, m1::Int, m2::I
 end
 
 
-function integrate!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT, TT, AT <: AbstractArray{DT}}
-    if isa(int, StochasticIntegrator)
-        # copy the increments of the Brownian Process
-        get_increments!(sol, asol, n, m)
-    end
-
+function integrate_common!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT, TT, AT <: AbstractArray{DT}}
     # integrate one initial condition for one time step
     integrate_step!(int, asol)
 
@@ -268,4 +226,8 @@ function integrate!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, asol::AtomicSo
 
     # copy solution from cache to solution
     set_solution!(sol, asol, n, m)
+end
+
+function integrate!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT, TT, AT <: AbstractArray{DT}}
+    integrate_common!(int, sol, asol, m, n)
 end

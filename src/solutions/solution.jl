@@ -3,7 +3,6 @@ using HDF5
 
 abstract type Solution{dType, tType, N} end
 abstract type DeterministicSolution{dType, tType, N} <: Solution{dType, tType, N} end
-abstract type StochasticSolution{dType, tType, wType, NQ, NW} <: Solution{dType, tType, NQ} end
 
 timesteps(sol::Solution) = error("time() not implemented for ", typeof(sol))
 hdf5(sol::Solution)   = error("hdf5() not implemented for ", typeof(sol))
@@ -16,10 +15,7 @@ Common.ntime(sol::Solution)  = error("ntime() not implemented for ", typeof(sol)
 create_hdf5(sol::Solution, file) = error("create_hdf5() not implemented for ", typeof(sol))
 Common.write_to_hdf5(sol::Solution, h5::HDF5.File, offset=0) = error("write_to_hdf5() not implemented for ", typeof(sol))
 
-conv(sol::StochasticSolution) = error("conv() not implemented for ", typeof(sol))
-
 Common.nsamples(sol::DeterministicSolution) = sol.ni
-Common.nsamples(sol::StochasticSolution) = sol.ns
 
 Common.eachtimestep(sol::Solution) = 1:sol.nt*sol.nsave
 Common.eachsample(sol::Solution) = 1:nsamples(sol)
@@ -43,24 +39,6 @@ end
 "Create solution for partitioned DAE."
 function Solution(equation::AbstractEquationPDAE, Δt, ntime::Int; kwargs...)
     SSolutionPDAE(equation, Δt, ntime; kwargs...)
-end
-
-"Create solution for SDE."
-function Solution(equation::SDE, Δt, ntime::Int; kwargs...)
-    SSolutionSDE(equation, Δt, ntime; kwargs...)
-end
-
-function Solution(equation::SDE, Δt, dW, dZ, ntime::Int; kwargs...)
-    SSolutionSDE(equation, Δt, dW, dZ, ntime; kwargs...)
-end
-
-"Create solution for PSDE."
-function Solution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int; kwargs...)
-    SSolutionPSDE(equation, Δt, ntime; kwargs...)
-end
-
-function Solution(equation::Union{PSDE,SPSDE}, Δt, dW, dZ, ntime::Int; kwargs...)
-    SSolutionPSDE(equation, Δt, dW, dZ, ntime; kwargs...)
 end
 
 "Print error for solutions of equations not implemented, yet."
@@ -87,16 +65,6 @@ end
 "Create parallel solution for partitioned DAE."
 function ParallelSolution(equation::AbstractEquationPDAE, Δt, ntime::Int; kwargs...)
     PSolutionPDAE(equation, Δt, ntime; kwargs...)
-end
-
-"Create parallel solution for SDE."
-function ParallelSolution(equation::SDE, Δt, ntime::Int; kwargs...)
-    PSolutionSDE(equation, Δt, ntime; kwargs...)
-end
-
-"Create parallel solution for PSDE."
-function ParallelSolution(equation::Union{PSDE,SPSDE}, Δt, ntime::Int; kwargs...)
-    PSolutionPSDE(equation, Δt, ntime; kwargs...)
 end
 
 "Print error for parallel solutions of equations not implemented, yet."
