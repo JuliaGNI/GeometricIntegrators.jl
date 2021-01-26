@@ -14,12 +14,13 @@ Integrator(equation, tableau, Δt)
 ```
 where `Δt` is the time step.
 
-As an example, consider an ODE like the harmonic oscillator, which is included as an example problem:
-```@setup 1
+As an example, consider an ODE like the harmonic oscillator, which is included in GeometricProblems.jl:
+```@example 1
 using GeometricIntegrators
+using GeometricProblems.HarmonicOscillator
 ```
 ```@example 1
-ode = TestProblems.HarmonicOscillatorProblem.harmonic_oscillator_ode()
+ode = harmonic_oscillator_ode()
 ```
 Create an explicit Euler tableau:
 ```@example 1
@@ -47,9 +48,10 @@ In some cases, in particular the VPRK integrators, the integrator has to be expl
 Consider again the harmonic oscillator:
 ```@setup 2
 using GeometricIntegrators
+using GeometricProblems.HarmonicOscillator
 ```
 ```example 2
-iode = harmonic_oscillator_iode
+iode = harmonic_oscillator_iode()
 ```
 Create a VPRK tableau that uses Gauss-Legendre Runge-Kutta coefficients with two stages:
 ```example 2
@@ -62,6 +64,7 @@ int = Integrator(iode, tab, 0.1)
 we obtain a plain `IntegratorVPRK`.
 If we want to use any of the projection methods, we have to explicitly specify the corresponding integrator type:
 ```example 2
+using GeometricIntegrators.Integrators.VPRK
 int = IntegratorVPRKpStandard(iode, tab, 0.1)
 ```
 or
@@ -77,7 +80,8 @@ integrate(equation, integrator, ntime)
 to perform the actual integration steps, where `ntime` defines the number of steps to integrate:
 ```@setup 3
 using GeometricIntegrators
-ode = TestProblems.HarmonicOscillatorProblem.harmonic_oscillator_ode()
+using GeometricProblems.HarmonicOscillator
+ode = harmonic_oscillator_ode()
 ```
 ```@example 3
 tab = TableauExplicitEuler()

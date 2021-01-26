@@ -42,15 +42,11 @@ Pages = ["tutorial/tutorial.md",
 ## Modules
 
 ```@contents
-Pages = ["modules/basis_functions.md",
-         "modules/equations.md",
+Pages = ["modules/equations.md",
          "modules/integrators.md",
          "modules/interpolation.md",
-         "modules/quadratures.md",
          "modules/discontinuities.md",
          "modules/simulations.md",
-         "modules/solvers_linear.md",
-         "modules/solvers_nonlinear.md",
          "modules/solutions.md",
          "modules/tableaus.md"
 ]
