@@ -6,18 +6,18 @@ struct TableauSLRK{DT <: Number} <: AbstractTableau{DT}
     s::Int
     r::Int
 
-    q::CoefficientsRK{DT}
-    p::CoefficientsRK{DT}
+    q::Tableau{DT}
+    p::Tableau{DT}
 
-    q̃::CoefficientsRK{DT}
-    p̃::CoefficientsRK{DT}
+    q̃::Tableau{DT}
+    p̃::Tableau{DT}
 
     ω::Matrix{DT}
     d::Vector{DT}
 
     function TableauSLRK(name::Symbol, o::Int, s::Int,
-                        q::CoefficientsRK{DT}, p::CoefficientsRK{DT},
-                        q̃::CoefficientsRK{DT}, p̃::CoefficientsRK{DT},
+                        q::Tableau{DT}, p::Tableau{DT},
+                        q̃::Tableau{DT}, p̃::Tableau{DT},
                         ω::Matrix{DT}, d=DT[]) where {DT}
 
         @assert s > 0 "Number of stages s must be > 0"

@@ -2,14 +2,14 @@
 "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
 mutable struct ParametersFIRKimplicit{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equs::ET
-    tab::TableauFIRK{TT}
+    tab::Tableau{TT}
     Δt::TT
 
     t::TT
     q::Vector{DT}
     θ::Vector{DT}
 
-    function ParametersFIRKimplicit{DT,D}(equs::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+    function ParametersFIRKimplicit{DT,D}(equs::ET, tab::Tableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
         new{DT, TT, D, tab.s, ET}(equs, tab, Δt, zero(TT), zeros(DT,D), zeros(DT,D))
     end
 end
@@ -68,9 +68,18 @@ struct IntegratorFIRKimplicit{DT, TT, D, S, PT <: ParametersFIRKimplicit{DT,TT},
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorFIRKimplicit{DT,D}(equations::NamedTuple, tableau::TableauFIRK{TT}, Δt::TT; exact_jacobian=true) where {DT,TT,D}
+    function IntegratorFIRKimplicit{DT,D}(equations::NamedTuple, tableau::Tableau{TT}, Δt::TT; exact_jacobian=true) where {DT,TT,D}
         # get number of stages
         S = tableau.s
+
+        # check if tableau is fully implicit
+        if get_config(:verbosity) ≥ 1
+            if isexplicit(tableau)
+                @warn "Initializing IntegratorFIRK with explicit tableau $(q.name).\nYou might want to use IntegratorERK instead."
+            elseif isdiagnonallyimplicit(tableau)
+                @warn "Initializing IntegratorFIRK with diagonally implicit tableau $(q.name).\nYou might want to use IntegratorDIRK instead."
+            end
+        end
 
         # create params
         params = ParametersFIRKimplicit{DT,D}(equations, tableau, Δt)
@@ -88,15 +97,15 @@ struct IntegratorFIRKimplicit{DT, TT, D, S, PT <: ParametersFIRKimplicit{DT,TT},
         IntegratorFIRKimplicit(params, solver, iguess, caches)
     end
 
-    # function IntegratorFIRKimplicit{DT,D}(v::Function, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    # function IntegratorFIRKimplicit{DT,D}(v::Function, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
     #     IntegratorFIRKimplicit{DT,D}(NamedTuple{(:v,)}((v,)), tableau, Δt; kwargs...)
     # end
 
-    # function IntegratorFIRKimplicit{DT,D}(v::Function, h::Function, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    # function IntegratorFIRKimplicit{DT,D}(v::Function, h::Function, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
     #     IntegratorFIRKimplicit{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     # end
 
-    function IntegratorFIRKimplicit(equation::IODE{DT,TT}, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorFIRKimplicit(equation::IODE{DT,TT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorFIRKimplicit{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
@@ -132,7 +141,7 @@ function initial_guess!(int::IntegratorFIRKimplicit{DT,TT}, sol::AtomicSolutionP
 
     # compute initial guess for internal stages
     # for i in eachstage(int)
-    #     evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).q.c[i])
+    #     evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).c[i])
     # end
     for i in eachstage(int)
         for k in eachdim(int)
@@ -170,13 +179,13 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
 
     # compute Q = q + Δt A V, Θ = ϑ(Q), F = f(Q,V)
     for i in eachindex(Q,F,Θ)
-        tᵢ = params.t + params.Δt * params.tab.q.c[i]
+        tᵢ = params.t + params.Δt * params.tab.c[i]
         for k in eachindex(Q[i],params.q)
             y1 = 0
             y2 = 0
             for j in eachindex(V)
-                y1 += params.tab.q.a[i,j] * V[j][k]
-                y2 += params.tab.q.â[i,j] * V[j][k]
+                y1 += params.tab.a[i,j] * V[j][k]
+                y2 += params.tab.â[i,j] * V[j][k]
             end
             Q[i][k] = params.q[k] + params.Δt * (y1 + y2)
         end
@@ -208,8 +217,8 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRKim
             y1 = 0
             y2 = 0
             for j in eachindex(cache.F)
-                y1 += params.tab.q.a[i,j] * cache.F[j][k]
-                y2 += params.tab.q.â[i,j] * cache.F[j][k]
+                y1 += params.tab.a[i,j] * cache.F[j][k]
+                y2 += params.tab.â[i,j] * cache.F[j][k]
             end
             b[D*(i-1)+k] = cache.Θ[i][k] - params.θ[k] - params.Δt * (y1 + y2)
         end
@@ -218,8 +227,8 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRKim
         y1 = 0
         y2 = 0
         for j in eachindex(cache.F)
-            y1 += params.tab.q.b[j] * cache.F[j][k]
-            y2 += params.tab.q.b̂[j] * cache.F[j][k]
+            y1 += params.tab.b[j] * cache.F[j][k]
+            y2 += params.tab.b̂[j] * cache.F[j][k]
         end
         b[D*S+k] = cache.θ[k] - params.θ[k] - params.Δt * (y1 + y2)
     end

@@ -1,40 +1,10 @@
 
 using ForwardDiff
 
-"Holds the tableau of a fully implicit Runge-Kutta method."
-struct TableauFIRK{T} <: AbstractTableauIRK{T}
-    @HeaderTableau
-
-    q::CoefficientsRK{T}
-
-    function TableauFIRK{T}(q) where {T}
-        if get_config(:verbosity) ≥ 1
-            if (q.s > 1 && istrilstrict(q.a)) || (q.s==1 && q.a[1,1] == 0)
-                @warn "Initializing TableauFIRK with explicit tableau $(q.name).\nYou might want to use TableauERK instead."
-            elseif q.s > 1 && istril(q.a)
-                @warn "Initializing TableauFIRK with diagonally implicit tableau $(q.name).\nYou might want to use TableauDIRK instead."
-            end
-        end
-
-        new(q.name, q.o, q.s, q)
-    end
-end
-
-function TableauFIRK(q::CoefficientsRK{T}) where {T}
-    TableauFIRK{T}(q)
-end
-
-function TableauFIRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}) where {T}
-    TableauFIRK{T}(CoefficientsRK(name, order, a, b, c))
-end
-
-# TODO function readTableauFIRKFromFile(dir::AbstractString, name::AbstractString)
-
-
 "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
 mutable struct ParametersFIRK{DT, TT, D, S, ET <: NamedTuple, FT, JT} <: Parameters{DT,TT}
     equs::ET
-    tab::TableauFIRK{TT}
+    tab::Tableau{TT}
     Δt::TT
 
     F::FT
@@ -43,7 +13,7 @@ mutable struct ParametersFIRK{DT, TT, D, S, ET <: NamedTuple, FT, JT} <: Paramet
     t::TT
     q::Vector{DT}
 
-    function ParametersFIRK{DT,D}(equs::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+    function ParametersFIRK{DT,D}(equs::ET, tab::Tableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
         F = (v,q) -> equs[:v](zero(TT), q, v)
         tq = zeros(DT,D)
         tv = zeros(DT,D)
@@ -105,9 +75,18 @@ struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorFIRK{DT,D}(equations::NamedTuple, tableau::TableauFIRK{TT}, Δt::TT; exact_jacobian=true) where {DT,TT,D}
+    function IntegratorFIRK{DT,D}(equations::NamedTuple, tableau::Tableau{TT}, Δt::TT; exact_jacobian=true) where {DT,TT,D}
         # get number of stages
         S = tableau.s
+
+        # check if tableau is fully implicit
+        if get_config(:verbosity) ≥ 1
+            if isexplicit(tableau)
+                @warn "Initializing IntegratorFIRK with explicit tableau $(tableau.name).\nYou might want to use IntegratorERK instead."
+            elseif isdiagnonallyimplicit(tableau)
+                @warn "Initializing IntegratorFIRK with diagonally implicit tableau $(tableau.name).\nYou might want to use IntegratorDIRK instead."
+            end
+        end
 
         # create params
         params = ParametersFIRK{DT,D}(equations, tableau, Δt)
@@ -129,15 +108,15 @@ struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
         IntegratorFIRK(params, solver, iguess, caches)
     end
 
-    function IntegratorFIRK{DT,D}(v::Function, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    function IntegratorFIRK{DT,D}(v::Function, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
         IntegratorFIRK{DT,D}(NamedTuple{(:v,)}((v,)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorFIRK{DT,D}(v::Function, h::Function, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    function IntegratorFIRK{DT,D}(v::Function, h::Function, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
         IntegratorFIRK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorFIRK(equation::ODE{DT,TT}, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorFIRK(equation::ODE{DT,TT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorFIRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
@@ -170,14 +149,14 @@ function initial_guess!(int::IntegratorFIRK{DT}, sol::AtomicSolutionODE{DT},
 
     # compute initial guess for internal stages
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).q.c[i])
+        evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).c[i])
     end
     for i in eachstage(int)
         offset = ndims(int)*(i-1)
         for k in eachdim(int)
             int.solver.x[offset+k] = 0
             for j in eachstage(int)
-                int.solver.x[offset+k] += timestep(int) * tableau(int).q.a[i,j] * cache.V[j][k]
+                int.solver.x[offset+k] += timestep(int) * tableau(int).a[i,j] * cache.V[j][k]
             end
         end
     end
@@ -199,7 +178,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
 
     # compute V = v(Q)
     for i in eachindex(Q,V)
-        tᵢ = params.t + params.Δt * params.tab.q.c[i]
+        tᵢ = params.t + params.Δt * params.tab.c[i]
         params.equs[:v](tᵢ, Q[i], V[i])
     end
 end
@@ -223,8 +202,8 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{D
             y1 = 0
             y2 = 0
             for j in eachindex(cache.V)
-                y1 += params.tab.q.a[i,j] * cache.V[j][k]
-                y2 += params.tab.q.â[i,j] * cache.V[j][k]
+                y1 += params.tab.a[i,j] * cache.V[j][k]
+                y2 += params.tab.â[i,j] * cache.V[j][k]
             end
             b[D*(i-1)+k] = - cache.Y[i][k] + params.Δt * (y1 + y2)
         end
@@ -241,7 +220,7 @@ function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT
             cache.Y[i][k] = x[D*(i-1)+k]
             cache.Q[i][k] = params.q[k] + cache.Y[i][k]
         end
-        tᵢ = params.t + params.Δt * params.tab.q.c[i]
+        tᵢ = params.t + params.Δt * params.tab.c[i]
         F = (v,q) -> params.equs[:v](tᵢ, q, v)
         ForwardDiff.jacobian!(cache.J[i], params.F, cache.ṽ, cache.Q[i], params.Jconfig)
     end
@@ -259,8 +238,8 @@ function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT
                         jac[m,n] += -1
                     end
 
-                    jac[m,n] += params.Δt * params.tab.q.a[i,j] * cache.J[j][k,l]
-                    jac[m,n] += params.Δt * params.tab.q.â[i,j] * cache.J[j][k,l]
+                    jac[m,n] += params.Δt * params.tab.a[i,j] * cache.J[j][k,l]
+                    jac[m,n] += params.Δt * params.tab.â[i,j] * cache.J[j][k,l]
                 end
             end
         end
@@ -294,7 +273,7 @@ function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::AtomicSolutionODE{DT,T
     compute_stages!(int.solver.x, cache.Q, cache.V, cache.Y, int.params)
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).b, tableau(int).b̂, timestep(int))
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)

@@ -49,8 +49,8 @@ vdae = lotka_volterra_2d_vdae(q₀; params=parameters)
 
 # Reference Solution
 
-ref_prev = integrate(ode, TableauGLRK(8), -Δt, 1)
-ref_next = integrate(ode, TableauGLRK(8), +Δt, 1)
+ref_prev = integrate(ode, TableauGauss(8), -Δt, 1)
+ref_next = integrate(ode, TableauGauss(8), +Δt, 1)
 
 tₚ = ref_prev.t[end]
 qₚ = ref_prev.q[end]

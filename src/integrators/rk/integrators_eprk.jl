@@ -21,8 +21,8 @@ b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 struct TableauEPRK{T} <: AbstractTableauPRK{T}
     @HeaderTableau
 
-    q::CoefficientsRK{T}
-    p::CoefficientsRK{T}
+    q::Tableau{T}
+    p::Tableau{T}
 
     function TableauEPRK{T}(name, o, q, p) where {T}
         @assert q.s==p.s
@@ -32,11 +32,11 @@ struct TableauEPRK{T} <: AbstractTableauPRK{T}
     end
 end
 
-function TableauEPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}) where {T}
+function TableauEPRK(name::Symbol, order::Int, q::Tableau{T}, p::Tableau{T}) where {T}
     TableauEPRK{T}(name, order, q, p)
 end
 
-function TableauEPRK(name::Symbol, order::Int, q::CoefficientsRK{T}) where {T}
+function TableauEPRK(name::Symbol, order::Int, q::Tableau{T}) where {T}
     TableauEPRK{T}(name, order, q, q)
 end
 

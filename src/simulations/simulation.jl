@@ -25,11 +25,11 @@ function Simulation(equ::Equation, int::Integrator, Δt, run_id, filename, ntime
     Simulation(equ, int, Solution(equ, Δt, ntime; nsave=nsave, nwrite=nwrite), run_id, filename)
 end
 
-function Simulation(equ::Equation, tableau::AbstractTableau, Δt, run_id, filename, ntime; kwargs...)
+function Simulation(equ::Equation, tableau::Union{AbstractTableau, Tableau}, Δt, run_id, filename, ntime; kwargs...)
     Simulation(equ, Integrator(equ, tableau, Δt), Δt, run_id, filename, ntime; kwargs...)
 end
 
-function Simulation(equ::Equation, integrator, tableau::AbstractTableau, Δt, run_id, filename, ntime; kwargs...)
+function Simulation(equ::Equation, integrator, tableau::Union{AbstractTableau, Tableau}, Δt, run_id, filename, ntime; kwargs...)
     Simulation(equ, integrator(equ, tableau, Δt), Δt, run_id, filename, ntime; kwargs...)
 end
 

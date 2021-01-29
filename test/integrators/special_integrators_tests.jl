@@ -17,22 +17,22 @@ const parameters = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
 ode  = lotka_volterra_2d_ode(q₀; params=parameters)
 vode = lotka_volterra_2d_vode(q₀; params=parameters)
-int  = IntegratorFIRK(ode, TableauGLRK(8), Δt)
+int  = IntegratorFIRK(ode, TableauGauss(8), Δt)
 sol  = integrate(ode, int, nt)
 refx = sol.q[end]
 
 
 @testset "$(rpad("Special integrators",80))" begin
 
-    flint = IntegratorFLRK(vode, TableauGLRK(2), Δt)
+    flint = IntegratorFLRK(vode, TableauGauss(2), Δt)
     flsol = integrate(vode, flint, nt)
     @test rel_err(flsol.q, refx) < 4E-12
 
-    flint = IntegratorFLRK(vode, TableauGLRK(3), Δt)
+    flint = IntegratorFLRK(vode, TableauGauss(3), Δt)
     flsol = integrate(vode, flint, nt)
     @test rel_err(flsol.q, refx) < 2E-16
 
-    flint = IntegratorFLRK(vode, TableauGLRK(4), Δt)
+    flint = IntegratorFLRK(vode, TableauGauss(4), Δt)
     flsol = integrate(vode, flint, nt)
     @test rel_err(flsol.q, refx) < 2E-16
 

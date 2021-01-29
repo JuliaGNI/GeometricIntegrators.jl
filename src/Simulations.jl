@@ -1,6 +1,7 @@
 module Simulations
 
     using ProgressMeter
+    using RungeKutta
 
     using ..Common
     using ..Equations

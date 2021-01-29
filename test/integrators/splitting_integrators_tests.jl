@@ -74,7 +74,7 @@ ssolc = integrate(sode, sintc, nt)
 DT = eltype(sode)
 D  = ndims(sode)
 
-ints_glrk1 = (IntegratorConstructor(DT, D, TableauGLRK(1)), IntegratorConstructor(DT, D, TableauGLRK(1)))
+ints_glrk1 = (IntegratorConstructor(DT, D, TableauGauss(1)), IntegratorConstructor(DT, D, TableauGauss(1)))
 ints_erk4  = (IntegratorConstructor(DT, D, TableauRK4()), IntegratorConstructor(DT, D, TableauRK4()))
 
 sint = IntegratorComposition(sode, ints_erk4, TableauLieA(), Δt)

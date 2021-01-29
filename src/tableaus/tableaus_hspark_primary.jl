@@ -1,5 +1,5 @@
 
-function TableauHSPARKSymmetricProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function TableauHSPARKSymmetricProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 
@@ -58,16 +58,16 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and symmetric projection."
 function TableauHSPARKLobattoIIIAIIIBpSymmetric(s)
-    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobattoIIIAIIIB($s)pSymmetric"), CoefficientsLobattoIIIA(s), CoefficientsLobattoIIIB(s), get_lobatto_d_vector(s))
+    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobattoIIIAIIIB($s)pSymmetric"), TableauLobattoIIIA(s), TableauLobattoIIIB(s), get_lobatto_d_vector(s))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and symmetric projection."
 function TableauHSPARKLobattoIIIBIIIApSymmetric(s)
-    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobattoIIIBIIIA($s)pSymmetric"), CoefficientsLobattoIIIB(s), CoefficientsLobattoIIIA(s), get_lobatto_d_vector(s))
+    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobattoIIIBIIIA($s)pSymmetric"), TableauLobattoIIIB(s), TableauLobattoIIIA(s), get_lobatto_d_vector(s))
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function TableauHSPARKGLRKpSymmetric(s)
-    glrk = CoefficientsGLRK(s)
+    glrk = TableauGauss(s)
     TableauHSPARKSymmetricProjection(Symbol("HSPARKGLRK($s)"), glrk, glrk)
 end

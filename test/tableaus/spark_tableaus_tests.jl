@@ -14,8 +14,8 @@
     @test typeof(TableauSPARKGLVPRK(1))                    <: TableauSPARK
     @test typeof(TableauSPARKGLVPRK(2))                    <: TableauSPARK
 
-    @test typeof(TableauGLRKpSymplectic(1))                <: TableauVPARK
-    @test typeof(TableauGLRKpSymplectic(2))                <: TableauVPARK
+    @test typeof(TableauGausspSymplectic(1))                <: TableauVPARK
+    @test typeof(TableauGausspSymplectic(2))                <: TableauVPARK
     @test typeof(TableauLobattoIIIAIIIBpSymplectic(2))     <: TableauVPARK
     @test typeof(TableauLobattoIIIAIIIBpSymplectic(3))     <: TableauVPARK
     @test typeof(TableauLobattoIIIAIIIBpSymplectic(4))     <: TableauVPARK
@@ -104,8 +104,8 @@
     @test typeof(TableauHPARKLobattoIIIBIIIA(2))      <: TableauHPARK
     @test typeof(TableauHPARKLobattoIIIBIIIA(3))      <: TableauHPARK
 
-    @test TableauHPARKGLRK(1) == getTableauHPARK(:HPARKGLRK1, CoefficientsGLRK(1), CoefficientsGLRK(1))
-    @test TableauHPARKGLRK(2) == getTableauHPARK(:HPARKGLRK2, CoefficientsGLRK(2), CoefficientsGLRK(2))
+    @test TableauHPARKGLRK(1) == getTableauHPARK(:HPARKGLRK1, TableauGauss(1), TableauGauss(1))
+    @test TableauHPARKGLRK(2) == getTableauHPARK(:HPARKGLRK2, TableauGauss(2), TableauGauss(2))
 
     @test typeof(TableauHSPARKGLRKpSymmetric(1))                       <: TableauHSPARKprimary
     @test typeof(TableauHSPARKGLRKpSymmetric(2))                       <: TableauHSPARKprimary

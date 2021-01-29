@@ -20,20 +20,20 @@ ode  = lotka_volterra_2d_ode(q₀; params=parameters)
 iode = lotka_volterra_2d_iode(q₀; params=parameters)
 vode = lotka_volterra_2d_vode(q₀; params=parameters)
 
-int  = IntegratorFIRK(ode, TableauGLRK(8), Δt)
+int  = IntegratorFIRK(ode, TableauGauss(8), Δt)
 sol  = integrate(ode, int, nt)
 refx = sol.q[end]
 
 
 @testset "$(rpad("VPRK integrators",80))" begin
 
-    sol = integrate(iode, TableauVPRK(:pglrk, 2, CoefficientsGLRK(1), -1), Δt, nt)
+    sol = integrate(iode, TableauVPRK(:pglrk, 2, TableauGauss(1), -1), Δt, nt)
     @test rel_err(sol.q, refx) < 2E-6
 
-    sol = integrate(iode, TableauVPRK(:pglrk, 4, CoefficientsGLRK(2), +1), Δt, nt)
+    sol = integrate(iode, TableauVPRK(:pglrk, 4, TableauGauss(2), +1), Δt, nt)
     @test rel_err(sol.q, refx) < 8E-7
 
-    sol = integrate(iode, TableauVPRK(:pglrk, 6, CoefficientsGLRK(3), -1), Δt, nt)
+    sol = integrate(iode, TableauVPRK(:pglrk, 6, TableauGauss(3), -1), Δt, nt)
     @test rel_err(sol.q, refx) < 4E-12
 
     sol = integrate(iode, TableauVPLobattoIIIA(2), Δt, nt)

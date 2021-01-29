@@ -4,6 +4,10 @@ module Tableaus
     
     using CompactBasisFunctions
     using QuadratureRules
+    using Reexport
+
+    @reexport using RungeKutta
+
 
     using ..Config
     using ..Common
@@ -17,55 +21,12 @@ module Tableaus
                                                   compute_ã_vspark_primary,
                                                   compute_α_vspark_primary
 
-    include("tableaus/coefficients_sa.jl")
+    export TableauGauss
 
-    export CoefficientsGLRK
-
+    
     include("tableaus/coefficients_glrk.jl")
-
-
-    export CoefficientsLobattoIIIA, CoefficientsLobattoIIIB,
-           CoefficientsLobattoIIIC, CoefficientsLobattoIIIC̄,
-           CoefficientsLobattoIIID, CoefficientsLobattoIIIE,
-           CoefficientsLobattoIIIF, CoefficientsLobattoIIIG
-
     include("tableaus/coefficients_lob.jl")
 
-    export CoefficientsRadauIA, CoefficientsRadauIIA
-
-    include("tableaus/coefficients_rad.jl")
-
-    export CoefficientsSRK3
-
-    include("tableaus/coefficients_srk.jl")
-
-
-    include("tableaus/tableaus_erk.jl")
-
-    export TableauExplicitEuler, TableauForwardEuler,
-           TableauExplicitMidpoint,
-           TableauHeun2, TableauHeun3,
-           TableauRalston2, TableauRalston3,
-           TableauRunge2, TableauRunge,
-           TableauKutta3, TableauKutta,
-           TableauRK4, TableauRK416, TableauRK438,
-           TableauSSPRK3
-
-    include("tableaus/tableaus_dirk.jl")
-
-    export TableauCrankNicolson,
-           TableauKraaijevangerSpijker,
-           TableauQinZhang,
-           TableauCrouzeix
-
-    include("tableaus/tableaus_firk.jl")
-
-    export TableauImplicitEuler, TableauBackwardEuler,
-           TableauImplicitMidpoint, TableauSRK3,
-           TableauGLRK, TableauRadauIA, TableauRadauIIA,
-           TableauLobattoIIIA, TableauLobattoIIIB, TableauLobattoIIIC, TableauLobattoIIIC̄,
-           TableauLobattoIIID, TableauLobattoIIIE, TableauLobattoIIIF, TableauLobattoIIIG
-           
 
     include("tableaus/tableaus_eprk.jl")
 
@@ -107,7 +68,7 @@ module Tableaus
     export TableauSymplecticProjection,
            TableauLobattoIIIAIIIBpSymplectic,
            TableauLobattoIIIBIIIApSymplectic,
-           TableauGLRKpSymplectic
+           TableauGausspSymplectic
 
     include("tableaus/tableaus_vpark.jl")
 

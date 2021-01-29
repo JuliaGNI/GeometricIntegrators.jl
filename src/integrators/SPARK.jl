@@ -2,6 +2,7 @@ module SPARK
 
     using Documenter: @doc
     using LinearAlgebra: Diagonal
+    using RungeKutta
     using SimpleSolvers
 
     using ..Common
@@ -15,8 +16,7 @@ module SPARK
 
     import ..Integrators: PDAEIntegrator, InitialGuessIODE, InitialGuessPODE, Parameters
     import ..Integrators: IDAEIntegratorCache, IntegratorCache, CacheDict, CacheType
-    import ..Integrators: AbstractTableau, AbstractTableauERK, AbstractTableauIRK,
-                          AbstractCoefficients, CoefficientsRK,
+    import ..Integrators: AbstractTableau, AbstractCoefficients,
                           @CoefficientsRK, @HeaderCoefficientsRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
                           update_vector_fields!, update_solution!, update_multiplier!,
