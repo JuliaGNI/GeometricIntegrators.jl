@@ -26,7 +26,7 @@ pdae = lotka_volterra_2d_pdae(q₀; params=parameters)
 vdae = lotka_volterra_2d_vdae(q₀; params=parameters)
 vdae_slrk = lotka_volterra_2d_slrk(q₀; params=parameters)
 
-int  = IntegratorFIRK(ode, TableauGLRK(8), Δt)
+int  = IntegratorFIRK(ode, TableauGauss(8), Δt)
 sol  = integrate(ode, int, nt)
 refx = sol.q[end]
 
@@ -161,19 +161,19 @@ end
 
 @testset "$(rpad("VPARK integrators",80))" begin
 
-    int = Integrator(idae, TableauSymplecticProjection(:glrk1ps, CoefficientsGLRK(1), CoefficientsGLRK(1)), Δt)
+    int = Integrator(idae, TableauSymplecticProjection(:glrk1ps, TableauGauss(1), TableauGauss(1)), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 1E-6
 
-    int = Integrator(idae, TableauSymplecticProjection(:glrk2ps, CoefficientsGLRK(2), CoefficientsGLRK(2)), Δt)
+    int = Integrator(idae, TableauSymplecticProjection(:glrk2ps, TableauGauss(2), TableauGauss(2)), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = Integrator(idae, TableauGLRKpSymplectic(1), Δt)
+    int = Integrator(idae, TableauGausspSymplectic(1), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 1E-6
 
-    int = Integrator(idae, TableauGLRKpSymplectic(2), Δt)
+    int = Integrator(idae, TableauGausspSymplectic(2), Δt)
     sol = integrate(idae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 

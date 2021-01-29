@@ -1,11 +1,11 @@
 module Integrators
 
     using CompactBasisFunctions
-    using DelimitedFiles
     using Documenter: @doc
     using LinearAlgebra
     using OffsetArrays
     using QuadratureRules
+    using RungeKutta
     using SimpleSolvers
 
     using ..Common
@@ -17,12 +17,13 @@ module Integrators
     using ..Equations
     using ..Solutions
 
+    import ..Equations: _get_v̄, _get_f̄
+
+    import RungeKutta: nstages
+
 
     export InitialGuess, InitialGuessODE, InitialGuessIODE, InitialGuessPODE,
            initialize!
-
-
-    import ..Equations: _get_v̄, _get_f̄
 
 
     include("integrators/initial_guess/extrapolation.jl")
@@ -59,7 +60,7 @@ module Integrators
     include("integrators/various/integrators_explicit_euler.jl")
 
 
-    export CoefficientsRK, HeaderCoefficientsRK,
+    export HeaderCoefficientsRK,
            AbstractTableauRK, AbstractTableauIRK, AbstractTableauPRK,
            IntegratorRK, writeTableauToFile
 
@@ -73,15 +74,12 @@ module Integrators
     include("integrators/rk/tableaus.jl")
 
 
-    export IntegratorERK, TableauERK, readTableauERKFromFile
-
-    include("integrators/rk/integrators_erk.jl")
-
-
-    export IntegratorDIRK, TableauDIRK
-    export IntegratorFIRK, TableauFIRK
+    export IntegratorERK
+    export IntegratorDIRK
+    export IntegratorFIRK
     export IntegratorFIRKimplicit, IntegratorMidpointImplicit, IntegratorSRKimplicit
 
+    include("integrators/rk/integrators_erk.jl")
     include("integrators/rk/integrators_dirk.jl")
     include("integrators/rk/integrators_firk.jl")
     include("integrators/rk/integrators_firk_implicit.jl")

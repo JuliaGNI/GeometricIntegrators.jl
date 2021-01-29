@@ -4,14 +4,14 @@ using ForwardDiff
 "Parameters for right-hand side function of formal Lagrangian Runge-Kutta methods."
 mutable struct ParametersFLRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equs::ET
-    tab::TableauFIRK{TT}
+    tab::Tableau{TT}
     Δt::TT
 
     t::TT
     q::Vector{DT}
     p::Vector{DT}
 
-    function ParametersFLRK{DT,D}(equs::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+    function ParametersFLRK{DT,D}(equs::ET, tab::Tableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
         new{DT,TT,D,tab.s,ET}(equs, tab, Δt, zero(TT), zeros(DT,D), zeros(DT,D))
     end
 end
@@ -73,9 +73,18 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches, ϑ, P, F, G, Z, J, A)
     end
 
-    function IntegratorFLRK{DT,D}(equations::NamedTuple, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,D}
+    function IntegratorFLRK{DT,D}(equations::NamedTuple, tableau::Tableau{TT}, Δt::TT) where {DT,TT,D}
         # get number of stages
         S = tableau.s
+
+        # check if tableau is fully implicit
+        if get_config(:verbosity) ≥ 1
+            if isexplicit(tableau)
+                @warn "Initializing IntegratorFIRK with explicit tableau $(q.name).\nYou might want to use IntegratorERK instead."
+            elseif isdiagnonallyimplicit(tableau)
+                @warn "Initializing IntegratorFIRK with diagonally implicit tableau $(q.name).\nYou might want to use IntegratorDIRK instead."
+            end
+        end
 
         # create params
         params = ParametersFLRK{DT,D}(equations, tableau, Δt)
@@ -93,7 +102,7 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
         IntegratorFLRK(params, solver, iguess, caches)
     end
 
-    function IntegratorFLRK(equation::VODE{DT,TT}, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorFLRK(equation::VODE{DT,TT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorFLRK{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 
@@ -133,14 +142,14 @@ function initial_guess!(int::IntegratorFLRK{DT}, sol::Union{AtomicSolutionODE{DT
 
     # compute initial guess for internal stages
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).q.c[i])
+        evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).c[i])
     end
     for i in eachstage(int)
         offset = ndims(int)*(i-1)
         for k in eachdim(int)
             int.solver.x[offset+k] = 0
             for j in eachstage(int)
-                int.solver.x[offset+k] += timestep(int) * tableau(int).q.a[i,j] * cache.V[j][k]
+                int.solver.x[offset+k] += timestep(int) * tableau(int).a[i,j] * cache.V[j][k]
             end
         end
     end
@@ -165,7 +174,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
 
     # compute V = v(Q)
     for i in 1:S
-        tᵢ = params.t + params.Δt * params.tab.q.c[i]
+        tᵢ = params.t + params.Δt * params.tab.c[i]
         params.equs[:v̄](tᵢ, Q[i], V[i])
     end
 end
@@ -189,8 +198,8 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFLRK{D
             y1 = 0
             y2 = 0
             for j in 1:S
-                y1 += params.tab.q.a[i,j] * cache.V[j][k]
-                y2 += params.tab.q.â[i,j] * cache.V[j][k]
+                y1 += params.tab.a[i,j] * cache.V[j][k]
+                y2 += params.tab.â[i,j] * cache.V[j][k]
             end
             b[D*(i-1)+k] = - cache.Y[i][k] + params.Δt * (y1 + y2)
         end
@@ -231,7 +240,7 @@ function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::AtomicSolutionPOD
     compute_stages!(int.solver.x, cache.Q, cache.V, cache.Y, int.params)
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).b, tableau(int).b̂, timestep(int))
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)
@@ -245,7 +254,7 @@ function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutio
     # compute ϑ = ϑ(t,Q), V(Q) = v(t, Q, V)
     # and f_0(Q, V(Q)) = f(t, Q, V, F)
     for i in 1:S
-        tᵢ = int.params.t + timestep(int) * tableau(int).q.c[i]
+        tᵢ = int.params.t + timestep(int) * tableau(int).c[i]
         int.params.equs[:ϑ](tᵢ, cache.Q[i], cache.V[i], int.ϑ[i])
         int.params.equs[:v̄](tᵢ, cache.Q[i], cache.V[i])
         int.params.equs[:g](tᵢ, cache.Q[i], cache.V[i], int.F[i])
@@ -253,7 +262,7 @@ function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutio
 
     # compute Jacobian of v via ForwardDiff
     for i in 1:S
-        tᵢ = int.params.t + timestep(int) * tableau(int).q.c[i]
+        tᵢ = int.params.t + timestep(int) * tableau(int).c[i]
         v_rev! = (v,q) -> int.params.equs[:v̄](tᵢ,q,v)
         ForwardDiff.jacobian!(int.J[i], v_rev!, cache.ṽ, cache.Q[i])
     end
@@ -277,7 +286,7 @@ function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutio
             δP[(l-1)*D+i] = int.params.p[i]
             # add A(F+G) to δP
             for k in 1:S
-                δP[(l-1)*D+i] += timestep(int) * tableau(int).q.a[l,k] * (int.F[k][i] + int.G[k][i])
+                δP[(l-1)*D+i] += timestep(int) * tableau(int).a[l,k] * (int.F[k][i] + int.G[k][i])
             end
         end
     end
@@ -287,7 +296,7 @@ function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutio
         for l in 1:S
             for i in 1:D
                 for j in 1:D
-                    int.A[(k-1)*D+i, (l-1)*D+j] = timestep(int) * tableau(int).q.a[k,l] * int.J[l][j,i]
+                    int.A[(k-1)*D+i, (l-1)*D+j] = timestep(int) * tableau(int).a[k,l] * int.J[l][j,i]
                 end
             end
         end
@@ -321,6 +330,6 @@ function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutio
     # println()
 
     # compute final update for p
-    update_solution!(sol.p, sol.p̃, int.F, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
-    update_solution!(sol.p, sol.p̃, int.G, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.F, tableau(int).b, tableau(int).b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, int.G, tableau(int).b, tableau(int).b̂, timestep(int))
 end

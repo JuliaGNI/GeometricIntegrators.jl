@@ -2,14 +2,14 @@
 "Parameters for right-hand side function of fully implicit Runge-Kutta methods."
 mutable struct ParametersMidpointImplicit{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equs::ET
-    tab::TableauFIRK{TT}
+    tab::Tableau{TT}
     Δt::TT
 
     t::TT
     q::Vector{DT}
     θ::Vector{DT}
 
-    function ParametersMidpointImplicit{DT,D}(equs::ET, tab::TableauFIRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+    function ParametersMidpointImplicit{DT,D}(equs::ET, tab::Tableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
         new{DT, TT, D, tab.s, ET}(equs, tab, Δt, zero(TT), zeros(DT,D), zeros(DT,D))
     end
 end
@@ -63,7 +63,7 @@ struct IntegratorMidpointImplicit{DT, TT, D, S, PT <: ParametersMidpointImplicit
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorMidpointImplicit{DT,D}(equations::NamedTuple, tableau::TableauFIRK{TT}, Δt::TT) where {DT,TT,D}
+    function IntegratorMidpointImplicit{DT,D}(equations::NamedTuple, tableau::Tableau{TT}, Δt::TT) where {DT,TT,D}
         # get number of stages
         S = tableau.s
 
@@ -85,15 +85,15 @@ struct IntegratorMidpointImplicit{DT, TT, D, S, PT <: ParametersMidpointImplicit
         IntegratorMidpointImplicit(params, solver, iguess, caches)
     end
 
-    # function IntegratorMidpointImplicit{DT,D}(v::Function, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    # function IntegratorMidpointImplicit{DT,D}(v::Function, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
     #     IntegratorMidpointImplicit{DT,D}(NamedTuple{(:v,)}((v,)), tableau, Δt; kwargs...)
     # end
 
-    # function IntegratorMidpointImplicit{DT,D}(v::Function, h::Function, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    # function IntegratorMidpointImplicit{DT,D}(v::Function, h::Function, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
     #     IntegratorMidpointImplicit{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     # end
 
-    function IntegratorMidpointImplicit(equation::IODE{DT,TT}, tableau::TableauFIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorMidpointImplicit(equation::IODE{DT,TT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorMidpointImplicit{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

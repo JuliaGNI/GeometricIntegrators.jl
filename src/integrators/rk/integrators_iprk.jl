@@ -21,8 +21,8 @@ b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 struct TableauIPRK{T} <: AbstractTableauPRK{T}
     @HeaderTableau
 
-    q::CoefficientsRK{T}
-    p::CoefficientsRK{T}
+    q::Tableau{T}
+    p::Tableau{T}
 
     function TableauIPRK{T}(name, o, q, p) where {T}
         @assert q.s==p.s
@@ -30,11 +30,9 @@ struct TableauIPRK{T} <: AbstractTableauPRK{T}
     end
 end
 
-function TableauIPRK(name::Symbol, order::Int, q::CoefficientsRK{T}) where {T}
-    TableauIPRK{T}(name, order, q, q)
+function TableauIPRK(name::Symbol, order::Int, q::Tableau{T}, p::Tableau{T}=q) where {T}
+    TableauIPRK{T}(name, order, q, p)
 end
-
-# TODO function readTableauIPRKFromFile(dir::AbstractString, name::AbstractString)
 
 
 "Parameters for right-hand side function of implicit partitioned Runge-Kutta methods."

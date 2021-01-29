@@ -24,7 +24,7 @@ pdae = harmonic_oscillator_pdae()
 
     s = 2
 
-    g = CoefficientsGLRK(s)
+    g = TableauGauss(s)
     g̃ = get_symplectic_conjugate_coefficients(g)
 
     @test g.a ≈ g̃.a atol=1E-15
@@ -35,16 +35,16 @@ pdae = harmonic_oscillator_pdae()
     @test check_symplecticity(g) == Array{Bool}(ones(s,s))
     @test check_symmetry(g) == Array{Bool}(ones(s,s))
 
-    @test check_order_conditions_B(g,1) == true
-    @test check_order_conditions_B(g,2) == true
-    @test check_order_conditions_C(g,1) == Array{Bool}(ones(s))
-    @test check_order_conditions_C(g,2) == Array{Bool}(ones(s))
-    @test check_order_conditions_D(g,1) == Array{Bool}(ones(s))
-    @test check_order_conditions_D(g,2) == Array{Bool}(ones(s))
+    @test check_order_conditions_b(g,1) == true
+    @test check_order_conditions_b(g,2) == true
+    @test check_order_conditions_c(g,1) == Array{Bool}(ones(s))
+    @test check_order_conditions_c(g,2) == Array{Bool}(ones(s))
+    @test check_order_conditions_d(g,1) == Array{Bool}(ones(s))
+    @test check_order_conditions_d(g,2) == Array{Bool}(ones(s))
 
-    A = CoefficientsLobattoIIIA(s)
-    B = CoefficientsLobattoIIIB(s)
-    E = CoefficientsLobattoIIIE(s)
+    A = TableauLobattoIIIA(s)
+    B = TableauLobattoIIIB(s)
+    E = TableauLobattoIIIE(s)
     Ã = get_symplectic_conjugate_coefficients(A)
     B̃ = get_symplectic_conjugate_coefficients(B)
 
@@ -75,14 +75,18 @@ end
     @test typeof(Integrator(ode, TableauExplicitMidpoint(), Δt)) <: IntegratorERK
     @test typeof(Integrator(ode, TableauCrouzeix(), Δt)) <: IntegratorDIRK
     @test typeof(Integrator(ode, TableauImplicitMidpoint(), Δt)) <: IntegratorFIRK
-    @test typeof(Integrator(pode, TableauEPRK(:eprk_midpoint, 2, TableauExplicitMidpoint().q), Δt)) <: IntegratorEPRK
-    @test typeof(Integrator(pode, TableauIPRK(:iprk_midpoint, 2, TableauImplicitMidpoint().q), Δt)) <: IntegratorIPRK
+    @test typeof(Integrator(pode, TableauEPRK(:eprk_midpoint, 2, TableauExplicitMidpoint()), Δt)) <: IntegratorEPRK
+    @test typeof(Integrator(pode, TableauIPRK(:iprk_midpoint, 2, TableauImplicitMidpoint()), Δt)) <: IntegratorIPRK
+
+    @test_logs (:warn, r"Initializing IntegratorDIRK with explicit tableau heun.*") IntegratorDIRK(ode, TableauHeun2(), Δt)
+    @test_logs (:warn, r"Initializing IntegratorFIRK with explicit tableau heun.*") IntegratorFIRK(ode, TableauHeun2(), Δt)
+    @test_logs (:warn, r"Initializing IntegratorFIRK with diagonally implicit tableau crouzeix.*") IntegratorFIRK(ode, TableauCrouzeix(), Δt)
 
     int_erk  = Integrator(ode, TableauExplicitMidpoint(), Δt)
     int_dirk = Integrator(ode, TableauCrouzeix(), Δt)
     int_firk = Integrator(ode, TableauImplicitMidpoint(), Δt)
-    int_eprk = Integrator(pode, TableauEPRK(:eprk_midpoint, 2, TableauExplicitMidpoint().q), Δt)
-    int_iprk = Integrator(pode, TableauIPRK(:iprk_midpoint, 2, TableauImplicitMidpoint().q), Δt)
+    int_eprk = Integrator(pode, TableauEPRK(:eprk_midpoint, 2, TableauExplicitMidpoint()), Δt)
+    int_iprk = Integrator(pode, TableauIPRK(:iprk_midpoint, 2, TableauImplicitMidpoint()), Δt)
 
     @test ndims(ode) == ndims(int_erk)
     @test ndims(ode) == ndims(int_dirk)
@@ -140,10 +144,10 @@ end
     jacobian!(int.solver.x, int.solver.J, IntegratorCache(int.params), int.params)
     @test int.solver.J == - [1.0  0.0; 0.0  1.0] + Δt / 2 * [0.0  1.0; -k  0.0]
 
-    test_firk_jacobian(ode, TableauGLRK(1), Δt, nt)
-    test_firk_jacobian(ode, TableauGLRK(2), Δt, nt)
-    test_firk_jacobian(ode, TableauGLRK(3), Δt, nt)
-    test_firk_jacobian(ode, TableauGLRK(4), Δt, nt)
+    test_firk_jacobian(ode, TableauGauss(1), Δt, nt)
+    test_firk_jacobian(ode, TableauGauss(2), Δt, nt)
+    test_firk_jacobian(ode, TableauGauss(3), Δt, nt)
+    test_firk_jacobian(ode, TableauGauss(4), Δt, nt)
 
 
     # check integrators
@@ -157,25 +161,25 @@ end
     sol = integrate(ode, TableauImplicitMidpoint(), Δt, nt)
     @test rel_err(sol.q, refx) < 5E-4
 
-    sol = integrate(ode, TableauGLRK(1), Δt, nt)
+    sol = integrate(ode, TableauGauss(1), Δt, nt)
     @test rel_err(sol.q, refx) < 5E-4
 
-    sol = integrate(ode, TableauGLRK(2), Δt, nt)
+    sol = integrate(ode, TableauGauss(2), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-7
 
-    sol = integrate(ode, TableauGLRK(3), Δt, nt)
+    sol = integrate(ode, TableauGauss(3), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    sol = integrate(ode, TableauGLRK(4), Δt, nt)
+    sol = integrate(ode, TableauGauss(4), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
-    sol = integrate(ode, TableauGLRK(5), Δt, nt)
+    sol = integrate(ode, TableauGauss(5), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
-    sol = integrate(ode, TableauGLRK(6), Δt, nt)
+    sol = integrate(ode, TableauGauss(6), Δt, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
-    sol = integrate(ode, TableauGLRK(7), Δt, nt)
+    sol = integrate(ode, TableauGauss(7), Δt, nt)
     @test rel_err(sol.q, refx) < 5E-15
 
     sol = integrate(ode, TableauSRK3(), Δt, nt)
@@ -184,19 +188,19 @@ end
 
     # Test integration with exact Jacobian
 
-    int = IntegratorFIRK(ode, TableauGLRK(1), Δt; exact_jacobian=true)
+    int = IntegratorFIRK(ode, TableauGauss(1), Δt; exact_jacobian=true)
     sol = integrate(ode, int, nt)
     @test rel_err(sol.q, refx) < 5E-4
 
-    int = IntegratorFIRK(ode, TableauGLRK(2), Δt; exact_jacobian=true)
+    int = IntegratorFIRK(ode, TableauGauss(2), Δt; exact_jacobian=true)
     sol = integrate(ode, int, nt)
     @test rel_err(sol.q, refx) < 1E-7
 
-    int = IntegratorFIRK(ode, TableauGLRK(3), Δt; exact_jacobian=true)
+    int = IntegratorFIRK(ode, TableauGauss(3), Δt; exact_jacobian=true)
     sol = integrate(ode, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = IntegratorFIRK(ode, TableauGLRK(4), Δt; exact_jacobian=true)
+    int = IntegratorFIRK(ode, TableauGauss(4), Δt; exact_jacobian=true)
     sol = integrate(ode, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
@@ -213,19 +217,19 @@ end
     @test rel_err(psol.q, refq) < 5E-2
     @test rel_err(psol.p, refp) < 1E-3
 
-    psol = integrate(pode, TableauEPRK(:prk4, 4, TableauRK4().q), Δt, nt)
+    psol = integrate(pode, TableauEPRK(:prk4, 4, TableauRK4()), Δt, nt)
     @test rel_err(psol.q, refq) < 5E-7
     @test rel_err(psol.p, refp) < 5E-7
 
-    psol = integrate(pode, TableauIPRK(:pglrk, 2, CoefficientsGLRK(1)), Δt, nt)
+    psol = integrate(pode, TableauIPRK(:pglrk, 2, TableauGauss(1)), Δt, nt)
     @test rel_err(psol.q, refq) < 5E-4
     @test rel_err(psol.p, refp) < 5E-4
 
-    psol = integrate(pode, TableauIPRK(:pglrk, 4, CoefficientsGLRK(2)), Δt, nt)
+    psol = integrate(pode, TableauIPRK(:pglrk, 4, TableauGauss(2)), Δt, nt)
     @test rel_err(psol.q, refq) < 1E-7
     @test rel_err(psol.p, refp) < 1E-7
 
-    psol = integrate(pode, TableauIPRK(:pglrk, 6, CoefficientsGLRK(3)), Δt, nt)
+    psol = integrate(pode, TableauIPRK(:pglrk, 6, TableauGauss(3)), Δt, nt)
     @test rel_err(psol.q, refq) < 1E-11
     @test rel_err(psol.p, refp) < 1E-11
 

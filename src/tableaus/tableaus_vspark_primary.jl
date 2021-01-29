@@ -53,7 +53,7 @@ This methods is constructed to satisfy the constraint on the projective stages, 
 Note, however, that it violates the symplecticity conditions $b^{1}_{i} b^{4}_{j} = b^{1}_{i} a^{4}_{ij} + b^{4}_{j} \tilde{a}^{1}_{ji}$ and $b^{2}_{i} b^{3}_{j} = b^{2}_{i} \tilde{a}^{3}_{ij} + b^{3}_{j} a^{2}_{ji}$.
 
 """
-function TableauVSPARKInternalProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function TableauVSPARKInternalProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 
@@ -106,7 +106,7 @@ end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function TableauVSPARKGLRKpInternal(s)
-    glrk = CoefficientsGLRK(s)
+    glrk = TableauGauss(s)
     TableauVSPARKInternalProjection(Symbol("GLRK($s)pInternal"), glrk, glrk; R∞=(-1)^s)
 end
 
@@ -224,7 +224,7 @@ end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function TableauVSPARKGLRKpModifiedInternal(s)
-    glrk = CoefficientsGLRK(s)
+    glrk = TableauGauss(s)
     TableauVSPARKModifiedInternalProjection(Symbol("GLRK($s)pModifiedInternal"), glrk, glrk; R∞=(-1)^s)
 end
 
@@ -270,11 +270,11 @@ a^{4} & \\
 The coefficients $\tilde{a}^{1}$ and $\tilde{a}^{3}$ are determined by the symplecticity conditions, specifically $a^{4}_{ij} = b^{4}_{j} ( b^{1}_{i} - \tilde{a}^{1}_{ji}) / b^{1}_{i}$ and $a^{2}_{ij} = b^{2}_{j} ( b^{3}_{i} - \tilde{a}^{3}_{ji} ) / b^{3}_{i}$, and $\omega = [0, 1]$.
 
 """
-function TableauVSPARKMidpointProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function TableauVSPARKMidpointProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R∞=1) where {T}
     @assert q.s == p.s
     s = q.s
 
-    g = CoefficientsGLRK(1)
+    g = TableauGauss(1)
     α̃ = g.a
     β = g.b
     γ = g.c
@@ -317,17 +317,17 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and midpoint projection."
 function TableauVSPARKLobattoIIIAIIIBpMidpoint(s)
-    TableauVSPARKMidpointProjection(Symbol("LobattoIIIAIIIB($s)pMidpoint"), CoefficientsLobattoIIIA(s), CoefficientsLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKMidpointProjection(Symbol("LobattoIIIAIIIB($s)pMidpoint"), TableauLobattoIIIA(s), TableauLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and midpoint projection."
 function TableauVSPARKLobattoIIIBIIIApMidpoint(s)
-    TableauVSPARKMidpointProjection(Symbol("LobattoIIIBIIIA($s)pMidpoint"), CoefficientsLobattoIIIB(s), CoefficientsLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKMidpointProjection(Symbol("LobattoIIIBIIIA($s)pMidpoint"), TableauLobattoIIIB(s), TableauLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Legendre method with s stages and midpoint projection."
 function TableauVSPARKGLRKpMidpoint(s)
-    glrk = CoefficientsGLRK(s)
+    glrk = TableauGauss(s)
     TableauVSPARKMidpointProjection(Symbol("GLRK($s)pMidpoint"), glrk, glrk; R∞=(-1)^s)
 end
 
@@ -369,11 +369,11 @@ For the projection, choose the tableau with $\tilde{s} = 1$ and $\rho = 0$, such
 The coefficients $a^{2}$ and $a^{4}$ are determined by the symplecticity conditions, specifically $a^{4}_{ij} = b^{4}_{j} ( b^{1}_{i} - \tilde{a}^{1}_{ji}) / b^{1}_{i}$ and $a^{2}_{ij} = b^{2}_{j} ( b^{3}_{i} - \tilde{a}^{3}_{ji} ) / b^{3}_{i}$, and $\omega = [0, 1]$.
 
 """
-function TableauVSPARKModifiedMidpointProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function TableauVSPARKModifiedMidpointProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R∞=1) where {T}
     @assert q.s == p.s
     s = q.s
 
-    g = CoefficientsGLRK(1)
+    g = TableauGauss(1)
     α̃ = g.a
     β = g.b
     γ = g.c
@@ -415,17 +415,17 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and midpoint projection."
 function TableauVSPARKLobattoIIIAIIIBpModifiedMidpoint(s)
-    TableauVSPARKModifiedMidpointProjection(Symbol("LobattoIIIAIIIB($s)pModifiedMidpoint"), CoefficientsLobattoIIIA(s), CoefficientsLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKModifiedMidpointProjection(Symbol("LobattoIIIAIIIB($s)pModifiedMidpoint"), TableauLobattoIIIA(s), TableauLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and midpoint projection."
 function TableauVSPARKLobattoIIIBIIIApModifiedMidpoint(s)
-    TableauVSPARKModifiedMidpointProjection(Symbol("LobattoIIIBIIIA($s)pModifiedMidpoint"), CoefficientsLobattoIIIB(s), CoefficientsLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKModifiedMidpointProjection(Symbol("LobattoIIIBIIIA($s)pModifiedMidpoint"), TableauLobattoIIIB(s), TableauLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Legendre method with s stages and midpoint projection."
 function TableauVSPARKGLRKpModifiedMidpoint(s)
-    glrk = CoefficientsGLRK(s)
+    glrk = TableauGauss(s)
     TableauVSPARKModifiedMidpointProjection(Symbol("GLRK($s)pModifiedMidpoint"), glrk, glrk; R∞=(-1)^s)
 end
 
@@ -481,7 +481,7 @@ so that the constraint $\phi(q_{n+1}, p_{n+1}) = 0$ is satisfied if $\phi(q_{n},
 Note that the choice of $\tilde{a}^{2}$ and $\tilde{a}^{4}$ violates the symplecticity condition $b^{2}_{i} b^{4}_{j} = b^{2}_{i} \tilde{a}^{4}_{ij} + b^{4}_{j} \tilde{a}^{2}_{ji}$.
 
 """
-function TableauVSPARKSymmetricProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function TableauVSPARKSymmetricProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 
@@ -539,17 +539,17 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and symmetric projection."
 function TableauVSPARKLobattoIIIAIIIBpSymmetric(s)
-    TableauVSPARKSymmetricProjection(Symbol("LobattoIIIAIIIB($s)pSymmetric"), CoefficientsLobattoIIIA(s), CoefficientsLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKSymmetricProjection(Symbol("LobattoIIIAIIIB($s)pSymmetric"), TableauLobattoIIIA(s), TableauLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and symmetric projection."
 function TableauVSPARKLobattoIIIBIIIApSymmetric(s)
-    TableauVSPARKSymmetricProjection(Symbol("LobattoIIIBIIIA($s)pSymmetric"), CoefficientsLobattoIIIB(s), CoefficientsLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKSymmetricProjection(Symbol("LobattoIIIBIIIA($s)pSymmetric"), TableauLobattoIIIB(s), TableauLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function TableauVSPARKGLRKpSymmetric(s)
-    glrk = CoefficientsGLRK(s)
+    glrk = TableauGauss(s)
     TableauVSPARKSymmetricProjection(Symbol("GLRK($s)pSymmetric"), glrk, glrk; R∞=(-1)^s)
 end
 
@@ -597,14 +597,14 @@ Finally choose $\omega = [0, 0, 1]$ and $\delta = [-1, R_{\infty}]$, implying th
 By construction, this method satisfies all symplecticity conditions, but the constraint on the projection stages, $\phi(\tilde{Q}_{n,i}, \tilde{P}_{n,i}) = 0$ for $i = 1, \, ..., \, \tilde{s}$, is not satisfied exactly, but only approximately, although with bounded error.
 
 """
-function TableauVSPARKLobattoIIIAIIIBProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function TableauVSPARKLobattoIIIAIIIBProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 
     o = min(q.o, p.o)
 
-    loba = CoefficientsLobattoIIIA(2)
-    lobb = CoefficientsLobattoIIIB(2)
+    loba = TableauLobattoIIIA(2)
+    lobb = TableauLobattoIIIB(2)
 
     a_q = q.a
     a_p = p.a
@@ -653,17 +653,17 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and Lobatto-IIIA-IIIB projection."
 function TableauVSPARKLobattoIIIAIIIBpLobattoIIIAIIIB(s)
-    TableauVSPARKLobattoIIIAIIIBProjection(Symbol("LobattoIIIAIIIB($s)pLobattoIIIAIIIB(2)"), CoefficientsLobattoIIIA(s), CoefficientsLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKLobattoIIIAIIIBProjection(Symbol("LobattoIIIAIIIB($s)pLobattoIIIAIIIB(2)"), TableauLobattoIIIA(s), TableauLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and Lobatto-IIIA-IIIB projection."
 function TableauVSPARKLobattoIIIBIIIApLobattoIIIAIIIB(s)
-    TableauVSPARKLobattoIIIAIIIBProjection(Symbol("LobattoIIIBIIIA($s)pLobattoIIIAIIIB(2)"), CoefficientsLobattoIIIB(s), CoefficientsLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKLobattoIIIAIIIBProjection(Symbol("LobattoIIIBIIIA($s)pLobattoIIIAIIIB(2)"), TableauLobattoIIIB(s), TableauLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Legendre method with s stages and Lobatto-IIIA-IIIB projection."
 function TableauVSPARKGLRKpLobattoIIIAIIIB(s)
-    glrk = CoefficientsGLRK(s)
+    glrk = TableauGauss(s)
     TableauVSPARKLobattoIIIAIIIBProjection(Symbol("GLRK($s)pLobattoIIIAIIIB(2)"), glrk, glrk; R∞=(-1)^s)
 end
 
@@ -674,14 +674,14 @@ end
 This methods is the same as `TableauVSPARKLobattoIIIAIIIBProjection`, except for using Lobatto-IIIA and IIIB tableaus with $\tilde{s} = 2$ stages for $(\tilde{a}^{2}, b^{2})$, and $(\tilde{a}^{4}, b^{4})$ respectively, instead of the other way around.
 
 """
-function TableauVSPARKLobattoIIIBIIIAProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function TableauVSPARKLobattoIIIBIIIAProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 
     o = min(q.o, p.o)
 
-    loba = CoefficientsLobattoIIIA(2)
-    lobb = CoefficientsLobattoIIIB(2)
+    loba = TableauLobattoIIIA(2)
+    lobb = TableauLobattoIIIB(2)
 
     a_q = q.a
     a_p = p.a
@@ -730,17 +730,17 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and Lobatto-IIIB-IIIA projection."
 function TableauVSPARKLobattoIIIAIIIBpLobattoIIIBIIIA(s)
-    TableauVSPARKLobattoIIIBIIIAProjection(Symbol("LobattoIIIAIIIB($s)pLobattoIIIBIIIA(2)"), CoefficientsLobattoIIIA(s), CoefficientsLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKLobattoIIIBIIIAProjection(Symbol("LobattoIIIAIIIB($s)pLobattoIIIBIIIA(2)"), TableauLobattoIIIA(s), TableauLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and Lobatto-IIIB-IIIA projection."
 function TableauVSPARKLobattoIIIBIIIApLobattoIIIBIIIA(s)
-    TableauVSPARKLobattoIIIBIIIAProjection(Symbol("LobattoIIIBIIIA($s)pLobattoIIIBIIIA(2)"), CoefficientsLobattoIIIB(s), CoefficientsLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKLobattoIIIBIIIAProjection(Symbol("LobattoIIIBIIIA($s)pLobattoIIIBIIIA(2)"), TableauLobattoIIIB(s), TableauLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Legendre method with s stages and Lobatto-IIIB-IIIA projection."
 function TableauVSPARKGLRKpLobattoIIIBIIIA(s)
-    glrk = CoefficientsGLRK(s)
+    glrk = TableauGauss(s)
     TableauVSPARKLobattoIIIBIIIAProjection(Symbol("GLRK($s)pLobattoIIIBIIIA(2)"), glrk, glrk; R∞=(-1)^s)
 end
 
@@ -766,15 +766,15 @@ Finally choose $\omega = [0, 0, 1]$ and $\delta = [-1, R_{\infty}]$, implying th
 By construction, this method satisfies all symplecticity conditions, but the constraint on the projection stages, $\phi(\tilde{Q}_{n,i}, \tilde{P}_{n,i}) = 0$ for $i = 1, \, ..., \, \tilde{s}$, is not satisfied exactly, but only approximately, although with bounded error.
 
 """
-function TableauVSPARKModifiedLobattoIIIAIIIBProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function TableauVSPARKModifiedLobattoIIIAIIIBProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 
     s = q.s
     o = min(q.o, p.o)
 
-    loba = CoefficientsLobattoIIIA(2)
-    lobb = CoefficientsLobattoIIIB(2)
+    loba = TableauLobattoIIIA(2)
+    lobb = TableauLobattoIIIB(2)
 
     a_q = q.a
     a_p = p.a
@@ -823,17 +823,17 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and Lobatto-IIIA-IIIB projection."
 function TableauVSPARKLobattoIIIAIIIBpModifiedLobattoIIIAIIIB(s)
-    TableauVSPARKModifiedLobattoIIIAIIIBProjection(Symbol("LobattoIIIAIIIB($s)pModifiedLobattoIIIAIIIB(2)"), CoefficientsLobattoIIIA(s), CoefficientsLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKModifiedLobattoIIIAIIIBProjection(Symbol("LobattoIIIAIIIB($s)pModifiedLobattoIIIAIIIB(2)"), TableauLobattoIIIA(s), TableauLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and Lobatto-IIIA-IIIB projection."
 function TableauVSPARKLobattoIIIBIIIApModifiedLobattoIIIAIIIB(s)
-    TableauVSPARKModifiedLobattoIIIAIIIBProjection(Symbol("LobattoIIIBIIIA($s)pModifiedLobattoIIIAIIIB(2)"), CoefficientsLobattoIIIB(s), CoefficientsLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKModifiedLobattoIIIAIIIBProjection(Symbol("LobattoIIIBIIIA($s)pModifiedLobattoIIIAIIIB(2)"), TableauLobattoIIIB(s), TableauLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function TableauVSPARKGLRKpModifiedLobattoIIIAIIIB(s)
-    glrk = CoefficientsGLRK(s)
+    glrk = TableauGauss(s)
     TableauVSPARKModifiedLobattoIIIAIIIBProjection(Symbol("GLRK($s)pModifiedLobattoIIIAIIIB(2)"), glrk, glrk; R∞=(-1)^s)
 end
 
@@ -844,15 +844,15 @@ end
 This methods is the same as `TableauVSPARKModifiedLobattoIIIAIIIBProjection`, except for using Lobatto-IIIA and IIIB tableaus with $\tilde{s} = 2$ stages for $(\tilde{a}^{2}, b^{2})$, and $(\tilde{a}^{4}, b^{4})$ respectively, instead of the other way around.
 
 """
-function TableauVSPARKModifiedLobattoIIIBIIIAProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=1) where {T}
+function TableauVSPARKModifiedLobattoIIIBIIIAProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R∞=1) where {T}
 
     @assert q.s == p.s
 
     s = q.s
     o = min(q.o, p.o)
 
-    loba = CoefficientsLobattoIIIA(2)
-    lobb = CoefficientsLobattoIIIB(2)
+    loba = TableauLobattoIIIA(2)
+    lobb = TableauLobattoIIIB(2)
 
     a_q = q.a
     a_p = p.a
@@ -901,27 +901,27 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and Lobatto-IIIB-IIIA projection."
 function TableauVSPARKLobattoIIIAIIIBpModifiedLobattoIIIBIIIA(s)
-    TableauVSPARKModifiedLobattoIIIBIIIAProjection(Symbol("LobattoIIIAIIIB($s)pModifiedLobattoIIIBIIIA(2)"), CoefficientsLobattoIIIA(s), CoefficientsLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKModifiedLobattoIIIBIIIAProjection(Symbol("LobattoIIIAIIIB($s)pModifiedLobattoIIIBIIIA(2)"), TableauLobattoIIIA(s), TableauLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and Lobatto-IIIB-IIIA projection."
 function TableauVSPARKLobattoIIIBIIIApModifiedLobattoIIIBIIIA(s)
-    TableauVSPARKModifiedLobattoIIIBIIIAProjection(Symbol("LobattoIIIBIIIA($s)pModifiedLobattoIIIBIIIA(2)"), CoefficientsLobattoIIIB(s), CoefficientsLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauVSPARKModifiedLobattoIIIBIIIAProjection(Symbol("LobattoIIIBIIIA($s)pModifiedLobattoIIIBIIIA(2)"), TableauLobattoIIIB(s), TableauLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
 function TableauVSPARKGLRKpModifiedLobattoIIIBIIIA(s)
-    glrk = CoefficientsGLRK(s)
+    glrk = TableauGauss(s)
     TableauVSPARKModifiedLobattoIIIBIIIAProjection(Symbol("GLRK($s)pModifiedLobattoIIIBIIIA(2)"), glrk, glrk; R∞=(-1)^s)
 end
 
 
 
 
-function TableauVSPARKSymplecticProjection(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]; R∞=+1) where {T}
+function TableauVSPARKSymplecticProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R∞=+1) where {T}
 
-    la = CoefficientsLobattoIIIA(2)
-    lb = CoefficientsLobattoIIIB(2)
+    la = TableauLobattoIIIA(2)
+    lb = TableauLobattoIIIB(2)
 
     @assert q.s == p.s
     @assert q.b == p.b
@@ -993,17 +993,17 @@ function TableauVSPARKSymplecticProjection(name, q::CoefficientsRK{T}, p::Coeffi
 end
 
 function TableauVSPARKGLRKpSymplectic(s)
-    glrk = CoefficientsGLRK(s)
+    glrk = TableauGauss(s)
     TableauVSPARKSymplecticProjection(Symbol("GLRK($s)pSymplectic"), glrk, glrk; R∞=(-1)^s)
 end
 
 
 function TableauVSPARKLobABCCD(s=2, T=Float64)
-    lob  = CoefficientsLobattoIIIC̄(s)
-    loba = CoefficientsLobattoIIIA(s)
-    lobb = CoefficientsLobattoIIIB(s)
-    lobc = CoefficientsLobattoIIIC(s)
-    lobd = CoefficientsLobattoIIID(s)
+    lob  = TableauLobattoIIIC̄(s)
+    loba = TableauLobattoIIIA(s)
+    lobb = TableauLobattoIIIB(s)
+    lobc = TableauLobattoIIIC(s)
+    lobd = TableauLobattoIIID(s)
     
     a_q = lobd.a
     a_p = lobd.a
@@ -1042,12 +1042,12 @@ function TableauVSPARKLobABCCD(s=2, T=Float64)
 end
 
 function TableauVSPARKLobABCCE(s=2, T=Float64)
-    lob  = CoefficientsLobattoIIIC̄(s)
-    loba = CoefficientsLobattoIIIA(s)
-    lobb = CoefficientsLobattoIIIB(s)
-    lobc = CoefficientsLobattoIIIC(s)
-    lobd = CoefficientsLobattoIIID(s)
-    lobe = CoefficientsLobattoIIIE(s)
+    lob  = TableauLobattoIIIC̄(s)
+    loba = TableauLobattoIIIA(s)
+    lobb = TableauLobattoIIIB(s)
+    lobc = TableauLobattoIIIC(s)
+    lobd = TableauLobattoIIID(s)
+    lobe = TableauLobattoIIIE(s)
     
     a_q = lobe.a
     a_p = lobe.a
@@ -1086,12 +1086,12 @@ function TableauVSPARKLobABCCE(s=2, T=Float64)
 end
 
 function TableauVSPARKLobABED(s=2, T=Float64)
-    lob  = CoefficientsLobattoIIIC̄(s)
-    loba = CoefficientsLobattoIIIA(s)
-    lobb = CoefficientsLobattoIIIB(s)
-    lobc = CoefficientsLobattoIIIC(s)
-    lobd = CoefficientsLobattoIIID(s)
-    lobe = CoefficientsLobattoIIIE(s)
+    lob  = TableauLobattoIIIC̄(s)
+    loba = TableauLobattoIIIA(s)
+    lobb = TableauLobattoIIIB(s)
+    lobc = TableauLobattoIIIC(s)
+    lobd = TableauLobattoIIID(s)
+    lobe = TableauLobattoIIIE(s)
 
     a_q = lobe.a
     a_p = lobe.a
@@ -1130,12 +1130,12 @@ function TableauVSPARKLobABED(s=2, T=Float64)
 end
 
 function TableauVSPARKLobABDE(s=2, T=Float64)
-    lob  = CoefficientsLobattoIIIC̄(s)
-    loba = CoefficientsLobattoIIIA(s)
-    lobb = CoefficientsLobattoIIIB(s)
-    lobc = CoefficientsLobattoIIIC(s)
-    lobd = CoefficientsLobattoIIID(s)
-    lobe = CoefficientsLobattoIIIE(s)
+    lob  = TableauLobattoIIIC̄(s)
+    loba = TableauLobattoIIIA(s)
+    lobb = TableauLobattoIIIB(s)
+    lobc = TableauLobattoIIIC(s)
+    lobd = TableauLobattoIIID(s)
+    lobe = TableauLobattoIIIE(s)
 
     a_q = lobd.a
     a_p = lobd.a
@@ -1174,12 +1174,12 @@ function TableauVSPARKLobABDE(s=2, T=Float64)
 end
 
 function TableauVSPARKLobABD(s=2, T=Float64)
-    lob  = CoefficientsLobattoIIIC̄(s)
-    loba = CoefficientsLobattoIIIA(s)
-    lobb = CoefficientsLobattoIIIB(s)
-    lobc = CoefficientsLobattoIIIC(s)
-    lobd = CoefficientsLobattoIIID(s)
-    lobe = CoefficientsLobattoIIIE(s)
+    lob  = TableauLobattoIIIC̄(s)
+    loba = TableauLobattoIIIA(s)
+    lobb = TableauLobattoIIIB(s)
+    lobc = TableauLobattoIIIC(s)
+    lobd = TableauLobattoIIID(s)
+    lobe = TableauLobattoIIIE(s)
 
 
     a_q = lobd.a
@@ -1219,12 +1219,12 @@ function TableauVSPARKLobABD(s=2, T=Float64)
 end
 
 function TableauVSPARKLobABE(s=2, T=Float64)
-    lob  = CoefficientsLobattoIIIC̄(s)
-    loba = CoefficientsLobattoIIIA(s)
-    lobb = CoefficientsLobattoIIIB(s)
-    lobc = CoefficientsLobattoIIIC(s)
-    lobd = CoefficientsLobattoIIID(s)
-    lobe = CoefficientsLobattoIIIE(s)
+    lob  = TableauLobattoIIIC̄(s)
+    loba = TableauLobattoIIIA(s)
+    lobb = TableauLobattoIIIB(s)
+    lobc = TableauLobattoIIIC(s)
+    lobd = TableauLobattoIIID(s)
+    lobe = TableauLobattoIIIE(s)
 
 
     a_q = lobe.a
@@ -1264,12 +1264,12 @@ function TableauVSPARKLobABE(s=2, T=Float64)
 end
 
 function TableauVSPARKLobDE(s=2, T=Float64)
-    lob  = CoefficientsLobattoIIIC̄(s)
-    loba = CoefficientsLobattoIIIA(s)
-    lobb = CoefficientsLobattoIIIB(s)
-    lobc = CoefficientsLobattoIIIC(s)
-    lobd = CoefficientsLobattoIIID(s)
-    lobe = CoefficientsLobattoIIIE(s)
+    lob  = TableauLobattoIIIC̄(s)
+    loba = TableauLobattoIIIA(s)
+    lobb = TableauLobattoIIIB(s)
+    lobc = TableauLobattoIIIC(s)
+    lobd = TableauLobattoIIID(s)
+    lobe = TableauLobattoIIIE(s)
 
 
     a_q = lobd.a
@@ -1309,12 +1309,12 @@ function TableauVSPARKLobDE(s=2, T=Float64)
 end
 
 function TableauVSPARKLobED(s=2, T=Float64)
-    lob  = CoefficientsLobattoIIIC̄(s)
-    loba = CoefficientsLobattoIIIA(s)
-    lobb = CoefficientsLobattoIIIB(s)
-    lobc = CoefficientsLobattoIIIC(s)
-    lobd = CoefficientsLobattoIIID(s)
-    lobe = CoefficientsLobattoIIIE(s)
+    lob  = TableauLobattoIIIC̄(s)
+    loba = TableauLobattoIIIA(s)
+    lobb = TableauLobattoIIIB(s)
+    lobc = TableauLobattoIIIC(s)
+    lobd = TableauLobattoIIID(s)
+    lobe = TableauLobattoIIIE(s)
 
 
     a_q = lobe.a

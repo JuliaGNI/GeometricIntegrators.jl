@@ -23,8 +23,8 @@ b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 struct TableauVPRK{T} <: AbstractTableauPRK{T}
     @HeaderTableau
 
-    q::CoefficientsRK{T}
-    p::CoefficientsRK{T}
+    q::Tableau{T}
+    p::Tableau{T}
 
     R∞::Int
 
@@ -41,18 +41,18 @@ struct TableauVPRK{T} <: AbstractTableauPRK{T}
     end
 end
 
-function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int, d::Vector{T}) where {T}
+function TableauVPRK(name::Symbol, order::Int, q::Tableau{T}, p::Tableau{T}, R∞::Int, d::Vector{T}) where {T}
     TableauVPRK{T}(name, order, q, p, R∞, d)
 end
 
-function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int) where {T}
+function TableauVPRK(name::Symbol, order::Int, q::Tableau{T}, p::Tableau{T}, R∞::Int) where {T}
     TableauVPRK{T}(name, order, q, p, R∞)
 end
 
-function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int, d::Vector{T}) where {T}
+function TableauVPRK(name::Symbol, order::Int, q::Tableau{T}, R∞::Int, d::Vector{T}) where {T}
     TableauVPRK{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞, d)
 end
 
-function TableauVPRK(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int) where {T}
+function TableauVPRK(name::Symbol, order::Int, q::Tableau{T}, R∞::Int) where {T}
     TableauVPRK{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞)
 end
