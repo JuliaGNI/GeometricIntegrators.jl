@@ -210,9 +210,16 @@ module Tableaus
 
     include("tableaus/tableaus_slrk.jl")
 
-    export TableauLieA, TableauLieB, TableauStrang,
-           TableauMcLachlan2, TableauMcLachlan4,
-           TableauTripleJump, TableauSuzukiFractal
+    export TableauLieA,
+           TableauLieB,
+           TableauMarchuk,
+           TableauMcLachlan2,
+           TableauMcLachlan4,
+           TableauStrang,
+           TableauStrangA,
+           TableauStrangB,
+           TableauSuzukiFractal,
+           TableauTripleJump
 
     include("tableaus/tableaus_splitting.jl")
 

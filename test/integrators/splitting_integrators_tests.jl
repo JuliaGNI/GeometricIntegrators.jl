@@ -38,6 +38,31 @@ sintc = IntegratorComposition(sode, TableauStrang(), Δt)
 ssolc = integrate(sode, sintc, nt)
 @test ssol.q == ssolc.q
 
+sint = Integrator(sode, TableauStrangA(), Δt)
+ssol = integrate(sode, sint, nt)
+@test rel_err(ssol.q, refx) < 1E-3
+
+sintc = IntegratorComposition(sode, TableauStrangA(), Δt)
+ssolc = integrate(sode, sintc, nt)
+@test ssol.q == ssolc.q
+
+sint = Integrator(sode, TableauStrangB(), Δt)
+ssol = integrate(sode, sint, nt)
+@test rel_err(ssol.q, refx) < 1E-3
+
+sintc = IntegratorComposition(sode, TableauStrangB(), Δt)
+ssolc = integrate(sode, sintc, nt)
+@test ssol.q == ssolc.q
+
+sint1 = Integrator(sode, TableauStrang(), Δt)
+ssol1 = integrate(sode, sint, nt)
+sint2 = Integrator(sode, TableauStrangA(), Δt)
+ssol2 = integrate(sode, sint, nt)
+sint3 = Integrator(sode, TableauStrangB(), Δt)
+ssol3 = integrate(sode, sint, nt)
+@test ssol1.q == ssol2.q
+@test ssol1.q ≈  ssol3.q
+
 sint = Integrator(sode, TableauMcLachlan2(), Δt)
 ssol = integrate(sode, sint, nt)
 @test rel_err(ssol.q, refx) < 1E-4

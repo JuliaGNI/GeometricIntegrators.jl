@@ -103,8 +103,14 @@ module Integrators
     include("integrators/rk/integrators_pglrk.jl")
 
 
-    export IntegratorSplitting, IntegratorComposition, IntegratorExactODE,
-           AbstractTableauSplitting, TableauSplittingGS, TableauSplittingNS, TableauSplittingSS
+    export IntegratorSplitting,
+           IntegratorComposition,
+           IntegratorExactODE,
+           AbstractTableauSplitting,
+           TableauSplitting,
+           TableauSplittingGS,
+           TableauSplittingNS,
+           TableauSplittingSS
            
     include("integrators/splitting/integrators_exact_ode.jl")
     include("integrators/splitting/splitting_tableau.jl")

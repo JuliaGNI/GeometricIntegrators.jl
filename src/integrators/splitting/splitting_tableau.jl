@@ -1,12 +1,12 @@
 
 abstract type AbstractTableauSplitting{T <: Real} <: AbstractTableau{T} end
 
-function get_splitting_coefficients(r, a::Vector{TT}, b::Vector{TT}) where {TT}
+function get_splitting_coefficients(r, a::Vector{T}, b::Vector{T}) where {T}
     @assert length(a) == length(b)
 
     s = length(a)
     f = zeros(Int, 2r*s)
-    c = zeros(TT,  2r*s)
+    c = zeros(T,   2r*s)
 
     for i in 1:s
         for j in 1:r
@@ -24,6 +24,52 @@ end
 
 
 @doc raw"""
+Tableau for general splitting methods for vector fields with two components A and B.
+
+Integrator:
+```math
+\varphi = \varphi_{b_s \tau, B} \circ \varphi_{a_s \tau, A} \circ \dotsc \circ \varphi_{b_1 \tau, B} \circ \varphi_{a_1 \tau, A}
+```
+"""
+struct TableauSplitting{T} <: AbstractTableauSplitting{T}
+    @HeaderTableau
+
+    a::Vector{T}
+    b::Vector{T}
+
+    function TableauSplitting{T}(name, o, s, a, b) where {T}
+        @assert s == length(a) == length(b)
+        new(name, o, s, a, b)
+    end
+end
+
+function TableauSplitting(name, o, a::Vector{T}, b::Vector{T}) where {T}
+    TableauSplitting{T}(name, o, length(a), a, b)
+end
+
+function get_splitting_coefficients(nequs, tableau::TableauSplitting{T}) where {T}
+    @assert nequs == 2
+    @assert length(tableau.a) == length(tableau.b)
+
+    s = length(tableau.a)
+    f = zeros(Int, 2s)
+    c = zeros(T,   2s)
+
+    for i in eachindex(tableau.a, tableau.b)
+        f[2*(i-1)+1] = 1
+        c[2*(i-1)+1] = tableau.a[i]
+        f[2*(i-1)+2] = 2
+        c[2*(i-1)+2] = tableau.b[i]
+    end
+
+    # select all entries with non-vanishing coefficients
+    y = c .!= 0
+
+    return f[y], c[y]
+end
+
+
+@doc raw"""
 Tableau for non-symmetric splitting methods.
     See McLachlan, Quispel, 2003, Equ. (4.10).
     The methods A and B are the composition of all vector fields in the SODE
@@ -32,14 +78,14 @@ Tableau for non-symmetric splitting methods.
 Basic method: Lie composition
 ```math
 \begin{aligned}
-\varphi_{\tau,A} &= \varphi_{\tau,v_1} \circ \varphi_{\tau,v_2} \circ \hdots \varphi_{\tau,v_{r-1}} \circ \varphi_{\tau,v_r} \\
-\varphi_{\tau,B} &= \varphi_{\tau,v_r} \circ \varphi_{\tau,v_{r-1}} \circ \hdots \varphi_{\tau,v_2} \circ \varphi_{\tau,v_1}
+\varphi_{\tau,A} &= \varphi_{\tau,v_1} \circ \varphi_{\tau,v_2} \circ \dotsc \circ \varphi_{\tau,v_{r-1}} \circ \varphi_{\tau,v_r} \\
+\varphi_{\tau,B} &= \varphi_{\tau,v_r} \circ \varphi_{\tau,v_{r-1}} \circ \dotsc \circ \varphi_{\tau,v_2} \circ \varphi_{\tau,v_1}
 \end{aligned}
 ```
 
 Integrator:
 ```math
-\varphi_{NS} = \varphi_{b_s \tau, B} \circ \varphi_{a_s \tau, A} \circ \hdots \circ \varphi_{b_1 \tau, B} \circ \varphi_{a_1 \tau, A}
+\varphi_{NS} = \varphi_{b_s \tau, B} \circ \varphi_{a_s \tau, A} \circ \dotsc \circ \varphi_{b_1 \tau, B} \circ \varphi_{a_1 \tau, A}
 ```
 """
 struct TableauSplittingNS{T} <: AbstractTableauSplitting{T}
@@ -87,14 +133,14 @@ Tableau for symmetric splitting methods with general stages.
 Basic method: Lie composition
 ```math
 \begin{aligned}
-\varphi_{\tau,A} &= \varphi_{\tau,v_1} \circ \varphi_{\tau,v_2} \circ \hdots \varphi_{\tau,v_{r-1}} \circ \varphi_{\tau,v_r} \\
-\varphi_{\tau,B} &= \varphi_{\tau,v_r} \circ \varphi_{\tau,v_{r-1}} \circ \hdots \varphi_{\tau,v_2} \circ \varphi_{\tau,v_1}
+\varphi_{\tau,A} &= \varphi_{\tau,v_1} \circ \varphi_{\tau,v_2} \circ \dotsc \circ \varphi_{\tau,v_{r-1}} \circ \varphi_{\tau,v_r} \\
+\varphi_{\tau,B} &= \varphi_{\tau,v_r} \circ \varphi_{\tau,v_{r-1}} \circ \dotsc \circ \varphi_{\tau,v_2} \circ \varphi_{\tau,v_1}
 \end{aligned}
 ```
 
 Integrator:
 ```math
-\varphi_{GS} = \varphi_{a_1 \tau, A} \circ \varphi_{b_1 \tau, B} \circ \hdots \circ \varphi_{b_1 \tau, B} \circ \varphi_{a_1 \tau, A}
+\varphi_{GS} = \varphi_{a_1 \tau, A} \circ \varphi_{b_1 \tau, B} \circ \dotsc \circ \varphi_{b_1 \tau, B} \circ \varphi_{a_1 \tau, A}
 ```
 """
 struct TableauSplittingGS{T} <: AbstractTableauSplitting{T}
@@ -142,13 +188,13 @@ Tableau for symmetric splitting methods with symmetric stages.
 
 Basic method: symmetric Strang composition
 ```math
-\varphi_{\tau,A} = \varphi_{\tau/2,v_1} \circ \varphi_{\tau/2,v_2} \circ \hdots \varphi_{\tau/2,v_{r-1}} \circ \varphi_{\tau/2,v_r}
-                \circ \varphi_{\tau/2,v_r} \circ \varphi_{\tau/2,v_{r-1}} \circ \hdots \varphi_{\tau/2,v_2} \circ \varphi_{\tau/2,v_1}
+\varphi_{\tau,A} = \varphi_{\tau/2,v_1} \circ \varphi_{\tau/2,v_2} \circ \dotsc \circ \varphi_{\tau/2,v_{r-1}} \circ \varphi_{\tau/2,v_r}
+                \circ \varphi_{\tau/2,v_r} \circ \varphi_{\tau/2,v_{r-1}} \circ \dotsc \circ \varphi_{\tau/2,v_2} \circ \varphi_{\tau/2,v_1}
 ```
 
 Integrator:
 ```math
-\varphi_{SS} = \varphi_{a_1 \tau, A} \circ \varphi_{a_2 \tau, A} \hdots \circ \varphi_{a_s \tau, A} \circ \hdots \circ \varphi_{a_2 \tau, A} \circ \varphi_{a_1 \tau, A}
+\varphi_{SS} = \varphi_{a_1 \tau, A} \circ \varphi_{a_2 \tau, A} \dotsc \circ \varphi_{a_s \tau, A} \circ \dotsc \circ \varphi_{a_2 \tau, A} \circ \varphi_{a_1 \tau, A}
 ```
 """
 struct TableauSplittingSS{T} <: AbstractTableauSplitting{T}
@@ -166,13 +212,13 @@ function TableauSplittingSS(name, o, a::Vector{T}) where {T}
     TableauSplittingSS{T}(name, o, length(a), a)
 end
 
-function get_splitting_coefficients(nequs, tableau::TableauSplittingSS{TT}) where {TT}
+function get_splitting_coefficients(nequs, tableau::TableauSplittingSS{T}) where {T}
     r = nequs
     a = vcat(tableau.a, tableau.a[end-1:-1:1]) ./ 2
     s = length(a)
 
     f = zeros(Int, 2r*s)
-    c = zeros(TT,  2r*s)
+    c = zeros(T,   2r*s)
 
     for i in 1:s
         for j in 1:r
