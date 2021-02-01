@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) Michael Kraus <michael.kraus@ipp.mpg.de>
+Copyright (c) The GeometricIntegrators Authors (see [AUTHORS.md](AUTHORS.md))
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
