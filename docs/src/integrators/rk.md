@@ -74,18 +74,18 @@ For many methods, tabulated coefficients are included, namely
 | [`TableauExplicitMidpoint`](@ref)                              | 2      | 2     |
 | [`TableauHeun2`](@ref)                                         | 2      | 2     |
 | [`TableauHeun3`](@ref)                                         | 3      | 3     |
+| [`TableauKutta`](@ref), [`TableauKutta3`](@ref)                | 3      | 3     |
 | [`TableauRalston2`](@ref)                                      | 2      | 2     |
 | [`TableauRalston3`](@ref)                                      | 3      | 3     |
 | [`TableauRunge`](@ref), [`TableauRunge2`](@ref)                | 2      | 2     |
-| [`TableauKutta`](@ref), [`TableauKutta3`](@ref)                | 3      | 3     |
 | [`TableauRK416`](@ref), [`TableauRK4`](@ref)                   | 4      | 4     |
 | [`TableauRK438`](@ref)                                         | 4      | 4     |
 | [`TableauSSPRK3`](@ref)                                        | 3      | 3     |
 | **Diagonally Implicit Methods**                                |        |       |
 | [`TableauCrankNicolson`](@ref)                                 | 2      | 2     |
+| [`TableauCrouzeix`](@ref)                                      | 2      | 3     |
 | [`TableauKraaijevangerSpijker`](@ref)                          | 2      | 2     |
 | [`TableauQinZhang`](@ref)                                      | 2      | 2     |
-| [`TableauCrouzeix`](@ref)                                      | 2      | 3     |
 | **Fully Implicit Methods**                                     |        |       |
 | [`TableauImplicitEuler`](@ref), [`TableauBackwardEuler`](@ref) | 1      | 1     |
 | [`TableauImplicitMidpoint`](@ref)                              | 2      | 2     |
@@ -179,7 +179,9 @@ The following methods are provided for the construction of the tableaus for the 
 | [`TableauLobattoIIIF(s, T=Float64)`](@ref)  | Lobatto IIIF with s stages  |
 | [`TableauLobattoIIIG(s, T=Float64)`](@ref)  | Lobatto IIIG with s stages  |
 | [`TableauRadauIA(s, T=Float64)`](@ref)      | Radau IA with s stages      |
+| [`TableauRadauIB(s, T=Float64)`](@ref)      | Radau IB with s stages      |
 | [`TableauRadauIIA(s, T=Float64)`](@ref)     | Radau IIA with s stages     |
+| [`TableauRadauIIB(s, T=Float64)`](@ref)     | Radau IIB with s stages     |
 
 The first argument `s` refers to the number of stages ($s \ge 1$ for Gauß and $s \ge 2$ for all other methods).
 The second argument specifies the number type of the coefficients. Internally, all coefficients are computed using `BigFloat` and then converted to the requested number type, defaulting to `Float64`.
