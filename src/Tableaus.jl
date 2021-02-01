@@ -95,6 +95,7 @@ module Tableaus
            TableauVPLobattoIIIA,
            TableauVPLobattoIIIB,
            TableauVPLobattoIIIC,
+           TableauVPLobattoIIIC̄,
            TableauVPLobattoIIID,
            TableauVPLobattoIIIE,
            TableauVPLobattoIIIF,
