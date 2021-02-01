@@ -2,6 +2,7 @@ module VPRK
 
     using Documenter: @doc
     using LinearAlgebra: mul!
+    using RungeKutta
     using SimpleSolvers
 
     using ..Common
@@ -17,7 +18,7 @@ module VPRK
     import ..Integrators: IODEIntegrator, IODEIntegratorCache, InitialGuessIODE, IntegratorPRK
     import ..Integrators: IntegratorCache, CacheDict, CacheType, Parameters
     import ..Integrators: AbstractTableauPRK, AbstractCoefficients,
-                          CoefficientsRK, CoefficientsPGLRK,
+                          CoefficientsPGLRK,
                           @CoefficientsRK, @HeaderTableau, @HeaderCoefficientsRK,
                           get_symplectic_conjugate_coefficients
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,

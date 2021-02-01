@@ -82,66 +82,66 @@ function TableauVSPARKLobattoIII(s, lq, lp; name = Symbol("VSPARKLobattoIII"))
 end
 
 function TableauVSPARKLobattoIIIAB(s)
-    lq = CoefficientsLobattoIIIA(s)
-    lp = CoefficientsLobattoIIIB(s)
+    lq = TableauLobattoIIIA(s)
+    lp = TableauLobattoIIIB(s)
     TableauVSPARKLobattoIII(s, lq, lp; name = Symbol("VSPARKLobattoIIIAIIIB"))
 end
 
 function TableauVSPARKLobattoIIIBA(s)
-    lq = CoefficientsLobattoIIIB(s)
-    lp = CoefficientsLobattoIIIA(s)
+    lq = TableauLobattoIIIB(s)
+    lp = TableauLobattoIIIA(s)
     TableauVSPARKLobattoIII(s, lq, lp; name = Symbol("VSPARKLobattoIIIBIIIA"))
 end
 
 function TableauVSPARKLobattoIIICC̄(s)
-    lq = CoefficientsLobattoIIIC(s)
-    lp = CoefficientsLobattoIIIC̄(s)
+    lq = TableauLobattoIIIC(s)
+    lp = TableauLobattoIIIC̄(s)
     TableauVSPARKLobattoIII(s, lq, lp; name = Symbol("VSPARKLobattoIIICIIIC̄"))
 end
 
 function TableauVSPARKLobattoIIIC̄C(s)
-    lq = CoefficientsLobattoIIIC̄(s)
-    lp = CoefficientsLobattoIIIC(s)
+    lq = TableauLobattoIIIC̄(s)
+    lp = TableauLobattoIIIC(s)
     TableauVSPARKLobattoIII(s, lq, lp; name = Symbol("VSPARKLobattoIIIC̄IIIC"))
 end
 
 function TableauVSPARKLobattoIIID(s)
-    l = CoefficientsLobattoIIID(s)
+    l = TableauLobattoIIID(s)
     TableauVSPARKLobattoIII(s, l, l; name = Symbol("VSPARKLobattoIIID"))
 end
 
 function TableauVSPARKLobattoIIIE(s)
-    l = CoefficientsLobattoIIIE(s)
+    l = TableauLobattoIIIE(s)
     TableauVSPARKLobattoIII(s, l, l; name = Symbol("VSPARKLobattoIIIE"))
 end
 
 
 function TableauVSPARKGLRKLobattoIII(s, σ, lq, lp; name = Symbol("VSPARKGLRKLobattoIII"))
     o = 2s
-    g = CoefficientsGLRK(s)
+    g = TableauGauss(s)
     getTableauVSPARK(s, σ, o, name, g, get_lobatto_glrk_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_d_vector(σ))
 end
 
 function TableauVSPARKGLRKLobattoIIIAB(s, σ=s+1)
-    TableauVSPARKGLRKLobattoIII(s, σ, CoefficientsLobattoIIIA(σ), CoefficientsLobattoIIIB(σ); name = Symbol("VSPARKGLRKLobattoIIIAIIIB"))
+    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIA(σ), TableauLobattoIIIB(σ); name = Symbol("VSPARKGLRKLobattoIIIAIIIB"))
 end
 
 function TableauVSPARKGLRKLobattoIIIBA(s, σ=s+1)
-    TableauVSPARKGLRKLobattoIII(s, σ, CoefficientsLobattoIIIB(σ), CoefficientsLobattoIIIA(σ); name = Symbol("VSPARKGLRKLobattoIIIBIIIA"))
+    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIB(σ), TableauLobattoIIIA(σ); name = Symbol("VSPARKGLRKLobattoIIIBIIIA"))
 end
 
 function TableauVSPARKGLRKLobattoIIICC̄(s, σ=s+1)
-    TableauVSPARKGLRKLobattoIII(s, σ, CoefficientsLobattoIIIC(σ), CoefficientsLobattoIIIC̄(σ); name = Symbol("VSPARKGLRKLobattoIIICIIIC̄"))
+    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIC(σ), TableauLobattoIIIC̄(σ); name = Symbol("VSPARKGLRKLobattoIIICIIIC̄"))
 end
 
 function TableauVSPARKGLRKLobattoIIIC̄C(s, σ=s+1)
-    TableauVSPARKGLRKLobattoIII(s, σ, CoefficientsLobattoIIIC̄(σ), CoefficientsLobattoIIIC(σ); name = Symbol("VSPARKGLRKLobattoIIIC̄IIIC"))
+    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIC̄(σ), TableauLobattoIIIC(σ); name = Symbol("VSPARKGLRKLobattoIIIC̄IIIC"))
 end
 
 function TableauVSPARKGLRKLobattoIIID(s, σ=s+1)
-    TableauVSPARKGLRKLobattoIII(s, σ, CoefficientsLobattoIIID(σ), CoefficientsLobattoIIID(σ); name = Symbol("VSPARKGLRKLobattoIIID"))
+    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIID(σ), TableauLobattoIIID(σ); name = Symbol("VSPARKGLRKLobattoIIID"))
 end
 
 function TableauVSPARKGLRKLobattoIIIE(s, σ=s+1)
-    TableauVSPARKGLRKLobattoIII(s, σ, CoefficientsLobattoIIIE(σ), CoefficientsLobattoIIIE(σ); name = Symbol("VSPARKGLRKLobattoIIIE"))
+    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIE(σ), TableauLobattoIIIE(σ); name = Symbol("VSPARKGLRKLobattoIIIE"))
 end

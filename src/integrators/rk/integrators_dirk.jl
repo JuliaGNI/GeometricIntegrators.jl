@@ -1,44 +1,15 @@
 
-"Holds the tableau of a diagonally implicit Runge-Kutta method."
-struct TableauDIRK{T} <: AbstractTableauIRK{T}
-    @HeaderTableau
-
-    q::CoefficientsRK{T}
-
-    function TableauDIRK{T}(q) where {T}
-        @assert istril(q.a)
-        @assert !(q.s==1 && q.a[1,1] ≠ 0)
-
-        if get_config(:verbosity) ≥ 1 && q.s > 1 && istrilstrict(q.a)
-            @warn "Initializing TableauDIRK with explicit tableau $(q.name).\nYou might want to use TableauERK instead."
-        end
-
-        new(q.name, q.o, q.s, q)
-    end
-end
-
-function TableauDIRK(q::CoefficientsRK{T}) where {T}
-    TableauDIRK{T}(q)
-end
-
-function TableauDIRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}) where {T}
-    TableauDIRK{T}(CoefficientsRK(name, order, a, b, c))
-end
-
-# TODO function readTableauDIRKFromFile(dir::AbstractString, name::AbstractString)
-
-
 "Parameters for right-hand side function of diagonally implicit Runge-Kutta methods."
 mutable struct ParametersDIRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equs::ET
-    tab::TableauDIRK{TT}
+    tab::Tableau{TT}
     Δt::TT
 
     t::TT
     q::Vector{DT}
     V::Vector{Vector{DT}}
 
-    function ParametersDIRK{DT,D}(equs::ET, tab::TableauDIRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+    function ParametersDIRK{DT,D}(equs::ET, tab::Tableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
         new{DT, TT, D, tab.s, ET}(equs, tab, Δt, zero(TT), zeros(DT,D), create_internal_stage_vector(DT, D, tab.s))
     end
 end
@@ -85,9 +56,18 @@ struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorDIRK{DT,D}(equations::NamedTuple, tableau::TableauDIRK{TT}, Δt::TT) where {DT, TT, D}
+    function IntegratorDIRK{DT,D}(equations::NamedTuple, tableau::Tableau{TT}, Δt::TT) where {DT, TT, D}
         # get number of stages
-        S = tableau.q.s
+        S = tableau.s
+
+        # check if tableau is diagonally implicit
+        @assert !isfullyimplicit(tableau)
+
+        if get_config(:verbosity) ≥ 1
+            if isexplicit(tableau)
+                @warn "Initializing IntegratorDIRK with explicit tableau $(tableau.name).\nYou might want to use IntegratorERK instead."
+            end
+        end
 
         # create params
         params = ParametersDIRK{DT,D}(equations, tableau, Δt)
@@ -105,15 +85,15 @@ struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
         IntegratorDIRK(params, solvers, iguess, caches)
     end
 
-    function IntegratorDIRK{DT,D}(v::Function, tableau::TableauDIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    function IntegratorDIRK{DT,D}(v::Function, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
         IntegratorDIRK{DT,D}(NamedTuple{(:v,)}((v,)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorDIRK{DT,D}(v::Function, h::Function, tableau::TableauDIRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    function IntegratorDIRK{DT,D}(v::Function, h::Function, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
         IntegratorDIRK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorDIRK(equation::ODE{DT,TT}, tableau::TableauDIRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorDIRK(equation::ODE{DT,TT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorDIRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
@@ -146,7 +126,7 @@ function initial_guess!(int::IntegratorDIRK{DT}, sol::AtomicSolutionODE{DT},
                         cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT}
 
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.q̃, cache.ṽ, int.params.tab.q.c[i])
+        evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.q̃, cache.ṽ, int.params.tab.c[i])
         for k in eachindex(cache.V[i], cache.ṽ)
             cache.V[i][k] = cache.ṽ[k]
         end
@@ -155,7 +135,7 @@ function initial_guess!(int::IntegratorDIRK{DT}, sol::AtomicSolutionODE{DT},
         for k in eachdim(int)
             int.solver[i].x[k] = 0
             for j in eachstage(int)
-                int.solver[i].x[k] += int.params.tab.q.a[i,j] * cache.V[j][k]
+                int.solver[i].x[k] += int.params.tab.a[i,j] * cache.V[j][k]
             end
         end
     end
@@ -176,7 +156,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{ST}, V::Vector{ST}, Y::Vector{
     end
 
     # compute V = v(Q)
-    tᵢ = params.t + params.Δt * params.tab.q.c[i]
+    tᵢ = params.t + params.Δt * params.tab.c[i]
     params.equs[:v](tᵢ, Q, V)
 end
 
@@ -197,11 +177,11 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{D
 
     # compute b = - (Y-AV)
     for k in 1:D
-        y1 = params.tab.q.a[i,i] * cache.V[i][k]
-        y2 = params.tab.q.â[i,i] * cache.V[i][k]
+        y1 = params.tab.a[i,i] * cache.V[i][k]
+        y2 = params.tab.â[i,i] * cache.V[i][k]
         for j in 1:i-1
-            y1 += params.tab.q.a[i,j] * params.V[j][k]
-            y2 += params.tab.q.â[i,j] * params.V[j][k]
+            y1 += params.tab.a[i,j] * params.V[j][k]
+            y2 += params.tab.â[i,j] * params.V[j][k]
         end
         b[k] = - cache.Y[i][k] + (y1 + y2)
     end
@@ -240,7 +220,7 @@ function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,T
     end
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).b, tableau(int).b̂, timestep(int))
 
     # update vector field for initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)

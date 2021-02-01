@@ -2,8 +2,8 @@
 # struct TableauVPRKpLegendre{T} <: AbstractTableauPRK{T}
 #     @HeaderTableau
 #
-#     q::CoefficientsRK{T}
-#     p::CoefficientsRK{T}
+#     q::Tableau{T}
+#     p::Tableau{T}
 #
 #     R∞::Int
 #
@@ -21,19 +21,19 @@
 #     end
 # end
 #
-# function TableauVPRKpLegendre(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int, ω::Matrix{T}, d::Vector{T}) where {T}
+# function TableauVPRKpLegendre(name::Symbol, order::Int, q::Tableau{T}, p::Tableau{T}, R∞::Int, ω::Matrix{T}, d::Vector{T}) where {T}
 #     TableauVPRKpLegendre{T}(name, order, q, p, R∞, ω, d)
 # end
 #
-# function TableauVPRKpLegendre(name::Symbol, order::Int, q::CoefficientsRK{T}, p::CoefficientsRK{T}, R∞::Int, ω::Matrix{T}) where {T}
+# function TableauVPRKpLegendre(name::Symbol, order::Int, q::Tableau{T}, p::Tableau{T}, R∞::Int, ω::Matrix{T}) where {T}
 #     TableauVPRKpLegendre{T}(name, order, q, p, R∞, ω)
 # end
 #
-# function TableauVPRKpLegendre(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int, ω::Matrix{T}, d::Vector{T}) where {T}
+# function TableauVPRKpLegendre(name::Symbol, order::Int, q::Tableau{T}, R∞::Int, ω::Matrix{T}, d::Vector{T}) where {T}
 #     TableauVPRKpLegendre{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞, ω, d)
 # end
 #
-# function TableauVPRKpLegendre(name::Symbol, order::Int, q::CoefficientsRK{T}, R∞::Int, ω::Matrix{T}) where {T}
+# function TableauVPRKpLegendre(name::Symbol, order::Int, q::Tableau{T}, R∞::Int, ω::Matrix{T}) where {T}
 #     TableauVPRKpLegendre{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞, ω)
 # end
 

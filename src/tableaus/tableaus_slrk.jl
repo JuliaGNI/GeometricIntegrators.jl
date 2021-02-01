@@ -11,35 +11,35 @@ function TableauSLRKLobattoIII(s, q, p)
 end
 
 function TableauSLRKLobattoIIIAB(s)
-    q = CoefficientsLobattoIIIA(s)
-    p = CoefficientsLobattoIIIB(s)
+    q = TableauLobattoIIIA(s)
+    p = TableauLobattoIIIB(s)
     TableauSLRKLobattoIII(s, q, p)
 end
 
 function TableauSLRKLobattoIIIBA(s)
-    q = CoefficientsLobattoIIIB(s)
-    p = CoefficientsLobattoIIIA(s)
+    q = TableauLobattoIIIB(s)
+    p = TableauLobattoIIIA(s)
     TableauSLRKLobattoIII(s, q, p)
 end
 
 function TableauSLRKLobattoIIICC̄(s)
-    q = CoefficientsLobattoIIIC(s)
-    p = CoefficientsLobattoIIIC̄(s)
+    q = TableauLobattoIIIC(s)
+    p = TableauLobattoIIIC̄(s)
     TableauSLRKLobattoIII(s, q, p)
 end
 
 function TableauSLRKLobattoIIIC̄C(s)
-    q = CoefficientsLobattoIIIC̄(s)
-    p = CoefficientsLobattoIIIC(s)
+    q = TableauLobattoIIIC̄(s)
+    p = TableauLobattoIIIC(s)
     TableauSLRKLobattoIII(s, q, p)
 end
 
 function TableauSLRKLobattoIIID(s)
-    l = CoefficientsLobattoIIID(s)
+    l = TableauLobattoIIID(s)
     TableauSLRKLobattoIII(s, l, l)
 end
 
 function TableauSLRKLobattoIIIE(s)
-    l = CoefficientsLobattoIIIE(s)
+    l = TableauLobattoIIIE(s)
     TableauSLRKLobattoIII(s, l, l)
 end

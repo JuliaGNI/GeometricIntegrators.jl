@@ -40,12 +40,12 @@ function ParallelSimulation(equ::Equation, ints::Tuple, Δt, run_id, filename, n
     ParallelSimulation(equ, ints, Solution(equ, Δt, ntime; nsave=nsave, nwrite=nwrite), run_id, filename)
 end
 
-function ParallelSimulation(equ::Equation, tableau::AbstractTableau, Δt, run_id, filename, ntime; kwargs...)
+function ParallelSimulation(equ::Equation, tableau::Union{AbstractTableau, Tableau}, Δt, run_id, filename, ntime; kwargs...)
     ints = Tuple(Integrator(equ, tableau, Δt) for i in 1:Threads.nthreads())
     ParallelSimulation(equ, ints, Δt, run_id, filename, ntime; kwargs...)
 end
 
-function ParallelSimulation(equ::Equation, integrator, tableau::AbstractTableau, Δt, run_id, filename, ntime; kwargs...)
+function ParallelSimulation(equ::Equation, integrator, tableau::Union{AbstractTableau, Tableau}, Δt, run_id, filename, ntime; kwargs...)
     ints = Tuple(integrator(equ, tableau, Δt) for i in 1:Threads.nthreads())
     ParallelSimulation(equ, ints, Δt, run_id, filename, ntime; kwargs...)
 end

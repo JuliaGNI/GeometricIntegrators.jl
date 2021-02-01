@@ -7,7 +7,7 @@ using .VPRK
 #*****************************************************************************#
 
 "Print error for integrators not implemented, yet."
-function Integrator(equation::Equation, tableau::AbstractTableau, Δt)
+function Integrator(equation::Equation, tableau::Union{AbstractTableau,Tableau}, Δt)
     error("No integrator found for equation ", equation, " and tableau ", tableau)
 end
 
@@ -16,19 +16,18 @@ end
 # Initialization functions for deterministic integrators                      #
 #*****************************************************************************#
 
-"Create integrator for explicit Runge-Kutta tableau."
-function Integrator(equation::ODE, tableau::TableauERK, Δt)
-    IntegratorERK(equation, tableau, Δt)
-end
-
-"Create integrator for diagonally implicit Runge-Kutta tableau."
-function Integrator(equation::ODE, tableau::TableauDIRK, Δt)
-    IntegratorDIRK(equation, tableau, Δt)
-end
-
-"Create integrator for fully implicit Runge-Kutta tableau."
-function Integrator(equation::ODE, tableau::TableauFIRK, Δt)
-    IntegratorFIRK(equation, tableau, Δt)
+"Create integrator for Runge-Kutta tableau."
+function Integrator(equation::ODE, tableau::Tableau, Δt)
+    if isexplicit(tableau)
+        # Create integrator for explicit Runge-Kutta tableau
+        IntegratorERK(equation, tableau, Δt)
+    elseif isdiagnonallyimplicit(tableau)
+        # Create integrator for diagonally implicit Runge-Kutta tableau
+        IntegratorDIRK(equation, tableau, Δt)
+    elseif isfullyimplicit(tableau)
+        # Create integrator for fully implicit Runge-Kutta tableau
+        IntegratorFIRK(equation, tableau, Δt)
+    end
 end
 
 "Create integrator for explicit partitioned Runge-Kutta tableau."
@@ -47,7 +46,7 @@ function Integrator(equation::IODE, tableau::TableauVPRK, Δt)
 end
 
 "Create integrator for formal Lagrangian Runge-Kutta tableau."
-function Integrator(equation::VODE, tableau::TableauFIRK, Δt)
+function Integrator(equation::VODE, tableau::Tableau, Δt)
     IntegratorFLRK(equation, tableau, Δt)
 end
 
@@ -111,19 +110,18 @@ function IntegratorConstructor(DT, D)
     (v::Function, Δt::Number; kwargs...) -> IntegratorExactODE{DT,D}(v, Δt; kwargs...)
 end
 
-"Create integrator constructor for explicit Runge-Kutta tableau."
-function IntegratorConstructor(DT, D, tableau::TableauERK)
-    (v::Function, Δt::Number; kwargs...) -> IntegratorERK{DT,D}(v, tableau, Δt; kwargs...)
-end
-
-"Create integrator constructor for diagonally implicit Runge-Kutta tableau."
-function IntegratorConstructor(DT, D, tableau::TableauDIRK)
-    (v::Function, Δt::Number; kwargs...) -> IntegratorDIRK{DT,D}(v, tableau, Δt; kwargs...)
-end
-
-"Create integrator constructor for fully implicit Runge-Kutta tableau."
-function IntegratorConstructor(DT, D, tableau::TableauFIRK)
-    (v::Function, Δt::Number; kwargs...) -> IntegratorFIRK{DT,D}(v, tableau, Δt; kwargs...)
+"Create integrator constructor for Runge-Kutta tableau."
+function IntegratorConstructor(DT, D, tableau::Tableau)
+    if isexplicit(tableau)
+        # Create integrator constructor for explicit Runge-Kutta tableau
+        (v::Function, Δt::Number; kwargs...) -> IntegratorERK{DT,D}(v, tableau, Δt; kwargs...)
+    elseif isdiagnonallyimplicit(tableau)
+        # Create integrator constructor for diagonally implicit Runge-Kutta tableau
+        (v::Function, Δt::Number; kwargs...) -> IntegratorDIRK{DT,D}(v, tableau, Δt; kwargs...)
+    elseif isfullyimplicit(tableau)
+        # Create integrator constructor for fully implicit Runge-Kutta tableau
+        (v::Function, Δt::Number; kwargs...) -> IntegratorFIRK{DT,D}(v, tableau, Δt; kwargs...)
+    end
 end
 
 
@@ -139,17 +137,17 @@ function integrate(equation::Equation, integrator::Integrator, ntime::Int; kwarg
 end
 
 "Integrate given equation with given tableau for ntime time steps and return solution."
-function integrate(equation::Equation, tableau::AbstractTableau, Δt, ntime; kwargs...)
+function integrate(equation::Equation, tableau::Union{AbstractTableau,Tableau}, Δt, ntime; kwargs...)
     return integrate(equation, Integrator(equation, tableau, Δt), ntime; kwargs...)
 end
 
 "Integrate ODE specified by vector field and initial condition with given tableau for ntime time steps and return solution."
-function integrate(f::Function, x₀::Vector, tableau::AbstractTableau, Δt, ntime; t₀=0., kwargs...)
+function integrate(f::Function, x₀::Vector, tableau::Union{AbstractTableau,Tableau}, Δt, ntime; t₀=0., kwargs...)
     return integrate(ODE(f, t₀, x₀), tableau, Δt, ntime; kwargs...)
 end
 
 "Integrate PODE specified by two vector fields and initial conditions with given tableau for ntime time steps and return solution."
-function integrate(v::Function, f::Function, q₀::Vector, p₀::Vector, tableau::AbstractTableau, Δt, ntime; t₀=0., kwargs...)
+function integrate(v::Function, f::Function, q₀::Vector, p₀::Vector, tableau::Union{AbstractTableau,Tableau}, Δt, ntime; t₀=0., kwargs...)
     return integrate(PODE(v, f, t₀, q₀, p₀), tableau, Δt, ntime; kwargs...)
 end
 

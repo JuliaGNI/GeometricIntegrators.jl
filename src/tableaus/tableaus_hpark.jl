@@ -1,5 +1,5 @@
 
-function getTableauHPARK(name, q::CoefficientsRK{T}, p::CoefficientsRK{T}, d=[]) where {T}
+function getTableauHPARK(name, q::Tableau{T}, p::Tableau{T}, d=[]) where {T}
 
     @assert q.s == p.s
 
@@ -34,16 +34,16 @@ end
 
 "SPARK tableau for Gauss-Lobatto IIIA-IIIB HPARK method with s stages."
 function TableauHPARKLobattoIIIAIIIB(s)
-    getTableauHPARK(Symbol("HPARKLobattoIIIAIIIB($s)"), CoefficientsLobattoIIIA(s), CoefficientsLobattoIIIB(s))
+    getTableauHPARK(Symbol("HPARKLobattoIIIAIIIB($s)"), TableauLobattoIIIA(s), TableauLobattoIIIB(s))
 end
 
 "SPARK tableau for Gauss-Lobatto IIIB-IIIA  method with s stages."
 function TableauHPARKLobattoIIIBIIIA(s)
-    getTableauHPARK(Symbol("HPARKLobattoIIIBIIIA($s)"), CoefficientsLobattoIIIB(s), CoefficientsLobattoIIIA(s))
+    getTableauHPARK(Symbol("HPARKLobattoIIIBIIIA($s)"), TableauLobattoIIIB(s), TableauLobattoIIIA(s))
 end
 
 "Tableau for Gauss-Legendre HPARK method with s stages."
 function TableauHPARKGLRK(s)
-    glrk = CoefficientsGLRK(s)
+    glrk = TableauGauss(s)
     getTableauHPARK(Symbol("HPARKGLRK", s), glrk, glrk)
 end
