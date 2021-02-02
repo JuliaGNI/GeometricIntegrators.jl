@@ -277,7 +277,7 @@ b = [0.5, 0.5]
 c = [0.0, 1.0]
 o = 2
 
-tab = TableauERK(:heun, o, a, b, c)
+tab = Tableau(:heun, o, a, b, c)
 ```
 Here, `o` is the order of the method, `a` are the coefficients, `b` the weights
 and `c` the nodes. `TableauERK` states that the method is explicit. Other choices
