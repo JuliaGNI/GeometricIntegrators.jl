@@ -241,7 +241,7 @@ like outlined above. In particular, this includes the following methods:
 
 | Function                               | Order | Method                      |
 |:---------------------------------------|:------|:----------------------------|
-| [`TableauGLRK`](@ref))                 | 2s    | Gauss-Legendre              |
+| [`TableauGauss`](@ref))                | 2s    | Gauss-Legendre              |
 | [`TableauRadauIA`](@ref)               | 2s-1  | Radau-IA                    |
 | [`TableauRadauIB`](@ref)               | 2s-1  | Radau-IB                    |
 | [`TableauRadauIIA`](@ref)              | 2s-1  | Radau-IIA                   |
@@ -282,12 +282,9 @@ o = 2
 tab = Tableau(:heun, o, a, b, c)
 ```
 Here, `o` is the order of the method, `a` are the coefficients, `b` the weights
-and `c` the nodes. `TableauERK` states that the method is explicit. Other choices
-include `TableauFIRK` for fully implicit Runge-Kutta methods, `TableauDIRK` for
-diagonally implicit and `TableauSIRK` for singly implicit Runge-Kutta methods.
-`TableauEPRK` and `TableauIPRK` can be used for explicit and implicit partitioned
-Runge-Kutta methods. The first parameter of the constructor of each tableau
-assigns a name to the tableau.
+and `c` the nodes. For partitioned Runge-Kutta tableaus, `TableauEPRK` and `TableauIPRK`
+can be used for explicit and implicit methods, respecrively. The first parameter of the
+constructor of each tableau assigns a name to the tableau.
 Such custom tableaus can be used in exactly the same as standard tableaus, e.g., by
 ```julia
 int = Integrator(ode, tab, 0.1)

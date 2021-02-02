@@ -169,7 +169,7 @@ The following methods are provided for the construction of the tableaus for the 
 
 | Function                                    | Method                      |
 |:--------------------------------------------|:----------------------------|
-| [`TableauGLRK(s, T=Float64)`](@ref)         | Gauß-Legendre with s stages |
+| [`TableauGauss(s, T=Float64)`](@ref)        | Gauß-Legendre with s stages |
 | [`TableauLobattoIIIA(s, T=Float64)`](@ref)  | Lobatto IIIA with s stages  |
 | [`TableauLobattoIIIB(s, T=Float64)`](@ref)  | Lobatto IIIB with s stages  |
 | [`TableauLobattoIIIC(s, T=Float64)`](@ref)  | Lobatto IIIC with s stages  |
