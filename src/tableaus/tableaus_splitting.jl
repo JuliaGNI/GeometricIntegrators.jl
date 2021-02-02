@@ -136,8 +136,15 @@ function TableauStrangB(::Type{T}=Float64) where {T}
 end
 
 
-"""
-McLachlan's 2nd order symmetric, minimum error splitting method
+@doc raw"""
+McLachlan's 2nd order symmetric, minimum error composition method
+
+The composition reads
+```math
+\Phi_{\Delta t} = \varphi_{\alpha \Delta t} \circ \varphi^{*}_{(1/2 - \alpha) \Delta t} \circ \varphi_{(1/2 - \alpha) \Delta t} \circ \varphi^{*}_{\alpha \Delta t} ,
+```
+where the parameter $\alpha$ can be optimized, e.g., to minimize the solution error.
+McLachlan arrives at $\alpha  = 0.1932$ as a generally useful value.
 
 Reference:
 
@@ -154,8 +161,24 @@ function TableauMcLachlan2(::Type{T}=Float64; α=0.1932) where {T}
 end
 
 
-"""
-McLachlan's 4th order symmetric, minimum error splitting method
+@doc raw"""
+McLachlan's 4th order symmetric, minimum error composition method
+
+The composition reads
+```math
+\Phi_{\Delta t} = \varphi_{\alpha_5 \Delta t} \circ \varphi^{*}_{\beta_5 \Delta t} \circ \dotsc \circ \varphi_{\alpha_2 \Delta t} \circ \varphi^{*}_{\beta_2 \Delta t} \circ \varphi_{\alpha_1 \Delta t} \circ \varphi^{*}_{\beta_1 \Delta t} ,
+```
+with
+```math
+\begin{aligned}
+\beta_1 &= \alpha_5 = \frac{14 - \sqrt{19}}{108} , &
+\alpha_1 &= \beta_5 = \frac{146 + 5 \sqrt{19}}{540} , & & \\
+\beta_2 &= \alpha_4 = \frac{- 23 - 20 \sqrt{19}}{270} , &
+\alpha_2 &= \beta_4 = \frac{-2 + 10 \sqrt{19}}{135} , & 
+\beta_3 &= \alpha_3 = \frac{1}{5} .
+\end{aligned}
+```
+The coefficients are optimised to provide an integrator with minimal solution error.
 
 Reference:
 
@@ -174,8 +197,18 @@ function TableauMcLachlan4(::Type{T}=Float64) where {T}
     TableauSplittingNS(:McLachlanSplitting, 4, a, a[end:-1:1])
 end
 
-"""
-4th order "Triple Jump" splitting method.
+@doc raw"""
+4th order "Triple Jump" composition method.
+
+The composition reads
+```math
+\Phi_{\Delta t} = \varphi_{\gamma_3 \Delta t} \circ \varphi_{\gamma_2 \Delta t} \circ \varphi_{\gamma_1 \Delta t}
+```
+with
+```math
+\gamma_1 = \gamma_3 = \frac{1}{2 - 2^{1/(p+1)}} , \qquad
+\gamma_2 = - \frac{2^{1/(p+1)}}{2 - 2^{1/(p+1)}} .
+```
 
 References:
 
@@ -208,8 +241,18 @@ function TableauTripleJump(::Type{T}=Float64) where {T}
 end
 
 
-"""
+@doc raw"""
 Suzuki's 4th order "fractal" composition method
+
+The composition reads
+```math
+\Phi_{\Delta t} = \varphi_{\gamma_5 \Delta t} \circ \varphi_{\gamma_4 \Delta t} \circ \varphi_{\gamma_3 \Delta t} \circ \varphi_{\gamma_2 \Delta t} \circ \varphi_{\gamma_1 \Delta t}
+```
+with
+```math
+\gamma_1 = \gamma_2 = \gamma_4 = \gamma_5 = \frac{1}{4 - 4^{1/(p+1)}} , \qquad
+\gamma_3 = - \frac{4^{1/(p+1)}}{4 - 4^{1/(p+1)}} .
+```
 
 Reference:
 
