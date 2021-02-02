@@ -243,7 +243,9 @@ like outlined above. In particular, this includes the following methods:
 |:---------------------------------------|:------|:----------------------------|
 | [`TableauGLRK`](@ref))                 | 2s    | Gauss-Legendre              |
 | [`TableauRadauIA`](@ref)               | 2s-1  | Radau-IA                    |
+| [`TableauRadauIB`](@ref)               | 2s-1  | Radau-IB                    |
 | [`TableauRadauIIA`](@ref)              | 2s-1  | Radau-IIA                   |
+| [`TableauRadauIIB`](@ref)              | 2s-1  | Radau-IIB                   |
 | [`TableauLobattoIIIA`](@ref)           | 2s-2  | Lobatto-IIIA                |
 | [`TableauLobattoIIIB`](@ref)           | 2s-2  | Lobatto-IIIB                |
 | [`TableauLobattoIIIC`](@ref)           | 2s-2  | Lobatto-IIIC                |
