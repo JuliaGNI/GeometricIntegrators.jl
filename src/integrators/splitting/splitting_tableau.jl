@@ -28,7 +28,7 @@ Tableau for general splitting methods for vector fields with two components A an
 
 Integrator:
 ```math
-\varphi = \varphi_{b_s \tau, B} \circ \varphi_{a_s \tau, A} \circ \dotsc \circ \varphi_{b_1 \tau, B} \circ \varphi_{a_1 \tau, A}
+\varphi_{\tau} = \varphi_{b_s \tau}^{B} \circ \varphi_{a_s \tau}^{A} \circ \dotsc \circ \varphi_{b_1 \tau}^{B} \circ \varphi_{a_1 \tau}^{A}
 ```
 """
 struct TableauSplitting{T} <: AbstractTableauSplitting{T}
@@ -78,14 +78,14 @@ Tableau for non-symmetric splitting methods.
 Basic method: Lie composition
 ```math
 \begin{aligned}
-\varphi_{\tau,A} &= \varphi_{\tau,v_1} \circ \varphi_{\tau,v_2} \circ \dotsc \circ \varphi_{\tau,v_{r-1}} \circ \varphi_{\tau,v_r} \\
-\varphi_{\tau,B} &= \varphi_{\tau,v_r} \circ \varphi_{\tau,v_{r-1}} \circ \dotsc \circ \varphi_{\tau,v_2} \circ \varphi_{\tau,v_1}
+\varphi_{\tau}^{A} &= \varphi_{\tau}^{v_1} \circ \varphi_{\tau}^{v_2} \circ \dotsc \circ \varphi_{\tau}^{v_{r-1}} \circ \varphi_{\tau}^{v_r} \\
+\varphi_{\tau}^{B} &= \varphi_{\tau}^{v_r} \circ \varphi_{\tau}^{v_{r-1}} \circ \dotsc \circ \varphi_{\tau}^{v_2} \circ \varphi_{\tau}^{v_1}
 \end{aligned}
 ```
 
 Integrator:
 ```math
-\varphi_{NS} = \varphi_{b_s \tau, B} \circ \varphi_{a_s \tau, A} \circ \dotsc \circ \varphi_{b_1 \tau, B} \circ \varphi_{a_1 \tau, A}
+\varphi_{\tau}^{NS} = \varphi_{b_s \tau}^{B} \circ \varphi_{a_s \tau}^{A} \circ \dotsc \circ \varphi_{b_1 \tau}^{B} \circ \varphi_{a_1 \tau}^{A}
 ```
 """
 struct TableauSplittingNS{T} <: AbstractTableauSplitting{T}
@@ -133,14 +133,14 @@ Tableau for symmetric splitting methods with general stages.
 Basic method: Lie composition
 ```math
 \begin{aligned}
-\varphi_{\tau,A} &= \varphi_{\tau,v_1} \circ \varphi_{\tau,v_2} \circ \dotsc \circ \varphi_{\tau,v_{r-1}} \circ \varphi_{\tau,v_r} \\
-\varphi_{\tau,B} &= \varphi_{\tau,v_r} \circ \varphi_{\tau,v_{r-1}} \circ \dotsc \circ \varphi_{\tau,v_2} \circ \varphi_{\tau,v_1}
+\varphi_{\tau}^{A} &= \varphi_{\tau}^{v_1} \circ \varphi_{\tau}^{v_2} \circ \dotsc \circ \varphi_{\tau}^{v_{r-1}} \circ \varphi_{\tau}^{v_r} \\
+\varphi_{\tau}^{B} &= \varphi_{\tau}^{v_r} \circ \varphi_{\tau}^{v_{r-1}} \circ \dotsc \circ \varphi_{\tau}^{v_2} \circ \varphi_{\tau}^{v_1}
 \end{aligned}
 ```
 
 Integrator:
 ```math
-\varphi_{GS} = \varphi_{a_1 \tau, A} \circ \varphi_{b_1 \tau, B} \circ \dotsc \circ \varphi_{b_1 \tau, B} \circ \varphi_{a_1 \tau, A}
+\varphi_{\tau}^{GS} = \varphi_{a_1 \tau}^{A} \circ \varphi_{b_1 \tau}^{B} \circ \dotsc \circ \varphi_{b_1 \tau}^{B} \circ \varphi_{a_1 \tau}^{A}
 ```
 """
 struct TableauSplittingGS{T} <: AbstractTableauSplitting{T}
@@ -188,13 +188,12 @@ Tableau for symmetric splitting methods with symmetric stages.
 
 Basic method: symmetric Strang composition
 ```math
-\varphi_{\tau,A} = \varphi_{\tau/2,v_1} \circ \varphi_{\tau/2,v_2} \circ \dotsc \circ \varphi_{\tau/2,v_{r-1}} \circ \varphi_{\tau/2,v_r}
-                \circ \varphi_{\tau/2,v_r} \circ \varphi_{\tau/2,v_{r-1}} \circ \dotsc \circ \varphi_{\tau/2,v_2} \circ \varphi_{\tau/2,v_1}
+\varphi_{\tau}^{A} = \varphi_{\tau/2}^{v_1} \circ \varphi_{\tau/2}^{v_2} \circ \dotsc \circ \varphi_{\tau/2}^{v_{r-1}} \circ \varphi_{\tau/2}^{v_r} \circ \varphi_{\tau/2}^{v_r} \circ \varphi_{\tau/2}^{v_{r-1}} \circ \dotsc \circ \varphi_{\tau/2}^{v_2} \circ \varphi_{\tau/2}^{v_1}
 ```
 
 Integrator:
 ```math
-\varphi_{SS} = \varphi_{a_1 \tau, A} \circ \varphi_{a_2 \tau, A} \dotsc \circ \varphi_{a_s \tau, A} \circ \dotsc \circ \varphi_{a_2 \tau, A} \circ \varphi_{a_1 \tau, A}
+\varphi_{\tau}^{SS} = \varphi_{a_1 \tau}^{A} \circ \varphi_{a_2 \tau}^{A} \circ \dotsc \circ \varphi_{a_s \tau}^{A} \circ \dotsc \circ \varphi_{a_2 \tau}^{A} \circ \varphi_{a_1 \tau}^{A}
 ```
 """
 struct TableauSplittingSS{T} <: AbstractTableauSplitting{T}
