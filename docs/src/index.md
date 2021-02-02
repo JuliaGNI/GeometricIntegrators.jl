@@ -35,7 +35,8 @@ A Julia package closely related to *GeometricIntegrators.jl* is *[DifferentialEq
 
 ```@contents
 Pages = ["tutorial/tutorial.md",
-         "integrators.md"]
+         "integrators.md",
+]
 ```
 
 
@@ -48,7 +49,18 @@ Pages = ["modules/equations.md",
          "modules/discontinuities.md",
          "modules/simulations.md",
          "modules/solutions.md",
-         "modules/tableaus.md"
+]
+```
+
+
+## Tableaus
+
+```@contents
+Pages = ["tableaus/rungekutta.md",
+         "tableaus/prk.md",
+         "tableaus/splitting.md",
+         "tableaus/vprk.md",
+         "tableaus/spark.md",
 ]
 ```
 
