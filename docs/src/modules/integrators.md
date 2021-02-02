@@ -28,7 +28,10 @@ Pages   = ["integrators/initial_guess/extrapolation.jl",
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
-Pages   = ["integrators/splitting/integrators_splitting.jl"]
+Pages   = ["integrators/splitting/integrators_composition.jl",
+           "integrators/splitting/integrators_splitting.jl",
+           "integrators/splitting/integrators_exact_ode.jl",
+           "integrators/splitting/splitting_tableau.jl"]
 ```
 
 
