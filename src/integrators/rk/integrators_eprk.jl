@@ -63,7 +63,7 @@ F_{n,i} &= - \dfrac{\partial H}{\partial q} (Q_{n,i}, P_{n,i}) ,
 and tableaus satisfying the symplecticity conditions
 ```math
 \begin{aligned}
-b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
+b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 \bar{b}_i &= b_i .
 \end{aligned}
 ```
