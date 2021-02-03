@@ -63,6 +63,7 @@ module Integrators
     export HeaderCoefficientsRK,
            AbstractTableauRK, AbstractTableauIRK, AbstractTableauPRK,
            IntegratorRK, writeTableauToFile
+    export TableauPRK
 
     export get_symplectic_conjugate_coefficients, symplecticize,
            check_symplecticity, symplecticity_conditions, 
@@ -70,8 +71,8 @@ module Integrators
            check_order_conditions_B, check_order_conditions_C, check_order_conditions_D
 
     include("integrators/rk/abstract_integrator_rk.jl")
-    include("integrators/rk/coefficients.jl")
     include("integrators/rk/tableaus.jl")
+    include("integrators/rk/tableau_prk.jl")
 
 
     export IntegratorERK
