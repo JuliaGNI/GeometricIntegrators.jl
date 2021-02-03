@@ -256,7 +256,6 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersIPRK{D
 end
 
 
-"Integrate ODE with implicit partitioned Runge-Kutta integrator."
 function integrate_step!(int::IntegratorIPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                          cache::IntegratorCacheIPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from atomic solution

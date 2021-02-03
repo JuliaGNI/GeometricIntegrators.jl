@@ -322,7 +322,6 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST},
 end
 
 
-"Integrate DAE with variational special partitioned additive Runge-Kutta integrator."
 function Integrators.integrate_step!(int::IntegratorVPRKpLegendre{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     local offset::Int

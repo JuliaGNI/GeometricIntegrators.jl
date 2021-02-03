@@ -247,7 +247,6 @@ function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT
 end
 
 
-"Integrate ODE with fully implicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
                          cache::IntegratorCacheFIRK{DT}=int.caches[DT]) where {DT,TT}
 

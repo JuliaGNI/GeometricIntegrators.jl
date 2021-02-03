@@ -84,7 +84,6 @@ end
 timestep(int::IntegratorComposition) = int.Δt
 
 
-"Integrate ODE with Composition integrator."
 function integrate_step!(int::IntegratorComposition{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
     local t̅ = sol.t
     int.q̅  .= sol.q

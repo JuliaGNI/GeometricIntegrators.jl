@@ -74,7 +74,6 @@ end
 @inline Base.ndims(::IntegratorERK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
-"Integrate ODE with explicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorERK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
                          cache::IntegratorCacheERK{DT}=int.caches[DT]) where {DT,TT}
     # temporary variables

@@ -235,7 +235,6 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRKim
 end
 
 
-"Integrate ODE with fully implicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorFIRKimplicit{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                          cache::IntegratorCacheFIRKimplicit{DT}=int.caches[DT]) where {DT,TT}
 

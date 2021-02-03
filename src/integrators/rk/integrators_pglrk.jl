@@ -398,7 +398,6 @@ function function_hamiltonian!(λ::Vector, int::IntegratorPGLRK{DT,TT},
 end
 
 
-"Integrate ODE with projected Gauss-Legendre Runge-Kutta integrator."
 function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
                          cache::IntegratorCachePGLRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from atomic solution

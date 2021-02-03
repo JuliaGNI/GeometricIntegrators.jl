@@ -153,7 +153,7 @@ function computeStageP!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{D
     equations(int)[:v](t, cache.Q[jmax], cache.P[i], cache.V[i])
 end
 
-"Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
+
 function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                          cache::IntegratorCacheEPRK{DT}=int.caches[DT]) where {DT,TT}
     # temporary variables

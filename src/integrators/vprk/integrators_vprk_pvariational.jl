@@ -156,7 +156,6 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 end
 
 
-"Integrate ODE with variational partitioned Runge-Kutta integrator."
 function Integrators.integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # add perturbation for next time step to solution

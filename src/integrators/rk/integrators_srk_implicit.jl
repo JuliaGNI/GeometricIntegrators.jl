@@ -235,7 +235,6 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSRKimp
 end
 
 
-"Integrate ODE with fully implicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorSRKimplicit{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                          cache::IntegratorCacheSRKimplicit{DT}=int.caches[DT]) where {DT,TT}
 

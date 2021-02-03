@@ -161,7 +161,6 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersMidpoi
 end
 
 
-"Integrate ODE with fully implicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorMidpointImplicit{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                          cache::IntegratorCacheMidpointImplicit{DT}=int.caches[DT]) where {DT,TT}
 

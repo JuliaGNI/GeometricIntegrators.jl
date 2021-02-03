@@ -14,7 +14,6 @@ end
 timestep(int::IntegratorExactODE) = int.Δt
 
 
-"Integrate ODE with exact solution."
 function integrate_step!(int::IntegratorExactODE{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
     # reset atomic solution
     reset!(sol, timestep(int))
