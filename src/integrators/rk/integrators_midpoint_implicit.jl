@@ -53,7 +53,7 @@ end
 "Fully implicit Runge-Kutta integrator."
 struct IntegratorMidpointImplicit{DT, TT, D, S, PT <: ParametersMidpointImplicit{DT,TT},
                                     ST <: NonlinearSolver{DT},
-                                    IT <: InitialGuessODE{DT,TT}} <: IntegratorRK{DT,TT}
+                                    IT <: InitialGuessODE{DT,TT}} <: AbstractIntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT

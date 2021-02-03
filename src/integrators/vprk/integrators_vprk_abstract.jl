@@ -1,5 +1,5 @@
 
-abstract type AbstractIntegratorVPRK{DT,TT,D,S} <: IODEIntegrator{DT,TT} end
+abstract type AbstractIntegratorVPRK{DT,TT,D,S} <: AbstractIntegratorIRK{DT,TT} end
 abstract type AbstractIntegratorVPRKwProjection{DT,TT,D,S} <: AbstractIntegratorVPRK{DT,TT,D,S} end
 
 @inline parameters(integrator::AbstractIntegratorVPRK) = integrator.params

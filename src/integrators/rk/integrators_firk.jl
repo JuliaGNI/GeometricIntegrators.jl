@@ -65,7 +65,7 @@ end
 "Fully implicit Runge-Kutta integrator."
 struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
                                     ST <: NonlinearSolver{DT},
-                                    IT <: InitialGuessODE{TT}} <: IntegratorRK{DT,TT}
+                                    IT <: InitialGuessODE{TT}} <: AbstractIntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT

@@ -67,7 +67,7 @@ Projected Variational Gauss-Legendre Runge-Kutta integrator.
 struct IntegratorVPRKpTableau{DT, TT, D, S,
                 PT <: ParametersVPRKpTableau{DT,TT},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessIODE{TT}} <: IntegratorPRK{DT,TT}
+                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT

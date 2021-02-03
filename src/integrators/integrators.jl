@@ -31,13 +31,17 @@ function Integrator(equation::ODE, tableau::Tableau, Δt)
 end
 
 "Create integrator for explicit partitioned Runge-Kutta tableau."
-function Integrator(equation::PODE, tableau::TableauEPRK, Δt)
-    IntegratorEPRK(equation, tableau, Δt)
+function Integrator(equation::Union{PODE,HODE}, tableau::TableauPRK, Δt)
+    if isexplicit(tableau)
+        IntegratorEPRK(equation, tableau, Δt)
+    else
+        IntegratorIPRK(equation, tableau, Δt)
+    end
 end
 
 "Create integrator for implicit partitioned Runge-Kutta tableau."
-function Integrator(equation::PODE, tableau::TableauIPRK, Δt)
-    IntegratorIPRK(equation, tableau, Δt)
+function Integrator(equation::Union{IODE,VODE}, tableau::TableauPRK, Δt)
+    IntegratorPRKimplicit(equation, tableau, Δt)
 end
 
 "Create integrator for variational partitioned Runge-Kutta tableau."

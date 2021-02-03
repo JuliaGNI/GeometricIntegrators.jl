@@ -46,7 +46,7 @@ end
 "Diagonally implicit Runge-Kutta integrator."
 struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
                                     ST,# <: NonlinearSolver{DT},
-                                    IT <: InitialGuessODE{TT}} <: IntegratorRK{DT,TT}
+                                    IT <: InitialGuessODE{TT}} <: AbstractIntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT

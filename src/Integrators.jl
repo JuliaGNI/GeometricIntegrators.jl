@@ -62,7 +62,9 @@ module Integrators
 
     export HeaderCoefficientsRK,
            AbstractTableauRK, AbstractTableauIRK, AbstractTableauPRK,
-           IntegratorRK, writeTableauToFile
+           AbstractIntegratorRK, AbstractIntegratorIRK, AbstractIntegratorPRK,
+           IntegratorRK
+
     export TableauPRK
 
     export get_symplectic_conjugate_coefficients, symplecticize,
@@ -88,12 +90,14 @@ module Integrators
     include("integrators/rk/integrators_srk_implicit.jl")
 
 
-    export IntegratorEPRK, TableauEPRK
-    export IntegratorIPRK, TableauIPRK
+    export IntegratorEPRK
+    export IntegratorIPRK
+    export IntegratorPRKimplicit
     export IntegratorFLRK
 
     include("integrators/rk/integrators_eprk.jl")
     include("integrators/rk/integrators_iprk.jl")
+    include("integrators/rk/integrators_prk_implicit.jl")
     include("integrators/rk/integrators_flrk.jl")
 
 

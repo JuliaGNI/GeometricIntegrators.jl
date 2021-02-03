@@ -31,7 +31,7 @@ end
 
 
 "Explicit Runge-Kutta integrator."
-struct IntegratorERK{DT, TT, D, S, ET} <: IntegratorRK{DT,TT}
+struct IntegratorERK{DT, TT, D, S, ET} <: AbstractIntegratorRK{DT,TT}
     params::ParametersERK{DT,TT,D,S,ET}
     caches::CacheDict{ParametersERK{DT,TT,D,S,ET}}
 
