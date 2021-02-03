@@ -5,7 +5,7 @@ Tableau for variational Lobatto IIIA method with s stages
 Uses Lobatto IIIA for the coefficients $a_{ij}$ and its symplectic conjugate, Lobatto IIIB, for the coefficients $\bar{a}_{ij}$.
 """
 function TableauVPLobattoIIIA(s)
-    TableauVPRK(Symbol("LobattoIIIA$(s)"), 2s-2, TableauLobattoIIIA(s), (-1)^(s+1), get_lobatto_d_vector(s))
+    TableauVPRK(Symbol("LobattoIIIA$(s)"), 2s-2, TableauLobattoIIIA(s), (-1)^(s+1), get_lobatto_nullvector(s))
 end
 
 @doc raw"""
@@ -14,7 +14,7 @@ Tableau for variational Lobatto IIIB method with s stages
 Uses Lobatto IIIB for the coefficients $a_{ij}$ and its symplectic conjugate, Lobatto IIIA, for the coefficients $\bar{a}_{ij}$.
 """
 function TableauVPLobattoIIIB(s)
-    TableauVPRK(Symbol("LobattoIIIB$(s)"), 2s-2, TableauLobattoIIIB(s), (-1)^(s+1), get_lobatto_d_vector(s))
+    TableauVPRK(Symbol("LobattoIIIB$(s)"), 2s-2, TableauLobattoIIIB(s), (-1)^(s+1), get_lobatto_nullvector(s))
 end
 
 @doc raw"""

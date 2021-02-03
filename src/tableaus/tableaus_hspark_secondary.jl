@@ -94,7 +94,7 @@ end
 
 function TableauHSPARKLobattoIII(s, lq, lp; name = Symbol("HSPARKLobattoIII"))
     o = 2s-2
-    getTableauHSPARK(s, s, o, name, lq, lp, lq, lp, get_lobatto_ω_matrix(s), get_lobatto_d_vector(s))
+    getTableauHSPARK(s, s, o, name, lq, lp, lq, lp, get_lobatto_ω_matrix(s), get_lobatto_nullvector(s))
 end
 
 function TableauHSPARKLobattoIIIAB(s)
@@ -135,7 +135,7 @@ end
 function TableauHSPARKGLRKLobattoIII(s, σ, lq, lp; name = Symbol("HSPARKGLRKLobattoIII"))
     o = 2s
     g = TableauGauss(s)
-    getTableauHSPARK(s, σ, o, name, g, get_lobatto_glrk_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_d_vector(σ))
+    getTableauHSPARK(s, σ, o, name, g, get_lobatto_glrk_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_nullvector(σ))
 end
 
 function TableauHSPARKGLRKLobattoIIIAB(s, σ=s+1)

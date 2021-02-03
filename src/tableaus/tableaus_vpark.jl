@@ -55,12 +55,12 @@ end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and symplectic projection."
 function TableauLobattoIIIAIIIBpSymplectic(s)
-    TableauSymplecticProjection(Symbol("LobattoIIIAIIIB($s)pSymplectic"), TableauLobattoIIIA(s), TableauLobattoIIIB(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauSymplecticProjection(Symbol("LobattoIIIAIIIB($s)pSymplectic"), TableauLobattoIIIA(s), TableauLobattoIIIB(s), get_lobatto_nullvector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and symplectic projection."
 function TableauLobattoIIIBIIIApSymplectic(s)
-    TableauSymplecticProjection(Symbol("LobattoIIIBIIIA($s)pSymplectic"), TableauLobattoIIIB(s), TableauLobattoIIIA(s), get_lobatto_d_vector(s); R∞=-1^(s+1))
+    TableauSymplecticProjection(Symbol("LobattoIIIBIIIA($s)pSymplectic"), TableauLobattoIIIB(s), TableauLobattoIIIA(s), get_lobatto_nullvector(s); R∞=-1^(s+1))
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."
