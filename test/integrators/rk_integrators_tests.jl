@@ -20,56 +20,6 @@ pdae = harmonic_oscillator_pdae()
 
 
 
-@testset "$(rpad("Runge-Kutta coefficients",80))" begin
-
-    s = 2
-
-    g = TableauGauss(s)
-    g̃ = get_symplectic_conjugate_coefficients(g)
-
-    @test g.a ≈ g̃.a atol=1E-15
-    @test g.b == g̃.b
-    @test g.c == g̃.c
-
-    @test compute_symplecticity_error(g) == zeros(s,s)
-    @test check_symplecticity(g) == Array{Bool}(ones(s,s))
-    @test check_symmetry(g) == Array{Bool}(ones(s,s))
-
-    @test check_order_conditions_b(g,1) == true
-    @test check_order_conditions_b(g,2) == true
-    @test check_order_conditions_c(g,1) == Array{Bool}(ones(s))
-    @test check_order_conditions_c(g,2) == Array{Bool}(ones(s))
-    @test check_order_conditions_d(g,1) == Array{Bool}(ones(s))
-    @test check_order_conditions_d(g,2) == Array{Bool}(ones(s))
-
-    A = TableauLobattoIIIA(s)
-    B = TableauLobattoIIIB(s)
-    E = TableauLobattoIIIE(s)
-    Ã = get_symplectic_conjugate_coefficients(A)
-    B̃ = get_symplectic_conjugate_coefficients(B)
-
-    @test A.a ≈ B̃.a atol=1E-15
-    @test A.b == Ã.b
-    @test A.c == Ã.c
-
-    @test B.a ≈ Ã.a atol=1E-15
-    @test B.b == Ã.b
-    @test B.c == Ã.c
-
-    Â = symplecticize(A)
-    B̂ = symplecticize(B)
-
-    @test Â.a ≈ E.a atol=1E-15
-    @test Â.b == E.b
-    @test Â.c == E.c
-
-    @test B̂.a ≈ E.a atol=1E-15
-    @test B̂.b == E.b
-    @test B̂.c == E.c
-
-end
-
-
 @testset "$(rpad("Runge-Kutta integrators",80))" begin
 
     @test typeof(Integrator(ode, TableauExplicitMidpoint(), Δt)) <: IntegratorERK
