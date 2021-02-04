@@ -7,7 +7,7 @@ end
 function TableauSLRKLobattoIII(s, q, p)
     o = 2s-2
     tsym = Symbol("SLRKLobattoIII")
-    getTableauSLRK(s, o, tsym, q, p, q, p, get_lobatto_ω_matrix(s), get_lobatto_d_vector(s))
+    getTableauSLRK(s, o, tsym, q, p, q, p, get_lobatto_ω_matrix(s), get_lobatto_nullvector(s))
 end
 
 function TableauSLRKLobattoIIIAB(s)

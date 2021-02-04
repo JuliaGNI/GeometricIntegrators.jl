@@ -31,13 +31,17 @@ function Integrator(equation::ODE, tableau::Tableau, Δt)
 end
 
 "Create integrator for explicit partitioned Runge-Kutta tableau."
-function Integrator(equation::PODE, tableau::TableauEPRK, Δt)
-    IntegratorEPRK(equation, tableau, Δt)
+function Integrator(equation::Union{PODE,HODE}, tableau::PartitionedTableau, Δt)
+    if isexplicit(tableau)
+        IntegratorEPRK(equation, tableau, Δt)
+    else
+        IntegratorIPRK(equation, tableau, Δt)
+    end
 end
 
 "Create integrator for implicit partitioned Runge-Kutta tableau."
-function Integrator(equation::PODE, tableau::TableauIPRK, Δt)
-    IntegratorIPRK(equation, tableau, Δt)
+function Integrator(equation::Union{IODE,VODE}, tableau::PartitionedTableau, Δt)
+    IntegratorPRKimplicit(equation, tableau, Δt)
 end
 
 "Create integrator for variational partitioned Runge-Kutta tableau."
@@ -137,7 +141,7 @@ function integrate(equation::Equation, integrator::Integrator, ntime::Int; kwarg
 end
 
 "Integrate given equation with given tableau for ntime time steps and return solution."
-function integrate(equation::Equation, tableau::Union{AbstractTableau,Tableau}, Δt, ntime; kwargs...)
+function integrate(equation::Equation, tableau::Union{AbstractTableau,Tableau,PartitionedTableau}, Δt, ntime; kwargs...)
     return integrate(equation, Integrator(equation, tableau, Δt), ntime; kwargs...)
 end
 
@@ -147,7 +151,7 @@ function integrate(f::Function, x₀::Vector, tableau::Union{AbstractTableau,Tab
 end
 
 "Integrate PODE specified by two vector fields and initial conditions with given tableau for ntime time steps and return solution."
-function integrate(v::Function, f::Function, q₀::Vector, p₀::Vector, tableau::Union{AbstractTableau,Tableau}, Δt, ntime; t₀=0., kwargs...)
+function integrate(v::Function, f::Function, q₀::Vector, p₀::Vector, tableau::Union{AbstractTableau,Tableau,PartitionedTableau}, Δt, ntime; t₀=0., kwargs...)
     return integrate(PODE(v, f, t₀, q₀, p₀), tableau, Δt, ntime; kwargs...)
 end
 

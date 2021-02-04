@@ -366,7 +366,6 @@ function update_solution!(sol::AtomicSolutionPODE, cache::IntegratorCacheCGVI)
 end
 
 
-"Integrate ODE with variational partitioned Runge-Kutta integrator."
 function integrate_step!(int::IntegratorCGVI{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                          cache::IntegratorCacheCGVI{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache

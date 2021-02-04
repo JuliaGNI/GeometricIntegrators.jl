@@ -65,7 +65,7 @@ end
 "Fully implicit Runge-Kutta integrator."
 struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
                                     ST <: NonlinearSolver{DT},
-                                    IT <: InitialGuessODE{TT}} <: IntegratorRK{DT,TT}
+                                    IT <: InitialGuessODE{TT}} <: AbstractIntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -247,7 +247,6 @@ function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT
 end
 
 
-"Integrate ODE with fully implicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
                          cache::IntegratorCacheFIRK{DT}=int.caches[DT]) where {DT,TT}
 

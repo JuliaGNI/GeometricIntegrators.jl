@@ -67,7 +67,7 @@ Projected Variational Gauss-Legendre Runge-Kutta integrator.
 struct IntegratorVPRKpTableau{DT, TT, D, S,
                 PT <: ParametersVPRKpTableau{DT,TT},
                 ST <: NonlinearSolver{DT},
-                IT <: InitialGuessIODE{TT}} <: IntegratorPRK{DT,TT}
+                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -264,7 +264,6 @@ function function_dirac_constraint!(λ::Vector, int::IntegratorVPRKpTableau{DT,T
 end
 
 
-"Integrate ODE with projected Gauss-Legendre Runge-Kutta integrator."
 function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
 

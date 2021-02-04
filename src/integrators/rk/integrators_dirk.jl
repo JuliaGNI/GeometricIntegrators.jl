@@ -46,7 +46,7 @@ end
 "Diagonally implicit Runge-Kutta integrator."
 struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
                                     ST,# <: NonlinearSolver{DT},
-                                    IT <: InitialGuessODE{TT}} <: IntegratorRK{DT,TT}
+                                    IT <: InitialGuessODE{TT}} <: AbstractIntegratorRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT
@@ -188,7 +188,6 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{D
 end
 
 
-"Integrate ODE with diagonally implicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
                          cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT,TT}
 

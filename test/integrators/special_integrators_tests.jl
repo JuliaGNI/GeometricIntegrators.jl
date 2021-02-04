@@ -16,11 +16,66 @@ const q₀ = [1.0, 1.0]
 const parameters = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
 ode  = lotka_volterra_2d_ode(q₀; params=parameters)
+iode = lotka_volterra_2d_iode(q₀; params=parameters)
 vode = lotka_volterra_2d_vode(q₀; params=parameters)
 int  = IntegratorFIRK(ode, TableauGauss(8), Δt)
 sol  = integrate(ode, int, nt)
 refx = sol.q[end]
 
+
+@testset "$(rpad("Runge-Kutta integrators for implicit equations",80))" begin
+
+    int = IntegratorFIRKimplicit(iode, TableauGauss(1), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 2E-5
+
+    int = IntegratorFIRKimplicit(iode, TableauGauss(2), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 4E-7
+
+    int = IntegratorFIRKimplicit(iode, TableauGauss(3), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 2E-10
+
+    int = IntegratorFIRKimplicit(iode, TableauGauss(4), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 8E-14
+
+
+    int = IntegratorSRKimplicit(iode, TableauGauss(1), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 2E-5
+
+    int = IntegratorSRKimplicit(iode, TableauGauss(2), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 4E-7
+
+    int = IntegratorSRKimplicit(iode, TableauGauss(3), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 2E-10
+
+    int = IntegratorSRKimplicit(iode, TableauGauss(4), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 8E-14
+
+
+    int = IntegratorPRKimplicit(iode, PartitionedTableauGauss(1), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 2E-6
+
+    int = IntegratorPRKimplicit(iode, PartitionedTableauGauss(2), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 8E-7
+
+    int = IntegratorPRKimplicit(iode, PartitionedTableauGauss(3), Δt)
+    sol = integrate(iode, int, nt)
+    @test rel_err(sol.q, refx) < 4E-12
+
+    # int = IntegratorPRKimplicit(iode, PartitionedTableauGauss(4), Δt)
+    # sol = integrate(iode, int, nt)
+    # @test rel_err(sol.q, refx) < 2E-16
+
+end
 
 @testset "$(rpad("Special integrators",80))" begin
 

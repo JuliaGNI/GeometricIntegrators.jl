@@ -27,7 +27,6 @@ equations(int::IntegratorExplicitEuler) = int.equs
 timestep(int::IntegratorExplicitEuler) = int.Δt
 
 
-"Integrate ODE with Explicit Euler integrator."
 function integrate_step!(int::IntegratorExplicitEuler{DT,TT,AT}, sol::AtomicSolutionODE{DT,TT,AT}) where {DT,TT,AT}
     # reset atomic solution
     reset!(sol, timestep(int))

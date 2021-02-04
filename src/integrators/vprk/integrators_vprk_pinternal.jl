@@ -160,7 +160,6 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 end
 
 
-"Integrate ODE with variational partitioned Runge-Kutta integrator."
 function Integrators.integrate_step!(int::IntegratorVPRKpInternal{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache

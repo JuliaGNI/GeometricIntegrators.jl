@@ -1,55 +1,11 @@
-@doc raw"""
-`TableauEPRK`: Tableau of an Explicit Partitioned Runge-Kutta method
-```math
-\begin{aligned}
-V_{n,i} &= \hphantom{-} \dfrac{\partial H}{\partial p} (Q_{n,i}, P_{n,i}) , &
-Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
-q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} , \\
-F_{n,i} &= - \dfrac{\partial H}{\partial q} (Q_{n,i}, P_{n,i}) , &
-P_{n,i} &= p_{n} + h  \sum \limits_{i=1}^{s} \bar{a}_{ij} \, F_{n,j} , &
-p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i} \, F_{n,i} ,
-\end{aligned}
-```
-usually satisfying the symplecticity conditions
-```math
-\begin{aligned}
-b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
-\bar{b}_i &= b_i .
-\end{aligned}
-```
-"""
-struct TableauEPRK{T} <: AbstractTableauPRK{T}
-    @HeaderTableau
-
-    q::Tableau{T}
-    p::Tableau{T}
-
-    function TableauEPRK{T}(name, o, q, p) where {T}
-        @assert q.s==p.s
-        # TODO check that both tableaus are lower triangular and that only one element
-        #      a_q[i,i] or a_p[i,i] is non-zero for all i.
-        new(name, o, q.s, q, p)
-    end
-end
-
-function TableauEPRK(name::Symbol, order::Int, q::Tableau{T}, p::Tableau{T}) where {T}
-    TableauEPRK{T}(name, order, q, p)
-end
-
-function TableauEPRK(name::Symbol, order::Int, q::Tableau{T}) where {T}
-    TableauEPRK{T}(name, order, q, q)
-end
-
-# TODO function readAbstractTableauEPRKFromFile(dir::AbstractString, name::AbstractString)
-
 
 "Parameters for right-hand side function of explicit partitioned Runge-Kutta methods."
 struct ParametersEPRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equs::ET
-    tab::TableauEPRK{TT}
+    tab::PartitionedTableau{TT}
     Δt::TT
 
-    function ParametersEPRK{DT,D}(equs::ET, tab::TableauEPRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+    function ParametersEPRK{DT,D}(equs::ET, tab::PartitionedTableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
         new{DT, TT, D, tab.s, ET}(equs, tab, Δt)
     end
 end
@@ -85,8 +41,34 @@ end
 @inline CacheType(ST, params::ParametersEPRK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheEPRK{ST,D,S}
 
 
-"Explicit partitioned Runge-Kutta integrator."
-struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: IntegratorPRK{DT,TT}
+@doc raw"""
+Explicit partitioned Runge-Kutta integrator solving the system
+```math
+\begin{aligned}
+V_{n,i} &= v (Q_{n,i}, P_{n,i}) , &
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} , \\
+F_{n,i} &= f (Q_{n,i}, P_{n,i}) , &
+P_{n,i} &= p_{n} + h  \sum \limits_{i=1}^{s} \bar{a}_{ij} \, F_{n,j} , &
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i} \, F_{n,i} .
+\end{aligned}
+```
+Usually we are interested in Hamiltonian systems, where
+```math
+\begin{aligned}
+V_{n,i} &= \dfrac{\partial H}{\partial p} (Q_{n,i}, P_{n,i}) , &
+F_{n,i} &= - \dfrac{\partial H}{\partial q} (Q_{n,i}, P_{n,i}) , 
+\end{aligned}
+```
+and tableaus satisfying the symplecticity conditions
+```math
+\begin{aligned}
+b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
+\bar{b}_i &= b_i .
+\end{aligned}
+```
+"""
+struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: AbstractIntegratorPRK{DT,TT}
     params::ParametersEPRK{DT, TT, D, S, ET}
     caches::CacheDict{ParametersEPRK{DT, TT, D, S, ET}}
 
@@ -94,7 +76,7 @@ struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: IntegratorPRK{DT,TT}
         new{DT, TT, D, S, ET}(params, caches)
     end
 
-    function IntegratorEPRK{DT,D}(equations::ET, tableau::TableauEPRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+    function IntegratorEPRK{DT,D}(equations::ET, tableau::PartitionedTableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
         # get number of stages
         S = tableau.s
 
@@ -108,15 +90,15 @@ struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: IntegratorPRK{DT,TT}
         IntegratorEPRK(params, caches)
     end
 
-    function IntegratorEPRK{DT,D}(v::Function, f::Function, tableau::TableauEPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    function IntegratorEPRK{DT,D}(v::Function, f::Function, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
         IntegratorEPRK{DT,D}(NamedTuple{(:v,:f)}((v,f)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorEPRK{DT,D}(v::Function, f::Function, h::Function, tableau::TableauEPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    function IntegratorEPRK{DT,D}(v::Function, f::Function, h::Function, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
         IntegratorEPRK{DT,D}(NamedTuple{(:v,:f,:h)}((v,f,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorEPRK(equation::PODE{DT,TT}, tableau::TableauEPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorEPRK(equation::PODE{DT,TT}, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorEPRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
@@ -153,7 +135,7 @@ function computeStageP!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{D
     equations(int)[:v](t, cache.Q[jmax], cache.P[i], cache.V[i])
 end
 
-"Integrate partitioned ODE with explicit partitioned Runge-Kutta integrator."
+
 function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                          cache::IntegratorCacheEPRK{DT}=int.caches[DT]) where {DT,TT}
     # temporary variables

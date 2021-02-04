@@ -28,15 +28,6 @@ module Tableaus
     include("tableaus/coefficients_lob.jl")
 
 
-    include("tableaus/tableaus_eprk.jl")
-
-    export TableauSymplecticEulerA, TableauSymplecticEulerB,
-           TableauLobattoIIIAIIIB2, TableauLobattoIIIBIIIA2
-
-    include("tableaus/tableaus_iprk.jl")
-
-    export TableauIPGLRK           
-    
     include("tableaus/tableaus_spark.jl")
 
     export TableauSPARKGLRK,

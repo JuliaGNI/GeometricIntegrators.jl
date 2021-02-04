@@ -78,7 +78,7 @@ end
 
 function TableauVSPARKLobattoIII(s, lq, lp; name = Symbol("VSPARKLobattoIII"))
     o = 2s-2
-    getTableauVSPARK(s, s, o, name, lq, lp, lq, lp, get_lobatto_ω_matrix(s), get_lobatto_d_vector(s))
+    getTableauVSPARK(s, s, o, name, lq, lp, lq, lp, get_lobatto_ω_matrix(s), get_lobatto_nullvector(s))
 end
 
 function TableauVSPARKLobattoIIIAB(s)
@@ -119,7 +119,7 @@ end
 function TableauVSPARKGLRKLobattoIII(s, σ, lq, lp; name = Symbol("VSPARKGLRKLobattoIII"))
     o = 2s
     g = TableauGauss(s)
-    getTableauVSPARK(s, σ, o, name, g, get_lobatto_glrk_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_d_vector(σ))
+    getTableauVSPARK(s, σ, o, name, g, get_lobatto_glrk_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_nullvector(σ))
 end
 
 function TableauVSPARKGLRKLobattoIIIAB(s, σ=s+1)

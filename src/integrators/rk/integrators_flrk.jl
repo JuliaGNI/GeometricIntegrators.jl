@@ -45,7 +45,7 @@ end
 "Formal Lagrangian Runge-Kutta integrator."
 struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
                                     ST <: NonlinearSolver{DT},
-                                    IT <: InitialGuessODE{TT}} <: IntegratorPRK{DT,TT}
+                                    IT <: InitialGuessODE{TT}} <: AbstractIntegratorPRK{DT,TT}
     params::PT
     solver::ST
     iguess::IT

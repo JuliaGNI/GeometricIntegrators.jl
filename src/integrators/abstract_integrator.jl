@@ -58,4 +58,16 @@ solution_stages!(::Vector{DT}, ::Vector{DT}, ::PT) where {DT, TT, PT <: Paramete
 
 initialize!(::Integrator, ::AtomicSolution) = nothing
 
+"""
+Performs one time step with a given integrator.
+
+```julia
+integrate_step!(integrator::Integrator, asol::AtomicSolution)
+```
+
+The function accepts two arguments: an integrator and an appropriate [`AtomicSolution`](@ref),
+which contains the state of the system at the beginning and the end of the time step and possibly
+additional information like solver output or the solution at internal stages of a Runge-Kutta
+method.
+"""
 integrate_step!(integrator::Integrator, ::AtomicSolution) = error("integrate_step()! not implemented for ", typeof(integrator))

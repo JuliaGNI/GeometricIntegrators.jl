@@ -52,7 +52,6 @@ end
 timestep(int::IntegratorSplitting) = int.Δt
 
 
-"Integrate ODE with splitting integrator."
 function integrate_step!(int::IntegratorSplitting{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
     local cᵢ::TT
     local tᵢ::TT

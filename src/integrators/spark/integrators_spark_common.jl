@@ -28,7 +28,6 @@ function update_solution!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomicSoluti
 end
 
 
-"Integrate an implicit DAE with a specialised partitioned additive Runge-Kutta integrator."
 function Integrators.integrate_step!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomicSolutionPDAE{DT,TT},
                                      cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache

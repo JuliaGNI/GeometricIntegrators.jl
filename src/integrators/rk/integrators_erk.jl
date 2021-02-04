@@ -31,7 +31,7 @@ end
 
 
 "Explicit Runge-Kutta integrator."
-struct IntegratorERK{DT, TT, D, S, ET} <: IntegratorRK{DT,TT}
+struct IntegratorERK{DT, TT, D, S, ET} <: AbstractIntegratorRK{DT,TT}
     params::ParametersERK{DT,TT,D,S,ET}
     caches::CacheDict{ParametersERK{DT,TT,D,S,ET}}
 
@@ -74,7 +74,6 @@ end
 @inline Base.ndims(::IntegratorERK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
-"Integrate ODE with explicit Runge-Kutta integrator."
 function integrate_step!(int::IntegratorERK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
                          cache::IntegratorCacheERK{DT}=int.caches[DT]) where {DT,TT}
     # temporary variables
