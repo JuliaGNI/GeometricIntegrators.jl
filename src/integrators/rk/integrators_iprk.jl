@@ -2,14 +2,14 @@
 "Parameters for right-hand side function of implicit partitioned Runge-Kutta methods."
 mutable struct ParametersIPRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equs::ET
-    tab::TableauPRK{TT}
+    tab::PartitionedTableau{TT}
     Δt::TT
 
     t::TT
     q::Vector{DT}
     p::Vector{DT}
 
-    function ParametersIPRK{DT,D}(equs::ET, tab::TableauPRK{TT}, Δt::TT) where {D, DT, TT, ET <: NamedTuple}
+    function ParametersIPRK{DT,D}(equs::ET, tab::PartitionedTableau{TT}, Δt::TT) where {D, DT, TT, ET <: NamedTuple}
         new{DT, TT, D, tab.s, ET}(equs, tab, Δt, zero(TT), zeros(DT,D), zeros(DT,D))
     end
 end
@@ -116,7 +116,7 @@ struct IntegratorIPRK{DT, TT, D, S, PT <: ParametersIPRK{DT,TT},
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorIPRK{DT,D}(equations::NamedTuple, tableau::TableauPRK{TT}, Δt::TT) where {DT,TT,D}
+    function IntegratorIPRK{DT,D}(equations::NamedTuple, tableau::PartitionedTableau{TT}, Δt::TT) where {DT,TT,D}
         # get number of stages
         S = tableau.s
 
@@ -136,15 +136,15 @@ struct IntegratorIPRK{DT, TT, D, S, PT <: ParametersIPRK{DT,TT},
         IntegratorIPRK(params, solver, iguess, caches)
     end
 
-    function IntegratorIPRK{DT,D}(v::Function, f::Function, tableau::TableauPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    function IntegratorIPRK{DT,D}(v::Function, f::Function, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
         IntegratorIPRK{DT,D}(NamedTuple{(:v,:f)}((v,f)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorIPRK{DT,D}(v::Function, f::Function, h::Function, tableau::TableauPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    function IntegratorIPRK{DT,D}(v::Function, f::Function, h::Function, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
         IntegratorIPRK{DT,D}(NamedTuple{(:v,:f,:h)}((v,f,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorIPRK(equation::PODE{DT,TT}, tableau::TableauPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorIPRK(equation::PODE{DT,TT}, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorIPRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

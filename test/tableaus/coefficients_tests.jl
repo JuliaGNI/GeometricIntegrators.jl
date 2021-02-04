@@ -6,7 +6,7 @@
     using GeometricIntegrators.Utils
     
     import GeometricIntegrators.Tableaus: get_lobatto_nodes, get_lobatto_weights,
-                                          get_lobatto_glrk_coefficients, get_lobatto_nullvector
+                                          get_lobatto_glrk_coefficients
     import QuadratureRules: LobattoLegendreQuadrature, nodes, weights
 
 
@@ -78,27 +78,6 @@
     @test get_lobatto_glrk_coefficients(2) ≈ _get_lobatto_interstage_coefficients(2)
     @test get_lobatto_glrk_coefficients(3) ≈ _get_lobatto_interstage_coefficients(3)
     @test get_lobatto_glrk_coefficients(4) ≈ _get_lobatto_interstage_coefficients(4)
-
-
-    function _get_lobatto_nullvector(s)
-        if s == 2
-            d = [+1.0, -1.0]
-        elseif s == 3
-            d = [+1.0, -2.0, +1.0]
-        elseif s == 4
-            d = [+1.0, -√5, +√5, -1.0]
-        elseif s == 5
-            d = [+3.0, -7.0, +8.0, -7.0, +3.0]
-        else
-            @error("We don't have a d vector for s=$(s) stages.")
-        end
-        return normalize(d) * sign(d[begin])
-    end
-
-    @test get_lobatto_nullvector(2; normalize=true) ≈ _get_lobatto_nullvector(2)
-    @test get_lobatto_nullvector(3; normalize=true) ≈ _get_lobatto_nullvector(3)
-    @test get_lobatto_nullvector(4; normalize=true) ≈ _get_lobatto_nullvector(4)
-    @test get_lobatto_nullvector(5; normalize=true) ≈ _get_lobatto_nullvector(5)
 
 
     # test PGLRK coefficients

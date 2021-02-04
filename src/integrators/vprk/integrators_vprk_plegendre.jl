@@ -1,5 +1,5 @@
 
-# struct TableauVPRKpLegendre{T} <: AbstractTableauPRK{T}
+# struct TableauVPRKpLegendre{T} <: AbstractPartitionedTableau{T}
 #     @HeaderTableau
 #
 #     q::Tableau{T}

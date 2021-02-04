@@ -65,16 +65,12 @@ module Integrators
            AbstractIntegratorRK, AbstractIntegratorIRK, AbstractIntegratorPRK,
            IntegratorRK
 
-    export TableauPRK
-
     export get_symplectic_conjugate_coefficients, symplecticize,
            check_symplecticity, symplecticity_conditions, 
-           check_symmetry, compute_symplecticity_error,
-           check_order_conditions_B, check_order_conditions_C, check_order_conditions_D
+           check_symmetry, compute_symplecticity_error
 
     include("integrators/rk/abstract_integrator_rk.jl")
     include("integrators/rk/tableaus.jl")
-    include("integrators/rk/tableau_prk.jl")
 
 
     export IntegratorERK

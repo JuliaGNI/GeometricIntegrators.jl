@@ -32,15 +32,6 @@ function get_lobatto_glrk_coefficients(s, σ=s+1, T=Float64)
 end
 
 
-function get_lobatto_nullvector(s, T=Float64; normalize=false)
-    q = get_lobatto_nodes(s)
-    l = Lagrange(q)
-    v = [l'[x, j] for x in q, j in eachindex(l)]
-    w = LinearAlgebra.nullspace(v')[:,begin]
-    normalize ? T.(LinearAlgebra.normalize(w) .* sign(w[begin])) : T.(w)
-end
-
-
 function get_lobatto_ω_matrix(s)
     as = TableauLobattoIIIA(s).a[2:s,1:s]
     es = zeros(s)

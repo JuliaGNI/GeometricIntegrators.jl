@@ -2,10 +2,10 @@
 "Parameters for right-hand side function of explicit partitioned Runge-Kutta methods."
 struct ParametersEPRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
     equs::ET
-    tab::TableauPRK{TT}
+    tab::PartitionedTableau{TT}
     Δt::TT
 
-    function ParametersEPRK{DT,D}(equs::ET, tab::TableauPRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+    function ParametersEPRK{DT,D}(equs::ET, tab::PartitionedTableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
         new{DT, TT, D, tab.s, ET}(equs, tab, Δt)
     end
 end
@@ -76,7 +76,7 @@ struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: AbstractIntegratorPRK{D
         new{DT, TT, D, S, ET}(params, caches)
     end
 
-    function IntegratorEPRK{DT,D}(equations::ET, tableau::TableauPRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
+    function IntegratorEPRK{DT,D}(equations::ET, tableau::PartitionedTableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
         # get number of stages
         S = tableau.s
 
@@ -90,15 +90,15 @@ struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: AbstractIntegratorPRK{D
         IntegratorEPRK(params, caches)
     end
 
-    function IntegratorEPRK{DT,D}(v::Function, f::Function, tableau::TableauPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    function IntegratorEPRK{DT,D}(v::Function, f::Function, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
         IntegratorEPRK{DT,D}(NamedTuple{(:v,:f)}((v,f)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorEPRK{DT,D}(v::Function, f::Function, h::Function, tableau::TableauPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
+    function IntegratorEPRK{DT,D}(v::Function, f::Function, h::Function, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
         IntegratorEPRK{DT,D}(NamedTuple{(:v,:f,:h)}((v,f,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorEPRK(equation::PODE{DT,TT}, tableau::TableauPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorEPRK(equation::PODE{DT,TT}, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorEPRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
