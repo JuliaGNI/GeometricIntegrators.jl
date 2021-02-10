@@ -7,7 +7,31 @@ bib = CitationBibliography("GeometricIntegrators.bib")
 
 makedocs(bib,
     sitename = "GeometricIntegrators.jl",
-    format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
+    format = Documenter.HTML(
+               prettyurls = get(ENV, "CI", nothing) == "true",
+               mathengine = MathJax3(Dict(
+                 :tex => Dict(
+                   :macros => Dict(
+                     :bigtimes => "\\mathop{\\vcenter{\\huge\\times}}",
+                     :ext => "\\mathsf{d}",
+                     :id => "\\mathop{id}",
+                     :rank => "\\mathop{rank}",
+                     :spn => "\\mathop{span}",
+                     :identity => "\\mathbb{I}",
+                     :abs => ["\\left \\vert #1 \\right \\vert", 1],
+                     :mf => ["\\mathcal{#1}", 1],
+                     :tb => ["\\mathsf{T}_{#1} #2", 2, ""],
+                     :cb => ["\\mathsf{T}_{#1}^{*} #2", 2, ""],
+                   ),
+                   :inlineMath => [["\$","\$"], ["\\(","\\)"]],
+                   :tags => "ams",
+                 ),
+                 :options => Dict(
+                   :ignoreHtmlClass => "tex2jax_ignore",
+                   :processHtmlClass => "tex2jax_process",
+                 ),
+               ), true)
+             ),
     pages = ["Home" => "index.md",
              "Tutorial" => "tutorial/tutorial.md",
              "Equations" => "equations.md",
