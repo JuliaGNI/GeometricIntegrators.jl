@@ -25,19 +25,19 @@ we will construct a finite-dimensional subspace of
 ```
 The subspace $\mf{Q}_{h} ( q_{0}, q_{N}, [0, T] )$ is defined by
 ```math
-\begin{equation}\label{eq:galerkin_vi_space_of_piecewise_polynomials}
+\begin{equation}\label{eq:galerkin-vi-space-of-piecewise-polynomials}
 \mf{Q}_{h} ( q_{0}, q_{N}, [0, T] ) = \big\{q_{h} : [0, T] \rightarrow \mf{M} \; \big\vert \; q_{h} \vert_{ [ t_{n} , t_{n+1} ] } \in \mathbb{P}_{s} ([t_{n}, t_{n+1}]) , \;  q_{h} \in C^{0} ([0, T]) \big\} ,
 \end{equation}
 ```
 where $\mathbb{P}_{s} ([t_{n}, t_{n+1}])$ is the space of polynomials of degree $s$ in the interval $[t_{n}, t_{n+1}] \subset [0, T]$.
-We see that $\mf{Q}_{h} ( q_{0}, q_{N}, [0, T] ) \subset \mf{Q} ( q_{0}, q_{N}, [0, T] )$. In order for $\mf{Q}_{h} ( q_{0}, q_{N}, [0, T] )$ to be an instance of $\mf{Q}_{d} ( q_{0}, q_{N}, \{ t_{n} \}_{n=0}^{N} )$ we have to require in addition to the definition~\eqref{eq:galerkin_vi_space_of_piecewise_polynomials} that  on the sequence $\{ t_{n} \}_{n=0}^{N}$, the curves $q_{h}$ in $\mf{Q}_{h} ( q_{0}, q_{N}, [0, T] )$ satisfy
+We see that $\mf{Q}_{h} ( q_{0}, q_{N}, [0, T] ) \subset \mf{Q} ( q_{0}, q_{N}, [0, T] )$. In order for $\mf{Q}_{h} ( q_{0}, q_{N}, [0, T] )$ to be an instance of $\mf{Q}_{d} ( q_{0}, q_{N}, \{ t_{n} \}_{n=0}^{N} )$ we have to require in addition to the definition \eqref{eq:galerkin-vi-space-of-piecewise-polynomials} that  on the sequence $\{ t_{n} \}_{n=0}^{N}$, the curves $q_{h}$ in $\mf{Q}_{h} ( q_{0}, q_{N}, [0, T] )$ satisfy
 ```math
 q_{h} \vert_{ [ t_{n} , t_{n+1} ] } (t_{n})   = q_{n}
 \qquad \text{and} \qquad
 q_{h} \vert_{ [ t_{n} , t_{n+1} ] } (t_{n+1}) = q_{n+1} ,
 ```
 where $q_{n}$ are the points of the discrete trajectories $q_{d} = \{ q_{n} \}_{n=0}^{N}$.
-However, it is often more convenient to enforce these continuity constraints weakly in the action rather than building them into the spaces, which implies dropping the condition $q_{h} \in C^{0} ([0, T])$ in~\eqref{eq:galerkin_vi_space_of_piecewise_polynomials}. This in turn means that the whole of $\mf{Q}_{h} ( q_{0}, q_{N}, [0, T] )$ is not a subspace of $\mf{Q} ( q_{0}, q_{N}, [0, T] )$ anymore.
+However, it is often more convenient to enforce these continuity constraints weakly in the action rather than building them into the spaces, which implies dropping the condition $q_{h} \in C^{0} ([0, T])$ in \eqref{eq:galerkin-vi-space-of-piecewise-polynomials}. This in turn means that the whole of $\mf{Q}_{h} ( q_{0}, q_{N}, [0, T] )$ is not a subspace of $\mf{Q} ( q_{0}, q_{N}, [0, T] )$ anymore.
 
 **TODO**:
 *The role of continuity is not clearly explained and probably not correctly worked out.
@@ -98,7 +98,7 @@ In order to obtain the discrete space of curves $\mf{Q}_{d} ( q_{0}, q_{N}, \{ t
 ```
 We project the trajectories of the particles onto a Lagrange basis in order to obtain the polynomial approximation of the trajectory in the interval $[t_{n}, t_{n+1}]$, i.e.,
 ```math
-\begin{equation}\label{eq:particle_trajectory_position}
+\begin{equation}\label{eq:particle-trajectory-position}
 q_{h} (t) \big\vert_{[t_{n}, t_{n+1}]} = \sum \limits_{m=1}^{s} Q_{n,m} \, \varphi_{n}^{s,m} (t) .
 \end{equation}
 ```
@@ -125,7 +125,7 @@ which is just linear interpolation for $q$ and piecewise constant for $\dot{q}$.
 
 In order to numerically compute the definite integral
 ```math
-\begin{equation}\label{eq:galerkin_vi_quadrature_integral}
+\begin{equation}\label{eq:galerkin-vi-quadrature-integral}
 F [q] = \int \limits_{t_{n}}^{t_{n+1}} f \big( t, q(t) \big) \, dt ,
 \end{equation}
 ```
@@ -134,7 +134,7 @@ Further, we introduce a quadrature formula in which $f$ itself is approximated b
 ```math
 f_{h} (t, q (t)) = \sum \limits_{i=1}^{s} \varphi_{n}^{s,i} (t) \, f \big( t_{n} + h c_{i}, \, q (t_{n} + h c_{i}) \big) .
 ```
-Together, this gives an approximation of the integral~\eqref{eq:galerkin_vi_quadrature_integral} as follows
+Together, this gives an approximation of the integral \eqref{eq:galerkin-vi-quadrature-integral} as follows
 ```math
 \begin{equation}\label{eq:galerkin_vi_quadrature_rule}
 F_h [q]
@@ -152,7 +152,7 @@ b_{i}
 ```
 $h = t_{n+1} - t_{n}$ is the time step, and $q_{h} (t) \big\vert_{ [ t_{n} , t_{n+1} ] }$ is some polynomial approximation to $q(t)$ in the interval $[t_{n}, t_{n+1}]$.
 %The $c_{i}$ will also be the collocation points of the quadrature rule that is used to approximate the action integral.
-We will focus on collocation methods where the nodes $c_{i}$ of the quadrature rule are also the nodes of the basis functions, so that for~\eqref{eq:particle_trajectory_position}, we have $q_{h} (t_{n} + h c_{i}) = Q_{n,i}$.
+We will focus on collocation methods where the nodes $c_{i}$ of the quadrature rule are also the nodes of the basis functions, so that for \eqref{eq:particle-trajectory-position}, we have $q_{h} (t_{n} + h c_{i}) = Q_{n,i}$.
 It follows that the discrete Lagrangian can be written as
 ```math
 L_{d} (q_{n}, q_{n+1}) = h \sum \limits_{i=1}^{s} b_{i} \, L \big( Q_{n,i} , \dot{Q}_{n,i} \big) .
