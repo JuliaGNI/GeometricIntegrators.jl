@@ -1,10 +1,9 @@
-
-# Discontinuous Galerkin Variational Integrators
+# [Discontinuous Galerkin Variational Integrators](@id dgvi)
 
 Discontinuous Galerkin Variational Integrators (DGVIs) are a family of integrators
 for degenerate Lagrangian systems and for Hamiltonian systems subject to Dirac constraints.
 For integrators for non-degenerate (regular) Lagrangian and unconstrained
-Hamiltonian systems see Hamilton-Pontryagin-Galerkin (HPG) Integrators.
+Hamiltonian systems see [Hamilton-Pontryagin-Galerkin (HPG) Integrators](@ref hpg).
 
 
 ## Degenerate Lagrangian Systems

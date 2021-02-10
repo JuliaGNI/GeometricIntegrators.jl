@@ -94,9 +94,9 @@ For many methods, tabulated coefficients are included, namely
 The coefficients of other methods are computed on-the-fly as described in the following.
 
 
-### Simplifying Assumptions
+## Simplifying Assumptions
 
-The construction of many Runge-Kutte methods, in particular the Gauß, Radau and Lobatto methods, relies on the so-called simplifying assumptions:
+The construction of many Runge-Kutte methods, in particular the Gauß, Lobatto and Radau methods, relies on the so-called simplifying assumptions:
 ```math
 \begin{aligned}
 B(\sigma): & \sum \limits_{i=1}^{s} b_{i} c_{i}^{k-1} = \frac{1}{k} , &
@@ -117,7 +117,7 @@ Furthermore, the following theorem holds:
 **Theorem (Butcher 1964)**: If the coefficients $(a_{ij}, b_{i}, c_{i})$ of a Runge-Kutta method satisfy $B(\sigma)$, $C(\eta)$, $D(\zeta)$ with $\sigma \le \eta + \zeta + 1$ and $\sigma \le 2 \eta + 2$, then the method is of order $\sigma$.
 
 
-### Gauß, Lobatto and Radau Methods
+## Gauß, Lobatto and Radau Methods
 
 Gauß methods are collocation methods using the nodes and weights of Gaußian quadrature formulas.
 The nodes are the zeros of the shifted Legendre polynomials of degree $s$,
@@ -185,3 +185,9 @@ The following methods are provided for the construction of the tableaus for the 
 
 The first argument `s` refers to the number of stages ($s \ge 1$ for Gauß and $s \ge 2$ for all other methods).
 The second argument specifies the number type of the coefficients. Internally, all coefficients are computed using `BigFloat` and then converted to the requested number type, defaulting to `Float64`.
+
+
+## Implicit Equations
+
+**TODO**
+ 
