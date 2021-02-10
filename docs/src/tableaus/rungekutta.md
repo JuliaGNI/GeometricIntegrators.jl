@@ -1,6 +1,6 @@
 # Runge-Kutta Tableaus
 
 ```@autodocs
-Modules = [RungeKutta]
+Modules = [RungeKutta.Tableaus]
 Order   = [:constant, :type, :macro, :function]
 ```
