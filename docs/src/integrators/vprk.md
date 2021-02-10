@@ -119,8 +119,18 @@ The terms of the variations which are multiplying $\delta q_{n}$ become
 ```math
 \lambda_{n+1} = \lambda_{n} + h \sum \limits_{i=1}^{s} b_{i} \, F_{n,i} .
 ```
-Similar to the position-momentum form, we can define
+Similar to classical [variational integrators](@ref variational-integrators), we can use the discrete fibre derivative
 ```math
+\begin{equation}\label{eq:discrete-fibre-derivative}
+\begin{aligned}
+\mathbb{F}^{-} L_{d} : (q_{n}, q_{n+1}) &\mapsto (q_{n},   p_{n})   = \big( q_{n}  , - D_{1} L_{d} (q_{n}, q_{n+1}) \big) , \\
+\mathbb{F}^{+} L_{d} : (q_{n}, q_{n+1}) &\mapsto (q_{n+1}, p_{n+1}) = \big( q_{n+1},   D_{2} L_{d} (q_{n}, q_{n+1}) \big) .
+\end{aligned}
+\end{equation}
+```
+to define the position-momentum form of the integrator,
+```math
+\begin{equation}\label{eq:vi-position-momentum-form}
 \begin{aligned}
 p_{n  }
 &=           -  D_{1} L_{d} (q_{n}, q_{n+1})
@@ -129,6 +139,7 @@ p_{n+1}
 &= \hphantom{-} D_{2} L_{d} (q_{n}, q_{n+1})
  = \lambda_{n+1} .
 \end{aligned}
+\end{equation}
 ```
 Replacing $\lambda_{n+1}$ in the second equation with its expression obtained from the first equation, we get
 ```math
@@ -190,7 +201,7 @@ accounting for the linear dependence of the $\dot{Q}_{n,i}$ and consequently als
 The particular values of $d_{i}$ depend on the number of stages $s$ and the definition of the $q_{n,i}$ [[OberBloebaum:2016](@cite)]. For two stages, we have $d_{1} = - d_{2}$, so that we can choose, for example, $d = (+1, -1)$, and \eqref{eq:vprk-lobatto} becomes equivalent to the variational integrator of the trapezoidal Lagrangian. For three stages, we can choose $d = (\tfrac{1}{2}, -1, \tfrac{1}{2})$, and for four stages we can use $d = (+1, -\sqrt{5}, +\sqrt{5}, -1)$.
 In GeometricIntegrators, these vectors can be obtained via the function [`get_lobatto_nullvector`](@ref) from [RungeKutta.jl](https://github.com/JuliaGNI/RungeKutta.jl).
 
-Another approach that always works is to use directly compute the position-momentum form of the variational integrator from the discrete Lagrangian \eqref{eq:vprk-discrete-lagrangian} instead of applying the discrete action principle.
+Another approach that always works is to use directly compute the position-momentum form \eqref{eq:vi-position-momentum-form} of the variational integrator for the discrete Lagrangian \eqref{eq:vprk-discrete-lagrangian} instead of applying the discrete action principle.
 Such subtleties, which are easily overlooked, can be avoided by starting the discretisation of the action from a more fundamental point of view, namely by approximating the function spaces of the trajectories, which leads us to [Galerkin Variational Integrators](@ref cgvi).
 
 
@@ -306,23 +317,23 @@ The general procedure is as follows.
 We start with initial conditions $q_{n}$ on $\Delta$ (recall that for the particular Lagrangian \eqref{eq:degenerate-lagrangian} considered here, the configuration manifold $\mf{M}$ and the constraint submanifold $\Delta$ are isomorphic, so that we can use the same coordinates on $\Delta$ as we use on $\mf{M}$).
 We compute the corresponding momentum $p_{n}$ by the continuous fibre derivative \eqref{eq:fibre-derivative-general}, which yields initial conditions $(q_{n}, p_{n} = \vartheta(q_{n}))$ on $\cb{\mf{M}}$ satisfying the constraint $\phi(q_{n}, p_{n}) = 0$. This corresponds to the inclusion map \eqref{eq:dirac-inclusion}.
 Then, we may or may not perturb these initial conditions off the constraint submanifold by applying a map $(q_{n}, p_{n}) \mapsto (\bar{q}_{n}, \bar{p}_{n})$ which is either the inverse $\mathbb{P}^{-1}$ of a projection $\mathbb{P} : \cb{\mf{M}} \rightarrow i(\Delta)$ or, in the case of the [standard projection](@ref sec:standard-projection), just the identity.
-The perturbation is followed by the application of some canonically symplectic algorithm $\Psi_{h}$ on $\cb{\mf{M}}$, namely a variational integrator in position-momentum form,
-```math
-\begin{equation}\label{eq:position-momentum-variational-integrator}
-\begin{aligned}
-p_{n  } &=           -  D_{1} L_{d} (q_{n}, q_{n+1}) , \\
-p_{n+1} &= \hphantom{-} D_{2} L_{d} (q_{n}, q_{n+1}) ,
-\end{aligned}
-\end{equation}
-```
-or a variational Runge-Kutta method \eqref{eq:vprk} or \eqref{eq:vprk-lobatto}, in which cases we have that $\Psi_{h} = \big( \mathbb{F}^{+} L_{d} \big) \circ \big( \mathbb{F}^{-} L_{d} \big)^{-1}$.
+The perturbation is followed by the application of some canonically symplectic algorithm $\Psi_{h}$ on $\cb{\mf{M}}$, namely a variational integrator in position-momentum form \eqref{eq:vi-position-momentum-form} or a variational Runge-Kutta method \eqref{eq:vprk} or \eqref{eq:vprk-lobatto}, in which cases we have that $\Psi_{h} = \big( \mathbb{F}^{+} L_{d} \big) \circ \big( \mathbb{F}^{-} L_{d} \big)^{-1}$.
 In general, the result of this algorithm, $(\bar{q}_{n+1}, \bar{p}_{n+1}) = \Psi_{h} (\bar{q}_{n}, \bar{p}_{n})$, will not lie on the constraint submanifold \eqref{eq:constraint-submanifold}. Therefore we apply a projection $(\bar{q}_{n+1}, \bar{p}_{n+1}) \mapsto (q_{n+1}, p_{n+1})$ which enforces $\phi (q_{n+1}, p_{n+1}) = p_{n+1} - \vartheta(q_{n+1}) = 0$. As this final result is a point in $i(\Delta)$ it is completely characterized by the value $q_{n+1}$.
 
 ![](../images/omega-orthogonal-projection.png)
 
 *Gradient of the constraint function $\phi$ orthogonal and $\Omega$-orthogonal to constant surfaces of $\phi(q, p) = p - \sqrt{p_{0}^{2} - q^{2}}$ for $p_{0} \in \{ 1, 2, 3 \}$.*
 
-Let us emphasize that in contrast to standard projection methods, where the solution is projected orthogonal to the constrained submanifold, along the gradient of $\phi$, here the projection has to be $\Omega$-orthogonal, where $\Omega$ is the canonical symplectic matrix \eqref{eq:canonical-symplectic-matrix}. That is, denoting by $\lambda$ the Lagrange multiplier, the projection step is given by $\Omega^{-1} \nabla \phi^{T} \lambda$ instead of an orthogonal projection $\nabla \phi^{T} \lambda$. This appears quite natural when comparing with \eqref{eq:euler-lagrange-dae}.
+Let us emphasize that in contrast to standard projection methods, where the solution is projected orthogonal to the constrained submanifold, along the gradient of $\phi$, here the projection has to be $\Omega$-orthogonal, where $\Omega$ is the canonical symplectic matrix
+```math
+\begin{equation}\label{eq:canonical-symplectic-matrix}
+\Omega = \begin{pmatrix}
+\mathbb{0} &           -  \mathbb{1} \\
+\mathbb{1} & \hphantom{-} \mathbb{0} 
+\end{pmatrix} .
+\end{equation}
+```
+That is, denoting by $\lambda$ the Lagrange multiplier, the projection step is given by $\Omega^{-1} \nabla \phi^{T} \lambda$ instead of an orthogonal projection $\nabla \phi^{T} \lambda$.
 
 Let us also note that, practically speaking, the momenta $p_{n}$ and $p_{n+1}$ are merely treated as intermediate variables much like the internal stages of a Runge-Kutta method.
 The Lagrange multiplier $\lambda$, on the other hand, is determined in different ways for the different methods and can be the same or different in the perturbation and the projection. It thus takes the role of an internal variable only for the standard, symmetric projection and midpoint projection, but not for the symplectic projection.
@@ -331,7 +342,7 @@ The Lagrange multiplier $\lambda$, on the other hand, is determined in different
 ### Geometric Aside: Projected Fibre Derivatives
 
 In the following, we will try to underpin the construction of the various projection methods with some geometric ideas.
-We already mentioned several times that the position-momentum form of the variational integrator \eqref{eq:position-momentum-variational-integrator} suffers from the problem that it does not preserve the constraint submanifold $\Delta$ defined in \eqref{eq:constraint-submanifold}.
+We already mentioned several times that the position-momentum form of the variational integrator \eqref{eq:vi-position-momentum-form} suffers from the problem that it does not preserve the constraint submanifold $\Delta$ defined in \eqref{eq:constraint-submanifold}.
 That is, even though it is applied to a point in $i(\Delta)$, it usually returns a point in $\cb{\mf{M}}$, but outside of $i(\Delta)$.
 In order to understand the reason for this, let us define $\Delta_{\mf{M}}^{-}$ and $\Delta_{\mf{M}}^{+}$ as the subsets of $\mf{M} \times \mf{M}$ which are mapped into the constraint submanifold $i(\Delta)$ by the discrete fibre derivatives $\mathbb{F}^{-} L_{d}$ and $\mathbb{F}^{+} L_{d}$, respectively, i.e.,
 ```math
@@ -351,18 +362,8 @@ or more explicitly,
 \end{aligned}
 \end{equation}
 ```
-A sufficient condition for the position-momentum form of the variational integrator \eqref{eq:position-momentum-variational-integrator} to preserve the constraint submanifold \eqref{eq:constraint-submanifold} would be that $\Delta_{\mf{M}}^{-}$ and $\Delta_{\mf{M}}^{+}$ are identical. 
-Slightly weaker necessary conditions can be formulated depending on the formulation of the position-momentum form in terms of the discrete Euler-Lagrange equations \eqref{eq:discrete-euler-lagrange-equations} and the discrete fibre derivative \eqref{eq:discrete-fibre-derivative-2}, c.f., Equation \eqref{eq:position-momentum-fibre-derivative}.
-For example, considering \eqref{eq:position-momentum-fibre-derivative-3}, a necessary condition for the position-momentum form to preserve $\Delta$ is that the image of the inverse of $\mathbb{F}^{-} L_{d}$, namely $\Delta_{\mf{M}}^{-}$, is in $\Delta_{\mf{M}}^{+}$,
-```math
-\big( \mathbb{F}^{-} L_{d} \big)^{-1} (i(\Delta)) = \Delta_{\mf{M}}^{-} \subset \Delta_{\mf{M}}^{+} .
-```
-Further, from \eqref{eq:position-momentum-fibre-derivative-1} and \eqref{eq:position-momentum-fibre-derivative-2} it follows that the image of the variational integrator $F_{L_{d}}$ applied to $\Delta_{\mf{M}}^{-}$ must be in $\Delta_{\mf{M}}^{-}$ and the image of $F_{L_{d}}$ applied to $\Delta_{\mf{M}}^{+}$ must be in $\Delta_{\mf{M}}^{+}$,
-```math
-F_{L_{d}} \big( \Delta_{\mf{M}}^{-} \big) \subset \Delta_{\mf{M}}^{-} , \qquad
-F_{L_{d}} \big( \Delta_{\mf{M}}^{+} \big) \subset \Delta_{\mf{M}}^{+} .
-```
-None of these conditions can be guaranteed and they are in general not satisfied. Although $\Delta_{\mf{M}}^{-}$ and $\Delta_{\mf{M}}^{+}$ might have some overlap, they are usually not identical, and the variational integrator, applied to a point in $\Delta_{\mf{M}}^{-}$ or $\Delta_{\mf{M}}^{+}$, does not necessarily result in a point in $\Delta_{\mf{M}}^{-}$ or $\Delta_{\mf{M}}^{+}$, respectively.
+A sufficient condition for the position-momentum form of the variational integrator \eqref{eq:vi-position-momentum-form} to preserve the constraint submanifold \eqref{eq:constraint-submanifold} would be that $\Delta_{\mf{M}}^{-}$ and $\Delta_{\mf{M}}^{+}$ are identical. 
+In principle, slightly weaker necessary conditions can be formulated, however in practice it is unclear how to prove any of these conditions and in general they are not satisfied.
 
 In order to construct a modified algorithm which does preserve the constraint submanifold, we compose the discrete fibre derivatives $\mathbb{F}^{\pm}$ with appropriate projections $\mathbb{P}^{\pm}$,
 ```math
@@ -379,7 +380,7 @@ In order to construct a modified algorithm which does preserve the constraint su
 ```
 so that they take any point in $\mf{M} \times \mf{M}$ to the constraint submanifold $\Delta$.
 The Lagrange multiplier $\lambda$ is indicated as subscript and implicitly determined by requiring that the constraint $\phi$ is satisfied by the projected values of $q$ and $p$.
-These projected fibre derivatives will not be a fibre-preserving map anymore, but they will change both $q$ and $p$, mimicking the continuous equations \eqref{eq:euler-lagrange-dae}.
+These projected fibre derivatives will not be a fibre-preserving map anymore, but they will change both $q$ and $p$.
 Noting that the nullspace of $\mathbb{P}_{\lambda}$ is the span of $\Omega^{-1} \nabla \phi$, a natural candidate for the projection $\mathbb{P}_{\lambda}$ is given by
 ```math
 \begin{equation}\label{eq:projector}
@@ -406,7 +407,7 @@ p_{n+1} &= D_{2} L_{d} (q_{n}, q_{n+1}) - h \, \phi_{q}^{T} (q_{n+1}, p_{n+1}) \
 \end{aligned}
 ```
 The signs in front of the projections have been chosen in correspondence with the signs of the discrete forces in [MarsdenWest:2001](@cite), Chapter 3.
-With these projections we obtain all of the algorithms introduced in the following sections, except for the midpoint projection, in a similar fashion to the definition of the position-momentum form of the variational integrator \eqref{eq:position-momentum-fibre-derivative-3}, as a map $\Delta \rightarrow \Delta$ which can formally be written as
+With these projections we obtain all of the algorithms introduced in the following sections, except for the midpoint projection, in a similar fashion to the definition of the position-momentum form of the variational integrator \eqref{eq:vi-position-momentum-form}, as a map $\Delta \rightarrow \Delta$ which can formally be written as
 ```math
 \begin{equation}\label{eq:projection-composition-map}
 \Phi_{h} = \big( \pi_{\Delta} \circ \mathbb{P}^{+} \circ \mathbb{F}^{+} L_{d} \big) \circ \big( \pi_{\Delta} \circ \mathbb{P}^{-} \circ \mathbb{F}^{-} L_{d} \big)^{-1} .
@@ -470,7 +471,7 @@ enforcing the constraint
 ```math
 0 = \phi (z_{n+1}) .
 ```
-This projection method, combined with the variational integrators \eqref{eq:position-momentum-variational-integrator}, is not symmetric, and therefore not reversible. Moreover, it exhibits a drift of the energy, as has been observed before, e.g., for holonomic constraints [[Hairer:2000](@cite), [Hairer:2001](@cite), [HairerLubichWanner:2006](@cite)].
+This projection method, combined with the variational integrator in position-momentum form \eqref{eq:vi-position-momentum-form}, is not symmetric, and therefore not reversible. Moreover, it exhibits a drift of the energy, as has been observed before, e.g., for holonomic constraints [[Hairer:2000](@cite), [Hairer:2001](@cite), [HairerLubichWanner:2006](@cite)].
 
 
 ### [Symmetric Projection](@id sec:symmetric-projection)
@@ -512,6 +513,17 @@ The algorithm composed of the symmetric projection and some symmetric variationa
 \Phi_{h} : q_{n} \mapsto q_{n+1} ,
 ```
 where, from a practical point of view, $p_{n}$, $p_{n+1}$ and $\lambda_{n+1/2}$ are treated as intermediate variables.
+Unfortunately, the method is not symplectic but instead satisfies the relation
+```math
+\begin{multline}\label{eq:symmetric-projection-symplecticity-condition}
+   \dfrac{1}{2} \bar{\Omega}_{ij} (q_{n}) \, \big( \ext q_{n}^{i} \wedge \ext q_{n}^{j}
+ - h^{2} \, \ext \lambda_{n+1/2}^{i} \wedge \ext \lambda_{n+1/2}^{j} \big)
+ - h^{2} \lambda_{n+1/2}^{k} \vartheta_{k,ij} (q_{n}) \, \ext q_{n}^{i} \wedge \ext \lambda_{n+1/2}^{j} = \\
+ = \dfrac{1}{2} \bar{\Omega}_{ij} (q_{n+1}) \, \big( \ext q_{n+1}^{i} \wedge \ext q_{n+1}^{j}
+ - h^{2} \, \ext \lambda_{n+1/2}^{i} \wedge \ext \lambda_{n+1/2}^{j} \big)
+ - h^{2} \lambda_{n+1/2}^{k} \vartheta_{k,ij} (q_{n+1}) \, \ext q_{n+1}^{i} \wedge \ext \lambda_{n+1/2}^{j} .
+\end{multline}
+```
 
 For certain systems, this method can even be shown to be symplectic. In general, though, it is not symplectic. Nevertheless, it tends to perform very well in long-time simulations.
 
@@ -551,7 +563,7 @@ in order to enforce the constraint
 0 = \phi (z_{n+1}) .
 \end{equation}
 ```
-The symplecticity condition \eqref{eq:symmetric-projection-symplecticity-condition-3} is modified as follows,
+The symplecticity condition \eqref{eq:symmetric-projection-symplecticity-condition} is modified as follows,
 ```math
 \begin{multline}\label{eq:symplectic_projection_symplecticity_condition}
    \dfrac{1}{2} \bar{\Omega}_{ij} (q_{n}) \, \big( \ext q_{n}^{i} \wedge \ext q_{n}^{j}
@@ -579,13 +591,13 @@ with matrix representation
 h^{2} \lambda \cdot \vartheta_{qq} & - h^{2} \bar{\Omega} \\
 \end{pmatrix} .
 ```
-To this corresponds a modified one-form $\vartheta_{\lambda}$, such that $\omega_{\lambda} = \ext \vartheta_{\lambda}$, given by
+This corresponds to a modified one-form $\vartheta_{\lambda}$, such that $\omega_{\lambda} = \ext \vartheta_{\lambda}$, given by
 ```math
 \begin{equation}\label{eq:symplectic_projection_one_form}
 \vartheta_{\lambda} = ( \vartheta_{i} (q) - h \, \lambda^{k} \vartheta_{k,i} (q) ) \, ( \ext q^{i} - h \, \ext \lambda^{i} )
 \end{equation}
 ```
-As noted by [[Chan:2004](@cite)], the modified perturbation \eqref{eq:symplectic-projection-pre-constraint}-\eqref{eq:symplectic-projection-pre} can be viewed as a change of variables from $(q, \lambda)$ on $\mf{M} \times \mathbb{R}^{d}$ to $(q, p)$ on $\cb{\mf{M}}$, and the projection \eqref{eq:symplectic-projection-post}-\eqref{eq:symplectic-projection-post-constraint} as a change of variables back from $(q, p)$ to $(q, \lambda)$.
+As noted by [Chan:2004](@cite), the modified perturbation \eqref{eq:symplectic-projection-pre-constraint}-\eqref{eq:symplectic-projection-pre} can be viewed as a change of variables from $(q, \lambda)$ on $\mf{M} \times \mathbb{R}^{d}$ to $(q, p)$ on $\cb{\mf{M}}$, and the projection \eqref{eq:symplectic-projection-post}-\eqref{eq:symplectic-projection-post-constraint} as a change of variables back from $(q, p)$ to $(q, \lambda)$.
 The symplectic form $\omega_{\lambda}$ on $\mf{M} \times \mathbb{R}^{d}$ thus corresponds to the pullback of the canonical symplectic form $\omega$ on $\cb{\mf{M}}$ by this variable transformation.
 
 Let us note that the sign in in front of the projection in \eqref{eq:symplectic-projection-post}, given by the stability function of the basic integrator, has very important implications on the nature of the algorithm.

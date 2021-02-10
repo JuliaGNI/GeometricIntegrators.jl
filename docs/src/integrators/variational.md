@@ -1,4 +1,4 @@
-# Variational Integrators
+# [Variational Integrators](@id variational-integrators)
 
 The basic idea of variational integrators is to construct a discrete counterpart to a particular mechanical system instead of directly discretising its equations of motion.
 This means that the fundamental building blocks of classical mechanics, namely the action functional, the Lagrangian, the variational principle, and the Noether theorem, all have discrete equivalents.
