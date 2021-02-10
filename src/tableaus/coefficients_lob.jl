@@ -1,7 +1,7 @@
 
 import LinearAlgebra
 
-import RungeKutta: get_lobatto_nodes, get_lobatto_weights, get_gauss_nodes
+import RungeKutta.Tableaus: get_lobatto_nodes, get_lobatto_weights, get_gauss_nodes
 
 
 @doc raw"""
