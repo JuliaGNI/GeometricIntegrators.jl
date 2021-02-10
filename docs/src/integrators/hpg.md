@@ -1,2 +1,1 @@
-
-# Hamilton-Pontryagin-Galerkin Integrators
+# [Hamilton-Pontryagin-Galerkin Integrators](@id hpg)
