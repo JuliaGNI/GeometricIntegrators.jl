@@ -39,7 +39,7 @@ struct IntegratorVPRKpSymmetric{DT, TT, D, S,
         IntegratorVPRKpSymmetric(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpSymmetric(equation::IODE{DT,TT}, tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorVPRKpSymmetric(equation::Union{IODE{DT},VODE{DT}}, tableau, Δt; kwargs...) where {DT}
         IntegratorVPRKpSymmetric{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

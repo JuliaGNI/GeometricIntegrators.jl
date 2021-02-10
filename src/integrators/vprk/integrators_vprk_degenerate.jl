@@ -50,7 +50,7 @@ mutable struct IntegratorVPRKdegenerate{DT, TT, D, S,
         IntegratorVPRKdegenerate(sparams, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKdegenerate(equation::IODE{DT,TT}, tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorVPRKdegenerate(equation::Union{IODE{DT},VODE{DT}}, tableau, Δt; kwargs...) where {DT}
         IntegratorVPRKdegenerate{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

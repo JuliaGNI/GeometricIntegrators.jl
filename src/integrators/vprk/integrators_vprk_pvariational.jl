@@ -53,7 +53,7 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
         IntegratorVPRKpVariational(params, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKpVariational(equation::IODE{DT,TT}, tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorVPRKpVariational(equation::Union{IODE{DT},VODE{DT}}, tableau, Δt; kwargs...) where {DT}
         IntegratorVPRKpVariational{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
