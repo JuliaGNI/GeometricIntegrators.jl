@@ -39,7 +39,7 @@ struct IntegratorVPRKpInternal{DT, TT, D, S,
         IntegratorVPRKpInternal(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpInternal(equation::IODE{DT,TT}, tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorVPRKpInternal(equation::Union{IODE{DT},VODE{DT}}, tableau, Δt; kwargs...) where {DT}
         IntegratorVPRKpInternal{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
