@@ -194,6 +194,95 @@ Another approach that always works is to use directly compute the position-momen
 Such subtleties, which are easily overlooked, can be avoided by starting the discretisation of the action from a more fundamental point of view, namely by approximating the function spaces of the trajectories, which leads us to [Galerkin Variational Integrators](@ref cgvi).
 
 
+## [Degenerate Lagrangians](@id sec:degenerate-lagrangian-systems)
+
+Degenerate Lagrangian systems are relevant for the study of population models, point vortex dynamics or reduced charged particle models like the guiding centre system.
+Here, we consider degenerate Lagrangian systems characterized by a Lagrangian that is linear or singular in the velocities. In particular, we consider the class of systems whose Lagrangian is of the form
+```math
+\begin{equation}\label{eq:degenerate-lagrangian}
+L (q, v) = \vartheta(q) \cdot v - H(q) .
+\end{equation}
+```
+The Lagrangian $L$ is a function on the tangent bundle $\tb{\mf{M}}$,
+```math
+\begin{equation}\label{eq:lagrangian-tangent-bundle}
+L : \tb{\mf{M}} \rightarrow \mathbb{R} ,
+\end{equation}
+```
+where $\mf{M}$ denotes the configuration manifold of the system which is assumed to be of dimension $d$. The cotangent bundle of the configuration manifold $\mf{M}$ is denoted by $\cb{\mf{M}}$.
+Further, we denote the coordinates of a point $m \in \mf{M}$ by $q(m) = (q^{1} (m), \dotsc, q^{d} (m))$ and similarly coordinates of points in $\tb{\mf{M}}$ by $(q^{i}, v^{i})$ and coordinates of points in $\cb{\mf{M}}$ by $(q^{i}, p^{i})$.
+In the following, we will always assume the existence of a global coordinate chart, so that $\mf{M}$ can be identified with the Euclidean space $\mathbb{R}^{d}$. For simplicity, we often use short-hand notation where we write $q$ to refer to both a point in $\mf{M}$ as well as its coordinates. Similarly, we often denote points in the tangent bundle $\tb{\mf{M}}$ by $(q, v)$.
+In local coordinates, the Lagrangian \eqref{eq:lagrangian-tangent-bundle} is thus written as a map $(q, v) \mapsto L(q, v)$.
+
+In Equation \eqref{eq:degenerate-lagrangian}, $\vartheta = \vartheta_{i} (q) \, \ext q^{i}$ is a differential one-form $\vartheta : \mf{M} \rightarrow \cb{\mf{M}}$, whose components $\vartheta_{i} : \mf{M} \rightarrow \mathbb{R}$ are general, possibly nonlinear functions of $q$, some of which (but not all) could be identically zero.
+For details on differential forms, tangent and cotangent bundles the interested reader may consult any modern book in mathematical physics or differential geometry. We recommend [Dray:2014](@cite), [BaezMuniain:1994](@cite), [Darling:1994](@cite), [Frankel:2011](@cite) for more physics oriented accounts and [Lee:2012](@cite), [Lee:2009](@cite), [Tu:2011](@cite), [Morita:2001](@cite) for more mathematics oriented accounts. In the following we assume a basic understanding of these concepts. To see their usefulness for classical mechanics we refer to [AbrahamMarsden:1978](@cite), [MarsdenRatiu:2002](@cite), [Holm:2009](@cite).
+
+
+## [Dirac Constraints](@id sec:dirac-constraints)
+
+Degenerate systems of the form \eqref{eq:degenerate-lagrangian} can also be formulated in terms of the phasespace trajectory $(q, p)$ in the cotangent bundle $\cb{\mf{M}}$, subject to a primary constraint in the sense of Dirac, determined by the function $\phi : \cb{\mf{M}} \rightarrow \mathbb{R}^{d}$, given by
+```math
+\begin{equation}\label{eq:dirac_constraint}
+\phi (q, p) = p - \vartheta(q) = 0 ,
+\end{equation}
+```
+and originating from the fibre derivative $\mathbb{F} L : \tb{\mf{M}} \rightarrow \cb{\mf{M}}$,
+```math
+\begin{equation}\label{eq:fibre-derivative-general}
+\mathbb{F} L (v_{q}) \cdot w_{q} = \dfrac{d}{d\epsilon} \bigg\vert_{\epsilon=0} L(v_{q} + \epsilon w_{q}) ,
+\end{equation}
+```
+where $v_{q} = (q, v)$ and $w_{q} = (q, w)$ denote two points in $\tb{\mf{M}}$ which share the same base point $q$ and are thus elements of the same fibre of $\tb{\mf{M}}$.
+By acting point-wise for each $t$, the fibre derivative maps the curve $(q, \dot{q})$ in the tangent bundle $\tb{\mf{M}}$ into the curve $(q, p)$ in the cotangent bundle $\cb{\mf{M}}$,
+```math
+\begin{equation}\label{eq:fibre_derivative}
+(q (t), p (t)) = \left( q (t), \dfrac{\partial L}{\partial v} (q (t), \dot{q} (t)) \right) = (q (t), \vartheta (q (t))) ,
+\end{equation}
+```
+where the last equality follows for Lagrangians of the form \eqref{eq:degenerate-lagrangian}.
+The Dirac constraint arising from the degenerate Lagrangian restricts the dynamics to the submanifold
+```math
+\begin{equation}\label{eq:constraint-submanifold}
+\Delta = \big\{ (q, p) \in \cb{\mf{M}} \, \big\vert \, \phi (q, p) = 0  \big\} \subset \cb{\mf{M}} .
+\end{equation}
+```
+In the preceding and the following, we assume that the Lagrangian is degenerate in all velocity components, that is, the Lagrangian is either linear or singular in each component of $v$, so that
+```math
+\dfrac{\partial^{2} L}{\partial v^{i} \, \partial v^{j}} = 0
+\hspace{3em}
+\text{for all $1 \leq i,j \leq d$.}
+```
+For instructive reasons, however, assume for a moment that the Lagrangian is degenerate in only $m < d$ components of $v$ and, e.g., quadratic in the other $d-m$ components. That is to say we can write
+```math
+p (t)
+= \big( \beta_{1} (q (t), \dot{q} (t)), \dotsc, \beta_{d-m} (q (t), \dot{q} (t)), \, \vartheta_{d-m+1} (q (t)), \dotsc, \vartheta_{d} (q (t)) \big)^{T} ,
+```
+where
+```math
+\dfrac{\partial L}{\partial v^{i}} (q (t), \dot{q} (t)) = \begin{cases}
+\beta_{i} (q (t), \dot{q} (t)) & 1 \leq i \leq d - m , \\
+\vartheta_{i} (q (t)) & d-m+1 \leq i \leq d . \\
+\end{cases}
+```
+We can then denote coordinates in $\Delta$ by $(q^{i}, \pi^{j})$ with $1 \leq i \leq d$ and $1 \leq j \leq d-m$, where the $\pi^{i}$ denote those momenta which are ``free'', i.e., not determined by the Dirac constraint. The inclusion map $i : \Delta \rightarrow \cb{\mf{M}}$ can then be written as
+```math
+\begin{equation}\label{eq:dirac-inclusion_genereal}
+i : (q, \pi) \mapsto (q, \pi, \vartheta (q)) .
+\end{equation}
+```
+In the fully degenerate case, however, we have $m=d$, so that the configuration manifold $\mf{M}$ and the constraint submanifold $\Delta$ are isomorphic and we can label points in $\Delta$ by the same $q$ we use to label points in $\mf{M}$.
+The inclusion map $i : \Delta \rightarrow \cb{\mf{M}}$ simplifies accordingly and reads
+```math
+\begin{equation}\label{eq:dirac-inclusion}
+i : q \mapsto (q, \vartheta (q)) ,
+\end{equation}
+```
+where it is important to keep in mind that $q$ denotes a point in $\Delta$.
+The inverse operation is given by the projection $\pi_{\Delta} : \cb{\mf{M}} \rightarrow \Delta$, defined such that $\pi_{\Delta} \circ i = \id$.
+
+As we are lacking a general framework for constructing structure-preserving numerical algorithms for noncanonical Hamiltonian systems on $\mf{M}$, we will construct such algorithms on $i(\Delta)$. This can be achieved by using canonically symplectic integrators on $\cb{\mf{M}}$ and assuring that their solution stays on $i(\Delta)$. To this end we will employ various projection methods.
+
+
 ## Projection Methods
 
 Projection methods are a standard technique for the integration of ordinary differential equations on manifolds [[Hairer:2001](@cite), [HairerLubichWanner:2006](@cite)].
@@ -215,9 +304,18 @@ As it turns out, both the standard projection and the symmetric projection are n
 
 The general procedure is as follows.
 We start with initial conditions $q_{n}$ on $\Delta$ (recall that for the particular Lagrangian \eqref{eq:degenerate-lagrangian} considered here, the configuration manifold $\mf{M}$ and the constraint submanifold $\Delta$ are isomorphic, so that we can use the same coordinates on $\Delta$ as we use on $\mf{M}$).
-We compute the corresponding momentum $p_{n}$ by the continuous fibre derivative \eqref{eq:fibre-derivative}, which yields initial conditions $(q_{n}, p_{n} = \vartheta(q_{n}))$ on $\cb{\mf{M}}$ satisfying the constraint $\phi(q_{n}, p_{n}) = 0$. This corresponds to the inclusion map \eqref{eq:dirac-inclusion}.
+We compute the corresponding momentum $p_{n}$ by the continuous fibre derivative \eqref{eq:fibre-derivative-general}, which yields initial conditions $(q_{n}, p_{n} = \vartheta(q_{n}))$ on $\cb{\mf{M}}$ satisfying the constraint $\phi(q_{n}, p_{n}) = 0$. This corresponds to the inclusion map \eqref{eq:dirac-inclusion}.
 Then, we may or may not perturb these initial conditions off the constraint submanifold by applying a map $(q_{n}, p_{n}) \mapsto (\bar{q}_{n}, \bar{p}_{n})$ which is either the inverse $\mathbb{P}^{-1}$ of a projection $\mathbb{P} : \cb{\mf{M}} \rightarrow i(\Delta)$ or, in the case of the [standard projection](@ref sec:standard-projection), just the identity.
-The perturbation is followed by the application of some canonically symplectic algorithm $\Psi_{h}$ on $\cb{\mf{M}}$, namely a variational integrator in position-momentum form \eqref{eq:position-momentum-variational-integrator} or a variational Runge-Kutta method \eqref{eq:vprk} or \eqref{eq:vprk-lobatto}, in which cases we have that $\Psi_{h} = \big( \mathbb{F}^{+} L_{d} \big) \circ \big( \mathbb{F}^{-} L_{d} \big)^{-1}$.
+The perturbation is followed by the application of some canonically symplectic algorithm $\Psi_{h}$ on $\cb{\mf{M}}$, namely a variational integrator in position-momentum form,
+```math
+\begin{equation}\label{eq:position-momentum-variational-integrator}
+\begin{aligned}
+p_{n  } &=           -  D_{1} L_{d} (q_{n}, q_{n+1}) , \\
+p_{n+1} &= \hphantom{-} D_{2} L_{d} (q_{n}, q_{n+1}) ,
+\end{aligned}
+\end{equation}
+```
+or a variational Runge-Kutta method \eqref{eq:vprk} or \eqref{eq:vprk-lobatto}, in which cases we have that $\Psi_{h} = \big( \mathbb{F}^{+} L_{d} \big) \circ \big( \mathbb{F}^{-} L_{d} \big)^{-1}$.
 In general, the result of this algorithm, $(\bar{q}_{n+1}, \bar{p}_{n+1}) = \Psi_{h} (\bar{q}_{n}, \bar{p}_{n})$, will not lie on the constraint submanifold \eqref{eq:constraint-submanifold}. Therefore we apply a projection $(\bar{q}_{n+1}, \bar{p}_{n+1}) \mapsto (q_{n+1}, p_{n+1})$ which enforces $\phi (q_{n+1}, p_{n+1}) = p_{n+1} - \vartheta(q_{n+1}) = 0$. As this final result is a point in $i(\Delta)$ it is completely characterized by the value $q_{n+1}$.
 
 ![](../images/omega-orthogonal-projection.png)
@@ -358,7 +456,7 @@ The idea of the construction of the methods is still the same, though. Only the 
 *Illustration of the standard projection method: The solution is projected to the constraint submanifold $\Delta$ after each step of the numerical integrator $\Psi_{h}$.*
 
 The standard projection method [[HairerLubichWanner:2006](@cite), Section IV.4] is the simplest projection method.
-Starting from $q_{n}$, we use the continuous fibre derivative \eqref{eq:fibre-derivative} to compute $p_{n} = \vartheta (q_{n})$. Then we apply some symplectic one-step method $\Psi_{h}$ to $z_{n} = (q_{n}, p_{n})$ to obtain an intermediate solution $z_{n+1}$,
+Starting from $q_{n}$, we use the continuous fibre derivative \eqref{eq:fibre-derivative-general} to compute $p_{n} = \vartheta (q_{n})$. Then we apply some symplectic one-step method $\Psi_{h}$ to $z_{n} = (q_{n}, p_{n})$ to obtain an intermediate solution $z_{n+1}$,
 ```math
 \bar{z}_{n+1} = \Psi_{h} (z_{n}) ,
 ```
