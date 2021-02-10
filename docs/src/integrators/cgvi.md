@@ -41,7 +41,7 @@ However, it is often more convenient to enforce these continuity constraints wea
 
 **TODO**:
 *The role of continuity is not clearly explained and probably not correctly worked out.
-In practice, we are using broken spaces Q_h and enforce continuity only weakly in the
+In practice, we are using broken spaces $\mf{Q}_h$ and enforce continuity only weakly in the
 action principle. 
 It should be made clear, that $\mf{Q}_d$ is an approximation of $\mf{Q}$, but not a subspace of $\mf{Q}$.
 $\mf{Q}_h$, however, is a subspace of $\mf{Q}$ (although it can be broken).
