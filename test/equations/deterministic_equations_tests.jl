@@ -434,7 +434,7 @@ end
 
     spdae_eqs = ((pdae_v, pdae_u, pdae_u), (pdae_f, pdae_g, pdae_g), pdae_ϕ, pdae_ψ)
 
-    spdae  = SPDAE(eltype(q₀), 1, 1, 1, 1, spdae_eqs..., t₀, q₀, p₀, λ₀)
+    spdae  = SPDAE(spdae_eqs..., t₀, [q₀], [p₀], [λ₀])
     spdae1 = SPDAE(spdae_eqs..., t₀, q₀, p₀, λ₀)
     spdae2 = SPDAE(spdae_eqs..., t₀, q₀, p₀)
     spdae3 = SPDAE(spdae_eqs..., q₀, p₀)
