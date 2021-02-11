@@ -28,6 +28,20 @@ Atomic solution for an PDAE.
 * `u̅`: projective vector field of q̅
 * `g`: projective vector field of p
 * `g̅`: projective vector field of p̅
+* `internal`: internal variables of the integrator (e.g., internal stages of a Runge-Kutta methods or solver output)
+
+### Constructors
+
+```julia
+AtomicSolutionPDAE{DT,TT,AT,IT}(nd, nm, internal::IT)
+AtomicSolutionPDAE{DT,TT,AT,IT}(t::TT, q::AT, p::AT, λ::AT, internal::IT)
+AtomicSolutionPDAE(DT, TT, AT, nd, nm, internal::IT=NamedTuple())
+AtomicSolutionPDAE(t::TT, q::AT, p::AT, λ::AT, internal::IT=NamedTuple())
+```
+
+* `nd`: dimension of the state vector
+* `nm`: dimension of the constraint
+
 """
 mutable struct AtomicSolutionPDAE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT

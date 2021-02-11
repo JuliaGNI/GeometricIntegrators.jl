@@ -17,6 +17,19 @@ Atomic solution for an ODE.
 * `q̃`: compensated summation error of q
 * `v`: vector field of q
 * `v̅`: vector field of q̅
+* `internal`: internal variables of the integrator (e.g., internal stages of a Runge-Kutta methods or solver output)
+
+### Constructors
+
+```julia
+AtomicSolutionODE{DT,TT,AT,IT}(nd, internal::IT)
+AtomicSolutionODE{DT,TT,AT,IT}(t::TT, q::AT, internal::IT)
+AtomicSolutionODE(DT, TT, AT, nd, internal::IT=NamedTuple())
+AtomicSolutionODE(t::TT, q::AT, internal::IT=NamedTuple())
+```
+
+* `nd`: dimension of the state vector
+
 """
 mutable struct AtomicSolutionODE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT

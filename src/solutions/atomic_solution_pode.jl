@@ -22,6 +22,19 @@ Atomic solution for an PODE.
 * `v̅`: vector field of q̅
 * `f`: vector field of p
 * `f̅`: vector field of p̅
+* `internal`: internal variables of the integrator (e.g., internal stages of a Runge-Kutta methods or solver output)
+
+### Constructors
+
+```julia
+AtomicSolutionPODE{DT,TT,AT,IT}(nd, internal::IT)
+AtomicSolutionPODE{DT,TT,AT,IT}(t::TT, q::AT, p::AT, internal::IT)
+AtomicSolutionPODE(DT, TT, AT, nd, internal::IT=NamedTuple())
+AtomicSolutionPODE(t::TT, q::AT, p::AT, internal::IT=NamedTuple())
+```
+
+* `nd`: dimension of the state vector
+
 """
 mutable struct AtomicSolutionPODE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT

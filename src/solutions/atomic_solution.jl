@@ -1,11 +1,34 @@
 
 """
 Abstract atomistic or single-step solution.
+
+## Constructors:
+
+```julia
+AtomicSolution(equation)
+AtomicSolution(solution)
+AtomicSolution(solution, integrator)
+```
+
+Automatically construct the appropriate atomistic solution based on the 
+given `equation` or `solution` type. If an `integrator` is provided as,
+the `internal` field of the atomic solution is constructed according to
+the internal state of the integrator as obtained from the function
+[`get_internal_variables`](@ref).
+
 """
 abstract type AtomicSolution{dType <: Number, tType <: Real, aType <: AbstractArray{dType}} end
 
 
-"Copy solution from atomistic solution to solution object."
+"""
+```julia
+copy_solution!(solution, atomic_solution, n, m)
+```
+
+Copy solution for time step `n` and initial condition `m` from atomic solution
+to solution object.
+
+"""
 function copy_solution!(sol::Solution, asol::AtomicSolution, n, m)
     copy_solution!(sol, get_solution(asol)..., n, m)
 end
