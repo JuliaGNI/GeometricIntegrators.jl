@@ -18,6 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate(); Pkg.build(); Pkg.precompile();'
+          sudo apt-get install imagemagick
           sudo apt-get install texlive-xetex
       - name: Build Tutorial
         run: julia --project tutorial.jl
