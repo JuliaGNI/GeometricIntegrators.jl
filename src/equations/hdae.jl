@@ -27,8 +27,8 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `fType <: Function`: type of `f`
 * `uType <: Function`: type of `u`
 * `gType <: Function`: type of `g`
-* `u̅Type <: Function`: type of `u̅`
-* `g̅Type <: Function`: type of `g̅`
+* `ūType <: Function`: type of `ū`
+* `ḡType <: Function`: type of `ḡ`
 * `ϕType <: Function`: type of `ϕ`
 * `ψType <: Function`: type of `ψ`
 * `hType <: Function`: type of `h`
@@ -44,8 +44,8 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `f`: function computing the Hamiltonian vector field ``f``
 * `u`: function computing the primary projection field ``u``
 * `g`: function computing the primary projection field ``g``
-* `u̅`: function computing the secondary projection field ``\bar{u}``
-* `g̅`: function computing the secondary projection field ``\bar{g}``
+* `ū`: function computing the secondary projection field ``\bar{u}``
+* `ḡ`: function computing the secondary projection field ``\bar{g}``
 * `ϕ`: primary constraints
 * `ψ`: secondary constraints
 * `h`: function computing the Hamiltonian ``H``
@@ -59,17 +59,17 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 ### Constructors
 
 ```julia
-HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, t₀, q₀, p₀, λ₀; v̄=v, f̄=f, parameters=nothing, periodicity=zero(q₀[begin]))
-HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
-HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, t₀, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, t₀, [q₀], [p₀], [λ₀]; kwargs...)
-HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
+HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, t₀, q₀, p₀, λ₀; v̄=v, f̄=f, parameters=nothing, periodicity=zero(q₀[begin]))
+HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
+HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, t₀, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
 ```
 
 """
 struct HDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             vType <: Function, fType <: Function,
             uType <: Function, gType <: Function,
-            u̅Type <: Function, g̅Type <: Function,
+            ūType <: Function, ḡType <: Function,
             ϕType <: Function, ψType <: Function,
             hType <: Function,
             v̄Type <: Function, f̄Type <: Function,
@@ -80,8 +80,8 @@ struct HDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     f::fType
     u::uType
     g::gType
-    u̅::u̅Type
-    g̅::g̅Type
+    ū::ūType
+    ḡ::ḡType
     ϕ::ϕType
     ψ::ψType
     h::hType
@@ -95,13 +95,13 @@ struct HDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     periodicity::arrayType
 
     function HDAE(v::vType, f::fType, u::uType, g::gType,
-                  u̅::u̅Type, g̅::g̅Type, ϕ::ϕType, ψ::ψType, h::hType,
+                  ū::ūType, ḡ::ḡType, ϕ::ϕType, ψ::ψType, h::hType,
                   t₀::tType, q₀::Vector{arrayType}, p₀::Vector{arrayType}, λ₀::Vector{arrayType};
                   v̄::v̄Type=v, f̄::f̄Type=f, parameters::pType=nothing, periodicity=zero(q₀[begin])) where {
                         dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
                         vType <: Function, fType <: Function,
                         uType <: Function, gType <: Function,
-                        u̅Type <: Function, g̅Type <: Function,
+                        ūType <: Function, ḡType <: Function,
                         ϕType <: Function, ψType <: Function,
                         hType <: Function,
                         v̄Type <: Function, f̄Type <: Function,
@@ -120,20 +120,20 @@ struct HDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
 
         @assert all([ndims(q) == ndims(p) == ndims(λ) for (q,p,λ) in zip(q₀,p₀,λ₀)])
 
-        new{dType, tType, arrayType, vType, fType, uType, gType, u̅Type, g̅Type, ϕType, ψType, hType, v̄Type, f̄Type, pType}(
-                d, m, v, f, u, g, u̅, g̅, ϕ, ψ, h, v̄, f̄, t₀, q₀, p₀, λ₀, parameters, periodicity)
+        new{dType, tType, arrayType, vType, fType, uType, gType, ūType, ḡType, ϕType, ψType, hType, v̄Type, f̄Type, pType}(
+                d, m, v, f, u, g, ū, ḡ, ϕ, ψ, h, v̄, f̄, t₀, q₀, p₀, λ₀, parameters, periodicity)
     end
 end
 
-HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
-HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, t₀, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, t₀, [q₀], [p₀], [λ₀]; kwargs...)
-HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
+HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
+HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, t₀, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, ū, ḡ, ϕ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
 
 const HDAEPT{PT,DT,TT,AT,VT,FT,UT,GT,U̅T,G̅T,ΦT,ΨT,HT,V̄T,F̄T} = HDAE{DT,TT,AT,VT,FT,UT,GT,U̅T,G̅T,ΦT,ΨT,HT,V̄T,F̄T,PT} # type alias for dispatch on parameters type parameter
 
 Base.hash(dae::HDAE, h::UInt) = hash(dae.d, hash(dae.m,
                         hash(dae.v, hash(dae.f, hash(dae.u, hash(dae.g,
-                        hash(dae.u̅, hash(dae.g̅, hash(dae.ϕ, hash(dae.ψ,
+                        hash(dae.ū, hash(dae.ḡ, hash(dae.ϕ, hash(dae.ψ,
                         hash(dae.h, hash(dae.v̄, hash(dae.f̄,
                         hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, h))))))))))))))))
 
@@ -144,8 +144,8 @@ Base.:(==)(dae1::HDAE, dae2::HDAE) = (
                              && dae1.f == dae2.f
                              && dae1.u == dae2.u
                              && dae1.g == dae2.g
-                             && dae1.u̅ == dae2.u̅
-                             && dae1.g̅ == dae2.g̅
+                             && dae1.ū == dae2.ū
+                             && dae1.ḡ == dae2.ḡ
                              && dae1.ϕ == dae2.ϕ
                              && dae1.ψ == dae2.ψ
                              && dae1.h == dae2.h
@@ -163,7 +163,7 @@ function Base.similar(equ::HDAE, t₀::Real, q₀::StateVector, p₀::StateVecto
     @assert all([length(q) == equ.d for q in q₀])
     @assert all([length(p) == equ.d for p in p₀])
     @assert all([length(λ) == equ.m for λ in λ₀])
-    HDAE(equ.v, equ.f, equ.u, equ.g, equ.u̅, equ.g̅, equ.ϕ, equ.ψ, equ.h, t₀, q₀, p₀, λ₀;
+    HDAE(equ.v, equ.f, equ.u, equ.g, equ.ū, equ.ḡ, equ.ϕ, equ.ψ, equ.h, t₀, q₀, p₀, λ₀;
          v̄=v̄, f̄=f̄, parameters=parameters, periodicity=periodicity)
 end
 
@@ -185,8 +185,8 @@ _get_v(equ::HDAE) = hasparameters(equ) ? (t,q,p,v) -> equ.v(t, q, p, v, equ.para
 _get_f(equ::HDAE) = hasparameters(equ) ? (t,q,p,f) -> equ.f(t, q, p, f, equ.parameters) : equ.f
 _get_u(equ::HDAE) = hasparameters(equ) ? (t,q,p,λ,u) -> equ.u(t, q, p, λ, u, equ.parameters) : equ.u
 _get_g(equ::HDAE) = hasparameters(equ) ? (t,q,p,λ,g) -> equ.g(t, q, p, λ, g, equ.parameters) : equ.g
-_get_u̅(equ::HDAE) = hasparameters(equ) ? (t,q,p,λ,u̅) -> equ.u̅(t, q, p, λ, u̅, equ.parameters) : equ.u̅
-_get_g̅(equ::HDAE) = hasparameters(equ) ? (t,q,p,λ,g̅) -> equ.g̅(t, q, p, λ, g̅, equ.parameters) : equ.g̅
+_get_ū(equ::HDAE) = hasparameters(equ) ? (t,q,p,λ,ū) -> equ.ū(t, q, p, λ, ū, equ.parameters) : equ.ū
+_get_ḡ(equ::HDAE) = hasparameters(equ) ? (t,q,p,λ,ḡ) -> equ.ḡ(t, q, p, λ, ḡ, equ.parameters) : equ.ḡ
 _get_ϕ(equ::HDAE) = hasparameters(equ) ? (t,q,p,ϕ) -> equ.ϕ(t, q, p, ϕ, equ.parameters) : equ.ϕ
 _get_ψ(equ::HDAE) = hasparameters(equ) ? (t,q,p,v,f,ψ) -> equ.ψ(t, q, p, v, f, ψ, equ.parameters) : equ.ψ
 _get_h(equ::HDAE) = hasparameters(equ) ? (t,q,p) -> equ.h(t, q, p, equ.parameters) : equ.h
@@ -194,8 +194,8 @@ _get_v̄(equ::HDAE) = hasparameters(equ) ? (t,q,p,v) -> equ.v̄(t, q, p, v, equ.
 _get_f̄(equ::HDAE) = hasparameters(equ) ? (t,q,p,f) -> equ.f̄(t, q, p, f, equ.parameters) : equ.f̄
 
 function get_function_tuple(equ::HDAE)
-    NamedTuple{(:v, :f, :u, :g, :u̅, :g̅, :ϕ, :ψ, :h, :v̄, :f̄)}((
+    NamedTuple{(:v, :f, :u, :g, :ū, :ḡ, :ϕ, :ψ, :h, :v̄, :f̄)}((
         _get_v(equ), _get_f(equ), _get_u(equ), _get_g(equ),
-        _get_u̅(equ), _get_g̅(equ), _get_ϕ(equ), _get_ψ(equ),
+        _get_ū(equ), _get_ḡ(equ), _get_ϕ(equ), _get_ψ(equ),
         _get_h(equ), _get_v̄(equ), _get_f̄(equ)))
 end

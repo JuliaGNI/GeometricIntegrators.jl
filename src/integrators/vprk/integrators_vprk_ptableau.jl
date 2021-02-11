@@ -9,9 +9,9 @@ mutable struct ParametersVPRKpTableau{DT, TT, D, S, ET <: NamedTuple} <: Paramet
     Δt::TT
 
     t::TT
-    t̅::TT
-    q̅::Vector{DT}
-    p̅::Vector{DT}
+    t̄::TT
+    q̄::Vector{DT}
+    p̄::Vector{DT}
 
     λ::Vector{DT}
     A::Matrix{DT}
@@ -38,10 +38,10 @@ end
 
 function update_params!(params::ParametersVPRKpTableau, sol::AtomicSolutionPODE)
     # set time for nonlinear solver and copy previous solution
-    params.t̅  = sol.t
+    params.t̄  = sol.t
     params.t  = sol.t + params.Δt
-    params.q̅ .= sol.q
-    params.p̅ .= sol.p
+    params.q̄ .= sol.q
+    params.p̄ .= sol.p
 end
 
 
@@ -108,20 +108,20 @@ end
 
 
 function Integrators.initialize!(int::IntegratorVPRKpTableau, sol::AtomicSolutionPODE)
-    sol.t̅ = sol.t - timestep(int)
+    sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.v)
     equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+                            sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 end
 
 
 function initial_guess!(int::IntegratorVPRKpTableau{DT}, sol::AtomicSolutionPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.ṽ,
                               tableau(int).c[i])
@@ -175,16 +175,16 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         end
     end
 
-    # compute Q=q̅+Δt*Y
+    # compute Q=q̄+Δt*Y
     for i in 1:S
         for k in 1:D
-            Q[i][k] = params.q̅[k] + params.Δt * Y[i][k]
+            Q[i][k] = params.q̄[k] + params.Δt * Y[i][k]
         end
     end
 
     # compute P=ϑ(Q,V) and F=f(Q,V)
     for i in 1:S
-        tᵢ = params.t̅ + params.Δt * params.tab.c[i]
+        tᵢ = params.t̄ + params.Δt * params.tab.c[i]
         params.equs[:ϑ](tᵢ, Q[i], V[i], P[i])
         params.equs[:f](tᵢ, Q[i], V[i], F[i])
     end
@@ -213,9 +213,9 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     end
 
 
-    # compute q=q̅+Δt*y and p=p̅+Δt*z
-    q .= params.q̅ .+ params.Δt .* y
-    p .= params.p̅ .+ params.Δt .* z
+    # compute q=q̄+Δt*y and p=p̄+Δt*z
+    q .= params.q̄ .+ params.Δt .* y
+    p .= params.p̄ .+ params.Δt .* z
 
     # compute θ=ϑ(t,q)
     params.equs[:ϑ](params.t, q, v, θ)
@@ -234,7 +234,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
     # compute b = [P-p-AF]
     for i in 1:S
         for k in 1:D
-            b[D*(i-1)+k] = cache.P[i][k] - params.p̅[k] - params.Δt * cache.Z[i][k]
+            b[D*(i-1)+k] = cache.P[i][k] - params.p̄[k] - params.Δt * cache.Z[i][k]
         end
     end
 end
@@ -279,7 +279,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::At
     # determine parameter λ
     nlres = nlsolve(λ -> function_dirac_constraint!(λ, int, cache), zero(int.params.λ);
                 xtol=SimpleSolvers.get_config(:nls_atol),
-                ftol=maximum(int.params.p̅)*SimpleSolvers.get_config(:nls_atol),
+                ftol=maximum(int.params.p̄)*SimpleSolvers.get_config(:nls_atol),
                 iterations=100)
                 #xtol=timestep(int)^nstages(int)*SimpleSolvers.get_config(:nls_atol),
 

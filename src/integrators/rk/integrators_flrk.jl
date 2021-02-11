@@ -113,12 +113,12 @@ end
 
 
 function initialize!(int::IntegratorFLRK, sol::AtomicSolutionODE)
-    sol.t̅ = sol.t - timestep(int)
+    sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v̄](sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
-                            sol.t̅, sol.q̅, sol.v̅)
+                            sol.t̄, sol.q̄, sol.v̄)
 end
 
 
@@ -142,7 +142,7 @@ function initial_guess!(int::IntegratorFLRK{DT}, sol::Union{AtomicSolutionODE{DT
 
     # compute initial guess for internal stages
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).c[i])
+        evaluate!(int.iguess, sol.q̄, sol.v̄, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).c[i])
     end
     for i in eachstage(int)
         offset = ndims(int)*(i-1)

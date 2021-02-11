@@ -180,13 +180,13 @@ end
 
 
 function initialize!(int::IntegratorCGVI, sol::AtomicSolutionPODE)
-    sol.t̅ = sol.t - timestep(int)
+    sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.v)
     equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+                            sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 end
 
 
@@ -195,7 +195,7 @@ function initial_guess!(int::IntegratorCGVI{DT,TT,D,S,R}, sol::AtomicSolutionPOD
     int.solver.x .= 0
 
     for i in eachindex(int.basis)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                                 sol.q, sol.p, sol.v, sol.f,
                                 cache.q̃, cache.p̃,
                                 cache.ṽ, cache.f̃,
@@ -206,7 +206,7 @@ function initial_guess!(int::IntegratorCGVI{DT,TT,D,S,R}, sol::AtomicSolutionPOD
         end
     end
 
-    evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+    evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                           sol.q, sol.p, sol.v, sol.f,
                           cache.q̃, cache.p̃,
                           one(TT), one(TT))

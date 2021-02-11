@@ -154,13 +154,13 @@ end
 
 
 function initialize!(int::IntegratorIPRK, sol::AtomicSolutionPODE)
-    sol.t̅ = sol.t - timestep(int)
+    sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v](sol.t, sol.q, sol.p, sol.v)
     equations(int)[:f](sol.t, sol.q, sol.p, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+                            sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 end
 
 
@@ -176,7 +176,7 @@ function initial_guess!(int::IntegratorIPRK{DT}, sol::AtomicSolutionPODE{DT},
                         cache::IntegratorCacheIPRK{DT}=int.caches[DT]) where {DT}
 
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.Q[i], cache.P[i], cache.V[i], cache.F[i],
                               tableau(int).q.c[i], tableau(int).p.c[i])

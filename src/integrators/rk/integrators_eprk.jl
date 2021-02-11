@@ -151,8 +151,8 @@ function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomicSolutionPODE{DT,
 
     # compute internal stages
     for i in eachstage(int)
-        tqᵢ = sol.t̅ + timestep(int) * tableau(int).q.c[i]
-        tpᵢ = sol.t̅ + timestep(int) * tableau(int).p.c[i]
+        tqᵢ = sol.t̄ + timestep(int) * tableau(int).q.c[i]
+        tpᵢ = sol.t̄ + timestep(int) * tableau(int).p.c[i]
 
         if tableau(int).q.a[i,i] ≠ zero(TT) && tableau(int).p.a[i,i] ≠ zero(TT)
             error("This is a fully implicit method!")

@@ -44,7 +44,7 @@ variables ``(q,p)`` and algebraic variables ``v``, ``\lambda`` and ``\mu``.
 * `ϑ`: function determining the momentum
 * `f`: function computing the vector field
 * `g`: function determining the primary projection, usually given by ``\nabla \vartheta (q) \cdot \lambda``
-* `g̅`: function determining the secondary projection, usually given by ``\lambda \cdot \nabla \vartheta (q)``
+* `ḡ`: function determining the secondary projection, usually given by ``\lambda \cdot \nabla \vartheta (q)``
 * `ϕ`: primary constraints, usually given by ``p - \vartheta (q)``
 * `ψ`: secondary constraints, usually given by ``\dot{p} - \dot{q} \cdot \nabla \vartheta (q)``
 * `v̄`: function computing an initial guess for the velocity field ``v`` (optional)
@@ -101,16 +101,16 @@ The funtions `g`, `v̄` and `f̄` are specified by
 ### Constructors
 
 ```julia
-LDAE(ϑ, f, g, g̅, ϕ, ψ, t₀, q₀, p₀, λ₀, μ₀; v̄=(t,q,v)->nothing, f̄=f, h=nothing, Ω=nothing, ∇H=nothing, parameters=nothing, periodicity=zero(q₀[begin]))
-LDAE(ϑ, f, g, g̅, ϕ, ψ, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀), μ₀::StateVector=zero(q₀); kwargs...) = LDAE(ϑ, f, g, g̅, ϕ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
-LDAE(ϑ, f, g, g̅, ϕ, ψ, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀), μ₀::State=zero(q₀); kwargs...) = LDAE(ϑ, f, g, g̅, ϕ, ψ, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
-LDAE(ϑ, f, g, g̅, ϕ, ψ, q₀::State, p₀::State, λ₀::State=zero(q₀), μ₀::State=zero(q₀); kwargs...) = LDAE(ϑ, f, g, g̅, ϕ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
+LDAE(ϑ, f, g, ḡ, ϕ, ψ, t₀, q₀, p₀, λ₀, μ₀; v̄=(t,q,v)->nothing, f̄=f, h=nothing, Ω=nothing, ∇H=nothing, parameters=nothing, periodicity=zero(q₀[begin]))
+LDAE(ϑ, f, g, ḡ, ϕ, ψ, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀), μ₀::StateVector=zero(q₀); kwargs...) = LDAE(ϑ, f, g, ḡ, ϕ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
+LDAE(ϑ, f, g, ḡ, ϕ, ψ, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀), μ₀::State=zero(q₀); kwargs...) = LDAE(ϑ, f, g, ḡ, ϕ, ψ, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
+LDAE(ϑ, f, g, ḡ, ϕ, ψ, q₀::State, p₀::State, λ₀::State=zero(q₀), μ₀::State=zero(q₀); kwargs...) = LDAE(ϑ, f, g, ḡ, ϕ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
 ```
 
 """
 struct LDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             ϑType <: Function, fType <: Function,
-            gType <: Function, g̅Type <: Function,
+            gType <: Function, ḡType <: Function,
             ϕType <: Function, ψType <: Function,
             v̄Type <: Function, f̄Type <: Function,
             hType <: OptionalFunction,
@@ -122,7 +122,7 @@ struct LDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     ϑ::ϑType
     f::fType
     g::gType
-    g̅::g̅Type
+    ḡ::ḡType
     ϕ::ϕType
     ψ::ψType
     v̄::v̄Type
@@ -138,14 +138,14 @@ struct LDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     parameters::pType
     periodicity::arrayType
 
-    function LDAE(ϑ::ϑType, f::fType, g::gType, g̅::g̅Type, ϕ::ϕType, ψ::ψType, t₀::tType,
+    function LDAE(ϑ::ϑType, f::fType, g::gType, ḡ::ḡType, ϕ::ϕType, ψ::ψType, t₀::tType,
                   q₀::Vector{arrayType}, p₀::Vector{arrayType},
                   λ₀::Vector{arrayType}, μ₀::Vector{arrayType};
                   v̄::v̄Type=(t,q,v)->nothing, f̄::f̄Type=f, h::hType=nothing, Ω::ΩType=nothing, ∇H::∇HType=nothing,
                   parameters::pType=nothing, periodicity=zero(q₀[begin])) where {
                         dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
                         ϑType <: Function, fType <: Function,
-                        gType <: Function, g̅Type <: Function,
+                        gType <: Function, ḡType <: Function,
                         ϕType <: Function, ψType <: Function,
                         v̄Type <: Function, f̄Type <: Function,
                         hType <: OptionalFunction,
@@ -167,14 +167,14 @@ struct LDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
 
         @assert all([ndims(q) == ndims(p) == ndims(λ) == ndims(μ) for (q,p,λ,μ) in zip(q₀,p₀,λ₀,μ₀)])
         
-        new{dType, tType, arrayType, ϑType, fType, gType, g̅Type, ϕType, ψType, v̄Type, f̄Type, hType, ΩType, ∇HType, pType}(
-                d, m, ϑ, f, g, g̅, ϕ, ψ, v̄, f̄, h, Ω, ∇H, t₀, q₀, p₀, λ₀, μ₀, parameters, periodicity)
+        new{dType, tType, arrayType, ϑType, fType, gType, ḡType, ϕType, ψType, v̄Type, f̄Type, hType, ΩType, ∇HType, pType}(
+                d, m, ϑ, f, g, ḡ, ϕ, ψ, v̄, f̄, h, Ω, ∇H, t₀, q₀, p₀, λ₀, μ₀, parameters, periodicity)
     end
 end
 
-LDAE(ϑ, f, g, g̅, ϕ, ψ, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀), μ₀::StateVector=zero(q₀); kwargs...) = LDAE(ϑ, f, g, g̅, ϕ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
-LDAE(ϑ, f, g, g̅, ϕ, ψ, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀), μ₀::State=zero(q₀); kwargs...) = LDAE(ϑ, f, g, g̅, ϕ, ψ, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
-LDAE(ϑ, f, g, g̅, ϕ, ψ, q₀::State, p₀::State, λ₀::State=zero(q₀), μ₀::State=zero(q₀); kwargs...) = LDAE(ϑ, f, g, g̅, ϕ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
+LDAE(ϑ, f, g, ḡ, ϕ, ψ, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀), μ₀::StateVector=zero(q₀); kwargs...) = LDAE(ϑ, f, g, ḡ, ϕ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
+LDAE(ϑ, f, g, ḡ, ϕ, ψ, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀), μ₀::State=zero(q₀); kwargs...) = LDAE(ϑ, f, g, ḡ, ϕ, ψ, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
+LDAE(ϑ, f, g, ḡ, ϕ, ψ, q₀::State, p₀::State, λ₀::State=zero(q₀), μ₀::State=zero(q₀); kwargs...) = LDAE(ϑ, f, g, ḡ, ϕ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
 
 const LDAEHT{HT,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,ΩT,∇T,PT} = LDAE{DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on Hamiltonian type parameter
 const LDAE∇T{∇T,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,ΩT,PT} = LDAE{DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on parameters type parameter
@@ -182,7 +182,7 @@ const LDAEΩT{ΩT,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,∇T,PT} = LDAE{D
 const LDAEPT{PT,DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,ΩT,∇T} = LDAE{DT,TT,AT,ϑT,FT,GT,G̅T,ϕT,ψT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on parameters type parameter
 
 Base.hash(dae::LDAE, h::UInt) = hash(dae.d, hash(dae.m,
-          hash(dae.ϑ, hash(dae.f, hash(dae.g, hash(dae.g̅, hash(dae.ϕ,
+          hash(dae.ϑ, hash(dae.f, hash(dae.g, hash(dae.ḡ, hash(dae.ϕ,
           hash(dae.ψ, hash(dae.v̄, hash(dae.f̄, hash(dae.h, hash(dae.Ω, hash(dae.∇H,
           hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, hash(dae.μ₀,
           hash(dae.parameters, hash(dae.periodicity, h))))))))))))))))))))
@@ -193,7 +193,7 @@ Base.:(==)(dae1::LDAE, dae2::LDAE) = (
                              && dae1.ϑ == dae2.ϑ
                              && dae1.f == dae2.f
                              && dae1.g == dae2.g
-                             && dae1.g̅ == dae2.g̅
+                             && dae1.ḡ == dae2.ḡ
                              && dae1.ϕ == dae2.ϕ
                              && dae1.ψ == dae2.ψ
                              && dae1.v̄ == dae2.v̄
@@ -218,7 +218,7 @@ function Base.similar(equ::LDAE, t₀::Real, q₀::StateVector, p₀::StateVecto
     @assert all([length(p) == ndims(equ) for p in p₀])
     @assert all([length(λ) == ndims(equ) for λ in λ₀])
     @assert all([length(μ) == ndims(equ) for μ in μ₀])
-    LDAE(equ.ϑ, equ.f, equ.g, equ.g̅, equ.ϕ, equ.ψ, t₀, q₀, p₀, λ₀, μ₀; v̄=v̄, f̄=f̄, h=h, Ω=Ω, ∇H=∇H, parameters=parameters, periodicity=periodicity)
+    LDAE(equ.ϑ, equ.f, equ.g, equ.ḡ, equ.ϕ, equ.ψ, t₀, q₀, p₀, λ₀, μ₀; v̄=v̄, f̄=f̄, h=h, Ω=Ω, ∇H=∇H, parameters=parameters, periodicity=periodicity)
 end
 
 @inline Base.ndims(equation::LDAE) = equation.d
@@ -244,7 +244,7 @@ hasparameters(::LDAEPT{<:NamedTuple}) = true
 _get_ϑ(equ::LDAE) = hasparameters(equ) ? (t,q,v,ϑ) -> equ.ϑ(t, q, v, ϑ, equ.parameters) : equ.ϑ
 _get_f(equ::LDAE) = hasparameters(equ) ? (t,q,v,f) -> equ.f(t, q, v, f, equ.parameters) : equ.f
 _get_g(equ::LDAE) = hasparameters(equ) ? (t,q,v,g) -> equ.g(t, q, v, g, equ.parameters) : equ.g
-_get_g̅(equ::LDAE) = hasparameters(equ) ? (t,q,λ,g̅) -> equ.g̅(t, q, λ, g̅, equ.parameters) : equ.g̅
+_get_ḡ(equ::LDAE) = hasparameters(equ) ? (t,q,λ,ḡ) -> equ.ḡ(t, q, λ, ḡ, equ.parameters) : equ.ḡ
 _get_ϕ(equ::LDAE) = hasparameters(equ) ? (t,q,v,ϕ) -> equ.ϕ(t, q, v, ϕ, equ.parameters) : equ.ϕ
 _get_ψ(equ::LDAE) = hasparameters(equ) ? (t,q,v,p,f,ψ) -> equ.ψ(t, q, v, p, f, ψ, equ.parameters) : equ.ψ
 _get_v̄(equ::LDAE) = hasparameters(equ) ? (t,q,v) -> equ.v̄(t, q, v, equ.parameters) : equ.v̄
@@ -255,8 +255,8 @@ _get_Ω(equ::LDAE) = hasparameters(equ) ? (t,q,Ω) -> equ.Ω(t, q, Ω, equ.param
 
 
 function get_function_tuple(equ::LDAE)
-    names = (:ϑ, :f, :g, :g̅, :ϕ, :ψ, :v̄, :f̄)
-    equs  = (_get_ϑ(equ), _get_f(equ), _get_g(equ), _get_g̅(equ), _get_ϕ(equ), _get_ψ(equ), _get_v̄(equ), _get_f̄(equ))
+    names = (:ϑ, :f, :g, :ḡ, :ϕ, :ψ, :v̄, :f̄)
+    equs  = (_get_ϑ(equ), _get_f(equ), _get_g(equ), _get_ḡ(equ), _get_ϕ(equ), _get_ψ(equ), _get_v̄(equ), _get_f̄(equ))
 
     if hashamiltonian(equ)
         names = (names..., :h)

@@ -345,7 +345,7 @@ end
     @test nsamples(hdae) == 1
     @test nconstraints(hdae) == 1
     @test periodicity(hdae) == zero(q₀)
-    @test get_function_tuple(hdae) == NamedTuple{(:v, :f, :u, :g, :u̅, :g̅, :ϕ, :ψ, :h, :v̄, :f̄)}((hdae_eqs..., pdae_v, pdae_f))
+    @test get_function_tuple(hdae) == NamedTuple{(:v, :f, :u, :g, :ū, :ḡ, :ϕ, :ψ, :h, :v̄, :f̄)}((hdae_eqs..., pdae_v, pdae_f))
 
     @test hdae == hdae1
     @test hdae == hdae2
@@ -374,7 +374,7 @@ end
     @test nsamples(ldae) == 1
     @test nconstraints(ldae) == 1
     @test periodicity(ldae) == zero(q₀)
-    @test get_function_tuple(ldae) == NamedTuple{(:ϑ, :f, :g, :g̅, :ϕ, :ψ, :v̄, :f̄)}((ldae_eqs..., iode_v, iode_f))
+    @test get_function_tuple(ldae) == NamedTuple{(:ϑ, :f, :g, :ḡ, :ϕ, :ψ, :v̄, :f̄)}((ldae_eqs..., iode_v, iode_f))
 
     @test ldae == ldae1
     @test ldae == ldae2

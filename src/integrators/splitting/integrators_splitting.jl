@@ -60,13 +60,13 @@ function integrate_step!(int::IntegratorSplitting{DT,TT}, sol::AtomicSolutionODE
     for i in eachindex(int.f, int.c)
         if int.c[i] ≠ zero(TT)
             cᵢ = timestep(int) * int.c[i]
-            tᵢ = sol.t̅ + cᵢ
+            tᵢ = sol.t̄ + cᵢ
 
             # reset atomic solution
             reset!(sol, cᵢ)
 
             # compute new solution
-            int.q[int.f[i]](tᵢ, sol.q̅, sol.q, cᵢ)
+            int.q[int.f[i]](tᵢ, sol.q̄, sol.q, cᵢ)
         end
     end
 end

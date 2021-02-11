@@ -108,13 +108,13 @@ end
 
 function Integrators.initialize!(int::IntegratorVPRKpStandard{DT}, sol::AtomicSolutionPODE{DT},
                                  cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
-    sol.t̅ = sol.t - timestep(int)
+    sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.v)
     equation(int, :f̄)(sol.t, sol.q, sol.p, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+                            sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 
     # initialise projector
     cache.U[1] .= cache.λ
@@ -125,7 +125,7 @@ end
 function initial_guess!(int::IntegratorVPRKpStandard{DT}, sol::AtomicSolutionPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
@@ -166,11 +166,11 @@ function compute_projection!(
     U[1] .= λ
     U[2] .= λ
 
-    params.equ[:g](params.t̅, q, λ, G[1])
+    params.equ[:g](params.t̄, q, λ, G[1])
     G[2] .= G[1]
 
-    # compute p̅=ϑ(q)
-    params.equ[:ϑ](params.t̅, q, λ, p)
+    # compute p̄=ϑ(q)
+    params.equ[:ϑ](params.t̄, q, λ, p)
 end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."
@@ -185,14 +185,14 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 
     compute_projection!(x, cache.q̃, cache.p̃, cache.λ, cache.U, cache.G, params)
 
-    # compute b = - [q̅-q-U]
+    # compute b = - [q̄-q-U]
     for k in 1:D
-        b[0*D+k] = - (cache.q̃[k] - params.q̅[k]) + params.Δt * params.pparams[:RU][2] * cache.U[2][k]
+        b[0*D+k] = - (cache.q̃[k] - params.q̄[k]) + params.Δt * params.pparams[:RU][2] * cache.U[2][k]
     end
 
-    # compute b = - [p̅-p-G]
+    # compute b = - [p̄-p-G]
     for k in 1:D
-        b[1*D+k] = - (cache.p̃[k] - params.p̅[k]) + params.Δt * params.pparams[:RG][2] * cache.G[2][k]
+        b[1*D+k] = - (cache.p̃[k] - params.p̄[k]) + params.Δt * params.pparams[:RG][2] * cache.G[2][k]
     end
 end
 

@@ -119,12 +119,12 @@ Solutions.AtomicSolution(integrator::IntegratorFIRKimplicit{DT,TT}) where {DT,TT
 
 
 function initialize!(int::IntegratorFIRKimplicit, sol::AtomicSolutionODE)
-    sol.t̅ = sol.t - timestep(int)
+    sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v̄](sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
-                            sol.t̅, sol.q̅, sol.v̅)
+                            sol.t̄, sol.q̄, sol.v̄)
 end
 
 
@@ -141,7 +141,7 @@ function initial_guess!(int::IntegratorFIRKimplicit{DT,TT}, sol::AtomicSolutionP
 
     # compute initial guess for internal stages
     # for i in eachstage(int)
-    #     evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).c[i])
+    #     evaluate!(int.iguess, sol.q̄, sol.v̄, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).c[i])
     # end
     for i in eachstage(int)
         for k in eachdim(int)
@@ -150,7 +150,7 @@ function initial_guess!(int::IntegratorFIRKimplicit{DT,TT}, sol::AtomicSolutionP
     end
 
     # compute initial guess for solution
-    # evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.q, cache.v, one(TT))
+    # evaluate!(int.iguess, sol.q̄, sol.v̄, sol.q, sol.v, cache.q, cache.v, one(TT))
     for k in eachdim(int)
         int.solver.x[ndims(int)*nstages(int)+k] = sol.q[k]#cache.q[k]
     end

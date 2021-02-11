@@ -119,7 +119,7 @@ end
 function initial_guess!(int::IntegratorVPRKpSecondary{DT}, sol::AtomicSolutionPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
@@ -142,7 +142,7 @@ function compute_stages_vprk!(x, q, v, p, Q, V, Λ, P, F, R, Φ, params)
     # compute Q
     compute_stages_q_vprk!(q, Q, V, Λ, params)
 
-    # compute p̅, R and Ψ
+    # compute p̄, R and Ψ
     compute_projection_vprk!(q, v, p, Q, V, Λ, R, Φ, params)
 
     # compute P and F
@@ -175,7 +175,7 @@ function compute_stages_q_vprk!(q::Vector{ST}, Q::Vector{Vector{ST}},
                 y3 += params.tab.q.a[i,j] * Λ[j][k]
                 y4 += params.tab.q.â[i,j] * Λ[j][k]
             end
-            Q[i][k] = params.q̅[k] + params.Δt * (y1 + y2) + params.Δt * (y3 + y4)
+            Q[i][k] = params.q̄[k] + params.Δt * (y1 + y2) + params.Δt * (y3 + y4)
         end
     end
 
@@ -188,7 +188,7 @@ function compute_stages_q_vprk!(q::Vector{ST}, Q::Vector{Vector{ST}},
             y3 += params.tab.q.b[j] * Λ[j][k]
             y4 += params.tab.q.b̂[j] * Λ[j][k]
         end
-        q[k] = params.q̅[k] + params.Δt * (y1 + y2) + params.Δt * (y3 + y4)
+        q[k] = params.q̄[k] + params.Δt * (y1 + y2) + params.Δt * (y3 + y4)
     end
 end
 
@@ -199,8 +199,8 @@ function compute_projection_vprk!(q::Vector{ST}, v::Vector{ST}, p::Vector{ST},
                 params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     # create temporary variables
-    local t₀::TT = params.t̅
-    local t₁::TT = params.t̅ + params.Δt
+    local t₀::TT = params.t̄
+    local t₁::TT = params.t̄ + params.Δt
     local tᵢ::TT
     local dH = zeros(ST,D)
     local Ω  = zeros(ST,D,D)
@@ -241,7 +241,7 @@ function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vecto
                 z3 += params.tab.p.a[i,j] * R[j][k]
                 z4 += params.tab.p.â[i,j] * R[j][k]
             end
-            b[D*(i-1)+k] = (P[i][k] - params.p̅[k]) - params.Δt * (z1 + z2) - params.Δt * (z3 + z4)
+            b[D*(i-1)+k] = (P[i][k] - params.p̄[k]) - params.Δt * (z1 + z2) - params.Δt * (z3 + z4)
         end
     end
 end
@@ -280,7 +280,7 @@ function compute_rhs_vprk_projection!(b::Vector{ST}, p::Vector{ST},
     #         z3 += params.tab.p.b[j] * R[j][k]
     #         z4 += params.tab.p.b̂[j] * R[j][k]
     #     end
-    #     b[offset+D*(S-1)+k] = (p[k] - params.p̅[k]) - params.Δt * (z1 + z2) + params.Δt * (z3 + z4)
+    #     b[offset+D*(S-1)+k] = (p[k] - params.p̄[k]) - params.Δt * (z1 + z2) + params.Δt * (z3 + z4)
     # end
 end
 

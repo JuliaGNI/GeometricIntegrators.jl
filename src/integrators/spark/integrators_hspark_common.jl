@@ -1,18 +1,18 @@
 
 function Integrators.initialize!(int::AbstractIntegratorHSPARK, sol::AtomicSolutionPDAE)
-    sol.t̅ = sol.t - timestep(int)
+    sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.p, sol.v)
     equation(int, :f̄)(sol.t, sol.q, sol.p, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+                            sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 end
 
 function initial_guess!(int::AbstractIntegratorHSPARK{DT}, sol::AtomicSolutionPDAE{DT},
                         cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
                               tableau(int).q.c[i], tableau(int).p.c[i])
@@ -24,7 +24,7 @@ function initial_guess!(int::AbstractIntegratorHSPARK{DT}, sol::AtomicSolutionPD
     end
 
     for i in 1:pstages(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
                               tableau(int).q̃.c[i], tableau(int).p̃.c[i])

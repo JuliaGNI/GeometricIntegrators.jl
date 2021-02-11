@@ -60,7 +60,7 @@ end
 function initial_guess!(int::IntegratorVPRKdegenerate{DT}, sol::AtomicSolutionPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
@@ -78,16 +78,16 @@ function initial_guess_projection!(int::IntegratorVPRKdegenerate{DT}, sol::Atomi
 end
 
 
-function compute_solution!(x::Vector{ST}, q̅::Vector{ST}, v̅::Vector{ST}, p̅::Vector{ST},
+function compute_solution!(x::Vector{ST}, q̄::Vector{ST}, v̄::Vector{ST}, p̄::Vector{ST},
                            params::ParametersVPRKdegenerate{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    @assert length(x) == length(q̅) == length(p̅)
+    @assert length(x) == length(q̄) == length(p̄)
 
     # copy x to q
-    q̅ .= x
+    q̄ .= x
 
-    # compute p̅ = ϑ(q)
-    params.equ[:ϑ](params.t̅ + params.Δt, q̅, v̅, p̅)
+    # compute p̄ = ϑ(q)
+    params.equ[:ϑ](params.t̄ + params.Δt, q̄, v̄, p̄)
 end
 
 
@@ -103,17 +103,17 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 
     compute_solution!(x, cache.q̃, cache.ṽ, cache.p̃, params)
 
-    # compute b = - [q̅-q-BV]
+    # compute b = - [q̄-q-BV]
     for k in 1:div(D,2)
-        b[k] = params.q̅[k] - cache.q̃[k]
+        b[k] = params.q̄[k] - cache.q̃[k]
         for i in 1:S
             b[k] += params.Δt * params.tab.q.b[i] * params.pparams[:V][i][k]
         end
     end
 
-    # compute b = - [p̅-p-BF]
+    # compute b = - [p̄-p-BF]
     for k in 1:div(D,2)
-        b[div(D,2)+k] = params.p̅[k] - cache.p̃[k]
+        b[div(D,2)+k] = params.p̄[k] - cache.p̃[k]
         for i in 1:S
             b[div(D,2)+k] += params.Δt * params.tab.p.b[i] * params.pparams[:F][i][k]
         end

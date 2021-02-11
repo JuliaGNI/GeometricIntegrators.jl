@@ -127,10 +127,10 @@ mutable struct ParametersPGLRK{DT,TT,D,S,ET <: NamedTuple} <: Parameters{DT,TT}
 
     h₀::DT
 
-    t̅::TT
+    t̄::TT
     t::TT
 
-    q̅::Vector{DT}
+    q̄::Vector{DT}
     λ::DT
 
     function ParametersPGLRK{DT,D}(equs::ET, tab::CoefficientsPGLRK{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
@@ -228,12 +228,12 @@ end
 
 
 function initialize!(int::IntegratorPGLRK, sol::AtomicSolutionODE)
-    sol.t̅ = sol.t - timestep(int)
+    sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v](sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
-                            sol.t̅, sol.q̅, sol.v̅)
+                            sol.t̄, sol.q̄, sol.v̄)
 
     int.params.h₀ = equations(int)[:h](sol.t, sol.q)
 end
@@ -241,9 +241,9 @@ end
 
 function update_params!(params::ParametersPGLRK, sol::AtomicSolutionODE)
     # set time for nonlinear solver and copy previous solution
-    params.t̅  = sol.t
+    params.t̄  = sol.t
     params.t  = sol.t + params.Δt
-    params.q̅ .= sol.q
+    params.q̄ .= sol.q
 end
 
 
@@ -251,7 +251,7 @@ function initial_guess!(int::IntegratorPGLRK{DT}, sol::AtomicSolutionODE{DT},
                         cache::IntegratorCachePGLRK{DT}=int.caches[DT]) where {DT}
 
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v,
+        evaluate!(int.iguess, sol.q̄, sol.v̄, sol.q, sol.v,
                               cache.q̃, cache.ṽ,
                               tableau(int).c[i])
 
@@ -278,16 +278,16 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         end
     end
 
-    # compute Q=q̅+Δt*Y
+    # compute Q=q̄+Δt*Y
     for i in 1:S
         for k in 1:D
-            Q[i][k] = params.q̅[k] + params.Δt * Y[i][k]
+            Q[i][k] = params.q̄[k] + params.Δt * Y[i][k]
         end
     end
 
     # compute V=v(T,Q)
     for i in 1:S
-        tᵢ = params.t̅ + params.Δt * params.tab.c[i]
+        tᵢ = params.t̄ + params.Δt * params.tab.c[i]
         params.equs[:v](tᵢ, Q[i], V[i])
     end
 
@@ -299,8 +299,8 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         end
     end
 
-    # compute q=q̅+Δt*y
-    q .= params.q̅ .+ params.Δt .* y
+    # compute q=q̄+Δt*y
+    q .= params.q̄ .+ params.Δt .* y
 end
 
 "Compute stages of projected Gauss-Legendre Runge-Kutta methods."

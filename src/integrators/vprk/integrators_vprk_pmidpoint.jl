@@ -62,7 +62,7 @@ function initial_guess!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::AtomicSolution
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
 
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
@@ -84,14 +84,14 @@ function compute_projection_vprk!(x::Vector{ST},
                 params::ParametersVPRKpMidpoint{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     # create temporary variables
-    local t₀::TT = params.t̅
-    local t₁::TT = params.t̅ + params.Δt
+    local t₀::TT = params.t̄
+    local t₁::TT = params.t̄ + params.Δt
     local tₘ::TT = (t₀+t₁)/2
     local y1::ST
     local y2::ST
     local q̃ = zeros(ST,D)
 
-    # copy x to λ and q̅
+    # copy x to λ and q̄
     for k in 1:D
         λ[k] = x[D*S+k]
     end
@@ -108,8 +108,8 @@ function compute_projection_vprk!(x::Vector{ST},
             y1 += params.tab.q.b[j] * V[j][k]
             y2 += params.tab.q.b̂[j] * V[j][k]
         end
-        q̃[k] = params.q̅[k] + 0.5 * params.Δt * (y1 + y2) + params.Δt *  params.pparams[:R][1] * U[1][k]
-        q[k] = params.q̅[k] + 1.0 * params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
+        q̃[k] = params.q̄[k] + 0.5 * params.Δt * (y1 + y2) + params.Δt *  params.pparams[:R][1] * U[1][k]
+        q[k] = params.q̄[k] + 1.0 * params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
     end
 
     params.equ[:g](tₘ, q̃, λ, G[1])

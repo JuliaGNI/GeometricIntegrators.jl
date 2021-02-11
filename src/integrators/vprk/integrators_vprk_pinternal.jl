@@ -62,7 +62,7 @@ function initial_guess!(int::IntegratorVPRKpInternal{DT,TT}, sol::AtomicSolution
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
 
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
@@ -84,15 +84,15 @@ function compute_projection_vprk!(x::Vector{ST},
                 params::ParametersVPRKpInternal{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     # create temporary variables
-    local t₀::TT = params.t̅
-    local t₁::TT = params.t̅ + params.Δt
+    local t₀::TT = params.t̄
+    local t₁::TT = params.t̄ + params.Δt
     local tₘ::TT
     local y1::ST
     local y2::ST
     local g = zeros(ST,D)
 
 
-    # copy x to λ and q̅
+    # copy x to λ and q̄
     for k in 1:D
         λ[k] = x[D*S+k]
     end
@@ -111,7 +111,7 @@ function compute_projection_vprk!(x::Vector{ST},
                 y1 += params.tab.q.a[i,j] * V[j][k]
                 y2 += params.tab.q.â[i,j] * V[j][k]
             end
-            Q[i][k] = params.q̅[k] + params.Δt * (y1 + y2) + params.Δt * params.pparams[:R][1] * U[1][k]
+            Q[i][k] = params.q̄[k] + params.Δt * (y1 + y2) + params.Δt * params.pparams[:R][1] * U[1][k]
         end
     end
 
@@ -123,13 +123,13 @@ function compute_projection_vprk!(x::Vector{ST},
             y1 += params.tab.q.b[j] * V[j][k]
             y2 += params.tab.q.b̂[j] * V[j][k]
         end
-        q[k] = params.q̅[k] + params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
+        q[k] = params.q̄[k] + params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
     end
 
     G[1] .= 0
     G[2] .= 0
     for j in 1:S
-        tₘ = params.t̅ + params.Δt * params.tab.q.c[j]
+        tₘ = params.t̄ + params.Δt * params.tab.q.c[j]
         params.equ[:g](tₘ, Q[j], λ, g)
         G[1] .+= params.tab.q.b[j] * g
         G[2] .+= params.tab.q.b[j] * g
