@@ -20,6 +20,9 @@ jobs:
       - name: Build Tutorial
         run: julia --project tutorial.jl
         working-directory: docs
+      - name: Generate Images
+        run: make all
+        working-directory: docs/src/images
       - name: Build and deploy Documentation
         run: julia --project make.jl
         working-directory: docs
