@@ -99,7 +99,9 @@ If you use *GeometricIntegrators.jl* in your work, please consider citing it by
 
 - Ernst Hairer and Christian Lubich. Numerical Solution of Ordinary Differential Equations. The Princeton Companion to Applied Mathematics, 293-305, 2015. Princeton University Press. ([Author's Web Site](https://na.uni-tuebingen.de/~lubich/pcam-ode.pdf))
 - Ernst Hairer, Christian Lubich and Gerhard Wanner. Geometric Numerical Integration Illustrated by the Störmer–Verlet Method. Acta Numerica 12, 399-450, 2003. ([Journal](http://dx.doi.org/10.1017/S0962492902000144))
-- Laurent O. Jay. Lobatto Methods. Encyclopedia of Applied and Computational Mathematics, 817–826. Springer, 2015. ([Article](http://dx.doi.org/10.1007/978-3-540-70529-1_123))
+- John C. Butcher. Gauss Methods. Encyclopedia of Applied and Computational Mathematics, Pages 583-589, 2015. ([Article](http://dx.doi.org/10.1007/978-3-540-70529-1_115))
+- Laurent O. Jay. Lobatto Methods. Encyclopedia of Applied and Computational Mathematics, Pages 817–826, 2015. ([Article](http://dx.doi.org/10.1007/978-3-540-70529-1_123))
+- Ernst Hairer and Gerhard Wanner. Radau Methods. Encyclopedia of Applied and Computational Mathematics, Pages 1213-1216, 2015. ([Article](http://dx.doi.org/10.1007/978-3-540-70529-1_139))
 
 
 ### Books on Geometric Numerical Integration
