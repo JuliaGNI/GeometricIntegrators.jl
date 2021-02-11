@@ -26,6 +26,14 @@ nstages(integrator::Integrator) = error("nstages() not implemented for ", typeof
 
 eachdim(integrator::Integrator) = 1:ndims(integrator)
 
+"""
+```julia
+get_internal_variables(::Integrator) = NamedTuple()
+```
+Returns a `NamedTuple` containing all internal variables of an integrator that
+shall be stored in an [`AtomicSolution`](@ref). If there is no method for a
+specific integrator implemented an empty `NamedTuple()` is returned.
+"""
 get_internal_variables(::Integrator) = NamedTuple()
 get_internal_variables(::Nothing) = NamedTuple()
 
