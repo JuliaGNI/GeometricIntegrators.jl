@@ -41,6 +41,8 @@ variables ``(q,p)`` and algebraic variable ``v``.
 * `t₀`: initial time (optional)
 * `q₀`: initial condition for `q`
 * `p₀`: initial condition for `p`
+* `parameters`: either a `NamedTuple` containing the equations parameters or `nothing`
+* `periodicity`: determines the periodicity of the state vector `q` for cutting periodic solutions
 
 The functions `ϑ` and `f` must have the interface
 ```julia

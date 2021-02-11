@@ -29,6 +29,8 @@ v (t) = v_1 (t) + ... + v_r (t) .
 * `q`: tuple of functions computing the solution
 * `t₀`: initial time
 * `q₀`: initial condition
+* `parameters`: either a `NamedTuple` containing the equations parameters or `nothing`
+* `periodicity`: determines the periodicity of the state vector `q` for cutting periodic solutions
 
 The functions `v_i` providing the vector field must have the interface
 ```julia

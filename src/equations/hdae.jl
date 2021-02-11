@@ -55,6 +55,8 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `q₀`: initial condition for dynamical variable ``q``
 * `p₀`: initial condition for dynamical variable ``p``
 * `λ₀`: initial condition for algebraic variable ``λ``
+* `parameters`: either a `NamedTuple` containing the equations parameters or `nothing`
+* `periodicity`: determines the periodicity of the state vector `q` for cutting periodic solutions
 
 ### Constructors
 

@@ -32,6 +32,8 @@ with vector fields ``v`` and ``f``, initial conditions ``(q_{0}, p_{0})`` and th
 * `t₀`: initial time
 * `q₀`: initial condition for `q`
 * `p₀`: initial condition for `p`
+* `parameters`: either a `NamedTuple` containing the equations parameters or `nothing`
+* `periodicity`: determines the periodicity of the state vector `q` for cutting periodic solutions
 
 The functions `v` and `f` must have the interface
 ```julia

@@ -24,6 +24,8 @@ with vector field ``v``, initial condition ``q_{0}`` and the solution
 * `h`: function computing the Hamiltonian (optional)
 * `t₀`: initial time
 * `q₀`: initial condition
+* `parameters`: either a `NamedTuple` containing the equations parameters or `nothing`
+* `periodicity`: determines the periodicity of the state vector `q` for cutting periodic solutions
 
 The function `v` providing the vector field must have the interface
 ```julia

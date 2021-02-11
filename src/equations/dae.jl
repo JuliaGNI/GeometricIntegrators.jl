@@ -38,6 +38,8 @@ taking values in ``\mathbb{R}^{n}``.
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q``
 * `λ₀`: initial condition for algebraic variable ``\lambda``
+* `parameters`: either a `NamedTuple` containing the equations parameters or `nothing`
+* `periodicity`: determines the periodicity of the state vector `q` for cutting periodic solutions
 
 The function `v`, providing the vector field, takes three arguments,
 `v(t, q, v)`, the functions `u` and `ϕ`, providing the projection and the
