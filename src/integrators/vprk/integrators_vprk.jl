@@ -54,7 +54,7 @@ struct IntegratorVPRK{DT, TT, D, S, PT <: ParametersVPRK{DT,TT},
         IntegratorVPRK{DT,D}(NamedTuple{(:ϑ,:f,:g,:v,:h)}((ϑ, f, g, v, h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorVPRK(equation::Union{IODE{DT},VODE{DT}}, tableau, Δt; kwargs...) where {DT}
+    function IntegratorVPRK(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
         IntegratorVPRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

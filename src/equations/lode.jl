@@ -1,5 +1,5 @@
 @doc raw"""
-`VODE`: Variational Ordinary Differential Equation *EXPERIMENTAL*
+`LODE`: Variational Ordinary Differential Equation *EXPERIMENTAL*
 
 Defines an implicit initial value problem
 ```math
@@ -86,14 +86,14 @@ and
 ### Constructors
 
 ```julia
-VODE(ϑ, f, g, t₀, q₀, p₀, λ₀; v̄=(t,q,v)->nothing, f̄=f, h=nothing, Ω=nothing, ∇H=nothing, parameters=nothing, periodicity=zero(q₀[begin]))
-VODE(ϑ, f, g, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀); kwargs...) = VODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
-VODE(ϑ, f, g, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = VODE(ϑ, f, g, t₀, [q₀], [p₀], [λ₀]; kwargs...)
-VODE(ϑ, f, g, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = VODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
+LODE(ϑ, f, g, t₀, q₀, p₀, λ₀; v̄=(t,q,v)->nothing, f̄=f, h=nothing, Ω=nothing, ∇H=nothing, parameters=nothing, periodicity=zero(q₀[begin]))
+LODE(ϑ, f, g, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀); kwargs...) = LODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
+LODE(ϑ, f, g, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = LODE(ϑ, f, g, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+LODE(ϑ, f, g, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = LODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
 ```
 
 """
-struct VODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
+struct LODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             ϑType <: Function, fType <: Function, gType <: Function,
             v̄Type <: Function, f̄Type <: Function, hType <: OptionalFunction,
             ΩType <: OptionalFunction, ∇HType <: OptionalFunction,
@@ -116,7 +116,7 @@ struct VODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     parameters::pType
     periodicity::arrayType
 
-    function VODE(ϑ::ϑType, f::fType, g::gType, t₀::tType,
+    function LODE(ϑ::ϑType, f::fType, g::gType, t₀::tType,
                 q₀::Vector{arrayType}, p₀::Vector{arrayType}, λ₀::Vector{arrayType};
                 v̄::v̄Type=(t,q,v)->nothing, f̄::f̄Type=f, h::hType=nothing, Ω::ΩType=nothing, ∇H::∇HType=nothing,
                 parameters::pType=nothing, periodicity=zero(q₀[begin])) where {
@@ -140,22 +140,22 @@ struct VODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     end
 end
 
-VODE(ϑ, f, g, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀); kwargs...) = VODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
-VODE(ϑ, f, g, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = VODE(ϑ, f, g, t₀, [q₀], [p₀], [λ₀]; kwargs...)
-VODE(ϑ, f, g, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = VODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
+LODE(ϑ, f, g, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀); kwargs...) = LODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
+LODE(ϑ, f, g, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = LODE(ϑ, f, g, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+LODE(ϑ, f, g, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = LODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
 
-const VODEHT{HT,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,ΩT,∇T,PT} = VODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on Hamiltonian type parameter
-const VODE∇T{∇T,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,PT} = VODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on gradient of Hamiltonian type parameter
-const VODEΩT{ΩT,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,∇T,PT} = VODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on symplectic two-form type parameter
-const VODEPT{PT,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T} = VODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on parameters type parameter
+const LODEHT{HT,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,ΩT,∇T,PT} = LODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on Hamiltonian type parameter
+const LODE∇T{∇T,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,PT} = LODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on gradient of Hamiltonian type parameter
+const LODEΩT{ΩT,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,∇T,PT} = LODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on symplectic two-form type parameter
+const LODEPT{PT,DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T} = LODE{DT,TT,AT,ϑT,FT,GT,V̄T,F̄T,HT,ΩT,∇T,PT} # type alias for dispatch on parameters type parameter
 
-Base.hash(ode::VODE, h::UInt) = hash(ode.d, hash(ode.m,
+Base.hash(ode::LODE, h::UInt) = hash(ode.d, hash(ode.m,
           hash(ode.ϑ, hash(ode.f, hash(ode.g, hash(ode.v̄, hash(ode.f̄,
           hash(ode.h, hash(ode.Ω, hash(ode.∇H,
           hash(ode.t₀, hash(ode.q₀, hash(ode.p₀, hash(ode.λ₀,
           hash(ode.parameters, hash(ode.periodicity, h))))))))))))))))
 
-Base.:(==)(ode1::VODE, ode2::VODE) = (
+Base.:(==)(ode1::LODE, ode2::LODE) = (
                                 ode1.d == ode2.d
                              && ode1.m == ode2.m
                              && ode1.ϑ == ode2.ϑ
@@ -173,47 +173,47 @@ Base.:(==)(ode1::VODE, ode2::VODE) = (
                              && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
 
-Base.similar(equ::VODE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀; kwargs...)
-Base.similar(equ::VODE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+Base.similar(equ::LODE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀; kwargs...)
+Base.similar(equ::LODE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
 
-function Base.similar(equ::VODE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector;
+function Base.similar(equ::LODE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector;
                       v̄=equ.v̄, f̄=equ.f̄, h=equ.h, Ω=equ.Ω, ∇H=equ.∇H, parameters=equ.parameters, periodicity=equ.periodicity)
     @assert all([length(q) == ndims(equ) for q in q₀])
     @assert all([length(p) == ndims(equ) for p in p₀])
     @assert all([length(λ) == ndims(equ) for λ in λ₀])
-    VODE(equ.ϑ, equ.f, equ.g, t₀, q₀, p₀, λ₀; v̄=v̄, f̄=f̄, h=h, Ω=Ω, ∇H=∇H, parameters=parameters, periodicity=periodicity)
+    LODE(equ.ϑ, equ.f, equ.g, t₀, q₀, p₀, λ₀; v̄=v̄, f̄=f̄, h=h, Ω=Ω, ∇H=∇H, parameters=parameters, periodicity=periodicity)
 end
 
-Base.ndims(equ::VODE) = equ.d
-Base.axes(equ::VODE) = axes(equ.q₀[begin])
-Common.nsamples(equ::VODE) = length(equ.q₀)
-Common.periodicity(equ::VODE) = equ.periodicity
+Base.ndims(equ::LODE) = equ.d
+Base.axes(equ::LODE) = axes(equ.q₀[begin])
+Common.nsamples(equ::LODE) = length(equ.q₀)
+Common.periodicity(equ::LODE) = equ.periodicity
 
-initial_conditions(equation::VODE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
+initial_conditions(equation::LODE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
 
-hashamiltonian(::VODEHT{<:Nothing}) = false
-hashamiltonian(::VODEHT{<:Function}) = true
+hashamiltonian(::LODEHT{<:Nothing}) = false
+hashamiltonian(::LODEHT{<:Function}) = true
 
-hasgradientham(::VODE∇T{<:Nothing}) = false
-hasgradientham(::VODE∇T{<:Function}) = true
+hasgradientham(::LODE∇T{<:Nothing}) = false
+hasgradientham(::LODE∇T{<:Function}) = true
 
-hassymplecticform(::VODEΩT{<:Nothing}) = false
-hassymplecticform(::VODEΩT{<:Function}) = true
+hassymplecticform(::LODEΩT{<:Nothing}) = false
+hassymplecticform(::LODEΩT{<:Function}) = true
 
-hasparameters(::VODEPT{<:Nothing}) = false
-hasparameters(::VODEPT{<:NamedTuple}) = true
+hasparameters(::LODEPT{<:Nothing}) = false
+hasparameters(::LODEPT{<:NamedTuple}) = true
 
-_get_ϑ(equ::VODE) = hasparameters(equ) ? (t,q,v,ϑ) -> equ.ϑ(t, q, v, ϑ, equ.parameters) : equ.ϑ
-_get_f(equ::VODE) = hasparameters(equ) ? (t,q,v,f) -> equ.f(t, q, v, f, equ.parameters) : equ.f
-_get_g(equ::VODE) = hasparameters(equ) ? (t,q,v,g) -> equ.g(t, q, v, g, equ.parameters) : equ.g
-_get_v̄(equ::VODE) = hasparameters(equ) ? (t,q,v) -> equ.v̄(t, q, v, equ.parameters) : equ.v̄
-_get_f̄(equ::VODE) = hasparameters(equ) ? (t,q,v,f) -> equ.f̄(t, q, v, f, equ.parameters) : equ.f̄
-_get_h(equ::VODE) = hasparameters(equ) ? (t,q) -> equ.h(t, q, equ.parameters) : equ.h
-_get_∇(equ::VODE) = hasparameters(equ) ? (t,q,∇H) -> equ.∇H(t, q, ∇H, equ.parameters) : equ.∇H
-_get_Ω(equ::VODE) = hasparameters(equ) ? (t,q,Ω) -> equ.Ω(t, q, Ω, equ.parameters) : equ.Ω
+_get_ϑ(equ::LODE) = hasparameters(equ) ? (t,q,v,ϑ) -> equ.ϑ(t, q, v, ϑ, equ.parameters) : equ.ϑ
+_get_f(equ::LODE) = hasparameters(equ) ? (t,q,v,f) -> equ.f(t, q, v, f, equ.parameters) : equ.f
+_get_g(equ::LODE) = hasparameters(equ) ? (t,q,v,g) -> equ.g(t, q, v, g, equ.parameters) : equ.g
+_get_v̄(equ::LODE) = hasparameters(equ) ? (t,q,v) -> equ.v̄(t, q, v, equ.parameters) : equ.v̄
+_get_f̄(equ::LODE) = hasparameters(equ) ? (t,q,v,f) -> equ.f̄(t, q, v, f, equ.parameters) : equ.f̄
+_get_h(equ::LODE) = hasparameters(equ) ? (t,q) -> equ.h(t, q, equ.parameters) : equ.h
+_get_∇(equ::LODE) = hasparameters(equ) ? (t,q,∇H) -> equ.∇H(t, q, ∇H, equ.parameters) : equ.∇H
+_get_Ω(equ::LODE) = hasparameters(equ) ? (t,q,Ω) -> equ.Ω(t, q, Ω, equ.parameters) : equ.Ω
 
 
-function get_function_tuple(equ::VODE)
+function get_function_tuple(equ::LODE)
     names = (:ϑ, :f, :g, :v̄, :f̄)
     equs  = (_get_ϑ(equ), _get_f(equ), _get_g(equ), _get_v̄(equ), _get_f̄(equ))
 

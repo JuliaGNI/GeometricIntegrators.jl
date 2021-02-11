@@ -36,7 +36,7 @@ shared arrays).
 
 The usual way to initialise a `Solution` is by passing an equation, which for
 `SolutionPODE` has to be an [`PODE`](@ref), [`HODE`](@ref), [`IODE`](@ref) or
-[`VODE`](@ref), a time step `Δt` and the number of time steps `ntimesteps`.
+[`LODE`](@ref), a time step `Δt` and the number of time steps `ntimesteps`.
 The optional parameters `nsave` and `nwrite` determine the intervals for
 storing the solution and writing to file, i.e., if `nsave > 1` only every
 `nsave`'th solution is actually stored, and every `nwrite`'th time step the
@@ -74,7 +74,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             end
         end
 
-        function $TSolution(equation::Union{PODE{DT,TT,AT}, HODE{DT,TT,AT}, IODE{DT,TT,AT}, VODE{DT,TT,AT}}, Δt::TT, ntimesteps::Int;
+        function $TSolution(equation::Union{PODE{DT,TT,AT}, HODE{DT,TT,AT}, IODE{DT,TT,AT}, LODE{DT,TT,AT}}, Δt::TT, ntimesteps::Int;
                             nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,AT}
             @assert nsave > 0
             @assert ntimesteps == 0 || ntimesteps ≥ nsave
@@ -176,7 +176,7 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
 @inline Common.periodicity(sol::SolutionPODE) = sol.periodicity
 
 
-function set_initial_conditions!(sol::SolutionPODE, equ::Union{PODE,HODE,IODE,VODE})
+function set_initial_conditions!(sol::SolutionPODE, equ::Union{PODE,HODE,IODE,LODE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end
 

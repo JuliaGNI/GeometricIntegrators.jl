@@ -110,7 +110,7 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
         IntegratorVPRKpSecondary(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpSecondary(equation::VODE{DT}, tableau, Δt; kwargs...) where {DT}
+    function IntegratorVPRKpSecondary(equation::LODE{DT}, tableau, Δt; kwargs...) where {DT}
         IntegratorVPRKpSecondary{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

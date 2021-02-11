@@ -65,11 +65,11 @@ For testing purposes [`IntegratorVPRKpStandard`](@ref) provides some additional 
 | [`IntegratorVPRKpVariationalP`](@ref) | VPRK integrator with variational projection on $(p_{n}, q_{n+1})$                                    |
 | [`IntegratorVPRKpSymplectic`](@ref)   | VPRK integrator with [symplectic projection](@ref sec:symplectic-projection)                         |
 
-All of the above integrators are applied to either an [`IODE`](@ref) or [`VODE`](@ref) and instantiated as follows:
+All of the above integrators are applied to either an [`IODE`](@ref) or [`LODE`](@ref) and instantiated as follows:
 ```julia
 int = IntegratorVPRK(iode, tab, Δt)
 ```
-The only exception is [`IntegratorVPRKpSecondary`](@ref) which can only be applied to an [`VODE`](@ref) as it needs some additional functions which are only defined for variational problems.
+The only exception is [`IntegratorVPRKpSecondary`](@ref) which can only be applied to an [`LODE`](@ref) as it needs some additional functions which are only defined for variational problems.
 
 
 ## Discrete Action Princtiple

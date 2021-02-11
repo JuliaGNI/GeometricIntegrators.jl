@@ -82,7 +82,7 @@ struct IntegratorVPRKpLegendre{DT, TT, D, S,
         IntegratorVPRKpLegendre(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpLegendre(equation::Union{IODE{DT},VODE{DT}}, tableau, Δt; kwargs...) where {DT}
+    function IntegratorVPRKpLegendre(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
         IntegratorVPRKpLegendre{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

@@ -43,7 +43,7 @@ module Integrators
            PODEIntegrator, PDAEIntegrator, PSDEIntegrator,
            IODEIntegrator, IDAEIntegrator,
            HODEIntegrator, HDAEIntegrator,
-           VODEIntegrator, VDAEIntegrator,
+           LODEIntegrator, LDAEIntegrator,
            SPSDEIntegrator
 
     export IntegratorCache, IntegratorConstructor

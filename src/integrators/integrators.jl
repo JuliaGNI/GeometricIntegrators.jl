@@ -53,7 +53,7 @@ function Integrator(equation::Union{PODE,HODE}, tableau::PartitionedTableau, Δt
 end
 
 # Create integrator for implicit partitioned Runge-Kutta tableau.
-function Integrator(equation::Union{IODE,VODE}, tableau::PartitionedTableau, Δt)
+function Integrator(equation::Union{IODE,LODE}, tableau::PartitionedTableau, Δt)
     IntegratorPRKimplicit(equation, tableau, Δt)
 end
 
@@ -63,7 +63,7 @@ function Integrator(equation::IODE, tableau::TableauVPRK, Δt)
 end
 
 # Create integrator for formal Lagrangian Runge-Kutta tableau.
-function Integrator(equation::VODE, tableau::Tableau, Δt)
+function Integrator(equation::LODE, tableau::Tableau, Δt)
     IntegratorFLRK(equation, tableau, Δt)
 end
 
@@ -93,7 +93,7 @@ function Integrator(equation::IDAE, tableau::TableauVSPARKprimary, Δt)
 end
 
 # Create integrator for variational special partitioned additive Runge-Kutta tableau with projection on secondary constraint.
-function Integrator(equation::VDAE, tableau::TableauVSPARKsecondary, Δt)
+function Integrator(equation::LDAE, tableau::TableauVSPARKsecondary, Δt)
     IntegratorVSPARKsecondary(equation, tableau, Δt)
 end
 

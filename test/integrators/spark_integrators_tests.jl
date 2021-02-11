@@ -23,8 +23,8 @@ const parameters = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 ode  = lotka_volterra_2d_ode(q₀; params=parameters)
 idae = lotka_volterra_2d_idae(q₀; params=parameters)
 pdae = lotka_volterra_2d_pdae(q₀; params=parameters)
-vdae = lotka_volterra_2d_vdae(q₀; params=parameters)
-vdae_slrk = lotka_volterra_2d_slrk(q₀; params=parameters)
+ldae = lotka_volterra_2d_ldae(q₀; params=parameters)
+ldae_slrk = lotka_volterra_2d_slrk(q₀; params=parameters)
 
 int  = IntegratorFIRK(ode, TableauGauss(8), Δt)
 sol  = integrate(ode, int, nt)
@@ -34,81 +34,81 @@ refx = sol.q[end]
 
 @testset "$(rpad("SLRK integrators",80))" begin
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIIAB(2), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIIAB(2), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIIAB(3), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIIAB(3), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIIAB(4), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIIAB(4), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIIBA(2), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIIBA(2), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIIBA(3), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIIBA(3), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIIBA(4), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIIBA(4), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIICC̄(2), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIICC̄(2), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIICC̄(3), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIICC̄(3), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIICC̄(4), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIICC̄(4), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIIC̄C(2), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIIC̄C(2), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIIC̄C(3), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIIC̄C(3), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIIC̄C(4), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIIC̄C(4), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIID(2), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIID(2), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIID(3), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIID(3), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIID(4), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIID(4), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 2E-15
 
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIIE(2), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIIE(2), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 1E-6
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIIE(3), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIIE(3), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = IntegratorSLRK(vdae_slrk, TableauSLRKLobattoIIIE(4), Δt)
-    sol = integrate(vdae_slrk, int, nt)
+    int = IntegratorSLRK(ldae_slrk, TableauSLRKLobattoIIIE(4), Δt)
+    sol = integrate(ldae_slrk, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 end
@@ -286,159 +286,159 @@ end
 
     ### VSPARKsecondary Integrators ###
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIIAB(2), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIIAB(2), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIIAB(3), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIIAB(3), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIIAB(4), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIIAB(4), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIIBA(2), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIIBA(2), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIIBA(3), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIIBA(3), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIIBA(4), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIIBA(4), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIICC̄(2), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIICC̄(2), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIICC̄(3), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIICC̄(3), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIICC̄(4), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIICC̄(4), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIIC̄C(2), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIIC̄C(2), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIIC̄C(3), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIIC̄C(3), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIIC̄C(4), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIIC̄C(4), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIID(2), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIID(2), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIID(3), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIID(3), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 2E-11
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIID(4), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIID(4), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 2E-15
 
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIIE(2), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIIE(2), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-6
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIIE(3), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIIE(3), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = Integrator(vdae, TableauVSPARKLobattoIIIE(4), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKLobattoIIIE(4), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIIAB(1), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIIAB(1), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIIAB(2), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIIAB(2), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIIAB(3), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIIAB(3), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIIBA(1), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIIBA(1), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIIBA(2), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIIBA(2), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIIBA(3), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIIBA(3), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIICC̄(1), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIICC̄(1), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIICC̄(2), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIICC̄(2), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIICC̄(3), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIICC̄(3), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 2E-15
 
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIIC̄C(1), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIIC̄C(1), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIIC̄C(2), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIIC̄C(2), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIIC̄C(3), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIIC̄C(3), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 2E-15
 
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIID(1), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIID(1), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 4E-6
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIID(2), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIID(2), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIID(3), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIID(3), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIIE(1), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIIE(1), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-6
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIIE(2), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIIE(2), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-11
 
-    int = Integrator(vdae, TableauVSPARKGLRKLobattoIIIE(3), Δt)
-    sol = integrate(vdae, int, nt)
+    int = Integrator(ldae, TableauVSPARKGLRKLobattoIIIE(3), Δt)
+    sol = integrate(ldae, int, nt)
     @test rel_err(sol.q, refx) < 1E-15
 end
 
@@ -559,18 +559,18 @@ end
 
     ### HSPARKsecondary Integrators ###
 
-    # int = IntegratorHSPARKsecondary(vdae, TableauHSPARKLobattoIIIAB(2), Δt)
-    # sol = integrate(vdae, int, nt)
+    # int = IntegratorHSPARKsecondary(ldae, TableauHSPARKLobattoIIIAB(2), Δt)
+    # sol = integrate(ldae, int, nt)
     # println(rel_err(sol.q, refx))
     # @test rel_err(sol.q, refx) < 4E-6
 
-    # int = IntegratorHSPARKsecondary(vdae, TableauHSPARKLobattoIIIAB(3), Δt)
-    # sol = integrate(vdae, int, nt)
+    # int = IntegratorHSPARKsecondary(ldae, TableauHSPARKLobattoIIIAB(3), Δt)
+    # sol = integrate(ldae, int, nt)
     # println(rel_err(sol.q, refx))
     # @test rel_err(sol.q, refx) < 2E-11
 
-    # int = IntegratorHSPARKsecondary(vdae, TableauHSPARKLobattoIIIAB(4), Δt)
-    # sol = integrate(vdae, int, nt)
+    # int = IntegratorHSPARKsecondary(ldae, TableauHSPARKLobattoIIIAB(4), Δt)
+    # sol = integrate(ldae, int, nt)
     # println(rel_err(sol.q, refx))
     # @test rel_err(sol.q, refx) < 1E-15
 

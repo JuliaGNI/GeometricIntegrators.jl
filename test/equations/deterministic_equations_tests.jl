@@ -229,29 +229,29 @@ end
 end
 
 
-@testset "$(rpad("Variational Ordinary Differential Equations (VODE)",80))" begin
+@testset "$(rpad("Variational Ordinary Differential Equations (LODE)",80))" begin
 
-    vode_eqs = (iode_ϑ, iode_f, iode_g)
+    lode_eqs = (iode_ϑ, iode_f, iode_g)
 
-    vode  = VODE(vode_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v)
-    vode1 = VODE(vode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
-    vode2 = VODE(vode_eqs..., t₀, q₀, p₀; v̄=iode_v)
-    vode3 = VODE(vode_eqs..., q₀, p₀; v̄=iode_v)
+    lode  = LODE(lode_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v)
+    lode1 = LODE(lode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
+    lode2 = LODE(lode_eqs..., t₀, q₀, p₀; v̄=iode_v)
+    lode3 = LODE(lode_eqs..., q₀, p₀; v̄=iode_v)
 
-    @test ndims(vode) == 1
-    @test nsamples(vode) == 1
-    @test periodicity(vode) == zero(q₀)
-    @test get_function_tuple(vode) == NamedTuple{(:ϑ, :f, :g, :v̄, :f̄)}((vode_eqs..., iode_v, iode_f))
+    @test ndims(lode) == 1
+    @test nsamples(lode) == 1
+    @test periodicity(lode) == zero(q₀)
+    @test get_function_tuple(lode) == NamedTuple{(:ϑ, :f, :g, :v̄, :f̄)}((lode_eqs..., iode_v, iode_f))
 
-    @test vode == vode1
-    @test vode == vode2
-    @test vode == vode3
+    @test lode == lode1
+    @test lode == lode2
+    @test lode == lode3
 
-    @test hash(vode1) == hash(vode2)
+    @test hash(lode1) == hash(lode2)
 
-    @test vode == similar(vode, t₀, q₀, p₀, λ₀)
-    @test vode == similar(vode, t₀, q₀, p₀)
-    @test vode == similar(vode, q₀, p₀)
+    @test lode == similar(lode, t₀, q₀, p₀, λ₀)
+    @test lode == similar(lode, t₀, q₀, p₀)
+    @test lode == similar(lode, q₀, p₀)
 
 end
 
@@ -360,34 +360,34 @@ end
 end
 
 
-@testset "$(rpad("Variational Differential Algebraic Equations (VDAE)",80))" begin
+@testset "$(rpad("Variational Differential Algebraic Equations (LDAE)",80))" begin
 
-    vdae_eqs = (iode_ϑ, iode_f, iode_g, iode_g, pdae_ϕ, pdae_ψ)
+    ldae_eqs = (iode_ϑ, iode_f, iode_g, iode_g, pdae_ϕ, pdae_ψ)
 
-    vdae  = VDAE(vdae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀]; v̄=iode_v)
-    vdae1 = VDAE(vdae_eqs..., t₀, q₀, p₀, λ₀, λ₀; v̄=iode_v)
-    vdae2 = VDAE(vdae_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
-    vdae3 = VDAE(vdae_eqs..., t₀, q₀, p₀; v̄=iode_v)
-    vdae4 = VDAE(vdae_eqs..., q₀, p₀; v̄=iode_v)
+    ldae  = LDAE(ldae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀]; v̄=iode_v)
+    ldae1 = LDAE(ldae_eqs..., t₀, q₀, p₀, λ₀, λ₀; v̄=iode_v)
+    ldae2 = LDAE(ldae_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
+    ldae3 = LDAE(ldae_eqs..., t₀, q₀, p₀; v̄=iode_v)
+    ldae4 = LDAE(ldae_eqs..., q₀, p₀; v̄=iode_v)
 
-    @test ndims(vdae) == 1
-    @test nsamples(vdae) == 1
-    @test nconstraints(vdae) == 1
-    @test periodicity(vdae) == zero(q₀)
-    @test get_function_tuple(vdae) == NamedTuple{(:ϑ, :f, :g, :g̅, :ϕ, :ψ, :v̄, :f̄)}((vdae_eqs..., iode_v, iode_f))
+    @test ndims(ldae) == 1
+    @test nsamples(ldae) == 1
+    @test nconstraints(ldae) == 1
+    @test periodicity(ldae) == zero(q₀)
+    @test get_function_tuple(ldae) == NamedTuple{(:ϑ, :f, :g, :g̅, :ϕ, :ψ, :v̄, :f̄)}((ldae_eqs..., iode_v, iode_f))
 
-    @test vdae == vdae1
-    @test vdae == vdae2
-    @test vdae == vdae3
-    @test vdae == vdae4
+    @test ldae == ldae1
+    @test ldae == ldae2
+    @test ldae == ldae3
+    @test ldae == ldae4
 
-    @test hash(vdae1) == hash(vdae2)
-    @test hash(vdae3) == hash(vdae4)
+    @test hash(ldae1) == hash(ldae2)
+    @test hash(ldae3) == hash(ldae4)
 
-    @test vdae == similar(vdae, t₀, q₀, p₀, λ₀, λ₀)
-    @test vdae == similar(vdae, t₀, q₀, p₀, λ₀)
-    @test vdae == similar(vdae, t₀, q₀, p₀)
-    @test vdae == similar(vdae, q₀, p₀)
+    @test ldae == similar(ldae, t₀, q₀, p₀, λ₀, λ₀)
+    @test ldae == similar(ldae, t₀, q₀, p₀, λ₀)
+    @test ldae == similar(ldae, t₀, q₀, p₀)
+    @test ldae == similar(ldae, q₀, p₀)
 
 end
 

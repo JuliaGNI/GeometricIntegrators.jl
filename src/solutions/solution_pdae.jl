@@ -38,7 +38,7 @@ shared arrays).
 
 The usual way to initialise a `Solution` is by passing an equation, which for
 `SolutionPDAE` has to be an [`PDAE`](@ref), [`HDAE`](@ref), [`IDAE`](@ref) or
-[`VDAE`](@ref), a time step `Δt` and the number of time steps `ntimesteps`. The
+[`LDAE`](@ref), a time step `Δt` and the number of time steps `ntimesteps`. The
 optional parameters `nsave` and `nwrite` determine the intervals for storing
 the solution and writing to file, i.e., if `nsave > 1` only every `nsave`'th
 solution is actually stored, and every `nwrite`'th time step the solution is
@@ -78,7 +78,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             end
         end
 
-        function $TSolution(equation::Union{PDAE{DT,TT,AT}, HDAE{DT,TT,AT}, IDAE{DT,TT,AT}, VDAE{DT,TT,AT}, IODE{DT,TT,AT}, VODE{DT,TT,AT}}, Δt::TT, ntimesteps::Int;
+        function $TSolution(equation::Union{PDAE{DT,TT,AT}, HDAE{DT,TT,AT}, IDAE{DT,TT,AT}, LDAE{DT,TT,AT}, IODE{DT,TT,AT}, LODE{DT,TT,AT}}, Δt::TT, ntimesteps::Int;
                             nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,AT}
             @assert nsave > 0
             @assert ntimesteps == 0 || ntimesteps ≥ nsave
@@ -192,7 +192,7 @@ Base.:(==)(sol1::SolutionPDAE{DT1,TT1,N1}, sol2::SolutionPDAE{DT2,TT2,N2}) where
 @inline Common.periodicity(sol::SolutionPDAE) = sol.periodicity
 
 
-function set_initial_conditions!(sol::SolutionPDAE, equ::Union{IODE,VODE,PDAE,IDAE,VDAE})
+function set_initial_conditions!(sol::SolutionPDAE, equ::Union{IODE,LODE,PDAE,IDAE,LDAE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, equ.λ₀)
 end
 

@@ -97,7 +97,7 @@ struct IntegratorVPRKpTableau{DT, TT, D, S,
         IntegratorVPRKpTableau(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpTableau(equation::Union{IODE{DT},VODE{DT}}, tableau, Δt; kwargs...) where {DT}
+    function IntegratorVPRKpTableau(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
         IntegratorVPRKpTableau{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
