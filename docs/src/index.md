@@ -90,15 +90,9 @@ If you use *GeometricIntegrators.jl* in your work, please consider citing it by
 
 *GeometricIntegrators.jl* contains reference implementation for the methods described in the following articles:
 
-- Michael Kraus. Hamilton-Pontryagin-Galerkin Integrators.
 - Michael Kraus. Projected Variational Integrators for Degenerate Lagrangian Systems. [arXiv:1708.07356](https://arxiv.org/abs/1708.07356).
-- Michael Kraus. SPARK Methods for Degenerate Lagrangian Systems.
-- Michael Kraus. SPARK Methods for Hamiltonian Systems subject to Dirac Constraints.
-- Michael Kraus. Symplectic Runge-Kutta Methods for Degenerate Lagrangian Systems.
-- Michael Kraus. Variational Integrators for Noncanonical Hamiltonian Systems.
 - Michael Kraus and Tomasz M. Tyranowski. Variational Integrators for Stochastic Dissipative Hamiltonian Systems. [arXiv:1909.07202](https://arxiv.org/abs/1909.07202),
   [Journal](https://doi.org/10.1088/1742-6596/1391/1/012037).
-- Michael Kraus, Joshua Burby. Conservation of Poincaré Integral Invariants in Numerical Simulations.
 
 
 ### Background Material
