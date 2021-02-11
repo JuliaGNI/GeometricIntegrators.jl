@@ -24,8 +24,10 @@ jobs:
         run: julia --project tutorial.jl
         working-directory: docs
       - name: Generate Images
-        run: make all
-        working-directory: docs/src/images
+        run: |
+          make all   -C src/images
+          make clean -C src/images
+        working-directory: docs
       - name: Build and deploy Documentation
         run: julia --project make.jl
         working-directory: docs
