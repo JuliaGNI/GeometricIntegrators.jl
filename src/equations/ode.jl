@@ -8,6 +8,15 @@ Defines an initial value problem
 with vector field ``v``, initial condition ``q_{0}`` and the solution
 ``q`` taking values in ``\mathbb{R}^{d}``.
 
+### Parameters
+
+* `DT <: Number`: data type
+* `TT <: Real`: time step type
+* `AT <: AbstractArray{DT}`: array type
+* `vType <: Function`: type of `v`
+* `hType <: OptionalFunction`: type of `h`
+* `pType <: Union{NamedTuple,Nothing}`: parameters type
+
 ### Fields
 
 * `d`: dimension of dynamical variable ``q`` and the vector field ``v``
@@ -27,6 +36,15 @@ The function `v` providing the vector field must have the interface
 where `t` is the current time, `q` is the current solution vector, and
 `v` is the vector which holds the result of evaluating the vector field ``v``
 on `t` and `q`.
+
+### Constructors
+
+```julia
+ODE(v, t₀, q₀; h=nothing, parameters=nothing, periodicity=zero(q₀[begin]))
+ODE(v, q₀::StateVector; kwargs...) = ODE(v, 0.0, q₀; kwargs...)
+ODE(v, t₀, q₀::State; kwargs...) = ODE(v, t₀, [q₀]; kwargs...)
+ODE(v, q₀::State; kwargs...) = ODE(v, 0.0, q₀; kwargs...)
+```
 
 """
 struct ODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType}, vType <: Function,

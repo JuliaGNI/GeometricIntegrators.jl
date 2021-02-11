@@ -12,6 +12,17 @@ with the drift vector fields ``v`` and ``f``, diffusion matrices ``B`` and ``G``
 initial conditions ``q_{0}`` and ``p_{0}``, the dynamical variables ``(q,p)`` taking
 values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``, and the m-dimensional Wiener process W
 
+### Parameters
+
+* `DT <: Number`: data type
+* `TT <: Real`: time step type
+* `AT <: AbstractArray{DT}`: array type
+* `vType <: Function`: type of `v`
+* `fType <: Function`: type of `f`
+* `BType <: Function`: type of `B`
+* `GType <: Function`: type of `G`
+* `pType <: Union{NamedTuple,Nothing}`: parameters type
+
 ### Fields
 
 * `d`:  dimension of dynamical variable ``q`` and the vector field ``v``
@@ -25,11 +36,19 @@ values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``, and the m-dimensional Wiener
 * `q₀`: initial condition for dynamical variable ``q`` (may be a random variable itself)
 * `p₀`: initial condition for dynamical variable ``p`` (may be a random variable itself)
 
-
 The functions `v`, `f`, `B` and `G`, providing the drift vector fields and diffusion matrices, take four arguments,
 `v(t, q, p, v)`, `f(t, q, p, f)`, `B(t, q, p,  B)` and `G(t, q, p, G)`, where `t` is the current time, `(q, p)` is the
 current solution vector, and `v`, `f`, `B` and `G` are the variables which hold the result
 of evaluating the vector fields ``v``, ``f`` and the matrices ``B``, ``G`` on `t` and `(q,p)`.
+
+### Constructors
+
+```julia
+PSDE(m, ns, v, f, B, G, t₀, q₀, p₀; parameters=nothing, periodicity=zero(q₀[begin]))
+PSDE(m, ns, v, f, B, G, q₀::StateVector, p₀::StateVector; kwargs...) = PSDE(m, ns, v, f, B, G, 0.0, q₀, p₀; kwargs...)
+PSDE(m, ns, v, f, B, G, t₀, q₀::State, p₀::State; kwargs...) = PSDE(m, ns, v, f, B, G, t₀, [q₀], [p₀]; kwargs...)
+PSDE(m, ns, v, f, B, G, q₀::State, p₀::State; kwargs...) = PSDE(m, ns, v, f, B, G, 0.0, q₀, p₀; kwargs...)
+```
 
 ### Example
 

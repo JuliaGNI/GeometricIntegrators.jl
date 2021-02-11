@@ -12,6 +12,19 @@ with the drift vector fields ``v`` and ``f_i``, diffusion matrices ``B`` and ``G
 initial conditions ``q_{0}`` and ``p_{0}``, the dynamical variables ``(q,p)`` taking
 values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``, and the m-dimensional Wiener process W
 
+### Parameters
+
+* `DT <: Number`: data type
+* `TT <: Real`: time step type
+* `AT <: AbstractArray{DT}`: array type
+* `vType <: Function`: type of `v`
+* `f1Type <: Function`: type of `f1`
+* `f2Type <: Function`: type of `f2`
+* `BType <: Function`: type of `B`
+* `G1Type <: Function`: type of `G1`
+* `G2Type <: Function`: type of `G2`
+* `pType <: Union{NamedTuple,Nothing}`: parameters type
+
 ### Fields
 
 * `d`:  dimension of dynamical variable ``q`` and the vector fields ``vi``
@@ -33,6 +46,15 @@ The functions `v`, `f`, `B` and `G`, providing the drift vector fields and diffu
 `v(t, q, p, v)`, `f(t, q, p, f)`, `B(t, q, p,  B)` and `G(t, q, p, G)`, where `t` is the current time, `(q, p)` is the
 current solution vector, and `v`, `f`, `B` and `G` are the variables which hold the result
 of evaluating the vector fields ``v``, ``f`` and the matrices ``B``, ``G`` on `t` and `(q,p)`.
+
+### Constructors
+
+```julia
+SPSDE(m, ns, v, f1, f2, B, G1, G2, t₀, q₀, p₀; parameters=nothing, periodicity=zero(q₀[begin]))
+SPSDE(m, ns, v, f1, f2, B, G1, G2, q₀::StateVector, p₀::StateVector; kwargs...) = SPSDE(m, ns, v, f1, f2, B, G1, G2, 0.0, q₀, p₀; kwargs...)
+SPSDE(m, ns, v, f1, f2, B, G1, G2, t₀, q₀::State, p₀::State; kwargs...) = SPSDE(m, ns, v, f1, f2, B, G1, G2, t₀, [q₀], [p₀]; kwargs...)
+SPSDE(m, ns, v, f1, f2, B, G1, G2, q₀::State, p₀::State; kwargs...) = SPSDE(m, ns, v, f1, f2, B, G1, G2, 0.0, q₀, p₀; kwargs...)
+```
 
 ### Example
 

@@ -18,6 +18,24 @@ taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}`` and
 the algebraic variables ``(\lambda, \gamma)`` taking values in
 ``\mathbb{R}^{n} \times \mathbb{R}^{d}``.
 
+### Parameters
+
+* `DT <: Number`: data type
+* `TT <: Real`: time step type
+* `AT <: AbstractArray{DT}`: array type
+* `vType <: Function`: type of `v`
+* `fType <: Function`: type of `f`
+* `uType <: Function`: type of `u`
+* `gType <: Function`: type of `g`
+* `u̅Type <: Function`: type of `u̅`
+* `g̅Type <: Function`: type of `g̅`
+* `ϕType <: Function`: type of `ϕ`
+* `ψType <: Function`: type of `ψ`
+* `hType <: Function`: type of `h`
+* `v̄Type <: Function`: type of `v̄`
+* `f̄Type <: Function`: type of `f̄`
+* `pType <: Union{NamedTuple,Nothing}`: parameters type
+
 ### Fields
 
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``v`` and ``f``
@@ -30,13 +48,23 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `g̅`: function computing the secondary projection field ``\bar{g}``
 * `ϕ`: primary constraints
 * `ψ`: secondary constraints
-* `v̄`: function computing an initial guess for the velocity field ``v``` (optional)
-* `f̄`: function computing an initial guess for the force field ``f`` (optional)
 * `h`: function computing the Hamiltonian ``H``
+* `v̄`: function computing an initial guess for the velocity field ``v``` (optional, defaults to `v`)
+* `f̄`: function computing an initial guess for the force field ``f`` (optional, defaults to `f`)
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q``
 * `p₀`: initial condition for dynamical variable ``p``
 * `λ₀`: initial condition for algebraic variable ``λ``
+
+### Constructors
+
+```julia
+HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, t₀, q₀, p₀, λ₀; v̄=v, f̄=f, parameters=nothing, periodicity=zero(q₀[begin]))
+HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
+HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, t₀, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, u̅, g̅, ϕ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
+```
+
 """
 struct HDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             vType <: Function, fType <: Function,

@@ -12,6 +12,16 @@ is given as a sum of vector fields
 v (t) = v_1 (t) + ... + v_r (t) .
 ```
 
+### Parameters
+
+* `DT <: Number`: data type
+* `TT <: Real`: time step type
+* `AT <: AbstractArray{DT}`: array type
+* `vType <: Union{Tuple,Nothing}`: type of `v`
+* `qType <: Union{Tuple,Nothing}`: type of `q`
+* `hType <: OptionalFunction`: type of `h`
+* `pType <: Union{NamedTuple,Nothing}`: parameters type
+
 ### Fields
 
 * `d`: dimension of dynamical variable ``q`` and the vector field ``v``
@@ -44,6 +54,21 @@ the update for.
 The fact that the function `v` returns the solution and not just the vector
 field for each substep increases the flexibility for the use of splitting
 methods, e.g., it allows to use another integrator for solving substeps.
+
+### Constructors
+
+```julia
+SODE(v, q, t₀, q₀; parameters=nothing, periodicity=zero(q₀[begin]))
+
+SODE(v, q::Union{Tuple,Nothing}, t₀::Real, q₀::State; kwargs...) = SODE(v, q, t₀, [q₀]; kwargs...)
+SODE(v, q::Union{Tuple,Nothing}, q₀::StateVector; kwargs...) = SODE(v, q, 0.0, q₀; kwargs...)
+SODE(v, q::Union{Tuple,Nothing}, q₀::State; kwargs...) = SODE(v, q, 0.0, q₀; kwargs...)
+
+SODE(v, t₀::Real, q₀::StateVector; kwargs...) = SODE(v, nothing, t₀, q₀; kwargs...)
+SODE(v, t₀::Real, q₀::State; kwargs...) = SODE(v, nothing, t₀, [q₀]; kwargs...)
+SODE(v, q₀::StateVector; kwargs...) = SODE(v, nothing, 0.0, q₀; kwargs...)
+SODE(v, q₀::State; kwargs...) = SODE(v, nothing, 0.0, q₀; kwargs...)
+```
 
 """
 struct SODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},

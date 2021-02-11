@@ -16,6 +16,19 @@ with vector field ``f``, the momentum defined by ``p``, initial conditions ``(q_
 This is a special case of a differential algebraic equation with dynamical
 variables ``(q,p)`` and algebraic variable ``v``.
 
+### Parameters
+
+* `DT <: Number`: data type
+* `TT <: Real`: time step type
+* `AT <: AbstractArray{DT}`: array type
+* `ϑType <: Function`: type of `ϑ`
+* `fType <: Function`: type of `f`
+* `gType <: Function`: type of `g`
+* `v̄Type <: Function`: type of `v̄`
+* `f̄Type <: Function`: type of `f̄`
+* `hType <: OptionalFunction`: type of `h`
+* `pType <: Union{NamedTuple,Nothing}`: parameters type
+
 ### Fields
 
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``f`` and ``p``
@@ -70,6 +83,16 @@ In addition, the functions `g`, `v̄` and `f̄` are specified by
 ```
 The function `g` is used in projection methods that enforce ``p = ϑ(q)``.
 The functions `v̄` and `f̄` are used for initial guesses in nonlinear implicit solvers.
+
+### Constructors
+
+```julia
+IODE(ϑ, f, g, t₀, q₀, p₀, λ₀; v̄=(t,q,v)->nothing, f̄=f, h=nothing, parameters=nothing, periodicity=zero(q₀[begin]))
+IODE(ϑ, f, g, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀); kwargs...) = IODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
+IODE(ϑ, f, g, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = IODE(ϑ, f, g, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+IODE(ϑ, f, g, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = IODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)
+```
+
 """
 struct IODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             ϑType <: Function, fType <: Function, gType <: Function,
