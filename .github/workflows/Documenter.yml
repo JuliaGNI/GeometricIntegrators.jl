@@ -16,12 +16,18 @@ jobs:
         with:
           version: 1.5
       - name: Install dependencies
-        run: julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate(); Pkg.build(); Pkg.precompile();'
+        run: |
+          julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate(); Pkg.build(); Pkg.precompile();'
+          sudo apt-get install texlive-xetex
       - name: Build Tutorial
         run: julia --project tutorial.jl
         working-directory: docs
+      - name: Generate Images
+        run: make all
+        working-directory: docs/src/images
       - name: Build and deploy Documentation
         run: julia --project make.jl
         working-directory: docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}

@@ -35,6 +35,7 @@ A Julia package closely related to *GeometricIntegrators.jl* is *[DifferentialEq
 
 ```@contents
 Pages = ["tutorial/tutorial.md",
+         "equations.md",
          "integrators.md",
 ]
 ```
@@ -46,7 +47,7 @@ Pages = ["tutorial/tutorial.md",
 Pages = ["modules/equations.md",
          "modules/integrators.md",
          "modules/interpolation.md",
-         "modules/discontinuities.md",
+        #"modules/discontinuities.md",
          "modules/simulations.md",
          "modules/solutions.md",
 ]
@@ -57,10 +58,18 @@ Pages = ["modules/equations.md",
 
 ```@contents
 Pages = ["tableaus/rungekutta.md",
-         "tableaus/prk.md",
+         "tableaus/rungekutta_partitioned.md",
          "tableaus/splitting.md",
          "tableaus/vprk.md",
          "tableaus/spark.md",
+]
+```
+
+## Developer Documentation
+
+```@contents
+Pages = ["developer/code_integration.md",
+         "developer/custom_integrators.md",
 ]
 ```
 
@@ -81,22 +90,18 @@ If you use *GeometricIntegrators.jl* in your work, please consider citing it by
 
 *GeometricIntegrators.jl* contains reference implementation for the methods described in the following articles:
 
-- Michael Kraus. Hamilton-Pontryagin-Galerkin Integrators.
 - Michael Kraus. Projected Variational Integrators for Degenerate Lagrangian Systems. [arXiv:1708.07356](https://arxiv.org/abs/1708.07356).
-- Michael Kraus. SPARK Methods for Degenerate Lagrangian Systems.
-- Michael Kraus. SPARK Methods for Hamiltonian Systems subject to Dirac Constraints.
-- Michael Kraus. Symplectic Runge-Kutta Methods for Degenerate Lagrangian Systems.
-- Michael Kraus. Variational Integrators for Noncanonical Hamiltonian Systems.
 - Michael Kraus and Tomasz M. Tyranowski. Variational Integrators for Stochastic Dissipative Hamiltonian Systems. [arXiv:1909.07202](https://arxiv.org/abs/1909.07202),
   [Journal](https://doi.org/10.1088/1742-6596/1391/1/012037).
-- Michael Kraus, Joshua Burby. Conservation of Poincaré Integral Invariants in Numerical Simulations.
 
 
 ### Background Material
 
 - Ernst Hairer and Christian Lubich. Numerical Solution of Ordinary Differential Equations. The Princeton Companion to Applied Mathematics, 293-305, 2015. Princeton University Press. ([Author's Web Site](https://na.uni-tuebingen.de/~lubich/pcam-ode.pdf))
 - Ernst Hairer, Christian Lubich and Gerhard Wanner. Geometric Numerical Integration Illustrated by the Störmer–Verlet Method. Acta Numerica 12, 399-450, 2003. ([Journal](http://dx.doi.org/10.1017/S0962492902000144))
-- Laurent O. Jay. Lobatto Methods. Encyclopedia of Applied and Computational Mathematics, 817–826. Springer, 2015. ([Article](http://dx.doi.org/10.1007/978-3-540-70529-1_123))
+- John C. Butcher. Gauss Methods. Encyclopedia of Applied and Computational Mathematics, Pages 583-589, 2015. ([Article](http://dx.doi.org/10.1007/978-3-540-70529-1_115))
+- Laurent O. Jay. Lobatto Methods. Encyclopedia of Applied and Computational Mathematics, Pages 817–826, 2015. ([Article](http://dx.doi.org/10.1007/978-3-540-70529-1_123))
+- Ernst Hairer and Gerhard Wanner. Radau Methods. Encyclopedia of Applied and Computational Mathematics, Pages 1213-1216, 2015. ([Article](http://dx.doi.org/10.1007/978-3-540-70529-1_139))
 
 
 ### Books on Geometric Numerical Integration

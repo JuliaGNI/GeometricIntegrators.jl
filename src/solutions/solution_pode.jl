@@ -17,6 +17,34 @@ Contains all fields necessary to store the solution of an PODE.
 * `counter`: counter for copied solution entries
 * `woffset`: counter for file offset
 * `h5`: HDF5 file for storage
+
+### Constructors
+
+```julia
+SSolutionPODE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
+SSolutionPODE(t::TimeSeries, q::SDataSeries, p::SDataSeries, ntimesteps)
+SSolutionPODE(file::String)
+PSolutionPODE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
+PSolutionPODE(t::TimeSeries, q::PDataSeries, p::PDataSeries, ntimesteps)
+PSolutionPODE(file::String)
+```
+
+The constructors `SSolutionPODE` create a `SolutionPODE` with internal data structures
+for serial simulations (i.e., standard arrays), while the constructors `PSolutionPODE`
+create a `SolutionPODE` with internal data structures for parallel simulations (i.e.,
+shared arrays).
+
+The usual way to initialise a `Solution` is by passing an equation, which for
+`SolutionPODE` has to be an [`PODE`](@ref), [`HODE`](@ref), [`IODE`](@ref) or
+[`VODE`](@ref), a time step `Δt` and the number of time steps `ntimesteps`.
+The optional parameters `nsave` and `nwrite` determine the intervals for
+storing the solution and writing to file, i.e., if `nsave > 1` only every
+`nsave`'th solution is actually stored, and every `nwrite`'th time step the
+solution is stored to disk.
+
+The other constructors, either passing a `TimeSeries` and two `DataSeries` or a
+filename are used to read data from previous simulations.
+
 """
 abstract type SolutionPODE{dType, tType, N} <: DeterministicSolution{dType, tType, N} end
 
@@ -46,7 +74,7 @@ for (TSolution, TDataSeries, Tdocstring) in
             end
         end
 
-        function $TSolution(equation::Union{PODE{DT,TT,AT}, IODE{DT,TT,AT}, VODE{DT,TT,AT}}, Δt::TT, ntimesteps::Int;
+        function $TSolution(equation::Union{PODE{DT,TT,AT}, HODE{DT,TT,AT}, IODE{DT,TT,AT}, VODE{DT,TT,AT}}, Δt::TT, ntimesteps::Int;
                             nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,AT}
             @assert nsave > 0
             @assert ntimesteps == 0 || ntimesteps ≥ nsave
@@ -148,7 +176,7 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
 @inline Common.periodicity(sol::SolutionPODE) = sol.periodicity
 
 
-function set_initial_conditions!(sol::SolutionPODE, equ::Union{PODE,IODE,VODE})
+function set_initial_conditions!(sol::SolutionPODE, equ::Union{PODE,HODE,IODE,VODE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end
 

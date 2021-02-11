@@ -31,6 +31,15 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `q₀`: initial condition for dynamical variable ``q``
 * `p₀`: initial condition for dynamical variable ``p``
 * `λ₀`: initial condition for algebraic variable ``λ``
+
+### Constructors
+
+```julia
+SPDAE(DT, N, d, m, n, v, f, ϕ, ψ, t₀, q₀, p₀, λ₀; parameters=nothing, periodicity=zeros(DT,d))
+SPDAE(v, f, ϕ, ψ, t₀, q₀, p₀, λ₀=zero(q₀); kwargs...) = SPDAE(eltype(q₀), ndims(q₀), size(q₀,1), size(λ₀,1), size(q₀,2), v, f, ϕ, ψ, t₀, q₀, p₀, λ₀; kwargs...)
+SPDAE(v, f, ϕ, ψ, q₀, p₀, λ₀=zero(q₀); kwargs...) = SPDAE(v, f, ϕ, ψ, zero(eltype(q₀)), q₀, p₀, λ₀; kwargs...)
+```
+
 """
 struct SPDAE{dType <: Number, tType <: Real, vType <: Tuple, fType <: Tuple,
              ϕType <: Function, ψType <: Function, pType <: Union{NamedTuple,Nothing},

@@ -21,6 +21,20 @@ Atomic solution for an DAE.
 * `v̅`: vector field of q̅
 * `u`: projective vector field of q
 * `u̅`: projective vector field of q̅
+* `internal`: internal variables of the integrator (e.g., internal stages of a Runge-Kutta methods or solver output)
+
+### Constructors
+
+```julia
+AtomicSolutionDAE{DT,TT,AT,IT}(nd, nm, internal::IT)
+AtomicSolutionDAE{DT,TT,AT,IT}(t::TT, q::AT, λ::AT, internal::IT)
+AtomicSolutionDAE(DT, TT, AT, nd, nm, internal::IT=NamedTuple())
+AtomicSolutionDAE(t::TT, q::AT, λ::AT, internal::IT=NamedTuple())
+```
+
+* `nd`: dimension of the state vector
+* `nm`: dimension of the constraint
+
 """
 mutable struct AtomicSolutionDAE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT

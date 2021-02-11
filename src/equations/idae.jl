@@ -16,6 +16,21 @@ conditions ``(q_{0}, p_{0})`` and ``\lambda_{0}``, the dynamical variables
 ``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}`` and
 the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 
+### Parameters
+
+* `DT <: Number`: data type
+* `TT <: Real`: time step type
+* `AT <: AbstractArray{DT}`: array type
+* `ϑType <: Function`: type of `ϑ`
+* `fType <: Function`: type of `f`
+* `uType <: Function`: type of `u`
+* `gType <: Function`: type of `g`
+* `ϕType <: Function`: type of `ϕ`
+* `v̄Type <: Function`: type of `v̄`
+* `f̄Type <: Function`: type of `f̄`
+* `hType <: OptionalFunction`: type of `h`
+* `pType <: Union{NamedTuple,Nothing}`: parameters type
+
 ### Fields
 
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``f`` and ``p``
@@ -32,6 +47,15 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 * `q₀`: initial condition for dynamical variable ``q``
 * `p₀`: initial condition for dynamical variable ``p``
 * `λ₀`: initial condition for algebraic variable ``\lambda``
+
+### Constructors
+
+```julia
+IDAE(ϑ, f, u, g, ϕ, t₀, q₀, p₀, λ₀; v̄=(t,q,v)->nothing, f̄=f, h=nothing, parameters=nothing, periodicity=zero(q₀[begin]))
+IDAE(ϑ, f, u, g, ϕ, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀); kwargs...) = IDAE(ϑ, f, u, g, ϕ, 0.0, q₀, p₀, λ₀; kwargs...)
+IDAE(ϑ, f, u, g, ϕ, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = IDAE(ϑ, f, u, g, ϕ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+IDAE(ϑ, f, u, g, ϕ, q₀::State, p₀::State, λ₀::State=zero(q₀); kwargs...) = IDAE(ϑ, f, u, g, ϕ, 0.0, q₀, p₀, λ₀; kwargs...)
+```
 
 """
 struct IDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},

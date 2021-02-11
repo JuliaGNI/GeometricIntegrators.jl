@@ -11,6 +11,15 @@ with drift vector field ``v``, diffusion matrix ``B``,
 initial conditions ``q_{0}``, the dynamical variable ``q``
 taking values in ``\mathbb{R}^{d}``, and the m-dimensional Wiener process W
 
+### Parameters
+
+* `DT <: Number`: data type
+* `TT <: Real`: time step type
+* `AT <: AbstractArray{DT}`: array type
+* `vType <: Function`: type of `v`
+* `BType <: Function`: type of `B`
+* `pType <: Union{NamedTuple,Nothing}`: parameters type
+
 ### Fields
 
 * `d`:  dimension of dynamical variable ``q`` and the vector field ``v``
@@ -21,16 +30,20 @@ taking values in ``\mathbb{R}^{d}``, and the m-dimensional Wiener process W
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q`` (may be a random variable itself)
 
-### Parameters
-
-* `N`: dimension of nitial condition array: N=1 - single, N=2 - multiple
-
-
 The functions `v` and `B`, providing the drift vector field and diffusion matrix,
 `v(t, q, v)` and `B(t, q, B, col=0)`, where `t` is the current time, `q` is the
 current solution vector, and `v` and `B` are the variables which hold the result
 of evaluating the vector field ``v`` and the matrix ``B`` on `t` and `q` (if col==0),
 or the column col of the matrix B (if col>0).
+
+### Constructors
+
+```julia
+SDE(m, ns, v, B, t₀, q₀; parameters=nothing, periodicity=zero(q₀[begin]))
+SDE(m, ns, v, B, q₀::StateVector; kwargs...) = SDE(m, ns, v, B, 0.0, q₀; kwargs...)
+SDE(m, ns, v, B, t₀, q₀::State; kwargs...) = SDE(m, ns, v, B, t₀, [q₀]; kwargs...)
+SDE(m, ns, v, B, q₀::State; kwargs...) = SDE(m, ns, v, B, 0.0, q₀; kwargs...)
+```
 
 ### Example
 

@@ -19,6 +19,16 @@ f &= - \frac{\partial H}{\partial q} ,
 initial conditions ``(q_{0}, p_{0})`` and the dynamical variables ``(q,p)``
 taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``.
 
+### Parameters
+
+* `DT <: Number`: data type
+* `TT <: Real`: time step type
+* `AT <: AbstractArray{DT}`: array type
+* `vType <: Function`: type of `v`
+* `fType <: Function`: type of `f`
+* `hType <: Function`: type of `h`
+* `pType <: Union{NamedTuple,Nothing}`: parameters type
+
 ### Fields
 
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``v`` and ``f``
@@ -28,6 +38,15 @@ taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``.
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q``
 * `p₀`: initial condition for dynamical variable ``p``
+
+### Constructors
+
+```julia
+HODE(v, f, h, t₀, q₀, p₀; parameters=nothing, periodicity=zero(q₀[begin]))
+HODE(v, f, h, q₀::StateVector, p₀::StateVector; kwargs...) = HODE(v, f, h, 0.0, q₀, p₀; kwargs...)
+HODE(v, f, h, t₀, q₀::State, p₀::State; kwargs...) = HODE(v, f, h, t₀, [q₀], [p₀]; kwargs...)
+HODE(v, f, h, q₀::State, p₀::State; kwargs...) = HODE(v, f, h, 0.0, q₀, p₀; kwargs...)
+```
 
 """
 struct HODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},

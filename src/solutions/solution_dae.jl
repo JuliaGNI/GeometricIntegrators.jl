@@ -18,6 +18,33 @@ Contains all fields necessary to store the solution of an DAE.
 * `counter`: counter for copied solution entries
 * `woffset`: counter for file offset
 * `h5`: HDF5 file for storage
+
+### Constructors
+
+```julia
+SSolutionDAE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
+SSolutionDAE(t::TimeSeries, q::SDataSeries, λ::SDataSeries, ntimesteps)
+SSolutionDAE(file::String)
+PSolutionDAE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
+PSolutionDAE(t::TimeSeries, q::PDataSeries, λ::PDataSeries, ntimesteps)
+PSolutionDAE(file::String)
+```
+
+The constructors `SSolutionDAE` create a `SolutionDAE` with internal data structures
+for serial simulations (i.e., standard arrays), while the constructors `PSolutionDAE`
+create a `SolutionDAE` with internal data structures for parallel simulations (i.e.,
+shared arrays).
+
+The usual way to initialise a `Solution` is by passing an equation, which for
+`SolutionDAE` has to be an [`DAE`](@ref), a time step `Δt` and the number of
+time steps `ntimesteps`. The optional parameters `nsave` and `nwrite` determine
+the intervals for storing the solution and writing to file, i.e., if
+`nsave > 1` only every `nsave`'th solution is actually stored, and every
+`nwrite`'th time step the solution is stored to disk.
+
+The other constructors, either passing a `TimeSeries` and two `DataSeries` or a
+filename are used to read data from previous simulations.
+
 """
 abstract type SolutionDAE{dType, tType, N} <: DeterministicSolution{dType, tType, N} end
 

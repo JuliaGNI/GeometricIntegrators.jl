@@ -20,6 +20,24 @@ the algebraic variables ``(v, \lambda, \mu)`` taking values in
 This is a special case of a differential algebraic equation with dynamical
 variables ``(q,p)`` and algebraic variables ``v``, ``\lambda`` and ``\mu``.
 
+### Parameters
+
+* `DT <: Number`: data type
+* `TT <: Real`: time step type
+* `AT <: AbstractArray{DT}`: array type
+* `ϑType <: Function`: type of `ϑ`
+* `fType <: Function`: type of `f`
+* `uType <: Function`: type of `u`
+* `gType <: Function`: type of `g`
+* `ϕType <: Function`: type of `ϕ`
+* `ψType <: Function`: type of `ψ`
+* `v̄Type <: Function`: type of `v̄`
+* `f̄Type <: Function`: type of `f̄`
+* `hType <: OptionalFunction`: type of `h`
+* `ΩType <: OptionalFunction`: type of `Ω`
+* `∇HType <: OptionalFunction`: type of `∇H`
+* `pType <: Union{NamedTuple,Nothing}`: parameters type
+
 ### Fields
 
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``f`` and ``p``
@@ -79,6 +97,16 @@ The funtions `g`, `v̄` and `f̄` are specified by
         ...
     end
 ```
+
+### Constructors
+
+```julia
+VDAE(ϑ, f, g, g̅, ϕ, ψ, t₀, q₀, p₀, λ₀, μ₀; v̄=(t,q,v)->nothing, f̄=f, h=nothing, Ω=nothing, ∇H=nothing, parameters=nothing, periodicity=zero(q₀[begin]))
+VDAE(ϑ, f, g, g̅, ϕ, ψ, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀), μ₀::StateVector=zero(q₀); kwargs...) = VDAE(ϑ, f, g, g̅, ϕ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
+VDAE(ϑ, f, g, g̅, ϕ, ψ, t₀, q₀::State, p₀::State, λ₀::State=zero(q₀), μ₀::State=zero(q₀); kwargs...) = VDAE(ϑ, f, g, g̅, ϕ, ψ, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
+VDAE(ϑ, f, g, g̅, ϕ, ψ, q₀::State, p₀::State, λ₀::State=zero(q₀), μ₀::State=zero(q₀); kwargs...) = VDAE(ϑ, f, g, g̅, ϕ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
+```
+
 """
 struct VDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             ϑType <: Function, fType <: Function,

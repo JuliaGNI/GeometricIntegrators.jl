@@ -13,6 +13,16 @@ p(t_{0}) &= p_{0} ,
 with vector fields ``v`` and ``f``, initial conditions ``(q_{0}, p_{0})`` and the solution
 ``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``.
 
+### Parameters
+
+* `DT <: Number`: data type
+* `TT <: Real`: time step type
+* `AT <: AbstractArray{DT}`: array type
+* `vType <: Function`: type of `v`
+* `fType <: Function`: type of `f`
+* `hType <: OptionalFunction`: type of `h`
+* `pType <: Union{NamedTuple,Nothing}`: parameters type
+
 ### Fields
 
 * `d`: dimension of dynamical variables ``q`` and ``p`` as well as the vector fields ``v`` and ``f``
@@ -42,6 +52,16 @@ and
 where `t` is the current time, `q` and `p` are the current solution vectors
 and `v` and `f` are the vectors which hold the result of evaluating the
 vector fields ``v`` and ``f`` on `t`, `q` and `p`.
+
+### Constructors
+
+```julia
+PODE(v, f, t₀, q₀, p₀; h=nothing, parameters=nothing, periodicity=zero(q₀[begin]))
+PODE(v, f, q₀::StateVector, p₀::StateVector; kwargs...) = PODE(v, f, 0.0, q₀, p₀; kwargs...)
+PODE(v, f, t₀, q₀::State, p₀::State; kwargs...) = PODE(v, f, t₀, [q₀], [p₀]; kwargs...)
+PODE(v, f, q₀::State, p₀::State; kwargs...) = PODE(v, f, 0.0, q₀, p₀; kwargs...)
+```
+
 """
 struct PODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             vType <: Function, fType <: Function, hType <: OptionalFunction,

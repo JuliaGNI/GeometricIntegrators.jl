@@ -13,6 +13,18 @@ initial conditions ``q_{0}`` and ``\lambda_{0}``, the dynamical variable ``q``
 taking values in ``\mathbb{R}^{m}`` and the algebraic variable ``\lambda``
 taking values in ``\mathbb{R}^{n}``.
 
+### Parameters
+
+* `DT <: Number`: data type
+* `TT <: Real`: time step type
+* `AT <: AbstractArray{DT}`: array type
+* `vType <: Function`: type of `v`
+* `uType <: Function`: type of `u`
+* `ϕType <: Function`: type of `ϕ`
+* `v̄Type <: Function`: type of `v̄`
+* `hType <: OptionalFunction`: type of `h`
+* `pType <: Union{NamedTuple,Nothing}`: parameters type
+
 ### Fields
 
 * `d`: dimension of dynamical variable ``q`` and the vector field ``v``
@@ -21,7 +33,7 @@ taking values in ``\mathbb{R}^{n}``.
 * `v`: function computing the vector field
 * `u`: function computing the projection
 * `ϕ`: algebraic constraint
-* `v̄`: function computing an initial guess for the velocity field ``v`` (optional)
+* `v̄`: function computing an initial guess for the velocity field ``v`` (defaults to `v`)
 * `h`: function computing the Hamiltonian (optional)
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q``
@@ -34,6 +46,15 @@ where `t` is the current time, `q` and `λ` are the current solution vectors,
 and `v`, `u` and `ϕ` are the vectors which hold the result of evaluating the
 vector field ``v``, the projection ``u`` and the algebraic constraint ``\phi``
 on `t`, `q` and `λ`.
+
+### Constructors
+
+```julia
+DAE(v, u, ϕ, t₀, q₀, λ₀; v̄=v, h=nothing, parameters=nothing, periodicity=zero(q₀[begin]))
+DAE(v, u, ϕ, q₀::StateVector, λ₀::StateVector; kwargs...) = DAE(v, u, ϕ, 0.0, q₀, λ₀; kwargs...)
+DAE(v, u, ϕ, t₀, q₀::State, λ₀::State; kwargs...) = DAE(v, u, ϕ, t₀, [q₀], [λ₀]; kwargs...)
+DAE(v, u, ϕ, q₀::State, λ₀::State; kwargs...) = DAE(v, u, ϕ, 0.0, q₀, λ₀; kwargs...)
+```
 
 ### Example
 
@@ -59,6 +80,7 @@ on `t`, `q` and `λ`.
     dae = DAE(v, u, ϕ, t₀, q₀, λ₀)
 
 ```
+
 """
 struct DAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
            vType <: Function, uType <: Function,

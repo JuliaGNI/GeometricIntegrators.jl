@@ -26,26 +26,34 @@ nstages(integrator::Integrator) = error("nstages() not implemented for ", typeof
 
 eachdim(integrator::Integrator) = 1:ndims(integrator)
 
+"""
+```julia
+get_internal_variables(::Integrator) = NamedTuple()
+```
+Returns a `NamedTuple` containing all internal variables of an integrator that
+shall be stored in an [`AtomicSolution`](@ref). If there is no method for a
+specific integrator implemented an empty `NamedTuple()` is returned.
+"""
 get_internal_variables(::Integrator) = NamedTuple()
 get_internal_variables(::Nothing) = NamedTuple()
 
 
-"Create AtomicSolution for ODE."
+# Create AtomicSolution for ODE.
 function Solutions.AtomicSolution(solution::SolutionODE, integrator::Integrator)
     AtomicSolutionODE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
 end
 
-"Create AtomicSolution for partitioned ODE."
+# Create AtomicSolution for partitioned ODE.
 function Solutions.AtomicSolution(solution::SolutionPODE, integrator::Integrator)
     AtomicSolutionPODE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
 end
 
-"Create AtomicSolution for DAE."
+# Create AtomicSolution for DAE.
 function Solutions.AtomicSolution(solution::SolutionDAE, integrator::Integrator)
     AtomicSolutionDAE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
 end
 
-"Create AtomicSolution for partitioned DAE."
+# Create AtomicSolution for partitioned DAE.
 function Solutions.AtomicSolution(solution::SolutionPDAE, integrator::Integrator)
     AtomicSolutionPDAE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
 end

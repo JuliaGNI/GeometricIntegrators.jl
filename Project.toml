@@ -36,7 +36,7 @@ Parameters = "0.12"
 ProgressMeter = "1"
 QuadratureRules = "0.1"
 Reexport = "0.2, 1.0"
-RungeKutta = "0.3"
+RungeKutta = "^0.3.1"
 SimpleSolvers = "0.1"
 julia = "^1.4"
 
