@@ -169,7 +169,7 @@ struct IntegratorDGVIP1{DT, TT, D, S, R,
         IntegratorDGVIP1(basis, quadrature, params, solver, iguess, caches)
     end
 
-    function IntegratorDGVIP1(equation::IODE{DT,TT}, basis::Basis{TT}, quadrature::QuadratureRule{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorDGVIP1(equation::Union{IODE{DT,TT}, LODE{DT,TT}}, basis::Basis{TT}, quadrature::QuadratureRule{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorDGVIP1{DT, ndims(equation)}(get_function_tuple(equation), basis, quadrature, Δt; kwargs...)
     end
 end

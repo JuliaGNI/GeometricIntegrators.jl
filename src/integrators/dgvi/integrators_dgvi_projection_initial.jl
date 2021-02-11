@@ -180,7 +180,7 @@ struct IntegratorDGVIP0{DT, TT, D, S, R,
         IntegratorDGVIP0(basis, quadrature, params, solver, iguess, caches)
     end
 
-    function IntegratorDGVIP0(equation::IODE{DT,TT}, basis::Basis{TT}, quadrature::QuadratureRule{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorDGVIP0(equation::Union{IODE{DT,TT}, LODE{DT,TT}}, basis::Basis{TT}, quadrature::QuadratureRule{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorDGVIP0{DT, ndims(equation)}(get_function_tuple(equation), basis, quadrature, Δt; kwargs...)
     end
 end
