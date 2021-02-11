@@ -72,4 +72,5 @@ makedocs(bib,
 
 deploydocs(
     repo   = "github.com/JuliaGNI/GeometricIntegrators.jl",
+    push_preview = true,
 )
