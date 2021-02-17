@@ -65,3 +65,7 @@ end
 function Base.convert(::Type{PODE}, equ::HODE)
     PODE(equ.v, equ.f, equ.t₀, equ.q₀, equ.p₀; h=equ.h, parameters=equ.parameters, periodicity=equ.periodicity)
 end
+
+function Base.convert(::Type{IODE}, equ::LODE)
+    IODE(equ.ϑ, equ.f, equ.g, equ.t₀, equ.q₀, equ.p₀, equ.λ₀; v̄=equ.v̄, f̄=equ.f̄, h=equ.h, parameters=equ.parameters, periodicity=equ.periodicity)
+end

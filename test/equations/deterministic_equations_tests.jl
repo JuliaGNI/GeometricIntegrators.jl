@@ -371,6 +371,28 @@ end
     @test lode == similar(lode, t₀, q₀, p₀)
     @test lode == similar(lode, q₀, p₀)
 
+    iode = convert(IODE, lode)
+    v₁ = zero(q₀)
+    v₂ = zero(q₀)
+    ϑ₁ = zero(q₀)
+    ϑ₂ = zero(q₀)
+    f₁ = zero(p₀)
+    f₂ = zero(p₀)
+    g₁ = zero(p₀)
+    g₂ = zero(p₀)
+    lode.v̄(lode.t₀, lode.q₀[begin], lode.p₀[begin], v₁)
+    iode.v̄(iode.t₀, iode.q₀[begin], iode.p₀[begin], v₂)
+    lode.ϑ(lode.t₀, lode.q₀[begin], v₁, ϑ₁)
+    iode.ϑ(iode.t₀, iode.q₀[begin], v₂, ϑ₂)
+    lode.f(lode.t₀, lode.q₀[begin], v₁, f₁)
+    iode.f(iode.t₀, iode.q₀[begin], v₂, f₂)
+    lode.g(lode.t₀, lode.q₀[begin], v₁, g₁)
+    iode.g(iode.t₀, iode.q₀[begin], v₂, g₂)
+    @test v₁ == v₂
+    @test ϑ₁ == ϑ₂
+    @test f₁ == f₂
+    @test g₁ == g₂
+
 end
 
 
