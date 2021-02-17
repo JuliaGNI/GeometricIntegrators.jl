@@ -1,5 +1,6 @@
 
 using GeometricIntegrators.Config
+using GeometricIntegrators.Equations
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Integrators: initial_guess!, jacobian!, update_params!
 using GeometricIntegrators.Solutions
@@ -201,4 +202,16 @@ end
     pgsol = integrate(ode, pgint, nt)
     @test rel_err(pgsol.q, refx) < 8E-16
 
+end
+
+
+@testset "$(rpad("Integrate PODEs with ODE Runge-Kutta integrators",80))" begin
+    for s in 1:4
+        code = convert(ODE, pode)
+        csol = integrate(code, TableauGauss(s), Δt, nt)
+        psol = integrate(pode, PartitionedTableauGauss(s), Δt, nt)
+
+        @test csol.q[1, end] == psol.q[1, end]
+        @test csol.q[2, end] == psol.p[1, end]
+    end
 end

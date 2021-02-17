@@ -6,17 +6,18 @@ using Test
 include("initial_conditions.jl")
 
 
-function ode_v(t, x, f)
-    f[1] = x[1]
+function ode_v(t, x, ẋ)
+    ẋ[1] = x[2]
+    ẋ[2] = 2x[1]
 end
 
 
 function pode_v(t, q, p, v)
-    v[1] = q[1]
+    v[1] = p[1]
 end
 
 function pode_f(t, q, p, f)
-    f[1] = 2p[1]
+    f[1] = 2q[1]
 end
 
 
@@ -109,22 +110,24 @@ end
 
 @testset "$(rpad("Ordinary Differential Equations (ODE)",80))" begin
 
-    ode  = ODE(ode_v, t₀, [q₀])
-    ode1 = ODE(ode_v, t₀, q₀)
-    ode2 = ODE(ode_v, q₀)
+    ode  = ODE(ode_v, t₀, [x₀])
+    ode1 = ODE(ode_v, [x₀])
+    ode2 = ODE(ode_v, t₀, x₀)
+    ode3 = ODE(ode_v, x₀)
 
-    @test ndims(ode) == 1
+    @test ndims(ode) == 2
     @test nsamples(ode) == 1
-    @test periodicity(ode) == zero(q₀)
+    @test periodicity(ode) == zero(x₀)
     @test get_function_tuple(ode) == NamedTuple{(:v,)}((ode_v,))
 
     @test ode == ode1
     @test ode == ode2
+    @test ode == ode3
 
-    @test hash(ode1) == hash(ode2)
+    @test hash(ode1) == hash(ode2) == hash(ode3)
 
-    @test ode == similar(ode, t₀, q₀)
-    @test ode == similar(ode, q₀)
+    @test ode == similar(ode, t₀, x₀)
+    @test ode == similar(ode, x₀)
 
 end
 
@@ -134,8 +137,9 @@ end
     pode_eqs = (pode_v, pode_f)
 
     pode  = PODE(pode_eqs..., t₀, [q₀], [p₀])
-    pode1 = PODE(pode_eqs..., t₀, q₀, p₀)
-    pode2 = PODE(pode_eqs..., q₀, p₀)
+    pode1 = PODE(pode_eqs..., [q₀], [p₀])
+    pode2 = PODE(pode_eqs..., t₀, q₀, p₀)
+    pode3 = PODE(pode_eqs..., q₀, p₀)
 
     @test ndims(pode) == 1
     @test nsamples(pode) == 1
@@ -144,11 +148,20 @@ end
 
     @test pode == pode1
     @test pode == pode2
+    @test pode == pode3
 
-    @test hash(pode1) == hash(pode2)
+    @test hash(pode1) == hash(pode2) == hash(pode3)
 
     @test pode == similar(pode, t₀, q₀, p₀)
     @test pode == similar(pode, q₀, p₀)
+
+    rode = ODE(ode_v, t₀, [x₀])
+    code = convert(ODE, pode)
+    v₁ = zero(x₀)
+    v₂ = zero(x₀)
+    rode.v(rode.t₀, rode.q₀[begin], v₁)
+    code.v(code.t₀, code.q₀[begin], v₂)
+    @test v₁ == v₂
 
 end
 
