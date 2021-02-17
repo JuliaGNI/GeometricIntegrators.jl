@@ -224,4 +224,13 @@ end
         @test csol.q[1, end] == hsol.q[1, end]
         @test csol.q[2, end] == hsol.p[1, end]
     end
+
+    for s in 1:4
+        code = convert(PODE, hode)
+        csol = integrate(code, PartitionedTableauGauss(s), Δt, nt)
+        hsol = integrate(hode, PartitionedTableauGauss(s), Δt, nt)
+
+        @test csol.q[1, end] == hsol.q[1, end]
+        @test csol.p[1, end] == hsol.p[1, end]
+    end
 end
