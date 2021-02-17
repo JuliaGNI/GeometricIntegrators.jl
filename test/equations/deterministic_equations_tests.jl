@@ -218,6 +218,17 @@ end
     code.v(code.t₀, code.q₀[begin], v₂)
     @test v₁ == v₂
 
+    rode = SODE((v_sode_1, v_sode_2), t₀, [x₀])
+    code = convert(SODE, pode)
+    v₁ = zero(x₀)
+    v₂ = zero(x₀)
+    rode.v[1](rode.t₀, rode.q₀[begin], v₁)
+    code.v[1](code.t₀, code.q₀[begin], v₂)
+    @test v₁ == v₂
+    rode.v[2](rode.t₀, rode.q₀[begin], v₁)
+    code.v[2](code.t₀, code.q₀[begin], v₂)
+    @test v₁ == v₂
+
 end
 
 
@@ -319,6 +330,17 @@ end
     pode.f(pode.t₀, pode.q₀[begin], pode.p₀[begin], f₂)
     @test v₁ == v₂
     @test f₁ == f₂
+
+    rode = SODE((v_sode_1, v_sode_2), t₀, [x₀])
+    code = convert(SODE, hode)
+    v₁ = zero(x₀)
+    v₂ = zero(x₀)
+    rode.v[1](rode.t₀, rode.q₀[begin], v₁)
+    code.v[1](code.t₀, code.q₀[begin], v₂)
+    @test v₁ == v₂
+    rode.v[2](rode.t₀, rode.q₀[begin], v₁)
+    code.v[2](code.t₀, code.q₀[begin], v₂)
+    @test v₁ == v₂
 
 end
 
