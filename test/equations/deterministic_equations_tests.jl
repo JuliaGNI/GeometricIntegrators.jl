@@ -20,6 +20,10 @@ function pode_f(t, q, p, f)
     f[1] = 2q[1]
 end
 
+function pode_h(t, q, p)
+    p[1]^2/2 + cos(q[1])
+end
+
 
 function iode_ϑ(t, q, v, p)
     p[1] = v[1]
@@ -220,7 +224,7 @@ end
 
 @testset "$(rpad("Hamiltonian Ordinary Differential Equations (HODE)",80))" begin
 
-    hode_eqs = (iode_v, iode_f, iode_h)
+    hode_eqs = (pode_v, pode_f, pode_h)
 
     hode  = HODE(hode_eqs..., t₀, [q₀], [p₀])
     hode1 = HODE(hode_eqs..., t₀, q₀, p₀)
@@ -238,6 +242,26 @@ end
 
     @test hode == similar(hode, t₀, q₀, p₀)
     @test hode == similar(hode, q₀, p₀)
+
+    rode = ODE(ode_v, t₀, [x₀])
+    code = convert(ODE, hode)
+    v₁ = zero(x₀)
+    v₂ = zero(x₀)
+    rode.v(rode.t₀, rode.q₀[begin], v₁)
+    code.v(code.t₀, code.q₀[begin], v₂)
+    @test v₁ == v₂
+
+    pode = convert(PODE, hode)
+    v₁ = zero(q₀)
+    v₂ = zero(q₀)
+    f₁ = zero(p₀)
+    f₂ = zero(p₀)
+    hode.v(hode.t₀, hode.q₀[begin], hode.p₀[begin], v₁)
+    pode.v(pode.t₀, pode.q₀[begin], pode.p₀[begin], v₂)
+    hode.f(hode.t₀, hode.q₀[begin], hode.p₀[begin], f₁)
+    pode.f(pode.t₀, pode.q₀[begin], pode.p₀[begin], f₂)
+    @test v₁ == v₂
+    @test f₁ == f₂
 
 end
 

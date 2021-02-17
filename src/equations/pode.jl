@@ -141,41 +141,6 @@ hashamiltonian(::PODEHT{<:Function}) = true
 hasparameters(::PODEPT{<:Nothing}) = false
 hasparameters(::PODEPT{<:NamedTuple}) = true
 
-
-@define _create_pode_argument_views begin
-    n = div(length(eachindex(x)), 2)
-    q = @view x[eachindex(x)[  1:n ]]
-    p = @view x[eachindex(x)[n+1:2n]]
-    q̇ = @view ẋ[eachindex(ẋ)[  1:n ]]
-    ṗ = @view ẋ[eachindex(ẋ)[n+1:2n]]
-end
-
-
-function Base.convert(::Type{ODE}, equ::PODE{DT,TT,AT}) where {DT, TT, AT <: AbstractVector}
-    # concatenate initial conditions
-    x₀ = [vcat(x...) for x in zip(equ.q₀, equ.p₀)]
-
-    # extend periodicity
-    periodicity = vcat(equ.periodicity, zero(equ.periodicity))
-
-    if hasparameters(equ)
-        v = (t, x, ẋ, params) -> begin
-            @_create_pode_argument_views
-            equ.v(t, q, p, q̇, params)
-            equ.f(t, q, p, ṗ, params)
-        end
-    else
-        v = (t, x, ẋ) -> begin
-            @_create_pode_argument_views
-            equ.v(t, q, p, q̇)
-            equ.f(t, q, p, ṗ)
-        end
-    end
-
-    ODE(v, equ.t₀, x₀; h=equ.h, parameters=equ.parameters, periodicity=periodicity)
-end
-
-
 _get_v(equ::PODE) = hasparameters(equ) ? (t,q,p,v) -> equ.v(t, q, p, v, equ.parameters) : equ.v
 _get_f(equ::PODE) = hasparameters(equ) ? (t,q,p,f) -> equ.f(t, q, p, f, equ.parameters) : equ.f
 _get_h(equ::PODE) = hasparameters(equ) ? (t,q,p) -> equ.h(t, q, p, equ.parameters) : equ.h

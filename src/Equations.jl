@@ -36,4 +36,6 @@ module Equations
     include("equations/psde.jl")
     include("equations/spsde.jl")
 
+    include("equations/conversion.jl")
+
 end

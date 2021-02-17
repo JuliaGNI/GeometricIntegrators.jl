@@ -17,6 +17,7 @@ pode = harmonic_oscillator_pode()
 sode = harmonic_oscillator_sode()
 iode = harmonic_oscillator_iode()
 idae = harmonic_oscillator_idae()
+hode = harmonic_oscillator_hode()
 pdae = harmonic_oscillator_pdae()
 
 
@@ -205,7 +206,7 @@ end
 end
 
 
-@testset "$(rpad("Integrate PODEs with ODE Runge-Kutta integrators",80))" begin
+@testset "$(rpad("Integrate PODE and HODE with ODE Runge-Kutta integrators",80))" begin
     for s in 1:4
         code = convert(ODE, pode)
         csol = integrate(code, TableauGauss(s), Δt, nt)
@@ -213,5 +214,14 @@ end
 
         @test csol.q[1, end] == psol.q[1, end]
         @test csol.q[2, end] == psol.p[1, end]
+    end
+
+    for s in 1:4
+        code = convert(ODE, hode)
+        csol = integrate(code, TableauGauss(s), Δt, nt)
+        hsol = integrate(hode, PartitionedTableauGauss(s), Δt, nt)
+
+        @test csol.q[1, end] == hsol.q[1, end]
+        @test csol.q[2, end] == hsol.p[1, end]
     end
 end
