@@ -12,6 +12,25 @@ function ode_v(t, x, ẋ)
 end
 
 
+function v_sode_1(t, x, v)
+    v[1] = x[2]
+end
+
+function v_sode_2(t, x, v)
+    v[2] = 2x[1]
+end
+
+function q_sode_1(t, x̄, x)
+    x[1] = x̄[1]
+    x[2] = x̄[2]
+end
+
+function q_sode_2(t, x̄, x)
+    x[1] = x̄[1]
+    x[2] = x̄[2]
+end
+
+
 function pode_v(t, q, p, v)
     v[1] = p[1]
 end
@@ -43,23 +62,6 @@ end
 
 function iode_h(t, q, v)
     v[1]^2/2 + cos(q[1])
-end
-
-
-function f_sode_1(t, x, f)
-    f[1] = x[1]
-end
-
-function f_sode_2(t, x, f)
-    f[1] = x[1]^2
-end
-
-function q_sode_1(t, x̄, x)
-    x[1] = x̄[1]
-end
-
-function q_sode_2(t, x̄, x)
-    x[1] = x̄[1]
 end
 
 
@@ -128,10 +130,57 @@ end
     @test ode == ode2
     @test ode == ode3
 
-    @test hash(ode1) == hash(ode2) == hash(ode3)
+    @test hash(ode) == hash(ode1)
+    @test hash(ode) == hash(ode2)
+    @test hash(ode) == hash(ode3)
 
     @test ode == similar(ode, t₀, x₀)
     @test ode == similar(ode, x₀)
+
+end
+
+
+@testset "$(rpad("Split Ordinary Differential Equations (SODE)",80))" begin
+
+    v_sode = (v_sode_1, v_sode_2)
+    q_sode = (q_sode_1, q_sode_2)
+
+    sode  = SODE(v_sode, t₀, [x₀])
+    sode1 = SODE(v_sode, [x₀])
+    sode2 = SODE(v_sode, t₀, x₀)
+    sode3 = SODE(v_sode, x₀)
+
+    @test ndims(sode) == 2
+    @test nsamples(sode) == 1
+    @test periodicity(sode) == zero(x₀)
+
+    @test sode == sode1
+    @test sode == sode2
+    @test sode == sode3
+
+    @test hash(sode) == hash(sode1)
+    @test hash(sode) == hash(sode2)
+    @test hash(sode) == hash(sode3)
+
+    @test sode == similar(sode, t₀, x₀)
+    @test sode == similar(sode, x₀)
+
+
+    sode  = SODE(v_sode, q_sode, t₀, [x₀])
+    sode1 = SODE(v_sode, q_sode, [x₀])
+    sode2 = SODE(v_sode, q_sode, t₀, x₀)
+    sode3 = SODE(v_sode, q_sode, x₀)
+
+    @test sode == sode1
+    @test sode == sode2
+    @test sode == sode3
+
+    @test hash(sode) == hash(sode1)
+    @test hash(sode) == hash(sode2)
+    @test hash(sode) == hash(sode3)
+
+    @test sode == similar(sode, t₀, x₀)
+    @test sode == similar(sode, x₀)
 
 end
 
@@ -154,7 +203,9 @@ end
     @test pode == pode2
     @test pode == pode3
 
-    @test hash(pode1) == hash(pode2) == hash(pode3)
+    @test hash(pode) == hash(pode1)
+    @test hash(pode) == hash(pode2)
+    @test hash(pode) == hash(pode3)
 
     @test pode == similar(pode, t₀, q₀, p₀)
     @test pode == similar(pode, q₀, p₀)
@@ -190,7 +241,9 @@ end
     @test iode == iode2
     @test iode == iode3
 
-    @test hash(iode1) == hash(iode2)
+    @test hash(iode) == hash(iode1)
+    @test hash(iode) == hash(iode2)
+    @test hash(iode) == hash(iode3)
 
     @test iode == similar(iode, t₀, q₀, p₀, λ₀)
     @test iode == similar(iode, t₀, q₀, p₀)
@@ -227,8 +280,9 @@ end
     hode_eqs = (pode_v, pode_f, pode_h)
 
     hode  = HODE(hode_eqs..., t₀, [q₀], [p₀])
-    hode1 = HODE(hode_eqs..., t₀, q₀, p₀)
-    hode2 = HODE(hode_eqs..., q₀, p₀)
+    hode1  = HODE(hode_eqs..., [q₀], [p₀])
+    hode2 = HODE(hode_eqs..., t₀, q₀, p₀)
+    hode3 = HODE(hode_eqs..., q₀, p₀)
 
     @test ndims(hode) == 1
     @test nsamples(hode) == 1
@@ -237,8 +291,11 @@ end
 
     @test hode == hode1
     @test hode == hode2
+    @test hode == hode3
 
-    @test hash(hode1) == hash(hode2)
+    @test hash(hode) == hash(hode1)
+    @test hash(hode) == hash(hode2)
+    @test hash(hode) == hash(hode3)
 
     @test hode == similar(hode, t₀, q₀, p₀)
     @test hode == similar(hode, q₀, p₀)
@@ -284,7 +341,9 @@ end
     @test lode == lode2
     @test lode == lode3
 
-    @test hash(lode1) == hash(lode2)
+    @test hash(lode) == hash(lode1)
+    @test hash(lode) == hash(lode2)
+    @test hash(lode) == hash(lode3)
 
     @test lode == similar(lode, t₀, q₀, p₀, λ₀)
     @test lode == similar(lode, t₀, q₀, p₀)
@@ -298,8 +357,9 @@ end
     dae_eqs = (dae_v, dae_u, dae_ϕ)
 
     dae  = DAE(dae_eqs..., t₀, [x₀], [λ₀])
-    dae1 = DAE(dae_eqs..., t₀, x₀, λ₀)
-    dae2 = DAE(dae_eqs..., x₀, λ₀)
+    dae1 = DAE(dae_eqs..., [x₀], [λ₀])
+    dae2 = DAE(dae_eqs..., t₀, x₀, λ₀)
+    dae3 = DAE(dae_eqs..., x₀, λ₀)
 
     @test ndims(dae) == 2
     @test nsamples(dae) == 1
@@ -309,8 +369,11 @@ end
 
     @test dae == dae1
     @test dae == dae2
+    @test dae == dae3
 
-    @test hash(dae1) == hash(dae2)
+    @test hash(dae) == hash(dae1)
+    @test hash(dae) == hash(dae2)
+    @test hash(dae) == hash(dae3)
 
     @test dae == similar(dae, t₀, x₀, λ₀)
     @test dae == similar(dae, x₀, λ₀)
@@ -323,8 +386,9 @@ end
     pdae_eqs = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_ϕ)
 
     pdae  = PDAE(pdae_eqs..., t₀, [q₀], [p₀], [λ₀])
-    pdae1 = PDAE(pdae_eqs..., t₀, q₀, p₀, λ₀)
-    pdae2 = PDAE(pdae_eqs..., q₀, p₀, λ₀)
+    pdae1 = PDAE(pdae_eqs..., [q₀], [p₀], [λ₀])
+    pdae2 = PDAE(pdae_eqs..., t₀, q₀, p₀, λ₀)
+    pdae3 = PDAE(pdae_eqs..., q₀, p₀, λ₀)
 
     @test ndims(pdae) == 1
     @test nsamples(pdae) == 1
@@ -334,8 +398,11 @@ end
 
     @test pdae == pdae1
     @test pdae == pdae2
+    @test pdae == pdae3
 
-    @test hash(pdae1) == hash(pdae2)
+    @test hash(pdae) == hash(pdae1)
+    @test hash(pdae) == hash(pdae2)
+    @test hash(pdae) == hash(pdae3)
 
     @test pdae == similar(pdae, t₀, q₀, p₀, λ₀)
     @test pdae == similar(pdae, t₀, q₀, p₀)
@@ -349,8 +416,9 @@ end
     idae_eqs = (pdae_p, pdae_f, pdae_u, pdae_g, pdae_ϕ)
 
     idae  = IDAE(idae_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=pdae_v)
-    idae1 = IDAE(idae_eqs..., t₀, q₀, p₀, λ₀; v̄=pdae_v)
-    idae2 = IDAE(idae_eqs..., q₀, p₀, λ₀; v̄=pdae_v)
+    idae1 = IDAE(idae_eqs..., [q₀], [p₀], [λ₀]; v̄=pdae_v)
+    idae2 = IDAE(idae_eqs..., t₀, q₀, p₀, λ₀; v̄=pdae_v)
+    idae3 = IDAE(idae_eqs..., q₀, p₀, λ₀; v̄=pdae_v)
 
     @test ndims(idae) == 1
     @test nsamples(idae) == 1
@@ -360,8 +428,11 @@ end
 
     @test idae == idae1
     @test idae == idae2
+    @test idae == idae3
 
-    @test hash(idae1) == hash(idae2)
+    @test hash(idae) == hash(idae1)
+    @test hash(idae) == hash(idae2)
+    @test hash(idae) == hash(idae3)
 
     @test idae == similar(idae, t₀, q₀, p₀, λ₀)
     @test idae == similar(idae, t₀, q₀, p₀)
@@ -375,8 +446,9 @@ end
     hdae_eqs = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_u, pdae_g, pdae_ϕ, pdae_ψ, pdae_h)
 
     hdae  = HDAE(hdae_eqs..., t₀, [q₀], [p₀], [λ₀])
-    hdae1 = HDAE(hdae_eqs..., t₀, q₀, p₀, λ₀)
-    hdae2 = HDAE(hdae_eqs..., q₀, p₀, λ₀)
+    hdae1 = HDAE(hdae_eqs..., [q₀], [p₀], [λ₀])
+    hdae2 = HDAE(hdae_eqs..., t₀, q₀, p₀, λ₀)
+    hdae3 = HDAE(hdae_eqs..., q₀, p₀, λ₀)
 
     @test ndims(hdae) == 1
     @test nsamples(hdae) == 1
@@ -386,9 +458,11 @@ end
 
     @test hdae == hdae1
     @test hdae == hdae2
+    @test hdae == hdae3
 
     @test hash(hdae) == hash(hdae1)
     @test hash(hdae) == hash(hdae2)
+    @test hash(hdae) == hash(hdae3)
 
     @test hdae == similar(hdae, t₀, q₀, p₀, λ₀)
     @test hdae == similar(hdae, t₀, q₀, p₀)
@@ -402,10 +476,11 @@ end
     ldae_eqs = (iode_ϑ, iode_f, iode_g, iode_g, pdae_ϕ, pdae_ψ)
 
     ldae  = LDAE(ldae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀]; v̄=iode_v)
-    ldae1 = LDAE(ldae_eqs..., t₀, q₀, p₀, λ₀, λ₀; v̄=iode_v)
-    ldae2 = LDAE(ldae_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
-    ldae3 = LDAE(ldae_eqs..., t₀, q₀, p₀; v̄=iode_v)
-    ldae4 = LDAE(ldae_eqs..., q₀, p₀; v̄=iode_v)
+    ldae1 = LDAE(ldae_eqs..., [q₀], [p₀], [λ₀], [λ₀]; v̄=iode_v)
+    ldae2 = LDAE(ldae_eqs..., t₀, q₀, p₀, λ₀, λ₀; v̄=iode_v)
+    ldae3 = LDAE(ldae_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
+    ldae4 = LDAE(ldae_eqs..., t₀, q₀, p₀; v̄=iode_v)
+    ldae5 = LDAE(ldae_eqs..., q₀, p₀; v̄=iode_v)
 
     @test ndims(ldae) == 1
     @test nsamples(ldae) == 1
@@ -417,9 +492,13 @@ end
     @test ldae == ldae2
     @test ldae == ldae3
     @test ldae == ldae4
+    @test ldae == ldae5
 
-    @test hash(ldae1) == hash(ldae2)
-    @test hash(ldae3) == hash(ldae4)
+    @test hash(ldae) == hash(ldae1)
+    @test hash(ldae) == hash(ldae2)
+    @test hash(ldae) == hash(ldae3)
+    @test hash(ldae) == hash(ldae4)
+    @test hash(ldae) == hash(ldae5)
 
     @test ldae == similar(ldae, t₀, q₀, p₀, λ₀, λ₀)
     @test ldae == similar(ldae, t₀, q₀, p₀, λ₀)
@@ -429,52 +508,15 @@ end
 end
 
 
-@testset "$(rpad("Split Ordinary Differential Equations (SODE)",80))" begin
-
-    f_sode = (f_sode_1, f_sode_2)
-    q_sode = (q_sode_1, q_sode_2)
-
-    sode  = SODE(f_sode, t₀, [q₀])
-    sode1 = SODE(f_sode, t₀, q₀)
-    sode2 = SODE(f_sode, q₀)
-
-    @test ndims(sode) == 1
-    @test nsamples(sode) == 1
-    @test periodicity(sode) == zero(q₀)
-
-    @test sode == sode1
-    @test sode == sode2
-
-    @test hash(sode) == hash(sode1)
-    @test hash(sode) == hash(sode2)
-
-    @test sode == similar(sode, t₀, q₀)
-    @test sode == similar(sode, q₀)
-
-
-    sode  = SODE(f_sode, q_sode, t₀, [q₀])
-    sode1 = SODE(f_sode, q_sode, t₀, q₀)
-    sode2 = SODE(f_sode, q_sode, q₀)
-
-    @test sode == sode1
-    @test sode == sode2
-
-    @test hash(sode) == hash(sode1)
-    @test hash(sode) == hash(sode2)
-
-    @test sode == similar(sode, t₀, q₀)
-    @test sode == similar(sode, q₀)
-end
-
-
 @testset "$(rpad("Split Partitioned Differential Algebraic Equations (SPDAE)",80))" begin
 
     spdae_eqs = ((pdae_v, pdae_u, pdae_u), (pdae_f, pdae_g, pdae_g), pdae_ϕ, pdae_ψ)
 
     spdae  = SPDAE(spdae_eqs..., t₀, [q₀], [p₀], [λ₀])
-    spdae1 = SPDAE(spdae_eqs..., t₀, q₀, p₀, λ₀)
-    spdae2 = SPDAE(spdae_eqs..., t₀, q₀, p₀)
-    spdae3 = SPDAE(spdae_eqs..., q₀, p₀)
+    spdae1 = SPDAE(spdae_eqs..., [q₀], [p₀], [λ₀])
+    spdae2 = SPDAE(spdae_eqs..., t₀, q₀, p₀, λ₀)
+    spdae3 = SPDAE(spdae_eqs..., t₀, q₀, p₀)
+    spdae4 = SPDAE(spdae_eqs..., q₀, p₀)
 
     @test ndims(spdae) == 1
     @test nsamples(spdae) == 1
@@ -485,10 +527,12 @@ end
     @test spdae == spdae1
     @test spdae == spdae2
     @test spdae == spdae3
+    @test spdae == spdae4
 
     @test hash(spdae) == hash(spdae1)
     @test hash(spdae) == hash(spdae2)
     @test hash(spdae) == hash(spdae3)
+    @test hash(spdae) == hash(spdae4)
 
     @test spdae == similar(spdae, t₀, q₀, p₀, λ₀)
     @test spdae == similar(spdae, t₀, q₀, p₀)
