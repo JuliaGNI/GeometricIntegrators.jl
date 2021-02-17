@@ -114,17 +114,17 @@ Base.:(==)(dae1::SPDAE, dae2::SPDAE) = (
                              && dae1.q₀ == dae2.q₀
                              && dae1.p₀ == dae2.p₀)
 
-function Base.similar(dae::SPDAE, q₀, p₀, λ₀=get_λ₀(q₀, dae.λ₀); kwargs...)
-    similar(dae, dae.t₀, q₀, p₀, λ₀; kwargs...)
-end
-
-function Base.similar(dae::SPDAE, t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, λ₀::AbstractArray{DT}=get_λ₀(q₀, dae.λ₀);
-                      parameters=dae.parameters, periodicity=dae.periodicity) where {DT  <: Number, TT <: Number}
-    @assert dae.d == size(q₀,1) == size(p₀,1)
-    @assert dae.m == size(λ₀,1)
-    SPDAE(dae.v, dae.f, dae.ϕ, dae.ψ, t₀, q₀, p₀, λ₀;
+function Base.similar(equ::SPDAE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector;
+                      parameters=equ.parameters, periodicity=equ.periodicity)
+    @assert all([length(q) == equ.d for q in q₀])
+    @assert all([length(p) == equ.d for p in p₀])
+    @assert all([length(λ) == equ.m for λ in λ₀])
+    SPDAE(equ.v, equ.f, equ.ϕ, equ.ψ, t₀, q₀, p₀, λ₀;
          parameters=parameters, periodicity=periodicity)
 end
+
+Base.similar(equ::SPDAE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀; kwargs...)
+Base.similar(equ::SPDAE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, equ.t₀, [q₀], [p₀], [λ₀]; kwargs...)
 
 @inline Base.ndims(equation::SPDAE) = equation.d
 @inline Base.axes(equation::SPDAE) = axes(equation.q₀[begin])

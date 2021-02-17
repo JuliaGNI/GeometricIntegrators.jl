@@ -175,9 +175,6 @@ Base.:(==)(ode1::LODE, ode2::LODE) = (
                              && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
 
-Base.similar(equ::LODE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀; kwargs...)
-Base.similar(equ::LODE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
-
 function Base.similar(equ::LODE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector;
                       v̄=equ.v̄, f̄=equ.f̄, h=equ.h, Ω=equ.Ω, ∇H=equ.∇H, parameters=equ.parameters, periodicity=equ.periodicity)
     @assert all([length(q) == ndims(equ) for q in q₀])
@@ -185,6 +182,9 @@ function Base.similar(equ::LODE, t₀::Real, q₀::StateVector, p₀::StateVecto
     @assert all([length(λ) == ndims(equ) for λ in λ₀])
     LODE(equ.ϑ, equ.f, equ.g, t₀, q₀, p₀, λ₀; v̄=v̄, f̄=f̄, h=h, Ω=Ω, ∇H=∇H, parameters=parameters, periodicity=periodicity)
 end
+
+Base.similar(equ::LODE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀; kwargs...)
+Base.similar(equ::LODE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
 
 Base.ndims(equ::LODE) = equ.d
 Base.axes(equ::LODE) = axes(equ.q₀[begin])

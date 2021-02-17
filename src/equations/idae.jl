@@ -144,9 +144,6 @@ Base.:(==)(dae1::IDAE, dae2::IDAE) = (
                              && dae1.parameters == dae2.parameters
                              && dae1.periodicity == dae2.periodicity)
 
-Base.similar(equ::IDAE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀; kwargs...)
-Base.similar(equ::IDAE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
-
 function Base.similar(equ::IDAE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector;
                       v̄=equ.v̄, f̄=equ.f̄, h=equ.h, parameters=equ.parameters, periodicity=equ.periodicity)
     @assert all([length(q) == ndims(equ) for q in q₀])
@@ -154,6 +151,9 @@ function Base.similar(equ::IDAE, t₀::Real, q₀::StateVector, p₀::StateVecto
     @assert all([length(λ) == equ.m for λ in λ₀])
     IDAE(equ.ϑ, equ.f, equ.u, equ.g, equ.ϕ, t₀, q₀, p₀, λ₀; v̄=v̄, f̄=f̄, h=h, parameters=parameters, periodicity=periodicity)
 end
+
+Base.similar(equ::IDAE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀; kwargs...)
+Base.similar(equ::IDAE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
 
 @inline Base.ndims(equation::IDAE) = equation.d
 @inline Base.axes(equation::IDAE) = axes(equation.q₀[begin])

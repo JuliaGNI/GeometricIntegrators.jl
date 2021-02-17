@@ -126,14 +126,14 @@ Base.:(==)(ode1::SODE, ode2::SODE) = (
                              && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
 
-Base.similar(equ::SODE, q₀; kwargs...) = similar(equ, equ.t₀, q₀; kwargs...)
-Base.similar(equ::SODE, t₀::Real, q₀::State; kwargs...) = similar(equ, t₀, [q₀]; kwargs...)
-
 function Base.similar(equ::SODE, t₀::Real, q₀::StateVector;
                       parameters=equ.parameters, periodicity=equ.periodicity)
     @assert all([length(q) == ndims(equ) for q in q₀])
     SODE(equ.v, equ.q, t₀, q₀; parameters=parameters, periodicity=periodicity)
 end
+
+Base.similar(equ::SODE, q₀; kwargs...) = similar(equ, equ.t₀, q₀; kwargs...)
+Base.similar(equ::SODE, t₀::Real, q₀::State; kwargs...) = similar(equ, t₀, [q₀]; kwargs...)
 
 Base.ndims(equ::SODE) = equ.d
 Base.axes(equ::SODE) = axes(equ.q₀[begin])

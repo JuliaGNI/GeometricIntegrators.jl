@@ -102,15 +102,15 @@ Base.:(==)(ode1::HODE, ode2::HODE) = (
                              && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
 
-Base.similar(equ::HODE, q₀, p₀; kwargs...) = similar(equ, equ.t₀, q₀, p₀; kwargs...)
-Base.similar(equ::HODE, t₀::Real, q₀::State, p₀::State; kwargs...) = similar(equ, t₀, [q₀], [p₀]; kwargs...)
-
 function Base.similar(equ::HODE, t₀::Real, q₀::StateVector, p₀::StateVector;
                       parameters=equ.parameters, periodicity=equ.periodicity)
     @assert all([length(q) == ndims(equ) for q in q₀])
     @assert all([length(p) == ndims(equ) for p in p₀])
     HODE(equ.v, equ.f, equ.h, t₀, q₀, p₀; parameters=parameters, periodicity=periodicity)
 end
+
+Base.similar(equ::HODE, q₀, p₀; kwargs...) = similar(equ, equ.t₀, q₀, p₀; kwargs...)
+Base.similar(equ::HODE, t₀::Real, q₀::State, p₀::State; kwargs...) = similar(equ, t₀, [q₀], [p₀]; kwargs...)
 
 Base.ndims(equ::HODE) = equ.d
 Base.axes(equ::HODE) = axes(equ.q₀[begin])

@@ -211,9 +211,6 @@ Base.:(==)(dae1::LDAE, dae2::LDAE) = (
                              && dae1.parameters == dae2.parameters
                              && dae1.periodicity == dae2.periodicity)
 
-Base.similar(equ::LDAE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀), μ₀=get_λ₀(q₀, equ.μ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀, μ₀; kwargs...)
-Base.similar(equ::LDAE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀), μ₀=get_λ₀(q₀, equ.μ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
-
 function Base.similar(equ::LDAE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector;
                       v̄=equ.v̄, f̄=equ.f̄, h=equ.h, Ω=equ.Ω, ∇H=equ.∇H, parameters=equ.parameters, periodicity=equ.periodicity)
     @assert all([length(q) == ndims(equ) for q in q₀])
@@ -222,6 +219,9 @@ function Base.similar(equ::LDAE, t₀::Real, q₀::StateVector, p₀::StateVecto
     @assert all([length(μ) == ndims(equ) for μ in μ₀])
     LDAE(equ.ϑ, equ.f, equ.g, equ.ḡ, equ.ϕ, equ.ψ, t₀, q₀, p₀, λ₀, μ₀; v̄=v̄, f̄=f̄, h=h, Ω=Ω, ∇H=∇H, parameters=parameters, periodicity=periodicity)
 end
+
+Base.similar(equ::LDAE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀), μ₀=get_λ₀(q₀, equ.μ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀, μ₀; kwargs...)
+Base.similar(equ::LDAE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀), μ₀=get_λ₀(q₀, equ.μ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
 
 @inline Base.ndims(equation::LDAE) = equation.d
 @inline Base.axes(equation::LDAE) = axes(equation.q₀[begin])

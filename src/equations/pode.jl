@@ -118,15 +118,15 @@ Base.:(==)(ode1::PODE, ode2::PODE) = (
                              && ode1.parameters == ode2.parameters
                              && ode1.periodicity == ode2.periodicity)
 
-Base.similar(equ::PODE, q₀, p₀; kwargs...) = similar(equ, equ.t₀, q₀, p₀; kwargs...)
-Base.similar(equ::PODE, t₀::Real, q₀::State, p₀::State; kwargs...) = similar(equ, t₀, [q₀], [p₀]; kwargs...)
-
 function Base.similar(equ::PODE, t₀::Real, q₀::StateVector, p₀::StateVector;
                       h=equ.h, parameters=equ.parameters, periodicity=equ.periodicity)
     @assert all([length(q) == ndims(equ) for q in q₀])
     @assert all([length(p) == ndims(equ) for p in p₀])
     PODE(equ.v, equ.f, t₀, q₀, p₀; h=h, parameters=parameters, periodicity=periodicity)
 end
+
+Base.similar(equ::PODE, q₀, p₀; kwargs...) = similar(equ, equ.t₀, q₀, p₀; kwargs...)
+Base.similar(equ::PODE, t₀::Real, q₀::State, p₀::State; kwargs...) = similar(equ, t₀, [q₀], [p₀]; kwargs...)
 
 Base.ndims(equ::PODE) = equ.d
 Base.axes(equ::PODE) = axes(equ.q₀[begin])
