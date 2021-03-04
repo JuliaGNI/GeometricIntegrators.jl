@@ -52,6 +52,7 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 * `q₀`: initial condition for dynamical variable ``q``
 * `p₀`: initial condition for dynamical variable ``p``
 * `λ₀`: initial condition for algebraic variable ``\lambda``
+* `μ₀`: initial condition for algebraic variable ``μ`` (optional)
 * `invariants`: either a `NamedTuple` containing the equation's invariants or `nothing`
 * `parameters`: either a `NamedTuple` containing the equation's parameters or `nothing`
 * `periodicity`: determines the periodicity of the state vector `q` for cutting periodic solutions
@@ -61,15 +62,15 @@ the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{n}``.
 ```julia
 PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, v̄, f̄, t₀, q₀, p₀, λ₀, invariants, parameters, periodicity)
 
-PDAE(v, f, u, g, ϕ, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...)
-PDAE(v, f, u, g, ϕ, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...)
-PDAE(v, f, u, g, ϕ, t₀, q₀::State, p₀::State, λ₀::State; kwargs...)
-PDAE(v, f, u, g, ϕ, q₀::State, p₀::State, λ₀::State; kwargs...)
+PDAE(v, f, u, g, ϕ, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...)
+PDAE(v, f, u, g, ϕ, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...)
+PDAE(v, f, u, g, ϕ, t₀, q₀::State, p₀::State, λ₀::State, μ₀::State=zero(λ₀); kwargs...)
+PDAE(v, f, u, g, ϕ, q₀::State, p₀::State, λ₀::State, μ₀::State=zero(λ₀); kwargs...)
 
-PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...)
-PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...)
-PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, q₀::State, p₀::State, λ₀::State; kwargs...)
-PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, q₀::State, p₀::State, λ₀::State; kwargs...)
+PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...)
+PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...)
+PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, q₀::State, p₀::State, λ₀::State, μ₀::State=zero(λ₀); kwargs...)
+PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, q₀::State, p₀::State, λ₀::State, μ₀::State=zero(λ₀); kwargs...)
 ```
 
 """
@@ -84,6 +85,7 @@ struct PDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
 
     d::Int
     m::Int
+
     v::vType
     f::fType
     u::uType
@@ -94,16 +96,19 @@ struct PDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     ψ::ψType
     v̄::v̄Type
     f̄::f̄Type
+
     t₀::tType
     q₀::Vector{arrayType}
     p₀::Vector{arrayType}
     λ₀::Vector{arrayType}
+    μ₀::Vector{arrayType}
+
     invariants::invType
     parameters::parType
     periodicity::perType
 
     function PDAE(v::vType, f::fType, u::uType, g::gType, ϕ::ϕType, ū::ūType, ḡ::ḡType, ψ::ψType, v̄::v̄Type, f̄::f̄Type,
-                  t₀::tType, q₀::Vector{arrayType}, p₀::Vector{arrayType}, λ₀::Vector{arrayType},
+                  t₀::tType, q₀::Vector{arrayType}, p₀::Vector{arrayType}, λ₀::Vector{arrayType}, μ₀::Vector{arrayType},
                   invariants::invType, parameters::parType, periodicity::perType) where {
                         dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
                         vType <: Function, fType <: Function,
@@ -124,24 +129,25 @@ struct PDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
         @assert all(length(q) == d for q in q₀)
         @assert all(length(p) == d for p in p₀)
         @assert all(length(λ) == m for λ in λ₀)
+        @assert all(length(μ) == m for μ in μ₀)
 
-        @assert all([ndims(q) == ndims(p) == ndims(λ) for (q,p,λ) in zip(q₀,p₀,λ₀)])
+        @assert all([ndims(q) == ndims(p) == ndims(λ) == ndims(μ) for (q,p,λ,μ) in zip(q₀,p₀,λ₀,μ₀)])
 
-        new{dType, tType, arrayType, vType, fType, uType, gType, ϕType, ūType, ḡType, ψType, v̄Type, f̄Type, invType, parType, perType}(d, m, v, f, u, g, ϕ, ū, ḡ, ψ, v̄, f̄, t₀, q₀, p₀, λ₀, invariants, parameters, periodicity)
+        new{dType, tType, arrayType, vType, fType, uType, gType, ϕType, ūType, ḡType, ψType, v̄Type, f̄Type, invType, parType, perType}(d, m, v, f, u, g, ϕ, ū, ḡ, ψ, v̄, f̄, t₀, q₀, p₀, λ₀, μ₀, invariants, parameters, periodicity)
     end
 end
 
-_PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, q₀, p₀, λ₀; v̄=v, f̄=f, invariants=nothing, parameters=nothing, periodicity=nothing) = PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, v̄, f̄, t₀, q₀, p₀, λ₀, invariants, parameters, periodicity)
+_PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, q₀, p₀, λ₀, μ₀; v̄=v, f̄=f, invariants=nothing, parameters=nothing, periodicity=nothing) = PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, v̄, f̄, t₀, q₀, p₀, λ₀, μ₀, invariants, parameters, periodicity)
 
-PDAE(v, f, u, g, ϕ, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = _PDAE(v, f, u, g, ϕ, nothing, nothing, nothing, t₀, q₀, p₀, λ₀; kwargs...)
-PDAE(v, f, u, g, ϕ, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = PDAE(v, f, u, g, ϕ, 0.0, q₀, p₀, λ₀; kwargs...)
-PDAE(v, f, u, g, ϕ, t₀, q₀::State, p₀::State, λ₀::State; kwargs...) = PDAE(v, f, u, g, ϕ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
-PDAE(v, f, u, g, ϕ, q₀::State, p₀::State, λ₀::State; kwargs...) = PDAE(v, f, u, g, ϕ, 0.0, q₀, p₀, λ₀; kwargs...)
+PDAE(v, f, u, g, ϕ, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...) = _PDAE(v, f, u, g, ϕ, nothing, nothing, nothing, t₀, q₀, p₀, λ₀, μ₀; kwargs...)
+PDAE(v, f, u, g, ϕ, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...) = PDAE(v, f, u, g, ϕ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
+PDAE(v, f, u, g, ϕ, t₀, q₀::State, p₀::State, λ₀::State, μ₀::State=zero(λ₀); kwargs...) = PDAE(v, f, u, g, ϕ, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
+PDAE(v, f, u, g, ϕ, q₀::State, p₀::State, λ₀::State, μ₀::State=zero(λ₀); kwargs...) = PDAE(v, f, u, g, ϕ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
 
-PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = _PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, q₀, p₀, λ₀; kwargs...)
-PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, 0.0, q₀, p₀, λ₀; kwargs...)
-PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, q₀::State, p₀::State, λ₀::State; kwargs...) = PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
-PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, q₀::State, p₀::State, λ₀::State; kwargs...) = PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, 0.0, q₀, p₀, λ₀; kwargs...)
+PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...) = _PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, q₀, p₀, λ₀, μ₀; kwargs...)
+PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...) = PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
+PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, q₀::State, p₀::State, λ₀::State, μ₀::State=zero(λ₀); kwargs...) = PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
+PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, q₀::State, p₀::State, λ₀::State, μ₀::State=zero(λ₀); kwargs...) = PDAE(v, f, u, g, ϕ, ū, ḡ, ψ, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
 
 const PDAEpsiType{psiT,DT,TT,AT,VT,FT,UT,GT,ΦT,ŪT,ḠT,V̄T,F̄T,invT,parT,perT} = PDAE{DT,TT,AT,VT,FT,UT,GT,ΦT,ŪT,ḠT,psiT,V̄T,F̄T,invT,parT,perT} # type alias for dispatch on secondary constraint type parameter
 const PDAEinvType{invT,DT,TT,AT,VT,FT,UT,GT,ΦT,ŪT,ḠT,psiT,V̄T,F̄T,parT,perT} = PDAE{DT,TT,AT,VT,FT,UT,GT,ΦT,ŪT,ḠT,psiT,V̄T,F̄T,invT,parT,perT} # type alias for dispatch on invariants type parameter
@@ -153,8 +159,8 @@ Base.hash(dae::PDAE, h::UInt) = hash(dae.d, hash(dae.m,
         hash(dae.u, hash(dae.g, hash(dae.ϕ,
         hash(dae.ū, hash(dae.ḡ, hash(dae.ψ,
         hash(dae.v̄, hash(dae.f̄,
-        hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀,
-        hash(dae.invariants, hash(dae.parameters, hash(dae.periodicity, h)))))))))))))))))))
+        hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, hash(dae.μ₀,
+        hash(dae.invariants, hash(dae.parameters, hash(dae.periodicity, h))))))))))))))))))))
 
 Base.:(==)(dae1::PDAE, dae2::PDAE) = (
                                 dae1.d == dae2.d
@@ -173,20 +179,22 @@ Base.:(==)(dae1::PDAE, dae2::PDAE) = (
                              && dae1.q₀ == dae2.q₀
                              && dae1.p₀ == dae2.p₀
                              && dae1.λ₀ == dae2.λ₀
+                             && dae1.μ₀ == dae2.μ₀
                              && dae1.invariants  == dae2.invariants
                              && dae1.parameters  == dae2.parameters
                              && dae1.periodicity == dae2.periodicity)
 
-function Base.similar(equ::PDAE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector; parameters=equ.parameters)
+function Base.similar(equ::PDAE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector; parameters=equ.parameters)
     @assert all([length(q) == equ.d for q in q₀])
     @assert all([length(p) == equ.d for p in p₀])
     @assert all([length(λ) == equ.m for λ in λ₀])
-    PDAE(equ.v, equ.f, equ.u, equ.g, equ.ϕ, equ.ū, equ.ḡ, equ.ψ, t₀, q₀, p₀, λ₀; v̄=equ.v̄, f̄=equ.f̄,
+    @assert all([length(μ) == equ.m for μ in μ₀])
+    PDAE(equ.v, equ.f, equ.u, equ.g, equ.ϕ, equ.ū, equ.ḡ, equ.ψ, t₀, q₀, p₀, λ₀, μ₀; v̄=equ.v̄, f̄=equ.f̄,
          invariants=equ.invariants, parameters=parameters, periodicity=equ.periodicity)
 end
 
-Base.similar(equ::PDAE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀; kwargs...)
-Base.similar(equ::PDAE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+Base.similar(equ::PDAE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀), μ₀=get_λ₀(λ₀, equ.μ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀, μ₀; kwargs...)
+Base.similar(equ::PDAE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀), μ₀::State=get_λ₀(λ₀, equ.μ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
 
 hassecondary(::PDAEpsiType{<:Nothing}) = false
 hassecondary(::PDAEpsiType{<:Function}) = true
@@ -206,7 +214,7 @@ hasperiodicity(::PDAEperType{<:AbstractArray}) = true
 @inline Common.nconstraints(equation::PDAE) = equation.m
 
 @inline Common.periodicity(equation::PDAE) = hasperiodicity(equation) ? equation.periodicity : zero(equation.q₀[begin])
-@inline initial_conditions(equation::PDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
+@inline initial_conditions(equation::PDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀, equation.μ₀)
 
 _get_v(equ::PDAE) = hasparameters(equ) ? (t,q,p,v)     -> equ.v(t, q, p, v, equ.parameters) : equ.v
 _get_f(equ::PDAE) = hasparameters(equ) ? (t,q,p,f)     -> equ.f(t, q, p, f, equ.parameters) : equ.f
