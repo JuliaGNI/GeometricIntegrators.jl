@@ -110,6 +110,7 @@ struct HDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     q₀::Vector{arrayType}
     p₀::Vector{arrayType}
     λ₀::Vector{arrayType}
+    μ₀::Vector{arrayType}
 
     hamiltonian::hamType
     invariants::invType
@@ -117,7 +118,7 @@ struct HDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     periodicity::perType
 
     function HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, v̄, f̄, P,
-                  t₀::tType, q₀::Vector{arrayType}, p₀::Vector{arrayType}, λ₀::Vector{arrayType},
+                  t₀::tType, q₀::Vector{arrayType}, p₀::Vector{arrayType}, λ₀::Vector{arrayType}, μ₀::Vector{arrayType},
                   hamiltonian, invariants, parameters, periodicity) where {
                         dType <: Number, tType <: Real, arrayType <: AbstractArray{dType}}
 
@@ -131,8 +132,9 @@ struct HDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
         @assert all(length(q) == d for q in q₀)
         @assert all(length(p) == d for p in p₀)
         @assert all(length(λ) == m for λ in λ₀)
+        @assert all(length(μ) == m for μ in μ₀)
 
-        @assert all([ndims(q) == ndims(p) == ndims(λ) for (q,p,λ) in zip(q₀,p₀,λ₀)])
+        @assert all([ndims(q) == ndims(p) == ndims(λ) == ndims(μ) for (q,p,λ,μ) in zip(q₀,p₀,λ₀,μ₀)])
 
         new{dType, tType, arrayType,
             typeof(v), typeof(f),
@@ -140,22 +142,22 @@ struct HDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
             typeof(ū), typeof(ḡ), typeof(ψ),
             typeof(v̄), typeof(f̄), typeof(P),
             typeof(hamiltonian), typeof(invariants), typeof(parameters), typeof(periodicity)}(
-                d, m, v, f, u, g, ϕ, ū, ḡ, ψ, v̄, f̄, P, t₀, q₀, p₀, λ₀,
+                d, m, v, f, u, g, ϕ, ū, ḡ, ψ, v̄, f̄, P, t₀, q₀, p₀, λ₀, μ₀,
                 hamiltonian, invariants, parameters, periodicity)
     end
 end
 
-_HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, hamiltonian, t₀, q₀, p₀, λ₀; v̄=v, f̄=f, P=symplectic_matrix, invariants=nothing, parameters=nothing, periodicity=nothing) = HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, v̄, f̄, P, t₀, q₀, p₀, λ₀, hamiltonian, invariants, parameters, periodicity)
+_HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, hamiltonian, t₀, q₀, p₀, λ₀, μ₀; v̄=v, f̄=f, P=symplectic_matrix, invariants=nothing, parameters=nothing, periodicity=nothing) = HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, v̄, f̄, P, t₀, q₀, p₀, λ₀, μ₀, hamiltonian, invariants, parameters, periodicity)
 
-HDAE(v, f, u, g, ϕ, h, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = _HDAE(v, f, u, g, ϕ, nothing, nothing, nothing, h, t₀, q₀, p₀, λ₀; kwargs...)
-HDAE(v, f, u, g, ϕ, h, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = HDAE(v, f, u, g, ϕ, h, 0.0, q₀, p₀, λ₀; kwargs...)
-HDAE(v, f, u, g, ϕ, h, t₀, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, ϕ, h, t₀, [q₀], [p₀], [λ₀]; kwargs...)
-HDAE(v, f, u, g, ϕ, h, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, ϕ, h, 0.0, q₀, p₀, λ₀; kwargs...)
+HDAE(v, f, u, g, ϕ, h, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...) = _HDAE(v, f, u, g, ϕ, nothing, nothing, nothing, h, t₀, q₀, p₀, λ₀, μ₀; kwargs...)
+HDAE(v, f, u, g, ϕ, h, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...) = HDAE(v, f, u, g, ϕ, h, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
+HDAE(v, f, u, g, ϕ, h, t₀, q₀::State, p₀::State, λ₀::State, μ₀::State=zero(λ₀); kwargs...) = HDAE(v, f, u, g, ϕ, h, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
+HDAE(v, f, u, g, ϕ, h, q₀::State, p₀::State, λ₀::State, μ₀::State=zero(λ₀); kwargs...) = HDAE(v, f, u, g, ϕ, h, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
 
-HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = _HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, t₀, q₀, p₀, λ₀; kwargs...)
-HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, q₀::StateVector, p₀::StateVector, λ₀::StateVector; kwargs...) = HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
-HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, t₀, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, t₀, [q₀], [p₀], [λ₀]; kwargs...)
-HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, q₀::State, p₀::State, λ₀::State; kwargs...) = HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, 0.0, q₀, p₀, λ₀; kwargs...)
+HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...) = _HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, t₀, q₀, p₀, λ₀, μ₀; kwargs...)
+HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...) = HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
+HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, t₀, q₀::State, p₀::State, λ₀::State, μ₀::State=zero(λ₀); kwargs...) = HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
+HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, q₀::State, p₀::State, λ₀::State, μ₀::State=zero(λ₀); kwargs...) = HDAE(v, f, u, g, ϕ, ū, ḡ, ψ, h, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)
 
 const HDAEpsiType{psiT,DT,TT,AT,VT,FT,UT,GT,ΦT,ŪT,ḠT,V̄T,F̄T,PT,hamT,invT,parT,perT} = HDAE{DT,TT,AT,VT,FT,UT,GT,ΦT,ŪT,ḠT,psiT,V̄T,F̄T,PT,hamT,invT,parT,perT} # type alias for dispatch on secondary constraint type parameter
 const HDAEinvType{invT,DT,TT,AT,VT,FT,UT,GT,ΦT,ŪT,ḠT,psiT,V̄T,F̄T,PT,hamT,parT,perT} = HDAE{DT,TT,AT,VT,FT,UT,GT,ΦT,ŪT,ḠT,psiT,V̄T,F̄T,PT,hamT,invT,parT,perT} # type alias for dispatch on invariants type parameter
@@ -167,8 +169,8 @@ Base.hash(dae::HDAE, h::UInt) = hash(dae.d, hash(dae.m,
                         hash(dae.u, hash(dae.g, hash(dae.ϕ,
                         hash(dae.ū, hash(dae.ḡ, hash(dae.ψ,
                         hash(dae.v̄, hash(dae.f̄, hash(dae.P,
-                        hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀,
-                        hash(dae.hamiltonian, hash(dae.invariants, hash(dae.parameters, hash(dae.periodicity, h)))))))))))))))))))))
+                        hash(dae.t₀, hash(dae.q₀, hash(dae.p₀, hash(dae.λ₀, hash(dae.μ₀,
+                        hash(dae.hamiltonian, hash(dae.invariants, hash(dae.parameters, hash(dae.periodicity, h))))))))))))))))))))))
 
 Base.:(==)(dae1::HDAE, dae2::HDAE) = (
                                 dae1.d == dae2.d
@@ -188,21 +190,23 @@ Base.:(==)(dae1::HDAE, dae2::HDAE) = (
                              && dae1.q₀ == dae2.q₀
                              && dae1.p₀ == dae2.p₀
                              && dae1.λ₀ == dae2.λ₀
+                             && dae1.μ₀ == dae2.μ₀
                              && dae1.hamiltonian == dae2.hamiltonian
                              && dae1.invariants  == dae2.invariants
                              && dae1.parameters  == dae2.parameters
                              && dae1.periodicity == dae2.periodicity)
 
-function Base.similar(equ::HDAE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector; parameters=equ.parameters)
+function Base.similar(equ::HDAE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector; parameters=equ.parameters)
     @assert all([length(q) == equ.d for q in q₀])
     @assert all([length(p) == equ.d for p in p₀])
     @assert all([length(λ) == equ.m for λ in λ₀])
-    _HDAE(equ.v, equ.f, equ.u, equ.g, equ.ϕ, equ.ū, equ.ḡ, equ.ψ, equ.hamiltonian, t₀, q₀, p₀, λ₀;
+    @assert all([length(μ) == equ.m for μ in μ₀])
+    _HDAE(equ.v, equ.f, equ.u, equ.g, equ.ϕ, equ.ū, equ.ḡ, equ.ψ, equ.hamiltonian, t₀, q₀, p₀, λ₀, μ₀;
          v̄=equ.v̄, f̄=equ.f̄, P=equ.P, invariants=equ.invariants, parameters=parameters, periodicity=equ.periodicity)
 end
 
-Base.similar(equ::HDAE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀; kwargs...)
-Base.similar(equ::HDAE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀]; kwargs...)
+Base.similar(equ::HDAE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀), μ₀=get_λ₀(λ₀, equ.μ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀, μ₀; kwargs...)
+Base.similar(equ::HDAE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀), μ₀::State=get_λ₀(λ₀, equ.μ₀); kwargs...) = similar(equ, t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
 
 hashamiltonian(::HDAE) = true
 
