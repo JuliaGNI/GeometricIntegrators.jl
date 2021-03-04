@@ -137,8 +137,8 @@ const SODEperType{perT,DT,TT,AT,VT,QT,invT,parT} = SODE{DT,TT,AT,VT,QT,invT,parT
 const SODEQT{QT,DT,TT,AT,VT,invT,parT,perT} = SODE{DT,TT,AT,VT,QT,invT,parT,perT} # type alias for dispatch on solution type parameter
 const SODEVT{VT,DT,TT,AT,QT,invT,parT,perT} = SODE{DT,TT,AT,VT,QT,invT,parT,perT} # type alias for dispatch on vector field type parameter
 
-Base.hash(ode::SODE, h::UInt) = hash(ode.d, hash(ode.v, hash(ode.t₀,
-        hash(ode.q₀, hash(ode.periodicity, hash(ode.parameters, h))))))
+Base.hash(ode::SODE, h::UInt) = hash(ode.d, hash(ode.v, hash(ode.t₀, hash(ode.q₀,
+                        hash(ode.invariants, hash(ode.parameters, hash(ode.periodicity, h)))))))
 
 Base.:(==)(ode1::SODE, ode2::SODE) = (
                                 ode1.d == ode2.d
