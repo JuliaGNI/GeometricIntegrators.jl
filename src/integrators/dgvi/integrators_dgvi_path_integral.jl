@@ -313,7 +313,7 @@ struct IntegratorDGVIPI{DT, TT, D, S, R,
         IntegratorDGVIPI(basis, quadrature, jump, params, solver, iguess, caches)
     end
 
-    function IntegratorDGVIPI(equation::Union{IODE{DT,TT}, LODE{DT,TT}}, basis::Basis{TT}, quadrature::QuadratureRule{TT}, jump::Discontinuity{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorDGVIPI(equation::Union{IODE{DT}, LODE{DT}}, basis::Basis, quadrature::QuadratureRule, jump::Discontinuity, Δt; kwargs...) where {DT}
         IntegratorDGVIPI{DT, ndims(equation)}(get_function_tuple(equation), basis, quadrature, jump, Δt; kwargs...)
     end
 end

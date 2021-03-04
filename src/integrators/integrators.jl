@@ -52,6 +52,10 @@ function Integrator(equation::Union{PODE,HODE}, tableau::PartitionedTableau, Δt
     end
 end
 
+function Integrator(equation::Union{PODE,HODE}, tableau::Tableau, Δt)
+    Integrator(equation, PartitionedTableau(tableau), Δt)
+end
+
 # Create integrator for implicit partitioned Runge-Kutta tableau.
 function Integrator(equation::Union{IODE,LODE}, tableau::PartitionedTableau, Δt)
     IntegratorPRKimplicit(equation, tableau, Δt)

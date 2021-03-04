@@ -1,24 +1,24 @@
 
-function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::Union{AtomicSolutionPODE{DT,TT}, AtomicSolutionPDAE{DT,TT}},
                           cache::IntegratorCacheVPRK{DT}) where {DT,TT}
     update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
     update_solution!(sol.p, sol.p̃, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 end
 
-function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}, R::Vector{TT},
+function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::Union{AtomicSolutionPODE{DT,TT}, AtomicSolutionPDAE{DT,TT}}, R::Vector{TT},
                            cache::IntegratorCacheVPRK{DT}) where {DT,TT}
     update_solution!(sol.q, sol.q̃, cache.U, R, timestep(int))
     update_solution!(sol.p, sol.p̃, cache.G, R, timestep(int))
 end
 
-function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}, RU::Vector{TT}, RG::Vector{TT},
+function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::Union{AtomicSolutionPODE{DT,TT}, AtomicSolutionPDAE{DT,TT}}, RU::Vector{TT}, RG::Vector{TT},
                            cache::IntegratorCacheVPRK{DT}) where {DT,TT}
     update_solution!(sol.q, sol.q̃, cache.U, RU, timestep(int))
     update_solution!(sol.p, sol.p̃, cache.G, RG, timestep(int))
 end
 
 
-function Integrators.initialize!(int::AbstractIntegratorVPRK{DT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
+function Integrators.initialize!(int::AbstractIntegratorVPRK{DT}, sol::Union{AtomicSolutionPODE{DT,TT}, AtomicSolutionPDAE{DT,TT}}) where {DT,TT}
     sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.v)

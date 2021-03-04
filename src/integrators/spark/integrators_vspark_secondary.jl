@@ -128,7 +128,7 @@ struct IntegratorVSPARKsecondary{DT, TT, D, S, R,
         IntegratorVSPARKsecondary(params, solver, iguess, caches)
     end
 
-    function IntegratorVSPARKsecondary(equation::LDAE{DT,TT}, tableau::TableauVSPARKsecondary{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorVSPARKsecondary(equation::LDAE{DT}, tableau::TableauVSPARKsecondary, Δt; kwargs...) where {DT}
         IntegratorVSPARKsecondary{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

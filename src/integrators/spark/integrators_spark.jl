@@ -96,7 +96,7 @@ struct IntegratorSPARK{DT, TT, D, S, R, PT <: ParametersSPARK{DT,TT,D,S,R},
         IntegratorSPARK(params, solver, iguess, caches)
     end
 
-    function IntegratorSPARK(equation::Union{IDAE{DT,TT}, LDAE{DT,TT}}, tableau::Union{TableauSPARK{TT},TableauSPARK{TT}}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorSPARK(equation::Union{IDAE{DT}, LDAE{DT}}, tableau::Union{TableauSPARK,TableauSPARK}, Δt; kwargs...) where {DT}
         IntegratorSPARK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

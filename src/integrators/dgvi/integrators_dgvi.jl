@@ -416,7 +416,7 @@ struct IntegratorDGVI{DT, TT, D, S, R,
         IntegratorDGVI(basis, quadrature, params, solver, iguess, caches)
     end
 
-    function IntegratorDGVI(equation::Union{IODE{DT,TT}, LODE{DT,TT}}, basis::Basis{TT}, quadrature::QuadratureRule{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorDGVI(equation::Union{IODE{DT}, LODE{DT}}, basis::Basis, quadrature::QuadratureRule, Δt; kwargs...) where {DT}
         IntegratorDGVI{DT, ndims(equation)}(get_function_tuple(equation), basis, quadrature, Δt; kwargs...)
     end
 end

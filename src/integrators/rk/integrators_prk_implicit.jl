@@ -144,7 +144,7 @@ struct IntegratorPRKimplicit{DT, TT, D, S, PT <: ParametersPRKimplicit{DT,TT},
         IntegratorPRKimplicit{DT,D}(NamedTuple{(:v,:f,:h)}((v,f,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorPRKimplicit(equation::Union{IODE{DT,TT}, LODE{DT,TT}}, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorPRKimplicit(equation::Union{IODE{DT}, LODE{DT}}, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorPRKimplicit{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

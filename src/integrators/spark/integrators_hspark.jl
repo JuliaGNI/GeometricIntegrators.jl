@@ -71,7 +71,7 @@ struct IntegratorHSPARK{DT, TT, D, S, R, PT <: ParametersHSPARK{DT,TT,D,S,R},
         IntegratorHSPARK(params, solver, iguess, caches)
     end
 
-    function IntegratorHSPARK(equation::Union{PDAE{DT,TT}, HDAE{DT,TT}}, tableau::Union{TableauSPARK{TT},TableauHSPARK{TT}}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorHSPARK(equation::Union{PDAE{DT}, HDAE{DT}}, tableau::Union{TableauSPARK,TableauHSPARK}, Δt; kwargs...) where {DT}
         IntegratorHSPARK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

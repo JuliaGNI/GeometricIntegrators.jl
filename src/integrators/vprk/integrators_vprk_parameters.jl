@@ -16,7 +16,7 @@ mutable struct AbstractParametersVPRK{IT, DT, TT, D, S, ET <: NamedTuple, PT <: 
     end
 end
 
-function update_params!(params::AbstractParametersVPRK, sol::AtomicSolutionPODE)
+function update_params!(params::AbstractParametersVPRK, sol::Union{AtomicSolutionPODE, AtomicSolutionPDAE})
     # set time for nonlinear solver and copy previous solution
     params.t̄  = sol.t
     params.q̄ .= sol.q

@@ -116,7 +116,7 @@ struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
         IntegratorFIRK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorFIRK(equation::ODE{DT,TT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorFIRK(equation::ODE{DT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorFIRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

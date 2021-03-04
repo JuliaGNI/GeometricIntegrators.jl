@@ -93,7 +93,7 @@ struct IntegratorMidpointImplicit{DT, TT, D, S, PT <: ParametersMidpointImplicit
     #     IntegratorMidpointImplicit{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     # end
 
-    function IntegratorMidpointImplicit(equation::Union{IODE{DT,TT}, LODE{DT,TT}}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorMidpointImplicit(equation::Union{IODE{DT}, LODE{DT}}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorMidpointImplicit{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
