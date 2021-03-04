@@ -148,16 +148,16 @@ Base.:(==)(dae1::SPDAE, dae2::SPDAE) = (
                              && dae1.parameters  == dae2.parameters
                              && dae1.periodicity == dae2.periodicity)
 
-function Base.similar(equ::SPDAE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector; parameters=equ.parameters)
+function Base.similar(equ::SPDAE, t₀::Real, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=get_λ₀(q₀, equ.μ₀); parameters=equ.parameters)
     @assert all([length(q) == equ.d for q in q₀])
     @assert all([length(p) == equ.d for p in p₀])
     @assert all([length(λ) == equ.m for λ in λ₀])
     @assert all([length(μ) == equ.m for μ in μ₀])
-    SPDAE(equ.v, equ.f, equ.ϕ, equ.ψ, t₀, q₀, p₀, λ₀, μ₀;
+    _SPDAE(equ.v, equ.f, equ.ϕ, equ.ψ, t₀, q₀, p₀, λ₀, μ₀;
           invariants=equ.invariants, parameters=parameters, periodicity=equ.periodicity)
 end
 
-Base.similar(equ::SPDAE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀), μ₀=get_λ₀(λ₀, equ.μ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀, μ₀; kwargs...)
+Base.similar(equ::SPDAE, q₀, p₀, λ₀=get_λ₀(q₀, equ.λ₀), μ₀=get_λ₀(q₀, equ.μ₀); kwargs...) = similar(equ, equ.t₀, q₀, p₀, λ₀, μ₀; kwargs...)
 Base.similar(equ::SPDAE, t₀::Real, q₀::State, p₀::State, λ₀::State=get_λ₀(q₀, equ.λ₀), μ₀::State=get_λ₀(λ₀, equ.μ₀); kwargs...) = similar(equ, equ.t₀, [q₀], [p₀], [λ₀], [μ₀]; kwargs...)
 
 hasinvariants(::SPDAEinvType{<:Nothing}) = false
