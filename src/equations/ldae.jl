@@ -58,7 +58,7 @@ variables ``(q,p)`` and algebraic variables ``v``, ``\lambda`` and ``\mu``.
 * `t₀`: initial time (optional)
 * `q₀`: initial condition for dynamical variable `q`
 * `p₀`: initial condition for dynamical variable `p`
-* `λ₀`: initial condition for algebraic variable `λ` (optional)
+* `λ₀`: initial condition for algebraic variable `λ`
 * `μ₀`: initial condition for algebraic variable `μ` (optional)
 * `lagrangian`: function computing the Lagrangian ``L``
 * `invariants`: either a `NamedTuple` containing the equation's invariants or `nothing`

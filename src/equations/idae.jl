@@ -220,7 +220,7 @@ hasperiodicity(::IDAEperType{<:AbstractArray}) = true
 @inline Common.nconstraints(equation::IDAE) = equation.m
 
 @inline Common.periodicity(equation::IDAE) = hasperiodicity(equation) ? equation.periodicity : zero(equation.q₀[begin])
-@inline initial_conditions(equation::IDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
+@inline initial_conditions(equation::IDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀, equation.μ₀)
 
 _get_ϑ(equ::IDAE) = hasparameters(equ) ? (t,q,v,ϑ)     -> equ.ϑ(t, q, v, ϑ, equ.parameters) : equ.ϑ
 _get_f(equ::IDAE) = hasparameters(equ) ? (t,q,v,f)     -> equ.f(t, q, v, f, equ.parameters) : equ.f

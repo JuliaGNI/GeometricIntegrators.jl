@@ -43,6 +43,7 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `q₀`: initial condition for dynamical variable ``q``
 * `p₀`: initial condition for dynamical variable ``p``
 * `λ₀`: initial condition for algebraic variable ``λ``
+* `μ₀`: initial condition for algebraic variable ``μ`` (optional)
 * `invariants`: either a `NamedTuple` containing the equation's invariants or `nothing`
 * `parameters`: either a `NamedTuple` containing the equation's parameters or `nothing`
 * `periodicity`: determines the periodicity of the state vector `q` for cutting periodic solutions
@@ -174,7 +175,7 @@ hasperiodicity(::SPDAEperType{<:AbstractArray}) = true
 @inline Common.nconstraints(equation::SPDAE) = equation.m
 
 @inline Common.periodicity(equation::SPDAE) = hasperiodicity(equation) ? equation.periodicity : zero(equation.q₀[begin])
-@inline initial_conditions(equation::SPDAE) = (equation.t₀, equation.q₀, equation.λ₀)
+@inline initial_conditions(equation::SPDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀, equation.μ₀)
 
 function get_function_tuple(equation::SPDAE{DT,TT,AT,VT,FT,ϕT,ψT,Nothing}) where {DT, TT, AT, VT, FT, ϕT, ψT}
     NamedTuple{(:v, :f, :ϕ, :ψ)}((equation.v, equation.f, equation.ϕ, equation.ψ))

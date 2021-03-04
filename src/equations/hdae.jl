@@ -58,6 +58,7 @@ the algebraic variables ``(\lambda, \gamma)`` taking values in
 * `q₀`: initial condition for dynamical variable ``q``
 * `p₀`: initial condition for dynamical variable ``p``
 * `λ₀`: initial condition for algebraic variable ``λ``
+* `μ₀`: initial condition for algebraic variable ``μ`` (optional)
 * `hamiltonian`: function computing the Hamiltonian ``H``
 * `invariants`: either a `NamedTuple` containing the equation's invariants or `nothing`
 * `parameters`: either a `NamedTuple` containing the equation's parameters or `nothing`
@@ -228,7 +229,7 @@ hasperiodicity(::HDAEperType{<:AbstractArray}) = true
 @inline Common.nconstraints(equation::HDAE) = equation.m
 
 @inline Common.periodicity(equation::HDAE) = hasperiodicity(equation) ? equation.periodicity : zero(equation.q₀[begin])
-@inline initial_conditions(equation::HDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀)
+@inline initial_conditions(equation::HDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀, equation.μ₀)
 
 _get_v(equ::HDAE)  = hasparameters(equ) ? (t,q,p,v)     -> equ.v(t, q, p, v, equ.parameters) : equ.v
 _get_f(equ::HDAE)  = hasparameters(equ) ? (t,q,p,f)     -> equ.f(t, q, p, f, equ.parameters) : equ.f
