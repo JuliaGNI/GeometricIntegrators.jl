@@ -160,6 +160,9 @@ end
 
     @test get_function_tuple(ode) == NamedTuple{(:v,)}((ode_v,))
 
+    @test ode == similar(ode, t₀, x₀)
+    @test ode == similar(ode, x₀)
+
     @test ode == ode1
     @test ode == ode2
     @test ode == ode3
@@ -170,9 +173,6 @@ end
     @test hash(ode) == hash(ode3)
     @test hash(ode) == hash(ode4)
 
-    @test ode == similar(ode, t₀, x₀)
-    @test ode == similar(ode, x₀)
-
 end
 
 
@@ -181,42 +181,48 @@ end
     v_sode = (v_sode_1, v_sode_2)
     q_sode = (q_sode_1, q_sode_2)
 
-    sode  = SODE(v_sode, t₀, [x₀])
-    sode1 = SODE(v_sode, [x₀])
-    sode2 = SODE(v_sode, t₀, x₀)
-    sode3 = SODE(v_sode, x₀)
+    sode  = SODE(v_sode, nothing, t₀, [x₀], nothing, nothing, nothing)
+    sode1 = SODE(v_sode, t₀, [x₀])
+    sode2 = SODE(v_sode, [x₀])
+    sode3 = SODE(v_sode, t₀, x₀)
+    sode4 = SODE(v_sode, x₀)
 
     @test ndims(sode) == 2
     @test nsamples(sode) == 1
     @test periodicity(sode) == zero(x₀)
 
+    @test sode == similar(sode, t₀, x₀)
+    @test sode == similar(sode, x₀)
+
     @test sode == sode1
     @test sode == sode2
     @test sode == sode3
+    @test sode == sode4
 
     @test hash(sode) == hash(sode1)
     @test hash(sode) == hash(sode2)
     @test hash(sode) == hash(sode3)
-
-    @test sode == similar(sode, t₀, x₀)
-    @test sode == similar(sode, x₀)
+    @test hash(sode) == hash(sode4)
 
 
     sode  = SODE(v_sode, q_sode, t₀, [x₀])
-    sode1 = SODE(v_sode, q_sode, [x₀])
-    sode2 = SODE(v_sode, q_sode, t₀, x₀)
-    sode3 = SODE(v_sode, q_sode, x₀)
+    sode1 = SODE(v_sode, q_sode, t₀, [x₀])
+    sode2 = SODE(v_sode, q_sode, [x₀])
+    sode3 = SODE(v_sode, q_sode, t₀, x₀)
+    sode4 = SODE(v_sode, q_sode, x₀)
+
+    @test sode == similar(sode, t₀, x₀)
+    @test sode == similar(sode, x₀)
 
     @test sode == sode1
     @test sode == sode2
     @test sode == sode3
+    @test sode == sode4
 
     @test hash(sode) == hash(sode1)
     @test hash(sode) == hash(sode2)
     @test hash(sode) == hash(sode3)
-
-    @test sode == similar(sode, t₀, x₀)
-    @test sode == similar(sode, x₀)
+    @test hash(sode) == hash(sode4)
 
 end
 
@@ -247,6 +253,9 @@ end
     @test functions.v == pode_v == pode.v
     @test functions.f == pode_f == pode.f
 
+    @test pode == similar(pode, t₀, q₀, p₀)
+    @test pode == similar(pode, q₀, p₀)
+
     @test pode == pode1
     @test pode == pode2
     @test pode == pode3
@@ -256,9 +265,6 @@ end
     @test hash(pode) == hash(pode2)
     @test hash(pode) == hash(pode3)
     @test hash(pode) == hash(pode4)
-
-    @test pode == similar(pode, t₀, q₀, p₀)
-    @test pode == similar(pode, q₀, p₀)
 
     rode = ODE(ode_v, t₀, [x₀])
     code = convert(ODE, pode)
@@ -286,12 +292,12 @@ end
 
     iode_eqs = (iode_ϑ, iode_f, iode_g)
 
-    # test without Hamiltonian
+    iode  = IODE(iode_eqs..., iode_v, iode_f, t₀, [q₀], [p₀], [λ₀], nothing, nothing, nothing)
 
-    iode  = IODE(iode_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v)
-    iode1 = IODE(iode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
-    iode2 = IODE(iode_eqs..., t₀, q₀, p₀; v̄=iode_v)
-    iode3 = IODE(iode_eqs..., q₀, p₀; v̄=iode_v)
+    iode1 = IODE(iode_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v)
+    iode2 = IODE(iode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
+    iode3 = IODE(iode_eqs..., t₀, q₀, p₀; v̄=iode_v)
+    iode4 = IODE(iode_eqs..., q₀, p₀; v̄=iode_v)
 
     @test axes(iode) == axes(q₀)
     @test ndims(iode) == 1
@@ -311,40 +317,19 @@ end
     @test functions.v̄ == iode_v == iode.v̄
     @test functions.f̄ == iode_f == iode.f̄
 
-    @test iode == iode1
-    @test iode == iode2
-    @test iode == iode3
-
-    @test hash(iode) == hash(iode1)
-    @test hash(iode) == hash(iode2)
-    @test hash(iode) == hash(iode3)
-
     @test iode == similar(iode, t₀, q₀, p₀, λ₀)
     @test iode == similar(iode, t₀, q₀, p₀)
     @test iode == similar(iode, q₀, p₀)
     
+    @test iode == iode1
+    @test iode == iode2
+    @test iode == iode3
+    @test iode == iode4
 
-    # test with Hamiltonian
-
-    # iode  = IODE(iode_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v, h=iode_h)
-    # iode1 = IODE(iode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v, h=iode_h)
-    # iode2 = IODE(iode_eqs..., t₀, q₀, p₀; v̄=iode_v, h=iode_h)
-    # iode3 = IODE(iode_eqs..., q₀, p₀; v̄=iode_v, h=iode_h)
-
-    # @test ndims(iode) == 1
-    # @test nsamples(iode) == 1
-    # @test periodicity(iode) == zero(q₀)
-    # @test get_function_tuple(iode) == NamedTuple{(:ϑ, :f, :g, :v̄, :f̄, :h)}((iode_eqs..., iode_v, iode_f, iode_h))
-
-    # @test iode == iode1
-    # @test iode == iode2
-    # @test iode == iode3
-
-    # @test hash(iode1) == hash(iode2)
-
-    # @test iode == similar(iode, t₀, q₀, p₀, λ₀)
-    # @test iode == similar(iode, t₀, q₀, p₀)
-    # @test iode == similar(iode, q₀, p₀)
+    @test hash(iode) == hash(iode1)
+    @test hash(iode) == hash(iode2)
+    @test hash(iode) == hash(iode3)
+    @test hash(iode) == hash(iode4)
 
 end
 
@@ -353,10 +338,12 @@ end
 
     hode_eqs = (pode_v, pode_f, pode_h)
 
-    hode  = HODE(hode_eqs..., t₀, [q₀], [p₀])
-    hode1  = HODE(hode_eqs..., [q₀], [p₀])
-    hode2 = HODE(hode_eqs..., t₀, q₀, p₀)
-    hode3 = HODE(hode_eqs..., q₀, p₀)
+    hode  = HODE(pode_v, pode_f, symplectic_matrix, t₀, [q₀], [p₀], pode_h, nothing, nothing, nothing)
+
+    hode1 = HODE(hode_eqs..., t₀, [q₀], [p₀])
+    hode2 = HODE(hode_eqs..., [q₀], [p₀])
+    hode3 = HODE(hode_eqs..., t₀, q₀, p₀)
+    hode4 = HODE(hode_eqs..., q₀, p₀)
 
     @test axes(hode) == axes(q₀)
     @test ndims(hode) == 1
@@ -374,16 +361,18 @@ end
     @test functions.f == pode_f == hode.f
     @test functions.h == pode_h == hode.hamiltonian
 
+    @test hode == similar(hode, t₀, q₀, p₀)
+    @test hode == similar(hode, q₀, p₀)
+
     @test hode == hode1
     @test hode == hode2
     @test hode == hode3
+    @test hode == hode4
 
     @test hash(hode) == hash(hode1)
     @test hash(hode) == hash(hode2)
     @test hash(hode) == hash(hode3)
-
-    @test hode == similar(hode, t₀, q₀, p₀)
-    @test hode == similar(hode, q₀, p₀)
+    @test hash(hode) == hash(hode4)
 
     rode = ODE(ode_v, t₀, [x₀])
     code = convert(ODE, hode)
@@ -423,7 +412,7 @@ end
 
     lode_eqs = (iode_ϑ, iode_f, iode_g, lode_l, lode_ω)
 
-    lode  = LODE(iode_ϑ, iode_f, iode_g, lode_ω, iode_v, iode_f, t₀, [q₀], [p₀], [λ₀], lode_l, nothing, nothing, nothing)
+    lode = LODE(iode_ϑ, iode_f, iode_g, lode_ω, iode_v, iode_f, t₀, [q₀], [p₀], [λ₀], lode_l, nothing, nothing, nothing)
 
     lode1 = LODE(lode_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v)
     lode2 = LODE(lode_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
@@ -450,6 +439,10 @@ end
     @test functions.f̄ == iode_f == lode.f̄
     @test functions.l == lode_l == lode.lagrangian
 
+    @test lode == similar(lode, t₀, q₀, p₀, λ₀)
+    @test lode == similar(lode, t₀, q₀, p₀)
+    @test lode == similar(lode, q₀, p₀)
+
     @test lode == lode1
     @test lode == lode2
     @test lode == lode3
@@ -459,10 +452,6 @@ end
     @test hash(lode) == hash(lode2)
     @test hash(lode) == hash(lode3)
     @test hash(lode) == hash(lode4)
-
-    @test lode == similar(lode, t₀, q₀, p₀, λ₀)
-    @test lode == similar(lode, t₀, q₀, p₀)
-    @test lode == similar(lode, q₀, p₀)
 
     iode = convert(IODE, lode)
     v₁ = zero(q₀)
@@ -495,25 +484,15 @@ end
     dae_eqs1 = (dae_v, dae_u, dae_ϕ)
     dae_eqs2 = (dae_v, dae_u, nothing, dae_ϕ, nothing)
 
-    dae  = DAE(dae_eqs..., t₀, [x₀], [λ₀], nothing, nothing, nothing)
+    dae = DAE(dae_eqs..., t₀, [x₀], [λ₀], [λ₀], nothing, nothing, nothing)
 
-    dae1 = DAE(dae_eqs1..., [x₀], [λ₀])
-    dae2 = DAE(dae_eqs1..., [x₀], [λ₀])
-    dae3 = DAE(dae_eqs1..., t₀, x₀, λ₀)
-    dae4 = DAE(dae_eqs1..., x₀, λ₀)
-
-    dae5 = DAE(dae_eqs2..., [x₀], [λ₀])
-    dae6 = DAE(dae_eqs2..., [x₀], [λ₀])
-    dae7 = DAE(dae_eqs2..., t₀, x₀, λ₀)
-    dae8 = DAE(dae_eqs2..., x₀, λ₀)
-    
     @test axes(dae) == axes(x₀)
     @test ndims(dae) == 2
     @test nsamples(dae) == 1
     @test nconstraints(dae) == 1
 
     @test periodicity(dae) == zero(x₀)
-    @test initial_conditions(dae) == (t₀, [x₀], [λ₀])
+    @test initial_conditions(dae) == (t₀, [x₀], [λ₀], [λ₀])
 
     @test hassecondary(dae) == false
     @test hasinvariants(dae) == false
@@ -526,37 +505,43 @@ end
     @test functions.ϕ == dae_ϕ == dae.ϕ
     @test functions.v̄ == dae_v == dae.v̄
 
-    @test dae == dae1
-    @test dae == dae2
-    @test dae == dae3
-    @test dae == dae4
-    @test dae == dae5
-    @test dae == dae6
-    @test dae == dae7
-    @test dae == dae8
-
-    @test hash(dae) == hash(dae1)
-    @test hash(dae) == hash(dae2)
-    @test hash(dae) == hash(dae3)
-    @test hash(dae) == hash(dae4)
-    @test hash(dae) == hash(dae5)
-    @test hash(dae) == hash(dae6)
-    @test hash(dae) == hash(dae7)
-    @test hash(dae) == hash(dae8)
-
     @test dae == similar(dae, t₀, x₀, λ₀)
     @test dae == similar(dae, x₀, λ₀)
+
+    for eqs in (dae_eqs1, dae_eqs2)
+        dae1 = DAE(eqs..., t₀, [x₀], [λ₀], [λ₀])
+        dae2 = DAE(eqs..., t₀, [x₀], [λ₀])
+        dae3 = DAE(eqs..., [x₀], [λ₀], [λ₀])
+        dae4 = DAE(eqs..., [x₀], [λ₀])
+        dae5 = DAE(eqs..., t₀, x₀, λ₀, λ₀)
+        dae6 = DAE(eqs..., t₀, x₀, λ₀)
+        dae7 = DAE(eqs..., x₀, λ₀, λ₀)
+        dae8 = DAE(eqs..., x₀, λ₀)
+        
+        @test dae == dae1
+        @test dae == dae2
+        @test dae == dae3
+        @test dae == dae4
+        @test dae == dae5
+        @test dae == dae6
+        @test dae == dae7
+        @test dae == dae8
+
+        @test hash(dae) == hash(dae1)
+        @test hash(dae) == hash(dae2)
+        @test hash(dae) == hash(dae3)
+        @test hash(dae) == hash(dae4)
+        @test hash(dae) == hash(dae5)
+        @test hash(dae) == hash(dae6)
+        @test hash(dae) == hash(dae7)
+        @test hash(dae) == hash(dae8)
+    end
 
 
     dae_eqs  = (dae_v, dae_u, dae_ū, dae_ϕ, dae_ψ)
     dae_args = (invariants=(h=pdae_h,), parameters=(a=1,), periodicity=π*ones(2))
 
-    dae  = DAE(dae_eqs..., dae_v, t₀, [x₀], [λ₀], dae_args.invariants, dae_args.parameters, dae_args.periodicity)
-
-    dae1 = DAE(dae_eqs..., [x₀], [λ₀]; dae_args...)
-    dae2 = DAE(dae_eqs..., [x₀], [λ₀]; dae_args...)
-    dae3 = DAE(dae_eqs..., t₀, x₀, λ₀; dae_args...)
-    dae4 = DAE(dae_eqs..., x₀, λ₀; dae_args...)
+    dae = DAE(dae_eqs..., dae_v, t₀, [x₀], [λ₀], [λ₀], dae_args.invariants, dae_args.parameters, dae_args.periodicity)
 
     @test axes(dae) == axes(x₀)
     @test ndims(dae) == 2
@@ -564,7 +549,7 @@ end
     @test nconstraints(dae) == 1
 
     @test periodicity(dae) == dae_args.periodicity
-    @test initial_conditions(dae) == (t₀, [x₀], [λ₀])
+    @test initial_conditions(dae) == (t₀, [x₀], [λ₀], [λ₀])
 
     @test hassecondary(dae) == true
     @test hasinvariants(dae) == true
@@ -579,6 +564,14 @@ end
     @test functions.ψ != dae_ψ == dae.ψ
     @test functions.v̄ != dae_v == dae.v̄
 
+    @test dae == similar(dae, t₀, x₀, λ₀)
+    @test dae == similar(dae, x₀, λ₀)
+
+    dae1 = DAE(dae_eqs..., [x₀], [λ₀]; dae_args...)
+    dae2 = DAE(dae_eqs..., [x₀], [λ₀]; dae_args...)
+    dae3 = DAE(dae_eqs..., t₀, x₀, λ₀; dae_args...)
+    dae4 = DAE(dae_eqs..., x₀, λ₀; dae_args...)
+
     @test dae == dae1
     @test dae == dae2
     @test dae == dae3
@@ -589,9 +582,6 @@ end
     @test hash(dae) == hash(dae3)
     @test hash(dae) == hash(dae4)
 
-    @test dae == similar(dae, t₀, x₀, λ₀)
-    @test dae == similar(dae, x₀, λ₀)
-
 end
 
 
@@ -601,17 +591,7 @@ end
     pdae_eqs1 = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_ϕ)
     pdae_eqs2 = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_ϕ, nothing, nothing, nothing)
 
-    pdae  = PDAE(pdae_eqs..., t₀, [q₀], [p₀], [λ₀], nothing, nothing, nothing)
-
-    pdae1 = PDAE(pdae_eqs1..., t₀, [q₀], [p₀], [λ₀])
-    pdae2 = PDAE(pdae_eqs1..., [q₀], [p₀], [λ₀])
-    pdae3 = PDAE(pdae_eqs1..., t₀, q₀, p₀, λ₀)
-    pdae4 = PDAE(pdae_eqs1..., q₀, p₀, λ₀)
-
-    pdae5 = PDAE(pdae_eqs2..., t₀, [q₀], [p₀], [λ₀])
-    pdae6 = PDAE(pdae_eqs2..., [q₀], [p₀], [λ₀])
-    pdae7 = PDAE(pdae_eqs2..., t₀, q₀, p₀, λ₀)
-    pdae8 = PDAE(pdae_eqs2..., q₀, p₀, λ₀)
+    pdae  = PDAE(pdae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀], nothing, nothing, nothing)
 
     @test axes(pdae) == axes(q₀)
     @test ndims(pdae) == 1
@@ -619,7 +599,7 @@ end
     @test nconstraints(pdae) == 1
 
     @test periodicity(pdae) == zero(q₀)
-    @test initial_conditions(pdae) == (t₀, [q₀], [p₀], [λ₀])
+    @test initial_conditions(pdae) == (t₀, [q₀], [p₀], [λ₀], [λ₀])
 
     @test hassecondary(pdae) == false
     @test hasinvariants(pdae) == false
@@ -635,38 +615,44 @@ end
     @test functions.v̄ == pdae_v == pdae.v̄
     @test functions.f̄ == pdae_f == pdae.f̄
     
-    @test pdae == pdae1
-    @test pdae == pdae2
-    @test pdae == pdae3
-    @test pdae == pdae4
-    @test pdae == pdae5
-    @test pdae == pdae6
-    @test pdae == pdae7
-    @test pdae == pdae8
-
-    @test hash(pdae) == hash(pdae1)
-    @test hash(pdae) == hash(pdae2)
-    @test hash(pdae) == hash(pdae3)
-    @test hash(pdae) == hash(pdae4)
-    @test hash(pdae) == hash(pdae5)
-    @test hash(pdae) == hash(pdae6)
-    @test hash(pdae) == hash(pdae7)
-    @test hash(pdae) == hash(pdae8)
-
     @test pdae == similar(pdae, t₀, q₀, p₀, λ₀)
     @test pdae == similar(pdae, t₀, q₀, p₀)
     @test pdae == similar(pdae, q₀, p₀)
+
+    for eqs in (pdae_eqs1, pdae_eqs2)
+        pdae1 = PDAE(eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀])
+        pdae2 = PDAE(eqs..., t₀, [q₀], [p₀], [λ₀])
+        pdae3 = PDAE(eqs..., [q₀], [p₀], [λ₀], [λ₀])
+        pdae4 = PDAE(eqs..., [q₀], [p₀], [λ₀])
+        pdae5 = PDAE(eqs..., t₀, q₀, p₀, λ₀, λ₀)
+        pdae6 = PDAE(eqs..., t₀, q₀, p₀, λ₀)
+        pdae7 = PDAE(eqs..., q₀, p₀, λ₀, λ₀)
+        pdae8 = PDAE(eqs..., q₀, p₀, λ₀)
+
+        @test pdae == pdae1
+        @test pdae == pdae2
+        @test pdae == pdae3
+        @test pdae == pdae4
+        @test pdae == pdae5
+        @test pdae == pdae6
+        @test pdae == pdae7
+        @test pdae == pdae8
+
+        @test hash(pdae) == hash(pdae1)
+        @test hash(pdae) == hash(pdae2)
+        @test hash(pdae) == hash(pdae3)
+        @test hash(pdae) == hash(pdae4)
+        @test hash(pdae) == hash(pdae5)
+        @test hash(pdae) == hash(pdae6)
+        @test hash(pdae) == hash(pdae7)
+        @test hash(pdae) == hash(pdae8)
+    end
 
 
     pdae_eqs  = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_ϕ, pdae_u, pdae_g, pdae_ψ)
     pdae_args = (invariants=(h=pdae_h,), parameters=(a=1,), periodicity=π*ones(1))
 
-    pdae  = PDAE(pdae_eqs..., pdae_v, pdae_f, t₀, [q₀], [p₀], [λ₀], pdae_args.invariants, pdae_args.parameters, pdae_args.periodicity)
-
-    pdae1 = PDAE(pdae_eqs..., t₀, [q₀], [p₀], [λ₀]; pdae_args...)
-    pdae2 = PDAE(pdae_eqs..., [q₀], [p₀], [λ₀]; pdae_args...)
-    pdae3 = PDAE(pdae_eqs..., t₀, q₀, p₀, λ₀; pdae_args...)
-    pdae4 = PDAE(pdae_eqs..., q₀, p₀, λ₀; pdae_args...)
+    pdae  = PDAE(pdae_eqs..., pdae_v, pdae_f, t₀, [q₀], [p₀], [λ₀], [λ₀], pdae_args.invariants, pdae_args.parameters, pdae_args.periodicity)
 
     @test axes(pdae) == axes(q₀)
     @test ndims(pdae) == 1
@@ -674,7 +660,7 @@ end
     @test nconstraints(pdae) == 1
 
     @test periodicity(pdae) == pdae_args.periodicity
-    @test initial_conditions(pdae) == (t₀, [q₀], [p₀], [λ₀])
+    @test initial_conditions(pdae) == (t₀, [q₀], [p₀], [λ₀], [λ₀])
 
     @test hassecondary(pdae) == true
     @test hasinvariants(pdae) == true
@@ -693,19 +679,36 @@ end
     @test functions.v̄ != pdae_v == pdae.v̄
     @test functions.f̄ != pdae_f == pdae.f̄
     
+    @test pdae == similar(pdae, t₀, q₀, p₀, λ₀)
+    @test pdae == similar(pdae, t₀, q₀, p₀)
+    @test pdae == similar(pdae, q₀, p₀)
+
+    pdae1 = PDAE(pdae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀]; pdae_args...)
+    pdae2 = PDAE(pdae_eqs..., t₀, [q₀], [p₀], [λ₀]; pdae_args...)
+    pdae3 = PDAE(pdae_eqs..., [q₀], [p₀], [λ₀], [λ₀]; pdae_args...)
+    pdae4 = PDAE(pdae_eqs..., [q₀], [p₀], [λ₀]; pdae_args...)
+    pdae5 = PDAE(pdae_eqs..., t₀, q₀, p₀, λ₀, λ₀; pdae_args...)
+    pdae6 = PDAE(pdae_eqs..., t₀, q₀, p₀, λ₀; pdae_args...)
+    pdae7 = PDAE(pdae_eqs..., q₀, p₀, λ₀, λ₀; pdae_args...)
+    pdae8 = PDAE(pdae_eqs..., q₀, p₀, λ₀; pdae_args...)
+
     @test pdae == pdae1
     @test pdae == pdae2
     @test pdae == pdae3
     @test pdae == pdae4
+    @test pdae == pdae5
+    @test pdae == pdae6
+    @test pdae == pdae7
+    @test pdae == pdae8
 
     @test hash(pdae) == hash(pdae1)
     @test hash(pdae) == hash(pdae2)
     @test hash(pdae) == hash(pdae3)
     @test hash(pdae) == hash(pdae4)
-
-    @test pdae == similar(pdae, t₀, q₀, p₀, λ₀)
-    @test pdae == similar(pdae, t₀, q₀, p₀)
-    @test pdae == similar(pdae, q₀, p₀)
+    @test hash(pdae) == hash(pdae5)
+    @test hash(pdae) == hash(pdae6)
+    @test hash(pdae) == hash(pdae7)
+    @test hash(pdae) == hash(pdae8)
 
 end
 
@@ -718,23 +721,13 @@ end
 
     idae  = IDAE(idae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀], nothing, nothing, nothing)
 
-    idae1 = IDAE(idae_eqs1..., t₀, [q₀], [p₀], [λ₀]; v̄=pdae_v)
-    idae2 = IDAE(idae_eqs1..., [q₀], [p₀], [λ₀]; v̄=pdae_v)
-    idae3 = IDAE(idae_eqs1..., t₀, q₀, p₀, λ₀; v̄=pdae_v)
-    idae4 = IDAE(idae_eqs1..., q₀, p₀, λ₀; v̄=pdae_v)
-
-    idae5 = IDAE(idae_eqs2..., t₀, [q₀], [p₀], [λ₀]; v̄=pdae_v)
-    idae6 = IDAE(idae_eqs2..., [q₀], [p₀], [λ₀]; v̄=pdae_v)
-    idae7 = IDAE(idae_eqs2..., t₀, q₀, p₀, λ₀; v̄=pdae_v)
-    idae8 = IDAE(idae_eqs2..., q₀, p₀, λ₀; v̄=pdae_v)
-
     @test axes(idae) == axes(q₀)
     @test ndims(idae) == 1
     @test nsamples(idae) == 1
     @test nconstraints(idae) == 1
 
     @test periodicity(idae) == zero(q₀)
-    @test initial_conditions(idae) == (t₀, [q₀], [p₀], [λ₀])
+    @test initial_conditions(idae) == (t₀, [q₀], [p₀], [λ₀], [λ₀])
 
     @test hassecondary(idae) == false
     @test hasinvariants(idae) == false
@@ -750,27 +743,38 @@ end
     @test functions.v̄ == pdae_v == idae.v̄
     @test functions.f̄ == pdae_f == idae.f̄
     
-    @test idae == idae1
-    @test idae == idae2
-    @test idae == idae3
-    @test idae == idae4
-    @test idae == idae5
-    @test idae == idae6
-    @test idae == idae7
-    @test idae == idae8
-
-    @test hash(idae) == hash(idae1)
-    @test hash(idae) == hash(idae2)
-    @test hash(idae) == hash(idae3)
-    @test hash(idae) == hash(idae4)
-    @test hash(idae) == hash(idae5)
-    @test hash(idae) == hash(idae6)
-    @test hash(idae) == hash(idae7)
-    @test hash(idae) == hash(idae8)
-
     @test idae == similar(idae, t₀, q₀, p₀, λ₀)
     @test idae == similar(idae, t₀, q₀, p₀)
     @test idae == similar(idae, q₀, p₀)
+
+    for eqs in (idae_eqs1, idae_eqs2)
+        idae1 = IDAE(eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀]; v̄=pdae_v)
+        idae2 = IDAE(eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=pdae_v)
+        idae3 = IDAE(eqs..., [q₀], [p₀], [λ₀], [λ₀]; v̄=pdae_v)
+        idae4 = IDAE(eqs..., [q₀], [p₀], [λ₀]; v̄=pdae_v)
+        idae5 = IDAE(eqs..., t₀, q₀, p₀, λ₀, λ₀; v̄=pdae_v)
+        idae6 = IDAE(eqs..., t₀, q₀, p₀, λ₀; v̄=pdae_v)
+        idae7 = IDAE(eqs..., q₀, p₀, λ₀, λ₀; v̄=pdae_v)
+        idae8 = IDAE(eqs..., q₀, p₀, λ₀; v̄=pdae_v)
+
+        @test idae == idae1
+        @test idae == idae2
+        @test idae == idae3
+        @test idae == idae4
+        @test idae == idae5
+        @test idae == idae6
+        @test idae == idae7
+        @test idae == idae8
+
+        @test hash(idae) == hash(idae1)
+        @test hash(idae) == hash(idae2)
+        @test hash(idae) == hash(idae3)
+        @test hash(idae) == hash(idae4)
+        @test hash(idae) == hash(idae5)
+        @test hash(idae) == hash(idae6)
+        @test hash(idae) == hash(idae7)
+        @test hash(idae) == hash(idae8)
+    end
 
 
     idae_eqs  = (pdae_p, pdae_f, pdae_u, pdae_g, pdae_ϕ, pdae_u, pdae_g, pdae_ψ)
@@ -778,18 +782,13 @@ end
 
     idae  = IDAE(idae_eqs..., pdae_v, pdae_f, t₀, [q₀], [p₀], [λ₀], [λ₀], idae_args.invariants, idae_args.parameters, idae_args.periodicity)
 
-    idae1 = IDAE(idae_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=pdae_v, idae_args...)
-    idae2 = IDAE(idae_eqs..., [q₀], [p₀], [λ₀]; v̄=pdae_v, idae_args...)
-    idae3 = IDAE(idae_eqs..., t₀, q₀, p₀, λ₀; v̄=pdae_v, idae_args...)
-    idae4 = IDAE(idae_eqs..., q₀, p₀, λ₀; v̄=pdae_v, idae_args...)
-
     @test axes(idae) == axes(q₀)
     @test ndims(idae) == 1
     @test nsamples(idae) == 1
     @test nconstraints(idae) == 1
 
     @test periodicity(idae) == idae_args.periodicity
-    @test initial_conditions(idae) == (t₀, [q₀], [p₀], [λ₀])
+    @test initial_conditions(idae) == (t₀, [q₀], [p₀], [λ₀], [λ₀])
 
     @test hassecondary(idae) == true
     @test hasinvariants(idae) == true
@@ -808,19 +807,36 @@ end
     @test functions.v̄ != pdae_v == idae.v̄
     @test functions.f̄ != pdae_f == idae.f̄
     
+    @test idae == similar(idae, t₀, q₀, p₀, λ₀)
+    @test idae == similar(idae, t₀, q₀, p₀)
+    @test idae == similar(idae, q₀, p₀)
+
+    idae1 = IDAE(idae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀]; v̄=pdae_v, idae_args...)
+    idae2 = IDAE(idae_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=pdae_v, idae_args...)
+    idae3 = IDAE(idae_eqs..., [q₀], [p₀], [λ₀], [λ₀]; v̄=pdae_v, idae_args...)
+    idae4 = IDAE(idae_eqs..., [q₀], [p₀], [λ₀]; v̄=pdae_v, idae_args...)
+    idae5 = IDAE(idae_eqs..., t₀, q₀, p₀, λ₀, λ₀; v̄=pdae_v, idae_args...)
+    idae6 = IDAE(idae_eqs..., t₀, q₀, p₀, λ₀; v̄=pdae_v, idae_args...)
+    idae7 = IDAE(idae_eqs..., q₀, p₀, λ₀, λ₀; v̄=pdae_v, idae_args...)
+    idae8 = IDAE(idae_eqs..., q₀, p₀, λ₀; v̄=pdae_v, idae_args...)
+
     @test idae == idae1
     @test idae == idae2
     @test idae == idae3
     @test idae == idae4
+    @test idae == idae5
+    @test idae == idae6
+    @test idae == idae7
+    @test idae == idae8
 
     @test hash(idae) == hash(idae1)
     @test hash(idae) == hash(idae2)
     @test hash(idae) == hash(idae3)
     @test hash(idae) == hash(idae4)
-
-    @test idae == similar(idae, t₀, q₀, p₀, λ₀)
-    @test idae == similar(idae, t₀, q₀, p₀)
-    @test idae == similar(idae, q₀, p₀)
+    @test hash(idae) == hash(idae5)
+    @test hash(idae) == hash(idae6)
+    @test hash(idae) == hash(idae7)
+    @test hash(idae) == hash(idae8)
 
 end
 
@@ -831,17 +847,7 @@ end
     hdae_eqs1 = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_ϕ, pdae_h)
     hdae_eqs2 = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_ϕ, nothing, nothing, nothing, pdae_h)
 
-    hdae  = HDAE(hdae_eqs..., t₀, [q₀], [p₀], [λ₀], pdae_h, nothing, nothing, nothing)
-
-    hdae1 = HDAE(hdae_eqs1..., t₀, [q₀], [p₀], [λ₀])
-    hdae2 = HDAE(hdae_eqs1..., [q₀], [p₀], [λ₀])
-    hdae3 = HDAE(hdae_eqs1..., t₀, q₀, p₀, λ₀)
-    hdae4 = HDAE(hdae_eqs1..., q₀, p₀, λ₀)
-
-    hdae5 = HDAE(hdae_eqs2..., t₀, [q₀], [p₀], [λ₀])
-    hdae6 = HDAE(hdae_eqs2..., [q₀], [p₀], [λ₀])
-    hdae7 = HDAE(hdae_eqs2..., t₀, q₀, p₀, λ₀)
-    hdae8 = HDAE(hdae_eqs2..., q₀, p₀, λ₀)
+    hdae  = HDAE(hdae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀], pdae_h, nothing, nothing, nothing)
 
     @test axes(hdae) == axes(q₀)
     @test ndims(hdae) == 1
@@ -849,7 +855,7 @@ end
     @test nconstraints(hdae) == 1
 
     @test periodicity(hdae) == zero(q₀)
-    @test initial_conditions(hdae) == (t₀, [q₀], [p₀], [λ₀])
+    @test initial_conditions(hdae) == (t₀, [q₀], [p₀], [λ₀], [λ₀])
 
     @test hassecondary(hdae) == false
     @test hasinvariants(hdae) == false
@@ -866,38 +872,44 @@ end
     @test functions.f̄ == pdae_f == hdae.f̄
     @test functions.h == pdae_h == hdae.hamiltonian
 
-    @test hdae == hdae1
-    @test hdae == hdae2
-    @test hdae == hdae3
-    @test hdae == hdae4
-    @test hdae == hdae5
-    @test hdae == hdae6
-    @test hdae == hdae7
-    @test hdae == hdae8
-
-    @test hash(hdae) == hash(hdae1)
-    @test hash(hdae) == hash(hdae2)
-    @test hash(hdae) == hash(hdae3)
-    @test hash(hdae) == hash(hdae4)
-    @test hash(hdae) == hash(hdae5)
-    @test hash(hdae) == hash(hdae6)
-    @test hash(hdae) == hash(hdae7)
-    @test hash(hdae) == hash(hdae8)
-
     @test hdae == similar(hdae, t₀, q₀, p₀, λ₀)
     @test hdae == similar(hdae, t₀, q₀, p₀)
     @test hdae == similar(hdae, q₀, p₀)
+
+    for eqs in (hdae_eqs1, hdae_eqs2)
+        hdae1 = HDAE(eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀])
+        hdae2 = HDAE(eqs..., t₀, [q₀], [p₀], [λ₀])
+        hdae3 = HDAE(eqs..., [q₀], [p₀], [λ₀], [λ₀])
+        hdae4 = HDAE(eqs..., [q₀], [p₀], [λ₀])
+        hdae5 = HDAE(eqs..., t₀, q₀, p₀, λ₀, λ₀)
+        hdae6 = HDAE(eqs..., t₀, q₀, p₀, λ₀)
+        hdae7 = HDAE(eqs..., q₀, p₀, λ₀, λ₀)
+        hdae8 = HDAE(eqs..., q₀, p₀, λ₀)
+
+        @test hdae == hdae1
+        @test hdae == hdae2
+        @test hdae == hdae3
+        @test hdae == hdae4
+        @test hdae == hdae5
+        @test hdae == hdae6
+        @test hdae == hdae7
+        @test hdae == hdae8
+
+        @test hash(hdae) == hash(hdae1)
+        @test hash(hdae) == hash(hdae2)
+        @test hash(hdae) == hash(hdae3)
+        @test hash(hdae) == hash(hdae4)
+        @test hash(hdae) == hash(hdae5)
+        @test hash(hdae) == hash(hdae6)
+        @test hash(hdae) == hash(hdae7)
+        @test hash(hdae) == hash(hdae8)
+    end
 
 
     hdae_eqs  = (pdae_v, pdae_f, pdae_u, pdae_g, pdae_ϕ, pdae_u, pdae_g, pdae_ψ)
     hdae_args = (invariants=(h=pdae_h,), parameters=(a=1,), periodicity=π*ones(1))
 
-    hdae  = HDAE(hdae_eqs..., pdae_v, pdae_f, symplectic_matrix, t₀, [q₀], [p₀], [λ₀], pdae_h, hdae_args.invariants, hdae_args.parameters, hdae_args.periodicity)
-
-    hdae1 = HDAE(hdae_eqs..., pdae_h, t₀, [q₀], [p₀], [λ₀]; hdae_args...)
-    hdae2 = HDAE(hdae_eqs..., pdae_h, [q₀], [p₀], [λ₀]; hdae_args...)
-    hdae3 = HDAE(hdae_eqs..., pdae_h, t₀, q₀, p₀, λ₀; hdae_args...)
-    hdae4 = HDAE(hdae_eqs..., pdae_h, q₀, p₀, λ₀; hdae_args...)
+    hdae  = HDAE(hdae_eqs..., pdae_v, pdae_f, symplectic_matrix, t₀, [q₀], [p₀], [λ₀], [λ₀], pdae_h, hdae_args.invariants, hdae_args.parameters, hdae_args.periodicity)
 
     @test axes(hdae) == axes(q₀)
     @test ndims(hdae) == 1
@@ -905,7 +917,7 @@ end
     @test nconstraints(hdae) == 1
 
     @test periodicity(hdae) == hdae_args.periodicity
-    @test initial_conditions(hdae) == (t₀, [q₀], [p₀], [λ₀])
+    @test initial_conditions(hdae) == (t₀, [q₀], [p₀], [λ₀], [λ₀])
 
     @test hassecondary(hdae) == true
     @test hasinvariants(hdae) == true
@@ -925,42 +937,51 @@ end
     @test functions.f̄ != pdae_f == hdae.f̄
     @test functions.h != pdae_h == hdae.hamiltonian
 
+    @test hdae == similar(hdae, t₀, q₀, p₀, λ₀)
+    @test hdae == similar(hdae, t₀, q₀, p₀)
+    @test hdae == similar(hdae, q₀, p₀)
+
+    hdae1 = HDAE(hdae_eqs..., pdae_h, t₀, [q₀], [p₀], [λ₀], [λ₀]; hdae_args...)
+    hdae2 = HDAE(hdae_eqs..., pdae_h, t₀, [q₀], [p₀], [λ₀]; hdae_args...)
+    hdae3 = HDAE(hdae_eqs..., pdae_h, [q₀], [p₀], [λ₀], [λ₀]; hdae_args...)
+    hdae4 = HDAE(hdae_eqs..., pdae_h, [q₀], [p₀], [λ₀]; hdae_args...)
+    hdae5 = HDAE(hdae_eqs..., pdae_h, t₀, q₀, p₀, λ₀, λ₀; hdae_args...)
+    hdae6 = HDAE(hdae_eqs..., pdae_h, t₀, q₀, p₀, λ₀; hdae_args...)
+    hdae7 = HDAE(hdae_eqs..., pdae_h, q₀, p₀, λ₀, λ₀; hdae_args...)
+    hdae8 = HDAE(hdae_eqs..., pdae_h, q₀, p₀, λ₀; hdae_args...)
+
     @test hdae == hdae1
     @test hdae == hdae2
     @test hdae == hdae3
     @test hdae == hdae4
+    @test hdae == hdae5
+    @test hdae == hdae6
+    @test hdae == hdae7
+    @test hdae == hdae8
 
     @test hash(hdae) == hash(hdae1)
     @test hash(hdae) == hash(hdae2)
     @test hash(hdae) == hash(hdae3)
     @test hash(hdae) == hash(hdae4)
-
-    @test hdae == similar(hdae, t₀, q₀, p₀, λ₀)
-    @test hdae == similar(hdae, t₀, q₀, p₀)
-    @test hdae == similar(hdae, q₀, p₀)
+    @test hash(hdae) == hash(hdae5)
+    @test hash(hdae) == hash(hdae6)
+    @test hash(hdae) == hash(hdae7)
+    @test hash(hdae) == hash(hdae8)
 
 end
 
 
 @testset "$(rpad("Variational Differential Algebraic Equations (LDAE)",80))" begin
 
-    ldae_eqs = (iode_ϑ, iode_f, iode_u, iode_g, pdae_ϕ, nothing, nothing, nothing, lode_l, lode_ω)
+    ldae_eqs  = (iode_ϑ, iode_f, iode_u, iode_g, pdae_ϕ, nothing, nothing, nothing, lode_ω)
+    ldae_eqs1 = (iode_ϑ, iode_f, iode_u, iode_g, pdae_ϕ, lode_l, lode_ω)
+    ldae_eqs2 = (iode_ϑ, iode_f, iode_u, iode_g, pdae_ϕ, nothing, nothing, nothing, lode_l, lode_ω)
 
-    ldae  = LDAE(ldae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀]; v̄=iode_v)
-
-    ldae01 = LDAE(ldae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀]; v̄=iode_v)
-    ldae02 = LDAE(ldae_eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v)
-    ldae03 = LDAE(ldae_eqs..., [q₀], [p₀], [λ₀], [λ₀]; v̄=iode_v)
-    ldae04 = LDAE(ldae_eqs..., [q₀], [p₀], [λ₀]; v̄=iode_v)
-    ldae05 = LDAE(ldae_eqs..., t₀, q₀, p₀, λ₀, λ₀; v̄=iode_v)
-    ldae06 = LDAE(ldae_eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
-    ldae07 = LDAE(ldae_eqs..., q₀, p₀, λ₀, λ₀; v̄=iode_v)
-    ldae08 = LDAE(ldae_eqs..., q₀, p₀, λ₀; v̄=iode_v)
+    ldae = LDAE(ldae_eqs..., iode_v, iode_f, t₀, [q₀], [p₀], [λ₀], [λ₀], lode_l, nothing, nothing, nothing)
 
     @test ndims(ldae) == 1
     @test nsamples(ldae) == 1
     @test nconstraints(ldae) == 1
-    @test periodicity(ldae) == zero(q₀)
 
     @test periodicity(ldae) == zero(q₀)
     @test initial_conditions(ldae) == (t₀, [q₀], [p₀], [λ₀], [λ₀])
@@ -976,73 +997,163 @@ end
     @test functions.u == iode_u == ldae.u
     @test functions.g == iode_g == ldae.g
     @test functions.ϕ == pdae_ϕ == ldae.ϕ
-    @test functions.l == lode_l == ldae.lagrangian
-    @test functions.ω == lode_ω == ldae.ω
     @test functions.v̄ == iode_v == ldae.v̄
     @test functions.f̄ == iode_f == ldae.f̄
-    
-    @test ldae == ldae01
-    @test ldae == ldae02
-    @test ldae == ldae03
-    @test ldae == ldae04
-    @test ldae == ldae05
-    @test ldae == ldae06
-    @test ldae == ldae07
-    @test ldae == ldae08
-    # @test ldae == ldae09
-    # @test ldae == ldae10
-    # @test ldae == ldae11
-    # @test ldae == ldae12
+    @test functions.ω == lode_ω == ldae.ω
+    @test functions.l == lode_l == ldae.lagrangian
 
-    @test hash(ldae) == hash(ldae01)
-    @test hash(ldae) == hash(ldae02)
-    @test hash(ldae) == hash(ldae03)
-    @test hash(ldae) == hash(ldae04)
-    @test hash(ldae) == hash(ldae05)
-    @test hash(ldae) == hash(ldae06)
-    @test hash(ldae) == hash(ldae07)
-    @test hash(ldae) == hash(ldae08)
-    # @test hash(ldae) == hash(ldae09)
-    # @test hash(ldae) == hash(ldae10)
-    # @test hash(ldae) == hash(ldae11)
-    # @test hash(ldae) == hash(ldae12)
+    @test ldae == similar(ldae, t₀, q₀, p₀, λ₀, λ₀)
+    @test ldae == similar(ldae, t₀, q₀, p₀, λ₀)
+    @test ldae == similar(ldae, t₀, q₀, p₀)
+    @test ldae == similar(ldae, q₀, p₀)
+    
+    for eqs in (ldae_eqs1, ldae_eqs2)
+        ldae1 = LDAE(eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀]; v̄=iode_v)
+        ldae2 = LDAE(eqs..., t₀, [q₀], [p₀], [λ₀]; v̄=iode_v)
+        ldae3 = LDAE(eqs..., [q₀], [p₀], [λ₀], [λ₀]; v̄=iode_v)
+        ldae4 = LDAE(eqs..., [q₀], [p₀], [λ₀]; v̄=iode_v)
+        ldae5 = LDAE(eqs..., t₀, q₀, p₀, λ₀, λ₀; v̄=iode_v)
+        ldae6 = LDAE(eqs..., t₀, q₀, p₀, λ₀; v̄=iode_v)
+        ldae7 = LDAE(eqs..., q₀, p₀, λ₀, λ₀; v̄=iode_v)
+        ldae8 = LDAE(eqs..., q₀, p₀, λ₀; v̄=iode_v)
+
+        @test ldae == ldae1
+        @test ldae == ldae2
+        @test ldae == ldae3
+        @test ldae == ldae4
+        @test ldae == ldae5
+        @test ldae == ldae6
+        @test ldae == ldae7
+        @test ldae == ldae8
+
+        @test hash(ldae) == hash(ldae1)
+        @test hash(ldae) == hash(ldae2)
+        @test hash(ldae) == hash(ldae3)
+        @test hash(ldae) == hash(ldae4)
+        @test hash(ldae) == hash(ldae5)
+        @test hash(ldae) == hash(ldae6)
+        @test hash(ldae) == hash(ldae7)
+        @test hash(ldae) == hash(ldae8)
+    end
+
+
+    ldae_eqs  = (iode_ϑ, iode_f, iode_u, iode_g, pdae_ϕ, pdae_u, pdae_g, pdae_ψ)
+    ldae_args = (invariants=(h=iode_h,), parameters=(a=1,), periodicity=π*ones(1))
+
+    ldae = LDAE(ldae_eqs..., lode_ω, iode_v, iode_f, t₀, [q₀], [p₀], [λ₀], [λ₀], lode_l, ldae_args.invariants, ldae_args.parameters, ldae_args.periodicity)
+
+    @test ndims(ldae) == 1
+    @test nsamples(ldae) == 1
+    @test nconstraints(ldae) == 1
+
+    @test periodicity(ldae) == ldae_args.periodicity
+    @test initial_conditions(ldae) == (t₀, [q₀], [p₀], [λ₀], [λ₀])
+
+    @test hassecondary(ldae) == true
+    @test hasinvariants(ldae) == true
+    @test hasparameters(ldae) == true
+    @test hasperiodicity(ldae) == true
+
+    functions = get_function_tuple(ldae)
+    @test functions.ϑ != iode_ϑ == ldae.ϑ
+    @test functions.f != iode_f == ldae.f
+    @test functions.u != iode_u == ldae.u
+    @test functions.g != iode_g == ldae.g
+    @test functions.ϕ != pdae_ϕ == ldae.ϕ
+    @test functions.v̄ != iode_v == ldae.v̄
+    @test functions.f̄ != iode_f == ldae.f̄
+    @test functions.ω != lode_ω == ldae.ω
+    @test functions.l != lode_l == ldae.lagrangian
 
     @test ldae == similar(ldae, t₀, q₀, p₀, λ₀, λ₀)
     @test ldae == similar(ldae, t₀, q₀, p₀, λ₀)
     @test ldae == similar(ldae, t₀, q₀, p₀)
     @test ldae == similar(ldae, q₀, p₀)
 
+    ldae1 = LDAE(ldae_eqs..., lode_l, lode_ω, t₀, [q₀], [p₀], [λ₀], [λ₀]; v̄=iode_v, ldae_args...)
+    ldae2 = LDAE(ldae_eqs..., lode_l, lode_ω, t₀, [q₀], [p₀], [λ₀]; v̄=iode_v, ldae_args...)
+    ldae3 = LDAE(ldae_eqs..., lode_l, lode_ω, [q₀], [p₀], [λ₀], [λ₀]; v̄=iode_v, ldae_args...)
+    ldae4 = LDAE(ldae_eqs..., lode_l, lode_ω, [q₀], [p₀], [λ₀]; v̄=iode_v, ldae_args...)
+    ldae5 = LDAE(ldae_eqs..., lode_l, lode_ω, t₀, q₀, p₀, λ₀, λ₀; v̄=iode_v, ldae_args...)
+    ldae6 = LDAE(ldae_eqs..., lode_l, lode_ω, t₀, q₀, p₀, λ₀; v̄=iode_v, ldae_args...)
+    ldae7 = LDAE(ldae_eqs..., lode_l, lode_ω, q₀, p₀, λ₀, λ₀; v̄=iode_v, ldae_args...)
+    ldae8 = LDAE(ldae_eqs..., lode_l, lode_ω, q₀, p₀, λ₀; v̄=iode_v, ldae_args...)
+
+    @test ldae == ldae1
+    @test ldae == ldae2
+    @test ldae == ldae3
+    @test ldae == ldae4
+    @test ldae == ldae5
+    @test ldae == ldae6
+    @test ldae == ldae7
+    @test ldae == ldae8
+
+    @test hash(ldae) == hash(ldae1)
+    @test hash(ldae) == hash(ldae2)
+    @test hash(ldae) == hash(ldae3)
+    @test hash(ldae) == hash(ldae4)
+    @test hash(ldae) == hash(ldae5)
+    @test hash(ldae) == hash(ldae6)
+    @test hash(ldae) == hash(ldae7)
+    @test hash(ldae) == hash(ldae8)
+    
 end
 
 
 @testset "$(rpad("Split Partitioned Differential Algebraic Equations (SPDAE)",80))" begin
 
-    spdae_eqs = ((pdae_v, pdae_u, pdae_u), (pdae_f, pdae_g, pdae_g), pdae_ϕ, pdae_ψ)
+    spdae_v = (pdae_v, pdae_u, pdae_u)
+    spdae_f = (pdae_f, pdae_g, pdae_g)
+    spdae_eqs = (spdae_v, spdae_f, pdae_ϕ, pdae_ψ)
 
-    spdae  = SPDAE(spdae_eqs..., t₀, [q₀], [p₀], [λ₀])
-    spdae1 = SPDAE(spdae_eqs..., [q₀], [p₀], [λ₀])
-    spdae2 = SPDAE(spdae_eqs..., t₀, q₀, p₀, λ₀)
-    spdae3 = SPDAE(spdae_eqs..., t₀, q₀, p₀)
-    spdae4 = SPDAE(spdae_eqs..., q₀, p₀)
+    spdae = SPDAE(spdae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀], nothing, nothing, nothing)
 
     @test ndims(spdae) == 1
     @test nsamples(spdae) == 1
     @test nconstraints(spdae) == 1
+
     @test periodicity(spdae) == zero(q₀)
-    @test get_function_tuple(spdae) == NamedTuple{(:v, :f, :ϕ, :ψ)}(spdae_eqs)
+    @test initial_conditions(spdae) == (t₀, [q₀], [p₀], [λ₀], [λ₀])
+
+    @test hasinvariants(spdae) == false
+    @test hasparameters(spdae) == false
+    @test hasperiodicity(spdae) == false
+
+    functions = get_function_tuple(spdae)
+    @test functions.v == spdae_v == spdae.v
+    @test functions.f == spdae_f == spdae.f
+    @test functions.ϕ ==  pdae_ϕ == spdae.ϕ
+    @test functions.ψ ==  pdae_ψ == spdae.ψ
+
+    @test spdae == similar(spdae, t₀, q₀, p₀, λ₀)
+    @test spdae == similar(spdae, t₀, q₀, p₀)
+    @test spdae == similar(spdae, q₀, p₀)
+
+    spdae1 = SPDAE(spdae_eqs..., t₀, [q₀], [p₀], [λ₀], [λ₀])
+    spdae2 = SPDAE(spdae_eqs..., t₀, [q₀], [p₀], [λ₀])
+    spdae3 = SPDAE(spdae_eqs..., [q₀], [p₀], [λ₀], [λ₀])
+    spdae4 = SPDAE(spdae_eqs..., [q₀], [p₀], [λ₀])
+    spdae5 = SPDAE(spdae_eqs..., t₀, q₀, p₀, λ₀, λ₀)
+    spdae6 = SPDAE(spdae_eqs..., t₀, q₀, p₀, λ₀)
+    spdae7 = SPDAE(spdae_eqs..., q₀, p₀, λ₀, λ₀)
+    spdae8 = SPDAE(spdae_eqs..., q₀, p₀, λ₀)
 
     @test spdae == spdae1
     @test spdae == spdae2
     @test spdae == spdae3
     @test spdae == spdae4
+    @test spdae == spdae5
+    @test spdae == spdae6
+    @test spdae == spdae7
+    @test spdae == spdae8
 
     @test hash(spdae) == hash(spdae1)
     @test hash(spdae) == hash(spdae2)
     @test hash(spdae) == hash(spdae3)
     @test hash(spdae) == hash(spdae4)
-
-    @test spdae == similar(spdae, t₀, q₀, p₀, λ₀)
-    @test spdae == similar(spdae, t₀, q₀, p₀)
-    @test spdae == similar(spdae, q₀, p₀)
+    @test hash(spdae) == hash(spdae5)
+    @test hash(spdae) == hash(spdae6)
+    @test hash(spdae) == hash(spdae7)
+    @test hash(spdae) == hash(spdae8)
 
 end
