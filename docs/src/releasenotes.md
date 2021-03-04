@@ -8,14 +8,22 @@
 * Use RungeKutta.jl for most tableaus and coefficients
 * Move stochastic integrators to separate package
 * Rewrite of most equation types
+* Rename `VODE` and `VDAE` to `LODE` and `LDAE` for consistency with `HODE` and `HDAE`
+* Add optional fields for the secondary constraint to all *DAE equations
 
-### Documentation
+### New Features
 
-* Add documentation for most integrators
+* Allow for arbitrary data structures as states (still experimental and not fully supported)
+* Add `convert` methods for `PODE` and `HODE` to `ODE` and `SODE`
 
 ### Fixes
 
 * Countless minor bugfixes
+
+### Documentation
+
+* Add theoretical background for variational integrators, Runge-Kutta and splitting methods
+* Add references for most methods
 
 
 ## 0.7.0
