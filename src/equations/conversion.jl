@@ -8,12 +8,15 @@
 end
 
 
+convert_periodicity(::Union{Type{ODE}, Type{SODE}}, equ::Union{PODE, HODE}) = vcat(periodicity(equ), zero(periodicity(equ)))
+
+
 function Base.convert(::Type{ODE}, equ::Union{PODE{DT,TT,AT}, HODE{DT,TT,AT}}) where {DT, TT, AT <: AbstractVector}
     # concatenate initial conditions
     x₀ = [vcat(x...) for x in zip(equ.q₀, equ.p₀)]
 
     # extend periodicity
-    periodicity = vcat(equ.periodicity, zero(equ.periodicity))
+    ode_periodicity = convert_periodicity(ODE, equ)
 
     if hasparameters(equ)
         v = (t, x, ẋ, params) -> begin
@@ -29,7 +32,9 @@ function Base.convert(::Type{ODE}, equ::Union{PODE{DT,TT,AT}, HODE{DT,TT,AT}}) w
         end
     end
 
-    ODE(v, equ.t₀, x₀; h=equ.h, parameters=equ.parameters, periodicity=periodicity)
+    ODE(v, equ.t₀, x₀; parameters=equ.parameters, periodicity=ode_periodicity)
+    # TODO: Convert invariants and pass to ODE
+    # TODO: For HODE append (h=equ.h,) to invariants
 end
 
 function Base.convert(::Type{SODE}, equ::Union{PODE{DT,TT,AT}, HODE{DT,TT,AT}}) where {DT, TT, AT <: AbstractVector}
@@ -37,7 +42,7 @@ function Base.convert(::Type{SODE}, equ::Union{PODE{DT,TT,AT}, HODE{DT,TT,AT}}) 
     x₀ = [vcat(x...) for x in zip(equ.q₀, equ.p₀)]
 
     # extend periodicity
-    periodicity = vcat(equ.periodicity, zero(equ.periodicity))
+    ode_periodicity = convert_periodicity(SODE, equ)
 
     if hasparameters(equ)
         v₁ = (t, x, ẋ, params) -> begin
@@ -59,13 +64,17 @@ function Base.convert(::Type{SODE}, equ::Union{PODE{DT,TT,AT}, HODE{DT,TT,AT}}) 
         end
     end
 
-    SODE((v₁, v₂), equ.t₀, x₀; parameters=equ.parameters, periodicity=periodicity)
+    SODE((v₁, v₂), equ.t₀, x₀; parameters=equ.parameters, periodicity=ode_periodicity)
+    # TODO: Convert invariants and pass to SODE
 end
 
 function Base.convert(::Type{PODE}, equ::HODE)
-    PODE(equ.v, equ.f, equ.t₀, equ.q₀, equ.p₀; h=equ.h, parameters=equ.parameters, periodicity=equ.periodicity)
+    PODE(equ.v, equ.f, equ.t₀, equ.q₀, equ.p₀;
+         invariants=equ.invariants, parameters=equ.parameters, periodicity=equ.periodicity)
+    # TODO: Append (h=equ.h,) to invariants
 end
 
 function Base.convert(::Type{IODE}, equ::LODE)
-    IODE(equ.ϑ, equ.f, equ.g, equ.t₀, equ.q₀, equ.p₀, equ.λ₀; v̄=equ.v̄, f̄=equ.f̄, h=equ.h, parameters=equ.parameters, periodicity=equ.periodicity)
+    IODE(equ.ϑ, equ.f, equ.g, equ.t₀, equ.q₀, equ.p₀, equ.λ₀;
+         v̄=equ.v̄, f̄=equ.f̄, invariants=equ.invariants, parameters=equ.parameters, periodicity=equ.periodicity)
 end

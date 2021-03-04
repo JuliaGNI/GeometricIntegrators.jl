@@ -33,8 +33,6 @@ end
 
 Base.ndims(equ::Equation) = error("ndims() not implemented for ", typeof(equ), ".")
 
-periodicity(equ::Equation) = error("periodicity() not implemented for ", typeof(equ), ".")
+Common.periodicity(equ::Equation) = error("periodicity() not implemented for ", typeof(equ), ".")
 
 get_function_tuple(equ::Equation) = error("get_function_tuple() not implemented for ", typeof(equ), ".")
-
-# TODO Add functions and vectors for invariants (momentum maps, energy, ...).

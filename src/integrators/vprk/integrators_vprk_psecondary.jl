@@ -110,13 +110,14 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
         IntegratorVPRKpSecondary(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpSecondary(equation::LODE{DT}, tableau, Δt; kwargs...) where {DT}
+    function IntegratorVPRKpSecondary(equation::LDAE{DT}, tableau, Δt; kwargs...) where {DT}
+        @assert hassecondary(equation)
         IntegratorVPRKpSecondary{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 
 
-function initial_guess!(int::IntegratorVPRKpSecondary{DT}, sol::AtomicSolutionPODE{DT},
+function initial_guess!(int::IntegratorVPRKpSecondary{DT}, sol::AtomicSolutionPDAE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
@@ -142,11 +143,11 @@ function compute_stages_vprk!(x, q, v, p, Q, V, Λ, P, F, R, Φ, params)
     # compute Q
     compute_stages_q_vprk!(q, Q, V, Λ, params)
 
-    # compute p̄, R and Ψ
-    compute_projection_vprk!(q, v, p, Q, V, Λ, R, Φ, params)
-
     # compute P and F
     compute_stages_p_vprk!(Q, V, P, F, params)
+
+    # compute p̄, R and Ψ
+    compute_projection_vprk!(q, v, p, Q, P, V, F, Λ, R, Φ, params)
 end
 
 
@@ -194,31 +195,32 @@ end
 
 
 function compute_projection_vprk!(q::Vector{ST}, v::Vector{ST}, p::Vector{ST},
-                Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, Λ::Vector{Vector{ST}},
-                R::Vector{Vector{ST}}, Ψ::Vector{Vector{ST}},
+                Q::Vector{Vector{ST}}, P::Vector{Vector{ST}},
+                V::Vector{Vector{ST}}, F::Vector{Vector{ST}},
+                Λ::Vector{Vector{ST}}, R::Vector{Vector{ST}}, Ψ::Vector{Vector{ST}},
                 params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     # create temporary variables
     local t₀::TT = params.t̄
     local t₁::TT = params.t̄ + params.Δt
     local tᵢ::TT
-    local dH = zeros(ST,D)
-    local Ω  = zeros(ST,D,D)
+    # local dH = zeros(ST,D)
+    # local Ω  = zeros(ST,D,D)
 
     # compute p=ϑ(q)
     params.equ[:ϑ](t₁, q, v, p)
 
     for i in 1:S
         tᵢ = t₀ + params.Δt * params.tab.p.c[i]
+        
+        # params.equ[:ω](tᵢ, Q[i], V[i], Ω)
+        # params.equ[:∇H](tᵢ, Q[i], dH)
 
+        # Ψ[i] .= Ω * V[i] .- dH
+
+        # params.equ[:u](tᵢ, Q[i], Λ[i], U[i])
         params.equ[:g](tᵢ, Q[i], Λ[i], R[i])
-        params.equ[:Ω](tᵢ, Q[i], Ω)
-        params.equ[:∇H](tᵢ, Q[i], dH)
-
-        # TODO Check if ω() returns Ω or Ω^T -> this decides the sign on dH below
-        #      Seems to be Ω^T -> then dH should be subtracted
-
-        Ψ[i] .= Ω * V[i] .- dH
+        params.equ[:ψ](tᵢ, Q[i], P[i], V[i], F[i], Ψ[i])
     end
 end
 
@@ -271,7 +273,7 @@ function compute_rhs_vprk_projection!(b::Vector{ST}, p::Vector{ST},
     #         end
     #     end
     # end
-    #
+    
     # for k in 1:D
     #     z1 = z2 = z3 = z4 = 0
     #     for j in 1:S
@@ -308,7 +310,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function Integrators.integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::AtomicSolutionPDAE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)

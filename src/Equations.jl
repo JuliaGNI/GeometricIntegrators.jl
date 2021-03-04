@@ -13,7 +13,11 @@ module Equations
     export SDE, PSDE, SPSDE
 
     export initial_conditions
-    export get_function_tuple, get_solution_tuple, hassolution, hasvectorfield
+    export get_function_tuple, get_solution_tuple,
+           get_invariants,
+           hassolution, hasvectorfield,
+           hasinvariants, hasparameters, hasperiodicity,
+           hassecondary
 
     include("equations/equations.jl")
 
