@@ -98,7 +98,7 @@ struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: AbstractIntegratorPRK{D
         IntegratorEPRK{DT,D}(NamedTuple{(:v,:f,:h)}((v,f,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorEPRK(equation::PODE{DT,TT}, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorEPRK(equation::Union{PODE{DT}, HODE{DT}}, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorEPRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
@@ -151,8 +151,8 @@ function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomicSolutionPODE{DT,
 
     # compute internal stages
     for i in eachstage(int)
-        tqᵢ = sol.t̅ + timestep(int) * tableau(int).q.c[i]
-        tpᵢ = sol.t̅ + timestep(int) * tableau(int).p.c[i]
+        tqᵢ = sol.t̄ + timestep(int) * tableau(int).q.c[i]
+        tpᵢ = sol.t̄ + timestep(int) * tableau(int).p.c[i]
 
         if tableau(int).q.a[i,i] ≠ zero(TT) && tableau(int).p.a[i,i] ≠ zero(TT)
             error("This is a fully implicit method!")

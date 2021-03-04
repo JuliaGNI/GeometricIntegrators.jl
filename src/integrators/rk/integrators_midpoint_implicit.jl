@@ -93,7 +93,7 @@ struct IntegratorMidpointImplicit{DT, TT, D, S, PT <: ParametersMidpointImplicit
     #     IntegratorMidpointImplicit{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     # end
 
-    function IntegratorMidpointImplicit(equation::IODE{DT,TT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorMidpointImplicit(equation::Union{IODE{DT}, LODE{DT}}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorMidpointImplicit{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
@@ -103,12 +103,12 @@ end
 
 
 function initialize!(int::IntegratorMidpointImplicit, sol::AtomicSolutionODE)
-    sol.t̅ = sol.t - timestep(int)
+    sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v](sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
-                            sol.t̅, sol.q̅, sol.v̅)
+                            sol.t̄, sol.q̄, sol.v̄)
 end
 
 
@@ -124,7 +124,7 @@ function initial_guess!(int::IntegratorMidpointImplicit{DT,TT}, sol::AtomicSolut
                         cache::IntegratorCacheMidpointImplicit{DT}=int.caches[DT]) where {DT,TT}
 
     # compute initial guess for solution
-    evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.q, cache.v, one(TT))
+    evaluate!(int.iguess, sol.q̄, sol.v̄, sol.q, sol.v, cache.q, cache.v, one(TT))
     int.solver.x .= cache.q 
 end
 

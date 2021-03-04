@@ -26,12 +26,12 @@ function InitialGuessIODE(interp::Type{<:Interpolator}, v::Function, f::Function
     InitialGuessIODE(int, v, f, Δt)
 end
 
-function InitialGuessIODE(interp::Type{<:Interpolator}, equation::Union{IODE,VODE,IDAE,VDAE}, Δt)
+function InitialGuessIODE(interp::Type{<:Interpolator}, equation::Union{IODE,LODE,IDAE,LDAE}, Δt)
     InitialGuessIODE(interp, _get_v̄(equation), _get_f̄(equation), Δt)
 end
 
-InitialGuess(interp, equation::Union{IODE,VODE,IDAE,VDAE}, Δt) = InitialGuessIODE(interp, equation, Δt)
-InitialGuess(equation::Union{IODE,VODE,IDAE,VDAE}, Δt) = InitialGuessIODE(get_config(:ig_interpolation), equation, Δt)
+InitialGuess(interp, equation::Union{IODE,LODE,IDAE,LDAE}, Δt) = InitialGuessIODE(interp, equation, Δt)
+InitialGuess(equation::Union{IODE,LODE,IDAE,LDAE}, Δt) = InitialGuessIODE(get_config(:ig_interpolation), equation, Δt)
 
 
 Base.:(==)(ig1::InitialGuessIODE{TT1}, ig2::InitialGuessIODE{TT2}) where {TT1,TT2}= (

@@ -11,12 +11,12 @@ Atomic solution for an ODE.
 ### Fields
 
 * `t`: time of current time step
-* `t̅`: time of previous time step
+* `t̄`: time of previous time step
 * `q`: current solution of q
-* `q̅`: previous solution of q
+* `q̄`: previous solution of q
 * `q̃`: compensated summation error of q
 * `v`: vector field of q
-* `v̅`: vector field of q̅
+* `v̄`: vector field of q̄
 * `internal`: internal variables of the integrator (e.g., internal stages of a Runge-Kutta methods or solver output)
 
 ### Constructors
@@ -33,14 +33,14 @@ AtomicSolutionODE(t::TT, q::AT, internal::IT=NamedTuple())
 """
 mutable struct AtomicSolutionODE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT
-    t̅::TT
+    t̄::TT
 
     q::AT
-    q̅::AT
+    q̄::AT
     q̃::AT
 
     v::AT
-    v̅::AT
+    v̄::AT
 
     internal::IT
 
@@ -83,9 +83,9 @@ function get_solution(asol::AtomicSolutionODE)
 end
 
 function Common.reset!(asol::AtomicSolutionODE, Δt)
-    asol.t̅  = asol.t
-    asol.q̅ .= asol.q
-    asol.v̅ .= asol.v
+    asol.t̄  = asol.t
+    asol.q̄ .= asol.q
+    asol.v̄ .= asol.v
     asol.t += Δt
 end
 

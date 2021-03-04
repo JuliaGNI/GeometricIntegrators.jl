@@ -82,27 +82,27 @@ struct IntegratorVPRKpLegendre{DT, TT, D, S,
         IntegratorVPRKpLegendre(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpLegendre(equation::Union{IODE{DT},VODE{DT}}, tableau, Δt; kwargs...) where {DT}
+    function IntegratorVPRKpLegendre(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
         IntegratorVPRKpLegendre{DT, equation.d}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
 
 
 function Integrators.initialize!(int::IntegratorVPRKpLegendre, sol::AtomicSolutionPODE)
-    sol.t̅ = sol.t - timestep(int)
+    sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.v)
     equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+                            sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 end
 
 
 function initial_guess!(int::IntegratorVPRKpLegendre{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.p̃, cache.v, cache.f,
                               tableau(int).q.c[i], tableau(int).p.c[i])
@@ -116,7 +116,7 @@ function initial_guess!(int::IntegratorVPRKpLegendre{DT,TT}, sol::AtomicSolution
     end
 
     evaluate!(int.iguess, sol.q, sol.p, sol.v, sol.f,
-                          sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+                          sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                           cache.q̃, cache.p̃,
                           one(TT), one(TT))
 
@@ -153,12 +153,12 @@ function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
             Z[i][k] = y[offset+2]
             V[i][k] = y[offset+3]
 
-            Q[i][k] = params.q̅[k] + params.Δt * Y[i][k]
-            P[i][k] = params.p̅[k] + params.Δt * Z[i][k]
+            Q[i][k] = params.q̄[k] + params.Δt * Y[i][k]
+            P[i][k] = params.p̄[k] + params.Δt * Z[i][k]
         end
 
         # compute P=p(t,Q) and F=f(t,Q,V)
-        tqᵢ = params.t̅ + params.Δt * params.tab.q.c[i]
+        tqᵢ = params.t̄ + params.Δt * params.tab.q.c[i]
         params.equ[:ϑ](tqᵢ, Q[i], V[i], Φ[i])
         params.equ[:f](tqᵢ, Q[i], V[i], F[i])
     end
@@ -170,7 +170,7 @@ function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
     end
 
     # compute p=p(t,q)
-    params.equ[:ϑ](params.t̅ + params.Δt, q, v, ϕ)
+    params.equ[:ϑ](params.t̄ + params.Δt, q, v, ϕ)
 
     # for Lobatto-type methods, copy y to μ
     if isdefined(params.tab, :d) && length(params.tab.d) > 0
@@ -244,17 +244,17 @@ function compute_rhs!(b::Vector{ST},
         for j in 1:S
             y += params.tab.q.b[j] * V[j][k]
         end
-        b[offset+k] = (params.q̅[k] - q[k]) + params.Δt * y
+        b[offset+k] = (params.q̄[k] - q[k]) + params.Δt * y
     end
 
-    # compute b = - (p̅-p-AF)
+    # compute b = - (p̄-p-AF)
     offset = (3*S+1)*D
     for k in 1:D
         z = 0
         for j in 1:S
             z += params.tab.p.b[j] * F[j][k]
         end
-        b[offset+k] = (params.p̅[k] - p[k]) + params.Δt * z
+        b[offset+k] = (params.p̄[k] - p[k]) + params.Δt * z
     end
 
     # if isdefined(params.tab, :d) && length(params.tab.d) > 0

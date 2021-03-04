@@ -11,17 +11,17 @@ Atomic solution for an PODE.
 ### Fields
 
 * `t`: time of current time step
-* `t̅`: time of previous time step
+* `t̄`: time of previous time step
 * `q`: current solution of q
-* `q̅`: previous solution of q
+* `q̄`: previous solution of q
 * `q̃`: compensated summation error of q
 * `p`: current solution of p
-* `p̅`: previous solution of p
+* `p̄`: previous solution of p
 * `p̃`: compensated summation error of p
 * `v`: vector field of q
-* `v̅`: vector field of q̅
+* `v̄`: vector field of q̄
 * `f`: vector field of p
-* `f̅`: vector field of p̅
+* `f̄`: vector field of p̄
 * `internal`: internal variables of the integrator (e.g., internal stages of a Runge-Kutta methods or solver output)
 
 ### Constructors
@@ -38,20 +38,20 @@ AtomicSolutionPODE(t::TT, q::AT, p::AT, internal::IT=NamedTuple())
 """
 mutable struct AtomicSolutionPODE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT
-    t̅::TT
+    t̄::TT
 
     q::AT
-    q̅::AT
+    q̄::AT
     q̃::AT
 
     p::AT
-    p̅::AT
+    p̄::AT
     p̃::AT
 
     v::AT
-    v̅::AT
+    v̄::AT
     f::AT
-    f̅::AT
+    f̄::AT
 
     internal::IT
 
@@ -99,11 +99,11 @@ function get_solution(asol::AtomicSolutionPODE)
 end
 
 function Common.reset!(asol::AtomicSolutionPODE, Δt)
-    asol.t̅  = asol.t
-    asol.q̅ .= asol.q
-    asol.p̅ .= asol.p
-    asol.v̅ .= asol.v
-    asol.f̅ .= asol.f
+    asol.t̄  = asol.t
+    asol.q̄ .= asol.q
+    asol.p̄ .= asol.p
+    asol.v̄ .= asol.v
+    asol.f̄ .= asol.f
     asol.t += Δt
 end
 

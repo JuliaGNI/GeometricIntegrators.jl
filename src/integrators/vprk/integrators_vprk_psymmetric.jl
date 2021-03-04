@@ -39,7 +39,7 @@ struct IntegratorVPRKpSymmetric{DT, TT, D, S,
         IntegratorVPRKpSymmetric(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpSymmetric(equation::Union{IODE{DT},VODE{DT}}, tableau, Δt; kwargs...) where {DT}
+    function IntegratorVPRKpSymmetric(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
         IntegratorVPRKpSymmetric{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
@@ -61,7 +61,7 @@ end
 function initial_guess!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
@@ -82,12 +82,12 @@ function compute_projection_vprk!(x::Vector{ST},
                 Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
                 params::ParametersVPRKpSymmetric{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    local t₀::TT = params.t̅
-    local t₁::TT = params.t̅ + params.Δt
+    local t₀::TT = params.t̄
+    local t₁::TT = params.t̄ + params.Δt
     local y1::ST
     local y2::ST
 
-    # copy x to λ and q̅
+    # copy x to λ and q̄
     for k in 1:D
         λ[k] = x[D*S+k]
     end
@@ -104,11 +104,11 @@ function compute_projection_vprk!(x::Vector{ST},
             y1 += params.tab.q.b[j] * V[j][k]
             y2 += params.tab.q.b̂[j] * V[j][k]
         end
-        q[k] = params.q̅[k] + params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
+        q[k] = params.q̄[k] + params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
     end
     
     # compute G=g(q,λ)
-    params.equ[:g](t₀, params.q̅, λ, G[1])
+    params.equ[:g](t₀, params.q̄, λ, G[1])
     params.equ[:g](t₁, q, λ, G[2])
 
     # compute p=ϑ(q)⋅p

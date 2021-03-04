@@ -36,7 +36,7 @@ shared arrays).
 
 The usual way to initialise a `Solution` is by passing an equation, which for
 `SolutionPODE` has to be an [`PODE`](@ref), [`HODE`](@ref), [`IODE`](@ref) or
-[`VODE`](@ref), a time step `Δt` and the number of time steps `ntimesteps`.
+[`LODE`](@ref), a time step `Δt` and the number of time steps `ntimesteps`.
 The optional parameters `nsave` and `nwrite` determine the intervals for
 storing the solution and writing to file, i.e., if `nsave > 1` only every
 `nsave`'th solution is actually stored, and every `nwrite`'th time step the
@@ -74,8 +74,8 @@ for (TSolution, TDataSeries, Tdocstring) in
             end
         end
 
-        function $TSolution(equation::Union{PODE{DT,TT,AT}, HODE{DT,TT,AT}, IODE{DT,TT,AT}, VODE{DT,TT,AT}}, Δt::TT, ntimesteps::Int;
-                            nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,AT}
+        function $TSolution(equation::Union{PODE{DT,TT1,AT}, HODE{DT,TT1,AT}, IODE{DT,TT1,AT}, LODE{DT,TT1,AT}}, Δt::TT2, ntimesteps::Int;
+                            nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT1,TT2,AT}
             @assert nsave > 0
             @assert ntimesteps == 0 || ntimesteps ≥ nsave
             @assert nwrite == 0 || nwrite ≥ nsave
@@ -86,6 +86,7 @@ for (TSolution, TDataSeries, Tdocstring) in
                 @assert mod(ntimesteps, nwrite) == 0
             end
 
+            TT = promote_type(TT1,TT2)
             N  = (nsamples(equation) > 1 ? 2 : 1)
             nd = ndims(equation)
             ni = nsamples(equation)
@@ -176,18 +177,18 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
 @inline Common.periodicity(sol::SolutionPODE) = sol.periodicity
 
 
-function set_initial_conditions!(sol::SolutionPODE, equ::Union{PODE,HODE,IODE,VODE})
+function set_initial_conditions!(sol::SolutionPODE, equ::Union{PODE,HODE,IODE,LODE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
 end
 
-function set_initial_conditions!(sol::SolutionPODE{AT,TT}, t₀::TT, q₀::AT, p₀::AT) where {AT,TT}
+function set_initial_conditions!(sol::SolutionPODE{AT}, t₀::Real, q₀::AT, p₀::AT) where {AT}
     set_data!(sol.q, q₀, 0)
     set_data!(sol.p, p₀, 0)
     compute_timeseries!(sol.t, t₀)
     sol.counter .= 1
 end
 
-function set_initial_conditions!(sol::SolutionPODE{AT,TT}, t₀::TT, q₀::AbstractVector{AT}, p₀::AbstractVector{AT}) where {AT,TT}
+function set_initial_conditions!(sol::SolutionPODE{AT}, t₀::Real, q₀::AbstractVector{AT}, p₀::AbstractVector{AT}) where {AT}
     for i in eachindex(q₀,p₀)
         set_data!(sol.q, q₀[i], 0, i)
         set_data!(sol.p, p₀[i], 0, i)
@@ -203,7 +204,7 @@ function get_initial_conditions!(sol::SolutionPODE{AT,TT}, asol::AtomicSolutionP
     asol.p̃ .= 0
 end
 
-function get_initial_conditions!(sol::SolutionPODE{AT,TT}, q::AT, p::AT, k, n=1) where {AT,TT}
+function get_initial_conditions!(sol::SolutionPODE{AT}, q::AT, p::AT, k, n=1) where {AT}
     get_solution!(sol, q, p, n-1, k)
 end
 
@@ -211,7 +212,7 @@ function get_initial_conditions(sol::SolutionPODE, k, n=1)
     get_solution(sol, n-1, k)
 end
 
-function get_solution!(sol::SolutionPODE{AT,TT}, q::AT, p::AT, n, k=1) where {AT,TT}
+function get_solution!(sol::SolutionPODE{AT}, q::AT, p::AT, n, k=1) where {AT}
     get_data!(sol.q, q, n, k)
     get_data!(sol.p, p, n, k)
 end

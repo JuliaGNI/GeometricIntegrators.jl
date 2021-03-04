@@ -52,63 +52,67 @@ function Integrator(equation::Union{PODE,HODE}, tableau::PartitionedTableau, Δt
     end
 end
 
+function Integrator(equation::Union{PODE,HODE}, tableau::Tableau, Δt)
+    Integrator(equation, PartitionedTableau(tableau), Δt)
+end
+
 # Create integrator for implicit partitioned Runge-Kutta tableau.
-function Integrator(equation::Union{IODE,VODE}, tableau::PartitionedTableau, Δt)
+function Integrator(equation::Union{IODE,LODE}, tableau::PartitionedTableau, Δt)
     IntegratorPRKimplicit(equation, tableau, Δt)
 end
 
 # Create integrator for variational partitioned Runge-Kutta tableau.
-function Integrator(equation::IODE, tableau::TableauVPRK, Δt)
+function Integrator(equation::Union{IODE,LODE}, tableau::TableauVPRK, Δt)
     IntegratorVPRK(equation, tableau, Δt)
 end
 
 # Create integrator for formal Lagrangian Runge-Kutta tableau.
-function Integrator(equation::VODE, tableau::Tableau, Δt)
+function Integrator(equation::LODE, tableau::Tableau, Δt)
     IntegratorFLRK(equation, tableau, Δt)
 end
 
 # Create integrator for Projected Gauss-Legendre Runge-Kutta tableau.
-function Integrator(equation::IODE, tableau::CoefficientsPGLRK, Δt)
+function Integrator(equation::Union{IODE,LODE}, tableau::CoefficientsPGLRK, Δt)
     IntegratorPGLRK(equation, tableau, Δt)
 end
 
 # Create integrator for variational partitioned additive Runge-Kutta tableau.
-function Integrator(equation::IDAE, tableau::TableauVPARK, Δt)
+function Integrator(equation::Union{IDAE,LDAE}, tableau::TableauVPARK, Δt)
     IntegratorVPARK(equation, tableau, Δt)
 end
 
 # Create integrator for special partitioned additive Runge-Kutta tableau.
-function Integrator(equation::IDAE, tableau::TableauSPARK, Δt)
+function Integrator(equation::Union{IDAE,LDAE}, tableau::TableauSPARK, Δt)
     IntegratorSPARK(equation, tableau, Δt)
 end
 
 # Create integrator for variational special partitioned additive Runge-Kutta tableau.
-function Integrator(equation::IDAE, tableau::TableauVSPARK, Δt)
+function Integrator(equation::Union{IDAE,LDAE}, tableau::TableauVSPARK, Δt)
     IntegratorVSPARK(equation, tableau, Δt)
 end
 
 # Create integrator for variational special partitioned additive Runge-Kutta tableau with projection on primary constraint.
-function Integrator(equation::IDAE, tableau::TableauVSPARKprimary, Δt)
+function Integrator(equation::Union{IDAE,LDAE}, tableau::TableauVSPARKprimary, Δt)
     IntegratorVSPARKprimary(equation, tableau, Δt)
 end
 
 # Create integrator for variational special partitioned additive Runge-Kutta tableau with projection on secondary constraint.
-function Integrator(equation::VDAE, tableau::TableauVSPARKsecondary, Δt)
+function Integrator(equation::LDAE, tableau::TableauVSPARKsecondary, Δt)
     IntegratorVSPARKsecondary(equation, tableau, Δt)
 end
 
 # Create integrator for Hamiltonian partitioned additive Runge-Kutta tableau.
-function Integrator(equation::PDAE, tableau::TableauHPARK, Δt)
+function Integrator(equation::Union{PDAE,HDAE}, tableau::TableauHPARK, Δt)
     IntegratorHPARK(equation, tableau, Δt)
 end
 
 # Create integrator for Hamiltonian special partitioned additive Runge-Kutta tableau.
-function Integrator(equation::PDAE, tableau::TableauHSPARK, Δt)
+function Integrator(equation::Union{PDAE,HDAE}, tableau::TableauHSPARK, Δt)
     IntegratorHSPARK(equation, tableau, Δt)
 end
 
 # Create integrator for Hamiltonian special partitioned additive Runge-Kutta tableau with projection on primary constraint.
-function Integrator(equation::PDAE, tableau::TableauHSPARKprimary, Δt)
+function Integrator(equation::Union{PDAE,HDAE}, tableau::TableauHSPARKprimary, Δt)
     IntegratorHSPARKprimary(equation, tableau, Δt)
 end
 

@@ -75,8 +75,8 @@ for (TSolution, TDataSeries, Tdocstring) in
             end
         end
 
-        function $TSolution(equation::DAE{DT,TT,AT}, Δt::TT, ntimesteps::Int;
-                            nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,AT}
+        function $TSolution(equation::DAE{DT,TT1,AT}, Δt::TT2, ntimesteps::Int;
+                            nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT1,TT2,AT}
             @assert nsave > 0
             @assert ntimesteps == 0 || ntimesteps ≥ nsave
             @assert nwrite == 0 || nwrite ≥ nsave
@@ -87,6 +87,7 @@ for (TSolution, TDataSeries, Tdocstring) in
                 @assert mod(ntimesteps, nwrite) == 0
             end
 
+            TT = promote_type(TT1,TT2)
             N  = nsamples(equation) > 1 ? 2 : 1
             nd = ndims(equation)
             nm = equation.m
@@ -190,14 +191,14 @@ function set_initial_conditions!(sol::SolutionDAE, equ::DAE)
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.λ₀)
 end
 
-function set_initial_conditions!(sol::SolutionDAE{DT,TT}, t₀::TT, q₀::DT, λ₀::DT) where {DT,TT}
+function set_initial_conditions!(sol::SolutionDAE{DT}, t₀::Real, q₀::DT, λ₀::DT) where {DT}
     set_data!(sol.q, q₀, 0)
     set_data!(sol.λ, λ₀, 0)
     compute_timeseries!(sol.t, t₀)
     sol.counter .= 1
 end
 
-function set_initial_conditions!(sol::SolutionDAE{DT,TT}, t₀::TT, q₀::AbstractVector{DT}, λ₀::AbstractVector{DT}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionDAE{DT}, t₀::Real, q₀::AbstractVector{DT}, λ₀::AbstractVector{DT}) where {DT}
     for i in eachindex(q₀,λ₀)
         set_data!(sol.q, q₀[i], 0, i)
         set_data!(sol.λ, λ₀[i], 0, i)

@@ -1,8 +1,12 @@
 module Common
 
-    export OptionalFunction
+    export OptionalAbstractArray, OptionalArray, OptionalFunction, OptionalNamedTuple
     
-    const OptionalFunction = Union{Function,Nothing}
+    const OptionalArray{arrayType} = Union{Nothing, arrayType} where {arrayType <: AbstractArray}
+    
+    const OptionalAbstractArray = Union{Nothing, AbstractArray}
+    const OptionalFunction      = Union{Nothing, Function}
+    const OptionalNamedTuple    = Union{Nothing, NamedTuple}
 
 
     export State, StateVector

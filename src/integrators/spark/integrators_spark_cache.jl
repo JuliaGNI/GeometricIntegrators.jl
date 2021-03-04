@@ -5,15 +5,15 @@ Cache of a Specialised Partitioned Additive Runge-Kutta integrator.
 
 * `n`: time step number
 * `t`: time of current time step
-* `t̅`: time of previous time step
+* `t̄`: time of previous time step
 * `q`: current solution of q
-* `q̅`: previous solution of q
+* `q̄`: previous solution of q
 * `p`: current solution of p
-* `p̅`: previous solution of p
+* `p̄`: previous solution of p
 * `v`: vector field of q
-* `v̅`: vector field of q̅
+* `v̄`: vector field of q̄
 * `f`: vector field of p
-* `f̅`: vector field of p̅
+* `f̄`: vector field of p̄
 * `q̃`: initial guess of q
 * `p̃`: initial guess of p
 * `ṽ`: initial guess of v
@@ -28,22 +28,22 @@ Cache of a Specialised Partitioned Additive Runge-Kutta integrator.
 """
 mutable struct IntegratorCacheSPARK{ST,D,S,R} <: IDAEIntegratorCache{ST,D}
     q::Vector{ST}
-    q̅::Vector{ST}
+    q̄::Vector{ST}
     p::Vector{ST}
-    p̅::Vector{ST}
+    p̄::Vector{ST}
     λ::Vector{ST}
-    λ̅::Vector{ST}
+    λ̄::Vector{ST}
     μ::Vector{ST}
     μ̅::Vector{ST}
 
     v::Vector{ST}
-    v̅::Vector{ST}
+    v̄::Vector{ST}
     f::Vector{ST}
-    f̅::Vector{ST}
+    f̄::Vector{ST}
     u::Vector{ST}
-    u̅::Vector{ST}
+    ū::Vector{ST}
     g::Vector{ST}
-    g̅::Vector{ST}
+    ḡ::Vector{ST}
     ϕ::Vector{ST}
     ϕ̅::Vector{ST}
 
@@ -81,23 +81,23 @@ mutable struct IntegratorCacheSPARK{ST,D,S,R} <: IDAEIntegratorCache{ST,D}
 
     function IntegratorCacheSPARK{ST,D,S,R}() where {ST,D,S,R}
         q = zeros(ST,D)
-        q̅ = zeros(ST,D)
+        q̄ = zeros(ST,D)
         p = zeros(ST,D)
-        p̅ = zeros(ST,D)
+        p̄ = zeros(ST,D)
         λ = zeros(ST,D)
-        λ̅ = zeros(ST,D)
+        λ̄= zeros(ST,D)
         μ = zeros(ST,D)
         μ̅ = zeros(ST,D)
 
         # create update vectors
         v = zeros(ST,D)
-        v̅ = zeros(ST,D)
+        v̄ = zeros(ST,D)
         f = zeros(ST,D)
-        f̅ = zeros(ST,D)
+        f̄ = zeros(ST,D)
         u = zeros(ST,D)
-        u̅ = zeros(ST,D)
+        ū = zeros(ST,D)
         g = zeros(ST,D)
-        g̅ = zeros(ST,D)
+        ḡ = zeros(ST,D)
         ϕ = zeros(ST,D)
         ϕ̅ = zeros(ST,D)
 
@@ -135,8 +135,8 @@ mutable struct IntegratorCacheSPARK{ST,D,S,R} <: IDAEIntegratorCache{ST,D}
         Φp = create_internal_stage_vector(ST, D, R)
         Ψp = create_internal_stage_vector(ST, D, R)
 
-        new(q, q̅, p, p̅, λ, λ̅, μ, μ̅,
-            v, v̅, f, f̅, u, u̅, g, g̅, ϕ, ϕ̅,
+        new(q, q̄, p, p̄, λ, λ̄, μ, μ̅,
+            v, v̄, f, f̄, u, ū, g, ḡ, ϕ, ϕ̅,
             q̃, p̃, ṽ, f̃, ϕ̃, s̃,
             Qi, Pi, Vi, Fi, Gi, Hi, Yi, Zi, Φi, Ψi,
             Qp, Pp, Vp, Λp, Up, Fp, Gp, G̅p, Hp, Yp, Zp, Φp, Ψp)
@@ -148,13 +148,13 @@ function IntegratorCache(int::AbstractIntegratorSPARK{DT,TT}) where {DT,TT}
 end
 
 function Common.reset!(cache::IntegratorCacheSPARK, Δt)
-    cache.t̅  = cache.t
-    cache.q̅ .= cache.q
-    cache.p̅ .= cache.p
-    cache.λ̅ .= cache.λ
-    cache.v̅ .= cache.v
-    cache.f̅ .= cache.f
-    cache.u̅ .= cache.u
-    cache.g̅ .= cache.g
+    cache.t̄  = cache.t
+    cache.q̄ .= cache.q
+    cache.p̄ .= cache.p
+    cache.λ̄.= cache.λ
+    cache.v̄ .= cache.v
+    cache.f̄ .= cache.f
+    cache.ū .= cache.u
+    cache.ḡ .= cache.g
     cache.ϕ̅ .= cache.ϕ
 end

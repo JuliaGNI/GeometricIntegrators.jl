@@ -12,8 +12,8 @@ abstract type IODEIntegrator{dType, tType} <: PODEIntegrator{dType, tType} end
 abstract type IDAEIntegrator{dType, tType} <: PDAEIntegrator{dType, tType} end
 abstract type HODEIntegrator{dType, tType} <: PODEIntegrator{dType, tType} end
 abstract type HDAEIntegrator{dType, tType} <: PDAEIntegrator{dType, tType} end
-abstract type VODEIntegrator{dType, tType} <: IODEIntegrator{dType, tType} end
-abstract type VDAEIntegrator{dType, tType} <: IDAEIntegrator{dType, tType} end
+abstract type LODEIntegrator{dType, tType} <: IODEIntegrator{dType, tType} end
+abstract type LDAEIntegrator{dType, tType} <: IDAEIntegrator{dType, tType} end
 
 parameters(integrator::Integrator) = error("parameters() not implemented for ", typeof(integrator))
 equations(integrator::Integrator) = error("equations() not implemented for ", typeof(integrator))

@@ -1,5 +1,6 @@
 
 using GeometricIntegrators.Config
+using GeometricIntegrators.Equations
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Integrators: initial_guess!, jacobian!, update_params!
 using GeometricIntegrators.Solutions
@@ -16,6 +17,7 @@ pode = harmonic_oscillator_pode()
 sode = harmonic_oscillator_sode()
 iode = harmonic_oscillator_iode()
 idae = harmonic_oscillator_idae()
+hode = harmonic_oscillator_hode()
 pdae = harmonic_oscillator_pdae()
 
 
@@ -201,4 +203,34 @@ end
     pgsol = integrate(ode, pgint, nt)
     @test rel_err(pgsol.q, refx) < 8E-16
 
+end
+
+
+@testset "$(rpad("Integrate PODE and HODE with ODE Runge-Kutta integrators",80))" begin
+    for s in 1:4
+        code = convert(ODE, pode)
+        csol = integrate(code, TableauGauss(s), Δt, nt)
+        psol = integrate(pode, PartitionedTableauGauss(s), Δt, nt)
+
+        @test csol.q[1, end] == psol.q[1, end]
+        @test csol.q[2, end] == psol.p[1, end]
+    end
+
+    for s in 1:4
+        code = convert(ODE, hode)
+        csol = integrate(code, TableauGauss(s), Δt, nt)
+        hsol = integrate(hode, PartitionedTableauGauss(s), Δt, nt)
+
+        @test csol.q[1, end] == hsol.q[1, end]
+        @test csol.q[2, end] == hsol.p[1, end]
+    end
+
+    for s in 1:4
+        code = convert(PODE, hode)
+        csol = integrate(code, PartitionedTableauGauss(s), Δt, nt)
+        hsol = integrate(hode, PartitionedTableauGauss(s), Δt, nt)
+
+        @test csol.q[1, end] == hsol.q[1, end]
+        @test csol.p[1, end] == hsol.p[1, end]
+    end
 end

@@ -93,7 +93,7 @@ struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
         IntegratorDIRK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorDIRK(equation::ODE{DT,TT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorDIRK(equation::ODE{DT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorDIRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
@@ -106,11 +106,11 @@ end
 "Initialise initial guess"
 function initialize!(int::IntegratorDIRK, cache::IntegratorCacheDIRK)
     # initialise initial guess
-    cache.t̅ = cache.t - timestep(int)
+    cache.t̄ = cache.t - timestep(int)
 
     int.params.equs[:v](cache.t, cache.q, cache.v)
 
-    initialize!(int.iguess, cache.t, cache.q, cache.v, cache.t̅, cache.q̅, cache.v̅)
+    initialize!(int.iguess, cache.t, cache.q, cache.v, cache.t̄, cache.q̄, cache.v̄)
 end
 
 
@@ -126,7 +126,7 @@ function initial_guess!(int::IntegratorDIRK{DT}, sol::AtomicSolutionODE{DT},
                         cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT}
 
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.q̃, cache.ṽ, int.params.tab.c[i])
+        evaluate!(int.iguess, sol.q̄, sol.v̄, sol.q, sol.v, cache.q̃, cache.ṽ, int.params.tab.c[i])
         for k in eachindex(cache.V[i], cache.ṽ)
             cache.V[i][k] = cache.ṽ[k]
         end

@@ -77,7 +77,7 @@ end
     return t
 end
 
-function compute_timeseries!(ts::TimeSeries{T}, t₀::T) where {T}
+function compute_timeseries!(ts::TimeSeries, t₀::Real)
     ts[0] = t₀
     for i in Base.OneTo(ts.n)
         ts[i] = ts[0] + i * ts.step * ts.Δt

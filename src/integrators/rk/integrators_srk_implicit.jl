@@ -96,7 +96,7 @@ struct IntegratorSRKimplicit{DT, TT, D, S, PT <: ParametersSRKimplicit{DT,TT},
     #     IntegratorSRKimplicit{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     # end
 
-    function IntegratorSRKimplicit(equation::IODE{DT,TT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorSRKimplicit(equation::Union{IODE{DT}, LODE{DT}}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorSRKimplicit{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
@@ -110,12 +110,12 @@ Solutions.AtomicSolution(integrator::IntegratorSRKimplicit{DT,TT}) where {DT,TT}
 
 
 function initialize!(int::IntegratorSRKimplicit, sol::AtomicSolutionODE)
-    sol.t̅ = sol.t - timestep(int)
+    sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v̄](sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
-                            sol.t̅, sol.q̅, sol.v̅)
+                            sol.t̄, sol.q̄, sol.v̄)
 end
 
 
@@ -132,7 +132,7 @@ function initial_guess!(int::IntegratorSRKimplicit{DT,TT}, sol::AtomicSolutionPO
 
     # compute initial guess for internal stages
     # for i in eachstage(int)
-    #     evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).c[i])
+    #     evaluate!(int.iguess, sol.q̄, sol.v̄, sol.q, sol.v, cache.Q[i], cache.V[i], tableau(int).c[i])
     # end
     for i in eachstage(int)
         for k in eachdim(int)
@@ -141,7 +141,7 @@ function initial_guess!(int::IntegratorSRKimplicit{DT,TT}, sol::AtomicSolutionPO
     end
 
     # compute initial guess for solution
-    # evaluate!(int.iguess, sol.q̅, sol.v̅, sol.q, sol.v, cache.q, cache.v, one(TT))
+    # evaluate!(int.iguess, sol.q̄, sol.v̄, sol.q, sol.v, cache.q, cache.v, one(TT))
     for k in eachdim(int)
         int.solver.x[ndims(int)*nstages(int)+k] = sol.q[k]#cache.q[k]
     end

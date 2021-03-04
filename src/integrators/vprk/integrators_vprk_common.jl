@@ -1,31 +1,31 @@
 
-function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::Union{AtomicSolutionPODE{DT,TT}, AtomicSolutionPDAE{DT,TT}},
                           cache::IntegratorCacheVPRK{DT}) where {DT,TT}
     update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
     update_solution!(sol.p, sol.p̃, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 end
 
-function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}, R::Vector{TT},
+function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::Union{AtomicSolutionPODE{DT,TT}, AtomicSolutionPDAE{DT,TT}}, R::Vector{TT},
                            cache::IntegratorCacheVPRK{DT}) where {DT,TT}
     update_solution!(sol.q, sol.q̃, cache.U, R, timestep(int))
     update_solution!(sol.p, sol.p̃, cache.G, R, timestep(int))
 end
 
-function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT}, RU::Vector{TT}, RG::Vector{TT},
+function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::Union{AtomicSolutionPODE{DT,TT}, AtomicSolutionPDAE{DT,TT}}, RU::Vector{TT}, RG::Vector{TT},
                            cache::IntegratorCacheVPRK{DT}) where {DT,TT}
     update_solution!(sol.q, sol.q̃, cache.U, RU, timestep(int))
     update_solution!(sol.p, sol.p̃, cache.G, RG, timestep(int))
 end
 
 
-function Integrators.initialize!(int::AbstractIntegratorVPRK{DT}, sol::AtomicSolutionPODE{DT,TT}) where {DT,TT}
-    sol.t̅ = sol.t - timestep(int)
+function Integrators.initialize!(int::AbstractIntegratorVPRK{DT}, sol::Union{AtomicSolutionPODE{DT,TT}, AtomicSolutionPDAE{DT,TT}}) where {DT,TT}
+    sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.v)
     equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̅, sol.q̅, sol.p̅, sol.v̅, sol.f̅)
+                            sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 end
 
 
@@ -44,7 +44,7 @@ function compute_stages!(x, q, p, λ, Q, V, U, P, F, G, params::AbstractParamete
     # copy x to V
     compute_stages_v_vprk!(x, V, params)
 
-    # compute U, G and p̅
+    # compute U, G and p̄
     compute_projection_vprk!(x, q, p, λ, Q, V, U, G, params)
 
     # compute Q
@@ -94,7 +94,7 @@ function compute_stages_q_vprk!(Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, pa
                 y1 += params.tab.q.a[i,j] * V[j][k]
                 y2 += params.tab.q.â[i,j] * V[j][k]
             end
-            Q[i][k] = params.q̅[k] + params.Δt * (y1 + y2)
+            Q[i][k] = params.q̄[k] + params.Δt * (y1 + y2)
         end
     end
 end
@@ -118,7 +118,7 @@ function compute_stages_q_vprk!(Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, U:
                 y1 += params.tab.q.a[i,j] * V[j][k]
                 y2 += params.tab.q.â[i,j] * V[j][k]
             end
-            Q[i][k] = params.q̅[k] + params.Δt * (y1 + y2) + params.Δt * params.pparams[:R][1] * U[1][k]
+            Q[i][k] = params.q̄[k] + params.Δt * (y1 + y2) + params.Δt * params.pparams[:R][1] * U[1][k]
         end
     end
 end
@@ -134,7 +134,7 @@ function compute_stages_p_vprk!(Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
     # compute P=ϑ(Q) and F=f(Q,V)
     for i in 1:S
         @assert D == length(Q[i]) == length(V[i]) == length(P[i]) == length(F[i])
-        tᵢ = params.t̅ + params.Δt * params.tab.q.c[i]
+        tᵢ = params.t̄ + params.Δt * params.tab.q.c[i]
         params.equ[:ϑ](tᵢ, Q[i], V[i], P[i])
         params.equ[:f](tᵢ, Q[i], V[i], F[i])
     end
@@ -158,7 +158,7 @@ function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vecto
                 z1 += params.tab.p.a[i,j] * F[j][k]
                 z2 += params.tab.p.â[i,j] * F[j][k]
             end
-            b[D*(i-1)+k] = - (P[i][k] - params.p̅[k]) + params.Δt * (z1 + z2)
+            b[D*(i-1)+k] = - (P[i][k] - params.p̄[k]) + params.Δt * (z1 + z2)
         end
     end
 end
@@ -198,7 +198,7 @@ function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vecto
                 z1 += params.tab.p.a[i,j] * (F[j][k] + R[j][k])
                 z2 += params.tab.p.â[i,j] * (F[j][k] + R[j][k])
             end
-            b[D*(i-1)+k] = - (P[i][k] - params.p̅[k]) + params.Δt * (z1 + z2) + params.Δt * params.pparams[:R][1] * G[1][k]
+            b[D*(i-1)+k] = - (P[i][k] - params.p̄[k]) + params.Δt * (z1 + z2) + params.Δt * params.pparams[:R][1] * G[1][k]
         end
     end
 end
@@ -218,7 +218,7 @@ function compute_rhs_vprk_projection_q!(b::Vector{ST}, q::Vector{ST}, V::Vector{
             y1 += params.tab.q.b[j] * V[j][k]
             y2 += params.tab.q.b̂[j] * V[j][k]
         end
-        b[offset+k] = - (q[k] - params.q̅[k]) + params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
+        b[offset+k] = - (q[k] - params.q̄[k]) + params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
     end
 end
 
@@ -237,7 +237,7 @@ function compute_rhs_vprk_projection_p!(b::Vector{ST}, p::Vector{ST}, F::Vector{
             z1 += params.tab.p.b[j] * F[j][k]
             z2 += params.tab.p.b̂[j] * F[j][k]
         end
-        b[offset+k] = - (p[k] - params.p̅[k]) + params.Δt * (z1 + z2) + params.Δt * (params.pparams[:R][1] * G[1][k] + params.pparams[:R][2] * G[2][k])
+        b[offset+k] = - (p[k] - params.p̄[k]) + params.Δt * (z1 + z2) + params.Δt * (params.pparams[:R][1] * G[1][k] + params.pparams[:R][2] * G[2][k])
     end
 end
 
@@ -257,7 +257,7 @@ function compute_rhs_vprk_projection_p!(b::Vector{ST}, p::Vector{ST},
             z1 += params.tab.p.b[j] * (F[j][k] + R[j][k])
             z2 += params.tab.p.b̂[j] * (F[j][k] + R[j][k])
         end
-        b[offset+k] = - (p[k] - params.p̅[k]) + params.Δt * (z1 + z2) + params.Δt * (params.pparams[:R][1] * G[1][k] + params.pparams[:R][2] * G[2][k])
+        b[offset+k] = - (p[k] - params.p̄[k]) + params.Δt * (z1 + z2) + params.Δt * (params.pparams[:R][1] * G[1][k] + params.pparams[:R][2] * G[2][k])
     end
 end
 

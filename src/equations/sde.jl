@@ -29,6 +29,8 @@ taking values in ``\mathbb{R}^{d}``, and the m-dimensional Wiener process W
 * `B`:  function computing the d x m diffusion matrix
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q`` (may be a random variable itself)
+* `parameters`: either a `NamedTuple` containing the equations parameters or `nothing`
+* `periodicity`: determines the periodicity of the state vector `q` for cutting periodic solutions
 
 The functions `v` and `B`, providing the drift vector field and diffusion matrix,
 `v(t, q, v)` and `B(t, q, B, col=0)`, where `t` is the current time, `q` is the

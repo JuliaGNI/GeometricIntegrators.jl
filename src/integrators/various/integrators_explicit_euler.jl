@@ -17,7 +17,7 @@ struct IntegratorExplicitEuler{DT, TT, AT, D, ET <: NamedTuple} <: Deterministic
         IntegratorExplicitEuler{DT,AT,D}(NamedTuple{(:v,)}((v,)), Δt; kwargs...)
     end
 
-    function IntegratorExplicitEuler(equation::ODE{DT,TT,AT}, Δt::TT; kwargs...) where {DT,TT,AT}
+    function IntegratorExplicitEuler(equation::ODE{DT,TT,AT}, Δt; kwargs...) where {DT,TT,AT}
         IntegratorExplicitEuler{DT, AT, axes(equation)}(get_function_tuple(equation), Δt; kwargs...)
     end
 end
@@ -32,7 +32,7 @@ function integrate_step!(int::IntegratorExplicitEuler{DT,TT,AT}, sol::AtomicSolu
     reset!(sol, timestep(int))
 
     # compute vector field
-    equations(int)[:v](sol.t̅, sol.q, int.v)
+    equations(int)[:v](sol.t̄, sol.q, int.v)
 
     # compute update
     sol.q .+= timestep(int) .* int.v

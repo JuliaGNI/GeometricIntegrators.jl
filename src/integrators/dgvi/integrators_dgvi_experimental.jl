@@ -169,7 +169,7 @@ struct IntegratorDGVIEXP{DT, TT, D, S, R,
         IntegratorDGVIEXP(basis, quadrature, params, solver, iguess, caches)
     end
 
-    function IntegratorDGVIEXP(equation::IODE{DT,TT}, basis::Basis{TT}, quadrature::QuadratureRule{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorDGVIEXP(equation::Union{IODE{DT}, LODE{DT}}, basis::Basis, quadrature::QuadratureRule, Δt; kwargs...) where {DT}
         IntegratorDGVIEXP{DT, ndims(equation)}(get_function_tuple(equation), basis, quadrature, Δt; kwargs...)
     end
 end
@@ -195,13 +195,13 @@ function initialize!(int::IntegratorDGVIEXP, sol::AtomicSolutionPODE)
     int.q⁻ .= int.q
     int.q⁺ .= int.q
 
-    sol.t̅ = sol.t - timestep(int)
+    sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.v)
 
     # initialise initial guess
     initialize!(int.iguess, sol.t, sol.q, sol.v,
-                            sol.t̅, sol.q̅, sol.v̅)
+                            sol.t̄, sol.q̄, sol.v̄)
 end
 
 
@@ -209,7 +209,7 @@ function initial_guess!(int::IntegratorDGVIEXP{DT,TT, D, S, R}, sol::AtomicSolut
                         cache::IntegratorCacheDGVI{DT}=int.caches[DT]) where {DT,TT,D,S,R}
     if nbasis(int.basis) > 0
         for i in eachindex(int.basis)
-            evaluate!(int.iguess, sol.q̅, sol.v̅,
+            evaluate!(int.iguess, sol.q̄, sol.v̄,
                                   sol.q, sol.v,
                                   cache.q̃,
                                   grid(int.basis)[i])
@@ -226,7 +226,7 @@ function initial_guess!(int::IntegratorDGVIEXP{DT,TT, D, S, R}, sol::AtomicSolut
         end
     end
 
-    evaluate!(int.iguess, sol.q̅, sol.v̅,
+    evaluate!(int.iguess, sol.q̄, sol.v̄,
                           sol.q, sol.v,
                           cache.q̃,
                           one(TT))
@@ -262,14 +262,14 @@ function compute_stages!(x, cache::IntegratorCacheDGVI{ST,D,S}, params::Paramete
         end
     end
 
-    # copy x to q̅=qₙ+₁
+    # copy x to q̄=qₙ+₁
     for k in 1:D
-        cache.q̅[k] = x[D*S+k]
+        cache.q̄[k] = x[D*S+k]
     end
 
-    # copy x to q̅⁺=qₙ+₁⁺
+    # copy x to q̄⁺=qₙ+₁⁺
     for k in 1:D
-        cache.q̅⁺[k] = x[D*(S+1)+k]
+        cache.q̄⁺[k] = x[D*(S+1)+k]
     end
 
     # compute Q, qₙ⁺ and qₙ₊₁⁻
@@ -292,7 +292,7 @@ function compute_stages_q!(cache::IntegratorCacheDGVI{ST,D,S,R},
 
     local q::ST
     local q⁺::ST
-    local q̅⁻::ST
+    local q̄⁻::ST
 
     local X = cache.X
     local Q = cache.Q
@@ -315,13 +315,13 @@ function compute_stages_q!(cache::IntegratorCacheDGVI{ST,D,S,R},
     # compute qₙ⁺ and qₙ₊₁⁻
     for k in 1:D
         q⁺ = 0
-        q̅⁻ = 0
+        q̄⁻ = 0
         for i in 1:S
             q⁺ += params.r⁺[i] * X[i][k]
-            q̅⁻ += params.r⁻[i] * X[i][k]
+            q̄⁻ += params.r⁻[i] * X[i][k]
         end
         cache.q⁺[k] = q⁺
-        cache.q̅⁻[k] = q̅⁻
+        cache.q̄⁻[k] = q̄⁻
     end
 end
 
@@ -369,18 +369,18 @@ function compute_stages_λ!(cache::IntegratorCacheDGVI{ST,D,S,R},
     # cache.ϕ⁻ .= 0.5 * (cache.q⁻ .+ cache.q )
     # cache.ϕ⁺ .= 0.5 * (cache.q  .+ cache.q⁺)
 
-    cache.ϕ̅  .= 0.5 * (cache.q̅⁻ .+ cache.q̅⁺)
-    # cache.ϕ̅⁻ .= 0.5 * (cache.q̅⁻ .+ cache.q̅ )
-    # cache.ϕ̅⁺ .= 0.5 * (cache.q̅  .+ cache.q̅⁺)
+    cache.ϕ̅  .= 0.5 * (cache.q̄⁻ .+ cache.q̄⁺)
+    # cache.ϕ̅⁻ .= 0.5 * (cache.q̄⁻ .+ cache.q̄ )
+    # cache.ϕ̅⁺ .= 0.5 * (cache.q̄  .+ cache.q̄⁺)
 
-    # compute λ and λ̅
+    # compute λ and λ̄
     cache.λ  .= cache.q⁺ .- cache.q⁻
     # cache.λ⁻ .= cache.q  .- cache.q⁻
     # cache.λ⁺ .= cache.q⁺ .- cache.q
 
-    cache.λ̅  .= cache.q̅⁺ .- cache.q̅⁻
-    # cache.λ̅⁻ .= cache.q̅  .- cache.q̅⁻
-    # cache.λ̅⁺ .= cache.q̅⁺ .- cache.q̅
+    cache.λ̄ .= cache.q̄⁺ .- cache.q̄⁻
+    # cache.λ̄⁻ .= cache.q̄  .- cache.q̄⁻
+    # cache.λ̄⁺ .= cache.q̄⁺ .- cache.q̄
 
     # compute ϑ
     params.equs[:ϑ](t₀, cache.ϕ,  cache.ϕ,  cache.θ)
@@ -388,17 +388,17 @@ function compute_stages_λ!(cache::IntegratorCacheDGVI{ST,D,S,R},
     # params.equs[:ϑ](t₀, cache.q⁺, cache.q⁺, cache.θ⁺)
 
     params.equs[:ϑ](t₁, cache.ϕ̅,  cache.ϕ̅,  cache.Θ̅)
-    # params.equs[:ϑ](t₁, cache.q̅⁻, cache.q̅⁻, cache.Θ̅⁻)
-    # params.equs[:ϑ](t₁, cache.q̅⁺, cache.q̅⁺, cache.Θ̅⁺)
+    # params.equs[:ϑ](t₁, cache.q̄⁻, cache.q̄⁻, cache.Θ̅⁻)
+    # params.equs[:ϑ](t₁, cache.q̄⁺, cache.q̄⁺, cache.Θ̅⁺)
 
     # compute projection
     params.equs[:g](t₀, cache.ϕ,  cache.λ,  cache.g)
     # params.equs[:g](t₀, cache.q⁻, cache.λ⁻, cache.g⁻)
     # params.equs[:g](t₀, cache.q⁺, cache.λ⁺, cache.g⁺)
 
-    params.equs[:g](t₁, cache.ϕ̅,  cache.λ̅,  cache.g̅)
-    # params.equs[:g](t₁, cache.q̅⁻, cache.λ̅⁻, cache.g̅⁻)
-    # params.equs[:g](t₁, cache.q̅⁺, cache.λ̅⁺, cache.g̅⁺)
+    params.equs[:g](t₁, cache.ϕ̅,  cache.λ̄,  cache.ḡ)
+    # params.equs[:g](t₁, cache.q̄⁻, cache.λ̄⁻, cache.ḡ⁻)
+    # params.equs[:g](t₁, cache.q̄⁺, cache.λ̄⁺, cache.ḡ⁺)
 end
 
 
@@ -420,7 +420,7 @@ function compute_rhs!(b::Vector{ST}, cache::IntegratorCacheDGVI{ST,D,S,R},
             z -= params.r⁻[i] * cache.Θ̅[k]
 
             z += params.r⁺[i] * 0.5 * cache.g[k]
-            z += params.r⁻[i] * 0.5 * cache.g̅[k]
+            z += params.r⁻[i] * 0.5 * cache.ḡ[k]
 
             b[D*(i-1)+k] = z
         end
@@ -428,7 +428,7 @@ function compute_rhs!(b::Vector{ST}, cache::IntegratorCacheDGVI{ST,D,S,R},
 
     # compute b = qₙ - 0.5 * qₙ⁺ - 0.5 * qₙ⁻
     for k in 1:D
-        b[D*S+k] = cache.q̅[k] - cache.ϕ̅[k]
+        b[D*S+k] = cache.q̄[k] - cache.ϕ̅[k]
     end
 
     # compute b = qₙ⁺ - r⁺⋅X
@@ -439,9 +439,9 @@ end
 
 
 function update_solution!(int::IntegratorDGVIEXP{DT,TT}, cache::IntegratorCacheDGVI{DT}) where {DT,TT}
-    int.q  .= cache.q̅
-    int.q⁻ .= cache.q̅⁻
-    int.q⁺ .= cache.q̅⁺
+    int.q  .= cache.q̄
+    int.q⁻ .= cache.q̄⁻
+    int.q⁺ .= cache.q̄⁺
 end
 
 

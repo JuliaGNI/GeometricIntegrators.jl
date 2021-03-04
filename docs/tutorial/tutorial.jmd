@@ -62,11 +62,11 @@ In *GeometricIntegrators.jl* we distinguish between three basic types of equatio
 * stochastic differential equations (SDEs).
 
 For each type, there are several subtypes
-* "normal" equations ([`ODE`](@ref), [`DAE`](@ref), [`SDE`](@ref)),
+* standard equations ([`ODE`](@ref), [`DAE`](@ref), [`SDE`](@ref)),
 * implicit equations ([`IODE`](@ref), [`IDAE`](@ref)),
-* variational equations ([`VODE`](@ref), [`VDAE`](@ref)),
-* Hamiltonian equations ([`HODE`](@ref), [`HDAE`](@ref)),
 * partitioned equations ([`PODE`](@ref), [`PDAE`](@ref), [`PSDE`](@ref)),
+* Hamiltonian equations ([`HODE`](@ref), [`HDAE`](@ref)),
+* Lagrangian equations ([`LODE`](@ref), [`LDAE`](@ref)),
 * split equations ([`SODE`](@ref), [`SPDAE`](@ref)).
 
 

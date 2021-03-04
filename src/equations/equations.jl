@@ -19,22 +19,20 @@ function get_λ₀(q₀::AbstractVector{DT}, λ₀::AbstractVector{DT}) where {D
     zero(λ₀)
 end
 
-function get_λ₀(q₀::AbstractVector{DT}, λ₀::AbstractVector{AT}) where {DT, AT <: AbstractArray{DT}}
+function get_λ₀(q₀::AbstractVector{DT}, λ₀::AbstractVector{AT}) where {DT <: Number, AT <: AbstractArray{DT}}
     zero(λ₀[begin])
 end
 
-function get_λ₀(q₀::AbstractVector{AT}, λ₀::AbstractVector{DT}) where {DT, AT <: AbstractArray{DT}}
+function get_λ₀(q₀::AbstractVector{AT}, λ₀::AbstractVector{DT}) where {DT <: Number, AT <: AbstractArray{DT}}
     [zero(λ₀) for i in eachindex(q₀)]
 end
 
-function get_λ₀(q₀::AbstractVector{AT}, λ₀::AbstractVector{AT}) where {DT, AT <: AbstractArray{DT}}
+function get_λ₀(q₀::AbstractVector{AT}, λ₀::AbstractVector{AT}) where {DT <: Number, AT <: AbstractArray{DT}}
     [zero(λ₀[begin]) for i in eachindex(q₀)]
 end
 
 Base.ndims(equ::Equation) = error("ndims() not implemented for ", typeof(equ), ".")
 
-periodicity(equ::Equation) = error("periodicity() not implemented for ", typeof(equ), ".")
+Common.periodicity(equ::Equation) = error("periodicity() not implemented for ", typeof(equ), ".")
 
 get_function_tuple(equ::Equation) = error("get_function_tuple() not implemented for ", typeof(equ), ".")
-
-# TODO Add functions and vectors for invariants (momentum maps, energy, ...).

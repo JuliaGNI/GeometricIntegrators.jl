@@ -38,7 +38,7 @@ shared arrays).
 
 The usual way to initialise a `Solution` is by passing an equation, which for
 `SolutionPDAE` has to be an [`PDAE`](@ref), [`HDAE`](@ref), [`IDAE`](@ref) or
-[`VDAE`](@ref), a time step `Δt` and the number of time steps `ntimesteps`. The
+[`LDAE`](@ref), a time step `Δt` and the number of time steps `ntimesteps`. The
 optional parameters `nsave` and `nwrite` determine the intervals for storing
 the solution and writing to file, i.e., if `nsave > 1` only every `nsave`'th
 solution is actually stored, and every `nwrite`'th time step the solution is
@@ -78,8 +78,8 @@ for (TSolution, TDataSeries, Tdocstring) in
             end
         end
 
-        function $TSolution(equation::Union{PDAE{DT,TT,AT}, HDAE{DT,TT,AT}, IDAE{DT,TT,AT}, VDAE{DT,TT,AT}, IODE{DT,TT,AT}, VODE{DT,TT,AT}}, Δt::TT, ntimesteps::Int;
-                            nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT,AT}
+        function $TSolution(equation::Union{PDAE{DT,TT1,AT}, HDAE{DT,TT1,AT}, IDAE{DT,TT1,AT}, LDAE{DT,TT1,AT}, IODE{DT,TT1,AT}, LODE{DT,TT1,AT}}, Δt::TT2, ntimesteps::Int;
+                            nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT1,TT2,AT}
             @assert nsave > 0
             @assert ntimesteps == 0 || ntimesteps ≥ nsave
             @assert nwrite == 0 || nwrite ≥ nsave
@@ -90,6 +90,7 @@ for (TSolution, TDataSeries, Tdocstring) in
                 @assert mod(ntimesteps, nwrite) == 0
             end
 
+            TT = promote_type(TT1,TT2)
             N  = nsamples(equation) > 1 ? 2 : 1
             nd = ndims(equation)
             nm = equation.m
@@ -192,11 +193,11 @@ Base.:(==)(sol1::SolutionPDAE{DT1,TT1,N1}, sol2::SolutionPDAE{DT2,TT2,N2}) where
 @inline Common.periodicity(sol::SolutionPDAE) = sol.periodicity
 
 
-function set_initial_conditions!(sol::SolutionPDAE, equ::Union{IODE,VODE,PDAE,IDAE,VDAE})
+function set_initial_conditions!(sol::SolutionPDAE, equ::Union{IODE,LODE,PDAE,IDAE,LDAE})
     set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, equ.λ₀)
 end
 
-function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, t₀::TT, q₀::DT, p₀::DT, λ₀::DT) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPDAE{DT}, t₀::Real, q₀::DT, p₀::DT, λ₀::DT) where {DT}
     set_data!(sol.q, q₀, 0)
     set_data!(sol.p, p₀, 0)
     set_data!(sol.λ, λ₀, 0)
@@ -204,7 +205,7 @@ function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, t₀::TT, q₀::DT, p
     sol.counter .= 1
 end
 
-function set_initial_conditions!(sol::SolutionPDAE{DT,TT}, t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, λ₀::AbstractVector{DT}) where {DT,TT}
+function set_initial_conditions!(sol::SolutionPDAE{DT}, t₀::Real, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, λ₀::AbstractVector{DT}) where {DT}
     for i in eachindex(q₀,p₀,λ₀)
         set_data!(sol.q, q₀[i], 0, i)
         set_data!(sol.p, p₀[i], 0, i)
@@ -221,13 +222,13 @@ function get_initial_conditions!(sol::SolutionPDAE{AT,TT}, asol::AtomicSolutionP
     asol.p̃ .= 0
 end
 
-function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::DT, p::DT, λ::DT, k, n=1) where {DT,TT}
+function get_initial_conditions!(sol::SolutionPDAE{DT}, q::DT, p::DT, λ::DT, k, n=1) where {DT}
     get_data!(sol.q, q, n-1, k)
     get_data!(sol.p, p, n-1, k)
     get_data!(sol.λ, λ, n-1, k)
 end
 
-function get_initial_conditions!(sol::SolutionPDAE{DT,TT}, q::DT, p::DT, k, n=1) where {DT,TT}
+function get_initial_conditions!(sol::SolutionPDAE{DT}, q::DT, p::DT, k, n=1) where {DT}
     get_data!(sol.q, q, n-1, k)
     get_data!(sol.p, p, n-1, k)
 end

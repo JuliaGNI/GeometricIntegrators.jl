@@ -35,7 +35,7 @@ implements the general integrator interface.
 struct IntegratorComposition{DT, TT, D, S, IT <: Tuple} <: ODEIntegrator{DT,TT}
     ints::IT
     Δt::TT
-    q̅::Vector{DT}
+    q̄::Vector{DT}
 
     function IntegratorComposition{DT,D}(integrators::IT, Δt::TT) where {DT, TT, D, IT <: Tuple}
         new{DT, TT, D, length(integrators), IT}(integrators, Δt, zeros(DT,D))
@@ -85,14 +85,14 @@ timestep(int::IntegratorComposition) = int.Δt
 
 
 function integrate_step!(int::IntegratorComposition{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
-    local t̅ = sol.t
-    int.q̅  .= sol.q
+    local t̄ = sol.t
+    int.q̄  .= sol.q
 
     # compute composition steps
     for subint in int.ints
         initialize!(subint, sol)
         integrate_step!(subint, sol)
-        sol.t̅  = t̅
-        sol.q̅ .= int.q̅
+        sol.t̄  = t̄
+        sol.q̄ .= int.q̄
     end
 end

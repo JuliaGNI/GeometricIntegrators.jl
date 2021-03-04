@@ -18,18 +18,18 @@ ode  = lotka_volterra_2d_ode(q₀; params=parameters)
 pode = lotka_volterra_2d_pode(q₀; params=parameters)
 hode = lotka_volterra_2d_hode(q₀; params=parameters)
 iode = lotka_volterra_2d_iode(q₀; params=parameters)
-vode = lotka_volterra_2d_vode(q₀; params=parameters)
+lode = lotka_volterra_2d_lode(q₀; params=parameters)
 
 dae  = lotka_volterra_2d_dae(q₀; params=parameters)
 pdae = lotka_volterra_2d_pdae(q₀; params=parameters)
 hdae = lotka_volterra_2d_hdae(q₀; params=parameters)
 idae = lotka_volterra_2d_idae(q₀; params=parameters)
-vdae = lotka_volterra_2d_vdae(q₀; params=parameters)
+ldae = lotka_volterra_2d_ldae(q₀; params=parameters)
 
 
 @test InitialGuessODE(int,  ode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄( ode), Δt)
 @test InitialGuessODE(int, iode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄(iode), Δt)
-@test InitialGuessODE(int, vode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄(vode), Δt)
+@test InitialGuessODE(int, lode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄(lode), Δt)
 
 @test InitialGuess(int, ode, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄(ode), Δt)
 @test InitialGuess(int, dae, Δt) == InitialGuessODE(int(0.0, 1.0, Δt), _get_v̄(dae), Δt)
@@ -43,8 +43,8 @@ vdae = lotka_volterra_2d_vdae(q₀; params=parameters)
 @test InitialGuess(int, pode, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v̄(pode), _get_f̄(pode), Δt)
 @test InitialGuess(int, pdae, Δt) == InitialGuessPODE(int(0.0, 1.0, Δt), _get_v̄(pdae), _get_f̄(pdae), Δt)
 
-@test InitialGuess(int, vode, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v̄(vode), _get_f̄(vode), Δt)
-@test InitialGuess(int, vdae, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v̄(vdae), _get_f̄(vdae), Δt)
+@test InitialGuess(int, lode, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v̄(lode), _get_f̄(lode), Δt)
+@test InitialGuess(int, ldae, Δt) == InitialGuessIODE(int(0.0, 1.0, Δt), _get_v̄(ldae), _get_f̄(ldae), Δt)
 
 
 # Reference Solution
