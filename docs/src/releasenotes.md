@@ -1,10 +1,27 @@
 
 # Release Notes
 
+## 0.8.0
+
+### Breaking Changes
+
+* Use RungeKutta.jl for most tableaus and coefficients
+* Move stochastic integrators to separate package
+* Rewrite of most equation types
+
+### Documentation
+
+* Add documentation for most integrators
+
+### Fixes
+
+* Countless minor bugfixes
+
+
 ## 0.7.0
 
-* use CompactBasisFunctions.jl instead of BasisFunctions submodule
-* use QuadratureRules.jl instead of Quadratures submodule
+* Use CompactBasisFunctions.jl instead of BasisFunctions submodule
+* Use QuadratureRules.jl instead of Quadratures submodule
 * Use SimpleSolvers.jl instead of Solvers submodule
 * Use GeometricProblems.jl instead of TestProblems submodule
 
