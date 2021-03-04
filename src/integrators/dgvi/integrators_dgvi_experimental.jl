@@ -170,7 +170,7 @@ struct IntegratorDGVIEXP{DT, TT, D, S, R,
     end
 
     function IntegratorDGVIEXP(equation::Union{IODE{DT}, LODE{DT}}, basis::Basis, quadrature::QuadratureRule, Δt; kwargs...) where {DT}
-        IntegratorDGVIEXP{DT, ndims(equation)}(get_function_tuple(equation), basis, quadrature, Δt; kwargs...)
+        IntegratorDGVIEXP{DT, ndims(equation)}(get_functions(equation), basis, quadrature, Δt; kwargs...)
     end
 end
 

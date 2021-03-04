@@ -223,7 +223,7 @@ _get_f̄(equ::LODE) = hasparameters(equ) ? (t,q,v,f) -> equ.f̄(t, q, v, f, equ.
 _get_l(equ::LODE) = hasparameters(equ) ? (t,q,v)   -> equ.lagrangian(t, q, v, equ.parameters) : equ.lagrangian
 
 
-function get_function_tuple(equ::LODE)
+function get_functions(equ::LODE)
     names = (:ϑ, :f, :g, :l, :ω, :v̄, :f̄)
     equs  = (_get_ϑ(equ), _get_f(equ), _get_g(equ), _get_l(equ), _get_ω(equ), _get_v̄(equ), _get_f̄(equ))
 

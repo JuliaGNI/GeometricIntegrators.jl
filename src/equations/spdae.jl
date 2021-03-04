@@ -177,11 +177,11 @@ hasperiodicity(::SPDAEperType{<:AbstractArray}) = true
 @inline Common.periodicity(equation::SPDAE) = hasperiodicity(equation) ? equation.periodicity : zero(equation.q₀[begin])
 @inline initial_conditions(equation::SPDAE) = (equation.t₀, equation.q₀, equation.p₀, equation.λ₀, equation.μ₀)
 
-function get_function_tuple(equation::SPDAE{DT,TT,AT,VT,FT,ϕT,ψT,Nothing}) where {DT, TT, AT, VT, FT, ϕT, ψT}
+function get_functions(equation::SPDAE{DT,TT,AT,VT,FT,ϕT,ψT,Nothing}) where {DT, TT, AT, VT, FT, ϕT, ψT}
     NamedTuple{(:v, :f, :ϕ, :ψ)}((equation.v, equation.f, equation.ϕ, equation.ψ))
 end
 
-function get_function_tuple(equation::SPDAE{DT,TT,AT,VT,FT,ϕT,ψT,PT}) where {DT, TT, AT, VT, FT, ϕT, ψT, PT <: NamedTuple}
+function get_functions(equation::SPDAE{DT,TT,AT,VT,FT,ϕT,ψT,PT}) where {DT, TT, AT, VT, FT, ϕT, ψT, PT <: NamedTuple}
     vₚ = (t,q,p,v)   -> equation.v(t, q, p, v, equation.parameters)
     fₚ = (t,q,p,f)   -> equation.f(t, q, p, f, equation.parameters)
     ϕₚ = (t,q,p,ϕ)   -> equation.ϕ(t, q, p, ϕ, equation.parameters)

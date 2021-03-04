@@ -189,5 +189,5 @@ Common.nsamples(equ::SODE) = length(equ.q₀)
 _get_v(equ::SODE) = hasparameters(equ) ? Tuple(typeof(V) <: Function ? (t,q,v) -> V(t, q, v, equ.parameters) : V for V in equ.v) : equ.v
 _get_q(equ::SODE) = hasparameters(equ) ? Tuple(typeof(Q) <: Function ? (t,q̄,q,h) -> Q(t, q̄, q, h, equ.parameters) : Q for Q in equ.q) : equ.q
 
-get_function_tuple(equ::SODE) = hasvectorfield(equ) ? _get_v(equ) : ()
-get_solution_tuple(equ::SODE) = hassolution(equ) ? _get_q(equ) : ()
+get_functions(equ::SODE) = hasvectorfield(equ) ? _get_v(equ) : ()
+get_solutions(equ::SODE) = hassolution(equ) ? _get_q(equ) : ()

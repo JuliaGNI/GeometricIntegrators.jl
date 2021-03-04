@@ -175,7 +175,7 @@ _get_G(equ::PSDE) = hasparameters(equ) ? (t,q,p,G) -> equ.G(t, q, p, G, equ.para
 # _get_h(equ::PSDE) = hasparameters(equ) ? (t,q,p) -> equ.h(t, q, p, equ.parameters) : equ.h
 
 
-function get_function_tuple(equ::PSDE)
+function get_functions(equ::PSDE)
     names = (:v,:f,:B,:G)
     equs  = (_get_v(equ), _get_f(equ), _get_B(equ), _get_G(equ))
 

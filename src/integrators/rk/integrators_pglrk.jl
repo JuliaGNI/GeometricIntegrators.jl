@@ -220,11 +220,17 @@ struct IntegratorPGLRK{DT, TT, D, S, PT <: ParametersPGLRK{DT,TT},
     function IntegratorPGLRK(equation::ODE{DT}, tableau::CoefficientsPGLRK{TT}, Δt::TT; kwargs...) where {DT,TT}
         @assert hasinvariants(equation)
         @assert :h ∈ keys(equation.invariants)
-        functions = merge(get_function_tuple(equation), get_invariants(equation))
+        functions = merge(get_functions(equation), get_invariants(equation))
         IntegratorPGLRK{DT, ndims(equation)}(functions, tableau, Δt; kwargs...)
     end
 end
 
+"Print Projected Gauss-Legendre Runge-Kutta integrator."
+function Base.show(io::IO, int::IntegratorPGLRK)
+    print(io, "Projected Gauss-Legendre Runge-Kutta Integrator with ")
+    print(io, "  timestep = ", int.params.Δt)
+    print(io, "  tableau  = ", int.params.tab)
+end
 
 @inline Base.ndims(::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 @inline nstages(::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = S

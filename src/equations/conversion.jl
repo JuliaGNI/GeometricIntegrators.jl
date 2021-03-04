@@ -78,3 +78,46 @@ function Base.convert(::Type{IODE}, equ::LODE)
     IODE(equ.ϑ, equ.f, equ.g, equ.t₀, equ.q₀, equ.p₀, equ.λ₀;
          v̄=equ.v̄, f̄=equ.f̄, invariants=equ.invariants, parameters=equ.parameters, periodicity=equ.periodicity)
 end
+
+
+function get_invariants(equ::Union{ODE,SODE,DAE})
+    if hasinvariants(equ)
+        keys = ()
+        invs = ()
+        for (key, inv) in pairs(equ.invariants)
+            keys = (keys..., key)
+            invs = (invs..., hasparameters(equ) ? (t,q) -> inv(t, q, equ.parameters) : inv)
+        end
+        return NamedTuple{keys}(invs)
+    else
+        return NamedTuple()
+    end
+end
+
+function get_invariants(equ::Union{IODE,LODE,IDAE,LDAE})
+    if hasinvariants(equ)
+        keys = ()
+        invs = ()
+        for (key, inv) in pairs(equ.invariants)
+            keys = (keys..., key)
+            invs = (invs..., hasparameters(equ) ? (t,q,v) -> inv(t, q, v, equ.parameters) : inv)
+        end
+        return NamedTuple{keys}(invs)
+    else
+        return NamedTuple()
+    end
+end
+
+function get_invariants(equ::Union{PODE,HODE,PDAE,PDAE,SPDAE})
+    if hasinvariants(equ)
+        keys = ()
+        invs = ()
+        for (key, inv) in pairs(equ.invariants)
+            keys = (keys..., key)
+            invs = (invs..., hasparameters(equ) ? (t,q,p) -> inv(t, q, p, equ.parameters) : inv)
+        end
+        return NamedTuple{keys}(invs)
+    else
+        return NamedTuple()
+    end
+end

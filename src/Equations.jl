@@ -13,7 +13,7 @@ module Equations
     export SDE, PSDE, SPSDE
 
     export initial_conditions
-    export get_function_tuple, get_solution_tuple,
+    export get_functions, get_solutions,
            get_invariants,
            hassolution, hasvectorfield,
            hasinvariants, hasparameters, hasperiodicity,

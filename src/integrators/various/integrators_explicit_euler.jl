@@ -18,7 +18,7 @@ struct IntegratorExplicitEuler{DT, TT, AT, D, ET <: NamedTuple} <: Deterministic
     end
 
     function IntegratorExplicitEuler(equation::ODE{DT,TT,AT}, Δt; kwargs...) where {DT,TT,AT}
-        IntegratorExplicitEuler{DT, AT, axes(equation)}(get_function_tuple(equation), Δt; kwargs...)
+        IntegratorExplicitEuler{DT, AT, axes(equation)}(get_functions(equation), Δt; kwargs...)
     end
 end
 

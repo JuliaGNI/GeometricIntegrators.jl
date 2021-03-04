@@ -145,7 +145,7 @@ struct IntegratorIPRK{DT, TT, D, S, PT <: ParametersIPRK{DT,TT},
     end
 
     function IntegratorIPRK(equation::Union{PODE{DT}, HODE{DT}}, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorIPRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorIPRK{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
     end
 end
 

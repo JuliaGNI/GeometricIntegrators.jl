@@ -181,7 +181,7 @@ _get_G1(equ::SPSDE) = hasparameters(equ) ? (t,q,p,G) -> equ.G1(t, q, p, G, equ.p
 _get_G2(equ::SPSDE) = hasparameters(equ) ? (t,q,p,G) -> equ.G2(t, q, p, G, equ.parameters) : equ.G2
 
 
-function get_function_tuple(equ::SPSDE)
+function get_functions(equ::SPSDE)
     names = (:v,:f1,:f2,:B,:G1,:G2)
     equs  = (_get_v(equ), _get_f1(equ), _get_f2(equ), _get_B(equ), _get_G1(equ), _get_G2(equ))
 

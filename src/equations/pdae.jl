@@ -228,7 +228,7 @@ _get_v̄(equ::PDAE) = hasparameters(equ) ? (t,q,p,v)     -> equ.v̄(t, q, p, v, 
 _get_f̄(equ::PDAE) = hasparameters(equ) ? (t,q,p,f)     -> equ.f̄(t, q, p, f, equ.parameters) : equ.f̄
 
 
-function get_function_tuple(equ::PDAE)
+function get_functions(equ::PDAE)
     names = (:v,:f,:u,:g,:ϕ)
     equs  = (_get_v(equ), _get_f(equ), _get_u(equ), _get_g(equ), _get_ϕ(equ))
 

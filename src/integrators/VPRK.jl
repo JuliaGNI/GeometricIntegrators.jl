@@ -9,7 +9,7 @@ module VPRK
     using ..Config
     using ..Utils
 
-    import ..Equations: IODE, LODE, LDAE, get_function_tuple, hassecondary
+    import ..Equations: IODE, LODE, LDAE, get_functions, hassecondary
 
     import ..Solutions: AtomicSolutionPODE, AtomicSolutionPDAE, SolutionPDAE, SolutionVector
     import ..Solutions: update!

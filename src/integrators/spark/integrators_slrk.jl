@@ -125,7 +125,7 @@ struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
     end
 
     function IntegratorSLRK(equation::LDAE{DT}, tableau::TableauSLRK, Δt; kwargs...) where {DT}
-        IntegratorSLRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorSLRK{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
     end
 end
 

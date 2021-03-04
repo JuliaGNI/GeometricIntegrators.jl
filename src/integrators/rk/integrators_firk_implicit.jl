@@ -106,7 +106,7 @@ struct IntegratorFIRKimplicit{DT, TT, D, S, PT <: ParametersFIRKimplicit{DT,TT},
     # end
 
     function IntegratorFIRKimplicit(equation::Union{IODE{DT,TT}, LODE{DT,TT}}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorFIRKimplicit{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorFIRKimplicit{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
     end
 end
 
