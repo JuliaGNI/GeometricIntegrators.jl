@@ -42,7 +42,7 @@ struct IntegratorSplitting{DT, TT, D, S, QT <: Tuple} <: ODEIntegrator{DT,TT}
     end
 end
 
-function IntegratorSplitting(equation::SODE{DT,TT}, tableau::ST, Δt::TT) where {DT, TT, ST <: AbstractTableauSplitting{TT}}
+function IntegratorSplitting(equation::SODE{DT}, tableau::ST, Δt::TT) where {DT, TT, ST <: AbstractTableauSplitting{TT}}
     @assert hassolution(equation)
     IntegratorSplitting{DT, ndims(equation)}(get_solution_tuple(equation), get_splitting_coefficients(length(equation.q), tableau)..., Δt)
 end
@@ -60,13 +60,13 @@ function integrate_step!(int::IntegratorSplitting{DT,TT}, sol::AtomicSolutionODE
     for i in eachindex(int.f, int.c)
         if int.c[i] ≠ zero(TT)
             cᵢ = timestep(int) * int.c[i]
-            tᵢ = sol.t̅ + cᵢ
+            tᵢ = sol.t̄ + cᵢ
 
             # reset atomic solution
             reset!(sol, cᵢ)
 
             # compute new solution
-            int.q[int.f[i]](tᵢ, sol.q̅, sol.q, cᵢ)
+            int.q[int.f[i]](tᵢ, sol.q̄, sol.q, cᵢ)
         end
     end
 end

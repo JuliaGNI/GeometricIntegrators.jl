@@ -8,7 +8,7 @@ module SPARK
     using ..Common
     using ..Config
 
-    import ..Equations: VODE, VDAE, HDAE, IDAE, PDAE, get_function_tuple
+    import ..Equations: LODE, LDAE, HDAE, IDAE, PDAE, get_function_tuple
 
     import ..Solutions: AtomicSolutionPDAE, SolutionVector, update!
 

@@ -11,23 +11,23 @@ Atomic solution for an PDAE.
 ### Fields
 
 * `t`: time of current time step
-* `t̅`: time of previous time step
+* `t̄`: time of previous time step
 * `q`: current solution of q
-* `q̅`: previous solution of q
+* `q̄`: previous solution of q
 * `q̃`: compensated summation error of q
 * `p`: current solution of p
-* `p̅`: previous solution of p
+* `p̄`: previous solution of p
 * `p̃`: compensated summation error of p
 * `λ`: current solution of λ
-* `λ̅`: previous solution of λ
+* `λ̄`: previous solution of λ
 * `v`: vector field of q
-* `v̅`: vector field of q̅
+* `v̄`: vector field of q̄
 * `f`: vector field of p
-* `f̅`: vector field of p̅
+* `f̄`: vector field of p̄
 * `u`: projective vector field of q
-* `u̅`: projective vector field of q̅
+* `ū`: projective vector field of q̄
 * `g`: projective vector field of p
-* `g̅`: projective vector field of p̅
+* `ḡ`: projective vector field of p̄
 * `internal`: internal variables of the integrator (e.g., internal stages of a Runge-Kutta methods or solver output)
 
 ### Constructors
@@ -45,28 +45,28 @@ AtomicSolutionPDAE(t::TT, q::AT, p::AT, λ::AT, internal::IT=NamedTuple())
 """
 mutable struct AtomicSolutionPDAE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT
-    t̅::TT
+    t̄::TT
 
     q::AT
-    q̅::AT
+    q̄::AT
     q̃::AT
 
     p::AT
-    p̅::AT
+    p̄::AT
     p̃::AT
 
     λ::AT
-    λ̅::AT
+    λ̄::AT
 
     v::AT
-    v̅::AT
+    v̄::AT
     f::AT
-    f̅::AT
-
+    f̄::AT
+    
     u::AT
-    u̅::AT
+    ū::AT
     g::AT
-    g̅::AT
+    ḡ::AT
 
     internal::IT
 
@@ -120,14 +120,14 @@ function get_solution(asol::AtomicSolutionPDAE)
 end
 
 function Common.reset!(asol::AtomicSolutionPDAE, Δt)
-    asol.t̅  = asol.t
-    asol.q̅ .= asol.q
-    asol.p̅ .= asol.p
-    asol.λ̅ .= asol.λ
-    asol.v̅ .= asol.v
-    asol.f̅ .= asol.f
-    asol.u̅ .= asol.u
-    asol.g̅ .= asol.g
+    asol.t̄  = asol.t
+    asol.q̄ .= asol.q
+    asol.p̄ .= asol.p
+    asol.λ̄.= asol.λ
+    asol.v̄ .= asol.v
+    asol.f̄ .= asol.f
+    asol.ū .= asol.u
+    asol.ḡ .= asol.g
     asol.t += Δt
 end
 

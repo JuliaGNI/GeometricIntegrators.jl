@@ -73,7 +73,7 @@ struct IntegratorHPARK{DT, TT, D, S, R, PT <: ParametersHPARK{DT,TT,D,S,R},
         IntegratorHPARK(params, solver, iguess, caches)
     end
 
-    function IntegratorHPARK(equation::PDAE{DT,TT}, tableau::TableauHPARK{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorHPARK(equation::Union{PDAE{DT}, HDAE{DT}}, tableau::TableauHPARK, Δt; kwargs...) where {DT}
         IntegratorHPARK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end

@@ -65,7 +65,7 @@ struct IntegratorERK{DT, TT, D, S, ET} <: AbstractIntegratorRK{DT,TT}
         IntegratorERK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorERK(equation::ODE{DT,TT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorERK(equation::ODE{DT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
         IntegratorERK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
@@ -90,9 +90,9 @@ function integrate_step!(int::IntegratorERK{DT,TT}, sol::AtomicSolutionODE{DT,TT
             for j in 1:i-1
                 yᵢ += tableau(int).a[i,j] * cache.V[j][k]
             end
-            cache.Q[i][k] = sol.q̅[k] + timestep(int) * yᵢ
+            cache.Q[i][k] = sol.q̄[k] + timestep(int) * yᵢ
         end
-        tᵢ = sol.t̅ + timestep(int) * tableau(int).c[i]
+        tᵢ = sol.t̄ + timestep(int) * tableau(int).c[i]
         equations(int)[:v](tᵢ, cache.Q[i], cache.V[i])
     end
 

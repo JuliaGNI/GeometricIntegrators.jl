@@ -19,12 +19,12 @@ mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
     # q::Vector{ST}
     # p::Vector{ST}
     λ::Vector{ST}
-    λ̅::Vector{ST}
+    λ̄::Vector{ST}
 
     q₋::Vector{ST}
-    q̅₊::Vector{ST}
+    q̄₊::Vector{ST}
     p₋::Vector{ST}
-    p̅₊::Vector{ST}
+    p̄₊::Vector{ST}
 
     u::Vector{ST}
     g::Vector{ST}
@@ -85,12 +85,12 @@ mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
         # projection vectors
         if projection
             λ = zeros(ST,D)
-            λ̅ = zeros(ST,D)
+            λ̄= zeros(ST,D)
 
             q₋= zeros(ST,D)
-            q̅₊= zeros(ST,D)
+            q̄₊= zeros(ST,D)
             p₋= zeros(ST,D)
-            p̅₊= zeros(ST,D)
+            p̄₊= zeros(ST,D)
 
             u = zeros(ST,D)
             g = zeros(ST,D)
@@ -103,12 +103,12 @@ mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
             R = create_internal_stage_vector(ST, D, S)
         else
             λ = Vector{ST}()
-            λ̅ = Vector{ST}()
+            λ̄= Vector{ST}()
 
             q₋= Vector{ST}()
-            q̅₊= Vector{ST}()
+            q̄₊= Vector{ST}()
             p₋= Vector{ST}()
-            p̅₊= Vector{ST}()
+            p̄₊= Vector{ST}()
 
             u = Vector{ST}()
             g = Vector{ST}()
@@ -121,7 +121,7 @@ mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
             R = create_internal_stage_vector(ST, 0, 0)
         end
 
-        new(λ, λ̅, q₋, q̅₊, p₋, p̅₊,
+        new(λ, λ̄, q₋, q̄₊, p₋, p̄₊,
             u, g, q̃, p̃, ṽ, f̃, θ̃, s̃, ϕ, μ, v, f, y, z,
             Q, P, V, F, Λ, Φ, Y, Z, U, G, R)
     end

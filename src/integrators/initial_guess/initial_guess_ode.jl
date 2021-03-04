@@ -24,7 +24,7 @@ function InitialGuessODE(interp::Type{<:Interpolator}, v::Function, Δt)
     InitialGuessODE(int, v, Δt)
 end
 
-function InitialGuessODE(interp::Type{<:Interpolator}, equation::Union{ODE,DAE,IODE,VODE}, Δt)
+function InitialGuessODE(interp::Type{<:Interpolator}, equation::Union{ODE,DAE,IODE,LODE}, Δt)
     InitialGuessODE(interp, _get_v̄(equation), Δt)
 end
 

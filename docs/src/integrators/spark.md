@@ -21,4 +21,4 @@ GeometricIntegrators.jl provides several flavours of such SPARK methods (*some a
 | [`IntegratorVSPARKprimary`](@ref)   | Degenerate Lagrangian system subject primary constraint in the sense of Dirac                        |
 | [`IntegratorVSPARKsecondary`](@ref) | Degenerate Lagrangian system enforcing primary & secondary Dirac constraint                          |
 
-These integrators are applied to either an `IDAE`, `HDAE` or `VDAE`.
+These integrators are applied to either an `IDAE`, `HDAE` or `LDAE`.

@@ -146,7 +146,7 @@ struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT
         IntegratorVSPARKprimary(params, solver, iguess, caches)
     end
 
-    function IntegratorVSPARKprimary(equation::IDAE{DT,TT}, tableau::TableauVSPARKprimary{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorVSPARKprimary(equation::Union{IDAE{DT}, LDAE{DT}}, tableau::TableauVSPARKprimary, Δt; kwargs...) where {DT}
         IntegratorVSPARKprimary{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
@@ -158,7 +158,7 @@ Common.nconstraints(::IntegratorVSPARKprimary{DT,TT,D}) where {DT,TT,D} = D
 function initial_guess!(int::IntegratorVSPARKprimary{DT}, sol::AtomicSolutionPDAE{DT},
                         cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
                               tableau(int).q.c[i], tableau(int).p.c[i])
@@ -170,7 +170,7 @@ function initial_guess!(int::IntegratorVSPARKprimary{DT}, sol::AtomicSolutionPDA
     end
 
     for i in 1:pstages(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
                               tableau(int).q̃.c[i], tableau(int).p̃.c[i])

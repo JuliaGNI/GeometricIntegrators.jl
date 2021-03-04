@@ -128,7 +128,7 @@ struct IntegratorVSPARKsecondary{DT, TT, D, S, R,
         IntegratorVSPARKsecondary(params, solver, iguess, caches)
     end
 
-    function IntegratorVSPARKsecondary(equation::VDAE{DT,TT}, tableau::TableauVSPARKsecondary{TT}, Δt::TT; kwargs...) where {DT,TT}
+    function IntegratorVSPARKsecondary(equation::LDAE{DT}, tableau::TableauVSPARKsecondary, Δt; kwargs...) where {DT}
         IntegratorVSPARKsecondary{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
     end
 end
@@ -140,7 +140,7 @@ Common.nconstraints(::IntegratorVSPARKsecondary{DT,TT,D}) where {DT,TT,D} = D
 function initial_guess!(int::IntegratorVSPARKsecondary{DT}, sol::AtomicSolutionPDAE{DT},
                         cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT}
     for i in 1:pstages(int)
-        evaluate!(int.iguess, sol.q̅, sol.p̅, sol.v̅, sol.f̅,
+        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
                               sol.q, sol.p, sol.v, sol.f,
                               cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
                               tableau(int).q̃.c[i], tableau(int).p̃.c[i])

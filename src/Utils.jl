@@ -12,7 +12,8 @@ module Utils
 
     include("utils/sum_utils.jl")
 
-    export istriustrict, istrilstrict
+    export istriustrict, istrilstrict,
+           symplectic_matrix
     
     include("utils/matrix_utils.jl")
 

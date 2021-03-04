@@ -18,3 +18,19 @@ function istrilstrict(A::Matrix{T}) where {T}
     end
     return true
 end
+
+
+function symplectic_matrix(t, q::AbstractVector{DT}, p::AbstractVector{DT}) where {DT}
+    @assert length(q) == length(p)
+
+    local d = length(q)
+
+    ω = zeros(DT, 2d, 2d)
+
+    for i in 1:d
+        ω[i, d+i] = +1
+        ω[d+i, i] = -1
+    end
+
+    return ω
+end

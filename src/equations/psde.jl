@@ -35,6 +35,8 @@ values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``, and the m-dimensional Wiener
 * `t₀`: initial time
 * `q₀`: initial condition for dynamical variable ``q`` (may be a random variable itself)
 * `p₀`: initial condition for dynamical variable ``p`` (may be a random variable itself)
+* `parameters`: either a `NamedTuple` containing the equations parameters or `nothing`
+* `periodicity`: determines the periodicity of the state vector `q` for cutting periodic solutions
 
 The functions `v`, `f`, `B` and `G`, providing the drift vector fields and diffusion matrices, take four arguments,
 `v(t, q, p, v)`, `f(t, q, p, f)`, `B(t, q, p,  B)` and `G(t, q, p, G)`, where `t` is the current time, `(q, p)` is the
