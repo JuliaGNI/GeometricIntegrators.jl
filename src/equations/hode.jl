@@ -169,7 +169,7 @@ _get_h(equ::HODE) = hasparameters(equ) ? (t,q,p)   -> equ.hamiltonian(t, q, p, e
 _get_v̄(equ::HODE) = _get_v(equ)
 _get_f̄(equ::HODE) = _get_f(equ)
 
-function get_function_tuple(equ::HODE)
+function get_functions(equ::HODE)
     names = (:v,:f,:h)
     equs  = (_get_v(equ), _get_f(equ), _get_h(equ))
     NamedTuple{names}(equs)

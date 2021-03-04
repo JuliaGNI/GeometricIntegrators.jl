@@ -220,7 +220,7 @@ struct IntegratorPGLRK{DT, TT, D, S, PT <: ParametersPGLRK{DT,TT},
     function IntegratorPGLRK(equation::ODE{DT}, tableau::CoefficientsPGLRK{TT}, Δt::TT; kwargs...) where {DT,TT}
         @assert hasinvariants(equation)
         @assert :h ∈ keys(equation.invariants)
-        functions = merge(get_function_tuple(equation), get_invariants(equation))
+        functions = merge(get_functions(equation), get_invariants(equation))
         IntegratorPGLRK{DT, ndims(equation)}(functions, tableau, Δt; kwargs...)
     end
 end

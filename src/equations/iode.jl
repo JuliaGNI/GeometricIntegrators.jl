@@ -216,7 +216,7 @@ _get_g(equ::IODE) = hasparameters(equ) ? (t,q,v,g) -> equ.g(t, q, v, g, equ.para
 _get_v̄(equ::IODE) = hasparameters(equ) ? (t,q,v) -> equ.v̄(t, q, v, equ.parameters) : equ.v̄
 _get_f̄(equ::IODE) = hasparameters(equ) ? (t,q,v,f) -> equ.f̄(t, q, v, f, equ.parameters) : equ.f̄
 
-function get_function_tuple(equ::IODE)
+function get_functions(equ::IODE)
     names = (:ϑ, :f, :g, :v̄, :f̄)
     equs  = (_get_ϑ(equ), _get_f(equ), _get_g(equ), _get_v̄(equ), _get_f̄(equ))
 

@@ -292,7 +292,7 @@ _get_f̄(equ::LDAE) = hasparameters(equ) ? (t,q,v,f)     -> equ.f̄(t, q, v, f, 
 _get_l(equ::LDAE) = hasparameters(equ) ? (t,q,v)       -> equ.lagrangian(t, q, v, equ.parameters) : equ.lagrangian
 
 
-function get_function_tuple(equ::LDAE)
+function get_functions(equ::LDAE)
     names = (:ϑ, :f, :u, :g, :ϕ)
     equs  = (_get_ϑ(equ), _get_f(equ), _get_u(equ), _get_g(equ), _get_ϕ(equ))
 

@@ -244,7 +244,7 @@ _get_f̄(equ::HDAE)  = hasparameters(equ) ? (t,q,p,f)     -> equ.f̄(t, q, p, f,
 _get_h(equ::HDAE)  = hasparameters(equ) ? (t,q,p)       -> equ.hamiltonian(t, q, p, equ.parameters) : equ.hamiltonian
 _get_P(equ::HDAE)  = hasparameters(equ) ? (t,q,p,P)     -> equ.P(t, q, p, P, equ.parameters) : equ.P
 
-function get_function_tuple(equ::HDAE)
+function get_functions(equ::HDAE)
     names = (:v, :f, :u, :g, :ϕ,)
     equs  = (_get_v(equ), _get_f(equ), 
              _get_u(equ), _get_g(equ), _get_ϕ(equ))

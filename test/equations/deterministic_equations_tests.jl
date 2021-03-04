@@ -158,7 +158,7 @@ end
     @test hasparameters(ode) == false
     @test hasperiodicity(ode) == false
 
-    @test get_function_tuple(ode) == NamedTuple{(:v,)}((ode_v,))
+    @test get_functions(ode) == NamedTuple{(:v,)}((ode_v,))
 
     @test ode == similar(ode, t₀, x₀)
     @test ode == similar(ode, x₀)
@@ -249,7 +249,7 @@ end
     @test hasparameters(pode) == false
     @test hasperiodicity(pode) == false
 
-    functions = get_function_tuple(pode)
+    functions = get_functions(pode)
     @test functions.v == pode_v == pode.v
     @test functions.f == pode_f == pode.f
 
@@ -310,7 +310,7 @@ end
     @test hasparameters(iode) == false
     @test hasperiodicity(iode) == false
 
-    functions = get_function_tuple(iode)
+    functions = get_functions(iode)
     @test functions.ϑ == iode_ϑ == iode.ϑ
     @test functions.f == iode_f == iode.f
     @test functions.g == iode_g == iode.g
@@ -356,7 +356,7 @@ end
     @test hasparameters(hode) == false
     @test hasperiodicity(hode) == false
 
-    functions = get_function_tuple(hode)
+    functions = get_functions(hode)
     @test functions.v == pode_v == hode.v
     @test functions.f == pode_f == hode.f
     @test functions.h == pode_h == hode.hamiltonian
@@ -430,7 +430,7 @@ end
     @test hasparameters(lode) == false
     @test hasperiodicity(lode) == false
 
-    functions = get_function_tuple(lode)
+    functions = get_functions(lode)
     @test functions.ϑ == iode_ϑ == lode.ϑ
     @test functions.f == iode_f == lode.f
     @test functions.g == iode_g == lode.g
@@ -499,7 +499,7 @@ end
     @test hasparameters(dae) == false
     @test hasperiodicity(dae) == false
 
-    functions = get_function_tuple(dae)
+    functions = get_functions(dae)
     @test functions.v == dae_v == dae.v
     @test functions.u == dae_u == dae.u
     @test functions.ϕ == dae_ϕ == dae.ϕ
@@ -556,7 +556,7 @@ end
     @test hasparameters(dae) == true
     @test hasperiodicity(dae) == true
 
-    functions = get_function_tuple(dae)
+    functions = get_functions(dae)
     @test functions.v != dae_v == dae.v
     @test functions.u != dae_u == dae.u
     @test functions.ū != dae_ū == dae.ū
@@ -606,7 +606,7 @@ end
     @test hasparameters(pdae) == false
     @test hasperiodicity(pdae) == false
 
-    functions = get_function_tuple(pdae)
+    functions = get_functions(pdae)
     @test functions.v == pdae_v == pdae.v
     @test functions.f == pdae_f == pdae.f
     @test functions.u == pdae_u == pdae.u
@@ -667,7 +667,7 @@ end
     @test hasparameters(pdae) == true
     @test hasperiodicity(pdae) == true
 
-    functions = get_function_tuple(pdae)
+    functions = get_functions(pdae)
     @test functions.v != pdae_v == pdae.v
     @test functions.f != pdae_f == pdae.f
     @test functions.u != pdae_u == pdae.u
@@ -734,7 +734,7 @@ end
     @test hasparameters(idae) == false
     @test hasperiodicity(idae) == false
 
-    functions = get_function_tuple(idae)
+    functions = get_functions(idae)
     @test functions.ϑ == pdae_p == idae.ϑ
     @test functions.f == pdae_f == idae.f
     @test functions.u == pdae_u == idae.u
@@ -795,7 +795,7 @@ end
     @test hasparameters(idae) == true
     @test hasperiodicity(idae) == true
 
-    functions = get_function_tuple(idae)
+    functions = get_functions(idae)
     @test functions.ϑ != pdae_p == idae.ϑ
     @test functions.f != pdae_f == idae.f
     @test functions.u != pdae_u == idae.u
@@ -862,7 +862,7 @@ end
     @test hasparameters(hdae) == false
     @test hasperiodicity(hdae) == false
 
-    functions = get_function_tuple(hdae)
+    functions = get_functions(hdae)
     @test functions.v == pdae_v == hdae.v
     @test functions.f == pdae_f == hdae.f
     @test functions.u == pdae_u == hdae.u
@@ -924,7 +924,7 @@ end
     @test hasparameters(hdae) == true
     @test hasperiodicity(hdae) == true
 
-    functions = get_function_tuple(hdae)
+    functions = get_functions(hdae)
     @test functions.v != pdae_v == hdae.v
     @test functions.f != pdae_f == hdae.f
     @test functions.u != pdae_u == hdae.u
@@ -991,7 +991,7 @@ end
     @test hasparameters(ldae) == false
     @test hasperiodicity(ldae) == false
 
-    functions = get_function_tuple(ldae)
+    functions = get_functions(ldae)
     @test functions.ϑ == iode_ϑ == ldae.ϑ
     @test functions.f == iode_f == ldae.f
     @test functions.u == iode_u == ldae.u
@@ -1054,7 +1054,7 @@ end
     @test hasparameters(ldae) == true
     @test hasperiodicity(ldae) == true
 
-    functions = get_function_tuple(ldae)
+    functions = get_functions(ldae)
     @test functions.ϑ != iode_ϑ == ldae.ϑ
     @test functions.f != iode_f == ldae.f
     @test functions.u != iode_u == ldae.u
@@ -1119,7 +1119,7 @@ end
     @test hasparameters(spdae) == false
     @test hasperiodicity(spdae) == false
 
-    functions = get_function_tuple(spdae)
+    functions = get_functions(spdae)
     @test functions.v == spdae_v == spdae.v
     @test functions.f == spdae_f == spdae.f
     @test functions.ϕ ==  pdae_ϕ == spdae.ϕ

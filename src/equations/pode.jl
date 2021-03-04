@@ -173,7 +173,7 @@ _get_v̄(equ::PODE) = _get_v(equ)
 _get_f̄(equ::PODE) = _get_f(equ)
 
 
-function get_function_tuple(equ::PODE)
+function get_functions(equ::PODE)
     names = (:v,:f)
     equs  = (_get_v(equ), _get_f(equ))
 

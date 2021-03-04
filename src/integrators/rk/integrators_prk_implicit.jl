@@ -145,7 +145,7 @@ struct IntegratorPRKimplicit{DT, TT, D, S, PT <: ParametersPRKimplicit{DT,TT},
     end
 
     function IntegratorPRKimplicit(equation::Union{IODE{DT}, LODE{DT}}, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorPRKimplicit{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorPRKimplicit{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
     end
 end
 

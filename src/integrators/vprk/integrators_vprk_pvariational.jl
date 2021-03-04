@@ -54,7 +54,7 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
     end
 
     function IntegratorVPRKpVariational(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
-        IntegratorVPRKpVariational{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorVPRKpVariational{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
     end
 end
 

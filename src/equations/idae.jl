@@ -234,7 +234,7 @@ _get_v̄(equ::IDAE) = hasparameters(equ) ? (t,q,v)       -> equ.v̄(t, q, v, equ
 _get_f̄(equ::IDAE) = hasparameters(equ) ? (t,q,v,f)     -> equ.f̄(t, q, v, f, equ.parameters) : equ.f̄
 _get_h(equ::IDAE) = hasparameters(equ) ? (t,q)         -> equ.h(t, q, equ.parameters) : equ.h
 
-function get_function_tuple(equ::IDAE)
+function get_functions(equ::IDAE)
     names = (:ϑ,:f,:u,:g,:ϕ)
     equs  = (_get_ϑ(equ), _get_f(equ), _get_u(equ), _get_g(equ), _get_ϕ(equ))
 

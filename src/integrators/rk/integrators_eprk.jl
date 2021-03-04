@@ -99,7 +99,7 @@ struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: AbstractIntegratorPRK{D
     end
 
     function IntegratorEPRK(equation::Union{PODE{DT}, HODE{DT}}, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorEPRK{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorEPRK{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
     end
 end
 

@@ -48,8 +48,8 @@ function IntegratorComposition(equation::SODE{DT,TT}, integrators::Tuple, tablea
 
     f, c = get_splitting_coefficients(R, tableau)
 
-    functions = get_function_tuple(equation)
-    solutions = get_solution_tuple(equation)
+    functions = get_functions(equation)
+    solutions = get_solutions(equation)
     subints = ()
 
     # construct composition integrators

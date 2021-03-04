@@ -40,7 +40,7 @@ struct IntegratorVPRKpMidpoint{DT, TT, D, S,
     end
 
     function IntegratorVPRKpMidpoint(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
-        IntegratorVPRKpMidpoint{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorVPRKpMidpoint{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
     end
 end
 

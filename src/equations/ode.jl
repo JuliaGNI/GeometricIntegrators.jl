@@ -141,23 +141,9 @@ Common.nsamples(equ::ODE) = length(equ.q₀)
 _get_v(equ::ODE) = hasparameters(equ) ? (t,q,v) -> equ.v(t, q, v, equ.parameters) : equ.v
 _get_v̄(equ::ODE) = _get_v(equ)
 
-function get_function_tuple(equ::ODE)
+function get_functions(equ::ODE)
     names = (:v,)
     equs  = (_get_v(equ),)
 
     NamedTuple{names}(equs)
-end
-
-function get_invariants(equ::ODE)
-    if hasinvariants(equ)
-        keys = ()
-        invs = ()
-        for (key, inv) in pairs(equ.invariants)
-            keys = (keys..., key)
-            invs = (invs..., hasparameters(equ) ? (t,q) -> inv(t, q, equ.parameters) : inv)
-        end
-        return NamedTuple{keys}(invs)
-    else
-        return NamedTuple()
-    end
 end

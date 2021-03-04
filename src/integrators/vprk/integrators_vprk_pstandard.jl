@@ -60,7 +60,7 @@ struct IntegratorVPRKpStandard{DT, TT, D, S,
     end
 
     function IntegratorVPRKpStandard(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt, RU, RG; kwargs...) where {DT}
-        IntegratorVPRKpStandard{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt, RU, RG; kwargs...)
+        IntegratorVPRKpStandard{DT, ndims(equation)}(get_functions(equation), tableau, Δt, RU, RG; kwargs...)
     end
 end
 

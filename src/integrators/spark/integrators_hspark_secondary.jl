@@ -77,7 +77,7 @@ struct IntegratorHSPARKsecondary{DT, TT, D, S, R, PT <: ParametersHSPARKsecondar
     end
 
     function IntegratorHSPARKsecondary(equation::HDAE{DT}, tableau::TableauHSPARKsecondary, Δt; kwargs...) where {DT}
-        IntegratorHSPARKsecondary{DT, ndims(equation)}(get_function_tuple(equation), tableau, Δt; kwargs...)
+        IntegratorHSPARKsecondary{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
     end
 end
 

@@ -158,7 +158,7 @@ _get_v(equ::SDE) = hasparameters(equ) ? (t,q,v) -> equ.v(t, q, v, equ.parameters
 _get_B(equ::SDE) = hasparameters(equ) ? (t,q,B,col=0) -> equ.B(t, q, B, equ.parameters, col) : equ.B
 # _get_h(equ::SDE) = hasparameters(equ) ? (t,q) -> equ.h(t, q, equ.parameters) : equ.h
 
-function get_function_tuple(equ::SDE)
+function get_functions(equ::SDE)
     names = (:v,:B)
     equs  = (_get_v(equ), _get_B(equ))
 

@@ -164,7 +164,7 @@ struct IntegratorCGVI{DT, TT, D, S, R,
     end
 
     function IntegratorCGVI(equation::Union{IODE{DT}, LODE{DT}}, basis::Basis, quadrature::QuadratureRule, Δt; kwargs...) where {DT}
-        IntegratorCGVI{DT, ndims(equation)}(get_function_tuple(equation), basis, quadrature, Δt; kwargs...)
+        IntegratorCGVI{DT, ndims(equation)}(get_functions(equation), basis, quadrature, Δt; kwargs...)
     end
 end
 
