@@ -197,7 +197,7 @@ struct LDAE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     end
 end
 
-_LDAE(ϑ, f, u, g, ϕ, ū, ḡ, ψ, lagrangian, ω, t₀, q₀, p₀, λ₀, μ₀; v̄=(t,q,v)->nothing, f̄=f, invariants=nothing, parameters=nothing, periodicity=nothing) = LDAE(ϑ, f, u, g, ϕ, ū, ḡ, ψ, ω, v̄, f̄, t₀, q₀, p₀, λ₀, μ₀, lagrangian, invariants, parameters, periodicity)
+_LDAE(ϑ, f, u, g, ϕ, ū, ḡ, ψ, lagrangian, ω, t₀, q₀, p₀, λ₀, μ₀; invariants=nothing, parameters=nothing, periodicity=nothing, v̄=(parameters === nothing ? (t,q,v)->nothing : (t,q,v,params)->nothing), f̄=f) = LDAE(ϑ, f, u, g, ϕ, ū, ḡ, ψ, ω, v̄, f̄, t₀, q₀, p₀, λ₀, μ₀, lagrangian, invariants, parameters, periodicity)
 
 LDAE(ϑ, f, u, g, ϕ, l, ω, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...) = _LDAE(ϑ, f, u, g, ϕ, nothing, nothing, nothing, l, ω, t₀, q₀, p₀, λ₀, μ₀; kwargs...)
 LDAE(ϑ, f, u, g, ϕ, l, ω, q₀::StateVector, p₀::StateVector, λ₀::StateVector, μ₀::StateVector=zero(λ₀); kwargs...) = LDAE(ϑ, f, u, g, ϕ, l, ω, 0.0, q₀, p₀, λ₀, μ₀; kwargs...)

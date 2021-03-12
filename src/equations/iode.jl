@@ -151,7 +151,7 @@ struct IODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     end
 end
 
-_IODE(ϑ, f, g, t₀, q₀, p₀, λ₀; v̄=(parameters === nothing ? (t,q,v)->nothing :  (t,q,v,params)->nothing), f̄=f, invariants=nothing, parameters=nothing, periodicity=nothing) = IODE(ϑ, f, g, v̄, f̄, t₀, q₀, p₀, λ₀, invariants, parameters, periodicity)
+_IODE(ϑ, f, g, t₀, q₀, p₀, λ₀; invariants=nothing, parameters=nothing, periodicity=nothing, v̄=(parameters === nothing ? (t,q,v)->nothing : (t,q,v,params)->nothing), f̄=f) = IODE(ϑ, f, g, v̄, f̄, t₀, q₀, p₀, λ₀, invariants, parameters, periodicity)
 
 IODE(ϑ, f, g, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀); kwargs...) = _IODE(ϑ, f, g, t₀, q₀, p₀, λ₀; kwargs...)
 IODE(ϑ, f, g, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀); kwargs...) = IODE(ϑ, f, g, 0.0, q₀, p₀, λ₀; kwargs...)

@@ -153,7 +153,7 @@ struct LODE{dType <: Number, tType <: Real, arrayType <: AbstractArray{dType},
     end
 end
 
-_LODE(ϑ, f, g, lagrangian, ω, t₀, q₀, p₀, λ₀; v̄=(parameters === nothing ? (t,q,v)->nothing :  (t,q,v,params)->nothing), f̄=f, invariants=nothing, parameters=nothing, periodicity=nothing) = LODE(ϑ, f, g, ω, v̄, f̄, t₀, q₀, p₀, λ₀, lagrangian, invariants, parameters, periodicity)
+_LODE(ϑ, f, g, lagrangian, ω, t₀, q₀, p₀, λ₀; invariants=nothing, parameters=nothing, periodicity=nothing, v̄=(parameters === nothing ? (t,q,v)->nothing : (t,q,v,params)->nothing), f̄=f) = LODE(ϑ, f, g, ω, v̄, f̄, t₀, q₀, p₀, λ₀, lagrangian, invariants, parameters, periodicity)
 
 LODE(ϑ, f, g, l, ω, t₀, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀); kwargs...) = _LODE(ϑ, f, g, l, ω, t₀, q₀, p₀, λ₀; kwargs...)
 LODE(ϑ, f, g, l, ω, q₀::StateVector, p₀::StateVector, λ₀::StateVector=zero(q₀); kwargs...) = LODE(ϑ, f, g, l, ω, 0.0, q₀, p₀, λ₀; kwargs...)
