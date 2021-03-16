@@ -62,7 +62,16 @@ end
 @inline CacheType(ST, params::ParametersFIRK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheFIRK{ST,D,S}
 
 
-"Fully implicit Runge-Kutta integrator."
+@doc raw"""
+Fully implicit Runge-Kutta integrator solving the system
+```math
+\begin{aligned}
+V_{n,i} &= v (Q_{n,i}, P_{n,i}) , &
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
+\end{aligned}
+```
+"""
 struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
                                     ST <: NonlinearSolver{DT},
                                     IT <: InitialGuessODE{TT}} <: AbstractIntegratorRK{DT,TT}

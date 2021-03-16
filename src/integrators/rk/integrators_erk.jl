@@ -30,7 +30,16 @@ end
 @inline CacheType(ST, params::ParametersERK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheERK{ST,D,S}
 
 
-"Explicit Runge-Kutta integrator."
+@doc raw"""
+Explicit Runge-Kutta integrator solving the system
+```math
+\begin{aligned}
+V_{n,i} &= v (Q_{n,i}, P_{n,i}) , &
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
+\end{aligned}
+```
+"""
 struct IntegratorERK{DT, TT, D, S, ET} <: AbstractIntegratorRK{DT,TT}
     params::ParametersERK{DT,TT,D,S,ET}
     caches::CacheDict{ParametersERK{DT,TT,D,S,ET}}
