@@ -216,7 +216,8 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     params.equs[:ϑ](tᵢ, q, v, θ)
 end
 
-"Compute stages of fully implicit Runge-Kutta methods."
+
+# Compute stages of fully implicit Runge-Kutta methods.
 function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSRKimplicit{DT,TT,D,S},
                           caches::CacheDict) where {ST,DT,TT,D,S}
     # temporary variables

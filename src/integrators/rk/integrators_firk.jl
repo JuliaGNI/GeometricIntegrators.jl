@@ -192,7 +192,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     end
 end
 
-"Compute stages of fully implicit Runge-Kutta methods."
+# Compute stages of fully implicit Runge-Kutta methods.
 function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,D},
                           caches::CacheDict) where {ST,DT,TT,D}
     # temporary variables
@@ -219,7 +219,7 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{D
     end
 end
 
-"Compute stages of fully implicit Runge-Kutta methods."
+# Compute Jacobian of fully implicit Runge-Kutta methods.
 function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT,D,S},
                    params::ParametersFIRK{DT,TT,D,S}) where {DT,TT,D,S}
     local tᵢ::TT
