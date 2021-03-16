@@ -107,7 +107,7 @@ end
 @inline Base.ndims(::IntegratorEPRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
-"Compute Q stages of explicit partitioned Runge-Kutta methods."
+# Compute Q stages of explicit partitioned Runge-Kutta methods.
 function computeStageQ!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{DT}, i::Int, jmax::Int, t::TT) where {DT,TT}
     fill!(cache.Y[i], zero(DT))
     for j in 1:jmax
@@ -121,7 +121,7 @@ function computeStageQ!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{D
     equations(int)[:f](t, cache.Q[i], cache.P[jmax], cache.F[i])
 end
 
-"Compute P stages of explicit partitioned Runge-Kutta methods."
+# Compute P stages of explicit partitioned Runge-Kutta methods.
 function computeStageP!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{DT}, i::Int, jmax::Int, t::TT) where {DT,TT}
     fill!(cache.Z[i], zero(DT))
     for j in 1:jmax

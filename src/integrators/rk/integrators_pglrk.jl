@@ -97,7 +97,7 @@ Base.:(==)(tab1::CoefficientsPGLRK, tab2::CoefficientsPGLRK) = (tab1.o == tab2.o
 
 Base.isequal(tab1::CoefficientsPGLRK{T1}, tab2::CoefficientsPGLRK{T2}) where {T1,T2} = (tab1 == tab2 && T1 == T2 && typeof(tab1) == typeof(tab2))
 
-"Print Runge-Kutta coefficients."
+# Print Runge-Kutta coefficients.
 function Base.show(io::IO, tab::CoefficientsPGLRK)
     print(io, "Projected Gauss-Legendre Runge-Kutta Coefficients ", tab.name, " with ", tab.s, " stages and order ", tab.o)
     print(io, "  a = ", tab.a)
@@ -225,7 +225,7 @@ struct IntegratorPGLRK{DT, TT, D, S, PT <: ParametersPGLRK{DT,TT},
     end
 end
 
-"Print Projected Gauss-Legendre Runge-Kutta integrator."
+# Print Projected Gauss-Legendre Runge-Kutta integrator.
 function Base.show(io::IO, int::IntegratorPGLRK)
     print(io, "Projected Gauss-Legendre Runge-Kutta Integrator with ")
     print(io, "  timestep = ", int.params.Δt)
@@ -312,7 +312,8 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     q .= params.q̄ .+ params.Δt .* y
 end
 
-"Compute stages of projected Gauss-Legendre Runge-Kutta methods."
+
+# Compute stages of projected Gauss-Legendre Runge-Kutta methods.
 function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S},
                           caches::CacheDict) where {ST,DT,TT,D,S}
 

@@ -113,7 +113,6 @@ end
 @inline has_initial_guess(int::IntegratorDIRK) = true
 
 
-"Initialise initial guess"
 function initialize!(int::IntegratorDIRK, cache::IntegratorCacheDIRK)
     # initialise initial guess
     cache.t̄ = cache.t - timestep(int)
@@ -131,7 +130,6 @@ function update_params!(int::IntegratorDIRK, sol::AtomicSolutionODE)
 end
 
 
-"Compute initial guess for internal stages."
 function initial_guess!(int::IntegratorDIRK{DT}, sol::AtomicSolutionODE{DT},
                         cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT}
 
@@ -171,7 +169,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{ST}, V::Vector{ST}, Y::Vector{
 end
 
 
-"Compute stages of fully implicit Runge-Kutta methods."
+# Compute stages of fully implicit Runge-Kutta methods.
 function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{DT,TT,D,S},
                           caches::CacheDict, i::Int) where {ST,DT,TT,D,S}
 

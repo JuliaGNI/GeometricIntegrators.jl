@@ -226,7 +226,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
 end
 
 
-"Compute stages of implicit partitioned Runge-Kutta methods."
+# Compute stages of implicit partitioned Runge-Kutta methods.
 function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersPRKimplicit{DT,TT,D,S},
                           caches::CacheDict) where {ST,DT,TT,D,S}
 
