@@ -11,7 +11,7 @@
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3648325.svg)](https://doi.org/10.5281/zenodo.3648325)
 
 
-GeometricIntegrators.jl is a library of geometric integrators for ordinary differential equations, stochastic differential equations and differential algebraic equations in Julia.
+GeometricIntegrators.jl is a library of geometric numerical algorithms for the solution of differential equations in Julia.
 Its main purpose is the democratization and proliferation of geometric integrators by providing a comprehensive collection of structure-preserving as well as standard algorithms under a unified interface. 
 GeometricIntegrators.jl can be used either interactively, as computational core in other codes, or from within [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) via [GeometricIntegratorsDiffEq.jl](https://github.com/JuliaDiffEq/GeometricIntegratorsDiffEq.jl). It provides both, a high-level interface that requires only very few lines of code to solve an actual problem, and a lean low-level interface that allows for straightforward integration into application codes via the exchange of minimalistic data structures.
 In both, the library leaves maximum control to the user. While trying to pick sensible defaults, all settings are accessible to and modifiable by the user. Suitable abstraction layers allow to choose between different linear and nonlinear solvers, auto-differentiation packages or custom routines for the computation of Jacobians and the like.
