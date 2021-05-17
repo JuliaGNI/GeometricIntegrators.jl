@@ -62,7 +62,16 @@ end
 @inline CacheType(ST, params::ParametersFIRK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheFIRK{ST,D,S}
 
 
-"Fully implicit Runge-Kutta integrator."
+@doc raw"""
+Fully implicit Runge-Kutta integrator solving the system
+```math
+\begin{aligned}
+V_{n,i} &= v (Q_{n,i}, P_{n,i}) , &
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
+\end{aligned}
+```
+"""
 struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
                                     ST <: NonlinearSolver{DT},
                                     IT <: InitialGuessODE{TT}} <: AbstractIntegratorRK{DT,TT}
@@ -183,7 +192,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     end
 end
 
-"Compute stages of fully implicit Runge-Kutta methods."
+# Compute stages of fully implicit Runge-Kutta methods.
 function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{DT,TT,D},
                           caches::CacheDict) where {ST,DT,TT,D}
     # temporary variables
@@ -210,7 +219,7 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRK{D
     end
 end
 
-"Compute stages of fully implicit Runge-Kutta methods."
+# Compute Jacobian of fully implicit Runge-Kutta methods.
 function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT,D,S},
                    params::ParametersFIRK{DT,TT,D,S}) where {DT,TT,D,S}
     local tᵢ::TT

@@ -50,7 +50,9 @@ end
 @inline CacheType(ST, params::ParametersMidpointImplicit{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheMidpointImplicit{ST,D,S}
 
 
-"Fully implicit Runge-Kutta integrator."
+"""
+Implicit midpoint Runge-Kutta integrator.
+"""
 struct IntegratorMidpointImplicit{DT, TT, D, S, PT <: ParametersMidpointImplicit{DT,TT},
                                     ST <: NonlinearSolver{DT},
                                     IT <: InitialGuessODE{DT,TT}} <: AbstractIntegratorRK{DT,TT}
@@ -147,7 +149,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{ST}, V::Vector{ST}, F::Vector{
     params.equs[:ϑ](params.t + params.Δt, q, v, θ)
 end
 
-"Compute stages of fully implicit Runge-Kutta methods."
+
 function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersMidpointImplicit{DT,TT,D,S},
                           caches::CacheDict) where {ST,DT,TT,D,S}
     # get cache for internal stages

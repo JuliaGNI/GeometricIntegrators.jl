@@ -13,22 +13,27 @@
 
 GeometricIntegrators.jl is a library of geometric integrators for ordinary differential equations, stochastic differential equations and differential algebraic equations in Julia.
 Its main purpose is the democratization and proliferation of geometric integrators by providing a comprehensive collection of structure-preserving as well as standard algorithms under a unified interface. 
-GeometricIntegrators.jl can be used either interactively or as computational core in other codes. It provides both, a high-level interface that requires only very few lines of code to solve an actual problem, and a lean low-level interface that allows for straightforward integration into application codes via the exchange of minimalistic data structures.
+GeometricIntegrators.jl can be used either interactively, as computational core in other codes, or from within [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) via [GeometricIntegratorsDiffEq.jl](https://github.com/JuliaDiffEq/GeometricIntegratorsDiffEq.jl). It provides both, a high-level interface that requires only very few lines of code to solve an actual problem, and a lean low-level interface that allows for straightforward integration into application codes via the exchange of minimalistic data structures.
 In both, the library leaves maximum control to the user. While trying to pick sensible defaults, all settings are accessible to and modifiable by the user. Suitable abstraction layers allow to choose between different linear and nonlinear solvers, auto-differentiation packages or custom routines for the computation of Jacobians and the like.
 
 
 ## Statement of need
 
 Differential equations are ubiquitous in science and engineering. Many equations possess geometric features or abstract mathematical structures that need to be preserved in the discretisation in order to obtain reliable simulation results, especially for nonlinear problems and long-time simulations. The preservation of such properties improves stability, bounds global error growth and reduces numerical artefacts.
-Robust, performant and structure-preserving solvers for different types of differential equations are thus needed across many disciplines. *GeometricIntegrators.jl* provides such solvers and makes them available for both direct use as well as integration into other codes. Furthermore, the implemented algorithms can also be used within the *[DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl)* ecosystem [[Rackauckas:2017](@cite)], which is the defacto standard differential equation solver for the Julia programming language [[Bezanson:2017](@cite)].
+Robust, performant and structure-preserving solvers for different types of differential equations are thus needed across many disciplines. GeometricIntegrators.jl provides such solvers and makes them available for both direct use as well as integration into other codes. Furthermore, the implemented algorithms can also be used within the [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) ecosystem [[Rackauckas:2017](@cite)], which is the defacto standard differential equation solver for the Julia programming language [[Bezanson:2017](@cite)].
 
-*GeometricIntegrators.jl* provides a comprehensive library of existing geometric integration as well as non-geometric algorithms, such as explicit, implicit, partitioned and stochastic Runge-Kutta methods, SPARK methods, splitting methods, symplectic methods and variational integrators. Most methods are implemented in an abstract way that allows for the flexible choice of tableaus, approximation spaces, basis functions, quadrature rules, and thus order of convergence.
-*GeometricIntegrators.jl* also serves as a testbed for the development and analysis of novel algorithms. Due to the modular structure and the use of the multiple dispatch paradigm, the library can easily be extended, e.g., towards new algorithms or new types of equations. The library is designed to minimize overhead and maximize performance in order to be able to perform simulations with millions or even billions of time steps to facilitate the study of the long-time behaviour of both numerical algorithms and dynamical systems.
+GeometricIntegrators.jl provides a comprehensive library of existing geometric integration as well as non-geometric algorithms, such as explicit, implicit and partitioned Runge-Kutta methods, SPARK methods, splitting methods, symplectic methods and variational integrators. Most methods are implemented in an abstract way that allows for the flexible choice of tableaus, approximation spaces, basis functions, quadrature rules, and thus order of convergence.
+As most geometric integrators are not easily combined with time step adaption in a structure-preserving way, GeometricIntegrators.jl does not provide any general infrastructure for adaptive time stepping. Nonetheless, individual integrators can implement their own adaptivity strategies as long as they provide a solution at a predefined, equidistant time series.
+
+GeometricIntegrators.jl also serves as a testbed for the development and analysis of novel algorithms. Due to the modular structure and the use of the multiple dispatch paradigm, the library can easily be extended, e.g., towards new algorithms or new types of equations. The library is designed to minimize overhead and maximize performance in order to be able to perform simulations with millions or even billions of time steps to facilitate the study of the long-time behaviour of both numerical algorithms and dynamical systems.
+The current scope of applications is mainly small- to mid-size systems of differential equations, e.g., systems of ordinary differential equations or semidiscretisations of partial differential equations with a moderate number of degrees of freedom.
+It is envisaged that in the future GeometricIntegrators.jl will also be able to address larger problems, especially semidiscretisations of partial differential equations in higher dimensions. Many elements required for this are already in place, e.g., support for general solution data structures, but others such as interfaces to appropriate iterative and parallel linear solvers are still lacking.
 
 
-## Other Software
+## Similar Software
 
-A Julia package closely related to *GeometricIntegrators.jl* is *[DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl)* [[Rackauckas:2017](@cite)]. However, the scope of the two libraries is rather different. While *DifferentialEquations.jl* provides a feature-rich ecosystem for the solution of differential equations, the focus of *GeometricIntegrators.jl* is on algorithms. In fact, *GeometricIntegrators.jl* can be used as backend for *DifferentialEquations.jl* via [GeometricIntegratorsDiffEq.jl](https://github.com/JuliaDiffEq/GeometricIntegratorsDiffEq.jl).
+A Julia package closely related to GeometricIntegrators.jl is [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) [[Rackauckas:2017](@cite)]. Although serving similar purposes, the scope of the two libraries is rather different.
+While DifferentialEquations.jl provides a feature-rich ecosystem for the solution of differential equations, the focus of GeometricIntegrators.jl is on algorithms. While [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) is based around adaptive time stepping algorithms, GeometricIntegrators.jl focuses on fixed time step methods, given that structure-preservation is not easily combined with time step adaptivity. Therefore both packages are rather complementary, and GeometricIntegrators.jl can in fact be used as backend for DifferentialEquations.jl via [GeometricIntegratorsDiffEq.jl](https://github.com/JuliaDiffEq/GeometricIntegratorsDiffEq.jl).
 
 
 ## Manual
@@ -76,7 +81,7 @@ Pages = ["developer/code_integration.md",
 
 ## References
 
-If you use *GeometricIntegrators.jl* in your work, please consider citing it by
+If you use GeometricIntegrators.jl in your work, please consider citing it by
 
 ```
 @misc{Kraus:2020:GeometricIntegrators,
@@ -88,7 +93,7 @@ If you use *GeometricIntegrators.jl* in your work, please consider citing it by
 }
 ```
 
-*GeometricIntegrators.jl* contains reference implementation for the methods described in the following articles:
+GeometricIntegrators.jl contains reference implementation for the methods described in the following articles:
 
 - Michael Kraus. Projected Variational Integrators for Degenerate Lagrangian Systems. [arXiv:1708.07356](https://arxiv.org/abs/1708.07356).
 - Michael Kraus and Tomasz M. Tyranowski. Variational Integrators for Stochastic Dissipative Hamiltonian Systems. [arXiv:1909.07202](https://arxiv.org/abs/1909.07202),

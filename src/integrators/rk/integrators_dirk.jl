@@ -43,7 +43,17 @@ end
 @inline CacheType(ST, params::ParametersDIRK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheDIRK{ST,D,S}
 
 
-"Diagonally implicit Runge-Kutta integrator."
+@doc raw"""
+Diagonally implicit Runge-Kutta integrator solving the system
+```math
+\begin{aligned}
+V_{n,i} &= v (Q_{n,i}, P_{n,i}) , &
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
+\end{aligned}
+```
+
+"""
 struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
                                     ST,# <: NonlinearSolver{DT},
                                     IT <: InitialGuessODE{TT}} <: AbstractIntegratorRK{DT,TT}
@@ -103,7 +113,6 @@ end
 @inline has_initial_guess(int::IntegratorDIRK) = true
 
 
-"Initialise initial guess"
 function initialize!(int::IntegratorDIRK, cache::IntegratorCacheDIRK)
     # initialise initial guess
     cache.t̄ = cache.t - timestep(int)
@@ -121,7 +130,6 @@ function update_params!(int::IntegratorDIRK, sol::AtomicSolutionODE)
 end
 
 
-"Compute initial guess for internal stages."
 function initial_guess!(int::IntegratorDIRK{DT}, sol::AtomicSolutionODE{DT},
                         cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT}
 
@@ -161,7 +169,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{ST}, V::Vector{ST}, Y::Vector{
 end
 
 
-"Compute stages of fully implicit Runge-Kutta methods."
+# Compute stages of fully implicit Runge-Kutta methods.
 function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{DT,TT,D,S},
                           caches::CacheDict, i::Int) where {ST,DT,TT,D,S}
 

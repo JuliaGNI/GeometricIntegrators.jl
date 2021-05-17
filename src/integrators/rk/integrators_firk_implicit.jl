@@ -55,7 +55,16 @@ end
 @inline CacheType(ST, params::ParametersFIRKimplicit{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheFIRKimplicit{ST,D,S}
 
 
-"Fully implicit Runge-Kutta integrator."
+@doc raw"""
+Fully implicit Runge-Kutta integrator solving the system
+```math
+\begin{aligned}
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
+\vartheta(Q_{n,i}) &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, f (Q_{n,j}, V_{n,j}) , &
+\vartheta(q_{n+1}) &= q_{n} + h \sum \limits_{i=1}^{s} b_{i}  \, f (Q_{n,j}, V_{n,j}) .
+\end{aligned}
+```
+"""
 struct IntegratorFIRKimplicit{DT, TT, D, S, PT <: ParametersFIRKimplicit{DT,TT},
                                     ST <: NonlinearSolver{DT},
                                     IT <: InitialGuessODE{TT}} <: AbstractIntegratorRK{DT,TT}
@@ -198,7 +207,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     params.equs[:ϑ](tᵢ, q, v, θ)
 end
 
-"Compute stages of fully implicit Runge-Kutta methods."
+# Compute stages of fully implicit Runge-Kutta methods.
 function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRKimplicit{DT,TT,D,S},
                           caches::CacheDict) where {ST,DT,TT,D,S}
     # temporary variables
