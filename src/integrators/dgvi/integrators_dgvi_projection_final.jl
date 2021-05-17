@@ -148,7 +148,7 @@ struct IntegratorDGVIP1{DT, TT, D, S, R,
     end
 
     function IntegratorDGVIP1{DT,D}(equations::NamedTuple, basis::Basis{TT}, quadrature::QuadratureRule{TT,R}, Δt::TT;
-                                  interpolation=HermiteInterpolation{DT}) where {DT,TT,D,R}
+                                  interpolation=HermiteExtrapolation{DT}) where {DT,TT,D,R}
 
         # get number of stages
         S = nbasis(basis)
@@ -163,7 +163,7 @@ struct IntegratorDGVIP1{DT, TT, D, S, R,
         solver = create_nonlinear_solver(DT, D*(S+2), params, caches)
 
         # create initial guess
-        iguess = InitialGuessODE(get_config(:ig_interpolation), equations[:v̄], Δt)
+        iguess = InitialGuessODE(get_config(:ig_extrapolation), equations[:v̄], Δt)
 
         # create integrator
         IntegratorDGVIP1(basis, quadrature, params, solver, iguess, caches)

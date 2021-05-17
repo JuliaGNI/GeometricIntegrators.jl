@@ -9,29 +9,29 @@
 * `Δt`:  time step
 * `s`:   number of extrapolation stages (for initialisation)
 """
-struct InitialGuessPODE{TT, VT, FT, IT <: Interpolator{TT}}
+struct InitialGuessPODE{TT, VT, FT, IT <: Extrapolation{TT}}
     int::IT
     v::VT
     f::FT
     Δt::TT
     s::Int
 
-    function InitialGuessPODE(int::IT, v::VT, f::FT, Δt::TT) where {TT <: Real, VT <: Function, FT <: Function, IT <: Interpolator{TT}}
+    function InitialGuessPODE(int::IT, v::VT, f::FT, Δt::TT) where {TT <: Real, VT <: Function, FT <: Function, IT <: Extrapolation{TT}}
         new{TT,VT,FT,IT}(int, v, f, Δt, get_config(:ig_extrapolation_stages))
     end
 end
 
-function InitialGuessPODE(interp::Type{<:Interpolator}, v::Function, f::Function, Δt)
+function InitialGuessPODE(interp::Type{<:Extrapolation}, v::Function, f::Function, Δt)
     int = interp(zero(Δt), one(Δt), Δt)
     InitialGuessPODE(int, v, f, Δt)
 end
 
-function InitialGuessPODE(interp::Type{<:Interpolator}, equation::Union{PODE,PDAE,HODE,HDAE}, Δt)
+function InitialGuessPODE(interp::Type{<:Extrapolation}, equation::Union{PODE,PDAE,HODE,HDAE}, Δt)
     InitialGuessPODE(interp, _get_v̄(equation), _get_f̄(equation), Δt)
 end
 
 InitialGuess(interp, equation::Union{PODE,PDAE,HODE,HDAE}, Δt) = InitialGuessPODE(interp, equation, Δt)
-InitialGuess(equation::Union{PODE,PDAE,HODE,HDAE}, Δt) = InitialGuessPODE(get_config(:ig_interpolation), equation, Δt)
+InitialGuess(equation::Union{PODE,PDAE,HODE,HDAE}, Δt) = InitialGuessPODE(get_config(:ig_extrapolation), equation, Δt)
 
 
 Base.:(==)(ig1::InitialGuessPODE{TT1}, ig2::InitialGuessPODE{TT2}) where {TT1,TT2}= (

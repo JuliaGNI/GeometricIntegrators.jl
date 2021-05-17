@@ -71,7 +71,7 @@ struct IntegratorVSPARK{DT, TT, D, S, R, PT <: ParametersVSPARK{DT,TT,D,S,R},
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_extrapolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVSPARK(params, solver, iguess, caches)

@@ -8,28 +8,28 @@
 * `Δt`:  time step
 * `s`:   number of extrapolation stages (for initialisation)
 """
-struct InitialGuessODE{TT, VT, IT <: Interpolator{TT}}
+struct InitialGuessODE{TT, VT, IT <: Extrapolation{TT}}
     int::IT
     v::VT
     Δt::TT
     s::Int
 
-    function InitialGuessODE(int::IT, v::VT, Δt::TT) where {TT <: Real, VT <: Function, IT <: Interpolator{TT}}
+    function InitialGuessODE(int::IT, v::VT, Δt::TT) where {TT <: Real, VT <: Function, IT <: Extrapolation{TT}}
         new{TT,VT,IT}(int, v, Δt, get_config(:ig_extrapolation_stages))
     end
 end
 
-function InitialGuessODE(interp::Type{<:Interpolator}, v::Function, Δt)
+function InitialGuessODE(interp::Type{<:Extrapolation}, v::Function, Δt)
     int = interp(zero(Δt), one(Δt), Δt)
     InitialGuessODE(int, v, Δt)
 end
 
-function InitialGuessODE(interp::Type{<:Interpolator}, equation::Union{ODE,DAE,IODE,LODE}, Δt)
+function InitialGuessODE(interp::Type{<:Extrapolation}, equation::Union{ODE,DAE,IODE,LODE}, Δt)
     InitialGuessODE(interp, _get_v̄(equation), Δt)
 end
 
 InitialGuess(interp, equation::Union{ODE,DAE}, Δt) = InitialGuessODE(interp, equation, Δt)
-InitialGuess(equation::Union{ODE,DAE}, Δt) = InitialGuessODE(get_config(:ig_interpolation), equation, Δt)
+InitialGuess(equation::Union{ODE,DAE}, Δt) = InitialGuessODE(get_config(:ig_extrapolation), equation, Δt)
 
 InitialGuess(interp, equation::ODE, Δt) = InitialGuessODE(interp, equation, Δt)
 InitialGuess(interp, equation::DAE, Δt) = InitialGuessODE(interp, equation, Δt)

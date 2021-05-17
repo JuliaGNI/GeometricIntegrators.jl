@@ -8,7 +8,7 @@ using Test
 
 using GeometricIntegrators.Equations: _get_v̄, _get_f̄
 
-int = get_config(:ig_interpolation)
+int = get_config(:ig_extrapolation)
 
 const Δt = 0.01
 const q₀ = [1.0, 1.0]

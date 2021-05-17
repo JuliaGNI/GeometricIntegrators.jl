@@ -130,7 +130,7 @@ struct IntegratorIPRK{DT, TT, D, S, PT <: ParametersIPRK{DT,TT},
         solver = create_nonlinear_solver(DT, 2*D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessPODE(get_config(:ig_interpolation), equations[:v], equations[:f], Δt)
+        iguess = InitialGuessPODE(get_config(:ig_extrapolation), equations[:v], equations[:f], Δt)
 
         # create integrator
         IntegratorIPRK(params, solver, iguess, caches)

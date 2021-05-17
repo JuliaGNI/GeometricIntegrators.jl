@@ -33,7 +33,7 @@ struct IntegratorVPRKpInternal{DT, TT, D, S,
         solver = create_nonlinear_solver(DT, D*(S+1), params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_extrapolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVPRKpInternal(params, solver, iguess, caches)

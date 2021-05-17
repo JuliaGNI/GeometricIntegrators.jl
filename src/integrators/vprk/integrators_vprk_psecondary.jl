@@ -104,7 +104,7 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
         solver = create_nonlinear_solver(DT, 2*D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_extrapolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVPRKpSecondary(params, solver, iguess, caches)

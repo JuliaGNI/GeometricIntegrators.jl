@@ -9,29 +9,29 @@
 * `Δt`:  time step
 * `s`:   number of extrapolation stages (for initialisation)
 """
-struct InitialGuessIODE{TT, VT, FT, IT <: Interpolator{TT}}
+struct InitialGuessIODE{TT, VT, FT, IT <: Extrapolation{TT}}
     int::IT
     v::VT
     f::FT
     Δt::TT
     s::Int
 
-    function InitialGuessIODE(int::IT, v::VT, f::FT, Δt::TT) where {TT <: Real, VT <: Function, FT <: Function, IT <: Interpolator{TT}}
+    function InitialGuessIODE(int::IT, v::VT, f::FT, Δt::TT) where {TT <: Real, VT <: Function, FT <: Function, IT <: Extrapolation{TT}}
         new{TT,VT,FT,IT}(int, v, f, Δt, get_config(:ig_extrapolation_stages))
     end
 end
 
-function InitialGuessIODE(interp::Type{<:Interpolator}, v::Function, f::Function, Δt)
+function InitialGuessIODE(interp::Type{<:Extrapolation}, v::Function, f::Function, Δt)
     int = interp(zero(Δt), one(Δt), Δt)
     InitialGuessIODE(int, v, f, Δt)
 end
 
-function InitialGuessIODE(interp::Type{<:Interpolator}, equation::Union{IODE,LODE,IDAE,LDAE}, Δt)
+function InitialGuessIODE(interp::Type{<:Extrapolation}, equation::Union{IODE,LODE,IDAE,LDAE}, Δt)
     InitialGuessIODE(interp, _get_v̄(equation), _get_f̄(equation), Δt)
 end
 
 InitialGuess(interp, equation::Union{IODE,LODE,IDAE,LDAE}, Δt) = InitialGuessIODE(interp, equation, Δt)
-InitialGuess(equation::Union{IODE,LODE,IDAE,LDAE}, Δt) = InitialGuessIODE(get_config(:ig_interpolation), equation, Δt)
+InitialGuess(equation::Union{IODE,LODE,IDAE,LDAE}, Δt) = InitialGuessIODE(get_config(:ig_extrapolation), equation, Δt)
 
 
 Base.:(==)(ig1::InitialGuessIODE{TT1}, ig2::InitialGuessIODE{TT2}) where {TT1,TT2}= (

@@ -92,22 +92,22 @@ g'(1) &= f'_1 .
 \end{aligned}
 ```
 """
-struct HermiteInterpolation{T} <: Interpolator{T}
+struct HermiteExtrapolation{T} <: Extrapolation{T}
     x₀::T
     x₁::T
     Δx::T
 
-    function HermiteInterpolation{T}(x₀, x₁, Δx) where {T}
+    function HermiteExtrapolation{T}(x₀, x₁, Δx) where {T}
         new(x₀, x₁, Δx)
     end
 end
 
-function HermiteInterpolation(x₀::T, x₁::T, Δx::T) where {T}
-    HermiteInterpolation{T}(x₀, x₁, Δx)
+function HermiteExtrapolation(x₀::T, x₁::T, Δx::T) where {T}
+    HermiteExtrapolation{T}(x₀, x₁, Δx)
 end
 
 
-function Common.evaluate!(int::HermiteInterpolation{TT}, y₀::AbstractArray{DT}, y₁::AbstractArray{DT}, f₀::AbstractArray{DT}, f₁::AbstractArray{DT}, x::TT, y::AbstractArray{DT}) where {DT,TT}
+function Common.evaluate!(int::HermiteExtrapolation{TT}, y₀::AbstractArray{DT}, y₁::AbstractArray{DT}, f₀::AbstractArray{DT}, f₁::AbstractArray{DT}, x::TT, y::AbstractArray{DT}) where {DT,TT}
     local a₀::TT
     local a₁::TT
     local b₀::TT
@@ -127,7 +127,7 @@ function Common.evaluate!(int::HermiteInterpolation{TT}, y₀::AbstractArray{DT}
     end
 end
 
-function Common.evaluate!(int::HermiteInterpolation{TT}, y₀::AbstractArray{DT}, y₁::AbstractArray{DT}, f₀::AbstractArray{DT}, f₁::AbstractArray{DT}, x::TT, y::AbstractArray{DT}, f::AbstractArray{DT}) where {DT,TT}
+function Common.evaluate!(int::HermiteExtrapolation{TT}, y₀::AbstractArray{DT}, y₁::AbstractArray{DT}, f₀::AbstractArray{DT}, f₁::AbstractArray{DT}, x::TT, y::AbstractArray{DT}, f::AbstractArray{DT}) where {DT,TT}
     local a₀::TT
     local a₁::TT
     local b₀::TT

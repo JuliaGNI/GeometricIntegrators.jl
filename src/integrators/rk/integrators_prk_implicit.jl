@@ -130,7 +130,7 @@ struct IntegratorPRKimplicit{DT, TT, D, S, PT <: ParametersPRKimplicit{DT,TT},
         solver = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_extrapolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorPRKimplicit(params, solver, iguess, caches)

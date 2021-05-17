@@ -207,7 +207,7 @@ struct IntegratorPGLRK{DT, TT, D, S, PT <: ParametersPGLRK{DT,TT},
         solver  = create_nonlinear_solver(DT, D*S, params, caches)
 
         # create initial guess
-        iguess = InitialGuessODE(get_config(:ig_interpolation), equations[:v], Δt)
+        iguess = InitialGuessODE(get_config(:ig_extrapolation), equations[:v], Δt)
 
         # create integrator
         IntegratorPGLRK(params, solver, iguess, caches)
