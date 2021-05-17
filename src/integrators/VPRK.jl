@@ -19,7 +19,7 @@ module VPRK
     import ..Integrators: IODEIntegrator, IODEIntegratorCache, InitialGuessIODE,
                           AbstractIntegratorIRK, AbstractIntegratorPRK
     import ..Integrators: IntegratorCache, CacheDict, CacheType, Parameters
-    import ..Integrators: AbstractTableauPRK, AbstractCoefficients,
+    import ..Integrators: AbstractTableau, AbstractCoefficients,
                           CoefficientsPGLRK,
                           @CoefficientsRK, @HeaderTableau, @HeaderCoefficientsRK,
                           get_symplectic_conjugate_coefficients

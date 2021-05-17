@@ -60,10 +60,7 @@ module Integrators
     include("integrators/various/integrators_explicit_euler.jl")
 
 
-    export HeaderCoefficientsRK,
-           AbstractTableauRK, AbstractTableauIRK, AbstractTableauPRK,
-           AbstractIntegratorRK, AbstractIntegratorIRK, AbstractIntegratorPRK,
-           IntegratorRK
+    export AbstractIntegratorRK, AbstractIntegratorIRK, AbstractIntegratorPRK, IntegratorRK
 
     export get_symplectic_conjugate_coefficients, symplecticize,
            check_symplecticity, symplecticity_conditions, 

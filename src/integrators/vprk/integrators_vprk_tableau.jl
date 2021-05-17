@@ -20,7 +20,7 @@ b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 \end{aligned}
 ```
 """
-struct TableauVPRK{T} <: AbstractTableauPRK{T}
+struct TableauVPRK{T} <: AbstractTableau{T}
     @HeaderTableau
 
     q::Tableau{T}
@@ -56,3 +56,9 @@ end
 function TableauVPRK(name::Symbol, order::Int, q::Tableau{T}, R∞::Int) where {T}
     TableauVPRK{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞)
 end
+
+Base.:(==)(tab1::TableauVPRK, tab2::TableauVPRK) = (tab1.o == tab2.o
+                                                 && tab1.s == tab2.s
+                                                 && tab1.q == tab2.q
+                                                 && tab1.p == tab2.p
+                                                 && tab1.R∞ == tab2.R∞)
