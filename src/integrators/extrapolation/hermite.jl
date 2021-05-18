@@ -89,7 +89,7 @@ g'(1) &= f'_1 .
 \end{aligned}
 ```
 """
-struct HermiteExtrapolation{T} <: Extrapolation{T}
+struct HermiteExtrapolation{T} <: Extrapolation
     x₀::T
     x₁::T
     Δx::T

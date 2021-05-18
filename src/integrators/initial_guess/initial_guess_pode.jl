@@ -9,14 +9,14 @@
 * `Δt`:  time step
 * `s`:   number of extrapolation stages (for initialisation)
 """
-struct InitialGuessPODE{TT, VT, FT, IT <: Extrapolation{TT}}
+struct InitialGuessPODE{TT, VT, FT, IT <: Extrapolation}
     int::IT
     v::VT
     f::FT
     Δt::TT
     s::Int
 
-    function InitialGuessPODE(int::IT, v::VT, f::FT, Δt::TT) where {TT <: Real, VT <: Function, FT <: Function, IT <: Extrapolation{TT}}
+    function InitialGuessPODE(int::IT, v::VT, f::FT, Δt::TT) where {TT <: Real, VT <: Function, FT <: Function, IT <: Extrapolation}
         new{TT,VT,FT,IT}(int, v, f, Δt, get_config(:ig_extrapolation_stages))
     end
 end

@@ -8,13 +8,13 @@
 * `Δt`:  time step
 * `s`:   number of extrapolation stages (for initialisation)
 """
-struct InitialGuessODE{TT, VT, IT <: Extrapolation{TT}}
+struct InitialGuessODE{TT, VT, IT <: Extrapolation}
     int::IT
     v::VT
     Δt::TT
     s::Int
 
-    function InitialGuessODE(int::IT, v::VT, Δt::TT) where {TT <: Real, VT <: Function, IT <: Extrapolation{TT}}
+    function InitialGuessODE(int::IT, v::VT, Δt::TT) where {TT <: Real, VT <: Function, IT <: Extrapolation}
         new{TT,VT,IT}(int, v, Δt, get_config(:ig_extrapolation_stages))
     end
 end

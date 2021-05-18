@@ -1,2 +1,2 @@
 
-abstract type Extrapolation{T} end
+abstract type Extrapolation end
