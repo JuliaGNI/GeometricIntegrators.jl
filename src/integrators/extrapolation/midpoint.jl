@@ -146,7 +146,7 @@ function _midpoint_extrapolation_iode!(v::Function, f::Function, t₀::TT, t₁:
     local f₀ = zero(p₀)
     local fᵢ = zero(p₀)
 
-    v(t₀, q₀, p₀, v₀)
+    v(t₀, q₀, v₀)
     f(t₀, q₀, v₀, f₀)
 
     for i in 1:(s+1)
@@ -156,7 +156,7 @@ function _midpoint_extrapolation_iode!(v::Function, f::Function, t₀::TT, t₁:
         pᵢ₁ .= p₀
         pᵢ₂ .= p₀ .+ σ[i] .* f₀
         for _ in 1:(F[i]-1)
-            v(tᵢ, qᵢ₂, pᵢ₂, vᵢ)
+            v(tᵢ, qᵢ₂, vᵢ)
             f(tᵢ, qᵢ₂, vᵢ,  fᵢ)
             qᵢₜ .= qᵢ₁ .+ 2σ[i] .* vᵢ
             qᵢ₁ .= qᵢ₂
