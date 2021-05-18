@@ -16,12 +16,14 @@ module Integrators
     using ..Equations
     using ..Solutions
 
-    import ..Equations: _get_v̄, _get_f̄
+    import ..Equations: _get_v, _get_f, _get_v̄, _get_f̄
 
     import RungeKutta: nstages
 
 
-    export Extrapolation, HermiteExtrapolation
+    export Extrapolation,
+           EulerExtrapolation, EulerExtrapolationODE,
+           HermiteExtrapolation
 
     include("integrators/extrapolation/extrapolation.jl")
     include("integrators/extrapolation/aitken_neville.jl")

@@ -7,7 +7,7 @@ using GeometricProblems.HarmonicOscillator
 using Test
 
 using GeometricIntegrators.Equations: _get_v
-using GeometricIntegrators.Integrators: euler_extrapolation, midpoint_extrapolation
+using GeometricIntegrators.Integrators: _euler_extrapolation_ode!, midpoint_extrapolation
 
 const Δt = 0.1
 const t₀ = 0.0
@@ -60,29 +60,35 @@ evaluate!(int, qₚ, q₀, vₚ, v₀, 2one(Δt), qᵢ, vᵢ)
 
 # Euler Extrapolation
 
-euler_extrapolation(_get_v(ode), t₀, t₁, q₀::Vector, qᵢ::Vector, 0)
+_euler_extrapolation_ode!(_get_v(ode), t₀, t₁, q₀, qᵢ, 0)
 # println(qᵢ, qₙ, qᵢ .- qₙ)
 @test qᵢ ≈ qₙ atol=1E-1
 
-euler_extrapolation(_get_v(ode), t₀, t₁, q₀::Vector, qᵢ::Vector, 1)
+_euler_extrapolation_ode!(_get_v(ode), t₀, t₁, q₀, qᵢ, 1)
 # println(qᵢ, qₙ, qᵢ .- qₙ)
 @test qᵢ ≈ qₙ atol=1E-2
 
-euler_extrapolation(_get_v(ode), t₀, t₁, q₀::Vector, qᵢ::Vector, 2)
+_euler_extrapolation_ode!(_get_v(ode), t₀, t₁, q₀, qᵢ, 2)
 # println(qᵢ, qₙ, qᵢ .- qₙ)
 @test qᵢ ≈ qₙ atol=1E-4
 
-euler_extrapolation(_get_v(ode), t₀, t₁, q₀::Vector, qᵢ::Vector, 3)
+_euler_extrapolation_ode!(_get_v(ode), t₀, t₁, q₀, qᵢ, 3)
 # println(qᵢ, qₙ, qᵢ .- qₙ)
 @test qᵢ ≈ qₙ atol=1E-6
 
-euler_extrapolation(_get_v(ode), t₀, t₁, q₀::Vector, qᵢ::Vector, 4)
+_euler_extrapolation_ode!(_get_v(ode), t₀, t₁, q₀, qᵢ, 4)
 # println(qᵢ, qₙ, qᵢ .- qₙ)
 @test qᵢ ≈ qₙ atol=1E-8
 
-euler_extrapolation(_get_v(ode), t₀, t₁, q₀::Vector, qᵢ::Vector, 5)
+_euler_extrapolation_ode!(_get_v(ode), t₀, t₁, q₀, qᵢ, 5)
 # println(qᵢ, qₙ, qᵢ .- qₙ)
 @test qᵢ ≈ qₙ atol=1E-10
+
+for i in 0:5
+    @test EulerExtrapolation(ode, i) == EulerExtrapolationODE(_get_v(ode), i)
+    @test evaluate!(EulerExtrapolation(ode, i), t₀, t₁, q₀, qᵢ) == _euler_extrapolation_ode!(_get_v(ode), t₀, t₁, q₀, qᵢ, i)
+    @test evaluate!(EulerExtrapolationODE(_get_v(ode), i), t₀, t₁, q₀, qᵢ) == _euler_extrapolation_ode!(_get_v(ode), t₀, t₁, q₀, qᵢ, i)
+end
 
 
 # Midpoint Extrapolation
