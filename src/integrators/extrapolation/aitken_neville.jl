@@ -8,12 +8,12 @@ such that p(x[i]) = y[i]) for all i.
     t:  evaluation point
     x:  evaluation value
 """
-function aitken_neville(ti::Vector{TT}, xi::Matrix, t::TT, x::Vector) where {TT}
+function aitken_neville!(ti::Vector{TT}, xi::Matrix, t::TT, x::Vector) where {TT}
     @assert length(ti) == size(xi,2)
     @assert length(x)  == size(xi,1)
 
-    for j in axes(t)
-        for i in 1:(length(t)-j)
+    for j in eachindex(ti)
+        for i in 1:(length(ti)-j)
             for k in axes(x,1)
                 xi[k,i] = xi[k,i+1] + (xi[k,i] - xi[k,i+1]) * (ti[i+j] - t) / (ti[i+j] - ti[i])
             end

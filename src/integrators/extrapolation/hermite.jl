@@ -6,9 +6,6 @@ through the function and its first derivative for the interval ``[0,1]``.
 The polynomial is determined by four constraint equations, matching the
 function and its derivative at the points ``0`` and ``1``.
 
-These inter- and extrapolation routines are exclusively used for computing
-initial guesses and are usually not called directly by the user.
-
 Start by defining the 3rd degree polynomial and its derivative by
 ```math
 \begin{aligned}

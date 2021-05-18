@@ -30,7 +30,7 @@ function midpoint_extrapolation(v::Function, t₀::TT, t₁::TT, x₀::Vector{DT
         tᵢ   = t₀ + σ[i]
         xᵢ₁ .= x₀
         xᵢ₂ .= x₀ .+ σ[i] .* v₀
-        for j in 1:(F[i]-1)
+        for _ in 1:(F[i]-1)
             v(tᵢ, xᵢ₂, vᵢ)
             xᵢₜ .= xᵢ₁ .+ 2σ[i] .* vᵢ
             xᵢ₁ .= xᵢ₂
@@ -41,7 +41,7 @@ function midpoint_extrapolation(v::Function, t₀::TT, t₁::TT, x₀::Vector{DT
         end
     end
 
-    aitken_neville(σ², pts, zero(TT), x₁)
+    aitken_neville!(σ², pts, zero(TT), x₁)
 end
 
 
@@ -92,7 +92,7 @@ function midpoint_extrapolation(v::Function, f::Function, t₀::TT, t₁::TT, q�
         qᵢ₂ .= q₀ .+ σ[i] .* v₀
         pᵢ₁ .= p₀
         pᵢ₂ .= p₀ .+ σ[i] .* f₀
-        for j in 1:(F[i]-1)
+        for _ in 1:(F[i]-1)
             v(tᵢ, qᵢ₂, pᵢ₂, vᵢ)
             f(tᵢ, qᵢ₂, vᵢ,  fᵢ)
             qᵢₜ .= qᵢ₁ .+ 2σ[i] .* vᵢ
@@ -110,6 +110,6 @@ function midpoint_extrapolation(v::Function, f::Function, t₀::TT, t₁::TT, q�
         end
     end
 
-    aitken_neville(σ2, qts, zero(TT), q₁)
-    aitken_neville(σ2, pts, zero(TT), p₁)
+    aitken_neville!(σ2, qts, zero(TT), q₁)
+    aitken_neville!(σ2, pts, zero(TT), p₁)
 end
