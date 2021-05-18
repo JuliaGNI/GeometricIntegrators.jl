@@ -20,7 +20,7 @@ struct InitialGuessODE{TT, VT, IT <: Extrapolation}
 end
 
 function InitialGuessODE(interp::Type{<:Extrapolation}, v::Function, Δt)
-    int = interp(zero(Δt), one(Δt), Δt)
+    int = interp(zero(Δt), Δt)
     InitialGuessODE(int, v, Δt)
 end
 
@@ -76,7 +76,7 @@ function Common.evaluate!(ig::InitialGuessODE{TT},
         @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁."
         guess .= q₁
     else
-        evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c, guess)
+        evaluate!(ig.int, q₀, q₁, v₀, v₁, (one(TT)+c)*ig.Δt, guess)
     end
 end
 
@@ -95,6 +95,6 @@ function Common.evaluate!(ig::InitialGuessODE{TT},
         guess_q .= q₁
         guess_v .= 0
     else
-        evaluate!(ig.int, q₀, q₁, v₀, v₁, one(TT)+c, guess_q, guess_v)
+        evaluate!(ig.int, q₀, q₁, v₀, v₁, (one(TT)+c)*ig.Δt, guess_q, guess_v)
     end
 end

@@ -64,6 +64,10 @@ evaluate!(HermiteExtrapolation(tₚ, t₀), xₚ, x₀, ẋₚ, ẋ₀, tᵢ, x�
 @test xᵢ ≈ xₙ atol=1E-5
 @test ẋᵢ ≈ ẋₙ atol=1E-4
 
+@test _hermite_extrapolation!(tₚ, t₀, xₚ, x₀, ẋₚ, ẋ₀, t₁, x₁) == xᵢ
+@test _hermite_extrapolation!(tₚ, t₀, xₚ, x₀, ẋₚ, ẋ₀, t₁, x₁, ẋ₁) == (xᵢ, ẋᵢ)
+@test _hermite_extrapolation!(_get_v(ode), tₚ, t₀, xₚ, x₀, t₁, x₁) == xᵢ
+@test _hermite_extrapolation!(_get_v(ode), tₚ, t₀, xₚ, x₀, t₁, x₁, ẋ₁) == (xᵢ, ẋᵢ)
 
 
 # Euler Extrapolation for ODEs

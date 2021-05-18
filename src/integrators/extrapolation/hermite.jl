@@ -1,11 +1,36 @@
 @doc raw"""
 # Hermite's Interpolating Polynomials
 
-Here, we implement a two point Hermite interpolation function which passes
+Implements a two point Hermite inter-/extrapolation function which passes
 through the function and its first derivative for the interval ``[0,1]``.
 The polynomial is determined by four constraint equations, matching the
 function and its derivative at the points ``0`` and ``1``.
 
+Call with one of the following methods
+```julia
+_hermite_extrapolation!(t₀, t₁, x₀, x₁, ẋ₀, ẋ₁, t, x)
+_hermite_extrapolation!(t₀, t₁, x₀, x₁, ẋ₀, ẋ₁, t, x, ẋ)
+_hermite_extrapolation!(v, t₀, t₁, x₀, x₁, t, x)
+_hermite_extrapolation!(v, t₀, t₁, x₀, x₁, t, x, ẋ)
+```
+
+where
+
+* `t₀`: first  sample time $t_0$
+* `t₁`: second sample time $t_1$
+* `x₀`: first  solution value $x_0 = x(t_0)$
+* `x₁`: second solution value $x_1 = x(t_1)$
+* `ẋ₀`: first  vector field value $ẋ_0 = v(t_0, x(t_0))$
+* `ẋ₁`: second vector field value $ẋ_1 = v(t_1, x(t_1))$
+* `v`:  function to compute vector field with signature `v(t,x,ẋ)`
+* `t`:  time $t$ to extrapolate
+* `x`:  extrapolated solution value $x(t)$
+* `v`:  extrapolated vector field value $ẋ(t)$
+
+
+#### Derivation
+
+The interpolation works as follows:
 Start by defining the 3rd degree polynomial and its derivative by
 ```math
 \begin{aligned}
@@ -89,59 +114,96 @@ g'(1) &= f'_1 .
 \end{aligned}
 ```
 """
-struct HermiteExtrapolation{T} <: Extrapolation
-    x₀::T
-    x₁::T
-    Δx::T
-
-    function HermiteExtrapolation{T}(x₀, x₁, Δx) where {T}
-        new(x₀, x₁, Δx)
-    end
-end
-
-function HermiteExtrapolation(x₀::T, x₁::T, Δx::T) where {T}
-    HermiteExtrapolation{T}(x₀, x₁, Δx)
-end
+function _hermite_extrapolation! end
 
 
-function Common.evaluate!(int::HermiteExtrapolation{TT}, y₀::AbstractArray{DT}, y₁::AbstractArray{DT}, f₀::AbstractArray{DT}, f₁::AbstractArray{DT}, x::TT, y::AbstractArray{DT}) where {DT,TT}
+function _hermite_extrapolation!(t₀::TT, t₁::TT, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, ẋ₀::AbstractArray{DT}, ẋ₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}) where {DT,TT}
     local a₀::TT
     local a₁::TT
     local b₀::TT
     local b₁::TT
+    local Δt = t₁ - t₀
+    local s = (t - t₀) / Δt
 
-    # Interpolate y values at required locations
-    if x == int.x₀
-        y .= y₀
-    elseif x == int.x₁
-        y .= y₁
+    # Interpolate x at t
+    if t == t₀
+        x .= x₀
+    elseif t == t₁
+        x .= x₁
     else
-        a₁ = 3x^2 - 2x^3
+        a₁ = 3s^2 - 2s^3
         a₀ = 1 - a₁
-        b₁ = x^2*(x-1)
-        b₀ = x*(1-x)+b₁
-        y .= a₀ .* y₀ .+ a₁ .* y₁ .+ b₀ .* int.Δx .* f₀ .+ b₁ .* int.Δx .* f₁
+        b₁ = s^2*(s-1)
+        b₀ = s*(1-s)+b₁
+        x .= a₀ .* x₀ .+ a₁ .* x₁ .+ b₀ .* Δt .* ẋ₀ .+ b₁ .* Δt .* ẋ₁
     end
+
+    return x
 end
 
-function Common.evaluate!(int::HermiteExtrapolation{TT}, y₀::AbstractArray{DT}, y₁::AbstractArray{DT}, f₀::AbstractArray{DT}, f₁::AbstractArray{DT}, x::TT, y::AbstractArray{DT}, f::AbstractArray{DT}) where {DT,TT}
+function _hermite_extrapolation!(t₀::TT, t₁::TT, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, ẋ₀::AbstractArray{DT}, ẋ₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}, ẋ::AbstractArray{DT}) where {DT,TT}
     local a₀::TT
     local a₁::TT
     local b₀::TT
     local b₁::TT
+    local Δt = t₁ - t₀
+    local s = (t - t₀) / Δt
 
-    evaluate!(int, y₀, y₁, f₀, f₁, x, y)
+    _hermite_extrapolation!(t₀, t₁, x₀, x₁, ẋ₀, ẋ₁, t, x)
 
-    # Interpolate f values at required locations
-    if x == int.x₀
-        f .= f₀
-    elseif x == int.x₁
-        f .= f₁
+    # Interpolate ẋ at t
+    if t == t₀
+        ẋ .= ẋ₀
+    elseif t == t₁
+        ẋ .= ẋ₁
     else
-        a₁ = (6x - 6x^2) / int.Δx
+        a₁ = (6s - 6s^2) / Δt
         a₀ = - a₁
-        b₁ = x*(3x-2)
-        b₀ = 1-2x+b₁
-        f .= a₀ .* y₀ .+ a₁ .* y₁ .+ b₀ .* f₀ .+ b₁ .* f₁
+        b₁ = s*(3s-2)
+        b₀ = 1-2s+b₁
+        ẋ .= a₀ .* x₀ .+ a₁ .* x₁ .+ b₀ .* ẋ₀ .+ b₁ .* ẋ₁
     end
+
+    return (x, ẋ)
+end
+
+function _get_velocities(v::Function, t₀::TT, t₁::TT, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}) where {DT,TT}
+    ẋ₀ = zero(x₀)
+    ẋ₁ = zero(x₁)
+    v(t₀, x₀, ẋ₀)
+    v(t₁, x₁, ẋ₁)
+    return (ẋ₀, ẋ₁)
+end
+
+function _hermite_extrapolation!(v::Function, t₀::TT, t₁::TT, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}) where {DT,TT}
+    _hermite_extrapolation!(t₀, t₁, x₀, x₁, _get_velocities(v, t₀, t₁, x₀, x₁)..., t, x)
+end
+
+function _hermite_extrapolation!(v::Function, t₀::TT, t₁::TT, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}, ẋ::AbstractArray{DT}) where {DT,TT}
+    _hermite_extrapolation!(t₀, t₁, x₀, x₁, _get_velocities(v, t₀, t₁, x₀, x₁)..., t, x, ẋ)
+end
+
+
+
+struct HermiteExtrapolation{T} <: Extrapolation
+    t₀::T
+    t₁::T
+    Δt::T
+
+    function HermiteExtrapolation{T}(t₀, t₁) where {T}
+        new(t₀, t₁, t₁-t₀)
+    end
+end
+
+function HermiteExtrapolation(t₀::T, t₁::T) where {T}
+    HermiteExtrapolation{T}(t₀, t₁)
+end
+
+
+function Common.evaluate!(int::HermiteExtrapolation{TT}, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, ẋ₀::AbstractArray{DT}, ẋ₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}) where {DT,TT}
+    _hermite_extrapolation!(int.t₀, int.t₁, x₀, x₁, ẋ₀, ẋ₁, t, x)
+end
+
+function Common.evaluate!(int::HermiteExtrapolation{TT}, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, ẋ₀::AbstractArray{DT}, ẋ₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}, ẋ::AbstractArray{DT}) where {DT,TT}
+    _hermite_extrapolation!(int.t₀, int.t₁, x₀, x₁, ẋ₀, ẋ₁, t, x, ẋ)
 end
