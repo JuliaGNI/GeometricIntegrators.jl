@@ -142,7 +142,7 @@ struct IntegratorCGVI{DT, TT, D, S, R,
     end
 
     function IntegratorCGVI{DT,D}(equations::NamedTuple, basis::Basis{TT}, quadrature::QuadratureRule{TT,R}, Δt::TT;
-                                  interpolation=HermiteInterpolation{DT}) where {DT,TT,D,R}
+                                  interpolation=HermiteExtrapolation{DT}) where {DT,TT,D,R}
 
         # get number of stages
         S = nbasis(basis)
@@ -157,7 +157,7 @@ struct IntegratorCGVI{DT, TT, D, S, R,
         solver = create_nonlinear_solver(DT, D*(S+1), params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_extrapolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorCGVI(basis, quadrature, params, solver, iguess, caches)

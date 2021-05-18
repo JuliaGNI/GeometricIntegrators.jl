@@ -10,23 +10,32 @@ module Integrators
 
     using ..Common
     using ..Config
-    using ..Interpolation
     using ..Utils
 
     using ..Discontinuities
     using ..Equations
     using ..Solutions
 
-    import ..Equations: _get_v̄, _get_f̄
+    import ..Equations: _get_v, _get_f, _get_v̄, _get_f̄
 
     import RungeKutta: nstages
+
+
+    export Extrapolation,
+           EulerExtrapolation, EulerExtrapolationODE,
+           MidpointExtrapolation, MidpointExtrapolationODE, MidpointExtrapolationIODE, MidpointExtrapolationPODE,
+           HermiteExtrapolation
+
+    include("integrators/extrapolation/extrapolation.jl")
+    include("integrators/extrapolation/aitken_neville.jl")
+    include("integrators/extrapolation/euler.jl")
+    include("integrators/extrapolation/hermite.jl")
+    include("integrators/extrapolation/midpoint.jl")
 
 
     export InitialGuess, InitialGuessODE, InitialGuessIODE, InitialGuessPODE,
            initialize!
 
-
-    include("integrators/initial_guess/extrapolation.jl")
     include("integrators/initial_guess/initial_guess_ode.jl")
     include("integrators/initial_guess/initial_guess_iode.jl")
     include("integrators/initial_guess/initial_guess_pode.jl")
@@ -134,7 +143,7 @@ module Integrators
 
     function __init__()
         default_params = (
-            (:ig_interpolation, HermiteInterpolation),
+            (:ig_extrapolation, HermiteExtrapolation),
             (:ig_extrapolation_stages, 5),
             (:int_show_progress_nmin,  1000),
         )

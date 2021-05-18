@@ -111,7 +111,7 @@ struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
         end
 
         # create initial guess
-        iguess = InitialGuessODE(get_config(:ig_interpolation), equations[:v], Δt)
+        iguess = InitialGuessODE(get_config(:ig_extrapolation), equations[:v], Δt)
 
         # create integrator
         IntegratorFIRK(params, solver, iguess, caches)

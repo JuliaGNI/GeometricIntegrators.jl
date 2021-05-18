@@ -89,7 +89,7 @@ struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
         solvers = [create_nonlinear_solver(DT, D, params, caches, i) for i in 1:S]
 
         # create initial guess
-        iguess = InitialGuessODE(get_config(:ig_interpolation), equations[:v], Δt)
+        iguess = InitialGuessODE(get_config(:ig_extrapolation), equations[:v], Δt)
 
         # create integrator
         IntegratorDIRK(params, solvers, iguess, caches)

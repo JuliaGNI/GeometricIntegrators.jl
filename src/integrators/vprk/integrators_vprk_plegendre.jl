@@ -76,7 +76,7 @@ struct IntegratorVPRKpLegendre{DT, TT, D, S,
         solver = create_nonlinear_solver(DT, N, params, caches)
 
         # create initial guess
-        iguess = InitialGuessIODE(get_config(:ig_interpolation), equations[:v̄], equations[:f̄], Δt)
+        iguess = InitialGuessIODE(get_config(:ig_extrapolation), equations[:v̄], equations[:f̄], Δt)
 
         # create integrator
         IntegratorVPRKpLegendre(params, solver, iguess, caches)
