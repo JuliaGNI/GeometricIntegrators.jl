@@ -1,12 +1,15 @@
-
 """
 Compute p(x) where p is the unique polynomial of degree length(xi),
 such that p(x[i]) = y[i]) for all i.
-
-    ti: interpolation nodes
-    xi: interpolation values
-    t:  evaluation point
-    x:  evaluation value
+Call with
+```julia
+aitken_neville!(ti::Vector, xi::Matrix, t::Number, x::Vector)
+```
+where
+* `ti`: interpolation nodes
+* `xi`: interpolation values
+* `t`:  evaluation point
+* `x`:  evaluation value
 """
 function aitken_neville!(ti::Vector{TT}, xi::Matrix, t::TT, x::Vector) where {TT}
     @assert length(ti) == size(xi,2)
