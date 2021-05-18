@@ -3,6 +3,7 @@ using SafeTestsets
 
 
 @safetestset "Common Integrator Functionality                                                 " begin include("integrators_common_tests.jl") end
+@safetestset "Extrapolation Methods                                                           " begin include("extrapolation_tests.jl") end
 @safetestset "Initial Guesses                                                                 " begin include("initial_guess_tests.jl") end
 @safetestset "Runge-Kutta Integrators                                                         " begin include("rk_integrators_tests.jl") end
 @safetestset "VPRK Integrators                                                                " begin include("vprk_integrators_tests.jl") end
