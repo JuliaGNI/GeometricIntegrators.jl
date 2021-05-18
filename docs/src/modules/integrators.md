@@ -15,6 +15,16 @@ Pages   = ["integrators/abstract_coefficients.jl",
 ```
 
 
+## Initial Guesses
+
+```@autodocs
+Modules = [GeometricIntegrators.Integrators]
+Pages   = ["integrators/initial_guess/initial_guess_ode.jl",
+           "integrators/initial_guess/initial_guess_iode.jl",
+           "integrators/initial_guess/initial_guess_pode.jl"]
+```
+
+
 # Extrapolation Methods
 
 The extrapolation routines are exclusively used for computing
@@ -28,16 +38,6 @@ Pages   = ["integrators/extrapolation/extrapolation.jl",
            "integrators/extrapolation/euler.jl",
            "integrators/extrapolation/hermite.jl",
            "integrators/extrapolation/midpoint.jl"]
-```
-
-
-## Initial Guesses
-
-```@autodocs
-Modules = [GeometricIntegrators.Integrators]
-Pages   = ["integrators/initial_guess/initial_guess_ode.jl",
-           "integrators/initial_guess/initial_guess_iode.jl",
-           "integrators/initial_guess/initial_guess_pode.jl"]
 ```
 
 
