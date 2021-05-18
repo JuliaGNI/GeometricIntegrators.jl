@@ -14,12 +14,29 @@ Pages   = ["integrators/abstract_coefficients.jl",
            "integrators/integrators.jl"]
 ```
 
+
+# Extrapolation Methods
+
+The extrapolation routines are exclusively used for computing
+initial guesses and are usually not called directly by the user.
+
+```@autodocs
+Modules = [GeometricIntegrators.Integrators]
+Order   = [:constant, :type, :macro, :function]
+Pages   = ["integrators/extrapolation/extrapolation.jl",
+           "integrators/extrapolation/aitken_neville.jl",
+           "integrators/extrapolation/euler.jl",
+           "integrators/extrapolation/hermite.jl",
+           "integrators/extrapolation/midpoint.jl"]
+```
+
+
 ## Initial Guesses
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
-Pages   = ["integrators/initial_guess/extrapolation.jl",
-           "integrators/initial_guess/initial_guess_ode.jl",
+Pages   = ["integrators/initial_guess/initial_guess_ode.jl",
+           "integrators/initial_guess/initial_guess_iode.jl",
            "integrators/initial_guess/initial_guess_pode.jl"]
 ```
 
