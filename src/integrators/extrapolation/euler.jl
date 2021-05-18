@@ -26,7 +26,7 @@ where
 * `s`:  number of interpolations (order $p=s+1$)
 
 """
-function _euler_extrapolation_ode!(v::Function, t₀::TT, t₁::TT, x₀::Vector, x₁::Vector, s::Int) where {TT}
+function _euler_extrapolation_ode!(v::Function, t₀::TT, t₁::TT, x₀::AbstractVector{DT}, x₁::AbstractVector{DT}, s::Int) where {DT,TT}
     @assert size(x₀) == size(x₁)
 
     F   = collect(1:(s+1))
@@ -59,11 +59,11 @@ end
 #     s::Int
 # end
 
-# function Common.evaluate!(extrap::EulerExtrapolation, v::Function, t₀::TT, t₁::TT, x₀::Vector{DT}, x₁::Vector{DT}) where {DT,TT}
+# function Common.evaluate!(extrap::EulerExtrapolation, v::Function, t₀::TT, t₁::TT, x₀::AbstractVector{DT}, x₁::AbstractVector{DT}) where {DT,TT}
 #     _euler_extrapolation_ode!(v, t₀, t₁, x₀, x₁, extrap.s)
 # end
 
-# function Common.evaluate!(extrap::EulerExtrapolation, v::Function, f::Function, t₀::TT, t₁::TT, q₀::Vector{DT}, q₁::Vector{DT}, p₀::Vector{DT}, p₁::Vector{DT}) where {DT,TT}
+# function Common.evaluate!(extrap::EulerExtrapolation, v::Function, f::Function, t₀::TT, t₁::TT, q₀::AbstractVector{DT}, q₁::AbstractVector{DT}, p₀::AbstractVector{DT}, p₁::AbstractVector{DT}) where {DT,TT}
 #     _euler_extrapolation_pode!(v, t₀, t₁, q₀, q₁, p₀, p₁, extrap.s)
 # end
 
@@ -85,7 +85,7 @@ function EulerExtrapolation(equ::ODE, s::Int)
     EulerExtrapolationODE(_get_v(equ), s)
 end
 
-function Common.evaluate!(extrap::EulerExtrapolationODE, t₀::TT, t₁::TT, x₀::Vector{DT}, x₁::Vector{DT}) where {DT,TT}
+function Common.evaluate!(extrap::EulerExtrapolationODE, t₀::TT, t₁::TT, x₀::AbstractVector{DT}, x₁::AbstractVector{DT}) where {DT,TT}
     _euler_extrapolation_ode!(extrap.v, t₀, t₁, x₀, x₁, extrap.s)
 end
 
@@ -108,7 +108,7 @@ end
 #     EulerExtrapolationIODE(_get_v(equ), _get_f(equ), s)
 # end
 
-# function Common.evaluate!(extrap::EulerExtrapolationIODE, t₀::TT, t₁::TT, q₀::Vector{DT}, q₁::Vector{DT}, p₀::Vector{DT}, p₁::Vector{DT}) where {DT,TT}
+# function Common.evaluate!(extrap::EulerExtrapolationIODE, t₀::TT, t₁::TT, q₀::AbstractVector{DT}, q₁::AbstractVector{DT}, p₀::AbstractVector{DT}, p₁::AbstractVector{DT}) where {DT,TT}
 #     _euler_extrapolation_iode!(extrap.v, t₀, t₁, q₀, q₁, p₀, p₁, extrap.s)
 # end
 
@@ -131,6 +131,6 @@ end
 #     EulerExtrapolationPODE(_get_v(equ), _get_f(equ), s)
 # end
 
-# function Common.evaluate!(extrap::EulerExtrapolationPODE, t₀::TT, t₁::TT, q₀::Vector{DT}, q₁::Vector{DT}, p₀::Vector{DT}, p₁::Vector{DT}) where {DT,TT}
+# function Common.evaluate!(extrap::EulerExtrapolationPODE, t₀::TT, t₁::TT, q₀::AbstractVector{DT}, q₁::AbstractVector{DT}, p₀::AbstractVector{DT}, p₁::AbstractVector{DT}) where {DT,TT}
 #     _euler_extrapolation_pode!(extrap.v, t₀, t₁, q₀, q₁, p₀, p₁, extrap.s)
 # end

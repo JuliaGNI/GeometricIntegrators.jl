@@ -26,7 +26,8 @@ where
 * `s`:  number of interpolations (order $p=2s+2$)
 
 """
-function _midpoint_extrapolation_ode!(v::Function, t₀::TT, t₁::TT, x₀::Vector{DT}, x₁::Vector{DT}, s::Int) where {DT,TT}
+function _midpoint_extrapolation_ode!(v::Function, t₀::TT, t₁::TT,
+                                      x₀::AbstractVector{DT}, x₁::AbstractVector{DT}, s::Int) where {DT,TT}
     @assert size(x₀) == size(x₁)
 
     local F   = [2i*one(TT) for i in 1:(s+1)]
@@ -80,7 +81,8 @@ function MidpointExtrapolation(equ::ODE, s::Int)
     MidpointExtrapolationODE(_get_v(equ), s)
 end
 
-function Common.evaluate!(extrap::MidpointExtrapolationODE, t₀::TT, t₁::TT, x₀::Vector{DT}, x₁::Vector{DT}) where {DT,TT}
+function Common.evaluate!(extrap::MidpointExtrapolationODE, t₀::TT, t₁::TT,
+                          x₀::AbstractVector{DT}, x₁::AbstractVector{DT}) where {DT,TT}
     _midpoint_extrapolation_ode!(extrap.v, t₀, t₁, x₀, x₁, extrap.s)
 end
 
@@ -117,7 +119,9 @@ where
 * `s`:  number of interpolations (order $p=2s+2$)
 
 """
-function _midpoint_extrapolation_iode!(v::Function, f::Function, t₀::TT, t₁::TT, q₀::Vector{DT}, q₁::Vector{DT}, p₀::Vector{DT}, p₁::Vector{DT}, s::Int) where {TT,DT}
+function _midpoint_extrapolation_iode!(v::Function, f::Function, t₀::TT, t₁::TT,
+                                       q₀::AbstractVector{DT}, q₁::AbstractVector{DT},
+                                       p₀::AbstractVector{DT}, p₁::AbstractVector{DT}, s::Int) where {DT,TT}
     @assert size(q₀) == size(q₁) == size(p₀) == size(p₁)
 
     local F   = [2i*one(TT) for i in 1:(s+1)]
@@ -193,7 +197,9 @@ function MidpointExtrapolation(equ::IODE, s::Int)
     MidpointExtrapolationIODE(_get_v̄(equ), _get_f̄(equ), s)
 end
 
-function Common.evaluate!(extrap::MidpointExtrapolationIODE, t₀::TT, t₁::TT, q₀::Vector{DT}, q₁::Vector{DT}, p₀::Vector{DT}, p₁::Vector{DT}) where {DT,TT}
+function Common.evaluate!(extrap::MidpointExtrapolationIODE, t₀::TT, t₁::TT,
+                          q₀::AbstractVector{DT}, q₁::AbstractVector{DT},
+                          p₀::AbstractVector{DT}, p₁::AbstractVector{DT}) where {DT,TT}
     _midpoint_extrapolation_iode!(extrap.v, extrap.f, t₀, t₁, q₀, q₁, p₀, p₁, extrap.s)
 end
 
@@ -230,7 +236,9 @@ where
 * `s`:  number of interpolations (order $p=2s+2$)
 
 """
-function _midpoint_extrapolation_pode!(v::Function, f::Function, t₀::TT, t₁::TT, q₀::Vector{DT}, q₁::Vector{DT}, p₀::Vector{DT}, p₁::Vector{DT}, s::Int) where {TT,DT}
+function _midpoint_extrapolation_pode!(v::Function, f::Function, t₀::TT, t₁::TT,
+                                       q₀::AbstractVector{DT}, q₁::AbstractVector{DT},
+                                       p₀::AbstractVector{DT}, p₁::AbstractVector{DT}, s::Int) where {DT,TT}
     @assert size(q₀) == size(q₁) == size(p₀) == size(p₁)
 
     local F   = [2i*one(TT) for i in 1:(s+1)]
@@ -306,6 +314,8 @@ function MidpointExtrapolation(equ::PODE, s::Int)
     MidpointExtrapolationPODE(_get_v(equ), _get_f(equ), s)
 end
 
-function Common.evaluate!(extrap::MidpointExtrapolationPODE, t₀::TT, t₁::TT, q₀::Vector{DT}, q₁::Vector{DT}, p₀::Vector{DT}, p₁::Vector{DT}) where {DT,TT}
+function Common.evaluate!(extrap::MidpointExtrapolationPODE, t₀::TT, t₁::TT,
+                          q₀::AbstractVector{DT}, q₁::AbstractVector{DT},
+                          p₀::AbstractVector{DT}, p₁::AbstractVector{DT}) where {DT,TT}
     _midpoint_extrapolation_pode!(extrap.v, extrap.f, t₀, t₁, q₀, q₁, p₀, p₁, extrap.s)
 end
