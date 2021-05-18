@@ -23,6 +23,7 @@ module Integrators
 
     export Extrapolation,
            EulerExtrapolation, EulerExtrapolationODE,
+           MidpointExtrapolation, MidpointExtrapolationODE, MidpointExtrapolationIODE, MidpointExtrapolationPODE,
            HermiteExtrapolation
 
     include("integrators/extrapolation/extrapolation.jl")

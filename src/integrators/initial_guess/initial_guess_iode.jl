@@ -56,7 +56,7 @@ function initialize!(ig::InitialGuessIODE{TT},
                 v₀::SolutionVector{DT},
                 f₀::SolutionVector{DT}) where {DT,TT}
 
-    midpoint_extrapolation((t,q,p,v)->ig.v(t,q,v), ig.f, t₁, t₀, q₁, q₀, p₁, p₀, ig.s)
+    _midpoint_extrapolation_iode!((t,q,p,v)->ig.v(t,q,v), ig.f, t₁, t₀, q₁, q₀, p₁, p₀, ig.s)
 
     ig.v(t₀, q₀, v₀)
     ig.v(t₁, q₁, v₁)

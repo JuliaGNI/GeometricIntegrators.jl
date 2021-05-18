@@ -51,7 +51,7 @@ function initialize!(ig::InitialGuessODE{TT},
                 t₀::TT,
                 q₀::SolutionVector{DT},
                 v₀::SolutionVector{DT}) where {DT,TT}
-    midpoint_extrapolation(ig.v, t₁, t₀, q₁, q₀, ig.s)
+    _midpoint_extrapolation_ode!(ig.v, t₁, t₀, q₁, q₀, ig.s)
     ig.v(t₀, q₀, v₀)
     ig.v(t₁, q₁, v₁)
 end
