@@ -134,6 +134,15 @@ module Integrators
     include("integrators/dgvi/integrators_dgvi_projection_final.jl")
 
 
+    export IntegratorDVIA, IntegratorDVIB,
+           IntegratorCMDVI, IntegratorCTDVI
+    
+    include("integrators/dvi/integrators_dvi_a.jl")
+    include("integrators/dvi/integrators_dvi_b.jl")
+    include("integrators/dvi/integrators_cmdvi.jl")
+    include("integrators/dvi/integrators_ctdvi.jl")
+
+
     include("integrators/SPARK.jl")
     include("integrators/VPRK.jl")
 
