@@ -23,6 +23,7 @@ function Integrators.initialize!(int::AbstractIntegratorVPRK{DT}, sol::Union{Ato
 
     equation(int, :v̄)(sol.t, sol.q, sol.v)
     equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
+    equation(int, :ϑ)(sol.t, sol.q, sol.v, sol.p)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
