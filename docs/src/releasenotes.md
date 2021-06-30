@@ -1,6 +1,31 @@
 
 # Release Notes
 
+
+## 0.9.0
+
+### Breaking Changes
+
+* Move `HermiteInterpolation` to Integrators and remove `Interpolation` sub-package
+
+### New Features
+
+* Implement first and second order Degenerate Variational Integrators (DVIs)
+* Add tests for extrapolation methods
+
+### Fixes
+
+* Bugfixes in implicit equations
+* Bugfixes in extrapolation methods
+* Bugfixes in initial guesses
+* Bugfixes in VPRK and VSPARK initialisation
+* Bugfixes in `TimeSeries` `getindex` methods
+
+### Documentation
+
+* Add missing docstrings in various places and remove superficial docstrings
+
+
 ## 0.8.0
 
 ### Breaking Changes
