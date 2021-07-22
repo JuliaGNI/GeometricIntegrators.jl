@@ -1,9 +1,9 @@
 
-using GeometricIntegrators.Config
+using GeometricBase.Config
+using GeometricBase.Utils
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Solutions
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.Utils
 using GeometricProblems.LotkaVolterra2d
 using SimpleSolvers
 using Test
@@ -30,12 +30,12 @@ refx = sol.q[end]
     sol = Solution(iode, Δt, nt)
     int = IntegratorDVIA(iode, Δt)
     integrate!(int, sol)
-    @test rel_err(sol.q, refx) < 1E-1
+    @test relative_maximum_error(sol.q, refx) < 1E-1
 
     sol = Solution(iode, Δt, nt)
     int = IntegratorDVIB(iode, Δt)
     integrate!(int, sol)
-    @test rel_err(sol.q, refx) < 1E-1
+    @test relative_maximum_error(sol.q, refx) < 1E-1
 
 end
 
@@ -45,11 +45,11 @@ end
     sol = Solution(iode, Δt, nt)
     int = IntegratorCMDVI(iode, Δt)
     integrate!(int, sol)
-    @test rel_err(sol.q, refx) < 4E-3
+    @test relative_maximum_error(sol.q, refx) < 4E-3
 
     sol = Solution(iode, Δt, nt)
     int = IntegratorCTDVI(iode, Δt)
     integrate!(int, sol)
-    @test rel_err(sol.q, refx) < 4E-3
+    @test relative_maximum_error(sol.q, refx) < 4E-3
 
 end

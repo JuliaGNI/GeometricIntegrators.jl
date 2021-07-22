@@ -77,7 +77,7 @@ struct IntegratorHSPARK{DT, TT, D, S, R, PT <: ParametersHSPARK{DT,TT,D,S,R},
 end
 
 
-Common.nconstraints(::IntegratorHSPARK{DT,TT,D}) where {DT,TT,D} = D
+GeometricBase.nconstraints(::IntegratorHSPARK{DT,TT,D}) where {DT,TT,D} = D
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},

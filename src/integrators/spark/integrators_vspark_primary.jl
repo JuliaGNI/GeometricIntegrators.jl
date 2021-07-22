@@ -152,7 +152,7 @@ struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT
 end
 
 
-Common.nconstraints(::IntegratorVSPARKprimary{DT,TT,D}) where {DT,TT,D} = D
+GeometricBase.nconstraints(::IntegratorVSPARKprimary{DT,TT,D}) where {DT,TT,D} = D
 
 
 function initial_guess!(int::IntegratorVSPARKprimary{DT}, sol::AtomicSolutionPDAE{DT},

@@ -21,7 +21,7 @@ equation(integrator::Integrator) = error("equation() not implemented for ", type
 equation(integrator::Integrator, i::Int) = error("equation() not implemented for ", typeof(integrator))
 timestep(integrator::Integrator) = error("timestep() not implemented for ", typeof(integrator))
 Base.ndims(integrator::Integrator) = error("ndims() not implemented for ", typeof(integrator))
-Common.nconstraints(integrator::Integrator) = error("nconstraints() not implemented for ", typeof(integrator))
+GeometricBase.nconstraints(integrator::Integrator) = error("nconstraints() not implemented for ", typeof(integrator))
 nstages(integrator::Integrator) = error("nstages() not implemented for ", typeof(integrator))
 
 eachdim(integrator::Integrator) = 1:ndims(integrator)

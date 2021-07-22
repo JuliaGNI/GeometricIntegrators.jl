@@ -1,16 +1,15 @@
 module Solutions
 
+    using Base: TwicePrecision
+
     using HDF5
     using OffsetArrays
     using SharedArrays
 
-    using Base: TwicePrecision
-
-    using ..Common
-    using ..Config
-    using ..Equations
-    using ..Utils
-
+    using GeometricBase
+    using GeometricBase.Config
+    using GeometricBase.Utils
+    using GeometricEquations
 
     export DEFAULT_NSAVE, DEFAULT_NWRITE
 

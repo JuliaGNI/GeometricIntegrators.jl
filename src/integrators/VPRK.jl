@@ -5,11 +5,11 @@ module VPRK
     using RungeKutta
     using SimpleSolvers
 
-    using ..Common
+    import GeometricEquations: IODE, LODE, LDAE, get_functions, hassecondary
+
+    using ..GeometricBase
     using ..Config
     using ..Utils
-
-    import ..Equations: IODE, LODE, LDAE, get_functions, hassecondary
 
     import ..Solutions: AtomicSolutionPODE, AtomicSolutionPDAE, SolutionPDAE, SolutionVector
     import ..Solutions: update!

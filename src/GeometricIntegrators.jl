@@ -2,15 +2,12 @@ module GeometricIntegrators
 
     using Reexport
 
-    include("Utils.jl")
-    using .Utils
+    @reexport using GeometricBase
+    @reexport using GeometricBase.Config
+    @reexport using GeometricBase.Utils
+    @reexport using GeometricEquations
 
-    include("Config.jl")
-    @reexport using .Config
-    include("Common.jl")
-    @reexport using .Common
-    include("Equations.jl")
-    @reexport using .Equations
+    
     include("Solutions.jl")
     @reexport using .Solutions
     include("Discontinuities.jl")

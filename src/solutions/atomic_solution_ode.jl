@@ -82,7 +82,7 @@ function get_solution(asol::AtomicSolutionODE)
     (asol.t, asol.q)
 end
 
-function Common.reset!(asol::AtomicSolutionODE, Δt)
+function GeometricBase.reset!(asol::AtomicSolutionODE, Δt)
     asol.t̄  = asol.t
     asol.q̄ .= asol.q
     asol.v̄ .= asol.v

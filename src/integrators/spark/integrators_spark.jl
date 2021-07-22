@@ -102,7 +102,7 @@ struct IntegratorSPARK{DT, TT, D, S, R, PT <: ParametersSPARK{DT,TT,D,S,R},
 end
 
 
-Common.nconstraints(::IntegratorSPARK{DT,TT,D}) where {DT,TT,D} = D
+GeometricBase.nconstraints(::IntegratorSPARK{DT,TT,D}) where {DT,TT,D} = D
 
 
 function Integrators.initialize!(int::IntegratorSPARK, sol::AtomicSolutionPDAE)

@@ -8,13 +8,13 @@ module Tableaus
 
     @reexport using RungeKutta
 
+    using GeometricBase
+    using GeometricBase.Config
+    using GeometricBase.Utils
 
-    using ..Config
-    using ..Common
     using ..Integrators
     using ..Integrators.SPARK
     using ..Integrators.VPRK
-    using ..Utils
 
     using GeometricIntegrators.Integrators.SPARK: get_ã_vspark_primary,
                                                   get_α_vspark_primary,

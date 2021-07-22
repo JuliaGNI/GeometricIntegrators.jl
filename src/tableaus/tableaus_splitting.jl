@@ -189,11 +189,11 @@ Reference:
 
 """
 function TableauMcLachlan4(::Type{T}=Float64) where {T}
-    a = Array{T}(@dec128 [ (146 +  5*√19) / 540,
-                           ( -2 + 10*√19) / 135,
-                           1/5,
-                           (-23 - 20*√19) / 270,
-                           ( 14 -    √19) / 108])
+    a = Array{T}(@big [ (146 +  5*√19) / 540,
+                        ( -2 + 10*√19) / 135,
+                                     1 / 5,
+                        (-23 - 20*√19) / 270,
+                        ( 14 -    √19) / 108])
     TableauSplittingNS(:McLachlanSplitting, 4, a, a[end:-1:1])
 end
 
@@ -234,8 +234,8 @@ References:
 
 """
 function TableauTripleJump(::Type{T}=Float64) where {T}
-    fac = @dec128 2^(1/3)
-    den = @dec128 1/(2-fac)
+    fac = @big 2^(1/3)
+    den = @big 1/(2-fac)
     a = Array{T}([ den, -fac*den ])
     TableauSplittingSS(:TripleJumpSplitting, 4, a)
 end
@@ -263,8 +263,8 @@ Reference:
 
 """
 function TableauSuzukiFractal(::Type{T}=Float64) where {T}
-    fac = @dec128 4^(1/3)
-    den = @dec128 1/(4-fac)
+    fac = @big 4^(1/3)
+    den = @big 1/(4-fac)
     a = Array{T}([ den, den, -fac*den ])
     TableauSplittingSS(:SuzukiFractalSplitting, 4, a)
 end

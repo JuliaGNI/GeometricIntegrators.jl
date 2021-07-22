@@ -1,13 +1,13 @@
 
-using GeometricIntegrators.Common
-using GeometricIntegrators.Config
+using GeometricBase
+using GeometricBase.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Integrators.VPRK
 using GeometricIntegrators.Tableaus
 using GeometricProblems.HarmonicOscillator
 using Test
 
-using GeometricIntegrators.Equations: _get_v, _get_f, _get_v̄, _get_f̄
+using GeometricEquations: _get_v, _get_f, _get_v̄, _get_f̄
 using GeometricIntegrators.Integrators: _euler_extrapolation_ode!, _hermite_extrapolation!,
                                         _midpoint_extrapolation_ode!, _midpoint_extrapolation_iode!, _midpoint_extrapolation_pode!
 
@@ -121,7 +121,7 @@ _midpoint_extrapolation_ode!(_get_v(ode), t₀, t₁, x₀, xᵢ, 2)
 
 _midpoint_extrapolation_ode!(_get_v(ode), t₀, t₁, x₀, xᵢ, 3)
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-16
+@test xᵢ ≈ xₙ atol=1E-15
 
 _midpoint_extrapolation_ode!(_get_v(ode), t₀, t₁, x₀, xᵢ, 4)
 # println(xᵢ, xₙ, qᵢ .- qₙ)
@@ -202,7 +202,7 @@ _midpoint_extrapolation_pode!(_get_v(pode), _get_f(pode), t₀, t₁, q₀, qᵢ
 _midpoint_extrapolation_pode!(_get_v(pode), _get_f(pode), t₀, t₁, q₀, qᵢ, p₀, pᵢ, 3)
 # println(3, qᵢ, qₙ, qᵢ .- qₙ)
 # println(3, pᵢ, pₙ, pᵢ .- pₙ)
-@test qᵢ ≈ qₙ atol=1E-16
+@test qᵢ ≈ qₙ atol=1E-15
 @test pᵢ ≈ pₙ atol=1E-16
 
 _midpoint_extrapolation_pode!(_get_v(pode), _get_f(pode), t₀, t₁, q₀, qᵢ, p₀, pᵢ, 4)
@@ -289,7 +289,7 @@ _midpoint_extrapolation_iode!(_get_v̄(iode), _get_f̄(iode), t₀, t₁, q₀, 
 _midpoint_extrapolation_iode!(_get_v̄(iode), _get_f̄(iode), t₀, t₁, q₀, qᵢ, p₀, pᵢ, 3)
 # println(3, qᵢ, qₙ, qᵢ .- qₙ)
 # println(3, pᵢ, pₙ, pᵢ .- pₙ)
-@test qᵢ ≈ qₙ atol=1E-16
+@test qᵢ ≈ qₙ atol=1E-15
 @test pᵢ ≈ pₙ atol=1E-16
 
 _midpoint_extrapolation_iode!(_get_v̄(iode), _get_f̄(iode), t₀, t₁, q₀, qᵢ, p₀, pᵢ, 4)

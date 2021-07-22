@@ -98,7 +98,7 @@ function get_solution(asol::AtomicSolutionPODE)
     (asol.t, asol.q, asol.p)
 end
 
-function Common.reset!(asol::AtomicSolutionPODE, Δt)
+function GeometricBase.reset!(asol::AtomicSolutionPODE, Δt)
     asol.t̄  = asol.t
     asol.q̄ .= asol.q
     asol.p̄ .= asol.p

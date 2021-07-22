@@ -1,6 +1,4 @@
 
-using HDF5
-
 abstract type Solution{dType, tType, N} end
 abstract type DeterministicSolution{dType, tType, N} <: Solution{dType, tType, N} end
 
@@ -10,15 +8,15 @@ nsave(sol::Solution)  = error("nsave() not implemented for ", typeof(sol))
 counter(sol::Solution) = error("counter() not implemented for ", typeof(sol))
 offset(sol::Solution) = error("offset() not implemented for ", typeof(sol))
 lastentry(sol::Solution) = error("lastentry() not implemented for ", typeof(sol))
-Common.ntime(sol::Solution)  = error("ntime() not implemented for ", typeof(sol))
+GeometricBase.ntime(sol::Solution)  = error("ntime() not implemented for ", typeof(sol))
 
 create_hdf5(sol::Solution, file) = error("create_hdf5() not implemented for ", typeof(sol))
-Common.write_to_hdf5(sol::Solution, h5::HDF5.File, offset=0) = error("write_to_hdf5() not implemented for ", typeof(sol))
+GeometricBase.write_to_hdf5(sol::Solution, h5::HDF5.File, offset=0) = error("write_to_hdf5() not implemented for ", typeof(sol))
 
-Common.nsamples(sol::DeterministicSolution) = sol.ni
+GeometricBase.nsamples(sol::DeterministicSolution) = sol.ni
 
-Common.eachtimestep(sol::Solution) = 1:sol.nt*sol.nsave
-Common.eachsample(sol::Solution) = 1:nsamples(sol)
+GeometricBase.eachtimestep(sol::Solution) = 1:sol.nt*sol.nsave
+GeometricBase.eachsample(sol::Solution) = 1:nsamples(sol)
 
 
 """

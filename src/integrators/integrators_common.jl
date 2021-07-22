@@ -184,7 +184,7 @@ function update_multiplier!(λ::SolutionVector{T}, Λ::Vector{Vector{T}}, b::Vec
 end
 
 
-function Common.cut_periodic_solution!(x::SolutionVector{T}, periodicity::Vector{T}) where {T}
+function GeometricBase.cut_periodic_solution!(x::SolutionVector{T}, periodicity::Vector{T}) where {T}
     @assert length(x) == length(periodicity)
 
     for k in eachindex(x, periodicity)
@@ -199,7 +199,7 @@ function Common.cut_periodic_solution!(x::SolutionVector{T}, periodicity::Vector
     end
 end
 
-function Common.cut_periodic_solution!(x::SolutionVector{T}, periodicity::Vector{T}, shift::Vector{T}) where {T}
+function GeometricBase.cut_periodic_solution!(x::SolutionVector{T}, periodicity::Vector{T}, shift::Vector{T}) where {T}
     @assert length(x) == length(periodicity)
     shift .= 0
     for k in eachindex(x, periodicity, shift)

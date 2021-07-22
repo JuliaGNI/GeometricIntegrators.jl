@@ -130,7 +130,7 @@ struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
 end
 
 
-Common.nconstraints(::IntegratorSLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
+GeometricBase.nconstraints(::IntegratorSLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
 function initial_guess!(int::IntegratorSLRK{DT}, sol::AtomicSolutionPDAE{DT},

@@ -1,11 +1,11 @@
 
-using GeometricIntegrators.Config
-using GeometricIntegrators.Equations
+using GeometricBase.Config
+using GeometricBase.Utils
+using GeometricEquations
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Integrators: initial_guess!, jacobian!, update_params!
 using GeometricIntegrators.Solutions
 using GeometricIntegrators.Tableaus
-using GeometricIntegrators.Utils
 using GeometricProblems.HarmonicOscillator
 using SimpleSolvers
 using Test
@@ -53,13 +53,13 @@ end
 @testset "$(rpad("Explicit Runge-Kutta integrators",80))" begin
 
     sol = integrate(ode, TableauExplicitEuler(), Δt, nt)
-    @test rel_err(sol.q, refx) < 5E-2
+    @test relative_maximum_error(sol.q, refx) < 5E-2
 
     sol = integrate(ode, TableauExplicitMidpoint(), Δt, nt)
-    @test rel_err(sol.q, refx) < 1E-3
+    @test relative_maximum_error(sol.q, refx) < 1E-3
 
     sol = integrate(ode, TableauRK4(), Δt, nt)
-    @test rel_err(sol.q, refx) < 5E-7
+    @test relative_maximum_error(sol.q, refx) < 5E-7
 
 end
 
@@ -106,56 +106,56 @@ end
     # check integrators
 
     sol = integrate(ode, TableauCrouzeix(), Δt, nt)
-    @test rel_err(sol.q, refx) < 5E-5
+    @test relative_maximum_error(sol.q, refx) < 5E-5
 
     sol = integrate(ode, TableauImplicitEuler(), Δt, nt)
-    @test rel_err(sol.q, refx) < 5E-2
+    @test relative_maximum_error(sol.q, refx) < 5E-2
 
     sol = integrate(ode, TableauImplicitMidpoint(), Δt, nt)
-    @test rel_err(sol.q, refx) < 5E-4
+    @test relative_maximum_error(sol.q, refx) < 5E-4
 
     sol = integrate(ode, TableauGauss(1), Δt, nt)
-    @test rel_err(sol.q, refx) < 5E-4
+    @test relative_maximum_error(sol.q, refx) < 5E-4
 
     sol = integrate(ode, TableauGauss(2), Δt, nt)
-    @test rel_err(sol.q, refx) < 1E-7
+    @test relative_maximum_error(sol.q, refx) < 1E-7
 
     sol = integrate(ode, TableauGauss(3), Δt, nt)
-    @test rel_err(sol.q, refx) < 1E-11
+    @test relative_maximum_error(sol.q, refx) < 1E-11
 
     sol = integrate(ode, TableauGauss(4), Δt, nt)
-    @test rel_err(sol.q, refx) < 1E-15
+    @test relative_maximum_error(sol.q, refx) < 1E-15
 
     sol = integrate(ode, TableauGauss(5), Δt, nt)
-    @test rel_err(sol.q, refx) < 1E-15
+    @test relative_maximum_error(sol.q, refx) < 1E-15
 
     sol = integrate(ode, TableauGauss(6), Δt, nt)
-    @test rel_err(sol.q, refx) < 1E-15
+    @test relative_maximum_error(sol.q, refx) < 1E-15
 
     sol = integrate(ode, TableauGauss(7), Δt, nt)
-    @test rel_err(sol.q, refx) < 5E-15
+    @test relative_maximum_error(sol.q, refx) < 5E-15
 
     sol = integrate(ode, TableauSRK3(), Δt, nt)
-    @test rel_err(sol.q, refx) < 1E-7
+    @test relative_maximum_error(sol.q, refx) < 1E-7
 
 
     # Test integration with exact Jacobian
 
     int = IntegratorFIRK(ode, TableauGauss(1), Δt; exact_jacobian=true)
     sol = integrate(ode, int, nt)
-    @test rel_err(sol.q, refx) < 5E-4
+    @test relative_maximum_error(sol.q, refx) < 5E-4
 
     int = IntegratorFIRK(ode, TableauGauss(2), Δt; exact_jacobian=true)
     sol = integrate(ode, int, nt)
-    @test rel_err(sol.q, refx) < 1E-7
+    @test relative_maximum_error(sol.q, refx) < 1E-7
 
     int = IntegratorFIRK(ode, TableauGauss(3), Δt; exact_jacobian=true)
     sol = integrate(ode, int, nt)
-    @test rel_err(sol.q, refx) < 1E-11
+    @test relative_maximum_error(sol.q, refx) < 1E-11
 
     int = IntegratorFIRK(ode, TableauGauss(4), Δt; exact_jacobian=true)
     sol = integrate(ode, int, nt)
-    @test rel_err(sol.q, refx) < 1E-15
+    @test relative_maximum_error(sol.q, refx) < 1E-15
 
 end
 
@@ -163,28 +163,28 @@ end
 @testset "$(rpad("Partitioned Runge-Kutta integrators",80))" begin
 
     # psol = integrate(pode, TableauSymplecticEulerA(), Δt, nt)
-    # @test rel_err(psol.q, refq) < 5E-2
-    # @test rel_err(psol.p, refp) < 1E-3
+    # @test relative_maximum_error(psol.q, refq) < 5E-2
+    # @test relative_maximum_error(psol.p, refp) < 1E-3
 
     # psol = integrate(pode, TableauSymplecticEulerB(), Δt, nt)
-    # @test rel_err(psol.q, refq) < 5E-2
-    # @test rel_err(psol.p, refp) < 1E-3
+    # @test relative_maximum_error(psol.q, refq) < 5E-2
+    # @test relative_maximum_error(psol.p, refp) < 1E-3
 
     psol = integrate(pode, PartitionedTableau(:prk4, TableauRK4()), Δt, nt)
-    @test rel_err(psol.q, refq) < 5E-7
-    @test rel_err(psol.p, refp) < 5E-7
+    @test relative_maximum_error(psol.q, refq) < 5E-7
+    @test relative_maximum_error(psol.p, refp) < 5E-7
 
     psol = integrate(pode, PartitionedTableau(:pglrk, TableauGauss(1)), Δt, nt)
-    @test rel_err(psol.q, refq) < 5E-4
-    @test rel_err(psol.p, refp) < 5E-4
+    @test relative_maximum_error(psol.q, refq) < 5E-4
+    @test relative_maximum_error(psol.p, refp) < 5E-4
 
     psol = integrate(pode, PartitionedTableau(:pglrk, TableauGauss(2)), Δt, nt)
-    @test rel_err(psol.q, refq) < 1E-7
-    @test rel_err(psol.p, refp) < 1E-7
+    @test relative_maximum_error(psol.q, refq) < 1E-7
+    @test relative_maximum_error(psol.p, refp) < 1E-7
 
     psol = integrate(pode, PartitionedTableau(:pglrk, TableauGauss(3)), Δt, nt)
-    @test rel_err(psol.q, refq) < 1E-11
-    @test rel_err(psol.p, refp) < 1E-11
+    @test relative_maximum_error(psol.q, refq) < 1E-11
+    @test relative_maximum_error(psol.p, refp) < 1E-11
 
 end
 
@@ -193,15 +193,15 @@ end
 
     pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(2), Δt)
     pgsol = integrate(ode, pgint, nt)
-    @test rel_err(pgsol.q, refx) < 6E-6
+    @test relative_maximum_error(pgsol.q, refx) < 6E-6
 
     pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(3), Δt)
     pgsol = integrate(ode, pgint, nt)
-    @test rel_err(pgsol.q, refx) < 2E-12
+    @test relative_maximum_error(pgsol.q, refx) < 2E-12
 
     pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(4), Δt)
     pgsol = integrate(ode, pgint, nt)
-    @test rel_err(pgsol.q, refx) < 8E-16
+    @test relative_maximum_error(pgsol.q, refx) < 8E-16
 
 end
 

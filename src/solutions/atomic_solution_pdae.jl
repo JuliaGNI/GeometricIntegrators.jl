@@ -119,7 +119,7 @@ function get_solution(asol::AtomicSolutionPDAE)
     (asol.t, asol.q, asol.p, asol.λ)
 end
 
-function Common.reset!(asol::AtomicSolutionPDAE, Δt)
+function GeometricBase.reset!(asol::AtomicSolutionPDAE, Δt)
     asol.t̄  = asol.t
     asol.q̄ .= asol.q
     asol.p̄ .= asol.p

@@ -83,7 +83,7 @@ struct IntegratorVPARK{DT, TT, D, S, R, PT <: ParametersVPARK{DT,TT,D,S,R},
 end
 
 
-Common.nconstraints(::IntegratorVPARK{DT,TT,D}) where {DT,TT,D} = D
+GeometricBase.nconstraints(::IntegratorVPARK{DT,TT,D}) where {DT,TT,D} = D
 
 
 function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},

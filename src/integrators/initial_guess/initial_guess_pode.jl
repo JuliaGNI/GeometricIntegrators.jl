@@ -75,7 +75,7 @@ function update_vector_fields!(ig::InitialGuessPODE{TT}, t₁::TT,
 end
 
 
-function Common.evaluate!(ig::InitialGuessPODE{TT},
+function GeometricBase.evaluate!(ig::InitialGuessPODE{TT},
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},
@@ -96,7 +96,7 @@ function Common.evaluate!(ig::InitialGuessPODE{TT},
 end
 
 
-function Common.evaluate!(ig::InitialGuessPODE{TT},
+function GeometricBase.evaluate!(ig::InitialGuessPODE{TT},
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},
@@ -120,7 +120,7 @@ function Common.evaluate!(ig::InitialGuessPODE{TT},
 end
 
 
-function Common.evaluate!(ig::InitialGuessPODE{TT},
+function GeometricBase.evaluate!(ig::InitialGuessPODE{TT},
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},
@@ -150,7 +150,7 @@ function Common.evaluate!(ig::InitialGuessPODE{TT},
 end
 
 
-function Common.evaluate!(ig::InitialGuessPODE{TT},
+function GeometricBase.evaluate!(ig::InitialGuessPODE{TT},
                 q₀::SolutionVector{DT},
                 p₀::SolutionVector{DT},
                 v₀::SolutionVector{DT},

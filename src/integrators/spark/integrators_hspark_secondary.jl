@@ -82,7 +82,7 @@ struct IntegratorHSPARKsecondary{DT, TT, D, S, R, PT <: ParametersHSPARKsecondar
 end
 
 
-Common.nconstraints(::IntegratorHSPARKsecondary{DT,TT,D}) where {DT,TT,D} = D
+GeometricBase.nconstraints(::IntegratorHSPARKsecondary{DT,TT,D}) where {DT,TT,D} = D
 
 
 function initial_guess!(int::IntegratorHSPARKsecondary{DT}, sol::AtomicSolutionPDAE{DT},

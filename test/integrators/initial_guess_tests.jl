@@ -1,12 +1,12 @@
 
-using GeometricIntegrators.Common
-using GeometricIntegrators.Config
+using GeometricBase
+using GeometricBase.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Tableaus
 using GeometricProblems.LotkaVolterra2d
 using Test
 
-using GeometricIntegrators.Equations: _get_v, _get_f, _get_v̄, _get_f̄
+using GeometricEquations: _get_v, _get_f, _get_v̄, _get_f̄
 
 int = get_config(:ig_extrapolation)
 

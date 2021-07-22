@@ -173,8 +173,8 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
 @inline counter(sol::SolutionPODE) = sol.counter
 @inline offset(sol::SolutionPODE) = sol.woffset
 @inline lastentry(sol::SolutionPODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
-@inline Common.ntime(sol::SolutionPODE) = sol.ntime
-@inline Common.periodicity(sol::SolutionPODE) = sol.periodicity
+@inline GeometricBase.ntime(sol::SolutionPODE) = sol.ntime
+@inline GeometricBase.periodicity(sol::SolutionPODE) = sol.periodicity
 
 
 function set_initial_conditions!(sol::SolutionPODE, equ::Union{PODE,HODE,IODE,LODE})
@@ -247,7 +247,7 @@ function set_solution!(sol::SolutionPODE{AT,TT}, q::AT, p::AT, n, k=1) where {AT
     end
 end
 
-function Common.reset!(sol::SolutionPODE)
+function GeometricBase.reset!(sol::SolutionPODE)
     reset!(sol.q)
     reset!(sol.p)
     compute_timeseries!(sol.t, sol.t[end])
