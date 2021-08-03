@@ -41,7 +41,7 @@ While DifferentialEquations.jl provides a feature-rich ecosystem for the solutio
 ```@contents
 Pages = ["tutorial/tutorial.md",
          "equations.md",
-         "integrators.md",
+         "integrators/usage.md",
 ]
 ```
 

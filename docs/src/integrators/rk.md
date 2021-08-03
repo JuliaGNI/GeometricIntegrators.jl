@@ -191,3 +191,10 @@ The second argument specifies the number type of the coefficients. Internally, a
 
 **TODO**
  
+
+
+## Partitioned Equations
+
+**TODO**
+ 
+
