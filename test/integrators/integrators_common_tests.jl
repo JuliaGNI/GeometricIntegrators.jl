@@ -1,5 +1,5 @@
 
-using GeometricIntegrators.Config
+using GeometricBase.Config
 using GeometricIntegrators.Integrators
 using GeometricIntegrators.Integrators: CacheType, Parameters
 using Test

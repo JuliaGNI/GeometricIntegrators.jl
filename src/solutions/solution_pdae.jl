@@ -189,8 +189,8 @@ Base.:(==)(sol1::SolutionPDAE{DT1,TT1,N1}, sol2::SolutionPDAE{DT2,TT2,N2}) where
 @inline counter(sol::SolutionPDAE) = sol.counter
 @inline offset(sol::SolutionPDAE) = sol.woffset
 @inline lastentry(sol::SolutionPDAE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
-@inline Common.ntime(sol::SolutionPDAE) = sol.ntime
-@inline Common.periodicity(sol::SolutionPDAE) = sol.periodicity
+@inline GeometricBase.ntime(sol::SolutionPDAE) = sol.ntime
+@inline GeometricBase.periodicity(sol::SolutionPDAE) = sol.periodicity
 
 
 function set_initial_conditions!(sol::SolutionPDAE, equ::Union{IODE,LODE,PDAE,IDAE,LDAE})
@@ -296,7 +296,7 @@ function get_solution(sol::SolutionPDAE{AT,TT,2}, n, k=1) where {AT,TT}
     (sol.t[n], sol.q[n,k], sol.p[n,k], sol.λ[n,k])
 end
 
-function Common.reset!(sol::SolutionPDAE)
+function GeometricBase.reset!(sol::SolutionPDAE)
     reset!(sol.q)
     reset!(sol.p)
     reset!(sol.λ)

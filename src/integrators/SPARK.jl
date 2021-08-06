@@ -5,10 +5,10 @@ module SPARK
     using RungeKutta
     using SimpleSolvers
 
-    using ..Common
-    using ..Config
+    import GeometricEquations: LODE, LDAE, HDAE, IDAE, PDAE, get_functions
 
-    import ..Equations: LODE, LDAE, HDAE, IDAE, PDAE, get_functions
+    using ..GeometricBase
+    using ..Config
 
     import ..Solutions: AtomicSolutionPDAE, SolutionVector, update!
 

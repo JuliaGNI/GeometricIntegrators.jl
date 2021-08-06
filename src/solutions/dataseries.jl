@@ -115,8 +115,8 @@ Base.parent(ds::DataSeries) = ds.d
 Base.eltype(ds::DataSeries{T,N}) where {T,N} = T
 Base.ndims(ds::DataSeries{T,N}) where {T,N} = N
 
-Common.ntime(ds::DataSeries) = lastindex(ds.d, 1) - 1
-Common.nsamples(ds::DataSeries) = size(ds.d, 2)
+GeometricBase.ntime(ds::DataSeries) = lastindex(ds.d, 1) - 1
+GeometricBase.nsamples(ds::DataSeries) = size(ds.d, 2)
 
 # errmsg_size(ds::DataSeries) = error("size not supported for data series with axes $(axes(ds))")
 # Base.size(ds::DataSeries) = errmsg_size(ds)
@@ -221,11 +221,11 @@ function set_data!(ds::DataSeries{T,2}, x::Vector{T}, n::Int) where {T}
     end
 end
 
-function Common.reset!(ds::DataSeries{T,1}) where {T}
+function GeometricBase.reset!(ds::DataSeries{T,1}) where {T}
     @inbounds ds[begin] = ds[end]
 end
 
-function Common.reset!(ds::DataSeries{T,2}) where {T}
+function GeometricBase.reset!(ds::DataSeries{T,2}) where {T}
     @inbounds for k in axes(ds,2)
         ds[begin,k] = ds[end,k]
     end

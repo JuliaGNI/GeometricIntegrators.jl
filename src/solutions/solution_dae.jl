@@ -183,8 +183,8 @@ Base.:(==)(sol1::SolutionDAE{DT1,TT1,N1}, sol2::SolutionDAE{DT2,TT2,N2}) where {
 @inline counter(sol::SolutionDAE) = sol.counter
 @inline offset(sol::SolutionDAE) = sol.woffset
 @inline lastentry(sol::SolutionDAE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
-@inline Common.ntime(sol::SolutionDAE) = sol.ntime
-@inline Common.periodicity(sol::SolutionDAE) = sol.periodicity
+@inline GeometricBase.ntime(sol::SolutionDAE) = sol.ntime
+@inline GeometricBase.periodicity(sol::SolutionDAE) = sol.periodicity
 
 
 function set_initial_conditions!(sol::SolutionDAE, equ::DAE)
@@ -257,7 +257,7 @@ function get_solution(sol::SolutionDAE{AT,TT,2}, n, k=1) where {AT,TT}
     (sol.t[n], sol.q[n,k], sol.λ[n,k])
 end
 
-function Common.reset!(sol::SolutionDAE)
+function GeometricBase.reset!(sol::SolutionDAE)
     reset!(sol.q)
     reset!(sol.λ)
     compute_timeseries!(sol.t, sol.t[end])

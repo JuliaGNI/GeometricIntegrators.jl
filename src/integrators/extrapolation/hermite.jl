@@ -200,10 +200,10 @@ function HermiteExtrapolation(t₀::T, t₁::T) where {T}
 end
 
 
-function Common.evaluate!(int::HermiteExtrapolation{TT}, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, ẋ₀::AbstractArray{DT}, ẋ₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}) where {DT,TT}
+function GeometricBase.evaluate!(int::HermiteExtrapolation{TT}, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, ẋ₀::AbstractArray{DT}, ẋ₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}) where {DT,TT}
     _hermite_extrapolation!(int.t₀, int.t₁, x₀, x₁, ẋ₀, ẋ₁, t, x)
 end
 
-function Common.evaluate!(int::HermiteExtrapolation{TT}, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, ẋ₀::AbstractArray{DT}, ẋ₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}, ẋ::AbstractArray{DT}) where {DT,TT}
+function GeometricBase.evaluate!(int::HermiteExtrapolation{TT}, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, ẋ₀::AbstractArray{DT}, ẋ₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}, ẋ::AbstractArray{DT}) where {DT,TT}
     _hermite_extrapolation!(int.t₀, int.t₁, x₀, x₁, ẋ₀, ẋ₁, t, x, ẋ)
 end

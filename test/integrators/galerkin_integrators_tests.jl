@@ -1,5 +1,5 @@
 
-using GeometricIntegrators.Common
+using GeometricBase
 using GeometricIntegrators.Config
 using GeometricIntegrators.Discontinuities
 using GeometricIntegrators.Integrators
@@ -22,27 +22,27 @@ BGau4 = Lagrange(nodes(QGau4))
 
 cgint = IntegratorCGVI(iode, BGau4, QGau4, Δt)
 cgsol = integrate(iode, cgint, nt)
-@test rel_err(cgsol.q, refx) < 1E-7
+@test relative_maximum_error(cgsol.q, refx) < 1E-7
 
 
 ### DGVI Integrators ###
 
 dgint = IntegratorDGVI(iode, BGau4, QGau4, Δt)
 dgsol = integrate(iode, dgint, nt)
-@test rel_err(dgsol.q, refx) < 1E-7
+@test relative_maximum_error(dgsol.q, refx) < 1E-7
 
 dgint = IntegratorDGVIP0(iode, BGau4, QGau4, Δt)
 dgsol = integrate(iode, dgint, nt)
-@test rel_err(dgsol.q, refx) < 1E-7
+@test relative_maximum_error(dgsol.q, refx) < 1E-7
 
 dgint = IntegratorDGVIP1(iode, BGau4, QGau4, Δt)
 dgsol = integrate(iode, dgint, nt)
-@test rel_err(dgsol.q, refx) < 1E-7
+@test relative_maximum_error(dgsol.q, refx) < 1E-7
 
 dgint = IntegratorDGVIEXP(iode, BGau4, QGau4, Δt)
 dgsol = integrate(iode, dgint, nt)
-@test rel_err(dgsol.q, refx) < 1E-7
+@test relative_maximum_error(dgsol.q, refx) < 1E-7
 
 dgint = IntegratorDGVIPI(iode, BGau4, QGau4, Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2)), Δt)
 dgsol = integrate(iode, dgint, nt)
-@test rel_err(dgsol.q, refx) < 1E-7
+@test relative_maximum_error(dgsol.q, refx) < 1E-7

@@ -30,6 +30,7 @@ The following list provides and overview of supported and planned features.
 - [ ] Hamilton-Pontryagin-Galerkin Integrators (HPGI),
 - [ ] Spline Variational Integrators (SVI),
 - [ ] Taylor Variational Integrators (TVI),
+- [x] Degenerate Variational Integrators (DVI),
 - [x] Splitting Methods (SM),
 - [ ] Hamiltonian Boundary Value Methods (HBVM).
 

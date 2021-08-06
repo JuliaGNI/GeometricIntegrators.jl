@@ -3,8 +3,9 @@ module Simulations
     using ProgressMeter
     using RungeKutta
 
-    using ..Common
-    using ..Equations
+    using GeometricBase
+    using GeometricEquations
+
     using ..Integrators
     using ..Solutions
 

@@ -39,7 +39,7 @@ Base.:(==)(ts1::TimeSeries, ts2::TimeSeries) = (
                              && ts1.Δt == ts2.Δt
                              && ts1.step == ts2.step)
 
-Common.ntime(ts::TimeSeries) = ts.n
+GeometricBase.ntime(ts::TimeSeries) = ts.n
 
 Base.parent(ts::TimeSeries) = ts.t
 Base.eltype(ts::TimeSeries{T}) where {T} = T
@@ -71,11 +71,25 @@ Base.:(==)(vec::AbstractVector, ts::TimeSeries) = (ts == vec)
     @inbounds setindex!(ts.t, t, i.+1)
 end
 
-@inline function Base.getindex(ts::TimeSeries, i::Int)
+# @inline function Base.getindex(ts::TimeSeries, i::Int)
+#     @boundscheck checkbounds(ts.t, i.+1)
+#     @inbounds getindex(ts.t, i.+1)
+#     return t
+# end
+
+@inline function Base.getindex(ts::TimeSeries, i::Union{Int,CartesianIndex})
     @boundscheck checkbounds(ts.t, i.+1)
-    @inbounds t = getindex(ts.t, i.+1)
-    return t
+    @inbounds getindex(ts.t, i.+1)
 end
+
+@inline function Base.getindex(ts::TimeSeries, I::AbstractRange{Int})
+    [ts[i] for i in I]
+end
+
+@inline function Base.getindex(ts::TimeSeries, ::Colon)
+    OffsetArray([ts[i] for i in axes(ts)], axes(ts,1))
+end
+
 
 function compute_timeseries!(ts::TimeSeries, t₀::Real)
     ts[0] = t₀

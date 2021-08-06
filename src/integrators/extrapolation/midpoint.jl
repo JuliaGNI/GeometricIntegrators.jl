@@ -81,7 +81,7 @@ function MidpointExtrapolation(equ::ODE, s::Int)
     MidpointExtrapolationODE(_get_v(equ), s)
 end
 
-function Common.evaluate!(extrap::MidpointExtrapolationODE, t₀::TT, t₁::TT,
+function GeometricBase.evaluate!(extrap::MidpointExtrapolationODE, t₀::TT, t₁::TT,
                           x₀::AbstractVector{DT}, x₁::AbstractVector{DT}) where {DT,TT}
     _midpoint_extrapolation_ode!(extrap.v, t₀, t₁, x₀, x₁, extrap.s)
 end
@@ -197,7 +197,7 @@ function MidpointExtrapolation(equ::IODE, s::Int)
     MidpointExtrapolationIODE(_get_v̄(equ), _get_f̄(equ), s)
 end
 
-function Common.evaluate!(extrap::MidpointExtrapolationIODE, t₀::TT, t₁::TT,
+function GeometricBase.evaluate!(extrap::MidpointExtrapolationIODE, t₀::TT, t₁::TT,
                           q₀::AbstractVector{DT}, q₁::AbstractVector{DT},
                           p₀::AbstractVector{DT}, p₁::AbstractVector{DT}) where {DT,TT}
     _midpoint_extrapolation_iode!(extrap.v, extrap.f, t₀, t₁, q₀, q₁, p₀, p₁, extrap.s)
@@ -314,7 +314,7 @@ function MidpointExtrapolation(equ::PODE, s::Int)
     MidpointExtrapolationPODE(_get_v(equ), _get_f(equ), s)
 end
 
-function Common.evaluate!(extrap::MidpointExtrapolationPODE, t₀::TT, t₁::TT,
+function GeometricBase.evaluate!(extrap::MidpointExtrapolationPODE, t₀::TT, t₁::TT,
                           q₀::AbstractVector{DT}, q₁::AbstractVector{DT},
                           p₀::AbstractVector{DT}, p₁::AbstractVector{DT}) where {DT,TT}
     _midpoint_extrapolation_pode!(extrap.v, extrap.f, t₀, t₁, q₀, q₁, p₀, p₁, extrap.s)

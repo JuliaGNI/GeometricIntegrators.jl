@@ -8,15 +8,15 @@ module Integrators
     using RungeKutta
     using SimpleSolvers
 
-    using ..Common
-    using ..Config
-    using ..Utils
+    using GeometricBase
+    using GeometricBase.Config
+    using GeometricBase.Utils
+    using GeometricEquations
+    using GeometricEquations: _get_v, _get_f, _get_v̄, _get_f̄
 
     using ..Discontinuities
-    using ..Equations
     using ..Solutions
 
-    import ..Equations: _get_v, _get_f, _get_v̄, _get_f̄
 
     import RungeKutta: nstages
 

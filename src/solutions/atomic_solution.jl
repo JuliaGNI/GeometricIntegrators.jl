@@ -33,7 +33,7 @@ function copy_solution!(sol::Solution, asol::AtomicSolution, n, m)
     copy_solution!(sol, get_solution(asol)..., n, m)
 end
 
-function Common.cut_periodic_solution!(asol::AtomicSolution{DT,TT,AT}, periodicity::AT) where {DT,TT,AT}
+function GeometricBase.cut_periodic_solution!(asol::AtomicSolution{DT,TT,AT}, periodicity::AT) where {DT,TT,AT}
     @assert axes(asol.q) == axes(periodicity)
     for k in eachindex(asol.q, asol.q̄, periodicity)
         if periodicity[k] ≠ 0
