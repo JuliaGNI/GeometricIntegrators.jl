@@ -7,6 +7,10 @@
 ### Breaking Changes
 
 * Move `HermiteInterpolation` to Integrators and remove `Interpolation` sub-package
+* Move `Equations` submodule to GeometricEquations.jl
+* Move `Common`, `Config` and `Utils` submodules to GeometricBase.jl
+* Move `TimeSeries`, `DataSeries` and `Solution` from `Solutions` types to GeometricBase.jl
+* Remove parallel DataSeries and Solution types
 
 ### New Features
 
