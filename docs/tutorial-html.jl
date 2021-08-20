@@ -1,6 +1,8 @@
 using GeometricIntegrators
 using Weave
 
+ENV["GKSwstype"] = "100"
+
 tutorial_path = joinpath(dirname(pathof(GeometricIntegrators)), "../docs/tutorial", "tutorial.jmd")
 build_path = joinpath(dirname(pathof(GeometricIntegrators)), "../docs/build/tutorial")
 
