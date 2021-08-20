@@ -22,7 +22,7 @@ Contains all fields necessary to store the solution of an PODE.
 
 ```julia
 SSolutionPODE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
-SSolutionPODE(t::TimeSeries, q::SDataSeries, p::SDataSeries, ntimesteps)
+SSolutionPODE(t::TimeSeries, q::DataSeries, p::DataSeries, ntimesteps)
 SSolutionPODE(file::String)
 PSolutionPODE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
 PSolutionPODE(t::TimeSeries, q::PDataSeries, p::PDataSeries, ntimesteps)
@@ -50,8 +50,9 @@ abstract type SolutionPODE{dType, tType, N} <: DeterministicSolution{dType, tTyp
 
 # Create SolutionPODEs with serial and parallel data structures.
 for (TSolution, TDataSeries, Tdocstring) in
-    ((:SSolutionPODE, :SDataSeries, "Serial Solution of a partitioned ordinary differential equation."),
-     (:PSolutionPODE, :PDataSeries, "Parallel Solution of a partitioned ordinary differential equation."))
+    ((:SSolutionPODE, :DataSeries, "Serial Solution of a partitioned ordinary differential equation."),
+    #  (:PSolutionPODE, :PDataSeries, "Parallel Solution of a partitioned ordinary differential equation.")
+    )
     @eval begin
         $Tdocstring
         mutable struct $TSolution{dType, tType, N} <: SolutionPODE{dType, tType, N}
@@ -168,12 +169,14 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
                              && sol1.periodicity == sol2.periodicity)
 
 @inline hdf5(sol::SolutionPODE)  = sol.h5
-@inline timesteps(sol::SolutionPODE)  = sol.t
-@inline nsave(sol::SolutionPODE) = sol.nsave
-@inline counter(sol::SolutionPODE) = sol.counter
-@inline offset(sol::SolutionPODE) = sol.woffset
-@inline lastentry(sol::SolutionPODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+@inline GeometricBase.counter(sol::SolutionPODE) = sol.counter
+@inline GeometricBase.offset(sol::SolutionPODE) = sol.woffset
+@inline GeometricBase.lastentry(sol::SolutionPODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+@inline GeometricBase.nsamples(sol::SolutionPODE) = sol.ni
+@inline GeometricBase.nsave(sol::SolutionPODE) = sol.nsave
 @inline GeometricBase.ntime(sol::SolutionPODE) = sol.ntime
+@inline GeometricBase.timesteps(sol::SolutionPODE)  = sol.t
+@inline GeometricBase.eachtimestep(sol::SolutionPODE) = 1:sol.nt*sol.nsave
 @inline GeometricBase.periodicity(sol::SolutionPODE) = sol.periodicity
 
 

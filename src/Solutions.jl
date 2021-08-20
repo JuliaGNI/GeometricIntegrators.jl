@@ -1,7 +1,5 @@
 module Solutions
 
-    using Base: TwicePrecision
-
     using HDF5
     using OffsetArrays
     using SharedArrays
@@ -11,27 +9,19 @@ module Solutions
     using GeometricBase.Utils
     using GeometricEquations
 
+    using GeometricBase: fromarray
+
     export DEFAULT_NSAVE, DEFAULT_NWRITE
 
     const DEFAULT_NSAVE = 1
     const DEFAULT_NWRITE = 0
 
-    export SolutionVector
 
-    SolutionVector{DT} = Union{Vector{DT}, Vector{TwicePrecision{DT}}}
-
-
-    export get_data!, set_data!
-    export DataSeries, PDataSeries, SDataSeries
+    export DataSeries
 
     include("solutions/dataseries.jl")
 
-    export TimeSeries, compute_timeseries!
-
-    include("solutions/timeseries.jl")
-
     export Solution, ParallelSolution, DeterministicSolution
-    export nsave, nsamples, timesteps, counter, offset, lastentry, hdf5
     export get_solution, get_solution!, set_solution!
 
     include("solutions/solution.jl")
@@ -49,8 +39,8 @@ module Solutions
 
     export SolutionODE, SSolutionODE, PSolutionODE, SolutionPODE, SSolutionPODE, PSolutionPODE
     export SolutionDAE, SSolutionDAE, PSolutionDAE, SolutionPDAE, SSolutionPDAE, PSolutionPDAE
-    export get_initial_conditions, get_initial_conditions!, set_initial_conditions!,
-           create_hdf5, create_hdf5!
+    export get_initial_conditions, get_initial_conditions!, set_initial_conditions!
+    export create_hdf5, create_hdf5!, write_to_hdf5, hdf5
 
     include("solutions/solution_ode.jl")
     include("solutions/solution_pode.jl")

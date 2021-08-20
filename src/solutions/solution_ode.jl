@@ -21,7 +21,7 @@ Contains all fields necessary to store the solution of an ODE.
 
 ```julia
 SSolutionODE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
-SSolutionODE(t::TimeSeries, q::SDataSeries, ntimesteps)
+SSolutionODE(t::TimeSeries, q::DataSeries, ntimesteps)
 SSolutionODE(file::String)
 PSolutionODE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
 PSolutionODE(t::TimeSeries, q::PDataSeries, ntimesteps)
@@ -48,8 +48,9 @@ abstract type SolutionODE{dType, tType, N} <: DeterministicSolution{dType, tType
 
 # Create SolutionODEs with serial and parallel data structures.
 for (TSolution, TDataSeries, Tdocstring) in
-    ((:SSolutionODE, :SDataSeries, "Serial Solution of a ordinary differential equation."),
-     (:PSolutionODE, :PDataSeries, "Parallel Solution of a ordinary differential equation."))
+    ((:SSolutionODE, :DataSeries, "Serial Solution of a ordinary differential equation."),
+    #  (:PSolutionODE, :PDataSeries, "Parallel Solution of a ordinary differential equation.")
+    )
     @eval begin
         $Tdocstring
         mutable struct $TSolution{dType, tType, N} <: SolutionODE{dType, tType, N}
@@ -163,12 +164,14 @@ Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {
                              && sol1.periodicity == sol2.periodicity)
 
 @inline hdf5(sol::SolutionODE)  = sol.h5
-@inline timesteps(sol::SolutionODE)  = sol.t
-@inline nsave(sol::SolutionODE) = sol.nsave
-@inline counter(sol::SolutionODE) = sol.counter
-@inline offset(sol::SolutionODE) = sol.woffset
-@inline lastentry(sol::SolutionODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+@inline GeometricBase.counter(sol::SolutionODE) = sol.counter
+@inline GeometricBase.offset(sol::SolutionODE) = sol.woffset
+@inline GeometricBase.lastentry(sol::SolutionODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+@inline GeometricBase.nsamples(sol::SolutionODE) = sol.ni
+@inline GeometricBase.nsave(sol::SolutionODE) = sol.nsave
 @inline GeometricBase.ntime(sol::SolutionODE) = sol.ntime
+@inline GeometricBase.timesteps(sol::SolutionODE)  = sol.t
+@inline GeometricBase.eachtimestep(sol::SolutionODE) = 1:sol.nt*sol.nsave
 @inline GeometricBase.periodicity(sol::SolutionODE) = sol.periodicity
 
 

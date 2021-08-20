@@ -24,7 +24,7 @@ Contains all fields necessary to store the solution of an PDAE.
 
 ```julia
 SSolutionPDAE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
-SSolutionPDAE(t::TimeSeries, q::SDataSeries, p::SDataSeries, λ::SDataSeries, ntimesteps)
+SSolutionPDAE(t::TimeSeries, q::DataSeries, p::DataSeries, λ::DataSeries, ntimesteps)
 SSolutionPDAE(file::String)
 PSolutionPDAE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
 PSolutionPDAE(t::TimeSeries, q::PDataSeries, p::PDataSeries, λ::PDataSeries, ntimesteps)
@@ -52,8 +52,9 @@ abstract type SolutionPDAE{dType, tType, N} <: DeterministicSolution{dType, tTyp
 
 # Create SolutionPDAEs with serial and parallel data structures.
 for (TSolution, TDataSeries, Tdocstring) in
-    ((:SSolutionPDAE, :SDataSeries, "Serial Solution of a partitioned differential algebraic equation."),
-     (:PSolutionPDAE, :PDataSeries, "Parallel Solution of a partitioned differential algebraic equation."))
+    ((:SSolutionPDAE, :DataSeries, "Serial Solution of a partitioned differential algebraic equation."),
+    #  (:PSolutionPDAE, :PDataSeries, "Parallel Solution of a partitioned differential algebraic equation.")
+    )
     @eval begin
         $Tdocstring
         mutable struct $TSolution{dType, tType, N} <: SolutionPDAE{dType, tType, N}
@@ -184,12 +185,14 @@ Base.:(==)(sol1::SolutionPDAE{DT1,TT1,N1}, sol2::SolutionPDAE{DT2,TT2,N2}) where
                              && sol1.periodicity == sol2.periodicity)
 
 @inline hdf5(sol::SolutionPDAE)  = sol.h5
-@inline timesteps(sol::SolutionPDAE)  = sol.t
-@inline nsave(sol::SolutionPDAE) = sol.nsave
-@inline counter(sol::SolutionPDAE) = sol.counter
-@inline offset(sol::SolutionPDAE) = sol.woffset
-@inline lastentry(sol::SolutionPDAE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+@inline GeometricBase.counter(sol::SolutionPDAE) = sol.counter
+@inline GeometricBase.offset(sol::SolutionPDAE) = sol.woffset
+@inline GeometricBase.lastentry(sol::SolutionPDAE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+@inline GeometricBase.nsamples(sol::SolutionPDAE) = sol.ni
+@inline GeometricBase.nsave(sol::SolutionPDAE) = sol.nsave
 @inline GeometricBase.ntime(sol::SolutionPDAE) = sol.ntime
+@inline GeometricBase.timesteps(sol::SolutionPDAE)  = sol.t
+@inline GeometricBase.eachtimestep(sol::SolutionPDAE) = 1:sol.nt*sol.nsave
 @inline GeometricBase.periodicity(sol::SolutionPDAE) = sol.periodicity
 
 
