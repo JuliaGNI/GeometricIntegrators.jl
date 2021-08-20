@@ -17,11 +17,7 @@ module Solutions
     const DEFAULT_NWRITE = 0
 
 
-    export DataSeries
-
-    include("solutions/dataseries.jl")
-
-    export Solution, ParallelSolution, DeterministicSolution
+    export DataSeries, TimeSeries, Solution, DeterministicSolution
     export get_solution, get_solution!, set_solution!
 
     include("solutions/solution.jl")
