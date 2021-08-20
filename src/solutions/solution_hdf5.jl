@@ -30,12 +30,12 @@ function save_attributes(sol::DeterministicSolution, h5::HDF5.File)
 end
 
 "write_to_hdf5: Wrapper for saving Solution to HDF5 file."
-function GeometricBase.write_to_hdf5(solution::Solution)
+function write_to_hdf5(solution::Solution)
     write_to_hdf5(solution, hdf5(solution), offset(solution))
 end
 
 "Creates HDF5 file, writes solution to file, and closes file."
-function GeometricBase.write_to_hdf5(solution::Solution, file::AbstractString)
+function write_to_hdf5(solution::Solution, file::AbstractString)
     h5 = create_hdf5(solution, file)
     write_to_hdf5(solution, h5)
     close(h5)
@@ -402,7 +402,7 @@ end
 
 
 "Append solution to HDF5 file."
-function GeometricBase.write_to_hdf5(solution::DeterministicSolution, h5::HDF5.File=hdf5(solution), offset=offset(solution))
+function write_to_hdf5(solution::DeterministicSolution, h5::HDF5.File=hdf5(solution), offset=offset(solution))
     # set convenience variables and compute ranges
     j1 = offset+2
     j2 = offset+1+solution.nt
@@ -415,7 +415,7 @@ function GeometricBase.write_to_hdf5(solution::DeterministicSolution, h5::HDF5.F
 end
 
 "Append solution to HDF5 file."
-function GeometricBase.write_to_hdf5(solution::Union{SolutionDAE,SolutionPDAE}, h5::HDF5.File=hdf5(solution), offset=offset(solution))
+function write_to_hdf5(solution::Union{SolutionDAE,SolutionPDAE}, h5::HDF5.File=hdf5(solution), offset=offset(solution))
     # set convenience variables and compute ranges
     j1 = offset+2
     j2 = offset+1+solution.nt
