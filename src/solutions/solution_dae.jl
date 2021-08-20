@@ -23,7 +23,7 @@ Contains all fields necessary to store the solution of an DAE.
 
 ```julia
 SSolutionDAE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
-SSolutionDAE(t::TimeSeries, q::SDataSeries, λ::SDataSeries, ntimesteps)
+SSolutionDAE(t::TimeSeries, q::DataSeries, λ::DataSeries, ntimesteps)
 SSolutionDAE(file::String)
 PSolutionDAE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
 PSolutionDAE(t::TimeSeries, q::PDataSeries, λ::PDataSeries, ntimesteps)
@@ -50,8 +50,9 @@ abstract type SolutionDAE{dType, tType, N} <: DeterministicSolution{dType, tType
 
 # Create SolutionPDAEs with serial and parallel data structures.
 for (TSolution, TDataSeries, Tdocstring) in
-    ((:SSolutionDAE, :SDataSeries, "Serial Solution of a differential algebraic equation."),
-     (:PSolutionDAE, :PDataSeries, "Parallel Solution of a differential algebraic equation."))
+    ((:SSolutionDAE, :DataSeries, "Serial Solution of a differential algebraic equation."),
+    #  (:PSolutionDAE, :PDataSeries, "Parallel Solution of a differential algebraic equation.")
+    )
     @eval begin
         $Tdocstring
         mutable struct $TSolution{dType, tType, N} <: SolutionDAE{dType, tType, N}
@@ -178,12 +179,14 @@ Base.:(==)(sol1::SolutionDAE{DT1,TT1,N1}, sol2::SolutionDAE{DT2,TT2,N2}) where {
                              && sol1.periodicity == sol2.periodicity)
 
 @inline hdf5(sol::SolutionDAE)  = sol.h5
-@inline timesteps(sol::SolutionDAE)  = sol.t
-@inline nsave(sol::SolutionDAE) = sol.nsave
-@inline counter(sol::SolutionDAE) = sol.counter
-@inline offset(sol::SolutionDAE) = sol.woffset
-@inline lastentry(sol::SolutionDAE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+@inline GeometricBase.counter(sol::SolutionDAE) = sol.counter
+@inline GeometricBase.offset(sol::SolutionDAE) = sol.woffset
+@inline GeometricBase.lastentry(sol::SolutionDAE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+@inline GeometricBase.nsamples(sol::SolutionDAE) = sol.ni
+@inline GeometricBase.nsave(sol::SolutionDAE) = sol.nsave
 @inline GeometricBase.ntime(sol::SolutionDAE) = sol.ntime
+@inline GeometricBase.timesteps(sol::SolutionDAE)  = sol.t
+@inline GeometricBase.eachtimestep(sol::SolutionDAE) = 1:sol.nt*sol.nsave
 @inline GeometricBase.periodicity(sol::SolutionDAE) = sol.periodicity
 
 

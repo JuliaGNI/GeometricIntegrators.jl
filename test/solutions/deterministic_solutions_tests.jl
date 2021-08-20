@@ -1,5 +1,6 @@
 
 using GeometricBase
+using GeometricBase: fromarray, test_interface
 using GeometricIntegrators.Solutions
 using GeometricIntegrators.Solutions: createHDF5
 using GeometricProblems.HarmonicOscillator
@@ -84,6 +85,8 @@ h5file = "test.hdf5"
     # test constructors and general functionality
     sol = Solution(ode, Δt, nt)
     @test typeof(sol) <: SolutionODE
+
+    test_interface(sol)
 
     sol0 = Solution(similar(ode, x0), Δt, nt)
     @test typeof(sol0) <: SolutionODE
@@ -245,6 +248,8 @@ end
     sol = Solution(pode, Δt, nt)
     @test typeof(sol) <: SolutionPODE
 
+    test_interface(sol)
+
     sol0 = Solution(similar(pode, q0, p0), Δt, nt)
     @test typeof(sol0) <: SolutionPODE
 
@@ -404,6 +409,8 @@ end
     sol = Solution(dae, Δt, nt)
     @test typeof(sol) <: SolutionDAE
 
+    test_interface(sol)
+
     sol0 = Solution(similar(dae, z0, λ0), Δt, nt)
     @test typeof(sol0) <: SolutionDAE
 
@@ -562,6 +569,8 @@ end
     # test constructors and general functionality
     sol = Solution(pdae, Δt, nt)
     @test typeof(sol) <: SolutionPDAE
+
+    test_interface(sol)
 
     sol0 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
     @test typeof(sol0) <: SolutionPDAE

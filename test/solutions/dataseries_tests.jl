@@ -1,6 +1,5 @@
 
 using GeometricIntegrators
-using GeometricIntegrators.Solutions
 using Test
 
 
@@ -11,8 +10,8 @@ nt = 10
     nd = 1
     ni = 1
 
-    ds = SDataSeries(rand(dt), nt)
-    @test typeof(ds) == typeof(SDataSeries{dt,1}(nt, ni))
+    ds = DataSeries(rand(dt), nt)
+    @test typeof(ds) == typeof(DataSeries{dt,1}(nt, ni))
     @test typeof(ds) <: AbstractArray{dt,1}
     @test firstindex(ds)   == 0
     @test firstindex(ds,1) == firstindex(ds.d,1) - 1
@@ -50,7 +49,7 @@ nt = 10
     @test ds[0] == ds[end]
 
     d = rand(nt+1)
-    ds = SDataSeries(d)
+    ds = DataSeries(d)
     @test ds.d == d
 
     @test similar(ds).d == zero(d)
@@ -67,8 +66,8 @@ end
     nd = 2
     ni = 1
 
-    ds = SDataSeries(rand(dt, nd), nt)
-    @test typeof(ds) == typeof(SDataSeries{Vector{dt},1}(nt, ni))
+    ds = DataSeries(rand(dt, nd), nt)
+    @test typeof(ds) == typeof(DataSeries{Vector{dt},1}(nt, ni))
     @test typeof(ds) <: AbstractArray{Vector{dt},1}
     @test firstindex(ds)   == 0
     @test firstindex(ds,1) == firstindex(ds.d,1) - 1
@@ -106,7 +105,7 @@ end
     @test ds[0] == ds[end]
 
     d = rand(nt+1)
-    ds = SDataSeries(d)
+    ds = DataSeries(d)
     @test ds.d == d
 
     @test similar(ds).d == zero(d)
@@ -122,8 +121,8 @@ end
 @testset "$(rpad("Dataseries 2d (scalar data)",80))" begin
     ni = 2
 
-    ds = SDataSeries(rand(dt, ni), nt, ni)
-    @test typeof(ds) == typeof(SDataSeries{dt,2}(nt, ni))
+    ds = DataSeries(rand(dt, ni), nt, ni)
+    @test typeof(ds) == typeof(DataSeries{dt,2}(nt, ni))
     @test typeof(ds) <: AbstractArray{dt,2}
     @test firstindex(ds)   == firstindex(ds.d)
     @test firstindex(ds,1) == firstindex(ds.d,1) - 1
@@ -172,7 +171,7 @@ end
     # @test ds.d[:,1] == tx
 
     d = rand(nt+1,ni)
-    ds = SDataSeries(d)
+    ds = DataSeries(d)
     @test ds.d == d
 
     @test similar(ds).d == zero(d)
@@ -183,8 +182,8 @@ end
     nd = 2
     ni = 5
 
-    ds = SDataSeries([rand(dt, nd) for i in 1:ni], nt)
-    @test typeof(ds) == typeof(SDataSeries{Vector{dt},2}(nt, ni))
+    ds = DataSeries([rand(dt, nd) for i in 1:ni], nt)
+    @test typeof(ds) == typeof(DataSeries{Vector{dt},2}(nt, ni))
     @test typeof(ds) <: AbstractArray{Vector{dt},2}
     @test firstindex(ds)   == firstindex(ds.d)
     @test firstindex(ds,1) == firstindex(ds.d,1) - 1
@@ -240,7 +239,7 @@ end
     # @test ds.d[:,1] == tx
 
     d = rand(nt+1,ni)
-    ds = SDataSeries(d)
+    ds = DataSeries(d)
     @test ds.d == d
 
     @test similar(ds).d == zero(d)
@@ -256,7 +255,7 @@ end
 #     nd = 2
 #     ni = 2
 
-#     ds = SDataSeries(dt, nd, nt, ni)
+#     ds = DataSeries(dt, nd, nt, ni)
 #     @test typeof(ds) <: AbstractArray{dt,3}
 #     @test firstindex(ds)   == firstindex(ds.d)
 #     @test firstindex(ds,1) == firstindex(ds.d,1)
@@ -324,7 +323,7 @@ end
 #     @test ds.d[:,1,1] == tx
 
 #     d = rand(nd,nt+1,ni)
-#     ds = SDataSeries(d)
+#     ds = DataSeries(d)
 #     @test ds.d == d
 
 #     @test similar(ds).d == zero(d)
