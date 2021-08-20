@@ -218,7 +218,7 @@ end
 
     int = IntegratorVSPARK(idae, TableauSPARKGLRKLobattoIIIAIIIB(3), Δt)
     sol = integrate(idae, int, nt)
-    @test relative_maximum_error(sol.q, refx) < 1E-15
+    @test relative_maximum_error(sol.q, refx) < 2E-15
 
     int = IntegratorVSPARK(idae, TableauSPARKGLRKLobattoIIIBIIIA(1), Δt)
     sol = integrate(idae, int, nt)
@@ -230,7 +230,7 @@ end
 
     int = IntegratorVSPARK(idae, TableauSPARKGLRKLobattoIIIBIIIA(3), Δt)
     sol = integrate(idae, int, nt)
-    @test relative_maximum_error(sol.q, refx) < 5E-16
+    @test relative_maximum_error(sol.q, refx) < 2E-15
 
 
     ### VSPARKprimary Integrators ###
