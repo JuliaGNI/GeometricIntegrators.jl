@@ -1,6 +1,42 @@
 
+"save_attributes: Saves common attributes of Solution to HDF5 file."
+function save_attributes(solution::Solution)
+    save_attributes(solution, hdf5(solution))
+end
+
+"save_attributes: Saves attributes of Deterministic Solutions to HDF5 file."
+function save_attributes(solution::DeterministicSolution, h5::HDF5.File)
+    # save attributes
+    attributes(h5)["ntime"] = ntime(solution)
+    attributes(h5)["nsave"] = nsave(solution)
+    attributes(h5)["nsamples"]  = nsamples(solution)
+end
+
+"Save attributes and common parameters to HDF5 file and create data structures"
+function initialize_hdf5!(h5::HDF5.File, solution::DeterministicSolution)
+    # save attributes and common parameters
+    save_attributes(solution, h5)
+
+    # create dataset
+    init_timeteps_in_hdf5(solution, h5)
+    init_solution_in_hdf5(solution, h5)
+end
+
+"write_to_hdf5: Wrapper for saving Solution to HDF5 file."
+function write_to_hdf5(solution::Solution)
+    write_to_hdf5(solution, hdf5(solution), offset(solution))
+end
+
+"Creates HDF5 file, writes solution to file, and closes file."
+function write_to_hdf5(solution::Solution, file::AbstractString)
+    create_hdf5(solution, file) do h5
+        write_to_hdf5(solution, h5)
+    end
+end
+
+
 "createHDF5: Creates or opens HDF5 file."
-function createHDF5(sol::Solution, file::AbstractString; overwrite=true)
+function _create_hdf5(file::AbstractString; overwrite=true)
     if overwrite
         flag = "w"
         get_config(:verbosity) > 1 ? @info("Creating HDF5 file ", file) : nothing
@@ -16,51 +52,37 @@ function createHDF5(sol::Solution, file::AbstractString; overwrite=true)
     return h5
 end
 
-"save_attributes: Saves common attributes of Solution to HDF5 file."
-function save_attributes(sol::Solution)
-    save_attributes(sol, hdf5(sol))
-end
-
-"save_attributes: Saves attributes of Deterministic Solutions to HDF5 file."
-function save_attributes(sol::DeterministicSolution, h5::HDF5.File)
-    # save attributes
-    attributes(h5)["ntime"] = ntime(sol)
-    attributes(h5)["nsave"] = nsave(sol)
-    attributes(h5)["nsamples"]  = nsamples(sol)
-end
-
-"write_to_hdf5: Wrapper for saving Solution to HDF5 file."
-function write_to_hdf5(solution::Solution)
-    write_to_hdf5(solution, hdf5(solution), offset(solution))
-end
-
-"Creates HDF5 file, writes solution to file, and closes file."
-function write_to_hdf5(solution::Solution, file::AbstractString)
-    h5 = create_hdf5(solution, file)
-    write_to_hdf5(solution, h5)
-    close(h5)
-end
-
-
 "Creates HDF5 file and initialises datasets for solution object."
 function create_hdf5!(solution::Solution, file::AbstractString; kwargs...)
-    solution.h5 = create_hdf5(solution, file; kwargs...)
+    # create HDF5 file
+    h5 = _create_hdf5(file; kwargs...)
+
+    try
+        # save attributes and common parameters and create dataset
+        initialize_hdf5!(h5, solution)
+    catch
+        @error("Could not initialize HDF5 file.")
+    end
+
+    solution.h5 = h5
 end
 
-"Creates HDF5 file and initialises datasets for deterministic solution object."
-function create_hdf5(solution::DeterministicSolution, file::AbstractString)
-    # create HDF5 file and save attributes and common parameters
-    h5 = createHDF5(solution, file)
+"Creates HDF5 file, initialises datasets for deterministic solution object and runs user code."
+function create_hdf5(f::Function, solution::DeterministicSolution, file::AbstractString; kwargs...)
+    # create HDF5 file
+    h5 = _create_hdf5(file; kwargs...)
 
-    # save attributes
-    save_attributes(solution, h5)
+    try
+        # save attributes and common parameters and create dataset
+        initialize_hdf5!(h5, solution)
 
-    # create dataset
-    init_timeteps_in_hdf5(solution, h5)
-    init_solution_in_hdf5(solution, h5)
-
-    return h5
+        # call user-provided code
+        f(h5)
+    finally
+        close(h5)
+    end
 end
+
 
 function init_timeteps_in_hdf5(solution::Solution{DT,TT}, h5::HDF5.File) where {DT,TT}
     t = create_dataset(h5, "t", TT, ((solution.nt+1,), (-1,)), chunk=(1,))

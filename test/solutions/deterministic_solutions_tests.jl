@@ -2,7 +2,7 @@
 using GeometricBase
 using GeometricBase: fromarray, test_interface
 using GeometricIntegrators.Solutions
-using GeometricIntegrators.Solutions: createHDF5
+using GeometricIntegrators.Solutions: _create_hdf5
 using GeometricProblems.HarmonicOscillator
 using Test
 import HDF5
@@ -147,13 +147,13 @@ h5file = "test.hdf5"
 
     # test general hdf5 functions
     sol1 = Solution(ode, Δt, nt)
-    h5 = createHDF5(sol1, h5file)
+    h5 = _create_hdf5(h5file)
     @test typeof(h5) == HDF5.File
     close(h5)
     @test isfile(h5file)
 
     sol1 = Solution(ode, Δt, nt)
-    h5 = createHDF5(sol1, h5file; overwrite=false)
+    h5 = _create_hdf5(h5file; overwrite=false)
     @test typeof(h5) == HDF5.File
     close(h5)
     @test isfile(h5file)
