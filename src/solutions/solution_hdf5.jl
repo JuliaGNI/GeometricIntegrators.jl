@@ -12,6 +12,7 @@ function save_attributes(solution::DeterministicSolution, h5::HDF5.File)
     attributes(h5)["nsamples"]  = nsamples(solution)
 end
 
+
 "Save attributes and common parameters to HDF5 file and create data structures"
 function initialize_hdf5!(h5::HDF5.File, solution::DeterministicSolution)
     # save attributes and common parameters
@@ -22,7 +23,8 @@ function initialize_hdf5!(h5::HDF5.File, solution::DeterministicSolution)
     init_solution_in_hdf5(solution, h5)
 end
 
-"write_to_hdf5: Wrapper for saving Solution to HDF5 file."
+
+"Wrapper for saving Solution to HDF5 file."
 function write_to_hdf5(solution::Solution)
     write_to_hdf5(solution, hdf5(solution), offset(solution))
 end
@@ -35,7 +37,7 @@ function write_to_hdf5(solution::Solution, file::AbstractString)
 end
 
 
-"createHDF5: Creates or opens HDF5 file."
+"Creates or opens HDF5 file."
 function _create_hdf5(file::AbstractString; overwrite=true)
     if overwrite
         flag = "w"
