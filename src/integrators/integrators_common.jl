@@ -17,10 +17,10 @@ function create_nonlinear_solver(DT, N, params, caches, solver::Type{<:Nonlinear
 
     # create wrapper function f!(x,b) that calls `F(x, b, params)`
     # with the appropriate `params`
-    f! = (x,b) -> F(x, b, params, caches)
+    f! = (b,x) -> F(x, b, params, caches)
 
     # create nonlinear solver with solver type obtained from config dictionary
-    s = solver(x, f!)
+    solver(x, zero(x), f!)
 end
 
 function create_nonlinear_solver(DT, N, params, caches, i::Int, solver::Type{<:NonlinearSolver}=_default_solver(), F::Function=function_stages!)
@@ -29,10 +29,10 @@ function create_nonlinear_solver(DT, N, params, caches, i::Int, solver::Type{<:N
 
     # create wrapper function f(x,b) that calls `F(x, b, params)`
     # with the appropriate `params`
-    f = (x,b) -> F(x, b, params, caches, i)
+    f! = (b,x) -> F(x, b, params, caches, i)
 
     # create nonlinear solver with solver type obtained from config dictionary
-    s = solver(x, f)
+    solver(x, zero(x), f!)
 end
 
 function create_nonlinear_solver_with_jacobian(DT, N, params, caches, solver::Type{<:NonlinearSolver}=_default_solver(), F=function_stages!, J=jacobian!)
@@ -41,14 +41,14 @@ function create_nonlinear_solver_with_jacobian(DT, N, params, caches, solver::Ty
 
     # create wrapper function f!(x,b) that calls `F(x, b, params)`
     # with the appropriate `params`
-    f! = (x,b) -> F(x, b, params, caches)
+    f! = (b,x) -> F(x, b, params, caches)
 
     # create wrapper function j!(x,df) that calls `J(x, df, params)`
     # with the appropriate `params`
-    j! = (x,df) -> J(x, df, caches[DT], params)
+    j! = (df,x) -> J(x, df, caches[DT], params)
 
     # create nonlinear solver with solver type obtained from config dictionary
-    s = solver(x, f!; J! = j!)
+    solver(x, zero(x), f!; J! = j!)
 end
 
 
