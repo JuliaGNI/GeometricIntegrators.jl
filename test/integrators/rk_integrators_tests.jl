@@ -133,6 +133,9 @@ end
     @test relative_maximum_error(sol.q, refx) < 1E-15
 
     sol = integrate(ode, TableauGauss(7), Δt, nt)
+    @test relative_maximum_error(sol.q, refx) < 1E-15
+
+    sol = integrate(ode, TableauGauss(8), Δt, nt)
     @test relative_maximum_error(sol.q, refx) < 5E-15
 
     sol = integrate(ode, TableauSRK3(), Δt, nt)
@@ -163,12 +166,14 @@ end
 @testset "$(rpad("Partitioned Runge-Kutta integrators",80))" begin
 
     # psol = integrate(pode, TableauSymplecticEulerA(), Δt, nt)
-    # @test relative_maximum_error(psol.q, refq) < 5E-2
-    # @test relative_maximum_error(psol.p, refp) < 1E-3
+    psol = integrate(pode, PartitionedTableau(:seulerA, TableauExplicitEuler(), TableauImplicitEuler()), Δt, nt)
+    @test relative_maximum_error(psol.q, refq) < 5E-2
+    @test relative_maximum_error(psol.p, refp) < 1E-3
 
     # psol = integrate(pode, TableauSymplecticEulerB(), Δt, nt)
-    # @test relative_maximum_error(psol.q, refq) < 5E-2
-    # @test relative_maximum_error(psol.p, refp) < 1E-3
+    psol = integrate(pode, PartitionedTableau(:seulerB, TableauImplicitEuler(), TableauExplicitEuler()), Δt, nt)
+    @test relative_maximum_error(psol.q, refq) < 5E-2
+    @test relative_maximum_error(psol.p, refp) < 1E-3
 
     psol = integrate(pode, PartitionedTableau(:prk4, TableauRK4()), Δt, nt)
     @test relative_maximum_error(psol.q, refq) < 5E-7
@@ -185,6 +190,10 @@ end
     psol = integrate(pode, PartitionedTableau(:pglrk, TableauGauss(3)), Δt, nt)
     @test relative_maximum_error(psol.q, refq) < 1E-11
     @test relative_maximum_error(psol.p, refp) < 1E-11
+
+    psol = integrate(pode, PartitionedTableau(:pglrk, TableauGauss(4)), Δt, nt)
+    @test relative_maximum_error(psol.q, refq) < 1E-15
+    @test relative_maximum_error(psol.p, refp) < 1E-15
 
 end
 
