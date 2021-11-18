@@ -55,7 +55,7 @@ function run!(sim::ParallelSimulation)
 
     println("Running ", sim.run_id, "...")
 
-    create_hdf5!(solution(sim), sim.filename)
+    h5io = SolutionHDF5(sim.filename, solution(sim))
 
     try
         # loop over integration cycles showing progress bar
@@ -79,7 +79,7 @@ function run!(sim::ParallelSimulation)
                 end
             end
 
-            write_to_hdf5(solution(sim))
+            save(h5io, solution(sim))
             c == sim.ncycle || reset!(solution(sim))
         end
     catch ex
@@ -89,12 +89,12 @@ function run!(sim::ParallelSimulation)
             @warn("Simulation exited early.")
             @warn(ex.msg)
         else
-            close(solution(sim))
+            close(h5io)
             throw(ex)
         end
     end
 
-    close(solution(sim))
+    close(h5io)
 
     return solution(sim)
 end

@@ -2,6 +2,21 @@
 # Release Notes
 
 
+## 0.10.0
+
+### Breaking Changes
+
+* Adapt Solution HDF5 interface to default Julia argument order and naming conventions
+* Extract HDF5 functionality from Solutions into separate data structure
+* Remove parallel Solution types
+
+### New Features
+
+
+### Documentation
+
+
+
 ## 0.9.0
 
 ### Breaking Changes

@@ -1,82 +1,70 @@
 
 using GeometricBase
-using GeometricBase: fromarray, test_interface
+using GeometricBase: test_interface
 using GeometricIntegrators.Solutions
-using GeometricIntegrators.Solutions: _create_hdf5
 using GeometricProblems.HarmonicOscillator
 using Test
-import HDF5
 
 
-nt    = 10
-Δt    = .1
-ni    = 5
+nt = 10
+Δt = 0.1
+ni = 5
 
-t0    = 0.
-x0    = rand(2)
-y0    = rand(2)
-q0    = rand(1)
-p0    = rand(1)
-z0    = rand(3)
-λ0    = rand(1)
-μ0    = rand(2)
+t0 = 0.0
+x0 = rand(2)
+y0 = rand(2)
+q0 = rand(1)
+p0 = rand(1)
+z0 = rand(3)
+λ0 = rand(1)
+μ0 = rand(2)
 
-t1    = 1.
-x1    = [rand(2) for j in 1:ni]
-y1    = [rand(2) for j in 1:ni]
-q1    = [rand(1) for j in 1:ni]
-p1    = [rand(1) for j in 1:ni]
-z1    = [rand(3) for j in 1:ni]
-λ1    = [rand(1) for j in 1:ni]
-μ1    = [rand(2) for j in 1:ni]
+t1 = 1.0
+x1 = [rand(2) for j = 1:ni]
+y1 = [rand(2) for j = 1:ni]
+q1 = [rand(1) for j = 1:ni]
+p1 = [rand(1) for j = 1:ni]
+z1 = [rand(3) for j = 1:ni]
+λ1 = [rand(1) for j = 1:ni]
+μ1 = [rand(2) for j = 1:ni]
 
-t2    = t1 + (t1-t0)
-x2    = [rand(2) for j in 1:ni]
-y2    = [rand(2) for j in 1:ni]
-q2    = [rand(1) for j in 1:ni]
-p2    = [rand(1) for j in 1:ni]
-z2    = [rand(3) for j in 1:ni]
-λ2    = [rand(1) for j in 1:ni]
-μ2    = [rand(2) for j in 1:ni]
+t2 = t1 + (t1 - t0)
+x2 = [rand(2) for j = 1:ni]
+y2 = [rand(2) for j = 1:ni]
+q2 = [rand(1) for j = 1:ni]
+p2 = [rand(1) for j = 1:ni]
+z2 = [rand(3) for j = 1:ni]
+λ2 = [rand(1) for j = 1:ni]
+μ2 = [rand(2) for j = 1:ni]
 
-tx    = zero(x0)
-ty    = zero(y0)
-tq    = zero(q0)
-tp    = zero(p0)
-tz    = zero(z0)
-tλ    = zero(λ0)
-tμ    = zero(μ0)
+tx = zero(x0)
+ty = zero(y0)
+tq = zero(q0)
+tp = zero(p0)
+tz = zero(z0)
+tλ = zero(λ0)
+tμ = zero(μ0)
 
-xs    = [rand(2) for i in 1:nt]
-ys    = [rand(2) for i in 1:nt]
-qs    = [rand(1) for i in 1:nt]
-ps    = [rand(1) for i in 1:nt]
-zs    = [rand(3) for i in 1:nt]
-λs    = [rand(1) for i in 1:nt]
-μs    = [rand(2) for i in 1:nt]
+xs = [rand(2) for i = 1:nt]
+ys = [rand(2) for i = 1:nt]
+qs = [rand(1) for i = 1:nt]
+ps = [rand(1) for i = 1:nt]
+zs = [rand(3) for i = 1:nt]
+λs = [rand(1) for i = 1:nt]
+μs = [rand(2) for i = 1:nt]
 
-Xs    = [rand(2) for i in 1:nt, j in 1:ni]
-Ys    = [rand(2) for i in 1:nt, j in 1:ni]
-Qs    = [rand(1) for i in 1:nt, j in 1:ni]
-Ps    = [rand(1) for i in 1:nt, j in 1:ni]
-Zs    = [rand(3) for i in 1:nt, j in 1:ni]
-Λs    = [rand(1) for i in 1:nt, j in 1:ni]
-Ms    = [rand(2) for i in 1:nt, j in 1:ni]
+Xs = [rand(2) for i = 1:nt, j = 1:ni]
+Ys = [rand(2) for i = 1:nt, j = 1:ni]
+Qs = [rand(1) for i = 1:nt, j = 1:ni]
+Ps = [rand(1) for i = 1:nt, j = 1:ni]
+Zs = [rand(3) for i = 1:nt, j = 1:ni]
+Λs = [rand(1) for i = 1:nt, j = 1:ni]
+Ms = [rand(2) for i = 1:nt, j = 1:ni]
 
-ode   = harmonic_oscillator_ode()
-dae   = harmonic_oscillator_dae()
-pode  = harmonic_oscillator_pode()
-pdae  = harmonic_oscillator_pdae()
-
-x100  = rand(ndims(ode),  100)
-y100  = rand(ndims(ode),  100)
-z100  = rand(ndims(dae),  100)
-q100  = rand(ndims(pode), 100)
-p100  = rand(ndims(pode), 100)
-λ100  = rand(dae.m,  100)
-μ100  = rand(pdae.m, 100)
-
-h5file = "test.hdf5"
+ode = harmonic_oscillator_ode()
+dae = harmonic_oscillator_dae()
+pode = harmonic_oscillator_pode()
+pdae = harmonic_oscillator_pdae()
 
 
 @testset "$(rpad("ODE Solution",80))" begin
@@ -86,7 +74,7 @@ h5file = "test.hdf5"
     sol = Solution(ode, Δt, nt)
     @test typeof(sol) <: SolutionODE
 
-    test_interface(sol)
+    # test_interface(sol) # TODO reactivate
 
     sol0 = Solution(similar(ode, x0), Δt, nt)
     @test typeof(sol0) <: SolutionODE
@@ -115,7 +103,7 @@ h5file = "test.hdf5"
     @test δx == x0
 
     set_initial_conditions!(sol1, similar(ode, t1, x2))
-    for j in 1:ni
+    for j = 1:ni
         get_initial_conditions!(sol1, tx, j)
         @test tx == x2[j]
     end
@@ -123,7 +111,7 @@ h5file = "test.hdf5"
     # test set/get solution
     sol1 = Solution(similar(ode, x0), Δt, nt)
     sol2 = Solution(similar(ode, x0), Δt, nt)
-    for i in 1:nt
+    for i = 1:nt
         tx .= xs[i]
         asol.q .= xs[i]
         set_solution!(sol1, tx, i)
@@ -134,110 +122,30 @@ h5file = "test.hdf5"
 
     sol1 = Solution(similar(ode, x1), Δt, nt)
     sol2 = Solution(similar(ode, x1), Δt, nt)
-    for i in 1:nt
-        for j in 1:ni
-            tx .= Xs[i,j]
-            asol.q .= Xs[i,j]
+    for i = 1:nt
+        for j = 1:ni
+            tx .= Xs[i, j]
+            asol.q .= Xs[i, j]
             set_solution!(sol1, tx, i, j)
             set_solution!(sol2, asol, i, j)
         end
     end
-    @test sol1.q[1:nt,:] == Xs
-    @test sol2.q[1:nt,:] == Xs
-
-    # test general hdf5 functions
-    sol1 = Solution(ode, Δt, nt)
-    h5 = _create_hdf5(h5file)
-    @test typeof(h5) == HDF5.File
-    close(h5)
-    @test isfile(h5file)
-
-    sol1 = Solution(ode, Δt, nt)
-    h5 = _create_hdf5(h5file; overwrite=false)
-    @test typeof(h5) == HDF5.File
-    close(h5)
-    @test isfile(h5file)
-    rm(h5file)
-
-    sol1 = Solution(ode, Δt, nt)
-    write_to_hdf5(sol1, h5file)
-    @test isfile(h5file)
-    rm(h5file)
-
-    # test hdf5 in- and output
-    sol1 = Solution(harmonic_oscillator_ode(x0), Δt, nt)
-    create_hdf5!(sol1, h5file)
-    write_to_hdf5(sol1)
-    close(sol1)
-    @test isfile(h5file)
-    sol2 = SSolutionODE(h5file)
-    @test sol1   != sol2
-    @test sol1.t == sol2.t
-    @test sol1.q == sol2.q
-    @test sol1.ntime == sol2.ntime
-    @test sol1.nsave == sol2.nsave
-    rm(h5file)
-
-    sol1 = Solution(harmonic_oscillator_ode(x1), Δt, nt)
-    create_hdf5!(sol1, h5file)
-    write_to_hdf5(sol1)
-    close(sol1)
-    @test isfile(h5file)
-    sol2 = SSolutionODE(h5file)
-    @test sol1   != sol2
-    @test sol1.t == sol2.t
-    @test sol1.q == sol2.q
-    @test sol1.ntime == sol2.ntime
-    @test sol1.nsave == sol2.nsave
-    rm(h5file)
+    @test sol1.q[1:nt, :] == Xs
+    @test sol2.q[1:nt, :] == Xs
 
     # test nsave and nwrite parameters
-    sol = Solution(ode, Δt, 20, nsave=2)
+    sol = Solution(ode, Δt, 20, nsave = 2)
     @test sol.nt == 10
 
-    sol = Solution(ode, Δt, 20, nsave=2, nwrite=10)
+    sol = Solution(ode, Δt, 20, nsave = 2, nwrite = 10)
     @test sol.nt == 5
 
     # test reset
     sol = Solution(ode, Δt, nt)
     reset!(sol)
-    @test sol.t[0]   == t1
+    @test sol.t[0] == t1
     @test sol.t[end] == t2
     @test offset(sol) == nt
-
-    sol1 = Solution(ode, Δt, 100, nwrite=10)
-    create_hdf5!(sol1, h5file)
-    for i in 1:10
-        for j in 1:10
-            set_solution!(sol1, x100[:,(i-1)*10+j], j)
-        end
-        write_to_hdf5(sol1)
-        reset!(sol1)
-    end
-    close(sol1)
-    sol2 = SSolutionODE(h5file)
-    @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
-    @test sol2.q.d == vcat(ode.q₀, [x100[:,j] for j in axes(x100, 2)])
-    @test sol2.ntime == 100
-    @test sol2.nsave == 1
-    rm(h5file)
-
-    sol1 = Solution(ode, Δt, 100, nsave=2, nwrite=10)
-    create_hdf5!(sol1, h5file)
-    for i in 1:10
-        for j in 1:10
-            set_solution!(sol1, x100[:,(i-1)*10+j], j)
-        end
-        write_to_hdf5(sol1)
-        reset!(sol1)
-    end
-    close(sol1)
-    sol2 = SSolutionODE(h5file)
-    @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
-    @test sol2.q.d == vcat(ode.q₀, [x100[:,j] for j in axes(x100, 2)[2:2:end]])
-    @test sol2.ntime == 100
-    @test sol2.nsave == 2
-    rm(h5file)
 end
 
 
@@ -248,7 +156,7 @@ end
     sol = Solution(pode, Δt, nt)
     @test typeof(sol) <: SolutionPODE
 
-    test_interface(sol)
+    # test_interface(sol) # TODO reactivate
 
     sol0 = Solution(similar(pode, q0, p0), Δt, nt)
     @test typeof(sol0) <: SolutionPODE
@@ -280,7 +188,7 @@ end
     @test δp == p0
 
     set_initial_conditions!(sol1, similar(pode, t1, q2, p2))
-    for j in 1:ni
+    for j = 1:ni
         get_initial_conditions!(sol1, tq, tp, j)
         @test tq == q2[j]
         @test tp == p2[j]
@@ -289,7 +197,7 @@ end
     # test set/get solution
     sol1 = Solution(similar(pode, q0, p0), Δt, nt)
     sol2 = Solution(similar(pode, q0, p0), Δt, nt)
-    for i in 1:nt
+    for i = 1:nt
         tq .= qs[i]
         tp .= ps[i]
         asol.q .= qs[i]
@@ -304,101 +212,34 @@ end
 
     sol1 = Solution(similar(pode, q1, p1), Δt, nt)
     sol2 = Solution(similar(pode, q1, p1), Δt, nt)
-    for i in 1:nt
-        for j in 1:ni
-            tq .= Qs[i,j]
-            tp .= Ps[i,j]
-            asol.q .= Qs[i,j]
-            asol.p .= Ps[i,j]
+    for i = 1:nt
+        for j = 1:ni
+            tq .= Qs[i, j]
+            tp .= Ps[i, j]
+            asol.q .= Qs[i, j]
+            asol.p .= Ps[i, j]
             set_solution!(sol1, tq, tp, i, j)
             set_solution!(sol2, asol, i, j)
         end
     end
-    @test sol1.q[1:nt,:] == Qs
-    @test sol1.p[1:nt,:] == Ps
-    @test sol2.q[1:nt,:] == Qs
-    @test sol2.p[1:nt,:] == Ps
-
-    # test hdf5 in- and output
-    sol1 = Solution(harmonic_oscillator_pode(q0, p0), Δt, nt)
-    create_hdf5!(sol1, h5file)
-    write_to_hdf5(sol1)
-    close(sol1)
-    @test isfile(h5file)
-    sol2 = SSolutionPODE(h5file)
-    @test sol1   != sol2
-    @test sol1.t == sol2.t
-    @test sol1.q == sol2.q
-    @test sol1.p == sol2.p
-    @test sol1.ntime == sol2.ntime
-    @test sol1.nsave == sol2.nsave
-    rm(h5file)
-
-    sol1 = Solution(harmonic_oscillator_pode(q1, p1), Δt, nt)
-    create_hdf5!(sol1, h5file)
-    write_to_hdf5(sol1)
-    close(sol1)
-    @test isfile(h5file)
-    sol2 = SSolutionPODE(h5file)
-    @test sol1   != sol2
-    @test sol1.t == sol2.t
-    @test sol1.q == sol2.q
-    @test sol1.p == sol2.p
-    @test sol1.ntime == sol2.ntime
-    @test sol1.nsave == sol2.nsave
-    rm(h5file)
+    @test sol1.q[1:nt, :] == Qs
+    @test sol1.p[1:nt, :] == Ps
+    @test sol2.q[1:nt, :] == Qs
+    @test sol2.p[1:nt, :] == Ps
 
     # test nsave and nwrite parameters
-    sol = Solution(pode, Δt, 20, nsave=2)
+    sol = Solution(pode, Δt, 20, nsave = 2)
     @test sol.nt == 10
 
-    sol = Solution(pode, Δt, 20, nsave=2, nwrite=10)
+    sol = Solution(pode, Δt, 20, nsave = 2, nwrite = 10)
     @test sol.nt == 5
 
     # test reset
     sol = Solution(pode, Δt, nt)
     reset!(sol)
-    @test sol.t[0]   == t1
+    @test sol.t[0] == t1
     @test sol.t[end] == t2
     @test offset(sol) == nt
-
-    sol1 = Solution(pode, Δt, 100, nwrite=10)
-    create_hdf5!(sol1, h5file)
-    for i in 1:10
-        for j in 1:10
-            oj = (i-1)*10+j
-            set_solution!(sol1, q100[:,oj], p100[:,oj], j)
-        end
-        write_to_hdf5(sol1)
-        reset!(sol1)
-    end
-    close(sol1)
-    sol2 = SSolutionPODE(h5file)
-    @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
-    @test sol2.q.d == vcat(pode.q₀, [q100[:,j] for j in axes(q100, 2)])
-    @test sol2.p.d == vcat(pode.p₀, [p100[:,j] for j in axes(p100, 2)])
-    @test sol2.ntime == 100
-    @test sol2.nsave == 1
-    rm(h5file)
-
-    sol1 = Solution(pode, Δt, 100, nsave=2, nwrite=10)
-    create_hdf5!(sol1, h5file)
-    for i in 1:10
-        for j in 1:10
-            oj = (i-1)*10+j
-            set_solution!(sol1, q100[:,oj], p100[:,oj], j)
-        end
-        write_to_hdf5(sol1)
-        reset!(sol1)
-    end
-    close(sol1)
-    sol2 = SSolutionPODE(h5file)
-    @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
-    @test sol2.q.d == vcat(pode.q₀, [q100[:,j] for j in axes(q100, 2)[2:2:end]])
-    @test sol2.p.d == vcat(pode.p₀, [p100[:,j] for j in axes(p100, 2)[2:2:end]])
-    @test sol2.ntime == 100
-    @test sol2.nsave == 2
-    rm(h5file)
 end
 
 
@@ -409,7 +250,7 @@ end
     sol = Solution(dae, Δt, nt)
     @test typeof(sol) <: SolutionDAE
 
-    test_interface(sol)
+    # test_interface(sol) # TODO reactivate
 
     sol0 = Solution(similar(dae, z0, λ0), Δt, nt)
     @test typeof(sol0) <: SolutionDAE
@@ -441,7 +282,7 @@ end
     @test δλ == λ0
 
     set_initial_conditions!(sol1, similar(dae, t1, z2, λ2))
-    for j in 1:ni
+    for j = 1:ni
         get_initial_conditions!(sol1, tz, tλ, j)
         @test tz == z2[j]
         @test tλ == λ2[j]
@@ -450,7 +291,7 @@ end
     # test set/get solution
     sol1 = Solution(similar(dae, z0, λ0), Δt, nt)
     sol2 = Solution(similar(dae, z0, λ0), Δt, nt)
-    for i in 1:nt
+    for i = 1:nt
         tz .= zs[i]
         tλ .= λs[i]
         asol.q .= zs[i]
@@ -465,101 +306,34 @@ end
 
     sol1 = Solution(similar(dae, z1, λ1), Δt, nt)
     sol2 = Solution(similar(dae, z1, λ1), Δt, nt)
-    for i in 1:nt
-        for j in 1:ni
-            tz .= Zs[i,j]
-            tλ .= Λs[i,j]
-            asol.q .= Zs[i,j]
-            asol.λ .= Λs[i,j]
+    for i = 1:nt
+        for j = 1:ni
+            tz .= Zs[i, j]
+            tλ .= Λs[i, j]
+            asol.q .= Zs[i, j]
+            asol.λ .= Λs[i, j]
             set_solution!(sol1, tz, tλ, i, j)
             set_solution!(sol2, asol, i, j)
         end
     end
-    @test sol1.q[1:nt,:] == Zs
-    @test sol1.λ[1:nt,:] == Λs
-    @test sol2.q[1:nt,:] == Zs
-    @test sol2.λ[1:nt,:] == Λs
-
-    # test hdf5 in- and output
-    sol1 = Solution(harmonic_oscillator_dae(z0, λ0), Δt, nt)
-    create_hdf5!(sol1, h5file)
-    write_to_hdf5(sol1)
-    close(sol1)
-    @test isfile(h5file)
-    sol2 = SSolutionDAE(h5file)
-    @test sol1   != sol2
-    @test sol1.t == sol2.t
-    @test sol1.q == sol2.q
-    @test sol1.λ == sol2.λ
-    @test sol1.ntime == sol2.ntime
-    @test sol1.nsave == sol2.nsave
-    rm(h5file)
-
-    sol1 = Solution(harmonic_oscillator_dae(z1, λ1), Δt, nt)
-    create_hdf5!(sol1, h5file)
-    write_to_hdf5(sol1)
-    close(sol1)
-    @test isfile(h5file)
-    sol2 = SSolutionDAE(h5file)
-    @test sol1   != sol2
-    @test sol1.t == sol2.t
-    @test sol1.q == sol2.q
-    @test sol1.λ == sol2.λ
-    @test sol1.ntime == sol2.ntime
-    @test sol1.nsave == sol2.nsave
-    rm(h5file)
+    @test sol1.q[1:nt, :] == Zs
+    @test sol1.λ[1:nt, :] == Λs
+    @test sol2.q[1:nt, :] == Zs
+    @test sol2.λ[1:nt, :] == Λs
 
     # test nsave and nwrite parameters
-    sol = Solution(dae, Δt, 20, nsave=2)
+    sol = Solution(dae, Δt, 20, nsave = 2)
     @test sol.nt == 10
 
-    sol = Solution(dae, Δt, 20, nsave=2, nwrite=10)
+    sol = Solution(dae, Δt, 20, nsave = 2, nwrite = 10)
     @test sol.nt == 5
 
     # test reset
     sol = Solution(dae, Δt, nt)
     reset!(sol)
-    @test sol.t[0]   == t1
+    @test sol.t[0] == t1
     @test sol.t[end] == t2
     @test offset(sol) == nt
-
-    sol1 = Solution(dae, Δt, 100, nwrite=10)
-    create_hdf5!(sol1, h5file)
-    for i in 1:10
-        for j in 1:10
-            oj = (i-1)*10+j
-            set_solution!(sol1, z100[:,oj], λ100[:,oj], j)
-        end
-        write_to_hdf5(sol1)
-        reset!(sol1)
-    end
-    close(sol1)
-    sol2 = SSolutionDAE(h5file)
-    @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
-    @test sol2.q.d == vcat(dae.q₀, [z100[:,j] for j in axes(z100, 2)])
-    @test sol2.λ.d == vcat(dae.λ₀, [λ100[:,j] for j in axes(λ100, 2)])
-    @test sol2.ntime == 100
-    @test sol2.nsave == 1
-    rm(h5file)
-
-    sol1 = Solution(dae, Δt, 100, nsave=2, nwrite=10)
-    create_hdf5!(sol1, h5file)
-    for i in 1:10
-        for j in 1:10
-            oj = (i-1)*10+j
-            set_solution!(sol1, z100[:,oj], λ100[:,oj], j)
-        end
-        write_to_hdf5(sol1)
-        reset!(sol1)
-    end
-    close(sol1)
-    sol2 = SSolutionDAE(h5file)
-    @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
-    @test sol2.q.d == vcat(dae.q₀, [z100[:,j] for j in axes(z100, 2)[2:2:end]])
-    @test sol2.λ.d == vcat(dae.λ₀, [λ100[:,j] for j in axes(λ100, 2)[2:2:end]])
-    @test sol2.ntime == 100
-    @test sol2.nsave == 2
-    rm(h5file)
 end
 
 
@@ -570,7 +344,7 @@ end
     sol = Solution(pdae, Δt, nt)
     @test typeof(sol) <: SolutionPDAE
 
-    test_interface(sol)
+    # test_interface(sol) # TODO reactivate
 
     sol0 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
     @test typeof(sol0) <: SolutionPDAE
@@ -611,7 +385,7 @@ end
     @test δμ == μ0
 
     set_initial_conditions!(sol1, similar(pdae, t1, x2, y2, μ2))
-    for j in 1:ni
+    for j = 1:ni
         get_initial_conditions!(sol1, tx, ty, tμ, j)
         @test tx == x2[j]
         @test ty == y2[j]
@@ -622,7 +396,7 @@ end
     sol1 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
     sol2 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
     sol3 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
-    for i in 1:nt
+    for i = 1:nt
         tx .= xs[i]
         ty .= ys[i]
         tμ .= μs[i]
@@ -645,116 +419,39 @@ end
     sol1 = Solution(similar(pdae, x1, y1, μ1), Δt, nt)
     sol2 = Solution(similar(pdae, x1, y1, μ1), Δt, nt)
     sol3 = Solution(similar(pdae, x1, y1, μ1), Δt, nt)
-    for i in 1:nt
-        for j in 1:ni
-            tx .= Xs[i,j]
-            ty .= Ys[i,j]
-            tμ .= Ms[i,j]
-            asol.q .= Xs[i,j]
-            asol.p .= Ys[i,j]
-            asol.λ .= Ms[i,j]
+    for i = 1:nt
+        for j = 1:ni
+            tx .= Xs[i, j]
+            ty .= Ys[i, j]
+            tμ .= Ms[i, j]
+            asol.q .= Xs[i, j]
+            asol.p .= Ys[i, j]
+            asol.λ .= Ms[i, j]
             set_solution!(sol1, tx, ty, tμ, i, j)
             set_solution!(sol2, tx, ty, i, j)
             set_solution!(sol3, asol, i, j)
         end
     end
-    @test sol1.q[1:nt,:] == Xs
-    @test sol1.p[1:nt,:] == Ys
-    @test sol1.λ[1:nt,:] == Ms
-    @test sol2.q[1:nt,:] == Xs
-    @test sol2.p[1:nt,:] == Ys
-    @test sol3.q[1:nt,:] == Xs
-    @test sol3.p[1:nt,:] == Ys
-    @test sol3.λ[1:nt,:] == Ms
-
-    # test hdf5 in- and output
-    sol1 = Solution(harmonic_oscillator_pdae(x0, y0, μ0), Δt, nt)
-    create_hdf5!(sol1, h5file)
-    write_to_hdf5(sol1)
-    close(sol1)
-    @test isfile(h5file)
-    sol2 = SSolutionPDAE(h5file)
-    @test sol1   != sol2
-    @test sol1.t == sol2.t
-    @test sol1.q == sol2.q
-    @test sol1.p == sol2.p
-    @test sol1.λ == sol2.λ
-    @test sol1.ntime == sol2.ntime
-    @test sol1.nsave == sol2.nsave
-    rm(h5file)
-
-    sol1 = Solution(harmonic_oscillator_pdae(x1, y1, μ1), Δt, nt)
-    create_hdf5!(sol1, h5file)
-    write_to_hdf5(sol1)
-    close(sol1)
-    @test isfile(h5file)
-    sol2 = SSolutionPDAE(h5file)
-    @test sol1   != sol2
-    @test sol1.t == sol2.t
-    @test sol1.q == sol2.q
-    @test sol1.p == sol2.p
-    @test sol1.λ == sol2.λ
-    @test sol1.ntime == sol2.ntime
-    @test sol1.nsave == sol2.nsave
-    rm(h5file)
+    @test sol1.q[1:nt, :] == Xs
+    @test sol1.p[1:nt, :] == Ys
+    @test sol1.λ[1:nt, :] == Ms
+    @test sol2.q[1:nt, :] == Xs
+    @test sol2.p[1:nt, :] == Ys
+    @test sol3.q[1:nt, :] == Xs
+    @test sol3.p[1:nt, :] == Ys
+    @test sol3.λ[1:nt, :] == Ms
 
     # test nsave and nwrite parameters
-    sol = Solution(pdae, Δt, 20, nsave=2)
+    sol = Solution(pdae, Δt, 20, nsave = 2)
     @test sol.nt == 10
 
-    sol = Solution(pdae, Δt, 20, nsave=2, nwrite=10)
+    sol = Solution(pdae, Δt, 20, nsave = 2, nwrite = 10)
     @test sol.nt == 5
 
     # test reset
     sol = Solution(pdae, Δt, nt)
     reset!(sol)
-    @test sol.t[0]   == t1
+    @test sol.t[0] == t1
     @test sol.t[end] == t2
     @test offset(sol) == nt
-
-    sol1 = Solution(pdae, Δt, 100, nwrite=10)
-    create_hdf5!(sol1, h5file)
-    for i in 1:10
-        for j in 1:10
-            oj = (i-1)*10+j
-            set_solution!(sol1, x100[:,oj], y100[:,oj], μ100[:,oj], j)
-        end
-        write_to_hdf5(sol1)
-        reset!(sol1)
-    end
-    close(sol1)
-    sol2 = SSolutionPDAE(h5file)
-    @test sol2.t.t ≈ Δt .* collect(0:100) atol=1E-14
-    @test sol2.q.d == vcat(pdae.q₀, [x100[:,j] for j in axes(x100, 2)])
-    @test sol2.p.d == vcat(pdae.p₀, [y100[:,j] for j in axes(y100, 2)])
-    @test sol2.λ.d == vcat(pdae.λ₀, [μ100[:,j] for j in axes(μ100, 2)])
-    # @test sol2.q.d == hcat(reshape(pdae.q₀, (ndims(pdae),1)), x100)
-    # @test sol2.p.d == hcat(reshape(pdae.p₀, (ndims(pdae),1)), y100)
-    # @test sol2.λ.d == hcat(reshape(pdae.λ₀, (pdae.m,1)), μ100)
-    @test sol2.ntime == 100
-    @test sol2.nsave == 1
-    rm(h5file)
-
-    sol1 = Solution(pdae, Δt, 100, nsave=2, nwrite=10)
-    create_hdf5!(sol1, h5file)
-    for i in 1:10
-        for j in 1:10
-            oj = (i-1)*10+j
-            set_solution!(sol1, x100[:,oj], y100[:,oj], μ100[:,oj], j)
-        end
-        write_to_hdf5(sol1)
-        reset!(sol1)
-    end
-    close(sol1)
-    sol2 = SSolutionPDAE(h5file)
-    @test sol2.t.t ≈ Δt .* collect(0:2:100) atol=1E-14
-    @test sol2.q.d == vcat(pdae.q₀, [x100[:,j] for j in axes(x100, 2)[2:2:end]])
-    @test sol2.p.d == vcat(pdae.p₀, [y100[:,j] for j in axes(y100, 2)[2:2:end]])
-    @test sol2.λ.d == vcat(pdae.λ₀, [μ100[:,j] for j in axes(μ100, 2)[2:2:end]])
-    # @test sol2.q.d == hcat(reshape(pdae.q₀, (ndims(pdae),1)), x100)[:,1:2:end]
-    # @test sol2.p.d == hcat(reshape(pdae.p₀, (ndims(pdae),1)), y100)[:,1:2:end]
-    # @test sol2.λ.d == hcat(reshape(pdae.λ₀, (pdae.m,1)), μ100)[:,1:2:end]
-    @test sol2.ntime == 100
-    @test sol2.nsave == 2
-    rm(h5file)
 end
