@@ -82,23 +82,9 @@ function save_attributes(sio::SolutionHDF5, solution::Solution)
 end
 
 
-# function save(h5::HDF5.File, solution::Solution, offset)
-#     # set convenience variables and compute ranges
-#     j1 = offset + 2
-#     j2 = offset + 1 + solution.nt
-
-#     # copy data from solution to HDF5 dataset
-#     save_timeteps(h5, solution, j1, j2, 1, solution.nt)
-#     save_solution(h5, solution, j1, j2, 1, solution.nt)
-#     save_multiplier(h5, solution, j1, j2, 1, solution.nt)
-
-#     return nothing
-# end
-
 "Save Solution to HDF5 file."
 function save(sio::SolutionHDF5, solution::Solution)
     # set convenience variables
-    h5 = hdf5(sio)
     nt = solution.nt
 
     # compute ranges
@@ -106,9 +92,9 @@ function save(sio::SolutionHDF5, solution::Solution)
     j2 = offset(sio) + 1 + nt
 
     # copy data from solution to HDF5 dataset
-    save_timeteps(h5, solution, j1, j2, 1, nt)
-    save_solution(h5, solution, j1, j2, 1, nt)
-    save_multiplier(h5, solution, j1, j2, 1, nt)
+    save_timeteps(sio, solution, j1, j2, 1, nt)
+    save_solution(sio, solution, j1, j2, 1, nt)
+    save_multiplier(sio, solution, j1, j2, 1, nt)
 
     sio.offset += nt
 
@@ -159,5 +145,3 @@ end
 #         write_to_hdf5(solution, h5)
 #     end
 # end
-
-

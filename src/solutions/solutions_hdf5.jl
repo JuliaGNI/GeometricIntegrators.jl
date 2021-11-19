@@ -5,6 +5,9 @@ function init_timeteps(h5::HDF5.File, solution::Solution{DT,TT}) where {DT,TT}
 end
 
 
+init_timeteps(sio::SolutionHDF5, args...) = init_timeteps(hdf5(sio), args...)
+
+
 function init_solution(h5::HDF5.File, solution::SolutionODE{DT,TT,1}) where {DT<:Number,TT}
     q = create_dataset(h5, "q", DT, ((solution.nt + 1,), (-1,)), chunk = (1,))
     q[1] = solution.q[0]
@@ -177,12 +180,18 @@ function init_solution(h5::HDF5.File, solution::SolutionPDAE{AT,TT,2}) where {DT
 end
 
 
+init_solution(sio::SolutionHDF5, args...) = init_solution(hdf5(sio), args...)
+
+
 function save_timeteps(h5::HDF5.File, sol::Solution, j1, j2, n1, n2)
     if size(h5["t"], 1) < j2
         HDF5.set_extent_dims(h5["t"], (j2,))
     end
     h5["t"][j1:j2] = timesteps(sol)[n1:n2]
 end
+
+
+save_timeteps(sio::SolutionHDF5, args...) = save_timeteps(hdf5(sio), args...)
 
 
 function save_solution(h5::HDF5.File, solution::Union{SolutionODE{DT,TT,1},SolutionDAE{DT,TT,1}}, j1, j2, n1, n2) where {DT<:Number,TT}
@@ -297,8 +306,7 @@ function save_solution(h5::HDF5.File, solution::Union{SolutionPODE{AT,TT,2},Solu
 end
 
 
-
-save_multiplier(::HDF5.File, ::Union{SolutionODE,SolutionPODE}, args...) = nothing
+save_solution(sio::SolutionHDF5, args...) = save_solution(hdf5(sio), args...)
 
 
 function save_multiplier(h5::HDF5.File, solution::Union{SolutionDAE{DT,TT,1},SolutionPDAE{DT,TT,1}}, j1, j2, n1, n2) where {DT<:Number,TT}
@@ -340,3 +348,7 @@ function save_multiplier(h5::HDF5.File, solution::Union{SolutionDAE{AT,TT,2},Sol
         end
     end
 end
+
+
+save_multiplier(::HDF5.File, ::Union{SolutionODE,SolutionPODE}, args...) = nothing
+save_multiplier(sio::SolutionHDF5, args...) = save_multiplier(hdf5(sio), args...)
