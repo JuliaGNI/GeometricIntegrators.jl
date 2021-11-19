@@ -20,18 +20,10 @@ Contains all fields necessary to store the solution of an ODE.
 ### Constructors
 
 ```julia
-SSolutionODE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
-SSolutionODE(t::TimeSeries, q::DataSeries, ntimesteps)
-SSolutionODE(file::String)
-PSolutionODE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
-PSolutionODE(t::TimeSeries, q::PDataSeries, ntimesteps)
-PSolutionODE(file::String)
+SolutionODE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
+SolutionODE(t::TimeSeries, q::DataSeries, ntimesteps)
+SolutionODE(file::String)
 ```
-
-The constructors `SSolutionODE` create a `SolutionODE` with internal data structures
-for serial simulations (i.e., standard arrays), while the constructors `PSolutionODE`
-create a `SolutionODE` with internal data structures for parallel simulations (i.e.,
-shared arrays).
 
 The usual way to initialise a `Solution` is by passing an equation, which for
 `SolutionODE` has to be an [`ODE`](@ref) or [`SODE`](@ref), a time step `Δt`
@@ -44,133 +36,117 @@ The other constructors, either passing a `TimeSeries` and a `DataSeries` or a
 filename are used to read data from previous simulations.
 
 """
-abstract type SolutionODE{dType, tType, N} <: DeterministicSolution{dType, tType, N} end
+mutable struct SolutionODE{dType,tType,N} <: DeterministicSolution{dType,tType,N}
+    nd::Int
+    nt::Int
+    ni::Int
+    t::TimeSeries{tType}
+    q::DataSeries{dType,N}
+    ntime::Int
+    nsave::Int
+    nwrite::Int
+    offset::Int
+    counter::Vector{Int}
+    periodicity::dType
 
-# Create SolutionODEs with serial and parallel data structures.
-for (TSolution, TDataSeries, Tdocstring) in
-    ((:SSolutionODE, :DataSeries, "Serial Solution of a ordinary differential equation."),
-    #  (:PSolutionODE, :PDataSeries, "Parallel Solution of a ordinary differential equation.")
-    )
-    @eval begin
-        $Tdocstring
-        mutable struct $TSolution{dType, tType, N} <: SolutionODE{dType, tType, N}
-            nd::Int
-            nt::Int
-            ni::Int
-            t::TimeSeries{tType}
-            q::$TDataSeries{dType,N}
-            ntime::Int
-            nsave::Int
-            nwrite::Int
-            counter::Vector{Int}
-            woffset::Int
-            periodicity::dType
-            h5::HDF5.File
+    function SolutionODE{dType,tType,N}(nd, nt, ni, t, q, ntime, nsave, nwrite, periodicity = zero(q[begin])) where {dType<:Union{Number,AbstractArray},tType<:Real,N}
+        new(nd, nt, ni, t, q, ntime, nsave, nwrite, 0, zeros(Int, ni), periodicity)
+    end
+end
 
-            function $TSolution{dType, tType, N}(nd, nt, ni, t, q, ntime, nsave, nwrite, periodicity=zero(q[begin])) where {dType <: Union{Number,AbstractArray}, tType <: Real, N}
-                new(nd, nt, ni, t, q, ntime, nsave, nwrite, zeros(Int, ni), 0, periodicity)
-            end
-        end
+function SolutionODE(equation::Union{ODE{DT,TT1,AT},SODE{DT,TT1,AT}}, Δt::TT2, ntimesteps::Int;
+    nsave::Int = DEFAULT_NSAVE, nwrite::Int = DEFAULT_NWRITE) where {DT,TT1,TT2,AT}
+    @assert nsave > 0
+    @assert ntimesteps == 0 || ntimesteps ≥ nsave
+    @assert nwrite == 0 || nwrite ≥ nsave
+    @assert mod(ntimesteps, nsave) == 0
 
-        function $TSolution(equation::Union{ODE{DT,TT1,AT},SODE{DT,TT1,AT}}, Δt::TT2, ntimesteps::Int;
-                            nsave::Int=DEFAULT_NSAVE, nwrite::Int=DEFAULT_NWRITE, filename=nothing) where {DT,TT1,TT2,AT}
-            @assert nsave > 0
-            @assert ntimesteps == 0 || ntimesteps ≥ nsave
-            @assert nwrite == 0 || nwrite ≥ nsave
-            @assert mod(ntimesteps, nsave) == 0
+    if nwrite > 0
+        @assert mod(nwrite, nsave) == 0
+        @assert mod(ntimesteps, nwrite) == 0
+    end
 
-            if nwrite > 0
-                @assert mod(nwrite, nsave) == 0
-                @assert mod(ntimesteps, nwrite) == 0
-            end
+    TT = promote_type(TT1, TT2)
+    N = nsamples(equation) > 1 ? 2 : 1
+    nd = ndims(equation)
+    ni = nsamples(equation)
+    nt = div(ntimesteps, nsave)
+    nt = (nwrite == 0 ? nt : div(nwrite, nsave))
+    nw = (nwrite == 0 ? ntimesteps : nwrite)
 
-            TT = promote_type(TT1,TT2)
-            N  = nsamples(equation) > 1 ? 2 : 1
-            nd = ndims(equation)
-            ni = nsamples(equation)
-            nt = div(ntimesteps, nsave)
-            nt = (nwrite == 0 ? nt : div(nwrite, nsave))
-            nw = (nwrite == 0 ? ntimesteps : nwrite)
+    @assert nd > 0
+    @assert ni > 0
+    @assert nt ≥ 0
+    @assert nw ≥ 0
 
-            @assert nd > 0
-            @assert ni > 0
-            @assert nt ≥ 0
-            @assert nw ≥ 0
+    t = TimeSeries{TT}(nt, Δt, nsave)
+    q = DataSeries(equation.q₀, nt, ni)
+    s = SolutionODE{AT,TT,N}(nd, nt, ni, t, q, ntimesteps, nsave, nw, periodicity(equation))
+    set_initial_conditions!(s, equation)
 
-            t = TimeSeries{TT}(nt, Δt, nsave)
-            q = $TDataSeries(equation.q₀, nt, ni)
-            s = $TSolution{AT,TT,N}(nd, nt, ni, t, q, ntimesteps, nsave, nw, periodicity(equation))
-            set_initial_conditions!(s, equation)
+    return s
+end
 
-            if !isnothing(filename)
-                isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing
-                create_hdf5!(s, filename)
-            end
+function SolutionODE(t::TimeSeries{TT}, q::DataSeries{DT,N}, ntimesteps::Int) where {DT,TT,N}
+    # extract parameters
+    nd = length(q[begin])
+    ni = nsamples(q)
+    nt = t.n
+    ns = div(ntimesteps, nt)
 
-            return s
-        end
+    @assert mod(ntimesteps, nt) == 0
 
-        function $TSolution(t::TimeSeries{TT}, q::$TDataSeries{DT,N}, ntimesteps::Int) where {DT,TT,N}
-            # extract parameters
-            nd = length(q[begin])
-            ni = nsamples(q)
-            nt = t.n
-            ns = div(ntimesteps, nt)
+    # create solution
+    SolutionODE{DT,TT,N}(nd, nt, ni, t, q, ntimesteps, ns, 0)
+end
 
-            @assert mod(ntimesteps, nt) == 0
+function SolutionODE(h5io::SolutionHDF5)
+    # get hdf5 file descriptor
+    h5 = hdf5(h5io)
 
-            # create solution
-            $TSolution{DT,TT,N}(nd, nt, ni, t, q, ntimesteps, ns, 0)
-        end
+    # read attributes
+    ntimesteps = read(attributes(h5)["ntime"])
+    nsave = read(attributes(h5)["nsave"])
+    nsamples = read(attributes(h5)["nsamples"])
 
-        function $TSolution(file::String)
-            # open HDF5 file
-            get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
-            h5 = h5open(file, "r")
+    # reading data arrays
+    t = TimeSeries(read(h5["t"]), nsave)
+    q = fromarray(DataSeries, read(h5["q"]), nsamples)
 
-            # read attributes
-            ntimesteps = read(attributes(h5)["ntime"])
-            nsave = read(attributes(h5)["nsave"])
-            nsamples = read(attributes(h5)["nsamples"])
+    # create solution
+    SolutionODE(t, q, ntimesteps)
+end
 
-            # reading data arrays
-            t = TimeSeries(read(h5["t"]), nsave)
-            q = fromarray($TDataSeries, read(h5["q"]), nsamples)
-
-            # need to close the file
-            close(h5)
-
-            # create solution
-            $TSolution(t, q, ntimesteps)
-        end
+function SolutionODE(file::String)
+    load(file) do h5io
+        SolutionODE(h5io::SolutionHDF5)
     end
 end
 
 
 Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {DT1,TT1,N1,DT2,TT2,N2} = (
-                                DT1 == DT2
-                             && TT1 == TT2
-                             && N1  == N2
-                             && sol1.nd == sol2.nd
-                             && sol1.nt == sol2.nt
-                             && sol1.ni == sol2.ni
-                             && sol1.t  == sol2.t
-                             && sol1.q  == sol2.q
-                             && sol1.ntime == sol2.ntime
-                             && sol1.nsave == sol2.nsave
-                             && sol1.nwrite == sol2.nwrite
-                             && sol1.counter == sol2.counter
-                             && sol1.woffset == sol2.woffset
-                             && sol1.periodicity == sol2.periodicity)
+    DT1 == DT2
+    && TT1 == TT2
+    && N1 == N2
+    && sol1.nd == sol2.nd
+    && sol1.nt == sol2.nt
+    && sol1.ni == sol2.ni
+    && sol1.t == sol2.t
+    && sol1.q == sol2.q
+    && sol1.ntime == sol2.ntime
+    && sol1.nsave == sol2.nsave
+    && sol1.nwrite == sol2.nwrite
+    && sol1.offset == sol2.offset
+    && sol1.counter == sol2.counter
+    && sol1.periodicity == sol2.periodicity)
 
-@inline hdf5(sol::SolutionODE)  = sol.h5
 @inline GeometricBase.counter(sol::SolutionODE) = sol.counter
-@inline GeometricBase.offset(sol::SolutionODE) = sol.woffset
+@inline GeometricBase.offset(sol::SolutionODE) = sol.offset
 @inline GeometricBase.lastentry(sol::SolutionODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline GeometricBase.nsamples(sol::SolutionODE) = sol.ni
 @inline GeometricBase.nsave(sol::SolutionODE) = sol.nsave
 @inline GeometricBase.ntime(sol::SolutionODE) = sol.ntime
-@inline GeometricBase.timesteps(sol::SolutionODE)  = sol.t
+@inline GeometricBase.timesteps(sol::SolutionODE) = sol.t
 @inline GeometricBase.eachtimestep(sol::SolutionODE) = 1:sol.nt*sol.nsave
 @inline GeometricBase.periodicity(sol::SolutionODE) = sol.periodicity
 
@@ -193,29 +169,29 @@ function set_initial_conditions!(sol::SolutionODE{DT}, t₀::Real, q₀::Abstrac
     sol.counter .= 1
 end
 
-function get_initial_conditions!(sol::SolutionODE{AT,TT}, asol::AtomicSolutionODE{DT,TT,AT}, k, n=1) where {DT, TT, AT <: AbstractArray{DT}}
-    get_solution!(sol, asol.q, n-1, k)
-    asol.t  = sol.t[n-1]
+function get_initial_conditions!(sol::SolutionODE{AT,TT}, asol::AtomicSolutionODE{DT,TT,AT}, k, n = 1) where {DT,TT,AT<:AbstractArray{DT}}
+    get_solution!(sol, asol.q, n - 1, k)
+    asol.t = sol.t[n-1]
     asol.q̃ .= 0
 end
 
-function get_initial_conditions!(sol::SolutionODE{DT}, q::DT, k, n=1) where {DT}
-    get_solution!(sol, q, n-1, k)
+function get_initial_conditions!(sol::SolutionODE{DT}, q::DT, k, n = 1) where {DT}
+    get_solution!(sol, q, n - 1, k)
 end
 
-function get_initial_conditions(sol::SolutionODE, k, n=1)
-    get_solution(sol, n-1, k)
+function get_initial_conditions(sol::SolutionODE, k, n = 1)
+    get_solution(sol, n - 1, k)
 end
 
-function set_solution!(sol::SolutionODE, t, q, n, k=1)
+function set_solution!(sol::SolutionODE, t, q, n, k = 1)
     set_solution!(sol, q, n, k)
 end
 
-function set_solution!(sol::SolutionODE{AT,TT}, asol::AtomicSolutionODE{DT,TT,AT}, n, k=1) where {DT, TT, AT <: AbstractArray{DT}}
+function set_solution!(sol::SolutionODE{AT,TT}, asol::AtomicSolutionODE{DT,TT,AT}, n, k = 1) where {DT,TT,AT<:AbstractArray{DT}}
     set_solution!(sol, asol.t, asol.q, n, k)
 end
 
-function set_solution!(sol::SolutionODE{AT}, q::AT, n, k=1) where {AT}
+function set_solution!(sol::SolutionODE{AT}, q::AT, n, k = 1) where {AT}
     @assert n <= sol.ntime
     @assert k <= sol.ni
     if mod(n, sol.nsave) == 0
@@ -227,24 +203,24 @@ function set_solution!(sol::SolutionODE{AT}, q::AT, n, k=1) where {AT}
     end
 end
 
-function get_solution!(sol::SolutionODE{AT}, q::AT, n, k=1) where {AT}
+function get_solution!(sol::SolutionODE{AT}, q::AT, n, k = 1) where {AT}
     get_data!(sol.q, q, n, k)
 end
 
-function get_solution(sol::SolutionODE{AT,TT,1}, n, k=1) where {AT,TT}
+function get_solution(sol::SolutionODE{AT,TT,1}, n, k = 1) where {AT,TT}
     @assert k == 1
     (sol.t[n], sol.q[n])
 end
 
-function get_solution(sol::SolutionODE{AT,TT,2}, n, k=1) where {AT,TT}
-    (sol.t[n], sol.q[n,k])
+function get_solution(sol::SolutionODE{AT,TT,2}, n, k = 1) where {AT,TT}
+    (sol.t[n], sol.q[n, k])
 end
 
 function GeometricBase.reset!(sol::SolutionODE)
     reset!(sol.q)
     compute_timeseries!(sol.t, sol.t[end])
     sol.counter .= 1
-    sol.woffset += sol.nt
+    sol.offset += sol.nt
 end
 
 function Base.close(solution::SolutionODE)
