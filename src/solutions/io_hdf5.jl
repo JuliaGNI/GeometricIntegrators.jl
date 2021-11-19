@@ -17,7 +17,7 @@ mutable struct SolutionHDF5 <: SolutionIO
         if isfile(file)
             if readonly
                 flag = "r"
-                get_config(:verbosity) > 1 ? @info("Opening HDF5 file ", file) : nothing
+                get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
             else
                 if overwrite
                     flag = "w"
@@ -116,9 +116,23 @@ function save(sio::SolutionHDF5, solution::Solution)
 end
 
 
-# function load(sio::SolutionHDF5)
+function load(file::AbstractString; kwargs...)
+    SolutionHDF5(file; kwargs...)
+end
 
-# end
+
+function load(f::Function, file::AbstractString)
+    # open HDF5 file
+    h5io = load(file; readonly = true)
+
+    try
+        # call user-provided code
+        f(h5io)
+    finally
+        # close HDF5 file
+        close(h5io)
+    end
+end
 
 
 

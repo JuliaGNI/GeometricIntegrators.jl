@@ -33,6 +33,11 @@ include("solutions/atomic_solution_pode.jl")
 include("solutions/atomic_solution_dae.jl")
 include("solutions/atomic_solution_pdae.jl")
 
+export SolutionIO, SolutionHDF5, hdf5
+
+include("solutions/io.jl")
+include("solutions/io_hdf5.jl")
+
 export SolutionODE, SSolutionODE, PSolutionODE, SolutionPODE, SSolutionPODE, PSolutionPODE
 export SolutionDAE, SSolutionDAE, PSolutionDAE, SolutionPDAE, SSolutionPDAE, PSolutionPDAE
 export get_initial_conditions, get_initial_conditions!, set_initial_conditions!
@@ -42,11 +47,6 @@ include("solutions/solution_pode.jl")
 include("solutions/solution_dae.jl")
 include("solutions/solution_pdae.jl")
 include("solutions/solutions_hdf5.jl")
-
-export SolutionIO, SolutionHDF5, hdf5
-
-include("solutions/io.jl")
-include("solutions/io_hdf5.jl")
 
 include("solutions/atomic_solution_constructors.jl")
 

@@ -121,10 +121,9 @@ function SolutionPODE(t::TimeSeries{TT}, q::DataSeries{AT,N}, p::DataSeries{AT,N
     SolutionPODE{AT,TT,N}(nd, nt, ni, t, q, p, ntimesteps, ns, 0)
 end
 
-function SolutionPODE(file::String)
-    # open HDF5 file
-    get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
-    h5 = h5open(file, "r")
+function SolutionPODE(h5io::SolutionHDF5)
+    # get hdf5 file descriptor
+    h5 = hdf5(h5io)
 
     # read attributes
     ntimesteps = read(attributes(h5)["ntime"])
@@ -136,11 +135,14 @@ function SolutionPODE(file::String)
     q = fromarray(DataSeries, read(h5["q"]), nsamples)
     p = fromarray(DataSeries, read(h5["p"]), nsamples)
 
-    # need to close the file
-    close(h5)
-
     # create solution
     SolutionPODE(t, q, p, ntimesteps)
+end
+
+function SolutionPODE(file::String)
+    load(file) do h5io
+        SolutionPODE(h5io::SolutionHDF5)
+    end
 end
 
 

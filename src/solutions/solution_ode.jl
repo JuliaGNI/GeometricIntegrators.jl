@@ -100,10 +100,9 @@ function SolutionODE(t::TimeSeries{TT}, q::DataSeries{DT,N}, ntimesteps::Int) wh
     SolutionODE{DT,TT,N}(nd, nt, ni, t, q, ntimesteps, ns, 0)
 end
 
-function SolutionODE(file::String)
-    # open HDF5 file
-    get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
-    h5 = h5open(file, "r")
+function SolutionODE(h5io::SolutionHDF5)
+    # get hdf5 file descriptor
+    h5 = hdf5(h5io)
 
     # read attributes
     ntimesteps = read(attributes(h5)["ntime"])
@@ -114,11 +113,14 @@ function SolutionODE(file::String)
     t = TimeSeries(read(h5["t"]), nsave)
     q = fromarray(DataSeries, read(h5["q"]), nsamples)
 
-    # need to close the file
-    close(h5)
-
     # create solution
     SolutionODE(t, q, ntimesteps)
+end
+
+function SolutionODE(file::String)
+    load(file) do h5io
+        SolutionODE(h5io::SolutionHDF5)
+    end
 end
 
 

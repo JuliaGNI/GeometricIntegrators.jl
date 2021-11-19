@@ -110,10 +110,9 @@ function SolutionDAE(t::TimeSeries{TT}, q::DataSeries{DT,N}, λ::DataSeries{DT,N
     SolutionDAE{DT,TT,N}(nd, nm, nt, ni, t, q, λ, ntimesteps, ns, 0)
 end
 
-function SolutionDAE(file::String)
-    # open HDF5 file
-    get_config(:verbosity) > 1 ? @info("Reading HDF5 file ", file) : nothing
-    h5 = h5open(file, "r")
+function SolutionDAE(h5io::SolutionHDF5)
+    # get hdf5 file descriptor
+    h5 = hdf5(h5io)
 
     # read attributes
     ntimesteps = read(attributes(h5)["ntime"])
@@ -125,11 +124,14 @@ function SolutionDAE(file::String)
     q = fromarray(DataSeries, read(h5["q"]), nsamples)
     λ = fromarray(DataSeries, read(h5["λ"]), nsamples)
 
-    # need to close the file
-    close(h5)
-
     # create solution
     SolutionDAE(t, q, λ, ntimesteps)
+end
+
+function SolutionDAE(file::String)
+    load(file) do h5io
+        SolutionDAE(h5io::SolutionHDF5)
+    end
 end
 
 
