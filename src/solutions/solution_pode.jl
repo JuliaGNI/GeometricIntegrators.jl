@@ -14,19 +14,16 @@ Contains all fields necessary to store the solution of an PODE.
 * `ntime`: number of time steps to compute
 * `nsave`: store every nsave'th time step (default: 1)
 * `nwrite`: save data to disk after every nwrite'th time step (default: ntime)
+* `offset`: counter for file offset
 * `counter`: counter for copied solution entries
-* `woffset`: counter for file offset
-* `h5`: HDF5 file for storage
 
 ### Constructors
 
 ```julia
-SSolutionPODE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
-SSolutionPODE(t::TimeSeries, q::DataSeries, p::DataSeries, ntimesteps)
-SSolutionPODE(file::String)
-PSolutionPODE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
-PSolutionPODE(t::TimeSeries, q::PDataSeries, p::PDataSeries, ntimesteps)
-PSolutionPODE(file::String)
+SolutionPODE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
+SolutionPODE(t::TimeSeries, q::DataSeries, p::DataSeries, ntimesteps)
+SolutionPODE(h5io::SolutionHDF5)
+SolutionPODE(file::String)
 ```
 
 The constructors `SSolutionPODE` create a `SolutionPODE` with internal data structures

@@ -12,16 +12,18 @@ Contains all fields necessary to store the solution of an DAE.
 * `t`:  time steps
 * `q`:  solution `q[nd, nt+1, ni]` with `q[:,0,:]` the initial conditions
 * `λ`:  Lagrange multiplier `λ[nd, nt+1, ni]`
-* `ntime`: number of time steps to compute -> stay or go ?
-* `stint`: storage interval (store every stint'th time step; default: 1)
+* `ntime`: number of time steps to compute
+* `nsave`: store every nsave'th time step (default: 1)
+* `nwrite`: save data to disk after every nwrite'th time step (default: ntime)
+* `offset`: counter for file offset
 * `counter`: counter for copied solution entries
-* `periodicity`: -> replace with equation
 
 ### Constructors
 
 ```julia
 SolutionDAE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
 SolutionDAE(t::TimeSeries, q::DataSeries, λ::DataSeries, ntimesteps)
+SolutionDAE(h5io::SolutionHDF5)
 SolutionDAE(file::String)
 ```
 

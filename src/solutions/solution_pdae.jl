@@ -16,19 +16,16 @@ Contains all fields necessary to store the solution of an PDAE.
 * `ntime`: number of time steps to compute
 * `nsave`: store every nsave'th time step (default: 1)
 * `nwrite`: save data to disk after every nwrite'th time step (default: ntime)
+* `offset`: counter for file offset
 * `counter`: counter for copied solution entries
-* `woffset`: counter for file offset
-* `h5`: HDF5 file for storage
 
 ### Constructors
 
 ```julia
-SSolutionPDAE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
-SSolutionPDAE(t::TimeSeries, q::DataSeries, p::DataSeries, λ::DataSeries, ntimesteps)
-SSolutionPDAE(file::String)
-PSolutionPDAE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
-PSolutionPDAE(t::TimeSeries, q::PDataSeries, p::PDataSeries, λ::PDataSeries, ntimesteps)
-PSolutionPDAE(file::String)
+SolutionPDAE(equation, Δt, ntimesteps; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE, filename=nothing)
+SolutionPDAE(t::TimeSeries, q::DataSeries, p::DataSeries, λ::DataSeries, ntimesteps)
+SolutionPDAE(h5io::SolutionHDF5)
+SolutionPDAE(file::String)
 ```
 
 The constructors `SSolutionPDAE` create a `SolutionPDAE` with internal data structures
