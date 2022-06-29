@@ -57,12 +57,12 @@ mutable struct SolutionPODE{dType,tType,N} <: DeterministicSolution{dType,tType,
     counter::Vector{Int}
     periodicity::dType
 
-    function SolutionPODE{dType,tType,N}(nd, nt, ni, t, q, p, ntime, nsave, nwrite, periodicity = zero(q[begin])) where {dType<:Union{Number,AbstractArray},tType<:Real,N}
-        new(nd, nt, ni, t, q, p, ntime, nsave, nwrite, 0, zeros(Int, ni), periodicity)
+    function SolutionPODE{dType,tType,N}(nd, nt, ni, t, q, p, ntime, nsave, nwrite, periodicity = NullPeriodicity()) where {dType<:Union{Number,AbstractArray},tType<:Real,N}
+        new(nd, nt, ni, t, q, p, ntime, nsave, nwrite, 0, zeros(Int, ni), _periodicity(q[0], periodicity))
     end
 end
 
-function SolutionPODE(equation::Union{PODE{DT,TT1,AT},HODE{DT,TT1,AT},IODE{DT,TT1,AT},LODE{DT,TT1,AT}}, Δt::TT2, ntimesteps::Int;
+function SolutionPODE(equation::Union{PODEProblem{DT,TT1,AT},HODEProblem{DT,TT1,AT},IODEProblem{DT,TT1,AT},LODEProblem{DT,TT1,AT}}, Δt::TT2, ntimesteps::Int;
     nsave::Int = DEFAULT_NSAVE, nwrite::Int = DEFAULT_NWRITE, filename = nothing) where {DT,TT1,TT2,AT}
     @assert nsave > 0
     @assert ntimesteps == 0 || ntimesteps ≥ nsave
@@ -76,7 +76,7 @@ function SolutionPODE(equation::Union{PODE{DT,TT1,AT},HODE{DT,TT1,AT},IODE{DT,TT
 
     TT = promote_type(TT1, TT2)
     N = (nsamples(equation) > 1 ? 2 : 1)
-    nd = ndims(equation)
+    nd = length(vec(equation.ics.q))
     ni = nsamples(equation)
     nt = div(ntimesteps, nsave)
     nt = (nwrite == 0 ? nt : div(nwrite, nsave))
@@ -88,8 +88,8 @@ function SolutionPODE(equation::Union{PODE{DT,TT1,AT},HODE{DT,TT1,AT},IODE{DT,TT
     @assert nw ≥ 0
 
     t = TimeSeries{TT}(nt, Δt, nsave)
-    q = DataSeries(equation.q₀, nt, ni)
-    p = DataSeries(equation.p₀, nt, ni)
+    q = DataSeries(equation.ics.q, nt, ni)
+    p = DataSeries(equation.ics.p, nt, ni)
     s = SolutionPODE{AT,TT,N}(nd, nt, ni, t, q, p, ntimesteps, nsave, nw, periodicity(equation))
     set_initial_conditions!(s, equation)
 
@@ -158,7 +158,7 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
     && sol1.periodicity == sol2.periodicity)
 
 @inline GeometricBase.counter(sol::SolutionPODE) = sol.counter
-@inline GeometricBase.offset(sol::SolutionPODE) = sol.offset
+@inline offset(sol::SolutionPODE) = sol.offset
 @inline GeometricBase.lastentry(sol::SolutionPODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline GeometricBase.nsamples(sol::SolutionPODE) = sol.ni
 @inline GeometricBase.nsave(sol::SolutionPODE) = sol.nsave
@@ -168,8 +168,8 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
 @inline GeometricBase.periodicity(sol::SolutionPODE) = sol.periodicity
 
 
-function set_initial_conditions!(sol::SolutionPODE, equ::Union{PODE,HODE,IODE,LODE})
-    set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀)
+function set_initial_conditions!(sol::SolutionPODE, equ::AbstractProblemPODE)
+    set_initial_conditions!(sol, equ.tspan[begin], equ.ics.q, equ.ics.p)
 end
 
 function set_initial_conditions!(sol::SolutionPODE{AT}, t₀::Real, q₀::AT, p₀::AT) where {AT}

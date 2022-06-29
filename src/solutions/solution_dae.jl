@@ -53,12 +53,12 @@ mutable struct SolutionDAE{dType,tType,N} <: DeterministicSolution{dType,tType,N
     counter::Vector{Int}
     periodicity::dType
 
-    function SolutionDAE{dType,tType,N}(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite, periodicity = zero(q[begin])) where {dType<:Union{Number,AbstractArray},tType<:Real,N}
-        new(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite, 0, zeros(Int, ni), periodicity)
+    function SolutionDAE{dType,tType,N}(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite, periodicity = NullPeriodicity()) where {dType<:Union{Number,AbstractArray},tType<:Real,N}
+        new(nd, nm, nt, ni, t, q, λ, ntime, nsave, nwrite, 0, zeros(Int, ni), _periodicity(q[0], periodicity))
     end
 end
 
-function SolutionDAE(equation::DAE{DT,TT1,AT}, Δt::TT2, ntimesteps::Int;
+function SolutionDAE(equation::DAEProblem{DT,TT1,AT}, Δt::TT2, ntimesteps::Int;
     nsave::Int = DEFAULT_NSAVE, nwrite::Int = DEFAULT_NWRITE) where {DT,TT1,TT2,AT}
     @assert nsave > 0
     @assert ntimesteps == 0 || ntimesteps ≥ nsave
@@ -72,8 +72,8 @@ function SolutionDAE(equation::DAE{DT,TT1,AT}, Δt::TT2, ntimesteps::Int;
 
     TT = promote_type(TT1, TT2)
     N = nsamples(equation) > 1 ? 2 : 1
-    nd = ndims(equation)
-    nm = equation.m
+    nd = length(vec(equation.ics.q))
+    nm = length(vec(equation.ics.λ))
     ni = nsamples(equation)
     nt = div(ntimesteps, nsave)
     nt = (nwrite == 0 ? nt : div(nwrite, nsave))
@@ -86,8 +86,8 @@ function SolutionDAE(equation::DAE{DT,TT1,AT}, Δt::TT2, ntimesteps::Int;
     @assert nw ≥ 0
 
     t = TimeSeries{TT}(nt, Δt, nsave)
-    q = DataSeries(equation.q₀, nt, ni)
-    λ = DataSeries(equation.λ₀, nt, ni)
+    q = DataSeries(equation.ics.q, nt, ni)
+    λ = DataSeries(equation.ics.λ, nt, ni)
     s = SolutionDAE{AT,TT,N}(nd, nm, nt, ni, t, q, λ, ntimesteps, nsave, nw, periodicity(equation))
     set_initial_conditions!(s, equation)
 
@@ -156,7 +156,7 @@ Base.:(==)(sol1::SolutionDAE{DT1,TT1,N1}, sol2::SolutionDAE{DT2,TT2,N2}) where {
     && sol1.periodicity == sol2.periodicity)
 
 @inline GeometricBase.counter(sol::SolutionDAE) = sol.counter
-@inline GeometricBase.offset(sol::SolutionDAE) = sol.offset
+@inline offset(sol::SolutionDAE) = sol.offset
 @inline GeometricBase.lastentry(sol::SolutionDAE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline GeometricBase.nsamples(sol::SolutionDAE) = sol.ni
 @inline GeometricBase.nsave(sol::SolutionDAE) = sol.nsave
@@ -166,8 +166,8 @@ Base.:(==)(sol1::SolutionDAE{DT1,TT1,N1}, sol2::SolutionDAE{DT2,TT2,N2}) where {
 @inline GeometricBase.periodicity(sol::SolutionDAE) = sol.periodicity
 
 
-function set_initial_conditions!(sol::SolutionDAE, equ::DAE)
-    set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.λ₀)
+function set_initial_conditions!(sol::SolutionDAE, equ::AbstractProblemDAE)
+    set_initial_conditions!(sol, equ.tspan[begin], equ.ics.q, equ.ics.λ)
 end
 
 function set_initial_conditions!(sol::SolutionDAE{DT}, t₀::Real, q₀::DT, λ₀::DT) where {DT}

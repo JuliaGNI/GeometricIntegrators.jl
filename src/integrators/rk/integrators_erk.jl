@@ -74,8 +74,8 @@ struct IntegratorERK{DT, TT, D, S, ET} <: AbstractIntegratorRK{DT,TT}
         IntegratorERK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorERK(equation::ODE{DT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorERK{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorERK(equation::ODEProblem{DT}, tableau::Tableau{TT}, Δt::TT=tstep(equation); kwargs...) where {DT,TT}
+        IntegratorERK{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
     end
 end
 

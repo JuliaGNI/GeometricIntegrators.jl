@@ -73,8 +73,8 @@ struct IntegratorHSPARKprimary{DT, TT, D, S, R, PT <: ParametersHSPARKprimary{DT
         IntegratorHSPARKprimary(params, solver, iguess, caches)
     end
 
-    function IntegratorHSPARKprimary(equation::Union{PDAE{DT}, HDAE{DT}}, tableau::TableauHSPARKprimary, Δt; kwargs...) where {DT}
-        IntegratorHSPARKprimary{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorHSPARKprimary(equation::Union{PDAEProblem{DT}, HDAEProblem{DT}}, tableau::TableauHSPARKprimary, Δt=tstep(equation); kwargs...) where {DT}
+        IntegratorHSPARKprimary{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
     end
 end
 

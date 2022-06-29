@@ -73,8 +73,8 @@ struct IntegratorHPARK{DT, TT, D, S, R, PT <: ParametersHPARK{DT,TT,D,S,R},
         IntegratorHPARK(params, solver, iguess, caches)
     end
 
-    function IntegratorHPARK(equation::Union{PDAE{DT}, HDAE{DT}}, tableau::TableauHPARK, Δt; kwargs...) where {DT}
-        IntegratorHPARK{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorHPARK(equation::Union{PDAEProblem{DT}, HDAEProblem{DT}}, tableau::TableauHPARK, Δt=tstep(equation); kwargs...) where {DT}
+        IntegratorHPARK{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
     end
 end
 

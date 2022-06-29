@@ -42,14 +42,14 @@ struct IntegratorSplitting{DT, TT, D, S, QT <: Tuple} <: ODEIntegrator{DT,TT}
     end
 end
 
-function IntegratorSplitting(equation::SODE{DT}, tableau::ST, Δt::TT) where {DT, TT, ST <: AbstractTableauSplitting{TT}}
-    @assert hassolution(equation)
-    IntegratorSplitting{DT, ndims(equation)}(get_solutions(equation), get_splitting_coefficients(length(equation.q), tableau)..., Δt)
+function IntegratorSplitting(problem::SODEProblem{DT}, tableau::ST, Δt::TT=tstep(problem)) where {DT, TT, ST <: AbstractTableauSplitting{TT}}
+    @assert hassolution(problem)
+    IntegratorSplitting{DT, ndims(problem)}(solutions(problem).q, get_splitting_coefficients(length(equation(problem).q), tableau)..., Δt)
 end
 
 
 @inline Base.ndims(::IntegratorSplitting{DT,TT,D}) where {DT,TT,D} = D
-timestep(int::IntegratorSplitting) = int.Δt
+@inline GeometricBase.timestep(int::IntegratorSplitting) = int.Δt
 
 
 function integrate_step!(int::IntegratorSplitting{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}

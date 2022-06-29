@@ -180,14 +180,14 @@ struct IntegratorDGVIP0{DT, TT, D, S, R,
         IntegratorDGVIP0(basis, quadrature, params, solver, iguess, caches)
     end
 
-    function IntegratorDGVIP0(equation::Union{IODE{DT}, LODE{DT}}, basis::Basis, quadrature::QuadratureRule, Δt; kwargs...) where {DT}
-        IntegratorDGVIP0{DT, ndims(equation)}(get_functions(equation), basis, quadrature, Δt; kwargs...)
+    function IntegratorDGVIP0(equation::Union{IODEProblem{DT}, LODEProblem{DT}}, basis::Basis, quadrature::QuadratureRule, Δt=tstep(equation); kwargs...) where {DT}
+        IntegratorDGVIP0{DT, ndims(equation)}(functions(equation), basis, quadrature, Δt; kwargs...)
     end
 end
 
-@inline equation(integrator::IntegratorDGVIP0, i::Symbol) = integrator.params.equs[i]
-@inline equations(integrator::IntegratorDGVIP0) = integrator.params.equs
-@inline timestep(integrator::IntegratorDGVIP0) = integrator.params.Δt
+@inline GeometricBase.equation(integrator::IntegratorDGVIP0, i::Symbol) = integrator.params.equs[i]
+@inline GeometricBase.equations(integrator::IntegratorDGVIP0) = integrator.params.equs
+@inline GeometricBase.timestep(integrator::IntegratorDGVIP0) = integrator.params.Δt
 @inline Base.ndims(::IntegratorDGVIP0{DT,TT,D}) where {DT,TT,D} = D
 
 

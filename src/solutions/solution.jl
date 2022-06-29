@@ -24,28 +24,28 @@ function Solution end
 
 
 # Create solution for ODE.
-function Solution(equation::AbstractEquationODE, Δt, ntime::Int; kwargs...)
-    SolutionODE(equation, Δt, ntime; kwargs...)
+function Solution(problem::AbstractProblemODE, ntime::Int; kwargs...)
+    SolutionODE(problem, problem.tstep, ntime; kwargs...)
 end
 
 # Create solution for partitioned ODE.
-function Solution(equation::AbstractEquationPODE, Δt, ntime::Int; kwargs...)
-    SolutionPODE(equation, Δt, ntime; kwargs...)
+function Solution(problem::AbstractProblemPODE, ntime::Int; kwargs...)
+    SolutionPODE(problem, problem.tstep, ntime; kwargs...)
 end
 
 # Create solution for DAE.
-function Solution(equation::AbstractEquationDAE, Δt, ntime::Int; kwargs...)
-    SolutionDAE(equation, Δt, ntime; kwargs...)
+function Solution(problem::AbstractProblemDAE, ntime::Int; kwargs...)
+    SolutionDAE(problem, problem.tstep, ntime; kwargs...)
 end
 
 # Create solution for partitioned DAE.
-function Solution(equation::AbstractEquationPDAE, Δt, ntime::Int; kwargs...)
-    SolutionPDAE(equation, Δt, ntime; kwargs...)
+function Solution(problem::AbstractProblemPDAE, ntime::Int; kwargs...)
+    SolutionPDAE(problem, problem.tstep, ntime; kwargs...)
 end
 
 # Print error for solutions of equations not implemented, yet.
-function Solution(equation::Equation, Δt, ntime::Int; kwargs...)
-    error("No solution found for equation ", equation)
+function Solution(problem::GeometricProblem, ntime::Int; kwargs...)
+    error("No solution found for problem type ", typeof(problem))
 end
 
 
@@ -81,6 +81,10 @@ end
 # end
 
 # # Print error for parallel solutions of equations not implemented, yet.
-# function ParallelSolution(equation::Equation, Δt, ntime::Int; kwargs...)
+# function ParallelSolution(equation::GeometricEquation, Δt, ntime::Int; kwargs...)
 #     error("No parallel solution found for equation ", equation)
 # end
+
+
+_periodicity(q, periodicity) = periodicity
+_periodicity(q, periodicity::NullPeriodicity) = zero(q)

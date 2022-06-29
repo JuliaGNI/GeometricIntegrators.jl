@@ -5,9 +5,8 @@ module VPRK
     using RungeKutta
     using SimpleSolvers
 
-    import GeometricEquations: IODE, LODE, LDAE, get_functions, hassecondary
-
     using ..GeometricBase
+    using ..GeometricEquations
     using ..Config
     using ..Utils
 

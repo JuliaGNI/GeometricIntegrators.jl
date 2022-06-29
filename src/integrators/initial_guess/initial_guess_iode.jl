@@ -26,12 +26,12 @@ function InitialGuessIODE(interp::Type{<:Extrapolation}, v::Function, f::Functio
     InitialGuessIODE(int, v, f, Δt)
 end
 
-function InitialGuessIODE(interp::Type{<:Extrapolation}, equation::Union{IODE,LODE,IDAE,LDAE}, Δt)
-    InitialGuessIODE(interp, _get_v̄(equation), _get_f̄(equation), Δt)
+function InitialGuessIODE(interp::Type{<:Extrapolation}, problem::Union{IODEProblem,LODEProblem,IDAEProblem,LDAEProblem}, Δt = tstep(problem))
+    InitialGuessIODE(interp, _get_v̄(equation(problem), parameters(problem)), _get_f̄(equation(problem), parameters(problem)), Δt)
 end
 
-InitialGuess(interp, equation::Union{IODE,LODE,IDAE,LDAE}, Δt) = InitialGuessIODE(interp, equation, Δt)
-InitialGuess(equation::Union{IODE,LODE,IDAE,LDAE}, Δt) = InitialGuessIODE(get_config(:ig_extrapolation), equation, Δt)
+InitialGuess(interp, problem::Union{IODEProblem,LODEProblem,IDAEProblem,LDAEProblem}, Δt = tstep(problem)) = InitialGuessIODE(interp, problem, Δt)
+InitialGuess(problem::Union{IODEProblem,LODEProblem,IDAEProblem,LDAEProblem}, Δt = tstep(problem)) = InitialGuessIODE(get_config(:ig_extrapolation), problem, Δt)
 
 
 Base.:(==)(ig1::InitialGuessIODE{TT1}, ig2::InitialGuessIODE{TT2}) where {TT1,TT2}= (

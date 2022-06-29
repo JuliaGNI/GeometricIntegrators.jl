@@ -217,11 +217,11 @@ struct IntegratorPGLRK{DT, TT, D, S, PT <: ParametersPGLRK{DT,TT},
         IntegratorPGLRK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorPGLRK(equation::ODE{DT}, tableau::CoefficientsPGLRK{TT}, Δt::TT; kwargs...) where {DT,TT}
-        @assert hasinvariants(equation)
-        @assert :h ∈ keys(equation.invariants)
-        functions = merge(get_functions(equation), get_invariants(equation))
-        IntegratorPGLRK{DT, ndims(equation)}(functions, tableau, Δt; kwargs...)
+    function IntegratorPGLRK(problem::ODEProblem{DT}, tableau::CoefficientsPGLRK{TT}, Δt::TT=tstep(problem); kwargs...) where {DT,TT}
+        @assert hasinvariants(problem)
+        @assert :h ∈ keys(invariants(problem))
+        _functions = merge(functions(problem), invariants(problem))
+        IntegratorPGLRK{DT, ndims(problem)}(_functions, tableau, Δt; kwargs...)
     end
 end
 

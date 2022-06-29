@@ -49,12 +49,12 @@ mutable struct SolutionODE{dType,tType,N} <: DeterministicSolution{dType,tType,N
     counter::Vector{Int}
     periodicity::dType
 
-    function SolutionODE{dType,tType,N}(nd, nt, ni, t, q, ntime, nsave, nwrite, periodicity = zero(q[begin])) where {dType<:Union{Number,AbstractArray},tType<:Real,N}
-        new(nd, nt, ni, t, q, ntime, nsave, nwrite, 0, zeros(Int, ni), periodicity)
+    function SolutionODE{dType,tType,N}(nd, nt, ni, t, q, ntime, nsave, nwrite, periodicity = NullPeriodicity()) where {dType<:Union{Number,AbstractArray},tType<:Real,N}
+        new(nd, nt, ni, t, q, ntime, nsave, nwrite, 0, zeros(Int, ni), _periodicity(q[0], periodicity))
     end
 end
 
-function SolutionODE(equation::Union{ODE{DT,TT1,AT},SODE{DT,TT1,AT}}, Δt::TT2, ntimesteps::Int;
+function SolutionODE(equation::Union{ODEProblem{DT,TT1,AT},SODEProblem{DT,TT1,AT}}, Δt::TT2, ntimesteps::Int;
     nsave::Int = DEFAULT_NSAVE, nwrite::Int = DEFAULT_NWRITE) where {DT,TT1,TT2,AT}
     @assert nsave > 0
     @assert ntimesteps == 0 || ntimesteps ≥ nsave
@@ -68,7 +68,7 @@ function SolutionODE(equation::Union{ODE{DT,TT1,AT},SODE{DT,TT1,AT}}, Δt::TT2, 
 
     TT = promote_type(TT1, TT2)
     N = nsamples(equation) > 1 ? 2 : 1
-    nd = ndims(equation)
+    nd = length(vec(equation.ics.q))
     ni = nsamples(equation)
     nt = div(ntimesteps, nsave)
     nt = (nwrite == 0 ? nt : div(nwrite, nsave))
@@ -80,7 +80,7 @@ function SolutionODE(equation::Union{ODE{DT,TT1,AT},SODE{DT,TT1,AT}}, Δt::TT2, 
     @assert nw ≥ 0
 
     t = TimeSeries{TT}(nt, Δt, nsave)
-    q = DataSeries(equation.q₀, nt, ni)
+    q = DataSeries(equation.ics.q, nt, ni)
     s = SolutionODE{AT,TT,N}(nd, nt, ni, t, q, ntimesteps, nsave, nw, periodicity(equation))
     set_initial_conditions!(s, equation)
 
@@ -141,7 +141,7 @@ Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {
     && sol1.periodicity == sol2.periodicity)
 
 @inline GeometricBase.counter(sol::SolutionODE) = sol.counter
-@inline GeometricBase.offset(sol::SolutionODE) = sol.offset
+@inline offset(sol::SolutionODE) = sol.offset
 @inline GeometricBase.lastentry(sol::SolutionODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline GeometricBase.nsamples(sol::SolutionODE) = sol.ni
 @inline GeometricBase.nsave(sol::SolutionODE) = sol.nsave
@@ -151,8 +151,8 @@ Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {
 @inline GeometricBase.periodicity(sol::SolutionODE) = sol.periodicity
 
 
-function set_initial_conditions!(sol::SolutionODE, equ::Union{ODE,SODE})
-    set_initial_conditions!(sol, equ.t₀, equ.q₀)
+function set_initial_conditions!(sol::SolutionODE, equ::AbstractProblemODE)
+    set_initial_conditions!(sol, equ.tspan[begin], equ.ics.q)
 end
 
 function set_initial_conditions!(sol::SolutionODE{DT}, t₀::Real, q₀) where {DT}

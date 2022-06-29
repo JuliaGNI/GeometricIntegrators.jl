@@ -59,37 +59,33 @@ struct IntegratorVPRKpStandard{DT, TT, D, S,
         IntegratorVPRKpStandard(params, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKpStandard(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt, RU, RG; kwargs...) where {DT}
-        IntegratorVPRKpStandard{DT, ndims(equation)}(get_functions(equation), tableau, Δt, RU, RG; kwargs...)
+    function IntegratorVPRKpStandard(equation::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, Δt, RU, RG; kwargs...) where {DT}
+        IntegratorVPRKpStandard{DT, ndims(equation)}(functions(equation), tableau, Δt, RU, RG; kwargs...)
     end
 end
 
 "Variational partitioned Runge-Kutta integrator with standard projection."
-function IntegratorVPRKpStandard(args...)
-    IntegratorVPRKpStandardConstructor(args..., [0,1]; R∞=1)
+function IntegratorVPRKpStandard(equation, tableau, Δt=tstep(equation))
+    IntegratorVPRKpStandard(equation, tableau, Δt, [0,1], [0,1]; R∞=1)
 end
 
 "Variational partitioned Runge-Kutta integrator with symplectic projection."
-function IntegratorVPRKpSymplectic(args...)
-    IntegratorVPRKpStandardConstructor(args..., [1,1])
-end
-
-function IntegratorVPRKpStandardConstructor(equation, tableau, Δt, R; R∞=tableau.R∞)
-    IntegratorVPRKpStandard(equation, tableau, Δt, R, R; R∞=R∞)
+function IntegratorVPRKpSymplectic(equation, tableau, Δt=tstep(equation))
+    IntegratorVPRKpStandard(equation, tableau, Δt, [1,1], [1,1])
 end
 
 @doc raw"""
 Variational partitioned Runge-Kutta integrator with variational projection on $(q_{n}, p_{n+1})$.
 """
-function IntegratorVPRKpVariationalQ(args...)
-    IntegratorVPRKpStandard(args..., [1,0], [0,1]; R∞=1)
+function IntegratorVPRKpVariationalQ(equation, tableau, Δt=tstep(equation))
+    IntegratorVPRKpStandard(equation, tableau, Δt, [1,0], [0,1]; R∞=1)
 end
 
 @doc raw"""
 Variational partitioned Runge-Kutta integrator with variational projection on $(p_{n}, q_{n+1})$.
 """
-function IntegratorVPRKpVariationalP(args...)
-    IntegratorVPRKpStandard(args..., [0,1], [1,0]; R∞=1)
+function IntegratorVPRKpVariationalP(equation, tableau, Δt=tstep(equation))
+    IntegratorVPRKpStandard(equation, tableau, Δt, [0,1], [1,0]; R∞=1)
 end
 
 

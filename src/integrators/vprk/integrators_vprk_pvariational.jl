@@ -53,8 +53,8 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
         IntegratorVPRKpVariational(params, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKpVariational(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
-        IntegratorVPRKpVariational{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRKpVariational(equation::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, Δt=tstep(equation); kwargs...) where {DT}
+        IntegratorVPRKpVariational{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
     end
 end
 

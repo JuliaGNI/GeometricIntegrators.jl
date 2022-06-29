@@ -313,14 +313,14 @@ struct IntegratorDGVIPI{DT, TT, D, S, R,
         IntegratorDGVIPI(basis, quadrature, jump, params, solver, iguess, caches)
     end
 
-    function IntegratorDGVIPI(equation::Union{IODE{DT}, LODE{DT}}, basis::Basis, quadrature::QuadratureRule, jump::Discontinuity, Δt; kwargs...) where {DT}
-        IntegratorDGVIPI{DT, ndims(equation)}(get_functions(equation), basis, quadrature, jump, Δt; kwargs...)
+    function IntegratorDGVIPI(equation::Union{IODEProblem{DT}, LODEProblem{DT}}, basis::Basis, quadrature::QuadratureRule, jump::Discontinuity, Δt=tstep(equation); kwargs...) where {DT}
+        IntegratorDGVIPI{DT, ndims(equation)}(functions(equation), basis, quadrature, jump, Δt; kwargs...)
     end
 end
 
-@inline equation(integrator::IntegratorDGVIPI, i::Symbol) = integrator.params.equs[i]
-@inline equations(integrator::IntegratorDGVIPI) = integrator.params.equs
-@inline timestep(integrator::IntegratorDGVIPI) = integrator.params.Δt
+@inline GeometricBase.equation(integrator::IntegratorDGVIPI, i::Symbol) = integrator.params.equs[i]
+@inline GeometricBase.equations(integrator::IntegratorDGVIPI) = integrator.params.equs
+@inline GeometricBase.timestep(integrator::IntegratorDGVIPI) = integrator.params.Δt
 @inline Base.ndims(::IntegratorDGVIPI{DT,TT,D}) where {DT,TT,D} = D
 
 

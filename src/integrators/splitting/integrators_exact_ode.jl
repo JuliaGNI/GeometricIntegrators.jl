@@ -11,7 +11,7 @@ end
 
 
 @inline Base.ndims(::IntegratorExactODE{DT,TT,D}) where {DT,TT,D} = D
-timestep(int::IntegratorExactODE) = int.Δt
+@inline GeometricBase.timestep(int::IntegratorExactODE) = int.Δt
 
 
 function integrate_step!(int::IntegratorExactODE{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}

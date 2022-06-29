@@ -82,8 +82,8 @@ struct IntegratorDVIB{DT, TT, D, PT <: ParametersDVIB{DT,TT},
         IntegratorDVIB(params, solver, iguess, caches)
     end
 
-    function IntegratorDVIB(equation::Union{IODE{DT}, LODE{DT}}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorDVIB{DT, ndims(equation)}(get_functions(equation), Δt; kwargs...)
+    function IntegratorDVIB(equation::Union{IODEProblem{DT}, LODEProblem{DT}}, Δt::TT=tstep(equation); kwargs...) where {DT,TT}
+        IntegratorDVIB{DT, ndims(equation)}(functions(equation), Δt; kwargs...)
     end
 end
 

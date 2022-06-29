@@ -15,11 +15,11 @@ abstract type HDAEIntegrator{dType, tType} <: PDAEIntegrator{dType, tType} end
 abstract type LODEIntegrator{dType, tType} <: IODEIntegrator{dType, tType} end
 abstract type LDAEIntegrator{dType, tType} <: IDAEIntegrator{dType, tType} end
 
-parameters(integrator::Integrator) = error("parameters() not implemented for ", typeof(integrator))
-equations(integrator::Integrator) = error("equations() not implemented for ", typeof(integrator))
-equation(integrator::Integrator) = error("equation() not implemented for ", typeof(integrator))
-equation(integrator::Integrator, i::Int) = error("equation() not implemented for ", typeof(integrator))
-timestep(integrator::Integrator) = error("timestep() not implemented for ", typeof(integrator))
+GeometricBase.parameters(integrator::Integrator) = error("parameters() not implemented for ", typeof(integrator))
+GeometricBase.equations(integrator::Integrator) = error("equations() not implemented for ", typeof(integrator))
+GeometricBase.equation(integrator::Integrator) = error("equation() not implemented for ", typeof(integrator))
+GeometricBase.equation(integrator::Integrator, i::Int) = error("equation() not implemented for ", typeof(integrator))
+GeometricBase.timestep(integrator::Integrator) = error("timestep() not implemented for ", typeof(integrator))
 Base.ndims(integrator::Integrator) = error("ndims() not implemented for ", typeof(integrator))
 GeometricBase.nconstraints(integrator::Integrator) = error("nconstraints() not implemented for ", typeof(integrator))
 nstages(integrator::Integrator) = error("nstages() not implemented for ", typeof(integrator))
@@ -78,4 +78,4 @@ which contains the state of the system at the beginning and the end of the time 
 additional information like solver output or the solution at internal stages of a Runge-Kutta
 method.
 """
-integrate_step!(integrator::Integrator, ::AtomicSolution) = error("integrate_step()! not implemented for ", typeof(integrator))
+integrate_step!(integrator::Integrator, ::AtomicSolution) = error("integrate_step!() not implemented for ", typeof(integrator))

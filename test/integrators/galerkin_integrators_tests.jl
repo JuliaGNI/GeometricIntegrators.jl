@@ -20,29 +20,29 @@ BGau4 = Lagrange(nodes(QGau4))
 
 ### CGVI Integrators ###
 
-cgint = IntegratorCGVI(iode, BGau4, QGau4, Δt)
+cgint = IntegratorCGVI(iode, BGau4, QGau4)
 cgsol = integrate(iode, cgint, nt)
 @test relative_maximum_error(cgsol.q, refx) < 1E-7
 
 
 ### DGVI Integrators ###
 
-dgint = IntegratorDGVI(iode, BGau4, QGau4, Δt)
+dgint = IntegratorDGVI(iode, BGau4, QGau4)
 dgsol = integrate(iode, dgint, nt)
 @test relative_maximum_error(dgsol.q, refx) < 1E-7
 
-dgint = IntegratorDGVIP0(iode, BGau4, QGau4, Δt)
+dgint = IntegratorDGVIP0(iode, BGau4, QGau4)
 dgsol = integrate(iode, dgint, nt)
 @test relative_maximum_error(dgsol.q, refx) < 1E-7
 
-dgint = IntegratorDGVIP1(iode, BGau4, QGau4, Δt)
+dgint = IntegratorDGVIP1(iode, BGau4, QGau4)
 dgsol = integrate(iode, dgint, nt)
 @test relative_maximum_error(dgsol.q, refx) < 1E-7
 
-dgint = IntegratorDGVIEXP(iode, BGau4, QGau4, Δt)
+dgint = IntegratorDGVIEXP(iode, BGau4, QGau4)
 dgsol = integrate(iode, dgint, nt)
 @test relative_maximum_error(dgsol.q, refx) < 1E-7
 
-dgint = IntegratorDGVIPI(iode, BGau4, QGau4, Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2)), Δt)
+dgint = IntegratorDGVIPI(iode, BGau4, QGau4, Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2)))
 dgsol = integrate(iode, dgint, nt)
 @test relative_maximum_error(dgsol.q, refx) < 1E-7

@@ -114,8 +114,8 @@ struct IntegratorFIRKimplicit{DT, TT, D, S, PT <: ParametersFIRKimplicit{DT,TT},
     #     IntegratorFIRKimplicit{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     # end
 
-    function IntegratorFIRKimplicit(equation::Union{IODE{DT,TT}, LODE{DT,TT}}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorFIRKimplicit{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorFIRKimplicit(equation::Union{IODEProblem{DT,TT}, LODEProblem{DT,TT}}, tableau::Tableau{TT}, Δt::TT=tstep(equation); kwargs...) where {DT,TT}
+        IntegratorFIRKimplicit{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
     end
 end
 

@@ -103,8 +103,8 @@ struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
         IntegratorDIRK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorDIRK(equation::ODE{DT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorDIRK{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorDIRK(equation::ODEProblem{DT}, tableau::Tableau{TT}, Δt::TT=tstep(equation); kwargs...) where {DT,TT}
+        IntegratorDIRK{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
     end
 end
 

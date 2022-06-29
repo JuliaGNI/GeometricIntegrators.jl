@@ -1,5 +1,5 @@
 
-struct Simulation{ET <: Equation, IT <: Integrator, ST <: Solution}
+struct Simulation{ET <: GeometricEquation, IT <: Integrator, ST <: Solution}
     equation::ET
     integrator::IT
     solution::ST
@@ -21,15 +21,15 @@ function Simulation(equ::ET, int::IT, sol::ST, run_id::String, filename::String)
     Simulation{ET,IT,ST}(equ, int, sol, ncycle, run_id, filename)
 end
 
-function Simulation(equ::Equation, int::Integrator, Δt, run_id, filename, ntime; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE)
+function Simulation(equ::GeometricEquation, int::Integrator, Δt, run_id, filename, ntime; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE)
     Simulation(equ, int, Solution(equ, Δt, ntime; nsave=nsave, nwrite=nwrite), run_id, filename)
 end
 
-function Simulation(equ::Equation, tableau::Union{AbstractTableau, Tableau}, Δt, run_id, filename, ntime; kwargs...)
+function Simulation(equ::GeometricEquation, tableau::Union{AbstractTableau, Tableau}, Δt, run_id, filename, ntime; kwargs...)
     Simulation(equ, Integrator(equ, tableau, Δt), Δt, run_id, filename, ntime; kwargs...)
 end
 
-function Simulation(equ::Equation, integrator, tableau::Union{AbstractTableau, Tableau}, Δt, run_id, filename, ntime; kwargs...)
+function Simulation(equ::GeometricEquation, integrator, tableau::Union{AbstractTableau, Tableau}, Δt, run_id, filename, ntime; kwargs...)
     Simulation(equ, integrator(equ, tableau, Δt), Δt, run_id, filename, ntime; kwargs...)
 end
 

@@ -42,14 +42,15 @@ struct IntegratorComposition{DT, TT, D, S, IT <: Tuple} <: ODEIntegrator{DT,TT}
     end
 end
 
-function IntegratorComposition(equation::SODE{DT,TT}, integrators::Tuple, tableau::ST, Δt::TT) where {DT, TT, ST <: AbstractTableauSplitting{TT}}
-    D = ndims(equation)
-    R = length(equation.v)
+function IntegratorComposition(problem::SODEProblem{DT,TT}, integrators::Tuple, tableau::ST, Δt::TT=tstep(problem)) where {DT, TT, ST <: AbstractTableauSplitting{TT}}
+    _functions = functions(problem).v
+    _solutions = solutions(problem).q
+
+    D = ndims(problem)
+    R = length(_functions)
 
     f, c = get_splitting_coefficients(R, tableau)
 
-    functions = get_functions(equation)
-    solutions = get_solutions(equation)
     subints = ()
 
     # construct composition integrators
@@ -58,25 +59,25 @@ function IntegratorComposition(equation::SODE{DT,TT}, integrators::Tuple, tablea
             cᵢ = Δt * c[i]
 
             if integrators[f[i]] == IntegratorExactODE
-                @assert hassolution(equation, f[i])
-                subint = integrators[f[i]]{DT,D}(solutions[f[i]], cᵢ)
+                @assert hassolution(equation(problem), f[i])
+                subint = integrators[f[i]]{DT,D}(_solutions[f[i]], cᵢ)
             else
-                @assert hasvectorfield(equation, f[i])
-                subint = integrators[f[i]](functions[f[i]], cᵢ)
+                @assert hasvectorfield(equation(problem), f[i])
+                subint = integrators[f[i]](_functions[f[i]], cᵢ)
             end
 
             subints  = (subints..., subint)
         end
     end
 
-    IntegratorComposition{DT, ndims(equation)}(subints, Δt)
+    IntegratorComposition{DT, ndims(problem)}(subints, Δt)
 end
 
-function IntegratorComposition(equation::SODE{DT}, tableau::AbstractTableauSplitting, Δt::Number) where {DT}
-    @assert hassolution(equation)
-    # integrators = Tuple(IntegratorConstructor(DT,ndims(equation)) for q in equation.q)
-    integrators = Tuple(IntegratorExactODE for q in equation.q)
-    IntegratorComposition(equation, integrators, tableau, Δt)
+function IntegratorComposition(problem::SODEProblem{DT}, tableau::AbstractTableauSplitting, Δt::Number=tstep(problem)) where {DT}
+    @assert hassolution(equation(problem))
+    # integrators = Tuple(IntegratorConstructor(DT,ndims(equation)) for q in solutions(problem).q)
+    integrators = Tuple(IntegratorExactODE for q in solutions(problem).q)
+    IntegratorComposition(problem, integrators, tableau, Δt)
 end
 
 

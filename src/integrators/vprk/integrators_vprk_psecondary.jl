@@ -110,9 +110,9 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
         IntegratorVPRKpSecondary(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpSecondary(equation::LDAE{DT}, tableau, Δt; kwargs...) where {DT}
+    function IntegratorVPRKpSecondary(equation::LDAEProblem{DT}, tableau, Δt=tstep(equation); kwargs...) where {DT}
         @assert hassecondary(equation)
-        IntegratorVPRKpSecondary{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+        IntegratorVPRKpSecondary{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
     end
 end
 

@@ -1,7 +1,7 @@
 
 # Create AtomicSolution for ODE.
-function AtomicSolution(equation::AbstractEquationODE)
-    AtomicSolutionODE(equation.t₀, equation.q₀[begin])
+function AtomicSolution(problem::AbstractProblemODE)
+    AtomicSolutionODE(problem.tspan[begin], problem.ics.q)
 end
 
 # Create AtomicSolution for ODE.
@@ -10,8 +10,8 @@ function AtomicSolution(solution::SolutionODE)
 end
 
 # Create AtomicSolution for partitioned ODE.
-function AtomicSolution(equation::AbstractEquationPODE)
-    AtomicSolutionPODE(equation.t₀, equation.q₀[begin], equation.p₀[begin])
+function AtomicSolution(problem::AbstractProblemPODE)
+    AtomicSolutionPODE(problem.tspan[begin], problem.ics.q, problem.ics.p)
 end
 
 # Create AtomicSolution for partitioned ODE.
@@ -20,8 +20,8 @@ function AtomicSolution(solution::SolutionPODE)
 end
 
 # Create AtomicSolution for DAE.
-function AtomicSolution(equation::AbstractEquationDAE)
-    AtomicSolutionDAE(equation.t₀, equation.q₀[begin], equation.λ₀[begin])
+function AtomicSolution(problem::AbstractProblemDAE)
+    AtomicSolutionDAE(problem.tspan[begin], problem.ics.q, problem.ics.λ)
 end
 
 # Create AtomicSolution for DAE.
@@ -30,8 +30,8 @@ function AtomicSolution(solution::SolutionDAE)
 end
 
 # Create AtomicSolution for partitioned DAE.
-function AtomicSolution(equation::AbstractEquationPDAE)
-    AtomicSolutionPDAE(equation.t₀, equation.q₀[begin], equation.p₀[begin], equation.λ₀[begin])
+function AtomicSolution(problem::AbstractProblemPDAE)
+    AtomicSolutionPDAE(problem.tspan[begin], problem.ics.q, problem.ics.p, problem.ics.λ)
 end
 
 # Create AtomicSolution for partitioned DAE.
@@ -39,9 +39,9 @@ function AtomicSolution(solution::SolutionPDAE)
     AtomicSolutionPDAE(get_initial_conditions(solution, 1)...)
 end
 
-# Print error for AtomicSolutions of equations not implemented, yet.
-function AtomicSolution(equation::Equation)
-    error("No AtomicSolution found for equation ", equation)
+# Print error for AtomicSolutions of problem types not implemented, yet.
+function AtomicSolution(problem::GeometricProblem)
+    error("No AtomicSolution found for problem type ", typeof(problem))
 end
 
 # Print error for AtomicSolutions of solution not implemented, yet.

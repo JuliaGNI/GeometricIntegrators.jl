@@ -77,8 +77,8 @@ function MidpointExtrapolationODE(v::VT, s::Int) where {VT}
     MidpointExtrapolationODE{VT}(v, s)
 end
 
-function MidpointExtrapolation(equ::ODE, s::Int)
-    MidpointExtrapolationODE(_get_v(equ), s)
+function MidpointExtrapolation(equ::ODEProblem, s::Int)
+    MidpointExtrapolationODE(functions(equ).v, s)
 end
 
 function GeometricBase.evaluate!(extrap::MidpointExtrapolationODE, t₀::TT, t₁::TT,
@@ -193,8 +193,8 @@ function MidpointExtrapolationIODE(v::VT, f::FT, s::Int) where {VT,FT}
     MidpointExtrapolationIODE{VT,FT}(v, f, s)
 end
 
-function MidpointExtrapolation(equ::IODE, s::Int)
-    MidpointExtrapolationIODE(_get_v̄(equ), _get_f̄(equ), s)
+function MidpointExtrapolation(equ::IODEProblem, s::Int)
+    MidpointExtrapolationIODE(functions(equ).v̄, functions(equ).f̄, s)
 end
 
 function GeometricBase.evaluate!(extrap::MidpointExtrapolationIODE, t₀::TT, t₁::TT,
@@ -310,8 +310,8 @@ function MidpointExtrapolationPODE(v::VT, f::FT, s::Int) where {VT,FT}
     MidpointExtrapolationPODE{VT,FT}(v, f, s)
 end
 
-function MidpointExtrapolation(equ::PODE, s::Int)
-    MidpointExtrapolationPODE(_get_v(equ), _get_f(equ), s)
+function MidpointExtrapolation(equ::PODEProblem, s::Int)
+    MidpointExtrapolationPODE(functions(equ).v, functions(equ).f, s)
 end
 
 function GeometricBase.evaluate!(extrap::MidpointExtrapolationPODE, t₀::TT, t₁::TT,

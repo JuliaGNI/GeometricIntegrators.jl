@@ -123,8 +123,8 @@ struct IntegratorSRKimplicit{DT, TT, D, S, PT <: ParametersSRKimplicit{DT,TT},
     #     IntegratorSRKimplicit{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     # end
 
-    function IntegratorSRKimplicit(equation::Union{IODE{DT}, LODE{DT}}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorSRKimplicit{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorSRKimplicit(equation::Union{IODEProblem{DT}, LODEProblem{DT}}, tableau::Tableau{TT}, Δt::TT=tstep(equation); kwargs...) where {DT,TT}
+        IntegratorSRKimplicit{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
     end
 end
 

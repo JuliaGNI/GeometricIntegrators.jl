@@ -61,12 +61,12 @@ mutable struct SolutionPDAE{dType,tType,N} <: DeterministicSolution{dType,tType,
     counter::Vector{Int}
     periodicity::dType
 
-    function SolutionPDAE{dType,tType,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, nwrite, periodicity = zero(q[begin])) where {dType<:Union{Number,AbstractArray},tType<:Real,N}
-        new(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, nwrite, 0, zeros(Int, ni), periodicity)
+    function SolutionPDAE{dType,tType,N}(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, nwrite, periodicity = NullPeriodicity()) where {dType<:Union{Number,AbstractArray},tType<:Real,N}
+        new(nd, nm, nt, ni, t, q, p, λ, ntime, nsave, nwrite, 0, zeros(Int, ni), _periodicity(q[0], periodicity))
     end
 end
 
-function SolutionPDAE(equation::Union{PDAE{DT,TT1,AT},HDAE{DT,TT1,AT},IDAE{DT,TT1,AT},LDAE{DT,TT1,AT},IODE{DT,TT1,AT},LODE{DT,TT1,AT}}, Δt::TT2, ntimesteps::Int;
+function SolutionPDAE(equation::Union{PDAEProblem{DT,TT1,AT},HDAEProblem{DT,TT1,AT},IDAEProblem{DT,TT1,AT},LDAEProblem{DT,TT1,AT},IODEProblem{DT,TT1,AT},LODEProblem{DT,TT1,AT}}, Δt::TT2, ntimesteps::Int;
     nsave::Int = DEFAULT_NSAVE, nwrite::Int = DEFAULT_NWRITE, filename = nothing) where {DT,TT1,TT2,AT}
     @assert nsave > 0
     @assert ntimesteps == 0 || ntimesteps ≥ nsave
@@ -80,8 +80,8 @@ function SolutionPDAE(equation::Union{PDAE{DT,TT1,AT},HDAE{DT,TT1,AT},IDAE{DT,TT
 
     TT = promote_type(TT1, TT2)
     N = nsamples(equation) > 1 ? 2 : 1
-    nd = ndims(equation)
-    nm = equation.m
+    nd = length(vec(equation.ics.q))
+    nm = length(vec(equation.ics.λ))
     ni = nsamples(equation)
     nt = div(ntimesteps, nsave)
     nt = (nwrite == 0 ? nt : div(nwrite, nsave))
@@ -94,9 +94,9 @@ function SolutionPDAE(equation::Union{PDAE{DT,TT1,AT},HDAE{DT,TT1,AT},IDAE{DT,TT
     @assert nw ≥ 0
 
     t = TimeSeries{TT}(nt, Δt, nsave)
-    q = DataSeries(equation.q₀, nt, ni)
-    p = DataSeries(equation.p₀, nt, ni)
-    λ = DataSeries(equation.λ₀, nt, ni)
+    q = DataSeries(equation.ics.q, nt, ni)
+    p = DataSeries(equation.ics.p, nt, ni)
+    λ = DataSeries(equation.ics.λ, nt, ni)
     s = SolutionPDAE{AT,TT,N}(nd, nm, nt, ni, t, q, p, λ, ntimesteps, nsave, nw, periodicity(equation))
     set_initial_conditions!(s, equation)
 
@@ -172,7 +172,7 @@ Base.:(==)(sol1::SolutionPDAE{DT1,TT1,N1}, sol2::SolutionPDAE{DT2,TT2,N2}) where
     && sol1.periodicity == sol2.periodicity)
 
 @inline GeometricBase.counter(sol::SolutionPDAE) = sol.counter
-@inline GeometricBase.offset(sol::SolutionPDAE) = sol.offset
+@inline offset(sol::SolutionPDAE) = sol.offset
 @inline GeometricBase.lastentry(sol::SolutionPDAE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
 @inline GeometricBase.nsamples(sol::SolutionPDAE) = sol.ni
 @inline GeometricBase.nsave(sol::SolutionPDAE) = sol.nsave
@@ -182,8 +182,8 @@ Base.:(==)(sol1::SolutionPDAE{DT1,TT1,N1}, sol2::SolutionPDAE{DT2,TT2,N2}) where
 @inline GeometricBase.periodicity(sol::SolutionPDAE) = sol.periodicity
 
 
-function set_initial_conditions!(sol::SolutionPDAE, equ::Union{IODE,LODE,PDAE,IDAE,LDAE})
-    set_initial_conditions!(sol, equ.t₀, equ.q₀, equ.p₀, equ.λ₀)
+function set_initial_conditions!(sol::SolutionPDAE, equ::AbstractProblemPDAE)
+    set_initial_conditions!(sol, equ.tspan[begin], equ.ics.q, equ.ics.p, equ.ics.λ)
 end
 
 function set_initial_conditions!(sol::SolutionPDAE{DT}, t₀::Real, q₀::DT, p₀::DT, λ₀::DT) where {DT}

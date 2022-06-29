@@ -416,14 +416,14 @@ struct IntegratorDGVI{DT, TT, D, S, R,
         IntegratorDGVI(basis, quadrature, params, solver, iguess, caches)
     end
 
-    function IntegratorDGVI(equation::Union{IODE{DT}, LODE{DT}}, basis::Basis, quadrature::QuadratureRule, Δt; kwargs...) where {DT}
-        IntegratorDGVI{DT, ndims(equation)}(get_functions(equation), basis, quadrature, Δt; kwargs...)
+    function IntegratorDGVI(equation::Union{IODEProblem{DT}, LODEProblem{DT}}, basis::Basis, quadrature::QuadratureRule, Δt=tstep(equation); kwargs...) where {DT}
+        IntegratorDGVI{DT, ndims(equation)}(functions(equation), basis, quadrature, Δt; kwargs...)
     end
 end
 
-@inline equation(integrator::IntegratorDGVI, i::Symbol) = integrator.params.equs[i]
-@inline equations(integrator::IntegratorDGVI) = integrator.params.equs
-@inline timestep(integrator::IntegratorDGVI) = integrator.params.Δt
+@inline GeometricBase.equation(integrator::IntegratorDGVI, i::Symbol) = integrator.params.equs[i]
+@inline GeometricBase.equations(integrator::IntegratorDGVI) = integrator.params.equs
+@inline GeometricBase.timestep(integrator::IntegratorDGVI) = integrator.params.Δt
 @inline Base.ndims(::IntegratorDGVI{DT,TT,D}) where {DT,TT,D} = D
 
 

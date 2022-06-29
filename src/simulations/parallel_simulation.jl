@@ -5,7 +5,7 @@
    WARNING: Many integrators are not thread-safe at this point!
 
 """
-struct ParallelSimulation{ET <: Equation, IT <: Tuple, ST <: Solution}
+struct ParallelSimulation{ET <: GeometricEquation, IT <: Tuple, ST <: Solution}
     equation::ET
     integrators::IT
     solution::ST
@@ -36,16 +36,16 @@ function ParallelSimulation(equ::ET, ints::IT, sol::ST, run_id::String, filename
     ParallelSimulation{ET,IT,ST}(equ, ints, sol, ncycle, run_id, filename)
 end
 
-function ParallelSimulation(equ::Equation, ints::Tuple, Δt, run_id, filename, ntime; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE)
+function ParallelSimulation(equ::GeometricEquation, ints::Tuple, Δt, run_id, filename, ntime; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE)
     ParallelSimulation(equ, ints, Solution(equ, Δt, ntime; nsave=nsave, nwrite=nwrite), run_id, filename)
 end
 
-function ParallelSimulation(equ::Equation, tableau::Union{AbstractTableau, Tableau}, Δt, run_id, filename, ntime; kwargs...)
+function ParallelSimulation(equ::GeometricEquation, tableau::Union{AbstractTableau, Tableau}, Δt, run_id, filename, ntime; kwargs...)
     ints = Tuple(Integrator(equ, tableau, Δt) for i in 1:Threads.nthreads())
     ParallelSimulation(equ, ints, Δt, run_id, filename, ntime; kwargs...)
 end
 
-function ParallelSimulation(equ::Equation, integrator, tableau::Union{AbstractTableau, Tableau}, Δt, run_id, filename, ntime; kwargs...)
+function ParallelSimulation(equ::GeometricEquation, integrator, tableau::Union{AbstractTableau, Tableau}, Δt, run_id, filename, ntime; kwargs...)
     ints = Tuple(integrator(equ, tableau, Δt) for i in 1:Threads.nthreads())
     ParallelSimulation(equ, ints, Δt, run_id, filename, ntime; kwargs...)
 end

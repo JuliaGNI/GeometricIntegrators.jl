@@ -31,7 +31,7 @@ AtomicSolutionODE(t::TT, q::AT, internal::IT=NamedTuple())
 * `nd`: dimension of the state vector
 
 """
-mutable struct AtomicSolutionODE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
+mutable struct AtomicSolutionODE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, VT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
     t::TT
     t̄::TT
 
@@ -39,31 +39,24 @@ mutable struct AtomicSolutionODE{DT <: Number, TT <: Real, AT <: AbstractArray{D
     q̄::AT
     q̃::AT
 
-    v::AT
-    v̄::AT
+    v::VT
+    v̄::VT
 
     internal::IT
 
-    function AtomicSolutionODE{DT,TT,AT,IT}(nd, internal::IT) where {DT,TT,AT,IT}
-        new(zero(TT), zero(TT),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            internal)
-    end
-
-    function AtomicSolutionODE{DT,TT,AT,IT}(t::TT, q::AT, internal::IT) where {DT,TT,AT,IT}
-        new(zero(t), zero(t),
-            zero(q), zero(q), zero(q),
-            zero(q), zero(q),
-            internal)
+    function AtomicSolutionODE(t::TT, q::AT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT}
+        v = vectorfield(q)
+        v̄ = vectorfield(q)
+        new{DT,TT,AT,typeof(v),IT}(zero(t), zero(t), zero(q), zero(q), zero(q), v, v̄, internal)
     end
 end
 
-AtomicSolutionODE(DT, TT, AT, nd, internal::IT=NamedTuple()) where {IT} = AtomicSolutionODE{DT,TT,AT,IT}(nd, internal)
-AtomicSolutionODE(t::TT, q::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionODE{DT,TT,AT,IT}(t, q, internal)
+AtomicSolutionODE{DT,TT,AT}(nd, args...) where {DT,TT,AT} = AtomicSolutionODE(zero(TT), AT(zeros(DT, nd)), args...)
+
+AtomicSolutionODE(DT, TT, AT, nd, args...) = AtomicSolutionODE{DT,TT,AT}(nd, args...)
 
 
-function set_initial_conditions!(asol::AtomicSolutionODE, equ::AbstractEquationODE, i::Int=1)
+function set_initial_conditions!(asol::AtomicSolutionODE, equ::AbstractProblemODE, i::Int=1)
     @assert i ≥ nsamples(equ)
     t, q = initial_conditions(equ)
     asol.t  = t

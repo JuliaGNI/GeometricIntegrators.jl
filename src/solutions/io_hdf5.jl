@@ -50,7 +50,7 @@ function SolutionHDF5(file::AbstractString, solution::Solution; kwargs...)
 end
 
 hdf5(sio::SolutionHDF5) = sio.h5
-GeometricBase.offset(sio::SolutionHDF5) = sio.offset
+offset(sio::SolutionHDF5) = sio.offset
 #attributes(sio::SolutionHDF5) = attributes(hdf5(sio))
 Base.close(sio::SolutionHDF5) = close(hdf5(sio))
 
