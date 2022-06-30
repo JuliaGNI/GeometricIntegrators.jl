@@ -10,7 +10,7 @@ using Test
 using CompactBasisFunctions
 using QuadratureRules
 
-using GeometricProblems.HarmonicOscillator: Δt, nt, refx, refq, refp
+using GeometricProblems.HarmonicOscillator: reference_solution, nt
 
 iode = harmonic_oscillator_iode()
 
@@ -22,27 +22,27 @@ BGau4 = Lagrange(nodes(QGau4))
 
 cgint = IntegratorCGVI(iode, BGau4, QGau4)
 cgsol = integrate(iode, cgint, nt)
-@test relative_maximum_error(cgsol.q, refx) < 1E-7
+@test relative_maximum_error(cgsol.q, reference_solution) < 1E-7
 
 
 ### DGVI Integrators ###
 
 dgint = IntegratorDGVI(iode, BGau4, QGau4)
 dgsol = integrate(iode, dgint, nt)
-@test relative_maximum_error(dgsol.q, refx) < 1E-7
+@test relative_maximum_error(dgsol.q, reference_solution) < 1E-7
 
 dgint = IntegratorDGVIP0(iode, BGau4, QGau4)
 dgsol = integrate(iode, dgint, nt)
-@test relative_maximum_error(dgsol.q, refx) < 1E-7
+@test relative_maximum_error(dgsol.q, reference_solution) < 1E-7
 
 dgint = IntegratorDGVIP1(iode, BGau4, QGau4)
 dgsol = integrate(iode, dgint, nt)
-@test relative_maximum_error(dgsol.q, refx) < 1E-7
+@test relative_maximum_error(dgsol.q, reference_solution) < 1E-7
 
 dgint = IntegratorDGVIEXP(iode, BGau4, QGau4)
 dgsol = integrate(iode, dgint, nt)
-@test relative_maximum_error(dgsol.q, refx) < 1E-7
+@test relative_maximum_error(dgsol.q, reference_solution) < 1E-7
 
 dgint = IntegratorDGVIPI(iode, BGau4, QGau4, Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2)))
 dgsol = integrate(iode, dgint, nt)
-@test relative_maximum_error(dgsol.q, refx) < 1E-7
+@test relative_maximum_error(dgsol.q, reference_solution) < 1E-7
