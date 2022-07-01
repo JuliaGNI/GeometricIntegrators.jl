@@ -45,6 +45,6 @@ function AtomicSolution(problem::GeometricProblem)
 end
 
 # Print error for AtomicSolutions of solution not implemented, yet.
-function AtomicSolution(solution::Solution)
+function AtomicSolution(solution::AbstractSolution)
     error("No AtomicSolution found for solution ", solution)
 end

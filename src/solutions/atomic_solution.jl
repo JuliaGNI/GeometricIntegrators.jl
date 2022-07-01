@@ -29,7 +29,7 @@ Copy solution for time step `n` and initial condition `m` from atomic solution
 to solution object.
 
 """
-function copy_solution!(sol::Solution, asol::AtomicSolution, n, m)
+function copy_solution!(sol::AbstractSolution, asol::AtomicSolution, n, m)
     copy_solution!(sol, get_solution(asol)..., n, m)
 end
 

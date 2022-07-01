@@ -247,7 +247,7 @@ Solve one time step n for one initial condition m.
 function integrate! end
 
 # Parts of one integration step that are common to deterministic and stochastic equations.
-function integrate_common!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT, TT, AT <: AbstractArray{DT}}
+function integrate_common!(int::Integrator{DT,TT}, sol::AbstractSolution{AT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT, TT, AT <: AbstractArray{DT}}
     # integrate one initial condition for one time step
     integrate_step!(int, asol)
 
@@ -259,25 +259,25 @@ function integrate_common!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, asol::A
 end
 
 # Integrate one time step n for one initial condition m.
-function integrate!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT, TT, AT <: AbstractArray{DT}}
+function integrate!(int::Integrator{DT,TT}, sol::AbstractSolution{AT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT, TT, AT <: AbstractArray{DT}}
     integrate_common!(int, sol, asol, m, n)
 end
 
 # Integrate `equation` for all initial conditions and all time steps.
-function integrate!(int::Integrator, sol::Solution)
+function integrate!(int::Integrator, sol::AbstractSolution)
     integrate!(int, sol, 1, nsamples(sol))
 end
 
 
 # Integrate equation for initial conditions m with m₁ ≤ m ≤ m₂.
-function integrate!(int::Integrator, sol::Solution, m₁, m₂)
+function integrate!(int::Integrator, sol::AbstractSolution, m₁, m₂)
     # integrate samples m with m₁ ≤ m ≤ m₂ for all time steps
     integrate!(int, sol, m₁, m₂, 1, ntime(sol))
 end
 
 
 # Integrate equation for initial conditions m with m₁ ≤ m ≤ m₂ for time steps n with n₁ ≤ n ≤ n₂.
-function integrate!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, m₁::Int, m₂::Int, n₁::Int, n₂::Int) where {DT, TT, AT <: AbstractArray{DT}}
+function integrate!(int::Integrator{DT,TT}, sol::AbstractSolution{AT,TT}, m₁::Int, m₂::Int, n₁::Int, n₂::Int) where {DT, TT, AT <: AbstractArray{DT}}
     @assert m₁ ≥ 1
     @assert m₂ ≥ m₁
     @assert m₂ ≤ nsamples(sol)

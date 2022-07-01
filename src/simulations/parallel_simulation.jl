@@ -5,7 +5,7 @@
    WARNING: Many integrators are not thread-safe at this point!
 
 """
-struct ParallelSimulation{ET <: GeometricEquation, IT <: Tuple, ST <: Solution}
+struct ParallelSimulation{ET <: GeometricEquation, IT <: Tuple, ST <: AbstractSolution}
     equation::ET
     integrators::IT
     solution::ST

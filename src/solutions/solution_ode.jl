@@ -142,9 +142,10 @@ Base.:(==)(sol1::SolutionODE{DT1,TT1,N1}, sol2::SolutionODE{DT2,TT2,N2}) where {
     && sol1.counter == sol2.counter
     && sol1.periodicity == sol2.periodicity)
 
-@inline GeometricBase.counter(sol::SolutionODE) = sol.counter
-@inline offset(sol::SolutionODE) = sol.offset
-@inline GeometricBase.lastentry(sol::SolutionODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+@inline GeometricSolutions.counter(sol::SolutionODE) = sol.counter
+@inline GeometricSolutions.offset(sol::SolutionODE) = sol.offset
+@inline GeometricSolutions.lastentry(sol::SolutionODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+
 @inline GeometricBase.nsamples(sol::SolutionODE) = sol.ni
 @inline GeometricBase.nsave(sol::SolutionODE) = sol.nsave
 @inline GeometricBase.ntime(sol::SolutionODE) = sol.ntime

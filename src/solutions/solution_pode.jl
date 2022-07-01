@@ -159,9 +159,10 @@ Base.:(==)(sol1::SolutionPODE, sol2::SolutionPODE) = (
     && sol1.counter == sol2.counter
     && sol1.periodicity == sol2.periodicity)
 
-@inline GeometricBase.counter(sol::SolutionPODE) = sol.counter
-@inline offset(sol::SolutionPODE) = sol.offset
-@inline GeometricBase.lastentry(sol::SolutionPODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+@inline GeometricSolutions.counter(sol::SolutionPODE) = sol.counter
+@inline GeometricSolutions.offset(sol::SolutionPODE) = sol.offset
+@inline GeometricSolutions.lastentry(sol::SolutionPODE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+
 @inline GeometricBase.nsamples(sol::SolutionPODE) = sol.ni
 @inline GeometricBase.nsave(sol::SolutionPODE) = sol.nsave
 @inline GeometricBase.ntime(sol::SolutionPODE) = sol.ntime

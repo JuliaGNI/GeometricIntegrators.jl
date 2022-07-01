@@ -1,5 +1,5 @@
 
-struct Simulation{ET <: GeometricEquation, IT <: Integrator, ST <: Solution}
+struct Simulation{ET <: GeometricEquation, IT <: Integrator, ST <: AbstractSolution}
     equation::ET
     integrator::IT
     solution::ST

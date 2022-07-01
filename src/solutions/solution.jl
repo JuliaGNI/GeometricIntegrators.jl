@@ -1,5 +1,5 @@
 
-abstract type DeterministicSolution{dType, tType, N} <: Solution{dType, tType, N} end
+abstract type DeterministicSolution{dType, tType, N} <: AbstractSolution{dType, tType, N} end
 
 
 function parameters(solution::DeterministicSolution)

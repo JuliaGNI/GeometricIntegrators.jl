@@ -173,9 +173,10 @@ Base.:(==)(sol1::SolutionPDAE{DT1,TT1,N1}, sol2::SolutionPDAE{DT2,TT2,N2}) where
     && sol1.counter == sol2.counter
     && sol1.periodicity == sol2.periodicity)
 
-@inline GeometricBase.counter(sol::SolutionPDAE) = sol.counter
-@inline offset(sol::SolutionPDAE) = sol.offset
-@inline GeometricBase.lastentry(sol::SolutionPDAE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+@inline GeometricSolutions.counter(sol::SolutionPDAE) = sol.counter
+@inline GeometricSolutions.offset(sol::SolutionPDAE) = sol.offset
+@inline GeometricSolutions.lastentry(sol::SolutionPDAE) = sol.ni == 1 ? sol.counter[1] - 1 : sol.counter .- 1
+
 @inline GeometricBase.nsamples(sol::SolutionPDAE) = sol.ni
 @inline GeometricBase.nsave(sol::SolutionPDAE) = sol.nsave
 @inline GeometricBase.ntime(sol::SolutionPDAE) = sol.ntime

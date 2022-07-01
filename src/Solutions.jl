@@ -8,8 +8,9 @@ using GeometricBase
 using GeometricBase.Config
 using GeometricBase.Utils
 using GeometricEquations
+using GeometricSolutions
 
-using GeometricBase: fromarray
+using GeometricSolutions: fromarray
 
 export DEFAULT_NSAVE, DEFAULT_NWRITE
 
@@ -17,7 +18,7 @@ const DEFAULT_NSAVE = 1
 const DEFAULT_NWRITE = 0
 
 
-export DataSeries, TimeSeries, Solution, DeterministicSolution
+export DataSeries, TimeSeries, Solution, AbstractSolution, DeterministicSolution
 export get_solution, get_solution!, set_solution!
 
 include("solutions/solution.jl")

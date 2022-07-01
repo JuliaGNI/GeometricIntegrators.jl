@@ -1,4 +1,4 @@
-using GeometricBase: test_interface
+using GeometricSolutions: test_interface
 using GeometricIntegrators
 using GeometricIntegrators.Solutions: offset
 using GeometricProblems.HarmonicOscillator

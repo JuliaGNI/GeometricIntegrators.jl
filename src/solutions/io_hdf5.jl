@@ -43,14 +43,14 @@ mutable struct SolutionHDF5 <: SolutionIO
     end
 end
 
-function SolutionHDF5(file::AbstractString, solution::Solution; kwargs...)
+function SolutionHDF5(file::AbstractString, solution::AbstractSolution; kwargs...)
     h5io = SolutionHDF5(file; kwargs...)
     initialize(h5io, solution)
     return h5io
 end
 
 hdf5(sio::SolutionHDF5) = sio.h5
-offset(sio::SolutionHDF5) = sio.offset
+GeometricSolutions.offset(sio::SolutionHDF5) = sio.offset
 #attributes(sio::SolutionHDF5) = attributes(hdf5(sio))
 Base.close(sio::SolutionHDF5) = close(hdf5(sio))
 
@@ -65,25 +65,25 @@ function initialize(h5::HDF5.File, solution::DeterministicSolution)
 end
 
 "Save attributes and common parameters to HDF5 file and create data structures"
-function initialize(sio::SolutionHDF5, solution::Solution)
+function initialize(sio::SolutionHDF5, solution::AbstractSolution)
     initialize(hdf5(sio), solution)
 end
 
 
-function save_attributes(h5::HDF5.File, solution::Solution)
+function save_attributes(h5::HDF5.File, solution::AbstractSolution)
     for (key, value) in pairs(parameters(solution))
         attributes(h5)[string(key)] = value
     end
 end
 
 "Saves attributes and parameters of a Solution to HDF5 file."
-function save_attributes(sio::SolutionHDF5, solution::Solution)
+function save_attributes(sio::SolutionHDF5, solution::AbstractSolution)
     save_attributes(hdf5(sio), solution)
 end
 
 
 "Save Solution to HDF5 file."
-function save(sio::SolutionHDF5, solution::Solution)
+function save(sio::SolutionHDF5, solution::AbstractSolution)
     # set convenience variables
     nt = solution.nt
 
@@ -140,7 +140,7 @@ end
 
 
 # "Creates HDF5 file, writes solution to file, and closes file."
-# function write_to_hdf5(file::AbstractString, solution::Solution)
+# function write_to_hdf5(file::AbstractString, solution::AbstractSolution)
 #     create_hdf5(solution, file) do h5
 #         write_to_hdf5(solution, h5)
 #     end

@@ -1,5 +1,5 @@
 
-function init_timeteps(h5::HDF5.File, solution::Solution{DT,TT}) where {DT,TT}
+function init_timeteps(h5::HDF5.File, solution::AbstractSolution{DT,TT}) where {DT,TT}
     t = create_dataset(h5, "t", TT, ((solution.nt + 1,), (-1,)), chunk = (1,))
     t[1] = timesteps(solution)[0]
 end
@@ -183,7 +183,7 @@ end
 init_solution(sio::SolutionHDF5, args...) = init_solution(hdf5(sio), args...)
 
 
-function save_timeteps(h5::HDF5.File, sol::Solution, j1, j2, n1, n2)
+function save_timeteps(h5::HDF5.File, sol::AbstractSolution, j1, j2, n1, n2)
     if size(h5["t"], 1) < j2
         HDF5.set_extent_dims(h5["t"], (j2,))
     end
