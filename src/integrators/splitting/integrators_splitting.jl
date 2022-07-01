@@ -42,9 +42,9 @@ struct IntegratorSplitting{DT, TT, D, S, QT <: Tuple} <: ODEIntegrator{DT,TT}
     end
 end
 
-function IntegratorSplitting(problem::SODEProblem{DT}, tableau::ST, Δt::TT=tstep(problem)) where {DT, TT, ST <: AbstractTableauSplitting{TT}}
+function IntegratorSplitting(problem::SODEProblem{DT}, tableau::ST) where {DT, TT, ST <: AbstractTableauSplitting{TT}}
     @assert hassolution(problem)
-    IntegratorSplitting{DT, ndims(problem)}(solutions(problem).q, get_splitting_coefficients(length(equation(problem).q), tableau)..., Δt)
+    IntegratorSplitting{DT, ndims(problem)}(solutions(problem).q, get_splitting_coefficients(length(equation(problem).q), tableau)..., timestep(problem))
 end
 
 

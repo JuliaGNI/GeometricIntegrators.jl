@@ -1,8 +1,4 @@
-
-using GeometricBase.Config
-using GeometricBase.Utils
-using GeometricIntegrators.Integrators
-using GeometricIntegrators.Tableaus
+using GeometricIntegrators
 using GeometricProblems.LotkaVolterra2d
 using SimpleSolvers
 using Test
@@ -23,7 +19,7 @@ iode = lotka_volterra_2d_iode(q₀; tspan=tspan, tstep=Δt, parameters=params)
 lode = lotka_volterra_2d_lode(q₀; tspan=tspan, tstep=Δt, parameters=params)
 
 int  = IntegratorFIRK(ode, TableauGauss(8))
-sol  = integrate(ode, int, nt)
+sol  = integrate(ode, int)
 
 reference_solution = sol.q[end]
 
@@ -31,53 +27,53 @@ reference_solution = sol.q[end]
 @testset "$(rpad("Runge-Kutta integrators for implicit equations",80))" begin
 
     int = IntegratorFIRKimplicit(iode, TableauGauss(1))
-    sol = integrate(iode, int, nt)
+    sol = integrate(iode, int)
     @test relative_maximum_error(sol.q, reference_solution) < 2E-5
 
     int = IntegratorFIRKimplicit(iode, TableauGauss(2))
-    sol = integrate(iode, int, nt)
+    sol = integrate(iode, int)
     @test relative_maximum_error(sol.q, reference_solution) < 4E-7
 
     int = IntegratorFIRKimplicit(iode, TableauGauss(3))
-    sol = integrate(iode, int, nt)
+    sol = integrate(iode, int)
     @test relative_maximum_error(sol.q, reference_solution) < 2E-10
 
     int = IntegratorFIRKimplicit(iode, TableauGauss(4))
-    sol = integrate(iode, int, nt)
+    sol = integrate(iode, int)
     @test relative_maximum_error(sol.q, reference_solution) < 8E-14
 
 
     int = IntegratorSRKimplicit(iode, TableauGauss(1))
-    sol = integrate(iode, int, nt)
+    sol = integrate(iode, int)
     @test relative_maximum_error(sol.q, reference_solution) < 2E-5
 
     int = IntegratorSRKimplicit(iode, TableauGauss(2))
-    sol = integrate(iode, int, nt)
+    sol = integrate(iode, int)
     @test relative_maximum_error(sol.q, reference_solution) < 4E-7
 
     int = IntegratorSRKimplicit(iode, TableauGauss(3))
-    sol = integrate(iode, int, nt)
+    sol = integrate(iode, int)
     @test relative_maximum_error(sol.q, reference_solution) < 2E-10
 
     int = IntegratorSRKimplicit(iode, TableauGauss(4))
-    sol = integrate(iode, int, nt)
+    sol = integrate(iode, int)
     @test relative_maximum_error(sol.q, reference_solution) < 8E-14
 
 
     int = IntegratorPRKimplicit(iode, PartitionedTableauGauss(1))
-    sol = integrate(iode, int, nt)
+    sol = integrate(iode, int)
     @test relative_maximum_error(sol.q, reference_solution) < 2E-6
 
     int = IntegratorPRKimplicit(iode, PartitionedTableauGauss(2))
-    sol = integrate(iode, int, nt)
+    sol = integrate(iode, int)
     @test relative_maximum_error(sol.q, reference_solution) < 8E-7
 
     int = IntegratorPRKimplicit(iode, PartitionedTableauGauss(3))
-    sol = integrate(iode, int, nt)
+    sol = integrate(iode, int)
     @test relative_maximum_error(sol.q, reference_solution) < 4E-12
 
     # int = IntegratorPRKimplicit(iode, PartitionedTableauGauss(4))
-    # sol = integrate(iode, int, nt)
+    # sol = integrate(iode, int)
     # @test relative_maximum_error(sol.q, reference_solution) < 2E-16
 
 end
@@ -85,28 +81,28 @@ end
 @testset "$(rpad("Special integrators",80))" begin
 
     flint = IntegratorFLRK(lode, TableauGauss(2))
-    flsol = integrate(lode, flint, nt)
+    flsol = integrate(lode, flint)
     @test relative_maximum_error(flsol.q, reference_solution) < 4E-12
 
     flint = IntegratorFLRK(lode, TableauGauss(3))
-    flsol = integrate(lode, flint, nt)
+    flsol = integrate(lode, flint)
     @test relative_maximum_error(flsol.q, reference_solution) < 4E-16
 
     flint = IntegratorFLRK(lode, TableauGauss(4))
-    flsol = integrate(lode, flint, nt)
+    flsol = integrate(lode, flint)
     @test relative_maximum_error(flsol.q, reference_solution) < 8E-16
 
 
     pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(2))
-    pgsol = integrate(ode, pgint, nt)
+    pgsol = integrate(ode, pgint)
     @test relative_maximum_error(pgsol.q, reference_solution) < 4E-12
 
     pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(3))
-    pgsol = integrate(ode, pgint, nt)
+    pgsol = integrate(ode, pgint)
     @test relative_maximum_error(pgsol.q, reference_solution) < 4E-16
 
     pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(4))
-    pgsol = integrate(ode, pgint, nt)
+    pgsol = integrate(ode, pgint)
     @test relative_maximum_error(pgsol.q, reference_solution) < 4E-16
 
 end

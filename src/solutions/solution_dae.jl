@@ -58,8 +58,11 @@ mutable struct SolutionDAE{dType,tType,N} <: DeterministicSolution{dType,tType,N
     end
 end
 
-function SolutionDAE(equation::DAEProblem{DT,TT1,AT}, Δt::TT2, ntimesteps::Int;
-    nsave::Int = DEFAULT_NSAVE, nwrite::Int = DEFAULT_NWRITE) where {DT,TT1,TT2,AT}
+function SolutionDAE(problem::DAEProblem{DT,TT,AT};
+                     nsave::Int = DEFAULT_NSAVE, nwrite::Int = DEFAULT_NWRITE) where {DT,TT,AT}
+
+    ntimesteps = ntime(problem)
+    
     @assert nsave > 0
     @assert ntimesteps == 0 || ntimesteps ≥ nsave
     @assert nwrite == 0 || nwrite ≥ nsave
@@ -70,11 +73,10 @@ function SolutionDAE(equation::DAEProblem{DT,TT1,AT}, Δt::TT2, ntimesteps::Int;
         @assert mod(ntimesteps, nwrite) == 0
     end
 
-    TT = promote_type(TT1, TT2)
-    N = nsamples(equation) > 1 ? 2 : 1
-    nd = length(vec(equation.ics.q))
-    nm = length(vec(equation.ics.λ))
-    ni = nsamples(equation)
+    N = nsamples(problem) > 1 ? 2 : 1
+    nd = length(vec(problem.ics.q))
+    nm = length(vec(problem.ics.λ))
+    ni = nsamples(problem)
     nt = div(ntimesteps, nsave)
     nt = (nwrite == 0 ? nt : div(nwrite, nsave))
     nw = (nwrite == 0 ? ntimesteps : nwrite)
@@ -85,11 +87,11 @@ function SolutionDAE(equation::DAEProblem{DT,TT1,AT}, Δt::TT2, ntimesteps::Int;
     @assert nt ≥ 0
     @assert nw ≥ 0
 
-    t = TimeSeries{TT}(nt, Δt, nsave)
-    q = DataSeries(equation.ics.q, nt, ni)
-    λ = DataSeries(equation.ics.λ, nt, ni)
-    s = SolutionDAE{AT,TT,N}(nd, nm, nt, ni, t, q, λ, ntimesteps, nsave, nw, periodicity(equation))
-    set_initial_conditions!(s, equation)
+    t = TimeSeries{TT}(nt, timestep(problem), nsave)
+    q = DataSeries(problem.ics.q, nt, ni)
+    λ = DataSeries(problem.ics.λ, nt, ni)
+    s = SolutionDAE{AT,TT,N}(nd, nm, nt, ni, t, q, λ, ntimesteps, nsave, nw, periodicity(problem))
+    set_initial_conditions!(s, problem)
 
     return s
 end

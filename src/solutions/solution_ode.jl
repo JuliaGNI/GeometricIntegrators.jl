@@ -54,8 +54,11 @@ mutable struct SolutionODE{dType,tType,N} <: DeterministicSolution{dType,tType,N
     end
 end
 
-function SolutionODE(equation::Union{ODEProblem{DT,TT1,AT},SODEProblem{DT,TT1,AT}}, Δt::TT2, ntimesteps::Int;
-    nsave::Int = DEFAULT_NSAVE, nwrite::Int = DEFAULT_NWRITE) where {DT,TT1,TT2,AT}
+function SolutionODE(problem::Union{ODEProblem{DT,TT,AT},SODEProblem{DT,TT,AT}};
+                     nsave::Int = DEFAULT_NSAVE, nwrite::Int = DEFAULT_NWRITE) where {DT,TT,AT}
+
+    ntimesteps = ntime(problem)
+
     @assert nsave > 0
     @assert ntimesteps == 0 || ntimesteps ≥ nsave
     @assert nwrite == 0 || nwrite ≥ nsave
@@ -66,10 +69,9 @@ function SolutionODE(equation::Union{ODEProblem{DT,TT1,AT},SODEProblem{DT,TT1,AT
         @assert mod(ntimesteps, nwrite) == 0
     end
 
-    TT = promote_type(TT1, TT2)
-    N = nsamples(equation) > 1 ? 2 : 1
-    nd = length(vec(equation.ics.q))
-    ni = nsamples(equation)
+    N = nsamples(problem) > 1 ? 2 : 1
+    nd = length(vec(problem.ics.q))
+    ni = nsamples(problem)
     nt = div(ntimesteps, nsave)
     nt = (nwrite == 0 ? nt : div(nwrite, nsave))
     nw = (nwrite == 0 ? ntimesteps : nwrite)
@@ -79,10 +81,10 @@ function SolutionODE(equation::Union{ODEProblem{DT,TT1,AT},SODEProblem{DT,TT1,AT
     @assert nt ≥ 0
     @assert nw ≥ 0
 
-    t = TimeSeries{TT}(nt, Δt, nsave)
-    q = DataSeries(equation.ics.q, nt, ni)
-    s = SolutionODE{AT,TT,N}(nd, nt, ni, t, q, ntimesteps, nsave, nw, periodicity(equation))
-    set_initial_conditions!(s, equation)
+    t = TimeSeries{TT}(nt, timestep(problem), nsave)
+    q = DataSeries(problem.ics.q, nt, ni)
+    s = SolutionODE{AT,TT,N}(nd, nt, ni, t, q, ntimesteps, nsave, nw, periodicity(problem))
+    set_initial_conditions!(s, problem)
 
     return s
 end

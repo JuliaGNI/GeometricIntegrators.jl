@@ -102,8 +102,8 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
         IntegratorFLRK(params, solver, iguess, caches)
     end
 
-    function IntegratorFLRK(equation::LODEProblem{DT}, tableau::Tableau{TT}, Δt::TT=tstep(equation); kwargs...) where {DT,TT}
-        IntegratorFLRK{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
+    function IntegratorFLRK(problem::LODEProblem{DT}, tableau::Tableau{TT}; kwargs...) where {DT,TT}
+        IntegratorFLRK{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 
 end

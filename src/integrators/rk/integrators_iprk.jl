@@ -144,8 +144,8 @@ struct IntegratorIPRK{DT, TT, D, S, PT <: ParametersIPRK{DT,TT},
         IntegratorIPRK{DT,D}(NamedTuple{(:v,:f,:h)}((v,f,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorIPRK(equation::Union{PODEProblem{DT}, HODEProblem{DT}}, tableau::PartitionedTableau{TT}, Δt::TT=tstep(equation); kwargs...) where {DT,TT}
-        IntegratorIPRK{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
+    function IntegratorIPRK(problem::Union{PODEProblem{DT}, HODEProblem{DT}}, tableau::PartitionedTableau{TT}; kwargs...) where {DT,TT}
+        IntegratorIPRK{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 

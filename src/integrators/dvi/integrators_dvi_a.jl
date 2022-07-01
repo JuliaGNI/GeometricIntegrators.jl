@@ -82,8 +82,8 @@ struct IntegratorDVIA{DT, TT, D, PT <: ParametersDVIA{DT,TT},
         IntegratorDVIA(params, solver, iguess, caches)
     end
 
-    function IntegratorDVIA(equation::Union{IODEProblem{DT}, LODEProblem{DT}}, Δt::TT=tstep(equation); kwargs...) where {DT,TT}
-        IntegratorDVIA{DT, ndims(equation)}(functions(equation), Δt; kwargs...)
+    function IntegratorDVIA(problem::Union{IODEProblem{DT}, LODEProblem{DT}}; kwargs...) where {DT,TT}
+        IntegratorDVIA{DT, ndims(problem)}(functions(problem), timestep(problem); kwargs...)
     end
 end
 

@@ -1,7 +1,5 @@
-
-using GeometricBase
 using GeometricBase: test_interface
-using GeometricIntegrators.Solutions
+using GeometricIntegrators
 using GeometricIntegrators.Solutions: offset
 using GeometricProblems.HarmonicOscillator
 using Test
@@ -72,15 +70,15 @@ pdae = harmonic_oscillator_pdae()
     asol = AtomicSolution(ode)
 
     # test constructors and general functionality
-    sol = Solution(ode, nt)
+    sol = Solution(ode)
     @test typeof(sol) <: SolutionODE
 
     # test_interface(sol) # TODO reactivate
 
-    sol0 = Solution(similar(ode, ics=(q=x0,)), nt)
+    sol0 = Solution(similar(ode, ics=(q=x0,)))
     @test typeof(sol0) <: SolutionODE
 
-    # sol1 = Solution(similar(ode, ics=(q=x1,)), nt)
+    # sol1 = Solution(similar(ode, ics=(q=x1,)))
     # @test typeof(sol1) <: SolutionODE
 
     @test sol != sol0
@@ -110,8 +108,8 @@ pdae = harmonic_oscillator_pdae()
     # end
 
     # test set/get solution
-    sol1 = Solution(similar(ode, ics=(q=x0,)), nt)
-    sol2 = Solution(similar(ode, ics=(q=x0,)), nt)
+    sol1 = Solution(similar(ode, ics=(q=x0,)))
+    sol2 = Solution(similar(ode, ics=(q=x0,)))
     for i = 1:nt
         tx .= xs[i]
         asol.q .= xs[i]
@@ -121,8 +119,8 @@ pdae = harmonic_oscillator_pdae()
     @test sol1.q[1:nt] == xs
     @test sol2.q[1:nt] == xs
 
-    # sol1 = Solution(similar(ode, ics=(q=x1,)), nt)
-    # sol2 = Solution(similar(ode, ics=(q=x1,)), nt)
+    # sol1 = Solution(similar(ode, ics=(q=x1,)))
+    # sol2 = Solution(similar(ode, ics=(q=x1,)))
     # for i = 1:nt
     #     for j = 1:ni
     #         tx .= Xs[i, j]
@@ -135,14 +133,14 @@ pdae = harmonic_oscillator_pdae()
     # @test sol2.q[1:nt, :] == Xs
 
     # test nsave and nwrite parameters
-    sol = Solution(ode, 20, nsave = 2)
+    sol = Solution(similar(ode, tspan = 2 .* tspan(ode)), nsave = 2)
     @test sol.nt == 10
 
-    sol = Solution(ode, 20, nsave = 2, nwrite = 10)
+    sol = Solution(similar(ode, tspan = 2 .* tspan(ode)), nsave = 2, nwrite = 10)
     @test sol.nt == 5
 
     # test reset
-    sol = Solution(ode, nt)
+    sol = Solution(ode)
     reset!(sol)
     @test sol.t[0] == t1
     @test sol.t[end] == t2
@@ -154,15 +152,15 @@ end
     asol = AtomicSolution(pode)
 
     # test constructors and general functionality
-    sol = Solution(pode, nt)
+    sol = Solution(pode)
     @test typeof(sol) <: SolutionPODE
 
     # test_interface(sol) # TODO reactivate
 
-    sol0 = Solution(similar(pode, ics=(q=q0, p=p0)), nt)
+    sol0 = Solution(similar(pode, ics=(q=q0, p=p0)))
     @test typeof(sol0) <: SolutionPODE
 
-    # sol1 = Solution(similar(pode, ics=(q=q1, p=p1)), nt)
+    # sol1 = Solution(similar(pode, ics=(q=q1, p=p1)))
     # @test typeof(sol1) <: SolutionPODE
 
     @test sol != sol0
@@ -196,8 +194,8 @@ end
     # end
 
     # test set/get solution
-    sol1 = Solution(similar(pode, ics=(q=q0, p=p0)), nt)
-    sol2 = Solution(similar(pode, ics=(q=q0, p=p0)), nt)
+    sol1 = Solution(similar(pode, ics=(q=q0, p=p0)))
+    sol2 = Solution(similar(pode, ics=(q=q0, p=p0)))
     for i = 1:nt
         tq .= qs[i]
         tp .= ps[i]
@@ -211,8 +209,8 @@ end
     @test sol2.q[1:nt] == qs
     @test sol2.p[1:nt] == ps
 
-    # sol1 = Solution(similar(pode, ics=(q=q1, p=p1)), nt)
-    # sol2 = Solution(similar(pode, ics=(q=q1, p=p1)), nt)
+    # sol1 = Solution(similar(pode, ics=(q=q1, p=p1)))
+    # sol2 = Solution(similar(pode, ics=(q=q1, p=p1)))
     # for i = 1:nt
     #     for j = 1:ni
     #         tq .= Qs[i, j]
@@ -229,14 +227,14 @@ end
     # @test sol2.p[1:nt, :] == Ps
 
     # test nsave and nwrite parameters
-    sol = Solution(pode, 20, nsave = 2)
+    sol = Solution(similar(pode, tspan = 2 .* tspan(pode)), nsave = 2)
     @test sol.nt == 10
 
-    sol = Solution(pode, 20, nsave = 2, nwrite = 10)
+    sol = Solution(similar(pode, tspan = 2 .* tspan(pode)), nsave = 2, nwrite = 10)
     @test sol.nt == 5
 
     # test reset
-    sol = Solution(pode, nt)
+    sol = Solution(pode)
     reset!(sol)
     @test sol.t[0] == t1
     @test sol.t[end] == t2
@@ -248,15 +246,15 @@ end
     asol = AtomicSolution(dae)
 
     # test constructors and general functionality
-    sol = Solution(dae, nt)
+    sol = Solution(dae)
     @test typeof(sol) <: SolutionDAE
 
     # test_interface(sol) # TODO reactivate
 
-    sol0 = Solution(similar(dae, ics=(q=z0, λ=λ0)), nt)
+    sol0 = Solution(similar(dae, ics=(q=z0, λ=λ0)))
     @test typeof(sol0) <: SolutionDAE
 
-    # sol1 = Solution(similar(dae, ics=(q=z1, λ=λ1)), nt)
+    # sol1 = Solution(similar(dae, ics=(q=z1, λ=λ1)))
     # @test typeof(sol1) <: SolutionDAE
 
     @test sol != sol0
@@ -290,8 +288,8 @@ end
     # end
 
     # test set/get solution
-    sol1 = Solution(similar(dae, ics=(q=z0, λ=λ0)), nt)
-    sol2 = Solution(similar(dae, ics=(q=z0, λ=λ0)), nt)
+    sol1 = Solution(similar(dae, ics=(q=z0, λ=λ0)))
+    sol2 = Solution(similar(dae, ics=(q=z0, λ=λ0)))
     for i = 1:nt
         tz .= zs[i]
         tλ .= λs[i]
@@ -305,8 +303,8 @@ end
     @test sol2.q[1:nt] == zs
     @test sol2.λ[1:nt] == λs
 
-    # sol1 = Solution(similar(dae, ics=(q=z1, λ=λ1)), nt)
-    # sol2 = Solution(similar(dae, ics=(q=z1, λ=λ1)), nt)
+    # sol1 = Solution(similar(dae, ics=(q=z1, λ=λ1)))
+    # sol2 = Solution(similar(dae, ics=(q=z1, λ=λ1)))
     # for i = 1:nt
     #     for j = 1:ni
     #         tz .= Zs[i, j]
@@ -323,14 +321,14 @@ end
     # @test sol2.λ[1:nt, :] == Λs
 
     # test nsave and nwrite parameters
-    sol = Solution(dae, 20, nsave = 2)
+    sol = Solution(similar(dae, tspan = 2 .* tspan(dae)), nsave = 2)
     @test sol.nt == 10
 
-    sol = Solution(dae, 20, nsave = 2, nwrite = 10)
+    sol = Solution(similar(dae, tspan = 2 .* tspan(dae)), nsave = 2, nwrite = 10)
     @test sol.nt == 5
 
     # test reset
-    sol = Solution(dae, nt)
+    sol = Solution(dae)
     reset!(sol)
     @test sol.t[0] == t1
     @test sol.t[end] == t2
@@ -342,15 +340,15 @@ end
     asol = AtomicSolution(pdae)
 
     # test constructors and general functionality
-    sol = Solution(pdae, nt)
+    sol = Solution(pdae)
     @test typeof(sol) <: SolutionPDAE
 
     # test_interface(sol) # TODO reactivate
 
-    sol0 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)), nt)
+    sol0 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)))
     @test typeof(sol0) <: SolutionPDAE
 
-    # sol1 = Solution(similar(pdae, ics=(q=x1, p=y1, λ=μ1)), nt)
+    # sol1 = Solution(similar(pdae, ics=(q=x1, p=y1, λ=μ1)))
     # @test typeof(sol1) <: SolutionPDAE
 
     @test sol != sol0
@@ -394,9 +392,9 @@ end
     # end
 
     # test set/get solution
-    sol1 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)), nt)
-    sol2 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)), nt)
-    sol3 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)), nt)
+    sol1 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)))
+    sol2 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)))
+    sol3 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)))
     for i = 1:nt
         tx .= xs[i]
         ty .= ys[i]
@@ -417,9 +415,9 @@ end
     @test sol3.p[1:nt] == ys
     @test sol3.λ[1:nt] == μs
 
-    # sol1 = Solution(similar(pdae, ics=(q=x1, p=y1, λ=μ1)), nt)
-    # sol2 = Solution(similar(pdae, ics=(q=x1, p=y1, λ=μ1)), nt)
-    # sol3 = Solution(similar(pdae, ics=(q=x1, p=y1, λ=μ1)), nt)
+    # sol1 = Solution(similar(pdae, ics=(q=x1, p=y1, λ=μ1)))
+    # sol2 = Solution(similar(pdae, ics=(q=x1, p=y1, λ=μ1)))
+    # sol3 = Solution(similar(pdae, ics=(q=x1, p=y1, λ=μ1)))
     # for i = 1:nt
     #     for j = 1:ni
     #         tx .= Xs[i, j]
@@ -443,14 +441,14 @@ end
     # @test sol3.λ[1:nt, :] == Ms
 
     # test nsave and nwrite parameters
-    sol = Solution(pdae, 20, nsave = 2)
+    sol = Solution(similar(pdae, tspan = 2 .* tspan(pdae)), nsave = 2)
     @test sol.nt == 10
 
-    sol = Solution(pdae, 20, nsave = 2, nwrite = 10)
+    sol = Solution(similar(pdae, tspan = 2 .* tspan(pdae)), nsave = 2, nwrite = 10)
     @test sol.nt == 5
 
     # test reset
-    sol = Solution(pdae, nt)
+    sol = Solution(pdae)
     reset!(sol)
     @test sol.t[0] == t1
     @test sol.t[end] == t2

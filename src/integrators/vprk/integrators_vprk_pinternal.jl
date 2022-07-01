@@ -39,8 +39,8 @@ struct IntegratorVPRKpInternal{DT, TT, D, S,
         IntegratorVPRKpInternal(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpInternal(equation::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, Δt=tstep(equation); kwargs...) where {DT}
-        IntegratorVPRKpInternal{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRKpInternal(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
+        IntegratorVPRKpInternal{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 

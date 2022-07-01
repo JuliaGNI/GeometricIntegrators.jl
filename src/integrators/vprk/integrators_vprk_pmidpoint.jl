@@ -39,8 +39,8 @@ struct IntegratorVPRKpMidpoint{DT, TT, D, S,
         IntegratorVPRKpMidpoint(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpMidpoint(equation::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, Δt=tstep(equation); kwargs...) where {DT}
-        IntegratorVPRKpMidpoint{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRKpMidpoint(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
+        IntegratorVPRKpMidpoint{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 

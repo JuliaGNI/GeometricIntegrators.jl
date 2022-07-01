@@ -82,8 +82,8 @@ struct IntegratorVPRKpLegendre{DT, TT, D, S,
         IntegratorVPRKpLegendre(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpLegendre(equation::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, Δt=tstep(equation); kwargs...) where {DT}
-        IntegratorVPRKpLegendre{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRKpLegendre(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
+        IntegratorVPRKpLegendre{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 

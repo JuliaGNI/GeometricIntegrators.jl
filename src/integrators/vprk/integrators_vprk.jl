@@ -54,8 +54,8 @@ struct IntegratorVPRK{DT, TT, D, S, PT <: ParametersVPRK{DT,TT},
         IntegratorVPRK{DT,D}(NamedTuple{(:ϑ,:f,:g,:v,:h)}((ϑ, f, g, v, h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorVPRK(equation::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, Δt; kwargs...) where {DT}
-        IntegratorVPRK{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRK(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
+        IntegratorVPRK{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 

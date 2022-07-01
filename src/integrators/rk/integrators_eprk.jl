@@ -98,8 +98,8 @@ struct IntegratorEPRK{DT, TT, D, S, ET <: NamedTuple} <: AbstractIntegratorPRK{D
         IntegratorEPRK{DT,D}(NamedTuple{(:v,:f,:h)}((v,f,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorEPRK(equation::Union{PODEProblem{DT}, HODEProblem{DT}}, tableau::PartitionedTableau{TT}, Δt::TT=tstep(equation); kwargs...) where {DT,TT}
-        IntegratorEPRK{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
+    function IntegratorEPRK(problem::Union{PODEProblem{DT}, HODEProblem{DT}}, tableau::PartitionedTableau{TT}; kwargs...) where {DT,TT}
+        IntegratorEPRK{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 

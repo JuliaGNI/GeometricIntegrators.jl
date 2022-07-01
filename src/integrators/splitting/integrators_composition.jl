@@ -73,11 +73,11 @@ function IntegratorComposition(problem::SODEProblem{DT,TT}, integrators::Tuple, 
     IntegratorComposition{DT, ndims(problem)}(subints, Δt)
 end
 
-function IntegratorComposition(problem::SODEProblem{DT}, tableau::AbstractTableauSplitting, Δt::Number=tstep(problem)) where {DT}
+function IntegratorComposition(problem::SODEProblem{DT}, tableau::AbstractTableauSplitting) where {DT}
     @assert hassolution(equation(problem))
     # integrators = Tuple(IntegratorConstructor(DT,ndims(equation)) for q in solutions(problem).q)
     integrators = Tuple(IntegratorExactODE for q in solutions(problem).q)
-    IntegratorComposition(problem, integrators, tableau, Δt)
+    IntegratorComposition(problem, integrators, tableau, timestep(problem))
 end
 
 

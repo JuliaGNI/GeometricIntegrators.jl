@@ -13,10 +13,10 @@ end
 
 """
 ```julia
-Solution(equation, Δt, ntime; kwargs...)
+Solution(problem; kwargs...)
 ```
 
-Create the appropriate `Solution` for the given `equation` type for a
+Create the appropriate `Solution` for the given `problem` type for a
 simulation with `ntime` time steps of step size `Δt`.
 
 """
@@ -24,65 +24,65 @@ function Solution end
 
 
 # Create solution for ODE.
-function Solution(problem::AbstractProblemODE, ntime::Int; kwargs...)
-    SolutionODE(problem, problem.tstep, ntime; kwargs...)
+function Solution(problem::AbstractProblemODE; kwargs...)
+    SolutionODE(problem; kwargs...)
 end
 
 # Create solution for partitioned ODE.
-function Solution(problem::AbstractProblemPODE, ntime::Int; kwargs...)
-    SolutionPODE(problem, problem.tstep, ntime; kwargs...)
+function Solution(problem::AbstractProblemPODE; kwargs...)
+    SolutionPODE(problem; kwargs...)
 end
 
 # Create solution for DAE.
-function Solution(problem::AbstractProblemDAE, ntime::Int; kwargs...)
-    SolutionDAE(problem, problem.tstep, ntime; kwargs...)
+function Solution(problem::AbstractProblemDAE; kwargs...)
+    SolutionDAE(problem; kwargs...)
 end
 
 # Create solution for partitioned DAE.
-function Solution(problem::AbstractProblemPDAE, ntime::Int; kwargs...)
-    SolutionPDAE(problem, problem.tstep, ntime; kwargs...)
+function Solution(problem::AbstractProblemPDAE; kwargs...)
+    SolutionPDAE(problem; kwargs...)
 end
 
-# Print error for solutions of equations not implemented, yet.
-function Solution(problem::GeometricProblem, ntime::Int; kwargs...)
+# Print error for solutions of problems not implemented, yet.
+function Solution(problem::GeometricProblem; kwargs...)
     error("No solution found for problem type ", typeof(problem))
 end
 
 
 # """
 # ```julia
-# ParallelSolution(equation, Δt, ntime; kwargs...)
+# ParallelSolution(problem; kwargs...)
 # ```
 
-# Create the appropriate `ParallelSolution` for the given `equation` type for a
+# Create the appropriate `ParallelSolution` for the given `problem` type for a
 # simulation with `ntime` time steps of step size `Δt`.
 
 # """
 # function ParallelSolution end
 
 # # Create parallel solution for ODE.
-# function ParallelSolution(equation::AbstractEquationODE, Δt, ntime::Int; kwargs...)
-#     PSolutionODE(equation, Δt, ntime; kwargs...)
+# function ParallelSolution(problem::AbstractProblemODE; kwargs...)
+#     PSolutionODE(problem; kwargs...)
 # end
 
 # # Create parallel solution for partitioned ODE.
-# function ParallelSolution(equation::AbstractEquationPODE, Δt, ntime::Int; kwargs...)
-#     PSolutionPODE(equation, Δt, ntime; kwargs...)
+# function ParallelSolution(problem::AbstractProblemPODE; kwargs...)
+#     PSolutionPODE(problem; kwargs...)
 # end
 
 # # Create parallel solution for DAE.
-# function ParallelSolution(equation::AbstractEquationDAE, Δt, ntime::Int; kwargs...)
-#     PSolutionDAE(equation, Δt, ntime; kwargs...)
+# function ParallelSolution(problem::AbstractProblemDAE; kwargs...)
+#     PSolutionDAE(problem; kwargs...)
 # end
 
 # # Create parallel solution for partitioned DAE.
-# function ParallelSolution(equation::AbstractEquationPDAE, Δt, ntime::Int; kwargs...)
-#     PSolutionPDAE(equation, Δt, ntime; kwargs...)
+# function ParallelSolution(problem::AbstractProblemPDAE; kwargs...)
+#     PSolutionPDAE(problem; kwargs...)
 # end
 
-# # Print error for parallel solutions of equations not implemented, yet.
-# function ParallelSolution(equation::GeometricEquation, Δt, ntime::Int; kwargs...)
-#     error("No parallel solution found for equation ", equation)
+# # Print error for parallel solutions of problems not implemented, yet.
+# function ParallelSolution(problem::GeometricProblem; kwargs...)
+#     error("No parallel solution found for problem ", problem)
 # end
 
 

@@ -1,31 +1,26 @@
-
-using GeometricBase
-using GeometricBase.Config
-using GeometricEquations
-using GeometricIntegrators.Integrators
-using GeometricIntegrators.Tableaus
+using GeometricIntegrators
 using GeometricProblems.LotkaVolterra2d
+using GeometricProblems.LotkaVolterra2d: Δt
 using Test
 
 using GeometricEquations: _get_v, _get_f, _get_v̄, _get_f̄
 
 int = get_config(:ig_extrapolation)
 
-const Δt = 0.01
 const q₀ = [1.0, 1.0]
 const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
-ode  = lotka_volterra_2d_ode(q₀; parameters=params, tstep=Δt)
-pode = lotka_volterra_2d_pode(q₀; parameters=params, tstep=Δt)
-hode = lotka_volterra_2d_hode(q₀; parameters=params, tstep=Δt)
-iode = lotka_volterra_2d_iode(q₀; parameters=params, tstep=Δt)
-lode = lotka_volterra_2d_lode(q₀; parameters=params, tstep=Δt)
+ode  = lotka_volterra_2d_ode(q₀; parameters=params)
+pode = lotka_volterra_2d_pode(q₀; parameters=params)
+hode = lotka_volterra_2d_hode(q₀; parameters=params)
+iode = lotka_volterra_2d_iode(q₀; parameters=params)
+lode = lotka_volterra_2d_lode(q₀; parameters=params)
 
-dae  = lotka_volterra_2d_dae(q₀; parameters=params, tstep=Δt)
-pdae = lotka_volterra_2d_pdae(q₀; parameters=params, tstep=Δt)
-hdae = lotka_volterra_2d_hdae(q₀; parameters=params, tstep=Δt)
-idae = lotka_volterra_2d_idae(q₀; parameters=params, tstep=Δt)
-ldae = lotka_volterra_2d_ldae(q₀; parameters=params, tstep=Δt)
+dae  = lotka_volterra_2d_dae(q₀; parameters=params)
+pdae = lotka_volterra_2d_pdae(q₀; parameters=params)
+hdae = lotka_volterra_2d_hdae(q₀; parameters=params)
+idae = lotka_volterra_2d_idae(q₀; parameters=params)
+ldae = lotka_volterra_2d_ldae(q₀; parameters=params)
 
 
 @test InitialGuessODE(int,  ode) == InitialGuessODE(int(0.0, Δt), _get_v̄(equation( ode), params), Δt)
@@ -50,8 +45,8 @@ ldae = lotka_volterra_2d_ldae(q₀; parameters=params, tstep=Δt)
 
 # Reference Solution
 
-ref_prev = integrate(similar(ode; tspan=(tspan(ode)[begin], tspan(ode)[begin]-tstep(ode)), tstep=-tstep(ode)), TableauGauss(8), 1)
-ref_next = integrate(similar(ode; tspan=(tspan(ode)[begin], tspan(ode)[begin]+tstep(ode)), tstep=+tstep(ode)), TableauGauss(8), 1)
+ref_prev = integrate(similar(ode; tspan=(tspan(ode)[begin], tspan(ode)[begin]-tstep(ode)), tstep=-tstep(ode)), TableauGauss(8))
+ref_next = integrate(similar(ode; tspan=(tspan(ode)[begin], tspan(ode)[begin]+tstep(ode)), tstep=+tstep(ode)), TableauGauss(8))
 
 tₚ = ref_prev.t[end]
 qₚ = ref_prev.q[end]
@@ -69,11 +64,11 @@ equation(ode).v(tₙ, qₙ, vₙ, parameters(ode))
 
 igode = InitialGuessODE(int, _get_v(equation(ode), parameters(ode)), Δt)
 
-t₀ = ode.tspan[begin]
+t₀ = tbegin(ode)
 q₀ = ode.ics.q
 v₀ = zero(q₀)
 
-t₁ = ode.tspan[begin] - Δt
+t₁ = tbegin(ode) - Δt
 q₁ = zero(q₀)
 v₁ = zero(v₀)
 
@@ -104,13 +99,13 @@ evaluate!(igode, q₁, v₁, q₀, v₀, q₂, v₂, t₂)
 
 igiode = InitialGuessIODE(int, _get_v̄(equation(iode), parameters(ode)), _get_f̄(equation(iode), parameters(ode)), Δt)
 
-t₀ = iode.tspan[begin]
+t₀ = tbegin(iode)
 q₀ = iode.ics.q
 p₀ = iode.ics.p
 v₀ = zero(q₀)
 f₀ = zero(p₀)
 
-t₁ = iode.tspan[begin] - Δt
+t₁ = tbegin(iode) - Δt
 q₁ = zero(q₀)
 p₁ = zero(p₀)
 v₁ = zero(v₀)
@@ -145,13 +140,13 @@ evaluate!(igiode, q₁, p₁, v₁, f₁, q₀, p₀, v₀, f₀, q₂, v₂, t�
 
 igpode = InitialGuessPODE(int, _get_v(equation(pode), parameters(pode)), _get_f(equation(pode), parameters(pode)), Δt)
 
-t₀ = pode.tspan[begin]
+t₀ = tbegin(pode)
 q₀ = pode.ics.q
 p₀ = pode.ics.p
 v₀ = zero(q₀)
 f₀ = zero(p₀)
 
-t₁ = pode.tspan[begin] - Δt
+t₁ = tbegin(pode) - Δt
 q₁ = zero(q₀)
 p₁ = zero(p₀)
 v₁ = zero(v₀)

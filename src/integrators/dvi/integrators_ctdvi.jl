@@ -86,8 +86,8 @@ struct IntegratorCTDVI{DT, TT, D, PT <: ParametersCTDVI{DT,TT},
         IntegratorCTDVI(params, solver, iguess, caches)
     end
 
-    function IntegratorCTDVI(equation::Union{IODEProblem{DT}, LODEProblem{DT}}, Δt::TT=tstep(equation); kwargs...) where {DT,TT}
-        IntegratorCTDVI{DT, ndims(equation)}(functions(equation), Δt; kwargs...)
+    function IntegratorCTDVI(problem::Union{IODEProblem{DT}, LODEProblem{DT}}; kwargs...) where {DT,TT}
+        IntegratorCTDVI{DT, ndims(problem)}(functions(problem), timestep(problem); kwargs...)
     end
 end
 

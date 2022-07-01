@@ -62,8 +62,11 @@ mutable struct SolutionPODE{dType,tType,N} <: DeterministicSolution{dType,tType,
     end
 end
 
-function SolutionPODE(equation::Union{PODEProblem{DT,TT1,AT},HODEProblem{DT,TT1,AT},IODEProblem{DT,TT1,AT},LODEProblem{DT,TT1,AT}}, Δt::TT2, ntimesteps::Int;
-    nsave::Int = DEFAULT_NSAVE, nwrite::Int = DEFAULT_NWRITE, filename = nothing) where {DT,TT1,TT2,AT}
+function SolutionPODE(problem::Union{PODEProblem{DT,TT,AT},HODEProblem{DT,TT,AT},IODEProblem{DT,TT,AT},LODEProblem{DT,TT,AT}};
+                      nsave::Int = DEFAULT_NSAVE, nwrite::Int = DEFAULT_NWRITE, filename = nothing) where {DT,TT,AT}
+
+    ntimesteps = ntime(problem)
+    
     @assert nsave > 0
     @assert ntimesteps == 0 || ntimesteps ≥ nsave
     @assert nwrite == 0 || nwrite ≥ nsave
@@ -74,10 +77,9 @@ function SolutionPODE(equation::Union{PODEProblem{DT,TT1,AT},HODEProblem{DT,TT1,
         @assert mod(ntimesteps, nwrite) == 0
     end
 
-    TT = promote_type(TT1, TT2)
-    N = (nsamples(equation) > 1 ? 2 : 1)
-    nd = length(vec(equation.ics.q))
-    ni = nsamples(equation)
+    N = (nsamples(problem) > 1 ? 2 : 1)
+    nd = length(vec(problem.ics.q))
+    ni = nsamples(problem)
     nt = div(ntimesteps, nsave)
     nt = (nwrite == 0 ? nt : div(nwrite, nsave))
     nw = (nwrite == 0 ? ntimesteps : nwrite)
@@ -87,11 +89,11 @@ function SolutionPODE(equation::Union{PODEProblem{DT,TT1,AT},HODEProblem{DT,TT1,
     @assert nt ≥ 0
     @assert nw ≥ 0
 
-    t = TimeSeries{TT}(nt, Δt, nsave)
-    q = DataSeries(equation.ics.q, nt, ni)
-    p = DataSeries(equation.ics.p, nt, ni)
-    s = SolutionPODE{AT,TT,N}(nd, nt, ni, t, q, p, ntimesteps, nsave, nw, periodicity(equation))
-    set_initial_conditions!(s, equation)
+    t = TimeSeries{TT}(nt, timestep(problem), nsave)
+    q = DataSeries(problem.ics.q, nt, ni)
+    p = DataSeries(problem.ics.p, nt, ni)
+    s = SolutionPODE{AT,TT,N}(nd, nt, ni, t, q, p, ntimesteps, nsave, nw, periodicity(problem))
+    set_initial_conditions!(s, problem)
 
     if !isnothing(filename)
         isfile(filename) ? @warn("Overwriting existing HDF5 file.") : nothing

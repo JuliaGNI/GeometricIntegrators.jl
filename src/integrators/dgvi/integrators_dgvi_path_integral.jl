@@ -313,8 +313,8 @@ struct IntegratorDGVIPI{DT, TT, D, S, R,
         IntegratorDGVIPI(basis, quadrature, jump, params, solver, iguess, caches)
     end
 
-    function IntegratorDGVIPI(equation::Union{IODEProblem{DT}, LODEProblem{DT}}, basis::Basis, quadrature::QuadratureRule, jump::Discontinuity, Δt=tstep(equation); kwargs...) where {DT}
-        IntegratorDGVIPI{DT, ndims(equation)}(functions(equation), basis, quadrature, jump, Δt; kwargs...)
+    function IntegratorDGVIPI(problem::Union{IODEProblem{DT}, LODEProblem{DT}}, basis::Basis, quadrature::QuadratureRule, jump::Discontinuity; kwargs...) where {DT}
+        IntegratorDGVIPI{DT, ndims(problem)}(functions(problem), basis, quadrature, jump, timestep(problem); kwargs...)
     end
 end
 

@@ -163,8 +163,8 @@ struct IntegratorCGVI{DT, TT, D, S, R,
         IntegratorCGVI(basis, quadrature, params, solver, iguess, caches)
     end
 
-    function IntegratorCGVI(equation::Union{IODEProblem{DT}, LODEProblem{DT}}, basis::Basis, quadrature::QuadratureRule, Δt=tstep(equation); kwargs...) where {DT}
-        IntegratorCGVI{DT, ndims(equation)}(functions(equation), basis, quadrature, Δt; kwargs...)
+    function IntegratorCGVI(problem::Union{IODEProblem{DT}, LODEProblem{DT}}, basis::Basis, quadrature::QuadratureRule; kwargs...) where {DT}
+        IntegratorCGVI{DT, ndims(problem)}(functions(problem), basis, quadrature, timestep(problem); kwargs...)
     end
 end
 

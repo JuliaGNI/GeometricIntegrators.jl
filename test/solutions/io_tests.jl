@@ -1,6 +1,4 @@
-
-using GeometricBase
-using GeometricIntegrators.Solutions
+using GeometricIntegrators
 using GeometricIntegrators.Solutions: save#load, 
 using GeometricProblems.HarmonicOscillator
 using Test
@@ -46,14 +44,14 @@ h5file = "test.hdf5"
 
 @testset "$(rpad("HDF5 I/O for ODE Solution",80))" begin
     # test general hdf5 functions
-    sol1 = Solution(ode, nt)
+    sol1 = Solution(ode)
     h5io = SolutionHDF5(h5file, sol1; overwrite = true)
     @test typeof(hdf5(h5io)) == HDF5.File
     save(h5io, sol1)
     close(h5io)
     @test isfile(h5file)
 
-    sol1 = Solution(ode, nt)
+    sol1 = Solution(ode)
     h5io = SolutionHDF5(h5file; overwrite = false)
     @test typeof(hdf5(h5io)) == HDF5.File
     save(h5io, sol1)
@@ -63,7 +61,7 @@ h5file = "test.hdf5"
     rm(h5file)
 
     # test hdf5 in- and output
-    sol1 = Solution(harmonic_oscillator_ode(x0), nt)
+    sol1 = Solution(harmonic_oscillator_ode(x0))
     h5io = SolutionHDF5(h5file, sol1)
     save(h5io, sol1)
     close(h5io)
@@ -77,7 +75,7 @@ h5file = "test.hdf5"
     @test sol1.nsave == sol2.nsave
     rm(h5file)
 
-    # sol1 = Solution(harmonic_oscillator_ode(x1), nt)
+    # sol1 = Solution(harmonic_oscillator_ode(x1))
     # h5io = SolutionHDF5(h5file, sol1)
     # save(h5io, sol1)
     # close(h5io)
@@ -90,7 +88,7 @@ h5file = "test.hdf5"
     # @test sol1.nsave == sol2.nsave
     # rm(h5file)
 
-    sol1 = Solution(ode, 100, nwrite = 10)
+    sol1 = Solution(similar(ode; tspan = 10 .* tspan(ode)), nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
     for i = 1:10
         for j = 1:10
@@ -107,7 +105,7 @@ h5file = "test.hdf5"
     @test sol2.nsave == 1
     rm(h5file)
 
-    sol1 = Solution(ode, 100, nsave = 2, nwrite = 10)
+    sol1 = Solution(similar(ode; tspan = 10 .* tspan(ode)), nsave = 2, nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
     for i = 1:10
         for j = 1:10
@@ -128,7 +126,7 @@ end
 
 
 @testset "$(rpad("HDF5 I/O for PODE Solution",80))" begin
-    sol1 = Solution(harmonic_oscillator_pode(q0, p0), nt)
+    sol1 = Solution(harmonic_oscillator_pode(q0, p0))
     h5io = SolutionHDF5(h5file, sol1)
     save(h5io, sol1)
     close(h5io)
@@ -142,7 +140,7 @@ end
     @test sol1.nsave == sol2.nsave
     rm(h5file)
 
-    # sol1 = Solution(harmonic_oscillator_pode(q1, p1), nt)
+    # sol1 = Solution(harmonic_oscillator_pode(q1, p1))
     # h5io = SolutionHDF5(h5file, sol1)
     # save(h5io, sol1)
     # close(h5io)
@@ -156,7 +154,7 @@ end
     # @test sol1.nsave == sol2.nsave
     # rm(h5file)
 
-    sol1 = Solution(pode, 100, nwrite = 10)
+    sol1 = Solution(similar(pode; tspan = 10 .* tspan(pode)), nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
     for i = 1:10
         for j = 1:10
@@ -175,7 +173,7 @@ end
     @test sol2.nsave == 1
     rm(h5file)
 
-    sol1 = Solution(pode, 100, nsave = 2, nwrite = 10)
+    sol1 = Solution(similar(pode; tspan = 10 .* tspan(pode)), nsave = 2, nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
     for i = 1:10
         for j = 1:10
@@ -197,7 +195,7 @@ end
 
 
 @testset "$(rpad("HDF5 I/O for DAE Solution",80))" begin
-    sol1 = Solution(harmonic_oscillator_dae(z0, λ0), nt)
+    sol1 = Solution(harmonic_oscillator_dae(z0, λ0))
     h5io = SolutionHDF5(h5file, sol1)
     save(h5io, sol1)
     close(h5io)
@@ -211,7 +209,7 @@ end
     @test sol1.nsave == sol2.nsave
     rm(h5file)
 
-    # sol1 = Solution(harmonic_oscillator_dae(z1, λ1), nt)
+    # sol1 = Solution(harmonic_oscillator_dae(z1, λ1))
     # h5io = SolutionHDF5(h5file, sol1)
     # save(h5io, sol1)
     # close(h5io)
@@ -225,7 +223,7 @@ end
     # @test sol1.nsave == sol2.nsave
     # rm(h5file)
 
-    sol1 = Solution(dae, 100, nwrite = 10)
+    sol1 = Solution(similar(dae; tspan = 10 .* tspan(dae)), nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
     for i = 1:10
         for j = 1:10
@@ -244,7 +242,7 @@ end
     @test sol2.nsave == 1
     rm(h5file)
 
-    sol1 = Solution(dae, 100, nsave = 2, nwrite = 10)
+    sol1 = Solution(similar(dae; tspan = 10 .* tspan(dae)), nsave = 2, nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
     for i = 1:10
         for j = 1:10
@@ -266,7 +264,7 @@ end
 
 
 @testset "$(rpad("HDF5 I/O for PDAE Solution",80))" begin
-    sol1 = Solution(harmonic_oscillator_pdae(x0, y0, μ0), nt)
+    sol1 = Solution(harmonic_oscillator_pdae(x0, y0, μ0))
     h5io = SolutionHDF5(h5file, sol1)
     save(h5io, sol1)
     close(h5io)
@@ -281,7 +279,7 @@ end
     @test sol1.nsave == sol2.nsave
     rm(h5file)
 
-    # sol1 = Solution(harmonic_oscillator_pdae(x1, y1, μ1), nt)
+    # sol1 = Solution(harmonic_oscillator_pdae(x1, y1, μ1))
     # h5io = SolutionHDF5(h5file, sol1)
     # save(h5io, sol1)
     # close(h5io)
@@ -296,7 +294,7 @@ end
     # @test sol1.nsave == sol2.nsave
     # rm(h5file)
 
-    sol1 = Solution(pdae, 100, nwrite = 10)
+    sol1 = Solution(similar(pdae; tspan = 10 .* tspan(pdae)), nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
     for i = 1:10
         for j = 1:10
@@ -319,7 +317,7 @@ end
     @test sol2.nsave == 1
     rm(h5file)
 
-    sol1 = Solution(pdae, 100, nsave = 2, nwrite = 10)
+    sol1 = Solution(similar(pdae; tspan = 10 .* tspan(pdae)), nsave = 2, nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
     for i = 1:10
         for j = 1:10

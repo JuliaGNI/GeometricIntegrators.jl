@@ -39,8 +39,8 @@ struct IntegratorVPRKpSymmetric{DT, TT, D, S,
         IntegratorVPRKpSymmetric(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpSymmetric(equation::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, Δt=tstep(equation); kwargs...) where {DT}
-        IntegratorVPRKpSymmetric{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRKpSymmetric(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
+        IntegratorVPRKpSymmetric{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 

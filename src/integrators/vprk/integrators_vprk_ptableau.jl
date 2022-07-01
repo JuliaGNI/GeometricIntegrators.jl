@@ -97,8 +97,8 @@ struct IntegratorVPRKpTableau{DT, TT, D, S,
         IntegratorVPRKpTableau(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpTableau(equation::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, Δt=tstep(equation); kwargs...) where {DT}
-        IntegratorVPRKpTableau{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRKpTableau(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
+        IntegratorVPRKpTableau{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 

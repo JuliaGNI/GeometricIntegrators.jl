@@ -1,31 +1,41 @@
-
-using GeometricBase
-using GeometricBase.Config
-using GeometricEquations
-using GeometricIntegrators.Integrators
+using GeometricIntegrators
 using GeometricIntegrators.Integrators.VPRK
-using GeometricIntegrators.Tableaus
 using GeometricProblems.HarmonicOscillator
+using GeometricProblems.HarmonicOscillator: Δt, k, ω
 using Test
 
 using GeometricEquations: _get_v, _get_f, _get_v̄, _get_f̄
+
 using GeometricIntegrators.Integrators: _euler_extrapolation_ode!, _hermite_extrapolation!,
                                         _midpoint_extrapolation_ode!, _midpoint_extrapolation_iode!, _midpoint_extrapolation_pode!
 
-const Δt = 0.1
-const t₋ = 0.0
 const t₀ = 0.0
 const t₁ = t₀ + Δt
 const t₂ = t₁ + Δt
+const t₋ = t₀ - Δt
 
 ode  = harmonic_oscillator_ode()
 pode = harmonic_oscillator_pode()
 iode = harmonic_oscillator_iode()
 
 
-# Create ODE Solution Arrays
+# Compute Reference Solution for ODEs
 
 x₀ = ode.ics.q
+
+A = sqrt(x₀[2]^2 / k + x₀[1]^2)
+ϕ = asin(x₀[1] / A)
+
+xₚ = [A * sin(- ω * Δt + ϕ), ω * A * cos(- ω * Δt + ϕ)]
+xₙ = [A * sin(+ ω * Δt + ϕ), ω * A * cos(+ ω * Δt + ϕ)]
+
+tₚ = t₋
+tₙ = t₁
+tᵢ = tₙ
+
+
+# Create ODE Solution Arrays
+
 x₁ = zero(x₀)
 x₂ = zero(x₀)
 xᵢ = zero(x₀)
@@ -36,20 +46,6 @@ ẋ₁ = zero(x₀)
 ẋ₂ = zero(x₀)
 ẋₙ = zero(x₀)
 ẋᵢ = zero(x₀)
-
-
-# Compute Reference Solution for ODEs
-
-ref_prev = integrate(similar(ode; tspan=(t₋,t₀), tstep=-Δt), TableauGauss(8), 1)
-ref_next = integrate(similar(ode; tspan=(t₀,t₁), tstep=+Δt), TableauGauss(8), 1)
-
-tₚ = ref_prev.t[end]
-xₚ = ref_prev.q[end]
-
-tₙ = ref_next.t[end]
-xₙ = ref_next.q[end]
-
-tᵢ = tₙ
 
 functions(ode).v(tₚ, xₚ, ẋₚ)
 functions(ode).v(t₀, x₀, ẋ₀)
@@ -163,14 +159,11 @@ ṗᵢ = zero(p₀)
 
 # Compute Reference Solution for PODEs
 
-ref_prev = integrate(similar(pode; tspan=(t₋,t₀), tstep=-Δt), PartitionedTableauGauss(8), 1)
-ref_next = integrate(similar(pode; tspan=(t₀,t₁), tstep=+Δt), PartitionedTableauGauss(8), 1)
+qₚ = [xₚ[1]]
+pₚ = [xₚ[2]]
 
-qₚ = ref_prev.q[end]
-pₚ = ref_prev.p[end]
-
-qₙ = ref_next.q[end]
-pₙ = ref_next.p[end]
+qₙ = [xₙ[1]]
+pₙ = [xₙ[2]]
 
 functions(pode).v(tₚ, qₚ, pₚ, q̇ₚ)
 functions(pode).v(t₀, q₀, p₀, q̇₀)
@@ -234,7 +227,12 @@ q₀ = iode.ics.q
 p₀ = iode.ics.p
 
 qᵢ = zero(q₀)
+qₚ = zero(q₀)
+qₙ = zero(q₀)
+
 pᵢ = zero(p₀)
+pₚ = zero(p₀)
+pₙ = zero(p₀)
 
 q̇ₚ = zero(q₀)
 q̇₀ = zero(q₀)
@@ -249,27 +247,19 @@ ṗᵢ = zero(p₀)
 
 # Compute Reference Solution for IODEs
 
-iode_prev = similar(iode; tspan=(t₋,t₀), tstep=-Δt)
-iode_next = similar(iode; tspan=(t₀,t₁), tstep=+Δt)
-
-ref_prev = integrate(iode_prev, IntegratorVPRKpSymmetric(iode_prev, TableauVPGLRK(8), tstep(iode_prev)), 1)
-ref_next = integrate(iode_next, IntegratorVPRKpSymmetric(iode_next, TableauVPGLRK(8), tstep(iode_next)), 1)
-
-qₚ = ref_prev.q[end]
-pₚ = ref_prev.p[end]
-
-qₙ = ref_next.q[end]
-pₙ = ref_next.p[end]
+qₚ .= xₚ
+qₙ .= xₙ
 
 functions(iode).v̄(tₚ, qₚ, q̇ₚ)
 functions(iode).v̄(t₀, q₀, q̇₀)
 functions(iode).v̄(tₙ, qₙ, q̇ₙ)
 
+functions(iode).ϑ(tₚ, qₚ, q̇ₚ, pₚ)
+functions(iode).ϑ(tₙ, qₙ, q̇ₙ, pₙ)
+
 functions(iode).f̄(tₚ, qₚ, q̇ₚ, ṗₚ)
 functions(iode).f̄(t₀, q₀, q̇₀, ṗ₀)
 functions(iode).f̄(tₙ, qₙ, q̇ₙ, ṗₙ)
-
-
 
 # Midpoint Extrapolation for IODEs
 
