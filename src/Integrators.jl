@@ -16,6 +16,7 @@ module Integrators
     using GeometricBase.Utils
     using GeometricEquations
     using GeometricEquations: _get_v, _get_f, _get_v̄, _get_f̄
+    using GeometricSolutions
 
     using ..Discontinuities
     using ..Solutions

@@ -147,7 +147,7 @@ function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomicSolutionPODE{DT,
     cache.P[0] .= sol.p
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # compute internal stages
     for i in eachstage(int)

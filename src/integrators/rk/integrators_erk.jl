@@ -90,7 +90,7 @@ function integrate_step!(int::IntegratorERK{DT,TT}, sol::AtomicSolutionODE{DT,TT
     local yᵢ::DT
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # compute internal stages
     for i in eachstage(int)

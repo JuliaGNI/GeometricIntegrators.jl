@@ -247,7 +247,7 @@ Solve one time step n for one initial condition m.
 function integrate! end
 
 # Parts of one integration step that are common to deterministic and stochastic equations.
-function integrate_common!(int::Integrator{DT,TT}, sol::AbstractSolution{AT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT, TT, AT <: AbstractArray{DT}}
+function integrate!(int::Integrator{DT,TT}, sol::GeometricSolution{AT,TT}, asol::AtomicSolution{DT,TT}, n::Int) where {DT, TT, AT}
     # integrate one initial condition for one time step
     integrate_step!(int, asol)
 
@@ -255,71 +255,52 @@ function integrate_common!(int::Integrator{DT,TT}, sol::AbstractSolution{AT,TT},
     cut_periodic_solution!(asol, periodicity(sol))
 
     # copy solution from cache to solution
-    set_solution!(sol, asol, n, m)
+    sol[n] = asol
 end
-
-# Integrate one time step n for one initial condition m.
-function integrate!(int::Integrator{DT,TT}, sol::AbstractSolution{AT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT, TT, AT <: AbstractArray{DT}}
-    integrate_common!(int, sol, asol, m, n)
-end
-
-# Integrate `equation` for all initial conditions and all time steps.
-function integrate!(int::Integrator, sol::AbstractSolution)
-    integrate!(int, sol, 1, nsamples(sol))
-end
-
-
-# Integrate equation for initial conditions m with m₁ ≤ m ≤ m₂.
-function integrate!(int::Integrator, sol::AbstractSolution, m₁, m₂)
-    # integrate samples m with m₁ ≤ m ≤ m₂ for all time steps
-    integrate!(int, sol, m₁, m₂, 1, ntime(sol))
-end
-
 
 # Integrate equation for initial conditions m with m₁ ≤ m ≤ m₂ for time steps n with n₁ ≤ n ≤ n₂.
-function integrate!(int::Integrator{DT,TT}, sol::AbstractSolution{AT,TT}, m₁::Int, m₂::Int, n₁::Int, n₂::Int) where {DT, TT, AT <: AbstractArray{DT}}
-    @assert m₁ ≥ 1
-    @assert m₂ ≥ m₁
-    @assert m₂ ≤ nsamples(sol)
+function integrate!(int::Integrator, sol::GeometricSolution, n₁::Int, n₂::Int)
+    # check time steps range for consistency
+    @assert n₁ ≥ 1
+    @assert n₂ ≥ n₁
+    @assert n₂ ≤ ntime(sol)
 
-    # TODO: reactivate after fixing TimeSeries
-    # @assert n₁ ≥ 1
-    # @assert n₂ ≥ n₁
-    # @assert n₂ ≤ ntime(sol)
-
+    # create single step solution
     asol = AtomicSolution(sol, int)
 
-    # loop over initial conditions showing progress bar
-    for m in m₁:m₂
-        # get cache from solution
-        get_initial_conditions!(sol, asol, m, n₁)
-        initialize!(int, asol)
+    # copy initial condition from solution
+    copy!(asol, sol[n₁-1])
+    initialize!(int, asol)
 
-        # loop over time steps
-        for n in n₁:n₂
-            integrate!(int, sol, asol, m, n)
+    # loop over time steps
+    for n in n₁:n₂
+        integrate!(int, sol, asol, n)
 
-            # try
-            #     integrate!(int, sol, asol, m, n)
-            # catch ex
-            #     tstr = " in time step " * string(n)
-            #
-            #     if m₁ ≠ m₂
-            #         tstr *= " for initial condition " * string(m)
-            #     end
-            #
-            #     tstr *= "."
-            #
-            #     if isa(ex, DomainError)
-            #         @warn("Domain error" * tstr)
-            #     elseif isa(ex, ErrorException)
-            #         @warn("Simulation exited early" * tstr)
-            #         @warn(ex.msg)
-            #     else
-            #         @warn(string(typeof(ex)) * tstr)
-            #         throw(ex)
-            #     end
-            # end
-        end
+        # try
+        #     integrate!(int, sol, asol, n)
+        # catch ex
+        #     tstr = " in time step " * string(n)
+        #
+        #     if m₁ ≠ m₂
+        #         tstr *= " for initial condition " * string(m)
+        #     end
+        #
+        #     tstr *= "."
+        #
+        #     if isa(ex, DomainError)
+        #         @warn("Domain error" * tstr)
+        #     elseif isa(ex, ErrorException)
+        #         @warn("Simulation exited early" * tstr)
+        #         @warn(ex.msg)
+        #     else
+        #         @warn(string(typeof(ex)) * tstr)
+        #         throw(ex)
+        #     end
+        # end
     end
+end
+
+# Integrate `equation` for all time steps.
+function integrate!(int::Integrator, sol::GeometricSolution)
+    integrate!(int, sol, 1, ntime(sol))
 end

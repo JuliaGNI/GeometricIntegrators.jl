@@ -38,24 +38,9 @@ get_internal_variables(::Integrator) = NamedTuple()
 get_internal_variables(::Nothing) = NamedTuple()
 
 
-# Create AtomicSolution for ODE.
-function Solutions.AtomicSolution(solution::SolutionODE, integrator::Integrator)
-    AtomicSolutionODE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
-end
-
-# Create AtomicSolution for partitioned ODE.
-function Solutions.AtomicSolution(solution::SolutionPODE, integrator::Integrator)
-    AtomicSolutionPODE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
-end
-
-# Create AtomicSolution for DAE.
-function Solutions.AtomicSolution(solution::SolutionDAE, integrator::Integrator)
-    AtomicSolutionDAE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
-end
-
-# Create AtomicSolution for partitioned DAE.
-function Solutions.AtomicSolution(solution::SolutionPDAE, integrator::Integrator)
-    AtomicSolutionPDAE(get_initial_conditions(solution, 1)..., get_internal_variables(integrator))
+# Create AtomicSolution with internal variables of integrator.
+function Solutions.AtomicSolution(solution::GeometricSolution, integrator::Integrator)
+    AtomicSolution(solution, get_internal_variables(integrator))
 end
 
 

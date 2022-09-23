@@ -337,7 +337,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpLegendre{DT,TT}, sol::A
     # println(int.solver.x)
 
     # reset solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

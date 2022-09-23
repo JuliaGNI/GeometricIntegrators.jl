@@ -417,7 +417,7 @@ function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionODE{DT,
     initial_guess!(int, sol)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # determine parameter λ
     λmin = -0.2^nstages(int)

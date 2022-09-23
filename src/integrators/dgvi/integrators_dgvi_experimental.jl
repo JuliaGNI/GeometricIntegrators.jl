@@ -454,7 +454,7 @@ function integrate_step!(int::IntegratorDGVIEXP{DT,TT}, sol::AtomicSolutionPODE{
     initial_guess!(int, sol, cache)
 
     # reset cache
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

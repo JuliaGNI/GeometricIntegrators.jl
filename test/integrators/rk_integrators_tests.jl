@@ -62,13 +62,11 @@ function test_firk_jacobian(ode, tableau; atol=eps())
     int1 = IntegratorFIRK(ode, tableau; exact_jacobian=false)
     int2 = IntegratorFIRK(ode, tableau; exact_jacobian=true)
 
-    sol = Solution(ode)
-
     asol1 = AtomicSolution(ode)
     asol2 = AtomicSolution(ode)
 
-    get_initial_conditions!(sol, asol1, 1, 1)
-    get_initial_conditions!(sol, asol2, 1, 1)
+    initialize!(int1, asol2)
+    initialize!(int1, asol2)
 
     update_params!(int1, asol1)
     update_params!(int2, asol2)
@@ -215,8 +213,8 @@ end
         csol = integrate(code, TableauGauss(s))
         psol = integrate(pode, PartitionedTableauGauss(s))
 
-        @test csol.q[1, end] == psol.q[1, end]
-        @test csol.q[2, end] == psol.p[1, end]
+        @test csol.q[end][1] == psol.q[end][1]
+        @test csol.q[end][2] == psol.p[end][1]
     end
 
     for s in 1:4
@@ -224,8 +222,8 @@ end
         csol = integrate(code, TableauGauss(s))
         hsol = integrate(hode, PartitionedTableauGauss(s))
 
-        @test csol.q[1, end] == hsol.q[1, end]
-        @test csol.q[2, end] == hsol.p[1, end]
+        @test csol.q[end][1] == hsol.q[end][1]
+        @test csol.q[end][2] == hsol.p[end][1]
     end
 
     for s in 1:4
@@ -233,7 +231,7 @@ end
         csol = integrate(code, PartitionedTableauGauss(s))
         hsol = integrate(hode, PartitionedTableauGauss(s))
 
-        @test csol.q[1, end] == hsol.q[1, end]
-        @test csol.p[1, end] == hsol.p[1, end]
+        @test csol.q[end][1] == hsol.q[end][1]
+        @test csol.p[end][1] == hsol.p[end][1]
     end
 end

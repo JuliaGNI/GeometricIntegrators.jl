@@ -274,7 +274,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::At
     initial_guess!(int, sol, cache)
 
     # reset solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # determine parameter λ
     nlres = nlsolve(λ -> function_dirac_constraint!(λ, int, cache), zero(int.params.λ);

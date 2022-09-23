@@ -114,7 +114,7 @@ function Integrators.integrate_step!(int::IntegratorVPRK{DT,TT}, sol::AtomicSolu
     initial_guess!(int, sol, cache)
 
     # reset solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

@@ -225,7 +225,7 @@ function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::AtomicSolutionPOD
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

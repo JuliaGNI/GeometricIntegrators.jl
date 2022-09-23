@@ -319,7 +319,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::
     initial_guess!(int, sol, cache)
 
     # reset solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

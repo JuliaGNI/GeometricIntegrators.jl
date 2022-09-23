@@ -149,7 +149,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::A
     initial_guess!(int, sol, cache)
 
     # reset cache
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

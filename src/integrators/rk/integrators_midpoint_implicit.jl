@@ -173,7 +173,7 @@ function integrate_step!(int::IntegratorMidpointImplicit{DT,TT}, sol::AtomicSolu
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

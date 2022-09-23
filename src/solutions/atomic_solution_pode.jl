@@ -27,16 +27,18 @@ Atomic solution for an PODE.
 ### Constructors
 
 ```julia
-AtomicSolutionPODE{DT,TT,AT,IT}(nd, internal::IT)
-AtomicSolutionPODE{DT,TT,AT,IT}(t::TT, q::AT, p::AT, internal::IT)
-AtomicSolutionPODE(DT, TT, AT, nd, internal::IT=NamedTuple())
 AtomicSolutionPODE(t::TT, q::AT, p::AT, internal::IT=NamedTuple())
 ```
 
-* `nd`: dimension of the state vector
-
 """
-mutable struct AtomicSolutionPODE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
+mutable struct AtomicSolutionPODE{
+            DT <: Number,
+            TT <: Real,
+            AT <: AbstractArray{DT},
+            VT <: AbstractArray{DT},
+            FT <: AbstractArray{DT},
+            IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
+
     t::TT
     t̄::TT
 
@@ -48,72 +50,61 @@ mutable struct AtomicSolutionPODE{DT <: Number, TT <: Real, AT <: AbstractArray{
     p̄::AT
     p̃::AT
 
-    v::AT
-    v̄::AT
-    f::AT
-    f̄::AT
+    v::VT
+    v̄::VT
+
+    f::FT
+    f̄::FT
 
     internal::IT
 
-    function AtomicSolutionPODE{DT,TT,AT,IT}(nd, internal::IT) where {DT,TT,AT,IT}
-        new(zero(TT), zero(TT),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            internal)
-    end
+    function AtomicSolutionPODE(t::TT, q::AT, p::AT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT}
+        v = vectorfield(q)
+        v̄ = vectorfield(q)
+        f = vectorfield(p)
+        f̄ = vectorfield(p)
 
-    function AtomicSolutionPODE{DT,TT,AT,IT}(t::TT, q::AT, p::AT, internal::IT) where {DT,TT,AT,IT}
-        new(zero(t), zero(t),
-            zero(q), zero(q), zero(q),
-            zero(p), zero(p), zero(p),
-            zero(q), zero(q), zero(p), zero(p),
-            internal)
+        new{DT,TT,AT,typeof(v),typeof(f),IT}(
+            copy(t), zero(t),
+            copy(q), zero(q), zero(q),
+            copy(p), zero(p), zero(p),
+            v, v̄, f, f̄, internal
+        )
     end
 end
 
-AtomicSolutionPODE(DT, TT, AT, nd, internal::IT=NamedTuple()) where {IT} = AtomicSolutionPODE{DT,TT,AT,IT}(nd, internal)
-AtomicSolutionPODE(t::TT, q::AT, p::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionPODE{DT,TT,AT,IT}(t, q, p, internal)
+function current(asol::AtomicSolutionPODE)
+    (t = asol.t, q = asol.q, p = asol.p)
+end
 
-function set_initial_conditions!(asol::AtomicSolutionPODE, equ::AbstractProblemPODE, i::Int=1)
-    @assert i ≥ nsamples(equ)
-    t, q, p = initial_conditions(equ)
-    asol.t  = t
-    asol.q .= q[i]
-    asol.p .= p[i]
+function previous(asol::AtomicSolutionPODE)
+    (t = asol.t̄, q = asol.q̄, p = asol.p̄)
+end
+
+function Base.copy!(asol::AtomicSolutionPODE, sol::NamedTuple)
+    asol.t  = sol.t
+    asol.q .= sol.q
+    asol.p .= sol.p
+    asol.q̃ .= 0
     asol.v .= 0
     asol.f .= 0
+    return asol
 end
 
-function set_solution!(asol::AtomicSolutionPODE, sol)
-    t, q, p = sol
-    asol.t  = t
-    asol.q .= q
-    asol.p .= p
-    asol.v .= 0
-    asol.f .= 0
-end
-
-function get_solution(asol::AtomicSolutionPODE)
-    (asol.t, asol.q, asol.p)
-end
-
-function GeometricBase.reset!(asol::AtomicSolutionPODE, Δt)
+function GeometricBase.reset!(asol::AtomicSolutionPODE)
     asol.t̄  = asol.t
     asol.q̄ .= asol.q
     asol.p̄ .= asol.p
     asol.v̄ .= asol.v
     asol.f̄ .= asol.f
+    return asol
+end
+
+function update!(asol::AtomicSolutionPODE{DT,TT,AT}, Δt::TT, Δq::AT, Δp::AT) where {DT,TT,AT}
     asol.t += Δt
-end
-
-function update!(asol::AtomicSolutionPODE{DT}, y::Vector{DT}, z::Vector{DT}) where {DT}
-    for k in eachindex(y,z)
-        update!(asol, y[k], z[k], k)
+    for k in eachindex(Δq,Δp)
+        asol.q[k], asol.q̃[k] = compensated_summation(Δq[k], asol.q[k], asol.q̃[k])
+        asol.p[k], asol.p̃[k] = compensated_summation(Δp[k], asol.p[k], asol.p̃[k])
     end
-end
-
-function update!(asol::AtomicSolutionPODE{DT}, y::DT, z::DT, k::Union{Int,CartesianIndex}) where {DT}
-    asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
-    asol.p[k], asol.p̃[k] = compensated_summation(z, asol.p[k], asol.p̃[k])
+    return asol
 end

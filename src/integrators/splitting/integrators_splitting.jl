@@ -63,7 +63,7 @@ function integrate_step!(int::IntegratorSplitting{DT,TT}, sol::AtomicSolutionODE
             tᵢ = sol.t̄ + cᵢ
 
             # reset atomic solution
-            reset!(sol, cᵢ)
+            reset!(sol)
 
             # compute new solution
             int.q[int.f[i]](tᵢ, sol.q̄, sol.q, cᵢ)

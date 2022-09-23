@@ -29,7 +29,7 @@ GeometricBase.timestep(int::IntegratorExplicitEuler) = int.Δt
 
 function integrate_step!(int::IntegratorExplicitEuler{DT,TT,AT}, sol::AtomicSolutionODE{DT,TT,AT}) where {DT,TT,AT}
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # compute vector field
     equations(int)[:v](sol.t̄, sol.q, int.v)

@@ -16,7 +16,7 @@ end
 
 function integrate_step!(int::IntegratorExactODE{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # compute new solution
     int.q(sol.t̄ + timestep(int), sol.q̄, sol.q, timestep(int))

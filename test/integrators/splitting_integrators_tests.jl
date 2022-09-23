@@ -57,7 +57,7 @@ ssol2 = integrate(sode, sint)
 sint3 = Integrator(sode, TableauStrangB())
 ssol3 = integrate(sode, sint)
 @test ssol1.q == ssol2.q
-@test ssol1.q ≈  ssol3.q
+@test all(ssol1.q .≈ ssol3.q)
 
 sint = Integrator(sode, TableauMcLachlan2())
 ssol = integrate(sode, sint)

@@ -569,7 +569,7 @@ function integrate_step!(int::IntegratorDGVIPI{DT,TT}, sol::AtomicSolutionPODE{D
     initial_guess!(int, sol, cache)
 
     # reset cache
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

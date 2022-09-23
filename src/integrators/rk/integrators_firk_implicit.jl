@@ -254,7 +254,7 @@ function integrate_step!(int::IntegratorFIRKimplicit{DT,TT}, sol::AtomicSolution
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)
