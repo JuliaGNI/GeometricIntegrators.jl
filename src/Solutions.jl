@@ -33,13 +33,10 @@ include("solutions/atomic_solution_pode.jl")
 include("solutions/atomic_solution_dae.jl")
 include("solutions/atomic_solution_pdae.jl")
 
-
-
 export SolutionODE, SolutionPODE
 export SolutionDAE, SolutionPDAE
 
 include("solutions/solution.jl")
-
 include("solutions/atomic_solution_constructors.jl")
 
 end
