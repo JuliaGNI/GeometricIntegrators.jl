@@ -26,12 +26,12 @@ function InitialGuessPODE(interp::Type{<:Extrapolation}, v::Function, f::Functio
     InitialGuessPODE(int, v, f, Δt)
 end
 
-function InitialGuessPODE(interp::Type{<:Extrapolation}, equation::Union{PODE,PDAE,HODE,HDAE}, Δt)
-    InitialGuessPODE(interp, _get_v̄(equation), _get_f̄(equation), Δt)
+function InitialGuessPODE(interp::Type{<:Extrapolation}, problem::Union{PODEProblem,PDAEProblem,HODEProblem,HDAEProblem}, Δt = tstep(problem))
+    InitialGuessPODE(interp, _get_v̄(equation(problem), parameters(problem)), _get_f̄(equation(problem), parameters(problem)), Δt)
 end
 
-InitialGuess(interp, equation::Union{PODE,PDAE,HODE,HDAE}, Δt) = InitialGuessPODE(interp, equation, Δt)
-InitialGuess(equation::Union{PODE,PDAE,HODE,HDAE}, Δt) = InitialGuessPODE(get_config(:ig_extrapolation), equation, Δt)
+InitialGuess(interp, problem::Union{PODEProblem,PDAEProblem,HODEProblem,HDAEProblem}, Δt = tstep(problem)) = InitialGuessPODE(interp, problem, Δt)
+InitialGuess(problem::Union{PODEProblem,PDAEProblem,HODEProblem,HDAEProblem}, Δt = tstep(problem)) = InitialGuessPODE(get_config(:ig_extrapolation), problem, Δt)
 
 
 Base.:(==)(ig1::InitialGuessPODE{TT1}, ig2::InitialGuessPODE{TT2}) where {TT1,TT2}= (

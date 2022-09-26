@@ -17,19 +17,19 @@ struct IntegratorExplicitEuler{DT, TT, AT, D, ET <: NamedTuple} <: Deterministic
         IntegratorExplicitEuler{DT,AT,D}(NamedTuple{(:v,)}((v,)), Δt; kwargs...)
     end
 
-    function IntegratorExplicitEuler(equation::ODE{DT,TT,AT}, Δt; kwargs...) where {DT,TT,AT}
-        IntegratorExplicitEuler{DT, AT, axes(equation)}(get_functions(equation), Δt; kwargs...)
+    function IntegratorExplicitEuler(problem::ODEProblem{DT,TT,AT}; kwargs...) where {DT,TT,AT}
+        IntegratorExplicitEuler{DT, AT, axes(problem)}(functions(problem), timestep(problem); kwargs...)
     end
 end
 
-equation(int::IntegratorExplicitEuler, i::Symbol) = int.equs[i]
-equations(int::IntegratorExplicitEuler) = int.equs
-timestep(int::IntegratorExplicitEuler) = int.Δt
+GeometricBase.equation(int::IntegratorExplicitEuler, i::Symbol) = int.equs[i]
+GeometricBase.equations(int::IntegratorExplicitEuler) = int.equs
+GeometricBase.timestep(int::IntegratorExplicitEuler) = int.Δt
 
 
 function integrate_step!(int::IntegratorExplicitEuler{DT,TT,AT}, sol::AtomicSolutionODE{DT,TT,AT}) where {DT,TT,AT}
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # compute vector field
     equations(int)[:v](sol.t̄, sol.q, int.v)

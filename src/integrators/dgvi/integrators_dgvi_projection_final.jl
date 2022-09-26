@@ -169,14 +169,14 @@ struct IntegratorDGVIP1{DT, TT, D, S, R,
         IntegratorDGVIP1(basis, quadrature, params, solver, iguess, caches)
     end
 
-    function IntegratorDGVIP1(equation::Union{IODE{DT}, LODE{DT}}, basis::Basis, quadrature::QuadratureRule, Δt; kwargs...) where {DT}
-        IntegratorDGVIP1{DT, ndims(equation)}(get_functions(equation), basis, quadrature, Δt; kwargs...)
+    function IntegratorDGVIP1(problem::Union{IODEProblem{DT}, LODEProblem{DT}}, basis::Basis, quadrature::QuadratureRule; kwargs...) where {DT}
+        IntegratorDGVIP1{DT, ndims(problem)}(functions(problem), basis, quadrature, timestep(problem); kwargs...)
     end
 end
 
-@inline equation(integrator::IntegratorDGVIP1, i::Symbol) = integrator.params.equs[i]
-@inline equations(integrator::IntegratorDGVIP1) = integrator.params.equs
-@inline timestep(integrator::IntegratorDGVIP1) = integrator.params.Δt
+@inline GeometricBase.equation(integrator::IntegratorDGVIP1, i::Symbol) = integrator.params.equs[i]
+@inline GeometricBase.equations(integrator::IntegratorDGVIP1) = integrator.params.equs
+@inline GeometricBase.timestep(integrator::IntegratorDGVIP1) = integrator.params.Δt
 @inline Base.ndims(::IntegratorDGVIP1{DT,TT,D}) where {DT,TT,D} = D
 
 
@@ -463,7 +463,7 @@ function integrate_step!(int::IntegratorDGVIP1{DT,TT}, sol::AtomicSolutionPODE{D
     initial_guess!(int, sol, cache)
 
     # reset cache
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

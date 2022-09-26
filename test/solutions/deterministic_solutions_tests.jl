@@ -1,7 +1,5 @@
-
-using GeometricBase
-using GeometricBase: test_interface
-using GeometricIntegrators.Solutions
+using GeometricSolutions: test_interface
+using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
 using Test
 
@@ -71,81 +69,41 @@ pdae = harmonic_oscillator_pdae()
     asol = AtomicSolution(ode)
 
     # test constructors and general functionality
-    sol = Solution(ode, Δt, nt)
+    sol = Solution(ode)
     @test typeof(sol) <: SolutionODE
 
-    # test_interface(sol) # TODO reactivate
+    test_interface(sol) # TODO reactivate
 
-    sol0 = Solution(similar(ode, x0), Δt, nt)
+    sol0 = Solution(similar(ode, ics=(q=x0,)))
     @test typeof(sol0) <: SolutionODE
-
-    sol1 = Solution(similar(ode, x1), Δt, nt)
-    @test typeof(sol1) <: SolutionODE
-
     @test sol != sol0
-    @test sol != sol1
-
-    @test nsave(sol) == 1
-    @test ntime(sol) == nt
-    @test timesteps(sol) == Δt .* collect(0:nt)
 
     # test initial conditions
-    set_initial_conditions!(sol, t0, x0)
-    get_initial_conditions!(sol, tx, 1)
-    get_initial_conditions!(sol, asol, 1)
+    copy!(asol, sol0[0])
 
-    @test tx == x0
     @test asol.t == t0
     @test asol.q == x0
 
-    δt, δx = get_initial_conditions(sol, 1)
-    @test δt == t0
-    @test δx == x0
-
-    set_initial_conditions!(sol1, similar(ode, t1, x2))
-    for j = 1:ni
-        get_initial_conditions!(sol1, tx, j)
-        @test tx == x2[j]
-    end
-
     # test set/get solution
-    sol1 = Solution(similar(ode, x0), Δt, nt)
-    sol2 = Solution(similar(ode, x0), Δt, nt)
-    for i = 1:nt
-        tx .= xs[i]
+    sol1 = Solution(similar(ode, ics=(q=x0,)))
+    sol2 = Solution(similar(ode, ics=(q=x0,)))
+    for i in eachindex(xs)
         asol.q .= xs[i]
-        set_solution!(sol1, tx, i)
-        set_solution!(sol2, asol, i)
+        sol1[i] = (q = copy(xs[i]),)
+        sol2[i] = asol
     end
     @test sol1.q[1:nt] == xs
     @test sol2.q[1:nt] == xs
 
-    sol1 = Solution(similar(ode, x1), Δt, nt)
-    sol2 = Solution(similar(ode, x1), Δt, nt)
-    for i = 1:nt
-        for j = 1:ni
-            tx .= Xs[i, j]
-            asol.q .= Xs[i, j]
-            set_solution!(sol1, tx, i, j)
-            set_solution!(sol2, asol, i, j)
-        end
-    end
-    @test sol1.q[1:nt, :] == Xs
-    @test sol2.q[1:nt, :] == Xs
+    # test step and nstore parameters
+    sol = Solution(similar(ode, tspan = 2 .* tspan(ode)); step = 2)
+    @test ntime(sol) == 20
+    @test nstore(sol) == 10
 
-    # test nsave and nwrite parameters
-    sol = Solution(ode, Δt, 20, nsave = 2)
-    @test sol.nt == 10
+    sol = Solution(similar(ode, tspan = 2 .* tspan(ode)); step = 10)
+    @test ntime(sol) == 20
+    @test nstore(sol) == 2
 
-    sol = Solution(ode, Δt, 20, nsave = 2, nwrite = 10)
-    @test sol.nt == 5
-
-    # test reset
-    sol = Solution(ode, Δt, nt)
-    reset!(sol)
-    @test sol.t[0] == t1
-    @test sol.t[end] == t2
-    @test offset(sol) == nt
 end
 
 
@@ -153,93 +111,44 @@ end
     asol = AtomicSolution(pode)
 
     # test constructors and general functionality
-    sol = Solution(pode, Δt, nt)
+    sol = Solution(pode)
     @test typeof(sol) <: SolutionPODE
 
-    # test_interface(sol) # TODO reactivate
+    test_interface(sol)
 
-    sol0 = Solution(similar(pode, q0, p0), Δt, nt)
+    sol0 = Solution(similar(pode, ics=(q=q0, p=p0)))
     @test typeof(sol0) <: SolutionPODE
-
-    sol1 = Solution(similar(pode, q1, p1), Δt, nt)
-    @test typeof(sol1) <: SolutionPODE
-
     @test sol != sol0
-    @test sol != sol1
-
-    @test nsave(sol) == 1
-    @test ntime(sol) == nt
-    @test timesteps(sol) == Δt .* collect(0:nt)
 
     # test initial conditions
-    set_initial_conditions!(sol, t0, q0, p0)
-    get_initial_conditions!(sol, tq, tp, 1)
-    get_initial_conditions!(sol, asol, 1)
+    copy!(asol, sol0[0])
 
-    @test tq == q0
-    @test tp == p0
     @test asol.t == t0
     @test asol.q == q0
     @test asol.p == p0
 
-    δt, δq, δp = get_initial_conditions(sol, 1)
-    @test δt == t0
-    @test δq == q0
-    @test δp == p0
-
-    set_initial_conditions!(sol1, similar(pode, t1, q2, p2))
-    for j = 1:ni
-        get_initial_conditions!(sol1, tq, tp, j)
-        @test tq == q2[j]
-        @test tp == p2[j]
-    end
-
     # test set/get solution
-    sol1 = Solution(similar(pode, q0, p0), Δt, nt)
-    sol2 = Solution(similar(pode, q0, p0), Δt, nt)
+    sol1 = Solution(similar(pode, ics=(q=q0, p=p0)))
+    sol2 = Solution(similar(pode, ics=(q=q0, p=p0)))
     for i = 1:nt
-        tq .= qs[i]
-        tp .= ps[i]
         asol.q .= qs[i]
         asol.p .= ps[i]
-        set_solution!(sol1, tq, tp, i)
-        set_solution!(sol2, asol, i)
+        sol1[i] = (q = copy(qs[i]), p = copy(ps[i]))
+        sol2[i] = asol
     end
     @test sol1.q[1:nt] == qs
     @test sol1.p[1:nt] == ps
     @test sol2.q[1:nt] == qs
     @test sol2.p[1:nt] == ps
 
-    sol1 = Solution(similar(pode, q1, p1), Δt, nt)
-    sol2 = Solution(similar(pode, q1, p1), Δt, nt)
-    for i = 1:nt
-        for j = 1:ni
-            tq .= Qs[i, j]
-            tp .= Ps[i, j]
-            asol.q .= Qs[i, j]
-            asol.p .= Ps[i, j]
-            set_solution!(sol1, tq, tp, i, j)
-            set_solution!(sol2, asol, i, j)
-        end
-    end
-    @test sol1.q[1:nt, :] == Qs
-    @test sol1.p[1:nt, :] == Ps
-    @test sol2.q[1:nt, :] == Qs
-    @test sol2.p[1:nt, :] == Ps
+    # test step and nstore parameters
+    sol = Solution(similar(pode, tspan = 2 .* tspan(pode)), step = 2)
+    @test ntime(sol) == 20
+    @test nstore(sol) == 10
 
-    # test nsave and nwrite parameters
-    sol = Solution(pode, Δt, 20, nsave = 2)
-    @test sol.nt == 10
-
-    sol = Solution(pode, Δt, 20, nsave = 2, nwrite = 10)
-    @test sol.nt == 5
-
-    # test reset
-    sol = Solution(pode, Δt, nt)
-    reset!(sol)
-    @test sol.t[0] == t1
-    @test sol.t[end] == t2
-    @test offset(sol) == nt
+    sol = Solution(similar(pode, tspan = 2 .* tspan(pode)), step = 10)
+    @test ntime(sol) == 20
+    @test nstore(sol) == 2
 end
 
 
@@ -247,93 +156,44 @@ end
     asol = AtomicSolution(dae)
 
     # test constructors and general functionality
-    sol = Solution(dae, Δt, nt)
+    sol = Solution(dae)
     @test typeof(sol) <: SolutionDAE
 
-    # test_interface(sol) # TODO reactivate
+    test_interface(sol)
 
-    sol0 = Solution(similar(dae, z0, λ0), Δt, nt)
+    sol0 = Solution(similar(dae, ics=(q=z0, λ=λ0)))
     @test typeof(sol0) <: SolutionDAE
-
-    sol1 = Solution(similar(dae, z1, λ1), Δt, nt)
-    @test typeof(sol1) <: SolutionDAE
-
     @test sol != sol0
-    @test sol != sol1
-
-    @test nsave(sol) == 1
-    @test ntime(sol) == nt
-    @test timesteps(sol) == Δt .* collect(0:nt)
 
     # test initial conditions
-    set_initial_conditions!(sol, t0, z0, λ0)
-    get_initial_conditions!(sol, tz, tλ, 1)
-    get_initial_conditions!(sol, asol, 1)
+    copy!(asol, sol0[0])
 
-    @test tz == z0
-    @test tλ == λ0
     @test asol.t == t0
     @test asol.q == z0
     @test asol.λ == λ0
 
-    δt, δz, δλ = get_initial_conditions(sol, 1)
-    @test δt == t0
-    @test δz == z0
-    @test δλ == λ0
-
-    set_initial_conditions!(sol1, similar(dae, t1, z2, λ2))
-    for j = 1:ni
-        get_initial_conditions!(sol1, tz, tλ, j)
-        @test tz == z2[j]
-        @test tλ == λ2[j]
-    end
-
     # test set/get solution
-    sol1 = Solution(similar(dae, z0, λ0), Δt, nt)
-    sol2 = Solution(similar(dae, z0, λ0), Δt, nt)
+    sol1 = Solution(similar(dae, ics=(q=z0, λ=λ0)))
+    sol2 = Solution(similar(dae, ics=(q=z0, λ=λ0)))
     for i = 1:nt
-        tz .= zs[i]
-        tλ .= λs[i]
         asol.q .= zs[i]
         asol.λ .= λs[i]
-        set_solution!(sol1, tz, tλ, i)
-        set_solution!(sol2, asol, i)
+        sol1[i] = (q = copy(zs[i]), λ = copy(λs[i]))
+        sol2[i] = asol
     end
     @test sol1.q[1:nt] == zs
     @test sol1.λ[1:nt] == λs
     @test sol2.q[1:nt] == zs
     @test sol2.λ[1:nt] == λs
 
-    sol1 = Solution(similar(dae, z1, λ1), Δt, nt)
-    sol2 = Solution(similar(dae, z1, λ1), Δt, nt)
-    for i = 1:nt
-        for j = 1:ni
-            tz .= Zs[i, j]
-            tλ .= Λs[i, j]
-            asol.q .= Zs[i, j]
-            asol.λ .= Λs[i, j]
-            set_solution!(sol1, tz, tλ, i, j)
-            set_solution!(sol2, asol, i, j)
-        end
-    end
-    @test sol1.q[1:nt, :] == Zs
-    @test sol1.λ[1:nt, :] == Λs
-    @test sol2.q[1:nt, :] == Zs
-    @test sol2.λ[1:nt, :] == Λs
+    # test step and nstore parameters
+    sol = Solution(similar(dae, tspan = 2 .* tspan(dae)), step = 2)
+    @test ntime(sol) == 20
+    @test nstore(sol) == 10
 
-    # test nsave and nwrite parameters
-    sol = Solution(dae, Δt, 20, nsave = 2)
-    @test sol.nt == 10
-
-    sol = Solution(dae, Δt, 20, nsave = 2, nwrite = 10)
-    @test sol.nt == 5
-
-    # test reset
-    sol = Solution(dae, Δt, nt)
-    reset!(sol)
-    @test sol.t[0] == t1
-    @test sol.t[end] == t2
-    @test offset(sol) == nt
+    sol = Solution(similar(dae, tspan = 2 .* tspan(dae)), step = 10)
+    @test ntime(sol) == 20
+    @test nstore(sol) == 2
 end
 
 
@@ -341,117 +201,46 @@ end
     asol = AtomicSolution(pdae)
 
     # test constructors and general functionality
-    sol = Solution(pdae, Δt, nt)
+    sol = Solution(pdae)
     @test typeof(sol) <: SolutionPDAE
 
-    # test_interface(sol) # TODO reactivate
+    test_interface(sol)
 
-    sol0 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
+    sol0 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)))
     @test typeof(sol0) <: SolutionPDAE
-
-    sol1 = Solution(similar(pdae, x1, y1, μ1), Δt, nt)
-    @test typeof(sol1) <: SolutionPDAE
-
     @test sol != sol0
-    @test sol != sol1
-
-    @test nsave(sol) == 1
-    @test ntime(sol) == nt
-    @test timesteps(sol) == Δt .* collect(0:nt)
 
     # test initial conditions
-    set_initial_conditions!(sol, t0, x0, y0, μ0)
-    get_initial_conditions!(sol, tx, ty, tμ, 1)
-    get_initial_conditions!(sol, asol, 1)
+    copy!(asol, sol0[0])
 
-    @test tx == x0
-    @test ty == y0
-    @test tμ == μ0
     @test asol.t == t0
     @test asol.q == x0
     @test asol.p == y0
     @test asol.λ == μ0
 
-    tx .= 0
-    ty .= 0
-    get_initial_conditions!(sol, tx, ty, 1)
-    @test tx == x0
-    @test ty == y0
-
-    δt, δx, δy, δμ = get_initial_conditions(sol, 1)
-    @test δt == t0
-    @test δx == x0
-    @test δy == y0
-    @test δμ == μ0
-
-    set_initial_conditions!(sol1, similar(pdae, t1, x2, y2, μ2))
-    for j = 1:ni
-        get_initial_conditions!(sol1, tx, ty, tμ, j)
-        @test tx == x2[j]
-        @test ty == y2[j]
-        @test tμ == μ2[j]
-    end
-
     # test set/get solution
-    sol1 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
-    sol2 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
-    sol3 = Solution(similar(pdae, x0, y0, μ0), Δt, nt)
+    sol1 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)))
+    sol2 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)))
     for i = 1:nt
-        tx .= xs[i]
-        ty .= ys[i]
-        tμ .= μs[i]
         asol.q .= xs[i]
         asol.p .= ys[i]
         asol.λ .= μs[i]
-        set_solution!(sol1, tx, ty, tμ, i)
-        set_solution!(sol2, tx, ty, i)
-        set_solution!(sol3, asol, i)
+        sol1[i] = (q = copy(xs[i]), p = copy(ys[i]), λ = copy(μs[i]))
+        sol2[i] = asol
     end
     @test sol1.q[1:nt] == xs
     @test sol1.p[1:nt] == ys
     @test sol1.λ[1:nt] == μs
     @test sol2.q[1:nt] == xs
     @test sol2.p[1:nt] == ys
-    @test sol3.q[1:nt] == xs
-    @test sol3.p[1:nt] == ys
-    @test sol3.λ[1:nt] == μs
 
-    sol1 = Solution(similar(pdae, x1, y1, μ1), Δt, nt)
-    sol2 = Solution(similar(pdae, x1, y1, μ1), Δt, nt)
-    sol3 = Solution(similar(pdae, x1, y1, μ1), Δt, nt)
-    for i = 1:nt
-        for j = 1:ni
-            tx .= Xs[i, j]
-            ty .= Ys[i, j]
-            tμ .= Ms[i, j]
-            asol.q .= Xs[i, j]
-            asol.p .= Ys[i, j]
-            asol.λ .= Ms[i, j]
-            set_solution!(sol1, tx, ty, tμ, i, j)
-            set_solution!(sol2, tx, ty, i, j)
-            set_solution!(sol3, asol, i, j)
-        end
-    end
-    @test sol1.q[1:nt, :] == Xs
-    @test sol1.p[1:nt, :] == Ys
-    @test sol1.λ[1:nt, :] == Ms
-    @test sol2.q[1:nt, :] == Xs
-    @test sol2.p[1:nt, :] == Ys
-    @test sol3.q[1:nt, :] == Xs
-    @test sol3.p[1:nt, :] == Ys
-    @test sol3.λ[1:nt, :] == Ms
+    # test step and nstore parameters
+    sol = Solution(similar(pdae, tspan = 2 .* tspan(pdae)), step = 2)
+    @test ntime(sol) == 20
+    @test nstore(sol) == 10
 
-    # test nsave and nwrite parameters
-    sol = Solution(pdae, Δt, 20, nsave = 2)
-    @test sol.nt == 10
+    sol = Solution(similar(pdae, tspan = 2 .* tspan(pdae)), step = 10)
+    @test ntime(sol) == 20
+    @test nstore(sol) == 2
 
-    sol = Solution(pdae, Δt, 20, nsave = 2, nwrite = 10)
-    @test sol.nt == 5
-
-    # test reset
-    sol = Solution(pdae, Δt, nt)
-    reset!(sol)
-    @test sol.t[0] == t1
-    @test sol.t[end] == t2
-    @test offset(sol) == nt
 end

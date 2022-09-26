@@ -124,8 +124,8 @@ struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
         IntegratorSLRK(params, solver, iguess, caches)
     end
 
-    function IntegratorSLRK(equation::LDAE{DT}, tableau::TableauSLRK, Δt; kwargs...) where {DT}
-        IntegratorSLRK{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorSLRK(equation::LDAEProblem{DT}, tableau::TableauSLRK, Δt=tstep(equation); kwargs...) where {DT}
+        IntegratorSLRK{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
     end
 end
 
@@ -177,7 +177,7 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S},
         # compute f(X)
         t = params.t + params.Δt * params.tab.p.c[i]
         params.equs[:f](t, cache.Qp[i], cache.Vp[i], cache.Fp[i])
-        params.equs[:g](t, cache.Qp[i], cache.Λp[i], cache.Gp[i])
+        params.equs[:g](t, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Gp[i])
         params.equs[:ϕ](t, cache.Qp[i], cache.Pp[i], cache.Φp[i])
         params.equs[:ψ](t, cache.Qp[i], cache.Pp[i], cache.Vp[i], cache.Fp[i], cache.Ψp[i])
     end

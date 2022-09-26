@@ -97,8 +97,8 @@ struct IntegratorVPRKpTableau{DT, TT, D, S,
         IntegratorVPRKpTableau(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpTableau(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
-        IntegratorVPRKpTableau{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRKpTableau(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
+        IntegratorVPRKpTableau{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 
@@ -274,7 +274,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::At
     initial_guess!(int, sol, cache)
 
     # reset solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # determine parameter λ
     nlres = nlsolve(λ -> function_dirac_constraint!(λ, int, cache), zero(int.params.λ);

@@ -81,8 +81,8 @@ struct IntegratorCMDVI{DT, TT, D, PT <: ParametersCMDVI{DT,TT},
         IntegratorCMDVI(params, solver, iguess, caches)
     end
 
-    function IntegratorCMDVI(equation::Union{IODE{DT}, LODE{DT}}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorCMDVI{DT, ndims(equation)}(get_functions(equation), Δt; kwargs...)
+    function IntegratorCMDVI(problem::Union{IODEProblem{DT}, LODEProblem{DT}}; kwargs...) where {DT,TT}
+        IntegratorCMDVI{DT, ndims(problem)}(functions(problem), timestep(problem); kwargs...)
     end
 end
 
@@ -193,7 +193,7 @@ function integrate_step!(int::IntegratorCMDVI{DT,TT}, sol::AtomicSolutionPODE{DT
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

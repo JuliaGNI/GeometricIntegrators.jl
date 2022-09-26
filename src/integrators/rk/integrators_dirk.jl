@@ -103,8 +103,8 @@ struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
         IntegratorDIRK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorDIRK(equation::ODE{DT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorDIRK{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorDIRK(problem::ODEProblem{DT}, tableau::Tableau{TT}; kwargs...) where {DT,TT}
+        IntegratorDIRK{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 
@@ -206,7 +206,7 @@ function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,T
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # consecutively solve for all stages
     for i in eachstage(int)

@@ -39,8 +39,8 @@ struct IntegratorVPRKpMidpoint{DT, TT, D, S,
         IntegratorVPRKpMidpoint(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpMidpoint(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
-        IntegratorVPRKpMidpoint{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRKpMidpoint(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
+        IntegratorVPRKpMidpoint{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 
@@ -149,7 +149,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::A
     initial_guess!(int, sol, cache)
 
     # reset cache
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

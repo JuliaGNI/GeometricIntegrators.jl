@@ -81,8 +81,8 @@ function EulerExtrapolationODE(v::VT, s::Int) where {VT}
     EulerExtrapolationODE{VT}(v, s)
 end
 
-function EulerExtrapolation(equ::ODE, s::Int)
-    EulerExtrapolationODE(_get_v(equ), s)
+function EulerExtrapolation(equ::ODEProblem, s::Int)
+    EulerExtrapolationODE(functions(equ).v, s)
 end
 
 function GeometricBase.evaluate!(extrap::EulerExtrapolationODE, t₀::TT, t₁::TT, x₀::AbstractVector{DT}, x₁::AbstractVector{DT}) where {DT,TT}

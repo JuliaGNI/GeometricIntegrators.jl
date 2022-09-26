@@ -144,8 +144,8 @@ struct IntegratorIPRK{DT, TT, D, S, PT <: ParametersIPRK{DT,TT},
         IntegratorIPRK{DT,D}(NamedTuple{(:v,:f,:h)}((v,f,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorIPRK(equation::Union{PODE{DT}, HODE{DT}}, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorIPRK{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorIPRK(problem::Union{PODEProblem{DT}, HODEProblem{DT}}, tableau::PartitionedTableau{TT}; kwargs...) where {DT,TT}
+        IntegratorIPRK{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 
@@ -255,7 +255,7 @@ function integrate_step!(int::IntegratorIPRK{DT,TT}, sol::AtomicSolutionPODE{DT,
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

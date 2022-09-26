@@ -125,8 +125,8 @@ struct IntegratorFIRK{DT, TT, D, S, PT <: ParametersFIRK{DT,TT},
         IntegratorFIRK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorFIRK(equation::ODE{DT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorFIRK{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorFIRK(problem::ODEProblem{DT}, tableau::Tableau{TT}; kwargs...) where {DT,TT}
+        IntegratorFIRK{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 
@@ -266,7 +266,7 @@ function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::AtomicSolutionODE{DT,T
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

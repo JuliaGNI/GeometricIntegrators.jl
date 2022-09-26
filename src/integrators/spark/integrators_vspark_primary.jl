@@ -146,8 +146,8 @@ struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT
         IntegratorVSPARKprimary(params, solver, iguess, caches)
     end
 
-    function IntegratorVSPARKprimary(equation::Union{IDAE{DT}, LDAE{DT}}, tableau::TableauVSPARKprimary, Δt; kwargs...) where {DT}
-        IntegratorVSPARKprimary{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVSPARKprimary(equation::Union{IDAEProblem{DT}, LDAEProblem{DT}}, tableau::TableauVSPARKprimary, Δt=tstep(equation); kwargs...) where {DT}
+        IntegratorVSPARKprimary{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
     end
 end
 

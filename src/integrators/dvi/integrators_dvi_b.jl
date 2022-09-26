@@ -82,8 +82,8 @@ struct IntegratorDVIB{DT, TT, D, PT <: ParametersDVIB{DT,TT},
         IntegratorDVIB(params, solver, iguess, caches)
     end
 
-    function IntegratorDVIB(equation::Union{IODE{DT}, LODE{DT}}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorDVIB{DT, ndims(equation)}(get_functions(equation), Δt; kwargs...)
+    function IntegratorDVIB(problem::Union{IODEProblem{DT}, LODEProblem{DT}}; kwargs...) where {DT,TT}
+        IntegratorDVIB{DT, ndims(problem)}(functions(problem), timestep(problem); kwargs...)
     end
 end
 
@@ -191,7 +191,7 @@ function integrate_step!(int::IntegratorDVIB{DT,TT}, sol::AtomicSolutionPODE{DT,
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

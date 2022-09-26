@@ -128,8 +128,8 @@ struct IntegratorVSPARKsecondary{DT, TT, D, S, R,
         IntegratorVSPARKsecondary(params, solver, iguess, caches)
     end
 
-    function IntegratorVSPARKsecondary(equation::LDAE{DT}, tableau::TableauVSPARKsecondary, Δt; kwargs...) where {DT}
-        IntegratorVSPARKsecondary{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVSPARKsecondary(equation::LDAEProblem{DT}, tableau::TableauVSPARKsecondary, Δt=tstep(equation); kwargs...) where {DT}
+        IntegratorVSPARKsecondary{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
     end
 end
 
@@ -181,8 +181,8 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
         # compute f(X)
         t = params.t + params.Δt * params.tab.p̃.c[i]
         params.equs[:f](t, cache.Qp[i], cache.Vp[i], cache.Fp[i])
-        params.equs[:g](t, cache.Qp[i], cache.Vp[i], cache.Gp[i])
-        params.equs[:g](t, cache.Qp[i], cache.Λp[i], cache.G̅p[i])
+        params.equs[:g](t, cache.Qp[i], cache.Pp[i], cache.Vp[i], cache.Gp[i])
+        params.equs[:g](t, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.G̅p[i])
 
         cache.Hp[i] .= cache.Fp[i] .+ cache.Gp[i]
 

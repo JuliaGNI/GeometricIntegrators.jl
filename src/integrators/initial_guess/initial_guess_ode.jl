@@ -24,15 +24,15 @@ function InitialGuessODE(interp::Type{<:Extrapolation}, v::Function, Δt)
     InitialGuessODE(int, v, Δt)
 end
 
-function InitialGuessODE(interp::Type{<:Extrapolation}, equation::Union{ODE,DAE,IODE,LODE}, Δt)
-    InitialGuessODE(interp, _get_v̄(equation), Δt)
+function InitialGuessODE(interp::Type{<:Extrapolation}, problem::Union{ODEProblem,DAEProblem,IODEProblem,LODEProblem}, Δt = tstep(problem))
+    InitialGuessODE(interp, _get_v̄(equation(problem), parameters(problem)), Δt)
 end
 
-InitialGuess(interp, equation::Union{ODE,DAE}, Δt) = InitialGuessODE(interp, equation, Δt)
-InitialGuess(equation::Union{ODE,DAE}, Δt) = InitialGuessODE(get_config(:ig_extrapolation), equation, Δt)
+InitialGuess(interp, problem::Union{ODEProblem,DAEProblem}, Δt = tstep(problem)) = InitialGuessODE(interp, problem, Δt)
+InitialGuess(problem::Union{ODEProblem,DAEProblem}, Δt = tstep(problem)) = InitialGuessODE(get_config(:ig_extrapolation), problem, Δt)
 
-InitialGuess(interp, equation::ODE, Δt) = InitialGuessODE(interp, equation, Δt)
-InitialGuess(interp, equation::DAE, Δt) = InitialGuessODE(interp, equation, Δt)
+InitialGuess(interp, equation::ODEProblem, Δt = tstep(equation)) = InitialGuessODE(interp, equation, Δt)
+InitialGuess(interp, equation::DAEProblem, Δt = tstep(equation)) = InitialGuessODE(interp, equation, Δt)
 
 
 Base.:(==)(ig1::InitialGuessODE{TT1}, ig2::InitialGuessODE{TT2}) where {TT1,TT2}= (

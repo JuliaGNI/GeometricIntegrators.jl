@@ -123,8 +123,8 @@ struct IntegratorSRKimplicit{DT, TT, D, S, PT <: ParametersSRKimplicit{DT,TT},
     #     IntegratorSRKimplicit{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     # end
 
-    function IntegratorSRKimplicit(equation::Union{IODE{DT}, LODE{DT}}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorSRKimplicit{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorSRKimplicit(problem::Union{IODEProblem{DT}, LODEProblem{DT}}, tableau::Tableau{TT}; kwargs...) where {DT,TT}
+        IntegratorSRKimplicit{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 
@@ -273,7 +273,7 @@ function integrate_step!(int::IntegratorSRKimplicit{DT,TT}, sol::AtomicSolutionP
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

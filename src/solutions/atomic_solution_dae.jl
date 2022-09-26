@@ -26,17 +26,18 @@ Atomic solution for an DAE.
 ### Constructors
 
 ```julia
-AtomicSolutionDAE{DT,TT,AT,IT}(nd, nm, internal::IT)
-AtomicSolutionDAE{DT,TT,AT,IT}(t::TT, q::AT, λ::AT, internal::IT)
-AtomicSolutionDAE(DT, TT, AT, nd, nm, internal::IT=NamedTuple())
 AtomicSolutionDAE(t::TT, q::AT, λ::AT, internal::IT=NamedTuple())
 ```
 
-* `nd`: dimension of the state vector
-* `nm`: dimension of the constraint
-
 """
-mutable struct AtomicSolutionDAE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
+mutable struct AtomicSolutionDAE{
+            DT <: Number,
+            TT <: Real,
+            AT <: AbstractArray{DT},
+            ΛT <: AbstractArray{DT},
+            VT <: AbstractArray{DT},
+            IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
+
     t::TT
     t̄::TT
 
@@ -44,78 +45,63 @@ mutable struct AtomicSolutionDAE{DT <: Number, TT <: Real, AT <: AbstractArray{D
     q̄::AT
     q̃::AT
 
-    λ::AT
-    λ̄::AT
+    λ::ΛT
+    λ̄::ΛT
 
-    v::AT
-    v̄::AT
+    v::VT
+    v̄::VT
 
-    u::AT
-    ū::AT
+    u::VT
+    ū::VT
 
     internal::IT
 
-    function AtomicSolutionDAE{DT,TT,AT,IT}(nd, nm, internal::IT) where {DT,TT,AT,IT}
-        new(zero(TT), zero(TT),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            AT(zeros(DT, nm)), AT(zeros(DT, nm)),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            internal)
-    end
+    function AtomicSolutionDAE(t::TT, q::AT, λ::ΛT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
+        v = vectorfield(q)
+        v̄ = vectorfield(q)
+        u = vectorfield(q)
+        ū = vectorfield(q)
 
-    function AtomicSolutionDAE{DT,TT,AT,IT}(t::TT, q::AT, λ::AT, internal::IT) where {DT,TT,AT,IT}
-        new(zero(t), zero(t),
-            zero(q), zero(q), zero(q),
-            zero(λ), zero(λ),
-            zero(q), zero(q),
-            zero(λ), zero(λ),
-            internal)
+        new{DT,TT,AT,ΛT,typeof(v),IT}(
+            copy(t), zero(t),
+            copy(q), zero(q), zero(q),
+            copy(λ), zero(λ),
+            v, v̄, u, ū, internal)
     end
 end
 
-AtomicSolutionDAE(DT, TT, AT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionDAE{DT,TT,AT,IT}(nd, nm, internal)
-AtomicSolutionDAE(t::TT, q::AT, λ::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionDAE{DT,TT,AT,IT}(t, q, λ, internal)
+function current(asol::AtomicSolutionDAE)
+    (t = asol.t, q = asol.q, λ = asol.λ)
+end
 
-function set_initial_conditions!(asol::AtomicSolutionDAE, equ::AbstractEquationDAE, i::Int=1)
-    @assert i ≥ nsamples(equ)
-    t, q, λ = initial_conditions(equ)
-    asol.t  = t
-    asol.q .= q[i]
-    asol.λ .= λ[i]
+function previous(asol::AtomicSolutionDAE)
+    (t = asol.t̄, q = asol.q̄, λ = asol.λ̄)
+end
+
+function Base.copy!(asol::AtomicSolutionDAE, sol::NamedTuple)
+    asol.t  = sol.t
+    asol.q .= sol.q
+    asol.λ .= sol.λ
+    asol.q̃ .= 0
     asol.v .= 0
+    asol.u .= 0
+    return asol
 end
 
-function set_solution!(asol::AtomicSolutionDAE, sol)
-    t, q, λ = sol
-    asol.t  = t
-    asol.q .= q
-    asol.λ .= λ
-    asol.v .= 0
-end
-
-function get_solution(asol::AtomicSolutionDAE)
-    (asol.t, asol.q, asol.λ)
-end
-
-function GeometricBase.reset!(asol::AtomicSolutionDAE, Δt)
+function GeometricBase.reset!(asol::AtomicSolutionDAE)
     asol.t̄  = asol.t
     asol.q̄ .= asol.q
     asol.λ̄ .= asol.λ
     asol.v̄ .= asol.v
     asol.ū .= asol.u
+    return asol
+end
+
+function update!(asol::AtomicSolutionDAE{DT}, Δt, Δq::Vector{DT}, λ::Vector{DT}) where {DT}
     asol.t += Δt
-end
-
-function update!(asol::AtomicSolutionDAE{DT}, y::Vector{DT}, λ::Vector{DT}) where {DT}
-    for k in eachindex(y)
-        update!(asol, y[k], k)
+    for k in eachindex(Δq)
+        asol.q[k], asol.q̃[k] = compensated_summation(Δq[k], asol.q[k], asol.q̃[k])
     end
-    for k in eachindex(λ)
-        asol.λ[k] = λ[k]
-    end
-end
-
-function update!(asol::AtomicSolutionDAE{DT}, y::DT, k::Union{Int,CartesianIndex}) where {DT}
-    asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
+    asol.λ .= λ
+    return asol
 end

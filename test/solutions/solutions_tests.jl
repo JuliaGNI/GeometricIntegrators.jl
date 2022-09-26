@@ -7,6 +7,3 @@ end
 @safetestset "Deterministic Solutions                                                         " begin
     include("deterministic_solutions_tests.jl")
 end
-@safetestset "IO                                                                              " begin
-    include("io_tests.jl")
-end

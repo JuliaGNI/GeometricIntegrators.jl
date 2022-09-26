@@ -110,9 +110,9 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
         IntegratorVPRKpSecondary(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpSecondary(equation::LDAE{DT}, tableau, Δt; kwargs...) where {DT}
-        @assert hassecondary(equation)
-        IntegratorVPRKpSecondary{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRKpSecondary(problem::LDAEProblem{DT}, tableau; kwargs...) where {DT}
+        @assert hassecondary(problem)
+        IntegratorVPRKpSecondary{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 
@@ -319,7 +319,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::
     initial_guess!(int, sol, cache)
 
     # reset solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

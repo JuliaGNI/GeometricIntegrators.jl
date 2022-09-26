@@ -33,17 +33,19 @@ Atomic solution for an PDAE.
 ### Constructors
 
 ```julia
-AtomicSolutionPDAE{DT,TT,AT,IT}(nd, nm, internal::IT)
-AtomicSolutionPDAE{DT,TT,AT,IT}(t::TT, q::AT, p::AT, λ::AT, internal::IT)
-AtomicSolutionPDAE(DT, TT, AT, nd, nm, internal::IT=NamedTuple())
 AtomicSolutionPDAE(t::TT, q::AT, p::AT, λ::AT, internal::IT=NamedTuple())
 ```
 
-* `nd`: dimension of the state vector
-* `nm`: dimension of the constraint
-
 """
-mutable struct AtomicSolutionPDAE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
+mutable struct AtomicSolutionPDAE{
+                DT <: Number,
+                TT <: Real,
+                AT <: AbstractArray{DT},
+                ΛT <: AbstractArray{DT},
+                VT <: AbstractArray{DT},
+                FT <: AbstractArray{DT},
+                IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
+    
     t::TT
     t̄::TT
 
@@ -55,92 +57,79 @@ mutable struct AtomicSolutionPDAE{DT <: Number, TT <: Real, AT <: AbstractArray{
     p̄::AT
     p̃::AT
 
-    λ::AT
-    λ̄::AT
+    λ::ΛT
+    λ̄::ΛT
 
-    v::AT
-    v̄::AT
-    f::AT
-    f̄::AT
+    v::VT
+    v̄::VT
+    f::FT
+    f̄::FT
     
-    u::AT
-    ū::AT
-    g::AT
-    ḡ::AT
+    u::VT
+    ū::VT
+    g::FT
+    ḡ::FT
 
     internal::IT
 
-    function AtomicSolutionPDAE{DT,TT,AT,IT}(nd, nm, internal::IT) where {DT,TT,AT,IT}
-        new(zero(TT), zero(TT),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            AT(zeros(DT, nm)), AT(zeros(DT, nm)),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            internal)
-    end
+    function AtomicSolutionPDAE(t::TT, q::AT, p::AT, λ::ΛT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
+        v = vectorfield(q)
+        v̄ = vectorfield(q)
+        f = vectorfield(p)
+        f̄ = vectorfield(p)
+        u = vectorfield(q)
+        ū = vectorfield(q)
+        g = vectorfield(p)
+        ḡ = vectorfield(p)
 
-    function AtomicSolutionPDAE{DT,TT,AT,IT}(t::TT, q::AT, p::AT, λ::AT, internal::IT) where {DT,TT,AT,IT}
-        new(zero(t), zero(t),
-            zero(q), zero(q), zero(q),
-            zero(p), zero(p), zero(p),
-            zero(λ), zero(λ),
-            zero(q), zero(q), zero(p), zero(p),
-            zero(λ), zero(λ), zero(λ), zero(λ),
-            internal)
+        new{DT,TT,AT,ΛT,typeof(v),typeof(f),IT}(
+            copy(t), zero(t),
+            copy(q), zero(q), zero(q),
+            copy(p), zero(p), zero(p),
+            copy(λ), zero(λ),
+            v, v̄, f, f̄, u, ū, g, ḡ, internal)
     end
 end
 
-AtomicSolutionPDAE(DT, TT, AT, nd, nm, internal::IT=NamedTuple()) where {IT} = AtomicSolutionPDAE{DT,TT,AT,IT}(nd, nm, internal)
-AtomicSolutionPDAE(t::TT, q::AT, p::AT, λ::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionPDAE{DT,TT,AT,IT}(t, q, p, λ, internal)
+function current(asol::AtomicSolutionPDAE)
+    (t = asol.t, q = asol.q, p = asol.p, λ = asol.λ)
+end
 
-function set_initial_conditions!(asol::AtomicSolutionPDAE, equ::AbstractEquationPDAE, i::Int=1)
-    @assert i ≥ nsamples(equ)
-    t, q, p, λ = initial_conditions(equ)
-    asol.t  = t
-    asol.q .= q[i]
-    asol.p .= p[i]
-    asol.λ .= λ[i]
+function previous(asol::AtomicSolutionPDAE)
+    (t = asol.t̄, q = asol.q̄, p = asol.p̄, λ = asol.λ̄)
+end
+
+function Base.copy!(asol::AtomicSolutionPDAE, sol::NamedTuple)
+    asol.t  = sol.t
+    asol.q .= sol.q
+    asol.p .= sol.p
+    asol.λ .= sol.λ
+    asol.q̃ .= 0
     asol.v .= 0
     asol.f .= 0
+    asol.u .= 0
+    asol.g .= 0
+    return asol
 end
 
-function set_solution!(asol::AtomicSolutionPDAE, sol)
-    t, q, p, λ = sol
-    asol.t  = t
-    asol.q .= q
-    asol.p .= p
-    asol.λ .= λ
-    asol.v .= 0
-    asol.f .= 0
-end
-
-function get_solution(asol::AtomicSolutionPDAE)
-    (asol.t, asol.q, asol.p, asol.λ)
-end
-
-function GeometricBase.reset!(asol::AtomicSolutionPDAE, Δt)
+function GeometricBase.reset!(asol::AtomicSolutionPDAE)
     asol.t̄  = asol.t
     asol.q̄ .= asol.q
     asol.p̄ .= asol.p
-    asol.λ̄.= asol.λ
+    asol.λ̄ .= asol.λ
     asol.v̄ .= asol.v
     asol.f̄ .= asol.f
     asol.ū .= asol.u
     asol.ḡ .= asol.g
+    return asol
+end
+
+function update!(asol::AtomicSolutionPDAE{DT,TT,AT,ΛT}, Δt::TT, Δq::AT, Δp::AT, λ::ΛT) where {DT,TT,AT,ΛT}
     asol.t += Δt
-end
-
-function update!(asol::AtomicSolutionPDAE{DT}, y::Vector{DT}, z::Vector{DT}, λ::Vector{DT}) where {DT}
-    for k in eachindex(y,z)
-        update!(asol, y[k], z[k], k)
+    for k in eachindex(Δq,Δp)
+        asol.q[k], asol.q̃[k] = compensated_summation(Δq[k], asol.q[k], asol.q̃[k])
+        asol.p[k], asol.p̃[k] = compensated_summation(Δp[k], asol.p[k], asol.p̃[k])
     end
-    for k in eachindex(λ)
-        asol.λ[k] = λ[k]
-    end
-end
-
-function update!(asol::AtomicSolutionPDAE{DT}, y::DT, z::DT, k::Union{Int,CartesianIndex}) where {DT}
-    asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
-    asol.p[k], asol.p̃[k] = compensated_summation(z, asol.p[k], asol.p̃[k])
+    asol.λ .= λ
+    return asol
 end

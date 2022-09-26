@@ -9,7 +9,6 @@ module Simulations
     using ..Integrators
     using ..Solutions
 
-    import ..Solutions: save
     import ..Solutions: DEFAULT_NSAVE, DEFAULT_NWRITE
 
     export Simulation, ParallelSimulation

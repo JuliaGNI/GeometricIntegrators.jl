@@ -1,5 +1,9 @@
 module Integrators
 
+    using Reexport
+
+    @reexport using GeometricBase
+    
     using CompactBasisFunctions
     using Documenter: @doc
     using LinearAlgebra
@@ -8,17 +12,23 @@ module Integrators
     using RungeKutta
     using SimpleSolvers
 
-    using GeometricBase
     using GeometricBase.Config
     using GeometricBase.Utils
     using GeometricEquations
     using GeometricEquations: _get_v, _get_f, _get_v̄, _get_f̄
+    using GeometricSolutions
 
     using ..Discontinuities
     using ..Solutions
 
 
+    import GeometricBase: timestep
+
     import RungeKutta: nstages
+
+
+    # compat workaroung
+    Base.ndims(prob::GeometricProblem) = length(vec(prob.ics.q))
 
 
     export Extrapolation,

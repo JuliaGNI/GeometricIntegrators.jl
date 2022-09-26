@@ -22,16 +22,17 @@ Atomic solution for an ODE.
 ### Constructors
 
 ```julia
-AtomicSolutionODE{DT,TT,AT,IT}(nd, internal::IT)
-AtomicSolutionODE{DT,TT,AT,IT}(t::TT, q::AT, internal::IT)
-AtomicSolutionODE(DT, TT, AT, nd, internal::IT=NamedTuple())
 AtomicSolutionODE(t::TT, q::AT, internal::IT=NamedTuple())
 ```
 
-* `nd`: dimension of the state vector
-
 """
-mutable struct AtomicSolutionODE{DT <: Number, TT <: Real, AT <: AbstractArray{DT}, IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
+mutable struct AtomicSolutionODE{
+            DT <: Number, 
+            TT <: Real, 
+            AT <: AbstractArray{DT}, 
+            VT <: AbstractArray{DT}, 
+            IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
+
     t::TT
     t̄::TT
 
@@ -39,62 +40,51 @@ mutable struct AtomicSolutionODE{DT <: Number, TT <: Real, AT <: AbstractArray{D
     q̄::AT
     q̃::AT
 
-    v::AT
-    v̄::AT
+    v::VT
+    v̄::VT
 
     internal::IT
 
-    function AtomicSolutionODE{DT,TT,AT,IT}(nd, internal::IT) where {DT,TT,AT,IT}
-        new(zero(TT), zero(TT),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            AT(zeros(DT, nd)), AT(zeros(DT, nd)),
-            internal)
-    end
-
-    function AtomicSolutionODE{DT,TT,AT,IT}(t::TT, q::AT, internal::IT) where {DT,TT,AT,IT}
-        new(zero(t), zero(t),
-            zero(q), zero(q), zero(q),
-            zero(q), zero(q),
-            internal)
+    function AtomicSolutionODE(t::TT, q::AT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT}
+        v = vectorfield(q)
+        v̄ = vectorfield(q)
+        new{DT,TT,AT,typeof(v),IT}(
+            copy(t), zero(t),
+            copy(q), zero(q), zero(q), 
+            v, v̄, internal)
     end
 end
 
-AtomicSolutionODE(DT, TT, AT, nd, internal::IT=NamedTuple()) where {IT} = AtomicSolutionODE{DT,TT,AT,IT}(nd, internal)
-AtomicSolutionODE(t::TT, q::AT, internal::IT=NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT} = AtomicSolutionODE{DT,TT,AT,IT}(t, q, internal)
+function current(asol::AtomicSolutionODE)
+    (t = asol.t, q = asol.q)
+end
 
+function previous(asol::AtomicSolutionODE)
+    (t = asol.t̄, q = asol.q̄)
+end
 
-function set_initial_conditions!(asol::AtomicSolutionODE, equ::AbstractEquationODE, i::Int=1)
-    @assert i ≥ nsamples(equ)
-    t, q = initial_conditions(equ)
-    asol.t  = t
-    asol.q .= q[i]
+function Base.copy!(asol::AtomicSolutionODE, sol::NamedTuple)
+    asol.t  = sol.t
+    asol.t̄  = 0
+    asol.q .= sol.q
+    asol.q̄ .= 0
+    asol.q̃ .= 0
     asol.v .= 0
+    asol.v̄ .= 0
+    return asol
 end
 
-function set_solution!(asol::AtomicSolutionODE, sol)
-    t, q = sol
-    asol.t  = t
-    asol.q .= q
-    asol.v .= 0
-end
-
-function get_solution(asol::AtomicSolutionODE)
-    (asol.t, asol.q)
-end
-
-function GeometricBase.reset!(asol::AtomicSolutionODE, Δt)
+function GeometricBase.reset!(asol::AtomicSolutionODE)
     asol.t̄  = asol.t
     asol.q̄ .= asol.q
     asol.v̄ .= asol.v
+    return asol
+end
+
+function update!(asol::AtomicSolutionODE{DT,TT,AT}, Δt::TT, Δq::AT) where {DT,TT,AT}
     asol.t += Δt
-end
-
-function update!(asol::AtomicSolutionODE{DT}, y::Vector{DT}) where {DT}
-    for k in eachindex(y)
-        update!(asol, y[k], k)
+    for k in eachindex(Δq)
+        asol.q[k], asol.q̃[k] = compensated_summation(Δq[k], asol.q[k], asol.q̃[k])
     end
-end
-
-function update!(asol::AtomicSolutionODE{DT}, y::DT, k::Union{Int,CartesianIndex}) where {DT}
-    asol.q[k], asol.q̃[k] = compensated_summation(y, asol.q[k], asol.q̃[k])
+    return asol
 end

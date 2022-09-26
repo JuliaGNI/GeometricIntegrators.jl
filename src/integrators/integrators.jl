@@ -20,8 +20,8 @@ function Integrator end
 
 
 # Print error for integrators not implemented, yet.
-function Integrator(equation::Equation, tableau::Union{AbstractTableau,Tableau}, Δt)
-    error("No integrator found for equation ", equation, " and tableau ", tableau)
+function Integrator(problem::GeometricProblem, tableau::Union{AbstractTableau,Tableau})
+    error("No integrator found for problem type ", typeof(problem), " and tableau ", tableau)
 end
 
 
@@ -30,95 +30,95 @@ end
 #*****************************************************************************#
 
 # Create integrator for Runge-Kutta tableau.
-function Integrator(equation::ODE, tableau::Tableau, Δt)
+function Integrator(problem::ODEProblem, tableau::Tableau)
     if isexplicit(tableau)
         # Create integrator for explicit Runge-Kutta tableau
-        IntegratorERK(equation, tableau, Δt)
+        IntegratorERK(problem, tableau)
     elseif isdiagnonallyimplicit(tableau)
         # Create integrator for diagonally implicit Runge-Kutta tableau
-        IntegratorDIRK(equation, tableau, Δt)
+        IntegratorDIRK(problem, tableau)
     elseif isfullyimplicit(tableau)
         # Create integrator for fully implicit Runge-Kutta tableau
-        IntegratorFIRK(equation, tableau, Δt)
+        IntegratorFIRK(problem, tableau)
     end
 end
 
 # Create integrator for explicit partitioned Runge-Kutta tableau.
-function Integrator(equation::Union{PODE,HODE}, tableau::PartitionedTableau, Δt)
+function Integrator(problem::Union{PODEProblem,HODEProblem}, tableau::PartitionedTableau)
     if isexplicit(tableau)
-        IntegratorEPRK(equation, tableau, Δt)
+        IntegratorEPRK(problem, tableau)
     else
-        IntegratorIPRK(equation, tableau, Δt)
+        IntegratorIPRK(problem, tableau)
     end
 end
 
-function Integrator(equation::Union{PODE,HODE}, tableau::Tableau, Δt)
-    Integrator(equation, PartitionedTableau(tableau), Δt)
+function Integrator(problem::Union{PODEProblem,HODEProblem}, tableau::Tableau)
+    Integrator(problem, PartitionedTableau(tableau))
 end
 
 # Create integrator for implicit partitioned Runge-Kutta tableau.
-function Integrator(equation::Union{IODE,LODE}, tableau::PartitionedTableau, Δt)
-    IntegratorPRKimplicit(equation, tableau, Δt)
+function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::PartitionedTableau)
+    IntegratorPRKimplicit(problem, tableau)
 end
 
 # Create integrator for variational partitioned Runge-Kutta tableau.
-function Integrator(equation::Union{IODE,LODE}, tableau::TableauVPRK, Δt)
-    IntegratorVPRK(equation, tableau, Δt)
+function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::TableauVPRK)
+    IntegratorVPRK(problem, tableau)
 end
 
 # Create integrator for formal Lagrangian Runge-Kutta tableau.
-function Integrator(equation::LODE, tableau::Tableau, Δt)
-    IntegratorFLRK(equation, tableau, Δt)
+function Integrator(problem::LODEProblem, tableau::Tableau)
+    IntegratorFLRK(problem, tableau)
 end
 
 # Create integrator for Projected Gauss-Legendre Runge-Kutta tableau.
-function Integrator(equation::Union{IODE,LODE}, tableau::CoefficientsPGLRK, Δt)
-    IntegratorPGLRK(equation, tableau, Δt)
+function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::CoefficientsPGLRK)
+    IntegratorPGLRK(problem, tableau)
 end
 
 # Create integrator for variational partitioned additive Runge-Kutta tableau.
-function Integrator(equation::Union{IDAE,LDAE}, tableau::TableauVPARK, Δt)
-    IntegratorVPARK(equation, tableau, Δt)
+function Integrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVPARK)
+    IntegratorVPARK(problem, tableau)
 end
 
 # Create integrator for special partitioned additive Runge-Kutta tableau.
-function Integrator(equation::Union{IDAE,LDAE}, tableau::TableauSPARK, Δt)
-    IntegratorSPARK(equation, tableau, Δt)
+function Integrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauSPARK)
+    IntegratorSPARK(problem, tableau)
 end
 
 # Create integrator for variational special partitioned additive Runge-Kutta tableau.
-function Integrator(equation::Union{IDAE,LDAE}, tableau::TableauVSPARK, Δt)
-    IntegratorVSPARK(equation, tableau, Δt)
+function Integrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVSPARK)
+    IntegratorVSPARK(problem, tableau)
 end
 
 # Create integrator for variational special partitioned additive Runge-Kutta tableau with projection on primary constraint.
-function Integrator(equation::Union{IDAE,LDAE}, tableau::TableauVSPARKprimary, Δt)
-    IntegratorVSPARKprimary(equation, tableau, Δt)
+function Integrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVSPARKprimary)
+    IntegratorVSPARKprimary(problem, tableau)
 end
 
 # Create integrator for variational special partitioned additive Runge-Kutta tableau with projection on secondary constraint.
-function Integrator(equation::LDAE, tableau::TableauVSPARKsecondary, Δt)
-    IntegratorVSPARKsecondary(equation, tableau, Δt)
+function Integrator(problem::LDAEProblem, tableau::TableauVSPARKsecondary)
+    IntegratorVSPARKsecondary(problem, tableau)
 end
 
 # Create integrator for Hamiltonian partitioned additive Runge-Kutta tableau.
-function Integrator(equation::Union{PDAE,HDAE}, tableau::TableauHPARK, Δt)
-    IntegratorHPARK(equation, tableau, Δt)
+function Integrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHPARK)
+    IntegratorHPARK(problem, tableau)
 end
 
 # Create integrator for Hamiltonian special partitioned additive Runge-Kutta tableau.
-function Integrator(equation::Union{PDAE,HDAE}, tableau::TableauHSPARK, Δt)
-    IntegratorHSPARK(equation, tableau, Δt)
+function Integrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHSPARK)
+    IntegratorHSPARK(problem, tableau)
 end
 
 # Create integrator for Hamiltonian special partitioned additive Runge-Kutta tableau with projection on primary constraint.
-function Integrator(equation::Union{PDAE,HDAE}, tableau::TableauHSPARKprimary, Δt)
-    IntegratorHSPARKprimary(equation, tableau, Δt)
+function Integrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHSPARKprimary)
+    IntegratorHSPARKprimary(problem, tableau)
 end
 
 # Create integrator for splitting tableau.
-function Integrator(equation::SODE, tableau::AbstractTableauSplitting, Δt)
-    IntegratorSplitting(equation, tableau, Δt)
+function Integrator(problem::SODEProblem, tableau::AbstractTableauSplitting)
+    IntegratorSplitting(problem, tableau)
 end
 
 
@@ -191,25 +191,25 @@ with vector fields `v` and `f` and initial conditions `q₀` and `p₀`.
 function integrate end
 
 # Apply integrator for ntime time steps and return solution.
-function integrate(equation::Equation, integrator::Integrator, ntime::Int; kwargs...)
-    solution = Solution(equation, timestep(integrator), ntime; kwargs...)
+function integrate(problem::GeometricProblem, integrator::Integrator; kwargs...)
+    solution = Solution(problem; kwargs...)
     integrate!(integrator, solution)
     return solution
 end
 
 # Integrate given equation with given tableau for ntime time steps and return solution.
-function integrate(equation::Equation, tableau::Union{AbstractTableau,Tableau,PartitionedTableau}, Δt, ntime; kwargs...)
-    return integrate(equation, Integrator(equation, tableau, Δt), ntime; kwargs...)
+function integrate(problem::GeometricProblem, tableau::Union{AbstractTableau,Tableau,PartitionedTableau}; kwargs...)
+    return integrate(problem, Integrator(problem, tableau); kwargs...)
 end
 
 # Integrate ODE specified by vector field and initial condition with given tableau for ntime time steps and return solution.
-function integrate(f::Function, x₀::Vector, tableau::Union{AbstractTableau,Tableau}, Δt, ntime; t₀=0., kwargs...)
-    return integrate(ODE(f, t₀, x₀), tableau, Δt, ntime; kwargs...)
+function integrate(f::Function, x₀::Vector, tableau::Union{AbstractTableau,Tableau}, tspan, Δt; kwargs...)
+    return integrate(ODEProblem(f, tspan, Δt, x₀), tableau; kwargs...)
 end
 
 # Integrate PODE specified by two vector fields and initial conditions with given tableau for ntime time steps and return solution.
-function integrate(v::Function, f::Function, q₀::Vector, p₀::Vector, tableau::Union{AbstractTableau,Tableau,PartitionedTableau}, Δt, ntime; t₀=0., kwargs...)
-    return integrate(PODE(v, f, t₀, q₀, p₀), tableau, Δt, ntime; kwargs...)
+function integrate(v::Function, f::Function, q₀::Vector, p₀::Vector, tableau::Union{AbstractTableau,Tableau,PartitionedTableau}, tspan, Δt; kwargs...)
+    return integrate(PODEProblem(v, f, tspan, Δt, q₀, p₀), tableau; kwargs...)
 end
 
 
@@ -247,7 +247,7 @@ Solve one time step n for one initial condition m.
 function integrate! end
 
 # Parts of one integration step that are common to deterministic and stochastic equations.
-function integrate_common!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT, TT, AT <: AbstractArray{DT}}
+function integrate!(int::Integrator{DT,TT}, sol::GeometricSolution{AT,TT}, asol::AtomicSolution{DT,TT}, n::Int) where {DT, TT, AT}
     # integrate one initial condition for one time step
     integrate_step!(int, asol)
 
@@ -255,70 +255,52 @@ function integrate_common!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, asol::A
     cut_periodic_solution!(asol, periodicity(sol))
 
     # copy solution from cache to solution
-    set_solution!(sol, asol, n, m)
+    sol[n] = asol
 end
-
-# Integrate one time step n for one initial condition m.
-function integrate!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, asol::AtomicSolution{DT,TT}, m::Int, n::Int) where {DT, TT, AT <: AbstractArray{DT}}
-    integrate_common!(int, sol, asol, m, n)
-end
-
-# Integrate `equation` for all initial conditions and all time steps.
-function integrate!(int::Integrator, sol::Solution)
-    integrate!(int, sol, 1, nsamples(sol))
-end
-
-
-# Integrate equation for initial conditions m with m₁ ≤ m ≤ m₂.
-function integrate!(int::Integrator, sol::Solution, m₁, m₂)
-    # integrate samples m with m₁ ≤ m ≤ m₂ for all time steps
-    integrate!(int, sol, m₁, m₂, 1, ntime(sol))
-end
-
 
 # Integrate equation for initial conditions m with m₁ ≤ m ≤ m₂ for time steps n with n₁ ≤ n ≤ n₂.
-function integrate!(int::Integrator{DT,TT}, sol::Solution{AT,TT}, m₁::Int, m₂::Int, n₁::Int, n₂::Int) where {DT, TT, AT <: AbstractArray{DT}}
-    @assert m₁ ≥ 1
-    @assert m₂ ≥ m₁
-    @assert m₂ ≤ nsamples(sol)
-
+function integrate!(int::Integrator, sol::GeometricSolution, n₁::Int, n₂::Int)
+    # check time steps range for consistency
     @assert n₁ ≥ 1
     @assert n₂ ≥ n₁
     @assert n₂ ≤ ntime(sol)
 
+    # create single step solution
     asol = AtomicSolution(sol, int)
 
-    # loop over initial conditions showing progress bar
-    for m in m₁:m₂
-        # get cache from solution
-        get_initial_conditions!(sol, asol, m, n₁)
-        initialize!(int, asol)
+    # copy initial condition from solution
+    copy!(asol, sol[n₁-1])
+    initialize!(int, asol)
 
-        # loop over time steps
-        for n in n₁:n₂
-            integrate!(int, sol, asol, m, n)
+    # loop over time steps
+    for n in n₁:n₂
+        integrate!(int, sol, asol, n)
 
-            # try
-            #     integrate!(int, sol, asol, m, n)
-            # catch ex
-            #     tstr = " in time step " * string(n)
-            #
-            #     if m₁ ≠ m₂
-            #         tstr *= " for initial condition " * string(m)
-            #     end
-            #
-            #     tstr *= "."
-            #
-            #     if isa(ex, DomainError)
-            #         @warn("Domain error" * tstr)
-            #     elseif isa(ex, ErrorException)
-            #         @warn("Simulation exited early" * tstr)
-            #         @warn(ex.msg)
-            #     else
-            #         @warn(string(typeof(ex)) * tstr)
-            #         throw(ex)
-            #     end
-            # end
-        end
+        # try
+        #     integrate!(int, sol, asol, n)
+        # catch ex
+        #     tstr = " in time step " * string(n)
+        #
+        #     if m₁ ≠ m₂
+        #         tstr *= " for initial condition " * string(m)
+        #     end
+        #
+        #     tstr *= "."
+        #
+        #     if isa(ex, DomainError)
+        #         @warn("Domain error" * tstr)
+        #     elseif isa(ex, ErrorException)
+        #         @warn("Simulation exited early" * tstr)
+        #         @warn(ex.msg)
+        #     else
+        #         @warn(string(typeof(ex)) * tstr)
+        #         throw(ex)
+        #     end
+        # end
     end
+end
+
+# Integrate `equation` for all time steps.
+function integrate!(int::Integrator, sol::GeometricSolution)
+    integrate!(int, sol, 1, ntime(sol))
 end

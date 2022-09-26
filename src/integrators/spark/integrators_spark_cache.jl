@@ -147,7 +147,7 @@ function IntegratorCache(int::AbstractIntegratorSPARK{DT,TT}) where {DT,TT}
     IntegratorCacheSPARK{DT, ndims(int), nstages(int), pstages(int)}()
 end
 
-function GeometricBase.reset!(cache::IntegratorCacheSPARK, Δt)
+function GeometricBase.reset!(cache::IntegratorCacheSPARK)
     cache.t̄  = cache.t
     cache.q̄ .= cache.q
     cache.p̄ .= cache.p

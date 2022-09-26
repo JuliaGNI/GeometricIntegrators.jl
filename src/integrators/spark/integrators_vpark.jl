@@ -77,8 +77,8 @@ struct IntegratorVPARK{DT, TT, D, S, R, PT <: ParametersVPARK{DT,TT,D,S,R},
         IntegratorVPARK(params, solver, iguess, caches)
     end
 
-    function IntegratorVPARK(equation::Union{IDAE{DT}, LDAE{DT}}, tableau::TableauVPARK, Δt; kwargs...) where {DT}
-        IntegratorVPARK{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPARK(equation::Union{IDAEProblem{DT}, LDAEProblem{DT}}, tableau::TableauVPARK, Δt=tstep(equation); kwargs...) where {DT}
+        IntegratorVPARK{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
     end
 end
 

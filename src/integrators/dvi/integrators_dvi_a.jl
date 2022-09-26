@@ -82,8 +82,8 @@ struct IntegratorDVIA{DT, TT, D, PT <: ParametersDVIA{DT,TT},
         IntegratorDVIA(params, solver, iguess, caches)
     end
 
-    function IntegratorDVIA(equation::Union{IODE{DT}, LODE{DT}}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorDVIA{DT, ndims(equation)}(get_functions(equation), Δt; kwargs...)
+    function IntegratorDVIA(problem::Union{IODEProblem{DT}, LODEProblem{DT}}; kwargs...) where {DT,TT}
+        IntegratorDVIA{DT, ndims(problem)}(functions(problem), timestep(problem); kwargs...)
     end
 end
 
@@ -191,7 +191,7 @@ function integrate_step!(int::IntegratorDVIA{DT,TT}, sol::AtomicSolutionPODE{DT,
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

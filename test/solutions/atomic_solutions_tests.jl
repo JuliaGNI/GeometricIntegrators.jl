@@ -7,6 +7,7 @@ using Test
 
 Δt = .1
 t0 = 0.
+t1 = t0 + Δt
 x0 = rand(2)
 q0 = rand(1)
 p0 = q0.^2
@@ -38,39 +39,34 @@ end
 
 @testset "$(rpad("Atomic ODE Solution",80))" begin
     asol = AtomicSolutionODE(t0, x0)
-    @test get_solution(asol) == (zero(t0), zero(x0))
 
-    set_solution!(asol, (t0, x0))
-    @test get_solution(asol) == (t0, x0)
     @test asol.t  == t0
     @test asol.q  == x0
     @test asol.t̄ == zero(t0)
     @test asol.q̄ == zero(x0)
 
-    reset!(asol, Δt)
-    @test asol.t̄ == t0
-    @test asol.q̄ == x0
+    @test current(asol) == (t = t0, q = x0)
+    @test previous(asol) == (t = zero(t0), q = zero(x0))
 
-    update!(asol, v0)
+    reset!(asol)
+    @test current(asol) == (t = t0, q = x0)
+    @test previous(asol) == (t = t0, q = x0)
+
+    update!(asol, Δt, v0)
     @test asol.t == t0  + Δt
     @test asol.q == x0 .+ v0
 
-    set_solution!(asol, (t0, [2π,2π]))
-    cut_periodic_solution!(asol, [2π, 0.])
-    @test asol.q  == [0., 2π]
-
-    set_solution!(asol, (t0, [-2π,2π]))
-    cut_periodic_solution!(asol, [2π, 0.])
-    @test asol.q  == [0., 2π]
+    copy!(asol, (t = t1, q = [2π,2π]))
+    @test asol.t == t1
+    @test asol.q == [2π,2π]
+    cut_periodic_solution!(asol, (q = [2π, 0.],))
+    @test asol.q == [0.,2π]
 end
 
 
 @testset "$(rpad("Atomic PODE Solution",80))" begin
     asol = AtomicSolutionPODE(t0, q0, p0)
-    @test get_solution(asol) == (zero(t0), zero(q0), zero(p0))
 
-    set_solution!(asol, (t0, q0, p0))
-    @test get_solution(asol) == (t0, q0, p0)
     @test asol.t  == t0
     @test asol.q  == q0
     @test asol.p  == p0
@@ -78,56 +74,64 @@ end
     @test asol.q̄ == zero(q0)
     @test asol.p̄ == zero(p0)
 
-    reset!(asol, Δt)
-    @test asol.t̄ == t0
-    @test asol.q̄ == q0
-    @test asol.p̄ == p0
+    @test current(asol) == (t = t0, q = q0, p = p0)
+    @test previous(asol) == (t = zero(t0), q = zero(q0), p = zero(p0))
 
-    update!(asol, y0, z0)
+    reset!(asol)
+    @test current(asol) == (t = t0, q = q0, p = p0)
+    @test previous(asol) == (t = t0, q = q0, p = p0)
+
+    update!(asol, Δt, y0, z0)
     @test asol.t == t0  + Δt
     @test asol.q == q0 .+ y0
     @test asol.p == p0 .+ z0
 
-    set_solution!(asol, (t0, [2π], [2π]))
-    cut_periodic_solution!(asol, [2π])
-    @test asol.q  == [0.]
-    @test asol.p  == [2π]
+    copy!(asol, (t = t1, q = [2π], p = [2π]))
+    @test asol.t == t1
+    @test asol.q == [2π]
+    @test asol.p == [2π]
+    cut_periodic_solution!(asol, (q = [2π],))
+    @test asol.q == [0.]
+    @test asol.p == [2π]
 end
 
 
 
 @testset "$(rpad("Atomic DAE Solution",80))" begin
     asol = AtomicSolutionDAE(t0, x0, λ0)
-    @test get_solution(asol) == (zero(t0), zero(x0), zero(λ0))
 
-    set_solution!(asol, (t0, x0, λ0))
-    @test get_solution(asol) == (t0, x0, λ0)
-    @test asol.t  == t0
-    @test asol.q  == x0
-    @test asol.λ  == λ0
+    @test asol.t == t0
+    @test asol.q == x0
+    @test asol.λ == λ0
     @test asol.t̄ == zero(t0)
     @test asol.q̄ == zero(x0)
-    @test asol.λ̄== zero(λ0)
+    @test asol.λ̄ == zero(λ0)
 
-    reset!(asol, Δt)
-    @test asol.t̄ == t0
-    @test asol.q̄ == x0
-    @test asol.λ̄== λ0
+    @test current(asol) == (t = t0, q = x0, λ = λ0)
+    @test previous(asol) == (t = zero(t0), q = zero(x0), λ = zero(λ0))
 
-    update!(asol, v0, λ1)
+    reset!(asol)
+    @test current(asol) == (t = t0, q = x0, λ = λ0)
+    @test previous(asol) == (t = t0, q = x0, λ = λ0)
+
+    update!(asol, Δt, v0, λ1)
     @test asol.t == t0  + Δt
     @test asol.q == x0 .+ v0
     @test asol.λ == λ1
+
+    copy!(asol, (t = t1, q = [-2π,2π], λ = λ1))
+    @test asol.t == t1
+    @test asol.q == [-2π,2π]
+    @test asol.λ == λ1
+    cut_periodic_solution!(asol, (q = [2π, 0.],))
+    @test asol.q == [0., 2π]
 end
 
 
 
 @testset "$(rpad("Atomic PDAE Solution",80))" begin
     asol = AtomicSolutionPDAE(t0, q0, p0, λ0)
-    @test get_solution(asol) == (zero(t0), zero(q0), zero(p0), zero(λ0))
 
-    set_solution!(asol, (t0, q0, p0, λ0))
-    @test get_solution(asol) == (t0, q0, p0, λ0)
     @test asol.t  == t0
     @test asol.q  == q0
     @test asol.p  == p0
@@ -135,17 +139,27 @@ end
     @test asol.t̄ == zero(t0)
     @test asol.q̄ == zero(q0)
     @test asol.p̄ == zero(p0)
-    @test asol.λ̄== zero(λ0)
+    @test asol.λ̄ == zero(λ0)
 
-    reset!(asol, Δt)
-    @test asol.t̄ == t0
-    @test asol.q̄ == q0
-    @test asol.p̄ == p0
-    @test asol.λ̄== λ0
+    @test current(asol) == (t = t0, q = q0, p = p0, λ = λ0)
+    @test previous(asol) == (t = zero(t0), q = zero(q0), p = zero(p0), λ = zero(λ0))
 
-    update!(asol, y0, z0, λ1)
+    reset!(asol)
+    @test current(asol) == (t = t0, q = q0, p = p0, λ = λ0)
+    @test previous(asol) == (t = t0, q = q0, p = p0, λ = λ0)
+
+    update!(asol, Δt, y0, z0, λ1)
     @test asol.t == t0  + Δt
     @test asol.q == q0 .+ y0
     @test asol.p == p0 .+ z0
     @test asol.λ == λ1
+
+    copy!(asol, (t = t1, q = [2π], p = [2π], λ = λ1))
+    @test asol.t == t1
+    @test asol.q == [2π]
+    @test asol.p == [2π]
+    @test asol.λ == λ1
+    cut_periodic_solution!(asol, (q = [2π],))
+    @test asol.q == [0.]
+    @test asol.p == [2π]
 end

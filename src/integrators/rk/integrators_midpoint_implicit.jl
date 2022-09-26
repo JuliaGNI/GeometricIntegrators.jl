@@ -95,8 +95,8 @@ struct IntegratorMidpointImplicit{DT, TT, D, S, PT <: ParametersMidpointImplicit
     #     IntegratorMidpointImplicit{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     # end
 
-    function IntegratorMidpointImplicit(equation::Union{IODE{DT}, LODE{DT}}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorMidpointImplicit{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorMidpointImplicit(problem::Union{IODEProblem{DT}, LODEProblem{DT}}, tableau::Tableau{TT}; kwargs...) where {DT,TT}
+        IntegratorMidpointImplicit{DT, ndims(equation)}(functions(equation), tableau, timestep(equation); kwargs...)
     end
 end
 
@@ -173,7 +173,7 @@ function integrate_step!(int::IntegratorMidpointImplicit{DT,TT}, sol::AtomicSolu
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

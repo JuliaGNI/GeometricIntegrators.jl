@@ -102,8 +102,8 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
         IntegratorFLRK(params, solver, iguess, caches)
     end
 
-    function IntegratorFLRK(equation::LODE{DT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorFLRK{DT, equation.d}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorFLRK(problem::LODEProblem{DT}, tableau::Tableau{TT}; kwargs...) where {DT,TT}
+        IntegratorFLRK{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 
 end
@@ -225,7 +225,7 @@ function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::AtomicSolutionPOD
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

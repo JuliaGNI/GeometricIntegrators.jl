@@ -39,8 +39,8 @@ struct IntegratorVPRKpInternal{DT, TT, D, S,
         IntegratorVPRKpInternal(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpInternal(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
-        IntegratorVPRKpInternal{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRKpInternal(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
+        IntegratorVPRKpInternal{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 
@@ -169,7 +169,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpInternal{DT,TT}, sol::A
     initial_guess!(int, sol, cache)
 
     # reset cache
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

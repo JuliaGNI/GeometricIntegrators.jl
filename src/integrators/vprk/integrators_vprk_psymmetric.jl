@@ -39,8 +39,8 @@ struct IntegratorVPRKpSymmetric{DT, TT, D, S,
         IntegratorVPRKpSymmetric(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpSymmetric(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
-        IntegratorVPRKpSymmetric{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRKpSymmetric(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
+        IntegratorVPRKpSymmetric{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 
@@ -145,7 +145,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::
     initial_guess!(int, sol, cache)
 
     # reset solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

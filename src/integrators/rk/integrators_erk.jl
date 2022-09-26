@@ -74,8 +74,8 @@ struct IntegratorERK{DT, TT, D, S, ET} <: AbstractIntegratorRK{DT,TT}
         IntegratorERK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorERK(equation::ODE{DT}, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorERK{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorERK(problem::ODEProblem{DT}, tableau::Tableau{TT}; kwargs...) where {DT,TT}
+        IntegratorERK{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 
@@ -90,7 +90,7 @@ function integrate_step!(int::IntegratorERK{DT,TT}, sol::AtomicSolutionODE{DT,TT
     local yᵢ::DT
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # compute internal stages
     for i in eachstage(int)

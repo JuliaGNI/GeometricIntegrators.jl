@@ -144,8 +144,8 @@ struct IntegratorPRKimplicit{DT, TT, D, S, PT <: ParametersPRKimplicit{DT,TT},
         IntegratorPRKimplicit{DT,D}(NamedTuple{(:v,:f,:h)}((v,f,h)), tableau, Δt; kwargs...)
     end
 
-    function IntegratorPRKimplicit(equation::Union{IODE{DT}, LODE{DT}}, tableau::PartitionedTableau{TT}, Δt::TT; kwargs...) where {DT,TT}
-        IntegratorPRKimplicit{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorPRKimplicit(problem::Union{IODEProblem{DT}, LODEProblem{DT}}, tableau::PartitionedTableau{TT}; kwargs...) where {DT,TT}
+        IntegratorPRKimplicit{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 
@@ -264,7 +264,7 @@ function integrate_step!(int::IntegratorPRKimplicit{DT,TT}, sol::AtomicSolutionP
     initial_guess!(int, sol, cache)
 
     # reset atomic solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)

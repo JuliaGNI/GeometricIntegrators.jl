@@ -50,8 +50,8 @@ mutable struct IntegratorVPRKdegenerate{DT, TT, D, S,
         IntegratorVPRKdegenerate(sparams, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKdegenerate(equation::Union{IODE{DT},LODE{DT}}, tableau, Δt; kwargs...) where {DT}
-        IntegratorVPRKdegenerate{DT, ndims(equation)}(get_functions(equation), tableau, Δt; kwargs...)
+    function IntegratorVPRKdegenerate(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
+        IntegratorVPRKdegenerate{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
     end
 end
 
@@ -131,7 +131,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKdegenerate{DT,TT}, sol::
     initial_guess!(int, sol, cache)
 
     # reset solution
-    reset!(sol, timestep(int))
+    reset!(sol)
 
     # call nonlinear solver
     solve!(int.solver)
