@@ -117,7 +117,7 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
 end
 
 
-function initial_guess!(int::IntegratorVPRKpSecondary{DT}, sol::AtomicSolutionPDAE{DT},
+function initial_guess!(int::IntegratorVPRKpSecondary{DT}, sol::SolutionStepPDAE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
@@ -310,7 +310,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::AtomicSolutionPDAE{DT,TT},
+function Integrators.integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::SolutionStepPDAE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)

@@ -88,7 +88,7 @@ struct IntegratorVPRKpLegendre{DT, TT, D, S,
 end
 
 
-function Integrators.initialize!(int::IntegratorVPRKpLegendre, sol::AtomicSolutionPODE)
+function Integrators.initialize!(int::IntegratorVPRKpLegendre, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.v)
@@ -99,7 +99,7 @@ function Integrators.initialize!(int::IntegratorVPRKpLegendre, sol::AtomicSoluti
 end
 
 
-function initial_guess!(int::IntegratorVPRKpLegendre{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function initial_guess!(int::IntegratorVPRKpLegendre{DT,TT}, sol::SolutionStepPODE{DT,TT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
@@ -322,7 +322,7 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST},
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKpLegendre{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function Integrators.integrate_step!(int::IntegratorVPRKpLegendre{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     local offset::Int
 

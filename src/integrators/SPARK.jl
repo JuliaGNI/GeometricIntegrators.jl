@@ -9,7 +9,7 @@ module SPARK
     using ..GeometricEquations
     using ..Config
 
-    import ..Solutions: AtomicSolutionPDAE, SolutionVector, update!
+    import ..Solutions: SolutionStepPDAE, SolutionVector, update!
 
     import ..Integrators
 

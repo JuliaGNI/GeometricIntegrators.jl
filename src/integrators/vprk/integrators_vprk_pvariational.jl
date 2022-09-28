@@ -59,7 +59,7 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
 end
 
 
-function Integrators.initialize!(int::IntegratorVPRKpVariational{DT}, sol::AtomicSolutionPODE{DT},
+function Integrators.initialize!(int::IntegratorVPRKpVariational{DT}, sol::SolutionStepPODE{DT},
                                  cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     sol.t̄ = sol.t - timestep(int)
 
@@ -75,7 +75,7 @@ function Integrators.initialize!(int::IntegratorVPRKpVariational{DT}, sol::Atomi
 end
 
 
-function initial_guess!(int::IntegratorVPRKpVariational{DT}, sol::AtomicSolutionPODE{DT},
+function initial_guess!(int::IntegratorVPRKpVariational{DT}, sol::SolutionStepPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
@@ -89,7 +89,7 @@ function initial_guess!(int::IntegratorVPRKpVariational{DT}, sol::AtomicSolution
     end
 end
 
-function initial_guess_projection!(int::IntegratorVPRKpVariational, sol::AtomicSolutionPODE)
+function initial_guess_projection!(int::IntegratorVPRKpVariational, sol::SolutionStepPODE)
     offset_q = 0
     offset_λ = ndims(int)
 
@@ -156,7 +156,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function Integrators.integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # add perturbation for next time step to solution
     # (same vector field as previous time step)

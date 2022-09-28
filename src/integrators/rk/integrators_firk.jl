@@ -134,7 +134,7 @@ end
 @inline Base.ndims(::IntegratorFIRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
-function initialize!(int::IntegratorFIRK, sol::AtomicSolutionODE)
+function initialize!(int::IntegratorFIRK, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v](sol.t, sol.q, sol.v)
@@ -144,14 +144,14 @@ function initialize!(int::IntegratorFIRK, sol::AtomicSolutionODE)
 end
 
 
-function update_params!(int::IntegratorFIRK, sol::AtomicSolutionODE)
+function update_params!(int::IntegratorFIRK, sol::SolutionStepODE)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = sol.t
     int.params.q .= sol.q
 end
 
 
-function initial_guess!(int::IntegratorFIRK{DT}, sol::AtomicSolutionODE{DT},
+function initial_guess!(int::IntegratorFIRK{DT}, sol::SolutionStepODE{DT},
                         cache::IntegratorCacheFIRK{DT}=int.caches[DT]) where {DT}
 
     local offset::Int
@@ -256,7 +256,7 @@ function jacobian!(x::Vector{DT}, jac::Matrix{DT}, cache::IntegratorCacheFIRK{DT
 end
 
 
-function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
+function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::SolutionStepODE{DT,TT},
                          cache::IntegratorCacheFIRK{DT}=int.caches[DT]) where {DT,TT}
 
     # update nonlinear solver parameters from atomic solution

@@ -1,5 +1,5 @@
 
-function Integrators.initialize!(int::AbstractIntegratorHSPARK, sol::AtomicSolutionPDAE)
+function Integrators.initialize!(int::AbstractIntegratorHSPARK, sol::SolutionStepPDAE)
     sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.p, sol.v)
@@ -9,7 +9,7 @@ function Integrators.initialize!(int::AbstractIntegratorHSPARK, sol::AtomicSolut
                             sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 end
 
-function initial_guess!(int::AbstractIntegratorHSPARK{DT}, sol::AtomicSolutionPDAE{DT},
+function initial_guess!(int::AbstractIntegratorHSPARK{DT}, sol::SolutionStepPDAE{DT},
                         cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,

@@ -102,7 +102,7 @@ function Integrators.get_internal_variables(int::IntegratorVPRKpStandard{DT,TT,D
 end
 
 
-function Integrators.initialize!(int::IntegratorVPRKpStandard{DT}, sol::AtomicSolutionPODE{DT},
+function Integrators.initialize!(int::IntegratorVPRKpStandard{DT}, sol::SolutionStepPODE{DT},
                                  cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     sol.t̄ = sol.t - timestep(int)
 
@@ -118,7 +118,7 @@ function Integrators.initialize!(int::IntegratorVPRKpStandard{DT}, sol::AtomicSo
 end
 
 
-function initial_guess!(int::IntegratorVPRKpStandard{DT}, sol::AtomicSolutionPODE{DT},
+function initial_guess!(int::IntegratorVPRKpStandard{DT}, sol::SolutionStepPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
@@ -132,7 +132,7 @@ function initial_guess!(int::IntegratorVPRKpStandard{DT}, sol::AtomicSolutionPOD
     end
 end
 
-function initial_guess_projection!(int::IntegratorVPRKpStandard, sol::AtomicSolutionPODE)
+function initial_guess_projection!(int::IntegratorVPRKpStandard, sol::SolutionStepPODE)
     offset_q = 0
     offset_λ = ndims(int)
 
@@ -193,7 +193,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKpStandard{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function Integrators.integrate_step!(int::IntegratorVPRKpStandard{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # add perturbation for next time step to solution
     # (same vector field as previous time step)

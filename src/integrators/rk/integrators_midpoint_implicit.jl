@@ -104,7 +104,7 @@ end
 @inline Base.ndims(::IntegratorMidpointImplicit{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
-function initialize!(int::IntegratorMidpointImplicit, sol::AtomicSolutionODE)
+function initialize!(int::IntegratorMidpointImplicit, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v](sol.t, sol.q, sol.v)
@@ -114,7 +114,7 @@ function initialize!(int::IntegratorMidpointImplicit, sol::AtomicSolutionODE)
 end
 
 
-function update_params!(int::IntegratorMidpointImplicit, sol::AtomicSolutionPODE)
+function update_params!(int::IntegratorMidpointImplicit, sol::SolutionStepPODE)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = sol.t
     int.params.q .= sol.q
@@ -122,7 +122,7 @@ function update_params!(int::IntegratorMidpointImplicit, sol::AtomicSolutionPODE
 end
 
 
-function initial_guess!(int::IntegratorMidpointImplicit{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function initial_guess!(int::IntegratorMidpointImplicit{DT,TT}, sol::SolutionStepPODE{DT,TT},
                         cache::IntegratorCacheMidpointImplicit{DT}=int.caches[DT]) where {DT,TT}
 
     # compute initial guess for solution
@@ -163,7 +163,7 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersMidpoi
 end
 
 
-function integrate_step!(int::IntegratorMidpointImplicit{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function integrate_step!(int::IntegratorMidpointImplicit{DT,TT}, sol::SolutionStepPODE{DT,TT},
                          cache::IntegratorCacheMidpointImplicit{DT}=int.caches[DT]) where {DT,TT}
 
     # update nonlinear solver parameters from atomic solution

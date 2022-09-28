@@ -28,7 +28,7 @@ mutable struct AbstractParametersSPARK{IT, DT, TT, D, S, R, P, equType <: NamedT
     end
 end
 
-function update_params!(params::AbstractParametersSPARK, sol::AtomicSolutionPDAE)
+function update_params!(params::AbstractParametersSPARK, sol::SolutionStepPDAE)
     # set time for nonlinear solver and copy previous solution
     params.t  = sol.t
     params.q .= sol.q

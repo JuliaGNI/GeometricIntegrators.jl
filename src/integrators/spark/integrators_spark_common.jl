@@ -15,7 +15,7 @@ function Integrators.get_internal_variables(int::AbstractIntegratorSPARK{DT,TT,D
     (Qi=Qi, Pi=Pi, Vi=Vi, Φi=Φi, Qp=Qp, Pp=Pp, Λp=Λp, Φp=Φp, solver=solver)
 end
 
-function update_solution!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomicSolutionPDAE{DT,TT},
+function update_solution!(int::AbstractIntegratorSPARK{DT,TT}, sol::SolutionStepPDAE{DT,TT},
                           cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT,TT}
     # compute final update
     update_solution!(sol.q, sol.q̃, cache.Vi, int.params.tab.q.b, timestep(int))
@@ -28,7 +28,7 @@ function update_solution!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomicSoluti
 end
 
 
-function Integrators.integrate_step!(int::AbstractIntegratorSPARK{DT,TT}, sol::AtomicSolutionPDAE{DT,TT},
+function Integrators.integrate_step!(int::AbstractIntegratorSPARK{DT,TT}, sol::SolutionStepPDAE{DT,TT},
                                      cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)

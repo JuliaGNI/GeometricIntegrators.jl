@@ -10,7 +10,7 @@ module VPRK
     using ..Config
     using ..Utils
 
-    import ..Solutions: AtomicSolutionPODE, AtomicSolutionPDAE, SolutionPDAE, SolutionVector
+    import ..Solutions: SolutionStepPODE, SolutionStepPDAE, SolutionPDAE, SolutionVector
     import ..Solutions: update!
 
     import ..Integrators

@@ -135,7 +135,7 @@ mutable struct ParametersDGVIPI{DT, TT, D, S, QR, FR, ET <: NamedTuple} <: Param
     end
 end
 
-# function update_params!(params::ParametersDGVIPI, sol::AtomicSolutionPODE)
+# function update_params!(params::ParametersDGVIPI, sol::SolutionStepPODE)
 #     # set time for nonlinear solver and copy previous solution
 #     params.t  = sol.t
 #     params.q .= sol.q
@@ -333,7 +333,7 @@ function update_params!(params::ParametersDGVIPI, int::IntegratorDGVIPI)
 end
 
 
-function initialize!(int::IntegratorDGVIPI, sol::AtomicSolutionPODE)
+function initialize!(int::IntegratorDGVIPI, sol::SolutionStepPODE)
     # copy initial conditions from solution
     int.q  .= sol.q
     int.q⁻ .= int.q
@@ -349,7 +349,7 @@ function initialize!(int::IntegratorDGVIPI, sol::AtomicSolutionPODE)
 end
 
 
-function initial_guess!(int::IntegratorDGVIPI{DT,TT,D,S,R}, sol::AtomicSolutionPODE{DT,TT},
+function initial_guess!(int::IntegratorDGVIPI{DT,TT,D,S,R}, sol::SolutionStepPODE{DT,TT},
                         cache::IntegratorCacheDGVIPI{DT}=int.caches[DT]) where {DT,TT,D,S,R}
     if nbasis(int.basis) > 0
         for i in eachindex(int.basis)
@@ -560,7 +560,7 @@ function update_solution!(int::IntegratorDGVIPI{DT}, cache::IntegratorCacheDGVIP
 end
 
 
-function integrate_step!(int::IntegratorDGVIPI{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function integrate_step!(int::IntegratorDGVIPI{DT,TT}, sol::SolutionStepPODE{DT,TT},
                          cache::IntegratorCacheDGVIPI{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, int)

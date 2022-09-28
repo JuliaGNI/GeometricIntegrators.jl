@@ -62,17 +62,17 @@ function test_firk_jacobian(ode, tableau; atol=eps())
     int1 = IntegratorFIRK(ode, tableau; exact_jacobian=false)
     int2 = IntegratorFIRK(ode, tableau; exact_jacobian=true)
 
-    asol1 = AtomicSolution(ode)
-    asol2 = AtomicSolution(ode)
+    solstep1 = SolutionStep(ode)
+    solstep2 = SolutionStep(ode)
 
-    initialize!(int1, asol2)
-    initialize!(int1, asol2)
+    initialize!(int1, solstep2)
+    initialize!(int1, solstep2)
 
-    update_params!(int1, asol1)
-    update_params!(int2, asol2)
+    update_params!(int1, solstep1)
+    update_params!(int2, solstep2)
 
-    initial_guess!(int1, asol1)
-    initial_guess!(int2, asol2)
+    initial_guess!(int1, solstep1)
+    initial_guess!(int2, solstep2)
 
     computeJacobian(int1.solver.x, int1.solver.J, int1.solver.Jparams)
     computeJacobian(int2.solver.x, int2.solver.J, int2.solver.Jparams)

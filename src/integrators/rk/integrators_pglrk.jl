@@ -236,7 +236,7 @@ end
 @inline nstages(::IntegratorPGLRK{DT,TT,D,S}) where {DT,TT,D,S} = S
 
 
-function initialize!(int::IntegratorPGLRK, sol::AtomicSolutionODE)
+function initialize!(int::IntegratorPGLRK, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v](sol.t, sol.q, sol.v)
@@ -248,7 +248,7 @@ function initialize!(int::IntegratorPGLRK, sol::AtomicSolutionODE)
 end
 
 
-function update_params!(params::ParametersPGLRK, sol::AtomicSolutionODE)
+function update_params!(params::ParametersPGLRK, sol::SolutionStepODE)
     # set time for nonlinear solver and copy previous solution
     params.t̄  = sol.t
     params.t  = sol.t + params.Δt
@@ -256,7 +256,7 @@ function update_params!(params::ParametersPGLRK, sol::AtomicSolutionODE)
 end
 
 
-function initial_guess!(int::IntegratorPGLRK{DT}, sol::AtomicSolutionODE{DT},
+function initial_guess!(int::IntegratorPGLRK{DT}, sol::SolutionStepODE{DT},
                         cache::IntegratorCachePGLRK{DT}=int.caches[DT]) where {DT}
 
     for i in eachstage(int)
@@ -408,7 +408,7 @@ function function_hamiltonian!(λ::Vector, int::IntegratorPGLRK{DT,TT},
 end
 
 
-function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
+function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::SolutionStepODE{DT,TT},
                          cache::IntegratorCachePGLRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from atomic solution
     update_params!(int.params, sol)

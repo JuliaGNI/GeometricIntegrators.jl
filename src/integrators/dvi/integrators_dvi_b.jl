@@ -91,7 +91,7 @@ end
 @inline Base.ndims(::IntegratorDVIB{DT,TT,D}) where {DT,TT,D} = D
 
 
-function initialize!(int::IntegratorDVIB, sol::AtomicSolutionPODE)
+function initialize!(int::IntegratorDVIB, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.v)
@@ -103,7 +103,7 @@ function initialize!(int::IntegratorDVIB, sol::AtomicSolutionPODE)
 end
 
 
-function update_params!(int::IntegratorDVIB, sol::AtomicSolutionPODE)
+function update_params!(int::IntegratorDVIB, sol::SolutionStepPODE)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = sol.t
     int.params.q .= sol.q
@@ -112,7 +112,7 @@ function update_params!(int::IntegratorDVIB, sol::AtomicSolutionPODE)
 end
 
 
-function initial_guess!(int::IntegratorDVIB{DT,TT,D}, sol::AtomicSolutionPODE{DT,TT},
+function initial_guess!(int::IntegratorDVIB{DT,TT,D}, sol::SolutionStepPODE{DT,TT},
                         cache::IntegratorCacheDVIB{DT}=int.caches[DT]) where {DT,TT,D}
 
     # compute initial guess for solution
@@ -181,7 +181,7 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDVIB{D
 end
 
 
-function integrate_step!(int::IntegratorDVIB{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function integrate_step!(int::IntegratorDVIB{DT,TT}, sol::SolutionStepPODE{DT,TT},
                          cache::IntegratorCacheDVIB{DT}=int.caches[DT]) where {DT,TT}
 
     # update nonlinear solver parameters from atomic solution

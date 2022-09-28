@@ -22,21 +22,21 @@ const DEFAULT_NWRITE = 0
 export DataSeries, TimeSeries, Solution, AbstractSolution, DeterministicSolution
 export current, previous
 
-export AtomicSolution,
-    AtomicSolutionODE, AtomicSolutionPODE,
-    AtomicSolutionDAE, AtomicSolutionPDAE
-export update!, cut_periodic_solution!
-
-include("solutions/atomic_solution.jl")
-include("solutions/atomic_solution_ode.jl")
-include("solutions/atomic_solution_pode.jl")
-include("solutions/atomic_solution_dae.jl")
-include("solutions/atomic_solution_pdae.jl")
-
 export SolutionODE, SolutionPODE
 export SolutionDAE, SolutionPDAE
 
+export SolutionStep,
+       SolutionStepODE, SolutionStepPODE,
+       SolutionStepDAE, SolutionStepPDAE
+
+export update!, cut_periodic_solution!
+
+include("solutions/solution_step.jl")
 include("solutions/solution.jl")
-include("solutions/atomic_solution_constructors.jl")
+include("solutions/solution_step_ode.jl")
+include("solutions/solution_step_pode.jl")
+include("solutions/solution_step_dae.jl")
+include("solutions/solution_step_pdae.jl")
+include("solutions/solution_step_constructors.jl")
 
 end

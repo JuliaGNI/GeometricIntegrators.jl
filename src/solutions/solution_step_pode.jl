@@ -27,17 +27,17 @@ Atomic solution for an PODE.
 ### Constructors
 
 ```julia
-AtomicSolutionPODE(t::TT, q::AT, p::AT, internal::IT=NamedTuple())
+SolutionStepPODE(t::TT, q::AT, p::AT, internal::IT=NamedTuple())
 ```
 
 """
-mutable struct AtomicSolutionPODE{
+mutable struct SolutionStepPODE{
             DT <: Number,
             TT <: Real,
             AT <: AbstractArray{DT},
             VT <: AbstractArray{DT},
             FT <: AbstractArray{DT},
-            IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
+            IT <: NamedTuple} <: SolutionStep{DT,TT,AT}
 
     t::TT
     t̄::TT
@@ -58,7 +58,7 @@ mutable struct AtomicSolutionPODE{
 
     internal::IT
 
-    function AtomicSolutionPODE(t::TT, q::AT, p::AT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT}
+    function SolutionStepPODE(t::TT, q::AT, p::AT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT}
         v = vectorfield(q)
         v̄ = vectorfield(q)
         f = vectorfield(p)
@@ -73,38 +73,38 @@ mutable struct AtomicSolutionPODE{
     end
 end
 
-function current(asol::AtomicSolutionPODE)
-    (t = asol.t, q = asol.q, p = asol.p)
+function current(solstep::SolutionStepPODE)
+    (t = solstep.t, q = solstep.q, p = solstep.p)
 end
 
-function previous(asol::AtomicSolutionPODE)
-    (t = asol.t̄, q = asol.q̄, p = asol.p̄)
+function previous(solstep::SolutionStepPODE)
+    (t = solstep.t̄, q = solstep.q̄, p = solstep.p̄)
 end
 
-function Base.copy!(asol::AtomicSolutionPODE, sol::NamedTuple)
-    asol.t  = sol.t
-    asol.q .= sol.q
-    asol.p .= sol.p
-    asol.q̃ .= 0
-    asol.v .= 0
-    asol.f .= 0
-    return asol
+function Base.copy!(solstep::SolutionStepPODE, sol::NamedTuple)
+    solstep.t  = sol.t
+    solstep.q .= sol.q
+    solstep.p .= sol.p
+    solstep.q̃ .= 0
+    solstep.v .= 0
+    solstep.f .= 0
+    return solstep
 end
 
-function GeometricBase.reset!(asol::AtomicSolutionPODE)
-    asol.t̄  = asol.t
-    asol.q̄ .= asol.q
-    asol.p̄ .= asol.p
-    asol.v̄ .= asol.v
-    asol.f̄ .= asol.f
-    return asol
+function GeometricBase.reset!(solstep::SolutionStepPODE)
+    solstep.t̄  = solstep.t
+    solstep.q̄ .= solstep.q
+    solstep.p̄ .= solstep.p
+    solstep.v̄ .= solstep.v
+    solstep.f̄ .= solstep.f
+    return solstep
 end
 
-function update!(asol::AtomicSolutionPODE{DT,TT,AT}, Δt::TT, Δq::AT, Δp::AT) where {DT,TT,AT}
-    asol.t += Δt
+function update!(solstep::SolutionStepPODE{DT,TT,AT}, Δt::TT, Δq::AT, Δp::AT) where {DT,TT,AT}
+    solstep.t += Δt
     for k in eachindex(Δq,Δp)
-        asol.q[k], asol.q̃[k] = compensated_summation(Δq[k], asol.q[k], asol.q̃[k])
-        asol.p[k], asol.p̃[k] = compensated_summation(Δp[k], asol.p[k], asol.p̃[k])
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q[k], solstep.q̃[k])
+        solstep.p[k], solstep.p̃[k] = compensated_summation(Δp[k], solstep.p[k], solstep.p̃[k])
     end
-    return asol
+    return solstep
 end
