@@ -1,7 +1,7 @@
 name = "GeometricIntegrators"
 uuid = "dcce2d33-59f6-5b8d-9047-0defad88ae06"
 authors = ["Michael Kraus <michael.kraus@ipp.mpg.de>"]
-version = "0.10.0"
+version = "0.10.1"
 
 [deps]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
@@ -34,7 +34,7 @@ Documenter = "0.25, 0.26, 0.27"
 ForwardDiff = "0.10"
 GenericLinearAlgebra = "0.2, 0.3"
 GeometricBase = "0.4"
-GeometricEquations = "0.6"
+GeometricEquations = "0.6, 0.7"
 GeometricSolutions = "0.3"
 HDF5 = "0.15, 0.16"
 NLsolve = "4"
