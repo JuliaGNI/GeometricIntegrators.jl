@@ -206,7 +206,7 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
 end
 
 
-function update_solution!(int::IntegratorVPARK{DT,TT}, sol::AtomicSolutionPDAE{DT,TT},
+function update_solution!(int::IntegratorVPARK{DT,TT}, sol::SolutionStepPDAE{DT,TT},
                           cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT,TT}
     # compute final update
     update_solution!(sol.q, sol.q̃, cache.Vi, int.params.tab.q.b, timestep(int))

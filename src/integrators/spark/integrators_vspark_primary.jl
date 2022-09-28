@@ -155,7 +155,7 @@ end
 GeometricBase.nconstraints(::IntegratorVSPARKprimary{DT,TT,D}) where {DT,TT,D} = D
 
 
-function initial_guess!(int::IntegratorVSPARKprimary{DT}, sol::AtomicSolutionPDAE{DT},
+function initial_guess!(int::IntegratorVSPARKprimary{DT}, sol::SolutionStepPDAE{DT},
                         cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,

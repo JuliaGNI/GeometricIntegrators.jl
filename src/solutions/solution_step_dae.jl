@@ -26,17 +26,17 @@ Atomic solution for an DAE.
 ### Constructors
 
 ```julia
-AtomicSolutionDAE(t::TT, q::AT, λ::AT, internal::IT=NamedTuple())
+SolutionStepDAE(t::TT, q::AT, λ::AT, internal::IT=NamedTuple())
 ```
 
 """
-mutable struct AtomicSolutionDAE{
+mutable struct SolutionStepDAE{
             DT <: Number,
             TT <: Real,
             AT <: AbstractArray{DT},
             ΛT <: AbstractArray{DT},
             VT <: AbstractArray{DT},
-            IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
+            IT <: NamedTuple} <: SolutionStep{DT,TT,AT}
 
     t::TT
     t̄::TT
@@ -56,7 +56,7 @@ mutable struct AtomicSolutionDAE{
 
     internal::IT
 
-    function AtomicSolutionDAE(t::TT, q::AT, λ::ΛT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
+    function SolutionStepDAE(t::TT, q::AT, λ::ΛT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
         v = vectorfield(q)
         v̄ = vectorfield(q)
         u = vectorfield(q)
@@ -70,38 +70,38 @@ mutable struct AtomicSolutionDAE{
     end
 end
 
-function current(asol::AtomicSolutionDAE)
-    (t = asol.t, q = asol.q, λ = asol.λ)
+function current(solstep::SolutionStepDAE)
+    (t = solstep.t, q = solstep.q, λ = solstep.λ)
 end
 
-function previous(asol::AtomicSolutionDAE)
-    (t = asol.t̄, q = asol.q̄, λ = asol.λ̄)
+function previous(solstep::SolutionStepDAE)
+    (t = solstep.t̄, q = solstep.q̄, λ = solstep.λ̄)
 end
 
-function Base.copy!(asol::AtomicSolutionDAE, sol::NamedTuple)
-    asol.t  = sol.t
-    asol.q .= sol.q
-    asol.λ .= sol.λ
-    asol.q̃ .= 0
-    asol.v .= 0
-    asol.u .= 0
-    return asol
+function Base.copy!(solstep::SolutionStepDAE, sol::NamedTuple)
+    solstep.t  = sol.t
+    solstep.q .= sol.q
+    solstep.λ .= sol.λ
+    solstep.q̃ .= 0
+    solstep.v .= 0
+    solstep.u .= 0
+    return solstep
 end
 
-function GeometricBase.reset!(asol::AtomicSolutionDAE)
-    asol.t̄  = asol.t
-    asol.q̄ .= asol.q
-    asol.λ̄ .= asol.λ
-    asol.v̄ .= asol.v
-    asol.ū .= asol.u
-    return asol
+function GeometricBase.reset!(solstep::SolutionStepDAE)
+    solstep.t̄  = solstep.t
+    solstep.q̄ .= solstep.q
+    solstep.λ̄ .= solstep.λ
+    solstep.v̄ .= solstep.v
+    solstep.ū .= solstep.u
+    return solstep
 end
 
-function update!(asol::AtomicSolutionDAE{DT}, Δt, Δq::Vector{DT}, λ::Vector{DT}) where {DT}
-    asol.t += Δt
+function update!(solstep::SolutionStepDAE{DT}, Δt, Δq::Vector{DT}, λ::Vector{DT}) where {DT}
+    solstep.t += Δt
     for k in eachindex(Δq)
-        asol.q[k], asol.q̃[k] = compensated_summation(Δq[k], asol.q[k], asol.q̃[k])
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q[k], solstep.q̃[k])
     end
-    asol.λ .= λ
-    return asol
+    solstep.λ .= λ
+    return solstep
 end

@@ -85,7 +85,7 @@ end
 timestep(int::IntegratorComposition) = int.Δt
 
 
-function integrate_step!(int::IntegratorComposition{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorComposition{DT,TT}, sol::SolutionStepODE{DT,TT}) where {DT,TT}
     local t̄ = sol.t
     int.q̄  .= sol.q
 

@@ -132,11 +132,11 @@ end
 @inline Base.ndims(::IntegratorSRKimplicit{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
-Solutions.AtomicSolution(integrator::IntegratorSRKimplicit{DT,TT}) where {DT,TT} =
-    AtomicSolutionPODE(DT, TT, ndims(integrator), get_internal_variables(integrator))
+Solutions.SolutionStep(integrator::IntegratorSRKimplicit{DT,TT}) where {DT,TT} =
+    SolutionStepPODE(DT, TT, ndims(integrator), get_internal_variables(integrator))
 
 
-function initialize!(int::IntegratorSRKimplicit, sol::AtomicSolutionODE)
+function initialize!(int::IntegratorSRKimplicit, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v̄](sol.t, sol.q, sol.v)
@@ -146,7 +146,7 @@ function initialize!(int::IntegratorSRKimplicit, sol::AtomicSolutionODE)
 end
 
 
-function update_params!(int::IntegratorSRKimplicit, sol::AtomicSolutionPODE)
+function update_params!(int::IntegratorSRKimplicit, sol::SolutionStepPODE)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = sol.t
     int.params.q .= sol.q
@@ -154,7 +154,7 @@ function update_params!(int::IntegratorSRKimplicit, sol::AtomicSolutionPODE)
 end
 
 
-function initial_guess!(int::IntegratorSRKimplicit{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function initial_guess!(int::IntegratorSRKimplicit{DT,TT}, sol::SolutionStepPODE{DT,TT},
                         cache::IntegratorCacheSRKimplicit{DT}=int.caches[DT]) where {DT,TT}
 
     # compute initial guess for internal stages
@@ -263,7 +263,7 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersSRKimp
 end
 
 
-function integrate_step!(int::IntegratorSRKimplicit{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function integrate_step!(int::IntegratorSRKimplicit{DT,TT}, sol::SolutionStepPODE{DT,TT},
                          cache::IntegratorCacheSRKimplicit{DT}=int.caches[DT]) where {DT,TT}
 
     # update nonlinear solver parameters from atomic solution

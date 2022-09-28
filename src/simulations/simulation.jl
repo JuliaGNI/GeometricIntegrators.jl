@@ -41,7 +41,7 @@ function run!(sim::Simulation)
     h5io = SolutionHDF5(sim.filename, solution(sim))
 
     # create atomic solution
-    asol = AtomicSolution(solution(sim), integrator(sim))
+    solstep = SolutionStep(solution(sim), integrator(sim))
 
     try
         # loop over integration cycles showing progress bar
@@ -49,14 +49,14 @@ function run!(sim::Simulation)
             # loop over samples
             for m in eachsample(sim)
                 # get cache from solution
-                get_initial_conditions!(solution(sim), asol, m)
+                get_initial_conditions!(solution(sim), solstep, m)
 
                 # initilize integrator
-                initialize!(integrator(sim), asol)
+                initialize!(integrator(sim), solstep)
 
                 # loop over time steps
                 for n in eachtimestep(solution(sim))
-                    integrate!(integrator(sim), solution(sim), asol, m, n)
+                    integrate!(integrator(sim), solution(sim), solstep, m, n)
                 end
             end
 

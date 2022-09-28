@@ -123,11 +123,11 @@ end
 @inline Base.ndims(::IntegratorFIRKimplicit{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
-Solutions.AtomicSolution(integrator::IntegratorFIRKimplicit{DT,TT}) where {DT,TT} =
-    AtomicSolutionPODE(DT, TT, ndims(integrator), get_internal_variables(integrator))
+Solutions.SolutionStep(integrator::IntegratorFIRKimplicit{DT,TT}) where {DT,TT} =
+    SolutionStepPODE(DT, TT, ndims(integrator), get_internal_variables(integrator))
 
 
-function initialize!(int::IntegratorFIRKimplicit, sol::AtomicSolutionODE)
+function initialize!(int::IntegratorFIRKimplicit, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v̄](sol.t, sol.q, sol.v)
@@ -137,7 +137,7 @@ function initialize!(int::IntegratorFIRKimplicit, sol::AtomicSolutionODE)
 end
 
 
-function update_params!(int::IntegratorFIRKimplicit, sol::AtomicSolutionPODE)
+function update_params!(int::IntegratorFIRKimplicit, sol::SolutionStepPODE)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = sol.t
     int.params.q .= sol.q
@@ -145,7 +145,7 @@ function update_params!(int::IntegratorFIRKimplicit, sol::AtomicSolutionPODE)
 end
 
 
-function initial_guess!(int::IntegratorFIRKimplicit{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function initial_guess!(int::IntegratorFIRKimplicit{DT,TT}, sol::SolutionStepPODE{DT,TT},
                         cache::IntegratorCacheFIRKimplicit{DT}=int.caches[DT]) where {DT,TT}
 
     # compute initial guess for internal stages
@@ -244,7 +244,7 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFIRKim
 end
 
 
-function integrate_step!(int::IntegratorFIRKimplicit{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function integrate_step!(int::IntegratorFIRKimplicit{DT,TT}, sol::SolutionStepPODE{DT,TT},
                          cache::IntegratorCacheFIRKimplicit{DT}=int.caches[DT]) where {DT,TT}
 
     # update nonlinear solver parameters from atomic solution

@@ -36,7 +36,7 @@ end
 @inline Integrators.CacheType(ST, params::ParametersVPRKpTableau{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheVPRK{ST,D,S}
 
 
-function update_params!(params::ParametersVPRKpTableau, sol::AtomicSolutionPODE)
+function update_params!(params::ParametersVPRKpTableau, sol::SolutionStepPODE)
     # set time for nonlinear solver and copy previous solution
     params.t̄  = sol.t
     params.t  = sol.t + params.Δt
@@ -107,7 +107,7 @@ end
 @inline Base.ndims(int::IntegratorVPRKpTableau{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
-function Integrators.initialize!(int::IntegratorVPRKpTableau, sol::AtomicSolutionPODE)
+function Integrators.initialize!(int::IntegratorVPRKpTableau, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.v)
@@ -118,7 +118,7 @@ function Integrators.initialize!(int::IntegratorVPRKpTableau, sol::AtomicSolutio
 end
 
 
-function initial_guess!(int::IntegratorVPRKpTableau{DT}, sol::AtomicSolutionPODE{DT},
+function initial_guess!(int::IntegratorVPRKpTableau{DT}, sol::SolutionStepPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
@@ -264,7 +264,7 @@ function function_dirac_constraint!(λ::Vector, int::IntegratorVPRKpTableau{DT,T
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
 
     # update nonlinear solver parameters from cache

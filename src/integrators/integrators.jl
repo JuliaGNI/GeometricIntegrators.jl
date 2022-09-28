@@ -247,15 +247,15 @@ Solve one time step n for one initial condition m.
 function integrate! end
 
 # Parts of one integration step that are common to deterministic and stochastic equations.
-function integrate!(int::Integrator{DT,TT}, sol::GeometricSolution{AT,TT}, asol::AtomicSolution{DT,TT}, n::Int) where {DT, TT, AT}
+function integrate!(int::Integrator{DT,TT}, sol::GeometricSolution{AT,TT}, solstep::SolutionStep{DT,TT}, n::Int) where {DT, TT, AT}
     # integrate one initial condition for one time step
-    integrate_step!(int, asol)
+    integrate_step!(int, solstep)
 
     # take care of periodic solutions
-    cut_periodic_solution!(asol, periodicity(sol))
+    cut_periodic_solution!(solstep, periodicity(sol))
 
     # copy solution from cache to solution
-    sol[n] = asol
+    sol[n] = solstep
 end
 
 # Integrate equation for initial conditions m with m₁ ≤ m ≤ m₂ for time steps n with n₁ ≤ n ≤ n₂.
@@ -266,18 +266,18 @@ function integrate!(int::Integrator, sol::GeometricSolution, n₁::Int, n₂::In
     @assert n₂ ≤ ntime(sol)
 
     # create single step solution
-    asol = AtomicSolution(sol, int)
+    solstep = SolutionStep(sol, int)
 
     # copy initial condition from solution
-    copy!(asol, sol[n₁-1])
-    initialize!(int, asol)
+    copy!(solstep, sol[n₁-1])
+    initialize!(int, solstep)
 
     # loop over time steps
     for n in n₁:n₂
-        integrate!(int, sol, asol, n)
+        integrate!(int, sol, solstep, n)
 
         # try
-        #     integrate!(int, sol, asol, n)
+        #     integrate!(int, sol, solstep, n)
         # catch ex
         #     tstr = " in time step " * string(n)
         #

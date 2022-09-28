@@ -136,7 +136,7 @@ function computeStageP!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{D
 end
 
 
-function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function integrate_step!(int::IntegratorEPRK{DT,TT}, sol::SolutionStepPODE{DT,TT},
                          cache::IntegratorCacheEPRK{DT}=int.caches[DT]) where {DT,TT}
     # temporary variables
     local tqᵢ::TT

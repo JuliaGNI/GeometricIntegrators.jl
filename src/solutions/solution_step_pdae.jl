@@ -33,18 +33,18 @@ Atomic solution for an PDAE.
 ### Constructors
 
 ```julia
-AtomicSolutionPDAE(t::TT, q::AT, p::AT, λ::AT, internal::IT=NamedTuple())
+SolutionStepPDAE(t::TT, q::AT, p::AT, λ::AT, internal::IT=NamedTuple())
 ```
 
 """
-mutable struct AtomicSolutionPDAE{
+mutable struct SolutionStepPDAE{
                 DT <: Number,
                 TT <: Real,
                 AT <: AbstractArray{DT},
                 ΛT <: AbstractArray{DT},
                 VT <: AbstractArray{DT},
                 FT <: AbstractArray{DT},
-                IT <: NamedTuple} <: AtomicSolution{DT,TT,AT}
+                IT <: NamedTuple} <: SolutionStep{DT,TT,AT}
     
     t::TT
     t̄::TT
@@ -72,7 +72,7 @@ mutable struct AtomicSolutionPDAE{
 
     internal::IT
 
-    function AtomicSolutionPDAE(t::TT, q::AT, p::AT, λ::ΛT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
+    function SolutionStepPDAE(t::TT, q::AT, p::AT, λ::ΛT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
         v = vectorfield(q)
         v̄ = vectorfield(q)
         f = vectorfield(p)
@@ -91,45 +91,45 @@ mutable struct AtomicSolutionPDAE{
     end
 end
 
-function current(asol::AtomicSolutionPDAE)
-    (t = asol.t, q = asol.q, p = asol.p, λ = asol.λ)
+function current(solstep::SolutionStepPDAE)
+    (t = solstep.t, q = solstep.q, p = solstep.p, λ = solstep.λ)
 end
 
-function previous(asol::AtomicSolutionPDAE)
-    (t = asol.t̄, q = asol.q̄, p = asol.p̄, λ = asol.λ̄)
+function previous(solstep::SolutionStepPDAE)
+    (t = solstep.t̄, q = solstep.q̄, p = solstep.p̄, λ = solstep.λ̄)
 end
 
-function Base.copy!(asol::AtomicSolutionPDAE, sol::NamedTuple)
-    asol.t  = sol.t
-    asol.q .= sol.q
-    asol.p .= sol.p
-    asol.λ .= sol.λ
-    asol.q̃ .= 0
-    asol.v .= 0
-    asol.f .= 0
-    asol.u .= 0
-    asol.g .= 0
-    return asol
+function Base.copy!(solstep::SolutionStepPDAE, sol::NamedTuple)
+    solstep.t  = sol.t
+    solstep.q .= sol.q
+    solstep.p .= sol.p
+    solstep.λ .= sol.λ
+    solstep.q̃ .= 0
+    solstep.v .= 0
+    solstep.f .= 0
+    solstep.u .= 0
+    solstep.g .= 0
+    return solstep
 end
 
-function GeometricBase.reset!(asol::AtomicSolutionPDAE)
-    asol.t̄  = asol.t
-    asol.q̄ .= asol.q
-    asol.p̄ .= asol.p
-    asol.λ̄ .= asol.λ
-    asol.v̄ .= asol.v
-    asol.f̄ .= asol.f
-    asol.ū .= asol.u
-    asol.ḡ .= asol.g
-    return asol
+function GeometricBase.reset!(solstep::SolutionStepPDAE)
+    solstep.t̄  = solstep.t
+    solstep.q̄ .= solstep.q
+    solstep.p̄ .= solstep.p
+    solstep.λ̄ .= solstep.λ
+    solstep.v̄ .= solstep.v
+    solstep.f̄ .= solstep.f
+    solstep.ū .= solstep.u
+    solstep.ḡ .= solstep.g
+    return solstep
 end
 
-function update!(asol::AtomicSolutionPDAE{DT,TT,AT,ΛT}, Δt::TT, Δq::AT, Δp::AT, λ::ΛT) where {DT,TT,AT,ΛT}
-    asol.t += Δt
+function update!(solstep::SolutionStepPDAE{DT,TT,AT,ΛT}, Δt::TT, Δq::AT, Δp::AT, λ::ΛT) where {DT,TT,AT,ΛT}
+    solstep.t += Δt
     for k in eachindex(Δq,Δp)
-        asol.q[k], asol.q̃[k] = compensated_summation(Δq[k], asol.q[k], asol.q̃[k])
-        asol.p[k], asol.p̃[k] = compensated_summation(Δp[k], asol.p[k], asol.p̃[k])
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q[k], solstep.q̃[k])
+        solstep.p[k], solstep.p̃[k] = compensated_summation(Δp[k], solstep.p[k], solstep.p̃[k])
     end
-    asol.λ .= λ
-    return asol
+    solstep.λ .= λ
+    return solstep
 end

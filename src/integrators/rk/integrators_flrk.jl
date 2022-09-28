@@ -112,7 +112,7 @@ end
 @inline Base.ndims(::IntegratorFLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
-function initialize!(int::IntegratorFLRK, sol::AtomicSolutionODE)
+function initialize!(int::IntegratorFLRK, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v̄](sol.t, sol.q, sol.v)
@@ -122,13 +122,13 @@ function initialize!(int::IntegratorFLRK, sol::AtomicSolutionODE)
 end
 
 
-function update_params!(int::IntegratorFLRK, sol::AtomicSolutionODE)
+function update_params!(int::IntegratorFLRK, sol::SolutionStepODE)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = sol.t
     int.params.q .= sol.q
 end
 
-function update_params!(int::IntegratorFLRK, sol::AtomicSolutionPODE)
+function update_params!(int::IntegratorFLRK, sol::SolutionStepPODE)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = sol.t
     int.params.q .= sol.q
@@ -136,7 +136,7 @@ function update_params!(int::IntegratorFLRK, sol::AtomicSolutionPODE)
 end
 
 
-function initial_guess!(int::IntegratorFLRK{DT}, sol::Union{AtomicSolutionODE{DT},AtomicSolutionPODE{DT}},
+function initial_guess!(int::IntegratorFLRK{DT}, sol::Union{SolutionStepODE{DT},SolutionStepPODE{DT}},
                         cache::IntegratorCacheFLRK{DT}=int.caches[DT]) where {DT}
     local offset::Int
 
@@ -207,16 +207,16 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersFLRK{D
 end
 
 
-function integrate_step!(int::IntegratorFLRK, sol::AtomicSolutionODE)
+function integrate_step!(int::IntegratorFLRK, sol::SolutionStepODE)
     integrate_step_flrk!(int, sol)
 end
 
-function integrate_step!(int::IntegratorFLRK, sol::AtomicSolutionPODE)
+function integrate_step!(int::IntegratorFLRK, sol::SolutionStepPODE)
     integrate_step_flrk!(int, sol)
     integrate_diag_flrk!(int, sol)
 end
 
-function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::SolutionStepPODE{DT,TT},
                               cache::IntegratorCacheFLRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from atomic solution
     update_params!(int, sol)
@@ -246,7 +246,7 @@ function integrate_step_flrk!(int::IntegratorFLRK{DT,TT}, sol::AtomicSolutionPOD
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)
 end
 
-function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::AtomicSolutionPODE{DT,TT},
+function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::SolutionStepPODE{DT,TT},
                               cache::IntegratorCacheFLRK{DT}=int.caches[DT]) where {DT,TT,D,S}
     # create temporary arrays
     δP = zeros(DT, D*S)

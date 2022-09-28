@@ -1,6 +1,4 @@
 
-
-
 const Solution = GeometricSolution
 
 const SolutionODE{dType, tType, dsType, probType, perType} = GeometricSolution{dType, tType, dsType, probType, perType} where {probType <: AbstractProblemODE}
@@ -11,8 +9,8 @@ const SolutionPDAE{dType, tType, dsType, probType, perType} = GeometricSolution{
 const SolutionPSDE{dType, tType, dsType, probType, perType} = GeometricSolution{dType, tType, dsType, probType, perType} where {probType <: AbstractProblemPSDE}
 
 
-function Base.setindex!(sol::Solution, asol::AtomicSolution, n)
-    sol[n] = current(asol)
+function Base.setindex!(sol::Solution, solstep::SolutionStep, n)
+    sol[n] = current(solstep)
 end
 
 
