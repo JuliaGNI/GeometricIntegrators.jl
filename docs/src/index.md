@@ -25,7 +25,7 @@ Robust, performant and structure-preserving solvers for different types of diffe
 GeometricIntegrators.jl provides a comprehensive library of existing geometric integration as well as non-geometric algorithms, such as explicit, implicit and partitioned Runge-Kutta methods, SPARK methods, splitting methods, symplectic methods and variational integrators. Most methods are implemented in an abstract way that allows for the flexible choice of tableaus, approximation spaces, basis functions, quadrature rules, and thus order of convergence.
 As most geometric integrators are not easily combined with time step adaption in a structure-preserving way, GeometricIntegrators.jl does not provide any general infrastructure for adaptive time stepping. Nonetheless, individual integrators can implement their own adaptivity strategies as long as they provide a solution at a predefined, equidistant time series.
 
-GeometricIntegrators.jl also serves as a testbed for the development and analysis of novel algorithms. Due to the modular structure and the use of the multiple dispatch paradigm, the library can easily be extended, e.g., towards new algorithms or new types of equations. The library is designed to minimize overhead and maximize performance in order to be able to perform simulations with millions or even billions of time steps to facilitate the study of the long-time behaviour of both numerical algorithms and dynamical systems.
+GeometricIntegrators.jl also serves as a testbed for the development and analysis of novel algorithms. Due to the modular structure and the use of the multiple dispatch paradigm, the library can easily be extended, e.g., towards new algorithms or new types of equations. The library aims at providing efficient implementations of diverse algorithms in order to be able to perform simulations and benchmarks with millions or even billions of time steps that facilitate the study of the long-time behaviour of both numerical algorithms and dynamical systems.
 The current scope of applications is mainly small- to mid-size systems of differential equations, e.g., systems of ordinary differential equations or semidiscretisations of partial differential equations with a moderate number of degrees of freedom.
 It is envisaged that in the future GeometricIntegrators.jl will also be able to address larger problems, especially semidiscretisations of partial differential equations in higher dimensions. Many elements required for this are already in place, e.g., support for general solution data structures, but others such as interfaces to appropriate iterative and parallel linear solvers are still lacking.
 
@@ -97,6 +97,8 @@ GeometricIntegrators.jl contains reference implementation for the methods descri
 - Michael Kraus. Projected Variational Integrators for Degenerate Lagrangian Systems. [arXiv:1708.07356](https://arxiv.org/abs/1708.07356).
 - Michael Kraus and Tomasz M. Tyranowski. Variational Integrators for Stochastic Dissipative Hamiltonian Systems. [arXiv:1909.07202](https://arxiv.org/abs/1909.07202),
   [Journal](https://doi.org/10.1088/1742-6596/1391/1/012037).
+
+References for most of the available Runge-Kutta methods can be found in the documentation of [RungeKutta.jl](https://juliagni.github.io/RungeKutta.jl/stable/).
 
 
 ### Background Material
