@@ -74,7 +74,7 @@ function Integrators.get_internal_variables(int::IntegratorVPRK{DT,TT,D,S}) wher
 end
 
 
-function initial_guess!(int::IntegratorVPRK{DT}, sol::AtomicSolutionPODE{DT},
+function initial_guess!(int::IntegratorVPRK{DT}, sol::SolutionStepPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
@@ -105,7 +105,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRK{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function Integrators.integrate_step!(int::IntegratorVPRK{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)

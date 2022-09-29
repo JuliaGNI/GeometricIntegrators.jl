@@ -85,7 +85,7 @@ mutable struct ParametersDGVI{DT, TT, D, S, R, ET <: NamedTuple} <: Parameters{D
 end
 
 
-function update_params!(params::ParametersDGVI, sol::AtomicSolutionPODE)
+function update_params!(params::ParametersDGVI, sol::SolutionStepPODE)
     # set time for nonlinear solver and copy previous solution
     params.t  = sol.t
     params.q .= sol.q
@@ -432,7 +432,7 @@ function IntegratorCache(int::IntegratorDGVI{DT,TT}) where {DT,TT}
 end
 
 
-function initialize!(int::IntegratorDGVI, sol::AtomicSolutionPODE)
+function initialize!(int::IntegratorDGVI, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 
     equation(int, :v̄)(sol.t, sol.q, sol.v)
@@ -442,7 +442,7 @@ function initialize!(int::IntegratorDGVI, sol::AtomicSolutionPODE)
 end
 
 
-function initial_guess!(int::IntegratorDGVI{DT,TT,D,S,R}, sol::AtomicSolutionPODE{DT,TT},
+function initial_guess!(int::IntegratorDGVI{DT,TT,D,S,R}, sol::SolutionStepPODE{DT,TT},
                         cache::IntegratorCacheDGVI{DT}=int.caches[DT]) where {DT,TT,D,S,R}
     if nbasis(int.basis) > 0
         for i in eachindex(int.basis)
@@ -677,13 +677,13 @@ function compute_rhs!(b::Vector{ST}, cache::IntegratorCacheDGVI{ST,D,S,R},
 end
 
 
-function update_solution!(sol::AtomicSolutionPODE, cache::IntegratorCacheDGVI)
+function update_solution!(sol::SolutionStepPODE, cache::IntegratorCacheDGVI)
     sol.q .= cache.q̄
     sol.p .= cache.p̄
 end
 
 
-function integrate_step!(int::IntegratorDGVI{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function integrate_step!(int::IntegratorDGVI{DT,TT}, sol::SolutionStepPODE{DT,TT},
                          cache::IntegratorCacheDGVI{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)

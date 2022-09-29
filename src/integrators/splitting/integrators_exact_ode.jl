@@ -14,7 +14,7 @@ end
 @inline GeometricBase.timestep(int::IntegratorExactODE) = int.Δt
 
 
-function integrate_step!(int::IntegratorExactODE{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorExactODE{DT,TT}, sol::SolutionStepODE{DT,TT}) where {DT,TT}
     # reset atomic solution
     reset!(sol)
 

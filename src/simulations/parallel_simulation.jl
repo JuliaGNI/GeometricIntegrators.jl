@@ -65,17 +65,17 @@ function run!(sim::ParallelSimulation)
                 id = Threads.threadid()
 
                 # create atomic solution
-                asol = AtomicSolution(solution(sim), integrator(sim, id))
+                solstep = SolutionStep(solution(sim), integrator(sim, id))
 
                 # get cache from solution
-                get_initial_conditions!(solution(sim), asol, m)
+                get_initial_conditions!(solution(sim), solstep, m)
 
                 # initilize integrator
-                initialize!(integrator(sim, id), asol)
+                initialize!(integrator(sim, id), solstep)
 
                 # loop over time steps
                 for n in eachtimestep(solution(sim))
-                    integrate!(integrator(sim, id), solution(sim), asol, m, n)
+                    integrate!(integrator(sim, id), solution(sim), solstep, m, n)
                 end
             end
 

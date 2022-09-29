@@ -66,7 +66,7 @@ pdae = harmonic_oscillator_pdae()
 
 
 @testset "$(rpad("ODE Solution",80))" begin
-    asol = AtomicSolution(ode)
+    solstep = SolutionStep(ode)
 
     # test constructors and general functionality
     sol = Solution(ode)
@@ -79,18 +79,18 @@ pdae = harmonic_oscillator_pdae()
     @test sol != sol0
 
     # test initial conditions
-    copy!(asol, sol0[0])
+    copy!(solstep, sol0[0])
 
-    @test asol.t == t0
-    @test asol.q == x0
+    @test solstep.t == t0
+    @test solstep.q == x0
 
     # test set/get solution
     sol1 = Solution(similar(ode, ics=(q=x0,)))
     sol2 = Solution(similar(ode, ics=(q=x0,)))
     for i in eachindex(xs)
-        asol.q .= xs[i]
+        solstep.q .= xs[i]
         sol1[i] = (q = copy(xs[i]),)
-        sol2[i] = asol
+        sol2[i] = solstep
     end
     @test sol1.q[1:nt] == xs
     @test sol2.q[1:nt] == xs
@@ -108,7 +108,7 @@ end
 
 
 @testset "$(rpad("PODE Solution",80))" begin
-    asol = AtomicSolution(pode)
+    solstep = SolutionStep(pode)
 
     # test constructors and general functionality
     sol = Solution(pode)
@@ -121,20 +121,20 @@ end
     @test sol != sol0
 
     # test initial conditions
-    copy!(asol, sol0[0])
+    copy!(solstep, sol0[0])
 
-    @test asol.t == t0
-    @test asol.q == q0
-    @test asol.p == p0
+    @test solstep.t == t0
+    @test solstep.q == q0
+    @test solstep.p == p0
 
     # test set/get solution
     sol1 = Solution(similar(pode, ics=(q=q0, p=p0)))
     sol2 = Solution(similar(pode, ics=(q=q0, p=p0)))
     for i = 1:nt
-        asol.q .= qs[i]
-        asol.p .= ps[i]
+        solstep.q .= qs[i]
+        solstep.p .= ps[i]
         sol1[i] = (q = copy(qs[i]), p = copy(ps[i]))
-        sol2[i] = asol
+        sol2[i] = solstep
     end
     @test sol1.q[1:nt] == qs
     @test sol1.p[1:nt] == ps
@@ -153,7 +153,7 @@ end
 
 
 @testset "$(rpad("DAE Solution",80))" begin
-    asol = AtomicSolution(dae)
+    solstep = SolutionStep(dae)
 
     # test constructors and general functionality
     sol = Solution(dae)
@@ -166,20 +166,20 @@ end
     @test sol != sol0
 
     # test initial conditions
-    copy!(asol, sol0[0])
+    copy!(solstep, sol0[0])
 
-    @test asol.t == t0
-    @test asol.q == z0
-    @test asol.λ == λ0
+    @test solstep.t == t0
+    @test solstep.q == z0
+    @test solstep.λ == λ0
 
     # test set/get solution
     sol1 = Solution(similar(dae, ics=(q=z0, λ=λ0)))
     sol2 = Solution(similar(dae, ics=(q=z0, λ=λ0)))
     for i = 1:nt
-        asol.q .= zs[i]
-        asol.λ .= λs[i]
+        solstep.q .= zs[i]
+        solstep.λ .= λs[i]
         sol1[i] = (q = copy(zs[i]), λ = copy(λs[i]))
-        sol2[i] = asol
+        sol2[i] = solstep
     end
     @test sol1.q[1:nt] == zs
     @test sol1.λ[1:nt] == λs
@@ -198,7 +198,7 @@ end
 
 
 @testset "$(rpad("PDAE Solution",80))" begin
-    asol = AtomicSolution(pdae)
+    solstep = SolutionStep(pdae)
 
     # test constructors and general functionality
     sol = Solution(pdae)
@@ -211,22 +211,22 @@ end
     @test sol != sol0
 
     # test initial conditions
-    copy!(asol, sol0[0])
+    copy!(solstep, sol0[0])
 
-    @test asol.t == t0
-    @test asol.q == x0
-    @test asol.p == y0
-    @test asol.λ == μ0
+    @test solstep.t == t0
+    @test solstep.q == x0
+    @test solstep.p == y0
+    @test solstep.λ == μ0
 
     # test set/get solution
     sol1 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)))
     sol2 = Solution(similar(pdae, ics=(q=x0, p=y0, λ=μ0)))
     for i = 1:nt
-        asol.q .= xs[i]
-        asol.p .= ys[i]
-        asol.λ .= μs[i]
+        solstep.q .= xs[i]
+        solstep.p .= ys[i]
+        solstep.λ .= μs[i]
         sol1[i] = (q = copy(xs[i]), p = copy(ys[i]), λ = copy(μs[i]))
-        sol2[i] = asol
+        sol2[i] = solstep
     end
     @test sol1.q[1:nt] == xs
     @test sol1.p[1:nt] == ys

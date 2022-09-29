@@ -31,16 +31,16 @@ eachdim(integrator::Integrator) = 1:ndims(integrator)
 get_internal_variables(::Integrator) = NamedTuple()
 ```
 Returns a `NamedTuple` containing all internal variables of an integrator that
-shall be stored in an [`AtomicSolution`](@ref). If there is no method for a
+shall be stored in an [`SolutionStep`](@ref). If there is no method for a
 specific integrator implemented an empty `NamedTuple()` is returned.
 """
 get_internal_variables(::Integrator) = NamedTuple()
 get_internal_variables(::Nothing) = NamedTuple()
 
 
-# Create AtomicSolution with internal variables of integrator.
-function Solutions.AtomicSolution(solution::GeometricSolution, integrator::Integrator)
-    AtomicSolution(solution, get_internal_variables(integrator))
+# Create SolutionStep with internal variables of integrator.
+function Solutions.SolutionStep(solution::GeometricSolution, integrator::Integrator)
+    SolutionStep(solution, get_internal_variables(integrator))
 end
 
 
@@ -49,18 +49,18 @@ abstract type Parameters{DT,TT} end
 function_stages!(::Vector{DT}, ::Vector{DT}, ::PT) where {DT, TT, PT <: Parameters{DT,TT}} = error("function_stages!() not implemented for ", PT)
 solution_stages!(::Vector{DT}, ::Vector{DT}, ::PT) where {DT, TT, PT <: Parameters{DT,TT}} = error("solution_stages!() not implemented for ", PT)
 
-initialize!(::Integrator, ::AtomicSolution) = nothing
+initialize!(::Integrator, ::SolutionStep) = nothing
 
 """
 Performs one time step with a given integrator.
 
 ```julia
-integrate_step!(integrator::Integrator, asol::AtomicSolution)
+integrate_step!(integrator::Integrator, solstep::SolutionStep)
 ```
 
-The function accepts two arguments: an integrator and an appropriate [`AtomicSolution`](@ref),
+The function accepts two arguments: an integrator and an appropriate [`SolutionStep`](@ref),
 which contains the state of the system at the beginning and the end of the time step and possibly
 additional information like solver output or the solution at internal stages of a Runge-Kutta
 method.
 """
-integrate_step!(integrator::Integrator, ::AtomicSolution) = error("integrate_step!() not implemented for ", typeof(integrator))
+integrate_step!(integrator::Integrator, ::SolutionStep) = error("integrate_step!() not implemented for ", typeof(integrator))

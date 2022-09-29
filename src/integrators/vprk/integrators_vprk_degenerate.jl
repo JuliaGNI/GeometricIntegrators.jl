@@ -57,7 +57,7 @@ end
 
 
 
-function initial_guess!(int::IntegratorVPRKdegenerate{DT}, sol::AtomicSolutionPODE{DT},
+function initial_guess!(int::IntegratorVPRKdegenerate{DT}, sol::SolutionStepPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
         evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
@@ -70,7 +70,7 @@ function initial_guess!(int::IntegratorVPRKdegenerate{DT}, sol::AtomicSolutionPO
     end
 end
 
-function initial_guess_projection!(int::IntegratorVPRKdegenerate{DT}, sol::AtomicSolutionPODE{DT},
+function initial_guess_projection!(int::IntegratorVPRKdegenerate{DT}, sol::SolutionStepPODE{DT},
                                    cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for k in eachdim(int)
         int.projector.x[k] = sol.q[k]
@@ -121,7 +121,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKdegenerate{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function Integrators.integrate_step!(int::IntegratorVPRKdegenerate{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)

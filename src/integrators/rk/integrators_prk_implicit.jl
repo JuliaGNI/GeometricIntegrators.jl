@@ -153,7 +153,7 @@ end
 @inline Base.ndims(::IntegratorPRKimplicit{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
-function initialize!(int::IntegratorPRKimplicit, sol::AtomicSolutionPODE)
+function initialize!(int::IntegratorPRKimplicit, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 
     equations(int)[:v̄](sol.t, sol.q, sol.v)
@@ -164,7 +164,7 @@ function initialize!(int::IntegratorPRKimplicit, sol::AtomicSolutionPODE)
 end
 
 
-function update_params!(int::IntegratorPRKimplicit, sol::AtomicSolutionPODE)
+function update_params!(int::IntegratorPRKimplicit, sol::SolutionStepPODE)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = sol.t
     int.params.q .= sol.q
@@ -172,7 +172,7 @@ function update_params!(int::IntegratorPRKimplicit, sol::AtomicSolutionPODE)
 end
 
 
-function initial_guess!(int::IntegratorPRKimplicit{DT}, sol::AtomicSolutionPODE{DT},
+function initial_guess!(int::IntegratorPRKimplicit{DT}, sol::SolutionStepPODE{DT},
                         cache::IntegratorCachePRKimplicit{DT}=int.caches[DT]) where {DT}
 
     for i in eachstage(int)
@@ -255,7 +255,7 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersPRKimp
 end
 
 
-function integrate_step!(int::IntegratorPRKimplicit{DT,TT}, sol::AtomicSolutionPODE{DT,TT},
+function integrate_step!(int::IntegratorPRKimplicit{DT,TT}, sol::SolutionStepPODE{DT,TT},
                          cache::IntegratorCachePRKimplicit{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from atomic solution
     update_params!(int, sol)

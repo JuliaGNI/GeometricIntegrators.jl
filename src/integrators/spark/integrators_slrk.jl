@@ -133,7 +133,7 @@ end
 GeometricBase.nconstraints(::IntegratorSLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
-function initial_guess!(int::IntegratorSLRK{DT}, sol::AtomicSolutionPDAE{DT},
+function initial_guess!(int::IntegratorSLRK{DT}, sol::SolutionStepPDAE{DT},
                         cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT}
     for i in 1:nstages(int)
         evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
@@ -248,7 +248,7 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
 end
 
 
-function update_solution!(int::IntegratorSLRK{DT,TT}, sol::AtomicSolutionPDAE{DT,TT},
+function update_solution!(int::IntegratorSLRK{DT,TT}, sol::SolutionStepPDAE{DT,TT},
                           cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT,TT}
     # compute final update
     update_solution!(sol.q, cache.Vp, int.params.tab.q.b, timestep(int))

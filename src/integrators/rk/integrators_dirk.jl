@@ -123,14 +123,14 @@ function initialize!(int::IntegratorDIRK, cache::IntegratorCacheDIRK)
 end
 
 
-function update_params!(int::IntegratorDIRK, sol::AtomicSolutionODE)
+function update_params!(int::IntegratorDIRK, sol::SolutionStepODE)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = sol.t
     int.params.q .= sol.q
 end
 
 
-function initial_guess!(int::IntegratorDIRK{DT}, sol::AtomicSolutionODE{DT},
+function initial_guess!(int::IntegratorDIRK{DT}, sol::SolutionStepODE{DT},
                         cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT}
 
     for i in eachstage(int)
@@ -196,7 +196,7 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{D
 end
 
 
-function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::AtomicSolutionODE{DT,TT},
+function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::SolutionStepODE{DT,TT},
                          cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT,TT}
 
      # update nonlinear solver parameters from atomic solution

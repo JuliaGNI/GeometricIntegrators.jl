@@ -52,7 +52,7 @@ end
 @inline GeometricBase.timestep(int::IntegratorSplitting) = int.Δt
 
 
-function integrate_step!(int::IntegratorSplitting{DT,TT}, sol::AtomicSolutionODE{DT,TT}) where {DT,TT}
+function integrate_step!(int::IntegratorSplitting{DT,TT}, sol::SolutionStepODE{DT,TT}) where {DT,TT}
     local cᵢ::TT
     local tᵢ::TT
 
