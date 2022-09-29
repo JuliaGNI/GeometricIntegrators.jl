@@ -53,7 +53,7 @@ makedocs(bib,
                # "Discontinuities"     => "modules/discontinuities.md",
                 "Equations"           => "modules/equations.md",
                 "Integrators"         => "modules/integrators.md",
-                "Simulations"         => "modules/simulations.md",
+               # "Simulations"         => "modules/simulations.md",
                 "Solutions"           => "modules/solutions.md",
                ],
              "Tableaus" => [
