@@ -3,6 +3,8 @@ using DocumenterCitations
 using Weave
 using GeometricIntegrators
 
+cp(normpath(@__FILE__, "../../AUTHORS.md"), normpath(@__FILE__, "../src/authors.md"); force=true)
+
 bib = CitationBibliography("GeometricIntegrators.bib")
 
 makedocs(bib,
@@ -67,7 +69,9 @@ makedocs(bib,
                ],
              "Release Notes" => "releasenotes.md",
              "Bibliography" => "bibliography.md",
-             ]
+             "Authors" => "authors.md",
+             "License" => "LICENSE.md",
+             ],
 )
 
 deploydocs(
