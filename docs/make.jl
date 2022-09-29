@@ -66,6 +66,7 @@ makedocs(bib,
              "Developer Docs" =>[
                 "Code Integration"    => "developer/code_integration.md",
                 "Custom Integrators"  => "developer/custom_integrators.md",
+                "Adaptive Time Stepping"  => "developer/adaptive_time_stepping.md",
                ],
              "Release Notes" => "releasenotes.md",
              "Bibliography" => "bibliography.md",
