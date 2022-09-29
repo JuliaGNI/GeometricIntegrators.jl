@@ -2,6 +2,6 @@
 # Equations
 
 ```@autodocs
-Modules = [GeometricIntegrators.Equations]
+Modules = [GeometricEquations]
 Order   = [:constant, :type, :macro, :function]
 ```

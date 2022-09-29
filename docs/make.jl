@@ -72,6 +72,10 @@ makedocs(bib,
              "Authors" => "authors.md",
              "License" => "LICENSE.md",
              ],
+    modules = [GeometricIntegrators,
+               GeometricBase,
+               GeometricEquations,
+               GeometricSolutions]
 )
 
 deploydocs(
