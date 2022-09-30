@@ -12,7 +12,7 @@ In this tutorial, we try to give an overview of the basic usage of GeometricInte
 *GeometricIntegrators.jl* can be installed using Julia's built-in package manager in the command line interface by
 ```julia; eval=false
 julia> ]
-(v1.5) pkg> add GeometricIntegrators
+(v1.8) pkg> add GeometricIntegrators
 ```
 In a Jupyter notebook, *GeometricIntegrators.jl* can be installed by explicitly using the `Pkg` module as
 ```julia; eval=false
@@ -35,7 +35,7 @@ using GeometricIntegrators
 ```
 Then we can create an ODE object for the equation $\dot{x} (t) = x(t)$ with initial condition $x(0) = 1$,
 ```julia
-ode = ODE((t, x, ẋ) -> ẋ[1] = x[1], [1.0]);
+ode = ODE((ẋ, t, x) -> ẋ[1] = x[1], [1.0]);
 ```
 create an integrator for this ODE, using the tableau for the explicit Euler method and a time step of $\Delta t = 0.1$,
 ```julia
@@ -95,7 +95,7 @@ x_2 \\
 Creating an `ODE` object requires the prescription of a function that computes
 the vector field $f$, e.g.,
 ```julia
-function ẋ(t, x, v)
+function ẋ(v, t, x, params)
     v[1] = x[2]
     v[2] = sin(x[1])
 end
@@ -111,12 +111,9 @@ ODE(<vector field>, <initial conditions>; kwargs...)
 ```
 specifically,
 ```julia
-ode = ODE(ẋ, x₀);
-```
-The initial time, `ode.t₀` is assumed to be $0$ be default. It can also be specified explicitly by
-```julia
-t₀  = 1.0
-ode = ODE(ẋ, t₀, x₀);
+tspan = (0.0, 10.0)
+tstep = 0.1
+ode = ODE(ẋ, tspan, tstep, x₀);
 ```
 
 
@@ -135,15 +132,15 @@ instead of $x$, can be exploited for more efficient integration.
 Such equations can be defined in terms of a partitioned ODE, where the vector
 fields are specified separately,
 ```julia
-function q̇(t, q, p, v)
+function q̇(v, t, q, p, params)
     v[1] = p[1]
 end
 
-function ṗ(t, q, p, f)
+function ṗ(f, t, q, p, params)
     f[1] = sin(q[1])
 end
 
-pode = PODE(q̇, ṗ, [acos(0.4)], [0.0]);
+pode = PODEProblem(q̇, ṗ, (0.0, 25.0), 0.1, [acos(0.4)], [0.0]);
 ```
 The first two arguments to the PODE constructor are the functions that determine
 the vector fields of the equations $\dot{q} (t) = v(t, q(t), p(t))$ and
@@ -163,12 +160,12 @@ general linear methods (_planned_).
 In order to instantiate many of the standard integrators, one needs to specify
 an ODE, a tableau and a timestep, e.g.,
 ```julia
-int = Integrator(ode, TableauExplicitEuler(), 0.1);
+int = Integrator(ode, TableauExplicitEuler());
 ```
 In order to run the integrator, the `integrate()` functions is called, passing
 an integrator object and the number of time steps to integrate:
 ```julia
-sol = integrate(ode, int, 250);
+sol = integrate(ode, int);
 ```
 The integrate function automatically creates an appropriate solution object,
 that contains the result of the integration.
@@ -183,8 +180,8 @@ system. The solutions drifts away although it should follow closed orbits.
 For a Hamiltonian system, defined as a PODE, a different tableau might be more
 appropriate, for example a symplectic Euler method,
 ```julia
-int = Integrator(pode, TableauLobattoIIIAIIIB(2), 0.1)
-sol = integrate(pode, int, 250);
+int = Integrator(pode, TableauLobattoIIIAIIIB(2))
+sol = integrate(pode, int);
 ```
 This creates a different integrator, which exploits the partitioned structure
 of the system. The solution return by the integrate step will also be a different
@@ -223,8 +220,8 @@ be used. The first parameter of the constructor of each tableau assigns a name t
 the tableau.
 Such custom tableaus can be used in exactly the same as standard tableaus, e.g., by
 ```julia
-int = Integrator(ode, tab, 0.1)
-sol = integrate(ode, int, 10);
+int = Integrator(ode, tab)
+sol = integrate(ode, int);
 ```
 making it very easy to implement and test new methods.
 
@@ -237,7 +234,7 @@ performant, e.g., when carrying out long-time simulations with intermediate
 saving of the solution.
 In such cases, it is better to preallocate a solution object by
 ```julia
-sol = Solution(ode, 0.1, 10);
+sol = Solution(ode);
 ```
 where the first argument is an equation, the second argument is the time step
 and the third argument is the number of time steps that will be computed in one
