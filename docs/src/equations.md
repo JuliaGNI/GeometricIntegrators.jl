@@ -50,7 +50,7 @@ with vector field ``v``, initial condition ``q_{0}`` and the solution
 
 The user needs to specify a function `v` that computes the vector field and must have the interface
 ```julia
-    function v(t, q, v, params)
+    function v(v, t, q, params)
         v[1] = ...
         v[2] = ...
         ...
@@ -93,9 +93,9 @@ q \in \mathbb{R}^{2} .
 
 In order to create an `ODEProblem` for the harmonic oscillator, we need to write the following code:
 ```julia
-function v(t, x, v, params)
+function v(v, t, x, params)
     v[1] = x[2]
-    v[2] = -params.k * x[1]
+    v[2] = - params.k * x[1]
 end
 
 tspan = (0.0, 1.0)
