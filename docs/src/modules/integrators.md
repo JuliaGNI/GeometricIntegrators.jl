@@ -76,12 +76,21 @@ Modules = [GeometricIntegrators.Integrators.SPARK]
 ```
 
 
-## VPRK Methods
+## Variational Partitioned Runge-Kutta Methods
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators.VPRK]
 ```
 
+## Degenerate Variational Integrators
+
+```@autodocs
+Modules = [GeometricIntegrators.Integrators]
+Pages   = ["integrators/dvi/integrators_dvi_a.jl",
+           "integrators/dvi/integrators_dvi_b.jl",
+           "integrators/dvi/integrators_cmdvi.jl",
+           "integrators/dvi/integrators_ctdvi.jl"]
+```
 
 ## Galerkin Variational Integrators
 

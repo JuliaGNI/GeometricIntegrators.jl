@@ -2,19 +2,29 @@
 # Release Notes
 
 
-## 0.10.0
+## 0.11.0
 
 ### Breaking Changes
 
-* Adapt Solution HDF5 interface to default Julia argument order and naming conventions
-* Extract HDF5 functionality from Solutions into separate data structure
-* Remove parallel Solution types
+* Rename `AtomicSolution` to `SolutionStep`
+* Disable `Simulation` functionality until `EnsembleSolution` is added to [GeometricEquations.jl](https://github.com/JuliaGNI/GeometricEquations.jl)
 
 ### New Features
 
 
 ### Documentation
 
+* Include documentation of [GeometricEquations.jl](https://github.com/JuliaGNI/GeometricEquations.jl) and [GeometricSolutions.jl](https://github.com/JuliaGNI/GeometricSolutions.jl)
+
+
+## 0.10.0
+
+### Breaking Changes
+
+* Refactor `TimeSeries`, `DataSeries` and `Solution` and move to [GeometricSolutions.jl](https://github.com/JuliaGNI/GeometricSolutions.jl)
+* Adapt Solution HDF5 interface to default Julia argument order and naming conventions
+* Extract HDF5 functionality from Solutions into separate data structure
+* Remove parallel Solution types
 
 
 ## 0.9.0
@@ -23,8 +33,8 @@
 
 * Move `HermiteInterpolation` to Integrators and remove `Interpolation` sub-package
 * Move `Equations` submodule to GeometricEquations.jl
-* Move `Common`, `Config` and `Utils` submodules to GeometricBase.jl
-* Move `TimeSeries`, `DataSeries` and `Solution` from `Solutions` types to GeometricBase.jl
+* Move `Common`, `Config` and `Utils` submodules to [GeometricBase.jl](https://github.com/JuliaGNI/GeometricBase.jl)
+* Move `TimeSeries`, `DataSeries` and `Solution` from `Solutions` types to [GeometricBase.jl](https://github.com/JuliaGNI/GeometricBase.jl)
 * Remove parallel DataSeries and Solution types
 
 ### New Features

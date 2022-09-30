@@ -6,6 +6,7 @@
 *.jl.mem
 *.jl.*.mem
 docs/build/
+docs/src/authors.md
 docs/src/images/*.png
 docs/src/images/*.svg
 docs/src/tutorial/

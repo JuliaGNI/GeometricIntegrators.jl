@@ -3,6 +3,8 @@ using DocumenterCitations
 using Weave
 using GeometricIntegrators
 
+cp(normpath(@__FILE__, "../../AUTHORS.md"), normpath(@__FILE__, "../src/authors.md"); force=true)
+
 bib = CitationBibliography("GeometricIntegrators.bib")
 
 makedocs(bib,
@@ -36,7 +38,8 @@ makedocs(bib,
              "Tutorial" => "tutorial/tutorial.md",
              "Equations" => "equations.md",
              "Integrators" => [
-                "Overview"    => "integrators.md",
+                "Usage"       => "integrators/usage.md",
+                "Overview"    => "integrators/overview.md",
                 "Runge-Kutta" => "integrators/rk.md",
                 "Splitting"   => "integrators/splitting.md",
                 "Variational" => "integrators/variational.md",
@@ -50,7 +53,7 @@ makedocs(bib,
                # "Discontinuities"     => "modules/discontinuities.md",
                 "Equations"           => "modules/equations.md",
                 "Integrators"         => "modules/integrators.md",
-                "Simulations"         => "modules/simulations.md",
+               # "Simulations"         => "modules/simulations.md",
                 "Solutions"           => "modules/solutions.md",
                ],
              "Tableaus" => [
@@ -63,10 +66,17 @@ makedocs(bib,
              "Developer Docs" =>[
                 "Code Integration"    => "developer/code_integration.md",
                 "Custom Integrators"  => "developer/custom_integrators.md",
+                "Adaptive Time Stepping"  => "developer/adaptive_time_stepping.md",
                ],
              "Release Notes" => "releasenotes.md",
              "Bibliography" => "bibliography.md",
-             ]
+             "Authors" => "authors.md",
+             "License" => "LICENSE.md",
+             ],
+    modules = [GeometricIntegrators,
+               GeometricBase,
+               GeometricEquations,
+               GeometricSolutions]
 )
 
 deploydocs(
