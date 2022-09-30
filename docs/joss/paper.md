@@ -34,12 +34,20 @@ In both cases, the library leaves maximum control to the user, e.g., with respec
 Differential equations are ubiquitous in science and engineering. Many equations possess geometric features or abstract mathematical structures that need to be preserved in the discretisation in order to obtain reliable simulation results, especially for nonlinear problems and long-time simulations. The preservation of such properties improves stability, bounds global error growth and reduces numerical artefacts [@BlanesCasas:2016; @HairerLubichWanner:2006; @LeimkuhlerReich:2004; @SanzSernaCalvo:1994].
 Robust, performant and structure-preserving solvers for different types of differential equations are thus needed across many disciplines. *GeometricIntegrators.jl* provides such solvers and makes them available for both direct use as well as integration into other codes. Furthermore, the implemented algorithms can also be used within the *DifferentialEquations.jl* ecosystem [@Rackauckas:2017], which is the defacto standard differential equation solver for the Julia programming language [@Bezanson:2017].
 
-*GeometricIntegrators.jl* provides a comprehensive library of existing geometric integration as well as non-geometric algorithms, such as explicit, implicit, partitioned and stochastic Runge-Kutta methods, SPARK methods, splitting methods, symplectic methods and variational integrators. Most integrators are implemented in an abstract way that allows for the flexible choice of tableaus, approximation spaces, basis functions, quadrature rules, and thus order of convergence.
-As most geometric integrators are not easily combined with time step adaption in a structure-preserving way, GeometricIntegrators.jl does not provide any general infrastructure for adaptive time stepping. Nonetheless, individual integrators can implement their own adaptivity strategies as long as they provide a solution at a predefined, equidistant time series.
+*GeometricIntegrators.jl* provides a comprehensive library of geometric integration algorithms as well as some non-geometric algorithms.
+It collects native Julia implementations of many known methods under a unified interface.
+Once a problem is implemented in the GeometricIntegators framework, all of its algorithms can immediately be applied and their performance evaluated.
+This facilitates numerical experiments with a wide variety of algorithms, simplifies benchmarking, and makes it easy to identify the best algorithm for a given problem.
+The implemented algorithms include explicit, implicit and partitioned Runge-Kutta methods, SPARK methods, splitting methods, symplectic methods and variational integrators.
+Most methods are implemented in an abstract way that allows for the flexible choice of tableaus, approximation spaces, basis functions, quadrature rules, and thus order of convergence. It also means that adding e.g. a new Runge-Kutta or splitting method merely amounts to adding its tableau.
+As most geometric integrators are not easily combined with time step adaption in a structure-preserving way, GeometricIntegrators.jl does not provide any general infrastructure for adaptive time stepping. Nonetheless, individual integrators can implement their own adaptivity strategies as long as they provide a solution at a predefined, equidistant series of time steps.
 
-*GeometricIntegrators.jl* also serves as a testbed for the development and analysis of novel algorithms [@Kraus:2017; @Kraus:2020; @KrausTyranowski:2020]. Due to the modular structure and the use of the multiple dispatch paradigm, the library can easily be extended, e.g., towards new algorithms or new types of equations. The library is designed to minimize overhead and maximize performance in order to be able to perform simulations with millions or even billions of time steps, facilitating the study of the long-time behaviour of both numerical algorithms and dynamical systems.
+One of the original aims of *GeometricIntegrators.jl* is to serve as a testbed for the development and analysis of novel algorithms [@Kraus:2017; @Kraus:2020; @KrausTyranowski:2020].
+Due to the modular structure and the use of the multiple dispatch paradigm, the library can easily be extended, e.g., towards new algorithms or new types of equations.
+The library aims at providing efficient implementations of diverse algorithms in order to be able to perform simulations and benchmarks with millions or even billions of time steps that facilitate the study of the long-time behaviour of both numerical algorithms and dynamical systems.
 The current scope of applications is mainly small- to mid-size systems of differential equations, e.g., systems of ordinary differential equations or semidiscretisations of partial differential equations with a moderate number of degrees of freedom.
-It is envisaged that in the future GeometricIntegrators.jl will also be able to address larger problems, especially semidiscretisations of partial differential equations in higher dimensions. Many elements required for this are already in place, e.g., support for general solution data structures, but others such as interfaces to appropriate iterative and parallel linear solvers are still lacking.
+It is envisaged that in the future GeometricIntegrators.jl will also be able to address larger problems, especially semidiscretisations of partial differential equations in higher dimensions.
+In particular, this requires interfaces to appropriate iterative and parallel linear solvers, which are still lacking.
 
 
 # Other Software
@@ -61,6 +69,6 @@ Support and submission of contributions to the library are handled through the G
 
 This work has received funding from the European Union's Horizon 2020 research and innovation programme under the Marie Sklodowska-Curie grant agreement No 708124. The views and opinions expressed herein do not necessarily reflect those of the European Commission.
 
-Tomasz M. Tyranowski provided the initial implementation of stochastic integrators.
+Tomasz M. Tyranowski provided the initial implementation of stochastic integrators which can now be found in the package StochasticIntegrators.jl.
 
 # References
