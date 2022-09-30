@@ -4,13 +4,13 @@ CurrentModule = GeometricIntegrators
 
 # Integrators
 
-GeometricIntegrators.jl provides a plethora of geometric and non-geometric integrators.
+GeometricIntegrators.jl provides a plethora of geometric integrators as well as non-geometric integrators (mainly for testing and benchmarking purposes).
 Most integrators are specified by a tableau, that is a Butcher tableau for Runge-Kutta methods, a pair of tableaus for partitioned Runge-Kutta and VPRK methods, or generalizations thereof for SPARK methods.
 Other integrators, such as Galerkin variational integrators require the specification of a basis and a quadrature rule.
 
-In many cases, the correct integrator is automatically selected based on the tableau and equation types by calling
+In many cases, the correct integrator is automatically selected based on the tableau and problem types by calling
 ```
-Integrator(equation, tableau, Δt)
+Integrator(problem, tableau)
 ```
 where `Δt` is the time step.
 
@@ -20,7 +20,7 @@ using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
 ```
 ```@example 1
-ode = harmonic_oscillator_ode()
+prob = harmonic_oscillator_ode()
 ```
 Create an explicit Euler tableau:
 ```@example 1
@@ -28,7 +28,7 @@ tab = TableauExplicitEuler()
 ```
 And now create an Integrator with the general `Integrator` constructor:
 ```@example 1
-int = Integrator(ode, tab, 0.1)
+int = Integrator(prob, tab)
 ```
 We see that we obtained an `IntegratorERK`, i.e., an explicit Runge-Kutta integrator.
 If instead we choose the implicit Euler tableau:
@@ -37,7 +37,7 @@ tab = TableauImplicitEuler()
 ```
 the general `Integrator` constructor creates a different integrator:
 ```@example 1
-int = Integrator(ode, tab, 0.1)
+int = Integrator(prob, tab)
 ```
 namely an `IntegratorFIRK`, i.e., a fully implicit Runge-Kutta integrator.
 
@@ -51,7 +51,7 @@ using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
 ```
 ```example 2
-iode = harmonic_oscillator_iode()
+prob = harmonic_oscillator_iode()
 ```
 Create a VPRK tableau that uses Gauss-Legendre Runge-Kutta coefficients with two stages:
 ```example 2
@@ -59,40 +59,36 @@ tab = TableauVPGLRK(2)
 ```
 If we just call the `Integrator` constructor,
 ```example 2
-int = Integrator(iode, tab, 0.1)
+int = Integrator(prob, tab)
 ```
 we obtain a plain `IntegratorVPRK`.
 If we want to use any of the projection methods, we have to explicitly specify the corresponding integrator type:
 ```example 2
 using GeometricIntegrators.Integrators.VPRK
-int = IntegratorVPRKpStandard(iode, tab, 0.1)
+int = IntegratorVPRKpStandard(prob, tab)
 ```
 or
 ```example 2
-int = IntegratorVPRKpSymmetric(iode, tab, 0.1)
+int = IntegratorVPRKpSymmetric(prob, tab)
 ```
 
 
 Once an integrator is obtained, we can just call the function
 ```
-integrate(equation, integrator, ntime)
+integrate(problem, integrator)
 ```
 to perform the actual integration steps, where `ntime` defines the number of steps to integrate:
 ```@setup 3
 using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
-ode = harmonic_oscillator_ode()
+prob = harmonic_oscillator_ode()
 ```
 ```@example 3
 tab = TableauExplicitEuler()
-int = Integrator(ode, tab, 0.1)
-sol = integrate(ode, int, 100)
+int = Integrator(prob, tab)
+sol = integrate(prob, int)
 ```
-The `integrate` function returns a solution object that stores the solution for each of the `ntime` time steps.
-There is also a convenience function that combines all of the above steps in one single call, namely
-```
-integrate(equation, tableau, Δt, ntime)
-```
+The `integrate` function returns a solution object that stores the solution for each time step.
 If the solution object is created manually, there exists a function
 ```
 integrate!(integrator, solution)
