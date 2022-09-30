@@ -58,10 +58,10 @@ function initialize!(ig::InitialGuessPODE{TT},
 
     _midpoint_extrapolation_pode!(ig.v, ig.f, t₁, t₀, q₁, q₀, p₁, p₀, ig.s)
 
-    ig.v(t₀, q₀, p₀, v₀)
-    ig.v(t₁, q₁, p₁, v₁)
-    ig.f(t₀, q₀, v₀, f₀)
-    ig.f(t₁, q₁, v₁, f₁)
+    ig.v(v₀, t₀, q₀, p₀)
+    ig.v(v₁, t₁, q₁, p₁)
+    ig.f(f₀, t₀, q₀, v₀)
+    ig.f(f₁, t₁, q₁, v₁)
 end
 
 
@@ -70,8 +70,8 @@ function update_vector_fields!(ig::InitialGuessPODE{TT}, t₁::TT,
                                p₁::SolutionVector{DT},
                                v₁::Vector{DT},
                                f₁::Vector{DT}) where {DT,TT}
-    ig.v(t₁, q₁, p₁, v₁)
-    ig.f(t₁, q₁, v₁, f₁)
+    ig.v(v₁, t₁, q₁, p₁)
+    ig.f(f₁, t₁, q₁, v₁)
 end
 
 

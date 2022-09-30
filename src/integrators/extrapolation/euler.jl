@@ -43,7 +43,7 @@ function _euler_extrapolation_ode!(v::Function, t₀::TT, t₁::TT, x₀::Abstra
             for k in axes(pts,1)
                 xᵢ[k] = pts[k,i]
             end
-            v(tᵢ, xᵢ, vᵢ)
+            v(vᵢ, tᵢ, xᵢ)
             for k in axes(pts,1)
                 pts[k,i] += σ[i] * vᵢ[k]
             end

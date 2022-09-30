@@ -19,5 +19,5 @@ function integrate_step!(int::IntegratorExactODE{DT,TT}, sol::SolutionStepODE{DT
     reset!(sol)
 
     # compute new solution
-    int.q(sol.t̄ + timestep(int), sol.q̄, sol.q, timestep(int))
+    int.q(sol.q, sol.t̄ + timestep(int), sol.q̄, sol.t̄)
 end

@@ -47,9 +47,9 @@ ẋ₂ = zero(x₀)
 ẋₙ = zero(x₀)
 ẋᵢ = zero(x₀)
 
-functions(ode).v(tₚ, xₚ, ẋₚ)
-functions(ode).v(t₀, x₀, ẋ₀)
-functions(ode).v(tₙ, xₙ, ẋₙ)
+functions(ode).v(ẋₚ, tₚ, xₚ)
+functions(ode).v(ẋ₀, t₀, x₀)
+functions(ode).v(ẋₙ, tₙ, xₙ)
 
 
 # Hermite Extrapolation
@@ -165,13 +165,13 @@ pₚ = [xₚ[2]]
 qₙ = [xₙ[1]]
 pₙ = [xₙ[2]]
 
-functions(pode).v(tₚ, qₚ, pₚ, q̇ₚ)
-functions(pode).v(t₀, q₀, p₀, q̇₀)
-functions(pode).v(tₙ, qₙ, pₙ, q̇ₙ)
+functions(pode).v(q̇ₚ, tₚ, qₚ, pₚ)
+functions(pode).v(q̇₀, t₀, q₀, p₀)
+functions(pode).v(q̇ₙ, tₙ, qₙ, pₙ)
 
-functions(pode).f(tₚ, qₚ, pₚ, ṗₚ)
-functions(pode).f(t₀, q₀, p₀, ṗ₀)
-functions(pode).f(tₙ, qₙ, pₙ, ṗₙ)
+functions(pode).f(ṗₚ, tₚ, qₚ, pₚ)
+functions(pode).f(ṗ₀, t₀, q₀, p₀)
+functions(pode).f(ṗₙ, tₙ, qₙ, pₙ)
 
 
 # Midpoint Extrapolation for PODEs
@@ -250,16 +250,16 @@ ṗᵢ = zero(p₀)
 qₚ .= xₚ
 qₙ .= xₙ
 
-functions(iode).v̄(tₚ, qₚ, q̇ₚ)
-functions(iode).v̄(t₀, q₀, q̇₀)
-functions(iode).v̄(tₙ, qₙ, q̇ₙ)
+functions(iode).v̄(q̇ₚ, tₚ, qₚ)
+functions(iode).v̄(q̇₀, t₀, q₀)
+functions(iode).v̄(q̇ₙ, tₙ, qₙ)
 
-functions(iode).ϑ(tₚ, qₚ, q̇ₚ, pₚ)
-functions(iode).ϑ(tₙ, qₙ, q̇ₙ, pₙ)
+functions(iode).ϑ(pₚ, tₚ, qₚ, q̇ₚ)
+functions(iode).ϑ(pₙ, tₙ, qₙ, q̇ₙ)
 
-functions(iode).f̄(tₚ, qₚ, q̇ₚ, ṗₚ)
-functions(iode).f̄(t₀, q₀, q̇₀, ṗ₀)
-functions(iode).f̄(tₙ, qₙ, q̇ₙ, ṗₙ)
+functions(iode).f̄(ṗₚ, tₚ, qₚ, q̇ₚ)
+functions(iode).f̄(ṗ₀, t₀, q₀, q̇₀)
+functions(iode).f̄(ṗₙ, tₙ, qₙ, q̇ₙ)
 
 # Midpoint Extrapolation for IODEs
 

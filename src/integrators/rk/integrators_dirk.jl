@@ -165,7 +165,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{ST}, V::Vector{ST}, Y::Vector{
 
     # compute V = v(Q)
     tᵢ = params.t + params.Δt * params.tab.c[i]
-    params.equs[:v](tᵢ, Q, V)
+    params.equs[:v](V, tᵢ, Q)
 end
 
 

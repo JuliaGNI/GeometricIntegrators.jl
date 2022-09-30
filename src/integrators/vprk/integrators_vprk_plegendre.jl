@@ -91,8 +91,8 @@ end
 function Integrators.initialize!(int::IntegratorVPRKpLegendre, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 
-    equation(int, :v̄)(sol.t, sol.q, sol.v)
-    equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
+    equation(int, :v̄)(sol.v, sol.t, sol.q)
+    equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
@@ -159,8 +159,8 @@ function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
 
         # compute P=p(t,Q) and F=f(t,Q,V)
         tqᵢ = params.t̄ + params.Δt * params.tab.q.c[i]
-        params.equ[:ϑ](tqᵢ, Q[i], V[i], Φ[i])
-        params.equ[:f](tqᵢ, Q[i], V[i], F[i])
+        params.equ[:ϑ](Φ[i], tqᵢ, Q[i], V[i])
+        params.equ[:f](F[i], tqᵢ, Q[i], V[i])
     end
 
     # copy y to q and p
@@ -170,7 +170,7 @@ function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
     end
 
     # compute p=p(t,q)
-    params.equ[:ϑ](params.t̄ + params.Δt, q, v, ϕ)
+    params.equ[:ϑ](ϕ, params.t̄ + params.Δt, q, v)
 
     # for Lobatto-type methods, copy y to μ
     if isdefined(params.tab, :d) && length(params.tab.d) > 0

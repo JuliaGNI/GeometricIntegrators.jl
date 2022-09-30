@@ -107,7 +107,7 @@ end
 function initialize!(int::IntegratorMidpointImplicit, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 
-    equations(int)[:v](sol.t, sol.q, sol.v)
+    equations(int)[:v](sol.v, sol.t, sol.q)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
                             sol.t̄, sol.q̄, sol.v̄)
@@ -192,6 +192,6 @@ function integrate_step!(int::IntegratorMidpointImplicit{DT,TT}, sol::SolutionSt
     sol.p .= cache.θ
 
     # compute vector field for initial guess
-    equations(int)[:v](sol.t, sol.q, sol.v)
+    equations(int)[:v](sol.v, sol.t, sol.q)
     # update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)
 end

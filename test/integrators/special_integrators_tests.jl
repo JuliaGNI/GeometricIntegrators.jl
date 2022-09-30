@@ -23,6 +23,7 @@ sol  = integrate(ode, int)
 
 reference_solution = sol.q[end]
 
+# TODO: Investigate Newton solver convergence issues.
 
 @testset "$(rpad("Runge-Kutta integrators for implicit equations",80))" begin
 

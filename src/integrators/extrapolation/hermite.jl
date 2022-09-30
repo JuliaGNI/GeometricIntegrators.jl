@@ -170,8 +170,8 @@ end
 function _get_velocities(v::Function, t₀::TT, t₁::TT, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}) where {DT,TT}
     ẋ₀ = zero(x₀)
     ẋ₁ = zero(x₁)
-    v(t₀, x₀, ẋ₀)
-    v(t₁, x₁, ẋ₁)
+    v(ẋ₀, t₀, x₀)
+    v(ẋ₁, t₁, x₁)
     return (ẋ₀, ẋ₁)
 end
 

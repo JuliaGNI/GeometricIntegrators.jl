@@ -118,7 +118,7 @@ function computeStageQ!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{D
     for k in eachdim(int)
         cache.Q[i][k] = cache.Q[0][k] + timestep(int) * cache.Y[i][k]
     end
-    equations(int)[:f](t, cache.Q[i], cache.P[jmax], cache.F[i])
+    equations(int)[:f](cache.F[i], t, cache.Q[i], cache.P[jmax])
 end
 
 # Compute P stages of explicit partitioned Runge-Kutta methods.
@@ -132,7 +132,7 @@ function computeStageP!(int::IntegratorEPRK{DT,TT}, cache::IntegratorCacheEPRK{D
     for k in eachdim(int)
         cache.P[i][k] = cache.P[0][k] + timestep(int) * cache.Z[i][k]
     end
-    equations(int)[:v](t, cache.Q[jmax], cache.P[i], cache.V[i])
+    equations(int)[:v](cache.V[i], t, cache.Q[jmax], cache.P[i])
 end
 
 

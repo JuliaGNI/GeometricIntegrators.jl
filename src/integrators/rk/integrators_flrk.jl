@@ -115,7 +115,7 @@ end
 function initialize!(int::IntegratorFLRK, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 
-    equations(int)[:v̄](sol.t, sol.q, sol.v)
+    equations(int)[:v̄](sol.v, sol.t, sol.q)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
                             sol.t̄, sol.q̄, sol.v̄)
@@ -175,7 +175,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     # compute V = v(Q)
     for i in 1:S
         tᵢ = params.t + params.Δt * params.tab.c[i]
-        params.equs[:v̄](tᵢ, Q[i], V[i])
+        params.equs[:v̄](V[i], tᵢ, Q[i])
     end
 end
 
@@ -255,15 +255,15 @@ function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::SolutionStepP
     # and f_0(Q, V(Q)) = f(t, Q, V, F)
     for i in 1:S
         tᵢ = int.params.t + timestep(int) * tableau(int).c[i]
-        int.params.equs[:ϑ](tᵢ, cache.Q[i], cache.V[i], int.ϑ[i])
-        int.params.equs[:v̄](tᵢ, cache.Q[i], cache.V[i])
-        int.params.equs[:g](tᵢ, cache.Q[i], cache.V[i], int.F[i])
+        int.params.equs[:ϑ](int.ϑ[i], tᵢ, cache.Q[i], cache.V[i])
+        int.params.equs[:v̄](cache.V[i], tᵢ, cache.Q[i])
+        int.params.equs[:g](int.F[i], tᵢ, cache.Q[i], cache.V[i])
     end
 
     # compute Jacobian of v via ForwardDiff
     for i in 1:S
         tᵢ = int.params.t + timestep(int) * tableau(int).c[i]
-        v_rev! = (v,q) -> int.params.equs[:v̄](tᵢ,q,v)
+        v_rev! = (v,q) -> int.params.equs[:v̄](v,tᵢ,q)
         ForwardDiff.jacobian!(int.J[i], v_rev!, cache.ṽ, cache.Q[i])
     end
 

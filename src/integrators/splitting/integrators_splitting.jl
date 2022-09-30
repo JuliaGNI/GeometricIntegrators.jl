@@ -66,7 +66,7 @@ function integrate_step!(int::IntegratorSplitting{DT,TT}, sol::SolutionStepODE{D
             reset!(sol)
 
             # compute new solution
-            int.q[int.f[i]](tᵢ, sol.q̄, sol.q, cᵢ)
+            int.q[int.f[i]](sol.q, tᵢ, sol.q̄, sol.t̄)
         end
     end
 end

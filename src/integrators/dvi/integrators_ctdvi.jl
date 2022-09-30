@@ -98,9 +98,9 @@ end
 function initialize!(int::IntegratorCTDVI, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 
-    equation(int, :v̄)(sol.t, sol.q, sol.v)
-    equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
-    equation(int, :ϑ)(sol.t, sol.q, sol.v, sol.p)
+    equation(int, :v̄)(sol.v, sol.t, sol.q)
+    equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
+    equation(int, :ϑ)(sol.p, sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
@@ -112,7 +112,7 @@ function update_params!(int::IntegratorCTDVI, sol::SolutionStepPODE)
     int.params.t  = sol.t
     int.params.q .= sol.q
     int.params.v .= sol.v
-    equations(int)[:ϑ](sol.t, sol.q, sol.v, int.params.θ)
+    equations(int)[:ϑ](int.params.θ, sol.t, sol.q, sol.v)
 end
 
 
@@ -165,13 +165,13 @@ function compute_stages!(x::Vector{ST}, q::Vector{ST}, v::Vector{ST}, θ::Vector
     end
 
     # compute f = f(q,v)
-    params.equs[:f](t⁻, q⁻, v, f⁻)
-    params.equs[:f](t⁺, q⁺, v, f⁺)
+    params.equs[:f](f⁻, t⁻, q⁻, v)
+    params.equs[:f](f⁺, t⁺, q⁺, v)
  
     # compute Θ = ϑ(q,v)
-    params.equs[:ϑ](t⁻, q⁻, v, θ⁻)
-    params.equs[:ϑ](t⁺, q⁺, v, θ⁺)
-    params.equs[:ϑ](t⁺, q, v, θ)
+    params.equs[:ϑ](θ⁻, t⁻, q⁻, v)
+    params.equs[:ϑ](θ⁺, t⁺, q⁺, v)
+    params.equs[:ϑ](θ, t⁺, q, v)
 end
 
 

@@ -14,7 +14,7 @@ mutable struct ParametersFIRK{DT, TT, D, S, ET <: NamedTuple, FT, JT} <: Paramet
     q::Vector{DT}
 
     function ParametersFIRK{DT,D}(equs::ET, tab::Tableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
-        F = (v,q) -> equs[:v](zero(TT), q, v)
+        F = (v,q) -> equs[:v](v, zero(TT), q)
         tq = zeros(DT,D)
         tv = zeros(DT,D)
         Jconfig = ForwardDiff.JacobianConfig(F, tv, tq)
@@ -137,7 +137,7 @@ end
 function initialize!(int::IntegratorFIRK, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 
-    equations(int)[:v](sol.t, sol.q, sol.v)
+    equations(int)[:v](sol.v, sol.t, sol.q)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
                             sol.t̄, sol.q̄, sol.v̄)
@@ -188,7 +188,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     # compute V = v(Q)
     for i in eachindex(Q,V)
         tᵢ = params.t + params.Δt * params.tab.c[i]
-        params.equs[:v](tᵢ, Q[i], V[i])
+        params.equs[:v](V[i], tᵢ, Q[i])
     end
 end
 

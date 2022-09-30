@@ -182,8 +182,8 @@ end
 function initialize!(int::IntegratorCGVI, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 
-    equation(int, :v̄)(sol.t, sol.q, sol.v)
-    equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
+    equation(int, :v̄)(sol.v, sol.t, sol.q)
+    equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
@@ -325,8 +325,8 @@ function compute_stages_p!(Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
     for i in eachindex(Q,V,P,F)
         @assert D == length(Q[i]) == length(V[i]) == length(P[i]) == length(F[i])
         tᵢ = params.t + params.Δt * params.c[i]
-        params.equs[:ϑ](tᵢ, Q[i], V[i], P[i])
-        params.equs[:f](tᵢ, Q[i], V[i], F[i])
+        params.equs[:ϑ](P[i], tᵢ, Q[i], V[i])
+        params.equs[:f](F[i], tᵢ, Q[i], V[i])
     end
 end
 

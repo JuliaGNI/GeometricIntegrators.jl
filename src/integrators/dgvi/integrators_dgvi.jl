@@ -435,7 +435,7 @@ end
 function initialize!(int::IntegratorDGVI, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 
-    equation(int, :v̄)(sol.t, sol.q, sol.v)
+    equation(int, :v̄)(sol.v, sol.t, sol.q)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
                             sol.t̄, sol.q̄, sol.v̄)
@@ -584,8 +584,8 @@ function compute_stages_p!(cache::IntegratorCacheDGVI{ST,D,S,R},
     # compute P=ϑ(Q) and F=f(Q)
     for i in 1:R
         tᵢ = params.t + params.Δt * params.c[i]
-        params.equs[:ϑ](tᵢ, cache.Q[i], cache.V[i], cache.P[i])
-        params.equs[:f](tᵢ, cache.Q[i], cache.V[i], cache.F[i])
+        params.equs[:ϑ](cache.P[i], tᵢ, cache.Q[i], cache.V[i])
+        params.equs[:f](cache.F[i], tᵢ, cache.Q[i], cache.V[i])
     end
 end
 
@@ -609,30 +609,30 @@ function compute_stages_λ!(cache::IntegratorCacheDGVI{ST,D,S,R},
     cache.λ̄⁻ .= cache.q̄  .- cache.q̄⁻
 
     # compute ϑ
-    params.equs[:ϑ](t₀, cache.q,  cache.q,  cache.θ)
-    params.equs[:ϑ](t₀, cache.q⁻, cache.q⁻, cache.θ⁻)
-    params.equs[:ϑ](t₀, cache.q⁺, cache.q⁺, cache.θ⁺)
+    params.equs[:ϑ](cache.θ,  t₀, cache.q,  cache.q)
+    params.equs[:ϑ](cache.θ⁻, t₀, cache.q⁻, cache.q⁻)
+    params.equs[:ϑ](cache.θ⁺, t₀, cache.q⁺, cache.q⁺)
 
-    params.equs[:ϑ](t₁, cache.q̄,  cache.q̄,  cache.Θ̅)
-    params.equs[:ϑ](t₁, cache.q̄⁻, cache.q̄⁻, cache.Θ̅⁻)
+    params.equs[:ϑ](cache.Θ̅, t₁, cache.q̄,  cache.q̄)
+    params.equs[:ϑ](cache.Θ̅⁻, t₁, cache.q̄⁻, cache.q̄⁻)
 
     # compute projection
-    params.equs[:g](t₀, cache.q,  cache.λ,  cache.g)
-    params.equs[:g](t₀, cache.q⁻, cache.λ⁻, cache.g⁻)
-    params.equs[:g](t₀, cache.q⁺, cache.λ⁺, cache.g⁺)
-    params.equs[:g](t₁, cache.q̄⁻, cache.λ̄⁻, cache.ḡ⁻)
-    params.equs[:g](t₀, cache.q,  cache.λ⁺, cache.h⁺)
-    params.equs[:g](t₁, cache.q̄,  cache.λ̄⁻, cache.h̅⁻)
+    params.equs[:g](cache.g,  t₀, cache.q,  cache.λ)
+    params.equs[:g](cache.g⁻, t₀, cache.q⁻, cache.λ⁻)
+    params.equs[:g](cache.g⁺, t₀, cache.q⁺, cache.λ⁺)
+    params.equs[:g](cache.ḡ⁻, t₁, cache.q̄⁻, cache.λ̄⁻)
+    params.equs[:g](cache.h⁺, t₀, cache.q,  cache.λ⁺)
+    params.equs[:g](cache.h̅⁻, t₁, cache.q̄,  cache.λ̄⁻)
 
     # # compute ϑ
-    # params.equs[:ϑ](t₀, cache.ϕ⁻, cache.ϕ⁻, cache.θ⁻)
-    # params.equs[:ϑ](t₀, cache.ϕ⁺, cache.ϕ⁺, cache.θ⁺)
-    # params.equs[:ϑ](t₁, cache.ϕ̅⁻, cache.ϕ̅⁻, cache.Θ̅⁻)
+    # params.equs[:ϑ](cache.θ⁻, t₀, cache.ϕ⁻, cache.ϕ⁻)
+    # params.equs[:ϑ](cache.θ⁺, t₀, cache.ϕ⁺, cache.ϕ⁺)
+    # params.equs[:ϑ](cache.Θ̅⁻, t₁, cache.ϕ̅⁻, cache.ϕ̅⁻)
     #
     # # compute projection
-    # params.equs[:g](t₀, cache.ϕ⁻, cache.λ⁻, cache.g⁻)
-    # params.equs[:g](t₀, cache.ϕ⁺, cache.λ⁺, cache.g⁺)
-    # params.equs[:g](t₁, cache.ϕ̅⁻, cache.λ̄⁻, cache.ḡ⁻)
+    # params.equs[:g](cache.g⁻, t₀, cache.ϕ⁻, cache.λ⁻)
+    # params.equs[:g](cache.g⁺, t₀, cache.ϕ⁺, cache.λ⁺)
+    # params.equs[:g](cache.ḡ⁻, t₁, cache.ϕ̅⁻, cache.λ̄⁻)
 
     # compute pₙ₊₁ = ϑ(qₙ₊₁⁻) + ∇ϑ(qₙ₊₁)⋅(qₙ₊₁-qₙ₊₁⁻)
     #    i.e. p̄ = ϑ(q̄⁻) + ∇ϑ(q̄)⋅(q̄-q̄⁻)

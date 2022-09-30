@@ -42,14 +42,14 @@ function _midpoint_extrapolation_ode!(v::Function, t₀::TT, t₁::TT,
     local vᵢ  = zero(x₀)
     local v₀  = zero(x₀)
 
-    v(t₀, x₀, v₀)
+    v(v₀, t₀, x₀)
 
     for i in 1:s+1
         tᵢ   = t₀ + σ[i]
         xᵢ₁ .= x₀
         xᵢ₂ .= x₀ .+ σ[i] .* v₀
         for _ in 1:(F[i]-1)
-            v(tᵢ, xᵢ₂, vᵢ)
+            v(vᵢ, tᵢ, xᵢ₂)
             xᵢₜ .= xᵢ₁ .+ 2σ[i] .* vᵢ
             xᵢ₁ .= xᵢ₂
             xᵢ₂ .= xᵢₜ
@@ -146,8 +146,8 @@ function _midpoint_extrapolation_iode!(v::Function, f::Function, t₀::TT, t₁:
     local f₀ = zero(p₀)
     local fᵢ = zero(p₀)
 
-    v(t₀, q₀, v₀)
-    f(t₀, q₀, v₀, f₀)
+    v(v₀, t₀, q₀)
+    f(f₀, t₀, q₀, v₀)
 
     for i in 1:(s+1)
         tᵢ   = t₀ + σ[i]
@@ -156,8 +156,8 @@ function _midpoint_extrapolation_iode!(v::Function, f::Function, t₀::TT, t₁:
         pᵢ₁ .= p₀
         pᵢ₂ .= p₀ .+ σ[i] .* f₀
         for _ in 1:(F[i]-1)
-            v(tᵢ, qᵢ₂, vᵢ)
-            f(tᵢ, qᵢ₂, vᵢ,  fᵢ)
+            v(vᵢ, tᵢ, qᵢ₂)
+            f(fᵢ, tᵢ, qᵢ₂, vᵢ)
             qᵢₜ .= qᵢ₁ .+ 2σ[i] .* vᵢ
             qᵢ₁ .= qᵢ₂
             qᵢ₂ .= qᵢₜ
@@ -263,8 +263,8 @@ function _midpoint_extrapolation_pode!(v::Function, f::Function, t₀::TT, t₁:
     local f₀ = zero(p₀)
     local fᵢ = zero(p₀)
 
-    v(t₀, q₀, p₀, v₀)
-    f(t₀, q₀, p₀, f₀)
+    v(v₀, t₀, q₀, p₀)
+    f(f₀, t₀, q₀, p₀)
 
     for i in 1:(s+1)
         tᵢ   = t₀ + σ[i]
@@ -273,8 +273,8 @@ function _midpoint_extrapolation_pode!(v::Function, f::Function, t₀::TT, t₁:
         pᵢ₁ .= p₀
         pᵢ₂ .= p₀ .+ σ[i] .* f₀
         for _ in 1:(F[i]-1)
-            v(tᵢ, qᵢ₂, pᵢ₂, vᵢ)
-            f(tᵢ, qᵢ₂, pᵢ₂, fᵢ)
+            v(vᵢ, tᵢ, qᵢ₂, pᵢ₂)
+            f(fᵢ, tᵢ, qᵢ₂, pᵢ₂)
             qᵢₜ .= qᵢ₁ .+ 2σ[i] .* vᵢ
             qᵢ₁ .= qᵢ₂
             qᵢ₂ .= qᵢₜ

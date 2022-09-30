@@ -102,8 +102,8 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
         # compute f(X)
         tqᵢ = params.t + params.Δt * params.tab.q.c[i]
         tpᵢ = params.t + params.Δt * params.tab.p.c[i]
-        params.equs[:v](tqᵢ, cache.Qi[i], cache.Pi[i], cache.Vi[i])
-        params.equs[:f](tpᵢ, cache.Qi[i], cache.Pi[i], cache.Fi[i])
+        params.equs[:v](cache.Vi[i], tqᵢ, cache.Qi[i], cache.Pi[i])
+        params.equs[:f](cache.Fi[i], tpᵢ, cache.Qi[i], cache.Pi[i])
     end
 
     for i in 1:R
@@ -120,9 +120,9 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
 
         # compute f(X)
         tλᵢ = params.t + params.Δt * params.tab.λ.c[i]
-        params.equs[:u](tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Up[i])
-        params.equs[:g](tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], cache.Gp[i])
-        params.equs[:ϕ](tλᵢ, cache.Qp[i], cache.Pp[i], cache.Φp[i])
+        params.equs[:u](cache.Up[i], tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i])
+        params.equs[:g](cache.Gp[i], tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i])
+        params.equs[:ϕ](cache.Φp[i], tλᵢ, cache.Qp[i], cache.Pp[i])
     end
 
     # compute q and p
@@ -139,7 +139,7 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
 
     # compute ϕ(q,p)
     tλᵢ = params.t + params.Δt
-    params.equs[:ϕ](tλᵢ, cache.q̃, cache.p̃, cache.ϕ̃)
+    params.equs[:ϕ](cache.ϕ̃, tλᵢ, cache.q̃, cache.p̃)
 end
 
 

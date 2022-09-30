@@ -112,11 +112,11 @@ function compute_projection_vprk!(x::Vector{ST},
         q[k] = params.q̄[k] + 1.0 * params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
     end
 
-    params.equ[:g](tₘ, q̃, λ, G[1])
+    params.equ[:g](G[1], tₘ, q̃, λ)
     G[2] .= G[1]
 
     # compute p=ϑ(q)
-    params.equ[:ϑ](t₁, q, λ, p)
+    params.equ[:ϑ](p, t₁, q, λ)
 end
 
 

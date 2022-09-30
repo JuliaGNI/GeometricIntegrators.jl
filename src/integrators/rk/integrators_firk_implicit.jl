@@ -130,7 +130,7 @@ Solutions.SolutionStep(integrator::IntegratorFIRKimplicit{DT,TT}) where {DT,TT} 
 function initialize!(int::IntegratorFIRKimplicit, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 
-    equations(int)[:v̄](sol.t, sol.q, sol.v)
+    equations(int)[:v̄](sol.v, sol.t, sol.q)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
                             sol.t̄, sol.q̄, sol.v̄)
@@ -141,7 +141,7 @@ function update_params!(int::IntegratorFIRKimplicit, sol::SolutionStepPODE)
     # set time for nonlinear solver and copy previous solution
     int.params.t  = sol.t
     int.params.q .= sol.q
-    equations(int)[:ϑ](sol.t, sol.q, sol.v, int.params.θ)
+    equations(int)[:ϑ](int.params.θ, sol.t, sol.q, sol.v)
 end
 
 
@@ -198,13 +198,13 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
             end
             Q[i][k] = params.q[k] + params.Δt * (y1 + y2)
         end
-        params.equs[:ϑ](tᵢ, Q[i], V[i], Θ[i])
-        params.equs[:f](tᵢ, Q[i], V[i], F[i])
+        params.equs[:ϑ](Θ[i], tᵢ, Q[i], V[i])
+        params.equs[:f](F[i], tᵢ, Q[i], V[i])
     end
 
     # compute q̄ = q + Δt B V, Θ = ϑ(q̄)
     tᵢ = params.t + params.Δt
-    params.equs[:ϑ](tᵢ, q, v, θ)
+    params.equs[:ϑ](θ, tᵢ, q, v)
 end
 
 # Compute stages of fully implicit Runge-Kutta methods.
@@ -273,6 +273,6 @@ function integrate_step!(int::IntegratorFIRKimplicit{DT,TT}, sol::SolutionStepPO
     sol.p .= cache.θ
 
     # compute vector field for initial guess
-    equations(int)[:v̄](sol.t, sol.q, sol.v)
+    equations(int)[:v̄](sol.v, sol.t, sol.q)
     # update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)
 end

@@ -2,8 +2,8 @@
 function Integrators.initialize!(int::AbstractIntegratorHSPARK, sol::SolutionStepPDAE)
     sol.t̄ = sol.t - timestep(int)
 
-    equation(int, :v̄)(sol.t, sol.q, sol.p, sol.v)
-    equation(int, :f̄)(sol.t, sol.q, sol.p, sol.f)
+    equation(int, :v̄)(sol.v, sol.t, sol.q, sol.p)
+    equation(int, :f̄)(sol.f, sol.t, sol.q, sol.p)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
