@@ -17,17 +17,27 @@ GeometricIntegrators.jl can be used either interactively, as computational core 
 In both, the library leaves maximum control to the user. While trying to pick sensible defaults, all settings are accessible to and modifiable by the user. Suitable abstraction layers allow to choose between different linear and nonlinear solvers, auto-differentiation packages or custom routines for the computation of Jacobians and the like.
 
 
-## Statement of need
+## Package Description
 
 Differential equations are ubiquitous in science and engineering. Many equations possess geometric features or abstract mathematical structures that need to be preserved in the discretisation in order to obtain reliable simulation results, especially for nonlinear problems and long-time simulations. The preservation of such properties improves stability, bounds global error growth and reduces numerical artefacts.
 Robust, performant and structure-preserving solvers for different types of differential equations are thus needed across many disciplines. GeometricIntegrators.jl provides such solvers and makes them available for both direct use as well as integration into other codes. Furthermore, the implemented algorithms can also be used within the [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) ecosystem [[Rackauckas:2017](@cite)], which is the defacto standard differential equation solver for the Julia programming language [[Bezanson:2017](@cite)].
 
-GeometricIntegrators.jl provides a comprehensive library of existing geometric integration as well as non-geometric algorithms, such as explicit, implicit and partitioned Runge-Kutta methods, SPARK methods, splitting methods, symplectic methods and variational integrators. Most methods are implemented in an abstract way that allows for the flexible choice of tableaus, approximation spaces, basis functions, quadrature rules, and thus order of convergence.
-As most geometric integrators are not easily combined with time step adaption in a structure-preserving way, GeometricIntegrators.jl does not provide any general infrastructure for adaptive time stepping. Nonetheless, individual integrators can implement their own adaptivity strategies as long as they provide a solution at a predefined, equidistant time series.
+GeometricIntegrators.jl provides a comprehensive library of geometric integration algorithms as well as some non-geometric algorithms.
+It collects native Julia implementations of many known methods under a unified interface.
+Once a problem is implemented in the GeometricIntegators framework, all of its algorithms can immediately be applied and their performance evaluated.
+This facilitates numerical experiments with a wide variety of algorithms, simplifies benchmarking, and makes it easy to identify the best algorithm for a given problem.
+The implemented algorithms include explicit, implicit and partitioned Runge-Kutta methods, SPARK methods, splitting methods, symplectic methods and variational integrators.
+Most methods are implemented in an abstract way that allows for the flexible choice of tableaus, approximation spaces, basis functions, quadrature rules, and thus order of convergence. It also means that adding e.g. a new Runge-Kutta or splitting method merely amounts to adding its tableau.
+Less standard algorithms can be added by extending the package with [custom integrators](developer/custom_integrators.md).
 
-GeometricIntegrators.jl also serves as a testbed for the development and analysis of novel algorithms. Due to the modular structure and the use of the multiple dispatch paradigm, the library can easily be extended, e.g., towards new algorithms or new types of equations. The library aims at providing efficient implementations of diverse algorithms in order to be able to perform simulations and benchmarks with millions or even billions of time steps that facilitate the study of the long-time behaviour of both numerical algorithms and dynamical systems.
+As most geometric integrators are not easily combined with time step adaption in a structure-preserving way, GeometricIntegrators.jl does not provide any general infrastructure for adaptive time stepping. Nonetheless, individual integrators can implement their own adaptivity strategies as long as they provide a solution at a predefined, equidistant series of time steps.
+
+One of the original aims of GeometricIntegrators.jl is to serve as a testbed for the development and analysis of novel algorithms.
+Due to the modular structure and the use of the multiple dispatch paradigm, the library can easily be extended, e.g., towards new algorithms or new types of equations.
+The library aims at providing efficient implementations of diverse algorithms in order to be able to perform simulations and benchmarks with millions or even billions of time steps that facilitate the study of the long-time behaviour of both numerical algorithms and dynamical systems.
 The current scope of applications is mainly small- to mid-size systems of differential equations, e.g., systems of ordinary differential equations or semidiscretisations of partial differential equations with a moderate number of degrees of freedom.
-It is envisaged that in the future GeometricIntegrators.jl will also be able to address larger problems, especially semidiscretisations of partial differential equations in higher dimensions. Many elements required for this are already in place, e.g., support for general solution data structures, but others such as interfaces to appropriate iterative and parallel linear solvers are still lacking.
+It is envisaged that in the future GeometricIntegrators.jl will also be able to address larger problems, especially semidiscretisations of partial differential equations in higher dimensions.
+In particular, this requires interfaces to appropriate iterative and parallel linear solvers, which are still lacking.
 
 
 ## Similar Software
