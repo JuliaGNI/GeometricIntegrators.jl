@@ -74,6 +74,7 @@ Pages = ["tableaus/rungekutta.md",
 ```@contents
 Pages = ["developer/code_integration.md",
          "developer/custom_integrators.md",
+         "developer/adaptive_time_stepping.md",
 ]
 ```
 
