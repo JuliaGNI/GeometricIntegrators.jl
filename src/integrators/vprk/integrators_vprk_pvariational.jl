@@ -63,14 +63,14 @@ function Integrators.initialize!(int::IntegratorVPRKpVariational{DT}, sol::Solut
                                  cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     sol.t̄ = sol.t - timestep(int)
 
-    equation(int, :v̄)(sol.t, sol.q, sol.v)
-    equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
+    equation(int, :v̄)(sol.v, sol.t, sol.q)
+    equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 
     # initialise projector
-    equation(int, :g)(sol.t, sol.q, cache.λ, cache.G[1])
+    equation(int, :g)(cache.G[1], sol.t, sol.q, cache.λ)
     # cache.U[1] .= cache.λ
 end
 
@@ -121,13 +121,13 @@ function compute_projection!(
     # U[1] .= λ
     # U[2] .= 0
 
-    params.equ[:g](params.t̄, q, λ, G[1])
+    params.equ[:g](G[1], params.t̄, q, λ)
     G[2] .= 0
     # G[1] .= 0
     # params.equ.g(params.t̄, q, λ, G[2])
 
     # compute p=ϑ(q)
-    params.equ[:ϑ](params.t̄, q, λ, p)
+    params.equ[:ϑ](p, params.t̄, q, λ)
 end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."

@@ -239,7 +239,7 @@ end
 function initialize!(int::IntegratorPGLRK, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 
-    equations(int)[:v](sol.t, sol.q, sol.v)
+    equations(int)[:v](sol.v, sol.t, sol.q)
 
     initialize!(int.iguess, sol.t, sol.q, sol.v,
                             sol.t̄, sol.q̄, sol.v̄)
@@ -297,7 +297,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     # compute V=v(T,Q)
     for i in 1:S
         tᵢ = params.t̄ + params.Δt * params.tab.c[i]
-        params.equs[:v](tᵢ, Q[i], V[i])
+        params.equs[:v](V[i], tᵢ, Q[i])
     end
 
     # compute y=B*V

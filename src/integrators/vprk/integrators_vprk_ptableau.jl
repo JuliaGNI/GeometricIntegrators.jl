@@ -110,8 +110,8 @@ end
 function Integrators.initialize!(int::IntegratorVPRKpTableau, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 
-    equation(int, :v̄)(sol.t, sol.q, sol.v)
-    equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
+    equation(int, :v̄)(sol.v, sol.t, sol.q)
+    equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
@@ -185,8 +185,8 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     # compute P=ϑ(Q,V) and F=f(Q,V)
     for i in 1:S
         tᵢ = params.t̄ + params.Δt * params.tab.c[i]
-        params.equs[:ϑ](tᵢ, Q[i], V[i], P[i])
-        params.equs[:f](tᵢ, Q[i], V[i], F[i])
+        params.equs[:ϑ](P[i], tᵢ, Q[i], V[i])
+        params.equs[:f](F[i], tᵢ, Q[i], V[i])
     end
 
     # compute Z
@@ -218,7 +218,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     p .= params.p̄ .+ params.Δt .* z
 
     # compute θ=ϑ(t,q)
-    params.equs[:ϑ](params.t, q, v, θ)
+    params.equs[:ϑ](θ, params.t, q, v)
 end
 
 "Compute stages of projected Gauss-Legendre Runge-Kutta methods."

@@ -32,7 +32,7 @@ function integrate_step!(int::IntegratorExplicitEuler{DT,TT,AT}, sol::SolutionSt
     reset!(sol)
 
     # compute vector field
-    equations(int)[:v](sol.t̄, sol.q, int.v)
+    equations(int)[:v](int.v, sol.t̄, sol.q)
 
     # compute update
     sol.q .+= timestep(int) .* int.v

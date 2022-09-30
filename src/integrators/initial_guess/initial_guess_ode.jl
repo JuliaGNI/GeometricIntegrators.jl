@@ -52,8 +52,8 @@ function initialize!(ig::InitialGuessODE{TT},
                 q₀::SolutionVector{DT},
                 v₀::SolutionVector{DT}) where {DT,TT}
     _midpoint_extrapolation_ode!(ig.v, t₁, t₀, q₁, q₀, ig.s)
-    ig.v(t₀, q₀, v₀)
-    ig.v(t₁, q₁, v₁)
+    ig.v(v₀, t₀, q₀)
+    ig.v(v₁, t₁, q₁)
 end
 
 
@@ -61,7 +61,7 @@ end
 function update_vector_fields!(ig::InitialGuessODE{TT}, t₁::TT,
                                q₁::SolutionVector{DT},
                                v₁::Vector{DT}) where {DT,TT}
-    ig.v(t₁, q₁, v₁)
+    ig.v(v₁, t₁, q₁)
 end
 
 function GeometricBase.evaluate!(ig::InitialGuessODE{TT},

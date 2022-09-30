@@ -1,7 +1,6 @@
 
 using SafeTestsets
 
-
 @safetestset "Common Integrator Functionality                                                 " begin include("integrators_common_tests.jl") end
 @safetestset "Extrapolation Methods                                                           " begin include("extrapolation_tests.jl") end
 @safetestset "Initial Guesses                                                                 " begin include("initial_guess_tests.jl") end

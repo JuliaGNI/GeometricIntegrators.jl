@@ -21,9 +21,9 @@ end
 function Integrators.initialize!(int::AbstractIntegratorVPRK{DT}, sol::Union{SolutionStepPODE{DT,TT}, SolutionStepPDAE{DT,TT}}) where {DT,TT}
     sol.t̄ = sol.t - timestep(int)
 
-    equation(int, :v̄)(sol.t, sol.q, sol.v)
-    equation(int, :f̄)(sol.t, sol.q, sol.v, sol.f)
-    equation(int, :ϑ)(sol.t, sol.q, sol.v, sol.p)
+    equation(int, :v̄)(sol.v, sol.t, sol.q)
+    equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
+    equation(int, :ϑ)(sol.p, sol.t, sol.q, sol.v)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
@@ -136,8 +136,8 @@ function compute_stages_p_vprk!(Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
     for i in 1:S
         @assert D == length(Q[i]) == length(V[i]) == length(P[i]) == length(F[i])
         tᵢ = params.t̄ + params.Δt * params.tab.q.c[i]
-        params.equ[:ϑ](tᵢ, Q[i], V[i], P[i])
-        params.equ[:f](tᵢ, Q[i], V[i], F[i])
+        params.equ[:ϑ](P[i], tᵢ, Q[i], V[i])
+        params.equ[:f](F[i], tᵢ, Q[i], V[i])
     end
 end
 

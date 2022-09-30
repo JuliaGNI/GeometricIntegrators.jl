@@ -341,7 +341,7 @@ function initialize!(int::IntegratorDGVIPI, sol::SolutionStepPODE)
 
     sol.t̄ = sol.t - timestep(int)
 
-    equation(int, :v̄)(sol.t, sol.q, sol.v)
+    equation(int, :v̄)(sol.v, sol.t, sol.q)
 
     # initialise initial guess
     initialize!(int.iguess, sol.t, sol.q, sol.v,
@@ -493,8 +493,8 @@ function compute_stages_p!(cache::IntegratorCacheDGVIPI{ST,D,S,R},
     # compute P=ϑ(Q) and F=f(Q)
     for i in 1:R
         tᵢ = params.t + params.Δt * params.c[i]
-        params.equs[:ϑ](tᵢ, cache.Q[i], cache.V[i], cache.P[i])
-        params.equs[:f](tᵢ, cache.Q[i], cache.V[i], cache.F[i])
+        params.equs[:ϑ](cache.P[i], tᵢ, cache.Q[i], cache.V[i])
+        params.equs[:f](cache.F[i], tᵢ, cache.Q[i], cache.V[i])
     end
 end
 
@@ -514,10 +514,10 @@ function compute_stages_λ!(cache::IntegratorCacheDGVIPI{ST,D,S,QR,FR},
     end
 
     for i in 1:FR
-        params.equs[:ϑ](t₀, cache.ϕ[i], cache.λ[i], cache.θ[i])
-        params.equs[:ϑ](t₁, cache.ϕ̅[i], cache.λ̄[i], cache.Θ̅[i])
-        params.equs[:g](t₀, cache.ϕ[i], cache.λ[i], cache.g[i])
-        params.equs[:g](t₁, cache.ϕ̅[i], cache.λ̄[i], cache.ḡ[i])
+        params.equs[:ϑ](cache.θ[i], t₀, cache.ϕ[i], cache.λ[i])
+        params.equs[:ϑ](cache.Θ̅[i], t₁, cache.ϕ̅[i], cache.λ̄[i])
+        params.equs[:g](cache.g[i], t₀, cache.ϕ[i], cache.λ[i])
+        params.equs[:g](cache.ḡ[i], t₁, cache.ϕ̅[i], cache.λ̄[i])
     end
 end
 

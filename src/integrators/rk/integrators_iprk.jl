@@ -156,8 +156,8 @@ end
 function initialize!(int::IntegratorIPRK, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 
-    equations(int)[:v](sol.t, sol.q, sol.p, sol.v)
-    equations(int)[:f](sol.t, sol.q, sol.p, sol.f)
+    equations(int)[:v](sol.v, sol.t, sol.q, sol.p)
+    equations(int)[:f](sol.f, sol.t, sol.q, sol.p)
 
     initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
                             sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
@@ -216,8 +216,8 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
         tpᵢ = params.t + params.Δt * params.tab.p.c[i]
 
         # compute v(Q,P) and f(Q,P)
-        params.equs[:v](tqᵢ, Q[i], P[i], V[i])
-        params.equs[:f](tpᵢ, Q[i], P[i], F[i])
+        params.equs[:v](V[i], tqᵢ, Q[i], P[i])
+        params.equs[:f](F[i], tpᵢ, Q[i], P[i])
     end
 end
 

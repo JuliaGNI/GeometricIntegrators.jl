@@ -102,7 +102,7 @@ function integrate_step!(int::IntegratorERK{DT,TT}, sol::SolutionStepODE{DT,TT},
             cache.Q[i][k] = sol.q̄[k] + timestep(int) * yᵢ
         end
         tᵢ = sol.t̄ + timestep(int) * tableau(int).c[i]
-        equations(int)[:v](tᵢ, cache.Q[i], cache.V[i])
+        equations(int)[:v](cache.V[i], tᵢ, cache.Q[i])
     end
 
     # compute final update

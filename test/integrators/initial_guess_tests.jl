@@ -56,8 +56,8 @@ tₙ = ref_next.t[end]
 qₙ = ref_next.q[end]
 vₙ = zero(qₙ)
 
-equation(ode).v(tₚ, qₚ, vₚ, parameters(ode))
-equation(ode).v(tₙ, qₙ, vₙ, parameters(ode))
+equation(ode).v(vₚ, tₚ, qₚ, parameters(ode))
+equation(ode).v(vₙ, tₙ, qₙ, parameters(ode))
 
 
 # InitialGuessODE
@@ -76,7 +76,7 @@ t₂ = one(Δt)
 q₂ = zero(q₀)
 v₂ = zero(v₀)
 
-equation(ode).v(t₀, q₀, v₀, parameters(ode))
+equation(ode).v(v₀, t₀, q₀, parameters(ode))
 
 initialize!(igode, t₀, q₀, v₀, t₁, q₁, v₁)
 evaluate!(igode, q₁, v₁, q₀, v₀, q₂, v₂, t₂)
@@ -117,7 +117,7 @@ p₂ = zero(p₀)
 v₂ = zero(v₀)
 f₂ = zero(f₀)
 
-equation(iode).v̄(t₀, q₀, v₀, parameters(iode))
+equation(iode).v̄(v₀, t₀, q₀, parameters(iode))
 
 initialize!(igiode, t₀, q₀, p₀, v₀, f₀, t₁, q₁, p₁, v₁, f₁)
 evaluate!(igiode, q₁, p₁, v₁, f₁, q₀, p₀, v₀, f₀, q₂, v₂, t₂)
@@ -158,8 +158,8 @@ p₂ = zero(p₀)
 v₂ = zero(v₀)
 f₂ = zero(f₀)
 
-equation(pode).v(t₀, q₀, p₀, v₀, parameters(pode))
-equation(pode).f(t₀, q₀, p₀, f₀, parameters(pode))
+equation(pode).v(v₀, t₀, q₀, p₀, parameters(pode))
+equation(pode).f(f₀, t₀, q₀, p₀, parameters(pode))
 
 initialize!(igpode, t₀, q₀, p₀, v₀, f₀, t₁, q₁, p₁, v₁, f₁)
 evaluate!(igpode, q₁, p₁, v₁, f₁, q₀, p₀, v₀, f₀, q₂, v₂, t₂)

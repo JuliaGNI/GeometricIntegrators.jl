@@ -87,7 +87,7 @@ function compute_solution!(x::Vector{ST}, q̄::Vector{ST}, v̄::Vector{ST}, p̄:
     q̄ .= x
 
     # compute p̄ = ϑ(q)
-    params.equ[:ϑ](params.t̄ + params.Δt, q̄, v̄, p̄)
+    params.equ[:ϑ](p̄, params.t̄ + params.Δt, q̄, v̄)
 end
 
 
