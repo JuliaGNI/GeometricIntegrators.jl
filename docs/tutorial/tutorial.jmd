@@ -33,23 +33,23 @@ Before any use, we need to load GeometricIntegrators,
 ```julia
 using GeometricIntegrators
 ```
-Then we can create an ODE object for the equation $\dot{x} (t) = x(t)$ with initial condition $x(0) = 1$,
+Then we can create an ODE object for the equation $\dot{x} (t) = x(t)$ with initial condition $x(0) = 1$, integration time span $(0, 1)$ and a time step of $\Delta t = 0.1$,
 ```julia
-ode = ODE((ẋ, t, x) -> ẋ[1] = x[1], [1.0]);
+prob = ODEProblem((ẋ, t, x, params) -> ẋ[1] = x[1], (0.0, 1.0), 0.1, [1.0]);
 ```
-create an integrator for this ODE, using the tableau for the explicit Euler method and a time step of $\Delta t = 0.1$,
+create an integrator for this ODE, using the tableau for the explicit Euler method
 ```julia
-int = Integrator(ode, TableauExplicitEuler(), 0.1);
+int = Integrator(prob, TableauExplicitEuler());
 ```
-and compute the solution for $n_t = 10$ time steps,
+and compute the solution,
 ```julia
-sol = integrate(ode, int, 10);
+sol = integrate(prob, int);
 ```
 Plot and compare with the exact solution
 ```julia
 using Plots
 plot(xlims=[0,1], xlab="t", ylab="x(t)", legend=:bottomright)
-plot!(sol.t, sol.q[1,:], label="numeric")
+plot!(sol.t, sol.q[:,1], label="numeric")
 plot!(sol.t, exp.(sol.t), label="exact")
 ```
 
@@ -62,19 +62,19 @@ In *GeometricIntegrators.jl* we distinguish between three basic types of equatio
 * stochastic differential equations (SDEs).
 
 For each type, there are several subtypes
-* standard equations ([`ODE`](@ref), [`DAE`](@ref), [`SDE`](@ref)),
-* implicit equations ([`IODE`](@ref), [`IDAE`](@ref)),
-* partitioned equations ([`PODE`](@ref), [`PDAE`](@ref), [`PSDE`](@ref)),
-* Hamiltonian equations ([`HODE`](@ref), [`HDAE`](@ref)),
-* Lagrangian equations ([`LODE`](@ref), [`LDAE`](@ref)),
-* split equations ([`SODE`](@ref), [`SPDAE`](@ref)).
+* standard equations ([`ODEProblem`](@ref), [`DAEProblem`](@ref), [`SDEProblem`](@ref)),
+* implicit equations ([`IODEProblem`](@ref), [`IDAEProblem`](@ref)),
+* partitioned equations ([`PODEProblem`](@ref), [`PDAEProblem`](@ref), [`PSDEProblem`](@ref)),
+* Hamiltonian equations ([`HODEProblem`](@ref), [`HDAEProblem`](@ref)),
+* Lagrangian equations ([`LODEProblem`](@ref), [`LDAEProblem`](@ref)),
+* split equations ([`SODEProblem`](@ref), [`SPDAEProblem`](@ref), [`SPSDEProblem`](@ref)).
 
 
 #### Ordinary differential equations
 
 Consider an ODE of the form
 ```math
-\dot{x} (t) = f(t, x(t)) ,
+\dot{x} (t) = v(t, x(t)) ,
 ```
 where $\dot{x}$ denotes the derivative of $x$ and $f$ the vector field of the
 equation, which is assumed to depend on both $t$ and $x$.
@@ -92,29 +92,52 @@ x_2 \\
 \end{pmatrix} .
 ```
 
-Creating an `ODE` object requires the prescription of a function that computes
-the vector field $f$, e.g.,
+Together with the integration time span `(t₀,t₁)` and the time step, an
+ODE defines an `ODEProblem`.
+
+The user needs to specify a function `ẋ` that computes the vector field and
+must have the interface
+```julia; eval=false
+    function ẋ(v, t, x, params)
+        v[1] = ...
+        v[2] = ...
+        ...
+    end
+```
+where `t` is the current time, `q` is the current solution vector, `v` is the
+vector which holds the result of evaluating the vector field ``v`` on `t` and
+`q`, and `params` is a `NamedTuple` of constant parameters on which the vector
+field may depend.
+
+For the mathematical pendulum, this could look as follows:
 ```julia
 function ẋ(v, t, x, params)
     v[1] = x[2]
     v[2] = sin(x[1])
 end
 ```
-which has to take three arguments, the current time `t`, the current solution vector `x` and the output vector `f`.
-Moreover, we need a set of initial conditions,
-```julia
-x₀ = [acos(0.4), 0.0]
+
+An `ODEProblem` is instantiated by
 ```
-An ODE object is than instantiated by
+ODEProblem(<vector field>, <time span>, <time step>, <initial conditions>; kwargs...)
 ```
-ODE(<vector field>, <initial conditions>; kwargs...)
-```
-specifically,
+so to create and `ODEProblem`, one only needs to pass the above function `ẋ`, a tuple
+`tspan` containing the start and end times of the integration, the time step
+`tstep` as well as an initial condition:
 ```julia
 tspan = (0.0, 10.0)
 tstep = 0.1
-ode = ODE(ẋ, tspan, tstep, x₀);
+x₀ = [acos(0.4), 0.0]
+
+ode = ODEProblem(ẋ, tspan, tstep, x₀)
 ```
+The full constructor would look like
+```julia
+ode = ODEProblem(ẋ, tspan, tstep, x₀; invariants = NullInvariants(),
+                 parameters = NullParameters(), periodicity = NullPeriodicity());
+```
+where all keyword arguments, namely invariants, parameters and periodicity, are
+by default initialized to be absent.
 
 
 #### Partitioned ordinary differential equations
@@ -158,7 +181,7 @@ explicit, implicit and partitioned Runge-Kutta methods, splitting methods and
 general linear methods (_planned_).
 
 In order to instantiate many of the standard integrators, one needs to specify
-an ODE, a tableau and a timestep, e.g.,
+an ODEProblem, a tableau and a timestep, e.g.,
 ```julia
 int = Integrator(ode, TableauExplicitEuler());
 ```
@@ -171,7 +194,7 @@ The integrate function automatically creates an appropriate solution object,
 that contains the result of the integration.
 
 ```julia
-plot(sol.q[1,:], sol.q[2,:], xlab="x(t)", ylab="y(t)", legend=:none)
+plot(sol.q[:,1], sol.q[:,2], xlab="x(t)", ylab="y(t)", legend=:none)
 ```
 
 Observe that the explicit Euler method is not well suited for integrating this
@@ -188,7 +211,7 @@ of the system. The solution return by the integrate step will also be a differen
 solution, adapted to the partitioned system.
 
 ```julia
-plot(sol.q[1,:], sol.p[1,:], xlab="q(t)", ylab="p(t)", legend=:none)
+plot(sol.q[:,1], sol.p[:,1], xlab="q(t)", ylab="p(t)", legend=:none)
 ```
 
 Moreover, this method respects the Hamiltonian structure of the system, resulting
