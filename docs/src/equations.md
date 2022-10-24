@@ -8,12 +8,12 @@ In *GeometricIntegrators.jl* we support three basic types of equations:
 
 For each type, there are several subtypes:
 
-* standard equations ([`ODE`](@ref), [`DAE`](@ref), [`SDE`](@ref)),
-* implicit equations ([`IODE`](@ref), [`IDAE`](@ref)),
-* partitioned equations ([`PODE`](@ref), [`PDAE`](@ref), [`PSDE`](@ref)),
-* Hamiltonian equations ([`HODE`](@ref), [`HDAE`](@ref)),
-* Lagrangian equations ([`LODE`](@ref), [`LDAE`](@ref)),
-* split equations ([`SODE`](@ref), [`SPDAE`](@ref), [`SPSDE`](@ref)).
+* standard equations ([`ODEProblem`](@ref), [`DAEProblem`](@ref), [`SDEProblem`](@ref)),
+* implicit equations ([`IODEProblem`](@ref), [`IDAEProblem`](@ref)),
+* partitioned equations ([`PODEProblem`](@ref), [`PDAEProblem`](@ref), [`PSDEProblem`](@ref)),
+* Hamiltonian equations ([`HODEProblem`](@ref), [`HDAEProblem`](@ref)),
+* Lagrangian equations ([`LODEProblem`](@ref), [`LDAEProblem`](@ref)),
+* split equations ([`SODEProblem`](@ref), [`SPDAEProblem`](@ref), [`SPSDEProblem`](@ref)).
 
 Each equation holds a number of functions determining the vector field, constraints, and possibly additional information like parameters, periodicity, invariants and the Hamiltonian or Lagrangian.
 

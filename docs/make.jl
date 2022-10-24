@@ -3,9 +3,12 @@ using DocumenterCitations
 using Weave
 using GeometricIntegrators
 
+
 cp(normpath(@__FILE__, "../../AUTHORS.md"), normpath(@__FILE__, "../src/authors.md"); force=true)
 
 bib = CitationBibliography("GeometricIntegrators.bib")
+
+DocMeta.setdocmeta!(GeometricIntegrators, :DocTestSetup, :(using GeometricIntegrators); recursive=true)
 
 makedocs(bib,
     sitename = "GeometricIntegrators.jl",
