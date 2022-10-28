@@ -25,15 +25,23 @@ z0 = rand(1)
     dae   = harmonic_oscillator_dae()
     pode  = harmonic_oscillator_pode()
     pdae  = harmonic_oscillator_pdae()
+    hode  = harmonic_oscillator_hode()
+    hdae  = harmonic_oscillator_hdae()
     iode  = harmonic_oscillator_iode()
     idae  = harmonic_oscillator_idae()
+    # lode  = harmonic_oscillator_lode()
+    # ldae  = harmonic_oscillator_ldae()
 
     @test typeof(SolutionStep(ode))   <: SolutionStepODE
     @test typeof(SolutionStep(dae))   <: SolutionStepDAE
     @test typeof(SolutionStep(pode))  <: SolutionStepPODE
+    @test typeof(SolutionStep(hode))  <: SolutionStepPODE
     @test typeof(SolutionStep(iode))  <: SolutionStepPODE
+    # @test typeof(SolutionStep(lode))  <: SolutionStepPODE
     @test typeof(SolutionStep(pdae))  <: SolutionStepPDAE
+    @test typeof(SolutionStep(hdae))  <: SolutionStepPDAE
     @test typeof(SolutionStep(idae))  <: SolutionStepPDAE
+    # @test typeof(SolutionStep(ldae))  <: SolutionStepPDAE
 end
 
 
