@@ -70,7 +70,7 @@ function Integrators.initialize!(int::IntegratorVPRKpVariational{DT}, sol::Solut
                             sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 
     # initialise projector
-    equation(int, :g)(cache.G[1], sol.t, sol.q, cache.λ)
+    equation(int, :g)(cache.G[1], sol.t, sol.q, sol.v, cache.λ)
     # cache.U[1] .= cache.λ
 end
 
@@ -101,11 +101,11 @@ end
 
 
 function compute_projection!(
-                x::Vector{ST}, q::SolutionVector{ST}, p::SolutionVector{ST}, λ::SolutionVector{ST},
+                x::Vector{ST}, q::SolutionVector{ST}, p::SolutionVector{ST}, v::SolutionVector{ST}, λ::SolutionVector{ST},
                 U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
                 params::ParametersVPRKpVariational{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    @assert D == length(q) == length(p) == length(λ)
+    @assert D == length(q) == length(p) == length(v) == length(λ)
     @assert D == length(U[1]) == length(U[2])
     @assert D == length(G[1]) == length(G[2])
 
@@ -121,13 +121,13 @@ function compute_projection!(
     # U[1] .= λ
     # U[2] .= 0
 
-    params.equ[:g](G[1], params.t̄, q, λ)
+    params.equ.g(G[1], params.t̄, q, v, λ)
     G[2] .= 0
     # G[1] .= 0
-    # params.equ.g(params.t̄, q, λ, G[2])
+    # params.equ.g(G[2], params.t̄, q, v, λ)
 
     # compute p=ϑ(q)
-    params.equ[:ϑ](p, params.t̄, q, λ)
+    params.equ.ϑ(p, params.t̄, q, v)
 end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."
@@ -140,7 +140,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_projection!(x, cache.q̃, cache.p̃, cache.λ, cache.U, cache.G, params)
+    compute_projection!(x, cache.q̃, cache.p̃, cache.ṽ, cache.λ, cache.U, cache.G, params)
 
     # # compute b = - [q̄-q-U]
     for k in 1:D
@@ -202,7 +202,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol
     check_solver_status(int.projector.status, int.projector.params)
 
     # compute projection vector fields
-    compute_projection!(int.projector.x, cache.q̃, cache.p̃, cache.λ,
+    compute_projection!(int.projector.x, cache.q̃, cache.p̃, cache.ṽ, cache.λ,
                                          cache.U, cache.G, int.pparams)
 
     # add projection to solution

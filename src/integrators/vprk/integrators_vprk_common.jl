@@ -41,12 +41,12 @@ function compute_stages!(x, Q, V, P, F, params::AbstractParametersVPRK)
     compute_stages_p_vprk!(Q, V, P, F, params)
 end
 
-function compute_stages!(x, q, p, λ, Q, V, U, P, F, G, params::AbstractParametersVPRK)
+function compute_stages!(x, q, p, v, λ, Q, V, U, P, F, G, params::AbstractParametersVPRK)
     # copy x to V
     compute_stages_v_vprk!(x, V, params)
 
     # compute U, G and p̄
-    compute_projection_vprk!(x, q, p, λ, Q, V, U, G, params)
+    compute_projection_vprk!(x, q, p, v, λ, Q, V, U, G, params)
 
     # compute Q
     compute_stages_q_vprk!(Q, V, U, params)
@@ -136,8 +136,8 @@ function compute_stages_p_vprk!(Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
     for i in 1:S
         @assert D == length(Q[i]) == length(V[i]) == length(P[i]) == length(F[i])
         tᵢ = params.t̄ + params.Δt * params.tab.q.c[i]
-        params.equ[:ϑ](P[i], tᵢ, Q[i], V[i])
-        params.equ[:f](F[i], tᵢ, Q[i], V[i])
+        params.equ.ϑ(P[i], tᵢ, Q[i], V[i])
+        params.equ.f(F[i], tᵢ, Q[i], V[i])
     end
 end
 

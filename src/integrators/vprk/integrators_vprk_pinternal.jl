@@ -79,7 +79,7 @@ end
 
 
 function compute_projection_vprk!(x::Vector{ST},
-                q::SolutionVector{ST}, p::SolutionVector{ST}, λ::SolutionVector{ST},
+                q::SolutionVector{ST}, p::SolutionVector{ST}, v::SolutionVector{ST}, λ::SolutionVector{ST},
                 Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
                 params::ParametersVPRKpInternal{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
@@ -130,13 +130,13 @@ function compute_projection_vprk!(x::Vector{ST},
     G[2] .= 0
     for j in 1:S
         tₘ = params.t̄ + params.Δt * params.tab.q.c[j]
-        params.equ[:g](g, tₘ, Q[j], λ)
+        params.equ.g(g, tₘ, Q[j], V[j], λ)
         G[1] .+= params.tab.q.b[j] * g
         G[2] .+= params.tab.q.b[j] * g
     end
 
     # compute p=ϑ(q)
-    params.equ[:ϑ](p, t₁, q, λ)
+    params.equ.ϑ(p, t₁, q, v)
 end
 
 
@@ -148,7 +148,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_stages!(x, cache.q̃, cache.p̃, cache.λ, cache.Q, cache.V, cache.U, cache.P, cache.F, cache.G, params)
+    compute_stages!(x, cache.q̃, cache.p̃, cache.ṽ, cache.λ, cache.Q, cache.V, cache.U, cache.P, cache.F, cache.G, params)
 
     # compute b = - [P-AF-U]
     compute_rhs_vprk!(b, cache.P, cache.F, cache.G, params)
@@ -182,7 +182,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpInternal{DT,TT}, sol::S
 
     # compute vector fields at internal stages and projection vector fields
     compute_stages!(int.solver.x,
-                    cache.q̃, cache.p̃, cache.λ,
+                    cache.q̃, cache.p̃, cache.ṽ, cache.λ,
                     cache.Q, cache.V, cache.U,
                     cache.P, cache.F, cache.G, int.params)
 

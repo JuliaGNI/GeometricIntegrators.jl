@@ -159,8 +159,8 @@ function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
 
         # compute P=p(t,Q) and F=f(t,Q,V)
         tqᵢ = params.t̄ + params.Δt * params.tab.q.c[i]
-        params.equ[:ϑ](Φ[i], tqᵢ, Q[i], V[i])
-        params.equ[:f](F[i], tqᵢ, Q[i], V[i])
+        params.equ.ϑ(Φ[i], tqᵢ, Q[i], V[i])
+        params.equ.f(F[i], tqᵢ, Q[i], V[i])
     end
 
     # copy y to q and p
@@ -170,7 +170,7 @@ function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
     end
 
     # compute p=p(t,q)
-    params.equ[:ϑ](ϕ, params.t̄ + params.Δt, q, v)
+    params.equ.ϑ(ϕ, params.t̄ + params.Δt, q, v)
 
     # for Lobatto-type methods, copy y to μ
     if isdefined(params.tab, :d) && length(params.tab.d) > 0

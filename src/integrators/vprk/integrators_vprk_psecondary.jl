@@ -208,19 +208,19 @@ function compute_projection_vprk!(q::Vector{ST}, v::Vector{ST}, p::Vector{ST},
     # local Ω  = zeros(ST,D,D)
 
     # compute p=ϑ(q)
-    params.equ[:ϑ](p, t₁, q, v)
+    params.equ.ϑ(p, t₁, q, v)
 
     for i in 1:S
         tᵢ = t₀ + params.Δt * params.tab.p.c[i]
         
-        # params.equ[:ω](tᵢ, Q[i], V[i], Ω)
-        # params.equ[:∇H](tᵢ, Q[i], dH)
+        # params.equ.ω(tᵢ, Q[i], V[i], Ω)
+        # params.equ.∇H(tᵢ, Q[i], dH)
 
         # Ψ[i] .= Ω * V[i] .- dH
 
-        # params.equ[:u](tᵢ, Q[i], Λ[i], U[i])
-        params.equ[:g](R[i], tᵢ, Q[i], Λ[i])
-        params.equ[:ψ](Ψ[i], tᵢ, Q[i], P[i], V[i], F[i])
+        # params.equ.u(tᵢ, Q[i], Λ[i], U[i])
+        params.equ.g(R[i], tᵢ, Q[i], V[i], Λ[i])
+        params.equ.ψ(Ψ[i], tᵢ, Q[i], P[i], V[i], F[i])
     end
 end
 

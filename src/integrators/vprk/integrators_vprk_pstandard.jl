@@ -114,7 +114,7 @@ function Integrators.initialize!(int::IntegratorVPRKpStandard{DT}, sol::Solution
 
     # initialise projector
     cache.U[1] .= cache.λ
-    equation(int, :g)(cache.G[1], sol.t, sol.q, cache.λ)
+    equation(int, :g)(cache.G[1], sol.t, sol.q, sol.v, cache.λ)
 end
 
 
@@ -143,12 +143,13 @@ function initial_guess_projection!(int::IntegratorVPRKpStandard, sol::SolutionSt
 end
 
 
-function compute_projection!(
-                x::Vector{ST}, q::SolutionVector{ST}, p::SolutionVector{ST}, λ::SolutionVector{ST},
+function compute_projection!(x::Vector{ST}, 
+                q::SolutionVector{ST}, p::SolutionVector{ST},
+                v::SolutionVector{ST}, λ::SolutionVector{ST},
                 U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
                 params::ParametersVPRKpStandard{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    @assert D == length(q) == length(p) == length(λ)
+    @assert D == length(q) == length(p) == length(v) == length(λ)
     @assert D == length(U[1]) == length(U[2])
     @assert D == length(G[1]) == length(G[2])
 
@@ -162,11 +163,11 @@ function compute_projection!(
     U[1] .= λ
     U[2] .= λ
 
-    params.equ[:g](G[1], params.t̄, q, λ)
+    params.equ.g(G[1], params.t̄, q, v, λ)
     G[2] .= G[1]
 
     # compute p̄=ϑ(q)
-    params.equ[:ϑ](p, params.t̄, q, λ)
+    params.equ.ϑ(p, params.t̄, q, v)
 end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."
@@ -179,7 +180,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_projection!(x, cache.q̃, cache.p̃, cache.λ, cache.U, cache.G, params)
+    compute_projection!(x, cache.q̃, cache.p̃, cache.ṽ, cache.λ, cache.U, cache.G, params)
 
     # compute b = - [q̄-q-U]
     for k in 1:D
@@ -239,7 +240,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpStandard{DT,TT}, sol::S
     check_solver_status(int.projector.status, int.projector.params)
 
     # compute projection vector fields
-    compute_projection!(int.projector.x, cache.q̃, cache.p̃, cache.λ, cache.U, cache.G, int.pparams)
+    compute_projection!(int.projector.x, cache.q̃, cache.p̃, cache.ṽ, cache.λ, cache.U, cache.G, int.pparams)
 
     # add projection to solution
     project_solution!(int, sol, int.pparams.pparams[:RU2], int.pparams.pparams[:RG2], cache)

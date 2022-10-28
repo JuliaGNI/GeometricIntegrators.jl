@@ -10,9 +10,10 @@ mutable struct AbstractParametersVPRK{IT, DT, TT, D, S, ET <: NamedTuple, PT <: 
     t̄::TT
     q̄::Vector{DT}
     p̄::Vector{DT}
+    v̄::Vector{DT}
 
     function AbstractParametersVPRK{IT,DT,D}(equs::ET, tab::TableauVPRK{TT}, Δt::TT, pparams::PT=NamedTuple()) where {IT, DT, TT, D, ET <: NamedTuple, PT <: NamedTuple}
-        new{IT, DT, TT, D, tab.s, ET, PT}(equs, tab, Δt, pparams, zero(TT), zeros(DT,D), zeros(DT,D))
+        new{IT, DT, TT, D, tab.s, ET, PT}(equs, tab, Δt, pparams, zero(TT), zeros(DT,D), zeros(DT,D), zeros(DT,D))
     end
 end
 
@@ -21,6 +22,7 @@ function update_params!(params::AbstractParametersVPRK, sol::Union{SolutionStepP
     params.t̄  = sol.t
     params.q̄ .= sol.q
     params.p̄ .= sol.p
+    params.v̄ .= sol.v
 end
 
 @inline equation(int::AbstractIntegratorVPRK, i::Symbol) = parameters(int).equ[i]

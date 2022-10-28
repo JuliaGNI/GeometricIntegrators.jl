@@ -392,13 +392,13 @@ function compute_stages_λ!(cache::IntegratorCacheDGVI{ST,D,S,R},
     # params.equs[:ϑ](cache.Θ̅⁺, t₁, cache.q̄⁺, cache.q̄⁺)
 
     # compute projection
-    params.equs[:g](cache.g, t₀, cache.ϕ,  cache.λ)
-    # params.equs[:g](cache.g⁻, t₀, cache.q⁻, cache.λ⁻)
-    # params.equs[:g](cache.g⁺, t₀, cache.q⁺, cache.λ⁺)
+    params.equs[:g](cache.g, t₀, cache.ϕ,  zero(cache.q), cache.λ)
+    # params.equs[:g](cache.g⁻, t₀, cache.q⁻, zero(cache.q), cache.λ⁻)
+    # params.equs[:g](cache.g⁺, t₀, cache.q⁺, zero(cache.q), cache.λ⁺)
 
-    params.equs[:g](cache.ḡ, t₁, cache.ϕ̅,  cache.λ̄)
-    # params.equs[:g](cache.ḡ⁻, t₁, cache.q̄⁻, cache.λ̄⁻)
-    # params.equs[:g](cache.ḡ⁺, t₁, cache.q̄⁺, cache.λ̄⁺)
+    params.equs[:g](cache.ḡ, t₁, cache.ϕ̅,  zero(cache.q), cache.λ̄)
+    # params.equs[:g](cache.ḡ⁻, t₁, cache.q̄⁻, zero(cache.q), cache.λ̄⁻)
+    # params.equs[:g](cache.ḡ⁺, t₁, cache.q̄⁺, zero(cache.q), cache.λ̄⁺)
 end
 
 

@@ -257,7 +257,7 @@ function integrate_diag_flrk!(int::IntegratorFLRK{DT,TT,D,S}, sol::SolutionStepP
         tᵢ = int.params.t + timestep(int) * tableau(int).c[i]
         int.params.equs[:ϑ](int.ϑ[i], tᵢ, cache.Q[i], cache.V[i])
         int.params.equs[:v̄](cache.V[i], tᵢ, cache.Q[i])
-        int.params.equs[:g](int.F[i], tᵢ, cache.Q[i], cache.V[i])
+        int.params.equs[:g](int.F[i], tᵢ, cache.Q[i], cache.V[i], cache.V[i])
     end
 
     # compute Jacobian of v via ForwardDiff

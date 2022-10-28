@@ -516,8 +516,8 @@ function compute_stages_λ!(cache::IntegratorCacheDGVIPI{ST,D,S,QR,FR},
     for i in 1:FR
         params.equs[:ϑ](cache.θ[i], t₀, cache.ϕ[i], cache.λ[i])
         params.equs[:ϑ](cache.Θ̅[i], t₁, cache.ϕ̅[i], cache.λ̄[i])
-        params.equs[:g](cache.g[i], t₀, cache.ϕ[i], cache.λ[i])
-        params.equs[:g](cache.ḡ[i], t₁, cache.ϕ̅[i], cache.λ̄[i])
+        params.equs[:g](cache.g[i], t₀, cache.ϕ[i], zero(cache.q), cache.λ[i])
+        params.equs[:g](cache.ḡ[i], t₁, cache.ϕ̅[i], zero(cache.q), cache.λ̄[i])
     end
 end
 
