@@ -62,7 +62,7 @@ q \in \mathbb{R}^{2} .
 ```
 
 In order to create an `ODEProblem` for the harmonic oscillator, we need to write the following code:
-```@example
+```@example ode
 using GeometricIntegrators # hide
 function v(v, t, x, params)
     v[1] = x[2]
@@ -77,7 +77,7 @@ prob = ODEProblem(v, tspan, tstep, q₀; parameters = (k = 0.5,))
 ```
 
 The energy of the harmonic oscillator is preserved, so we can add it as an invariant, 
-```julia
+```@example ode
 energy(t, q, params) = q[2]^2 / 2 + params.k * q[1]^2 / 2
 
 prob = ODEProblem(v, tspan, tstep, q₀; parameters = (k = 0.5,), invariants = (h=energy,))
@@ -103,7 +103,7 @@ The dynamical equations are given by
 ```
 
 In order to create a `PODEProblem` for the harmonic oscillator, we need to write the following code:
-```@example
+```@example pode
 using GeometricIntegrators # hide
 function v(v, t, q, p, params)
     v[1] = p[1]
@@ -122,7 +122,7 @@ prob = PODEProblem(v, f, tspan, tstep, q₀, p₀; parameters = (k = 0.5,))
 ```
 
 The energy of the harmonic oscillator is preserved, so we can add it as an invariant, 
-```julia
+```@example pode
 energy(t, q, p, params) = p[1]^2 / 2 + params.k * q[1]^2 / 2
 
 prob = PODEProblem(v, f, tspan, tstep, q₀, p₀; parameters = (k = 0.5,), invariants = (h=energy,))
@@ -204,7 +204,7 @@ p(t) &= v(t) , \\
 Here, `v` acts as a Lagrange multiplier that enforces the "constraint" ``p(t) = v(t)``.
 
 In order to create an `IODEProblem` for the harmonic oscillator, we thus need to write the following code:
-```@example
+```@example iode
 using GeometricIntegrators # hide
 function p(p, t, q, v, params)
     p[1] = v[1]
@@ -227,7 +227,7 @@ prob = IODEProblem(p, f, tspan, tstep, q₀, p₀; parameters = (k = 0.5,))
 ```
 
 The energy of the harmonic oscillator is preserved, so we can add it as an invariant, 
-```julia
+```@example iode
 energy(t, q, v, params) = v[1]^2 / 2 + params.k * q[1]^2 / 2
 
 prob = IODEProblem(p, f, tspan, tstep, q₀, p₀; parameters = (k = 0.5,), invariants = (h=energy,))
@@ -274,7 +274,7 @@ p(t) &= \frac{\partial L}{\partial v} (q(t),v(t)) = v(t) , \\
 Here, `v` acts as a Lagrange multiplier that enforces the "constraint" ``p(t) = \partial L / \partial v``.
 
 In order to create an `LODEProblem` for the harmonic oscillator, we thus need to write the following code:
-```@example
+```@example lode
 using GeometricIntegrators # hide
 function p(p, t, q, v, params)
     p[1] = v[1]
@@ -304,7 +304,7 @@ prob = LODEProblem(p, f, ω, l, tspan, tstep, q₀, p₀; parameters = (k = 0.5,
 ```
 
 The energy of the harmonic oscillator is preserved, so we can add it as an invariant, 
-```julia
+```@example lode
 energy(t, q, v, params) = v[1]^2 / 2 + params.k * q[1]^2 / 2
 
 prob = LODEProblem(p, f, ω, l, tspan, tstep, q₀, p₀; parameters = (k = 0.5,), invariants = (h=energy,))
@@ -350,7 +350,7 @@ q₀ = [1., 1.]
 λ₀ = [0.]
 params = (k=0.5,)
 
-dae = DAEProblem(v, u, ϕ, tspan, tstep, q₀, λ₀; parameters = params)
+prob = DAEProblem(v, u, ϕ, tspan, tstep, q₀, λ₀; parameters = params)
 ```
 
 
