@@ -47,7 +47,7 @@ struct IntegratorHSPARKprimary{DT, TT, D, S, R, PT <: ParametersHSPARKprimary{DT
         new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorHSPARKprimary{DT,D}(equations::NamedTuple, tableau::TableauHSPARKprimary{TT}, Δt::TT) where {DT,TT,D,ST}
+    function IntegratorHSPARKprimary{DT,D}(equations::NamedTuple, tableau::TableauHSPARKprimary{TT}, Δt::TT) where {DT,TT,D}
         @assert tableau.ρ == tableau.r-1
 
         # get number of stages

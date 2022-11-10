@@ -116,7 +116,7 @@ struct IntegratorVSPARKprimary{DT, TT, D, S, R, PT <: ParametersVSPARKprimary{DT
         new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorVSPARKprimary{DT,D}(equations::NamedTuple, tableau::TableauVSPARKprimary{TT}, Δt::TT) where {DT,TT,D,ST}
+    function IntegratorVSPARKprimary{DT,D}(equations::NamedTuple, tableau::TableauVSPARKprimary{TT}, Δt::TT) where {DT,TT,D}
         # @assert tableau.ρ == tableau.r-1
 
         # get number of stages

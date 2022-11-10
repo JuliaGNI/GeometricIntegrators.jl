@@ -98,7 +98,7 @@ struct IntegratorSLRK{DT, TT, D, S, PT <: ParametersSLRK{DT,TT,D,S,S},
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorSLRK{DT,D}(equations::NamedTuple, tableau::TableauSLRK{TT}, Δt::TT) where {DT,TT,D,ST}
+    function IntegratorSLRK{DT,D}(equations::NamedTuple, tableau::TableauSLRK{TT}, Δt::TT) where {DT,TT,D}
         # get number of stages
         S = tableau.s
 
