@@ -1,5 +1,5 @@
 
-# Equations
+# Problem Types
 
 The following data structures are all implemented in [GeometricEquations.jl](https://github.com/JuliaGNI/GeometricEquations.jl).
 Each problem type is derived from [`GeometricProblem`](@ref).
