@@ -326,6 +326,23 @@ is energy conserving, most integrators do not respect this property.
 A possible way of remedying this flaw is to explicitly add energy
 conservation as an algebraic constraint. 
 
+The dynamical equations are given by
+```math
+\dot{q} (t) = \begin{pmatrix}
+0 & 1 \\
+-k & 0 \\
+\end{pmatrix} q(t) 
++ \nabla \phi (q(t)) \lambda ,
+\qquad
+\phi (q) = \frac{q_2^2}{2} + k \, \frac{q_1^2}{2}
+\qquad
+q \in \mathbb{R}^{2} ,
+\qquad
+\lambda \in \mathbb{R}^{1} .
+```
+
+In order to create an `DAEProblem` for the harmonic oscillator including the projection
+on the constant energy manifold, we need to write the following code:
 ```@example
 using GeometricIntegrators # hide
 hamiltonian(t, q, params) = q[2]^2 / 2 + params.k * q[1]^2 / 2
@@ -361,12 +378,98 @@ using GeometricEquations, Markdown
 Markdown.parse(GeometricEquations.pdae_equations)
 ```
 
+### Example: Harmonic Oscillator
+
+As an example we consider the harmonic oscillator, with an additional
+constraint that enforces energy conservation. While the system itself
+is energy conserving, most integrators do not respect this property.
+A possible way of remedying this flaw is to explicitly add energy
+conservation as an algebraic constraint. 
+
+```@example
+using GeometricIntegrators # hide
+hamiltonian(t, q, p, params) = p[1]^2 / 2 + params.k * q[1]^2 / 2
+
+function v(v, t, q, p, params)
+    v[1] = p[1]
+end
+
+function f(f, t, q, p, params)
+    f[1] = - params.k * q[1]
+end
+
+function u(u, t, q, p, λ, params)
+    u[1] = λ[1] * params.k * q[1]
+end
+
+function g(g, t, q, p, λ, params)
+    g[1] = λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, p, params)
+    ϕ[1] = hamiltonian(t, q, p, params)
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [0.5]
+p₀ = [0.0]
+λ₀ = [0.0]
+params = (k=0.5,)
+
+prob = PDAEProblem(v, f, u, g, ϕ, tspan, tstep, q₀, p₀, λ₀; parameters = params)
+```
+
 
 ### Hamiltonian Differential Algebraic Equation (HDAE)
 
 ```@eval
 using GeometricEquations, Markdown
 Markdown.parse(GeometricEquations.hdae_equations)
+```
+
+
+### Example: Harmonic Oscillator
+
+As an example we consider the harmonic oscillator, with an additional
+constraint that enforces energy conservation. While the system itself
+is energy conserving, most integrators, even symplectic ones, do not
+respect this property.
+A possible way of remedying this flaw is to explicitly add energy
+conservation as an algebraic constraint.
+
+```@example
+using GeometricIntegrators # hide
+hamiltonian(t, q, p, params) = p[1]^2 / 2 + params.k * q[1]^2 / 2
+
+function v(v, t, q, p, params)
+    v[1] = p[1]
+end
+
+function f(f, t, q, p, params)
+    f[1] = - params.k * q[1]
+end
+
+function u(u, t, q, p, λ, params)
+    u[1] = λ[1] * params.k * q[1]
+end
+
+function g(g, t, q, p, λ, params)
+    g[1] = λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, p, params)
+    ϕ[1] = hamiltonian(t, q, p, params)
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [0.5]
+p₀ = [0.0]
+λ₀ = [0.0]
+params = (k=0.5,)
+
+prob = HDAEProblem(v, f, u, g, ϕ, hamiltonian, tspan, tstep, q₀, p₀, λ₀; parameters = params)
 ```
 
 
