@@ -1,5 +1,5 @@
 """
-Atomic solution for an PDAE.
+Solution step for a [`PDAEProblem`](@ref).
 
 ### Parameters
 
