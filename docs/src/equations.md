@@ -378,44 +378,63 @@ using GeometricEquations, Markdown
 Markdown.parse(GeometricEquations.pdae_equations)
 ```
 
-### Example: Harmonic Oscillator
+### Example: Pendulum
 
-As an example we consider the harmonic oscillator, with an additional
-constraint that enforces energy conservation. While the system itself
-is energy conserving, most integrators do not respect this property.
-A possible way of remedying this flaw is to explicitly add energy
-conservation as an algebraic constraint. 
+As an example we consider the pendulum in cartesian coordinates, with
+a constraint that enforces the solution to respect the length of the pendulum.
 
+The dynamical equations are given by
+```math
+\begin{aligned}
+\dot{q} (t) &= p (t) , &
+q &\in \mathbb{R}^{2},
+\\
+\dot{p} (t) &= 
+\begin{pmatrix}
+  - \lambda q_1 (t) \\
+1 - \lambda q_2 (t) \\
+\end{pmatrix} , &
+p &\in \mathbb{R}^{2} ,
+\\
+\phi (q) &= q^2 - l^2 , &
+\lambda &\in \mathbb{R}^{1} .
+\end{aligned}
+```
+
+In order to create an `PDAEProblem` for the pendulum including the projection
+on the constant length constraint, we need to write the following code:
 ```@example
 using GeometricIntegrators # hide
-hamiltonian(t, q, p, params) = p[1]^2 / 2 + params.k * q[1]^2 / 2
 
 function v(v, t, q, p, params)
-    v[1] = p[1]
+    v .= p
 end
 
 function f(f, t, q, p, params)
-    f[1] = - params.k * q[1]
+    f[1] = 0
+    f[2] = 1
 end
 
 function u(u, t, q, p, λ, params)
-    u[1] = λ[1] * params.k * q[1]
+    u .= 0
 end
 
 function g(g, t, q, p, λ, params)
-    g[1] = λ[1] * q[2]
+    g[1] = - λ[1] * q[1]
+    g[2] = - λ[1] * q[2]
 end
 
 function ϕ(ϕ, t, q, p, params)
-    ϕ[1] = hamiltonian(t, q, p, params)
+    ϕ[1] = q[1]^2 + q[2]^2 - params.l^2
 end
 
 tspan = (0.0, 1.0)
 tstep = 0.1
-q₀ = [0.5]
-p₀ = [0.0]
+params = (l=0.5,)
+
+q₀ = [params.l, 0.0]
+p₀ = [0.0, 0.1]
 λ₀ = [0.0]
-params = (k=0.5,)
 
 prob = PDAEProblem(v, f, u, g, ϕ, tspan, tstep, q₀, p₀, λ₀; parameters = params)
 ```
@@ -429,47 +448,73 @@ Markdown.parse(GeometricEquations.hdae_equations)
 ```
 
 
-### Example: Harmonic Oscillator
+### Example: Pendulum
 
-As an example we consider the harmonic oscillator, with an additional
-constraint that enforces energy conservation. While the system itself
-is energy conserving, most integrators, even symplectic ones, do not
-respect this property.
-A possible way of remedying this flaw is to explicitly add energy
-conservation as an algebraic constraint.
+As an example we consider the pendulum in cartesian coordinates, with
+a constraint that enforces the solution to respect the length of the pendulum.
 
+The Hamiltonian is given by
+```math
+H(q,p) = \frac{1}{2} p^2 + l - q_2 ,
+```
+and dynamical equations read
+```math
+\begin{aligned}
+\dot{q} (t) &= p (t) , &
+q &\in \mathbb{R}^{2},
+\\
+\dot{p} (t) &= 
+\begin{pmatrix}
+  - \lambda q_1 (t) \\
+1 - \lambda q_2 (t) \\
+\end{pmatrix} , &
+p &\in \mathbb{R}^{2} ,
+\\
+\phi (q) &= q^2 - l^2 , &
+\lambda &\in \mathbb{R}^{1} .
+\end{aligned}
+```
+
+In order to create an `HDAEProblem` for the pendulum including the projection
+on the constant length constraint, we need to write the following code:
 ```@example
 using GeometricIntegrators # hide
-hamiltonian(t, q, p, params) = p[1]^2 / 2 + params.k * q[1]^2 / 2
 
 function v(v, t, q, p, params)
-    v[1] = p[1]
+    v .= p
 end
 
 function f(f, t, q, p, params)
-    f[1] = - params.k * q[1]
+    f[1] = 0
+    f[2] = 1
 end
 
 function u(u, t, q, p, λ, params)
-    u[1] = λ[1] * params.k * q[1]
+    u .= 0
 end
 
 function g(g, t, q, p, λ, params)
-    g[1] = λ[1] * q[2]
+    g[1] = - λ[1] * q[1]
+    g[2] = - λ[1] * q[2]
 end
 
 function ϕ(ϕ, t, q, p, params)
-    ϕ[1] = hamiltonian(t, q, p, params)
+    ϕ[1] = q[1]^2 + q[2]^2 - params.l^2
+end
+
+function h(t, q, p, params)
+    return (p[1]^2 + p[2]^2)/2 + params.l - q[2]
 end
 
 tspan = (0.0, 1.0)
 tstep = 0.1
-q₀ = [0.5]
-p₀ = [0.0]
-λ₀ = [0.0]
-params = (k=0.5,)
+params = (l=0.5,)
 
-prob = HDAEProblem(v, f, u, g, ϕ, hamiltonian, tspan, tstep, q₀, p₀, λ₀; parameters = params)
+q₀ = [params.l, 0.0]
+p₀ = [0.0, 0.1]
+λ₀ = [0.0]
+
+prob = HDAEProblem(v, f, u, g, ϕ, h, tspan, tstep, q₀, p₀, λ₀; parameters = params)
 ```
 
 
@@ -481,11 +526,164 @@ Markdown.parse(GeometricEquations.idae_equations)
 ```
 
 
+### Example: Pendulum
+
+As an example we consider the pendulum in cartesian coordinates, with
+a constraint that enforces the solution to respect the length of the pendulum.
+
+The implicit equations are given by
+```math
+\begin{aligned}
+\dot{q} (t) &= v(t) , &
+q &\in \mathbb{R}^{2},
+\\
+\dot{p} (t) &= 
+\begin{pmatrix}
+0 \\
+1 \\
+\end{pmatrix}
+- \lambda(t) q(t) , &
+v &\in \mathbb{R}^{2} ,
+\\
+p(t) &= v(t) , &
+p &\in \mathbb{R}^{2} ,
+\\
+\phi (q) &= q^2 - l^2 , &
+\lambda &\in \mathbb{R}^{1} .
+\end{aligned}
+```
+
+In order to create an `IDAEProblem` for the pendulum including the projection
+on the constant length constraint, we need to write the following code:
+```@example
+using GeometricIntegrators # hide
+
+function p(p, t, q, v, params)
+    p .= v
+end
+
+function f(f, t, q, v, params)
+    f[1] = 0
+    f[2] = 1
+end
+
+function u(u, t, q, v, p, λ, params)
+    u .= 0
+end
+
+function g(g, t, q, v, p, λ, params)
+    g[1] = - λ[1] * q[1]
+    g[2] = - λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, v, p, params)
+    ϕ[1] = q[1]^2 + q[2]^2 - params.l^2
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+params = (l=0.5,)
+
+q₀ = [params.l, 0.0]
+p₀ = [0.0, 0.1]
+λ₀ = [0.0]
+
+prob = IDAEProblem(p, f, u, g, ϕ, tspan, tstep, q₀, p₀, λ₀; parameters = params)
+```
+
 ### Lagrangian Differential Algebraic Equation (LDAE)
 
 ```@eval
 using GeometricEquations, Markdown
 Markdown.parse(GeometricEquations.ldae_equations)
+```
+
+### Example: Pendulum
+
+As an example we consider the pendulum in cartesian coordinates, with
+a constraint that enforces the solution to respect the length of the pendulum.
+
+The Hamilton-Pontryagin principle for this system is given by
+```math
+\delta \int \limits_{t_0}^{t_1} \big[ L(q, v) + \left< p , \dot{q} - v \right> + \lambda \, \phi (q) \big] = 0 ,
+```
+with Lagrangian
+```math
+L(q,v) = \frac{1}{2} v^2 - (l - q_2) ,
+```
+and constraint
+```math
+\phi(q) = q^2 - l^2 .
+```
+The resulting implicit equations read
+```math
+\begin{aligned}
+\dot{q} (t) &= v(t) , &
+q &\in \mathbb{R}^{2},
+\\
+\dot{p} (t) &= 
+\begin{pmatrix}
+0 \\
+1 \\
+\end{pmatrix}
+- \lambda(t) q(t) , &
+v &\in \mathbb{R}^{2} ,
+\\
+p(t) &= v(t) , &
+p &\in \mathbb{R}^{2} ,
+\\
+\phi (q) &= q^2 - l^2 , &
+\lambda &\in \mathbb{R}^{1} .
+\end{aligned}
+```
+
+In order to create an `LDAEProblem` for the pendulum including the projection
+on the constant length constraint, we need to write the following code:
+```@example
+using GeometricIntegrators # hide
+
+function p(p, t, q, v, params)
+    p .= v
+end
+
+function f(f, t, q, v, params)
+    f[1] = 0
+    f[2] = 1
+end
+
+function u(u, t, q, v, p, λ, params)
+    u .= 0
+end
+
+function g(g, t, q, v, p, λ, params)
+    g[1] = - λ[1] * q[1]
+    g[2] = - λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, v, p, params)
+    ϕ[1] = q[1]^2 + q[2]^2 - params.l^2
+end
+
+function ω(f, t, q, v, params)
+    ω[1,1] =  0
+    ω[1,2] = -1
+    ω[2,1] = +1
+    ω[2,2] =  0
+end
+
+function l(t, q, v, params)
+    return (v[1]^2 + v[2]^2)/2 - (params.l - q[2])
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+params = (l=0.5,)
+
+q₀ = [params.l, 0.0]
+p₀ = [0.0, 0.1]
+λ₀ = [0.0]
+
+prob = LDAEProblem(p, f, u, g, ϕ, ω, l, tspan, tstep, q₀, p₀, λ₀; parameters = params)
 ```
 
 
