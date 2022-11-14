@@ -10,12 +10,12 @@ In this tutorial, we try to give an overview of the basic usage of GeometricInte
 ## Installation
 
 *GeometricIntegrators.jl* can be installed using Julia's built-in package manager in the command line interface by
-```julia; eval=false
+```julia
 julia> ]
 (v1.8) pkg> add GeometricIntegrators
 ```
 In a Jupyter notebook, *GeometricIntegrators.jl* can be installed by explicitly using the `Pkg` module as
-```julia; eval=false
+```julia
 using Pkg
 Pkg.add("GeometricIntegrators")
 ```
@@ -30,28 +30,31 @@ methods, the integrator is implicitly selected by specifying an equation and a
 tableau.
 
 Before any use, we need to load GeometricIntegrators,
-```julia
+```@example 1
 using GeometricIntegrators
 ```
 Then we can create an ODE object for the equation $\dot{x} (t) = x(t)$ with initial condition $x(0) = 1$, integration time span $(0, 1)$ and a time step of $\Delta t = 0.1$,
-```julia
-prob = ODEProblem((ẋ, t, x, params) -> ẋ[1] = x[1], (0.0, 1.0), 0.1, [1.0]);
+```@example 1
+prob = ODEProblem((ẋ, t, x, params) -> ẋ[1] = x[1], (0.0, 1.0), 0.1, [1.0])
 ```
 create an integrator for this ODE, using the tableau for the explicit Euler method
-```julia
-int = Integrator(prob, TableauExplicitEuler());
+```@example 1
+int = Integrator(prob, TableauExplicitEuler())
 ```
 and compute the solution,
-```julia
-sol = integrate(prob, int);
+```@example 1
+sol = integrate(prob, int)
 ```
 Plot and compare with the exact solution
-```julia
+```@example 1
 using Plots
 plot(xlims=[0,1], xlab="t", ylab="x(t)", legend=:bottomright)
 plot!(sol.t, sol.q[:,1], label="numeric")
 plot!(sol.t, exp.(sol.t), label="exact")
+savefig("images/tutorial-ode-1.png") # hide
 ```
+
+![](images/tutorial-ode-1.png)
 
 
 ## Equations
@@ -97,12 +100,12 @@ ODE defines an `ODEProblem`.
 
 The user needs to specify a function `ẋ` that computes the vector field and
 must have the interface
-```julia; eval=false
-    function ẋ(v, t, x, params)
-        v[1] = ...
-        v[2] = ...
-        ...
-    end
+```julia
+function ẋ(v, t, x, params)
+    v[1] = ...
+    v[2] = ...
+    ...
+end
 ```
 where `t` is the current time, `q` is the current solution vector, `v` is the
 vector which holds the result of evaluating the vector field ``v`` on `t` and
@@ -110,7 +113,7 @@ vector which holds the result of evaluating the vector field ``v`` on `t` and
 field may depend.
 
 For the mathematical pendulum, this could look as follows:
-```julia
+```@example 1
 function ẋ(v, t, x, params)
     v[1] = x[2]
     v[2] = sin(x[1])
@@ -124,7 +127,7 @@ ODEProblem(<vector field>, <time span>, <time step>, <initial conditions>; kwarg
 so to create and `ODEProblem`, one only needs to pass the above function `ẋ`, a tuple
 `tspan` containing the start and end times of the integration, the time step
 `tstep` as well as an initial condition:
-```julia
+```@example 1
 tspan = (0.0, 10.0)
 tstep = 0.1
 x₀ = [acos(0.4), 0.0]
@@ -132,9 +135,9 @@ x₀ = [acos(0.4), 0.0]
 ode = ODEProblem(ẋ, tspan, tstep, x₀)
 ```
 The full constructor would look like
-```julia
+```@example 1
 ode = ODEProblem(ẋ, tspan, tstep, x₀; invariants = NullInvariants(),
-                 parameters = NullParameters(), periodicity = NullPeriodicity());
+                 parameters = NullParameters(), periodicity = NullPeriodicity())
 ```
 where all keyword arguments, namely invariants, parameters and periodicity, are
 by default initialized to be absent.
@@ -154,7 +157,7 @@ This structure, namely the partitioning into two sets of variables $(q,p)$
 instead of $x$, can be exploited for more efficient integration.
 Such equations can be defined in terms of a partitioned ODE, where the vector
 fields are specified separately,
-```julia
+```@example 1
 function q̇(v, t, q, p, params)
     v[1] = p[1]
 end
@@ -163,7 +166,7 @@ function ṗ(f, t, q, p, params)
     f[1] = sin(q[1])
 end
 
-pode = PODEProblem(q̇, ṗ, (0.0, 25.0), 0.1, [acos(0.4)], [0.0]);
+pode = PODEProblem(q̇, ṗ, (0.0, 25.0), 0.1, [acos(0.4)], [0.0])
 ```
 The first two arguments to the PODE constructor are the functions that determine
 the vector fields of the equations $\dot{q} (t) = v(t, q(t), p(t))$ and
@@ -182,37 +185,43 @@ general linear methods (_planned_).
 
 In order to instantiate many of the standard integrators, one needs to specify
 an ODEProblem, a tableau and a timestep, e.g.,
-```julia
-int = Integrator(ode, TableauExplicitEuler());
+```@example 1
+int = Integrator(ode, TableauExplicitEuler())
 ```
 In order to run the integrator, the `integrate()` functions is called, passing
 an integrator object and the number of time steps to integrate:
-```julia
-sol = integrate(ode, int);
+```@example 1
+sol = integrate(ode, int)
 ```
 The integrate function automatically creates an appropriate solution object,
 that contains the result of the integration.
 
-```julia
+```@example 1
 plot(sol.q[:,1], sol.q[:,2], xlab="x(t)", ylab="y(t)", legend=:none)
+savefig("images/tutorial-ode-2.png"); nothing # hide
 ```
+
+![](images/tutorial-ode-2.png)
 
 Observe that the explicit Euler method is not well suited for integrating this
 system. The solutions drifts away although it should follow closed orbits.
 
 For a Hamiltonian system, defined as a PODE, a different tableau might be more
 appropriate, for example a symplectic Euler method,
-```julia
+```@example 1
 int = Integrator(pode, TableauLobattoIIIAIIIB(2))
-sol = integrate(pode, int);
+sol = integrate(pode, int)
 ```
 This creates a different integrator, which exploits the partitioned structure
 of the system. The solution return by the integrate step will also be a different
 solution, adapted to the partitioned system.
 
-```julia
+```@example 1
 plot(sol.q[:,1], sol.p[:,1], xlab="q(t)", ylab="p(t)", legend=:none)
+savefig("images/tutorial-pode-1.png"); nothing # hide
 ```
+
+![](images/tutorial-pode-1.png)
 
 Moreover, this method respects the Hamiltonian structure of the system, resulting
 in closed orbits following the contours of the system's energy.
@@ -221,14 +230,14 @@ in closed orbits following the contours of the system's energy.
 ## Tableaus
 
 Many tableaus for Runge-Kutta methods are predefined and can easily be used
-like outlined above. For an overview see [here](../integrators/overview.md).
+like outlined above. For an overview see [here](integrators/overview.md).
 
 
 #### Custom Tableaus
 
 If required, it is straight-forward to create a custom tableau.
 The tableau of Heun's method, for example, is defined as follows:
-```julia
+```@example 1
 a = [[0.0 0.0]
      [1.0 0.0]]
 b = [0.5, 0.5]
@@ -242,9 +251,9 @@ and `c` the nodes. For partitioned Runge-Kutta tableaus, `PartitionedTableau` ca
 be used. The first parameter of the constructor of each tableau assigns a name to
 the tableau.
 Such custom tableaus can be used in exactly the same as standard tableaus, e.g., by
-```julia
+```@example 1
 int = Integrator(ode, tab)
-sol = integrate(ode, int);
+sol = integrate(ode, int)
 ```
 making it very easy to implement and test new methods.
 
@@ -256,14 +265,14 @@ the `integrate()` function. While this is often convenient, it is sometimes not
 performant, e.g., when carrying out long-time simulations with intermediate
 saving of the solution.
 In such cases, it is better to preallocate a solution object by
-```julia
-sol = Solution(ode);
+```@example 1
+sol = Solution(ode)
 ```
 where the first argument is an equation, the second argument is the time step
 and the third argument is the number of time steps that will be computed in one
 integration step.
 The call to the integrator is then made via
-```julia
+```@example 1
 integrate!(int, sol)
 ```
 If several integration cycles shall be performed, the `reset!()` function can be

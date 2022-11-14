@@ -9,7 +9,6 @@ docs/build/
 docs/src/authors.md
 docs/src/images/*.png
 docs/src/images/*.svg
-docs/src/tutorial/
 examples/*.pdf
 examples/*.png
 examples/*/*.png

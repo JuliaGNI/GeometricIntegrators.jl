@@ -1,6 +1,5 @@
 using Documenter
 using DocumenterCitations
-using Weave
 using GeometricIntegrators
 
 
@@ -38,7 +37,7 @@ makedocs(bib,
                ), true)
              ),
     pages = ["Home" => "index.md",
-             "Tutorial" => "tutorial/tutorial.md",
+             "Tutorial" => "tutorial.md",
              "Problem Types" => "equations.md",
              "Integrators" => [
                 "Usage"       => "integrators/usage.md",
@@ -69,7 +68,7 @@ makedocs(bib,
              "Developer Docs" =>[
                 "Code Integration"    => "developer/code_integration.md",
                 "Custom Integrators"  => "developer/custom_integrators.md",
-                "Adaptive Time Stepping"  => "developer/adaptive_time_stepping.md",
+                "Adaptive Time Stepping" => "developer/adaptive_time_stepping.md",
                ],
             #  "Internals" =>[
             #     "Equations"           => "internals/equations.md",
