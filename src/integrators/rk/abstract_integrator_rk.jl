@@ -5,10 +5,11 @@ abstract type AbstractIntegratorPRK{dType, tType} <: PODEIntegrator{dType, tType
 
 IntegratorRK = Union{AbstractIntegratorRK, AbstractIntegratorIRK, AbstractIntegratorPRK}
 
-@inline GeometricBase.equation(integrator::IntegratorRK, i::Symbol) = integrator.params.equs[i]
-@inline GeometricBase.equations(integrator::IntegratorRK) = integrator.params.equs
-@inline GeometricBase.timestep(integrator::IntegratorRK) = integrator.params.Δt
-@inline tableau(integrator::IntegratorRK)  = integrator.params.tab
+@inline GeometricBase.parameters(integrator::IntegratorRK) = integrator.params
+@inline GeometricBase.equation(integrator::IntegratorRK, i::Symbol) = parameters(integrator).equs[i]
+@inline GeometricBase.equations(integrator::IntegratorRK) = parameters(integrator).equs
+@inline GeometricBase.timestep(integrator::IntegratorRK) = parameters(integrator).Δt
+@inline tableau(integrator::IntegratorRK)  = parameters(integrator).tab
 
 @inline nstages(integrator::IntegratorRK)  = nstages(tableau(integrator))
 @inline eachstage(integrator::IntegratorRK) = 1:nstages(integrator)
