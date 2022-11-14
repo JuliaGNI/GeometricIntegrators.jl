@@ -8,13 +8,12 @@ using .VPRK
 
 """
 ```julia
-Integrator(equation, tableau, Δt)
+Integrator(problem, tableau)
 ```
 
 Universal constructor for Runge-Kutta (standard, partitioned, variational),
 SPARK and splitting integrators that automatically selects the appropriate
-integrator based on the equation and tableau types.
-
+integrator based on the problem and tableau types.
 """
 function Integrator end
 
