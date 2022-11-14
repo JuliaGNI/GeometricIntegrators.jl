@@ -1,0 +1,47 @@
+
+methods = (
+    # explicit Runge-Kutta methods
+    ForwardEuler,
+    ExplicitEuler,
+    ExplicitMidpoint,
+    Heun2,
+    Heun3,
+    Kutta3,
+    Ralston2,
+    Ralston3,
+    RK4,
+    RK416,
+    RK438,
+    Runge2,
+    SSPRK2,
+    SSPRK3,
+    # diagonally implicit Runge-Kutta methods
+    CrankNicolson,
+    Crouzeix,
+    KraaijevangerSpijker,
+    QinZhang,
+    # fully implicit Runge-Kutta methods
+    BackwardEuler,
+    ImplicitEuler,
+    ImplicitMidpoint,
+    SRK3,
+    # Runge-Kutta methods with variable number of stages
+    Gauss,
+    LobattoIIIA,
+    LobattoIIIB,
+    LobattoIIIC,
+    LobattoIIIC̄,
+    LobattoIIID,
+    LobattoIIIE,
+    LobattoIIIF,
+    LobattoIIIG,
+    RadauIA,
+    RadauIB,
+    RadauIIA,
+    RadauIIB,
+    # partitioned Runge-Kutta methods with variable number of stages
+    LobattoIIIAIIIB,
+    LobattoIIIBIIIA,
+    LobattoIIICIIIC̄,
+    LobattoIIIC̄IIIC,
+)

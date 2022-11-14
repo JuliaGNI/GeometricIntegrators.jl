@@ -20,6 +20,16 @@ module GeometricIntegrators
     @reexport using .Tableaus
 
 
+    include("methods/methods.jl")
+    include("methods/rungekutta.jl")
+    
+    include("methods/list.jl")
+
+    for m in nameof.(methods)
+        @eval export $m
+    end
+
+
     function __init__()
         add_config(:verbosity, 1)
     end
