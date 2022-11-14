@@ -1,6 +1,4 @@
 
-using QuadratureRules
-
 "Holds the coefficients of a projected Gauss-Legendre Runge-Kutta method."
 struct CoefficientsPGLRK{T} <: AbstractCoefficients{T}
     @HeaderCoefficientsRK
@@ -314,7 +312,7 @@ end
 
 
 # Compute stages of projected Gauss-Legendre Runge-Kutta methods.
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S},
+function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersPGLRK{DT,TT,D,S},
                           caches::CacheDict) where {ST,DT,TT,D,S}
 
     # get cache for internal stages
@@ -408,7 +406,7 @@ function function_hamiltonian!(λ::Vector, int::IntegratorPGLRK{DT,TT},
 end
 
 
-function integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::SolutionStepODE{DT,TT},
+function Integrators.integrate_step!(int::IntegratorPGLRK{DT,TT}, sol::SolutionStepODE{DT,TT},
                          cache::IntegratorCachePGLRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from atomic solution
     update_params!(int.params, sol)

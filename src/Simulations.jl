@@ -2,6 +2,7 @@ module Simulations
 
     using ProgressMeter
     using RungeKutta
+    using RungeKutta: AbstractTableau
 
     using GeometricBase
     using GeometricEquations

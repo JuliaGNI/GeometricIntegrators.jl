@@ -1,5 +1,5 @@
 
-abstract type AbstractTableauSplitting{T <: Real} <: AbstractTableau{T} end
+abstract type AbstractTableauSplitting{T} <: AbstractTableau{T} end
 
 function get_splitting_coefficients(r, a::Vector{T}, b::Vector{T}) where {T}
     @assert length(a) == length(b)
@@ -32,7 +32,7 @@ Integrator:
 ```
 """
 struct TableauSplitting{T} <: AbstractTableauSplitting{T}
-    @HeaderTableau
+    @TableauHeader
 
     a::Vector{T}
     b::Vector{T}
@@ -89,7 +89,7 @@ Integrator:
 ```
 """
 struct TableauSplittingNS{T} <: AbstractTableauSplitting{T}
-    @HeaderTableau
+    @TableauHeader
 
     a::Vector{T}
     b::Vector{T}
@@ -144,7 +144,7 @@ Integrator:
 ```
 """
 struct TableauSplittingGS{T} <: AbstractTableauSplitting{T}
-    @HeaderTableau
+    @TableauHeader
 
     a::Vector{T}
     b::Vector{T}
@@ -197,7 +197,7 @@ Integrator:
 ```
 """
 struct TableauSplittingSS{T} <: AbstractTableauSplitting{T}
-    @HeaderTableau
+    @TableauHeader
 
     a::Vector{T}
 

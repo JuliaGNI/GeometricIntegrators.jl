@@ -190,23 +190,6 @@ end
 end
 
 
-@testset "$(rpad("Special Runge-Kutta integrators",80))" begin
-
-    pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(2))
-    pgsol = integrate(ode, pgint)
-    @test relative_maximum_error(pgsol.q, reference_solution) < 6E-6
-
-    pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(3))
-    pgsol = integrate(ode, pgint)
-    @test relative_maximum_error(pgsol.q, reference_solution) < 2E-12
-
-    pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(4))
-    pgsol = integrate(ode, pgint)
-    @test relative_maximum_error(pgsol.q, reference_solution) < 8E-16
-
-end
-
-
 @testset "$(rpad("Integrate PODE and HODE with ODE Runge-Kutta integrators",80))" begin
     for s in 1:4
         code = convert(ODEProblem, pode)

@@ -21,7 +21,7 @@ b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 ```
 """
 struct TableauVPRK{T} <: AbstractTableau{T}
-    @HeaderTableau
+    @TableauHeader
 
     q::Tableau{T}
     p::Tableau{T}

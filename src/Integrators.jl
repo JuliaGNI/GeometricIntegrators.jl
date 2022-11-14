@@ -10,6 +10,7 @@ module Integrators
     using OffsetArrays
     using QuadratureRules
     using RungeKutta
+    using RungeKutta: AbstractTableau, @TableauHeader
     using SimpleSolvers
 
     using GeometricBase.Config
@@ -49,12 +50,6 @@ module Integrators
     include("integrators/initial_guess/initial_guess_ode.jl")
     include("integrators/initial_guess/initial_guess_iode.jl")
     include("integrators/initial_guess/initial_guess_pode.jl")
-
-
-    export AbstractCoefficients, AbstractTableau
-
-    include("integrators/abstract_coefficients.jl")
-    include("integrators/abstract_tableau.jl")
 
 
     export Integrator, DeterministicIntegrator, StochasticIntegrator
@@ -111,11 +106,6 @@ module Integrators
     include("integrators/rk/integrators_iprk.jl")
     include("integrators/rk/integrators_prk_implicit.jl")
     include("integrators/rk/integrators_flrk.jl")
-
-
-    export IntegratorPGLRK, CoefficientsPGLRK
-
-    include("integrators/rk/integrators_pglrk.jl")
 
 
     export IntegratorSplitting,

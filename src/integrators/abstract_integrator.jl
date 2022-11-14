@@ -64,3 +64,7 @@ additional information like solver output or the solution at internal stages of 
 method.
 """
 integrate_step!(integrator::Integrator, ::SolutionStep) = error("integrate_step!() not implemented for ", typeof(integrator))
+
+
+# function check_symplecticity end
+function symplecticity_conditions end

@@ -113,6 +113,23 @@ reference_solution = sol.q[end]
 end
 
 
+@testset "$(rpad("PGLRK integrators",80))" begin
+
+    int = IntegratorPGLRK(ode, CoefficientsPGLRK(2))
+    sol = integrate(ode, int)
+    @test relative_maximum_error(sol.q, reference_solution) < 4E-12
+
+    int = IntegratorPGLRK(ode, CoefficientsPGLRK(3))
+    sol = integrate(ode, int)
+    @test relative_maximum_error(sol.q, reference_solution) < 4E-16
+
+    int = IntegratorPGLRK(ode, CoefficientsPGLRK(4))
+    sol = integrate(ode, int)
+    @test relative_maximum_error(sol.q, reference_solution) < 4E-16
+
+end
+
+
 @testset "$(rpad("SPARK integrators",80))" begin
 
     int = Integrator(idae, TableauSPARKGLRK(1))

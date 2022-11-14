@@ -93,17 +93,4 @@ end
     flsol = integrate(lode, flint)
     @test relative_maximum_error(flsol.q, reference_solution) < 8E-16
 
-
-    pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(2))
-    pgsol = integrate(ode, pgint)
-    @test relative_maximum_error(pgsol.q, reference_solution) < 4E-12
-
-    pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(3))
-    pgsol = integrate(ode, pgint)
-    @test relative_maximum_error(pgsol.q, reference_solution) < 4E-16
-
-    pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(4))
-    pgsol = integrate(ode, pgint)
-    @test relative_maximum_error(pgsol.q, reference_solution) < 4E-16
-
 end

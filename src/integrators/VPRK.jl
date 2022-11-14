@@ -3,6 +3,7 @@ module VPRK
     using Documenter: @doc
     using LinearAlgebra: mul!
     using RungeKutta
+    using RungeKutta: AbstractTableau, @TableauHeader
     using SimpleSolvers
 
     using ..GeometricBase
@@ -18,15 +19,15 @@ module VPRK
     import ..Integrators: IODEIntegrator, IODEIntegratorCache, InitialGuessIODE,
                           AbstractIntegratorIRK, AbstractIntegratorPRK
     import ..Integrators: IntegratorCache, CacheDict, CacheType, Parameters
-    import ..Integrators: AbstractTableau, AbstractCoefficients,
-                          CoefficientsPGLRK,
-                          @CoefficientsRK, @HeaderTableau, @HeaderCoefficientsRK,
+    import ..Integrators: CoefficientsPGLRK,
                           get_symplectic_conjugate_coefficients
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
                           update_vector_fields!, update_solution!, update_multiplier!,
                           initialize!
     import ..Integrators: equation, equations, tableau, timestep,
                           eachdim, eachstage, nstages
+
+    import ..SPARK: CoefficientsPGLRK
 
 
     export IntegratorVPRK, IntegratorVPRKpNone, TableauVPRK

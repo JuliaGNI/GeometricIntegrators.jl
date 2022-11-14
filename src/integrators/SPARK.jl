@@ -1,21 +1,25 @@
 module SPARK
 
+    using CompactBasisFunctions
     using Documenter: @doc
-    using LinearAlgebra: Diagonal
+    using LinearAlgebra
+    using QuadratureRules
     using RungeKutta
+    using RungeKutta: AbstractTableau, @TableauHeader
     using SimpleSolvers
 
     using ..GeometricBase
     using ..GeometricEquations
     using ..Config
 
-    import ..Solutions: SolutionStepPDAE, SolutionVector, update!
+    import ..Solutions: SolutionStepODE, SolutionStepPDAE, SolutionVector, update!
 
     import ..Integrators
 
-    import ..Integrators: PDAEIntegrator, InitialGuessIODE, InitialGuessPODE, Parameters
-    import ..Integrators: IDAEIntegratorCache, IntegratorCache, CacheDict, CacheType
-    import ..Integrators: AbstractTableau, AbstractCoefficients,
+    import ..Integrators: AbstractIntegratorRK, PDAEIntegrator
+    import ..Integrators: InitialGuessIODE, InitialGuessODE, InitialGuessPODE, Parameters
+    import ..Integrators: IntegratorCache, IDAEIntegratorCache, ODEIntegratorCache, CacheDict, CacheType
+    import ..Integrators: AbstractTableau,
                           @CoefficientsRK, @HeaderCoefficientsRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
                           update_vector_fields!, update_solution!, update_multiplier!,
@@ -46,6 +50,7 @@ module SPARK
     export IntegratorVSPARKsecondary, TableauVSPARKsecondary
 
     export IntegratorSLRK, TableauSLRK
+    export IntegratorPGLRK, CoefficientsPGLRK
 
 
     include("spark/abstract_integrator_spark.jl")
@@ -71,6 +76,7 @@ module SPARK
     include("spark/integrators_hspark_primary.jl")
     include("spark/integrators_hspark_secondary.jl")
 
+    include("spark/integrators_pglrk.jl")
     include("spark/integrators_slrk.jl")
 
 end
