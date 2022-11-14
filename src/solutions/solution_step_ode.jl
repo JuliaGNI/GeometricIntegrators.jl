@@ -1,5 +1,5 @@
 """
-Atomic solution for an ODE.
+Solution step for an [`ODEProblem`](@ref).
 
 ### Parameters
 

@@ -1,5 +1,5 @@
 """
-Atomic solution for an DAE.
+Solution step for a [`DAEProblem`](@ref).
 
 ### Parameters
 

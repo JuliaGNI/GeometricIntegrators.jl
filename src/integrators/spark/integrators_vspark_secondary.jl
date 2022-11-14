@@ -101,7 +101,7 @@ struct IntegratorVSPARKsecondary{DT, TT, D, S, R,
         new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorVSPARKsecondary{DT,D}(equations::NamedTuple, tableau::TableauVSPARKsecondary{TT}, Δt::TT) where {DT,TT,D,ST}
+    function IntegratorVSPARKsecondary{DT,D}(equations::NamedTuple, tableau::TableauVSPARKsecondary{TT}, Δt::TT) where {DT,TT,D}
         # get number of stages
         S = tableau.s
         R = tableau.r

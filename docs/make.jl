@@ -1,11 +1,13 @@
 using Documenter
 using DocumenterCitations
-using Weave
 using GeometricIntegrators
+
 
 cp(normpath(@__FILE__, "../../AUTHORS.md"), normpath(@__FILE__, "../src/authors.md"); force=true)
 
 bib = CitationBibliography("GeometricIntegrators.bib")
+
+DocMeta.setdocmeta!(GeometricIntegrators, :DocTestSetup, :(using GeometricIntegrators); recursive=true)
 
 makedocs(bib,
     sitename = "GeometricIntegrators.jl",
@@ -35,8 +37,8 @@ makedocs(bib,
                ), true)
              ),
     pages = ["Home" => "index.md",
-             "Tutorial" => "tutorial/tutorial.md",
-             "Equations" => "equations.md",
+             "Tutorial" => "tutorial.md",
+             "Problem Types" => "equations.md",
              "Integrators" => [
                 "Usage"       => "integrators/usage.md",
                 "Overview"    => "integrators/overview.md",
@@ -51,8 +53,8 @@ makedocs(bib,
                ],
              "Modules" => [
                # "Discontinuities"     => "modules/discontinuities.md",
-                "Equations"           => "modules/equations.md",
                 "Integrators"         => "modules/integrators.md",
+                "Problems"            => "modules/equations.md",
                # "Simulations"         => "modules/simulations.md",
                 "Solutions"           => "modules/solutions.md",
                ],
@@ -66,8 +68,11 @@ makedocs(bib,
              "Developer Docs" =>[
                 "Code Integration"    => "developer/code_integration.md",
                 "Custom Integrators"  => "developer/custom_integrators.md",
-                "Adaptive Time Stepping"  => "developer/adaptive_time_stepping.md",
+                "Adaptive Time Stepping" => "developer/adaptive_time_stepping.md",
                ],
+            #  "Internals" =>[
+            #     "Equations"           => "internals/equations.md",
+            #  ],
              "Release Notes" => "releasenotes.md",
              "Bibliography" => "bibliography.md",
              "Authors" => "authors.md",

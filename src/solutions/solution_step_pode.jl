@@ -1,5 +1,5 @@
 """
-Atomic solution for an PODE.
+Solution step for a [`PODEProblem`](@ref).
 
 ### Parameters
 

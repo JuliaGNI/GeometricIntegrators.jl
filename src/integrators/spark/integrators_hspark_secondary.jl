@@ -49,7 +49,7 @@ struct IntegratorHSPARKsecondary{DT, TT, D, S, R, PT <: ParametersHSPARKsecondar
         new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorHSPARKsecondary{DT,D}(equations::NamedTuple, tableau::TableauHSPARKsecondary{TT}, Δt::TT) where {DT,TT,D,ST}
+    function IntegratorHSPARKsecondary{DT,D}(equations::NamedTuple, tableau::TableauHSPARKsecondary{TT}, Δt::TT) where {DT,TT,D}
         # get number of stages
         S = tableau.s
         R = tableau.r

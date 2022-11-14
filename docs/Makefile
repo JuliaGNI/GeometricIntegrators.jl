@@ -1,7 +1,7 @@
 
-.PHONY: documenter images tutorial tutorial-html
+.PHONY: documenter images
 
-all: tutorial images documenter
+all: images documenter
 
 documenter:
 	julia --color=yes --project=. make.jl
@@ -9,12 +9,6 @@ documenter:
 images:
 	$(MAKE) all   -C src/images
 	$(MAKE) clean -C src/images
-
-tutorial:
-	julia --color=yes --project=. tutorial.jl
-
-tutorial-html:
-	julia --color=yes --project=. tutorial-html.jl
 
 clean:
 	$(MAKE) empty -C src/images

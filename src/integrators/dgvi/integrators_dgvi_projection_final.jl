@@ -238,7 +238,7 @@ function initial_guess!(int::IntegratorDGVIP1{DT,TT, D, S, R}, sol::SolutionStep
 end
 
 
-"Compute stages of variational partitioned Runge-Kutta methods."
+# Compute stages of variational partitioned Runge-Kutta methods.
 function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVIP1{DT,TT,D,S,R},
                 caches::CacheDict) where {ST,DT,TT,D,S,R}
     @assert length(x) == length(b)
@@ -286,7 +286,7 @@ function compute_stages!(x, cache::IntegratorCacheDGVI{ST,D,S}, params::Paramete
 end
 
 
-"Compute solution at quadrature nodes and across jump."
+# Compute solution at quadrature nodes and across jump.
 function compute_stages_q!(cache::IntegratorCacheDGVI{ST,D,S,R},
                            params::ParametersDGVIP1{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 
@@ -326,7 +326,7 @@ function compute_stages_q!(cache::IntegratorCacheDGVI{ST,D,S,R},
 end
 
 
-"Compute velocities at quadrature nodes."
+# Compute velocities at quadrature nodes.
 function compute_stages_v!(cache::IntegratorCacheDGVI{ST,D,S,R},
                            params::ParametersDGVIP1{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local v::ST
@@ -343,7 +343,7 @@ function compute_stages_v!(cache::IntegratorCacheDGVI{ST,D,S,R},
 end
 
 
-"Compute one-form and forces at quadrature nodes."
+# Compute one-form and forces at quadrature nodes.
 function compute_stages_p!(cache::IntegratorCacheDGVI{ST,D,S,R},
                            params::ParametersDGVIP1{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
 

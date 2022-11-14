@@ -8,12 +8,12 @@ In *GeometricIntegrators.jl* we support three basic types of equations:
 
 For each type, there are several subtypes:
 
-* standard equations ([`ODE`](@ref), [`DAE`](@ref), [`SDE`](@ref)),
-* implicit equations ([`IODE`](@ref), [`IDAE`](@ref)),
-* partitioned equations ([`PODE`](@ref), [`PDAE`](@ref), [`PSDE`](@ref)),
-* Hamiltonian equations ([`HODE`](@ref), [`HDAE`](@ref)),
-* Lagrangian equations ([`LODE`](@ref), [`LDAE`](@ref)),
-* split equations ([`SODE`](@ref), [`SPDAE`](@ref), [`SPSDE`](@ref)).
+* standard equations ([`ODEProblem`](@ref), [`DAEProblem`](@ref), [`SDEProblem`](@ref)),
+* implicit equations ([`IODEProblem`](@ref), [`IDAEProblem`](@ref)),
+* partitioned equations ([`PODEProblem`](@ref), [`PDAEProblem`](@ref), [`PSDEProblem`](@ref)),
+* Hamiltonian equations ([`HODEProblem`](@ref), [`HDAEProblem`](@ref)),
+* Lagrangian equations ([`LODEProblem`](@ref), [`LDAEProblem`](@ref)),
+* split equations ([`SODEProblem`](@ref), [`SPDAEProblem`](@ref), [`SPSDEProblem`](@ref)).
 
 Each equation holds a number of functions determining the vector field, constraints, and possibly additional information like parameters, periodicity, invariants and the Hamiltonian or Lagrangian.
 
@@ -36,51 +36,21 @@ If not set to their corresponding Null types, the user needs to pass a `NamedTup
 * arbitrary data structures for parameters, 
 * the same data structure as the solution for periodicity.
 
-The latter should be zero everywhere, except for those components, that are periodic, i.e., whose value are supposed to stay within a range `(0, max)`. Support for ranges starting with other values than zero is currently missing but can be added if demand arises.
+The latter should be zero everywhere, except for those components, that are periodic, i.e.,
+whose value are supposed to stay within a range `(0, max)`. Support for ranges starting
+with other values than zero is currently missing but can be added if demand arises.
 
 
 ## Ordinary Differential Equations (ODEs)
 
-Ordinary differential equations define an initial value problem of the form
-```math
-\dot{q} (t) = v(t, q(t)) , \qquad q(t_{0}) = q_{0} ,
-```
-with vector field ``v``, initial condition ``q_{0}`` and the solution
-``q`` taking values in ``\mathbb{R}^{d}``.
-
-The user needs to specify a function `v` that computes the vector field and must have the interface
-```julia
-    function v(v, t, q, params)
-        v[1] = ...
-        v[2] = ...
-        ...
-    end
-```
-where `t` is the current time, `q` is the current solution vector, `v` is the
-vector which holds the result of evaluating the vector field ``v`` on `t` and
-`q`, and `params` are constant parameters on which the vector field may depend.
-
-To create and `ODE`, one only needs to pass this function:
-```julia
-equ = ODE(v)
-```
-The full constructor would look like
-```julia
-equ = ODE(v; invariants = NullInvariants(), parameters = NullParameters(), periodicity = NullPeriodicity())
-```
-where all keyword arguments, namely invariants, parameters and periodicity are by default initialized to be absent.
-
-With this, we can create an `ODEProblem` via
-```julia
-tspan = (0.0, 1.0)
-tstep = 0.1
-q₀ = [0.5, 0.0]
-
-prob = GeometricProblem(equ, tspan, tstep, ics = (q=q₀,))
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.ode_equations)
 ```
 
-Typically, one would create an ODEProblem right away.
-We will see this in the next example for the harmonic oscillator.
+#### Example: Harmonic Oscillator
+
+As an example, let us consider the harmonic oscillator.
 The dynamical equations are given by
 ```math
 \dot{q} (t) = \begin{pmatrix}
@@ -92,7 +62,8 @@ q \in \mathbb{R}^{2} .
 ```
 
 In order to create an `ODEProblem` for the harmonic oscillator, we need to write the following code:
-```julia
+```@example ode
+using GeometricIntegrators # hide
 function v(v, t, x, params)
     v[1] = x[2]
     v[2] = - params.k * x[1]
@@ -106,7 +77,7 @@ prob = ODEProblem(v, tspan, tstep, q₀; parameters = (k = 0.5,))
 ```
 
 The energy of the harmonic oscillator is preserved, so we can add it as an invariant, 
-```julia
+```@example ode
 energy(t, q, params) = q[2]^2 / 2 + params.k * q[1]^2 / 2
 
 prob = ODEProblem(v, tspan, tstep, q₀; parameters = (k = 0.5,), invariants = (h=energy,))
@@ -115,177 +86,713 @@ prob = ODEProblem(v, tspan, tstep, q₀; parameters = (k = 0.5,), invariants = (
 
 ### Partitioned Ordinary Differential Equations (PODEs)
 
-A partitioned ordinary differential equation has the form
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.pode_equations)
+```
+
+#### Example: Harmonic Oscillator
+
+As an example, let us consider the harmonic oscillator.
+The dynamical equations are given by
 ```math
 \begin{aligned}
-\dot{q} (t) &= v(t, q(t), p(t)) , &
-q(t_{0}) &= q_{0} , \\
-\dot{p} (t) &= f(t, q(t), p(t)) , &
-p(t_{0}) &= p_{0} ,
+\dot{q} (t) &= p (t) \\
+\dot{p} (t) &= - k \, q(t) .
 \end{aligned}
 ```
-with vector fields ``v`` and ``f``, initial conditions ``(q_{0}, p_{0})`` and the solution
-``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``.
+
+In order to create a `PODEProblem` for the harmonic oscillator, we need to write the following code:
+```@example pode
+using GeometricIntegrators # hide
+function v(v, t, q, p, params)
+    v[1] = p[1]
+end
+
+function f(f, t, q, p, params)
+    f[1] = - params.k * q[1]
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [0.5]
+p₀ = [0.0]
+
+prob = PODEProblem(v, f, tspan, tstep, q₀, p₀; parameters = (k = 0.5,))
+```
+
+The energy of the harmonic oscillator is preserved, so we can add it as an invariant, 
+```@example pode
+energy(t, q, p, params) = p[1]^2 / 2 + params.k * q[1]^2 / 2
+
+prob = PODEProblem(v, f, tspan, tstep, q₀, p₀; parameters = (k = 0.5,), invariants = (h=energy,))
+```
+
 
 ### Hamiltonian Ordinary Differential Equations (HODEs)
 
-A special case of a partitioned ordinary differential equation is a canonical
-Hamiltonian system of equations,
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.hode_equations)
+```
+
+#### Example: Harmonic Oscillator
+
+As an example, let us consider the harmonic oscillator.
+The dynamical equations are given by
 ```math
 \begin{aligned}
-\dot{q} (t) &= v(t, q(t), p(t)) , & q(t_{0}) &= q_{0} , \\
-\dot{p} (t) &= f(t, q(t), p(t)) , & p(t_{0}) &= p_{0} ,
+\dot{q} (t) &= p (t) \\
+\dot{p} (t) &= - k \, q(t) ,
 \end{aligned}
 ```
-with vector fields ``v`` and ``f``, given by
+which can also be written as 
 ```math
-\begin{aligned}
-v &=   \frac{\partial H}{\partial p} , &
-f &= - \frac{\partial H}{\partial q} ,
-\end{aligned}
+\begin{pmatrix}
+\dot{q} (t) \\
+\dot{p} (t) \\
+\end{pmatrix} = \begin{pmatrix}
+0 & 1 \\
+-1 & 0 \\
+\end{pmatrix}
+\nabla H( q(t) , p(t) ) ,
+\qquad
+H(q,p) = \frac{p^2}{2} + k \, \frac{q^2}{2} ,
 ```
-initial conditions ``(q_{0}, p_{0})`` and the dynamical variables ``(q,p)``
-taking values in ``T^{*} Q \simeq \mathbb{R}^{d} \times \mathbb{R}^{d}``.
+where $H$ is the Hamiltonian, i.e., the total energy of the system.
+
+In order to create a `HODEProblem` for the harmonic oscillator, we need to write the following code:
+```@example
+using GeometricIntegrators # hide
+function v(v, t, q, p, params)
+    v[1] = p[1]
+end
+
+function f(f, t, q, p, params)
+    f[1] = - params.k * q[1]
+end
+
+h(t, q, p, params) = p[1]^2 / 2 + params.k * q[1]^2 / 2
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [0.5]
+p₀ = [0.0]
+
+prob = HODEProblem(v, f, h, tspan, tstep, q₀, p₀; parameters = (k = 0.5,))
+```
+
 
 ### Implicit Ordinary Differential Equations (IODEs)
 
-An implicit ordinary differential equations is of the form
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.iode_equations)
+```
+
+#### Example: Harmonic Oscillator
+
+As an example, let us consider the harmonic oscillator.
+In implicit form, its equations are given as follows,
 ```math
 \begin{aligned}
-\dot{q} (t) &= v(t) , &
-q(t_{0}) &= q_{0} , \\
-\dot{p} (t) &= f(t, q(t), v(t)) , &
-p(t_{0}) &= p_{0} , \\
-p(t) &= ϑ(t, q(t), v(t))
+\dot{q} (t) &= v(t) , \\
+p(t) &= v(t) , \\
+\dot{p} (t) &= - k q(t) .
 \end{aligned}
 ```
-with force field ``f``, the momentum defined by ``p``, initial conditions ``(q_{0}, p_{0})`` and the solution
-``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}``.
-This is a special case of a differential algebraic equation with dynamical
-variables ``(q,p)`` and algebraic variable ``v``.
+Here, `v` acts as a Lagrange multiplier that enforces the "constraint" ``p(t) = v(t)``.
+
+In order to create an `IODEProblem` for the harmonic oscillator, we thus need to write the following code:
+```@example iode
+using GeometricIntegrators # hide
+function p(p, t, q, v, params)
+    p[1] = v[1]
+end
+
+function f(f, t, q, v, params)
+    p[1] = - params.k * q[1]
+end
+
+function g(f, t, q, v, params)
+    p[1] = - params.k * q[1]
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [0.5]
+p₀ = [0.0]
+
+prob = IODEProblem(p, f, tspan, tstep, q₀, p₀; parameters = (k = 0.5,))
+```
+
+The energy of the harmonic oscillator is preserved, so we can add it as an invariant, 
+```@example iode
+energy(t, q, v, params) = v[1]^2 / 2 + params.k * q[1]^2 / 2
+
+prob = IODEProblem(p, f, tspan, tstep, q₀, p₀; parameters = (k = 0.5,), invariants = (h=energy,))
+```
+
 
 ### Lagrangian Ordinary Differential Equations (LODEs)
 
-A special case of an implicit ordinary differential equations is a Lagrangian system of equations,
-```math
-\begin{aligned}
-\dot{q} (t) &= v(t) , &
-q(t_{0}) &= q_{0} , \\
-\dot{p} (t) &= f(t, q(t), v(t)) , &
-p(t_{0}) &= p_{0} , \\
-p(t) &= ϑ(t, q(t), v(t))
-\end{aligned}
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.lode_equations)
 ```
-with momentum ``p`` and force field ``f``, given by
-```math
-\begin{aligned}
-p &= \frac{\partial L}{\partial v} , &
-f &= \frac{\partial L}{\partial q} ,
-\end{aligned}
-```
-initial conditions ``(q_{0}, p_{0})`` and the solution ``(q,p)`` taking values
-in ``T^{*} Q \simeq \mathbb{R}^{d} \times \mathbb{R}^{d}``.
 
+#### Example: Harmonic Oscillator
+
+As an example, let us consider the harmonic oscillator.
+Its Lagrangian is given by
+```math
+L(q, \dot{q}) = \frac{\dot{q}^2}{2} - k \, \frac{q^2}{2} ,
+```
+so that the Euler-Lagrange equations
+```math
+\frac{d}{dt} \frac{\partial L}{\partial \dot{q}} = \frac{\partial L}{\partial q} ,
+```
+become
+```math
+\ddot{q} (t) = - k q(t) .
+```
+
+Most integrators for Lagrangian systems do not solve this second order system (semi-spray form),
+but instead use a reformulation as an implicit ordinary differential equation.
+This formulation can most easily be obtained from a Hamilton-Pontryagin principle
+```math
+\delta \int \limits_{t_0}^{t_1} \big[ L(q, v) + \left< p , \dot{q} - v \right> \big] = 0 ,
+```
+as follows,
+```math
+\begin{aligned}
+\dot{q} (t) &= v(t) , \\
+p(t) &= \frac{\partial L}{\partial v} (q(t),v(t)) = v(t) , \\
+\dot{p} (t) &= \frac{\partial L}{\partial q} (q(t),v(t)) = - k q(t) .
+\end{aligned}
+```
+Here, `v` acts as a Lagrange multiplier that enforces the "constraint" ``p(t) = \partial L / \partial v``.
+
+In order to create an `LODEProblem` for the harmonic oscillator, we thus need to write the following code:
+```@example lode
+using GeometricIntegrators # hide
+function p(p, t, q, v, params)
+    p[1] = v[1]
+end
+
+function f(f, t, q, v, params)
+    p[1] = - params.k * q[1]
+end
+
+function ω(f, t, q, v, params)
+    ω[1,1] =  0
+    ω[1,2] = -1
+    ω[2,1] = +1
+    ω[2,2] =  0
+end
+
+function l(t, q, v, params)
+    v[1]^2 / 2 - params.k * q[1]^2 / 2
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [0.5]
+p₀ = [0.0]
+
+prob = LODEProblem(p, f, ω, l, tspan, tstep, q₀, p₀; parameters = (k = 0.5,))
+```
+
+The energy of the harmonic oscillator is preserved, so we can add it as an invariant, 
+```@example lode
+energy(t, q, v, params) = v[1]^2 / 2 + params.k * q[1]^2 / 2
+
+prob = LODEProblem(p, f, ω, l, tspan, tstep, q₀, p₀; parameters = (k = 0.5,), invariants = (h=energy,))
+```
 
 
 ## Differential Algebraic Equation (DAE)
 
-Differential algebraic initial value problems are of the form
-```math
-\begin{aligned}
-\dot{q} (t) &= v(t, q(t)) + u(t, q(t), \lambda(t)) , & q(t_{0}) &= q_{0} , \\
-0 &= \phi (t, q(t), \lambda(t)) , & \lambda(t_{0}) &= \lambda_{0} ,
-\end{aligned}
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.dae_equations)
 ```
-with vector field ``v``, projection ``u``, algebraic constraint ``\phi=0``,
-initial conditions ``q_{0}`` and ``\lambda_{0}``, the dynamical variable ``q``
-taking values in ``\mathbb{R}^{d}`` and the algebraic variable ``\lambda``
-taking values in ``\mathbb{R}^{m}``.
+
+### Example: Harmonic Oscillator
+
+As an example we consider the harmonic oscillator, with an additional
+constraint that enforces energy conservation. While the system itself
+is energy conserving, most integrators do not respect this property.
+A possible way of remedying this flaw is to explicitly add energy
+conservation as an algebraic constraint. 
+
+The dynamical equations are given by
+```math
+\dot{q} (t) = \begin{pmatrix}
+0 & 1 \\
+-k & 0 \\
+\end{pmatrix} q(t) 
++ \nabla \phi (q(t)) \lambda ,
+\qquad
+\phi (q) = \frac{q_2^2}{2} + k \, \frac{q_1^2}{2}
+\qquad
+q \in \mathbb{R}^{2} ,
+\qquad
+\lambda \in \mathbb{R}^{1} .
+```
+
+In order to create an `DAEProblem` for the harmonic oscillator including the projection
+on the constant energy manifold, we need to write the following code:
+```@example
+using GeometricIntegrators # hide
+hamiltonian(t, q, params) = q[2]^2 / 2 + params.k * q[1]^2 / 2
+
+function v(v, t, q, params)
+    v[1] = q[2]
+    v[2] = - params.k * q[1]
+end
+
+function u(u, t, q, λ, params)
+    u[1] = λ[1] * params.k * q[1]
+    u[2] = λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, params)
+    ϕ[1] = hamiltonian(t, q, params)
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [1., 1.]
+λ₀ = [0.]
+params = (k=0.5,)
+
+prob = DAEProblem(v, u, ϕ, tspan, tstep, q₀, λ₀; parameters = params)
+```
 
 
 ### Partitioned Differential Algebraic Equation (PDAE)
 
-A partitioned differential algebraic equation has the form
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.pdae_equations)
+```
+
+### Example: Pendulum
+
+As an example we consider the pendulum in cartesian coordinates, with
+a constraint that enforces the solution to respect the length of the pendulum.
+
+The dynamical equations are given by
 ```math
 \begin{aligned}
-\dot{q} (t) &= v(t, q(t), p(t)) + u(t, q(t), p(t), \lambda(t)) , & q(t_{0}) &= q_{0} , \\
-\dot{p} (t) &= f(t, q(t), p(t)) + r(t, q(t), p(t), \lambda(t)) , & p(t_{0}) &= p_{0} , \\
-0 &= \phi (t, q(t), p(t), \lambda(t)) , & \lambda(t_{0}) &= \lambda_{0} ,
+\dot{q} (t) &= p (t) , &
+q &\in \mathbb{R}^{2},
+\\
+\dot{p} (t) &= 
+\begin{pmatrix}
+  - \lambda q_1 (t) \\
+1 - \lambda q_2 (t) \\
+\end{pmatrix} , &
+p &\in \mathbb{R}^{2} ,
+\\
+\phi (q) &= q^2 - l^2 , &
+\lambda &\in \mathbb{R}^{1} .
 \end{aligned}
 ```
-with vector fields ``v`` and ``f``, projection ``u`` and ``r``,
-algebraic constraint ``\phi=0``,
-conditions ``(q_{0}, p_{0})`` and ``\lambda_{0}``, the dynamical variables
-``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}`` and
-the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{m}``.
+
+In order to create an `PDAEProblem` for the pendulum including the projection
+on the constant length constraint, we need to write the following code:
+```@example
+using GeometricIntegrators # hide
+
+function v(v, t, q, p, params)
+    v .= p
+end
+
+function f(f, t, q, p, params)
+    f[1] = 0
+    f[2] = 1
+end
+
+function u(u, t, q, p, λ, params)
+    u .= 0
+end
+
+function g(g, t, q, p, λ, params)
+    g[1] = - λ[1] * q[1]
+    g[2] = - λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, p, params)
+    ϕ[1] = q[1]^2 + q[2]^2 - params.l^2
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+params = (l=0.5,)
+
+q₀ = [params.l, 0.0]
+p₀ = [0.0, 0.1]
+λ₀ = [0.0]
+
+prob = PDAEProblem(v, f, u, g, ϕ, tspan, tstep, q₀, p₀, λ₀; parameters = params)
+```
+
 
 ### Hamiltonian Differential Algebraic Equation (HDAE)
 
-A special form of a partitioned differential algebraic equation is
-a canonical Hamiltonian system of equations subject to Dirac constraints,
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.hdae_equations)
+```
+
+
+### Example: Pendulum
+
+As an example we consider the pendulum in cartesian coordinates, with
+a constraint that enforces the solution to respect the length of the pendulum.
+
+The Hamiltonian is given by
+```math
+H(q,p) = \frac{1}{2} p^2 + l - q_2 ,
+```
+and dynamical equations read
 ```math
 \begin{aligned}
-\dot{q} (t) &= v(t, q(t), p(t)) + u(t, q(t), p(t), \lambda(t)) + \bar{g}(t, q(t), p(t), \lambda(t), \gamma(t)) , & q(t_{0}) &= q_{0} , \\
-\dot{p} (t) &= f(t, q(t), p(t)) + g(t, q(t), p(t), \lambda(t)) + \bar{f}(t, q(t), p(t), \lambda(t), \gamma(t)) , & p(t_{0}) &= p_{0} , \\
-0 &= \phi (t, q(t), p(t)) , \\
-0 &= \psi (t, q(t), p(t), \dot{q}(t), \dot{p}(t)) ,
+\dot{q} (t) &= p (t) , &
+q &\in \mathbb{R}^{2},
+\\
+\dot{p} (t) &= 
+\begin{pmatrix}
+  - \lambda q_1 (t) \\
+1 - \lambda q_2 (t) \\
+\end{pmatrix} , &
+p &\in \mathbb{R}^{2} ,
+\\
+\phi (q) &= q^2 - l^2 , &
+\lambda &\in \mathbb{R}^{1} .
 \end{aligned}
 ```
-with vector fields ``v``, ``u``, ``\bar{u}`` and ``f``, ``g``, ``\bar{g}``,
-primary constraint ``\phi(q,p)=0`` and secondary constraint ``\psi(q,p,\lambda)=0``,
-initial conditions ``(q_{0}, p_{0})``, the dynamical variables ``(q,p)``
-taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}`` and
-the algebraic variables ``(\lambda, \gamma)`` taking values in
-``\mathbb{R}^{m} \times \mathbb{R}^{m}``.
+
+In order to create an `HDAEProblem` for the pendulum including the projection
+on the constant length constraint, we need to write the following code:
+```@example
+using GeometricIntegrators # hide
+
+function v(v, t, q, p, params)
+    v .= p
+end
+
+function f(f, t, q, p, params)
+    f[1] = 0
+    f[2] = 1
+end
+
+function u(u, t, q, p, λ, params)
+    u .= 0
+end
+
+function g(g, t, q, p, λ, params)
+    g[1] = - λ[1] * q[1]
+    g[2] = - λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, p, params)
+    ϕ[1] = q[1]^2 + q[2]^2 - params.l^2
+end
+
+function h(t, q, p, params)
+    return (p[1]^2 + p[2]^2)/2 + params.l - q[2]
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+params = (l=0.5,)
+
+q₀ = [params.l, 0.0]
+p₀ = [0.0, 0.1]
+λ₀ = [0.0]
+
+prob = HDAEProblem(v, f, u, g, ϕ, h, tspan, tstep, q₀, p₀, λ₀; parameters = params)
+```
 
 
 ### Implicit Differential Algebraic Equation (IDAE)
 
-An implicit differential algebraic initial value problem takes the form
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.idae_equations)
+```
+
+
+### Example: Pendulum
+
+As an example we consider the pendulum in cartesian coordinates, with
+a constraint that enforces the solution to respect the length of the pendulum.
+
+The implicit equations are given by
 ```math
 \begin{aligned}
-\dot{q} (t) &= v(t) + u(t, q(t), p(t), \lambda(t)) , & q(t_{0}) &= q_{0} , \\
-\dot{p} (t) &= f(t, q(t), v(t)) + r(t, q(t), p(t), \lambda(t)) , & p(t_{0}) &= p_{0} , \\
-p(t) &= p(t, q(t), v(t)) , && \\
-0 &= \phi (t, q(t), p(t), \lambda(t)) , & \lambda(t_{0}) &= \lambda_{0} ,
+\dot{q} (t) &= v(t) , &
+q &\in \mathbb{R}^{2},
+\\
+\dot{p} (t) &= 
+\begin{pmatrix}
+0 \\
+1 \\
+\end{pmatrix}
+- \lambda(t) q(t) , &
+v &\in \mathbb{R}^{2} ,
+\\
+p(t) &= v(t) , &
+p &\in \mathbb{R}^{2} ,
+\\
+\phi (q) &= q^2 - l^2 , &
+\lambda &\in \mathbb{R}^{1} .
 \end{aligned}
 ```
-with force field ``f``, the momentum defined by ``p``, projection ``u`` and ``r``,
-algebraic constraint ``\phi=0``,
-conditions ``(q_{0}, p_{0})`` and ``\lambda_{0}``, the dynamical variables
-``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}`` and
-the algebraic variable ``\lambda`` taking values in ``\mathbb{R}^{m}``.
 
+In order to create an `IDAEProblem` for the pendulum including the projection
+on the constant length constraint, we need to write the following code:
+```@example
+using GeometricIntegrators # hide
+
+function p(p, t, q, v, params)
+    p .= v
+end
+
+function f(f, t, q, v, params)
+    f[1] = 0
+    f[2] = 1
+end
+
+function u(u, t, q, v, p, λ, params)
+    u .= 0
+end
+
+function g(g, t, q, v, p, λ, params)
+    g[1] = - λ[1] * q[1]
+    g[2] = - λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, v, p, params)
+    ϕ[1] = q[1]^2 + q[2]^2 - params.l^2
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+params = (l=0.5,)
+
+q₀ = [params.l, 0.0]
+p₀ = [0.0, 0.1]
+λ₀ = [0.0]
+
+prob = IDAEProblem(p, f, u, g, ϕ, tspan, tstep, q₀, p₀, λ₀; parameters = params)
+```
 
 ### Lagrangian Differential Algebraic Equation (LDAE)
 
-A special case of an implicit initial value problem is a Lagrangian differential
-algebraic equation of the form
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.ldae_equations)
+```
+
+### Example: Pendulum
+
+As an example we consider the pendulum in cartesian coordinates, with
+a constraint that enforces the solution to respect the length of the pendulum.
+
+The Hamilton-Pontryagin principle for this system is given by
+```math
+\delta \int \limits_{t_0}^{t_1} \big[ L(q, v) + \left< p , \dot{q} - v \right> + \lambda \, \phi (q) \big] = 0 ,
+```
+with Lagrangian
+```math
+L(q,v) = \frac{1}{2} v^2 - (l - q_2) ,
+```
+and constraint
+```math
+\phi(q) = q^2 - l^2 .
+```
+The resulting implicit equations read
 ```math
 \begin{aligned}
-\dot{q} (t) &= v(t) + \lambda(t), &
-q(t_{0}) &= q_{0} , \\
-\dot{p} (t) &= f(t, q(t), v(t)) + g(t, q(t), \lambda(t)) + \bar{g} (t, q(t), \mu(t)) , &
-p(t_{0}) &= p_{0} , \\
-p(t) &= ϑ(t, q(t), v(t)) , \\
-0 &= \phi (t, q(t), p(t)) , \\
-0 &= \psi (t, q(t), p(t), \dot{q}(t), \dot{p}(t)) ,
+\dot{q} (t) &= v(t) , &
+q &\in \mathbb{R}^{2},
+\\
+\dot{p} (t) &= 
+\begin{pmatrix}
+0 \\
+1 \\
+\end{pmatrix}
+- \lambda(t) q(t) , &
+v &\in \mathbb{R}^{2} ,
+\\
+p(t) &= v(t) , &
+p &\in \mathbb{R}^{2} ,
+\\
+\phi (q) &= q^2 - l^2 , &
+\lambda &\in \mathbb{R}^{1} .
 \end{aligned}
 ```
-with momentum ``p`` and force field ``f``, given by
-```math
-\begin{aligned}
-p &= \frac{\partial L}{\partial v} , &
-f &= \frac{\partial L}{\partial q} ,
-\end{aligned}
+
+In order to create an `LDAEProblem` for the pendulum including the projection
+on the constant length constraint, we need to write the following code:
+```@example
+using GeometricIntegrators # hide
+
+function p(p, t, q, v, params)
+    p .= v
+end
+
+function f(f, t, q, v, params)
+    f[1] = 0
+    f[2] = 1
+end
+
+function u(u, t, q, v, p, λ, params)
+    u .= 0
+end
+
+function g(g, t, q, v, p, λ, params)
+    g[1] = - λ[1] * q[1]
+    g[2] = - λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, v, p, params)
+    ϕ[1] = q[1]^2 + q[2]^2 - params.l^2
+end
+
+function ω(f, t, q, v, params)
+    ω[1,1] =  0
+    ω[1,2] = -1
+    ω[2,1] = +1
+    ω[2,2] =  0
+end
+
+function l(t, q, v, params)
+    return (v[1]^2 + v[2]^2)/2 - (params.l - q[2])
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+params = (l=0.5,)
+
+q₀ = [params.l, 0.0]
+p₀ = [0.0, 0.1]
+λ₀ = [0.0]
+
+prob = LDAEProblem(p, f, u, g, ϕ, ω, l, tspan, tstep, q₀, p₀, λ₀; parameters = params)
 ```
-initial conditions ``(q_{0}, p_{0})`` and the solution
-``(q,p)`` taking values in ``\mathbb{R}^{d} \times \mathbb{R}^{d}`` and
-the algebraic variables ``(v, \lambda, \mu)`` taking values in
-``\mathbb{R}^{d} \times \mathbb{R}^{m} \times \mathbb{R}^{m}``.
-This is a special case of a differential algebraic equation with dynamical
-variables ``(q,p)`` and algebraic variables ``v``, ``\lambda`` and ``\mu``.
 
 
 ## Stochastic Differential Equations (SDEs)
 
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.sde_equations)
+```
+
+#### Example: Kubo Oscillator
+
+```@example
+using GeometricIntegrators # hide
+function v(t, q, v, params)
+    v[1] = + params.λ * q[2]
+    v[2] = - params.λ * q[1]
+end
+
+function B(t, q, B, params)
+    for j in axes(B, 2)
+        B[1,j] = + params.ν * q[2]
+        B[2,j] = - params.ν * q[1]
+    end
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.01
+q₀ = [0.5, 0.0]
+
+prob = SDEProblem(v, B, tspan, tstep, q₀; parameters = (λ=2.0, μ=1.0))
+```
+
+
+### Partitioned Stochastic Differential Equation (PSDE)
+
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.psde_equations)
+```
+
+#### Example: Kubo Oscillator
+
+```@example
+using GeometricIntegrators # hide
+function v(v, t, q, p, params)
+    v[1] = + params.λ * p[1]
+end
+
+function f(f, t, q, p, params)
+    f[1] = - params.λ * q[1]
+end
+
+function B(B, t, q, p, params)
+    B[1,1] = params.ν * p[1]
+end
+
+function G(G, t, q, p, params)
+    G[1,1] = - params.ν * q[1]
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.01
+q₀ = [0.5]
+p₀ = [0.0]
+
+prob = PSDEProblem(v, f, B, G, tspan, tstep, q₀, p₀; parameters = (λ=2.0, μ=1.0))
+```
+
+
+### Split Partitioned Stochastic Differential Equation (SPSDE)
+
+```@eval
+using GeometricEquations, Markdown
+Markdown.parse(GeometricEquations.spsde_equations)
+```
+
+#### Example: Kubo Oscillator
+
+```@example
+using GeometricIntegrators # hide
+function v(v, t, q, p, params)
+    v[1] = + params.λ * p[1]
+end
+
+function f1(f, t, q, p, params)
+    f[1] = - params.λ * q[1]
+end
+
+function f2(f, t, q, p, params)
+    f[1] = 0
+end
+
+function B(B, t, q, p, params)
+    B[1,1] = params.ν * p[1]
+end
+
+function G1(G, t, q, p, params)
+    G[1,1] = - params.ν * q[1]
+end
+
+function G2(G, t, q, p, params)
+    G[1,1] = 0
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.01
+q₀ = [0.5]
+p₀ = [0.0]
+
+prob = SPSDEProblem(v, f1, f2, B, G1, G2, tspan, tstep, q₀, p₀; parameters = (λ=2.0, μ=1.0))
+```
