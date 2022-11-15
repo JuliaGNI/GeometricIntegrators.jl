@@ -1,31 +1,35 @@
 
-abstract type RKODEMethod <: ODEMethod end
-abstract type RKPODEMethod <: PODEMethod end
+abstract type RKMethod <: ODEMethod end
+abstract type PRKMethod <: PODEMethod end
+abstract type VPRKMethod <: IODEMethod end
 
-tableau(method::RKODEMethod) = error("No tableau for Runge-Kutta method $(typeof(method)) provided")
-tableau(method::RKPODEMethod) = error("No tableau for partitioned Runge-Kutta method $(typeof(method)) provided")
+tableau(method::RKMethod) = error("No tableau for Runge-Kutta method $(typeof(method)) provided")
+tableau(method::PRKMethod) = error("No tableau for partitioned Runge-Kutta method $(typeof(method)) provided")
 
-Integrators.Integrator(problem::ODEProblem, method::RKODEMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
-Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::RKODEMethod; kwargs...) = Integrator(problem, PartitionedTableau(tableau(method)); kwargs...)
-Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::RKPODEMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
+Integrators.Integrator(problem::ODEProblem, method::RKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
+Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::RKMethod; kwargs...) = Integrator(problem, PartitionedTableau(tableau(method)); kwargs...)
+Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::PRKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
+Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::RKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
+Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::PRKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
+Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::VPRKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
 
 
 # Explicit Runge-Kutta Methods
 
-struct ForwardEuler <: RKODEMethod end
-struct ExplicitEuler <: RKODEMethod end
-struct ExplicitMidpoint <: RKODEMethod end
-struct Heun2 <: RKODEMethod end
-struct Heun3 <: RKODEMethod end
-struct Kutta3 <: RKODEMethod end
-struct Ralston2 <: RKODEMethod end
-struct Ralston3 <: RKODEMethod end
-struct RK4 <: RKODEMethod end
-struct RK416 <: RKODEMethod end
-struct RK438 <: RKODEMethod end
-struct Runge2 <: RKODEMethod end
-struct SSPRK2 <: RKODEMethod end
-struct SSPRK3 <: RKODEMethod end
+struct ForwardEuler <: RKMethod end
+struct ExplicitEuler <: RKMethod end
+struct ExplicitMidpoint <: RKMethod end
+struct Heun2 <: RKMethod end
+struct Heun3 <: RKMethod end
+struct Kutta3 <: RKMethod end
+struct Ralston2 <: RKMethod end
+struct Ralston3 <: RKMethod end
+struct RK4 <: RKMethod end
+struct RK416 <: RKMethod end
+struct RK438 <: RKMethod end
+struct Runge2 <: RKMethod end
+struct SSPRK2 <: RKMethod end
+struct SSPRK3 <: RKMethod end
 
 tableau(::ForwardEuler) = TableauForwardEuler()
 tableau(::ExplicitEuler) = TableauExplicitEuler()
@@ -45,10 +49,10 @@ tableau(::SSPRK3) = TableauSSPRK3()
 
 # Diagonally Implicit Runge-Kutta Methods
 
-struct CrankNicolson <: RKODEMethod end
-struct Crouzeix <: RKODEMethod end
-struct KraaijevangerSpijker <: RKODEMethod end
-struct QinZhang <: RKODEMethod end
+struct CrankNicolson <: RKMethod end
+struct Crouzeix <: RKMethod end
+struct KraaijevangerSpijker <: RKMethod end
+struct QinZhang <: RKMethod end
 
 tableau(::CrankNicolson) = TableauCrankNicolson()
 tableau(::Crouzeix) = TableauCrouzeix()
@@ -58,10 +62,10 @@ tableau(::QinZhang) = TableauQinZhang()
 
 # Fully Implicit Runge-Kutta Methods
 
-struct BackwardEuler <: RKODEMethod end
-struct ImplicitEuler <: RKODEMethod end
-struct ImplicitMidpoint <: RKODEMethod end
-struct SRK3 <: RKODEMethod end
+struct BackwardEuler <: RKMethod end
+struct ImplicitEuler <: RKMethod end
+struct ImplicitMidpoint <: RKMethod end
+struct SRK3 <: RKMethod end
 
 tableau(::BackwardEuler) = TableauBackwardEuler()
 tableau(::ImplicitEuler) = TableauImplicitEuler()
@@ -69,55 +73,55 @@ tableau(::ImplicitMidpoint) = TableauImplicitMidpoint()
 tableau(::SRK3) = TableauSRK3()
 
 
-struct Gauss <: RKODEMethod
+struct Gauss <: RKMethod
     s::Int
 end
 
-struct LobattoIIIA <: RKODEMethod
+struct LobattoIIIA <: RKMethod
     s::Int
 end
 
-struct LobattoIIIB <: RKODEMethod
+struct LobattoIIIB <: RKMethod
     s::Int
 end
 
-struct LobattoIIIC <: RKODEMethod
+struct LobattoIIIC <: RKMethod
     s::Int
 end
 
-struct LobattoIIIC̄ <: RKODEMethod
+struct LobattoIIIC̄ <: RKMethod
     s::Int
 end
 
-struct LobattoIIID <: RKODEMethod
+struct LobattoIIID <: RKMethod
     s::Int
 end
 
-struct LobattoIIIE <: RKODEMethod
+struct LobattoIIIE <: RKMethod
     s::Int
 end
 
-struct LobattoIIIF <: RKODEMethod
+struct LobattoIIIF <: RKMethod
     s::Int
 end
 
-struct LobattoIIIG <: RKODEMethod
+struct LobattoIIIG <: RKMethod
     s::Int
 end
 
-struct RadauIA <: RKODEMethod
+struct RadauIA <: RKMethod
     s::Int
 end
 
-struct RadauIB <: RKODEMethod
+struct RadauIB <: RKMethod
     s::Int
 end
 
-struct RadauIIA <: RKODEMethod
+struct RadauIIA <: RKMethod
     s::Int
 end
 
-struct RadauIIB <: RKODEMethod
+struct RadauIIB <: RKMethod
     s::Int
 end
 
@@ -138,19 +142,19 @@ tableau(method::RadauIIB) = TableauRadauIIB(method.s)
 
 # Partitioned Runge-Kutta Methods
 
-struct LobattoIIIAIIIB <: RKPODEMethod
+struct LobattoIIIAIIIB <: PRKMethod
     s::Int
 end
 
-struct LobattoIIIBIIIA <: RKPODEMethod
+struct LobattoIIIBIIIA <: PRKMethod
     s::Int
 end
 
-struct LobattoIIICIIIC̄ <: RKPODEMethod
+struct LobattoIIICIIIC̄ <: PRKMethod
     s::Int
 end
 
-struct LobattoIIIC̄IIIC <: RKPODEMethod
+struct LobattoIIIC̄IIIC <: PRKMethod
     s::Int
 end
 
