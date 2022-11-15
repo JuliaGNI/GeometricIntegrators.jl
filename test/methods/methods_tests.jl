@@ -1,4 +1,5 @@
 using GeometricIntegrators
+using GeometricIntegrators.Integrators.VPRK
 using GeometricProblems.HarmonicOscillator
 using Test
 
@@ -6,6 +7,8 @@ using Test
 ode  = harmonic_oscillator_ode()
 pode = harmonic_oscillator_pode()
 hode = harmonic_oscillator_hode()
+iode = harmonic_oscillator_iode()
+# lode = harmonic_oscillator_lode()
 
 
 @testset "$(rpad("Runge-Kutta methods",80))" begin
@@ -60,5 +63,34 @@ end
     @test typeof(Integrator(pode, LobattoIIIBIIIA(2))) <: IntegratorEPRK
     @test typeof(Integrator(pode, LobattoIIICIIIC̄(2))) <: IntegratorIPRK
     @test typeof(Integrator(pode, LobattoIIIC̄IIIC(2))) <: IntegratorIPRK
+
+end
+
+
+@testset "$(rpad("Variational Partitioned Runge-Kutta methods",80))" begin
+
+    @test typeof(Integrator(iode, VPSRK3())) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKGauss(2))) <: IntegratorVPRK
+
+    @test typeof(Integrator(iode, VPRKLobattoIIIA(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIB(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIC(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIC̄(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIID(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIE(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIF(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIG(2))) <: IntegratorVPRK
+    
+    @test typeof(Integrator(iode, VPRKLobattoIIIAIIIB(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIBIIIA(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIAIIIĀ(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIBIIIB̄(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIICIIIC̄(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIC̄IIIC(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIDIIID̄(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIEIIIĒ(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIFIIIF̄(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIF̄IIIF(2))) <: IntegratorVPRK
+    @test typeof(Integrator(iode, VPRKLobattoIIIGIIIḠ(2))) <: IntegratorVPRK
 
 end
