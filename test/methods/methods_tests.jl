@@ -58,6 +58,7 @@ end
 @testset "$(rpad("Partitioned Runge-Kutta methods",80))" begin
 
     @test typeof(Integrator(pode, Gauss(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, SRK3())) <: IntegratorIPRK
 
     @test typeof(Integrator(pode, LobattoIIIAIIIB(2))) <: IntegratorEPRK
     @test typeof(Integrator(pode, LobattoIIIBIIIA(2))) <: IntegratorEPRK
@@ -92,5 +93,13 @@ end
     @test typeof(Integrator(iode, VPRKLobattoIIIFIIIF̄(2))) <: IntegratorVPRK
     @test typeof(Integrator(iode, VPRKLobattoIIIF̄IIIF(2))) <: IntegratorVPRK
     @test typeof(Integrator(iode, VPRKLobattoIIIGIIIḠ(2))) <: IntegratorVPRK
+
+end
+
+
+@testset "$(rpad("Runge-Kutta methods for Implicit Equations",80))" begin
+
+    @test typeof(Integrator(iode, Gauss(2))) <: IntegratorFIRKimplicit
+    @test typeof(Integrator(iode, SRK3())) <: IntegratorFIRKimplicit
 
 end
