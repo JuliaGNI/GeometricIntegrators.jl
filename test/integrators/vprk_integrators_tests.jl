@@ -37,22 +37,22 @@ reference_solution = sol.q[end]
     sol = integrate(iode, TableauVPRK(:pglrk, 6, TableauGauss(3), -1))
     @test relative_maximum_error(sol.q, reference_solution) < 4E-12
 
-    sol = integrate(iode, TableauVPLobattoIIIA(2))
+    sol = integrate(iode, TableauVPLobattoIIIAIIIĀ(2))
     @test relative_maximum_error(sol.q, reference_solution) < 4E-6
 
-    sol = integrate(iode, TableauVPLobattoIIIA(3))
+    sol = integrate(iode, TableauVPLobattoIIIAIIIĀ(3))
     @test relative_maximum_error(sol.q, reference_solution) < 8E-7
 
-    sol = integrate(iode, TableauVPLobattoIIIA(4))
+    sol = integrate(iode, TableauVPLobattoIIIAIIIĀ(4))
     @test relative_maximum_error(sol.q, reference_solution) < 3E-11
 
-    sol = integrate(iode, TableauVPLobattoIIIB(2))
+    sol = integrate(iode, TableauVPLobattoIIIBIIIB̄(2))
     @test relative_maximum_error(sol.q, reference_solution) < 2E-6
 
-    sol = integrate(iode, TableauVPLobattoIIIB(3))
+    sol = integrate(iode, TableauVPLobattoIIIBIIIB̄(3))
     @test relative_maximum_error(sol.q, reference_solution) < 8E-7
 
-    sol = integrate(iode, TableauVPLobattoIIIB(4))
+    sol = integrate(iode, TableauVPLobattoIIIBIIIB̄(4))
     @test relative_maximum_error(sol.q, reference_solution) < 2E-11
 
 end
