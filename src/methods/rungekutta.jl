@@ -6,6 +6,13 @@ abstract type VPRKMethod <: IODEMethod end
 tableau(method::RKMethod) = error("No tableau for Runge-Kutta method $(typeof(method)) provided")
 tableau(method::PRKMethod) = error("No tableau for partitioned Runge-Kutta method $(typeof(method)) provided")
 
+ispodemethod(::RKMethod) = true
+ishodemethod(::RKMethod) = true
+isiodemethod(::RKMethod) = true
+islodemethod(::RKMethod) = true
+isiodemethod(::PRKMethod) = true
+islodemethod(::PRKMethod) = true
+
 Integrators.Integrator(problem::ODEProblem, method::RKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
 Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::RKMethod; kwargs...) = Integrator(problem, PartitionedTableau(tableau(method)); kwargs...)
 Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::PRKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)

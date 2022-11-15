@@ -13,3 +13,29 @@ abstract type PDAEMethod <: Method end
 abstract type HDAEMethod <: PDAEMethod end
 abstract type IDAEMethod <: Method end
 abstract type LDAEMethod <: IDAEMethod end
+
+isodemethod(::Method) = false
+ispodemethod(::Method) = false
+ishodemethod(::Method) = false
+isiodemethod(::Method) = false
+islodemethod(::Method) = false
+issodemethod(::Method) = false
+
+isdaemethod(::Method) = false
+ispdaemethod(::Method) = false
+ishdaemethod(::Method) = false
+isidaemethod(::Method) = false
+isldaemethod(::Method) = false
+
+isodemethod(::ODEMethod) = true
+ispodemethod(::PODEMethod) = true
+ishodemethod(::HODEMethod) = true
+isiodemethod(::IODEMethod) = true
+islodemethod(::LODEMethod) = true
+issodemethod(::SODEMethod) = true
+
+isdaemethod(::DAEMethod) = true
+ispdaemethod(::PDAEMethod) = true
+ishdaemethod(::HDAEMethod) = true
+isidaemethod(::IDAEMethod) = true
+isldaemethod(::LDAEMethod) = true
