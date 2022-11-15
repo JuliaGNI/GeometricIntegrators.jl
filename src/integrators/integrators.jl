@@ -55,6 +55,11 @@ function Integrator(problem::Union{PODEProblem,HODEProblem}, tableau::Tableau; k
     Integrator(problem, PartitionedTableau(tableau); kwargs...)
 end
 
+# Create integrator for Runge-Kutta tableau and implicit problem.
+function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::Tableau; kwargs...)
+    IntegratorFIRKimplicit(problem, tableau; kwargs...)
+end
+
 # Create integrator for implicit partitioned Runge-Kutta tableau.
 function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::PartitionedTableau; kwargs...)
     IntegratorPRKimplicit(problem, tableau; kwargs...)
