@@ -43,7 +43,10 @@ module Tableaus
 
     include("tableaus/tableaus_vprk.jl")
 
-    export TableauVPGLRK,
+    export TableauVPSRK3,
+           TableauVPGLRK,
+           TableauVPRadauIIA,
+           TableauVPRadauIIB,
            TableauVPLobattoIIIA,
            TableauVPLobattoIIIB,
            TableauVPLobattoIIIC,
@@ -52,10 +55,17 @@ module Tableaus
            TableauVPLobattoIIIE,
            TableauVPLobattoIIIF,
            TableauVPLobattoIIIG,
-           TableauVPSRK3,
-           TableauVPLobattoIIIAIIIA,
-           TableauVPLobattoIIIBIIIB,
-           TableauVPRadauIIAIIA
+           TableauVPLobattoIIIAIIIB,
+           TableauVPLobattoIIIBIIIA,
+           TableauVPLobattoIIIAIIIĀ,
+           TableauVPLobattoIIIBIIIB̄,
+           TableauVPLobattoIIICIIIC̄,
+           TableauVPLobattoIIIC̄IIIC,
+           TableauVPLobattoIIIDIIID̄,
+           TableauVPLobattoIIIEIIIĒ,
+           TableauVPLobattoIIIFIIIF̄,
+           TableauVPLobattoIIIF̄IIIF,
+           TableauVPLobattoIIIGIIIḠ
 
     export TableauSymplecticProjection,
            TableauLobattoIIIAIIIBpSymplectic,

@@ -8,6 +8,16 @@
 
     @test typeof(TableauVPSRK3()) <: TableauVPRK
 
+    @test typeof(TableauVPRadauIIA(2)) <: TableauVPRK
+    @test typeof(TableauVPRadauIIA(3)) <: TableauVPRK
+    @test typeof(TableauVPRadauIIA(4)) <: TableauVPRK
+    @test typeof(TableauVPRadauIIA(5)) <: TableauVPRK
+
+    @test typeof(TableauVPRadauIIB(2)) <: TableauVPRK
+    @test typeof(TableauVPRadauIIB(3)) <: TableauVPRK
+    @test typeof(TableauVPRadauIIB(4)) <: TableauVPRK
+    @test typeof(TableauVPRadauIIB(5)) <: TableauVPRK
+
     @test typeof(TableauVPLobattoIIIA(2)) <: TableauVPRK
     @test typeof(TableauVPLobattoIIIA(3)) <: TableauVPRK
     @test typeof(TableauVPLobattoIIIA(4)) <: TableauVPRK
@@ -48,25 +58,56 @@
     @test typeof(TableauVPLobattoIIIG(4)) <: TableauVPRK
     @test typeof(TableauVPLobattoIIIG(5)) <: TableauVPRK
 
-    @test typeof(TableauVPLobattoIIIAIIIA(2)) <: TableauVPRK
-    @test typeof(TableauVPLobattoIIIAIIIA(3)) <: TableauVPRK
-    @test typeof(TableauVPLobattoIIIAIIIA(4)) <: TableauVPRK
-    @test typeof(TableauVPLobattoIIIAIIIA(5)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIAIIIB(2)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIAIIIB(3)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIAIIIB(4)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIAIIIB(5)) <: TableauVPRK
 
-    @test typeof(TableauVPLobattoIIIBIIIB(2)) <: TableauVPRK
-    @test typeof(TableauVPLobattoIIIBIIIB(3)) <: TableauVPRK
-    @test typeof(TableauVPLobattoIIIBIIIB(4)) <: TableauVPRK
-    @test typeof(TableauVPLobattoIIIBIIIB(5)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIBIIIA(2)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIBIIIA(3)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIBIIIA(4)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIBIIIA(5)) <: TableauVPRK
 
-    @test typeof(TableauVPRadauIIAIIA(2)) <: TableauVPRK
-    @test typeof(TableauVPRadauIIAIIA(3)) <: TableauVPRK
-    @test typeof(TableauVPRadauIIAIIA(4)) <: TableauVPRK
-    @test typeof(TableauVPRadauIIAIIA(5)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIAIIIĀ(2)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIAIIIĀ(3)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIAIIIĀ(4)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIAIIIĀ(5)) <: TableauVPRK
+
+    @test typeof(TableauVPLobattoIIIBIIIB̄(2)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIBIIIB̄(3)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIBIIIB̄(4)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIBIIIB̄(5)) <: TableauVPRK
+
+    @test typeof(TableauVPLobattoIIICIIIC̄(2)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIICIIIC̄(3)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIICIIIC̄(4)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIICIIIC̄(5)) <: TableauVPRK
+
+    @test typeof(TableauVPLobattoIIIDIIID̄(2)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIDIIID̄(3)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIDIIID̄(4)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIDIIID̄(5)) <: TableauVPRK
+
+    @test typeof(TableauVPLobattoIIIEIIIĒ(2)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIEIIIĒ(3)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIEIIIĒ(4)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIEIIIĒ(5)) <: TableauVPRK
+
+    @test typeof(TableauVPLobattoIIIFIIIF̄(2)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIFIIIF̄(3)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIFIIIF̄(4)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIFIIIF̄(5)) <: TableauVPRK
+
+    @test typeof(TableauVPLobattoIIIGIIIḠ(2)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIGIIIḠ(3)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIGIIIḠ(4)) <: TableauVPRK
+    @test typeof(TableauVPLobattoIIIGIIIḠ(5)) <: TableauVPRK
 
 
-    @test TableauVPGLRK(1) == TableauVPGLRK(Float64, 1)
-    @test TableauVPSRK3()  == TableauVPSRK3(Float64)
-
+    @test TableauVPSRK3()         == TableauVPSRK3(Float64)
+    @test TableauVPGLRK(1)        == TableauVPGLRK(Float64, 1)
+    @test TableauVPRadauIIA(2)    == TableauVPRadauIIA(Float64, 2)
+    @test TableauVPRadauIIB(2)    == TableauVPRadauIIB(Float64, 2)
     @test TableauVPLobattoIIIA(2) == TableauVPLobattoIIIA(Float64, 2)
     @test TableauVPLobattoIIIB(2) == TableauVPLobattoIIIB(Float64, 2)
     @test TableauVPLobattoIIIC(2) == TableauVPLobattoIIIC(Float64, 2)
@@ -74,8 +115,6 @@
     @test TableauVPLobattoIIID(2) == TableauVPLobattoIIID(Float64, 2)
     @test TableauVPLobattoIIIE(2) == TableauVPLobattoIIIE(Float64, 2)
     @test TableauVPLobattoIIIF(2) == TableauVPLobattoIIIF(Float64, 2)
-    @test TableauVPLobattoIIIF(2) == TableauVPLobattoIIIF(Float64, 2)
     @test TableauVPLobattoIIIG(2) == TableauVPLobattoIIIG(Float64, 2)
-    @test TableauVPRadauIIAIIA(2) == TableauVPRadauIIAIIA(Float64, 2)
 
 end
