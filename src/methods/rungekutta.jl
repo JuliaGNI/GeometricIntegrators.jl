@@ -19,6 +19,21 @@ Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::RKMethod
 Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::PRKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
 
 
+# General Runge-Kutta Method
+
+struct RK{TT} <: RKMethod
+    tableau::TT
+
+    function RK(tableau::TT) where {TT <: Tableau}
+        new{TT}(tableau)
+    end
+end
+
+tableau(method::RK) = method.tableau
+
+Integrators.Integrator(problem::ODEProblem, method::RK; kwargs...) = Integrator(problem, tableau(method); kwargs...)
+
+
 # Explicit Runge-Kutta Methods
 
 struct ForwardEuler <: RKMethod end

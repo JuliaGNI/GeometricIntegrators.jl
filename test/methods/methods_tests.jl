@@ -3,6 +3,7 @@ using GeometricIntegrators.Integrators.VPRK
 using GeometricProblems.HarmonicOscillator
 using Test
 
+using GeometricIntegrators: tableau
 
 ode  = harmonic_oscillator_ode()
 pode = harmonic_oscillator_pode()
@@ -51,6 +52,21 @@ iode = harmonic_oscillator_iode()
     @test typeof(Integrator(ode, RadauIIA(2))) <: IntegratorFIRK
     @test typeof(Integrator(ode, RadauIIB(2))) <: IntegratorFIRK
 
+    @test tableau(ForwardEuler()) == tableau(RK(TableauForwardEuler()))
+    @test tableau(ExplicitEuler()) == tableau(RK(TableauExplicitEuler()))
+    @test tableau(ExplicitMidpoint()) == tableau(RK(TableauExplicitMidpoint()))
+    @test tableau(Heun2()) == tableau(RK(TableauHeun2()))
+    @test tableau(Heun3()) == tableau(RK(TableauHeun3()))
+    @test tableau(Kutta3()) == tableau(RK(TableauKutta3()))
+    @test tableau(Ralston2()) == tableau(RK(TableauRalston2()))
+    @test tableau(Ralston3()) == tableau(RK(TableauRalston3()))
+    @test tableau(RK4()) == tableau(RK(TableauRK4()))
+    @test tableau(RK416()) == tableau(RK(TableauRK416()))
+    @test tableau(RK438()) == tableau(RK(TableauRK438()))
+    @test tableau(Runge2()) == tableau(RK(TableauRunge2()))
+    @test tableau(SSPRK2()) == tableau(RK(TableauSSPRK2()))
+    @test tableau(SSPRK3()) == tableau(RK(TableauSSPRK3()))
+
 end
 
 
@@ -69,7 +85,8 @@ end
 
 @testset "$(rpad("Runge-Kutta methods for Implicit Equations",80))" begin
 
-    @test typeof(Integrator(iode, Gauss(2))) <: IntegratorFIRKimplicit
+    @test typeof(Integrator(iode, ImplicitMidpoint())) <: IntegratorFIRKimplicit
     @test typeof(Integrator(iode, SRK3())) <: IntegratorFIRKimplicit
+    @test typeof(Integrator(iode, Gauss(2))) <: IntegratorFIRKimplicit
 
 end

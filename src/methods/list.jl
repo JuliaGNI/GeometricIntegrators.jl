@@ -1,5 +1,6 @@
 
 methods = (
+    RK,
     # explicit Runge-Kutta methods
     ForwardEuler,
     ExplicitEuler,
@@ -45,6 +46,7 @@ methods = (
     LobattoIIICIIIC̄,
     LobattoIIIC̄IIIC,
     # variational partitioned Runge-Kutta methods
+    VPRK,
     VPSRK3,
     VPRKGauss,
     VPRKRadauIIA,
