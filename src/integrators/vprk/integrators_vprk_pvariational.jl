@@ -24,18 +24,18 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
         new{DT, TT, D, S, typeof(params), typeof(pparams), ST, PST, IT}(params, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKpVariational{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT; R=[1,1]) where {DT, TT, D}
+    function IntegratorVPRKpVariational{DT,D}(equations::NamedTuple, tableau::PartitionedTableau{TT}, nullvec, Δt::TT; R=[1,1]) where {DT, TT, D}
         # get number of stages
         S = tableau.s
 
         # create params
-        params = ParametersVPRK{DT,D}(equations, tableau, Δt)
+        params = ParametersVPRK{DT,D}(equations, tableau, nullvec, Δt)
 
         # create projector params
         R  = convert(Vector{TT}, R)
         R1 = [R[1], zero(TT)]
         R2 = [zero(TT), R[2]]
-        pparams = ParametersVPRKpVariational{DT,D}(equations, tableau, Δt, NamedTuple{(:R,:R1,:R2)}((R,R1,R2)))
+        pparams = ParametersVPRKpVariational{DT,D}(equations, tableau, nullvec, Δt, NamedTuple{(:R,:R1,:R2)}((R,R1,R2)))
 
         # create cache dict
         caches = CacheDict(pparams)
@@ -53,8 +53,8 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
         IntegratorVPRKpVariational(params, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKpVariational(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
-        IntegratorVPRKpVariational{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
+    function IntegratorVPRKpVariational(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
+        IntegratorVPRKpVariational{DT, ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
 end
 

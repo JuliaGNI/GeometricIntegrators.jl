@@ -41,32 +41,6 @@ module Tableaus
            TableauSPARKVPRK,
            TableauSPARKGLVPRK
 
-    include("tableaus/tableaus_vprk.jl")
-
-    export TableauVPSRK3,
-           TableauVPGLRK,
-           TableauVPRadauIIA,
-           TableauVPRadauIIB,
-           TableauVPLobattoIIIA,
-           TableauVPLobattoIIIB,
-           TableauVPLobattoIIIC,
-           TableauVPLobattoIIIC̄,
-           TableauVPLobattoIIID,
-           TableauVPLobattoIIIE,
-           TableauVPLobattoIIIF,
-           TableauVPLobattoIIIG,
-           TableauVPLobattoIIIAIIIB,
-           TableauVPLobattoIIIBIIIA,
-           TableauVPLobattoIIIAIIIĀ,
-           TableauVPLobattoIIIBIIIB̄,
-           TableauVPLobattoIIICIIIC̄,
-           TableauVPLobattoIIIC̄IIIC,
-           TableauVPLobattoIIIDIIID̄,
-           TableauVPLobattoIIIEIIIĒ,
-           TableauVPLobattoIIIFIIIF̄,
-           TableauVPLobattoIIIF̄IIIF,
-           TableauVPLobattoIIIGIIIḠ
-
     export TableauSymplecticProjection,
            TableauLobattoIIIAIIIBpSymplectic,
            TableauLobattoIIIBIIIApSymplectic,

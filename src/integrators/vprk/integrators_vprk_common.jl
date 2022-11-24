@@ -271,24 +271,24 @@ function compute_rhs_vprk_correction!(b::Vector{ST}, V::Vector{Vector{ST}},
     local sl::Int = div(S+1, 2)
     local μ = zeros(ST,D)
 
-    if isdefined(params.tab, :d)
+    if !isnothing(params.nullvec)
         # compute μ
         for k in 1:D
-            μ[k] = params.tab.p.b[sl] / params.tab.d[sl] * b[D*(sl-1)+k]
+            μ[k] = params.tab.p.b[sl] / params.nullvec[sl] * b[D*(sl-1)+k]
         end
 
         # replace equation for Pₗ with constraint on V
         for k in 1:D
             b[D*(sl-1)+k] = 0
             for i in 1:S
-                b[D*(sl-1)+k] += V[i][k] * params.tab.d[i]
+                b[D*(sl-1)+k] += V[i][k] * params.nullvec[i]
             end
         end
 
         # modify P₁, ..., Pₛ except for Pₗ
         for i in 1:S
             if i ≠ sl
-                z = params.tab.d[i] / params.tab.p.b[i]
+                z = params.nullvec[i] / params.tab.p.b[i]
                 for k in 1:D
                     b[D*(i-1)+k] -= z * μ[k]
                 end

@@ -56,7 +56,7 @@ struct IntegratorVPRKpLegendre{DT, TT, D, S,
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpLegendre{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,D}
+    function IntegratorVPRKpLegendre{DT,D}(equations::NamedTuple, tableau::PartitionedTableau{TT}, nullvec, Δt::TT) where {DT,TT,D}
         # get number of stages
         S = tableau.s
 
@@ -67,7 +67,7 @@ struct IntegratorVPRKpLegendre{DT, TT, D, S,
         end
 
         # create params
-        params = ParametersVPRKpLegendre{DT,D}(equations, tableau, Δt)
+        params = ParametersVPRKpLegendre{DT,D}(equations, tableau, nullvec, Δt)
 
         # create cache dict
         caches = CacheDict(params)
@@ -82,8 +82,8 @@ struct IntegratorVPRKpLegendre{DT, TT, D, S,
         IntegratorVPRKpLegendre(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpLegendre(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
-        IntegratorVPRKpLegendre{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
+    function IntegratorVPRKpLegendre(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
+        IntegratorVPRKpLegendre{DT, ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
 end
 

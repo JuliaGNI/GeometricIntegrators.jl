@@ -68,4 +68,18 @@ methods = (
     VPRKLobattoIIIFIIIF̄,
     VPRKLobattoIIIF̄IIIF,
     VPRKLobattoIIIGIIIḠ,
+    # projected VPRK methods
+    ProjectedVPRK,
+    VPRKpInternal,
+    VPRKpLegendre,
+    VPRKpMidpoint,
+    VPRKpSecondary,
+    VPRKpStandard,
+    VPRKpSymmetric,
+    VPRKpSymplectic,
+    VPRKpVariational,
+    VPRKpVariationalP,
+    VPRKpVariationalQ,
+    # degenerate VPRK methods
+    DegenerateVPRK,
 )

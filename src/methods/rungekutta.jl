@@ -1,7 +1,6 @@
 
 abstract type RKMethod <: ODEMethod end
 abstract type PRKMethod <: PODEMethod end
-abstract type VPRKMethod <: IODEMethod end
 
 tableau(method::RKMethod) = error("No tableau for Runge-Kutta method $(typeof(method)) provided")
 tableau(method::PRKMethod) = error("No tableau for partitioned Runge-Kutta method $(typeof(method)) provided")
@@ -18,7 +17,6 @@ Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::RKMethod
 Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::PRKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
 Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::RKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
 Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::PRKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
-Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::VPRKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
 
 
 # Explicit Runge-Kutta Methods
@@ -169,124 +167,3 @@ tableau(method::LobattoIIIAIIIB) = TableauLobattoIIIAIIIB(method.s)
 tableau(method::LobattoIIIBIIIA) = TableauLobattoIIIBIIIA(method.s)
 tableau(method::LobattoIIICIIIC̄) = TableauLobattoIIICIIIC̄(method.s)
 tableau(method::LobattoIIIC̄IIIC) = TableauLobattoIIIC̄IIIC(method.s)
-
-
-# Variational Partitioned Runge-Kutta Methods
-
-struct VPSRK3 <: VPRKMethod end
-
-struct VPRKGauss <: VPRKMethod
-    s::Int
-end
-
-struct VPRKRadauIIA <: VPRKMethod
-    s::Int
-end
-
-struct VPRKRadauIIB <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIA <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIB <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIC <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIC̄ <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIID <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIE <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIF <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIG <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIAIIIB <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIBIIIA <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIAIIIĀ <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIBIIIB̄ <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIICIIIC̄ <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIC̄IIIC <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIDIIID̄ <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIEIIIĒ <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIFIIIF̄ <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIF̄IIIF <: VPRKMethod
-    s::Int
-end
-
-struct VPRKLobattoIIIGIIIḠ <: VPRKMethod
-    s::Int
-end
-
-tableau(::VPSRK3) = TableauVPSRK3()
-
-tableau(method::VPRKGauss) = TableauVPGLRK(method.s)
-tableau(method::VPRKRadauIIA) = TableauVPRadauIIA(method.s)
-tableau(method::VPRKRadauIIB) = TableauVPRadauIIA(method.s)
-
-tableau(method::VPRKLobattoIIIA) = TableauVPLobattoIIIA(method.s)
-tableau(method::VPRKLobattoIIIB) = TableauVPLobattoIIIB(method.s)
-tableau(method::VPRKLobattoIIIC) = TableauVPLobattoIIIC(method.s)
-tableau(method::VPRKLobattoIIIC̄) = TableauVPLobattoIIIC̄(method.s)
-tableau(method::VPRKLobattoIIID) = TableauVPLobattoIIID(method.s)
-tableau(method::VPRKLobattoIIIE) = TableauVPLobattoIIIE(method.s)
-tableau(method::VPRKLobattoIIIF) = TableauVPLobattoIIIF(method.s)
-tableau(method::VPRKLobattoIIIG) = TableauVPLobattoIIIG(method.s)
-
-tableau(method::VPRKLobattoIIIAIIIB) = TableauVPLobattoIIIAIIIB(method.s)
-tableau(method::VPRKLobattoIIIBIIIA) = TableauVPLobattoIIIBIIIA(method.s)
-
-tableau(method::VPRKLobattoIIIAIIIĀ) = TableauVPLobattoIIIAIIIĀ(method.s)
-tableau(method::VPRKLobattoIIIBIIIB̄) = TableauVPLobattoIIIBIIIB̄(method.s)
-tableau(method::VPRKLobattoIIICIIIC̄) = TableauVPLobattoIIICIIIC̄(method.s)
-tableau(method::VPRKLobattoIIIC̄IIIC) = TableauVPLobattoIIIC̄IIIC(method.s)
-tableau(method::VPRKLobattoIIIDIIID̄) = TableauVPLobattoIIIDIIID̄(method.s)
-tableau(method::VPRKLobattoIIIEIIIĒ) = TableauVPLobattoIIIEIIIĒ(method.s)
-tableau(method::VPRKLobattoIIIFIIIF̄) = TableauVPLobattoIIIFIIIF̄(method.s)
-tableau(method::VPRKLobattoIIIF̄IIIF) = TableauVPLobattoIIIF̄IIIF(method.s)
-tableau(method::VPRKLobattoIIIGIIIḠ) = TableauVPLobattoIIIGIIIḠ(method.s)

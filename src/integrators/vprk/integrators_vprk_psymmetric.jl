@@ -18,13 +18,13 @@ struct IntegratorVPRKpSymmetric{DT, TT, D, S,
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpSymmetric{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,D}
+    function IntegratorVPRKpSymmetric{DT,D}(equations::NamedTuple, tableau::PartitionedTableau{TT}, nullvec, Δt::TT) where {DT,TT,D}
         # get number of stages
         S = tableau.s
 
         # create params
         R = convert(Vector{TT}, [1, tableau.R∞])
-        params = ParametersVPRKpSymmetric{DT,D}(equations, tableau, Δt, NamedTuple{(:R,)}((R,)))
+        params = ParametersVPRKpSymmetric{DT,D}(equations, tableau, nullvec, Δt, NamedTuple{(:R,)}((R,)))
 
         # create cache dict
         caches = CacheDict(params)
@@ -39,8 +39,8 @@ struct IntegratorVPRKpSymmetric{DT, TT, D, S,
         IntegratorVPRKpSymmetric(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpSymmetric(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
-        IntegratorVPRKpSymmetric{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
+    function IntegratorVPRKpSymmetric(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
+        IntegratorVPRKpSymmetric{DT, ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
 end
 

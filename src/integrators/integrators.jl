@@ -65,11 +65,6 @@ function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::Partitione
     IntegratorPRKimplicit(problem, tableau; kwargs...)
 end
 
-# Create integrator for variational partitioned Runge-Kutta tableau.
-function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::TableauVPRK; kwargs...)
-    IntegratorVPRK(problem, tableau; kwargs...)
-end
-
 # Create integrator for formal Lagrangian Runge-Kutta tableau.
 function Integrator(problem::LODEProblem, tableau::Tableau; kwargs...)
     IntegratorFLRK(problem, tableau; kwargs...)

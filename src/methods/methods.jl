@@ -1,6 +1,9 @@
 
 abstract type Method end
 
+Integrators.integrate(problem::GeometricProblem, method::Method; kwargs...) = integrate(problem, Integrator(problem, method; kwargs...))
+
+
 abstract type ODEMethod <: Method end
 abstract type PODEMethod <: Method end
 abstract type HODEMethod <: PODEMethod end

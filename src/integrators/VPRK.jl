@@ -29,7 +29,7 @@ module VPRK
                           eachdim, eachstage, nstages
 
 
-    export IntegratorVPRK, IntegratorVPRKpNone, TableauVPRK
+    export IntegratorVPRK, IntegratorVPRKpNone
 
     export IntegratorVPRKdegenerate
 
@@ -43,7 +43,6 @@ module VPRK
 
     include("vprk/integrators_vprk_abstract.jl")
     include("vprk/integrators_vprk_cache.jl")
-    include("vprk/integrators_vprk_tableau.jl")
     include("vprk/integrators_vprk_parameters.jl")
     include("vprk/integrators_vprk_common.jl")
     include("vprk/integrators_vprk.jl")
@@ -53,7 +52,6 @@ module VPRK
     include("vprk/integrators_vprk_pstandard.jl")
     include("vprk/integrators_vprk_psecondary.jl")
     include("vprk/integrators_vprk_psymmetric.jl")
-    include("vprk/integrators_vprk_ptableau.jl")
     include("vprk/integrators_vprk_pvariational.jl")
     include("vprk/integrators_vprk_plegendre.jl")
 
