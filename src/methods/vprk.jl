@@ -14,6 +14,7 @@ struct VPRK{TT,DT} <: VPRKMethod
 end
 
 VPRK(tableau::Tableau, args...; kwargs...) = VPRK(PartitionedTableau(tableau), args...; kwargs...)
+VPRK(tableau1::Tableau, tableau2::Tableau, args...; kwargs...) = VPRK(PartitionedTableau(tableau1, tableau2), args...; kwargs...)
 
 tableau(method::VPRK) = method.tableau
 nullvector(method::VPRK) = method.d
