@@ -25,7 +25,7 @@ Pages   = ["integrators/initial_guess/initial_guess_ode.jl",
 ```
 
 
-# Extrapolation Methods
+## Extrapolation Methods
 
 The extrapolation routines are exclusively used for computing
 initial guesses and are usually not called directly by the user.

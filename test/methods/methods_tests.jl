@@ -1,5 +1,4 @@
 using GeometricIntegrators
-using GeometricIntegrators.Integrators.VPRK
 using GeometricProblems.HarmonicOscillator
 using Test
 
