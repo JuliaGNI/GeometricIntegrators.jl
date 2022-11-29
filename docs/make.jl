@@ -3,6 +3,8 @@ using DocumenterCitations
 using GeometricIntegrators
 
 
+ENV["GKSwstype"] = "100"
+
 cp(normpath(@__FILE__, "../../AUTHORS.md"), normpath(@__FILE__, "../src/authors.md"); force=true)
 
 bib = CitationBibliography("GeometricIntegrators.bib")
