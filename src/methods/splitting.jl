@@ -4,6 +4,8 @@ abstract type SplittingMethod <: SODEMethod end
 issodemethod(::SplittingMethod) = true
 
 Integrators.Integrator(problem::SODEProblem, method::SplittingMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
+Integrators.IntegratorComposition(problem::SODEProblem, method::SplittingMethod; kwargs...) = IntegratorComposition(problem, tableau(method); kwargs...)
+Integrators.IntegratorComposition(problem::SODEProblem, integrators::Tuple, method::SplittingMethod; kwargs...) = IntegratorComposition(problem, integrators, tableau(method); kwargs...)
 
 
 @doc raw"""
