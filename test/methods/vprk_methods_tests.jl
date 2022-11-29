@@ -1,7 +1,7 @@
-using GeometricIntegrators
 using GeometricIntegrators.Integrators.VPRK
 using GeometricProblems.HarmonicOscillator
-using Test
+
+using GeometricIntegrators.Methods: VPRKMethod
 
 
 iode = harmonic_oscillator_iode()

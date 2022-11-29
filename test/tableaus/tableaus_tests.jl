@@ -7,4 +7,3 @@ using Test
 
 include("coefficients_tests.jl")
 include("spark_tableaus_tests.jl")
-include("splitting_tableaus_tests.jl")
