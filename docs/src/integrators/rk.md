@@ -165,36 +165,90 @@ The tableaus of all of the above methods can be computed for an arbitrary number
 
 ### Constructors
 
-The following methods are provided for the construction of the tableaus for the previously described methods:
+The following methods are provided for selecting the previously described Runge-Kutta schemes:
 
-| Function                                    | Method                      |
-|:--------------------------------------------|:----------------------------|
-| [`TableauGauss(s, T=Float64)`](@ref)        | Gauß-Legendre with s stages |
-| [`TableauLobattoIIIA(s, T=Float64)`](@ref)  | Lobatto IIIA with s stages  |
-| [`TableauLobattoIIIB(s, T=Float64)`](@ref)  | Lobatto IIIB with s stages  |
-| [`TableauLobattoIIIC(s, T=Float64)`](@ref)  | Lobatto IIIC with s stages  |
-| [`TableauLobattoIIIC̄(s, T=Float64)`](@ref)  | Lobatto IIIC̄ with s stages  |
-| [`TableauLobattoIIID(s, T=Float64)`](@ref)  | Lobatto IIID with s stages  |
-| [`TableauLobattoIIIE(s, T=Float64)`](@ref)  | Lobatto IIIE with s stages  |
-| [`TableauLobattoIIIF(s, T=Float64)`](@ref)  | Lobatto IIIF with s stages  |
-| [`TableauLobattoIIIG(s, T=Float64)`](@ref)  | Lobatto IIIG with s stages  |
-| [`TableauRadauIA(s, T=Float64)`](@ref)      | Radau IA with s stages      |
-| [`TableauRadauIB(s, T=Float64)`](@ref)      | Radau IB with s stages      |
-| [`TableauRadauIIA(s, T=Float64)`](@ref)     | Radau IIA with s stages     |
-| [`TableauRadauIIB(s, T=Float64)`](@ref)     | Radau IIB with s stages     |
+| Function                         | Method                      | Order |
+|:---------------------------------|:----------------------------|:------|
+| [`TableauGauss(s)`](@ref)        | Gauß-Legendre with s stages | 2s    |
+| [`TableauLobattoIIIA(s)`](@ref)  | Lobatto IIIA with s stages  | 2s-2  |
+| [`TableauLobattoIIIB(s)`](@ref)  | Lobatto IIIB with s stages  | 2s-2  |
+| [`TableauLobattoIIIC(s)`](@ref)  | Lobatto IIIC with s stages  | 2s-2  |
+| [`TableauLobattoIIIC̄(s)`](@ref)  | Lobatto IIIC̄ with s stages  | 2s-2  |
+| [`TableauLobattoIIID(s)`](@ref)  | Lobatto IIID with s stages  | 2s-2  |
+| [`TableauLobattoIIIE(s)`](@ref)  | Lobatto IIIE with s stages  | 2s-2  |
+| [`TableauLobattoIIIF(s)`](@ref)  | Lobatto IIIF with s stages  | 2s-2  |
+| [`TableauLobattoIIIG(s)`](@ref)  | Lobatto IIIG with s stages  | 2s-2  |
+| [`TableauRadauIA(s)`](@ref)      | Radau IA with s stages      | 2s-1  |
+| [`TableauRadauIB(s)`](@ref)      | Radau IB with s stages      | 2s-1  |
+| [`TableauRadauIIA(s)`](@ref)     | Radau IIA with s stages     | 2s-1  |
+| [`TableauRadauIIB(s)`](@ref)     | Radau IIB with s stages     | 2s-1  |
 
 The first argument `s` refers to the number of stages ($s \ge 1$ for Gauß and $s \ge 2$ for all other methods).
 The second argument specifies the number type of the coefficients. Internally, all coefficients are computed using `BigFloat` and then converted to the requested number type, defaulting to `Float64`.
 
 
-## Implicit Equations
-
-**TODO**
- 
-
-
 ## Partitioned Equations
 
-**TODO**
+Partitioned Runge-Kutta methods consist of two tableaus that solve a partitioned ordinary differential equation,
+```math
+\begin{aligned}
+\dot{q} (t) &= v(t, q(t), p(t)) , &
+q(t_{0}) &= q_{0} , \\
+\dot{p} (t) &= f(t, q(t), p(t)) , &
+p(t_{0}) &= p_{0} ,
+\end{aligned}
+```
+in the following way:
+```math
+\begin{aligned}
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, v(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) , &
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i}  \, v(t_{n} + c_j \Delta t, Q_{n,i}, P_{n,i}) , \\
+P_{n,i} &= p_{n} + h  \sum \limits_{i=1}^{s} \bar{a}_{ij} \, f(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) , &
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i}   \, f(t_{n} + c_j \Delta t, Q_{n,i}, P_{n,i}) .
+\end{aligned}
+```
+
+The [`PartitionedTableau`](@ref) data structure can be used to compose any two Runge-Kutta tableaus
+into a partitioned Runge-Kutta tableau.
+A particular interesting family of partitioned Runge-Kutta methods are symplectic Lobatto methods,
+specifically
+
+| Function                               | Method                      | Order |
+|:---------------------------------------|:----------------------------|:------|
+| [`TableauLobattoIIIAIIIB(s)`](@ref)    | Lobatto-IIIA-IIIB           | 2s-2  |
+| [`TableauLobattoIIIBIIIA(s)`](@ref)    | Lobatto-IIIB-IIIA           | 2s-2  |
+| [`TableauLobattoIIIAIIIĀ(s)`](@ref)    | Lobatto-IIIA-IIIĀ           | 2s-2  |
+| [`TableauLobattoIIIBIIIB̄(s)`](@ref)    | Lobatto-IIIB-IIIB̄           | 2s-2  |
+| [`TableauLobattoIIICIIIC̄(s)`](@ref)    | Lobatto-IIIC-IIIC̄           | 2s-2  |
+| [`TableauLobattoIIIC̄IIIC(s)`](@ref)    | Lobatto-IIIC̄-IIIC           | 2s-2  |
+| [`TableauLobattoIIIDIIID̄(s)`](@ref)    | Lobatto-IIID-IIID̄           | 2s-2  |
+| [`TableauLobattoIIIEIIIĒ(s)`](@ref)    | Lobatto-IIIE-IIIĒ           | 2s-2  |
+| [`TableauLobattoIIIFIIIF̄(s)`](@ref)    | Lobatto-IIIF-IIIF̄           | 2s    |
+| [`TableauLobattoIIIF̄IIIF(s)`](@ref)    | Lobatto-IIIF̄-IIIF           | 2s    |
+| [`TableauLobattoIIIGIIIḠ(s)`](@ref)    | Lobatto-IIIG-IIIḠ           | 2s    |
 
 
+## Implicit Equations
+
+An implicit ordinary differential equations is an initial value problem of the form
+```math
+\begin{aligned}
+\dot{q} (t) &= v(t) , &
+q(t_{0}) &= q_{0} , \\
+\dot{p} (t) &= f(t, q(t), v(t)) , &
+p(t_{0}) &= p_{0} , \\
+p(t) &= ϑ(t, q(t), v(t)) .
+\end{aligned}
+```
+Such problems can be integrated with adapted Runge-Kutta methods, namely
+```math
+\begin{aligned}
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, v(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) , &
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i}  \, v(t_{n} + c_j \Delta t, Q_{n,i}, P_{n,i}) , \\
+P_{n,i} &= p_{n} + h  \sum \limits_{i=1}^{s} \bar{a}_{ij} \, f(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) , &
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i}   \, f(t_{n} + c_j \Delta t, Q_{n,i}, P_{n,i}) , \\
+P_{n,i} &= ϑ(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) .
+\end{aligned}
+```
+
+Implicit ODEs can be integrated with any implicit Runge-Kutta or partitioned Runge-Kutta method.
