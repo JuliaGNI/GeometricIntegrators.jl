@@ -40,7 +40,7 @@ makedocs(bib,
              ),
     pages = ["Home" => "index.md",
              "Tutorial" => "tutorial.md",
-             "Problem Types" => "equations.md",
+             "Problems" => "problems.md",
              "Methods"    => "methods.md",
              "Integrators" => [
                 "Runge-Kutta" => "integrators/rk.md",
