@@ -54,5 +54,6 @@ module VPRK
     include("vprk/integrators_vprk_psymmetric.jl")
     include("vprk/integrators_vprk_pvariational.jl")
     include("vprk/integrators_vprk_plegendre.jl")
+    include("vprk/integrators_vprk_ptableau.jl")
 
 end

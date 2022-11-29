@@ -63,6 +63,8 @@ end
 
 """
 Projected Variational Gauss-Legendre Runge-Kutta integrator.
+
+**EXPERIMENTAL**
 """
 struct IntegratorVPRKpTableau{DT, TT, D, S,
                 PT <: ParametersVPRKpTableau{DT,TT},
