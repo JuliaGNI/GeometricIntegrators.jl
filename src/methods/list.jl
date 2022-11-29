@@ -92,6 +92,11 @@ methods = (
     VPRKpVariationalQ,
     # degenerate VPRK methods
     DegenerateVPRK,
+    # degenerate VI methods
+    DVIA,
+    DVIB,
+    CMDVI,
+    CTDVI,
     # splitting methods
     LieA,
     LieB,
