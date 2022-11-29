@@ -146,19 +146,6 @@ module Tableaus
 
     include("tableaus/tableaus_slrk.jl")
 
-    export TableauLieA,
-           TableauLieB,
-           TableauMarchuk,
-           TableauMcLachlan2,
-           TableauMcLachlan4,
-           TableauStrang,
-           TableauStrangA,
-           TableauStrangB,
-           TableauSuzukiFractal,
-           TableauTripleJump
-
-    include("tableaus/tableaus_splitting.jl")
-
 
     function __init__()
         add_config(:tab_compensated_summation, true)

@@ -92,6 +92,17 @@ methods = (
     VPRKpVariationalQ,
     # degenerate VPRK methods
     DegenerateVPRK,
+    # splitting methods
+    LieA,
+    LieB,
+    Strang,
+    Marchuk,
+    StrangA,
+    StrangB,
+    McLachlan2,
+    McLachlan4,
+    TripleJump,
+    SuzukiFractal,
 )
 
 for m in nameof.(methods)

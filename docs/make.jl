@@ -61,7 +61,6 @@ makedocs(bib,
                  "Solutions"           => "modules/solutions.md",
                  "Runge-Kutta Tableaus" => "modules/rungekutta.md",
                  "Partitioned Runge-Kutta Tableaus" => "modules/rungekutta_partitioned.md",
-                 "Splitting Methods"   => "modules/splitting.md",
                  "SPARK Methods"       => "modules/spark.md",
                  ],
              "Developer Docs" =>[

@@ -1,4 +1,11 @@
 
+abstract type SplittingMethod <: SODEMethod end
+
+issodemethod(::SplittingMethod) = true
+
+Integrators.Integrator(problem::SODEProblem, method::SplittingMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
+
+
 @doc raw"""
 Lie-Trotter Splitting A
 
@@ -15,7 +22,9 @@ Reference:
     doi: 10.1090/S0002-9939-1959-0108732-6.
 
 """
-function TableauLieA(::Type{T}=Float64) where {T}
+struct LieA <: SplittingMethod end
+
+function tableau(::LieA, ::Type{T}=Float64) where {T}
     a = Array{T}([ 1 ])
     b = Array{T}([ 0 ])
     TableauSplittingNS(:LieTrotterSplittingA, 1, a, b)
@@ -38,7 +47,9 @@ Reference:
     doi: 10.1090/S0002-9939-1959-0108732-6.
 
 """
-function TableauLieB(::Type{T}=Float64) where {T}
+struct LieB <: SplittingMethod end
+
+function tableau(::LieB, ::Type{T}=Float64) where {T}
     a = Array{T}([ 0 ])
     b = Array{T}([ 1 ])
     TableauSplittingNS(:LieTrotterSplittingB, 1, a, b)
@@ -54,7 +65,7 @@ For a vector field $\dot{x} = f_1 (t,x) + f_2 (t,x)$, the splitting reads
 ```
 
 For vector fields with two components, this is not the most efficient implementation.
-For such cases [`TableauStrangA`](@ref) or [`TableauStrangB`](@ref) should be used instead.
+For such cases [`StrangA`](@ref) or [`StrangB`](@ref) should be used instead.
 
 
 References:
@@ -70,14 +81,16 @@ References:
     doi: 10.21136/AM.1968.103142.
 
 """
-function TableauStrang(::Type{T}=Float64) where {T}
+struct Strang <: SplittingMethod end
+
+"Alias for [`Strang`](@ref)"
+struct Marchuk <: SplittingMethod end
+
+function tableau(::Union{Strang,Marchuk}, ::Type{T}=Float64) where {T}
     a = Array{T}([ 1//2 ])
     b = Array{T}([ 1//2 ])
     TableauSplittingNS(:StrangSplitting, 2, a, b)
 end
-
-"Alias for [`TableauStrang`](@ref)"
-TableauMarchuk = TableauStrang
 
 
 @doc raw"""
@@ -101,7 +114,9 @@ References:
     doi: 10.21136/AM.1968.103142.
 
 """
-function TableauStrangA(::Type{T}=Float64) where {T}
+struct StrangA <: SplittingMethod end
+
+function tableau(::StrangA, ::Type{T}=Float64) where {T}
     a = Array{T}([ 1//2, 1//2 ])
     b = Array{T}([ 1//1, 0//1 ])
     TableauSplitting(:StrangSplittingA, 2, a, b)
@@ -129,7 +144,9 @@ References:
     doi: 10.21136/AM.1968.103142.
 
 """
-function TableauStrangB(::Type{T}=Float64) where {T}
+struct StrangB <: SplittingMethod end
+
+function tableau(::StrangB, ::Type{T}=Float64) where {T}
     a = Array{T}([ 0//1, 1//1 ])
     b = Array{T}([ 1//2, 1//2 ])
     TableauSplitting(:StrangSplittingB, 2, a, b)
@@ -154,7 +171,9 @@ Reference:
     doi: 10.1137/0916010.
 
 """
-function TableauMcLachlan2(::Type{T}=Float64; α=0.1932) where {T}
+struct McLachlan2 <: SplittingMethod end
+
+function tableau(::McLachlan2, ::Type{T}=Float64; α=0.1932) where {T}
     a = Array{T}([ α, 0.5 - α ])
     b = Array{T}([ 0.5 - α, α ])
     TableauSplittingNS(:McLachlanSplitting, 2, a, b)
@@ -188,7 +207,9 @@ Reference:
     doi: 10.1137/0916010.
 
 """
-function TableauMcLachlan4(::Type{T}=Float64) where {T}
+struct McLachlan4 <: SplittingMethod end
+
+function tableau(::McLachlan4, ::Type{T}=Float64) where {T}
     a = Array{T}(@big [ (146 +  5*√19) / 540,
                         ( -2 + 10*√19) / 135,
                                      1 / 5,
@@ -233,7 +254,9 @@ References:
     doi: 10.1016/0375-9601(90)90092-3
 
 """
-function TableauTripleJump(::Type{T}=Float64) where {T}
+struct TripleJump <: SplittingMethod end
+
+function tableau(::TripleJump, ::Type{T}=Float64) where {T}
     fac = @big 2^(1/3)
     den = @big 1/(2-fac)
     a = Array{T}([ den, -fac*den ])
@@ -262,7 +285,9 @@ Reference:
     doi: 10.1016/0375-9601(90)90962-N
 
 """
-function TableauSuzukiFractal(::Type{T}=Float64) where {T}
+struct SuzukiFractal <: SplittingMethod end
+
+function tableau(::SuzukiFractal, ::Type{T}=Float64) where {T}
     fac = @big 4^(1/3)
     den = @big 1/(4-fac)
     a = Array{T}([ den, den, -fac*den ])

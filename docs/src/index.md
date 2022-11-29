@@ -67,7 +67,6 @@ Pages = ["modules/equations.md",
          "modules/solutions.md",
          "modules/rungekutta.md",
          "modules/rungekutta_partitioned.md",
-         "modules/splitting.md",
          "modules/spark.md",
 ]
 ```
