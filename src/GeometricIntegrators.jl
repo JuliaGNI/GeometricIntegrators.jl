@@ -14,25 +14,12 @@ module GeometricIntegrators
     @reexport using .Discontinuities
     include("Integrators.jl")
     @reexport using .Integrators
-    include("Simulations.jl")
-    @reexport using .Simulations
     include("Tableaus.jl")
     @reexport using .Tableaus
-
-    using .Integrators.VPRK
-
-    include("methods/methods.jl")
-    include("methods/projection.jl")
-    include("methods/rungekutta.jl")
-    include("methods/vprk.jl")
-    include("methods/vprk_degenerate.jl")
-    include("methods/vprk_projected.jl")
-    
-    include("methods/list.jl")
-
-    for m in nameof.(methods)
-        @eval export $m
-    end
+    include("Methods.jl")
+    @reexport using .Methods
+    include("Simulations.jl")
+    @reexport using .Simulations
 
 
     function __init__()

@@ -85,3 +85,7 @@ methods = (
     # degenerate VPRK methods
     DegenerateVPRK,
 )
+
+for m in nameof.(methods)
+    @eval export $m
+end

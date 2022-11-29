@@ -3,7 +3,7 @@ using GeometricIntegrators.Integrators.VPRK
 using GeometricProblems.HarmonicOscillator
 using Test
 
-using GeometricIntegrators: tableau
+using GeometricIntegrators.Methods: tableau
 
 ode  = harmonic_oscillator_ode()
 pode = harmonic_oscillator_pode()
