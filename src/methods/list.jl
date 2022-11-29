@@ -35,6 +35,7 @@ methods = (
     LobattoIIID,
     LobattoIIIE,
     LobattoIIIF,
+    LobattoIIIF̄,
     LobattoIIIG,
     RadauIA,
     RadauIB,
@@ -43,8 +44,15 @@ methods = (
     # partitioned Runge-Kutta methods with variable number of stages
     LobattoIIIAIIIB,
     LobattoIIIBIIIA,
+    LobattoIIIAIIIĀ,
+    LobattoIIIBIIIB̄,
     LobattoIIICIIIC̄,
     LobattoIIIC̄IIIC,
+    LobattoIIIDIIID̄,
+    LobattoIIIEIIIĒ,
+    LobattoIIIFIIIF̄,
+    LobattoIIIF̄IIIF,
+    LobattoIIIGIIIḠ,
     # variational partitioned Runge-Kutta methods
     VPRK,
     VPSRK3,

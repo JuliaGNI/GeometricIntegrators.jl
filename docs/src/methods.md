@@ -104,9 +104,9 @@ The main method types for ODEs currently implemented are Runge-Kutta methods and
 
 Any Runge-Kutta method can be selected by the [`RK`](@ref) method
 ```julia
-rk = RK(<tableau>)
+rk = RK(tableau)
 ```
-where `<tableau>` is any tableau from [RungeKutta.Tableaus](@ref). For most tableaus there also exist explicit shortcuts to select the method. These are listed in the following.
+where `tableau` is any tableau from [RungeKutta.Tableaus](@ref RungeKuttaTableaus). For most tableaus there also exist explicit shortcuts to select the method. These are listed in the following.
 
 
 #### Explicit Runge-Kutta Methods
@@ -160,6 +160,7 @@ where `<tableau>` is any tableau from [RungeKutta.Tableaus](@ref). For most tabl
 | [`LobattoIIID`](@ref)           | 2s-2  | Lobatto-IIID                |
 | [`LobattoIIIE`](@ref)           | 2s-2  | Lobatto-IIIE                |
 | [`LobattoIIIF`](@ref)           | 2s    | Lobatto-IIIF                |
+| [`LobattoIIIF`](@ref)           | 2s    | Lobatto-IIIF                |
 | [`LobattoIIIG`](@ref)           | 2s    | Lobatto-IIIG                |
 
 All of these tableaus are generated on the fly and take the number of stages `s` as parameter.
@@ -185,12 +186,26 @@ All of these tableaus are generated on the fly and take the number of stages `s`
 
 #### Partitioned Runge-Kutta Methods
 
+Any partitioned Runge-Kutta method can be selected by the [`PRK`](@ref) method
+```julia
+prk = PRK(tableau)
+```
+where `tableau` is any tableau from [RungeKutta.PartitionedTableaus](@ref PartitionedRungeKuttaTableaus).
+For most tableaus there also exist explicit shortcuts to select the method. These are listed in the following.
+
 | Function                        | Order | Method                      |
 |:--------------------------------|:------|:----------------------------|
 | [`LobattoIIIAIIIB`](@ref)       | 2s-2  | Lobatto-IIIA-IIIB           |
 | [`LobattoIIIBIIIA`](@ref)       | 2s-2  | Lobatto-IIIB-IIIA           |
+| [`LobattoIIIAIIIĀ`](@ref)       | 2s-2  | Lobatto-IIIA-IIIĀ           |
+| [`LobattoIIIBIIIB̄`](@ref)       | 2s-2  | Lobatto-IIIB-IIIB̄           |
 | [`LobattoIIICIIIC̄`](@ref)       | 2s-2  | Lobatto-IIIC-IIIC̄           |
 | [`LobattoIIIC̄IIIC`](@ref)       | 2s-2  | Lobatto-IIIC̄-IIIC           |
+| [`LobattoIIIDIIID̄`](@ref)       | 2s-2  | Lobatto-IIID-IIID̄           |
+| [`LobattoIIIEIIIĒ`](@ref)       | 2s-2  | Lobatto-IIIE-IIIĒ           |
+| [`LobattoIIIFIIIF̄`](@ref)       | 2s    | Lobatto-IIIF-IIIF̄           |
+| [`LobattoIIIF̄IIIF`](@ref)       | 2s    | Lobatto-IIIF̄-IIIF           |
+| [`LobattoIIIGIIIḠ`](@ref)       | 2s    | Lobatto-IIIG-IIIḠ           |
 
 
 ## Integrators for implicit ODEs
@@ -219,8 +234,15 @@ All implicit Runge-Kutta and partitioned Runge-Kutta methods can also be applied
 |                                 |       |                             |
 | [`LobattoIIIAIIIB`](@ref)       | 2s-2  | Lobatto-IIIA-IIIB           |
 | [`LobattoIIIBIIIA`](@ref)       | 2s-2  | Lobatto-IIIB-IIIA           |
+| [`LobattoIIIAIIIĀ`](@ref)       | 2s-2  | Lobatto-IIIA-IIIĀ           |
+| [`LobattoIIIBIIIB̄`](@ref)       | 2s-2  | Lobatto-IIIB-IIIB̄           |
 | [`LobattoIIICIIIC̄`](@ref)       | 2s-2  | Lobatto-IIIC-IIIC̄           |
 | [`LobattoIIIC̄IIIC`](@ref)       | 2s-2  | Lobatto-IIIC̄-IIIC           |
+| [`LobattoIIIDIIID̄`](@ref)       | 2s-2  | Lobatto-IIID-IIID̄           |
+| [`LobattoIIIEIIIĒ`](@ref)       | 2s-2  | Lobatto-IIIE-IIIĒ           |
+| [`LobattoIIIFIIIF̄`](@ref)       | 2s    | Lobatto-IIIF-IIIF̄           |
+| [`LobattoIIIF̄IIIF`](@ref)       | 2s    | Lobatto-IIIF̄-IIIF           |
+| [`LobattoIIIGIIIḠ`](@ref)       | 2s    | Lobatto-IIIG-IIIḠ           |
 
 
 ## Integrators for Lagrangian ODEs

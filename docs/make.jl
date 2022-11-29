@@ -80,7 +80,8 @@ makedocs(bib,
     modules = [GeometricIntegrators,
                GeometricBase,
                GeometricEquations,
-               GeometricSolutions]
+               GeometricSolutions,
+               RungeKutta]
 )
 
 deploydocs(

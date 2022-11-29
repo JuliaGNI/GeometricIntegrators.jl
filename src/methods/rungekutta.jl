@@ -173,6 +173,11 @@ struct LobattoIIIF <: RKMethod
     s::Int
 end
 
+"Runge-Kutta method with [`TableauLobattoIIIF̄`](@ref)."
+struct LobattoIIIF̄ <: RKMethod
+    s::Int
+end
+
 "Runge-Kutta method with [`TableauLobattoIIIG`](@ref)."
 struct LobattoIIIG <: RKMethod
     s::Int
@@ -206,6 +211,7 @@ tableau(method::LobattoIIIC̄) = TableauLobattoIIIC̄(method.s)
 tableau(method::LobattoIIID) = TableauLobattoIIID(method.s)
 tableau(method::LobattoIIIE) = TableauLobattoIIIE(method.s)
 tableau(method::LobattoIIIF) = TableauLobattoIIIF(method.s)
+tableau(method::LobattoIIIF̄) = TableauLobattoIIIF̄(method.s)
 tableau(method::LobattoIIIG) = TableauLobattoIIIG(method.s)
 tableau(method::RadauIA) = TableauRadauIA(method.s)
 tableau(method::RadauIB) = TableauRadauIB(method.s)
@@ -225,6 +231,16 @@ struct LobattoIIIBIIIA <: PRKMethod
     s::Int
 end
 
+"Partitioned Runge-Kutta method with [`TableauLobattoIIIA`](@ref) for ``q`` and [`TableauLobattoIIIĀ`](@ref) for ``p``."
+struct LobattoIIIAIIIĀ <: PRKMethod
+    s::Int
+end
+
+"Partitioned Runge-Kutta method with [`TableauLobattoIIIB`](@ref) for ``q`` and [`TableauLobattoIIIB̄`](@ref) for ``p``."
+struct LobattoIIIBIIIB̄ <: PRKMethod
+    s::Int
+end
+
 "Partitioned Runge-Kutta method with [`TableauLobattoIIIC`](@ref) for ``q`` and [`TableauLobattoIIIC̄`](@ref) for ``p``."
 struct LobattoIIICIIIC̄ <: PRKMethod
     s::Int
@@ -235,7 +251,40 @@ struct LobattoIIIC̄IIIC <: PRKMethod
     s::Int
 end
 
+"Partitioned Runge-Kutta method with [`TableauLobattoIIID`](@ref) for ``q`` and [`TableauLobattoIIID̄`](@ref) for ``p``."
+struct LobattoIIIDIIID̄ <: PRKMethod
+    s::Int
+end
+
+"Partitioned Runge-Kutta method with [`TableauLobattoIIIE`](@ref) for ``q`` and [`TableauLobattoIIIĒ`](@ref) for ``p``."
+struct LobattoIIIEIIIĒ <: PRKMethod
+    s::Int
+end
+
+"Partitioned Runge-Kutta method with [`TableauLobattoIIIF`](@ref) for ``q`` and [`TableauLobattoIIIF̄`](@ref) for ``p``."
+struct LobattoIIIFIIIF̄ <: PRKMethod
+    s::Int
+end
+
+"Partitioned Runge-Kutta method with [`TableauLobattoIIIF̄`](@ref) for ``q`` and [`TableauLobattoIIIF`](@ref) for ``p``."
+struct LobattoIIIF̄IIIF <: PRKMethod
+    s::Int
+end
+
+"Partitioned Runge-Kutta method with [`TableauLobattoIIIG`](@ref) for ``q`` and [`TableauLobattoIIIḠ`](@ref) for ``p``."
+struct LobattoIIIGIIIḠ <: PRKMethod
+    s::Int
+end
+
+
 tableau(method::LobattoIIIAIIIB) = TableauLobattoIIIAIIIB(method.s)
 tableau(method::LobattoIIIBIIIA) = TableauLobattoIIIBIIIA(method.s)
+tableau(method::LobattoIIIAIIIĀ) = TableauLobattoIIIAIIIĀ(method.s)
+tableau(method::LobattoIIIBIIIB̄) = TableauLobattoIIIBIIIB̄(method.s)
 tableau(method::LobattoIIICIIIC̄) = TableauLobattoIIICIIIC̄(method.s)
 tableau(method::LobattoIIIC̄IIIC) = TableauLobattoIIIC̄IIIC(method.s)
+tableau(method::LobattoIIIDIIID̄) = TableauLobattoIIIDIIID̄(method.s)
+tableau(method::LobattoIIIEIIIĒ) = TableauLobattoIIIEIIIĒ(method.s)
+tableau(method::LobattoIIIFIIIF̄) = TableauLobattoIIIFIIIF̄(method.s)
+tableau(method::LobattoIIIF̄IIIF) = TableauLobattoIIIF̄IIIF(method.s)
+tableau(method::LobattoIIIGIIIḠ) = TableauLobattoIIIGIIIḠ(method.s)

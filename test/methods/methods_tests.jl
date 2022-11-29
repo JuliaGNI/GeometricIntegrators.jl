@@ -45,6 +45,7 @@ iode = harmonic_oscillator_iode()
     @test typeof(Integrator(ode, LobattoIIID(2))) <: IntegratorFIRK
     @test typeof(Integrator(ode, LobattoIIIE(2))) <: IntegratorDIRK
     @test typeof(Integrator(ode, LobattoIIIF(2))) <: IntegratorFIRK
+    @test typeof(Integrator(ode, LobattoIIIF̄(2))) <: IntegratorFIRK
     @test typeof(Integrator(ode, LobattoIIIG(2))) <: IntegratorFIRK
     @test typeof(Integrator(ode, RadauIA(2))) <: IntegratorFIRK
     @test typeof(Integrator(ode, RadauIB(2))) <: IntegratorFIRK
@@ -71,13 +72,35 @@ end
 
 @testset "$(rpad("Partitioned Runge-Kutta methods",80))" begin
 
-    @test typeof(Integrator(pode, Gauss(2))) <: IntegratorIPRK
     @test typeof(Integrator(pode, SRK3())) <: IntegratorIPRK
+    
+    @test typeof(Integrator(pode, Gauss(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, RadauIA(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, RadauIB(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, RadauIIA(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, RadauIIB(2))) <: IntegratorIPRK
 
+    @test typeof(Integrator(pode, LobattoIIIA(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, LobattoIIIB(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, LobattoIIIC(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, LobattoIIIC̄(2))) <: IntegratorEPRK
+    @test typeof(Integrator(pode, LobattoIIID(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, LobattoIIIE(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, LobattoIIIF(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, LobattoIIIF̄(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, LobattoIIIG(2))) <: IntegratorIPRK
+    
     @test typeof(Integrator(pode, LobattoIIIAIIIB(2))) <: IntegratorEPRK
     @test typeof(Integrator(pode, LobattoIIIBIIIA(2))) <: IntegratorEPRK
+    @test typeof(Integrator(pode, LobattoIIIAIIIĀ(2))) <: IntegratorEPRK
+    @test typeof(Integrator(pode, LobattoIIIBIIIB̄(2))) <: IntegratorEPRK
     @test typeof(Integrator(pode, LobattoIIICIIIC̄(2))) <: IntegratorIPRK
     @test typeof(Integrator(pode, LobattoIIIC̄IIIC(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, LobattoIIIDIIID̄(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, LobattoIIIEIIIĒ(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, LobattoIIIFIIIF̄(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, LobattoIIIF̄IIIF(2))) <: IntegratorIPRK
+    @test typeof(Integrator(pode, LobattoIIIGIIIḠ(2))) <: IntegratorIPRK
 
 end
 
