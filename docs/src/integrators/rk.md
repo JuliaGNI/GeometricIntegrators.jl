@@ -252,3 +252,25 @@ P_{n,i} &= ϑ(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) .
 ```
 
 Implicit ODEs can be integrated with any implicit Runge-Kutta or partitioned Runge-Kutta method.
+
+
+## Custom Tableaus
+
+If required, it is straight-forward to create a custom tableau.
+The tableau of Heun's method, for example, is defined as follows:
+```@example 1
+using GeometricIntegrators # hide
+a = [[0.0 0.0]
+     [1.0 0.0]]
+b = [0.5, 0.5]
+c = [0.0, 1.0]
+o = 2
+
+tab = Tableau(:heun, o, a, b, c)
+```
+Here, `o` is the order of the method, `a` are the coefficients, `b` the weights
+and `c` the nodes. For partitioned Runge-Kutta tableaus, `PartitionedTableau` can
+be used. The first parameter of the constructor of each tableau assigns a name to
+the tableau.
+Such custom tableaus can be used in exactly the same as standard tableaus, making
+it very easy to implement and test new Runge-Kutta methods.

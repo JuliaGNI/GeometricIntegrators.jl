@@ -184,9 +184,9 @@ explicit, implicit and partitioned Runge-Kutta methods, splitting methods and
 general linear methods (_planned_).
 
 In order to instantiate many of the standard integrators, one needs to specify
-an ODEProblem, a tableau and a timestep, e.g.,
+an ODEProblem, a method and a timestep, e.g.,
 ```@example 1
-int = Integrator(ode, TableauExplicitEuler())
+int = Integrator(ode, ExplicitEuler())
 ```
 In order to run the integrator, the `integrate()` functions is called, passing
 an integrator object and the number of time steps to integrate:
@@ -206,10 +206,10 @@ savefig("images/tutorial-ode-2.png"); nothing # hide
 Observe that the explicit Euler method is not well suited for integrating this
 system. The solutions drifts away although it should follow closed orbits.
 
-For a Hamiltonian system, defined as a PODE, a different tableau might be more
+For a Hamiltonian system, defined as a PODE, a different methods might be more
 appropriate, for example a symplectic Euler method,
 ```@example 1
-int = Integrator(pode, TableauLobattoIIIAIIIB(2))
+int = Integrator(pode, LobattoIIIAIIIB(2))
 sol = integrate(pode, int)
 ```
 This creates a different integrator, which exploits the partitioned structure
@@ -225,69 +225,3 @@ savefig("images/tutorial-pode-1.png"); nothing # hide
 
 Moreover, this method respects the Hamiltonian structure of the system, resulting
 in closed orbits following the contours of the system's energy.
-
-
-## Tableaus
-
-Many tableaus for Runge-Kutta methods are predefined and can easily be used
-like outlined above. For an overview see [here](integrators/overview.md).
-
-
-#### Custom Tableaus
-
-If required, it is straight-forward to create a custom tableau.
-The tableau of Heun's method, for example, is defined as follows:
-```@example 1
-a = [[0.0 0.0]
-     [1.0 0.0]]
-b = [0.5, 0.5]
-c = [0.0, 1.0]
-o = 2
-
-tab = Tableau(:heun, o, a, b, c)
-```
-Here, `o` is the order of the method, `a` are the coefficients, `b` the weights
-and `c` the nodes. For partitioned Runge-Kutta tableaus, `PartitionedTableau` can
-be used. The first parameter of the constructor of each tableau assigns a name to
-the tableau.
-Such custom tableaus can be used in exactly the same as standard tableaus, e.g., by
-```@example 1
-int = Integrator(ode, tab)
-sol = integrate(ode, int)
-```
-making it very easy to implement and test new methods.
-
-
-## Solutions
-
-In what we have seen so far, the solution was always automatically created by
-the `integrate()` function. While this is often convenient, it is sometimes not
-performant, e.g., when carrying out long-time simulations with intermediate
-saving of the solution.
-In such cases, it is better to preallocate a solution object by
-```@example 1
-sol = Solution(ode)
-```
-where the first argument is an equation, the second argument is the time step
-and the third argument is the number of time steps that will be computed in one
-integration step.
-The call to the integrator is then made via
-```@example 1
-integrate!(int, sol)
-```
-If several integration cycles shall be performed, the `reset!()` function can be
-used to copy the solution of the last time step to the initial conditions of the
-solution,
-```julia
-for i in 1:10
-    # integrate!(int, sol)
-    #
-    # save or process solution
-    #
-    # reset!(sol)
-end
-```
-All solutions have a `t` field holding the series of time steps that has been
-computed in addition to several data fields, for example `q` for an ODE solution,
-`q` and `p` for a PODE solution, `q`and `λ` for a DAE solution, and `q`, `p` and
-`λ` for a PDAE solution.
