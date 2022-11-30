@@ -42,3 +42,12 @@ ispdaemethod(::PDAEMethod) = true
 ishdaemethod(::HDAEMethod) = true
 isidaemethod(::IDAEMethod) = true
 isldaemethod(::LDAEMethod) = true
+
+isexplicit(::Method) = false
+isimplicit(::Method) = false
+issymmetric(::Method) = false
+issymplectic(::Method) = false
+isenergypreserving(::Method) = false
+isstifflyaccurate(::Method) = false
+
+order(::Method) = missing
