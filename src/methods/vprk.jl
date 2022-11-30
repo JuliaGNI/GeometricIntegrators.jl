@@ -3,7 +3,15 @@
 
 abstract type VPRKMethod <: IODEMethod end
 
+"""
+Variational Partitioned Runge-Kutta Method
 
+```
+VPRK(tableau::PartitionedTableau, d=nothing)
+VPRK(tableau::Tableau, args...; kwargs...) = VPRK(PartitionedTableau(tableau), args...; kwargs...)
+VPRK(tableau1::Tableau, tableau2::Tableau, args...; kwargs...) = VPRK(PartitionedTableau(tableau1, tableau2), args...; kwargs...)
+```
+"""
 struct VPRK{TT,DT} <: VPRKMethod
     tableau::TT
     d::DT
