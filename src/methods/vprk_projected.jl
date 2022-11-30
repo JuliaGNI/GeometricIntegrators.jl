@@ -8,7 +8,7 @@ struct ProjectedVPRK{VT,PT} <: VPRKMethod
     end
 end
 
-ProjectedVPRK(projection::ProjectionMethod, tableau::AbstractTableau, args...; kwargs...) = ProjectedVPRK(projection, VPRK(tableau, args...; kwargs...))
+ProjectedVPRK(tableau::AbstractTableau, projection::ProjectionMethod, args...; kwargs...) = ProjectedVPRK(VPRK(tableau, args...; kwargs...), projection)
 
 tableau(method::ProjectedVPRK) = tableau(method.vprk)
 nullvector(method::ProjectedVPRK) = nullvector(method.vprk)
