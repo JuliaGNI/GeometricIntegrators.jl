@@ -169,7 +169,7 @@ struct MethodList{MD}
     header
     data
 
-    function MethodList(list::Tuple = methods; markdown::Bool = false)
+    function MethodList(list::Tuple = methods; markdown::Bool = false, selector = _ -> true)
         header = [
             "Method",
             "Order",
@@ -189,29 +189,36 @@ struct MethodList{MD}
             "LDAE",
         ]
     
-        data = [[
-            string(m),
-            string(order(m)),
-            _display_property(isexplicit(m)),
-            _display_property(issymmetric(m)),
-            _display_property(issymplectic(m)),
-            _display_property(isodemethod(m)),
-            _display_property(ispodemethod(m)),
-            _display_property(ishodemethod(m)),
-            _display_property(isiodemethod(m)),
-            _display_property(islodemethod(m)),
-            _display_property(issodemethod(m)),
-            _display_property(isdaemethod(m)),
-            _display_property(ispdaemethod(m)),
-            _display_property(ishdaemethod(m)),
-            _display_property(isidaemethod(m)),
-            _display_property(isldaemethod(m)),
-        ] for m in list]
+        data = []
+        
+        for m in list
+            if selector(m)
+                data = [data..., [
+                    string(m),
+                    string(order(m)),
+                    _display_property(isexplicit(m)),
+                    _display_property(issymmetric(m)),
+                    _display_property(issymplectic(m)),
+                    _display_property(isodemethod(m)),
+                    _display_property(ispodemethod(m)),
+                    _display_property(ishodemethod(m)),
+                    _display_property(isiodemethod(m)),
+                    _display_property(islodemethod(m)),
+                    _display_property(issodemethod(m)),
+                    _display_property(isdaemethod(m)),
+                    _display_property(ispdaemethod(m)),
+                    _display_property(ishdaemethod(m)),
+                    _display_property(isidaemethod(m)),
+                    _display_property(isldaemethod(m)),
+                ]]
+            end
+        end
 
         new{markdown}(header, permutedims(hcat(data...)))
     end
 end
 
+Base.length(ml::MethodList) = size(ml.data, 1)
 
 """
 ```julia
