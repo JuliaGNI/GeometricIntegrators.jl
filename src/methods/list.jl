@@ -164,18 +164,51 @@ end
 _display_property(p::Bool) = p ? "✓" : "✗"
 _display_property(p::Missing) = p
 
+_true(m) = true
+
+function _row(m, refs, selector)
+    row = [
+        refs ? "[`$(m)`](@ref)" : string(m),
+        string(order(m)),
+        _display_property(isexplicit(m)),
+        _display_property(issymmetric(m)),
+        _display_property(issymplectic(m)),
+    ]
+
+    if selector == _true
+        row = [row...,
+            _display_property(isodemethod(m)),
+            _display_property(ispodemethod(m)),
+            _display_property(ishodemethod(m)),
+            _display_property(isiodemethod(m)),
+            _display_property(islodemethod(m)),
+            _display_property(issodemethod(m)),
+            _display_property(isdaemethod(m)),
+            _display_property(ispdaemethod(m)),
+            _display_property(ishdaemethod(m)),
+            _display_property(isidaemethod(m)),
+            _display_property(isldaemethod(m)),
+        ]
+    end
+    
+    return row
+end
 
 struct MethodList{MD}
     header
     data
 
-    function MethodList(list::Tuple = methods; markdown::Bool = false, selector = _ -> true)
+    function MethodList(list::Tuple = methods; markdown::Bool = false, selector = _true, refs = false)
         header = [
             "Method",
             "Order",
             "Explicit",
             "Symmetric",
             "Symplectic",
+        ]
+
+        if selector == _true
+            header = [header...,
             "ODE",
             "PODE",
             "HODE",
@@ -188,29 +221,13 @@ struct MethodList{MD}
             "IDAE",
             "LDAE",
         ]
+        end
     
         data = []
         
         for m in list
             if selector(m)
-                data = [data..., [
-                    string(m),
-                    string(order(m)),
-                    _display_property(isexplicit(m)),
-                    _display_property(issymmetric(m)),
-                    _display_property(issymplectic(m)),
-                    _display_property(isodemethod(m)),
-                    _display_property(ispodemethod(m)),
-                    _display_property(ishodemethod(m)),
-                    _display_property(isiodemethod(m)),
-                    _display_property(islodemethod(m)),
-                    _display_property(issodemethod(m)),
-                    _display_property(isdaemethod(m)),
-                    _display_property(ispdaemethod(m)),
-                    _display_property(ishdaemethod(m)),
-                    _display_property(isidaemethod(m)),
-                    _display_property(isldaemethod(m)),
-                ]]
+                data = [data..., _row(m, refs, selector)]
             end
         end
 

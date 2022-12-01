@@ -2,7 +2,7 @@
 
 ```julia; echo=false; results="raw"
 using GeometricIntegrators.Methods
-show(stdout, "text/markdown", Methods.MethodList())
+show(stdout, "text/markdown", Methods.MethodList(refs = true))
 ```
 
 ```julia; echo=false; results="raw"
@@ -23,7 +23,7 @@ prob_types = (
 )
 
 for (prob, selector) in prob_types
-    methods = Methods.MethodList(selector = selector)
+    methods = Methods.MethodList(selector = selector, refs = true)
     if length(methods) > 1
         print(stdout, "\n## $(prob) Methods\n\n")
         show(stdout, "text/markdown", methods)
