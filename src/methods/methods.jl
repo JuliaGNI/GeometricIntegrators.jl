@@ -6,16 +6,16 @@ Integrators.integrate(problem::GeometricProblem, method::Method; kwargs...) = in
 
 abstract type ODEMethod <: Method end
 abstract type PODEMethod <: Method end
-abstract type HODEMethod <: PODEMethod end
+abstract type HODEMethod <: Method end
 abstract type IODEMethod <: Method end
-abstract type LODEMethod <: IODEMethod end
+abstract type LODEMethod <: Method end
 abstract type SODEMethod <: Method end
 
 abstract type DAEMethod <: Method end
 abstract type PDAEMethod <: Method end
-abstract type HDAEMethod <: PDAEMethod end
+abstract type HDAEMethod <: Method end
 abstract type IDAEMethod <: Method end
-abstract type LDAEMethod <: IDAEMethod end
+abstract type LDAEMethod <: Method end
 
 isodemethod(::Union{Method, Type{<:Method}}) = false
 ispodemethod(::Union{Method, Type{<:Method}}) = false
