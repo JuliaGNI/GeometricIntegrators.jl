@@ -14,6 +14,8 @@ isimplicit(method::VPRKMethod) = RungeKutta.isimplicit(tableau(method))
 issymmetric(method::VPRKMethod) = RungeKutta.issymmetric(tableau(method))
 issymplectic(method::VPRKMethod) = RungeKutta.issymplectic(tableau(method))
 
+Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::VPRKMethod; kwargs...) = IntegratorVPRK(problem, tableau(method), nullvector(method); kwargs...)
+
 
 """
 Variational Partitioned Runge-Kutta Method
@@ -47,8 +49,6 @@ order(method::VPRK) = RungeKutta.order(tableau(method))
 hasnullvector(method::VPRK{DT,Nothing}) where {DT} = false
 hasnullvector(method::VPRK{DT,<:AbstractVector}) where {DT} = true
 
-Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::VPRK; kwargs...) = IntegratorVPRK(problem, tableau(method), nullvector(method); kwargs...)
-
 
 
 @doc raw"""
@@ -73,7 +73,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIA`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIA<: VPRKMethod
+struct VPRKLobattoIIIA <: VPRKMethod
     s::Int
 end
 
@@ -81,7 +81,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIB`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIB<: VPRKMethod
+struct VPRKLobattoIIIB <: VPRKMethod
     s::Int
 end
 
@@ -89,7 +89,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIC`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIC<: VPRKMethod
+struct VPRKLobattoIIIC <: VPRKMethod
     s::Int
 end
 
@@ -97,7 +97,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIC̄`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIC̄<: VPRKMethod
+struct VPRKLobattoIIIC̄ <: VPRKMethod
     s::Int
 end
 
@@ -105,7 +105,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIID`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIID<: VPRKMethod
+struct VPRKLobattoIIID <: VPRKMethod
     s::Int
 end
 
@@ -113,7 +113,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIE`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIE<: VPRKMethod
+struct VPRKLobattoIIIE <: VPRKMethod
     s::Int
 end
 
@@ -121,7 +121,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIF`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIF<: VPRKMethod
+struct VPRKLobattoIIIF <: VPRKMethod
     s::Int
 end
 
@@ -129,7 +129,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIF̄`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIF̄<: VPRKMethod
+struct VPRKLobattoIIIF̄ <: VPRKMethod
     s::Int
 end
 
@@ -137,7 +137,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIG`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIG<: VPRKMethod
+struct VPRKLobattoIIIG <: VPRKMethod
     s::Int
 end
 
@@ -145,7 +145,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauRadauIIA`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
-struct VPRKRadauIIA<: VPRKMethod
+struct VPRKRadauIIA <: VPRKMethod
     s::Int
 end
 
@@ -153,7 +153,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauRadauIIB`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
-struct VPRKRadauIIB<: VPRKMethod
+struct VPRKRadauIIB <: VPRKMethod
     s::Int
 end
 
@@ -161,7 +161,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIA`](@ref) for the coefficients $a_{ij}$ and [`TableauLobattoIIIB`](@ref) for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIAIIIB<: VPRKMethod
+struct VPRKLobattoIIIAIIIB <: VPRKMethod
     s::Int
 end
 
@@ -169,7 +169,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIB`](@ref) for the coefficients $a_{ij}$ and [`TableauLobattoIIIA`](@ref) for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIBIIIA<: VPRKMethod
+struct VPRKLobattoIIIBIIIA <: VPRKMethod
     s::Int
 end
 
@@ -177,7 +177,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIA`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIAIIIĀ<: VPRKMethod
+struct VPRKLobattoIIIAIIIĀ <: VPRKMethod
     s::Int
 end
 
@@ -185,7 +185,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIB`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIBIIIB̄<: VPRKMethod
+struct VPRKLobattoIIIBIIIB̄ <: VPRKMethod
     s::Int
 end
 
@@ -193,7 +193,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIC`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIICIIIC̄<: VPRKMethod
+struct VPRKLobattoIIICIIIC̄ <: VPRKMethod
     s::Int
 end
 
@@ -201,7 +201,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIC̄`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIC̄IIIC<: VPRKMethod
+struct VPRKLobattoIIIC̄IIIC <: VPRKMethod
     s::Int
 end
 
@@ -209,7 +209,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIID`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIDIIID̄<: VPRKMethod
+struct VPRKLobattoIIIDIIID̄ <: VPRKMethod
     s::Int
 end
 
@@ -217,7 +217,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIE`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIEIIIĒ<: VPRKMethod
+struct VPRKLobattoIIIEIIIĒ <: VPRKMethod
     s::Int
 end
 
@@ -225,7 +225,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIF`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIFIIIF̄<: VPRKMethod
+struct VPRKLobattoIIIFIIIF̄ <: VPRKMethod
     s::Int
 end
 
@@ -233,7 +233,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIF̄`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIF̄IIIF<: VPRKMethod
+struct VPRKLobattoIIIF̄IIIF <: VPRKMethod
     s::Int
 end
 
@@ -241,7 +241,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIG`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIGIIIḠ<: VPRKMethod
+struct VPRKLobattoIIIGIIIḠ <: VPRKMethod
     s::Int
 end
 
@@ -259,10 +259,10 @@ tableau(method::VPRKLobattoIIIG) = PartitionedTableau(TableauLobattoIIIG(method.
 tableau(method::VPRKRadauIIA) = PartitionedTableau(TableauRadauIIA(method.s))
 tableau(method::VPRKRadauIIB) = PartitionedTableau(TableauRadauIIB(method.s))
 
-tableau(method::VPRKLobattoIIIAIIIB) = (PartitionedTableau(:LobIIIAIIIB, TableauLobattoIIIA(method.s), TableauLobattoIIIB(method.s)), get_lobatto_nullvector(method.s))
-tableau(method::VPRKLobattoIIIBIIIA) = (PartitionedTableau(:LobIIIBIIIA, TableauLobattoIIIB(method.s), TableauLobattoIIIA(method.s)), get_lobatto_nullvector(method.s))
-tableau(method::VPRKLobattoIIIAIIIĀ) = (SymplecticPartitionedTableau(TableauLobattoIIIA(method.s)), get_lobatto_nullvector(method.s))
-tableau(method::VPRKLobattoIIIBIIIB̄) = (SymplecticPartitionedTableau(TableauLobattoIIIB(method.s)), get_lobatto_nullvector(method.s))
+tableau(method::VPRKLobattoIIIAIIIB) = PartitionedTableau(:LobIIIAIIIB, TableauLobattoIIIA(method.s), TableauLobattoIIIB(method.s))
+tableau(method::VPRKLobattoIIIBIIIA) = PartitionedTableau(:LobIIIBIIIA, TableauLobattoIIIB(method.s), TableauLobattoIIIA(method.s))
+tableau(method::VPRKLobattoIIIAIIIĀ) = SymplecticPartitionedTableau(TableauLobattoIIIA(method.s))
+tableau(method::VPRKLobattoIIIBIIIB̄) = SymplecticPartitionedTableau(TableauLobattoIIIB(method.s))
 tableau(method::VPRKLobattoIIICIIIC̄) = TableauLobattoIIICIIIC̄(method.s)
 tableau(method::VPRKLobattoIIIC̄IIIC) = TableauLobattoIIIC̄IIIC(method.s)
 tableau(method::VPRKLobattoIIIDIIID̄) = TableauLobattoIIIDIIID̄(method.s)
@@ -270,6 +270,11 @@ tableau(method::VPRKLobattoIIIEIIIĒ) = TableauLobattoIIIEIIIĒ(method.s)
 tableau(method::VPRKLobattoIIIFIIIF̄) = TableauLobattoIIIFIIIF̄(method.s)
 tableau(method::VPRKLobattoIIIF̄IIIF) = TableauLobattoIIIF̄IIIF(method.s)
 tableau(method::VPRKLobattoIIIGIIIḠ) = TableauLobattoIIIGIIIḠ(method.s)
+
+nullvector(method::VPRKLobattoIIIAIIIB) = get_lobatto_nullvector(method.s)
+nullvector(method::VPRKLobattoIIIBIIIA) = get_lobatto_nullvector(method.s)
+nullvector(method::VPRKLobattoIIIAIIIĀ) = get_lobatto_nullvector(method.s)
+nullvector(method::VPRKLobattoIIIBIIIB̄) = get_lobatto_nullvector(method.s)
 
 order(::Type{VPRKGauss}) = "2s"
 order(::Type{VPRKLobattoIIIA}) = "2s-2"

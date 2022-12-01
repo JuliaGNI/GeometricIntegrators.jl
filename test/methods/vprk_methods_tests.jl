@@ -123,20 +123,6 @@ iode = harmonic_oscillator_iode()
     @test typeof(VPRKLobattoIIIGIIIḠ(5)) <: VPRKMethod
 
 
-    @test VPSRK3()           == VPSRK3(Float64)
-    @test VPRKGauss(1)       == VPRKGauss(Float64, 1)
-    @test VPRKRadauIIA(2)    == VPRKRadauIIA(Float64, 2)
-    @test VPRKRadauIIB(2)    == VPRKRadauIIB(Float64, 2)
-    @test VPRKLobattoIIIA(2) == VPRKLobattoIIIA(Float64, 2)
-    @test VPRKLobattoIIIB(2) == VPRKLobattoIIIB(Float64, 2)
-    @test VPRKLobattoIIIC(2) == VPRKLobattoIIIC(Float64, 2)
-    @test VPRKLobattoIIIC̄(2) == VPRKLobattoIIIC̄(Float64, 2)
-    @test VPRKLobattoIIID(2) == VPRKLobattoIIID(Float64, 2)
-    @test VPRKLobattoIIIE(2) == VPRKLobattoIIIE(Float64, 2)
-    @test VPRKLobattoIIIF(2) == VPRKLobattoIIIF(Float64, 2)
-    @test VPRKLobattoIIIG(2) == VPRKLobattoIIIG(Float64, 2)
-
-
     @test typeof(Integrator(iode, VPSRK3())) <: IntegratorVPRK
     @test typeof(Integrator(iode, VPRKGauss(2))) <: IntegratorVPRK
 

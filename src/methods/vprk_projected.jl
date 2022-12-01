@@ -24,34 +24,34 @@ hasnullvector(method::ProjectedVPRK) = hasnullvector(method.vprk)
 
 
 "[`VPRK`](@ref) integrator with projection on internal stages"
-VPRKpInternal(method::VPRK) = ProjectedVPRK(method, InternalStageProjection())
+VPRKpInternal(method::VPRKMethod) = ProjectedVPRK(method, InternalStageProjection())
 
 "[`VPRK`](@ref) integrator with Legendre projection"
-VPRKpLegendre(method::VPRK) = ProjectedVPRK(method, LegendreProjection())
+VPRKpLegendre(method::VPRKMethod) = ProjectedVPRK(method, LegendreProjection())
 
 "[`VPRK`](@ref) integrator with Midpoint projection"
-VPRKpMidpoint(method::VPRK) = ProjectedVPRK(method, MidpointProjection())
+VPRKpMidpoint(method::VPRKMethod) = ProjectedVPRK(method, MidpointProjection())
 
 "[`VPRK`](@ref) integrator with projection on secondary constraint"
-VPRKpSecondary(method::VPRK) = ProjectedVPRK(method, SecondaryProjection())
+VPRKpSecondary(method::VPRKMethod) = ProjectedVPRK(method, SecondaryProjection())
 
 "[`VPRK`](@ref) integrator with standard projection"
-VPRKpStandard(method::VPRK) = ProjectedVPRK(method, StandardProjection())
+VPRKpStandard(method::VPRKMethod) = ProjectedVPRK(method, StandardProjection())
 
 "[`VPRK`](@ref) integrator with symmetric projection"
-VPRKpSymmetric(method::VPRK) = ProjectedVPRK(method, SymmetricProjection())
+VPRKpSymmetric(method::VPRKMethod) = ProjectedVPRK(method, SymmetricProjection())
 
 "[`VPRK`](@ref) integrator with symplectic projection"
-VPRKpSymplectic(method::VPRK) = ProjectedVPRK(method, SymplecticProjection())
+VPRKpSymplectic(method::VPRKMethod) = ProjectedVPRK(method, SymplecticProjection())
 
 "[`VPRK`](@ref) integrator with variational projection"
-VPRKpVariational(method::VPRK) = ProjectedVPRK(method, VariationalProjection())
+VPRKpVariational(method::VPRKMethod) = ProjectedVPRK(method, VariationalProjection())
 
 "[`VPRK`](@ref) integrator with variational projection on P"
-VPRKpVariationalP(method::VPRK) = ProjectedVPRK(method, VariationalProjectionOnP())
+VPRKpVariationalP(method::VPRKMethod) = ProjectedVPRK(method, VariationalProjectionOnP())
 
 "[`VPRK`](@ref) integrator with variational projection on Q"
-VPRKpVariationalQ(method::VPRK) = ProjectedVPRK(method, VariationalProjectionOnQ())
+VPRKpVariationalQ(method::VPRKMethod) = ProjectedVPRK(method, VariationalProjectionOnQ())
 
 VPRKpInternal(args...; kwargs...) = ProjectedVPRK(VPRK(args...; kwargs...), InternalStageProjection())
 VPRKpLegendre(args...; kwargs...) = ProjectedVPRK(VPRK(args...; kwargs...), LegendreProjection())
