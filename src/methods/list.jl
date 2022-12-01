@@ -106,20 +106,6 @@ variational_partitioned_runge_kutta_families = (
     VPRKLobattoIIIGIIIḠ,
 )
 
-    # degenerate VPRK methods
-
-    # projected VPRK methods
-    # VPRKpInternal,
-    # VPRKpLegendre,
-    # VPRKpMidpoint,
-    # VPRKpSecondary,
-    # VPRKpStandard,
-    # VPRKpSymmetric,
-    # VPRKpSymplectic,
-    # VPRKpVariational,
-    # VPRKpVariationalP,
-    # VPRKpVariationalQ,
-
 degenerate_variational_integrators = (
     DVIA,
     DVIB,
@@ -159,6 +145,21 @@ methods = tuplejoin(method_groups...)
 for m in nameof.(methods)
     @eval export $m
 end
+
+
+# degenerate VPRK methods
+
+# projected VPRK methods
+export VPRKpInternal
+export VPRKpLegendre
+export VPRKpMidpoint
+export VPRKpSecondary
+export VPRKpStandard
+export VPRKpSymmetric
+export VPRKpSymplectic
+export VPRKpVariational
+export VPRKpVariationalP
+export VPRKpVariationalQ
 
 
 _display_property(p::Bool) = p ? "✓" : "✗"
