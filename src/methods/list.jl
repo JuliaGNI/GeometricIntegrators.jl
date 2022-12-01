@@ -1,8 +1,13 @@
 
-methods = (
+meta_methods = (
     RK,
     PRK,
-    # explicit Runge-Kutta methods
+    VPRK,
+    DegenerateVPRK,
+    ProjectedVPRK,
+)
+
+explicit_rungekutta_methods = (
     ForwardEuler,
     ExplicitEuler,
     ExplicitMidpoint,
@@ -17,17 +22,33 @@ methods = (
     Runge2,
     SSPRK2,
     SSPRK3,
-    # diagonally implicit Runge-Kutta methods
+)
+
+diagonally_implicit_rungekutta_methods = (
     CrankNicolson,
     Crouzeix,
     KraaijevangerSpijker,
     QinZhang,
-    # fully implicit Runge-Kutta methods
+)
+
+fully_implicit_rungekutta_methods = (
     BackwardEuler,
     ImplicitEuler,
     ImplicitMidpoint,
     SRK3,
-    # Runge-Kutta methods with variable number of stages
+)
+
+implicit_rungekutta_methods = (
+    diagonally_implicit_rungekutta_methods...,
+    fully_implicit_rungekutta_methods...,
+)
+
+runge_kutta_methods = (
+    explicit_rungekutta_methods...,
+    implicit_rungekutta_methods...,
+)
+
+runge_kutta_families = (
     Gauss,
     LobattoIIIA,
     LobattoIIIB,
@@ -42,7 +63,9 @@ methods = (
     RadauIB,
     RadauIIA,
     RadauIIB,
-    # partitioned Runge-Kutta methods with variable number of stages
+)
+
+partitioned_runge_kutta_families = (
     LobattoIIIAIIIB,
     LobattoIIIBIIIA,
     LobattoIIIAIIIĀ,
@@ -54,8 +77,9 @@ methods = (
     LobattoIIIFIIIF̄,
     LobattoIIIF̄IIIF,
     LobattoIIIGIIIḠ,
-    # variational partitioned Runge-Kutta methods
-    VPRK,
+)
+
+variational_partitioned_runge_kutta_families = (
     VPSRK3,
     VPRKGauss,
     VPRKRadauIIA,
@@ -80,8 +104,11 @@ methods = (
     VPRKLobattoIIIFIIIF̄,
     VPRKLobattoIIIF̄IIIF,
     VPRKLobattoIIIGIIIḠ,
+)
+
+    # degenerate VPRK methods
+
     # projected VPRK methods
-    ProjectedVPRK,
     # VPRKpInternal,
     # VPRKpLegendre,
     # VPRKpMidpoint,
@@ -92,14 +119,15 @@ methods = (
     # VPRKpVariational,
     # VPRKpVariationalP,
     # VPRKpVariationalQ,
-    # degenerate VPRK methods
-    DegenerateVPRK,
-    # degenerate VI methods
+
+degenerate_variational_integrators = (
     DVIA,
     DVIB,
     CMDVI,
     CTDVI,
-    # splitting methods
+)
+
+splitting_methods = (
     LieA,
     LieB,
     Strang,
@@ -111,6 +139,22 @@ methods = (
     TripleJump,
     SuzukiFractal,
 )
+
+method_groups = (
+    meta_methods,
+    runge_kutta_methods,
+    runge_kutta_families,
+    partitioned_runge_kutta_families,
+    variational_partitioned_runge_kutta_families,
+    degenerate_variational_integrators,
+    splitting_methods,
+)
+
+@inline tuplejoin(x) = x
+@inline tuplejoin(x, y) = (x..., y...)
+@inline tuplejoin(x, y, z...) = tuplejoin(tuplejoin(x, y), z...)
+
+methods = tuplejoin(method_groups...)
 
 for m in nameof.(methods)
     @eval export $m
