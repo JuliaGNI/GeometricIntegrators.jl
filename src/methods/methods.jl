@@ -17,37 +17,47 @@ abstract type HDAEMethod <: PDAEMethod end
 abstract type IDAEMethod <: Method end
 abstract type LDAEMethod <: IDAEMethod end
 
-isodemethod(::Method) = false
-ispodemethod(::Method) = false
-ishodemethod(::Method) = false
-isiodemethod(::Method) = false
-islodemethod(::Method) = false
-issodemethod(::Method) = false
+isodemethod(::Union{Method, Type{<:Method}}) = false
+ispodemethod(::Union{Method, Type{<:Method}}) = false
+ishodemethod(::Union{Method, Type{<:Method}}) = false
+isiodemethod(::Union{Method, Type{<:Method}}) = false
+islodemethod(::Union{Method, Type{<:Method}}) = false
+issodemethod(::Union{Method, Type{<:Method}}) = false
 
-isdaemethod(::Method) = false
-ispdaemethod(::Method) = false
-ishdaemethod(::Method) = false
-isidaemethod(::Method) = false
-isldaemethod(::Method) = false
+isdaemethod(::Union{Method, Type{<:Method}}) = false
+ispdaemethod(::Union{Method, Type{<:Method}}) = false
+ishdaemethod(::Union{Method, Type{<:Method}}) = false
+isidaemethod(::Union{Method, Type{<:Method}}) = false
+isldaemethod(::Union{Method, Type{<:Method}}) = false
 
-isodemethod(::ODEMethod) = true
-ispodemethod(::PODEMethod) = true
-ishodemethod(::HODEMethod) = true
-isiodemethod(::IODEMethod) = true
-islodemethod(::LODEMethod) = true
-issodemethod(::SODEMethod) = true
+isodemethod(::Union{ODEMethod, Type{<:ODEMethod}}) = true
+ispodemethod(::Union{PODEMethod, Type{<:PODEMethod}}) = true
+ishodemethod(::Union{HODEMethod, Type{<:HODEMethod}}) = true
+isiodemethod(::Union{IODEMethod, Type{<:IODEMethod}}) = true
+islodemethod(::Union{LODEMethod, Type{<:LODEMethod}}) = true
+issodemethod(::Union{SODEMethod, Type{<:SODEMethod}}) = true
 
-isdaemethod(::DAEMethod) = true
-ispdaemethod(::PDAEMethod) = true
-ishdaemethod(::HDAEMethod) = true
-isidaemethod(::IDAEMethod) = true
-isldaemethod(::LDAEMethod) = true
+isdaemethod(::Union{DAEMethod, Type{<:DAEMethod}}) = true
+ispdaemethod(::Union{PDAEMethod, Type{<:PDAEMethod}}) = true
+ishdaemethod(::Union{HDAEMethod, Type{<:HDAEMethod}}) = true
+isidaemethod(::Union{IDAEMethod, Type{<:IDAEMethod}}) = true
+isldaemethod(::Union{LDAEMethod, Type{<:LDAEMethod}}) = true
 
-isexplicit(::Method) = false
-isimplicit(::Method) = false
-issymmetric(::Method) = false
-issymplectic(::Method) = false
-isenergypreserving(::Method) = false
-isstifflyaccurate(::Method) = false
+isexplicit(::Method) = missing
+isimplicit(::Method) = missing
+issymmetric(::Method) = missing
+issymplectic(::Method) = missing
+isenergypreserving(::Method) = missing
+isstifflyaccurate(::Method) = missing
+
+isexplicit(t::Type{<:Method}) = applicable(t) ? isexplicit(t()) : missing
+isimplicit(t::Type{<:Method}) = applicable(t) ? isimplicit(t()) : missing
+issymmetric(t::Type{<:Method}) = applicable(t) ? issymmetric(t()) : missing
+issymplectic(t::Type{<:Method}) = applicable(t) ? issymplectic(t()) : missing
+isenergypreserving(t::Type{<:Method}) = applicable(t) ? isenergypreserving(t()) : missing
+isstifflyaccurate(t::Type{<:Method}) = applicable(t) ? isstifflyaccurate(t()) : missing
 
 order(::Method) = missing
+order(t::Type{<:Method}) = applicable(t) ? order(t()) : missing
+
+description(::Union{Method, Type{<:Method}}) = missing

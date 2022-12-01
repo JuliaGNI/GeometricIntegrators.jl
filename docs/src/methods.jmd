@@ -1,0 +1,6 @@
+# List of all Methods
+
+```julia; echo=false; results="raw"
+using GeometricIntegrators.Methods
+show(stdout, "text/markdown", Methods.MethodList())
+```

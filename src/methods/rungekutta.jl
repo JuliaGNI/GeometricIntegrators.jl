@@ -2,15 +2,27 @@
 abstract type RKMethod <: ODEMethod end
 abstract type PRKMethod <: PODEMethod end
 
+const RungeKuttaMethod = Union{RKMethod,PRKMethod}
+
 tableau(method::RKMethod) = error("No tableau for Runge-Kutta method $(typeof(method)) provided")
 tableau(method::PRKMethod) = error("No tableau for partitioned Runge-Kutta method $(typeof(method)) provided")
 
-ispodemethod(::RKMethod) = true
-ishodemethod(::RKMethod) = true
-isiodemethod(::RKMethod) = true
-islodemethod(::RKMethod) = true
-isiodemethod(::PRKMethod) = true
-islodemethod(::PRKMethod) = true
+order(method::RungeKuttaMethod) = RungeKutta.order(tableau(method))
+
+ispodemethod(::Union{RKMethod, Type{<:RKMethod}}) = true
+ishodemethod(::Union{RKMethod, Type{<:RKMethod}}) = true
+isiodemethod(::Union{RKMethod, Type{<:RKMethod}}) = true
+islodemethod(::Union{RKMethod, Type{<:RKMethod}}) = true
+ishodemethod(::Union{PRKMethod, Type{<:PRKMethod}}) = true
+isiodemethod(::Union{PRKMethod, Type{<:PRKMethod}}) = true
+islodemethod(::Union{PRKMethod, Type{<:PRKMethod}}) = true
+
+isexplicit(method::RungeKuttaMethod) = RungeKutta.isexplicit(tableau(method))
+isimplicit(method::RungeKuttaMethod) = RungeKutta.isimplicit(tableau(method))
+issymmetric(method::RungeKuttaMethod) = RungeKutta.issymmetric(tableau(method))
+issymplectic(method::RungeKuttaMethod) = RungeKutta.issymplectic(tableau(method))
+# isenergypreserving(method::RungeKuttaMethod) = RungeKutta.order(tableau(method))
+# isstifflyaccurate(method::RungeKuttaMethod) = RungeKutta.order(tableau(method))
 
 Integrators.Integrator(problem::ODEProblem, method::RKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
 Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::RKMethod; kwargs...) = Integrator(problem, PartitionedTableau(tableau(method)); kwargs...)
@@ -37,6 +49,26 @@ end
 tableau(method::RK) = method.tableau
 
 Integrators.Integrator(problem::ODEProblem, method::RK; kwargs...) = Integrator(problem, tableau(method); kwargs...)
+
+
+"""
+Partitioned Runge-Kutta Method
+
+```
+PRK(tableau)
+```
+"""
+struct PRK{TT} <: PRKMethod
+    tableau::TT
+
+    function PRK(tableau::TT) where {TT <: PartitionedTableau}
+        new{TT}(tableau)
+    end
+end
+
+tableau(method::PRK) = method.tableau
+
+Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::PRK; kwargs...) = Integrator(problem, tableau(method); kwargs...)
 
 
 # Explicit Runge-Kutta Methods
@@ -223,6 +255,36 @@ tableau(method::RadauIB) = TableauRadauIB(method.s)
 tableau(method::RadauIIA) = TableauRadauIIA(method.s)
 tableau(method::RadauIIB) = TableauRadauIIB(method.s)
 
+order(::Type{Gauss}) = "2s"
+order(::Type{LobattoIIIA}) = "2s-2"
+order(::Type{LobattoIIIB}) = "2s-2"
+order(::Type{LobattoIIIC}) = "2s-2"
+order(::Type{LobattoIIIC̄}) = "2s-2"
+order(::Type{LobattoIIID}) = "2s-2"
+order(::Type{LobattoIIIE}) = "2s-2"
+order(::Type{LobattoIIIF}) = "2s"
+order(::Type{LobattoIIIF̄}) = "2s"
+order(::Type{LobattoIIIG}) = "2s"
+order(::Type{RadauIA}) = "2s-1"
+order(::Type{RadauIB}) = "2s-1"
+order(::Type{RadauIIA}) = "2s-1"
+order(::Type{RadauIIB}) = "2s-1"
+
+issymplectic(::Type{Gauss}) = true
+issymplectic(::Type{LobattoIIIA}) = false
+issymplectic(::Type{LobattoIIIB}) = false
+issymplectic(::Type{LobattoIIIC}) = false
+issymplectic(::Type{LobattoIIIC̄}) = false
+issymplectic(::Type{LobattoIIID}) = true
+issymplectic(::Type{LobattoIIIE}) = true
+issymplectic(::Type{LobattoIIIF}) = false
+issymplectic(::Type{LobattoIIIF̄}) = false
+issymplectic(::Type{LobattoIIIG}) = true
+issymplectic(::Type{RadauIA}) = false
+issymplectic(::Type{RadauIB}) = false
+issymplectic(::Type{RadauIIA}) = false
+issymplectic(::Type{RadauIIB}) = false
+
 
 # Partitioned Runge-Kutta Methods
 
@@ -293,3 +355,27 @@ tableau(method::LobattoIIIEIIIĒ) = TableauLobattoIIIEIIIĒ(method.s)
 tableau(method::LobattoIIIFIIIF̄) = TableauLobattoIIIFIIIF̄(method.s)
 tableau(method::LobattoIIIF̄IIIF) = TableauLobattoIIIF̄IIIF(method.s)
 tableau(method::LobattoIIIGIIIḠ) = TableauLobattoIIIGIIIḠ(method.s)
+
+order(::Type{LobattoIIIAIIIB}) = "2s-2"
+order(::Type{LobattoIIIBIIIA}) = "2s-2"
+order(::Type{LobattoIIIAIIIĀ}) = "2s-2"
+order(::Type{LobattoIIIBIIIB̄}) = "2s-2"
+order(::Type{LobattoIIICIIIC̄}) = "2s-2"
+order(::Type{LobattoIIIC̄IIIC}) = "2s-2"
+order(::Type{LobattoIIIDIIID̄}) = "2s-2"
+order(::Type{LobattoIIIEIIIĒ}) = "2s-2"
+order(::Type{LobattoIIIFIIIF̄}) = "2s"
+order(::Type{LobattoIIIF̄IIIF}) = "2s"
+order(::Type{LobattoIIIGIIIḠ}) = "2s"
+
+issymplectic(::Type{LobattoIIIAIIIB}) = true
+issymplectic(::Type{LobattoIIIBIIIA}) = true
+issymplectic(::Type{LobattoIIIAIIIĀ}) = true
+issymplectic(::Type{LobattoIIIBIIIB̄}) = true
+issymplectic(::Type{LobattoIIICIIIC̄}) = true
+issymplectic(::Type{LobattoIIIC̄IIIC}) = true
+issymplectic(::Type{LobattoIIIDIIID̄}) = true
+issymplectic(::Type{LobattoIIIEIIIĒ}) = true
+issymplectic(::Type{LobattoIIIFIIIF̄}) = true
+issymplectic(::Type{LobattoIIIF̄IIIF}) = true
+issymplectic(::Type{LobattoIIIGIIIḠ}) = true

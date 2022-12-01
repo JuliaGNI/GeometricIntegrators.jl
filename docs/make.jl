@@ -1,6 +1,7 @@
 using Documenter
 using DocumenterCitations
 using GeometricIntegrators
+using Weave
 
 
 ENV["GKSwstype"] = "100"
@@ -10,6 +11,8 @@ cp(normpath(@__FILE__, "../../AUTHORS.md"), normpath(@__FILE__, "../src/authors.
 bib = CitationBibliography("GeometricIntegrators.bib")
 
 DocMeta.setdocmeta!(GeometricIntegrators, :DocTestSetup, :(using GeometricIntegrators); recursive=true)
+
+weave("src/methods.jmd", out_path = "src", doctype = "github")
 
 makedocs(bib,
     sitename = "GeometricIntegrators.jl",

@@ -1,6 +1,7 @@
 """
 Projected [`VPRK`](@ref) Method
 
+A projected Variational Runge-Kutta Method consists of a VPRK method and a projection method:
 ```
 ProjectedVPRK(vprk::VPRKMethod, projection::ProjectionMethod)
 ProjectedVPRK(tableau::AbstractTableau, projection::ProjectionMethod, args...; kwargs...) = ProjectedVPRK(VPRK(tableau, args...; kwargs...), projection)

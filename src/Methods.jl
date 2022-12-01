@@ -2,6 +2,7 @@ module Methods
 
     using GeometricBase.Utils
     using GeometricEquations
+    using PrettyTables
     using RungeKutta
     using RungeKutta.Tableaus
     using RungeKutta.PartitionedTableaus

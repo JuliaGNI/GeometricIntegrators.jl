@@ -26,6 +26,8 @@ Reference:
 """
 struct LieA <: SplittingMethod end
 
+order(::Union{LieA, Type{LieA}}) = 1
+
 function tableau(::LieA, ::Type{T}=Float64) where {T}
     a = Array{T}([ 1 ])
     b = Array{T}([ 0 ])
@@ -50,6 +52,8 @@ Reference:
 
 """
 struct LieB <: SplittingMethod end
+
+order(::Union{LieB, Type{LieB}}) = 1
 
 function tableau(::LieB, ::Type{T}=Float64) where {T}
     a = Array{T}([ 0 ])
@@ -88,6 +92,8 @@ struct Strang <: SplittingMethod end
 "Alias for [`Strang`](@ref)"
 struct Marchuk <: SplittingMethod end
 
+order(::Union{Strang, Type{Strang}, Marchuk, Type{Marchuk}}) = 2
+
 function tableau(::Union{Strang,Marchuk}, ::Type{T}=Float64) where {T}
     a = Array{T}([ 1//2 ])
     b = Array{T}([ 1//2 ])
@@ -117,6 +123,8 @@ References:
 
 """
 struct StrangA <: SplittingMethod end
+
+order(::Union{StrangA, Type{StrangA}}) = 2
 
 function tableau(::StrangA, ::Type{T}=Float64) where {T}
     a = Array{T}([ 1//2, 1//2 ])
@@ -148,6 +156,8 @@ References:
 """
 struct StrangB <: SplittingMethod end
 
+order(::Union{StrangB, Type{StrangB}}) = 2
+
 function tableau(::StrangB, ::Type{T}=Float64) where {T}
     a = Array{T}([ 0//1, 1//1 ])
     b = Array{T}([ 1//2, 1//2 ])
@@ -174,6 +184,8 @@ Reference:
 
 """
 struct McLachlan2 <: SplittingMethod end
+
+order(::Union{McLachlan2, Type{McLachlan2}}) = 2
 
 function tableau(::McLachlan2, ::Type{T}=Float64; α=0.1932) where {T}
     a = Array{T}([ α, 0.5 - α ])
@@ -210,6 +222,8 @@ Reference:
 
 """
 struct McLachlan4 <: SplittingMethod end
+
+order(::Union{McLachlan4, Type{McLachlan4}}) = 4
 
 function tableau(::McLachlan4, ::Type{T}=Float64) where {T}
     a = Array{T}(@big [ (146 +  5*√19) / 540,
@@ -258,6 +272,8 @@ References:
 """
 struct TripleJump <: SplittingMethod end
 
+order(::Union{TripleJump, Type{TripleJump}}) = 4
+
 function tableau(::TripleJump, ::Type{T}=Float64) where {T}
     fac = @big 2^(1/3)
     den = @big 1/(2-fac)
@@ -288,6 +304,8 @@ Reference:
 
 """
 struct SuzukiFractal <: SplittingMethod end
+
+order(::Union{SuzukiFractal, Type{SuzukiFractal}}) = 4
 
 function tableau(::SuzukiFractal, ::Type{T}=Float64) where {T}
     fac = @big 4^(1/3)
