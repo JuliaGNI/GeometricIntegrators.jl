@@ -37,9 +37,9 @@ Then we can create an ODE object for the equation $\dot{x} (t) = x(t)$ with init
 ```@example 1
 prob = ODEProblem((ẋ, t, x, params) -> ẋ[1] = x[1], (0.0, 1.0), 0.1, [1.0])
 ```
-create an integrator for this ODE, using the tableau for the explicit Euler method
+create an integrator for this ODE, using the explicit Euler method
 ```@example 1
-int = Integrator(prob, TableauExplicitEuler())
+int = Integrator(prob, ExplicitEuler())
 ```
 and compute the solution,
 ```@example 1
