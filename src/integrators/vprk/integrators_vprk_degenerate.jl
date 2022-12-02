@@ -56,6 +56,15 @@ mutable struct IntegratorVPRKdegenerate{DT, TT, D, S,
 end
 
 
+function Base.show(io::IO, int::IntegratorVPRKdegenerate)
+    print(io, "\nVariational Partitioned Runge-Kutta Integrator for Degenerate Lagrangians with:\n")
+    print(io, "   Timestep: $(int.params.Δt)\n")
+    print(io, "   Tableau:  $(description(int.params.tab))\n")
+    print(io, "   $(string(int.params.tab.q))")
+    print(io, "   $(string(int.params.tab.p))")
+    # print(io, reference(int.params.tab))
+end
+
 
 function initial_guess!(int::IntegratorVPRKdegenerate{DT}, sol::SolutionStepPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}

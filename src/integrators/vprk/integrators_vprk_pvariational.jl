@@ -3,7 +3,7 @@
 const ParametersVPRKpVariational = AbstractParametersVPRK{:vprk_pvariational}
 
 
-"Variational partitioned Runge-Kutta integrator."
+"Variational Partitioned Runge-Kutta Integrator with Variational Projection."
 struct IntegratorVPRKpVariational{DT, TT, D, S,
                 PT  <: ParametersVPRK{DT,TT},
                 PPT <: ParametersVPRKpVariational{DT,TT},
@@ -56,6 +56,16 @@ struct IntegratorVPRKpVariational{DT, TT, D, S,
     function IntegratorVPRKpVariational(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
         IntegratorVPRKpVariational{DT, ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
+end
+
+
+function Base.show(io::IO, int::IntegratorVPRKpVariational)
+    print(io, "\nVariational Partitioned Runge-Kutta Integrator with Variational Projection and:\n")
+    print(io, "   Timestep: $(int.params.Δt)\n")
+    print(io, "   Tableau:  $(description(int.params.tab))\n")
+    print(io, "   $(string(int.params.tab.q))")
+    print(io, "   $(string(int.params.tab.p))")
+    # print(io, reference(int.params.tab))
 end
 
 

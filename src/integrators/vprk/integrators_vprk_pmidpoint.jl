@@ -3,7 +3,7 @@
 const ParametersVPRKpMidpoint = AbstractParametersVPRK{:vprk_pmidpoint}
 
 
-"Variational partitioned Runge-Kutta integrator."
+"Variational Partitioned Runge-Kutta Integrator with Midpoint Projection."
 struct IntegratorVPRKpMidpoint{DT, TT, D, S,
                 PT <: ParametersVPRKpMidpoint{DT,TT},
                 ST <: NonlinearSolver{DT},
@@ -42,6 +42,16 @@ struct IntegratorVPRKpMidpoint{DT, TT, D, S,
     function IntegratorVPRKpMidpoint(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
         IntegratorVPRKpMidpoint{DT, ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
+end
+
+
+function Base.show(io::IO, int::IntegratorVPRKpMidpoint)
+    print(io, "\nVariational Partitioned Runge-Kutta Integrator with Midpoint Projection and:\n")
+    print(io, "   Timestep: $(int.params.Δt)\n")
+    print(io, "   Tableau:  $(description(int.params.tab))\n")
+    print(io, "   $(string(int.params.tab.q))")
+    print(io, "   $(string(int.params.tab.p))")
+    # print(io, reference(int.params.tab))
 end
 
 

@@ -12,7 +12,7 @@ end
 
 
 @doc raw"""
-Variational partitioned Runge-Kutta integrator.
+Variational Partitioned Runge-Kutta Integrator.
 
 ```math
 \begin{aligned}
@@ -83,6 +83,17 @@ end
 
 
 IntegratorVPRKpNone = IntegratorVPRK
+
+
+function Base.show(io::IO, int::IntegratorVPRK)
+    print(io, "\nVariational Partitioned Runge-Kutta Integrator with:\n")
+    print(io, "   Timestep: $(int.params.Δt)\n")
+    print(io, "   Tableau:  $(description(int.params.tab))\n")
+    print(io, "   $(string(int.params.tab.q))")
+    print(io, "   $(string(int.params.tab.p))")
+    # print(io, reference(int.params.tab))
+end
+
 
 function Integrators.get_internal_variables(int::IntegratorVPRK{DT,TT,D,S}) where {DT, TT, D, S}
     Q = create_internal_stage_vector(DT, D, S)

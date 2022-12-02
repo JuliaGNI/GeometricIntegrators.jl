@@ -3,7 +3,7 @@
 const ParametersVPRKpStandard = AbstractParametersVPRK{:vprk_pstandard}
 
 
-"Variational partitioned Runge-Kutta integrator."
+"Variational Partitioned Runge-Kutta Integrator with Standard Projection."
 struct IntegratorVPRKpStandard{DT, TT, D, S,
                 PT  <: ParametersVPRK{DT,TT},
                 PPT <: ParametersVPRKpStandard{DT,TT},
@@ -86,6 +86,16 @@ Variational partitioned Runge-Kutta integrator with variational projection on $(
 """
 function IntegratorVPRKpVariationalP(problem, tableau, nullvec)
     IntegratorVPRKpStandard(problem, tableau, nullvec, [0,1], [1,0]; R∞=1)
+end
+
+
+function Base.show(io::IO, int::IntegratorVPRKpStandard)
+    print(io, "\nVariational Partitioned Runge-Kutta Integrator with Standard Projection and:\n")
+    print(io, "   Timestep: $(int.params.Δt)\n")
+    print(io, "   Tableau:  $(description(int.params.tab))\n")
+    print(io, "   $(string(int.params.tab.q))")
+    print(io, "   $(string(int.params.tab.p))")
+    # print(io, reference(int.params.tab))
 end
 
 

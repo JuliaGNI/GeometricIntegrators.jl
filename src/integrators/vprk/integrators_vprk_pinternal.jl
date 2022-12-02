@@ -3,7 +3,7 @@
 const ParametersVPRKpInternal = AbstractParametersVPRK{:vprk_pinternal}
 
 
-"Variational partitioned Runge-Kutta integrator."
+"Variational Partitioned Runge-Kutta Integrator with Projection on Internal Stages."
 struct IntegratorVPRKpInternal{DT, TT, D, S,
                 PT <: ParametersVPRKpInternal{DT,TT},
                 ST <: NonlinearSolver{DT},
@@ -42,6 +42,16 @@ struct IntegratorVPRKpInternal{DT, TT, D, S,
     function IntegratorVPRKpInternal(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
         IntegratorVPRKpInternal{DT, ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
+end
+
+
+function Base.show(io::IO, int::IntegratorVPRKpInternal)
+    print(io, "\nVariational Partitioned Runge-Kutta Integrator with Projection on Internal Stages and:\n")
+    print(io, "   Timestep: $(int.params.Δt)\n")
+    print(io, "   Tableau:  $(description(int.params.tab))\n")
+    print(io, "   $(string(int.params.tab.q))")
+    print(io, "   $(string(int.params.tab.p))")
+    # print(io, reference(int.params.tab))
 end
 
 
