@@ -91,67 +91,151 @@ Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::PRK; kwa
 
 # Explicit Runge-Kutta Methods
 
-"Explicit Runge-Kutta method with [`TableauForwardEuler`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauForwardEuler`](@ref).
+
+$(reference(Val(:ExplicitEuler)))
+"""
 struct ForwardEuler <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauExplicitEuler`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauExplicitEuler`](@ref).
+
+$(reference(Val(:ExplicitEuler)))
+"""
 struct ExplicitEuler <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauExplicitMidpoint`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauExplicitMidpoint`](@ref).
+
+$(reference(Val(:ExplicitMidpoint)))
+"""
 struct ExplicitMidpoint <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauHeun2`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauHeun2`](@ref).
+
+$(reference(Val(:Heun2)))
+"""
 struct Heun2 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauHeun3`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauHeun3`](@ref).
+
+$(reference(Val(:Heun3)))
+"""
 struct Heun3 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauKutta3`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauKutta3`](@ref).
+
+$(reference(Val(:Kutta3)))
+"""
 struct Kutta3 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRalston2`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRalston2`](@ref).
+
+$(reference(Val(:Ralston2)))
+"""
 struct Ralston2 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRalston3`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRalston3`](@ref).
+
+$(reference(Val(:Ralston3)))
+"""
 struct Ralston3 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRK4`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRK4`](@ref).
+
+$(reference(Val(:RK4)))
+"""
 struct RK4 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRK21`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRK21`](@ref).
+
+$(reference(Val(:RK21)))
+"""
 struct RK21 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRK22`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRK22`](@ref).
+
+$(reference(Val(:RK22)))
+"""
 struct RK22 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRK31`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRK31`](@ref).
+
+$(reference(Val(:RK31)))
+"""
 struct RK31 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRK32`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRK32`](@ref).
+
+$(reference(Val(:RK32)))
+"""
 struct RK32 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRK41`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRK41`](@ref).
+
+$(reference(Val(:RK41)))
+"""
 struct RK41 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRK42`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRK42`](@ref).
+
+$(reference(Val(:RK42)))
+"""
 struct RK42 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRK416`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRK416`](@ref).
+
+$(reference(Val(:RK416)))
+"""
 struct RK416 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRK438`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRK438`](@ref).
+
+$(reference(Val(:RK438)))
+"""
 struct RK438 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRK5`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRK5`](@ref).
+
+$(reference(Val(:RK5)))
+"""
 struct RK5 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauRunge2`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauRunge2`](@ref).
+
+$(reference(Val(:Runge2)))
+"""
 struct Runge2 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauSSPRK2`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauSSPRK2`](@ref).
+
+$(reference(Val(:SSPRK2)))
+"""
 struct SSPRK2 <: RKMethod end
 
-"Explicit Runge-Kutta method with [`TableauSSPRK3`](@ref)."
+"""
+Explicit Runge-Kutta method with [`TableauSSPRK3`](@ref).
+
+$(reference(Val(:SSPRK3)))
+"""
 struct SSPRK3 <: RKMethod end
 
 tableau(::ForwardEuler) = TableauForwardEuler()
@@ -179,16 +263,32 @@ tableau(::SSPRK3) = TableauSSPRK3()
 
 # Diagonally Implicit Runge-Kutta Methods
 
-"Diagonally implicit Runge-Kutta method with [`TableauCrankNicolson`](@ref)."
+"""
+Diagonally implicit Runge-Kutta method with [`TableauCrankNicolson`](@ref).
+
+$(reference(Val(:CrankNicolson)))
+"""
 struct CrankNicolson <: RKMethod end
 
-"Diagonally implicit Runge-Kutta method with [`TableauCrouzeix`](@ref)."
+"""
+Diagonally implicit Runge-Kutta method with [`TableauCrouzeix`](@ref).
+
+$(reference(Val(:Crouzeix)))
+"""
 struct Crouzeix <: RKMethod end
 
-"Diagonally implicit Runge-Kutta method with [`TableauKraaijevangerSpijker`](@ref)."
+"""
+Diagonally implicit Runge-Kutta method with [`TableauKraaijevangerSpijker`](@ref).
+
+$(reference(Val(:KraaijevangerSpijker)))
+"""
 struct KraaijevangerSpijker <: RKMethod end
 
-"Diagonally implicit Runge-Kutta method with [`TableauQinZhang`](@ref)."
+"""
+Diagonally implicit Runge-Kutta method with [`TableauQinZhang`](@ref).
+
+$(reference(Val(:QinZhang)))
+"""
 struct QinZhang <: RKMethod end
 
 tableau(::CrankNicolson) = TableauCrankNicolson()
@@ -199,16 +299,32 @@ tableau(::QinZhang) = TableauQinZhang()
 
 # Fully Implicit Runge-Kutta Methods
 
-"Fully implicit Runge-Kutta method with [`TableauBackwardEuler`](@ref)."
+"""
+Fully implicit Runge-Kutta method with [`TableauBackwardEuler`](@ref).
+
+$(reference(Val(:BackwardEuler)))
+"""
 struct BackwardEuler <: RKMethod end
 
-"Fully implicit Runge-Kutta method with [`TableauImplicitEuler`](@ref)."
+"""
+Fully implicit Runge-Kutta method with [`TableauImplicitEuler`](@ref).
+
+$(reference(Val(:ImplicitEuler)))
+"""
 struct ImplicitEuler <: RKMethod end
 
-"Fully implicit Runge-Kutta method with [`TableauImplicitMidpoint`](@ref)."
+"""
+Fully implicit Runge-Kutta method with [`TableauImplicitMidpoint`](@ref).
+
+$(reference(Val(:ImplicitMidpoint)))
+"""
 struct ImplicitMidpoint <: RKMethod end
 
-"Fully implicit Runge-Kutta method with [`TableauSRK3`](@ref)."
+"""
+Fully implicit Runge-Kutta method with [`TableauSRK3`](@ref).
+
+$(reference(Val(:SRK3)))
+"""
 struct SRK3 <: RKMethod end
 
 tableau(::BackwardEuler) = TableauBackwardEuler()
@@ -216,72 +332,124 @@ tableau(::ImplicitEuler) = TableauImplicitEuler()
 tableau(::ImplicitMidpoint) = TableauImplicitMidpoint()
 tableau(::SRK3) = TableauSRK3()
 
-"Fully implicit Runge-Kutta method with [`TableauGauss`](@ref)."
+"""
+Fully implicit Runge-Kutta method with [`TableauGauss`](@ref).
+
+$(reference(Val(:Gauss)))
+"""
 struct Gauss <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauLobattoIII`](@ref)."
+"""
+Runge-Kutta method with [`TableauLobattoIII`](@ref).
+
+$(reference(Val(:LobattoIII)))
+"""
 struct LobattoIII <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauLobattoIIIA`](@ref)."
+"""
+Runge-Kutta method with [`TableauLobattoIIIA`](@ref).
+
+$(reference(Val(:LobattoIIIA)))
+"""
 struct LobattoIIIA <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauLobattoIIIB`](@ref)."
+"""
+Runge-Kutta method with [`TableauLobattoIIIB`](@ref).
+
+$(reference(Val(:LobattoIIIB)))
+"""
 struct LobattoIIIB <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauLobattoIIIC`](@ref)."
+"""
+Runge-Kutta method with [`TableauLobattoIIIC`](@ref).
+
+$(reference(Val(:LobattoIIIC)))
+"""
 struct LobattoIIIC <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauLobattoIIID`](@ref)."
+"""
+Runge-Kutta method with [`TableauLobattoIIID`](@ref).
+
+$(reference(Val(:LobattoIIID)))
+"""
 struct LobattoIIID <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauLobattoIIIE`](@ref)."
+"""
+Runge-Kutta method with [`TableauLobattoIIIE`](@ref).
+
+$(reference(Val(:LobattoIIIE)))
+"""
 struct LobattoIIIE <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauLobattoIIIF`](@ref)."
+"""
+Runge-Kutta method with [`TableauLobattoIIIF`](@ref).
+
+$(reference(Val(:LobattoIIIF)))
+"""
 struct LobattoIIIF <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauLobattoIIIF̄`](@ref)."
+"""
+Runge-Kutta method with [`TableauLobattoIIIF̄`](@ref).
+"""
 struct LobattoIIIF̄ <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauLobattoIIIG`](@ref)."
+"""
+Runge-Kutta method with [`TableauLobattoIIIG`](@ref).
+"""
 struct LobattoIIIG <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauRadauIA`](@ref)."
+"""
+Runge-Kutta method with [`TableauRadauIA`](@ref).
+
+$(reference(Val(:RadauIA)))
+"""
 struct RadauIA <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauRadauIB`](@ref)."
+"""
+Runge-Kutta method with [`TableauRadauIB`](@ref).
+
+$(reference(Val(:RadauIB)))
+"""
 struct RadauIB <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauRadauIIA`](@ref)."
+"""
+Runge-Kutta method with [`TableauRadauIIA`](@ref).
+
+$(reference(Val(:RadauIIA)))
+"""
 struct RadauIIA <: RKMethod
     s::Int
 end
 
-"Runge-Kutta method with [`TableauRadauIIB`](@ref)."
+"""
+Runge-Kutta method with [`TableauRadauIIB`](@ref).
+
+$(reference(Val(:RadauIIB)))
+"""
 struct RadauIIB <: RKMethod
     s::Int
 end
