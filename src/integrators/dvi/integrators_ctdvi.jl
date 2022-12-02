@@ -95,6 +95,13 @@ end
 @inline Base.ndims(::IntegratorCTDVI{DT,TT,D}) where {DT,TT,D} = D
 
 
+function Base.show(io::IO, int::IntegratorCTDVI)
+    print(io, "\nTrapezoidal Degenerate Variational Integrator with:\n")
+    print(io, "   Timestep: $(int.params.Δt)\n")
+    # print(io, reference(int.params.tab))
+end
+
+
 function initialize!(int::IntegratorCTDVI, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 

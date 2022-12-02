@@ -91,6 +91,13 @@ end
 @inline Base.ndims(::IntegratorDVIA{DT,TT,D}) where {DT,TT,D} = D
 
 
+function Base.show(io::IO, int::IntegratorDVIA)
+    print(io, "\nDegenerate Variational Integrator (Euler-A) with:\n")
+    print(io, "   Timestep: $(int.params.Δt)\n")
+    # print(io, reference(int.params.tab))
+end
+
+
 function initialize!(int::IntegratorDVIA, sol::SolutionStepPODE)
     sol.t̄ = sol.t - timestep(int)
 
