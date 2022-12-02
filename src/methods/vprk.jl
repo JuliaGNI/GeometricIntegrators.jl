@@ -38,6 +38,10 @@ end
 VPRK(tableau::Tableau, args...; kwargs...) = VPRK(PartitionedTableau(tableau), args...; kwargs...)
 VPRK(tableau1::Tableau, tableau2::Tableau, args...; kwargs...) = VPRK(PartitionedTableau(tableau1, tableau2), args...; kwargs...)
 
+VPRK(method::RKMethod, args...; kwargs...) = VPRK(PartitionedTableau(tableau(method)))
+VPRK(method::PRKMethod, args...; kwargs...) = VPRK(tableau(method))
+VPRK(method::VPRKMethod, args...; kwargs...) = VPRK(tableau(method), nullvector(method))
+
 Base.hash(method::VPRK, h::UInt) = hash(method.tableau, hash(method.d, hash(:VPRK, h)))
 
 Base.:(==)(method1::VPRK, method2::VPRK) = (method1.tableau == method2.tableau && method1.d == method2.d)

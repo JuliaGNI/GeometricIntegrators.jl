@@ -46,6 +46,8 @@ struct RK{TT} <: RKMethod
     end
 end
 
+RK(method::RKMethod, args...; kwargs...) = RK(tableau(method))
+
 tableau(method::RK) = method.tableau
 
 Integrators.Integrator(problem::ODEProblem, method::RK; kwargs...) = Integrator(problem, tableau(method); kwargs...)
@@ -65,6 +67,9 @@ struct PRK{TT} <: PRKMethod
         new{TT}(tableau)
     end
 end
+
+PRK(method::PRKMethod, args...; kwargs...) = PRK(tableau(method))
+PRK(method::RKMethod, args...; kwargs...) = PRK(PartitionedTableau(tableau(method)))
 
 tableau(method::PRK) = method.tableau
 
