@@ -1,4 +1,11 @@
+"""
+Variational Partitioned Runge-Kutta Method for Degenerate Lagrangians
 
+```
+DegenerateVPRK(method::VPRK)
+DegenerateVPRK(tableau::AbstractTableau, args...; kwargs...)
+```
+"""
 struct DegenerateVPRK{VT} <: VPRKMethod
     vprk::VT
 
@@ -8,6 +15,7 @@ struct DegenerateVPRK{VT} <: VPRKMethod
 end
 
 DegenerateVPRK(tableau::AbstractTableau, args...; kwargs...) = DegenerateVPRK(VPRK(tableau, args...; kwargs...))
+DegenerateVPRK(method::Union{RKMethod,PRKMethod}, args...; kwargs...) = DegenerateVPRK(VPRK(method, args...; kwargs...))
 
 tableau(method::DegenerateVPRK) = tableau(method.vprk)
 nullvector(method::DegenerateVPRK) = nullvector(method.vprk)

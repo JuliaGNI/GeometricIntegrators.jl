@@ -1,11 +1,10 @@
 using GeometricIntegrators.Integrators.VPRK
-using GeometricProblems.HarmonicOscillator
+using GeometricEquations.Tests.HarmonicOscillator
 
 using GeometricIntegrators.Methods: VPRKMethod
 
-
-iode = harmonic_oscillator_iode()
-# lode = harmonic_oscillator_lode()
+iode = iodeproblem()
+lode = lodeproblem()
 
 
 @testset "$(rpad("Variational Partitioned Runge-Kutta Methods",80))" begin
@@ -146,5 +145,16 @@ iode = harmonic_oscillator_iode()
     @test typeof(Integrator(iode, VPRKLobattoIIIFIIIF̄(2))) <: IntegratorVPRK
     @test typeof(Integrator(iode, VPRKLobattoIIIF̄IIIF(2))) <: IntegratorVPRK
     @test typeof(Integrator(iode, VPRKLobattoIIIGIIIḠ(2))) <: IntegratorVPRK
+
+end
+
+
+@testset "$(rpad("Variational Partitioned Runge-Kutta Methods for Degenerate Lagrangians",80))" begin
+
+    @test typeof(DegenerateVPRK(Gauss(1))) <: VPRKMethod
+    @test typeof(DegenerateVPRK(Gauss(2))) <: VPRKMethod
+
+    @test typeof(DegenerateVPRK(VPRKGauss(1))) <: VPRKMethod
+    @test typeof(DegenerateVPRK(VPRKGauss(2))) <: VPRKMethod
 
 end
