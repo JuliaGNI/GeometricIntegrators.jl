@@ -113,6 +113,15 @@ end
 @inline has_initial_guess(int::IntegratorDIRK) = true
 
 
+function Base.show(io::IO, int::IntegratorDIRK)
+    print(io, "\nDiagonally Implicit Runge-Kutta Integrator with:\n")
+    print(io, "   Timestep: $(int.params.Δt)\n")
+    print(io, "   Tableau:  $(description(int.params.tab))\n")
+    print(io, "   $(string(int.params.tab))")
+    # print(io, reference(int.params.tab))
+end
+
+
 function initialize!(int::IntegratorDIRK, cache::IntegratorCacheDIRK)
     # initialise initial guess
     cache.t̄ = cache.t - timestep(int)

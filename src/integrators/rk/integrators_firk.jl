@@ -134,6 +134,15 @@ end
 @inline Base.ndims(::IntegratorFIRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
+function Base.show(io::IO, int::IntegratorFIRK)
+    print(io, "\nFully Implicit Runge-Kutta Integrator with:\n")
+    print(io, "   Timestep: $(int.params.Δt)\n")
+    print(io, "   Tableau:  $(description(int.params.tab))\n")
+    print(io, "   $(string(int.params.tab))")
+    # print(io, reference(int.params.tab))
+end
+
+
 function initialize!(int::IntegratorFIRK, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 

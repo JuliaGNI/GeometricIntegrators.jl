@@ -112,6 +112,15 @@ end
 @inline Base.ndims(::IntegratorFLRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
+function Base.show(io::IO, int::IntegratorFLRK)
+    print(io, "\nFormal Lagrangian Runge-Kutta Integrator with:\n")
+    print(io, "   Timestep: $(int.params.Δt)\n")
+    print(io, "   Tableau:  $(description(int.params.tab))\n")
+    print(io, "   $(string(int.params.tab))")
+    # print(io, reference(int.params.tab))
+end
+
+
 function initialize!(int::IntegratorFLRK, sol::SolutionStepODE)
     sol.t̄ = sol.t - timestep(int)
 
