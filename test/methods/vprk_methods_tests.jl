@@ -27,6 +27,11 @@ iode = harmonic_oscillator_iode()
     @test typeof(VPRKRadauIIB(4)) <: VPRKMethod
     @test typeof(VPRKRadauIIB(5)) <: VPRKMethod
 
+    @test typeof(VPRKLobattoIII(2)) <: VPRKMethod
+    @test typeof(VPRKLobattoIII(3)) <: VPRKMethod
+    @test typeof(VPRKLobattoIII(4)) <: VPRKMethod
+    @test typeof(VPRKLobattoIII(5)) <: VPRKMethod
+
     @test typeof(VPRKLobattoIIIA(2)) <: VPRKMethod
     @test typeof(VPRKLobattoIIIA(3)) <: VPRKMethod
     @test typeof(VPRKLobattoIIIA(4)) <: VPRKMethod
@@ -41,11 +46,6 @@ iode = harmonic_oscillator_iode()
     @test typeof(VPRKLobattoIIIC(3)) <: VPRKMethod
     @test typeof(VPRKLobattoIIIC(4)) <: VPRKMethod
     @test typeof(VPRKLobattoIIIC(5)) <: VPRKMethod
-
-    @test typeof(VPRKLobattoIIIC̄(2)) <: VPRKMethod
-    @test typeof(VPRKLobattoIIIC̄(3)) <: VPRKMethod
-    @test typeof(VPRKLobattoIIIC̄(4)) <: VPRKMethod
-    @test typeof(VPRKLobattoIIIC̄(5)) <: VPRKMethod
 
     @test typeof(VPRKLobattoIIID(2)) <: VPRKMethod
     @test typeof(VPRKLobattoIIID(3)) <: VPRKMethod
@@ -126,10 +126,10 @@ iode = harmonic_oscillator_iode()
     @test typeof(Integrator(iode, VPSRK3())) <: IntegratorVPRK
     @test typeof(Integrator(iode, VPRKGauss(2))) <: IntegratorVPRK
 
+    @test typeof(Integrator(iode, VPRKLobattoIII(2))) <: IntegratorVPRK
     @test typeof(Integrator(iode, VPRKLobattoIIIA(2))) <: IntegratorVPRK
     @test typeof(Integrator(iode, VPRKLobattoIIIB(2))) <: IntegratorVPRK
     @test typeof(Integrator(iode, VPRKLobattoIIIC(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIC̄(2))) <: IntegratorVPRK
     @test typeof(Integrator(iode, VPRKLobattoIIID(2))) <: IntegratorVPRK
     @test typeof(Integrator(iode, VPRKLobattoIIIE(2))) <: IntegratorVPRK
     @test typeof(Integrator(iode, VPRKLobattoIIIF(2))) <: IntegratorVPRK

@@ -71,6 +71,14 @@ end
 
 @doc raw"""
 Variational Partitioned Runge-Kutta Method that uses 
+[`TableauLobattoIII`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
+"""
+struct VPRKLobattoIII <: VPRKMethod
+    s::Int
+end
+
+@doc raw"""
+Variational Partitioned Runge-Kutta Method that uses 
 [`TableauLobattoIIIA`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIA <: VPRKMethod
@@ -90,14 +98,6 @@ Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIC`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIC <: VPRKMethod
-    s::Int
-end
-
-@doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
-[`TableauLobattoIIIC̄`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
-"""
-struct VPRKLobattoIIIC̄ <: VPRKMethod
     s::Int
 end
 
@@ -247,10 +247,10 @@ end
 
 
 tableau(method::VPRKGauss) = SymplecticPartitionedTableau(TableauGauss(method.s))
+tableau(method::VPRKLobattoIII) = PartitionedTableau(TableauLobattoIII(method.s))
 tableau(method::VPRKLobattoIIIA) = PartitionedTableau(TableauLobattoIIIA(method.s))
 tableau(method::VPRKLobattoIIIB) = PartitionedTableau(TableauLobattoIIIB(method.s))
 tableau(method::VPRKLobattoIIIC) = PartitionedTableau(TableauLobattoIIIC(method.s))
-tableau(method::VPRKLobattoIIIC̄) = PartitionedTableau(TableauLobattoIIIC̄(method.s))
 tableau(method::VPRKLobattoIIID) = PartitionedTableau(TableauLobattoIIID(method.s))
 tableau(method::VPRKLobattoIIIE) = PartitionedTableau(TableauLobattoIIIE(method.s))
 tableau(method::VPRKLobattoIIIF) = PartitionedTableau(TableauLobattoIIIF(method.s))
@@ -277,10 +277,10 @@ nullvector(method::VPRKLobattoIIIAIIIĀ) = get_lobatto_nullvector(method.s)
 nullvector(method::VPRKLobattoIIIBIIIB̄) = get_lobatto_nullvector(method.s)
 
 order(::Type{VPRKGauss}) = "2s"
+order(::Type{VPRKLobattoIII}) = "2s-2"
 order(::Type{VPRKLobattoIIIA}) = "2s-2"
 order(::Type{VPRKLobattoIIIB}) = "2s-2"
 order(::Type{VPRKLobattoIIIC}) = "2s-2"
-order(::Type{VPRKLobattoIIIC̄}) = "2s-2"
 order(::Type{VPRKLobattoIIID}) = "2s-2"
 order(::Type{VPRKLobattoIIIE}) = "2s-2"
 order(::Type{VPRKLobattoIIIF}) = "2s"
@@ -302,10 +302,10 @@ order(::Type{VPRKLobattoIIIF̄IIIF}) = "2s"
 order(::Type{VPRKLobattoIIIGIIIḠ}) = "2s"
 
 issymplectic(::Type{VPRKGauss}) = true
+issymplectic(::Type{VPRKLobattoIII}) = false
 issymplectic(::Type{VPRKLobattoIIIA}) = false
 issymplectic(::Type{VPRKLobattoIIIB}) = false
 issymplectic(::Type{VPRKLobattoIIIC}) = false
-issymplectic(::Type{VPRKLobattoIIIC̄}) = false
 issymplectic(::Type{VPRKLobattoIIID}) = true
 issymplectic(::Type{VPRKLobattoIIIE}) = true
 issymplectic(::Type{VPRKLobattoIIIF}) = false

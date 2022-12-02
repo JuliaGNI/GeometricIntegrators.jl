@@ -51,21 +51,21 @@ function getTableauVSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
     end
 
 
-    a_q = (a_q_1, a_q_2)
-    b_q = (b_q_1, b_q_2)
-    c_q = g.c
+    a_q = Array.((a_q_1, a_q_2))
+    b_q = Array.((b_q_1, b_q_2))
+    c_q = Array(g.c)
 
-    a_p = (a_p_1, a_p_2, a_p_3)
-    b_p = (b_p_1, b_p_2, b_p_3)
-    c_p = g.c
+    a_p = Array.((a_p_1, a_p_2, a_p_3))
+    b_p = Array.((b_p_1, b_p_2, b_p_3))
+    c_p = Array(g.c)
 
-    α_q = (α_q_1, α_q_2)
-    β_q = (β_q_1, β_q_2)
-    γ_q = lq.c
+    α_q = Array.((α_q_1, α_q_2))
+    β_q = Array.((β_q_1, β_q_2))
+    γ_q = Array(lq.c)
 
-    α_p = (α_p_1, α_p_2, α_p_3)
-    β_p = (β_p_1, β_p_2, β_p_3)
-    γ_p = lp.c
+    α_p = Array.((α_p_1, α_p_2, α_p_3))
+    β_p = Array.((β_p_1, β_p_2, β_p_3))
+    γ_p = Array(lp.c)
 
     coeff_q = CoefficientsSPARK(tsym, o, s, σ, a_q, b_q, c_q)
     coeff_p = CoefficientsSPARK(tsym, o, s, σ, a_p, b_p, c_p)

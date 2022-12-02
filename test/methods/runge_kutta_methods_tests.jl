@@ -19,8 +19,15 @@ iode = harmonic_oscillator_iode()
     @test typeof(Integrator(ode, Ralston2())) <: IntegratorERK
     @test typeof(Integrator(ode, Ralston3())) <: IntegratorERK
     @test typeof(Integrator(ode, RK4())) <: IntegratorERK
+    @test typeof(Integrator(ode, RK21())) <: IntegratorERK
+    @test typeof(Integrator(ode, RK22())) <: IntegratorERK
+    @test typeof(Integrator(ode, RK31())) <: IntegratorERK
+    @test typeof(Integrator(ode, RK32())) <: IntegratorERK
+    @test typeof(Integrator(ode, RK41())) <: IntegratorERK
+    @test typeof(Integrator(ode, RK42())) <: IntegratorERK
     @test typeof(Integrator(ode, RK416())) <: IntegratorERK
     @test typeof(Integrator(ode, RK438())) <: IntegratorERK
+    @test typeof(Integrator(ode, RK5())) <: IntegratorERK
     @test typeof(Integrator(ode, Runge2())) <: IntegratorERK
     @test typeof(Integrator(ode, SSPRK2())) <: IntegratorERK
     @test typeof(Integrator(ode, SSPRK3())) <: IntegratorERK
@@ -36,10 +43,10 @@ iode = harmonic_oscillator_iode()
     @test typeof(Integrator(ode, SRK3())) <: IntegratorFIRK
 
     @test typeof(Integrator(ode, Gauss(2))) <: IntegratorFIRK
+    @test typeof(Integrator(ode, LobattoIII(2))) <: IntegratorERK
     @test typeof(Integrator(ode, LobattoIIIA(2))) <: IntegratorDIRK
     @test typeof(Integrator(ode, LobattoIIIB(2))) <: IntegratorERK
     @test typeof(Integrator(ode, LobattoIIIC(2))) <: IntegratorFIRK
-    @test typeof(Integrator(ode, LobattoIIIC̄(2))) <: IntegratorERK
     @test typeof(Integrator(ode, LobattoIIID(2))) <: IntegratorFIRK
     @test typeof(Integrator(ode, LobattoIIIE(2))) <: IntegratorDIRK
     @test typeof(Integrator(ode, LobattoIIIF(2))) <: IntegratorFIRK
@@ -50,20 +57,7 @@ iode = harmonic_oscillator_iode()
     @test typeof(Integrator(ode, RadauIIA(2))) <: IntegratorFIRK
     @test typeof(Integrator(ode, RadauIIB(2))) <: IntegratorFIRK
 
-    @test tableau(ForwardEuler()) == tableau(RK(TableauForwardEuler()))
-    @test tableau(ExplicitEuler()) == tableau(RK(TableauExplicitEuler()))
-    @test tableau(ExplicitMidpoint()) == tableau(RK(TableauExplicitMidpoint()))
-    @test tableau(Heun2()) == tableau(RK(TableauHeun2()))
-    @test tableau(Heun3()) == tableau(RK(TableauHeun3()))
-    @test tableau(Kutta3()) == tableau(RK(TableauKutta3()))
-    @test tableau(Ralston2()) == tableau(RK(TableauRalston2()))
-    @test tableau(Ralston3()) == tableau(RK(TableauRalston3()))
     @test tableau(RK4()) == tableau(RK(TableauRK4()))
-    @test tableau(RK416()) == tableau(RK(TableauRK416()))
-    @test tableau(RK438()) == tableau(RK(TableauRK438()))
-    @test tableau(Runge2()) == tableau(RK(TableauRunge2()))
-    @test tableau(SSPRK2()) == tableau(RK(TableauSSPRK2()))
-    @test tableau(SSPRK3()) == tableau(RK(TableauSSPRK3()))
 
 end
 
@@ -78,10 +72,10 @@ end
     @test typeof(Integrator(pode, RadauIIA(2))) <: IntegratorIPRK
     @test typeof(Integrator(pode, RadauIIB(2))) <: IntegratorIPRK
 
+    @test typeof(Integrator(pode, LobattoIII(2))) <: IntegratorEPRK
     @test typeof(Integrator(pode, LobattoIIIA(2))) <: IntegratorIPRK
     @test typeof(Integrator(pode, LobattoIIIB(2))) <: IntegratorIPRK
     @test typeof(Integrator(pode, LobattoIIIC(2))) <: IntegratorIPRK
-    @test typeof(Integrator(pode, LobattoIIIC̄(2))) <: IntegratorEPRK
     @test typeof(Integrator(pode, LobattoIIID(2))) <: IntegratorIPRK
     @test typeof(Integrator(pode, LobattoIIIE(2))) <: IntegratorIPRK
     @test typeof(Integrator(pode, LobattoIIIF(2))) <: IntegratorIPRK

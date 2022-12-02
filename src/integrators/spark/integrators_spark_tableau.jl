@@ -35,15 +35,17 @@ struct AbstractTableauSPARK{IT, DT <: Number} <: AbstractTableau{DT}
     end
 
     function AbstractTableauSPARK{IT}(name::Symbol, order::Int,
-                             a_q::Matrix{DT}, a_p::Matrix{DT},
-                             α_q::Matrix{DT}, α_p::Matrix{DT},
-                             a_q̃::Matrix{DT}, a_p̃::Matrix{DT},
-                             α_q̃::Matrix{DT}, α_p̃::Matrix{DT},
-                             b_q::Vector{DT}, b_p::Vector{DT},
-                             β_q::Vector{DT}, β_p::Vector{DT},
-                             c_q::Vector{DT}, c_p::Vector{DT},
-                             c_λ::Vector{DT}, d_λ::Vector{DT},
-                             ω::Matrix{DT}, δ::Matrix{DT}, d::Vector{DT}=DT[]) where {IT, DT <: Number}
+                             a_q::AbstractMatrix{DT}, a_p::AbstractMatrix{DT},
+                             α_q::AbstractMatrix{DT}, α_p::AbstractMatrix{DT},
+                             a_q̃::AbstractMatrix{DT}, a_p̃::AbstractMatrix{DT},
+                             α_q̃::AbstractMatrix{DT}, α_p̃::AbstractMatrix{DT},
+                             b_q::AbstractVector{DT}, b_p::AbstractVector{DT},
+                             β_q::AbstractVector{DT}, β_p::AbstractVector{DT},
+                             c_q::AbstractVector{DT}, c_p::AbstractVector{DT},
+                             c_λ::AbstractVector{DT}, d_λ::AbstractVector{DT},
+                             ω::AbstractMatrix{DT},
+                             δ::AbstractMatrix{DT},
+                             d::AbstractVector{DT}=DT[]) where {IT, DT <: Number}
 
         s = length(c_q)
         r = length(c_λ)
@@ -72,15 +74,15 @@ struct AbstractTableauSPARK{IT, DT <: Number} <: AbstractTableau{DT}
     end
 
     function AbstractTableauSPARK{IT}(name::Symbol, order::Int,
-                             a_q::Matrix{DT}, a_p::Matrix{DT},
-                             α_q::Matrix{DT}, α_p::Matrix{DT},
-                             a_q̃::Matrix{DT}, a_p̃::Matrix{DT},
-                             α_q̃::Matrix{DT}, α_p̃::Matrix{DT},
-                             b_q::Vector{DT}, b_p::Vector{DT},
-                             β_q::Vector{DT}, β_p::Vector{DT},
-                             c_q::Vector{DT}, c_p::Vector{DT},
-                             c_λ::Vector{DT}, d_λ::Vector{DT},
-                             d::Vector{DT}=DT[]) where {IT, DT <: Number}
+                             a_q::AbstractMatrix{DT}, a_p::AbstractMatrix{DT},
+                             α_q::AbstractMatrix{DT}, α_p::AbstractMatrix{DT},
+                             a_q̃::AbstractMatrix{DT}, a_p̃::AbstractMatrix{DT},
+                             α_q̃::AbstractMatrix{DT}, α_p̃::AbstractMatrix{DT},
+                             b_q::AbstractVector{DT}, b_p::AbstractVector{DT},
+                             β_q::AbstractVector{DT}, β_p::AbstractVector{DT},
+                             c_q::AbstractVector{DT}, c_p::AbstractVector{DT},
+                             c_λ::AbstractVector{DT}, d_λ::AbstractVector{DT},
+                             d::AbstractVector{DT}=DT[]) where {IT, DT <: Number}
 
         R = length(c_λ)
         AbstractTableauSPARK{IT}(name, order,

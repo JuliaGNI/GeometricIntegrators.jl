@@ -20,8 +20,7 @@ module VPRK
     import ..Integrators: IntegratorCache, CacheDict, CacheType, Parameters
     import ..Integrators: AbstractTableau, AbstractCoefficients,
                           CoefficientsPGLRK,
-                          @CoefficientsRK, @HeaderTableau, @HeaderCoefficientsRK,
-                          get_symplectic_conjugate_coefficients
+                          @CoefficientsRK, @HeaderTableau, @HeaderCoefficientsRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
                           update_vector_fields!, update_solution!, update_multiplier!,
                           initialize!
@@ -34,10 +33,10 @@ module VPRK
     export IntegratorVPRKdegenerate
 
     export IntegratorVPRKpStandard, IntegratorVPRKpSymplectic,
-         IntegratorVPRKpInternal, IntegratorVPRKpMidpoint,
-         IntegratorVPRKpSymmetric, IntegratorVPRKpTableau,
-         IntegratorVPRKpSecondary, IntegratorVPRKpVariational,
-         IntegratorVPRKpVariationalQ, IntegratorVPRKpVariationalP
+           IntegratorVPRKpInternal, IntegratorVPRKpMidpoint,
+           IntegratorVPRKpSymmetric, IntegratorVPRKpTableau,
+           IntegratorVPRKpSecondary, IntegratorVPRKpVariational,
+           IntegratorVPRKpVariationalQ, IntegratorVPRKpVariationalP
 
     export IntegratorVPRKpLegendre#, TableauVPRKpLegendre
 

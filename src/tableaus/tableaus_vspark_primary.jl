@@ -276,7 +276,7 @@ function TableauVSPARKMidpointProjection(name, q::Tableau{T}, p::Tableau{T}, d=[
 
     g = TableauGauss(1)
     α̃ = g.a
-    β = g.b
+    β = Array(g.b)
     γ = g.c
 
     α = 0.5 * ones(T, s, 1)
@@ -375,7 +375,7 @@ function TableauVSPARKModifiedMidpointProjection(name, q::Tableau{T}, p::Tableau
 
     g = TableauGauss(1)
     α̃ = g.a
-    β = g.b
+    β = Array(g.b)
     γ = g.c
 
     q_ã = reshape(q.b ./ 2, 1, s)

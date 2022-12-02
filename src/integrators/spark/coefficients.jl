@@ -163,7 +163,7 @@ struct CoefficientsIRK{T} <: AbstractCoefficients{T}
     end
 end
 
-function CoefficientsIRK(name::Symbol, order::Int, a::Matrix{T}, b::Vector{T}, c::Vector{T}) where {T}
+function CoefficientsIRK(name::Symbol, order::Int, a::AbstractMatrix{T}, b::AbstractVector{T}, c::AbstractVector{T}) where {T}
     CoefficientsIRK{T}(name, order, size(a,2), size(a,1), a, b, c)
 end
 

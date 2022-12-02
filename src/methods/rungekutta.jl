@@ -100,11 +100,32 @@ struct Ralston3 <: RKMethod end
 "Explicit Runge-Kutta method with [`TableauRK4`](@ref)."
 struct RK4 <: RKMethod end
 
+"Explicit Runge-Kutta method with [`TableauRK21`](@ref)."
+struct RK21 <: RKMethod end
+
+"Explicit Runge-Kutta method with [`TableauRK22`](@ref)."
+struct RK22 <: RKMethod end
+
+"Explicit Runge-Kutta method with [`TableauRK31`](@ref)."
+struct RK31 <: RKMethod end
+
+"Explicit Runge-Kutta method with [`TableauRK32`](@ref)."
+struct RK32 <: RKMethod end
+
+"Explicit Runge-Kutta method with [`TableauRK41`](@ref)."
+struct RK41 <: RKMethod end
+
+"Explicit Runge-Kutta method with [`TableauRK42`](@ref)."
+struct RK42 <: RKMethod end
+
 "Explicit Runge-Kutta method with [`TableauRK416`](@ref)."
 struct RK416 <: RKMethod end
 
 "Explicit Runge-Kutta method with [`TableauRK438`](@ref)."
 struct RK438 <: RKMethod end
+
+"Explicit Runge-Kutta method with [`TableauRK5`](@ref)."
+struct RK5 <: RKMethod end
 
 "Explicit Runge-Kutta method with [`TableauRunge2`](@ref)."
 struct Runge2 <: RKMethod end
@@ -123,9 +144,16 @@ tableau(::Heun3) = TableauHeun3()
 tableau(::Kutta3) = TableauKutta3()
 tableau(::Ralston2) = TableauRalston2()
 tableau(::Ralston3) = TableauRalston3()
+tableau(::RK21) = TableauRK21()
+tableau(::RK22) = TableauRK22()
+tableau(::RK31) = TableauRK31()
+tableau(::RK32) = TableauRK32()
 tableau(::RK4) = TableauRK4()
+tableau(::RK41) = TableauRK41()
+tableau(::RK42) = TableauRK42()
 tableau(::RK416) = TableauRK416()
 tableau(::RK438) = TableauRK438()
+tableau(::RK5) = TableauRK5()
 tableau(::Runge2) = TableauRunge2()
 tableau(::SSPRK2) = TableauSSPRK2()
 tableau(::SSPRK3) = TableauSSPRK3()
@@ -175,6 +203,11 @@ struct Gauss <: RKMethod
     s::Int
 end
 
+"Runge-Kutta method with [`TableauLobattoIII`](@ref)."
+struct LobattoIII <: RKMethod
+    s::Int
+end
+
 "Runge-Kutta method with [`TableauLobattoIIIA`](@ref)."
 struct LobattoIIIA <: RKMethod
     s::Int
@@ -187,11 +220,6 @@ end
 
 "Runge-Kutta method with [`TableauLobattoIIIC`](@ref)."
 struct LobattoIIIC <: RKMethod
-    s::Int
-end
-
-"Runge-Kutta method with [`TableauLobattoIIIC̄`](@ref)."
-struct LobattoIIIC̄ <: RKMethod
     s::Int
 end
 
@@ -241,10 +269,10 @@ struct RadauIIB <: RKMethod
 end
 
 tableau(method::Gauss) = TableauGauss(method.s)
+tableau(method::LobattoIII) = TableauLobattoIII(method.s)
 tableau(method::LobattoIIIA) = TableauLobattoIIIA(method.s)
 tableau(method::LobattoIIIB) = TableauLobattoIIIB(method.s)
 tableau(method::LobattoIIIC) = TableauLobattoIIIC(method.s)
-tableau(method::LobattoIIIC̄) = TableauLobattoIIIC̄(method.s)
 tableau(method::LobattoIIID) = TableauLobattoIIID(method.s)
 tableau(method::LobattoIIIE) = TableauLobattoIIIE(method.s)
 tableau(method::LobattoIIIF) = TableauLobattoIIIF(method.s)
@@ -256,10 +284,10 @@ tableau(method::RadauIIA) = TableauRadauIIA(method.s)
 tableau(method::RadauIIB) = TableauRadauIIB(method.s)
 
 order(::Type{Gauss}) = "2s"
+order(::Type{LobattoIII}) = "2s-2"
 order(::Type{LobattoIIIA}) = "2s-2"
 order(::Type{LobattoIIIB}) = "2s-2"
 order(::Type{LobattoIIIC}) = "2s-2"
-order(::Type{LobattoIIIC̄}) = "2s-2"
 order(::Type{LobattoIIID}) = "2s-2"
 order(::Type{LobattoIIIE}) = "2s-2"
 order(::Type{LobattoIIIF}) = "2s"
@@ -271,10 +299,10 @@ order(::Type{RadauIIA}) = "2s-1"
 order(::Type{RadauIIB}) = "2s-1"
 
 isexplicit(::Type{Gauss}) = false
+isexplicit(::Type{LobattoIII}) = false
 isexplicit(::Type{LobattoIIIA}) = false
 isexplicit(::Type{LobattoIIIB}) = false
 isexplicit(::Type{LobattoIIIC}) = false
-isexplicit(::Type{LobattoIIIC̄}) = false
 isexplicit(::Type{LobattoIIID}) = false
 isexplicit(::Type{LobattoIIIE}) = false
 isexplicit(::Type{LobattoIIIF}) = false
@@ -286,10 +314,10 @@ isexplicit(::Type{RadauIIA}) = false
 isexplicit(::Type{RadauIIB}) = false
 
 isimplicit(::Type{Gauss}) = true
+isimplicit(::Type{LobattoIII}) = true
 isimplicit(::Type{LobattoIIIA}) = true
 isimplicit(::Type{LobattoIIIB}) = true
 isimplicit(::Type{LobattoIIIC}) = true
-isimplicit(::Type{LobattoIIIC̄}) = true
 isimplicit(::Type{LobattoIIID}) = true
 isimplicit(::Type{LobattoIIIE}) = true
 isimplicit(::Type{LobattoIIIF}) = true
@@ -301,10 +329,10 @@ isimplicit(::Type{RadauIIA}) = true
 isimplicit(::Type{RadauIIB}) = true
 
 issymmetric(::Type{Gauss}) = true
+issymmetric(::Type{LobattoIII}) = false
 issymmetric(::Type{LobattoIIIA}) = true
 issymmetric(::Type{LobattoIIIB}) = true
 issymmetric(::Type{LobattoIIIC}) = false
-issymmetric(::Type{LobattoIIIC̄}) = false
 issymmetric(::Type{LobattoIIID}) = true
 issymmetric(::Type{LobattoIIIE}) = true
 issymmetric(::Type{LobattoIIIF}) = true
@@ -316,10 +344,10 @@ issymmetric(::Type{RadauIIA}) = false
 issymmetric(::Type{RadauIIB}) = false
 
 issymplectic(::Type{Gauss}) = true
+issymplectic(::Type{LobattoIII}) = false
 issymplectic(::Type{LobattoIIIA}) = false
 issymplectic(::Type{LobattoIIIB}) = false
 issymplectic(::Type{LobattoIIIC}) = false
-issymplectic(::Type{LobattoIIIC̄}) = false
 issymplectic(::Type{LobattoIIID}) = true
 issymplectic(::Type{LobattoIIIE}) = true
 issymplectic(::Type{LobattoIIIF}) = false

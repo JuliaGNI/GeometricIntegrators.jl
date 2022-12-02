@@ -386,10 +386,10 @@ where `tableau` is any tableau from [RungeKutta.Tableaus](@ref RungeKuttaTableau
 | [`RadauIB`](@ref)               | 2s-1  | Radau-IB                    |
 | [`RadauIIA`](@ref)              | 2s-1  | Radau-IIA                   |
 | [`RadauIIB`](@ref)              | 2s-1  | Radau-IIB                   |
+| [`LobattoIII`](@ref)            | 2s-2  | Lobatto-III                 |
 | [`LobattoIIIA`](@ref)           | 2s-2  | Lobatto-IIIA                |
 | [`LobattoIIIB`](@ref)           | 2s-2  | Lobatto-IIIB                |
 | [`LobattoIIIC`](@ref)           | 2s-2  | Lobatto-IIIC                |
-| [`LobattoIIIC̄`](@ref)           | 2s-2  | Lobatto-IIIC̄                |
 | [`LobattoIIID`](@ref)           | 2s-2  | Lobatto-IIID                |
 | [`LobattoIIIE`](@ref)           | 2s-2  | Lobatto-IIIE                |
 | [`LobattoIIIF`](@ref)           | 2s    | Lobatto-IIIF                |
@@ -456,10 +456,10 @@ All implicit Runge-Kutta and partitioned Runge-Kutta methods can also be applied
 | [`RadauIB`](@ref)               | 2s-1  | Radau-IB                    |
 | [`RadauIIA`](@ref)              | 2s-1  | Radau-IIA                   |
 | [`RadauIIB`](@ref)              | 2s-1  | Radau-IIB                   |
+| [`LobattoIII`](@ref)            | 2s-2  | Lobatto-III                 |
 | [`LobattoIIIA`](@ref)           | 2s-2  | Lobatto-IIIA                |
 | [`LobattoIIIB`](@ref)           | 2s-2  | Lobatto-IIIB                |
 | [`LobattoIIIC`](@ref)           | 2s-2  | Lobatto-IIIC                |
-| [`LobattoIIIC̄`](@ref)           | 2s-2  | Lobatto-IIIC̄                |
 | [`LobattoIIID`](@ref)           | 2s-2  | Lobatto-IIID                |
 | [`LobattoIIIE`](@ref)           | 2s-2  | Lobatto-IIIE                |
 | [`LobattoIIIF`](@ref)           | 2s    | Lobatto-IIIF                |
@@ -490,10 +490,10 @@ methods or Continuous Galerkin Variational Integrators ([`CGVI`](@ref)).
 | [`VPRKGauss`](@ref)             | VPRK integrator with [`TableauGauss`](@ref)                               |
 | [`VPRKRadauIIA`](@ref)          | VPRK integrator with [`TableauRadauIIA`](@ref)                            |
 | [`VPRKRadauIIB`](@ref)          | VPRK integrator with [`TableauRadauIIB`](@ref)                            |
+| [`VPRKLobattoIII`](@ref)        | VPRK integrator with [`TableauLobattoIII`](@ref)                          |
 | [`VPRKLobattoIIIA`](@ref)       | VPRK integrator with [`TableauLobattoIIIA`](@ref)                         |
 | [`VPRKLobattoIIIB`](@ref)       | VPRK integrator with [`TableauLobattoIIIB`](@ref)                         |
 | [`VPRKLobattoIIIC`](@ref)       | VPRK integrator with [`TableauLobattoIIIC`](@ref)                         |
-| [`VPRKLobattoIIIC̄`](@ref)       | VPRK integrator with [`TableauLobattoIIIC̄`](@ref)                         |
 | [`VPRKLobattoIIID`](@ref)       | VPRK integrator with [`TableauLobattoIIID`](@ref)                         |
 | [`VPRKLobattoIIIE`](@ref)       | VPRK integrator with [`TableauLobattoIIIE`](@ref)                         |
 | [`VPRKLobattoIIIF`](@ref)       | VPRK integrator with [`TableauLobattoIIIF`](@ref)                         |

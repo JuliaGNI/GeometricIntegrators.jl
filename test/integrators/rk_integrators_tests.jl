@@ -25,9 +25,9 @@ pdae = harmonic_oscillator_pdae()
     @test typeof(Integrator(pode, PartitionedTableau(:iprk_midpoint, TableauImplicitMidpoint()))) <: IntegratorIPRK
     @test typeof(Integrator(iode, PartitionedTableau(:iprk_midpoint, TableauImplicitMidpoint()))) <: IntegratorPRKimplicit
 
-    @test_logs (:warn, r"Initializing IntegratorDIRK with explicit tableau heun.*") IntegratorDIRK(ode, TableauHeun2())
-    @test_logs (:warn, r"Initializing IntegratorFIRK with explicit tableau heun.*") IntegratorFIRK(ode, TableauHeun2())
-    @test_logs (:warn, r"Initializing IntegratorFIRK with diagonally implicit tableau crouzeix.*") IntegratorFIRK(ode, TableauCrouzeix())
+    @test_logs (:warn, r"Initializing IntegratorDIRK with explicit tableau Heun2.*") IntegratorDIRK(ode, TableauHeun2())
+    @test_logs (:warn, r"Initializing IntegratorFIRK with explicit tableau Heun2.*") IntegratorFIRK(ode, TableauHeun2())
+    @test_logs (:warn, r"Initializing IntegratorFIRK with diagonally implicit tableau Crouzeix.*") IntegratorFIRK(ode, TableauCrouzeix())
 
     int_erk  = Integrator(ode, TableauExplicitMidpoint())
     int_dirk = Integrator(ode, TableauCrouzeix())
