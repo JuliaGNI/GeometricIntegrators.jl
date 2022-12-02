@@ -2,6 +2,7 @@
 meta_methods = (
     RK,
     PRK,
+    FLRK,
     VPRK,
     DegenerateVPRK,
     ProjectedVPRK,

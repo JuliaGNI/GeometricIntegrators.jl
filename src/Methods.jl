@@ -15,6 +15,7 @@ module Methods
     include("methods/projection.jl")
     include("methods/rungekutta.jl")
     include("methods/splitting.jl")
+    include("methods/flrk.jl")
     include("methods/vprk.jl")
     include("methods/vprk_degenerate.jl")
     include("methods/vprk_projected.jl")

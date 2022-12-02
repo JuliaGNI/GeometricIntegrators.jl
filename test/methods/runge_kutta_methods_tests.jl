@@ -1,11 +1,12 @@
-using GeometricProblems.HarmonicOscillator
+using GeometricEquations.Tests.HarmonicOscillator
 
 using GeometricIntegrators.Methods: tableau
 
-ode  = harmonic_oscillator_ode()
-pode = harmonic_oscillator_pode()
-hode = harmonic_oscillator_hode()
-iode = harmonic_oscillator_iode()
+ode  = odeproblem()
+pode = podeproblem()
+hode = hodeproblem()
+iode = iodeproblem()
+lode = lodeproblem()
 
 
 @testset "$(rpad("Runge-Kutta methods",80))" begin
@@ -102,5 +103,11 @@ end
     @test typeof(Integrator(iode, ImplicitMidpoint())) <: IntegratorFIRKimplicit
     @test typeof(Integrator(iode, SRK3())) <: IntegratorFIRKimplicit
     @test typeof(Integrator(iode, Gauss(2))) <: IntegratorFIRKimplicit
+
+end
+
+@testset "$(rpad("Formal Lagrangian Runge-Kutta methods",80))" begin
+
+    @test typeof(Integrator(lode, FLRK(Gauss(1)))) <: IntegratorFLRK
 
 end
