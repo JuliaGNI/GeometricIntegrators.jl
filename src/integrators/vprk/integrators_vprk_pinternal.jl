@@ -18,13 +18,13 @@ struct IntegratorVPRKpInternal{DT, TT, D, S,
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpInternal{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,D}
+    function IntegratorVPRKpInternal{DT,D}(equations::NamedTuple, tableau::PartitionedTableau{TT}, nullvec, Δt::TT) where {DT,TT,D}
         # get number of stages
         S = tableau.s
 
         # create params
         R = TT[1, tableau.R∞]
-        params = ParametersVPRKpInternal{DT,D}(equations, tableau, Δt, NamedTuple{(:R,)}((R,)))
+        params = ParametersVPRKpInternal{DT,D}(equations, tableau, nullvec, Δt, NamedTuple{(:R,)}((R,)))
 
         # create cache dict
         caches = CacheDict(params)
@@ -39,8 +39,8 @@ struct IntegratorVPRKpInternal{DT, TT, D, S,
         IntegratorVPRKpInternal(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpInternal(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
-        IntegratorVPRKpInternal{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
+    function IntegratorVPRKpInternal(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
+        IntegratorVPRKpInternal{DT, ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
 end
 

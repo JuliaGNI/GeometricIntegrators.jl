@@ -1,0 +1,3 @@
+
+# Degenerate Variational Integrators
+

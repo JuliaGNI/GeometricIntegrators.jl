@@ -11,7 +11,29 @@ function IntegratorCache{ST}(params::ParametersVPRK{DT,TT,D,S}; kwargs...) where
 end
 
 
-"Variational partitioned Runge-Kutta integrator."
+@doc raw"""
+Variational partitioned Runge-Kutta integrator.
+
+```math
+\begin{aligned}
+P_{n,i} &= \dfrac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , &
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} , \\
+F_{n,i} &= \dfrac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , &
+P_{n,i} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{a}_{ij} \, F_{n,j} - d_i \lambda , &
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i} \, F_{n,i} , \\
+&&
+0 &= \sum \limits_{i=1}^{s} d_i V_i , &&
+\end{aligned}
+```
+satisfying the symplecticity conditions
+```math
+\begin{aligned}
+b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
+\bar{b}_i &= b_i .
+\end{aligned}
+```
+"""
 struct IntegratorVPRK{DT, TT, D, S, PT <: ParametersVPRK{DT,TT},
                                     ST <: NonlinearSolver{DT},
                                     IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
@@ -24,12 +46,12 @@ struct IntegratorVPRK{DT, TT, D, S, PT <: ParametersVPRK{DT,TT},
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRK{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,D}
+    function IntegratorVPRK{DT,D}(equations::NamedTuple, tableau::PartitionedTableau{TT}, nullvec, Δt::TT) where {DT,TT,D}
         # get number of stages
         S = tableau.s
 
         # create params
-        params = ParametersVPRK{DT,D}(equations, tableau, Δt)
+        params = ParametersVPRK{DT,D}(equations, tableau, nullvec, Δt)
 
         # create cache dict
         caches = CacheDict(params)
@@ -45,17 +67,17 @@ struct IntegratorVPRK{DT, TT, D, S, PT <: ParametersVPRK{DT,TT},
     end
 
     function IntegratorVPRK{DT,D}(ϑ::Function, f::Function, g::Function, v::Function,
-                    tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
-        IntegratorVPRK{DT,D}(NamedTuple{(:ϑ,:f,:g,:v)}((ϑ, f, g, v)), tableau, Δt; kwargs...)
+                    tableau::PartitionedTableau{TT}, nullvec, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorVPRK{DT,D}(NamedTuple{(:ϑ,:f,:g,:v)}((ϑ, f, g, v)), tableau, nullvec, Δt; kwargs...)
     end
 
     function IntegratorVPRK{DT,D}(ϑ::Function, f::Function, g::Function, v::Function, h::Function,
-                    tableau::TableauVPRK{TT}, Δt::TT; kwargs...) where {DT,TT,D}
-        IntegratorVPRK{DT,D}(NamedTuple{(:ϑ,:f,:g,:v,:h)}((ϑ, f, g, v, h)), tableau, Δt; kwargs...)
+                    tableau::PartitionedTableau{TT}, nullvec, Δt::TT; kwargs...) where {DT,TT,D}
+        IntegratorVPRK{DT,D}(NamedTuple{(:ϑ,:f,:g,:v,:h)}((ϑ, f, g, v, h)), tableau, nullvec, Δt; kwargs...)
     end
 
-    function IntegratorVPRK(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
-        IntegratorVPRK{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
+    function IntegratorVPRK(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
+        IntegratorVPRK{DT, ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
 end
 

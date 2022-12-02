@@ -28,31 +28,31 @@ reference_solution = sol.q[end]
 
 @testset "$(rpad("VPRK integrators",80))" begin
 
-    sol = integrate(iode, TableauVPRK(:pglrk, 2, TableauGauss(1), -1))
+    sol = integrate(iode, VPRKGauss(1))
     @test relative_maximum_error(sol.q, reference_solution) < 2E-6
 
-    sol = integrate(iode, TableauVPRK(:pglrk, 4, TableauGauss(2), +1))
+    sol = integrate(iode, VPRKGauss(2))
     @test relative_maximum_error(sol.q, reference_solution) < 8E-7
 
-    sol = integrate(iode, TableauVPRK(:pglrk, 6, TableauGauss(3), -1))
+    sol = integrate(iode, VPRKGauss(3))
     @test relative_maximum_error(sol.q, reference_solution) < 4E-12
 
-    sol = integrate(iode, TableauVPLobattoIIIA(2))
+    sol = integrate(iode, VPRKLobattoIIIAIIIĀ(2))
     @test relative_maximum_error(sol.q, reference_solution) < 4E-6
 
-    sol = integrate(iode, TableauVPLobattoIIIA(3))
+    sol = integrate(iode, VPRKLobattoIIIAIIIĀ(3))
     @test relative_maximum_error(sol.q, reference_solution) < 8E-7
 
-    sol = integrate(iode, TableauVPLobattoIIIA(4))
+    sol = integrate(iode, VPRKLobattoIIIAIIIĀ(4))
     @test relative_maximum_error(sol.q, reference_solution) < 3E-11
 
-    sol = integrate(iode, TableauVPLobattoIIIB(2))
+    sol = integrate(iode, VPRKLobattoIIIBIIIB̄(2))
     @test relative_maximum_error(sol.q, reference_solution) < 2E-6
 
-    sol = integrate(iode, TableauVPLobattoIIIB(3))
+    sol = integrate(iode, VPRKLobattoIIIBIIIB̄(3))
     @test relative_maximum_error(sol.q, reference_solution) < 8E-7
 
-    sol = integrate(iode, TableauVPLobattoIIIB(4))
+    sol = integrate(iode, VPRKLobattoIIIBIIIB̄(4))
     @test relative_maximum_error(sol.q, reference_solution) < 2E-11
 
 end
@@ -60,16 +60,13 @@ end
 
 @testset "$(rpad("VPRK integrators with standard projection",80))" begin
 
-    int = IntegratorVPRKpStandard(iode, TableauVPGLRK(1))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpStandard(VPRKGauss(1)))
     @test relative_maximum_error(sol.q, reference_solution) < 1E-6
 
-    int = IntegratorVPRKpStandard(iode, TableauVPGLRK(2))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpStandard(VPRKGauss(2)))
     @test relative_maximum_error(sol.q, reference_solution) < 1E-11
 
-    int = IntegratorVPRKpStandard(iode, TableauVPGLRK(3))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpStandard(VPRKGauss(3)))
     @test relative_maximum_error(sol.q, reference_solution) < 1E-15
 
 end
@@ -77,16 +74,13 @@ end
 
 @testset "$(rpad("VPRK integrators with symplectic projection",80))" begin
 
-    int = IntegratorVPRKpSymplectic(iode, TableauVPGLRK(1))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpSymplectic(VPRKGauss(1)))
     @test relative_maximum_error(sol.q, reference_solution) < 4E-6
 
-    int = IntegratorVPRKpSymplectic(iode, TableauVPGLRK(2))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpSymplectic(VPRKGauss(2)))
     @test relative_maximum_error(sol.q, reference_solution) < 1E-11
 
-    int = IntegratorVPRKpSymplectic(iode, TableauVPGLRK(3))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpSymplectic(VPRKGauss(3)))
     @test relative_maximum_error(sol.q, reference_solution) < 8E-12
 
 end
@@ -94,54 +88,44 @@ end
 
 @testset "$(rpad("VPRK integrators with symmetric projection",80))" begin
 
-    int = IntegratorVPRKpSymmetric(iode, TableauVPGLRK(1))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpSymmetric(VPRKGauss(1)))
     @test relative_maximum_error(sol.q, reference_solution) < 1E-6
 
-    int = IntegratorVPRKpSymmetric(iode, TableauVPGLRK(2))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpSymmetric(VPRKGauss(2)))
     @test relative_maximum_error(sol.q, reference_solution) < 1E-11
 
-    int = IntegratorVPRKpSymmetric(iode, TableauVPGLRK(3))
-    sol = integrate(iode, int)
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-16
+    sol = integrate(iode, VPRKpSymmetric(VPRKGauss(3)))
+    @test relative_maximum_error(sol.q, reference_solution) < 5E-16
 
 end
 
 
 @testset "$(rpad("VPRK integrators with midpoint projection",80))" begin
 
-    int = IntegratorVPRKpMidpoint(iode, TableauVPGLRK(1))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpMidpoint(VPRKGauss(1)))
     @test relative_maximum_error(sol.q, reference_solution) < 1E-6
 
-    int = IntegratorVPRKpMidpoint(iode, TableauVPGLRK(2))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpMidpoint(VPRKGauss(2)))
     @test relative_maximum_error(sol.q, reference_solution) < 1E-11
 
-    int = IntegratorVPRKpMidpoint(iode, TableauVPGLRK(3))
-    sol = integrate(iode, int)
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-16
+    sol = integrate(iode, VPRKpMidpoint(VPRKGauss(3)))
+    @test relative_maximum_error(sol.q, reference_solution) < 5E-16
 
 end
 
 
 @testset "$(rpad("VPRK integrators with internal projection",80))" begin
 
-    int = IntegratorVPRKpInternal(iode, TableauVPGLRK(1))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpInternal(VPRKGauss(1)))
     @test relative_maximum_error(sol.q, reference_solution) < 2E-6
 
-    int = IntegratorVPRKpInternal(iode, TableauVPGLRK(2))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpInternal(VPRKGauss(2)))
     @test relative_maximum_error(sol.q, reference_solution) < 1E-11
 
-    int = IntegratorVPRKpInternal(iode, TableauVPGLRK(3))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpInternal(VPRKGauss(3)))
     @test relative_maximum_error(sol.q, reference_solution) < 4E-12
 
-    int = IntegratorVPRKpInternal(iode, TableauVPGLRK(4))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpInternal(VPRKGauss(4)))
     @test relative_maximum_error(sol.q, reference_solution) < 8E-16
 
 end
@@ -151,57 +135,45 @@ end
 
     # TODO: reactivate
 
-    # int = IntegratorVPRKpSecondary(ldae, TableauVPGLRK(1))
-    # sol = integrate(ldae, int)
-    # @test relative_maximum_error(sol.q, refx) < 2E-6
+    # sol = integrate(ldae, VPRKpSecondary(VPRKGauss(1)))
+    # @test relative_maximum_error(sol.q, reference_solution) < 2E-6
 
-    # int = IntegratorVPRKpSecondary(ldae, TableauVPGLRK(2))
-    # sol = integrate(ldae, int)
-    # @test relative_maximum_error(sol.q, refx) < 8E-7
+    # sol = integrate(ldae, VPRKpSecondary(VPRKGauss(2)))
+    # @test relative_maximum_error(sol.q, reference_solution) < 8E-7
 
-    # int = IntegratorVPRKpSecondary(ldae, TableauVPGLRK(3))
-    # sol = integrate(ldae, int)
-    # @test relative_maximum_error(sol.q, refx) < 4E-12
+    # sol = integrate(ldae, VPRKpSecondary(VPRKGauss(3)))
+    # @test relative_maximum_error(sol.q, reference_solution) < 4E-12
 
 end
 
 
 @testset "$(rpad("VPRK integrators with variational projection",80))" begin
 
-    intV1 = IntegratorVPRKpVariational(iode, TableauVPGLRK(1))
-    solV1 = integrate(iode, intV1)
+    solV1 = integrate(iode, VPRKpVariational(VPRKGauss(1)))
     @test relative_maximum_error(solV1.q, reference_solution) < 8E-7
 
-    intV2 = IntegratorVPRKpVariational(iode, TableauVPGLRK(2))
-    solV2 = integrate(iode, intV2)
+    solV2 = integrate(iode, VPRKpVariational(VPRKGauss(2)))
     @test relative_maximum_error(solV2.q, reference_solution) < 8E-8
 
-    intV3 = IntegratorVPRKpVariational(iode, TableauVPGLRK(3))
-    solV3 = integrate(iode, intV3)
+    solV3 = integrate(iode, VPRKpVariational(VPRKGauss(3)))
     @test relative_maximum_error(solV3.q, reference_solution) < 1E-11
 
-    intQ1 = IntegratorVPRKpVariationalQ(iode, TableauVPGLRK(1))
-    solQ1 = integrate(iode, intQ1)
+    solQ1 = integrate(iode, VPRKpVariationalQ(VPRKGauss(1)))
     @test relative_maximum_error(solQ1.q, reference_solution) < 4E-5
 
-    intQ2 = IntegratorVPRKpVariationalQ(iode, TableauVPGLRK(2))
-    solQ2 = integrate(iode, intQ2)
+    solQ2 = integrate(iode, VPRKpVariationalQ(VPRKGauss(2)))
     @test relative_maximum_error(solQ2.q, reference_solution) < 2E-4
 
-    intQ3 = IntegratorVPRKpVariationalQ(iode, TableauVPGLRK(3))
-    solQ3 = integrate(iode, intQ3)
+    solQ3 = integrate(iode, VPRKpVariationalQ(VPRKGauss(3)))
     @test relative_maximum_error(solQ3.q, reference_solution) < 1E-8
 
-    intP1 = IntegratorVPRKpVariationalP(iode, TableauVPGLRK(1))
-    solP1 = integrate(iode, intP1)
+    solP1 = integrate(iode, VPRKpVariationalP(VPRKGauss(1)))
     @test relative_maximum_error(solP1.q, reference_solution) < 8E-7
 
-    intP2 = IntegratorVPRKpVariationalP(iode, TableauVPGLRK(2))
-    solP2 = integrate(iode, intP2)
+    solP2 = integrate(iode, VPRKpVariationalP(VPRKGauss(2)))
     @test relative_maximum_error(solP2.q, reference_solution) < 8E-8
 
-    intP3 = IntegratorVPRKpVariationalP(iode, TableauVPGLRK(3))
-    solP3 = integrate(iode, intP3)
+    solP3 = integrate(iode, VPRKpVariationalP(VPRKGauss(3)))
     @test relative_maximum_error(solP3.q, reference_solution) < 1E-11
 
     @test relative_maximum_error(solV1.q, solP1.q[end]) == 0
@@ -212,6 +184,8 @@ end
 
 
 @testset "$(rpad("VPRK integrators with projection on Runge-Kutta tableau",80))" begin
+
+    # TODO: reactivate
 
     # int = IntegratorVPRKpTableau(iode, CoefficientsPGLRK(5), Δt*5)
     # sol = integrate(iode, int, div(nt,5))
@@ -226,33 +200,27 @@ end
 
 @testset "$(rpad("Degenerate symplectic partitioned Runge-Kutta methods",80))" begin
 
-    int = IntegratorVPRKdegenerate(iode, TableauVPGLRK(1))
-    sol = integrate(iode, int)
+    sol = integrate(iode, DegenerateVPRK(VPRKGauss(1)))
     @test relative_maximum_error(sol.q, reference_solution) < 2E-5
 
-    int = IntegratorVPRKdegenerate(iode, TableauVPGLRK(2))
-    sol = integrate(iode, int)
+    sol = integrate(iode, DegenerateVPRK(VPRKGauss(2)))
     @test relative_maximum_error(sol.q, reference_solution) < 4E-7
 
-    int = IntegratorVPRKdegenerate(iode, TableauVPGLRK(3))
-    sol = integrate(iode, int)
+    sol = integrate(iode, DegenerateVPRK(VPRKGauss(3)))
     @test relative_maximum_error(sol.q, reference_solution) < 2E-10
 
 end
 
 
-@testset "$(rpad("VSPRK integrators with Legendre projection",80))" begin
+@testset "$(rpad("VPRK integrators with Legendre projection",80))" begin
 
-    int = IntegratorVPRKpLegendre(iode, TableauVPGLRK(1))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpLegendre(VPRKGauss(1)))
     @test relative_maximum_error(sol.q, reference_solution) < 1E-6
 
-    int = IntegratorVPRKpLegendre(iode, TableauVPGLRK(2))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpLegendre(VPRKGauss(2)))
     @test relative_maximum_error(sol.q, reference_solution) < 1E-11
 
-    int = IntegratorVPRKpLegendre(iode, TableauVPGLRK(3))
-    sol = integrate(iode, int)
+    sol = integrate(iode, VPRKpLegendre(VPRKGauss(3)))
     @test relative_maximum_error(sol.q, reference_solution) < 8E-16
 
 end

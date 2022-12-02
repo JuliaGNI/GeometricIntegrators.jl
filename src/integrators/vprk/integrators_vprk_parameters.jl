@@ -1,8 +1,9 @@
 
 "Parameters for right-hand side function of variational partitioned Runge-Kutta methods."
-mutable struct AbstractParametersVPRK{IT, DT, TT, D, S, ET <: NamedTuple, PT <: NamedTuple} <: Parameters{DT,TT}
+mutable struct AbstractParametersVPRK{IT, DT, TT, D, S, ET, PT, NV} <: Parameters{DT,TT}
     equ::ET
-    tab::TableauVPRK{TT}
+    tab::PartitionedTableau{TT}
+    nullvec::NV
     Δt::TT
 
     pparams::PT
@@ -12,8 +13,8 @@ mutable struct AbstractParametersVPRK{IT, DT, TT, D, S, ET <: NamedTuple, PT <: 
     p̄::Vector{DT}
     v̄::Vector{DT}
 
-    function AbstractParametersVPRK{IT,DT,D}(equs::ET, tab::TableauVPRK{TT}, Δt::TT, pparams::PT=NamedTuple()) where {IT, DT, TT, D, ET <: NamedTuple, PT <: NamedTuple}
-        new{IT, DT, TT, D, tab.s, ET, PT}(equs, tab, Δt, pparams, zero(TT), zeros(DT,D), zeros(DT,D), zeros(DT,D))
+    function AbstractParametersVPRK{IT,DT,D}(equs::ET, tab::PartitionedTableau{TT}, nullvec::NV, Δt::TT, pparams::PT=NamedTuple()) where {IT, DT, TT, D, ET <: NamedTuple, PT <: NamedTuple, NV <: Union{AbstractArray,Nothing}}
+        new{IT, DT, TT, D, tab.s, ET, PT, NV}(equs, tab, nullvec, Δt, pparams, zero(TT), zeros(DT,D), zeros(DT,D), zeros(DT,D))
     end
 end
 

@@ -1,13 +1,18 @@
 using Documenter
 using DocumenterCitations
 using GeometricIntegrators
+using Weave
 
+
+ENV["GKSwstype"] = "100"
 
 cp(normpath(@__FILE__, "../../AUTHORS.md"), normpath(@__FILE__, "../src/authors.md"); force=true)
 
 bib = CitationBibliography("GeometricIntegrators.bib")
 
 DocMeta.setdocmeta!(GeometricIntegrators, :DocTestSetup, :(using GeometricIntegrators); recursive=true)
+
+weave("src/methods.jmd", out_path = "src", doctype = "github")
 
 makedocs(bib,
     sitename = "GeometricIntegrators.jl",
@@ -38,33 +43,30 @@ makedocs(bib,
              ),
     pages = ["Home" => "index.md",
              "Tutorial" => "tutorial.md",
-             "Problem Types" => "equations.md",
+             "Problems" => "problems.md",
+             "Methods"    => "methods.md",
              "Integrators" => [
-                "Usage"       => "integrators/usage.md",
-                "Overview"    => "integrators/overview.md",
                 "Runge-Kutta" => "integrators/rk.md",
                 "Splitting"   => "integrators/splitting.md",
                 "Variational" => "integrators/variational.md",
                 "VPRK"        => "integrators/vprk.md",
                 "SPARK"       => "integrators/spark.md",
+                "DVI"         => "integrators/dvi.md",
                 "CGVI"        => "integrators/cgvi.md",
                #  "DGVI"        => "integrators/dgvi.md",
                #  "HPG"         => "integrators/hpg.md",
                ],
              "Modules" => [
                # "Discontinuities"     => "modules/discontinuities.md",
-                "Integrators"         => "modules/integrators.md",
-                "Problems"            => "modules/equations.md",
+                 "Methods"             => "modules/methods.md",
+                 "Integrators"         => "modules/integrators.md",
+                 "Problems"            => "modules/equations.md",
                # "Simulations"         => "modules/simulations.md",
-                "Solutions"           => "modules/solutions.md",
-               ],
-             "Tableaus" => [
-                "Runge-Kutta Methods" => "tableaus/rungekutta.md",
-                "Partitioned Runge-Kutta Methods" => "tableaus/rungekutta_partitioned.md",
-                "Splitting Methods"   => "tableaus/splitting.md",
-                "VPRK Methods"        => "tableaus/vprk.md",
-                "SPARK Methods"       => "tableaus/spark.md",
-               ],
+                 "Solutions"           => "modules/solutions.md",
+                 "Runge-Kutta Tableaus" => "modules/rungekutta.md",
+                 "Partitioned Runge-Kutta Tableaus" => "modules/rungekutta_partitioned.md",
+                 "SPARK Methods"       => "modules/spark.md",
+                 ],
              "Developer Docs" =>[
                 "Code Integration"    => "developer/code_integration.md",
                 "Custom Integrators"  => "developer/custom_integrators.md",
@@ -81,7 +83,8 @@ makedocs(bib,
     modules = [GeometricIntegrators,
                GeometricBase,
                GeometricEquations,
-               GeometricSolutions]
+               GeometricSolutions,
+               RungeKutta]
 )
 
 deploydocs(

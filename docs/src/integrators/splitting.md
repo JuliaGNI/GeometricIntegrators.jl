@@ -350,3 +350,19 @@ and composed as
 \varphi_{\tau}^{SS} = \varphi_{a_1 \tau}^{S} \circ \varphi_{a_2 \tau}^{S} \circ \dotsc \circ \varphi_{a_s \tau}^{S} \circ \dotsc \circ \varphi_{a_2 \tau}^{S} \circ \varphi_{a_1 \tau}^{S} ,
 ```
 to obtain an integrator.
+
+
+### Implemented Splitting Methods
+
+| Function                        | Order | Method                       |
+|:--------------------------------|:------|:-----------------------------|
+| [`LieA`](@ref)                  | 1     | Lie-Trotter Splitting A      |
+| [`LieB`](@ref)                  | 1     | Lie-Trotter Splitting B      |
+| [`Strang`](@ref)                | 2     | Strang / Marchuk Splitting   |
+| [`Marchuk`](@ref)               | 2     | Strang / Marchuk Splitting   |
+| [`StrangA`](@ref)               | 2     | Strang / Marchuk Splitting A |
+| [`StrangB`](@ref)               | 2     | Strang / Marchuk Splitting B |
+| [`McLachlan2`](@ref)            | 2     | McLachlan's 2nd order symmetric, minimum error composition method |
+| [`McLachlan4`](@ref)            | 2     | McLachlan's 4th order symmetric, minimum error composition method |
+| [`TripleJump`](@ref)            | 4     | 4th order "Triple Jump" composition method                        |
+| [`SuzukiFractal`](@ref)         | 4     | Suzuki's 4th order "fractal" composition method                   |

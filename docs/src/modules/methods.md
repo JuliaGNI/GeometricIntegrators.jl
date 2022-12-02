@@ -1,6 +1,7 @@
-# Runge-Kutta Tableaus
+
+# Methods
 
 ```@autodocs
-Modules = [RungeKutta.Tableaus]
+Modules = [GeometricIntegrators.Methods]
 Order   = [:constant, :type, :macro, :function]
 ```

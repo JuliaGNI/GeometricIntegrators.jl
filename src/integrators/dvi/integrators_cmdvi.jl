@@ -50,7 +50,7 @@ end
 
 
 """
-Implicit midpoint Runge-Kutta integrator.
+Midpoint Degenerate Variational Integrator.
 """
 struct IntegratorCMDVI{DT, TT, D, PT <: ParametersCMDVI{DT,TT},
                                    ST <: NonlinearSolver{DT},

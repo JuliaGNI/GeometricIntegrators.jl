@@ -24,13 +24,13 @@ struct IntegratorVPRKpStandard{DT, TT, D, S,
         new{DT, TT, D, S, typeof(params), typeof(pparams), ST, PST, IT}(params, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKpStandard{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT,
+    function IntegratorVPRKpStandard{DT,D}(equations::NamedTuple, tableau::PartitionedTableau{TT}, nullvec, Δt::TT,
                                         RU::Vector, RG::Vector; R∞::Int=tableau.R∞) where {DT, TT, D}
         # get number of stages
         S = tableau.s
 
         # create params
-        params  = ParametersVPRK{DT,D}(equations, tableau, Δt)
+        params  = ParametersVPRK{DT,D}(equations, tableau, nullvec, Δt)
 
         # create projector params
         RU  = Vector{TT}(RU)
@@ -40,7 +40,7 @@ struct IntegratorVPRKpStandard{DT, TT, D, S,
         RG1 = [RG[1], zero(TT)]
         RG2 = [zero(TT), R∞ * RG[2]]
 
-        pparams = ParametersVPRKpStandard{DT,D}(equations, tableau, Δt,
+        pparams = ParametersVPRKpStandard{DT,D}(equations, tableau, nullvec, Δt,
                     NamedTuple{(:RU, :RU1, :RU2, :RG, :RG1, :RG2)}((RU, RU1, RU2, RG, RG1, RG2)))
 
         # create cache dict
@@ -59,33 +59,33 @@ struct IntegratorVPRKpStandard{DT, TT, D, S,
         IntegratorVPRKpStandard(params, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKpStandard(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, RU, RG; kwargs...) where {DT}
-        IntegratorVPRKpStandard{DT, ndims(problem)}(functions(problem), tableau, timestep(problem), RU, RG; kwargs...)
+    function IntegratorVPRKpStandard(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, nullvec, RU, RG; kwargs...) where {DT}
+        IntegratorVPRKpStandard{DT, ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem), RU, RG; kwargs...)
     end
 end
 
 "Variational partitioned Runge-Kutta integrator with standard projection."
-function IntegratorVPRKpStandard(problem, tableau)
-    IntegratorVPRKpStandard(problem, tableau, [0,1], [0,1]; R∞=1)
+function IntegratorVPRKpStandard(problem, tableau, nullvec)
+    IntegratorVPRKpStandard(problem, tableau, nullvec, [0,1], [0,1]; R∞=1)
 end
 
 "Variational partitioned Runge-Kutta integrator with symplectic projection."
-function IntegratorVPRKpSymplectic(problem, tableau)
-    IntegratorVPRKpStandard(problem, tableau, [1,1], [1,1])
+function IntegratorVPRKpSymplectic(problem, tableau, nullvec)
+    IntegratorVPRKpStandard(problem, tableau, nullvec, [1,1], [1,1])
 end
 
 @doc raw"""
 Variational partitioned Runge-Kutta integrator with variational projection on $(q_{n}, p_{n+1})$.
 """
-function IntegratorVPRKpVariationalQ(problem, tableau)
-    IntegratorVPRKpStandard(problem, tableau, [1,0], [0,1]; R∞=1)
+function IntegratorVPRKpVariationalQ(problem, tableau, nullvec)
+    IntegratorVPRKpStandard(problem, tableau, nullvec, [1,0], [0,1]; R∞=1)
 end
 
 @doc raw"""
 Variational partitioned Runge-Kutta integrator with variational projection on $(p_{n}, q_{n+1})$.
 """
-function IntegratorVPRKpVariationalP(problem, tableau)
-    IntegratorVPRKpStandard(problem, tableau, [0,1], [1,0]; R∞=1)
+function IntegratorVPRKpVariationalP(problem, tableau, nullvec)
+    IntegratorVPRKpStandard(problem, tableau, nullvec, [0,1], [1,0]; R∞=1)
 end
 
 

@@ -14,10 +14,12 @@ module GeometricIntegrators
     @reexport using .Discontinuities
     include("Integrators.jl")
     @reexport using .Integrators
-    include("Simulations.jl")
-    @reexport using .Simulations
     include("Tableaus.jl")
     @reexport using .Tableaus
+    include("Methods.jl")
+    @reexport using .Methods
+    include("Simulations.jl")
+    @reexport using .Simulations
 
 
     function __init__()

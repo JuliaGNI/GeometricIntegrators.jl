@@ -51,7 +51,7 @@ end
 
 
 """
-Implicit midpoint Runge-Kutta integrator.
+Symplectic Euler-B Degenerate Variational Integrator.
 """
 struct IntegratorDVIB{DT, TT, D, PT <: ParametersDVIB{DT,TT},
                                  ST <: NonlinearSolver{DT},

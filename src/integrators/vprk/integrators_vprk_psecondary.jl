@@ -81,7 +81,7 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpSecondary{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT) where {DT,TT,D}
+    function IntegratorVPRKpSecondary{DT,D}(equations::NamedTuple, tableau::PartitionedTableau{TT}, nullvec, Δt::TT) where {DT,TT,D}
         # get number of stages
         S = tableau.s
 
@@ -95,7 +95,7 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
 
         # create params
         R = convert(Vector{TT}, [1, tableau.R∞])
-        params = ParametersVPRKpSecondary{DT,D}(equations, tableau, Δt, NamedTuple{(:R,:ω)}((R,ω)))
+        params = ParametersVPRKpSecondary{DT,D}(equations, tableau, nullvec, Δt, NamedTuple{(:R,:ω)}((R,ω)))
 
         # create cache dict
         caches = CacheDict(params)
@@ -110,9 +110,9 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
         IntegratorVPRKpSecondary(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpSecondary(problem::LDAEProblem{DT}, tableau; kwargs...) where {DT}
+    function IntegratorVPRKpSecondary(problem::Union{IDAEProblem{DT},LDAEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
         @assert hassecondary(problem)
-        IntegratorVPRKpSecondary{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
+        IntegratorVPRKpSecondary{DT, ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
 end
 
@@ -219,8 +219,8 @@ function compute_projection_vprk!(q::Vector{ST}, v::Vector{ST}, p::Vector{ST},
         # Ψ[i] .= Ω * V[i] .- dH
 
         # params.equ.u(tᵢ, Q[i], Λ[i], U[i])
-        params.equ.g(R[i], tᵢ, Q[i], V[i], Λ[i])
-        params.equ.ψ(Ψ[i], tᵢ, Q[i], P[i], V[i], F[i])
+        params.equ.g(R[i], tᵢ, Q[i], V[i], P[i], Λ[i])
+        params.equ.ψ(Ψ[i], tᵢ, Q[i], V[i], P[i], V[i], F[i])
     end
 end
 

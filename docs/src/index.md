@@ -51,7 +51,7 @@ While DifferentialEquations.jl provides a feature-rich ecosystem for the solutio
 ```@contents
 Pages = ["tutorial/tutorial.md",
          "equations.md",
-         "integrators/usage.md",
+         "methods.md",
 ]
 ```
 
@@ -60,24 +60,17 @@ Pages = ["tutorial/tutorial.md",
 
 ```@contents
 Pages = ["modules/equations.md",
+         "modules/methods.md",
          "modules/integrators.md",
         #"modules/discontinuities.md",
-         "modules/simulations.md",
+        #"modules/simulations.md",
          "modules/solutions.md",
+         "modules/rungekutta.md",
+         "modules/rungekutta_partitioned.md",
+         "modules/spark.md",
 ]
 ```
 
-
-## Tableaus
-
-```@contents
-Pages = ["tableaus/rungekutta.md",
-         "tableaus/rungekutta_partitioned.md",
-         "tableaus/splitting.md",
-         "tableaus/vprk.md",
-         "tableaus/spark.md",
-]
-```
 
 ## Developer Documentation
 

@@ -24,15 +24,15 @@ mutable struct IntegratorVPRKdegenerate{DT, TT, D, S,
         new{DT, TT, D, S, typeof(params), typeof(pparams), ST, PST, IT}(params, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKdegenerate{DT,D}(equations::NamedTuple, tableau::TableauVPRK{TT}, Δt::TT; R=[1,1]) where {DT, TT, D}
+    function IntegratorVPRKdegenerate{DT,D}(equations::NamedTuple, tableau::PartitionedTableau{TT}, nullvec, Δt::TT; R=[1,1]) where {DT, TT, D}
         # get number of stages
         S = tableau.s
 
         # create solver params
-        sparams = ParametersVPRK{DT,D}(equations, tableau, Δt)
+        sparams = ParametersVPRK{DT,D}(equations, tableau, nullvec, Δt)
 
         # create projector params
-        pparams = ParametersVPRKdegenerate{DT,D}(equations, tableau, Δt, NamedTuple{(:V,:F)}((create_internal_stage_vector(DT,D,S), create_internal_stage_vector(DT,D,S))))
+        pparams = ParametersVPRKdegenerate{DT,D}(equations, tableau, nullvec, Δt, NamedTuple{(:V,:F)}((create_internal_stage_vector(DT,D,S), create_internal_stage_vector(DT,D,S))))
 
         # create cache dict
         caches = CacheDict(pparams)
@@ -50,8 +50,8 @@ mutable struct IntegratorVPRKdegenerate{DT, TT, D, S,
         IntegratorVPRKdegenerate(sparams, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKdegenerate(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau; kwargs...) where {DT}
-        IntegratorVPRKdegenerate{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
+    function IntegratorVPRKdegenerate(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
+        IntegratorVPRKdegenerate{DT, ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
 end
 

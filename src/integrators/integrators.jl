@@ -8,19 +8,18 @@ using .VPRK
 
 """
 ```julia
-Integrator(equation, tableau, Δt)
+Integrator(problem, tableau)
 ```
 
 Universal constructor for Runge-Kutta (standard, partitioned, variational),
 SPARK and splitting integrators that automatically selects the appropriate
-integrator based on the equation and tableau types.
-
+integrator based on the problem and tableau types.
 """
 function Integrator end
 
 
 # Print error for integrators not implemented, yet.
-function Integrator(problem::GeometricProblem, tableau::Union{AbstractTableau,Tableau})
+function Integrator(problem::GeometricProblem, tableau::AbstractTableau; kwargs...)
     error("No integrator found for problem type ", typeof(problem), " and tableau ", tableau)
 end
 
@@ -30,95 +29,95 @@ end
 #*****************************************************************************#
 
 # Create integrator for Runge-Kutta tableau.
-function Integrator(problem::ODEProblem, tableau::Tableau)
+function Integrator(problem::ODEProblem, tableau::Tableau; kwargs...)
     if isexplicit(tableau)
         # Create integrator for explicit Runge-Kutta tableau
-        IntegratorERK(problem, tableau)
+        IntegratorERK(problem, tableau; kwargs...)
     elseif isdiagnonallyimplicit(tableau)
         # Create integrator for diagonally implicit Runge-Kutta tableau
-        IntegratorDIRK(problem, tableau)
+        IntegratorDIRK(problem, tableau; kwargs...)
     elseif isfullyimplicit(tableau)
         # Create integrator for fully implicit Runge-Kutta tableau
-        IntegratorFIRK(problem, tableau)
+        IntegratorFIRK(problem, tableau; kwargs...)
     end
 end
 
 # Create integrator for explicit partitioned Runge-Kutta tableau.
-function Integrator(problem::Union{PODEProblem,HODEProblem}, tableau::PartitionedTableau)
+function Integrator(problem::Union{PODEProblem,HODEProblem}, tableau::PartitionedTableau; kwargs...)
     if isexplicit(tableau)
-        IntegratorEPRK(problem, tableau)
+        IntegratorEPRK(problem, tableau; kwargs...)
     else
-        IntegratorIPRK(problem, tableau)
+        IntegratorIPRK(problem, tableau; kwargs...)
     end
 end
 
-function Integrator(problem::Union{PODEProblem,HODEProblem}, tableau::Tableau)
-    Integrator(problem, PartitionedTableau(tableau))
+function Integrator(problem::Union{PODEProblem,HODEProblem}, tableau::Tableau; kwargs...)
+    Integrator(problem, PartitionedTableau(tableau); kwargs...)
+end
+
+# Create integrator for Runge-Kutta tableau and implicit problem.
+function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::Tableau; kwargs...)
+    IntegratorFIRKimplicit(problem, tableau; kwargs...)
 end
 
 # Create integrator for implicit partitioned Runge-Kutta tableau.
-function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::PartitionedTableau)
-    IntegratorPRKimplicit(problem, tableau)
-end
-
-# Create integrator for variational partitioned Runge-Kutta tableau.
-function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::TableauVPRK)
-    IntegratorVPRK(problem, tableau)
+function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::PartitionedTableau; kwargs...)
+    IntegratorPRKimplicit(problem, tableau; kwargs...)
 end
 
 # Create integrator for formal Lagrangian Runge-Kutta tableau.
-function Integrator(problem::LODEProblem, tableau::Tableau)
-    IntegratorFLRK(problem, tableau)
+function Integrator(problem::LODEProblem, tableau::Tableau; kwargs...)
+    IntegratorFLRK(problem, tableau; kwargs...)
 end
 
 # Create integrator for Projected Gauss-Legendre Runge-Kutta tableau.
-function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::CoefficientsPGLRK)
-    IntegratorPGLRK(problem, tableau)
+function Integrator(problem::Union{IODEProblem,LODEProblem}, tableau::CoefficientsPGLRK; kwargs...)
+    IntegratorPGLRK(problem, tableau; kwargs...)
 end
 
 # Create integrator for variational partitioned additive Runge-Kutta tableau.
-function Integrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVPARK)
-    IntegratorVPARK(problem, tableau)
+function Integrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVPARK; kwargs...)
+    IntegratorVPARK(problem, tableau; kwargs...)
 end
 
 # Create integrator for special partitioned additive Runge-Kutta tableau.
-function Integrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauSPARK)
-    IntegratorSPARK(problem, tableau)
+function Integrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauSPARK; kwargs...)
+    IntegratorSPARK(problem, tableau; kwargs...)
 end
 
 # Create integrator for variational special partitioned additive Runge-Kutta tableau.
-function Integrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVSPARK)
-    IntegratorVSPARK(problem, tableau)
+function Integrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVSPARK; kwargs...)
+    IntegratorVSPARK(problem, tableau; kwargs...)
 end
 
 # Create integrator for variational special partitioned additive Runge-Kutta tableau with projection on primary constraint.
-function Integrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVSPARKprimary)
-    IntegratorVSPARKprimary(problem, tableau)
+function Integrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVSPARKprimary; kwargs...)
+    IntegratorVSPARKprimary(problem, tableau; kwargs...)
 end
 
 # Create integrator for variational special partitioned additive Runge-Kutta tableau with projection on secondary constraint.
-function Integrator(problem::LDAEProblem, tableau::TableauVSPARKsecondary)
-    IntegratorVSPARKsecondary(problem, tableau)
+function Integrator(problem::LDAEProblem, tableau::TableauVSPARKsecondary; kwargs...)
+    IntegratorVSPARKsecondary(problem, tableau; kwargs...)
 end
 
 # Create integrator for Hamiltonian partitioned additive Runge-Kutta tableau.
-function Integrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHPARK)
-    IntegratorHPARK(problem, tableau)
+function Integrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHPARK; kwargs...)
+    IntegratorHPARK(problem, tableau; kwargs...)
 end
 
 # Create integrator for Hamiltonian special partitioned additive Runge-Kutta tableau.
-function Integrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHSPARK)
-    IntegratorHSPARK(problem, tableau)
+function Integrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHSPARK; kwargs...)
+    IntegratorHSPARK(problem, tableau; kwargs...)
 end
 
 # Create integrator for Hamiltonian special partitioned additive Runge-Kutta tableau with projection on primary constraint.
-function Integrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHSPARKprimary)
-    IntegratorHSPARKprimary(problem, tableau)
+function Integrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHSPARKprimary; kwargs...)
+    IntegratorHSPARKprimary(problem, tableau; kwargs...)
 end
 
 # Create integrator for splitting tableau.
-function Integrator(problem::SODEProblem, tableau::AbstractTableauSplitting)
-    IntegratorSplitting(problem, tableau)
+function Integrator(problem::SODEProblem, tableau::AbstractTableauSplitting; kwargs...)
+    IntegratorSplitting(problem, tableau; kwargs...)
 end
 
 

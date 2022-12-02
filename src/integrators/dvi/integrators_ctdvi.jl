@@ -55,7 +55,7 @@ end
 
 
 """
-Implicit midpoint Runge-Kutta integrator.
+Trapezoidal Degenerate Variational Integrator.
 """
 struct IntegratorCTDVI{DT, TT, D, PT <: ParametersCTDVI{DT,TT},
                                    ST <: NonlinearSolver{DT},

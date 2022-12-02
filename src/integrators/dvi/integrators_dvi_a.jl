@@ -51,7 +51,7 @@ end
 
 
 """
-Implicit midpoint Runge-Kutta integrator.
+Symplectic Euler-A Degenerate Variational Integrator.
 """
 struct IntegratorDVIA{DT, TT, D, PT <: ParametersDVIA{DT,TT},
                                  ST <: NonlinearSolver{DT},
