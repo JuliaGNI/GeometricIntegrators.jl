@@ -17,6 +17,14 @@ issymplectic(method::VPRKMethod) = RungeKutta.issymplectic(tableau(method))
 Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::VPRKMethod; kwargs...) = IntegratorVPRK(problem, tableau(method), nullvector(method); kwargs...)
 
 
+function Base.show(io::IO, method::VPRKMethod)
+    print(io, "\nVariational Partitioned Runge-Kutta Method with Tableau: $(description(tableau(method)))\n")
+    print(io, string(tableau(method).q))
+    print(io, string(tableau(method).p))
+    ismissing(reference(tableau(method))) || print(io, reference(tableau(method)))
+end
+
+
 """
 Variational Partitioned Runge-Kutta Method
 

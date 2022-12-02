@@ -60,4 +60,4 @@ isstifflyaccurate(t::Type{<:Method}) = applicable(t) ? isstifflyaccurate(t()) : 
 order(::Method) = missing
 order(t::Type{<:Method}) = applicable(t) ? order(t()) : missing
 
-description(::Union{Method, Type{<:Method}}) = missing
+RungeKutta.description(::Union{Method, Type{<:Method}}) = missing

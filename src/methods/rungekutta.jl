@@ -30,6 +30,19 @@ Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::PRKMetho
 Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::RKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
 Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::PRKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
 
+function Base.show(io::IO, method::RKMethod)
+    print(io, "\nRunge-Kutta Method with Tableau: $(description(tableau(method)))\n")
+    print(io, string(tableau(method)))
+    ismissing(reference(tableau(method))) || print(io, reference(tableau(method)))
+end
+
+function Base.show(io::IO, method::PRKMethod)
+    print(io, "\nPartitioned Runge-Kutta Method with Tableau: $(description(tableau(method)))\n")
+    print(io, string(tableau(method).q))
+    print(io, string(tableau(method).p))
+    ismissing(reference(tableau(method))) || print(io, reference(tableau(method)))
+end
+
 
 """
 General Runge-Kutta Method
