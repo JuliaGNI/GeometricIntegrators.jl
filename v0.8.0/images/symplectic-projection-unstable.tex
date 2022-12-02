@@ -1,0 +1,82 @@
+\documentclass[12pt,convert={density=150}]{standalone}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{fontspec}
+\usepackage{tikz}
+
+\usetikzlibrary{arrows}
+\usetikzlibrary{decorations.markings}
+\usetikzlibrary{decorations.text}
+\usetikzlibrary{positioning}
+
+\definecolor{myblue}{RGB}{38,120,179}
+
+\begin{document}
+\footnotesize
+\begin{tikzpicture}[yscale=1.3333, xscale=1.3333,
+    decoration={
+        markings,
+		mark=at position 0.1 with \coordinate (M1);,
+		mark=at position 0.3 with \coordinate (M2);,
+		mark=at position 0.5 with \coordinate (M3);,
+		mark=at position 0.7 with \coordinate (M4);,
+		mark=at position 0.9 with \coordinate (M5);,
+        mark={ between positions 0.1 and 0.9 step 0.2 with {
+        			\node[circle, draw=black, fill=black, inner sep=1pt] {};
+        	 }
+        },
+		mark=at position 0.3 with { \node (P2) at (0,8mm) [circle, draw=myblue, fill=white, inner sep=1pt] {};},
+		mark=at position 0.5 with { \node (P3) at (0,12mm) [circle, draw=myblue, fill=white, inner sep=1pt] {};},
+		mark=at position 0.7 with { \node (P4) at (0,16mm) [circle, draw=myblue, fill=white, inner sep=1pt] {};},
+		mark=at position 0.9 with { \node (P5) at (0,20mm) [circle, draw=myblue, fill=white, inner sep=1pt] {};},
+		mark=at position 0.1 with { \node (T1) at (0,-4mm) [circle, draw=myblue, fill=white, inner sep=1pt] {};},
+		mark=at position 0.3 with { \node (T2) at (0,-8mm) [circle, draw=myblue, fill=white, inner sep=1pt] {};},
+		mark=at position 0.5 with { \node (T3) at (0,-12mm) [circle, draw=myblue, fill=white, inner sep=1pt] {};},
+		mark=at position 0.7 with { \node (T4) at (0,-16mm) [circle, draw=myblue, fill=white, inner sep=1pt] {};},
+        mark=at position 0.1 with {
+            		\draw[myblue, line width=0.2mm, -latex] (0,0mm) -- (T1);
+        },
+        mark=at position 0.3 with {
+            		\draw[myblue, line width=0.2mm, latex-] (0,0mm) -- (T2);
+        },
+        mark=at position 0.5 with {
+            		\draw[myblue, line width=0.2mm, -latex] (0,0mm) -- (T3);
+        },
+        mark=at position 0.7 with {
+            		\draw[myblue, line width=0.2mm, latex-] (0,0mm) -- (T4);
+        },
+        mark=at position 0.3 with {
+            		\draw[myblue, line width=0.2mm, -latex] (0,0mm) -- (P2);
+        },
+        mark=at position 0.5 with {
+            		\draw[myblue, line width=0.2mm, latex-] (0,0mm) -- (P3);
+        },
+        mark=at position 0.7 with {
+            		\draw[myblue, line width=0.2mm, -latex] (0,0mm) -- (P4);
+        },
+        mark=at position 0.9 with {
+            		\draw[myblue, line width=0.2mm, latex-] (0,0mm) -- (P5);
+        },
+    }]
+
+	\clip (0.4,1.7) rectangle (5.4,4.8);
+	
+	\draw[black, line width=0.2mm, postaction=decorate] (0.5,2.5) .. controls(2,4) and (3.5,2) .. (5,4);
+	
+	\node[black] (Delta) at (5.2,4) {\large$\Delta$};
+	
+	\draw[myblue, line width=0.2mm, -latex] (T1) -- (T2) node [midway, below, sloped] {$\Psi_{h}$};
+	\draw[myblue, line width=0.2mm, -latex] (P2) -- (P3) node [midway, above, sloped] {$\Psi_{h}$};
+	\draw[myblue, line width=0.2mm, -latex] (T3) -- (T4) node [midway, below, sloped] {$\Psi_{h}$};
+	\draw[myblue, line width=0.2mm, -latex] (P4) -- (P5) node [midway, above, sloped] {$\Psi_{h}$};
+	
+	\node[black] (z0) at ([shift={(0.0,+.20)}]M1) {$z_{0}$};
+	\node[black] (z1) at ([shift={(.20,+.15)}]M2) {$z_{1}$};
+	\node[black] (z2) at ([shift={(.20,+.15)}]M3) {$z_{2}$};
+	\node[black] (z3) at ([shift={(.15,+.20)}]M4) {$z_{3}$};
+	\node[black] (z4) at ([shift={(0.0,-.20)}]M5) {$z_{4}$};
+	
+    \end{tikzpicture}
+\end{document}

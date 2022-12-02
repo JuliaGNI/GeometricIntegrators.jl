@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Interpolation · GeometricIntegrators.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="../../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>GeometricIntegrators.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../">Home</a></li><li><a class="toctext" href="../../tutorial/">Tutorial</a></li><li><span class="toctext">Integrators</span><ul><li><a class="toctext" href="../../integrators/">Overview</a></li><li><a class="toctext" href="../../integrators/splitting/">Splitting</a></li><li><a class="toctext" href="../../integrators/rk/">Runge-Kutta</a></li><li><a class="toctext" href="../../integrators/vprk/">VPRK</a></li><li><a class="toctext" href="../../integrators/spark/">SPARK</a></li><li><a class="toctext" href="../../integrators/cgvi/">CGVI</a></li><li><a class="toctext" href="../../integrators/dgvi/">DGVI</a></li><li><a class="toctext" href="../../integrators/hpg/">HPG</a></li></ul></li><li><span class="toctext">Modules</span><ul><li><a class="toctext" href="../basis_functions/">Basis Functions</a></li><li><a class="toctext" href="../discontinuities/">Discontinuities</a></li><li><a class="toctext" href="../equations/">Equations</a></li><li><a class="toctext" href="../integrators/">Integrators</a></li><li class="current"><a class="toctext" href>Interpolation</a><ul class="internal"></ul></li><li><a class="toctext" href="../solvers_linear/">Linear Solvers</a></li><li><a class="toctext" href="../solvers_nonlinear/">Nonlinear Solvers</a></li><li><a class="toctext" href="../quadratures/">Quadrature Rules</a></li><li><a class="toctext" href="../solutions/">Solutions</a></li><li><a class="toctext" href="../tableaus/">Tableaus</a></li></ul></li></ul></nav><article id="docs"><header><nav><ul><li>Modules</li><li><a href>Interpolation</a></li></ul><a class="edit-page" href="https://github.com/DDMGNI/GeometricIntegrators.jl/blob/master/docs/src/modules/interpolation.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Interpolation</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Interpolation-1" href="#Interpolation-1">Interpolation</a></h1><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GeometricIntegrators.Interpolation.HermiteInterpolation" href="#GeometricIntegrators.Interpolation.HermiteInterpolation"><code>GeometricIntegrators.Interpolation.HermiteInterpolation</code></a> — <span class="docstring-category">Type</span>.</div><div><div><p><strong>Hermite&#39;s Interpolating Polynomials</strong></p><p>Here, we implement a two point Hermite interpolation function which passes through the function and its first derivative for the interval <span>$[0,1]$</span>. The polynomial is determined by four constraint equations, matching the function and its derivative at the points <span>$0$</span> and <span>$1$</span>.</p><p>Start by defining the 3rd degree polynomial and its derivative by</p><div>\[\begin{align*}
+g(x) &amp;= a_0 + a_1 x + a_2 x^2 + a_3 x^3 , \\
+g&#39;(x) &amp;= a_1 + 2 a_2 x + 3 a_3 x^2 ,
+\end{align*}\]</div><p>and apply the constraints</p><div>\[\begin{align*}
+g(0) &amp;= f_0 &amp; &amp; \Rightarrow &amp; a_0 &amp;= f_0 , \\
+g(1) &amp;= f_1 &amp; &amp; \Rightarrow &amp; a_0 + a_1 + a_2 + a_3 &amp;= f_1 , \\
+g&#39;(0) &amp;= f&#39;_0 &amp; &amp; \Rightarrow &amp; a_1 &amp;= f&#39;_0 , \\
+g&#39;(1) &amp;= f&#39;_1 &amp; &amp; \Rightarrow &amp; a_1 + 2 a_2 + 3 a_3 &amp;= f&#39;_1 . \\
+\end{align*}\]</div><p>Solving for <span>$a_0, a_1, a_2, a_3$</span> leads to</p><div>\[\begin{align*}
+a_0 &amp;= f_0 , &amp;
+a_1 &amp;= f&#39;_0 , &amp;
+a_2 &amp;= - 3 f_0 + 3 f_1 - 2 f&#39;_0 - f&#39;_1 , &amp;
+a_3 &amp;= 2 f_0 - 2 f_1 + f&#39;_0 + f&#39;_1 ,
+\end{align*}\]</div><p>so that the polynomial <span>$g(x)$</span> reads</p><div>\[g(x) = f_0 + f&#39;_0 x + (- 3 f_0 + 3 f_1 - 2 f&#39;_0 - f&#39;_1) x^2 + (2 f_0 - 2 f_1 + f&#39;_0 + f&#39;_1) x^3 .\]</div><p>The function and derivative values can be factored out, so that <span>$g(x)$</span> can be rewritten as</p><div>\[g(x) = f_0 (1 - 3 x^2 + 2 x^3) + f_1 (3 x^2 - 2 x^3) + f&#39;_0 (x - 2 x^2 + x^3) + f&#39;_1 (- x^2 + x^3) ,\]</div><p>or in generic form as</p><div>\[g(x) = f_0 a_0(x) + f_1 a_1(x) + f&#39;_0 b_0(x) + f&#39;_1 b_1(x) ,\]</div><p>with basis functions</p><div>\[\begin{align*}
+a_0 (x) &amp;= 1 - 3 x^2 + 2 x^3 , &amp;
+b_0 (x) &amp;= x - 2 x^2 + x^3 , \\
+a_1 (x) &amp;= 3 x^2 - 2 x^3 , &amp;
+b_1 (x) &amp;= - x^2 + x^3 .
+\end{align*}\]</div><p>The derivative <span>$g&#39;(x)$</span> accordingly reads</p><div>\[g&#39;(x) = f_0 a&#39;_0(x) + f_1 a&#39;_1(x) + f&#39;_0 b&#39;_0(x) + f&#39;_1 b&#39;_1(x) ,\]</div><p>with</p><div>\[\begin{align*}
+a&#39;_0 (x) &amp;= - 6 x + 6 x^2 , &amp;
+b&#39;_0 (x) &amp;= 1 - 4 x + 3 x^2 , \\
+a&#39;_1 (x) &amp;= 6 x - 6 x^2 , &amp;
+b&#39;_1 (x) &amp;= - 2 x + 3 x^2 .
+\end{align*}\]</div><p>The basis functions <span>$a_0$</span>and <span>$a_1$</span> are associated with the function values at <span>$x_0$</span> and <span>$x_1$</span>, respectively, while the basis functions <span>$b_0$</span> and <span>$b_1$</span> are associated with the derivative values at <span>$x_0$</span> and <span>$x_1$</span>. The basis functions satisfy the following relations,</p><div>\[\begin{align*}
+a_i (x_j) &amp;= \delta_{ij} , &amp;
+b_i (x_j) &amp;= 0 , &amp;
+a&#39;_i (x_j) &amp;= 0 , &amp;
+b&#39;_i (x_j) &amp;= \delta_{ij} , &amp;
+i,j &amp;= 0, 1 ,
+\end{align*}\]</div><p>where <span>$\delta_{ij}$</span> denotes the Kronecker-delta, so that</p><div>\[\begin{align*}
+g(0) &amp;= f_0 , &amp;
+g(1) &amp;= f_1 , &amp;
+g&#39;(0) &amp;= f&#39;_0 , &amp;
+g&#39;(1) &amp;= f&#39;_1 .
+\end{align*}\]</div></div></div><a class="source-link" target="_blank" href="https://github.com/DDMGNI/GeometricIntegrators.jl/blob/30d03fdf008f8bd7803ed646e1ca2492f0aeb04f/src/interpolation/hermite_interpolation.jl#L5-L95">source</a></section><footer><hr/><a class="previous" href="../integrators/"><span class="direction">Previous</span><span class="title">Integrators</span></a><a class="next" href="../solvers_linear/"><span class="direction">Next</span><span class="title">Linear Solvers</span></a></footer></article></body></html>
