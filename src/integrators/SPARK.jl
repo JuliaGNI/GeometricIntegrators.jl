@@ -5,6 +5,8 @@ module SPARK
     using RungeKutta
     using SimpleSolvers
 
+    import RungeKutta: AbstractTableau
+
     using ..GeometricBase
     using ..GeometricEquations
     using ..Config
@@ -15,7 +17,7 @@ module SPARK
 
     import ..Integrators: PDAEIntegrator, InitialGuessIODE, InitialGuessPODE, Parameters
     import ..Integrators: IDAEIntegratorCache, IntegratorCache, CacheDict, CacheType
-    import ..Integrators: AbstractTableau, AbstractCoefficients,
+    import ..Integrators: AbstractCoefficients,
                           @CoefficientsRK, @HeaderCoefficientsRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
                           update_vector_fields!, update_solution!, update_multiplier!,

@@ -202,12 +202,12 @@ function integrate(problem::GeometricProblem, tableau::Union{AbstractTableau,Tab
 end
 
 # Integrate ODE specified by vector field and initial condition with given tableau for ntime time steps and return solution.
-function integrate(f::Function, x₀::Vector, tableau::Union{AbstractTableau,Tableau}, tspan, Δt; kwargs...)
+function integrate(f::Function, x₀::Vector, tableau::AbstractTableau, tspan, Δt; kwargs...)
     return integrate(ODEProblem(f, tspan, Δt, x₀), tableau; kwargs...)
 end
 
 # Integrate PODE specified by two vector fields and initial conditions with given tableau for ntime time steps and return solution.
-function integrate(v::Function, f::Function, q₀::Vector, p₀::Vector, tableau::Union{AbstractTableau,Tableau,PartitionedTableau}, tspan, Δt; kwargs...)
+function integrate(v::Function, f::Function, q₀::Vector, p₀::Vector, tableau::AbstractTableau, tspan, Δt; kwargs...)
     return integrate(PODEProblem(v, f, tspan, Δt, q₀, p₀), tableau; kwargs...)
 end
 

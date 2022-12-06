@@ -23,7 +23,7 @@ mutable struct AbstractParametersSPARK{IT, DT, TT, D, S, R, P, equType <: NamedT
         AbstractParametersSPARK{IT, DT, D, tab.s, tab.r, tab.ρ}(equs, tab, Δt)
     end
 
-    function AbstractParametersSPARK{IT,DT,D}(equs::NamedTuple, tab::Union{AbstractTableau,Tableau}, Δt::Number) where {IT,DT,D}
+    function AbstractParametersSPARK{IT,DT,D}(equs::NamedTuple, tab::AbstractTableau, Δt::Number) where {IT,DT,D}
         AbstractParametersSPARK{IT, DT, D, tab.s, tab.r, 0}(equs, tab, Δt)
     end
 end

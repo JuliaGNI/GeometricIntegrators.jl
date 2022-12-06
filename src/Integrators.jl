@@ -24,7 +24,7 @@ module Integrators
 
     import GeometricBase: timestep
 
-    import RungeKutta: nstages
+    import RungeKutta: AbstractTableau, nstages
 
 
     # compat workaroung
@@ -51,7 +51,7 @@ module Integrators
     include("integrators/initial_guess/initial_guess_pode.jl")
 
 
-    export AbstractCoefficients, AbstractTableau
+    export AbstractCoefficients
 
     include("integrators/abstract_coefficients.jl")
     include("integrators/abstract_tableau.jl")

@@ -9,6 +9,7 @@ module Methods
 
     using ..Integrators
     using ..Integrators.VPRK
+    using RungeKutta: AbstractTableau
 
 
     include("methods/methods.jl")

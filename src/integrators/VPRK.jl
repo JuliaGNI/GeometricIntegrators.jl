@@ -5,6 +5,8 @@ module VPRK
     using RungeKutta
     using SimpleSolvers
 
+    import RungeKutta: AbstractTableau
+    
     using ..GeometricBase
     using ..GeometricEquations
     using ..Config
@@ -18,8 +20,7 @@ module VPRK
     import ..Integrators: IODEIntegrator, IODEIntegratorCache, InitialGuessIODE,
                           AbstractIntegratorIRK, AbstractIntegratorPRK
     import ..Integrators: IntegratorCache, CacheDict, CacheType, Parameters
-    import ..Integrators: AbstractTableau, AbstractCoefficients,
-                          CoefficientsPGLRK,
+    import ..Integrators: AbstractCoefficients, CoefficientsPGLRK,
                           @CoefficientsRK, @HeaderTableau, @HeaderCoefficientsRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
                           update_vector_fields!, update_solution!, update_multiplier!,
