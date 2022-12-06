@@ -81,7 +81,7 @@ struct IntegratorFLRK{DT, TT, D, S, PT <: ParametersFLRK{DT,TT},
         if get_config(:verbosity) ≥ 1
             if isexplicit(tableau)
                 @warn "Initializing IntegratorFIRK with explicit tableau $(q.name).\nYou might want to use IntegratorERK instead."
-            elseif isdiagnonallyimplicit(tableau)
+            elseif isdiagonallyimplicit(tableau)
                 @warn "Initializing IntegratorFIRK with diagonally implicit tableau $(q.name).\nYou might want to use IntegratorDIRK instead."
             end
         end

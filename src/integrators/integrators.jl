@@ -33,7 +33,7 @@ function Integrator(problem::ODEProblem, tableau::Tableau; kwargs...)
     if isexplicit(tableau)
         # Create integrator for explicit Runge-Kutta tableau
         IntegratorERK(problem, tableau; kwargs...)
-    elseif isdiagnonallyimplicit(tableau)
+    elseif isdiagonallyimplicit(tableau)
         # Create integrator for diagonally implicit Runge-Kutta tableau
         IntegratorDIRK(problem, tableau; kwargs...)
     elseif isfullyimplicit(tableau)
@@ -151,7 +151,7 @@ function IntegratorConstructor(DT, D, tableau::Tableau)
     if isexplicit(tableau)
         # Create integrator constructor for explicit Runge-Kutta tableau
         (v::Function, Δt::Number; kwargs...) -> IntegratorERK{DT,D}(v, tableau, Δt; kwargs...)
-    elseif isdiagnonallyimplicit(tableau)
+    elseif isdiagonallyimplicit(tableau)
         # Create integrator constructor for diagonally implicit Runge-Kutta tableau
         (v::Function, Δt::Number; kwargs...) -> IntegratorDIRK{DT,D}(v, tableau, Δt; kwargs...)
     elseif isfullyimplicit(tableau)
