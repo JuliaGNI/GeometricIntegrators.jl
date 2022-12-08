@@ -236,7 +236,7 @@ function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::SolutionStepODE{DT,TT}
     end
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).b, tableau(int).b̂, timestep(int))
+    update!(sol, cache.V, tableau(int), timestep(int))
 
     # update vector field for initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)

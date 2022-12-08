@@ -290,7 +290,7 @@ function integrate_step!(int::IntegratorFIRK{DT,TT}, sol::SolutionStepODE{DT,TT}
     compute_stages!(int.solver.x, cache.Q, cache.V, cache.Y, int.params)
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).b, tableau(int).b̂, timestep(int))
+    update!(sol, cache.V, tableau(int), timestep(int))
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)

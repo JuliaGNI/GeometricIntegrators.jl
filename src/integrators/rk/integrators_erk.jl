@@ -115,5 +115,5 @@ function integrate_step!(int::IntegratorERK{DT,TT}, sol::SolutionStepODE{DT,TT},
     end
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).b, tableau(int).b̂, timestep(int))
+    update!(sol, cache.V, tableau(int), timestep(int))
 end

@@ -13,3 +13,15 @@ IntegratorRK = Union{AbstractIntegratorRK, AbstractIntegratorIRK, AbstractIntegr
 
 @inline nstages(integrator::IntegratorRK)  = nstages(tableau(integrator))
 @inline eachstage(integrator::IntegratorRK) = 1:nstages(integrator)
+
+
+function update!(sol::SolutionStepODE, V, tableau::Tableau, Δt)
+    update_solution!(sol.q, sol.q̃, V, tableau.b, tableau.b̂, Δt)
+    sol.t += Δt
+end
+
+function update!(sol::SolutionStepPODE, V, F, tableau::PartitionedTableau, Δt)
+    update_solution!(sol.q, sol.q̃, V, tableau.q.b, tableau.q.b̂, Δt)
+    update_solution!(sol.p, sol.p̃, F, tableau.p.b, tableau.p.b̂, Δt)
+    sol.t += Δt
+end
