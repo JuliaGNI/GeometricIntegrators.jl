@@ -32,9 +32,10 @@ module Integrators
 
 
     export Extrapolation,
-           EulerExtrapolation, EulerExtrapolationODE,
-           MidpointExtrapolation, MidpointExtrapolationODE, MidpointExtrapolationIODE, MidpointExtrapolationPODE,
+           EulerExtrapolation,
+           MidpointExtrapolation,
            HermiteExtrapolation
+    export extrapolate!
 
     include("integrators/extrapolation/extrapolation.jl")
     include("integrators/extrapolation/aitken_neville.jl")

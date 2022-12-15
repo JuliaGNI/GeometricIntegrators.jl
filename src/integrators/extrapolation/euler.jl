@@ -1,4 +1,3 @@
-
 @doc raw"""
 Euler extrapolation method with arbitrary order p.
 
@@ -9,30 +8,41 @@ Solves the ordinary differential equation
 x(t_0) &= x_0 ,
 \end{aligned}
 ```
-for $x_1 = x(t_1)$.
 
-Call with
+for $x_1 = x(t_1)$, and is called with
+
 ```julia
-_euler_extrapolation_ode!(v, t₀, t₁, x₀, x₁, s)
+extrapolate!(t₀, x₀, t₁, x₁, problem, EulerExtrapolation(s))
 ```
 
 where
 
-* `v`:  function to compute vector field with signature `v(t,x,ẋ)`
 * `t₀`: initial time
 * `t₁`: final   time
 * `x₀`: initial value $x_0 = x(t_0)$
 * `x₁`: final   value $x_1 = x(t_1)$
+* `problem`: [`ODEProblem`](@ref) whose solution to extrapolate
 * `s`:  number of interpolations (order $p=s+1$)
 
 """
-function _euler_extrapolation_ode!(v::Function, t₀::TT, t₁::TT, x₀::AbstractVector{DT}, x₁::AbstractVector{DT}, s::Int) where {DT,TT}
+struct EulerExtrapolation
+    s::Int
+    function EulerExtrapolation(s=default_extrapolation_stages)
+        @assert s ≥ 0
+        new(s)
+    end
+end
+
+
+function extrapolate!(t₀::TT, x₀::AbstractVector{DT},
+                      t₁::TT, x₁::AbstractVector{DT},
+                      problem::ODEProblem, extrap::EulerExtrapolation) where {DT,TT}
     @assert size(x₀) == size(x₁)
 
-    F   = collect(1:(s+1))
-    Δt  = t₁ - t₀
-    σ   = Δt ./ F
-    pts = repeat(x₀, outer = [1, s+1])
+    local v   = functions(problem).v
+    local F   = collect(1:(extrap.s+1))
+    local σ   = (t₁ - t₀) ./ F
+    local pts = repeat(x₀, outer = [1, extrap.s+1])
 
     local xᵢ = zero(x₀)
     local vᵢ = zero(x₀)
@@ -50,87 +60,7 @@ function _euler_extrapolation_ode!(v::Function, t₀::TT, t₁::TT, x₀::Abstra
         end
     end
 
-    aitken_neville!(σ, pts, zero(TT), x₁)
+    aitken_neville!(x₁, zero(TT), σ, pts)
+
     return x₁
 end
-
-
-# struct EulerExtrapolation <: Extrapolation
-#     s::Int
-# end
-
-# function GeometricBase.evaluate!(extrap::EulerExtrapolation, v::Function, t₀::TT, t₁::TT, x₀::AbstractVector{DT}, x₁::AbstractVector{DT}) where {DT,TT}
-#     _euler_extrapolation_ode!(v, t₀, t₁, x₀, x₁, extrap.s)
-# end
-
-# function GeometricBase.evaluate!(extrap::EulerExtrapolation, v::Function, f::Function, t₀::TT, t₁::TT, q₀::AbstractVector{DT}, q₁::AbstractVector{DT}, p₀::AbstractVector{DT}, p₁::AbstractVector{DT}) where {DT,TT}
-#     _euler_extrapolation_pode!(v, t₀, t₁, q₀, q₁, p₀, p₁, extrap.s)
-# end
-
-
-struct EulerExtrapolationODE{VT} <: Extrapolation
-    s::Int
-    v::VT
-
-    function EulerExtrapolationODE{VT}(v, s) where {VT}
-        new(s,v)
-    end
-end
-
-function EulerExtrapolationODE(v::VT, s::Int) where {VT}
-    EulerExtrapolationODE{VT}(v, s)
-end
-
-function EulerExtrapolation(equ::ODEProblem, s::Int)
-    EulerExtrapolationODE(functions(equ).v, s)
-end
-
-function GeometricBase.evaluate!(extrap::EulerExtrapolationODE, t₀::TT, t₁::TT, x₀::AbstractVector{DT}, x₁::AbstractVector{DT}) where {DT,TT}
-    _euler_extrapolation_ode!(extrap.v, t₀, t₁, x₀, x₁, extrap.s)
-end
-
-
-# struct EulerExtrapolationIODE{VT,FT} <: Extrapolation
-#     s::Int
-#     v::VT
-#     f::FT
-    
-#     function EulerExtrapolationIODE{VT,FT}(v, f, s) where {VT,FT}
-#         new(s,v,f)
-#     end
-# end
-
-# function EulerExtrapolationIODE(v::VT, f::FT, s::Int) where {VT,FT}
-#     EulerExtrapolationIODE{VT,FT}(v, f, s)
-# end
-
-# function EulerExtrapolation(equ::IODE, s::Int)
-#     EulerExtrapolationIODE(_get_v(equ), _get_f(equ), s)
-# end
-
-# function GeometricBase.evaluate!(extrap::EulerExtrapolationIODE, t₀::TT, t₁::TT, q₀::AbstractVector{DT}, q₁::AbstractVector{DT}, p₀::AbstractVector{DT}, p₁::AbstractVector{DT}) where {DT,TT}
-#     _euler_extrapolation_iode!(extrap.v, t₀, t₁, q₀, q₁, p₀, p₁, extrap.s)
-# end
-
-
-# struct EulerExtrapolationPODE{VT,FT} <: Extrapolation
-#     s::Int
-#     v::VT
-#     f::FT
-    
-#     function EulerExtrapolationPODE{VT,FT}(v, f, s) where {VT,FT}
-#         new(s,v,f)
-#     end
-# end
-
-# function EulerExtrapolationPODE(v::VT, f::FT, s::Int) where {VT,FT}
-#     EulerExtrapolationPODE{VT,FT}(v, f, s)
-# end
-
-# function EulerExtrapolation(equ::PODE, s::Int)
-#     EulerExtrapolationPODE(_get_v(equ), _get_f(equ), s)
-# end
-
-# function GeometricBase.evaluate!(extrap::EulerExtrapolationPODE, t₀::TT, t₁::TT, q₀::AbstractVector{DT}, q₁::AbstractVector{DT}, p₀::AbstractVector{DT}, p₁::AbstractVector{DT}) where {DT,TT}
-#     _euler_extrapolation_pode!(extrap.v, t₀, t₁, q₀, q₁, p₀, p₁, extrap.s)
-# end

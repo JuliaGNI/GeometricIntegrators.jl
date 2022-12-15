@@ -8,24 +8,27 @@ function and its derivative at the points ``0`` and ``1``.
 
 Call with one of the following methods
 ```julia
-_hermite_extrapolation!(t₀, t₁, x₀, x₁, ẋ₀, ẋ₁, t, x)
-_hermite_extrapolation!(t₀, t₁, x₀, x₁, ẋ₀, ẋ₁, t, x, ẋ)
-_hermite_extrapolation!(v, t₀, t₁, x₀, x₁, t, x)
-_hermite_extrapolation!(v, t₀, t₁, x₀, x₁, t, x, ẋ)
+extrapolate!(t₀, x₀, ẋ₀, t₁, x₁, ẋ₁, t, x, HermiteExtrapolation())
+extrapolate!(t₀, x₀, ẋ₀, t₁, x₁, ẋ₁, t, x, ẋ, HermiteExtrapolation())
+extrapolate!(t₀, x₀, t₁, x₁, t, x, v, HermiteExtrapolation())
+extrapolate!(t₀, x₀, t₁, x₁, t, x, ẋ, v, HermiteExtrapolation())
+extrapolate!(t₀, x₀, t₁, x₁, t, x, problem, HermiteExtrapolation())
+extrapolate!(t₀, x₀, t₁, x₁, t, x, ẋ, problem, HermiteExtrapolation())
 ```
 
 where
 
 * `t₀`: first  sample time $t_0$
-* `t₁`: second sample time $t_1$
 * `x₀`: first  solution value $x_0 = x(t_0)$
-* `x₁`: second solution value $x_1 = x(t_1)$
 * `ẋ₀`: first  vector field value $ẋ_0 = v(t_0, x(t_0))$
+* `t₁`: second sample time $t_1$
+* `x₁`: second solution value $x_1 = x(t_1)$
 * `ẋ₁`: second vector field value $ẋ_1 = v(t_1, x(t_1))$
-* `v`:  function to compute vector field with signature `v(t,x,ẋ)`
 * `t`:  time $t$ to extrapolate
 * `x`:  extrapolated solution value $x(t)$
-* `v`:  extrapolated vector field value $ẋ(t)$
+* `ẋ`:  extrapolated vector field value $ẋ(t)$
+* `v`:  function to compute vector field with signature `v(ẋ,t,x)`
+* `problem`: [`ODEProblem`](@ref) whose vector field to use
 
 
 #### Derivation
@@ -114,96 +117,102 @@ g'(1) &= f'_1 .
 \end{aligned}
 ```
 """
-function _hermite_extrapolation! end
+struct HermiteExtrapolation end
 
 
-function _hermite_extrapolation!(t₀::TT, t₁::TT, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, ẋ₀::AbstractArray{DT}, ẋ₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}) where {DT,TT}
+function extrapolate!(t₀::TT, x₀::AbstractArray{DT}, ẋ₀::AbstractArray{DT},
+                      t₁::TT, x₁::AbstractArray{DT}, ẋ₁::AbstractArray{DT},
+                      tᵢ::TT, xᵢ::AbstractArray{DT},
+                      ::HermiteExtrapolation) where {DT,TT}
     local a₀::TT
     local a₁::TT
     local b₀::TT
     local b₁::TT
     local Δt = t₁ - t₀
-    local s = (t - t₀) / Δt
+    local s = (tᵢ - t₀) / Δt
 
     # Interpolate x at t
-    if t == t₀
-        x .= x₀
-    elseif t == t₁
-        x .= x₁
+    if tᵢ == t₀
+        xᵢ .= x₀
+    elseif tᵢ == t₁
+        xᵢ .= x₁
     else
         a₁ = 3s^2 - 2s^3
         a₀ = 1 - a₁
         b₁ = s^2*(s-1)
         b₀ = s*(1-s)+b₁
-        x .= a₀ .* x₀ .+ a₁ .* x₁ .+ b₀ .* Δt .* ẋ₀ .+ b₁ .* Δt .* ẋ₁
+        xᵢ .= a₀ .* x₀ .+ a₁ .* x₁ .+ b₀ .* Δt .* ẋ₀ .+ b₁ .* Δt .* ẋ₁
     end
 
-    return x
+    return xᵢ
 end
 
-function _hermite_extrapolation!(t₀::TT, t₁::TT, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, ẋ₀::AbstractArray{DT}, ẋ₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}, ẋ::AbstractArray{DT}) where {DT,TT}
+function extrapolate!(t₀::TT, x₀::AbstractArray{DT}, ẋ₀::AbstractArray{DT},
+                      t₁::TT, x₁::AbstractArray{DT}, ẋ₁::AbstractArray{DT},
+                      tᵢ::TT, xᵢ::AbstractArray{DT}, ẋᵢ::AbstractArray{DT},
+                      extrap::HermiteExtrapolation) where {DT,TT}
     local a₀::TT
     local a₁::TT
     local b₀::TT
     local b₁::TT
     local Δt = t₁ - t₀
-    local s = (t - t₀) / Δt
+    local s = (tᵢ - t₀) / Δt
 
-    _hermite_extrapolation!(t₀, t₁, x₀, x₁, ẋ₀, ẋ₁, t, x)
+    extrapolate!(t₀, x₀, ẋ₀, t₁, x₁, ẋ₁, tᵢ, xᵢ, extrap)
 
     # Interpolate ẋ at t
-    if t == t₀
-        ẋ .= ẋ₀
-    elseif t == t₁
-        ẋ .= ẋ₁
+    if tᵢ == t₀
+        ẋᵢ .= ẋ₀
+    elseif tᵢ == t₁
+        ẋᵢ .= ẋ₁
     else
         a₁ = (6s - 6s^2) / Δt
         a₀ = - a₁
         b₁ = s*(3s-2)
         b₀ = 1-2s+b₁
-        ẋ .= a₀ .* x₀ .+ a₁ .* x₁ .+ b₀ .* ẋ₀ .+ b₁ .* ẋ₁
+        ẋᵢ .= a₀ .* x₀ .+ a₁ .* x₁ .+ b₀ .* ẋ₀ .+ b₁ .* ẋ₁
     end
 
-    return (x, ẋ)
-end
-
-function _get_velocities(v::Function, t₀::TT, t₁::TT, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}) where {DT,TT}
-    ẋ₀ = zero(x₀)
-    ẋ₁ = zero(x₁)
-    v(ẋ₀, t₀, x₀)
-    v(ẋ₁, t₁, x₁)
-    return (ẋ₀, ẋ₁)
-end
-
-function _hermite_extrapolation!(v::Function, t₀::TT, t₁::TT, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}) where {DT,TT}
-    _hermite_extrapolation!(t₀, t₁, x₀, x₁, _get_velocities(v, t₀, t₁, x₀, x₁)..., t, x)
-end
-
-function _hermite_extrapolation!(v::Function, t₀::TT, t₁::TT, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}, ẋ::AbstractArray{DT}) where {DT,TT}
-    _hermite_extrapolation!(t₀, t₁, x₀, x₁, _get_velocities(v, t₀, t₁, x₀, x₁)..., t, x, ẋ)
+    return (xᵢ, ẋᵢ)
 end
 
 
-
-struct HermiteExtrapolation{T} <: Extrapolation
-    t₀::T
-    t₁::T
-    Δt::T
-
-    function HermiteExtrapolation{T}(t₀, t₁) where {T}
-        new(t₀, t₁, t₁-t₀)
-    end
+function _vectorfield(t::TT, x::AbstractArray{DT}, v::Callable) where {DT,TT}
+    ẋ = zero(x)
+    v(ẋ, t, x)
+    return ẋ
 end
 
-function HermiteExtrapolation(t₀::T, t₁::T) where {T}
-    HermiteExtrapolation{T}(t₀, t₁)
+function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
+                      t₁::TT, x₁::AbstractArray{DT},
+                      tᵢ::TT, xᵢ::AbstractArray{DT},
+                      v::Function, extrap::HermiteExtrapolation) where {DT,TT}
+    ẋ₀ = _vectorfield(t₀, x₀, v)
+    ẋ₁ = _vectorfield(t₁, x₁, v)
+    extrapolate!(t₀, x₀, ẋ₀, t₁, x₁, ẋ₁, tᵢ, xᵢ, extrap)
 end
 
-
-function GeometricBase.evaluate!(int::HermiteExtrapolation{TT}, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, ẋ₀::AbstractArray{DT}, ẋ₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}) where {DT,TT}
-    _hermite_extrapolation!(int.t₀, int.t₁, x₀, x₁, ẋ₀, ẋ₁, t, x)
+function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
+                      t₁::TT, x₁::AbstractArray{DT},
+                      tᵢ::TT, xᵢ::AbstractArray{DT}, ẋᵢ::AbstractArray{DT}, 
+                      v::Function, extrap::HermiteExtrapolation) where {DT,TT}
+    ẋ₀ = _vectorfield(t₀, x₀, v)
+    ẋ₁ = _vectorfield(t₁, x₁, v)
+    extrapolate!(t₀, x₀, ẋ₀, t₁, x₁, ẋ₁, tᵢ, xᵢ, ẋᵢ, extrap)
 end
 
-function GeometricBase.evaluate!(int::HermiteExtrapolation{TT}, x₀::AbstractArray{DT}, x₁::AbstractArray{DT}, ẋ₀::AbstractArray{DT}, ẋ₁::AbstractArray{DT}, t::TT, x::AbstractArray{DT}, ẋ::AbstractArray{DT}) where {DT,TT}
-    _hermite_extrapolation!(int.t₀, int.t₁, x₀, x₁, ẋ₀, ẋ₁, t, x, ẋ)
+function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
+                      t₁::TT, x₁::AbstractArray{DT},
+                      tᵢ::TT, xᵢ::AbstractArray{DT},
+                      problem::ODEProblem,
+                      extrap::HermiteExtrapolation) where {DT,TT}
+    extrapolate!(t₀, x₀, t₁, x₁, tᵢ, xᵢ, functions(problem).v, extrap)
+end
+
+function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
+                      t₁::TT, x₁::AbstractArray{DT},
+                      tᵢ::TT, xᵢ::AbstractArray{DT}, ẋᵢ::AbstractArray{DT}, 
+                      problem::ODEProblem,
+                      extrap::HermiteExtrapolation) where {DT,TT}
+    extrapolate!(t₀, x₀, t₁, x₁, tᵢ, xᵢ, ẋᵢ, functions(problem).v, extrap)
 end
