@@ -1,7 +1,7 @@
 
 using GeometricBase
+using GeometricEquations.Tests.HarmonicOscillator
 using GeometricIntegrators.Solutions
-using GeometricProblems.HarmonicOscillator
 using Test
 
 
@@ -21,37 +21,41 @@ z0 = rand(1)
 
 
 @testset "$(rpad("Atomic Solution Constructors",80))" begin
-    ode   = harmonic_oscillator_ode()
-    dae   = harmonic_oscillator_dae()
-    pode  = harmonic_oscillator_pode()
-    pdae  = harmonic_oscillator_pdae()
-    hode  = harmonic_oscillator_hode()
-    hdae  = harmonic_oscillator_hdae()
-    iode  = harmonic_oscillator_iode()
-    idae  = harmonic_oscillator_idae()
-    # lode  = harmonic_oscillator_lode()
-    # ldae  = harmonic_oscillator_ldae()
+    ode   = odeproblem()
+    dae   = daeproblem()
+    pode  = podeproblem()
+    pdae  = pdaeproblem()
+    hode  = hodeproblem()
+    hdae  = hdaeproblem()
+    iode  = iodeproblem()
+    idae  = idaeproblem()
+    lode  = lodeproblem()
+    ldae  = ldaeproblem()
 
     @test typeof(SolutionStep(ode))   <: SolutionStepODE
     @test typeof(SolutionStep(dae))   <: SolutionStepDAE
     @test typeof(SolutionStep(pode))  <: SolutionStepPODE
     @test typeof(SolutionStep(hode))  <: SolutionStepPODE
     @test typeof(SolutionStep(iode))  <: SolutionStepPODE
-    # @test typeof(SolutionStep(lode))  <: SolutionStepPODE
+    @test typeof(SolutionStep(lode))  <: SolutionStepPODE
     @test typeof(SolutionStep(pdae))  <: SolutionStepPDAE
     @test typeof(SolutionStep(hdae))  <: SolutionStepPDAE
     @test typeof(SolutionStep(idae))  <: SolutionStepPDAE
-    # @test typeof(SolutionStep(ldae))  <: SolutionStepPDAE
+    @test typeof(SolutionStep(ldae))  <: SolutionStepPDAE
 end
 
 
 @testset "$(rpad("Atomic ODE Solution",80))" begin
     solstep = SolutionStepODE(t0, x0)
 
-    @test solstep.t  == t0
-    @test solstep.q  == x0
-    @test solstep.t̄ == zero(t0)
-    @test solstep.q̄ == zero(x0)
+    @test solstep.t == solstep.t̄[0] == current(solstep).t == t0
+    @test solstep.q == solstep.q̄[0] == current(solstep).q == x0
+
+    @test solstep.t̄ == history(solstep).t
+    @test solstep.q̄ == history(solstep).q
+    
+    solstep.t̄[1]  = zero(t0)
+    solstep.q̄[1] .= zero(x0)
 
     @test current(solstep) == (t = t0, q = x0)
     @test previous(solstep) == (t = zero(t0), q = zero(x0))
@@ -75,12 +79,17 @@ end
 @testset "$(rpad("Atomic PODE Solution",80))" begin
     solstep = SolutionStepPODE(t0, q0, p0)
 
-    @test solstep.t  == t0
-    @test solstep.q  == q0
-    @test solstep.p  == p0
-    @test solstep.t̄ == zero(t0)
-    @test solstep.q̄ == zero(q0)
-    @test solstep.p̄ == zero(p0)
+    @test solstep.t == solstep.t̄[0] == current(solstep).t == t0
+    @test solstep.q == solstep.q̄[0] == current(solstep).q == q0
+    @test solstep.p == solstep.p̄[0] == current(solstep).p == p0
+
+    @test solstep.t̄ == history(solstep).t
+    @test solstep.q̄ == history(solstep).q
+    @test solstep.p̄ == history(solstep).p
+
+    solstep.t̄[1]  = zero(t0)
+    solstep.q̄[1] .= zero(q0)
+    solstep.p̄[1] .= zero(p0)
 
     @test current(solstep) == (t = t0, q = q0, p = p0)
     @test previous(solstep) == (t = zero(t0), q = zero(q0), p = zero(p0))
@@ -108,12 +117,17 @@ end
 @testset "$(rpad("Atomic DAE Solution",80))" begin
     solstep = SolutionStepDAE(t0, x0, λ0)
 
-    @test solstep.t == t0
-    @test solstep.q == x0
-    @test solstep.λ == λ0
-    @test solstep.t̄ == zero(t0)
-    @test solstep.q̄ == zero(x0)
-    @test solstep.λ̄ == zero(λ0)
+    @test solstep.t == solstep.t̄[0] == current(solstep).t == t0
+    @test solstep.q == solstep.q̄[0] == current(solstep).q == x0
+    @test solstep.λ == solstep.λ̄[0] == current(solstep).λ == λ0
+
+    @test solstep.t̄ == history(solstep).t
+    @test solstep.q̄ == history(solstep).q
+    @test solstep.λ̄ == history(solstep).λ
+
+    solstep.t̄[1]  = zero(t0)
+    solstep.q̄[1] .= zero(x0)
+    solstep.λ̄[1] .= zero(λ0)
 
     @test current(solstep) == (t = t0, q = x0, λ = λ0)
     @test previous(solstep) == (t = zero(t0), q = zero(x0), λ = zero(λ0))
@@ -140,14 +154,20 @@ end
 @testset "$(rpad("Atomic PDAE Solution",80))" begin
     solstep = SolutionStepPDAE(t0, q0, p0, λ0)
 
-    @test solstep.t  == t0
-    @test solstep.q  == q0
-    @test solstep.p  == p0
-    @test solstep.λ  == λ0
-    @test solstep.t̄ == zero(t0)
-    @test solstep.q̄ == zero(q0)
-    @test solstep.p̄ == zero(p0)
-    @test solstep.λ̄ == zero(λ0)
+    @test solstep.t == solstep.t̄[0] == current(solstep).t == t0
+    @test solstep.q == solstep.q̄[0] == current(solstep).q == q0
+    @test solstep.p == solstep.p̄[0] == current(solstep).p == p0
+    @test solstep.λ == solstep.λ̄[0] == current(solstep).λ == λ0
+
+    @test solstep.t̄ == history(solstep).t
+    @test solstep.q̄ == history(solstep).q
+    @test solstep.p̄ == history(solstep).p
+    @test solstep.λ̄ == history(solstep).λ
+
+    solstep.t̄[1]  = zero(t0)
+    solstep.q̄[1] .= zero(q0)
+    solstep.p̄[1] .= zero(p0)
+    solstep.λ̄[1] .= zero(λ0)
 
     @test current(solstep) == (t = t0, q = q0, p = p0, λ = λ0)
     @test previous(solstep) == (t = zero(t0), q = zero(q0), p = zero(p0), λ = zero(λ0))

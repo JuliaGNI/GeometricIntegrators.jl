@@ -19,6 +19,14 @@ the internal state of the integrator as obtained from the function
 """
 abstract type SolutionStep{dType <: Number, tType <: Real, aType <: AbstractArray{dType}} end
 
+
+GeometricBase.datatype(::SolutionStep{dType, tType, aType}) where {dType, tType, aType} = dType
+GeometricBase.timetype(::SolutionStep{dType, tType, aType}) where {dType, tType, aType} = tType
+GeometricBase.arrtype(::SolutionStep{dType, tType, aType}) where {dType, tType, aType} = aType
+
+eachhistory(sol::SolutionStep) = nhistory(sol):-1:1
+
+
 """
 Copy the initial conditions of a `GeometricProblem` to the current state of an atomic solution.
 """
@@ -39,15 +47,19 @@ function previous end
 function GeometricBase.cut_periodic_solution!(solstep::SolutionStep, periodicity)
     if periodicity.q != NullPeriodicity()
         @assert axes(solstep.q) == axes(periodicity.q)
-        for k in eachindex(solstep.q, solstep.q̄, periodicity.q)
+        for k in eachindex(solstep.q, periodicity.q)
             if periodicity.q[k] ≠ 0
                 while solstep.q[k] < 0
                     solstep.q[k], solstep.q̃[k] = compensated_summation(+periodicity.q[k], solstep.q[k], solstep.q̃[k])
-                    solstep.q̄[k] += periodicity.q[k]
+                    for i in eachhistory(solstep)
+                        solstep.q̄[i][k] += periodicity.q[k]
+                    end
                 end
                 while solstep.q[k] ≥ periodicity.q[k]
                     solstep.q[k], solstep.q̃[k] = compensated_summation(-periodicity.q[k], solstep.q[k], solstep.q̃[k])
-                    solstep.q̄[k] -= periodicity.q[k]
+                    for i in eachhistory(solstep)
+                        solstep.q̄[i][k] -= periodicity.q[k]
+                    end
                 end
             end
         end

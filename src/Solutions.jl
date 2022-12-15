@@ -4,7 +4,6 @@ using Reexport
 
 using HDF5
 using OffsetArrays
-using SharedArrays
 
 using GeometricBase
 using GeometricBase.Config
@@ -20,7 +19,7 @@ const DEFAULT_NWRITE = 0
 
 
 export DataSeries, TimeSeries, Solution, AbstractSolution, DeterministicSolution
-export current, previous
+export current, previous, history
 
 export SolutionODE, SolutionPODE
 export SolutionDAE, SolutionPDAE

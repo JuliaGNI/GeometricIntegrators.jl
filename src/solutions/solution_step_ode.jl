@@ -11,12 +11,12 @@ Solution step for an [`ODEProblem`](@ref).
 ### Fields
 
 * `t`: time of current time step
-* `t̄`: time of previous time step
+* `t̄`: time of previous time steps
 * `q`: current solution of q
-* `q̄`: previous solution of q
+* `q̄`: previous solutions of q
 * `q̃`: compensated summation error of q
 * `v`: vector field of q
-* `v̄`: vector field of q̄
+* `v̄`: vector fields of q̄
 * `internal`: internal variables of the integrator (e.g., internal stages of a Runge-Kutta methods or solver output)
 
 ### Constructors
@@ -31,60 +31,72 @@ mutable struct SolutionStepODE{
             TT <: Real, 
             AT <: AbstractArray{DT}, 
             VT <: AbstractArray{DT}, 
-            IT <: NamedTuple} <: SolutionStep{DT,TT,AT}
+            IT <: NamedTuple,
+            NT} <: SolutionStep{DT,TT,AT}
 
     t::TT
-    t̄::TT
-
     q::AT
-    q̄::AT
-    q̃::AT
-
     v::VT
-    v̄::VT
+
+    t̄::OffsetVector{TT, Vector{TT}}
+    q̄::OffsetVector{AT, Vector{AT}}
+    v̄::OffsetVector{VT, Vector{VT}}
+
+    q̃::AT
 
     internal::IT
 
-    function SolutionStepODE(t::TT, q::AT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT}
-        v = vectorfield(q)
-        v̄ = vectorfield(q)
-        new{DT,TT,AT,typeof(v),IT}(
-            copy(t), zero(t),
-            copy(q), zero(q), zero(q), 
-            v, v̄, internal)
+    function SolutionStepODE(t::TT, q::AT; history = 1, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT}
+        @assert history ≥ 1
+
+        t̄ = OffsetVector([zero(t) for _ in 1:history+1], 0:history)
+        q̄ = OffsetVector([zero(q) for _ in 1:history+1], 0:history)
+        v̄ = OffsetVector([vectorfield(q) for _ in 1:history+1], 0:history)
+
+        t̄[0]  = t
+        q̄[0] .= q
+
+        new{DT,TT,AT,typeof(v̄[0]),IT,history}(t̄[0], q̄[0], v̄[0], t̄, q̄, v̄, zero(q), internal)
     end
 end
 
-function current(solstep::SolutionStepODE)
-    (t = solstep.t, q = solstep.q)
-end
 
-function previous(solstep::SolutionStepODE)
-    (t = solstep.t̄, q = solstep.q̄)
-end
+nhistory(::SolutionStepODE{DT,TT,AT,VT,IT,NT}) where {DT,TT,AT,VT,IT,NT} = NT
+
+current(solstep::SolutionStepODE) = (t = solstep.t, q = solstep.q)
+previous(solstep::SolutionStepODE) = (t = solstep.t̄[1], q = solstep.q̄[1])
+history(solstep::SolutionStepODE) = (t = solstep.t̄, q = solstep.q̄)
+
 
 function Base.copy!(solstep::SolutionStepODE, sol::NamedTuple)
     solstep.t  = sol.t
-    solstep.t̄  = 0
     solstep.q .= sol.q
-    solstep.q̄ .= 0
     solstep.q̃ .= 0
     solstep.v .= 0
-    solstep.v̄ .= 0
+
+    for i in eachhistory(solstep)
+        solstep.t̄[i]  = 0
+        solstep.q̄[i] .= 0
+        solstep.v̄[i] .= 0
+    end
+
     return solstep
 end
 
 function GeometricBase.reset!(solstep::SolutionStepODE)
-    solstep.t̄  = solstep.t
-    solstep.q̄ .= solstep.q
-    solstep.v̄ .= solstep.v
+    for i in eachhistory(solstep)
+        solstep.t̄[i]  = solstep.t̄[i-1]
+        solstep.q̄[i] .= solstep.q̄[i-1]
+        solstep.v̄[i] .= solstep.v̄[i-1]
+    end
+
     return solstep
 end
 
 function update!(solstep::SolutionStepODE{DT,TT,AT}, Δt::TT, Δq::AT) where {DT,TT,AT}
     solstep.t += Δt
     for k in eachindex(Δq)
-        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q[k], solstep.q̃[k])
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q̄[1][k], solstep.q̃[k])
     end
     return solstep
 end

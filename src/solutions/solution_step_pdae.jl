@@ -11,23 +11,23 @@ Solution step for a [`PDAEProblem`](@ref).
 ### Fields
 
 * `t`: time of current time step
-* `t̄`: time of previous time step
+* `t̄`: time of previous time steps
 * `q`: current solution of q
-* `q̄`: previous solution of q
+* `q̄`: previous solutions of q
 * `q̃`: compensated summation error of q
 * `p`: current solution of p
-* `p̄`: previous solution of p
+* `p̄`: previous solutions of p
 * `p̃`: compensated summation error of p
 * `λ`: current solution of λ
-* `λ̄`: previous solution of λ
+* `λ̄`: previous solutions of λ
 * `v`: vector field of q
-* `v̄`: vector field of q̄
+* `v̄`: vector fields of q̄
 * `f`: vector field of p
-* `f̄`: vector field of p̄
+* `f̄`: vector fields of p̄
 * `u`: projective vector field of q
-* `ū`: projective vector field of q̄
+* `ū`: projective vector fields of q̄
 * `g`: projective vector field of p
-* `ḡ`: projective vector field of p̄
+* `ḡ`: projective vector fields of p̄
 * `internal`: internal variables of the integrator (e.g., internal stages of a Runge-Kutta methods or solver output)
 
 ### Constructors
@@ -44,60 +44,60 @@ mutable struct SolutionStepPDAE{
                 ΛT <: AbstractArray{DT},
                 VT <: AbstractArray{DT},
                 FT <: AbstractArray{DT},
-                IT <: NamedTuple} <: SolutionStep{DT,TT,AT}
+                IT <: NamedTuple,
+                NT} <: SolutionStep{DT,TT,AT}
     
     t::TT
-    t̄::TT
-
     q::AT
-    q̄::AT
-    q̃::AT
-
     p::AT
-    p̄::AT
-    p̃::AT
-
     λ::ΛT
-    λ̄::ΛT
-
     v::VT
-    v̄::VT
     f::FT
-    f̄::FT
-    
     u::VT
-    ū::VT
     g::FT
-    ḡ::FT
+
+    t̄::OffsetVector{TT, Vector{TT}}
+    q̄::OffsetVector{AT, Vector{AT}}
+    p̄::OffsetVector{AT, Vector{AT}}
+    λ̄::OffsetVector{ΛT, Vector{ΛT}}
+    v̄::OffsetVector{VT, Vector{VT}}
+    f̄::OffsetVector{FT, Vector{FT}}
+    ū::OffsetVector{VT, Vector{VT}}
+    ḡ::OffsetVector{FT, Vector{FT}}
+
+    q̃::AT
+    p̃::AT
 
     internal::IT
 
-    function SolutionStepPDAE(t::TT, q::AT, p::AT, λ::ΛT, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
-        v = vectorfield(q)
-        v̄ = vectorfield(q)
-        f = vectorfield(p)
-        f̄ = vectorfield(p)
-        u = vectorfield(q)
-        ū = vectorfield(q)
-        g = vectorfield(p)
-        ḡ = vectorfield(p)
+    function SolutionStepPDAE(t::TT, q::AT, p::AT, λ::ΛT; history = 1, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
+        @assert history ≥ 1
 
-        new{DT,TT,AT,ΛT,typeof(v),typeof(f),IT}(
-            copy(t), zero(t),
-            copy(q), zero(q), zero(q),
-            copy(p), zero(p), zero(p),
-            copy(λ), zero(λ),
-            v, v̄, f, f̄, u, ū, g, ḡ, internal)
+        t̄ = OffsetVector([zero(t) for _ in 1:history+1], 0:history)
+        q̄ = OffsetVector([zero(q) for _ in 1:history+1], 0:history)
+        p̄ = OffsetVector([zero(p) for _ in 1:history+1], 0:history)
+        λ̄ = OffsetVector([zero(λ) for _ in 1:history+1], 0:history)
+        v̄ = OffsetVector([vectorfield(q) for _ in 1:history+1], 0:history)
+        f̄ = OffsetVector([vectorfield(p) for _ in 1:history+1], 0:history)
+        ū = OffsetVector([vectorfield(q) for _ in 1:history+1], 0:history)
+        ḡ = OffsetVector([vectorfield(p) for _ in 1:history+1], 0:history)
+
+        t̄[0]  = t
+        q̄[0] .= q
+        p̄[0] .= p
+        λ̄[0] .= λ
+
+        new{DT,TT,AT,ΛT,typeof(v̄[0]),typeof(f̄[0]),IT,history}(t̄[0], q̄[0], p̄[0], λ̄[0], v̄[0], f̄[0], ū[0], ḡ[0], t̄, q̄, p̄, λ̄, v̄, f̄, ū, ḡ, zero(q), zero(p), internal)
     end
 end
 
-function current(solstep::SolutionStepPDAE)
-    (t = solstep.t, q = solstep.q, p = solstep.p, λ = solstep.λ)
-end
 
-function previous(solstep::SolutionStepPDAE)
-    (t = solstep.t̄, q = solstep.q̄, p = solstep.p̄, λ = solstep.λ̄)
-end
+nhistory(::SolutionStepPDAE{DT,TT,AT,ΛT,VT,FT,IT,NT}) where {DT,TT,AT,ΛT,VT,FT,IT,NT} = NT
+
+current(solstep::SolutionStepPDAE) = (t = solstep.t, q = solstep.q, p = solstep.p, λ = solstep.λ)
+previous(solstep::SolutionStepPDAE) = (t = solstep.t̄[1], q = solstep.q̄[1], p = solstep.p̄[1], λ = solstep.λ̄[1])
+history(solstep::SolutionStepPDAE) = (t = solstep.t̄, q = solstep.q̄, p = solstep.p̄, λ = solstep.λ̄)
+
 
 function Base.copy!(solstep::SolutionStepPDAE, sol::NamedTuple)
     solstep.t  = sol.t
@@ -105,30 +105,47 @@ function Base.copy!(solstep::SolutionStepPDAE, sol::NamedTuple)
     solstep.p .= sol.p
     solstep.λ .= sol.λ
     solstep.q̃ .= 0
+    solstep.p̃ .= 0
     solstep.v .= 0
     solstep.f .= 0
     solstep.u .= 0
     solstep.g .= 0
+
+    for i in eachhistory(solstep)
+        solstep.t̄[i]  = 0
+        solstep.q̄[i] .= 0
+        solstep.p̄[i] .= 0
+        solstep.λ̄[i] .= 0
+        solstep.v̄[i] .= 0
+        solstep.f̄[i] .= 0
+        solstep.ū[i] .= 0
+        solstep.ḡ[i] .= 0
+    end
+
     return solstep
 end
 
+
 function GeometricBase.reset!(solstep::SolutionStepPDAE)
-    solstep.t̄  = solstep.t
-    solstep.q̄ .= solstep.q
-    solstep.p̄ .= solstep.p
-    solstep.λ̄ .= solstep.λ
-    solstep.v̄ .= solstep.v
-    solstep.f̄ .= solstep.f
-    solstep.ū .= solstep.u
-    solstep.ḡ .= solstep.g
+    for i in eachhistory(solstep)
+        solstep.t̄[i]  = solstep.t̄[i-1]
+        solstep.q̄[i] .= solstep.q̄[i-1]
+        solstep.p̄[i] .= solstep.p̄[i-1]
+        solstep.λ̄[i] .= solstep.λ̄[i-1]
+        solstep.v̄[i] .= solstep.v̄[i-1]
+        solstep.f̄[i] .= solstep.f̄[i-1]
+        solstep.ū[i] .= solstep.ū[i-1]
+        solstep.ḡ[i] .= solstep.ḡ[i-1]
+    end
+
     return solstep
 end
 
 function update!(solstep::SolutionStepPDAE{DT,TT,AT,ΛT}, Δt::TT, Δq::AT, Δp::AT, λ::ΛT) where {DT,TT,AT,ΛT}
     solstep.t += Δt
     for k in eachindex(Δq,Δp)
-        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q[k], solstep.q̃[k])
-        solstep.p[k], solstep.p̃[k] = compensated_summation(Δp[k], solstep.p[k], solstep.p̃[k])
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q̄[1][k], solstep.q̃[k])
+        solstep.p[k], solstep.p̃[k] = compensated_summation(Δp[k], solstep.p̄[1][k], solstep.p̃[k])
     end
     solstep.λ .= λ
     return solstep
