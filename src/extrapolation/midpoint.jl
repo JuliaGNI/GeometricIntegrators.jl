@@ -85,7 +85,7 @@ where
 * `s`:  number of interpolations (order $p=2s+2$)
 
 """
-struct MidpointExtrapolation
+struct MidpointExtrapolation <: Extrapolation
     s::Int
     MidpointExtrapolation(s=default_extrapolation_stages) = new(s)
 end
@@ -131,14 +131,16 @@ end
 
 function extrapolate!(t₀, x₀::AbstractVector,
                       t₁, x₁::AbstractVector,
-                      problem::ODEProblem, extrap::MidpointExtrapolation)
+                      problem::Union{ODEProblem,DAEProblem},
+                      extrap::MidpointExtrapolation)
     extrapolate!(t₀, x₀, t₁, x₁, functions(problem).v, extrap)
 end
 
 
 function extrapolate!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
                       t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
-                      problem::Union{PODEProblem,HODEProblem}, extrap::MidpointExtrapolation) where {DT,TT}
+                      problem::Union{PODEProblem,HODEProblem,PDAEProblem,HDAEProblem},
+                      extrap::MidpointExtrapolation) where {DT,TT}
     @assert size(q₀) == size(q₁) == size(p₀) == size(p₁)
 
     local v   = functions(problem).v
@@ -201,7 +203,8 @@ end
 
 function extrapolate!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
                       t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
-                      problem::Union{IODEProblem,LODEProblem}, extrap::MidpointExtrapolation) where {DT,TT}
+                      problem::Union{IODEProblem,LODEProblem,IDAEProblem,LDAEProblem},
+                      extrap::MidpointExtrapolation) where {DT,TT}
     @assert size(q₀) == size(q₁) == size(p₀) == size(p₁)
 
     local v   = functions(problem).v̄

@@ -25,7 +25,7 @@ where
 * `s`:  number of interpolations (order $p=s+1$)
 
 """
-struct EulerExtrapolation
+struct EulerExtrapolation <: Extrapolation
     s::Int
     function EulerExtrapolation(s=default_extrapolation_stages)
         @assert s ≥ 0

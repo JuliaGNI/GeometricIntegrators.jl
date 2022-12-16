@@ -117,7 +117,7 @@ g'(1) &= f'_1 .
 \end{aligned}
 ```
 """
-struct HermiteExtrapolation end
+struct HermiteExtrapolation <: Extrapolation end
 
 
 function extrapolate!(t₀::TT, x₀::AbstractArray{DT}, ẋ₀::AbstractArray{DT},
