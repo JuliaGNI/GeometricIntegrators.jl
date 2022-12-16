@@ -93,11 +93,9 @@ end
 
 function extrapolate!(t₀::TT, x₀::AbstractVector{DT},
                       t₁::TT, x₁::AbstractVector{DT},
-                      problem::ODEProblem, extrap::MidpointExtrapolation) where {DT,TT}
+                      v::Callable, extrap::MidpointExtrapolation) where {DT,TT}
     @assert size(x₀) == size(x₁)
 
-
-    local v   = functions(problem).v
     local F   = [2i*one(TT) for i in 1:extrap.s+1]
     local σ   = (t₁ - t₀) ./ F
     local σ²  = σ.^2
@@ -129,6 +127,12 @@ function extrapolate!(t₀::TT, x₀::AbstractVector{DT},
     aitken_neville!(x₁, zero(TT), σ², pts)
     
     return x₁
+end
+
+function extrapolate!(t₀, x₀::AbstractVector,
+                      t₁, x₁::AbstractVector,
+                      problem::ODEProblem, extrap::MidpointExtrapolation)
+    extrapolate!(t₀, x₀, t₁, x₁, functions(problem).v, extrap)
 end
 
 
