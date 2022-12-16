@@ -60,7 +60,7 @@ this solves the explicit dynamical equation
 
 ```math
 \begin{aligned}
-\dot{q} &= v(t, q, p) , &
+\dot{q} &= v(t, q) , &
 q(t_0) &= q_0 , \\
 \dot{p} &= f(t, q, v) , &
 p(t_0) &= p_0 , 
