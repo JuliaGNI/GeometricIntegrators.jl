@@ -19,6 +19,7 @@ module Integrators
     using GeometricSolutions
 
     using ..Discontinuities
+    using ..Extrapolators
     using ..Solutions
 
 
@@ -29,19 +30,6 @@ module Integrators
 
     # compat workaroung
     Base.ndims(prob::GeometricProblem) = length(vec(prob.ics.q))
-
-
-    export Extrapolation,
-           EulerExtrapolation,
-           MidpointExtrapolation,
-           HermiteExtrapolation
-    export extrapolate!
-
-    include("integrators/extrapolation/extrapolation.jl")
-    include("integrators/extrapolation/aitken_neville.jl")
-    include("integrators/extrapolation/euler.jl")
-    include("integrators/extrapolation/hermite.jl")
-    include("integrators/extrapolation/midpoint.jl")
 
 
     export InitialGuess, InitialGuessODE, InitialGuessIODE, InitialGuessPODE,

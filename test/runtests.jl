@@ -1,6 +1,7 @@
 
 using SafeTestsets
 
+@safetestset "Extrapolation Methods                                                           " begin include("extrapolation_tests.jl") end
 @safetestset "Solution Tests                                                                  " begin include("solutions/solutions_tests.jl") end
 @safetestset "Tableau Tests                                                                   " begin include("tableaus/tableaus_tests.jl") end
 @safetestset "Method Tests                                                                    " begin include("methods/methods_tests.jl") end

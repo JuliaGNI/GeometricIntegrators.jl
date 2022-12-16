@@ -8,6 +8,10 @@ module GeometricIntegrators
     @reexport using GeometricEquations
 
     
+    include("Methods.jl")
+    @reexport using .Methods
+    include("Extrapolators.jl")
+    @reexport using .Extrapolators
     include("Solutions.jl")
     @reexport using .Solutions
     include("Discontinuities.jl")
@@ -16,8 +20,6 @@ module GeometricIntegrators
     @reexport using .Integrators
     include("Tableaus.jl")
     @reexport using .Tableaus
-    include("Methods.jl")
-    @reexport using .Methods
     include("Simulations.jl")
     @reexport using .Simulations
 
