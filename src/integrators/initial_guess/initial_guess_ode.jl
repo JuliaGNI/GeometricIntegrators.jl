@@ -1,100 +1,57 @@
-"""
-`InitialGuessODE`: Initial guess for ordinary differential equations
 
-### Fields
-
-* `int`: interpolation structure
-* `v`:   vector  field
-* `Δt`:  time step
-* `s`:   number of extrapolation stages (for initialisation)
-"""
-struct InitialGuessODE{TT, VT, IT <: Extrapolation}
-    int::IT
-    v::VT
-    Δt::TT
-    s::Int
-
-    function InitialGuessODE(int::IT, v::VT, Δt::TT) where {TT <: Real, VT <: Function, IT <: Extrapolation}
-        new{TT,VT,IT}(int, v, Δt, get_config(:ig_extrapolation_stages))
-    end
-end
-
-function InitialGuessODE(interp::Type{<:Extrapolation}, v::Function, Δt)
-    int = interp(zero(Δt), Δt)
-    InitialGuessODE(int, v, Δt)
-end
-
-function InitialGuessODE(interp::Type{<:Extrapolation}, problem::Union{ODEProblem,DAEProblem,IODEProblem,LODEProblem}, Δt = tstep(problem))
-    InitialGuessODE(interp, _get_v̄(equation(problem), parameters(problem)), Δt)
-end
-
-InitialGuess(interp, problem::Union{ODEProblem,DAEProblem}, Δt = tstep(problem)) = InitialGuessODE(interp, problem, Δt)
-InitialGuess(problem::Union{ODEProblem,DAEProblem}, Δt = tstep(problem)) = InitialGuessODE(get_config(:ig_extrapolation), problem, Δt)
-
-InitialGuess(interp, equation::ODEProblem, Δt = tstep(equation)) = InitialGuessODE(interp, equation, Δt)
-InitialGuess(interp, equation::DAEProblem, Δt = tstep(equation)) = InitialGuessODE(interp, equation, Δt)
-
-
-Base.:(==)(ig1::InitialGuessODE{TT1}, ig2::InitialGuessODE{TT2}) where {TT1,TT2}= (
-                                TT1 == TT2
-                             && ig1.int == ig2.int
-                             && ig1.v   == ig2.v
-                             && ig1.Δt  == ig2.Δt
-                             && ig1.s   == ig2.s)
-
-
-"Initialise initial guess, i.e., given t₀, t₁, q₁ compute q₀, v₀, v₁."
-function initialize!(ig::InitialGuessODE{TT},
-                t₁::TT,
-                q₁::SolutionVector{DT},
-                v₁::SolutionVector{DT},
-                t₀::TT,
-                q₀::SolutionVector{DT},
-                v₀::SolutionVector{DT}) where {DT,TT}
-    _midpoint_extrapolation_ode!(ig.v, t₁, t₀, q₁, q₀, ig.s)
-    ig.v(v₀, t₀, q₀)
-    ig.v(v₁, t₁, q₁)
+function initialguess!(t, q, q̇, solstep::SolutionStepODE, ::AbstractProblemODE, ::NoInitialGuess)
+    t  = solstep.t̄[1]
+    q .= solstep.q̄[1]
+    q̇ .= solstep.v̄[1]
+    (t = t, q = q, v = q̇)
 end
 
 
-"compute vector field of new solution"
-function update_vector_fields!(ig::InitialGuessODE{TT}, t₁::TT,
-                               q₁::SolutionVector{DT},
-                               v₁::Vector{DT}) where {DT,TT}
-    ig.v(v₁, t₁, q₁)
-end
-
-function GeometricBase.evaluate!(ig::InitialGuessODE{TT},
-                q₀::SolutionVector{DT},
-                v₀::SolutionVector{DT},
-                q₁::SolutionVector{DT},
-                v₁::SolutionVector{DT},
-                guess::SolutionVector{DT},
-                c::TT=one(TT)) where {DT,TT}
-
+function initialguess!(t₀, q₀, q̇₀, t₁, q₁, q̇₁, t, q, q̇, iguess::HermiteExtrapolation)
     if q₀ == q₁
-        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁."
-        guess .= q₁
+        @warn "q₀ and q₁ in initial guess are identical!"
+        q .= q₁
+        q̇ .= q̇₁
     else
-        evaluate!(ig.int, q₀, q₁, v₀, v₁, (one(TT)+c)*ig.Δt, guess)
+        extrapolate!(t₀, q₀, q̇₀, t₁, q₁, q̇₁, t, q, q̇, iguess)
     end
+    (t = t, q = q, v = q̇)
 end
 
-function GeometricBase.evaluate!(ig::InitialGuessODE{TT},
-                q₀::SolutionVector{DT},
-                v₀::SolutionVector{DT},
-                q₁::SolutionVector{DT},
-                v₁::SolutionVector{DT},
-                guess_q::SolutionVector{DT},
-                guess_v::SolutionVector{DT},
-                c::TT=one(TT)) where {DT,TT}
-                @assert length(guess_q) == length(guess_v)
-
+function initialguess!(t₀, q₀, q̇₀, t₁, q₁, q̇₁, t, q, iguess::HermiteExtrapolation)
     if q₀ == q₁
-        @warn "q₀ and q₁ in initial guess are identical! Setting q=q₁ and v=0."
-        guess_q .= q₁
-        guess_v .= 0
+        @warn "q₀ and q₁ in initial guess are identical!"
+        q .= q₁
     else
-        evaluate!(ig.int, q₀, q₁, v₀, v₁, (one(TT)+c)*ig.Δt, guess_q, guess_v)
+        extrapolate!(t₀, q₀, q̇₀, t₁, q₁, q̇₁, t, q, iguess)
     end
+    (t = t, q = q)
+end
+
+function initialguess!(t, q, q̇, solstep::SolutionStepODE, ::AbstractProblemODE, extrap::HermiteExtrapolation)
+    initialguess!(solstep.t̄[2], solstep.q̄[2], solstep.v̄[2], solstep.t̄[1], solstep.q̄[1], solstep.v̄[1], t, q, q̇, extrap)
+end
+
+function initialguess!(t, q, solstep::SolutionStepODE, ::AbstractProblemODE, extrap::HermiteExtrapolation)
+    initialguess!(solstep.t̄[2], solstep.q̄[2], solstep.v̄[2], solstep.t̄[1], solstep.q̄[1], solstep.v̄[1], t, q, extrap)
+end
+
+
+function initialguess!(t̄, q̄, t, q, q̇, problem::AbstractProblemODE, extrap::MidpointExtrapolation)
+    extrapolate!(t̄, q̄, t, q, problem, extrap)
+    functions(problem).v(q̇, t, q)
+    (t = t, q = q, v = q̇)
+end
+
+function initialguess!(t, q, q̇, solstep::SolutionStepODE, problem::AbstractProblemODE, extrap::MidpointExtrapolation)
+    initialguess!(solstep.t̄[1], solstep.q̄[1], t, q, q̇, problem, extrap)
+end
+
+function initialguess!(t̄, q̄, t, q, problem::AbstractProblemODE, extrap::MidpointExtrapolation)
+    extrapolate!(t̄, q̄, t, q, problem, extrap)
+    (t = t, q = q)
+end
+
+function initialguess!(t, q, solstep::SolutionStepODE, problem::AbstractProblemODE, extrap::MidpointExtrapolation)
+    initialguess!(solstep.t̄[1], solstep.q̄[1], t, q, problem, extrap)
 end

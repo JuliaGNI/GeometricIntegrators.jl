@@ -32,11 +32,11 @@ module Integrators
     Base.ndims(prob::GeometricProblem) = length(vec(prob.ics.q))
 
 
-    export InitialGuess, InitialGuessODE, InitialGuessIODE, InitialGuessPODE,
-           initialize!
+    export InitialGuess, NoInitialGuess, OptionalInitialGuess
+    export initialguess!
 
+    include("integrators/initial_guess/initial_guess.jl")
     include("integrators/initial_guess/initial_guess_ode.jl")
-    include("integrators/initial_guess/initial_guess_iode.jl")
     include("integrators/initial_guess/initial_guess_pode.jl")
 
 
