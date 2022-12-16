@@ -64,10 +64,6 @@ mutable struct SolutionStepDAE{
         v̄ = OffsetVector([vectorfield(q) for _ in 1:history+1], 0:history)
         ū = OffsetVector([vectorfield(q) for _ in 1:history+1], 0:history)
 
-        t̄[0]  = t
-        q̄[0] .= q
-        λ̄[0] .= λ
-
         new{DT,TT,AT,ΛT,typeof(v̄[0]),IT,history}(t̄[0], q̄[0], λ̄[0], v̄[0], ū[0], t̄, q̄, λ̄ , v̄, ū, zero(q), internal)
     end
 end
@@ -80,31 +76,16 @@ previous(solstep::SolutionStepDAE) = (t = solstep.t̄[1], q = solstep.q̄[1], λ
 history(solstep::SolutionStepDAE) = (t = solstep.t̄, q = solstep.q̄, λ = solstep.λ̄)
 
 
-function Base.copy!(solstep::SolutionStepDAE, sol::NamedTuple)
-    solstep.t  = sol.t
-    solstep.q .= sol.q
-    solstep.λ .= sol.λ
+function initialize!(solstep::SolutionStepDAE, problem::AbstractProblemDAE, extrap::Extrapolation)
+    solstep.t  = initial_conditions(problem).t
+    solstep.q .= initial_conditions(problem).q
+    solstep.λ .= initial_conditions(problem).λ
+
     solstep.q̃ .= 0
-    solstep.v .= 0
 
     for i in eachhistory(solstep)
-        solstep.t̄[i]  = 0
-        solstep.q̄[i] .= 0
-        solstep.λ̄[i] .= 0
-        solstep.v̄[i] .= 0
-        solstep.ū[i] .= 0
-    end
-
-    return solstep
-end
-
-function GeometricBase.reset!(solstep::SolutionStepDAE)
-    for i in eachhistory(solstep)
-        solstep.t̄[i]  = solstep.t̄[i-1]
-        solstep.q̄[i] .= solstep.q̄[i-1]
-        solstep.λ̄[i] .= solstep.λ̄[i-1]
-        solstep.v̄[i] .= solstep.v̄[i-1]
-        solstep.ū[i] .= solstep.ū[i-1]
+        solstep.t̄[i] = solstep.t̄[i-1] - timestep(problem)
+        extrapolate!(solstep.t̄[i-1], solstep.q̄[i-1], solstep.t̄[i], solstep.q̄[i], problem, extrap)
     end
 
     return solstep
@@ -116,5 +97,36 @@ function update!(solstep::SolutionStepDAE{DT}, Δt, Δq::Vector{DT}, λ::Vector{
         solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q̄[1][k], solstep.q̃[k])
     end
     solstep.λ .= λ
+    return solstep
+end
+
+function GeometricBase.reset!(solstep::SolutionStepDAE)
+    for i in backwardhistory(solstep)
+        solstep.t̄[i]  = solstep.t̄[i-1]
+        solstep.q̄[i] .= solstep.q̄[i-1]
+        solstep.λ̄[i] .= solstep.λ̄[i-1]
+        solstep.v̄[i] .= solstep.v̄[i-1]
+        solstep.ū[i] .= solstep.ū[i-1]
+    end
+
+    return solstep
+end
+
+
+function Base.copy!(solstep::SolutionStepDAE, sol::NamedTuple)
+    solstep.t  = sol.t
+    solstep.q .= sol.q
+    solstep.λ .= sol.λ
+    solstep.q̃ .= 0
+    solstep.v .= 0
+
+    # for i in backwardhistory(solstep)
+    #     solstep.t̄[i]  = 0
+    #     solstep.q̄[i] .= 0
+    #     solstep.λ̄[i] .= 0
+    #     solstep.v̄[i] .= 0
+    #     solstep.ū[i] .= 0
+    # end
+
     return solstep
 end

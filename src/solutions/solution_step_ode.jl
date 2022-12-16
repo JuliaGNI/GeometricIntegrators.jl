@@ -53,9 +53,6 @@ mutable struct SolutionStepODE{
         q̄ = OffsetVector([zero(q) for _ in 1:history+1], 0:history)
         v̄ = OffsetVector([vectorfield(q) for _ in 1:history+1], 0:history)
 
-        t̄[0]  = t
-        q̄[0] .= q
-
         new{DT,TT,AT,typeof(v̄[0]),IT,history}(t̄[0], q̄[0], v̄[0], t̄, q̄, v̄, zero(q), internal)
     end
 end
@@ -68,26 +65,15 @@ previous(solstep::SolutionStepODE) = (t = solstep.t̄[1], q = solstep.q̄[1])
 history(solstep::SolutionStepODE) = (t = solstep.t̄, q = solstep.q̄)
 
 
-function Base.copy!(solstep::SolutionStepODE, sol::NamedTuple)
-    solstep.t  = sol.t
-    solstep.q .= sol.q
+function initialize!(solstep::SolutionStepODE, problem::AbstractProblemODE, extrap::Extrapolation)
+    solstep.t  = initial_conditions(problem).t
+    solstep.q .= initial_conditions(problem).q
+
     solstep.q̃ .= 0
-    solstep.v .= 0
 
     for i in eachhistory(solstep)
-        solstep.t̄[i]  = 0
-        solstep.q̄[i] .= 0
-        solstep.v̄[i] .= 0
-    end
-
-    return solstep
-end
-
-function GeometricBase.reset!(solstep::SolutionStepODE)
-    for i in eachhistory(solstep)
-        solstep.t̄[i]  = solstep.t̄[i-1]
-        solstep.q̄[i] .= solstep.q̄[i-1]
-        solstep.v̄[i] .= solstep.v̄[i-1]
+        solstep.t̄[i] = solstep.t̄[i-1] - timestep(problem)
+        extrapolate!(solstep.t̄[i-1], solstep.q̄[i-1], solstep.t̄[i], solstep.q̄[i], problem, extrap)
     end
 
     return solstep
@@ -98,5 +84,31 @@ function update!(solstep::SolutionStepODE{DT,TT,AT}, Δt::TT, Δq::AT) where {DT
     for k in eachindex(Δq)
         solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q̄[1][k], solstep.q̃[k])
     end
+    return solstep
+end
+
+function GeometricBase.reset!(solstep::SolutionStepODE)
+    for i in backwardhistory(solstep)
+        solstep.t̄[i]  = solstep.t̄[i-1]
+        solstep.q̄[i] .= solstep.q̄[i-1]
+        solstep.v̄[i] .= solstep.v̄[i-1]
+    end
+
+    return solstep
+end
+
+
+function Base.copy!(solstep::SolutionStepODE, sol::NamedTuple)
+    solstep.t  = sol.t
+    solstep.q .= sol.q
+    solstep.q̃ .= 0
+    solstep.v .= 0
+
+    # for i in backwardhistory(solstep)
+    #     solstep.t̄[i]  = 0
+    #     solstep.q̄[i] .= 0
+    #     solstep.v̄[i] .= 0
+    # end
+
     return solstep
 end

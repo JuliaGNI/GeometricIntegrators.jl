@@ -1,4 +1,6 @@
 
+default_extrapolation() = MidpointExtrapolation(5)
+
 """
 Abstract atomic or single-step solution.
 
@@ -19,12 +21,14 @@ the internal state of the integrator as obtained from the function
 """
 abstract type SolutionStep{dType <: Number, tType <: Real, aType <: AbstractArray{dType}} end
 
+initialize!(::SolutionStep, ::GeometricProblem) = nothing
 
 GeometricBase.datatype(::SolutionStep{dType, tType, aType}) where {dType, tType, aType} = dType
 GeometricBase.timetype(::SolutionStep{dType, tType, aType}) where {dType, tType, aType} = tType
 GeometricBase.arrtype(::SolutionStep{dType, tType, aType}) where {dType, tType, aType} = aType
 
-eachhistory(sol::SolutionStep) = nhistory(sol):-1:1
+eachhistory(sol::SolutionStep) = 1:nhistory(sol)
+backwardhistory(sol::SolutionStep) = nhistory(sol):-1:1
 
 
 """

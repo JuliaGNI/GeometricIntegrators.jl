@@ -1,7 +1,9 @@
 
 # Create SolutionStep for an ODEProblem.
-function SolutionStep(problem::AbstractProblemODE; kwargs...)
-    SolutionStepODE(initial_conditions(problem)...; kwargs...)
+function SolutionStep(problem::AbstractProblemODE, extrap::Extrapolation = default_extrapolation(); kwargs...)
+    solstep = SolutionStepODE(initial_conditions(problem)...; kwargs...)
+    initialize!(solstep, problem, extrap)
+    return solstep
 end
 
 # Create SolutionStep for an ODEProblem.
@@ -10,9 +12,11 @@ function SolutionStep(solution::SolutionODE; kwargs...)
 end
 
 # Create SolutionStep for a PODEProblem.
-function SolutionStep(problem::AbstractProblemPODE; kwargs...)
+function SolutionStep(problem::AbstractProblemPODE, extrap::Extrapolation = default_extrapolation(); kwargs...)
     ics = initial_conditions(problem)
-    SolutionStepPODE(ics.t, ics.q, ics.p; kwargs...)
+    solstep = SolutionStepPODE(ics.t, ics.q, ics.p; kwargs...)
+    initialize!(solstep, problem, extrap)
+    return solstep
 end
 
 # Create SolutionStep for a PODEProblem.
@@ -21,8 +25,10 @@ function SolutionStep(solution::SolutionPODE; kwargs...)
 end
 
 # Create SolutionStep for a DAEProblem.
-function SolutionStep(problem::AbstractProblemDAE; kwargs...)
-    SolutionStepDAE(initial_conditions(problem)...; kwargs...)
+function SolutionStep(problem::AbstractProblemDAE, extrap::Extrapolation = default_extrapolation(); kwargs...)
+    solstep = SolutionStepDAE(initial_conditions(problem)...; kwargs...)
+    initialize!(solstep, problem, extrap)
+    return solstep
 end
 
 # Create SolutionStep for a DAEProblem.
@@ -31,9 +37,11 @@ function SolutionStep(solution::SolutionDAE; kwargs...)
 end
 
 # Create SolutionStep for a PDAEProblem.
-function SolutionStep(problem::AbstractProblemPDAE; kwargs...)
+function SolutionStep(problem::AbstractProblemPDAE, extrap::Extrapolation = default_extrapolation(); kwargs...)
     ics = initial_conditions(problem)
-    SolutionStepPDAE(ics.t, ics.q, ics.p, ics.λ; kwargs...)
+    solstep = SolutionStepPDAE(ics.t, ics.q, ics.p, ics.λ; kwargs...)
+    initialize!(solstep, problem, extrap)
+    return solstep
 end
 
 # Create SolutionStep for a PDAEProblem.
@@ -41,12 +49,12 @@ function SolutionStep(solution::SolutionPDAE; kwargs...)
     SolutionStepPDAE(solution[0].t, solution[0].q, solution[0].p, solution[0].λ; kwargs...)
 end
 
-function SolutionStep(problem::GeometricProblem, method::GeometricMethod)
-    SolutionStep(problem, internal(method))
+function SolutionStep(problem::GeometricProblem, method::GeometricMethod, extrap::Extrapolation = default_extrapolation())
+    SolutionStep(problem, extrap; internal=internal(method))
 end
 
 function SolutionStep(solution::AbstractSolution, method::GeometricMethod)
-    SolutionStep(solution, internal(method))
+    SolutionStep(solution; internal=internal(method))
 end
 
 # Print error for SolutionSteps of problem types not implemented, yet.

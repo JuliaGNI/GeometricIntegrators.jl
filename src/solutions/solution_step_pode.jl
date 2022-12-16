@@ -66,10 +66,6 @@ mutable struct SolutionStepPODE{
         v̄ = OffsetVector([vectorfield(q) for _ in 1:history+1], 0:history)
         f̄ = OffsetVector([vectorfield(p) for _ in 1:history+1], 0:history)
 
-        t̄[0]  = t
-        q̄[0] .= q
-        p̄[0] .= p
-
         new{DT,TT,AT,typeof(v̄[0]),typeof(f̄[0]),IT,history}(t̄[0], q̄[0], p̄[0], v̄[0], f̄[0], t̄, q̄, p̄, v̄, f̄, zero(q), zero(p), internal)
     end
 end
@@ -81,33 +77,17 @@ previous(solstep::SolutionStepPODE) = (t = solstep.t̄[1], q = solstep.q̄[1], p
 history(solstep::SolutionStepPODE) = (t = solstep.t̄, q = solstep.q̄, p = solstep.p̄)
 
 
-function Base.copy!(solstep::SolutionStepPODE, sol::NamedTuple)
-    solstep.t  = sol.t
-    solstep.q .= sol.q
-    solstep.p .= sol.p
+function initialize!(solstep::SolutionStepPODE, problem::AbstractProblemPODE, extrap::Extrapolation)
+    solstep.t  = initial_conditions(problem).t
+    solstep.q .= initial_conditions(problem).q
+    solstep.p .= initial_conditions(problem).p
+
     solstep.q̃ .= 0
     solstep.p̃ .= 0
-    solstep.v .= 0
-    solstep.f .= 0
 
     for i in eachhistory(solstep)
-        solstep.t̄[i]  = 0
-        solstep.q̄[i] .= 0
-        solstep.p̄[i] .= 0
-        solstep.v̄[i] .= 0
-        solstep.f̄[i] .= 0
-    end
-
-    return solstep
-end
-
-function GeometricBase.reset!(solstep::SolutionStepPODE)
-    for i in eachhistory(solstep)
-        solstep.t̄[i]  = solstep.t̄[i-1]
-        solstep.q̄[i] .= solstep.q̄[i-1]
-        solstep.p̄[i] .= solstep.p̄[i-1]
-        solstep.v̄[i] .= solstep.v̄[i-1]
-        solstep.f̄[i] .= solstep.f̄[i-1]
+        solstep.t̄[i] = solstep.t̄[i-1] - timestep(problem)
+        extrapolate!(solstep.t̄[i-1], solstep.q̄[i-1], solstep.p̄[i-1], solstep.t̄[i], solstep.q̄[i], solstep.p̄[i], problem, extrap)
     end
 
     return solstep
@@ -119,5 +99,38 @@ function update!(solstep::SolutionStepPODE{DT,TT,AT}, Δt::TT, Δq::AT, Δp::AT)
         solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q̄[1][k], solstep.q̃[k])
         solstep.p[k], solstep.p̃[k] = compensated_summation(Δp[k], solstep.p̄[1][k], solstep.p̃[k])
     end
+    return solstep
+end
+
+function GeometricBase.reset!(solstep::SolutionStepPODE)
+    for i in backwardhistory(solstep)
+        solstep.t̄[i]  = solstep.t̄[i-1]
+        solstep.q̄[i] .= solstep.q̄[i-1]
+        solstep.p̄[i] .= solstep.p̄[i-1]
+        solstep.v̄[i] .= solstep.v̄[i-1]
+        solstep.f̄[i] .= solstep.f̄[i-1]
+    end
+
+    return solstep
+end
+
+
+function Base.copy!(solstep::SolutionStepPODE, sol::NamedTuple)
+    solstep.t  = sol.t
+    solstep.q .= sol.q
+    solstep.p .= sol.p
+    solstep.q̃ .= 0
+    solstep.p̃ .= 0
+    solstep.v .= 0
+    solstep.f .= 0
+
+    # for i in backwardhistory(solstep)
+    #     solstep.t̄[i]  = 0
+    #     solstep.q̄[i] .= 0
+    #     solstep.p̄[i] .= 0
+    #     solstep.v̄[i] .= 0
+    #     solstep.f̄[i] .= 0
+    # end
+
     return solstep
 end

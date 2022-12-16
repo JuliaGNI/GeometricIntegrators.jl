@@ -2,7 +2,6 @@ module Solutions
 
 using Reexport
 
-using HDF5
 using OffsetArrays
 
 using GeometricBase
@@ -11,6 +10,10 @@ using GeometricBase.Utils
 using GeometricEquations
 
 @reexport using GeometricSolutions
+
+using ..Extrapolators
+
+import ..Methods: GeometricMethod
 
 export DEFAULT_NSAVE, DEFAULT_NWRITE
 
