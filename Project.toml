@@ -28,7 +28,7 @@ SimpleSolvers = "36b790f5-6434-4fbe-b711-1f64a1e2f6a2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-Aqua = "0.5"
+Aqua = "0.5, 0.6"
 CompactBasisFunctions = "0.2"
 DecFP = "1"
 Documenter = "0.25, 0.26, 0.27"
