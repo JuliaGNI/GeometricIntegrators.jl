@@ -122,8 +122,9 @@ module Integrators
     include("integrators/rk/integrators_eprk.jl")
     include("integrators/rk/integrators_iprk.jl")
     include("integrators/rk/integrators_iprk_implicit.jl")
-    # include("integrators/rk/old/integrators_flrk.jl")
-    # include("integrators/rk/old/integrators_pglrk.jl")
+    # include("integrators/rk/integrators_flrk.jl")
+    include("integrators/rk/pglrk_coefficients.jl")
+    # include("integrators/rk/pglrk_integrators.jl")
 
 
     export IntegratorSplitting,

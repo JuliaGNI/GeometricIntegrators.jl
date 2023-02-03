@@ -30,10 +30,10 @@ function solver(solver::Type{<:NewtonMethod}, problem::GeometricProblem, method:
 end
 
 function update!(solstep::SolutionStepODE, V, tableau::Tableau, Δt)
-    update_solution!(solstep.q, solstep.q̃, V, tableau.b, tableau.b̂, Δt)
+    update_solution!(solstep.q, solstep.q̄[1], solstep.q̃, V, tableau.b, tableau.b̂, Δt)
 end
 
 function update!(solstep::SolutionStepPODE, V, F, tableau::PartitionedTableau, Δt)
-    update_solution!(solstep.q, solstep.q̃, V, tableau.q.b, tableau.q.b̂, Δt)
-    update_solution!(solstep.p, solstep.p̃, F, tableau.p.b, tableau.p.b̂, Δt)
+    update_solution!(solstep.q, solstep.q̄[1], solstep.q̃, V, tableau.q.b, tableau.q.b̂, Δt)
+    update_solution!(solstep.p, solstep.p̄[1], solstep.p̃, F, tableau.p.b, tableau.p.b̂, Δt)
 end
