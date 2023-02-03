@@ -28,3 +28,12 @@ function solver(solver::Type{<:NewtonMethod}, problem::GeometricProblem, method:
     # create nonlinear solver with solver type obtained from config dictionary
     solver(x, zero(x), f!)
 end
+
+function update!(solstep::SolutionStepODE, V, tableau::Tableau, Δt)
+    update_solution!(solstep.q, solstep.q̃, V, tableau.b, tableau.b̂, Δt)
+end
+
+function update!(solstep::SolutionStepPODE, V, F, tableau::PartitionedTableau, Δt)
+    update_solution!(solstep.q, solstep.q̃, V, tableau.q.b, tableau.q.b̂, Δt)
+    update_solution!(solstep.p, solstep.p̃, F, tableau.p.b, tableau.p.b̂, Δt)
+end

@@ -145,6 +145,5 @@ function integrate_step!(solstep::SolutionStepPODE{DT,TT}, problem::PODEProblem{
     end
 
     # compute final update
-    update_solution!(solstep.q, solstep.q̄[1], solstep.q̃, caches[DT].V, tableau(method).q.b, tableau(method).q.b̂, timestep(problem))
-    update_solution!(solstep.p, solstep.p̄[1], solstep.p̃, caches[DT].F, tableau(method).p.b, tableau(method).p.b̂, timestep(problem))
+    update!(solstep, caches[DT].V, caches[DT].F, tableau(method), timestep(problem))
 end

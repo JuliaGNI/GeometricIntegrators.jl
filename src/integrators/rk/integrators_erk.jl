@@ -67,5 +67,5 @@ function integrate_step!(solstep::SolutionStepODE{DT,TT}, problem::ODEProblem{DT
     end
 
     # compute final update
-    update_solution!(solstep.q, solstep.q̄[1], solstep.q̃, V, tableau(method).b, tableau(method).b̂, timestep(problem))
+    update!(solstep, V, tableau(method), timestep(problem))
 end

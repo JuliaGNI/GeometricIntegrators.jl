@@ -170,7 +170,7 @@ function integrate_step!(
     end
 
     # compute final update
-    update_solution!(solstep.q, solstep.q̄[1], solstep.q̃, caches[DT].V, tableau(method).b, tableau(method).b̂, timestep(problem))
+    update!(solstep, caches[DT].V, tableau(method), timestep(problem))
 
     # update vector field for initial guess
     update_vector_fields!(solstep, problem)
