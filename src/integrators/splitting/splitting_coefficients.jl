@@ -1,7 +1,10 @@
 
-abstract type AbstractTableauSplitting{T <: Real} <: AbstractTableau{T} end
+abstract type SplittingCoefficients end
 
-function get_splitting_coefficients(r, a::Vector{T}, b::Vector{T}) where {T}
+coefficients(problem::SODEProblem, splitting::SplittingCoefficients) = coefficients(length(solutions(problem).q), splitting)
+
+
+function _splitting_coefficients(r::Int, a::AbstractVector{T}, b::AbstractVector{T}) where {T}
     @assert length(a) == length(b)
 
     s = length(a)
@@ -24,42 +27,42 @@ end
 
 
 @doc raw"""
-Tableau for general splitting methods for vector fields with two components A and B.
+General splitting method for vector fields with two components A and B.
 
 Integrator:
 ```math
 \varphi_{\tau} = \varphi_{b_s \tau}^{B} \circ \varphi_{a_s \tau}^{A} \circ \dotsc \circ \varphi_{b_1 \tau}^{B} \circ \varphi_{a_1 \tau}^{A}
 ```
 """
-struct TableauSplitting{T} <: AbstractTableauSplitting{T}
+struct SplittingCoefficientsGeneral{T} <: SplittingCoefficients
     @HeaderTableau
 
     a::Vector{T}
     b::Vector{T}
 
-    function TableauSplitting{T}(name, o, s, a, b) where {T}
+    function SplittingCoefficientsGeneral{T}(name, o, s, a, b) where {T}
         @assert s == length(a) == length(b)
         new(name, o, s, a, b)
     end
 end
 
-function TableauSplitting(name, o, a::Vector{T}, b::Vector{T}) where {T}
-    TableauSplitting{T}(name, o, length(a), a, b)
+function SplittingCoefficientsGeneral(name, o, a::Vector{T}, b::Vector{T}) where {T}
+    SplittingCoefficientsGeneral{T}(name, o, length(a), a, b)
 end
 
-function get_splitting_coefficients(nequs, tableau::TableauSplitting{T}) where {T}
+function coefficients(nequs::Int, method::SplittingCoefficientsGeneral{T}) where {T}
     @assert nequs == 2
-    @assert length(tableau.a) == length(tableau.b)
+    @assert length(method.a) == length(method.b)
 
-    s = length(tableau.a)
+    s = length(method.a)
     f = zeros(Int, 2s)
     c = zeros(T,   2s)
 
-    for i in eachindex(tableau.a, tableau.b)
+    for i in eachindex(method.a, method.b)
         f[2*(i-1)+1] = 1
-        c[2*(i-1)+1] = tableau.a[i]
+        c[2*(i-1)+1] = method.a[i]
         f[2*(i-1)+2] = 2
-        c[2*(i-1)+2] = tableau.b[i]
+        c[2*(i-1)+2] = method.b[i]
     end
 
     # select all entries with non-vanishing coefficients
@@ -70,7 +73,7 @@ end
 
 
 @doc raw"""
-Tableau for non-symmetric splitting methods.
+Non-symmetric splitting method.
     See McLachlan, Quispel, 2003, Equ. (4.10).
     The methods A and B are the composition of all vector fields in the SODE
     and its adjoint, respectively.
@@ -88,25 +91,25 @@ Integrator:
 \varphi_{\tau}^{NS} = \varphi_{b_s \tau}^{B} \circ \varphi_{a_s \tau}^{A} \circ \dotsc \circ \varphi_{b_1 \tau}^{B} \circ \varphi_{a_1 \tau}^{A}
 ```
 """
-struct TableauSplittingNS{T} <: AbstractTableauSplitting{T}
+struct SplittingCoefficientsNonSymmetric{T} <: SplittingCoefficients
     @HeaderTableau
 
     a::Vector{T}
     b::Vector{T}
 
-    function TableauSplittingNS{T}(name, o, s, a, b) where {T}
+    function SplittingCoefficientsNonSymmetric{T}(name, o, s, a, b) where {T}
         @assert s == length(a) == length(b)
         new(name, o, s, a, b)
     end
 end
 
-function TableauSplittingNS(name, o, a::Vector{T}, b::Vector{T}) where {T}
-    TableauSplittingNS{T}(name, o, length(a), a, b)
+function SplittingCoefficientsNonSymmetric(name, o, a::Vector{T}, b::Vector{T}) where {T}
+    SplittingCoefficientsNonSymmetric{T}(name, o, length(a), a, b)
 end
 
-function get_splitting_coefficients(nequs, tableau::TableauSplittingNS)
+function coefficients(nequs::Int, method::SplittingCoefficientsNonSymmetric)
     # R = length(equation.v)
-    # S = tableau.s
+    # S = method.s
     #
     # f = zeros(Int, 2R*S)
     # c = zeros(TT,  2R*S)
@@ -114,20 +117,20 @@ function get_splitting_coefficients(nequs, tableau::TableauSplittingNS)
     # for i in 1:S
     #     for j in 1:R
     #         f[(2i-2)*R+j] = j
-    #         c[(2i-2)*R+j] = tableau.a[i]
+    #         c[(2i-2)*R+j] = method.a[i]
     #     end
     #     for j in 1:R
     #         f[(2i-1)*R+j] = R-j+1
-    #         c[(2i-1)*R+j] = tableau.b[i]
+    #         c[(2i-1)*R+j] = method.b[i]
     #     end
     # end
 
-    get_splitting_coefficients(nequs, tableau.a, tableau.b)
+    _splitting_coefficients(nequs::Int, method.a, method.b)
 end
 
 
 @doc raw"""
-Tableau for symmetric splitting methods with general stages.
+Symmetric splitting method with general stages.
     See McLachlan, Quispel, 2003, Equ. (4.11).
 
 Basic method: Lie composition
@@ -143,25 +146,25 @@ Integrator:
 \varphi_{\tau}^{GS} = \varphi_{a_1 \tau}^{A} \circ \varphi_{b_1 \tau}^{B} \circ \dotsc \circ \varphi_{b_1 \tau}^{B} \circ \varphi_{a_1 \tau}^{A}
 ```
 """
-struct TableauSplittingGS{T} <: AbstractTableauSplitting{T}
+struct SplittingCoefficientsGS{T} <: SplittingCoefficients
     @HeaderTableau
 
     a::Vector{T}
     b::Vector{T}
 
-    function TableauSplittingGS{T}(name, o, s, a, b) where {T}
+    function SplittingCoefficientsGS{T}(name, o, s, a, b) where {T}
         @assert s == length(a) == length(b)
         new(name, o, s, a, b)
     end
 end
 
-function TableauSplittingGS(name, o, a::Vector{T}, b::Vector{T}) where {T}
-    TableauSplittingGS{T}(name, o, length(a), a, b)
+function SplittingCoefficientsGS(name, o, a::Vector{T}, b::Vector{T}) where {T}
+    SplittingCoefficientsGS{T}(name, o, length(a), a, b)
 end
 
-function get_splitting_coefficients(nequs, tableau::TableauSplittingGS) 
+function coefficients(nequs::Int, method::SplittingCoefficientsGS) 
     # R = nequs
-    # S = tableau.s
+    # S = method.s
     #
     # f = zeros(Int, 2R*S)
     # c = zeros(TT,  2R*S)
@@ -169,21 +172,21 @@ function get_splitting_coefficients(nequs, tableau::TableauSplittingGS)
     # for i in 1:S
     #     for j in 1:R
     #         f[(2i-2)*R+j] = j
-    #         c[(2i-2)*R+j] = tableau.a[i]
+    #         c[(2i-2)*R+j] = method.a[i]
     #     end
     #     for j in R:-1:1
     #         f[(2i-1)*R+j] = R-j+1
-    #         c[(2i-1)*R+j] = tableau.b[i]
+    #         c[(2i-1)*R+j] = method.b[i]
     #     end
     # end
 
-    f, c = get_splitting_coefficients(nequs, tableau.a, tableau.b)
+    f, c = _splitting_coefficients(nequs::Int, method.a, method.b)
     vcat(f, f[end:-1:1]), vcat(c, c[end:-1:1])
 end
 
 
 @doc raw"""
-Tableau for symmetric splitting methods with symmetric stages.
+Symmetric splitting method with symmetric stages.
     See McLachlan, Quispel, 2003, Equ. (4.6).
 
 Basic method: symmetric Strang composition
@@ -196,24 +199,24 @@ Integrator:
 \varphi_{\tau}^{SS} = \varphi_{a_1 \tau}^{A} \circ \varphi_{a_2 \tau}^{A} \circ \dotsc \circ \varphi_{a_s \tau}^{A} \circ \dotsc \circ \varphi_{a_2 \tau}^{A} \circ \varphi_{a_1 \tau}^{A}
 ```
 """
-struct TableauSplittingSS{T} <: AbstractTableauSplitting{T}
+struct SplittingCoefficientsSS{T} <: SplittingCoefficients
     @HeaderTableau
 
     a::Vector{T}
 
-    function TableauSplittingSS{T}(name, o, s, a) where {T}
+    function SplittingCoefficientsSS{T}(name, o, s, a) where {T}
         @assert s == length(a)
         new(name, o, s, a)
     end
 end
 
-function TableauSplittingSS(name, o, a::Vector{T}) where {T}
-    TableauSplittingSS{T}(name, o, length(a), a)
+function SplittingCoefficientsSS(name, o, a::Vector{T}) where {T}
+    SplittingCoefficientsSS{T}(name, o, length(a), a)
 end
 
-function get_splitting_coefficients(nequs, tableau::TableauSplittingSS{T}) where {T}
+function coefficients(nequs::Int, method::SplittingCoefficientsSS{T}) where {T}
     r = nequs
-    a = vcat(tableau.a, tableau.a[end-1:-1:1]) ./ 2
+    a = vcat(method.a, method.a[end-1:-1:1]) ./ 2
     s = length(a)
 
     f = zeros(Int, 2r*s)

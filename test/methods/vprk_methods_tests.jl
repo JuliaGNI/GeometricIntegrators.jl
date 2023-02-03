@@ -122,29 +122,29 @@ lode = lodeproblem()
     @test typeof(VPRKLobattoIIIGIIIḠ(5)) <: VPRKMethod
 
 
-    @test typeof(Integrator(iode, VPSRK3())) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKGauss(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPSRK3())) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKGauss(2))) <: IntegratorVPRK
 
-    @test typeof(Integrator(iode, VPRKLobattoIII(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIA(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIB(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIC(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIID(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIE(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIF(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIG(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIII(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIA(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIB(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIC(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIID(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIE(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIF(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIG(2))) <: IntegratorVPRK
 
-    @test typeof(Integrator(iode, VPRKLobattoIIIAIIIB(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIBIIIA(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIAIIIĀ(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIBIIIB̄(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIICIIIC̄(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIC̄IIIC(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIDIIID̄(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIEIIIĒ(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIFIIIF̄(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIF̄IIIF(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIGIIIḠ(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIAIIIB(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIBIIIA(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIAIIIĀ(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIBIIIB̄(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIICIIIC̄(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIC̄IIIC(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIDIIID̄(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIEIIIĒ(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIFIIIF̄(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIF̄IIIF(2))) <: IntegratorVPRK
+    @test typeof(AbstractIntegrator(iode, VPRKLobattoIIIGIIIḠ(2))) <: IntegratorVPRK
 
 end
 

@@ -1,5 +1,5 @@
 
-abstract type ProjectionMethod <: Method end
+abstract type ProjectionMethod <: GeometricMethod end
 
 struct InternalStageProjection <: ProjectionMethod end
 struct LegendreProjection <: ProjectionMethod end

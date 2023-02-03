@@ -1,8 +1,8 @@
 
-function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::Union{SolutionStepPODE{DT,TT}, SolutionStepPDAE{DT,TT}},
+function Integrators.update_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::Union{SolutionStepPODE{DT,TT}, SolutionStepPDAE{DT,TT}},
                           cache::IntegratorCacheVPRK{DT}) where {DT,TT}
-    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
-    update_solution!(sol.p, sol.p̃, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̄[1], sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̄[1], sol.p̃, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 end
 
 function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::Union{SolutionStepPODE{DT,TT}, SolutionStepPDAE{DT,TT}}, R::Vector{TT},
@@ -19,14 +19,8 @@ end
 
 
 function Integrators.initialize!(int::AbstractIntegratorVPRK{DT}, sol::Union{SolutionStepPODE{DT,TT}, SolutionStepPDAE{DT,TT}}) where {DT,TT}
-    sol.t̄ = sol.t - timestep(int)
-
-    equation(int, :v̄)(sol.v, sol.t, sol.q)
-    equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
-    equation(int, :ϑ)(sol.p, sol.t, sol.q, sol.v)
-
-    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
+    initialize!(int.iguess, sol.t̄[0], sol.q̄[0], sol.p̄[0], sol.v̄[0], sol.f̄[0],
+                            sol.t̄[1], sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1])
 end
 
 

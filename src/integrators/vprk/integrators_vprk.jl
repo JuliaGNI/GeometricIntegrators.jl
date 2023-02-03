@@ -3,11 +3,11 @@
 const ParametersVPRK = AbstractParametersVPRK{:vprk}
 
 function IntegratorCache(params::ParametersVPRK{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
-    IntegratorCacheVPRK{DT,D,S}(false; kwargs...)
+    IntegratorCacheVPRK{DT,D,S}(D*S, false; kwargs...)
 end
 
 function IntegratorCache{ST}(params::ParametersVPRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
-    IntegratorCacheVPRK{ST,D,S}(false; kwargs...)
+    IntegratorCacheVPRK{ST,D,S}(D*S, false; kwargs...)
 end
 
 
@@ -35,12 +35,12 @@ b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 ```
 """
 struct IntegratorVPRK{DT, TT, D, S, PT <: ParametersVPRK{DT,TT},
-                                    ST <: NonlinearSolver{DT},
+                                    ST <: NonlinearSolver,
                                     IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT
-    caches::CacheDict{PT}
+    caches::OldCacheDict{PT}
 
     function IntegratorVPRK(params::ParametersVPRK{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
@@ -54,7 +54,7 @@ struct IntegratorVPRK{DT, TT, D, S, PT <: ParametersVPRK{DT,TT},
         params = ParametersVPRK{DT,D}(equations, tableau, nullvec, Δt)
 
         # create cache dict
-        caches = CacheDict(params)
+        caches = OldCacheDict(params)
 
         # create nonlinear solver
         solver = create_nonlinear_solver(DT, D*S, params, caches)
@@ -110,13 +110,12 @@ end
 function initial_guess!(int::IntegratorVPRK{DT}, sol::SolutionStepPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
-                              sol.q, sol.p, sol.v, sol.f,
-                              cache.q̃, cache.ṽ,
-                              tableau(int).q.c[i])
+        evaluate!(int.iguess, sol.q̄[2], sol.p̄[2], sol.v̄[2], sol.f̄[2],
+                              sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1],
+                              cache.q̃, cache.ṽ, tableau(int).q.c[i])
 
         for k in eachdim(int)
-            int.solver.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
+            cache.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
         end
     end
 end
@@ -125,7 +124,7 @@ end
 "Compute stages of variational partitioned Runge-Kutta methods."
 function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRK{DT,TT,D,S},
-                caches::CacheDict) where {ST,DT,TT,D,S}
+                caches::OldCacheDict) where {ST,DT,TT,D,S}
 
     @assert length(x) == length(b)
 
@@ -143,23 +142,23 @@ function Integrators.integrate_step!(int::IntegratorVPRK{DT,TT}, sol::SolutionSt
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 
+    # reset solution
+    reset!(sol, timestep(int))
+
     # compute initial guess
     initial_guess!(int, sol, cache)
 
-    # reset solution
-    reset!(sol)
-
     # call nonlinear solver
-    solve!(int.solver)
+    solve!(cache.x, int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params)
+    # print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params)
+    # check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, cache.Q, cache.V, cache.P, cache.F, int.params)
+    compute_stages!(cache.x, cache.Q, cache.V, cache.P, cache.F, int.params)
 
     # compute final update
     update_solution!(int, sol, cache)
@@ -168,11 +167,11 @@ function Integrators.integrate_step!(int::IntegratorVPRK{DT,TT}, sol::SolutionSt
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 
     # copy internal stage variables
-    sol.internal[:Q] .= cache.Q
-    sol.internal[:P] .= cache.P
-    sol.internal[:V] .= cache.V
-    sol.internal[:F] .= cache.F
+    # sol.internal[:Q] .= cache.Q
+    # sol.internal[:P] .= cache.P
+    # sol.internal[:V] .= cache.V
+    # sol.internal[:F] .= cache.F
 
     # copy solver status
-    get_solver_status!(int.solver, sol.internal[:solver])
+    # get_solver_status!(int.solver, sol.internal[:solver])
 end

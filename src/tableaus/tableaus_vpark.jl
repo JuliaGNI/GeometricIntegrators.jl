@@ -1,5 +1,5 @@
 
-function TableauSymplecticProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R∞=1) where {T}
+function TableauSymplecticProjection(name, q::Tableau{T}, p::Tableau{T}, d=nothing; R∞=1) where {T}
 
     @assert q.s == p.s
 
@@ -33,23 +33,12 @@ function TableauSymplecticProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R
     d_λ = [0.0, 1.0]
 
 
-    if length(d) == 0
-        return TableauVPARK(name, o,
-                            a_q, a_p, α_q, α_p,
-                            a_q̃, a_p̃, α_q̃, α_p̃,
-                            b_q, b_p, β_q, β_p,
-                            c_q, c_p, c_λ, d_λ)
-    else
-        @assert length(d) == q.s == p.s
-
-        return TableauVPARK(name, o,
-                            a_q, a_p, α_q, α_p,
-                            a_q̃, a_p̃, α_q̃, α_p̃,
-                            b_q, b_p, β_q, β_p,
-                            c_q, c_p, c_λ, d_λ,
-                            d)
-    end
-
+    return VPARK(TableauVPARK(name, o,
+                        a_q, a_p, α_q, α_p,
+                        a_q̃, a_p̃, α_q̃, α_p̃,
+                        b_q, b_p, β_q, β_p,
+                        c_q, c_p, c_λ, d_λ,
+                        d))
 end
 
 

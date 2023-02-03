@@ -2,13 +2,21 @@
 "Parameters for right-hand side function of Variational Partitioned Runge-Kutta methods."
 const ParametersVPRKdegenerate = AbstractParametersVPRK{:vprk_degenerate}
 
+function Integrators.IntegratorCache(params::ParametersVPRKdegenerate{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
+    IntegratorCacheVPRK{DT,D,S}(D*S, true, D; kwargs...)
+end
+
+function Integrators.IntegratorCache{ST}(params::ParametersVPRKdegenerate{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+    IntegratorCacheVPRK{ST,D,S}(D*S, true, D; kwargs...)
+end
+
 
 "Variational partitioned Runge-Kutta integrator."
 mutable struct IntegratorVPRKdegenerate{DT, TT, D, S,
                 PT  <: ParametersVPRK{DT,TT},
                 PPT <: ParametersVPRKdegenerate{DT,TT},
-                ST  <: NonlinearSolver{DT},
-                PST <: NonlinearSolver{DT},
+                ST  <: NonlinearSolver,
+                PST <: NonlinearSolver,
                 IT  <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
 
     params::PT
@@ -16,7 +24,7 @@ mutable struct IntegratorVPRKdegenerate{DT, TT, D, S,
     solver::ST
     projector::PST
     iguess::IT
-    caches::CacheDict{PPT}
+    caches::OldCacheDict{PPT}
 
     function IntegratorVPRKdegenerate(params::ParametersVPRK{DT,TT,D,S},
                     pparams::ParametersVPRKdegenerate{DT,TT,D,S},
@@ -35,7 +43,7 @@ mutable struct IntegratorVPRKdegenerate{DT, TT, D, S,
         pparams = ParametersVPRKdegenerate{DT,D}(equations, tableau, nullvec, Δt, NamedTuple{(:V,:F)}((create_internal_stage_vector(DT,D,S), create_internal_stage_vector(DT,D,S))))
 
         # create cache dict
-        caches = CacheDict(pparams)
+        caches = OldCacheDict(pparams)
 
         # create nonlinear solver
         solver = create_nonlinear_solver(DT, D*S, sparams, caches)
@@ -69,12 +77,12 @@ end
 function initial_guess!(int::IntegratorVPRKdegenerate{DT}, sol::SolutionStepPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
-                              sol.q, sol.p, sol.v, sol.f,
+        evaluate!(int.iguess, sol.q̄[2], sol.p̄[2], sol.v̄[2], sol.f̄[2],
+                              sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1],
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
         for k in eachdim(int)
-            int.solver.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
+            cache.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
         end
     end
 end
@@ -82,7 +90,7 @@ end
 function initial_guess_projection!(int::IntegratorVPRKdegenerate{DT}, sol::SolutionStepPODE{DT},
                                    cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for k in eachdim(int)
-        int.projector.x[k] = sol.q[k]
+        cache.x̄[k] = sol.q[k]
     end
 end
 
@@ -103,7 +111,7 @@ end
 "Compute solution of degenerate symplectic partitioned Runge-Kutta methods."
 function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKdegenerate{DT,TT,D,S},
-                caches::CacheDict) where {ST,DT,TT,D,S}
+                caches::OldCacheDict) where {ST,DT,TT,D,S}
 
     @assert length(x) == length(b)
 
@@ -136,23 +144,23 @@ function Integrators.integrate_step!(int::IntegratorVPRKdegenerate{DT,TT}, sol::
     update_params!(int.params, sol)
     update_params!(int.pparams, sol)
 
+    # reset solution
+    reset!(sol, timestep(int))
+
     # compute initial guess
     initial_guess!(int, sol, cache)
 
-    # reset solution
-    reset!(sol)
-
     # call nonlinear solver
-    solve!(int.solver)
+    solve!(cache.x, int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params)
+    # print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params)
+    # check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, cache.Q, cache.V, cache.P, cache.F, int.params)
+    compute_stages!(cache.x, cache.Q, cache.V, cache.P, cache.F, int.params)
 
     # compute unprojected solution
     update_solution!(int, sol, cache)
@@ -167,16 +175,16 @@ function Integrators.integrate_step!(int::IntegratorVPRKdegenerate{DT,TT}, sol::
     initial_guess_projection!(int, sol)
 
     # call solution solver
-    solve!(int.projector)
+    solve!(cache.x̄, int.projector)
 
     # print solver status
-    print_solver_status(int.projector.status, int.projector.params)
+    # print_solver_status(int.projector.status, int.projector.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.projector.status, int.projector.params)
+    # check_solver_status(int.projector.status, int.projector.params)
 
     # compute projection vector fields
-    compute_solution!(int.projector.x, sol.q, cache.ṽ, sol.p, int.pparams)
+    compute_solution!(cache.x̄, sol.q, cache.ṽ, sol.p, int.pparams)
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)

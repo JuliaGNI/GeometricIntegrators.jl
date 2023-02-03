@@ -91,7 +91,7 @@ struct MidpointExtrapolation <: Extrapolation
 end
 
 
-function extrapolate!(t₀::TT, x₀::AbstractVector{DT},
+function extrapolate_ode!(t₀::TT, x₀::AbstractVector{DT},
                       t₁::TT, x₁::AbstractVector{DT},
                       v::Callable, extrap::MidpointExtrapolation) where {DT,TT}
     @assert size(x₀) == size(x₁)
@@ -133,18 +133,15 @@ function extrapolate!(t₀, x₀::AbstractVector,
                       t₁, x₁::AbstractVector,
                       problem::Union{ODEProblem,DAEProblem},
                       extrap::MidpointExtrapolation)
-    extrapolate!(t₀, x₀, t₁, x₁, functions(problem).v, extrap)
+    extrapolate_ode!(t₀, x₀, t₁, x₁, functions(problem).v, extrap)
 end
 
 
-function extrapolate!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
+function extrapolate_pode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
                       t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
-                      problem::Union{PODEProblem,HODEProblem,PDAEProblem,HDAEProblem},
+                      v::Callable, f::Callable,
                       extrap::MidpointExtrapolation) where {DT,TT}
     @assert size(q₀) == size(q₁) == size(p₀) == size(p₁)
-
-    local v   = functions(problem).v
-    local f   = functions(problem).f
 
     local F   = [2i*one(TT) for i in 1:extrap.s+1]
     local σ   = (t₁ - t₀) ./ F
@@ -200,15 +197,19 @@ function extrapolate!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{D
     return (q₁, p₁)
 end
 
-
 function extrapolate!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
+    t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
+    problem::Union{PODEProblem,HODEProblem,PDAEProblem,HDAEProblem},
+    extrap::MidpointExtrapolation) where {DT,TT}
+    extrapolate_pode!(t₀, q₀, p₀, t₁, q₁, p₁, functions(problem).v, functions(problem).f, extrap)
+end
+
+
+function extrapolate_iode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
                       t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
-                      problem::Union{IODEProblem,LODEProblem,IDAEProblem,LDAEProblem},
+                      v::Callable, f::Callable,
                       extrap::MidpointExtrapolation) where {DT,TT}
     @assert size(q₀) == size(q₁) == size(p₀) == size(p₁)
-
-    local v   = functions(problem).v̄
-    local f   = functions(problem).f̄
 
     local F   = [2i*one(TT) for i in 1:extrap.s+1]
     local σ   = (t₁ - t₀) ./ F
@@ -262,4 +263,12 @@ function extrapolate!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{D
     aitken_neville!(p₁, zero(TT), σ2, pts)
 
     return (q₁, p₁)
+end
+
+function extrapolate!(
+    t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
+    t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
+    problem::Union{IODEProblem,LODEProblem,IDAEProblem,LDAEProblem},
+    extrap::MidpointExtrapolation) where {DT,TT}
+    extrapolate_iode!(t₀, q₀, p₀, t₁, q₁, p₁, functions(problem).v̄, functions(problem).f̄, extrap)
 end

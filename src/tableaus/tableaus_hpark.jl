@@ -1,5 +1,5 @@
 
-function getTableauHPARK(name, q::Tableau{T}, p::Tableau{T}, d=[]) where {T}
+function getTableauHPARK(name, q::Tableau{T}, p::Tableau{T}, d=nothing) where {T}
 
     @assert q.s == p.s
 
@@ -13,22 +13,12 @@ function getTableauHPARK(name, q::Tableau{T}, p::Tableau{T}, d=[]) where {T}
     c_p = p.c
 
 
-    if length(d) == 0
-        return TableauHPARK(name, o,
-                            a_q, a_p, a_q, a_p,
-                            a_q, a_p, a_q, a_p,
-                            b_q, b_p, b_q, b_p,
-                            c_q, c_p, c_q, c_p)
-    else
-        @assert length(d) == q.s == p.s
-
-        return TableauHPARK(name, o,
-                            a_q, a_p, a_q, a_p,
-                            a_q, a_p, a_q, a_p,
-                            b_q, b_p, b_q, b_p,
-                            c_q, c_p, c_q, c_p,
-                            d)
-    end
+    return HPARK(TableauHPARK(name, o,
+                        a_q, a_p, a_q, a_p,
+                        a_q, a_p, a_q, a_p,
+                        b_q, b_p, b_q, b_p,
+                        c_q, c_p, c_q, c_p,
+                        d))
 end
 
 

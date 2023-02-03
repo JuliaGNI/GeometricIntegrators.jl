@@ -1,10 +1,32 @@
 
-abstract type AbstractIntegratorSPARK{dType, tType, D, S, R} <: PDAEIntegrator{dType, tType} end
-abstract type AbstractIntegratorHSPARK{dType, tType, D, S, R} <: AbstractIntegratorSPARK{dType, tType, D, S, R} end
-abstract type AbstractIntegratorVSPARK{dType, tType, D, S, R} <: AbstractIntegratorSPARK{dType, tType, D, S, R} end
+abstract type HSPARKMethod <: HDAEMethod end
+abstract type ISPARKMethod <: IDAEMethod end
+abstract type LSPARKMethod <: LDAEMethod end
+abstract type PSPARKMethod <: PDAEMethod end
 
-@inline parameters(int::AbstractIntegratorSPARK) = int.params
-@inline nstages(int::AbstractIntegratorSPARK{DT,TT,D,S,R}) where {DT,TT,D,S,R} = S
-@inline pstages(int::AbstractIntegratorSPARK{DT,TT,D,S,R}) where {DT,TT,D,S,R} = R
-@inline Base.ndims(int::AbstractIntegratorSPARK{DT,TT,D,S,R}) where {DT,TT,D,S,R} = D
-@inline eachstage(integrator::AbstractIntegratorSPARK) = 1:nstages(integrator)
+const AbstractSPARKMethod = Union{HSPARKMethod, ISPARKMethod, LSPARKMethod, PSPARKMethod}
+const AbstractSPARKProblem{DT<:Number, TT<:Real} = 
+    Union{HDAEProblem{DT,TT}, 
+          IDAEProblem{DT,TT},
+          LDAEProblem{DT,TT},
+          PDAEProblem{DT,TT}}
+
+Integrators.default_solver(::AbstractSPARKMethod) = Newton()
+Integrators.default_iguess(::AbstractSPARKMethod) = HermiteExtrapolation()
+
+
+nstages(method::AbstractSPARKMethod) = nstages(tableau(method))
+pstages(method::AbstractSPARKMethod) = pstages(tableau(method))
+eachstage(method::AbstractSPARKMethod) = eachstage(tableau(method))
+hasnullvector(method::AbstractSPARKMethod) = hasnullvector(tableau(method))
+
+
+function Integrators.initsolver(::Newton, solstep::SolutionStepPDAE, problem::AbstractSPARKProblem, method::AbstractSPARKMethod, caches::CacheDict)
+    DT = datatype(problem)
+
+    # create wrapper function f!(b,x)
+    f! = (b,x) -> function_stages!(b, x, solstep, problem, method, caches)
+
+    # create nonlinear solver
+    NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
+end

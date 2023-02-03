@@ -20,8 +20,8 @@ module GeometricIntegrators
     @reexport using .Integrators
     include("Tableaus.jl")
     @reexport using .Tableaus
-    include("Simulations.jl")
-    @reexport using .Simulations
+    # include("Simulations.jl")
+    # @reexport using .Simulations
 
 
     function __init__()

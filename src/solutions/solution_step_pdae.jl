@@ -70,7 +70,7 @@ mutable struct SolutionStepPDAE{
 
     internal::IT
 
-    function SolutionStepPDAE(t::TT, q::AT, p::AT, λ::ΛT; history = 1, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
+    function SolutionStepPDAE(t::TT, q::AT, p::AT, λ::ΛT; history = 2, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
         @assert history ≥ 1
 
         t̄ = OffsetVector([zero(t) for _ in 1:history+1], 0:history)
@@ -94,7 +94,22 @@ previous(solstep::SolutionStepPDAE) = (t = solstep.t̄[1], q = solstep.q̄[1], p
 history(solstep::SolutionStepPDAE) = (t = solstep.t̄, q = solstep.q̄, p = solstep.p̄, λ = solstep.λ̄)
 
 
-function initialize!(solstep::SolutionStepPDAE, problem::AbstractProblemPDAE, extrap::Extrapolation)
+function update_vector_fields!(solstep::SolutionStepPDAE, problem::Union{PDAEProblem,HDAEProblem}, i=0)
+    functions(problem).v(solstep.v̄[i], solstep.t̄[i], solstep.q̄[i], solstep.p̄[i])
+    functions(problem).f(solstep.f̄[i], solstep.t̄[i], solstep.q̄[i], solstep.p̄[i])
+    functions(problem).u(solstep.ū[i], solstep.t̄[i], solstep.q̄[i], solstep.p̄[i], solstep.λ̄[i])
+    functions(problem).g(solstep.ḡ[i], solstep.t̄[i], solstep.q̄[i], solstep.p̄[i], solstep.λ̄[i])
+end
+
+function update_vector_fields!(solstep::SolutionStepPDAE, problem::Union{IDAEProblem,LDAEProblem}, i=0)
+    functions(problem).v̄(solstep.v̄[i], solstep.t̄[i], solstep.q̄[i])
+    functions(problem).f̄(solstep.f̄[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i])
+    functions(problem).u(solstep.ū[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i], solstep.p̄[i], solstep.λ̄[i])
+    functions(problem).g(solstep.ḡ[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i], solstep.p̄[i], solstep.λ̄[i])
+    functions(problem).ϑ(solstep.p̄[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i])
+end
+
+function initialize!(solstep::SolutionStepPDAE, problem::AbstractProblemPDAE, extrap::Extrapolation = default_extrapolation())
     solstep.t  = initial_conditions(problem).t
     solstep.q .= initial_conditions(problem).q
     solstep.p .= initial_conditions(problem).p
@@ -103,16 +118,18 @@ function initialize!(solstep::SolutionStepPDAE, problem::AbstractProblemPDAE, ex
     solstep.q̃ .= 0
     solstep.p̃ .= 0
 
+    update_vector_fields!(solstep, problem)
+
     for i in eachhistory(solstep)
         solstep.t̄[i] = solstep.t̄[i-1] - timestep(problem)
         extrapolate!(solstep.t̄[i-1], solstep.q̄[i-1], solstep.p̄[i-1], solstep.t̄[i], solstep.q̄[i], solstep.p̄[i], problem, extrap)
+        update_vector_fields!(solstep, problem, i)
     end
 
     return solstep
 end
 
-function update!(solstep::SolutionStepPDAE{DT,TT,AT,ΛT}, Δt::TT, Δq::AT, Δp::AT, λ::ΛT) where {DT,TT,AT,ΛT}
-    solstep.t += Δt
+function update!(solstep::SolutionStepPDAE{DT,TT,AT,ΛT}, Δq::AT, Δp::AT, λ::ΛT) where {DT,TT,AT,ΛT}
     for k in eachindex(Δq,Δp)
         solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q̄[1][k], solstep.q̃[k])
         solstep.p[k], solstep.p̃[k] = compensated_summation(Δp[k], solstep.p̄[1][k], solstep.p̃[k])
@@ -121,7 +138,8 @@ function update!(solstep::SolutionStepPDAE{DT,TT,AT,ΛT}, Δt::TT, Δq::AT, Δp:
     return solstep
 end
 
-function GeometricBase.reset!(solstep::SolutionStepPDAE)
+
+function GeometricBase.reset!(solstep::SolutionStepPDAE, Δt)
     for i in backwardhistory(solstep)
         solstep.t̄[i]  = solstep.t̄[i-1]
         solstep.q̄[i] .= solstep.q̄[i-1]
@@ -132,6 +150,8 @@ function GeometricBase.reset!(solstep::SolutionStepPDAE)
         solstep.ū[i] .= solstep.ū[i-1]
         solstep.ḡ[i] .= solstep.ḡ[i-1]
     end
+
+    solstep.t = solstep.t̄[0] += Δt
 
     return solstep
 end

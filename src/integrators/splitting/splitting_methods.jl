@@ -1,11 +1,8 @@
 
-abstract type SplittingMethod <: SODEMethod end
+abstract type AbstractSplittingMethod <: SODEMethod end
 
-issodemethod(::SplittingMethod) = true
-
-Integrators.Integrator(problem::SODEProblem, method::SplittingMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
-Integrators.IntegratorComposition(problem::SODEProblem, method::SplittingMethod; kwargs...) = IntegratorComposition(problem, tableau(method); kwargs...)
-Integrators.IntegratorComposition(problem::SODEProblem, integrators::Tuple, method::SplittingMethod; kwargs...) = IntegratorComposition(problem, integrators, tableau(method); kwargs...)
+coefficients(::T) where {T <: AbstractSplittingMethod} = error("Splitting method $T does not have a coefficients() method.")
+coefficients(problem::SODEProblem, splitting::AbstractSplittingMethod) = coefficients(problem, coefficients(splitting))
 
 
 @doc raw"""
@@ -24,14 +21,14 @@ Reference:
     doi: 10.1090/S0002-9939-1959-0108732-6.
 
 """
-struct LieA <: SplittingMethod end
+struct LieA <: AbstractSplittingMethod end
 
-order(::Union{LieA, Type{LieA}}) = 1
+GeometricBase.order(::Union{LieA, Type{LieA}}) = 1
 
-function tableau(::LieA, ::Type{T}=Float64) where {T}
+function coefficients(::LieA, ::Type{T}=Float64) where {T}
     a = Array{T}([ 1 ])
     b = Array{T}([ 0 ])
-    TableauSplittingNS(:LieTrotterSplittingA, 1, a, b)
+    SplittingCoefficientsNonSymmetric(:LieTrotterSplittingA, 1, a, b)
 end
 
 
@@ -51,14 +48,14 @@ Reference:
     doi: 10.1090/S0002-9939-1959-0108732-6.
 
 """
-struct LieB <: SplittingMethod end
+struct LieB <: AbstractSplittingMethod end
 
-order(::Union{LieB, Type{LieB}}) = 1
+GeometricBase.order(::Union{LieB, Type{LieB}}) = 1
 
-function tableau(::LieB, ::Type{T}=Float64) where {T}
+function coefficients(::LieB, ::Type{T}=Float64) where {T}
     a = Array{T}([ 0 ])
     b = Array{T}([ 1 ])
-    TableauSplittingNS(:LieTrotterSplittingB, 1, a, b)
+    SplittingCoefficientsNonSymmetric(:LieTrotterSplittingB, 1, a, b)
 end
 
 
@@ -87,17 +84,17 @@ References:
     doi: 10.21136/AM.1968.103142.
 
 """
-struct Strang <: SplittingMethod end
+struct Strang <: AbstractSplittingMethod end
 
 "Alias for [`Strang`](@ref)"
-struct Marchuk <: SplittingMethod end
+struct Marchuk <: AbstractSplittingMethod end
 
-order(::Union{Strang, Type{Strang}, Marchuk, Type{Marchuk}}) = 2
+GeometricBase.order(::Union{Strang, Type{Strang}, Marchuk, Type{Marchuk}}) = 2
 
-function tableau(::Union{Strang,Marchuk}, ::Type{T}=Float64) where {T}
+function coefficients(::Union{Strang,Marchuk}, ::Type{T}=Float64) where {T}
     a = Array{T}([ 1//2 ])
     b = Array{T}([ 1//2 ])
-    TableauSplittingNS(:StrangSplitting, 2, a, b)
+    SplittingCoefficientsNonSymmetric(:StrangSplitting, 2, a, b)
 end
 
 
@@ -122,14 +119,14 @@ References:
     doi: 10.21136/AM.1968.103142.
 
 """
-struct StrangA <: SplittingMethod end
+struct StrangA <: AbstractSplittingMethod end
 
-order(::Union{StrangA, Type{StrangA}}) = 2
+GeometricBase.order(::Union{StrangA, Type{StrangA}}) = 2
 
-function tableau(::StrangA, ::Type{T}=Float64) where {T}
+function coefficients(::StrangA, ::Type{T}=Float64) where {T}
     a = Array{T}([ 1//2, 1//2 ])
     b = Array{T}([ 1//1, 0//1 ])
-    TableauSplitting(:StrangSplittingA, 2, a, b)
+    SplittingCoefficientsGeneral(:StrangSplittingA, 2, a, b)
 end
 
 
@@ -154,14 +151,14 @@ References:
     doi: 10.21136/AM.1968.103142.
 
 """
-struct StrangB <: SplittingMethod end
+struct StrangB <: AbstractSplittingMethod end
 
-order(::Union{StrangB, Type{StrangB}}) = 2
+GeometricBase.order(::Union{StrangB, Type{StrangB}}) = 2
 
-function tableau(::StrangB, ::Type{T}=Float64) where {T}
+function coefficients(::StrangB, ::Type{T}=Float64) where {T}
     a = Array{T}([ 0//1, 1//1 ])
     b = Array{T}([ 1//2, 1//2 ])
-    TableauSplitting(:StrangSplittingB, 2, a, b)
+    SplittingCoefficientsGeneral(:StrangSplittingB, 2, a, b)
 end
 
 
@@ -183,14 +180,14 @@ Reference:
     doi: 10.1137/0916010.
 
 """
-struct McLachlan2 <: SplittingMethod end
+struct McLachlan2 <: AbstractSplittingMethod end
 
-order(::Union{McLachlan2, Type{McLachlan2}}) = 2
+GeometricBase.order(::Union{McLachlan2, Type{McLachlan2}}) = 2
 
-function tableau(::McLachlan2, ::Type{T}=Float64; α=0.1932) where {T}
+function coefficients(::McLachlan2, ::Type{T}=Float64; α=0.1932) where {T}
     a = Array{T}([ α, 0.5 - α ])
     b = Array{T}([ 0.5 - α, α ])
-    TableauSplittingNS(:McLachlanSplitting, 2, a, b)
+    SplittingCoefficientsNonSymmetric(:McLachlanSplitting, 2, a, b)
 end
 
 
@@ -221,17 +218,17 @@ Reference:
     doi: 10.1137/0916010.
 
 """
-struct McLachlan4 <: SplittingMethod end
+struct McLachlan4 <: AbstractSplittingMethod end
 
-order(::Union{McLachlan4, Type{McLachlan4}}) = 4
+GeometricBase.order(::Union{McLachlan4, Type{McLachlan4}}) = 4
 
-function tableau(::McLachlan4, ::Type{T}=Float64) where {T}
+function coefficients(::McLachlan4, ::Type{T}=Float64) where {T}
     a = Array{T}(@big [ (146 +  5*√19) / 540,
                         ( -2 + 10*√19) / 135,
                                      1 / 5,
                         (-23 - 20*√19) / 270,
                         ( 14 -    √19) / 108])
-    TableauSplittingNS(:McLachlanSplitting, 4, a, a[end:-1:1])
+    SplittingCoefficientsNonSymmetric(:McLachlanSplitting, 4, a, a[end:-1:1])
 end
 
 @doc raw"""
@@ -270,15 +267,15 @@ References:
     doi: 10.1016/0375-9601(90)90092-3
 
 """
-struct TripleJump <: SplittingMethod end
+struct TripleJump <: AbstractSplittingMethod end
 
-order(::Union{TripleJump, Type{TripleJump}}) = 4
+GeometricBase.order(::Union{TripleJump, Type{TripleJump}}) = 4
 
-function tableau(::TripleJump, ::Type{T}=Float64) where {T}
+function coefficients(::TripleJump, ::Type{T}=Float64) where {T}
     fac = @big 2^(1/3)
     den = @big 1/(2-fac)
     a = Array{T}([ den, -fac*den ])
-    TableauSplittingSS(:TripleJumpSplitting, 4, a)
+    SplittingCoefficientsSS(:TripleJumpSplitting, 4, a)
 end
 
 
@@ -303,13 +300,13 @@ Reference:
     doi: 10.1016/0375-9601(90)90962-N
 
 """
-struct SuzukiFractal <: SplittingMethod end
+struct SuzukiFractal <: AbstractSplittingMethod end
 
-order(::Union{SuzukiFractal, Type{SuzukiFractal}}) = 4
+GeometricBase.order(::Union{SuzukiFractal, Type{SuzukiFractal}}) = 4
 
-function tableau(::SuzukiFractal, ::Type{T}=Float64) where {T}
+function coefficients(::SuzukiFractal, ::Type{T}=Float64) where {T}
     fac = @big 4^(1/3)
     den = @big 1/(4-fac)
     a = Array{T}([ den, den, -fac*den ])
-    TableauSplittingSS(:SuzukiFractalSplitting, 4, a)
+    SplittingCoefficientsSS(:SuzukiFractalSplitting, 4, a)
 end

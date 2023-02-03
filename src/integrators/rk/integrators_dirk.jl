@@ -1,243 +1,177 @@
-
-"Parameters for right-hand side function of diagonally implicit Runge-Kutta methods."
-mutable struct ParametersDIRK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
-    equs::ET
-    tab::Tableau{TT}
-    Δt::TT
-
-    t::TT
-    q::Vector{DT}
-    V::Vector{Vector{DT}}
-
-    function ParametersDIRK{DT,D}(equs::ET, tab::Tableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
-        new{DT, TT, D, tab.s, ET}(equs, tab, Δt, zero(TT), zeros(DT,D), create_internal_stage_vector(DT, D, tab.s))
-    end
-end
-
-
 """
 Diagonally implicit Runge-Kutta integrator cache.
 """
 struct IntegratorCacheDIRK{DT,D,S} <: ODEIntegratorCache{DT,D}
-    q̃::Vector{DT}
-    ṽ::Vector{DT}
-    s̃::Vector{DT}
-    y::Vector{DT}
+    x::Vector{Vector{DT}}
 
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
 
     function IntegratorCacheDIRK{DT,D,S}() where {DT,D,S}
+        x = create_internal_stage_vector(DT, D, S)
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
-        new(zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Y)
+        new(x, Q, V, Y)
     end
 end
 
-function IntegratorCache{ST}(params::ParametersDIRK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+function Cache{ST}(problem::GeometricProblem, method::DIRKMethod; kwargs...) where {ST}
+    S = nstages(tableau(method))
+    D = ndims(problem)
     IntegratorCacheDIRK{ST,D,S}(; kwargs...)
 end
 
-@inline CacheType(ST, params::ParametersDIRK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheDIRK{ST,D,S}
+@inline CacheType(ST, problem::GeometricProblem, method::DIRKMethod) = IntegratorCacheDIRK{ST, ndims(problem), nstages(tableau(method))}
 
 
 @doc raw"""
 Diagonally implicit Runge-Kutta integrator solving the system
 ```math
 \begin{aligned}
-V_{n,i} &= v (Q_{n,i}, P_{n,i}) , &
+V_{n,i} &= v (t_i, Q_{n,i}) , &
 Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
 q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 \end{aligned}
 ```
-
 """
-struct IntegratorDIRK{DT, TT, D, S, PT <: ParametersDIRK{DT,TT},
-                                    ST,# <: NonlinearSolver{DT},
-                                    IT <: InitialGuessODE{TT}} <: AbstractIntegratorRK{DT,TT}
-    params::PT
-    solver::ST
-    iguess::IT
-    caches::CacheDict{PT}
+const IntegratorDIRK{DT,TT} = Integrator{<:ODEProblem{DT,TT}, <:DIRKMethod}
 
-    function IntegratorDIRK(params::ParametersDIRK{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
-        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
-    end
+initmethod(method::DIRK) = method
+initmethod(method::DIRKMethod) = DIRK(method)
 
-    function IntegratorDIRK{DT,D}(equations::NamedTuple, tableau::Tableau{TT}, Δt::TT) where {DT, TT, D}
-        # get number of stages
-        S = tableau.s
-
-        # check if tableau is diagonally implicit
-        @assert !isfullyimplicit(tableau)
-
-        if get_config(:verbosity) ≥ 1
-            if isexplicit(tableau)
-                @warn "Initializing IntegratorDIRK with explicit tableau $(tableau.name).\nYou might want to use IntegratorERK instead."
-            end
-        end
-
-        # create params
-        params = ParametersDIRK{DT,D}(equations, tableau, Δt)
-
-        # create cache dict
-        caches = CacheDict(params)
-
-        # create solvers
-        solvers = [create_nonlinear_solver(DT, D, params, caches, i) for i in 1:S]
-
-        # create initial guess
-        iguess = InitialGuessODE(get_config(:ig_extrapolation), equations[:v], Δt)
-
-        # create integrator
-        IntegratorDIRK(params, solvers, iguess, caches)
-    end
-
-    function IntegratorDIRK{DT,D}(v::Function, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
-        IntegratorDIRK{DT,D}(NamedTuple{(:v,)}((v,)), tableau, Δt; kwargs...)
-    end
-
-    function IntegratorDIRK{DT,D}(v::Function, h::Function, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
-        IntegratorDIRK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
-    end
-
-    function IntegratorDIRK(problem::ODEProblem{DT}, tableau::Tableau{TT}; kwargs...) where {DT,TT}
-        IntegratorDIRK{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
-    end
-end
-
-
-@inline Base.ndims(::IntegratorDIRK{DT,TT,D,S}) where {DT,TT,D,S} = D
-@inline has_initial_guess(int::IntegratorDIRK) = true
+default_solver(::DIRKMethod) = Newton()
+default_iguess(::DIRKMethod) = HermiteExtrapolation()
 
 
 function Base.show(io::IO, int::IntegratorDIRK)
     print(io, "\nDiagonally Implicit Runge-Kutta Integrator with:\n")
-    print(io, "   Timestep: $(int.params.Δt)\n")
-    print(io, "   Tableau:  $(description(int.params.tab))\n")
-    print(io, "   $(string(int.params.tab))")
+    print(io, "   Timestep: $(timestep(int))\n")
+    print(io, "   Tableau:  $(description(tableau(int)))\n")
+    print(io, "   $(string(tableau(int)))")
     # print(io, reference(int.params.tab))
 end
 
 
-function initialize!(int::IntegratorDIRK, cache::IntegratorCacheDIRK)
-    # initialise initial guess
-    cache.t̄ = cache.t - timestep(int)
+struct SingleStageSolvers{ST} <: NonlinearSolver
+    solvers::ST
+    SingleStageSolvers(solvers...) = new{typeof(solvers)}(solvers)
+end
 
-    int.params.equs[:v](cache.t, cache.q, cache.v)
+Base.getindex(s::SingleStageSolvers, args...) = getindex(s.solvers, args...)
 
-    initialize!(int.iguess, cache.t, cache.q, cache.v, cache.t̄, cache.q̄, cache.v̄)
+
+function initsolver(::Newton, solstep::SolutionStepODE{DT}, problem::ODEProblem, method::DIRKMethod, caches::CacheDict, i) where {DT}
+    # create wrapper function f!(b,x)
+    f! = (b,x) -> function_stages!(b, x, solstep, problem, method, caches, i)
+
+    # create nonlinear solver
+    NewtonSolver(zero(caches[DT].x[i]), zero(caches[DT].x[i]), f!; linesearch = Backtracking(), config = Options(min_iterations = 1))
+end
+
+function initsolver(solvermethod::Newton, solstep::SolutionStepODE, problem::ODEProblem, method::DIRKMethod, caches::CacheDict)
+    SingleStageSolvers([initsolver(solvermethod, solstep, problem, method, caches, i) for i in 1:nstages(tableau(method))]...)
 end
 
 
-function update_params!(int::IntegratorDIRK, sol::SolutionStepODE)
-    # set time for nonlinear solver and copy previous solution
-    int.params.t  = sol.t
-    int.params.q .= sol.q
-end
+function initial_guess!(
+    solstep::SolutionStepODE{DT}, 
+    problem::ODEProblem,
+    method::DIRKMethod, 
+    caches::CacheDict, 
+    ::NonlinearSolver, 
+    iguess::Union{InitialGuess,Extrapolation}) where {DT}
+    
+    # obtain cache
+    cache = caches[DT]
 
-
-function initial_guess!(int::IntegratorDIRK{DT}, sol::SolutionStepODE{DT},
-                        cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT}
-
-    for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̄, sol.v̄, sol.q, sol.v, cache.q̃, cache.ṽ, int.params.tab.c[i])
-        for k in eachindex(cache.V[i], cache.ṽ)
-            cache.V[i][k] = cache.ṽ[k]
-        end
+    for i in eachstage(method)
+        initialguess!(solstep.t̄[1] + timestep(problem) * tableau(method).c[i], cache.Q[i], cache.V[i], solstep, problem, iguess)
     end
-    for i in eachstage(int)
-        for k in eachdim(int)
-            int.solver[i].x[k] = 0
-            for j in eachstage(int)
-                int.solver[i].x[k] += int.params.tab.a[i,j] * cache.V[j][k]
+
+    for i in eachstage(method)
+        for k in 1:ndims(problem)
+            cache.x[i][k] = 0
+            for j in eachstage(method)
+                cache.x[i][k] += timestep(problem) * tableau(method).a[i,j] * cache.V[j][k]
             end
         end
     end
 end
 
 
-function compute_stages!(x::Vector{ST}, Q::Vector{ST}, V::Vector{ST}, Y::Vector{ST},
-                         params::ParametersDIRK{DT,TT,D,S}, i::Int) where {ST,DT,TT,D,S}
-
+function compute_stages!(x::Vector{ST}, solstep::SolutionStepODE{DT,TT}, problem::ODEProblem, method::DIRKMethod, caches::CacheDict, i) where {ST,DT,TT}
     local tᵢ::TT
 
-    @assert D == length(Q) == length(V) == length(Y)
+    # get cache for internal stages
+    local Q::Vector{Vector{ST}} = caches[ST].Q
+    local V::Vector{Vector{ST}} = caches[ST].V
+    local Y::Vector{Vector{ST}} = caches[ST].Y
 
-    # copy x to Y and compute Q = q + Δt Y
-    for k in 1:D
-        Y[k] = x[k]
-        Q[k] = params.q[k] + params.Δt * Y[k]
+    # copy x to Y and compute Q = q + Y
+    for k in 1:ndims(problem)
+        Y[i][k] = x[k]
+        Q[i][k] = solstep.q̄[1][k] + Y[i][k]
     end
 
     # compute V = v(Q)
-    tᵢ = params.t + params.Δt * params.tab.c[i]
-    params.equs[:v](V, tᵢ, Q)
+    tᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).c[i]
+    functions(problem).v(V[i], tᵢ, Q[i])
 end
 
 
-# Compute stages of fully implicit Runge-Kutta methods.
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDIRK{DT,TT,D,S},
-                          caches::CacheDict, i::Int) where {ST,DT,TT,D,S}
-
+# Compute stages of diagonally implicit Runge-Kutta methods.
+function function_stages!(b::Vector{ST}, x::Vector{ST}, solstep::SolutionStepODE, problem::ODEProblem, method::DIRKMethod, caches::CacheDict, i) where {ST}
     # temporary variables
     local y1::ST
     local y2::ST
 
     # get cache for internal stages
-    cache = caches[ST]
+    local V::Vector{Vector{ST}} = caches[ST].V
+    local Y::Vector{Vector{ST}} = caches[ST].Y
 
     # compute stages from nonlinear solver solution x
-    compute_stages!(x, cache.Q[i], cache.V[i], cache.Y[i], params, i)
+    compute_stages!(x, solstep, problem, method, caches, i)
 
     # compute b = - (Y-AV)
-    for k in 1:D
-        y1 = params.tab.a[i,i] * cache.V[i][k]
-        y2 = params.tab.â[i,i] * cache.V[i][k]
+    for k in 1:ndims(problem)
+        y1 = tableau(method).a[i,i] * V[i][k]
+        y2 = tableau(method).â[i,i] * V[i][k]
         for j in 1:i-1
-            y1 += params.tab.a[i,j] * params.V[j][k]
-            y2 += params.tab.â[i,j] * params.V[j][k]
+            y1 += tableau(method).a[i,j] * V[j][k]
+            y2 += tableau(method).â[i,j] * V[j][k]
         end
-        b[k] = - cache.Y[i][k] + (y1 + y2)
+        b[k] = - Y[i][k] + timestep(problem) * (y1 + y2)
     end
 end
 
 
-function integrate_step!(int::IntegratorDIRK{DT,TT}, sol::SolutionStepODE{DT,TT},
-                         cache::IntegratorCacheDIRK{DT}=int.caches[DT]) where {DT,TT}
-
-     # update nonlinear solver parameters from atomic solution
-     update_params!(int, sol)
-
-    # compute initial guess
-    initial_guess!(int, sol, cache)
-
-    # reset atomic solution
-    reset!(sol)
+function integrate_step!(
+    solstep::SolutionStepODE{DT,TT},
+    problem::ODEProblem{DT,TT}, 
+    method::DIRKMethod,
+    caches::CacheDict,
+    solvers::SingleStageSolvers) where {DT,TT}
 
     # consecutively solve for all stages
-    for i in eachstage(int)
+    for i in eachstage(method)
         # call nonlinear solver
-        solve!(int.solver[i])
+        solve!(caches[DT].x[i], solvers[i])
 
         # print solver status
-        print_solver_status(int.solver[i].status, int.solver[i].params)
+        # println(status(solvers[i]))
 
         # check if solution contains NaNs or error bounds are violated
-        check_solver_status(int.solver[i].status, int.solver[i].params)
+        # println(meets_stopping_criteria(status(solvers[i])))
 
         # compute vector field at internal stages
-        compute_stages!(int.solver[i].x, cache.Q[i], cache.V[i], cache.Y[i], int.params, i)
-
-        # copy velocity field to parameters
-        int.params.V[i] .= cache.V[i]
+        compute_stages!(caches[DT].x[i], solstep, problem, method, caches, i)
     end
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).b, tableau(int).b̂, timestep(int))
+    update_solution!(solstep.q, solstep.q̄[1], solstep.q̃, caches[DT].V, tableau(method).b, tableau(method).b̂, timestep(problem))
 
     # update vector field for initial guess
-    update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)
+    update_vector_fields!(solstep, problem)
 end

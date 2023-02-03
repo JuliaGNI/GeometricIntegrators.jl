@@ -1,26 +1,41 @@
 module Methods
 
+    using GeometricBase
     using GeometricBase.Utils
     using GeometricEquations
     using PrettyTables
-    using RungeKutta
     using RungeKutta.Tableaus
     using RungeKutta.PartitionedTableaus
 
-    using ..Integrators
-    using ..Integrators.VPRK
-    using RungeKutta: AbstractTableau
+    import RungeKutta
+    import RungeKutta: AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
+    import RungeKutta: eachstage, nstages
+    import SimpleSolvers: SolverMethod
 
 
     include("methods/methods.jl")
     include("methods/projection.jl")
     include("methods/rungekutta.jl")
-    include("methods/splitting.jl")
+    # include("methods/splitting.jl")
     include("methods/flrk.jl")
     include("methods/vprk.jl")
     include("methods/vprk_degenerate.jl")
     include("methods/vprk_projected.jl")
     include("methods/dvi.jl")
+
+    export GeometricMethod
+    export ODEMethod, PODEMethod, HODEMethod, IODEMethod, LODEMethod, SODEMethod
+    export DAEMethod, PDAEMethod, HDAEMethod, IDAEMethod, LDAEMethod
+    export RKMethod, ERKMethod, IRKMethod, DIRKMethod
+    export PRKMethod, EPRKMethod, IPRKMethod, VPRKMethod
+    export AbstractSplittingMethod
+
+    export RK, PRK
+    export internal_variables
+    export implicit_update
+
+    export AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
+    export nstages, eachstage, coefficients, weights, nodes
 
     include("methods/list.jl")
 

@@ -2,9 +2,14 @@
 "Holds the tableau of an Variational Partitioned Additive Runge-Kutta method."
 const TableauVPARK = AbstractTableauSPARK{:vpark}
 
-"Parameters for right-hand side function of Variational Partitioned Additive Runge-Kutta methods."
-const ParametersVPARK = AbstractParametersSPARK{:vpark}
+struct VPARK{TT <: TableauVPARK} <: ISPARKMethod
+    tableau::TT
+end
 
+Methods.tableau(method::VPARK) = method.tableau
+
+nonlinearsolversize(problem::Union{IDAEProblem,LDAEProblem}, method::VPARK) =
+    3 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)
 
 
 @doc raw"""
@@ -38,56 +43,30 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{aligned}
 ```
 """
-struct IntegratorVPARK{DT, TT, D, S, R, PT <: ParametersVPARK{DT,TT,D,S,R},
-                                        ST <: NonlinearSolver{DT},
-                                        IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVSPARK{DT,TT,D,S,R}
-    params::PT
-    solver::ST
-    iguess::IT
-    caches::CacheDict{PT}
+const IntegratorVPARK{DT,TT} = Integrator{<:Union{IDAEProblem{DT,TT},LDAEProblem{DT,TT}}, <:VPARK}
 
-    function IntegratorVPARK(params::ParametersVPARK{DT,TT,D,S,R}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,R,ST,IT}
-        new{DT, TT, D, S, R, typeof(params), ST, IT}(params, solver, iguess, caches)
-    end
-
-    function IntegratorVPARK{DT,D}(equations::NamedTuple, tableau::TableauVPARK{TT}, Δt::TT) where {DT,TT,D}
-        # get number of stages
-        S = tableau.s
-        R = tableau.r
-
-        N = 3*D*S + 3*D*R
-
-        if isdefined(tableau, :d) && length(tableau.d) > 0
-            N += D
-        end
-
-        # create params
-        params = ParametersVPARK{DT,D}(equations, tableau, Δt)
-
-        # create cache dict
-        caches = CacheDict(params)
-
-        # create solver
-        solver = create_nonlinear_solver(DT, N, params, caches)
-
-        # create initial guess
-        iguess = InitialGuessIODE(get_config(:ig_extrapolation), equations[:v̄], equations[:f̄], Δt)
-
-        # create integrator
-        IntegratorVPARK(params, solver, iguess, caches)
-    end
-
-    function IntegratorVPARK(equation::Union{IDAEProblem{DT}, LDAEProblem{DT}}, tableau::TableauVPARK, Δt=tstep(equation); kwargs...) where {DT}
-        IntegratorVPARK{DT, ndims(equation)}(functions(equation), tableau, Δt; kwargs...)
-    end
+function Base.show(io::IO, int::IntegratorVPARK)
+    print(io, "\nVariational partitioned additive Runge-Kutta integrator:\n")
+    print(io, "   Timestep: $(timestep(problem))\n")
+    print(io, "   Tableau:  $(description(method(int)))\n")
+    print(io, "   $(string(method(int).q))")
+    print(io, "   $(string(method(int).p))")
+    # print(io, reference(method(int)))
 end
 
 
-GeometricBase.nconstraints(::IntegratorVPARK{DT,TT,D}) where {DT,TT,D} = D
+function compute_stages!(
+    x::Vector{ST},
+    solstep::SolutionStepPDAE{DT,TT}, 
+    problem::Union{IDAEProblem,LDAEProblem},
+    method::VPARK, 
+    caches::CacheDict) where {ST,DT,TT}
 
+    local cache = caches[ST]
+    local S = nstages(method)
+    local R = pstages(method)
+    local D = ndims(problem)
 
-function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
-                                        params::ParametersVPARK{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
     local tpᵢ::TT
     local tλᵢ::TT
 
@@ -99,14 +78,14 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
             cache.Vi[i][k] = x[3*(D*(i-1)+k-1)+3]
 
             # compute Q and P
-            cache.Qi[i][k] = params.q[k] + params.Δt * cache.Yi[i][k]
-            cache.Pi[i][k] = params.p[k] + params.Δt * cache.Zi[i][k]
+            cache.Qi[i][k] = solstep.q̄[1][k] + timestep(problem) * cache.Yi[i][k]
+            cache.Pi[i][k] = solstep.p̄[1][k] + timestep(problem) * cache.Zi[i][k]
         end
 
         # compute f(X)
-        tpᵢ = params.t + params.Δt * params.tab.p.c[i]
-        params.equs[:ϑ](cache.Φi[i], tpᵢ, cache.Qi[i], cache.Vi[i])
-        params.equs[:f](cache.Fi[i], tpᵢ, cache.Qi[i], cache.Vi[i])
+        tpᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).p.c[i]
+        functions(problem)[:ϑ](cache.Φi[i], tpᵢ, cache.Qi[i], cache.Vi[i])
+        functions(problem)[:f](cache.Fi[i], tpᵢ, cache.Qi[i], cache.Vi[i])
 
         cache.Φi[i] .-= cache.Pi[i]
     end
@@ -120,18 +99,18 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
             cache.Λp[i][k] = x[3*D*S+3*(D*(i-1)+k-1)+3]
 
             # compute Q and V
-            cache.Qp[i][k] = params.q[k] + params.Δt * cache.Yp[i][k]
-            cache.Pp[i][k] = params.p[k] + params.Δt * cache.Zp[i][k]
+            cache.Qp[i][k] = solstep.q̄[1][k] + timestep(problem) * cache.Yp[i][k]
+            cache.Pp[i][k] = solstep.p̄[1][k] + timestep(problem) * cache.Zp[i][k]
         end
 
         # compute f(X)
-        tλᵢ = params.t + params.Δt * params.tab.λ.c[i]
-        params.equs[:u](cache.Up[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i])
-        params.equs[:g](cache.Gp[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i])
-        params.equs[:ϕ](cache.Φp[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i])
+        tλᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).λ.c[i]
+        functions(problem)[:u](cache.Up[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i])
+        functions(problem)[:g](cache.Gp[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i])
+        functions(problem)[:ϕ](cache.Φp[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i])
     end
 
-    if isdefined(params.tab, :d) && length(params.tab.d) > 0
+    if hasnullvector(method)
         for k in 1:D
             cache.μ[k] = x[3*D*S+3*D*R+k]
         end
@@ -139,14 +118,25 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheSPARK{ST,D,S,R},
 end
 
 
-"Compute stages of variational partitioned additive Runge-Kutta methods."
-function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::ParametersVPARK{DT,TT,D,S,R},
-                                      caches::CacheDict) where {ST,DT,TT,D,S,R}
+# Compute stages of variational partitioned additive Runge-Kutta methods.
+function function_stages!(
+    b::Vector{ST},
+    x::Vector{ST},
+    solstep::SolutionStepPDAE, 
+    problem::Union{IDAEProblem,LDAEProblem},
+    method::VPARK, 
+    caches::CacheDict) where {ST}
 
     # get cache for internal stages
-    cache = caches[ST]
+    local cache = caches[ST]
 
-    compute_stages!(y, cache, params)
+    # number of internal stages
+    local S = nstages(method)
+    local R = pstages(method)
+    local D = ndims(problem)
+
+    # compute stages from nonlinear solver solution x
+    compute_stages!(x, solstep, problem, method, caches)
 
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
     for i in 1:S
@@ -155,12 +145,12 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
             b[3*(D*(i-1)+k-1)+2] = - cache.Zi[i][k]
             b[3*(D*(i-1)+k-1)+3] = - cache.Φi[i][k]
             for j in 1:S
-                b[3*(D*(i-1)+k-1)+1] += params.tab.q.a[i,j] * cache.Vi[j][k]
-                b[3*(D*(i-1)+k-1)+2] += params.tab.p.a[i,j] * cache.Fi[j][k]
+                b[3*(D*(i-1)+k-1)+1] += tableau(method).q.a[i,j] * cache.Vi[j][k]
+                b[3*(D*(i-1)+k-1)+2] += tableau(method).p.a[i,j] * cache.Fi[j][k]
             end
             for j in 1:R
-                b[3*(D*(i-1)+k-1)+1] += params.tab.q.α[i,j] * cache.Up[j][k]
-                b[3*(D*(i-1)+k-1)+2] += params.tab.p.α[i,j] * cache.Gp[j][k]
+                b[3*(D*(i-1)+k-1)+1] += tableau(method).q.α[i,j] * cache.Up[j][k]
+                b[3*(D*(i-1)+k-1)+2] += tableau(method).p.α[i,j] * cache.Gp[j][k]
             end
         end
     end
@@ -172,48 +162,52 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST}, params::Para
             b[3*D*S+3*(D*(i-1)+k-1)+2] = - cache.Zp[i][k]
             b[3*D*S+3*(D*(i-1)+k-1)+3] = - cache.Φp[i][k]
             for j in 1:S
-                b[3*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.a[i,j] * cache.Vi[j][k]
-                b[3*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.a[i,j] * cache.Fi[j][k]
+                b[3*D*S+3*(D*(i-1)+k-1)+1] += tableau(method).q̃.a[i,j] * cache.Vi[j][k]
+                b[3*D*S+3*(D*(i-1)+k-1)+2] += tableau(method).p̃.a[i,j] * cache.Fi[j][k]
             end
             for j in 1:R
-                b[3*D*S+3*(D*(i-1)+k-1)+1] += params.tab.q̃.α[i,j] * cache.Up[j][k]
-                b[3*D*S+3*(D*(i-1)+k-1)+2] += params.tab.p̃.α[i,j] * cache.Gp[j][k]
+                b[3*D*S+3*(D*(i-1)+k-1)+1] += tableau(method).q̃.α[i,j] * cache.Up[j][k]
+                b[3*D*S+3*(D*(i-1)+k-1)+2] += tableau(method).p̃.α[i,j] * cache.Gp[j][k]
             end
         end
     end
 
     # compute b = - [Λ₁-λ]
-    if params.tab.λ.c[1] == 0
+    if tableau(method).λ.c[1] == 0
         for k in 1:D
-            b[3*D*S+3*(k-1)+3] = - cache.Λp[1][k] + params.λ[k]
+            b[3*D*S+3*(k-1)+3] = - cache.Λp[1][k] + solstep.λ̄[1][k]
         end
     end
 
-    if isdefined(params.tab, :d) && length(params.tab.d) > 0
+    if hasnullvector(method)
         for i in 1:S
             for k in 1:D
-                b[3*(D*(i-1)+k-1)+3] -= cache.μ[k] * params.tab.d[i] / params.tab.p.b[i]
+                b[3*(D*(i-1)+k-1)+3] -= cache.μ[k] * tableau(method).d[i] / tableau(method).p.b[i]
             end
         end
 
         for k in 1:D
             b[3*D*S+3*D*R+k] = 0
             for i in 1:S
-                b[3*D*S+3*D*R+k] -= cache.Vi[i][k] * params.tab.d[i]
+                b[3*D*S+3*D*R+k] -= cache.Vi[i][k] * tableau(method).d[i]
             end
         end
     end
 end
 
 
-function update_solution!(int::IntegratorVPARK{DT,TT}, sol::SolutionStepPDAE{DT,TT},
-                          cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT,TT}
+function update_solution!(
+    solstep::SolutionStepPDAE{DT,TT}, 
+    problem::Union{IDAEProblem,LDAEProblem},
+    method::VPARK, 
+    caches::CacheDict) where {DT,TT}
+
     # compute final update
-    update_solution!(sol.q, sol.q̃, cache.Vi, int.params.tab.q.b, timestep(int))
-    update_solution!(sol.p, sol.p̃, cache.Fi, int.params.tab.p.b, timestep(int))
+    update_solution!(solstep.q, solstep.q̃, caches[DT].Vi, tableau(method).q.b, timestep(problem))
+    update_solution!(solstep.p, solstep.p̃, caches[DT].Fi, tableau(method).p.b, timestep(problem))
 
     # compute projection
-    update_solution!(sol.q, sol.q̃, cache.Up, int.params.tab.q.β, timestep(int))
-    update_solution!(sol.p, sol.p̃, cache.Gp, int.params.tab.p.β, timestep(int))
-    update_multiplier!(sol.λ, cache.Λp, int.params.tab.λ.b)
+    update_solution!(solstep.q, solstep.q̃, caches[DT].Up, tableau(method).q.β, timestep(problem))
+    update_solution!(solstep.p, solstep.p̃, caches[DT].Gp, tableau(method).p.β, timestep(problem))
+    update_multiplier!(solstep.λ, caches[DT].Λp, tableau(method).λ.b)
 end

@@ -18,7 +18,7 @@ end
 
 ProjectedVPRK(tableau::AbstractTableau, projection::ProjectionMethod, args...; kwargs...) = ProjectedVPRK(VPRK(tableau, args...; kwargs...), projection)
 
-tableau(method::ProjectedVPRK) = tableau(method.vprk)
+GeometricBase.tableau(method::ProjectedVPRK) = tableau(method.vprk)
 nullvector(method::ProjectedVPRK) = nullvector(method.vprk)
 hasnullvector(method::ProjectedVPRK) = hasnullvector(method.vprk)
 
@@ -63,44 +63,3 @@ VPRKpSymplectic(args...; kwargs...) = ProjectedVPRK(VPRK(args...; kwargs...), Sy
 VPRKpVariational(args...; kwargs...) = ProjectedVPRK(VPRK(args...; kwargs...), VariationalProjection())
 VPRKpVariationalP(args...; kwargs...) = ProjectedVPRK(VPRK(args...; kwargs...), VariationalProjectionOnP())
 VPRKpVariationalQ(args...; kwargs...) = ProjectedVPRK(VPRK(args...; kwargs...), VariationalProjectionOnQ())
-
-
-function Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::ProjectedVPRK{VT,PT}; kwargs...) where {VT, PT <: InternalStageProjection}
-    IntegratorVPRKpInternal(problem, tableau(method), nullvector(method); kwargs...)
-end
-
-function Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::ProjectedVPRK{VT,PT}; kwargs...) where {VT, PT <: LegendreProjection}
-    IntegratorVPRKpLegendre(problem, tableau(method), nullvector(method); kwargs...)
-end
-
-function Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::ProjectedVPRK{VT,PT}; kwargs...) where {VT, PT <: MidpointProjection}
-    IntegratorVPRKpMidpoint(problem, tableau(method), nullvector(method); kwargs...)
-end
-
-function Integrators.Integrator(problem::Union{IDAEProblem,LDAEProblem}, method::ProjectedVPRK{VT,PT}; kwargs...) where {VT, PT <: SecondaryProjection}
-    IntegratorVPRKpSecondary(problem, tableau(method), nullvector(method); kwargs...)
-end
-
-function Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::ProjectedVPRK{VT,PT}; kwargs...) where {VT, PT <: StandardProjection}
-    IntegratorVPRKpStandard(problem, tableau(method), nullvector(method); kwargs...)
-end
-
-function Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::ProjectedVPRK{VT,PT}; kwargs...) where {VT, PT <: SymmetricProjection}
-    IntegratorVPRKpSymmetric(problem, tableau(method), nullvector(method); kwargs...)
-end
-
-function Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::ProjectedVPRK{VT,PT}; kwargs...) where {VT, PT <: SymplecticProjection}
-    IntegratorVPRKpSymplectic(problem, tableau(method), nullvector(method); kwargs...)
-end
-
-function Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::ProjectedVPRK{VT,PT}; kwargs...) where {VT, PT <: VariationalProjection}
-    IntegratorVPRKpVariational(problem, tableau(method), nullvector(method); kwargs...)
-end
-
-function Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::ProjectedVPRK{VT,PT}; kwargs...) where {VT, PT <: VariationalProjectionOnP}
-    IntegratorVPRKpVariationalP(problem, tableau(method), nullvector(method); kwargs...)
-end
-
-function Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::ProjectedVPRK{VT,PT}; kwargs...) where {VT, PT <: VariationalProjectionOnQ}
-    IntegratorVPRKpVariationalQ(problem, tableau(method), nullvector(method); kwargs...)
-end

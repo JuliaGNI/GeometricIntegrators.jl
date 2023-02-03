@@ -265,7 +265,7 @@ struct IntegratorDGVIPI{DT, TT, D, S, R,
                 BT <: Basis,
                 JT <: Discontinuity,
                 PT <: ParametersDGVIPI{DT,TT,D,S},
-                ST <: NonlinearSolver{DT},
+                ST <: NonlinearSolver,
                 IT <: InitialGuessODE{TT}} <: IODEIntegrator{DT,TT}
     basis::BT
     quadrature::QuadratureRule{TT,R}

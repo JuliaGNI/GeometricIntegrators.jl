@@ -1,23 +1,27 @@
 
 "Exact solution of an ODE."
-struct IntegratorExactODE{DT, TT, D, QT <: Function} <: ODEIntegrator{DT,TT}
+struct ExactSolutionODE{T, QT <: Base.Callable} <: ODEMethod
+    c::T
     q::QT
-    Δt::TT
-
-    function IntegratorExactODE{DT,D}(solution::solType, Δt::TT) where {DT, TT, D, solType <: Function}
-        new{DT,TT,D,solType}(solution, Δt)
-    end
 end
 
+function Cache{ST}(problem::SODEProblem, method::ExactSolutionODE; kwargs...) where {ST}
+    IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}(; kwargs...)
+end
 
-@inline Base.ndims(::IntegratorExactODE{DT,TT,D}) where {DT,TT,D} = D
-@inline GeometricBase.timestep(int::IntegratorExactODE) = int.Δt
+@inline CacheType(ST, problem::SODEProblem, ::ExactSolutionODE) = IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}
 
 
-function integrate_step!(int::IntegratorExactODE{DT,TT}, sol::SolutionStepODE{DT,TT}) where {DT,TT}
-    # reset atomic solution
-    reset!(sol)
+function integrate_step!(
+    solstep::SolutionStepODE{DT,TT},
+    problem::SODEProblem{DT,TT},
+    method::ExactSolutionODE,
+    caches::CacheDict,
+    ::NoSolver) where {DT,TT}
+    
+    # copy previous solution
+    caches[DT].q .= solstep.q
 
     # compute new solution
-    int.q(sol.q, sol.t̄ + timestep(int), sol.q̄, sol.t̄)
+    method.q(solstep.q, sol.t̄[1] + timestep(problem) * method.c, caches[DT].q, solstep.t̄[1])
 end

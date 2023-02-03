@@ -1,7 +1,7 @@
 
 # general helper functions for integrators.
 
-_default_solver() = SimpleSolvers.get_config(:nls_solver)
+_default_solver() = SimpleSolvers.NewtonSolver
 
 """
 Create nonlinear solver object for a system of `N` equations with data type `DT`.
@@ -20,7 +20,7 @@ function create_nonlinear_solver(DT, N, params, caches, solver::Type{<:Nonlinear
     f! = (b,x) -> F(x, b, params, caches)
 
     # create nonlinear solver with solver type obtained from config dictionary
-    solver(x, zero(x), f!)
+    solver(x, zero(x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
 end
 
 function create_nonlinear_solver(DT, N, params, caches, i::Int, solver::Type{<:NonlinearSolver}=_default_solver(), F::Function=function_stages!)
@@ -32,7 +32,7 @@ function create_nonlinear_solver(DT, N, params, caches, i::Int, solver::Type{<:N
     f! = (b,x) -> F(x, b, params, caches, i)
 
     # create nonlinear solver with solver type obtained from config dictionary
-    solver(x, zero(x), f!)
+    solver(x, zero(x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
 end
 
 function create_nonlinear_solver_with_jacobian(DT, N, params, caches, solver::Type{<:NonlinearSolver}=_default_solver(), F=function_stages!, J=jacobian!)
@@ -48,7 +48,7 @@ function create_nonlinear_solver_with_jacobian(DT, N, params, caches, solver::Ty
     j! = (df,x) -> J(x, df, caches[DT], params)
 
     # create nonlinear solver with solver type obtained from config dictionary
-    solver(x, zero(x), f!; J! = j!)
+    solver(x, zero(x), f!; J! = j!, linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
 end
 
 
@@ -110,7 +110,7 @@ function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b
 
     for k in axes(ẋ, 1)
         for i in axes(ẋ, 2)
-            x[k], xₑᵣᵣ[k] = compensated_summation(Δt * b[i] * ẋ[k,i], x[k], xₑᵣᵣ[k])
+            x[k], xₑᵣᵣ[k] = compensated_summation(x[k], Δt * b[i] * ẋ[k,i], xₑᵣᵣ[k])
         end
     end
 end
@@ -122,9 +122,14 @@ function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Vector{Vecto
 
     for i in eachindex(ẋ)
         for k in eachindex(ẋ[i])
-            x[k], xₑᵣᵣ[k] = compensated_summation(Δt * b[i] * ẋ[i][k], x[k], xₑᵣᵣ[k])
+            x[k], xₑᵣᵣ[k] = compensated_summation(x[k], Δt * b[i] * ẋ[i][k], xₑᵣᵣ[k])
         end
     end
+end
+
+function update_solution!(x::Vector{T}, x̄::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::AbstractVector, b̂::AbstractVector, Δt) where {T}
+    update_solution!(x, xₑᵣᵣ, ẋ, b, Δt)
+    update_solution!(x, xₑᵣᵣ, ẋ, b̂, Δt)
 end
 
 function update_solution!(x::SolutionVector{T}, ẋ::Matrix{T}, b::AbstractVector, Δt) where {T}
@@ -156,11 +161,6 @@ function update_solution!(x::SolutionVector{T}, ẋ::Vector{Vector{T}}, b::Abstr
         end
         x[k] += Δt * Δx
     end
-end
-
-function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::AbstractVector, b̂::AbstractVector, Δt) where {T}
-    update_solution!(x, xₑᵣᵣ, ẋ, b, Δt)
-    update_solution!(x, xₑᵣᵣ, ẋ, b̂, Δt)
 end
 
 function update_solution!(x::SolutionVector{T}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::AbstractVector, b̂::AbstractVector, Δt) where {T}

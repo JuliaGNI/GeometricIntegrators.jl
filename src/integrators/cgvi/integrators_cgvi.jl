@@ -126,7 +126,7 @@ end
 struct IntegratorCGVI{DT, TT, D, S, R, 
                       BT <: Basis,
                       PT <: ParametersCGVI{DT,TT,D,S,R},
-                      ST <: NonlinearSolver{DT},
+                      ST <: NonlinearSolver,
                       IT <: InitialGuessIODE{TT}} <: IODEIntegrator{DT,TT}
     basis::BT
     quadrature::QuadratureRule{TT,R}

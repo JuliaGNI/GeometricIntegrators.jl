@@ -2,17 +2,25 @@
 "Parameters for right-hand side function of Variational Partitioned Runge-Kutta methods."
 const ParametersVPRKpSymmetric = AbstractParametersVPRK{:vprk_psymmetric}
 
+function IntegratorCache(params::ParametersVPRKpSymmetric{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
+    IntegratorCacheVPRK{DT,D,S}(D*(S+1), true; kwargs...)
+end
+
+function IntegratorCache{ST}(params::ParametersVPRKpSymmetric{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+    IntegratorCacheVPRK{ST,D,S}(D*(S+1), true; kwargs...)
+end
+
 
 "Variational Partitioned Runge-Kutta Integrator with Symmetric Projection."
 struct IntegratorVPRKpSymmetric{DT, TT, D, S,
                 PT <: ParametersVPRKpSymmetric{DT,TT},
-                ST <: NonlinearSolver{DT},
+                ST <: NonlinearSolver,
                 IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
 
     params::PT
     solver::ST
     iguess::IT
-    caches::CacheDict{PT}
+    caches::OldCacheDict{PT}
 
     function IntegratorVPRKpSymmetric(params::ParametersVPRKpSymmetric{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
@@ -27,7 +35,7 @@ struct IntegratorVPRKpSymmetric{DT, TT, D, S,
         params = ParametersVPRKpSymmetric{DT,D}(equations, tableau, nullvec, Δt, NamedTuple{(:R,)}((R,)))
 
         # create cache dict
-        caches = CacheDict(params)
+        caches = OldCacheDict(params)
 
         # create solver
         solver = create_nonlinear_solver(DT, D*(S+1), params, caches)
@@ -71,18 +79,18 @@ end
 function initial_guess!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::SolutionStepPODE{DT,TT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
-                              sol.q, sol.p, sol.v, sol.f,
+        evaluate!(int.iguess, sol.q̄[2], sol.p̄[2], sol.v̄[2], sol.f̄[2],
+                              sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1],
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
 
         for k in eachdim(int)
-            int.solver.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
+            cache.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
         end
     end
 
     for k in eachdim(int)
-        int.solver.x[ndims(int)*nstages(int)+k] = 0
+        cache.x[ndims(int)*nstages(int)+k] = 0
     end
 end
 
@@ -129,7 +137,7 @@ end
 "Compute stages of variational partitioned Runge-Kutta methods."
 function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpSymmetric{DT,TT,D,S},
-                caches::CacheDict) where {ST,DT,TT,D,S}
+                caches::OldCacheDict) where {ST,DT,TT,D,S}
 
     # get cache for internal stages
     cache = caches[ST]
@@ -151,23 +159,23 @@ function Integrators.integrate_step!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 
+    # reset solution
+    reset!(sol, timestep(int))
+
     # compute initial guess
     initial_guess!(int, sol, cache)
 
-    # reset solution
-    reset!(sol)
-
     # call nonlinear solver
-    solve!(int.solver)
+    solve!(cache.x, int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params)
+    # print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params)
+    # check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages and projection vector fields
-    compute_stages!(int.solver.x,
+    compute_stages!(cache.x,
                     cache.q̃, cache.p̃, cache.ṽ, cache.λ,
                     cache.Q, cache.V, cache.U,
                     cache.P, cache.F, cache.G, int.params)
@@ -182,12 +190,12 @@ function Integrators.integrate_step!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 
     # copy internal stage variables
-    sol.internal.Q .= cache.Q
-    sol.internal.P .= cache.P
-    sol.internal.V .= cache.V
-    sol.internal.F .= cache.F
-    sol.internal.λ .= cache.λ
+    # sol.internal.Q .= cache.Q
+    # sol.internal.P .= cache.P
+    # sol.internal.V .= cache.V
+    # sol.internal.F .= cache.F
+    # sol.internal.λ .= cache.λ
 
     # copy solver status
-    get_solver_status!(int.solver, sol.internal[:solver])
+    # get_solver_status!(int.solver, sol.internal[:solver])
 end

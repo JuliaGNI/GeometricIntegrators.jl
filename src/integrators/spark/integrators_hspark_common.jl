@@ -1,44 +1,39 @@
 
-function Integrators.initialize!(int::AbstractIntegratorHSPARK, sol::SolutionStepPDAE)
-    sol.t̄ = sol.t - timestep(int)
+function Integrators.initial_guess!(
+    solstep::SolutionStepPDAE{DT}, 
+    problem::Union{HDAEProblem,PDAEProblem},
+    method::Union{HSPARKMethod,PSPARKMethod}, 
+    caches::CacheDict, 
+    ::NonlinearSolver, 
+    iguess::Union{InitialGuess,Extrapolation}) where {DT}
 
-    equation(int, :v̄)(sol.v, sol.t, sol.q, sol.p)
-    equation(int, :f̄)(sol.f, sol.t, sol.q, sol.p)
+    cache = caches[DT]
 
-    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
-end
+    for i in 1:nstages(method)
+        # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
+        initialguess!(solstep.t̄[1] + timestep(problem) * tableau(method).q.c[i], cache.Qi[i], cache.Pi[i], cache.Vi[i], cache.Fi[i], solstep, problem, iguess; nowarn = true)
 
-function initial_guess!(int::AbstractIntegratorHSPARK{DT}, sol::SolutionStepPDAE{DT},
-                        cache::IntegratorCacheSPARK{DT}=int.caches[DT]) where {DT}
-    for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
-                              sol.q, sol.p, sol.v, sol.f,
-                              cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
-                              tableau(int).q.c[i], tableau(int).p.c[i])
-
-        for k in eachdim(int)
-            int.solver.x[2*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - sol.q[k])/timestep(int)
-            int.solver.x[2*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - sol.p[k])/timestep(int)
+        for k in 1:ndims(problem)
+            cache.x[2*(ndims(problem)*(i-1)+k-1)+1] = (cache.Qi[i][k] - solstep.q̄[1][k]) / timestep(problem)
+            cache.x[2*(ndims(problem)*(i-1)+k-1)+2] = (cache.Pi[i][k] - solstep.p̄[1][k]) / timestep(problem)
         end
     end
 
-    for i in 1:pstages(int)
-        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
-                              sol.q, sol.p, sol.v, sol.f,
-                              cache.q̃, cache.p̃, cache.ṽ, cache.f̃,
-                              tableau(int).q̃.c[i], tableau(int).p̃.c[i])
+    for i in 1:pstages(method)
+        # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
+        initialguess!(solstep.t̄[1] + timestep(problem) * tableau(method).q̃.c[i], cache.Qp[i], cache.Pp[i], cache.Vp[i], cache.Fp[i], solstep, problem, iguess; nowarn = true)
 
-        for k in eachdim(int)
-            int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+1] = (cache.q̃[k] - sol.q[k])/timestep(int)
-            int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+2] = (cache.p̃[k] - sol.p[k])/timestep(int)
-            int.solver.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+3] = 0
+        for k in 1:ndims(problem)
+            cache.x[2*ndims(problem)*nstages(method)+3*(ndims(problem)*(i-1)+k-1)+1] = (cache.Qp[i][k] - solstep.q̄[1][k]) / timestep(problem)
+            cache.x[2*ndims(problem)*nstages(method)+3*(ndims(problem)*(i-1)+k-1)+2] = (cache.Pp[i][k] - solstep.p̄[1][k]) / timestep(problem)
+            cache.x[2*ndims(problem)*nstages(method)+3*(ndims(problem)*(i-1)+k-1)+3] = 0
         end
     end
 
-    if isdefined(tableau(int), :λ) && tableau(int).λ.c[1] == 0
-        for k in eachdim(int)
-            int.solver.x[2*ndims(int)*nstages(int)+3*(k-1)+3] = sol.λ[k]
-        end
-    end
+    # TODO: Check indices !!!
+    # if isdefined(tableau(method), :λ) && tableau(method).λ.c[1] == 0
+    #     for k in 1:ndims(problem)
+    #         cache.x[2*ndims(problem)*nstages(method)+3*(k-1)+3] = solstep.λ[k]
+    #     end
+    # end
 end

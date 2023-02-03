@@ -32,24 +32,21 @@ In order to include exact solutions in the composition, the [`IntegratorExactODE
 implements the general integrator interface.
 
 """
-struct IntegratorComposition{DT, TT, D, S, IT <: Tuple} <: ODEIntegrator{DT,TT}
-    ints::IT
-    Δt::TT
-    q̄::Vector{DT}
-
-    function IntegratorComposition{DT,D}(integrators::IT, Δt::TT) where {DT, TT, D, IT <: Tuple}
-        new{DT, TT, D, length(integrators), IT}(integrators, Δt, zeros(DT,D))
-    end
+struct Composition{T,IT}
+    f::Vector{Int}
+    c::Vector{T}
+    integrators::IT
 end
 
-function IntegratorComposition(problem::SODEProblem{DT,TT}, integrators::Tuple, tableau::ST, Δt::TT=tstep(problem)) where {DT, TT, ST <: AbstractTableauSplitting{TT}}
+
+function Composition(problem::SODEProblem,  splitting::SplittingCoefficients, integrators::Tuple)
     _functions = functions(problem).v
     _solutions = solutions(problem).q
 
     D = ndims(problem)
     R = length(_functions)
 
-    f, c = get_splitting_coefficients(R, tableau)
+    f, c = splitting_coefficients(R, splitting)
 
     subints = ()
 
@@ -70,30 +67,39 @@ function IntegratorComposition(problem::SODEProblem{DT,TT}, integrators::Tuple, 
         end
     end
 
-    IntegratorComposition{DT, ndims(problem)}(subints, Δt)
+    Composition(f, c, subints)
 end
 
-function IntegratorComposition(problem::SODEProblem{DT}, tableau::AbstractTableauSplitting) where {DT}
+
+function Composition(problem::SODEProblem{DT}, splitting::SplittingCoefficients) where {DT}
     @assert hassolution(equation(problem))
-    # integrators = Tuple(IntegratorConstructor(DT,ndims(equation)) for q in solutions(problem).q)
-    integrators = Tuple(IntegratorExactODE for q in solutions(problem).q)
-    IntegratorComposition(problem, integrators, tableau, timestep(problem))
+    solutions = Tuple(ExactSolutionODE(q) for (c,q) in zip(coefficients(problem, splitting), solutions(problem).q))
+    Composition(problem, solutions, coeffs, timestep(problem))
 end
 
 
-@inline Base.ndims(::IntegratorComposition{DT,TT,D}) where {DT,TT,D} = D
-timestep(int::IntegratorComposition) = int.Δt
+function Cache{ST}(problem::SODEProblem, method::Composition; kwargs...) where {ST}
+    IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}(; kwargs...)
+end
+
+@inline CacheType(ST, problem::SODEProblem, ::Composition) = IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}
 
 
-function integrate_step!(int::IntegratorComposition{DT,TT}, sol::SolutionStepODE{DT,TT}) where {DT,TT}
-    local t̄ = sol.t
-    int.q̄  .= sol.q
-
+function integrate_step!(
+    solstep::SolutionStepODE{DT,TT},
+    problem::SODEProblem{DT,TT},
+    method::Composition,
+    caches::CacheDict,
+    solver::NoSolver) where {DT,TT}
+    
     # compute composition steps
-    for subint in int.ints
-        initialize!(subint, sol)
-        integrate_step!(subint, sol)
-        sol.t̄  = t̄
-        sol.q̄ .= int.q̄
+    for subint in method.integrators
+        # copy previous solution
+        caches[DT].t .= solstep.t
+        caches[DT].q .= solstep.q
+
+        # initialize!(subint, sol)
+
+        integrate_step!(solstep, problem, subint, caches, solver)
     end
 end

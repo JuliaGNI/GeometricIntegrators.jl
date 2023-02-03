@@ -379,7 +379,7 @@ In order to solve these equations, initial conditions ``q_{0}`` and
 struct IntegratorDGVI{DT, TT, D, S, R,
                 BT <: Basis,
                 PT <: ParametersDGVI{DT,TT,D,S},
-                ST <: NonlinearSolver{DT},
+                ST <: NonlinearSolver,
                 IT <: InitialGuessODE{TT}} <: IODEIntegrator{DT,TT}
     basis::BT
     quadrature::QuadratureRule{TT,R}

@@ -63,11 +63,11 @@ end
     @test current(solstep) == (t = t0, q = x0)
     @test previous(solstep) == (t = zero(t0), q = zero(x0))
 
-    reset!(solstep)
-    @test current(solstep) == (t = t0, q = x0)
+    reset!(solstep, Δt)
+    @test current(solstep) == (t = t0 + Δt, q = x0)
     @test previous(solstep) == (t = t0, q = x0)
 
-    update!(solstep, Δt, Δx)
+    update!(solstep, Δx)
     @test solstep.t == t0  + Δt
     @test solstep.q == x0 .+ Δx
 
@@ -118,11 +118,11 @@ end
     @test current(solstep) == (t = t0, q = q0, p = p0)
     @test previous(solstep) == (t = zero(t0), q = zero(q0), p = zero(p0))
 
-    reset!(solstep)
-    @test current(solstep) == (t = t0, q = q0, p = p0)
+    reset!(solstep, Δt)
+    @test current(solstep) == (t = t0 + Δt, q = q0, p = p0)
     @test previous(solstep) == (t = t0, q = q0, p = p0)
 
-    update!(solstep, Δt, Δq, Δp)
+    update!(solstep, Δq, Δp)
     @test solstep.t == t0  + Δt
     @test solstep.q == q0 .+ Δq
     @test solstep.p == p0 .+ Δp
@@ -178,11 +178,11 @@ end
     @test current(solstep) == (t = t0, q = x0, λ = λ0)
     @test previous(solstep) == (t = zero(t0), q = zero(x0), λ = zero(λ0))
 
-    reset!(solstep)
-    @test current(solstep) == (t = t0, q = x0, λ = λ0)
+    reset!(solstep, Δt)
+    @test current(solstep) == (t = t0 + Δt, q = x0, λ = λ0)
     @test previous(solstep) == (t = t0, q = x0, λ = λ0)
 
-    update!(solstep, Δt, Δx, λ1)
+    update!(solstep, Δx, λ1)
     @test solstep.t == t0  + Δt
     @test solstep.q == x0 .+ Δx
     @test solstep.λ == λ1
@@ -239,11 +239,11 @@ end
     @test current(solstep) == (t = t0, q = q0, p = p0, λ = λ0)
     @test previous(solstep) == (t = zero(t0), q = zero(q0), p = zero(p0), λ = zero(λ0))
 
-    reset!(solstep)
-    @test current(solstep) == (t = t0, q = q0, p = p0, λ = λ0)
+    reset!(solstep, Δt)
+    @test current(solstep) == (t = t0 + Δt, q = q0, p = p0, λ = λ0)
     @test previous(solstep) == (t = t0, q = q0, p = p0, λ = λ0)
 
-    update!(solstep, Δt, Δq, Δp, λ1)
+    update!(solstep, Δq, Δp, λ1)
     @test solstep.t == t0  + Δt
     @test solstep.q == q0 .+ Δq
     @test solstep.p == p0 .+ Δp

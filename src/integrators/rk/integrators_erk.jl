@@ -1,16 +1,4 @@
 
-"Parameters for right-hand side function of explicit Runge-Kutta methods."
-struct ParametersERK{DT, TT, D, S, ET <: NamedTuple} <: Parameters{DT,TT}
-    equs::ET
-    tab::Tableau{TT}
-    Δt::TT
-
-    function ParametersERK{DT,D}(equs::ET, tab::Tableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
-        new{DT, TT, D, tab.s, ET}(equs, tab, Δt)
-    end
-end
-
-
 "Explicit Runge-Kutta integrator cache."
 struct IntegratorCacheERK{DT,D,S} <: ODEIntegratorCache{DT,D}
     Q::Vector{Vector{DT}}
@@ -23,97 +11,61 @@ struct IntegratorCacheERK{DT,D,S} <: ODEIntegratorCache{DT,D}
     end
 end
 
-function IntegratorCache{ST}(params::ParametersERK{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+function Cache{ST}(problem::GeometricProblem, method::ERK; kwargs...) where {ST}
+    S = nstages(tableau(method))
+    D = ndims(problem)
     IntegratorCacheERK{ST,D,S}(; kwargs...)
 end
 
-@inline CacheType(ST, params::ParametersERK{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheERK{ST,D,S}
+@inline CacheType(ST, problem::GeometricProblem, method::ERK) = IntegratorCacheERK{ST, ndims(problem), nstages(tableau(method))}
 
 
 @doc raw"""
 Explicit Runge-Kutta integrator solving the system
 ```math
 \begin{aligned}
-V_{n,i} &= v (Q_{n,i}, P_{n,i}) , &
+V_{n,i} &= v (t_i, Q_{n,i}) , &
 Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
 q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 \end{aligned}
 ```
 """
-struct IntegratorERK{DT, TT, D, S, ET} <: AbstractIntegratorRK{DT,TT}
-    params::ParametersERK{DT,TT,D,S,ET}
-    caches::CacheDict{ParametersERK{DT,TT,D,S,ET}}
+const IntegratorERK{DT,TT} = Integrator{<:ODEProblem{DT,TT}, <:ERK}
 
-
-    function IntegratorERK(params::ParametersERK{DT,TT,D,S,ET}, caches) where {DT,TT,D,S,ET}
-        new{DT, TT, D, S, ET}(params, caches)
-    end
-
-    function IntegratorERK{DT,D}(equations::ET, tableau::Tableau{TT}, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
-        # get number of stages
-        S = tableau.s
-
-        # check if tableau is explicit
-        @assert isexplicit(tableau)
-
-        # create params
-        params = ParametersERK{DT,D}(equations, tableau, Δt)
-
-        # create cache dict
-        caches = CacheDict(params)
-
-        # create integrator
-        IntegratorERK(params, caches)
-    end
-
-    function IntegratorERK{DT,D}(v::Function, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
-        IntegratorERK{DT,D}(NamedTuple{(:v,)}((v,)), tableau, Δt; kwargs...)
-    end
-
-    function IntegratorERK{DT,D}(v::Function, h::Function, tableau::Tableau{TT}, Δt::TT; kwargs...) where {DT,TT,D}
-        IntegratorERK{DT,D}(NamedTuple{(:v,:h)}((v,h)), tableau, Δt; kwargs...)
-    end
-
-    function IntegratorERK(problem::ODEProblem{DT}, tableau::Tableau{TT}; kwargs...) where {DT,TT}
-        IntegratorERK{DT, ndims(problem)}(functions(problem), tableau, timestep(problem); kwargs...)
-    end
-end
-
-
-@inline Base.ndims(::IntegratorERK{DT,TT,D,S}) where {DT,TT,D,S} = D
-
+initmethod(method::ERK) = method
+initmethod(method::ERKMethod) = ERK(method)
 
 function Base.show(io::IO, int::IntegratorERK)
     print(io, "\nExplicit Runge-Kutta Integrator with:\n")
-    print(io, "   Timestep: $(int.params.Δt)\n")
-    print(io, "   Tableau:  $(description(int.params.tab))\n")
-    print(io, "   $(string(int.params.tab))")
-    # print(io, reference(int.params.tab))
+    print(io, "   Timestep: $(timestep(int))\n")
+    print(io, "   Tableau:  $(description(tableau(int)))\n")
+    print(io, "   $(string(tableau(int)))")
+    # print(io, reference(tableau(int)))
 end
 
 
-function integrate_step!(int::IntegratorERK{DT,TT}, sol::SolutionStepODE{DT,TT},
-                         cache::IntegratorCacheERK{DT}=int.caches[DT]) where {DT,TT}
+function integrate_step!(solstep::SolutionStepODE{DT,TT}, problem::ODEProblem{DT,TT}, method::ERK, caches::CacheDict, ::NoSolver) where {DT,TT}
+    # obtain cache
+    local Q::Vector{Vector{DT}} = caches[DT].Q
+    local V::Vector{Vector{DT}} = caches[DT].V
+
     # temporary variables
     local tᵢ::TT
     local yᵢ::DT
 
-    # reset atomic solution
-    reset!(sol)
-
     # compute internal stages
-    for i in eachstage(int)
-        for k in eachindex(cache.Q[i], cache.V[i])
+    for i in eachstage(method)
+        tᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).c[i]
+        for k in eachindex(Q[i], V[i])
             yᵢ = 0
             for j in 1:i-1
-                yᵢ += tableau(int).a[i,j] * cache.V[j][k]
+                yᵢ += tableau(method).a[i,j] * V[j][k]
             end
-            cache.Q[i][k] = sol.q̄[k] + timestep(int) * yᵢ
+            Q[i][k] = solstep.q̄[1][k] + timestep(problem) * yᵢ
         end
-        tᵢ = sol.t̄ + timestep(int) * tableau(int).c[i]
-        equations(int)[:v](cache.V[i], tᵢ, cache.Q[i])
+        functions(problem).v(V[i], tᵢ, Q[i])
     end
 
     # compute final update
-    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).b, tableau(int).b̂, timestep(int))
+    update_solution!(solstep.q, solstep.q̄[1], solstep.q̃, V, tableau(method).b, tableau(method).b̂, timestep(problem))
 end

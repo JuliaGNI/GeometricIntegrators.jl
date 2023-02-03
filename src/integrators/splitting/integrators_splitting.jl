@@ -8,7 +8,7 @@ whose vector field ``v`` is given as a sum of vector fields
 v (t) = v_1 (t) + ... + v_r (t) .
 ```
 
-`IntegratorSplitting` has two constructors:
+`Splitting` has two constructors:
 ```julia
 IntegratorSplitting{DT,D}(solutions::Tuple, f::Vector{Int}, c::Vector, Δt)
 IntegratorSplitting(equation::SODE, tableau::AbstractTableauSplitting, Δt)
@@ -28,45 +28,51 @@ In the second constructor, these vectors are constructed from the tableau and
 the equation.
 
 """
-struct IntegratorSplitting{DT, TT, D, S, QT <: Tuple} <: ODEIntegrator{DT,TT}
-    q::QT
-    f::NTuple{S,Int64}
-    c::NTuple{S,TT}
-    Δt::TT
+struct Splitting{T} <: SODEMethod
+    f::Vector{Int}
+    c::Vector{T}
+end
 
-    function IntegratorSplitting{DT,D}(solutions::solType, f::Vector{Int}, c::Vector{TT}, Δt::TT) where {DT, TT, D, solType <: Tuple}
-        @assert length(f) == length(c)
-        ft = Tuple(f)
-        ct = Tuple(c)
-        new{DT,TT,D,length(f),solType}(solutions, ft, ct, Δt)
+Splitting(method::AbstractSplittingMethod, problem::SODEProblem) = Splitting(coefficients(problem, method)...)
+
+coefficients(method::Splitting) = (method.f, method.c)
+
+initmethod(method::AbstractSplittingMethod, problem::SODEProblem) = Splitting(method, problem)
+initmethod(method::Splitting, ::SODEProblem) = method
+
+
+"Splitting integrator cache."
+mutable struct IntegratorCacheSplitting{DT,TT,D} <: ODEIntegratorCache{DT,D}
+    q::Vector{DT}
+    t::TT
+
+    function IntegratorCacheSplitting{DT,TT,D}() where {DT,TT,D}
+        new(zeros(DT,D), zero(TT))
     end
 end
 
-function IntegratorSplitting(problem::SODEProblem{DT}, tableau::ST) where {DT, TT, ST <: AbstractTableauSplitting{TT}}
-    @assert hassolution(problem)
-    IntegratorSplitting{DT, ndims(problem)}(solutions(problem).q, get_splitting_coefficients(length(equation(problem).q), tableau)..., timestep(problem))
+function Cache{ST}(problem::SODEProblem, method::Splitting; kwargs...) where {ST}
+    IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}(; kwargs...)
 end
 
-
-@inline Base.ndims(::IntegratorSplitting{DT,TT,D}) where {DT,TT,D} = D
-@inline GeometricBase.timestep(int::IntegratorSplitting) = int.Δt
+@inline CacheType(ST, problem::SODEProblem, ::Splitting) = IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}
 
 
-function integrate_step!(int::IntegratorSplitting{DT,TT}, sol::SolutionStepODE{DT,TT}) where {DT,TT}
-    local cᵢ::TT
-    local tᵢ::TT
-
+function integrate_step!(
+    solstep::SolutionStepODE{DT,TT},
+    problem::SODEProblem{DT,TT},
+    method::Splitting,
+    caches::CacheDict,
+    ::NoSolver) where {DT,TT}
+    
     # compute splitting steps
-    for i in eachindex(int.f, int.c)
-        if int.c[i] ≠ zero(TT)
-            cᵢ = timestep(int) * int.c[i]
-            tᵢ = sol.t̄ + cᵢ
-
-            # reset atomic solution
-            reset!(sol)
+    for i in eachindex(method.f, method.c)
+        if method.c[i] ≠ zero(TT)
+            # copy previous solution
+            caches[DT].q .= solstep.q
 
             # compute new solution
-            int.q[int.f[i]](sol.q, tᵢ, sol.q̄, sol.t̄)
+            solutions(problem).q[method.f[i]](solstep.q, solstep.t̄[1] + timestep(problem) * method.c[i], caches[DT].q, solstep.t̄[1])
         end
     end
 end

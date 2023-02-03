@@ -1,5 +1,5 @@
 "Holds the tableau of an Specialised Partitioned Additive Runge-Kutta method for Variational systems."
-struct AbstractTableauSPARK{IT, DT <: Number} <: AbstractTableau{DT}
+struct AbstractTableauSPARK{IT, DT <: Number, DVT} <: AbstractTableau{DT}
     name::Symbol
     o::Int
     s::Int
@@ -16,9 +16,9 @@ struct AbstractTableauSPARK{IT, DT <: Number} <: AbstractTableau{DT}
 
     ω::Matrix{DT}
     δ::Matrix{DT}
-    d::Vector{DT}
+    d::DVT
 
-    function AbstractTableauSPARK{IT,DT}(name::Symbol, o::Int, s::Int, r::Int, ρ::Int, q, p, q̃, p̃, λ, ω, δ, d=DT[]) where {IT, DT}
+    function AbstractTableauSPARK{IT,DT}(name::Symbol, o::Int, s::Int, r::Int, ρ::Int, q, p, q̃, p̃, λ, ω, δ, d::DVT = nothing) where {IT, DT, DVT <: Union{AbstractVector,Nothing}}
         @assert s > 0 "Number of stages s must be > 0"
         @assert r > 0 "Number of stages r must be > 0"
         @assert ρ ≥ 0 && ρ ≤ r+1
@@ -29,9 +29,9 @@ struct AbstractTableauSPARK{IT, DT <: Number} <: AbstractTableau{DT}
         # @assert size(ω, 2)==r+1
         @assert size(δ, 1)==ρ
 
-        @assert length(d)==0 || length(d)==s
+        @assert d === nothing || length(d) == s
 
-        new(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, δ, d)
+        new{IT,DT,DVT}(name, o, s, r, ρ, q, p, q̃, p̃, λ, ω, δ, d)
     end
 
     function AbstractTableauSPARK{IT}(name::Symbol, order::Int,
@@ -45,7 +45,7 @@ struct AbstractTableauSPARK{IT, DT <: Number} <: AbstractTableau{DT}
                              c_λ::AbstractVector{DT}, d_λ::AbstractVector{DT},
                              ω::AbstractMatrix{DT},
                              δ::AbstractMatrix{DT},
-                             d::AbstractVector{DT}=DT[]) where {IT, DT <: Number}
+                             args...) where {IT, DT <: Number}
 
         s = length(c_q)
         r = length(c_λ)
@@ -70,7 +70,7 @@ struct AbstractTableauSPARK{IT, DT <: Number} <: AbstractTableau{DT}
         p̃ = CoefficientsPRK{DT}(name, order, s, r, a_p̃, c_λ, α_p̃)
         λ = CoefficientsMRK{DT}(name, r, d_λ, c_λ)
 
-        AbstractTableauSPARK{IT,DT}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω, δ, d)
+        AbstractTableauSPARK{IT,DT}(name, order, s, r, ρ, q, p, q̃, p̃, λ, ω, δ, args...)
     end
 
     function AbstractTableauSPARK{IT}(name::Symbol, order::Int,
@@ -82,7 +82,7 @@ struct AbstractTableauSPARK{IT, DT <: Number} <: AbstractTableau{DT}
                              β_q::AbstractVector{DT}, β_p::AbstractVector{DT},
                              c_q::AbstractVector{DT}, c_p::AbstractVector{DT},
                              c_λ::AbstractVector{DT}, d_λ::AbstractVector{DT},
-                             d::AbstractVector{DT}=DT[]) where {IT, DT <: Number}
+                             args...) where {IT, DT <: Number}
 
         R = length(c_λ)
         AbstractTableauSPARK{IT}(name, order,
@@ -91,9 +91,16 @@ struct AbstractTableauSPARK{IT, DT <: Number} <: AbstractTableau{DT}
                                  b_q, b_p, β_q, β_p,
                                  c_q, c_p, c_λ, d_λ,
                                  hcat(Array(Diagonal(ones(DT,R))), zeros(DT,R)),
-                                 zeros(DT,0,R), d)
+                                 zeros(DT,0,R), args...)
     end
 end
+
+nstages(tableau::AbstractTableauSPARK) = tableau.s
+pstages(tableau::AbstractTableauSPARK) = tableau.r
+eachstage(tableau::AbstractTableauSPARK) = 1:nstages(tableau)
+
+hasnullvector(::AbstractTableauSPARK{IT,DT,Nothing}) where {IT,DT} = false
+hasnullvector(::AbstractTableauSPARK{IT,DT,<:AbstractVector}) where {IT,DT} = true
 
 Base.:(==)(tab1::AbstractTableauSPARK, tab2::AbstractTableauSPARK) = (tab1.o == tab2.o
                                                        && tab1.s == tab2.s

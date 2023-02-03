@@ -4,39 +4,51 @@ module Integrators
 
     @reexport using GeometricBase
     
-    using CompactBasisFunctions
     using Documenter: @doc
+    using ForwardDiff
+    using GeometricBase
     using LinearAlgebra
     using OffsetArrays
     using QuadratureRules
-    using RungeKutta
     using SimpleSolvers
 
     using GeometricBase.Config
     using GeometricBase.Utils
     using GeometricEquations
-    using GeometricEquations: _get_v, _get_f, _get_v̄, _get_f̄
     using GeometricSolutions
 
     using ..Discontinuities
     using ..Extrapolators
+    using ..Methods
     using ..Solutions
 
+    import Base: Callable
 
-    import GeometricBase: timestep
+    import CompactBasisFunctions
+    import CompactBasisFunctions: Basis
+    import CompactBasisFunctions: nbasis
+    
+    import RungeKutta
 
-    import RungeKutta: AbstractTableau, nstages
+    import ..Extrapolators: extrapolate_ode!, extrapolate_iode!, extrapolate_pode!
+
+    import ..Methods: nullvector
 
 
     # compat workaroung
     Base.ndims(prob::GeometricProblem) = length(vec(prob.ics.q))
 
 
-    export InitialGuess, NoInitialGuess, OptionalInitialGuess
+    export InitialGuess, NoInitialGuess
+    export InitialGuessODE, InitialGuessIODE, InitialGuessPODE
     export initialguess!
 
     include("integrators/initial_guess/initial_guess.jl")
+    include("integrators/initial_guess/hermite.jl")
+    include("integrators/initial_guess/midpoint.jl")
+    
     include("integrators/initial_guess/initial_guess_ode.jl")
+    include("integrators/initial_guess/initial_guess_iode.jl")
     include("integrators/initial_guess/initial_guess_pode.jl")
 
 
@@ -46,7 +58,7 @@ module Integrators
     include("integrators/abstract_tableau.jl")
 
 
-    export Integrator, DeterministicIntegrator, StochasticIntegrator
+    export AbstractIntegrator, DeterministicIntegrator, StochasticIntegrator, Integrator
     export ODEIntegrator, DAEIntegrator, SDEIntegrator,
            PODEIntegrator, PDAEIntegrator, PSDEIntegrator,
            IODEIntegrator, IDAEIntegrator,
@@ -55,12 +67,21 @@ module Integrators
            SPSDEIntegrator
 
     export IntegratorCache, IntegratorConstructor
-    export integrate, integrate!, integrate_step!, equation, timestep
-    export function_stages!#, NonlinearFunctionParameters
+    export equation, timestep
+    # export function_stages!, NonlinearFunctionParameters
 
     include("integrators/abstract_integrator.jl")
     include("integrators/integrator_cache.jl")
     include("integrators/integrators_common.jl")
+
+
+    export Integrator
+    export integrate, integrate!, integrate_step!
+    
+    export NoSolver, NoProjection
+    export default_solver, default_iguess, default_projection
+
+    include("integrators/integrator.jl")
 
 
     export IntegratorExplicitEuler
@@ -79,45 +100,58 @@ module Integrators
 
 
     export IntegratorERK
+    export IntegratorIRK
+    export IntegratorIRKimplicit
     export IntegratorDIRK
-    export IntegratorFIRK
-    export IntegratorFIRKimplicit, IntegratorMidpointImplicit, IntegratorSRKimplicit
+    #export IntegratorMidpointImplicit, IntegratorSRKimplicit
 
     include("integrators/rk/integrators_erk.jl")
+    include("integrators/rk/integrators_irk.jl")
+    include("integrators/rk/integrators_irk_implicit.jl")
     include("integrators/rk/integrators_dirk.jl")
-    include("integrators/rk/integrators_firk.jl")
-    include("integrators/rk/integrators_firk_implicit.jl")
-    include("integrators/rk/integrators_midpoint_implicit.jl")
-    include("integrators/rk/integrators_srk_implicit.jl")
+    # include("integrators/rk/integrators_midpoint_implicit.jl")
+    # include("integrators/rk/integrators_srk_implicit.jl")
 
 
     export IntegratorEPRK
     export IntegratorIPRK
-    export IntegratorPRKimplicit
-    export IntegratorFLRK
+    export IntegratorIPRKimplicit
+    # export IntegratorFLRK
+    # export IntegratorPGLRK, CoefficientsPGLRK
 
     include("integrators/rk/integrators_eprk.jl")
     include("integrators/rk/integrators_iprk.jl")
-    include("integrators/rk/integrators_prk_implicit.jl")
-    include("integrators/rk/integrators_flrk.jl")
-
-
-    export IntegratorPGLRK, CoefficientsPGLRK
-
-    include("integrators/rk/integrators_pglrk.jl")
+    include("integrators/rk/integrators_iprk_implicit.jl")
+    include("integrators/rk/old/integrators_flrk.jl")
+    include("integrators/rk/old/integrators_pglrk.jl")
 
 
     export IntegratorSplitting,
            IntegratorComposition,
            IntegratorExactODE,
            AbstractTableauSplitting,
-           TableauSplitting,
-           TableauSplittingGS,
-           TableauSplittingNS,
-           TableauSplittingSS
+           Splitting,
+           SplittingCoefficientsGeneral,
+           SplittingCoefficientsNonSymmetric,
+           SplittingCoefficientsGS,
+           SplittingCoefficientsSS
+
+    export coefficients
+
+    export LieA,
+           LieB,
+           Strang,
+           Marchuk,
+           StrangA,
+           StrangB,
+           McLachlan2,
+           McLachlan4,
+           TripleJump,
+           SuzukiFractal
            
     include("integrators/splitting/integrators_exact_ode.jl")
-    include("integrators/splitting/splitting_tableau.jl")
+    include("integrators/splitting/splitting_coefficients.jl")
+    include("integrators/splitting/splitting_methods.jl")
     include("integrators/splitting/integrators_composition.jl")
     include("integrators/splitting/integrators_splitting.jl")
 
@@ -134,12 +168,14 @@ module Integrators
 
 
     export IntegratorDVIA, IntegratorDVIB,
-           IntegratorCMDVI, IntegratorCTDVI
+           IntegratorCMDVI, IntegratorCTDVI,
+           IntegratorDVRK
     
     include("integrators/dvi/integrators_dvi_a.jl")
     include("integrators/dvi/integrators_dvi_b.jl")
     include("integrators/dvi/integrators_cmdvi.jl")
     include("integrators/dvi/integrators_ctdvi.jl")
+    include("integrators/dvi/integrators_dvrk.jl")
 
 
     include("integrators/SPARK.jl")
@@ -147,6 +183,7 @@ module Integrators
 
 
     include("integrators/integrators.jl")
+    include("integrators/methods.jl")
 
 
     function __init__()

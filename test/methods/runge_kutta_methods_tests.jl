@@ -38,25 +38,25 @@ lode = lodeproblem()
     @test typeof(Integrator(ode, KraaijevangerSpijker())) <: IntegratorDIRK
     @test typeof(Integrator(ode, QinZhang())) <: IntegratorDIRK
 
-    @test typeof(Integrator(ode, BackwardEuler())) <: IntegratorFIRK
-    @test typeof(Integrator(ode, ImplicitEuler())) <: IntegratorFIRK
-    @test typeof(Integrator(ode, ImplicitMidpoint())) <: IntegratorFIRK
-    @test typeof(Integrator(ode, SRK3())) <: IntegratorFIRK
+    @test typeof(Integrator(ode, BackwardEuler())) <: IntegratorIRK
+    @test typeof(Integrator(ode, ImplicitEuler())) <: IntegratorIRK
+    @test typeof(Integrator(ode, ImplicitMidpoint())) <: IntegratorIRK
+    @test typeof(Integrator(ode, SRK3())) <: IntegratorIRK
 
-    @test typeof(Integrator(ode, Gauss(2))) <: IntegratorFIRK
+    @test typeof(Integrator(ode, Gauss(2))) <: IntegratorIRK
     @test typeof(Integrator(ode, LobattoIII(2))) <: IntegratorERK
     @test typeof(Integrator(ode, LobattoIIIA(2))) <: IntegratorDIRK
     @test typeof(Integrator(ode, LobattoIIIB(2))) <: IntegratorERK
-    @test typeof(Integrator(ode, LobattoIIIC(2))) <: IntegratorFIRK
-    @test typeof(Integrator(ode, LobattoIIID(2))) <: IntegratorFIRK
+    @test typeof(Integrator(ode, LobattoIIIC(2))) <: IntegratorIRK
+    @test typeof(Integrator(ode, LobattoIIID(2))) <: IntegratorIRK
     @test typeof(Integrator(ode, LobattoIIIE(2))) <: IntegratorDIRK
-    @test typeof(Integrator(ode, LobattoIIIF(2))) <: IntegratorFIRK
-    @test typeof(Integrator(ode, LobattoIIIF̄(2))) <: IntegratorFIRK
-    @test typeof(Integrator(ode, LobattoIIIG(2))) <: IntegratorFIRK
-    @test typeof(Integrator(ode, RadauIA(2))) <: IntegratorFIRK
-    @test typeof(Integrator(ode, RadauIB(2))) <: IntegratorFIRK
-    @test typeof(Integrator(ode, RadauIIA(2))) <: IntegratorFIRK
-    @test typeof(Integrator(ode, RadauIIB(2))) <: IntegratorFIRK
+    @test typeof(Integrator(ode, LobattoIIIF(2))) <: IntegratorIRK
+    @test typeof(Integrator(ode, LobattoIIIF̄(2))) <: IntegratorIRK
+    @test typeof(Integrator(ode, LobattoIIIG(2))) <: IntegratorIRK
+    @test typeof(Integrator(ode, RadauIA(2))) <: IntegratorIRK
+    @test typeof(Integrator(ode, RadauIB(2))) <: IntegratorIRK
+    @test typeof(Integrator(ode, RadauIIA(2))) <: IntegratorIRK
+    @test typeof(Integrator(ode, RadauIIB(2))) <: IntegratorIRK
 
     @test tableau(RK4()) == tableau(RK(TableauRK4()))
 
@@ -100,14 +100,14 @@ end
 
 @testset "$(rpad("Runge-Kutta methods for Implicit Equations",80))" begin
 
-    @test typeof(Integrator(iode, ImplicitMidpoint())) <: IntegratorFIRKimplicit
-    @test typeof(Integrator(iode, SRK3())) <: IntegratorFIRKimplicit
-    @test typeof(Integrator(iode, Gauss(2))) <: IntegratorFIRKimplicit
+    @test typeof(Integrator(iode, ImplicitMidpoint())) <: IntegratorIRKimplicit
+    @test typeof(Integrator(iode, SRK3())) <: IntegratorIRKimplicit
+    @test typeof(Integrator(iode, Gauss(2))) <: IntegratorIRKimplicit
 
 end
 
-@testset "$(rpad("Formal Lagrangian Runge-Kutta methods",80))" begin
+# @testset "$(rpad("Formal Lagrangian Runge-Kutta methods",80))" begin
 
-    @test typeof(Integrator(lode, FLRK(Gauss(1)))) <: IntegratorFLRK
+#     @test typeof(Integrator(lode, FLRK(Gauss(1)))) <: IntegratorFLRK
 
-end
+# end

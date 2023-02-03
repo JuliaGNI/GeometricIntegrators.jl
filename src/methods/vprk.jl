@@ -3,9 +3,9 @@
 
 abstract type VPRKMethod <: LODEMethod end
 
-tableau(::VPRKMethod) = missing
+GeometricBase.tableau(::VPRKMethod) = missing
 nullvector(::VPRKMethod) = nothing
-order(method::VPRKMethod) = RungeKutta.order(tableau(method))
+GeometricBase.order(method::VPRKMethod) = RungeKutta.order(tableau(method))
 
 isiodemethod(::Union{VPRKMethod, Type{<:VPRKMethod}}) = true
 
@@ -13,8 +13,6 @@ isexplicit(method::VPRKMethod) = RungeKutta.isexplicit(tableau(method))
 isimplicit(method::VPRKMethod) = RungeKutta.isimplicit(tableau(method))
 issymmetric(method::VPRKMethod) = RungeKutta.issymmetric(tableau(method))
 issymplectic(method::VPRKMethod) = RungeKutta.issymplectic(tableau(method))
-
-Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::VPRKMethod; kwargs...) = IntegratorVPRK(problem, tableau(method), nullvector(method); kwargs...)
 
 
 function Base.show(io::IO, method::VPRKMethod)
@@ -54,9 +52,9 @@ Base.hash(method::VPRK, h::UInt) = hash(method.tableau, hash(method.d, hash(:VPR
 
 Base.:(==)(method1::VPRK, method2::VPRK) = (method1.tableau == method2.tableau && method1.d == method2.d)
 
-tableau(method::VPRK) = method.tableau
+GeometricBase.tableau(method::VPRK) = method.tableau
 nullvector(method::VPRK) = method.d
-order(method::VPRK) = RungeKutta.order(tableau(method))
+GeometricBase.order(method::VPRK) = RungeKutta.order(tableau(method))
 
 hasnullvector(method::VPRK{DT,Nothing}) where {DT} = false
 hasnullvector(method::VPRK{DT,<:AbstractVector}) where {DT} = true
@@ -70,7 +68,7 @@ for both $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPSRK3 <: VPRKMethod end
 
-tableau(::VPSRK3) = SymplecticPartitionedTableau(TableauSRK3())
+GeometricBase.tableau(::VPSRK3) = SymplecticPartitionedTableau(TableauSRK3())
 
 
 @doc raw"""
@@ -258,60 +256,60 @@ struct VPRKLobattoIIIGIIIḠ <: VPRKMethod
 end
 
 
-tableau(method::VPRKGauss) = SymplecticPartitionedTableau(TableauGauss(method.s))
-tableau(method::VPRKLobattoIII) = PartitionedTableau(TableauLobattoIII(method.s))
-tableau(method::VPRKLobattoIIIA) = PartitionedTableau(TableauLobattoIIIA(method.s))
-tableau(method::VPRKLobattoIIIB) = PartitionedTableau(TableauLobattoIIIB(method.s))
-tableau(method::VPRKLobattoIIIC) = PartitionedTableau(TableauLobattoIIIC(method.s))
-tableau(method::VPRKLobattoIIID) = PartitionedTableau(TableauLobattoIIID(method.s))
-tableau(method::VPRKLobattoIIIE) = PartitionedTableau(TableauLobattoIIIE(method.s))
-tableau(method::VPRKLobattoIIIF) = PartitionedTableau(TableauLobattoIIIF(method.s))
-tableau(method::VPRKLobattoIIIF̄) = PartitionedTableau(TableauLobattoIIIF̄(method.s))
-tableau(method::VPRKLobattoIIIG) = PartitionedTableau(TableauLobattoIIIG(method.s))
-tableau(method::VPRKRadauIIA) = PartitionedTableau(TableauRadauIIA(method.s))
-tableau(method::VPRKRadauIIB) = PartitionedTableau(TableauRadauIIB(method.s))
+GeometricBase.tableau(method::VPRKGauss) = SymplecticPartitionedTableau(TableauGauss(method.s))
+GeometricBase.tableau(method::VPRKLobattoIII) = PartitionedTableau(TableauLobattoIII(method.s))
+GeometricBase.tableau(method::VPRKLobattoIIIA) = PartitionedTableau(TableauLobattoIIIA(method.s))
+GeometricBase.tableau(method::VPRKLobattoIIIB) = PartitionedTableau(TableauLobattoIIIB(method.s))
+GeometricBase.tableau(method::VPRKLobattoIIIC) = PartitionedTableau(TableauLobattoIIIC(method.s))
+GeometricBase.tableau(method::VPRKLobattoIIID) = PartitionedTableau(TableauLobattoIIID(method.s))
+GeometricBase.tableau(method::VPRKLobattoIIIE) = PartitionedTableau(TableauLobattoIIIE(method.s))
+GeometricBase.tableau(method::VPRKLobattoIIIF) = PartitionedTableau(TableauLobattoIIIF(method.s))
+GeometricBase.tableau(method::VPRKLobattoIIIF̄) = PartitionedTableau(TableauLobattoIIIF̄(method.s))
+GeometricBase.tableau(method::VPRKLobattoIIIG) = PartitionedTableau(TableauLobattoIIIG(method.s))
+GeometricBase.tableau(method::VPRKRadauIIA) = PartitionedTableau(TableauRadauIIA(method.s))
+GeometricBase.tableau(method::VPRKRadauIIB) = PartitionedTableau(TableauRadauIIB(method.s))
 
-tableau(method::VPRKLobattoIIIAIIIB) = TableauLobattoIIIAIIIB(method.s)
-tableau(method::VPRKLobattoIIIBIIIA) = TableauLobattoIIIBIIIA(method.s)
-tableau(method::VPRKLobattoIIIAIIIĀ) = TableauLobattoIIIAIIIĀ(method.s)
-tableau(method::VPRKLobattoIIIBIIIB̄) = TableauLobattoIIIBIIIB̄(method.s)
-tableau(method::VPRKLobattoIIICIIIC̄) = TableauLobattoIIICIIIC̄(method.s)
-tableau(method::VPRKLobattoIIIC̄IIIC) = TableauLobattoIIIC̄IIIC(method.s)
-tableau(method::VPRKLobattoIIIDIIID̄) = TableauLobattoIIIDIIID̄(method.s)
-tableau(method::VPRKLobattoIIIEIIIĒ) = TableauLobattoIIIEIIIĒ(method.s)
-tableau(method::VPRKLobattoIIIFIIIF̄) = TableauLobattoIIIFIIIF̄(method.s)
-tableau(method::VPRKLobattoIIIF̄IIIF) = TableauLobattoIIIF̄IIIF(method.s)
-tableau(method::VPRKLobattoIIIGIIIḠ) = TableauLobattoIIIGIIIḠ(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIAIIIB) = TableauLobattoIIIAIIIB(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIBIIIA) = TableauLobattoIIIBIIIA(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIAIIIĀ) = TableauLobattoIIIAIIIĀ(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIBIIIB̄) = TableauLobattoIIIBIIIB̄(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIICIIIC̄) = TableauLobattoIIICIIIC̄(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIC̄IIIC) = TableauLobattoIIIC̄IIIC(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIDIIID̄) = TableauLobattoIIIDIIID̄(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIEIIIĒ) = TableauLobattoIIIEIIIĒ(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIFIIIF̄) = TableauLobattoIIIFIIIF̄(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIF̄IIIF) = TableauLobattoIIIF̄IIIF(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIGIIIḠ) = TableauLobattoIIIGIIIḠ(method.s)
 
 nullvector(method::VPRKLobattoIIIAIIIB) = get_lobatto_nullvector(method.s)
 nullvector(method::VPRKLobattoIIIBIIIA) = get_lobatto_nullvector(method.s)
 nullvector(method::VPRKLobattoIIIAIIIĀ) = get_lobatto_nullvector(method.s)
 nullvector(method::VPRKLobattoIIIBIIIB̄) = get_lobatto_nullvector(method.s)
 
-order(::Type{VPRKGauss}) = "2s"
-order(::Type{VPRKLobattoIII}) = "2s-2"
-order(::Type{VPRKLobattoIIIA}) = "2s-2"
-order(::Type{VPRKLobattoIIIB}) = "2s-2"
-order(::Type{VPRKLobattoIIIC}) = "2s-2"
-order(::Type{VPRKLobattoIIID}) = "2s-2"
-order(::Type{VPRKLobattoIIIE}) = "2s-2"
-order(::Type{VPRKLobattoIIIF}) = "2s"
-order(::Type{VPRKLobattoIIIF̄}) = "2s"
-order(::Type{VPRKLobattoIIIG}) = "2s"
-order(::Type{VPRKRadauIIA}) = "2s-1"
-order(::Type{VPRKRadauIIB}) = "2s-1"
+GeometricBase.order(::Type{VPRKGauss}) = "2s"
+GeometricBase.order(::Type{VPRKLobattoIII}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIA}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIB}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIC}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIID}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIE}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIF}) = "2s"
+GeometricBase.order(::Type{VPRKLobattoIIIF̄}) = "2s"
+GeometricBase.order(::Type{VPRKLobattoIIIG}) = "2s"
+GeometricBase.order(::Type{VPRKRadauIIA}) = "2s-1"
+GeometricBase.order(::Type{VPRKRadauIIB}) = "2s-1"
 
-order(::Type{VPRKLobattoIIIAIIIB}) = "2s-2"
-order(::Type{VPRKLobattoIIIBIIIA}) = "2s-2"
-order(::Type{VPRKLobattoIIIAIIIĀ}) = "2s-2"
-order(::Type{VPRKLobattoIIIBIIIB̄}) = "2s-2"
-order(::Type{VPRKLobattoIIICIIIC̄}) = "2s-2"
-order(::Type{VPRKLobattoIIIC̄IIIC}) = "2s-2"
-order(::Type{VPRKLobattoIIIDIIID̄}) = "2s-2"
-order(::Type{VPRKLobattoIIIEIIIĒ}) = "2s-2"
-order(::Type{VPRKLobattoIIIFIIIF̄}) = "2s"
-order(::Type{VPRKLobattoIIIF̄IIIF}) = "2s"
-order(::Type{VPRKLobattoIIIGIIIḠ}) = "2s"
+GeometricBase.order(::Type{VPRKLobattoIIIAIIIB}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIBIIIA}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIAIIIĀ}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIBIIIB̄}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIICIIIC̄}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIC̄IIIC}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIDIIID̄}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIEIIIĒ}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIFIIIF̄}) = "2s"
+GeometricBase.order(::Type{VPRKLobattoIIIF̄IIIF}) = "2s"
+GeometricBase.order(::Type{VPRKLobattoIIIGIIIḠ}) = "2s"
 
 issymplectic(::Type{VPRKGauss}) = true
 issymplectic(::Type{VPRKLobattoIII}) = false

@@ -4,6 +4,14 @@
 "Parameters for right-hand side function of Variational Partitioned Runge-Kutta methods."
 const ParametersVPRKpSecondary = AbstractParametersVPRK{:vprk_psecondary}
 
+function IntegratorCache(params::ParametersVPRKpSecondary{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
+    IntegratorCacheVPRK{DT,D,S}(2*D*S, true; kwargs...)
+end
+
+function IntegratorCache{ST}(params::ParametersVPRKpSecondary{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+    IntegratorCacheVPRK{ST,D,S}(2*D*S, true; kwargs...)
+end
+
 
 @doc raw"""
 Variational partitioned Runge-Kutta integrator with projection on secondary constraint.
@@ -70,12 +78,12 @@ VPRK methods).
 """
 struct IntegratorVPRKpSecondary{DT, TT, D, S,
                 PT <: ParametersVPRKpSecondary{DT,TT},
-                ST <: NonlinearSolver{DT},
+                ST <: NonlinearSolver,
                 IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT
-    caches::CacheDict{PT}
+    caches::OldCacheDict{PT}
 
     function IntegratorVPRKpSecondary(params::ParametersVPRKpSecondary{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
@@ -98,7 +106,7 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
         params = ParametersVPRKpSecondary{DT,D}(equations, tableau, nullvec, Δt, NamedTuple{(:R,:ω)}((R,ω)))
 
         # create cache dict
-        caches = CacheDict(params)
+        caches = OldCacheDict(params)
 
         # create solver
         solver = create_nonlinear_solver(DT, 2*D*S, params, caches)
@@ -130,14 +138,14 @@ end
 function initial_guess!(int::IntegratorVPRKpSecondary{DT}, sol::SolutionStepPDAE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
-                              sol.q, sol.p, sol.v, sol.f,
+        evaluate!(int.iguess, sol.q̄[2], sol.p̄[2], sol.v̄[2], sol.f̄[2],
+                              sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1],
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
 
         for k in eachdim(int)
-            int.solver.x[ndims(int)*(0*nstages(int)+i-1)+k] = cache.ṽ[k]
-            int.solver.x[ndims(int)*(1*nstages(int)+i-1)+k] = 0
+            cache.x[ndims(int)*(0*nstages(int)+i-1)+k] = cache.ṽ[k]
+            cache.x[ndims(int)*(1*nstages(int)+i-1)+k] = 0
         end
     end
 end
@@ -300,7 +308,7 @@ end
 "Compute stages of variational partitioned Runge-Kutta methods."
 function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpSecondary{DT,TT,D,S},
-                caches::CacheDict) where {ST,DT,TT,D,S}
+                caches::OldCacheDict) where {ST,DT,TT,D,S}
 
     # get cache for internal stages
     cache = caches[ST]
@@ -324,36 +332,36 @@ function Integrators.integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
+    
+    # reset solution
+    reset!(sol, timestep(int))
 
     # compute initial guess
     initial_guess!(int, sol, cache)
 
-    # reset solution
-    reset!(sol)
-
     # call nonlinear solver
-    solve!(int.solver)
+    solve!(cache.x, int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params)
+    # print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params)
+    # check_solver_status(int.solver.status, int.solver.params)
 
     # compute final update
-    compute_stages_vprk!(int.solver.x,
+    compute_stages_vprk!(cache.x,
                          cache.q̃, cache.ṽ, cache.p̃,
                          cache.Q, cache.V, cache.Λ,
                          cache.P, cache.F, cache.R,
                          cache.Φ, int.params)
 
     # compute unprojected solution
-    update_solution!(sol.q, sol.q̃, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
-    update_solution!(sol.p, sol.p̃, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, sol.q̄[1], cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, sol.p̄[1], cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 
     # add projection to solution
-    update_solution!(sol.q, sol.q̃, cache.Λ, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
-    update_solution!(sol.p, sol.p̃, cache.R, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, sol.q̄[1], cache.Λ, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, sol.p̄[1], cache.R, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)

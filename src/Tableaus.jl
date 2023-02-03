@@ -21,8 +21,6 @@ module Tableaus
                                                   compute_ã_vspark_primary,
                                                   compute_α_vspark_primary
 
-    export TableauGauss
-
     
     include("tableaus/coefficients_glrk.jl")
     include("tableaus/coefficients_lob.jl")
@@ -30,16 +28,16 @@ module Tableaus
 
     include("tableaus/tableaus_spark.jl")
 
-    export TableauSPARKGLRK,
-           TableauSPARKLobattoIIIAIIIB,
-           TableauSPARKLobattoIIIBIIIA,
-           TableauSPARKGLRKLobattoIIIAIIIB,
-           TableauSPARKGLRKLobattoIIIBIIIA,
-           TableauSPARKLobatto,
-           TableauSPARKLobABC,
-           TableauSPARKLobABD,
-           TableauSPARKVPRK,
-           TableauSPARKGLVPRK
+    export SPARKGLRK,
+           SPARKLobattoIIIAIIIB,
+           SPARKLobattoIIIBIIIA,
+           SPARKGLRKLobattoIIIAIIIB,
+           SPARKGLRKLobattoIIIBIIIA,
+           SPARKLobatto,
+           SPARKLobABC,
+           SPARKLobABD,
+           SPARKVPRK,
+           SPARKGLVPRK
 
     export TableauSymplecticProjection,
            TableauLobattoIIIAIIIBpSymplectic,
@@ -137,12 +135,12 @@ module Tableaus
 
     include("tableaus/tableaus_hspark_secondary.jl")
 
-    export TableauSLRKLobattoIIIAB,
-           TableauSLRKLobattoIIIBA,
-           TableauSLRKLobattoIIICC̄,
-           TableauSLRKLobattoIIIC̄C,
-           TableauSLRKLobattoIIID,
-           TableauSLRKLobattoIIIE
+    export SLRKLobattoIIIAB,
+           SLRKLobattoIIIBA,
+           SLRKLobattoIIICC̄,
+           SLRKLobattoIIIC̄C,
+           SLRKLobattoIIID,
+           SLRKLobattoIIIE
 
     include("tableaus/tableaus_slrk.jl")
 

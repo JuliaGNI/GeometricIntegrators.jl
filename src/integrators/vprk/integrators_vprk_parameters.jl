@@ -28,8 +28,8 @@ end
 
 @inline equation(int::AbstractIntegratorVPRK, i::Symbol) = parameters(int).equ[i]
 @inline equations(int::AbstractIntegratorVPRK) = parameters(int).equ
-@inline timestep(int::AbstractIntegratorVPRK) = parameters(int).Δt
-@inline tableau(int::AbstractIntegratorVPRK) = parameters(int).tab
+@inline GeometricBase.timestep(int::AbstractIntegratorVPRK) = parameters(int).Δt
+@inline GeometricBase.tableau(int::AbstractIntegratorVPRK) = parameters(int).tab
 
 
 function Integrators.IntegratorCache{ST}(params::AbstractParametersVPRK{IT,DT,TT,D,S}; kwargs...) where {IT,ST,DT,TT,D,S}

@@ -19,7 +19,7 @@ module VPRK
 
     import ..Integrators: IODEIntegrator, IODEIntegratorCache, InitialGuessIODE,
                           AbstractIntegratorIRK, AbstractIntegratorPRK
-    import ..Integrators: IntegratorCache, CacheDict, CacheType, Parameters
+    import ..Integrators: IntegratorCache, OldCacheDict, CacheType, Parameters
     import ..Integrators: AbstractCoefficients, CoefficientsPGLRK,
                           @CoefficientsRK, @HeaderTableau, @HeaderCoefficientsRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,

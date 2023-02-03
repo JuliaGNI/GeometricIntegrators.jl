@@ -123,7 +123,7 @@ end
 struct IntegratorDGVIP1{DT, TT, D, S, R,
                 BT <: Basis,
                 PT <: ParametersDGVIP1{DT,TT,D,S},
-                ST <: NonlinearSolver{DT},
+                ST <: NonlinearSolver,
                 IT <: InitialGuessODE{TT}} <: IODEIntegrator{DT,TT}
     basis::BT
     quadrature::QuadratureRule{TT,R}

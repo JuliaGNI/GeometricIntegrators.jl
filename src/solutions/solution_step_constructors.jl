@@ -50,11 +50,11 @@ function SolutionStep(solution::SolutionPDAE; kwargs...)
 end
 
 function SolutionStep(problem::GeometricProblem, method::GeometricMethod, extrap::Extrapolation = default_extrapolation())
-    SolutionStep(problem, extrap; internal=internal(method))
+    SolutionStep(problem, extrap; internal=internal_variables(method))
 end
 
 function SolutionStep(solution::AbstractSolution, method::GeometricMethod)
-    SolutionStep(solution; internal=internal(method))
+    SolutionStep(solution; internal=internal_variables(method))
 end
 
 # Print error for SolutionSteps of problem types not implemented, yet.

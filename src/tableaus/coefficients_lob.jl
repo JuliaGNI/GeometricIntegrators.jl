@@ -11,7 +11,7 @@ The projective Lobatto-GLRK coefficients are implicitly given by
 ```
 where $c$ are Gauß-Legendre nodes with $s$ stages and $\bar{c}$ are Gauß-Lobatto nodes with $\sigma$ stages.
 """
-function get_lobatto_glrk_coefficients(s, σ=s+1, T=Float64)
+function lobatto_gauss_coefficients(s, σ=s+1, T=Float64)
     if σ == 1
         @error "Lobatto III coefficients for one stage are not defined."
     end
@@ -32,7 +32,7 @@ function get_lobatto_glrk_coefficients(s, σ=s+1, T=Float64)
 end
 
 
-function get_lobatto_ω_matrix(s)
+function lobatto_ω_matrix(s)
     as = TableauLobattoIIIA(s).a[2:s,1:s]
     es = zeros(s)
     es[s] = 1

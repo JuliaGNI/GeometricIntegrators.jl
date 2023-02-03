@@ -28,7 +28,7 @@ GeometricBase.timestep(int::IntegratorExplicitEuler) = int.Δt
 
 
 function integrate_step!(int::IntegratorExplicitEuler{DT,TT,AT}, sol::SolutionStepODE{DT,TT,AT}) where {DT,TT,AT}
-    # reset atomic solution
+    # reset solution step
     reset!(sol)
 
     # compute vector field

@@ -27,6 +27,8 @@ Cache of a Specialised Partitioned Additive Runge-Kutta integrator.
 * `Z`: vector field of internal stages of p
 """
 mutable struct IntegratorCacheSPARK{ST,D,S,R} <: IDAEIntegratorCache{ST,D}
+    x::Vector{ST}
+
     q::Vector{ST}
     q̄::Vector{ST}
     p::Vector{ST}
@@ -79,13 +81,17 @@ mutable struct IntegratorCacheSPARK{ST,D,S,R} <: IDAEIntegratorCache{ST,D}
     Φp::Vector{Vector{ST}}
     Ψp::Vector{Vector{ST}}
 
-    function IntegratorCacheSPARK{ST,D,S,R}() where {ST,D,S,R}
+    function IntegratorCacheSPARK{ST,D,S,R}(N) where {ST,D,S,R}
+        # nonlinear solver vector
+        x = zeros(ST,N)
+
+        # create temporary solution vectors
         q = zeros(ST,D)
         q̄ = zeros(ST,D)
         p = zeros(ST,D)
         p̄ = zeros(ST,D)
         λ = zeros(ST,D)
-        λ̄= zeros(ST,D)
+        λ̄ = zeros(ST,D)
         μ = zeros(ST,D)
         μ̅ = zeros(ST,D)
 
@@ -135,7 +141,8 @@ mutable struct IntegratorCacheSPARK{ST,D,S,R} <: IDAEIntegratorCache{ST,D}
         Φp = create_internal_stage_vector(ST, D, R)
         Ψp = create_internal_stage_vector(ST, D, R)
 
-        new(q, q̄, p, p̄, λ, λ̄, μ, μ̅,
+        new(x,
+            q, q̄, p, p̄, λ, λ̄, μ, μ̅,
             v, v̄, f, f̄, u, ū, g, ḡ, ϕ, ϕ̅,
             q̃, p̃, ṽ, f̃, ϕ̃, s̃,
             Qi, Pi, Vi, Fi, Gi, Hi, Yi, Zi, Φi, Ψi,
@@ -143,18 +150,35 @@ mutable struct IntegratorCacheSPARK{ST,D,S,R} <: IDAEIntegratorCache{ST,D}
     end
 end
 
-function IntegratorCache(int::AbstractIntegratorSPARK{DT,TT}) where {DT,TT}
-    IntegratorCacheSPARK{DT, ndims(int), nstages(int), pstages(int)}()
-end
+# function IntegratorCache(int::AbstractIntegratorSPARK{DT,TT}) where {DT,TT}
+#     IntegratorCacheSPARK{DT, ndims(problem), nstages(method), pstages(method)}()
+# end
 
 function GeometricBase.reset!(cache::IntegratorCacheSPARK)
     cache.t̄  = cache.t
     cache.q̄ .= cache.q
     cache.p̄ .= cache.p
-    cache.λ̄.= cache.λ
+    cache.λ̄ .= cache.λ
     cache.v̄ .= cache.v
     cache.f̄ .= cache.f
     cache.ū .= cache.u
     cache.ḡ .= cache.g
     cache.ϕ̅ .= cache.ϕ
 end
+
+
+function Cache{ST}(problem::AbstractSPARKProblem, method::AbstractSPARKMethod; kwargs...) where {ST}
+    D = ndims(problem)
+    S = nstages(method)
+    R = pstages(method)
+    N = nonlinearsolversize(problem, method)
+
+    if hasnullvector(method)
+        N += D
+    end
+
+    IntegratorCacheSPARK{ST,D,S,R}(N; kwargs...)
+end
+
+
+@inline CacheType(ST, problem::AbstractSPARKProblem, method::AbstractSPARKMethod) = IntegratorCacheSPARK{ST, ndims(problem), nstages(method), pstages(method)}

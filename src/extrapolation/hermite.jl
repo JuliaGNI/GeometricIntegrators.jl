@@ -124,6 +124,11 @@ function extrapolate!(t₀::TT, x₀::AbstractArray{DT}, ẋ₀::AbstractArray{D
                       t₁::TT, x₁::AbstractArray{DT}, ẋ₁::AbstractArray{DT},
                       tᵢ::TT, xᵢ::AbstractArray{DT},
                       ::HermiteExtrapolation) where {DT,TT}
+
+    if t₀ == t₁
+        @error "t₀ and t₁ in Hermite extrapolation are identical!"
+    end
+                
     local a₀::TT
     local a₁::TT
     local b₀::TT
@@ -151,6 +156,11 @@ function extrapolate!(t₀::TT, x₀::AbstractArray{DT}, ẋ₀::AbstractArray{D
                       t₁::TT, x₁::AbstractArray{DT}, ẋ₁::AbstractArray{DT},
                       tᵢ::TT, xᵢ::AbstractArray{DT}, ẋᵢ::AbstractArray{DT},
                       extrap::HermiteExtrapolation) where {DT,TT}
+
+    if t₀ == t₁
+        @error "t₀ and t₁ in Hermite extrapolation are identical!"
+    end
+                                
     local a₀::TT
     local a₁::TT
     local b₀::TT

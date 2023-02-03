@@ -1,5 +1,5 @@
 
-function getTableauHSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
+function getTableauHSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=nothing)
     # α_q_1 and α_p_2 need to be conjugate symplectic
     # α_q_1 and α_p_3 need to be conjugate symplectic
     # α_q_2 and α_p_2 need to be conjugate symplectic
@@ -88,13 +88,13 @@ function getTableauHSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
     coeff_q̃ = CoefficientsSPARK(tsym, o, σ, s, α_q, β_q, γ_q)
     coeff_p̃ = CoefficientsSPARK(tsym, o, σ, s, α_p, β_p, γ_p)
 
-    TableauHSPARKsecondary(tsym, o, s, σ, coeff_q, coeff_p, coeff_q̃, coeff_p̃, ω, d)
+    HSPARKsecondary(tsym, o, s, σ, coeff_q, coeff_p, coeff_q̃, coeff_p̃, ω, d)
 end
 
 
 function TableauHSPARKLobattoIII(s, lq, lp; name = Symbol("HSPARKLobattoIII"))
     o = 2s-2
-    getTableauHSPARK(s, s, o, name, lq, lp, lq, lp, get_lobatto_ω_matrix(s), get_lobatto_nullvector(s))
+    getTableauHSPARK(s, s, o, name, lq, lp, lq, lp, lobatto_ω_matrix(s), get_lobatto_nullvector(s))
 end
 
 function TableauHSPARKLobattoIIIAB(s)
@@ -135,7 +135,7 @@ end
 function TableauHSPARKGLRKLobattoIII(s, σ, lq, lp; name = Symbol("HSPARKGLRKLobattoIII"))
     o = 2s
     g = TableauGauss(s)
-    getTableauHSPARK(s, σ, o, name, g, get_lobatto_glrk_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_nullvector(σ))
+    getTableauHSPARK(s, σ, o, name, g, lobatto_gauss_coefficients(s, σ), lq, lp, gauss_ω_matrix(σ), get_lobatto_nullvector(σ))
 end
 
 function TableauHSPARKGLRKLobattoIIIAB(s, σ=s+1)

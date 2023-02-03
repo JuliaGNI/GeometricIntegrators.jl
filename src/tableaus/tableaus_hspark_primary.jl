@@ -1,5 +1,5 @@
 
-function TableauHSPARKSymmetricProjection(name, q::Tableau{T}, p::Tableau{T}, d=[]; R∞=1) where {T}
+function TableauHSPARKSymmetricProjection(name, q::Tableau{T}, p::Tableau{T}, d=nothing; R∞=1) where {T}
 
     @assert q.s == p.s
 
@@ -36,34 +36,22 @@ function TableauHSPARKSymmetricProjection(name, q::Tableau{T}, p::Tableau{T}, d=
     δ_λ = reshape(T[-1   R∞], (1,2))
 
 
-    if length(d) == 0
-        return TableauHSPARKprimary(name, o,
-                            a_q, a_p, α_q, α_p,
-                            a_q̃, a_p̃, α_q̃, α_p̃,
-                            b_q, b_p, β_q, β_p,
-                            c_q, c_p, c_λ, d_λ,
-                            ω_λ, δ_λ)
-    else
-        @assert length(d) == q.s == p.s
-
-        return TableauHSPARKprimary(name, o,
-                            a_q, a_p, α_q, α_p,
-                            a_q̃, a_p̃, α_q̃, α_p̃,
-                            b_q, b_p, β_q, β_p,
-                            c_q, c_p, c_λ, d_λ,
-                            ω_λ, δ_λ, d)
-    end
-
+    return HSPARKprimary(TableauHSPARKprimary(name, o,
+                        a_q, a_p, α_q, α_p,
+                        a_q̃, a_p̃, α_q̃, α_p̃,
+                        b_q, b_p, β_q, β_p,
+                        c_q, c_p, c_λ, d_λ,
+                        ω_λ, δ_λ, d))
 end
 
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and symmetric projection."
 function TableauHSPARKLobattoIIIAIIIBpSymmetric(s)
-    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobattoIIIAIIIB($s)pSymmetric"), TableauLobattoIIIA(s), TableauLobattoIIIB(s), get_lobatto_nullvector(s))
+    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobattoIIIAIIIB($s)pSymmetric"), TableauLobattoIIIA(s), TableauLobattoIIIĀ(s))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and symmetric projection."
 function TableauHSPARKLobattoIIIBIIIApSymmetric(s)
-    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobattoIIIBIIIA($s)pSymmetric"), TableauLobattoIIIB(s), TableauLobattoIIIA(s), get_lobatto_nullvector(s))
+    TableauHSPARKSymmetricProjection(Symbol("HSPARKLobattoIIIBIIIA($s)pSymmetric"), TableauLobattoIIIB(s), TableauLobattoIIIB̄(s))
 end
 
 "Tableau for Gauss-Legendre method with s stages and symplectic projection."

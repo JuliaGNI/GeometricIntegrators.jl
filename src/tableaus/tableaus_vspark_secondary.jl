@@ -72,13 +72,13 @@ function getTableauVSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
     coeff_q̃ = CoefficientsSPARK(tsym, o, σ, s, α_q, β_q, γ_q)
     coeff_p̃ = CoefficientsSPARK(tsym, o, σ, s, α_p, β_p, γ_p)
 
-    TableauVSPARKsecondary(tsym, o, s, σ, coeff_q, coeff_p, coeff_q̃, coeff_p̃, ω, d)
+    VSPARKsecondary(tsym, o, s, σ, coeff_q, coeff_p, coeff_q̃, coeff_p̃, ω, d)
 end
 
 
 function TableauVSPARKLobattoIII(s, lq, lp; name = Symbol("VSPARKLobattoIII"))
     o = 2s-2
-    getTableauVSPARK(s, s, o, name, lq, lp, lq, lp, get_lobatto_ω_matrix(s), get_lobatto_nullvector(s))
+    getTableauVSPARK(s, s, o, name, lq, lp, lq, lp, lobatto_ω_matrix(s), get_lobatto_nullvector(s))
 end
 
 function TableauVSPARKLobattoIIIAB(s)
@@ -119,7 +119,7 @@ end
 function TableauVSPARKGLRKLobattoIII(s, σ, lq, lp; name = Symbol("VSPARKGLRKLobattoIII"))
     o = 2s
     g = TableauGauss(s)
-    getTableauVSPARK(s, σ, o, name, g, get_lobatto_glrk_coefficients(s, σ), lq, lp, get_GLRK_ω_matrix(σ), get_lobatto_nullvector(σ))
+    getTableauVSPARK(s, σ, o, name, g, lobatto_gauss_coefficients(s, σ), lq, lp, gauss_ω_matrix(σ), get_lobatto_nullvector(σ))
 end
 
 function TableauVSPARKGLRKLobattoIIIAB(s, σ=s+1)

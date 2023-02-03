@@ -1,7 +1,10 @@
 
 meta_methods = (
-    RK,
-    PRK,
+    ERK,
+    IRK,
+    DIRK,
+    EPRK,
+    IPRK,
     FLRK,
     VPRK,
     DegenerateVPRK,
@@ -73,7 +76,13 @@ runge_kutta_families = (
     RadauIIB,
 )
 
+partitioned_runge_kutta_methods = (
+    SymplecticEulerA,
+    SymplecticEulerB,
+)
+
 partitioned_runge_kutta_families = (
+    PartitionedGauss,
     LobattoIIIAIIIB,
     LobattoIIIBIIIA,
     LobattoIIIAIIIĀ,
@@ -119,25 +128,27 @@ degenerate_variational_integrators = (
     DVIB,
     CMDVI,
     CTDVI,
+    DVRK,
 )
 
 splitting_methods = (
-    LieA,
-    LieB,
-    Strang,
-    Marchuk,
-    StrangA,
-    StrangB,
-    McLachlan2,
-    McLachlan4,
-    TripleJump,
-    SuzukiFractal,
+    # LieA,
+    # LieB,
+    # Strang,
+    # Marchuk,
+    # StrangA,
+    # StrangB,
+    # McLachlan2,
+    # McLachlan4,
+    # TripleJump,
+    # SuzukiFractal,
 )
 
 method_groups = (
     meta_methods,
     runge_kutta_methods,
     runge_kutta_families,
+    partitioned_runge_kutta_methods,
     partitioned_runge_kutta_families,
     variational_partitioned_runge_kutta_families,
     degenerate_variational_integrators,
@@ -154,6 +165,20 @@ for m in nameof.(methods)
     @eval export $m
 end
 
+# projection methods
+
+export ProjectionMethod
+
+export InternalStageProjection
+export LegendreProjection
+export MidpointProjection
+export SecondaryProjection
+export StandardProjection
+export SymmetricProjection
+export SymplecticProjection
+export VariationalProjection
+export VariationalProjectionOnP
+export VariationalProjectionOnQ
 
 # degenerate VPRK methods
 

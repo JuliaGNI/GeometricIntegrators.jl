@@ -1,45 +1,41 @@
 
-function getTableauSLRK(s, o, tsym, q, p, q̃, p̃, ω, d=Nothing)
-    TableauSLRK(tsym, o, s, q, p, q̃, p̃, ω, d)
-end
-
-
-function TableauSLRKLobattoIII(s, q, p)
+function SLRKLobattoIII(tsym, s, q, p)
     o = 2s-2
-    tsym = Symbol("SLRKLobattoIII")
-    getTableauSLRK(s, o, tsym, q, p, q, p, get_lobatto_ω_matrix(s), get_lobatto_nullvector(s))
+    SLRK(tsym, o, s, q, p, q, p, lobatto_ω_matrix(s), get_lobatto_nullvector(s))
 end
 
-function TableauSLRKLobattoIIIAB(s)
+function SLRKLobattoIIIAB(s)
     q = TableauLobattoIIIA(s)
-    p = TableauLobattoIIIB(s)
-    TableauSLRKLobattoIII(s, q, p)
+    p = TableauLobattoIIIĀ(s)
+    SLRKLobattoIII(Symbol("SLRKLobattoIIIAIIIĀ"), s, q, p)
 end
 
-function TableauSLRKLobattoIIIBA(s)
+function SLRKLobattoIIIBA(s)
     q = TableauLobattoIIIB(s)
-    p = TableauLobattoIIIA(s)
-    TableauSLRKLobattoIII(s, q, p)
+    p = TableauLobattoIIIB̄(s)
+    SLRKLobattoIII(Symbol("SLRKLobattoIIIBIIIB̄"), s, q, p)
 end
 
-function TableauSLRKLobattoIIICC̄(s)
+function SLRKLobattoIIICC̄(s)
     q = TableauLobattoIIIC(s)
     p = TableauLobattoIIIC̄(s)
-    TableauSLRKLobattoIII(s, q, p)
+    SLRKLobattoIII(Symbol("SLRKLobattoIIICIIIC̄"), s, q, p)
 end
 
-function TableauSLRKLobattoIIIC̄C(s)
+function SLRKLobattoIIIC̄C(s)
     q = TableauLobattoIIIC̄(s)
     p = TableauLobattoIIIC(s)
-    TableauSLRKLobattoIII(s, q, p)
+    SLRKLobattoIII(Symbol("SLRKLobattoIIICIIIC̄"), s, q, p)
 end
 
-function TableauSLRKLobattoIIID(s)
-    l = TableauLobattoIIID(s)
-    TableauSLRKLobattoIII(s, l, l)
+function SLRKLobattoIIID(s)
+    q = TableauLobattoIIID(s)
+    p = TableauLobattoIIID̄(s)
+    SLRKLobattoIII(Symbol("SLRKLobattoIIID"), s, q, p)
 end
 
-function TableauSLRKLobattoIIIE(s)
-    l = TableauLobattoIIIE(s)
-    TableauSLRKLobattoIII(s, l, l)
+function SLRKLobattoIIIE(s)
+    q = TableauLobattoIIIE(s)
+    p = TableauLobattoIIIĒ(s)
+    SLRKLobattoIII(Symbol("SLRKLobattoIIIE"), s, q, p)
 end

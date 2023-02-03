@@ -5,18 +5,24 @@ module SPARK
     using RungeKutta
     using SimpleSolvers
 
-    import RungeKutta: AbstractTableau
+    import RungeKutta: AbstractTableau, nstages, eachstage
 
     using ..GeometricBase
     using ..GeometricEquations
     using ..Config
 
+    using ..Methods
+
+    import ..Methods: tableau
+
     import ..Solutions: SolutionStepPDAE, SolutionVector, update!
 
     import ..Integrators
 
-    import ..Integrators: PDAEIntegrator, InitialGuessIODE, InitialGuessPODE, Parameters
-    import ..Integrators: IDAEIntegratorCache, IntegratorCache, CacheDict, CacheType
+    import ..Integrators: Integrator, PDAEIntegrator, Parameters, Newton
+    import ..Integrators: InitialGuess, InitialGuessIODE, InitialGuessPODE, Extrapolation, HermiteExtrapolation
+    import ..Integrators: initialguess!, initial_guess!, integrate_step!, function_stages!
+    import ..Integrators: IDAEIntegratorCache, IntegratorCache, OldCacheDict, CacheDict, Cache, CacheType
     import ..Integrators: AbstractCoefficients,
                           @CoefficientsRK, @HeaderCoefficientsRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
@@ -34,20 +40,20 @@ module SPARK
     export AbstractIntegratorSPARK
     export AbstractTableauSPARK, TableauSPARK
 
-    export IntegratorSPARK, TableauSPARK
+    export SPARKMethod, IntegratorSPARK, TableauSPARK
 
-    export IntegratorHPARK, TableauHPARK
-    export IntegratorVPARK, TableauVPARK
+    export HPARK, IntegratorHPARK, TableauHPARK
+    export VPARK, IntegratorVPARK, TableauVPARK
 
-    export IntegratorHSPARK, TableauHSPARK
-    export IntegratorHSPARKprimary, TableauHSPARKprimary
-    export IntegratorHSPARKsecondary, TableauHSPARKsecondary
+    export HSPARK, IntegratorHSPARK, TableauHSPARK
+    export HSPARKprimary, IntegratorHSPARKprimary, TableauHSPARKprimary
+    export HSPARKsecondary, IntegratorHSPARKsecondary, TableauHSPARKsecondary
 
-    export IntegratorVSPARK, TableauVSPARK
-    export IntegratorVSPARKprimary, TableauVSPARKprimary
-    export IntegratorVSPARKsecondary, TableauVSPARKsecondary
+    export VSPARK, IntegratorVSPARK, TableauVSPARK
+    export VSPARKprimary, IntegratorVSPARKprimary, TableauVSPARKprimary
+    export VSPARKsecondary, IntegratorVSPARKsecondary, TableauVSPARKsecondary
 
-    export IntegratorSLRK, TableauSLRK
+    export IntegratorSLRK, SLRK
 
 
     include("spark/abstract_integrator_spark.jl")
@@ -56,7 +62,6 @@ module SPARK
     include("spark/integrators_spark_cache.jl")
     include("spark/integrators_spark_common.jl")
     include("spark/integrators_spark_tableau.jl")
-    include("spark/integrators_spark_parameters.jl")
 
     include("spark/integrators_spark.jl")
     

@@ -1,5 +1,5 @@
 
-function get_GLRK_ω_matrix(s)
+function gauss_ω_matrix(s)
     ω = zeros(s, s+1)
     g = TableauGauss(s)
     ω[s,s+1] = 1

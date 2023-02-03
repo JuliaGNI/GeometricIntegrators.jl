@@ -1,22 +1,3 @@
-
-import ForwardDiff
-
-"Parameters for right-hand side function of degenerate variational integrator."
-mutable struct ParametersCMDVI{DT, TT, D, ET <: NamedTuple} <: Parameters{DT,TT}
-    equs::ET
-    Δt::TT
-
-    t::TT
-    q::Vector{DT}
-    v::Vector{DT}
-    θ::Vector{DT}
-
-    function ParametersCMDVI{DT,D}(equs::ET, Δt::TT) where {DT, TT, D, ET <: NamedTuple}
-        new{DT, TT, D, ET}(equs, Δt, zero(TT), zeros(DT,D), zeros(DT,D), zeros(DT,D))
-    end
-end
-
-
 @doc raw"""
 Degenerate variational integrator cache.
 
@@ -27,197 +8,170 @@ Degenerate variational integrator cache.
 * `Θ`: implicit function evaluated on solution
 * `f`: vector field of implicit function
 """
-struct IntegratorCacheCMDVI{DT,D,S} <: ODEIntegratorCache{DT,D}
+struct IntegratorCacheCMDVI{DT,D} <: ODEIntegratorCache{DT,D}
+    x::Vector{DT}
+
     q::Vector{DT}
     v::Vector{DT}
     θ::Vector{DT}
+    f::Vector{DT}
 
     q̄::Vector{DT}
     θ̄::Vector{DT}
     f̄::Vector{DT}
 
-    function IntegratorCacheCMDVI{DT,D,S}() where {DT,D,S}
-        new(zeros(DT,D), zeros(DT,D), zeros(DT,D),
+    function IntegratorCacheCMDVI{DT,D}() where {DT,D}
+        new(zeros(DT,2D), 
+            zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D),
             zeros(DT,D), zeros(DT,D), zeros(DT,D))
     end
 end
 
-function IntegratorCache{ST}(params::ParametersCMDVI{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
-    IntegratorCacheCMDVI{ST,D,S}(; kwargs...)
+function Cache{ST}(problem::Union{IODEProblem,LODEProblem}, method::CMDVI; kwargs...) where {ST}
+    IntegratorCacheCMDVI{ST, ndims(problem)}(; kwargs...)
 end
 
-@inline CacheType(ST, ::ParametersCMDVI{DT,TT,D,S}) where {DT,TT,D,S} = IntegratorCacheCMDVI{ST,D,S}
+@inline CacheType(ST, problem::Union{IODEProblem,LODEProblem}, method::CMDVI) = IntegratorCacheCMDVI{ST, ndims(problem)}
 
 
 """
 Midpoint Degenerate Variational Integrator.
 """
-struct IntegratorCMDVI{DT, TT, D, PT <: ParametersCMDVI{DT,TT},
-                                   ST <: NonlinearSolver{DT},
-                                   IT <: InitialGuessIODE{TT}} <: AbstractIntegratorRK{DT,TT}
-    params::PT
-    solver::ST
-    iguess::IT
-    caches::CacheDict{PT}
+const IntegratorCMDVI{DT,TT} = Integrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:CMDVI}
 
-    function IntegratorCMDVI(params::ParametersCMDVI{DT,TT,D}, solver::ST, iguess::IT, caches) where {DT,TT,D,ST,IT}
-        new{DT, TT, D, typeof(params), ST, IT}(params, solver, iguess, caches)
-    end
 
-    function IntegratorCMDVI{DT,D}(equations::NamedTuple, Δt::TT) where {DT,TT,D}
-        # create params
-        params = ParametersCMDVI{DT,D}(equations, Δt)
+default_solver(::CMDVI) = Newton()
+default_iguess(::CMDVI) = HermiteExtrapolation()
 
-        # create cache dict
-        caches = CacheDict(params)
 
-        # create solver
-        solver = create_nonlinear_solver(DT, 2D, params, caches)
+function initsolver(::Newton, solstep::SolutionStepPODE{DT}, problem::Union{IODEProblem,LODEProblem}, method::CMDVI, caches::CacheDict) where {DT}
+    # create wrapper function f!(b,x)
+    f! = (b,x) -> function_stages!(b, x, solstep, problem, method, caches)
 
-        # create initial guess
-        iguess = InitialGuessIODE(get_config(:ig_extrapolation), equations[:v̄], equations[:f̄], Δt)
-
-        # create integrator
-        IntegratorCMDVI(params, solver, iguess, caches)
-    end
-
-    function IntegratorCMDVI(problem::Union{IODEProblem{DT}, LODEProblem{DT}}; kwargs...) where {DT}
-        IntegratorCMDVI{DT, ndims(problem)}(functions(problem), timestep(problem); kwargs...)
-    end
+    # create nonlinear solver
+    NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
 end
-
-
-@inline Base.ndims(::IntegratorCMDVI{DT,TT,D}) where {DT,TT,D} = D
 
 
 function Base.show(io::IO, int::IntegratorCMDVI)
     print(io, "\nMidpoint Degenerate Variational Integrator with:\n")
-    print(io, "   Timestep: $(int.params.Δt)\n")
-    # print(io, reference(int.params.tab))
+    print(io, "   Timestep: $(timestep(int))\n")
 end
 
 
-function initialize!(int::IntegratorCMDVI, sol::SolutionStepPODE)
-    sol.t̄ = sol.t - timestep(int)
+function initial_guess!(
+    solstep::SolutionStepPODE{DT}, 
+    problem::Union{IODEProblem,LODEProblem},
+    method::CMDVI, 
+    caches::CacheDict, 
+    ::NonlinearSolver, 
+    iguess::Union{InitialGuess,Extrapolation}) where {DT}
 
-    equation(int, :v̄)(sol.v, sol.t, sol.q)
-    equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
-    equation(int, :ϑ)(sol.p, sol.t, sol.q, sol.v)
+    # get cache and dimension
+    cache = caches[DT]
+    D = ndims(problem)
 
-    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
-                            sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
-end
+    # compute initial guess for solution q(n+1)
+    initialguess!(solstep.t, cache.q, cache.θ, cache.v, cache.f, solstep, problem, iguess)
 
+    cache.x[1:D] .= cache.q
 
-function update_params!(int::IntegratorCMDVI, sol::SolutionStepPODE)
-    # set time for nonlinear solver and copy previous solution
-    int.params.t  = sol.t
-    int.params.q .= sol.q
-    int.params.v .= sol.v
-    equations(int)[:ϑ](int.params.θ, sol.t, sol.q, sol.v)
-end
-
-
-function initial_guess!(int::IntegratorCMDVI{DT,TT,D}, sol::SolutionStepPODE{DT,TT},
-                        cache::IntegratorCacheCMDVI{DT}=int.caches[DT]) where {DT,TT,D}
-
-    # compute initial guess for solution
-    evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
-                          sol.q, sol.p, sol.v, sol.f,
-                          cache.q, cache.v, one(TT))
-
-    int.solver.x[1:D] .= cache.q                           # q(n+1)
-
-    # compute initial guess for solution
-    evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
-                          sol.q, sol.p, sol.v, sol.f,
-                          cache.q, cache.v, one(TT)/2)
+    # compute initial guess for solution q(n+1/2)
+    initialguess!((solstep.t + solstep.t̄[1])/2, cache.q, cache.θ, cache.v, cache.f, solstep, problem, iguess)
 
     offset_v = D
     offset_x = D + div(D,2)
     for k in 1:div(D,2)
-        int.solver.x[offset_v+k] = cache.v[k]              # v¹(n+1/2)
-        int.solver.x[offset_x+k] = cache.q[div(D,2)+k]     # q²(n+1/2)
+        cache.x[offset_v+k] = cache.v[k]              # v¹(n+1/2)
+        cache.x[offset_x+k] = cache.q[div(D,2)+k]     # q²(n+1/2)
     end
 end
 
 
-function compute_stages!(x::Vector{ST}, q::Vector{ST}, v::Vector{ST}, θ::Vector{ST},
-                                        q̄::Vector{ST}, θ̄::Vector{ST}, f̄::Vector{ST},
-                                        params::ParametersCMDVI{DT,TT,D}) where {ST,DT,TT,D}
+function compute_stages!(
+    x::Vector{ST},
+    solstep::SolutionStepPODE{DT,TT},
+    problem::Union{IODEProblem,LODEProblem},
+    method::CMDVI,
+    caches::CacheDict) where {ST,DT,TT}
+
+    # get cache and dimension
+    cache = caches[ST]
+    D = ndims(problem)
 
     # set some local variables for convenience and clarity
-    local t⁻ = params.t
-    local t̄  = params.t + params.Δt / 2
-    local t⁺ = params.t + params.Δt
+    local t̄  = solstep.t̄[1] + timestep(problem) / 2
+    local t⁺ = solstep.t̄[1] + timestep(problem)
     
     # copy x to q
-    q .= x[1:D]
+    cache.q .= x[1:D]
 
     # copy x to q⁻, q⁺ and v
     for k in 1:div(D,2)
-        q̄[k] = (params.q[k] + q[k]) / 2
-        q̄[div(D,2)+k] = x[D+div(D,2)+k]
+        cache.q̄[k] = (solstep.q̄[1][k] + cache.q[k]) / 2
+        cache.q̄[div(D,2)+k] = x[D+div(D,2)+k]
 
-        v[k]          = x[D+k]
-        v[div(D,2)+k] = 0
+        cache.v[k]          = x[D+k]
+        cache.v[div(D,2)+k] = 0
     end
 
     # compute f = f(q,v)
-    params.equs[:f](f̄, t̄, q̄, v)
+    functions(problem).f(cache.f̄, t̄, cache.q̄, cache.v)
  
     # compute Θ = ϑ(q,v)
-    params.equs[:ϑ](θ̄, t̄, q̄, v)
-    params.equs[:ϑ](θ, t⁺, q, v)
+    functions(problem).ϑ(cache.θ̄, t̄,  cache.q̄, cache.v)
+    functions(problem).ϑ(cache.θ, t⁺, cache.q, cache.v)
 end
 
 
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersCMDVI{DT,TT,D},
-                          caches::CacheDict) where {ST,DT,TT,D}
+function function_stages!(
+    b::Vector{ST},
+    x::Vector{ST},
+    solstep::SolutionStepPODE,
+    problem::Union{IODEProblem,LODEProblem},
+    method::CMDVI,
+    caches::CacheDict) where {ST}
+
     # get cache for internal stages
     cache = caches[ST]
+    D = ndims(problem)
 
     # compute stages from nonlinear solver solution x
-    compute_stages!(x, cache.q, cache.v, cache.θ, cache.q̄, cache.θ̄, cache.f̄, params)
+    compute_stages!(x, solstep, problem, method, caches)
 
     # compute b
-    b[1:D] .= cache.θ̄  .- params.θ .- params.Δt .* cache.f̄ ./ 2
+    b[1:D] .= cache.θ̄ .- solstep.p̄[1] .- timestep(problem) .* cache.f̄ ./ 2
     
     for k in 1:div(D,2)
-        b[D+k] = cache.q[k] - params.q[k] - params.Δt * cache.v[k]
-        b[D+div(D,2)+k] = cache.θ[k] - params.θ[k] - params.Δt * cache.f̄[k]
+        b[D+k]          = cache.q[k] - solstep.q̄[1][k] - timestep(problem) * cache.v[k]
+        b[D+div(D,2)+k] = cache.θ[k] - solstep.p̄[1][k] - timestep(problem) * cache.f̄[k]
     end
 end
 
 
-function integrate_step!(int::IntegratorCMDVI{DT,TT}, sol::SolutionStepPODE{DT,TT},
-                         cache::IntegratorCacheCMDVI{DT}=int.caches[DT]) where {DT,TT}
-
-    # update nonlinear solver parameters from atomic solution
-    update_params!(int, sol)
-
-    # compute initial guess
-    initial_guess!(int, sol, cache)
-
-    # reset atomic solution
-    reset!(sol)
+function integrate_step!(
+    solstep::SolutionStepPODE{DT,TT},
+    problem::Union{IODEProblem{DT,TT},LODEProblem{DT,TT}},
+    method::CMDVI,
+    caches::CacheDict,
+    solver::NonlinearSolver) where {DT,TT}
 
     # call nonlinear solver
-    solve!(int.solver)
+    solve!(caches[DT].x, solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params)
+    # print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params)
+    # check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector field at internal stages
-    compute_stages!(int.solver.x, cache.q, cache.v, cache.θ, cache.q̄, cache.θ̄, cache.f̄, int.params)
+    compute_stages!(caches[DT].x, solstep, problem, method, caches)
 
     # compute final update
-    sol.q .= cache.q
-    sol.p .= cache.θ
+    solstep.q .= caches[DT].q
+    solstep.p .= caches[DT].θ
 
-    # copy solution to initial guess
-    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
+    # update vector field for initial guess
+    update_vector_fields!(solstep, problem)
 end

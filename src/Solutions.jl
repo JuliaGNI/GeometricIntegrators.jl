@@ -14,6 +14,7 @@ using GeometricEquations
 using ..Extrapolators
 
 import ..Methods: GeometricMethod
+import ..Methods: internal_variables
 
 export DEFAULT_NSAVE, DEFAULT_NWRITE
 
@@ -31,7 +32,7 @@ export SolutionStep,
        SolutionStepODE, SolutionStepPODE,
        SolutionStepDAE, SolutionStepPDAE
 
-export update!, cut_periodic_solution!
+export update!, update_vector_fields!, cut_periodic_solution!
 
 include("solutions/solution_step.jl")
 include("solutions/solution.jl")
