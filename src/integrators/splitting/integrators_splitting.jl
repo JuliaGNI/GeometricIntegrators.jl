@@ -42,17 +42,17 @@ initmethod(method::Splitting, ::SODEProblem) = method
 
 
 "Splitting integrator cache."
-mutable struct IntegratorCacheSplitting{DT,TT,D} <: ODEIntegratorCache{DT,D}
-    q::Vector{DT}
+mutable struct IntegratorCacheSplitting{DT,TT,D,AT} <: ODEIntegratorCache{DT,D}
+    q::AT
     t::TT
 
-    function IntegratorCacheSplitting{DT,TT,D}() where {DT,TT,D}
-        new(zeros(DT,D), zero(TT))
+    function IntegratorCacheSplitting{DT,TT,D}(q₀::AT) where {DT,TT,D,AT <: AbstractArray{DT}}
+        new{DT,TT,D,AT}(zero(q₀), zero(TT))
     end
 end
 
 function Cache{ST}(problem::SODEProblem, method::Splitting; kwargs...) where {ST}
-    IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}(; kwargs...)
+    IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}(problem.ics.q; kwargs...)
 end
 
 @inline CacheType(ST, problem::SODEProblem, ::Splitting) = IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}
