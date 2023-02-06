@@ -97,7 +97,7 @@ function initsolver(::Newton, solstep::SolutionStepPODE{DT}, problem::Union{IODE
 end
 
 
-function Base.show(io::IO, int::IntegratorIRK)
+function Base.show(io::IO, int::IntegratorIRKimplicit)
     print(io, "\nRunge-Kutta Integrator for Implicit Equations with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(description(tableau(int)))\n")
