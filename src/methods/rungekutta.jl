@@ -15,7 +15,6 @@ GeometricBase.tableau(method::RKMethod) = error("No tableau for Runge-Kutta meth
 GeometricBase.tableau(method::PRKMethod) = error("No tableau for partitioned Runge-Kutta method $(typeof(method)) provided")
 
 GeometricBase.order(method::RungeKuttaMethod) = order(tableau(method))
-GeometricBase.order(method::RungeKuttaMethod) = order(tableau(method))
 
 nstages(method::RungeKuttaMethod) = RungeKutta.nstages(tableau(method))
 eachstage(method::RungeKuttaMethod) = RungeKutta.eachstage(tableau(method))
