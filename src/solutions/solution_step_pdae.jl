@@ -106,7 +106,6 @@ function update_vector_fields!(solstep::SolutionStepPDAE, problem::Union{IDAEPro
     functions(problem).f̄(solstep.f̄[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i])
     functions(problem).u(solstep.ū[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i], solstep.p̄[i], solstep.λ̄[i])
     functions(problem).g(solstep.ḡ[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i], solstep.p̄[i], solstep.λ̄[i])
-    functions(problem).ϑ(solstep.p̄[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i])
 end
 
 function initialize!(solstep::SolutionStepPDAE, problem::AbstractProblemPDAE, extrap::Extrapolation = default_extrapolation())
