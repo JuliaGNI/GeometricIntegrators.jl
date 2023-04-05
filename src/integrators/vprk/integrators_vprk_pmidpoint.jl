@@ -55,15 +55,15 @@ end
 
 function Base.show(io::IO, int::IntegratorVPRKpMidpoint)
     print(io, "\nVariational Partitioned Runge-Kutta Integrator with Midpoint Projection and:\n")
-    print(io, "   Timestep: $(int.params.Δt)\n")
-    print(io, "   Tableau:  $(description(int.params.tab))\n")
-    print(io, "   $(string(int.params.tab.q))")
-    print(io, "   $(string(int.params.tab.p))")
-    # print(io, reference(int.params.tab))
+    print(io, "   Timestep: $(int.timestep(problem))\n")
+    print(io, "   Tableau:  $(description(int.tableau(method)))\n")
+    print(io, "   $(string(int.tableau(method).q))")
+    print(io, "   $(string(int.tableau(method).p))")
+    # print(io, reference(int.tableau(method)))
 end
 
 
-function Integrators.get_internal_variables(int::IntegratorVPRKpMidpoint{DT,TT,D,S}) where {DT, TT, D, S}
+function get_internal_variables(int::IntegratorVPRKpMidpoint{DT,TT,D,S}) where {DT, TT, D, S}
     Q = create_internal_stage_vector(DT, D, S)
     P = create_internal_stage_vector(DT, D, S)
     V = create_internal_stage_vector(DT, D, S)
@@ -102,8 +102,8 @@ function compute_projection_vprk!(x::Vector{ST},
                 params::ParametersVPRKpMidpoint{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     # create temporary variables
-    local t₀::TT = params.t̄
-    local t₁::TT = params.t̄ + params.Δt
+    local t₀::TT = solstep.t̄[1]
+    local t₁::TT = solstep.t̄[1] + timestep(problem)
     local tₘ::TT = (t₀+t₁)/2
     local y1::ST
     local y2::ST
@@ -123,23 +123,23 @@ function compute_projection_vprk!(x::Vector{ST},
         y1 = 0
         y2 = 0
         for j in 1:S
-            y1 += params.tab.q.b[j] * V[j][k]
-            y2 += params.tab.q.b̂[j] * V[j][k]
+            y1 += tableau(method).q.b[j] * V[j][k]
+            y2 += tableau(method).q.b̂[j] * V[j][k]
         end
-        q̃[k] = params.q̄[k] + 0.5 * params.Δt * (y1 + y2) + params.Δt *  params.pparams[:R][1] * U[1][k]
-        q[k] = params.q̄[k] + 1.0 * params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
+        q̃[k] = solstep.q̄[1][k] + 0.5 * timestep(problem) * (y1 + y2) + timestep(problem) *  params.pparams[:R][1] * U[1][k]
+        q[k] = solstep.q̄[1][k] + 1.0 * timestep(problem) * (y1 + y2) + timestep(problem) * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
     end
 
-    params.equ.g(G[1], tₘ, q̃, v, λ)
+    functions(problem).g(G[1], tₘ, q̃, v, λ)
     G[2] .= G[1]
 
     # compute p=ϑ(q)
-    params.equ.ϑ(p, t₁, q, v)
+    functions(problem).ϑ(p, t₁, q, v)
 end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+function function_stages!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpMidpoint{DT,TT,D,S},
                 caches::OldCacheDict) where {ST,DT,TT,D,S}
 
@@ -154,11 +154,11 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
     # compute b = - [p-bF-G]
     compute_rhs_vprk_projection_p!(b, cache.p̃, cache.F, cache.G, D*(S+0), params)
 
-    compute_rhs_vprk_correction!(b, cache.V, params)
+    compute_rhs_correction!(b, cache.V, params)
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::SolutionStepPODE{DT,TT},
+function integrate_step!(int::IntegratorVPRKpMidpoint{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)

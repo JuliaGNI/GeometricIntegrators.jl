@@ -44,7 +44,13 @@ function Base.show(io::IO, int::IntegratorERK)
 end
 
 
-function integrate_step!(solstep::SolutionStepODE{DT,TT}, problem::ODEProblem{DT,TT}, method::ERK, caches::CacheDict, ::NoSolver) where {DT,TT}
+function integrate_step!(
+    solstep::Union{SolutionStepODE{DT,TT},SolutionStepDAE{DT,TT}},
+    problem::Union{ODEProblem{DT,TT},DAEProblem{DT,TT}},
+    method::ERK,
+    caches::CacheDict,
+    ::NoSolver) where {DT,TT}
+
     # obtain cache
     local Q::Vector{Vector{DT}} = caches[DT].Q
     local V::Vector{Vector{DT}} = caches[DT].V

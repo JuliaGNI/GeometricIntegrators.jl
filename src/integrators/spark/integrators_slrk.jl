@@ -39,7 +39,7 @@ pstages(method::SLRK) = method.r
 hasnullvector(method::SLRK{DT,Nothing}) where {DT} = false
 hasnullvector(method::SLRK{DT,<:AbstractVector}) where {DT} = true
 
-nonlinearsolversize(problem::LDAEProblem, method::SLRK) =
+solversize(problem::LDAEProblem, method::SLRK) =
     4 * ndims(problem) * nstages(method)
 
 

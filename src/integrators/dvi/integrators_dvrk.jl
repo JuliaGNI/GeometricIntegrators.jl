@@ -34,6 +34,8 @@ struct IntegratorCacheDVRK{DT,D,S} <: ODEIntegratorCache{DT,D}
     end
 end
 
+nlsolution(cache::IntegratorCacheDVRK) = cache.x
+
 function Cache{ST}(problem::Union{IODEProblem,LODEProblem}, method::DVRK; kwargs...) where {ST}
     IntegratorCacheDVRK{ST, ndims(problem), nstages(tableau(method))}(; kwargs...)
 end
@@ -233,7 +235,7 @@ function integrate_step!(
     solver::NonlinearSolver) where {DT,TT}
 
     # call nonlinear solver
-    solve!(caches[DT].x, solver)
+    solve!(caches[DT].x, (b,x) -> function_stages!(b, x, solstep, problem, method, caches), solver)
 
     # print solver status
     # println(status(solver))

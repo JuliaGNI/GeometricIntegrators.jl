@@ -108,6 +108,12 @@ function update_vector_fields!(solstep::SolutionStepPDAE, problem::Union{IDAEPro
     functions(problem).g(solstep.ḡ[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i], solstep.p̄[i], solstep.λ̄[i])
 end
 
+update_implicit_functions!(::SolutionStepPDAE, ::Union{PDAEProblem,HDAEProblem}, i=0) = nothing
+
+function update_implicit_functions!(solstep::SolutionStepPDAE, problem::Union{IDAEProblem,LDAEProblem}, i=0)
+    functions(problem).ϑ(solstep.p̄[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i])
+end
+
 function initialize!(solstep::SolutionStepPDAE, problem::AbstractProblemPDAE, extrap::Extrapolation = default_extrapolation())
     solstep.t  = initial_conditions(problem).t
     solstep.q .= initial_conditions(problem).q
@@ -118,25 +124,45 @@ function initialize!(solstep::SolutionStepPDAE, problem::AbstractProblemPDAE, ex
     solstep.p̃ .= 0
 
     update_vector_fields!(solstep, problem)
+    # update_implicit_functions!(solstep, problem)
 
     for i in eachhistory(solstep)
         solstep.t̄[i] = solstep.t̄[i-1] - timestep(problem)
         extrapolate!(solstep.t̄[i-1], solstep.q̄[i-1], solstep.p̄[i-1], solstep.t̄[i], solstep.q̄[i], solstep.p̄[i], problem, extrap)
         update_vector_fields!(solstep, problem, i)
+        update_implicit_functions!(solstep, problem, i)
     end
 
+    return solstep
+end
+
+function update!(solstep::SolutionStepPDAE{DT,TT,AT,ΛT}, Δq::AT, Δp::AT) where {DT,TT,AT,ΛT}
+    for k in eachindex(Δq,Δp)
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q[k], solstep.q̃[k])
+        solstep.p[k], solstep.p̃[k] = compensated_summation(Δp[k], solstep.p[k], solstep.p̃[k])
+    end
+    return solstep
+end
+
+function update!(solstep::SolutionStepPDAE{DT,TT,AT,ΛT}, q̇::AT, ṗ::AT, Δt::TT) where {DT,TT,AT,ΛT}
+    for k in eachindex(q̇,ṗ)
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δt * q̇[k], solstep.q[k], solstep.q̃[k])
+        solstep.p[k], solstep.p̃[k] = compensated_summation(Δt * ṗ[k], solstep.p[k], solstep.p̃[k])
+    end
     return solstep
 end
 
 function update!(solstep::SolutionStepPDAE{DT,TT,AT,ΛT}, Δq::AT, Δp::AT, λ::ΛT) where {DT,TT,AT,ΛT}
-    for k in eachindex(Δq,Δp)
-        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q̄[1][k], solstep.q̃[k])
-        solstep.p[k], solstep.p̃[k] = compensated_summation(Δp[k], solstep.p̄[1][k], solstep.p̃[k])
-    end
-    solstep.λ .= λ
+    update!(solstep, Δq, Δp)
+    copyto!(solstep.λ, λ)
     return solstep
 end
 
+function update!(solstep::SolutionStepPDAE{DT,TT,AT,ΛT}, q̇::AT, ṗ::AT, λ::ΛT, Δt::TT) where {DT,TT,AT,ΛT}
+    update!(solstep, q̇, ṗ, Δt)
+    copyto!(solstep.λ, λ)
+    return solstep
+end
 
 function GeometricBase.reset!(solstep::SolutionStepPDAE, Δt)
     for i in backwardhistory(solstep)

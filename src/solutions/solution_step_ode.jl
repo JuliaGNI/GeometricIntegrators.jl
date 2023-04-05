@@ -99,7 +99,14 @@ end
 
 function update!(solstep::SolutionStepODE, Δq)
     for k in eachindex(Δq)
-        solstep.q[k], solstep.q̃[k] = compensated_summation(solstep.q̄[1][k], Δq[k], solstep.q̃[k])
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q[k], solstep.q̃[k])
+    end
+    return solstep
+end
+
+function update!(solstep::SolutionStepODE, q̇, Δt)
+    for k in eachindex(q̇)
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δt * q̇[k], solstep.q[k], solstep.q̃[k])
     end
     return solstep
 end

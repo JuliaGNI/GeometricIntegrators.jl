@@ -87,6 +87,12 @@ function update_vector_fields!(solstep::SolutionStepPODE, problem::Union{IODEPro
     functions(problem).f̄(solstep.f̄[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i])
 end
 
+update_implicit_functions!(::SolutionStepPODE, ::Union{PODEProblem,HODEProblem}, i=0) = nothing
+
+function update_implicit_functions!(solstep::SolutionStepPODE, problem::Union{IODEProblem,LODEProblem}, i=0)
+    functions(problem).ϑ(solstep.p̄[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i])
+end
+
 function initialize!(solstep::SolutionStepPODE, problem::AbstractProblemPODE, extrap::Extrapolation = default_extrapolation())
     solstep.t  = initial_conditions(problem).t
     solstep.q .= initial_conditions(problem).q
@@ -96,20 +102,30 @@ function initialize!(solstep::SolutionStepPODE, problem::AbstractProblemPODE, ex
     solstep.p̃ .= 0
 
     update_vector_fields!(solstep, problem)
+    # update_implicit_functions!(solstep, problem)
 
     for i in eachhistory(solstep)
         solstep.t̄[i] = solstep.t̄[i-1] - timestep(problem)
         extrapolate!(solstep.t̄[i-1], solstep.q̄[i-1], solstep.p̄[i-1], solstep.t̄[i], solstep.q̄[i], solstep.p̄[i], problem, extrap)
         update_vector_fields!(solstep, problem, i)
+        update_implicit_functions!(solstep, problem, i)
     end
 
     return solstep
 end
 
-function update!(solstep::SolutionStepPODE{DT,TT,AT}, Δq::AT, Δp::AT) where {DT,TT,AT}
+function update!(solstep::SolutionStepPODE, Δq, Δp)
     for k in eachindex(Δq,Δp)
-        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q̄[1][k], solstep.q̃[k])
-        solstep.p[k], solstep.p̃[k] = compensated_summation(Δp[k], solstep.p̄[1][k], solstep.p̃[k])
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q[k], solstep.q̃[k])
+        solstep.p[k], solstep.p̃[k] = compensated_summation(Δp[k], solstep.p[k], solstep.p̃[k])
+    end
+    return solstep
+end
+
+function update!(solstep::SolutionStepPODE, y, z, Δt)
+    for k in eachindex(y,z)
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δt * y[k], solstep.q[k], solstep.q̃[k])
+        solstep.p[k], solstep.p̃[k] = compensated_summation(Δt * z[k], solstep.p[k], solstep.p̃[k])
     end
     return solstep
 end

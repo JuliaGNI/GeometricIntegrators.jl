@@ -98,11 +98,29 @@ function initialize!(solstep::SolutionStepDAE, problem::AbstractProblemDAE, extr
     return solstep
 end
 
-function update!(solstep::SolutionStepDAE{DT}, Δq::Vector{DT}, λ::Vector{DT}) where {DT}
+function update!(solstep::SolutionStepDAE{DT,TT,AT,ΛT}, Δq::AT) where {DT,TT,AT,ΛT}
     for k in eachindex(Δq)
-        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q̄[1][k], solstep.q̃[k])
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δq[k], solstep.q[k], solstep.q̃[k])
     end
-    solstep.λ .= λ
+    return solstep
+end
+
+function update!(solstep::SolutionStepDAE{DT,TT,AT,ΛT}, q̇::AT, Δt::TT) where {DT,TT,AT,ΛT}
+    for k in eachindex(q̇)
+        solstep.q[k], solstep.q̃[k] = compensated_summation(Δt * q̇[k], solstep.q[k], solstep.q̃[k])
+    end
+    return solstep
+end
+
+function update!(solstep::SolutionStepDAE{DT,TT,AT,ΛT}, Δq::AT, λ::ΛT) where {DT,TT,AT,ΛT}
+    update!(solstep, Δq)
+    copyto!(solstep.λ, λ)
+    return solstep
+end
+
+function update!(solstep::SolutionStepDAE{DT,TT,AT,ΛT}, q̇::AT, λ::ΛT, Δt::TT) where {DT,TT,AT,ΛT}
+    update!(solstep, q̇, Δt)
+    copyto!(solstep.λ, λ)
     return solstep
 end
 

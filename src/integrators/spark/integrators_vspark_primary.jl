@@ -78,7 +78,7 @@ end
 
 Methods.tableau(method::VSPARKprimary) = method.tableau
 
-nonlinearsolversize(problem::Union{IDAEProblem,LDAEProblem}, method::VSPARKprimary) =
+solversize(problem::Union{IDAEProblem,LDAEProblem}, method::VSPARKprimary) =
     2 * ndims(problem) * nstages(method) + 2 * ndims(problem) * pstages(method)
 
 

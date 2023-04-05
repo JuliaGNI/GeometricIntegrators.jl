@@ -9,7 +9,7 @@ HSPARK(method::SPARKMethod) = HSPARK(tableau(method))
 
 Methods.tableau(method::HSPARK) = method.tableau
 
-nonlinearsolversize(problem::Union{PDAEProblem,HDAEProblem}, method::Union{HSPARK,SPARKMethod}) =
+solversize(problem::Union{PDAEProblem,HDAEProblem}, method::Union{HSPARK,SPARKMethod}) =
     2 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)
 
 

@@ -19,6 +19,9 @@ IntegratorCache{ST}(integrator::AbstractIntegrator) where {ST} = error("Integrat
 
 CacheType(T, params::Parameters) = error("CacheType(T, params) not implemented for ", typeof(params))
 
+nlsolution(::IntegratorCache) = nothing
+
+
 struct OldCacheDict{PT}
     params::PT
     caches::Dict{UInt64, IntegratorCache}
@@ -62,3 +65,12 @@ end
         c.caches[key] = Cache{ST}(c.problem, c.method)
     end::CacheType(ST, c.problem, c.method)
 end
+
+function updateall!(c::CacheDict, data)
+    for (key, cache) in c.caches
+        update!(c.caches[key], data...)
+    end
+end
+
+cache(c::CacheDict) = c[datatype(c.problem)]
+nlsolution(c::CacheDict) = nlsolution(cache(c))

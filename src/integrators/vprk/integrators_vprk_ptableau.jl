@@ -38,10 +38,10 @@ end
 
 function update_params!(params::ParametersVPRKpTableau, sol::SolutionStepPODE)
     # set time for nonlinear solver and copy previous solution
-    params.t̄  = sol.t
-    params.t  = sol.t + params.Δt
-    params.q̄ .= sol.q
-    params.p̄ .= sol.p
+    solstep.t̄[1]  = sol.t
+    params.t  = sol.t + timestep(problem)
+    solstep.q̄[1] .= sol.q
+    solstep.p̄[1] .= sol.p
 end
 
 
@@ -55,9 +55,9 @@ function update_tableau!(params::ParametersVPRKpTableau{DT,TT,D,S}, λ::Vector) 
         params.W[S-k, S-k+1] = -λ[k]
     end
 
-    # params.A .= params.tab.P * params.W * params.tab.Q
-    mul!(params.T, params.W, params.tab.Q)
-    mul!(params.A, params.tab.P, params.T)
+    # params.A .= tableau(method).P * params.W * tableau(method).Q
+    mul!(params.T, params.W, tableau(method).Q)
+    mul!(params.A, tableau(method).P, params.T)
 end
 
 
@@ -105,11 +105,11 @@ struct IntegratorVPRKpTableau{DT, TT, D, S,
 end
 
 
-@inline nstages(integrator::IntegratorVPRKpTableau{DT,TT,D,S}) where {DT,TT,D,S} = S
+@inline Methods.nstages(integrator::IntegratorVPRKpTableau{DT,TT,D,S}) where {DT,TT,D,S} = S
 @inline Base.ndims(int::IntegratorVPRKpTableau{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 
-function Integrators.initialize!(int::IntegratorVPRKpTableau, sol::SolutionStepPODE)
+function initialize!(int::IntegratorVPRKpTableau, sol::SolutionStepPODE)
     equation(int, :v̄)(sol.v, sol.t, sol.q)
     equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
 
@@ -168,7 +168,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
             y₁ = 0
             y₂ = 0
             for j in 1:S
-                y₁ += params.tab.a[i,j] * V[j][k]
+                y₁ += tableau(method).a[i,j] * V[j][k]
                 y₂ += params.A[i,j] * V[j][k]
             end
             Y[i][k] = y₁ + y₂
@@ -178,13 +178,13 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     # compute Q=q̄+Δt*Y
     for i in 1:S
         for k in 1:D
-            Q[i][k] = params.q̄[k] + params.Δt * Y[i][k]
+            Q[i][k] = solstep.q̄[1][k] + timestep(problem) * Y[i][k]
         end
     end
 
     # compute P=ϑ(Q,V) and F=f(Q,V)
     for i in 1:S
-        tᵢ = params.t̄ + params.Δt * params.tab.c[i]
+        tᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).c[i]
         params.equs[:ϑ](P[i], tᵢ, Q[i], V[i])
         params.equs[:f](F[i], tᵢ, Q[i], V[i])
     end
@@ -195,7 +195,7 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
             z₁ = 0
             z₂ = 0
             for j in 1:S
-                z₁ += params.tab.a[i,j] * F[j][k]
+                z₁ += tableau(method).a[i,j] * F[j][k]
                 z₂ += params.A[i,j] * F[j][k]
             end
             Z[i][k] = z₁ + z₂
@@ -207,22 +207,22 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
     z .= 0
     for k in 1:D
         for j in 1:S
-            y[k] += params.tab.b[j] * V[j][k]
-            z[k] += params.tab.b[j] * F[j][k]
+            y[k] += tableau(method).b[j] * V[j][k]
+            z[k] += tableau(method).b[j] * F[j][k]
         end
     end
 
 
     # compute q=q̄+Δt*y and p=p̄+Δt*z
-    q .= params.q̄ .+ params.Δt .* y
-    p .= params.p̄ .+ params.Δt .* z
+    q .= solstep.q̄[1] .+ timestep(problem) .* y
+    p .= solstep.p̄[1] .+ timestep(problem) .* z
 
     # compute θ=ϑ(t,q)
     params.equs[:ϑ](θ, params.t, q, v)
 end
 
 "Compute stages of projected Gauss-Legendre Runge-Kutta methods."
-function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+function function_stages!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpTableau{DT,TT,D,S},
                 caches::OldCacheDict) where {ST,DT,TT,D,S}
 
@@ -234,7 +234,7 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
     # compute b = [P-p-AF]
     for i in 1:S
         for k in 1:D
-            b[D*(i-1)+k] = cache.P[i][k] - params.p̄[k] - params.Δt * cache.Z[i][k]
+            b[D*(i-1)+k] = cache.P[i][k] - solstep.p̄[1][k] - timestep(problem) * cache.Z[i][k]
         end
     end
 end
@@ -264,7 +264,7 @@ function function_dirac_constraint!(λ::Vector, int::IntegratorVPRKpTableau{DT,T
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::SolutionStepPODE{DT,TT},
+function integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
 
     # update nonlinear solver parameters from cache
@@ -279,7 +279,7 @@ function Integrators.integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::So
     # determine parameter λ
     nlres = nlsolve(λ -> function_dirac_constraint!(λ, int, cache), zero(int.params.λ);
                 xtol=SimpleSolvers.get_config(:nls_atol),
-                ftol=maximum(int.params.p̄)*SimpleSolvers.get_config(:nls_atol),
+                ftol=maximum(int.solstep.p̄[1])*SimpleSolvers.get_config(:nls_atol),
                 iterations=100)
                 #xtol=timestep(int)^nstages(int)*SimpleSolvers.get_config(:nls_atol),
 

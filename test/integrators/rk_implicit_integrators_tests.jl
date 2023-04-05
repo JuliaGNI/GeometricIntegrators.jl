@@ -1,6 +1,5 @@
 using GeometricIntegrators
 using GeometricProblems.LotkaVolterra2d
-using SimpleSolvers
 using Test
 
 const t₀ = 0.0

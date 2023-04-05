@@ -37,6 +37,9 @@ struct IntegratorCacheIPRKimplicit{ST,D,S} <: PODEIntegratorCache{ST,D}
     end
 end
 
+nlsolution(cache::IntegratorCacheIPRKimplicit) = cache.x
+
+
 function Cache{ST}(problem::Union{IODEProblem,LODEProblem}, method::IPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
     D = ndims(problem)
@@ -74,6 +77,9 @@ b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 ```
 """
 const IntegratorIPRKimplicit{DT,TT} = Integrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:IPRK}
+
+solversize(problem::Union{IODEProblem,LODEProblem}, method::IPRK) =
+    ndims(problem) * nstages(method)
 
 
 function initsolver(::Newton, solstep::SolutionStepPODE{DT}, problem::Union{IODEProblem,LODEProblem}, method::IPRKMethod, caches::CacheDict) where {DT}
@@ -128,7 +134,7 @@ end
 
 
 function compute_stages!(
-    x::Vector{ST},
+    x::AbstractVector{ST},
     solstep::SolutionStepPODE{DT,TT},
     problem::Union{IODEProblem,LODEProblem},
     method::IPRKMethod,
@@ -174,8 +180,8 @@ end
 
 # Compute stages of implicit partitioned Runge-Kutta methods.
 function function_stages!(
-    b::Vector{ST},
-    x::Vector{ST},
+    b::AbstractVector{ST},
+    x::AbstractVector{ST},
     solstep::SolutionStepPODE,
     problem::Union{IODEProblem,LODEProblem},
     method::IPRKMethod,
@@ -215,7 +221,7 @@ function integrate_step!(
     solver::NonlinearSolver) where {DT,TT}
 
     # call nonlinear solver
-    solve!(caches[DT].x, solver)
+    solve!(caches[DT].x, (b,x) -> function_stages!(b, x, solstep, problem, method, caches), solver)
 
     # print solver status
     # println(status(solver))
@@ -227,8 +233,7 @@ function integrate_step!(
     compute_stages!(caches[DT].x, solstep, problem, method, caches)
 
     # compute final update
-    update_solution!(solstep.q, solstep.q̄[1], solstep.q̃, caches[DT].V, tableau(method).q.b, tableau(method).q.b̂, timestep(problem))
-    update_solution!(solstep.p, solstep.p̄[1], solstep.p̃, caches[DT].F, tableau(method).p.b, tableau(method).p.b̂, timestep(problem))
+    update!(solstep, caches[DT].V, caches[DT].F, tableau(method), timestep(problem))
 
     # update vector field for initial guess
     update_vector_fields!(solstep, problem)

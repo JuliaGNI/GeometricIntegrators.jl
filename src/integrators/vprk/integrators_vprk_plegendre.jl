@@ -55,11 +55,11 @@ const ParametersVPRKpLegendre = AbstractParametersVPRK{:vprk_plegendre}
 
 
 function IntegratorCache(params::ParametersVPRKpLegendre{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
-    IntegratorCacheVPRK{DT,D,S}(_VPRKpLegendre_ndofs(D, params.tab), true; kwargs...)
+    IntegratorCacheVPRK{DT,D,S}(_VPRKpLegendre_ndofs(D, tableau(method)), true; kwargs...)
 end
 
 function IntegratorCache{ST}(params::ParametersVPRKpLegendre{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
-    IntegratorCacheVPRK{ST,D,S}(_VPRKpLegendre_ndofs(D, params.tab), true; kwargs...)
+    IntegratorCacheVPRK{ST,D,S}(_VPRKpLegendre_ndofs(D, tableau(method)), true; kwargs...)
 end
 
 
@@ -166,14 +166,14 @@ function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
             Z[i][k] = y[offset+2]
             V[i][k] = y[offset+3]
 
-            Q[i][k] = params.q̄[k] + params.Δt * Y[i][k]
-            P[i][k] = params.p̄[k] + params.Δt * Z[i][k]
+            Q[i][k] = solstep.q̄[1][k] + timestep(problem) * Y[i][k]
+            P[i][k] = solstep.p̄[1][k] + timestep(problem) * Z[i][k]
         end
 
         # compute P=p(t,Q) and F=f(t,Q,V)
-        tqᵢ = params.t̄ + params.Δt * params.tab.q.c[i]
-        params.equ.ϑ(Φ[i], tqᵢ, Q[i], V[i])
-        params.equ.f(F[i], tqᵢ, Q[i], V[i])
+        tqᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).q.c[i]
+        functions(problem).ϑ(Φ[i], tqᵢ, Q[i], V[i])
+        functions(problem).f(F[i], tqᵢ, Q[i], V[i])
     end
 
     # copy y to q and p
@@ -183,10 +183,10 @@ function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
     end
 
     # compute p=p(t,q)
-    params.equ.ϑ(ϕ, params.t̄ + params.Δt, q, v)
+    functions(problem).ϑ(ϕ, solstep.t̄[1] + timestep(problem), q, v)
 
     # for Lobatto-type methods, copy y to μ
-    if isdefined(params.tab, :d) && length(params.tab.d) > 0
+    if isdefined(tableau(method), :d) && length(tableau(method).d) > 0
         offset = (3*S+2)*D
         for k in 1:D
             μ[k] = y[offset+k]
@@ -212,7 +212,7 @@ function compute_rhs!(b::Vector{ST},
         for k in 1:D
             y = 0
             for j in 1:S
-                y += params.tab.q.a[i,j] * V[j][k]
+                y += tableau(method).q.a[i,j] * V[j][k]
             end
             b[offset+k] = Y[i][k] - y
         end
@@ -224,7 +224,7 @@ function compute_rhs!(b::Vector{ST},
         for k in 1:D
             z = 0
             for j in 1:S
-                z += params.tab.p.a[i,j] * F[j][k]
+                z += tableau(method).p.a[i,j] * F[j][k]
             end
             b[offset+k] = Z[i][k] - z
         end
@@ -236,8 +236,8 @@ function compute_rhs!(b::Vector{ST},
         for k in 1:D
             z = 0
             for j in 1:S
-                ω = params.tab.p.b[j] * params.tab.p.c[j]^(i-1)
-                # ω = params.tab.q.a[i+1,j]
+                ω = tableau(method).p.b[j] * tableau(method).p.c[j]^(i-1)
+                # ω = tableau(method).q.a[i+1,j]
                 z += ω * (Φ[j][k] - P[j][k])
             end
             b[offset+k] = z
@@ -255,9 +255,9 @@ function compute_rhs!(b::Vector{ST},
     for k in 1:D
         y = 0
         for j in 1:S
-            y += params.tab.q.b[j] * V[j][k]
+            y += tableau(method).q.b[j] * V[j][k]
         end
-        b[offset+k] = (params.q̄[k] - q[k]) + params.Δt * y
+        b[offset+k] = (solstep.q̄[1][k] - q[k]) + timestep(problem) * y
     end
 
     # compute b = - (p̄-p-AF)
@@ -265,27 +265,27 @@ function compute_rhs!(b::Vector{ST},
     for k in 1:D
         z = 0
         for j in 1:S
-            z += params.tab.p.b[j] * F[j][k]
+            z += tableau(method).p.b[j] * F[j][k]
         end
-        b[offset+k] = (params.p̄[k] - p[k]) + params.Δt * z
+        b[offset+k] = (solstep.p̄[1][k] - p[k]) + timestep(problem) * z
     end
 
-    # if isdefined(params.tab, :d) && length(params.tab.d) > 0
+    # if isdefined(tableau(method), :d) && length(tableau(method).d) > 0
     #     offset = (3*S+2)*D
     #     for k in 1:D
     #         b[offset+k] = 0
     #         for i in 1:S
-    #             b[offset+k] -= V[k,i] * params.tab.d[i]
+    #             b[offset+k] -= V[k,i] * tableau(method).d[i]
     #         end
     #     end
     # end
 
-    if isdefined(params.tab, :d) && length(params.tab.d) > 0
+    if isdefined(tableau(method), :d) && length(tableau(method).d) > 0
         sl     = div(S+1, 2)
         offset = D*(S+sl-1)
 
         # compute μ
-        z = params.tab.p.b[sl] / params.tab.d[sl]
+        z = tableau(method).p.b[sl] / tableau(method).d[sl]
         for k in 1:D
             μ[k] = z * b[offset+k]
         end
@@ -294,7 +294,7 @@ function compute_rhs!(b::Vector{ST},
         for k in 1:D
             z = 0
             for i in 1:S
-                z += V[k,i] * params.tab.d[i]
+                z += V[k,i] * tableau(method).d[i]
             end
             b[offset+k] = z
         end
@@ -303,7 +303,7 @@ function compute_rhs!(b::Vector{ST},
         for i in 1:S
             if i ≠ sl
                 offset = D*(S+i-1)
-                z = params.tab.d[i] / params.tab.p.b[i]
+                z = tableau(method).d[i] / tableau(method).p.b[i]
                 for k in 1:D
                     b[offset+k] -= z * μ[k]
                 end
@@ -335,7 +335,7 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST},
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKpLegendre{DT,TT}, sol::SolutionStepPODE{DT,TT},
+function integrate_step!(int::IntegratorVPRKpLegendre{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     local offset::Int
 

@@ -9,7 +9,7 @@ VSPARK(method::SPARKMethod) = VSPARK(tableau(method))
 
 Methods.tableau(method::VSPARK) = method.tableau
 
-nonlinearsolversize(problem::Union{IDAEProblem,LDAEProblem}, method::VSPARK) =
+solversize(problem::Union{IDAEProblem,LDAEProblem}, method::VSPARK) =
     3 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)
 
 

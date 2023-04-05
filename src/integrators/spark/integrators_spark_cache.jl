@@ -171,7 +171,7 @@ function Cache{ST}(problem::AbstractSPARKProblem, method::AbstractSPARKMethod; k
     D = ndims(problem)
     S = nstages(method)
     R = pstages(method)
-    N = nonlinearsolversize(problem, method)
+    N = solversize(problem, method)
 
     if hasnullvector(method)
         N += D

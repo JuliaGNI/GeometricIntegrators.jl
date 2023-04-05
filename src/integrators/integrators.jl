@@ -121,9 +121,9 @@ function integrate(problem::GeometricProblem, integrator::AbstractIntegrator; kw
     return solution
 end
 
-function integrate(problem::GeometricProblem, method::VPRKMethod; kwargs...)
-    integrate(problem, AbstractIntegrator(problem, method); kwargs...)
-end
+# function integrate(problem::GeometricProblem, method::VPRKMethod; kwargs...)
+#     integrate(problem, AbstractIntegrator(problem, method); kwargs...)
+# end
 
 # # Integrate given equation with given tableau for ntime time steps and return solution.
 # function integrate(problem::GeometricProblem, tableau::AbstractTableau; kwargs...)

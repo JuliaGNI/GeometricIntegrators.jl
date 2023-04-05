@@ -1,15 +1,17 @@
 
 struct NoSolver <: SolverMethod end
-struct NoProjection <: ProjectionMethod end
 
 default_solver(::GeometricMethod) = NoSolver()
+# default_solver(::Nothing) = NoSolver()
+
 default_iguess(::GeometricMethod) = NoInitialGuess()
-default_projection(::GeometricMethod) = NoProjection()
+# default_iguess(::Nothing) = NoInitialGuess()
+
+# default_projection(::GeometricMethod) = NoProjection()
 
 initmethod(method::GeometricMethod) = method
 initmethod(method::GeometricMethod, ::GeometricProblem) = initmethod(method)
-initsolver(::SolverMethod, ::SolutionStep, ::GeometricProblem, ::GeometricMethod, ::CacheDict) = NoSolver()
-# projection(::ProjectionMethod, ::GeometricProblem, ::GeometricMethod, ::CacheDict) = NoProjection()
+initsolver(::SolverMethod, ::GeometricMethod, ::CacheDict) = NoSolver()
 
 
 """
@@ -31,52 +33,67 @@ Integrator(problem::GeometricProblem, method::GeometricMethod; solver = default_
 ```
 
 """
-struct Integrator{PT, MT, CT, ST, IT, PJT, SST}
+struct Integrator{PT, MT, CT, ST, IT, SIT, SST}
     problem::PT
     method::MT
     caches::CT
     solver::ST
     iguess::IT
-    projection::PJT
+    subint::SIT
     solstep::SST
 
-    function Integrator(problem::GeometricProblem, integratormethod::GeometricMethod, solvermethod::SolverMethod, iguess::Union{InitialGuess,Extrapolation}, prjctn::ProjectionMethod)
+    function Integrator(
+        problem::GeometricProblem, 
+        integratormethod::GeometricMethod, 
+        solvermethod::SolverMethod, 
+        iguess::Union{InitialGuess,Extrapolation})
+
         method = initmethod(integratormethod, problem)
         caches = CacheDict(problem, method)
-        solstep = SolutionStep(problem, method)
-        solver = initsolver(solvermethod, solstep, problem, method, caches)
-        # prjctn = projection(_projection, problem, method, caches)
+        subint = Integrator(problem, parent(method))
+        solstp = subint === nothing ? SolutionStep(problem, method) : solstep(subint)
+        solver = initsolver(solvermethod, method, caches)
 
         new{typeof(problem),
             typeof(method),
             typeof(caches),
             typeof(solver),
             typeof(iguess),
-            typeof(prjctn),
-            typeof(solstep)
-           }(problem, method, caches, solver, iguess, prjctn, solstep)
+            typeof(subint),
+            typeof(solstp)
+           }(problem, method, caches, solver, iguess, subint, solstp)
     end
 end
 
-function Integrator(problem::GeometricProblem, method::GeometricMethod;
-            solver = default_solver(method),
-            initialguess = default_iguess(method),
-            projection = default_projection(method))
-    Integrator(problem, method, solver, initialguess, projection)
+function Integrator(
+    problem::GeometricProblem,
+    method::GeometricMethod;
+    solver = default_solver(method),
+    initialguess = default_iguess(method))
+
+    Integrator(problem, method, solver, initialguess)
 end
+
+Integrator(::GeometricProblem, ::Nothing, args...; kwargs...) = nothing
 
 problem(int::Integrator) = int.problem
 method(int::Integrator) = int.method
 caches(int::Integrator) = int.caches
 solver(int::Integrator) = int.solver
 iguess(int::Integrator) = int.iguess
-projct(int::Integrator) = int.projection
 initialguess(int::Integrator) = int.iguess
-projection(int::Integrator) = int.projection
+subint(int::Integrator) = int.subint
 solstep(int::Integrator) = int.solstep
 
 cache(int::Integrator, DT) = caches(int)[DT]
 cache(int::Integrator) = cache(int, datatype(solstep(int)))
+eachstage(int::Integrator) = eachstage(method(int))
+implicit_update(int::Integrator) = implicit_update(method(int))
+nconstraints(int::Integrator) = nconstraints(problem(int))
+Base.ndims(int::Integrator) = ndims(problem(int))
+nstages(int::Integrator) = nstages(tableau(method(int)))
+nlsolution(int::Integrator) = nlsolution(cache(int))
+tableau(int::Integrator) = tableau(method(int))
 
 GeometricBase.equations(int::Integrator) = functions(problem(int))
 GeometricBase.timestep(int::Integrator) = timestep(problem(int))
@@ -88,6 +105,21 @@ initialize!(int::Integrator) = initialize!(solstep(int), problem(int), method(in
 
 initial_guess!(::SolutionStep, ::GeometricProblem, ::GeometricMethod, ::CacheDict, ::Union{SolverMethod, NonlinearSolver}, ::Union{InitialGuess,Extrapolation}) = nothing
 initial_guess!(int::Integrator) = initial_guess!(solstep(int), problem(int), method(int), caches(int), solver(int), iguess(int))
+
+
+function function_stages!(b::Vector, x::Vector, int::Integrator)
+    function_stages!(b, x, solstep(int), problem(int), method(int), caches(int))
+end
+
+residual!(b, x, int) = function_stages!(b, x, int)
+# components!(x, int) = components!(x, solstep(int), problem(int), method(int), caches(int))
+
+# create nonlinear solver
+function initsolver(::NewtonMethod, ::GeometricMethod, caches::CacheDict; kwargs...)
+    x = zero(nlsolution(caches))
+    y = zero(nlsolution(caches))
+    NewtonSolver(x, y; linesearch = Backtracking(), config = Options(min_iterations = 1), kwargs...)
+end
 
 
 #*****************************************************************************#
@@ -130,6 +162,8 @@ end
 # Integration functions for deterministic integrators                         #
 #*****************************************************************************#
 
+integrate_step!(int::Integrator) = integrate_step!(solstep(int), problem(int), method(int), caches(int), solver(int))
+
 """
 Solve for all time steps n:
 ```julia
@@ -150,23 +184,25 @@ integrate!(::SolutionStep, ::GeometricProblem, ::GeometricMethod, ::CacheDict, :
 function integrate! end
 
 # Parts of one integration step that are common to deterministic and stochastic equations.
-function integrate!(solstep::SolutionStep, problem::GeometricProblem, method::GeometricMethod, caches::CacheDict, solver::Union{SolverMethod, NonlinearSolver}, iguess::Union{InitialGuess,Extrapolation})
+# function integrate!(solstep::SolutionStep, problem::GeometricProblem, method::GeometricMethod, caches::CacheDict, solver::Union{SolverMethod, NonlinearSolver}, iguess::Union{InitialGuess,Extrapolation})
+function integrate!(int::Integrator)
     # reset solution step
-    reset!(solstep, timestep(problem))
+    reset!(solstep(int), timestep(problem(int)))
 
     # compute initial guess
-    initial_guess!(solstep, problem, method, caches, solver, iguess)
+    initial_guess!(int)
 
     # integrate one initial condition for one time step
-    integrate_step!(solstep, problem, method, caches, solver)
+    integrate_step!(int)
 
     # take care of periodic solutions
-    cut_periodic_solution!(solstep, periodicity(problem))
+    cut_periodic_solution!(solstep(int), periodicity(problem(int)))
 
-    return solstep
+    # update vector field for initial guess
+    Solutions.update_vector_fields!(solstep(int), problem(int))
+
+    return solstep(int)
 end
-
-integrate!(int::Integrator) = integrate!(solstep(int), problem(int), method(int), caches(int), solver(int), iguess(int))
 
 # Integrate equation for time steps n with n₁ ≤ n ≤ n₂.
 function integrate!(sol::GeometricSolution, int::Integrator, n₁::Int, n₂::Int)

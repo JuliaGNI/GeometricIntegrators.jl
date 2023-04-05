@@ -170,6 +170,8 @@ function extrapolate!(t₀::TT, x₀::AbstractArray{DT}, ẋ₀::AbstractArray{D
 
     extrapolate!(t₀, x₀, ẋ₀, t₁, x₁, ẋ₁, tᵢ, xᵢ, extrap)
 
+    # TODO: Verify interpolation of ẋ ! Values appear to be totally wrong !
+
     # Interpolate ẋ at t
     if tᵢ == t₀
         ẋᵢ .= ẋ₀

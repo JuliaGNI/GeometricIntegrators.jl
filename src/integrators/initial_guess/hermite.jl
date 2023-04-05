@@ -26,11 +26,11 @@ function initialguess!(t₀, q₀, q̇₀, t₁, q₁, q̇₁, t, q, iguess::Her
     (t = t, q = q)
 end
 
-function initialguess!(t, q, q̇, solstep::SolutionStepODE, ::AbstractProblemODE, extrap::HermiteExtrapolation; kwargs...)
+function initialguess!(t, q, q̇, solstep::Union{SolutionStepODE,SolutionStepDAE}, ::Union{AbstractProblemODE,DAEProblem}, extrap::HermiteExtrapolation; kwargs...)
     initialguess!(solstep.t̄[2], solstep.q̄[2], solstep.v̄[2], solstep.t̄[1], solstep.q̄[1], solstep.v̄[1], t, q, q̇, extrap; kwargs...)
 end
 
-function initialguess!(t, q, solstep::SolutionStepODE, ::AbstractProblemODE, extrap::HermiteExtrapolation; kwargs...)
+function initialguess!(t, q, solstep::Union{SolutionStepODE,SolutionStepDAE}, ::Union{AbstractProblemODE,DAEProblem}, extrap::HermiteExtrapolation; kwargs...)
     initialguess!(solstep.t̄[2], solstep.q̄[2], solstep.v̄[2], solstep.t̄[1], solstep.q̄[1], solstep.v̄[1], t, q, extrap; kwargs...)
 end
 

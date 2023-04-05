@@ -27,12 +27,17 @@ module Integrators
     import CompactBasisFunctions
     import CompactBasisFunctions: Basis
     import CompactBasisFunctions: nbasis
+
+    import GeometricEquations: nconstraints
     
     import RungeKutta
+    import RungeKutta: eachstage, nstages
 
     import ..Extrapolators: extrapolate_ode!, extrapolate_iode!, extrapolate_pode!
 
-    import ..Methods: nullvector
+    import ..Methods: initmethod, implicit_update, nullvector, tableau
+
+    import ..Solutions: current, reset!
 
 
     # compat workaroung
@@ -40,16 +45,16 @@ module Integrators
 
 
     export InitialGuess, NoInitialGuess
-    export InitialGuessODE, InitialGuessIODE, InitialGuessPODE
+    # export InitialGuessODE, InitialGuessIODE, InitialGuessPODE
     export initialguess!
 
     include("integrators/initial_guess/initial_guess.jl")
     include("integrators/initial_guess/hermite.jl")
     include("integrators/initial_guess/midpoint.jl")
     
-    include("integrators/initial_guess/initial_guess_ode.jl")
-    include("integrators/initial_guess/initial_guess_iode.jl")
-    include("integrators/initial_guess/initial_guess_pode.jl")
+    # include("integrators/initial_guess/initial_guess_ode.jl")
+    # include("integrators/initial_guess/initial_guess_iode.jl")
+    # include("integrators/initial_guess/initial_guess_pode.jl")
 
 
     export AbstractCoefficients
@@ -95,7 +100,9 @@ module Integrators
            check_symplecticity, symplecticity_conditions, 
            check_symmetry, compute_symplecticity_error
 
-    include("integrators/rk/abstract_integrator_rk.jl")
+    include("integrators/rk/abstract.jl")
+    include("integrators/rk/common.jl")
+    include("integrators/rk/updates.jl")
     include("integrators/rk/tableaus.jl")
 
 
@@ -157,15 +164,21 @@ module Integrators
     include("integrators/splitting/integrators_splitting.jl")
 
 
-    export IntegratorCGVI, IntegratorDGVI, IntegratorDGVIEXP,
-           IntegratorDGVIPI, IntegratorDGVIP0, IntegratorDGVIP1
+    export IntegratorVPRK
 
-    include("integrators/cgvi/integrators_cgvi.jl")
-    include("integrators/dgvi/integrators_dgvi.jl")
-    include("integrators/dgvi/integrators_dgvi_experimental.jl")
-    include("integrators/dgvi/integrators_dgvi_path_integral.jl")
-    include("integrators/dgvi/integrators_dgvi_projection_initial.jl")
-    include("integrators/dgvi/integrators_dgvi_projection_final.jl")
+    include("integrators/vi/integrators_vprk_cache.jl")
+    include("integrators/vi/integrators_vprk.jl")
+
+
+    # export IntegratorCGVI, IntegratorDGVI, IntegratorDGVIEXP,
+    #        IntegratorDGVIPI, IntegratorDGVIP0, IntegratorDGVIP1
+
+    # include("integrators/cgvi/integrators_cgvi.jl")
+    # include("integrators/dgvi/integrators_dgvi.jl")
+    # include("integrators/dgvi/integrators_dgvi_experimental.jl")
+    # include("integrators/dgvi/integrators_dgvi_path_integral.jl")
+    # include("integrators/dgvi/integrators_dgvi_projection_initial.jl")
+    # include("integrators/dgvi/integrators_dgvi_projection_final.jl")
 
 
     export IntegratorDVIA, IntegratorDVIB,
@@ -186,6 +199,11 @@ module Integrators
     include("integrators/integrators.jl")
     include("integrators/methods.jl")
 
+
+    include("projections/common_projection.jl")
+    include("projections/midpoint_projection.jl")
+    include("projections/standard_projection.jl")
+    
 
     function __init__()
         default_params = (

@@ -66,11 +66,11 @@ end
 
 function Base.show(io::IO, int::IntegratorVPRKdegenerate)
     print(io, "\nVariational Partitioned Runge-Kutta Integrator for Degenerate Lagrangians with:\n")
-    print(io, "   Timestep: $(int.params.Δt)\n")
-    print(io, "   Tableau:  $(description(int.params.tab))\n")
-    print(io, "   $(string(int.params.tab.q))")
-    print(io, "   $(string(int.params.tab.p))")
-    # print(io, reference(int.params.tab))
+    print(io, "   Timestep: $(int.timestep(problem))\n")
+    print(io, "   Tableau:  $(description(int.tableau(method)))\n")
+    print(io, "   $(string(int.tableau(method).q))")
+    print(io, "   $(string(int.tableau(method).p))")
+    # print(io, reference(int.tableau(method)))
 end
 
 
@@ -104,7 +104,7 @@ function compute_solution!(x::Vector{ST}, q̄::Vector{ST}, v̄::Vector{ST}, p̄:
     q̄ .= x
 
     # compute p̄ = ϑ(q)
-    params.equ.ϑ(p̄, params.t̄ + params.Δt, q̄, v̄)
+    functions(problem).ϑ(p̄, solstep.t̄[1] + timestep(problem), q̄, v̄)
 end
 
 
@@ -122,23 +122,23 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 
     # compute b = - [q̄-q-BV]
     for k in 1:div(D,2)
-        b[k] = params.q̄[k] - cache.q̃[k]
+        b[k] = solstep.q̄[1][k] - cache.q̃[k]
         for i in 1:S
-            b[k] += params.Δt * params.tab.q.b[i] * params.pparams[:V][i][k]
+            b[k] += timestep(problem) * tableau(method).q.b[i] * params.pparams[:V][i][k]
         end
     end
 
     # compute b = - [p̄-p-BF]
     for k in 1:div(D,2)
-        b[div(D,2)+k] = params.p̄[k] - cache.p̃[k]
+        b[div(D,2)+k] = solstep.p̄[1][k] - cache.p̃[k]
         for i in 1:S
-            b[div(D,2)+k] += params.Δt * params.tab.p.b[i] * params.pparams[:F][i][k]
+            b[div(D,2)+k] += timestep(problem) * tableau(method).p.b[i] * params.pparams[:F][i][k]
         end
     end
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKdegenerate{DT,TT}, sol::SolutionStepPODE{DT,TT},
+function integrate_step!(int::IntegratorVPRKdegenerate{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)

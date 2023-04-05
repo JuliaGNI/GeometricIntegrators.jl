@@ -27,7 +27,7 @@ end
 
 Methods.tableau(method::SPARKMethod) = method.tableau
 
-nonlinearsolversize(problem::Union{IDAEProblem,LDAEProblem}, method::SPARKMethod) =
+solversize(problem::Union{IDAEProblem,LDAEProblem}, method::SPARKMethod) =
     2 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)
 
 
@@ -67,7 +67,7 @@ const IntegratorSPARK{DT,TT} = Integrator{<:Union{IDAEProblem{DT,TT},LDAEProblem
 
 function Base.show(io::IO, int::IntegratorSPARK)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for index-two DAE systems:\n")
-    print(io, "   Timestep: $(timestep(problem))\n")
+    print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(description(method(int)))\n")
     print(io, "   $(string(method(int).q))")
     print(io, "   $(string(method(int).p))")
@@ -75,7 +75,7 @@ function Base.show(io::IO, int::IntegratorSPARK)
 end
 
 
-function Integrators.initial_guess!(
+function initial_guess!(
     solstep::SolutionStepPDAE{DT}, 
     problem::Union{IDAEProblem,LDAEProblem},
     method::SPARKMethod, 

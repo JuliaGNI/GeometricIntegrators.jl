@@ -32,6 +32,8 @@ struct IntegratorCacheCTDVI{DT,D} <: ODEIntegratorCache{DT,D}
     end
 end
 
+nlsolution(cache::IntegratorCacheCTDVI) = cache.x
+
 function Cache{ST}(problem::Union{IODEProblem,LODEProblem}, method::CTDVI; kwargs...) where {ST}
     IntegratorCacheCTDVI{ST, ndims(problem)}(; kwargs...)
 end
@@ -168,7 +170,7 @@ function integrate_step!(
     solver::NonlinearSolver) where {DT,TT}
 
     # call nonlinear solver
-    solve!(caches[DT].x, solver)
+    solve!(caches[DT].x, (b,x) -> function_stages!(b, x, solstep, problem, method, caches), solver)
 
     # print solver status
     # print_solver_status(int.solver.status, int.solver.params)

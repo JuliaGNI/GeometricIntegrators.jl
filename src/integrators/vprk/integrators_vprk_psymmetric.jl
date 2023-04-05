@@ -55,11 +55,11 @@ end
 
 function Base.show(io::IO, int::IntegratorVPRKpSymmetric)
     print(io, "\nVariational Partitioned Runge-Kutta Integrator with Symmetric Projection and:\n")
-    print(io, "   Timestep: $(int.params.Δt)\n")
-    print(io, "   Tableau:  $(description(int.params.tab))\n")
-    print(io, "   $(string(int.params.tab.q))")
-    print(io, "   $(string(int.params.tab.p))")
-    # print(io, reference(int.params.tab))
+    print(io, "   Timestep: $(int.timestep(problem))\n")
+    print(io, "   Tableau:  $(description(int.tableau(method)))\n")
+    print(io, "   $(string(int.tableau(method).q))")
+    print(io, "   $(string(int.tableau(method).p))")
+    # print(io, reference(int.tableau(method)))
 end
 
 
@@ -100,8 +100,8 @@ function compute_projection_vprk!(x::Vector{ST},
                 Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
                 params::ParametersVPRKpSymmetric{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    local t₀::TT = params.t̄
-    local t₁::TT = params.t̄ + params.Δt
+    local t₀::TT = solstep.t̄[1]
+    local t₁::TT = solstep.t̄[1] + timestep(problem)
     local y1::ST
     local y2::ST
 
@@ -119,18 +119,18 @@ function compute_projection_vprk!(x::Vector{ST},
         y1 = 0
         y2 = 0
         for j in 1:S
-            y1 += params.tab.q.b[j] * V[j][k]
-            y2 += params.tab.q.b̂[j] * V[j][k]
+            y1 += tableau(method).q.b[j] * V[j][k]
+            y2 += tableau(method).q.b̂[j] * V[j][k]
         end
-        q[k] = params.q̄[k] + params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
+        q[k] = solstep.q̄[1][k] + timestep(problem) * (y1 + y2) + timestep(problem) * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
     end
     
     # compute G=g(q,λ)
-    params.equ.g(G[1], t₀, params.q̄, params.v̄, λ)
-    params.equ.g(G[2], t₁, q, v, λ)
+    functions(problem).g(G[1], t₀, solstep.q̄[1], params.v̄, λ)
+    functions(problem).g(G[2], t₁, q, v, λ)
 
     # compute p=ϑ(q)⋅p
-    params.equ.ϑ(p, t₁, q, v)
+    functions(problem).ϑ(p, t₁, q, v)
 end
 
 
@@ -150,11 +150,11 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
     # compute b = - [p-bF-G]
     compute_rhs_vprk_projection_p!(b, cache.p̃, cache.F, cache.G, D*(S+0), params)
 
-    compute_rhs_vprk_correction!(b, cache.V, params)
+    compute_rhs_correction!(b, cache.V, params)
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::SolutionStepPODE{DT,TT},
+function integrate_step!(int::IntegratorVPRKpSymmetric{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)

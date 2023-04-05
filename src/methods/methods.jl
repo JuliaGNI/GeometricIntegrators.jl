@@ -14,6 +14,8 @@ abstract type HDAEMethod <: GeometricMethod end
 abstract type IDAEMethod <: GeometricMethod end
 abstract type LDAEMethod <: GeometricMethod end
 
+Base.parent(::GeometricMethod) = nothing
+
 internal_variables(::GeometricMethod) = NamedTuple()
 
 isodemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false

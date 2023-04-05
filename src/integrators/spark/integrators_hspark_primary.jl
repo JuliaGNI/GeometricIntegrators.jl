@@ -7,7 +7,7 @@ end
 
 Methods.tableau(method::HSPARKprimary) = method.tableau
 
-nonlinearsolversize(problem::Union{PDAEProblem,HDAEProblem}, method::HSPARKprimary) =
+solversize(problem::Union{PDAEProblem,HDAEProblem}, method::HSPARKprimary) =
     2 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)
 
 

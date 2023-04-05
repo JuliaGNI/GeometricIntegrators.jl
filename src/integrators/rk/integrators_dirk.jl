@@ -3,7 +3,6 @@ Diagonally implicit Runge-Kutta integrator cache.
 """
 struct IntegratorCacheDIRK{DT,D,S} <: ODEIntegratorCache{DT,D}
     x::Vector{Vector{DT}}
-
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
@@ -16,6 +15,9 @@ struct IntegratorCacheDIRK{DT,D,S} <: ODEIntegratorCache{DT,D}
         new(x, Q, V, Y)
     end
 end
+
+nlsolution(cache::IntegratorCacheDIRK, i) = cache.x[i]
+
 
 function Cache{ST}(problem::GeometricProblem, method::DIRKMethod; kwargs...) where {ST}
     S = nstages(tableau(method))
@@ -36,7 +38,9 @@ q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 \end{aligned}
 ```
 """
-const IntegratorDIRK{DT,TT} = Integrator{<:ODEProblem{DT,TT}, <:DIRKMethod}
+const IntegratorDIRK{DT,TT} = Integrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}}, <:DIRKMethod}
+
+solversize(problem::Union{DAEProblem,ODEProblem}, ::DIRKMethod) = ndims(problem)
 
 initmethod(method::DIRK) = method
 initmethod(method::DIRKMethod) = DIRK(method)
@@ -62,16 +66,8 @@ end
 Base.getindex(s::SingleStageSolvers, args...) = getindex(s.solvers, args...)
 
 
-function initsolver(::Newton, solstep::SolutionStepODE{DT}, problem::ODEProblem, method::DIRKMethod, caches::CacheDict, i) where {DT}
-    # create wrapper function f!(b,x)
-    f! = (b,x) -> function_stages!(b, x, solstep, problem, method, caches, i)
-
-    # create nonlinear solver
-    NewtonSolver(zero(caches[DT].x[i]), zero(caches[DT].x[i]), f!; linesearch = Backtracking(), config = Options(min_iterations = 1))
-end
-
-function initsolver(solvermethod::Newton, solstep::SolutionStepODE, problem::ODEProblem, method::DIRKMethod, caches::CacheDict)
-    SingleStageSolvers([initsolver(solvermethod, solstep, problem, method, caches, i) for i in 1:nstages(tableau(method))]...)
+function initsolver(::NewtonMethod, method::DIRK, caches::CacheDict; kwargs...)
+    SingleStageSolvers([NewtonSolver(zero(cache(caches).x[i]), zero(cache(caches).x[i]); linesearch = Backtracking(), config = Options(min_iterations = 1)) for i in eachstage(method)]...)
 end
 
 
@@ -101,63 +97,64 @@ function initial_guess!(
 end
 
 
-function compute_stages!(x::Vector{ST}, solstep::SolutionStepODE{DT,TT}, problem::ODEProblem, method::DIRKMethod, caches::CacheDict, i) where {ST,DT,TT}
-    local tᵢ::TT
+function components!(x::AbstractVector{ST}, int::IntegratorDIRK, i) where {ST}
+    # time of i-th stage
+    local tᵢ::timetype(problem(int))
 
     # get cache for internal stages
-    local Q::Vector{Vector{ST}} = caches[ST].Q
-    local V::Vector{Vector{ST}} = caches[ST].V
-    local Y::Vector{Vector{ST}} = caches[ST].Y
+    local Q::Vector{Vector{ST}} = cache(int, ST).Q
+    local V::Vector{Vector{ST}} = cache(int, ST).V
+    local Y::Vector{Vector{ST}} = cache(int, ST).Y
 
     # copy x to Y and compute Q = q + Y
-    for k in 1:ndims(problem)
+    for k in 1:ndims(int)
         Y[i][k] = x[k]
-        Q[i][k] = solstep.q̄[1][k] + Y[i][k]
+        Q[i][k] = solstep(int).q[k] + Y[i][k]
     end
 
     # compute V = v(Q)
-    tᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).c[i]
-    functions(problem).v(V[i], tᵢ, Q[i])
+    tᵢ = solstep(int).t̄[1] + timestep(int) * tableau(int).c[i]
+    equations(int).v(V[i], tᵢ, Q[i])
 end
 
 
-# Compute stages of diagonally implicit Runge-Kutta methods.
-function function_stages!(b::Vector{ST}, x::Vector{ST}, solstep::SolutionStepODE, problem::ODEProblem, method::DIRKMethod, caches::CacheDict, i) where {ST}
+function residual!(b::AbstractVector{ST}, int::IntegratorDIRK, i) where {ST}
     # temporary variables
     local y1::ST
     local y2::ST
 
     # get cache for internal stages
-    local V::Vector{Vector{ST}} = caches[ST].V
-    local Y::Vector{Vector{ST}} = caches[ST].Y
-
-    # compute stages from nonlinear solver solution x
-    compute_stages!(x, solstep, problem, method, caches, i)
+    local V::Vector{Vector{ST}} = cache(int, ST).V
+    local Y::Vector{Vector{ST}} = cache(int, ST).Y
 
     # compute b = - (Y-AV)
-    for k in 1:ndims(problem)
-        y1 = tableau(method).a[i,i] * V[i][k]
-        y2 = tableau(method).â[i,i] * V[i][k]
+    for k in 1:ndims(int)
+        y1 = tableau(int).a[i,i] * V[i][k]
+        y2 = tableau(int).â[i,i] * V[i][k]
         for j in 1:i-1
-            y1 += tableau(method).a[i,j] * V[j][k]
-            y2 += tableau(method).â[i,j] * V[j][k]
+            y1 += tableau(int).a[i,j] * V[j][k]
+            y2 += tableau(int).â[i,j] * V[j][k]
         end
-        b[k] = - Y[i][k] + timestep(problem) * (y1 + y2)
+        b[k] = - Y[i][k] + timestep(int) * (y1 + y2)
     end
 end
 
 
-function integrate_step!(
-    solstep::SolutionStepODE{DT,TT},
-    problem::ODEProblem{DT,TT}, 
-    method::DIRKMethod,
-    caches::CacheDict,
-    solvers::SingleStageSolvers) where {DT,TT}
+# Compute stages of diagonally implicit Runge-Kutta methods.
+function residual!(b, x, int::IntegratorDIRK, i)
+    # compute stages from nonlinear solver solution x
+    components!(x, int, i)
 
+    # compute residual vector
+    residual!(b, int, i)
+end
+
+
+function integrate_step!(int::IntegratorDIRK)
     # consecutively solve for all stages
-    for i in eachstage(method)
+    for i in eachstage(int)
         # call nonlinear solver
-        solve!(caches[DT].x[i], solvers[i])
+        solve!(nlsolution(cache(int), i), (b,x) -> residual!(b, x, int, i), solver(int)[i])
 
         # print solver status
         # println(status(solvers[i]))
@@ -166,12 +163,12 @@ function integrate_step!(
         # println(meets_stopping_criteria(status(solvers[i])))
 
         # compute vector field at internal stages
-        compute_stages!(caches[DT].x[i], solstep, problem, method, caches, i)
+        components!(nlsolution(cache(int), i), int, i)
     end
 
     # compute final update
-    update!(solstep, caches[DT].V, tableau(method), timestep(problem))
+    update!(solstep(int), cache(int).V, tableau(int), timestep(int))
 
     # update vector field for initial guess
-    update_vector_fields!(solstep, problem)
+    update_vector_fields!(solstep(int), problem(int))
 end

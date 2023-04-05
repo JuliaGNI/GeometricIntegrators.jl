@@ -38,14 +38,14 @@ end
 
 
 function Integrators.integrate_step!(
-    solstep::SolutionStepPDAE{DT,TT},
-    problem::AbstractSPARKProblem{DT,TT},
+    solstep::SolutionStepPDAE{DT},
+    problem::AbstractSPARKProblem{DT},
     method::AbstractSPARKMethod,
     caches::CacheDict,
-    solver::NonlinearSolver) where {DT,TT}
+    solver::NonlinearSolver) where {DT}
 
     # call nonlinear solver
-    solve!(caches[DT].x, solver)
+    solve!(caches[DT].x, (b,x) -> function_stages!(b, x, solstep, problem, method, caches), solver)
 
     # check_jacobian(int.solver)
     # print_jacobian(int.solver)
@@ -62,6 +62,9 @@ function Integrators.integrate_step!(
     # compute final update
     update_solution!(solstep, problem, method, caches)
 
+    # update vector field for initial guess
+    update_vector_fields!(solstep, problem)
+
     # copy internal stage variables
     # TODO: reactivate
     # solstep.internal.Qi .= caches[DT].Qi
@@ -73,7 +76,4 @@ function Integrators.integrate_step!(
     # solstep.internal.Pp .= caches[DT].Pp
     # solstep.internal.Λp .= caches[DT].Λp
     # solstep.internal.Φp .= caches[DT].Φp
-
-    # update vector field for initial guess
-    update_vector_fields!(solstep, problem)
 end

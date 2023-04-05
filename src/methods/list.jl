@@ -9,6 +9,7 @@ meta_methods = (
     VPRK,
     DegenerateVPRK,
     ProjectedVPRK,
+    ProjectedMethod,
 )
 
 explicit_rungekutta_methods = (
@@ -168,10 +169,12 @@ end
 # projection methods
 
 export ProjectionMethod
+export ProjectedMethod
 
 export InternalStageProjection
 export LegendreProjection
 export MidpointProjection
+export PostProjection
 export SecondaryProjection
 export StandardProjection
 export SymmetricProjection

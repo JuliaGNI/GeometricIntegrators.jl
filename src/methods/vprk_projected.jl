@@ -18,6 +18,7 @@ end
 
 ProjectedVPRK(tableau::AbstractTableau, projection::ProjectionMethod, args...; kwargs...) = ProjectedVPRK(VPRK(tableau, args...; kwargs...), projection)
 
+Base.parent(method::ProjectedVPRK) = method.vprk
 GeometricBase.tableau(method::ProjectedVPRK) = tableau(method.vprk)
 nullvector(method::ProjectedVPRK) = nullvector(method.vprk)
 hasnullvector(method::ProjectedVPRK) = hasnullvector(method.vprk)

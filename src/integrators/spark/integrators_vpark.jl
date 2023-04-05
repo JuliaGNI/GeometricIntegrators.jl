@@ -8,7 +8,7 @@ end
 
 Methods.tableau(method::VPARK) = method.tableau
 
-nonlinearsolversize(problem::Union{IDAEProblem,LDAEProblem}, method::VPARK) =
+solversize(problem::Union{IDAEProblem,LDAEProblem}, method::VPARK) =
     3 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)
 
 

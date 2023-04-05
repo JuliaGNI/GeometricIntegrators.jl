@@ -41,6 +41,9 @@ struct IntegratorCacheIPRK{ST,D,S} <: PODEIntegratorCache{ST,D}
     end
 end
 
+nlsolution(cache::IntegratorCacheIPRK) = cache.x
+
+
 function Cache{ST}(problem::GeometricProblem, method::IPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
     D = ndims(problem)
@@ -79,21 +82,14 @@ b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 """
 const IntegratorIPRK{DT,TT} = Integrator{<:Union{PODEProblem{DT,TT},HODEProblem{DT,TT}}, <:IPRK}
 
+solversize(problem::Union{PODEProblem,HODEProblem}, method::IPRK) =
+    2 * ndims(problem) * nstages(method)
+
 initmethod(method::IPRK) = method
 initmethod(method::IPRKMethod) = IPRK(method)
 
-
 default_solver(::IPRKMethod) = Newton()
 default_iguess(::IPRKMethod) = HermiteExtrapolation()
-
-
-function initsolver(::Newton, solstep::SolutionStepPODE{DT}, problem::Union{PODEProblem,HODEProblem}, method::IPRKMethod, caches::CacheDict) where {DT}
-    # create wrapper function f!(b,x)
-    f! = (b,x) -> function_stages!(b, x, solstep, problem, method, caches)
-
-    # create nonlinear solver
-    NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1))
-end
 
 
 function Base.show(io::IO, int::IntegratorIPRK)
@@ -136,7 +132,7 @@ end
 
 
 function compute_stages!(
-    x::Vector{ST},
+    x::AbstractVector{ST},
     solstep::SolutionStepPODE{DT,TT},
     problem::Union{PODEProblem,HODEProblem},
     method::IPRKMethod,
@@ -178,8 +174,8 @@ end
 
 # Compute stages of implicit partitioned Runge-Kutta methods.
 function function_stages!(
-    b::Vector{ST},
-    x::Vector{ST},
+    b::AbstractVector{ST},
+    x::AbstractVector{ST},
     solstep::SolutionStepPODE,
     problem::Union{PODEProblem,HODEProblem},
     method::IPRKMethod,
@@ -218,7 +214,7 @@ function integrate_step!(
     solver::NonlinearSolver) where {DT,TT}
 
     # call nonlinear solver
-    solve!(caches[DT].x, solver)
+    solve!(caches[DT].x, (b,x) -> function_stages!(b, x, solstep, problem, method, caches), solver)
 
     # print solver status
     # println(status(solver))

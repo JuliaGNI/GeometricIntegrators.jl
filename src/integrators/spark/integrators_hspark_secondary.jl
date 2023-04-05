@@ -42,7 +42,7 @@ pstages(method::HSPARKsecondary) = method.r
 hasnullvector(method::HSPARKsecondary{DT,Nothing}) where {DT} = false
 hasnullvector(method::HSPARKsecondary{DT,<:AbstractVector}) where {DT} = true
 
-nonlinearsolversize(problem::HDAEProblem, method::HSPARKsecondary) =
+solversize(problem::HDAEProblem, method::HSPARKsecondary) =
     2 * ndims(problem) * nstages(method) + 4 * ndims(problem) * pstages(method)
 
 

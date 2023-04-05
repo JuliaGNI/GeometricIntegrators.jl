@@ -69,15 +69,15 @@ end
 
 function Base.show(io::IO, int::IntegratorVPRKpVariational)
     print(io, "\nVariational Partitioned Runge-Kutta Integrator with Variational Projection and:\n")
-    print(io, "   Timestep: $(int.params.Δt)\n")
-    print(io, "   Tableau:  $(description(int.params.tab))\n")
-    print(io, "   $(string(int.params.tab.q))")
-    print(io, "   $(string(int.params.tab.p))")
-    # print(io, reference(int.params.tab))
+    print(io, "   Timestep: $(int.timestep(problem))\n")
+    print(io, "   Tableau:  $(description(int.tableau(method)))\n")
+    print(io, "   $(string(int.tableau(method).q))")
+    print(io, "   $(string(int.tableau(method).p))")
+    # print(io, reference(int.tableau(method)))
 end
 
 
-function Integrators.initialize!(int::IntegratorVPRKpVariational{DT}, sol::SolutionStepPODE{DT},
+function initialize!(int::IntegratorVPRKpVariational{DT}, sol::SolutionStepPODE{DT},
                                  cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     equation(int, :v̄)(sol.v, sol.t, sol.q)
     equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
@@ -138,17 +138,17 @@ function compute_projection!(
     # U[1] .= λ
     # U[2] .= 0
 
-    params.equ.g(G[1], params.t̄, q, v, λ)
+    functions(problem).g(G[1], solstep.t̄[1], q, v, λ)
     G[2] .= 0
     # G[1] .= 0
-    # params.equ.g(G[2], params.t̄, q, v, λ)
+    # functions(problem).g(G[2], solstep.t̄[1], q, v, λ)
 
     # compute p=ϑ(q)
-    params.equ.ϑ(p, params.t̄, q, v)
+    functions(problem).ϑ(p, solstep.t̄[1], q, v)
 end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."
-function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+function function_stages!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpVariational{DT,TT,D,S},
                 caches::OldCacheDict) where {ST,DT,TT,D,S}
 
@@ -161,19 +161,19 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
 
     # # compute b = - [q̄-q-U]
     for k in 1:D
-        b[0*D+k] = - (cache.q̃[k] - params.q̄[k]) + params.Δt * params.pparams[:R][2] * cache.U[2][k]
-        # b[0*D+k] = - (cache.q[k] - params.q̄[k])
+        b[0*D+k] = - (cache.q̃[k] - solstep.q̄[1][k]) + timestep(problem) * params.pparams[:R][2] * cache.U[2][k]
+        # b[0*D+k] = - (cache.q[k] - solstep.q̄[1][k])
     end
 
     # compute b = - [p̄-p-G]
     for k in 1:D
-        b[1*D+k] = - (cache.p̃[k] - params.p̄[k])
-        # b[1*D+k] = - (cache.p[k] - params.p̄[k]) + params.Δt * params.R[2] * cache.G[2][k]
+        b[1*D+k] = - (cache.p̃[k] - solstep.p̄[1][k])
+        # b[1*D+k] = - (cache.p[k] - solstep.p̄[1][k]) + timestep(problem) * params.R[2] * cache.G[2][k]
     end
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::SolutionStepPODE{DT,TT},
+function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # add perturbation for next time step to solution
     # (same vector field as previous time step)
