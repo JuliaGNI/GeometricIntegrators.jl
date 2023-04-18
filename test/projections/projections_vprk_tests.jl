@@ -18,78 +18,78 @@ sol = integrate(ode, Gauss(8))
 reference_solution = sol.q[end]
 
 
-# @testset "$(rpad("VPRK integrators without projection",80))" begin
+@testset "$(rpad("VPRK integrators without projection",80))" begin
 
-#     sol = integrate(iode, VPRKGauss(1))
-#     @test relative_maximum_error(sol.q, reference_solution) < 2E-6
+    sol = integrate(iode, VPRKGauss(1))
+    @test relative_maximum_error(sol.q, reference_solution) < 2E-6
 
-#     sol = integrate(iode, VPRKGauss(2))
-#     @test relative_maximum_error(sol.q, reference_solution) < 8E-7
+    sol = integrate(iode, VPRKGauss(2))
+    @test relative_maximum_error(sol.q, reference_solution) < 8E-7
 
-#     sol = integrate(iode, VPRKGauss(3))
-#     @test relative_maximum_error(sol.q, reference_solution) < 4E-12
+    sol = integrate(iode, VPRKGauss(3))
+    @test relative_maximum_error(sol.q, reference_solution) < 4E-12
 
-#     sol = integrate(iode, VPRKLobattoIIIAIIIĀ(2))
-#     @test relative_maximum_error(sol.q, reference_solution) < 4E-6
+    sol = integrate(iode, VPRKLobattoIIIAIIIĀ(2))
+    @test relative_maximum_error(sol.q, reference_solution) < 4E-6
 
-#     sol = integrate(iode, VPRKLobattoIIIAIIIĀ(3))
-#     @test relative_maximum_error(sol.q, reference_solution) < 8E-7
+    sol = integrate(iode, VPRKLobattoIIIAIIIĀ(3))
+    @test relative_maximum_error(sol.q, reference_solution) < 8E-7
 
-#     sol = integrate(iode, VPRKLobattoIIIAIIIĀ(4))
-#     @test relative_maximum_error(sol.q, reference_solution) < 3E-11
+    sol = integrate(iode, VPRKLobattoIIIAIIIĀ(4))
+    @test relative_maximum_error(sol.q, reference_solution) < 3E-11
 
-#     sol = integrate(iode, VPRKLobattoIIIBIIIB̄(2))
-#     @test relative_maximum_error(sol.q, reference_solution) < 2E-6
+    sol = integrate(iode, VPRKLobattoIIIBIIIB̄(2))
+    @test relative_maximum_error(sol.q, reference_solution) < 2E-6
 
-#     sol = integrate(iode, VPRKLobattoIIIBIIIB̄(3))
-#     @test relative_maximum_error(sol.q, reference_solution) < 8E-7
+    sol = integrate(iode, VPRKLobattoIIIBIIIB̄(3))
+    @test relative_maximum_error(sol.q, reference_solution) < 8E-7
 
-#     sol = integrate(iode, VPRKLobattoIIIBIIIB̄(4))
-#     @test relative_maximum_error(sol.q, reference_solution) < 2E-11
-
-# end
-
-
-# @testset "$(rpad("VPRK integrators with standard projection",80))" begin
-
-#     sol = integrate(iode, PostProjection(VPRKGauss(1)))
-#     @test relative_maximum_error(sol.q, reference_solution) < 1E-6
-
-#     sol = integrate(iode, PostProjection(VPRKGauss(2)))
-#     @test relative_maximum_error(sol.q, reference_solution) < 1E-11
-
-#     sol = integrate(iode, PostProjection(VPRKGauss(3)))
-#     @test relative_maximum_error(sol.q, reference_solution) < 1E-15
-
-# end
-
-
-# @testset "$(rpad("VPRK integrators with symplectic projection",80))" begin
-
-#     sol = integrate(iode, SymplecticProjection(VPRKGauss(1)))
-#     @test relative_maximum_error(sol.q, reference_solution) < 4E-6
-
-#     sol = integrate(iode, SymplecticProjection(VPRKGauss(2)))
-#     @test relative_maximum_error(sol.q, reference_solution) < 1E-11
-
-#     sol = integrate(iode, SymplecticProjection(VPRKGauss(3)))
-#     @test relative_maximum_error(sol.q, reference_solution) < 1E-15
-
-# end
-
-
-@testset "$(rpad("VPRK integrators with midpoint projection",80))" begin
-
-    sol = integrate(iode, VPRKpMidpoint(VPRKGauss(1)))
-    @test relative_maximum_error(sol.q, reference_solution) < 1E-6
-
-    sol = integrate(iode, VPRKpMidpoint(VPRKGauss(2)))
-    @test relative_maximum_error(sol.q, reference_solution) < 1E-11
-
-    sol = integrate(iode, VPRKpMidpoint(VPRKGauss(3)))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-15
+    sol = integrate(iode, VPRKLobattoIIIBIIIB̄(4))
+    @test relative_maximum_error(sol.q, reference_solution) < 2E-11
 
 end
+
+
+@testset "$(rpad("VPRK integrators with standard projection",80))" begin
+
+    sol = integrate(iode, PostProjection(VPRKGauss(1)))
+    @test relative_maximum_error(sol.q, reference_solution) < 1E-6
+
+    sol = integrate(iode, PostProjection(VPRKGauss(2)))
+    @test relative_maximum_error(sol.q, reference_solution) < 1E-11
+
+    sol = integrate(iode, PostProjection(VPRKGauss(3)))
+    @test relative_maximum_error(sol.q, reference_solution) < 1E-15
+
+end
+
+
+@testset "$(rpad("VPRK integrators with symplectic projection",80))" begin
+
+    sol = integrate(iode, SymplecticProjection(VPRKGauss(1)))
+    @test relative_maximum_error(sol.q, reference_solution) < 4E-6
+
+    sol = integrate(iode, SymplecticProjection(VPRKGauss(2)))
+    @test relative_maximum_error(sol.q, reference_solution) < 1E-11
+
+    sol = integrate(iode, SymplecticProjection(VPRKGauss(3)))
+    @test relative_maximum_error(sol.q, reference_solution) < 1E-15
+
+end
+
+
+# @testset "$(rpad("VPRK integrators with midpoint projection",80))" begin
+
+#     sol = integrate(iode, VPRKpMidpoint(VPRKGauss(1)))
+#     @test relative_maximum_error(sol.q, reference_solution) < 1E-6
+
+#     sol = integrate(iode, VPRKpMidpoint(VPRKGauss(2)))
+#     @test relative_maximum_error(sol.q, reference_solution) < 1E-11
+
+#     sol = integrate(iode, VPRKpMidpoint(VPRKGauss(3)))
+#     @test relative_maximum_error(sol.q, reference_solution) < 4E-15
+
+# end
 
 
 # @testset "$(rpad("VPRK integrators with symmetric projection",80))" begin
