@@ -35,9 +35,9 @@ module Integrators
 
     import ..Extrapolators: extrapolate_ode!, extrapolate_iode!, extrapolate_pode!
 
-    import ..Methods: initmethod, implicit_update, nullvector, tableau
+    import ..Methods: hasnullvector, initmethod, implicit_update, nullvector, tableau
 
-    import ..Solutions: current, reset!
+    import ..Solutions: current, cut_periodic_solution!, reset!
 
 
     # compat workaroung

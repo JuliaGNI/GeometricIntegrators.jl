@@ -48,7 +48,7 @@ Returns a NamedTuple with the solution of the previous time step.
 """
 function previous end
 
-function GeometricBase.cut_periodic_solution!(solstep::SolutionStep, periodicity)
+function cut_periodic_solution!(solstep::SolutionStep, periodicity)
     if periodicity.q != NullPeriodicity()
         @assert axes(solstep.q) == axes(periodicity.q)
         for k in eachindex(solstep.q, periodicity.q)
