@@ -73,9 +73,16 @@ function update!(cache::MidpointProjectionCache, V::AbstractVector, tableau::Tab
     cache.q .+= cache.Δq
 end
 
-function update!(cache::MidpointProjectionCache, V::AbstractVector, F::AbstractVector, tableau::Union{Tableau,PartitionedTableau}, Δt::Number)
+function update!(cache::MidpointProjectionCache, V::AbstractVector, F::AbstractVector, tableau::Tableau, Δt::Number)
     update_vector!(cache.Δq, V, tableau, Δt)
     update_vector!(cache.Δp, F, tableau, Δt)
+    cache.q .+= cache.Δq
+    cache.p .+= cache.Δp
+end
+
+function update!(cache::MidpointProjectionCache, V::AbstractVector, F::AbstractVector, tableau::PartitionedTableau, Δt::Number)
+    update_vector!(cache.Δq, V, tableau.q, Δt)
+    update_vector!(cache.Δp, F, tableau.p, Δt)
     cache.q .+= cache.Δq
     cache.p .+= cache.Δp
 end

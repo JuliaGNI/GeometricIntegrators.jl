@@ -36,7 +36,7 @@ reference_solution = sol.q[end]
 end
 
 
-@testset "$(rpad("Midpoint-projection with Runge-Kutta integrators for implicit equations",80))" begin
+@testset "$(rpad("Midpoint Projection with Runge-Kutta integrators for implicit equations",80))" begin
 
     sol = integrate(iode, MidpointProjection(Gauss(1)))
     @test relative_maximum_error(sol.q, reference_solution) < 4E-4

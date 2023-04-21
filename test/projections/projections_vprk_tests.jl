@@ -78,18 +78,18 @@ end
 end
 
 
-# @testset "$(rpad("VPRK integrators with midpoint projection",80))" begin
+@testset "$(rpad("VPRK integrators with midpoint projection",80))" begin
 
-#     sol = integrate(iode, VPRKpMidpoint(VPRKGauss(1)))
-#     @test relative_maximum_error(sol.q, reference_solution) < 1E-6
+    sol = integrate(iode, MidpointProjection(VPRKGauss(1)))
+    @test relative_maximum_error(sol.q, reference_solution) < 1E-6
 
-#     sol = integrate(iode, VPRKpMidpoint(VPRKGauss(2)))
-#     @test relative_maximum_error(sol.q, reference_solution) < 1E-11
+    sol = integrate(iode, MidpointProjection(VPRKGauss(2)))
+    @test relative_maximum_error(sol.q, reference_solution) < 1E-11
 
-#     sol = integrate(iode, VPRKpMidpoint(VPRKGauss(3)))
-#     @test relative_maximum_error(sol.q, reference_solution) < 4E-15
+    sol = integrate(iode, MidpointProjection(VPRKGauss(3)))
+    @test relative_maximum_error(sol.q, reference_solution) < 4E-15
 
-# end
+end
 
 
 # @testset "$(rpad("VPRK integrators with symmetric projection",80))" begin
