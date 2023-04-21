@@ -223,15 +223,15 @@ end
 
 # Compute stages of implicit Runge-Kutta methods.
 function residual!(b::AbstractVector{ST}, int::IntegratorIRKimplicit) where {ST}
-    # temporary variables
-    local y1::ST
-    local y2::ST
-
-    # get cache for internal stages
+    # get cache for previous solution and internal stages
     local p̄ = cache(int, ST).p̄
     local θ = cache(int, ST).θ
     local Θ = cache(int, ST).Θ
     local F = cache(int, ST).F
+
+    # temporary variables
+    local y1::ST
+    local y2::ST
 
     # compute b for internal stages
     for i in eachindex(Θ)

@@ -167,70 +167,58 @@ function components!(x::AbstractVector{ST}, int::IntegratorVPRK) where {ST}
 end
 
 
-function residual!(
-    b::AbstractVector{ST},
-    solstep::SolutionStepPODE, 
-    problem::VPRKProblem,
-    method::VPRKMethod,
-    caches::CacheDict) where {ST}
+function residual_solution!(b::AbstractVector{ST}, int::IntegratorVPRK) where {ST}
+    # get cache for previous solution and internal stages
+    local p̄ = cache(int, ST).p̄
+    local P = cache(int, ST).P
+    local F = cache(int, ST).F
 
-    local S = nstages(method)
-    local D = ndims(problem)
-    local p̄ = caches[ST].p̄
-    local P = caches[ST].P
-    local F = caches[ST].F
-
+    # temporary variables
     local z1::ST
     local z2::ST
 
     # compute b = - [(P-p-AF)]
-    for i in 1:S
-        for k in 1:D
+    for i in eachindex(P)
+        for k in eachindex(P[i])
             z1 = 0
             z2 = 0
-            for j in 1:S
-                z1 += tableau(method).p.a[i,j] * F[j][k]
-                z2 += tableau(method).p.â[i,j] * F[j][k]
+            for j in eachindex(F)
+                z1 += tableau(int).p.a[i,j] * F[j][k]
+                z2 += tableau(int).p.â[i,j] * F[j][k]
             end
-            b[D*(i-1)+k] = - ( P[i][k] - p̄[k] ) + timestep(problem) * (z1 + z2)
+            b[ndims(int)*(i-1) + k] = - ( P[i][k] - p̄[k] ) + timestep(int) * (z1 + z2)
         end
     end
 end
 
 
-function residual_correction!(
-    b::AbstractVector{ST},
-    problem::VPRKProblem,
-    method::VPRKMethod, 
-    caches::CacheDict) where {ST}
+function residual_correction!(b::AbstractVector{ST}, int::IntegratorVPRK) where {ST}
+    # get cache for internal stages
+    local V = cache(int, ST).V
+    local μ = cache(int, ST).μ
 
-    local S = nstages(method)
-    local D = ndims(problem)
-    local V = caches[ST].V
-    local μ = caches[ST].μ
+    local sl::Int = div(nstages(int)+1, 2)
 
-    local sl::Int = div(S+1, 2)
-
-    if hasnullvector(method)
+    if hasnullvector(int)
         # compute μ
-        for k in 1:D
-            μ[k] = tableau(method).p.b[sl] / nullvector(method)[sl] * b[D*(sl-1)+k]
+        for k in eachindex(μ)
+            μ[k] = tableau(int).p.b[sl] / nullvector(int)[sl] * b[ndims(int)*(sl-1)+k]
         end
 
         # replace equation for Pₗ with constraint on V
-        for k in 1:D
-            b[D*(sl-1)+k] = 0
-            for i in 1:S
-                b[D*(sl-1)+k] += V[i][k] * nullvector(method)[i]
+        for k in eachindex(μ)
+            b[ndims(int)*(sl-1)+k] = 0
+            for i in eachindex(nullvector(int))
+                b[ndims(int)*(sl-1)+k] += V[i][k] * nullvector(int)[i]
             end
         end
 
         # modify P₁, ..., Pₛ except for Pₗ
-        for i in 1:S
+        for i in eachindex(nullvector(int))
             if i ≠ sl
-                z = nullvector(method)[i] / tableau(method).p.b[i]
-                for k in 1:D
-                    b[D*(i-1)+k] -= z * μ[k]
+                z = nullvector(int)[i] / tableau(int).p.b[i]
+                for k in eachindex(μ)
+                    b[ndims(int)*(i-1)+k] -= z * μ[k]
                 end
             end
         end
@@ -240,8 +228,8 @@ end
 
 # Compute stages of variational partitioned Runge-Kutta methods.
 function residual!(b::AbstractVector, int::IntegratorVPRK)
-    residual!(b, solstep(int), problem(int), method(int), caches(int))
-    residual_correction!(b, problem(int), method(int), caches(int))
+    residual_solution!(b, int)
+    residual_correction!(b, int)
 end
 
 

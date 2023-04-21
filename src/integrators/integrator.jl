@@ -88,11 +88,13 @@ solstep(int::Integrator) = int.solstep
 cache(int::Integrator, DT) = caches(int)[DT]
 cache(int::Integrator) = cache(int, datatype(solstep(int)))
 eachstage(int::Integrator) = eachstage(method(int))
+hasnullvector(int::Integrator) = hasnullvector(method(int))
 implicit_update(int::Integrator) = implicit_update(method(int))
 nconstraints(int::Integrator) = nconstraints(problem(int))
 Base.ndims(int::Integrator) = ndims(problem(int))
 nstages(int::Integrator) = nstages(tableau(method(int)))
 nlsolution(int::Integrator) = nlsolution(cache(int))
+nullvector(int::Integrator) = nullvector(method(int))
 tableau(int::Integrator) = tableau(method(int))
 
 GeometricBase.equations(int::Integrator) = functions(problem(int))
