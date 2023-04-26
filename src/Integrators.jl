@@ -203,6 +203,7 @@ module Integrators
     include("projections/common_projection.jl")
     include("projections/midpoint_projection.jl")
     include("projections/standard_projection.jl")
+    include("projections/symmetric_projection.jl")
     
 
     function __init__()

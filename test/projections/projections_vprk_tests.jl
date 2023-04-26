@@ -92,18 +92,18 @@ end
 end
 
 
-# @testset "$(rpad("VPRK integrators with symmetric projection",80))" begin
+@testset "$(rpad("VPRK integrators with symmetric projection",80))" begin
 
-#     sol = integrate(iode, VPRKpSymmetric(VPRKGauss(1)))
-#     @test relative_maximum_error(sol.q, reference_solution) < 1E-6
+    sol = integrate(iode, SymmetricProjection(VPRKGauss(1)))
+    @test relative_maximum_error(sol.q, reference_solution) < 1E-6
 
-#     sol = integrate(iode, VPRKpSymmetric(VPRKGauss(2)))
-#     @test relative_maximum_error(sol.q, reference_solution) < 1E-11
+    sol = integrate(iode, SymmetricProjection(VPRKGauss(2)))
+    @test relative_maximum_error(sol.q, reference_solution) < 1E-11
 
-#     sol = integrate(iode, VPRKpSymmetric(VPRKGauss(3)))
-#     @test relative_maximum_error(sol.q, reference_solution) < 4E-15
+    sol = integrate(iode, SymmetricProjection(VPRKGauss(3)))
+    @test relative_maximum_error(sol.q, reference_solution) < 4E-15
 
-# end
+end
 
 
 # @testset "$(rpad("VPRK integrators with internal projection",80))" begin
