@@ -189,7 +189,7 @@ function integrate! end
 # function integrate!(solstep::SolutionStep, problem::GeometricProblem, method::GeometricMethod, caches::CacheDict, solver::Union{SolverMethod, NonlinearSolver}, iguess::Union{InitialGuess,Extrapolation})
 function integrate!(int::Integrator)
     # reset solution step
-    reset!(solstep(int), timestep(problem(int)))
+    reset!(solstep(int), timestep(int))
 
     # compute initial guess
     initial_guess!(int)
