@@ -200,7 +200,8 @@ module Integrators
     include("integrators/methods.jl")
 
 
-    include("projections/common_projection.jl")
+    include("projections/cache.jl")
+    include("projections/common.jl")
     include("projections/midpoint_projection.jl")
     include("projections/standard_projection.jl")
     include("projections/symmetric_projection.jl")
