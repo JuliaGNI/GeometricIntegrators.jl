@@ -194,20 +194,3 @@ function function_stages!(
         end
     end
 end
-
-
-function update_solution!(
-    solstep::SolutionStepPDAE{DT,TT}, 
-    problem::Union{IDAEProblem,LDAEProblem},
-    method::VPARK, 
-    caches::CacheDict) where {DT,TT}
-
-    # compute final update
-    update_solution!(solstep.q, solstep.q̃, caches[DT].Vi, tableau(method).q.b, timestep(problem))
-    update_solution!(solstep.p, solstep.p̃, caches[DT].Fi, tableau(method).p.b, timestep(problem))
-
-    # compute projection
-    update_solution!(solstep.q, solstep.q̃, caches[DT].Up, tableau(method).q.β, timestep(problem))
-    update_solution!(solstep.p, solstep.p̃, caches[DT].Gp, tableau(method).p.β, timestep(problem))
-    update_multiplier!(solstep.λ, caches[DT].Λp, tableau(method).λ.b)
-end

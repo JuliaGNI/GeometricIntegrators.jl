@@ -6,8 +6,12 @@ end
 
 @define CoefficientsARK begin
     @CoefficientsRK
+
     α::Matrix{T}
     β::Vector{T}
+
+    α̂::Matrix{T}
+    β̂::Vector{T}
 end
 
 @define CoefficientsPRK begin
@@ -27,7 +31,7 @@ struct CoefficientsARK{T} <: AbstractCoefficients{T}
         @assert r > 0 "Number of stages r must be > 0"
         @assert s==size(a,1)==size(a,2)==size(α,1)==length(b)==length(c)
         @assert r==size(α,2)==length(β)
-        new(name,o,s,r,a,b,c,α,β)
+        new(name, o, s, r, a, b, c, zero(a), zero(b), zero(c), α, β, zero(α), zero(β))
     end
 end
 

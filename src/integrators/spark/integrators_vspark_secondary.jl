@@ -284,11 +284,11 @@ function update_solution!(
     caches::CacheDict) where {DT,TT}
 
     # compute final update
-    update_solution!(solstep.p, solstep.p̃, caches[DT].Fi, tableau(method).p.b[1], timestep(problem))
+    update!(solstep.p, solstep.p̃, caches[DT].Fi, tableau(method).p.b[1], zero(tableau(method).p.b[1]), timestep(problem))
 
     # compute projection
-    update_solution!(solstep.q, solstep.q̃, caches[DT].Vp, tableau(method).q.b[1], timestep(problem))
-    update_solution!(solstep.q, solstep.q̃, caches[DT].Λp, tableau(method).q.b[2], timestep(problem))
-    update_solution!(solstep.p, solstep.p̃, caches[DT].Gp, tableau(method).p.b[2], timestep(problem))
-    update_solution!(solstep.p, solstep.p̃, caches[DT].G̅p, tableau(method).p.b[3], timestep(problem))
+    update!(solstep.q, solstep.q̃, caches[DT].Vp, tableau(method).q.b[1], zero(tableau(method).q.b[1]), timestep(problem))
+    update!(solstep.q, solstep.q̃, caches[DT].Λp, tableau(method).q.b[2], zero(tableau(method).q.b[2]), timestep(problem))
+    update!(solstep.p, solstep.p̃, caches[DT].Gp, tableau(method).p.b[2], zero(tableau(method).p.b[2]), timestep(problem))
+    update!(solstep.p, solstep.p̃, caches[DT].G̅p, tableau(method).p.b[3], zero(tableau(method).p.b[3]), timestep(problem))
 end
