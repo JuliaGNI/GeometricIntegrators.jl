@@ -19,6 +19,6 @@ using SafeTestsets
 
 @safetestset "Common Integrator Functionality                                                 " begin include("integrators/integrators_common_tests.jl") end
 @safetestset "Tableau Tests                                                                   " begin include("tableaus/tableaus_tests.jl") end
-# @safetestset "Method Tests                                                                    " begin include("methods/methods_tests.jl") end
+@safetestset "Method Tests                                                                    " begin include("methods/methods_tests.jl") end
 
 # @safetestset "Simulation Tests                                                                " begin include("simulations/simulations_tests.jl") end
