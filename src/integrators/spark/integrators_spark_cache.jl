@@ -154,6 +154,8 @@ end
 #     IntegratorCacheSPARK{DT, ndims(problem), nstages(method), pstages(method)}()
 # end
 
+nlsolution(cache::IntegratorCacheSPARK) = cache.x
+
 function GeometricBase.reset!(cache::IntegratorCacheSPARK)
     cache.t̄  = cache.t
     cache.q̄ .= cache.q

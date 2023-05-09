@@ -21,12 +21,7 @@ eachstage(method::AbstractSPARKMethod) = eachstage(tableau(method))
 hasnullvector(method::AbstractSPARKMethod) = hasnullvector(tableau(method))
 
 
-function Integrators.initsolver(::Newton, solstep::SolutionStepPDAE, problem::AbstractSPARKProblem, method::AbstractSPARKMethod, caches::CacheDict)
-    DT = datatype(problem)
-
-    # create wrapper function f!(b,x)
-    f! = (b,x) -> function_stages!(b, x, solstep, problem, method, caches)
-
-    # create nonlinear solver
-    NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
+# create nonlinear solver
+function initsolver(::Newton, method::AbstractSPARKMethod, caches::CacheDict)
+    NewtonSolver(zero(nlsolution(caches)), zero(nlsolution(caches)); linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
 end

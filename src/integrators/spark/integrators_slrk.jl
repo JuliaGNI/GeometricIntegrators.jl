@@ -265,14 +265,14 @@ end
 
 
 function update_solution!(
-    solstep::SolutionStepPDAE{DT,TT}, 
+    solstep::SolutionStepPDAE{DT}, 
     problem::LDAEProblem,
     method::SLRK, 
-    caches::CacheDict) where {DT,TT}
+    caches::CacheDict) where {DT}
 
     # compute final update
-    update_solution!(solstep.q, caches[DT].Vp, method.q.b, timestep(problem))
-    update_solution!(solstep.q, caches[DT].Λp, method.q̃.b, timestep(problem))
-    update_solution!(solstep.p, caches[DT].Fp, method.p.b, timestep(problem))
-    update_solution!(solstep.p, caches[DT].Gp, method.p̃.b, timestep(problem))
+    update!(solstep.q, solstep.q̃, caches[DT].Vp, method.q.b, method.q.b̂, timestep(problem))
+    update!(solstep.q, solstep.q̃, caches[DT].Λp, method.q̃.b, method.q̃.b̂, timestep(problem))
+    update!(solstep.p, solstep.p̃, caches[DT].Fp, method.p.b, method.p.b̂, timestep(problem))
+    update!(solstep.p, solstep.p̃, caches[DT].Gp, method.p̃.b, method.p̃.b̂, timestep(problem))
 end

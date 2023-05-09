@@ -15,19 +15,19 @@ module SPARK
 
     import ..Methods: tableau
 
-    import ..Solutions: SolutionStepPDAE, SolutionVector, update!
+    import ..Solutions: SolutionStepPDAE, SolutionVector
 
     import ..Integrators
 
     import ..Integrators: Integrator, PDAEIntegrator, Parameters, Newton
-    import ..Integrators: InitialGuess, InitialGuessIODE, InitialGuessPODE, Extrapolation, HermiteExtrapolation
+    import ..Integrators: InitialGuess, Extrapolation, HermiteExtrapolation
     import ..Integrators: initialguess!, initial_guess!, integrate_step!, function_stages!
     import ..Integrators: CacheDict, Cache, CacheType, IDAEIntegratorCache
     import ..Integrators: AbstractCoefficients,
                           @CoefficientsRK, @HeaderCoefficientsRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
-                          update_vector_fields!, update_solution!, update_multiplier!,
-                          initialize!
+                          update!, update_vector_fields!, update_solution!, update_multiplier!,
+                          initialize!, initsolver, nlsolution
     import ..Integrators: equation, equations, tableau, timestep,
                           eachdim, eachstage, nstages
 
