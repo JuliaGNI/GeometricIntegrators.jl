@@ -56,13 +56,12 @@ module SPARK
     export IntegratorSLRK, SLRK
 
 
-    include("spark/abstract_integrator_spark.jl")
+    include("spark/abstract.jl")
     include("spark/coefficients.jl")
+    include("spark/cache.jl")
 
-    include("spark/integrators_spark_cache.jl")
     include("spark/integrators_spark_common.jl")
     include("spark/integrators_spark_tableau.jl")
-
     include("spark/integrators_spark.jl")
     
     include("spark/integrators_vpark.jl")
