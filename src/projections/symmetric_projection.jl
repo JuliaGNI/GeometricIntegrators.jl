@@ -125,13 +125,13 @@ function components!(
 end
 
 
-function constraint!(solstep::SolutionStep, problem::DAEProblem, cache::ProjectionCache)
+function constraint!(solstep::SolutionStep, problem::DAEProblem, ::IntegratorSymmetricProjection, cache::ProjectionCache)
     # compute ϕ = ϕ(q)
     functions(problem).ϕ(cache.ϕ, solstep.t, cache.q)
 end
 
 
-function constraint!(solstep::SolutionStep, problem::Union{IODEProblem,LODEProblem}, cache::ProjectionCache)
+function constraint!(solstep::SolutionStep, problem::Union{IODEProblem,LODEProblem}, ::IntegratorSymmetricProjection, cache::ProjectionCache)
     # compute ϕ = ϑ(q) - p
     functions(problem).ϑ(cache.ϕ, solstep.t, cache.q, solstep.v)
     cache.ϕ .-= cache.p
@@ -193,7 +193,7 @@ function residual!(
     components!(x, int)
 
     # update constraint
-    constraint!(solstep(int), problem(int), cache(int, ST))
+    constraint!(solstep(int), problem(int), int, cache(int, ST))
 
     # split b
     b̄, b̃ = split_nlsolution(b, int)
