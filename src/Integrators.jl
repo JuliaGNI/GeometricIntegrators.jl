@@ -138,6 +138,7 @@ module Integrators
            IntegratorComposition,
            IntegratorExactODE,
            AbstractTableauSplitting,
+           Composition,
            Splitting,
            SplittingCoefficientsGeneral,
            SplittingCoefficientsNonSymmetric,

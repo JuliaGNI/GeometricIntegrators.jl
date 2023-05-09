@@ -19,7 +19,7 @@ module VPRK
     import ..Integrators
 
     import ..Integrators: Integrator, PDAEIntegrator, Parameters, Newton
-    import ..Integrators: InitialGuess, InitialGuessIODE, InitialGuessPODE, Extrapolation, HermiteExtrapolation
+    import ..Integrators: InitialGuess, Extrapolation, HermiteExtrapolation
     import ..Integrators: initialguess!, initial_guess!, integrate_step!, function_stages!
     import ..Integrators: IODEIntegrator, IODEIntegratorCache,
                           AbstractIntegratorIRK, AbstractIntegratorPRK
