@@ -166,9 +166,9 @@ end
 
 
 function residual!(b::AbstractVector{ST}, int::IntegratorSymmetricProjection) where {ST}
-    # compute b = q̃ - (q + q̄) / 2
+    # compute b = q̃ - q
     for k in 1:ndims(int)
-        b[k] = cache(int, ST).q̃[k] - ( cache(int, ST).q[k] + solstep(int).q̄[1][k] ) / 2
+        b[k] = cache(int, ST).q̃[k] - cache(int, ST).q[k]
     end
 
     # compute b = ϕ(q) or b = ϕ(q,p) or b = ϕ(...)
