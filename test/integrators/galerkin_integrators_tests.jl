@@ -10,7 +10,7 @@ using GeometricProblems.HarmonicOscillator: reference_solution
 iode = harmonic_oscillator_iode()
 
 QGau4 = GaussLegendreQuadrature(4)
-BGau4 = Lagrange(nodes(QGau4))
+BGau4 = Lagrange(QuadratureRules.nodes(QGau4))
 
 
 ### CGVI Integrators ###
