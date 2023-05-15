@@ -26,10 +26,10 @@ module SPARK
     import ..Integrators: AbstractCoefficients,
                           @CoefficientsRK, @HeaderCoefficientsRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
-                          update!, update_vector_fields!, update_solution!, update_multiplier!,
+                          update!, update_vector_fields!, update_multiplier!,
                           initialize!, initsolver, nlsolution
     import ..Integrators: equation, equations, tableau, timestep,
-                          eachdim, eachstage, nstages
+                          eachstage, nstages
 
     import ..Utils: @define
 

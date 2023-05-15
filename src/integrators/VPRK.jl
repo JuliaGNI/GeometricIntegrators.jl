@@ -24,14 +24,13 @@ module VPRK
     import ..Integrators: IODEIntegrator, IODEIntegratorCache,
                           AbstractIntegratorIRK, AbstractIntegratorPRK
     import ..Integrators: CacheDict, Cache, CacheType, nlsolution
-    import ..Integrators: IntegratorCache, OldCacheDict, Parameters
+    import ..Integrators: IntegratorCache, Parameters
     import ..Integrators: AbstractCoefficients, CoefficientsPGLRK,
                           @CoefficientsRK, @HeaderTableau, @HeaderCoefficientsRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
                           update_vector_fields!, update_multiplier!,
                           initialize!, update!
-    import ..Integrators: equation, equations, tableau, timestep,
-                          eachdim
+    import ..Integrators: equation, equations, tableau, timestep
     import ..Integrators: solver
 
 
