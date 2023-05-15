@@ -41,10 +41,10 @@ end
 end
 
 
-IntegratorCache(problem::GeometricProblem, method::GeometricMethod) = IntegratorCache{datatype(problem)}(problem, method)
-IntegratorCache{ST}(::GeometricProblem, ::GeometricMethod) where {ST} = nothing
+IntegratorCache(problem::AbstractProblem, method::GeometricMethod) = IntegratorCache{datatype(problem)}(problem, method)
+IntegratorCache{ST}(::AbstractProblem, ::GeometricMethod) where {ST} = nothing
 
-CacheType(T, problem::GeometricProblem, method::GeometricMethod) = error("CacheType(T, params) not implemented for ", typeof(problem), " and ", typeof(method))
+CacheType(T, problem::AbstractProblem, method::GeometricMethod) = error("CacheType(T, params) not implemented for ", typeof(problem), " and ", typeof(method))
 
 
 struct CacheDict{PT,MT}
@@ -52,7 +52,7 @@ struct CacheDict{PT,MT}
     method::MT
     caches::Dict{UInt64, IntegratorCache}
 
-    function CacheDict(prob::GeometricProblem, method::GeometricMethod)
+    function CacheDict(prob::AbstractProblem, method::GeometricMethod)
         new{typeof(prob), typeof(method)}(prob, method, Dict{UInt64, IntegratorCache}())
     end
 end

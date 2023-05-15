@@ -21,7 +21,7 @@ the internal state of the integrator as obtained from the function
 """
 abstract type SolutionStep{dType <: Number, tType <: Real, aType <: AbstractArray{dType}} end
 
-initialize!(::SolutionStep, ::GeometricProblem) = nothing
+initialize!(::SolutionStep, ::AbstractProblem) = nothing
 
 GeometricBase.datatype(::SolutionStep{dType, tType, aType}) where {dType, tType, aType} = dType
 GeometricBase.timetype(::SolutionStep{dType, tType, aType}) where {dType, tType, aType} = tType

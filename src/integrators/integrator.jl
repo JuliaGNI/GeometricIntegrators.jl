@@ -10,7 +10,7 @@ default_iguess(::GeometricMethod) = NoInitialGuess()
 # default_projection(::GeometricMethod) = NoProjection()
 
 initmethod(method::GeometricMethod) = method
-initmethod(method::GeometricMethod, ::GeometricProblem) = initmethod(method)
+initmethod(method::GeometricMethod, ::AbstractProblem) = initmethod(method)
 initsolver(::SolverMethod, ::GeometricMethod, ::CacheDict) = NoSolver()
 
 
@@ -43,7 +43,7 @@ struct Integrator{PT, MT, CT, ST, IT, SIT, SST}
     solstep::SST
 
     function Integrator(
-        problem::GeometricProblem, 
+        problem::AbstractProblem, 
         integratormethod::GeometricMethod, 
         solvermethod::SolverMethod, 
         iguess::Union{InitialGuess,Extrapolation})
@@ -66,7 +66,7 @@ struct Integrator{PT, MT, CT, ST, IT, SIT, SST}
 end
 
 function Integrator(
-    problem::GeometricProblem,
+    problem::AbstractProblem,
     method::GeometricMethod;
     solver = default_solver(method),
     initialguess = default_iguess(method))
@@ -74,7 +74,7 @@ function Integrator(
     Integrator(problem, method, solver, initialguess)
 end
 
-Integrator(::GeometricProblem, ::Nothing, args...; kwargs...) = nothing
+Integrator(::AbstractProblem, ::Nothing, args...; kwargs...) = nothing
 
 problem(int::Integrator) = int.problem
 method(int::Integrator) = int.method

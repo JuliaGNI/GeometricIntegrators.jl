@@ -49,7 +49,7 @@ function SolutionStep(solution::SolutionPDAE; kwargs...)
     SolutionStepPDAE(solution[0].t, solution[0].q, solution[0].p, solution[0].λ; kwargs...)
 end
 
-function SolutionStep(problem::GeometricProblem, method::GeometricMethod, extrap::Extrapolation = default_extrapolation())
+function SolutionStep(problem::AbstractProblem, method::GeometricMethod, extrap::Extrapolation = default_extrapolation())
     SolutionStep(problem, extrap; internal=internal_variables(method))
 end
 
@@ -58,7 +58,7 @@ function SolutionStep(solution::AbstractSolution, method::GeometricMethod)
 end
 
 # Print error for SolutionSteps of problem types not implemented, yet.
-function SolutionStep(problem::GeometricProblem, args...; kwargs...)
+function SolutionStep(problem::AbstractProblem, args...; kwargs...)
     error("No SolutionStep found for problem type ", typeof(problem))
 end
 
