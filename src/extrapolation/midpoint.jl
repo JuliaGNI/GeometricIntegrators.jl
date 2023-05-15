@@ -131,7 +131,7 @@ end
 
 function extrapolate!(t₀, x₀::AbstractVector,
                       t₁, x₁::AbstractVector,
-                      problem::Union{ODEProblem,DAEProblem},
+                      problem::Union{ODEProblem, DAEProblem, SubstepProblem},
                       extrap::MidpointExtrapolation)
     extrapolate_ode!(t₀, x₀, t₁, x₁, functions(problem).v, extrap)
 end

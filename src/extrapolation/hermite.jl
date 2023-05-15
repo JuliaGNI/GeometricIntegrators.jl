@@ -216,7 +216,7 @@ end
 function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
                       t₁::TT, x₁::AbstractArray{DT},
                       tᵢ::TT, xᵢ::AbstractArray{DT},
-                      problem::ODEProblem,
+                      problem::Union{ODEProblem, DAEProblem, SubstepProblem},
                       extrap::HermiteExtrapolation) where {DT,TT}
     extrapolate!(t₀, x₀, t₁, x₁, tᵢ, xᵢ, functions(problem).v, extrap)
 end
@@ -224,7 +224,7 @@ end
 function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
                       t₁::TT, x₁::AbstractArray{DT},
                       tᵢ::TT, xᵢ::AbstractArray{DT}, ẋᵢ::AbstractArray{DT}, 
-                      problem::ODEProblem,
+                      problem::Union{ODEProblem, DAEProblem, SubstepProblem},
                       extrap::HermiteExtrapolation) where {DT,TT}
     extrapolate!(t₀, x₀, t₁, x₁, tᵢ, xᵢ, ẋᵢ, functions(problem).v, extrap)
 end
