@@ -159,12 +159,12 @@ module Integrators
            TripleJump,
            SuzukiFractal
            
-    include("integrators/splitting/composition_methods.jl")
-    include("integrators/splitting/integrators_exact_ode.jl")
+    include("integrators/splitting/exact_solution.jl")
     include("integrators/splitting/splitting_coefficients.jl")
     include("integrators/splitting/splitting_methods.jl")
-    include("integrators/splitting/integrators_composition.jl")
-    include("integrators/splitting/integrators_splitting.jl")
+    include("integrators/splitting/splitting_integrator.jl")
+    include("integrators/splitting/composition_methods.jl")
+    include("integrators/splitting/composition_integrator.jl")
 
 
     export IntegratorVPRK
