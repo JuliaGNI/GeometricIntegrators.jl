@@ -88,7 +88,7 @@ ssol = integrate(sode, sint)
 # println(relative_maximum_error(ssol.q, reference_solution))
 @test relative_maximum_error(ssol.q, reference_solution) < 5E-2
 
-# sint = Composition(ints_glrk1, Strang())
-# ssol = integrate(sode, sint)
+sint = Composition(ints_glrk1, Strang())
+ssol = integrate(sode, sint)
 # println(relative_maximum_error(ssol.q, reference_solution))
-# @test relative_maximum_error(ssol.q, reference_solution) < 1E-3
+@test relative_maximum_error(ssol.q, reference_solution) < 1E-3

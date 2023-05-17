@@ -71,7 +71,7 @@ end
 
 function update_vector_fields!(solstep::SolutionStepODE, problem::SODEProblem, i=0)
     # TODO: add proper implementation !!!
-    @warn "update_vector_fields!() method for SODEs is still missing"
+    # @warn "update_vector_fields!() method for SODEs is still missing"
 end
 
 function initialize!(solstep::SolutionStepODE, problem::AbstractProblemODE, extrap::Extrapolation = default_extrapolation())
@@ -94,6 +94,13 @@ function initialize!(solstep::SolutionStepODE, problem::SODEProblem, extrap::Ext
     solstep.t  = initial_conditions(problem).t
     solstep.q .= initial_conditions(problem).q
     solstep.q̃ .= 0
+
+    for i in eachhistory(solstep)
+        solstep.t̄[i] = solstep.t̄[i-1] - timestep(problem)
+        # TODO: add proper implementation !!!
+        # extrapolate!(solstep.t̄[i-1], solstep.q̄[i-1], solstep.t̄[i], solstep.q̄[i], problem, extrap)
+        # update_vector_fields!(solstep, problem, i)
+    end
 
     return solstep
 end
