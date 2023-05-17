@@ -134,9 +134,10 @@ module Integrators
     # include("integrators/rk/pglrk_integrators.jl")
 
 
-    export IntegratorSplitting,
-           IntegratorComposition,
+    export ExactSolution,
            IntegratorExactODE,
+           IntegratorSplitting,
+           IntegratorComposition,
            AbstractTableauSplitting,
            Composition,
            Splitting,
@@ -158,6 +159,7 @@ module Integrators
            TripleJump,
            SuzukiFractal
            
+    include("integrators/splitting/composition_methods.jl")
     include("integrators/splitting/integrators_exact_ode.jl")
     include("integrators/splitting/splitting_coefficients.jl")
     include("integrators/splitting/splitting_methods.jl")

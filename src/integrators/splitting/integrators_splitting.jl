@@ -34,8 +34,9 @@ struct Splitting{T} <: SODEMethod
 end
 
 Splitting(method::AbstractSplittingMethod, problem::SODEProblem) = Splitting(coefficients(problem, method)...)
+Splitting(problem::SODEProblem, method::AbstractSplittingMethod) = Splitting(coefficients(problem, method)...)
 
-coefficients(method::Splitting) = (method.f, method.c)
+coefficients(method::Splitting) = (f = method.f, c = method.c)
 
 initmethod(method::AbstractSplittingMethod, problem::SODEProblem) = Splitting(method, problem)
 initmethod(method::Splitting, ::SODEProblem) = method
@@ -52,10 +53,15 @@ mutable struct IntegratorCacheSplitting{DT,TT,D,AT} <: ODEIntegratorCache{DT,D}
 end
 
 function Cache{ST}(problem::SODEProblem, method::Splitting; kwargs...) where {ST}
-    IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}(problem.ics.q; kwargs...)
+    IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}(initial_conditions(problem).q; kwargs...)
 end
 
 @inline CacheType(ST, problem::SODEProblem, ::Splitting) = IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}
+
+function reset!(cache::IntegratorCacheSplitting, t, q, λ = missing)
+    copyto!(cache.q, q)
+    cache.t = t
+end
 
 
 function integrate_step!(

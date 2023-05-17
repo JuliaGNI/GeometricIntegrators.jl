@@ -1,6 +1,6 @@
 
 "Explicit Euler integrator."
-struct IntegratorExplicitEuler{DT, TT, AT, D, ET <: NamedTuple} <: DeterministicIntegrator{DT,TT}
+struct IntegratorExplicitEuler{DT, TT, AT, D, ET <: NamedTuple} <: DeterministicIntegrator
     equs::ET
     Δt::TT
     v::AT

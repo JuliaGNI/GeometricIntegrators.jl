@@ -31,13 +31,13 @@ nlsolution(cache::IntegratorCacheIRK) = cache.x
 reset!(cache::IntegratorCacheIRK, t, q, λ = missing) = copyto!(cache.q̄, q)
 
 
-function Cache{ST}(problem::GeometricProblem, method::IRKMethod; kwargs...) where {ST}
+function Cache{ST}(problem::AbstractProblem, method::IRKMethod; kwargs...) where {ST}
     S = nstages(tableau(method))
     D = ndims(problem)
     IntegratorCacheIRK{ST,D,S}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::GeometricProblem, method::IRKMethod) = IntegratorCacheIRK{ST, ndims(problem), nstages(tableau(method))}
+@inline CacheType(ST, problem::AbstractProblem, method::IRKMethod) = IntegratorCacheIRK{ST, ndims(problem), nstages(tableau(method))}
 
 
 @doc raw"""
@@ -50,9 +50,9 @@ q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 \end{aligned}
 ```
 """
-const IntegratorIRK{DT,TT} = Integrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}}, <:IRKMethod}
+const IntegratorIRK{DT,TT} = Integrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}}, <:IRKMethod}
 
-solversize(problem::Union{DAEProblem,ODEProblem}, method::IRKMethod) =
+solversize(problem::Union{ODEProblem, DAEProblem, SubstepProblem}, method::IRKMethod) =
     ndims(problem) * nstages(method)
 
 initmethod(method::IRK) = method
@@ -72,8 +72,8 @@ end
 
 
 function initial_guess!(
-    solstep::Union{SolutionStepODE{DT},SolutionStepDAE{DT}},
-    problem::Union{ODEProblem,DAEProblem},
+    solstep::Union{SolutionStepODE{DT}, SolutionStepDAE{DT}, SubstepProblem{DT}},
+    problem::Union{ODEProblem, DAEProblem, SubstepProblem},
     method::IRKMethod, 
     caches::CacheDict, 
     ::NonlinearSolver, 

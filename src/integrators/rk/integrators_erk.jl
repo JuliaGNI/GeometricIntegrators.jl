@@ -11,13 +11,13 @@ struct IntegratorCacheERK{DT,D,S} <: ODEIntegratorCache{DT,D}
     end
 end
 
-function Cache{ST}(problem::GeometricProblem, method::ERK; kwargs...) where {ST}
+function Cache{ST}(problem::AbstractProblem, method::ERK; kwargs...) where {ST}
     S = nstages(tableau(method))
     D = ndims(problem)
     IntegratorCacheERK{ST,D,S}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::GeometricProblem, method::ERK) = IntegratorCacheERK{ST, ndims(problem), nstages(tableau(method))}
+@inline CacheType(ST, problem::AbstractProblem, method::ERK) = IntegratorCacheERK{ST, ndims(problem), nstages(tableau(method))}
 
 
 @doc raw"""
@@ -30,7 +30,7 @@ q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 \end{aligned}
 ```
 """
-const IntegratorERK{DT,TT} = Integrator{<:ODEProblem{DT,TT}, <:ERK}
+const IntegratorERK{DT,TT} = Integrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}}, <:ERK}
 
 initmethod(method::ERK) = method
 initmethod(method::ERKMethod) = ERK(method)
@@ -45,8 +45,8 @@ end
 
 
 function integrate_step!(
-    solstep::Union{SolutionStepODE{DT,TT},SolutionStepDAE{DT,TT}},
-    problem::Union{ODEProblem{DT,TT},DAEProblem{DT,TT}},
+    solstep::Union{SolutionStepODE{DT,TT}, SolutionStepDAE{DT,TT}, SubstepProblem{DT,TT}},
+    problem::Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}},
     method::ERK,
     caches::CacheDict,
     ::NoSolver) where {DT,TT}

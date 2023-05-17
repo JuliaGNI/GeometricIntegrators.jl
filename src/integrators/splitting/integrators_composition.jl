@@ -8,11 +8,11 @@ whose vector field ``v`` is given as a sum of vector fields
 v (t) = v_1 (t) + ... + v_r (t) .
 ```
 
-`IntegratorComposition` has three constructors:
+`CompositionIntegrator` has three constructors:
 ```julia
-IntegratorComposition{DT,D}(integrators::Tuple, Δt)
-IntegratorComposition(equation::SODE, constructors::Tuple, tableau::AbstractTableauSplitting, Δt)
-IntegratorComposition(equation::SODE, tableau::AbstractTableauSplitting, Δt)
+CompositionIntegrator{DT,D}(integrators::Tuple, solstep::SolutionStep)
+CompositionIntegrator(equation::SODE, methods::Tuple, tableau::AbstractTableauSplitting, Δt)
+CompositionIntegrator(equation::SODE, tableau::AbstractTableauSplitting, Δt)
 ```
 In the first constructor, `DT` is the data type of the state vector and `D`
 the dimension of the system. In the second and third constructor, this
@@ -32,74 +32,129 @@ In order to include exact solutions in the composition, the [`IntegratorExactODE
 implements the general integrator interface.
 
 """
-struct Composition{T,IT}
-    f::Vector{Int}
-    c::Vector{T}
-    integrators::IT
+struct Composition{MT, ST <: AbstractSplittingMethod} <: SODEMethod
+    methods::MT
+    splitting::ST
 end
 
+Composition(splitting::AbstractSplittingMethod) = Composition(ExactSolution(), splitting)
 
-function Composition(problem::SODEProblem,  splitting::SplittingCoefficients, integrators::Tuple)
-    _functions = functions(problem).v
-    _solutions = solutions(problem).q
+method(c::Composition{<: Tuple}, i::Int) = c.methods[i]
+method(c::Composition{<: GeometricMethod}, args...) = c.methods
 
-    D = ndims(problem)
-    R = length(_functions)
+function methods(c::Composition{<: Tuple}, neqs)
+    @assert neqs == length(c.methods)
+    return c.methods
+end
 
-    f, c = splitting_coefficients(R, splitting)
+methods(c::Composition{<: GeometricMethod}, neqs) = Tuple(method(c) for _ in 1:neqs)
 
-    subints = ()
+splitting(c::Composition) = c.splitting
+
+
+
+_solvers(methods::Tuple) = Tuple([default_solver(m) for m in methods])
+_iguesses(methods::Tuple) = Tuple([default_iguess(m) for m in methods])
+
+_neqs(::Any) = 0
+_neqs(::Nothing) = 0
+_neqs(eqs::Tuple) = length(eqs)
+_neqs(equ::SODE) = maximum([_neqs(functions(equ)), _neqs(solutions(equ))])
+_neqs(problem::SODEProblem) = _neqs(equation(problem))
+
+
+struct CompositionIntegrator{PT,SIT,SST,ST} <: DeterministicIntegrator
+    problem::PT
+    subints::SIT
+    solstep::SST
+    splitting::ST
+
+    # function CompositionIntegrator(problem, subints, solstep, splitting)
+
+    # end
+end
+
+function CompositionIntegrator(
+    problem::SODEProblem,
+    splitting::AbstractSplittingMethod,
+    methods::Tuple;
+    solvers = _solvers(methods),
+    initialguesses = _iguesses(methods))
+
+    @assert length(methods) == length(solvers) == length(initialguesses) == _neqs(problem)
+
+    # create a solution step
+    solstep = SolutionStep(problem, splitting)
+
+    # get splitting indices and coefficients
+    f, c = coefficients(problem, splitting)
 
     # construct composition integrators
-    for i in eachindex(f,c)
-        if c[i] ≠ zero(TT)
-            cᵢ = Δt * c[i]
+    subints = Tuple(Integrator(SubstepProblem(problem, c[i], f[i]), methods[f[i]]; solstp = solstep) for i in eachindex(f,c))
 
-            if integrators[f[i]] == IntegratorExactODE
-                @assert hassolution(equation(problem), f[i])
-                subint = integrators[f[i]]{DT,D}(_solutions[f[i]], cᵢ)
-            else
-                @assert hasvectorfield(equation(problem), f[i])
-                subint = integrators[f[i]](_functions[f[i]], cᵢ)
-            end
+    CompositionIntegrator(problem, subints, solstep, splitting)
+end
 
-            subints  = (subints..., subint)
-        end
+function Integrator(problem::SODEProblem, comp::Composition; kwargs...)
+    CompositionIntegrator(problem, splitting(comp), methods(comp, _neqs(problem)); kwargs...)
+end
+
+
+problem(int::CompositionIntegrator) = int.problem
+solstep(int::CompositionIntegrator) = int.solstep
+subints(int::CompositionIntegrator) = int.subints
+
+Base.ndims(int::CompositionIntegrator) = ndims(problem(int))
+
+GeometricBase.timestep(int::CompositionIntegrator) = timestep(problem(int))
+
+initial_guess!(::CompositionIntegrator) = nothing
+
+function initialize!(cint::CompositionIntegrator)
+    for int in subints(cint)
+        initialize!(int)
     end
-
-    Composition(f, c, subints)
 end
 
 
-function Composition(problem::SODEProblem{DT}, splitting::SplittingCoefficients) where {DT}
-    @assert hassolution(equation(problem))
-    solutions = Tuple(ExactSolutionODE(q) for (c,q) in zip(coefficients(problem, splitting), solutions(problem).q))
-    Composition(problem, solutions, coeffs, timestep(problem))
-end
+
+# function Cache{ST}(problem::SODEProblem, method::Composition; kwargs...) where {ST}
+#     IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}(; kwargs...)
+# end
+
+# @inline CacheType(ST, problem::SODEProblem, ::Composition) = IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}
 
 
-function Cache{ST}(problem::SODEProblem, method::Composition; kwargs...) where {ST}
-    IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}(; kwargs...)
-end
-
-@inline CacheType(ST, problem::SODEProblem, ::Composition) = IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}
-
-
-function integrate_step!(
-    solstep::SolutionStepODE{DT,TT},
-    problem::SODEProblem{DT,TT},
-    method::Composition,
-    caches::CacheDict,
-    solver::NoSolver) where {DT,TT}
-    
+function integrate_step!(int::CompositionIntegrator)
     # compute composition steps
-    for subint in method.integrators
-        # copy previous solution
-        caches[DT].t .= solstep.t
-        caches[DT].q .= solstep.q
+    for subint in subints(int)
+        # copy previous solution to cache of subint
+        reset!(cache(subint), solstep(int).t, solstep(int).q)
+        
+        # compute initial guess for subint
+        initial_guess!(subint)
 
-        # initialize!(subint, sol)
-
-        integrate_step!(solstep, problem, subint, caches, solver)
+        # integrate one timestep with subint
+        integrate_step!(subint)
     end
 end
+
+
+# function integrate_step!(
+#     solstep::SolutionStepODE{DT,TT},
+#     problem::SODEProblem{DT,TT},
+#     method::Composition,
+#     caches::CacheDict,
+#     solver::NoSolver) where {DT,TT}
+    
+#     # compute composition steps
+#     for subint in method.integrators
+#         # copy previous solution
+#         caches[DT].t .= solstep.t
+#         caches[DT].q .= solstep.q
+
+#         # initialize!(subint, sol)
+
+#         integrate_step!(solstep, problem, subint, caches, solver)
+#     end
+# end
