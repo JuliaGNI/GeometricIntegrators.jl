@@ -18,13 +18,13 @@ module VPRK
 
     import ..Integrators
 
-    import ..Integrators: Integrator, PDAEIntegrator, Parameters, Newton
+    import ..Integrators: Integrator, PDAEIntegrator, Newton
     import ..Integrators: InitialGuess, Extrapolation, HermiteExtrapolation
     import ..Integrators: initialguess!, initial_guess!, integrate_step!, function_stages!
     import ..Integrators: IODEIntegrator, IODEIntegratorCache,
                           AbstractIntegratorIRK, AbstractIntegratorPRK
     import ..Integrators: CacheDict, Cache, CacheType, nlsolution
-    import ..Integrators: IntegratorCache, Parameters
+    import ..Integrators: IntegratorCache
     import ..Integrators: AbstractCoefficients, CoefficientsPGLRK,
                           @CoefficientsRK, @HeaderTableau, @HeaderCoefficientsRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
