@@ -28,12 +28,10 @@ module Integrators
     import CompactBasisFunctions: Basis
     import CompactBasisFunctions: nbasis
 
-    import GeometricEquations: nconstraints
+    import GeometricBase: description, nconstraints
     
     import RungeKutta
     import RungeKutta: eachstage, nstages
-
-    import ..Extrapolators: extrapolate_ode!, extrapolate_iode!, extrapolate_pode!
 
     import ..Methods: hasnullvector, initmethod, implicit_update, nullvector, tableau
 

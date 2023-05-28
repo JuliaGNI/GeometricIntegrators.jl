@@ -38,7 +38,7 @@ initmethod(method::ERKMethod) = ERK(method)
 function Base.show(io::IO, int::IntegratorERK)
     print(io, "\nExplicit Runge-Kutta Integrator with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
-    print(io, "   Tableau:  $(description(tableau(int)))\n")
+    print(io, "   Tableau:  $(RungeKutta.description(tableau(int)))\n")
     print(io, "   $(string(tableau(int)))")
     # print(io, reference(tableau(int)))
 end
