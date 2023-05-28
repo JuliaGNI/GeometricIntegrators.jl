@@ -35,7 +35,7 @@ module Integrators
 
     import ..Methods: hasnullvector, initmethod, implicit_update, nullvector, tableau
 
-    import ..Solutions: current, cut_periodic_solution!, reset!
+    import ..Solutions: current, cut_periodic_solution!, reset!, update!
 
 
     # compat workaroung
@@ -87,9 +87,10 @@ module Integrators
     include("integrators/integrator.jl")
 
 
-    export IntegratorExplicitEuler
+    export ExplicitEuler, ImplicitEuler
     
     include("integrators/various/integrators_explicit_euler.jl")
+    include("integrators/various/integrators_implicit_euler.jl")
 
 
     export AbstractIntegratorRK, AbstractIntegratorIRK, AbstractIntegratorPRK, IntegratorRK

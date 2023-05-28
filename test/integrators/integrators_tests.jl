@@ -1,12 +1,19 @@
+using GeometricIntegrators
+using SimpleSolvers
+using Test
 
-using SafeTestsets
+using GeometricEquations.Tests.HarmonicOscillator
+using GeometricEquations.Tests.HarmonicOscillator: reference_solution
 
-# @safetestset "Common Integrator Functionality                                                 " begin include("integrators_common_tests.jl") end
-# @safetestset "Initial Guesses                                                                 " begin include("initial_guess_tests.jl") end
-# @safetestset "Runge-Kutta Integrators                                                         " begin include("rk_integrators_tests.jl") end
-# @safetestset "VPRK Integrators                                                                " begin include("vprk_integrators_tests.jl") end
-# @safetestset "SPARK Integrators                                                               " begin include("spark_integrators_tests.jl") end
-# @safetestset "Degenerate Variational Integrators                                              " begin include("dvi_integrators_tests.jl") end
-# @safetestset "Special Integrators                                                             " begin include("special_integrators_tests.jl") end
-# @safetestset "Splitting Integrators                                                           " begin include("splitting_integrators_tests.jl") end
-# @safetestset "Galerkin Integrators                                                            " begin include("galerkin_integrators_tests.jl") end
+ode  = odeproblem()
+
+
+@testset "$(rpad("Various integrators",80))" begin
+
+    sol = integrate(ode, ExplicitEuler())
+    @test relative_maximum_error(sol.q, reference_solution) < 5E-2
+
+    sol = integrate(ode, ImplicitEuler())
+    @test relative_maximum_error(sol.q, reference_solution) < 5E-2
+
+end

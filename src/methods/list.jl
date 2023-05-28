@@ -14,7 +14,7 @@ meta_methods = (
 
 explicit_rungekutta_methods = (
     ForwardEuler,
-    ExplicitEuler,
+    ExplicitEulerRK,
     ExplicitMidpoint,
     Heun2,
     Heun3,
@@ -45,7 +45,7 @@ diagonally_implicit_rungekutta_methods = (
 
 fully_implicit_rungekutta_methods = (
     BackwardEuler,
-    ImplicitEuler,
+    ImplicitEulerRK,
     ImplicitMidpoint,
     SRK3,
 )
@@ -171,11 +171,11 @@ end
 export ProjectionMethod
 export ProjectedMethod
 
-export InternalStageProjection
-export LegendreProjection
+# export InternalStageProjection
+# export LegendreProjection
 export MidpointProjection
 export PostProjection
-export SecondaryProjection
+# export SecondaryProjection
 export StandardProjection
 export SymmetricProjection
 export SymplecticProjection
@@ -186,16 +186,16 @@ export VariationalProjectionOnQ
 # degenerate VPRK methods
 
 # projected VPRK methods
-export VPRKpInternal
-export VPRKpLegendre
-export VPRKpMidpoint
-export VPRKpSecondary
-export VPRKpStandard
-export VPRKpSymmetric
-export VPRKpSymplectic
-export VPRKpVariational
-export VPRKpVariationalP
-export VPRKpVariationalQ
+# export VPRKpInternal
+# export VPRKpLegendre
+# export VPRKpMidpoint
+# export VPRKpSecondary
+# export VPRKpStandard
+# export VPRKpSymmetric
+# export VPRKpSymplectic
+# export VPRKpVariational
+# export VPRKpVariationalP
+# export VPRKpVariationalQ
 
 
 _display_property(p::Bool) = p ? "✓" : "✗"

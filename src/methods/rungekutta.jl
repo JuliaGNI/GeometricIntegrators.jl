@@ -198,7 +198,7 @@ Explicit Runge-Kutta method with [`TableauExplicitEuler`](@ref).
 
 $(reference(Val(:ExplicitEuler)))
 """
-struct ExplicitEuler <: ERKMethod end
+struct ExplicitEulerRK <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauExplicitMidpoint`](@ref).
@@ -334,7 +334,7 @@ $(reference(Val(:SSPRK3)))
 struct SSPRK3 <: ERKMethod end
 
 GeometricBase.tableau(::ForwardEuler) = TableauForwardEuler()
-GeometricBase.tableau(::ExplicitEuler) = TableauExplicitEuler()
+GeometricBase.tableau(::ExplicitEulerRK) = TableauExplicitEuler()
 GeometricBase.tableau(::ExplicitMidpoint) = TableauExplicitMidpoint()
 GeometricBase.tableau(::Heun2) = TableauHeun2()
 GeometricBase.tableau(::Heun3) = TableauHeun3()
@@ -406,7 +406,7 @@ Fully implicit Runge-Kutta method with [`TableauImplicitEuler`](@ref).
 
 $(reference(Val(:ImplicitEuler)))
 """
-struct ImplicitEuler <: IRKMethod end
+struct ImplicitEulerRK <: IRKMethod end
 
 """
 Fully implicit Runge-Kutta method with [`TableauImplicitMidpoint`](@ref).
@@ -423,7 +423,7 @@ $(reference(Val(:SRK3)))
 struct SRK3 <: IRKMethod end
 
 GeometricBase.tableau(::BackwardEuler) = TableauBackwardEuler()
-GeometricBase.tableau(::ImplicitEuler) = TableauImplicitEuler()
+GeometricBase.tableau(::ImplicitEulerRK) = TableauImplicitEuler()
 GeometricBase.tableau(::ImplicitMidpoint) = TableauImplicitMidpoint()
 GeometricBase.tableau(::SRK3) = TableauSRK3()
 

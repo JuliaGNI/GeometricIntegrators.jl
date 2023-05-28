@@ -45,7 +45,7 @@ pdae = pdaeproblem()
 
 @testset "$(rpad("Explicit Runge-Kutta integrators",80))" begin
 
-    sol = integrate(ode, ExplicitEuler())
+    sol = integrate(ode, ExplicitEulerRK())
     @test relative_maximum_error(sol.q, reference_solution) < 5E-2
 
     sol = integrate(ode, ExplicitMidpoint())
@@ -59,7 +59,7 @@ end
 
 @testset "$(rpad("Implicit Runge-Kutta integrators",80))" begin
 
-    sol = integrate(ode, ImplicitEuler())
+    sol = integrate(ode, ImplicitEulerRK())
     @test relative_maximum_error(sol.q, reference_solution) < 5E-2
 
     sol = integrate(ode, ImplicitMidpoint())

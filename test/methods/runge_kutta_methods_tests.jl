@@ -12,7 +12,7 @@ lode = lodeproblem()
 @testset "$(rpad("Runge-Kutta methods",80))" begin
 
     @test typeof(Integrator(ode, ForwardEuler())) <: IntegratorERK
-    @test typeof(Integrator(ode, ExplicitEuler())) <: IntegratorERK
+    @test typeof(Integrator(ode, ExplicitEulerRK())) <: IntegratorERK
     @test typeof(Integrator(ode, ExplicitMidpoint())) <: IntegratorERK
     @test typeof(Integrator(ode, Heun2())) <: IntegratorERK
     @test typeof(Integrator(ode, Heun3())) <: IntegratorERK
@@ -39,7 +39,7 @@ lode = lodeproblem()
     @test typeof(Integrator(ode, QinZhang())) <: IntegratorDIRK
 
     @test typeof(Integrator(ode, BackwardEuler())) <: IntegratorIRK
-    @test typeof(Integrator(ode, ImplicitEuler())) <: IntegratorIRK
+    @test typeof(Integrator(ode, ImplicitEulerRK())) <: IntegratorIRK
     @test typeof(Integrator(ode, ImplicitMidpoint())) <: IntegratorIRK
     @test typeof(Integrator(ode, SRK3())) <: IntegratorIRK
 
