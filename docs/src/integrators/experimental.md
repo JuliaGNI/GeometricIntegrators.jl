@@ -3,7 +3,7 @@
 
 ```@docs
 GeometricIntegrators.Integrators.IntegratorExplicitEuler
-GeometricIntegrators.Integrators.IntegratorMidpointImplicit
+GeometricIntegrators.Integrators.IntegratorImplicitEuler
 GeometricIntegrators.Integrators.IntegratorIRKimplicit
 #GeometricIntegrators.Integrators.IntegratorIPRKimplicit
 ```
