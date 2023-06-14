@@ -32,7 +32,7 @@ dae = daeproblem()
 end
 
 
-@testset "$(rpad("Midpoint-projection with Runge-Kutta integrators",80))" begin
+@testset "$(rpad("Midpoint projection with Runge-Kutta integrators",80))" begin
 
     # sol = integrate(dae, MidpointProjection(RK4()))
     # @test relative_maximum_error(sol.q, reference_solution) < 2E-7
@@ -57,7 +57,7 @@ end
 end
 
 
-@testset "$(rpad("Midpoint-projection with Runge-Kutta integrators",80))" begin
+@testset "$(rpad("Symmetric projection with Runge-Kutta integrators",80))" begin
 
     # sol = integrate(dae, SymmetricProjection(RK4()))
     # @test relative_maximum_error(sol.q, reference_solution) < 2E-7

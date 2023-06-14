@@ -26,7 +26,7 @@ SolutionStepODE(t::TT, q::AT, internal::IT=NamedTuple())
 ```
 
 """
-mutable struct SolutionStepODE{
+struct SolutionStepODE{
             DT <: Number, 
             TT <: Real, 
             AT <: AbstractArray{DT}, 

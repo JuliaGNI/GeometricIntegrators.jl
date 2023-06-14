@@ -30,7 +30,7 @@ SolutionStepDAE(t::TT, q::AT, λ::AT, internal::IT=NamedTuple())
 ```
 
 """
-mutable struct SolutionStepDAE{
+struct SolutionStepDAE{
             DT <: Number,
             TT <: Real,
             AT <: AbstractArray{DT},
