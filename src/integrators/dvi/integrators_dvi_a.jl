@@ -109,11 +109,11 @@ function compute_stages!(
 
     # compute f = f(q,v)
     functions(problem).f(cache.f, solstep.t, cache.q, cache.v)
-    functions(problem).f(cache.f̄, solstep.t̄[1], solstep.q̄[1], cache.v̄)
+    functions(problem).f(cache.f̄, solstep.t̄, solstep.q̄, cache.v̄)
  
     # compute Θ = ϑ(q,v)
     functions(problem).ϑ(cache.θ, solstep.t, cache.q, cache.v)
-    # functions(problem).ϑ(cache.θ̄, solstep.t̄[1], solstep.q̄[1], cache.v̄)
+    # functions(problem).ϑ(cache.θ̄, solstep.t̄, solstep.q̄, cache.v̄)
 end
 
 
@@ -134,8 +134,8 @@ function function_stages!(
 
     # compute b
     for k in 1:div(D,2)
-        b[k]   = cache.θ[k] - solstep.p̄[1][k] - timestep(problem) * cache.f̄[k]
-        b[D+k] = cache.q[k] - solstep.q̄[1][k] - timestep(problem) * cache.v[k]
+        b[k]   = cache.θ[k] - solstep.p̄[k] - timestep(problem) * cache.f̄[k]
+        b[D+k] = cache.q[k] - solstep.q̄[k] - timestep(problem) * cache.v[k]
     end
 
     for k in div(D,2)+1:D

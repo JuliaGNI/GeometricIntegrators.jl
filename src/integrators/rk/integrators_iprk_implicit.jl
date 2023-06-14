@@ -117,14 +117,14 @@ function initial_guess!(
 
     # compute initial guess for internal stages
     for i in eachstage(method)
-        initialguess!(solstep.t̄[1] + timestep(problem) * tableau(method).p.c[i], Q[i], P[i], V[i], F[i], solstep, problem, iguess)
+        initialguess!(solstep.t̄ + timestep(problem) * tableau(method).p.c[i], Q[i], P[i], V[i], F[i], solstep, problem, iguess)
     end
 
     # assemble initial guess for nonlinear solver solution vector
     for i in eachstage(method)
         offset = ndims(problem)*(i-1)
         for k in 1:ndims(problem)
-            x[offset+k] = P[i][k] - solstep.p̄[1][k]
+            x[offset+k] = P[i][k] - solstep.p̄[k]
             for j in eachstage(method)
                 x[offset+k] -= timestep(problem) * tableau(method).p.a[i,j] * F[j][k]
             end
@@ -164,12 +164,12 @@ function compute_stages!(
                 y1 += tableau(method).q.a[i,j] * V[j][k]
                 y2 += tableau(method).q.â[i,j] * V[j][k]
             end
-            Q[i][k] = solstep.q̄[1][k] + timestep(problem) * (y1 + y2)
+            Q[i][k] = solstep.q̄[k] + timestep(problem) * (y1 + y2)
         end
 
         # compute time of internal stage
-        tqᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).q.c[i]
-        tpᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).p.c[i]
+        tqᵢ = solstep.t̄ + timestep(problem) * tableau(method).q.c[i]
+        tpᵢ = solstep.t̄ + timestep(problem) * tableau(method).p.c[i]
 
         # compute ϑ(Q,V) and f(Q,V)
         functions(problem).ϑ(P[i], tqᵢ, Q[i], V[i])
@@ -207,7 +207,7 @@ function function_stages!(
                 z1 += tableau(method).p.a[i,j] * F[j][k]
                 z2 += tableau(method).p.â[i,j] * F[j][k]
             end
-            b[D*(i-1)+k] = P[i][k] - solstep.p̄[1][k] - timestep(problem) * (z1 + z2)
+            b[D*(i-1)+k] = P[i][k] - solstep.p̄[k] - timestep(problem) * (z1 + z2)
         end
     end
 end

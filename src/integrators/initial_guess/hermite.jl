@@ -75,9 +75,9 @@ function initialguess!(t₀, q₀, p₀, q̇₀, ṗ₀, t₁, q₁, p₁, q̇�
 end
 
 function initialguess!(t, q, p, q̇, ṗ, solstep::Union{SolutionStepPODE,SolutionStepPDAE}, ::Union{AbstractProblemPODE,AbstractProblemPDAE}, extrap::HermiteExtrapolation; kwargs...)
-    initialguess!(solstep.t̄[2], solstep.q̄[2], solstep.p̄[2], solstep.v̄[2], solstep.f̄[2], solstep.t̄[1], solstep.q̄[1], solstep.p̄[1], solstep.v̄[1], solstep.f̄[1], t, q, p, q̇, ṗ, extrap; kwargs...)
+    initialguess!(history(solstep, 2)..., history(solstep, 1)..., t, q, p, q̇, ṗ, extrap; kwargs...)
 end
 
 function initialguess!(t, q, p, solstep::Union{SolutionStepPODE,SolutionStepPDAE}, ::Union{AbstractProblemPODE,AbstractProblemPDAE}, extrap::HermiteExtrapolation; kwargs...)
-    initialguess!(solstep.t̄[2], solstep.q̄[2], solstep.p̄[2], solstep.v̄[2], solstep.f̄[2], solstep.t̄[1], solstep.q̄[1], solstep.p̄[1], solstep.v̄[1], solstep.f̄[1], t, q, p, extrap; kwargs...)
+    initialguess!(history(solstep, 2)..., history(solstep, 1)..., t, q, p, extrap; kwargs...)
 end

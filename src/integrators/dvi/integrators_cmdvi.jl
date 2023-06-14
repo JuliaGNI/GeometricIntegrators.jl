@@ -33,7 +33,7 @@ function Cache{ST}(problem::Union{IODEProblem,LODEProblem}, method::CMDVI; kwarg
     IntegratorCacheCMDVI{ST, ndims(problem)}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::Union{IODEProblem,LODEProblem}, method::CMDVI) = IntegratorCacheCMDVI{ST, ndims(problem)}
+@inline CacheType(ST, problem::Union{IODEProblem,LODEProblem}, ::CMDVI) = IntegratorCacheCMDVI{ST, ndims(problem)}
 
 
 """
@@ -79,7 +79,7 @@ function initial_guess!(
     cache.x[1:D] .= cache.q
 
     # compute initial guess for solution q(n+1/2)
-    initialguess!((solstep.t + solstep.t̄[1])/2, cache.q, cache.θ, cache.v, cache.f, solstep, problem, iguess)
+    initialguess!((solstep.t + solstep.t̄)/2, cache.q, cache.θ, cache.v, cache.f, solstep, problem, iguess)
 
     offset_v = D
     offset_x = D + div(D,2)
@@ -102,15 +102,15 @@ function compute_stages!(
     D = ndims(problem)
 
     # set some local variables for convenience and clarity
-    local t̄  = solstep.t̄[1] + timestep(problem) / 2
-    local t⁺ = solstep.t̄[1] + timestep(problem)
+    local t̄  = solstep.t̄ + timestep(problem) / 2
+    local t⁺ = solstep.t̄ + timestep(problem)
     
     # copy x to q
     cache.q .= x[1:D]
 
     # copy x to q⁻, q⁺ and v
     for k in 1:div(D,2)
-        cache.q̄[k] = (solstep.q̄[1][k] + cache.q[k]) / 2
+        cache.q̄[k] = (solstep.q̄[k] + cache.q[k]) / 2
         cache.q̄[div(D,2)+k] = x[D+div(D,2)+k]
 
         cache.v[k]          = x[D+k]
@@ -142,11 +142,11 @@ function function_stages!(
     compute_stages!(x, solstep, problem, method, caches)
 
     # compute b
-    b[1:D] .= cache.θ̄ .- solstep.p̄[1] .- timestep(problem) .* cache.f̄ ./ 2
+    b[1:D] .= cache.θ̄ .- solstep.p̄ .- timestep(problem) .* cache.f̄ ./ 2
     
     for k in 1:div(D,2)
-        b[D+k]          = cache.q[k] - solstep.q̄[1][k] - timestep(problem) * cache.v[k]
-        b[D+div(D,2)+k] = cache.θ[k] - solstep.p̄[1][k] - timestep(problem) * cache.f̄[k]
+        b[D+k]          = cache.q[k] - solstep.q̄[k] - timestep(problem) * cache.v[k]
+        b[D+div(D,2)+k] = cache.θ[k] - solstep.p̄[k] - timestep(problem) * cache.f̄[k]
     end
 end
 

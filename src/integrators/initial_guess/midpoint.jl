@@ -35,7 +35,7 @@ function initialguess!(t̄, q̄, p̄, t, q, p, q̇, ṗ, problem::Union{IODEProb
 end
 
 function initialguess!(t, q, p, q̇, ṗ, solstep::SolutionStepPODE, problem::AbstractProblemPODE, extrap::MidpointExtrapolation)
-    initialguess!(solstep.t̄[1], solstep.q̄[1], solstep.p̄[1], t, q, p, q̇, ṗ, problem, extrap)
+    initialguess!(previous(solstep)..., t, q, p, q̇, ṗ, problem, extrap)
 end
 
 function initialguess!(t̄, q̄, p̄, t, q, p, problem::AbstractProblemPODE, extrap::MidpointExtrapolation)
@@ -45,5 +45,5 @@ function initialguess!(t̄, q̄, p̄, t, q, p, problem::AbstractProblemPODE, ext
 end
 
 function initialguess!(t, q, p, solstep::SolutionStepPODE, problem::AbstractProblemPODE, extrap::MidpointExtrapolation)
-    initialguess!(solstep.t̄[1], solstep.q̄[1], solstep.p̄[1], t, q, p, problem, extrap)
+    initialguess!(previous(solstep)..., t, q, p, problem, extrap)
 end

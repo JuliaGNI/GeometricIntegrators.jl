@@ -99,21 +99,21 @@ end
 
     solstep = SolutionStepPODE(t0, q0, p0)
 
-    @test solstep.t == solstep.t̄[0] == current(solstep).t
-    @test solstep.q == solstep.q̄[0] == current(solstep).q
-    @test solstep.p == solstep.p̄[0] == current(solstep).p
+    @test solstep.t == history(solstep).t[0] == current(solstep).t
+    @test solstep.q == history(solstep).q[0] == current(solstep).q
+    @test solstep.p == history(solstep).p[0] == current(solstep).p
 
-    @test solstep.t̄ == history(solstep).t
-    @test solstep.q̄ == history(solstep).q
-    @test solstep.p̄ == history(solstep).p
+    @test solstep.t̄ == history(solstep).t[1] == previous(solstep).t
+    @test solstep.q̄ == history(solstep).q[1] == previous(solstep).q
+    @test solstep.p̄ == history(solstep).p[1] == previous(solstep).p
 
-    solstep.t̄[0]  = t0
-    solstep.q̄[0] .= q0
-    solstep.p̄[0] .= p0
+    solstep.t  = t0
+    solstep.q .= q0
+    solstep.p .= p0
 
-    solstep.t̄[1]  = zero(t0)
-    solstep.q̄[1] .= zero(q0)
-    solstep.p̄[1] .= zero(p0)
+    solstep.t̄  = zero(t0)
+    solstep.q̄ .= zero(q0)
+    solstep.p̄ .= zero(p0)
 
     @test current(solstep) == (t = t0, q = q0, p = p0)
     @test previous(solstep) == (t = zero(t0), q = zero(q0), p = zero(p0))
@@ -148,9 +148,9 @@ end
     @test solstep.q == initial_conditions(pode).q
     @test solstep.p == initial_conditions(pode).p
 
-    @test solstep.t̄[1] ≈ - timestep(pode)
-    @test solstep.q̄[1] ≈ [A * sin(- ω * timestep(pode) + ϕ)]
-    @test solstep.p̄[1] ≈ [ω * A * cos(- ω * timestep(pode) + ϕ)]
+    @test solstep.t̄ ≈ - timestep(pode)
+    @test solstep.q̄ ≈ [A * sin(- ω * timestep(pode) + ϕ)]
+    @test solstep.p̄ ≈ [ω * A * cos(- ω * timestep(pode) + ϕ)]
 
 end
 

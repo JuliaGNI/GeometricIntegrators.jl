@@ -110,7 +110,7 @@ function initial_guess!(
 
     # compute initial guess for internal stages
     for i in eachstage(tableau(method))
-        initialguess!(solstep.t̄[1] + timestep(problem) * tableau(method).c[i], cache.Q[i], cache.Θ[i], cache.V[i], cache.F[i], solstep, problem, iguess)
+        initialguess!(solstep.t̄ + timestep(problem) * tableau(method).c[i], cache.Q[i], cache.Θ[i], cache.V[i], cache.F[i], solstep, problem, iguess)
     end
     for i in eachstage(tableau(method))
         for k in 1:ndims(problem)
@@ -158,7 +158,7 @@ function compute_stages!(
 
     # compute Q = q + Δt A V, Θ = ϑ(Q), F = f(Q,V)
     for i in eachindex(cache.Q, cache.F, cache.Θ)
-        tᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).c[i]
+        tᵢ = solstep.t̄ + timestep(problem) * tableau(method).c[i]
         for k in eachindex(cache.Q[i])
             y1 = 0
             y2 = 0
@@ -166,7 +166,7 @@ function compute_stages!(
                 y1 += tableau(method).a[i,j] * cache.V[j][k]
                 y2 += tableau(method).â[i,j] * cache.V[j][k]
             end
-            cache.Q[i][k] = solstep.q̄[1][k] + timestep(problem) * (y1 + y2)
+            cache.Q[i][k] = solstep.q̄[k] + timestep(problem) * (y1 + y2)
         end
         functions(problem).ϑ(cache.Θ[i], tᵢ, cache.Q[i], cache.V[i])
         functions(problem).f(cache.F[i], tᵢ, cache.Q[i], cache.V[i])
@@ -203,7 +203,7 @@ function function_stages!(
                 y1 += tableau(method).a[i,j] * cache.F[j][k]
                 y2 += tableau(method).â[i,j] * cache.F[j][k]
             end
-            b[D*(i-1)+k] = cache.Θ[i][k] - solstep.p̄[1][k] - timestep(problem) * (y1 + y2)
+            b[D*(i-1)+k] = cache.Θ[i][k] - solstep.p̄[k] - timestep(problem) * (y1 + y2)
         end
     end
     for k in 1:div(D,2)
@@ -213,7 +213,7 @@ function function_stages!(
             y1 += tableau(method).b[j] * cache.F[j][k]
             y2 += tableau(method).b̂[j] * cache.F[j][k]
         end
-        b[D*S+k] = cache.θ[k] - solstep.p̄[1][k] - timestep(problem) * (y1 + y2)
+        b[D*S+k] = cache.θ[k] - solstep.p̄[k] - timestep(problem) * (y1 + y2)
     end
     for k in 1:div(D,2)
         y1 = 0
@@ -222,7 +222,7 @@ function function_stages!(
             y1 += tableau(method).b[j] * cache.V[j][k]
             y2 += tableau(method).b̂[j] * cache.V[j][k]
         end
-        b[D*S+div(D,2)+k] = cache.q[k] - solstep.q̄[1][k] - timestep(problem) * (y1 + y2)
+        b[D*S+div(D,2)+k] = cache.q[k] - solstep.q̄[k] - timestep(problem) * (y1 + y2)
     end
 end
 

@@ -116,7 +116,7 @@ function initial_guess!(
     local F = caches[DT].F
 
     for i in eachstage(method)
-        initialguess!(solstep.t̄[1] + timestep(problem) * tableau(method).q.c[i], Q[i], P[i], V[i], F[i], solstep, problem, iguess)
+        initialguess!(solstep.t̄ + timestep(problem) * tableau(method).q.c[i], Q[i], P[i], V[i], F[i], solstep, problem, iguess)
     end
     for i in eachstage(method)
         for k in 1:ndims(problem)
@@ -162,8 +162,8 @@ function compute_stages!(
         end
 
         # compute time of internal stage
-        tqᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).q.c[i]
-        tpᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).p.c[i]
+        tqᵢ = solstep.t̄ + timestep(problem) * tableau(method).q.c[i]
+        tpᵢ = solstep.t̄ + timestep(problem) * tableau(method).p.c[i]
 
         # compute v(Q,P) and f(Q,P)
         functions(problem).v(V[i], tqᵢ, Q[i], P[i])

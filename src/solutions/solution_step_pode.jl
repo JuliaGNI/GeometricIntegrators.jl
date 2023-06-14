@@ -11,23 +11,23 @@ Solution step for a [`PODEProblem`](@ref).
 ### Fields
 
 * `t`: time of current time step
-* `t̄`: time of previous time steps
+* `t̄`: time of previous time step
 * `q`: current solution of q
-* `q̄`: previous solutions of q
-* `q̃`: compensated summation error of q
 * `p`: current solution of p
-* `p̄`: previous solutions of p
-* `p̃`: compensated summation error of p
+* `q̄`: previous solution of q
+* `p̄`: previous solution of p
 * `v`: vector field of q
-* `v̄`: vector fields of q̄
 * `f`: vector field of p
-* `f̄`: vector fields of p̄
+* `v̄`: vector field of q̄
+* `f̄`: vector field of p̄
+* `q̃`: compensated summation error of q
+* `p̃`: compensated summation error of p
 * `internal`: internal variables of the integrator (e.g., internal stages of a Runge-Kutta methods or solver output)
 
 ### Constructors
 
 ```julia
-SolutionStepPODE(t::TT, q::AT, p::AT, internal::IT=NamedTuple())
+SolutionStepPODE(t::TT, q::AT, p::AT; nhistory=1, internal::IT=NamedTuple())
 ```
 
 """
@@ -37,60 +37,106 @@ mutable struct SolutionStepPODE{
             AT <: AbstractArray{DT},
             VT <: AbstractArray{DT},
             FT <: AbstractArray{DT},
+            HT <: NamedTuple,
             IT <: NamedTuple,
             NT} <: SolutionStep{DT,TT,AT}
 
-    t::TT
     q::AT
     p::AT
     v::VT
-    f::VT
+    f::FT
 
-    t̄::OffsetVector{TT, Vector{TT}}
-    q̄::OffsetVector{AT, Vector{AT}}
-    p̄::OffsetVector{AT, Vector{AT}}
-    v̄::OffsetVector{VT, Vector{VT}}
-    f̄::OffsetVector{VT, Vector{VT}}
+    q̄::AT
+    p̄::AT
+    v̄::VT
+    f̄::FT
 
     q̃::AT
     p̃::AT
 
+    history::HT
     internal::IT
 
-    function SolutionStepPODE(t::TT, q::AT, p::AT; history = 2, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT}
-        @assert history ≥ 1
+    function SolutionStepPODE(t::TT, q::AT, p::AT; nhistory = 2, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT}
+        # TODO: nhistory should default to 1 and set to higher values by integrator / initial guess method
+        @assert nhistory ≥ 1
 
-        t̄ = OffsetVector([zero(t) for _ in 1:history+1], 0:history)
-        q̄ = OffsetVector([zero(q) for _ in 1:history+1], 0:history)
-        p̄ = OffsetVector([zero(p) for _ in 1:history+1], 0:history)
-        v̄ = OffsetVector([vectorfield(q) for _ in 1:history+1], 0:history)
-        f̄ = OffsetVector([vectorfield(p) for _ in 1:history+1], 0:history)
+        history = (
+            t = OffsetVector([zero(t) for _ in 0:nhistory], 0:nhistory),
+            q = OffsetVector([zero(q) for _ in 0:nhistory], 0:nhistory),
+            p = OffsetVector([zero(p) for _ in 0:nhistory], 0:nhistory),
+            v = OffsetVector([vectorfield(q) for _ in 0:nhistory], 0:nhistory),
+            f = OffsetVector([vectorfield(p) for _ in 0:nhistory], 0:nhistory),
+        )
 
-        new{DT,TT,AT,typeof(v̄[0]),typeof(f̄[0]),IT,history}(t̄[0], q̄[0], p̄[0], v̄[0], f̄[0], t̄, q̄, p̄, v̄, f̄, zero(q), zero(p), internal)
+        q = history.q[0]
+        p = history.p[0]
+        v = history.v[0]
+        f = history.f[0]
+
+        q̄ = history.q[1]
+        p̄ = history.p[1]
+        v̄ = history.v[1]
+        f̄ = history.f[1]
+
+        q̃ = zero(q)
+        p̃ = zero(p)
+
+        new{DT, TT, AT, typeof(v), typeof(f), typeof(history), IT, nhistory}(q, p, v, f, q̄, p̄, v̄, f̄, q̃, p̃, history, internal)
     end
 end
 
-nhistory(::SolutionStepPODE{DT,TT,AT,VT,FT,IT,NT}) where {DT,TT,AT,VT,FT,IT,NT} = NT
+@inline function Base.hasproperty(::SolutionStepPODE, s::Symbol)
+    s == :t || s == :t̄ || hasfield(SolutionStepPODE, s)
+end
+
+@inline function Base.getproperty(solstep::SolutionStepPODE, s::Symbol)
+    if s == :t
+        return history(solstep).t[0]
+    elseif s == :t̄
+        return history(solstep).t[1]
+    else
+        return getfield(solstep, s)
+    end
+end
+
+@inline function Base.setproperty!(solstep::SolutionStepPODE, s::Symbol, val)
+    if s == :t
+        return history(solstep).t[0] = val
+    elseif s == :t̄
+        return history(solstep).t[1] = val
+    else
+        return setfield!(solstep, s, val)
+    end
+end
+
+nhistory(::SolutionStepPODE{DT,TT,AT,VT,FT,HT,IT,NT}) where {DT,TT,AT,VT,FT,HT,IT,NT} = NT
 
 current(solstep::SolutionStepPODE) = (t = solstep.t, q = solstep.q, p = solstep.p)
-previous(solstep::SolutionStepPODE) = (t = solstep.t̄[1], q = solstep.q̄[1], p = solstep.p̄[1])
-history(solstep::SolutionStepPODE) = (t = solstep.t̄, q = solstep.q̄, p = solstep.p̄)
+previous(solstep::SolutionStepPODE) = (t = solstep.t̄, q = solstep.q̄, p = solstep.p̄)
+history(solstep::SolutionStepPODE) = solstep.history
+history(solstep::SolutionStepPODE, i::Int) = (
+    t = history(solstep).t[i],
+    q = history(solstep).q[i],
+    p = history(solstep).p[i],
+    v = history(solstep).v[i],
+    f = history(solstep).f[i])
 
 
 function update_vector_fields!(solstep::SolutionStepPODE, problem::Union{PODEProblem,HODEProblem}, i=0)
-    functions(problem).v(solstep.v̄[i], solstep.t̄[i], solstep.q̄[i], solstep.p̄[i])
-    functions(problem).f(solstep.f̄[i], solstep.t̄[i], solstep.q̄[i], solstep.p̄[i])
+    functions(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i])
+    functions(problem).f(history(solstep).f[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i])
 end
 
 function update_vector_fields!(solstep::SolutionStepPODE, problem::Union{IODEProblem,LODEProblem}, i=0)
-    functions(problem).v̄(solstep.v̄[i], solstep.t̄[i], solstep.q̄[i])
-    functions(problem).f̄(solstep.f̄[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i])
+    functions(problem).v̄(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i])
+    functions(problem).f̄(history(solstep).f[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i])
 end
 
 update_implicit_functions!(::SolutionStepPODE, ::Union{PODEProblem,HODEProblem}, i=0) = nothing
 
 function update_implicit_functions!(solstep::SolutionStepPODE, problem::Union{IODEProblem,LODEProblem}, i=0)
-    functions(problem).ϑ(solstep.p̄[i], solstep.t̄[i], solstep.q̄[i], solstep.v̄[i])
+    functions(problem).ϑ(history(solstep).p[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i])
 end
 
 function initialize!(solstep::SolutionStepPODE, problem::AbstractProblemPODE, extrap::Extrapolation = default_extrapolation())
@@ -105,8 +151,8 @@ function initialize!(solstep::SolutionStepPODE, problem::AbstractProblemPODE, ex
     # update_implicit_functions!(solstep, problem)
 
     for i in eachhistory(solstep)
-        solstep.t̄[i] = solstep.t̄[i-1] - timestep(problem)
-        extrapolate!(solstep.t̄[i-1], solstep.q̄[i-1], solstep.p̄[i-1], solstep.t̄[i], solstep.q̄[i], solstep.p̄[i], problem, extrap)
+        history(solstep).t[i] = history(solstep).t[i-1] - timestep(problem)
+        extrapolate!(history(solstep).t[i-1], history(solstep).q[i-1], history(solstep).p[i-1], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i], problem, extrap)
         update_vector_fields!(solstep, problem, i)
         update_implicit_functions!(solstep, problem, i)
     end
@@ -132,14 +178,14 @@ end
 
 function GeometricBase.reset!(solstep::SolutionStepPODE, Δt)
     for i in backwardhistory(solstep)
-        solstep.t̄[i]  = solstep.t̄[i-1]
-        solstep.q̄[i] .= solstep.q̄[i-1]
-        solstep.p̄[i] .= solstep.p̄[i-1]
-        solstep.v̄[i] .= solstep.v̄[i-1]
-        solstep.f̄[i] .= solstep.f̄[i-1]
+        history(solstep).t[i]  = history(solstep).t[i-1]
+        history(solstep).q[i] .= history(solstep).q[i-1]
+        history(solstep).p[i] .= history(solstep).p[i-1]
+        history(solstep).v[i] .= history(solstep).v[i-1]
+        history(solstep).f[i] .= history(solstep).f[i-1]
     end
 
-    solstep.t = solstep.t̄[0] += Δt
+    solstep.t = solstep.t̄ + Δt
 
     return solstep
 end
