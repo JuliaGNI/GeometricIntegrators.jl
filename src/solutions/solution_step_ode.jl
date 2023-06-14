@@ -11,18 +11,18 @@ Solution step for an [`ODEProblem`](@ref).
 ### Fields
 
 * `t`: time of current time step
-* `t̄`: time of previous time steps
+* `t̄`: time of previous time step
 * `q`: current solution of q
-* `q̄`: previous solutions of q
-* `q̃`: compensated summation error of q
+* `q̄`: previous solution of q
 * `v`: vector field of q
-* `v̄`: vector fields of q̄
+* `v̄`: vector field of q̄
+* `q̃`: compensated summation error of q
 * `internal`: internal variables of the integrator (e.g., internal stages of a Runge-Kutta methods or solver output)
 
 ### Constructors
 
 ```julia
-SolutionStepODE(t::TT, q::AT, internal::IT=NamedTuple())
+SolutionStepODE(t::TT, q::AT; nhistory=1, internal::IT=NamedTuple())
 ```
 
 """
