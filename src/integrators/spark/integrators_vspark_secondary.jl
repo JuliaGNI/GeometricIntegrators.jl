@@ -120,11 +120,11 @@ function Integrators.initial_guess!(
 
     for i in 1:pstages(method)
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
-        initialguess!(solstep.t̄[1] + timestep(problem) * tableau(method).q̃.c[i], cache.Qp[i], cache.Pp[i], cache.Vp[i], cache.Fp[i], solstep, problem, iguess)
+        initialguess!(solstep.t̄ + timestep(problem) * tableau(method).q̃.c[i], cache.Qp[i], cache.Pp[i], cache.Vp[i], cache.Fp[i], solstep, problem, iguess)
 
         for k in 1:ndims(problem)
-            cache.x[4*(ndims(problem)*(i-1)+k-1)+1] = (cache.Qp[i][k] - solstep.q̄[1][k]) / timestep(problem)
-            cache.x[4*(ndims(problem)*(i-1)+k-1)+2] = (cache.Pp[i][k] - solstep.p̄[1][k]) / timestep(problem)
+            cache.x[4*(ndims(problem)*(i-1)+k-1)+1] = (cache.Qp[i][k] - solstep.q̄[k]) / timestep(problem)
+            cache.x[4*(ndims(problem)*(i-1)+k-1)+2] = (cache.Pp[i][k] - solstep.p̄[k]) / timestep(problem)
             cache.x[4*(ndims(problem)*(i-1)+k-1)+3] =  cache.Vp[i][k]
             cache.x[4*(ndims(problem)*(i-1)+k-1)+4] = 0
         end
@@ -161,12 +161,12 @@ function compute_stages!(
             cache.Λp[i][k] = x[4*(D*(i-1)+k-1)+4]
 
             # compute Q and P
-            cache.Qp[i][k] = solstep.q̄[1][k] + timestep(problem) * cache.Yp[i][k]
-            cache.Pp[i][k] = solstep.p̄[1][k] + timestep(problem) * cache.Zp[i][k]
+            cache.Qp[i][k] = solstep.q̄[k] + timestep(problem) * cache.Yp[i][k]
+            cache.Pp[i][k] = solstep.p̄[k] + timestep(problem) * cache.Zp[i][k]
         end
 
         # compute f(X)
-        t = solstep.t̄[1] + timestep(problem) * tableau(method).p̃.c[i]
+        t = solstep.t̄ + timestep(problem) * tableau(method).p̃.c[i]
         functions(problem)[:f](cache.Fp[i], t, cache.Qp[i], cache.Vp[i])
         functions(problem)[:g](cache.Gp[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Vp[i])
         functions(problem)[:g](cache.G̅p[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i])
@@ -191,17 +191,17 @@ function compute_stages!(
                 cache.Yi[i][k] += tableau(method).q.a[1][i,j] * cache.Vp[j][k]
                 cache.Yi[i][k] += tableau(method).q.a[2][i,j] * cache.Λp[j][k]
             end
-            cache.Qi[i][k] = solstep.q̄[1][k] + timestep(problem) * cache.Yi[i][k]
+            cache.Qi[i][k] = solstep.q̄[k] + timestep(problem) * cache.Yi[i][k]
         end
 
         # compute f(X)
-        t = solstep.t̄[1] + timestep(problem) * tableau(method).p.c[i]
+        t = solstep.t̄ + timestep(problem) * tableau(method).p.c[i]
         functions(problem)[:f](cache.Fi[i], t, cache.Qi[i], cache.Vi[i])
     end
 
     # compute q and p
-    cache.q̃ .= solstep.q̄[1]
-    cache.p̃ .= solstep.p̄[1]
+    cache.q̃ .= solstep.q̄
+    cache.p̃ .= solstep.p̄
     for i in 1:S
         cache.p̃ .+= timestep(problem) .* tableau(method).p.b[1][i] .* cache.Fi[i]
     end

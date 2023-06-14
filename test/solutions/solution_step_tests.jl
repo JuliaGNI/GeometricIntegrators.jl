@@ -216,25 +216,25 @@ end
 
     solstep = SolutionStepPDAE(t0, q0, p0, λ0)
 
-    @test solstep.t == solstep.t̄[0] == current(solstep).t
-    @test solstep.q == solstep.q̄[0] == current(solstep).q
-    @test solstep.p == solstep.p̄[0] == current(solstep).p
-    @test solstep.λ == solstep.λ̄[0] == current(solstep).λ
+    @test solstep.t == history(solstep).t[0] == current(solstep).t
+    @test solstep.q == history(solstep).q[0] == current(solstep).q
+    @test solstep.p == history(solstep).p[0] == current(solstep).p
+    @test solstep.λ == history(solstep).λ[0] == current(solstep).λ
 
-    @test solstep.t̄ == history(solstep).t
-    @test solstep.q̄ == history(solstep).q
-    @test solstep.p̄ == history(solstep).p
-    @test solstep.λ̄ == history(solstep).λ
+    @test solstep.t̄ == history(solstep).t[1] == previous(solstep).t
+    @test solstep.q̄ == history(solstep).q[1] == previous(solstep).q
+    @test solstep.p̄ == history(solstep).p[1] == previous(solstep).p
+    @test solstep.λ̄ == history(solstep).λ[1] == previous(solstep).λ
 
-    solstep.t̄[0]  = t0
-    solstep.q̄[0] .= q0
-    solstep.p̄[0] .= p0
-    solstep.λ̄[0] .= λ0
+    solstep.t  = t0
+    solstep.q .= q0
+    solstep.p .= p0
+    solstep.λ .= λ0
 
-    solstep.t̄[1]  = zero(t0)
-    solstep.q̄[1] .= zero(q0)
-    solstep.p̄[1] .= zero(p0)
-    solstep.λ̄[1] .= zero(λ0)
+    solstep.t̄  = zero(t0)
+    solstep.q̄ .= zero(q0)
+    solstep.p̄ .= zero(p0)
+    solstep.λ̄ .= zero(λ0)
 
     @test current(solstep) == (t = t0, q = q0, p = p0, λ = λ0)
     @test previous(solstep) == (t = zero(t0), q = zero(q0), p = zero(p0), λ = zero(λ0))
@@ -271,8 +271,8 @@ end
     @test solstep.q == initial_conditions(pdae).q
     @test solstep.p == initial_conditions(pdae).p
 
-    @test solstep.t̄[1] ≈ - timestep(pdae)
-    @test solstep.q̄[1][1] ≈ A * sin(- ω * timestep(pdae) + ϕ)
-    @test solstep.p̄[1][1] ≈ ω * A * cos(- ω * timestep(pdae) + ϕ)
+    @test solstep.t̄ ≈ - timestep(pdae)
+    @test solstep.q̄[1] ≈ A * sin(- ω * timestep(pdae) + ϕ)
+    @test solstep.p̄[1] ≈ ω * A * cos(- ω * timestep(pdae) + ϕ)
 
 end

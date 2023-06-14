@@ -79,13 +79,13 @@ function compute_stages!(
             cache.Zi[i][k] = x[2*(D*(i-1)+k-1)+2]
 
             # compute Q and P
-            cache.Qi[i][k] = solstep.q̄[1][k] + timestep(problem) * cache.Yi[i][k]
-            cache.Pi[i][k] = solstep.p̄[1][k] + timestep(problem) * cache.Zi[i][k]
+            cache.Qi[i][k] = solstep.q̄[k] + timestep(problem) * cache.Yi[i][k]
+            cache.Pi[i][k] = solstep.p̄[k] + timestep(problem) * cache.Zi[i][k]
         end
 
         # compute f(X)
-        tqᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).q.c[i]
-        tpᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).p.c[i]
+        tqᵢ = solstep.t̄ + timestep(problem) * tableau(method).q.c[i]
+        tpᵢ = solstep.t̄ + timestep(problem) * tableau(method).p.c[i]
         functions(problem)[:v](cache.Vi[i], tqᵢ, cache.Qi[i], cache.Pi[i])
         functions(problem)[:f](cache.Fi[i], tpᵢ, cache.Qi[i], cache.Pi[i])
     end
@@ -98,20 +98,20 @@ function compute_stages!(
             cache.Λp[i][k] = x[2*D*S+3*(D*(i-1)+k-1)+3]
 
             # compute Q and V
-            cache.Qp[i][k] = solstep.q̄[1][k] + timestep(problem) * cache.Yp[i][k]
-            cache.Pp[i][k] = solstep.p̄[1][k] + timestep(problem) * cache.Zp[i][k]
+            cache.Qp[i][k] = solstep.q̄[k] + timestep(problem) * cache.Yp[i][k]
+            cache.Pp[i][k] = solstep.p̄[k] + timestep(problem) * cache.Zp[i][k]
         end
 
         # compute f(X)
-        tλᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).λ.c[i]
+        tλᵢ = solstep.t̄ + timestep(problem) * tableau(method).λ.c[i]
         functions(problem)[:u](cache.Up[i], tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i])
         functions(problem)[:g](cache.Gp[i], tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i])
         functions(problem)[:ϕ](cache.Φp[i], tλᵢ, cache.Qp[i], cache.Pp[i])
     end
 
     # compute q and p
-    cache.q̃ .= solstep.q̄[1]
-    cache.p̃ .= solstep.p̄[1]
+    cache.q̃ .= solstep.q̄
+    cache.p̃ .= solstep.p̄
     for i in 1:S
         cache.q̃ .+= timestep(problem) .* tableau(method).q.b[i] .* cache.Vi[i]
         cache.p̃ .+= timestep(problem) .* tableau(method).p.b[i] .* cache.Fi[i]

@@ -31,8 +31,8 @@ end
 function update_params!(params::AbstractParametersSPARK, sol::SolutionStepPDAE)
     # set time for nonlinear solver and copy previous solution
     solstep.t̄  = sol.t
-    solstep.q̄[1] .= solstep.q̄[1]
-    solstep.p̄[1] .= solstep.p̄[1]
+    solstep.q̄ .= solstep.q̄
+    solstep.p̄ .= solstep.p̄
     params.λ .= sol.λ
 end
 

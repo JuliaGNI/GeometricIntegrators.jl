@@ -133,15 +133,15 @@ function Integrators.initial_guess!(
     # compute initial guess for internal stages
     for i in 1:pstages(method)
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
-        initialguess!(solstep.t̄[1] + timestep(problem) * method.p̃.c[i], Q[i], P[i], V[i], F[i], solstep, problem, iguess)
+        initialguess!(solstep.t̄ + timestep(problem) * method.p̃.c[i], Q[i], P[i], V[i], F[i], solstep, problem, iguess)
     end
 
     # assemble initial guess for nonlinear solver solution vector
     for i in 1:pstages(method)
         for k in 1:ndims(problem)
             offset = 4*(ndims(problem)*(i-1)+k-1)
-            x[offset+1] = (Q[i][k] - solstep.q̄[1][k]) / timestep(problem)
-            x[offset+2] = (P[i][k] - solstep.p̄[1][k]) / timestep(problem)
+            x[offset+1] = (Q[i][k] - solstep.q̄[k]) / timestep(problem)
+            x[offset+2] = (P[i][k] - solstep.p̄[k]) / timestep(problem)
             x[offset+3] =  V[i][k]
             x[offset+4] = 0
         end
@@ -176,12 +176,12 @@ function compute_stages!(
             cache.Λp[i][k] = x[4*(D*(i-1)+k-1)+4]
 
             # compute Q and P
-            cache.Qp[i][k] = solstep.q̄[1][k] + timestep(problem) * cache.Yp[i][k]
-            cache.Pp[i][k] = solstep.p̄[1][k] + timestep(problem) * cache.Zp[i][k]
+            cache.Qp[i][k] = solstep.q̄[k] + timestep(problem) * cache.Yp[i][k]
+            cache.Pp[i][k] = solstep.p̄[k] + timestep(problem) * cache.Zp[i][k]
         end
 
         # compute f(X)
-        t = solstep.t̄[1] + timestep(problem) * method.p.c[i]
+        t = solstep.t̄ + timestep(problem) * method.p.c[i]
         functions(problem).f(cache.Fp[i], t, cache.Qp[i], cache.Vp[i])
         functions(problem).g(cache.Gp[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i])
         functions(problem).ϕ(cache.Φp[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i])
@@ -195,8 +195,8 @@ function compute_stages!(
     end
 
     # compute q and p
-    cache.q̃ .= solstep.q̄[1]
-    cache.p̃ .= solstep.p̄[1]
+    cache.q̃ .= solstep.q̄
+    cache.p̃ .= solstep.p̄
     for i in 1:nstages(method)
         cache.q̃ .+= timestep(problem) .* method.q.b[i] .* cache.Vp[i]
         cache.q̃ .+= timestep(problem) .* method.q̃.b[i] .* cache.Λp[i]

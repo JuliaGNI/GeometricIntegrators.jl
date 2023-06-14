@@ -19,3 +19,11 @@ function initialguess!(t, q, p, q̇, ṗ, solstep::SolutionStepPODE, ::AbstractP
     ṗ .= solstep.f̄[1]
     (t = t, q = q, p = p, v = q̇, f = ṗ)
 end
+
+function initialguess!(t₀, q₀, p₀, λ₀, q̇₀, ṗ₀, u₀, g₀, t₁, q₁, p₁, λ₁, q̇₁, ṗ₁, u₁, g₁, t, q, p, iguess::Union{Extrapolation,InitialGuess}; kwargs...)
+    initialguess!(t₀, q₀, p₀, q̇₀, ṗ₀, t₁, q₁, p₁, q̇₁, ṗ₁, t, q, p, iguess; kwargs...)
+end
+
+function initialguess!(t₀, q₀, p₀, λ₀, q̇₀, ṗ₀, u₀, g₀, t₁, q₁, p₁, λ₁, q̇₁, ṗ₁, u₁, g₁, t, q, p, q̇, ṗ, iguess::Union{Extrapolation,InitialGuess}; kwargs...)
+    initialguess!(t₀, q₀, p₀, q̇₀, ṗ₀, t₁, q₁, p₁, q̇₁, ṗ₁, t, q, p, q̇, ṗ, iguess; kwargs...)
+end

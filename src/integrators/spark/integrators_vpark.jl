@@ -78,12 +78,12 @@ function compute_stages!(
             cache.Vi[i][k] = x[3*(D*(i-1)+k-1)+3]
 
             # compute Q and P
-            cache.Qi[i][k] = solstep.q̄[1][k] + timestep(problem) * cache.Yi[i][k]
-            cache.Pi[i][k] = solstep.p̄[1][k] + timestep(problem) * cache.Zi[i][k]
+            cache.Qi[i][k] = solstep.q̄[k] + timestep(problem) * cache.Yi[i][k]
+            cache.Pi[i][k] = solstep.p̄[k] + timestep(problem) * cache.Zi[i][k]
         end
 
         # compute f(X)
-        tpᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).p.c[i]
+        tpᵢ = solstep.t̄ + timestep(problem) * tableau(method).p.c[i]
         functions(problem)[:ϑ](cache.Φi[i], tpᵢ, cache.Qi[i], cache.Vi[i])
         functions(problem)[:f](cache.Fi[i], tpᵢ, cache.Qi[i], cache.Vi[i])
 
@@ -99,12 +99,12 @@ function compute_stages!(
             cache.Λp[i][k] = x[3*D*S+3*(D*(i-1)+k-1)+3]
 
             # compute Q and V
-            cache.Qp[i][k] = solstep.q̄[1][k] + timestep(problem) * cache.Yp[i][k]
-            cache.Pp[i][k] = solstep.p̄[1][k] + timestep(problem) * cache.Zp[i][k]
+            cache.Qp[i][k] = solstep.q̄[k] + timestep(problem) * cache.Yp[i][k]
+            cache.Pp[i][k] = solstep.p̄[k] + timestep(problem) * cache.Zp[i][k]
         end
 
         # compute f(X)
-        tλᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).λ.c[i]
+        tλᵢ = solstep.t̄ + timestep(problem) * tableau(method).λ.c[i]
         functions(problem)[:u](cache.Up[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i])
         functions(problem)[:g](cache.Gp[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i])
         functions(problem)[:ϕ](cache.Φp[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i])
@@ -175,7 +175,7 @@ function function_stages!(
     # compute b = - [Λ₁-λ]
     if tableau(method).λ.c[1] == 0
         for k in 1:D
-            b[3*D*S+3*(k-1)+3] = - cache.Λp[1][k] + solstep.λ̄[1][k]
+            b[3*D*S+3*(k-1)+3] = - cache.Λp[1][k] + solstep.λ̄[k]
         end
     end
 
