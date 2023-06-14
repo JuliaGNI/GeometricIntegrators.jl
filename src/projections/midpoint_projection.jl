@@ -166,7 +166,7 @@ end
 function residual!(b::AbstractVector{ST}, int::IntegratorMidpointProjection) where {ST}
     # compute b = q̃ - (q + q̄) / 2
     for k in 1:ndims(int)
-        b[k] = cache(int, ST).q̃[k] - ( cache(int, ST).q[k] + solstep(int).q̄[1][k] ) / 2
+        b[k] = cache(int, ST).q̃[k] - ( cache(int, ST).q[k] + solstep(int).q̄[k] ) / 2
     end
 
     # compute b = ϕ(q) or b = ϕ(q,p) or b = ϕ(...)

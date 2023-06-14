@@ -159,21 +159,21 @@ end
 
     solstep = SolutionStepDAE(t0, x0, λ0)
 
-    @test solstep.t == solstep.t̄[0] == current(solstep).t
-    @test solstep.q == solstep.q̄[0] == current(solstep).q
-    @test solstep.λ == solstep.λ̄[0] == current(solstep).λ
+    @test solstep.t == history(solstep).t[0] == current(solstep).t
+    @test solstep.q == history(solstep).q[0] == current(solstep).q
+    @test solstep.λ == history(solstep).λ[0] == current(solstep).λ
 
-    @test solstep.t̄ == history(solstep).t
-    @test solstep.q̄ == history(solstep).q
-    @test solstep.λ̄ == history(solstep).λ
+    @test solstep.t̄ == history(solstep).t[1] == previous(solstep).t
+    @test solstep.q̄ == history(solstep).q[1] == previous(solstep).q
+    @test solstep.λ̄ == history(solstep).λ[1] == previous(solstep).λ
 
-    solstep.t̄[0]  = t0
-    solstep.q̄[0] .= x0
-    solstep.λ̄[0] .= λ0
+    solstep.t  = t0
+    solstep.q .= x0
+    solstep.λ .= λ0
 
-    solstep.t̄[1]  = zero(t0)
-    solstep.q̄[1] .= zero(x0)
-    solstep.λ̄[1] .= zero(λ0)
+    solstep.t̄  = zero(t0)
+    solstep.q̄ .= zero(x0)
+    solstep.λ̄ .= zero(λ0)
 
     @test current(solstep) == (t = t0, q = x0, λ = λ0)
     @test previous(solstep) == (t = zero(t0), q = zero(x0), λ = zero(λ0))
@@ -206,8 +206,8 @@ end
     @test solstep.t == initial_conditions(dae).t
     @test solstep.q == initial_conditions(dae).q
 
-    @test solstep.t̄[1] ≈ - timestep(dae)
-    @test solstep.q̄[1][1:2] ≈ [A * sin(- ω * timestep(dae) + ϕ), ω * A * cos(- ω * timestep(dae) + ϕ)]
+    @test solstep.t̄ ≈ - timestep(dae)
+    @test solstep.q̄[1:2] ≈ [A * sin(- ω * timestep(dae) + ϕ), ω * A * cos(- ω * timestep(dae) + ϕ)]
 
 end
 
