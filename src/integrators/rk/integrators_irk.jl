@@ -86,7 +86,7 @@ function initial_guess!(
 
     # compute initial guess for internal stages
     for i in eachstage(method)
-        initialguess!(solstep.t̄[1] + timestep(problem) * tableau(method).c[i], cache.Q[i], cache.V[i], solstep, problem, iguess)
+        initialguess!(solstep.t̄ + timestep(problem) * tableau(method).c[i], cache.Q[i], cache.V[i], solstep, problem, iguess)
     end
 
     # assemble initial guess for nonlinear solver solution vector
@@ -121,7 +121,7 @@ function components!(x::AbstractVector{ST}, int::IntegratorIRK) where {ST}
 
     # compute V = v(Q)
     for i in eachindex(Q,V)
-        tᵢ = solstep(int).t̄[1] + timestep(int) * tableau(int).c[i]
+        tᵢ = solstep(int).t̄ + timestep(int) * tableau(int).c[i]
         equations(int).v(V[i], tᵢ, Q[i])
     end
 end

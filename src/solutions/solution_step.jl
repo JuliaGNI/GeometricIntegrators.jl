@@ -56,13 +56,13 @@ function cut_periodic_solution!(solstep::SolutionStep, periodicity)
                 while solstep.q[k] < 0
                     solstep.q[k], solstep.q̃[k] = compensated_summation(+periodicity.q[k], solstep.q[k], solstep.q̃[k])
                     for i in eachhistory(solstep)
-                        solstep.q̄[i][k] += periodicity.q[k]
+                        history(solstep).q[i][k] += periodicity.q[k]
                     end
                 end
                 while solstep.q[k] ≥ periodicity.q[k]
                     solstep.q[k], solstep.q̃[k] = compensated_summation(-periodicity.q[k], solstep.q[k], solstep.q̃[k])
                     for i in eachhistory(solstep)
-                        solstep.q̄[i][k] -= periodicity.q[k]
+                        history(solstep).q[i][k] -= periodicity.q[k]
                     end
                 end
             end

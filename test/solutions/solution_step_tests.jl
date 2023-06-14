@@ -48,17 +48,17 @@ end
 
     solstep = SolutionStepODE(t0, x0)
 
-    @test solstep.t == solstep.t̄[0] == current(solstep).t
-    @test solstep.q == solstep.q̄[0] == current(solstep).q
+    @test solstep.t == history(solstep).t[0] == current(solstep).t
+    @test solstep.q == history(solstep).q[0] == current(solstep).q
 
-    @test solstep.t̄ == history(solstep).t
-    @test solstep.q̄ == history(solstep).q
+    @test solstep.t̄ == history(solstep).t[1] == previous(solstep).t
+    @test solstep.q̄ == history(solstep).q[1] == previous(solstep).q
 
-    solstep.t̄[0]  = t0
-    solstep.q̄[0] .= x0
+    solstep.t  = t0
+    solstep.q .= x0
 
-    solstep.t̄[1]  = zero(t0)
-    solstep.q̄[1] .= zero(x0)
+    solstep.t̄  = zero(t0)
+    solstep.q̄ .= zero(x0)
 
     @test current(solstep) == (t = t0, q = x0)
     @test previous(solstep) == (t = zero(t0), q = zero(x0))
@@ -89,8 +89,8 @@ end
     @test solstep.t == initial_conditions(ode).t
     @test solstep.q == initial_conditions(ode).q
 
-    @test solstep.t̄[1] ≈ - timestep(ode)
-    @test solstep.q̄[1] ≈ [A * sin(- ω * timestep(ode) + ϕ), ω * A * cos(- ω * timestep(ode) + ϕ)]
+    @test solstep.t̄ ≈ - timestep(ode)
+    @test solstep.q̄ ≈ [A * sin(- ω * timestep(ode) + ϕ), ω * A * cos(- ω * timestep(ode) + ϕ)]
 
 end
 

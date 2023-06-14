@@ -6,7 +6,7 @@ function initialguess!(t̄, q̄, t, q, q̇, problem::AbstractProblemODE, extrap:
 end
 
 function initialguess!(t, q, q̇, solstep::SolutionStepODE, problem::AbstractProblemODE, extrap::MidpointExtrapolation)
-    initialguess!(solstep.t̄[1], solstep.q̄[1], t, q, q̇, problem, extrap)
+    initialguess!(previous(solstep)..., t, q, q̇, problem, extrap)
 end
 
 function initialguess!(t̄, q̄, t, q, problem::AbstractProblemODE, extrap::MidpointExtrapolation)
@@ -15,7 +15,7 @@ function initialguess!(t̄, q̄, t, q, problem::AbstractProblemODE, extrap::Midp
 end
 
 function initialguess!(t, q, solstep::SolutionStepODE, problem::AbstractProblemODE, extrap::MidpointExtrapolation)
-    initialguess!(solstep.t̄[1], solstep.q̄[1], t, q, problem, extrap)
+    initialguess!(previous(solstep)..., t, q, problem, extrap)
 end
 
 

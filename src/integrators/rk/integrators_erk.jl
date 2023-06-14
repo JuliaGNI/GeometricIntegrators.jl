@@ -61,13 +61,13 @@ function integrate_step!(
 
     # compute internal stages
     for i in eachstage(method)
-        tᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).c[i]
+        tᵢ = solstep.t̄ + timestep(problem) * tableau(method).c[i]
         for k in eachindex(Q[i], V[i])
             yᵢ = 0
             for j in 1:i-1
                 yᵢ += tableau(method).a[i,j] * V[j][k]
             end
-            Q[i][k] = solstep.q̄[1][k] + timestep(problem) * yᵢ
+            Q[i][k] = solstep.q̄[k] + timestep(problem) * yᵢ
         end
         functions(problem).v(V[i], tᵢ, Q[i])
     end

@@ -83,7 +83,7 @@ function initial_guess!(
     cache = caches[DT]
 
     for i in eachstage(method)
-        initialguess!(solstep.t̄[1] + timestep(problem) * tableau(method).c[i], cache.Q[i], cache.V[i], solstep, problem, iguess)
+        initialguess!(solstep.t̄ + timestep(problem) * tableau(method).c[i], cache.Q[i], cache.V[i], solstep, problem, iguess)
     end
 
     for i in eachstage(method)
@@ -113,7 +113,7 @@ function components!(x::AbstractVector{ST}, int::IntegratorDIRK, i) where {ST}
     end
 
     # compute V = v(Q)
-    tᵢ = solstep(int).t̄[1] + timestep(int) * tableau(int).c[i]
+    tᵢ = solstep(int).t̄ + timestep(int) * tableau(int).c[i]
     equations(int).v(V[i], tᵢ, Q[i])
 end
 
