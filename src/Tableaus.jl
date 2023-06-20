@@ -5,16 +5,16 @@ module Tableaus
     using CompactBasisFunctions
     using QuadratureRules
     using Reexport
-
-    @reexport using RungeKutta
+    using RungeKutta.Tableaus
 
     using GeometricBase
     using GeometricBase.Config
     using GeometricBase.Utils
 
     using ..Integrators
-    using ..Integrators.SPARK
-    using ..Integrators.VPRK
+    using ..Integrators.Integrators.SPARK
+
+    using RungeKutta: Tableau
 
     using GeometricIntegrators.Integrators.SPARK: get_ã_vspark_primary,
                                                   get_α_vspark_primary,

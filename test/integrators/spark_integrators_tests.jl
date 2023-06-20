@@ -1,7 +1,7 @@
 using GeometricIntegrators
 using GeometricIntegrators.Integrators.SPARK
 using GeometricProblems.LotkaVolterra2d
-using SimpleSolvers
+using RungeKutta
 using Test
 
 const t₀ = 0.0

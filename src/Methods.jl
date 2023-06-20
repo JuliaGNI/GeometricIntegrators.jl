@@ -42,6 +42,7 @@ module Methods
     export AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
     export nstages, eachstage, coefficients, weights, nodes
     export hasnullvector, nullvector
+    export isexplicit, isimplicit, issymmetric, issymplectic, isenergypreserving, isstifflyaccurate
 
     include("methods/list.jl")
 
