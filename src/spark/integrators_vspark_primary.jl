@@ -76,7 +76,7 @@ struct VSPARKprimary{TT <: TableauVSPARKprimary} <: ISPARKMethod
     tableau::TT
 end
 
-Methods.tableau(method::VSPARKprimary) = method.tableau
+tableau(method::VSPARKprimary) = method.tableau
 
 solversize(problem::Union{IDAEProblem,LDAEProblem}, method::VSPARKprimary) =
     2 * ndims(problem) * nstages(method) + 2 * ndims(problem) * pstages(method)

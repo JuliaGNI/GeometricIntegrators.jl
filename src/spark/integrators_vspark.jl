@@ -7,7 +7,7 @@ end
 
 VSPARK(method::SPARKMethod) = VSPARK(tableau(method))
 
-Methods.tableau(method::VSPARK) = method.tableau
+tableau(method::VSPARK) = method.tableau
 
 solversize(problem::Union{IDAEProblem,LDAEProblem}, method::VSPARK) =
     3 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)

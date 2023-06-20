@@ -9,20 +9,16 @@ module SPARK
     using RungeKutta.Tableaus
     using SimpleSolvers
 
-    import RungeKutta: AbstractTableau, Tableau, nstages, eachstage
-
     using GeometricBase
     using GeometricBase.Config
     using GeometricBase.Utils
+    using GeometricEquations
 
+    import GeometricBase: tableau
+    import RungeKutta: AbstractTableau, Tableau, nstages, eachstage
 
-    using ..GeometricBase
-    using ..GeometricEquations
-    using ..Config
 
     using ..Methods
-
-    import ..Methods: tableau
 
     import ..Solutions: SolutionStepPDAE, SolutionVector
 
@@ -37,8 +33,7 @@ module SPARK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
                           update!, update_vector_fields!, update_multiplier!,
                           initialize!, initsolver, nlsolution
-    import ..Integrators: equation, equations, tableau, timestep,
-                          eachstage, nstages
+    import ..Integrators: equation, equations, timestep, eachstage, nstages
 
     import ..Utils: @define
 

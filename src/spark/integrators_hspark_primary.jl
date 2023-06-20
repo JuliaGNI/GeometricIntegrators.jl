@@ -5,7 +5,7 @@ struct HSPARKprimary{TT <: TableauHSPARKprimary} <: PSPARKMethod
     tableau::TT
 end
 
-Methods.tableau(method::HSPARKprimary) = method.tableau
+tableau(method::HSPARKprimary) = method.tableau
 
 solversize(problem::Union{PDAEProblem,HDAEProblem}, method::HSPARKprimary) =
     2 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)

@@ -28,14 +28,14 @@ module Integrators
     import CompactBasisFunctions: Basis
     import CompactBasisFunctions: nbasis
 
-    import GeometricBase: description, nconstraints
+    import GeometricBase: description, reference, nconstraints, tableau, reset!
     
     import RungeKutta
     import RungeKutta: eachstage, nstages
 
-    import ..Methods: hasnullvector, initmethod, implicit_update, nullvector, tableau
+    import ..Methods: hasnullvector, initmethod, implicit_update, nullvector
 
-    import ..Solutions: current, cut_periodic_solution!, reset!, update!
+    import ..Solutions: current, cut_periodic_solution!, update!
 
 
     # compat workaroung
@@ -144,8 +144,6 @@ module Integrators
            SplittingCoefficientsNonSymmetric,
            SplittingCoefficientsGS,
            SplittingCoefficientsSS
-
-    export coefficients
 
     export LieA,
            LieB,

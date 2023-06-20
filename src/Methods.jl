@@ -7,6 +7,7 @@ module Methods
     using RungeKutta.Tableaus
     using RungeKutta.PartitionedTableaus
 
+    import GeometricBase: tableau
     import RungeKutta
     import RungeKutta: AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
     import RungeKutta: eachstage, nstages

@@ -7,7 +7,7 @@ struct HPARK{TT <: TableauHPARK} <: PSPARKMethod
     tableau::TT
 end
 
-Methods.tableau(method::HPARK) = method.tableau
+tableau(method::HPARK) = method.tableau
 
 solversize(problem::Union{PDAEProblem,HDAEProblem}, method::HPARK) =
     2 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)

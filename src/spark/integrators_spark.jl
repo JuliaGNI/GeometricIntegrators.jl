@@ -25,7 +25,7 @@ struct SPARKMethod{TT <: TableauSPARK} <: ISPARKMethod
     tableau::TT
 end
 
-Methods.tableau(method::SPARKMethod) = method.tableau
+tableau(method::SPARKMethod) = method.tableau
 
 solversize(problem::Union{IDAEProblem,LDAEProblem}, method::SPARKMethod) =
     2 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)
