@@ -10,7 +10,7 @@ const IntegratorExplicitEuler{DT,TT} = Integrator{<:Union{ODEProblem{DT,TT}, DAE
 function integrate_step!(int::IntegratorExplicitEuler)
 
     # compute vector field
-    equations(int)[:v](solstep(int).v, solstep(int).t̄, solstep(int).q)
+    equations(int)[:v](solstep(int).v, solstep(int).t, solstep(int).q)
 
     # compute update
     update!(solstep(int), solstep(int).v, timestep(int))
