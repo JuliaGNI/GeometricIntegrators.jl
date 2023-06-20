@@ -4,7 +4,6 @@ authors = ["Michael Kraus <michael.kraus@ipp.mpg.de>"]
 version = "0.11.4"
 
 [deps]
-Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 CompactBasisFunctions = "a09551c4-f815-4143-809e-dd1986753ba7"
 DecFP = "55939f99-70c6-5e9b-8bb0-5071ed7d61fd"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
@@ -28,7 +27,6 @@ SimpleSolvers = "36b790f5-6434-4fbe-b711-1f64a1e2f6a2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-Aqua = "0.5, 0.6"
 CompactBasisFunctions = "0.2"
 DecFP = "1"
 Documenter = "0.25, 0.26, 0.27"
@@ -50,10 +48,11 @@ SimpleSolvers = "0.3"
 julia = "1.6"
 
 [extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 GeometricEquations = "c85262ba-a08a-430a-b926-d29770767bf2"
 GeometricProblems = "18cb22b4-ad41-5c80-9c5f-710df63fbdc9"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["GeometricEquations", "GeometricProblems", "SafeTestsets", "Test"]
+test = ["Aqua", "GeometricEquations", "GeometricProblems", "SafeTestsets", "Test"]
