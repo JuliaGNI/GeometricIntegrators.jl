@@ -1,4 +1,4 @@
-using GeometricIntegrators.Integrators.VPRK
+using GeometricIntegrators.Integrators
 using GeometricEquations.Tests.HarmonicOscillator
 
 using GeometricIntegrators.Methods: VPRK, VPRKMethod

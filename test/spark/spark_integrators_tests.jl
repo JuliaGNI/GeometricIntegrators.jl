@@ -1,5 +1,5 @@
 using GeometricIntegrators
-using GeometricIntegrators.Integrators.SPARK
+using GeometricIntegrators.SPARK
 using GeometricProblems.LotkaVolterra2d
 using RungeKutta
 using Test

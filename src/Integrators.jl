@@ -194,10 +194,6 @@ module Integrators
     include("integrators/dvi/integrators_dvrk.jl")
 
 
-    include("integrators/SPARK.jl")
-    include("integrators/VPRK.jl")
-
-
     include("integrators/integrators.jl")
     include("integrators/methods.jl")
 

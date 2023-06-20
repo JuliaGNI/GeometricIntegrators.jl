@@ -18,11 +18,10 @@ module GeometricIntegrators
     @reexport using .Discontinuities
     include("Integrators.jl")
     @reexport using .Integrators
-    include("Tableaus.jl")
-    @reexport using .Tableaus
     # include("Simulations.jl")
     # @reexport using .Simulations
 
+    include("SPARK.jl")
 
     function __init__()
         add_config(:verbosity, 1)
