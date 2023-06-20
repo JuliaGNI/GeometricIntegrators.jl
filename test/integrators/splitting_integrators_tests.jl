@@ -1,11 +1,10 @@
 using GeometricIntegrators
-using GeometricProblems.HarmonicOscillator
-using SimpleSolvers
+using GeometricEquations.Tests.HarmonicOscillator
 using Test
 
-using GeometricProblems.HarmonicOscillator: reference_solution
+using GeometricEquations.Tests.HarmonicOscillator: reference_solution
 
-sode = harmonic_oscillator_sode()
+sode = sodeproblem()
 
 sode1 = SubstepProblem(sode, one(timestep(sode)), 1)
 sode2 = SubstepProblem(sode, one(timestep(sode)), 2)

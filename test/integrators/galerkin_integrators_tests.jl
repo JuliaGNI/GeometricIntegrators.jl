@@ -1,13 +1,13 @@
 using GeometricIntegrators
-using GeometricProblems.HarmonicOscillator
+using GeometricEquations.Tests.HarmonicOscillator
 using Test
 
 using CompactBasisFunctions
 using QuadratureRules
 
-using GeometricProblems.HarmonicOscillator: reference_solution
+using GeometricEquations.Tests.HarmonicOscillator: reference_solution
 
-iode = harmonic_oscillator_iode()
+iode = iodeproblem()
 
 QGau4 = GaussLegendreQuadrature(4)
 BGau4 = Lagrange(QuadratureRules.nodes(QGau4))

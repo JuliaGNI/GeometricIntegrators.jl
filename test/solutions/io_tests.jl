@@ -1,13 +1,13 @@
 using GeometricIntegrators
 using GeometricIntegrators.Solutions: save#load, 
-using GeometricProblems.HarmonicOscillator
+using GeometricEquations.Tests.HarmonicOscillator
 using Test
 import HDF5
 
-ode = harmonic_oscillator_ode()
-dae = harmonic_oscillator_dae()
-pode = harmonic_oscillator_pode()
-pdae = harmonic_oscillator_pdae()
+ode  = odeproblem()
+dae  = daeproblem()
+pode = podeproblem()
+pdae = pdaeproblem()
 
 nt = 10
 Δt = 0.1

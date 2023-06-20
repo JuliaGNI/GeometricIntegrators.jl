@@ -1,4 +1,3 @@
-
 using GeometricEquations.Tests.HarmonicOscillator
 using GeometricIntegrators
 using Test

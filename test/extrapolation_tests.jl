@@ -1,22 +1,24 @@
 using GeometricIntegrators
-using GeometricProblems.HarmonicOscillator
-using GeometricProblems.HarmonicOscillator: Δt, k, ω
+using GeometricEquations.Tests.HarmonicOscillator
 using Test
 
-const t₀ = 0.0
-const t₁ = t₀ + Δt
-const t₂ = t₁ + Δt
-const t₋ = t₀ - Δt
-
-ode  = harmonic_oscillator_ode()
-pode = harmonic_oscillator_pode()
-iode = harmonic_oscillator_iode()
+ode  = odeproblem()
+pode = podeproblem()
+iode = degenerate_iodeproblem()
 
 
 # Compute Reference Solution for ODEs
 
-x₀ = ode.ics.q
+const Δt = timestep(ode)
+const t₀ = initial_conditions(ode).t
+const t₁ = t₀ + Δt
+const t₂ = t₁ + Δt
+const t₋ = t₀ - Δt
 
+x₀ = initial_conditions(ode).q
+
+k = parameters(ode).k
+ω = parameters(ode).ω
 A = sqrt(x₀[2]^2 / k + x₀[1]^2)
 ϕ = asin(x₀[1] / A)
 
@@ -123,8 +125,8 @@ extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(5))
 
 # Create PODE Solution Arrays
 
-q₀ = pode.ics.q
-p₀ = pode.ics.p
+q₀ = initial_conditions(pode).q
+p₀ = initial_conditions(pode).p
 
 qᵢ = zero(q₀)
 pᵢ = zero(p₀)
@@ -198,8 +200,8 @@ extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(5))
 
 # Create IODE Solution Arrays
 
-q₀ = iode.ics.q
-p₀ = iode.ics.p
+q₀ = initial_conditions(iode).q
+p₀ = initial_conditions(iode).p
 
 qᵢ = zero(q₀)
 qₚ = zero(q₀)
