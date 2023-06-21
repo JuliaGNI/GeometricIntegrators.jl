@@ -69,13 +69,6 @@ Pages   = ["integrators/rk/bstract_integrator_rk.jl",
 ```
 
 
-## SPARK Methods
-
-```@autodocs
-Modules = [GeometricIntegrators.Integrators.SPARK]
-```
-
-
 ## Variational Partitioned Runge-Kutta Methods
 
 ```@autodocs

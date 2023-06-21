@@ -1,5 +1,5 @@
 ```@meta
-CurrentModule = GeometricIntegrators.Integrators.SPARK
+CurrentModule = GeometricIntegrators.SPARK
 ```
 
 # Special Partitioned Additive Runge-Kutta Integrators
