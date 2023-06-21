@@ -14,36 +14,6 @@ abstract type PDAEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 reset!(::ODEIntegratorCache, t, q, λ = missing) = nothing
 
 
-# IntegratorCache(params::Parameters{DT}) where {DT} = IntegratorCache{DT}(params)
-# IntegratorCache{ST}(params::Parameters) where {ST} = error("IntegratorCache{ST}(params) not implemented for ", typeof(params))
-
-# IntegratorCache(integrator::AbstractIntegrator{DT}) where {DT} = IntegratorCache{DT}(integrator)
-# IntegratorCache{ST}(integrator::AbstractIntegrator) where {ST} = error("IntegratorCache{ST}(int) not implemented for ", typeof(integrator))
-
-# CacheType(T, params::Parameters) = error("CacheType(T, params) not implemented for ", typeof(params))
-
-# nlsolution(::IntegratorCache) = nothing
-
-
-# struct OldCacheDict{PT}
-#     params::PT
-#     caches::Dict{UInt64, IntegratorCache}
-
-#     function OldCacheDict(params::Parameters)
-#         new{typeof(params)}(params, Dict{UInt64, IntegratorCache}())
-#     end
-# end
-
-# @inline function Base.getindex(c::OldCacheDict, ST::DataType)
-#     key = hash(Threads.threadid(), hash(ST))
-#     if haskey(c.caches, key)
-#         c.caches[key]
-#     else
-#         c.caches[key] = IntegratorCache{ST}(c.params)
-#     end::CacheType(ST, c.params)
-# end
-
-
 IntegratorCache(problem::AbstractProblem, method::GeometricMethod) = IntegratorCache{datatype(problem)}(problem, method)
 IntegratorCache{ST}(::AbstractProblem, ::GeometricMethod) where {ST} = nothing
 
