@@ -48,7 +48,7 @@ default_iguess(::DVIB) = HermiteExtrapolation()
 
 function initsolver(::Newton, solstep::SolutionStepPODE{DT}, problem::Union{IODEProblem,LODEProblem}, method::DVIB, caches::CacheDict) where {DT}
     # create wrapper function f!(b,x)
-    f! = (b,x) -> function_stages!(b, x, solstep, problem, method, caches)
+    f! = (b,x) -> residual!(b, x, solstep, problem, method, caches)
 
     # create nonlinear solver
     NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
@@ -85,7 +85,7 @@ function initial_guess!(
 end
 
 
-function compute_stages!(
+function components!(
     x::Vector{ST},
     solstep::SolutionStepPODE{DT,TT},
     problem::Union{IODEProblem,LODEProblem},
@@ -117,7 +117,7 @@ function compute_stages!(
 end
 
 
-function function_stages!(
+function residual!(
     b::Vector{ST},
     x::Vector{ST},
     solstep::SolutionStepPODE,
@@ -130,7 +130,7 @@ function function_stages!(
     D = ndims(problem)
 
     # compute stages from nonlinear solver solution x
-    compute_stages!(x, solstep, problem, method, caches)
+    components!(x, solstep, problem, method, caches)
 
     # compute b
     for k in 1:div(D,2)
@@ -153,7 +153,7 @@ function integrate_step!(
     solver::NonlinearSolver) where {DT,TT}
 
     # call nonlinear solver
-    solve!(caches[DT].x, (b,x) -> function_stages!(b, x, solstep, problem, method, caches), solver)
+    solve!(caches[DT].x, (b,x) -> residual!(b, x, solstep, problem, method, caches), solver)
 
     # print solver status
     # print_solver_status(int.solver.status, int.solver.params)
@@ -162,7 +162,7 @@ function integrate_step!(
     # check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector field at internal stages
-    compute_stages!(caches[DT].x, solstep, problem, method, caches)
+    components!(caches[DT].x, solstep, problem, method, caches)
 
     # compute final update
     solstep.q .= caches[DT].q

@@ -148,7 +148,7 @@ function compute_projection!(
 end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."
-function function_stages!(x::Vector{ST}, b::Vector{ST},
+function residual!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpVariational{DT,TT,D,S},
                 caches::OldCacheDict) where {ST,DT,TT,D,S}
 
@@ -198,7 +198,7 @@ function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::SolutionSt
     # check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(cache.x, cache.Q, cache.V, cache.P, cache.F, int.params)
+    components!(cache.x, cache.Q, cache.V, cache.P, cache.F, int.params)
 
     # compute unprojected solution
     update_solution!(int, sol, cache)

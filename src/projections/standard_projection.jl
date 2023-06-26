@@ -68,7 +68,7 @@ function initial_guess!(
 end
 
 
-function compute_stages!(
+function components!(
     x::AbstractVector{DT},
     solstep::SolutionStep, 
     problem::DAEProblem,
@@ -101,7 +101,7 @@ function compute_stages!(
 end
 
 
-function compute_stages!(
+function components!(
     x::AbstractVector{ST},
     solstep::SolutionStep, 
     problem::Union{IODEProblem,LODEProblem},
@@ -145,7 +145,7 @@ end
 
 
 # Compute stages of variational partitioned Runge-Kutta methods.
-function function_stages!(
+function residual!(
     b::Vector{ST},
     x::Vector{ST},
     solstep::SolutionStep, 
@@ -156,7 +156,7 @@ function function_stages!(
     @assert axes(x) == axes(b)
 
     # compute stages
-    compute_stages!(x, solstep, problem, method, caches)
+    components!(x, solstep, problem, method, caches)
 
     # compute b = q̄ - q - Δt * U
     for k in 1:ndims(problem)
@@ -206,7 +206,7 @@ function integrate_step!(int::Integrator{<:GeometricProblem, <:ProjectedMethod{<
     initial_guess!(int)
 
     # call nonlinear solver for projection
-    solve!(nlsolution(int), (b,x) -> function_stages!(b, x, solstep(int), problem(int), method(int), caches(int)), solver(int))
+    solve!(nlsolution(int), (b,x) -> residual!(b, x, solstep(int), problem(int), method(int), caches(int)), solver(int))
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))

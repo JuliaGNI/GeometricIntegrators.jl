@@ -97,7 +97,7 @@ const IntegratorSLRK{DT,TT} = Integrator{<:LDAEProblem{DT,TT}, <:SLRK}
 
 # function Integrators.initsolver(::Newton, solstep::SolutionStepPDAE{DT}, problem::LDAEProblem, method::SLRK, caches::CacheDict) where {DT}
 #     # create wrapper function f!(b,x)
-#     f! = (b,x) -> function_stages!(b, x, solstep, problem, method, caches)
+#     f! = (b,x) -> residual!(b, x, solstep, problem, method, caches)
 
 #     # create nonlinear solver
 #     NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
@@ -155,7 +155,7 @@ function Integrators.initial_guess!(
 end
 
 
-function compute_stages!(
+function components!(
     x::Vector{ST},
     solstep::SolutionStepPDAE{DT,TT}, 
     problem::LDAEProblem,
@@ -210,7 +210,7 @@ end
 
 
 # Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems.
-function function_stages!(
+function residual!(
     b::Vector{ST},
     x::Vector{ST},
     solstep::SolutionStepPDAE, 
@@ -226,7 +226,7 @@ function function_stages!(
     local D = ndims(problem)
 
     # compute stages from nonlinear solver solution x
-    compute_stages!(x, solstep, problem, method, caches)
+    components!(x, solstep, problem, method, caches)
 
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ, ωΨ]
     for i in 1:nstages(method)

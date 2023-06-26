@@ -133,8 +133,8 @@ function initial_guess!(int::IntegratorVPRKpTableau{DT}, sol::SolutionStepPODE{D
 end
 
 
-function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVPRK{ST}, params::ParametersVPRKpTableau{DT,TT,D,S}) where {ST,DT,TT,D,S}
-    compute_stages!(x, cache.Q, cache.V,
+function components!(x::Vector{ST}, cache::IntegratorCacheVPRK{ST}, params::ParametersVPRKpTableau{DT,TT,D,S}) where {ST,DT,TT,D,S}
+    components!(x, cache.Q, cache.V,
                        cache.P, cache.F,
                        cache.Y, cache.Z,
                        cache.q̃, cache.ṽ, cache.p̃,
@@ -142,7 +142,7 @@ function compute_stages!(x::Vector{ST}, cache::IntegratorCacheVPRK{ST}, params::
                        params)
 end
 
-function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
+function components!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
                                         P::Vector{Vector{ST}}, F::Vector{Vector{ST}},
                                         Y::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
                                         q::Vector{ST}, v::Vector{ST}, p::Vector{ST},
@@ -222,14 +222,14 @@ function compute_stages!(x::Vector{ST}, Q::Vector{Vector{ST}}, V::Vector{Vector{
 end
 
 "Compute stages of projected Gauss-Legendre Runge-Kutta methods."
-function function_stages!(x::Vector{ST}, b::Vector{ST},
+function residual!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpTableau{DT,TT,D,S},
                 caches::OldCacheDict) where {ST,DT,TT,D,S}
 
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_stages!(x, cache, params)
+    components!(x, cache, params)
 
     # compute b = [P-p-AF]
     for i in 1:S
@@ -257,7 +257,7 @@ function function_dirac_constraint!(λ::Vector, int::IntegratorVPRKpTableau{DT,T
     # check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(cache.x, cache, int.params)
+    components!(cache.x, cache, int.params)
 
     # compute and return ϑ(t,q)-p
     return cache.θ̃ .- cache.p̃

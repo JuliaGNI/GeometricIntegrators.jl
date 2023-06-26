@@ -74,7 +74,7 @@ end
 
 
 # Compute Q stages of explicit partitioned Runge-Kutta methods.
-function computeStageQ!(solstep::SolutionStepPODE{DT,TT}, problem::PODEProblem{DT,TT}, method::EPRK, caches::CacheDict, i::Int, jmax::Int, t::TT) where {DT,TT}
+function compute_stage_q!(solstep::SolutionStepPODE{DT,TT}, problem::PODEProblem{DT,TT}, method::EPRK, caches::CacheDict, i::Int, jmax::Int, t::TT) where {DT,TT}
     # obtain cache
     local Q = caches[DT].Q
     local P = caches[DT].P
@@ -95,7 +95,7 @@ function computeStageQ!(solstep::SolutionStepPODE{DT,TT}, problem::PODEProblem{D
 end
 
 # Compute P stages of explicit partitioned Runge-Kutta methods.
-function computeStageP!(solstep::SolutionStepPODE{DT,TT}, problem::PODEProblem{DT,TT}, method::EPRK, caches::CacheDict, i::Int, jmax::Int, t::TT) where {DT,TT}
+function compute_stage_p!(solstep::SolutionStepPODE{DT,TT}, problem::PODEProblem{DT,TT}, method::EPRK, caches::CacheDict, i::Int, jmax::Int, t::TT) where {DT,TT}
     # obtain cache
     local Q = caches[DT].Q
     local P = caches[DT].P
@@ -133,14 +133,14 @@ function integrate_step!(solstep::SolutionStepPODE{DT,TT}, problem::PODEProblem{
         if tableau(method).q.a[i,i] ≠ zero(TT) && tableau(method).p.a[i,i] ≠ zero(TT)
             error("This is an implicit method!")
         elseif tableau(method).q.a[i,i] ≠ zero(TT)
-            computeStageP!(solstep, problem, method, caches, i, i-1, tpᵢ)
-            computeStageQ!(solstep, problem, method, caches, i, i, tqᵢ)
+            compute_stage_p!(solstep, problem, method, caches, i, i-1, tpᵢ)
+            compute_stage_q!(solstep, problem, method, caches, i, i, tqᵢ)
         elseif tableau(method).p.a[i,i] ≠ zero(TT)
-            computeStageQ!(solstep, problem, method, caches, i, i-1, tqᵢ)
-            computeStageP!(solstep, problem, method, caches, i, i, tpᵢ)
+            compute_stage_q!(solstep, problem, method, caches, i, i-1, tqᵢ)
+            compute_stage_p!(solstep, problem, method, caches, i, i, tpᵢ)
         else
-            computeStageQ!(solstep, problem, method, caches, i, i-1, tqᵢ)
-            computeStageP!(solstep, problem, method, caches, i, i-1, tpᵢ)
+            compute_stage_q!(solstep, problem, method, caches, i, i-1, tqᵢ)
+            compute_stage_p!(solstep, problem, method, caches, i, i-1, tpᵢ)
         end
     end
 

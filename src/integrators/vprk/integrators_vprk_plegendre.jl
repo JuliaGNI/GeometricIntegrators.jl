@@ -152,7 +152,7 @@ function initial_guess!(int::IntegratorVPRKpLegendre{DT,TT}, sol::SolutionStepPO
 end
 
 
-function compute_stages!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
+function components!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
                 params::ParametersVPRKpLegendre{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     local offset::Int
@@ -313,7 +313,7 @@ function compute_rhs!(b::Vector{ST},
 end
 
 "Compute stages of variational special partitioned additive Runge-Kutta methods."
-function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST},
+function Integrators.residual!(y::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpLegendre{DT,TT,D,S},
                 caches::OldCacheDict) where {ST,DT,TT,D,S}
 
@@ -322,7 +322,7 @@ function Integrators.function_stages!(y::Vector{ST}, b::Vector{ST},
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_stages!(y, cache.Q, cache.V, cache.P, cache.F, cache.Y, cache.Z, cache.Φ, cache.q̃, cache.ṽ, cache.p̃, cache.ϕ, cache.μ, params)
+    components!(y, cache.Q, cache.V, cache.P, cache.F, cache.Y, cache.Z, cache.Φ, cache.q̃, cache.ṽ, cache.p̃, cache.ϕ, cache.μ, params)
 
     compute_rhs!(b, cache.Q, cache.V, cache.P, cache.F, cache.Y, cache.Z, cache.Φ, cache.q̃, cache.p̃, cache.ϕ, cache.μ, params)
 
@@ -362,7 +362,7 @@ function integrate_step!(int::IntegratorVPRKpLegendre{DT,TT}, sol::SolutionStepP
     # check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(cache.x, cache.Q, cache.V, cache.P,
+    components!(cache.x, cache.Q, cache.V, cache.P,
                     cache.F, cache.Y, cache.Z, cache.Φ,
                     cache.q̃, cache.ṽ, cache.p̃, cache.ϕ,
                     cache.μ, int.params)

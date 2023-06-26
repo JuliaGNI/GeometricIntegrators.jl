@@ -19,7 +19,7 @@ end
 
 
 
-function compute_stages!(
+function components!(
     x::AbstractVector{ST},
     solstep::SolutionStepPODE,
     problem::VPRKProblem,

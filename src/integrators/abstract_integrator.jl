@@ -210,7 +210,7 @@ get_internal_variables(::Nothing) = NamedTuple()
 
 # abstract type Parameters{DT,TT} end
 
-# function_stages!(::Vector{DT}, ::Vector{DT}, ::PT) where {DT, TT, PT <: Parameters{DT,TT}} = error("function_stages!() not implemented for ", PT)
+# residual!(::Vector{DT}, ::Vector{DT}, ::PT) where {DT, TT, PT <: Parameters{DT,TT}} = error("residual!() not implemented for ", PT)
 # solution_stages!(::Vector{DT}, ::Vector{DT}, ::PT) where {DT, TT, PT <: Parameters{DT,TT}} = error("solution_stages!() not implemented for ", PT)
 
 # initialize!(::AbstractIntegrator, ::SolutionStep) = nothing

@@ -159,14 +159,14 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+function Integrators.residual!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpInternal{DT,TT,D,S},
                 caches::OldCacheDict) where {ST,DT,TT,D,S}
 
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_stages!(x, cache.q̃, cache.p̃, cache.ṽ, cache.λ, cache.Q, cache.V, cache.U, cache.P, cache.F, cache.G, params)
+    components!(x, cache.q̃, cache.p̃, cache.ṽ, cache.λ, cache.Q, cache.V, cache.U, cache.P, cache.F, cache.G, params)
 
     # compute b = - [P-AF-U]
     compute_rhs_vprk!(b, cache.P, cache.F, cache.G, params)
@@ -199,7 +199,7 @@ function integrate_step!(int::IntegratorVPRKpInternal{DT,TT}, sol::SolutionStepP
     # check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages and projection vector fields
-    compute_stages!(cache.x,
+    components!(cache.x,
                     cache.q̃, cache.p̃, cache.ṽ, cache.λ,
                     cache.Q, cache.V, cache.U,
                     cache.P, cache.F, cache.G, int.params)

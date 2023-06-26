@@ -306,7 +306,7 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+function Integrators.residual!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpSecondary{DT,TT,D,S},
                 caches::OldCacheDict) where {ST,DT,TT,D,S}
 

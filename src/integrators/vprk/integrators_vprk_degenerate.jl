@@ -109,7 +109,7 @@ end
 
 
 "Compute solution of degenerate symplectic partitioned Runge-Kutta methods."
-function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+function Integrators.residual!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKdegenerate{DT,TT,D,S},
                 caches::OldCacheDict) where {ST,DT,TT,D,S}
 
@@ -160,7 +160,7 @@ function integrate_step!(int::IntegratorVPRKdegenerate{DT,TT}, sol::SolutionStep
     # check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(cache.x, cache.Q, cache.V, cache.P, cache.F, int.params)
+    components!(cache.x, cache.Q, cache.V, cache.P, cache.F, int.params)
 
     # compute unprojected solution
     update_solution!(int, sol, cache)

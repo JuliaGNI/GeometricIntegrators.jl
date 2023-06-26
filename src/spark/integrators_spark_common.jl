@@ -49,7 +49,7 @@ function Integrators.integrate_step!(
     solver::NonlinearSolver) where {DT}
 
     # call nonlinear solver
-    solve!(caches[DT].x, (b,x) -> function_stages!(b, x, solstep, problem, method, caches), solver)
+    solve!(caches[DT].x, (b,x) -> residual!(b, x, solstep, problem, method, caches), solver)
 
     # check_jacobian(int.solver)
     # print_jacobian(int.solver)
@@ -61,7 +61,7 @@ function Integrators.integrate_step!(
     # println(meets_stopping_criteria(status(solver)))
 
     # compute vector fields at internal stages
-    compute_stages!(caches[DT].x, solstep, problem, method, caches)
+    components!(caches[DT].x, solstep, problem, method, caches)
 
     # compute final update
     update_solution!(solstep, problem, method, caches)

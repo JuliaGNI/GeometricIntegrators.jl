@@ -93,9 +93,8 @@ initial_guess!(::SolutionStep, ::AbstractProblem, ::GeometricMethod, ::CacheDict
 initial_guess!(int::Integrator) = initial_guess!(solstep(int), problem(int), method(int), caches(int), solver(int), iguess(int))
 
 
-function function_stages!(b::Vector, x::Vector, int::Integrator)
-    function_stages!(b, x, solstep(int), problem(int), method(int), caches(int))
+function residual!(b::AbstractVector, x::AbstractVector, int::Integrator)
+    residual!(b, x, solstep(int), problem(int), method(int), caches(int))
 end
 
-residual!(b, x, int) = function_stages!(b, x, int)
 # components!(x, int) = components!(x, solstep(int), problem(int), method(int), caches(int))

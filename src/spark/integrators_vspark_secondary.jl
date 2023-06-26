@@ -138,7 +138,7 @@ function Integrators.initial_guess!(
 end
 
 
-function compute_stages!(
+function components!(
     x::Vector{ST},
     solstep::SolutionStepPDAE{DT,TT}, 
     problem::Union{IDAEProblem,LDAEProblem},
@@ -218,7 +218,7 @@ end
 
 
 # Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems.
-function function_stages!(
+function residual!(
     b::Vector{ST},
     x::Vector{ST},
     solstep::SolutionStepPDAE, 
@@ -235,7 +235,7 @@ function function_stages!(
     local D = ndims(problem)
 
     # compute stages from nonlinear solver solution x
-    compute_stages!(x, solstep, problem, method, caches)
+    components!(x, solstep, problem, method, caches)
 
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ, ωΨ]
     for i in 1:R

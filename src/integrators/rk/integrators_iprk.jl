@@ -131,7 +131,7 @@ function initial_guess!(
 end
 
 
-function compute_stages!(
+function components!(
     x::AbstractVector{ST},
     solstep::SolutionStepPODE{DT,TT},
     problem::Union{PODEProblem,HODEProblem},
@@ -173,7 +173,7 @@ end
 
 
 # Compute stages of implicit partitioned Runge-Kutta methods.
-function function_stages!(
+function residual!(
     b::AbstractVector{ST},
     x::AbstractVector{ST},
     solstep::SolutionStepPODE,
@@ -190,7 +190,7 @@ function function_stages!(
     local D = ndims(problem)
 
     # compute stages from nonlinear solver solution x
-    compute_stages!(x, solstep, problem, method, caches)
+    components!(x, solstep, problem, method, caches)
 
     # compute b = - [(Y-AV), (Z-AF)]
     for i in eachstage(method)
@@ -214,7 +214,7 @@ function integrate_step!(
     solver::NonlinearSolver) where {DT,TT}
 
     # call nonlinear solver
-    solve!(caches[DT].x, (b,x) -> function_stages!(b, x, solstep, problem, method, caches), solver)
+    solve!(caches[DT].x, (b,x) -> residual!(b, x, solstep, problem, method, caches), solver)
 
     # print solver status
     # println(status(solver))
@@ -223,7 +223,7 @@ function integrate_step!(
     # println(meets_stopping_criteria(status(solver)))
 
     # compute vector fields at internal stages
-    compute_stages!(caches[DT].x, solstep, problem, method, caches)
+    components!(caches[DT].x, solstep, problem, method, caches)
 
     # compute final update
     update!(solstep, caches[DT].V, caches[DT].F, tableau(method), timestep(problem))

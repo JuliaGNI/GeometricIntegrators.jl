@@ -65,7 +65,6 @@ module Integrators
 
     export IntegratorCache, IntegratorConstructor
     export equation, timestep
-    # export function_stages!, NonlinearFunctionParameters
 
     include("integrators/integrator_cache.jl")
     include("integrators/abstract_integrator.jl")
