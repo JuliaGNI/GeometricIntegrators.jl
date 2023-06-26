@@ -227,9 +227,9 @@ ṗᵢ = zero(p₀)
 qₚ .= xₚ
 qₙ .= xₙ
 
-functions(iode).v̄(q̇ₚ, tₚ, qₚ)
-functions(iode).v̄(q̇₀, t₀, q₀)
-functions(iode).v̄(q̇ₙ, tₙ, qₙ)
+functions(iode).v̄(q̇ₚ, tₚ, qₚ, pₚ)
+functions(iode).v̄(q̇₀, t₀, q₀, p₀)
+functions(iode).v̄(q̇ₙ, tₙ, qₙ, pₙ)
 
 functions(iode).ϑ(pₚ, tₚ, qₚ, q̇ₚ)
 functions(iode).ϑ(pₙ, tₙ, qₙ, q̇ₙ)

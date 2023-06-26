@@ -29,7 +29,7 @@ end
 
 function initialguess!(t̄, q̄, p̄, t, q, p, q̇, ṗ, problem::Union{IODEProblem,LODEProblem}, extrap::MidpointExtrapolation)
     extrapolate!(t̄, q̄, p̄, t, q, p, problem, extrap)
-    functions(problem).v̄(q̇, t, q)
+    functions(problem).v̄(q̇, t, q, p)
     functions(problem).f̄(ṗ, t, q, q̇)
     (t = t, q = q, p = p, v = q̇, f = ṗ)
 end
