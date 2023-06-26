@@ -83,3 +83,9 @@ PostProjection(method::GeometricMethod) = ProjectedMethod(StandardProjection([0,
 SymplecticProjection(method::Union{PRKMethod,VPRKMethod}) = ProjectedMethod(StandardProjection([0,1], [0,1], tableau(method).R∞), method)
 VariationalProjectionOnP(method::GeometricMethod) = ProjectedMethod(StandardProjection([0,1], [1,0]), method)
 VariationalProjectionOnQ(method::GeometricMethod) = ProjectedMethod(StandardProjection([1,0], [0,1]), method)
+
+
+# description(::PostProjection) = "Post projection"
+# description(::SymplecticProjection) = "Symplectic Projection"
+# description(::VariationalProjectionOnP) = @doc raw"Variational projection on $(q_{n}, p_{n+1})$"
+# description(::VariationalProjectionOnQ) = @doc raw"Variational projection on $(p_{n}, q_{n+1})$"

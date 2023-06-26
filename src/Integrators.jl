@@ -43,22 +43,16 @@ module Integrators
 
 
     export InitialGuess, NoInitialGuess
-    # export InitialGuessODE, InitialGuessIODE, InitialGuessPODE
     export initialguess!
 
     include("integrators/initial_guess/initial_guess.jl")
     include("integrators/initial_guess/hermite.jl")
     include("integrators/initial_guess/midpoint.jl")
-    
-    # include("integrators/initial_guess/initial_guess_ode.jl")
-    # include("integrators/initial_guess/initial_guess_iode.jl")
-    # include("integrators/initial_guess/initial_guess_pode.jl")
 
 
     export AbstractCoefficients
 
     include("integrators/abstract_coefficients.jl")
-    include("integrators/abstract_tableau.jl")
 
 
     export AbstractIntegrator, DeterministicIntegrator, StochasticIntegrator, Integrator
@@ -75,7 +69,6 @@ module Integrators
 
     include("integrators/integrator_cache.jl")
     include("integrators/abstract_integrator.jl")
-    include("integrators/integrators_common.jl")
 
 
     export Integrator

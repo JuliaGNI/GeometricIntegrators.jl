@@ -1,6 +1,12 @@
 
 abstract type SplittingCoefficients end
 
+@define CoefficientsHeader begin
+    name::Symbol
+    o::Int
+    s::Int
+end
+
 coefficients(problem::SODEProblem, splitting::SplittingCoefficients) = coefficients(length(solutions(problem).q), splitting)
 
 
@@ -35,7 +41,7 @@ Integrator:
 ```
 """
 struct SplittingCoefficientsGeneral{T} <: SplittingCoefficients
-    @HeaderTableau
+    @CoefficientsHeader
 
     a::Vector{T}
     b::Vector{T}
@@ -92,7 +98,7 @@ Integrator:
 ```
 """
 struct SplittingCoefficientsNonSymmetric{T} <: SplittingCoefficients
-    @HeaderTableau
+    @CoefficientsHeader
 
     a::Vector{T}
     b::Vector{T}
@@ -147,7 +153,7 @@ Integrator:
 ```
 """
 struct SplittingCoefficientsGS{T} <: SplittingCoefficients
-    @HeaderTableau
+    @CoefficientsHeader
 
     a::Vector{T}
     b::Vector{T}
@@ -200,7 +206,7 @@ Integrator:
 ```
 """
 struct SplittingCoefficientsSS{T} <: SplittingCoefficients
-    @HeaderTableau
+    @CoefficientsHeader
 
     a::Vector{T}
 

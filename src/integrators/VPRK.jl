@@ -25,8 +25,7 @@ module VPRK
                           AbstractIntegratorIRK, AbstractIntegratorPRK
     import ..Integrators: CacheDict, Cache, CacheType, nlsolution
     import ..Integrators: IntegratorCache
-    import ..Integrators: AbstractCoefficients, CoefficientsPGLRK,
-                          @CoefficientsRK, @HeaderTableau, @HeaderCoefficientsRK
+    import ..Integrators: AbstractCoefficients, CoefficientsPGLRK
     import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
                           update_vector_fields!, update_multiplier!,
                           initialize!, update!
@@ -53,10 +52,7 @@ module VPRK
     # include("vprk/integrators_vprk.jl")
     # include("vprk/integrators_vprk_degenerate.jl")
     # include("vprk/integrators_vprk_pinternal.jl")
-    # include("vprk/integrators_vprk_pmidpoint.jl")
-    # include("vprk/integrators_vprk_pstandard.jl")
     # include("vprk/integrators_vprk_psecondary.jl")
-    # include("vprk/integrators_vprk_psymmetric.jl")
     # include("vprk/integrators_vprk_pvariational.jl")
     # include("vprk/integrators_vprk_plegendre.jl")
     # include("vprk/integrators_vprk_ptableau.jl")

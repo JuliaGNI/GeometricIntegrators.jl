@@ -1,4 +1,9 @@
 
+# function check_symplecticity end
+function symplecticity_conditions end
+
+
+
 # AbstractIntegrator(problem::Union{IODEProblem,LODEProblem}, method::RKMethod; kwargs...) = AbstractIntegrator(problem, Methods.tableau(method); kwargs...)
 # AbstractIntegrator(problem::Union{IODEProblem,LODEProblem}, method::PRKMethod; kwargs...) = AbstractIntegrator(problem, Methods.tableau(method); kwargs...)
 

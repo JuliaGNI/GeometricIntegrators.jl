@@ -64,7 +64,45 @@ function update_vector!(Δq::AbstractVector, Δp::AbstractVector, V::StageVector
 end
 
 
+function update_multiplier!(λ::SolutionVector{T}, Λ::StageVector{T}, b::AbstractVector) where {T}
+    for Λᵢ in Λ
+        @assert length(λ) == length(Λᵢ)
+    end
+    local t::T
+    @inbounds for i in eachindex(λ)
+        t = zero(T)
+        for j in eachindex(b,Λ)
+            t += b[j] * Λ[j][i]
+        end
+        λ[i] = t
+    end
+    nothing
+end
 
+
+# function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b::AbstractVector, Δt) where {T}
+#     @assert length(x) == length(xₑᵣᵣ)
+#     @assert length(x) == size(ẋ, 1)
+#     @assert length(b) == size(ẋ, 2)
+
+#     for k in axes(ẋ, 1)
+#         for i in axes(ẋ, 2)
+#             x[k], xₑᵣᵣ[k] = compensated_summation(Δt * b[i] * ẋ[k,i], x[k], xₑᵣᵣ[k])
+#         end
+#     end
+# end
+
+# function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Vector{Vector{T}}, b::AbstractVector, Δt) where {T}
+#     @assert length(b) == length(ẋ)
+#     @assert length(x) == length(ẋ[1])
+#     @assert length(x) == length(xₑᵣᵣ)
+
+#     for i in eachindex(ẋ)
+#         for k in eachindex(ẋ[i])
+#             x[k], xₑᵣᵣ[k] = compensated_summation(Δt * b[i] * ẋ[i][k], x[k], xₑᵣᵣ[k])
+#         end
+#     end
+# end
 
 # function update_solution!(x::SolutionVector{T}, ẋ::Matrix{T}, b::AbstractVector, Δt) where {T}
 #     @assert length(x) == size(ẋ, 1)
@@ -81,6 +119,7 @@ end
 #     end
 # end
 
+
 # function update_solution!(x::SolutionVector{T}, ẋ::Vector{Vector{T}}, b::AbstractVector, Δt) where {T}
 #     @assert length(b) == length(ẋ)
 #     @assert length(x) == length(ẋ[1])
@@ -96,23 +135,27 @@ end
 #     end
 # end
 
+# function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::AbstractVector, b̂::AbstractVector, Δt) where {T}
+#     update_solution!(x, xₑᵣᵣ, ẋ, b, Δt)
+#     update_solution!(x, xₑᵣᵣ, ẋ, b̂, Δt)
+# end
+
 # function update_solution!(x::SolutionVector{T}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::AbstractVector, b̂::AbstractVector, Δt) where {T}
 #     update_solution!(x, ẋ, b, Δt)
 #     update_solution!(x, ẋ, b̂, Δt)
 # end
 
-
-function update_multiplier!(λ::SolutionVector{T}, Λ::StageVector{T}, b::AbstractVector) where {T}
-    for Λᵢ in Λ
-        @assert length(λ) == length(Λᵢ)
-    end
-    local t::T
-    @inbounds for i in eachindex(λ)
-        t = zero(T)
-        for j in eachindex(b,Λ)
-            t += b[j] * Λ[j][i]
-        end
-        λ[i] = t
-    end
-    nothing
-end
+# function update_multiplier!(λ::SolutionVector{T}, Λ::Vector{Vector{T}}, b::AbstractVector) where {T}
+#     for Λᵢ in Λ
+#         @assert length(λ) == length(Λᵢ)
+#     end
+#     local t::T
+#     @inbounds for i in eachindex(λ)
+#         t = zero(T)
+#         for j in eachindex(b,Λ)
+#             t += b[j] * Λ[j][i]
+#         end
+#         λ[i] = t
+#     end
+#     nothing
+# end
