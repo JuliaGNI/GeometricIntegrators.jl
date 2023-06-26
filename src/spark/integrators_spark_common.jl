@@ -66,9 +66,6 @@ function Integrators.integrate_step!(
     # compute final update
     update_solution!(solstep, problem, method, caches)
 
-    # update vector field for initial guess
-    update_vector_fields!(solstep, problem)
-
     # copy internal stage variables
     # TODO: reactivate
     # solstep.internal.Qi .= caches[DT].Qi

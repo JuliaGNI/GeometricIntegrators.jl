@@ -276,9 +276,6 @@ function integrate_step!(int::IntegratorVPRK)
     # compute final update
     update!(nlsolution(int), int)
 
-    # update vector field for initial guess
-    update_vector_fields!(solstep(int), problem(int))
-
     # copy internal stage variables
     # solstep(int).internal[:Q] .= cache(int).Q
     # solstep(int).internal[:P] .= cache(int).P

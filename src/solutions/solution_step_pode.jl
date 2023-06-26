@@ -148,7 +148,6 @@ function initialize!(solstep::SolutionStepPODE, problem::AbstractProblemPODE, ex
     solstep.p̃ .= 0
 
     update_vector_fields!(solstep, problem)
-    # update_implicit_functions!(solstep, problem)
 
     for i in eachhistory(solstep)
         history(solstep).t[i] = history(solstep).t[i-1] - timestep(problem)

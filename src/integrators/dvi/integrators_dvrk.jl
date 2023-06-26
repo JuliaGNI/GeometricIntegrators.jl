@@ -249,8 +249,4 @@ function integrate_step!(
     # compute final update
     solstep.q .= caches[DT].q
     solstep.p .= caches[DT].θ
-
-    # update vector field for initial guess
-    update_vector_fields!(solstep, problem)
-    # equations(int)[:v̄](sol.v, sol.t, sol.q)
 end

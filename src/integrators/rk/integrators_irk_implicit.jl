@@ -299,9 +299,6 @@ function integrate_step!(int::IntegratorIRKimplicit)
     # compute final update
     update!(nlsolution(int), int)
 
-    # update vector field for initial guess
-    update_vector_fields!(solstep(int), problem(int))
-
     # update one-form for next step
     # functions(problem).ϑ(solstep.p, solstep.t, solstep.q, solstep.v)
 end

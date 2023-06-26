@@ -168,7 +168,4 @@ function integrate_step!(int::IntegratorDIRK)
 
     # compute final update
     update!(solstep(int), cache(int).V, tableau(int), timestep(int))
-
-    # update vector field for initial guess
-    update_vector_fields!(solstep(int), problem(int))
 end
