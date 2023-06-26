@@ -30,7 +30,7 @@ module SPARK
     import ..Integrators: CacheDict, Cache, CacheType, IDAEIntegratorCache
     import ..Integrators: AbstractCoefficients,
                           @CoefficientsRK, @HeaderCoefficientsRK
-    import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
+    import ..Integrators: create_internal_stage_vector,
                           update!, update_vector_fields!, update_multiplier!,
                           initialize!, initsolver, nlsolution
     import ..Integrators: equation, equations, timestep, eachstage, nstages

@@ -26,7 +26,7 @@ module VPRK
     import ..Integrators: CacheDict, Cache, CacheType, nlsolution
     import ..Integrators: IntegratorCache
     import ..Integrators: AbstractCoefficients, CoefficientsPGLRK
-    import ..Integrators: create_internal_stage_vector, create_nonlinear_solver,
+    import ..Integrators: create_internal_stage_vector, 
                           update_vector_fields!, update_multiplier!,
                           initialize!, update!
     import ..Integrators: equation, equations, tableau, timestep
