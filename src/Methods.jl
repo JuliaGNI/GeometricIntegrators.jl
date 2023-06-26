@@ -7,7 +7,7 @@ module Methods
     using RungeKutta.Tableaus
     using RungeKutta.PartitionedTableaus
 
-    import GeometricBase: tableau
+    import GeometricBase: order, tableau
     import RungeKutta
     import RungeKutta: AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
     import RungeKutta: eachstage, nstages
@@ -32,15 +32,15 @@ module Methods
     export PRKMethod, EPRKMethod, IPRKMethod, VPRKMethod
     export AbstractSplittingMethod
 
-    export initmethod
-
     export RK, PRK
+
+    export initmethod, implicit_update
     export internal_variables
-    export implicit_update
 
     export NoProjection, projection
 
     export AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
+    export name, order, description, reference
     export nstages, eachstage, coefficients, weights, nodes
     export hasnullvector, nullvector
     export isexplicit, isimplicit, issymmetric, issymplectic, isenergypreserving, isstifflyaccurate

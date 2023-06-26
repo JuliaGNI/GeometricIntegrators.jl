@@ -69,10 +69,11 @@ Pages   = ["integrators/rk/bstract_integrator_rk.jl",
 ```
 
 
-## Variational Partitioned Runge-Kutta Methods
+## Variational Integrators
 
 ```@autodocs
-Modules = [GeometricIntegrators.Integrators.VPRK]
+Modules = [GeometricIntegrators.Integrators]
+Pages   = ["integrators/vi/integrators_vprk.jl"]
 ```
 
 ## Degenerate Variational Integrators

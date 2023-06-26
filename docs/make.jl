@@ -1,6 +1,7 @@
 using Documenter
 using DocumenterCitations
 using GeometricIntegrators
+using RungeKutta
 using Weave
 
 
