@@ -156,7 +156,7 @@ function update_vector_fields!(solstep::SolutionStepPDAE, problem::Union{PDAEPro
 end
 
 function update_vector_fields!(solstep::SolutionStepPDAE, problem::Union{IDAEProblem,LDAEProblem}, i=0)
-    functions(problem).v̄(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i])
+    functions(problem).v̄(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i])
     functions(problem).f̄(history(solstep).f[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i])
     functions(problem).u(history(solstep).u[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i], history(solstep).p[i], history(solstep).λ[i])
     functions(problem).g(history(solstep).g[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i], history(solstep).p[i], history(solstep).λ[i])
