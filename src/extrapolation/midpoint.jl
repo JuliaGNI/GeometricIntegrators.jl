@@ -232,7 +232,7 @@ function extrapolate_iode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
     local f₀ = zero(p₀)
     local fᵢ = zero(p₀)
 
-    v(v₀, t₀, q₀)
+    v(v₀, t₀, q₀, p₀)
     f(f₀, t₀, q₀, v₀)
 
     for i in 1:extrap.s+1
@@ -242,7 +242,7 @@ function extrapolate_iode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
         pᵢ₁ .= p₀
         pᵢ₂ .= p₀ .+ σ[i] .* f₀
         for _ in 1:(F[i]-1)
-            v(vᵢ, tᵢ, qᵢ₂)
+            v(vᵢ, tᵢ, qᵢ₂, pᵢ₂)
             f(fᵢ, tᵢ, qᵢ₂, vᵢ)
             qᵢₜ .= qᵢ₁ .+ 2σ[i] .* vᵢ
             qᵢ₁ .= qᵢ₂

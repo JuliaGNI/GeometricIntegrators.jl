@@ -27,11 +27,15 @@ function initialguess!(t₀, q₀, q̇₀, t₁, q₁, q̇₁, t, q, iguess::Her
 end
 
 function initialguess!(t, q, q̇, solstep::Union{SolutionStepODE,SolutionStepDAE}, ::Union{AbstractProblemODE,DAEProblem}, extrap::HermiteExtrapolation; kwargs...)
-    initialguess!(history(solstep, 2)..., history(solstep, 1)..., t, q, q̇, extrap; kwargs...)
+    t₀, q₀, q̇₀ = history(solstep, 2).t, history(solstep, 2).q, history(solstep, 2).v
+    t₁, q₁, q̇₁ = history(solstep, 1).t, history(solstep, 1).q, history(solstep, 1).v
+    initialguess!(t₀, q₀, q̇₀, t₁, q₁, q̇₁, t, q, q̇, extrap; kwargs...)
 end
 
 function initialguess!(t, q, solstep::Union{SolutionStepODE,SolutionStepDAE}, ::Union{AbstractProblemODE,DAEProblem}, extrap::HermiteExtrapolation; kwargs...)
-    initialguess!(history(solstep, 2)..., history(solstep, 1)..., t, q, extrap; kwargs...)
+    t₀, q₀, q̇₀ = history(solstep, 2).t, history(solstep, 2).q, history(solstep, 2).v
+    t₁, q₁, q̇₁ = history(solstep, 1).t, history(solstep, 1).q, history(solstep, 1).v
+    initialguess!(t₀, q₀, q̇₀, t₁, q₁, q̇₁, t, q, extrap; kwargs...)
 end
 
 

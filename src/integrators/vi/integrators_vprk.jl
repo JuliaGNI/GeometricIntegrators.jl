@@ -63,13 +63,12 @@ function initial_guess!(
     cache = caches[DT]
 
     for i in eachstage(method)
-        # TODO: Check initial guess !
-        initialguess!(solstep.t̄[1] + timestep(problem) * tableau(method).q.c[i], cache.Q[i], cache.V[i], solstep, problem, iguess)
+        initialguess!(solstep.t̄ + timestep(problem) * tableau(method).q.c[i], cache.Q[i], cache.V[i], solstep, problem, iguess)
         for k in 1:ndims(problem)
-            cache.x[ndims(problem)*(i-1)+k] = 0#solstep.v̄[1][k]#cache.V[i][k]
+            cache.x[ndims(problem)*(i-1)+k] = cache.V[i][k]
         end
-        # println("  t = $(solstep.t̄[1] + timestep(problem) * tableau(method).q.c[i]),",
-        #         "  q̄ = $(solstep.q̄[1]), v̄ = $(solstep.v̄[1]), ",
+        # println("  t = $(solstep.t̄ + timestep(problem) * tableau(method).q.c[i]),",
+        #         "  q̄ = $(solstep.q̄), v̄ = $(solstep.v̄), ",
         #         "  q = $(cache.Q[i]), v = $(cache.V[i])")
     end
 end
