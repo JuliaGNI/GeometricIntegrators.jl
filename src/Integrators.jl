@@ -45,9 +45,9 @@ module Integrators
     export InitialGuess, NoInitialGuess
     export initialguess!
 
-    include("integrators/initial_guess/initial_guess.jl")
-    include("integrators/initial_guess/hermite.jl")
-    include("integrators/initial_guess/midpoint.jl")
+    include("initial_guess/initial_guess.jl")
+    include("initial_guess/hermite.jl")
+    include("initial_guess/midpoint.jl")
 
 
     export AbstractCoefficients
