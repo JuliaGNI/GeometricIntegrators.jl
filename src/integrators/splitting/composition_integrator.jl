@@ -59,8 +59,8 @@ _iguesses(methods::Tuple) = Tuple([default_iguess(m) for m in methods])
 _neqs(::Any) = 0
 _neqs(::Nothing) = 0
 _neqs(eqs::Tuple) = length(eqs)
-_neqs(equ::SODE) = maximum([_neqs(functions(equ)), _neqs(solutions(equ))])
-_neqs(problem::SODEProblem) = _neqs(equation(problem))
+_neqs(equ::SODE) = nsteps(equ)
+_neqs(problem::SODEProblem) = nsteps(problem)
 
 
 struct CompositionIntegrator{PT,SIT,SST,ST} <: DeterministicIntegrator

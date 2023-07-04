@@ -78,7 +78,7 @@ function integrate_step!(
             caches[DT].q .= solstep.q
 
             # compute new solution
-            solutions(problem).q[method.f[i]](solstep.q, solstep.t̄[1] + timestep(problem) * method.c[i], caches[DT].q, solstep.t̄[1])
+            solutions(problem).q[method.f[i]](solstep.q, solstep.t̄ + timestep(problem) * method.c[i], caches[DT].q, solstep.t̄)
         end
     end
 end

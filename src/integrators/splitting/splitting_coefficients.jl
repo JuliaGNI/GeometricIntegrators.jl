@@ -7,7 +7,7 @@ abstract type SplittingCoefficients end
     s::Int
 end
 
-coefficients(problem::SODEProblem, splitting::SplittingCoefficients) = coefficients(length(solutions(problem).q), splitting)
+coefficients(problem::SODEProblem, splitting::SplittingCoefficients) = coefficients(nsteps(equation(problem)), splitting)
 
 
 function _splitting_coefficients(r::Int, a::AbstractVector{T}, b::AbstractVector{T}) where {T}
