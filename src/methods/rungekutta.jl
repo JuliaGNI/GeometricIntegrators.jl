@@ -2,12 +2,25 @@
 abstract type RKMethod <: ODEMethod end
 abstract type PRKMethod <: PODEMethod end
 
+abstract type ERKMethod <: RKMethod end
+abstract type IRKMethod <: RKMethod end
+abstract type DIRKMethod <: IRKMethod end
+
+abstract type EPRKMethod <: PRKMethod end
+abstract type IPRKMethod <: PRKMethod end
+
 const RungeKuttaMethod = Union{RKMethod,PRKMethod}
 
-tableau(method::RKMethod) = error("No tableau for Runge-Kutta method $(typeof(method)) provided")
-tableau(method::PRKMethod) = error("No tableau for partitioned Runge-Kutta method $(typeof(method)) provided")
+GeometricBase.tableau(method::RKMethod) = error("No tableau for Runge-Kutta method $(typeof(method)) provided")
+GeometricBase.tableau(method::PRKMethod) = error("No tableau for partitioned Runge-Kutta method $(typeof(method)) provided")
 
-order(method::RungeKuttaMethod) = RungeKutta.order(tableau(method))
+GeometricBase.order(method::RungeKuttaMethod) = order(tableau(method))
+
+nstages(method::RungeKuttaMethod) = RungeKutta.nstages(tableau(method))
+eachstage(method::RungeKuttaMethod) = RungeKutta.eachstage(tableau(method))
+coefficients(method::RungeKuttaMethod) = RungeKutta.coefficients(tableau(method))
+weights(method::RungeKuttaMethod) = RungeKutta.weights(tableau(method))
+nodes(method::RungeKuttaMethod) = RungeKutta.nodes(tableau(method))
 
 ispodemethod(::Union{RKMethod, Type{<:RKMethod}}) = true
 ishodemethod(::Union{RKMethod, Type{<:RKMethod}}) = true
@@ -24,11 +37,16 @@ issymplectic(method::RungeKuttaMethod) = RungeKutta.issymplectic(tableau(method)
 # isenergypreserving(method::RungeKuttaMethod) = RungeKutta.order(tableau(method))
 # isstifflyaccurate(method::RungeKuttaMethod) = RungeKutta.order(tableau(method))
 
-Integrators.Integrator(problem::ODEProblem, method::RKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
-Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::RKMethod; kwargs...) = Integrator(problem, PartitionedTableau(tableau(method)); kwargs...)
-Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::PRKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
-Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::RKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
-Integrators.Integrator(problem::Union{IODEProblem,LODEProblem}, method::PRKMethod; kwargs...) = Integrator(problem, tableau(method); kwargs...)
+isexplicit(method::ERKMethod) = true
+isexplicit(method::IRKMethod) = false
+isimplicit(method::ERKMethod) = false
+isimplicit(method::IRKMethod) = true
+
+isexplicit(method::EPRKMethod) = true
+isexplicit(method::IPRKMethod) = false
+isimplicit(method::EPRKMethod) = false
+isimplicit(method::IPRKMethod) = true
+
 
 function Base.show(io::IO, method::RKMethod)
     print(io, "\nRunge-Kutta Method with Tableau: $(description(tableau(method)))\n")
@@ -45,26 +63,97 @@ end
 
 
 """
-General Runge-Kutta Method
+Explicit Runge-Kutta Method
+
+```
+ERK(tableau)
+```
+"""
+struct ERK{TT <: Tableau} <: ERKMethod
+    tableau::TT
+end
+
+"""
+Implicit Runge-Kutta Method
+
+```
+IRK(tableau)
+```
+"""
+struct IRK{TT <: Tableau, ImplicitUpdate} <: IRKMethod
+    tableau::TT
+
+    function IRK(tableau::TT; implicit_update::Bool = false) where {TT <: Tableau}
+        new{TT, implicit_update}(tableau)
+    end
+end
+
+implicit_update(::IRKMethod) = false
+implicit_update(::IRK{TT,IU}) where {TT,IU} = IU
+
+"""
+Diagonally Implicit Runge-Kutta Method
+
+```
+DIRK(tableau)
+```
+"""
+struct DIRK{TT <: Tableau} <: DIRKMethod
+    tableau::TT
+end
+
+
+"""
+Runge-Kutta Method
 
 ```
 RK(tableau)
 ```
-"""
-struct RK{TT} <: RKMethod
-    tableau::TT
 
-    function RK(tableau::TT) where {TT <: Tableau}
-        new{TT}(tableau)
+Returns an explicit, implicit or diagonally implicit Runge-Kutta method depending on the tableau.
+"""
+function RK(tableau::Tableau)
+    if RungeKutta.isexplicit(tableau)
+        # Create method for explicit Runge-Kutta tableau
+        return ERK(tableau)
+    elseif RungeKutta.isdiagonallyimplicit(tableau)
+        # Create method for diagonally implicit Runge-Kutta tableau
+        return DIRK(tableau)
+    elseif RungeKutta.isfullyimplicit(tableau)
+        # Create method for implicit Runge-Kutta tableau
+        return IRK(tableau)
     end
 end
 
-RK(method::RKMethod, args...; kwargs...) = RK(tableau(method))
+RK(method::RKMethod, args...; kwargs...) = RK(tableau(method), args...; kwargs...)
+ERK(method::RKMethod, args...; kwargs...) = ERK(tableau(method), args...; kwargs...)
+IRK(method::RKMethod, args...; kwargs...) = IRK(tableau(method), args...; kwargs...)
+DIRK(method::RKMethod, args...; kwargs...) = DIRK(tableau(method), args...; kwargs...)
 
-tableau(method::RK) = method.tableau
+@inline GeometricBase.tableau(method::Union{ERK,IRK,DIRK}) = method.tableau
 
-Integrators.Integrator(problem::ODEProblem, method::RK; kwargs...) = Integrator(problem, tableau(method); kwargs...)
 
+"""
+Explicit Partitioned Runge-Kutta Method
+
+```
+EPRK(tableau)
+```
+"""
+struct EPRK{TT <: PartitionedTableau} <: EPRKMethod
+    tableau::TT
+end
+
+"""
+Implicit Partitioned Runge-Kutta Method
+
+```
+IPRK(tableau)
+```
+"""
+struct IPRK{TT <: PartitionedTableau} <: IPRKMethod
+    tableau::TT
+end
 
 """
 Partitioned Runge-Kutta Method
@@ -72,21 +161,27 @@ Partitioned Runge-Kutta Method
 ```
 PRK(tableau)
 ```
-"""
-struct PRK{TT} <: PRKMethod
-    tableau::TT
 
-    function PRK(tableau::TT) where {TT <: PartitionedTableau}
-        new{TT}(tableau)
+Returns an explicit or implicit partitioned Runge-Kutta method depending on the tableau.
+"""
+function PRK(tableau::PartitionedTableau)
+    if RungeKutta.isexplicit(tableau)
+        # Create method for explicit partitioned Runge-Kutta tableau
+        return EPRK(tableau)
+    elseif RungeKutta.isimplicit(tableau)
+        # Create method for implicit partitioned Runge-Kutta tableau
+        return IPRK(tableau)
     end
 end
 
-PRK(method::PRKMethod, args...; kwargs...) = PRK(tableau(method))
-PRK(method::RKMethod, args...; kwargs...) = PRK(PartitionedTableau(tableau(method)))
+PRK(tableau::Tableau, args...; kwargs...) = PRK(PartitionedTableau(tableau), args...; kwargs...)
+PRK(method::PRKMethod, args...; kwargs...) = PRK(tableau(method), args...; kwargs...)
+PRK(method::RKMethod, args...; kwargs...) = PRK(tableau(method), args...; kwargs...)
+EPRK(method::PRKMethod, args...; kwargs...) = EPRK(tableau(method), args...; kwargs...)
+IPRK(method::PRKMethod, args...; kwargs...) = IPRK(tableau(method), args...; kwargs...)
 
-tableau(method::PRK) = method.tableau
+@inline GeometricBase.tableau(method::Union{EPRK,IPRK}) = method.tableau
 
-Integrators.Integrator(problem::Union{PODEProblem,HODEProblem}, method::PRK; kwargs...) = Integrator(problem, tableau(method); kwargs...)
 
 
 # Explicit Runge-Kutta Methods
@@ -96,169 +191,169 @@ Explicit Runge-Kutta method with [`TableauForwardEuler`](@ref).
 
 $(reference(Val(:ExplicitEuler)))
 """
-struct ForwardEuler <: RKMethod end
+struct ForwardEuler <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauExplicitEuler`](@ref).
 
 $(reference(Val(:ExplicitEuler)))
 """
-struct ExplicitEuler <: RKMethod end
+struct ExplicitEulerRK <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauExplicitMidpoint`](@ref).
 
 $(reference(Val(:ExplicitMidpoint)))
 """
-struct ExplicitMidpoint <: RKMethod end
+struct ExplicitMidpoint <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauHeun2`](@ref).
 
 $(reference(Val(:Heun2)))
 """
-struct Heun2 <: RKMethod end
+struct Heun2 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauHeun3`](@ref).
 
 $(reference(Val(:Heun3)))
 """
-struct Heun3 <: RKMethod end
+struct Heun3 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauKutta3`](@ref).
 
 $(reference(Val(:Kutta3)))
 """
-struct Kutta3 <: RKMethod end
+struct Kutta3 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRalston2`](@ref).
 
 $(reference(Val(:Ralston2)))
 """
-struct Ralston2 <: RKMethod end
+struct Ralston2 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRalston3`](@ref).
 
 $(reference(Val(:Ralston3)))
 """
-struct Ralston3 <: RKMethod end
+struct Ralston3 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRK4`](@ref).
 
 $(reference(Val(:RK4)))
 """
-struct RK4 <: RKMethod end
+struct RK4 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRK21`](@ref).
 
 $(reference(Val(:RK21)))
 """
-struct RK21 <: RKMethod end
+struct RK21 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRK22`](@ref).
 
 $(reference(Val(:RK22)))
 """
-struct RK22 <: RKMethod end
+struct RK22 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRK31`](@ref).
 
 $(reference(Val(:RK31)))
 """
-struct RK31 <: RKMethod end
+struct RK31 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRK32`](@ref).
 
 $(reference(Val(:RK32)))
 """
-struct RK32 <: RKMethod end
+struct RK32 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRK41`](@ref).
 
 $(reference(Val(:RK41)))
 """
-struct RK41 <: RKMethod end
+struct RK41 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRK42`](@ref).
 
 $(reference(Val(:RK42)))
 """
-struct RK42 <: RKMethod end
+struct RK42 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRK416`](@ref).
 
 $(reference(Val(:RK416)))
 """
-struct RK416 <: RKMethod end
+struct RK416 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRK438`](@ref).
 
 $(reference(Val(:RK438)))
 """
-struct RK438 <: RKMethod end
+struct RK438 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRK5`](@ref).
 
 $(reference(Val(:RK5)))
 """
-struct RK5 <: RKMethod end
+struct RK5 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauRunge2`](@ref).
 
 $(reference(Val(:Runge2)))
 """
-struct Runge2 <: RKMethod end
+struct Runge2 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauSSPRK2`](@ref).
 
 $(reference(Val(:SSPRK2)))
 """
-struct SSPRK2 <: RKMethod end
+struct SSPRK2 <: ERKMethod end
 
 """
 Explicit Runge-Kutta method with [`TableauSSPRK3`](@ref).
 
 $(reference(Val(:SSPRK3)))
 """
-struct SSPRK3 <: RKMethod end
+struct SSPRK3 <: ERKMethod end
 
-tableau(::ForwardEuler) = TableauForwardEuler()
-tableau(::ExplicitEuler) = TableauExplicitEuler()
-tableau(::ExplicitMidpoint) = TableauExplicitMidpoint()
-tableau(::Heun2) = TableauHeun2()
-tableau(::Heun3) = TableauHeun3()
-tableau(::Kutta3) = TableauKutta3()
-tableau(::Ralston2) = TableauRalston2()
-tableau(::Ralston3) = TableauRalston3()
-tableau(::RK21) = TableauRK21()
-tableau(::RK22) = TableauRK22()
-tableau(::RK31) = TableauRK31()
-tableau(::RK32) = TableauRK32()
-tableau(::RK4) = TableauRK4()
-tableau(::RK41) = TableauRK41()
-tableau(::RK42) = TableauRK42()
-tableau(::RK416) = TableauRK416()
-tableau(::RK438) = TableauRK438()
-tableau(::RK5) = TableauRK5()
-tableau(::Runge2) = TableauRunge2()
-tableau(::SSPRK2) = TableauSSPRK2()
-tableau(::SSPRK3) = TableauSSPRK3()
+GeometricBase.tableau(::ForwardEuler) = TableauForwardEuler()
+GeometricBase.tableau(::ExplicitEulerRK) = TableauExplicitEuler()
+GeometricBase.tableau(::ExplicitMidpoint) = TableauExplicitMidpoint()
+GeometricBase.tableau(::Heun2) = TableauHeun2()
+GeometricBase.tableau(::Heun3) = TableauHeun3()
+GeometricBase.tableau(::Kutta3) = TableauKutta3()
+GeometricBase.tableau(::Ralston2) = TableauRalston2()
+GeometricBase.tableau(::Ralston3) = TableauRalston3()
+GeometricBase.tableau(::RK21) = TableauRK21()
+GeometricBase.tableau(::RK22) = TableauRK22()
+GeometricBase.tableau(::RK31) = TableauRK31()
+GeometricBase.tableau(::RK32) = TableauRK32()
+GeometricBase.tableau(::RK4) = TableauRK4()
+GeometricBase.tableau(::RK41) = TableauRK41()
+GeometricBase.tableau(::RK42) = TableauRK42()
+GeometricBase.tableau(::RK416) = TableauRK416()
+GeometricBase.tableau(::RK438) = TableauRK438()
+GeometricBase.tableau(::RK5) = TableauRK5()
+GeometricBase.tableau(::Runge2) = TableauRunge2()
+GeometricBase.tableau(::SSPRK2) = TableauSSPRK2()
+GeometricBase.tableau(::SSPRK3) = TableauSSPRK3()
 
 
 # Diagonally Implicit Runge-Kutta Methods
@@ -268,33 +363,33 @@ Diagonally implicit Runge-Kutta method with [`TableauCrankNicolson`](@ref).
 
 $(reference(Val(:CrankNicolson)))
 """
-struct CrankNicolson <: RKMethod end
+struct CrankNicolson <: DIRKMethod end
 
 """
 Diagonally implicit Runge-Kutta method with [`TableauCrouzeix`](@ref).
 
 $(reference(Val(:Crouzeix)))
 """
-struct Crouzeix <: RKMethod end
+struct Crouzeix <: DIRKMethod end
 
 """
 Diagonally implicit Runge-Kutta method with [`TableauKraaijevangerSpijker`](@ref).
 
 $(reference(Val(:KraaijevangerSpijker)))
 """
-struct KraaijevangerSpijker <: RKMethod end
+struct KraaijevangerSpijker <: DIRKMethod end
 
 """
 Diagonally implicit Runge-Kutta method with [`TableauQinZhang`](@ref).
 
 $(reference(Val(:QinZhang)))
 """
-struct QinZhang <: RKMethod end
+struct QinZhang <: DIRKMethod end
 
-tableau(::CrankNicolson) = TableauCrankNicolson()
-tableau(::Crouzeix) = TableauCrouzeix()
-tableau(::KraaijevangerSpijker) = TableauKraaijevangerSpijker()
-tableau(::QinZhang) = TableauQinZhang()
+GeometricBase.tableau(::CrankNicolson) = TableauCrankNicolson()
+GeometricBase.tableau(::Crouzeix) = TableauCrouzeix()
+GeometricBase.tableau(::KraaijevangerSpijker) = TableauKraaijevangerSpijker()
+GeometricBase.tableau(::QinZhang) = TableauQinZhang()
 
 
 # Fully Implicit Runge-Kutta Methods
@@ -304,40 +399,40 @@ Fully implicit Runge-Kutta method with [`TableauBackwardEuler`](@ref).
 
 $(reference(Val(:BackwardEuler)))
 """
-struct BackwardEuler <: RKMethod end
+struct BackwardEuler <: IRKMethod end
 
 """
 Fully implicit Runge-Kutta method with [`TableauImplicitEuler`](@ref).
 
 $(reference(Val(:ImplicitEuler)))
 """
-struct ImplicitEuler <: RKMethod end
+struct ImplicitEulerRK <: IRKMethod end
 
 """
 Fully implicit Runge-Kutta method with [`TableauImplicitMidpoint`](@ref).
 
 $(reference(Val(:ImplicitMidpoint)))
 """
-struct ImplicitMidpoint <: RKMethod end
+struct ImplicitMidpoint <: IRKMethod end
 
 """
 Fully implicit Runge-Kutta method with [`TableauSRK3`](@ref).
 
 $(reference(Val(:SRK3)))
 """
-struct SRK3 <: RKMethod end
+struct SRK3 <: IRKMethod end
 
-tableau(::BackwardEuler) = TableauBackwardEuler()
-tableau(::ImplicitEuler) = TableauImplicitEuler()
-tableau(::ImplicitMidpoint) = TableauImplicitMidpoint()
-tableau(::SRK3) = TableauSRK3()
+GeometricBase.tableau(::BackwardEuler) = TableauBackwardEuler()
+GeometricBase.tableau(::ImplicitEulerRK) = TableauImplicitEuler()
+GeometricBase.tableau(::ImplicitMidpoint) = TableauImplicitMidpoint()
+GeometricBase.tableau(::SRK3) = TableauSRK3()
 
 """
 Fully implicit Runge-Kutta method with [`TableauGauss`](@ref).
 
 $(reference(Val(:Gauss)))
 """
-struct Gauss <: RKMethod
+struct Gauss <: IRKMethod
     s::Int
 end
 
@@ -454,35 +549,35 @@ struct RadauIIB <: RKMethod
     s::Int
 end
 
-tableau(method::Gauss) = TableauGauss(method.s)
-tableau(method::LobattoIII) = TableauLobattoIII(method.s)
-tableau(method::LobattoIIIA) = TableauLobattoIIIA(method.s)
-tableau(method::LobattoIIIB) = TableauLobattoIIIB(method.s)
-tableau(method::LobattoIIIC) = TableauLobattoIIIC(method.s)
-tableau(method::LobattoIIID) = TableauLobattoIIID(method.s)
-tableau(method::LobattoIIIE) = TableauLobattoIIIE(method.s)
-tableau(method::LobattoIIIF) = TableauLobattoIIIF(method.s)
-tableau(method::LobattoIIIF̄) = TableauLobattoIIIF̄(method.s)
-tableau(method::LobattoIIIG) = TableauLobattoIIIG(method.s)
-tableau(method::RadauIA) = TableauRadauIA(method.s)
-tableau(method::RadauIB) = TableauRadauIB(method.s)
-tableau(method::RadauIIA) = TableauRadauIIA(method.s)
-tableau(method::RadauIIB) = TableauRadauIIB(method.s)
+GeometricBase.tableau(method::Gauss) = TableauGauss(method.s)
+GeometricBase.tableau(method::LobattoIII) = TableauLobattoIII(method.s)
+GeometricBase.tableau(method::LobattoIIIA) = TableauLobattoIIIA(method.s)
+GeometricBase.tableau(method::LobattoIIIB) = TableauLobattoIIIB(method.s)
+GeometricBase.tableau(method::LobattoIIIC) = TableauLobattoIIIC(method.s)
+GeometricBase.tableau(method::LobattoIIID) = TableauLobattoIIID(method.s)
+GeometricBase.tableau(method::LobattoIIIE) = TableauLobattoIIIE(method.s)
+GeometricBase.tableau(method::LobattoIIIF) = TableauLobattoIIIF(method.s)
+GeometricBase.tableau(method::LobattoIIIF̄) = TableauLobattoIIIF̄(method.s)
+GeometricBase.tableau(method::LobattoIIIG) = TableauLobattoIIIG(method.s)
+GeometricBase.tableau(method::RadauIA) = TableauRadauIA(method.s)
+GeometricBase.tableau(method::RadauIB) = TableauRadauIB(method.s)
+GeometricBase.tableau(method::RadauIIA) = TableauRadauIIA(method.s)
+GeometricBase.tableau(method::RadauIIB) = TableauRadauIIB(method.s)
 
-order(::Type{Gauss}) = "2s"
-order(::Type{LobattoIII}) = "2s-2"
-order(::Type{LobattoIIIA}) = "2s-2"
-order(::Type{LobattoIIIB}) = "2s-2"
-order(::Type{LobattoIIIC}) = "2s-2"
-order(::Type{LobattoIIID}) = "2s-2"
-order(::Type{LobattoIIIE}) = "2s-2"
-order(::Type{LobattoIIIF}) = "2s"
-order(::Type{LobattoIIIF̄}) = "2s"
-order(::Type{LobattoIIIG}) = "2s"
-order(::Type{RadauIA}) = "2s-1"
-order(::Type{RadauIB}) = "2s-1"
-order(::Type{RadauIIA}) = "2s-1"
-order(::Type{RadauIIB}) = "2s-1"
+GeometricBase.order(::Type{Gauss}) = "2s"
+GeometricBase.order(::Type{LobattoIII}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIA}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIB}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIC}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIID}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIE}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIF}) = "2s"
+GeometricBase.order(::Type{LobattoIIIF̄}) = "2s"
+GeometricBase.order(::Type{LobattoIIIG}) = "2s"
+GeometricBase.order(::Type{RadauIA}) = "2s-1"
+GeometricBase.order(::Type{RadauIB}) = "2s-1"
+GeometricBase.order(::Type{RadauIIA}) = "2s-1"
+GeometricBase.order(::Type{RadauIIB}) = "2s-1"
 
 isexplicit(::Type{Gauss}) = false
 isexplicit(::Type{LobattoIII}) = false
@@ -547,6 +642,41 @@ issymplectic(::Type{RadauIIB}) = false
 
 # Partitioned Runge-Kutta Methods
 
+
+"""
+    SymplecticEulerA
+
+Symplectic Euler method using explicit Euler for q and implicit Euler for p.
+"""
+struct SymplecticEulerA <: EPRKMethod end
+
+"""
+    SymplecticEulerB
+
+Symplectic Euler method using implicit Euler for q and explicit Euler for p.
+"""
+struct SymplecticEulerB <: EPRKMethod end
+ 
+GeometricBase.tableau(::SymplecticEulerA) = PartitionedTableau(:SymplecticEulerA, TableauExplicitEuler(), TableauImplicitEuler())
+GeometricBase.tableau(::SymplecticEulerB) = PartitionedTableau(:SymplecticEulerB, TableauImplicitEuler(), TableauExplicitEuler())
+
+GeometricBase.order(::Type{SymplecticEulerA}) = 1
+GeometricBase.order(::Type{SymplecticEulerB}) = 1
+
+issymplectic(::Type{SymplecticEulerA}) = true
+issymplectic(::Type{SymplecticEulerB}) = true
+
+
+"""
+Partitioned Runge-Kutta method [`TableauGauss`](@ref) for both ``q`` and ``p``.
+
+$(reference(Val(:Gauss)))
+"""
+struct PartitionedGauss <: IPRKMethod
+    s::Int
+end
+
+
 "Partitioned Runge-Kutta method with [`TableauLobattoIIIA`](@ref) for ``q`` and [`TableauLobattoIIIB`](@ref) for ``p``."
 struct LobattoIIIAIIIB <: PRKMethod
     s::Int
@@ -603,30 +733,33 @@ struct LobattoIIIGIIIḠ <: PRKMethod
 end
 
 
-tableau(method::LobattoIIIAIIIB) = TableauLobattoIIIAIIIB(method.s)
-tableau(method::LobattoIIIBIIIA) = TableauLobattoIIIBIIIA(method.s)
-tableau(method::LobattoIIIAIIIĀ) = TableauLobattoIIIAIIIĀ(method.s)
-tableau(method::LobattoIIIBIIIB̄) = TableauLobattoIIIBIIIB̄(method.s)
-tableau(method::LobattoIIICIIIC̄) = TableauLobattoIIICIIIC̄(method.s)
-tableau(method::LobattoIIIC̄IIIC) = TableauLobattoIIIC̄IIIC(method.s)
-tableau(method::LobattoIIIDIIID̄) = TableauLobattoIIIDIIID̄(method.s)
-tableau(method::LobattoIIIEIIIĒ) = TableauLobattoIIIEIIIĒ(method.s)
-tableau(method::LobattoIIIFIIIF̄) = TableauLobattoIIIFIIIF̄(method.s)
-tableau(method::LobattoIIIF̄IIIF) = TableauLobattoIIIF̄IIIF(method.s)
-tableau(method::LobattoIIIGIIIḠ) = TableauLobattoIIIGIIIḠ(method.s)
+GeometricBase.tableau(method::PartitionedGauss) = PartitionedTableau(TableauGauss(method.s))
+GeometricBase.tableau(method::LobattoIIIAIIIB) = TableauLobattoIIIAIIIB(method.s)
+GeometricBase.tableau(method::LobattoIIIBIIIA) = TableauLobattoIIIBIIIA(method.s)
+GeometricBase.tableau(method::LobattoIIIAIIIĀ) = TableauLobattoIIIAIIIĀ(method.s)
+GeometricBase.tableau(method::LobattoIIIBIIIB̄) = TableauLobattoIIIBIIIB̄(method.s)
+GeometricBase.tableau(method::LobattoIIICIIIC̄) = TableauLobattoIIICIIIC̄(method.s)
+GeometricBase.tableau(method::LobattoIIIC̄IIIC) = TableauLobattoIIIC̄IIIC(method.s)
+GeometricBase.tableau(method::LobattoIIIDIIID̄) = TableauLobattoIIIDIIID̄(method.s)
+GeometricBase.tableau(method::LobattoIIIEIIIĒ) = TableauLobattoIIIEIIIĒ(method.s)
+GeometricBase.tableau(method::LobattoIIIFIIIF̄) = TableauLobattoIIIFIIIF̄(method.s)
+GeometricBase.tableau(method::LobattoIIIF̄IIIF) = TableauLobattoIIIF̄IIIF(method.s)
+GeometricBase.tableau(method::LobattoIIIGIIIḠ) = TableauLobattoIIIGIIIḠ(method.s)
 
-order(::Type{LobattoIIIAIIIB}) = "2s-2"
-order(::Type{LobattoIIIBIIIA}) = "2s-2"
-order(::Type{LobattoIIIAIIIĀ}) = "2s-2"
-order(::Type{LobattoIIIBIIIB̄}) = "2s-2"
-order(::Type{LobattoIIICIIIC̄}) = "2s-2"
-order(::Type{LobattoIIIC̄IIIC}) = "2s-2"
-order(::Type{LobattoIIIDIIID̄}) = "2s-2"
-order(::Type{LobattoIIIEIIIĒ}) = "2s-2"
-order(::Type{LobattoIIIFIIIF̄}) = "2s"
-order(::Type{LobattoIIIF̄IIIF}) = "2s"
-order(::Type{LobattoIIIGIIIḠ}) = "2s"
+GeometricBase.order(::Type{PartitionedGauss}) = "2s"
+GeometricBase.order(::Type{LobattoIIIAIIIB}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIBIIIA}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIAIIIĀ}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIBIIIB̄}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIICIIIC̄}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIC̄IIIC}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIDIIID̄}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIEIIIĒ}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIFIIIF̄}) = "2s"
+GeometricBase.order(::Type{LobattoIIIF̄IIIF}) = "2s"
+GeometricBase.order(::Type{LobattoIIIGIIIḠ}) = "2s"
 
+issymplectic(::Type{PartitionedGauss}) = true
 issymplectic(::Type{LobattoIIIAIIIB}) = true
 issymplectic(::Type{LobattoIIIBIIIA}) = true
 issymplectic(::Type{LobattoIIIAIIIĀ}) = true

@@ -1,34 +1,35 @@
 
-abstract type Method end
+abstract type GeometricMethod end
 
-Integrators.integrate(problem::GeometricProblem, method::Method; kwargs...) = integrate(problem, Integrator(problem, method; kwargs...))
+abstract type ODEMethod <: GeometricMethod end
+abstract type PODEMethod <: GeometricMethod end
+abstract type HODEMethod <: GeometricMethod end
+abstract type IODEMethod <: GeometricMethod end
+abstract type LODEMethod <: GeometricMethod end
+abstract type SODEMethod <: GeometricMethod end
 
+abstract type DAEMethod <: GeometricMethod end
+abstract type PDAEMethod <: GeometricMethod end
+abstract type HDAEMethod <: GeometricMethod end
+abstract type IDAEMethod <: GeometricMethod end
+abstract type LDAEMethod <: GeometricMethod end
 
-abstract type ODEMethod <: Method end
-abstract type PODEMethod <: Method end
-abstract type HODEMethod <: Method end
-abstract type IODEMethod <: Method end
-abstract type LODEMethod <: Method end
-abstract type SODEMethod <: Method end
+Base.parent(::GeometricMethod) = nothing
 
-abstract type DAEMethod <: Method end
-abstract type PDAEMethod <: Method end
-abstract type HDAEMethod <: Method end
-abstract type IDAEMethod <: Method end
-abstract type LDAEMethod <: Method end
+internal_variables(::GeometricMethod) = NamedTuple()
 
-isodemethod(::Union{Method, Type{<:Method}}) = false
-ispodemethod(::Union{Method, Type{<:Method}}) = false
-ishodemethod(::Union{Method, Type{<:Method}}) = false
-isiodemethod(::Union{Method, Type{<:Method}}) = false
-islodemethod(::Union{Method, Type{<:Method}}) = false
-issodemethod(::Union{Method, Type{<:Method}}) = false
+isodemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
+ispodemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
+ishodemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
+isiodemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
+islodemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
+issodemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
 
-isdaemethod(::Union{Method, Type{<:Method}}) = false
-ispdaemethod(::Union{Method, Type{<:Method}}) = false
-ishdaemethod(::Union{Method, Type{<:Method}}) = false
-isidaemethod(::Union{Method, Type{<:Method}}) = false
-isldaemethod(::Union{Method, Type{<:Method}}) = false
+isdaemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
+ispdaemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
+ishdaemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
+isidaemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
+isldaemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
 
 isodemethod(::Union{ODEMethod, Type{<:ODEMethod}}) = true
 ispodemethod(::Union{PODEMethod, Type{<:PODEMethod}}) = true
@@ -43,21 +44,21 @@ ishdaemethod(::Union{HDAEMethod, Type{<:HDAEMethod}}) = true
 isidaemethod(::Union{IDAEMethod, Type{<:IDAEMethod}}) = true
 isldaemethod(::Union{LDAEMethod, Type{<:LDAEMethod}}) = true
 
-isexplicit(::Method) = missing
-isimplicit(::Method) = missing
-issymmetric(::Method) = missing
-issymplectic(::Method) = missing
-isenergypreserving(::Method) = missing
-isstifflyaccurate(::Method) = missing
+isexplicit(::GeometricMethod) = missing
+isimplicit(::GeometricMethod) = missing
+issymmetric(::GeometricMethod) = missing
+issymplectic(::GeometricMethod) = missing
+isenergypreserving(::GeometricMethod) = missing
+isstifflyaccurate(::GeometricMethod) = missing
 
-isexplicit(t::Type{<:Method}) = applicable(t) ? isexplicit(t()) : missing
-isimplicit(t::Type{<:Method}) = applicable(t) ? isimplicit(t()) : missing
-issymmetric(t::Type{<:Method}) = applicable(t) ? issymmetric(t()) : missing
-issymplectic(t::Type{<:Method}) = applicable(t) ? issymplectic(t()) : missing
-isenergypreserving(t::Type{<:Method}) = applicable(t) ? isenergypreserving(t()) : missing
-isstifflyaccurate(t::Type{<:Method}) = applicable(t) ? isstifflyaccurate(t()) : missing
+isexplicit(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isexplicit(t()) : missing
+isimplicit(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isimplicit(t()) : missing
+issymmetric(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.issymmetric(t()) : missing
+issymplectic(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.issymplectic(t()) : missing
+isenergypreserving(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isenergypreserving(t()) : missing
+isstifflyaccurate(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isstifflyaccurate(t()) : missing
 
-order(::Method) = missing
-order(t::Type{<:Method}) = applicable(t) ? order(t()) : missing
+GeometricBase.order(::GeometricMethod) = missing
+GeometricBase.order(t::Type{<:GeometricMethod}) = applicable(t) ? order(t()) : missing
 
-RungeKutta.description(::Union{Method, Type{<:Method}}) = missing
+RungeKutta.description(::Union{GeometricMethod, Type{<:GeometricMethod}}) = missing

@@ -9,5 +9,9 @@ end
     a::Matrix{T}
     b::Vector{T}
     c::Vector{T}
+
+    â::Matrix{T}
+    b̂::Vector{T}
+    ĉ::Vector{T}
 end
 

@@ -1,12 +1,7 @@
 
 using GeometricIntegrators
-using GeometricProblems.HarmonicOscillator
-using SimpleSolvers
+using GeometricEquations.Tests.HarmonicOscillator
 using Test
-
-SimpleSolvers.set_config(:nls_atol_break, Inf)
-SimpleSolvers.set_config(:nls_rtol_break, Inf)
-SimpleSolvers.set_config(:nls_stol_break, Inf)
 
 
 Δt = 0.1
@@ -23,7 +18,7 @@ h5file = "test.hdf5"
 
 
 tab = TableauImplicitMidpoint()
-ode = harmonic_oscillator_ode([rand(2) for i in 1:ns])
+ode = odeproblem([rand(2) for i in 1:ns])
 
 
 # @testset "$(rpad("Serial Simulation",80))" begin

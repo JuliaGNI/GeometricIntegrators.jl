@@ -126,7 +126,7 @@ end
 struct IntegratorCGVI{DT, TT, D, S, R, 
                       BT <: Basis,
                       PT <: ParametersCGVI{DT,TT,D,S,R},
-                      ST <: NonlinearSolver{DT},
+                      ST <: NonlinearSolver,
                       IT <: InitialGuessIODE{TT}} <: IODEIntegrator{DT,TT}
     basis::BT
     quadrature::QuadratureRule{TT,R}
@@ -218,7 +218,7 @@ end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersCGVI{DT,TT,D,S,R},
+function residual!(x::Vector{ST}, b::Vector{ST}, params::ParametersCGVI{DT,TT,D,S,R},
                 caches::CacheDict) where {ST,DT,TT,D,S,R}
     @assert length(x) == length(b)
 
@@ -226,18 +226,18 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersCGVI{D
     cache = caches[ST]
 
     # compute stages from nonlinear solver solution x
-    compute_stages!(x, cache, params)
+    components!(x, cache, params)
 
     # compute rhs b of nonlinear solver
     compute_rhs!(b, cache.X, cache.Q, cache.P, cache.F, cache.p̃, params)
 end
 
 
-function compute_stages!(x, cache::IntegratorCacheCGVI, params::ParametersCGVI)
-    compute_stages!(x, cache.X, cache.Q, cache.V, cache.P, cache.F, cache.q̃, cache.p̃, params)
+function components!(x, cache::IntegratorCacheCGVI, params::ParametersCGVI)
+    components!(x, cache.X, cache.Q, cache.V, cache.P, cache.F, cache.q̃, cache.p̃, params)
 end
 
-function compute_stages!(x, X, Q, V, P, F, q, p, params::ParametersCGVI{DT,TT,D,S,R}) where {DT,TT,D,S,R}
+function components!(x, X, Q, V, P, F, q, p, params::ParametersCGVI{DT,TT,D,S,R}) where {DT,TT,D,S,R}
 
     # copy x to X
     for i in eachindex(X)
@@ -387,7 +387,7 @@ function integrate_step!(int::IntegratorCGVI{DT,TT}, sol::SolutionStepPODE{DT,TT
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, cache, int.params)
+    components!(int.solver.x, cache, int.params)
 
     # compute final update
     update_solution!(sol, cache)

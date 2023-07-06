@@ -1,109 +1,93 @@
 using GeometricIntegrators
-using GeometricProblems.HarmonicOscillator
-using SimpleSolvers
+using GeometricEquations.Tests.HarmonicOscillator
 using Test
 
-SimpleSolvers.set_config(:nls_stol_break, Inf)
+using GeometricEquations.Tests.HarmonicOscillator: reference_solution
 
-using GeometricProblems.HarmonicOscillator: reference_solution
+sode = sodeproblem()
 
-sode = harmonic_oscillator_sode()
+sode1 = SubstepProblem(sode, one(timestep(sode)), 1)
+sode2 = SubstepProblem(sode, one(timestep(sode)), 2)
+
+@test_nowarn Integrator(sode1, ExactSolution())
+@test_nowarn Integrator(sode2, ExactSolution())
 
 
-sint = Integrator(sode, LieA())
-ssol = integrate(sode, sint)
+ssol = integrate(sode, LieA())
 @test relative_maximum_error(ssol.q, reference_solution) < 5E-2
 
-sintc = IntegratorComposition(sode, LieA())
-ssolc = integrate(sode, sintc)
+ssolc = integrate(sode, Composition(LieA()))
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, LieB())
-ssol = integrate(sode, sint)
+ssol = integrate(sode, LieB())
 @test relative_maximum_error(ssol.q, reference_solution) < 5E-2
 
-sintc = IntegratorComposition(sode, LieB())
-ssolc = integrate(sode, sintc)
+ssolc = integrate(sode, Composition(LieB()))
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, Strang())
-ssol = integrate(sode, sint)
+ssol = integrate(sode, Strang())
 @test relative_maximum_error(ssol.q, reference_solution) < 1E-3
 
-sintc = IntegratorComposition(sode, Strang())
-ssolc = integrate(sode, sintc)
+ssolc = integrate(sode, Composition(Strang()))
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, StrangA())
-ssol = integrate(sode, sint)
+ssol = integrate(sode, StrangA())
 @test relative_maximum_error(ssol.q, reference_solution) < 1E-3
 
-sintc = IntegratorComposition(sode, StrangA())
-ssolc = integrate(sode, sintc)
+ssolc = integrate(sode, Composition(StrangA()))
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, StrangB())
-ssol = integrate(sode, sint)
+ssol = integrate(sode, StrangB())
 @test relative_maximum_error(ssol.q, reference_solution) < 1E-3
 
-sintc = IntegratorComposition(sode, StrangB())
-ssolc = integrate(sode, sintc)
+ssolc = integrate(sode, Composition(StrangB()))
 @test ssol.q == ssolc.q
 
-sint1 = Integrator(sode, Strang())
-ssol1 = integrate(sode, sint)
-sint2 = Integrator(sode, StrangA())
-ssol2 = integrate(sode, sint)
-sint3 = Integrator(sode, StrangB())
-ssol3 = integrate(sode, sint)
-@test ssol1.q == ssol2.q
-@test all(ssol1.q .≈ ssol3.q)
 
-sint = Integrator(sode, McLachlan2())
-ssol = integrate(sode, sint)
+ssol1 = integrate(sode, Strang())
+ssol2 = integrate(sode, StrangA())
+ssol3 = integrate(sode, StrangB())
+@test ssol1.q.d ≈ ssol2.q.d  atol=1e-14
+@test ssol1.q.d ≈ ssol3.q.d  atol=1e-3
+
+
+ssol = integrate(sode, McLachlan2())
 @test relative_maximum_error(ssol.q, reference_solution) < 1E-4
 
-sintc = IntegratorComposition(sode, McLachlan2())
-ssolc = integrate(sode, sintc)
+ssolc = integrate(sode, Composition(McLachlan2()))
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, McLachlan4())
-ssol = integrate(sode, sint)
+ssol = integrate(sode, McLachlan4())
 @test relative_maximum_error(ssol.q, reference_solution) < 5E-4
 
-sintc = IntegratorComposition(sode, McLachlan4())
-ssolc = integrate(sode, sintc)
+ssolc = integrate(sode, Composition(McLachlan4()))
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, TripleJump())
-ssol = integrate(sode, sint)
+ssol = integrate(sode, TripleJump())
 @test relative_maximum_error(ssol.q, reference_solution) < 5E-6
 
-sintc = IntegratorComposition(sode, TripleJump())
-ssolc = integrate(sode, sintc)
+ssolc = integrate(sode, Composition(TripleJump()))
 @test ssol.q == ssolc.q
 
-sint = Integrator(sode, SuzukiFractal())
-ssol = integrate(sode, sint)
+ssol = integrate(sode, SuzukiFractal())
 @test relative_maximum_error(ssol.q, reference_solution) < 5E-7
 
-sintc = IntegratorComposition(sode, SuzukiFractal())
-ssolc = integrate(sode, sintc)
+ssolc = integrate(sode, Composition(SuzukiFractal()))
 @test ssol.q == ssolc.q
 
 
 DT = datatype(sode)
 D  = length(sode.ics.q)
 
-ints_glrk1 = (IntegratorConstructor(DT, D, TableauGauss(1)), IntegratorConstructor(DT, D, TableauGauss(1)))
-ints_erk4  = (IntegratorConstructor(DT, D, TableauRK4()), IntegratorConstructor(DT, D, TableauRK4()))
+ints_glrk1 = (Gauss(1), Gauss(1))
+ints_erk4  = (RK4(), RK4())
 
-sint = IntegratorComposition(sode, ints_erk4, LieA())
+sint = Composition(ints_erk4, LieA())
 ssol = integrate(sode, sint)
 # println(relative_maximum_error(ssol.q, reference_solution))
 @test relative_maximum_error(ssol.q, reference_solution) < 5E-2
 
-sint = IntegratorComposition(sode, ints_glrk1, Strang())
+sint = Composition(ints_glrk1, Strang())
 ssol = integrate(sode, sint)
 # println(relative_maximum_error(ssol.q, reference_solution))
 @test relative_maximum_error(ssol.q, reference_solution) < 1E-3

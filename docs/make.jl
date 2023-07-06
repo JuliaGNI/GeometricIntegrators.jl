@@ -1,6 +1,7 @@
 using Documenter
 using DocumenterCitations
 using GeometricIntegrators
+using RungeKutta
 using Weave
 
 
@@ -52,7 +53,7 @@ makedocs(bib,
                 "VPRK"        => "integrators/vprk.md",
                 "SPARK"       => "integrators/spark.md",
                 "DVI"         => "integrators/dvi.md",
-                "CGVI"        => "integrators/cgvi.md",
+                # "CGVI"        => "integrators/cgvi.md",
                #  "DGVI"        => "integrators/dgvi.md",
                #  "HPG"         => "integrators/hpg.md",
                ],

@@ -1,5 +1,5 @@
 ```@meta
-CurrentModule = GeometricIntegrators.Integrators.VPRK
+CurrentModule = GeometricIntegrators.Integrators
 ```
 
 # Variational Partitioned Runge-Kutta Integrators

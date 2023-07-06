@@ -123,7 +123,7 @@ end
 struct IntegratorDGVIEXP{DT, TT, D, S, R,
                 BT <: Basis,
                 PT <: ParametersDGVIEXP{DT,TT,D,S},
-                ST <: NonlinearSolver{DT},
+                ST <: NonlinearSolver,
                 IT <: InitialGuessODE{TT}} <: IODEIntegrator{DT,TT}
     basis::BT
     quadrature::QuadratureRule{TT,R}
@@ -239,7 +239,7 @@ end
 
 
 # Compute stages of variational partitioned Runge-Kutta methods.
-function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVIEXP{DT,TT,D,S,R},
+function residual!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVIEXP{DT,TT,D,S,R},
                 caches::CacheDict) where {ST,DT,TT,D,S,R}
     @assert length(x) == length(b)
 
@@ -247,14 +247,14 @@ function function_stages!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVIEX
     cache = caches[ST]
 
     # compute stages from nonlinear solver solution x
-    compute_stages!(x, cache, params)
+    components!(x, cache, params)
 
     # compute rhs b of nonlinear solver
     compute_rhs!(b, cache, params)
 end
 
 
-function compute_stages!(x, cache::IntegratorCacheDGVI{ST,D,S}, params::ParametersDGVIEXP{DT,TT,D,S}) where {ST,DT,TT,D,S}
+function components!(x, cache::IntegratorCacheDGVI{ST,D,S}, params::ParametersDGVIEXP{DT,TT,D,S}) where {ST,DT,TT,D,S}
     # copy x to X
     for i in 1:S
         for k in 1:D
@@ -466,7 +466,7 @@ function integrate_step!(int::IntegratorDGVIEXP{DT,TT}, sol::SolutionStepPODE{DT
     check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages
-    compute_stages!(int.solver.x, cache, int.params)
+    components!(int.solver.x, cache, int.params)
 
     # copy solution from cache to integrator
     update_solution!(int, cache)

@@ -8,19 +8,20 @@ module GeometricIntegrators
     @reexport using GeometricEquations
 
     
+    include("Methods.jl")
+    @reexport using .Methods
+    include("Extrapolators.jl")
+    @reexport using .Extrapolators
     include("Solutions.jl")
     @reexport using .Solutions
     include("Discontinuities.jl")
     @reexport using .Discontinuities
     include("Integrators.jl")
     @reexport using .Integrators
-    include("Tableaus.jl")
-    @reexport using .Tableaus
-    include("Methods.jl")
-    @reexport using .Methods
-    include("Simulations.jl")
-    @reexport using .Simulations
+    # include("Simulations.jl")
+    # @reexport using .Simulations
 
+    include("SPARK.jl")
 
     function __init__()
         add_config(:verbosity, 1)

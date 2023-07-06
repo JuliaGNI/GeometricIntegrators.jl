@@ -16,6 +16,4 @@ end
 
 FLRK(method::RKMethod, args...; kwargs...) = FLRK(tableau(method))
 
-tableau(method::FLRK) = method.tableau
-
-Integrators.Integrator(problem::LODEProblem, method::FLRK; kwargs...) = IntegratorFLRK(problem, tableau(method); kwargs...)
+GeometricBase.tableau(method::FLRK) = method.tableau

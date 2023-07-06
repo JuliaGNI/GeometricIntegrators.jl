@@ -1,13 +1,39 @@
-using GeometricIntegrators.Integrators.VPRK
+using GeometricIntegrators.Integrators
 using GeometricEquations.Tests.HarmonicOscillator
 
-using GeometricIntegrators.Methods: VPRKMethod
+using GeometricIntegrators.Methods: VPRK, VPRKMethod
 
 iode = iodeproblem()
 lode = lodeproblem()
 
 
 @testset "$(rpad("Variational Partitioned Runge-Kutta Methods",80))" begin
+
+    # @test VPRK(SRK3()) == VPRK(VPSRK3())
+
+    # @test VPRK(Gauss(1)) == VPRK(VPRKGauss(1))
+    @test VPRK(RadauIIA(2)) == VPRK(VPRKRadauIIA(2))
+    @test VPRK(RadauIIB(2)) == VPRK(VPRKRadauIIB(2))
+
+    @test VPRK(VPRKLobattoIII(2))  == VPRK(VPRKLobattoIII(2))
+    @test VPRK(VPRKLobattoIIIA(2)) == VPRK(VPRKLobattoIIIA(2))
+    @test VPRK(VPRKLobattoIIIB(2)) == VPRK(VPRKLobattoIIIB(2))
+    @test VPRK(VPRKLobattoIIIC(2)) == VPRK(VPRKLobattoIIIC(2))
+    @test VPRK(VPRKLobattoIIID(2)) == VPRK(VPRKLobattoIIID(2))
+    @test VPRK(VPRKLobattoIIIE(2)) == VPRK(VPRKLobattoIIIE(2))
+    @test VPRK(VPRKLobattoIIIF(2)) == VPRK(VPRKLobattoIIIF(2))
+    @test VPRK(VPRKLobattoIIIG(2)) == VPRK(VPRKLobattoIIIG(2))
+
+    # @test VPRK(LobattoIIIAIIIB(2)) == VPRK(VPRKLobattoIIIAIIIB(2))
+    # @test VPRK(LobattoIIIBIIIA(2)) == VPRK(VPRKLobattoIIIBIIIA(2))
+    # @test VPRK(LobattoIIIAIIIĀ(2)) == VPRK(VPRKLobattoIIIAIIIĀ(2))
+    # @test VPRK(LobattoIIIBIIIB̄(2)) == VPRK(VPRKLobattoIIIBIIIB̄(2))
+    @test VPRK(LobattoIIICIIIC̄(2)) == VPRK(VPRKLobattoIIICIIIC̄(2))
+    @test VPRK(LobattoIIIDIIID̄(2)) == VPRK(VPRKLobattoIIIDIIID̄(2))
+    @test VPRK(LobattoIIIEIIIĒ(2)) == VPRK(VPRKLobattoIIIEIIIĒ(2))
+    @test VPRK(LobattoIIIFIIIF̄(2)) == VPRK(VPRKLobattoIIIFIIIF̄(2))
+    @test VPRK(LobattoIIIGIIIḠ(2)) == VPRK(VPRKLobattoIIIGIIIḠ(2))
+
 
     @test typeof(VPSRK3()) <: VPRKMethod
 

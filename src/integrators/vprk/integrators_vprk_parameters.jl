@@ -20,16 +20,16 @@ end
 
 function update_params!(params::AbstractParametersVPRK, sol::Union{SolutionStepPODE, SolutionStepPDAE})
     # set time for nonlinear solver and copy previous solution
-    params.t̄  = sol.t
-    params.q̄ .= sol.q
-    params.p̄ .= sol.p
+    solstep.t̄[1]  = sol.t
+    solstep.q̄[1] .= sol.q
+    solstep.p̄[1] .= sol.p
     params.v̄ .= sol.v
 end
 
 @inline equation(int::AbstractIntegratorVPRK, i::Symbol) = parameters(int).equ[i]
 @inline equations(int::AbstractIntegratorVPRK) = parameters(int).equ
-@inline timestep(int::AbstractIntegratorVPRK) = parameters(int).Δt
-@inline tableau(int::AbstractIntegratorVPRK) = parameters(int).tab
+@inline GeometricBase.timestep(int::AbstractIntegratorVPRK) = parameters(int).Δt
+@inline GeometricBase.tableau(int::AbstractIntegratorVPRK) = parameters(int).tab
 
 
 function Integrators.IntegratorCache{ST}(params::AbstractParametersVPRK{IT,DT,TT,D,S}; kwargs...) where {IT,ST,DT,TT,D,S}

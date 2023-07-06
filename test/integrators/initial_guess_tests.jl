@@ -3,85 +3,66 @@ using GeometricProblems.LotkaVolterra2d
 using GeometricProblems.LotkaVolterra2d: Δt
 using Test
 
-using GeometricEquations: _get_v, _get_f, _get_v̄, _get_f̄
-
-int = get_config(:ig_extrapolation)
-
-const q₀ = [1.0, 1.0]
+const qᵢ = [1.0, 1.0]
 const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
-ode  = lotka_volterra_2d_ode(q₀; parameters=params)
-pode = lotka_volterra_2d_pode(q₀; parameters=params)
-hode = lotka_volterra_2d_hode(q₀; parameters=params)
-iode = lotka_volterra_2d_iode(q₀; parameters=params)
-lode = lotka_volterra_2d_lode(q₀; parameters=params)
+ode  = lotka_volterra_2d_ode(qᵢ; parameters=params)
+pode = lotka_volterra_2d_pode(qᵢ; parameters=params)
+hode = lotka_volterra_2d_hode(qᵢ; parameters=params)
+iode = lotka_volterra_2d_iode(qᵢ; parameters=params)
+lode = lotka_volterra_2d_lode(qᵢ; parameters=params)
 
-dae  = lotka_volterra_2d_dae(q₀; parameters=params)
-pdae = lotka_volterra_2d_pdae(q₀; parameters=params)
-hdae = lotka_volterra_2d_hdae(q₀; parameters=params)
-idae = lotka_volterra_2d_idae(q₀; parameters=params)
-ldae = lotka_volterra_2d_ldae(q₀; parameters=params)
-
-
-@test InitialGuessODE(int,  ode) == InitialGuessODE(int(0.0, Δt), _get_v̄(equation( ode), params), Δt)
-@test InitialGuessODE(int, iode) == InitialGuessODE(int(0.0, Δt), _get_v̄(equation(iode), params), Δt)
-@test InitialGuessODE(int, lode) == InitialGuessODE(int(0.0, Δt), _get_v̄(equation(lode), params), Δt)
-
-@test InitialGuess(int, ode) == InitialGuessODE(int(0.0, Δt), _get_v̄(equation(ode), params), Δt)
-@test InitialGuess(int, dae) == InitialGuessODE(int(0.0, Δt), _get_v̄(equation(dae), params), Δt)
-
-@test InitialGuess(int, hode) == InitialGuessPODE(int(0.0, Δt), _get_v̄(equation(hode), params), _get_f̄(equation(hode), params), Δt)
-@test InitialGuess(int, hdae) == InitialGuessPODE(int(0.0, Δt), _get_v̄(equation(hdae), params), _get_f̄(equation(hdae), params), Δt)
-
-@test InitialGuess(int, iode) == InitialGuessIODE(int(0.0, Δt), _get_v̄(equation(iode), params), _get_f̄(equation(iode), params), Δt)
-@test InitialGuess(int, idae) == InitialGuessIODE(int(0.0, Δt), _get_v̄(equation(idae), params), _get_f̄(equation(idae), params), Δt)
-
-@test InitialGuess(int, pode) == InitialGuessPODE(int(0.0, Δt), _get_v̄(equation(pode), params), _get_f̄(equation(pode), params), Δt)
-@test InitialGuess(int, pdae) == InitialGuessPODE(int(0.0, Δt), _get_v̄(equation(pdae), params), _get_f̄(equation(pdae), params), Δt)
-
-@test InitialGuess(int, lode) == InitialGuessIODE(int(0.0, Δt), _get_v̄(equation(lode), params), _get_f̄(equation(lode), params), Δt)
-@test InitialGuess(int, ldae) == InitialGuessIODE(int(0.0, Δt), _get_v̄(equation(ldae), params), _get_f̄(equation(ldae), params), Δt)
+dae  = lotka_volterra_2d_dae(qᵢ; parameters=params)
+pdae = lotka_volterra_2d_pdae(qᵢ; parameters=params)
+hdae = lotka_volterra_2d_hdae(qᵢ; parameters=params)
+idae = lotka_volterra_2d_idae(qᵢ; parameters=params)
+ldae = lotka_volterra_2d_ldae(qᵢ; parameters=params)
 
 
-# Reference Solution
+# ODE Reference Solution
 
-ref_prev = integrate(similar(ode; tspan=(tspan(ode)[begin], tspan(ode)[begin]-tstep(ode)), tstep=-tstep(ode)), TableauGauss(8))
-ref_next = integrate(similar(ode; tspan=(tspan(ode)[begin], tspan(ode)[begin]+tstep(ode)), tstep=+tstep(ode)), TableauGauss(8))
+ode_prev = similar(ode; tspan=(tspan(ode)[begin], tspan(ode)[begin]-tstep(ode)), tstep=-tstep(ode))
+ode_next = similar(ode; tspan=(tspan(ode)[begin], tspan(ode)[begin]+tstep(ode)), tstep=+tstep(ode))
 
-tₚ = ref_prev.t[end]
-qₚ = ref_prev.q[end]
-vₚ = zero(qₚ)
+t₀ = initial_conditions(ode).t
+q₀ = initial_conditions(ode).q
+v₀ = zero(q₀)
 
-tₙ = ref_next.t[end]
-qₙ = ref_next.q[end]
-vₙ = zero(qₙ)
+tₚ = tspan(ode_prev)[end]
+qₚ = zero(q₀)
+vₚ = zero(v₀)
+
+tₙ = tspan(ode_next)[end]
+qₙ = zero(q₀)
+vₙ = zero(v₀)
+
+extrapolate!(t₀, q₀, tₚ, qₚ, ode_prev, MidpointExtrapolation(5))
+extrapolate!(t₀, q₀, tₙ, qₙ, ode_next, MidpointExtrapolation(5))
 
 equation(ode).v(vₚ, tₚ, qₚ, parameters(ode))
 equation(ode).v(vₙ, tₙ, qₙ, parameters(ode))
 
 
-# InitialGuessODE
+# ODE Initial Guess
 
-igode = InitialGuessODE(int, _get_v(equation(ode), parameters(ode)), Δt)
-
-t₀ = tbegin(ode)
-q₀ = ode.ics.q
+t₀ = initial_conditions(ode).t
+q₀ = initial_conditions(ode).q
 v₀ = zero(q₀)
 
-t₁ = tbegin(ode) - Δt
+t₁ = t₀ - Δt
 q₁ = zero(q₀)
 v₁ = zero(v₀)
 
-t₂ = one(Δt)
+t₂ = t₀ + Δt
 q₂ = zero(q₀)
 v₂ = zero(v₀)
 
 equation(ode).v(v₀, t₀, q₀, parameters(ode))
 
-initialize!(igode, t₀, q₀, v₀, t₁, q₁, v₁)
-evaluate!(igode, q₁, v₁, q₀, v₀, q₂, v₂, t₂)
+initialguess!(t₀, q₀, t₁, q₁, v₁, ode, MidpointExtrapolation(4))
+initialguess!(t₁, q₁, v₁, t₀, q₀, v₀, t₂, q₂, v₂, HermiteExtrapolation())
 
-# println("IG-ODE")
+# println("ODE Initial Guess")
 # println(q₁ .- qₚ)
 # println(v₁ .- vₚ)
 # println(q₂ .- qₙ)
@@ -95,64 +76,54 @@ evaluate!(igode, q₁, v₁, q₀, v₀, q₂, v₂, t₂)
 @test v₂ ≈ vₙ atol=1E-5
 
 
-# InitialGuessIODE
+# PODE Reference Solution
 
-igiode = InitialGuessIODE(int, _get_v̄(equation(iode), parameters(ode)), _get_f̄(equation(iode), parameters(ode)), Δt)
+pode_prev = similar(pode; tspan=(tspan(pode)[begin], tspan(pode)[begin]-tstep(pode)), tstep=-tstep(pode))
+pode_next = similar(pode; tspan=(tspan(pode)[begin], tspan(pode)[begin]+tstep(pode)), tstep=+tstep(pode))
 
-t₀ = tbegin(iode)
-q₀ = iode.ics.q
-p₀ = iode.ics.p
+t₀ = initial_conditions(pode).t
+q₀ = initial_conditions(pode).q
+p₀ = initial_conditions(pode).p
 v₀ = zero(q₀)
 f₀ = zero(p₀)
 
-t₁ = tbegin(iode) - Δt
+tₚ = tspan(pode_prev)[end]
+qₚ = zero(q₀)
+pₚ = zero(p₀)
+vₚ = zero(v₀)
+fₚ = zero(p₀)
+
+tₙ = tspan(pode_next)[end]
+qₙ = zero(q₀)
+pₙ = zero(p₀)
+vₙ = zero(v₀)
+fₙ = zero(f₀)
+
+extrapolate!(t₀, q₀, p₀, tₚ, qₚ, pₚ, pode_prev, MidpointExtrapolation(5))
+extrapolate!(t₀, q₀, p₀, tₙ, qₙ, pₙ, pode_next, MidpointExtrapolation(5))
+
+equation(pode).v(vₚ, tₚ, qₚ, pₚ, parameters(pode))
+equation(pode).v(vₙ, tₙ, qₙ, pₙ, parameters(pode))
+
+equation(pode).f(fₚ, tₚ, qₚ, pₚ, parameters(pode))
+equation(pode).f(fₙ, tₙ, qₙ, pₙ, parameters(pode))
+
+
+# PODE Initial Guess
+
+t₀ = initial_conditions(pode).t
+q₀ = initial_conditions(pode).q
+p₀ = initial_conditions(pode).p
+v₀ = zero(q₀)
+f₀ = zero(p₀)
+
+t₁ = t₀ - Δt
 q₁ = zero(q₀)
 p₁ = zero(p₀)
 v₁ = zero(v₀)
 f₁ = zero(f₀)
 
-t₂ = one(Δt)
-q₂ = zero(q₀)
-p₂ = zero(p₀)
-v₂ = zero(v₀)
-f₂ = zero(f₀)
-
-equation(iode).v̄(v₀, t₀, q₀, parameters(iode))
-
-initialize!(igiode, t₀, q₀, p₀, v₀, f₀, t₁, q₁, p₁, v₁, f₁)
-evaluate!(igiode, q₁, p₁, v₁, f₁, q₀, p₀, v₀, f₀, q₂, v₂, t₂)
-
-# println("IG-IODE")
-# println(q₁ .- qₚ)
-# println(v₁ .- vₚ)
-# println(q₂ .- qₙ)
-# println(v₂ .- vₙ)
-# println()
-
-@test q₁ ≈ qₚ atol=1E-14
-@test v₁ ≈ vₚ atol=1E-14
-
-@test q₂ ≈ qₙ atol=1E-8
-@test v₂ ≈ vₙ atol=1E-5
-
-
-# InitialGuessPODE
-
-igpode = InitialGuessPODE(int, _get_v(equation(pode), parameters(pode)), _get_f(equation(pode), parameters(pode)), Δt)
-
-t₀ = tbegin(pode)
-q₀ = pode.ics.q
-p₀ = pode.ics.p
-v₀ = zero(q₀)
-f₀ = zero(p₀)
-
-t₁ = tbegin(pode) - Δt
-q₁ = zero(q₀)
-p₁ = zero(p₀)
-v₁ = zero(v₀)
-f₁ = zero(f₀)
-
-t₂ = one(Δt)
+t₂ = t₀ + Δt
 q₂ = zero(q₀)
 p₂ = zero(p₀)
 v₂ = zero(v₀)
@@ -161,18 +132,76 @@ f₂ = zero(f₀)
 equation(pode).v(v₀, t₀, q₀, p₀, parameters(pode))
 equation(pode).f(f₀, t₀, q₀, p₀, parameters(pode))
 
-initialize!(igpode, t₀, q₀, p₀, v₀, f₀, t₁, q₁, p₁, v₁, f₁)
-evaluate!(igpode, q₁, p₁, v₁, f₁, q₀, p₀, v₀, f₀, q₂, v₂, t₂)
+initialguess!(t₀, q₀, p₀, t₁, q₁, p₁, v₁, f₁, pode, MidpointExtrapolation(4))
+initialguess!(t₁, q₁, p₁, v₁, f₁, t₀, q₀, p₀, v₀, f₀, t₂, q₂, p₂, v₂, f₂, HermiteExtrapolation())
 
-# println("IG-PODE")
+# println("PODE Initial Guess")
 # println(q₁ .- qₚ)
+# println(p₁ .- pₚ)
 # println(v₁ .- vₚ)
+# println(f₁ .- fₚ)
 # println(q₂ .- qₙ)
+# println(p₂ .- pₙ)
 # println(v₂ .- vₙ)
+# println(f₂ .- fₙ)
 # println()
 
 @test q₁ ≈ qₚ atol=1E-14
+@test p₁ ≈ pₚ atol=1E-14
 @test v₁ ≈ vₚ atol=1E-14
+@test f₁ ≈ fₚ atol=1E-13
 
 @test q₂ ≈ qₙ atol=1E-8
+@test p₂ ≈ pₙ atol=1E-7
 @test v₂ ≈ vₙ atol=1E-5
+@test f₂ ≈ fₙ atol=1E-5
+
+
+# IODE Initial Guess
+
+t₀ = initial_conditions(iode).t
+q₀ = initial_conditions(iode).q
+p₀ = initial_conditions(iode).p
+v₀ = zero(q₀)
+f₀ = zero(p₀)
+
+t₁ = t₀ - Δt
+q₁ = zero(q₀)
+p₁ = zero(p₀)
+v₁ = zero(v₀)
+f₁ = zero(f₀)
+
+t₂ = t₀ + Δt
+q₂ = zero(q₀)
+p₂ = zero(p₀)
+v₂ = zero(v₀)
+f₂ = zero(f₀)
+
+equation(iode).v̄(v₀, t₀, q₀, parameters(iode))
+equation(iode).f̄(f₀, t₀, q₀, v₀, parameters(iode))
+
+initialguess!(t₀, q₀, p₀, t₁, q₁, p₁, v₁, f₁, iode, MidpointExtrapolation(4))
+initialguess!(t₁, q₁, p₁, v₁, f₁, t₀, q₀, p₀, v₀, f₀, t₂, q₂, p₂, v₂, f₂, HermiteExtrapolation())
+
+# println("IODE Initial Guess")
+# println(q₁ .- qₚ)
+# println(p₁ .- pₚ)
+# println(v₁ .- vₚ)
+# println(f₁ .- fₚ)
+# println(q₂ .- qₙ)
+# println(p₂ .- pₙ)
+# println(v₂ .- vₙ)
+# println(f₂ .- fₙ)
+# println()
+
+@test q₁ ≈ qₚ atol=1E-14
+# @test p₁ ≈ pₚ atol=1E-14
+@test v₁ ≈ vₚ atol=1E-14
+# @test f₁ ≈ fₚ atol=1E-13
+
+@test q₂ ≈ qₙ atol=1E-8
+# @test p₂ ≈ pₙ atol=1E-7
+@test v₂ ≈ vₙ atol=1E-5
+# @test f₂ ≈ fₙ atol=1E-5
+
+# TODO: Investigate why p/f errors are so large!

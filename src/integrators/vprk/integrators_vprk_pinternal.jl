@@ -2,17 +2,25 @@
 "Parameters for right-hand side function of Variational Partitioned Runge-Kutta methods."
 const ParametersVPRKpInternal = AbstractParametersVPRK{:vprk_pinternal}
 
+function IntegratorCache(params::ParametersVPRKpInternal{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
+    IntegratorCacheVPRK{DT,D,S}(D*(S+1), true; kwargs...)
+end
+
+function IntegratorCache{ST}(params::ParametersVPRKpInternal{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
+    IntegratorCacheVPRK{ST,D,S}(D*(S+1), true; kwargs...)
+end
+
 
 "Variational Partitioned Runge-Kutta Integrator with Projection on Internal Stages."
 struct IntegratorVPRKpInternal{DT, TT, D, S,
                 PT <: ParametersVPRKpInternal{DT,TT},
-                ST <: NonlinearSolver{DT},
+                ST <: NonlinearSolver,
                 IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
 
     params::PT
     solver::ST
     iguess::IT
-    caches::CacheDict{PT}
+    caches::OldCacheDict{PT}
 
     function IntegratorVPRKpInternal(params::ParametersVPRKpInternal{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
         new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
@@ -27,7 +35,7 @@ struct IntegratorVPRKpInternal{DT, TT, D, S,
         params = ParametersVPRKpInternal{DT,D}(equations, tableau, nullvec, Δt, NamedTuple{(:R,)}((R,)))
 
         # create cache dict
-        caches = CacheDict(params)
+        caches = OldCacheDict(params)
 
         # create solver
         solver = create_nonlinear_solver(DT, D*(S+1), params, caches)
@@ -47,11 +55,11 @@ end
 
 function Base.show(io::IO, int::IntegratorVPRKpInternal)
     print(io, "\nVariational Partitioned Runge-Kutta Integrator with Projection on Internal Stages and:\n")
-    print(io, "   Timestep: $(int.params.Δt)\n")
-    print(io, "   Tableau:  $(description(int.params.tab))\n")
-    print(io, "   $(string(int.params.tab.q))")
-    print(io, "   $(string(int.params.tab.p))")
-    # print(io, reference(int.params.tab))
+    print(io, "   Timestep: $(int.timestep(problem))\n")
+    print(io, "   Tableau:  $(description(int.tableau(method)))\n")
+    print(io, "   $(string(int.tableau(method).q))")
+    print(io, "   $(string(int.tableau(method).p))")
+    # print(io, reference(int.tableau(method)))
 end
 
 
@@ -72,18 +80,18 @@ function initial_guess!(int::IntegratorVPRKpInternal{DT,TT}, sol::SolutionStepPO
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
 
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̄, sol.p̄, sol.v̄, sol.f̄,
-                              sol.q, sol.p, sol.v, sol.f,
+        evaluate!(int.iguess, sol.q̄[2], sol.p̄[2], sol.v̄[2], sol.f̄[2],
+                              sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1],
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
 
         for k in eachdim(int)
-            int.solver.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
+            cache.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
         end
     end
 
     for k in eachdim(int)
-        int.solver.x[ndims(int)*nstages(int)+k] = 0
+        cache.x[ndims(int)*nstages(int)+k] = 0
     end
 end
 
@@ -94,8 +102,8 @@ function compute_projection_vprk!(x::Vector{ST},
                 params::ParametersVPRKpInternal{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     # create temporary variables
-    local t₀::TT = params.t̄
-    local t₁::TT = params.t̄ + params.Δt
+    local t₀::TT = solstep.t̄[1]
+    local t₁::TT = solstep.t̄[1] + timestep(problem)
     local tₘ::TT
     local y1::ST
     local y2::ST
@@ -118,10 +126,10 @@ function compute_projection_vprk!(x::Vector{ST},
             y1 = 0
             y2 = 0
             for j in 1:S
-                y1 += params.tab.q.a[i,j] * V[j][k]
-                y2 += params.tab.q.â[i,j] * V[j][k]
+                y1 += tableau(method).q.a[i,j] * V[j][k]
+                y2 += tableau(method).q.â[i,j] * V[j][k]
             end
-            Q[i][k] = params.q̄[k] + params.Δt * (y1 + y2) + params.Δt * params.pparams[:R][1] * U[1][k]
+            Q[i][k] = solstep.q̄[1][k] + timestep(problem) * (y1 + y2) + timestep(problem) * params.pparams[:R][1] * U[1][k]
         end
     end
 
@@ -130,35 +138,35 @@ function compute_projection_vprk!(x::Vector{ST},
         y1 = 0
         y2 = 0
         for j in 1:S
-            y1 += params.tab.q.b[j] * V[j][k]
-            y2 += params.tab.q.b̂[j] * V[j][k]
+            y1 += tableau(method).q.b[j] * V[j][k]
+            y2 += tableau(method).q.b̂[j] * V[j][k]
         end
-        q[k] = params.q̄[k] + params.Δt * (y1 + y2) + params.Δt * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
+        q[k] = solstep.q̄[1][k] + timestep(problem) * (y1 + y2) + timestep(problem) * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
     end
 
     G[1] .= 0
     G[2] .= 0
     for j in 1:S
-        tₘ = params.t̄ + params.Δt * params.tab.q.c[j]
-        params.equ.g(g, tₘ, Q[j], V[j], λ)
-        G[1] .+= params.tab.q.b[j] * g
-        G[2] .+= params.tab.q.b[j] * g
+        tₘ = solstep.t̄[1] + timestep(problem) * tableau(method).q.c[j]
+        functions(problem).g(g, tₘ, Q[j], V[j], λ)
+        G[1] .+= tableau(method).q.b[j] * g
+        G[2] .+= tableau(method).q.b[j] * g
     end
 
     # compute p=ϑ(q)
-    params.equ.ϑ(p, t₁, q, v)
+    functions(problem).ϑ(p, t₁, q, v)
 end
 
 
 "Compute stages of variational partitioned Runge-Kutta methods."
-function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
+function Integrators.residual!(x::Vector{ST}, b::Vector{ST},
                 params::ParametersVPRKpInternal{DT,TT,D,S},
-                caches::CacheDict) where {ST,DT,TT,D,S}
+                caches::OldCacheDict) where {ST,DT,TT,D,S}
 
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_stages!(x, cache.q̃, cache.p̃, cache.ṽ, cache.λ, cache.Q, cache.V, cache.U, cache.P, cache.F, cache.G, params)
+    components!(x, cache.q̃, cache.p̃, cache.ṽ, cache.λ, cache.Q, cache.V, cache.U, cache.P, cache.F, cache.G, params)
 
     # compute b = - [P-AF-U]
     compute_rhs_vprk!(b, cache.P, cache.F, cache.G, params)
@@ -166,32 +174,32 @@ function Integrators.function_stages!(x::Vector{ST}, b::Vector{ST},
     # compute b = - [p-bF-G]
     compute_rhs_vprk_projection_p!(b, cache.p̃, cache.F, cache.G, D*(S+0), params)
 
-    compute_rhs_vprk_correction!(b, cache.V, params)
+    compute_rhs_correction!(b, cache.V, params)
 end
 
 
-function Integrators.integrate_step!(int::IntegratorVPRKpInternal{DT,TT}, sol::SolutionStepPODE{DT,TT},
+function integrate_step!(int::IntegratorVPRKpInternal{DT,TT}, sol::SolutionStepPODE{DT,TT},
                                      cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 
+    # reset cache
+    reset!(sol, timestep(int))
+
     # compute initial guess
     initial_guess!(int, sol, cache)
 
-    # reset cache
-    reset!(sol)
-
     # call nonlinear solver
-    solve!(int.solver)
+    solve!(cache.x, int.solver)
 
     # print solver status
-    print_solver_status(int.solver.status, int.solver.params)
+    # print_solver_status(int.solver.status, int.solver.params)
 
     # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params)
+    # check_solver_status(int.solver.status, int.solver.params)
 
     # compute vector fields at internal stages and projection vector fields
-    compute_stages!(int.solver.x,
+    components!(cache.x,
                     cache.q̃, cache.p̃, cache.ṽ, cache.λ,
                     cache.Q, cache.V, cache.U,
                     cache.P, cache.F, cache.G, int.params)
@@ -206,12 +214,12 @@ function Integrators.integrate_step!(int::IntegratorVPRKpInternal{DT,TT}, sol::S
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 
     # copy internal stage variables
-    sol.internal.Q .= cache.Q
-    sol.internal.P .= cache.P
-    sol.internal.V .= cache.V
-    sol.internal.F .= cache.F
-    sol.internal.λ .= cache.λ
+    # sol.internal.Q .= cache.Q
+    # sol.internal.P .= cache.P
+    # sol.internal.V .= cache.V
+    # sol.internal.F .= cache.F
+    # sol.internal.λ .= cache.λ
 
     # copy solver status
-    get_solver_status!(int.solver, sol.internal[:solver])
+    # get_solver_status!(int.solver, sol.internal[:solver])
 end

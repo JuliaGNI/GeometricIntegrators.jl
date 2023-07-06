@@ -2,7 +2,7 @@
 
 ```@setup 1
 using GeometricIntegrators
-using GeometricProblems.HarmonicOscillator
+using GeometricEquations.Tests.HarmonicOscillator
 prob = harmonic_oscillator_ode()
 ```
 
@@ -20,14 +20,14 @@ integration step.
 The call to the integrator is then made via
 ```@example 1
 int = Integrator(prob, Gauss(1))
-integrate!(int, sol)
+integrate!(sol, int)
 ```
 If several integration cycles shall be performed, the `reset!()` function can be
 used to copy the solution of the last time step to the initial conditions of the
 solution,
 ```julia
 for i in 1:10
-    # integrate!(int, sol)
+    # integrate!(sol, int)
     #
     # save or process solution
     #
