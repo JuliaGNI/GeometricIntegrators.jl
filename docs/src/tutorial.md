@@ -242,7 +242,7 @@ Integrator(problem, method)
 As an example, consider an ODE like the harmonic oscillator, which is included in GeometricEquations.jl:
 ```@example 1
 using GeometricIntegrators
-using GeometricEquations.Tests.HarmonicOscillator
+using GeometricProblems.HarmonicOscillator
 ```
 ```@example 1
 prob = harmonic_oscillator_ode()
@@ -292,7 +292,7 @@ method = VPRKLobattoIIIAIIIB(2)
 For the purpose of a complete example, consider again the harmonic oscillator:
 ```@setup 2
 using GeometricIntegrators
-using GeometricEquations.Tests.HarmonicOscillator
+using GeometricProblems.HarmonicOscillator
 ```
 ```example 2
 prob = harmonic_oscillator_iode()
@@ -314,7 +314,7 @@ integrate(problem, integrator)
 to perform the actual integration steps, where `ntime` defines the number of steps to integrate:
 ```@setup 3
 using GeometricIntegrators
-using GeometricEquations.Tests.HarmonicOscillator
+using GeometricProblems.HarmonicOscillator
 prob = harmonic_oscillator_ode()
 ```
 ```@example 3

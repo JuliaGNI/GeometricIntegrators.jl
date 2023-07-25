@@ -2,7 +2,7 @@
 
 ```@setup 1
 using GeometricIntegrators
-using GeometricEquations.Tests.HarmonicOscillator
+using GeometricProblems.HarmonicOscillator
 prob = harmonic_oscillator_ode()
 ```
 
