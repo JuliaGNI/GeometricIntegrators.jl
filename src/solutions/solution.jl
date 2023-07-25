@@ -1,5 +1,8 @@
 
-const Solution = GeometricSolution
+function Solution(problem::Union{GeometricProblem, SubstepProblem}; kwargs...)
+    GeometricSolution(problem; kwargs...)
+end
+    
 
 const SolutionODE{dType, tType, dsType, probType, perType} = GeometricSolution{dType, tType, dsType, probType, perType} where {probType <: AbstractProblemODE}
 const SolutionDAE{dType, tType, dsType, probType, perType} = GeometricSolution{dType, tType, dsType, probType, perType} where {probType <: AbstractProblemDAE}
@@ -9,7 +12,7 @@ const SolutionPDAE{dType, tType, dsType, probType, perType} = GeometricSolution{
 const SolutionPSDE{dType, tType, dsType, probType, perType} = GeometricSolution{dType, tType, dsType, probType, perType} where {probType <: AbstractProblemPSDE}
 
 
-function Base.setindex!(sol::Solution, solstep::SolutionStep, n)
+function Base.setindex!(sol::GeometricSolution, solstep::SolutionStep, n)
     sol[n] = current(solstep)
 end
 
