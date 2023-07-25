@@ -82,8 +82,8 @@ function initialize!(int::IntegratorVPRKpVariational{DT}, sol::SolutionStepPODE{
     equation(int, :v̄)(sol.v, sol.t, sol.q)
     equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
 
-    initialize!(int.iguess, sol.t̄[0], sol.q̄[0], sol.p̄[0], sol.v̄[0], sol.f̄[0],
-                            sol.t̄[1], sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1])
+    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
+                            sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 
     # initialise projector
     equation(int, :g)(cache.G[1], sol.t, sol.q, sol.v, cache.λ)
@@ -94,8 +94,8 @@ end
 function initial_guess!(int::IntegratorVPRKpVariational{DT}, sol::SolutionStepPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̄[2], sol.p̄[2], sol.v̄[2], sol.f̄[2],
-                              sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1],
+        evaluate!(int.iguess, sol.history.q[2], sol.history.p[2], sol.history.v[2], sol.history.f[2],
+                              sol.history.q[1], sol.history.p[1], sol.history.v[1], sol.history.f[1],
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
 
@@ -138,13 +138,13 @@ function compute_projection!(
     # U[1] .= λ
     # U[2] .= 0
 
-    functions(problem).g(G[1], solstep.t̄[1], q, v, λ)
+    functions(problem).g(G[1], solstep.t̄, q, v, λ)
     G[2] .= 0
     # G[1] .= 0
-    # functions(problem).g(G[2], solstep.t̄[1], q, v, λ)
+    # functions(problem).g(G[2], solstep.t̄, q, v, λ)
 
     # compute p=ϑ(q)
-    functions(problem).ϑ(p, solstep.t̄[1], q, v)
+    functions(problem).ϑ(p, solstep.t̄, q, v)
 end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."
@@ -161,14 +161,14 @@ function residual!(x::Vector{ST}, b::Vector{ST},
 
     # # compute b = - [q̄-q-U]
     for k in 1:D
-        b[0*D+k] = - (cache.q̃[k] - solstep.q̄[1][k]) + timestep(problem) * params.pparams[:R][2] * cache.U[2][k]
-        # b[0*D+k] = - (cache.q[k] - solstep.q̄[1][k])
+        b[0*D+k] = - (cache.q̃[k] - solstep.q̄[k]) + timestep(problem) * params.pparams[:R][2] * cache.U[2][k]
+        # b[0*D+k] = - (cache.q[k] - solstep.q̄[k])
     end
 
     # compute b = - [p̄-p-G]
     for k in 1:D
-        b[1*D+k] = - (cache.p̃[k] - solstep.p̄[1][k])
-        # b[1*D+k] = - (cache.p[k] - solstep.p̄[1][k]) + timestep(problem) * params.R[2] * cache.G[2][k]
+        b[1*D+k] = - (cache.p̃[k] - solstep.p̄[k])
+        # b[1*D+k] = - (cache.p[k] - solstep.p̄[k]) + timestep(problem) * params.R[2] * cache.G[2][k]
     end
 end
 

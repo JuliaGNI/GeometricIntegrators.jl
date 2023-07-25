@@ -77,8 +77,8 @@ end
 function initial_guess!(int::IntegratorVPRKdegenerate{DT}, sol::SolutionStepPODE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̄[2], sol.p̄[2], sol.v̄[2], sol.f̄[2],
-                              sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1],
+        evaluate!(int.iguess, sol.history.q[2], sol.history.p[2], sol.history.v[2], sol.history.f[2],
+                              sol.history.q[1], sol.history.p[1], sol.history.v[1], sol.history.f[1],
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
         for k in eachdim(int)
@@ -104,7 +104,7 @@ function compute_solution!(x::Vector{ST}, q̄::Vector{ST}, v̄::Vector{ST}, p̄:
     q̄ .= x
 
     # compute p̄ = ϑ(q)
-    functions(problem).ϑ(p̄, solstep.t̄[1] + timestep(problem), q̄, v̄)
+    functions(problem).ϑ(p̄, solstep.t̄ + timestep(problem), q̄, v̄)
 end
 
 
@@ -122,7 +122,7 @@ function Integrators.residual!(x::Vector{ST}, b::Vector{ST},
 
     # compute b = - [q̄-q-BV]
     for k in 1:div(D,2)
-        b[k] = solstep.q̄[1][k] - cache.q̃[k]
+        b[k] = solstep.q̄[k] - cache.q̃[k]
         for i in 1:S
             b[k] += timestep(problem) * tableau(method).q.b[i] * params.pparams[:V][i][k]
         end
@@ -130,7 +130,7 @@ function Integrators.residual!(x::Vector{ST}, b::Vector{ST},
 
     # compute b = - [p̄-p-BF]
     for k in 1:div(D,2)
-        b[div(D,2)+k] = solstep.p̄[1][k] - cache.p̃[k]
+        b[div(D,2)+k] = solstep.p̄[k] - cache.p̃[k]
         for i in 1:S
             b[div(D,2)+k] += timestep(problem) * tableau(method).p.b[i] * params.pparams[:F][i][k]
         end

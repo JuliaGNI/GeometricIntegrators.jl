@@ -80,8 +80,8 @@ function initial_guess!(int::IntegratorVPRKpInternal{DT,TT}, sol::SolutionStepPO
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
 
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̄[2], sol.p̄[2], sol.v̄[2], sol.f̄[2],
-                              sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1],
+        evaluate!(int.iguess, sol.history.q[2], sol.history.p[2], sol.history.v[2], sol.history.f[2],
+                              sol.history.q[1], sol.history.p[1], sol.history.v[1], sol.history.f[1],
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
 
@@ -102,8 +102,8 @@ function compute_projection_vprk!(x::Vector{ST},
                 params::ParametersVPRKpInternal{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     # create temporary variables
-    local t₀::TT = solstep.t̄[1]
-    local t₁::TT = solstep.t̄[1] + timestep(problem)
+    local t₀::TT = solstep.t̄
+    local t₁::TT = solstep.t̄ + timestep(problem)
     local tₘ::TT
     local y1::ST
     local y2::ST
@@ -129,7 +129,7 @@ function compute_projection_vprk!(x::Vector{ST},
                 y1 += tableau(method).q.a[i,j] * V[j][k]
                 y2 += tableau(method).q.â[i,j] * V[j][k]
             end
-            Q[i][k] = solstep.q̄[1][k] + timestep(problem) * (y1 + y2) + timestep(problem) * params.pparams[:R][1] * U[1][k]
+            Q[i][k] = solstep.q̄[k] + timestep(problem) * (y1 + y2) + timestep(problem) * params.pparams[:R][1] * U[1][k]
         end
     end
 
@@ -141,13 +141,13 @@ function compute_projection_vprk!(x::Vector{ST},
             y1 += tableau(method).q.b[j] * V[j][k]
             y2 += tableau(method).q.b̂[j] * V[j][k]
         end
-        q[k] = solstep.q̄[1][k] + timestep(problem) * (y1 + y2) + timestep(problem) * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
+        q[k] = solstep.q̄[k] + timestep(problem) * (y1 + y2) + timestep(problem) * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
     end
 
     G[1] .= 0
     G[2] .= 0
     for j in 1:S
-        tₘ = solstep.t̄[1] + timestep(problem) * tableau(method).q.c[j]
+        tₘ = solstep.t̄ + timestep(problem) * tableau(method).q.c[j]
         functions(problem).g(g, tₘ, Q[j], V[j], λ)
         G[1] .+= tableau(method).q.b[j] * g
         G[2] .+= tableau(method).q.b[j] * g

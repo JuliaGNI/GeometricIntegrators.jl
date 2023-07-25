@@ -50,7 +50,7 @@ function initial_guess!(int::IntegratorMidpointProjection)
     cache(int).x̄ .= nlsolution(subint(int))
 
     # compute initial guess for projected solution
-    initialguess!(solstep(int).t̄[1] + timestep(int)/2, cache(int).q̃, cache(int).v, solstep(int), problem(int), iguess(int))
+    initialguess!(solstep(int).t̄ + timestep(int)/2, cache(int).q̃, cache(int).v, solstep(int), problem(int), iguess(int))
 
     # copy initial guess for projected solution to common solution vector
     cache(int).x̃[1:ndims(int)] .= cache(int).q̃

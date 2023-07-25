@@ -145,7 +145,7 @@ function components_p!(
 
     # compute P=ϑ(Q,V) and F=f(Q,V)
     for i in 1:S
-        tᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).p.c[i]
+        tᵢ = solstep.t̄ + timestep(problem) * tableau(method).p.c[i]
         functions(problem).ϑ(P[i], tᵢ, Q[i], V[i])
         functions(problem).f(F[i], tᵢ, Q[i], V[i])
         # if ST == Float64

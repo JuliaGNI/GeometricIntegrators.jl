@@ -138,8 +138,8 @@ end
 function initial_guess!(int::IntegratorVPRKpSecondary{DT}, sol::SolutionStepPDAE{DT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̄[2], sol.p̄[2], sol.v̄[2], sol.f̄[2],
-                              sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1],
+        evaluate!(int.iguess, sol.history.q[2], sol.history.p[2], sol.history.v[2], sol.history.f[2],
+                              sol.history.q[1], sol.history.p[1], sol.history.v[1], sol.history.f[1],
                               cache.q̃, cache.ṽ,
                               tableau(int).q.c[i])
 
@@ -194,7 +194,7 @@ function compute_stages_q_vprk!(q::Vector{ST}, Q::Vector{Vector{ST}},
                 y3 += tableau(method).q.a[i,j] * Λ[j][k]
                 y4 += tableau(method).q.â[i,j] * Λ[j][k]
             end
-            Q[i][k] = solstep.q̄[1][k] + timestep(problem) * (y1 + y2) + timestep(problem) * (y3 + y4)
+            Q[i][k] = solstep.q̄[k] + timestep(problem) * (y1 + y2) + timestep(problem) * (y3 + y4)
         end
     end
 
@@ -207,7 +207,7 @@ function compute_stages_q_vprk!(q::Vector{ST}, Q::Vector{Vector{ST}},
             y3 += tableau(method).q.b[j] * Λ[j][k]
             y4 += tableau(method).q.b̂[j] * Λ[j][k]
         end
-        q[k] = solstep.q̄[1][k] + timestep(problem) * (y1 + y2) + timestep(problem) * (y3 + y4)
+        q[k] = solstep.q̄[k] + timestep(problem) * (y1 + y2) + timestep(problem) * (y3 + y4)
     end
 end
 
@@ -219,8 +219,8 @@ function compute_projection_vprk!(q::Vector{ST}, v::Vector{ST}, p::Vector{ST},
                 params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     # create temporary variables
-    local t₀::TT = solstep.t̄[1]
-    local t₁::TT = solstep.t̄[1] + timestep(problem)
+    local t₀::TT = solstep.t̄
+    local t₁::TT = solstep.t̄ + timestep(problem)
     local tᵢ::TT
     # local dH = zeros(ST,D)
     # local Ω  = zeros(ST,D,D)
@@ -261,7 +261,7 @@ function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vecto
                 z3 += tableau(method).p.a[i,j] * R[j][k]
                 z4 += tableau(method).p.â[i,j] * R[j][k]
             end
-            b[D*(i-1)+k] = (P[i][k] - solstep.p̄[1][k]) - timestep(problem) * (z1 + z2) - timestep(problem) * (z3 + z4)
+            b[D*(i-1)+k] = (P[i][k] - solstep.p̄[k]) - timestep(problem) * (z1 + z2) - timestep(problem) * (z3 + z4)
         end
     end
 end
@@ -300,7 +300,7 @@ function compute_rhs_vprk_projection!(b::Vector{ST}, p::Vector{ST},
     #         z3 += tableau(method).p.b[j] * R[j][k]
     #         z4 += tableau(method).p.b̂[j] * R[j][k]
     #     end
-    #     b[offset+D*(S-1)+k] = (p[k] - solstep.p̄[1][k]) - timestep(problem) * (z1 + z2) + timestep(problem) * (z3 + z4)
+    #     b[offset+D*(S-1)+k] = (p[k] - solstep.p̄[k]) - timestep(problem) * (z1 + z2) + timestep(problem) * (z3 + z4)
     # end
 end
 
@@ -356,12 +356,12 @@ function integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::SolutionStep
                          cache.Φ, int.params)
 
     # compute unprojected solution
-    update_solution!(sol.q, sol.q̃, sol.q̄[1], cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
-    update_solution!(sol.p, sol.p̃, sol.p̄[1], cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, sol.q̄, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, sol.p̄, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 
     # add projection to solution
-    update_solution!(sol.q, sol.q̃, sol.q̄[1], cache.Λ, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
-    update_solution!(sol.p, sol.p̃, sol.p̄[1], cache.R, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
+    update_solution!(sol.q, sol.q̃, sol.q̄, cache.Λ, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
+    update_solution!(sol.p, sol.p̃, sol.p̄, cache.R, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
 
     # copy solution to initial guess
     update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)

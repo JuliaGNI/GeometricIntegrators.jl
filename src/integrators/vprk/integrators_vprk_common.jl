@@ -163,7 +163,7 @@ function compute_rhs_vprk_projection_q!(b::Vector{ST}, q::Vector{ST}, V::Vector{
             y1 += tableau(method).q.b[j] * V[j][k]
             y2 += tableau(method).q.b̂[j] * V[j][k]
         end
-        b[offset+k] = - ( q[k] - solstep.q̄[1][k] ) + timestep(problem) * (y1 + y2) + timestep(problem) * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
+        b[offset+k] = - ( q[k] - solstep.q̄[k] ) + timestep(problem) * (y1 + y2) + timestep(problem) * (params.pparams[:R][1] * U[1][k] + params.pparams[:R][2] * U[2][k])
     end
 end
 
@@ -188,7 +188,7 @@ function compute_rhs_vprk_projection_p!(b::Vector{ST}, p::Vector{ST}, F::Vector{
             z1 += tableau(method).p.b[j] * F[j][k]
             z2 += tableau(method).p.b̂[j] * F[j][k]
         end
-        b[offset+k] = - ( p[k] - solstep.p̄[1][k] ) + timestep(problem) * (z1 + z2) + timestep(problem) * (params.pparams[:R][1] * G[1][k] + params.pparams[:R][2] * G[2][k])
+        b[offset+k] = - ( p[k] - solstep.p̄[k] ) + timestep(problem) * (z1 + z2) + timestep(problem) * (params.pparams[:R][1] * G[1][k] + params.pparams[:R][2] * G[2][k])
     end
 end
 
@@ -213,7 +213,7 @@ function compute_rhs_vprk_projection_p!(b::Vector{ST}, offset::Int,
             z1 += tableau(method).p.b[j] * (F[j][k] + R[j][k])
             z2 += tableau(method).p.b̂[j] * (F[j][k] + R[j][k])
         end
-        b[offset+k] = - ( p[k] - solstep.p̄[1][k] ) + timestep(problem) * (z1 + z2) + timestep(problem) * (params.pparams[:R][1] * G[1][k] + params.pparams[:R][2] * G[2][k])
+        b[offset+k] = - ( p[k] - solstep.p̄[k] ) + timestep(problem) * (z1 + z2) + timestep(problem) * (params.pparams[:R][1] * G[1][k] + params.pparams[:R][2] * G[2][k])
     end
 end
 

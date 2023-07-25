@@ -157,8 +157,8 @@ function components!(
             Z[i][k] = x[2*(D*(i-1)+k-1)+2]
 
             # compute Q and P
-            Q[i][k] = solstep.q̄[1][k] + timestep(problem) * Y[i][k]
-            P[i][k] = solstep.p̄[1][k] + timestep(problem) * Z[i][k]
+            Q[i][k] = solstep.q̄[k] + timestep(problem) * Y[i][k]
+            P[i][k] = solstep.p̄[k] + timestep(problem) * Z[i][k]
         end
 
         # compute time of internal stage

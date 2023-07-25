@@ -20,9 +20,9 @@ end
 
 function update_params!(params::AbstractParametersVPRK, sol::Union{SolutionStepPODE, SolutionStepPDAE})
     # set time for nonlinear solver and copy previous solution
-    solstep.t̄[1]  = sol.t
-    solstep.q̄[1] .= sol.q
-    solstep.p̄[1] .= sol.p
+    solstep.t̄  = sol.t
+    solstep.q̄ .= sol.q
+    solstep.p̄ .= sol.p
     params.v̄ .= sol.v
 end
 

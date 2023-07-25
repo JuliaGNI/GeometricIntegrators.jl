@@ -107,16 +107,16 @@ function Integrators.initialize!(int::IntegratorVPRKpLegendre, sol::SolutionStep
     equation(int, :v̄)(sol.v, sol.t, sol.q)
     equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
 
-    initialize!(int.iguess, sol.t̄[0], sol.q̄[0], sol.p̄[0], sol.v̄[0], sol.f̄[0],
-                            sol.t̄[1], sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1])
+    initialize!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f,
+                            sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 end
 
 
 function initial_guess!(int::IntegratorVPRKpLegendre{DT,TT}, sol::SolutionStepPODE{DT,TT},
                         cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.q̄[2], sol.p̄[2], sol.v̄[2], sol.f̄[2],
-                              sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1],
+        evaluate!(int.iguess, sol.history.q[2], sol.history.p[2], sol.history.v[2], sol.history.f[2],
+                              sol.history.q[1], sol.history.p[1], sol.history.v[1], sol.history.f[1],
                               cache.q̃, cache.p̃, cache.v, cache.f,
                               tableau(int).q.c[i], tableau(int).p.c[i])
 
@@ -128,8 +128,8 @@ function initial_guess!(int::IntegratorVPRKpLegendre{DT,TT}, sol::SolutionStepPO
         end
     end
 
-    evaluate!(int.iguess, sol.q̄[2], sol.p̄[2], sol.v̄[2], sol.f̄[2],
-                          sol.q̄[1], sol.p̄[1], sol.v̄[1], sol.f̄[1],
+    evaluate!(int.iguess, sol.history.q[2], sol.history.p[2], sol.history.v[2], sol.history.f[2],
+                          sol.history.q[1], sol.history.p[1], sol.history.v[1], sol.history.f[1],
                           cache.q̃, cache.p̃,
                           one(TT), one(TT))
 
@@ -166,12 +166,12 @@ function components!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
             Z[i][k] = y[offset+2]
             V[i][k] = y[offset+3]
 
-            Q[i][k] = solstep.q̄[1][k] + timestep(problem) * Y[i][k]
-            P[i][k] = solstep.p̄[1][k] + timestep(problem) * Z[i][k]
+            Q[i][k] = solstep.q̄[k] + timestep(problem) * Y[i][k]
+            P[i][k] = solstep.p̄[k] + timestep(problem) * Z[i][k]
         end
 
         # compute P=p(t,Q) and F=f(t,Q,V)
-        tqᵢ = solstep.t̄[1] + timestep(problem) * tableau(method).q.c[i]
+        tqᵢ = solstep.t̄ + timestep(problem) * tableau(method).q.c[i]
         functions(problem).ϑ(Φ[i], tqᵢ, Q[i], V[i])
         functions(problem).f(F[i], tqᵢ, Q[i], V[i])
     end
@@ -183,7 +183,7 @@ function components!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
     end
 
     # compute p=p(t,q)
-    functions(problem).ϑ(ϕ, solstep.t̄[1] + timestep(problem), q, v)
+    functions(problem).ϑ(ϕ, solstep.t̄ + timestep(problem), q, v)
 
     # for Lobatto-type methods, copy y to μ
     if isdefined(tableau(method), :d) && length(tableau(method).d) > 0
@@ -257,7 +257,7 @@ function compute_rhs!(b::Vector{ST},
         for j in 1:S
             y += tableau(method).q.b[j] * V[j][k]
         end
-        b[offset+k] = (solstep.q̄[1][k] - q[k]) + timestep(problem) * y
+        b[offset+k] = (solstep.q̄[k] - q[k]) + timestep(problem) * y
     end
 
     # compute b = - (p̄-p-AF)
@@ -267,7 +267,7 @@ function compute_rhs!(b::Vector{ST},
         for j in 1:S
             z += tableau(method).p.b[j] * F[j][k]
         end
-        b[offset+k] = (solstep.p̄[1][k] - p[k]) + timestep(problem) * z
+        b[offset+k] = (solstep.p̄[k] - p[k]) + timestep(problem) * z
     end
 
     # if isdefined(tableau(method), :d) && length(tableau(method).d) > 0
