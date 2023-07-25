@@ -198,18 +198,23 @@ end
     psol = integrate(pode, Gauss(1))
     @test relative_maximum_error(psol.q, reference_solution_q) < 5E-4
     @test relative_maximum_error(psol.p, reference_solution_p) < 5E-4
+    @test psol.q == integrate(pode, PartitionedGauss(1)).q
+    @test psol.q == integrate(pode, ImplicitMidpoint()).q
 
     psol = integrate(pode, Gauss(2))
     @test relative_maximum_error(psol.q, reference_solution_q) < 1E-7
     @test relative_maximum_error(psol.p, reference_solution_p) < 1E-7
+    @test psol.q == integrate(pode, PartitionedGauss(2)).q
 
     psol = integrate(pode, Gauss(3))
     @test relative_maximum_error(psol.q, reference_solution_q) < 1E-11
     @test relative_maximum_error(psol.p, reference_solution_p) < 1E-11
+    @test psol.q == integrate(pode, PartitionedGauss(3)).q
 
     psol = integrate(pode, Gauss(4))
     @test relative_maximum_error(psol.q, reference_solution_q) < 1E-15
     @test relative_maximum_error(psol.p, reference_solution_p) < 1E-15
+    @test psol.q == integrate(pode, PartitionedGauss(4)).q
 
 end
 
