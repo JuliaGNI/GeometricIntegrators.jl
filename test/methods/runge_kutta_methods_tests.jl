@@ -1,4 +1,4 @@
-using GeometricEquations.Tests.HarmonicOscillator
+using GeometricProblems.HarmonicOscillator
 using RungeKutta.Tableaus
 
 using GeometricIntegrators.Methods: tableau

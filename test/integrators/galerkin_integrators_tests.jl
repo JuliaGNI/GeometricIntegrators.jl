@@ -1,11 +1,11 @@
 using GeometricIntegrators
-using GeometricEquations.Tests.HarmonicOscillator
+using GeometricProblems.HarmonicOscillator
 using Test
 
 using CompactBasisFunctions
 using QuadratureRules
 
-using GeometricEquations.Tests.HarmonicOscillator: reference_solution
+using GeometricProblems.HarmonicOscillator: reference_solution
 
 iode = iodeproblem()
 

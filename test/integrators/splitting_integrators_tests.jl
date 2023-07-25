@@ -1,8 +1,8 @@
 using GeometricIntegrators
-using GeometricEquations.Tests.HarmonicOscillator
+using GeometricProblems.HarmonicOscillator
 using Test
 
-using GeometricEquations.Tests.HarmonicOscillator: reference_solution
+using GeometricProblems.HarmonicOscillator: reference_solution
 
 sode = sodeproblem()
 

@@ -1,8 +1,8 @@
 using GeometricIntegrators
 using Test
 
-using GeometricEquations.Tests.HarmonicOscillator
-using GeometricEquations.Tests.HarmonicOscillator: reference_solution, hamiltonian
+using GeometricProblems.HarmonicOscillator
+using GeometricProblems.HarmonicOscillator: reference_solution, hamiltonian
 
 dae = daeproblem()
 

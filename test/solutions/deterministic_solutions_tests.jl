@@ -1,5 +1,5 @@
 using GeometricSolutions: test_interface
-using GeometricEquations.Tests.HarmonicOscillator
+using GeometricProblems.HarmonicOscillator
 using GeometricIntegrators
 using Test
 

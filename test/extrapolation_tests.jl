@@ -1,5 +1,5 @@
 using GeometricIntegrators
-using GeometricEquations.Tests.HarmonicOscillator
+using GeometricProblems.HarmonicOscillator
 using Test
 
 ode  = odeproblem()
