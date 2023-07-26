@@ -14,37 +14,35 @@ ode  = lotka_volterra_2d_ode(q₀; tspan=tspan, tstep=Δt, parameters=params)
 iode = lotka_volterra_2d_iode(q₀; tspan=tspan, tstep=Δt, parameters=params)
 lode = lotka_volterra_2d_lode(q₀; tspan=tspan, tstep=Δt, parameters=params)
 
-sol  = integrate(ode, Gauss(8))
-
-reference_solution = sol.q[end]
+ref  = integrate(ode, Gauss(8))
 
 
 @testset "$(rpad("Runge-Kutta integrators for implicit equations",80))" begin
 
     sol = integrate(iode, Gauss(1))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-5
+    @test relative_maximum_error(sol.q, ref.q) < 4E-5
 
     sol = integrate(iode, Gauss(2))
-    @test relative_maximum_error(sol.q, reference_solution) < 8E-7
+    @test relative_maximum_error(sol.q, ref.q) < 8E-7
 
     sol = integrate(iode, Gauss(3))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-10
+    @test relative_maximum_error(sol.q, ref.q) < 4E-10
 
     sol = integrate(iode, Gauss(4))
-    @test relative_maximum_error(sol.q, reference_solution) < 2E-13
+    @test relative_maximum_error(sol.q, ref.q) < 2E-13
 
 
     sol = integrate(iode, IRK(Gauss(1); implicit_update = true))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-5
+    @test relative_maximum_error(sol.q, ref.q) < 4E-5
 
     sol = integrate(iode, IRK(Gauss(2); implicit_update = true))
-    @test relative_maximum_error(sol.q, reference_solution) < 8E-7
+    @test relative_maximum_error(sol.q, ref.q) < 8E-7
 
     sol = integrate(iode, IRK(Gauss(3); implicit_update = true))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-10
+    @test relative_maximum_error(sol.q, ref.q) < 4E-10
 
     sol = integrate(iode, IRK(Gauss(4); implicit_update = true))
-    @test relative_maximum_error(sol.q, reference_solution) < 2E-13
+    @test relative_maximum_error(sol.q, ref.q) < 2E-13
 
 end
 
@@ -52,16 +50,16 @@ end
 @testset "$(rpad("Partitioned Runge-Kutta integrators for implicit equations",80))" begin
 
     sol = integrate(iode, PartitionedGauss(1))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-5
+    @test relative_maximum_error(sol.q, ref.q) < 4E-5
 
     sol = integrate(iode, PartitionedGauss(2))
-    @test relative_maximum_error(sol.q, reference_solution) < 8E-7
+    @test relative_maximum_error(sol.q, ref.q) < 8E-7
 
     sol = integrate(iode, PartitionedGauss(3))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-10
+    @test relative_maximum_error(sol.q, ref.q) < 4E-10
 
     sol = integrate(iode, PartitionedGauss(4))
-    @test relative_maximum_error(sol.q, reference_solution) < 2E-13
+    @test relative_maximum_error(sol.q, ref.q) < 2E-13
 
 end
 
@@ -70,14 +68,14 @@ end
 
 #     flint = IntegratorFLRK(lode, TableauGauss(2))
 #     flsol = integrate(lode, flint)
-#     @test relative_maximum_error(flsol.q, reference_solution) < 4E-12
+#     @test relative_maximum_error(flsol.q, ref.q) < 4E-12
 
 #     flint = IntegratorFLRK(lode, TableauGauss(3))
 #     flsol = integrate(lode, flint)
-#     @test relative_maximum_error(flsol.q, reference_solution) < 4E-16
+#     @test relative_maximum_error(flsol.q, ref.q) < 4E-16
 
 #     flint = IntegratorFLRK(lode, TableauGauss(4))
 #     flsol = integrate(lode, flint)
-#     @test relative_maximum_error(flsol.q, reference_solution) < 8E-16
+#     @test relative_maximum_error(flsol.q, ref.q) < 8E-16
 
 # end

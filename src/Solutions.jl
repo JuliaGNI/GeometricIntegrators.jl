@@ -5,15 +5,13 @@ using Reexport
 using OffsetArrays
 
 using GeometricBase
-using GeometricBase.Config
-using GeometricBase.Utils
 using GeometricEquations
-
-@reexport using GeometricSolutions
-
-using ..Extrapolators
+using GeometricSolutions
 
 import GeometricBase: reset!
+import GeometricBase.Utils: compensated_summation
+
+using ..Extrapolators
 
 import ..Methods: GeometricMethod
 import ..Methods: internal_variables

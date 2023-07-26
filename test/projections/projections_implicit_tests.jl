@@ -13,25 +13,22 @@ const tspan = (t₀, Δt*nt)
 
 ode  = lotka_volterra_2d_ode(q₀; tspan=tspan, tstep=Δt, parameters=params)
 iode = lotka_volterra_2d_iode(q₀; tspan=tspan, tstep=Δt, parameters=params)
-
-sol  = integrate(ode, Gauss(8))
-
-reference_solution = sol.q[end]
+ref  = integrate(ode, Gauss(8))
 
 
 @testset "$(rpad("Post-projection with Runge-Kutta integrators for implicit equations",80))" begin
 
     sol = integrate(iode, PostProjection(Gauss(1)))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-4
+    @test relative_maximum_error(sol.q, ref.q) < 4E-4
 
     sol = integrate(iode, PostProjection(Gauss(2)))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-8
+    @test relative_maximum_error(sol.q, ref.q) < 4E-8
 
     sol = integrate(iode, PostProjection(Gauss(3)))
-    @test relative_maximum_error(sol.q, reference_solution) < 2E-12
+    @test relative_maximum_error(sol.q, ref.q) < 2E-12
 
     sol = integrate(iode, PostProjection(Gauss(4)))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 end
 
@@ -39,16 +36,16 @@ end
 @testset "$(rpad("Midpoint Projection with Runge-Kutta integrators for implicit equations",80))" begin
 
     sol = integrate(iode, MidpointProjection(Gauss(1)))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-4
+    @test relative_maximum_error(sol.q, ref.q) < 4E-4
 
     sol = integrate(iode, MidpointProjection(Gauss(2)))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-8
+    @test relative_maximum_error(sol.q, ref.q) < 4E-8
 
     sol = integrate(iode, MidpointProjection(Gauss(3)))
-    @test relative_maximum_error(sol.q, reference_solution) < 2E-12
+    @test relative_maximum_error(sol.q, ref.q) < 2E-12
 
     sol = integrate(iode, MidpointProjection(Gauss(4)))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 end
 
@@ -56,15 +53,15 @@ end
 @testset "$(rpad("Symmetric Projection with Runge-Kutta integrators for implicit equations",80))" begin
 
     sol = integrate(iode, SymmetricProjection(Gauss(1)))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-4
+    @test relative_maximum_error(sol.q, ref.q) < 4E-4
 
     sol = integrate(iode, SymmetricProjection(Gauss(2)))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-8
+    @test relative_maximum_error(sol.q, ref.q) < 4E-8
 
     sol = integrate(iode, SymmetricProjection(Gauss(3)))
-    @test relative_maximum_error(sol.q, reference_solution) < 2E-12
+    @test relative_maximum_error(sol.q, ref.q) < 2E-12
 
     sol = integrate(iode, SymmetricProjection(Gauss(4)))
-    @test relative_maximum_error(sol.q, reference_solution) < 4E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 end

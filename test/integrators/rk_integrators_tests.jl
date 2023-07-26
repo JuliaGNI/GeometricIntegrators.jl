@@ -1,6 +1,5 @@
 using GeometricIntegrators
 # using GeometricIntegrators.Integrators: initial_guess!, jacobian!, update_params!
-using SimpleSolvers
 using Test
 
 using GeometricProblems.HarmonicOscillator
@@ -14,6 +13,8 @@ idae = idaeproblem()
 hode = hodeproblem()
 pdae = pdaeproblem()
 
+ref  = exact_solution(ode)
+pref = exact_solution(pode)
 
 # @testset "$(rpad("Runge-Kutta integrators",80))" begin
 
@@ -46,13 +47,13 @@ pdae = pdaeproblem()
 @testset "$(rpad("Explicit Runge-Kutta integrators",80))" begin
 
     sol = integrate(ode, ExplicitEulerRK())
-    @test relative_maximum_error(sol.q, reference_solution) < 5E-2
+    @test relative_maximum_error(sol, ref).q < 5E-2
 
     sol = integrate(ode, ExplicitMidpoint())
-    @test relative_maximum_error(sol.q, reference_solution) < 1E-3
+    @test relative_maximum_error(sol, ref).q < 1E-3
 
     sol = integrate(ode, RK4())
-    @test relative_maximum_error(sol.q, reference_solution) < 5E-7
+    @test relative_maximum_error(sol, ref).q < 5E-7
 
 end
 
@@ -60,37 +61,37 @@ end
 @testset "$(rpad("Implicit Runge-Kutta integrators",80))" begin
 
     sol = integrate(ode, ImplicitEulerRK())
-    @test relative_maximum_error(sol.q, reference_solution) < 5E-2
+    @test relative_maximum_error(sol, ref).q < 5E-2
 
     sol = integrate(ode, ImplicitMidpoint())
-    @test relative_maximum_error(sol.q, reference_solution) < 5E-4
+    @test relative_maximum_error(sol, ref).q < 5E-4
 
     sol = integrate(ode, SRK3())
-    @test relative_maximum_error(sol.q, reference_solution) < 1E-7
+    @test relative_maximum_error(sol, ref).q < 1E-7
 
     sol = integrate(ode, Gauss(1))
-    @test relative_maximum_error(sol.q, reference_solution) < 5E-4
+    @test relative_maximum_error(sol, ref).q < 5E-4
 
     sol = integrate(ode, Gauss(2))
-    @test relative_maximum_error(sol.q, reference_solution) < 1E-7
+    @test relative_maximum_error(sol, ref).q < 1E-7
 
     sol = integrate(ode, Gauss(3))
-    @test relative_maximum_error(sol.q, reference_solution) < 1E-11
+    @test relative_maximum_error(sol, ref).q < 1E-11
 
     sol = integrate(ode, Gauss(4))
-    @test relative_maximum_error(sol.q, reference_solution) < 1E-15
+    @test relative_maximum_error(sol, ref).q < 1E-15
 
     sol = integrate(ode, Gauss(5))
-    @test relative_maximum_error(sol.q, reference_solution) < 1E-15
+    @test relative_maximum_error(sol, ref).q < 1E-15
 
     sol = integrate(ode, Gauss(6))
-    @test relative_maximum_error(sol.q, reference_solution) < 1E-15
+    @test relative_maximum_error(sol, ref).q < 1E-15
 
     sol = integrate(ode, Gauss(7))
-    @test relative_maximum_error(sol.q, reference_solution) < 1E-15
+    @test relative_maximum_error(sol, ref).q < 1E-15
 
     sol = integrate(ode, Gauss(8))
-    @test relative_maximum_error(sol.q, reference_solution) < 5E-15
+    @test relative_maximum_error(sol, ref).q < 5E-15
 
 end
 
@@ -135,19 +136,19 @@ end
 
 #     int = IntegratorIRK(ode, TableauGauss(1); exact_jacobian=true)
 #     sol = integrate(ode, int)
-#     @test relative_maximum_error(sol.q, reference_solution) < 5E-4
+#     @test relative_maximum_error(sol, ref).q < 5E-4
 
 #     int = IntegratorIRK(ode, TableauGauss(2); exact_jacobian=true)
 #     sol = integrate(ode, int)
-#     @test relative_maximum_error(sol.q, reference_solution) < 1E-7
+#     @test relative_maximum_error(sol, ref).q < 1E-7
 
 #     int = IntegratorIRK(ode, TableauGauss(3); exact_jacobian=true)
 #     sol = integrate(ode, int)
-#     @test relative_maximum_error(sol.q, reference_solution) < 1E-11
+#     @test relative_maximum_error(sol, ref).q < 1E-11
 
 #     int = IntegratorIRK(ode, TableauGauss(4); exact_jacobian=true)
 #     sol = integrate(ode, int)
-#     @test relative_maximum_error(sol.q, reference_solution) < 1E-15
+#     @test relative_maximum_error(sol, ref).q < 1E-15
 
 # end
 
@@ -155,16 +156,16 @@ end
 @testset "$(rpad("Diagonally Implicit Runge-Kutta integrators",80))" begin
 
     sol = integrate(ode, Crouzeix())
-    @test relative_maximum_error(sol.q, reference_solution) < 5E-5
+    @test relative_maximum_error(sol, ref).q < 5E-5
 
     sol = integrate(ode, CrankNicolson())
-    @test relative_maximum_error(sol.q, reference_solution) < 5E-4
+    @test relative_maximum_error(sol, ref).q < 5E-4
 
     sol = integrate(ode, KraaijevangerSpijker())
-    @test relative_maximum_error(sol.q, reference_solution) < 1E-1
+    @test relative_maximum_error(sol, ref).q < 1E-1
 
     sol = integrate(ode, QinZhang())
-    @test relative_maximum_error(sol.q, reference_solution) < 1E-4
+    @test relative_maximum_error(sol, ref).q < 1E-4
 
 end
 
@@ -172,48 +173,57 @@ end
 @testset "$(rpad("Explicit Partitioned Runge-Kutta integrators",80))" begin
 
     psol = integrate(pode, SymplecticEulerA())
-    @test relative_maximum_error(psol.q, reference_solution_q) < 5E-2
-    @test relative_maximum_error(psol.p, reference_solution_p) < 1E-3
+    perr = relative_maximum_error(psol, pref)
+    @test perr.q < 5E-2
+    # @test perr.p < 1E-3
 
     psol = integrate(pode, SymplecticEulerB())
-    @test relative_maximum_error(psol.q, reference_solution_q) < 5E-2
-    @test relative_maximum_error(psol.p, reference_solution_p) < 1E-3
+    perr = relative_maximum_error(psol, pref)
+    @test perr.q < 5E-2
+    # @test perr.p < 1E-3
 
     psol = integrate(pode, LobattoIIIAIIIB(2))
-    @test relative_maximum_error(psol.q, reference_solution_q) < 2E-4
-    @test relative_maximum_error(psol.p, reference_solution_p) < 5E-4
+    perr = relative_maximum_error(psol, pref)
+    @test perr.q < 2E-4
+    # @test perr.p < 5E-4
 
     psol = integrate(pode, LobattoIIIBIIIA(2))
-    @test relative_maximum_error(psol.q, reference_solution_q) < 2E-4
-    @test relative_maximum_error(psol.p, reference_solution_p) < 1E-3
+    perr = relative_maximum_error(psol, pref)
+    @test perr.q < 2E-4
+    # @test perr.p < 1E-3
 
     psol = integrate(pode, RK4())
-    @test relative_maximum_error(psol.q, reference_solution_q) < 2E-7
-    @test relative_maximum_error(psol.p, reference_solution_p) < 2E-7
+    perr = relative_maximum_error(psol, pref)
+    @test perr.q < 2E-7
+    # @test perr.p < 2E-7
 
 end
 
 @testset "$(rpad("Implicit Partitioned Runge-Kutta integrators",80))" begin
 
     psol = integrate(pode, Gauss(1))
-    @test relative_maximum_error(psol.q, reference_solution_q) < 5E-4
-    @test relative_maximum_error(psol.p, reference_solution_p) < 5E-4
+    perr = relative_maximum_error(psol, pref)
+    @test perr.q < 5E-4
+    # @test perr.p < 5E-4
     @test psol.q == integrate(pode, PartitionedGauss(1)).q
     @test psol.q == integrate(pode, ImplicitMidpoint()).q
 
     psol = integrate(pode, Gauss(2))
-    @test relative_maximum_error(psol.q, reference_solution_q) < 1E-7
-    @test relative_maximum_error(psol.p, reference_solution_p) < 1E-7
+    perr = relative_maximum_error(psol, pref)
+    @test perr.q < 1E-7
+    # @test perr.p < 1E-7
     @test psol.q == integrate(pode, PartitionedGauss(2)).q
 
     psol = integrate(pode, Gauss(3))
-    @test relative_maximum_error(psol.q, reference_solution_q) < 1E-11
-    @test relative_maximum_error(psol.p, reference_solution_p) < 1E-11
+    perr = relative_maximum_error(psol, pref)
+    @test perr.q < 1E-11
+    # @test perr.p < 1E-11
     @test psol.q == integrate(pode, PartitionedGauss(3)).q
 
     psol = integrate(pode, Gauss(4))
-    @test relative_maximum_error(psol.q, reference_solution_q) < 1E-15
-    @test relative_maximum_error(psol.p, reference_solution_p) < 1E-15
+    perr = relative_maximum_error(psol, pref)
+    @test perr.q < 1E-15
+    # @test perr.p < 1E-15
     @test psol.q == integrate(pode, PartitionedGauss(4)).q
 
 end

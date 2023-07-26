@@ -10,11 +10,10 @@ module SPARK
     using SimpleSolvers
 
     using GeometricBase
-    using GeometricBase.Config
-    using GeometricBase.Utils
     using GeometricEquations
 
     import GeometricBase: tableau
+    import GeometricBase.Utils: @define
     import RungeKutta: AbstractTableau, Tableau, nstages, eachstage
 
 
@@ -34,8 +33,6 @@ module SPARK
                           update!, update_vector_fields!, update_multiplier!,
                           initialize!, initsolver, nlsolution
     import ..Integrators: equation, equations, timestep, eachstage, nstages
-
-    import ..Utils: @define
 
 
     export CoefficientsARK, CoefficientsPRK, CoefficientsMRK, CoefficientsIRK,
@@ -206,10 +203,5 @@ module SPARK
            SLRKLobattoIIIE
 
     include("spark/tableaus_slrk.jl")
-
-
-    function __init__()
-        add_config(:tab_compensated_summation, true)
-    end
 
 end

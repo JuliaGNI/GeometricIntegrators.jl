@@ -1,19 +1,19 @@
 using GeometricIntegrators
-using SimpleSolvers
+using GeometricProblems.HarmonicOscillator
 using Test
 
-using GeometricProblems.HarmonicOscillator
-using GeometricProblems.HarmonicOscillator: reference_solution
 
-ode  = odeproblem()
+ode = odeproblem()
+ref = exact_solution(ode)
 
-
-@testset "$(rpad("Various integrators",80))" begin
+@testset "$(rpad("Various integrators", 80))" begin
 
     sol = integrate(ode, ExplicitEuler())
-    @test relative_maximum_error(sol.q, reference_solution) < 5E-2
+    err = relative_maximum_error(sol, ref)
+    @test err.q < 5E-2
 
     sol = integrate(ode, ImplicitEuler())
-    @test relative_maximum_error(sol.q, reference_solution) < 5E-2
+    err = relative_maximum_error(sol, ref)
+    @test err.q < 5E-2
 
 end

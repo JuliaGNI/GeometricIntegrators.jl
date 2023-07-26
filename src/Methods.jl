@@ -1,7 +1,6 @@
 module Methods
 
     using GeometricBase
-    using GeometricBase.Utils
     using GeometricEquations
     using PrettyTables
     using RungeKutta.Tableaus

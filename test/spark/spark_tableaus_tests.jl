@@ -4,9 +4,9 @@ using Test
 
 @testset "$(rpad("SPARK Coefficients",80))" begin
 
+    using GeometricIntegrators
+    
     using LinearAlgebra: normalize
-    using GeometricBase
-    using GeometricIntegrators.Utils
     
     import GeometricIntegrators.SPARK: get_lobatto_nodes, get_lobatto_weights,
                                        lobatto_gauss_coefficients
