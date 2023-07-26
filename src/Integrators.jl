@@ -7,15 +7,14 @@ module Integrators
     using Documenter: @doc
     using ForwardDiff
     using GeometricBase
+    using GeometricEquations
+    using GeometricSolutions
     using LinearAlgebra
     using OffsetArrays
     using QuadratureRules
     using SimpleSolvers
 
     using GeometricBase.Config
-    using GeometricBase.Utils
-    using GeometricEquations
-    using GeometricSolutions
 
     using ..Discontinuities
     using ..Extrapolators
@@ -29,6 +28,7 @@ module Integrators
     import CompactBasisFunctions: nbasis
 
     import GeometricBase: description, reference, nconstraints, tableau, reset!
+    import GeometricBase.Utils: @big, @define, compensated_summation
     
     import RungeKutta
     import RungeKutta: eachstage, nstages

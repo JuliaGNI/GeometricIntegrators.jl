@@ -9,8 +9,6 @@ module VPRK
     
     using ..GeometricBase
     using ..GeometricEquations
-    using ..Config
-    using ..Utils
 
     using ..Methods
 

@@ -11,10 +11,10 @@ module SPARK
 
     using GeometricBase
     using GeometricBase.Config
-    using GeometricBase.Utils
     using GeometricEquations
 
     import GeometricBase: tableau
+    import GeometricBase.Utils: @define
     import RungeKutta: AbstractTableau, Tableau, nstages, eachstage
 
 
@@ -34,8 +34,6 @@ module SPARK
                           update!, update_vector_fields!, update_multiplier!,
                           initialize!, initsolver, nlsolution
     import ..Integrators: equation, equations, timestep, eachstage, nstages
-
-    import ..Utils: @define
 
 
     export CoefficientsARK, CoefficientsPRK, CoefficientsMRK, CoefficientsIRK,

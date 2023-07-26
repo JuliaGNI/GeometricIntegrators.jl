@@ -4,8 +4,8 @@ module GeometricIntegrators
 
     @reexport using GeometricBase
     @reexport using GeometricBase.Config
-    @reexport using GeometricBase.Utils
     @reexport using GeometricEquations
+    @reexport using GeometricSolutions
 
     
     include("Methods.jl")
