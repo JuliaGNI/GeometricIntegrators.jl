@@ -76,6 +76,17 @@ function integrate(problem::AbstractProblem, method::GeometricMethod; kwargs...)
     integrate!(solution, integrator)
 end
 
+function integrate(problems::GeometricEnsemble, method::GeometricMethod; kwargs...)
+    solutions = Solution(problems; kwargs...)
+
+    for (problem, solution) in zip(problems, solutions)
+        integrator = Integrator(problem, method; kwargs...)
+        integrate!(solution, integrator)
+    end
+
+    return solutions
+end
+
 integrate_step!(int::AbstractIntegrator) = integrate_step!(solstep(int), problem(int), method(int), caches(int), solver(int))
 
 """

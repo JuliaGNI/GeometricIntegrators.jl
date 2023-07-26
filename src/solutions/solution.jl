@@ -3,6 +3,9 @@ function Solution(problem::Union{GeometricProblem, SubstepProblem}; kwargs...)
     GeometricSolution(problem; kwargs...)
 end
     
+function Solution(problem::GeometricEnsemble; kwargs...)
+    EnsembleSolution(problem; kwargs...)
+end
 
 const SolutionODE{dType, tType, dsType, probType, perType} = GeometricSolution{dType, tType, dsType, probType, perType} where {probType <: AbstractProblemODE}
 const SolutionDAE{dType, tType, dsType, probType, perType} = GeometricSolution{dType, tType, dsType, probType, perType} where {probType <: AbstractProblemDAE}

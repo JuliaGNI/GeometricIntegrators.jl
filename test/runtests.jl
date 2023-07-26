@@ -19,7 +19,8 @@ using SafeTestsets
 @safetestset "Projection Methods with Implicit Equations                                      " begin include("projections/projections_implicit_tests.jl") end
 @safetestset "Projection Methods with Variational Partitioned Runge-Kutta Integrators         " begin include("projections/projections_vprk_tests.jl") end
 
-@safetestset "Common Integrator Functionality                                                 " begin include("integrators/integrators_common_tests.jl") end
+@safetestset "Ensemble Integrator Tests                                                       " begin include("integrators/ensemble_integrators_tests.jl") end
+
 @safetestset "Method Tests                                                                    " begin include("methods/methods_tests.jl") end
 
 # @safetestset "Simulation Tests                                                                " begin include("simulations/simulations_tests.jl") end
