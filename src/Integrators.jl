@@ -7,14 +7,13 @@ module Integrators
     using Documenter: @doc
     using ForwardDiff
     using GeometricBase
+    # using GeometricBase.Config
     using GeometricEquations
     using GeometricSolutions
     using LinearAlgebra
     using OffsetArrays
     using QuadratureRules
     using SimpleSolvers
-
-    using GeometricBase.Config
 
     using ..Discontinuities
     using ..Extrapolators
@@ -195,16 +194,17 @@ module Integrators
     include("projections/symmetric_projection.jl")
     
 
-    function __init__()
-        default_params = (
-            (:ig_extrapolation, HermiteExtrapolation),
-            (:ig_extrapolation_stages, 5),
-            (:int_show_progress_nmin,  1000),
-        )
+    # function __init__()
+    #     default_params = (
+    #         (:ig_extrapolation, HermiteExtrapolation),
+    #         (:ig_extrapolation_stages, 5),
+    #         (:int_show_progress_nmin,  1000),
+    #         (:tab_compensated_summation, true),
+    #     )
 
-        for param in default_params
-            add_config(param...)
-        end
-    end
+    #     for param in default_params
+    #         add_config(param...)
+    #     end
+    # end
 
 end

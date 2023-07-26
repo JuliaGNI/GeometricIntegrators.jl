@@ -3,10 +3,10 @@ module GeometricIntegrators
     using Reexport
 
     @reexport using GeometricBase
-    @reexport using GeometricBase.Config
     @reexport using GeometricEquations
     @reexport using GeometricSolutions
 
+    # import GeometricBase.Config
     
     include("Methods.jl")
     @reexport using .Methods
@@ -23,8 +23,8 @@ module GeometricIntegrators
 
     include("SPARK.jl")
 
-    function __init__()
-        add_config(:verbosity, 1)
-    end
+    # function __init__()
+    #     add_config(:verbosity, 1)
+    # end
 
 end

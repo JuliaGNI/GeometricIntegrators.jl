@@ -5,7 +5,6 @@ using Reexport
 using OffsetArrays
 
 using GeometricBase
-using GeometricBase.Config
 using GeometricEquations
 using GeometricSolutions
 

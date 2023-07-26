@@ -10,7 +10,6 @@ module SPARK
     using SimpleSolvers
 
     using GeometricBase
-    using GeometricBase.Config
     using GeometricEquations
 
     import GeometricBase: tableau
@@ -204,10 +203,5 @@ module SPARK
            SLRKLobattoIIIE
 
     include("spark/tableaus_slrk.jl")
-
-
-    function __init__()
-        add_config(:tab_compensated_summation, true)
-    end
 
 end
