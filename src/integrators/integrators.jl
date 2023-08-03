@@ -15,11 +15,11 @@ Universal constructor for Runge-Kutta (standard, partitioned, variational),
 SPARK and splitting integrators that automatically selects the appropriate
 integrator based on the problem and tableau types.
 """
-function AbstractIntegrator end
+function GeometricIntegrator end
 
 
 # Print error for integrators not implemented, yet.
-function AbstractIntegrator(problem::GeometricProblem, tableau::AbstractTableau; kwargs...)
+function GeometricIntegrator(problem::EquationProblem, tableau::AbstractTableau; kwargs...)
     error("No integrator found for problem type ", typeof(problem), " and tableau ", tableau)
 end
 
@@ -29,57 +29,57 @@ end
 #*****************************************************************************#
 
 # # Create integrator for formal Lagrangian Runge-Kutta tableau.
-# function AbstractIntegrator(problem::LODEProblem, tableau::Tableau; kwargs...)
+# function GeometricIntegrator(problem::LODEProblem, tableau::Tableau; kwargs...)
 #     IntegratorFLRK(problem, tableau; kwargs...)
 # end
 
 # # Create integrator for Projected Gauss-Legendre Runge-Kutta tableau.
-# function AbstractIntegrator(problem::Union{IODEProblem,LODEProblem}, tableau::CoefficientsPGLRK; kwargs...)
+# function GeometricIntegrator(problem::Union{IODEProblem,LODEProblem}, tableau::CoefficientsPGLRK; kwargs...)
 #     IntegratorPGLRK(problem, tableau; kwargs...)
 # end
 
 # # Create integrator for variational partitioned additive Runge-Kutta tableau.
-# function AbstractIntegrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVPARK; kwargs...)
+# function GeometricIntegrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVPARK; kwargs...)
 #     IntegratorVPARK(problem, tableau; kwargs...)
 # end
 
 # # Create integrator for special partitioned additive Runge-Kutta tableau.
-# function AbstractIntegrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauSPARK; kwargs...)
+# function GeometricIntegrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauSPARK; kwargs...)
 #     IntegratorSPARK(problem, tableau; kwargs...)
 # end
 
 # # Create integrator for variational special partitioned additive Runge-Kutta tableau.
-# function AbstractIntegrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVSPARK; kwargs...)
+# function GeometricIntegrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVSPARK; kwargs...)
 #     IntegratorVSPARK(problem, tableau; kwargs...)
 # end
 
 # # Create integrator for variational special partitioned additive Runge-Kutta tableau with projection on primary constraint.
-# function AbstractIntegrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVSPARKprimary; kwargs...)
+# function GeometricIntegrator(problem::Union{IDAEProblem,LDAEProblem}, tableau::TableauVSPARKprimary; kwargs...)
 #     IntegratorVSPARKprimary(problem, tableau; kwargs...)
 # end
 
 # # Create integrator for variational special partitioned additive Runge-Kutta tableau with projection on secondary constraint.
-# function AbstractIntegrator(problem::LDAEProblem, tableau::TableauVSPARKsecondary; kwargs...)
+# function GeometricIntegrator(problem::LDAEProblem, tableau::TableauVSPARKsecondary; kwargs...)
 #     IntegratorVSPARKsecondary(problem, tableau; kwargs...)
 # end
 
 # # Create integrator for Hamiltonian partitioned additive Runge-Kutta tableau.
-# function AbstractIntegrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHPARK; kwargs...)
+# function GeometricIntegrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHPARK; kwargs...)
 #     IntegratorHPARK(problem, tableau; kwargs...)
 # end
 
 # # Create integrator for Hamiltonian special partitioned additive Runge-Kutta tableau.
-# function AbstractIntegrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHSPARK; kwargs...)
+# function GeometricIntegrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHSPARK; kwargs...)
 #     IntegratorHSPARK(problem, tableau; kwargs...)
 # end
 
 # # Create integrator for Hamiltonian special partitioned additive Runge-Kutta tableau with projection on primary constraint.
-# function AbstractIntegrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHSPARKprimary; kwargs...)
+# function GeometricIntegrator(problem::Union{PDAEProblem,HDAEProblem}, tableau::TableauHSPARKprimary; kwargs...)
 #     IntegratorHSPARKprimary(problem, tableau; kwargs...)
 # end
 
 # # Create integrator for splitting tableau.
-# function AbstractIntegrator(problem::SODEProblem, tableau::AbstractTableauSplitting; kwargs...)
+# function GeometricIntegrator(problem::SODEProblem, tableau::AbstractTableauSplitting; kwargs...)
 #     IntegratorSplitting(problem, tableau; kwargs...)
 # end
 
@@ -115,19 +115,19 @@ end
 #*****************************************************************************#
 
 # Apply integrator for ntime time steps and return solution.
-function integrate(problem::GeometricProblem, integrator::AbstractIntegrator; kwargs...)
+function integrate(problem::EquationProblem, integrator::GeometricIntegrator; kwargs...)
     solution = Solution(problem; kwargs...)
     integrate!(solution, problem, integrator)
     return solution
 end
 
-# function integrate(problem::GeometricProblem, method::VPRKMethod; kwargs...)
-#     integrate(problem, AbstractIntegrator(problem, method); kwargs...)
+# function integrate(problem::EquationProblem, method::VPRKMethod; kwargs...)
+#     integrate(problem, GeometricIntegrator(problem, method); kwargs...)
 # end
 
 # # Integrate given equation with given tableau for ntime time steps and return solution.
-# function integrate(problem::GeometricProblem, tableau::AbstractTableau; kwargs...)
-#     integrate(problem, AbstractIntegrator(problem, tableau); kwargs...)
+# function integrate(problem::EquationProblem, tableau::AbstractTableau; kwargs...)
+#     integrate(problem, GeometricIntegrator(problem, tableau); kwargs...)
 # end
 
 # # Integrate ODE specified by vector field and initial condition with given tableau for ntime time steps and return solution.
@@ -147,7 +147,7 @@ end
 
 
 # Parts of one integration step that are common to deterministic and stochastic equations.
-function integrate!(solstep::SolutionStep, problem::GeometricProblem, int::AbstractIntegrator)
+function integrate!(solstep::SolutionStep, problem::EquationProblem, int::GeometricIntegrator)
     # integrate one initial condition for one time step
     integrate_step!(int, solstep)
 
@@ -156,7 +156,7 @@ function integrate!(solstep::SolutionStep, problem::GeometricProblem, int::Abstr
 end
 
 # Integrate equation for initial conditions m with m₁ ≤ m ≤ m₂ for time steps n with n₁ ≤ n ≤ n₂.
-function integrate!(sol::GeometricSolution, problem::GeometricProblem, int::AbstractIntegrator, n₁::Int, n₂::Int)
+function integrate!(sol::GeometricSolution, problem::EquationProblem, int::GeometricIntegrator, n₁::Int, n₂::Int)
     # check time steps range for consistency
     @assert n₁ ≥ 1
     @assert n₂ ≥ n₁
@@ -201,6 +201,6 @@ function integrate!(sol::GeometricSolution, problem::GeometricProblem, int::Abst
 end
 
 # Integrate `equation` for all time steps.
-function integrate!(sol::GeometricSolution, problem::GeometricProblem, int::AbstractIntegrator)
+function integrate!(sol::GeometricSolution, problem::EquationProblem, int::GeometricIntegrator)
     integrate!(sol, problem, int, 1, ntime(sol))
 end

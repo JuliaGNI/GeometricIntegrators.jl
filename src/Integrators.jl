@@ -27,6 +27,7 @@ module Integrators
     import CompactBasisFunctions: nbasis
 
     import GeometricBase: description, reference, nconstraints, tableau, reset!
+    import GeometricBase: integrate, integrate!
     import GeometricBase.Utils: @big, @define, compensated_summation
     
     import RungeKutta
@@ -38,7 +39,7 @@ module Integrators
 
 
     # compat workaroung
-    Base.ndims(prob::GeometricProblem) = length(vec(prob.ics.q))
+    Base.ndims(prob::EquationProblem) = length(vec(prob.ics.q))
 
 
     export InitialGuess, NoInitialGuess
@@ -54,7 +55,7 @@ module Integrators
     include("integrators/abstract_coefficients.jl")
 
 
-    export AbstractIntegrator, DeterministicIntegrator, StochasticIntegrator, Integrator
+    export GeometricIntegrator, Integrator
     export ODEIntegrator, DAEIntegrator, SDEIntegrator,
            PODEIntegrator, PDAEIntegrator, PSDEIntegrator,
            IODEIntegrator, IDAEIntegrator,

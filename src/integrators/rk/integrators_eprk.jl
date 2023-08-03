@@ -22,13 +22,13 @@ struct IntegratorCacheEPRK{DT,D,S} <: PODEIntegratorCache{DT,D}
     end
 end
 
-function Cache{ST}(problem::GeometricProblem, method::EPRK; kwargs...) where {ST}
+function Cache{ST}(problem::EquationProblem, method::EPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
     D = ndims(problem)
     IntegratorCacheEPRK{ST,D,S}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::GeometricProblem, method::EPRK) = IntegratorCacheEPRK{ST, ndims(problem), nstages(tableau(method))}
+@inline CacheType(ST, problem::EquationProblem, method::EPRK) = IntegratorCacheEPRK{ST, ndims(problem), nstages(tableau(method))}
 
 
 @doc raw"""

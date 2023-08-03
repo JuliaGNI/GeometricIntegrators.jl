@@ -10,7 +10,7 @@ const IntegratorRK = Union{AbstractIntegratorRK, AbstractIntegratorIRK, Abstract
 
 const StageVector{T} = Vector{<:AbstractVector{T}}
 
-GeometricBase.tableau(int::Integrator{<:GeometricProblem, <:RKMethod}) = tableau(method(int))
+GeometricBase.tableau(int::Integrator{<:EquationProblem, <:RKMethod}) = tableau(method(int))
 
 initmethod(method::RKMethod) = RK(method)
 initmethod(method::PRKMethod) = PRK(method)

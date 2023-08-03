@@ -1,5 +1,5 @@
 
-abstract type GeometricMethod end
+abstract type GeometricMethod <: AbstractMethod end
 
 abstract type ODEMethod <: GeometricMethod end
 abstract type PODEMethod <: GeometricMethod end
@@ -13,8 +13,6 @@ abstract type PDAEMethod <: GeometricMethod end
 abstract type HDAEMethod <: GeometricMethod end
 abstract type IDAEMethod <: GeometricMethod end
 abstract type LDAEMethod <: GeometricMethod end
-
-Base.parent(::GeometricMethod) = nothing
 
 internal_variables(::GeometricMethod) = NamedTuple()
 
@@ -44,21 +42,9 @@ ishdaemethod(::Union{HDAEMethod, Type{<:HDAEMethod}}) = true
 isidaemethod(::Union{IDAEMethod, Type{<:IDAEMethod}}) = true
 isldaemethod(::Union{LDAEMethod, Type{<:LDAEMethod}}) = true
 
-isexplicit(::GeometricMethod) = missing
-isimplicit(::GeometricMethod) = missing
-issymmetric(::GeometricMethod) = missing
-issymplectic(::GeometricMethod) = missing
-isenergypreserving(::GeometricMethod) = missing
-isstifflyaccurate(::GeometricMethod) = missing
-
 isexplicit(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isexplicit(t()) : missing
 isimplicit(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isimplicit(t()) : missing
 issymmetric(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.issymmetric(t()) : missing
 issymplectic(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.issymplectic(t()) : missing
 isenergypreserving(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isenergypreserving(t()) : missing
 isstifflyaccurate(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isstifflyaccurate(t()) : missing
-
-GeometricBase.order(::GeometricMethod) = missing
-GeometricBase.order(t::Type{<:GeometricMethod}) = applicable(t) ? order(t()) : missing
-
-RungeKutta.description(::Union{GeometricMethod, Type{<:GeometricMethod}}) = missing

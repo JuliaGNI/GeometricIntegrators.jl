@@ -1,9 +1,9 @@
 
-function Cache{ST}(problem::GeometricProblem, method::ProjectedMethod{<:SymmetricProjection}; kwargs...) where {ST}
+function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:SymmetricProjection}; kwargs...) where {ST}
     ProjectionCache{ST, ndims(problem), nconstraints(problem), solversize(problem, parent(method))}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::GeometricProblem, method::ProjectedMethod{<:SymmetricProjection}) = 
+@inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:SymmetricProjection}) = 
     ProjectionCache{ST, ndims(problem), nconstraints(problem), solversize(problem, parent(method))}
 
 
@@ -11,7 +11,7 @@ default_solver(::ProjectedMethod{<:SymmetricProjection}) = Newton()
 default_iguess(::ProjectedMethod{<:SymmetricProjection}) = HermiteExtrapolation()
 
 
-const IntegratorSymmetricProjection{DT,TT} = Integrator{<:GeometricProblem{DT,TT}, <:ProjectedMethod{<:SymmetricProjection}}
+const IntegratorSymmetricProjection{DT,TT} = Integrator{<:EquationProblem{DT,TT}, <:ProjectedMethod{<:SymmetricProjection}}
 
 # TODO: Try to disable this, once everything works!
 function initsolver(::NewtonMethod, ::ProjectedMethod{<:SymmetricProjection}, caches::CacheDict; kwargs...)
@@ -227,7 +227,7 @@ function update!(x::AbstractVector{ST}, int::IntegratorSymmetricProjection) wher
 end
 
 
-function integrate_step!(int::Integrator{<:GeometricProblem, <:ProjectedMethod{<:SymmetricProjection}})
+function integrate_step!(int::Integrator{<:EquationProblem, <:ProjectedMethod{<:SymmetricProjection}})
     # call nonlinear solver for projection
     solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
 

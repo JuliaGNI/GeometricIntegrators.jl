@@ -26,10 +26,10 @@ function update_params!(params::AbstractParametersVPRK, sol::Union{SolutionStepP
     params.v̄ .= sol.v
 end
 
-@inline equation(int::AbstractIntegratorVPRK, i::Symbol) = parameters(int).equ[i]
-@inline equations(int::AbstractIntegratorVPRK) = parameters(int).equ
-@inline GeometricBase.timestep(int::AbstractIntegratorVPRK) = parameters(int).Δt
-@inline GeometricBase.tableau(int::AbstractIntegratorVPRK) = parameters(int).tab
+@inline equation(int::GeometricIntegratorVPRK, i::Symbol) = parameters(int).equ[i]
+@inline equations(int::GeometricIntegratorVPRK) = parameters(int).equ
+@inline GeometricBase.timestep(int::GeometricIntegratorVPRK) = parameters(int).Δt
+@inline GeometricBase.tableau(int::GeometricIntegratorVPRK) = parameters(int).tab
 
 
 function Integrators.IntegratorCache{ST}(params::AbstractParametersVPRK{IT,DT,TT,D,S}; kwargs...) where {IT,ST,DT,TT,D,S}

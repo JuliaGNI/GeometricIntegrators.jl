@@ -3,7 +3,7 @@ Integrator
 
 Collects all data structures needed by an integrator:
 
-* `problem`: [`GeometricProblem`](@ref) to solve
+* `problem`: [`EquationProblem`](@ref) to solve
 * `method`: integration method
 * `cache`: temprary data structures needed by method
 * `solver`: linear or nonlinear solver needed by method
@@ -13,7 +13,7 @@ Collects all data structures needed by an integrator:
 Constructors:
 
 ```
-Integrator(problem::GeometricProblem, method::GeometricMethod; solver = default_solver(method), iguess = default_iguess(method), projection = default_projection(method))
+Integrator(problem::EquationProblem, method::GeometricMethod; solver = default_solver(method), iguess = default_iguess(method), projection = default_projection(method))
 ```
 
 """

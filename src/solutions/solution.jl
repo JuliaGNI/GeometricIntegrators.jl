@@ -1,5 +1,5 @@
 
-function Solution(problem::Union{GeometricProblem, SubstepProblem}; kwargs...)
+function Solution(problem::Union{EquationProblem, SubstepProblem}; kwargs...)
     GeometricSolution(problem; kwargs...)
 end
     

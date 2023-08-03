@@ -44,13 +44,13 @@ end
 nlsolution(cache::IntegratorCacheIPRK) = cache.x
 
 
-function Cache{ST}(problem::GeometricProblem, method::IPRK; kwargs...) where {ST}
+function Cache{ST}(problem::EquationProblem, method::IPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
     D = ndims(problem)
     IntegratorCacheIPRK{ST,D,S}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::GeometricProblem, method::IPRK) = IntegratorCacheIPRK{ST, ndims(problem), nstages(tableau(method))}
+@inline CacheType(ST, problem::EquationProblem, method::IPRK) = IntegratorCacheIPRK{ST, ndims(problem), nstages(tableau(method))}
 
 
 @doc raw"""

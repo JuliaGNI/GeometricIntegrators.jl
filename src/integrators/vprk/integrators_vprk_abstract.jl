@@ -1,16 +1,16 @@
 
-# abstract type AbstractIntegratorVPRK{DT,TT,D,S} <: AbstractIntegratorIRK{DT,TT} end
-# abstract type AbstractIntegratorVPRKwProjection{DT,TT,D,S} <: AbstractIntegratorVPRK{DT,TT,D,S} end
+# abstract type GeometricIntegratorVPRK{DT,TT,D,S} <: AbstractIntegratorIRK{DT,TT} end
+# abstract type GeometricIntegratorVPRKwProjection{DT,TT,D,S} <: GeometricIntegratorVPRK{DT,TT,D,S} end
 
-# @inline parameters(integrator::AbstractIntegratorVPRK) = integrator.params
+# @inline parameters(integrator::GeometricIntegratorVPRK) = integrator.params
 
-# @inline nstages(::AbstractIntegratorVPRK{DT,TT,D,S}) where {DT,TT,D,S} = S
-# @inline Base.ndims(::AbstractIntegratorVPRK{DT,TT,D,S}) where {DT,TT,D,S} = D
+# @inline nstages(::GeometricIntegratorVPRK{DT,TT,D,S}) where {DT,TT,D,S} = S
+# @inline Base.ndims(::GeometricIntegratorVPRK{DT,TT,D,S}) where {DT,TT,D,S} = D
 
-# @inline eachstage(integrator::AbstractIntegratorVPRK) = 1:nstages(integrator)
-# @inline eachdim(integrator::AbstractIntegratorVPRK) = 1:ndims(integrator)
+# @inline eachstage(integrator::GeometricIntegratorVPRK) = 1:nstages(integrator)
+# @inline eachdim(integrator::GeometricIntegratorVPRK) = 1:ndims(integrator)
 
-# function Base.show(io::IO, int::AbstractIntegratorVPRK)
+# function Base.show(io::IO, int::GeometricIntegratorVPRK)
 #     print(io, "\n$(description(int)) with:\n")
 #     print(io, "   Timestep: $(timestep(int))\n")
 #     print(io, "   Tableau:  $(description(method(int)))\n")
@@ -19,7 +19,7 @@
 #     # print(io, reference(method(int)))
 # end
 
-# function Base.show(io::IO, int::AbstractIntegratorVPRKwProjection)
+# function Base.show(io::IO, int::GeometricIntegratorVPRKwProjection)
 #     print(io, "\n$(description(int)) and:\n")
 #     print(io, "   Timestep: $(timestep(int))\n")
 #     print(io, "   Tableau:  $(description(method(int)))\n")
