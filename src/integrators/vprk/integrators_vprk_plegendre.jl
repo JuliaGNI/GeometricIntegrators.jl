@@ -67,7 +67,7 @@ end
 struct IntegratorVPRKpLegendre{DT, TT, D, S,
                 PT <: ParametersVPRKpLegendre{DT,TT},
                 ST <: NonlinearSolver,
-                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
+                IT <: InitialGuessIODE{TT}} <: GeometricIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT

@@ -27,17 +27,17 @@ end
 nlsolution(cache::StandardProjectionCache) = cache.x
 
 
-function Cache{ST}(problem::GeometricProblem, ::ProjectedMethod{<:StandardProjection}; kwargs...) where {ST}
+function Cache{ST}(problem::EquationProblem, ::ProjectedMethod{<:StandardProjection}; kwargs...) where {ST}
     StandardProjectionCache{ST, ndims(problem), nconstraints(problem)}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::GeometricProblem, ::ProjectedMethod{<:StandardProjection}) = StandardProjectionCache{ST, ndims(problem), nconstraints(problem)}
+@inline CacheType(ST, problem::EquationProblem, ::ProjectedMethod{<:StandardProjection}) = StandardProjectionCache{ST, ndims(problem), nconstraints(problem)}
 
 
 default_solver(::ProjectedMethod{<:StandardProjection}) = Newton()
 
 
-const IntegratorStandardProjection{DT,TT} = Integrator{<:GeometricProblem{DT,TT}, <:ProjectedMethod{<:StandardProjection}}
+const IntegratorStandardProjection{DT,TT} = Integrator{<:EquationProblem{DT,TT}, <:ProjectedMethod{<:StandardProjection}}
 
 
 # function Base.show(io::IO, int::ProjectedMethod{<:StandardProjection})
@@ -58,7 +58,7 @@ end
 
 function initial_guess!(
     solstep::SolutionStep,
-    ::GeometricProblem,
+    ::EquationProblem,
     ::ProjectedMethod{<:StandardProjection},
     caches::CacheDict,
     ::NonlinearSolver,
@@ -149,7 +149,7 @@ function residual!(
     b::Vector{ST},
     x::Vector{ST},
     solstep::SolutionStep, 
-    problem::GeometricProblem,
+    problem::EquationProblem,
     method::ProjectedMethod{<:StandardProjection}, 
     caches::CacheDict) where {ST}
 
@@ -172,7 +172,7 @@ end
 
 function preprojection!(
     solstep::SolutionStep{DT},
-    problem::GeometricProblem,
+    problem::EquationProblem,
     method::StandardProjection, 
     caches::CacheDict) where {DT}
 
@@ -182,7 +182,7 @@ end
 
 function postprojection!(
     solstep::SolutionStep{DT},
-    problem::GeometricProblem,
+    problem::EquationProblem,
     method::StandardProjection, 
     caches::CacheDict) where {DT}
 
@@ -191,7 +191,7 @@ function postprojection!(
 end
 
 
-function integrate_step!(int::Integrator{<:GeometricProblem, <:ProjectedMethod{<:StandardProjection}})
+function integrate_step!(int::Integrator{<:EquationProblem, <:ProjectedMethod{<:StandardProjection}})
     # add perturbation for next time step to solution
     # (same vector field as previous time step)
     preprojection!(solstep(int), problem(int), projection(method(int)), caches(int))

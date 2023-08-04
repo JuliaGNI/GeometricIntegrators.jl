@@ -19,13 +19,13 @@ end
 nlsolution(cache::IntegratorCacheDIRK, i) = cache.x[i]
 
 
-function Cache{ST}(problem::GeometricProblem, method::DIRKMethod; kwargs...) where {ST}
+function Cache{ST}(problem::EquationProblem, method::DIRKMethod; kwargs...) where {ST}
     S = nstages(tableau(method))
     D = ndims(problem)
     IntegratorCacheDIRK{ST,D,S}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::GeometricProblem, method::DIRKMethod) = IntegratorCacheDIRK{ST, ndims(problem), nstages(tableau(method))}
+@inline CacheType(ST, problem::EquationProblem, method::DIRKMethod) = IntegratorCacheDIRK{ST, ndims(problem), nstages(tableau(method))}
 
 
 @doc raw"""

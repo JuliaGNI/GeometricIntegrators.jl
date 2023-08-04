@@ -32,9 +32,9 @@ backwardhistory(sol::SolutionStep) = nhistory(sol):-1:1
 
 
 """
-Copy the initial conditions of a `GeometricProblem` to the current state of an atomic solution.
+Copy the initial conditions of a `EquationProblem` to the current state of an atomic solution.
 """
-function Base.copy!(solstep::SolutionStep, equ::GeometricProblem)
+function Base.copy!(solstep::SolutionStep, equ::EquationProblem)
     copy!(solstep, initial_conditions(equ))
 end
 

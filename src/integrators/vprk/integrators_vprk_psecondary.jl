@@ -79,7 +79,7 @@ VPRK methods).
 struct IntegratorVPRKpSecondary{DT, TT, D, S,
                 PT <: ParametersVPRKpSecondary{DT,TT},
                 ST <: NonlinearSolver,
-                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRK{DT,TT,D,S}
+                IT <: InitialGuessIODE{TT}} <: GeometricIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT

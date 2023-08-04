@@ -1,16 +1,16 @@
 
-function update_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::Union{SolutionStepPODE{DT,TT}, SolutionStepPDAE{DT,TT}},
+function update_solution!(int::GeometricIntegratorVPRK{DT,TT}, sol::Union{SolutionStepPODE{DT,TT}, SolutionStepPDAE{DT,TT}},
                           cache::IntegratorCacheVPRK{DT}) where {DT,TT}
     update!(sol, cache.V, cache.F, tableau(int), timestep(int))
 end
 
-function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::Union{SolutionStepPODE{DT,TT}, SolutionStepPDAE{DT,TT}}, R::Vector{TT},
+function project_solution!(int::GeometricIntegratorVPRK{DT,TT}, sol::Union{SolutionStepPODE{DT,TT}, SolutionStepPDAE{DT,TT}}, R::Vector{TT},
                            cache::IntegratorCacheVPRK{DT}) where {DT,TT}
     update!(sol.q, sol.q̃, cache.U, R, timestep(int))
     update!(sol.p, sol.p̃, cache.G, R, timestep(int))
 end
 
-function project_solution!(int::AbstractIntegratorVPRK{DT,TT}, sol::Union{SolutionStepPODE{DT,TT}, SolutionStepPDAE{DT,TT}}, RU::Vector{TT}, RG::Vector{TT},
+function project_solution!(int::GeometricIntegratorVPRK{DT,TT}, sol::Union{SolutionStepPODE{DT,TT}, SolutionStepPDAE{DT,TT}}, RU::Vector{TT}, RG::Vector{TT},
                            cache::IntegratorCacheVPRK{DT}) where {DT,TT}
     update!(sol.q, sol.q̃, cache.U, RU, timestep(int))
     update!(sol.p, sol.p̃, cache.G, RG, timestep(int))

@@ -15,7 +15,7 @@ end
 struct IntegratorVPRKpInternal{DT, TT, D, S,
                 PT <: ParametersVPRKpInternal{DT,TT},
                 ST <: NonlinearSolver,
-                IT <: InitialGuessIODE{TT}} <: AbstractIntegratorVPRKwProjection{DT,TT,D,S}
+                IT <: InitialGuessIODE{TT}} <: GeometricIntegratorVPRKwProjection{DT,TT,D,S}
 
     params::PT
     solver::ST

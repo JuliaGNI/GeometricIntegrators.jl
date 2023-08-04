@@ -100,6 +100,6 @@ function project!(cache::ProjectionCache, U::AbstractVector, G::AbstractVector, 
     cache.p .+= Δt .* G
 end
 
-function project!(solstep::SolutionStep, problem::GeometricProblem, method::ProjectionMethod, cache::ProjectionCache)
+function project!(solstep::SolutionStep, problem::EquationProblem, method::ProjectionMethod, cache::ProjectionCache)
     project(solstep, problem, method, cache.U, cache.G, cache.λ)
 end
