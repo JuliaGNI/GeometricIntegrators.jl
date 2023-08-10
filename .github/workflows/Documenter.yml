@@ -1,23 +1,28 @@
 name: Documentation
-
 on:
   push:
     branches:
       - main
     tags: '*'
   pull_request:
-
-jobs:
+jobs:  
   build:
+    name: Documentation
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      statuses: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@latest
-        with:
-          version: 1
-      - name: Install dependencies
+      - name: Configure doc environment
         run: |
-          julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate(); Pkg.build(); Pkg.precompile();'
+          julia --project=docs/ -e '
+            using Pkg
+            Pkg.develop(PackageSpec(path=pwd()))
+            Pkg.instantiate()
+            Pkg.build()
+            Pkg.precompile()'
           sudo apt-get install imagemagick
           sudo apt-get install texlive-xetex
       - name: Generate Images
@@ -25,10 +30,15 @@ jobs:
           make all   -C src/images
           make clean -C src/images
         working-directory: docs
-      - name: Build and deploy Documentation
-        run: julia --project make.jl
-        working-directory: docs
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-docdeploy@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
           GKSwstype: 100
+      - run: |
+          julia --project=docs -e '
+            using Documenter: DocMeta, doctest
+            using GeometricIntegrators
+            DocMeta.setdocmeta!(GeometricIntegrators, :DocTestSetup, :(using GeometricIntegrators); recursive=true)
+            doctest(GeometricIntegrators)'
