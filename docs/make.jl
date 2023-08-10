@@ -13,7 +13,7 @@ bib = CitationBibliography(joinpath(@__DIR__, "src", "GeometricIntegrators.bib")
 
 DocMeta.setdocmeta!(GeometricIntegrators, :DocTestSetup, :(using GeometricIntegrators); recursive=true)
 
-weave("src/methods.jmd", out_path = "src", doctype = "github")
+weave(joinpath(@__DIR__, "src", "methods.jmd"), out_path = joinpath(@__DIR__, "src"), doctype = "github")
 
 makedocs(bib,
     sitename = "GeometricIntegrators.jl",
