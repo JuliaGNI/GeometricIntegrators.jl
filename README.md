@@ -3,12 +3,12 @@
 
 *Julia library of geometric integrators for differential equations.*
 
-[![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliagni.github.io/GeometricIntegrators.jl/stable/)
-[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://juliagni.github.io/GeometricIntegrators.jl/latest/)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliagni.github.io/GeometricIntegrators.jl/stable)
+[![Latest](https://img.shields.io/badge/docs-latest-blue.svg)](https://juliagni.github.io/GeometricIntegrators.jl/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 [![PkgEval Status](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/G/GeometricIntegrators.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/G/GeometricIntegrators.html)
 [![CI](https://github.com/JuliaGNI/GeometricIntegrators.jl/workflows/CI/badge.svg)](https://github.com/JuliaGNI/GeometricIntegrators.jl/actions?query=workflow:CI)
-[![codecov Status](https://codecov.io/gh/JuliaGNI/GeometricIntegrators.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaGNI/GeometricIntegrators.jl)
+[![Coverage](https://codecov.io/gh/JuliaGNI/GeometricIntegrators.jl/branch/main/graph/badge.svg?token=CBFbr4QfiD)](https://codecov.io/gh/JuliaGNI/GeometricIntegrators.jl)
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3648325.svg)](https://doi.org/10.5281/zenodo.3648325)
 
 GeometricIntegrators.jl is a library of geometric integrators for ordinary differential equations, stochastic differential equations and differential algebraic equations in Julia. Its main aim is the democratization and proliferation of geometric integrators, providing a comprehensive collection of standard and structure-preserving algorithms under a unified interface. Furthermore it serves as testbed for the implementation and verification of novel geometric integrators, in particular their analysis with respect to long-time stability and conservation of geometric structures. 

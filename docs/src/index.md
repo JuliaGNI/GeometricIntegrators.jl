@@ -4,10 +4,8 @@
 *Julia library of geometric integrators for differential equations.*
 
 [![PkgEval Status](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/G/GeometricIntegrators.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/G/GeometricIntegrators.html)
-![CI](https://github.com/JuliaGNI/GeometricIntegrators.jl/workflows/CI/badge.svg)
-[![Build Status](https://travis-ci.org/JuliaGNI/GeometricIntegrators.jl.svg?branch=master)](https://travis-ci.org/JuliaGNI/GeometricIntegrators.jl)
-[![Coverage Status](https://coveralls.io/repos/github/JuliaGNI/GeometricIntegrators.jl/badge.svg)](https://coveralls.io/github/JuliaGNI/GeometricIntegrators.jl)
-[![codecov Status](https://codecov.io/gh/JuliaGNI/GeometricIntegrators.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaGNI/GeometricIntegrators.jl)
+[![CI](https://github.com/JuliaGNI/GeometricIntegrators.jl/workflows/CI/badge.svg)](https://github.com/JuliaGNI/GeometricIntegrators.jl/actions?query=workflow:CI)
+[![Coverage](https://codecov.io/gh/JuliaGNI/GeometricIntegrators.jl/branch/main/graph/badge.svg?token=CBFbr4QfiD)](https://codecov.io/gh/JuliaGNI/GeometricIntegrators.jl)
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3648325.svg)](https://doi.org/10.5281/zenodo.3648325)
 
 
