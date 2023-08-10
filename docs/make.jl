@@ -90,5 +90,7 @@ makedocs(bib,
 
 deploydocs(
     repo   = "github.com/JuliaGNI/GeometricIntegrators.jl",
+    devurl = "latest",
+    devbranch = "main",
     push_preview = true,
 )
