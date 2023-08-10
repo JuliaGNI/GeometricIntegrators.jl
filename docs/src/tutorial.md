@@ -209,8 +209,7 @@ system. The solutions drifts away although it should follow closed orbits.
 For a Hamiltonian system, defined as a PODE, a different methods might be more
 appropriate, for example a symplectic Euler method,
 ```@example 1
-int = Integrator(pode, LobattoIIIAIIIB(2))
-sol = integrate(pode, int)
+sol = integrate(pode, LobattoIIIAIIIB(2))
 ```
 This creates a different integrator, which exploits the partitioned structure
 of the system. The solution return by the integrate step will also be a different
@@ -275,11 +274,11 @@ int = Integrator(prob, Gauss(1))
 ```
 Special integrators, such as Vartiational Partitioned Runge-Kutta (VPRK) methods, can be initialised by providing one or two tableaus, that is
 ```@example 1
-method = VPRK(TableauGauss(1))
+method = VPRK(Gauss(1))
 ```
 or
 ```@example 1
-method = VPRK(TableauLobattoIIIA(2), TableauLobattoIIIB(2))
+method = VPRK(LobattoIIIA(2), LobattoIIIB(2))
 ```
 For standard tableaus there also exist shortcuts, such as
 ```@example 1
