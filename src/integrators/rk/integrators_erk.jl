@@ -32,7 +32,6 @@ q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 """
 const IntegratorERK{DT,TT} = Integrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}}, <:ERK}
 
-initmethod(method::ERK) = method
 initmethod(method::ERKMethod) = ERK(method)
 
 function Base.show(io::IO, int::IntegratorERK)

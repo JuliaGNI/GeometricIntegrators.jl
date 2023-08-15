@@ -42,7 +42,6 @@ const IntegratorDIRK{DT,TT} = Integrator{<:Union{ODEProblem{DT,TT}, DAEProblem{D
 
 solversize(problem::Union{DAEProblem,ODEProblem}, ::DIRKMethod) = ndims(problem)
 
-initmethod(method::DIRK) = method
 initmethod(method::DIRKMethod) = DIRK(method)
 
 default_solver(::DIRKMethod) = Newton()

@@ -85,7 +85,6 @@ const IntegratorIPRK{DT,TT} = Integrator{<:Union{PODEProblem{DT,TT},HODEProblem{
 solversize(problem::Union{PODEProblem,HODEProblem}, method::IPRK) =
     2 * ndims(problem) * nstages(method)
 
-initmethod(method::IPRK) = method
 initmethod(method::IPRKMethod) = IPRK(method)
 
 default_solver(::IPRKMethod) = Newton()

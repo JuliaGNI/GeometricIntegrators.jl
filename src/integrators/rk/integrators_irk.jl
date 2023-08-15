@@ -28,6 +28,7 @@ struct IntegratorCacheIRK{DT,D,S} <: ODEIntegratorCache{DT,D}
 end
 
 nlsolution(cache::IntegratorCacheIRK) = cache.x
+
 reset!(cache::IntegratorCacheIRK, t, q, λ = missing) = copyto!(cache.q̄, q)
 
 
@@ -55,7 +56,6 @@ const IntegratorIRK{DT,TT} = Integrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT
 solversize(problem::Union{ODEProblem, DAEProblem, SubstepProblem}, method::IRKMethod) =
     ndims(problem) * nstages(method)
 
-initmethod(method::IRK) = method
 initmethod(method::IRKMethod) = IRK(method)
 
 default_solver(::IRKMethod) = Newton()

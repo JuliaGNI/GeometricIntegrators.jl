@@ -60,7 +60,6 @@ b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 """
 const IntegratorEPRK{DT,TT} = Integrator{<:PODEProblem{DT,TT}, <:EPRK}
 
-initmethod(method::EPRK) = method
 initmethod(method::EPRKMethod) = EPRK(method)
 
 function Base.show(io::IO, int::IntegratorEPRK)

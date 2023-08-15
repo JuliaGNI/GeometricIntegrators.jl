@@ -52,7 +52,6 @@ methods(c::Composition{<: GeometricMethod}, neqs) = Tuple(method(c) for _ in 1:n
 splitting(c::Composition) = c.splitting
 
 
-
 _solvers(methods::Tuple) = Tuple([default_solver(m) for m in methods])
 _iguesses(methods::Tuple) = Tuple([default_iguess(m) for m in methods])
 
