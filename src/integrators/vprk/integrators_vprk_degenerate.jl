@@ -185,7 +185,4 @@ function integrate_step!(int::IntegratorVPRKdegenerate{DT,TT}, sol::SolutionStep
 
     # compute projection vector fields
     compute_solution!(cache.x̄, sol.q, cache.ṽ, sol.p, int.pparams)
-
-    # copy solution to initial guess
-    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

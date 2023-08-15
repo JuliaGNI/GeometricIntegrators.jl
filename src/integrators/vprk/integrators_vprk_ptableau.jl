@@ -297,7 +297,4 @@ function integrate_step!(int::IntegratorVPRKpTableau{DT,TT}, sol::SolutionStepPO
     # compute final update
     update_solution!(sol.q, cache.V, tableau(int).b, timestep(int))
     update_solution!(sol.p, cache.F, tableau(int).b, timestep(int))
-
-    # copy solution to initial guess
-    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

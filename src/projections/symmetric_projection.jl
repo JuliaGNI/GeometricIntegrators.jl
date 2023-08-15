@@ -245,7 +245,4 @@ function integrate_step!(int::Integrator{<:EquationProblem, <:ProjectedMethod{<:
 
     # update solution step
     update!(nlsolution(int), int)
-
-    # update vector field for initial guess
-    update_vector_fields!(solstep(int), problem(int))
 end

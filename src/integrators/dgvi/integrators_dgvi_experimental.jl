@@ -481,10 +481,6 @@ function integrate_step!(int::IntegratorDGVIEXP{DT,TT}, sol::SolutionStepPODE{DT
     # println(int.q⁺ .- int.q)
     # println()
 
-    # copy solution to initial guess
-    update_vector_fields!(int.iguess, sol.t, sol.q, sol.v)
-    # update_vector_fields!(int.iguess, int.q, int.q⁻)
-
     # take care of periodic solutions
     # cut_periodic_solution!(int.q,  int.equation.periodicity)
     # cut_periodic_solution!(int.q⁻, int.equation.periodicity)

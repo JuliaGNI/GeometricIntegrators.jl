@@ -362,7 +362,4 @@ function integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::SolutionStep
     # add projection to solution
     update_solution!(sol.q, sol.q̃, sol.q̄, cache.Λ, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
     update_solution!(sol.p, sol.p̃, sol.p̄, cache.R, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
-
-    # copy solution to initial guess
-    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

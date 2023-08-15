@@ -224,7 +224,4 @@ function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::SolutionSt
 
     # add projection to solution
     project_solution!(int, sol, int.pparams.pparams[:R2], cache)
-
-    # copy solution to initial guess
-    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

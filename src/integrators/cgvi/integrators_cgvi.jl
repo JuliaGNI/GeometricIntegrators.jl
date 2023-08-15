@@ -391,7 +391,4 @@ function integrate_step!(int::IntegratorCGVI{DT,TT}, sol::SolutionStepPODE{DT,TT
 
     # compute final update
     update_solution!(sol, cache)
-
-    # copy solution to initial guess
-    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

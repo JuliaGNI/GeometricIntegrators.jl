@@ -56,12 +56,12 @@ module Integrators
 
 
     export GeometricIntegrator, Integrator
-    export ODEIntegrator, DAEIntegrator, SDEIntegrator,
-           PODEIntegrator, PDAEIntegrator, PSDEIntegrator,
-           IODEIntegrator, IDAEIntegrator,
-           HODEIntegrator, HDAEIntegrator,
-           LODEIntegrator, LDAEIntegrator,
-           SPSDEIntegrator
+    # export ODEIntegrator, DAEIntegrator, SDEIntegrator,
+    #        PODEIntegrator, PDAEIntegrator, PSDEIntegrator,
+    #        IODEIntegrator, IDAEIntegrator,
+    #        HODEIntegrator, HDAEIntegrator,
+    #        LODEIntegrator, LDAEIntegrator,
+    #        SPSDEIntegrator
 
     export IntegratorCache, IntegratorConstructor
     export equation, timestep
@@ -184,7 +184,6 @@ module Integrators
     include("integrators/dvi/integrators_dvrk.jl")
 
 
-    include("integrators/integrators.jl")
     include("integrators/methods.jl")
 
 

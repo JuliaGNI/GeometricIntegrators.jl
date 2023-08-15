@@ -370,7 +370,4 @@ function integrate_step!(int::IntegratorVPRKpLegendre{DT,TT}, sol::SolutionStepP
     # compute final update
     update_solution!(sol.q, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))
     update_solution!(sol.p, cache.F, tableau(int).p.b, tableau(int).p.b̂, timestep(int))
-
-    # copy solution to initial guess for next time step
-    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
 end

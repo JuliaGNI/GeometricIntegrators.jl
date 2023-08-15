@@ -210,9 +210,6 @@ function integrate_step!(int::IntegratorVPRKpInternal{DT,TT}, sol::SolutionStepP
     # add projection to solution
     project_solution!(int, sol, int.params.pparams[:R], cache)
 
-    # copy solution to initial guess
-    update_vector_fields!(int.iguess, sol.t, sol.q, sol.p, sol.v, sol.f)
-
     # copy internal stage variables
     # sol.internal.Q .= cache.Q
     # sol.internal.P .= cache.P
