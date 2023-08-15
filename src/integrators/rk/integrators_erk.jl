@@ -45,7 +45,7 @@ end
 
 
 function integrate_step!(
-    solstep::Union{SolutionStepODE{DT,TT}, SolutionStepDAE{DT,TT}, SubstepProblem{DT,TT}},
+    solstep::Union{SolutionStepODE{DT,TT}, SolutionStepDAE{DT,TT}},
     problem::Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}},
     method::ERK,
     caches::CacheDict,
