@@ -1,41 +1,38 @@
 
-# Problem Types
+# Equations
 
 The following data structures are all implemented in [GeometricEquations.jl](https://github.com/JuliaGNI/GeometricEquations.jl).
-Each problem type is derived from [`GeometricProblem`](@ref).
-
-## Geometric Problems
 
 ```@docs
-GeometricEquations.GeometricProblem
+GeometricEquations.GeometricEquation
 ```
 
 ## Ordinary Differential Equations
 
 ```@docs
-GeometricEquations.ODEProblem
-GeometricEquations.PODEProblem
-GeometricEquations.HODEProblem
-GeometricEquations.IODEProblem
-GeometricEquations.LODEProblem
-GeometricEquations.SODEProblem
+GeometricEquations.ODE
+GeometricEquations.PODE
+GeometricEquations.HODE
+GeometricEquations.IODE
+GeometricEquations.LODE
+GeometricEquations.SODE
 ```
 
 ## Differential Algebraic Equations
 
 ```@docs
-GeometricEquations.DAEProblem
-GeometricEquations.PDAEProblem
-GeometricEquations.HDAEProblem
-GeometricEquations.IDAEProblem
-GeometricEquations.LDAEProblem
-GeometricEquations.SPDAEProblem
+GeometricEquations.DAE
+GeometricEquations.PDAE
+GeometricEquations.HDAE
+GeometricEquations.IDAE
+GeometricEquations.LDAE
+GeometricEquations.SPDAE
 ```
 
 ## Stochastic Differential Equations
 
 ```@docs
-GeometricEquations.SDEProblem
-GeometricEquations.PSDEProblem
-GeometricEquations.SPSDEProblem
+GeometricEquations.SDE
+GeometricEquations.PSDE
+GeometricEquations.SPSDE
 ```
