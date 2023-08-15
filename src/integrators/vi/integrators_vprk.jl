@@ -34,11 +34,6 @@ initmethod(method::VPRKMethod) = Methods.VPRK(method)
 solversize(problem::VPRKProblem, method::VPRKMethod) =
     ndims(problem) * nstages(method)
 
-function initsolver(::NewtonMethod, method::VPRKMethod, caches::CacheDict{<:VPRKProblem})
-    # create nonlinear solver
-    NewtonSolver(zero(nlsolution(caches)), zero(nlsolution(caches)); linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
-end
-
 
 # function Integrators.get_internal_variables(int::IntegratorVPRK{DT,TT,D,S}) where {DT, TT, D, S}
 #     Q = create_internal_stage_vector(DT, D, S)

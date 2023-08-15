@@ -46,15 +46,6 @@ default_solver(::DVIA) = Newton()
 default_iguess(::DVIA) = HermiteExtrapolation()
 
 
-function initsolver(::Newton, solstep::SolutionStepPODE{DT}, problem::Union{IODEProblem,LODEProblem}, method::DVIA, caches::CacheDict) where {DT}
-    # create wrapper function f!(b,x)
-    f! = (b,x) -> residual!(b, x, solstep, problem, method, caches)
-
-    # create nonlinear solver
-    NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
-end
-
-
 function Base.show(io::IO, int::IntegratorDVIA)
     print(io, "\nDegenerate Variational Integrator (Euler-A) with:\n")
     print(io, "   Timestep: $(timestep(int))\n")

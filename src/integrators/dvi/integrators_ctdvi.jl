@@ -51,15 +51,6 @@ default_solver(::CTDVI) = Newton()
 default_iguess(::CTDVI) = HermiteExtrapolation()
 
 
-function initsolver(::Newton, solstep::SolutionStepPODE{DT}, problem::Union{IODEProblem,LODEProblem}, method::CTDVI, caches::CacheDict) where {DT}
-    # create wrapper function f!(b,x)
-    f! = (b,x) -> residual!(b, x, solstep, problem, method, caches)
-
-    # create nonlinear solver
-    NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
-end
-
-
 function Base.show(io::IO, int::IntegratorCTDVI)
     print(io, "\nTrapezoidal Degenerate Variational Integrator with:\n")
     print(io, "   Timestep: $(timestep(int))\n")

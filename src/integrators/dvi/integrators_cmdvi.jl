@@ -46,15 +46,6 @@ default_solver(::CMDVI) = Newton()
 default_iguess(::CMDVI) = HermiteExtrapolation()
 
 
-function initsolver(::Newton, solstep::SolutionStepPODE{DT}, problem::Union{IODEProblem,LODEProblem}, method::CMDVI, caches::CacheDict) where {DT}
-    # create wrapper function f!(b,x)
-    f! = (b,x) -> residual!(b, x, solstep, problem, method, caches)
-
-    # create nonlinear solver
-    NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
-end
-
-
 function Base.show(io::IO, int::IntegratorCMDVI)
     print(io, "\nMidpoint Degenerate Variational Integrator with:\n")
     print(io, "   Timestep: $(timestep(int))\n")

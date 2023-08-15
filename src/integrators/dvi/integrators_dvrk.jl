@@ -79,15 +79,6 @@ default_solver(::DVRK) = Newton()
 default_iguess(::DVRK) = HermiteExtrapolation()
 
 
-function initsolver(::Newton, solstep::SolutionStepPODE{DT}, problem::Union{IODEProblem,LODEProblem}, method::DVRK, caches::CacheDict) where {DT}
-    # create wrapper function f!(b,x)
-    f! = (b,x) -> residual!(b, x, solstep, problem, method, caches)
-
-    # create nonlinear solver
-    NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
-end
-
-
 function Base.show(io::IO, int::IntegratorDVRK)
     print(io, "\nRunge-Kutta Integrator for Degenerate Lagrangians with:\n")
     print(io, "   Timestep: $(timestep(int))\n")

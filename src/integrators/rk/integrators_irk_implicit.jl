@@ -110,11 +110,6 @@ function solversize(problem::Union{IODEProblem,LODEProblem}, method::IRKMethod)
     return n
 end
 
-function initsolver(::NewtonMethod, method::IRKMethod, caches::CacheDict{<:Union{IODEProblem,LODEProblem}})
-    # create nonlinear solver
-    NewtonSolver(zero(nlsolution(caches)), zero(nlsolution(caches)); linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
-end
-
 
 function Base.show(io::IO, int::IntegratorIRKimplicit)
     print(io, "\nRunge-Kutta Integrator for Implicit Equations with:\n")

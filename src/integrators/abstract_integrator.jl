@@ -19,6 +19,12 @@ abstract type LDAEIntegrator{dType, tType} <: IDAEIntegrator{dType, tType} end
 
 struct NoSolver <: SolverMethod end
 
+default_options() = Options(
+    min_iterations = 1,
+    x_abstol = 8eps(),
+    f_abstol = 8eps(),
+)
+
 default_solver(::GeometricMethod) = NoSolver()
 # default_solver(::Nothing) = NoSolver()
 
@@ -32,10 +38,10 @@ initmethod(method::GeometricMethod, ::AbstractProblem) = initmethod(method)
 initsolver(::SolverMethod, ::GeometricMethod, ::CacheDict) = NoSolver()
 
 # create nonlinear solver
-function initsolver(::NewtonMethod, ::GeometricMethod, caches::CacheDict; kwargs...)
+function initsolver(::NewtonMethod, ::GeometricMethod, caches::CacheDict; config = default_options(), kwargs...)
     x = zero(nlsolution(caches))
     y = zero(nlsolution(caches))
-    NewtonSolver(x, y; linesearch = Backtracking(), config = Options(min_iterations = 1), kwargs...)
+    NewtonSolver(x, y; linesearch = Backtracking(), config = config, kwargs...)
 end
 
 

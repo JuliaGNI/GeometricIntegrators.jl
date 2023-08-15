@@ -82,15 +82,6 @@ solversize(problem::Union{IODEProblem,LODEProblem}, method::IPRK) =
     ndims(problem) * nstages(method)
 
 
-function initsolver(::Newton, solstep::SolutionStepPODE{DT}, problem::Union{IODEProblem,LODEProblem}, method::IPRKMethod, caches::CacheDict) where {DT}
-    # create wrapper function f!(b,x)
-    f! = (b,x) -> residual!(b, x, solstep, problem, method, caches)
-
-    # create nonlinear solver
-    NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
-end
-
-
 function Base.show(io::IO, int::IntegratorIPRKimplicit)
     print(io, "\nPartitioned Runge-Kutta Integrator for Implicit Equations with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
