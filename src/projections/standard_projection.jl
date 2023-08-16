@@ -37,7 +37,7 @@ end
 default_solver(::ProjectedMethod{<:StandardProjection}) = Newton()
 
 
-const IntegratorStandardProjection{DT,TT} = GeometricIntegrator{<:EquationProblem{DT,TT}, <:ProjectedMethod{<:StandardProjection}}
+const IntegratorStandardProjection{DT,TT} = ProjectionIntegrator{<:EquationProblem{DT,TT}, <:ProjectedMethod{<:StandardProjection}}
 
 
 # function Base.show(io::IO, int::ProjectedMethod{<:StandardProjection})
@@ -191,7 +191,7 @@ function postprojection!(
 end
 
 
-function integrate_step!(int::GeometricIntegrator{<:EquationProblem, <:ProjectedMethod{<:StandardProjection}})
+function integrate_step!(int::IntegratorStandardProjection)
     # add perturbation for next time step to solution
     # (same vector field as previous time step)
     preprojection!(solstep(int), problem(int), projection(method(int)), caches(int))
