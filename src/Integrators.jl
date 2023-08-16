@@ -55,26 +55,20 @@ module Integrators
     include("integrators/abstract_coefficients.jl")
 
 
-    export GeometricIntegrator, GeometricIntegrator
-    # export ODEIntegrator, DAEIntegrator, SDEIntegrator,
-    #        PODEIntegrator, PDAEIntegrator, PSDEIntegrator,
-    #        IODEIntegrator, IDAEIntegrator,
-    #        HODEIntegrator, HDAEIntegrator,
-    #        LODEIntegrator, LDAEIntegrator,
-    #        SPSDEIntegrator
-
     export IntegratorCache, IntegratorConstructor
     export equation, timestep
 
     include("integrators/integrator_cache.jl")
-    include("integrators/abstract_integrator.jl")
+
+
+    export NoSolver, NoProjection
+    export default_solver, default_iguess, default_projection
+
+    include("integrators/methods.jl")
 
 
     export GeometricIntegrator
     export integrate, integrate!, integrate_step!
-    
-    export NoSolver, NoProjection
-    export default_solver, default_iguess, default_projection
 
     include("integrators/integrator.jl")
 
@@ -182,9 +176,6 @@ module Integrators
     include("integrators/dvi/integrators_cmdvi.jl")
     include("integrators/dvi/integrators_ctdvi.jl")
     include("integrators/dvi/integrators_dvrk.jl")
-
-
-    include("integrators/methods.jl")
 
 
     include("projections/cache.jl")

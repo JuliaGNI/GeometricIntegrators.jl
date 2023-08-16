@@ -16,7 +16,7 @@ Automatically construct the appropriate atomic solution based on the
 given `equation` or `solution` type. If an `integrator` is provided as,
 the `internal` field of the atomic solution is constructed according to
 the internal state of the integrator as obtained from the function
-`get_internal_variables`.
+`internal_variables`.
 
 """
 abstract type SolutionStep{dType <: Number, tType <: Real, aType <: AbstractArray{dType}} end

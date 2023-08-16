@@ -34,7 +34,7 @@ solversize(problem::VPRKProblem, method::VPRKMethod) =
     ndims(problem) * nstages(method)
 
 
-# function Integrators.get_internal_variables(int::IntegratorVPRK{DT,TT,D,S}) where {DT, TT, D, S}
+# function Integrators.internal_variables(int::IntegratorVPRK{DT,TT,D,S}) where {DT, TT, D, S}
 #     Q = create_internal_stage_vector(DT, D, S)
 #     P = create_internal_stage_vector(DT, D, S)
 #     V = create_internal_stage_vector(DT, D, S)

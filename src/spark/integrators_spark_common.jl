@@ -1,5 +1,5 @@
 
-function Integrators.get_internal_variables(method::AbstractSPARKMethod, problem::AbstractSPARKProblem{DT,TT}) where {DT,TT}
+function Integrators.internal_variables(method::AbstractSPARKMethod, problem::AbstractSPARKProblem{DT,TT}) where {DT,TT}
     S = nstages(method)
     R = pstages(method)
     D = ndims(problem)
