@@ -76,7 +76,7 @@ b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 \end{aligned}
 ```
 """
-const IntegratorIPRKimplicit{DT,TT} = Integrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:IPRK}
+const IntegratorIPRKimplicit{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:IPRK}
 
 solversize(problem::Union{IODEProblem,LODEProblem}, method::IPRK) =
     ndims(problem) * nstages(method)

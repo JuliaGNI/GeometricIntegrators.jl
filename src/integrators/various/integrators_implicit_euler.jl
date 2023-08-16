@@ -41,7 +41,7 @@ end
 @inline CacheType(ST, problem::AbstractProblem, method::ImplicitEuler) = IntegratorCacheImplicitEuler{ST, ndims(problem)}
 
 
-const IntegratorImplicitEuler{DT,TT} = Integrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}}, <:ImplicitEuler}
+const IntegratorImplicitEuler{DT,TT} = GeometricIntegrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}}, <:ImplicitEuler}
 
 solversize(problem::Union{ODEProblem, DAEProblem, SubstepProblem}, ::ImplicitEuler) = ndims(problem)
 

@@ -38,7 +38,7 @@ q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 \end{aligned}
 ```
 """
-const IntegratorDIRK{DT,TT} = Integrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}}, <:DIRKMethod}
+const IntegratorDIRK{DT,TT} = GeometricIntegrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}}, <:DIRKMethod}
 
 solversize(problem::Union{DAEProblem,ODEProblem}, ::DIRKMethod) = ndims(problem)
 

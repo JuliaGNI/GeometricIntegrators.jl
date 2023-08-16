@@ -30,7 +30,7 @@ q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 \end{aligned}
 ```
 """
-const IntegratorERK{DT,TT} = Integrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}}, <:ERK}
+const IntegratorERK{DT,TT} = GeometricIntegrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}}, <:ERK}
 
 initmethod(method::ERKMethod) = ERK(method)
 

@@ -89,12 +89,12 @@ function CompositionIntegrator(
     f, c = coefficients(problem, splitting)
 
     # construct composition integrators
-    subints = Tuple(Integrator(SubstepProblem(problem, c[i], f[i]), methods[f[i]]; solstp = solstep) for i in eachindex(f,c))
+    subints = Tuple(GeometricIntegrator(SubstepProblem(problem, c[i], f[i]), methods[f[i]]; solstp = solstep) for i in eachindex(f,c))
 
     CompositionIntegrator(problem, subints, solstep, splitting)
 end
 
-function Integrator(problem::SODEProblem, comp::Composition; kwargs...)
+function GeometricIntegrator(problem::SODEProblem, comp::Composition; kwargs...)
     CompositionIntegrator(problem, splitting(comp), methods(comp, _neqs(problem)); kwargs...)
 end
 

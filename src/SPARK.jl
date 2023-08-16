@@ -23,7 +23,7 @@ module SPARK
 
     import ..Integrators
 
-    import ..Integrators: Integrator, PDAEIntegrator, Newton
+    import ..Integrators: GeometricIntegrator, Newton
     import ..Integrators: InitialGuess, Extrapolation, HermiteExtrapolation
     import ..Integrators: initialguess!, initial_guess!, integrate_step!, residual!
     import ..Integrators: CacheDict, Cache, CacheType, IDAEIntegratorCache

@@ -80,7 +80,7 @@ b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 \end{aligned}
 ```
 """
-const IntegratorIPRK{DT,TT} = Integrator{<:Union{PODEProblem{DT,TT},HODEProblem{DT,TT}}, <:IPRK}
+const IntegratorIPRK{DT,TT} = GeometricIntegrator{<:Union{PODEProblem{DT,TT},HODEProblem{DT,TT}}, <:IPRK}
 
 solversize(problem::Union{PODEProblem,HODEProblem}, method::IPRK) =
     2 * ndims(problem) * nstages(method)

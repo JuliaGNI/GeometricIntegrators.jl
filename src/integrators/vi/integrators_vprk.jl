@@ -1,4 +1,3 @@
-
 @doc raw"""
 Variational Partitioned Runge-Kutta Integrator.
 
@@ -22,7 +21,7 @@ b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
 \end{aligned}
 ```
 """
-const IntegratorVPRK{DT,TT} = Integrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:VPRKMethod}
+const IntegratorVPRK{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:VPRKMethod}
 
 description(::IntegratorVPRK) = "Variational Partitioned Runge-Kutta Integrator"
 

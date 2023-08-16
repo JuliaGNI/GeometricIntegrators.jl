@@ -1,20 +1,5 @@
 
-abstract type GeometricIntegrator <: AbstractIntegrator end
-
-abstract type DeterministicIntegrator <: GeometricIntegrator end
-
-abstract type ODEIntegrator{dType, tType} <: DeterministicIntegrator end
-abstract type DAEIntegrator{dType, tType} <: DeterministicIntegrator end
-abstract type PODEIntegrator{dType, tType} <: DeterministicIntegrator end
-abstract type PDAEIntegrator{dType, tType} <: DeterministicIntegrator end
-
-abstract type IODEIntegrator{dType, tType} <: PODEIntegrator{dType, tType} end
-abstract type IDAEIntegrator{dType, tType} <: PDAEIntegrator{dType, tType} end
-abstract type HODEIntegrator{dType, tType} <: PODEIntegrator{dType, tType} end
-abstract type HDAEIntegrator{dType, tType} <: PDAEIntegrator{dType, tType} end
-abstract type LODEIntegrator{dType, tType} <: IODEIntegrator{dType, tType} end
-abstract type LDAEIntegrator{dType, tType} <: IDAEIntegrator{dType, tType} end
-
+abstract type DeterministicIntegrator <: AbstractIntegrator end
 
 
 struct NoSolver <: SolverMethod end
@@ -54,7 +39,7 @@ end
 
 # Apply integrator for ntime time steps and return solution.
 function integrate(problem::AbstractProblem, method::GeometricMethod; kwargs...)
-    integrator = Integrator(problem, method; kwargs...)
+    integrator = GeometricIntegrator(problem, method; kwargs...)
     solution = Solution(problem; kwargs...)
     integrate!(solution, integrator)
 end
@@ -63,19 +48,19 @@ function integrate(problems::GeometricEnsemble, method::GeometricMethod; kwargs.
     solutions = Solution(problems; kwargs...)
 
     for (problem, solution) in zip(problems, solutions)
-        integrator = Integrator(problem, method; kwargs...)
+        integrator = GeometricIntegrator(problem, method; kwargs...)
         integrate!(solution, integrator)
     end
 
     return solutions
 end
 
-integrate_step!(int::GeometricIntegrator) = integrate_step!(solstep(int), problem(int), method(int), caches(int), solver(int))
+integrate_step!(int::DeterministicIntegrator) = integrate_step!(solstep(int), problem(int), method(int), caches(int), solver(int))
 
 
 # Parts of one integration step that are common to deterministic and stochastic equations.
 # function integrate!(solstep::SolutionStep, problem::EquationProblem, method::GeometricMethod, caches::CacheDict, solver::Union{SolverMethod, NonlinearSolver}, iguess::Union{InitialGuess,Extrapolation})
-function integrate!(int::GeometricIntegrator)
+function integrate!(int::DeterministicIntegrator)
     # reset solution step
     reset!(solstep(int), timestep(int))
 
@@ -101,7 +86,7 @@ Solve for time steps n with n₁ ≤ n ≤ n₂.
 integrate!(solution, integrator, n₁, n₂)
 ```
 """
-function integrate!(sol::GeometricSolution, int::GeometricIntegrator, n₁::Int, n₂::Int)
+function integrate!(sol::GeometricSolution, int::DeterministicIntegrator, n₁::Int, n₂::Int)
     # check time steps range for consistency
     @assert n₁ ≥ 1
     @assert n₂ ≥ n₁
@@ -149,7 +134,7 @@ Solve for all time steps n:
 integrate!(solution, integrator)
 ```
 """
-function integrate!(sol::GeometricSolution, int::GeometricIntegrator)
+function integrate!(sol::GeometricSolution, int::DeterministicIntegrator)
     integrate!(sol, int, 1, ntime(sol))
 end
 
@@ -184,7 +169,7 @@ Returns a `NamedTuple` containing all internal variables of an integrator that
 shall be stored in an [`SolutionStep`](@ref). If there is no method for a
 specific integrator implemented an empty `NamedTuple()` is returned.
 """
-get_internal_variables(::GeometricIntegrator) = NamedTuple()
+get_internal_variables(::DeterministicIntegrator) = NamedTuple()
 get_internal_variables(::Nothing) = NamedTuple()
 
 

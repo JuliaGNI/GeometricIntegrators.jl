@@ -92,7 +92,7 @@ F^1_{n,i} + F^2_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i 
 \end{aligned}
 ```
 """
-const IntegratorSLRK{DT,TT} = Integrator{<:LDAEProblem{DT,TT}, <:SLRK}
+const IntegratorSLRK{DT,TT} = GeometricIntegrator{<:LDAEProblem{DT,TT}, <:SLRK}
 
 
 # function Integrators.initsolver(::Newton, solstep::SolutionStepPDAE{DT}, problem::LDAEProblem, method::SLRK, caches::CacheDict) where {DT}

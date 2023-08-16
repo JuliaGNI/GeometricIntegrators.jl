@@ -7,7 +7,7 @@ function symplecticity_conditions end
 # GeometricIntegrator(problem::Union{IODEProblem,LODEProblem}, method::RKMethod; kwargs...) = GeometricIntegrator(problem, Methods.tableau(method); kwargs...)
 # GeometricIntegrator(problem::Union{IODEProblem,LODEProblem}, method::PRKMethod; kwargs...) = GeometricIntegrator(problem, Methods.tableau(method); kwargs...)
 
-GeometricIntegrator(problem::LODEProblem, method::FLRK; kwargs...) = IntegratorFLRK(problem, Methods.tableau(method); kwargs...)
+# GeometricIntegrator(problem::LODEProblem, method::FLRK; kwargs...) = IntegratorFLRK(problem, Methods.tableau(method); kwargs...)
 
 # GeometricIntegrator(problem::Union{IODEProblem,LODEProblem}, method::VPRKMethod; kwargs...) = IntegratorVPRK(problem, Methods.tableau(method), nullvector(method); kwargs...)
 

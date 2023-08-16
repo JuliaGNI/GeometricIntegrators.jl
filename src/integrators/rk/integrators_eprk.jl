@@ -58,7 +58,7 @@ b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 \end{aligned}
 ```
 """
-const IntegratorEPRK{DT,TT} = Integrator{<:PODEProblem{DT,TT}, <:EPRK}
+const IntegratorEPRK{DT,TT} = GeometricIntegrator{<:PODEProblem{DT,TT}, <:EPRK}
 
 initmethod(method::EPRKMethod) = EPRK(method)
 

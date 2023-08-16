@@ -79,7 +79,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{aligned}
 ```
 """
-const IntegratorHSPARKsecondary{DT,TT} = Integrator{<:HDAEProblem{DT,TT}, <:HSPARKsecondary}
+const IntegratorHSPARKsecondary{DT,TT} = GeometricIntegrator{<:HDAEProblem{DT,TT}, <:HSPARKsecondary}
 
 
 function Base.show(io::IO, int::IntegratorHSPARKsecondary)

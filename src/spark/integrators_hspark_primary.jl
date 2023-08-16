@@ -43,7 +43,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{aligned}
 ```
 """
-const IntegratorHSPARKprimary{DT,TT} = Integrator{<:Union{PDAEProblem{DT,TT},HDAEProblem{DT,TT}}, <:HSPARKprimary}
+const IntegratorHSPARKprimary{DT,TT} = GeometricIntegrator{<:Union{PDAEProblem{DT,TT},HDAEProblem{DT,TT}}, <:HSPARKprimary}
 
 function Base.show(io::IO, int::IntegratorHSPARKprimary)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for Hamiltonian systems")

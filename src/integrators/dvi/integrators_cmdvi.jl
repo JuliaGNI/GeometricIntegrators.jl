@@ -39,7 +39,7 @@ end
 """
 Midpoint Degenerate Variational Integrator.
 """
-const IntegratorCMDVI{DT,TT} = Integrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:CMDVI}
+const IntegratorCMDVI{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:CMDVI}
 
 
 default_solver(::CMDVI) = Newton()

@@ -55,7 +55,7 @@ module Integrators
     include("integrators/abstract_coefficients.jl")
 
 
-    export GeometricIntegrator, Integrator
+    export GeometricIntegrator, GeometricIntegrator
     # export ODEIntegrator, DAEIntegrator, SDEIntegrator,
     #        PODEIntegrator, PDAEIntegrator, PSDEIntegrator,
     #        IODEIntegrator, IDAEIntegrator,
@@ -70,7 +70,7 @@ module Integrators
     include("integrators/abstract_integrator.jl")
 
 
-    export Integrator
+    export GeometricIntegrator
     export integrate, integrate!, integrate_step!
     
     export NoSolver, NoProjection

@@ -95,7 +95,7 @@ F^1_{n,i} + F^2_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i 
 \end{aligned}
 ```
 """
-const IntegratorVSPARKsecondary{DT,TT} = Integrator{<:LDAEProblem{DT,TT}, <:VSPARKsecondary}
+const IntegratorVSPARKsecondary{DT,TT} = GeometricIntegrator{<:LDAEProblem{DT,TT}, <:VSPARKsecondary}
 
 function Base.show(io::IO, int::IntegratorVSPARKsecondary)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for degenerate")

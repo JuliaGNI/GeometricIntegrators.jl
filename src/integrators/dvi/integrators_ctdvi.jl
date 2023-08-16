@@ -44,7 +44,7 @@ end
 """
 Trapezoidal Degenerate Variational Integrator.
 """
-const IntegratorCTDVI{DT,TT} = Integrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:CTDVI}
+const IntegratorCTDVI{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:CTDVI}
 
 
 default_solver(::CTDVI) = Newton()

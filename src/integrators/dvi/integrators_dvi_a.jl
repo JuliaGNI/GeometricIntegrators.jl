@@ -39,7 +39,7 @@ end
 """
 Symplectic Euler-A Degenerate Variational Integrator.
 """
-const IntegratorDVIA{DT,TT} = Integrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:DVIA}
+const IntegratorDVIA{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:DVIA}
 
 
 default_solver(::DVIA) = Newton()

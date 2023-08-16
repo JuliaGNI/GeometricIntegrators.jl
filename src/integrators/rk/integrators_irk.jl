@@ -51,7 +51,7 @@ q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 \end{aligned}
 ```
 """
-const IntegratorIRK{DT,TT} = Integrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}}, <:IRKMethod}
+const IntegratorIRK{DT,TT} = GeometricIntegrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}}, <:IRKMethod}
 
 solversize(problem::Union{ODEProblem, DAEProblem, SubstepProblem}, method::IRKMethod) =
     ndims(problem) * nstages(method)

@@ -9,8 +9,8 @@ ref  = exact_solution(odeproblem())
 sode1 = SubstepProblem(sode, one(timestep(sode)), 1)
 sode2 = SubstepProblem(sode, one(timestep(sode)), 2)
 
-@test_nowarn Integrator(sode1, ExactSolution())
-@test_nowarn Integrator(sode2, ExactSolution())
+@test_nowarn  GeometricIntegrator(sode1, ExactSolution())
+@test_nowarn  GeometricIntegrator(sode2, ExactSolution())
 
 
 ssol = integrate(sode, LieA())

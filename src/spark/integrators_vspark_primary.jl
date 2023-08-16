@@ -114,7 +114,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{aligned}
 ```
 """
-const IntegratorVSPARKprimary{DT,TT} = Integrator{<:Union{IDAEProblem{DT,TT},LDAEProblem{DT,TT}}, <:VSPARKprimary}
+const IntegratorVSPARKprimary{DT,TT} = GeometricIntegrator{<:Union{IDAEProblem{DT,TT},LDAEProblem{DT,TT}}, <:VSPARKprimary}
 
 function Base.show(io::IO, int::IntegratorVSPARKprimary)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for Variational systems")

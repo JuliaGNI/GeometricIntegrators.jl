@@ -39,7 +39,7 @@ end
 """
 Symplectic Euler-B Degenerate Variational Integrator.
 """
-const IntegratorDVIB{DT,TT} = Integrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:DVIB}
+const IntegratorDVIB{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:DVIB}
 
 
 default_solver(::DVIB) = Newton()

@@ -148,29 +148,29 @@ lode = lodeproblem()
     @test typeof(VPRKLobattoIIIGIIIḠ(5)) <: VPRKMethod
 
 
-    @test typeof(Integrator(iode, VPSRK3())) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKGauss(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPSRK3())) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKGauss(2))) <: IntegratorVPRK
 
-    @test typeof(Integrator(iode, VPRKLobattoIII(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIA(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIB(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIC(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIID(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIE(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIF(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIG(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIII(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIA(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIB(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIC(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIID(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIE(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIF(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIG(2))) <: IntegratorVPRK
 
-    @test typeof(Integrator(iode, VPRKLobattoIIIAIIIB(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIBIIIA(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIAIIIĀ(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIBIIIB̄(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIICIIIC̄(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIC̄IIIC(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIDIIID̄(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIEIIIĒ(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIFIIIF̄(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIF̄IIIF(2))) <: IntegratorVPRK
-    @test typeof(Integrator(iode, VPRKLobattoIIIGIIIḠ(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIAIIIB(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIBIIIA(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIAIIIĀ(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIBIIIB̄(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIICIIIC̄(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIC̄IIIC(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIDIIID̄(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIEIIIĒ(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIFIIIF̄(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIF̄IIIF(2))) <: IntegratorVPRK
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIGIIIḠ(2))) <: IntegratorVPRK
 
 end
 
