@@ -26,8 +26,10 @@ module Integrators
     import CompactBasisFunctions: Basis
     import CompactBasisFunctions: nbasis
 
-    import GeometricBase: description, reference, nconstraints, tableau, reset!
+    import GeometricBase: description, reference, tableau
+    import GeometricBase: equations, nconstraints, timestep
     import GeometricBase: integrate, integrate!
+    import GeometricBase: reset!
     import GeometricBase.Utils: @big, @define, compensated_summation
     
     import RungeKutta
@@ -179,7 +181,7 @@ module Integrators
 
 
     include("projections/cache.jl")
-    include("projections/common.jl")
+    include("projections/projection.jl")
     include("projections/midpoint_projection.jl")
     include("projections/standard_projection.jl")
     include("projections/symmetric_projection.jl")

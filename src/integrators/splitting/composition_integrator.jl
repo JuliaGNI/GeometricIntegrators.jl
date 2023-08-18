@@ -1,3 +1,33 @@
+struct Composition{MT, ST <: AbstractSplittingMethod} <: SODEMethod
+    methods::MT
+    splitting::ST
+end
+
+Composition(splitting::AbstractSplittingMethod) = Composition(ExactSolution(), splitting)
+
+method(c::Composition{<: Tuple}, i::Int) = c.methods[i]
+method(c::Composition{<: GeometricMethod}, args...) = c.methods
+
+function methods(c::Composition{<: Tuple}, neqs)
+    @assert neqs == length(c.methods)
+    return c.methods
+end
+
+methods(c::Composition{<: GeometricMethod}, neqs) = Tuple(method(c) for _ in 1:neqs)
+
+splitting(c::Composition) = c.splitting
+
+
+_solvers(methods::Tuple) = Tuple([default_solver(m) for m in methods])
+_iguesses(methods::Tuple) = Tuple([default_iguess(m) for m in methods])
+
+_neqs(::Any) = 0
+_neqs(::Nothing) = 0
+_neqs(eqs::Tuple) = length(eqs)
+_neqs(equ::SODE) = nsteps(equ)
+_neqs(problem::SODEProblem) = nsteps(problem)
+
+
 @doc raw"""
 Composition integrator for the solution of initial value problems
 ```math
@@ -32,45 +62,17 @@ In order to include exact solutions in the composition, the [`IntegratorExactODE
 implements the general integrator interface.
 
 """
-struct Composition{MT, ST <: AbstractSplittingMethod} <: SODEMethod
-    methods::MT
-    splitting::ST
-end
-
-Composition(splitting::AbstractSplittingMethod) = Composition(ExactSolution(), splitting)
-
-method(c::Composition{<: Tuple}, i::Int) = c.methods[i]
-method(c::Composition{<: GeometricMethod}, args...) = c.methods
-
-function methods(c::Composition{<: Tuple}, neqs)
-    @assert neqs == length(c.methods)
-    return c.methods
-end
-
-methods(c::Composition{<: GeometricMethod}, neqs) = Tuple(method(c) for _ in 1:neqs)
-
-splitting(c::Composition) = c.splitting
-
-
-_solvers(methods::Tuple) = Tuple([default_solver(m) for m in methods])
-_iguesses(methods::Tuple) = Tuple([default_iguess(m) for m in methods])
-
-_neqs(::Any) = 0
-_neqs(::Nothing) = 0
-_neqs(eqs::Tuple) = length(eqs)
-_neqs(equ::SODE) = nsteps(equ)
-_neqs(problem::SODEProblem) = nsteps(problem)
-
-
-struct CompositionIntegrator{PT,SIT,SST,ST} <: DeterministicIntegrator
+struct CompositionIntegrator{
+        PT <: SODEProblem,
+        MT <: AbstractSplittingMethod,
+        SIT <: Tuple,
+        SST <: SolutionStep
+    } <: DeterministicIntegrator
+    
     problem::PT
+    method::MT
     subints::SIT
     solstep::SST
-    splitting::ST
-
-    # function CompositionIntegrator(problem, subints, solstep, splitting)
-
-    # end
 end
 
 function CompositionIntegrator(
@@ -91,7 +93,7 @@ function CompositionIntegrator(
     # construct composition integrators
     subints = Tuple(GeometricIntegrator(SubstepProblem(problem, c[i], f[i]), methods[f[i]]; solstp = solstep) for i in eachindex(f,c))
 
-    CompositionIntegrator(problem, subints, solstep, splitting)
+    CompositionIntegrator(problem, splitting, subints, solstep)
 end
 
 function GeometricIntegrator(problem::SODEProblem, comp::Composition; kwargs...)
@@ -102,10 +104,11 @@ end
 problem(int::CompositionIntegrator) = int.problem
 solstep(int::CompositionIntegrator) = int.solstep
 subints(int::CompositionIntegrator) = int.subints
+method(int::CompositionIntegrator) = int.method
 
 Base.ndims(int::CompositionIntegrator) = ndims(problem(int))
 
-GeometricBase.timestep(int::CompositionIntegrator) = timestep(problem(int))
+timestep(int::CompositionIntegrator) = timestep(problem(int))
 
 initial_guess!(::CompositionIntegrator) = nothing
 

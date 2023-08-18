@@ -11,7 +11,7 @@ default_solver(::ProjectedMethod{<:MidpointProjection}) = Newton()
 default_iguess(::ProjectedMethod{<:MidpointProjection}) = HermiteExtrapolation()
 
 
-const IntegratorMidpointProjection{DT,TT} = GeometricIntegrator{<:EquationProblem{DT,TT}, <:ProjectedMethod{<:MidpointProjection}}
+const IntegratorMidpointProjection{DT,TT} = ProjectionIntegrator{<:EquationProblem{DT,TT}, <:ProjectedMethod{<:MidpointProjection}}
 
 # TODO: Try to disable this, once everything works!
 function initsolver(::NewtonMethod, ::ProjectedMethod{<:MidpointProjection}, caches::CacheDict; kwargs...)
@@ -225,7 +225,7 @@ function update!(x::AbstractVector{ST}, int::IntegratorMidpointProjection) where
 end
 
 
-function integrate_step!(int::GeometricIntegrator{<:EquationProblem, <:ProjectedMethod{<:MidpointProjection}})
+function integrate_step!(int::IntegratorMidpointProjection)
     # call nonlinear solver for projection
     solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
 
