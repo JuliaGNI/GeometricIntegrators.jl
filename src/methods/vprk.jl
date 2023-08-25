@@ -17,12 +17,13 @@ isimplicit(method::VPRKMethod) = RungeKutta.isimplicit(tableau(method))
 issymmetric(method::VPRKMethod) = RungeKutta.issymmetric(tableau(method))
 issymplectic(method::VPRKMethod) = RungeKutta.issymplectic(tableau(method))
 
+print_reference(io, method::VPRKMethod) = try ismissing(reference(tableau(method))) || print(io, reference(tableau(method))) catch MethodError String("") end
 
 function Base.show(io::IO, method::VPRKMethod)
     print(io, "\nVariational Partitioned Runge-Kutta Method with Tableau: $(description(tableau(method)))\n")
     print(io, string(tableau(method).q))
     print(io, string(tableau(method).p))
-    ismissing(reference(tableau(method))) || print(io, reference(tableau(method)))
+    print_reference(io, method)
 end
 
 

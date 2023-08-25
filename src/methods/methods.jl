@@ -48,3 +48,5 @@ issymmetric(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.issymmetric
 issymplectic(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.issymplectic(t()) : missing
 isenergypreserving(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isenergypreserving(t()) : missing
 isstifflyaccurate(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isstifflyaccurate(t()) : missing
+
+print_reference(io, method::GeometricMethod) = try ismissing(reference(method)) || print(io, reference(method)) catch MethodError String("") end

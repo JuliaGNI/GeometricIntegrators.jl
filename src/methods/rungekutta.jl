@@ -22,6 +22,8 @@ coefficients(method::RungeKuttaMethod) = RungeKutta.coefficients(tableau(method)
 weights(method::RungeKuttaMethod) = RungeKutta.weights(tableau(method))
 nodes(method::RungeKuttaMethod) = RungeKutta.nodes(tableau(method))
 
+print_reference(io, method::RungeKuttaMethod) = try ismissing(reference(tableau(method))) || print(io, reference(tableau(method))) catch MethodError String("") end
+
 ispodemethod(::Union{RKMethod, Type{<:RKMethod}}) = true
 ishodemethod(::Union{RKMethod, Type{<:RKMethod}}) = true
 isiodemethod(::Union{RKMethod, Type{<:RKMethod}}) = true
@@ -51,14 +53,14 @@ isimplicit(method::IPRKMethod) = true
 function Base.show(io::IO, method::RKMethod)
     print(io, "\nRunge-Kutta Method with Tableau: $(description(tableau(method)))\n")
     print(io, string(tableau(method)))
-    ismissing(reference(tableau(method))) || print(io, reference(tableau(method)))
+    print_reference(io, method)
 end
 
 function Base.show(io::IO, method::PRKMethod)
     print(io, "\nPartitioned Runge-Kutta Method with Tableau: $(description(tableau(method)))\n")
     print(io, string(tableau(method).q))
     print(io, string(tableau(method).p))
-    ismissing(reference(tableau(method))) || print(io, reference(tableau(method)))
+    print_reference(io, method)
 end
 
 
