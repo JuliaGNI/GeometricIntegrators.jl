@@ -42,11 +42,11 @@ ishdaemethod(::Union{HDAEMethod, Type{<:HDAEMethod}}) = true
 isidaemethod(::Union{IDAEMethod, Type{<:IDAEMethod}}) = true
 isldaemethod(::Union{LDAEMethod, Type{<:LDAEMethod}}) = true
 
-isexplicit(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isexplicit(t()) : missing
-isimplicit(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isimplicit(t()) : missing
-issymmetric(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.issymmetric(t()) : missing
-issymplectic(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.issymplectic(t()) : missing
-isenergypreserving(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isenergypreserving(t()) : missing
-isstifflyaccurate(t::Type{<:GeometricMethod}) = applicable(t) ? RungeKutta.isstifflyaccurate(t()) : missing
+isexplicit(t::Type{<:GeometricMethod}) = applicable(t) ? isexplicit(t()) : missing
+isimplicit(t::Type{<:GeometricMethod}) = applicable(t) ? isimplicit(t()) : missing
+issymmetric(t::Type{<:GeometricMethod}) = applicable(t) ? issymmetric(t()) : missing
+issymplectic(t::Type{<:GeometricMethod}) = applicable(t) ? issymplectic(t()) : missing
+isenergypreserving(t::Type{<:GeometricMethod}) = applicable(t) ? isenergypreserving(t()) : missing
+isstifflyaccurate(t::Type{<:GeometricMethod}) = applicable(t) ? isstifflyaccurate(t()) : missing
 
 print_reference(io, method::GeometricMethod) = try ismissing(reference(method)) || print(io, reference(method)) catch MethodError String("") end

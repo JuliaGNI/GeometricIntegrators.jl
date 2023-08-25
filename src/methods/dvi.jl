@@ -25,6 +25,8 @@ issymmetric(::Union{CMDVI, Type{<:CMDVI}}) = true
 issymmetric(::Union{CTDVI, Type{<:CTDVI}}) = true
 
 issymplectic(::Union{DVIMethod, Type{<:DVIMethod}}) = true
+isexplicit(::Union{DVIMethod, Type{<:DVIMethod}}) = false
+isimplicit(::Union{DVIMethod, Type{<:DVIMethod}}) = true
 
 
 """
@@ -47,5 +49,7 @@ DVRK(method::RKMethod, args...; kwargs...) = DVRK(tableau(method))
 
 GeometricBase.tableau(method::DVRK) = method.tableau
 GeometricBase.order(method::DVRK) = order(tableaus(method))
+isexplicit(method::DVRK) = false
+isimplicit(method::DVRK) = true
 issymmetric(method::DVRK) = issymmetric(tableaus(method))
 issymplectic(method::DVRK) = issymplectic(tableaus(method))
