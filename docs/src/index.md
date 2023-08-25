@@ -48,7 +48,7 @@ While DifferentialEquations.jl provides a feature-rich ecosystem for the solutio
 
 ```@contents
 Pages = ["tutorial/tutorial.md",
-         "equations.md",
+         "problems.md",
          "methods.md",
 ]
 ```
@@ -57,10 +57,11 @@ Pages = ["tutorial/tutorial.md",
 ## Modules
 
 ```@contents
-Pages = ["modules/equations.md",
-         "modules/methods.md",
+Pages = ["modules/methods.md",
          "modules/integrators.md",
         #"modules/discontinuities.md",
+         "modules/problems.md",
+         "modules/equations.md",
         #"modules/simulations.md",
          "modules/solutions.md",
          "modules/rungekutta.md",
@@ -73,7 +74,9 @@ Pages = ["modules/equations.md",
 ## Developer Documentation
 
 ```@contents
-Pages = ["developer/code_integration.md",
+Pages = ["developer/integrators.md",
+         "developer/projections.md",
+         "developer/code_integration.md",
          "developer/custom_integrators.md",
          "developer/adaptive_time_stepping.md",
 ]
