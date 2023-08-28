@@ -15,6 +15,8 @@ abstract type IDAEMethod <: GeometricMethod end
 abstract type LDAEMethod <: GeometricMethod end
 
 internal_variables(::GeometricMethod) = NamedTuple()
+nullvector(::GeometricMethod) = nothing
+GeometricBase.tableau(::GeometricMethod) = missing
 
 isodemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
 ispodemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false

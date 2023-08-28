@@ -3,8 +3,6 @@
 
 abstract type VPRKMethod <: LODEMethod end
 
-GeometricBase.tableau(::VPRKMethod) = missing
-nullvector(::VPRKMethod) = nothing
 GeometricBase.order(method::VPRKMethod) = RungeKutta.order(tableau(method))
 
 @inline nstages(method::VPRKMethod) = nstages(tableau(method))
