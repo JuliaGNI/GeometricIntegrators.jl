@@ -8,12 +8,8 @@ module GeometricIntegrators
 
     # import GeometricBase.Config
     
-    include("Methods.jl")
-    @reexport using .Methods
     include("Extrapolators.jl")
     @reexport using .Extrapolators
-    include("Solutions.jl")
-    @reexport using .Solutions
     include("Discontinuities.jl")
     @reexport using .Discontinuities
     include("Integrators.jl")

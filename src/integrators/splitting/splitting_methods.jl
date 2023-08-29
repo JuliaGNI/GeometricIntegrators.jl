@@ -4,6 +4,9 @@ abstract type AbstractSplittingMethod <: SODEMethod end
 coefficients(::T) where {T <: AbstractSplittingMethod} = error("Splitting method $T does not have a coefficients() method.")
 coefficients(problem::SODEProblem, splitting::AbstractSplittingMethod) = coefficients(problem, coefficients(splitting))
 
+isexplicit(::Union{AbstractSplittingMethod, Type{<:AbstractSplittingMethod}}) = true
+isimplicit(::Union{AbstractSplittingMethod, Type{<:AbstractSplittingMethod}}) = false
+
 
 @doc raw"""
 Lie-Trotter Splitting A

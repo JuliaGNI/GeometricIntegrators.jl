@@ -12,13 +12,14 @@ module Integrators
     using GeometricSolutions
     using LinearAlgebra
     using OffsetArrays
+    using PrettyTables
     using QuadratureRules
+    using RungeKutta.Tableaus
+    using RungeKutta.PartitionedTableaus
     using SimpleSolvers
 
     using ..Discontinuities
     using ..Extrapolators
-    using ..Methods
-    using ..Solutions
 
     import Base: Callable
 
@@ -28,20 +29,72 @@ module Integrators
 
     import GeometricBase: description, reference, tableau
     import GeometricBase: equations, nconstraints, timestep
+    import GeometricBase: order, tableau
     import GeometricBase: integrate, integrate!
     import GeometricBase: reset!
     import GeometricBase.Utils: @big, @define, compensated_summation
     
     import RungeKutta
     import RungeKutta: eachstage, nstages
+    import RungeKutta: AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
 
-    import ..Methods: hasnullvector, initmethod, implicit_update, nullvector
-
-    import ..Solutions: current, cut_periodic_solution!, update!
+    import SimpleSolvers: SolverMethod
 
 
-    # compat workaroung
+    # compat workaround
     Base.ndims(prob::EquationProblem) = length(vec(prob.ics.q))
+
+
+    const DEFAULT_NSAVE = 1
+    const DEFAULT_NWRITE = 0
+
+
+    export AbstractCoefficients
+
+    include("integrators/abstract_coefficients.jl")
+
+
+    export GeometricMethod
+    export ODEMethod, PODEMethod, HODEMethod, IODEMethod, LODEMethod, SODEMethod
+    export DAEMethod, PDAEMethod, HDAEMethod, IDAEMethod, LDAEMethod
+    export RKMethod, ERKMethod, IRKMethod, DIRKMethod
+    export PRKMethod, EPRKMethod, IPRKMethod, VPRKMethod, DVIMethod
+    export AbstractSplittingMethod
+
+    export RK, PRK
+
+    export default_solver, default_iguess, default_projection
+    export initmethod, implicit_update
+    export internal_variables
+
+    export AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
+    export name, order, description, reference
+    export nstages, eachstage, coefficients, weights, nodes
+    export hasnullvector, nullvector
+    export isexplicit, isimplicit, issymmetric, issymplectic, isenergypreserving, isstifflyaccurate
+
+    include("integrators/methods.jl")
+
+
+    export DataSeries, TimeSeries, Solution, AbstractSolution, DeterministicSolution
+    export current, previous, history
+
+    export SolutionODE, SolutionPODE
+    export SolutionDAE, SolutionPDAE
+
+    export SolutionStep,
+        SolutionStepODE, SolutionStepPODE,
+        SolutionStepDAE, SolutionStepPDAE
+
+    export reset!, update!, update_vector_fields!, cut_periodic_solution!
+
+    include("solutions/solution_step.jl")
+    include("solutions/solution.jl")
+    include("solutions/solution_step_ode.jl")
+    include("solutions/solution_step_pode.jl")
+    include("solutions/solution_step_dae.jl")
+    include("solutions/solution_step_pdae.jl")
+    include("solutions/solution_step_constructors.jl")
 
 
     export InitialGuess, NoInitialGuess
@@ -52,21 +105,15 @@ module Integrators
     include("initial_guess/midpoint.jl")
 
 
-    export AbstractCoefficients
-
-    include("integrators/abstract_coefficients.jl")
-
-
     export IntegratorCache, IntegratorConstructor
     export equation, timestep
 
     include("integrators/integrator_cache.jl")
 
 
-    export NoSolver, NoProjection
-    export default_solver, default_iguess, default_projection
+    export NoSolver
 
-    include("integrators/methods.jl")
+    include("integrators/solvers.jl")
 
 
     export GeometricIntegrator
@@ -77,8 +124,8 @@ module Integrators
 
     export ExplicitEuler, ImplicitEuler
     
-    include("integrators/various/integrators_explicit_euler.jl")
-    include("integrators/various/integrators_implicit_euler.jl")
+    include("integrators/euler/explicit_euler.jl")
+    include("integrators/euler/implicit_euler.jl")
 
 
     export AbstractIntegratorRK, AbstractIntegratorIRK, AbstractIntegratorPRK, IntegratorRK
@@ -87,6 +134,7 @@ module Integrators
            check_symplecticity, symplecticity_conditions, 
            check_symmetry, compute_symplecticity_error
 
+    include("integrators/rk/methods.jl")
     include("integrators/rk/abstract.jl")
     include("integrators/rk/common.jl")
     include("integrators/rk/updates.jl")
@@ -133,17 +181,6 @@ module Integrators
            SplittingCoefficientsGS,
            SplittingCoefficientsSS
 
-    export LieA,
-           LieB,
-           Strang,
-           Marchuk,
-           StrangA,
-           StrangB,
-           McLachlan2,
-           McLachlan4,
-           TripleJump,
-           SuzukiFractal
-           
     include("integrators/splitting/exact_solution.jl")
     include("integrators/splitting/splitting_coefficients.jl")
     include("integrators/splitting/splitting_methods.jl")
@@ -154,6 +191,7 @@ module Integrators
 
     export IntegratorVPRK
 
+    include("integrators/vi/vprk_methods.jl")
     include("integrators/vi/integrators_vprk_cache.jl")
     include("integrators/vi/integrators_vprk.jl")
 
@@ -173,6 +211,7 @@ module Integrators
            IntegratorCMDVI, IntegratorCTDVI,
            IntegratorDVRK
     
+    include("integrators/dvi/methods.jl")
     include("integrators/dvi/integrators_dvi_a.jl")
     include("integrators/dvi/integrators_dvi_b.jl")
     include("integrators/dvi/integrators_cmdvi.jl")
@@ -180,12 +219,19 @@ module Integrators
     include("integrators/dvi/integrators_dvrk.jl")
 
 
+    export NoProjection, projection
+
+    include("projections/methods.jl")
     include("projections/cache.jl")
     include("projections/projection.jl")
     include("projections/midpoint_projection.jl")
     include("projections/standard_projection.jl")
     include("projections/symmetric_projection.jl")
+    include("integrators/vi/vprk_projected.jl")
     
+
+    include("integrators/method_list.jl")
+
 
     # function __init__()
     #     default_params = (

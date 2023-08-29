@@ -28,7 +28,7 @@ description(::IntegratorVPRK) = "Variational Partitioned Runge-Kutta Integrator"
 default_solver(::VPRKMethod) = Newton()
 default_iguess(::VPRKMethod) = HermiteExtrapolation()
 
-initmethod(method::VPRKMethod) = Methods.VPRK(method)
+initmethod(method::VPRKMethod) = VPRK(method)
 
 solversize(problem::VPRKProblem, method::VPRKMethod) =
     ndims(problem) * nstages(method)
