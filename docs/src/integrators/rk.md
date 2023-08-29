@@ -67,29 +67,29 @@ GeometricIntegrators.jl provides various explicit and implicit (both diagonally 
 For many methods, tabulated coefficients are included, namely
 
 
-| Function and Aliases                                           | Stages | Order |
-|:---------------------------------------------------------------|:-------|:------|
-| **Explicit Methods**                                           |        |       |
-| [`TableauExplicitEuler`](@ref), [`TableauForwardEuler`](@ref)  | 1      | 1     |
-| [`TableauExplicitMidpoint`](@ref)                              | 2      | 2     |
-| [`TableauHeun2`](@ref)                                         | 2      | 2     |
-| [`TableauHeun3`](@ref)                                         | 3      | 3     |
-| [`TableauKutta`](@ref), [`TableauKutta3`](@ref)                | 3      | 3     |
-| [`TableauRalston2`](@ref)                                      | 2      | 2     |
-| [`TableauRalston3`](@ref)                                      | 3      | 3     |
-| [`TableauRunge`](@ref), [`TableauRunge2`](@ref)                | 2      | 2     |
-| [`TableauRK416`](@ref), [`TableauRK4`](@ref)                   | 4      | 4     |
-| [`TableauRK438`](@ref)                                         | 4      | 4     |
-| [`TableauSSPRK3`](@ref)                                        | 3      | 3     |
-| **Diagonally Implicit Methods**                                |        |       |
-| [`TableauCrankNicolson`](@ref)                                 | 2      | 2     |
-| [`TableauCrouzeix`](@ref)                                      | 2      | 3     |
-| [`TableauKraaijevangerSpijker`](@ref)                          | 2      | 2     |
-| [`TableauQinZhang`](@ref)                                      | 2      | 2     |
-| **Fully Implicit Methods**                                     |        |       |
-| [`TableauImplicitEuler`](@ref), [`TableauBackwardEuler`](@ref) | 1      | 1     |
-| [`TableauImplicitMidpoint`](@ref)                              | 2      | 2     |
-| [`TableauSRK3`](@ref)                                          | 3      | 4     |
+| Function and Aliases                             | Stages | Order |
+|:-------------------------------------------------|:-------|:------|
+| **Explicit Methods**                             |        |       |
+| [`ExplicitEuler`](@ref), [`ForwardEuler`](@ref)  | 1      | 1     |
+| [`ExplicitMidpoint`](@ref)                       | 2      | 2     |
+| [`Heun2`](@ref)                                  | 2      | 2     |
+| [`Heun3`](@ref)                                  | 3      | 3     |
+| [`Kutta3`](@ref), [`Kutta3`](@ref)               | 3      | 3     |
+| [`Ralston2`](@ref)                               | 2      | 2     |
+| [`Ralston3`](@ref)                               | 3      | 3     |
+| [`Runge2`](@ref), [`Runge2`](@ref)               | 2      | 2     |
+| [`RK416`](@ref), [`RK4`](@ref)                   | 4      | 4     |
+| [`RK438`](@ref)                                  | 4      | 4     |
+| [`SSPRK3`](@ref)                                 | 3      | 3     |
+| **Diagonally Implicit Methods**                  |        |       |
+| [`CrankNicolson`](@ref)                          | 2      | 2     |
+| [`Crouzeix`](@ref)                               | 2      | 3     |
+| [`KraaijevangerSpijker`](@ref)                   | 2      | 2     |
+| [`QinZhang`](@ref)                               | 2      | 2     |
+| **Fully Implicit Methods**                       |        |       |
+| [`ImplicitEuler`](@ref), [`BackwardEuler`](@ref) | 1      | 1     |
+| [`ImplicitMidpoint`](@ref)                       | 2      | 2     |
+| [`SRK3`](@ref)                                   | 3      | 4     |
 
 The coefficients of other methods are computed on-the-fly as described in the following.
 
@@ -167,21 +167,21 @@ The tableaus of all of the above methods can be computed for an arbitrary number
 
 The following methods are provided for selecting the previously described Runge-Kutta schemes:
 
-| Function                         | Method                      | Order |
-|:---------------------------------|:----------------------------|:------|
-| [`TableauGauss(s)`](@ref)        | Gauß-Legendre with s stages | 2s    |
-| [`TableauLobattoIIIA(s)`](@ref)  | Lobatto IIIA with s stages  | 2s-2  |
-| [`TableauLobattoIIIB(s)`](@ref)  | Lobatto IIIB with s stages  | 2s-2  |
-| [`TableauLobattoIIIC(s)`](@ref)  | Lobatto IIIC with s stages  | 2s-2  |
-| [`TableauLobattoIIIC̄(s)`](@ref)  | Lobatto IIIC̄ with s stages  | 2s-2  |
-| [`TableauLobattoIIID(s)`](@ref)  | Lobatto IIID with s stages  | 2s-2  |
-| [`TableauLobattoIIIE(s)`](@ref)  | Lobatto IIIE with s stages  | 2s-2  |
-| [`TableauLobattoIIIF(s)`](@ref)  | Lobatto IIIF with s stages  | 2s-2  |
-| [`TableauLobattoIIIG(s)`](@ref)  | Lobatto IIIG with s stages  | 2s-2  |
-| [`TableauRadauIA(s)`](@ref)      | Radau IA with s stages      | 2s-1  |
-| [`TableauRadauIB(s)`](@ref)      | Radau IB with s stages      | 2s-1  |
-| [`TableauRadauIIA(s)`](@ref)     | Radau IIA with s stages     | 2s-1  |
-| [`TableauRadauIIB(s)`](@ref)     | Radau IIB with s stages     | 2s-1  |
+| Function                  | Method                      | Order |
+|:--------------------------|:----------------------------|:------|
+| [`Gauss(s)`](@ref)        | Gauß-Legendre with s stages | 2s    |
+| [`LobattoIII(s)`](@ref)   | Lobatto III  with s stages  | 2s-2  |
+| [`LobattoIIIA(s)`](@ref)  | Lobatto IIIA with s stages  | 2s-2  |
+| [`LobattoIIIB(s)`](@ref)  | Lobatto IIIB with s stages  | 2s-2  |
+| [`LobattoIIIC(s)`](@ref)  | Lobatto IIIC with s stages  | 2s-2  |
+| [`LobattoIIID(s)`](@ref)  | Lobatto IIID with s stages  | 2s-2  |
+| [`LobattoIIIE(s)`](@ref)  | Lobatto IIIE with s stages  | 2s-2  |
+| [`LobattoIIIF(s)`](@ref)  | Lobatto IIIF with s stages  | 2s-2  |
+| [`LobattoIIIG(s)`](@ref)  | Lobatto IIIG with s stages  | 2s-2  |
+| [`RadauIA(s)`](@ref)      | Radau IA with s stages      | 2s-1  |
+| [`RadauIB(s)`](@ref)      | Radau IB with s stages      | 2s-1  |
+| [`RadauIIA(s)`](@ref)     | Radau IIA with s stages     | 2s-1  |
+| [`RadauIIB(s)`](@ref)     | Radau IIB with s stages     | 2s-1  |
 
 The first argument `s` refers to the number of stages ($s \ge 1$ for Gauß and $s \ge 2$ for all other methods).
 The second argument specifies the number type of the coefficients. Internally, all coefficients are computed using `BigFloat` and then converted to the requested number type, defaulting to `Float64`.
@@ -213,19 +213,19 @@ into a partitioned Runge-Kutta tableau.
 A particular interesting family of partitioned Runge-Kutta methods are symplectic Lobatto methods,
 specifically
 
-| Function                               | Method                      | Order |
-|:---------------------------------------|:----------------------------|:------|
-| [`TableauLobattoIIIAIIIB(s)`](@ref)    | Lobatto-IIIA-IIIB           | 2s-2  |
-| [`TableauLobattoIIIBIIIA(s)`](@ref)    | Lobatto-IIIB-IIIA           | 2s-2  |
-| [`TableauLobattoIIIAIIIĀ(s)`](@ref)    | Lobatto-IIIA-IIIĀ           | 2s-2  |
-| [`TableauLobattoIIIBIIIB̄(s)`](@ref)    | Lobatto-IIIB-IIIB̄           | 2s-2  |
-| [`TableauLobattoIIICIIIC̄(s)`](@ref)    | Lobatto-IIIC-IIIC̄           | 2s-2  |
-| [`TableauLobattoIIIC̄IIIC(s)`](@ref)    | Lobatto-IIIC̄-IIIC           | 2s-2  |
-| [`TableauLobattoIIIDIIID̄(s)`](@ref)    | Lobatto-IIID-IIID̄           | 2s-2  |
-| [`TableauLobattoIIIEIIIĒ(s)`](@ref)    | Lobatto-IIIE-IIIĒ           | 2s-2  |
-| [`TableauLobattoIIIFIIIF̄(s)`](@ref)    | Lobatto-IIIF-IIIF̄           | 2s    |
-| [`TableauLobattoIIIF̄IIIF(s)`](@ref)    | Lobatto-IIIF̄-IIIF           | 2s    |
-| [`TableauLobattoIIIGIIIḠ(s)`](@ref)    | Lobatto-IIIG-IIIḠ           | 2s    |
+| Function                        | Method                      | Order |
+|:--------------------------------|:----------------------------|:------|
+| [`LobattoIIIAIIIB(s)`](@ref)    | Lobatto-IIIA-IIIB           | 2s-2  |
+| [`LobattoIIIBIIIA(s)`](@ref)    | Lobatto-IIIB-IIIA           | 2s-2  |
+| [`LobattoIIIAIIIĀ(s)`](@ref)    | Lobatto-IIIA-IIIĀ           | 2s-2  |
+| [`LobattoIIIBIIIB̄(s)`](@ref)    | Lobatto-IIIB-IIIB̄           | 2s-2  |
+| [`LobattoIIICIIIC̄(s)`](@ref)    | Lobatto-IIIC-IIIC̄           | 2s-2  |
+| [`LobattoIIIC̄IIIC(s)`](@ref)    | Lobatto-IIIC̄-IIIC           | 2s-2  |
+| [`LobattoIIIDIIID̄(s)`](@ref)    | Lobatto-IIID-IIID̄           | 2s-2  |
+| [`LobattoIIIEIIIĒ(s)`](@ref)    | Lobatto-IIIE-IIIĒ           | 2s-2  |
+| [`LobattoIIIFIIIF̄(s)`](@ref)    | Lobatto-IIIF-IIIF̄           | 2s    |
+| [`LobattoIIIF̄IIIF(s)`](@ref)    | Lobatto-IIIF̄-IIIF           | 2s    |
+| [`LobattoIIIGIIIḠ(s)`](@ref)    | Lobatto-IIIG-IIIḠ           | 2s    |
 
 
 ## Implicit Equations

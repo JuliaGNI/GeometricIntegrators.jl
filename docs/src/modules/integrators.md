@@ -45,20 +45,12 @@ Pages   = ["integrators/extrapolation/extrapolation.jl",
 
 # Euler Integrators
 
-```@docs
-GeometricIntegrators.Integrators.ExplicitEuler
-GeometricIntegrators.Integrators.ImplicitEuler
-```
-
-
-## Splitting Methods
-
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
-Pages   = ["integrators/splitting/integrators_composition.jl",
-           "integrators/splitting/integrators_splitting.jl",
-           "integrators/splitting/integrators_exact_ode.jl",
-           "integrators/splitting/splitting_tableau.jl"]
+Pages   = [
+            "integrators/euler/explicit_euler.jl",
+            "integrators/euler/implicit_euler.jl",
+        ]
 ```
 
 
@@ -66,9 +58,10 @@ Pages   = ["integrators/splitting/integrators_composition.jl",
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
-Pages   = ["integrators/rk/abstract_integrator_rk.jl",
-           "integrators/rk/coefficients.jl",
+Pages   = ["integrators/rk/abstract.jl",
+           "integrators/rk/common.jl",
            "integrators/rk/tableaus.jl",
+           "integrators/rk/updates.jl",
            "integrators/rk/integrators_erk.jl",
            "integrators/rk/integrators_irk.jl",
            "integrators/rk/integrators_irk_implicit.jl",
@@ -76,6 +69,7 @@ Pages   = ["integrators/rk/abstract_integrator_rk.jl",
            "integrators/rk/integrators_eprk.jl",
            "integrators/rk/integrators_iprk.jl",
            "integrators/rk/integrators_iprk_implicit.jl",
+           "integrators/rk/methods.jl",
           ]
 ```
 
@@ -85,17 +79,21 @@ Pages   = ["integrators/rk/abstract_integrator_rk.jl",
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
 Pages   = ["integrators/vi/integrators_vprk.jl"]
+Pages   = ["integrators/vi/vprk_methods.jl"]
 ```
 
 ## Degenerate Variational Integrators
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
-Pages   = ["integrators/dvi/integrators_dvi_a.jl",
-           "integrators/dvi/integrators_dvi_b.jl",
-           "integrators/dvi/integrators_cmdvi.jl",
-           "integrators/dvi/integrators_ctdvi.jl",
-           "integrators/dvi/integrators_dvrk.jl"]
+Pages   = [
+            "integrators/dvi/integrators_dvi_a.jl",
+            "integrators/dvi/integrators_dvi_b.jl",
+            "integrators/dvi/integrators_cmdvi.jl",
+            "integrators/dvi/integrators_ctdvi.jl",
+            "integrators/dvi/integrators_dvrk.jl",
+            "integrators/dvi/methods.jl",
+        ]
 ```
 
 ## Galerkin Variational Integrators
@@ -104,4 +102,19 @@ Pages   = ["integrators/dvi/integrators_dvi_a.jl",
 Modules = [GeometricIntegrators.Integrators]
 Pages   = ["integrators/cgvi/integrators_cgvi.jl",
            "integrators/dgvi/integrators_dgvi.jl"]
+```
+
+
+## Splitting Methods
+
+```@autodocs
+Modules = [GeometricIntegrators.Integrators]
+Pages   = [
+            "integrators/splitting/exact_solution.jl",
+            "integrators/splitting/composition_integrators.jl",
+            "integrators/splitting/composition_methods.jl",
+            "integrators/splitting/splitting_coefficients.jl",
+            "integrators/splitting/splitting_integrator.jl",
+            "integrators/splitting/splitting_methods.jl",
+        ]
 ```

@@ -39,11 +39,11 @@ prob = ODEProblem((ẋ, t, x, params) -> ẋ[1] = x[1], (0.0, 1.0), 0.1, [1.0])
 ```
 create an integrator for this ODE, using the explicit Euler method
 ```@example 1
-int = Integrator(prob, ExplicitEuler())
+int = GeometricIntegrator(prob, ExplicitEuler())
 ```
 and compute the solution,
 ```@example 1
-sol = integrate(prob, int)
+sol = integrate(int)
 ```
 Plot and compare with the exact solution
 ```@example 1
@@ -186,12 +186,12 @@ general linear methods (_planned_).
 In order to instantiate many of the standard integrators, one needs to specify
 an ODEProblem, a method and a timestep, e.g.,
 ```@example 1
-int = Integrator(ode, ExplicitEuler())
+int = GeometricIntegrator(ode, ExplicitEuler())
 ```
 In order to run the integrator, the `integrate()` functions is called, passing
 an integrator object and the number of time steps to integrate:
 ```@example 1
-sol = integrate(ode, int)
+sol = integrate(int)
 ```
 The integrate function automatically creates an appropriate solution object,
 that contains the result of the integration.
@@ -235,7 +235,7 @@ Other integrators, such as Galerkin variational integrators require the specific
 
 The correct integrator is automatically selected based on the method and problem types by calling
 ```
-Integrator(problem, method)
+GeometricIntegrator(problem, method)
 ```
 
 As an example, consider an ODE like the harmonic oscillator, which is included in GeometricEquations.jl:
@@ -244,7 +244,7 @@ using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
 ```
 ```@example 1
-prob = harmonic_oscillator_ode()
+prob = HarmonicOscillator.odeproblem()
 ```
 Create an explicit Euler method:
 ```@example 1
@@ -252,7 +252,7 @@ method = ExplicitEuler()
 ```
 And now create an Integrator with the general `Integrator` constructor:
 ```@example 1
-int = Integrator(prob, method)
+int = GeometricIntegrator(prob, method)
 ```
 We see that we obtained an `IntegratorERK`, i.e., an explicit Runge-Kutta integrator.
 If instead we choose the implicit Euler method:
@@ -261,7 +261,7 @@ method = ImplicitEuler()
 ```
 the general `Integrator` constructor creates a different integrator:
 ```@example 1
-int = Integrator(prob, method)
+int = GeometricIntegrator(prob, method)
 ```
 namely an `IntegratorFIRK`, i.e., a fully implicit Runge-Kutta integrator.
 
@@ -270,7 +270,7 @@ GeometricIntegrators automatically detects if a Runge-Kutta tableau is explicit,
 Certain Runge-Kutta method such as Gauß, Radau and Lobatto methods are available for an arbitrary number of stages.
 Here the number of stages has to be speficied
 ```@example 1
-int = Integrator(prob, Gauss(1))
+int = GeometricIntegrator(prob, Gauss(1))
 ```
 Special integrators, such as Vartiational Partitioned Runge-Kutta (VPRK) methods, can be initialised by providing one or two tableaus, that is
 ```@example 1
@@ -294,7 +294,7 @@ using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
 ```
 ```example 2
-prob = harmonic_oscillator_iode()
+prob = HarmonicOscillator.iodeproblem()
 ```
 Create a VPRK tableau that uses Gauss-Legendre Runge-Kutta coefficients with two stages:
 ```example 2
@@ -308,17 +308,17 @@ we obtain a `IntegratorVPRK`.
 
 Once an integrator is obtained, we can just call the function
 ```
-integrate(problem, integrator)
+integrate(integrator)
 ```
 to perform the actual integration steps, where `ntime` defines the number of steps to integrate:
 ```@setup 3
 using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
-prob = harmonic_oscillator_ode()
+prob = HarmonicOscillator.odeproblem()
 ```
 ```@example 3
-int = Integrator(prob, ExplicitEuler())
-sol = integrate(prob, int)
+int = GeometricIntegrator(prob, ExplicitEuler())
+sol = integrate(int)
 ```
 The `integrate` function returns a solution object that stores the solution for each time step.
 If the solution object is created manually, there exists a function
@@ -482,32 +482,32 @@ All implicit Runge-Kutta and partitioned Runge-Kutta methods can also be applied
 Regular (non-degenerate) Lagragian ODEs can be integrated with Variational Partitioned Runge-Kutta ([`VPRK`](@ref))
 methods or Continuous Galerkin Variational Integrators ([`CGVI`](@ref)).
 
-| Function                        | Method                                                                    |
-|:--------------------------------|:--------------------------------------------------------------------------|
-| [`VPRK`](@ref)                  | Variational Partitioned Runge-Kutta integrator                            |
-|                                 |                                                                           |
-| [`VPRKGauss`](@ref)             | VPRK integrator with [`TableauGauss`](@ref)                               |
-| [`VPRKRadauIIA`](@ref)          | VPRK integrator with [`TableauRadauIIA`](@ref)                            |
-| [`VPRKRadauIIB`](@ref)          | VPRK integrator with [`TableauRadauIIB`](@ref)                            |
-| [`VPRKLobattoIII`](@ref)        | VPRK integrator with [`TableauLobattoIII`](@ref)                          |
-| [`VPRKLobattoIIIA`](@ref)       | VPRK integrator with [`TableauLobattoIIIA`](@ref)                         |
-| [`VPRKLobattoIIIB`](@ref)       | VPRK integrator with [`TableauLobattoIIIB`](@ref)                         |
-| [`VPRKLobattoIIIC`](@ref)       | VPRK integrator with [`TableauLobattoIIIC`](@ref)                         |
-| [`VPRKLobattoIIID`](@ref)       | VPRK integrator with [`TableauLobattoIIID`](@ref)                         |
-| [`VPRKLobattoIIIE`](@ref)       | VPRK integrator with [`TableauLobattoIIIE`](@ref)                         |
-| [`VPRKLobattoIIIF`](@ref)       | VPRK integrator with [`TableauLobattoIIIF`](@ref)                         |
-| [`VPRKLobattoIIIG`](@ref)       | VPRK integrator with [`TableauLobattoIIIG`](@ref)                         |
-| [`VPRKLobattoIIIAIIIB`](@ref)   | VPRK integrator with [`TableauLobattoIIIAIIIB`](@ref)                     |
-| [`VPRKLobattoIIIBIIIA`](@ref)   | VPRK integrator with [`TableauLobattoIIIBIIIA`](@ref)                     |
-| [`VPRKLobattoIIIAIIIĀ`](@ref)   | VPRK integrator with [`TableauLobattoIIIAIIIĀ`](@ref)                     |
-| [`VPRKLobattoIIIBIIIB̄`](@ref)   | VPRK integrator with [`TableauLobattoIIIBIIIB̄`](@ref)                     |
-| [`VPRKLobattoIIICIIIC̄`](@ref)   | VPRK integrator with [`TableauLobattoIIICIIIC̄`](@ref)                     |
-| [`VPRKLobattoIIIC̄IIIC`](@ref)   | VPRK integrator with [`TableauLobattoIIIC̄IIIC`](@ref)                     |
-| [`VPRKLobattoIIIDIIID̄`](@ref)   | VPRK integrator with [`TableauLobattoIIIDIIID̄`](@ref)                     |
-| [`VPRKLobattoIIIEIIIĒ`](@ref)   | VPRK integrator with [`TableauLobattoIIIEIIIĒ`](@ref)                     |
-| [`VPRKLobattoIIIFIIIF̄`](@ref)   | VPRK integrator with [`TableauLobattoIIIFIIIF̄`](@ref)                     |
-| [`VPRKLobattoIIIF̄IIIF`](@ref)   | VPRK integrator with [`TableauLobattoIIIF̄IIIF`](@ref)                     |
-| [`VPRKLobattoIIIGIIIḠ`](@ref)   | VPRK integrator with [`TableauLobattoIIIGIIIḠ`](@ref)                     |
+| Function                        | Method                                                             |
+|:--------------------------------|:-------------------------------------------------------------------|
+| [`VPRK`](@ref)                  | Variational Partitioned Runge-Kutta integrator                     |
+|                                 |                                                                    |
+| [`VPRKGauss`](@ref)             | VPRK integrator with [`Gauss`](@ref)                               |
+| [`VPRKRadauIIA`](@ref)          | VPRK integrator with [`RadauIIA`](@ref)                            |
+| [`VPRKRadauIIB`](@ref)          | VPRK integrator with [`RadauIIB`](@ref)                            |
+| [`VPRKLobattoIII`](@ref)        | VPRK integrator with [`LobattoIII`](@ref)                          |
+| [`VPRKLobattoIIIA`](@ref)       | VPRK integrator with [`LobattoIIIA`](@ref)                         |
+| [`VPRKLobattoIIIB`](@ref)       | VPRK integrator with [`LobattoIIIB`](@ref)                         |
+| [`VPRKLobattoIIIC`](@ref)       | VPRK integrator with [`LobattoIIIC`](@ref)                         |
+| [`VPRKLobattoIIID`](@ref)       | VPRK integrator with [`LobattoIIID`](@ref)                         |
+| [`VPRKLobattoIIIE`](@ref)       | VPRK integrator with [`LobattoIIIE`](@ref)                         |
+| [`VPRKLobattoIIIF`](@ref)       | VPRK integrator with [`LobattoIIIF`](@ref)                         |
+| [`VPRKLobattoIIIG`](@ref)       | VPRK integrator with [`LobattoIIIG`](@ref)                         |
+| [`VPRKLobattoIIIAIIIB`](@ref)   | VPRK integrator with [`LobattoIIIAIIIB`](@ref)                     |
+| [`VPRKLobattoIIIBIIIA`](@ref)   | VPRK integrator with [`LobattoIIIBIIIA`](@ref)                     |
+| [`VPRKLobattoIIIAIIIĀ`](@ref)   | VPRK integrator with [`LobattoIIIAIIIĀ`](@ref)                     |
+| [`VPRKLobattoIIIBIIIB̄`](@ref)   | VPRK integrator with [`LobattoIIIBIIIB̄`](@ref)                     |
+| [`VPRKLobattoIIICIIIC̄`](@ref)   | VPRK integrator with [`LobattoIIICIIIC̄`](@ref)                     |
+| [`VPRKLobattoIIIC̄IIIC`](@ref)   | VPRK integrator with [`LobattoIIIC̄IIIC`](@ref)                     |
+| [`VPRKLobattoIIIDIIID̄`](@ref)   | VPRK integrator with [`LobattoIIIDIIID̄`](@ref)                     |
+| [`VPRKLobattoIIIEIIIĒ`](@ref)   | VPRK integrator with [`LobattoIIIEIIIĒ`](@ref)                     |
+| [`VPRKLobattoIIIFIIIF̄`](@ref)   | VPRK integrator with [`LobattoIIIFIIIF̄`](@ref)                     |
+| [`VPRKLobattoIIIF̄IIIF`](@ref)   | VPRK integrator with [`LobattoIIIF̄IIIF`](@ref)                     |
+| [`VPRKLobattoIIIGIIIḠ`](@ref)   | VPRK integrator with [`LobattoIIIGIIIḠ`](@ref)                     |
 
 
 ### Integrators for Degenerate Lagrangian ODEs
@@ -521,7 +521,7 @@ or Projected Variational Partitioned Runge-Kutta ([`ProjectedVPRK`](@ref)) metho
 | [`DVIB`](@ref)                  | Symplectic Euler-B Degenerate Variational Integrator                      |
 | [`CMDVI`](@ref)                 | Midpoint Degenerate Variational Integrator                                |
 | [`CTDVI`](@ref)                 | Trapezoidal Degenerate Variational Integrator                             |
-| [`DegenerateVPRK`](@ref)        | Variational Partitioned Runge-Kutta integrator for degenerate Lagrangians |
+| [`DVRK`](@ref)                  | Degenerate Variational Runge-Kutta integrator                             |
 | [`ProjectedVPRK`](@ref)         | Projected Variational Partitioned Runge-Kutta integrator                  |
 |                                 |                                                                           |
 | [`VPRKpInternal`](@ref)         | VPRK integrator with projection on internal stages                        |

@@ -3,7 +3,7 @@
 ```@setup 1
 using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
-prob = harmonic_oscillator_ode()
+prob = HarmonicOscillator.odeproblem()
 ```
 
 In what we have seen so far, the solution was always automatically created by
@@ -19,7 +19,7 @@ and the third argument is the number of time steps that will be computed in one
 integration step.
 The call to the integrator is then made via
 ```@example 1
-int = Integrator(prob, Gauss(1))
+int = GeometricIntegrator(prob, Gauss(1))
 integrate!(sol, int)
 ```
 If several integration cycles shall be performed, the `reset!()` function can be

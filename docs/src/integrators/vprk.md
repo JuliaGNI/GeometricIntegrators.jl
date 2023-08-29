@@ -46,30 +46,31 @@ To mitigate this problem, projection methods have been developed, which can be u
 
 GeometricIntegrators.jl provides the following VPRK methods:
 
-| Integrator                            | Description                                                                                          |
-|:--------------------------------------|:-----------------------------------------------------------------------------------------------------|
-| [`IntegratorVPRK`](@ref)              | Variational Partitioned Runge-Kutta (VPRK) integrator without projection                             |
-| [`IntegratorVPRKpStandard`](@ref)     | VPRK integrator with [standard projection](@ref sec:standard-projection)                             |
-| [`IntegratorVPRKpSymmetric`](@ref)    | VPRK integrator with [symmetric projection](@ref sec:symmetric-projection)                           |
-| [`IntegratorVPRKpMidpoint`](@ref)     | VPRK integrator with [midpoint projection](@ref sec:midpoint-projection)                             |
-| [`IntegratorVPRKpVariational`](@ref)  | VPRK integrator with variational projection (*unstable*)                                             |
-| [`IntegratorVPRKpSecondary`](@ref)    | VPRK integrator with projection on secondary constraint                                              |
-| [`IntegratorVPRKpInternal`](@ref)     | Gauss-Legendre VPRK integrator with projection on internal stages of Runge-Kutta method              |
-| [`IntegratorVPRKpTableau`](@ref)      | Gauss-Legendre VPRK integrator with projection in tableau of Runge-Kutta method                      |
+| Integrator                  | Description                                                                                          |
+|:----------------------------|:-----------------------------------------------------------------------------------------------------|
+| [`VPRK`](@ref)              | Variational Partitioned Runge-Kutta (VPRK) integrator without projection                             |
+| [`VPRKpStandard`](@ref)     | VPRK integrator with [standard projection](@ref sec:standard-projection)                             |
+| [`VPRKpSymmetric`](@ref)    | VPRK integrator with [symmetric projection](@ref sec:symmetric-projection)                           |
+| [`VPRKpMidpoint`](@ref)     | VPRK integrator with [midpoint projection](@ref sec:midpoint-projection)                             |
+| [`VPRKpVariational`](@ref)  | VPRK integrator with variational projection (*unstable*)                                             |
+| [`VPRKpSecondary`](@ref)    | VPRK integrator with projection on secondary constraint                                              |
+| [`VPRKpInternal`](@ref)     | Gauss-Legendre VPRK integrator with projection on internal stages of Runge-Kutta method              |
+| [`VPRKpTableau`](@ref)      | Gauss-Legendre VPRK integrator with projection in tableau of Runge-Kutta method                      |
 
 For testing purposes [`IntegratorVPRKpStandard`](@ref) provides some additional constructors (*note that these methods are generally unstable*):
 
-| Integrator                            | Description                                                                                          |
-|:--------------------------------------|:-----------------------------------------------------------------------------------------------------|
-| [`IntegratorVPRKpVariationalQ`](@ref) | VPRK integrator with variational projection on $(q_{n}, p_{n+1})$                                    |
-| [`IntegratorVPRKpVariationalP`](@ref) | VPRK integrator with variational projection on $(p_{n}, q_{n+1})$                                    |
-| [`IntegratorVPRKpSymplectic`](@ref)   | VPRK integrator with [symplectic projection](@ref sec:symplectic-projection)                         |
+| Integrator                  | Description                                                                                          |
+|:----------------------------|:-----------------------------------------------------------------------------------------------------|
+| [`VPRKpVariationalQ`](@ref) | VPRK integrator with variational projection on $(q_{n}, p_{n+1})$                                    |
+| [`VPRKpVariationalP`](@ref) | VPRK integrator with variational projection on $(p_{n}, q_{n+1})$                                    |
+| [`VPRKpSymplectic`](@ref)   | VPRK integrator with [symplectic projection](@ref sec:symplectic-projection)                         |
 
 All of the above integrators are applied to either an [`IODEProblem`](@ref) or [`LODEProblem`](@ref) and instantiated as follows:
 ```julia
-int = IntegratorVPRK(iode, tab, Δt)
+int = GeometricIntegrator(iode, VPRK(Gauss(1)))
 ```
-The only exception is [`IntegratorVPRKpSecondary`](@ref) which can only be applied to an [`LODEProblem`](@ref) as it needs some additional functions which are only defined for variational problems.
+where the constructor of each method needs to be supplied with a Runge-Kutta or partitioned Runge-Kutta method.
+The only exception is [`VPRKpSecondary`](@ref) which can only be applied to an [`LODEProblem`](@ref) as it needs some additional functions which are only defined for variational problems.
 
 
 ## Discrete Action Princtiple
