@@ -227,8 +227,10 @@ module Integrators
     export HPImidpointIntegrator, HPItrapezoidalIntegrator
 
     include("integrators/hpi/hpi_methods.jl")
+    include("integrators/hpi/hpi_cache.jl")
     include("integrators/hpi/hpi_midpoint.jl")
     include("integrators/hpi/hpi_trapezoidal.jl")
+    include("integrators/hpi/hpi_common.jl")
 
 
     export NoProjection, projection

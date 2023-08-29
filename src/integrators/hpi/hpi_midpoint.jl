@@ -8,7 +8,7 @@ L_d (q_{n}, q_{n+1}) = h \, L \bigg( \frac{q_{n} + q_{n+1}}{2}, v_{n+1/2} \bigg)
 where $q_{n}$ approximates the solution $q(t_n)$ and $v_{n+1/2}$ is the velocity, which is assumed to be constant in the interval $[t_{n}, t_{n+1}]$.
 The discrete Hamilton-Pontryagin action reads
 ```math
-A_d [q_d] = \sum \limits_{n=0}^{N-1} \bigg[ L_{d}^{\alpha,\beta} (q_{n}, q_{n+1}, v_{n+1/2}) + \left< p_{n+1/2} , v_{n+1/2} - \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \right> \bigg] ,
+A_d [q_d] = \sum \limits_{n=0}^{N-1} \bigg[ L_{d}^{\alpha,\beta} (q_{n}, q_{n+1}, v_{n+1/2}) + \left< p_{n+1/2} , \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) - v_{n+1/2} \right> \bigg] ,
 ```
 where $\phi_h$ is a map that computes the velocity $v_{n+1/2}$ as a function of $q_{n}$, $q_{n+1}$ and a set of parameters $a_{n,n+1}$.
 A trivial example of such a map that does not depend on any parameters $a_{n,n+1}$ is
@@ -22,8 +22,8 @@ The equations of motion, that are solved by this integrator, is computed as:
 \begin{aligned}
 0 &= \frac{h}{2} \, \frac{\partial L}{\partial q} \bigg( \frac{q_{n-1} + q_{n}}{2}, v_{n-1/2} \bigg)
    + \frac{h}{2} \, \frac{\partial L}{\partial q} \bigg( \frac{q_{n} + q_{n+1}}{2}, v_{n+1/2} \bigg) \\
-  &- h \, D_1 \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2}
-   - h \, D_2 \phi_h (q_{n-1}, q_{n}; a_{n-1,n}) \cdot p_{n-1/2} , \\
+  &+ h \, D_1 \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2}
+   + h \, D_2 \phi_h (q_{n-1}, q_{n}; a_{n-1,n}) \cdot p_{n-1/2} , \\
 0 &= D_a \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1} , \\
 p_{n+1/2} &= \frac{\partial L}{\partial v} \bigg( \frac{q_{n} + q_{n+1}}{2}, v_{n+1/2} \bigg) , \\
 v_{n+1/2} &= \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) .
@@ -40,6 +40,8 @@ struct HPImidpoint{ϕT, D₁ϕT, D₂ϕT, DₐϕT, PT} <: HPIMethod
     Dₐϕ::DₐϕT
     params::PT
 end
+
+nparams(method::HPImidpoint) = length(method.params)
 
 isexplicit(method::HPImidpoint) = false
 isimplicit(method::HPImidpoint) = true
