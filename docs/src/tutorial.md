@@ -10,7 +10,7 @@ In this tutorial, we try to give an overview of the basic usage of GeometricInte
 ## Installation
 
 *GeometricIntegrators.jl* can be installed using Julia's built-in package manager in the command line interface by
-```julia
+```
 julia> ]
 (v1.9) pkg> add GeometricIntegrators
 ```

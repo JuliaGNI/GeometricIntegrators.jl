@@ -32,22 +32,22 @@ ishodemethod(::Union{PRKMethod, Type{<:PRKMethod}}) = true
 isiodemethod(::Union{PRKMethod, Type{<:PRKMethod}}) = true
 islodemethod(::Union{PRKMethod, Type{<:PRKMethod}}) = true
 
+isexplicit(method::Union{ERKMethod, Type{<:ERKMethod}}) = true
+isexplicit(method::Union{IRKMethod, Type{<:IRKMethod}}) = false
+isimplicit(method::Union{ERKMethod, Type{<:ERKMethod}}) = false
+isimplicit(method::Union{IRKMethod, Type{<:IRKMethod}}) = true
+
+isexplicit(method::Union{EPRKMethod, Type{<:EPRKMethod}}) = true
+isexplicit(method::Union{IPRKMethod, Type{<:IPRKMethod}}) = false
+isimplicit(method::Union{EPRKMethod, Type{<:EPRKMethod}}) = false
+isimplicit(method::Union{IPRKMethod, Type{<:IPRKMethod}}) = true
+
 isexplicit(method::RungeKuttaMethod) = RungeKutta.isexplicit(tableau(method))
 isimplicit(method::RungeKuttaMethod) = RungeKutta.isimplicit(tableau(method))
 issymmetric(method::RungeKuttaMethod) = RungeKutta.issymmetric(tableau(method))
 issymplectic(method::RungeKuttaMethod) = RungeKutta.issymplectic(tableau(method))
 # isenergypreserving(method::RungeKuttaMethod) = RungeKutta.order(tableau(method))
 # isstifflyaccurate(method::RungeKuttaMethod) = RungeKutta.order(tableau(method))
-
-isexplicit(method::ERKMethod) = true
-isexplicit(method::IRKMethod) = false
-isimplicit(method::ERKMethod) = false
-isimplicit(method::IRKMethod) = true
-
-isexplicit(method::EPRKMethod) = true
-isexplicit(method::IPRKMethod) = false
-isimplicit(method::EPRKMethod) = false
-isimplicit(method::IPRKMethod) = true
 
 
 function Base.show(io::IO, method::RKMethod)
