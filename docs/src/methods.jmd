@@ -1,29 +1,29 @@
 # List of all Methods
 
 ```julia; echo=false; results="raw"
-using GeometricIntegrators.Methods
-show(stdout, "text/markdown", Methods.MethodList(refs = true))
+using GeometricIntegrators.Integrators
+show(stdout, "text/markdown", Integrators.MethodList(refs = true))
 ```
 
 ```julia; echo=false; results="raw"
-using GeometricIntegrators.Methods
+using GeometricIntegrators.Integrators
 
 prob_types = (
-    ("ODE",  Methods.isodemethod),
-    ("PODE", Methods.ispodemethod),
-    ("HODE", Methods.ishodemethod),
-    ("IODE", Methods.isiodemethod),
-    ("LODE", Methods.islodemethod),
-    ("SODE", Methods.issodemethod),
-    ("DAE",  Methods.isdaemethod),
-    ("PDAE", Methods.ispdaemethod),
-    ("HDAE", Methods.ishdaemethod),
-    ("IDAE", Methods.isidaemethod),
-    ("LDAE", Methods.isldaemethod),
+    ("ODE",  Integrators.isodemethod),
+    ("PODE", Integrators.ispodemethod),
+    ("HODE", Integrators.ishodemethod),
+    ("IODE", Integrators.isiodemethod),
+    ("LODE", Integrators.islodemethod),
+    ("SODE", Integrators.issodemethod),
+    ("DAE",  Integrators.isdaemethod),
+    ("PDAE", Integrators.ispdaemethod),
+    ("HDAE", Integrators.ishdaemethod),
+    ("IDAE", Integrators.isidaemethod),
+    ("LDAE", Integrators.isldaemethod),
 )
 
 for (prob, selector) in prob_types
-    methods = Methods.MethodList(selector = selector, refs = true)
+    methods = Integrators.MethodList(selector = selector, refs = true)
     if length(methods) > 1
         print(stdout, "\n## $(prob) Methods\n\n")
         show(stdout, "text/markdown", methods)

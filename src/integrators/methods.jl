@@ -50,6 +50,13 @@ ishdaemethod(::Union{HDAEMethod, Type{<:HDAEMethod}}) = true
 isidaemethod(::Union{IDAEMethod, Type{<:IDAEMethod}}) = true
 isldaemethod(::Union{LDAEMethod, Type{<:LDAEMethod}}) = true
 
+isexplicit(::GeometricMethod) = missing
+isimplicit(::GeometricMethod) = missing
+issymmetric(::GeometricMethod) = missing
+issymplectic(::GeometricMethod) = missing
+isenergypreserving(::GeometricMethod) = missing
+isstifflyaccurate(::GeometricMethod) = missing
+
 isexplicit(t::Type{<:GeometricMethod}) = applicable(t) ? isexplicit(t()) : missing
 isimplicit(t::Type{<:GeometricMethod}) = applicable(t) ? isimplicit(t()) : missing
 issymmetric(t::Type{<:GeometricMethod}) = applicable(t) ? issymmetric(t()) : missing
