@@ -78,8 +78,10 @@ Pages   = ["integrators/rk/abstract.jl",
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
-Pages   = ["integrators/vi/integrators_vprk.jl"]
-Pages   = ["integrators/vi/vprk_methods.jl"]
+Pages   = [
+            "integrators/vi/integrators_vprk.jl",
+            "integrators/vi/vprk_methods.jl",
+        ]
 ```
 
 ## Degenerate Variational Integrators
