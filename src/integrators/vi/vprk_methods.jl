@@ -8,8 +8,6 @@ GeometricBase.order(method::VPRKMethod) = RungeKutta.order(tableau(method))
 @inline nstages(method::VPRKMethod) = nstages(tableau(method))
 @inline eachstage(method::VPRKMethod) = eachstage(tableau(method))
 
-isiodemethod(::Union{VPRKMethod, Type{<:VPRKMethod}}) = true
-
 isexplicit(method::VPRKMethod) = RungeKutta.isexplicit(tableau(method))
 isimplicit(method::VPRKMethod) = RungeKutta.isimplicit(tableau(method))
 issymmetric(method::VPRKMethod) = RungeKutta.issymmetric(tableau(method))
