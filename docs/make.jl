@@ -55,6 +55,7 @@ makedocs(bib,
                 "DVI"         => "integrators/dvi.md",
                 # "CGVI"        => "integrators/cgvi.md",
                #  "DGVI"        => "integrators/dgvi.md",
+               #  "HPI"         => "integrators/hpi.md",
                #  "HPG"         => "integrators/hpg.md",
                ],
              "Modules" => [

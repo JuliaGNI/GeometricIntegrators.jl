@@ -12,6 +12,8 @@ using SafeTestsets
 
 # @safetestset "Galerkin Variational Integrators                                                " begin include("integrators/galerkin_integrators_tests.jl") end
 
+@safetestset "Hamilton-Pontryagin Integrators                                                 " begin include("integrators/hamilton_pontryagin_integrators_tests.jl") end
+
 @safetestset "Projection Methods                                                              " begin include("projections/projections_tests.jl") end
 @safetestset "Projection Methods with Implicit Equations                                      " begin include("projections/projections_implicit_tests.jl") end
 @safetestset "Projection Methods with Variational Partitioned Runge-Kutta Integrators         " begin include("projections/projections_vprk_tests.jl") end

@@ -2,18 +2,15 @@
 # Integrators
 
 
-## Common
+## Geometric Integrator
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
-Pages   = ["integrators/abstract_coefficients.jl",
-           "integrators/abstract_integrator.jl",
-           "integrators/abstract_tableau.jl",
-           "integrators/integrator_cache.jl",
-           "integrators/integrators_common.jl",
-           "integrators/integrators.jl"]
+Pages   = [
+            "integrators/integrator_cache.jl",
+            "integrators/integrator.jl",
+        ]
 ```
-
 
 ## Initial Guesses
 
@@ -25,7 +22,6 @@ Pages   = [
             "integrators/initial_guess/midpoint.jl",
           ]
 ```
-
 
 ## Extrapolation Methods
 
@@ -42,7 +38,6 @@ Pages   = ["integrators/extrapolation/extrapolation.jl",
            "integrators/extrapolation/midpoint.jl"]
 ```
 
-
 # Euler Integrators
 
 ```@autodocs
@@ -53,8 +48,7 @@ Pages   = [
         ]
 ```
 
-
-## Runge-Kutta Methods
+## Runge-Kutta Integrators
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
@@ -73,12 +67,14 @@ Pages   = ["integrators/rk/abstract.jl",
           ]
 ```
 
-
 ## Variational Integrators
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
 Pages   = [
+            "integrators/vi/vi_methods.jl",
+            "integrators/vi/position_momentum_midpoint.jl",
+            "integrators/vi/position_momentum_trapezoidal.jl",
             "integrators/vi/vprk_integrator.jl",
             "integrators/vi/vprk_methods.jl",
         ]
@@ -89,12 +85,12 @@ Pages   = [
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
 Pages   = [
+            "integrators/dvi/methods.jl",
             "integrators/dvi/integrators_dvi_a.jl",
             "integrators/dvi/integrators_dvi_b.jl",
             "integrators/dvi/integrators_cmdvi.jl",
             "integrators/dvi/integrators_ctdvi.jl",
             "integrators/dvi/integrators_dvrk.jl",
-            "integrators/dvi/methods.jl",
         ]
 ```
 
@@ -106,8 +102,18 @@ Pages   = ["integrators/cgvi/integrators_cgvi.jl",
            "integrators/dgvi/integrators_dgvi.jl"]
 ```
 
+## Hamilton-Pontryagin Integrators
 
-## Splitting Methods
+```@autodocs
+Modules = [GeometricIntegrators.Integrators]
+Pages   = [
+            "integrators/hpi/hpi_methods.jl",
+            "integrators/hpi/hpi_midpoint.jl",
+            "integrators/hpi/hpi_trapezoidal.jl",
+        ]
+```
+
+## Splitting and Composition Methods
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]

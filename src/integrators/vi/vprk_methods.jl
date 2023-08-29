@@ -1,7 +1,7 @@
 
 # Variational Partitioned Runge-Kutta Methods
 
-abstract type VPRKMethod <: LODEMethod end
+abstract type VPRKMethod <: VIMethod end
 
 GeometricBase.order(method::VPRKMethod) = RungeKutta.order(tableau(method))
 
