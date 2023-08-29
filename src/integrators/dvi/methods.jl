@@ -5,6 +5,9 @@ issymplectic(::Union{DVIMethod, Type{<:DVIMethod}}) = true
 isexplicit(::Union{DVIMethod, Type{<:DVIMethod}}) = false
 isimplicit(::Union{DVIMethod, Type{<:DVIMethod}}) = true
 
+default_solver(::DVIMethod) = Newton()
+default_iguess(::DVIMethod) = HermiteExtrapolation()
+
 
 "Symplectic Euler-A Degenerate Variational Integrator."
 struct DVIA <: DVIMethod end

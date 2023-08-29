@@ -65,7 +65,7 @@ Degenerate Variational Runge-Kutta integrator cache.
 * `Θ`: implicit function of internal stages
 * `F`: vector field of implicit function
 """
-struct IntegratorCacheDVRK{DT,D,S} <: ODEIntegratorCache{DT,D}
+struct IntegratorCacheDVRK{DT,D,S} <: IODEIntegratorCache{DT,D}
     x::Vector{DT}
 
     q::Vector{DT}
@@ -97,10 +97,6 @@ end
 
 
 const IntegratorDVRK{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:DVRK}
-
-
-default_solver(::DVRK) = Newton()
-default_iguess(::DVRK) = HermiteExtrapolation()
 
 
 function Base.show(io::IO, int::IntegratorDVRK)
