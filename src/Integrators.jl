@@ -192,8 +192,8 @@ module Integrators
     export IntegratorVPRK
 
     include("integrators/vi/vprk_methods.jl")
-    include("integrators/vi/integrators_vprk_cache.jl")
-    include("integrators/vi/integrators_vprk.jl")
+    include("integrators/vi/vprk_cache.jl")
+    include("integrators/vi/vprk_integrator.jl")
 
 
     # export IntegratorCGVI, IntegratorDGVI, IntegratorDGVIEXP,

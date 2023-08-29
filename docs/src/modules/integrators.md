@@ -79,7 +79,7 @@ Pages   = ["integrators/rk/abstract.jl",
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
 Pages   = [
-            "integrators/vi/integrators_vprk.jl",
+            "integrators/vi/vprk_integrator.jl",
             "integrators/vi/vprk_methods.jl",
         ]
 ```
