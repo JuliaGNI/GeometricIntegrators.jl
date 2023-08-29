@@ -64,7 +64,7 @@ function components!(
     functions(problem).f(cache.f̃, t̃, cache.q̃, cache.ṽ)
 
     # compute p
-    cache.p .= cache.θ̃ .+ timestep(problem) .* cache.f̃ ./ 2
+    cache.p .= cache.p̄ .+ timestep(problem) .* cache.f̃
 end
 
 

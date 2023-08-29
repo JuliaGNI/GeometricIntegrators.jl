@@ -66,7 +66,8 @@ function components!(
     functions(problem).f(cache.f, t, cache.q, cache.ṽ)
 
     # compute p
-    cache.p .= (cache.θ .+ cache.θ̄) ./ 2 .+ timestep(problem) .* cache.f ./ 2
+    cache.θ̃ .= (cache.θ .+ cache.θ̄) ./ 2
+    cache.p .= cache.p̄ .+ timestep(problem) .* (cache.f .+ cache.f̄) ./ 2
 end
 
 
@@ -88,5 +89,5 @@ function residual!(
     components!(x, solstep, problem, method, caches)
 
     # compute b
-    b .= (cache.θ .+ cache.θ̄) ./ 2 .- cache.p̄ .- timestep(problem) .* cache.f̄ ./ 2
+    b .= cache.θ̃ .- cache.p̄ .- timestep(problem) .* cache.f̄ ./ 2
 end
