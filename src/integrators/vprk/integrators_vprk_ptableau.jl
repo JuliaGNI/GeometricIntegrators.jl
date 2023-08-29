@@ -104,7 +104,7 @@ struct IntegratorVPRKpTableau{DT, TT, D, S,
 end
 
 
-@inline Methods.nstages(integrator::IntegratorVPRKpTableau{DT,TT,D,S}) where {DT,TT,D,S} = S
+@inline nstages(integrator::IntegratorVPRKpTableau{DT,TT,D,S}) where {DT,TT,D,S} = S
 @inline Base.ndims(int::IntegratorVPRKpTableau{DT,TT,D,S}) where {DT,TT,D,S} = D
 
 

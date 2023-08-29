@@ -56,7 +56,7 @@ function integrate!(int::DeterministicIntegrator)
     cut_periodic_solution!(solstep(int), periodicity(problem(int)))
 
     # update vector field for initial guess
-    Solutions.update_vector_fields!(solstep(int), problem(int))
+    update_vector_fields!(solstep(int), problem(int))
 
     return solstep(int)
 end
@@ -77,7 +77,7 @@ function integrate!(sol::GeometricSolution, int::DeterministicIntegrator, n₁::
     # copy initial condition from solution and initialize
     copy!(solstep(int), sol[n₁-1])
     initialize!(int)
-    Solutions.initialize!(solstep(int), problem(int), Solutions.default_extrapolation())
+    initialize!(solstep(int), problem(int), default_extrapolation())
 
     # loop over time steps
     for n in n₁:n₂
@@ -238,7 +238,7 @@ internal_variables(::Nothing) = NamedTuple()
 
 
 # Create SolutionStep with internal variables of integrator.
-# function Solutions.SolutionStep(solution::GeometricSolution, integrator::GeometricIntegrator)
+# function SolutionStep(solution::GeometricSolution, integrator::GeometricIntegrator)
 #     SolutionStep(solution, internal_variables(integrator))
 # end
 

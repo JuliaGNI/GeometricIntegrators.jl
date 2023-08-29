@@ -1,5 +1,5 @@
 using GeometricIntegrators
-using GeometricIntegrators.Solutions: save#load, 
+using GeometricIntegrators.Integrators: save#load, 
 using GeometricProblems.HarmonicOscillator
 using Test
 import HDF5

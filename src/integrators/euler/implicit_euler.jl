@@ -5,10 +5,10 @@ $(reference(Val(:ImplicitEuler)))
 """
 struct ImplicitEuler <: ODEMethod end
 
-Methods.isexplicit(method::ImplicitEuler) = false
-Methods.isimplicit(method::ImplicitEuler) = true
-Methods.issymmetric(method::ImplicitEuler) = false
-Methods.issymplectic(method::ImplicitEuler) = false
+isexplicit(method::ImplicitEuler) = false
+isimplicit(method::ImplicitEuler) = true
+issymmetric(method::ImplicitEuler) = false
+issymplectic(method::ImplicitEuler) = false
 
 
 @doc raw"""

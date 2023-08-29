@@ -17,13 +17,11 @@ module SPARK
     import RungeKutta: AbstractTableau, Tableau, nstages, eachstage
 
 
-    using ..Methods
-
-    import ..Solutions: SolutionStepPDAE, SolutionVector
-
     import ..Integrators
 
     import ..Integrators: GeometricIntegrator, Newton
+    import ..Integrators: HDAEMethod, IDAEMethod, LDAEMethod, PDAEMethod
+    import ..Integrators: SolutionStepPDAE, SolutionVector
     import ..Integrators: InitialGuess, Extrapolation, HermiteExtrapolation
     import ..Integrators: initialguess!, initial_guess!, integrate_step!, residual!
     import ..Integrators: CacheDict, Cache, CacheType, IDAEIntegratorCache

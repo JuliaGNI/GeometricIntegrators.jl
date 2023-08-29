@@ -188,20 +188,6 @@ end
 # end
 
 
-# @testset "$(rpad("Degenerate symplectic partitioned Runge-Kutta methods",80))" begin
-
-#     sol = integrate(iode, DegenerateVPRK(VPRKGauss(1)))
-#     @test relative_maximum_error(sol.q, ref.q) < 2E-5
-
-#     sol = integrate(iode, DegenerateVPRK(VPRKGauss(2)))
-#     @test relative_maximum_error(sol.q, ref.q) < 4E-7
-
-#     sol = integrate(iode, DegenerateVPRK(VPRKGauss(3)))
-#     @test relative_maximum_error(sol.q, ref.q) < 2E-10
-
-# end
-
-
 # @testset "$(rpad("VPRK integrators with Legendre projection",80))" begin
 
 #     sol = integrate(iode, VPRKpLegendre(VPRKGauss(1)))

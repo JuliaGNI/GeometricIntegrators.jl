@@ -6,7 +6,7 @@ using Test
 ode = odeproblem()
 ref = exact_solution(ode)
 
-@testset "$(rpad("Various integrators", 80))" begin
+@testset "$(rpad("Euler integrators", 80))" begin
 
     sol = integrate(ode, ExplicitEuler())
     err = relative_maximum_error(sol, ref)

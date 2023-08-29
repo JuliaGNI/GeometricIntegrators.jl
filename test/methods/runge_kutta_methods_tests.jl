@@ -1,7 +1,7 @@
 using GeometricProblems.HarmonicOscillator
 using RungeKutta.Tableaus
 
-using GeometricIntegrators.Methods: tableau
+using GeometricIntegrators.Integrators: tableau
 
 ode  = odeproblem()
 pode = podeproblem()

@@ -5,9 +5,9 @@ meta_methods = (
     DIRK,
     EPRK,
     IPRK,
-    FLRK,
+    # FLRK,
     VPRK,
-    DegenerateVPRK,
+    DVRK,
     ProjectedVPRK,
     ProjectedMethod,
 )
@@ -129,20 +129,19 @@ degenerate_variational_integrators = (
     DVIB,
     CMDVI,
     CTDVI,
-    DVRK,
 )
 
 splitting_methods = (
-    # LieA,
-    # LieB,
-    # Strang,
-    # Marchuk,
-    # StrangA,
-    # StrangB,
-    # McLachlan2,
-    # McLachlan4,
-    # TripleJump,
-    # SuzukiFractal,
+    LieA,
+    LieB,
+    Strang,
+    Marchuk,
+    StrangA,
+    StrangB,
+    McLachlan2,
+    McLachlan4,
+    TripleJump,
+    SuzukiFractal,
 )
 
 method_groups = (
@@ -160,9 +159,9 @@ method_groups = (
 @inline tuplejoin(x, y) = (x..., y...)
 @inline tuplejoin(x, y, z...) = tuplejoin(tuplejoin(x, y), z...)
 
-methods = tuplejoin(method_groups...)
+method_list = tuplejoin(method_groups...)
 
-for m in nameof.(methods)
+for m in nameof.(method_list)
     @eval export $m
 end
 
@@ -235,7 +234,7 @@ struct MethodList{MD}
     header
     data
 
-    function MethodList(list::Tuple = methods; markdown::Bool = false, selector = _true, refs = false)
+    function MethodList(list::Tuple = method_list; markdown::Bool = false, selector = _true, refs = false)
         header = [
             "Method",
             "Order",

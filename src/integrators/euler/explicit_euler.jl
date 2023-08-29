@@ -5,10 +5,10 @@ $(reference(Val(:ExplicitEuler)))
 """
 struct ExplicitEuler <: ODEMethod end
 
-Methods.isexplicit(method::ExplicitEuler) = true
-Methods.isimplicit(method::ExplicitEuler) = false
-Methods.issymmetric(method::ExplicitEuler) = false
-Methods.issymplectic(method::ExplicitEuler) = false
+isexplicit(method::ExplicitEuler) = true
+isimplicit(method::ExplicitEuler) = false
+issymmetric(method::ExplicitEuler) = false
+issymplectic(method::ExplicitEuler) = false
 
 
 const IntegratorExplicitEuler{DT,TT} = GeometricIntegrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}}, <:ExplicitEuler}
