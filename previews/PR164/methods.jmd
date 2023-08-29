@@ -1,0 +1,32 @@
+# List of all Methods
+
+```julia; echo=false; results="raw"
+using GeometricIntegrators.Methods
+show(stdout, "text/markdown", Methods.MethodList(refs = true))
+```
+
+```julia; echo=false; results="raw"
+using GeometricIntegrators.Methods
+
+prob_types = (
+    ("ODE",  Methods.isodemethod),
+    ("PODE", Methods.ispodemethod),
+    ("HODE", Methods.ishodemethod),
+    ("IODE", Methods.isiodemethod),
+    ("LODE", Methods.islodemethod),
+    ("SODE", Methods.issodemethod),
+    ("DAE",  Methods.isdaemethod),
+    ("PDAE", Methods.ispdaemethod),
+    ("HDAE", Methods.ishdaemethod),
+    ("IDAE", Methods.isidaemethod),
+    ("LDAE", Methods.isldaemethod),
+)
+
+for (prob, selector) in prob_types
+    methods = Methods.MethodList(selector = selector, refs = true)
+    if length(methods) > 1
+        print(stdout, "\n## $(prob) Methods\n\n")
+        show(stdout, "text/markdown", methods)
+    end
+end
+```
