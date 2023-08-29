@@ -1,5 +1,58 @@
 @doc raw"""
-Degenerate variational Runge-Kutta integrator cache.
+Degenerate Variational Runge-Kutta (DVRK) method for noncanonical
+symplectic equations solving the system
+```math
+\begin{aligned}
+P_{n,i} &= \vartheta (Q_{n,i}, V_{n,i}) , &
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} , \\
+F_{n,i} &= f (Q_{n,i}, V_{n,i}) , &
+P_{n,i} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{a}_{ij} \, F_{n,j} , &
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i} \, F_{n,i} ,
+\end{aligned}
+```
+Usually we are interested in Lagrangian systems, where
+```math
+\begin{aligned}
+P_{n,i} &= \dfrac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , &
+F_{n,i} &= \dfrac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) ,
+\end{aligned}
+```
+and tableaus satisfying the symplecticity conditions
+```math
+\begin{aligned}
+b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
+\bar{b}_i &= b_i .
+\end{aligned}
+```
+
+A Degenerate Variational Runge-Kutta method is instantiated by either
+passing a Runge-Kutta tableau or a Runge-Kutta method:
+```
+DVRK(tableau::Tableau)
+DVRK(method::RKMethod)
+```
+"""
+struct DVRK{TT} <: DVIMethod
+    tableau::TT
+
+    function DVRK(tableau::TT) where {TT <: Tableau}
+        new{TT}(tableau)
+    end
+end
+
+DVRK(method::RKMethod, args...; kwargs...) = DVRK(tableau(method))
+
+GeometricBase.tableau(method::DVRK) = method.tableau
+GeometricBase.order(method::DVRK) = order(tableaus(method))
+isexplicit(method::DVRK) = false
+isimplicit(method::DVRK) = true
+issymmetric(method::DVRK) = issymmetric(tableaus(method))
+issymplectic(method::DVRK) = issymplectic(tableaus(method))
+
+
+@doc raw"""
+Degenerate Variational Runge-Kutta integrator cache.
 
 ### Fields
 
@@ -43,35 +96,6 @@ end
 @inline CacheType(ST, problem::Union{IODEProblem,LODEProblem}, method::DVRK) = IntegratorCacheDVRK{ST, ndims(problem)}
 
 
-
-@doc raw"""
-Degenerate Variational Runge-Kutta integrator for noncanonical
-symplectic equations solving the system
-```math
-\begin{aligned}
-P_{n,i} &= \vartheta (Q_{n,i}, V_{n,i}) , &
-Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
-q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} , \\
-F_{n,i} &= f (Q_{n,i}, V_{n,i}) , &
-P_{n,i} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{a}_{ij} \, F_{n,j} , &
-p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i} \, F_{n,i} ,
-\end{aligned}
-```
-Usually we are interested in Lagrangian systems, where
-```math
-\begin{aligned}
-P_{n,i} &= \dfrac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , &
-F_{n,i} &= \dfrac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) ,
-\end{aligned}
-```
-and tableaus satisfying the symplecticity conditions
-```math
-\begin{aligned}
-b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
-\bar{b}_i &= b_i .
-\end{aligned}
-```
-"""
 const IntegratorDVRK{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:DVRK}
 
 
