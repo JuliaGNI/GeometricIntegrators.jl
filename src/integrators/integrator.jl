@@ -20,10 +20,14 @@ end
 
 
 # Apply integrator for ntime time steps and return solution.
+function integrate(integrator::DeterministicIntegrator; kwargs...)
+    solution = Solution(problem(integrator); kwargs...)
+    integrate!(solution, integrator)
+end
+
 function integrate(problem::AbstractProblem, method::GeometricMethod; kwargs...)
     integrator = GeometricIntegrator(problem, method; kwargs...)
-    solution = Solution(problem; kwargs...)
-    integrate!(solution, integrator)
+    integrate(integrator)
 end
 
 function integrate(problems::GeometricEnsemble, method::GeometricMethod; kwargs...)
