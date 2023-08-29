@@ -19,9 +19,11 @@ Pages   = ["integrators/abstract_coefficients.jl",
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
-Pages   = ["integrators/initial_guess/initial_guess_ode.jl",
-           "integrators/initial_guess/initial_guess_iode.jl",
-           "integrators/initial_guess/initial_guess_pode.jl"]
+Pages   = [
+            "integrators/initial_guess/initial_guess.jl",
+            "integrators/initial_guess/hermite.jl",
+            "integrators/initial_guess/midpoint.jl",
+          ]
 ```
 
 
@@ -41,6 +43,14 @@ Pages   = ["integrators/extrapolation/extrapolation.jl",
 ```
 
 
+# Euler Integrators
+
+```@docs
+GeometricIntegrators.Integrators.ExplicitEuler
+GeometricIntegrators.Integrators.ImplicitEuler
+```
+
+
 ## Splitting Methods
 
 ```@autodocs
@@ -56,16 +66,17 @@ Pages   = ["integrators/splitting/integrators_composition.jl",
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
-Pages   = ["integrators/rk/bstract_integrator_rk.jl",
+Pages   = ["integrators/rk/abstract_integrator_rk.jl",
            "integrators/rk/coefficients.jl",
            "integrators/rk/tableaus.jl",
            "integrators/rk/integrators_erk.jl",
+           "integrators/rk/integrators_irk.jl",
+           "integrators/rk/integrators_irk_implicit.jl",
            "integrators/rk/integrators_dirk.jl",
-           "integrators/rk/integrators_firk.jl",
            "integrators/rk/integrators_eprk.jl",
            "integrators/rk/integrators_iprk.jl",
-           "integrators/rk/integrators_flrk.jl",
-           "integrators/rk/integrators_pglrk.jl"]
+           "integrators/rk/integrators_iprk_implicit.jl",
+          ]
 ```
 
 
@@ -83,7 +94,8 @@ Modules = [GeometricIntegrators.Integrators]
 Pages   = ["integrators/dvi/integrators_dvi_a.jl",
            "integrators/dvi/integrators_dvi_b.jl",
            "integrators/dvi/integrators_cmdvi.jl",
-           "integrators/dvi/integrators_ctdvi.jl"]
+           "integrators/dvi/integrators_ctdvi.jl",
+           "integrators/dvi/integrators_dvrk.jl"]
 ```
 
 ## Galerkin Variational Integrators
