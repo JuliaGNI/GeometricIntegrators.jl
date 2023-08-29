@@ -3,7 +3,7 @@ using SafeTestsets
 @safetestset "Extrapolation Methods                                                           " begin include("extrapolation_tests.jl") end
 @safetestset "Solution Tests                                                                  " begin include("solutions/solutions_tests.jl") end
 @safetestset "Initial Guesses                                                                 " begin include("integrators/initial_guess_tests.jl") end
-@safetestset "Various Integrators                                                             " begin include("integrators/integrators_tests.jl") end
+@safetestset "Euler Integrators                                                               " begin include("integrators/euler_tests.jl") end
 @safetestset "Runge-Kutta Integrators                                                         " begin include("integrators/rk_integrators_tests.jl") end
 @safetestset "Runge-Kutta Integrators for Implicit Equations                                  " begin include("integrators/rk_implicit_integrators_tests.jl") end
 @safetestset "Splitting Integrators                                                           " begin include("integrators/splitting_integrators_tests.jl") end

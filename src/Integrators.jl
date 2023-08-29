@@ -77,8 +77,8 @@ module Integrators
 
     export ExplicitEuler, ImplicitEuler
     
-    include("integrators/various/integrators_explicit_euler.jl")
-    include("integrators/various/integrators_implicit_euler.jl")
+    include("integrators/euler/explicit_euler.jl")
+    include("integrators/euler/implicit_euler.jl")
 
 
     export AbstractIntegratorRK, AbstractIntegratorIRK, AbstractIntegratorPRK, IntegratorRK
