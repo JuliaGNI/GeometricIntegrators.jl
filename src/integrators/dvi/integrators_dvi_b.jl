@@ -8,7 +8,7 @@ Degenerate variational integrator cache.
 * `Θ`: implicit function evaluated on solution
 * `f`: vector field of implicit function
 """
-struct IntegratorCacheDVIB{DT,D} <: ODEIntegratorCache{DT,D}
+struct IntegratorCacheDVIB{DT,D} <: IODEIntegratorCache{DT,D}
     x::Vector{DT}
 
     q::Vector{DT}
@@ -40,10 +40,6 @@ end
 Symplectic Euler-B Degenerate Variational Integrator.
 """
 const IntegratorDVIB{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:DVIB}
-
-
-default_solver(::DVIB) = Newton()
-default_iguess(::DVIB) = HermiteExtrapolation()
 
 
 function Base.show(io::IO, int::IntegratorDVIB)

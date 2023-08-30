@@ -25,9 +25,6 @@ const IntegratorVPRK{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LOD
 
 description(::IntegratorVPRK) = "Variational Partitioned Runge-Kutta Integrator"
 
-default_solver(::VPRKMethod) = Newton()
-default_iguess(::VPRKMethod) = HermiteExtrapolation()
-
 initmethod(method::VPRKMethod) = VPRK(method)
 
 solversize(problem::VPRKProblem, method::VPRKMethod) =

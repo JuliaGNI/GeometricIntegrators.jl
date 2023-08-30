@@ -1,4 +1,3 @@
-
 # GeometricIntegrators.jl
 
 *Julia library of geometric integrators for differential equations.*
@@ -47,38 +46,57 @@ While DifferentialEquations.jl provides a feature-rich ecosystem for the solutio
 ## Manual
 
 ```@contents
-Pages = ["tutorial/tutorial.md",
-         "problems.md",
-         "methods.md",
+Pages = [
+    "tutorial/tutorial.md",
+    "problems.md",
+    "methods.md",
 ]
 ```
 
+
+## Integrators
+
+```@contents
+Pages = [
+    "integrators/rk.md",
+    "integrators/splitting.md",
+    "integrators/variational.md",
+    "integrators/vprk.md",
+    "integrators/spark.md",
+    "integrators/dvi.md",
+    "integrators/cgvi.md",
+    "integrators/dgvi.md",
+    "integrators/hpi.md",
+    "integrators/hpg.md",
+]
+```
 
 ## Modules
 
 ```@contents
-Pages = ["modules/methods.md",
-         "modules/integrators.md",
-        #"modules/discontinuities.md",
-         "modules/problems.md",
-         "modules/equations.md",
-        #"modules/simulations.md",
-         "modules/solutions.md",
-         "modules/rungekutta.md",
-         "modules/rungekutta_partitioned.md",
-         "modules/spark.md",
+Pages = [
+    "modules/methods.md",
+    "modules/integrators.md",
+    # "modules/discontinuities.md",
+    "modules/problems.md",
+    "modules/equations.md",
+    # "modules/simulations.md",
+    "modules/solutions.md",
+    "modules/rungekutta.md",
+    "modules/rungekutta_partitioned.md",
+    "modules/spark.md",
 ]
 ```
-
 
 ## Developer Documentation
 
 ```@contents
-Pages = ["developer/integrators.md",
-         "developer/projections.md",
-         "developer/code_integration.md",
-         "developer/custom_integrators.md",
-         "developer/adaptive_time_stepping.md",
+Pages = [
+    "developer/integrators.md",
+    "developer/projections.md",
+    "developer/code_integration.md",
+    "developer/custom_integrators.md",
+    "developer/adaptive_time_stepping.md",
 ]
 ```
 

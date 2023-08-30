@@ -191,9 +191,14 @@ module Integrators
 
     export IntegratorVPRK
 
+    include("integrators/vi/vi_methods.jl")
+    include("integrators/vi/position_momentum_cache.jl")
+    include("integrators/vi/position_momentum_midpoint.jl")
+    include("integrators/vi/position_momentum_trapezoidal.jl")
+    include("integrators/vi/position_momentum_common.jl")
     include("integrators/vi/vprk_methods.jl")
-    include("integrators/vi/integrators_vprk_cache.jl")
-    include("integrators/vi/integrators_vprk.jl")
+    include("integrators/vi/vprk_cache.jl")
+    include("integrators/vi/vprk_integrator.jl")
 
 
     # export IntegratorCGVI, IntegratorDGVI, IntegratorDGVIEXP,
@@ -217,6 +222,15 @@ module Integrators
     include("integrators/dvi/integrators_cmdvi.jl")
     include("integrators/dvi/integrators_ctdvi.jl")
     include("integrators/dvi/integrators_dvrk.jl")
+
+
+    export HPImidpointIntegrator, HPItrapezoidalIntegrator
+
+    include("integrators/hpi/hpi_methods.jl")
+    include("integrators/hpi/hpi_cache.jl")
+    include("integrators/hpi/hpi_midpoint.jl")
+    include("integrators/hpi/hpi_trapezoidal.jl")
+    include("integrators/hpi/hpi_common.jl")
 
 
     export NoProjection, projection

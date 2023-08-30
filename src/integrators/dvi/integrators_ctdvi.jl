@@ -8,7 +8,7 @@ Degenerate variational integrator cache.
 * `Θ`: implicit function evaluated on solution
 * `f`: vector field of implicit function
 """
-struct IntegratorCacheCTDVI{DT,D} <: ODEIntegratorCache{DT,D}
+struct IntegratorCacheCTDVI{DT,D} <: IODEIntegratorCache{DT,D}
     x::Vector{DT}
 
     q::Vector{DT}
@@ -45,10 +45,6 @@ end
 Trapezoidal Degenerate Variational Integrator.
 """
 const IntegratorCTDVI{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:CTDVI}
-
-
-default_solver(::CTDVI) = Newton()
-default_iguess(::CTDVI) = HermiteExtrapolation()
 
 
 function Base.show(io::IO, int::IntegratorCTDVI)

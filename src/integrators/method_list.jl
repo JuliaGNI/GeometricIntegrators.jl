@@ -10,6 +10,8 @@ meta_methods = (
     DVRK,
     ProjectedVPRK,
     ProjectedMethod,
+    HPImidpoint,
+    HPItrapezoidal,
 )
 
 explicit_rungekutta_methods = (
@@ -124,6 +126,11 @@ variational_partitioned_runge_kutta_families = (
     VPRKLobattoIIIGIIIḠ,
 )
 
+variational_integrators = (
+    PMVImidpoint,
+    PMVItrapezoidal,    
+)
+
 degenerate_variational_integrators = (
     DVIA,
     DVIB,
@@ -151,6 +158,7 @@ method_groups = (
     partitioned_runge_kutta_methods,
     partitioned_runge_kutta_families,
     variational_partitioned_runge_kutta_families,
+    variational_integrators,
     degenerate_variational_integrators,
     splitting_methods,
 )
