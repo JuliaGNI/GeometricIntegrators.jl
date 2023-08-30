@@ -30,11 +30,11 @@ pref = exact_solution(podeproblem())
     end
 
 
-    # sol = integrate(lode, HPImidpoint(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]))
-    # @test relative_maximum_error(sol.q, pref.q) < 4E-4
+    sol = integrate(lode, HPImidpoint(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]))
+    @test relative_maximum_error(sol.q, pref.q) < 4E-4
 
-    # ref = integrate(lode, PMVImidpoint())
-    # @test relative_maximum_error(sol.q, ref.q) < 8*eps()
+    ref = integrate(lode, PMVImidpoint())
+    @test relative_maximum_error(sol.q, ref.q) < 8*eps()
 
 
     sol = integrate(lode, HPItrapezoidal(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]))

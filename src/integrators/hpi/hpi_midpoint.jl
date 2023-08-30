@@ -24,14 +24,33 @@ The equations of motion, that are solved by this integrator, is computed as:
    + \frac{h}{2} \, \frac{\partial L}{\partial q} \bigg( \frac{q_{n} + q_{n+1}}{2}, v_{n+1/2} \bigg) \\
   &+ h \, D_1 \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2}
    + h \, D_2 \phi_h (q_{n-1}, q_{n}; a_{n-1,n}) \cdot p_{n-1/2} , \\
-0 &= D_a \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1} , \\
+0 &= D_a \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2} , \\
 p_{n+1/2} &= \frac{\partial L}{\partial v} \bigg( \frac{q_{n} + q_{n+1}}{2}, v_{n+1/2} \bigg) , \\
 v_{n+1/2} &= \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) .
 \end{aligned}
 ```
-The current implementation requires that $D_2 \phi_h $ and $D_a \phi_h$ do not depend on the second and third argument, but only $D_1 \phi_h$ is allowed to depend on all three arguments.
-Otherwise it would be necessary to prescribe initial conditions $(q_{-1}, a_{-1,0}, q_{0}, p_{0})$ instead of just $(q_{0}, p_{0})$.
-
+Upon defining the momentum
+```math
+p_{n}
+= h \, D_2 \phi_h (q_{n-1}, q_{n}; a_{n-1,n}) \cdot p_{n-1/2}
++ \frac{h}{2} \, \frac{\partial L}{\partial q} \bigg( \frac{q_{n-1} + q_{n}}{2}, v_{n-1/2} \bigg) ,
+```
+we can rewrite the equations of motion as
+```math
+\begin{aligned}
+0 &= p_{n}
+   + \frac{h}{2} \, \frac{\partial L}{\partial q} \bigg( \frac{q_{n} + q_{n+1}}{2}, v_{n+1/2} \bigg)
+   + h \, D_1 \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2} , \\
+0 &= D_a \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2} , \\
+v_{n+1/2} &= \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) , \\
+p_{n+1/2} &= \frac{\partial L}{\partial v} \bigg( \frac{q_{n} + q_{n+1}}{2}, v_{n+1/2} \bigg) , \\
+p_{n+1}
+&= h \, D_2 \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2}
+ + \frac{h}{2} \, \frac{\partial L}{\partial q} \bigg( \frac{q_{n} + q_{n+1}}{2}, v_{n+1/2} \bigg) .
+\end{aligned}
+```
+Given $(q_{n}, p_{n})$, the first four equations are solved for $q_{n+1}$, where $v_{n+1/2}$, $p_{n+1/2}$, and $a_{n,n+1}$ are treated as internal variables similar to the internal stages of a Runge-Kutta method.
+The last equation provides an explicit update for $p_{n+1}$.
 """
 struct HPImidpoint{ϕT, D₁ϕT, D₂ϕT, DₐϕT, PT} <: HPIMethod
     ϕ::ϕT
@@ -50,3 +69,93 @@ issymplectic(method::HPImidpoint) = true
 
 
 const HPImidpointIntegrator{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:HPImidpoint}
+
+function Cache{ST}(problem::Union{IODEProblem,LODEProblem}, method::HPImidpoint; kwargs...) where {ST}
+    IntegratorCacheHPI{ST, ndims(problem), nparams(method)}(; kwargs...)
+end
+
+@inline CacheType(ST, problem::Union{IODEProblem,LODEProblem}, method::HPImidpoint) = IntegratorCacheHPI{ST, ndims(problem), nparams(method)}
+
+function Base.show(io::IO, int::HPImidpointIntegrator)
+    print(io, "\nHamilton-Pontryagin Integrator using midpoint quadrature with:\n")
+    print(io, "   Timestep: $(timestep(int))\n")
+end
+
+
+function components!(
+    x::Vector{ST},
+    solstep::SolutionStepPODE{DT,TT},
+    problem::Union{IODEProblem,LODEProblem},
+    method::HPImidpoint,
+    caches::CacheDict) where {ST,DT,TT}
+
+    # get cache and dimension
+    cache = caches[ST]
+    D = ndims(problem)
+    A = nparams(method)
+
+    # set some local variables for convenience and clarity
+    local t̃ = solstep.t̄ + timestep(problem) / 2
+    
+    # copy x to q
+    cache.q .= x[1:D]
+    cache.a .= x[D+1:D+A]
+
+    # compute q̃
+    cache.q̃ .= (cache.q .+ cache.q̄) ./ 2
+
+    # compute v
+    method.ϕ(cache.ṽ, cache.q̄, cache.q, cache.a, timestep(problem))
+ 
+    # compute Θ̃ = ϑ(q̃,ṽ) and f̃ = f(q̃,ṽ)
+    functions(problem).ϑ(cache.θ̃, t̃, cache.q̃, cache.ṽ)
+    functions(problem).f(cache.f̃, t̃, cache.q̃, cache.ṽ)
+
+    # compute derivatives of ϕ
+    method.D₁ϕ(cache.D₁ϕ, cache.q̄, cache.q, cache.a, timestep(problem))
+    method.D₂ϕ(cache.D₂ϕ, cache.q̄, cache.q, cache.a, timestep(problem))
+    method.Dₐϕ(cache.Dₐϕ, cache.q̄, cache.q, cache.a, timestep(problem))
+
+    # compute p
+    cache.p .= timestep(problem) .* cache.f̃ ./ 2
+    for i in 1:D
+        for j in 1:D
+            cache.p[i] += timestep(problem) * cache.D₂ϕ[i,j] * cache.θ̃[j]
+        end
+    end
+end
+
+
+function residual!(
+    b::Vector{ST},
+    x::Vector{ST},
+    solstep::SolutionStepPODE,
+    problem::Union{IODEProblem,LODEProblem},
+    method::HPImidpoint,
+    caches::CacheDict) where {ST}
+
+    # get cache for internal stages
+    cache = caches[ST]
+    D = ndims(problem)
+    A = nparams(method)
+
+    # copy previous solution from solstep to cache
+    reset!(cache, current(solstep)...)
+
+    # compute stages from nonlinear solver solution x
+    components!(x, solstep, problem, method, caches)
+
+    # compute b
+    for i in 1:D
+        b[i] = cache.p̄[i] + timestep(problem) * cache.f̃[i] / 2
+        for j in 1:D
+            b[i] += timestep(problem) * cache.D₁ϕ[i,j] * cache.θ̃[j]
+        end
+    end
+    for i in 1:A
+        b[D+i] = 0
+        for j in 1:D
+            b[D+i] += cache.Dₐϕ[i,j] * cache.θ̃[j]
+        end
+    end
+end
