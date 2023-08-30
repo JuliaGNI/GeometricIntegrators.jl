@@ -44,9 +44,9 @@ p_{n}
 we can rewrite the equations of motion as
 ```math
 \begin{aligned}
-0 &= \frac{h}{2} \, \frac{\partial L}{\partial q} (q_{n}, v_{n+1/2})
-   + h \, D_1 \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2}
-   + p_{n} , \\
+0 &= p_{n}
+   + \frac{h}{2} \, \frac{\partial L}{\partial q} (q_{n}, v_{n+1/2})
+   + h \, D_1 \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2} , \\
 0 &= D_a \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2} , \\
 v_{n+1/2}
 &= \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) , \\
@@ -95,10 +95,10 @@ p_{n}
 we can rewrite the equations of motion as
 ```math
 \begin{aligned}
-0 &= \frac{h}{2} \, \frac{\partial L}{\partial q} \bigg( \frac{q_{n} + q_{n+1}}{2}, v_{n+1/2} \bigg)
-   + h \, D_1 \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2}
-   + p_{n} , \\
-0 &= D_a \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1} , \\
+0 &= p_{n}
+   + \frac{h}{2} \, \frac{\partial L}{\partial q} \bigg( \frac{q_{n} + q_{n+1}}{2}, v_{n+1/2} \bigg)
+   + h \, D_1 \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2} , \\
+0 &= D_a \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2} , \\
 v_{n+1/2} &= \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) , \\
 p_{n+1/2} &= \frac{\partial L}{\partial v} \bigg( \frac{q_{n} + q_{n+1}}{2}, v_{n+1/2} \bigg) , \\
 p_{n+1}

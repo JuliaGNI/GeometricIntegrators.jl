@@ -20,9 +20,9 @@ In order to solve the discrete Euler-Lagrange equations, the user needs to speci
 The equations of motion, that are solved by this integrator, are:
 ```math
 \begin{aligned}
-0 &= \frac{h}{2} \, \frac{\partial L}{\partial q} (q_{n}, v_{n+1/2})
-   + h \, D_1 \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2}
-   + p_{n} , \\
+0 &= p_{n}
+   + \frac{h}{2} \, \frac{\partial L}{\partial q} (q_{n}, v_{n+1/2})
+   + h \, D_1 \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2} , \\
 0 &= D_a \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) \cdot p_{n+1/2} , \\
 v_{n+1/2}
 &= \phi_h (q_{n}, q_{n+1}; a_{n,n+1}) , \\
