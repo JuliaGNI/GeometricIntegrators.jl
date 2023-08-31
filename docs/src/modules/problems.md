@@ -7,7 +7,9 @@ Each problem type is derived from [`EquationProblem`](@ref).
 ## Geometric Equation Problems
 
 ```@docs
+GeometricEquations.GeometricProblem
 GeometricEquations.EquationProblem
+GeometricEquations.EnsembleProblem
 ```
 
 ## Ordinary Differential Equations
