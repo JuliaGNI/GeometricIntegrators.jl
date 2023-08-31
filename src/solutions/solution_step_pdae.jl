@@ -168,7 +168,7 @@ function update_implicit_functions!(solstep::SolutionStepPDAE, problem::Union{ID
     functions(problem).ϑ(history(solstep).p[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i])
 end
 
-function initialize!(solstep::SolutionStepPDAE, problem::AbstractProblemPDAE, extrap::Extrapolation = default_extrapolation())
+function initialize!(solstep::SolutionStepPDAE, problem::Union{PDAEProblem, HDAEProblem, IDAEProblem, LDAEProblem}, extrap::Extrapolation = default_extrapolation())
     solstep.t  = initial_conditions(problem).t
     solstep.q .= initial_conditions(problem).q
     solstep.p .= initial_conditions(problem).p

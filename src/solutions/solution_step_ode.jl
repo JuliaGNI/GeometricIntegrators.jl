@@ -103,7 +103,7 @@ history(solstep::SolutionStepODE, i::Int) = (
     v = history(solstep).v[i])
 
 
-function update_vector_fields!(solstep::SolutionStepODE, problem::AbstractProblemODE, i=0)
+function update_vector_fields!(solstep::SolutionStepODE, problem::Union{ODEProblem, SODEProblem, SubstepProblem}, i=0)
     functions(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i])
 end
 
@@ -112,7 +112,7 @@ function update_vector_fields!(solstep::SolutionStepODE, problem::SODEProblem, i
     # @warn "update_vector_fields!() method for SODEs is still missing"
 end
 
-function initialize!(solstep::SolutionStepODE, problem::AbstractProblemODE, extrap::Extrapolation = default_extrapolation())
+function initialize!(solstep::SolutionStepODE, problem::Union{ODEProblem, SODEProblem, SubstepProblem}, extrap::Extrapolation = default_extrapolation())
     solstep.t  = initial_conditions(problem).t
     solstep.q .= initial_conditions(problem).q
     solstep.q̃ .= 0

@@ -120,12 +120,12 @@ history(solstep::SolutionStepDAE, i::Int) = (
     u = history(solstep).u[i])
 
 
-function update_vector_fields!(solstep::SolutionStepDAE, problem::AbstractProblemDAE, i=0)
+function update_vector_fields!(solstep::SolutionStepDAE, problem::DAEProblem, i=0)
     functions(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i])
     functions(problem).u(history(solstep).u[i], history(solstep).t[i], history(solstep).q[i], history(solstep).λ[i])
 end
 
-function initialize!(solstep::SolutionStepDAE, problem::AbstractProblemDAE, extrap::Extrapolation = default_extrapolation())
+function initialize!(solstep::SolutionStepDAE, problem::DAEProblem, extrap::Extrapolation = default_extrapolation())
     solstep.t  = initial_conditions(problem).t
     solstep.q .= initial_conditions(problem).q
     solstep.λ .= initial_conditions(problem).λ

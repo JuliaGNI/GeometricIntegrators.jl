@@ -139,7 +139,7 @@ function update_implicit_functions!(solstep::SolutionStepPODE, problem::Union{IO
     functions(problem).ϑ(history(solstep).p[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i])
 end
 
-function initialize!(solstep::SolutionStepPODE, problem::AbstractProblemPODE, extrap::Extrapolation = default_extrapolation())
+function initialize!(solstep::SolutionStepPODE, problem::Union{PODEProblem, HODEProblem, IODEProblem, LODEProblem}, extrap::Extrapolation = default_extrapolation())
     solstep.t  = initial_conditions(problem).t
     solstep.q .= initial_conditions(problem).q
     solstep.p .= initial_conditions(problem).p
