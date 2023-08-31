@@ -10,11 +10,10 @@ isimplicit(method::ExplicitEuler) = false
 issymmetric(method::ExplicitEuler) = false
 issymplectic(method::ExplicitEuler) = false
 
+const ExplicitEulerIntegrator{DT,TT} = GeometricIntegrator{<:ExplicitEuler, <:AbstractProblemODE{DT,TT}}
 
-const IntegratorExplicitEuler{DT,TT} = GeometricIntegrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}}, <:ExplicitEuler}
 
-function integrate_step!(int::IntegratorExplicitEuler)
-
+function integrate_step!(int::ExplicitEulerIntegrator)
     # compute vector field
     equations(int)[:v](solstep(int).v, solstep(int).t, solstep(int).q)
 
