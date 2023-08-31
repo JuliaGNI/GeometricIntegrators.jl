@@ -2,7 +2,7 @@
 CurrentModule = GeometricIntegrators.Integrators
 ```
 
-# Variational Partitioned Runge-Kutta Integrators
+# [Variational Partitioned Runge-Kutta Integrators](@id vprk)
 
 Variational partitioned Runge-Kutta methods solve Lagranian systems in implicit form, i.e.,
 ```math
