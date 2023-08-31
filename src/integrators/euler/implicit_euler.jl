@@ -32,6 +32,7 @@ struct ImplicitEulerCache{DT,D} <: ODEIntegratorCache{DT,D}
 end
 
 nlsolution(cache::ImplicitEulerCache) = cache.x
+
 reset!(cache::ImplicitEulerCache, t, q, λ = missing) = copyto!(cache.q̄, q)
 
 function Cache{ST}(problem::AbstractProblem, method::ImplicitEuler; kwargs...) where {ST}
@@ -41,15 +42,13 @@ end
 @inline CacheType(ST, problem::AbstractProblem, method::ImplicitEuler) = ImplicitEulerCache{ST, ndims(problem)}
 
 
-const ImplicitEulerIntegrator{DT,TT} = GeometricIntegrator{<:ImplicitEuler, <:AbstractProblemODE{DT,TT}}
-
 solversize(problem::AbstractProblemODE, ::ImplicitEuler) = ndims(problem)
 
 default_solver(::ImplicitEuler) = Newton()
 default_iguess(::ImplicitEuler) = HermiteExtrapolation()
 
 
-function initial_guess!(int::ImplicitEulerIntegrator)
+function initial_guess!(int::GeometricIntegrator{<:ImplicitEuler})
     # compute initial guess
     initialguess!(solstep(int).t, cache(int).q, cache(int).v, solstep(int), problem(int), iguess(int))
 
@@ -57,7 +56,7 @@ function initial_guess!(int::ImplicitEulerIntegrator)
     nlsolution(int) .= cache(int).v
 end
 
-function components!(x::AbstractVector{ST}, int::ImplicitEulerIntegrator) where {ST}
+function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:ImplicitEuler}) where {ST}
     local q = cache(int, ST).q
     local q̄ = cache(int, ST).q̄
     local v = cache(int, ST).v
@@ -72,7 +71,7 @@ function components!(x::AbstractVector{ST}, int::ImplicitEulerIntegrator) where 
 end
 
 
-function residual!(b::AbstractVector{ST}, int::ImplicitEulerIntegrator) where {ST}
+function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:ImplicitEuler}) where {ST}
     # temporary variables
     local y::ST
 
@@ -86,7 +85,7 @@ end
 
 
 # Compute stages of implicit Euler methods.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, int::ImplicitEulerIntegrator) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, int::GeometricIntegrator{<:ImplicitEuler}) where {ST}
     @assert axes(x) == axes(b)
 
     # copy previous solution from solstep to cache
@@ -100,7 +99,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, int::ImplicitEu
 end
 
 
-function update!(x::AbstractVector{DT}, int::ImplicitEulerIntegrator) where {DT}
+function update!(x::AbstractVector{DT}, int::GeometricIntegrator{<:ImplicitEuler}) where {DT}
     # copy previous solution from solstep to cache
     reset!(cache(int, DT), current(solstep(int))...)
 
@@ -112,7 +111,7 @@ function update!(x::AbstractVector{DT}, int::ImplicitEulerIntegrator) where {DT}
 end
 
 
-function integrate_step!(int::ImplicitEulerIntegrator)
+function integrate_step!(int::GeometricIntegrator{<:ImplicitEuler, <:AbstractProblemODE})
     # call nonlinear solver
     solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
 
