@@ -57,7 +57,7 @@ GeometricIntegrators.jl provides the following VPRK methods:
 | [`VPRKpInternal`](@ref)     | Gauss-Legendre VPRK integrator with projection on internal stages of Runge-Kutta method              |
 | [`VPRKpTableau`](@ref)      | Gauss-Legendre VPRK integrator with projection in tableau of Runge-Kutta method                      |
 
-For testing purposes [`IntegratorVPRKpStandard`](@ref) provides some additional constructors (*note that these methods are generally unstable*):
+For testing purposes [`VPRKpStandard`](@ref) provides some additional constructors (*note that these methods are generally unstable*):
 
 | Integrator                  | Description                                                                                          |
 |:----------------------------|:-----------------------------------------------------------------------------------------------------|
@@ -659,7 +659,7 @@ in order to force the solution to satisfy the constraint,
 ```
 For certain systems, this method can be shown to be symplectic with respect to the original noncanonical symplectic form on $\mf{M}$ if the integrator $\Psi_{h}$ is a symmetric, symplectic Runge-Kutta method with an odd number of stages $s$, for which the central stage with index $(s+1)/2$ corresponds to $z_{n+1/2}$.
 This is obviously the case for the implicit midpoint rule, that is the Gauss-Legendre Runge-Kutta method with $s=1$, but unfortunately not for higher-order Gauss-Legendre or for Gauss-Lobatto methods.
-However, following [OevelSofroniou:1997](@cite) and [Zhao:2014](@cite), higher-order methods similar to Gauss-Legendre methods but satisfying the requested property can be obtained. See for example the method with three stages, implemented as [`TableauSRK3`](@ref).
+However, following [OevelSofroniou:1997](@cite) and [Zhao:2014](@cite), higher-order methods similar to Gauss-Legendre methods but satisfying the requested property can be obtained. See for example the method with three stages, implemented as [`SRK3`](@ref).
 
 
 ### [Internal Stage Projection](@id sec:internal-stage-projection)
