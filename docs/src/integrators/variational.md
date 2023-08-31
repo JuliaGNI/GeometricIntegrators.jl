@@ -65,7 +65,7 @@ Once we obtained the discrete action, everything else follows in a straight forw
 
 After we fix the sequence $\{ t_{n} \}_{n=0}^{N}$, the continuous action can be written as
 ```math
-\mathcal{A} [q(t)] = {\sum}_{n=0}^{N-1} \int_{t_{n}}^{t_{n+1}} L (q, \dot{q}) \, dt .
+\mathcal{A} [q] = {\sum}_{n=0}^{N-1} \int_{t_{n}}^{t_{n+1}} L (q, \dot{q}) \, dt .
 ```
 The terms of the sum are called the \emph{exact discrete Lagrangian},
 ```math
