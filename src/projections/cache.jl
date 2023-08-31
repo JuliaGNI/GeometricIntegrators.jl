@@ -49,7 +49,20 @@ struct ProjectionCache{DT,D,M,N} <: IODEIntegratorCache{DT,D}
     end
 end
 
+Base.ndims(::ProjectionCache{DT,D,M,N}) where {DT,D,M,N} = D
+nconstraints(::ProjectionCache{DT,D,M,N}) where {DT,D,M,N} = M
+solversize(::ProjectionCache{DT,D,M,N}) where {DT,D,M,N} = N
+
 nlsolution(cache::ProjectionCache) = cache.x
+
+function split_nlsolution(cache::ProjectionCache{DT,D,M,N}) where {DT,D,M,N}
+    x = nlsolution(cache)
+    x̄ = @view x[1:N]
+    x̃ = @view x[N+1:N+D+M]
+
+    return (x̄, x̃)
+end
+
 
 function current(cache::ProjectionCache, solstep::Union{SolutionStepODE,SolutionStepDAE})
     (t = solstep.t, q = cache.q)
