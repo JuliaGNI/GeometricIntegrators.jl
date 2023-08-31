@@ -8,7 +8,6 @@ meta_methods = (
     # FLRK,
     VPRK,
     DVRK,
-    ProjectedVPRK,
     ProjectedMethod,
     HPImidpoint,
     HPItrapezoidal,
@@ -189,8 +188,6 @@ export SymplecticProjection
 export VariationalProjection
 export VariationalProjectionOnP
 export VariationalProjectionOnQ
-
-# degenerate VPRK methods
 
 # projected VPRK methods
 # export VPRKpInternal
