@@ -26,14 +26,6 @@ default_iguess(::ProjectedMethod{<:MidpointProjection}) = HermiteExtrapolation()
 
 const IntegratorMidpointProjection{DT,TT} = ProjectionIntegrator{<:EquationProblem{DT,TT}, <:ProjectedMethod{<:MidpointProjection}}
 
-# TODO: Try to disable this, once everything works!
-function initsolver(::NewtonMethod, ::ProjectedMethod{<:MidpointProjection}, caches::CacheDict; kwargs...)
-    x = zero(nlsolution(caches))
-    y = zero(nlsolution(caches))
-    NewtonSolver(x, y; linesearch = Backtracking(), config = Options(min_iterations = 1, f_abstol = 2eps(eltype(nlsolution(caches)))), kwargs...)
-end
-
-
 # function Base.show(io::IO, int::ProjectedMethod{<:MidpointProjection})
 #     print(io, "\nProjection method with:\n")
 #     print(io, "   Timestep: $(timestep(int))\n")

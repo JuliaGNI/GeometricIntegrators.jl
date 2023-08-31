@@ -26,14 +26,6 @@ default_iguess(::ProjectedMethod{<:SymmetricProjection}) = HermiteExtrapolation(
 
 const IntegratorSymmetricProjection{DT,TT} = ProjectionIntegrator{<:EquationProblem{DT,TT}, <:ProjectedMethod{<:SymmetricProjection}}
 
-# TODO: Try to disable this, once everything works!
-function initsolver(::NewtonMethod, ::ProjectedMethod{<:SymmetricProjection}, caches::CacheDict; kwargs...)
-    x = zero(nlsolution(caches))
-    y = zero(nlsolution(caches))
-    NewtonSolver(x, y; linesearch = Backtracking(), config = Options(min_iterations = 1, f_abstol = 2eps(eltype(nlsolution(caches)))), kwargs...)
-end
-
-
 # function Base.show(io::IO, int::ProjectedMethod{<:SymmetricProjection})
 #     print(io, "\nProjection method with:\n")
 #     print(io, "   Timestep: $(timestep(int))\n")
