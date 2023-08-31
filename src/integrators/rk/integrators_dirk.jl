@@ -1,33 +1,3 @@
-"""
-Diagonally implicit Runge-Kutta integrator cache.
-"""
-struct IntegratorCacheDIRK{DT,D,S} <: ODEIntegratorCache{DT,D}
-    x::Vector{Vector{DT}}
-    Q::Vector{Vector{DT}}
-    V::Vector{Vector{DT}}
-    Y::Vector{Vector{DT}}
-
-    function IntegratorCacheDIRK{DT,D,S}() where {DT,D,S}
-        x = create_internal_stage_vector(DT, D, S)
-        Q = create_internal_stage_vector(DT, D, S)
-        V = create_internal_stage_vector(DT, D, S)
-        Y = create_internal_stage_vector(DT, D, S)
-        new(x, Q, V, Y)
-    end
-end
-
-nlsolution(cache::IntegratorCacheDIRK, i) = cache.x[i]
-
-
-function Cache{ST}(problem::EquationProblem, method::DIRKMethod; kwargs...) where {ST}
-    S = nstages(tableau(method))
-    D = ndims(problem)
-    IntegratorCacheDIRK{ST,D,S}(; kwargs...)
-end
-
-@inline CacheType(ST, problem::EquationProblem, method::DIRKMethod) = IntegratorCacheDIRK{ST, ndims(problem), nstages(tableau(method))}
-
-
 @doc raw"""
 Diagonally implicit Runge-Kutta integrator solving the system
 ```math
@@ -38,17 +8,29 @@ q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 \end{aligned}
 ```
 """
-const IntegratorDIRK{DT,TT} = GeometricIntegrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}}, <:DIRKMethod}
-
-solversize(problem::Union{DAEProblem,ODEProblem}, ::DIRKMethod) = ndims(problem)
-
-initmethod(method::DIRKMethod) = DIRK(method)
+abstract type DIRKMethod <: IRKMethod end
 
 default_solver(::DIRKMethod) = Newton()
 default_iguess(::DIRKMethod) = HermiteExtrapolation()
 
 
-function Base.show(io::IO, int::IntegratorDIRK)
+"""
+Diagonally Implicit Runge-Kutta Method
+
+```
+DIRK(tableau)
+```
+"""
+struct DIRK{TT <: Tableau} <: DIRKMethod
+    tableau::TT
+end
+
+initmethod(method::DIRKMethod) = DIRK(method)
+
+solversize(problem::AbstractProblemODE, ::DIRKMethod) = ndims(problem)
+
+
+function Base.show(io::IO, int::GeometricIntegrator{<:DIRK})
     print(io, "\nDiagonally Implicit Runge-Kutta Integrator with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(description(tableau(int)))\n")
@@ -70,33 +52,52 @@ function initsolver(::NewtonMethod, method::DIRK, caches::CacheDict; kwargs...)
 end
 
 
-function initial_guess!(
-    solstep::SolutionStepODE{DT}, 
-    problem::ODEProblem,
-    method::DIRKMethod, 
-    caches::CacheDict, 
-    ::NonlinearSolver, 
-    iguess::Union{InitialGuess,Extrapolation}) where {DT}
-    
-    # obtain cache
-    cache = caches[DT]
+"""
+Diagonally implicit Runge-Kutta integrator cache.
+"""
+struct DIRKCache{DT,D,S} <: ODEIntegratorCache{DT,D}
+    x::Vector{Vector{DT}}
+    Q::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
+    Y::Vector{Vector{DT}}
 
-    for i in eachstage(method)
-        initialguess!(solstep.t̄ + timestep(problem) * tableau(method).c[i], cache.Q[i], cache.V[i], solstep, problem, iguess)
+    function DIRKCache{DT,D,S}() where {DT,D,S}
+        x = create_internal_stage_vector(DT, D, S)
+        Q = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        Y = create_internal_stage_vector(DT, D, S)
+        new(x, Q, V, Y)
+    end
+end
+
+function Cache{ST}(problem::EquationProblem, method::DIRKMethod; kwargs...) where {ST}
+    S = nstages(tableau(method))
+    D = ndims(problem)
+    DIRKCache{ST,D,S}(; kwargs...)
+end
+
+@inline CacheType(ST, problem::EquationProblem, method::DIRKMethod) = DIRKCache{ST, ndims(problem), nstages(tableau(method))}
+
+nlsolution(cache::DIRKCache, i) = cache.x[i]
+
+
+function initial_guess!(int::GeometricIntegrator{<:DIRK})
+    for i in eachstage(int)
+        initialguess!(solstep(int).t̄ + timestep(int) * tableau(int).c[i], cache(int).Q[i], cache(int).V[i], solstep(int), problem(int), iguess(int))
     end
 
-    for i in eachstage(method)
-        for k in 1:ndims(problem)
-            cache.x[i][k] = 0
-            for j in eachstage(method)
-                cache.x[i][k] += timestep(problem) * tableau(method).a[i,j] * cache.V[j][k]
+    for i in eachstage(int)
+        for k in 1:ndims(int)
+            cache(int).x[i][k] = 0
+            for j in eachstage(int)
+                cache(int).x[i][k] += timestep(int) * tableau(int).a[i,j] * cache(int).V[j][k]
             end
         end
     end
 end
 
 
-function components!(x::AbstractVector{ST}, int::IntegratorDIRK, i) where {ST}
+function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:DIRK}, i) where {ST}
     # time of i-th stage
     local tᵢ::timetype(problem(int))
 
@@ -117,7 +118,7 @@ function components!(x::AbstractVector{ST}, int::IntegratorDIRK, i) where {ST}
 end
 
 
-function residual!(b::AbstractVector{ST}, int::IntegratorDIRK, i) where {ST}
+function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:DIRK}, i) where {ST}
     # temporary variables
     local y1::ST
     local y2::ST
@@ -140,7 +141,7 @@ end
 
 
 # Compute stages of diagonally implicit Runge-Kutta methods.
-function residual!(b, x, int::IntegratorDIRK, i)
+function residual!(b, x, int::GeometricIntegrator{<:DIRK}, i)
     # compute stages from nonlinear solver solution x
     components!(x, int, i)
 
@@ -149,7 +150,7 @@ function residual!(b, x, int::IntegratorDIRK, i)
 end
 
 
-function integrate_step!(int::IntegratorDIRK)
+function integrate_step!(int::GeometricIntegrator{<:DIRK, <:AbstractProblemODE})
     # consecutively solve for all stages
     for i in eachstage(int)
         # call nonlinear solver

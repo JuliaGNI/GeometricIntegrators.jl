@@ -1,38 +1,5 @@
-
-"Explicit Runge-Kutta integrator cache."
-struct IntegratorCacheEPRK{DT,D,S} <: PODEIntegratorCache{DT,D}
-    Q::OffsetArray{Array{DT,1},1,Array{Array{DT,1},1}}
-    P::OffsetArray{Array{DT,1},1,Array{Array{DT,1},1}}
-
-    V::Vector{Vector{DT}}
-    F::Vector{Vector{DT}}
-    Y::Vector{Vector{DT}}
-    Z::Vector{Vector{DT}}
-
-    function IntegratorCacheEPRK{DT,D,S}() where {DT,D,S}
-        Q = create_internal_stage_vector_with_zero(DT, D, S)
-        P = create_internal_stage_vector_with_zero(DT, D, S)
-
-        Y = create_internal_stage_vector(DT, D, S)
-        Z = create_internal_stage_vector(DT, D, S)
-        V = create_internal_stage_vector(DT, D, S)
-        F = create_internal_stage_vector(DT, D, S)
-
-        new(Q, P, Y, Z, V, F)
-    end
-end
-
-function Cache{ST}(problem::EquationProblem, method::EPRK; kwargs...) where {ST}
-    S = nstages(tableau(method))
-    D = ndims(problem)
-    IntegratorCacheEPRK{ST,D,S}(; kwargs...)
-end
-
-@inline CacheType(ST, problem::EquationProblem, method::EPRK) = IntegratorCacheEPRK{ST, ndims(problem), nstages(tableau(method))}
-
-
 @doc raw"""
-Explicit partitioned Runge-Kutta integrator solving the system
+Explicit partitioned Runge-Kutta method solving the system
 ```math
 \begin{aligned}
 V_{n,i} &= v (t_i, Q_{n,i}, P_{n,i}) , &
@@ -58,11 +25,26 @@ b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 \end{aligned}
 ```
 """
-const IntegratorEPRK{DT,TT} = GeometricIntegrator{<:PODEProblem{DT,TT}, <:EPRK}
+abstract type EPRKMethod <: PRKMethod end
+
+isexplicit(method::Union{EPRKMethod, Type{<:EPRKMethod}}) = true
+isimplicit(method::Union{EPRKMethod, Type{<:EPRKMethod}}) = false
+
+
+"""
+Explicit Partitioned Runge-Kutta Method
+
+```
+EPRK(tableau)
+```
+"""
+struct EPRK{TT <: PartitionedTableau} <: EPRKMethod
+    tableau::TT
+end
 
 initmethod(method::EPRKMethod) = EPRK(method)
 
-function Base.show(io::IO, int::IntegratorEPRK)
+function Base.show(io::IO, int::GeometricIntegrator{<:EPRK})
     print(io, "\nExplicit Partitioned Runge-Kutta Integrator with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(description(tableau(int)))\n")
@@ -72,16 +54,48 @@ function Base.show(io::IO, int::IntegratorEPRK)
 end
 
 
-# Compute Q stages of explicit partitioned Runge-Kutta methods.
-function compute_stage_q!(solstep::SolutionStepPODE{DT,TT}, problem::PODEProblem{DT,TT}, method::EPRK, caches::CacheDict, i::Int, jmax::Int, t::TT) where {DT,TT}
-    # obtain cache
-    local Q = caches[DT].Q
-    local P = caches[DT].P
-    local V = caches[DT].V
-    local F = caches[DT].F
-    local Y = caches[DT].Y
+"Explicit Runge-Kutta integrator cache."
+struct EPRKCache{DT,D,S} <: PODEIntegratorCache{DT,D}
+    Q::OffsetArray{Array{DT,1},1,Array{Array{DT,1},1}}
+    P::OffsetArray{Array{DT,1},1,Array{Array{DT,1},1}}
 
-    fill!(Y[i], zero(DT))
+    V::Vector{Vector{DT}}
+    F::Vector{Vector{DT}}
+    Y::Vector{Vector{DT}}
+    Z::Vector{Vector{DT}}
+
+    function EPRKCache{DT,D,S}() where {DT,D,S}
+        Q = create_internal_stage_vector_with_zero(DT, D, S)
+        P = create_internal_stage_vector_with_zero(DT, D, S)
+
+        Y = create_internal_stage_vector(DT, D, S)
+        Z = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        F = create_internal_stage_vector(DT, D, S)
+
+        new(Q, P, Y, Z, V, F)
+    end
+end
+
+function Cache{ST}(problem::EquationProblem, method::EPRK; kwargs...) where {ST}
+    S = nstages(tableau(method))
+    D = ndims(problem)
+    EPRKCache{ST,D,S}(; kwargs...)
+end
+
+@inline CacheType(ST, problem::EquationProblem, method::EPRK) = EPRKCache{ST, ndims(problem), nstages(tableau(method))}
+
+
+# Compute Q stages of explicit partitioned Runge-Kutta methods.
+function compute_stage_q!(solstep::SolutionStepPODE, problem::PODEProblem, method::EPRK, cache, i, jmax, t)
+    # obtain cache
+    local Q = cache.Q
+    local P = cache.P
+    local V = cache.V
+    local F = cache.F
+    local Y = cache.Y
+
+    fill!(Y[i], 0)
     for k in eachindex(Y[i])
         for j in 1:jmax
             Y[i][k] += timestep(problem) * tableau(method).q.a[i,j] * V[j][k]
@@ -94,15 +108,15 @@ function compute_stage_q!(solstep::SolutionStepPODE{DT,TT}, problem::PODEProblem
 end
 
 # Compute P stages of explicit partitioned Runge-Kutta methods.
-function compute_stage_p!(solstep::SolutionStepPODE{DT,TT}, problem::PODEProblem{DT,TT}, method::EPRK, caches::CacheDict, i::Int, jmax::Int, t::TT) where {DT,TT}
+function compute_stage_p!(solstep::SolutionStepPODE, problem::PODEProblem, method::EPRK, cache, i, jmax, t)
     # obtain cache
-    local Q = caches[DT].Q
-    local P = caches[DT].P
-    local V = caches[DT].V
-    local F = caches[DT].F
-    local Z = caches[DT].Z
+    local Q = cache.Q
+    local P = cache.P
+    local V = cache.V
+    local F = cache.F
+    local Z = cache.Z
 
-    fill!(Z[i], zero(DT))
+    fill!(Z[i], 0)
     for k in eachindex(Z[i])
         for j in 1:jmax
             Z[i][k] += timestep(problem) * tableau(method).p.a[i,j] * F[j][k]
@@ -115,34 +129,30 @@ function compute_stage_p!(solstep::SolutionStepPODE{DT,TT}, problem::PODEProblem
 end
 
 
-function integrate_step!(solstep::SolutionStepPODE{DT,TT}, problem::PODEProblem{DT,TT}, method::EPRK, caches::CacheDict, ::NoSolver) where {DT,TT}
-    # temporary variables
-    local tqᵢ::TT
-    local tpᵢ::TT
-
+function integrate_step!(int::GeometricIntegrator{<:EPRK, <:AbstractProblemPODE})
     # store previous solution
-    caches[DT].Q[0] .= solstep.q
-    caches[DT].P[0] .= solstep.p
+    cache(int).Q[0] .= solstep(int).q
+    cache(int).P[0] .= solstep(int).p
 
     # compute internal stages
-    for i in eachstage(method)
-        tqᵢ = solstep.t̄ + timestep(problem) * tableau(method).q.c[i]
-        tpᵢ = solstep.t̄ + timestep(problem) * tableau(method).p.c[i]
+    for i in eachstage(int)
+        tqᵢ = solstep(int).t̄ + timestep(int) * tableau(int).q.c[i]
+        tpᵢ = solstep(int).t̄ + timestep(int) * tableau(int).p.c[i]
 
-        if tableau(method).q.a[i,i] ≠ zero(TT) && tableau(method).p.a[i,i] ≠ zero(TT)
+        if tableau(int).q.a[i,i] ≠ 0 && tableau(int).p.a[i,i] ≠ 0
             error("This is an implicit method!")
-        elseif tableau(method).q.a[i,i] ≠ zero(TT)
-            compute_stage_p!(solstep, problem, method, caches, i, i-1, tpᵢ)
-            compute_stage_q!(solstep, problem, method, caches, i, i, tqᵢ)
-        elseif tableau(method).p.a[i,i] ≠ zero(TT)
-            compute_stage_q!(solstep, problem, method, caches, i, i-1, tqᵢ)
-            compute_stage_p!(solstep, problem, method, caches, i, i, tpᵢ)
+        elseif tableau(int).q.a[i,i] ≠ 0
+            compute_stage_p!(solstep(int), problem(int), method(int), cache(int), i, i-1, tpᵢ)
+            compute_stage_q!(solstep(int), problem(int), method(int), cache(int), i, i, tqᵢ)
+        elseif tableau(int).p.a[i,i] ≠ 0
+            compute_stage_q!(solstep(int), problem(int), method(int), cache(int), i, i-1, tqᵢ)
+            compute_stage_p!(solstep(int), problem(int), method(int), cache(int), i, i, tpᵢ)
         else
-            compute_stage_q!(solstep, problem, method, caches, i, i-1, tqᵢ)
-            compute_stage_p!(solstep, problem, method, caches, i, i-1, tpᵢ)
+            compute_stage_q!(solstep(int), problem(int), method(int), cache(int), i, i-1, tqᵢ)
+            compute_stage_p!(solstep(int), problem(int), method(int), cache(int), i, i-1, tpᵢ)
         end
     end
 
     # compute final update
-    update!(solstep, caches[DT].V, caches[DT].F, tableau(method), timestep(problem))
+    update!(solstep(int), cache(int).V, cache(int).F, tableau(int), timestep(int))
 end

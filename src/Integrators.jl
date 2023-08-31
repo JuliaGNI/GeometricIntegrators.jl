@@ -129,23 +129,27 @@ module Integrators
 
 
     export AbstractIntegratorRK, AbstractIntegratorIRK, AbstractIntegratorPRK, IntegratorRK
+    
+    export ERKIntegrator
+    export IntegratorIRK
+    export IntegratorIRKimplicit
+    export IntegratorDIRK
+    #export IntegratorMidpointImplicit, IntegratorSRKimplicit
+
+    export IntegratorEPRK
+    export IPRKIntegrator
+    export IntegratorIPRKimplicit
+    # export IntegratorFLRK
+    # export IntegratorPGLRK, CoefficientsPGLRK
 
     export get_symplectic_conjugate_coefficients, symplecticize,
            check_symplecticity, symplecticity_conditions, 
            check_symmetry, compute_symplecticity_error
 
-    include("integrators/rk/methods.jl")
     include("integrators/rk/abstract.jl")
     include("integrators/rk/common.jl")
     include("integrators/rk/updates.jl")
     include("integrators/rk/tableaus.jl")
-
-
-    export IntegratorERK
-    export IntegratorIRK
-    export IntegratorIRKimplicit
-    export IntegratorDIRK
-    #export IntegratorMidpointImplicit, IntegratorSRKimplicit
 
     include("integrators/rk/integrators_erk.jl")
     include("integrators/rk/integrators_irk.jl")
@@ -154,19 +158,14 @@ module Integrators
     # include("integrators/rk/integrators_midpoint_implicit.jl")
     # include("integrators/rk/integrators_srk_implicit.jl")
 
-
-    export IntegratorEPRK
-    export IntegratorIPRK
-    export IntegratorIPRKimplicit
-    # export IntegratorFLRK
-    # export IntegratorPGLRK, CoefficientsPGLRK
-
     include("integrators/rk/integrators_eprk.jl")
     include("integrators/rk/integrators_iprk.jl")
     include("integrators/rk/integrators_iprk_implicit.jl")
     # include("integrators/rk/integrators_flrk.jl")
     include("integrators/rk/pglrk_coefficients.jl")
     # include("integrators/rk/pglrk_integrators.jl")
+
+    include("integrators/rk/methods.jl")
 
 
     export ExactSolution,
