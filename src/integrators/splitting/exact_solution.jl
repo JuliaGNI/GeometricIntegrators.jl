@@ -1,4 +1,6 @@
-
+"""
+Implements the [`GeometricIntegrator`](@ref) interface for the exact solution of a substep in [`SODE`](@ref).
+"""
 struct ExactSolution <: GeometricMethod end
 
 function Cache{ST}(problem::SubstepProblem, method::ExactSolution; kwargs...) where {ST}
