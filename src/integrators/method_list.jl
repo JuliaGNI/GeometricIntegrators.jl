@@ -190,16 +190,16 @@ export VariationalProjectionOnP
 export VariationalProjectionOnQ
 
 # projected VPRK methods
-# export VPRKpInternal
-# export VPRKpLegendre
-# export VPRKpMidpoint
-# export VPRKpSecondary
-# export VPRKpStandard
-# export VPRKpSymmetric
-# export VPRKpSymplectic
-# export VPRKpVariational
-# export VPRKpVariationalP
-# export VPRKpVariationalQ
+export VPRKpInternal
+export VPRKpLegendre
+export VPRKpMidpoint
+export VPRKpSecondary
+export VPRKpStandard
+export VPRKpSymmetric
+export VPRKpSymplectic
+export VPRKpVariational
+export VPRKpVariationalP
+export VPRKpVariationalQ
 
 
 _display_property(p::Bool) = p ? "✓" : "✗"
