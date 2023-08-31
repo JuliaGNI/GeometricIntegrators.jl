@@ -25,61 +25,43 @@ For reference see the excellent review paper by [McLachlanQuispel:2002](@cite) o
 
 ## Splitting Integrators
 
-In GeometricIntegrators, basic splitting methods are implemented in [`IntegratorSplitting`](@ref),
+In GeometricIntegrators, basic splitting methods are implemented in [`Splitting`](@ref),
 which has two constructors:
 ```julia
-IntegratorSplitting{DT,D}(solutions::Tuple, f::Vector{Int}, c::Vector, Δt)
-IntegratorSplitting(equation::SODE, tableau::AbstractTableauSplitting, Δt)
+Splitting(f::Vector{Int}, c::Vector)
+Splitting(method::AbstractSplittingMethod, problem::SODEProblem)
 ```
-In the first constructor, `DT` is the data type of the state vector and `D`
-the dimension of the system. In the second constructor, this information
-is extracted from the `equation`. 
-The tuple `solutions` contains functions implementing the flow (exact solution)
-of the vector fields `v_i`. The vectors `f` and `c` define the actual splitting
-method: `f` is a vector of indices of the flows in the split equation to be
-solved and `c` is a vector of the same size `f` that contains the coefficients
+The vectors `f` and `c` define the actual splitting method: `f` is a vector
+of indices of the flows in the split equation (that is the exact solution which
+can be obtained by `solutions(problem)`) to be solved
+and `c` is a vector of the same size as `f` that contains the coefficients
 for each splitting step, i.e., the resulting integrator has the form
 ```math
 \varphi_{\tau} = \phi_{c[s] \tau}^{v_{f[s]}} \circ \dotsc \circ \phi_{c[2] \tau}^{v_{f[2]}} \circ \phi_{c[1] \tau}^{v_{f[1]}} .
 ```
-In the second constructor, these vectors are constructed from the tableau and
-the equation.
-
+In the second constructor, these vectors are constructed from the splitting method and
+the problem.
 
 ## Composition Integrators
 
-Fully flexible composition methods are implemented in [`IntegratorComposition`](@ref),
+Fully flexible composition methods are implemented in [`Composition`](@ref),
 which can use any ODE integrator implemented in GeometricIntegrators to solve the
 steps of the splitting. For each step, a different integrator can be chosen as
-well as the exact solution using [`IntegratorExactODE`](@ref), which is a simple
+well as the exact solution using [`ExactSolution`](@ref), which is a simple
 wrapper around the exact flow of a splitting step, implementing the general
 integrator interface.
 
-`IntegratorComposition` has three constructors:
+`Composition` has one main constructor:
 ```julia
-IntegratorComposition{DT,D}(integrators::Tuple, Δt)
-IntegratorComposition(equation::SODE, constructors::Tuple, tableau::AbstractTableauSplitting, Δt)
-IntegratorComposition(equation::SODE, tableau::AbstractTableauSplitting, Δt)
+Composition(methods, splitting)
 ```
-In the first constructor, `DT` is the data type of the state vector and `D`
-the dimension of the system. In the second and third constructor, this
-information is extracted from the equation. 
-The tuple `integrators` contains the integrators for each substep. Each integrator
-is instantiated with appropriately scaled time step size $\Delta t = c_i \tau$ to
-match the corresponding splitting scheme.
-In the second constructor, the tuple `constructors` contains closures around the
-constructors for the integrators of each step of the composition, that is functions
-taking a vector field $v_i$, the time step $\Delta t$ and optional keyword arguments,
-e.g. for the exact solution or a Runge-Kutta integrator, we have
+The first argument is tuple of methods that are used to solve each substep,
+and the second argument is a splitting method.
+A second convenience constructor uses the [`ExactSolution`](@ref) for all steps:
 ```julia
-(v::Function, Δt::Number; kwargs...) -> IntegratorExactODE{DT,D}(v, Δt; kwargs...)
-(v::Function, Δt::Number; kwargs...) -> Integrator{DT,D}(v, tableau, Δt; kwargs...)
+Composition(splitting) = Composition(ExactSolution(), splitting)
 ```
-The integrators are constructed according to the tableau and time step `\Delta t`
-and passed to the first constructor.
-The third constructor assumes that the exact solution is used for each splitting
-step. It thus constructs a composition method that is equivalent to a plain
-[`IntegratorSplitting`](@ref).
+This constructs a composition method that is equivalent to a plain [`Splitting`](@ref).
 
 
 ## Splitting of Hamiltonian Systems
@@ -291,12 +273,12 @@ Given the outstanding performance already second order symplectic integrators ar
 Nevertheless, if extremely high accuracy is indispensable, think for example of long-time simulations of the solar system, these methods can be applied. Moreover, there exist special methods optimized for such problems.
 
 
-## Splitting Tableaus
+## Splitting Coefficients
 
-Actualy splitting methods are usually prescribed in one of the following forms.
+Actually splitting methods are usually prescribed in one of the following forms.
 
 
-### [`TableauSplitting`](@ref)
+### [`SplittingCoefficientsGeneral`](@ref)
 
 Tableau for general splitting methods for vector fields with two terms
 $v = v_A + v_B$, leading to the following integrator:
@@ -305,7 +287,7 @@ $v = v_A + v_B$, leading to the following integrator:
 ```
 
 
-### [`TableauSplittingNS`](@ref)
+### [`SplittingCoefficientsNonSymmetric`](@ref)
 
 Tableau for non-symmetric splitting methods [[McLachlanQuispel:2002](@cite), Equation (4.10)].
 Here, two flows $\varphi_{\tau}^{A}$ and $\varphi_{\tau}^{B}$ are constructed as the Lie
@@ -322,7 +304,7 @@ and the integrator is composed as follows:
 ```
 
 
-### [`TableauSplittingGS`](@ref)
+### [`SplittingCoefficientsGS`](@ref)
 
 Tableau for symmetric splitting methods with general stages [[McLachlanQuispel:2002](@cite), Equation (4.11)],
 where again two flows $\varphi_{\tau}^{A}$ and $\varphi_{\tau}^{B}$ are constructed via Lie composition
@@ -338,7 +320,7 @@ but with an integrator composed as
 ```
 
 
-### [`TableauSplittingSS`](@ref)
+### [`SplittingCoefficientsSS`](@ref)
 
 Tableau for symmetric splitting methods with symmetric stages [[McLachlanQuispel:2002](@cite), Equation (4.6)].
 Here, only one flow $\varphi_{\tau}^{S}$ is constructed via symmetric Strang composition,

@@ -1,3 +1,27 @@
+@doc raw"""
+Composition integrator for the solution of initial value problems
+```math
+\dot{q} (t) = v(t, q(t)) , \qquad q(t_{0}) = q_{0} ,
+```
+whose vector field ``v`` is given as a sum of vector fields
+```math
+v (t) = v_1 (t) + ... + v_r (t) .
+```
+
+`Composition` has one main constructor:
+```julia
+Composition(methods, splitting)
+```
+The first argument is tuple of methods that are used to solve each substep,
+and the second argument is a splitting method.
+A second convenience constructor uses the [`ExactSolution`](@ref) for all steps:
+```julia
+Composition(splitting) = Composition(ExactSolution(), splitting)
+```
+This constructs a composition method that is equivalent to a plain [`Splitting`](@ref).
+In order to include exact solutions in the composition, the [`ExactSolution`](@ref) method
+implements the general integrator interface.
+"""
 struct Composition{MT, ST <: AbstractSplittingMethod} <: SODEMethod
     methods::MT
     splitting::ST
@@ -28,40 +52,6 @@ _neqs(equ::SODE) = nsteps(equ)
 _neqs(problem::SODEProblem) = nsteps(problem)
 
 
-@doc raw"""
-Composition integrator for the solution of initial value problems
-```math
-\dot{q} (t) = v(t, q(t)) , \qquad q(t_{0}) = q_{0} ,
-```
-whose vector field ``v`` is given as a sum of vector fields
-```math
-v (t) = v_1 (t) + ... + v_r (t) .
-```
-
-`CompositionIntegrator` has three constructors:
-```julia
-CompositionIntegrator{DT,D}(integrators::Tuple, solstep::SolutionStep)
-CompositionIntegrator(equation::SODE, methods::Tuple, tableau::AbstractTableauSplitting, Δt)
-CompositionIntegrator(equation::SODE, tableau::AbstractTableauSplitting, Δt)
-```
-In the first constructor, `DT` is the data type of the state vector and `D`
-the dimension of the system. In the second and third constructor, this
-information is extracted from the equation. 
-The tuple `integrators` contains the integrators for each substep. Each integrator
-is instantiated with appropriately scaled time step size $\Delta t = c_i \tau$ to
-match the corresponding splitting scheme.
-In the second constructor, the tuple `constructors` contains constructors for the
-integrators of each step of the composition. The integrators are constructed
-according to the tableau and time step `\Delta t` and passed to the first
-constructor.
-The third constructor assumes that the exact solution is used for each splitting
-step. It thus constructs a composition method that is equivalent to a plain
-[`IntegratorSplitting`](@ref).
-
-In order to include exact solutions in the composition, the [`IntegratorExactODE`](@ref)
-implements the general integrator interface.
-
-"""
 struct CompositionIntegrator{
         PT <: SODEProblem,
         MT <: AbstractSplittingMethod,

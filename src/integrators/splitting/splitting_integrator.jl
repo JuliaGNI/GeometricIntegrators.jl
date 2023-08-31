@@ -10,23 +10,19 @@ v (t) = v_1 (t) + ... + v_r (t) .
 
 `Splitting` has two constructors:
 ```julia
-IntegratorSplitting{DT,D}(solutions::Tuple, f::Vector{Int}, c::Vector, Δt)
-IntegratorSplitting(equation::SODE, tableau::AbstractTableauSplitting, Δt)
+Splitting(f::Vector{Int}, c::Vector)
+Splitting(method::AbstractSplittingMethod, problem::SODEProblem)
 ```
-In the first constructor, `DT` is the data type of the state vector and `D`
-the dimension of the system. In the second constructor, this information
-is extracted from the equation. 
-The tuple `solutions` contains functions implementing the flow (exact solution)
-of the vector fields `v_i`. The vectors `f` and `c` define the actual splitting
-method: `f` is a vector of indices of the flows in the split equation to be
-solved and `c` is a vector of the same size `f` that contains the coefficients
+The vectors `f` and `c` define the actual splitting method: `f` is a vector
+of indices of the flows in the split equation (that is the exact solution which
+can be obtained by `solutions(problem)`) to be solved
+and `c` is a vector of the same size as `f` that contains the coefficients
 for each splitting step, i.e., the resulting integrator has the form
 ```math
 \varphi_{\tau} = \phi_{c[s] \tau}^{v_{f[s]}} \circ \dotsc \circ \phi_{c[2] \tau}^{v_{f[2]}} \circ \phi_{c[1] \tau}^{v_{f[1]}} .
 ```
-In the second constructor, these vectors are constructed from the tableau and
-the equation.
-
+In the second constructor, these vectors are constructed from the splitting method and
+the problem.
 """
 struct Splitting{T} <: SODEMethod
     f::Vector{Int}
