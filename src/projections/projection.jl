@@ -1,5 +1,5 @@
 @doc raw"""
-
+The `ProjectionIntegrator` is the counterpart to the `GeometricIntegrator` for [`ProjectionMethod`](@ref)s.
 """
 struct ProjectionIntegrator{
         PT <: AbstractProblem,
