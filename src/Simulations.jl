@@ -7,14 +7,13 @@ module Simulations
     using GeometricEquations
 
     using ..Integrators
-    using ..Solutions
 
-    import ..Solutions: DEFAULT_NSAVE, DEFAULT_NWRITE
+    import ..Integrators: DEFAULT_NSAVE, DEFAULT_NWRITE
 
-    export Simulation, ParallelSimulation
-    export run!
+    # export SerialSimulation, ParallelSimulation
+    # export run!
 
-    include("simulations/simulation.jl")
-    include("simulations/parallel_simulation.jl")
+    # include("simulations/serial_simulation.jl")
+    # include("simulations/parallel_simulation.jl")
 
 end

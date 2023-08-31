@@ -14,8 +14,8 @@ module GeometricIntegrators
     @reexport using .Discontinuities
     include("Integrators.jl")
     @reexport using .Integrators
-    # include("Simulations.jl")
-    # @reexport using .Simulations
+    include("Simulations.jl")
+    @reexport using .Simulations
 
     include("SPARK.jl")
 

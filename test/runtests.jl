@@ -25,4 +25,4 @@ using SafeTestsets
 @safetestset "SPARK Integrators                                                               " begin include("spark/spark_integrators_tests.jl") end
 @safetestset "SPARK Tableau Tests                                                             " begin include("spark/spark_tableaus_tests.jl") end
 
-# @safetestset "Simulation Tests                                                                " begin include("simulations/simulations_tests.jl") end
+@safetestset "Simulation Tests                                                                " begin include("simulations/simulations_tests.jl") end
