@@ -118,10 +118,10 @@ Pages   = [
 Modules = [GeometricIntegrators.Integrators]
 Pages   = [
             "integrators/splitting/exact_solution.jl",
-            "integrators/splitting/composition_integrators.jl",
-            "integrators/splitting/composition_methods.jl",
             "integrators/splitting/splitting_coefficients.jl",
-            "integrators/splitting/splitting_integrator.jl",
             "integrators/splitting/splitting_methods.jl",
+            "integrators/splitting/splitting_integrator.jl",
+            "integrators/splitting/composition_integrator.jl",
+            "integrators/splitting/composition_methods.jl",
         ]
 ```
