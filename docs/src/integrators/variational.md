@@ -444,3 +444,15 @@ D_{2} L_{d} \big( q_{n-1}, q_{n} \big) \cdot X_{n} = D_{2} L_{d} \big( q_{n}, q_
 \end{equation}
 ```
 It states that solutions $\{ q_{n} \}_{n=0}^{N}$ of the discrete Euler-Lagrange equations preserve the components of the momentum $p_{n} = D_{2} L_{d} \big( q_{n-1}, q_{n} \big)$ in direction $X_{n}$.
+
+
+## Available Variational Integrators
+
+Currently, the position-momentum form of the midpoint and trapezoidal discrete Lagrangians (cf. above) are implemented:
+
+| Function and Aliases                             | Order |
+|:-------------------------------------------------|:------|
+| [`PMVImidpoint`](@ref)                           | 2     |
+| [`PMVItrapezoidal`](@ref)                        | 2     |
+
+In addition, the family of [variational partitioned Runge-Kutta integrators](@ref vprk) provide a large number of methods.
