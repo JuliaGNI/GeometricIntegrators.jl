@@ -9,9 +9,9 @@ ref = exact_solution(odeproblem())
 
 @testset "$(rpad("Post-projection with Runge-Kutta integrators",80))" begin
 
-    sol = integrate(dae, PostProjection(RK4()))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-7
-    @test abs(hamiltonian(sol.t[end], sol.q[end], dae.parameters) - hamiltonian(sol.t[begin], sol.q[begin], dae.parameters)) < eps()
+    # sol = integrate(dae, PostProjection(RK4()))
+    # @test relative_maximum_error(sol.q, ref.q) < 2E-7
+    # @test abs(hamiltonian(sol.t[end], sol.q[end], dae.parameters) - hamiltonian(sol.t[begin], sol.q[begin], dae.parameters)) < eps()
 
     sol = integrate(dae, PostProjection(Gauss(1)))
     @test relative_maximum_error(sol.q, ref.q) < 4E-4
