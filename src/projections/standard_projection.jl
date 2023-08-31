@@ -1,3 +1,23 @@
+struct StandardProjection{DT} <: ProjectionMethod 
+    RU::Vector{DT}
+    RG::Vector{DT}
+    
+    function StandardProjection(RU, RG, R∞ = 1)
+        DT, RU, RG = _projection_weights(RU, RG, R∞)
+        new{DT}(RU, RG)
+    end
+end
+
+PostProjection(method::GeometricMethod) = ProjectedMethod(StandardProjection([0,1], [0,1]), method)
+SymplecticProjection(method::Union{PRKMethod,VPRKMethod}) = ProjectedMethod(StandardProjection([0,1], [0,1], tableau(method).R∞), method)
+VariationalProjectionOnP(method::GeometricMethod) = ProjectedMethod(StandardProjection([0,1], [1,0]), method)
+VariationalProjectionOnQ(method::GeometricMethod) = ProjectedMethod(StandardProjection([1,0], [0,1]), method)
+
+# description(::PostProjection) = "Post projection"
+# description(::SymplecticProjection) = "Symplectic Projection"
+# description(::VariationalProjectionOnP) = @doc raw"Variational projection on $(q_{n}, p_{n+1})$"
+# description(::VariationalProjectionOnQ) = @doc raw"Variational projection on $(p_{n}, q_{n+1})$"
+
 
 struct StandardProjectionCache{DT,D,M} <: IODEIntegratorCache{DT,D}
     x::Vector{DT}

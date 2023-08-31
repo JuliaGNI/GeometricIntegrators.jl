@@ -1,3 +1,16 @@
+struct MidpointProjection{DT} <: ProjectionMethod 
+    RU::Vector{DT}
+    RG::Vector{DT}
+
+    function MidpointProjection(R∞ = 1)
+        DT, RU, RG = _projection_weights([1//2,1//2], [1//2,1//2], R∞)
+        new{DT}(RU, RG)
+    end
+end
+
+MidpointProjection(method::GeometricMethod) = ProjectedMethod(MidpointProjection(), method)
+MidpointProjection(method::Union{RKMethod,PRKMethod,VPRKMethod}) = ProjectedMethod(MidpointProjection(tableau(method).R∞), method)
+
 
 function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:MidpointProjection}; kwargs...) where {ST}
     ProjectionCache{ST, ndims(problem), nconstraints(problem), solversize(problem, parent(method))}(; kwargs...)

@@ -1,3 +1,16 @@
+struct SymmetricProjection{DT} <: ProjectionMethod 
+    RU::Vector{DT}
+    RG::Vector{DT}
+    
+    function SymmetricProjection(R∞ = 1)
+        DT, RU, RG = _projection_weights([1//2,1//2], [1//2,1//2], R∞)
+        new{DT}(RU, RG)
+    end
+end
+
+SymmetricProjection(method::GeometricMethod) = ProjectedMethod(SymmetricProjection(), method)
+SymmetricProjection(method::Union{RKMethod,PRKMethod,VPRKMethod}) = ProjectedMethod(SymmetricProjection(tableau(method).R∞), method)
+
 
 function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:SymmetricProjection}; kwargs...) where {ST}
     ProjectionCache{ST, ndims(problem), nconstraints(problem), solversize(problem, parent(method))}(; kwargs...)
