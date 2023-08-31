@@ -30,7 +30,7 @@ function integrate(problem::AbstractProblem, method::GeometricMethod; kwargs...)
     integrate(integrator)
 end
 
-function integrate(problems::GeometricEnsemble, method::GeometricMethod; kwargs...)
+function integrate(problems::EnsembleProblem, method::GeometricMethod; kwargs...)
     solutions = Solution(problems; kwargs...)
 
     for (problem, solution) in zip(problems, solutions)

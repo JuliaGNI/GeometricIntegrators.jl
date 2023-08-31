@@ -3,7 +3,7 @@ function Solution(problem::Union{EquationProblem, SubstepProblem}; kwargs...)
     GeometricSolution(problem; kwargs...)
 end
     
-function Solution(problem::GeometricEnsemble; kwargs...)
+function Solution(problem::EnsembleProblem; kwargs...)
     EnsembleSolution(problem; kwargs...)
 end
 
