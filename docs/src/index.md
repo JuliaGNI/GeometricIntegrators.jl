@@ -75,15 +75,15 @@ Pages = [
 
 ```@contents
 Pages = [
-    "modules/methods.md",
-    "modules/integrators.md",
     # "modules/discontinuities.md",
-    "modules/problems.md",
     "modules/equations.md",
+    "modules/integrators.md",
+    "modules/methods.md",
+    "modules/projections.md",
+    "modules/problems.md",
+    "modules/rungekutta.md",
     # "modules/simulations.md",
     "modules/solutions.md",
-    "modules/rungekutta.md",
-    "modules/rungekutta_partitioned.md",
     "modules/spark.md",
 ]
 ```

@@ -422,7 +422,7 @@ Any partitioned Runge-Kutta method can be selected by the [`PRK`](@ref) method
 ```julia
 prk = PRK(tableau)
 ```
-where `tableau` is any tableau from [RungeKutta.PartitionedTableaus](@ref PartitionedRungeKuttaTableaus).
+where `tableau` is any tableau from [RungeKutta.PartitionedTableaus](@ref partitioned-runge-kutta-rableaus).
 For most tableaus there also exist explicit shortcuts to select the method. These are listed in the following.
 
 | Function                        | Order | Method                      |
