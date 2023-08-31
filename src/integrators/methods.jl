@@ -1,3 +1,6 @@
+"""
+`GeometricMethod` is the abstract supertype for all integration methods implemented in GeometricIntegrators.
+"""
 abstract type GeometricMethod <: AbstractMethod end
 
 abstract type ODEMethod <: GeometricMethod end
