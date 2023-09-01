@@ -218,9 +218,9 @@ module Integrators
     include("integrators/dvi/dvi_common.jl")
     include("integrators/dvi/dvi_cache.jl")
     include("integrators/dvi/dvi_euler.jl")
-    include("integrators/dvi/integrators_cmdvi.jl")
-    include("integrators/dvi/integrators_ctdvi.jl")
-    include("integrators/dvi/integrators_dvrk.jl")
+    include("integrators/dvi/dvi_midpoint.jl")
+    include("integrators/dvi/dvi_trapezoidal.jl")
+    include("integrators/dvi/dvrk.jl")
 
 
     export HPImidpointIntegrator, HPItrapezoidalIntegrator
