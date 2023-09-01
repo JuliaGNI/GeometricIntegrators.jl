@@ -215,9 +215,9 @@ module Integrators
            IntegratorCMDVI, IntegratorCTDVI,
            IntegratorDVRK
     
-    include("integrators/dvi/methods.jl")
-    include("integrators/dvi/integrators_dvi_a.jl")
-    include("integrators/dvi/integrators_dvi_b.jl")
+    include("integrators/dvi/dvi_common.jl")
+    include("integrators/dvi/dvi_cache.jl")
+    include("integrators/dvi/dvi_euler.jl")
     include("integrators/dvi/integrators_cmdvi.jl")
     include("integrators/dvi/integrators_ctdvi.jl")
     include("integrators/dvi/integrators_dvrk.jl")

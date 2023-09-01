@@ -45,6 +45,7 @@ DVRK(method::RKMethod, args...; kwargs...) = DVRK(tableau(method))
 
 GeometricBase.tableau(method::DVRK) = method.tableau
 GeometricBase.order(method::DVRK) = order(tableaus(method))
+eachstage(method::DVRK) = eachstage(tableau(method))
 isexplicit(method::DVRK) = false
 isimplicit(method::DVRK) = true
 issymmetric(method::DVRK) = issymmetric(tableaus(method))
@@ -65,8 +66,11 @@ Degenerate Variational Runge-Kutta integrator cache.
 * `Θ`: implicit function of internal stages
 * `F`: vector field of implicit function
 """
-struct IntegratorCacheDVRK{DT,D,S} <: IODEIntegratorCache{DT,D}
+struct DVRKCache{DT,D,S} <: IODEIntegratorCache{DT,D}
     x::Vector{DT}
+
+    q̄::Vector{DT}
+    p̄::Vector{DT}
 
     q::Vector{DT}
     v::Vector{DT}
@@ -78,28 +82,30 @@ struct IntegratorCacheDVRK{DT,D,S} <: IODEIntegratorCache{DT,D}
     Θ::Vector{Vector{DT}}
     F::Vector{Vector{DT}}
 
-    function IntegratorCacheDVRK{DT,D,S}() where {DT,D,S}
+    function DVRKCache{DT,D,S}() where {DT,D,S}
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         Θ = create_internal_stage_vector(DT, D, S)
         F = create_internal_stage_vector(DT, D, S)
-        new(zeros(DT, D*(S+1)), zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Θ, F)
+        new(zeros(DT, D*(S+1)), zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D), Q, V, Θ, F)
     end
 end
 
-nlsolution(cache::IntegratorCacheDVRK) = cache.x
-
-function Cache{ST}(problem::Union{IODEProblem,LODEProblem}, method::DVRK; kwargs...) where {ST}
-    IntegratorCacheDVRK{ST, ndims(problem), nstages(tableau(method))}(; kwargs...)
+function reset!(cache::DVRKCache, t, q, p)
+    copyto!(cache.q̄, q)
+    copyto!(cache.p̄, p)
 end
 
-@inline CacheType(ST, problem::Union{IODEProblem,LODEProblem}, method::DVRK) = IntegratorCacheDVRK{ST, ndims(problem)}
+nlsolution(cache::DVRKCache) = cache.x
+
+function Cache{ST}(problem::Union{IODEProblem,LODEProblem}, method::DVRK; kwargs...) where {ST}
+    DVRKCache{ST, ndims(problem), nstages(tableau(method))}(; kwargs...)
+end
+
+@inline CacheType(ST, problem::Union{IODEProblem,LODEProblem}, method::DVRK) = DVRKCache{ST, ndims(problem)}
 
 
-const IntegratorDVRK{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:DVRK}
-
-
-function Base.show(io::IO, int::IntegratorDVRK)
+function Base.show(io::IO, int::GeometricIntegrator{<:DVRK})
     print(io, "\nRunge-Kutta Integrator for Degenerate Lagrangians with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(description(tableau(int)))\n")
@@ -108,156 +114,114 @@ function Base.show(io::IO, int::IntegratorDVRK)
 end
 
 
-function initial_guess!(
-    solstep::SolutionStepPODE{DT}, 
-    problem::Union{IODEProblem,LODEProblem},
-    method::DVRK, 
-    caches::CacheDict, 
-    ::NonlinearSolver, 
-    iguess::Union{InitialGuess,Extrapolation}) where {DT}
-
-    # get cache and dimension
-    cache = caches[DT]
+function initial_guess!(int::GeometricIntegrator{<:DVRK})
+    # set some local variables for convenience
+    local D = ndims(int)
+    local x = nlsolution(int)
 
     # compute initial guess for internal stages
-    for i in eachstage(tableau(method))
-        initialguess!(solstep.t̄ + timestep(problem) * tableau(method).c[i], cache.Q[i], cache.Θ[i], cache.V[i], cache.F[i], solstep, problem, iguess)
+    for i in eachstage(int)
+        initialguess!(solstep(int).t̄ + timestep(int) * tableau(int).c[i], cache(int).Q[i], cache(int).Θ[i], cache(int).V[i], cache(int).F[i], solstep(int), problem(int), iguess(int))
     end
-    for i in eachstage(tableau(method))
-        for k in 1:ndims(problem)
-            cache.x[ndims(problem)*(i-1)+k] = cache.V[i][k]
+    for i in eachindex(cache(int).V)
+        for k in eachindex(cache(int).V[i])
+            x[D*(i-1)+k] = cache(int).V[i][k]
         end
     end
     
     # compute initial guess for solution
-    initialguess!(solstep.t, cache.q, cache.θ, cache.v, cache.f, solstep, problem, iguess)
+    initialguess!(solstep(int).t, cache(int).q, cache(int).θ, cache(int).v, cache(int).f, solstep(int), problem(int), iguess(int))
 
-    for k in 1:ndims(problem)
-        cache.x[ndims(problem) * nstages(tableau(method)) + k] = cache.q[k]
+    for k in 1:D
+        x[ndims(int) * nstages(int) + k] = cache(int).q[k]
     end
 end
 
 
-function components!(
-    x::Vector{ST},
-    solstep::SolutionStepPODE{DT,TT},
-    problem::Union{IODEProblem,LODEProblem},
-    method::DVRK,
-    caches::CacheDict) where {ST,DT,TT}
-
-    # get cache and dimension
-    cache = caches[ST]
-    D = ndims(problem)
-    S = nstages(tableau(method))
-
-    # temporary variables
-    local y1::ST
-    local y2::ST
-    local tᵢ::TT
+function components!(x::Vector{ST}, int::GeometricIntegrator{<:DVRK}) where {ST}
+    # set some local variables for convenience and clarity
+    local D = ndims(int)
+    local S = nstages(tableau(int))
 
     # copy x to V
-    for i in eachindex(cache.V)
-        for k in eachindex(cache.V[i])
-            cache.V[i][k] = x[D*(i-1)+k]
+    for i in eachindex(cache(int,ST).V)
+        for k in eachindex(cache(int,ST).V[i])
+            cache(int,ST).V[i][k] = x[D*(i-1)+k]
         end
     end
 
     # copy x to q
-    for k in eachindex(cache.q)
-        cache.q[k] = x[D*S+k]
+    for k in eachindex(cache(int,ST).q)
+        cache(int,ST).q[k] = x[D*S+k]
     end
 
     # compute Q = q + Δt A V, Θ = ϑ(Q), F = f(Q,V)
-    for i in eachindex(cache.Q, cache.F, cache.Θ)
-        tᵢ = solstep.t̄ + timestep(problem) * tableau(method).c[i]
-        for k in eachindex(cache.Q[i])
-            y1 = 0
-            y2 = 0
-            for j in eachindex(cache.V)
-                y1 += tableau(method).a[i,j] * cache.V[j][k]
-                y2 += tableau(method).â[i,j] * cache.V[j][k]
+    for i in eachindex(cache(int,ST).Q, cache(int,ST).F, cache(int,ST).Θ)
+        tᵢ = solstep(int).t̄ + timestep(int) * tableau(int).c[i]
+        for k in eachindex(cache(int,ST).Q[i])
+            y1 = y2 = zero(ST)
+            for j in eachindex(cache(int,ST).V)
+                y1 += tableau(int).a[i,j] * cache(int,ST).V[j][k]
+                y2 += tableau(int).â[i,j] * cache(int,ST).V[j][k]
             end
-            cache.Q[i][k] = solstep.q̄[k] + timestep(problem) * (y1 + y2)
+            cache(int,ST).Q[i][k] = cache(int).q̄[k] + timestep(int) * (y1 + y2)
         end
-        functions(problem).ϑ(cache.Θ[i], tᵢ, cache.Q[i], cache.V[i])
-        functions(problem).f(cache.F[i], tᵢ, cache.Q[i], cache.V[i])
+        equations(int).ϑ(cache(int,ST).Θ[i], tᵢ, cache(int,ST).Q[i], cache(int,ST).V[i])
+        equations(int).f(cache(int,ST).F[i], tᵢ, cache(int,ST).Q[i], cache(int,ST).V[i])
     end
 
     # compute q̄ = q + Δt B V, Θ = ϑ(q̄)
-    functions(problem).ϑ(cache.θ, solstep.t, cache.q, cache.v)
+    equations(int).ϑ(cache(int,ST).θ, solstep(int).t, cache(int,ST).q, cache(int,ST).v)
 end
 
 
 # Compute stages of fully implicit Runge-Kutta methods.
-function residual!(
-    b::Vector{ST},
-    x::Vector{ST},
-    solstep::SolutionStepPODE,
-    problem::Union{IODEProblem,LODEProblem},
-    method::DVRK,
-    caches::CacheDict) where {ST}
-
-    # get cache
-    cache = caches[ST]
-    D = ndims(problem)
-    S = nstages(tableau(method))
+function residual!(b::Vector{ST}, x::Vector{ST}, int::GeometricIntegrator{<:DVRK}) where {ST}
+    # set some local variables for convenience and clarity
+    local D = ndims(int)
+    local S = nstages(tableau(int))
 
     # compute stages from nonlinear solver solution x
-    components!(x, solstep, problem, method, caches)
+    components!(x, int)
     
     # compute b
-    for i in eachindex(cache.Θ)
-        for k in eachindex(cache.Θ[i])
-            y1 = 0
-            y2 = 0
-            for j in eachindex(cache.F)
-                y1 += tableau(method).a[i,j] * cache.F[j][k]
-                y2 += tableau(method).â[i,j] * cache.F[j][k]
+    for i in eachindex(cache(int,ST).Θ)
+        for k in eachindex(cache(int,ST).Θ[i])
+            y1 = y2 = zero(ST)
+            for j in eachindex(cache(int,ST).F)
+                y1 += tableau(int).a[i,j] * cache(int,ST).F[j][k]
+                y2 += tableau(int).â[i,j] * cache(int,ST).F[j][k]
             end
-            b[D*(i-1)+k] = cache.Θ[i][k] - solstep.p̄[k] - timestep(problem) * (y1 + y2)
+            b[D*(i-1)+k] = cache(int,ST).Θ[i][k] - cache(int).p̄[k] - timestep(int) * (y1 + y2)
         end
     end
     for k in 1:div(D,2)
-        y1 = 0
-        y2 = 0
-        for j in eachindex(cache.F)
-            y1 += tableau(method).b[j] * cache.F[j][k]
-            y2 += tableau(method).b̂[j] * cache.F[j][k]
+        y1 = y2 = zero(ST)
+        for j in eachindex(cache(int,ST).F)
+            y1 += tableau(int).b[j] * cache(int,ST).F[j][k]
+            y2 += tableau(int).b̂[j] * cache(int,ST).F[j][k]
         end
-        b[D*S+k] = cache.θ[k] - solstep.p̄[k] - timestep(problem) * (y1 + y2)
+        b[D*S+k] = cache(int,ST).θ[k] - cache(int).p̄[k] - timestep(int) * (y1 + y2)
     end
     for k in 1:div(D,2)
-        y1 = 0
-        y2 = 0
-        for j in eachindex(cache.V)
-            y1 += tableau(method).b[j] * cache.V[j][k]
-            y2 += tableau(method).b̂[j] * cache.V[j][k]
+        y1 = y2 = zero(ST)
+        for j in eachindex(cache(int,ST).V)
+            y1 += tableau(int).b[j] * cache(int,ST).V[j][k]
+            y2 += tableau(int).b̂[j] * cache(int,ST).V[j][k]
         end
-        b[D*S+div(D,2)+k] = cache.q[k] - solstep.q̄[k] - timestep(problem) * (y1 + y2)
+        b[D*S+div(D,2)+k] = cache(int,ST).q[k] - cache(int).q̄[k] - timestep(int) * (y1 + y2)
     end
 end
 
 
-function integrate_step!(
-    solstep::SolutionStepPODE{DT,TT},
-    problem::Union{IODEProblem{DT,TT},LODEProblem{DT,TT}},
-    method::DVRK,
-    caches::CacheDict,
-    solver::NonlinearSolver) where {DT,TT}
-
-    # call nonlinear solver
-    solve!(caches[DT].x, (b,x) -> residual!(b, x, solstep, problem, method, caches), solver)
-
-    # print solver status
-    # println(status(solver))
-
-    # check if solution contains NaNs or error bounds are violated
-    # check_solver_status(int.solver.status, int.solver.params)
+function update!(x::AbstractVector{DT}, int::GeometricIntegrator{<:DVRK}) where {DT}
+    # copy previous solution from solstep to cache
+    reset!(cache(int, DT), current(solstep(int))...)
 
     # compute vector field at internal stages
-    components!(caches[DT].x, solstep, problem, method, caches)
+    components!(x, int)
 
     # compute final update
-    solstep.q .= caches[DT].q
-    solstep.p .= caches[DT].θ
+    solstep(int).q .= cache(int, DT).q
+    solstep(int).p .= cache(int, DT).θ
 end
