@@ -90,17 +90,15 @@ Implicit partitioned Runge-Kutta integrator cache.
 
 ### Fields
 
-* `q̃`: initial guess of q
-* `p̃`: initial guess of p
-* `ṽ`: initial guess of v
-* `f̃`: initial guess of f
-* `s̃`: holds shift due to periodicity of solution
-* `Q`: internal stages of q
-* `P`: internal stages of p
-* `V`: internal stages of v
-* `F`: internal stages of f
-* `Y`: vector field of internal stages of q
-* `Z`: vector field of internal stages of p
+* `x`: nonlinear solver solution vector
+* `q̄`: solution at previous timestep
+* `p̄`: momentum at previous timestep
+* `Q`: internal stages of solution q
+* `P`: internal stages of momentum p
+* `V`: internal stages of vector field v = q̇
+* `F`: internal stages of vector field f = ṗ
+* `Y`: summed vector field of internal stages Q
+* `Z`: summed vector field of internal stages P
 """
 struct IPRKCache{ST,D,S,N} <: PODEIntegratorCache{ST,D}
     x::Vector{ST}

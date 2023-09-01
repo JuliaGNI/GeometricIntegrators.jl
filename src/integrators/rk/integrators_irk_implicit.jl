@@ -3,6 +3,8 @@ Implicit Runge-Kutta integrator cache.
 
 ### Fields
 
+* `q̄`: solution at previous timestep
+* `p̄`: momentum at previous timestep
 * `Q`: internal stages of solution
 * `V`: internal stages of vector field
 * `Θ`: internal stages of one-form ``\vartheta``

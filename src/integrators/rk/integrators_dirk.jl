@@ -54,6 +54,13 @@ end
 
 """
 Diagonally implicit Runge-Kutta integrator cache.
+
+### Fields
+
+* `x`: nonlinear solver solution vector
+* `Q`: internal stages of solution q
+* `V`: internal stages of vector field v = q̇
+* `Y`: summed vector field of internal stages Q
 """
 struct DIRKCache{DT,D,S} <: ODEIntegratorCache{DT,D}
     x::Vector{Vector{DT}}

@@ -86,6 +86,8 @@ Implicit Runge-Kutta integrator cache.
 
 ### Fields
 
+* `x`: nonlinear solver solution vector
+* `q̄`: solution at previous timestep
 * `Q`: internal stages of solution
 * `V`: internal stages of vector field
 * `Y`: vector field of internal stages
