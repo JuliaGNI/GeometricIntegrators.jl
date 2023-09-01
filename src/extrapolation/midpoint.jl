@@ -131,7 +131,7 @@ end
 
 function extrapolate!(t₀, x₀::AbstractVector,
                       t₁, x₁::AbstractVector,
-                      problem::Union{ODEProblem, DAEProblem, SubstepProblem},
+                      problem::AbstractProblemODE,
                       extrap::MidpointExtrapolation)
     extrapolate_ode!(t₀, x₀, t₁, x₁, functions(problem).v, extrap)
 end
@@ -199,7 +199,7 @@ end
 
 function extrapolate!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
     t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
-    problem::Union{PODEProblem,HODEProblem,PDAEProblem,HDAEProblem},
+    problem::AbstractProblemPODE,
     extrap::MidpointExtrapolation) where {DT,TT}
     extrapolate_pode!(t₀, q₀, p₀, t₁, q₁, p₁, functions(problem).v, functions(problem).f, extrap)
 end
@@ -268,7 +268,7 @@ end
 function extrapolate!(
     t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
     t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
-    problem::Union{IODEProblem,LODEProblem,IDAEProblem,LDAEProblem},
+    problem::AbstractProblemIODE,
     extrap::MidpointExtrapolation) where {DT,TT}
     extrapolate_iode!(t₀, q₀, p₀, t₁, q₁, p₁, functions(problem).v̄, functions(problem).f̄, extrap)
 end

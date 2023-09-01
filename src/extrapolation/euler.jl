@@ -66,6 +66,6 @@ end
 
 function extrapolate!(t₀, x₀::AbstractVector,
                       t₁, x₁::AbstractVector,
-                      problem::Union{ODEProblem, DAEProblem, SubstepProblem}, extrap::EulerExtrapolation)
+                      problem::AbstractProblemODE, extrap::EulerExtrapolation)
     extrapolate!(t₀, x₀, t₁, x₁, functions(problem).v, extrap)
 end

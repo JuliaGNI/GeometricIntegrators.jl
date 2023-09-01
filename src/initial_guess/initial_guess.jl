@@ -11,7 +11,7 @@ function initialguess!(t, q, q̇, solstep::SolutionStepODE, ::AbstractProblemODE
     (t = t, q = q, v = q̇)
 end
 
-function initialguess!(t, q, p, q̇, ṗ, solstep::SolutionStepPODE, ::AbstractProblemPODE, ::NoInitialGuess)
+function initialguess!(t, q, p, q̇, ṗ, solstep::SolutionStepPODE, ::Union{AbstractProblemPODE,AbstractProblemIODE}, ::NoInitialGuess)
     t  = solstep.t̄
     q .= solstep.q̄
     p .= solstep.p̄
