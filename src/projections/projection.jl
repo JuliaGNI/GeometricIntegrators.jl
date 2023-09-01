@@ -112,24 +112,3 @@ equations(int::ProjectionIntegrator) = functions(problem(int))
 timestep(int::ProjectionIntegrator) = timestep(problem(int))
 
 initialize!(int::ProjectionIntegrator) = initialize!(subint(int))
-<<<<<<< HEAD
-=======
-
-
-
-function project!(solstep::SolutionStepODE, problem::EquationProblem, ::ProjectionMethod, U, G, λ)
-    update!(solstep, U, timestep(problem))
-end
-
-function project!(solstep::SolutionStepDAE, problem::EquationProblem, ::ProjectionMethod, U, G, λ)
-    update!(solstep, U, λ, timestep(problem))
-end
-
-function project!(solstep::SolutionStepPODE, problem::EquationProblem, ::ProjectionMethod, U, G, λ)
-    update!(solstep, U, G, timestep(problem))
-end
-
-function project!(solstep::SolutionStepPDAE, problem::EquationProblem, ::ProjectionMethod, U, G, λ)
-    update!(solstep, U, G, λ, timestep(problem))
-end
->>>>>>> ed182cbc (Change order of type parameters of GeometricIntegrator and ProjectionIntegrator.)
