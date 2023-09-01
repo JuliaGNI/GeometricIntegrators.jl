@@ -53,95 +53,65 @@ issymmetric(method::HPItrapezoidal) = missing
 issymplectic(method::HPItrapezoidal) = true
 
 
-const HPItrapezoidalIntegrator{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:HPItrapezoidal}
-
-function Cache{ST}(problem::Union{IODEProblem,LODEProblem}, method::HPItrapezoidal; kwargs...) where {ST}
-    IntegratorCacheHPI{ST, ndims(problem), nparams(method)}(; kwargs...)
-end
-
-@inline CacheType(ST, problem::Union{IODEProblem,LODEProblem}, method::HPItrapezoidal) = IntegratorCacheHPI{ST, ndims(problem), nparams(method)}
-
-function Base.show(io::IO, int::HPItrapezoidalIntegrator)
+function Base.show(io::IO, int::GeometricIntegrator{<:HPItrapezoidal})
     print(io, "\nHamilton-Pontryagin Integrator using trapezoidal quadrature with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
 end
 
 
-function components!(
-    x::Vector{ST},
-    solstep::SolutionStepPODE{DT,TT},
-    problem::Union{IODEProblem,LODEProblem},
-    method::HPItrapezoidal,
-    caches::CacheDict) where {ST,DT,TT}
-
-    # get cache and dimension
-    cache = caches[ST]
-    D = ndims(problem)
-    A = nparams(method)
-
+function components!(x::Vector{ST}, int::GeometricIntegrator{<:HPItrapezoidal}) where {ST}
     # set some local variables for convenience and clarity
-    local t̄ = solstep.t̄
-    local t = solstep.t̄ + timestep(problem)
+    local D = ndims(int)
+    local A = nparams(method(int))
     
     # copy x to q
-    cache.q .= x[1:D]
-    cache.a .= x[D+1:D+A]
+    cache(int,ST).q .= x[1:D]
+    cache(int,ST).a .= x[D+1:D+A]
 
     # compute v
-    method.ϕ(cache.ṽ, cache.q̄, cache.q, cache.a, timestep(problem))
+    method(int).ϕ(cache(int,ST).ṽ, cache(int).q̄, cache(int,ST).q, cache(int,ST).a, timestep(int))
  
     # compute Θ = ϑ(q,ṽ) and f = f(q,ṽ)
-    functions(problem).ϑ(cache.θ̄, t̄, cache.q̄, cache.ṽ)
-    functions(problem).ϑ(cache.θ, t, cache.q, cache.ṽ)
-    functions(problem).f(cache.f̄, t̄, cache.q̄, cache.ṽ)
-    functions(problem).f(cache.f, t, cache.q, cache.ṽ)
+    equations(int).ϑ(cache(int,ST).θ̄, solstep(int).t̄, cache(int).q̄, cache(int,ST).ṽ)
+    equations(int).f(cache(int,ST).f̄, solstep(int).t̄, cache(int).q̄, cache(int,ST).ṽ)
+    equations(int).ϑ(cache(int,ST).θ, solstep(int).t, cache(int,ST).q, cache(int,ST).ṽ)
+    equations(int).f(cache(int,ST).f, solstep(int).t, cache(int,ST).q, cache(int,ST).ṽ)
 
     # compute derivatives of ϕ
-    method.D₁ϕ(cache.D₁ϕ, cache.q̄, cache.q, cache.a, timestep(problem))
-    method.D₂ϕ(cache.D₂ϕ, cache.q̄, cache.q, cache.a, timestep(problem))
-    method.Dₐϕ(cache.Dₐϕ, cache.q̄, cache.q, cache.a, timestep(problem))
+    method(int).D₁ϕ(cache(int,ST).D₁ϕ, cache(int).q̄, cache(int,ST).q, cache(int,ST).a, timestep(int))
+    method(int).D₂ϕ(cache(int,ST).D₂ϕ, cache(int).q̄, cache(int,ST).q, cache(int,ST).a, timestep(int))
+    method(int).Dₐϕ(cache(int,ST).Dₐϕ, cache(int).q̄, cache(int,ST).q, cache(int,ST).a, timestep(int))
 
     # compute p
-    cache.θ̃ .= (cache.θ .+ cache.θ̄) ./ 2
-    cache.p .= timestep(problem) .* cache.f ./ 2
+    cache(int,ST).θ̃ .= (cache(int,ST).θ .+ cache(int,ST).θ̄) ./ 2
+    cache(int,ST).p .= timestep(int) .* cache(int,ST).f ./ 2
     for i in 1:D
         for j in 1:D
-            cache.p[i] += timestep(problem) * cache.D₂ϕ[i,j] * cache.θ̃[j]
+            cache(int,ST).p[i] += timestep(int) * cache(int,ST).D₂ϕ[i,j] * cache(int,ST).θ̃[j]
         end
     end
 end
 
 
-function residual!(
-    b::Vector{ST},
-    x::Vector{ST},
-    solstep::SolutionStepPODE,
-    problem::Union{IODEProblem,LODEProblem},
-    method::HPItrapezoidal,
-    caches::CacheDict) where {ST}
-
-    # get cache for internal stages
-    cache = caches[ST]
-    D = ndims(problem)
-    A = nparams(method)
-
-    # copy previous solution from solstep to cache
-    reset!(cache, current(solstep)...)
+function residual!(b::Vector{ST}, x::Vector{ST}, int::GeometricIntegrator{<:HPItrapezoidal}) where {ST}
+    # set some local variables for convenience and clarity
+    local D = ndims(int)
+    local A = nparams(method(int))
 
     # compute stages from nonlinear solver solution x
-    components!(x, solstep, problem, method, caches)
+    components!(x, int)
 
     # compute b
     for i in 1:D
-        b[i] = cache.p̄[i] + timestep(problem) * cache.f̄[i] / 2
+        b[i] = cache(int).p̄[i] + timestep(int) * cache(int,ST).f̄[i] / 2
         for j in 1:D
-            b[i] += timestep(problem) * cache.D₁ϕ[i,j] * cache.θ̃[j]
+            b[i] += timestep(int) * cache(int,ST).D₁ϕ[i,j] * cache(int,ST).θ̃[j]
         end
     end
     for i in 1:A
         b[D+i] = 0
         for j in 1:D
-            b[D+i] += cache.Dₐϕ[i,j] * cache.θ̃[j]
+            b[D+i] += cache(int,ST).Dₐϕ[i,j] * cache(int,ST).θ̃[j]
         end
     end
 end

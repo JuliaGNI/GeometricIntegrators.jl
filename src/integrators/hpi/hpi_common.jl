@@ -1,34 +1,46 @@
 
-function initial_guess!(
-    solstep::SolutionStepPODE{DT}, 
-    problem::Union{IODEProblem,LODEProblem},
-    method::Union{HPImidpoint,HPItrapezoidal}, 
-    caches::CacheDict, 
-    ::NonlinearSolver, 
-    iguess::Union{InitialGuess,Extrapolation}) where {DT}
+abstract type HPIMethod <: LODEMethod end
 
-    # get cache and dimension
-    cache = caches[DT]
-    D = ndims(problem)
-    A = nparams(method)
+isiodemethod(::Union{HPIMethod, Type{<:HPIMethod}}) = true
+
+default_solver(::HPIMethod) = Newton()
+default_iguess(::HPIMethod) = HermiteExtrapolation()
+
+
+function initial_guess!(int::GeometricIntegrator{<:HPIMethod})
+    # set some local variables for convenience
+    local D = ndims(int)
+    local A = nparams(method(int))
+    local x = nlsolution(int)
 
     # compute initial guess for solution q(n+1)
-    initialguess!(solstep.t, cache.q, cache.p, solstep, problem, iguess)
+    initialguess!(solstep(int).t, cache(int).q, cache(int).p, solstep(int), problem(int), iguess(int))
 
     # copy initial guess to solution vector
-    cache.x[1:D] .= cache.q
-    cache.x[D+1:D+A] .= 0
+    x[1:D] .= cache(int).q
+    x[D+1:D+A] .= 0
 end
 
-function integrate_step!(
-    solstep::SolutionStepPODE{DT,TT},
-    problem::Union{IODEProblem{DT,TT},LODEProblem{DT,TT}},
-    method::Union{HPImidpoint,HPItrapezoidal}, 
-    caches::CacheDict,
-    solver::NonlinearSolver) where {DT,TT}
+
+function update!(x::AbstractVector{DT}, int::GeometricIntegrator{<:HPIMethod}) where {DT}
+    # copy previous solution from solstep to cache
+    reset!(cache(int, DT), current(solstep(int))...)
+
+    # compute vector field at internal stages
+    components!(x, int)
+
+    # compute final update
+    solstep(int).q .= cache(int, DT).q
+    solstep(int).p .= cache(int, DT).p
+end
+
+
+function integrate_step!(int::GeometricIntegrator{<:HPIMethod, <:AbstractProblemIODE})
+    # copy previous solution from solstep to cache
+    reset!(cache(int), current(solstep(int))...)
 
     # call nonlinear solver
-    solve!(caches[DT].x, (b,x) -> residual!(b, x, solstep, problem, method, caches), solver)
+    solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
 
     # print solver status
     # print_solver_status(int.solver.status, int.solver.params)
@@ -36,10 +48,6 @@ function integrate_step!(
     # check if solution contains NaNs or error bounds are violated
     # check_solver_status(int.solver.status, int.solver.params)
 
-    # compute vector field at internal stages
-    components!(caches[DT].x, solstep, problem, method, caches)
-
     # compute final update
-    solstep.q .= caches[DT].q
-    solstep.p .= caches[DT].p
+    update!(nlsolution(int), int)
 end
