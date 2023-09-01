@@ -191,10 +191,10 @@ module Integrators
     export IntegratorVPRK
 
     include("integrators/vi/vi_methods.jl")
+    include("integrators/vi/position_momentum_common.jl")
     include("integrators/vi/position_momentum_cache.jl")
     include("integrators/vi/position_momentum_midpoint.jl")
     include("integrators/vi/position_momentum_trapezoidal.jl")
-    include("integrators/vi/position_momentum_common.jl")
     include("integrators/vi/vprk_methods.jl")
     include("integrators/vi/vprk_cache.jl")
     include("integrators/vi/vprk_integrator.jl")

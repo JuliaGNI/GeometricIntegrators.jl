@@ -3,9 +3,15 @@ Cache for variational integrator in position-momentum form.
 
 ### Fields
 
-* `q`: internal stages of solution
-* `Θ`: implicit function evaluated on solution
-* `f`: vector field of implicit function
+* `x`: nonlinear solver solution vector
+* `q`: solution at next timestep
+* `p`: momentum at next timestep
+* `θ`: implicit function evaluated on solution at next timestep
+* `f`: vector field of implicit function evaluated on solution at next timestep
+* `q̄`: solution at previous timestep
+* `p̄`: momentum at previous timestep
+* `θ̄`: implicit function evaluated on solution at previous timestep
+* `f̄`: vector field of implicit function evaluated on solution at previous timestep
 """
 struct IntegratorCachePMVI{DT,D} <: IODEIntegratorCache{DT,D}
     x::Vector{DT}
@@ -39,3 +45,9 @@ function reset!(cache::IntegratorCachePMVI, t, q, p)
 end
 
 nlsolution(cache::IntegratorCachePMVI) = cache.x
+
+function Cache{ST}(problem::AbstractProblemIODE, method::PMVIMethod; kwargs...) where {ST}
+    IntegratorCachePMVI{ST, ndims(problem)}(; kwargs...)
+end
+
+@inline CacheType(ST, problem::AbstractProblemIODE, ::PMVIMethod) = IntegratorCachePMVI{ST, ndims(problem)}
