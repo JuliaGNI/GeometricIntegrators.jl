@@ -1,5 +1,37 @@
-@doc raw"""
+"""
+A `ProjectionMethod` is an algorithm that is applied together with a geometric integrator
+to enforce constraints which are not automatically satisfied by the integrator.
+Examples include conservation of invariants like energy or the Dirac constraint in [`IODE`](@ref)s.
+"""
+abstract type ProjectionMethod <: GeometricMethod end
 
+struct NoProjection <: ProjectionMethod end
+
+projection(::GeometricMethod) = NoProjection()
+
+
+"""
+A `ProjectedMethod` consists of a [`ProjectionMethod`](@ref) and a [`GeometricMethod`](@ref).
+"""
+struct ProjectedMethod{PT <: ProjectionMethod, MT <: GeometricMethod} <: ProjectionMethod
+    projection::PT
+    method::MT
+
+    function ProjectedMethod(proj::ProjectionMethod, method::GeometricMethod)
+        _method = initmethod(method)
+        new{typeof(proj), typeof(_method)}(proj, _method)
+    end
+end
+
+projection(proj::ProjectedMethod) = proj.projection
+Base.parent(proj::ProjectedMethod) = proj.method
+
+initmethod(projection::ProjectedMethod) = projection
+initmethod(projection::ProjectionMethod, method::GeometricMethod) = ProjectedMethod(projection, method)
+
+
+@doc raw"""
+The `ProjectionIntegrator` is the counterpart to the `GeometricIntegrator` for [`ProjectionMethod`](@ref)s.
 """
 struct ProjectionIntegrator{
         PT <: AbstractProblem,
@@ -80,22 +112,3 @@ equations(int::ProjectionIntegrator) = functions(problem(int))
 timestep(int::ProjectionIntegrator) = timestep(problem(int))
 
 initialize!(int::ProjectionIntegrator) = initialize!(subint(int))
-
-
-
-
-function project!(solstep::SolutionStepODE, problem::EquationProblem, ::ProjectionMethod, U, G, λ)
-    update!(solstep, U, timestep(problem))
-end
-
-function project!(solstep::SolutionStepDAE, problem::EquationProblem, ::ProjectionMethod, U, G, λ)
-    update!(solstep, U, λ, timestep(problem))
-end
-
-function project!(solstep::SolutionStepPODE, problem::EquationProblem, ::ProjectionMethod, U, G, λ)
-    update!(solstep, U, G, timestep(problem))
-end
-
-function project!(solstep::SolutionStepPDAE, problem::EquationProblem, ::ProjectionMethod, U, G, λ)
-    update!(solstep, U, G, λ, timestep(problem))
-end

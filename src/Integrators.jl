@@ -235,12 +235,14 @@ module Integrators
 
     export NoProjection, projection
 
-    include("projections/methods.jl")
-    include("projections/cache.jl")
     include("projections/projection.jl")
+    include("projections/cache.jl")
+    include("projections/common.jl")
     include("projections/midpoint_projection.jl")
     include("projections/standard_projection.jl")
     include("projections/symmetric_projection.jl")
+
+    include("projections/methods.jl")
     include("integrators/vi/vprk_projected.jl")
     
 

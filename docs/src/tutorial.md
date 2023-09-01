@@ -513,7 +513,7 @@ methods or Continuous Galerkin Variational Integrators ([`CGVI`](@ref)).
 ### Integrators for Degenerate Lagrangian ODEs
 
 Degenerate Lagragian ODEs can be integrated with [Degenerate Variational Integrators](integrators/dvi.md) (see also [`DVRK`](@ref))
-or Projected Variational Partitioned Runge-Kutta ([`ProjectedVPRK`](@ref)) methods.
+or projected [Variational Partitioned Runge-Kutta](@ref vprk) methods.
 
 | Function                        | Method                                                                    |
 |:--------------------------------|:--------------------------------------------------------------------------|
@@ -522,7 +522,6 @@ or Projected Variational Partitioned Runge-Kutta ([`ProjectedVPRK`](@ref)) metho
 | [`CMDVI`](@ref)                 | Midpoint Degenerate Variational Integrator                                |
 | [`CTDVI`](@ref)                 | Trapezoidal Degenerate Variational Integrator                             |
 | [`DVRK`](@ref)                  | Degenerate Variational Runge-Kutta integrator                             |
-| [`ProjectedVPRK`](@ref)         | Projected Variational Partitioned Runge-Kutta integrator                  |
 |                                 |                                                                           |
 | [`VPRKpInternal`](@ref)         | VPRK integrator with projection on internal stages                        |
 | [`VPRKpLegendre`](@ref)         | VPRK integrator with Legendre projection                                  |

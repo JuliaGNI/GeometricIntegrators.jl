@@ -1,3 +1,16 @@
+struct MidpointProjection{DT} <: ProjectionMethod 
+    RU::Vector{DT}
+    RG::Vector{DT}
+
+    function MidpointProjection(R∞ = 1)
+        DT, RU, RG = _projection_weights([1//2,1//2], [1//2,1//2], R∞)
+        new{DT}(RU, RG)
+    end
+end
+
+MidpointProjection(method::GeometricMethod) = ProjectedMethod(MidpointProjection(), method)
+MidpointProjection(method::Union{RKMethod,PRKMethod,VPRKMethod}) = ProjectedMethod(MidpointProjection(tableau(method).R∞), method)
+
 
 function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:MidpointProjection}; kwargs...) where {ST}
     ProjectionCache{ST, ndims(problem), nconstraints(problem), solversize(problem, parent(method))}(; kwargs...)
@@ -12,14 +25,6 @@ default_iguess(::ProjectedMethod{<:MidpointProjection}) = HermiteExtrapolation()
 
 
 const IntegratorMidpointProjection{DT,TT} = ProjectionIntegrator{<:EquationProblem{DT,TT}, <:ProjectedMethod{<:MidpointProjection}}
-
-# TODO: Try to disable this, once everything works!
-function initsolver(::NewtonMethod, ::ProjectedMethod{<:MidpointProjection}, caches::CacheDict; kwargs...)
-    x = zero(nlsolution(caches))
-    y = zero(nlsolution(caches))
-    NewtonSolver(x, y; linesearch = Backtracking(), config = Options(min_iterations = 1, f_abstol = 2eps(eltype(nlsolution(caches)))), kwargs...)
-end
-
 
 # function Base.show(io::IO, int::ProjectedMethod{<:MidpointProjection})
 #     print(io, "\nProjection method with:\n")

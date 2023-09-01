@@ -8,7 +8,6 @@ meta_methods = (
     # FLRK,
     VPRK,
     DVRK,
-    ProjectedVPRK,
     ProjectedMethod,
     HPImidpoint,
     HPItrapezoidal,
@@ -190,19 +189,17 @@ export VariationalProjection
 export VariationalProjectionOnP
 export VariationalProjectionOnQ
 
-# degenerate VPRK methods
-
 # projected VPRK methods
-# export VPRKpInternal
-# export VPRKpLegendre
-# export VPRKpMidpoint
-# export VPRKpSecondary
-# export VPRKpStandard
-# export VPRKpSymmetric
-# export VPRKpSymplectic
-# export VPRKpVariational
-# export VPRKpVariationalP
-# export VPRKpVariationalQ
+export VPRKpInternal
+export VPRKpLegendre
+export VPRKpMidpoint
+export VPRKpSecondary
+export VPRKpStandard
+export VPRKpSymmetric
+export VPRKpSymplectic
+export VPRKpVariational
+export VPRKpVariationalP
+export VPRKpVariationalQ
 
 
 _display_property(p::Bool) = p ? "✓" : "✗"

@@ -1,3 +1,16 @@
+struct SymmetricProjection{DT} <: ProjectionMethod 
+    RU::Vector{DT}
+    RG::Vector{DT}
+    
+    function SymmetricProjection(R∞ = 1)
+        DT, RU, RG = _projection_weights([1//2,1//2], [1//2,1//2], R∞)
+        new{DT}(RU, RG)
+    end
+end
+
+SymmetricProjection(method::GeometricMethod) = ProjectedMethod(SymmetricProjection(), method)
+SymmetricProjection(method::Union{RKMethod,PRKMethod,VPRKMethod}) = ProjectedMethod(SymmetricProjection(tableau(method).R∞), method)
+
 
 function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:SymmetricProjection}; kwargs...) where {ST}
     ProjectionCache{ST, ndims(problem), nconstraints(problem), solversize(problem, parent(method))}(; kwargs...)
@@ -12,14 +25,6 @@ default_iguess(::ProjectedMethod{<:SymmetricProjection}) = HermiteExtrapolation(
 
 
 const IntegratorSymmetricProjection{DT,TT} = ProjectionIntegrator{<:EquationProblem{DT,TT}, <:ProjectedMethod{<:SymmetricProjection}}
-
-# TODO: Try to disable this, once everything works!
-function initsolver(::NewtonMethod, ::ProjectedMethod{<:SymmetricProjection}, caches::CacheDict; kwargs...)
-    x = zero(nlsolution(caches))
-    y = zero(nlsolution(caches))
-    NewtonSolver(x, y; linesearch = Backtracking(), config = Options(min_iterations = 1, f_abstol = 2eps(eltype(nlsolution(caches)))), kwargs...)
-end
-
 
 # function Base.show(io::IO, int::ProjectedMethod{<:SymmetricProjection})
 #     print(io, "\nProjection method with:\n")
