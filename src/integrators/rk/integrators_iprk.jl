@@ -102,8 +102,11 @@ Implicit partitioned Runge-Kutta integrator cache.
 * `Y`: vector field of internal stages of q
 * `Z`: vector field of internal stages of p
 """
-struct IPRKCache{ST,D,S} <: PODEIntegratorCache{ST,D}
+struct IPRKCache{ST,D,S,N} <: PODEIntegratorCache{ST,D}
     x::Vector{ST}
+
+    q̄::Vector{ST}
+    p̄::Vector{ST}
 
     Q::Vector{Vector{ST}}
     P::Vector{Vector{ST}}
@@ -112,9 +115,13 @@ struct IPRKCache{ST,D,S} <: PODEIntegratorCache{ST,D}
     Y::Vector{Vector{ST}}
     Z::Vector{Vector{ST}}
 
-    function IPRKCache{ST,D,S}() where {ST,D,S}
+    function IPRKCache{ST,D,S,N}() where {ST,D,S,N}
         # create solver vector
-        x = zeros(ST, 2*D*S)
+        x = zeros(ST, N)
+
+        # create previous solution vectors
+        q̄ = zeros(ST, D)
+        p̄ = zeros(ST, D)
 
         # create internal stage vectors
         Q = create_internal_stage_vector(ST, D, S)
@@ -124,38 +131,47 @@ struct IPRKCache{ST,D,S} <: PODEIntegratorCache{ST,D}
         Y = create_internal_stage_vector(ST, D, S)
         Z = create_internal_stage_vector(ST, D, S)
 
-        new(x, Q, P, V, F, Y, Z)
+        new(x, q̄, p̄, Q, P, V, F, Y, Z)
     end
 end
-
-nlsolution(cache::IPRKCache) = cache.x
 
 function Cache{ST}(problem::EquationProblem, method::IPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
     D = ndims(problem)
-    IPRKCache{ST,D,S}(; kwargs...)
+    IPRKCache{ST, D, S, solversize(problem, method)}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::IPRK) = IPRKCache{ST, ndims(problem), nstages(tableau(method))}
+@inline CacheType(ST, problem::EquationProblem, method::IPRK) = IPRKCache{ST, ndims(problem), nstages(tableau(method)), solversize(problem, method)}
+
+nlsolution(cache::IPRKCache) = cache.x
+
+function reset!(cache::IPRKCache, t, q, p)
+    copyto!(cache.q̄, q)
+    copyto!(cache.p̄, p)
+end
 
 
 function initial_guess!(int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE})
-    # get cache for internal stages
+    # get cache for nonlinear solution vector and internal stages
+    local x = nlsolution(int)
     local Q = cache(int).Q
     local P = cache(int).P
     local V = cache(int).V
     local F = cache(int).F
 
+    # compute initial guess for internal stages
     for i in eachstage(int)
         initialguess!(solstep(int).t̄ + timestep(int) * tableau(int).q.c[i], Q[i], P[i], V[i], F[i], solstep(int), problem(int), iguess(int))
     end
+
+    # assemble initial guess for nonlinear solver solution vector
     for i in eachstage(int)
         for k in 1:ndims(int)
-            cache(int).x[2*(ndims(int)*(i-1)+k-1)+1] = 0
-            cache(int).x[2*(ndims(int)*(i-1)+k-1)+2] = 0
+            x[2*(ndims(int)*(i-1)+k-1)+1] = 0
+            x[2*(ndims(int)*(i-1)+k-1)+2] = 0
             for j in eachstage(int)
-                cache(int).x[2*(ndims(int)*(i-1)+k-1)+1] += tableau(int).q.a[i,j] * V[j][k]
-                cache(int).x[2*(ndims(int)*(i-1)+k-1)+2] += tableau(int).p.a[i,j] * F[j][k]
+                x[2*(ndims(int)*(i-1)+k-1)+1] += tableau(int).q.a[i,j] * V[j][k]
+                x[2*(ndims(int)*(i-1)+k-1)+2] += tableau(int).p.a[i,j] * F[j][k]
             end
         end
     end
@@ -184,13 +200,9 @@ function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:IPRK, <:A
             P[i][k] = solstep(int).p̄[k] + timestep(int) * Z[i][k]
         end
 
-        # compute time of internal stage
-        tqᵢ = solstep(int).t̄ + timestep(int) * tableau(int).q.c[i]
-        tpᵢ = solstep(int).t̄ + timestep(int) * tableau(int).p.c[i]
-
         # compute v(Q,P) and f(Q,P)
-        equations(int).v(V[i], tqᵢ, Q[i], P[i])
-        equations(int).f(F[i], tpᵢ, Q[i], P[i])
+        equations(int).v(V[i], solstep(int).t̄ + timestep(int) * tableau(int).q.c[i], Q[i], P[i])
+        equations(int).f(F[i], solstep(int).t̄ + timestep(int) * tableau(int).p.c[i], Q[i], P[i])
     end
 end
 
@@ -208,11 +220,11 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, int::GeometricI
     components!(x, int)
 
     # compute b = - [(Y-AV), (Z-AF)]
-    for i in eachstage(int)
-        for k in 1:D
+    for i in eachindex(Y,Z)
+        for k in eachindex(Y[i],Z[i])
             b[2*(D*(i-1)+k-1)+1] = - Y[i][k]
             b[2*(D*(i-1)+k-1)+2] = - Z[i][k]
-            for j in eachstage(int)
+            for j in eachindex(V,F)
                 b[2*(D*(i-1)+k-1)+1] += tableau(int).q.a[i,j] * V[j][k]
                 b[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[i,j] * F[j][k]
             end
