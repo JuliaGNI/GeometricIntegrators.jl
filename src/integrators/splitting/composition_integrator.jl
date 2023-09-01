@@ -53,8 +53,8 @@ _neqs(problem::SODEProblem) = nsteps(problem)
 
 
 struct CompositionIntegrator{
-        PT <: SODEProblem,
         MT <: AbstractSplittingMethod,
+        PT <: SODEProblem,
         SIT <: Tuple,
         SST <: SolutionStep
     } <: DeterministicIntegrator
@@ -109,15 +109,7 @@ function initialize!(cint::CompositionIntegrator)
 end
 
 
-
-# function Cache{ST}(problem::SODEProblem, method::Composition; kwargs...) where {ST}
-#     IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}(; kwargs...)
-# end
-
-# @inline CacheType(ST, problem::SODEProblem, ::Composition) = IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}
-
-
-function integrate_step!(int::CompositionIntegrator)
+function integrate_step!(int::CompositionIntegrator{<:AbstractSplittingMethod, <:SODEProblem})
     # compute composition steps
     for subint in subints(int)
         # copy previous solution to cache of subint
@@ -130,23 +122,3 @@ function integrate_step!(int::CompositionIntegrator)
         integrate_step!(subint)
     end
 end
-
-
-# function integrate_step!(
-#     solstep::SolutionStepODE{DT,TT},
-#     problem::SODEProblem{DT,TT},
-#     method::Composition,
-#     caches::CacheDict,
-#     solver::NoSolver) where {DT,TT}
-    
-#     # compute composition steps
-#     for subint in method.integrators
-#         # copy previous solution
-#         caches[DT].t .= solstep.t
-#         caches[DT].q .= solstep.q
-
-#         # initialize!(subint, sol)
-
-#         integrate_step!(solstep, problem, subint, caches, solver)
-#     end
-# end
