@@ -1,6 +1,4 @@
 
-# Variational Partitioned Runge-Kutta Methods
-
 abstract type VPRKMethod <: VIMethod end
 
 GeometricBase.order(method::VPRKMethod) = RungeKutta.order(tableau(method))
@@ -23,8 +21,30 @@ function Base.show(io::IO, method::VPRKMethod)
 end
 
 
-"""
+@doc raw"""
 Variational Partitioned Runge-Kutta Method
+
+```math
+\begin{aligned}
+P_{n,i} &= \dfrac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , &
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} , \\
+F_{n,i} &= \dfrac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , &
+P_{n,i} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{a}_{ij} \, F_{n,j} - d_i \lambda , &
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i} \, F_{n,i} , \\
+&&
+0 &= \sum \limits_{i=1}^{s} d_i V_i , &&
+\end{aligned}
+```
+satisfying the symplecticity conditions
+```math
+\begin{aligned}
+b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
+\bar{b}_i &= b_i .
+\end{aligned}
+```
+
+## Constructors
 
 ```
 VPRK(tableau::PartitionedTableau, d=nothing)
@@ -47,6 +67,8 @@ VPRK(tableau1::Tableau, tableau2::Tableau, args...; kwargs...) = VPRK(Partitione
 VPRK(method::RKMethod, args...; kwargs...) = VPRK(PartitionedTableau(tableau(method)))
 VPRK(method::PRKMethod, args...; kwargs...) = VPRK(tableau(method))
 VPRK(method::VPRKMethod, args...; kwargs...) = VPRK(tableau(method), nullvector(method))
+
+initmethod(method::VPRKMethod) = VPRK(method)
 
 Base.hash(method::VPRK, h::UInt) = hash(method.tableau, hash(method.d, hash(:VPRK, h)))
 
