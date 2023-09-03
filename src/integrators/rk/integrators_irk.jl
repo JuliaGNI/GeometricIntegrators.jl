@@ -146,8 +146,6 @@ end
 
 
 function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:IRK, <:AbstractProblemODE}) where {ST}
-    local tᵢ::timetype(problem(int))
-
     local q̄ = cache(int, ST).q̄
     local Q = cache(int, ST).Q
     local V = cache(int, ST).V

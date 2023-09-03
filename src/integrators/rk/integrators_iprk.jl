@@ -194,8 +194,8 @@ function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:IPRK, <:A
             Z[i][k] = x[2*(D*(i-1)+k-1)+2]
 
             # compute Q and P
-            Q[i][k] = solstep(int).q̄[k] + timestep(int) * Y[i][k]
-            P[i][k] = solstep(int).p̄[k] + timestep(int) * Z[i][k]
+            Q[i][k] = cache(int).q̄[k] + timestep(int) * Y[i][k]
+            P[i][k] = cache(int).p̄[k] + timestep(int) * Z[i][k]
         end
 
         # compute v(Q,P) and f(Q,P)
@@ -232,6 +232,9 @@ end
 
 
 function integrate_step!(int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE})
+    # copy previous solution from solstep to cache
+    reset!(cache(int), current(solstep(int))...)
+
     # call nonlinear solver
     solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
 

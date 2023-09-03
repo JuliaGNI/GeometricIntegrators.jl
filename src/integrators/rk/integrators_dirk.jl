@@ -68,12 +68,17 @@ struct DIRKCache{DT,D,S} <: ODEIntegratorCache{DT,D}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
 
+    q̄::Vector{DT}
+    p̄::Vector{DT}
+
     function DIRKCache{DT,D,S}() where {DT,D,S}
         x = create_internal_stage_vector(DT, D, S)
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         Y = create_internal_stage_vector(DT, D, S)
-        new(x, Q, V, Y)
+        q̄ = zeros(DT, D)
+        p̄ = zeros(DT, D)
+        new(x, Q, V, Y, q̄, p̄)
     end
 end
 
@@ -84,6 +89,8 @@ function Cache{ST}(problem::EquationProblem, method::DIRKMethod; kwargs...) wher
 end
 
 @inline CacheType(ST, problem::EquationProblem, method::DIRKMethod) = DIRKCache{ST, ndims(problem), nstages(tableau(method))}
+
+reset!(cache::DIRKCache, t, q, λ = missing) = copyto!(cache.q̄, q)
 
 nlsolution(cache::DIRKCache, i) = cache.x[i]
 
@@ -116,12 +123,11 @@ function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:DIRK}, i)
     # copy x to Y and compute Q = q + Y
     for k in 1:ndims(int)
         Y[i][k] = x[k]
-        Q[i][k] = solstep(int).q[k] + Y[i][k]
+        Q[i][k] = cache(int).q̄[k] + Y[i][k]
     end
 
     # compute V = v(Q)
-    tᵢ = solstep(int).t̄ + timestep(int) * tableau(int).c[i]
-    equations(int).v(V[i], tᵢ, Q[i])
+    equations(int).v(V[i], solstep(int).t̄ + timestep(int) * tableau(int).c[i], Q[i])
 end
 
 
@@ -158,6 +164,9 @@ end
 
 
 function integrate_step!(int::GeometricIntegrator{<:DIRK, <:AbstractProblemODE})
+    # copy previous solution from solstep to cache
+    reset!(cache(int), current(solstep(int))...)
+
     # consecutively solve for all stages
     for i in eachstage(int)
         # call nonlinear solver
