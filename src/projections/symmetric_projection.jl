@@ -24,8 +24,6 @@ default_solver(::ProjectedMethod{<:SymmetricProjection}) = Newton()
 default_iguess(::ProjectedMethod{<:SymmetricProjection}) = HermiteExtrapolation()
 
 
-const IntegratorSymmetricProjection{DT,TT} = ProjectionIntegrator{<:EquationProblem{DT,TT}, <:ProjectedMethod{<:SymmetricProjection}}
-
 # function Base.show(io::IO, int::ProjectedMethod{<:SymmetricProjection})
 #     print(io, "\nProjection method with:\n")
 #     print(io, "   Timestep: $(timestep(int))\n")
@@ -35,7 +33,7 @@ const IntegratorSymmetricProjection{DT,TT} = ProjectionIntegrator{<:EquationProb
 # end
 
 
-function split_nlsolution(x::AbstractVector, int::IntegratorSymmetricProjection)
+function split_nlsolution(x::AbstractVector, int::ProjectionIntegrator{<:ProjectedMethod{<:SymmetricProjection}})
     D = ndims(int)
     M = nconstraints(int)
     N = solversize(problem(int), parent(method(int)))
@@ -47,7 +45,7 @@ function split_nlsolution(x::AbstractVector, int::IntegratorSymmetricProjection)
 end
 
 
-function initial_guess!(int::IntegratorSymmetricProjection)
+function initial_guess!(int::ProjectionIntegrator{<:ProjectedMethod{<:SymmetricProjection}})
     # compute initial guess for parent method
     initial_guess!(subint(int))
 
@@ -130,20 +128,20 @@ function components!(
 end
 
 
-function constraint!(solstep::SolutionStep, problem::DAEProblem, ::IntegratorSymmetricProjection, cache::ProjectionCache)
+function constraint!(solstep::SolutionStep, problem::DAEProblem, ::ProjectionIntegrator{<:ProjectedMethod{<:SymmetricProjection}}, cache::ProjectionCache)
     # compute ϕ = ϕ(q)
     functions(problem).ϕ(cache.ϕ, solstep.t, cache.q)
 end
 
 
-function constraint!(solstep::SolutionStep, problem::Union{IODEProblem,LODEProblem}, ::IntegratorSymmetricProjection, cache::ProjectionCache)
+function constraint!(solstep::SolutionStep, problem::Union{IODEProblem,LODEProblem}, ::ProjectionIntegrator{<:ProjectedMethod{<:SymmetricProjection}}, cache::ProjectionCache)
     # compute ϕ = ϑ(q) - p
     functions(problem).ϑ(cache.ϕ, solstep.t, cache.q, solstep.v)
     cache.ϕ .-= cache.p
 end
 
 
-function components!(x::AbstractVector{ST}, int::IntegratorSymmetricProjection) where {ST}
+function components!(x::AbstractVector{ST}, int::ProjectionIntegrator{<:ProjectedMethod{<:SymmetricProjection}}) where {ST}
     # TODO: Further generalise for non-RK methods
     # Need to implement update_vector! for integrators
 
@@ -170,7 +168,7 @@ function components!(x::AbstractVector{ST}, int::IntegratorSymmetricProjection) 
 end
 
 
-function residual!(b::AbstractVector{ST}, int::IntegratorSymmetricProjection) where {ST}
+function residual!(b::AbstractVector{ST}, int::ProjectionIntegrator{<:ProjectedMethod{<:SymmetricProjection}}) where {ST}
     # compute b = q̃ - q
     for k in 1:ndims(int)
         b[k] = cache(int, ST).q̃[k] - cache(int, ST).q[k]
@@ -187,7 +185,7 @@ end
 function residual!(
     b::AbstractVector{ST},
     x::AbstractVector{ST},
-    int::IntegratorSymmetricProjection) where {ST}
+    int::ProjectionIntegrator{<:ProjectedMethod{<:SymmetricProjection}}) where {ST}
 
     @assert axes(x) == axes(b)
 
@@ -211,7 +209,7 @@ function residual!(
 end
 
 
-function update!(x::AbstractVector{ST}, int::IntegratorSymmetricProjection) where {ST}
+function update!(x::AbstractVector{ST}, int::ProjectionIntegrator{<:ProjectedMethod{<:SymmetricProjection}}) where {ST}
     # split x and b
     x̄, x̃ = split_nlsolution(x, int)
 
@@ -232,7 +230,7 @@ function update!(x::AbstractVector{ST}, int::IntegratorSymmetricProjection) wher
 end
 
 
-function integrate_step!(int::IntegratorSymmetricProjection)
+function integrate_step!(int::ProjectionIntegrator{<:ProjectedMethod{<:SymmetricProjection}})
     # call nonlinear solver for projection
     solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
 
