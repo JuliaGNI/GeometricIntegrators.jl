@@ -9,9 +9,7 @@ using SafeTestsets
 @safetestset "Splitting Integrators                                                           " begin include("integrators/splitting_integrators_tests.jl") end
 @safetestset "Variational Integrators                                                         " begin include("integrators/variational_integrators_tests.jl") end
 @safetestset "Degenerate Variational Integrators                                              " begin include("integrators/dvi_integrators_tests.jl") end
-
-# @safetestset "Galerkin Variational Integrators                                                " begin include("integrators/galerkin_integrators_tests.jl") end
-
+@safetestset "Galerkin Variational Integrators                                                " begin include("integrators/galerkin_integrators_tests.jl") end
 @safetestset "Hamilton-Pontryagin Integrators                                                 " begin include("integrators/hamilton_pontryagin_integrators_tests.jl") end
 
 @safetestset "Projection Methods                                                              " begin include("projections/projections_tests.jl") end

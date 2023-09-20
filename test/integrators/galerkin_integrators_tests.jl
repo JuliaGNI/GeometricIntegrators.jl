@@ -1,13 +1,12 @@
 using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
-using Test
-
 using CompactBasisFunctions
 using QuadratureRules
+using Test
 
-using GeometricProblems.HarmonicOscillator: reference_solution
 
 iode = iodeproblem()
+pref = exact_solution(podeproblem())
 
 QGau4 = GaussLegendreQuadrature(4)
 BGau4 = Lagrange(QuadratureRules.nodes(QGau4))
@@ -15,29 +14,23 @@ BGau4 = Lagrange(QuadratureRules.nodes(QGau4))
 
 ### CGVI Integrators ###
 
-cgint = IntegratorCGVI(iode, BGau4, QGau4)
-cgsol = integrate(iode, cgint)
-@test relative_maximum_error(cgsol.q, reference_solution) < 1E-7
+cgsol = integrate(iode, CGVI(BGau4, QGau4))
+@test relative_maximum_error(cgsol.q, pref.q) < 1E-7
 
 
 ### DGVI Integrators ###
 
-dgint = IntegratorDGVI(iode, BGau4, QGau4)
-dgsol = integrate(iode, dgint)
-@test relative_maximum_error(dgsol.q, reference_solution) < 1E-7
+# dgsol = integrate(iode, DGVI(BGau4, QGau4))
+# @test relative_maximum_error(dgsol.q, pref.q) < 1E-7
 
-dgint = IntegratorDGVIP0(iode, BGau4, QGau4)
-dgsol = integrate(iode, dgint)
-@test relative_maximum_error(dgsol.q, reference_solution) < 1E-7
+# dgsol = integrate(iode, DGVIP0(BGau4, QGau4))
+# @test relative_maximum_error(dgsol.q, pref.q) < 1E-7
 
-dgint = IntegratorDGVIP1(iode, BGau4, QGau4)
-dgsol = integrate(iode, dgint)
-@test relative_maximum_error(dgsol.q, reference_solution) < 1E-7
+# dgsol = integrate(iode, DGVIP1(BGau4, QGau4))
+# @test relative_maximum_error(dgsol.q, pref.q) < 1E-7
 
-dgint = IntegratorDGVIEXP(iode, BGau4, QGau4)
-dgsol = integrate(iode, dgint)
-@test relative_maximum_error(dgsol.q, reference_solution) < 1E-7
+# dgsol = integrate(iode, DGVIEXP(BGau4, QGau4))
+# @test relative_maximum_error(dgsol.q, pref.q) < 1E-7
 
-dgint = IntegratorDGVIPI(iode, BGau4, QGau4, Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2)))
-dgsol = integrate(iode, dgint)
-@test relative_maximum_error(dgsol.q, reference_solution) < 1E-7
+# dgsol = integrate(iode, DGVIPI(BGau4, QGau4, Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2))))
+# @test relative_maximum_error(dgsol.q, pref.q) < 1E-7

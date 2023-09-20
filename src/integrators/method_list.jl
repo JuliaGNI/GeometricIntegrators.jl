@@ -8,6 +8,7 @@ meta_methods = (
     # FLRK,
     VPRK,
     DVRK,
+    CGVI,
     ProjectedMethod,
     HPImidpoint,
     HPItrapezoidal,
