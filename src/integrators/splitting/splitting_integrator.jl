@@ -68,7 +68,7 @@ function integrate_step!(int::GeometricIntegrator{<:Splitting, <:SODEProblem})
             cache(int).t  = solstep(int).t̄ + timestep(int) * method(int).c[i]
 
             # compute new solution
-            solutions(problem(int)).q[method(int).f[i]](solstep(int).q, cache(int).t, cache(int).q, solstep(int).t̄)
+            solutions(problem(int)).q[method(int).f[i]](solstep(int).q, cache(int).t, cache(int).q, solstep(int).t̄, parameters(solstep(int)))
         end
     end
 end

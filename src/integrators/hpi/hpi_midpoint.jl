@@ -91,8 +91,8 @@ function components!(x::Vector{ST}, int::GeometricIntegrator{<:HPImidpoint}) whe
     method(int).ϕ(cache(int,ST).ṽ, cache(int).q̄, cache(int,ST).q, cache(int,ST).a, timestep(int))
  
     # compute Θ̃ = ϑ(q̃,ṽ) and f̃ = f(q̃,ṽ)
-    equations(int).ϑ(cache(int,ST).θ̃, t̃, cache(int,ST).q̃, cache(int,ST).ṽ)
-    equations(int).f(cache(int,ST).f̃, t̃, cache(int,ST).q̃, cache(int,ST).ṽ)
+    equations(int).ϑ(cache(int,ST).θ̃, t̃, cache(int,ST).q̃, cache(int,ST).ṽ, parameters(solstep(int)))
+    equations(int).f(cache(int,ST).f̃, t̃, cache(int,ST).q̃, cache(int,ST).ṽ, parameters(solstep(int)))
 
     # compute derivatives of ϕ
     method(int).D₁ϕ(cache(int,ST).D₁ϕ, cache(int).q̄, cache(int,ST).q, cache(int,ST).a, timestep(int))

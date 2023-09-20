@@ -27,9 +27,8 @@ module Integrators
     import CompactBasisFunctions: Basis
     import CompactBasisFunctions: nbasis
 
-    import GeometricBase: description, reference, tableau
-    import GeometricBase: equations, nconstraints, timestep
-    import GeometricBase: order, tableau
+    import GeometricBase: description, reference, tableau, order
+    import GeometricBase: equations, nconstraints, parameters, timestep
     import GeometricBase: integrate, integrate!
     import GeometricBase: reset!
     import GeometricBase.Utils: @big, @define, compensated_summation

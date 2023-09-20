@@ -93,7 +93,8 @@ end
 
 function extrapolate_ode!(t₀::TT, x₀::AbstractVector{DT},
                       t₁::TT, x₁::AbstractVector{DT},
-                      v::Callable, extrap::MidpointExtrapolation) where {DT,TT}
+                      v::Callable, params::OptionalParameters,
+                      extrap::MidpointExtrapolation) where {DT,TT}
     @assert size(x₀) == size(x₁)
 
     local F   = [2i*one(TT) for i in 1:extrap.s+1]
@@ -107,14 +108,14 @@ function extrapolate_ode!(t₀::TT, x₀::AbstractVector{DT},
     local vᵢ  = zero(x₀)
     local v₀  = zero(x₀)
 
-    v(v₀, t₀, x₀)
+    v(v₀, t₀, x₀, params)
 
     for i in 1:extrap.s+1
         tᵢ   = t₀ + σ[i]
         xᵢ₁ .= x₀
         xᵢ₂ .= x₀ .+ σ[i] .* v₀
         for _ in 1:(F[i]-1)
-            v(vᵢ, tᵢ, xᵢ₂)
+            v(vᵢ, tᵢ, xᵢ₂, params)
             xᵢₜ .= xᵢ₁ .+ 2σ[i] .* vᵢ
             xᵢ₁ .= xᵢ₂
             xᵢ₂ .= xᵢₜ
@@ -133,13 +134,13 @@ function extrapolate!(t₀, x₀::AbstractVector,
                       t₁, x₁::AbstractVector,
                       problem::AbstractProblemODE,
                       extrap::MidpointExtrapolation)
-    extrapolate_ode!(t₀, x₀, t₁, x₁, functions(problem).v, extrap)
+    extrapolate_ode!(t₀, x₀, t₁, x₁, functions(problem).v, parameters(problem), extrap)
 end
 
 
 function extrapolate_pode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
                       t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
-                      v::Callable, f::Callable,
+                      v::Callable, f::Callable, params::OptionalParameters,
                       extrap::MidpointExtrapolation) where {DT,TT}
     @assert size(q₀) == size(q₁) == size(p₀) == size(p₁)
 
@@ -164,8 +165,8 @@ function extrapolate_pode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
     local f₀ = zero(p₀)
     local fᵢ = zero(p₀)
 
-    v(v₀, t₀, q₀, p₀)
-    f(f₀, t₀, q₀, p₀)
+    v(v₀, t₀, q₀, p₀, params)
+    f(f₀, t₀, q₀, p₀, params)
 
     for i in 1:extrap.s+1
         tᵢ   = t₀ + σ[i]
@@ -174,8 +175,8 @@ function extrapolate_pode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
         pᵢ₁ .= p₀
         pᵢ₂ .= p₀ .+ σ[i] .* f₀
         for _ in 1:(F[i]-1)
-            v(vᵢ, tᵢ, qᵢ₂, pᵢ₂)
-            f(fᵢ, tᵢ, qᵢ₂, pᵢ₂)
+            v(vᵢ, tᵢ, qᵢ₂, pᵢ₂, params)
+            f(fᵢ, tᵢ, qᵢ₂, pᵢ₂, params)
             qᵢₜ .= qᵢ₁ .+ 2σ[i] .* vᵢ
             qᵢ₁ .= qᵢ₂
             qᵢ₂ .= qᵢₜ
@@ -201,13 +202,13 @@ function extrapolate!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{D
     t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
     problem::AbstractProblemPODE,
     extrap::MidpointExtrapolation) where {DT,TT}
-    extrapolate_pode!(t₀, q₀, p₀, t₁, q₁, p₁, functions(problem).v, functions(problem).f, extrap)
+    extrapolate_pode!(t₀, q₀, p₀, t₁, q₁, p₁, functions(problem).v, functions(problem).f, parameters(problem), extrap)
 end
 
 
 function extrapolate_iode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
                       t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
-                      v::Callable, f::Callable,
+                      v::Callable, f::Callable, params::OptionalParameters,
                       extrap::MidpointExtrapolation) where {DT,TT}
     @assert size(q₀) == size(q₁) == size(p₀) == size(p₁)
 
@@ -232,8 +233,8 @@ function extrapolate_iode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
     local f₀ = zero(p₀)
     local fᵢ = zero(p₀)
 
-    v(v₀, t₀, q₀, p₀)
-    f(f₀, t₀, q₀, v₀)
+    v(v₀, t₀, q₀, p₀, params)
+    f(f₀, t₀, q₀, v₀, params)
 
     for i in 1:extrap.s+1
         tᵢ   = t₀ + σ[i]
@@ -242,8 +243,8 @@ function extrapolate_iode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
         pᵢ₁ .= p₀
         pᵢ₂ .= p₀ .+ σ[i] .* f₀
         for _ in 1:(F[i]-1)
-            v(vᵢ, tᵢ, qᵢ₂, pᵢ₂)
-            f(fᵢ, tᵢ, qᵢ₂, vᵢ)
+            v(vᵢ, tᵢ, qᵢ₂, pᵢ₂, params)
+            f(fᵢ, tᵢ, qᵢ₂, vᵢ, params)
             qᵢₜ .= qᵢ₁ .+ 2σ[i] .* vᵢ
             qᵢ₁ .= qᵢ₂
             qᵢ₂ .= qᵢₜ
@@ -270,5 +271,5 @@ function extrapolate!(
     t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
     problem::AbstractProblemIODE,
     extrap::MidpointExtrapolation) where {DT,TT}
-    extrapolate_iode!(t₀, q₀, p₀, t₁, q₁, p₁, functions(problem).v̄, functions(problem).f̄, extrap)
+    extrapolate_iode!(t₀, q₀, p₀, t₁, q₁, p₁, functions(problem).v̄, functions(problem).f̄, parameters(problem), extrap)
 end

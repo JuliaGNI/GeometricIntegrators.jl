@@ -1,7 +1,7 @@
 
 function initialguess!(t̄, q̄, t, q, q̇, problem::AbstractProblemODE, extrap::MidpointExtrapolation)
     extrapolate!(t̄, q̄, t, q, problem, extrap)
-    functions(problem).v(q̇, t, q)
+    functions(problem).v(q̇, t, q, parameters(problem))
     (t = t, q = q, v = q̇)
 end
 
@@ -22,15 +22,15 @@ end
 
 function initialguess!(t̄, q̄, p̄, t, q, p, q̇, ṗ, problem::AbstractProblemPODE, extrap::MidpointExtrapolation)
     extrapolate!(t̄, q̄, p̄, t, q, p, problem, extrap)
-    functions(problem).v(q̇, t, q, p)
-    functions(problem).f(ṗ, t, q, p)
+    functions(problem).v(q̇, t, q, p, parameters(problem))
+    functions(problem).f(ṗ, t, q, p, parameters(problem))
     (t = t, q = q, p = p, v = q̇, f = ṗ)
 end
 
 function initialguess!(t̄, q̄, p̄, t, q, p, q̇, ṗ, problem::AbstractProblemIODE, extrap::MidpointExtrapolation)
     extrapolate!(t̄, q̄, p̄, t, q, p, problem, extrap)
-    functions(problem).v̄(q̇, t, q, p)
-    functions(problem).f̄(ṗ, t, q, q̇)
+    functions(problem).v̄(q̇, t, q, p, parameters(problem))
+    functions(problem).f̄(ṗ, t, q, q̇, parameters(problem))
     (t = t, q = q, p = p, v = q̇, f = ṗ)
 end
 

@@ -72,10 +72,10 @@ function components!(x::Vector{ST}, int::GeometricIntegrator{<:HPItrapezoidal}) 
     method(int).ϕ(cache(int,ST).ṽ, cache(int).q̄, cache(int,ST).q, cache(int,ST).a, timestep(int))
  
     # compute Θ = ϑ(q,ṽ) and f = f(q,ṽ)
-    equations(int).ϑ(cache(int,ST).θ̄, solstep(int).t̄, cache(int).q̄, cache(int,ST).ṽ)
-    equations(int).f(cache(int,ST).f̄, solstep(int).t̄, cache(int).q̄, cache(int,ST).ṽ)
-    equations(int).ϑ(cache(int,ST).θ, solstep(int).t, cache(int,ST).q, cache(int,ST).ṽ)
-    equations(int).f(cache(int,ST).f, solstep(int).t, cache(int,ST).q, cache(int,ST).ṽ)
+    equations(int).ϑ(cache(int,ST).θ̄, solstep(int).t̄, cache(int).q̄, cache(int,ST).ṽ, parameters(solstep(int)))
+    equations(int).f(cache(int,ST).f̄, solstep(int).t̄, cache(int).q̄, cache(int,ST).ṽ, parameters(solstep(int)))
+    equations(int).ϑ(cache(int,ST).θ, solstep(int).t, cache(int,ST).q, cache(int,ST).ṽ, parameters(solstep(int)))
+    equations(int).f(cache(int,ST).f, solstep(int).t, cache(int,ST).q, cache(int,ST).ṽ, parameters(solstep(int)))
 
     # compute derivatives of ϕ
     method(int).D₁ϕ(cache(int,ST).D₁ϕ, cache(int).q̄, cache(int,ST).q, cache(int,ST).a, timestep(int))

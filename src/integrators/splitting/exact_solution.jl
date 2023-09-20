@@ -21,5 +21,5 @@ function integrate_step!(
     caches[DT].q .= solstep.q
 
     # compute new solution
-    solutions(problem).q(solstep.q, solstep.t̄ + timestep(problem), caches[DT].q, solstep.t̄)
+    solutions(problem).q(solstep.q, solstep.t̄ + timestep(problem), caches[DT].q, solstep.t̄, parameters(solstep))
 end

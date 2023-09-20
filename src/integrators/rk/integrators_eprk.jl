@@ -104,7 +104,7 @@ function compute_stage_q!(solstep::SolutionStepPODE, problem::PODEProblem, metho
     for k in eachindex(Y[i])
         Q[i][k] = solstep.q̄[k] + Y[i][k]
     end
-    functions(problem).f(F[i], t, Q[i], P[jmax])
+    functions(problem).f(F[i], t, Q[i], P[jmax], parameters(solstep))
 end
 
 # Compute P stages of explicit partitioned Runge-Kutta methods.
@@ -125,7 +125,7 @@ function compute_stage_p!(solstep::SolutionStepPODE, problem::PODEProblem, metho
     for k in eachindex(Z[i])
         P[i][k] = solstep.p̄[k] + Z[i][k]
     end
-    functions(problem).v(V[i], t, Q[jmax], P[i])
+    functions(problem).v(V[i], t, Q[jmax], P[i], parameters(solstep))
 end
 
 

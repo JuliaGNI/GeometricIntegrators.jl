@@ -166,12 +166,12 @@ function components!(x::Vector{ST}, int::GeometricIntegrator{<:DVRK}) where {ST}
             end
             cache(int,ST).Q[i][k] = cache(int).q̄[k] + timestep(int) * (y1 + y2)
         end
-        equations(int).ϑ(cache(int,ST).Θ[i], tᵢ, cache(int,ST).Q[i], cache(int,ST).V[i])
-        equations(int).f(cache(int,ST).F[i], tᵢ, cache(int,ST).Q[i], cache(int,ST).V[i])
+        equations(int).ϑ(cache(int,ST).Θ[i], tᵢ, cache(int,ST).Q[i], cache(int,ST).V[i], parameters(solstep(int)))
+        equations(int).f(cache(int,ST).F[i], tᵢ, cache(int,ST).Q[i], cache(int,ST).V[i], parameters(solstep(int)))
     end
 
     # compute q̄ = q + Δt B V, Θ = ϑ(q̄)
-    equations(int).ϑ(cache(int,ST).θ, solstep(int).t, cache(int,ST).q, cache(int,ST).v)
+    equations(int).ϑ(cache(int,ST).θ, solstep(int).t, cache(int,ST).q, cache(int,ST).v, parameters(solstep(int)))
 end
 
 

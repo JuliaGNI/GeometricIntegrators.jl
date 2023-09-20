@@ -127,7 +127,7 @@ function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:DIRK}, i)
     end
 
     # compute V = v(Q)
-    equations(int).v(V[i], solstep(int).t̄ + timestep(int) * tableau(int).c[i], Q[i])
+    equations(int).v(V[i], solstep(int).t̄ + timestep(int) * tableau(int).c[i], Q[i], parameters(solstep(int)))
 end
 
 

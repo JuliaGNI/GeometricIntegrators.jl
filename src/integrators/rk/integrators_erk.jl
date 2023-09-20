@@ -73,7 +73,7 @@ function integrate_step!(int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
             end
             Q[i][k] = solstep(int).q̄[k] + timestep(int) * yᵢ
         end
-        equations(int).v(V[i], tᵢ, Q[i])
+        equations(int).v(V[i], tᵢ, Q[i], parameters(solstep(int)))
     end
 
     # compute final update

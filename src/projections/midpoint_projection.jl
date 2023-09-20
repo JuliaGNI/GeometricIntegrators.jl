@@ -86,7 +86,7 @@ function components!(
     end
 
     # compute u=λ and g=∇ϑ(q)⋅λ
-    functions(problem).u(u, solstep.t, q̃, λ)
+    functions(problem).u(u, solstep.t, q̃, λ, parameters(solstep))
     U[1] .= projection(method).RU[1] .* u
     U[2] .= projection(method).RU[2] .* u
 end
@@ -120,7 +120,7 @@ function components!(
     U[2] .= projection(method).RU[2] .* λ
 
     # compute g = ∇ϑ(q)⋅λ
-    functions(problem).g(g, solstep.t, q̃, solstep.v, λ)
+    functions(problem).g(g, solstep.t, q̃, solstep.v, λ, parameters(solstep))
     G[1] .= projection(method).RG[1] .* g
     G[2] .= projection(method).RG[2] .* g
 end
@@ -128,13 +128,13 @@ end
 
 function constraint!(solstep::SolutionStep, problem::DAEProblem, ::ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection}}, cache::ProjectionCache)
     # compute ϕ = ϕ(q)
-    functions(problem).ϕ(cache.ϕ, solstep.t, cache.q)
+    functions(problem).ϕ(cache.ϕ, solstep.t, cache.q, parameters(solstep))
 end
 
 
 function constraint!(solstep::SolutionStep, problem::Union{IODEProblem,LODEProblem}, ::ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection}}, cache::ProjectionCache)
     # compute ϕ = ϑ(q) - p
-    functions(problem).ϑ(cache.ϕ, solstep.t, cache.q, solstep.v)
+    functions(problem).ϑ(cache.ϕ, solstep.t, cache.q, solstep.v, parameters(solstep))
     cache.ϕ .-= cache.p
 end
 

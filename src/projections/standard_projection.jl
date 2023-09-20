@@ -86,12 +86,12 @@ function components!(
     end
 
     # compute u = u(q,λ)
-    functions(problem).u(u, solstep.t, q, λ)
+    functions(problem).u(u, solstep.t, q, λ, parameters(solstep))
     U[1] .= projection(method).RU[1] .* u
     U[2] .= projection(method).RU[2] .* u
 
     # compute ϕ = ϕ(q)
-    functions(problem).ϕ(ϕ, solstep.t, q)
+    functions(problem).ϕ(ϕ, solstep.t, q, parameters(solstep))
 end
 
 
@@ -125,7 +125,7 @@ function components!(
     U[2] .= projection(method).RU[2] .* λ
 
     # compute g = ∇ϑ(q)⋅λ
-    functions(problem).g(g, solstep.t, q, solstep.v, λ)
+    functions(problem).g(g, solstep.t, q, solstep.v, λ, parameters(solstep))
     G[1] .= projection(method).RG[1] .* g
     G[2] .= projection(method).RG[2] .* g
 
@@ -133,7 +133,7 @@ function components!(
     p .= solstep.p .+ timestep(problem) .* G[2]
 
     # compute ϕ = ϑ(q) - p
-    functions(problem).ϑ(ϕ, solstep.t, q, solstep.v)
+    functions(problem).ϑ(ϕ, solstep.t, q, solstep.v, parameters(solstep))
     ϕ .-= p
 end
 

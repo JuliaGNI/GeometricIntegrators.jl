@@ -46,6 +46,7 @@ mutable struct SolutionStepPDAE{
                 FT <: AbstractArray{DT},
                 HT <: NamedTuple,
                 IT <: NamedTuple,
+                paramsType <: OptionalParameters,
                 NT} <: SolutionStep{DT,TT,AT}
     
     q::AT
@@ -70,7 +71,9 @@ mutable struct SolutionStepPDAE{
     history::HT
     internal::IT
 
-    function SolutionStepPDAE(t::TT, q::AT, p::AT, λ::ΛT; nhistory = 2, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
+    parameters::paramsType
+
+    function SolutionStepPDAE(t::TT, q::AT, p::AT, λ::ΛT, parameters; nhistory = 2, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
         # TODO: nhistory should default to 1 and set to higher values by integrator / initial guess method
         @assert nhistory ≥ 1
 
@@ -104,7 +107,7 @@ mutable struct SolutionStepPDAE{
         q̃ = zero(q)
         p̃ = zero(p)
 
-        new{DT, TT, AT, ΛT, typeof(v), typeof(f), typeof(history), IT, nhistory}(q, p, λ, v, f, u, g, q̄, p̄, λ̄, v̄, f̄, ū, ḡ, q̃, p̃, history, internal)
+        new{DT, TT, AT, ΛT, typeof(v), typeof(f), typeof(history), IT, typeof(parameters), nhistory}(q, p, λ, v, f, u, g, q̄, p̄, λ̄, v̄, f̄, ū, ḡ, q̃, p̃, history, internal, parameters)
     end
 end
 
@@ -132,7 +135,7 @@ end
     end
 end
 
-nhistory(::SolutionStepPDAE{DT,TT,AT,ΛT,VT,FT,HT,IT,NT}) where {DT,TT,AT,ΛT,VT,FT,HT,IT,NT} = NT
+nhistory(::SolutionStepPDAE{DT,TT,AT,ΛT,VT,FT,HT,IT,PT,NT}) where {DT,TT,AT,ΛT,VT,FT,HT,IT,PT,NT} = NT
 
 current(solstep::SolutionStepPDAE) = (t = solstep.t, q = solstep.q, p = solstep.p, λ = solstep.λ)
 previous(solstep::SolutionStepPDAE) = (t = solstep.t̄, q = solstep.q̄, p = solstep.p̄, λ = solstep.λ̄)
@@ -146,26 +149,27 @@ history(solstep::SolutionStepPDAE, i::Int) = (
     f = history(solstep).f[i],
     u = history(solstep).u[i],
     g = history(solstep).g[i])
+parameters(solstep::SolutionStepPDAE) = solstep.parameters
 
 
 function update_vector_fields!(solstep::SolutionStepPDAE, problem::Union{PDAEProblem,HDAEProblem}, i=0)
-    functions(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i])
-    functions(problem).f(history(solstep).f[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i])
-    functions(problem).u(history(solstep).u[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i], history(solstep).λ[i])
-    functions(problem).g(history(solstep).g[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i], history(solstep).λ[i])
+    functions(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i], parameters(problem))
+    functions(problem).f(history(solstep).f[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i], parameters(problem))
+    functions(problem).u(history(solstep).u[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i], history(solstep).λ[i], parameters(problem))
+    functions(problem).g(history(solstep).g[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i], history(solstep).λ[i], parameters(problem))
 end
 
 function update_vector_fields!(solstep::SolutionStepPDAE, problem::Union{IDAEProblem,LDAEProblem}, i=0)
-    functions(problem).v̄(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i])
-    functions(problem).f̄(history(solstep).f[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i])
-    functions(problem).u(history(solstep).u[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i], history(solstep).p[i], history(solstep).λ[i])
-    functions(problem).g(history(solstep).g[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i], history(solstep).p[i], history(solstep).λ[i])
+    functions(problem).v̄(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i], parameters(problem))
+    functions(problem).f̄(history(solstep).f[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i], parameters(problem))
+    functions(problem).u(history(solstep).u[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i], history(solstep).p[i], history(solstep).λ[i], parameters(problem))
+    functions(problem).g(history(solstep).g[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i], history(solstep).p[i], history(solstep).λ[i], parameters(problem))
 end
 
 update_implicit_functions!(::SolutionStepPDAE, ::Union{PDAEProblem,HDAEProblem}, i=0) = nothing
 
 function update_implicit_functions!(solstep::SolutionStepPDAE, problem::Union{IDAEProblem,LDAEProblem}, i=0)
-    functions(problem).ϑ(history(solstep).p[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i])
+    functions(problem).ϑ(history(solstep).p[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i], parameters(problem))
 end
 
 function initialize!(solstep::SolutionStepPDAE, problem::Union{PDAEProblem, HDAEProblem, IDAEProblem, LDAEProblem}, extrap::Extrapolation = default_extrapolation())

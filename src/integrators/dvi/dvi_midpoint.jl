@@ -53,11 +53,11 @@ function components!(x::Vector{ST}, int::GeometricIntegrator{<:CMDVI}) where {ST
     end
 
     # compute f = f(q,v)
-    equations(int).f(cache(int,ST).f̃, t̃, cache(int,ST).q̃, cache(int,ST).v)
+    equations(int).f(cache(int,ST).f̃, t̃, cache(int,ST).q̃, cache(int,ST).v, parameters(solstep(int)))
  
     # compute Θ = ϑ(q,v)
-    equations(int).ϑ(cache(int,ST).p̃, t̃, cache(int,ST).q̃, cache(int,ST).v)
-    equations(int).ϑ(cache(int,ST).p, t, cache(int,ST).q, cache(int,ST).v)
+    equations(int).ϑ(cache(int,ST).p̃, t̃, cache(int,ST).q̃, cache(int,ST).v, parameters(solstep(int)))
+    equations(int).ϑ(cache(int,ST).p, t, cache(int,ST).q, cache(int,ST).v, parameters(solstep(int)))
 end
 
 

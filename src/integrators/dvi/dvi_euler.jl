@@ -60,12 +60,12 @@ function components!(x::Vector{ST}, int::GeometricIntegrator{<:DVIEuler}) where 
     end
 
     # compute f = f(q,v)
-    equations(int).f(cache(int,ST).f, solstep(int).t, cache(int,ST).q, cache(int,ST).v)
-    equations(int).f(cache(int,ST).f̄, solstep(int).t̄, cache(int).q̄, cache(int,ST).v̄)
+    equations(int).f(cache(int,ST).f, solstep(int).t, cache(int,ST).q, cache(int,ST).v, parameters(solstep(int)))
+    equations(int).f(cache(int,ST).f̄, solstep(int).t̄, cache(int).q̄, cache(int,ST).v̄, parameters(solstep(int)))
  
     # compute Θ = ϑ(q,v)
-    equations(int).ϑ(cache(int,ST).p, solstep(int).t, cache(int,ST).q, cache(int,ST).v)
-    # equations(int).ϑ(cache(int,ST).θ̄, solstep(int).t̄, solstep(int).q̄, cache(int,ST).v̄)
+    equations(int).ϑ(cache(int,ST).p, solstep(int).t, cache(int,ST).q, cache(int,ST).v, parameters(solstep(int)))
+    # equations(int).ϑ(cache(int,ST).θ̄, solstep(int).t̄, solstep(int).q̄, cache(int,ST).v̄, parameters(solstep(int)))
 end
 
 

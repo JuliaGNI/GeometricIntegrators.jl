@@ -199,8 +199,8 @@ function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:IPRK, <:A
         end
 
         # compute v(Q,P) and f(Q,P)
-        equations(int).v(V[i], solstep(int).t̄ + timestep(int) * tableau(int).q.c[i], Q[i], P[i])
-        equations(int).f(F[i], solstep(int).t̄ + timestep(int) * tableau(int).p.c[i], Q[i], P[i])
+        equations(int).v(V[i], solstep(int).t̄ + timestep(int) * tableau(int).q.c[i], Q[i], P[i], parameters(solstep(int)))
+        equations(int).f(F[i], solstep(int).t̄ + timestep(int) * tableau(int).p.c[i], Q[i], P[i], parameters(solstep(int)))
     end
 end
 

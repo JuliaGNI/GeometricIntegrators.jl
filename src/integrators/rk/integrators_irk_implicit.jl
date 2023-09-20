@@ -163,13 +163,13 @@ function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:IRK, <:Ab
     # compute Θ = ϑ(Q) and F = f(Q,V)
     for i in eachindex(Θ,F)
         tᵢ = solstep(int).t̄ + timestep(int) * tableau(int).c[i]
-        equations(int).ϑ(Θ[i], tᵢ, Q[i], V[i])
-        equations(int).f(F[i], tᵢ, Q[i], V[i])
+        equations(int).ϑ(Θ[i], tᵢ, Q[i], V[i], parameters(solstep(int)))
+        equations(int).f(F[i], tᵢ, Q[i], V[i], parameters(solstep(int)))
     end
 
     # compute θ = ϑ(q)
     if implicit_update(int)
-        equations(int).ϑ(θ, solstep(int).t, q, v)
+        equations(int).ϑ(θ, solstep(int).t, q, v, parameters(solstep(int)))
     end
 end
 

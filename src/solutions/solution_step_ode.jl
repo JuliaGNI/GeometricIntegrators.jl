@@ -33,6 +33,7 @@ struct SolutionStepODE{
             VT <: AbstractArray{DT}, 
             HT <: NamedTuple,
             IT <: NamedTuple,
+            paramsType <: OptionalParameters,
             NT} <: SolutionStep{DT,TT,AT}
 
     q::AT
@@ -46,7 +47,9 @@ struct SolutionStepODE{
     history::HT
     internal::IT
 
-    function SolutionStepODE(t::TT, q::AT; nhistory = 2, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT}
+    parameters::paramsType
+
+    function SolutionStepODE(t::TT, q::AT, parameters; nhistory = 2, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT}
         # TODO: nhistory should default to 1 and set to higher values by integrator / initial guess method
         @assert nhistory ≥ 1
 
@@ -64,7 +67,7 @@ struct SolutionStepODE{
 
         q̃ = zero(q)
 
-        new{DT, TT, AT, typeof(v), typeof(history), IT, nhistory}(q, v, q̄, v̄, q̃, history, internal)
+        new{DT, TT, AT, typeof(v), typeof(history), IT, typeof(parameters), nhistory}(q, v, q̄, v̄, q̃, history, internal, parameters)
     end
 end
 
@@ -92,7 +95,7 @@ end
     end
 end
 
-nhistory(::SolutionStepODE{DT,TT,AT,VT,HT,IT,NT}) where {DT,TT,AT,VT,HT,IT,NT} = NT
+nhistory(::SolutionStepODE{DT,TT,AT,VT,HT,IT,PT,NT}) where {DT,TT,AT,VT,HT,IT,PT,NT} = NT
 
 current(solstep::SolutionStepODE) = (t = solstep.t, q = solstep.q)
 previous(solstep::SolutionStepODE) = (t = solstep.t̄, q = solstep.q̄)
@@ -101,10 +104,10 @@ history(solstep::SolutionStepODE, i::Int) = (
     t = history(solstep).t[i],
     q = history(solstep).q[i],
     v = history(solstep).v[i])
-
+parameters(solstep::SolutionStepODE) = solstep.parameters
 
 function update_vector_fields!(solstep::SolutionStepODE, problem::Union{ODEProblem, SODEProblem, SubstepProblem}, i=0)
-    functions(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i])
+    functions(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], parameters(problem))
 end
 
 function update_vector_fields!(solstep::SolutionStepODE, problem::SODEProblem, i=0)

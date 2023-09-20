@@ -38,6 +38,7 @@ struct SolutionStepDAE{
             VT <: AbstractArray{DT},
             HT <: NamedTuple,
             IT <: NamedTuple,
+            paramsType <: OptionalParameters,
             NT} <: SolutionStep{DT,TT,AT}
 
     q::AT
@@ -55,7 +56,9 @@ struct SolutionStepDAE{
     history::HT
     internal::IT
 
-    function SolutionStepDAE(t::TT, q::AT, λ::ΛT; nhistory = 2, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
+    parameters::paramsType
+
+    function SolutionStepDAE(t::TT, q::AT, λ::ΛT, parameters; nhistory = 2, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, ΛT <: AbstractArray{DT}, IT}
         # TODO: nhistory should default to 1 and set to higher values by integrator / initial guess method
         @assert nhistory ≥ 1
 
@@ -79,7 +82,7 @@ struct SolutionStepDAE{
 
         q̃ = zero(q)
 
-        new{DT, TT, AT, ΛT, typeof(v), typeof(history), IT, nhistory}(q, λ, v, u, q̄, λ̄, v̄, ū, q̃, history, internal)
+        new{DT, TT, AT, ΛT, typeof(v), typeof(history), IT, typeof(parameters), nhistory}(q, λ, v, u, q̄, λ̄, v̄, ū, q̃, history, internal, parameters)
     end
 end
 
@@ -107,7 +110,7 @@ end
     end
 end
 
-nhistory(::SolutionStepDAE{DT,TT,AT,ΛT,VT,HT,IT,NT}) where {DT,TT,AT,ΛT,VT,HT,IT,NT} = NT
+nhistory(::SolutionStepDAE{DT,TT,AT,ΛT,VT,HT,IT,PT,NT}) where {DT,TT,AT,ΛT,VT,HT,IT,PT,NT} = NT
 
 current(solstep::SolutionStepDAE) = (t = solstep.t, q = solstep.q, λ = solstep.λ)
 previous(solstep::SolutionStepDAE) = (t = solstep.t̄, q = solstep.q̄, λ = solstep.λ̄)
@@ -118,11 +121,12 @@ history(solstep::SolutionStepDAE, i::Int) = (
     λ = history(solstep).λ[i],
     v = history(solstep).v[i],
     u = history(solstep).u[i])
+parameters(solstep::SolutionStepDAE) = solstep.parameters
 
 
 function update_vector_fields!(solstep::SolutionStepDAE, problem::DAEProblem, i=0)
-    functions(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i])
-    functions(problem).u(history(solstep).u[i], history(solstep).t[i], history(solstep).q[i], history(solstep).λ[i])
+    functions(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], parameters(problem))
+    functions(problem).u(history(solstep).u[i], history(solstep).t[i], history(solstep).q[i], history(solstep).λ[i], parameters(problem))
 end
 
 function initialize!(solstep::SolutionStepDAE, problem::DAEProblem, extrap::Extrapolation = default_extrapolation())

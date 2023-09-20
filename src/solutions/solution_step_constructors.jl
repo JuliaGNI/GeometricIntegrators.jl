@@ -1,7 +1,7 @@
 
 # Create SolutionStep for an ODEProblem.
 function SolutionStep(problem::Union{ODEProblem, SODEProblem, SubstepProblem}, extrap::Extrapolation = default_extrapolation(); kwargs...)
-    solstep = SolutionStepODE(initial_conditions(problem)...; kwargs...)
+    solstep = SolutionStepODE(initial_conditions(problem)..., parameters(problem); kwargs...)
     initialize!(solstep, problem, extrap)
     return solstep
 end
@@ -14,7 +14,7 @@ end
 # Create SolutionStep for a PODEProblem.
 function SolutionStep(problem::Union{PODEProblem, HODEProblem, IODEProblem, LODEProblem}, extrap::Extrapolation = default_extrapolation(); kwargs...)
     ics = initial_conditions(problem)
-    solstep = SolutionStepPODE(ics.t, ics.q, ics.p; kwargs...)
+    solstep = SolutionStepPODE(ics.t, ics.q, ics.p, parameters(problem); kwargs...)
     initialize!(solstep, problem, extrap)
     return solstep
 end
@@ -26,7 +26,7 @@ end
 
 # Create SolutionStep for a DAEProblem.
 function SolutionStep(problem::DAEProblem, extrap::Extrapolation = default_extrapolation(); kwargs...)
-    solstep = SolutionStepDAE(initial_conditions(problem)...; kwargs...)
+    solstep = SolutionStepDAE(initial_conditions(problem)..., parameters(problem); kwargs...)
     initialize!(solstep, problem, extrap)
     return solstep
 end
@@ -39,14 +39,14 @@ end
 # Create SolutionStep for a PDAEProblem.
 function SolutionStep(problem::Union{PDAEProblem, HDAEProblem, IDAEProblem, LDAEProblem}, extrap::Extrapolation = default_extrapolation(); kwargs...)
     ics = initial_conditions(problem)
-    solstep = SolutionStepPDAE(ics.t, ics.q, ics.p, ics.λ; kwargs...)
+    solstep = SolutionStepPDAE(ics.t, ics.q, ics.p, ics.λ, parameters(problem); kwargs...)
     initialize!(solstep, problem, extrap)
     return solstep
 end
 
 # Create SolutionStep for a PDAEProblem.
 function SolutionStep(solution::SolutionPDAE; kwargs...)
-    SolutionStepPDAE(solution[0].t, solution[0].q, solution[0].p, solution[0].λ; kwargs...)
+    SolutionStepPDAE(solution[0].t, solution[0].q, solution[0].p, solution[0].λ, parameters(problem); kwargs...)
 end
 
 function SolutionStep(problem::AbstractProblem, method::GeometricMethod, extrap::Extrapolation = default_extrapolation())

@@ -74,8 +74,8 @@ function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:IPRK, <:A
 
     # compute ϑ(Q,V) and f(Q,V)
     for i in eachindex(P,F)
-        equations(int).ϑ(P[i], solstep(int).t̄ + timestep(int) * tableau(int).q.c[i], Q[i], V[i])
-        equations(int).f(F[i], solstep(int).t̄ + timestep(int) * tableau(int).p.c[i], Q[i], V[i])
+        equations(int).ϑ(P[i], solstep(int).t̄ + timestep(int) * tableau(int).q.c[i], Q[i], V[i], parameters(solstep(int)))
+        equations(int).f(F[i], solstep(int).t̄ + timestep(int) * tableau(int).p.c[i], Q[i], V[i], parameters(solstep(int)))
     end
 end
 

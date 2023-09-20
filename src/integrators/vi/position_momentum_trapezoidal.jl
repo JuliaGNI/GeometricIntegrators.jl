@@ -39,10 +39,10 @@ function components!(x::Vector{ST}, int::GeometricIntegrator{<:PMVItrapezoidal})
     cache(int, ST).ṽ .= (cache(int, ST).q .- cache(int, ST).q̄) ./ timestep(int)
  
     # compute Θ = ϑ(q,ṽ) and f = f(q,ṽ)
-    equations(int).ϑ(cache(int, ST).θ̄, t̄, cache(int, ST).q̄, cache(int, ST).ṽ)
-    equations(int).ϑ(cache(int, ST).θ, t, cache(int, ST).q, cache(int, ST).ṽ)
-    equations(int).f(cache(int, ST).f̄, t̄, cache(int, ST).q̄, cache(int, ST).ṽ)
-    equations(int).f(cache(int, ST).f, t, cache(int, ST).q, cache(int, ST).ṽ)
+    equations(int).ϑ(cache(int, ST).θ̄, t̄, cache(int, ST).q̄, cache(int, ST).ṽ, parameters(solstep(int)))
+    equations(int).ϑ(cache(int, ST).θ, t, cache(int, ST).q, cache(int, ST).ṽ, parameters(solstep(int)))
+    equations(int).f(cache(int, ST).f̄, t̄, cache(int, ST).q̄, cache(int, ST).ṽ, parameters(solstep(int)))
+    equations(int).f(cache(int, ST).f, t, cache(int, ST).q, cache(int, ST).ṽ, parameters(solstep(int)))
 
     # compute p
     cache(int, ST).θ̃ .= (cache(int, ST).θ .+ cache(int, ST).θ̄) ./ 2

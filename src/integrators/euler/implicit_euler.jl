@@ -67,7 +67,7 @@ function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:ImplicitE
     q .= q̄ .+ timestep(int) .* v̄
 
     # compute v = v(q)
-    equations(int).v(v, solstep(int).t, q)
+    equations(int).v(v, solstep(int).t, q, parameters(solstep(int)))
 end
 
 
