@@ -15,7 +15,7 @@ DocMeta.setdocmeta!(GeometricIntegrators, :DocTestSetup, :(using GeometricIntegr
 
 weave(joinpath(@__DIR__, "src", "methods.jmd"), out_path = joinpath(@__DIR__, "src"), doctype = "github")
 
-makedocs(bib,
+makedocs(bib;
     sitename = "GeometricIntegrators.jl",
     format = Documenter.HTML(
                prettyurls = get(ENV, "CI", nothing) == "true",
@@ -83,11 +83,13 @@ makedocs(bib,
         "Authors" => "authors.md",
         "License" => "LICENSE.md",
     ],
-    modules = [GeometricIntegrators,
-               GeometricBase,
-               GeometricEquations,
-               GeometricSolutions,
-               RungeKutta]
+    modules = [
+        GeometricIntegrators,
+        GeometricBase,
+        GeometricEquations,
+        GeometricSolutions,
+        RungeKutta,
+    ],
 )
 
 deploydocs(
