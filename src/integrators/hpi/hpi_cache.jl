@@ -7,7 +7,7 @@ Cache for variational integrator in position-momentum form.
 * `Θ`: implicit function evaluated on solution
 * `f`: vector field of implicit function
 """
-struct IntegratorCacheHPI{DT,D,A} <: IODEIntegratorCache{DT,D}
+struct HPICache{DT,D,A} <: IODEIntegratorCache{DT,D}
     x::Vector{DT}
     a::Vector{DT}
 
@@ -30,7 +30,7 @@ struct IntegratorCacheHPI{DT,D,A} <: IODEIntegratorCache{DT,D}
     D₂ϕ::Matrix{DT}
     Dₐϕ::Matrix{DT}
 
-    function IntegratorCacheHPI{DT,D,A}() where {DT,D,A}
+    function HPICache{DT,D,A}() where {DT,D,A}
         new(zeros(DT, D+A), zeros(DT, A),
             zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D),
             zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D),
@@ -40,9 +40,15 @@ struct IntegratorCacheHPI{DT,D,A} <: IODEIntegratorCache{DT,D}
     end
 end
 
-function reset!(cache::IntegratorCacheHPI, t, q, p)
+function reset!(cache::HPICache, t, q, p)
     copyto!(cache.q̄, q)
     copyto!(cache.p̄, p)
 end
 
-nlsolution(cache::IntegratorCacheHPI) = cache.x
+nlsolution(cache::HPICache) = cache.x
+
+function Cache{ST}(problem::AbstractProblemIODE, method::HPIMethod; kwargs...) where {ST}
+    HPICache{ST, ndims(problem), nparams(method)}(; kwargs...)
+end
+
+@inline CacheType(ST, problem::AbstractProblemIODE, method::HPIMethod) = HPICache{ST, ndims(problem), nparams(method)}

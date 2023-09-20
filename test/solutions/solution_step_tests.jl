@@ -45,7 +45,7 @@ end
 
 @testset "$(rpad("ODE Solution Step",80))" begin
 
-    solstep = SolutionStepODE(t0, x0)
+    solstep = SolutionStepODE(t0, x0, parameters(ode))
 
     @test solstep.t == history(solstep).t[0] == current(solstep).t
     @test solstep.q == history(solstep).q[0] == current(solstep).q
@@ -96,7 +96,7 @@ end
 
 @testset "$(rpad("PODE Solution Step",80))" begin
 
-    solstep = SolutionStepPODE(t0, q0, p0)
+    solstep = SolutionStepPODE(t0, q0, p0, parameters(pode))
 
     @test solstep.t == history(solstep).t[0] == current(solstep).t
     @test solstep.q == history(solstep).q[0] == current(solstep).q
@@ -156,7 +156,7 @@ end
 
 @testset "$(rpad("DAE Solution Step",80))" begin
 
-    solstep = SolutionStepDAE(t0, x0, λ0)
+    solstep = SolutionStepDAE(t0, x0, λ0, parameters(dae))
 
     @test solstep.t == history(solstep).t[0] == current(solstep).t
     @test solstep.q == history(solstep).q[0] == current(solstep).q
@@ -213,7 +213,7 @@ end
 
 @testset "$(rpad("PDAE Solution Step",80))" begin
 
-    solstep = SolutionStepPDAE(t0, q0, p0, λ0)
+    solstep = SolutionStepPDAE(t0, q0, p0, λ0, parameters(pdae))
 
     @test solstep.t == history(solstep).t[0] == current(solstep).t
     @test solstep.q == history(solstep).q[0] == current(solstep).q

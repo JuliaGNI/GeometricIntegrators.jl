@@ -182,10 +182,10 @@ function components!(
 
         # compute f(X)
         t = solstep.t̄ + timestep(problem) * method.p.c[i]
-        functions(problem).f(cache.Fp[i], t, cache.Qp[i], cache.Vp[i])
-        functions(problem).g(cache.Gp[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i])
-        functions(problem).ϕ(cache.Φp[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i])
-        functions(problem).ψ(cache.Ψp[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Vp[i], cache.Fp[i])
+        functions(problem).f(cache.Fp[i], t, cache.Qp[i], cache.Vp[i], parameters(solstep))
+        functions(problem).g(cache.Gp[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i], parameters(solstep))
+        functions(problem).ϕ(cache.Φp[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i], parameters(solstep))
+        functions(problem).ψ(cache.Ψp[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Vp[i], cache.Fp[i], parameters(solstep))
     end
 
     if hasnullvector(method)
@@ -205,7 +205,7 @@ function components!(
     end
 
     # compute ϕ(q,p)
-    functions(problem).ϕ(cache.ϕ̃, solstep.t, cache.q̃, cache.ṽ, cache.p̃)
+    functions(problem).ϕ(cache.ϕ̃, solstep.t, cache.q̃, cache.ṽ, cache.p̃, parameters(solstep))
 end
 
 

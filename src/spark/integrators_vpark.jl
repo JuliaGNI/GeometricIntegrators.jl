@@ -84,8 +84,8 @@ function components!(
 
         # compute f(X)
         tpᵢ = solstep.t̄ + timestep(problem) * tableau(method).p.c[i]
-        functions(problem)[:ϑ](cache.Φi[i], tpᵢ, cache.Qi[i], cache.Vi[i])
-        functions(problem)[:f](cache.Fi[i], tpᵢ, cache.Qi[i], cache.Vi[i])
+        functions(problem).ϑ(cache.Φi[i], tpᵢ, cache.Qi[i], cache.Vi[i], parameters(solstep))
+        functions(problem).f(cache.Fi[i], tpᵢ, cache.Qi[i], cache.Vi[i], parameters(solstep))
 
         cache.Φi[i] .-= cache.Pi[i]
     end
@@ -105,9 +105,9 @@ function components!(
 
         # compute f(X)
         tλᵢ = solstep.t̄ + timestep(problem) * tableau(method).λ.c[i]
-        functions(problem)[:u](cache.Up[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i])
-        functions(problem)[:g](cache.Gp[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i])
-        functions(problem)[:ϕ](cache.Φp[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i])
+        functions(problem).u(cache.Up[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i], parameters(solstep))
+        functions(problem).g(cache.Gp[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i], parameters(solstep))
+        functions(problem).ϕ(cache.Φp[i], tλᵢ, cache.Qp[i], cache.Vp[i], cache.Pp[i], parameters(solstep))
     end
 
     if hasnullvector(method)

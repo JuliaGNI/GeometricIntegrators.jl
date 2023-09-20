@@ -26,13 +26,13 @@ function initialguess!(t₀, q₀, q̇₀, t₁, q₁, q̇₁, t, q, iguess::Her
     (t = t, q = q)
 end
 
-function initialguess!(t, q, q̇, solstep::Union{SolutionStepODE,SolutionStepDAE}, ::Union{AbstractProblemODE,DAEProblem}, extrap::HermiteExtrapolation; kwargs...)
+function initialguess!(t, q, q̇, solstep::Union{SolutionStepODE,SolutionStepDAE}, ::AbstractProblemODE, extrap::HermiteExtrapolation; kwargs...)
     t₀, q₀, q̇₀ = history(solstep, 2).t, history(solstep, 2).q, history(solstep, 2).v
     t₁, q₁, q̇₁ = history(solstep, 1).t, history(solstep, 1).q, history(solstep, 1).v
     initialguess!(t₀, q₀, q̇₀, t₁, q₁, q̇₁, t, q, q̇, extrap; kwargs...)
 end
 
-function initialguess!(t, q, solstep::Union{SolutionStepODE,SolutionStepDAE}, ::Union{AbstractProblemODE,DAEProblem}, extrap::HermiteExtrapolation; kwargs...)
+function initialguess!(t, q, solstep::Union{SolutionStepODE,SolutionStepDAE}, ::AbstractProblemODE, extrap::HermiteExtrapolation; kwargs...)
     t₀, q₀, q̇₀ = history(solstep, 2).t, history(solstep, 2).q, history(solstep, 2).v
     t₁, q₁, q̇₁ = history(solstep, 1).t, history(solstep, 1).q, history(solstep, 1).v
     initialguess!(t₀, q₀, q̇₀, t₁, q₁, q̇₁, t, q, extrap; kwargs...)
@@ -78,10 +78,10 @@ function initialguess!(t₀, q₀, p₀, q̇₀, ṗ₀, t₁, q₁, p₁, q̇�
     (t = t, q = q, p = p)
 end
 
-function initialguess!(t, q, p, q̇, ṗ, solstep::Union{SolutionStepPODE,SolutionStepPDAE}, ::Union{AbstractProblemPODE,AbstractProblemPDAE}, extrap::HermiteExtrapolation; kwargs...)
+function initialguess!(t, q, p, q̇, ṗ, solstep::Union{SolutionStepPODE,SolutionStepPDAE}, ::Union{AbstractProblemPODE,AbstractProblemIODE}, extrap::HermiteExtrapolation; kwargs...)
     initialguess!(history(solstep, 2)..., history(solstep, 1)..., t, q, p, q̇, ṗ, extrap; kwargs...)
 end
 
-function initialguess!(t, q, p, solstep::Union{SolutionStepPODE,SolutionStepPDAE}, ::Union{AbstractProblemPODE,AbstractProblemPDAE}, extrap::HermiteExtrapolation; kwargs...)
+function initialguess!(t, q, p, solstep::Union{SolutionStepPODE,SolutionStepPDAE}, ::Union{AbstractProblemPODE,AbstractProblemIODE}, extrap::HermiteExtrapolation; kwargs...)
     initialguess!(history(solstep, 2)..., history(solstep, 1)..., t, q, p, extrap; kwargs...)
 end

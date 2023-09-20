@@ -146,8 +146,8 @@ GeometricIntegrator(problem::EquationProblem, method::GeometricMethod; solver = 
 
 """
 struct GeometricIntegrator{
-        PT <: AbstractProblem,
         MT <: GeometricMethod,
+        PT <: AbstractProblem,
         CT <: CacheDict{PT,MT},
         ST <: Union{NonlinearSolver,SolverMethod},
         IT <: Union{InitialGuess,Extrapolation},

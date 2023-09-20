@@ -1,27 +1,5 @@
-
-"Explicit Runge-Kutta integrator cache."
-struct IntegratorCacheERK{DT,D,S} <: ODEIntegratorCache{DT,D}
-    Q::Vector{Vector{DT}}
-    V::Vector{Vector{DT}}
-
-    function IntegratorCacheERK{DT,D,S}() where {DT,D,S}
-        Q = create_internal_stage_vector(DT, D, S)
-        V = create_internal_stage_vector(DT, D, S)
-        new(Q, V)
-    end
-end
-
-function Cache{ST}(problem::AbstractProblem, method::ERK; kwargs...) where {ST}
-    S = nstages(tableau(method))
-    D = ndims(problem)
-    IntegratorCacheERK{ST,D,S}(; kwargs...)
-end
-
-@inline CacheType(ST, problem::AbstractProblem, method::ERK) = IntegratorCacheERK{ST, ndims(problem), nstages(tableau(method))}
-
-
 @doc raw"""
-Explicit Runge-Kutta integrator solving the system
+Explicit Runge-Kutta method solving the system
 ```math
 \begin{aligned}
 V_{n,i} &= v (t_i, Q_{n,i}) , &
@@ -30,11 +8,27 @@ q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 \end{aligned}
 ```
 """
-const IntegratorERK{DT,TT} = GeometricIntegrator{<:Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}}, <:ERK}
+abstract type ERKMethod <: RKMethod end
+
+isexplicit(method::Union{ERKMethod, Type{<:ERKMethod}}) = true
+isimplicit(method::Union{ERKMethod, Type{<:ERKMethod}}) = false
+
+
+"""
+Explicit Runge-Kutta Method
+
+```
+ERK(tableau)
+```
+"""
+struct ERK{TT <: Tableau} <: ERKMethod
+    tableau::TT
+end
 
 initmethod(method::ERKMethod) = ERK(method)
 
-function Base.show(io::IO, int::IntegratorERK)
+
+function Base.show(io::IO, int::GeometricIntegrator{<:ERK})
     print(io, "\nExplicit Runge-Kutta Integrator with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(RungeKutta.description(tableau(int)))\n")
@@ -43,34 +37,45 @@ function Base.show(io::IO, int::IntegratorERK)
 end
 
 
-function integrate_step!(
-    solstep::Union{SolutionStepODE{DT,TT}, SolutionStepDAE{DT,TT}},
-    problem::Union{ODEProblem{DT,TT}, DAEProblem{DT,TT}, SubstepProblem{DT,TT}},
-    method::ERK,
-    caches::CacheDict,
-    ::NoSolver) where {DT,TT}
+"Explicit Runge-Kutta integrator cache."
+struct ERKCache{DT,D,S} <: ODEIntegratorCache{DT,D}
+    Q::Vector{Vector{DT}}
+    V::Vector{Vector{DT}}
 
+    function ERKCache{DT,D,S}() where {DT,D,S}
+        Q = create_internal_stage_vector(DT, D, S)
+        V = create_internal_stage_vector(DT, D, S)
+        new(Q, V)
+    end
+end
+
+function Cache{ST}(problem::AbstractProblemODE, method::ERK; kwargs...) where {ST}
+    S = nstages(tableau(method))
+    D = ndims(problem)
+    ERKCache{ST,D,S}(; kwargs...)
+end
+
+@inline CacheType(ST, problem::AbstractProblemODE, method::ERK) = ERKCache{ST, ndims(problem), nstages(tableau(method))}
+
+
+function integrate_step!(int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
     # obtain cache
-    local Q::Vector{Vector{DT}} = caches[DT].Q
-    local V::Vector{Vector{DT}} = caches[DT].V
-
-    # temporary variables
-    local tᵢ::TT
-    local yᵢ::DT
+    local Q = cache(int).Q
+    local V = cache(int).V
 
     # compute internal stages
-    for i in eachstage(method)
-        tᵢ = solstep.t̄ + timestep(problem) * tableau(method).c[i]
+    for i in eachstage(int)
+        tᵢ = solstep(int).t̄ + timestep(int) * tableau(int).c[i]
         for k in eachindex(Q[i], V[i])
             yᵢ = 0
             for j in 1:i-1
-                yᵢ += tableau(method).a[i,j] * V[j][k]
+                yᵢ += tableau(int).a[i,j] * V[j][k]
             end
-            Q[i][k] = solstep.q̄[k] + timestep(problem) * yᵢ
+            Q[i][k] = solstep(int).q̄[k] + timestep(int) * yᵢ
         end
-        functions(problem).v(V[i], tᵢ, Q[i])
+        equations(int).v(V[i], tᵢ, Q[i], parameters(solstep(int)))
     end
 
     # compute final update
-    update!(solstep, V, tableau(method), timestep(problem))
+    update!(solstep(int), V, tableau(int), timestep(int))
 end

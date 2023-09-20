@@ -39,42 +39,36 @@ initmethod(method::Splitting, ::SODEProblem) = method
 
 
 "Splitting integrator cache."
-mutable struct IntegratorCacheSplitting{DT,TT,D,AT} <: ODEIntegratorCache{DT,D}
+mutable struct SplittingCache{DT,TT,D,AT} <: ODEIntegratorCache{DT,D}
     q::AT
     t::TT
 
-    function IntegratorCacheSplitting{DT,TT,D}(q₀::AT) where {DT,TT,D,AT <: AbstractArray{DT}}
+    function SplittingCache{DT,TT,D}(q₀::AT) where {DT,TT,D,AT <: AbstractArray{DT}}
         new{DT,TT,D,AT}(zero(q₀), zero(TT))
     end
 end
 
 function Cache{ST}(problem::SODEProblem, method::Splitting; kwargs...) where {ST}
-    IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}(initial_conditions(problem).q; kwargs...)
+    SplittingCache{ST, typeof(timestep(problem)), ndims(problem)}(initial_conditions(problem).q; kwargs...)
 end
 
-@inline CacheType(ST, problem::SODEProblem, ::Splitting) = IntegratorCacheSplitting{ST, typeof(timestep(problem)), ndims(problem)}
+@inline CacheType(ST, problem::SODEProblem, ::Splitting) = SplittingCache{ST, typeof(timestep(problem)), ndims(problem)}
 
-function reset!(cache::IntegratorCacheSplitting, t, q, λ = missing)
+function reset!(cache::SplittingCache, t, q, λ = missing)
     copyto!(cache.q, q)
     cache.t = t
 end
 
-
-function integrate_step!(
-    solstep::SolutionStepODE{DT,TT},
-    problem::SODEProblem{DT,TT},
-    method::Splitting,
-    caches::CacheDict,
-    ::NoSolver) where {DT,TT}
-    
+function integrate_step!(int::GeometricIntegrator{<:Splitting, <:SODEProblem})
     # compute splitting steps
-    for i in eachindex(method.f, method.c)
-        if method.c[i] ≠ zero(TT)
-            # copy previous solution
-            caches[DT].q .= solstep.q
+    for i in eachindex(method(int).f, method(int).c)
+        if method(int).c[i] ≠ 0
+            # copy previous solution and compute time
+            cache(int).q .= solstep(int).q
+            cache(int).t  = solstep(int).t̄ + timestep(int) * method(int).c[i]
 
             # compute new solution
-            solutions(problem).q[method.f[i]](solstep.q, solstep.t̄ + timestep(problem) * method.c[i], caches[DT].q, solstep.t̄)
+            solutions(problem(int)).q[method(int).f[i]](solstep(int).q, cache(int).t, cache(int).q, solstep(int).t̄, parameters(solstep(int)))
         end
     end
 end

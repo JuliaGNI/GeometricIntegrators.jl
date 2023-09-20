@@ -36,7 +36,8 @@ end
 
 function extrapolate!(t₀::TT, x₀::AbstractVector{DT},
                       t₁::TT, x₁::AbstractVector{DT},
-                      v::Callable, extrap::EulerExtrapolation) where {DT,TT}
+                      v::Callable, params::OptionalParameters,
+                      extrap::EulerExtrapolation) where {DT,TT}
     @assert size(x₀) == size(x₁)
 
     local F   = collect(1:(extrap.s+1))
@@ -52,7 +53,7 @@ function extrapolate!(t₀::TT, x₀::AbstractVector{DT},
             for k in axes(pts,1)
                 xᵢ[k] = pts[k,i]
             end
-            v(vᵢ, tᵢ, xᵢ)
+            v(vᵢ, tᵢ, xᵢ, params)
             for k in axes(pts,1)
                 pts[k,i] += σ[i] * vᵢ[k]
             end
@@ -66,6 +67,7 @@ end
 
 function extrapolate!(t₀, x₀::AbstractVector,
                       t₁, x₁::AbstractVector,
-                      problem::Union{ODEProblem, DAEProblem, SubstepProblem}, extrap::EulerExtrapolation)
-    extrapolate!(t₀, x₀, t₁, x₁, functions(problem).v, extrap)
+                      problem::AbstractProblemODE,
+                      extrap::EulerExtrapolation)
+    extrapolate!(t₀, x₀, t₁, x₁, functions(problem).v, parameters(problem), extrap)
 end

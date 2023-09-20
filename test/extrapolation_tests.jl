@@ -14,6 +14,9 @@ const t₀ = initial_conditions(ode).t
 const t₁ = t₀ + Δt
 const t₂ = t₁ + Δt
 const t₋ = t₀ - Δt
+const tₚ = t₋
+const tₙ = t₁
+const tᵢ = tₙ
 
 x₀ = initial_conditions(ode).q
 
@@ -22,12 +25,8 @@ k = parameters(ode).k
 A = sqrt(x₀[2]^2 / k + x₀[1]^2)
 ϕ = asin(x₀[1] / A)
 
-xₚ = [A * sin(- ω * Δt + ϕ), ω * A * cos(- ω * Δt + ϕ)]
-xₙ = [A * sin(+ ω * Δt + ϕ), ω * A * cos(+ ω * Δt + ϕ)]
-
-tₚ = t₋
-tₙ = t₁
-tᵢ = tₙ
+xₚ = exact_solution(t₀ - Δt, x₀, t₀, parameters(ode))
+xₙ = exact_solution(t₀ + Δt, x₀, t₀, parameters(ode))
 
 
 # Create ODE Solution Arrays
@@ -43,9 +42,9 @@ ẋ₂ = zero(x₀)
 ẋₙ = zero(x₀)
 ẋᵢ = zero(x₀)
 
-functions(ode).v(ẋₚ, tₚ, xₚ)
-functions(ode).v(ẋ₀, t₀, x₀)
-functions(ode).v(ẋₙ, tₙ, xₙ)
+functions(ode).v(ẋₚ, tₚ, xₚ, parameters(ode))
+functions(ode).v(ẋ₀, t₀, x₀, parameters(ode))
+functions(ode).v(ẋₙ, tₙ, xₙ, parameters(ode))
 
 
 # Hermite Extrapolation
@@ -64,8 +63,8 @@ extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, ode, HermiteExtrapolation())
 
 @test extrapolate!(tₚ, xₚ, ẋₚ, t₀, x₀, ẋ₀, t₁, x₁, HermiteExtrapolation()) == xᵢ
 @test extrapolate!(tₚ, xₚ, ẋₚ, t₀, x₀, ẋ₀, t₁, x₁, ẋ₁, HermiteExtrapolation()) == (xᵢ, ẋᵢ)
-@test extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, functions(ode).v, HermiteExtrapolation()) == xᵢ
-@test extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, ẋ₁, functions(ode).v, HermiteExtrapolation()) == (xᵢ, ẋᵢ)
+@test extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, functions(ode).v, parameters(ode), HermiteExtrapolation()) == xᵢ
+@test extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, ẋ₁, functions(ode).v, parameters(ode), HermiteExtrapolation()) == (xᵢ, ẋᵢ)
 @test extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, ode, HermiteExtrapolation()) == xᵢ
 @test extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, ẋ₁, ode, HermiteExtrapolation()) == (xᵢ, ẋᵢ)
 
@@ -150,13 +149,13 @@ pₚ = [xₚ[2]]
 qₙ = [xₙ[1]]
 pₙ = [xₙ[2]]
 
-functions(pode).v(q̇ₚ, tₚ, qₚ, pₚ)
-functions(pode).v(q̇₀, t₀, q₀, p₀)
-functions(pode).v(q̇ₙ, tₙ, qₙ, pₙ)
+functions(pode).v(q̇ₚ, tₚ, qₚ, pₚ, parameters(pode))
+functions(pode).v(q̇₀, t₀, q₀, p₀, parameters(pode))
+functions(pode).v(q̇ₙ, tₙ, qₙ, pₙ, parameters(pode))
 
-functions(pode).f(ṗₚ, tₚ, qₚ, pₚ)
-functions(pode).f(ṗ₀, t₀, q₀, p₀)
-functions(pode).f(ṗₙ, tₙ, qₙ, pₙ)
+functions(pode).f(ṗₚ, tₚ, qₚ, pₚ, parameters(pode))
+functions(pode).f(ṗ₀, t₀, q₀, p₀, parameters(pode))
+functions(pode).f(ṗₙ, tₙ, qₙ, pₙ, parameters(pode))
 
 
 # Midpoint Extrapolation for PODEs
@@ -227,16 +226,16 @@ ṗᵢ = zero(p₀)
 qₚ .= xₚ
 qₙ .= xₙ
 
-functions(iode).v̄(q̇ₚ, tₚ, qₚ, pₚ)
-functions(iode).v̄(q̇₀, t₀, q₀, p₀)
-functions(iode).v̄(q̇ₙ, tₙ, qₙ, pₙ)
+functions(iode).v̄(q̇ₚ, tₚ, qₚ, pₚ, parameters(iode))
+functions(iode).v̄(q̇₀, t₀, q₀, p₀, parameters(iode))
+functions(iode).v̄(q̇ₙ, tₙ, qₙ, pₙ, parameters(iode))
 
-functions(iode).ϑ(pₚ, tₚ, qₚ, q̇ₚ)
-functions(iode).ϑ(pₙ, tₙ, qₙ, q̇ₙ)
+functions(iode).ϑ(pₚ, tₚ, qₚ, q̇ₚ, parameters(iode))
+functions(iode).ϑ(pₙ, tₙ, qₙ, q̇ₙ, parameters(iode))
 
-functions(iode).f̄(ṗₚ, tₚ, qₚ, q̇ₚ)
-functions(iode).f̄(ṗ₀, t₀, q₀, q̇₀)
-functions(iode).f̄(ṗₙ, tₙ, qₙ, q̇ₙ)
+functions(iode).f̄(ṗₚ, tₚ, qₚ, q̇ₚ, parameters(iode))
+functions(iode).f̄(ṗ₀, t₀, q₀, q̇₀, parameters(iode))
+functions(iode).f̄(ṗₙ, tₙ, qₙ, q̇ₙ, parameters(iode))
 
 # Midpoint Extrapolation for IODEs
 

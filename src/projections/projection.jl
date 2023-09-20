@@ -34,8 +34,8 @@ initmethod(projection::ProjectionMethod, method::GeometricMethod) = ProjectedMet
 The `ProjectionIntegrator` is the counterpart to the `GeometricIntegrator` for [`ProjectionMethod`](@ref)s.
 """
 struct ProjectionIntegrator{
-        PT <: AbstractProblem,
         MT <: ProjectionMethod,
+        PT <: AbstractProblem,
         CT <: CacheDict{PT,MT},
         ST <: Union{NonlinearSolver,SolverMethod},
         IT <: Union{InitialGuess,Extrapolation},

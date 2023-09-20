@@ -86,8 +86,8 @@ function components!(
         # compute f(X)
         tqᵢ = solstep.t̄ + timestep(problem) * tableau(method).q.c[i]
         tpᵢ = solstep.t̄ + timestep(problem) * tableau(method).p.c[i]
-        functions(problem)[:v](cache.Vi[i], tqᵢ, cache.Qi[i], cache.Pi[i])
-        functions(problem)[:f](cache.Fi[i], tpᵢ, cache.Qi[i], cache.Pi[i])
+        functions(problem).v(cache.Vi[i], tqᵢ, cache.Qi[i], cache.Pi[i], parameters(solstep))
+        functions(problem).f(cache.Fi[i], tpᵢ, cache.Qi[i], cache.Pi[i], parameters(solstep))
     end
 
     for i in 1:R
@@ -104,9 +104,9 @@ function components!(
 
         # compute f(X)
         tλᵢ = solstep.t̄ + timestep(problem) * tableau(method).λ.c[i]
-        functions(problem)[:u](cache.Up[i], tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i])
-        functions(problem)[:g](cache.Gp[i], tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i])
-        functions(problem)[:ϕ](cache.Φp[i], tλᵢ, cache.Qp[i], cache.Pp[i])
+        functions(problem).u(cache.Up[i], tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], parameters(solstep))
+        functions(problem).g(cache.Gp[i], tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], parameters(solstep))
+        functions(problem).ϕ(cache.Φp[i], tλᵢ, cache.Qp[i], cache.Pp[i], parameters(solstep))
     end
 
     # compute q and p
@@ -122,7 +122,7 @@ function components!(
     end
 
     # compute ϕ(q,p)
-    functions(problem)[:ϕ](cache.ϕ̃, solstep.t, cache.q̃, cache.p̃)
+    functions(problem).ϕ(cache.ϕ̃, solstep.t, cache.q̃, cache.p̃, parameters(solstep))
 end
 
 

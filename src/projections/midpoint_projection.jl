@@ -24,8 +24,6 @@ default_solver(::ProjectedMethod{<:MidpointProjection}) = Newton()
 default_iguess(::ProjectedMethod{<:MidpointProjection}) = HermiteExtrapolation()
 
 
-const IntegratorMidpointProjection{DT,TT} = ProjectionIntegrator{<:EquationProblem{DT,TT}, <:ProjectedMethod{<:MidpointProjection}}
-
 # function Base.show(io::IO, int::ProjectedMethod{<:MidpointProjection})
 #     print(io, "\nProjection method with:\n")
 #     print(io, "   Timestep: $(timestep(int))\n")
@@ -35,7 +33,7 @@ const IntegratorMidpointProjection{DT,TT} = ProjectionIntegrator{<:EquationProbl
 # end
 
 
-function split_nlsolution(x::AbstractVector, int::IntegratorMidpointProjection)
+function split_nlsolution(x::AbstractVector, int::ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection}})
     D = ndims(int)
     M = nconstraints(int)
     N = solversize(problem(int), parent(method(int)))
@@ -47,7 +45,7 @@ function split_nlsolution(x::AbstractVector, int::IntegratorMidpointProjection)
 end
 
 
-function initial_guess!(int::IntegratorMidpointProjection)
+function initial_guess!(int::ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection}})
     # compute initial guess for parent method
     initial_guess!(subint(int))
 
@@ -88,7 +86,7 @@ function components!(
     end
 
     # compute u=λ and g=∇ϑ(q)⋅λ
-    functions(problem).u(u, solstep.t, q̃, λ)
+    functions(problem).u(u, solstep.t, q̃, λ, parameters(solstep))
     U[1] .= projection(method).RU[1] .* u
     U[2] .= projection(method).RU[2] .* u
 end
@@ -122,26 +120,26 @@ function components!(
     U[2] .= projection(method).RU[2] .* λ
 
     # compute g = ∇ϑ(q)⋅λ
-    functions(problem).g(g, solstep.t, q̃, solstep.v, λ)
+    functions(problem).g(g, solstep.t, q̃, solstep.v, λ, parameters(solstep))
     G[1] .= projection(method).RG[1] .* g
     G[2] .= projection(method).RG[2] .* g
 end
 
 
-function constraint!(solstep::SolutionStep, problem::DAEProblem, ::IntegratorMidpointProjection, cache::ProjectionCache)
+function constraint!(solstep::SolutionStep, problem::DAEProblem, ::ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection}}, cache::ProjectionCache)
     # compute ϕ = ϕ(q)
-    functions(problem).ϕ(cache.ϕ, solstep.t, cache.q)
+    functions(problem).ϕ(cache.ϕ, solstep.t, cache.q, parameters(solstep))
 end
 
 
-function constraint!(solstep::SolutionStep, problem::Union{IODEProblem,LODEProblem}, ::IntegratorMidpointProjection, cache::ProjectionCache)
+function constraint!(solstep::SolutionStep, problem::Union{IODEProblem,LODEProblem}, ::ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection}}, cache::ProjectionCache)
     # compute ϕ = ϑ(q) - p
-    functions(problem).ϑ(cache.ϕ, solstep.t, cache.q, solstep.v)
+    functions(problem).ϑ(cache.ϕ, solstep.t, cache.q, solstep.v, parameters(solstep))
     cache.ϕ .-= cache.p
 end
 
 
-function components!(x::AbstractVector{ST}, int::IntegratorMidpointProjection) where {ST}
+function components!(x::AbstractVector{ST}, int::ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection}}) where {ST}
     # TODO: Further generalise for non-RK methods
     # Need to implement update_vector! for integrators
 
@@ -168,7 +166,7 @@ function components!(x::AbstractVector{ST}, int::IntegratorMidpointProjection) w
 end
 
 
-function residual!(b::AbstractVector{ST}, int::IntegratorMidpointProjection) where {ST}
+function residual!(b::AbstractVector{ST}, int::ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection}}) where {ST}
     # compute b = q̃ - (q + q̄) / 2
     for k in 1:ndims(int)
         b[k] = cache(int, ST).q̃[k] - ( cache(int, ST).q[k] + solstep(int).q̄[k] ) / 2
@@ -185,7 +183,7 @@ end
 function residual!(
     b::AbstractVector{ST},
     x::AbstractVector{ST},
-    int::IntegratorMidpointProjection) where {ST}
+    int::ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection}}) where {ST}
 
     @assert axes(x) == axes(b)
 
@@ -209,7 +207,7 @@ function residual!(
 end
 
 
-function update!(x::AbstractVector{ST}, int::IntegratorMidpointProjection) where {ST}
+function update!(x::AbstractVector{ST}, int::ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection}}) where {ST}
     # split x and b
     x̄, x̃ = split_nlsolution(x, int)
 
@@ -230,7 +228,7 @@ function update!(x::AbstractVector{ST}, int::IntegratorMidpointProjection) where
 end
 
 
-function integrate_step!(int::IntegratorMidpointProjection)
+function integrate_step!(int::ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection}})
     # call nonlinear solver for projection
     solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
 

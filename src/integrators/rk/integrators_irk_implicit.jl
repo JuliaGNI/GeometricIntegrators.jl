@@ -3,12 +3,14 @@ Implicit Runge-Kutta integrator cache.
 
 ### Fields
 
+* `q̄`: solution at previous timestep
+* `p̄`: momentum at previous timestep
 * `Q`: internal stages of solution
 * `V`: internal stages of vector field
 * `Θ`: internal stages of one-form ``\vartheta``
 * `F`: internal stages of force field
 """
-struct IntegratorCacheIRKimplicit{DT,D,S} <: IODEIntegratorCache{DT,D}
+struct IRKimplicitCache{DT,D,S} <: IODEIntegratorCache{DT,D}
     x::Vector{DT}
 
     q̄::Vector{DT}
@@ -24,7 +26,7 @@ struct IntegratorCacheIRKimplicit{DT,D,S} <: IODEIntegratorCache{DT,D}
     Θ::Vector{Vector{DT}}
     F::Vector{Vector{DT}}
 
-    function IntegratorCacheIRKimplicit{DT,D,S}(method::IRKMethod) where {DT,D,S}
+    function IRKimplicitCache{DT,D,S}(method::IRK) where {DT,D,S}
         if implicit_update(method)
             x = zeros(DT, D*(S+1))
         else
@@ -48,59 +50,23 @@ struct IntegratorCacheIRKimplicit{DT,D,S} <: IODEIntegratorCache{DT,D}
     end
 end
 
-nlsolution(cache::IntegratorCacheIRKimplicit) = cache.x
+nlsolution(cache::IRKimplicitCache) = cache.x
 
-function reset!(cache::IntegratorCacheIRKimplicit, t, q, p)
+function reset!(cache::IRKimplicitCache, t, q, p, λ = missing)
     copyto!(cache.q̄, q)
     copyto!(cache.p̄, p)
 end
 
-function Cache{ST}(problem::Union{IODEProblem,LODEProblem}, method::IRKMethod; kwargs...) where {ST}
+function Cache{ST}(problem::AbstractProblemIODE, method::IRK; kwargs...) where {ST}
     S = nstages(tableau(method))
     D = ndims(problem)
-    IntegratorCacheIRKimplicit{ST,D,S}(method; kwargs...)
+    IRKimplicitCache{ST,D,S}(method; kwargs...)
 end
 
-@inline CacheType(ST, problem::Union{IODEProblem,LODEProblem}, method::IRKMethod) = IntegratorCacheIRKimplicit{ST, ndims(problem), nstages(tableau(method))}
+@inline CacheType(ST, problem::AbstractProblemIODE, method::IRK) = IRKimplicitCache{ST, ndims(problem), nstages(tableau(method))}
 
 
-@doc raw"""
-Implicit Runge-Kutta integrator for implicit systems of equations,
-solving the system
-```math
-\begin{aligned}
-P_{n,i} &= \vartheta (Q_{n,i}) , &
-Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , \\
-F_{n,i} &= f (Q_{n,i}, V_{n,i}) , &
-P_{n,i} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{a}_{ij} \, F_{n,j} .
-\end{aligned}
-```
-If `implicit_update` is set to `true`, the update is computed by solving
-```math
-\vartheta(q_{n+1}) = \vartheta(q_{n}) + h \sum \limits_{i=1}^{s} b_{i}  \, f (Q_{n,j}, V_{n,j}) ,
-```
-otherwise it is computed explicitly by
-```math
-q_{n+1} = q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
-```
-Usually we are interested in Lagrangian systems, where
-```math
-\begin{aligned}
-P_{n,i} &= \dfrac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , &
-F_{n,i} &= \dfrac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) ,
-\end{aligned}
-```
-and tableaus satisfying the symplecticity conditions
-```math
-\begin{aligned}
-b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
-\bar{b}_i &= b_i .
-\end{aligned}
-```
-"""
-const IntegratorIRKimplicit{DT,TT} = GeometricIntegrator{<:Union{IODEProblem{DT,TT},LODEProblem{DT,TT}}, <:IRKMethod}
-
-function solversize(problem::Union{IODEProblem,LODEProblem}, method::IRKMethod)
+function solversize(problem::AbstractProblemIODE, method::IRK)
     n = ndims(problem) * nstages(method)
 
     if implicit_update(method)
@@ -111,7 +77,7 @@ function solversize(problem::Union{IODEProblem,LODEProblem}, method::IRKMethod)
 end
 
 
-function Base.show(io::IO, int::IntegratorIRKimplicit)
+function Base.show(io::IO, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
     print(io, "\nRunge-Kutta Integrator for Implicit Equations with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(description(tableau(int)))\n")
@@ -120,52 +86,44 @@ function Base.show(io::IO, int::IntegratorIRKimplicit)
 end
 
 
-function initial_guess!(
-    solstep::SolutionStepPODE{DT},
-    problem::Union{IODEProblem,LODEProblem},
-    method::IRKMethod,
-    caches::CacheDict,
-    ::NonlinearSolver,
-    iguess::Union{InitialGuess,Extrapolation}) where {DT}
-    
-    local cache = caches[DT]
-    local offset::Int
+function initial_guess!(int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
+    # get cache for nonlinear solution vector and internal stages
+    local x = nlsolution(int)
+    local Q = cache(int).Q
+    local Θ = cache(int).Θ
+    local V = cache(int).V
+    local F = cache(int).F
 
     # compute initial guess for internal stages
-    for i in eachstage(method)
-        initialguess!(solstep.t̄ + timestep(problem) * tableau(method).c[i], cache.Q[i], cache.Θ[i], cache.V[i], cache.F[i], solstep, problem, iguess)
+    for i in eachstage(int)
+        initialguess!(solstep(int).t̄ + timestep(int) * tableau(int).c[i], Q[i], Θ[i], V[i], F[i], solstep(int), problem(int), iguess(int))
     end
 
     # assemble initial guess for nonlinear solver solution vector
-    for i in eachstage(method)
-        offset = ndims(problem)*(i-1)
-        for k in 1:ndims(problem)
-            cache.x[offset+k] = cache.Θ[i][k] - solstep.p̄[k]
-            for j in eachstage(method)
-                cache.x[offset+k] -= timestep(problem) * tableau(method).a[i,j] * cache.F[j][k]
+    for i in eachstage(int)
+        offset = ndims(int)*(i-1)
+        for k in 1:ndims(int)
+            x[offset+k] = Θ[i][k] - solstep(int).p̄[k]
+            for j in eachstage(int)
+                x[offset+k] -= timestep(int) * tableau(int).a[i,j] * F[j][k]
             end
         end
     end
 
     # compute initial guess for solution
-    if implicit_update(method)
-        initialguess!(solstep.t, cache.q, cache.θ, cache.v, cache.f, solstep, problem, iguess)
+    if implicit_update(int)
+        initialguess!(solstep(int).t, cache(int).q, cache(int).θ, cache(int).v, cache(int).f, solstep(int), problem(int), iguess(int))
 
-        offset = ndims(problem) * nstages(tableau(method))
+        offset = ndims(int) * nstages(int)
 
-        for k in 1:ndims(problem)
-            cache.x[offset + k] = cache.q[k]
+        for k in 1:ndims(int)
+            x[offset + k] = cache(int).q[k]
         end
     end
 end
 
 
-function components!(x::AbstractVector{ST}, int::IntegratorIRKimplicit) where {ST}
-    # temporary variables
-    local y1::ST
-    local y2::ST
-    local tᵢ::timetype(problem(int))
-
+function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {ST}
     # get cache for internal stages
     local q̄ = cache(int, ST).q̄
     local q = cache(int, ST).q
@@ -193,7 +151,7 @@ function components!(x::AbstractVector{ST}, int::IntegratorIRKimplicit) where {S
     # compute Q = q + Δt A V
     for i in eachindex(Q)
         for k in eachindex(Q[i])
-            y1 = y2 = 0
+            y1 = y2 = zero(ST)
             for j in eachindex(V)
                 y1 += tableau(int).a[i,j] * V[j][k]
                 y2 += tableau(int).â[i,j] * V[j][k]
@@ -205,33 +163,29 @@ function components!(x::AbstractVector{ST}, int::IntegratorIRKimplicit) where {S
     # compute Θ = ϑ(Q) and F = f(Q,V)
     for i in eachindex(Θ,F)
         tᵢ = solstep(int).t̄ + timestep(int) * tableau(int).c[i]
-        equations(int).ϑ(Θ[i], tᵢ, Q[i], V[i])
-        equations(int).f(F[i], tᵢ, Q[i], V[i])
+        equations(int).ϑ(Θ[i], tᵢ, Q[i], V[i], parameters(solstep(int)))
+        equations(int).f(F[i], tᵢ, Q[i], V[i], parameters(solstep(int)))
     end
 
     # compute θ = ϑ(q)
     if implicit_update(int)
-        equations(int).ϑ(θ, solstep(int).t, q, v)
+        equations(int).ϑ(θ, solstep(int).t, q, v, parameters(solstep(int)))
     end
 end
 
 
 # Compute stages of implicit Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, int::IntegratorIRKimplicit) where {ST}
+function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {ST}
     # get cache for previous solution and internal stages
     local p̄ = cache(int, ST).p̄
     local θ = cache(int, ST).θ
     local Θ = cache(int, ST).Θ
     local F = cache(int, ST).F
 
-    # temporary variables
-    local y1::ST
-    local y2::ST
-
     # compute b for internal stages
     for i in eachindex(Θ)
         for k in eachindex(Θ[i])
-            y1 = y2 = 0
+            y1 = y2 = zero(ST)
             for j in eachindex(F)
                 y1 += tableau(int).a[i,j] * F[j][k]
                 y2 += tableau(int).â[i,j] * F[j][k]
@@ -243,7 +197,7 @@ function residual!(b::AbstractVector{ST}, int::IntegratorIRKimplicit) where {ST}
     # compute b for update
     if implicit_update(int)
         for k in eachindex(θ)
-            y1 = y2 = 0
+            y1 = y2 = zero(ST)
             for j in eachindex(F)
                 y1 += tableau(int).b[j] * F[j][k]
                 y2 += tableau(int).b̂[j] * F[j][k]
@@ -255,7 +209,7 @@ end
 
 
 # Compute stages of implicit Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, int::IntegratorIRKimplicit) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {ST}
     @assert axes(x) == axes(b)
 
     # copy previous solution from solstep to cache
@@ -269,7 +223,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, int::Integrator
 end
 
 
-function update!(x::AbstractVector{DT}, int::IntegratorIRKimplicit) where {DT}
+function update!(x::AbstractVector{DT}, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {DT}
     # copy previous solution from solstep to cache
     reset!(cache(int, DT), current(solstep(int))...)
 
@@ -281,7 +235,7 @@ function update!(x::AbstractVector{DT}, int::IntegratorIRKimplicit) where {DT}
 end
 
 
-function integrate_step!(int::IntegratorIRKimplicit)
+function integrate_step!(int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
     # call nonlinear solver
     solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
 
@@ -293,7 +247,4 @@ function integrate_step!(int::IntegratorIRKimplicit)
 
     # compute final update
     update!(nlsolution(int), int)
-
-    # update one-form for next step
-    # functions(problem).ϑ(solstep.p, solstep.t, solstep.q, solstep.v)
 end

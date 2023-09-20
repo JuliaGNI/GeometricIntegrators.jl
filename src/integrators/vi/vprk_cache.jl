@@ -1,9 +1,3 @@
-
-const VPRKProblem{DT<:Number, TT<:Real} = 
-    Union{IODEProblem{DT,TT},
-          LODEProblem{DT,TT}}
-
-
 @doc raw"""
 Variational partitioned Runge-Kutta integrator cache.
 
@@ -21,7 +15,7 @@ Variational partitioned Runge-Kutta integrator cache.
 * `Y`: integral of vector field of internal stages of q
 * `Z`: integral of vector field of internal stages of p
 """
-mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
+mutable struct VPRKCache{ST,D,S} <: IODEIntegratorCache{ST,D}
     x::Vector{ST}
     x̄::Vector{ST}
 
@@ -66,7 +60,7 @@ mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
     G::Vector{Vector{ST}}
     R::Vector{Vector{ST}}
 
-    function IntegratorCacheVPRK{ST,D,S}(n, projection::Bool=false, m=0) where {ST,D,S}
+    function VPRKCache{ST,D,S}(n, projection::Bool=false, m=0) where {ST,D,S}
         # create solver vector
         x = zeros(ST,n)
         x̄ = zeros(ST,m)
@@ -143,23 +137,23 @@ mutable struct IntegratorCacheVPRK{ST,D,S} <: IODEIntegratorCache{ST,D}
     end
 end
 
-function IntegratorCacheVPRK(ST, D, S, N, ::VPRKMethod)
-    IntegratorCacheVPRK{ST,D,S}(N, false)
+function VPRKCache(ST, D, S, N, ::VPRKMethod)
+    VPRKCache{ST,D,S}(N, false)
 end
 
 # function IntegratorCacheVPRK(ST, D, S, N, ::ProjectedVPRK)
 #     IntegratorCacheVPRK{ST,D,S}(N, true)
 # end
 
-nlsolution(cache::IntegratorCacheVPRK) = cache.x
+nlsolution(cache::VPRKCache) = cache.x
 
-function reset!(cache::IntegratorCacheVPRK, t, q, p)
+function reset!(cache::VPRKCache, t, q, p)
     copyto!(cache.q̄, q)
     copyto!(cache.p̄, p)
 end
 
 
-function Cache{ST}(problem::VPRKProblem, method::VPRKMethod; kwargs...) where {ST}
+function Cache{ST}(problem::AbstractProblemIODE, method::VPRKMethod; kwargs...) where {ST}
     D = ndims(problem)
     S = nstages(method)
     N = solversize(problem, method)
@@ -168,7 +162,7 @@ function Cache{ST}(problem::VPRKProblem, method::VPRKMethod; kwargs...) where {S
     #     N += D
     # end
 
-    IntegratorCacheVPRK(ST, D, S, N, method; kwargs...)
+    VPRKCache(ST, D, S, N, method; kwargs...)
 end
 
-@inline CacheType(ST, problem::VPRKProblem, method::VPRKMethod) = IntegratorCacheVPRK{ST, ndims(problem), nstages(method)}
+@inline CacheType(ST, problem::AbstractProblemIODE, method::VPRKMethod) = VPRKCache{ST, ndims(problem), nstages(method)}

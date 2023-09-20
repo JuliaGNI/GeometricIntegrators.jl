@@ -189,42 +189,44 @@ function extrapolate!(t₀::TT, x₀::AbstractArray{DT}, ẋ₀::AbstractArray{D
 end
 
 
-function _vectorfield(t::TT, x::AbstractArray{DT}, v::Callable) where {DT,TT}
+function _vectorfield(t::TT, x::AbstractArray{DT}, v::Callable, params) where {DT,TT}
     ẋ = zero(x)
-    v(ẋ, t, x)
+    v(ẋ, t, x, params)
     return ẋ
 end
 
 function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
                       t₁::TT, x₁::AbstractArray{DT},
                       tᵢ::TT, xᵢ::AbstractArray{DT},
-                      v::Function, extrap::HermiteExtrapolation) where {DT,TT}
-    ẋ₀ = _vectorfield(t₀, x₀, v)
-    ẋ₁ = _vectorfield(t₁, x₁, v)
+                      v::Function, params::OptionalParameters,
+                      extrap::HermiteExtrapolation) where {DT,TT}
+    ẋ₀ = _vectorfield(t₀, x₀, v, params)
+    ẋ₁ = _vectorfield(t₁, x₁, v, params)
     extrapolate!(t₀, x₀, ẋ₀, t₁, x₁, ẋ₁, tᵢ, xᵢ, extrap)
 end
 
 function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
                       t₁::TT, x₁::AbstractArray{DT},
                       tᵢ::TT, xᵢ::AbstractArray{DT}, ẋᵢ::AbstractArray{DT}, 
-                      v::Function, extrap::HermiteExtrapolation) where {DT,TT}
-    ẋ₀ = _vectorfield(t₀, x₀, v)
-    ẋ₁ = _vectorfield(t₁, x₁, v)
+                      v::Function, params::OptionalParameters,
+                      extrap::HermiteExtrapolation) where {DT,TT}
+    ẋ₀ = _vectorfield(t₀, x₀, v, params)
+    ẋ₁ = _vectorfield(t₁, x₁, v, params)
     extrapolate!(t₀, x₀, ẋ₀, t₁, x₁, ẋ₁, tᵢ, xᵢ, ẋᵢ, extrap)
 end
 
 function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
                       t₁::TT, x₁::AbstractArray{DT},
                       tᵢ::TT, xᵢ::AbstractArray{DT},
-                      problem::Union{ODEProblem, DAEProblem, SubstepProblem},
+                      problem::AbstractProblemODE,
                       extrap::HermiteExtrapolation) where {DT,TT}
-    extrapolate!(t₀, x₀, t₁, x₁, tᵢ, xᵢ, functions(problem).v, extrap)
+    extrapolate!(t₀, x₀, t₁, x₁, tᵢ, xᵢ, functions(problem).v, parameters(problem), extrap)
 end
 
 function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
                       t₁::TT, x₁::AbstractArray{DT},
                       tᵢ::TT, xᵢ::AbstractArray{DT}, ẋᵢ::AbstractArray{DT}, 
-                      problem::Union{ODEProblem, DAEProblem, SubstepProblem},
+                      problem::AbstractProblemODE,
                       extrap::HermiteExtrapolation) where {DT,TT}
-    extrapolate!(t₀, x₀, t₁, x₁, tᵢ, xᵢ, ẋᵢ, functions(problem).v, extrap)
+    extrapolate!(t₀, x₀, t₁, x₁, tᵢ, xᵢ, ẋᵢ, functions(problem).v, parameters(problem), extrap)
 end
