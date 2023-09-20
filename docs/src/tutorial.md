@@ -480,7 +480,7 @@ All implicit Runge-Kutta and partitioned Runge-Kutta methods can also be applied
 ### Integrators for Lagrangian ODEs
 
 Regular (non-degenerate) Lagragian ODEs can be integrated with Variational Partitioned Runge-Kutta ([`VPRK`](@ref))
-methods.
+methods or Continuous Galerkin Variational Integrators ([`CGVI`](@ref)).
 
 | Function                        | Method                                                             |
 |:--------------------------------|:-------------------------------------------------------------------|

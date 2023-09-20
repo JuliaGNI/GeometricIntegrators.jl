@@ -8,9 +8,15 @@ meta_methods = (
     # FLRK,
     VPRK,
     DVRK,
+    CGVI,
     ProjectedMethod,
     HPImidpoint,
     HPItrapezoidal,
+)
+
+euler_methods = (
+    ExplicitEuler, 
+    ImplicitEuler,
 )
 
 explicit_rungekutta_methods = (
@@ -126,8 +132,10 @@ variational_partitioned_runge_kutta_families = (
 )
 
 variational_integrators = (
+    HPImidpoint,
+    HPItrapezoidal,
     PMVImidpoint,
-    PMVItrapezoidal,    
+    PMVItrapezoidal,
 )
 
 degenerate_variational_integrators = (
@@ -152,6 +160,7 @@ splitting_methods = (
 
 method_groups = (
     meta_methods,
+    euler_methods,
     runge_kutta_methods,
     runge_kutta_families,
     partitioned_runge_kutta_methods,
