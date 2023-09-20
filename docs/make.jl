@@ -15,8 +15,10 @@ DocMeta.setdocmeta!(GeometricIntegrators, :DocTestSetup, :(using GeometricIntegr
 
 weave(joinpath(@__DIR__, "src", "methods.jmd"), out_path = joinpath(@__DIR__, "src"), doctype = "github")
 
-makedocs(bib;
+makedocs(
     sitename = "GeometricIntegrators.jl",
+    plugins = [bib],
+    warnonly = Documenter.except(:autodocs_block, :cross_references, :docs_block, :doctest, :eval_block, :example_block, :footnote, :linkcheck_remotes, :linkcheck, :meta_block, :parse_error, :setup_block),
     format = Documenter.HTML(
                prettyurls = get(ENV, "CI", nothing) == "true",
                mathengine = MathJax3(Dict(
