@@ -122,25 +122,9 @@ module Integrators
     include("integrators/integrator.jl")
 
 
-    export ExplicitEuler, ImplicitEuler
-    
     include("integrators/euler/explicit_euler.jl")
     include("integrators/euler/implicit_euler.jl")
 
-
-    export AbstractIntegratorRK, AbstractIntegratorIRK, AbstractIntegratorPRK, IntegratorRK
-    
-    export ERKIntegrator
-    export IntegratorIRK
-    export IntegratorIRKimplicit
-    export IntegratorDIRK
-    #export IntegratorMidpointImplicit, IntegratorSRKimplicit
-
-    export IntegratorEPRK
-    export IPRKIntegrator
-    export IntegratorIPRKimplicit
-    # export IntegratorFLRK
-    # export IntegratorPGLRK, CoefficientsPGLRK
 
     export get_symplectic_conjugate_coefficients, symplecticize,
            check_symplecticity, symplecticity_conditions, 
@@ -169,9 +153,6 @@ module Integrators
 
 
     export ExactSolution,
-           IntegratorExactODE,
-           IntegratorSplitting,
-           IntegratorComposition,
            AbstractTableauSplitting,
            Composition,
            Splitting,
@@ -188,8 +169,6 @@ module Integrators
     include("integrators/splitting/composition_integrator.jl")
 
 
-    export IntegratorVPRK
-
     include("integrators/vi/vi_methods.jl")
     include("integrators/vi/position_momentum_common.jl")
     include("integrators/vi/position_momentum_cache.jl")
@@ -200,10 +179,6 @@ module Integrators
     include("integrators/vi/vprk_integrator.jl")
 
 
-    # export IntegratorCGVI, IntegratorDGVI, IntegratorDGVIEXP,
-    #        IntegratorDGVIPI, IntegratorDGVIP0, IntegratorDGVIP1
-
-    # include("integrators/cgvi/integrators_cgvi.jl")
     include("integrators/cgvi/integrators_cgvi.jl")
     # include("integrators/dgvi/integrators_dgvi.jl")
     # include("integrators/dgvi/integrators_dgvi_experimental.jl")
@@ -212,10 +187,6 @@ module Integrators
     # include("integrators/dgvi/integrators_dgvi_projection_final.jl")
 
 
-    export IntegratorDVIA, IntegratorDVIB,
-           IntegratorCMDVI, IntegratorCTDVI,
-           IntegratorDVRK
-    
     include("integrators/dvi/dvi_common.jl")
     include("integrators/dvi/dvi_cache.jl")
     include("integrators/dvi/dvi_euler.jl")
@@ -223,8 +194,6 @@ module Integrators
     include("integrators/dvi/dvi_trapezoidal.jl")
     include("integrators/dvi/dvrk.jl")
 
-
-    export HPImidpointIntegrator, HPItrapezoidalIntegrator
 
     include("integrators/hpi/hpi_common.jl")
     include("integrators/hpi/hpi_cache.jl")
