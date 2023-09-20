@@ -84,12 +84,10 @@ Pages   = [
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
 Pages   = [
-            "integrators/dvi/methods.jl",
-            "integrators/dvi/integrators_dvi_a.jl",
-            "integrators/dvi/integrators_dvi_b.jl",
-            "integrators/dvi/integrators_cmdvi.jl",
-            "integrators/dvi/integrators_ctdvi.jl",
-            "integrators/dvi/integrators_dvrk.jl",
+            "integrators/dvi/dvi_euler.jl",
+            "integrators/dvi/dvi_midpoint.jl",
+            "integrators/dvi/dvi_trapezoidal.jl",
+            "integrators/dvi/dvrk.jl",
         ]
 ```
 

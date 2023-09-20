@@ -55,7 +55,6 @@ GeometricIntegrators.jl provides the following VPRK methods:
 | [`VPRKpVariational`](@ref)  | VPRK integrator with variational projection (*unstable*)                                             |
 | [`VPRKpSecondary`](@ref)    | VPRK integrator with projection on secondary constraint                                              |
 | [`VPRKpInternal`](@ref)     | Gauss-Legendre VPRK integrator with projection on internal stages of Runge-Kutta method              |
-| [`VPRKpTableau`](@ref)      | Gauss-Legendre VPRK integrator with projection in tableau of Runge-Kutta method                      |
 
 For testing purposes [`VPRKpStandard`](@ref) provides some additional constructors (*note that these methods are generally unstable*):
 
