@@ -1,7 +1,7 @@
 name = "GeometricIntegrators"
 uuid = "dcce2d33-59f6-5b8d-9047-0defad88ae06"
 authors = ["Michael Kraus <michael.kraus@ipp.mpg.de>"]
-version = "0.12.3"
+version = "0.13.0"
 
 [deps]
 CompactBasisFunctions = "a09551c4-f815-4143-809e-dd1986753ba7"
