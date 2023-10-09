@@ -1,6 +1,6 @@
 # [Continuous Galerkin Variational Integrators](@id cgvi)
 
-In the following, we first present the Galerkin framework for variational integrators [[Leok:2004](@cite), [Leok:2011](@cite), [Campos:2014](@cite), [Campos:2015](@cite), [OberBlobaum:2014](@cite), [OberBloebaum:2016](@cite)] where the space of curves $\mf{Q}$ that connect two points in $\mf{M}$ is approximated by a finite-dimensional subspace (Galerkin integrators of 0th kind).
+In the following, we first present the Galerkin framework for variational integrators [[Leok:2004](@cite), [Leok:2011](@cite), [Campos:2014](@cite), [Campos:2015](@cite), [OberBloebaum:2014](@cite), [OberBloebaum:2016](@cite)] where the space of curves $\mf{Q}$ that connect two points in $\mf{M}$ is approximated by a finite-dimensional subspace (Galerkin integrators of 0th kind).
 We use Lagrange polynomials to approximate the trajectories albeit other choices are possible.
 Alternatively, we can approximate the generalised velocities 
 (Galerkin integrators of 1st kind), which leads us to variational-partitioned Runge-Kutta methods.
@@ -47,7 +47,7 @@ It should be made clear, that $\mf{Q}_d$ is an approximation of $\mf{Q}$, but no
 $\mf{Q}_h$, however, is a subspace of $\mf{Q}$ (although it can be broken).
 The connection between $\mf{Q}_h$ and $\mf{Q}_d$ is made by the continuity constraints (which for
 Lagrange polynomials and sequences of nodes which include the boundaries, i.e., $c_1=0$
-and $c_s=1$, is automatically satisfied).
+and $c_s=1$, is automatically satisfied -> this is not true).
 In this context we also need to discuss that curves in $\mf{Q}(\mf{M})$ are assumed to be $C^2$,
 which is not required by the curves in $\mf{Q}_h$.*
 

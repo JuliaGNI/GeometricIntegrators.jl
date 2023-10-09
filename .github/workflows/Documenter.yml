@@ -24,10 +24,12 @@ jobs:
             Pkg.build()
             Pkg.precompile()'
           sudo apt-get install imagemagick
+          sudo apt-get install poppler-utils
           sudo apt-get install texlive-xetex
       - name: Generate Images
         run: |
           make all   -C src/images
+          make png   -C src/images
           make clean -C src/images
         working-directory: docs
       - uses: julia-actions/julia-buildpkg@v1
