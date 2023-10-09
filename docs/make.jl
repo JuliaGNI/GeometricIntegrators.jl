@@ -21,6 +21,8 @@ makedocs(
     warnonly = Documenter.except(:autodocs_block, :cross_references, :docs_block, :doctest, :eval_block, :example_block, :footnote, :linkcheck_remotes, :linkcheck, :meta_block, :parse_error, :setup_block),
     format = Documenter.HTML(
                prettyurls = get(ENV, "CI", nothing) == "true",
+               size_threshold = 524288,
+               size_threshold_warn = 262144,
                mathengine = MathJax3(Dict(
                  :tex => Dict(
                    :macros => Dict(
