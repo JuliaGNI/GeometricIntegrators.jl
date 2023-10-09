@@ -11,16 +11,16 @@ pdf:
 	xelatex -shell-escape variation-discrete
 
 png:
-	pdftocairo commuting-diagram.pdf              commuting-diagram.png              -png -r 150 -transp
-	pdftocairo omega-orthogonal-projection.pdf    omega-orthogonal-projection.png    -png -r 150 -transp
-	pdftocairo post-projection.pdf                post-projection.png                -png -r 150 -transp
-	pdftocairo post-projection-unstable.pdf       post-projection-unstable.png       -png -r 150 -transp
-	pdftocairo standard-projection.pdf            standard-projection.png            -png -r 150 -transp
-	pdftocairo symmetric-projection-minus.pdf     symmetric-projection-minus.png     -png -r 150 -transp
-	pdftocairo symmetric-projection-plus.pdf      symmetric-projection-plus.png      -png -r 150 -transp
-	pdftocairo symplectic-projection-unstable.pdf symplectic-projection-unstable.png -png -r 150 -transp
-	pdftocairo variation-continuous.pdf           variation-continuous.png           -png -r 150 -transp
-	pdftocairo variation-discrete.pdf             variation-discrete.png             -png -r 150 -transp
+	pdftocairo  -png -r 150 -transp -singlefile  commuting-diagram.pdf               commuting-diagram              
+	pdftocairo  -png -r 150 -transp -singlefile  omega-orthogonal-projection.pdf     omega-orthogonal-projection    
+	pdftocairo  -png -r 150 -transp -singlefile  post-projection.pdf                 post-projection                
+	pdftocairo  -png -r 150 -transp -singlefile  post-projection-unstable.pdf        post-projection-unstable       
+	pdftocairo  -png -r 150 -transp -singlefile  standard-projection.pdf             standard-projection            
+	pdftocairo  -png -r 150 -transp -singlefile  symmetric-projection-minus.pdf      symmetric-projection-minus     
+	pdftocairo  -png -r 150 -transp -singlefile  symmetric-projection-plus.pdf       symmetric-projection-plus      
+	pdftocairo  -png -r 150 -transp -singlefile  symplectic-projection-unstable.pdf  symplectic-projection-unstable 
+	pdftocairo  -png -r 150 -transp -singlefile  variation-continuous.pdf            variation-continuous           
+	pdftocairo  -png -r 150 -transp -singlefile  variation-discrete.pdf              variation-discrete             
 
 clean:
 	rm -f *.aux
@@ -28,6 +28,7 @@ clean:
 	rm -f *.fls
 	rm -f *.log
 	rm -f *.pdf
+	rm -f *.xdv
 
 empty: clean
 	rm -f *.png
