@@ -24,7 +24,7 @@ jobs:
             Pkg.build()
             Pkg.precompile()'
           sudo apt-get install imagemagick
-          sudo apt-get install poppler-utils
+          sudo apt-get install pdftocairo
           sudo apt-get install texlive-xetex
       - name: Generate Images
         run: |
