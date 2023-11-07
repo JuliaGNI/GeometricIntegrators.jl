@@ -87,7 +87,7 @@ end
 
 
 # Compute Q stages of explicit partitioned Runge-Kutta methods.
-function compute_stage_q!(solstep::SolutionStepPODE, problem::PODEProblem, method::EPRK, cache, i, jmax, t)
+function compute_stage_q!(solstep::SolutionStepPODE, problem::AbstractProblemPODE, method::EPRK, cache, i, jmax, t)
     # obtain cache
     local Q = cache.Q
     local P = cache.P
@@ -108,7 +108,7 @@ function compute_stage_q!(solstep::SolutionStepPODE, problem::PODEProblem, metho
 end
 
 # Compute P stages of explicit partitioned Runge-Kutta methods.
-function compute_stage_p!(solstep::SolutionStepPODE, problem::PODEProblem, method::EPRK, cache, i, jmax, t)
+function compute_stage_p!(solstep::SolutionStepPODE, problem::AbstractProblemPODE, method::EPRK, cache, i, jmax, t)
     # obtain cache
     local Q = cache.Q
     local P = cache.P

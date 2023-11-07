@@ -176,26 +176,31 @@ end
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 5E-2
     # @test perr.p < 1E-3
+    @test psol.q == integrate(hode, SymplecticEulerA()).q
 
     psol = integrate(pode, SymplecticEulerB())
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 5E-2
     # @test perr.p < 1E-3
+    @test psol.q == integrate(hode, SymplecticEulerB()).q
 
     psol = integrate(pode, LobattoIIIAIIIB(2))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 2E-4
     # @test perr.p < 5E-4
+    @test psol.q == integrate(hode, LobattoIIIAIIIB(2)).q
 
     psol = integrate(pode, LobattoIIIBIIIA(2))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 2E-4
     # @test perr.p < 1E-3
+    @test psol.q == integrate(hode, LobattoIIIBIIIA(2)).q
 
     psol = integrate(pode, RK4())
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 2E-7
     # @test perr.p < 2E-7
+    @test psol.q == integrate(hode, RK4()).q
 
 end
 
@@ -207,24 +212,33 @@ end
     # @test perr.p < 5E-4
     @test psol.q == integrate(pode, PartitionedGauss(1)).q
     @test psol.q == integrate(pode, ImplicitMidpoint()).q
+    @test psol.q == integrate(hode, Gauss(1)).q
+    @test psol.q == integrate(hode, PartitionedGauss(1)).q
+    @test psol.q == integrate(hode, ImplicitMidpoint()).q
 
     psol = integrate(pode, Gauss(2))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 1E-7
     # @test perr.p < 1E-7
     @test psol.q == integrate(pode, PartitionedGauss(2)).q
+    @test psol.q == integrate(hode, Gauss(2)).q
+    @test psol.q == integrate(hode, PartitionedGauss(2)).q
 
     psol = integrate(pode, Gauss(3))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 1E-11
     # @test perr.p < 1E-11
     @test psol.q == integrate(pode, PartitionedGauss(3)).q
+    @test psol.q == integrate(hode, Gauss(3)).q
+    @test psol.q == integrate(hode, PartitionedGauss(3)).q
 
     psol = integrate(pode, Gauss(4))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 1E-15
     # @test perr.p < 1E-15
     @test psol.q == integrate(pode, PartitionedGauss(4)).q
+    @test psol.q == integrate(hode, Gauss(4)).q
+    @test psol.q == integrate(hode, PartitionedGauss(4)).q
 
 end
 
