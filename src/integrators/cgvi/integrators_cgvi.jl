@@ -148,15 +148,18 @@ function initial_guess!(int::GeometricIntegrator{<:CGVI})
     local S = nbasis(method(int))
     local x = nlsolution(int)
 
-    for i in eachindex(basis(method(int)))
-        initialguess!(method(int).x[i], cache(int).q̃, cache(int).p̃, solstep(int), problem(int), iguess(int))
+    # TODO: here we should not initialise with the solution q but with the degree of freedom x,
+    # obtained e.g. from an L2 projection of q onto the basis
 
+    for i in eachindex(basis(method(int)))
+        initialguess!(solstep(int).t̄ + timestep(int) * method(int).x[i], cache(int).q̃, cache(int).p̃, solstep(int), problem(int), iguess(int))
+        
         for k in 1:D
             x[D*(i-1)+k] = cache(int).q̃[k]
         end
     end
 
-    initialguess!(one(timestep(int)), cache(int).q̃, cache(int).p̃, solstep(int), problem(int), iguess(int))
+    initialguess!(solstep(int).t, cache(int).q̃, cache(int).p̃, solstep(int), problem(int), iguess(int))
 
     for k in 1:D
         x[D*S+k] = cache(int).p̃[k]
