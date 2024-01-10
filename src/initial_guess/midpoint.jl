@@ -39,8 +39,7 @@ function initialguess!(t, q, p, q̇, ṗ, solstep::SolutionStepPODE, problem::Ab
 end
 
 function initialguess!(t̄, q̄, p̄, t, q, p, problem::Union{AbstractProblemPODE,AbstractProblemIODE}, extrap::MidpointExtrapolation)
-    # extrapolate!(t̄, q̄, p̄, t, q, p, problem, extrap)
-    extrapolate!(t̄, q̄, t, q, problem, extrap)
+    extrapolate!(t̄, q̄, p̄, t, q, p, problem, extrap)
     (t = t, q = q, p = p)
 end
 
