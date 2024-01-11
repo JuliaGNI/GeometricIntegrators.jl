@@ -63,10 +63,10 @@ initialguess!(t₀, q₀, t₁, q₁, v₁, ode, MidpointExtrapolation(4))
 initialguess!(t₁, q₁, v₁, t₀, q₀, v₀, t₂, q₂, v₂, HermiteExtrapolation())
 
 # println("ODE Initial Guess")
-# println(q₁ .- qₚ)
-# println(v₁ .- vₚ)
-# println(q₂ .- qₙ)
-# println(v₂ .- vₙ)
+# println("Δq = $(q₁ .- qₚ)")
+# println("Δv = $(v₁ .- vₚ)")
+# println("Δq = $(q₂ .- qₙ)")
+# println("Δv = $(v₂ .- vₙ)")
 # println()
 
 @test q₁ ≈ qₚ atol=1E-14
@@ -136,14 +136,14 @@ initialguess!(t₀, q₀, p₀, t₁, q₁, p₁, v₁, f₁, pode, MidpointExtr
 initialguess!(t₁, q₁, p₁, v₁, f₁, t₀, q₀, p₀, v₀, f₀, t₂, q₂, p₂, v₂, f₂, HermiteExtrapolation())
 
 # println("PODE Initial Guess")
-# println(q₁ .- qₚ)
-# println(p₁ .- pₚ)
-# println(v₁ .- vₚ)
-# println(f₁ .- fₚ)
-# println(q₂ .- qₙ)
-# println(p₂ .- pₙ)
-# println(v₂ .- vₙ)
-# println(f₂ .- fₙ)
+# println("Δq = $(q₁ .- qₚ)")
+# println("Δp = $(p₁ .- pₚ)")
+# println("Δv = $(v₁ .- vₚ)")
+# println("Δf = $(f₁ .- fₚ)")
+# println("Δq = $(q₂ .- qₙ)")
+# println("Δp = $(p₂ .- pₙ)")
+# println("Δv = $(v₂ .- vₙ)")
+# println("Δf = $(f₂ .- fₙ)")
 # println()
 
 @test q₁ ≈ qₚ atol=1E-14
@@ -155,6 +155,39 @@ initialguess!(t₁, q₁, p₁, v₁, f₁, t₀, q₀, p₀, v₀, f₀, t₂, 
 @test p₂ ≈ pₙ atol=1E-7
 @test v₂ ≈ vₙ atol=1E-5
 @test f₂ ≈ fₙ atol=1E-5
+
+
+# IODE Reference Solution
+
+iode_prev = similar(iode; tspan=(tspan(iode)[begin], tspan(iode)[begin]-tstep(iode)), tstep=-tstep(iode))
+iode_next = similar(iode; tspan=(tspan(iode)[begin], tspan(iode)[begin]+tstep(iode)), tstep=+tstep(iode))
+
+t₀ = initial_conditions(iode).t
+q₀ = initial_conditions(iode).q
+p₀ = initial_conditions(iode).p
+v₀ = zero(q₀)
+f₀ = zero(p₀)
+
+tₚ = tspan(iode_prev)[end]
+qₚ = zero(q₀)
+pₚ = zero(p₀)
+vₚ = zero(v₀)
+fₚ = zero(p₀)
+
+tₙ = tspan(iode_next)[end]
+qₙ = zero(q₀)
+pₙ = zero(p₀)
+vₙ = zero(v₀)
+fₙ = zero(f₀)
+
+extrapolate!(t₀, q₀, p₀, tₚ, qₚ, pₚ, iode_prev, MidpointExtrapolation(5))
+extrapolate!(t₀, q₀, p₀, tₙ, qₙ, pₙ, iode_next, MidpointExtrapolation(5))
+
+equation(iode).v̄(vₚ, tₚ, qₚ, pₚ, parameters(iode))
+equation(iode).v̄(vₙ, tₙ, qₙ, pₙ, parameters(iode))
+
+equation(iode).f̄(fₚ, tₚ, qₚ, vₚ, parameters(iode))
+equation(iode).f̄(fₙ, tₙ, qₙ, vₙ, parameters(iode))
 
 
 # IODE Initial Guess
@@ -177,31 +210,35 @@ p₂ = zero(p₀)
 v₂ = zero(v₀)
 f₂ = zero(f₀)
 
-equation(iode).v̄(v₀, t₀, q₀, parameters(iode))
+equation(iode).v̄(v₀, t₀, q₀, p₀, parameters(iode))
 equation(iode).f̄(f₀, t₀, q₀, v₀, parameters(iode))
 
 initialguess!(t₀, q₀, p₀, t₁, q₁, p₁, v₁, f₁, iode, MidpointExtrapolation(4))
 initialguess!(t₁, q₁, p₁, v₁, f₁, t₀, q₀, p₀, v₀, f₀, t₂, q₂, p₂, v₂, f₂, HermiteExtrapolation())
 
 # println("IODE Initial Guess")
-# println(q₁ .- qₚ)
-# println(p₁ .- pₚ)
-# println(v₁ .- vₚ)
-# println(f₁ .- fₚ)
-# println(q₂ .- qₙ)
-# println(p₂ .- pₙ)
-# println(v₂ .- vₙ)
-# println(f₂ .- fₙ)
+# println("Δq = $(q₁ .- qₚ)")
+# println("Δp = $(p₁ .- pₚ)")
+# println("Δv = $(v₁ .- vₚ)")
+# println("Δf = $(f₁ .- fₚ)")
+# println("Δq = $(q₂ .- qₙ)")
+# println("Δp = $(p₂ .- pₙ)")
+# println("Δv = $(v₂ .- vₙ)")
+# println("Δf = $(f₂ .- fₙ)")
+# println()
+# println("fₚ = $(fₚ)")
+# println("f₀ = $(f₀)")
+# println("fₙ = $(fₙ)")
+# println("f₁ = $(f₁)")
+# println("f₂ = $(f₂)")
 # println()
 
 @test q₁ ≈ qₚ atol=1E-14
-# @test p₁ ≈ pₚ atol=1E-14
+@test p₁ ≈ pₚ atol=1E-14
 @test v₁ ≈ vₚ atol=1E-14
-# @test f₁ ≈ fₚ atol=1E-13
+@test f₁ ≈ fₚ atol=1E-13
 
 @test q₂ ≈ qₙ atol=1E-8
-# @test p₂ ≈ pₙ atol=1E-7
+@test p₂ ≈ pₙ atol=1E-7
 @test v₂ ≈ vₙ atol=1E-5
-# @test f₂ ≈ fₙ atol=1E-5
-
-# TODO: Investigate why p/f errors are so large!
+@test f₂ ≈ fₙ atol=1E-5
