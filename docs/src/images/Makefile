@@ -34,4 +34,4 @@ empty: clean
 	rm -f *.png
 	rm -f *.svg
 
-all: pdf
+all: pdf png

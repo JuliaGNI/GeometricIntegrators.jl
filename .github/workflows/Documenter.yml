@@ -29,7 +29,6 @@ jobs:
       - name: Generate Images
         run: |
           make all   -C src/images
-          make png   -C src/images
           make clean -C src/images
         working-directory: docs
       - uses: julia-actions/julia-buildpkg@v1
