@@ -37,7 +37,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
           GKSwstype: 100
-      - run: |
+      - name: Doctests
+        run: |
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
             using GeometricIntegrators
