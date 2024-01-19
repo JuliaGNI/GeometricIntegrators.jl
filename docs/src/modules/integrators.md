@@ -16,9 +16,9 @@ Pages   = [
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
 Pages   = [
-            "integrators/initial_guess/initial_guess.jl",
-            "integrators/initial_guess/hermite.jl",
-            "integrators/initial_guess/midpoint.jl",
+            "initial_guess/initial_guess.jl",
+            "initial_guess/hermite.jl",
+            "initial_guess/midpoint.jl",
           ]
 ```
 
@@ -30,11 +30,11 @@ initial guesses and are usually not called directly by the user.
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
 Order   = [:constant, :type, :macro, :function]
-Pages   = ["integrators/extrapolation/extrapolation.jl",
-           "integrators/extrapolation/aitken_neville.jl",
-           "integrators/extrapolation/euler.jl",
-           "integrators/extrapolation/hermite.jl",
-           "integrators/extrapolation/midpoint.jl"]
+Pages   = ["extrapolation/extrapolation.jl",
+           "extrapolation/aitken_neville.jl",
+           "extrapolation/euler.jl",
+           "extrapolation/hermite.jl",
+           "extrapolation/midpoint.jl"]
 ```
 
 # Euler Integrators
