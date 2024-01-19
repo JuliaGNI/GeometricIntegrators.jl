@@ -28,7 +28,7 @@ The extrapolation routines are exclusively used for computing
 initial guesses and are usually not called directly by the user.
 
 ```@autodocs
-Modules = [GeometricIntegrators.Integrators]
+Modules = [GeometricIntegrators.Extrapolators]
 Order   = [:constant, :type, :macro, :function]
 Pages   = ["extrapolation/extrapolation.jl",
            "extrapolation/aitken_neville.jl",
