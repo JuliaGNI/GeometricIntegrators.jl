@@ -94,7 +94,7 @@ function initial_guess!(
             cache.x[2*(ndims(problem)*(i-1)+k-1)+2] = (cache.Pi[i][k] - solstep.p̄[k]) / timestep(problem)
         end
 
-        # Quick fix for dirty implementation of F function
+        # Quick fix for sloppy implementation of F function
         cache.Vi[i] .= 0
         cache.Fi[i] .= 0
     end
@@ -137,6 +137,7 @@ function components!(
     local R = pstages(method)
     local D = ndims(problem)
 
+    local tqᵢ::TT
     local tpᵢ::TT
     local tλᵢ::TT
 
@@ -156,8 +157,10 @@ function components!(
         # The function f depends von v but Vi has never been initialized !
         # For degenerate Lagrangians this might be just right, as the corresponding 
         # term in F that multiplies v should not be there in the first place
-        # (cf. SPARK paper)
+        # (cf. SPARK paper) but in general this will cause problems
+        # tqᵢ = solstep.t̄ + timestep(problem) * tableau(method).q.c[i]
         tpᵢ = solstep.t̄ + timestep(problem) * tableau(method).p.c[i]
+        # functions(problem).v̄(cache.Vi[i], tqᵢ, cache.Qi[i], cache.Pi[i], parameters(solstep))
         functions(problem).ϑ(cache.Φi[i], tpᵢ, cache.Qi[i], cache.Vi[i], parameters(solstep))
         functions(problem).f(cache.Fi[i], tpᵢ, cache.Qi[i], cache.Vi[i], parameters(solstep))
         cache.Φi[i] .-= cache.Pi[i]
