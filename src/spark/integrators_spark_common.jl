@@ -21,15 +21,15 @@ end
 
 
 function copy_internal_variables(solstep::SolutionStepPDAE, cache::IntegratorCacheSPARK)
-    solstep.internal.Qi .= cache.Qi
-    solstep.internal.Pi .= cache.Pi
-    solstep.internal.Vi .= cache.Vi
-    solstep.internal.Φi .= cache.Φi
+    haskey(internal(solstep), :Qi) && copyto!(internal(solstep).Qi, cache.Qi)
+    haskey(internal(solstep), :Pi) && copyto!(internal(solstep).Pi, cache.Pi)
+    haskey(internal(solstep), :Vi) && copyto!(internal(solstep).Vi, cache.Vi)
+    haskey(internal(solstep), :Φi) && copyto!(internal(solstep).Φi, cache.Φi)
 
-    solstep.internal.Qp .= cache.Qp
-    solstep.internal.Pp .= cache.Pp
-    solstep.internal.Λp .= cache.Λp
-    solstep.internal.Φp .= cache.Φp
+    haskey(internal(solstep), :Qp) && copyto!(internal(solstep).Qp, cache.Qp)
+    haskey(internal(solstep), :Pp) && copyto!(internal(solstep).Pp, cache.Pp)
+    haskey(internal(solstep), :Vp) && copyto!(internal(solstep).Λp, cache.Λp)
+    haskey(internal(solstep), :Φp) && copyto!(internal(solstep).Φp, cache.Φp)
 end
 
 

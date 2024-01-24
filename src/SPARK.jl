@@ -29,7 +29,7 @@ module SPARK
                           @CoefficientsRK, @HeaderCoefficientsRK
     import ..Integrators: create_internal_stage_vector,
                           update!, update_vector_fields!, update_multiplier!,
-                          initialize!, initsolver, nlsolution
+                          initialize!, initsolver, internal, nlsolution
     import ..Integrators: equation, equations, timestep, eachstage, nstages
 
 

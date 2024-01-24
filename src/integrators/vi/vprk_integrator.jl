@@ -21,10 +21,10 @@ end
 
 
 function copy_internal_variables(solstep::SolutionStep, cache::VPRKCache)
-    solstep.internal.Q .= cache.Q
-    solstep.internal.P .= cache.P
-    solstep.internal.V .= cache.V
-    solstep.internal.F .= cache.F
+    haskey(internal(solstep), :Q) && coypto!(internal(solstep).Q, cache.Q)
+    haskey(internal(solstep), :P) && coypto!(internal(solstep).P, cache.P)
+    haskey(internal(solstep), :V) && coypto!(internal(solstep).V, cache.V)
+    haskey(internal(solstep), :F) && coypto!(internal(solstep).F, cache.F)
 end
 
 
