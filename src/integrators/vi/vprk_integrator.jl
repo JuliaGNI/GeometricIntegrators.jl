@@ -13,18 +13,22 @@ function internal_variables(method::VPRKMethod, problem::AbstractProblemIODE{DT,
     P = create_internal_stage_vector(DT, D, S)
     V = create_internal_stage_vector(DT, D, S)
     F = create_internal_stage_vector(DT, D, S)
+    Y = create_internal_stage_vector(DT, D, S)
+    Z = create_internal_stage_vector(DT, D, S)
 
     # solver = get_solver_status(int.solver)
 
-    (Q=Q, P=P, V=V, F=F)#, solver=solver)
+    (Q=Q, P=P, V=V, F=F, Y=Y, Z=Z)#, solver=solver)
 end
 
 
 function copy_internal_variables(solstep::SolutionStep, cache::VPRKCache)
-    haskey(internal(solstep), :Q) && coypto!(internal(solstep).Q, cache.Q)
-    haskey(internal(solstep), :P) && coypto!(internal(solstep).P, cache.P)
-    haskey(internal(solstep), :V) && coypto!(internal(solstep).V, cache.V)
-    haskey(internal(solstep), :F) && coypto!(internal(solstep).F, cache.F)
+    haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
+    haskey(internal(solstep), :P) && copyto!(internal(solstep).P, cache.P)
+    haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
+    haskey(internal(solstep), :F) && copyto!(internal(solstep).F, cache.F)
+    haskey(internal(solstep), :Y) && copyto!(internal(solstep).Y, cache.Y)
+    haskey(internal(solstep), :Z) && copyto!(internal(solstep).Z, cache.Z)
 end
 
 

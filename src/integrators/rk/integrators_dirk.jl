@@ -95,6 +95,26 @@ reset!(cache::DIRKCache, t, q, λ = missing) = copyto!(cache.q̄, q)
 nlsolution(cache::DIRKCache, i) = cache.x[i]
 
 
+function internal_variables(method::DIRKMethod, problem::AbstractProblemODE{DT,TT}) where {DT,TT}
+    S = nstages(method)
+    D = ndims(problem)
+
+    Q = create_internal_stage_vector(DT, D, S)
+    V = create_internal_stage_vector(DT, D, S)
+    Y = create_internal_stage_vector(DT, D, S)
+
+    # solver = get_solver_status(int.solver)
+
+    (Q=Q, V=V, Y=Y)#, solver=solver)
+end
+
+function copy_internal_variables(solstep::SolutionStep, cache::DIRKCache)
+    haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
+    haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
+    haskey(internal(solstep), :Y) && copyto!(internal(solstep).Y, cache.Y)
+end
+
+
 function initial_guess!(int::GeometricIntegrator{<:DIRK})
     for i in eachstage(int)
         initialguess!(solstep(int).t̄ + timestep(int) * tableau(int).c[i], cache(int).Q[i], cache(int).V[i], solstep(int), problem(int), iguess(int))
@@ -184,4 +204,7 @@ function integrate_step!(int::GeometricIntegrator{<:DIRK, <:AbstractProblemODE})
 
     # compute final update
     update!(solstep(int), cache(int).V, tableau(int), timestep(int))
+
+    # copy internal stage variables
+    copy_internal_variables(solstep(int), cache(int))
 end

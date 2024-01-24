@@ -77,6 +77,28 @@ function solversize(problem::AbstractProblemIODE, method::IRK)
 end
 
 
+function internal_variables(method::IRK, problem::AbstractProblemIODE{DT,TT}) where {DT,TT}
+    S = nstages(method)
+    D = ndims(problem)
+
+    Q = create_internal_stage_vector(DT, D, S)
+    V = create_internal_stage_vector(DT, D, S)
+    Θ = create_internal_stage_vector(DT, D, S)
+    F = create_internal_stage_vector(DT, D, S)
+
+    # solver = get_solver_status(int.solver)
+
+    (Q=Q, V=V, Θ=Θ, F=F)#, solver=solver)
+end
+
+function copy_internal_variables(solstep::SolutionStep, cache::IRKimplicitCache)
+    haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
+    haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
+    haskey(internal(solstep), :Θ) && copyto!(internal(solstep).Θ, cache.Θ)
+    haskey(internal(solstep), :F) && copyto!(internal(solstep).F, cache.F)
+end
+
+
 function Base.show(io::IO, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
     print(io, "\nRunge-Kutta Integrator for Implicit Equations with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
@@ -247,4 +269,10 @@ function integrate_step!(int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
 
     # compute final update
     update!(nlsolution(int), int)
+
+    # copy internal stage variables
+    copy_internal_variables(solstep(int), cache(int))
+
+    # copy solver status
+    # get_solver_status!(solver(int), solstep(int).internal[:solver])
 end

@@ -140,4 +140,7 @@ function integrate_step!(int::GeometricIntegrator{<:IPRK, <:AbstractProblemIODE}
 
     # compute final update
     update!(nlsolution(int), int)
+
+    # copy internal stage variables
+    copy_internal_variables(solstep(int), cache(int))
 end

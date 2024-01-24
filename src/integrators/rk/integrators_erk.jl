@@ -58,6 +58,22 @@ end
 @inline CacheType(ST, problem::AbstractProblemODE, method::ERK) = ERKCache{ST, ndims(problem), nstages(tableau(method))}
 
 
+function internal_variables(method::ERK, problem::AbstractProblemODE{DT,TT}) where {DT,TT}
+    S = nstages(method)
+    D = ndims(problem)
+
+    Q = create_internal_stage_vector(DT, D, S)
+    V = create_internal_stage_vector(DT, D, S)
+
+    (Q=Q, V=V)
+end
+
+function copy_internal_variables(solstep::SolutionStep, cache::ERKCache)
+    haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
+    haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
+end
+
+
 function integrate_step!(int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
     # obtain cache
     local Q = cache(int).Q
@@ -78,4 +94,7 @@ function integrate_step!(int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
 
     # compute final update
     update!(solstep(int), V, tableau(int), timestep(int))
+
+    # copy internal stage variables
+    copy_internal_variables(solstep(int), cache(int))
 end

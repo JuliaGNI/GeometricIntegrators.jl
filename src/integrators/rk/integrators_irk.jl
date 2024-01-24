@@ -125,6 +125,25 @@ end
 @inline CacheType(ST, problem::AbstractProblem, method::IRKMethod) = IRKCache{ST, ndims(problem), nstages(tableau(method))}
 
 
+function internal_variables(method::IRKMethod, problem::AbstractProblemODE{DT,TT}) where {DT,TT}
+    S = nstages(method)
+    D = ndims(problem)
+
+    Q = create_internal_stage_vector(DT, D, S)
+    V = create_internal_stage_vector(DT, D, S)
+    Y = create_internal_stage_vector(DT, D, S)
+
+    # solver = get_solver_status(int.solver)
+
+    (Q=Q, V=V, Y=Y)#, solver=solver)
+end
+
+function copy_internal_variables(solstep::SolutionStep, cache::IRKCache)
+    haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
+    haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
+    haskey(internal(solstep), :Y) && copyto!(internal(solstep).Y, cache.Y)
+end
+
 
 function initial_guess!(int::GeometricIntegrator{<:IRK, <:AbstractProblemODE})
     # compute initial guess for internal stages
@@ -227,4 +246,10 @@ function integrate_step!(int::GeometricIntegrator{<:IRK, <:AbstractProblemODE})
 
     # compute final update
     update!(nlsolution(int), int)
+
+    # copy internal stage variables
+    copy_internal_variables(solstep(int), cache(int))
+
+    # copy solver status
+    # get_solver_status!(solver(int), solstep(int).internal[:solver])
 end

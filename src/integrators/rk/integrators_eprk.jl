@@ -86,6 +86,31 @@ end
 @inline CacheType(ST, problem::EquationProblem, method::EPRK) = EPRKCache{ST, ndims(problem), nstages(tableau(method))}
 
 
+function internal_variables(method::EPRK, problem::AbstractProblemPODE{DT,TT}) where {DT,TT}
+    S = nstages(method)
+    D = ndims(problem)
+
+    Q = create_internal_stage_vector_with_zero(DT, D, S)
+    P = create_internal_stage_vector_with_zero(DT, D, S)
+
+    Y = create_internal_stage_vector(DT, D, S)
+    Z = create_internal_stage_vector(DT, D, S)
+    V = create_internal_stage_vector(DT, D, S)
+    F = create_internal_stage_vector(DT, D, S)
+
+    (Q=Q, P=P, V=V, F=F, Y=Y, Z=Z)
+end
+
+function copy_internal_variables(solstep::SolutionStep, cache::EPRKCache)
+    haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
+    haskey(internal(solstep), :P) && copyto!(internal(solstep).P, cache.P)
+    haskey(internal(solstep), :Y) && copyto!(internal(solstep).Y, cache.Y)
+    haskey(internal(solstep), :Z) && copyto!(internal(solstep).Z, cache.Z)
+    haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
+    haskey(internal(solstep), :F) && copyto!(internal(solstep).F, cache.F)
+end
+
+
 # Compute Q stages of explicit partitioned Runge-Kutta methods.
 function compute_stage_q!(solstep::SolutionStepPODE, problem::AbstractProblemPODE, method::EPRK, cache, i, jmax, t)
     # obtain cache
@@ -155,4 +180,7 @@ function integrate_step!(int::GeometricIntegrator{<:EPRK, <:AbstractProblemPODE}
 
     # compute final update
     update!(solstep(int), cache(int).V, cache(int).F, tableau(int), timestep(int))
+
+    # copy internal stage variables
+    copy_internal_variables(solstep(int), cache(int))
 end

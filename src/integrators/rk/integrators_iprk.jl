@@ -149,6 +149,30 @@ function reset!(cache::IPRKCache, t, q, p)
 end
 
 
+function internal_variables(method::IPRK, problem::AbstractProblemPODE{DT,TT}) where {DT,TT}
+    S = nstages(method)
+    D = ndims(problem)
+
+    Q = create_internal_stage_vector(DT, D, S)
+    P = create_internal_stage_vector(DT, D, S)
+    V = create_internal_stage_vector(DT, D, S)
+    F = create_internal_stage_vector(DT, D, S)
+    Y = create_internal_stage_vector(DT, D, S)
+    Z = create_internal_stage_vector(DT, D, S)
+
+    (Q=Q, P=P, V=V, F=F, Y=Y, Z=Z)
+end
+
+function copy_internal_variables(solstep::SolutionStep, cache::IPRKCache)
+    haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
+    haskey(internal(solstep), :P) && copyto!(internal(solstep).P, cache.P)
+    haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
+    haskey(internal(solstep), :F) && copyto!(internal(solstep).F, cache.F)
+    haskey(internal(solstep), :Y) && copyto!(internal(solstep).Y, cache.Y)
+    haskey(internal(solstep), :Z) && copyto!(internal(solstep).Z, cache.Z)
+end
+
+
 function initial_guess!(int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE})
     # get cache for nonlinear solution vector and internal stages
     local x = nlsolution(int)
@@ -249,4 +273,7 @@ function integrate_step!(int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE}
 
     # compute final update
     update!(solstep(int), cache(int).V, cache(int).F, tableau(int), timestep(int))
+
+    # copy internal stage variables
+    copy_internal_variables(solstep(int), cache(int))
 end
