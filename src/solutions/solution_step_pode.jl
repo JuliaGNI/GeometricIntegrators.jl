@@ -124,6 +124,7 @@ history(solstep::SolutionStepPODE, i::Int) = (
     p = history(solstep).p[i],
     v = history(solstep).v[i],
     f = history(solstep).f[i])
+internal(solstep::SolutionStepPODE) = solstep.internal
 parameters(solstep::SolutionStepPODE) = solstep.parameters
 
 

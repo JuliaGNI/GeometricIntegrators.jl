@@ -104,6 +104,7 @@ history(solstep::SolutionStepODE, i::Int) = (
     t = history(solstep).t[i],
     q = history(solstep).q[i],
     v = history(solstep).v[i])
+internal(solstep::SolutionStepODE) = solstep.internal
 parameters(solstep::SolutionStepODE) = solstep.parameters
 
 function update_vector_fields!(solstep::SolutionStepODE, problem::Union{ODEProblem, SODEProblem, SubstepProblem}, i=0)

@@ -149,6 +149,7 @@ history(solstep::SolutionStepPDAE, i::Int) = (
     f = history(solstep).f[i],
     u = history(solstep).u[i],
     g = history(solstep).g[i])
+internal(solstep::SolutionStepPDAE) = solstep.internal
 parameters(solstep::SolutionStepPDAE) = solstep.parameters
 
 
