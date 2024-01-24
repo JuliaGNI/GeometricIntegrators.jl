@@ -5,16 +5,27 @@ solversize(problem::AbstractProblemIODE, method::VPRKMethod) =
     ndims(problem) * nstages(method)
 
 
-# function Integrators.internal_variables(int::IntegratorVPRK{DT,TT,D,S}) where {DT, TT, D, S}
-#     Q = create_internal_stage_vector(DT, D, S)
-#     P = create_internal_stage_vector(DT, D, S)
-#     V = create_internal_stage_vector(DT, D, S)
-#     F = create_internal_stage_vector(DT, D, S)
+function internal_variables(method::VPRKMethod, problem::AbstractProblemIODE{DT,TT}) where {DT,TT}
+    S = nstages(method)
+    D = ndims(problem)
 
-#     solver = get_solver_status(int.solver)
+    Q = create_internal_stage_vector(DT, D, S)
+    P = create_internal_stage_vector(DT, D, S)
+    V = create_internal_stage_vector(DT, D, S)
+    F = create_internal_stage_vector(DT, D, S)
 
-#     (Q=Q, P=P, V=V, F=F, solver=solver)
-# end
+    # solver = get_solver_status(int.solver)
+
+    (Q=Q, P=P, V=V, F=F)#, solver=solver)
+end
+
+
+function copy_internal_variables(solstep::SolutionStep, cache::VPRKCache)
+    solstep.internal.Q .= cache.Q
+    solstep.internal.P .= cache.P
+    solstep.internal.V .= cache.V
+    solstep.internal.F .= cache.F
+end
 
 
 function initial_guess!(int::GeometricIntegrator{<:VPRK})
@@ -172,10 +183,7 @@ function integrate_step!(int::GeometricIntegrator{<:VPRK, <:AbstractProblemIODE}
     update!(nlsolution(int), int)
 
     # copy internal stage variables
-    # solstep(int).internal[:Q] .= cache(int).Q
-    # solstep(int).internal[:P] .= cache(int).P
-    # solstep(int).internal[:V] .= cache(int).V
-    # solstep(int).internal[:F] .= cache(int).F
+    copy_internal_variables(solstep(int), cache(int))
 
     # copy solver status
     # get_solver_status!(solver(int), solstep(int).internal[:solver])

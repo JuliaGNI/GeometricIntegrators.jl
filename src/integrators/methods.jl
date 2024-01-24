@@ -16,7 +16,7 @@ abstract type HDAEMethod <: GeometricMethod end
 abstract type IDAEMethod <: GeometricMethod end
 abstract type LDAEMethod <: GeometricMethod end
 
-internal_variables(::GeometricMethod) = NamedTuple()
+internal_variables(::GeometricMethod, ::GeometricProblem) = NamedTuple()
 nullvector(::GeometricMethod) = nothing
 GeometricBase.tableau(::GeometricMethod) = missing
 

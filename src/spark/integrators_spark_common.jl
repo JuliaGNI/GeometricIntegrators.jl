@@ -14,9 +14,22 @@ function Integrators.internal_variables(method::AbstractSPARKMethod, problem::Ab
     Λp = create_internal_stage_vector(DT, D, R) 
     Φp = create_internal_stage_vector(DT, D, R)
 
-    solver = get_solver_status(int.solver)
+    # solver = get_solver_status(int.solver)
 
-    (Qi=Qi, Pi=Pi, Vi=Vi, Φi=Φi, Qp=Qp, Pp=Pp, Λp=Λp, Φp=Φp, solver=solver)
+    (Qi=Qi, Pi=Pi, Vi=Vi, Φi=Φi, Qp=Qp, Pp=Pp, Λp=Λp, Φp=Φp)#, solver=solver)
+end
+
+
+function copy_internal_variables(solstep::SolutionStepPDAE, cache::IntegratorCacheSPARK)
+    solstep.internal.Qi .= cache.Qi
+    solstep.internal.Pi .= cache.Pi
+    solstep.internal.Vi .= cache.Vi
+    solstep.internal.Φi .= cache.Φi
+
+    solstep.internal.Qp .= cache.Qp
+    solstep.internal.Pp .= cache.Pp
+    solstep.internal.Λp .= cache.Λp
+    solstep.internal.Φp .= cache.Φp
 end
 
 
@@ -67,14 +80,5 @@ function Integrators.integrate_step!(
     update_solution!(solstep, problem, method, caches)
 
     # copy internal stage variables
-    # TODO: reactivate
-    # solstep.internal.Qi .= caches[DT].Qi
-    # solstep.internal.Pi .= caches[DT].Pi
-    # solstep.internal.Vi .= caches[DT].Vi
-    # solstep.internal.Φi .= caches[DT].Φi
-
-    # solstep.internal.Qp .= caches[DT].Qp
-    # solstep.internal.Pp .= caches[DT].Pp
-    # solstep.internal.Λp .= caches[DT].Λp
-    # solstep.internal.Φp .= caches[DT].Φp
+    copy_internal_variables(solstep, caches[DT])
 end
