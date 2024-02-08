@@ -35,24 +35,24 @@ Before any use, we need to load `GeometricIntegrators`,
 ```julia
 using GeometricIntegrators
 ```
-Then we can create an `ODE` object for the equation ẋ(t) = x(t) with initial condition x(0)=1 by
-```julia
-ode = ODE((t, x, ẋ) -> ẋ[1] = x[1], [1.0]);
+Then we can create an ODE problem for the equation $\dot{x} (t) = x(t)$ with integration time span $(0, 1)$. a time step of $\Delta t = 0.1$, and initial condition $x(0) = 1$, 
+```@example 1
+prob = ODEProblem((ẋ, t, x, params) -> ẋ[1] = x[1], (0.0, 1.0), 0.1, [1.0])
 ```
-An integrator for this ODE, using the tableau for the explicit Euler method and a time step of Δt=0.1, is obtained by
+An integrator for this ODE, using the explicit Euler method is obtained by
 ```julia
-int = Integrator(ode, TableauExplicitEuler(), 0.1);
+int = GeometricIntegrator(prob, ExplicitEuler())
 ```
-With that, the solution for nₜ=10 time steps is simply computed by
+With that, the solution is simply computed by
 ```julia
-sol = integrate(ode, int, 10);
+sol = integrate(int)
 ```
 which returns an object holding the solution for all time steps.
 With the help of the *[Plots.jl](https://github.com/JuliaPlots/Plots.jl)* package we can visualise the result and compare with the exact solution:
 ```julia
 using Plots
 plot(xlims=[0,1], xlab="t", ylab="x(t)", legend=:bottomright)
-plot!(sol.t, sol.q[1,:], label="numeric")
+plot!(sol.t, sol.q[:,1], label="numeric")
 plot!(sol.t, exp.(sol.t), label="exact")
 ```
 

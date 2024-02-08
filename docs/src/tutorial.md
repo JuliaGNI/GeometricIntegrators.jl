@@ -33,7 +33,7 @@ Before any use, we need to load GeometricIntegrators,
 ```@example 1
 using GeometricIntegrators
 ```
-Then we can create an ODE object for the equation $\dot{x} (t) = x(t)$ with initial condition $x(0) = 1$, integration time span $(0, 1)$ and a time step of $\Delta t = 0.1$,
+Then we can create an ODE problem for the equation $\dot{x} (t) = x(t)$ with integration time span $(0, 1)$. a time step of $\Delta t = 0.1$, and initial condition $x(0) = 1$, 
 ```@example 1
 prob = ODEProblem((ẋ, t, x, params) -> ẋ[1] = x[1], (0.0, 1.0), 0.1, [1.0])
 ```

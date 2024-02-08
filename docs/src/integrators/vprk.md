@@ -4,7 +4,7 @@ CurrentModule = GeometricIntegrators.Integrators
 
 # [Variational Partitioned Runge-Kutta Integrators](@id vprk)
 
-Variational partitioned Runge-Kutta methods solve Lagranian systems in implicit form, i.e.,
+Variational partitioned Runge-Kutta methods solve Lagrangian systems in implicit form, i.e.,
 ```math
 \begin{aligned}
 p       &= \dfrac{\partial L}{\partial \dot{q}} (q, \dot{q}) , &
