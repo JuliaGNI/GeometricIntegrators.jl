@@ -38,8 +38,7 @@ end
 
 # Create SolutionStep for a PDAEProblem.
 function SolutionStep(problem::Union{PDAEProblem, HDAEProblem, IDAEProblem, LDAEProblem}, extrap::Extrapolation = default_extrapolation(); kwargs...)
-    ics = initial_conditions(problem)
-    solstep = SolutionStepPDAE(ics.t, ics.q, ics.p, ics.λ, parameters(problem); kwargs...)
+    solstep = SolutionStepPDAE(initial_conditions(problem)..., parameters(problem); kwargs...)
     initialize!(solstep, problem, extrap)
     return solstep
 end

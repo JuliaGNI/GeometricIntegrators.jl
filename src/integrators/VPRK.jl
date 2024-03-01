@@ -12,7 +12,7 @@ module VPRK
 
     using ..Methods
 
-    import ..Solutions: SolutionStepPODE, SolutionStepPDAE, SolutionPDAE, SolutionVector
+    import ..Solutions: SolutionStepPODE, SolutionStepPDAE, SolutionPDAE
 
     import ..Integrators
 

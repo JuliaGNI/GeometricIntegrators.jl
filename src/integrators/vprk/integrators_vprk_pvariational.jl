@@ -118,7 +118,7 @@ end
 
 
 function compute_projection!(
-                x::Vector{ST}, q::SolutionVector{ST}, p::SolutionVector{ST}, v::SolutionVector{ST}, λ::SolutionVector{ST},
+                x::Vector{ST}, q::AbstractVector{ST}, p::AbstractVector{ST}, v::AbstractVector{ST}, λ::AbstractVector{ST},
                 U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
                 params::ParametersVPRKpVariational{DT,TT,D,S}) where {ST,DT,TT,D,S}
 

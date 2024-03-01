@@ -114,7 +114,7 @@ end
 
 nlsolution(cache::IRKCache) = cache.x
 
-reset!(cache::IRKCache, t, q, λ = missing) = copyto!(cache.q̄, q)
+reset!(cache::IRKCache, t, q, λ = missing, μ = missing) = copyto!(cache.q̄, q)
 
 function Cache{ST}(problem::AbstractProblem, method::IRKMethod; kwargs...) where {ST}
     S = nstages(tableau(method))

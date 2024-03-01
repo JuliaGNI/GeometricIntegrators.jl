@@ -97,7 +97,7 @@ end
 
 
 function compute_projection_vprk!(x::Vector{ST},
-                q::SolutionVector{ST}, p::SolutionVector{ST}, v::SolutionVector{ST}, λ::SolutionVector{ST},
+                q::AbstractVector{ST}, p::AbstractVector{ST}, v::AbstractVector{ST}, λ::AbstractVector{ST},
                 Q::Vector{Vector{ST}}, V::Vector{Vector{ST}}, U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
                 params::ParametersVPRKpInternal{DT,TT,D,S}) where {ST,DT,TT,D,S}
 

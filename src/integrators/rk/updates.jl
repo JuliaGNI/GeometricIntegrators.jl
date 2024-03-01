@@ -64,7 +64,7 @@ function update_vector!(Δq::AbstractVector, Δp::AbstractVector, V::StageVector
 end
 
 
-function update_multiplier!(λ::SolutionVector{T}, Λ::StageVector{T}, b::AbstractVector) where {T}
+function update_multiplier!(λ::AbstractVector{T}, Λ::StageVector{T}, b::AbstractVector) where {T}
     for Λᵢ in Λ
         @assert length(λ) == length(Λᵢ)
     end
@@ -104,7 +104,7 @@ end
 #     end
 # end
 
-# function update_solution!(x::SolutionVector{T}, ẋ::Matrix{T}, b::AbstractVector, Δt) where {T}
+# function update_solution!(x::AbstractVector{T}, ẋ::Matrix{T}, b::AbstractVector, Δt) where {T}
 #     @assert length(x) == size(ẋ, 1)
 #     @assert length(b) == size(ẋ, 2)
 
@@ -120,7 +120,7 @@ end
 # end
 
 
-# function update_solution!(x::SolutionVector{T}, ẋ::Vector{Vector{T}}, b::AbstractVector, Δt) where {T}
+# function update_solution!(x::AbstractVector{T}, ẋ::Vector{Vector{T}}, b::AbstractVector, Δt) where {T}
 #     @assert length(b) == length(ẋ)
 #     @assert length(x) == length(ẋ[1])
 
@@ -140,12 +140,12 @@ end
 #     update_solution!(x, xₑᵣᵣ, ẋ, b̂, Δt)
 # end
 
-# function update_solution!(x::SolutionVector{T}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::AbstractVector, b̂::AbstractVector, Δt) where {T}
+# function update_solution!(x::AbstractVector{T}, ẋ::Union{Matrix{T},Vector{Vector{T}}}, b::AbstractVector, b̂::AbstractVector, Δt) where {T}
 #     update_solution!(x, ẋ, b, Δt)
 #     update_solution!(x, ẋ, b̂, Δt)
 # end
 
-# function update_multiplier!(λ::SolutionVector{T}, Λ::Vector{Vector{T}}, b::AbstractVector) where {T}
+# function update_multiplier!(λ::AbstractVector{T}, Λ::Vector{Vector{T}}, b::AbstractVector) where {T}
 #     for Λᵢ in Λ
 #         @assert length(λ) == length(Λᵢ)
 #     end

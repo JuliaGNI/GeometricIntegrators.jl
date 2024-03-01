@@ -15,7 +15,7 @@ q0 = rand(1)
 p0 = rand(1)
 z0 = rand(3)
 λ0 = rand(1)
-μ0 = rand(2)
+μ0 = rand(1)
 
 t1 = 1.0
 x1 = [rand(2) for j = 1:ni]
@@ -24,7 +24,7 @@ q1 = [rand(1) for j = 1:ni]
 p1 = [rand(1) for j = 1:ni]
 z1 = [rand(3) for j = 1:ni]
 λ1 = [rand(1) for j = 1:ni]
-μ1 = [rand(2) for j = 1:ni]
+μ1 = [rand(1) for j = 1:ni]
 
 t2 = t1 + (t1 - t0)
 x2 = [rand(2) for j = 1:ni]
@@ -33,7 +33,7 @@ q2 = [rand(1) for j = 1:ni]
 p2 = [rand(1) for j = 1:ni]
 z2 = [rand(3) for j = 1:ni]
 λ2 = [rand(1) for j = 1:ni]
-μ2 = [rand(2) for j = 1:ni]
+μ2 = [rand(1) for j = 1:ni]
 
 tx = zero(x0)
 ty = zero(y0)
@@ -49,7 +49,7 @@ qs = [rand(1) for i = 1:nt]
 ps = [rand(1) for i = 1:nt]
 zs = [rand(3) for i = 1:nt]
 λs = [rand(1) for i = 1:nt]
-μs = [rand(2) for i = 1:nt]
+μs = [rand(1) for i = 1:nt]
 
 Xs = [rand(2) for i = 1:nt, j = 1:ni]
 Ys = [rand(2) for i = 1:nt, j = 1:ni]
@@ -57,7 +57,7 @@ Qs = [rand(1) for i = 1:nt, j = 1:ni]
 Ps = [rand(1) for i = 1:nt, j = 1:ni]
 Zs = [rand(3) for i = 1:nt, j = 1:ni]
 Λs = [rand(1) for i = 1:nt, j = 1:ni]
-Ms = [rand(2) for i = 1:nt, j = 1:ni]
+Ms = [rand(1) for i = 1:nt, j = 1:ni]
 
 ode  = odeproblem()
 dae  = daeproblem()
@@ -74,7 +74,7 @@ pdae = pdaeproblem()
 
     test_interface(sol) # TODO reactivate
 
-    sol0 = Solution(similar(ode, ics=(q=x0,)))
+    sol0 = Solution(similar(ode, ics = (q = StateVariable(x0),)))
     @test typeof(sol0) <: SolutionODE
     @test sol != sol0
 
@@ -85,8 +85,8 @@ pdae = pdaeproblem()
     @test solstep.q == x0
 
     # test set/get solution
-    sol1 = Solution(similar(ode, ics=(q=x0,)))
-    sol2 = Solution(similar(ode, ics=(q=x0,)))
+    sol1 = Solution(similar(ode, ics = (q = StateVariable(x0),)))
+    sol2 = Solution(similar(ode, ics = (q = StateVariable(x0),)))
     for i in eachindex(xs)
         solstep.q .= xs[i]
         sol1[i] = (q = copy(xs[i]),)
@@ -116,7 +116,7 @@ end
 
     test_interface(sol)
 
-    sol0 = Solution(similar(pode, ics=(q=q0, p=p0)))
+    sol0 = Solution(similar(pode, ics = (q = StateVariable(q0), p = StateVariable(p0))))
     @test typeof(sol0) <: SolutionPODE
     @test sol != sol0
 
@@ -128,8 +128,8 @@ end
     @test solstep.p == p0
 
     # test set/get solution
-    sol1 = Solution(similar(pode, ics=(q=q0, p=p0)))
-    sol2 = Solution(similar(pode, ics=(q=q0, p=p0)))
+    sol1 = Solution(similar(pode, ics = (q = StateVariable(q0), p = StateVariable(p0))))
+    sol2 = Solution(similar(pode, ics = (q = StateVariable(q0), p = StateVariable(p0))))
     for i = 1:nt
         solstep.q .= qs[i]
         solstep.p .= ps[i]
@@ -161,7 +161,7 @@ end
 
     test_interface(sol)
 
-    sol0 = Solution(similar(dae, ics=(q=x0, λ=λ0)))
+    sol0 = Solution(similar(dae, ics = (q = StateVariable(x0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
     @test typeof(sol0) <: SolutionDAE
     @test sol != sol0
 
@@ -173,8 +173,8 @@ end
     @test solstep.λ == λ0
 
     # test set/get solution
-    sol1 = Solution(similar(dae, ics=(q=x0, λ=λ0)))
-    sol2 = Solution(similar(dae, ics=(q=x0, λ=λ0)))
+    sol1 = Solution(similar(dae, ics = (q = StateVariable(x0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
+    sol2 = Solution(similar(dae, ics = (q = StateVariable(x0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
     for i = 1:nt
         solstep.q .= xs[i]
         solstep.λ .= λs[i]
@@ -206,7 +206,7 @@ end
 
     test_interface(sol)
 
-    sol0 = Solution(similar(pdae, ics=(q=q0, p=p0, λ=λ0)))
+    sol0 = Solution(similar(pdae, ics = (q = StateVariable(q0), p = StateVariable(p0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
     @test typeof(sol0) <: SolutionPDAE
     @test sol != sol0
 
@@ -219,8 +219,8 @@ end
     @test solstep.λ == λ0
 
     # test set/get solution
-    sol1 = Solution(similar(pdae, ics=(q=q0, p=p0, λ=λ0)))
-    sol2 = Solution(similar(pdae, ics=(q=q0, p=p0, λ=λ0)))
+    sol1 = Solution(similar(pdae, ics = (q = StateVariable(q0), p = StateVariable(p0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
+    sol2 = Solution(similar(pdae, ics = (q = StateVariable(q0), p = StateVariable(p0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
     for i = 1:nt
         solstep.q .= qs[i]
         solstep.p .= ps[i]
