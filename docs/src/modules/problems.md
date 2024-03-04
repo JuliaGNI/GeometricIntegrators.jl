@@ -31,7 +31,6 @@ GeometricEquations.PDAEProblem
 GeometricEquations.HDAEProblem
 GeometricEquations.IDAEProblem
 GeometricEquations.LDAEProblem
-GeometricEquations.SPDAEProblem
 ```
 
 ## Stochastic Differential Equations

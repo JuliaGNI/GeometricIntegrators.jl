@@ -26,7 +26,6 @@ GeometricEquations.PDAE
 GeometricEquations.HDAE
 GeometricEquations.IDAE
 GeometricEquations.LDAE
-GeometricEquations.SPDAE
 ```
 
 ## Stochastic Differential Equations

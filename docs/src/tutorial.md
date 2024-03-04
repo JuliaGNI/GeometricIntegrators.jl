@@ -70,7 +70,7 @@ For each type, there are several subtypes
 * partitioned equations ([`PODEProblem`](@ref), [`PDAEProblem`](@ref), [`PSDEProblem`](@ref)),
 * Hamiltonian equations ([`HODEProblem`](@ref), [`HDAEProblem`](@ref)),
 * Lagrangian equations ([`LODEProblem`](@ref), [`LDAEProblem`](@ref)),
-* split equations ([`SODEProblem`](@ref), [`SPDAEProblem`](@ref), [`SPSDEProblem`](@ref)).
+* split equations ([`SODEProblem`](@ref), [`SPSDEProblem`](@ref)).
 
 
 #### Ordinary differential equations
