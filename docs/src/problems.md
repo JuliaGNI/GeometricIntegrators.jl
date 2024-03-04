@@ -698,6 +698,9 @@ Markdown.parse(GeometricEquations.sde_equations)
 
 ```@example
 using GeometricIntegrators # hide
+using GeometricBase # hide
+struct WienerProcess <: GeometricBase.AbstractStochasticProcess end # hide
+
 function v(t, q, v, params)
     v[1] = + params.λ * q[2]
     v[2] = - params.λ * q[1]
@@ -714,7 +717,7 @@ tspan = (0.0, 1.0)
 tstep = 0.01
 q₀ = [0.5, 0.0]
 
-prob = SDEProblem(v, B, tspan, tstep, q₀; parameters = (λ=2.0, μ=1.0))
+prob = SDEProblem(v, B, WienerProcess(), tspan, tstep, q₀; parameters = (λ=2.0, μ=1.0))
 ```
 
 
@@ -729,6 +732,9 @@ Markdown.parse(GeometricEquations.psde_equations)
 
 ```@example
 using GeometricIntegrators # hide
+using GeometricBase # hide
+struct WienerProcess <: GeometricBase.AbstractStochasticProcess end # hide
+
 function v(v, t, q, p, params)
     v[1] = + params.λ * p[1]
 end
@@ -750,7 +756,7 @@ tstep = 0.01
 q₀ = [0.5]
 p₀ = [0.0]
 
-prob = PSDEProblem(v, f, B, G, tspan, tstep, q₀, p₀; parameters = (λ=2.0, μ=1.0))
+prob = PSDEProblem(v, f, B, G, WienerProcess(), tspan, tstep, q₀, p₀; parameters = (λ=2.0, μ=1.0))
 ```
 
 
@@ -765,6 +771,9 @@ Markdown.parse(GeometricEquations.spsde_equations)
 
 ```@example
 using GeometricIntegrators # hide
+using GeometricBase # hide
+struct WienerProcess <: GeometricBase.AbstractStochasticProcess end # hide
+
 function v(v, t, q, p, params)
     v[1] = + params.λ * p[1]
 end
@@ -794,5 +803,5 @@ tstep = 0.01
 q₀ = [0.5]
 p₀ = [0.0]
 
-prob = SPSDEProblem(v, f1, f2, B, G1, G2, tspan, tstep, q₀, p₀; parameters = (λ=2.0, μ=1.0))
+prob = SPSDEProblem(v, f1, f2, B, G1, G2, WienerProcess(), tspan, tstep, q₀, p₀; parameters = (λ=2.0, μ=1.0))
 ```
