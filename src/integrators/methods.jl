@@ -16,6 +16,9 @@ abstract type HDAEMethod <: GeometricMethod end
 abstract type IDAEMethod <: GeometricMethod end
 abstract type LDAEMethod <: GeometricMethod end
 
+initmethod(method::GeometricMethod) = method
+initmethod(method::GeometricMethod, ::AbstractProblem) = initmethod(method)
+
 internal_variables(::GeometricMethod, ::GeometricProblem) = NamedTuple()
 nullvector(::GeometricMethod) = nothing
 GeometricBase.tableau(::GeometricMethod) = missing
@@ -23,9 +26,6 @@ GeometricBase.tableau(::GeometricMethod) = missing
 default_solver(::GeometricMethod) = NoSolver()
 default_iguess(::GeometricMethod) = NoInitialGuess()
 default_projection(::GeometricMethod) = NoProjection()
-
-initmethod(method::GeometricMethod) = method
-initmethod(method::GeometricMethod, ::AbstractProblem) = initmethod(method)
 
 isodemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
 ispodemethod(::Union{GeometricMethod, Type{<:GeometricMethod}}) = false
