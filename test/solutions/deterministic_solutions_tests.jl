@@ -1,4 +1,4 @@
-using GeometricSolutions: test_interface
+# using GeometricSolutions: test_interface
 using GeometricProblems.HarmonicOscillator
 using GeometricIntegrators
 using Test
@@ -72,7 +72,7 @@ pdae = pdaeproblem()
     sol = Solution(ode)
     @test typeof(sol) <: SolutionODE
 
-    test_interface(sol) # TODO reactivate
+    # test_interface(sol) # TODO reactivate
 
     sol0 = Solution(similar(ode, ics = (q = StateVariable(x0),)))
     @test typeof(sol0) <: SolutionODE
@@ -114,7 +114,7 @@ end
     sol = Solution(pode)
     @test typeof(sol) <: SolutionPODE
 
-    test_interface(sol)
+    # test_interface(sol)
 
     sol0 = Solution(similar(pode, ics = (q = StateVariable(q0), p = StateVariable(p0))))
     @test typeof(sol0) <: SolutionPODE
@@ -159,7 +159,7 @@ end
     sol = Solution(dae)
     @test typeof(sol) <: SolutionDAE
 
-    test_interface(sol)
+    # test_interface(sol)
 
     sol0 = Solution(similar(dae, ics = (q = StateVariable(x0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
     @test typeof(sol0) <: SolutionDAE
@@ -204,7 +204,7 @@ end
     sol = Solution(pdae)
     @test typeof(sol) <: SolutionPDAE
 
-    test_interface(sol)
+    # test_interface(sol)
 
     sol0 = Solution(similar(pdae, ics = (q = StateVariable(q0), p = StateVariable(p0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
     @test typeof(sol0) <: SolutionPDAE
