@@ -6,17 +6,17 @@ using Test
 const qᵢ = [1.0, 1.0]
 const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
-ode  = lotka_volterra_2d_ode(qᵢ; parameters=params)
-pode = lotka_volterra_2d_pode(qᵢ; parameters=params)
-hode = lotka_volterra_2d_hode(qᵢ; parameters=params)
-iode = lotka_volterra_2d_iode(qᵢ; parameters=params)
-lode = lotka_volterra_2d_lode(qᵢ; parameters=params)
+ode  = odeproblem(qᵢ; parameters=params)
+pode = podeproblem(qᵢ; parameters=params)
+hode = hodeproblem(qᵢ; parameters=params)
+iode = iodeproblem(qᵢ; parameters=params)
+lode = lodeproblem(qᵢ; parameters=params)
 
-dae  = lotka_volterra_2d_dae(qᵢ; parameters=params)
-pdae = lotka_volterra_2d_pdae(qᵢ; parameters=params)
-hdae = lotka_volterra_2d_hdae(qᵢ; parameters=params)
-idae = lotka_volterra_2d_idae(qᵢ; parameters=params)
-ldae = lotka_volterra_2d_ldae(qᵢ; parameters=params)
+dae  = daeproblem(qᵢ; parameters=params)
+pdae = pdaeproblem(qᵢ; parameters=params)
+hdae = hdaeproblem(qᵢ; parameters=params)
+idae = idaeproblem(qᵢ; parameters=params)
+ldae = ldaeproblem(qᵢ; parameters=params)
 
 
 # ODE Reference Solution

@@ -12,12 +12,12 @@ const Δt = 0.01
 const nt = 10
 const tspan = (t₀, Δt*nt)
 
-ode  = lotka_volterra_2d_ode(q₀; tspan=tspan, tstep=Δt, parameters=params)
-hdae = lotka_volterra_2d_hdae(q₀; tspan=tspan, tstep=Δt, parameters=params)
-idae = lotka_volterra_2d_idae(q₀; tspan=tspan, tstep=Δt, parameters=params)
-pdae = lotka_volterra_2d_pdae(q₀; tspan=tspan, tstep=Δt, parameters=params)
-ldae = lotka_volterra_2d_ldae(q₀; tspan=tspan, tstep=Δt, parameters=params)
-ldae_slrk = lotka_volterra_2d_slrk(q₀; tspan=tspan, tstep=Δt, parameters=params)
+ode  = odeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
+hdae = hdaeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
+idae = idaeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
+pdae = pdaeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
+ldae = ldaeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
+ldae_slrk = ldaeproblem_slrk(q₀; tspan=tspan, tstep=Δt, parameters=params)
 
 ref  = integrate(ode, Gauss(8))
 

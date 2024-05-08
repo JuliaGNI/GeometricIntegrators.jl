@@ -9,10 +9,10 @@ const q₀ = [1.0, 1.0]
 const tspan = (0.0, Δt * nt)
 const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
-ode  = lotka_volterra_2d_ode(q₀; tspan=tspan, tstep=Δt, parameters=params)
-iode = lotka_volterra_2d_iode(q₀; tspan=tspan, tstep=Δt, parameters=params)
-lode = lotka_volterra_2d_lode(q₀; tspan=tspan, tstep=Δt, parameters=params)
-ldae = lotka_volterra_2d_ldae(q₀; tspan=tspan, tstep=Δt, parameters=params)
+ode  = odeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
+iode = iodeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
+lode = lodeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
+ldae = ldaeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
 ref  = integrate(ode, Gauss(8))
 
 

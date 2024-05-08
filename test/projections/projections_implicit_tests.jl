@@ -11,8 +11,8 @@ const Δt = 0.01
 const nt = 10
 const tspan = (t₀, Δt*nt)
 
-ode  = lotka_volterra_2d_ode(q₀; tspan=tspan, tstep=Δt, parameters=params)
-iode = lotka_volterra_2d_iode(q₀; tspan=tspan, tstep=Δt, parameters=params)
+ode  = odeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
+iode = iodeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
 ref  = integrate(ode, Gauss(8))
 
 
