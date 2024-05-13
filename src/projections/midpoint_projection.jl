@@ -156,7 +156,7 @@ function components!(x::AbstractVector{ST}, int::ProjectionIntegrator{<:Projecte
     reset!(cache(subint(int), ST), current(cache(int, ST), solstep(int))...)
 
     # call components method of parent integrator
-    components!(x̄, subint(int))
+    components!(x̄, current(cache(int, ST), solstep(int)), parameters(solstep(int)), subint(int))
 
     # update solution with vectorfield of parent integrator
     update!(cache(int, ST), cache(subint(int), ST), tableau(subint(int)), timestep(subint(int)))
@@ -221,7 +221,7 @@ function update!(x::AbstractVector{ST}, int::ProjectionIntegrator{<:ProjectedMet
     project!(solstep(int), problem(int), method(int), cache(int, ST).U[1], cache(int, ST).G[1], cache(int, ST).λ)
 
     # compute update of parent integrator
-    update!(x̄, subint(int))
+    update!(current(solstep(int)), parameters(solstep(int)), x̄, subint(int))
 
     # compute final projection (perturbation)
     project!(solstep(int), problem(int), method(int), cache(int, ST).U[2], cache(int, ST).G[2], cache(int, ST).λ)

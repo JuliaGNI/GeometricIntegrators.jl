@@ -74,26 +74,36 @@ function copy_internal_variables(solstep::SolutionStep, cache::ERKCache)
 end
 
 
-function integrate_step!(int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
+function update!(sol, params, _, int::GeometricIntegrator{<:ERK})
+    # compute final update
+    update!(sol.q, cache(int).V, tableau(int), timestep(int))
+end
+
+
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
     # obtain cache
     local Q = cache(int).Q
     local V = cache(int).V
 
     # compute internal stages
     for i in eachstage(int)
-        tᵢ = solstep(int).t̄ + timestep(int) * tableau(int).c[i]
+        tᵢ = sol.t + timestep(int) * (tableau(int).c[i] - 1)
         for k in eachindex(Q[i], V[i])
             yᵢ = 0
             for j in 1:i-1
                 yᵢ += tableau(int).a[i,j] * V[j][k]
             end
-            Q[i][k] = solstep(int).q̄[k] + timestep(int) * yᵢ
+            Q[i][k] = sol.q[k] + timestep(int) * yᵢ
         end
-        equations(int).v(V[i], tᵢ, Q[i], parameters(solstep(int)))
+        equations(int).v(V[i], tᵢ, Q[i], params)
     end
 
     # compute final update
-    update!(solstep(int), V, tableau(int), timestep(int))
+    update!(sol, params, nothing, int)
+end
+
+function integrate_step!(int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
+    integrate_step!(current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
 
     # copy internal stage variables
     copy_internal_variables(solstep(int), cache(int))

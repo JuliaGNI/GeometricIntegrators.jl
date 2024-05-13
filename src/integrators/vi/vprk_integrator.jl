@@ -45,7 +45,7 @@ function initial_guess!(int::GeometricIntegrator{<:VPRK})
 end
 
 
-function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:VPRK}) where {ST}
+function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRK}) where {ST}
     # get cache for internal stages
     local q̄ = cache(int, ST).q̄
     local Q = cache(int, ST).Q
@@ -75,9 +75,9 @@ function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:VPRK}) wh
 
     # compute P=ϑ(Q,V) and F=f(Q,V)
     for i in eachindex(P,F)
-        tᵢ = solstep(int).t̄ + timestep(int) * tableau(int).p.c[i]
-        equations(int).ϑ(P[i], tᵢ, Q[i], V[i], parameters(solstep(int)))
-        equations(int).f(F[i], tᵢ, Q[i], V[i], parameters(solstep(int)))
+        tᵢ = sol.t + timestep(int) * (tableau(int).p.c[i] - 1)
+        equations(int).ϑ(P[i], tᵢ, Q[i], V[i], params)
+        equations(int).f(F[i], tᵢ, Q[i], V[i], params)
     end
 end
 
@@ -144,35 +144,36 @@ end
 
 
 # Compute stages of Variational Partitioned Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, int::GeometricIntegrator{<:VPRK}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRK}) where {ST}
     @assert axes(x) == axes(b)
 
     # copy previous solution from solstep to cache
-    reset!(cache(int, ST), current(solstep(int))...)
+    reset!(cache(int, ST), sol...)
 
     # compute stages from nonlinear solver solution x
-    components!(x, int)
+    components!(x, sol, params, int)
 
     # compute residual vector
     residual!(b, int)
 end
 
 
-function update!(x::AbstractVector{DT}, int::GeometricIntegrator{<:VPRK}) where {DT}
+function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:VPRK}) where {DT}
     # copy previous solution from solstep to cache
-    reset!(cache(int, DT), current(solstep(int))...)
+    reset!(cache(int, DT), sol...)
 
     # compute vector field at internal stages
-    components!(x, int)
+    components!(x, sol, params, int)
 
     # compute final update
-    update!(solstep(int), cache(int, DT).V, cache(int, DT).F, tableau(int), timestep(int))
+    update!(sol.q, cache(int, DT).V, tableau(int).q, timestep(int))
+    update!(sol.p, cache(int, DT).F, tableau(int).p, timestep(int))
 end
 
 
-function integrate_step!(int::GeometricIntegrator{<:VPRK, <:AbstractProblemIODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:VPRK, <:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
+    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))
@@ -184,7 +185,11 @@ function integrate_step!(int::GeometricIntegrator{<:VPRK, <:AbstractProblemIODE}
     # println(meets_stopping_criteria(status(solver(int))))
 
     # compute final update
-    update!(nlsolution(int), int)
+    update!(sol, params, nlsolution(int), int)
+end
+
+function integrate_step!(int::GeometricIntegrator{<:VPRK, <:AbstractProblemIODE})
+    integrate_step!(current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
 
     # copy internal stage variables
     copy_internal_variables(solstep(int), cache(int))
