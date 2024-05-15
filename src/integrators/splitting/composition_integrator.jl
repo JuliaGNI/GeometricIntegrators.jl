@@ -90,7 +90,6 @@ function GeometricIntegrator(problem::SODEProblem, comp::Composition; kwargs...)
     CompositionIntegrator(problem, splitting(comp), methods(comp, _neqs(problem)); kwargs...)
 end
 
-
 problem(int::CompositionIntegrator) = int.problem
 solstep(int::CompositionIntegrator) = int.solstep
 subints(int::CompositionIntegrator) = int.subints
@@ -121,8 +120,4 @@ function integrate_step!(sol, history, params, int::CompositionIntegrator{<:Abst
         # integrate one timestep with subint
         integrate_step!(sol, history, params, subint)
     end
-end
-
-function integrate_step!(int::CompositionIntegrator{<:AbstractSplittingMethod, <:SODEProblem})
-    integrate_step!(current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
 end

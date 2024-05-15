@@ -101,10 +101,3 @@ function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ERK, <
     # compute final update
     update!(sol, params, nothing, int)
 end
-
-function integrate_step!(int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
-    integrate_step!(current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
-
-    # copy internal stage variables
-    copy_internal_variables(solstep(int), cache(int))
-end

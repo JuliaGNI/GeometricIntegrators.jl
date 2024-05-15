@@ -271,13 +271,3 @@ function integrate_step!(sol, history, params, int::GeometricIntegrator{<:IRK, <
     # compute final update
     update!(sol, params, nlsolution(int), int)
 end
-
-function integrate_step!(int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
-    integrate_step!(current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
-
-    # copy internal stage variables
-    copy_internal_variables(solstep(int), cache(int))
-
-    # copy solver status
-    # get_solver_status!(solver(int), solstep(int).internal[:solver])
-end

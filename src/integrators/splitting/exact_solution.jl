@@ -17,7 +17,3 @@ function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ExactS
     # compute new solution
     solutions(problem(int)).q(sol.q, history.t[1] + timestep(int), cache(int).q, history.t[1], params)
 end
-
-function integrate_step!(int::GeometricIntegrator{<:ExactSolution, <:SubstepProblem})
-    integrate_step!(current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
-end

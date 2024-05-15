@@ -124,7 +124,3 @@ function integrate_step!(sol, history, params, int::GeometricIntegrator{<:Implic
     # compute final update
     update!(sol, params, nlsolution(int), int)
 end
-
-function integrate_step!(int::GeometricIntegrator{<:ImplicitEuler, <:AbstractProblemODE})
-    integrate_step!(current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
-end

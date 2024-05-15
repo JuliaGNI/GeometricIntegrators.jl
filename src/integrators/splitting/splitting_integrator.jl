@@ -72,7 +72,3 @@ function integrate_step!(sol, history, params, int::GeometricIntegrator{<:Splitt
         end
     end
 end
-
-function integrate_step!(int::GeometricIntegrator{<:Splitting, <:SODEProblem})
-    integrate_step!(current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
-end
