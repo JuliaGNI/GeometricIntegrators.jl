@@ -14,6 +14,17 @@ function update!(x::AbstractArray{T}, ẋ::StageVector{T}, tableau::Tableau, Δt
     return x
 end
 
+function update!(x::AbstractVector{T}, ẋ::StageVector{T}, b::AbstractVector, Δt) where {T}
+    @assert length(b) == length(ẋ)
+
+    for i in eachindex(ẋ)
+        @assert length(x) == length(ẋ[i])
+        x .+= Δt .* b[i] .* ẋ[i]
+    end
+
+    return x
+end
+
 function update!(x::AbstractVector{T}, xₑᵣᵣ::AbstractVector{T}, ẋ::StageVector{T}, b::AbstractVector, Δt) where {T}
     @assert length(b) == length(ẋ)
     @assert length(x) == length(ẋ[1])
@@ -24,6 +35,8 @@ function update!(x::AbstractVector{T}, xₑᵣᵣ::AbstractVector{T}, ẋ::Stage
             x[k], xₑᵣᵣ[k] = compensated_summation(x[k], Δt * b[i] * ẋ[i][k], xₑᵣᵣ[k])
         end
     end
+
+    return x
 end
 
 function update!(x::AbstractVector{T}, xₑᵣᵣ::AbstractVector{T}, ẋ::StageVector{T}, b::AbstractVector, b̂::AbstractVector, Δt) where {T}

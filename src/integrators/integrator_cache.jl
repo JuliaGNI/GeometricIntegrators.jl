@@ -3,6 +3,14 @@ abstract type Cache{DT} end
 
 abstract type IntegratorCache{DT,D} <: Cache{DT} end
 
+IntegratorCache(problem::AbstractProblem, method::GeometricMethod) = IntegratorCache{datatype(problem)}(problem, method)
+IntegratorCache{ST}(::AbstractProblem, ::GeometricMethod) where {ST} = nothing
+
+copy_internal_variables(::SolutionStep, ::Union{IntegratorCache,Nothing}) = nothing
+
+CacheType(T, problem::AbstractProblem, method::GeometricMethod) = error("CacheType(T, params) not implemented for ", typeof(problem), " and ", typeof(method))
+
+
 abstract type ODEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 abstract type DAEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 abstract type IODEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
@@ -10,14 +18,7 @@ abstract type IDAEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 abstract type PODEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 abstract type PDAEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 
-
 reset!(::ODEIntegratorCache, t, q, λ = missing) = nothing
-
-
-IntegratorCache(problem::AbstractProblem, method::GeometricMethod) = IntegratorCache{datatype(problem)}(problem, method)
-IntegratorCache{ST}(::AbstractProblem, ::GeometricMethod) where {ST} = nothing
-
-CacheType(T, problem::AbstractProblem, method::GeometricMethod) = error("CacheType(T, params) not implemented for ", typeof(problem), " and ", typeof(method))
 
 
 struct CacheDict{PT,MT}

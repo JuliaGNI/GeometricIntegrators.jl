@@ -107,7 +107,7 @@ const IntegratorSLRK{DT,TT} = GeometricIntegrator{<:LDAEProblem{DT,TT}, <:SLRK}
 function Base.show(io::IO, int::IntegratorSLRK)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for degenerate")
     print(io, "\nvariational systems with projection on secondary constraint:\n")
-    print(io, "   Timestep: $(timestep(problem))\n")
+    print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(description(method(int)))\n")
     print(io, "   $(string(method(int).q))")
     print(io, "   $(string(method(int).p))")
@@ -115,164 +115,138 @@ function Base.show(io::IO, int::IntegratorSLRK)
 end
 
 
-function Integrators.initial_guess!(
-    solstep::SolutionStepPDAE{DT}, 
-    problem::LDAEProblem,
-    method::SLRK, 
-    caches::CacheDict, 
-    ::NonlinearSolver, 
-    iguess::Union{InitialGuess,Extrapolation}) where {DT}
-
+function initial_guess!(int::GeometricIntegrator{<:SLRK,<:LDAEProblem})
     # get caches for nonlinear solver vector and internal stages
-    local x = caches[DT].x
-    local Q = caches[DT].Qp
-    local P = caches[DT].Pp
-    local V = caches[DT].Vp
-    local F = caches[DT].Fp
+    local x = cache(int).x
+    local Q = cache(int).Qp
+    local P = cache(int).Pp
+    local V = cache(int).Vp
+    local F = cache(int).Fp
 
     # compute initial guess for internal stages
-    for i in 1:pstages(method)
+    for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
-        initialguess!(solstep.t̄ + timestep(problem) * method.p̃.c[i], Q[i], P[i], V[i], F[i], solstep, problem, iguess)
+        initialguess!(solstep(int).t̄ + timestep(int) * method(int).p̃.c[i], Q[i], P[i], V[i], F[i], solstep(int), problem(int), iguess(int))
     end
 
     # assemble initial guess for nonlinear solver solution vector
-    for i in 1:pstages(method)
-        for k in 1:ndims(problem)
-            offset = 4*(ndims(problem)*(i-1)+k-1)
-            x[offset+1] = (Q[i][k] - solstep.q̄[k]) / timestep(problem)
-            x[offset+2] = (P[i][k] - solstep.p̄[k]) / timestep(problem)
+    for i in 1:pstages(method(int))
+        for k in 1:ndims(problem(int))
+            offset = 4*(ndims(int)*(i-1)+k-1)
+            x[offset+1] = (Q[i][k] - solstep(int).q̄[k]) / timestep(int)
+            x[offset+2] = (P[i][k] - solstep(int).p̄[k]) / timestep(int)
             x[offset+3] =  V[i][k]
             x[offset+4] = 0
         end
     end
 
-    if hasnullvector(method)
-        for k in 1:ndims(problem)
-            x[4*ndims(problem)*pstages(method)+k] = 0
+    if hasnullvector(method(int))
+        for k in 1:ndims(int)
+            x[4*ndims(int)*pstages(method(int))+k] = 0
         end
     end
 end
 
 
-function components!(
-    x::Vector{ST},
-    solstep::SolutionStepPDAE{DT,TT}, 
-    problem::LDAEProblem,
-    method::SLRK, 
-    caches::CacheDict) where {ST,DT,TT}
+function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:SLRK}) where {ST}
+    # get cache for internal stages
+    local C = cache(int, ST)
 
-    local cache = caches[ST]
-    local S = nstages(method)
-    local D = ndims(problem)
-    local t::TT
-
-    for i in 1:nstages(method)
-        for k in 1:D
+    for i in eachindex(C.Yp, C.Zp, C.Vp, C.Λp)
+        for k in eachindex(C.Yp[i], C.Zp[i], C.Vp[i], C.Λp[i])
             # copy y to Y, Z and Λ
-            cache.Yp[i][k] = x[4*(D*(i-1)+k-1)+1]
-            cache.Zp[i][k] = x[4*(D*(i-1)+k-1)+2]
-            cache.Vp[i][k] = x[4*(D*(i-1)+k-1)+3]
-            cache.Λp[i][k] = x[4*(D*(i-1)+k-1)+4]
+            C.Yp[i][k] = x[4*(ndims(int)*(i-1)+k-1)+1]
+            C.Zp[i][k] = x[4*(ndims(int)*(i-1)+k-1)+2]
+            C.Vp[i][k] = x[4*(ndims(int)*(i-1)+k-1)+3]
+            C.Λp[i][k] = x[4*(ndims(int)*(i-1)+k-1)+4]
 
             # compute Q and P
-            cache.Qp[i][k] = solstep.q̄[k] + timestep(problem) * cache.Yp[i][k]
-            cache.Pp[i][k] = solstep.p̄[k] + timestep(problem) * cache.Zp[i][k]
+            C.Qp[i][k] = sol.q[k] + timestep(int) * C.Yp[i][k]
+            C.Pp[i][k] = sol.p[k] + timestep(int) * C.Zp[i][k]
         end
 
         # compute f(X)
-        t = solstep.t̄ + timestep(problem) * method.p.c[i]
-        functions(problem).f(cache.Fp[i], t, cache.Qp[i], cache.Vp[i], parameters(solstep))
-        functions(problem).g(cache.Gp[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Λp[i], parameters(solstep))
-        functions(problem).ϕ(cache.Φp[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i], parameters(solstep))
-        functions(problem).ψ(cache.Ψp[i], t, cache.Qp[i], cache.Vp[i], cache.Pp[i], cache.Vp[i], cache.Fp[i], parameters(solstep))
+        tᵢ = sol.t + timestep(int) * (method(int).p.c[i] - 1)
+        equations(int).f(C.Fp[i], tᵢ, C.Qp[i], C.Vp[i], params)
+        equations(int).g(C.Gp[i], tᵢ, C.Qp[i], C.Vp[i], C.Pp[i], C.Λp[i], params)
+        equations(int).ϕ(C.Φp[i], tᵢ, C.Qp[i], C.Vp[i], C.Pp[i], params)
+        equations(int).ψ(C.Ψp[i], tᵢ, C.Qp[i], C.Vp[i], C.Pp[i], C.Vp[i], C.Fp[i], params)
     end
 
-    if hasnullvector(method)
-        for k in 1:D
-            cache.μ[k] = x[4*D*S+k]
+    if hasnullvector(method(int))
+        for k in eachindex(C.μ)
+            C.μ[k] = x[4*ndims(int)*nstages(int)+k]
         end
     end
 
     # compute q and p
-    cache.q̃ .= solstep.q̄
-    cache.p̃ .= solstep.p̄
-    for i in 1:nstages(method)
-        cache.q̃ .+= timestep(problem) .* method.q.b[i] .* cache.Vp[i]
-        cache.q̃ .+= timestep(problem) .* method.q̃.b[i] .* cache.Λp[i]
-        cache.p̃ .+= timestep(problem) .* method.p.b[i] .* cache.Fp[i]
-        cache.p̃ .+= timestep(problem) .* method.p̃.b[i] .* cache.Gp[i]
+    C.q̃ .= sol.q
+    C.p̃ .= sol.p
+    for i in 1:nstages(int)
+        C.q̃ .+= timestep(int) .* method(int).q.b[i] .* C.Vp[i]
+        C.q̃ .+= timestep(int) .* method(int).q̃.b[i] .* C.Λp[i]
+        C.p̃ .+= timestep(int) .* method(int).p.b[i] .* C.Fp[i]
+        C.p̃ .+= timestep(int) .* method(int).p̃.b[i] .* C.Gp[i]
     end
 
     # compute ϕ(q,p)
-    functions(problem).ϕ(cache.ϕ̃, solstep.t, cache.q̃, cache.ṽ, cache.p̃, parameters(solstep))
+    equations(int).ϕ(C.ϕ̃, sol.t, C.q̃, C.ṽ, C.p̃, params)
 end
 
 
 # Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems.
-function residual!(
-    b::Vector{ST},
-    x::Vector{ST},
-    solstep::SolutionStepPDAE, 
-    problem::LDAEProblem,
-    method::SLRK, 
-    caches::CacheDict) where {ST}
-
-    # get cache for internal stages
-    local cache = caches[ST]
-
-    # number of internal stages
-    local S = nstages(method)
-    local D = ndims(problem)
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:SLRK}) where {ST}
+    # get cache and number of internal stages
+    local C = cache(int, ST)
+    local S = nstages(int)
+    local D = ndims(int)
 
     # compute stages from nonlinear solver solution x
-    components!(x, solstep, problem, method, caches)
+    components!(x, sol, params, int)
 
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ, ωΨ]
-    for i in 1:nstages(method)
-        for k in 1:D
-            b[4*(D*(i-1)+k-1)+1] = - cache.Yp[i][k]
-            b[4*(D*(i-1)+k-1)+2] = - cache.Zp[i][k]
-            b[4*(D*(i-1)+k-1)+3] = - cache.Φp[i][k]
-            b[4*(D*(i-1)+k-1)+4] = method.ω[i,S+1] * cache.ϕ̃[k]
+    for i in 1:nstages(int)
+        for k in 1:ndims(int)
+            b[4*(D*(i-1)+k-1)+1] = - C.Yp[i][k]
+            b[4*(D*(i-1)+k-1)+2] = - C.Zp[i][k]
+            b[4*(D*(i-1)+k-1)+3] = - C.Φp[i][k]
+            b[4*(D*(i-1)+k-1)+4] = method(int).ω[i,S+1] * C.ϕ̃[k]
 
-            for j in 1:nstages(method)
-                b[4*(D*(i-1)+k-1)+1] += method.q.a[i,j] * cache.Vp[j][k]
-                b[4*(D*(i-1)+k-1)+1] += method.q̃.a[i,j] * cache.Λp[j][k]
-                b[4*(D*(i-1)+k-1)+2] += method.p.a[i,j] * cache.Fp[j][k]
-                b[4*(D*(i-1)+k-1)+2] += method.p̃.a[i,j] * cache.Gp[j][k]
-                b[4*(D*(i-1)+k-1)+4] += method.ω[i,j]   * cache.Ψp[j][k]
+            for j in 1:nstages(int)
+                b[4*(D*(i-1)+k-1)+1] += method(int).q.a[i,j] * C.Vp[j][k]
+                b[4*(D*(i-1)+k-1)+1] += method(int).q̃.a[i,j] * C.Λp[j][k]
+                b[4*(D*(i-1)+k-1)+2] += method(int).p.a[i,j] * C.Fp[j][k]
+                b[4*(D*(i-1)+k-1)+2] += method(int).p̃.a[i,j] * C.Gp[j][k]
+                b[4*(D*(i-1)+k-1)+4] += method(int).ω[i,j]   * C.Ψp[j][k]
             end
         end
     end
 
-    if hasnullvector(method)
-        for i in 1:nstages(method)
-            for k in 1:D
-                b[4*(D*(i-1)+k-1)+2] += cache.μ[k] * method.d[i] / method.p.b[i]
-                b[4*(D*(i-1)+k-1)+3] += cache.μ[k] * method.d[i] / method.p.b[i]
+    if hasnullvector(method(int))
+        for i in 1:nstages(int)
+            for k in 1:ndims(int)
+                b[4*(D*(i-1)+k-1)+2] += C.μ[k] * method(int).d[i] / method(int).p.b[i]
+                b[4*(D*(i-1)+k-1)+3] += C.μ[k] * method(int).d[i] / method(int).p.b[i]
             end
         end
 
-        for k in 1:D
+        for k in 1:ndims(int)
             b[4*D*S+k] = 0
-            for i in 1:nstages(method)
-                b[4*D*S+k] -= cache.Vp[i][k] * method.d[i]
+            for i in 1:nstages(int)
+                b[4*D*S+k] -= C.Vp[i][k] * method(int).d[i]
             end
         end
     end
 end
 
 
-function update_solution!(
-    solstep::SolutionStepPDAE{DT}, 
-    problem::LDAEProblem,
-    method::SLRK, 
-    caches::CacheDict) where {DT}
+function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:SLRK,<:LDAEProblem}) where {DT}
+    # compute vector field at internal stages
+    components!(x, sol, params, int)
 
     # compute final update
-    update!(solstep.q, solstep.q̃, caches[DT].Vp, method.q.b, method.q.b̂, timestep(problem))
-    update!(solstep.q, solstep.q̃, caches[DT].Λp, method.q̃.b, method.q̃.b̂, timestep(problem))
-    update!(solstep.p, solstep.p̃, caches[DT].Fp, method.p.b, method.p.b̂, timestep(problem))
-    update!(solstep.p, solstep.p̃, caches[DT].Gp, method.p̃.b, method.p̃.b̂, timestep(problem))
+    update!(sol.q, cache(int, DT).Vp, method(int).q, timestep(int))
+    update!(sol.q, cache(int, DT).Λp, method(int).q̃, timestep(int))
+    update!(sol.p, cache(int, DT).Fp, method(int).p, timestep(int))
+    update!(sol.p, cache(int, DT).Gp, method(int).p̃, timestep(int))
 end

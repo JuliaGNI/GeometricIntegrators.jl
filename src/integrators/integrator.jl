@@ -5,6 +5,9 @@
 
 abstract type DeterministicIntegrator <: AbstractIntegrator end
 
+cache(::DeterministicIntegrator, DT) = nothing
+cache(::DeterministicIntegrator) = nothing
+
 initialize!(::SolutionStep, ::AbstractProblem, ::GeometricMethod, ::CacheDict, ::Union{SolverMethod, NonlinearSolver}, ::Union{InitialGuess,Extrapolation}) = nothing
 initialize!(int::DeterministicIntegrator) = initialize!(solstep(int), problem(int), method(int), caches(int), solver(int), iguess(int))
 
@@ -41,7 +44,16 @@ function integrate(problems::EnsembleProblem, method::GeometricMethod; kwargs...
     return solutions
 end
 
-integrate_step!(int::DeterministicIntegrator) = integrate_step!(solstep(int), problem(int), method(int), caches(int), solver(int))
+function integrate_step!(int::DeterministicIntegrator)
+    # integrate one time step
+    integrate_step!(current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
+
+    # copy internal variables from cache to solution step
+    copy_internal_variables(solstep(int), cache(int))
+
+    # copy solver status to solution step
+    # solver_status!(solver(int), solstep(int).internal[:solver])
+end
 
 
 # Parts of one integration step that are common to deterministic and stochastic equations.

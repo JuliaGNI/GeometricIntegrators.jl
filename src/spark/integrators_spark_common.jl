@@ -1,5 +1,5 @@
 
-function Integrators.internal_variables(method::AbstractSPARKMethod, problem::AbstractSPARKProblem{DT,TT}) where {DT,TT}
+function internal_variables(method::AbstractSPARKMethod, problem::AbstractSPARKProblem{DT,TT}) where {DT,TT}
     S = nstages(method)
     R = pstages(method)
     D = ndims(problem)
@@ -33,36 +33,22 @@ function copy_internal_variables(solstep::SolutionStepPDAE, cache::IntegratorCac
 end
 
 
-function update_solution!(
-    solstep::SolutionStepPDAE{DT,TT}, 
-    problem::AbstractSPARKProblem{DT,TT},
-    method::AbstractSPARKMethod, 
-    caches::CacheDict) where {DT,TT}
+function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:AbstractSPARKMethod}) where {DT}
+    # compute vector field at internal stages
+    components!(x, sol, params, int)
 
-    # compute final update
-    # update_solution!(solstep.q, solstep.q̃, caches[DT].Vi, tableau(method).q.b, timestep(problem))
-    # update_solution!(solstep.p, solstep.p̃, caches[DT].Fi, tableau(method).p.b, timestep(problem))
-    update!(solstep.q, solstep.q̃, caches[DT].Vi, tableau(method).q.b, tableau(method).q.b̂, timestep(problem))
-    update!(solstep.p, solstep.p̃, caches[DT].Fi, tableau(method).p.b, tableau(method).p.b̂, timestep(problem))
+    # compute final update and projection
+    update!(sol.q, cache(int, DT).Vi, cache(int, DT).Up, tableau(int).q, timestep(int))
+    update!(sol.p, cache(int, DT).Fi, cache(int, DT).Gp, tableau(int).p, timestep(int))
+    update!(sol.λ, cache(int, DT).Λp, tableau(int).λ, timestep(int))
 
-    # compute projection
-    # update_solution!(solstep.q, solstep.q̃, caches[DT].Up, tableau(method).q.β, timestep(problem))
-    # update_solution!(solstep.p, solstep.p̃, caches[DT].Gp, tableau(method).p.β, timestep(problem))
-    update!(solstep.q, solstep.q̃, caches[DT].Up, tableau(method).q.β, tableau(method).q.β̂, timestep(problem))
-    update!(solstep.p, solstep.p̃, caches[DT].Gp, tableau(method).p.β, tableau(method).p.β̂, timestep(problem))
-    update_multiplier!(solstep.λ, caches[DT].Λp, tableau(method).λ.b)
+    return sol
 end
 
 
-function Integrators.integrate_step!(
-    solstep::SolutionStepPDAE{DT},
-    problem::AbstractSPARKProblem{DT},
-    method::AbstractSPARKMethod,
-    caches::CacheDict,
-    solver::NonlinearSolver) where {DT}
-
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:AbstractSPARKMethod, <:AbstractSPARKProblem})
     # call nonlinear solver
-    solve!(caches[DT].x, (b,x) -> residual!(b, x, solstep, problem, method, caches), solver)
+    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
 
     # check_jacobian(int.solver)
     # print_jacobian(int.solver)
@@ -73,12 +59,6 @@ function Integrators.integrate_step!(
     # check if solution contains NaNs or error bounds are violated
     # println(meets_stopping_criteria(status(solver)))
 
-    # compute vector fields at internal stages
-    components!(caches[DT].x, solstep, problem, method, caches)
-
     # compute final update
-    update_solution!(solstep, problem, method, caches)
-
-    # copy internal stage variables
-    copy_internal_variables(solstep, caches[DT])
+    update!(sol, params, nlsolution(int), int)
 end

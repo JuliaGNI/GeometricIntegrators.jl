@@ -45,11 +45,11 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{aligned}
 ```
 """
-const IntegratorHSPARK{DT,TT} = GeometricIntegrator{<:Union{PDAEProblem{DT,TT},HDAEProblem{DT,TT}}, <:HSPARK}
+const IntegratorHSPARK{DT,TT} = GeometricIntegrator{<:HSPARK, <:Union{PDAEProblem{DT,TT},HDAEProblem{DT,TT}}}
 
 function Base.show(io::IO, int::IntegratorHSPARK)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for Hamiltonian systems *EXPERIMENTAL*\n")
-    print(io, "   Timestep: $(timestep(problem))\n")
+    print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(description(method(int)))\n")
     print(io, "   $(string(method(int).q))")
     print(io, "   $(string(method(int).p))")
@@ -57,109 +57,91 @@ function Base.show(io::IO, int::IntegratorHSPARK)
 end
 
 
-function components!(
-    x::Vector{ST},
-    solstep::SolutionStepPDAE{DT,TT}, 
-    problem::Union{PDAEProblem,HDAEProblem},
-    method::HSPARK, 
-    caches::CacheDict) where {ST,DT,TT}
-
-    local cache = caches[ST]
-    local S = nstages(method)
-    local R = pstages(method)
-    local D = ndims(problem)
-
-    local tqᵢ::TT
-    local tpᵢ::TT
-    local tλᵢ::TT
+function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:HSPARK,<:Union{PDAEProblem,HDAEProblem}}) where {ST}
+    # get cache and number of internal stages
+    local C = cache(int, ST)
+    local S = nstages(method(int))
+    local R = pstages(method(int))
+    local D = ndims(int)
 
     for i in 1:S
         for k in 1:D
             # copy x to Y, Z
-            cache.Yi[i][k] = x[2*(D*(i-1)+k-1)+1]
-            cache.Zi[i][k] = x[2*(D*(i-1)+k-1)+2]
-
-            # compute Q and P
-            cache.Qi[i][k] = solstep.q̄[k] + timestep(problem) * cache.Yi[i][k]
-            cache.Pi[i][k] = solstep.p̄[k] + timestep(problem) * cache.Zi[i][k]
+            C.Yi[i][k] = x[2*(D*(i-1)+k-1)+1]
+            C.Zi[i][k] = x[2*(D*(i-1)+k-1)+2]
         end
 
+        # compute Q and P
+        C.Qi[i] .= sol.q .+ timestep(int) .* C.Yi[i]
+        C.Pi[i] .= sol.p .+ timestep(int) .* C.Zi[i]
+
         # compute f(X)
-        tqᵢ = solstep.t̄ + timestep(problem) * tableau(method).q.c[i]
-        tpᵢ = solstep.t̄ + timestep(problem) * tableau(method).p.c[i]
-        functions(problem).v(cache.Vi[i], tqᵢ, cache.Qi[i], cache.Pi[i], parameters(solstep))
-        functions(problem).f(cache.Fi[i], tpᵢ, cache.Qi[i], cache.Pi[i], parameters(solstep))
+        tqᵢ = sol.t + timestep(int) * (tableau(int).q.c[i] - 1)
+        tpᵢ = sol.t + timestep(int) * (tableau(int).p.c[i] - 1)
+        equations(int).v(C.Vi[i], tqᵢ, C.Qi[i], C.Pi[i], params)
+        equations(int).f(C.Fi[i], tpᵢ, C.Qi[i], C.Pi[i], params)
     end
 
     for i in 1:R
         for k in 1:D
             # copy y to Y, Z and Λ
-            cache.Yp[i][k] = x[2*D*S+3*(D*(i-1)+k-1)+1]
-            cache.Zp[i][k] = x[2*D*S+3*(D*(i-1)+k-1)+2]
-            cache.Λp[i][k] = x[2*D*S+3*(D*(i-1)+k-1)+3]
-
-            # compute Q and V
-            cache.Qp[i][k] = solstep.q̄[k] + timestep(problem) * cache.Yp[i][k]
-            cache.Pp[i][k] = solstep.p̄[k] + timestep(problem) * cache.Zp[i][k]
+            C.Yp[i][k] = x[2*D*S+3*(D*(i-1)+k-1)+1]
+            C.Zp[i][k] = x[2*D*S+3*(D*(i-1)+k-1)+2]
+            C.Λp[i][k] = x[2*D*S+3*(D*(i-1)+k-1)+3]
         end
 
+        # compute Q and V
+        C.Qp[i] .= sol.q .+ timestep(int) .* C.Yp[i]
+        C.Pp[i] .= sol.p .+ timestep(int) .* C.Zp[i]
+
         # compute f(X)
-        tλᵢ = solstep.t̄ + timestep(problem) * tableau(method).λ.c[i]
-        functions(problem).u(cache.Up[i], tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], parameters(solstep))
-        functions(problem).g(cache.Gp[i], tλᵢ, cache.Qp[i], cache.Pp[i], cache.Λp[i], parameters(solstep))
-        functions(problem).ϕ(cache.Φp[i], tλᵢ, cache.Qp[i], cache.Pp[i], parameters(solstep))
+        tλᵢ = sol.t + timestep(int) * (tableau(int).λ.c[i] - 1)
+        equations(int).u(C.Up[i], tλᵢ, C.Qp[i], C.Pp[i], C.Λp[i], params)
+        equations(int).g(C.Gp[i], tλᵢ, C.Qp[i], C.Pp[i], C.Λp[i], params)
+        equations(int).ϕ(C.Φp[i], tλᵢ, C.Qp[i], C.Pp[i], params)
     end
 
     # compute q and p
-    cache.q̃ .= solstep.q̄
-    cache.p̃ .= solstep.p̄
+    C.q̃ .= sol.q
+    C.p̃ .= sol.p
     for i in 1:S
-        cache.q̃ .+= timestep(problem) .* tableau(method).q.b[i] .* cache.Vi[i]
-        cache.p̃ .+= timestep(problem) .* tableau(method).p.b[i] .* cache.Fi[i]
+        C.q̃ .+= timestep(int) .* tableau(int).q.b[i] .* C.Vi[i]
+        C.p̃ .+= timestep(int) .* tableau(int).p.b[i] .* C.Fi[i]
     end
     for i in 1:R
-        cache.q̃ .+= timestep(problem) .* tableau(method).q.β[i] .* cache.Up[i]
-        cache.p̃ .+= timestep(problem) .* tableau(method).p.β[i] .* cache.Gp[i]
+        C.q̃ .+= timestep(int) .* tableau(int).q.β[i] .* C.Up[i]
+        C.p̃ .+= timestep(int) .* tableau(int).p.β[i] .* C.Gp[i]
     end
 
     # compute ϕ(q,p)
-    functions(problem).ϕ(cache.ϕ̃, solstep.t, cache.q̃, cache.p̃, parameters(solstep))
+    equations(int).ϕ(C.ϕ̃, sol.t, C.q̃, C.p̃, params)
 end
 
 
 # Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems.
-function residual!(
-    b::Vector{ST},
-    x::Vector{ST},
-    solstep::SolutionStepPDAE, 
-    problem::Union{PDAEProblem,HDAEProblem},
-    method::HSPARK, 
-    caches::CacheDict) where {ST}
-
-    # get cache for internal stages
-    local cache = caches[ST]
-
-    # number of internal stages
-    local S = nstages(method)
-    local R = pstages(method)
-    local P = tableau(method).ρ
-    local D = ndims(problem)
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:HSPARK,<:Union{PDAEProblem,HDAEProblem}}) where {ST}
+    # get cache and number of internal stages
+    local C = cache(int, ST)
+    local S = nstages(int)
+    local R = pstages(method(int))
+    local P = tableau(int).ρ
+    local D = ndims(int)
 
     # compute stages from nonlinear solver solution x
-    components!(x, solstep, problem, method, caches)
+    components!(x, sol, params, int)
 
     # compute b = - [(Y-AV-AU), (Z-AF-AG)]
     for i in 1:S
         for k in 1:D
-            b[2*(D*(i-1)+k-1)+1] = - cache.Yi[i][k]
-            b[2*(D*(i-1)+k-1)+2] = - cache.Zi[i][k]
+            b[2*(D*(i-1)+k-1)+1] = - C.Yi[i][k]
+            b[2*(D*(i-1)+k-1)+2] = - C.Zi[i][k]
             for j in 1:S
-                b[2*(D*(i-1)+k-1)+1] += tableau(method).q.a[i,j] * cache.Vi[j][k]
-                b[2*(D*(i-1)+k-1)+2] += tableau(method).p.a[i,j] * cache.Fi[j][k]
+                b[2*(D*(i-1)+k-1)+1] += tableau(int).q.a[i,j] * C.Vi[j][k]
+                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[i,j] * C.Fi[j][k]
             end
             for j in 1:R
-                b[2*(D*(i-1)+k-1)+1] += tableau(method).q.α[i,j] * cache.Up[j][k]
-                b[2*(D*(i-1)+k-1)+2] += tableau(method).p.α[i,j] * cache.Gp[j][k]
+                b[2*(D*(i-1)+k-1)+1] += tableau(int).q.α[i,j] * C.Up[j][k]
+                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.α[i,j] * C.Gp[j][k]
             end
         end
     end
@@ -167,15 +149,15 @@ function residual!(
     # compute b = - [(Y-AV-AU), (Z-AF-AG), ωΦ]
     for i in 1:R
         for k in 1:D
-            b[2*D*S+3*(D*(i-1)+k-1)+1] = - cache.Yp[i][k]
-            b[2*D*S+3*(D*(i-1)+k-1)+2] = - cache.Zp[i][k]
+            b[2*D*S+3*(D*(i-1)+k-1)+1] = - C.Yp[i][k]
+            b[2*D*S+3*(D*(i-1)+k-1)+2] = - C.Zp[i][k]
             for j in 1:S
-                b[2*D*S+3*(D*(i-1)+k-1)+1] += tableau(method).q̃.a[i,j] * cache.Vi[j][k]
-                b[2*D*S+3*(D*(i-1)+k-1)+2] += tableau(method).p̃.a[i,j] * cache.Fi[j][k]
+                b[2*D*S+3*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[i,j] * C.Vi[j][k]
+                b[2*D*S+3*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[i,j] * C.Fi[j][k]
             end
             for j in 1:R
-                b[2*D*S+3*(D*(i-1)+k-1)+1] += tableau(method).q̃.α[i,j] * cache.Up[j][k]
-                b[2*D*S+3*(D*(i-1)+k-1)+2] += tableau(method).p̃.α[i,j] * cache.Gp[j][k]
+                b[2*D*S+3*(D*(i-1)+k-1)+1] += tableau(int).q̃.α[i,j] * C.Up[j][k]
+                b[2*D*S+3*(D*(i-1)+k-1)+2] += tableau(int).p̃.α[i,j] * C.Gp[j][k]
             end
         end
     end
@@ -183,9 +165,9 @@ function residual!(
         for k in 1:D
             b[2*D*S+3*(D*(i-1)+k-1)+3] = 0
             for j in 1:R
-                b[2*D*S+3*(D*(i-1)+k-1)+3] -= tableau(method).ω[i,j] * cache.Φp[j][k]
+                b[2*D*S+3*(D*(i-1)+k-1)+3] -= tableau(int).ω[i,j] * C.Φp[j][k]
             end
-            b[2*D*S+3*(D*(i-1)+k-1)+3] -= tableau(method).ω[i,R+1] * cache.ϕ̃[k]
+            b[2*D*S+3*(D*(i-1)+k-1)+3] -= tableau(int).ω[i,R+1] * C.ϕ̃[k]
         end
     end
 
@@ -194,7 +176,7 @@ function residual!(
         for k in 1:D
             b[2*D*S+3*(D*(R-1)+k-1)+3] = 0
             for j in 1:R
-                b[2*D*S+3*(D*(i-1)+k-1)+3] -= tableau(method).δ[j] * cache.Λp[j][k]
+                b[2*D*S+3*(D*(i-1)+k-1)+3] -= tableau(int).δ[j] * C.Λp[j][k]
             end
         end
     end
