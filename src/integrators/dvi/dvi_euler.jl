@@ -44,9 +44,11 @@ function initial_guess!(int::GeometricIntegrator{<:DVIEuler})
 end
 
 
-function components!(x::Vector{ST}, int::GeometricIntegrator{<:DVIEuler}) where {ST}
+function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIEuler}) where {ST}
     # set some local variables for convenience
     local D = ndims(int)
+    local t = sol.t
+    local t̄ = sol.t - timestep(int)
 
     # copy x to q
     cache(int,ST).q .= x[1:D]
@@ -60,26 +62,23 @@ function components!(x::Vector{ST}, int::GeometricIntegrator{<:DVIEuler}) where 
     end
 
     # compute f = f(q,v)
-    equations(int).f(cache(int,ST).f, solstep(int).t, cache(int,ST).q, cache(int,ST).v, parameters(solstep(int)))
-    equations(int).f(cache(int,ST).f̄, solstep(int).t̄, cache(int).q̄, cache(int,ST).v̄, parameters(solstep(int)))
+    equations(int).f(cache(int,ST).f, t, cache(int,ST).q, cache(int,ST).v, params)
+    equations(int).f(cache(int,ST).f̄, t̄, sol.q, cache(int,ST).v̄, params)
  
     # compute Θ = ϑ(q,v)
-    equations(int).ϑ(cache(int,ST).p, solstep(int).t, cache(int,ST).q, cache(int,ST).v, parameters(solstep(int)))
-    # equations(int).ϑ(cache(int,ST).θ̄, solstep(int).t̄, solstep(int).q̄, cache(int,ST).v̄, parameters(solstep(int)))
+    equations(int).ϑ(cache(int,ST).p, t, cache(int,ST).q, cache(int,ST).v, params)
+    # equations(int).ϑ(cache(int,ST).θ̄, t̄, solstep(int).q̄, cache(int,ST).v̄, params)
 end
 
 
-function residual!(b::Vector{ST}, x::Vector{ST}, int::GeometricIntegrator{<:DVIA}) where {ST}
+function residual!(b::Vector{ST}, sol, int::GeometricIntegrator{<:DVIA}) where {ST}
     # set some local variables for convenience
     local D = ndims(int)
 
-    # compute stages from nonlinear solver solution x
-    components!(x, int)
-
     # compute b
     for k in 1:div(D,2)
-        b[k]   = cache(int,ST).p[k] - cache(int).p̄[k] - timestep(int) * cache(int,ST).f̄[k]
-        b[D+k] = cache(int,ST).q[k] - cache(int).q̄[k] - timestep(int) * cache(int,ST).v[k]
+        b[k]   = cache(int,ST).p[k] - sol.p[k] - timestep(int) * cache(int,ST).f̄[k]
+        b[D+k] = cache(int,ST).q[k] - sol.q[k] - timestep(int) * cache(int,ST).v[k]
     end
 
     for k in div(D,2)+1:D
@@ -89,17 +88,14 @@ function residual!(b::Vector{ST}, x::Vector{ST}, int::GeometricIntegrator{<:DVIA
 end
 
 
-function residual!(b::Vector{ST}, x::Vector{ST}, int::GeometricIntegrator{<:DVIB}) where {ST}
+function residual!(b::Vector{ST}, sol, int::GeometricIntegrator{<:DVIB}) where {ST}
     # set some local variables for convenience
     local D = ndims(int)
 
-    # compute stages from nonlinear solver solution x
-    components!(x, int)
-
     # compute b
     for k in 1:div(D,2)
-        b[k]   = cache(int,ST).p[k] - cache(int).p̄[k] - timestep(int) * cache(int,ST).f[k]
-        b[D+k] = cache(int,ST).q[k] - cache(int).q̄[k] - timestep(int) * cache(int,ST).v̄[k]
+        b[k]   = cache(int,ST).p[k] - sol.p[k] - timestep(int) * cache(int,ST).f[k]
+        b[D+k] = cache(int,ST).q[k] - sol.q[k] - timestep(int) * cache(int,ST).v̄[k]
     end
 
     for k in div(D,2)+1:D
@@ -109,16 +105,10 @@ function residual!(b::Vector{ST}, x::Vector{ST}, int::GeometricIntegrator{<:DVIB
 end
 
 
-function update!(x::AbstractVector{DT}, int::GeometricIntegrator{<:DVIEuler}) where {DT}
-    # copy previous solution from solstep to cache
-    reset!(cache(int, DT), current(solstep(int))...)
-
-    # compute vector field at internal stages
-    components!(x, int)
-
+function update!(sol, int::GeometricIntegrator{<:DVIEuler})
     # compute final update
-    solstep(int).q .= cache(int, DT).q
-    solstep(int).v .= cache(int, DT).v
-    solstep(int).p .= cache(int, DT).p
-    solstep(int).f .= cache(int, DT).f
+    sol.q .= cache(int).q
+    # sol.v .= cache(int).v # TODO: Copy to internal variables.
+    sol.p .= cache(int).p
+    # sol.f .= cache(int).f # TODO: Copy to internal variables.
 end

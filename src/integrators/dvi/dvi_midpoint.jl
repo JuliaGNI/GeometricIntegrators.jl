@@ -34,7 +34,7 @@ function initial_guess!(int::GeometricIntegrator{<:CMDVI})
 end
 
 
-function components!(x::Vector{ST}, int::GeometricIntegrator{<:CMDVI}) where {ST}
+function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:CMDVI}) where {ST}
     # set some local variables for convenience and clarity
     local D = ndims(int)
     local t̃ = solstep(int).t̄ + timestep(int) / 2
@@ -45,7 +45,7 @@ function components!(x::Vector{ST}, int::GeometricIntegrator{<:CMDVI}) where {ST
 
     # copy x to q⁻, q⁺ and v
     for k in 1:div(D,2)
-        cache(int,ST).q̃[k] = (cache(int).q̄[k] + cache(int,ST).q[k]) / 2
+        cache(int,ST).q̃[k] = (sol.q[k] + cache(int,ST).q[k]) / 2
         cache(int,ST).q̃[div(D,2)+k] = x[D+div(D,2)+k]
 
         cache(int,ST).v[k]          = x[D+k]
@@ -53,39 +53,30 @@ function components!(x::Vector{ST}, int::GeometricIntegrator{<:CMDVI}) where {ST
     end
 
     # compute f = f(q,v)
-    equations(int).f(cache(int,ST).f̃, t̃, cache(int,ST).q̃, cache(int,ST).v, parameters(solstep(int)))
+    equations(int).f(cache(int,ST).f̃, t̃, cache(int,ST).q̃, cache(int,ST).v, params)
  
     # compute Θ = ϑ(q,v)
-    equations(int).ϑ(cache(int,ST).p̃, t̃, cache(int,ST).q̃, cache(int,ST).v, parameters(solstep(int)))
-    equations(int).ϑ(cache(int,ST).p, t, cache(int,ST).q, cache(int,ST).v, parameters(solstep(int)))
+    equations(int).ϑ(cache(int,ST).p̃, t̃, cache(int,ST).q̃, cache(int,ST).v, params)
+    equations(int).ϑ(cache(int,ST).p, t, cache(int,ST).q, cache(int,ST).v, params)
 end
 
 
-function residual!(b::Vector{ST}, x::Vector{ST}, int::GeometricIntegrator{<:CMDVI}) where {ST}
+function residual!(b::Vector{ST}, sol, int::GeometricIntegrator{<:CMDVI}) where {ST}
     # set some local variables for convenience
     local D = ndims(int)
 
-    # compute stages from nonlinear solver solution x
-    components!(x, int)
-
     # compute b
-    b[1:D] .= cache(int,ST).p̃ .- cache(int).p̄ .- timestep(int) .* cache(int,ST).f̃ ./ 2
+    b[1:D] .= cache(int,ST).p̃ .- sol.p .- timestep(int) .* cache(int,ST).f̃ ./ 2
     
     for k in 1:div(D,2)
-        b[D+k]          = cache(int,ST).q[k] - cache(int).q̄[k] - timestep(int) * cache(int,ST).v[k]
-        b[D+div(D,2)+k] = cache(int,ST).p[k] - cache(int).p̄[k] - timestep(int) * cache(int,ST).f̃[k]
+        b[D+k]          = cache(int,ST).q[k] - sol.q[k] - timestep(int) * cache(int,ST).v[k]
+        b[D+div(D,2)+k] = cache(int,ST).p[k] - sol.p[k] - timestep(int) * cache(int,ST).f̃[k]
     end
 end
 
 
-function update!(x::AbstractVector{DT}, int::GeometricIntegrator{<:CMDVI}) where {DT}
-    # copy previous solution from solstep to cache
-    reset!(cache(int, DT), current(solstep(int))...)
-
-    # compute vector field at internal stages
-    components!(x, int)
-
+function update!(sol, int::GeometricIntegrator{<:CMDVI})
     # compute final update
-    solstep(int).q .= cache(int, DT).q
-    solstep(int).p .= cache(int, DT).p
+    sol.q .= cache(int).q
+    sol.p .= cache(int).p
 end

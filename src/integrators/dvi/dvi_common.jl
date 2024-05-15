@@ -9,12 +9,35 @@ default_solver(::DVIMethod) = Newton()
 default_iguess(::DVIMethod) = HermiteExtrapolation()
 
 
-function integrate_step!(int::GeometricIntegrator{<:DVIMethod, <:AbstractProblemIODE})
-    # copy previous solution from solstep to cache
-    reset!(cache(int), current(solstep(int))...)
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DVIMethod, <:AbstractProblemIODE}) where {ST}
+    @assert axes(x) == axes(b)
 
+    # copy previous solution from solstep to cache
+    reset!(cache(int, ST), sol...)
+
+    # compute stages from nonlinear solver solution x
+    components!(x, sol, params, int)
+
+    # compute residual vector
+    residual!(b, sol, int)
+end
+
+
+function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:DVIMethod, <:AbstractProblemIODE}) where {DT}
+    # copy previous solution from solstep to cache
+    reset!(cache(int, DT), sol...)
+
+    # compute vector field at internal stages
+    components!(x, sol, params, int)
+
+    # compute final update
+    update!(sol, int)
+end
+
+
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DVIMethod, <:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
+    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
 
     # print solver status
     # print_solver_status(int.solver.status, int.solver.params)
@@ -23,5 +46,5 @@ function integrate_step!(int::GeometricIntegrator{<:DVIMethod, <:AbstractProblem
     # check_solver_status(int.solver.status, int.solver.params)
 
     # compute final update
-    update!(nlsolution(int), int)
+    update!(sol, params, nlsolution(int), int)
 end
