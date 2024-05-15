@@ -74,11 +74,11 @@ function Base.show(io::IO, int::GeometricIntegrator{<:HPImidpoint})
 end
 
 
-function components!(x::Vector{ST}, int::GeometricIntegrator{<:HPImidpoint}) where {ST}
+function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:HPImidpoint, <:AbstractProblemIODE}) where {ST}
     # set some local variables for convenience and clarity
     local D = ndims(int)
     local A = nparams(method(int))
-    local t̃ = solstep(int).t̄ + timestep(int) / 2
+    local t̃ = sol.t - timestep(int) / 2
     
     # copy x to q
     cache(int,ST).q .= x[1:D]
@@ -91,8 +91,8 @@ function components!(x::Vector{ST}, int::GeometricIntegrator{<:HPImidpoint}) whe
     method(int).ϕ(cache(int,ST).ṽ, cache(int).q̄, cache(int,ST).q, cache(int,ST).a, timestep(int))
  
     # compute Θ̃ = ϑ(q̃,ṽ) and f̃ = f(q̃,ṽ)
-    equations(int).ϑ(cache(int,ST).θ̃, t̃, cache(int,ST).q̃, cache(int,ST).ṽ, parameters(solstep(int)))
-    equations(int).f(cache(int,ST).f̃, t̃, cache(int,ST).q̃, cache(int,ST).ṽ, parameters(solstep(int)))
+    equations(int).ϑ(cache(int,ST).θ̃, t̃, cache(int,ST).q̃, cache(int,ST).ṽ, params)
+    equations(int).f(cache(int,ST).f̃, t̃, cache(int,ST).q̃, cache(int,ST).ṽ, params)
 
     # compute derivatives of ϕ
     method(int).D₁ϕ(cache(int,ST).D₁ϕ, cache(int).q̄, cache(int,ST).q, cache(int,ST).a, timestep(int))
@@ -109,13 +109,10 @@ function components!(x::Vector{ST}, int::GeometricIntegrator{<:HPImidpoint}) whe
 end
 
 
-function residual!(b::Vector{ST}, x::Vector{ST}, int::GeometricIntegrator{<:HPImidpoint}) where {ST}
+function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:HPImidpoint, <:AbstractProblemIODE}) where {ST}
     # set some local variables for convenience and clarity
     local D = ndims(int)
     local A = nparams(method(int))
-
-    # compute stages from nonlinear solver solution x
-    components!(x, int)
 
     # compute b
     for i in 1:D

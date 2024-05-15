@@ -22,25 +22,37 @@ function initial_guess!(int::GeometricIntegrator{<:HPIMethod})
 end
 
 
-function update!(x::AbstractVector{DT}, int::GeometricIntegrator{<:HPIMethod}) where {DT}
+# Compute stages of Hamilton-Pontryagin integrators.
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:HPIMethod, <:AbstractProblemIODE}) where {ST}
+    @assert axes(x) == axes(b)
+
     # copy previous solution from solstep to cache
-    reset!(cache(int, DT), current(solstep(int))...)
+    reset!(cache(int, ST), sol...)
 
-    # compute vector field at internal stages
-    components!(x, int)
+    # compute stages from nonlinear solver solution x
+    components!(x, sol, params, int)
 
-    # compute final update
-    solstep(int).q .= cache(int, DT).q
-    solstep(int).p .= cache(int, DT).p
+    # compute residual vector
+    residual!(b, int)
 end
 
 
-function integrate_step!(int::GeometricIntegrator{<:HPIMethod, <:AbstractProblemIODE})
+function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:HPIMethod}) where {DT}
     # copy previous solution from solstep to cache
-    reset!(cache(int), current(solstep(int))...)
+    reset!(cache(int, DT), sol...)
 
+    # compute vector field at internal stages
+    components!(x, sol, params, int)
+
+    # compute final update
+    sol.q .= cache(int, DT).q
+    sol.p .= cache(int, DT).p
+end
+
+
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:HPIMethod, <:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
+    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
 
     # print solver status
     # print_solver_status(int.solver.status, int.solver.params)
@@ -49,5 +61,5 @@ function integrate_step!(int::GeometricIntegrator{<:HPIMethod, <:AbstractProblem
     # check_solver_status(int.solver.status, int.solver.params)
 
     # compute final update
-    update!(nlsolution(int), int)
+    update!(sol, params, nlsolution(int), int)
 end
