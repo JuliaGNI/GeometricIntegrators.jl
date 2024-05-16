@@ -165,43 +165,40 @@ end
 
 
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemODE}) where {ST}
-    local q̄ = cache(int, ST).q̄
-    local Q = cache(int, ST).Q
-    local V = cache(int, ST).V
-    local Y = cache(int, ST).Y
+    # get cache for internal stages
+    local C = cache(int, ST)
     local D = ndims(int)
 
     # copy x to Y and compute Q = q + Y
-    for i in eachindex(Q,Y)
-        for k in eachindex(Q[i],Y[i])
-            Y[i][k] = x[D*(i-1)+k]
-            Q[i][k] = q̄[k] + Y[i][k]
+    for i in eachindex(C.Q, C.Y)
+        for k in eachindex(C.Q[i], C.Y[i])
+            C.Y[i][k] = x[D*(i-1)+k]
+            C.Q[i][k] = C.q̄[k] + C.Y[i][k]
         end
     end
 
     # compute V = v(Q)
-    for i in eachindex(Q,V)
+    for i in eachindex(C.Q, C.V)
         tᵢ = sol.t + timestep(int) * (tableau(int).c[i] - 1)
-        equations(int).v(V[i], tᵢ, Q[i], params)
+        equations(int).v(C.V[i], tᵢ, C.Q[i], params)
     end
 end
 
 
 function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:IRK, <:AbstractProblemODE}) where {ST}
     # get cache for internal stages
-    local V = cache(int, ST).V
-    local Y = cache(int, ST).Y
+    local C = cache(int, ST)
     local D = ndims(int)
 
     # compute b = - (Y-AV)
-    for i in eachindex(Y)
-        for k in eachindex(Y[i])
+    for i in eachindex(C.Y)
+        for k in eachindex(C.Y[i])
             y1 = y2 = zero(ST)
-            for j in eachindex(V)
-                y1 += tableau(int).a[i,j] * V[j][k]
-                y2 += tableau(int).â[i,j] * V[j][k]
+            for j in eachindex(C.V)
+                y1 += tableau(int).a[i,j] * C.V[j][k]
+                y2 += tableau(int).â[i,j] * C.V[j][k]
             end
-            b[D*(i-1)+k] = - Y[i][k] + timestep(int) * (y1 + y2)
+            b[D*(i-1)+k] = - C.Y[i][k] + timestep(int) * (y1 + y2)
         end
     end
 end

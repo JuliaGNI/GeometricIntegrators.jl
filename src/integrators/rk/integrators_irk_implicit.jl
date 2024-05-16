@@ -147,84 +147,74 @@ end
 
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {ST}
     # get cache for internal stages
-    local q̄ = cache(int, ST).q̄
-    local q = cache(int, ST).q
-    local v = cache(int, ST).v
-    local θ = cache(int, ST).θ
-    local Q = cache(int, ST).Q
-    local V = cache(int, ST).V
-    local Θ = cache(int, ST).Θ
-    local F = cache(int, ST).F
+    local C = cache(int, ST)
 
     # copy x to V
-    for i in eachindex(V)
-        for k in eachindex(V[i])
-            V[i][k] = x[ndims(int)*(i-1) + k]
+    for i in eachindex(C.V)
+        for k in eachindex(C.V[i])
+            C.V[i][k] = x[ndims(int)*(i-1) + k]
         end
     end
 
     # copy x to q
     if implicit_update(int)
-        for k in eachindex(q)
-            q[k] = x[ndims(int) * nstages(int) + k]
+        for k in eachindex(C.q)
+            C.q[k] = x[ndims(int) * nstages(int) + k]
         end
     end
 
     # compute Q = q + Δt A V
-    for i in eachindex(Q)
-        for k in eachindex(Q[i])
+    for i in eachindex(C.Q)
+        for k in eachindex(C.Q[i])
             y1 = y2 = zero(ST)
-            for j in eachindex(V)
-                y1 += tableau(int).a[i,j] * V[j][k]
-                y2 += tableau(int).â[i,j] * V[j][k]
+            for j in eachindex(C.V)
+                y1 += tableau(int).a[i,j] * C.V[j][k]
+                y2 += tableau(int).â[i,j] * C.V[j][k]
             end
-            Q[i][k] = q̄[k] + timestep(int) * (y1 + y2)
+            C.Q[i][k] = sol.q[k] + timestep(int) * (y1 + y2)
         end
     end
 
     # compute Θ = ϑ(Q) and F = f(Q,V)
-    for i in eachindex(Θ,F)
+    for i in eachindex(C.Θ, C.F)
         tᵢ = sol.t + timestep(int) * (tableau(int).c[i] - 1)
-        equations(int).ϑ(Θ[i], tᵢ, Q[i], V[i], params)
-        equations(int).f(F[i], tᵢ, Q[i], V[i], params)
+        equations(int).ϑ(C.Θ[i], tᵢ, C.Q[i], C.V[i], params)
+        equations(int).f(C.F[i], tᵢ, C.Q[i], C.V[i], params)
     end
 
     # compute θ = ϑ(q)
     if implicit_update(int)
-        equations(int).ϑ(θ, sol.t, q, v, params)
+        equations(int).ϑ(C.θ, sol.t, C.q, C.v, params)
     end
 end
 
 
 # Compute stages of implicit Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {ST}
-    # get cache for previous solution and internal stages
-    local p̄ = cache(int, ST).p̄
-    local θ = cache(int, ST).θ
-    local Θ = cache(int, ST).Θ
-    local F = cache(int, ST).F
+function residual!(b::AbstractVector{ST}, sol, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {ST}
+    # get cache for internal stages
+    local C = cache(int, ST)
 
     # compute b for internal stages
-    for i in eachindex(Θ)
-        for k in eachindex(Θ[i])
+    for i in eachindex(C.Θ)
+        for k in eachindex(C.Θ[i])
             y1 = y2 = zero(ST)
-            for j in eachindex(F)
-                y1 += tableau(int).a[i,j] * F[j][k]
-                y2 += tableau(int).â[i,j] * F[j][k]
+            for j in eachindex(C.F)
+                y1 += tableau(int).a[i,j] * C.F[j][k]
+                y2 += tableau(int).â[i,j] * C.F[j][k]
             end
-            b[ndims(int)*(i-1) + k] = Θ[i][k] - p̄[k] - timestep(int) * (y1 + y2)
+            b[ndims(int)*(i-1) + k] = C.Θ[i][k] - sol.p[k] - timestep(int) * (y1 + y2)
         end
     end
 
     # compute b for update
     if implicit_update(int)
-        for k in eachindex(θ)
+        for k in eachindex(C.θ)
             y1 = y2 = zero(ST)
-            for j in eachindex(F)
-                y1 += tableau(int).b[j] * F[j][k]
-                y2 += tableau(int).b̂[j] * F[j][k]
+            for j in eachindex(C.F)
+                y1 += tableau(int).b[j] * C.F[j][k]
+                y2 += tableau(int).b̂[j] * C.F[j][k]
             end
-            b[ndims(int) * nstages(int) + k] = θ[k] - p̄[k] - timestep(int) * (y1 + y2)
+            b[ndims(int) * nstages(int) + k] = C.θ[k] - sol.p[k] - timestep(int) * (y1 + y2)
         end
     end
 end
@@ -241,7 +231,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     components!(x, sol, params, int)
 
     # compute residual vector
-    residual!(b, int)
+    residual!(b, sol, int)
 end
 
 
