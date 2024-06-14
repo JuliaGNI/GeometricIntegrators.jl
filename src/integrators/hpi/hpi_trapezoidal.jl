@@ -69,11 +69,11 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     cache(int,ST).a .= x[D+1:D+A]
 
     # compute v
-    method(int).ϕ(cache(int,ST).ṽ, cache(int).q̄, cache(int,ST).q, cache(int,ST).a, timestep(int))
+    method(int).ϕ(cache(int,ST).ṽ, sol.q, cache(int,ST).q, cache(int,ST).a, timestep(int))
  
     # compute Θ = ϑ(q,ṽ) and f = f(q,ṽ)
-    equations(int).ϑ(cache(int,ST).θ̄, solstep(int).t̄, cache(int).q̄, cache(int,ST).ṽ, params)
-    equations(int).f(cache(int,ST).f̄, solstep(int).t̄, cache(int).q̄, cache(int,ST).ṽ, params)
+    equations(int).ϑ(cache(int,ST).θ̄, solstep(int).t̄, sol.q, cache(int,ST).ṽ, params)
+    equations(int).f(cache(int,ST).f̄, solstep(int).t̄, sol.q, cache(int,ST).ṽ, params)
     equations(int).ϑ(cache(int,ST).θ, solstep(int).t, cache(int,ST).q, cache(int,ST).ṽ, params)
     equations(int).f(cache(int,ST).f, solstep(int).t, cache(int,ST).q, cache(int,ST).ṽ, params)
 
@@ -93,14 +93,20 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
 end
 
 
-function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:HPItrapezoidal, <:AbstractProblemIODE}) where {ST}
+# Compute stages of Hamilton-Pontryagin integrators.
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:HPItrapezoidal, <:AbstractProblemIODE}) where {ST}
+    @assert axes(x) == axes(b)
+
+    # compute stages from nonlinear solver solution x
+    components!(x, sol, params, int)
+
     # set some local variables for convenience and clarity
     local D = ndims(int)
     local A = nparams(method(int))
 
     # compute b
     for i in 1:D
-        b[i] = cache(int).p̄[i] + timestep(int) * cache(int,ST).f̄[i] / 2
+        b[i] = sol.p[i] + timestep(int) * cache(int,ST).f̄[i] / 2
         for j in 1:D
             b[i] += timestep(int) * cache(int,ST).D₁ϕ[i,j] * cache(int,ST).θ̃[j]
         end

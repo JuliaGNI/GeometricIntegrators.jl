@@ -11,12 +11,11 @@ cache(::DeterministicIntegrator) = nothing
 initialize!(::SolutionStep, ::AbstractProblem, ::GeometricMethod, ::CacheDict, ::Union{SolverMethod, NonlinearSolver}, ::Union{InitialGuess,Extrapolation}) = nothing
 initialize!(int::DeterministicIntegrator) = initialize!(solstep(int), problem(int), method(int), caches(int), solver(int), iguess(int))
 
-initial_guess!(::SolutionStep, ::AbstractProblem, ::GeometricMethod, ::CacheDict, ::Union{SolverMethod, NonlinearSolver}, ::Union{InitialGuess,Extrapolation}) = nothing
-initial_guess!(int::DeterministicIntegrator) = initial_guess!(solstep(int), problem(int), method(int), caches(int), solver(int), iguess(int))
-
+initial_guess!(sol, history, params, ::DeterministicIntegrator) = nothing
+initial_guess!(int::DeterministicIntegrator) = initial_guess!(current(solstep(int)), history(solstep(int)), parameters(problem(int)), int)
 
 function residual!(b::AbstractVector, x::AbstractVector, int::DeterministicIntegrator)
-    residual!(b, x, solstep(int), problem(int), method(int), caches(int))
+    residual!(b, x, current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
 end
 
 # components!(x::AbstractVector, int::DeterministicIntegrator) = components!(x, solstep(int), problem(int), method(int), caches(int))

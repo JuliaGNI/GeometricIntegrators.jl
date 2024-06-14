@@ -39,11 +39,6 @@ struct IntegratorCachePMVI{DT,D} <: IODEIntegratorCache{DT,D}
     end
 end
 
-function reset!(cache::IntegratorCachePMVI, t, q, p)
-    copyto!(cache.q̄, q)
-    copyto!(cache.p̄, p)
-end
-
 nlsolution(cache::IntegratorCachePMVI) = cache.x
 
 function Cache{ST}(problem::AbstractProblemIODE, method::PMVIMethod; kwargs...) where {ST}

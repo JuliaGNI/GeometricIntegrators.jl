@@ -19,6 +19,8 @@ abstract type LDAEMethod <: GeometricMethod end
 initmethod(method::GeometricMethod) = method
 initmethod(method::GeometricMethod, ::AbstractProblem) = initmethod(method)
 
+solversize(problem::AbstractProblemODE, method::GeometricMethod) = 0
+
 internal_variables(::GeometricMethod, ::GeometricProblem) = NamedTuple()
 nullvector(::GeometricMethod) = nothing
 GeometricBase.tableau(::GeometricMethod) = missing

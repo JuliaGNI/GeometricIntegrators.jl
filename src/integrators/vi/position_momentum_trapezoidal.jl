@@ -27,30 +27,30 @@ function Base.show(io::IO, int::GeometricIntegrator{<:PMVItrapezoidal})
 end
 
 
-function components!(x::Vector{ST}, int::GeometricIntegrator{<:PMVItrapezoidal}) where {ST}
+function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVItrapezoidal}) where {ST}
     # set some local variables for convenience and clarity
-    local t̄ = solstep(int).t̄
-    local t = solstep(int).t̄ + timestep(int)
+    local t̄ = sol.t - timestep(int)
+    local t = sol.t
     
     # copy x to q
     cache(int, ST).q .= x[1:ndims(int)]
 
     # compute v
-    cache(int, ST).ṽ .= (cache(int, ST).q .- cache(int, ST).q̄) ./ timestep(int)
+    cache(int, ST).ṽ .= (cache(int, ST).q .- sol.q) ./ timestep(int)
  
     # compute Θ = ϑ(q,ṽ) and f = f(q,ṽ)
-    equations(int).ϑ(cache(int, ST).θ̄, t̄, cache(int, ST).q̄, cache(int, ST).ṽ, parameters(solstep(int)))
-    equations(int).ϑ(cache(int, ST).θ, t, cache(int, ST).q, cache(int, ST).ṽ, parameters(solstep(int)))
-    equations(int).f(cache(int, ST).f̄, t̄, cache(int, ST).q̄, cache(int, ST).ṽ, parameters(solstep(int)))
-    equations(int).f(cache(int, ST).f, t, cache(int, ST).q, cache(int, ST).ṽ, parameters(solstep(int)))
+    equations(int).ϑ(cache(int, ST).θ̄, t̄, sol.q, cache(int, ST).ṽ, params)
+    equations(int).ϑ(cache(int, ST).θ, t, cache(int, ST).q, cache(int, ST).ṽ, params)
+    equations(int).f(cache(int, ST).f̄, t̄, sol.q, cache(int, ST).ṽ, params)
+    equations(int).f(cache(int, ST).f, t, cache(int, ST).q, cache(int, ST).ṽ, params)
 
     # compute p
     cache(int, ST).θ̃ .= (cache(int, ST).θ .+ cache(int, ST).θ̄) ./ 2
-    cache(int, ST).p .= cache(int, ST).p̄ .+ timestep(int) .* (cache(int, ST).f .+ cache(int, ST).f̄) ./ 2
+    cache(int, ST).p .= sol.p .+ timestep(int) .* (cache(int, ST).f .+ cache(int, ST).f̄) ./ 2
 end
 
 
-function residual!(b::Vector{ST}, int::GeometricIntegrator{<:PMVItrapezoidal}) where {ST}
+function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVItrapezoidal}) where {ST}
     # compute b
-    b .= cache(int, ST).θ̃ .- cache(int, ST).p̄ .- timestep(int) .* cache(int, ST).f̄ ./ 2
+    b .= cache(int, ST).θ̃ .- sol.p .- timestep(int) .* cache(int, ST).f̄ ./ 2
 end

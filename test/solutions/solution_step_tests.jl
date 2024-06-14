@@ -8,6 +8,7 @@ t0 = 0.
 t1 = t0 + Δt
 x0 = rand(2)
 q0 = rand(1)
+v0 = zero(q0)
 p0 = q0.^2
 λ0 = rand(1)
 λ1 = rand(1)
@@ -116,12 +117,12 @@ end
     solstep.q̄ .= zero(q0)
     solstep.p̄ .= zero(p0)
 
-    @test current(solstep) == (t = t0, q = q0, p = p0)
-    @test previous(solstep) == (t = zero(t0), q = zero(q0), p = zero(p0))
+    @test current(solstep) == (t = t0, q = q0, v = v0, p = p0)
+    @test previous(solstep) == (t = zero(t0), q = zero(q0), v = zero(v0), p = zero(p0))
 
     reset!(solstep, Δt)
-    @test current(solstep) == (t = t0 + Δt, q = q0, p = p0)
-    @test previous(solstep) == (t = t0, q = q0, p = p0)
+    @test current(solstep) == (t = t0 + Δt, q = q0, v = v0, p = p0)
+    @test previous(solstep) == (t = t0, q = q0, v = v0, p = p0)
 
     update!(solstep, Δq, Δp)
     @test solstep.t == t0  + Δt

@@ -61,7 +61,7 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:CMDV
 end
 
 
-function residual!(b::Vector{ST}, sol, int::GeometricIntegrator{<:CMDVI}) where {ST}
+function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:CMDVI}) where {ST}
     # set some local variables for convenience
     local D = ndims(int)
 
@@ -75,8 +75,8 @@ function residual!(b::Vector{ST}, sol, int::GeometricIntegrator{<:CMDVI}) where 
 end
 
 
-function update!(sol, int::GeometricIntegrator{<:CMDVI})
+function update!(sol, params, int::GeometricIntegrator{<:CMDVI}, DT)
     # compute final update
-    sol.q .= cache(int).q
-    sol.p .= cache(int).p
+    sol.q .= cache(int, DT).q
+    sol.p .= cache(int, DT).p
 end

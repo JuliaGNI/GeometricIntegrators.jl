@@ -57,7 +57,6 @@ end
 
 @inline CacheType(ST, problem::AbstractProblemODE, method::ERK) = ERKCache{ST, ndims(problem), nstages(tableau(method))}
 
-
 function internal_variables(method::ERK, problem::AbstractProblemODE{DT,TT}) where {DT,TT}
     S = nstages(method)
     D = ndims(problem)
@@ -74,13 +73,7 @@ function copy_internal_variables(solstep::SolutionStep, cache::ERKCache)
 end
 
 
-function update!(sol, params, _, int::GeometricIntegrator{<:ERK})
-    # compute final update
-    update!(sol.q, cache(int).V, tableau(int), timestep(int))
-end
-
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
+function components!(_, sol, params, int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
     # obtain cache
     local Q = cache(int).Q
     local V = cache(int).V
@@ -97,7 +90,17 @@ function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ERK, <
         end
         equations(int).v(V[i], tᵢ, Q[i], params)
     end
+end
 
+function update!(sol, params, _, int::GeometricIntegrator{<:ERK})
+    # compute vector field at internal stages
+    components!(nothing, sol, params, int)
+
+    # compute final update
+    update!(sol.q, cache(int).V, tableau(int), timestep(int))
+end
+
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
     # compute final update
     update!(sol, params, nothing, int)
 end

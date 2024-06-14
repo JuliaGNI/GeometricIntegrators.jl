@@ -112,3 +112,21 @@ equations(int::ProjectionIntegrator) = functions(problem(int))
 timestep(int::ProjectionIntegrator) = timestep(problem(int))
 
 initialize!(int::ProjectionIntegrator) = initialize!(subint(int))
+
+# const DAEProjectionIntegrator{MT} = ProjectionIntegrator{MT, <:DAEProblem} where {{MT <: ProjectionMethod}}
+# const IODEProjectionIntegrator{MT} = ProjectionIntegrator{MT, <:IODEProblem} where {{MT <: ProjectionMethod}}
+# const LODEProjectionIntegrator{MT} = ProjectionIntegrator{MT, <:LODEProblem} where {{MT <: ProjectionMethod}}
+
+
+function project!(sol, U::AbstractVector, G::AbstractVector, int::ProjectionIntegrator{<:ProjectionMethod, <:DAEProblem})
+    sol.q .+= timestep(int) .* U
+end
+
+function project!(sol, U::AbstractVector, G::AbstractVector, int::ProjectionIntegrator{<:ProjectionMethod, <:Union{IODEProblem, LODEProblem, PDAEProblem, HDAEProblem}})
+    sol.q .+= timestep(int) .* U
+    sol.p .+= timestep(int) .* G
+end
+
+# function project!(sol, problem::EquationProblem, method::ProjectionMethod, cache::ProjectionCache)
+#     project(solstep, problem, method, cache.U, cache.G, cache.λ)
+# end

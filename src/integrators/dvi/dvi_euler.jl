@@ -71,7 +71,7 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIE
 end
 
 
-function residual!(b::Vector{ST}, sol, int::GeometricIntegrator{<:DVIA}) where {ST}
+function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIA}) where {ST}
     # set some local variables for convenience
     local D = ndims(int)
 
@@ -88,7 +88,7 @@ function residual!(b::Vector{ST}, sol, int::GeometricIntegrator{<:DVIA}) where {
 end
 
 
-function residual!(b::Vector{ST}, sol, int::GeometricIntegrator{<:DVIB}) where {ST}
+function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIB}) where {ST}
     # set some local variables for convenience
     local D = ndims(int)
 
@@ -105,10 +105,10 @@ function residual!(b::Vector{ST}, sol, int::GeometricIntegrator{<:DVIB}) where {
 end
 
 
-function update!(sol, int::GeometricIntegrator{<:DVIEuler})
+function update!(sol, params, int::GeometricIntegrator{<:DVIEuler}, DT)
     # compute final update
-    sol.q .= cache(int).q
-    # sol.v .= cache(int).v # TODO: Copy to internal variables.
-    sol.p .= cache(int).p
-    # sol.f .= cache(int).f # TODO: Copy to internal variables.
+    sol.q .= cache(int, DT).q
+    # sol.v .= cache(int, DT).v # TODO: Copy to internal variables.
+    sol.p .= cache(int, DT).p
+    # sol.f .= cache(int, DT).f # TODO: Copy to internal variables.
 end

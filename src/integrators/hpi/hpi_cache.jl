@@ -40,11 +40,6 @@ struct HPICache{DT,D,A} <: IODEIntegratorCache{DT,D}
     end
 end
 
-function reset!(cache::HPICache, t, q, p)
-    copyto!(cache.q̄, q)
-    copyto!(cache.p̄, p)
-end
-
 nlsolution(cache::HPICache) = cache.x
 
 function Cache{ST}(problem::AbstractProblemIODE, method::HPIMethod; kwargs...) where {ST}

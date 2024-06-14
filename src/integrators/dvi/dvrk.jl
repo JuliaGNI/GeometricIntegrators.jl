@@ -176,7 +176,7 @@ end
 
 
 # Compute stages of fully implicit Runge-Kutta methods.
-function residual!(b::Vector{ST}, sol, int::GeometricIntegrator{<:DVRK}) where {ST}
+function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVRK}) where {ST}
     # set some local variables for convenience and clarity
     local D = ndims(int)
     local S = nstages(tableau(int))
@@ -211,8 +211,8 @@ function residual!(b::Vector{ST}, sol, int::GeometricIntegrator{<:DVRK}) where {
 end
 
 
-function update!(sol, int::GeometricIntegrator{<:DVRK})
+function update!(sol, params, int::GeometricIntegrator{<:DVRK}, DT)
     # compute final update
-    sol.q .= cache(int).q
-    sol.p .= cache(int).θ
+    sol.q .= cache(int, DT).q
+    sol.p .= cache(int, DT).θ
 end

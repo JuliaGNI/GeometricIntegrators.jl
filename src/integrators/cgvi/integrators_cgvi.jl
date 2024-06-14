@@ -88,9 +88,6 @@ end
 struct CGVICache{ST,D,S,R} <: IODEIntegratorCache{ST,D}
     x::Vector{ST}
 
-    q̄::Vector{ST}
-    p̄::Vector{ST}
-
     q̃::Vector{ST}
     p̃::Vector{ST}
     ṽ::Vector{ST}
@@ -107,9 +104,6 @@ struct CGVICache{ST,D,S,R} <: IODEIntegratorCache{ST,D}
     function CGVICache{ST,D,S,R}() where {ST,D,S,R}
         x = zeros(ST, D*(S+1))
         
-        q̄ = zeros(ST,D)
-        p̄ = zeros(ST,D)
-
         # create temporary vectors
         q̃ = zeros(ST,D)
         p̃ = zeros(ST,D)
@@ -124,13 +118,8 @@ struct CGVICache{ST,D,S,R} <: IODEIntegratorCache{ST,D}
         V = create_internal_stage_vector(ST,D,R)
         F = create_internal_stage_vector(ST,D,R)
 
-        new(x, q̄, p̄, q̃, p̃, ṽ, f̃, s̃, X, Q, P, V, F)
+        new(x, q̃, p̃, ṽ, f̃, s̃, X, Q, P, V, F)
     end
-end
-
-function reset!(cache::CGVICache, t, q, p)
-    copyto!(cache.q̄, q)
-    copyto!(cache.p̄, p)
 end
 
 nlsolution(cache::CGVICache) = cache.x
@@ -225,7 +214,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
 end
 
 
-function residual!(b::Vector{ST}, int::GeometricIntegrator{<:CGVI}) where {ST}
+function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
     # set some local variables for convenience and clarity
     local C = cache(int, ST)
     local D = ndims(int)
@@ -233,59 +222,55 @@ function residual!(b::Vector{ST}, int::GeometricIntegrator{<:CGVI}) where {ST}
 
     # compute b = - [(P-AF)]
     for i in eachindex(method(int).r₀, method(int).r₁)
-        for k in eachindex(C.p̃, C.p̄)
+        for k in eachindex(C.p̃)#, sol.p # TODO
             z = zero(ST)
             for j in eachindex(C.P, C.F)
                 z += method(int).b[j] * method(int).m[j,i] * C.F[j][k] * timestep(int)
                 z += method(int).b[j] * method(int).a[j,i] * C.P[j][k]
             end
-            b[D*(i-1)+k] = (method(int).r₁[i] * C.p̃[k] - method(int).r₀[i] * C.p̄[k]) - z
+            b[D*(i-1)+k] = (method(int).r₁[i] * C.p̃[k] - method(int).r₀[i] * sol.p[k]) - z
         end
     end
 
     # compute b = - [(q-r₀Q)]
-    for k in eachindex(C.q̄)
+    for k in eachindex(sol.q)
         y = zero(ST)
         for j in eachindex(C.X)
             y += method(int).r₀[j] * C.X[j][k]
         end
-        b[D*S+k] = C.q̄[k] - y
+        b[D*S+k] = sol.q[k] - y
     end
 end
 
 
 # Compute stages of Variational Partitioned Runge-Kutta methods.
 function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
+    # check that x and b are compatible
     @assert axes(x) == axes(b)
-
-    # copy previous solution from solstep to cache
-    reset!(cache(int, ST), sol...)
 
     # compute stages from nonlinear solver solution x
     components!(x, sol, params, int)
 
     # compute residual vector
-    residual!(b, int)
+    residual!(b, sol, params, int)
 end
 
 
-function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:CGVI}) where {DT}
-    # copy previous solution from solstep to cache
-    reset!(cache(int, DT), sol...)
+function update!(sol, params, int::GeometricIntegrator{<:CGVI}, DT)
+    sol.q .= cache(int, DT).q̃
+    sol.p .= cache(int, DT).p̃
+end
 
+function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:CGVI}) where {DT}
     # compute vector field at internal stages
     components!(x, sol, params, int)
 
     # compute final update
-    solstep(int).q .= cache(int, DT).q̃
-    solstep(int).p .= cache(int, DT).p̃
+    update!(sol, params, int, DT)
 end
 
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:CGVI, <:AbstractProblemIODE})
-    # copy previous solution from solstep to cache
-    reset!(cache(int), sol...)
-
     # call nonlinear solver
     solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
 

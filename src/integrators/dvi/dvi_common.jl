@@ -10,28 +10,23 @@ default_iguess(::DVIMethod) = HermiteExtrapolation()
 
 
 function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DVIMethod, <:AbstractProblemIODE}) where {ST}
+    # check that x and b are compatible
     @assert axes(x) == axes(b)
-
-    # copy previous solution from solstep to cache
-    reset!(cache(int, ST), sol...)
 
     # compute stages from nonlinear solver solution x
     components!(x, sol, params, int)
 
     # compute residual vector
-    residual!(b, sol, int)
+    residual!(b, sol, params, int)
 end
 
 
 function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:DVIMethod, <:AbstractProblemIODE}) where {DT}
-    # copy previous solution from solstep to cache
-    reset!(cache(int, DT), sol...)
-
     # compute vector field at internal stages
     components!(x, sol, params, int)
 
     # compute final update
-    update!(sol, int)
+    update!(sol, params, int, DT)
 end
 
 

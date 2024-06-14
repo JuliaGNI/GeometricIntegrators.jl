@@ -13,9 +13,6 @@ Implicit Runge-Kutta integrator cache.
 struct IRKimplicitCache{DT,D,S} <: IODEIntegratorCache{DT,D}
     x::Vector{DT}
 
-    q̄::Vector{DT}
-    p̄::Vector{DT}
-
     q::Vector{DT}
     v::Vector{DT}
     θ::Vector{DT}
@@ -33,9 +30,6 @@ struct IRKimplicitCache{DT,D,S} <: IODEIntegratorCache{DT,D}
             x = zeros(DT, D*S)
         end
 
-        q̄ = zeros(DT,D)
-        p̄ = zeros(DT,D)
-
         q = zeros(DT,D)
         v = zeros(DT,D)
         θ = zeros(DT,D)
@@ -46,16 +40,11 @@ struct IRKimplicitCache{DT,D,S} <: IODEIntegratorCache{DT,D}
         Θ = create_internal_stage_vector(DT, D, S)
         F = create_internal_stage_vector(DT, D, S)
         
-        new(x, q̄, p̄, q, v, θ, f, Q, V, Θ, F)
+        new(x, q, v, θ, f, Q, V, Θ, F)
     end
 end
 
 nlsolution(cache::IRKimplicitCache) = cache.x
-
-function reset!(cache::IRKimplicitCache, t, q, p, λ = missing)
-    copyto!(cache.q̄, q)
-    copyto!(cache.p̄, p)
-end
 
 function Cache{ST}(problem::AbstractProblemIODE, method::IRK; kwargs...) where {ST}
     S = nstages(tableau(method))
@@ -108,7 +97,7 @@ function Base.show(io::IO, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE
 end
 
 
-function initial_guess!(int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
     # get cache for nonlinear solution vector and internal stages
     local x = nlsolution(int)
     local Q = cache(int).Q
@@ -118,14 +107,14 @@ function initial_guess!(int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
 
     # compute initial guess for internal stages
     for i in eachstage(int)
-        initialguess!(solstep(int).t̄ + timestep(int) * tableau(int).c[i], Q[i], Θ[i], V[i], F[i], solstep(int), problem(int), iguess(int))
+        initialguess!(sol.t + timestep(int) * (tableau(int).c[i] - 1), Q[i], Θ[i], V[i], F[i], solstep(int), problem(int), iguess(int))
     end
 
     # assemble initial guess for nonlinear solver solution vector
     for i in eachstage(int)
         offset = ndims(int)*(i-1)
         for k in 1:ndims(int)
-            x[offset+k] = Θ[i][k] - solstep(int).p̄[k]
+            x[offset+k] = Θ[i][k] - sol.p[k]
             for j in eachstage(int)
                 x[offset+k] -= timestep(int) * tableau(int).a[i,j] * F[j][k]
             end
@@ -189,8 +178,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
 end
 
 
-# Compute stages of implicit Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, sol, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {ST}
+function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -220,31 +208,31 @@ function residual!(b::AbstractVector{ST}, sol, int::GeometricIntegrator{<:IRK, <
 end
 
 
-# Compute stages of implicit Runge-Kutta methods.
 function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {ST}
+    # check that x and b are compatible
     @assert axes(x) == axes(b)
 
-    # copy previous solution from solstep to cache
-    reset!(cache(int, ST), sol...)
-
-    # compute stages from nonlinear solver solution x
+    # compute stages of implicit Runge-Kutta methods from nonlinear solver solution x
     components!(x, sol, params, int)
 
-    # compute residual vector
-    residual!(b, sol, int)
+    # compute right-hand side b of nonlinear solver
+    residual!(b, sol, params, int)
+end
+
+
+function update!(sol, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}, DT)
+    # compute final update
+    update!(sol.q, cache(int, DT).V, tableau(int), timestep(int))
+    update!(sol.p, cache(int, DT).F, tableau(int), timestep(int))
 end
 
 
 function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {DT}
-    # copy previous solution from solstep to cache
-    reset!(cache(int, DT), sol...)
-
     # compute vector field at internal stages
     components!(x, sol, params, int)
 
     # compute final update
-    update!(sol.q, cache(int, DT).V, tableau(int), timestep(int))
-    update!(sol.p, cache(int, DT).F, tableau(int), timestep(int))
+    update!(sol, params, int, DT)
 end
 
 

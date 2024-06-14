@@ -103,9 +103,6 @@ Implicit partitioned Runge-Kutta integrator cache.
 struct IPRKCache{ST,D,S,N} <: PODEIntegratorCache{ST,D}
     x::Vector{ST}
 
-    q̄::Vector{ST}
-    p̄::Vector{ST}
-
     Q::Vector{Vector{ST}}
     P::Vector{Vector{ST}}
     V::Vector{Vector{ST}}
@@ -117,10 +114,6 @@ struct IPRKCache{ST,D,S,N} <: PODEIntegratorCache{ST,D}
         # create solver vector
         x = zeros(ST, N)
 
-        # create previous solution vectors
-        q̄ = zeros(ST, D)
-        p̄ = zeros(ST, D)
-
         # create internal stage vectors
         Q = create_internal_stage_vector(ST, D, S)
         P = create_internal_stage_vector(ST, D, S)
@@ -129,7 +122,7 @@ struct IPRKCache{ST,D,S,N} <: PODEIntegratorCache{ST,D}
         Y = create_internal_stage_vector(ST, D, S)
         Z = create_internal_stage_vector(ST, D, S)
 
-        new(x, q̄, p̄, Q, P, V, F, Y, Z)
+        new(x, Q, P, V, F, Y, Z)
     end
 end
 
@@ -142,11 +135,6 @@ end
 @inline CacheType(ST, problem::EquationProblem, method::IPRK) = IPRKCache{ST, ndims(problem), nstages(tableau(method)), solversize(problem, method)}
 
 nlsolution(cache::IPRKCache) = cache.x
-
-function reset!(cache::IPRKCache, t, q, p)
-    copyto!(cache.q̄, q)
-    copyto!(cache.p̄, p)
-end
 
 
 function internal_variables(method::IPRK, problem::AbstractProblemPODE{DT,TT}) where {DT,TT}
@@ -173,7 +161,7 @@ function copy_internal_variables(solstep::SolutionStep, cache::IPRKCache)
 end
 
 
-function initial_guess!(int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE})
     # get cache for nonlinear solution vector and internal stages
     local x = nlsolution(int)
     local Q = cache(int).Q
@@ -183,7 +171,7 @@ function initial_guess!(int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE})
 
     # compute initial guess for internal stages
     for i in eachstage(int)
-        initialguess!(solstep(int).t̄ + timestep(int) * tableau(int).q.c[i], Q[i], P[i], V[i], F[i], solstep(int), problem(int), iguess(int))
+        initialguess!(sol.t + timestep(int) * (tableau(int).q.c[i] - 1), Q[i], P[i], V[i], F[i], solstep(int), problem(int), iguess(int))
     end
 
     # assemble initial guess for nonlinear solver solution vector
@@ -250,9 +238,6 @@ end
 
 
 function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE}) where {DT}
-    # copy previous solution from solstep to cache
-    reset!(cache(int, DT), sol...)
-
     # compute vector field at internal stages
     components!(x, sol, params, int)
 
@@ -263,9 +248,6 @@ end
 
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE})
-    # copy previous solution from solstep to cache
-    reset!(cache(int), sol...)
-
     # call nonlinear solver
     solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
 

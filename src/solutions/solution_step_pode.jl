@@ -115,8 +115,8 @@ end
 
 nhistory(::SolutionStepPODE{DT,TT,AT,VT,FT,HT,IT,PT,NT}) where {DT,TT,AT,VT,FT,HT,IT,PT,NT} = NT
 
-current(solstep::SolutionStepPODE) = (t = solstep.t, q = solstep.q, p = solstep.p)
-previous(solstep::SolutionStepPODE) = (t = solstep.t̄, q = solstep.q̄, p = solstep.p̄)
+current(solstep::SolutionStepPODE) = (t = solstep.t, q = solstep.q, v = solstep.v, p = solstep.p)
+previous(solstep::SolutionStepPODE) = (t = solstep.t̄, q = solstep.q̄, v = solstep.v̄, p = solstep.p̄)
 history(solstep::SolutionStepPODE) = solstep.history
 history(solstep::SolutionStepPODE, i::Int) = (
     t = history(solstep).t[i],

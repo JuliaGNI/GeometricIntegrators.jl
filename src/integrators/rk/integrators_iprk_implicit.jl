@@ -19,26 +19,23 @@ end
 @inline CacheType(ST, problem::AbstractProblemIODE, method::IPRK) = IPRKCache{ST, ndims(problem), nstages(tableau(method)), solversize(problem, method)}
 
 
-function initial_guess!(int::GeometricIntegrator{<:IPRK, <:AbstractProblemIODE})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK, <:AbstractProblemIODE})
     # get cache for nonlinear solution vector and internal stages
+    local C = cache(int)
     local x = nlsolution(int)
-    local Q = cache(int).Q
-    local P = cache(int).P
-    local V = cache(int).V
-    local F = cache(int).F
 
     # compute initial guess for internal stages
     for i in eachstage(int)
-        initialguess!(solstep(int).t̄ + timestep(int) * tableau(int).p.c[i], Q[i], P[i], V[i], F[i], solstep(int), problem(int), iguess(int))
+        initialguess!(sol.t + timestep(int) * (tableau(int).p.c[i] - 1), C.Q[i], C.P[i], C.V[i], C.F[i], solstep(int), problem(int), iguess(int))
     end
 
     # assemble initial guess for nonlinear solver solution vector
     for i in eachstage(int)
         offset = ndims(int)*(i-1)
         for k in 1:ndims(int)
-            x[offset+k] = P[i][k] - cache(int).p̄[k]
+            x[offset+k] = C.P[i][k] - sol.p[k]
             for j in eachstage(int)
-                x[offset+k] -= timestep(int) * tableau(int).p.a[i,j] * F[j][k]
+                x[offset+k] -= timestep(int) * tableau(int).p.a[i,j] * C.F[j][k]
             end
         end
     end

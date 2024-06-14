@@ -7,7 +7,7 @@ default_solver(::HPIMethod) = Newton()
 default_iguess(::HPIMethod) = HermiteExtrapolation()
 
 
-function initial_guess!(int::GeometricIntegrator{<:HPIMethod})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:HPIMethod})
     # set some local variables for convenience
     local D = ndims(int)
     local A = nparams(method(int))
@@ -18,29 +18,11 @@ function initial_guess!(int::GeometricIntegrator{<:HPIMethod})
 
     # copy initial guess to solution vector
     x[1:D] .= cache(int).q
-    x[D+1:D+A] .= 0
-end
-
-
-# Compute stages of Hamilton-Pontryagin integrators.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:HPIMethod, <:AbstractProblemIODE}) where {ST}
-    @assert axes(x) == axes(b)
-
-    # copy previous solution from solstep to cache
-    reset!(cache(int, ST), sol...)
-
-    # compute stages from nonlinear solver solution x
-    components!(x, sol, params, int)
-
-    # compute residual vector
-    residual!(b, int)
+    x[D+1:D+A] .= method(int).params
 end
 
 
 function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:HPIMethod}) where {DT}
-    # copy previous solution from solstep to cache
-    reset!(cache(int, DT), sol...)
-
     # compute vector field at internal stages
     components!(x, sol, params, int)
 

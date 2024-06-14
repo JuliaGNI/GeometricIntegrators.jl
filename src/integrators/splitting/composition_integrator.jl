@@ -101,6 +101,7 @@ timestep(int::CompositionIntegrator) = timestep(problem(int))
 
 initial_guess!(::CompositionIntegrator) = nothing
 
+
 function initialize!(cint::CompositionIntegrator)
     for int in subints(cint)
         initialize!(int)
@@ -111,9 +112,6 @@ end
 function integrate_step!(sol, history, params, int::CompositionIntegrator{<:AbstractSplittingMethod, <:SODEProblem})
     # compute composition steps
     for subint in subints(int)
-        # copy previous solution to cache of subint
-        reset!(cache(subint), sol.t, sol.q)
-        
         # compute initial guess for subint
         initial_guess!(subint)
 

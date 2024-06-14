@@ -47,7 +47,6 @@ end
 
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRK}) where {ST}
     # get cache for internal stages
-    local q̄ = cache(int, ST).q̄
     local Q = cache(int, ST).Q
     local P = cache(int, ST).P
     local V = cache(int, ST).V
@@ -69,7 +68,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
                 y1 += tableau(int).q.a[i,j] * V[j][k]
                 y2 += tableau(int).q.â[i,j] * V[j][k]
             end
-            Q[i][k] = q̄[k] + timestep(int) * (y1 + y2)
+            Q[i][k] = sol.q[k] + timestep(int) * (y1 + y2)
         end
     end
 
@@ -82,9 +81,8 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
 end
 
 
-function residual_solution!(b::AbstractVector{ST}, int::GeometricIntegrator{<:VPRK}) where {ST}
+function residual_solution!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRK}) where {ST}
     # get cache for previous solution and internal stages
-    local p̄ = cache(int, ST).p̄
     local P = cache(int, ST).P
     local F = cache(int, ST).F
 
@@ -96,13 +94,13 @@ function residual_solution!(b::AbstractVector{ST}, int::GeometricIntegrator{<:VP
                 z1 += tableau(int).p.a[i,j] * F[j][k]
                 z2 += tableau(int).p.â[i,j] * F[j][k]
             end
-            b[ndims(int)*(i-1) + k] = - ( P[i][k] - p̄[k] ) + timestep(int) * (z1 + z2)
+            b[ndims(int)*(i-1) + k] = - ( P[i][k] - sol.p[k] ) + timestep(int) * (z1 + z2)
         end
     end
 end
 
 
-function residual_correction!(b::AbstractVector{ST}, int::GeometricIntegrator{<:VPRK}) where {ST}
+function residual_correction!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRK}) where {ST}
     # get cache for internal stages
     local V = cache(int, ST).V
     local μ = cache(int, ST).μ
@@ -137,37 +135,37 @@ end
 
 
 # Compute stages of variational partitioned Runge-Kutta methods.
-function residual!(b::AbstractVector, int::GeometricIntegrator{<:VPRK})
-    residual_solution!(b, int)
-    residual_correction!(b, int)
+function residual!(b::AbstractVector, sol, params, int::GeometricIntegrator{<:VPRK})
+    residual_solution!(b, sol, params, int)
+    residual_correction!(b, sol, params, int)
 end
 
 
 # Compute stages of Variational Partitioned Runge-Kutta methods.
 function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRK}) where {ST}
+    # check that x and b are compatible
     @assert axes(x) == axes(b)
-
-    # copy previous solution from solstep to cache
-    reset!(cache(int, ST), sol...)
 
     # compute stages from nonlinear solver solution x
     components!(x, sol, params, int)
 
     # compute residual vector
-    residual!(b, int)
+    residual!(b, sol, params, int)
 end
 
 
-function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:VPRK}) where {DT}
-    # copy previous solution from solstep to cache
-    reset!(cache(int, DT), sol...)
+function update!(sol, params, int::GeometricIntegrator{<:VPRK}, DT)
+    # compute final update
+    update!(sol.q, cache(int, DT).V, tableau(int).q, timestep(int))
+    update!(sol.p, cache(int, DT).F, tableau(int).p, timestep(int))
+end
 
+function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:VPRK}) where {DT}
     # compute vector field at internal stages
     components!(x, sol, params, int)
 
     # compute final update
-    update!(sol.q, cache(int, DT).V, tableau(int).q, timestep(int))
-    update!(sol.p, cache(int, DT).F, tableau(int).p, timestep(int))
+    update!(sol, params, int, DT)
 end
 
 

@@ -1,21 +1,22 @@
 
-struct ProjectionCache{DT,D,M,N} <: IODEIntegratorCache{DT,D}
+mutable struct ProjectionCache{DT,TT,PT,D,M,N} <: IODEIntegratorCache{DT,D}
+    t::TT
+
     x::Vector{DT}
     x̄::SubArray{DT, 1, Vector{DT}, Tuple{UnitRange{Int}}, true}
     x̃::SubArray{DT, 1, Vector{DT}, Tuple{UnitRange{Int}}, true}
 
     q::Vector{DT}
-    q̃::Vector{DT}
-
     p::Vector{DT}
-
-    Δq::Vector{DT}
-    Δp::Vector{DT}
-
     v::Vector{DT}
     f::Vector{DT}
 
+    q̄::Vector{DT}
+    q̃::Vector{DT}
+    ṽ::Vector{DT}
+
     λ::Vector{DT}
+    ϑ::Vector{DT}
     ϕ::Vector{DT}
     u::Vector{DT}
     g::Vector{DT}
@@ -23,39 +24,49 @@ struct ProjectionCache{DT,D,M,N} <: IODEIntegratorCache{DT,D}
     U::Vector{Vector{DT}}
     G::Vector{Vector{DT}}
 
-    function ProjectionCache{DT,D,M,N}() where {DT,D,M,N}
+    function ProjectionCache{DT}(problem::EquationProblem, method::ProjectedMethod) where {DT}
+        D = ndims(problem)
+        M = nconstraints(problem)
+        N = solversize(problem, parent(method))
+
+        TT = timetype(problem)
+        t = tspan(problem)[begin]
+
         x = zeros(DT, N+D+M)
         x̄ = @view x[1:N]
         x̃ = @view x[N+1:N+D+M]
 
         q = zeros(DT, D)
-        q̃ = zeros(DT, D)
-
         p = zeros(DT, D)
-
-        Δq = zeros(DT, D)
-        Δp = zeros(DT, D)
-
         v = zeros(DT, D)
         f = zeros(DT, D)
+
+        q̄ = zeros(DT, D)
+        q̃ = zeros(DT, D)
+        ṽ = zeros(DT, D)
+        
         λ = zeros(DT, M)
+        ϑ = zeros(DT, M)
         ϕ = zeros(DT, M)
         u = zeros(DT, D)
         g = zeros(DT, D)
+
         U = [zeros(DT, D), zeros(DT, D)]
         G = [zeros(DT, D), zeros(DT, D)]
 
-        new(x, x̄, x̃, q, q̃, p, Δq, Δp, v, f, λ, ϕ, u, g, U, G)
+        new{DT, TT, typeof(problem), D, M, N}(t, x, x̄, x̃, q, p, v, f, q̄, q̃, ṽ, λ, ϑ, ϕ, u, g, U, G)
     end
 end
 
-Base.ndims(::ProjectionCache{DT,D,M,N}) where {DT,D,M,N} = D
-nconstraints(::ProjectionCache{DT,D,M,N}) where {DT,D,M,N} = M
-solversize(::ProjectionCache{DT,D,M,N}) where {DT,D,M,N} = N
+ProjectionCache(problem::EquationProblem, method::ProjectedMethod) = ProjectionCache{datatype(problem)}(problem, method)
+
+Base.ndims(::ProjectionCache{DT,TT,PT,D,M,N}) where {DT,TT,PT,D,M,N} = D
+nconstraints(::ProjectionCache{DT,TT,PT,D,M,N}) where {DT,TT,PT,D,M,N} = M
+solversize(::ProjectionCache{DT,TT,PT,D,M,N}) where {DT,TT,PT,D,M,N} = N
 
 nlsolution(cache::ProjectionCache) = cache.x
 
-function split_nlsolution(cache::ProjectionCache{DT,D,M,N}) where {DT,D,M,N}
+function split_nlsolution(cache::ProjectionCache{DT,TT,PT,D,M,N}) where {DT,TT,PT,D,M,N}
     x = nlsolution(cache)
     x̄ = @view x[1:N]
     x̃ = @view x[N+1:N+D+M]
@@ -64,55 +75,35 @@ function split_nlsolution(cache::ProjectionCache{DT,D,M,N}) where {DT,D,M,N}
 end
 
 
-function current(cache::ProjectionCache, solstep::Union{SolutionStepODE,SolutionStepDAE})
-    (t = solstep.t, q = cache.q)
+function current(cache::ProjectionCache{DT, TT, <:DAEProblem}) where {DT, TT}
+    (t = cache.t, q = cache.q)
 end
 
-function current(cache::ProjectionCache, solstep::Union{SolutionStepPODE,SolutionStepPDAE})
-    (t = solstep.t, q = cache.q, p = cache.p)
+function current(cache::ProjectionCache{DT, TT, <:Union{PDAEProblem, HDAEProblem}}) where {DT, TT}
+    (t = cache.t, q = cache.q, p = cache.p)
 end
 
-function reset!(cache::ProjectionCache, t, q)
-    copyto!(cache.q, q)
+function current(cache::ProjectionCache{DT, TT, <:Union{IODEProblem, LODEProblem}}) where {DT, TT}
+    (t = cache.t, q = cache.q, v = cache.v, p = cache.p)
 end
 
-function reset!(cache::ProjectionCache, t, q, p, λ = missing)
-    copyto!(cache.q, q)
-    copyto!(cache.p, p)
+function reset!(cache::ProjectionCache{DT, TT, <:DAEProblem}, sol) where {DT, TT}
+    cache.t = sol.t
+    copyto!(cache.q, sol.q)
+    return cache
 end
 
-function update!(cache::ProjectionCache, V::AbstractVector, tableau::Tableau, Δt::Number)
-    update_vector!(cache.Δq, V, tableau, Δt)
-    cache.q .+= cache.Δq
+function reset!(cache::ProjectionCache{DT, TT, <:Union{PDAEProblem, HDAEProblem}}, sol) where {DT, TT}
+    cache.t = sol.t
+    copyto!(cache.q, sol.q)
+    copyto!(cache.p, sol.p)
+    return cache
 end
 
-function update!(cache::ProjectionCache, V::AbstractVector, F::AbstractVector, tableau::Tableau, Δt::Number)
-    update_vector!(cache.Δq, V, tableau, Δt)
-    update_vector!(cache.Δp, F, tableau, Δt)
-    cache.q .+= cache.Δq
-    cache.p .+= cache.Δp
-end
-
-function update!(cache::ProjectionCache, V::AbstractVector, F::AbstractVector, tableau::PartitionedTableau, Δt::Number)
-    update_vector!(cache.Δq, V, tableau.q, Δt)
-    update_vector!(cache.Δp, F, tableau.p, Δt)
-    cache.q .+= cache.Δq
-    cache.p .+= cache.Δp
-end
-
-function update!(cache::ProjectionCache, subcache::Union{ODEIntegratorCache,DAEIntegratorCache}, tableau::Union{Tableau,PartitionedTableau}, Δt::Number)
-    update!(cache, subcache.V, tableau, Δt)
-end
-
-function update!(cache::ProjectionCache, subcache::Union{IODEIntegratorCache,PODEIntegratorCache}, tableau::Union{Tableau,PartitionedTableau}, Δt::Number)
-    update!(cache, subcache.V, subcache.F, tableau, Δt)
-end
-
-function project!(cache::ProjectionCache, U::AbstractVector, G::AbstractVector, Δt::Number)
-    cache.q .+= Δt .* U
-    cache.p .+= Δt .* G
-end
-
-function project!(solstep::SolutionStep, problem::EquationProblem, method::ProjectionMethod, cache::ProjectionCache)
-    project(solstep, problem, method, cache.U, cache.G, cache.λ)
+function reset!(cache::ProjectionCache{DT, TT, <:Union{IODEProblem, LODEProblem}}, sol) where {DT, TT}
+    cache.t = sol.t
+    copyto!(cache.q, sol.q)
+    copyto!(cache.v, sol.v)
+    copyto!(cache.p, sol.p)
+    return cache
 end

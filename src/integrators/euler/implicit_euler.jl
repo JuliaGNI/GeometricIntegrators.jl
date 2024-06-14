@@ -16,24 +16,20 @@ Implicit Euler integrator cache.
 """
 struct ImplicitEulerCache{DT,D} <: ODEIntegratorCache{DT,D}
     x::Vector{DT}
-    q̄::Vector{DT}
     q::Vector{DT}
     v::Vector{DT}
     v̄::Vector{DT}
 
     function ImplicitEulerCache{DT,D}() where {DT,D}
         x = zeros(DT, D)
-        q̄ = zeros(DT, D)
         q = zeros(DT, D)
         v = zeros(DT, D)
         v̄ = zeros(DT, D)
-        new(x, q̄, q, v, v̄)
+        new(x, q, v, v̄)
     end
 end
 
 nlsolution(cache::ImplicitEulerCache) = cache.x
-
-reset!(cache::ImplicitEulerCache, t, q, λ = missing) = copyto!(cache.q̄, q)
 
 function Cache{ST}(problem::AbstractProblem, method::ImplicitEuler; kwargs...) where {ST}
     ImplicitEulerCache{ST, ndims(problem)}(; kwargs...)
@@ -48,9 +44,9 @@ default_solver(::ImplicitEuler) = Newton()
 default_iguess(::ImplicitEuler) = HermiteExtrapolation()
 
 
-function initial_guess!(int::GeometricIntegrator{<:ImplicitEuler})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:ImplicitEuler})
     # compute initial guess
-    initialguess!(solstep(int).t, cache(int).q, cache(int).v, solstep(int), problem(int), iguess(int))
+    initialguess!(sol.t, cache(int).q, cache(int).v, solstep(int), problem(int), iguess(int))
 
     # assemble initial guess for nonlinear solver solution vector
     nlsolution(int) .= cache(int).v
@@ -58,13 +54,12 @@ end
 
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:ImplicitEuler}) where {ST}
     local q = cache(int, ST).q
-    local q̄ = cache(int, ST).q̄
     local v = cache(int, ST).v
     local v̄ = cache(int, ST).v̄
 
     # compute q = q̄ + Δt * x (v = x)
     v̄ .= x
-    q .= q̄ .+ timestep(int) .* v̄
+    q .= sol.q .+ timestep(int) .* v̄
 
     # compute v = v(q)
     equations(int).v(v, sol.t, q, params)
