@@ -65,9 +65,6 @@ function extrapolate!(t₀::TT, x₀::AbstractVector{DT},
     return x₁
 end
 
-function extrapolate!(t₀, x₀::AbstractVector,
-                      t₁, x₁::AbstractVector,
-                      problem::AbstractProblemODE,
-                      extrap::EulerExtrapolation)
-    extrapolate!(t₀, x₀, t₁, x₁, functions(problem).v, parameters(problem), extrap)
+function extrapolate!(sol, history, problem::AbstractProblemODE, extrap::EulerExtrapolation)
+    extrapolate!(history.t[1], history.q[1], sol.t, sol.q, functions(problem).v, parameters(problem), extrap)
 end

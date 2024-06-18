@@ -69,57 +69,62 @@ extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, ode, HermiteExtrapolation())
 @test extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, ẋ₁, ode, HermiteExtrapolation()) == (xᵢ, ẋᵢ)
 
 
+# solution and history tuples
+sol = (t = tᵢ, q = xᵢ)
+history = (t = [t₀], q = [x₀])
+
 # Euler Extrapolation for ODEs
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, EulerExtrapolation(0))
-# println(xᵢ, xₙ, xᵢ .- xₙ)
-@test xᵢ ≈ xₙ atol=1E-1
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, EulerExtrapolation(1))
+extrapolate!(sol, history, ode, EulerExtrapolation(0))
 # println(xᵢ, xₙ, xᵢ .- xₙ)
-@test xᵢ ≈ xₙ atol=1E-2
+@test sol.q ≈ xₙ atol=1E-1
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, EulerExtrapolation(2))
+extrapolate!(sol, history, ode, EulerExtrapolation(1))
 # println(xᵢ, xₙ, xᵢ .- xₙ)
-@test xᵢ ≈ xₙ atol=1E-4
+@test sol.q ≈ xₙ atol=1E-2
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, EulerExtrapolation(3))
+extrapolate!(sol, history, ode, EulerExtrapolation(2))
 # println(xᵢ, xₙ, xᵢ .- xₙ)
-@test xᵢ ≈ xₙ atol=1E-6
+@test sol.q ≈ xₙ atol=1E-4
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, EulerExtrapolation(4))
+extrapolate!(sol, history, ode, EulerExtrapolation(3))
 # println(xᵢ, xₙ, xᵢ .- xₙ)
-@test xᵢ ≈ xₙ atol=1E-8
+@test sol.q ≈ xₙ atol=1E-6
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, EulerExtrapolation(5))
+extrapolate!(sol, history, ode, EulerExtrapolation(4))
 # println(xᵢ, xₙ, xᵢ .- xₙ)
-@test xᵢ ≈ xₙ atol=1E-10
+@test sol.q ≈ xₙ atol=1E-8
+
+extrapolate!(sol, history, ode, EulerExtrapolation(5))
+# println(xᵢ, xₙ, xᵢ .- xₙ)
+@test sol.q ≈ xₙ atol=1E-10
 
 
 # Midpoint Extrapolation for ODEs
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(0))
+extrapolate!(sol, history, ode, MidpointExtrapolation(0))
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-4
+@test sol.q ≈ xₙ atol=1E-4
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(1))
+extrapolate!(sol, history, ode, MidpointExtrapolation(1))
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-8
+@test sol.q ≈ xₙ atol=1E-8
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(2))
+extrapolate!(sol, history, ode, MidpointExtrapolation(2))
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-12
+@test sol.q ≈ xₙ atol=1E-12
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(3))
+extrapolate!(sol, history, ode, MidpointExtrapolation(3))
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-15
+@test sol.q ≈ xₙ atol=1E-15
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(4))
+extrapolate!(sol, history, ode, MidpointExtrapolation(4))
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-16
+@test sol.q ≈ xₙ atol=1E-16
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(5))
+extrapolate!(sol, history, ode, MidpointExtrapolation(5))
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-15
+@test sol.q ≈ xₙ atol=1E-15
 
 
 # Create PODE Solution Arrays
@@ -157,40 +162,43 @@ functions(pode).f(ṗₚ, tₚ, qₚ, pₚ, parameters(pode))
 functions(pode).f(ṗ₀, t₀, q₀, p₀, parameters(pode))
 functions(pode).f(ṗₙ, tₙ, qₙ, pₙ, parameters(pode))
 
+# solution and history tuples
+sol = (t = tᵢ, q = qᵢ, p = pᵢ)
+history = (t = [t₀], q = [q₀], p = [p₀])
 
 # Midpoint Extrapolation for PODEs
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(0))
+extrapolate!(sol, history, pode, MidpointExtrapolation(0))
 # println(0, qᵢ, qₙ, qᵢ .- qₙ)
 # println(0, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-6
 @test pᵢ ≈ pₙ atol=1E-4
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(1))
+extrapolate!(sol, history, pode, MidpointExtrapolation(1))
 # println(1, qᵢ, qₙ, qᵢ .- qₙ)
 # println(1, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-10
 @test pᵢ ≈ pₙ atol=1E-8
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(2))
+extrapolate!(sol, history, pode, MidpointExtrapolation(2))
 # println(2, qᵢ, qₙ, qᵢ .- qₙ)
 # println(2, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-14
 @test pᵢ ≈ pₙ atol=1E-12
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(3))
+extrapolate!(sol, history, pode, MidpointExtrapolation(3))
 # println(3, qᵢ, qₙ, qᵢ .- qₙ)
 # println(3, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-15
 @test pᵢ ≈ pₙ atol=1E-16
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(4))
+extrapolate!(sol, history, pode, MidpointExtrapolation(4))
 # println(4, qᵢ, qₙ, qᵢ .- qₙ)
 # println(4, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-16
 @test pᵢ ≈ pₙ atol=1E-16
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(5))
+extrapolate!(sol, history, pode, MidpointExtrapolation(5))
 # println(5, qᵢ, qₙ, qᵢ .- qₙ)
 # println(5, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-15
@@ -237,39 +245,43 @@ functions(iode).f̄(ṗₚ, tₚ, qₚ, q̇ₚ, parameters(iode))
 functions(iode).f̄(ṗ₀, t₀, q₀, q̇₀, parameters(iode))
 functions(iode).f̄(ṗₙ, tₙ, qₙ, q̇ₙ, parameters(iode))
 
+# solution and history tuples
+sol = (t = tᵢ, q = qᵢ, p = pᵢ)
+history = (t = [t₀], q = [q₀], p = [p₀])
+
 # Midpoint Extrapolation for IODEs
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, iode, MidpointExtrapolation(0))
+extrapolate!(sol, history, iode, MidpointExtrapolation(0))
 # println(0, qᵢ, qₙ, qᵢ .- qₙ)
 # println(0, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-4
 @test pᵢ ≈ pₙ atol=1E-4
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, iode, MidpointExtrapolation(1))
+extrapolate!(sol, history, iode, MidpointExtrapolation(1))
 # println(1, qᵢ, qₙ, qᵢ .- qₙ)
 # println(1, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-8
 @test pᵢ ≈ pₙ atol=1E-8
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, iode, MidpointExtrapolation(2))
+extrapolate!(sol, history, iode, MidpointExtrapolation(2))
 # println(2, qᵢ, qₙ, qᵢ .- qₙ)
 # println(2, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-12
 @test pᵢ ≈ pₙ atol=1E-12
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, iode, MidpointExtrapolation(3))
+extrapolate!(sol, history, iode, MidpointExtrapolation(3))
 # println(3, qᵢ, qₙ, qᵢ .- qₙ)
 # println(3, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-15
 @test pᵢ ≈ pₙ atol=1E-16
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, iode, MidpointExtrapolation(4))
+extrapolate!(sol, history, iode, MidpointExtrapolation(4))
 # println(4, qᵢ, qₙ, qᵢ .- qₙ)
 # println(4, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-16
 @test pᵢ ≈ pₙ atol=1E-16
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, iode, MidpointExtrapolation(5))
+extrapolate!(sol, history, iode, MidpointExtrapolation(5))
 # println(5, qᵢ, qₙ, qᵢ .- qₙ)
 # println(5, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-15

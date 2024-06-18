@@ -130,11 +130,8 @@ function extrapolate_ode!(t₀::TT, x₀::AbstractVector{DT},
     return x₁
 end
 
-function extrapolate!(t₀, x₀::AbstractVector,
-                      t₁, x₁::AbstractVector,
-                      problem::AbstractProblemODE,
-                      extrap::MidpointExtrapolation)
-    extrapolate_ode!(t₀, x₀, t₁, x₁, functions(problem).v, parameters(problem), extrap)
+function extrapolate!(sol, history, problem::AbstractProblemODE, extrap::MidpointExtrapolation)
+    extrapolate_ode!(history.t[1], history.q[1], sol.t, sol.q, functions(problem).v, parameters(problem), extrap)
 end
 
 
@@ -198,11 +195,8 @@ function extrapolate_pode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
     return (q₁, p₁)
 end
 
-function extrapolate!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
-    t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
-    problem::AbstractProblemPODE,
-    extrap::MidpointExtrapolation) where {DT,TT}
-    extrapolate_pode!(t₀, q₀, p₀, t₁, q₁, p₁, functions(problem).v, functions(problem).f, parameters(problem), extrap)
+function extrapolate!(sol, history, problem::AbstractProblemPODE, extrap::MidpointExtrapolation)
+    extrapolate_pode!(history.t[1], history.q[1], history.p[1], sol.t, sol.q, sol.p, functions(problem).v, functions(problem).f, parameters(problem), extrap)
 end
 
 
@@ -266,10 +260,6 @@ function extrapolate_iode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
     return (q₁, p₁)
 end
 
-function extrapolate!(
-    t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
-    t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
-    problem::AbstractProblemIODE,
-    extrap::MidpointExtrapolation) where {DT,TT}
-    extrapolate_iode!(t₀, q₀, p₀, t₁, q₁, p₁, functions(problem).v̄, functions(problem).f̄, parameters(problem), extrap)
+function extrapolate!(sol, history, problem::AbstractProblemIODE, extrap::MidpointExtrapolation)
+    extrapolate_iode!(history.t[1], history.q[1], history.p[1], sol.t, sol.q, sol.p, functions(problem).v̄, functions(problem).f̄, parameters(problem), extrap)
 end

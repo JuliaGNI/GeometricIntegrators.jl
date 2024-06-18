@@ -33,8 +33,11 @@ tₙ = tspan(ode_next)[end]
 qₙ = zero(q₀)
 vₙ = zero(v₀)
 
-extrapolate!(t₀, q₀, tₚ, qₚ, ode_prev, MidpointExtrapolation(5))
-extrapolate!(t₀, q₀, tₙ, qₙ, ode_next, MidpointExtrapolation(5))
+hist = (t = [t₀], q = [q₀])
+prev = (t = tₚ, q = qₚ)
+next = (t = tₙ, q = qₙ)
+extrapolate!(prev, hist, ode_prev, MidpointExtrapolation(5))
+extrapolate!(next, hist, ode_next, MidpointExtrapolation(5))
 
 equation(ode).v(vₚ, tₚ, qₚ, parameters(ode))
 equation(ode).v(vₙ, tₙ, qₙ, parameters(ode))
@@ -96,8 +99,11 @@ pₙ = zero(p₀)
 vₙ = zero(v₀)
 fₙ = zero(f₀)
 
-extrapolate!(t₀, q₀, p₀, tₚ, qₚ, pₚ, pode_prev, MidpointExtrapolation(5))
-extrapolate!(t₀, q₀, p₀, tₙ, qₙ, pₙ, pode_next, MidpointExtrapolation(5))
+hist = (t = [t₀], q = [q₀], p = [p₀])
+prev = (t = tₚ, q = qₚ, p = pₚ)
+next = (t = tₙ, q = qₙ, p = pₙ)
+extrapolate!(prev, hist, pode_prev, MidpointExtrapolation(5))
+extrapolate!(next, hist, pode_next, MidpointExtrapolation(5))
 
 equation(pode).v(vₚ, tₚ, qₚ, pₚ, parameters(pode))
 equation(pode).v(vₙ, tₙ, qₙ, pₙ, parameters(pode))

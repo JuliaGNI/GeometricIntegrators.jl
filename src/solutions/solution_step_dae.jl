@@ -149,7 +149,9 @@ function initialize!(solstep::SolutionStepDAE, problem::DAEProblem, extrap::Extr
 
     for i in eachhistory(solstep)
         history(solstep).t[i] = history(solstep).t[i-1] - timestep(problem)
-        extrapolate!(history(solstep).t[i-1], history(solstep).q[i-1], history(solstep).t[i], history(solstep).q[i], problem, extrap)
+        sol = (t = history(solstep).t[i], q = history(solstep).q[i])
+        hist = (t = [history(solstep).t[i-1]], q = [history(solstep).q[i-1]])
+        extrapolate!(sol, hist, problem, extrap)
         update_vector_fields!(solstep, problem, i)
     end
 
