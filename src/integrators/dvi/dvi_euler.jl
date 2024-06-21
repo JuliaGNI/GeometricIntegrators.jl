@@ -108,7 +108,7 @@ end
 function update!(sol, params, int::GeometricIntegrator{<:DVIEuler}, DT)
     # compute final update
     sol.q .= cache(int, DT).q
-    # sol.v .= cache(int, DT).v # TODO: Copy to internal variables.
+    sol.v .= cache(int, DT).v
     sol.p .= cache(int, DT).p
     # sol.f .= cache(int, DT).f # TODO: Copy to internal variables.
 end
