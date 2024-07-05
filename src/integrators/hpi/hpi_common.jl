@@ -14,10 +14,17 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:HPIMeth
     local x = nlsolution(int)
 
     # compute initial guess for solution q(n+1)
-    initialguess!(solstep(int).t, cache(int).q, cache(int).p, solstep(int), problem(int), iguess(int))
+    soltmp = (
+        t = sol.t,
+        q = cache(int).q̃,
+        p = cache(int).θ̃,
+        v = cache(int).ṽ,
+        f = cache(int).f̃,
+    )
+    solutionstep!(soltmp, history, problem(int), iguess(int))
 
     # copy initial guess to solution vector
-    x[1:D] .= cache(int).q
+    x[1:D] .= cache(int).q̃
     x[D+1:D+A] .= method(int).params
 end
 

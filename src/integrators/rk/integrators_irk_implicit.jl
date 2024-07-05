@@ -98,32 +98,42 @@ end
 
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
-    # get cache for nonlinear solution vector and internal stages
+    # get cache for nonlinear solution vector
     local x = nlsolution(int)
-    local Q = cache(int).Q
-    local Θ = cache(int).Θ
-    local V = cache(int).V
-    local F = cache(int).F
 
     # compute initial guess for internal stages
     for i in eachstage(int)
-        initialguess!(sol.t + timestep(int) * (tableau(int).c[i] - 1), Q[i], Θ[i], V[i], F[i], solstep(int), problem(int), iguess(int))
+        soltmp = (
+            t = history.t[1] + timestep(int) * tableau(int).c[i],
+            q = cache(int).Q[i],
+            p = cache(int).Θ[i],
+            v = cache(int).V[i],
+            f = cache(int).F[i],
+        )
+        solutionstep!(soltmp, history, problem(int), iguess(int))
     end
 
     # assemble initial guess for nonlinear solver solution vector
     for i in eachstage(int)
         offset = ndims(int)*(i-1)
         for k in 1:ndims(int)
-            x[offset+k] = Θ[i][k] - sol.p[k]
+            x[offset+k] = cache(int).Θ[i][k] - sol.p[k]
             for j in eachstage(int)
-                x[offset+k] -= timestep(int) * tableau(int).a[i,j] * F[j][k]
+                x[offset+k] -= timestep(int) * tableau(int).a[i,j] * cache(int).F[j][k]
             end
         end
     end
 
     # compute initial guess for solution
     if implicit_update(int)
-        initialguess!(solstep(int).t, cache(int).q, cache(int).θ, cache(int).v, cache(int).f, solstep(int), problem(int), iguess(int))
+        soltmp = (
+            t = sol.t,
+            q = cache(int).q,
+            p = cache(int).θ,
+            v = cache(int).v,
+            f = cache(int).f,
+        )
+        solutionstep!(soltmp, history, problem(int), iguess(int))
 
         offset = ndims(int) * nstages(int)
 

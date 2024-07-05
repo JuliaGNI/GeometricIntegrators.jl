@@ -1,103 +1,157 @@
 
-#*****************************************************************************#
-# General integration functions for all integrators                           #
-#*****************************************************************************#
-
-abstract type DeterministicIntegrator <: AbstractIntegrator end
-
-cache(::DeterministicIntegrator, DT) = nothing
-cache(::DeterministicIntegrator) = nothing
-
-initialize!(::SolutionStep, ::AbstractProblem, ::GeometricMethod, ::CacheDict, ::Union{SolverMethod, NonlinearSolver}, ::Union{InitialGuess,Extrapolation}) = nothing
-initialize!(int::DeterministicIntegrator) = initialize!(solstep(int), problem(int), method(int), caches(int), solver(int), iguess(int))
-
-initial_guess!(sol, history, params, ::DeterministicIntegrator) = nothing
-initial_guess!(int::DeterministicIntegrator) = initial_guess!(current(solstep(int)), history(solstep(int)), parameters(problem(int)), int)
-
-function residual!(b::AbstractVector, x::AbstractVector, int::DeterministicIntegrator)
-    residual!(b, x, current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
+function solutionstep(int::AbstractIntegrator, sol, args...)
+    solstep = SolutionStep(problem(int), method(int))
+    initialize!(solstep, sol, problem(int), args...)
+    solstep
 end
+
+cache(::AbstractIntegrator, DT) = nothing
+cache(::AbstractIntegrator) = nothing
+
+
+"""
+GeometricIntegrator
+
+Collects all data structures needed by an integrator:
+
+* `problem`: [`EquationProblem`](@ref) to solve
+* `method`: integration method
+* `cache`: temprary data structures needed by method
+* `solver`: linear or nonlinear solver needed by method
+* `iguess`: initial guess for implicit methods
+* `projection`: optional projection method
+
+Constructors:
+
+```
+GeometricIntegrator(problem::EquationProblem, method::GeometricMethod; solver = default_solver(method), iguess = default_iguess(method), projection = default_projection(method))
+```
+
+"""
+struct GeometricIntegrator{
+        MT <: GeometricMethod,
+        PT <: AbstractProblem,
+        CT <: CacheDict{PT,MT},
+        ST <: Union{NonlinearSolver,SolverMethod},
+        IT <: Extrapolation
+    } <: AbstractIntegrator
+
+    problem::PT
+    method::MT
+    caches::CT
+    solver::ST
+    iguess::IT
+end
+
+function GeometricIntegrator(
+        problem::AbstractProblem,
+        integratormethod::GeometricMethod,
+        solvermethod::SolverMethod,
+        iguess::Extrapolation;
+        method = initmethod(integratormethod, problem),
+        caches = CacheDict(problem, method),
+        solver = initsolver(solvermethod, method, caches)
+    )
+    GeometricIntegrator(problem, method, caches, solver, iguess)
+end
+
+function GeometricIntegrator(
+        problem::AbstractProblem,
+        method::GeometricMethod;
+        solver = default_solver(method),
+        initialguess = default_iguess(method),
+        kwargs...
+    )
+    GeometricIntegrator(problem, method, solver, initialguess; kwargs...)
+end
+
+GeometricIntegrator(::AbstractProblem, ::Nothing, args...; kwargs...) = nothing
+
+problem(int::GeometricIntegrator) = int.problem
+method(int::GeometricIntegrator) = int.method
+caches(int::GeometricIntegrator) = int.caches
+solver(int::GeometricIntegrator) = int.solver
+iguess(int::GeometricIntegrator) = int.iguess
+initialguess(int::GeometricIntegrator) = int.iguess
+
+cache(int::GeometricIntegrator, DT) = caches(int)[DT]
+cache(int::GeometricIntegrator) = cache(int, datatype(problem(int)))
+eachstage(int::GeometricIntegrator) = eachstage(method(int))
+hasnullvector(int::GeometricIntegrator) = hasnullvector(method(int))
+implicit_update(int::GeometricIntegrator) = implicit_update(method(int))
+nconstraints(int::GeometricIntegrator) = nconstraints(problem(int))
+Base.ndims(int::GeometricIntegrator) = ndims(problem(int))
+nstages(int::GeometricIntegrator) = nstages(tableau(method(int)))
+nlsolution(int::GeometricIntegrator) = nlsolution(cache(int))
+nullvector(int::GeometricIntegrator) = nullvector(method(int))
+tableau(int::GeometricIntegrator) = tableau(method(int))
+
+equations(int::GeometricIntegrator) = functions(problem(int))
+timestep(int::GeometricIntegrator) = timestep(problem(int))
+
+initial_guess!(sol, history, params, ::GeometricIntegrator) = nothing
+
+# Cache{DT}(int::Integrator) where {DT} = Cache{DT}(int.problem, int.method)
+
+# cache(::GeometricIntegrator, DT) = nothing
+# cache(::GeometricIntegrator) = nothing
+
+# initialize!(::SolutionStep, ::AbstractProblem, ::GeometricMethod, ::CacheDict, ::Union{SolverMethod, NonlinearSolver}, ::Union{InitialGuess,Extrapolation}) = nothing
+# initialize!(int::DeterministicIntegrator) = initialize!(solstep(int), problem(int), method(int), caches(int), solver(int), iguess(int))
+
+# function residual!(b::AbstractVector, x::AbstractVector, int::DeterministicIntegrator)
+#     residual!(b, x, current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
+# end
 
 # components!(x::AbstractVector, int::DeterministicIntegrator) = components!(x, solstep(int), problem(int), method(int), caches(int))
 
 
-# Apply integrator for ntime time steps and return solution.
-function integrate(integrator::DeterministicIntegrator; kwargs...)
-    solution = Solution(problem(integrator); kwargs...)
-    integrate!(solution, integrator)
-end
-
-function integrate(problem::AbstractProblem, method::GeometricMethod; kwargs...)
-    integrator = GeometricIntegrator(problem, method; kwargs...)
-    integrate(integrator)
-end
-
-function integrate(problems::EnsembleProblem, method::GeometricMethod; kwargs...)
-    solutions = Solution(problems; kwargs...)
-
-    for (problem, solution) in zip(problems, solutions)
-        integrator = GeometricIntegrator(problem, method; kwargs...)
-        integrate!(solution, integrator)
-    end
-
-    return solutions
-end
-
-function integrate_step!(int::DeterministicIntegrator)
-    # integrate one time step
-    integrate_step!(current(solstep(int)), history(solstep(int)), parameters(solstep(int)), int)
-
-    # copy internal variables from cache to solution step
-    copy_internal_variables(solstep(int), cache(int))
-
-    # copy solver status to solution step
-    # solver_status!(solver(int), solstep(int).internal[:solver])
-end
-
-
 # Parts of one integration step that are common to deterministic and stochastic equations.
 # function integrate!(solstep::SolutionStep, problem::EquationProblem, method::GeometricMethod, caches::CacheDict, solver::Union{SolverMethod, NonlinearSolver}, iguess::Union{InitialGuess,Extrapolation})
-function integrate!(int::DeterministicIntegrator)
+function integrate!(solstep::SolutionStep, int::AbstractIntegrator)
     # reset solution step
-    reset!(solstep(int), timestep(int))
+    reset!(solstep, timestep(int))
 
     # compute initial guess
-    initial_guess!(int)
+    initial_guess!(current(solstep), history(solstep), parameters(solstep), int)
 
     # integrate one initial condition for one time step
-    integrate_step!(int)
+    integrate_step!(current(solstep), history(solstep), parameters(solstep), int)
+
+    # copy internal variables from cache to solution step
+    copy_internal_variables!(solstep, cache(int))
+
+    # copy solver status to solution step
+    # solver_status!(solver(int), solstep.internal[:solver])
 
     # take care of periodic solutions
-    cut_periodic_solution!(solstep(int), periodicity(problem(int)))
+    cut_periodic_solution!(solstep, periodicity(problem(int)))
 
     # update vector field for initial guess
-    update_vector_fields!(solstep(int), problem(int))
+    update_vector_fields!(solstep, problem(int))
 
-    return solstep(int)
+    return solstep
 end
 
-# Integrate equation for time steps n with n₁ ≤ n ≤ n₂.
 """
 Solve for time steps n with n₁ ≤ n ≤ n₂.
 ```julia
 integrate!(solution, integrator, n₁, n₂)
 ```
 """
-function integrate!(sol::GeometricSolution, int::DeterministicIntegrator, n₁::Int, n₂::Int)
+function integrate!(sol::GeometricSolution, int::AbstractIntegrator, n₁::Int, n₂::Int)
     # check time steps range for consistency
     @assert n₁ ≥ 1
     @assert n₂ ≥ n₁
     @assert n₂ ≤ ntime(sol)
 
-    # copy initial condition from solution and initialize
-    copy!(solstep(int), sol[n₁-1])
-    initialize!(int)
-    initialize!(solstep(int), problem(int), default_extrapolation())
+    # copy initial condition from solution to solutionstep and initialize
+    solstep = solutionstep(int, sol[n₁-1])
 
     # loop over time steps
     for n in n₁:n₂
         # integrate one step and copy solution from cache to solution
-        sol[n] = integrate!(int)
+        sol[n] = integrate!(solstep, int)
 
         # try
         #     sol[n] = integrate!(int)
@@ -131,97 +185,33 @@ Solve for all time steps n:
 integrate!(solution, integrator)
 ```
 """
-function integrate!(sol::GeometricSolution, int::DeterministicIntegrator)
+function integrate!(sol::GeometricSolution, int::AbstractIntegrator)
     integrate!(sol, int, 1, ntime(sol))
 end
 
 
-
-"""
-GeometricIntegrator
-
-Collects all data structures needed by an integrator:
-
-* `problem`: [`EquationProblem`](@ref) to solve
-* `method`: integration method
-* `cache`: temprary data structures needed by method
-* `solver`: linear or nonlinear solver needed by method
-* `iguess`: initial guess for implicit methods
-* `projection`: optional projection method
-
-Constructors:
-
-```
-GeometricIntegrator(problem::EquationProblem, method::GeometricMethod; solver = default_solver(method), iguess = default_iguess(method), projection = default_projection(method))
-```
-
-"""
-struct GeometricIntegrator{
-        MT <: GeometricMethod,
-        PT <: AbstractProblem,
-        CT <: CacheDict{PT,MT},
-        ST <: Union{NonlinearSolver,SolverMethod},
-        IT <: Union{InitialGuess,Extrapolation},
-        SST <: SolutionStep
-    } <: DeterministicIntegrator
-
-    problem::PT
-    method::MT
-    caches::CT
-    solver::ST
-    iguess::IT
-    solstep::SST
+function integrate(integrator::AbstractIntegrator; kwargs...)
+    solution = Solution(problem(integrator); kwargs...)
+    integrate!(solution, integrator)
 end
 
-function GeometricIntegrator(
-        problem::AbstractProblem,
-        integratormethod::GeometricMethod,
-        solvermethod::SolverMethod,
-        iguess::Union{InitialGuess,Extrapolation};
-        method = initmethod(integratormethod, problem),
-        caches = CacheDict(problem, method),
-        solstp = SolutionStep(problem, method),
-        solver = initsolver(solvermethod, method, caches)
-    )
-    GeometricIntegrator(problem, method, caches, solver, iguess, solstp)
+function integrate(problem::AbstractProblem, method::GeometricMethod; kwargs...)
+    integrator = GeometricIntegrator(problem, method; kwargs...)
+    integrate(integrator)
 end
 
-function GeometricIntegrator(
-        problem::AbstractProblem,
-        method::GeometricMethod;
-        solver = default_solver(method),
-        initialguess = default_iguess(method),
-        kwargs...
-    )
-    GeometricIntegrator(problem, method, solver, initialguess; kwargs...)
+function integrate(problems::EnsembleProblem, method::GeometricMethod; kwargs...)
+    solutions = Solution(problems; kwargs...)
+
+    for (problem, solution) in zip(problems, solutions)
+        integrator = GeometricIntegrator(problem, method; kwargs...)
+        integrate!(solution, integrator)
+    end
+
+    return solutions
 end
 
-GeometricIntegrator(::AbstractProblem, ::Nothing, args...; kwargs...) = nothing
 
-problem(int::GeometricIntegrator) = int.problem
-method(int::GeometricIntegrator) = int.method
-caches(int::GeometricIntegrator) = int.caches
-solver(int::GeometricIntegrator) = int.solver
-iguess(int::GeometricIntegrator) = int.iguess
-initialguess(int::GeometricIntegrator) = int.iguess
-solstep(int::GeometricIntegrator) = int.solstep
-
-cache(int::GeometricIntegrator, DT) = caches(int)[DT]
-cache(int::GeometricIntegrator) = cache(int, datatype(solstep(int)))
-eachstage(int::GeometricIntegrator) = eachstage(method(int))
-hasnullvector(int::GeometricIntegrator) = hasnullvector(method(int))
-implicit_update(int::GeometricIntegrator) = implicit_update(method(int))
-nconstraints(int::GeometricIntegrator) = nconstraints(problem(int))
-Base.ndims(int::GeometricIntegrator) = ndims(problem(int))
-nstages(int::GeometricIntegrator) = nstages(tableau(method(int)))
-nlsolution(int::GeometricIntegrator) = nlsolution(cache(int))
-nullvector(int::GeometricIntegrator) = nullvector(method(int))
-tableau(int::GeometricIntegrator) = tableau(method(int))
-
-equations(int::GeometricIntegrator) = functions(problem(int))
-timestep(int::GeometricIntegrator) = timestep(problem(int))
-
-# Cache{DT}(int::Integrator) where {DT} = Cache{DT}(int.problem, int.method)
 
 
 

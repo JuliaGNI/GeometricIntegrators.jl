@@ -131,7 +131,7 @@ end
 @inline CacheType(ST, problem::AbstractProblemIODE, method::CGVI) = CGVICache{ST, ndims(problem), nbasis(method), nnodes(method)}
 
 
-function initial_guess!(int::GeometricIntegrator{<:CGVI})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CGVI})
     # set some local variables for convenience
     local D = ndims(int)
     local S = nbasis(method(int))
@@ -141,14 +141,28 @@ function initial_guess!(int::GeometricIntegrator{<:CGVI})
     # obtained e.g. from an L2 projection of q onto the basis
 
     for i in eachindex(basis(method(int)))
-        initialguess!(solstep(int).t̄ + timestep(int) * method(int).x[i], cache(int).q̃, cache(int).p̃, solstep(int), problem(int), iguess(int))
-        
+        soltmp = (
+            t = sol.t + timestep(int) * (method(int).x[i] - 1),
+            q = cache(int).q̃,
+            p = cache(int).p̃,
+            v = cache(int).ṽ,
+            f = cache(int).f̃,
+        )
+        solutionstep!(soltmp, history, problem(int), iguess(int))
+
         for k in 1:D
             x[D*(i-1)+k] = cache(int).q̃[k]
         end
     end
 
-    initialguess!(solstep(int).t, cache(int).q̃, cache(int).p̃, solstep(int), problem(int), iguess(int))
+    soltmp = (
+        t = sol.t,
+        q = cache(int).q̃,
+        p = cache(int).p̃,
+        v = cache(int).ṽ,
+        f = cache(int).f̃,
+    )
+    solutionstep!(soltmp, history, problem(int), iguess(int))
 
     for k in 1:D
         x[D*S+k] = cache(int).p̃[k]

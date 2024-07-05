@@ -38,10 +38,9 @@ struct ProjectionIntegrator{
         PT <: AbstractProblem,
         CT <: CacheDict{PT,MT},
         ST <: Union{NonlinearSolver,SolverMethod},
-        IT <: Union{InitialGuess,Extrapolation},
-        SIT <: AbstractIntegrator,
-        SST <: SolutionStep
-    } <: DeterministicIntegrator
+        IT <: Extrapolation,
+        SIT <: AbstractIntegrator
+    } <: AbstractIntegrator
 
     problem::PT
     method::MT
@@ -49,30 +48,28 @@ struct ProjectionIntegrator{
     solver::ST
     iguess::IT
     subint::SIT
-    solstep::SST
 end
 
 function ProjectionIntegrator(
         problem::AbstractProblem,
         projectionmethod::ProjectionMethod,
         solvermethod::SolverMethod,
-        iguess::Union{InitialGuess,Extrapolation},
+        iguess::Extrapolation,
         subint::AbstractIntegrator;
         method = initmethod(projectionmethod, problem),
         caches = CacheDict(problem, method),
-        solstp = solstep(subint),
         solver = initsolver(solvermethod, method, caches)
     )
-    ProjectionIntegrator(problem, method, caches, solver, iguess, subint, solstp)
+    ProjectionIntegrator(problem, method, caches, solver, iguess, subint)
 end
 
 function ProjectionIntegrator(
         problem::AbstractProblem,
         projectionmethod::ProjectionMethod,
         solvermethod::SolverMethod,
-        iguess::Union{InitialGuess,Extrapolation},
+        iguess::Extrapolation,
         parent_solvermethod::SolverMethod,
-        parent_iguess::Union{InitialGuess,Extrapolation};
+        parent_iguess::Extrapolation;
         kwargs...
     )
     subint = GeometricIntegrator(problem, parent(projectionmethod), parent_solvermethod, parent_iguess)
@@ -99,10 +96,10 @@ solver(int::ProjectionIntegrator) = int.solver
 iguess(int::ProjectionIntegrator) = int.iguess
 initialguess(int::ProjectionIntegrator) = int.iguess
 subint(int::ProjectionIntegrator) = int.subint
-solstep(int::ProjectionIntegrator) = int.solstep
+# solstep(int::ProjectionIntegrator) = int.solstep
 
 cache(int::ProjectionIntegrator, DT) = caches(int)[DT]
-cache(int::ProjectionIntegrator) = cache(int, datatype(solstep(int)))
+cache(int::ProjectionIntegrator) = cache(int, datatype(problem(int)))
 nconstraints(int::ProjectionIntegrator) = nconstraints(problem(int))
 nlsolution(int::ProjectionIntegrator) = nlsolution(cache(int))
 

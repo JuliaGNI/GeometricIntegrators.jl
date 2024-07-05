@@ -25,13 +25,20 @@ function Base.show(io::IO, int::GeometricIntegrator{<:DVIB})
 end
 
 
-function initial_guess!(int::GeometricIntegrator{<:DVIEuler})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DVIEuler})
     # set some local variables for convenience
     local D = ndims(int)
     local x = nlsolution(int)
 
     # compute initial guess for solution
-    initialguess!(solstep(int).t, cache(int).q, cache(int).p, cache(int).v, cache(int).f, solstep(int), problem(int), iguess(int))
+    soltmp = (
+        t = sol.t,
+        q = cache(int).q,
+        p = cache(int).p,
+        v = cache(int).v,
+        f = cache(int).f,
+    )
+    solutionstep!(soltmp, history, problem(int), iguess(int))
 
     # copy q to nonlinear solution vector
     x[1:D] .= cache(int).q
@@ -39,7 +46,7 @@ function initial_guess!(int::GeometricIntegrator{<:DVIEuler})
     # copy v to nonlinear solution vector
     for k in 1:div(D,2)
         x[D+k] = cache(int).v[k]
-        x[D+div(D,2)+k] = solstep(int).v[k]
+        x[D+div(D,2)+k] = sol.v[k]
     end
 end
 

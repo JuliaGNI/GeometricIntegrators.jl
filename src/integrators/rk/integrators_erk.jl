@@ -67,7 +67,7 @@ function internal_variables(method::ERK, problem::AbstractProblemODE{DT,TT}) whe
     (Q=Q, V=V)
 end
 
-function copy_internal_variables(solstep::SolutionStep, cache::ERKCache)
+function copy_internal_variables!(solstep::SolutionStep, cache::ERKCache)
     haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
     haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
 end

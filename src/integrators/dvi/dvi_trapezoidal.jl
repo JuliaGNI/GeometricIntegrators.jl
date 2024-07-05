@@ -64,18 +64,32 @@ function Base.show(io::IO, int::GeometricIntegrator{<:CTDVI})
 end
 
 
-function initial_guess!(int::GeometricIntegrator{<:CTDVI})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CTDVI})
     # set some local variables for convenience
     local D = ndims(int)
     local x = nlsolution(int)
 
     # compute initial guess for solution q(n+1)
-    initialguess!(solstep(int).t, cache(int).q, cache(int).θ, cache(int).v, cache(int).f, solstep(int), problem(int), iguess(int))
+    soltmp = (
+        t = sol.t,
+        q = cache(int).q,
+        p = cache(int).θ,
+        v = cache(int).v,
+        f = cache(int).f,
+    )
+    solutionstep!(soltmp, history, problem(int), iguess(int))
 
     x[1:D] .= cache(int).q
 
     # compute initial guess for solution q(n+1/2)
-    initialguess!((solstep(int).t + solstep(int).t̄)/2, cache(int).q, cache(int).θ, cache(int).v, cache(int).f, solstep(int), problem(int), iguess(int))
+    soltmp = (
+        t = (sol.t + history.t[1]) / 2,
+        q = cache(int).q,
+        p = cache(int).θ,
+        v = cache(int).v,
+        f = cache(int).f,
+    )
+    solutionstep!(soltmp, history, problem(int), iguess(int))
 
     offset_v = D
     offset_x = D + div(D,2)

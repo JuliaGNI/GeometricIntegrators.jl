@@ -72,10 +72,10 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     method(int).ϕ(cache(int,ST).ṽ, sol.q, cache(int,ST).q, cache(int,ST).a, timestep(int))
  
     # compute Θ = ϑ(q,ṽ) and f = f(q,ṽ)
-    equations(int).ϑ(cache(int,ST).θ̄, solstep(int).t̄, sol.q, cache(int,ST).ṽ, params)
-    equations(int).f(cache(int,ST).f̄, solstep(int).t̄, sol.q, cache(int,ST).ṽ, params)
-    equations(int).ϑ(cache(int,ST).θ, solstep(int).t, cache(int,ST).q, cache(int,ST).ṽ, params)
-    equations(int).f(cache(int,ST).f, solstep(int).t, cache(int,ST).q, cache(int,ST).ṽ, params)
+    equations(int).ϑ(cache(int,ST).θ̄, sol.t - timestep(int), sol.q, cache(int,ST).ṽ, params)
+    equations(int).f(cache(int,ST).f̄, sol.t - timestep(int), sol.q, cache(int,ST).ṽ, params)
+    equations(int).ϑ(cache(int,ST).θ, sol.t, cache(int,ST).q, cache(int,ST).ṽ, params)
+    equations(int).f(cache(int,ST).f, sol.t, cache(int,ST).q, cache(int,ST).ṽ, params)
 
     # compute derivatives of ϕ
     method(int).D₁ϕ(cache(int,ST).D₁ϕ, cache(int).q̄, cache(int,ST).q, cache(int,ST).a, timestep(int))

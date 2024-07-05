@@ -110,7 +110,12 @@ end
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DIRK})
     for i in eachstage(int)
-        initialguess!(sol.t + timestep(int) * (tableau(int).c[i] - 1), cache(int).Q[i], cache(int).V[i], solstep(int), problem(int), iguess(int))
+        soltmp = (
+            t = history.t[1] + timestep(int) * tableau(int).c[i],
+            q = cache(int).Q[i],
+            v = cache(int).V[i],
+        )
+        solutionstep!(soltmp, history, problem(int), iguess(int))
     end
 
     for i in eachstage(int)

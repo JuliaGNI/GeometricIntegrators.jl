@@ -114,14 +114,21 @@ function Base.show(io::IO, int::GeometricIntegrator{<:DVRK})
 end
 
 
-function initial_guess!(int::GeometricIntegrator{<:DVRK})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DVRK})
     # set some local variables for convenience
     local D = ndims(int)
     local x = nlsolution(int)
 
     # compute initial guess for internal stages
     for i in eachstage(int)
-        initialguess!(solstep(int).t̄ + timestep(int) * tableau(int).c[i], cache(int).Q[i], cache(int).Θ[i], cache(int).V[i], cache(int).F[i], solstep(int), problem(int), iguess(int))
+        soltmp = (
+            t = sol.t + timestep(int) * (tableau(int).c[i] - 1),
+            q = cache(int).Q[i],
+            p = cache(int).Θ[i],
+            v = cache(int).V[i],
+            f = cache(int).F[i],
+        )
+        solutionstep!(soltmp, history, problem(int), iguess(int))
     end
     for i in eachindex(cache(int).V)
         for k in eachindex(cache(int).V[i])
@@ -130,7 +137,14 @@ function initial_guess!(int::GeometricIntegrator{<:DVRK})
     end
     
     # compute initial guess for solution
-    initialguess!(solstep(int).t, cache(int).q, cache(int).θ, cache(int).v, cache(int).f, solstep(int), problem(int), iguess(int))
+    soltmp = (
+        t = sol.t,
+        q = cache(int).q,
+        p = cache(int).θ,
+        v = cache(int).v,
+        f = cache(int).f,
+    )
+    solutionstep!(soltmp, history, problem(int), iguess(int))
 
     for k in 1:D
         x[ndims(int) * nstages(int) + k] = cache(int).q[k]

@@ -6,7 +6,7 @@ abstract type IntegratorCache{DT,D} <: Cache{DT} end
 IntegratorCache(problem::AbstractProblem, method::GeometricMethod) = IntegratorCache{datatype(problem)}(problem, method)
 IntegratorCache{ST}(::AbstractProblem, ::GeometricMethod) where {ST} = nothing
 
-copy_internal_variables(::SolutionStep, ::Union{IntegratorCache,Nothing}) = nothing
+copy_internal_variables!(::SolutionStep, ::Union{IntegratorCache,Nothing}) = nothing
 
 CacheType(T, problem::AbstractProblem, method::GeometricMethod) = error("CacheType(T, params) not implemented for ", typeof(problem), " and ", typeof(method))
 

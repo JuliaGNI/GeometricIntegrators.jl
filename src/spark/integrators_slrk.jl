@@ -115,27 +115,30 @@ function Base.show(io::IO, int::IntegratorSLRK)
 end
 
 
-function initial_guess!(int::GeometricIntegrator{<:SLRK,<:LDAEProblem})
-    # get caches for nonlinear solver vector and internal stages
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SLRK,<:LDAEProblem})
+    # get caches for nonlinear solver vector
     local x = cache(int).x
-    local Q = cache(int).Qp
-    local P = cache(int).Pp
-    local V = cache(int).Vp
-    local F = cache(int).Fp
 
     # compute initial guess for internal stages
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
-        initialguess!(solstep(int).t̄ + timestep(int) * method(int).p̃.c[i], Q[i], P[i], V[i], F[i], solstep(int), problem(int), iguess(int))
+        soltmp = (
+            t = history.t[1] + timestep(int) * tableau(int).p̃.c[i],
+            q = cache(int).Qp[i],
+            p = cache(int).Pp[i],
+            v = cache(int).Vp[i],
+            f = cache(int).Fp[i],
+        )
+        solutionstep!(soltmp, history, problem(int), iguess(int))
     end
 
     # assemble initial guess for nonlinear solver solution vector
     for i in 1:pstages(method(int))
         for k in 1:ndims(problem(int))
             offset = 4*(ndims(int)*(i-1)+k-1)
-            x[offset+1] = (Q[i][k] - solstep(int).q̄[k]) / timestep(int)
-            x[offset+2] = (P[i][k] - solstep(int).p̄[k]) / timestep(int)
-            x[offset+3] =  V[i][k]
+            x[offset+1] = (cache(int).Qp[i][k] - sol.q[k]) / timestep(int)
+            x[offset+2] = (cache(int).Pp[i][k] - sol.p[k]) / timestep(int)
+            x[offset+3] =  cache(int).Vp[i][k]
             x[offset+4] = 0
         end
     end

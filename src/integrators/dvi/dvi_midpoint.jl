@@ -12,18 +12,32 @@ function Base.show(io::IO, int::GeometricIntegrator{<:CMDVI})
 end
 
 
-function initial_guess!(int::GeometricIntegrator{<:CMDVI})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CMDVI})
     # set some local variables for convenience
     local D = ndims(int)
     local x = nlsolution(int)
 
     # compute initial guess for solution q(n+1)
-    initialguess!(solstep(int).t, cache(int).q, cache(int).p, cache(int).v, cache(int).f, solstep(int), problem(int), iguess(int))
+    soltmp = (
+        t = sol.t,
+        q = cache(int).q,
+        p = cache(int).p,
+        v = cache(int).v,
+        f = cache(int).f,
+    )
+    solutionstep!(soltmp, history, problem(int), iguess(int))
 
     x[1:D] .= cache(int).q
 
     # compute initial guess for solution q(n+1/2)
-    initialguess!((solstep(int).t + solstep(int).t̄)/2, cache(int).q, cache(int).p, cache(int).v, cache(int).f, solstep(int), problem(int), iguess(int))
+    soltmp = (
+        t = (sol.t + history.t[1]) / 2,
+        q = cache(int).q,
+        p = cache(int).p,
+        v = cache(int).v,
+        f = cache(int).f,
+    )
+    solutionstep!(soltmp, history, problem(int), iguess(int))
 
     offset_v = D
     offset_x = D + div(D,2)
@@ -37,8 +51,8 @@ end
 function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:CMDVI}) where {ST}
     # set some local variables for convenience and clarity
     local D = ndims(int)
-    local t̃ = solstep(int).t̄ + timestep(int) / 2
-    local t = solstep(int).t
+    local t̃ = sol.t - timestep(int) / 2
+    local t = sol.t
     
     # copy x to q
     cache(int,ST).q .= x[1:D]

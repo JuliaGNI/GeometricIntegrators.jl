@@ -101,7 +101,7 @@ function internal_variables(method::EPRK, problem::AbstractProblemPODE{DT,TT}) w
     (Q=Q, P=P, V=V, F=F, Y=Y, Z=Z)
 end
 
-function copy_internal_variables(solstep::SolutionStep, cache::EPRKCache)
+function copy_internal_variables!(solstep::SolutionStep, cache::EPRKCache)
     haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
     haskey(internal(solstep), :P) && copyto!(internal(solstep).P, cache.P)
     haskey(internal(solstep), :Y) && copyto!(internal(solstep).Y, cache.Y)

@@ -162,16 +162,19 @@ end
 
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE})
-    # get cache for nonlinear solution vector and internal stages
+    # get cache for nonlinear solution vector
     local x = nlsolution(int)
-    local Q = cache(int).Q
-    local P = cache(int).P
-    local V = cache(int).V
-    local F = cache(int).F
 
     # compute initial guess for internal stages
     for i in eachstage(int)
-        initialguess!(sol.t + timestep(int) * (tableau(int).q.c[i] - 1), Q[i], P[i], V[i], F[i], solstep(int), problem(int), iguess(int))
+        soltmp = (
+            t = history.t[1] + timestep(int) * tableau(int).q.c[i],
+            q = cache(int).Q[i],
+            p = cache(int).P[i],
+            v = cache(int).V[i],
+            f = cache(int).F[i],
+        )
+        solutionstep!(soltmp, history, problem(int), iguess(int))
     end
 
     # assemble initial guess for nonlinear solver solution vector
@@ -180,8 +183,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK, <
             x[2*(ndims(int)*(i-1)+k-1)+1] = 0
             x[2*(ndims(int)*(i-1)+k-1)+2] = 0
             for j in eachstage(int)
-                x[2*(ndims(int)*(i-1)+k-1)+1] += tableau(int).q.a[i,j] * V[j][k]
-                x[2*(ndims(int)*(i-1)+k-1)+2] += tableau(int).p.a[i,j] * F[j][k]
+                x[2*(ndims(int)*(i-1)+k-1)+1] += tableau(int).q.a[i,j] * cache(int).V[j][k]
+                x[2*(ndims(int)*(i-1)+k-1)+2] += tableau(int).p.a[i,j] * cache(int).F[j][k]
             end
         end
     end

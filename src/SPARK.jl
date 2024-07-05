@@ -23,8 +23,8 @@ module SPARK
     import ..Integrators: HDAEMethod, IDAEMethod, LDAEMethod, PDAEMethod
     import ..Integrators: SolutionStepPDAE
     import ..Integrators: StageVector
-    import ..Integrators: InitialGuess, Extrapolation, HermiteExtrapolation
-    import ..Integrators: initialguess!, initial_guess!, integrate_step!, residual!
+    import ..Integrators: Extrapolation, HermiteExtrapolation
+    import ..Integrators: initial_guess!, integrate_step!, residual!, solutionstep!
     import ..Integrators: CacheDict, Cache, CacheType, IDAEIntegratorCache
     import ..Integrators: AbstractCoefficients,
                           @CoefficientsRK, @HeaderCoefficientsRK
@@ -33,7 +33,7 @@ module SPARK
                           initialize!, initsolver, internal, nlsolution,
                           internal_variables
     import ..Integrators: current, equation, equations, timestep, eachstage, nstages
-    import ..Integrators: cache, caches, iguess, method, problem, solstep, solver
+    import ..Integrators: cache, caches, iguess, method, problem, solver
 
 
     export CoefficientsARK, CoefficientsPRK, CoefficientsMRK, CoefficientsIRK,

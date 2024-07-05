@@ -13,9 +13,8 @@ end
 
 # Create SolutionStep for a PODEProblem.
 function SolutionStep(problem::Union{PODEProblem, HODEProblem, IODEProblem, LODEProblem}, extrap::Extrapolation = default_extrapolation(); kwargs...)
-    ics = initial_conditions(problem)
-    solstep = SolutionStepPODE(ics.t, ics.q, ics.p, parameters(problem); kwargs...)
-    initialize!(solstep, problem, extrap)
+    solstep = SolutionStepPODE(initial_conditions(problem)..., parameters(problem); kwargs...)
+    initialize!(solstep, initial_conditions(problem), problem, extrap)
     return solstep
 end
 
@@ -27,7 +26,7 @@ end
 # Create SolutionStep for a DAEProblem.
 function SolutionStep(problem::DAEProblem, extrap::Extrapolation = default_extrapolation(); kwargs...)
     solstep = SolutionStepDAE(initial_conditions(problem)..., parameters(problem); kwargs...)
-    initialize!(solstep, problem, extrap)
+    initialize!(solstep, initial_conditions(problem), problem, extrap)
     return solstep
 end
 
@@ -39,7 +38,7 @@ end
 # Create SolutionStep for a PDAEProblem.
 function SolutionStep(problem::Union{PDAEProblem, HDAEProblem, IDAEProblem, LDAEProblem}, extrap::Extrapolation = default_extrapolation(); kwargs...)
     solstep = SolutionStepPDAE(initial_conditions(problem)..., parameters(problem); kwargs...)
-    initialize!(solstep, problem, extrap)
+    initialize!(solstep, initial_conditions(problem), problem, extrap)
     return solstep
 end
 

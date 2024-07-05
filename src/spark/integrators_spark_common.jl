@@ -20,7 +20,7 @@ function internal_variables(method::AbstractSPARKMethod, problem::AbstractSPARKP
 end
 
 
-function copy_internal_variables(solstep::SolutionStepPDAE, cache::IntegratorCacheSPARK)
+function copy_internal_variables!(solstep::SolutionStepPDAE, cache::IntegratorCacheSPARK)
     haskey(internal(solstep), :Qi) && copyto!(internal(solstep).Qi, cache.Qi)
     haskey(internal(solstep), :Pi) && copyto!(internal(solstep).Pi, cache.Pi)
     haskey(internal(solstep), :Vi) && copyto!(internal(solstep).Vi, cache.Vi)

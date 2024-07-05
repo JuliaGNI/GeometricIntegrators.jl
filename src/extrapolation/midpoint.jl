@@ -91,16 +91,18 @@ struct MidpointExtrapolation <: Extrapolation
 end
 
 
-function extrapolate_ode!(t₀::TT, x₀::AbstractVector{DT},
-                      t₁::TT, x₁::AbstractVector{DT},
-                      v::Callable, params::OptionalParameters,
-                      extrap::MidpointExtrapolation) where {DT,TT}
-    @assert size(x₀) == size(x₁)
+function extrapolate!(
+        t₀::TT, x₀::AbstractVector{DT},
+        t₁::TT, x₁::AbstractVector{DT},
+        problem::Union{AbstractProblemODE, SODEProblem},
+        extrap::MidpointExtrapolation) where {DT,TT}
+    
+    @assert axes(x₀) == axes(x₁)
 
     local F   = [2i*one(TT) for i in 1:extrap.s+1]
     local σ   = (t₁ - t₀) ./ F
     local σ²  = σ.^2
-    local pts = zeros(DT, length(x₀), extrap.s+1)
+    local pts = zeros(DT, axes(x₀)..., extrap.s+1)
 
     local xᵢ₁ = zero(x₀)
     local xᵢ₂ = zero(x₀)
@@ -108,14 +110,14 @@ function extrapolate_ode!(t₀::TT, x₀::AbstractVector{DT},
     local vᵢ  = zero(x₀)
     local v₀  = zero(x₀)
 
-    v(v₀, t₀, x₀, params)
+    initialguess(problem).v(v₀, t₀, x₀, parameters(problem))
 
     for i in 1:extrap.s+1
         tᵢ   = t₀ + σ[i]
         xᵢ₁ .= x₀
         xᵢ₂ .= x₀ .+ σ[i] .* v₀
         for _ in 1:(F[i]-1)
-            v(vᵢ, tᵢ, xᵢ₂, params)
+            initialguess(problem).v(vᵢ, tᵢ, xᵢ₂, parameters(problem))
             xᵢₜ .= xᵢ₁ .+ 2σ[i] .* vᵢ
             xᵢ₁ .= xᵢ₂
             xᵢ₂ .= xᵢₜ
@@ -130,23 +132,26 @@ function extrapolate_ode!(t₀::TT, x₀::AbstractVector{DT},
     return x₁
 end
 
-function extrapolate!(sol, history, problem::AbstractProblemODE, extrap::MidpointExtrapolation)
-    extrapolate_ode!(history.t[1], history.q[1], sol.t, sol.q, functions(problem).v, parameters(problem), extrap)
+function solutionstep!(sol, history, problem::Union{AbstractProblemODE, SODEProblem}, extrap::MidpointExtrapolation)
+    extrapolate!(history.t[1], history.q[1], sol.t, sol.q, problem, extrap)
+    update_vectorfields!(sol, problem)
+    return sol
 end
 
 
-function extrapolate_pode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
+function extrapolate!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
                       t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
-                      v::Callable, f::Callable, params::OptionalParameters,
+                      problem::AbstractProblemPODE,
                       extrap::MidpointExtrapolation) where {DT,TT}
-    @assert size(q₀) == size(q₁) == size(p₀) == size(p₁)
+    
+    @assert axes(q₀) == axes(q₁) == axes(p₀) == axes(p₁)
 
     local F   = [2i*one(TT) for i in 1:extrap.s+1]
     local σ   = (t₁ - t₀) ./ F
     local σ2  = σ.^2
 
-    local qts = zeros(DT, length(q₀), extrap.s+1)
-    local pts = zeros(DT, length(p₀), extrap.s+1)
+    local qts = zeros(DT, axes(q₀)..., extrap.s+1)
+    local pts = zeros(DT, axes(p₀)..., extrap.s+1)
 
     local qᵢ₁= zero(q₀)
     local qᵢ₂= zero(q₀)
@@ -162,8 +167,8 @@ function extrapolate_pode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
     local f₀ = zero(p₀)
     local fᵢ = zero(p₀)
 
-    v(v₀, t₀, q₀, p₀, params)
-    f(f₀, t₀, q₀, p₀, params)
+    initialguess(problem).v(v₀, t₀, q₀, p₀, parameters(problem))
+    initialguess(problem).f(f₀, t₀, q₀, p₀, parameters(problem))
 
     for i in 1:extrap.s+1
         tᵢ   = t₀ + σ[i]
@@ -172,8 +177,8 @@ function extrapolate_pode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
         pᵢ₁ .= p₀
         pᵢ₂ .= p₀ .+ σ[i] .* f₀
         for _ in 1:(F[i]-1)
-            v(vᵢ, tᵢ, qᵢ₂, pᵢ₂, params)
-            f(fᵢ, tᵢ, qᵢ₂, pᵢ₂, params)
+            initialguess(problem).v(vᵢ, tᵢ, qᵢ₂, pᵢ₂, parameters(problem))
+            initialguess(problem).f(fᵢ, tᵢ, qᵢ₂, pᵢ₂, parameters(problem))
             qᵢₜ .= qᵢ₁ .+ 2σ[i] .* vᵢ
             qᵢ₁ .= qᵢ₂
             qᵢ₂ .= qᵢₜ
@@ -195,23 +200,27 @@ function extrapolate_pode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
     return (q₁, p₁)
 end
 
-function extrapolate!(sol, history, problem::AbstractProblemPODE, extrap::MidpointExtrapolation)
-    extrapolate_pode!(history.t[1], history.q[1], history.p[1], sol.t, sol.q, sol.p, functions(problem).v, functions(problem).f, parameters(problem), extrap)
+function solutionstep!(sol, history, problem::AbstractProblemPODE, extrap::MidpointExtrapolation)
+    extrapolate!(history.t[1], history.q[1], history.p[1], sol.t, sol.q, sol.p, problem, extrap)
+    update_vectorfields!(sol, problem)
+    return sol
 end
 
 
-function extrapolate_iode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{DT}, 
-                      t₁::TT, q₁::AbstractVector{DT}, p₁::AbstractVector{DT}, 
-                      v::Callable, f::Callable, params::OptionalParameters,
-                      extrap::MidpointExtrapolation) where {DT,TT}
-    @assert size(q₀) == size(q₁) == size(p₀) == size(p₁)
+function extrapolate!(
+        t₀::TT, q₀::AbstractArray{DT}, p₀::AbstractArray{DT}, 
+        t₁::TT, q₁::AbstractArray{DT}, p₁::AbstractArray{DT}, 
+        problem::AbstractProblemIODE,
+        extrap::MidpointExtrapolation) where {DT,TT}
+    
+    @assert axes(q₀) == axes(q₁) == axes(p₀) == axes(p₁)
 
     local F   = [2i*one(TT) for i in 1:extrap.s+1]
     local σ   = (t₁ - t₀) ./ F
     local σ2  = σ.^2
 
-    local qts = zeros(DT, length(q₀), extrap.s+1)
-    local pts = zeros(DT, length(p₀), extrap.s+1)
+    local qts = zeros(DT, axes(q₀)..., extrap.s+1)
+    local pts = zeros(DT, axes(p₀)..., extrap.s+1)
 
     local qᵢ₁= zero(q₀)
     local qᵢ₂= zero(q₀)
@@ -227,8 +236,8 @@ function extrapolate_iode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
     local f₀ = zero(p₀)
     local fᵢ = zero(p₀)
 
-    v(v₀, t₀, q₀, p₀, params)
-    f(f₀, t₀, q₀, v₀, params)
+    initialguess(problem).v(v₀, t₀, q₀, p₀, parameters(problem))
+    initialguess(problem).f(f₀, t₀, q₀, v₀, parameters(problem))
 
     for i in 1:extrap.s+1
         tᵢ   = t₀ + σ[i]
@@ -237,8 +246,8 @@ function extrapolate_iode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
         pᵢ₁ .= p₀
         pᵢ₂ .= p₀ .+ σ[i] .* f₀
         for _ in 1:(F[i]-1)
-            v(vᵢ, tᵢ, qᵢ₂, pᵢ₂, params)
-            f(fᵢ, tᵢ, qᵢ₂, vᵢ, params)
+            initialguess(problem).v(vᵢ, tᵢ, qᵢ₂, pᵢ₂, parameters(problem))
+            initialguess(problem).f(fᵢ, tᵢ, qᵢ₂, vᵢ, parameters(problem))
             qᵢₜ .= qᵢ₁ .+ 2σ[i] .* vᵢ
             qᵢ₁ .= qᵢ₂
             qᵢ₂ .= qᵢₜ
@@ -260,6 +269,8 @@ function extrapolate_iode!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVec
     return (q₁, p₁)
 end
 
-function extrapolate!(sol, history, problem::AbstractProblemIODE, extrap::MidpointExtrapolation)
-    extrapolate_iode!(history.t[1], history.q[1], history.p[1], sol.t, sol.q, sol.p, functions(problem).v̄, functions(problem).f̄, parameters(problem), extrap)
+function solutionstep!(sol, history, problem::AbstractProblemIODE, extrap::MidpointExtrapolation)
+    extrapolate!(history.t[1], history.q[1], history.p[1], sol.t, sol.q, sol.p, problem, extrap)
+    update_vectorfields!(sol, problem)
+    return sol
 end

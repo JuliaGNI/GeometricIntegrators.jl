@@ -107,46 +107,33 @@ history(solstep::SolutionStepODE, i::Int) = (
 internal(solstep::SolutionStepODE) = solstep.internal
 parameters(solstep::SolutionStepODE) = solstep.parameters
 
-function update_vector_fields!(solstep::SolutionStepODE, problem::Union{ODEProblem, SODEProblem, SubstepProblem}, i=0)
+function update_vector_fields!(solstep::SolutionStepODE, problem::Union{ODEProblem, SubstepProblem}, i=0)
     functions(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], parameters(problem))
 end
 
 function update_vector_fields!(solstep::SolutionStepODE, problem::SODEProblem, i=0)
-    # TODO: add proper implementation !!!
-    # @warn "update_vector_fields!() method for SODEs is still missing"
+    initialguess(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], parameters(problem))
 end
 
-function initialize!(solstep::SolutionStepODE, problem::Union{ODEProblem, SODEProblem, SubstepProblem}, extrap::Extrapolation = default_extrapolation())
-    solstep.t  = initial_conditions(problem).t
-    solstep.q .= initial_conditions(problem).q
+function initialize!(solstep::SolutionStepODE, sol::NamedTuple, problem::Union{ODEProblem, SODEProblem, SubstepProblem}, extrap::Extrapolation = default_extrapolation())
+    solstep.t  = sol.t
+    solstep.q .= sol.q
     solstep.q̃ .= 0
 
     update_vector_fields!(solstep, problem)
 
     for i in eachhistory(solstep)
         history(solstep).t[i] = history(solstep).t[i-1] - timestep(problem)
-        sol = (t = history(solstep).t[i], q = history(solstep).q[i])
-        hist = (t = [history(solstep).t[i-1]], q = [history(solstep).q[i-1]])
-        extrapolate!(sol, hist, problem, extrap)
-        update_vector_fields!(solstep, problem, i)
+        soltmp = (t = history(solstep).t[i], q = history(solstep).q[i], v = history(solstep).v[i])
+        hsttmp = (t = [history(solstep).t[i-1]], q = [history(solstep).q[i-1]], v = [history(solstep).v[i-1]])
+        solutionstep!(soltmp, hsttmp, problem, extrap)
     end
 
     return solstep
 end
 
-function initialize!(solstep::SolutionStepODE, problem::SODEProblem, extrap::Extrapolation = default_extrapolation())
-    solstep.t  = initial_conditions(problem).t
-    solstep.q .= initial_conditions(problem).q
-    solstep.q̃ .= 0
-
-    for i in eachhistory(solstep)
-        history(solstep).t[i] = history(solstep).t[i-1] - timestep(problem)
-        # TODO: add proper implementation !!!
-        # extrapolate!(solstep.t̄[i-1], solstep.q̄[i-1], solstep.t̄[i], solstep.q̄[i], problem, extrap)
-        # update_vector_fields!(solstep, problem, i)
-    end
-
-    return solstep
+function initialize!(solstep::SolutionStepODE, problem::Union{ODEProblem, SODEProblem, SubstepProblem}, args...)
+    initialize!(solstep, initial_conditions(problem), problem, args...)
 end
 
 function update!(solstep::SolutionStepODE, Δq)

@@ -108,14 +108,20 @@ function Base.show(io::IO, int::IntegratorVSPARKsecondary)
 end
 
 
-function initial_guess!(int::GeometricIntegrator{<:VSPARKsecondary,<:Union{IDAEProblem,LDAEProblem}})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VSPARKsecondary,<:Union{IDAEProblem,LDAEProblem}})
     # get cache for internal stages
     local C = cache(int)
-    local sol = current(solstep(int))
 
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
-        initialguess!(sol.t + timestep(int) * (tableau(int).q̃.c[i] - 1), C.Qp[i], C.Pp[i], C.Vp[i], C.Fp[i], solstep(int), problem(int), iguess(int))
+        soltmp = (
+            t = history.t[1] + timestep(int) * tableau(int).q̃.c[i],
+            q = cache(int).Qp[i],
+            p = cache(int).Pp[i],
+            v = cache(int).Vp[i],
+            f = cache(int).Fp[i],
+        )
+        solutionstep!(soltmp, history, problem(int), iguess(int))
 
         for k in 1:ndims(int)
             C.x[4*(ndims(int)*(i-1)+k-1)+1] = (C.Qp[i][k] - sol.q[k]) / timestep(int)

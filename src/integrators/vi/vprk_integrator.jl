@@ -22,7 +22,7 @@ function internal_variables(method::VPRKMethod, problem::AbstractProblemIODE{DT,
 end
 
 
-function copy_internal_variables(solstep::SolutionStep, cache::VPRKCache)
+function copy_internal_variables!(solstep::SolutionStep, cache::VPRKCache)
     haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
     haskey(internal(solstep), :P) && copyto!(internal(solstep).P, cache.P)
     haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)

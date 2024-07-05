@@ -54,7 +54,14 @@ function initial_guess!(sol, history, params, int::SymmetricProjectionIntegrator
     cache(int).x̄ .= nlsolution(subint(int))
 
     # compute initial guess for projected solution
-    initialguess!(solstep(int).t, cache(int).q̃, cache(int).v, solstep(int), problem(int), iguess(int))
+    soltmp = (
+        t = (sol.t + history.t[1]) / 2,
+        q = cache(int).q̃,
+        p = cache(int).p̃,
+        v = cache(int).ṽ,
+        f = cache(int).f̃,
+    )
+    solutionstep!(soltmp, history, problem(int), iguess(int))
     # TODO: Fix this!
 
     # copy initial guess for projected solution to common solution vector
