@@ -88,9 +88,6 @@ end
 struct CGVICache{ST,D,S,R} <: IODEIntegratorCache{ST,D}
     x::Vector{ST}
 
-    q̄::Vector{ST}
-    p̄::Vector{ST}
-
     q̃::Vector{ST}
     p̃::Vector{ST}
     ṽ::Vector{ST}
@@ -107,9 +104,6 @@ struct CGVICache{ST,D,S,R} <: IODEIntegratorCache{ST,D}
     function CGVICache{ST,D,S,R}() where {ST,D,S,R}
         x = zeros(ST, D*(S+1))
         
-        q̄ = zeros(ST,D)
-        p̄ = zeros(ST,D)
-
         # create temporary vectors
         q̃ = zeros(ST,D)
         p̃ = zeros(ST,D)
@@ -124,13 +118,8 @@ struct CGVICache{ST,D,S,R} <: IODEIntegratorCache{ST,D}
         V = create_internal_stage_vector(ST,D,R)
         F = create_internal_stage_vector(ST,D,R)
 
-        new(x, q̄, p̄, q̃, p̃, ṽ, f̃, s̃, X, Q, P, V, F)
+        new(x, q̃, p̃, ṽ, f̃, s̃, X, Q, P, V, F)
     end
-end
-
-function reset!(cache::CGVICache, t, q, p)
-    copyto!(cache.q̄, q)
-    copyto!(cache.p̄, p)
 end
 
 nlsolution(cache::CGVICache) = cache.x
@@ -142,7 +131,7 @@ end
 @inline CacheType(ST, problem::AbstractProblemIODE, method::CGVI) = CGVICache{ST, ndims(problem), nbasis(method), nnodes(method)}
 
 
-function initial_guess!(int::GeometricIntegrator{<:CGVI})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CGVI})
     # set some local variables for convenience
     local D = ndims(int)
     local S = nbasis(method(int))
@@ -152,14 +141,28 @@ function initial_guess!(int::GeometricIntegrator{<:CGVI})
     # obtained e.g. from an L2 projection of q onto the basis
 
     for i in eachindex(basis(method(int)))
-        initialguess!(solstep(int).t̄ + timestep(int) * method(int).x[i], cache(int).q̃, cache(int).p̃, solstep(int), problem(int), iguess(int))
-        
+        soltmp = (
+            t = sol.t + timestep(int) * (method(int).x[i] - 1),
+            q = cache(int).q̃,
+            p = cache(int).p̃,
+            v = cache(int).ṽ,
+            f = cache(int).f̃,
+        )
+        solutionstep!(soltmp, history, problem(int), iguess(int))
+
         for k in 1:D
             x[D*(i-1)+k] = cache(int).q̃[k]
         end
     end
 
-    initialguess!(solstep(int).t, cache(int).q̃, cache(int).p̃, solstep(int), problem(int), iguess(int))
+    soltmp = (
+        t = sol.t,
+        q = cache(int).q̃,
+        p = cache(int).p̃,
+        v = cache(int).ṽ,
+        f = cache(int).f̃,
+    )
+    solutionstep!(soltmp, history, problem(int), iguess(int))
 
     for k in 1:D
         x[D*S+k] = cache(int).p̃[k]
@@ -167,139 +170,123 @@ function initial_guess!(int::GeometricIntegrator{<:CGVI})
 end
 
 
-function components!(x::AbstractVector{ST}, int::GeometricIntegrator{<:CGVI}) where {ST}
+function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
     # set some local variables for convenience and clarity
+    local C = cache(int, ST)
     local D = ndims(int)
     local S = nbasis(method(int))
-    local q = cache(int, ST).q̃
-    local p = cache(int, ST).p̃
-    local Q = cache(int, ST).Q
-    local V = cache(int, ST).V
-    local P = cache(int, ST).P
-    local F = cache(int, ST).F
-    local X = cache(int, ST).X
-
 
     # copy x to X
-    for i in eachindex(X)
-        for k in eachindex(X[i])
-            X[i][k] = x[D*(i-1)+k]
+    for i in eachindex(C.X)
+        for k in eachindex(C.X[i])
+            C.X[i][k] = x[D*(i-1)+k]
         end
     end
 
     # copy x to p
-    for k in eachindex(p)
-        p[k] = x[D*S+k]
+    for k in eachindex(C.p̃)
+        C.p̃[k] = x[D*S+k]
     end
 
     # compute Q
-    for i in eachindex(Q)
-        for k in eachindex(Q[i])
+    for i in eachindex(C.Q)
+        for k in eachindex(C.Q[i])
             y = zero(ST)
-            for j in eachindex(X)
-                y += method(int).m[i,j] * X[j][k]
+            for j in eachindex(C.X)
+                y += method(int).m[i,j] * C.X[j][k]
             end
-            Q[i][k] = y
+            C.Q[i][k] = y
         end
     end
 
     # compute q
-    for k in eachindex(q)
+    for k in eachindex(C.q̃)
         y = zero(ST)
-        for i in eachindex(X)
-            y += method(int).r₁[i] * X[i][k]
+        for i in eachindex(C.X)
+            y += method(int).r₁[i] * C.X[i][k]
         end
-        q[k] = y
+        C.q̃[k] = y
     end
 
     # compute V
-    for i in eachindex(V)
-        for k in eachindex(V[i])
+    for i in eachindex(C.V)
+        for k in eachindex(C.V[i])
             y = zero(ST)
-            for j in eachindex(X)
-                y += method(int).a[i,j] * X[j][k]
+            for j in eachindex(C.X)
+                y += method(int).a[i,j] * C.X[j][k]
             end
-            V[i][k] = y / timestep(int)
+            C.V[i][k] = y / timestep(int)
         end
     end
 
     # compute P=ϑ(Q,V) and F=f(Q,V)
-    for i in eachindex(Q,V,P,F)
-        tᵢ = solstep(int).t + timestep(int) * method(int).c[i]
-        equations(int).ϑ(P[i], tᵢ, Q[i], V[i], parameters(solstep(int)))
-        equations(int).f(F[i], tᵢ, Q[i], V[i], parameters(solstep(int)))
+    for i in eachindex(C.Q, C.V, C.P, C.F)
+        tᵢ = sol.t + timestep(int) * (method(int).c[i] - 1)
+        equations(int).ϑ(C.P[i], tᵢ, C.Q[i], C.V[i], params)
+        equations(int).f(C.F[i], tᵢ, C.Q[i], C.V[i], params)
     end
 end
 
 
-function residual!(b::Vector{ST}, int::GeometricIntegrator{<:CGVI}) where {ST}
+function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
     # set some local variables for convenience and clarity
+    local C = cache(int, ST)
     local D = ndims(int)
     local S = nbasis(method(int))
-    local q̄ = cache(int, ST).q̄
-    local p̄ = cache(int, ST).p̄
-    local p̃ = cache(int, ST).p̃
-    local P = cache(int, ST).P
-    local F = cache(int, ST).F
-    local X = cache(int, ST).X
 
     # compute b = - [(P-AF)]
     for i in eachindex(method(int).r₀, method(int).r₁)
-        for k in eachindex(p̃, p̄)
+        for k in eachindex(C.p̃)#, sol.p # TODO
             z = zero(ST)
-            for j in eachindex(P,F)
-                z += method(int).b[j] * method(int).m[j,i] * F[j][k] * timestep(int)
-                z += method(int).b[j] * method(int).a[j,i] * P[j][k]
+            for j in eachindex(C.P, C.F)
+                z += method(int).b[j] * method(int).m[j,i] * C.F[j][k] * timestep(int)
+                z += method(int).b[j] * method(int).a[j,i] * C.P[j][k]
             end
-            b[D*(i-1)+k] = (method(int).r₁[i] * p̃[k] - method(int).r₀[i] * p̄[k]) - z
+            b[D*(i-1)+k] = (method(int).r₁[i] * C.p̃[k] - method(int).r₀[i] * sol.p[k]) - z
         end
     end
 
     # compute b = - [(q-r₀Q)]
-    for k in eachindex(q̄)
+    for k in eachindex(sol.q)
         y = zero(ST)
-        for j in eachindex(X)
-            y += method(int).r₀[j] * X[j][k]
+        for j in eachindex(C.X)
+            y += method(int).r₀[j] * C.X[j][k]
         end
-        b[D*S+k] = q̄[k] - y
+        b[D*S+k] = sol.q[k] - y
     end
 end
 
 
 # Compute stages of Variational Partitioned Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, int::GeometricIntegrator{<:CGVI}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
+    # check that x and b are compatible
     @assert axes(x) == axes(b)
 
-    # copy previous solution from solstep to cache
-    reset!(cache(int, ST), current(solstep(int))...)
-
     # compute stages from nonlinear solver solution x
-    components!(x, int)
+    components!(x, sol, params, int)
 
     # compute residual vector
-    residual!(b, int)
+    residual!(b, sol, params, int)
 end
 
 
-function update!(x::AbstractVector{DT}, int::GeometricIntegrator{<:CGVI}) where {DT}
-    # copy previous solution from solstep to cache
-    reset!(cache(int, DT), current(solstep(int))...)
+function update!(sol, params, int::GeometricIntegrator{<:CGVI}, DT)
+    sol.q .= cache(int, DT).q̃
+    sol.p .= cache(int, DT).p̃
+end
 
+function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:CGVI}) where {DT}
     # compute vector field at internal stages
-    components!(x, int)
+    components!(x, sol, params, int)
 
     # compute final update
-    solstep(int).q .= cache(int, DT).q̃
-    solstep(int).p .= cache(int, DT).p̃
+    update!(sol, params, int, DT)
 end
 
 
-function integrate_step!(int::GeometricIntegrator{<:CGVI, <:AbstractProblemIODE})
-    # copy previous solution from solstep to cache
-    reset!(cache(int), current(solstep(int))...)
-
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:CGVI, <:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
+    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
 
     # print solver status
     # print_solver_status(int.solver.status, int.solver.params)
@@ -308,5 +295,5 @@ function integrate_step!(int::GeometricIntegrator{<:CGVI, <:AbstractProblemIODE}
     # check_solver_status(int.solver.status, int.solver.params)
 
     # compute final update
-    update!(nlsolution(int), int)
+    update!(sol, params, nlsolution(int), int)
 end

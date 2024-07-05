@@ -15,34 +15,36 @@ function initial_guess!(int::GeometricIntegrator{<:PMVIMethod})
 end
 
 
-function residual!(b::Vector{ST}, x::Vector{ST}, int::GeometricIntegrator{<:PMVIMethod}) where {ST}
-    # copy previous solution from solstep to cache
-    reset!(cache(int, ST), current(solstep(int))...)
+function residual!(b::Vector{ST}, x::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVIMethod}) where {ST}
+    # check that x and b are compatible
+    @assert axes(x) == axes(b)
 
     # compute stages from nonlinear solver solution x
-    components!(x, int)
+    components!(x, sol, params, int)
 
     # compute residual vector
-    residual!(b, int)
+    residual!(b, sol, params, int)
 end
 
 
-function update!(x::AbstractVector{DT}, int::GeometricIntegrator{<:PMVIMethod}) where {DT}
-    # copy previous solution from solstep to cache
-    reset!(cache(int, DT), current(solstep(int))...)
+function update!(sol, params, int::GeometricIntegrator{<:PMVIMethod}, DT)
+    # compute final update
+    sol.q .= cache(int).q
+    sol.p .= cache(int).p
+end
 
+function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:PMVIMethod}) where {DT}
     # compute vector field at internal stages
-    components!(x, int)
+    components!(x, sol, params, int)
 
     # compute final update
-    solstep(int).q .= cache(int).q
-    solstep(int).p .= cache(int).p
+    update!(sol, params, int, DT)
 end
 
 
-function integrate_step!(int::GeometricIntegrator{<:PMVIMethod, <:AbstractProblemIODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:PMVIMethod, <:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, int), solver(int))
+    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
 
     # print solver status
     # print_solver_status(int.solver.status, int.solver.params)
@@ -51,5 +53,5 @@ function integrate_step!(int::GeometricIntegrator{<:PMVIMethod, <:AbstractProble
     # check_solver_status(int.solver.status, int.solver.params)
 
     # compute final update
-    update!(nlsolution(int), int)
+    update!(sol, params, nlsolution(int), int)
 end

@@ -59,16 +59,16 @@ function reset!(cache::SplittingCache, t, q, λ = missing)
     cache.t = t
 end
 
-function integrate_step!(int::GeometricIntegrator{<:Splitting, <:SODEProblem})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:Splitting, <:SODEProblem})
     # compute splitting steps
     for i in eachindex(method(int).f, method(int).c)
         if method(int).c[i] ≠ 0
             # copy previous solution and compute time
-            cache(int).q .= solstep(int).q
-            cache(int).t  = solstep(int).t̄ + timestep(int) * method(int).c[i]
+            cache(int).q .= sol.q
+            cache(int).t  = sol.t + timestep(int) * (method(int).c[i] - 1)
 
             # compute new solution
-            solutions(problem(int)).q[method(int).f[i]](solstep(int).q, cache(int).t, cache(int).q, solstep(int).t̄, parameters(solstep(int)))
+            solutions(problem(int)).q[method(int).f[i]](sol.q, cache(int).t, cache(int).q, sol.t - timestep(int), params)
         end
     end
 end

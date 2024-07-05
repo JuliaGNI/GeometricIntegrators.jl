@@ -40,11 +40,6 @@ struct DVICache{DT,D} <: IODEIntegratorCache{DT,D}
     end
 end
 
-function reset!(cache::DVICache, t, q, p)
-    copyto!(cache.q̄, q)
-    copyto!(cache.p̄, p)
-end
-
 nlsolution(cache::DVICache) = cache.x
 
 function Cache{ST}(problem::AbstractProblemIODE, method::DVIMethod; kwargs...) where {ST}

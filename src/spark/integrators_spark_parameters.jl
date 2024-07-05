@@ -30,9 +30,9 @@ end
 
 function update_params!(params::AbstractParametersSPARK, sol::SolutionStepPDAE)
     # set time for nonlinear solver and copy previous solution
-    solstep.t̄  = sol.t
-    solstep.q̄ .= solstep.q̄
-    solstep.p̄ .= solstep.p̄
+    solstep(int).t̄  = sol.t
+    solstep(int).q̄ .= solstep(int).q̄
+    solstep(int).p̄ .= solstep(int).p̄
     params.λ .= sol.λ
 end
 
@@ -42,8 +42,8 @@ end
 @inline GeometricBase.tableau(int::AbstractIntegratorSPARK) = parameters(int).tab
 
 
-function Integrators.IntegratorCache{ST}(params::AbstractParametersSPARK{IT,DT,TT,D,S,R}; kwargs...) where {IT,ST,DT,TT,D,S,R}
+function IntegratorCache{ST}(params::AbstractParametersSPARK{IT,DT,TT,D,S,R}; kwargs...) where {IT,ST,DT,TT,D,S,R}
     IntegratorCacheSPARK{ST,D,S,R}(; kwargs...)
 end
 
-@inline Integrators.CacheType(ST, params::AbstractParametersSPARK{IT,DT,TT,D,S,R}) where {IT,DT,TT,D,S,R} = IntegratorCacheSPARK{ST,D,S,R}
+@inline CacheType(ST, params::AbstractParametersSPARK{IT,DT,TT,D,S,R}) where {IT,DT,TT,D,S,R} = IntegratorCacheSPARK{ST,D,S,R}

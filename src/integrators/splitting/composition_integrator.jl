@@ -55,44 +55,37 @@ _neqs(problem::SODEProblem) = nsteps(problem)
 struct CompositionIntegrator{
         MT <: AbstractSplittingMethod,
         PT <: SODEProblem,
-        SIT <: Tuple,
-        SST <: SolutionStep
-    } <: DeterministicIntegrator
+        SIT <: Tuple
+    } <: AbstractIntegrator
     
     problem::PT
     method::MT
     subints::SIT
-    solstep::SST
-end
 
-function CompositionIntegrator(
-    problem::SODEProblem,
-    splitting::AbstractSplittingMethod,
-    methods::Tuple;
-    solvers = _solvers(methods),
-    initialguesses = _iguesses(methods))
+    function CompositionIntegrator(
+        problem::SODEProblem,
+        splitting::AbstractSplittingMethod,
+        methods::Tuple;
+        solvers = _solvers(methods),
+        initialguesses = _iguesses(methods))
 
-    @assert length(methods) == length(solvers) == length(initialguesses) == _neqs(problem)
+        @assert length(methods) == length(solvers) == length(initialguesses) == _neqs(problem)
 
-    # create a solution step
-    solstep = SolutionStep(problem, splitting)
+        # get splitting indices and coefficients
+        f, c = coefficients(problem, splitting)
 
-    # get splitting indices and coefficients
-    f, c = coefficients(problem, splitting)
+        # construct composition integrators
+        subints = Tuple(GeometricIntegrator(SubstepProblem(problem, c[i], f[i]), methods[f[i]]) for i in eachindex(f,c))
 
-    # construct composition integrators
-    subints = Tuple(GeometricIntegrator(SubstepProblem(problem, c[i], f[i]), methods[f[i]]; solstp = solstep) for i in eachindex(f,c))
-
-    CompositionIntegrator(problem, splitting, subints, solstep)
+        new{typeof(splitting), typeof(problem), typeof(subints)}(problem, splitting, subints)
+    end
 end
 
 function GeometricIntegrator(problem::SODEProblem, comp::Composition; kwargs...)
     CompositionIntegrator(problem, splitting(comp), methods(comp, _neqs(problem)); kwargs...)
 end
 
-
 problem(int::CompositionIntegrator) = int.problem
-solstep(int::CompositionIntegrator) = int.solstep
 subints(int::CompositionIntegrator) = int.subints
 method(int::CompositionIntegrator) = int.method
 
@@ -100,7 +93,7 @@ Base.ndims(int::CompositionIntegrator) = ndims(problem(int))
 
 timestep(int::CompositionIntegrator) = timestep(problem(int))
 
-initial_guess!(::CompositionIntegrator) = nothing
+initial_guess!(sol, history, params, ::CompositionIntegrator) = nothing
 
 function initialize!(cint::CompositionIntegrator)
     for int in subints(cint)
@@ -109,16 +102,13 @@ function initialize!(cint::CompositionIntegrator)
 end
 
 
-function integrate_step!(int::CompositionIntegrator{<:AbstractSplittingMethod, <:SODEProblem})
+function integrate_step!(sol, history, params, int::CompositionIntegrator{<:AbstractSplittingMethod, <:SODEProblem})
     # compute composition steps
     for subint in subints(int)
-        # copy previous solution to cache of subint
-        reset!(cache(subint), solstep(int).t, solstep(int).q)
-        
         # compute initial guess for subint
-        initial_guess!(subint)
+        initial_guess!(sol, history, params, subint)
 
         # integrate one timestep with subint
-        integrate_step!(subint)
+        integrate_step!(sol, history, params, subint)
     end
 end

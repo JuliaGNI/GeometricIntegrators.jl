@@ -27,27 +27,27 @@ function Base.show(io::IO, int::GeometricIntegrator{<:PMVImidpoint})
 end
 
 
-function components!(x::Vector{ST}, int::GeometricIntegrator{<:PMVImidpoint}) where {ST}
+function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVImidpoint}) where {ST}
     # set some local variables for convenience and clarity
-    local t̃ = solstep(int).t̄ + timestep(int) / 2
+    local t̃ = sol.t - timestep(int) / 2
     
     # copy x to q
     cache(int, ST).q .= x[1:ndims(int)]
 
     # compute q̃ and ṽ
-    cache(int, ST).q̃ .= (cache(int, ST).q .+ cache(int, ST).q̄) ./ 2
-    cache(int, ST).ṽ .= (cache(int, ST).q .- cache(int, ST).q̄) ./ timestep(int)
+    cache(int, ST).q̃ .= (cache(int, ST).q .+ sol.q) ./ 2
+    cache(int, ST).ṽ .= (cache(int, ST).q .- sol.q) ./ timestep(int)
  
     # compute Θ̃ = ϑ(q̃,ṽ) and f̃ = f(q̃,ṽ)
-    equations(int).ϑ(cache(int, ST).θ̃, t̃, cache(int, ST).q̃, cache(int, ST).ṽ, parameters(solstep(int)))
-    equations(int).f(cache(int, ST).f̃, t̃, cache(int, ST).q̃, cache(int, ST).ṽ, parameters(solstep(int)))
+    equations(int).ϑ(cache(int, ST).θ̃, t̃, cache(int, ST).q̃, cache(int, ST).ṽ, params)
+    equations(int).f(cache(int, ST).f̃, t̃, cache(int, ST).q̃, cache(int, ST).ṽ, params)
 
     # compute p
-    cache(int, ST).p .= cache(int, ST).p̄ .+ timestep(int) .* cache(int, ST).f̃
+    cache(int, ST).p .= sol.p .+ timestep(int) .* cache(int, ST).f̃
 end
 
 
-function residual!(b::Vector{ST}, int::GeometricIntegrator{<:PMVImidpoint}) where {ST}
+function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVImidpoint}) where {ST}
     # compute b
-    b .= cache(int, ST).θ̃ .- cache(int, ST).p̄ .- timestep(int) .* cache(int, ST).f̃ ./ 2
+    b .= cache(int, ST).θ̃ .- sol.p .- timestep(int) .* cache(int, ST).f̃ ./ 2
 end

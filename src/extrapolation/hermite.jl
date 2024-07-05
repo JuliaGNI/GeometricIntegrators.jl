@@ -188,45 +188,40 @@ function extrapolate!(t₀::TT, x₀::AbstractArray{DT}, ẋ₀::AbstractArray{D
     return (xᵢ, ẋᵢ)
 end
 
+function solutionstep!(sol, history, problem::Union{AbstractProblemODE, SODEProblem}, extrap::HermiteExtrapolation; nowarn = false)
+    t₀, q₀, q̇₀ = history.t[2], history.q[2], history.v[2]
+    t₁, q₁, q̇₁ = history.t[1], history.q[1], history.v[1]
 
-function _vectorfield(t::TT, x::AbstractArray{DT}, v::Callable, params) where {DT,TT}
-    ẋ = zero(x)
-    v(ẋ, t, x, params)
-    return ẋ
+    if q₀ == q₁
+        nowarn || @warn "Hermite Extrapolation: q's history[1] and history[2] are identical!"
+        sol.q .= q₁
+        sol.v .= q̇₁
+    else
+        extrapolate!(t₀, q₀, q̇₀, t₁, q₁, q̇₁, sol.t, sol.q, sol.v, extrap)
+    end
+
+    return sol
 end
 
-function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
-                      t₁::TT, x₁::AbstractArray{DT},
-                      tᵢ::TT, xᵢ::AbstractArray{DT},
-                      v::Function, params::OptionalParameters,
-                      extrap::HermiteExtrapolation) where {DT,TT}
-    ẋ₀ = _vectorfield(t₀, x₀, v, params)
-    ẋ₁ = _vectorfield(t₁, x₁, v, params)
-    extrapolate!(t₀, x₀, ẋ₀, t₁, x₁, ẋ₁, tᵢ, xᵢ, extrap)
-end
+function solutionstep!(sol, history, problem::Union{AbstractProblemPODE, AbstractProblemIODE}, extrap::HermiteExtrapolation; nowarn = false)
+    t₀, q₀, v₀, p₀, f₀ = history.t[2], history.q[2], history.v[2], history.p[2], history.f[2]
+    t₁, q₁, v₁, p₁, f₁ = history.t[1], history.q[1], history.v[1], history.p[1], history.f[1]
 
-function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
-                      t₁::TT, x₁::AbstractArray{DT},
-                      tᵢ::TT, xᵢ::AbstractArray{DT}, ẋᵢ::AbstractArray{DT}, 
-                      v::Function, params::OptionalParameters,
-                      extrap::HermiteExtrapolation) where {DT,TT}
-    ẋ₀ = _vectorfield(t₀, x₀, v, params)
-    ẋ₁ = _vectorfield(t₁, x₁, v, params)
-    extrapolate!(t₀, x₀, ẋ₀, t₁, x₁, ẋ₁, tᵢ, xᵢ, ẋᵢ, extrap)
-end
+    if q₀ == q₁
+        nowarn || @warn "Hermite Extrapolation: q's history[1] and history[2] are identical!"
+        sol.q .= q₁
+        sol.v .= v₁
+    else
+        extrapolate!(t₀, q₀, v₀, t₁, q₁, v₁, sol.t, sol.q, sol.v, extrap)
+    end
 
-function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
-                      t₁::TT, x₁::AbstractArray{DT},
-                      tᵢ::TT, xᵢ::AbstractArray{DT},
-                      problem::AbstractProblemODE,
-                      extrap::HermiteExtrapolation) where {DT,TT}
-    extrapolate!(t₀, x₀, t₁, x₁, tᵢ, xᵢ, functions(problem).v, parameters(problem), extrap)
-end
+    if p₀ == p₁
+        nowarn || @warn "Hermite Extrapolation: p's history[1] and history[2] are identical!"
+        sol.p .= p₁
+        sol.f .= f₁
+    else
+        extrapolate!(t₀, p₀, f₀, t₁, p₁, f₁, sol.t, sol.p, sol.f, extrap)
+    end
 
-function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
-                      t₁::TT, x₁::AbstractArray{DT},
-                      tᵢ::TT, xᵢ::AbstractArray{DT}, ẋᵢ::AbstractArray{DT}, 
-                      problem::AbstractProblemODE,
-                      extrap::HermiteExtrapolation) where {DT,TT}
-    extrapolate!(t₀, x₀, t₁, x₁, tᵢ, xᵢ, ẋᵢ, functions(problem).v, parameters(problem), extrap)
+    return sol
 end

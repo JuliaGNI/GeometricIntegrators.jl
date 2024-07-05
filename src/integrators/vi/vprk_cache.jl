@@ -22,9 +22,6 @@ mutable struct VPRKCache{ST,D,S} <: IODEIntegratorCache{ST,D}
     λ::Vector{ST}
     λ̄::Vector{ST}
 
-    q̄::Vector{ST}
-    p̄::Vector{ST}
-
     q₋::Vector{ST}
     q̄₊::Vector{ST}
     p₋::Vector{ST}
@@ -66,8 +63,6 @@ mutable struct VPRKCache{ST,D,S} <: IODEIntegratorCache{ST,D}
         x̄ = zeros(ST,m)
 
         # create temporary vectors
-        q̄ = zeros(ST,D)
-        p̄ = zeros(ST,D)
         q̃ = zeros(ST,D)
         p̃ = zeros(ST,D)
         ṽ = zeros(ST,D)
@@ -131,7 +126,7 @@ mutable struct VPRKCache{ST,D,S} <: IODEIntegratorCache{ST,D}
             R = create_internal_stage_vector(ST, 0, 0)
         end
 
-        new(x, x̄, λ, λ̄, q̄, p̄, q₋, q̄₊, p₋, p̄₊,
+        new(x, x̄, λ, λ̄, q₋, q̄₊, p₋, p̄₊,
             u, g, q̃, p̃, ṽ, f̃, θ̃, s̃, ϕ, μ, v, f, y, z,
             Q, P, V, F, Λ, Φ, Y, Z, U, G, R)
     end
@@ -146,11 +141,6 @@ end
 # end
 
 nlsolution(cache::VPRKCache) = cache.x
-
-function reset!(cache::VPRKCache, t, q, p)
-    copyto!(cache.q̄, q)
-    copyto!(cache.p̄, p)
-end
 
 
 function Cache{ST}(problem::AbstractProblemIODE, method::VPRKMethod; kwargs...) where {ST}

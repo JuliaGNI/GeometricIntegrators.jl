@@ -57,69 +57,72 @@ extrapolate!(tₚ, xₚ, ẋₚ, t₀, x₀, ẋ₀, tᵢ, xᵢ, ẋᵢ, Hermite
 @test xᵢ ≈ xₙ atol=1E-5
 @test ẋᵢ ≈ ẋₙ atol=1E-4
 
-extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, ode, HermiteExtrapolation())
-
-@test x₁ == xᵢ
-
 @test extrapolate!(tₚ, xₚ, ẋₚ, t₀, x₀, ẋ₀, t₁, x₁, HermiteExtrapolation()) == xᵢ
 @test extrapolate!(tₚ, xₚ, ẋₚ, t₀, x₀, ẋ₀, t₁, x₁, ẋ₁, HermiteExtrapolation()) == (xᵢ, ẋᵢ)
-@test extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, functions(ode).v, parameters(ode), HermiteExtrapolation()) == xᵢ
-@test extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, ẋ₁, functions(ode).v, parameters(ode), HermiteExtrapolation()) == (xᵢ, ẋᵢ)
-@test extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, ode, HermiteExtrapolation()) == xᵢ
-@test extrapolate!(tₚ, xₚ, t₀, x₀, t₁, x₁, ẋ₁, ode, HermiteExtrapolation()) == (xᵢ, ẋᵢ)
 
+sol = (t = t₁, q = x₁, v = ẋ₁)
+ref = (t = tᵢ, q = xᵢ, v = ẋᵢ)
+history = (t = [t₀, tₚ], q = [x₀, xₚ], v = [ẋ₀, ẋₚ])
+solutionstep!(sol, history, ode, HermiteExtrapolation())
+@test sol == ref
+
+
+# solution and history tuples
+sol = (t = tᵢ, q = xᵢ, v = ẋᵢ)
+history = (t = [t₀], q = [x₀], v = [ẋ₀])
 
 # Euler Extrapolation for ODEs
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, EulerExtrapolation(0))
-# println(xᵢ, xₙ, xᵢ .- xₙ)
-@test xᵢ ≈ xₙ atol=1E-1
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, EulerExtrapolation(1))
+solutionstep!(sol, history, ode, EulerExtrapolation(0))
 # println(xᵢ, xₙ, xᵢ .- xₙ)
-@test xᵢ ≈ xₙ atol=1E-2
+@test sol.q ≈ xₙ atol=1E-1
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, EulerExtrapolation(2))
+solutionstep!(sol, history, ode, EulerExtrapolation(1))
 # println(xᵢ, xₙ, xᵢ .- xₙ)
-@test xᵢ ≈ xₙ atol=1E-4
+@test sol.q ≈ xₙ atol=1E-2
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, EulerExtrapolation(3))
+solutionstep!(sol, history, ode, EulerExtrapolation(2))
 # println(xᵢ, xₙ, xᵢ .- xₙ)
-@test xᵢ ≈ xₙ atol=1E-6
+@test sol.q ≈ xₙ atol=1E-4
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, EulerExtrapolation(4))
+solutionstep!(sol, history, ode, EulerExtrapolation(3))
 # println(xᵢ, xₙ, xᵢ .- xₙ)
-@test xᵢ ≈ xₙ atol=1E-8
+@test sol.q ≈ xₙ atol=1E-6
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, EulerExtrapolation(5))
+solutionstep!(sol, history, ode, EulerExtrapolation(4))
 # println(xᵢ, xₙ, xᵢ .- xₙ)
-@test xᵢ ≈ xₙ atol=1E-10
+@test sol.q ≈ xₙ atol=1E-8
+
+solutionstep!(sol, history, ode, EulerExtrapolation(5))
+# println(xᵢ, xₙ, xᵢ .- xₙ)
+@test sol.q ≈ xₙ atol=1E-10
 
 
 # Midpoint Extrapolation for ODEs
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(0))
+solutionstep!(sol, history, ode, MidpointExtrapolation(0))
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-4
+@test sol.q ≈ xₙ atol=1E-4
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(1))
+solutionstep!(sol, history, ode, MidpointExtrapolation(1))
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-8
+@test sol.q ≈ xₙ atol=1E-8
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(2))
+solutionstep!(sol, history, ode, MidpointExtrapolation(2))
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-12
+@test sol.q ≈ xₙ atol=1E-12
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(3))
+solutionstep!(sol, history, ode, MidpointExtrapolation(3))
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-15
+@test sol.q ≈ xₙ atol=1E-15
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(4))
+solutionstep!(sol, history, ode, MidpointExtrapolation(4))
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-16
+@test sol.q ≈ xₙ atol=1E-16
 
-extrapolate!(t₀, x₀, tᵢ, xᵢ, ode, MidpointExtrapolation(5))
+solutionstep!(sol, history, ode, MidpointExtrapolation(5))
 # println(xᵢ, xₙ, qᵢ .- qₙ)
-@test xᵢ ≈ xₙ atol=1E-15
+@test sol.q ≈ xₙ atol=1E-15
 
 
 # Create PODE Solution Arrays
@@ -157,40 +160,43 @@ functions(pode).f(ṗₚ, tₚ, qₚ, pₚ, parameters(pode))
 functions(pode).f(ṗ₀, t₀, q₀, p₀, parameters(pode))
 functions(pode).f(ṗₙ, tₙ, qₙ, pₙ, parameters(pode))
 
+# solution and history tuples
+sol = (t = tᵢ, q = qᵢ, p = pᵢ, v = q̇ᵢ, f = ṗᵢ)
+history = (t = [t₀], q = [q₀], p = [p₀], v = [q̇₀], f = [ṗ₀])
 
 # Midpoint Extrapolation for PODEs
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(0))
+solutionstep!(sol, history, pode, MidpointExtrapolation(0))
 # println(0, qᵢ, qₙ, qᵢ .- qₙ)
 # println(0, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-6
 @test pᵢ ≈ pₙ atol=1E-4
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(1))
+solutionstep!(sol, history, pode, MidpointExtrapolation(1))
 # println(1, qᵢ, qₙ, qᵢ .- qₙ)
 # println(1, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-10
 @test pᵢ ≈ pₙ atol=1E-8
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(2))
+solutionstep!(sol, history, pode, MidpointExtrapolation(2))
 # println(2, qᵢ, qₙ, qᵢ .- qₙ)
 # println(2, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-14
 @test pᵢ ≈ pₙ atol=1E-12
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(3))
+solutionstep!(sol, history, pode, MidpointExtrapolation(3))
 # println(3, qᵢ, qₙ, qᵢ .- qₙ)
 # println(3, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-15
 @test pᵢ ≈ pₙ atol=1E-16
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(4))
+solutionstep!(sol, history, pode, MidpointExtrapolation(4))
 # println(4, qᵢ, qₙ, qᵢ .- qₙ)
 # println(4, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-16
 @test pᵢ ≈ pₙ atol=1E-16
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, pode, MidpointExtrapolation(5))
+solutionstep!(sol, history, pode, MidpointExtrapolation(5))
 # println(5, qᵢ, qₙ, qᵢ .- qₙ)
 # println(5, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-15
@@ -226,50 +232,54 @@ ṗᵢ = zero(p₀)
 qₚ .= xₚ
 qₙ .= xₙ
 
-functions(iode).v̄(q̇ₚ, tₚ, qₚ, pₚ, parameters(iode))
-functions(iode).v̄(q̇₀, t₀, q₀, p₀, parameters(iode))
-functions(iode).v̄(q̇ₙ, tₙ, qₙ, pₙ, parameters(iode))
+initialguess(iode).v(q̇ₚ, tₚ, qₚ, pₚ, parameters(iode))
+initialguess(iode).v(q̇₀, t₀, q₀, p₀, parameters(iode))
+initialguess(iode).v(q̇ₙ, tₙ, qₙ, pₙ, parameters(iode))
 
 functions(iode).ϑ(pₚ, tₚ, qₚ, q̇ₚ, parameters(iode))
 functions(iode).ϑ(pₙ, tₙ, qₙ, q̇ₙ, parameters(iode))
 
-functions(iode).f̄(ṗₚ, tₚ, qₚ, q̇ₚ, parameters(iode))
-functions(iode).f̄(ṗ₀, t₀, q₀, q̇₀, parameters(iode))
-functions(iode).f̄(ṗₙ, tₙ, qₙ, q̇ₙ, parameters(iode))
+initialguess(iode).f(ṗₚ, tₚ, qₚ, q̇ₚ, parameters(iode))
+initialguess(iode).f(ṗ₀, t₀, q₀, q̇₀, parameters(iode))
+initialguess(iode).f(ṗₙ, tₙ, qₙ, q̇ₙ, parameters(iode))
+
+# solution and history tuples
+sol = (t = tᵢ, q = qᵢ, p = pᵢ, v = q̇ᵢ, f = ṗᵢ)
+history = (t = [t₀], q = [q₀], p = [p₀], v = [q̇₀], f = [ṗ₀])
 
 # Midpoint Extrapolation for IODEs
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, iode, MidpointExtrapolation(0))
+solutionstep!(sol, history, iode, MidpointExtrapolation(0))
 # println(0, qᵢ, qₙ, qᵢ .- qₙ)
 # println(0, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-4
 @test pᵢ ≈ pₙ atol=1E-4
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, iode, MidpointExtrapolation(1))
+solutionstep!(sol, history, iode, MidpointExtrapolation(1))
 # println(1, qᵢ, qₙ, qᵢ .- qₙ)
 # println(1, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-8
 @test pᵢ ≈ pₙ atol=1E-8
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, iode, MidpointExtrapolation(2))
+solutionstep!(sol, history, iode, MidpointExtrapolation(2))
 # println(2, qᵢ, qₙ, qᵢ .- qₙ)
 # println(2, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-12
 @test pᵢ ≈ pₙ atol=1E-12
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, iode, MidpointExtrapolation(3))
+solutionstep!(sol, history, iode, MidpointExtrapolation(3))
 # println(3, qᵢ, qₙ, qᵢ .- qₙ)
 # println(3, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-15
 @test pᵢ ≈ pₙ atol=1E-16
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, iode, MidpointExtrapolation(4))
+solutionstep!(sol, history, iode, MidpointExtrapolation(4))
 # println(4, qᵢ, qₙ, qᵢ .- qₙ)
 # println(4, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-16
 @test pᵢ ≈ pₙ atol=1E-16
 
-extrapolate!(t₀, q₀, p₀, tᵢ, qᵢ, pᵢ, iode, MidpointExtrapolation(5))
+solutionstep!(sol, history, iode, MidpointExtrapolation(5))
 # println(5, qᵢ, qₙ, qᵢ .- qₙ)
 # println(5, pᵢ, pₙ, pᵢ .- pₙ)
 @test qᵢ ≈ qₙ atol=1E-15

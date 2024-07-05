@@ -2,22 +2,25 @@
 `GeometricMethod` is the abstract supertype for all integration methods implemented in GeometricIntegrators.
 """
 abstract type GeometricMethod <: AbstractMethod end
+abstract type DeterministicMethod <: GeometricMethod end
 
-abstract type ODEMethod <: GeometricMethod end
-abstract type PODEMethod <: GeometricMethod end
-abstract type HODEMethod <: GeometricMethod end
-abstract type IODEMethod <: GeometricMethod end
-abstract type LODEMethod <: GeometricMethod end
-abstract type SODEMethod <: GeometricMethod end
+abstract type ODEMethod <: DeterministicMethod end
+abstract type PODEMethod <: DeterministicMethod end
+abstract type HODEMethod <: DeterministicMethod end
+abstract type IODEMethod <: DeterministicMethod end
+abstract type LODEMethod <: DeterministicMethod end
+abstract type SODEMethod <: DeterministicMethod end
 
-abstract type DAEMethod <: GeometricMethod end
-abstract type PDAEMethod <: GeometricMethod end
-abstract type HDAEMethod <: GeometricMethod end
-abstract type IDAEMethod <: GeometricMethod end
-abstract type LDAEMethod <: GeometricMethod end
+abstract type DAEMethod <: DeterministicMethod end
+abstract type PDAEMethod <: DeterministicMethod end
+abstract type HDAEMethod <: DeterministicMethod end
+abstract type IDAEMethod <: DeterministicMethod end
+abstract type LDAEMethod <: DeterministicMethod end
 
 initmethod(method::GeometricMethod) = method
 initmethod(method::GeometricMethod, ::AbstractProblem) = initmethod(method)
+
+solversize(problem::AbstractProblemODE, method::GeometricMethod) = 0
 
 internal_variables(::GeometricMethod, ::GeometricProblem) = NamedTuple()
 nullvector(::GeometricMethod) = nothing

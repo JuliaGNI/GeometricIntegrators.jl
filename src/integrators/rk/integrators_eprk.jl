@@ -101,7 +101,7 @@ function internal_variables(method::EPRK, problem::AbstractProblemPODE{DT,TT}) w
     (Q=Q, P=P, V=V, F=F, Y=Y, Z=Z)
 end
 
-function copy_internal_variables(solstep::SolutionStep, cache::EPRKCache)
+function copy_internal_variables!(solstep::SolutionStep, cache::EPRKCache)
     haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
     haskey(internal(solstep), :P) && copyto!(internal(solstep).P, cache.P)
     haskey(internal(solstep), :Y) && copyto!(internal(solstep).Y, cache.Y)
@@ -112,75 +112,65 @@ end
 
 
 # Compute Q stages of explicit partitioned Runge-Kutta methods.
-function compute_stage_q!(solstep::SolutionStepPODE, problem::AbstractProblemPODE, method::EPRK, cache, i, jmax, t)
+function compute_stage_q!(sol, params, int::GeometricIntegrator{<:EPRK, <:AbstractProblemPODE}, i, jmax, t)
     # obtain cache
-    local Q = cache.Q
-    local P = cache.P
-    local V = cache.V
-    local F = cache.F
-    local Y = cache.Y
+    local C = cache(int)
 
-    fill!(Y[i], 0)
-    for k in eachindex(Y[i])
+    fill!(C.Y[i], 0)
+    for k in eachindex(C.Y[i])
         for j in 1:jmax
-            Y[i][k] += timestep(problem) * tableau(method).q.a[i,j] * V[j][k]
+            C.Y[i][k] += timestep(int) * tableau(int).q.a[i,j] * C.V[j][k]
         end
     end
-    for k in eachindex(Y[i])
-        Q[i][k] = solstep.q̄[k] + Y[i][k]
+    for k in eachindex(C.Y[i])
+        C.Q[i][k] = sol.q[k] + C.Y[i][k]
     end
-    functions(problem).f(F[i], t, Q[i], P[jmax], parameters(solstep))
+    equations(int).f(C.F[i], t, C.Q[i], C.P[jmax], params)
 end
 
 # Compute P stages of explicit partitioned Runge-Kutta methods.
-function compute_stage_p!(solstep::SolutionStepPODE, problem::AbstractProblemPODE, method::EPRK, cache, i, jmax, t)
+function compute_stage_p!(sol, params, int::GeometricIntegrator{<:EPRK, <:AbstractProblemPODE}, i, jmax, t)
     # obtain cache
-    local Q = cache.Q
-    local P = cache.P
-    local V = cache.V
-    local F = cache.F
-    local Z = cache.Z
+    local C = cache(int)
 
-    fill!(Z[i], 0)
-    for k in eachindex(Z[i])
+    fill!(C.Z[i], 0)
+    for k in eachindex(C.Z[i])
         for j in 1:jmax
-            Z[i][k] += timestep(problem) * tableau(method).p.a[i,j] * F[j][k]
+            C.Z[i][k] += timestep(int) * tableau(int).p.a[i,j] * C.F[j][k]
         end
     end
-    for k in eachindex(Z[i])
-        P[i][k] = solstep.p̄[k] + Z[i][k]
+    for k in eachindex(C.Z[i])
+        C.P[i][k] = sol.p[k] + C.Z[i][k]
     end
-    functions(problem).v(V[i], t, Q[jmax], P[i], parameters(solstep))
+    equations(int).v(C.V[i], t, C.Q[jmax], C.P[i], params)
 end
 
 
-function integrate_step!(int::GeometricIntegrator{<:EPRK, <:AbstractProblemPODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:EPRK, <:AbstractProblemPODE})
     # store previous solution
-    cache(int).Q[0] .= solstep(int).q
-    cache(int).P[0] .= solstep(int).p
+    cache(int).Q[0] .= sol.q
+    cache(int).P[0] .= sol.p
 
     # compute internal stages
     for i in eachstage(int)
-        tqᵢ = solstep(int).t̄ + timestep(int) * tableau(int).q.c[i]
-        tpᵢ = solstep(int).t̄ + timestep(int) * tableau(int).p.c[i]
+        tqᵢ = sol.t + timestep(int) * (tableau(int).q.c[i] - 1)
+        tpᵢ = sol.t + timestep(int) * (tableau(int).p.c[i] - 1)
 
         if tableau(int).q.a[i,i] ≠ 0 && tableau(int).p.a[i,i] ≠ 0
             error("This is an implicit method!")
         elseif tableau(int).q.a[i,i] ≠ 0
-            compute_stage_p!(solstep(int), problem(int), method(int), cache(int), i, i-1, tpᵢ)
-            compute_stage_q!(solstep(int), problem(int), method(int), cache(int), i, i, tqᵢ)
+            compute_stage_p!(sol, params, int, i, i-1, tpᵢ)
+            compute_stage_q!(sol, params, int, i, i, tqᵢ)
         elseif tableau(int).p.a[i,i] ≠ 0
-            compute_stage_q!(solstep(int), problem(int), method(int), cache(int), i, i-1, tqᵢ)
-            compute_stage_p!(solstep(int), problem(int), method(int), cache(int), i, i, tpᵢ)
+            compute_stage_q!(sol, params, int, i, i-1, tqᵢ)
+            compute_stage_p!(sol, params, int, i, i, tpᵢ)
         else
-            compute_stage_q!(solstep(int), problem(int), method(int), cache(int), i, i-1, tqᵢ)
-            compute_stage_p!(solstep(int), problem(int), method(int), cache(int), i, i-1, tpᵢ)
+            compute_stage_q!(sol, params, int, i, i-1, tqᵢ)
+            compute_stage_p!(sol, params, int, i, i-1, tpᵢ)
         end
     end
 
     # compute final update
-    update!(solstep(int), cache(int).V, cache(int).F, tableau(int), timestep(int))
-
-    # copy internal stage variables
-    copy_internal_variables(solstep(int), cache(int))
+    update!(sol.q, cache(int).V, tableau(int).q, timestep(int))
+    update!(sol.p, cache(int).F, tableau(int).p, timestep(int))
 end

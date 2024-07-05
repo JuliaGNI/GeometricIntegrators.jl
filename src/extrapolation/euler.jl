@@ -36,9 +36,10 @@ end
 
 function extrapolate!(t₀::TT, x₀::AbstractVector{DT},
                       t₁::TT, x₁::AbstractVector{DT},
-                      v::Callable, params::OptionalParameters,
+                      problem::AbstractProblemODE,
                       extrap::EulerExtrapolation) where {DT,TT}
-    @assert size(x₀) == size(x₁)
+
+    @assert axes(x₀) == axes(x₁)
 
     local F   = collect(1:(extrap.s+1))
     local σ   = (t₁ - t₀) ./ F
@@ -53,7 +54,7 @@ function extrapolate!(t₀::TT, x₀::AbstractVector{DT},
             for k in axes(pts,1)
                 xᵢ[k] = pts[k,i]
             end
-            v(vᵢ, tᵢ, xᵢ, params)
+            initialguess(problem).v(vᵢ, tᵢ, xᵢ, parameters(problem))
             for k in axes(pts,1)
                 pts[k,i] += σ[i] * vᵢ[k]
             end
@@ -65,9 +66,8 @@ function extrapolate!(t₀::TT, x₀::AbstractVector{DT},
     return x₁
 end
 
-function extrapolate!(t₀, x₀::AbstractVector,
-                      t₁, x₁::AbstractVector,
-                      problem::AbstractProblemODE,
-                      extrap::EulerExtrapolation)
-    extrapolate!(t₀, x₀, t₁, x₁, functions(problem).v, parameters(problem), extrap)
+function solutionstep!(sol, history, problem::Union{AbstractProblemODE, SODEProblem}, extrap::EulerExtrapolation)
+    extrapolate!(history.t[1], history.q[1], sol.t, sol.q, problem, extrap)
+    update_vectorfields!(sol, problem)
+    return sol
 end

@@ -10,16 +10,10 @@ end
 @inline CacheType(ST, problem::SubstepProblem, ::ExactSolution) = SplittingCache{ST, typeof(timestep(problem)), ndims(problem)}
 
 
-function integrate_step!(
-    solstep::SolutionStepODE{DT,TT},
-    problem::SubstepProblem,
-    method::ExactSolution,
-    caches::CacheDict,
-    ::NoSolver) where {DT,TT}
-    
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ExactSolution, <:SubstepProblem})
     # copy previous solution
-    caches[DT].q .= solstep.q
+    cache(int).q .= sol.q
 
     # compute new solution
-    solutions(problem).q(solstep.q, solstep.t̄ + timestep(problem), caches[DT].q, solstep.t̄, parameters(solstep))
+    solutions(problem(int)).q(sol.q, history.t[1] + timestep(int), cache(int).q, history.t[1], params)
 end

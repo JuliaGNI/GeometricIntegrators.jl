@@ -24,6 +24,7 @@ ode_next = similar(ode; tspan=(tspan(ode)[begin], tspan(ode)[begin]+tstep(ode)),
 t₀ = initial_conditions(ode).t
 q₀ = initial_conditions(ode).q
 v₀ = zero(q₀)
+equation(ode).v(v₀, t₀, q₀, parameters(ode))
 
 tₚ = tspan(ode_prev)[end]
 qₚ = zero(q₀)
@@ -33,11 +34,11 @@ tₙ = tspan(ode_next)[end]
 qₙ = zero(q₀)
 vₙ = zero(v₀)
 
-extrapolate!(t₀, q₀, tₚ, qₚ, ode_prev, MidpointExtrapolation(5))
-extrapolate!(t₀, q₀, tₙ, qₙ, ode_next, MidpointExtrapolation(5))
-
-equation(ode).v(vₚ, tₚ, qₚ, parameters(ode))
-equation(ode).v(vₙ, tₙ, qₙ, parameters(ode))
+hist = (t = [t₀], q = [q₀], v = [v₀])
+prev = (t = tₚ, q = qₚ, v = vₚ)
+next = (t = tₙ, q = qₙ, v = vₙ)
+solutionstep!(prev, hist, ode_prev, MidpointExtrapolation(5))
+solutionstep!(next, hist, ode_next, MidpointExtrapolation(5))
 
 
 # ODE Initial Guess
@@ -56,8 +57,13 @@ v₂ = zero(v₀)
 
 equation(ode).v(v₀, t₀, q₀, parameters(ode))
 
-initialguess!(t₀, q₀, t₁, q₁, v₁, ode, MidpointExtrapolation(4))
-initialguess!(t₁, q₁, v₁, t₀, q₀, v₀, t₂, q₂, v₂, HermiteExtrapolation())
+hist = (t = [t₀], q = [q₀], v = [v₀])
+sol1 = (t = t₁, q = q₁, v = v₁)
+solutionstep!(sol1, hist, ode, MidpointExtrapolation(4))
+
+hist = (t = [t₁, t₀], q = [q₁, q₀], v = [v₁, v₀])
+sol2 = (t = t₂, q = q₂, v = v₂)
+solutionstep!(sol2, hist, ode, HermiteExtrapolation())
 
 # println("ODE Initial Guess")
 # println("Δq = $(q₁ .- qₚ)")
@@ -96,14 +102,11 @@ pₙ = zero(p₀)
 vₙ = zero(v₀)
 fₙ = zero(f₀)
 
-extrapolate!(t₀, q₀, p₀, tₚ, qₚ, pₚ, pode_prev, MidpointExtrapolation(5))
-extrapolate!(t₀, q₀, p₀, tₙ, qₙ, pₙ, pode_next, MidpointExtrapolation(5))
-
-equation(pode).v(vₚ, tₚ, qₚ, pₚ, parameters(pode))
-equation(pode).v(vₙ, tₙ, qₙ, pₙ, parameters(pode))
-
-equation(pode).f(fₚ, tₚ, qₚ, pₚ, parameters(pode))
-equation(pode).f(fₙ, tₙ, qₙ, pₙ, parameters(pode))
+hist = (t = [t₀], q = [q₀], p = [p₀], v = [v₀], f = [f₀])
+prev = (t = tₚ, q = qₚ, p = pₚ, v = vₚ, f = fₚ)
+next = (t = tₙ, q = qₙ, p = pₙ, v = vₙ, f = fₙ)
+solutionstep!(prev, hist, pode_prev, MidpointExtrapolation(5))
+solutionstep!(next, hist, pode_next, MidpointExtrapolation(5))
 
 
 # PODE Initial Guess
@@ -129,8 +132,13 @@ f₂ = zero(f₀)
 equation(pode).v(v₀, t₀, q₀, p₀, parameters(pode))
 equation(pode).f(f₀, t₀, q₀, p₀, parameters(pode))
 
-initialguess!(t₀, q₀, p₀, t₁, q₁, p₁, v₁, f₁, pode, MidpointExtrapolation(4))
-initialguess!(t₁, q₁, p₁, v₁, f₁, t₀, q₀, p₀, v₀, f₀, t₂, q₂, p₂, v₂, f₂, HermiteExtrapolation())
+hist = (t = [t₀], q = [q₀], p = [p₀], v = [v₀], f = [f₀])
+sol1 = (t = t₁, q = q₁, p = p₁, v = v₁, f = f₁)
+solutionstep!(sol1, hist, pode, MidpointExtrapolation(4))
+
+hist = (t = [t₁, t₀], q = [q₁, q₀], p = [p₁, p₀], v = [v₁, v₀], f = [f₁, f₀])
+sol2 = (t = t₂, q = q₂, p = p₂, v = v₂, f = f₂)
+solutionstep!(sol2, hist, pode, HermiteExtrapolation())
 
 # println("PODE Initial Guess")
 # println("Δq = $(q₁ .- qₚ)")
@@ -174,11 +182,16 @@ p₂ = zero(p₀)
 v₂ = zero(v₀)
 f₂ = zero(f₀)
 
-equation(iode).v̄(v₀, t₀, q₀, p₀, parameters(iode))
-equation(iode).f̄(f₀, t₀, q₀, v₀, parameters(iode))
+initialguess(iode).v(v₀, t₀, q₀, p₀, parameters(iode))
+initialguess(iode).f(f₀, t₀, q₀, v₀, parameters(iode))
 
-initialguess!(t₀, q₀, p₀, t₁, q₁, p₁, v₁, f₁, iode, MidpointExtrapolation(4))
-initialguess!(t₁, q₁, p₁, v₁, f₁, t₀, q₀, p₀, v₀, f₀, t₂, q₂, p₂, v₂, f₂, HermiteExtrapolation())
+hist = (t = [t₀], q = [q₀], p = [p₀], v = [v₀], f = [f₀])
+sol1 = (t = t₁, q = q₁, p = p₁, v = v₁, f = f₁)
+solutionstep!(sol1, hist, iode, MidpointExtrapolation(4))
+
+hist = (t = [t₁, t₀], q = [q₁, q₀], p = [p₁, p₀], v = [v₁, v₀], f = [f₁, f₀])
+sol2 = (t = t₂, q = q₂, p = p₂, v = v₂, f = f₂)
+solutionstep!(sol2, hist, iode, HermiteExtrapolation())
 
 # println("IODE Initial Guess")
 # println("Δq = $(q₁ .- qₚ)")

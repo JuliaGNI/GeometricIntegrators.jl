@@ -1,9 +1,9 @@
 using SafeTestsets
 
-@safetestset "Extrapolation Methods                                                           " begin include("extrapolation_tests.jl") end
+@safetestset "Extrapolation Methods                                                           " begin include("extrapolation/extrapolation_tests.jl") end
 @safetestset "Solution Tests                                                                  " begin include("solutions/solutions_tests.jl") end
-@safetestset "Initial Guesses (Harmonic Oscillator)                                           " begin include("integrators/initial_guess_tests_harmonic_oscillator.jl") end
-@safetestset "Initial Guesses (Lotka-Volterra)                                                " begin include("integrators/initial_guess_tests_lotka_volterra.jl") end
+@safetestset "Initial Guesses (Harmonic Oscillator)                                           " begin include("extrapolation/initial_guess_tests_harmonic_oscillator.jl") end
+@safetestset "Initial Guesses (Lotka-Volterra)                                                " begin include("extrapolation/initial_guess_tests_lotka_volterra.jl") end
 
 @safetestset "Euler Integrators                                                               " begin include("integrators/euler_tests.jl") end
 @safetestset "Runge-Kutta Integrators                                                         " begin include("integrators/rk_integrators_tests.jl") end

@@ -138,18 +138,20 @@ function update_vector_fields!(solstep::SolutionStepDAE, problem::DAEProblem, i=
     functions(problem).u(history(solstep).u[i], history(solstep).t[i], history(solstep).q[i], history(solstep).λ[i], parameters(problem))
 end
 
-function initialize!(solstep::SolutionStepDAE, problem::DAEProblem, extrap::Extrapolation = default_extrapolation())
-    solstep.t  = initial_conditions(problem).t
-    solstep.q .= initial_conditions(problem).q
-    solstep.λ .= initial_conditions(problem).λ
-    solstep.μ .= initial_conditions(problem).μ
+function initialize!(solstep::SolutionStepDAE, sol::NamedTuple, problem::DAEProblem, extrap::Extrapolation = default_extrapolation())
+    solstep.t  = sol.t
+    solstep.q .= sol.q
+    solstep.λ .= sol.λ
+    solstep.μ .= sol.μ
     solstep.q̃ .= 0
 
     update_vector_fields!(solstep, problem)
 
     for i in eachhistory(solstep)
         history(solstep).t[i] = history(solstep).t[i-1] - timestep(problem)
-        extrapolate!(history(solstep).t[i-1], history(solstep).q[i-1], history(solstep).t[i], history(solstep).q[i], problem, extrap)
+        soltmp = (t = history(solstep).t[i], q = history(solstep).q[i], v = history(solstep).v[i])
+        hsttmp = (t = [history(solstep).t[i-1]], q = [history(solstep).q[i-1]], v = [history(solstep).v[i-1]])
+        solutionstep!(soltmp, hsttmp, problem, extrap)
         update_vector_fields!(solstep, problem, i)
     end
 

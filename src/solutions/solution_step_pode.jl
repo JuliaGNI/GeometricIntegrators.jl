@@ -60,7 +60,7 @@ mutable struct SolutionStepPODE{
 
     parameters::paramsType
 
-    function SolutionStepPODE(t::TT, q::AT, p::AT, parameters; nhistory = 2, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, IT}
+    function SolutionStepPODE(t::TT, q::AT, p::AT, v::VT, parameters; nhistory = 2, internal::IT = NamedTuple()) where {DT, TT, AT <: AbstractArray{DT}, VT <: AbstractArray{DT}, IT}
         # TODO: nhistory should default to 1 and set to higher values by integrator / initial guess method
         @assert nhistory ≥ 1
 
@@ -68,7 +68,7 @@ mutable struct SolutionStepPODE{
             t = OffsetVector([zero(t) for _ in 0:nhistory], 0:nhistory),
             q = OffsetVector([zero(q) for _ in 0:nhistory], 0:nhistory),
             p = OffsetVector([zero(p) for _ in 0:nhistory], 0:nhistory),
-            v = OffsetVector([vectorfield(q) for _ in 0:nhistory], 0:nhistory),
+            v = OffsetVector([zero(v) for _ in 0:nhistory], 0:nhistory),
             f = OffsetVector([vectorfield(p) for _ in 0:nhistory], 0:nhistory),
         )
 
@@ -85,8 +85,12 @@ mutable struct SolutionStepPODE{
         q̃ = zero(q)
         p̃ = zero(p)
 
-        new{DT, TT, AT, typeof(v), typeof(f), typeof(history), IT, typeof(parameters), nhistory}(q, p, v, f, q̄, p̄, v̄, f̄, q̃, p̃, history, internal, parameters)
+        new{DT, TT, AT, VT, typeof(f), typeof(history), IT, typeof(parameters), nhistory}(q, p, v, f, q̄, p̄, v̄, f̄, q̃, p̃, history, internal, parameters)
     end
+end
+
+function SolutionStepPODE(t::TT, q::AT, p::AT, parameters; kwargs...) where {TT, AT <: AbstractArray}
+    SolutionStepPODE(t, q, p, vectorfield(q), parameters; kwargs...)
 end
 
 @inline function Base.hasproperty(::SolutionStepPODE, s::Symbol)
@@ -115,8 +119,8 @@ end
 
 nhistory(::SolutionStepPODE{DT,TT,AT,VT,FT,HT,IT,PT,NT}) where {DT,TT,AT,VT,FT,HT,IT,PT,NT} = NT
 
-current(solstep::SolutionStepPODE) = (t = solstep.t, q = solstep.q, p = solstep.p)
-previous(solstep::SolutionStepPODE) = (t = solstep.t̄, q = solstep.q̄, p = solstep.p̄)
+current(solstep::SolutionStepPODE) = (t = solstep.t, q = solstep.q, v = solstep.v, p = solstep.p)
+previous(solstep::SolutionStepPODE) = (t = solstep.t̄, q = solstep.q̄, v = solstep.v̄, p = solstep.p̄)
 history(solstep::SolutionStepPODE) = solstep.history
 history(solstep::SolutionStepPODE, i::Int) = (
     t = history(solstep).t[i],
@@ -134,8 +138,8 @@ function update_vector_fields!(solstep::SolutionStepPODE, problem::Union{PODEPro
 end
 
 function update_vector_fields!(solstep::SolutionStepPODE, problem::Union{IODEProblem,LODEProblem}, i=0)
-    functions(problem).v̄(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i], parameters(problem))
-    functions(problem).f̄(history(solstep).f[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i], parameters(problem))
+    initialguess(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i], parameters(problem))
+    initialguess(problem).f(history(solstep).f[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i], parameters(problem))
 end
 
 update_implicit_functions!(::SolutionStepPODE, ::Union{PODEProblem,HODEProblem}, i=0) = nothing
@@ -144,10 +148,10 @@ function update_implicit_functions!(solstep::SolutionStepPODE, problem::Union{IO
     functions(problem).ϑ(history(solstep).p[i], history(solstep).t[i], history(solstep).q[i], history(solstep).v[i], parameters(problem))
 end
 
-function initialize!(solstep::SolutionStepPODE, problem::Union{PODEProblem, HODEProblem, IODEProblem, LODEProblem}, extrap::Extrapolation = default_extrapolation())
-    solstep.t  = initial_conditions(problem).t
-    solstep.q .= initial_conditions(problem).q
-    solstep.p .= initial_conditions(problem).p
+function initialize!(solstep::SolutionStepPODE, sol::NamedTuple, problem::Union{PODEProblem, HODEProblem, IODEProblem, LODEProblem}, extrap::Extrapolation = default_extrapolation())
+    solstep.t  = sol.t
+    solstep.q .= sol.q
+    solstep.p .= sol.p
 
     solstep.q̃ .= 0
     solstep.p̃ .= 0
@@ -156,8 +160,21 @@ function initialize!(solstep::SolutionStepPODE, problem::Union{PODEProblem, HODE
 
     for i in eachhistory(solstep)
         history(solstep).t[i] = history(solstep).t[i-1] - timestep(problem)
-        extrapolate!(history(solstep).t[i-1], history(solstep).q[i-1], history(solstep).p[i-1], history(solstep).t[i], history(solstep).q[i], history(solstep).p[i], problem, extrap)
-        update_vector_fields!(solstep, problem, i)
+        soltmp = (
+            t = history(solstep).t[i],
+            q = history(solstep).q[i],
+            p = history(solstep).p[i],
+            v = history(solstep).v[i],
+            f = history(solstep).f[i],
+        )
+        hsttmp = (
+            t = [history(solstep).t[i-1]],
+            q = [history(solstep).q[i-1]],
+            p = [history(solstep).p[i-1]],
+            v = [history(solstep).v[i-1]],
+            f = [history(solstep).f[i-1]],
+        )
+        solutionstep!(soltmp, hsttmp, problem, extrap)
         update_implicit_functions!(solstep, problem, i)
     end
 

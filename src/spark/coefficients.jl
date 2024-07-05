@@ -70,6 +70,25 @@ function Base.show(io::IO, tab::CoefficientsARK)
     print(io, "  β = ", tab.β)
 end
 
+function update!(x::AbstractArray{T}, ẋ::StageVector{T}, ẏ::StageVector{T}, tableau::CoefficientsARK, Δt) where {T}
+    @assert length(tableau.b) == length(ẋ)
+    @assert length(tableau.β) == length(ẏ)
+ 
+    for i in eachindex(ẋ, tableau.b, tableau.b̂)
+        @assert axes(x) == axes(ẋ[i])
+        x .+= Δt .* tableau.b[i] .* ẋ[i]
+        x .+= Δt .* tableau.b̂[i] .* ẋ[i]
+    end
+
+    for i in eachindex(ẏ, tableau.β, tableau.β̂)
+        @assert axes(x) == axes(ẏ[i])
+        x .+= Δt .* tableau.β[i] .* ẏ[i]
+        x .+= Δt .* tableau.β̂[i] .* ẏ[i]
+    end
+    
+    return x
+end
+
 
 "Holds the coefficients of a projective Runge-Kutta method."
 struct CoefficientsPRK{T} <: AbstractCoefficients{T}
@@ -149,6 +168,19 @@ function Base.show(io::IO, tab::CoefficientsMRK)
     print(io, "Multiplier Runge-Kutta coefficients ", tab.name, " with ", tab.r, " projective stages")
     print(io, "  b = ", tab.b)
     print(io, "  c = ", tab.c)
+end
+
+function update!(λ::AbstractArray{T}, Λ::StageVector{T}, tableau::CoefficientsMRK, Δt) where {T}
+    @assert length(tableau.b) == length(Λ)
+
+    λ .= 0
+
+    for j in eachindex(Λ, tableau.b)
+        @assert axes(λ) == axes(Λ[j])
+        λ .+= tableau.b[j] .* Λ[j]
+    end
+
+    return λ
 end
 
 

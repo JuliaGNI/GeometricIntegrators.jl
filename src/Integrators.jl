@@ -29,8 +29,8 @@ module Integrators
     import CompactBasisFunctions: nbasis
 
     import GeometricBase: description, reference, tableau, order
-    import GeometricBase: equations, nconstraints, parameters, timestep
-    import GeometricBase: integrate, integrate!
+    import GeometricBase: equations, initialguess, nconstraints, parameters, timestep
+    import GeometricBase: integrate, integrate!, solutionstep!
     import GeometricBase: reset!
     import GeometricBase.Utils: @big, @define, compensated_summation
     
@@ -97,14 +97,6 @@ module Integrators
     include("solutions/solution_step_constructors.jl")
 
 
-    export InitialGuess, NoInitialGuess
-    export initialguess!
-
-    include("initial_guess/initial_guess.jl")
-    include("initial_guess/hermite.jl")
-    include("initial_guess/midpoint.jl")
-
-
     export IntegratorCache, IntegratorConstructor
     export equation, timestep
 
@@ -117,7 +109,7 @@ module Integrators
 
 
     export GeometricIntegrator
-    export integrate, integrate!, integrate_step!
+    export integrate, integrate!, solutionstep!
 
     include("integrators/integrator.jl")
 

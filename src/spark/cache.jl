@@ -151,7 +151,7 @@ mutable struct IntegratorCacheSPARK{ST,D,S,R} <: IDAEIntegratorCache{ST,D}
 end
 
 # function IntegratorCache(int::AbstractIntegratorSPARK{DT,TT}) where {DT,TT}
-#     IntegratorCacheSPARK{DT, ndims(problem), nstages(method), pstages(method)}()
+#     IntegratorCacheSPARK{DT, ndims(int), nstages(int), pstages(method(int))}()
 # end
 
 nlsolution(cache::IntegratorCacheSPARK) = cache.x
