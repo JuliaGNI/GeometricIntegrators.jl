@@ -34,8 +34,8 @@ struct EulerExtrapolation <: Extrapolation
 end
 
 
-function extrapolate!(t₀::TT, x₀::AbstractVector{DT},
-                      t₁::TT, x₁::AbstractVector{DT},
+function extrapolate!(t₀::TT, x₀::AbstractArray{DT},
+                      t₁::TT, x₁::AbstractArray{DT},
                       problem::AbstractProblemODE,
                       extrap::EulerExtrapolation) where {DT,TT}
 
@@ -43,21 +43,15 @@ function extrapolate!(t₀::TT, x₀::AbstractVector{DT},
 
     local F   = collect(1:(extrap.s+1))
     local σ   = (t₁ - t₀) ./ F
-    local pts = repeat(x₀, outer = [1, extrap.s+1])
+    local pts = [copy(x₀) for _ in F]
 
-    local xᵢ = zero(x₀)
     local vᵢ = zero(x₀)
 
     for i in F
         for _ in 1:(F[i]-1)
-            tᵢ = t₀ + σ[i]
-            for k in axes(pts,1)
-                xᵢ[k] = pts[k,i]
-            end
-            initialguess(problem).v(vᵢ, tᵢ, xᵢ, parameters(problem))
-            for k in axes(pts,1)
-                pts[k,i] += σ[i] * vᵢ[k]
-            end
+            tᵢ  = t₀ + σ[i]
+            initialguess(problem).v(vᵢ, tᵢ, pts[i], parameters(problem))
+            pts[i] .+= σ[i] * vᵢ
         end
     end
 

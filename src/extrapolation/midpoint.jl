@@ -92,8 +92,8 @@ end
 
 
 function extrapolate!(
-        t₀::TT, x₀::AbstractVector{DT},
-        t₁::TT, x₁::AbstractVector{DT},
+        t₀::TT, x₀::AbstractArray{DT},
+        t₁::TT, x₁::AbstractArray{DT},
         problem::Union{AbstractProblemODE, SODEProblem},
         extrap::MidpointExtrapolation) where {DT,TT}
     
@@ -102,7 +102,7 @@ function extrapolate!(
     local F   = [2i*one(TT) for i in 1:extrap.s+1]
     local σ   = (t₁ - t₀) ./ F
     local σ²  = σ.^2
-    local pts = zeros(DT, axes(x₀)..., extrap.s+1)
+    local pts = [zero(x₀) for _ in 1:extrap.s+1]
 
     local xᵢ₁ = zero(x₀)
     local xᵢ₂ = zero(x₀)
@@ -112,7 +112,7 @@ function extrapolate!(
 
     initialguess(problem).v(v₀, t₀, x₀, parameters(problem))
 
-    for i in 1:extrap.s+1
+    for i in eachindex(pts)
         tᵢ   = t₀ + σ[i]
         xᵢ₁ .= x₀
         xᵢ₂ .= x₀ .+ σ[i] .* v₀
@@ -122,9 +122,7 @@ function extrapolate!(
             xᵢ₁ .= xᵢ₂
             xᵢ₂ .= xᵢₜ
         end
-        for k in axes(pts,1)
-            pts[k,i] += xᵢ₂[k]
-        end
+        pts[i] .+= xᵢ₂
     end
 
     aitken_neville!(x₁, zero(TT), σ², pts)
@@ -150,8 +148,8 @@ function extrapolate!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{D
     local σ   = (t₁ - t₀) ./ F
     local σ2  = σ.^2
 
-    local qts = zeros(DT, axes(q₀)..., extrap.s+1)
-    local pts = zeros(DT, axes(p₀)..., extrap.s+1)
+    local qts = [zero(q₀) for _ in 1:extrap.s+1]
+    local pts = [zero(p₀) for _ in 1:extrap.s+1]
 
     local qᵢ₁= zero(q₀)
     local qᵢ₂= zero(q₀)
@@ -186,12 +184,8 @@ function extrapolate!(t₀::TT, q₀::AbstractVector{DT}, p₀::AbstractVector{D
             pᵢ₁ .= pᵢ₂
             pᵢ₂ .= pᵢₜ
         end
-        for k in axes(qts,1)
-            qts[k,i] += qᵢ₂[k]
-        end
-        for k in axes(pts,1)
-            pts[k,i] += pᵢ₂[k]
-        end
+        qts[i] .+= qᵢ₂
+        pts[i] .+= pᵢ₂
     end
 
     aitken_neville!(q₁, zero(TT), σ2, qts)
@@ -219,8 +213,8 @@ function extrapolate!(
     local σ   = (t₁ - t₀) ./ F
     local σ2  = σ.^2
 
-    local qts = zeros(DT, axes(q₀)..., extrap.s+1)
-    local pts = zeros(DT, axes(p₀)..., extrap.s+1)
+    local qts = [zero(q₀) for _ in 1:extrap.s+1]
+    local pts = [zero(p₀) for _ in 1:extrap.s+1]
 
     local qᵢ₁= zero(q₀)
     local qᵢ₂= zero(q₀)
@@ -255,12 +249,8 @@ function extrapolate!(
             pᵢ₁ .= pᵢ₂
             pᵢ₂ .= pᵢₜ
         end
-        for k in axes(qts,1)
-            qts[k,i] += qᵢ₂[k]
-        end
-        for k in axes(pts,1)
-            pts[k,i] += pᵢ₂[k]
-        end
+        qts[i] .+= qᵢ₂
+        pts[i] .+= pᵢ₂
     end
 
     aitken_neville!(q₁, zero(TT), σ2, qts)

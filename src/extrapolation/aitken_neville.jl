@@ -11,18 +11,18 @@ where
 * `ti`: interpolation nodes
 * `xi`: interpolation values
 """
-function aitken_neville!(x::AbstractVector, t::TT, ti::AbstractVector{TT}, xi::AbstractMatrix) where {TT}
-    @assert length(ti) == size(xi,2)
-    @assert length(x)  == size(xi,1)
+function aitken_neville!(x::AbstractArray, t::TT, ti::AbstractVector{TT}, xi::AbstractVector) where {TT}
+    @assert length(ti) == length(xi)
+    
+    for _xi in xi
+        @assert axes(x) == axes(_xi)
+    end
 
     for j in eachindex(ti)
-        for i in 1:(length(ti)-j)
-            for k in axes(x,1)
-                xi[k,i] = xi[k,i+1] + (xi[k,i] - xi[k,i+1]) * (ti[i+j] - t) / (ti[i+j] - ti[i])
-            end
+        for i in eachindex(ti)[begin:end-j]
+            @. xi[i] = xi[i+1] + (xi[i] - xi[i+1]) * (ti[i+j] - t) / (ti[i+j] - ti[i])
         end
     end
-    for k in eachindex(x)
-        x[k] = xi[k,1]
-    end
+
+    copyto!(x, xi[1])
 end
