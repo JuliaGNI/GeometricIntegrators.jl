@@ -7,10 +7,10 @@ default_options() = Options(
     f_abstol = 8eps(),
 )
 
-initsolver(::SolverMethod, ::GeometricMethod, ::CacheDict) = NoSolver()
+initsolver(::SolverMethod, ::Options, ::GeometricMethod, ::CacheDict) = NoSolver()
 
 # create nonlinear solver
-function initsolver(::NewtonMethod, ::GeometricMethod, caches::CacheDict; config = default_options(), kwargs...)
+function initsolver(::NewtonMethod, config::Options, ::GeometricMethod, caches::CacheDict; kwargs...)
     x = zero(nlsolution(caches))
     y = zero(nlsolution(caches))
     NewtonSolver(x, y; linesearch = Backtracking(), config = config, kwargs...)

@@ -56,9 +56,10 @@ function ProjectionIntegrator(
         solvermethod::SolverMethod,
         iguess::Extrapolation,
         subint::AbstractIntegrator;
+        options = default_options(),
         method = initmethod(projectionmethod, problem),
         caches = CacheDict(problem, method),
-        solver = initsolver(solvermethod, method, caches)
+        solver = initsolver(solvermethod, options, method, caches)
     )
     ProjectionIntegrator(problem, method, caches, solver, iguess, subint)
 end

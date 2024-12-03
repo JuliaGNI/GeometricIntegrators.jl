@@ -47,8 +47,8 @@ end
 Base.getindex(s::SingleStageSolvers, args...) = getindex(s.solvers, args...)
 
 
-function initsolver(::NewtonMethod, method::DIRK, caches::CacheDict; kwargs...)
-    SingleStageSolvers([NewtonSolver(zero(cache(caches).x[i]), zero(cache(caches).x[i]); linesearch = Backtracking(), config = Options(min_iterations = 1)) for i in eachstage(method)]...)
+function initsolver(::NewtonMethod, config::Options, method::DIRK, caches::CacheDict; kwargs...)
+    SingleStageSolvers([NewtonSolver(zero(cache(caches).x[i]), zero(cache(caches).x[i]); linesearch = Backtracking(), config = config) for i in eachstage(method)]...)
 end
 
 

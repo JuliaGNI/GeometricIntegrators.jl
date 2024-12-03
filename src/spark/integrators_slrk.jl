@@ -95,12 +95,12 @@ F^1_{n,i} + F^2_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i 
 const IntegratorSLRK{DT,TT} = GeometricIntegrator{<:LDAEProblem{DT,TT}, <:SLRK}
 
 
-# function Integrators.initsolver(::Newton, solstep::SolutionStepPDAE{DT}, problem::LDAEProblem, method::SLRK, caches::CacheDict) where {DT}
+# function Integrators.initsolver(::Newton, config::Options, solstep::SolutionStepPDAE{DT}, problem::LDAEProblem, method::SLRK, caches::CacheDict) where {DT}
 #     # create wrapper function f!(b,x)
 #     f! = (b,x) -> residual!(b, x, solstep, problem, method, caches)
 
 #     # create nonlinear solver
-#     NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
+#     NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = config)
 # end
 
 

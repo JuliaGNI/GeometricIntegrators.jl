@@ -22,6 +22,6 @@ hasnullvector(method::AbstractSPARKMethod) = hasnullvector(tableau(method))
 
 
 # create nonlinear solver
-function initsolver(::Newton, method::AbstractSPARKMethod, caches::CacheDict)
-    NewtonSolver(zero(nlsolution(caches)), zero(nlsolution(caches)); linesearch = Backtracking(), config = Options(min_iterations = 1, x_abstol = 8eps(), f_abstol = 8eps()))
+function initsolver(::Newton, config::Options, method::AbstractSPARKMethod, caches::CacheDict)
+    NewtonSolver(zero(nlsolution(caches)), zero(nlsolution(caches)); linesearch = Backtracking(), config = config)
 end

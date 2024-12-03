@@ -48,9 +48,10 @@ function GeometricIntegrator(
         integratormethod::GeometricMethod,
         solvermethod::SolverMethod,
         iguess::Extrapolation;
+        options = default_options(),
         method = initmethod(integratormethod, problem),
         caches = CacheDict(problem, method),
-        solver = initsolver(solvermethod, method, caches)
+        solver = initsolver(solvermethod, options, method, caches)
     )
     GeometricIntegrator(problem, method, caches, solver, iguess)
 end
@@ -190,8 +191,8 @@ function integrate!(sol::GeometricSolution, int::AbstractIntegrator)
 end
 
 
-function integrate(integrator::AbstractIntegrator; kwargs...)
-    solution = Solution(problem(integrator); kwargs...)
+function integrate(integrator::AbstractIntegrator)
+    solution = Solution(problem(integrator))
     integrate!(solution, integrator)
 end
 
@@ -201,7 +202,7 @@ function integrate(problem::AbstractProblem, method::GeometricMethod; kwargs...)
 end
 
 function integrate(problems::EnsembleProblem, method::GeometricMethod; kwargs...)
-    solutions = Solution(problems; kwargs...)
+    solutions = Solution(problems)
 
     for (problem, solution) in zip(problems, solutions)
         integrator = GeometricIntegrator(problem, method; kwargs...)
