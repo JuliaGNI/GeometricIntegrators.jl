@@ -97,7 +97,7 @@ module Integrators
     include("solutions/solution_step_constructors.jl")
 
 
-    export IntegratorCache, IntegratorConstructor
+    export IntegratorCache
     export equation, timestep
 
     include("integrators/integrator_cache.jl")
