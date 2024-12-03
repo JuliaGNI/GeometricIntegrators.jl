@@ -69,12 +69,13 @@ function ProjectionIntegrator(
         projectionmethod::ProjectionMethod,
         solvermethod::SolverMethod,
         iguess::Extrapolation,
+        parent_solveroptions::Options,
         parent_solvermethod::SolverMethod,
         parent_iguess::Extrapolation;
         kwargs...
     )
-    subint = GeometricIntegrator(problem, parent(projectionmethod), parent_solvermethod, parent_iguess)
-    ProjectionIntegrator(problem, projectionmethod, solvermethod, iguess, subint)
+    subint = GeometricIntegrator(problem, parent(projectionmethod), parent_solvermethod, parent_iguess; options = parent_solveroptions)
+    ProjectionIntegrator(problem, projectionmethod, solvermethod, iguess, subint; kwargs...)
 end
 
 function GeometricIntegrator(
@@ -82,11 +83,12 @@ function GeometricIntegrator(
         method::ProjectionMethod;
         solver = default_solver(method),
         initialguess = default_iguess(method),
+        parent_options = default_options(),
         parent_solver = default_solver(parent(method)),
         parent_initialguess = default_iguess(parent(method)),
         kwargs...
     )
-    ProjectionIntegrator(problem, method, solver, initialguess, parent_solver, parent_initialguess; kwargs...)
+    ProjectionIntegrator(problem, method, solver, initialguess, parent_options, parent_solver, parent_initialguess; kwargs...)
 end
 
 
