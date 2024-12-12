@@ -42,7 +42,7 @@ pstages(method::VSPARKsecondary) = method.r
 hasnullvector(method::VSPARKsecondary{DT,Nothing}) where {DT} = false
 hasnullvector(method::VSPARKsecondary{DT,<:AbstractVector}) where {DT} = true
 
-solversize(problem::Union{IDAEProblem,LDAEProblem}, method::VSPARKsecondary) =
+solversize(problem::AbstractProblemIDAE, method::VSPARKsecondary) =
     4 * ndims(problem) * pstages(method)
 
 

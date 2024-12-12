@@ -27,7 +27,7 @@ end
 
 tableau(method::SPARKMethod) = method.tableau
 
-solversize(problem::Union{IDAEProblem,LDAEProblem}, method::SPARKMethod) =
+solversize(problem::AbstractProblemIDAE, method::SPARKMethod) =
     2 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)
 
 

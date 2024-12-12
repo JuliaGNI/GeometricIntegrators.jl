@@ -9,7 +9,7 @@ end
 
 tableau(method::HPARK) = method.tableau
 
-solversize(problem::Union{PDAEProblem,HDAEProblem}, method::HPARK) =
+solversize(problem::AbstractProblemPDAE, method::HPARK) =
     2 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)
 
 

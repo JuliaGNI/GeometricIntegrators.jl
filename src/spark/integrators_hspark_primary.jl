@@ -7,7 +7,7 @@ end
 
 tableau(method::HSPARKprimary) = method.tableau
 
-solversize(problem::Union{PDAEProblem,HDAEProblem}, method::HSPARKprimary) =
+solversize(problem::AbstractProblemPDAE, method::HSPARKprimary) =
     2 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)
 
 
