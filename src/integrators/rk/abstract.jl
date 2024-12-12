@@ -55,4 +55,4 @@ GeometricBase.tableau(int::GeometricIntegrator{<:EquationProblem, <:RKMethod}) =
 initmethod(method::RKMethod) = RK(method)
 initmethod(method::PRKMethod) = PRK(method)
 
-GeometricIntegrator(problem::Union{PODEProblem,HODEProblem}, method::RKMethod, args...; kwargs...) = GeometricIntegrator(problem, PRK(method), args...; kwargs...)
+GeometricIntegrator(problem::AbstractProblemPODE, method::RKMethod, args...; kwargs...) = GeometricIntegrator(problem, PRK(method), args...; kwargs...)
