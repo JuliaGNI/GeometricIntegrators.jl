@@ -1,10 +1,10 @@
 
-function Solution(problem::Union{EquationProblem, SubstepProblem}; kwargs...)
-    GeometricSolution(problem; kwargs...)
+function Solution(problem::Union{EquationProblem, SubstepProblem}, args...; kwargs...)
+    GeometricSolution(problem, args...; kwargs...)
 end
     
-function Solution(problem::EnsembleProblem; kwargs...)
-    EnsembleSolution(problem; kwargs...)
+function Solution(problem::EnsembleProblem, args...; kwargs...)
+    EnsembleSolution(problem, args...; kwargs...)
 end
 
 const SolutionODE{dType, tType, dsType, probType, perType} = GeometricSolution{dType, tType, dsType, probType, perType} where {probType <: Union{ODEProblem, SODEProblem, SubstepProblem}}

@@ -96,11 +96,11 @@ pdae = pdaeproblem()
     @test sol2.q[1:nt] == xs
 
     # test step and nstore parameters
-    sol = Solution(similar(ode, tspan = 2 .* tspan(ode)); step = 2)
+    sol = Solution(similar(ode, tspan = 2 .* tspan(ode)), 2)
     @test ntime(sol) == 20
     @test nstore(sol) == 10
 
-    sol = Solution(similar(ode, tspan = 2 .* tspan(ode)); step = 10)
+    sol = Solution(similar(ode, tspan = 2 .* tspan(ode)), 10)
     @test ntime(sol) == 20
     @test nstore(sol) == 2
 
@@ -142,11 +142,11 @@ end
     @test sol2.p[1:nt] == ps
 
     # test step and nstore parameters
-    sol = Solution(similar(pode, tspan = 2 .* tspan(pode)), step = 2)
+    sol = Solution(similar(pode, tspan = 2 .* tspan(pode)), 2)
     @test ntime(sol) == 20
     @test nstore(sol) == 10
 
-    sol = Solution(similar(pode, tspan = 2 .* tspan(pode)), step = 10)
+    sol = Solution(similar(pode, tspan = 2 .* tspan(pode)), 10)
     @test ntime(sol) == 20
     @test nstore(sol) == 2
 end
@@ -187,11 +187,11 @@ end
     @test sol2.λ[1:nt] == λs
 
     # test step and nstore parameters
-    sol = Solution(similar(dae, tspan = 2 .* tspan(dae)), step = 2)
+    sol = Solution(similar(dae, tspan = 2 .* tspan(dae)), 2)
     @test ntime(sol) == 20
     @test nstore(sol) == 10
 
-    sol = Solution(similar(dae, tspan = 2 .* tspan(dae)), step = 10)
+    sol = Solution(similar(dae, tspan = 2 .* tspan(dae)), 10)
     @test ntime(sol) == 20
     @test nstore(sol) == 2
 end
@@ -235,11 +235,11 @@ end
     @test sol2.p[1:nt] == ps
 
     # test step and nstore parameters
-    sol = Solution(similar(pdae, tspan = 2 .* tspan(pdae)), step = 2)
+    sol = Solution(similar(pdae, tspan = 2 .* tspan(pdae)), 2)
     @test ntime(sol) == 20
     @test nstore(sol) == 10
 
-    sol = Solution(similar(pdae, tspan = 2 .* tspan(pdae)), step = 10)
+    sol = Solution(similar(pdae, tspan = 2 .* tspan(pdae)), 10)
     @test ntime(sol) == 20
     @test nstore(sol) == 2
 
