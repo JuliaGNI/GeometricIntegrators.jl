@@ -27,7 +27,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [compat]
 CompactBasisFunctions = "0.2"
 Documenter = "0.25, 0.26, 0.27, 1"
-ForwardDiff = "0.10"
+ForwardDiff = "0.10, 1"
 GenericLinearAlgebra = "0.2, 0.3"
 GeometricBase = "0.10.11"
 GeometricEquations = "0.18"
