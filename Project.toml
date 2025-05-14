@@ -1,7 +1,7 @@
 name = "GeometricIntegrators"
 uuid = "dcce2d33-59f6-5b8d-9047-0defad88ae06"
-authors = ["Michael Kraus <michael.kraus@ipp.mpg.de>"]
 version = "0.14.5"
+authors = ["Michael Kraus <michael.kraus@ipp.mpg.de>"]
 
 [deps]
 CompactBasisFunctions = "a09551c4-f815-4143-809e-dd1986753ba7"
@@ -30,7 +30,7 @@ Documenter = "0.25, 0.26, 0.27, 1"
 ForwardDiff = "0.10, 1"
 GenericLinearAlgebra = "0.2, 0.3"
 GeometricBase = "0.10.11"
-GeometricEquations = "0.18"
+GeometricEquations = "0.18.2"
 GeometricSolutions = "0.4"
 OffsetArrays = "1"
 Parameters = "0.12"

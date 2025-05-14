@@ -3,7 +3,7 @@ module Integrators
     using Reexport
 
     @reexport using GeometricBase
-    
+
     using Documenter: @doc
     using ForwardDiff
     using GeometricBase
@@ -33,7 +33,7 @@ module Integrators
     import GeometricBase: integrate, integrate!, solutionstep!
     import GeometricBase: reset!
     import GeometricBase.Utils: @big, @define, compensated_summation
-    
+
     import RungeKutta
     import RungeKutta: eachstage, nstages
     import RungeKutta: AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
@@ -57,6 +57,7 @@ module Integrators
     export GeometricMethod
     export ODEMethod, PODEMethod, HODEMethod, IODEMethod, LODEMethod, SODEMethod
     export DAEMethod, PDAEMethod, HDAEMethod, IDAEMethod, LDAEMethod
+    export DELEMethod
     export RKMethod, ERKMethod, IRKMethod, DIRKMethod
     export PRKMethod, EPRKMethod, IPRKMethod, VPRKMethod, DVIMethod
     export AbstractSplittingMethod
@@ -119,7 +120,7 @@ module Integrators
 
 
     export get_symplectic_conjugate_coefficients, symplecticize,
-           check_symplecticity, symplecticity_conditions, 
+           check_symplecticity, symplecticity_conditions,
            check_symmetry, compute_symplecticity_error
 
     include("integrators/rk/abstract.jl")
@@ -162,6 +163,7 @@ module Integrators
 
 
     include("integrators/vi/vi_methods.jl")
+    include("integrators/vi/deleqs.jl")
     include("integrators/vi/position_momentum_common.jl")
     include("integrators/vi/position_momentum_cache.jl")
     include("integrators/vi/position_momentum_midpoint.jl")
@@ -204,7 +206,7 @@ module Integrators
 
     include("projections/methods.jl")
     include("integrators/vi/vprk_projected.jl")
-    
+
 
     include("integrators/method_list.jl")
 
