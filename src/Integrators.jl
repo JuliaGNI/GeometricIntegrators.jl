@@ -57,7 +57,7 @@ module Integrators
     export GeometricMethod
     export ODEMethod, PODEMethod, HODEMethod, IODEMethod, LODEMethod, SODEMethod
     export DAEMethod, PDAEMethod, HDAEMethod, IDAEMethod, LDAEMethod
-    export DELEMethod
+    export DELEMethod, Midpoint, Trapezoidal
     export RKMethod, ERKMethod, IRKMethod, DIRKMethod
     export PRKMethod, EPRKMethod, IPRKMethod, VPRKMethod, DVIMethod
     export AbstractSplittingMethod
@@ -164,6 +164,7 @@ module Integrators
 
     include("integrators/vi/vi_methods.jl")
     include("integrators/vi/deleqs.jl")
+    include("integrators/vi/deleqs_methods.jl")
     include("integrators/vi/position_momentum_common.jl")
     include("integrators/vi/position_momentum_cache.jl")
     include("integrators/vi/position_momentum_midpoint.jl")
