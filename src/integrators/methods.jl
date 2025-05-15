@@ -17,6 +17,8 @@ abstract type HDAEMethod <: DeterministicMethod end
 abstract type IDAEMethod <: DeterministicMethod end
 abstract type LDAEMethod <: DeterministicMethod end
 
+abstract type DELEMethod <: DeterministicMethod end
+
 initmethod(method::GeometricMethod) = method
 initmethod(method::GeometricMethod, ::AbstractProblem) = initmethod(method)
 
@@ -55,6 +57,8 @@ ispdaemethod(::Union{PDAEMethod, Type{<:PDAEMethod}}) = true
 ishdaemethod(::Union{HDAEMethod, Type{<:HDAEMethod}}) = true
 isidaemethod(::Union{IDAEMethod, Type{<:IDAEMethod}}) = true
 isldaemethod(::Union{LDAEMethod, Type{<:LDAEMethod}}) = true
+
+isdelemethod(::Union{DELEMethod, Type{<:DELEMethod}}) = true
 
 isexplicit(::GeometricMethod) = missing
 isimplicit(::GeometricMethod) = missing

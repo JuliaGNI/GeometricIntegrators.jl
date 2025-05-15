@@ -1,5 +1,4 @@
-
-# Create SolutionStep for an ODEProblem.
+# Create SolutionStep for an ODEProblem, SODEProblem, SubstepProblem.
 function SolutionStep(problem::Union{ODEProblem, SODEProblem, SubstepProblem}, extrap::Extrapolation = default_extrapolation(); kwargs...)
     solstep = SolutionStepODE(initial_conditions(problem)..., parameters(problem); kwargs...)
     initialize!(solstep, problem, extrap)
@@ -46,6 +45,14 @@ end
 function SolutionStep(solution::SolutionPDAE; kwargs...)
     SolutionStepPDAE(solution[0].t, solution[0].q, solution[0].p, solution[0].λ, parameters(problem); kwargs...)
 end
+
+# Create SolutionStep for an DELEProblem.
+function SolutionStep(problem::DELEProblem, extrap::Extrapolation = NoExtrapolation(); kwargs...)
+    solstep = SolutionStepODE(initial_conditions(problem).t, initial_conditions(problem).q, parameters(problem); nhistory = 2, kwargs...)
+    initialize!(solstep, initial_conditions(problem), problem, extrap)
+    return solstep
+end
+
 
 function SolutionStep(problem::AbstractProblem, method::GeometricMethod, extrap::Extrapolation = default_extrapolation())
     SolutionStep(problem, extrap; internal = internal_variables(method, problem))

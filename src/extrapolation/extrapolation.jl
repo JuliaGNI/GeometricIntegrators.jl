@@ -5,6 +5,7 @@ abstract type Extrapolation end
 # abstract type Extrapolation <: DeterministicMethod end
 
 
+struct NoExtrapolation <: Extrapolation end
 struct NoInitialGuess <: Extrapolation end
 
 

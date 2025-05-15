@@ -27,10 +27,10 @@ SolutionStepODE(t::TT, q::AT; nhistory=1, internal::IT=NamedTuple())
 
 """
 struct SolutionStepODE{
-            DT <: Number, 
-            TT <: Real, 
-            AT <: AbstractArray{DT}, 
-            VT <: AbstractArray{DT}, 
+            DT <: Number,
+            TT <: Real,
+            AT <: AbstractArray{DT},
+            VT <: AbstractArray{DT},
             HT <: NamedTuple,
             IT <: NamedTuple,
             paramsType <: OptionalParameters,
@@ -115,6 +115,10 @@ function update_vector_fields!(solstep::SolutionStepODE, problem::SODEProblem, i
     initialguess(problem).v(history(solstep).v[i], history(solstep).t[i], history(solstep).q[i], parameters(problem))
 end
 
+function update_vector_fields!(solstep::SolutionStepODE, problem::DELEProblem, i=0)
+    nothing
+end
+
 function initialize!(solstep::SolutionStepODE, sol::NamedTuple, problem::Union{ODEProblem, SODEProblem, SubstepProblem}, extrap::Extrapolation = default_extrapolation())
     solstep.t  = sol.t
     solstep.q .= sol.q
@@ -132,7 +136,17 @@ function initialize!(solstep::SolutionStepODE, sol::NamedTuple, problem::Union{O
     return solstep
 end
 
-function initialize!(solstep::SolutionStepODE, problem::Union{ODEProblem, SODEProblem, SubstepProblem}, args...)
+function initialize!(solstep::SolutionStepODE, sol::NamedTuple, problem::DELEProblem, extrap::Extrapolation = default_extrapolation())
+    solstep.t  = sol.t
+    solstep.q .= sol.q
+
+    history(solstep).t[1]  = sol.t - tstep(problem)
+    history(solstep).q[1] .= sol.q̄
+
+    return solstep
+end
+
+function initialize!(solstep::SolutionStepODE, problem::Union{ODEProblem, SODEProblem, SubstepProblem, DELEProblem}, args...)
     initialize!(solstep, initial_conditions(problem), problem, args...)
 end
 

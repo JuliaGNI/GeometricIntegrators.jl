@@ -15,7 +15,7 @@ meta_methods = (
 )
 
 euler_methods = (
-    ExplicitEuler, 
+    ExplicitEuler,
     ImplicitEuler,
 )
 
@@ -136,6 +136,7 @@ variational_integrators = (
     HPItrapezoidal,
     PMVImidpoint,
     PMVItrapezoidal,
+    DiscreteEulerLagrange,
 )
 
 degenerate_variational_integrators = (
@@ -240,7 +241,7 @@ function _row(m, refs, selector)
             _display_property(isldaemethod(m)),
         ]
     end
-    
+
     return row
 end
 
@@ -272,9 +273,9 @@ struct MethodList{MD}
             "LDAE",
         ]
         end
-    
+
         data = []
-        
+
         for m in list
             if selector(m)
                 data = [data..., _row(m, refs, selector)]

@@ -17,6 +17,7 @@ abstract type IODEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 abstract type IDAEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 abstract type PODEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 abstract type PDAEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
+abstract type DELEIntegratorCache{DT,D} <: IntegratorCache{DT,D} end
 
 reset!(::ODEIntegratorCache, t, q, λ = missing) = nothing
 
