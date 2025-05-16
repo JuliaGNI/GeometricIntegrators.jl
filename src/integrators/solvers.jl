@@ -1,7 +1,7 @@
 
 struct NoSolver <: SolverMethod end
 
-default_options() = Options(
+default_options(method = nothing) = Options(
     min_iterations = 1,
     x_abstol = 8eps(),
     f_abstol = 8eps(),

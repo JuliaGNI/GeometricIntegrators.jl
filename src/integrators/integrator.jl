@@ -48,7 +48,7 @@ function GeometricIntegrator(
         integratormethod::GeometricMethod,
         solvermethod::SolverMethod,
         iguess::Extrapolation;
-        options = default_options(),
+        options = default_options(integratormethod),
         method = initmethod(integratormethod, problem),
         caches = CacheDict(problem, method),
         solver = initsolver(solvermethod, options, method, caches)
