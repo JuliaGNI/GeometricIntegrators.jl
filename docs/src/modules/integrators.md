@@ -71,6 +71,8 @@ Pages   = ["integrators/rk/abstract.jl",
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
 Pages   = [
+            "integrators/vi/deleqs.jl",
+            "integrators/vi/deleqs_methods.jl",
             "integrators/vi/vi_methods.jl",
             "integrators/vi/position_momentum_midpoint.jl",
             "integrators/vi/position_momentum_trapezoidal.jl",

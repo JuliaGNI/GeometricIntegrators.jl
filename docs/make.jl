@@ -1,5 +1,6 @@
 using Documenter
 using DocumenterCitations
+using DocumenterInterLinks
 using GeometricIntegrators
 using RungeKutta
 using Weave
@@ -11,13 +12,17 @@ cp(normpath(@__FILE__, "../../AUTHORS.md"), normpath(@__FILE__, "../src/authors.
 
 bib = CitationBibliography(joinpath(@__DIR__, "src", "GeometricIntegrators.bib"))
 
+links = InterLinks(
+    "GeometricEquations" => "https://JuliaGNI.github.io/GeometricEquations.jl/stable/",
+)
+
 DocMeta.setdocmeta!(GeometricIntegrators, :DocTestSetup, :(using GeometricIntegrators); recursive=true)
 
 weave(joinpath(@__DIR__, "src", "methods.jmd"), out_path = joinpath(@__DIR__, "src"), doctype = "github")
 
 makedocs(
     sitename = "GeometricIntegrators.jl",
-    plugins = [bib],
+    plugins = [bib,links],
     warnonly = Documenter.except(:autodocs_block, :cross_references, :docs_block, :doctest, :eval_block, :example_block, :footnote, :linkcheck_remotes, :linkcheck, :meta_block, :parse_error, :setup_block),
     format = Documenter.HTML(
                prettyurls = get(ENV, "CI", nothing) == "true",
