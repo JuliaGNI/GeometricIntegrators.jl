@@ -21,19 +21,19 @@ ldae = ldaeproblem(qᵢ; parameters=params)
 
 # ODE Reference Solution
 
-ode_prev = similar(ode; tspan=(tspan(ode)[begin], tspan(ode)[begin]-tstep(ode)), tstep=-tstep(ode))
-ode_next = similar(ode; tspan=(tspan(ode)[begin], tspan(ode)[begin]+tstep(ode)), tstep=+tstep(ode))
+ode_prev = similar(ode; tspan=(initialtime(ode), initialtime(ode)-timestep(ode)), tstep=-timestep(ode))
+ode_next = similar(ode; tspan=(initialtime(ode), initialtime(ode)+timestep(ode)), tstep=+timestep(ode))
 
 t₀ = initial_conditions(ode).t
 q₀ = initial_conditions(ode).q
 v₀ = zero(q₀)
 equation(ode).v(v₀, t₀, q₀, parameters(ode))
 
-tₚ = tspan(ode_prev)[end]
+tₚ = finaltime(ode_prev)
 qₚ = zero(q₀)
 vₚ = zero(v₀)
 
-tₙ = tspan(ode_next)[end]
+tₙ = finaltime(ode_next)
 qₙ = zero(q₀)
 vₙ = zero(v₀)
 
@@ -84,8 +84,8 @@ solutionstep!(sol2, hist, ode, HermiteExtrapolation())
 
 # PODE Reference Solution
 
-pode_prev = similar(pode; tspan=(tspan(pode)[begin], tspan(pode)[begin]-tstep(pode)), tstep=-tstep(pode))
-pode_next = similar(pode; tspan=(tspan(pode)[begin], tspan(pode)[begin]+tstep(pode)), tstep=+tstep(pode))
+pode_prev = similar(pode; tspan=(initialtime(pode), initialtime(pode)-timestep(pode)), tstep=-timestep(pode))
+pode_next = similar(pode; tspan=(initialtime(pode), initialtime(pode)+timestep(pode)), tstep=+timestep(pode))
 
 t₀ = initial_conditions(pode).t
 q₀ = initial_conditions(pode).q
@@ -93,13 +93,13 @@ p₀ = initial_conditions(pode).p
 v₀ = zero(q₀)
 f₀ = zero(p₀)
 
-tₚ = tspan(pode_prev)[end]
+tₚ = finaltime(pode_prev)
 qₚ = zero(q₀)
 pₚ = zero(p₀)
 vₚ = zero(v₀)
 fₚ = zero(p₀)
 
-tₙ = tspan(pode_next)[end]
+tₙ = finaltime(pode_next)
 qₙ = zero(q₀)
 pₙ = zero(p₀)
 vₙ = zero(v₀)
@@ -167,8 +167,8 @@ solutionstep!(sol2, hist, pode, HermiteExtrapolation())
 
 # IODE Reference Solution
 
-iode_prev = similar(iode; tspan=(tspan(iode)[begin], tspan(iode)[begin]-tstep(iode)), tstep=-tstep(iode))
-iode_next = similar(iode; tspan=(tspan(iode)[begin], tspan(iode)[begin]+tstep(iode)), tstep=+tstep(iode))
+iode_prev = similar(iode; tspan=(initialtime(iode), initialtime(iode)-timestep(iode)), tstep=-timestep(iode))
+iode_next = similar(iode; tspan=(initialtime(iode), initialtime(iode)+timestep(iode)), tstep=+timestep(iode))
 
 t₀ = initial_conditions(iode).t
 q₀ = initial_conditions(iode).q
@@ -176,13 +176,13 @@ p₀ = initial_conditions(iode).p
 v₀ = zero(q₀)
 f₀ = zero(p₀)
 
-tₚ = tspan(iode_prev)[end]
+tₚ = finaltime(iode_prev)
 qₚ = zero(q₀)
 pₚ = zero(p₀)
 vₚ = zero(v₀)
 fₚ = zero(p₀)
 
-tₙ = tspan(iode_next)[end]
+tₙ = finaltime(iode_next)
 qₙ = zero(q₀)
 pₙ = zero(p₀)
 vₙ = zero(v₀)

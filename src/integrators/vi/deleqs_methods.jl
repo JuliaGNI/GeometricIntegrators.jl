@@ -7,9 +7,9 @@ struct Trapezoidal <: DELEQuadrature end
 
 
 function dele_initial_data(prob::LODEProblem, predictor::LODEMethod)
-    t₀ = tspan(prob)[begin]
-    t₁ = t₀ - tstep(prob)
-    sol = integrate(similar(prob, (t₀,t₁), -tstep(prob)), predictor)
+    t₀ = timespan(prob)[begin]
+    t₁ = t₀ - timestep(prob)
+    sol = integrate(similar(prob, (t₀,t₁), -timestep(prob)), predictor)
     return (sol[1].q, sol[0].q)
 end
 
@@ -62,7 +62,7 @@ function GeometricEquations.DELEProblem(prob::LODEProblem, ::Midpoint, predictor
         (t₀, t₁, q₀, q₁, params) -> dele_midpoint_Ld(t₀, t₁, q₀, q₁, params, prob),
         (d, t₀, t₁, q₀, q₁, params) -> dele_midpoint_D1Ld(d, t₀, t₁, q₀, q₁, params, prob),
         (d, t₀, t₁, q₀, q₁, params) -> dele_midpoint_D2Ld(d, t₀, t₁, q₀, q₁, params, prob),
-        tspan(prob), tstep(prob), q₀, q₁; invariants = invariants(prob), parameters = parameters(prob))
+        timespan(prob), timestep(prob), q₀, q₁; invariants = invariants(prob), parameters = parameters(prob))
 end
 
 
@@ -115,5 +115,5 @@ function GeometricEquations.DELEProblem(prob::LODEProblem, ::Trapezoidal, predic
         (t₀, t₁, q₀, q₁, params) -> dele_trapezoidal_Ld(t₀, t₁, q₀, q₁, params, prob),
         (d, t₀, t₁, q₀, q₁, params) -> dele_trapezoidal_D1Ld(d, t₀, t₁, q₀, q₁, params, prob),
         (d, t₀, t₁, q₀, q₁, params) -> dele_trapezoidal_D2Ld(d, t₀, t₁, q₀, q₁, params, prob),
-        tspan(prob), tstep(prob), q₀, q₁; invariants = invariants(prob), parameters = parameters(prob))
+        timespan(prob), timestep(prob), q₀, q₁; invariants = invariants(prob), parameters = parameters(prob))
 end

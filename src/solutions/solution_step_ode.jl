@@ -140,7 +140,7 @@ function initialize!(solstep::SolutionStepODE, sol::NamedTuple, problem::DELEPro
     solstep.t  = sol.t
     solstep.q .= sol.q
 
-    history(solstep).t[1]  = sol.t - tstep(problem)
+    history(solstep).t[1]  = sol.t - timestep(problem)
     history(solstep).q[1] .= sol.q̄
 
     return solstep

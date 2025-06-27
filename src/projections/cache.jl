@@ -32,7 +32,7 @@ mutable struct ProjectionCache{DT,TT,PT,D,M,N} <: IODEIntegratorCache{DT,D}
         N = solversize(problem, parent(method))
 
         TT = timetype(problem)
-        t = tspan(problem)[begin]
+        t = initialtime(problem)
 
         x = zeros(DT, N+D+M)
         x̄ = @view x[1:N]
@@ -48,7 +48,7 @@ mutable struct ProjectionCache{DT,TT,PT,D,M,N} <: IODEIntegratorCache{DT,D}
         p̃ = zeros(DT, D)
         ṽ = zeros(DT, D)
         f̃ = zeros(DT, D)
-        
+
         λ = zeros(DT, M)
         ϑ = zeros(DT, M)
         ϕ = zeros(DT, M)
