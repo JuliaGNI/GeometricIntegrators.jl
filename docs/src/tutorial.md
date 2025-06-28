@@ -126,17 +126,17 @@ ODEProblem(<vector field>, <time span>, <time step>, <initial conditions>; kwarg
 ```
 so to create and `ODEProblem`, one only needs to pass the above function `ẋ`, a tuple
 `tspan` containing the start and end times of the integration, the time step
-`tstep` as well as an initial condition:
+`Δt` as well as an initial condition:
 ```@example 1
 tspan = (0.0, 10.0)
-tstep = 0.1
+Δt = 0.1
 x₀ = [acos(0.4), 0.0]
 
-ode = ODEProblem(ẋ, tspan, tstep, x₀)
+ode = ODEProblem(ẋ, tspan, Δt, x₀)
 ```
 The full constructor would look like
 ```@example 1
-ode = ODEProblem(ẋ, tspan, tstep, x₀; invariants = NullInvariants(),
+ode = ODEProblem(ẋ, tspan, Δt, x₀; invariants = NullInvariants(),
                  parameters = NullParameters(), periodicity = NullPeriodicity())
 ```
 where all keyword arguments, namely invariants, parameters and periodicity, are
