@@ -5,7 +5,7 @@ using Test
 using GeometricProblems.HarmonicOscillator
 using GeometricProblems.HarmonicOscillator: reference_solution, reference_solution_q, reference_solution_p
 
-ode  = odeproblem()
+ode = odeproblem()
 pode = podeproblem()
 sode = sodeproblem()
 iode = iodeproblem()
@@ -13,7 +13,7 @@ idae = idaeproblem()
 hode = hodeproblem()
 pdae = pdaeproblem()
 
-ref  = exact_solution(ode)
+ref = exact_solution(ode)
 pref = exact_solution(pode)
 
 # @testset "$(rpad("Runge-Kutta integrators",80))" begin
@@ -269,8 +269,8 @@ end
         # @test csol.q[end][1] == psol.q[end][1] # TODO: Reactivate!
         # @test csol.q[end][2] == psol.p[end][1] # TODO: Reactivate!
 
-        @test csol.q[end][1] ≈ psol.q[end][1]  atol=1E-15
-        @test csol.q[end][2] ≈ psol.p[end][1]  atol=1E-15
+        @test csol.q[end][1] ≈ psol.q[end][1] atol = 1E-15
+        @test csol.q[end][2] ≈ psol.p[end][1] atol = 1E-15
     end
 
     for s in 1:4
@@ -281,8 +281,8 @@ end
         # @test csol.q[end][1] == hsol.q[end][1] # TODO: Reactivate!
         # @test csol.q[end][2] == hsol.p[end][1] # TODO: Reactivate!
 
-        @test csol.q[end][1] ≈ hsol.q[end][1]  atol=1E-15
-        @test csol.q[end][2] ≈ hsol.p[end][1]  atol=1E-15
+        @test csol.q[end][1] ≈ hsol.q[end][1] atol = 1E-15
+        @test csol.q[end][2] ≈ hsol.p[end][1] atol = 1E-15
     end
 
     for s in 1:4

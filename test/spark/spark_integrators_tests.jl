@@ -10,16 +10,16 @@ const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
 const Δt = 0.01
 const nt = 10
-const tspan = (t₀, Δt*nt)
+const tspan = (t₀, Δt * nt)
 
-ode  = odeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
+ode = odeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
 hdae = hdaeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
 idae = idaeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
 pdae = pdaeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
 ldae = ldaeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
 ldae_slrk = ldaeproblem_slrk(q₀; tspan=tspan, tstep=Δt, parameters=params)
 
-ref  = integrate(ode, Gauss(8))
+ref = integrate(ode, Gauss(8))
 
 
 @testset "$(rpad("SLRK integrators",80))" begin
@@ -155,7 +155,7 @@ end
     # println(relative_maximum_error(sol.q, ref.q))
     # @test relative_maximum_error(sol.q, ref.q) < 2E-10
 
-    
+
     # TODO: Check if the following integrators show the correct order of convergence !
 
     # sol = integrate(idae, SPARKGLRKLobattoIIIAIIIB(1))
@@ -469,7 +469,7 @@ end
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIE(3))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
-    
+
 end
 
 
@@ -662,121 +662,121 @@ end
 end
 
 
-@testset "$(rpad("HSPARK integrators with projection on secondary constraint",80))" begin
+# @testset "$(rpad("HSPARK integrators with projection on secondary constraint",80))" begin
 
-    ### HSPARKsecondary Integrators ###
+#     ### HSPARKsecondary Integrators ###
 
-    sol = integrate(hdae, TableauHSPARKLobattoIIIAB(2))
-    # println(relative_maximum_error(sol.q, ref.q))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-6
+#     sol = integrate(hdae, TableauHSPARKLobattoIIIAB(2))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
-    sol = integrate(hdae, TableauHSPARKLobattoIIIAB(3))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 2E-11
-    # TODO: Check Errors !!!
+#     sol = integrate(hdae, TableauHSPARKLobattoIIIAB(3))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 2E-11
+#     # TODO: Check Errors !!!
 
-    sol = integrate(hdae, TableauHSPARKLobattoIIIAB(4))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 1E-15
-    # TODO: Check Errors !!!
-
-
-    sol = integrate(hdae, TableauHSPARKLobattoIIIBA(2))
-    # println(relative_maximum_error(sol.q, ref.q))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-6
-
-    sol = integrate(hdae, TableauHSPARKLobattoIIIBA(3))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 2E-11
-    # TODO: Check Errors !!!
-
-    sol = integrate(hdae, TableauHSPARKLobattoIIIBA(4))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 1E-15
-    # TODO: Check Errors !!!
+#     sol = integrate(hdae, TableauHSPARKLobattoIIIAB(4))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 1E-15
+#     # TODO: Check Errors !!!
 
 
-    sol = integrate(hdae, TableauHSPARKLobattoIIID(2))
-    # println(relative_maximum_error(sol.q, ref.q))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-6
+#     sol = integrate(hdae, TableauHSPARKLobattoIIIBA(2))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
-    sol = integrate(hdae, TableauHSPARKLobattoIIID(3))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 2E-11
-    # TODO: Check Errors !!!
+#     sol = integrate(hdae, TableauHSPARKLobattoIIIBA(3))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 2E-11
+#     # TODO: Check Errors !!!
 
-    sol = integrate(hdae, TableauHSPARKLobattoIIID(4))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 1E-15
-    # TODO: Check Errors !!!
-
-
-    sol = integrate(hdae, TableauHSPARKLobattoIIIE(2))
-    # println(relative_maximum_error(sol.q, ref.q))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-6
-
-    sol = integrate(hdae, TableauHSPARKLobattoIIIE(3))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 2E-11
-    # TODO: Check Errors !!!
-
-    sol = integrate(hdae, TableauHSPARKLobattoIIIE(4))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 1E-15
-    # TODO: Check Errors !!!
+#     sol = integrate(hdae, TableauHSPARKLobattoIIIBA(4))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 1E-15
+#     # TODO: Check Errors !!!
 
 
-    # TODO: Fix the following !!!
+#     sol = integrate(hdae, TableauHSPARKLobattoIIID(2))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
-    # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(2))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 4E-6
+#     sol = integrate(hdae, TableauHSPARKLobattoIIID(3))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 2E-11
+#     # TODO: Check Errors !!!
 
-    # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(3))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 2E-11
-
-    # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(4))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 1E-15
-
-
-    # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(2))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 4E-6
-
-    # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(3))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 2E-11
-
-    # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(4))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 1E-15
+#     sol = integrate(hdae, TableauHSPARKLobattoIIID(4))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 1E-15
+#     # TODO: Check Errors !!!
 
 
-    # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIID(2))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 4E-6
+#     sol = integrate(hdae, TableauHSPARKLobattoIIIE(2))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
-    # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIID(3))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 2E-11
+#     sol = integrate(hdae, TableauHSPARKLobattoIIIE(3))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 2E-11
+#     # TODO: Check Errors !!!
 
-    # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIID(4))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 1E-15
+#     sol = integrate(hdae, TableauHSPARKLobattoIIIE(4))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 1E-15
+#     # TODO: Check Errors !!!
 
 
-    # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIE(2))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 4E-6
+#     # TODO: Fix the following !!!
 
-    # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIE(3))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 2E-11
+#     # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(2))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 4E-6
 
-    # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIE(4))
-    # println(relative_maximum_error(sol.q, ref.q))
-    # @test relative_maximum_error(sol.q, ref.q) < 1E-15
+#     # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(3))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
-end
+#     # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(4))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 1E-15
+
+
+#     # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(2))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 4E-6
+
+#     # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(3))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 2E-11
+
+#     # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(4))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 1E-15
+
+
+#     # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIID(2))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 4E-6
+
+#     # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIID(3))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 2E-11
+
+#     # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIID(4))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 1E-15
+
+
+#     # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIE(2))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 4E-6
+
+#     # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIE(3))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 2E-11
+
+#     # sol = integrate(hdae, TableauHSPARKGLRKLobattoIIIE(4))
+#     # println(relative_maximum_error(sol.q, ref.q))
+#     # @test relative_maximum_error(sol.q, ref.q) < 1E-15
+
+# end

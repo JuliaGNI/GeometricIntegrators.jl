@@ -24,12 +24,18 @@ struct DiscreteEulerLagrangeCache{DT,D} <: DELEIntegratorCache{DT,D}
     D1Ld::Vector{DT}
     D2Ld::Vector{DT}
 
+    q̃::Vector{DT}
+    ṽ::Vector{DT}
+    θ̃::Vector{DT}
+    f̃::Vector{DT}
+
     function DiscreteEulerLagrangeCache{DT,D}() where {DT,D}
         x = zeros(DT, D)
         q = zeros(DT, D)
         D1Ld = zeros(DT, D)
         D2Ld = zeros(DT, D)
-        new(x, q, D1Ld, D2Ld)
+        new(x, q, D1Ld, D2Ld,
+            zeros(DT, D), zeros(DT, D), zeros(DT, D), zeros(DT, D))
     end
 end
 
@@ -38,30 +44,31 @@ reset!(::DELEIntegratorCache, t₀, q₀, t₁, q₁) = nothing
 nlsolution(cache::DiscreteEulerLagrangeCache) = cache.x
 
 function Cache{ST}(problem::AbstractProblem, method::DiscreteEulerLagrange; kwargs...) where {ST}
-    DiscreteEulerLagrangeCache{ST, ndims(problem)}(; kwargs...)
+    DiscreteEulerLagrangeCache{ST,ndims(problem)}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblem, method::DiscreteEulerLagrange) = DiscreteEulerLagrangeCache{ST, ndims(problem)}
+@inline CacheType(ST, problem::AbstractProblem, method::DiscreteEulerLagrange) = DiscreteEulerLagrangeCache{ST,ndims(problem)}
 
 
 solversize(problem::AbstractProblemDELE, ::DiscreteEulerLagrange) = ndims(problem)
 
 default_solver(::DiscreteEulerLagrange) = Newton()
-# default_iguess(::DiscreteEulerLagrange) = HermiteExtrapolation()
+default_iguess(::DiscreteEulerLagrange) = HermiteExtrapolation()
 
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DiscreteEulerLagrange})
-    # temporary solution
-    # ig = (t = sol.t, q = cache(int).q, v = cache(int).v)
+    # compute initial guess for solution q(n+1)
+    # soltmp = (
+    #     t=sol.t,
+    #     q=cache(int).q̃,
+    #     p=cache(int).θ̃,
+    #     v=cache(int).ṽ,
+    #     f=cache(int).f̃,
+    # )
+    # solutionstep!(soltmp, history, problem(int), iguess(int))
 
-    # compute initial guess
-    # solutionstep!(ig, history, problem(int), iguess(int))
-
-    # assemble initial guess for nonlinear solver solution vector
-    # ...
-
-    # copy previous solution to nonlinear solver solution vector
-    # nlsolution(int) .= cache(int).q
+    # copy initial guess to solution vector
+    # nlsolution(int) .= cache(int).q̃
     nlsolution(int) .= sol.q
 end
 
@@ -114,9 +121,9 @@ function update!(sol, history, params, x::AbstractVector{DT}, int::GeometricInte
 end
 
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DiscreteEulerLagrange, <:AbstractProblemDELE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DiscreteEulerLagrange,<:AbstractProblemDELE})
     # call nonlinear solver
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, history, params, int), solver(int))
+    solve!(solver(int), nlsolution(int), (sol, history, params, int))
 
     # print solver status
     # println(status(solver))

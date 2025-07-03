@@ -3,7 +3,7 @@ function internal_variables(method::AbstractSPARKMethod, problem::AbstractSPARKP
     S = nstages(method)
     R = pstages(method)
     D = ndims(problem)
-    
+
     Qi = create_internal_stage_vector(DT, D, S)
     Pi = create_internal_stage_vector(DT, D, S)
     Vi = create_internal_stage_vector(DT, D, S)
@@ -11,7 +11,7 @@ function internal_variables(method::AbstractSPARKMethod, problem::AbstractSPARKP
 
     Qp = create_internal_stage_vector(DT, D, R)
     Pp = create_internal_stage_vector(DT, D, R)
-    Λp = create_internal_stage_vector(DT, D, R) 
+    Λp = create_internal_stage_vector(DT, D, R)
     Φp = create_internal_stage_vector(DT, D, R)
 
     # solver = get_solver_status(int.solver)
@@ -46,9 +46,9 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
 end
 
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:AbstractSPARKMethod, <:AbstractSPARKProblem})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:AbstractSPARKMethod,<:AbstractSPARKProblem})
     # call nonlinear solver
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
+    solve!(solver(int), nlsolution(int), (sol, params, int))
 
     # check_jacobian(int.solver)
     # print_jacobian(int.solver)

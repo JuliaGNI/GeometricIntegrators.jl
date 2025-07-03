@@ -29,12 +29,12 @@ GeometricIntegrator(problem::EquationProblem, method::GeometricMethod; solver = 
 
 """
 struct GeometricIntegrator{
-        MT <: GeometricMethod,
-        PT <: AbstractProblem,
-        CT <: CacheDict{PT,MT},
-        ST <: Union{NonlinearSolver,SolverMethod},
-        IT <: Extrapolation
-    } <: AbstractIntegrator
+    MT<:GeometricMethod,
+    PT<:AbstractProblem,
+    CT<:CacheDict{PT,MT},
+    ST<:Union{NonlinearSolver,SolverMethod},
+    IT<:Extrapolation
+} <: AbstractIntegrator
 
     problem::PT
     method::MT
@@ -44,25 +44,25 @@ struct GeometricIntegrator{
 end
 
 function GeometricIntegrator(
-        problem::AbstractProblem,
-        integratormethod::GeometricMethod,
-        solvermethod::SolverMethod,
-        iguess::Extrapolation;
-        options = default_options(integratormethod),
-        method = initmethod(integratormethod, problem),
-        caches = CacheDict(problem, method),
-        solver = initsolver(solvermethod, options, method, caches)
-    )
+    problem::AbstractProblem,
+    integratormethod::GeometricMethod,
+    solvermethod::SolverMethod,
+    iguess::Extrapolation;
+    method=initmethod(integratormethod, problem),
+    caches=CacheDict(problem, method),
+    options...
+)
+    solver = initsolver(solvermethod, method, caches; (length(options) == 0 ? default_options(integratormethod) : options)...)
     GeometricIntegrator(problem, method, caches, solver, iguess)
 end
 
 function GeometricIntegrator(
-        problem::AbstractProblem,
-        method::GeometricMethod;
-        solver = default_solver(method),
-        initialguess = default_iguess(method),
-        kwargs...
-    )
+    problem::AbstractProblem,
+    method::GeometricMethod;
+    solver=default_solver(method),
+    initialguess=default_iguess(method),
+    kwargs...
+)
     GeometricIntegrator(problem, method, solver, initialguess; kwargs...)
 end
 

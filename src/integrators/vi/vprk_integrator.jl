@@ -32,9 +32,16 @@ function copy_internal_variables!(solstep::SolutionStep, cache::VPRKCache)
 end
 
 
-function initial_guess!(int::GeometricIntegrator{<:VPRK})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VPRK})
     for i in eachstage(int)
-        initialguess!(solstep(int).t̄ + timestep(int) * tableau(int).q.c[i], cache(int).Q[i], cache(int).V[i], solstep(int), problem(int), iguess(int))
+        soltmp = (
+            t=history.t[1] + timestep(int) * tableau(int).q.c[i],
+            q=cache(int).Q[i],
+            p=cache(int).P[i],
+            v=cache(int).V[i],
+            f=cache(int).F[i],
+        )
+        solutionstep!(soltmp, history, problem(int), iguess(int))
         for k in eachindex(cache(int).V[i])
             cache(int).x[ndims(int)*(i-1)+k] = cache(int).V[i][k]
         end
@@ -55,7 +62,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     # copy x to V
     for i in eachindex(V)
         for k in eachindex(V[i])
-            V[i][k] = x[ndims(int)*(i-1) + k]
+            V[i][k] = x[ndims(int)*(i-1)+k]
         end
     end
 
@@ -65,15 +72,15 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         for k in eachindex(Q[i])
             y1 = y2 = zero(ST)
             for j in eachindex(V)
-                y1 += tableau(int).q.a[i,j] * V[j][k]
-                y2 += tableau(int).q.â[i,j] * V[j][k]
+                y1 += tableau(int).q.a[i, j] * V[j][k]
+                y2 += tableau(int).q.â[i, j] * V[j][k]
             end
             Q[i][k] = sol.q[k] + timestep(int) * (y1 + y2)
         end
     end
 
     # compute P=ϑ(Q,V) and F=f(Q,V)
-    for i in eachindex(P,F)
+    for i in eachindex(P, F)
         tᵢ = sol.t + timestep(int) * (tableau(int).p.c[i] - 1)
         equations(int).ϑ(P[i], tᵢ, Q[i], V[i], params)
         equations(int).f(F[i], tᵢ, Q[i], V[i], params)
@@ -91,10 +98,10 @@ function residual_solution!(b::AbstractVector{ST}, sol, params, int::GeometricIn
         for k in eachindex(P[i])
             z1 = z2 = zero(ST)
             for j in eachindex(F)
-                z1 += tableau(int).p.a[i,j] * F[j][k]
-                z2 += tableau(int).p.â[i,j] * F[j][k]
+                z1 += tableau(int).p.a[i, j] * F[j][k]
+                z2 += tableau(int).p.â[i, j] * F[j][k]
             end
-            b[ndims(int)*(i-1) + k] = - ( P[i][k] - sol.p[k] ) + timestep(int) * (z1 + z2)
+            b[ndims(int)*(i-1)+k] = -(P[i][k] - sol.p[k]) + timestep(int) * (z1 + z2)
         end
     end
 end
@@ -105,7 +112,7 @@ function residual_correction!(b::AbstractVector{ST}, sol, params, int::Geometric
     local V = cache(int, ST).V
     local μ = cache(int, ST).μ
 
-    local sl::Int = div(nstages(int)+1, 2)
+    local sl::Int = div(nstages(int) + 1, 2)
 
     if hasnullvector(int)
         # compute μ
@@ -169,9 +176,9 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
 end
 
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:VPRK, <:AbstractProblemIODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:VPRK,<:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
+    solve!(solver(int), nlsolution(int), (sol, params, int))
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))

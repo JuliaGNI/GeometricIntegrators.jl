@@ -13,13 +13,13 @@ projection(::GeometricMethod) = NoProjection()
 """
 A `ProjectedMethod` consists of a [`ProjectionMethod`](@ref) and a [`GeometricMethod`](@ref).
 """
-struct ProjectedMethod{PT <: ProjectionMethod, MT <: GeometricMethod} <: ProjectionMethod
+struct ProjectedMethod{PT<:ProjectionMethod,MT<:GeometricMethod} <: ProjectionMethod
     projection::PT
     method::MT
 
     function ProjectedMethod(proj::ProjectionMethod, method::GeometricMethod)
         _method = initmethod(method)
-        new{typeof(proj), typeof(_method)}(proj, _method)
+        new{typeof(proj),typeof(_method)}(proj, _method)
     end
 end
 
@@ -34,13 +34,13 @@ initmethod(projection::ProjectionMethod, method::GeometricMethod) = ProjectedMet
 The `ProjectionIntegrator` is the counterpart to the `GeometricIntegrator` for [`ProjectionMethod`](@ref)s.
 """
 struct ProjectionIntegrator{
-        MT <: ProjectionMethod,
-        PT <: AbstractProblem,
-        CT <: CacheDict{PT,MT},
-        ST <: Union{NonlinearSolver,SolverMethod},
-        IT <: Extrapolation,
-        SIT <: AbstractIntegrator
-    } <: AbstractIntegrator
+    MT<:ProjectionMethod,
+    PT<:AbstractProblem,
+    CT<:CacheDict{PT,MT},
+    ST<:Union{NonlinearSolver,SolverMethod},
+    IT<:Extrapolation,
+    SIT<:AbstractIntegrator
+} <: AbstractIntegrator
 
     problem::PT
     method::MT
@@ -51,44 +51,42 @@ struct ProjectionIntegrator{
 end
 
 function ProjectionIntegrator(
-        problem::AbstractProblem,
-        projectionmethod::ProjectionMethod,
-        solvermethod::SolverMethod,
-        iguess::Extrapolation,
-        subint::AbstractIntegrator;
-        options = default_options(),
-        method = initmethod(projectionmethod, problem),
-        caches = CacheDict(problem, method),
-        solver = initsolver(solvermethod, options, method, caches)
-    )
+    problem::AbstractProblem,
+    projectionmethod::ProjectionMethod,
+    solvermethod::SolverMethod,
+    iguess::Extrapolation,
+    subint::AbstractIntegrator;
+    method=initmethod(projectionmethod, problem),
+    caches=CacheDict(problem, method),
+    options...
+)
+    solver = initsolver(solvermethod, method, caches; (length(options) == 0 ? default_options() : options)...)
     ProjectionIntegrator(problem, method, caches, solver, iguess, subint)
 end
 
 function ProjectionIntegrator(
-        problem::AbstractProblem,
-        projectionmethod::ProjectionMethod,
-        solvermethod::SolverMethod,
-        iguess::Extrapolation,
-        parent_solveroptions::Options,
-        parent_solvermethod::SolverMethod,
-        parent_iguess::Extrapolation;
-        kwargs...
-    )
-    subint = GeometricIntegrator(problem, parent(projectionmethod), parent_solvermethod, parent_iguess; options = parent_solveroptions)
+    problem::AbstractProblem,
+    projectionmethod::ProjectionMethod,
+    solvermethod::SolverMethod,
+    iguess::Extrapolation,
+    parent_solvermethod::SolverMethod,
+    parent_iguess::Extrapolation;
+    kwargs...
+)
+    subint = GeometricIntegrator(problem, parent(projectionmethod), parent_solvermethod, parent_iguess; default_options(parent(projectionmethod))...)
     ProjectionIntegrator(problem, projectionmethod, solvermethod, iguess, subint; kwargs...)
 end
 
 function GeometricIntegrator(
-        problem::AbstractProblem,
-        method::ProjectionMethod;
-        solver = default_solver(method),
-        initialguess = default_iguess(method),
-        parent_options = default_options(),
-        parent_solver = default_solver(parent(method)),
-        parent_initialguess = default_iguess(parent(method)),
-        kwargs...
-    )
-    ProjectionIntegrator(problem, method, solver, initialguess, parent_options, parent_solver, parent_initialguess; kwargs...)
+    problem::AbstractProblem,
+    method::ProjectionMethod;
+    solver=default_solver(method),
+    initialguess=default_iguess(method),
+    parent_solver=default_solver(parent(method)),
+    parent_initialguess=default_iguess(parent(method)),
+    kwargs...
+)
+    ProjectionIntegrator(problem, method, solver, initialguess, parent_solver, parent_initialguess; kwargs...)
 end
 
 
@@ -118,11 +116,11 @@ initialize!(int::ProjectionIntegrator) = initialize!(subint(int))
 # const LODEProjectionIntegrator{MT} = ProjectionIntegrator{MT, <:LODEProblem} where {{MT <: ProjectionMethod}}
 
 
-function project!(sol, U::AbstractVector, G::AbstractVector, int::ProjectionIntegrator{<:ProjectionMethod, <:DAEProblem})
+function project!(sol, U::AbstractVector, G::AbstractVector, int::ProjectionIntegrator{<:ProjectionMethod,<:DAEProblem})
     sol.q .+= timestep(int) .* U
 end
 
-function project!(sol, U::AbstractVector, G::AbstractVector, int::ProjectionIntegrator{<:ProjectionMethod, <:Union{IODEProblem, LODEProblem, PDAEProblem, HDAEProblem}})
+function project!(sol, U::AbstractVector, G::AbstractVector, int::ProjectionIntegrator{<:ProjectionMethod,<:Union{IODEProblem,LODEProblem,PDAEProblem,HDAEProblem}})
     sol.q .+= timestep(int) .* U
     sol.p .+= timestep(int) .* G
 end

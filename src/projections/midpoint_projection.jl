@@ -1,9 +1,9 @@
-struct MidpointProjection{DT} <: ProjectionMethod 
+struct MidpointProjection{DT} <: ProjectionMethod
     RU::Vector{DT}
     RG::Vector{DT}
 
-    function MidpointProjection(R∞ = 1)
-        DT, RU, RG = _projection_weights([1//2,1//2], [1//2,1//2], R∞)
+    function MidpointProjection(R∞=1)
+        DT, RU, RG = _projection_weights([1 // 2, 1 // 2], [1 // 2, 1 // 2], R∞)
         new{DT}(RU, RG)
     end
 end
@@ -11,14 +11,14 @@ end
 MidpointProjection(method::GeometricMethod) = ProjectedMethod(MidpointProjection(), method)
 MidpointProjection(method::Union{RKMethod,PRKMethod,VPRKMethod}) = ProjectedMethod(MidpointProjection(tableau(method).R∞), method)
 
-const MidpointProjectionIntegrator{PT} = ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection, <:GeometricMethod}, PT} where {PT <: AbstractProblem}
+const MidpointProjectionIntegrator{PT} = ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection,<:GeometricMethod},PT} where {PT<:AbstractProblem}
 
 function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:MidpointProjection}; kwargs...) where {ST}
     ProjectionCache{ST}(problem, method; kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:MidpointProjection}) = 
-    ProjectionCache{ST, timetype(problem), typeof(problem), ndims(problem), nconstraints(problem), solversize(problem, parent(method))}
+@inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:MidpointProjection}) =
+    ProjectionCache{ST,timetype(problem),typeof(problem),ndims(problem),nconstraints(problem),solversize(problem, parent(method))}
 
 
 default_solver(::ProjectedMethod{<:MidpointProjection}) = Newton()
@@ -55,11 +55,11 @@ function initial_guess!(sol, history, params, int::MidpointProjectionIntegrator)
 
     # compute initial guess for projected solution
     soltmp = (
-        t = (sol.t + history.t[1]) / 2,
-        q = cache(int).q̃,
-        p = cache(int).p̃,
-        v = cache(int).ṽ,
-        f = cache(int).f̃,
+        t=(sol.t + history.t[1]) / 2,
+        q=cache(int).q̃,
+        p=cache(int).p̃,
+        v=cache(int).ṽ,
+        f=cache(int).f̃,
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
     # TODO: Fix this!
@@ -218,7 +218,7 @@ end
 
 function integrate_step!(sol, history, params, int::MidpointProjectionIntegrator)
     # call nonlinear solver for projection
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
+    solve!(solver(int), nlsolution(int), (sol, params, int))
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))

@@ -25,21 +25,21 @@ struct IRKimplicitCache{DT,D,S} <: IODEIntegratorCache{DT,D}
 
     function IRKimplicitCache{DT,D,S}(method::IRK) where {DT,D,S}
         if implicit_update(method)
-            x = zeros(DT, D*(S+1))
+            x = zeros(DT, D * (S + 1))
         else
-            x = zeros(DT, D*S)
+            x = zeros(DT, D * S)
         end
 
-        q = zeros(DT,D)
-        v = zeros(DT,D)
-        θ = zeros(DT,D)
-        f = zeros(DT,D)
+        q = zeros(DT, D)
+        v = zeros(DT, D)
+        θ = zeros(DT, D)
+        f = zeros(DT, D)
 
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         Θ = create_internal_stage_vector(DT, D, S)
         F = create_internal_stage_vector(DT, D, S)
-        
+
         new(x, q, v, θ, f, Q, V, Θ, F)
     end
 end
@@ -52,7 +52,7 @@ function Cache{ST}(problem::AbstractProblemIODE, method::IRK; kwargs...) where {
     IRKimplicitCache{ST,D,S}(method; kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblemIODE, method::IRK) = IRKimplicitCache{ST, ndims(problem), nstages(tableau(method))}
+@inline CacheType(ST, problem::AbstractProblemIODE, method::IRK) = IRKimplicitCache{ST,ndims(problem),nstages(tableau(method))}
 
 
 function solversize(problem::AbstractProblemIODE, method::IRK)
@@ -88,7 +88,7 @@ function copy_internal_variables(solstep::SolutionStep, cache::IRKimplicitCache)
 end
 
 
-function Base.show(io::IO, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
+function Base.show(io::IO, int::GeometricIntegrator{<:IRK,<:AbstractProblemIODE})
     print(io, "\nRunge-Kutta Integrator for Implicit Equations with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(description(tableau(int)))\n")
@@ -97,29 +97,29 @@ function Base.show(io::IO, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE
 end
 
 
-function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IRK,<:AbstractProblemIODE})
     # get cache for nonlinear solution vector
     local x = nlsolution(int)
 
     # compute initial guess for internal stages
     for i in eachstage(int)
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).c[i],
-            q = cache(int).Q[i],
-            p = cache(int).Θ[i],
-            v = cache(int).V[i],
-            f = cache(int).F[i],
+            t=history.t[1] + timestep(int) * tableau(int).c[i],
+            q=cache(int).Q[i],
+            p=cache(int).Θ[i],
+            v=cache(int).V[i],
+            f=cache(int).F[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
 
     # assemble initial guess for nonlinear solver solution vector
     for i in eachstage(int)
-        offset = ndims(int)*(i-1)
+        offset = ndims(int) * (i - 1)
         for k in 1:ndims(int)
             x[offset+k] = cache(int).Θ[i][k] - sol.p[k]
             for j in eachstage(int)
-                x[offset+k] -= timestep(int) * tableau(int).a[i,j] * cache(int).F[j][k]
+                x[offset+k] -= timestep(int) * tableau(int).a[i, j] * cache(int).F[j][k]
             end
         end
     end
@@ -127,38 +127,38 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IRK, <:
     # compute initial guess for solution
     if implicit_update(int)
         soltmp = (
-            t = sol.t,
-            q = cache(int).q,
-            p = cache(int).θ,
-            v = cache(int).v,
-            f = cache(int).f,
+            t=sol.t,
+            q=cache(int).q,
+            p=cache(int).θ,
+            v=cache(int).v,
+            f=cache(int).f,
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
         offset = ndims(int) * nstages(int)
 
         for k in 1:ndims(int)
-            x[offset + k] = cache(int).q[k]
+            x[offset+k] = cache(int).q[k]
         end
     end
 end
 
 
-function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {ST}
+function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IRK,<:AbstractProblemIODE}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
     # copy x to V
     for i in eachindex(C.V)
         for k in eachindex(C.V[i])
-            C.V[i][k] = x[ndims(int)*(i-1) + k]
+            C.V[i][k] = x[ndims(int)*(i-1)+k]
         end
     end
 
     # copy x to q
     if implicit_update(int)
         for k in eachindex(C.q)
-            C.q[k] = x[ndims(int) * nstages(int) + k]
+            C.q[k] = x[ndims(int)*nstages(int)+k]
         end
     end
 
@@ -167,8 +167,8 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         for k in eachindex(C.Q[i])
             y1 = y2 = zero(ST)
             for j in eachindex(C.V)
-                y1 += tableau(int).a[i,j] * C.V[j][k]
-                y2 += tableau(int).â[i,j] * C.V[j][k]
+                y1 += tableau(int).a[i, j] * C.V[j][k]
+                y2 += tableau(int).â[i, j] * C.V[j][k]
             end
             C.Q[i][k] = sol.q[k] + timestep(int) * (y1 + y2)
         end
@@ -188,7 +188,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
 end
 
 
-function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {ST}
+function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IRK,<:AbstractProblemIODE}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -197,10 +197,10 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
         for k in eachindex(C.Θ[i])
             y1 = y2 = zero(ST)
             for j in eachindex(C.F)
-                y1 += tableau(int).a[i,j] * C.F[j][k]
-                y2 += tableau(int).â[i,j] * C.F[j][k]
+                y1 += tableau(int).a[i, j] * C.F[j][k]
+                y2 += tableau(int).â[i, j] * C.F[j][k]
             end
-            b[ndims(int)*(i-1) + k] = C.Θ[i][k] - sol.p[k] - timestep(int) * (y1 + y2)
+            b[ndims(int)*(i-1)+k] = C.Θ[i][k] - sol.p[k] - timestep(int) * (y1 + y2)
         end
     end
 
@@ -212,13 +212,13 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
                 y1 += tableau(int).b[j] * C.F[j][k]
                 y2 += tableau(int).b̂[j] * C.F[j][k]
             end
-            b[ndims(int) * nstages(int) + k] = C.θ[k] - sol.p[k] - timestep(int) * (y1 + y2)
+            b[ndims(int)*nstages(int)+k] = C.θ[k] - sol.p[k] - timestep(int) * (y1 + y2)
         end
     end
 end
 
 
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IRK,<:AbstractProblemIODE}) where {ST}
     # check that x and b are compatible
     @assert axes(x) == axes(b)
 
@@ -230,14 +230,14 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
 end
 
 
-function update!(sol, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}, DT)
+function update!(sol, params, int::GeometricIntegrator{<:IRK,<:AbstractProblemIODE}, DT)
     # compute final update
     update!(sol.q, cache(int, DT).V, tableau(int), timestep(int))
     update!(sol.p, cache(int, DT).F, tableau(int), timestep(int))
 end
 
 
-function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE}) where {DT}
+function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:IRK,<:AbstractProblemIODE}) where {DT}
     # compute vector field at internal stages
     components!(x, sol, params, int)
 
@@ -246,9 +246,9 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
 end
 
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:IRK, <:AbstractProblemIODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:IRK,<:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
+    solve!(solver(int), nlsolution(int), (sol, params, int))
 
     # print solver status
     # println(status(solver))

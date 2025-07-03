@@ -6,12 +6,19 @@ isimplicit(method::PMVIMethod) = true
 issymplectic(method::PMVIMethod) = true
 
 
-function initial_guess!(int::GeometricIntegrator{<:PMVIMethod})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:PMVIMethod})
     # compute initial guess for solution q(n+1)
-    initialguess!(solstep(int).t, cache(int).q, cache(int).p, solstep(int), problem(int), iguess(int))
+    soltmp = (
+        t=sol.t,
+        q=cache(int).q̃,
+        p=cache(int).θ̃,
+        v=cache(int).ṽ,
+        f=cache(int).f̃,
+    )
+    solutionstep!(soltmp, history, problem(int), iguess(int))
 
     # copy initial guess to solution vector
-    nlsolution(int) .= cache(int).q
+    nlsolution(int) .= cache(int).q̃
 end
 
 
@@ -42,9 +49,9 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
 end
 
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:PMVIMethod, <:AbstractProblemIODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:PMVIMethod,<:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
+    solve!(solver(int), nlsolution(int), (sol, params, int))
 
     # print solver status
     # print_solver_status(int.solver.status, int.solver.params)

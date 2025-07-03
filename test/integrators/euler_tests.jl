@@ -1,6 +1,5 @@
 using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
-using SimpleSolvers: Options
 using Test
 
 
@@ -17,11 +16,11 @@ ref = exact_solution(ode)
     err = relative_maximum_error(sol, ref)
     @test err.q < 5E-2
 
-    sol = integrate(ode, ImplicitEuler(); options = Options(
-        min_iterations = 1,
-        x_abstol = 2eps(),
-        f_abstol = 2eps(),
-    ))
+    sol = integrate(ode, ImplicitEuler();
+        min_iterations=1,
+        x_abstol=2eps(),
+        f_abstol=2eps(),
+    )
     err = relative_maximum_error(sol, ref)
     @test err.q < 5E-2
 
