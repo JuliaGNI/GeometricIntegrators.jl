@@ -9,27 +9,26 @@ lode = lodeproblem()
 pref = exact_solution(podeproblem())
 
 
-# TODO: Reactivate
-# @testset "$(rpad("Discrete Euler-Lagrange integrators",80))" begin
+@testset "$(rpad("Discrete Euler-Lagrange integrators",80))" begin
 
-#     sol = integrate(deleproblem_midpoint(), DiscreteEulerLagrange())
-#     # println(relative_maximum_error(sol.q, pref.q))
-#     @test relative_maximum_error(sol.q, pref.q) < 4E-4
+    sol = integrate(deleproblem_midpoint(), DiscreteEulerLagrange())
+    # println(relative_maximum_error(sol.q, pref.q))
+    @test relative_maximum_error(sol.q, pref.q) < 4E-4
 
-#     dele = DELEProblem(lode, Midpoint())
-#     dsol = integrate(dele, DiscreteEulerLagrange())
-#     @test relative_maximum_error(dsol.q, pref.q) < 4E-4
-#     @test relative_maximum_error(dsol.q, sol.q) < 1E-14
+    dele = DELEProblem(lode, Midpoint())
+    dsol = integrate(dele, DiscreteEulerLagrange())
+    @test relative_maximum_error(dsol.q, pref.q) < 4E-4
+    @test relative_maximum_error(dsol.q, sol.q) < 1E-14
 
-#     sol = integrate(deleproblem_trapezoidal(), DiscreteEulerLagrange())
-#     # println(relative_maximum_error(sol.q, pref.q))
-#     @test relative_maximum_error(sol.q, pref.q) < 4E-4
+    sol = integrate(deleproblem_trapezoidal(), DiscreteEulerLagrange())
+    # println(relative_maximum_error(sol.q, pref.q))
+    @test relative_maximum_error(sol.q, pref.q) < 4E-4
 
-#     dele = DELEProblem(lode, Trapezoidal())
-#     dsol = integrate(dele, DiscreteEulerLagrange())
-#     @test relative_maximum_error(dsol.q, pref.q) < 4E-4
-#     @test relative_maximum_error(dsol.q, sol.q) < 1E-14
-# end
+    dele = DELEProblem(lode, Trapezoidal())
+    dsol = integrate(dele, DiscreteEulerLagrange())
+    @test relative_maximum_error(dsol.q, pref.q) < 4E-4
+    @test relative_maximum_error(dsol.q, sol.q) < 1E-14
+end
 
 
 @testset "$(rpad("Vartiational integrators",80))" begin
