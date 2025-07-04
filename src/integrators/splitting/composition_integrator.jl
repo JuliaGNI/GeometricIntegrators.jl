@@ -22,22 +22,22 @@ This constructs a composition method that is equivalent to a plain [`Splitting`]
 In order to include exact solutions in the composition, the [`ExactSolution`](@ref) method
 implements the general integrator interface.
 """
-struct Composition{MT, ST <: AbstractSplittingMethod} <: SODEMethod
+struct Composition{MT,ST<:AbstractSplittingMethod} <: SODEMethod
     methods::MT
     splitting::ST
 end
 
 Composition(splitting::AbstractSplittingMethod) = Composition(ExactSolution(), splitting)
 
-method(c::Composition{<: Tuple}, i::Int) = c.methods[i]
-method(c::Composition{<: GeometricMethod}, args...) = c.methods
+method(c::Composition{<:Tuple}, i::Int) = c.methods[i]
+method(c::Composition{<:GeometricMethod}, args...) = c.methods
 
-function methods(c::Composition{<: Tuple}, neqs)
+function methods(c::Composition{<:Tuple}, neqs)
     @assert neqs == length(c.methods)
     return c.methods
 end
 
-methods(c::Composition{<: GeometricMethod}, neqs) = Tuple(method(c) for _ in 1:neqs)
+methods(c::Composition{<:GeometricMethod}, neqs) = Tuple(method(c) for _ in 1:neqs)
 
 splitting(c::Composition) = c.splitting
 
@@ -53,11 +53,11 @@ _neqs(problem::SODEProblem) = nsteps(problem)
 
 
 struct CompositionIntegrator{
-        MT <: AbstractSplittingMethod,
-        PT <: SODEProblem,
-        SIT <: Tuple
-    } <: AbstractIntegrator
-    
+    MT<:AbstractSplittingMethod,
+    PT<:SODEProblem,
+    SIT<:Tuple
+} <: AbstractIntegrator
+
     problem::PT
     method::MT
     subints::SIT
@@ -66,9 +66,9 @@ struct CompositionIntegrator{
         problem::SODEProblem,
         splitting::AbstractSplittingMethod,
         methods::Tuple;
-        options = _options(methods),
-        solvers = _solvers(methods),
-        initialguesses = _iguesses(methods))
+        options=_options(methods),
+        solvers=_solvers(methods),
+        initialguesses=_iguesses(methods))
 
         @assert length(methods) == length(options) == length(solvers) == length(initialguesses) == _neqs(problem)
 
@@ -76,9 +76,9 @@ struct CompositionIntegrator{
         f, c = coefficients(problem, splitting)
 
         # construct composition integrators
-        subints = Tuple(GeometricIntegrator(SubstepProblem(problem, c[i], f[i]), methods[f[i]]; options = options[f[i]], solver = solvers[f[i]]) for i in eachindex(f,c))
+        subints = Tuple(GeometricIntegrator(SubstepProblem(problem, c[i], f[i]), methods[f[i]]; solver=solvers[f[i]], options[f[i]]...) for i in eachindex(f, c))
 
-        new{typeof(splitting), typeof(problem), typeof(subints)}(problem, splitting, subints)
+        new{typeof(splitting),typeof(problem),typeof(subints)}(problem, splitting, subints)
     end
 end
 
@@ -103,7 +103,7 @@ function initialize!(cint::CompositionIntegrator)
 end
 
 
-function integrate_step!(sol, history, params, int::CompositionIntegrator{<:AbstractSplittingMethod, <:SODEProblem})
+function integrate_step!(sol, history, params, int::CompositionIntegrator{<:AbstractSplittingMethod,<:SODEProblem})
     # compute composition steps
     for subint in subints(int)
         # compute initial guess for subint

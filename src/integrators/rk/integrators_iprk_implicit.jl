@@ -1,7 +1,7 @@
 
 solversize(problem::AbstractProblemIODE, method::IPRK) = ndims(problem) * nstages(method)
 
-function Base.show(io::IO, int::GeometricIntegrator{<:IPRK, <:AbstractProblemIODE})
+function Base.show(io::IO, int::GeometricIntegrator{<:IPRK,<:AbstractProblemIODE})
     print(io, "\nPartitioned Runge-Kutta Integrator for Implicit Equations with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(description(tableau(int)))\n")
@@ -13,49 +13,49 @@ end
 function Cache{ST}(problem::AbstractProblemIODE, method::IPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
     D = ndims(problem)
-    IPRKCache{ST, D, S, solversize(problem, method)}(; kwargs...)
+    IPRKCache{ST,D,S,solversize(problem, method)}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblemIODE, method::IPRK) = IPRKCache{ST, ndims(problem), nstages(tableau(method)), solversize(problem, method)}
+@inline CacheType(ST, problem::AbstractProblemIODE, method::IPRK) = IPRKCache{ST,ndims(problem),nstages(tableau(method)),solversize(problem, method)}
 
 
-function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK, <:AbstractProblemIODE})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemIODE})
     # get cache for nonlinear solution vector
     local x = nlsolution(int)
 
     # compute initial guess for internal stages
     for i in eachstage(int)
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).p.c[i],
-            q = cache(int).Q[i],
-            p = cache(int).P[i],
-            v = cache(int).V[i],
-            f = cache(int).F[i],
+            t=history.t[1] + timestep(int) * tableau(int).p.c[i],
+            q=cache(int).Q[i],
+            p=cache(int).P[i],
+            v=cache(int).V[i],
+            f=cache(int).F[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
 
     # assemble initial guess for nonlinear solver solution vector
     for i in eachstage(int)
-        offset = ndims(int)*(i-1)
+        offset = ndims(int) * (i - 1)
         for k in 1:ndims(int)
             x[offset+k] = cache(int).P[i][k] - sol.p[k]
             for j in eachstage(int)
-                x[offset+k] -= timestep(int) * tableau(int).p.a[i,j] * cache(int).F[j][k]
+                x[offset+k] -= timestep(int) * tableau(int).p.a[i, j] * cache(int).F[j][k]
             end
         end
     end
 end
 
 
-function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IPRK, <:AbstractProblemIODE}) where {ST}
+function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemIODE}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
     # copy x to V
     for i in eachindex(C.V)
         for k in eachindex(C.V[i])
-            C.V[i][k] = x[ndims(int)*(i-1) + k]
+            C.V[i][k] = x[ndims(int)*(i-1)+k]
         end
     end
 
@@ -64,8 +64,8 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         for k in eachindex(C.Q[i])
             y1 = y2 = zero(ST)
             for j in eachindex(C.V)
-                y1 += tableau(int).q.a[i,j] * C.V[j][k]
-                y2 += tableau(int).q.â[i,j] * C.V[j][k]
+                y1 += tableau(int).q.a[i, j] * C.V[j][k]
+                y2 += tableau(int).q.â[i, j] * C.V[j][k]
             end
             C.Q[i][k] = sol.q[k] + timestep(int) * (y1 + y2)
         end
@@ -80,7 +80,7 @@ end
 
 
 # Compute stages of implicit partitioned Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IPRK, <:AbstractProblemIODE}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemIODE}) where {ST}
     @assert axes(x) == axes(b)
 
     # compute stages from nonlinear solver solution x
@@ -94,8 +94,8 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
         for k in eachindex(C.P[i])
             z1 = z2 = zero(ST)
             for j in eachstage(int)
-                z1 += tableau(int).p.a[i,j] * C.F[j][k]
-                z2 += tableau(int).p.â[i,j] * C.F[j][k]
+                z1 += tableau(int).p.a[i, j] * C.F[j][k]
+                z2 += tableau(int).p.â[i, j] * C.F[j][k]
             end
             b[ndims(int)*(i-1)+k] = C.P[i][k] - sol.p[k] - timestep(int) * (z1 + z2)
         end
@@ -103,7 +103,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
 end
 
 
-function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:IPRK, <:AbstractProblemIODE}) where {DT}
+function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:IPRK,<:AbstractProblemIODE}) where {DT}
     # compute vector field at internal stages
     components!(x, sol, params, int)
 
@@ -113,9 +113,9 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
 end
 
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:IPRK, <:AbstractProblemIODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
+    solve!(solver(int), nlsolution(int), (sol, params, int))
 
     # print solver status
     # println(status(solver))

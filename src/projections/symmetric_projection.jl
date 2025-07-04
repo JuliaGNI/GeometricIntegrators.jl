@@ -1,9 +1,9 @@
-struct SymmetricProjection{DT} <: ProjectionMethod 
+struct SymmetricProjection{DT} <: ProjectionMethod
     RU::Vector{DT}
     RG::Vector{DT}
-    
-    function SymmetricProjection(R∞ = 1)
-        DT, RU, RG = _projection_weights([1//2,1//2], [1//2,1//2], R∞)
+
+    function SymmetricProjection(R∞=1)
+        DT, RU, RG = _projection_weights([1 // 2, 1 // 2], [1 // 2, 1 // 2], R∞)
         new{DT}(RU, RG)
     end
 end
@@ -11,14 +11,14 @@ end
 SymmetricProjection(method::GeometricMethod) = ProjectedMethod(SymmetricProjection(), method)
 SymmetricProjection(method::Union{RKMethod,PRKMethod,VPRKMethod}) = ProjectedMethod(SymmetricProjection(tableau(method).R∞), method)
 
-const SymmetricProjectionIntegrator{PT} = ProjectionIntegrator{<:ProjectedMethod{<:SymmetricProjection, <:GeometricMethod}, PT} where {PT <: AbstractProblem}
+const SymmetricProjectionIntegrator{PT} = ProjectionIntegrator{<:ProjectedMethod{<:SymmetricProjection,<:GeometricMethod},PT} where {PT<:AbstractProblem}
 
 function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:SymmetricProjection}; kwargs...) where {ST}
     ProjectionCache{ST}(problem, method; kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:SymmetricProjection}) = 
-    ProjectionCache{ST, timetype(problem), typeof(problem), ndims(problem), nconstraints(problem), solversize(problem, parent(method))}
+@inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:SymmetricProjection}) =
+    ProjectionCache{ST,timetype(problem),typeof(problem),ndims(problem),nconstraints(problem),solversize(problem, parent(method))}
 
 
 default_solver(::ProjectedMethod{<:SymmetricProjection}) = Newton()
@@ -55,11 +55,11 @@ function initial_guess!(sol, history, params, int::SymmetricProjectionIntegrator
 
     # compute initial guess for projected solution
     soltmp = (
-        t = (sol.t + history.t[1]) / 2,
-        q = cache(int).q̃,
-        p = cache(int).p̃,
-        v = cache(int).ṽ,
-        f = cache(int).f̃,
+        t=(sol.t + history.t[1]) / 2,
+        q=cache(int).q̃,
+        p=cache(int).p̃,
+        v=cache(int).ṽ,
+        f=cache(int).f̃,
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
     # TODO: Fix this!
@@ -220,7 +220,7 @@ end
 
 function integrate_step!(sol, history, params, int::SymmetricProjectionIntegrator)
     # call nonlinear solver for projection
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
+    solve!(solver(int), nlsolution(int), (sol, params, int))
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))

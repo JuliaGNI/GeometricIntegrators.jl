@@ -1,31 +1,31 @@
-struct StandardProjection{DT} <: ProjectionMethod 
+struct StandardProjection{DT} <: ProjectionMethod
     RU::Vector{DT}
     RG::Vector{DT}
-    
-    function StandardProjection(RU, RG, R∞ = 1)
+
+    function StandardProjection(RU, RG, R∞=1)
         DT, RU, RG = _projection_weights(RU, RG, R∞)
         new{DT}(RU, RG)
     end
 end
 
-PostProjection(method::GeometricMethod) = ProjectedMethod(StandardProjection([0,1], [0,1]), method)
-SymplecticProjection(method::Union{PRKMethod,VPRKMethod}) = ProjectedMethod(StandardProjection([0,1], [0,1], tableau(method).R∞), method)
-VariationalProjectionOnP(method::GeometricMethod) = ProjectedMethod(StandardProjection([0,1], [1,0]), method)
-VariationalProjectionOnQ(method::GeometricMethod) = ProjectedMethod(StandardProjection([1,0], [0,1]), method)
+PostProjection(method::GeometricMethod) = ProjectedMethod(StandardProjection([0, 1], [0, 1]), method)
+SymplecticProjection(method::Union{PRKMethod,VPRKMethod}) = ProjectedMethod(StandardProjection([0, 1], [0, 1], tableau(method).R∞), method)
+VariationalProjectionOnP(method::GeometricMethod) = ProjectedMethod(StandardProjection([0, 1], [1, 0]), method)
+VariationalProjectionOnQ(method::GeometricMethod) = ProjectedMethod(StandardProjection([1, 0], [0, 1]), method)
 
 # description(::PostProjection) = "Post projection"
 # description(::SymplecticProjection) = "Symplectic Projection"
 # description(::VariationalProjectionOnP) = @doc raw"Variational projection on $(q_{n}, p_{n+1})$"
 # description(::VariationalProjectionOnQ) = @doc raw"Variational projection on $(p_{n}, q_{n+1})$"
 
-const StandardProjectionIntegrator{PT} = ProjectionIntegrator{<:ProjectedMethod{<:StandardProjection, <:GeometricMethod}, PT} where {PT <: AbstractProblem}
+const StandardProjectionIntegrator{PT} = ProjectionIntegrator{<:ProjectedMethod{<:StandardProjection,<:GeometricMethod},PT} where {PT<:AbstractProblem}
 
 function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:StandardProjection}; kwargs...) where {ST}
     ProjectionCache{ST}(problem, method; kwargs...)
 end
 
 @inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:StandardProjection}) =
-    ProjectionCache{ST, timetype(problem), typeof(problem), ndims(problem), nconstraints(problem), solversize(problem, parent(method))}
+    ProjectionCache{ST,timetype(problem),typeof(problem),ndims(problem),nconstraints(problem),solversize(problem, parent(method))}
 
 
 default_solver(::ProjectedMethod{<:StandardProjection}) = Newton()
@@ -43,9 +43,9 @@ function split_nlsolution(x::AbstractVector, int::StandardProjectionIntegrator)
 end
 
 
-function initsolver(::NewtonMethod, config::Options, ::ProjectedMethod{<:StandardProjection}, caches::CacheDict; kwargs...)
+function initsolver(::NewtonMethod, ::ProjectedMethod{<:StandardProjection}, caches::CacheDict; kwargs...)
     x̄, x̃ = split_nlsolution(cache(caches))
-    NewtonSolver(zero(x̃), zero(x̃); config = config, kwargs...)
+    NewtonSolver(zero(x̃), residual!, zero(x̃); kwargs...)
 end
 
 
@@ -177,7 +177,7 @@ function integrate_step!(sol, history, params, int::StandardProjectionIntegrator
 
     # call nonlinear solver for projection
     x̄, x̃ = split_nlsolution(nlsolution(int), int)
-    solve!(x̃, (b,x) -> residual!(b, x, sol, params, int), solver(int))
+    solve!(solver(int), x̃, (sol, params, int))
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))

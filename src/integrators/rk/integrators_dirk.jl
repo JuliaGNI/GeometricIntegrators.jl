@@ -21,7 +21,7 @@ Diagonally Implicit Runge-Kutta Method
 DIRK(tableau)
 ```
 """
-struct DIRK{TT <: Tableau} <: DIRKMethod
+struct DIRK{TT<:Tableau} <: DIRKMethod
     tableau::TT
 end
 
@@ -47,8 +47,8 @@ end
 Base.getindex(s::SingleStageSolvers, args...) = getindex(s.solvers, args...)
 
 
-function initsolver(::NewtonMethod, config::Options, method::DIRK, caches::CacheDict; kwargs...)
-    SingleStageSolvers([NewtonSolver(zero(cache(caches).x[i]), zero(cache(caches).x[i]); linesearch = Backtracking(), config = config) for i in eachstage(method)]...)
+function initsolver(::NewtonMethod, method::DIRK, caches::CacheDict; kwargs...)
+    SingleStageSolvers([NewtonSolver(zero(cache(caches).x[i]), residual!, zero(cache(caches).x[i]); linesearch=Backtracking(), kwargs...) for i in eachstage(method)]...)
 end
 
 
@@ -83,7 +83,7 @@ function Cache{ST}(problem::EquationProblem, method::DIRKMethod; kwargs...) wher
     DIRKCache{ST,D,S}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::DIRKMethod) = DIRKCache{ST, ndims(problem), nstages(tableau(method))}
+@inline CacheType(ST, problem::EquationProblem, method::DIRKMethod) = DIRKCache{ST,ndims(problem),nstages(tableau(method))}
 
 nlsolution(cache::DIRKCache, i) = cache.x[i]
 
@@ -111,9 +111,9 @@ end
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DIRK})
     for i in eachstage(int)
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).c[i],
-            q = cache(int).Q[i],
-            v = cache(int).V[i],
+            t=history.t[1] + timestep(int) * tableau(int).c[i],
+            q=cache(int).Q[i],
+            v=cache(int).V[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
@@ -122,7 +122,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DIRK})
         for k in 1:ndims(int)
             cache(int).x[i][k] = 0
             for j in eachstage(int)
-                cache(int).x[i][k] += timestep(int) * tableau(int).a[i,j] * cache(int).V[j][k]
+                cache(int).x[i][k] += timestep(int) * tableau(int).a[i, j] * cache(int).V[j][k]
             end
         end
     end
@@ -156,11 +156,11 @@ function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:DIRK}, i) w
 
     # compute b = - (Y-AV)
     for k in 1:ndims(int)
-        y1 = tableau(int).a[i,i] * C.V[i][k]
-        y2 = tableau(int).â[i,i] * C.V[i][k]
+        y1 = tableau(int).a[i, i] * C.V[i][k]
+        y2 = tableau(int).â[i, i] * C.V[i][k]
         for j in 1:i-1
-            y1 += tableau(int).a[i,j] * C.V[j][k]
-            y2 += tableau(int).â[i,j] * C.V[j][k]
+            y1 += tableau(int).a[i, j] * C.V[j][k]
+            y2 += tableau(int).â[i, j] * C.V[j][k]
         end
         b[k] = C.Y[i][k] - timestep(int) * (y1 + y2)
     end
@@ -180,14 +180,14 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
 end
 
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DIRK, <:AbstractProblemODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DIRK,<:AbstractProblemODE})
     # copy previous solution from solstep to cache
     reset!(cache(int), sol...)
 
     # consecutively solve for all stages
     for i in eachstage(int)
         # call nonlinear solver
-        solve!(nlsolution(cache(int), i), (b,x) -> residual!(b, x, sol, params, int, i), solver(int)[i])
+        solve!(solver(int)[i], nlsolution(cache(int), i), (sol, params, int, i))
 
         # print solver status
         # println(status(solvers[i]))

@@ -32,10 +32,10 @@ end
 nlsolution(cache::ImplicitEulerCache) = cache.x
 
 function Cache{ST}(problem::AbstractProblem, method::ImplicitEuler; kwargs...) where {ST}
-    ImplicitEulerCache{ST, ndims(problem)}(; kwargs...)
+    ImplicitEulerCache{ST,ndims(problem)}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblem, method::ImplicitEuler) = ImplicitEulerCache{ST, ndims(problem)}
+@inline CacheType(ST, problem::AbstractProblem, method::ImplicitEuler) = ImplicitEulerCache{ST,ndims(problem)}
 
 
 solversize(problem::AbstractProblemODE, ::ImplicitEuler) = ndims(problem)
@@ -43,10 +43,9 @@ solversize(problem::AbstractProblemODE, ::ImplicitEuler) = ndims(problem)
 default_solver(::ImplicitEuler) = Newton()
 default_iguess(::ImplicitEuler) = HermiteExtrapolation()
 
-
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:ImplicitEuler})
     # temporary solution
-    ig = (t = sol.t, q = cache(int).q, v = cache(int).v)
+    ig = (t=sol.t, q=cache(int).q, v=cache(int).v)
 
     # compute initial guess
     solutionstep!(ig, history, problem(int), iguess(int))
@@ -109,9 +108,9 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
 end
 
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ImplicitEuler, <:AbstractProblemODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ImplicitEuler,<:AbstractProblemODE})
     # call nonlinear solver
-    solve!(nlsolution(int), (b,x) -> residual!(b, x, sol, params, int), solver(int))
+    solve!(solver(int), nlsolution(int), (sol, params, int))
 
     # print solver status
     # println(status(solver))

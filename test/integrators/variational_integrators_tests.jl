@@ -52,7 +52,7 @@ end
     # @test relative_maximum_error(sol.p, pref.p) < 4E-4
 
     ref = integrate(lode, PMVImidpoint())
-    @test relative_maximum_error(sol.q, ref.q) < 8*eps()
+    @test relative_maximum_error(sol.q, ref.q) < 8 * eps()
 
     sol = integrate(lode, VPRKGauss(2))
     # println(relative_maximum_error(sol.q, pref.q))
@@ -85,7 +85,7 @@ end
     # @test relative_maximum_error(sol.p, pref.p) < 2E-4
 
     ref = integrate(lode, PMVItrapezoidal())
-    @test relative_maximum_error(sol.q, ref.q) < 8*eps()
+    @test relative_maximum_error(sol.q, ref.q) < 8 * eps()
 
     sol = integrate(lode, VPRKLobattoIIIAIIIĀ(3))
     # println(relative_maximum_error(sol.q, pref.q))
