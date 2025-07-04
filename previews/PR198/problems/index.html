@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Problems · GeometricIntegrators.jl</title><meta name="title" content="Problems · GeometricIntegrators.jl"/><meta property="og:title" content="Problems · GeometricIntegrators.jl"/><meta property="twitter:title" content="Problems · GeometricIntegrators.jl"/><meta name="description" content="Documentation for GeometricIntegrators.jl."/><meta property="og:description" content="Documentation for GeometricIntegrators.jl."/><meta property="twitter:description" content="Documentation for GeometricIntegrators.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">GeometricIntegrators.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../tutorial/">Tutorial</a></li><li class="is-active"><a class="tocitem" href>Problems</a><ul class="internal"><li><a class="tocitem" href="#Keyword-Arguments"><span>Keyword Arguments</span></a></li><li><a class="tocitem" href="#Ordinary-Differential-Equations-(ODEs)"><span>Ordinary Differential Equations (ODEs)</span></a></li><li><a class="tocitem" href="#Differential-Algebraic-Equation-(DAE)"><span>Differential Algebraic Equation (DAE)</span></a></li><li><a class="tocitem" href="#Stochastic-Differential-Equations-(SDEs)"><span>Stochastic Differential Equations (SDEs)</span></a></li></ul></li><li><a class="tocitem" href="../methods/">Methods</a></li><li><span class="tocitem">Integrators</span><ul><li><a class="tocitem" href="../integrators/rk/">Runge-Kutta</a></li><li><a class="tocitem" href="../integrators/splitting/">Splitting</a></li><li><a class="tocitem" href="../integrators/variational/">Variational</a></li><li><a class="tocitem" href="../integrators/vprk/">VPRK</a></li><li><a class="tocitem" href="../integrators/spark/">SPARK</a></li><li><a class="tocitem" href="../integrators/dvi/">DVI</a></li><li><a class="tocitem" href="../integrators/hpi/">Hamilton-Pontryagin</a></li></ul></li><li><span class="tocitem">Modules</span><ul><li><a class="tocitem" href="../modules/equations/">Equations</a></li><li><a class="tocitem" href="../modules/integrators/">Integrators</a></li><li><a class="tocitem" href="../modules/methods/">Methods</a></li><li><a class="tocitem" href="../modules/problems/">Problems</a></li><li><a class="tocitem" href="../modules/projections/">Projections</a></li><li><a class="tocitem" href="../modules/rungekutta/">Runge-Kutta Tableaus</a></li><li><a class="tocitem" href="../modules/solutions/">Solutions</a></li><li><a class="tocitem" href="../modules/spark/">SPARK Methods</a></li></ul></li><li><span class="tocitem">Developer Docs</span><ul><li><a class="tocitem" href="../developer/integrators/">Integrators</a></li><li><a class="tocitem" href="../developer/projections/">Projections</a></li><li><a class="tocitem" href="../developer/code_integration/">Code Integration</a></li><li><a class="tocitem" href="../developer/custom_integrators/">Custom Integrators</a></li><li><a class="tocitem" href="../developer/adaptive_time_stepping/">Adaptive Time Stepping</a></li></ul></li><li><a class="tocitem" href="../releasenotes/">Release Notes</a></li><li><a class="tocitem" href="../bibliography/">Bibliography</a></li><li><a class="tocitem" href="../authors/">Authors</a></li><li><a class="tocitem" href="../LICENSE/">License</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Problems</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Problems</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaGNI/GeometricIntegrators.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaGNI/GeometricIntegrators.jl/blob/main/docs/src/problems.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Equation-and-Problem-Types"><a class="docs-heading-anchor" href="#Equation-and-Problem-Types">Equation and Problem Types</a><a id="Equation-and-Problem-Types-1"></a><a class="docs-heading-anchor-permalink" href="#Equation-and-Problem-Types" title="Permalink"></a></h1><p>In <em>GeometricIntegrators.jl</em> we support three basic types of equations:</p><ul><li>ordinary differential equations (ODEs),</li><li>differential algebraic equations (DAEs),</li><li>stochastic differential equations (SDEs).</li></ul><p>For each type, there are several subtypes:</p><ul><li>standard equations (<a href="../modules/problems/#GeometricEquations.ODEProblem"><code>ODEProblem</code></a>, <a href="../modules/problems/#GeometricEquations.DAEProblem"><code>DAEProblem</code></a>, <a href="../modules/problems/#GeometricEquations.SDEProblem"><code>SDEProblem</code></a>),</li><li>implicit equations (<a href="../modules/problems/#GeometricEquations.IODEProblem"><code>IODEProblem</code></a>, <a href="../modules/problems/#GeometricEquations.IDAEProblem"><code>IDAEProblem</code></a>),</li><li>partitioned equations (<a href="../modules/problems/#GeometricEquations.PODEProblem"><code>PODEProblem</code></a>, <a href="../modules/problems/#GeometricEquations.PDAEProblem"><code>PDAEProblem</code></a>, <a href="../modules/problems/#GeometricEquations.PSDEProblem"><code>PSDEProblem</code></a>),</li><li>Hamiltonian equations (<a href="../modules/problems/#GeometricEquations.HODEProblem"><code>HODEProblem</code></a>, <a href="../modules/problems/#GeometricEquations.HDAEProblem"><code>HDAEProblem</code></a>),</li><li>Lagrangian equations (<a href="../modules/problems/#GeometricEquations.LODEProblem"><code>LODEProblem</code></a>, <a href="../modules/problems/#GeometricEquations.LDAEProblem"><code>LDAEProblem</code></a>),</li><li>split equations (<a href="../modules/problems/#GeometricEquations.SODEProblem"><code>SODEProblem</code></a>, <a href="../modules/problems/#GeometricEquations.SPSDEProblem"><code>SPSDEProblem</code></a>).</li></ul><p>Each equation holds a number of functions determining the vector field, constraints, and possibly additional information like parameters, periodicity, invariants and the Hamiltonian or Lagrangian.</p><p>To each equation type there exists a corresponding problem type, which holds the equation, initial conditions, parameters, a time span to integrate over, as well as a time step (which is typically fixed in GeometricIntegrators). In addition, these problem types provide some convenience constructors to generate the equation and the problem at once.</p><p>All of the equation and problem types are defined in the <a href="https://github.com/JuliaGNI/GeometricEquations.jl">GeometricEquations.jl</a> package. The <a href="https://github.com/JuliaGNI/GeometricProblems.jl">GeometricProblems.jl</a> package implements a number of example problems for testing and benchmarking.</p><h2 id="Keyword-Arguments"><a class="docs-heading-anchor" href="#Keyword-Arguments">Keyword Arguments</a><a id="Keyword-Arguments-1"></a><a class="docs-heading-anchor-permalink" href="#Keyword-Arguments" title="Permalink"></a></h2><p>All equation and problem types take the following keyword arguments:</p><ul><li><code>invariants = NullInvariants()</code></li><li><code>parameters = NullParameters()</code></li><li><code>periodicity = NullPeriodicity()</code></li></ul><p>If not set to their corresponding Null types, the user needs to pass a <code>NamedTuple</code> whose values are</p><ul><li>functions for invariants,</li><li>arbitrary data structures for parameters, </li><li>the same data structure as the solution for periodicity.</li></ul><p>The latter should be zero everywhere, except for those components, that are periodic, i.e., whose value are supposed to stay within a range <code>(0, max)</code>. Support for ranges starting with other values than zero is currently missing but can be added if demand arises.</p><h2 id="Ordinary-Differential-Equations-(ODEs)"><a class="docs-heading-anchor" href="#Ordinary-Differential-Equations-(ODEs)">Ordinary Differential Equations (ODEs)</a><a id="Ordinary-Differential-Equations-(ODEs)-1"></a><a class="docs-heading-anchor-permalink" href="#Ordinary-Differential-Equations-(ODEs)" title="Permalink"></a></h2><p>Ordinary differential equations define an initial value problem of the form</p><p class="math-container">\[\dot{q} (t) = v(t, q(t)) ,\]</p><p>with vector field <span>$v$</span>.</p><h4 id="Example:-Harmonic-Oscillator"><a class="docs-heading-anchor" href="#Example:-Harmonic-Oscillator">Example: Harmonic Oscillator</a><a id="Example:-Harmonic-Oscillator-1"></a><a class="docs-heading-anchor-permalink" href="#Example:-Harmonic-Oscillator" title="Permalink"></a></h4><p>As an example, let us consider the harmonic oscillator. The dynamical equations are given by</p><p class="math-container">\[\dot{q} (t) = \begin{pmatrix}
+0 &amp; 1 \\
+-k &amp; 0 \\
+\end{pmatrix} q(t) ,
+\qquad
+q \in \mathbb{R}^{2} .\]</p><p>In order to create an <code>ODEProblem</code> for the harmonic oscillator, we need to write the following code:</p><pre><code class="language-julia hljs">function v(v, t, x, params)
+    v[1] = x[2]
+    v[2] = - params.k * x[1]
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [0.5, 0.0]
+
+prob = ODEProblem(v, tspan, tstep, q₀; parameters = (k = 0.5,))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Ordinary Differential Equation (ODE)
+
+ with vector field
+   v = v
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5, 0.0])
+
+ Parameters: 
+   (k = 0.5,)</code></pre><p>The energy of the harmonic oscillator is preserved, so we can add it as an invariant, </p><pre><code class="language-julia hljs">energy(t, q, params) = q[2]^2 / 2 + params.k * q[1]^2 / 2
+
+prob = ODEProblem(v, tspan, tstep, q₀; parameters = (k = 0.5,), invariants = (h=energy,))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Ordinary Differential Equation (ODE)
+
+ with vector field
+   v = v
+
+ Invariants: 
+   (h = Main.energy,)
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5, 0.0])
+
+ Parameters: 
+   (k = 0.5,)</code></pre><h3 id="Partitioned-Ordinary-Differential-Equations-(PODEs)"><a class="docs-heading-anchor" href="#Partitioned-Ordinary-Differential-Equations-(PODEs)">Partitioned Ordinary Differential Equations (PODEs)</a><a id="Partitioned-Ordinary-Differential-Equations-(PODEs)-1"></a><a class="docs-heading-anchor-permalink" href="#Partitioned-Ordinary-Differential-Equations-(PODEs)" title="Permalink"></a></h3><p>A partitioned ordinary differential equation is an initial value problem of the form</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t, q(t), p(t)) , \\
+\dot{p} (t) &amp;= f(t, q(t), p(t)) ,
+\end{aligned}\]</p><p>with vector fields <span>$v$</span> and <span>$f$</span>.</p><h4 id="Example:-Harmonic-Oscillator-2"><a class="docs-heading-anchor" href="#Example:-Harmonic-Oscillator-2">Example: Harmonic Oscillator</a><a class="docs-heading-anchor-permalink" href="#Example:-Harmonic-Oscillator-2" title="Permalink"></a></h4><p>As an example, let us consider the harmonic oscillator. The dynamical equations are given by</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= p (t) \\
+\dot{p} (t) &amp;= - k \, q(t) .
+\end{aligned}\]</p><p>In order to create a <code>PODEProblem</code> for the harmonic oscillator, we need to write the following code:</p><pre><code class="language-julia hljs">function v(v, t, q, p, params)
+    v[1] = p[1]
+end
+
+function f(f, t, q, p, params)
+    f[1] = - params.k * q[1]
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [0.5]
+p₀ = [0.0]
+
+prob = PODEProblem(v, f, tspan, tstep, q₀, p₀; parameters = (k = 0.5,))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Partitioned Ordinary Differential Equation (PODE)
+
+ with vector fields
+   v = v
+   f = f
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5], p = [0.0])
+
+ Parameters: 
+   (k = 0.5,)</code></pre><p>The energy of the harmonic oscillator is preserved, so we can add it as an invariant, </p><pre><code class="language-julia hljs">energy(t, q, p, params) = p[1]^2 / 2 + params.k * q[1]^2 / 2
+
+prob = PODEProblem(v, f, tspan, tstep, q₀, p₀; parameters = (k = 0.5,), invariants = (h=energy,))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Partitioned Ordinary Differential Equation (PODE)
+
+ with vector fields
+   v = v
+   f = f
+
+ Invariants: 
+   (h = Main.energy,)
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5], p = [0.0])
+
+ Parameters: 
+   (k = 0.5,)</code></pre><h3 id="Hamiltonian-Ordinary-Differential-Equations-(HODEs)"><a class="docs-heading-anchor" href="#Hamiltonian-Ordinary-Differential-Equations-(HODEs)">Hamiltonian Ordinary Differential Equations (HODEs)</a><a id="Hamiltonian-Ordinary-Differential-Equations-(HODEs)-1"></a><a class="docs-heading-anchor-permalink" href="#Hamiltonian-Ordinary-Differential-Equations-(HODEs)" title="Permalink"></a></h3><p>A canonical Hamiltonian system of equations is special case of a partitioned ordinary differential equation,</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t, q(t), p(t)) , \\
+\dot{p} (t) &amp;= f(t, q(t), p(t)) ,
+\end{aligned}\]</p><p>with vector fields <span>$v$</span> and <span>$f$</span>, given by</p><p class="math-container">\[\begin{aligned}
+v &amp;=   \frac{\partial H}{\partial p} , &amp;
+f &amp;= - \frac{\partial H}{\partial q} .
+\end{aligned}\]</p><h4 id="Example:-Harmonic-Oscillator-3"><a class="docs-heading-anchor" href="#Example:-Harmonic-Oscillator-3">Example: Harmonic Oscillator</a><a class="docs-heading-anchor-permalink" href="#Example:-Harmonic-Oscillator-3" title="Permalink"></a></h4><p>As an example, let us consider the harmonic oscillator. The dynamical equations are given by</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= p (t) \\
+\dot{p} (t) &amp;= - k \, q(t) ,
+\end{aligned}\]</p><p>which can also be written as </p><p class="math-container">\[\begin{pmatrix}
+\dot{q} (t) \\
+\dot{p} (t) \\
+\end{pmatrix} = \begin{pmatrix}
+0 &amp; 1 \\
+-1 &amp; 0 \\
+\end{pmatrix}
+\nabla H( q(t) , p(t) ) ,
+\qquad
+H(q,p) = \frac{p^2}{2} + k \, \frac{q^2}{2} ,\]</p><p>where <span>$H$</span> is the Hamiltonian, i.e., the total energy of the system.</p><p>In order to create a <code>HODEProblem</code> for the harmonic oscillator, we need to write the following code:</p><pre><code class="language-julia hljs">function v(v, t, q, p, params)
+    v[1] = p[1]
+end
+
+function f(f, t, q, p, params)
+    f[1] = - params.k * q[1]
+end
+
+h(t, q, p, params) = p[1]^2 / 2 + params.k * q[1]^2 / 2
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [0.5]
+p₀ = [0.0]
+
+prob = HODEProblem(v, f, h, tspan, tstep, q₀, p₀; parameters = (k = 0.5,))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Hamiltonian Ordinary Differential Equation (HODE)
+
+ with vector fields
+   v = v
+   f = f
+
+ Hamiltonian: H = h
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5], p = [0.0])
+
+ Parameters: 
+   (k = 0.5,)</code></pre><h3 id="Implicit-Ordinary-Differential-Equations-(IODEs)"><a class="docs-heading-anchor" href="#Implicit-Ordinary-Differential-Equations-(IODEs)">Implicit Ordinary Differential Equations (IODEs)</a><a id="Implicit-Ordinary-Differential-Equations-(IODEs)-1"></a><a class="docs-heading-anchor-permalink" href="#Implicit-Ordinary-Differential-Equations-(IODEs)" title="Permalink"></a></h3><p>An implicit ordinary differential equations is an initial value problem of the form</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t) , \\
+\dot{p} (t) &amp;= f(t, q(t), v(t)) , \\
+p(t) &amp;= ϑ(t, q(t), v(t)) ,
+\end{aligned}\]</p><p>with force field <span>$f$</span>, the momentum defined by <span>$p$</span>. This is a special case of a differential algebraic equation with dynamical variables <span>$(q,p)$</span> and algebraic variable <span>$v$</span>, that is determined such that the constraint <span>$p(t) = ϑ(t, q(t), v(t))$</span> is satisfied.</p><p>Many integrators perform a projection step in order to enforce this constraint. To this end, the system is extended to</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t) + λ(t) , \\
+\dot{p} (t) &amp;= f(t, q(t), v(t)) + g(t, q(t), v(t), λ(t)) , \\
+p(t) &amp;= ϑ(t, q(t), v(t)) ,
+\end{aligned}\]</p><p>where the vector field defining the projection step is usually given as</p><p class="math-container">\[\begin{aligned}
+g(t, q(t), v(t), λ(t)) &amp;= λ(t) \cdot \nabla ϑ(t, q(t), v(t)) .
+\end{aligned}\]</p><h4 id="Example:-Harmonic-Oscillator-4"><a class="docs-heading-anchor" href="#Example:-Harmonic-Oscillator-4">Example: Harmonic Oscillator</a><a class="docs-heading-anchor-permalink" href="#Example:-Harmonic-Oscillator-4" title="Permalink"></a></h4><p>As an example, let us consider the harmonic oscillator. In implicit form, its equations are given as follows,</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t) , \\
+p(t) &amp;= v(t) , \\
+\dot{p} (t) &amp;= - k q(t) .
+\end{aligned}\]</p><p>Here, <code>v</code> acts as a Lagrange multiplier that enforces the &quot;constraint&quot; <span>$p(t) = v(t)$</span>.</p><p>In order to create an <code>IODEProblem</code> for the harmonic oscillator, we thus need to write the following code:</p><pre><code class="language-julia hljs">function p(p, t, q, v, params)
+    p[1] = v[1]
+end
+
+function f(f, t, q, v, params)
+    p[1] = - params.k * q[1]
+end
+
+function g(f, t, q, v, params)
+    p[1] = - params.k * q[1]
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [0.5]
+p₀ = [0.0]
+
+prob = IODEProblem(p, f, tspan, tstep, q₀, p₀; parameters = (k = 0.5,))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Implicit Ordinary Differential Equation (IODE)
+
+ with vector fields
+   v = p
+   f = f
+   g = _iode_default_g
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5], p = [0.0], v = [0.0])
+
+ Parameters: 
+   (k = 0.5,)</code></pre><p>The energy of the harmonic oscillator is preserved, so we can add it as an invariant, </p><pre><code class="language-julia hljs">energy(t, q, v, params) = v[1]^2 / 2 + params.k * q[1]^2 / 2
+
+prob = IODEProblem(p, f, tspan, tstep, q₀, p₀; parameters = (k = 0.5,), invariants = (h=energy,))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Implicit Ordinary Differential Equation (IODE)
+
+ with vector fields
+   v = p
+   f = f
+   g = _iode_default_g
+
+ Invariants: 
+   (h = Main.energy,)
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5], p = [0.0], v = [0.0])
+
+ Parameters: 
+   (k = 0.5,)</code></pre><h3 id="Lagrangian-Ordinary-Differential-Equations-(LODEs)"><a class="docs-heading-anchor" href="#Lagrangian-Ordinary-Differential-Equations-(LODEs)">Lagrangian Ordinary Differential Equations (LODEs)</a><a id="Lagrangian-Ordinary-Differential-Equations-(LODEs)-1"></a><a class="docs-heading-anchor-permalink" href="#Lagrangian-Ordinary-Differential-Equations-(LODEs)" title="Permalink"></a></h3><p>A Lagrangian system of equations is a special case of an implicit ordinary differential equations, that is an implicit initial value problem of the form</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t) , \\
+\dot{p} (t) &amp;= f(t, q(t), v(t)) , \\
+p(t) &amp;= ϑ(t, q(t), v(t)) ,
+\end{aligned}\]</p><p>with momentum <span>$p$</span> and force field <span>$f$</span>, given by</p><p class="math-container">\[\begin{aligned}
+p &amp;= \frac{\partial L}{\partial v} , &amp;
+f &amp;= \frac{\partial L}{\partial q} .
+\end{aligned}\]</p><p>This is a special case of an implicit ordinary differential equation, that is defined by a Lagrangian, as well as a special case of a differential algebraic equation with dynamical variables <span>$(q,p)$</span> and algebraic variable <span>$v$</span>, that is determined such that the constraint <span>$p(t) = ϑ(t, q(t), v(t))$</span> is satisfied.</p><p>Many integrators perform a projection step in order to enforce this constraint. To this end, the system is extended to</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t) + \lambda(t) , \\
+\dot{p} (t) &amp;= f(t, q(t), v(t)) + g(t, q(t), v(t), \lambda(t)) , \\
+p(t) &amp;= ϑ(t, q(t), v(t)) ,
+\end{aligned}\]</p><p>where the vector field defining the projection step is usually given as</p><p class="math-container">\[\begin{aligned}
+g(t, q(t), v(t), λ(t)) &amp;= λ(t) \cdot \nabla ϑ(t, q(t), v(t)) .
+\end{aligned}\]</p><h4 id="Example:-Harmonic-Oscillator-5"><a class="docs-heading-anchor" href="#Example:-Harmonic-Oscillator-5">Example: Harmonic Oscillator</a><a class="docs-heading-anchor-permalink" href="#Example:-Harmonic-Oscillator-5" title="Permalink"></a></h4><p>As an example, let us consider the harmonic oscillator. Its Lagrangian is given by</p><p class="math-container">\[L(q, \dot{q}) = \frac{\dot{q}^2}{2} - k \, \frac{q^2}{2} ,\]</p><p>so that the Euler-Lagrange equations</p><p class="math-container">\[\frac{d}{dt} \frac{\partial L}{\partial \dot{q}} = \frac{\partial L}{\partial q} ,\]</p><p>become</p><p class="math-container">\[\ddot{q} (t) = - k q(t) .\]</p><p>Most integrators for Lagrangian systems do not solve this second order system (semi-spray form), but instead use a reformulation as an implicit ordinary differential equation. This formulation can most easily be obtained from a Hamilton-Pontryagin principle</p><p class="math-container">\[\delta \int \limits_{t_0}^{t_1} \big[ L(q, v) + \left&lt; p , \dot{q} - v \right&gt; \big] = 0 ,\]</p><p>as follows,</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t) , \\
+p(t) &amp;= \frac{\partial L}{\partial v} (q(t),v(t)) = v(t) , \\
+\dot{p} (t) &amp;= \frac{\partial L}{\partial q} (q(t),v(t)) = - k q(t) .
+\end{aligned}\]</p><p>Here, <code>v</code> acts as a Lagrange multiplier that enforces the &quot;constraint&quot; <span>$p(t) = \partial L / \partial v$</span>.</p><p>In order to create an <code>LODEProblem</code> for the harmonic oscillator, we thus need to write the following code:</p><pre><code class="language-julia hljs">function p(p, t, q, v, params)
+    p[1] = v[1]
+end
+
+function f(f, t, q, v, params)
+    p[1] = - params.k * q[1]
+end
+
+function ω(f, t, q, v, params)
+    ω[1,1] =  0
+    ω[1,2] = -1
+    ω[2,1] = +1
+    ω[2,2] =  0
+end
+
+function l(t, q, v, params)
+    v[1]^2 / 2 - params.k * q[1]^2 / 2
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [0.5]
+p₀ = [0.0]
+
+prob = LODEProblem(p, f, ω, l, tspan, tstep, q₀, p₀; parameters = (k = 0.5,))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Lagrangian Ordinary Differential Equation (LODE)
+
+ with vector fields
+   ϑ = p
+   f = f
+   g = _lode_default_g
+
+ Lagrangian: L = l
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5], p = [0.0], v = [0.0])
+
+ Parameters: 
+   (k = 0.5,)</code></pre><p>The energy of the harmonic oscillator is preserved, so we can add it as an invariant, </p><pre><code class="language-julia hljs">energy(t, q, v, params) = v[1]^2 / 2 + params.k * q[1]^2 / 2
+
+prob = LODEProblem(p, f, ω, l, tspan, tstep, q₀, p₀; parameters = (k = 0.5,), invariants = (h=energy,))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Lagrangian Ordinary Differential Equation (LODE)
+
+ with vector fields
+   ϑ = p
+   f = f
+   g = _lode_default_g
+
+ Lagrangian: L = l
+
+ Invariants: 
+   (h = Main.energy,)
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5], p = [0.0], v = [0.0])
+
+ Parameters: 
+   (k = 0.5,)</code></pre><h2 id="Differential-Algebraic-Equation-(DAE)"><a class="docs-heading-anchor" href="#Differential-Algebraic-Equation-(DAE)">Differential Algebraic Equation (DAE)</a><a id="Differential-Algebraic-Equation-(DAE)-1"></a><a class="docs-heading-anchor-permalink" href="#Differential-Algebraic-Equation-(DAE)" title="Permalink"></a></h2><p>Defines a differential algebraic initial value problem</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t, q(t)) + u(t, q(t), \lambda(t)) , \\
+0 &amp;= \phi (t, q(t)) ,
+\end{aligned}\]</p><p>with vector field <span>$v$</span>, projection <span>$u$</span>, algebraic constraint <span>$\phi=0$</span>.</p><p>Some integrators also enforce the secondary constraint <span>$\psi$</span>, that is the time derivative of the algebraic constraint <span>$\phi$</span>. In this case, the system of equations is modified as follows</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t, q(t)) + u(t, q(t), \lambda(t)) + \bar{u} (t, q(t), \dot{q} (t), \dot{p} (t), \mu(t)) , \\
+0 &amp;= \phi (t, q(t)) , \\
+0 &amp;= \psi (t, q(t), \dot{q} (t)) .
+\end{aligned}\]</p><h3 id="Example:-Harmonic-Oscillator-6"><a class="docs-heading-anchor" href="#Example:-Harmonic-Oscillator-6">Example: Harmonic Oscillator</a><a class="docs-heading-anchor-permalink" href="#Example:-Harmonic-Oscillator-6" title="Permalink"></a></h3><p>As an example we consider the harmonic oscillator, with an additional constraint that enforces energy conservation. While the system itself is energy conserving, most integrators do not respect this property. A possible way of remedying this flaw is to explicitly add energy conservation as an algebraic constraint. </p><p>The dynamical equations are given by</p><p class="math-container">\[\dot{q} (t) = \begin{pmatrix}
+0 &amp; 1 \\
+-k &amp; 0 \\
+\end{pmatrix} q(t) 
++ \nabla \phi (q(t)) \lambda ,
+\qquad
+\phi (q) = \frac{q_2^2}{2} + k \, \frac{q_1^2}{2}
+\qquad
+q \in \mathbb{R}^{2} ,
+\qquad
+\lambda \in \mathbb{R}^{1} .\]</p><p>In order to create an <code>DAEProblem</code> for the harmonic oscillator including the projection on the constant energy manifold, we need to write the following code:</p><pre><code class="language-julia hljs">hamiltonian(t, q, params) = q[2]^2 / 2 + params.k * q[1]^2 / 2
+
+function v(v, t, q, params)
+    v[1] = q[2]
+    v[2] = - params.k * q[1]
+end
+
+function u(u, t, q, λ, params)
+    u[1] = λ[1] * params.k * q[1]
+    u[2] = λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, params)
+    ϕ[1] = hamiltonian(t, q, params)
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+q₀ = [1., 1.]
+λ₀ = [0.]
+params = (k=0.5,)
+
+prob = DAEProblem(v, u, ϕ, tspan, tstep, q₀, λ₀; parameters = params)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Differential Algebraic Equation (DAE)
+
+ with vector fields
+   v = v
+   u = u
+   ū = nothing
+
+ and constraints
+   ϕ = ϕ
+   ψ = nothing
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [1.0, 1.0], λ = [0.0], μ = [0.0])
+
+ Parameters: 
+   (k = 0.5,)</code></pre><h3 id="Partitioned-Differential-Algebraic-Equation-(PDAE)"><a class="docs-heading-anchor" href="#Partitioned-Differential-Algebraic-Equation-(PDAE)">Partitioned Differential Algebraic Equation (PDAE)</a><a id="Partitioned-Differential-Algebraic-Equation-(PDAE)-1"></a><a class="docs-heading-anchor-permalink" href="#Partitioned-Differential-Algebraic-Equation-(PDAE)" title="Permalink"></a></h3><p>A partitioned differential algebraic equation has the form</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t, q(t), p(t)) + u(t, q(t), p(t), \lambda(t)) , \\
+\dot{p} (t) &amp;= f(t, q(t), p(t)) + g(t, q(t), p(t), \lambda(t)) , \\
+0 &amp;= \phi (t, q(t), p(t)) ,
+\end{aligned}\]</p><p>with vector fields <span>$v$</span> and <span>$f$</span>, projection <span>$u$</span> and <span>$g$</span>, algebraic constraint <span>$\phi=0$</span>.</p><p>Some integrators also enforce the secondary constraint <span>$\psi$</span>, that is the time derivative of the algebraic constraint <span>$\phi$</span>. In this case, the system of equations is modified as follows</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t, q(t), p(t)) + u(t, q(t), p(t), \lambda(t)) + \bar{u} (t, q(t), p(t), \mu(t)) , \\
+\dot{p} (t) &amp;= f(t, q(t), p(t)) + g(t, q(t), p(t), \lambda(t)) + \bar{g} (t, q(t), p(t), \mu(t)) , \\
+0 &amp;= \phi (t, q(t), p(t)) , \\
+0 &amp;= \psi (t, q(t), p(t), \dot{q} (t), \dot{p} (t)) .
+\end{aligned}\]</p><h3 id="Example:-Pendulum"><a class="docs-heading-anchor" href="#Example:-Pendulum">Example: Pendulum</a><a id="Example:-Pendulum-1"></a><a class="docs-heading-anchor-permalink" href="#Example:-Pendulum" title="Permalink"></a></h3><p>As an example we consider the pendulum in cartesian coordinates, with a constraint that enforces the solution to respect the length of the pendulum.</p><p>The dynamical equations are given by</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= p (t) , &amp;
+q &amp;\in \mathbb{R}^{2},
+\\
+\dot{p} (t) &amp;= 
+\begin{pmatrix}
+  - \lambda q_1 (t) \\
+1 - \lambda q_2 (t) \\
+\end{pmatrix} , &amp;
+p &amp;\in \mathbb{R}^{2} ,
+\\
+\phi (q) &amp;= q^2 - l^2 , &amp;
+\lambda &amp;\in \mathbb{R}^{1} .
+\end{aligned}\]</p><p>In order to create an <code>PDAEProblem</code> for the pendulum including the projection on the constant length constraint, we need to write the following code:</p><pre><code class="language-julia hljs">function v(v, t, q, p, params)
+    v .= p
+end
+
+function f(f, t, q, p, params)
+    f[1] = 0
+    f[2] = 1
+end
+
+function u(u, t, q, p, λ, params)
+    u .= 0
+end
+
+function g(g, t, q, p, λ, params)
+    g[1] = - λ[1] * q[1]
+    g[2] = - λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, p, params)
+    ϕ[1] = q[1]^2 + q[2]^2 - params.l^2
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+params = (l=0.5,)
+
+q₀ = [params.l, 0.0]
+p₀ = [0.0, 0.1]
+λ₀ = [0.0]
+
+prob = PDAEProblem(v, f, u, g, ϕ, tspan, tstep, q₀, p₀, λ₀; parameters = params)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Partitioned Differential Algebraic Equation (PDAE)
+
+ with vector fields
+   v = v
+   u = u
+   ū = nothing
+   f = f
+   g = g
+   ḡ = nothing
+
+ and constraints
+   ϕ = ϕ
+   ψ = nothing
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5, 0.0], p = [0.0, 0.1], λ = [0.0], μ = [0.0])
+
+ Parameters: 
+   (l = 0.5,)</code></pre><h3 id="Hamiltonian-Differential-Algebraic-Equation-(HDAE)"><a class="docs-heading-anchor" href="#Hamiltonian-Differential-Algebraic-Equation-(HDAE)">Hamiltonian Differential Algebraic Equation (HDAE)</a><a id="Hamiltonian-Differential-Algebraic-Equation-(HDAE)-1"></a><a class="docs-heading-anchor-permalink" href="#Hamiltonian-Differential-Algebraic-Equation-(HDAE)" title="Permalink"></a></h3><p>A Hamiltonian differential algebraic is an initial value problem, that is a canonical Hamiltonian system of equations subject to Dirac constraints,</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t, q(t), p(t)) + u(t, q(t), p(t), \lambda(t)) + \bar{u} (t, q(t), p(t), \mu(t)) , \\
+\dot{p} (t) &amp;= f(t, q(t), p(t)) + g(t, q(t), p(t), \lambda(t)) + \bar{g} (t, q(t), p(t), \mu(t)) , \\
+0 &amp;= \phi (t, q(t), p(t)) , \\
+0 &amp;= \psi (t, q(t), p(t), \dot{q}(t), \dot{p}(t)) ,
+\end{aligned}\]</p><p>with vector fields <span>$v$</span>, <span>$u$</span>, <span>$\bar{u}$</span> and <span>$f$</span>, <span>$g$</span>, <span>$\bar{g}$</span>, primary constraint <span>$\phi(q,p)=0$</span> and secondary constraint <span>$\psi(q,p,\dot{q},\dot{p})=0$</span>.</p><h3 id="Example:-Pendulum-2"><a class="docs-heading-anchor" href="#Example:-Pendulum-2">Example: Pendulum</a><a class="docs-heading-anchor-permalink" href="#Example:-Pendulum-2" title="Permalink"></a></h3><p>As an example we consider the pendulum in cartesian coordinates, with a constraint that enforces the solution to respect the length of the pendulum.</p><p>The Hamiltonian is given by</p><p class="math-container">\[H(q,p) = \frac{1}{2} p^2 + l - q_2 ,\]</p><p>and dynamical equations read</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= p (t) , &amp;
+q &amp;\in \mathbb{R}^{2},
+\\
+\dot{p} (t) &amp;= 
+\begin{pmatrix}
+  - \lambda q_1 (t) \\
+1 - \lambda q_2 (t) \\
+\end{pmatrix} , &amp;
+p &amp;\in \mathbb{R}^{2} ,
+\\
+\phi (q) &amp;= q^2 - l^2 , &amp;
+\lambda &amp;\in \mathbb{R}^{1} .
+\end{aligned}\]</p><p>In order to create an <code>HDAEProblem</code> for the pendulum including the projection on the constant length constraint, we need to write the following code:</p><pre><code class="language-julia hljs">function v(v, t, q, p, params)
+    v .= p
+end
+
+function f(f, t, q, p, params)
+    f[1] = 0
+    f[2] = 1
+end
+
+function u(u, t, q, p, λ, params)
+    u .= 0
+end
+
+function g(g, t, q, p, λ, params)
+    g[1] = - λ[1] * q[1]
+    g[2] = - λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, p, params)
+    ϕ[1] = q[1]^2 + q[2]^2 - params.l^2
+end
+
+function h(t, q, p, params)
+    return (p[1]^2 + p[2]^2)/2 + params.l - q[2]
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+params = (l=0.5,)
+
+q₀ = [params.l, 0.0]
+p₀ = [0.0, 0.1]
+λ₀ = [0.0]
+
+prob = HDAEProblem(v, f, u, g, ϕ, h, tspan, tstep, q₀, p₀, λ₀; parameters = params)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Hamiltonian Differential Algebraic Equation (HDAE)
+
+ with vector fields
+   v = v
+   f = f
+   u = u
+   g = g
+   ū = nothing
+   ḡ = nothing
+
+ and constraints
+   ϕ = ϕ
+   ψ = nothing
+
+ Hamiltonian: H = h
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5, 0.0], p = [0.0, 0.1], λ = [0.0], μ = [0.0])
+
+ Parameters: 
+   (l = 0.5,)</code></pre><h3 id="Implicit-Differential-Algebraic-Equation-(IDAE)"><a class="docs-heading-anchor" href="#Implicit-Differential-Algebraic-Equation-(IDAE)">Implicit Differential Algebraic Equation (IDAE)</a><a id="Implicit-Differential-Algebraic-Equation-(IDAE)-1"></a><a class="docs-heading-anchor-permalink" href="#Implicit-Differential-Algebraic-Equation-(IDAE)" title="Permalink"></a></h3><p>An implicit differential algebraic initial value problem takes the form</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t) + u(t, q(t), v(t), p(t), \lambda(t)) , \\
+\dot{p} (t) &amp;= f(t, q(t), v(t)) + g(t, q(t), v(t), p(t), \lambda(t)) , \\
+p(t) &amp;= ϑ(t, q(t), v(t)) , \\
+0 &amp;= \phi (t, q(t), v(t), p(t)) ,
+\end{aligned}\]</p><p>with force field <span>$f$</span>, the momentum defined by <span>$ϑ$</span>, projections <span>$u$</span> and <span>$g$</span>, algebraic constraint <span>$\phi(t,q,v,p)=0$</span>.</p><p>Some integrators also enforce the secondary constraint <span>$\psi$</span>, that is the time derivative of the algebraic constraint <span>$\phi$</span>. In this case, the system of equations is modified as follows</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t) + u(t, q(t), v(t), p(t), \lambda(t)) + \bar{u} (t, q(t), v(t), p(t), \mu(t)) , \\
+\dot{p} (t) &amp;= f(t, q(t), v(t)) + g(t, q(t), v(t), p(t), \lambda(t)) + \bar{g} (t, q(t), v(t), p(t), \mu(t)) , \\
+p(t) &amp;= ϑ(t, q(t), v(t)) , &amp;&amp; \\
+0 &amp;= \phi (t, q(t), v(t), p(t)) , \\
+0 &amp;= \psi (t, q(t), v(t), p(t), \dot{q} (t), \dot{p} (t)) .
+\end{aligned}\]</p><h3 id="Example:-Pendulum-3"><a class="docs-heading-anchor" href="#Example:-Pendulum-3">Example: Pendulum</a><a class="docs-heading-anchor-permalink" href="#Example:-Pendulum-3" title="Permalink"></a></h3><p>As an example we consider the pendulum in cartesian coordinates, with a constraint that enforces the solution to respect the length of the pendulum.</p><p>The implicit equations are given by</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t) , &amp;
+q &amp;\in \mathbb{R}^{2},
+\\
+\dot{p} (t) &amp;= 
+\begin{pmatrix}
+0 \\
+1 \\
+\end{pmatrix}
+- \lambda(t) q(t) , &amp;
+v &amp;\in \mathbb{R}^{2} ,
+\\
+p(t) &amp;= v(t) , &amp;
+p &amp;\in \mathbb{R}^{2} ,
+\\
+\phi (q) &amp;= q^2 - l^2 , &amp;
+\lambda &amp;\in \mathbb{R}^{1} .
+\end{aligned}\]</p><p>In order to create an <code>IDAEProblem</code> for the pendulum including the projection on the constant length constraint, we need to write the following code:</p><pre><code class="language-julia hljs">function p(p, t, q, v, params)
+    p .= v
+end
+
+function f(f, t, q, v, params)
+    f[1] = 0
+    f[2] = 1
+end
+
+function u(u, t, q, v, p, λ, params)
+    u .= 0
+end
+
+function g(g, t, q, v, p, λ, params)
+    g[1] = - λ[1] * q[1]
+    g[2] = - λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, v, p, params)
+    ϕ[1] = q[1]^2 + q[2]^2 - params.l^2
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+params = (l=0.5,)
+
+q₀ = [params.l, 0.0]
+p₀ = [0.0, 0.1]
+λ₀ = [0.0]
+
+prob = IDAEProblem(p, f, u, g, ϕ, tspan, tstep, q₀, p₀, λ₀; parameters = params)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Implicit Differential Algebraic Equation (IDAE)
+
+ with vector fields
+   ϑ = p
+   f = f
+   u = u
+   g = g
+   ū = nothing
+   ḡ = nothing
+
+ and constraints
+   ϕ = ϕ
+   ψ = nothing
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5, 0.0], p = [0.0, 0.1], v = [0.0, 0.0], λ = [0.0], μ = [0.0])
+
+ Parameters: 
+   (l = 0.5,)</code></pre><h3 id="Lagrangian-Differential-Algebraic-Equation-(LDAE)"><a class="docs-heading-anchor" href="#Lagrangian-Differential-Algebraic-Equation-(LDAE)">Lagrangian Differential Algebraic Equation (LDAE)</a><a id="Lagrangian-Differential-Algebraic-Equation-(LDAE)-1"></a><a class="docs-heading-anchor-permalink" href="#Lagrangian-Differential-Algebraic-Equation-(LDAE)" title="Permalink"></a></h3><p>A special case of an implicit initial value problem is a Lagrangian differential algebraic equation of the form</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t) + u(t, q(t), v(t), p(t), \lambda(t)) + \bar{u} (t, q(t), v(t), p(t), \mu(t)) , \\
+\dot{p} (t) &amp;= f(t, q(t), v(t)) + g(t, q(t), v(t), p(t), \lambda(t)) + \bar{g} (t, q(t), v(t), p(t), \mu(t)) , \\
+p(t) &amp;= ϑ(t, q(t), v(t)) , \\
+0 &amp;= \phi (t, q(t), v(t), p(t)) , \\
+0 &amp;= \psi (t, q(t), v(t), p(t), \dot{q}(t), \dot{p}(t)) ,
+\end{aligned}\]</p><p>with momentum <span>$p$</span> and force field <span>$f$</span>, given by</p><p class="math-container">\[\begin{aligned}
+p &amp;= \frac{\partial L}{\partial v} (q,v) , &amp;
+f &amp;= \frac{\partial L}{\partial q} (q,v) ,
+\end{aligned}\]</p><p>projection fields <span>$u$</span>, <span>$\bar{u}$</span> and <span>$g$</span>, <span>$\bar{g}$</span>. This is a special case of a differential algebraic equation with dynamical variables <span>$(q,p)$</span> and algebraic variables <span>$v$</span>, <span>$\lambda$</span> and <span>$\mu$</span>.</p><h3 id="Example:-Pendulum-4"><a class="docs-heading-anchor" href="#Example:-Pendulum-4">Example: Pendulum</a><a class="docs-heading-anchor-permalink" href="#Example:-Pendulum-4" title="Permalink"></a></h3><p>As an example we consider the pendulum in cartesian coordinates, with a constraint that enforces the solution to respect the length of the pendulum.</p><p>The Hamilton-Pontryagin principle for this system is given by</p><p class="math-container">\[\delta \int \limits_{t_0}^{t_1} \big[ L(q, v) + \left&lt; p , \dot{q} - v \right&gt; + \lambda \, \phi (q) \big] = 0 ,\]</p><p>with Lagrangian</p><p class="math-container">\[L(q,v) = \frac{1}{2} v^2 - (l - q_2) ,\]</p><p>and constraint</p><p class="math-container">\[\phi(q) = q^2 - l^2 .\]</p><p>The resulting implicit equations read</p><p class="math-container">\[\begin{aligned}
+\dot{q} (t) &amp;= v(t) , &amp;
+q &amp;\in \mathbb{R}^{2},
+\\
+\dot{p} (t) &amp;= 
+\begin{pmatrix}
+0 \\
+1 \\
+\end{pmatrix}
+- \lambda(t) q(t) , &amp;
+v &amp;\in \mathbb{R}^{2} ,
+\\
+p(t) &amp;= v(t) , &amp;
+p &amp;\in \mathbb{R}^{2} ,
+\\
+\phi (q) &amp;= q^2 - l^2 , &amp;
+\lambda &amp;\in \mathbb{R}^{1} .
+\end{aligned}\]</p><p>In order to create an <code>LDAEProblem</code> for the pendulum including the projection on the constant length constraint, we need to write the following code:</p><pre><code class="language-julia hljs">function p(p, t, q, v, params)
+    p .= v
+end
+
+function f(f, t, q, v, params)
+    f[1] = 0
+    f[2] = 1
+end
+
+function u(u, t, q, v, p, λ, params)
+    u .= 0
+end
+
+function g(g, t, q, v, p, λ, params)
+    g[1] = - λ[1] * q[1]
+    g[2] = - λ[1] * q[2]
+end
+
+function ϕ(ϕ, t, q, v, p, params)
+    ϕ[1] = q[1]^2 + q[2]^2 - params.l^2
+end
+
+function ω(f, t, q, v, params)
+    ω[1,1] =  0
+    ω[1,2] = -1
+    ω[2,1] = +1
+    ω[2,2] =  0
+end
+
+function l(t, q, v, params)
+    return (v[1]^2 + v[2]^2)/2 - (params.l - q[2])
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.1
+params = (l=0.5,)
+
+q₀ = [params.l, 0.0]
+p₀ = [0.0, 0.1]
+λ₀ = [0.0]
+
+prob = LDAEProblem(p, f, u, g, ϕ, ω, l, tspan, tstep, q₀, p₀, λ₀; parameters = params)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Lagrangian Differential Algebraic Equation (LDAE)
+
+ with vector fields
+   ϑ = p
+   f = f
+   u = u
+   g = g
+   ū = nothing
+   ḡ = nothing
+
+ and constraints
+   ϕ = ϕ
+   ψ = nothing
+
+ Lagrangian: L = l
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.1 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5, 0.0], p = [0.0, 0.1], v = [0.0, 0.0], λ = [0.0], μ = [0.0])
+
+ Parameters: 
+   (l = 0.5,)</code></pre><h2 id="Stochastic-Differential-Equations-(SDEs)"><a class="docs-heading-anchor" href="#Stochastic-Differential-Equations-(SDEs)">Stochastic Differential Equations (SDEs)</a><a id="Stochastic-Differential-Equations-(SDEs)-1"></a><a class="docs-heading-anchor-permalink" href="#Stochastic-Differential-Equations-(SDEs)" title="Permalink"></a></h2><p>Defines a stochastic differential initial value problem</p><p class="math-container">\[\begin{aligned}
+dq (t) &amp;= v(t, q(t)) \, dt + B(t, q(t)) \circ dW , &amp; q(t_{0}) &amp;= q_{0} ,
+\end{aligned}\]</p><p>with drift vector field <span>$v$</span>, diffusion matrix <span>$B$</span>, initial conditions <span>$q_{0}$</span>, the dynamical variable <span>$q$</span> taking values in <span>$\mathbb{R}^{d}$</span>, and the m-dimensional Wiener process W</p><h4 id="Example:-Kubo-Oscillator"><a class="docs-heading-anchor" href="#Example:-Kubo-Oscillator">Example: Kubo Oscillator</a><a id="Example:-Kubo-Oscillator-1"></a><a class="docs-heading-anchor-permalink" href="#Example:-Kubo-Oscillator" title="Permalink"></a></h4><pre><code class="language-julia hljs">function v(t, q, v, params)
+    v[1] = + params.λ * q[2]
+    v[2] = - params.λ * q[1]
+end
+
+function B(t, q, B, params)
+    for j in axes(B, 2)
+        B[1,j] = + params.ν * q[2]
+        B[2,j] = - params.ν * q[1]
+    end
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.01
+q₀ = [0.5, 0.0]
+
+prob = SDEProblem(v, B, WienerProcess(), tspan, tstep, q₀; parameters = (λ=2.0, μ=1.0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Stratonovich Stochastic Differential Equation (SDE)
+
+ with vector field
+   v = v
+
+ and diffusion matrix
+   B = B
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.01 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5, 0.0])
+
+ Parameters: 
+   (λ = 2.0, μ = 1.0)</code></pre><h3 id="Partitioned-Stochastic-Differential-Equation-(PSDE)"><a class="docs-heading-anchor" href="#Partitioned-Stochastic-Differential-Equation-(PSDE)">Partitioned Stochastic Differential Equation (PSDE)</a><a id="Partitioned-Stochastic-Differential-Equation-(PSDE)-1"></a><a class="docs-heading-anchor-permalink" href="#Partitioned-Stochastic-Differential-Equation-(PSDE)" title="Permalink"></a></h3><p>A partitioned stochastic differential equations is an initial value problem of the form</p><p class="math-container">\[\begin{aligned}
+dq (t) &amp;= v(t, q(t), p(t)) \, dt + B(t, q(t), p(t)) \circ dW , &amp; q(t_{0}) &amp;= q_{0} , \\
+dp (t) &amp;= f(t, q(t), p(t)) \, dt + G(t, q(t), p(t)) \circ dW , &amp; p(t_{0}) &amp;= p_{0}
+\end{aligned}\]</p><p>with the drift vector fields <span>$v$</span> and <span>$f$</span>, diffusion matrices <span>$B$</span> and <span>$G$</span>, initial conditions <span>$q_{0}$</span> and <span>$p_{0}$</span>, the dynamical variables <span>$(q,p)$</span> taking values in <span>$\mathbb{R}^{d} \times \mathbb{R}^{d}$</span>, and the m-dimensional Wiener process W</p><h4 id="Example:-Kubo-Oscillator-2"><a class="docs-heading-anchor" href="#Example:-Kubo-Oscillator-2">Example: Kubo Oscillator</a><a class="docs-heading-anchor-permalink" href="#Example:-Kubo-Oscillator-2" title="Permalink"></a></h4><pre><code class="language-julia hljs">function v(v, t, q, p, params)
+    v[1] = + params.λ * p[1]
+end
+
+function f(f, t, q, p, params)
+    f[1] = - params.λ * q[1]
+end
+
+function B(B, t, q, p, params)
+    B[1,1] = params.ν * p[1]
+end
+
+function G(G, t, q, p, params)
+    G[1,1] = - params.ν * q[1]
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.01
+q₀ = [0.5]
+p₀ = [0.0]
+
+prob = PSDEProblem(v, f, B, G, WienerProcess(), tspan, tstep, q₀, p₀; parameters = (λ=2.0, μ=1.0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Stratonovich Partitioned Stochastic Differential Equation (PSDE)
+
+ with vector fields
+   v = v
+   f = f
+
+ and diffusion matrices
+   B = B
+   G = G
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.01 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5], p = [0.0])
+
+ Parameters: 
+   (λ = 2.0, μ = 1.0)</code></pre><h3 id="Split-Partitioned-Stochastic-Differential-Equation-(SPSDE)"><a class="docs-heading-anchor" href="#Split-Partitioned-Stochastic-Differential-Equation-(SPSDE)">Split Partitioned Stochastic Differential Equation (SPSDE)</a><a id="Split-Partitioned-Stochastic-Differential-Equation-(SPSDE)-1"></a><a class="docs-heading-anchor-permalink" href="#Split-Partitioned-Stochastic-Differential-Equation-(SPSDE)" title="Permalink"></a></h3><p>Defines a partitioned stochastic differential initial value problem</p><p class="math-container">\[\begin{aligned}
+dq (t) &amp;=   v(t, q(t), p(t)) \, dt + B(t, q(t), p(t)) \circ dW , &amp; q(t_{0}) &amp;= q_{0} , \\
+dp (t) &amp;= [ f_1(t, q(t), p(t)) + f_2(t, q(t), p(t)) ] \, dt + [ G_1(t, q(t), p(t)) + G_2(t, q(t), p(t)) ] \circ dW , &amp; p(t_{0}) &amp;= p_{0} ,
+\end{aligned}\]</p><p>with the drift vector fields <span>$v$</span> and <span>$f_i$</span>, diffusion matrices <span>$B$</span> and <span>$G_i$</span>, initial conditions <span>$q_{0}$</span> and <span>$p_{0}$</span>, the dynamical variables <span>$(q,p)$</span> taking values in <span>$\mathbb{R}^{d} \times \mathbb{R}^{d}$</span>, and the m-dimensional Wiener process W</p><h4 id="Example:-Kubo-Oscillator-3"><a class="docs-heading-anchor" href="#Example:-Kubo-Oscillator-3">Example: Kubo Oscillator</a><a class="docs-heading-anchor-permalink" href="#Example:-Kubo-Oscillator-3" title="Permalink"></a></h4><pre><code class="language-julia hljs">function v(v, t, q, p, params)
+    v[1] = + params.λ * p[1]
+end
+
+function f1(f, t, q, p, params)
+    f[1] = - params.λ * q[1]
+end
+
+function f2(f, t, q, p, params)
+    f[1] = 0
+end
+
+function B(B, t, q, p, params)
+    B[1,1] = params.ν * p[1]
+end
+
+function G1(G, t, q, p, params)
+    G[1,1] = - params.ν * q[1]
+end
+
+function G2(G, t, q, p, params)
+    G[1,1] = 0
+end
+
+tspan = (0.0, 1.0)
+tstep = 0.01
+q₀ = [0.5]
+p₀ = [0.0]
+
+prob = SPSDEProblem(v, f1, f2, B, G1, G2, WienerProcess(), tspan, tstep, q₀, p₀; parameters = (λ=2.0, μ=1.0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Geometric Equation Problem for Stratonovich Split Partitioned Stochastic Differential Equation (PSDE)
+
+ with vector fields
+   v  = v
+   f1 = f1
+   f2 = f2
+
+ and diffusion matrices
+   B  = B
+   G1 = G1
+   G2 = G2
+
+ Invariants: 
+   NullInvariants()
+
+ Timespan: (0.0, 1.0) 
+ Timestep: 0.01 
+
+ Initial conditions: 
+   (t = 0.0, q = [0.5], p = [0.0])
+
+ Parameters: 
+   (λ = 2.0, μ = 1.0)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tutorial/">« Tutorial</a><a class="docs-footer-nextpage" href="../methods/">Methods »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.13.0 on <span class="colophon-date" title="Friday 4 July 2025 16:20">Friday 4 July 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
