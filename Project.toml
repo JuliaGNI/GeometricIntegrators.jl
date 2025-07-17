@@ -1,7 +1,7 @@
 name = "GeometricIntegrators"
 uuid = "dcce2d33-59f6-5b8d-9047-0defad88ae06"
-version = "0.14.11"
 authors = ["Michael Kraus <michael.kraus@ipp.mpg.de>"]
+version = "0.14.11"
 
 [deps]
 CompactBasisFunctions = "a09551c4-f815-4143-809e-dd1986753ba7"
@@ -30,7 +30,7 @@ Documenter = "1"
 ForwardDiff = "0.10, 1"
 GenericLinearAlgebra = "0.2, 0.3"
 GeometricBase = "0.11"
-GeometricEquations = "0.19"
+GeometricEquations = "0.19, 0.20"
 GeometricSolutions = "0.5"
 OffsetArrays = "1"
 Parameters = "0.12"
@@ -52,11 +52,4 @@ SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = [
-    "Aqua",
-    "GeometricEquations",
-    "GeometricProblems",
-    "RungeKutta",
-    "SafeTestsets",
-    "Test",
-]
+test = ["Aqua", "GeometricEquations", "GeometricProblems", "RungeKutta", "SafeTestsets", "Test"]
