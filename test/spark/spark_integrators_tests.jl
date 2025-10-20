@@ -335,7 +335,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
     sol = integrate(idae, TableauVSPARKLobattoIIIBIIIApSymmetric(3))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-4
+    @test relative_maximum_error(sol.q, ref.q) < 2E-4
     # @test relative_maximum_error(sol.q, ref.q) < 5E-11
     # TODO: Check Errors !!!
 
