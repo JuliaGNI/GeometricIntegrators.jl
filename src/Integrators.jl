@@ -46,6 +46,8 @@ import GeometricIntegratorsBase: default_options, initialize!, initmethod, inits
 
 
 import GeometricIntegratorsBase: isexplicit, isimplicit, issymmetric, issymplectic, isenergypreserving, isstifflyaccurate, implicit_update
+import GeometricIntegratorsBase: isodemethod, ispodemethod, ishodemethod, isiodemethod, islodemethod, issodemethod
+import GeometricIntegratorsBase: isdaemethod, ispdaemethod, ishdaemethod, isidaemethod, isldaemethod
 import GeometricIntegratorsBase: default_solver, default_iguess, solversize
 
 import RungeKutta
@@ -87,6 +89,8 @@ export name, order, description, reference
 # export nstages, eachstage, coefficients, weights, nodes
 export hasnullvector, nullvector
 export isexplicit, isimplicit, issymmetric, issymplectic, isenergypreserving, isstifflyaccurate
+export isodemethod, ispodemethod, ishodemethod, isiodemethod, islodemethod, issodemethod
+export isdaemethod, ispdaemethod, ishdaemethod, isidaemethod, isldaemethod
 
 # include("integrators/methods.jl")
 

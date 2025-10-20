@@ -12,7 +12,7 @@ performant, e.g., when carrying out long-time simulations with intermediate
 saving of the solution.
 In such cases, it is better to preallocate a solution object by
 ```@example 1
-sol = Solution(prob)
+sol = GeometricSolution(prob)
 ```
 where the first argument is an equation, the second argument is the time step
 and the third argument is the number of time steps that will be computed in one
