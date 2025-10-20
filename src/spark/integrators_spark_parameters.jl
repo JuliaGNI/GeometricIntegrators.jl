@@ -1,6 +1,6 @@
 
 "Parameters for right-hand side function of Specialised Partitioned Additive Runge-Kutta methods."
-mutable struct AbstractParametersSPARK{IT, DT, TT, D, S, R, P, equType <: NamedTuple, tabType <: AbstractTableau} <: Parameters{DT,TT}
+mutable struct AbstractParametersSPARK{IT,DT,TT,D,S,R,P,equType<:NamedTuple,tabType<:AbstractTableau} <: Parameters{DT,TT}
     equs::equType
     tab::tabType
     Δt::TT
@@ -12,25 +12,25 @@ mutable struct AbstractParametersSPARK{IT, DT, TT, D, S, R, P, equType <: NamedT
 
     function AbstractParametersSPARK{IT,DT,D,S,R,P}(equs::equType, tab::tabType, Δt::TT) where {IT,DT,TT,D,S,R,P,equType,tabType}
         # create solution vectors
-        q = zeros(DT,D)
-        p = zeros(DT,D)
-        λ = zeros(DT,D)
+        q = zeros(DT, D)
+        p = zeros(DT, D)
+        λ = zeros(DT, D)
 
-        new{IT, DT, TT, D, S, R, P, equType, tabType}(equs, tab, Δt, zero(TT), q, p, λ)
+        new{IT,DT,TT,D,S,R,P,equType,tabType}(equs, tab, Δt, zero(TT), q, p, λ)
     end
 
     function AbstractParametersSPARK{IT,DT,D}(equs::NamedTuple, tab::AbstractTableauSPARK, Δt::Number) where {IT,DT,D}
-        AbstractParametersSPARK{IT, DT, D, tab.s, tab.r, tab.ρ}(equs, tab, Δt)
+        AbstractParametersSPARK{IT,DT,D,tab.s,tab.r,tab.ρ}(equs, tab, Δt)
     end
 
     function AbstractParametersSPARK{IT,DT,D}(equs::NamedTuple, tab::AbstractTableau, Δt::Number) where {IT,DT,D}
-        AbstractParametersSPARK{IT, DT, D, tab.s, tab.r, 0}(equs, tab, Δt)
+        AbstractParametersSPARK{IT,DT,D,tab.s,tab.r,0}(equs, tab, Δt)
     end
 end
 
-function update_params!(params::AbstractParametersSPARK, sol::SolutionStepPDAE)
+function update_params!(params::AbstractParametersSPARK, sol::SolutionStep{PDAE})
     # set time for nonlinear solver and copy previous solution
-    solstep(int).t̄  = sol.t
+    solstep(int).t̄ = sol.t
     solstep(int).q̄ .= solstep(int).q̄
     solstep(int).p̄ .= solstep(int).p̄
     params.λ .= sol.λ

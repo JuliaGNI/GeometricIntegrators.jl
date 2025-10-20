@@ -2,12 +2,12 @@
 function update!(x::AbstractArray{T}, ẋ::StageVector{T}, tableau::Tableau, Δt) where {T}
     @assert length(tableau.b) == length(ẋ)
     @assert length(x) == length(ẋ[1])
- 
-    for i in eachindex(tableau.b,ẋ)
+
+    for i in eachindex(tableau.b, ẋ)
         x .+= Δt .* tableau.b[i] .* ẋ[i]
     end
 
-    for i in eachindex(tableau.b̂,ẋ)
+    for i in eachindex(tableau.b̂, ẋ)
         x .+= Δt .* tableau.b̂[i] .* ẋ[i]
     end
 
@@ -30,7 +30,7 @@ function update!(x::AbstractVector{T}, xₑᵣᵣ::AbstractVector{T}, ẋ::Stage
     @assert length(x) == length(ẋ[1])
     @assert length(x) == length(xₑᵣᵣ)
 
-    for k in eachindex(x,xₑᵣᵣ)
+    for k in eachindex(x, xₑᵣᵣ)
         for i in eachindex(ẋ)
             x[k], xₑᵣᵣ[k] = compensated_summation(x[k], Δt * b[i] * ẋ[i][k], xₑᵣᵣ[k])
         end
@@ -44,16 +44,16 @@ function update!(x::AbstractVector{T}, xₑᵣᵣ::AbstractVector{T}, ẋ::Stage
     update!(x, xₑᵣᵣ, ẋ, b̂, Δt)
 end
 
-function update!(solstep::Union{SolutionStepODE,SolutionStepDAE}, V::StageVector, tableau::Tableau, Δt)
+function update!(solstep::Union{SolutionStep{ODE},SolutionStep{DAE}}, V::StageVector, tableau::Tableau, Δt)
     update!(solstep.q, solstep.q̃, V, tableau.b, tableau.b̂, Δt)
 end
 
-function update!(solstep::Union{SolutionStepPODE,SolutionStepPDAE}, V::StageVector, F::StageVector, tableau::Tableau, Δt)
+function update!(solstep::Union{SolutionStep{PODE},SolutionStep{PDAE}}, V::StageVector, F::StageVector, tableau::Tableau, Δt)
     update!(solstep.q, solstep.q̃, V, tableau.b, tableau.b̂, Δt)
     update!(solstep.p, solstep.p̃, F, tableau.b, tableau.b̂, Δt)
 end
 
-function update!(solstep::Union{SolutionStepPODE,SolutionStepPDAE}, V::StageVector, F::StageVector, tableau::PartitionedTableau, Δt)
+function update!(solstep::Union{SolutionStep{PODE},SolutionStep{PDAE}}, V::StageVector, F::StageVector, tableau::PartitionedTableau, Δt)
     update!(solstep.q, solstep.q̃, V, tableau.q.b, tableau.q.b̂, Δt)
     update!(solstep.p, solstep.p̃, F, tableau.p.b, tableau.p.b̂, Δt)
 end
@@ -99,7 +99,7 @@ function update_multiplier!(λ::AbstractVector{T}, Λ::StageVector{T}, b::Abstra
     local t::T
     @inbounds for i in eachindex(λ)
         t = zero(T)
-        for j in eachindex(b,Λ)
+        for j in eachindex(b, Λ)
             t += b[j] * Λ[j][i]
         end
         λ[i] = t

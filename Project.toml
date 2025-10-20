@@ -10,6 +10,7 @@ ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
 GeometricBase = "9a0b12b7-583b-4f04-aa1f-d8551b6addc9"
 GeometricEquations = "c85262ba-a08a-430a-b926-d29770767bf2"
+GeometricIntegratorsBase = "71212ab4-08a2-48eb-a02b-4cbad0e9c44a"
 GeometricSolutions = "7843afe4-64f4-4df4-9231-049495c56661"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
@@ -29,8 +30,9 @@ CompactBasisFunctions = "0.2"
 Documenter = "1"
 ForwardDiff = "0.10, 1"
 GenericLinearAlgebra = "0.2, 0.3"
-GeometricBase = "0.11"
-GeometricEquations = "0.19"
+GeometricBase = "0.12"
+GeometricEquations = "0.20"
+GeometricIntegratorsBase = "0.1"
 GeometricSolutions = "0.5"
 OffsetArrays = "1"
 Parameters = "0.12"
@@ -52,11 +54,4 @@ SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = [
-    "Aqua",
-    "GeometricEquations",
-    "GeometricProblems",
-    "RungeKutta",
-    "SafeTestsets",
-    "Test",
-]
+test = ["Aqua", "GeometricEquations", "GeometricProblems", "RungeKutta", "SafeTestsets", "Test"]

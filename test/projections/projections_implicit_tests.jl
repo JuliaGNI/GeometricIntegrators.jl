@@ -9,11 +9,11 @@ const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
 const Δt = 0.01
 const nt = 10
-const tspan = (t₀, Δt*nt)
+const tspan = (t₀, Δt * nt)
 
-ode  = odeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
-iode = iodeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
-ref  = integrate(ode, Gauss(8))
+ode = odeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+iode = iodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+ref = integrate(ode, Gauss(8))
 
 
 @testset "$(rpad("Post-projection with Runge-Kutta integrators for implicit equations",80))" begin

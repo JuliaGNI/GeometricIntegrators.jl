@@ -10,13 +10,13 @@ const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
 const Δt = 0.01
 const nt = 10
-const tspan = (t₀, Δt*nt)
+const tspan = (t₀, Δt * nt)
 
-ode  = odeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
-iode = iodeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
-lode = lodeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
+ode = odeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+iode = iodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+lode = lodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
 
-ref  = integrate(ode, Gauss(8))
+ref = integrate(ode, Gauss(8))
 
 
 @testset "$(rpad("1st Order DVIs",80))" begin

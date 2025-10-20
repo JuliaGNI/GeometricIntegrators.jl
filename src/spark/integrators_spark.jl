@@ -2,16 +2,16 @@
 "Holds the tableau of an Specialised Partitioned Additive Runge-Kutta method."
 const TableauSPARK = AbstractTableauSPARK{:spark}
 
-function RungeKutta.check_symplecticity(tab::TableauSPARK{T}; atol=16*eps(T), rtol=16*eps(T)) where {T}
-    s_αa_qp̃ = [isapprox(tab.q.b[i] * tab.p.α[i,j] + tab.p.β[j] * tab.q̃.a[j,i], tab.q.b[i] * tab.p.β[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.r]
-    s_α_q̃p̃  = [isapprox(tab.p.β[i] * tab.q̃.α[i,j] + tab.q.β[j] * tab.p̃.α[j,i], tab.p.β[i] * tab.q.β[j]; atol=atol, rtol=rtol) for i in 1:tab.r, j in 1:tab.r]
-    s_b_qp  = isapprox.(tab.q.b, tab.p.b; atol=atol, rtol=rtol)
-    s_ω     = [isapprox(tab.ω[i,j], (i == j ? 1 : 0); atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.s+1]
+function RungeKutta.check_symplecticity(tab::TableauSPARK{T}; atol=16 * eps(T), rtol=16 * eps(T)) where {T}
+    s_αa_qp̃ = [isapprox(tab.q.b[i] * tab.p.α[i, j] + tab.p.β[j] * tab.q̃.a[j, i], tab.q.b[i] * tab.p.β[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.r]
+    s_α_q̃p̃ = [isapprox(tab.p.β[i] * tab.q̃.α[i, j] + tab.q.β[j] * tab.p̃.α[j, i], tab.p.β[i] * tab.q.β[j]; atol=atol, rtol=rtol) for i in 1:tab.r, j in 1:tab.r]
+    s_b_qp = isapprox.(tab.q.b, tab.p.b; atol=atol, rtol=rtol)
+    s_ω = [isapprox(tab.ω[i, j], (i == j ? 1 : 0); atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.s+1]
 
     return (s_αa_qp̃, s_α_q̃p̃, s_b_qp, s_ω)
 end
 
-function Integrators.symplecticity_conditions(::TableauSPARK)
+function GeometricIntegratorsBase.symplecticity_conditions(::TableauSPARK)
     (
         """`` b^{1}_{i} b^{3}_{j} = b^{3}_{j} \\tilde{a}^{1}_{ji} + b^{1}_{i} a^{3}_{ij} ``""",
         """`` b^{2}_{i} b^{3}_{j} = b^{3}_{j} \\tilde{a}^{2}_{ji} + b^{2}_{i} \\tilde{a}^{3}_{ij} ``""",
@@ -21,7 +21,7 @@ function Integrators.symplecticity_conditions(::TableauSPARK)
 end
 
 
-struct SPARKMethod{TT <: TableauSPARK} <: ISPARKMethod
+struct SPARKMethod{TT<:TableauSPARK} <: ISPARKMethod
     tableau::TT
 end
 
@@ -63,7 +63,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{aligned}
 ```
 """
-const IntegratorSPARK{DT,TT} = GeometricIntegrator{<:Union{IDAEProblem{DT,TT},LDAEProblem{DT,TT}}, <:SPARKMethod}
+const IntegratorSPARK{DT,TT} = GeometricIntegrator{<:Union{IDAEProblem{DT,TT},LDAEProblem{DT,TT}},<:SPARKMethod}
 
 function Base.show(io::IO, int::IntegratorSPARK)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for index-two DAE systems:\n")
@@ -82,11 +82,11 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SPARKMe
     for i in 1:nstages(int)
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).q.c[i],
-            q = cache(int).Qi[i],
-            p = cache(int).Pi[i],
-            v = cache(int).Vi[i],
-            f = cache(int).Fi[i],
+            t=history.t[1] + timestep(int) * tableau(int).q.c[i],
+            q=cache(int).Qi[i],
+            p=cache(int).Pi[i],
+            v=cache(int).Vi[i],
+            f=cache(int).Fi[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -103,18 +103,18 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SPARKMe
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).q̃.c[i],
-            q = cache(int).Qp[i],
-            p = cache(int).Pp[i],
-            v = cache(int).Vp[i],
-            f = cache(int).Fp[i],
+            t=history.t[1] + timestep(int) * tableau(int).q̃.c[i],
+            q=cache(int).Qp[i],
+            p=cache(int).Pp[i],
+            v=cache(int).Vp[i],
+            f=cache(int).Fp[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
         for k in 1:ndims(int)
             C.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+1] = (C.Qp[i][k] - sol.q[k]) / timestep(int)
             C.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+2] = (C.Pp[i][k] - sol.p[k]) / timestep(int)
-            C.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+3] =  C.Vp[i][k]
+            C.x[2*ndims(int)*nstages(int)+3*(ndims(int)*(i-1)+k-1)+3] = C.Vp[i][k]
         end
     end
 
@@ -154,7 +154,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         # compute f(X)
         # TODO: Solve Problem !!!
         # The function f depends von v but Vi has never been initialized !
-        # For degenerate Lagrangians this might be just right, as the corresponding 
+        # For degenerate Lagrangians this might be just right, as the corresponding
         # term in F that multiplies v should not be there in the first place
         # (cf. SPARK paper) but in general this will cause problems
         # tqᵢ = solstep(int).t̄ + timestep(int) * tableau(int).q.c[i]
@@ -222,14 +222,14 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
     for i in 1:S
         for k in 1:D
-            b[2*(D*(i-1)+k-1)+1] = - C.Yi[i][k]
-            b[2*(D*(i-1)+k-1)+2] = - C.Zi[i][k]
+            b[2*(D*(i-1)+k-1)+1] = -C.Yi[i][k]
+            b[2*(D*(i-1)+k-1)+2] = -C.Zi[i][k]
             for j in 1:S
-                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[i,j] * C.Fi[j][k]
+                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[i, j] * C.Fi[j][k]
             end
             for j in 1:R
-                b[2*(D*(i-1)+k-1)+1] += tableau(int).q.α[i,j] * C.Up[j][k]
-                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.α[i,j] * C.Gp[j][k]
+                b[2*(D*(i-1)+k-1)+1] += tableau(int).q.α[i, j] * C.Up[j][k]
+                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.α[i, j] * C.Gp[j][k]
             end
         end
     end
@@ -237,15 +237,15 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = - [(Y-AV-AU), (Z-AF-AG)]
     for i in 1:R
         for k in 1:D
-            b[2*D*S+3*(D*(i-1)+k-1)+1] = - C.Yp[i][k]
-            b[2*D*S+3*(D*(i-1)+k-1)+2] = - C.Zp[i][k]
+            b[2*D*S+3*(D*(i-1)+k-1)+1] = -C.Yp[i][k]
+            b[2*D*S+3*(D*(i-1)+k-1)+2] = -C.Zp[i][k]
             b[2*D*S+3*(D*(i-1)+k-1)+3] = 0
             for j in 1:S
-                b[2*D*S+3*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[i,j] * C.Fi[j][k]
+                b[2*D*S+3*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[i, j] * C.Fi[j][k]
             end
             for j in 1:R
-                b[2*D*S+3*(D*(i-1)+k-1)+1] += tableau(int).q̃.α[i,j] * C.Up[j][k]
-                b[2*D*S+3*(D*(i-1)+k-1)+2] += tableau(int).p̃.α[i,j] * C.Gp[j][k]
+                b[2*D*S+3*(D*(i-1)+k-1)+1] += tableau(int).q̃.α[i, j] * C.Up[j][k]
+                b[2*D*S+3*(D*(i-1)+k-1)+2] += tableau(int).p̃.α[i, j] * C.Gp[j][k]
             end
         end
     end
@@ -254,9 +254,9 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     for i in 1:R-P
         for k in 1:D
             for j in 1:R
-                b[2*D*S+3*(D*(i-1)+k-1)+3] -= tableau(int).ω[i,j] * C.Φp[j][k]
+                b[2*D*S+3*(D*(i-1)+k-1)+3] -= tableau(int).ω[i, j] * C.Φp[j][k]
             end
-            b[2*D*S+3*(D*(i-1)+k-1)+3] -= tableau(int).ω[i,R+1] * C.ϕ̃[k]
+            b[2*D*S+3*(D*(i-1)+k-1)+3] -= tableau(int).ω[i, R+1] * C.ϕ̃[k]
         end
     end
 

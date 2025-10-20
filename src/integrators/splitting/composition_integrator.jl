@@ -41,7 +41,6 @@ methods(c::Composition{<:GeometricMethod}, neqs) = Tuple(method(c) for _ in 1:ne
 
 splitting(c::Composition) = c.splitting
 
-_options(methods::Tuple) = Tuple([default_options() for _ in methods])
 _solvers(methods::Tuple) = Tuple([default_solver(m) for m in methods])
 _iguesses(methods::Tuple) = Tuple([default_iguess(m) for m in methods])
 
@@ -66,17 +65,16 @@ struct CompositionIntegrator{
         problem::SODEProblem,
         splitting::AbstractSplittingMethod,
         methods::Tuple;
-        options=_options(methods),
         solvers=_solvers(methods),
         initialguesses=_iguesses(methods))
 
-        @assert length(methods) == length(options) == length(solvers) == length(initialguesses) == _neqs(problem)
+        @assert length(methods) == length(solvers) == length(initialguesses) == _neqs(problem)
 
         # get splitting indices and coefficients
         f, c = coefficients(problem, splitting)
 
         # construct composition integrators
-        subints = Tuple(GeometricIntegrator(SubstepProblem(problem, c[i], f[i]), methods[f[i]]; solver=solvers[f[i]], options[f[i]]...) for i in eachindex(f, c))
+        subints = Tuple(GeometricIntegrator(SubstepProblem(problem, c[i], f[i]), methods[f[i]]; solver=solvers[f[i]]) for i in eachindex(f, c))
 
         new{typeof(splitting),typeof(problem),typeof(subints)}(problem, splitting, subints)
     end
@@ -86,6 +84,7 @@ function GeometricIntegrator(problem::SODEProblem, comp::Composition; kwargs...)
     CompositionIntegrator(problem, splitting(comp), methods(comp, _neqs(problem)); kwargs...)
 end
 
+cache(int::CompositionIntegrator) = NoCache{datatype(problem(int))}()
 problem(int::CompositionIntegrator) = int.problem
 subints(int::CompositionIntegrator) = int.subints
 method(int::CompositionIntegrator) = int.method

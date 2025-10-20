@@ -1,19 +1,19 @@
 
 const TableauVSPARKprimary = AbstractTableauSPARK{:vspark_primary}
 
-function RungeKutta.check_symplecticity(tab::TableauVSPARKprimary{T}; atol=16*eps(T), rtol=16*eps(T)) where {T}
-    s_a_qp  = [isapprox(tab.p.b[i] * tab.q.a[i,j] + tab.q.b[j] * tab.p.a[j,i], tab.p.b[i] * tab.q.b[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.s]
-    s_α_q̃p̃  = [isapprox(tab.p.β[i] * tab.q̃.α[i,j] + tab.q.β[j] * tab.p̃.α[j,i], tab.p.β[i] * tab.q.β[j]; atol=atol, rtol=rtol) for i in 1:tab.r, j in 1:tab.r]
-    s_αa_q̃p = [isapprox(tab.p.b[i] * tab.q.α[i,j] + tab.q.β[j] * tab.p̃.a[j,i], tab.p.b[i] * tab.q.β[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.r]
-    s_αa_qp̃ = [isapprox(tab.q.b[i] * tab.p.α[i,j] + tab.p.β[j] * tab.q̃.a[j,i], tab.q.b[i] * tab.p.β[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.r]
-    s_b_qp  = isapprox.(tab.q.b, tab.p.b; atol=atol, rtol=rtol)
-    s_β_qp  = isapprox.(tab.q.β, tab.p.β; atol=atol, rtol=rtol)
+function RungeKutta.check_symplecticity(tab::TableauVSPARKprimary{T}; atol=16 * eps(T), rtol=16 * eps(T)) where {T}
+    s_a_qp = [isapprox(tab.p.b[i] * tab.q.a[i, j] + tab.q.b[j] * tab.p.a[j, i], tab.p.b[i] * tab.q.b[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.s]
+    s_α_q̃p̃ = [isapprox(tab.p.β[i] * tab.q̃.α[i, j] + tab.q.β[j] * tab.p̃.α[j, i], tab.p.β[i] * tab.q.β[j]; atol=atol, rtol=rtol) for i in 1:tab.r, j in 1:tab.r]
+    s_αa_q̃p = [isapprox(tab.p.b[i] * tab.q.α[i, j] + tab.q.β[j] * tab.p̃.a[j, i], tab.p.b[i] * tab.q.β[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.r]
+    s_αa_qp̃ = [isapprox(tab.q.b[i] * tab.p.α[i, j] + tab.p.β[j] * tab.q̃.a[j, i], tab.q.b[i] * tab.p.β[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.r]
+    s_b_qp = isapprox.(tab.q.b, tab.p.b; atol=atol, rtol=rtol)
+    s_β_qp = isapprox.(tab.q.β, tab.p.β; atol=atol, rtol=rtol)
 
     return (s_a_qp, s_α_q̃p̃, s_αa_q̃p, s_αa_qp̃, s_b_qp, s_β_qp)
 end
 
 
-function Integrators.symplecticity_conditions(::TableauVSPARKprimary)
+function GeometricIntegratorsBase.symplecticity_conditions(::TableauVSPARKprimary)
     (
         """`` b^{p}_{i} b^{q}_{j} = b^{p}_{i} a^{q}_{ij} + b^{q}_{j} a^{p}_{ji} ``""",
         """`` \\beta^{p}_{i} \\beta^{q}_{j} = \\beta^{p}_{i} \\tilde{\\alpha}^{q}_{ij} + \\beta^{q}_{j} \\tilde{\\alpha}^{p}_{ji} ``""",
@@ -27,9 +27,9 @@ end
 
 function compute_conjugate_vspark_primary(a, b, b̄)
     ā = zero(a)
-    for i in axes(ā,1)
-        for j in axes(ā,2)
-            ā[i,j] = b̄[j] / b[i] * ( b[i] - a[j,i] )
+    for i in axes(ā, 1)
+        for j in axes(ā, 2)
+            ā[i, j] = b̄[j] / b[i] * (b[i] - a[j, i])
         end
     end
     return ā
@@ -41,7 +41,7 @@ function compute_ã_vspark_primary(α, β, b)
     ã = zeros(eltype(α), s̃, s)
     for i in 1:s̃
         for j in 1:s
-            ã[i,j] = b[j] / β[i] * ( β[i] - α[j,i] )
+            ã[i, j] = b[j] / β[i] * (β[i] - α[j, i])
         end
     end
     return ã
@@ -59,7 +59,7 @@ function compute_α_vspark_primary(ã, b, β)
     α = zeros(eltype(ã), s, s̃)
     for i in 1:s
         for j in 1:s̃
-            α[i,j] = β[j] / b[i] * ( b[i] - ã[j,i] )
+            α[i, j] = β[j] / b[i] * (b[i] - ã[j, i])
         end
     end
     return α
@@ -72,7 +72,7 @@ function get_α_vspark_primary(ã_q, b_q, β_q, ã_p, b_p, β_p)
 end
 
 
-struct VSPARKprimary{TT <: TableauVSPARKprimary} <: ISPARKMethod
+struct VSPARKprimary{TT<:TableauVSPARKprimary} <: ISPARKMethod
     tableau::TT
 end
 
@@ -114,7 +114,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{aligned}
 ```
 """
-const IntegratorVSPARKprimary{DT,TT} = GeometricIntegrator{<:VSPARKprimary, <:Union{IDAEProblem{DT,TT},LDAEProblem{DT,TT}}}
+const IntegratorVSPARKprimary{DT,TT} = GeometricIntegrator{<:VSPARKprimary,<:Union{IDAEProblem{DT,TT},LDAEProblem{DT,TT}}}
 
 function Base.show(io::IO, int::IntegratorVSPARKprimary)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for Variational systems")
@@ -134,16 +134,16 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VSPARKp
     for i in 1:nstages(int)
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).q.c[i],
-            q = cache(int).Qi[i],
-            p = cache(int).Pi[i],
-            v = cache(int).Vi[i],
-            f = cache(int).Fi[i],
+            t=history.t[1] + timestep(int) * tableau(int).q.c[i],
+            q=cache(int).Qi[i],
+            p=cache(int).Pi[i],
+            v=cache(int).Vi[i],
+            f=cache(int).Fi[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
         for k in 1:ndims(int)
-            C.x[2*(ndims(int)*(i-1)+k-1)+1] =  C.Vi[i][k]
+            C.x[2*(ndims(int)*(i-1)+k-1)+1] = C.Vi[i][k]
             C.x[2*(ndims(int)*(i-1)+k-1)+2] = (C.Pi[i][k] - sol.p[k]) / timestep(int)
         end
     end
@@ -151,11 +151,11 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VSPARKp
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).q̃.c[i],
-            q = cache(int).Qp[i],
-            p = cache(int).Pp[i],
-            v = cache(int).Vp[i],
-            f = cache(int).Fp[i],
+            t=history.t[1] + timestep(int) * tableau(int).q̃.c[i],
+            q=cache(int).Qp[i],
+            p=cache(int).Pp[i],
+            v=cache(int).Vp[i],
+            f=cache(int).Fp[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -209,10 +209,10 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         # compute Y
         C.Yi[i] .= 0
         for j in 1:S
-            C.Yi[i] .+= tableau(int).q.a[i,j] .* C.Vi[j]
+            C.Yi[i] .+= tableau(int).q.a[i, j] .* C.Vi[j]
         end
         for j in 1:R
-            C.Yi[i] .+= tableau(int).q.α[i,j] .* C.Up[j]
+            C.Yi[i] .+= tableau(int).q.α[i, j] .* C.Up[j]
         end
 
         # compute Q and P
@@ -231,10 +231,10 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         # compute Y
         C.Yp[i] .= 0
         for j in 1:S
-            C.Yp[i] .+= tableau(int).q̃.a[i,j] .* C.Vi[j]
+            C.Yp[i] .+= tableau(int).q̃.a[i, j] .* C.Vi[j]
         end
         for j in 1:R
-            C.Yp[i] .+= tableau(int).q̃.α[i,j] .* C.Up[j]
+            C.Yp[i] .+= tableau(int).q̃.α[i, j] .* C.Up[j]
         end
 
         # compute Q and P
@@ -288,10 +288,10 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
             b[2*(D*(i-1)+k-1)+1] = C.Φi[i][k]
             b[2*(D*(i-1)+k-1)+2] = C.Zi[i][k]
             for j in 1:S
-                b[2*(D*(i-1)+k-1)+2] -= tableau(int).p.a[i,j] * C.Fi[j][k]
+                b[2*(D*(i-1)+k-1)+2] -= tableau(int).p.a[i, j] * C.Fi[j][k]
             end
             for j in 1:R
-                b[2*(D*(i-1)+k-1)+2] -= tableau(int).p.α[i,j] * C.Gp[j][k]
+                b[2*(D*(i-1)+k-1)+2] -= tableau(int).p.α[i, j] * C.Gp[j][k]
             end
         end
     end
@@ -301,10 +301,10 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
         for k in 1:D
             b[2*D*S+2*(D*(i-1)+k-1)+2] = C.Zp[i][k]
             for j in 1:S
-                b[2*D*S+2*(D*(i-1)+k-1)+2] -= tableau(int).p̃.a[i,j] * C.Fi[j][k]
+                b[2*D*S+2*(D*(i-1)+k-1)+2] -= tableau(int).p̃.a[i, j] * C.Fi[j][k]
             end
             for j in 1:R
-                b[2*D*S+2*(D*(i-1)+k-1)+2] -= tableau(int).p̃.α[i,j] * C.Gp[j][k]
+                b[2*D*S+2*(D*(i-1)+k-1)+2] -= tableau(int).p̃.α[i, j] * C.Gp[j][k]
             end
         end
     end
@@ -314,9 +314,9 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
         for k in 1:D
             b[2*D*S+2*(D*(i-1)+k-1)+1] = 0
             for j in 1:R
-                b[2*D*S+2*(D*(i-1)+k-1)+1] += tableau(int).ω[i,j] * C.Φp[j][k]
+                b[2*D*S+2*(D*(i-1)+k-1)+1] += tableau(int).ω[i, j] * C.Φp[j][k]
             end
-            b[2*D*S+2*(D*(i-1)+k-1)+1] += tableau(int).ω[i,R+1] * C.ϕ̃[k]
+            b[2*D*S+2*(D*(i-1)+k-1)+1] += tableau(int).ω[i, R+1] * C.ϕ̃[k]
         end
     end
 
@@ -325,7 +325,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
         for k in 1:D
             b[2*D*S+2*(D*(R-P+i-1)+k-1)+1] = 0
             for j in 1:R
-                b[2*D*S+2*(D*(R-P+i-1)+k-1)+1] += tableau(int).δ[i,j] * C.Λp[j][k]
+                b[2*D*S+2*(D*(R-P+i-1)+k-1)+1] += tableau(int).δ[i, j] * C.Λp[j][k]
             end
         end
     end

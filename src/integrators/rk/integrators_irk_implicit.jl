@@ -80,7 +80,7 @@ function internal_variables(method::IRK, problem::AbstractProblemIODE{DT,TT}) wh
     (Q=Q, V=V, Θ=Θ, F=F)#, solver=solver)
 end
 
-function copy_internal_variables(solstep::SolutionStep, cache::IRKimplicitCache)
+function copy_internal_variables!(solstep::SolutionStep, cache::IRKimplicitCache)
     haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
     haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
     haskey(internal(solstep), :Θ) && copyto!(internal(solstep).Θ, cache.Θ)
