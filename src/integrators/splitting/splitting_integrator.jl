@@ -32,7 +32,7 @@ end
 Splitting(method::AbstractSplittingMethod, problem::SODEProblem) = Splitting(coefficients(problem, method)...)
 Splitting(problem::SODEProblem, method::AbstractSplittingMethod) = Splitting(coefficients(problem, method)...)
 
-coefficients(method::Splitting) = (f = method.f, c = method.c)
+coefficients(method::Splitting) = (f=method.f, c=method.c)
 
 initmethod(method::AbstractSplittingMethod, problem::SODEProblem) = Splitting(method, problem)
 initmethod(method::Splitting, ::SODEProblem) = method
@@ -43,29 +43,29 @@ mutable struct SplittingCache{DT,TT,D,AT} <: ODEIntegratorCache{DT,D}
     q::AT
     t::TT
 
-    function SplittingCache{DT,TT,D}(q₀::AT) where {DT,TT,D,AT <: AbstractArray{DT}}
+    function SplittingCache{DT,TT,D}(q₀::AT) where {DT,TT,D,AT<:AbstractArray{DT}}
         new{DT,TT,D,AT}(zero(q₀), zero(TT))
     end
 end
 
 function Cache{ST}(problem::SODEProblem, method::Splitting; kwargs...) where {ST}
-    SplittingCache{ST, typeof(timestep(problem)), ndims(problem)}(initial_conditions(problem).q; kwargs...)
+    SplittingCache{ST,typeof(timestep(problem)),ndims(problem)}(initial_conditions(problem).q; kwargs...)
 end
 
-@inline CacheType(ST, problem::SODEProblem, ::Splitting) = SplittingCache{ST, typeof(timestep(problem)), ndims(problem)}
+@inline CacheType(ST, problem::SODEProblem, ::Splitting) = SplittingCache{ST,typeof(timestep(problem)),ndims(problem)}
 
-function reset!(cache::SplittingCache, t, q, λ = missing)
+function reset!(cache::SplittingCache, t, q, λ=missing)
     copyto!(cache.q, q)
     cache.t = t
 end
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:Splitting, <:SODEProblem})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:Splitting,<:SODEProblem})
     # compute splitting steps
     for i in eachindex(method(int).f, method(int).c)
         if method(int).c[i] ≠ 0
             # copy previous solution and compute time
             cache(int).q .= sol.q
-            cache(int).t  = sol.t + timestep(int) * (method(int).c[i] - 1)
+            cache(int).t = sol.t + timestep(int) * (method(int).c[i] - 1)
 
             # compute new solution
             solutions(problem(int)).q[method(int).f[i]](sol.q, cache(int).t, cache(int).q, sol.t - timestep(int), params)

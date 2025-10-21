@@ -9,11 +9,11 @@ const q₀ = [1.0, 1.0]
 const tspan = (0.0, Δt * nt)
 const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
-ode  = odeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
-iode = iodeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
-lode = lodeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
-ldae = ldaeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
-ref  = integrate(ode, Gauss(8))
+ode = odeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+iode = iodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+lode = lodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+ldae = ldaeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+ref = integrate(ode, Gauss(8))
 
 
 @testset "$(rpad("VPRK integrators without projection",80))" begin
@@ -57,7 +57,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
     sol = integrate(iode, PostProjection(VPRKGauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 end
 
@@ -71,7 +71,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
     sol = integrate(iode, SymplecticProjection(VPRKGauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 end
 

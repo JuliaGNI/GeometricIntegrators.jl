@@ -1,16 +1,4 @@
 """
-A `ProjectionMethod` is an algorithm that is applied together with a geometric integrator
-to enforce constraints which are not automatically satisfied by the integrator.
-Examples include conservation of invariants like energy or the Dirac constraint in [`IODE`](@ref)s.
-"""
-abstract type ProjectionMethod <: GeometricMethod end
-
-struct NoProjection <: ProjectionMethod end
-
-projection(::GeometricMethod) = NoProjection()
-
-
-"""
 A `ProjectedMethod` consists of a [`ProjectionMethod`](@ref) and a [`GeometricMethod`](@ref).
 """
 struct ProjectedMethod{PT<:ProjectionMethod,MT<:GeometricMethod} <: ProjectionMethod
@@ -38,7 +26,7 @@ struct ProjectionIntegrator{
     PT<:AbstractProblem,
     CT<:CacheDict{PT,MT},
     ST<:Union{NonlinearSolver,SolverMethod},
-    IT<:Extrapolation,
+    IT<:Union{InitialGuess,Extrapolation},
     SIT<:AbstractIntegrator
 } <: AbstractIntegrator
 
@@ -54,7 +42,7 @@ function ProjectionIntegrator(
     problem::AbstractProblem,
     projectionmethod::ProjectionMethod,
     solvermethod::SolverMethod,
-    iguess::Extrapolation,
+    iguess::Union{InitialGuess,Extrapolation},
     subint::AbstractIntegrator;
     method=initmethod(projectionmethod, problem),
     caches=CacheDict(problem, method),
@@ -68,9 +56,9 @@ function ProjectionIntegrator(
     problem::AbstractProblem,
     projectionmethod::ProjectionMethod,
     solvermethod::SolverMethod,
-    iguess::Extrapolation,
+    iguess::Union{InitialGuess,Extrapolation},
     parent_solvermethod::SolverMethod,
-    parent_iguess::Extrapolation;
+    parent_iguess::Union{InitialGuess,Extrapolation};
     kwargs...
 )
     subint = GeometricIntegrator(problem, parent(projectionmethod), parent_solvermethod, parent_iguess; default_options(parent(projectionmethod))...)

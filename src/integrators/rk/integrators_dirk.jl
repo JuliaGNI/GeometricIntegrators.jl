@@ -101,7 +101,7 @@ function internal_variables(method::DIRKMethod, problem::AbstractProblemODE{DT,T
     (Q=Q, V=V, Y=Y)#, solver=solver)
 end
 
-function copy_internal_variables(solstep::SolutionStep, cache::DIRKCache)
+function copy_internal_variables!(solstep::SolutionStep, cache::DIRKCache)
     haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
     haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
     haskey(internal(solstep), :Y) && copyto!(internal(solstep).Y, cache.Y)
