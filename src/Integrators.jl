@@ -121,9 +121,6 @@ export equation, timestep
 
 export NoSolver
 
-include("integrators/solvers.jl")
-
-
 export GeometricIntegrator
 export integrate, integrate!, solutionstep!
 
