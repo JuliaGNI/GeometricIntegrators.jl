@@ -113,7 +113,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DIRK})
         soltmp = (
             t=history.t[1] + timestep(int) * tableau(int).c[i],
             q=cache(int).Q[i],
-            v=cache(int).V[i],
+            q̇=cache(int).V[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end

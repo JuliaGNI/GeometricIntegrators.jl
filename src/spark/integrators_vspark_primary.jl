@@ -137,8 +137,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VSPARKp
             t=history.t[1] + timestep(int) * tableau(int).q.c[i],
             q=cache(int).Qi[i],
             p=cache(int).Pi[i],
-            v=cache(int).Vi[i],
-            f=cache(int).Fi[i],
+            q̇=cache(int).Vi[i],
+            ṗ=cache(int).Fi[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -154,8 +154,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VSPARKp
             t=history.t[1] + timestep(int) * tableau(int).q̃.c[i],
             q=cache(int).Qp[i],
             p=cache(int).Pp[i],
-            v=cache(int).Vp[i],
-            f=cache(int).Fp[i],
+            q̇=cache(int).Vp[i],
+            ṗ=cache(int).Fp[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 

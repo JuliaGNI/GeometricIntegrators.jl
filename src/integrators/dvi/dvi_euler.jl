@@ -7,11 +7,11 @@ struct DVIA <: DVIEuler end
 "Symplectic Euler-B Degenerate Variational Integrator."
 struct DVIB <: DVIEuler end
 
-order(::Union{DVIA, Type{DVIA}}) = 1
-order(::Union{DVIB, Type{DVIB}}) = 1
+order(::Union{DVIA,Type{DVIA}}) = 1
+order(::Union{DVIB,Type{DVIB}}) = 1
 
-issymmetric(::Union{DVIA, Type{<:DVIA}}) = false
-issymmetric(::Union{DVIB, Type{<:DVIB}}) = false
+issymmetric(::Union{DVIA,Type{<:DVIA}}) = false
+issymmetric(::Union{DVIB,Type{<:DVIB}}) = false
 
 
 function Base.show(io::IO, int::GeometricIntegrator{<:DVIA})
@@ -32,11 +32,11 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DVIEule
 
     # compute initial guess for solution
     soltmp = (
-        t = sol.t,
-        q = cache(int).q,
-        p = cache(int).p,
-        v = cache(int).v,
-        f = cache(int).f,
+        t=sol.t,
+        q=cache(int).q,
+        p=cache(int).p,
+        q̇=cache(int).v,
+        ṗ=cache(int).f,
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -44,9 +44,9 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DVIEule
     x[1:D] .= cache(int).q
 
     # copy v to nonlinear solution vector
-    for k in 1:div(D,2)
+    for k in 1:div(D, 2)
         x[D+k] = cache(int).v[k]
-        x[D+div(D,2)+k] = sol.v[k]
+        x[D+div(D, 2)+k] = sol.v[k]
     end
 end
 
@@ -58,22 +58,22 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIE
     local t̄ = sol.t - timestep(int)
 
     # copy x to q
-    cache(int,ST).q .= x[1:D]
+    cache(int, ST).q .= x[1:D]
 
     # copy x to v and v̄
-    for k in 1:div(D,2)
-        cache(int,ST).v[k] = x[D+k]
-        cache(int,ST).v̄[k] = x[D+div(D,2)+k]
-        cache(int,ST).v[div(D,2)+k] = 0
-        cache(int,ST).v̄[div(D,2)+k] = 0
+    for k in 1:div(D, 2)
+        cache(int, ST).v[k] = x[D+k]
+        cache(int, ST).v̄[k] = x[D+div(D, 2)+k]
+        cache(int, ST).v[div(D, 2)+k] = 0
+        cache(int, ST).v̄[div(D, 2)+k] = 0
     end
 
     # compute f = f(q,v)
-    equations(int).f(cache(int,ST).f, t, cache(int,ST).q, cache(int,ST).v, params)
-    equations(int).f(cache(int,ST).f̄, t̄, sol.q, cache(int,ST).v̄, params)
- 
+    equations(int).f(cache(int, ST).f, t, cache(int, ST).q, cache(int, ST).v, params)
+    equations(int).f(cache(int, ST).f̄, t̄, sol.q, cache(int, ST).v̄, params)
+
     # compute Θ = ϑ(q,v)
-    equations(int).ϑ(cache(int,ST).p, t, cache(int,ST).q, cache(int,ST).v, params)
+    equations(int).ϑ(cache(int, ST).p, t, cache(int, ST).q, cache(int, ST).v, params)
     # equations(int).ϑ(cache(int,ST).θ̄, t̄, solstep(int).q̄, cache(int,ST).v̄, params)
 end
 
@@ -83,14 +83,14 @@ function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIA})
     local D = ndims(int)
 
     # compute b
-    for k in 1:div(D,2)
-        b[k]   = cache(int,ST).p[k] - sol.p[k] - timestep(int) * cache(int,ST).f̄[k]
-        b[D+k] = cache(int,ST).q[k] - sol.q[k] - timestep(int) * cache(int,ST).v[k]
+    for k in 1:div(D, 2)
+        b[k] = cache(int, ST).p[k] - sol.p[k] - timestep(int) * cache(int, ST).f̄[k]
+        b[D+k] = cache(int, ST).q[k] - sol.q[k] - timestep(int) * cache(int, ST).v[k]
     end
 
-    for k in div(D,2)+1:D
-        b[k]   = timestep(int) * cache(int,ST).f̄[k]
-        b[D+k] = timestep(int) * cache(int,ST).f[k]
+    for k in div(D, 2)+1:D
+        b[k] = timestep(int) * cache(int, ST).f̄[k]
+        b[D+k] = timestep(int) * cache(int, ST).f[k]
     end
 end
 
@@ -100,14 +100,14 @@ function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIB})
     local D = ndims(int)
 
     # compute b
-    for k in 1:div(D,2)
-        b[k]   = cache(int,ST).p[k] - sol.p[k] - timestep(int) * cache(int,ST).f[k]
-        b[D+k] = cache(int,ST).q[k] - sol.q[k] - timestep(int) * cache(int,ST).v̄[k]
+    for k in 1:div(D, 2)
+        b[k] = cache(int, ST).p[k] - sol.p[k] - timestep(int) * cache(int, ST).f[k]
+        b[D+k] = cache(int, ST).q[k] - sol.q[k] - timestep(int) * cache(int, ST).v̄[k]
     end
 
-    for k in div(D,2)+1:D
-        b[k]   = timestep(int) * cache(int,ST).f[k]
-        b[D+k] = timestep(int) * cache(int,ST).f̄[k]
+    for k in div(D, 2)+1:D
+        b[k] = timestep(int) * cache(int, ST).f[k]
+        b[D+k] = timestep(int) * cache(int, ST).f̄[k]
     end
 end
 

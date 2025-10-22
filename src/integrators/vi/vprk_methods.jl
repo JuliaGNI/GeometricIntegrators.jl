@@ -3,6 +3,9 @@ abstract type VPRKMethod <: VIMethod end
 
 GeometricBase.order(method::VPRKMethod) = RungeKutta.order(tableau(method))
 
+default_iguess(::VPRKMethod) = HermiteExtrapolation()
+# default_iguess(::VPRKMethod) = MidpointExtrapolation(5)
+
 @inline nstages(method::VPRKMethod) = nstages(tableau(method))
 @inline eachstage(method::VPRKMethod) = eachstage(tableau(method))
 
@@ -11,7 +14,12 @@ isimplicit(method::VPRKMethod) = RungeKutta.isimplicit(tableau(method))
 issymmetric(method::VPRKMethod) = RungeKutta.issymmetric(tableau(method))
 issymplectic(method::VPRKMethod) = RungeKutta.issymplectic(tableau(method))
 
-print_reference(io, method::VPRKMethod) = try ismissing(reference(tableau(method))) || print(io, reference(tableau(method))) catch MethodError String("") end
+print_reference(io, method::VPRKMethod) =
+    try
+        ismissing(reference(tableau(method))) || print(io, reference(tableau(method)))
+    catch MethodError
+        String("")
+    end
 
 function Base.show(io::IO, method::VPRKMethod)
     print(io, "\nVariational Partitioned Runge-Kutta Method with Tableau: $(description(tableau(method)))\n")
@@ -56,7 +64,7 @@ struct VPRK{TT,DT} <: VPRKMethod
     tableau::TT
     d::DT
 
-    function VPRK(tableau::TT, d::DT=nothing) where {TT <: PartitionedTableau, DT <: Union{AbstractVector,Nothing}}
+    function VPRK(tableau::TT, d::DT=nothing) where {TT<:PartitionedTableau,DT<:Union{AbstractVector,Nothing}}
         new{TT,DT}(tableau, d)
     end
 end
@@ -84,7 +92,7 @@ hasnullvector(method::VPRK{DT,<:AbstractVector}) where {DT} = true
 
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 the symmetric [`TableauSRK3`](@ref) coefficients with 3 stages
 for both $a_{ij}$ and $\bar{a}_{ij}$.
 """
@@ -94,7 +102,7 @@ GeometricBase.tableau(::VPSRK3) = SymplecticPartitionedTableau(TableauSRK3())
 
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 Gauss-Legendre coefficients for both $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKGauss <: VPRKMethod
@@ -102,7 +110,7 @@ struct VPRKGauss <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIII`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIII <: VPRKMethod
@@ -110,7 +118,7 @@ struct VPRKLobattoIII <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIA`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIA <: VPRKMethod
@@ -118,7 +126,7 @@ struct VPRKLobattoIIIA <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIB`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIB <: VPRKMethod
@@ -126,7 +134,7 @@ struct VPRKLobattoIIIB <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIC`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIC <: VPRKMethod
@@ -134,7 +142,7 @@ struct VPRKLobattoIIIC <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIID`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIID <: VPRKMethod
@@ -142,7 +150,7 @@ struct VPRKLobattoIIID <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIE`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIE <: VPRKMethod
@@ -150,7 +158,7 @@ struct VPRKLobattoIIIE <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIF`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIF <: VPRKMethod
@@ -158,7 +166,7 @@ struct VPRKLobattoIIIF <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIF̄`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIF̄ <: VPRKMethod
@@ -166,7 +174,7 @@ struct VPRKLobattoIIIF̄ <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIG`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIG <: VPRKMethod
@@ -174,7 +182,7 @@ struct VPRKLobattoIIIG <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauRadauIIA`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKRadauIIA <: VPRKMethod
@@ -182,7 +190,7 @@ struct VPRKRadauIIA <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauRadauIIB`](@ref) for both coefficients $a_{ij}$ and $\bar{a}_{ij}$.
 """
 struct VPRKRadauIIB <: VPRKMethod
@@ -190,7 +198,7 @@ struct VPRKRadauIIB <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIA`](@ref) for the coefficients $a_{ij}$ and [`TableauLobattoIIIB`](@ref) for the coefficients $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIAIIIB <: VPRKMethod
@@ -198,7 +206,7 @@ struct VPRKLobattoIIIAIIIB <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIB`](@ref) for the coefficients $a_{ij}$ and [`TableauLobattoIIIA`](@ref) for the coefficients $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIBIIIA <: VPRKMethod
@@ -206,7 +214,7 @@ struct VPRKLobattoIIIBIIIA <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIA`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIAIIIĀ <: VPRKMethod
@@ -214,7 +222,7 @@ struct VPRKLobattoIIIAIIIĀ <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIB`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIBIIIB̄ <: VPRKMethod
@@ -222,7 +230,7 @@ struct VPRKLobattoIIIBIIIB̄ <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIC`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIICIIIC̄ <: VPRKMethod
@@ -230,7 +238,7 @@ struct VPRKLobattoIIICIIIC̄ <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIC̄`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIC̄IIIC <: VPRKMethod
@@ -238,7 +246,7 @@ struct VPRKLobattoIIIC̄IIIC <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIID`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIDIIID̄ <: VPRKMethod
@@ -246,7 +254,7 @@ struct VPRKLobattoIIIDIIID̄ <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIE`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIEIIIĒ <: VPRKMethod
@@ -254,7 +262,7 @@ struct VPRKLobattoIIIEIIIĒ <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIF`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIFIIIF̄ <: VPRKMethod
@@ -262,7 +270,7 @@ struct VPRKLobattoIIIFIIIF̄ <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIF̄`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIF̄IIIF <: VPRKMethod
@@ -270,7 +278,7 @@ struct VPRKLobattoIIIF̄IIIF <: VPRKMethod
 end
 
 @doc raw"""
-Variational Partitioned Runge-Kutta Method that uses 
+Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIG`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
 struct VPRKLobattoIIIGIIIḠ <: VPRKMethod

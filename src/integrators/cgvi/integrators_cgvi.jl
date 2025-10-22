@@ -145,8 +145,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CGVI})
             t=sol.t + timestep(int) * (method(int).x[i] - 1),
             q=cache(int).q̃,
             p=cache(int).p̃,
-            v=cache(int).ṽ,
-            f=cache(int).f̃,
+            q̇=cache(int).ṽ,
+            ṗ=cache(int).f̃,
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -159,8 +159,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CGVI})
         t=sol.t,
         q=cache(int).q̃,
         p=cache(int).p̃,
-        v=cache(int).ṽ,
-        f=cache(int).f̃,
+        q̇=cache(int).ṽ,
+        ṗ=cache(int).f̃,
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 

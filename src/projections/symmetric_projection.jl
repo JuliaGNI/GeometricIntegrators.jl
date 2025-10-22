@@ -58,8 +58,8 @@ function initial_guess!(sol, history, params, int::SymmetricProjectionIntegrator
         t=(sol.t + history.t[1]) / 2,
         q=cache(int).q̃,
         p=cache(int).p̃,
-        v=cache(int).ṽ,
-        f=cache(int).f̃,
+        q̇=cache(int).ṽ,
+        ṗ=cache(int).f̃,
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
     # TODO: Fix this!

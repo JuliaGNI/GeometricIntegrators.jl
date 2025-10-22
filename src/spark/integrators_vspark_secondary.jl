@@ -1,5 +1,5 @@
 "Holds the tableau of an Specialised Partitioned Additive Runge-Kutta method for Variational systems."
-struct VSPARKsecondary{DT <: Number, DVT} <: LSPARKMethod
+struct VSPARKsecondary{DT<:Number,DVT} <: LSPARKMethod
     name::Symbol
     o::Int
     s::Int
@@ -16,17 +16,17 @@ struct VSPARKsecondary{DT <: Number, DVT} <: LSPARKMethod
     d::DVT
 
     function VSPARKsecondary(name::Symbol, o::Int, s::Int, r::Int,
-                        q::CoefficientsSPARK{DT}, p::CoefficientsSPARK{DT},
-                        q̃::CoefficientsSPARK{DT}, p̃::CoefficientsSPARK{DT},
-                        ω::Matrix{DT}, d::DVT = nothing) where {DT, DVT <: Union{AbstractVector,Nothing}}
+        q::CoefficientsSPARK{DT}, p::CoefficientsSPARK{DT},
+        q̃::CoefficientsSPARK{DT}, p̃::CoefficientsSPARK{DT},
+        ω::Matrix{DT}, d::DVT=nothing) where {DT,DVT<:Union{AbstractVector,Nothing}}
 
         @assert s > 0 "Number of stages s must be > 0"
         @assert r > 0 "Number of stages r must be > 0"
 
-        @assert s==q.s==p.s==q̃.σ==p̃.σ
-        @assert r==q.σ==p.σ==q̃.s==p̃.s
-        @assert size(ω,1)==r
-        @assert size(ω,2)==r+1
+        @assert s == q.s == p.s == q̃.σ == p̃.σ
+        @assert r == q.σ == p.σ == q̃.s == p̃.s
+        @assert size(ω, 1) == r
+        @assert size(ω, 2) == r + 1
 
         @assert d === nothing || length(d) == r
 
@@ -95,7 +95,7 @@ F^1_{n,i} + F^2_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i 
 \end{aligned}
 ```
 """
-const IntegratorVSPARKsecondary{DT,TT} = GeometricIntegrator{<:VSPARKsecondary, <:LDAEProblem{DT,TT}}
+const IntegratorVSPARKsecondary{DT,TT} = GeometricIntegrator{<:VSPARKsecondary,<:LDAEProblem{DT,TT}}
 
 function Base.show(io::IO, int::IntegratorVSPARKsecondary)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for degenerate")
@@ -115,18 +115,18 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VSPARKs
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).q̃.c[i],
-            q = cache(int).Qp[i],
-            p = cache(int).Pp[i],
-            v = cache(int).Vp[i],
-            f = cache(int).Fp[i],
+            t=history.t[1] + timestep(int) * tableau(int).q̃.c[i],
+            q=cache(int).Qp[i],
+            p=cache(int).Pp[i],
+            q̇=cache(int).Vp[i],
+            ṗ=cache(int).Fp[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
         for k in 1:ndims(int)
             C.x[4*(ndims(int)*(i-1)+k-1)+1] = (C.Qp[i][k] - sol.q[k]) / timestep(int)
             C.x[4*(ndims(int)*(i-1)+k-1)+2] = (C.Pp[i][k] - sol.p[k]) / timestep(int)
-            C.x[4*(ndims(int)*(i-1)+k-1)+3] =  C.Vp[i][k]
+            C.x[4*(ndims(int)*(i-1)+k-1)+3] = C.Vp[i][k]
             C.x[4*(ndims(int)*(i-1)+k-1)+4] = 0
         end
     end
@@ -182,8 +182,8 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         for k in 1:D
             C.Yi[i][k] = 0
             for j in 1:R
-                C.Yi[i][k] += tableau(int).q.a[1][i,j] * C.Vp[j][k]
-                C.Yi[i][k] += tableau(int).q.a[2][i,j] * C.Λp[j][k]
+                C.Yi[i][k] += tableau(int).q.a[1][i, j] * C.Vp[j][k]
+                C.Yi[i][k] += tableau(int).q.a[2][i, j] * C.Λp[j][k]
             end
         end
 
@@ -227,23 +227,23 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ, ωΨ]
     for i in 1:R
         for k in 1:D
-            b[4*(D*(i-1)+k-1)+1] = - C.Yp[i][k]
-            b[4*(D*(i-1)+k-1)+2] = - C.Zp[i][k]
-            b[4*(D*(i-1)+k-1)+3] = - C.Φp[i][k]
+            b[4*(D*(i-1)+k-1)+1] = -C.Yp[i][k]
+            b[4*(D*(i-1)+k-1)+2] = -C.Zp[i][k]
+            b[4*(D*(i-1)+k-1)+3] = -C.Φp[i][k]
             b[4*(D*(i-1)+k-1)+4] = 0
             for j in 1:S
-                b[4*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[1][i,j] * C.Fi[j][k]
+                b[4*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[1][i, j] * C.Fi[j][k]
             end
             for j in 1:R
-                b[4*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[1][i,j] * C.Vp[j][k]
-                b[4*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[2][i,j] * C.Λp[j][k]
-                b[4*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[2][i,j] * C.Gp[j][k]
-                b[4*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[3][i,j] * C.G̅p[j][k]
+                b[4*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[1][i, j] * C.Vp[j][k]
+                b[4*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[2][i, j] * C.Λp[j][k]
+                b[4*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[2][i, j] * C.Gp[j][k]
+                b[4*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[3][i, j] * C.G̅p[j][k]
             end
             for j in 1:R
-                b[4*(D*(i-1)+k-1)+4] -= tableau(int).ω[i,j] * C.Ψp[j][k]
+                b[4*(D*(i-1)+k-1)+4] -= tableau(int).ω[i, j] * C.Ψp[j][k]
             end
-            b[4*(D*(i-1)+k-1)+4] -= tableau(int).ω[i,R+1] * C.ϕ̃[k]
+            b[4*(D*(i-1)+k-1)+4] -= tableau(int).ω[i, R+1] * C.ϕ̃[k]
         end
     end
 
