@@ -1,6 +1,6 @@
 name = "GeometricIntegrators"
 uuid = "dcce2d33-59f6-5b8d-9047-0defad88ae06"
-version = "0.15.0"
+version = "0.15.1"
 authors = ["Michael Kraus <michael.kraus@ipp.mpg.de>"]
 
 [deps]
