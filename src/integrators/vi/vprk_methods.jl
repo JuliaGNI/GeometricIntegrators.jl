@@ -4,7 +4,6 @@ abstract type VPRKMethod <: VIMethod end
 GeometricBase.order(method::VPRKMethod) = RungeKutta.order(tableau(method))
 
 default_iguess(::VPRKMethod) = HermiteExtrapolation()
-# default_iguess(::VPRKMethod) = MidpointExtrapolation(5)
 
 @inline nstages(method::VPRKMethod) = nstages(tableau(method))
 @inline eachstage(method::VPRKMethod) = eachstage(tableau(method))
