@@ -39,7 +39,7 @@ function Base.show(io::IO, int::GeometricIntegrator{<:DIRK})
 end
 
 
-struct SingleStageSolvers{ST} <: NonlinearSolver
+struct SingleStageSolvers{ST} <: AbstractSolver
     solvers::ST
     SingleStageSolvers(solvers...) = new{typeof(solvers)}(solvers)
 end
@@ -47,8 +47,8 @@ end
 Base.getindex(s::SingleStageSolvers, args...) = getindex(s.solvers, args...)
 
 
-function initsolver(::NewtonMethod, method::DIRK, caches::CacheDict; kwargs...)
-    SingleStageSolvers([NewtonSolver(zero(cache(caches).x[i]), residual!, zero(cache(caches).x[i]); linesearch=Backtracking(), kwargs...) for i in eachstage(method)]...)
+function initsolver(::Newton, method::DIRK, caches::CacheDict; kwargs...)
+    SingleStageSolvers([NewtonSolver(zero(cache(caches).x[i]), residual!, zero(cache(caches).x[i]); linesearch=default_linesearch(method), kwargs...) for i in eachstage(method)]...)
 end
 
 
@@ -187,7 +187,7 @@ function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DIRK,<
     # consecutively solve for all stages
     for i in eachstage(int)
         # call nonlinear solver
-        solve!(solver(int)[i], nlsolution(cache(int), i), (sol, params, int, i))
+        solve!(nlsolution(cache(int), i), solver(int)[i], (sol, params, int, i))
 
         # print solver status
         # println(status(solvers[i]))

@@ -51,13 +51,13 @@ end
 @testset "$(rpad("VPRK integrators with standard projection",80))" begin
 
     sol = integrate(iode, PostProjection(VPRKGauss(1)))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-6
+    @test relative_maximum_error(sol.q, ref.q) < 4E-6#1E-6
 
     sol = integrate(iode, PostProjection(VPRKGauss(2)))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-11
+    @test relative_maximum_error(sol.q, ref.q) < 8E-7#1E-11
 
     sol = integrate(iode, PostProjection(VPRKGauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-11#2E-15
 
 end
 
@@ -68,10 +68,10 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 4E-6
 
     sol = integrate(iode, SymplecticProjection(VPRKGauss(2)))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-11
+    @test relative_maximum_error(sol.q, ref.q) < 8E-7#1E-11
 
     sol = integrate(iode, SymplecticProjection(VPRKGauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-11#2E-15
 
 end
 

@@ -252,7 +252,7 @@ end
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemPODE})
     # call nonlinear solver
-    solve!(solver(int), nlsolution(int), (sol, params, int))
+    solve!(nlsolution(int), solver(int), (sol, params, int))
 
     # print solver status
     # println(status(solver))

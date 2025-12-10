@@ -218,7 +218,7 @@ end
 
 function integrate_step!(sol, history, params, int::MidpointProjectionIntegrator)
     # call nonlinear solver for projection
-    solve!(solver(int), nlsolution(int), (sol, params, int))
+    solve!(nlsolution(int), solver(int), (sol, params, int))
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))

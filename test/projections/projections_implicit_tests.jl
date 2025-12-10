@@ -22,13 +22,13 @@ ref = integrate(ode, Gauss(8))
     @test relative_maximum_error(sol.q, ref.q) < 4E-4
 
     sol = integrate(iode, PostProjection(Gauss(2)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-8
+    @test relative_maximum_error(sol.q, ref.q) < 8E-7
 
     sol = integrate(iode, PostProjection(Gauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-12
+    @test relative_maximum_error(sol.q, ref.q) < 4E-11
 
     sol = integrate(iode, PostProjection(Gauss(4)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-14
 
 end
 

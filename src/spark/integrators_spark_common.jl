@@ -48,7 +48,7 @@ end
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:AbstractSPARKMethod,<:AbstractSPARKProblem})
     # call nonlinear solver
-    solve!(solver(int), nlsolution(int), (sol, params, int))
+    solve!(nlsolution(int), solver(int), (sol, params, int))
 
     # check_jacobian(int.solver)
     # print_jacobian(int.solver)

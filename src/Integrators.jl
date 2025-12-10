@@ -43,12 +43,12 @@ import GeometricIntegratorsBase: Cache, CacheType, GeometricIntegrator, NoProjec
 import GeometricIntegratorsBase: cache, hasnullvector, iguess, internal, method, nlsolution, nullvector, problem, projection, solver
 import GeometricIntegratorsBase: components!, initialize!, initial_guess!, integrate_step!, residual!
 import GeometricIntegratorsBase: default_options, initialize!, initmethod, initsolver, internal_variables, copy_internal_variables!
-
+import GeometricIntegratorsBase: Newton
 
 import GeometricIntegratorsBase: isexplicit, isimplicit, issymmetric, issymplectic, isenergypreserving, isstifflyaccurate, implicit_update
 import GeometricIntegratorsBase: isodemethod, ispodemethod, ishodemethod, isiodemethod, islodemethod, issodemethod
 import GeometricIntegratorsBase: isdaemethod, ispdaemethod, ishdaemethod, isidaemethod, isldaemethod
-import GeometricIntegratorsBase: default_solver, default_iguess, solversize
+import GeometricIntegratorsBase: default_solver, default_linesearch, default_iguess, solversize
 
 import RungeKutta
 import RungeKutta: eachstage, nstages
