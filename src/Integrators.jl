@@ -6,9 +6,7 @@ using Reexport
 @reexport using GeometricIntegratorsBase
 
 using Documenter: @doc
-using ForwardDiff
 using GeometricBase
-# using GeometricBase.Config
 using GeometricEquations
 using GeometricSolutions
 using LinearAlgebra
@@ -21,7 +19,6 @@ using SimpleSolvers
 using StaticArrays
 
 using ..Discontinuities
-# using ..Extrapolators
 
 import Base: Callable
 
