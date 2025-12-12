@@ -12,8 +12,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:PMVIMet
         t=sol.t,
         q=cache(int).q̃,
         p=cache(int).θ̃,
-        v=cache(int).ṽ,
-        f=cache(int).f̃,
+        q̇=cache(int).ṽ,
+        ṗ=cache(int).f̃,
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -51,7 +51,7 @@ end
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:PMVIMethod,<:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(solver(int), nlsolution(int), (sol, params, int))
+    solve!(nlsolution(int), solver(int), (sol, params, int))
 
     # print solver status
     # print_solver_status(int.solver.status, int.solver.params)

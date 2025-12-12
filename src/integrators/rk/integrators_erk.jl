@@ -10,8 +10,8 @@ q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 """
 abstract type ERKMethod <: RKMethod end
 
-isexplicit(method::Union{ERKMethod, Type{<:ERKMethod}}) = true
-isimplicit(method::Union{ERKMethod, Type{<:ERKMethod}}) = false
+isexplicit(method::Union{ERKMethod,Type{<:ERKMethod}}) = true
+isimplicit(method::Union{ERKMethod,Type{<:ERKMethod}}) = false
 
 
 """
@@ -21,7 +21,7 @@ Explicit Runge-Kutta Method
 ERK(tableau)
 ```
 """
-struct ERK{TT <: Tableau} <: ERKMethod
+struct ERK{TT<:Tableau} <: ERKMethod
     tableau::TT
 end
 
@@ -55,7 +55,7 @@ function Cache{ST}(problem::AbstractProblemODE, method::ERK; kwargs...) where {S
     ERKCache{ST,D,S}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblemODE, method::ERK) = ERKCache{ST, ndims(problem), nstages(tableau(method))}
+@inline CacheType(ST, problem::AbstractProblemODE, method::ERK) = ERKCache{ST,ndims(problem),nstages(tableau(method))}
 
 function internal_variables(method::ERK, problem::AbstractProblemODE{DT,TT}) where {DT,TT}
     S = nstages(method)
@@ -73,7 +73,7 @@ function copy_internal_variables!(solstep::SolutionStep, cache::ERKCache)
 end
 
 
-function components!(_, sol, params, int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
+function components!(_, sol, params, int::GeometricIntegrator{<:ERK,<:AbstractProblemODE})
     # obtain cache
     local Q = cache(int).Q
     local V = cache(int).V
@@ -84,7 +84,7 @@ function components!(_, sol, params, int::GeometricIntegrator{<:ERK, <:AbstractP
         for k in eachindex(Q[i], V[i])
             yᵢ = 0
             for j in 1:i-1
-                yᵢ += tableau(int).a[i,j] * V[j][k]
+                yᵢ += tableau(int).a[i, j] * V[j][k]
             end
             Q[i][k] = sol.q[k] + timestep(int) * yᵢ
         end
@@ -100,7 +100,7 @@ function update!(sol, params, _, int::GeometricIntegrator{<:ERK})
     update!(sol.q, cache(int).V, tableau(int), timestep(int))
 end
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ERK,<:AbstractProblemODE})
     # compute final update
     update!(sol, params, nothing, int)
 end

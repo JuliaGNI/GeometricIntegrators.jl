@@ -1,5 +1,5 @@
 "Holds all parameters of an Specialised Partitioned Additive Runge-Kutta method for variational systems subject to constraints."
-struct SLRK{DT <: Number, DVT} <: LSPARKMethod
+struct SLRK{DT<:Number,DVT} <: LSPARKMethod
     name::Symbol
     o::Int
     s::Int
@@ -15,15 +15,15 @@ struct SLRK{DT <: Number, DVT} <: LSPARKMethod
     d::DVT
 
     function SLRK(name::Symbol, o::Int, s::Int,
-                  q::Tableau{DT}, p::Tableau{DT},
-                  q̃::Tableau{DT}, p̃::Tableau{DT},
-                  ω::Matrix{DT}, d::DVT = nothing) where {DT, DVT <: Union{AbstractVector,Nothing}}
+        q::Tableau{DT}, p::Tableau{DT},
+        q̃::Tableau{DT}, p̃::Tableau{DT},
+        ω::Matrix{DT}, d::DVT=nothing) where {DT,DVT<:Union{AbstractVector,Nothing}}
 
         @assert s > 0 "Number of stages s must be > 0"
 
         @assert s == q.s == p.s == q̃.s == p̃.s
-        @assert size(ω,1) == s
-        @assert size(ω,2) == s+1
+        @assert size(ω, 1) == s
+        @assert size(ω, 2) == s + 1
 
         @assert d === nothing || length(d) == s
 
@@ -92,7 +92,7 @@ F^1_{n,i} + F^2_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i 
 \end{aligned}
 ```
 """
-const IntegratorSLRK{DT,TT} = GeometricIntegrator{<:LDAEProblem{DT,TT}, <:SLRK}
+const IntegratorSLRK{DT,TT} = GeometricIntegrator{<:LDAEProblem{DT,TT},<:SLRK}
 
 
 # function Integrators.initsolver(::Newton, config::Options, solstep::SolutionStepPDAE{DT}, problem::LDAEProblem, method::SLRK, caches::CacheDict) where {DT}
@@ -123,11 +123,11 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SLRK,<:
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).p̃.c[i],
-            q = cache(int).Qp[i],
-            p = cache(int).Pp[i],
-            v = cache(int).Vp[i],
-            f = cache(int).Fp[i],
+            t=history.t[1] + timestep(int) * tableau(int).p̃.c[i],
+            q=cache(int).Qp[i],
+            p=cache(int).Pp[i],
+            q̇=cache(int).Vp[i],
+            ṗ=cache(int).Fp[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
@@ -135,10 +135,10 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SLRK,<:
     # assemble initial guess for nonlinear solver solution vector
     for i in 1:pstages(method(int))
         for k in 1:ndims(problem(int))
-            offset = 4*(ndims(int)*(i-1)+k-1)
+            offset = 4 * (ndims(int) * (i - 1) + k - 1)
             x[offset+1] = (cache(int).Qp[i][k] - sol.q[k]) / timestep(int)
             x[offset+2] = (cache(int).Pp[i][k] - sol.p[k]) / timestep(int)
-            x[offset+3] =  cache(int).Vp[i][k]
+            x[offset+3] = cache(int).Vp[i][k]
             x[offset+4] = 0
         end
     end
@@ -210,17 +210,17 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ, ωΨ]
     for i in 1:nstages(int)
         for k in 1:ndims(int)
-            b[4*(D*(i-1)+k-1)+1] = - C.Yp[i][k]
-            b[4*(D*(i-1)+k-1)+2] = - C.Zp[i][k]
-            b[4*(D*(i-1)+k-1)+3] = - C.Φp[i][k]
-            b[4*(D*(i-1)+k-1)+4] = method(int).ω[i,S+1] * C.ϕ̃[k]
+            b[4*(D*(i-1)+k-1)+1] = -C.Yp[i][k]
+            b[4*(D*(i-1)+k-1)+2] = -C.Zp[i][k]
+            b[4*(D*(i-1)+k-1)+3] = -C.Φp[i][k]
+            b[4*(D*(i-1)+k-1)+4] = method(int).ω[i, S+1] * C.ϕ̃[k]
 
             for j in 1:nstages(int)
-                b[4*(D*(i-1)+k-1)+1] += method(int).q.a[i,j] * C.Vp[j][k]
-                b[4*(D*(i-1)+k-1)+1] += method(int).q̃.a[i,j] * C.Λp[j][k]
-                b[4*(D*(i-1)+k-1)+2] += method(int).p.a[i,j] * C.Fp[j][k]
-                b[4*(D*(i-1)+k-1)+2] += method(int).p̃.a[i,j] * C.Gp[j][k]
-                b[4*(D*(i-1)+k-1)+4] += method(int).ω[i,j]   * C.Ψp[j][k]
+                b[4*(D*(i-1)+k-1)+1] += method(int).q.a[i, j] * C.Vp[j][k]
+                b[4*(D*(i-1)+k-1)+1] += method(int).q̃.a[i, j] * C.Λp[j][k]
+                b[4*(D*(i-1)+k-1)+2] += method(int).p.a[i, j] * C.Fp[j][k]
+                b[4*(D*(i-1)+k-1)+2] += method(int).p̃.a[i, j] * C.Gp[j][k]
+                b[4*(D*(i-1)+k-1)+4] += method(int).ω[i, j] * C.Ψp[j][k]
             end
         end
     end

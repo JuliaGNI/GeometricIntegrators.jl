@@ -5,11 +5,11 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Union{H
     for i in 1:nstages(int)
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).q.c[i],
-            q = cache(int).Qi[i],
-            p = cache(int).Pi[i],
-            v = cache(int).Vi[i],
-            f = cache(int).Fi[i],
+            t=history.t[1] + timestep(int) * tableau(int).q.c[i],
+            q=cache(int).Qi[i],
+            p=cache(int).Pi[i],
+            q̇=cache(int).Vi[i],
+            ṗ=cache(int).Fi[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -22,11 +22,11 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Union{H
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t = sol.t + timestep(int) * (tableau(int).q̃.c[i] - 1),
-            q = cache(int).Qp[i],
-            p = cache(int).Pp[i],
-            v = cache(int).Vp[i],
-            f = cache(int).Fp[i],
+            t=sol.t + timestep(int) * (tableau(int).q̃.c[i] - 1),
+            q=cache(int).Qp[i],
+            p=cache(int).Pp[i],
+            q̇=cache(int).Vp[i],
+            ṗ=cache(int).Fp[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 

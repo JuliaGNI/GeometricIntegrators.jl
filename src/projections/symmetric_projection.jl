@@ -58,8 +58,8 @@ function initial_guess!(sol, history, params, int::SymmetricProjectionIntegrator
         t=(sol.t + history.t[1]) / 2,
         q=cache(int).q̃,
         p=cache(int).p̃,
-        v=cache(int).ṽ,
-        f=cache(int).f̃,
+        q̇=cache(int).ṽ,
+        ṗ=cache(int).f̃,
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
     # TODO: Fix this!
@@ -220,7 +220,7 @@ end
 
 function integrate_step!(sol, history, params, int::SymmetricProjectionIntegrator)
     # call nonlinear solver for projection
-    solve!(solver(int), nlsolution(int), (sol, params, int))
+    solve!(nlsolution(int), solver(int), (sol, params, int))
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))

@@ -29,8 +29,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK,<:
             t=history.t[1] + timestep(int) * tableau(int).p.c[i],
             q=cache(int).Q[i],
             p=cache(int).P[i],
-            v=cache(int).V[i],
-            f=cache(int).F[i],
+            q̇=cache(int).V[i],
+            ṗ=cache(int).F[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
@@ -115,7 +115,7 @@ end
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(solver(int), nlsolution(int), (sol, params, int))
+    solve!(nlsolution(int), solver(int), (sol, params, int))
 
     # print solver status
     # println(status(solver))

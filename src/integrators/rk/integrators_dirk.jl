@@ -39,7 +39,7 @@ function Base.show(io::IO, int::GeometricIntegrator{<:DIRK})
 end
 
 
-struct SingleStageSolvers{ST} <: NonlinearSolver
+struct SingleStageSolvers{ST} <: AbstractSolver
     solvers::ST
     SingleStageSolvers(solvers...) = new{typeof(solvers)}(solvers)
 end
@@ -47,8 +47,8 @@ end
 Base.getindex(s::SingleStageSolvers, args...) = getindex(s.solvers, args...)
 
 
-function initsolver(::NewtonMethod, method::DIRK, caches::CacheDict; kwargs...)
-    SingleStageSolvers([NewtonSolver(zero(cache(caches).x[i]), residual!, zero(cache(caches).x[i]); linesearch=Backtracking(), kwargs...) for i in eachstage(method)]...)
+function initsolver(::Newton, method::DIRK, caches::CacheDict; kwargs...)
+    SingleStageSolvers([NewtonSolver(zero(cache(caches).x[i]), residual!, zero(cache(caches).x[i]); linesearch=default_linesearch(method), kwargs...) for i in eachstage(method)]...)
 end
 
 
@@ -101,7 +101,7 @@ function internal_variables(method::DIRKMethod, problem::AbstractProblemODE{DT,T
     (Q=Q, V=V, Y=Y)#, solver=solver)
 end
 
-function copy_internal_variables(solstep::SolutionStep, cache::DIRKCache)
+function copy_internal_variables!(solstep::SolutionStep, cache::DIRKCache)
     haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
     haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
     haskey(internal(solstep), :Y) && copyto!(internal(solstep).Y, cache.Y)
@@ -113,7 +113,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DIRK})
         soltmp = (
             t=history.t[1] + timestep(int) * tableau(int).c[i],
             q=cache(int).Q[i],
-            v=cache(int).V[i],
+            q̇=cache(int).V[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
@@ -187,7 +187,7 @@ function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DIRK,<
     # consecutively solve for all stages
     for i in eachstage(int)
         # call nonlinear solver
-        solve!(solver(int)[i], nlsolution(cache(int), i), (sol, params, int, i))
+        solve!(nlsolution(cache(int), i), solver(int)[i], (sol, params, int, i))
 
         # print solver status
         # println(status(solvers[i]))

@@ -38,8 +38,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VPRK})
             t=history.t[1] + timestep(int) * tableau(int).q.c[i],
             q=cache(int).Q[i],
             p=cache(int).P[i],
-            v=cache(int).V[i],
-            f=cache(int).F[i],
+            q̇=cache(int).V[i],
+            ṗ=cache(int).F[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
         for k in eachindex(cache(int).V[i])
@@ -178,7 +178,7 @@ end
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:VPRK,<:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(solver(int), nlsolution(int), (sol, params, int))
+    solve!(nlsolution(int), solver(int), (sol, params, int))
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))

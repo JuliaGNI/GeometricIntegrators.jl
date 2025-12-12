@@ -80,7 +80,7 @@ function internal_variables(method::IRK, problem::AbstractProblemIODE{DT,TT}) wh
     (Q=Q, V=V, Θ=Θ, F=F)#, solver=solver)
 end
 
-function copy_internal_variables(solstep::SolutionStep, cache::IRKimplicitCache)
+function copy_internal_variables!(solstep::SolutionStep, cache::IRKimplicitCache)
     haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
     haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
     haskey(internal(solstep), :Θ) && copyto!(internal(solstep).Θ, cache.Θ)
@@ -101,26 +101,21 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IRK,<:A
     # get cache for nonlinear solution vector
     local x = nlsolution(int)
 
-    # compute initial guess for internal stages
+    # compute initial guess for internal stages and
+    # assemble initial guess for nonlinear solver solution vector
     for i in eachstage(int)
         soltmp = (
             t=history.t[1] + timestep(int) * tableau(int).c[i],
             q=cache(int).Q[i],
             p=cache(int).Θ[i],
-            v=cache(int).V[i],
-            f=cache(int).F[i],
+            q̇=cache(int).V[i],
+            ṗ=cache(int).F[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
-    end
-
-    # assemble initial guess for nonlinear solver solution vector
-    for i in eachstage(int)
+        initialguess(problem(int)).v(soltmp.q̇, soltmp.t, soltmp.q, soltmp.p, params)
         offset = ndims(int) * (i - 1)
-        for k in 1:ndims(int)
-            x[offset+k] = cache(int).Θ[i][k] - sol.p[k]
-            for j in eachstage(int)
-                x[offset+k] -= timestep(int) * tableau(int).a[i, j] * cache(int).F[j][k]
-            end
+        for k in eachindex(cache(int).V[i])
+            x[offset+k] = cache(int).V[i][k]
         end
     end
 
@@ -130,8 +125,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IRK,<:A
             t=sol.t,
             q=cache(int).q,
             p=cache(int).θ,
-            v=cache(int).v,
-            f=cache(int).f,
+            q̇=cache(int).v,
+            ṗ=cache(int).f,
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -248,7 +243,7 @@ end
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:IRK,<:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(solver(int), nlsolution(int), (sol, params, int))
+    solve!(nlsolution(int), solver(int), (sol, params, int))
 
     # print solver status
     # println(status(solver))

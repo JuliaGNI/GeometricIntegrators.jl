@@ -11,9 +11,9 @@ const AbstractSPARKProblem{DT<:Number,TT<:Real} =
         LDAEProblem{DT,TT},
         PDAEProblem{DT,TT}}
 
-Integrators.default_iguess(::AbstractSPARKMethod) = HermiteExtrapolation()
-Integrators.default_solver(::AbstractSPARKMethod) = Newton()
-Integrators.default_options(::AbstractSPARKMethod) = (
+GeometricIntegratorsBase.default_iguess(::AbstractSPARKMethod) = HermiteExtrapolation()
+GeometricIntegratorsBase.default_solver(::AbstractSPARKMethod) = Newton()
+GeometricIntegratorsBase.default_options(::AbstractSPARKMethod) = (
     min_iterations=1,
     x_suctol=2eps(),
     f_abstol=8eps(),

@@ -1,7 +1,7 @@
 
 const TableauVSPARK = AbstractTableauSPARK{:vspark}
 
-struct VSPARK{TT <: Union{TableauSPARK,TableauVSPARK}} <: ISPARKMethod
+struct VSPARK{TT<:Union{TableauSPARK,TableauVSPARK}} <: ISPARKMethod
     tableau::TT
 end
 
@@ -45,7 +45,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{aligned}
 ```
 """
-const IntegratorVSPARK{DT,TT} = GeometricIntegrator{<:VSPARK, <:Union{IDAEProblem{DT,TT},LDAEProblem{DT,TT}}}
+const IntegratorVSPARK{DT,TT} = GeometricIntegrator{<:VSPARK,<:Union{IDAEProblem{DT,TT},LDAEProblem{DT,TT}}}
 
 function Base.show(io::IO, int::IntegratorVSPARK)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for Variational systems:\n")
@@ -64,18 +64,18 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VSPARK,
     for i in 1:nstages(int)
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).q.c[i],
-            q = cache(int).Qi[i],
-            p = cache(int).Pi[i],
-            v = cache(int).Vi[i],
-            f = cache(int).Fi[i],
+            t=history.t[1] + timestep(int) * tableau(int).q.c[i],
+            q=cache(int).Qi[i],
+            p=cache(int).Pi[i],
+            q̇=cache(int).Vi[i],
+            ṗ=cache(int).Fi[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
         for k in 1:ndims(int)
             C.x[3*(ndims(int)*(i-1)+k-1)+1] = (C.Qi[i][k] - sol.q[k]) / timestep(int)
             C.x[3*(ndims(int)*(i-1)+k-1)+2] = (C.Pi[i][k] - sol.p[k]) / timestep(int)
-            C.x[3*(ndims(int)*(i-1)+k-1)+3] =  C.Vi[i][k]
+            C.x[3*(ndims(int)*(i-1)+k-1)+3] = C.Vi[i][k]
         end
 
         # Quick fix for dirty implementation of F function
@@ -86,11 +86,11 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VSPARK,
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).q̃.c[i],
-            q = cache(int).Qp[i],
-            p = cache(int).Pp[i],
-            v = cache(int).Vp[i],
-            f = cache(int).Fp[i],
+            t=history.t[1] + timestep(int) * tableau(int).q̃.c[i],
+            q=cache(int).Qp[i],
+            p=cache(int).Pp[i],
+            q̇=cache(int).Vp[i],
+            ṗ=cache(int).Fp[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -203,16 +203,16 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
     for i in 1:S
         for k in 1:D
-            b[3*(D*(i-1)+k-1)+1] = - C.Yi[i][k]
-            b[3*(D*(i-1)+k-1)+2] = - C.Zi[i][k]
-            b[3*(D*(i-1)+k-1)+3] = - C.Φi[i][k]
+            b[3*(D*(i-1)+k-1)+1] = -C.Yi[i][k]
+            b[3*(D*(i-1)+k-1)+2] = -C.Zi[i][k]
+            b[3*(D*(i-1)+k-1)+3] = -C.Φi[i][k]
             for j in 1:S
-                b[3*(D*(i-1)+k-1)+1] += tableau(int).q.a[i,j] * C.Vi[j][k]
-                b[3*(D*(i-1)+k-1)+2] += tableau(int).p.a[i,j] * C.Fi[j][k]
+                b[3*(D*(i-1)+k-1)+1] += tableau(int).q.a[i, j] * C.Vi[j][k]
+                b[3*(D*(i-1)+k-1)+2] += tableau(int).p.a[i, j] * C.Fi[j][k]
             end
             for j in 1:R
-                b[3*(D*(i-1)+k-1)+1] += tableau(int).q.α[i,j] * C.Up[j][k]
-                b[3*(D*(i-1)+k-1)+2] += tableau(int).p.α[i,j] * C.Gp[j][k]
+                b[3*(D*(i-1)+k-1)+1] += tableau(int).q.α[i, j] * C.Up[j][k]
+                b[3*(D*(i-1)+k-1)+2] += tableau(int).p.α[i, j] * C.Gp[j][k]
             end
         end
     end
@@ -220,16 +220,16 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = - [(Y-AV-AU), (Z-AF-AG)]
     for i in 1:R
         for k in 1:D
-            b[3*D*S+3*(D*(i-1)+k-1)+1] = - C.Yp[i][k]
-            b[3*D*S+3*(D*(i-1)+k-1)+2] = - C.Zp[i][k]
+            b[3*D*S+3*(D*(i-1)+k-1)+1] = -C.Yp[i][k]
+            b[3*D*S+3*(D*(i-1)+k-1)+2] = -C.Zp[i][k]
             b[3*D*S+3*(D*(i-1)+k-1)+3] = 0
             for j in 1:S
-                b[3*D*S+3*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[i,j] * C.Vi[j][k]
-                b[3*D*S+3*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[i,j] * C.Fi[j][k]
+                b[3*D*S+3*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[i, j] * C.Vi[j][k]
+                b[3*D*S+3*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[i, j] * C.Fi[j][k]
             end
             for j in 1:R
-                b[3*D*S+3*(D*(i-1)+k-1)+1] += tableau(int).q̃.α[i,j] * C.Up[j][k]
-                b[3*D*S+3*(D*(i-1)+k-1)+2] += tableau(int).p̃.α[i,j] * C.Gp[j][k]
+                b[3*D*S+3*(D*(i-1)+k-1)+1] += tableau(int).q̃.α[i, j] * C.Up[j][k]
+                b[3*D*S+3*(D*(i-1)+k-1)+2] += tableau(int).p̃.α[i, j] * C.Gp[j][k]
             end
         end
     end
@@ -238,9 +238,9 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     for i in 1:R-P
         for k in 1:D
             for j in 1:R
-                b[3*D*S+3*(D*(i-1)+k-1)+3] -= tableau(int).ω[i,j] * C.Φp[j][k]
+                b[3*D*S+3*(D*(i-1)+k-1)+3] -= tableau(int).ω[i, j] * C.Φp[j][k]
             end
-            b[3*D*S+3*(D*(i-1)+k-1)+3] -= tableau(int).ω[i,R+1] * C.ϕ̃[k]
+            b[3*D*S+3*(D*(i-1)+k-1)+3] -= tableau(int).ω[i, R+1] * C.ϕ̃[k]
         end
     end
 

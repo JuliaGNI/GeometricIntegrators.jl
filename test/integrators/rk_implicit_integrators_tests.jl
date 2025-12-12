@@ -8,13 +8,13 @@ const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
 const Δt = 0.01
 const nt = 10
-const tspan = (t₀, Δt*nt)
+const tspan = (t₀, Δt * nt)
 
-ode  = odeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
-iode = iodeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
-lode = lodeproblem(q₀; tspan=tspan, tstep=Δt, parameters=params)
+ode = odeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+iode = iodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+lode = lodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
 
-ref  = integrate(ode, Gauss(8))
+ref = integrate(ode, Gauss(8))
 
 
 @testset "$(rpad("Runge-Kutta integrators for implicit equations",80))" begin
@@ -32,16 +32,16 @@ ref  = integrate(ode, Gauss(8))
     @test relative_maximum_error(sol.q, ref.q) < 2E-13
 
 
-    sol = integrate(iode, IRK(Gauss(1); implicit_update = true))
+    sol = integrate(iode, IRK(Gauss(1); implicit_update=true))
     @test relative_maximum_error(sol.q, ref.q) < 4E-5
 
-    sol = integrate(iode, IRK(Gauss(2); implicit_update = true))
+    sol = integrate(iode, IRK(Gauss(2); implicit_update=true))
     @test relative_maximum_error(sol.q, ref.q) < 8E-7
 
-    sol = integrate(iode, IRK(Gauss(3); implicit_update = true))
+    sol = integrate(iode, IRK(Gauss(3); implicit_update=true))
     @test relative_maximum_error(sol.q, ref.q) < 4E-10
 
-    sol = integrate(iode, IRK(Gauss(4); implicit_update = true))
+    sol = integrate(iode, IRK(Gauss(4); implicit_update=true))
     @test relative_maximum_error(sol.q, ref.q) < 2E-13
 
 end

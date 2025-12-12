@@ -20,7 +20,7 @@ function internal_variables(method::AbstractSPARKMethod, problem::AbstractSPARKP
 end
 
 
-function copy_internal_variables!(solstep::SolutionStepPDAE, cache::IntegratorCacheSPARK)
+function copy_internal_variables!(solstep::SolutionStep{PDAE}, cache::IntegratorCacheSPARK)
     haskey(internal(solstep), :Qi) && copyto!(internal(solstep).Qi, cache.Qi)
     haskey(internal(solstep), :Pi) && copyto!(internal(solstep).Pi, cache.Pi)
     haskey(internal(solstep), :Vi) && copyto!(internal(solstep).Vi, cache.Vi)
@@ -48,7 +48,7 @@ end
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:AbstractSPARKMethod,<:AbstractSPARKProblem})
     # call nonlinear solver
-    solve!(solver(int), nlsolution(int), (sol, params, int))
+    solve!(nlsolution(int), solver(int), (sol, params, int))
 
     # check_jacobian(int.solver)
     # print_jacobian(int.solver)

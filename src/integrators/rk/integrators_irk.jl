@@ -134,7 +134,7 @@ function internal_variables(method::IRKMethod, problem::AbstractProblemODE{DT,TT
     (Q=Q, V=V, Y=Y)#, solver=solver)
 end
 
-function copy_internal_variables(solstep::SolutionStep, cache::IRKCache)
+function copy_internal_variables!(solstep::SolutionStep, cache::IRKCache)
     haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
     haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
     haskey(internal(solstep), :Y) && copyto!(internal(solstep).Y, cache.Y)
@@ -147,7 +147,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IRK,<:A
         soltmp = (
             t=history.t[1] + timestep(int) * tableau(int).c[i],
             q=cache(int).Q[i],
-            v=cache(int).V[i],
+            q̇=cache(int).V[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
@@ -234,7 +234,7 @@ end
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:IRK,<:AbstractProblemODE})
     # call nonlinear solver
-    solve!(solver(int), nlsolution(int), (sol, params, int))
+    solve!(nlsolution(int), solver(int), (sol, params, int))
 
     # print solver status
     # println(status(solver))

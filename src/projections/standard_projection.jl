@@ -177,7 +177,7 @@ function integrate_step!(sol, history, params, int::StandardProjectionIntegrator
 
     # call nonlinear solver for projection
     x̄, x̃ = split_nlsolution(nlsolution(int), int)
-    solve!(solver(int), x̃, (sol, params, int))
+    solve!(x̃, solver(int), (sol, params, int))
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))
