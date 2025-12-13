@@ -307,5 +307,5 @@ function Base.show(io::IO, ml::MethodList{true})
 end
 
 function Base.show(io::IO, ::MIME"text/markdown", ml::MethodList)
-    pretty_table(io, ml.data; column_labels=ml.header, limit_printing=false, table_format=MarkdownTableFormat())
+    pretty_table(io, ml.data; column_labels=ml.header, limit_printing=false, allow_markdown_in_cells=true, table_format=MarkdownTableFormat())
 end
