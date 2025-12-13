@@ -1,7 +1,7 @@
 name = "GeometricIntegrators"
 uuid = "dcce2d33-59f6-5b8d-9047-0defad88ae06"
-version = "0.15.3"
 authors = ["Michael Kraus <michael.kraus@ipp.mpg.de>"]
+version = "0.15.3"
 
 [deps]
 CompactBasisFunctions = "a09551c4-f815-4143-809e-dd1986753ba7"
@@ -35,7 +35,7 @@ GeometricProblems = "0.6"
 GeometricSolutions = "0.5"
 OffsetArrays = "1"
 Parameters = "0.12"
-PrettyTables = "2"
+PrettyTables = "2, 3"
 ProgressMeter = "1"
 QuadratureRules = "0.1"
 Reexport = "1.0"
