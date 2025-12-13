@@ -1,4 +1,6 @@
 
+using PrettyTables: pretty_table, MarkdownTableFormat
+
 meta_methods = (
     ERK,
     IRK,
@@ -249,7 +251,7 @@ struct MethodList{MD}
     header
     data
 
-    function MethodList(list::Tuple = method_list; markdown::Bool = false, selector = _true, refs = false)
+    function MethodList(list::Tuple=method_list; markdown::Bool=false, selector=_true, refs=false)
         header = [
             "Method",
             "Order",
@@ -297,13 +299,13 @@ Base.show(io::IO, ::MIME"text/markdown", ml::MethodList)
 Pretty-print MethodList.
 """
 function Base.show(io::IO, ml::MethodList)
-    pretty_table(io, ml.data; header = ml.header, limit_printing = false)
+    pretty_table(io, ml.data; column_labels=ml.header, limit_printing=false)
 end
 
 function Base.show(io::IO, ml::MethodList{true})
-    pretty_table(io, ml.data; header = ml.header, limit_printing = false, tf = tf_markdown)
+    pretty_table(io, ml.data; column_labels=ml.header, limit_printing=false, table_format=MarkdownTableFormat())
 end
 
 function Base.show(io::IO, ::MIME"text/markdown", ml::MethodList)
-    pretty_table(io, ml.data; header = ml.header, limit_printing = false, tf = tf_markdown)
+    pretty_table(io, ml.data; column_labels=ml.header, limit_printing=false, table_format=MarkdownTableFormat())
 end

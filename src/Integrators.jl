@@ -11,7 +11,6 @@ using GeometricEquations
 using GeometricSolutions
 using LinearAlgebra
 using OffsetArrays
-using PrettyTables
 using QuadratureRules
 using RungeKutta.Tableaus
 using RungeKutta.PartitionedTableaus
