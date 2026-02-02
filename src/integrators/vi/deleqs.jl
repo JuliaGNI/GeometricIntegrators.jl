@@ -123,7 +123,7 @@ end
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DiscreteEulerLagrange,<:AbstractProblemDELE})
     # call nonlinear solver
-    solve!(nlsolution(int), solver(int), (sol, history, params, int))
+    solve!(nlsolution(int), solver(int), solverstate(int), (sol, history, params, int))
 
     # print solver status
     # println(status(solver))

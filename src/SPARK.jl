@@ -29,7 +29,7 @@ import GeometricIntegratorsBase: Extrapolation, HermiteExtrapolation
 import GeometricIntegratorsBase: CacheDict, Cache, CacheType, IDAEIntegratorCache
 import GeometricIntegratorsBase: HDAEMethod, IDAEMethod, LDAEMethod, PDAEMethod
 import GeometricIntegratorsBase: SolutionStep
-import GeometricIntegratorsBase: cache, caches, iguess, method, problem, solver
+import GeometricIntegratorsBase: cache, caches, iguess, method, problem, solver, solverstate
 import GeometricIntegratorsBase: initial_guess!, integrate_step!, residual!, solutionstep!
 import GeometricIntegratorsBase: current, equation, equations, timestep
 import GeometricIntegratorsBase: update!, initialize!, initsolver, internal, nlsolution, internal_variables

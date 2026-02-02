@@ -36,7 +36,7 @@ import GeometricIntegratorsBase: ODEIntegratorCache, IODEIntegratorCache, PODEIn
 import GeometricIntegratorsBase: DAEIntegratorCache, IDAEIntegratorCache, PDAEIntegratorCache
 
 import GeometricIntegratorsBase: Cache, CacheType, GeometricIntegrator, NoProjection, ProjectionMethod
-import GeometricIntegratorsBase: cache, hasnullvector, iguess, internal, method, nlsolution, nullvector, problem, projection, solver
+import GeometricIntegratorsBase: cache, hasnullvector, iguess, internal, method, nlsolution, nullvector, problem, projection, solver, solverstate
 import GeometricIntegratorsBase: components!, initialize!, initial_guess!, integrate_step!, residual!
 import GeometricIntegratorsBase: default_options, initialize!, initmethod, initsolver, internal_variables, copy_internal_variables!
 import GeometricIntegratorsBase: Newton
