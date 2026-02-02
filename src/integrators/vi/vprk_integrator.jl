@@ -178,7 +178,7 @@ end
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:VPRK,<:AbstractProblemIODE})
     # call nonlinear solver
-    solve!(nlsolution(int), solver(int), (sol, params, int))
+    solve!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))
