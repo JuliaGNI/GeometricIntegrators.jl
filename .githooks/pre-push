@@ -6,9 +6,9 @@ no_color='\033[0m'
 
 reponame=$(basename `git rev-parse --show-toplevel`)
 
-
 echo "\nRunning pre-push hook\n"
 echo "Testing $reponame"
+
 julia --project=@.  -e "using Pkg; Pkg.test(\"GeometricIntegrators\")"
 
 if [[ $? -ne 0 ]]; then
