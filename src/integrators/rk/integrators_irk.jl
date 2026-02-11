@@ -69,7 +69,7 @@ end
 
 implicit_update(::IRK{TT,IU}) where {TT,IU} = IU
 
-initmethod(method::IRKMethod) = IRK(method)
+initmethod(method::IRKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = IRK(method, TT)
 
 
 function Base.show(io::IO, int::GeometricIntegrator{<:IRK})

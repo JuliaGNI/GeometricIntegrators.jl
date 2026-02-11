@@ -14,7 +14,7 @@ Usually we are interested in Hamiltonian systems, where
 ```math
 \begin{aligned}
 V_{n,i} &= \dfrac{\partial H}{\partial p} (Q_{n,i}, P_{n,i}) , &
-F_{n,i} &= - \dfrac{\partial H}{\partial q} (Q_{n,i}, P_{n,i}) , 
+F_{n,i} &= - \dfrac{\partial H}{\partial q} (Q_{n,i}, P_{n,i}) ,
 \end{aligned}
 ```
 and tableaus satisfying the symplecticity conditions
@@ -27,8 +27,8 @@ b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 """
 abstract type EPRKMethod <: PRKMethod end
 
-isexplicit(method::Union{EPRKMethod, Type{<:EPRKMethod}}) = true
-isimplicit(method::Union{EPRKMethod, Type{<:EPRKMethod}}) = false
+isexplicit(method::Union{EPRKMethod,Type{<:EPRKMethod}}) = true
+isimplicit(method::Union{EPRKMethod,Type{<:EPRKMethod}}) = false
 
 
 """
@@ -38,11 +38,11 @@ Explicit Partitioned Runge-Kutta Method
 EPRK(tableau)
 ```
 """
-struct EPRK{TT <: PartitionedTableau} <: EPRKMethod
+struct EPRK{TT<:PartitionedTableau} <: EPRKMethod
     tableau::TT
 end
 
-initmethod(method::EPRKMethod) = EPRK(method)
+initmethod(method::EPRKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = EPRK(method, TT)
 
 function Base.show(io::IO, int::GeometricIntegrator{<:EPRK})
     print(io, "\nExplicit Partitioned Runge-Kutta Integrator with:\n")
@@ -83,7 +83,7 @@ function Cache{ST}(problem::EquationProblem, method::EPRK; kwargs...) where {ST}
     EPRKCache{ST,D,S}(; kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::EPRK) = EPRKCache{ST, ndims(problem), nstages(tableau(method))}
+@inline CacheType(ST, problem::EquationProblem, method::EPRK) = EPRKCache{ST,ndims(problem),nstages(tableau(method))}
 
 
 function internal_variables(method::EPRK, problem::AbstractProblemPODE{DT,TT}) where {DT,TT}
@@ -112,14 +112,14 @@ end
 
 
 # Compute Q stages of explicit partitioned Runge-Kutta methods.
-function compute_stage_q!(sol, params, int::GeometricIntegrator{<:EPRK, <:AbstractProblemPODE}, i, jmax, t)
+function compute_stage_q!(sol, params, int::GeometricIntegrator{<:EPRK,<:AbstractProblemPODE}, i, jmax, t)
     # obtain cache
     local C = cache(int)
 
     fill!(C.Y[i], 0)
     for k in eachindex(C.Y[i])
         for j in 1:jmax
-            C.Y[i][k] += timestep(int) * tableau(int).q.a[i,j] * C.V[j][k]
+            C.Y[i][k] += timestep(int) * tableau(int).q.a[i, j] * C.V[j][k]
         end
     end
     for k in eachindex(C.Y[i])
@@ -129,14 +129,14 @@ function compute_stage_q!(sol, params, int::GeometricIntegrator{<:EPRK, <:Abstra
 end
 
 # Compute P stages of explicit partitioned Runge-Kutta methods.
-function compute_stage_p!(sol, params, int::GeometricIntegrator{<:EPRK, <:AbstractProblemPODE}, i, jmax, t)
+function compute_stage_p!(sol, params, int::GeometricIntegrator{<:EPRK,<:AbstractProblemPODE}, i, jmax, t)
     # obtain cache
     local C = cache(int)
 
     fill!(C.Z[i], 0)
     for k in eachindex(C.Z[i])
         for j in 1:jmax
-            C.Z[i][k] += timestep(int) * tableau(int).p.a[i,j] * C.F[j][k]
+            C.Z[i][k] += timestep(int) * tableau(int).p.a[i, j] * C.F[j][k]
         end
     end
     for k in eachindex(C.Z[i])
@@ -146,7 +146,7 @@ function compute_stage_p!(sol, params, int::GeometricIntegrator{<:EPRK, <:Abstra
 end
 
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:EPRK, <:AbstractProblemPODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{<:EPRK,<:AbstractProblemPODE})
     # store previous solution
     cache(int).Q[0] .= sol.q
     cache(int).P[0] .= sol.p
@@ -156,17 +156,17 @@ function integrate_step!(sol, history, params, int::GeometricIntegrator{<:EPRK, 
         tqᵢ = sol.t + timestep(int) * (tableau(int).q.c[i] - 1)
         tpᵢ = sol.t + timestep(int) * (tableau(int).p.c[i] - 1)
 
-        if tableau(int).q.a[i,i] ≠ 0 && tableau(int).p.a[i,i] ≠ 0
+        if tableau(int).q.a[i, i] ≠ 0 && tableau(int).p.a[i, i] ≠ 0
             error("This is an implicit method!")
-        elseif tableau(int).q.a[i,i] ≠ 0
-            compute_stage_p!(sol, params, int, i, i-1, tpᵢ)
+        elseif tableau(int).q.a[i, i] ≠ 0
+            compute_stage_p!(sol, params, int, i, i - 1, tpᵢ)
             compute_stage_q!(sol, params, int, i, i, tqᵢ)
-        elseif tableau(int).p.a[i,i] ≠ 0
-            compute_stage_q!(sol, params, int, i, i-1, tqᵢ)
+        elseif tableau(int).p.a[i, i] ≠ 0
+            compute_stage_q!(sol, params, int, i, i - 1, tqᵢ)
             compute_stage_p!(sol, params, int, i, i, tpᵢ)
         else
-            compute_stage_q!(sol, params, int, i, i-1, tqᵢ)
-            compute_stage_p!(sol, params, int, i, i-1, tpᵢ)
+            compute_stage_q!(sol, params, int, i, i - 1, tqᵢ)
+            compute_stage_p!(sol, params, int, i, i - 1, tpᵢ)
         end
     end
 

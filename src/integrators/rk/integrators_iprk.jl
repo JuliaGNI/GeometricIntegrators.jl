@@ -71,7 +71,7 @@ struct IPRK{TT<:PartitionedTableau} <: IPRKMethod
     tableau::TT
 end
 
-initmethod(method::IPRKMethod) = IPRK(method)
+initmethod(method::IPRKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = IPRK(method, TT)
 
 solversize(problem::AbstractProblemPODE, method::IPRK) = 2 * ndims(problem) * nstages(method)
 

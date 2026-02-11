@@ -25,7 +25,7 @@ struct DIRK{TT<:Tableau} <: DIRKMethod
     tableau::TT
 end
 
-initmethod(method::DIRKMethod) = DIRK(method)
+initmethod(method::DIRKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = DIRK(method, TT)
 
 solversize(problem::AbstractProblemODE, ::DIRKMethod) = ndims(problem)
 

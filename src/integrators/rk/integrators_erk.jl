@@ -25,7 +25,7 @@ struct ERK{TT<:Tableau} <: ERKMethod
     tableau::TT
 end
 
-initmethod(method::ERKMethod) = ERK(method)
+initmethod(method::ERKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = ERK(method, TT)
 
 
 function Base.show(io::IO, int::GeometricIntegrator{<:ERK})
