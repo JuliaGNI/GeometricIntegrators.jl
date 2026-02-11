@@ -47,11 +47,13 @@ sol = integrate(int)
 ```
 Plot and compare with the exact solution
 ```@example 1
-using Plots
-plot(xlims=[0,1], xlab="t", ylab="x(t)", legend=:bottomright)
-plot!(sol.t, sol.q[:,1], label="numeric")
-plot!(sol.t, exp.(sol.t), label="exact")
-savefig("images/tutorial-ode-1.png") # hide
+using CairoMakie
+fig = Figure()
+ax = Axis(fig[1, 1], xlabel = "t", ylabel = "x(t)", limits = ((0, 1), nothing))
+lines!(ax, sol.t, sol.q[:,1], label = "numeric")
+lines!(ax, sol.t, exp.(sol.t), label = "exact")
+axislegend(ax, position = :rb)
+save("images/tutorial-ode-1.png", fig) # hide
 ```
 
 ![](images/tutorial-ode-1.png)
@@ -197,8 +199,8 @@ The integrate function automatically creates an appropriate solution object,
 that contains the result of the integration.
 
 ```@example 1
-plot(sol.q[:,1], sol.q[:,2], xlab="x(t)", ylab="y(t)", legend=:none)
-savefig("images/tutorial-ode-2.png"); nothing # hide
+fig, ax, line = lines(sol.q[:,1], sol.q[:,2], axis = (xlabel = "x(t)", ylabel = "y(t)"))
+save("images/tutorial-ode-2.png", fig) # hide
 ```
 
 ![](images/tutorial-ode-2.png)
@@ -216,8 +218,8 @@ of the system. The solution return by the integrate step will also be a differen
 solution, adapted to the partitioned system.
 
 ```@example 1
-plot(sol.q[:,1], sol.p[:,1], xlab="q(t)", ylab="p(t)", legend=:none)
-savefig("images/tutorial-pode-1.png"); nothing # hide
+fig, ax, line = lines(sol.q[:,1], sol.p[:,1], axis = (xlabel = "q(t)", ylabel = "p(t)"))
+save("images/tutorial-pode-1.png", fig) # hide
 ```
 
 ![](images/tutorial-pode-1.png)
@@ -536,4 +538,3 @@ or projected [Variational Partitioned Runge-Kutta](@ref vprk) methods.
 
 
 ### Integrators for DAEs
-
