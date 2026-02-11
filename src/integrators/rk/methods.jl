@@ -37,17 +37,17 @@ PRK(tableau)
 
 Returns an explicit or implicit partitioned Runge-Kutta method depending on the tableau.
 """
-function PRK(tableau::PartitionedTableau, ::Type{T}=Float64) where {T}
+function PRK(tableau::PartitionedTableau)
     if RungeKutta.isexplicit(tableau)
         # Create method for explicit partitioned Runge-Kutta tableau
-        return EPRK(tableau, T)
+        return EPRK(tableau)
     elseif RungeKutta.isimplicit(tableau)
         # Create method for implicit partitioned Runge-Kutta tableau
-        return IPRK(tableau, T)
+        return IPRK(tableau)
     end
 end
 
-PRK(tableau::Tableau, ::Type{T}=Float64, args...; kwargs...) where {T} = PRK(PartitionedTableau(tableau, T), args...; kwargs...)
+PRK(tableau::Tableau, ::Type{T}=Float64, args...; kwargs...) where {T} = PRK(PartitionedTableau(tableau), args...; kwargs...)
 PRK(method::PRKMethod, ::Type{T}=Float64, args...; kwargs...) where {T} = PRK(tableau(method, T), args...; kwargs...)
 PRK(method::RKMethod, ::Type{T}=Float64, args...; kwargs...) where {T} = PRK(tableau(method, T), args...; kwargs...)
 EPRK(method::PRKMethod, ::Type{T}=Float64, args...; kwargs...) where {T} = EPRK(tableau(method, T), args...; kwargs...)
