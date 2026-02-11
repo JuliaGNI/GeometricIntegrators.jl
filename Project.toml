@@ -52,5 +52,5 @@ RungeKutta = "fb486d5c-30a0-4a8a-8415-a8b4ace5a6f7"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[targets]
-test = ["Aqua", "GeometricEquations", "GeometricProblems", "RungeKutta", "SafeTestsets", "Test"]
+[workspace]
+projects = ["test", "docs"]
