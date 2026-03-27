@@ -3,6 +3,7 @@
 
 ```@contents
 Pages = [#"modules/discontinuities.md",
+         "modules/base.md",
          "modules/equations.md",
          "modules/solutions.md",
          "modules/integrators.md",
