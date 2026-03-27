@@ -55,7 +55,7 @@ function initial_guess!(sol, history, params, int::SymmetricProjectionIntegrator
 
     # compute initial guess for projected solution
     soltmp = (
-        t=(sol.t + history.t[1]) / 2,
+        t=(sol.t + history[1].t) / 2,
         q=cache(int).q̃,
         p=cache(int).p̃,
         q̇=cache(int).ṽ,

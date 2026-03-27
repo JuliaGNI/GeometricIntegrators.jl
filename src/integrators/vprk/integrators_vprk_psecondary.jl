@@ -5,11 +5,11 @@
 const ParametersVPRKpSecondary = AbstractParametersVPRK{:vprk_psecondary}
 
 function IntegratorCache(params::ParametersVPRKpSecondary{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
-    IntegratorCacheVPRK{DT,D,S}(2*D*S, true; kwargs...)
+    IntegratorCacheVPRK{DT,D,S}(2 * D * S, true; kwargs...)
 end
 
 function IntegratorCache{ST}(params::ParametersVPRKpSecondary{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
-    IntegratorCacheVPRK{ST,D,S}(2*D*S, true; kwargs...)
+    IntegratorCacheVPRK{ST,D,S}(2 * D * S, true; kwargs...)
 end
 
 
@@ -76,17 +76,17 @@ The vector ``d`` is zero for Gauss-Legendre methods and needs to be chosen
 appropriately for Gauss-Lobatto methods (for details see documentation of
 VPRK methods).
 """
-struct IntegratorVPRKpSecondary{DT, TT, D, S,
-                PT <: ParametersVPRKpSecondary{DT,TT},
-                ST <: NonlinearSolver,
-                IT <: InitialGuessIODE{TT}} <: GeometricIntegratorVPRK{DT,TT,D,S}
+struct IntegratorVPRKpSecondary{DT,TT,D,S,
+    PT<:ParametersVPRKpSecondary{DT,TT},
+    ST<:NonlinearSolver,
+    IT<:InitialGuessIODE{TT}} <: GeometricIntegratorVPRK{DT,TT,D,S}
     params::PT
     solver::ST
     iguess::IT
     caches::OldCacheDict{PT}
 
     function IntegratorVPRKpSecondary(params::ParametersVPRKpSecondary{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
-        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
+        new{DT,TT,D,S,typeof(params),ST,IT}(params, solver, iguess, caches)
     end
 
     function IntegratorVPRKpSecondary{DT,D}(equations::NamedTuple, tableau::PartitionedTableau{TT}, nullvec, Δt::TT) where {DT,TT,D}
@@ -94,22 +94,22 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
         S = tableau.s
 
         # compute reduction matrix
-        ω = zeros(TT, S-1, S)
+        ω = zeros(TT, S - 1, S)
         for i in 1:(S-1)
             for j in 1:S
-                ω[i,j] = tableau.q.b[j] * tableau.q.c[j]^(i-1)
+                ω[i, j] = tableau.q.b[j] * tableau.q.c[j]^(i - 1)
             end
         end
 
         # create params
         R = convert(Vector{TT}, [1, tableau.R∞])
-        params = ParametersVPRKpSecondary{DT,D}(equations, tableau, nullvec, Δt, NamedTuple{(:R,:ω)}((R,ω)))
+        params = ParametersVPRKpSecondary{DT,D}(equations, tableau, nullvec, Δt, NamedTuple{(:R, :ω)}((R, ω)))
 
         # create cache dict
         caches = OldCacheDict(params)
 
         # create solver
-        solver = create_nonlinear_solver(DT, 2*D*S, params, caches)
+        solver = create_nonlinear_solver(DT, 2 * D * S, params, caches)
 
         # create initial guess
         iguess = InitialGuessIODE(get_config(:ig_extrapolation), equations[:v̄], equations[:f̄], Δt)
@@ -120,7 +120,7 @@ struct IntegratorVPRKpSecondary{DT, TT, D, S,
 
     function IntegratorVPRKpSecondary(problem::Union{IDAEProblem{DT},LDAEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
         @assert hassecondary(problem)
-        IntegratorVPRKpSecondary{DT, ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
+        IntegratorVPRKpSecondary{DT,ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
 end
 
@@ -136,12 +136,12 @@ end
 
 
 function initial_guess!(int::IntegratorVPRKpSecondary{DT}, sol::SolutionStepPDAE{DT},
-                        cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
+    cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.history.q[2], sol.history.p[2], sol.history.v[2], sol.history.f[2],
-                              sol.history.q[1], sol.history.p[1], sol.history.v[1], sol.history.f[1],
-                              cache.q̃, cache.ṽ,
-                              tableau(int).q.c[i])
+        evaluate!(int.iguess, sol.history[2].q, sol.history[2].p, sol.history[2].v, sol.history[2].f,
+            sol.history[1].q, sol.history[1].p, sol.history[1].v, sol.history[1].f,
+            cache.q̃, cache.ṽ,
+            tableau(int).q.c[i])
 
         for k in eachdim(int)
             cache.x[ndims(int)*(0*nstages(int)+i-1)+k] = cache.ṽ[k]
@@ -170,10 +170,10 @@ end
 
 
 function compute_stages_q_vprk!(q::Vector{ST}, Q::Vector{Vector{ST}},
-                V::Vector{Vector{ST}}, Λ::Vector{Vector{ST}},
-                params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
+    V::Vector{Vector{ST}}, Λ::Vector{Vector{ST}},
+    params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
-    for (Qᵢ,Vᵢ,Λᵢ) in zip(Q,V,Λ)
+    for (Qᵢ, Vᵢ, Λᵢ) in zip(Q, V, Λ)
         @assert D == length(Qᵢ) == length(Vᵢ) == length(Λᵢ) == length(q)
     end
 
@@ -189,10 +189,10 @@ function compute_stages_q_vprk!(q::Vector{ST}, Q::Vector{Vector{ST}},
         for k in 1:D
             y1 = y2 = y3 = y4 = 0
             for j in 1:S
-                y1 += tableau(method).q.a[i,j] * V[j][k]
-                y2 += tableau(method).q.â[i,j] * V[j][k]
-                y3 += tableau(method).q.a[i,j] * Λ[j][k]
-                y4 += tableau(method).q.â[i,j] * Λ[j][k]
+                y1 += tableau(method).q.a[i, j] * V[j][k]
+                y2 += tableau(method).q.â[i, j] * V[j][k]
+                y3 += tableau(method).q.a[i, j] * Λ[j][k]
+                y4 += tableau(method).q.â[i, j] * Λ[j][k]
             end
             Q[i][k] = solstep.q̄[k] + timestep(problem) * (y1 + y2) + timestep(problem) * (y3 + y4)
         end
@@ -213,10 +213,10 @@ end
 
 
 function compute_projection_vprk!(q::Vector{ST}, v::Vector{ST}, p::Vector{ST},
-                Q::Vector{Vector{ST}}, P::Vector{Vector{ST}},
-                V::Vector{Vector{ST}}, F::Vector{Vector{ST}},
-                Λ::Vector{Vector{ST}}, R::Vector{Vector{ST}}, Ψ::Vector{Vector{ST}},
-                params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
+    Q::Vector{Vector{ST}}, P::Vector{Vector{ST}},
+    V::Vector{Vector{ST}}, F::Vector{Vector{ST}},
+    Λ::Vector{Vector{ST}}, R::Vector{Vector{ST}}, Ψ::Vector{Vector{ST}},
+    params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     # create temporary variables
     local t₀::TT = solstep.t̄
@@ -230,7 +230,7 @@ function compute_projection_vprk!(q::Vector{ST}, v::Vector{ST}, p::Vector{ST},
 
     for i in 1:S
         tᵢ = t₀ + timestep(problem) * tableau(method).p.c[i]
-        
+
         # functions(problem).ω(tᵢ, Q[i], V[i], Ω)
         # functions(problem).∇H(tᵢ, Q[i], dH)
 
@@ -244,7 +244,7 @@ end
 
 
 function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vector{ST}}, R::Vector{Vector{ST}},
-                params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
+    params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     local z1::ST
     local z2::ST
@@ -256,10 +256,10 @@ function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vecto
         for k in 1:D
             z1 = z2 = z3 = z4 = 0
             for j in 1:S
-                z1 += tableau(method).p.a[i,j] * F[j][k]
-                z2 += tableau(method).p.â[i,j] * F[j][k]
-                z3 += tableau(method).p.a[i,j] * R[j][k]
-                z4 += tableau(method).p.â[i,j] * R[j][k]
+                z1 += tableau(method).p.a[i, j] * F[j][k]
+                z2 += tableau(method).p.â[i, j] * F[j][k]
+                z3 += tableau(method).p.a[i, j] * R[j][k]
+                z4 += tableau(method).p.â[i, j] * R[j][k]
             end
             b[D*(i-1)+k] = (P[i][k] - solstep.p̄[k]) - timestep(problem) * (z1 + z2) - timestep(problem) * (z3 + z4)
         end
@@ -267,8 +267,8 @@ function compute_rhs_vprk!(b::Vector{ST}, P::Vector{Vector{ST}}, F::Vector{Vecto
 end
 
 function compute_rhs_vprk_projection!(b::Vector{ST}, p::Vector{ST},
-                F::Vector{Vector{ST}}, R::Vector{Vector{ST}}, Ψ::Vector{Vector{ST}}, offset::Int,
-                params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
+    F::Vector{Vector{ST}}, R::Vector{Vector{ST}}, Ψ::Vector{Vector{ST}}, offset::Int,
+    params::ParametersVPRKpSecondary{DT,TT,D,S}) where {ST,DT,TT,D,S}
 
     local z1::ST
     local z2::ST
@@ -291,7 +291,7 @@ function compute_rhs_vprk_projection!(b::Vector{ST}, p::Vector{ST},
     #         end
     #     end
     # end
-    
+
     # for k in 1:D
     #     z1 = z2 = z3 = z4 = 0
     #     for j in 1:S
@@ -307,32 +307,32 @@ end
 
 "Compute stages of variational partitioned Runge-Kutta methods."
 function Integrators.residual!(x::Vector{ST}, b::Vector{ST},
-                params::ParametersVPRKpSecondary{DT,TT,D,S},
-                caches::OldCacheDict) where {ST,DT,TT,D,S}
+    params::ParametersVPRKpSecondary{DT,TT,D,S},
+    caches::OldCacheDict) where {ST,DT,TT,D,S}
 
     # get cache for internal stages
     cache = caches[ST]
 
     compute_stages_vprk!(x, cache.q̃, cache.ṽ, cache.p̃,
-                            cache.Q, cache.V, cache.Λ,
-                            cache.P, cache.F, cache.R,
-                            cache.Φ, params)
+        cache.Q, cache.V, cache.Λ,
+        cache.P, cache.F, cache.R,
+        cache.Φ, params)
 
     # compute b = [P-AF-AR]
     compute_rhs_vprk!(b, cache.P, cache.F, cache.R, params)
 
     # compute b = Φ
-    compute_rhs_vprk_projection!(b, cache.p̃, cache.F, cache.R, cache.Φ, D*S, params)
+    compute_rhs_vprk_projection!(b, cache.p̃, cache.F, cache.R, cache.Φ, D * S, params)
 
     compute_rhs_correction!(b, cache.V, params)
 end
 
 
 function integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::SolutionStepPDAE{DT,TT},
-                                     cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
+    cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
-    
+
     # reset solution
     reset!(sol, timestep(int))
 
@@ -350,10 +350,10 @@ function integrate_step!(int::IntegratorVPRKpSecondary{DT,TT}, sol::SolutionStep
 
     # compute final update
     compute_stages_vprk!(cache.x,
-                         cache.q̃, cache.ṽ, cache.p̃,
-                         cache.Q, cache.V, cache.Λ,
-                         cache.P, cache.F, cache.R,
-                         cache.Φ, int.params)
+        cache.q̃, cache.ṽ, cache.p̃,
+        cache.Q, cache.V, cache.Λ,
+        cache.P, cache.F, cache.R,
+        cache.Φ, int.params)
 
     # compute unprojected solution
     update_solution!(sol.q, sol.q̃, sol.q̄, cache.V, tableau(int).q.b, tableau(int).q.b̂, timestep(int))

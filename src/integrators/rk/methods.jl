@@ -7,16 +7,16 @@ RK(tableau)
 
 Returns an explicit, implicit or diagonally implicit Runge-Kutta method depending on the tableau.
 """
-function RK(tableau::Tableau, ::Type{T}=Float64) where {T}
+function RK(tableau::Tableau)
     if RungeKutta.isexplicit(tableau)
         # Create method for explicit Runge-Kutta tableau
-        return ERK(tableau, T)
+        return ERK(tableau)
     elseif RungeKutta.isdiagonallyimplicit(tableau)
         # Create method for diagonally implicit Runge-Kutta tableau
-        return DIRK(tableau, T)
+        return DIRK(tableau)
     elseif RungeKutta.isfullyimplicit(tableau)
         # Create method for implicit Runge-Kutta tableau
-        return IRK(tableau, T)
+        return IRK(tableau)
     end
 end
 

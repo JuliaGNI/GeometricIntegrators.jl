@@ -1,5 +1,5 @@
 
-struct HSPARKsecondary{DT <: Number, DVT} <: HSPARKMethod
+struct HSPARKsecondary{DT<:Number,DVT} <: HSPARKMethod
     name::Symbol
     o::Int
     s::Int
@@ -16,17 +16,17 @@ struct HSPARKsecondary{DT <: Number, DVT} <: HSPARKMethod
     d::DVT
 
     function HSPARKsecondary(name::Symbol, o::Int, s::Int, r::Int,
-                        q::CoefficientsSPARK{DT}, p::CoefficientsSPARK{DT},
-                        q̃::CoefficientsSPARK{DT}, p̃::CoefficientsSPARK{DT},
-                        ω::Matrix{DT}, d::DVT = nothing) where {DT, DVT <: Union{AbstractVector,Nothing}}
+        q::CoefficientsSPARK{DT}, p::CoefficientsSPARK{DT},
+        q̃::CoefficientsSPARK{DT}, p̃::CoefficientsSPARK{DT},
+        ω::Matrix{DT}, d::DVT=nothing) where {DT,DVT<:Union{AbstractVector,Nothing}}
 
         @assert s > 0 "Number of stages s must be > 0"
         @assert r > 0 "Number of stages r must be > 0"
 
-        @assert s==q.s==p.s==q̃.σ==p̃.σ
-        @assert r==q.σ==p.σ==q̃.s==p̃.s
-        @assert size(ω,1)==r
-        @assert size(ω,2)==r+1
+        @assert s == q.s == p.s == q̃.σ == p̃.σ
+        @assert r == q.σ == p.σ == q̃.s == p̃.s
+        @assert size(ω, 1) == r
+        @assert size(ω, 2) == r + 1
 
         @assert d === nothing || length(d) == r
 
@@ -79,7 +79,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{aligned}
 ```
 """
-const IntegratorHSPARKsecondary{DT,TT} = GeometricIntegrator{<:HSPARKsecondary, <:HDAEProblem{DT,TT}}
+const IntegratorHSPARKsecondary{DT,TT} = GeometricIntegrator{<:HSPARKsecondary,<:HDAEProblem{DT,TT}}
 
 
 function Base.show(io::IO, int::IntegratorHSPARKsecondary)
@@ -99,11 +99,11 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Union{H
 
     for i in 1:nstages(int)
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).q.c[i],
-            q = cache(int).Qi[i],
-            p = cache(int).Pi[i],
-            v = cache(int).Vi[i],
-            f = cache(int).Fi[i],
+            t=history[1].t + timestep(int) * tableau(int).q.c[i],
+            q=cache(int).Qi[i],
+            p=cache(int).Pi[i],
+            v=cache(int).Vi[i],
+            f=cache(int).Fi[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -116,11 +116,11 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Union{H
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t = history.t[1] + timestep(int) * tableau(int).q̃.c[i],
-            q = cache(int).Qp[i],
-            p = cache(int).Pp[i],
-            v = cache(int).Vp[i],
-            f = cache(int).Fp[i],
+            t=history[1].t + timestep(int) * tableau(int).q̃.c[i],
+            q=cache(int).Qp[i],
+            p=cache(int).Pp[i],
+            v=cache(int).Vp[i],
+            f=cache(int).Fp[i],
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -228,17 +228,17 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ]
     for i in 1:S
         for k in 1:D
-            b[2*(D*(i-1)+k-1)+1] = - C.Yi[i][k]
-            b[2*(D*(i-1)+k-1)+2] = - C.Zi[i][k]
+            b[2*(D*(i-1)+k-1)+1] = -C.Yi[i][k]
+            b[2*(D*(i-1)+k-1)+2] = -C.Zi[i][k]
             for j in 1:S
-                b[2*(D*(i-1)+k-1)+1] += tableau(int).q.a[1][i,j] * C.Vi[j][k]
-                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[1][i,j] * C.Fi[j][k]
+                b[2*(D*(i-1)+k-1)+1] += tableau(int).q.a[1][i, j] * C.Vi[j][k]
+                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[1][i, j] * C.Fi[j][k]
             end
             for j in 1:R
-                b[2*(D*(i-1)+k-1)+1] += tableau(int).q.a[2][i,j] * C.Up[j][k]
-                b[2*(D*(i-1)+k-1)+1] += tableau(int).q.a[3][i,j] * C.Λp[j][k]
-                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[2][i,j] * C.Gp[j][k]
-                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[3][i,j] * C.G̅p[j][k]
+                b[2*(D*(i-1)+k-1)+1] += tableau(int).q.a[2][i, j] * C.Up[j][k]
+                b[2*(D*(i-1)+k-1)+1] += tableau(int).q.a[3][i, j] * C.Λp[j][k]
+                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[2][i, j] * C.Gp[j][k]
+                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[3][i, j] * C.G̅p[j][k]
             end
         end
     end
@@ -246,25 +246,25 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ, ωΨ]
     for i in 1:R
         for k in 1:D
-            b[2*D*S+4*(D*(i-1)+k-1)+1] = - C.Yp[i][k]
-            b[2*D*S+4*(D*(i-1)+k-1)+2] = - C.Zp[i][k]
-            b[2*D*S+4*(D*(i-1)+k-1)+3] = - C.Φp[i][k]
+            b[2*D*S+4*(D*(i-1)+k-1)+1] = -C.Yp[i][k]
+            b[2*D*S+4*(D*(i-1)+k-1)+2] = -C.Zp[i][k]
+            b[2*D*S+4*(D*(i-1)+k-1)+3] = -C.Φp[i][k]
             # b[2*D*S+4*(D*(i-1)+k-1)+4] = - C.Ψp[i][k]
             b[2*D*S+4*(D*(i-1)+k-1)+4] = 0
             for j in 1:S
-                b[2*D*S+4*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[1][i,j] * C.Vi[j][k]
-                b[2*D*S+4*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[1][i,j] * C.Fi[j][k]
+                b[2*D*S+4*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[1][i, j] * C.Vi[j][k]
+                b[2*D*S+4*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[1][i, j] * C.Fi[j][k]
             end
             for j in 1:R
-                b[2*D*S+4*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[2][i,j] * C.Up[j][k]
-                b[2*D*S+4*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[3][i,j] * C.Λp[j][k]
-                b[2*D*S+4*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[2][i,j] * C.Gp[j][k]
-                b[2*D*S+4*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[3][i,j] * C.G̅p[j][k]
+                b[2*D*S+4*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[2][i, j] * C.Up[j][k]
+                b[2*D*S+4*(D*(i-1)+k-1)+1] += tableau(int).q̃.a[3][i, j] * C.Λp[j][k]
+                b[2*D*S+4*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[2][i, j] * C.Gp[j][k]
+                b[2*D*S+4*(D*(i-1)+k-1)+2] += tableau(int).p̃.a[3][i, j] * C.G̅p[j][k]
             end
             for j in 1:R
-                b[2*D*S+4*(D*(i-1)+k-1)+4] -= tableau(int).ω[i,j] * C.Ψp[j][k]
+                b[2*D*S+4*(D*(i-1)+k-1)+4] -= tableau(int).ω[i, j] * C.Ψp[j][k]
             end
-            b[2*D*S+4*(D*(i-1)+k-1)+4] -= tableau(int).ω[i,R+1] * C.ϕ̃[k]
+            b[2*D*S+4*(D*(i-1)+k-1)+4] -= tableau(int).ω[i, R+1] * C.ϕ̃[k]
         end
     end
 
@@ -274,7 +274,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     #             b[2*D*S+4*(D*(i-1)+k-1)+2] -= C.μ[k] * tableau(int).d[i] / tableau(int).p.b[2][i]
     #         end
     #     end
-    
+
     #     for k in 1:D
     #         b[2*D*S+4*D*R+k] = 0
     #         for i in 1:R

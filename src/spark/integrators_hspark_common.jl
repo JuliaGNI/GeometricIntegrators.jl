@@ -5,7 +5,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Union{H
     for i in 1:nstages(int)
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t=history.t[1] + timestep(int) * tableau(int).q.c[i],
+            t=history[1].t + timestep(int) * tableau(int).q.c[i],
             q=cache(int).Qi[i],
             p=cache(int).Pi[i],
             q̇=cache(int).Vi[i],

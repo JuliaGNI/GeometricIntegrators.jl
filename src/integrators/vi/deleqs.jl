@@ -81,10 +81,10 @@ function components!(x::AbstractVector{ST}, sol, history, params, int::Geometric
     q .= x
 
     # compute D1Ld(t_n, t_n+1, q_n, q_n+1)
-    equations(int).D1Ld(D1Ld, history.t[1], sol.t, history.q[1], q, params)
+    equations(int).D1Ld(D1Ld, history[1].t, sol.t, history[1].q, q, params)
 
     # compute D2Ld(t_n-1, t_n, q_n-1, q_n)
-    equations(int).D2Ld(D2Ld, history.t[2], history.t[1], history.q[2], history.q[1], params)
+    equations(int).D2Ld(D2Ld, history[2].t, history[1].t, history[2].q, history[1].q, params)
 end
 
 
@@ -99,7 +99,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, history, p
     @assert axes(x) == axes(b)
 
     # copy previous solution from solstep to cache
-    reset!(cache(int, ST), sol..., history.t[1], history.q[1])
+    reset!(cache(int, ST), sol..., history[1].t, history[1].q)
 
     # compute stages from nonlinear solver solution x
     components!(x, sol, history, params, int)
@@ -111,7 +111,7 @@ end
 
 function update!(sol, history, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:DiscreteEulerLagrange}) where {DT}
     # copy previous solution from solstep to cache
-    reset!(cache(int, DT), sol..., history.t[1], history.q[1])
+    reset!(cache(int, DT), sol..., history[1].t, history[1].q)
 
     # compute vector field at internal stages
     components!(x, sol, history, params, int)

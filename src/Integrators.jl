@@ -103,14 +103,6 @@ export SolutionStep,
 
 export reset!, update!, update_vector_fields!, cut_periodic_solution!
 
-# include("solutions/solution_step.jl")
-# include("solutions/solution.jl")
-# include("solutions/solution_step_ode.jl")
-# include("solutions/solution_step_pode.jl")
-# include("solutions/solution_step_dae.jl")
-# include("solutions/solution_step_pdae.jl")
-# include("solutions/solution_step_constructors.jl")
-
 
 export equation, timestep
 

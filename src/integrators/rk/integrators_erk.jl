@@ -23,6 +23,10 @@ ERK(tableau)
 """
 struct ERK{TT<:Tableau} <: ERKMethod
     tableau::TT
+    function ERK(tableau::TT) where {TT<:Tableau}
+        @assert RungeKutta.isexplicit(tableau)
+        new{TT}(tableau)
+    end
 end
 
 initmethod(method::ERKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = ERK(method, TT)

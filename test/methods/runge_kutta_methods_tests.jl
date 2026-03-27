@@ -3,7 +3,7 @@ using RungeKutta.Tableaus
 
 using GeometricIntegrators.Integrators: tableau
 
-ode  = odeproblem()
+ode = odeproblem()
 pode = podeproblem()
 hode = hodeproblem()
 iode = iodeproblem()
@@ -67,7 +67,7 @@ end
 @testset "$(rpad("Partitioned Runge-Kutta methods",80))" begin
 
     @test typeof(GeometricIntegrator(pode, SRK3())) <: GeometricIntegrator{<:IPRK}
-    
+
     @test typeof(GeometricIntegrator(pode, Gauss(2))) <: GeometricIntegrator{<:IPRK}
     @test typeof(GeometricIntegrator(pode, RadauIA(2))) <: GeometricIntegrator{<:IPRK}
     @test typeof(GeometricIntegrator(pode, RadauIB(2))) <: GeometricIntegrator{<:IPRK}
@@ -83,7 +83,7 @@ end
     @test typeof(GeometricIntegrator(pode, LobattoIIIF(2))) <: GeometricIntegrator{<:IPRK}
     @test typeof(GeometricIntegrator(pode, LobattoIIIF̄(2))) <: GeometricIntegrator{<:IPRK}
     @test typeof(GeometricIntegrator(pode, LobattoIIIG(2))) <: GeometricIntegrator{<:IPRK}
-    
+
     @test typeof(GeometricIntegrator(pode, LobattoIIIAIIIB(2))) <: GeometricIntegrator{<:EPRK}
     @test typeof(GeometricIntegrator(pode, LobattoIIIBIIIA(2))) <: GeometricIntegrator{<:EPRK}
     @test typeof(GeometricIntegrator(pode, LobattoIIIAIIIĀ(2))) <: GeometricIntegrator{<:EPRK}

@@ -145,7 +145,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IRK,<:A
     # compute initial guess for internal stages
     for i in eachstage(int)
         soltmp = (
-            t=history.t[1] + timestep(int) * tableau(int).c[i],
+            t=history[1].t + timestep(int) * tableau(int).c[i],
             q=cache(int).Q[i],
             q̇=cache(int).V[i],
         )

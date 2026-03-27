@@ -83,7 +83,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CTDVI})
 
     # compute initial guess for solution q(n+1/2)
     soltmp = (
-        t=(sol.t + history.t[1]) / 2,
+        t=(sol.t + history[1].t) / 2,
         q=cache(int).q,
         p=cache(int).θ,
         q̇=cache(int).v,

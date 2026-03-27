@@ -35,7 +35,7 @@ end
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VPRK})
     for i in eachstage(int)
         soltmp = (
-            t=history.t[1] + timestep(int) * tableau(int).q.c[i],
+            t=history[1].t + timestep(int) * tableau(int).q.c[i],
             q=cache(int).Q[i],
             p=cache(int).P[i],
             q̇=cache(int).V[i],

@@ -55,7 +55,7 @@ end
 @inline CacheType(ST, problem::AbstractProblemIODE, method::IRK) = IRKimplicitCache{ST,ndims(problem),nstages(tableau(method))}
 
 
-function solversize(problem::AbstractProblemIODE, method::IRK)
+function solversize(problem::AbstractProblemIODE, method::IRKMethod)
     n = ndims(problem) * nstages(method)
 
     if implicit_update(method)
@@ -105,7 +105,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IRK,<:A
     # assemble initial guess for nonlinear solver solution vector
     for i in eachstage(int)
         soltmp = (
-            t=history.t[1] + timestep(int) * tableau(int).c[i],
+            t=history[1].t + timestep(int) * tableau(int).c[i],
             q=cache(int).Q[i],
             p=cache(int).Θ[i],
             q̇=cache(int).V[i],

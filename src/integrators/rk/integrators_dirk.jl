@@ -23,6 +23,10 @@ DIRK(tableau)
 """
 struct DIRK{TT<:Tableau} <: DIRKMethod
     tableau::TT
+    function DIRK(tableau::TT) where {TT<:Tableau}
+        @assert RungeKutta.isdiagonallyimplicit(tableau)
+        new{TT}(tableau)
+    end
 end
 
 initmethod(method::DIRKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = DIRK(method, TT)
@@ -111,7 +115,7 @@ end
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DIRK})
     for i in eachstage(int)
         soltmp = (
-            t=history.t[1] + timestep(int) * tableau(int).c[i],
+            t=history[1].t + timestep(int) * tableau(int).c[i],
             q=cache(int).Q[i],
             q̇=cache(int).V[i],
         )

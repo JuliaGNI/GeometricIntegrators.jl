@@ -44,7 +44,7 @@ function ProjectionIntegrator(
     solvermethod::SolverMethod,
     iguess::Union{InitialGuess,Extrapolation},
     subint::AbstractIntegrator;
-    method=initmethod(projectionmethod, problem),
+    method=initmethod(projectionmethod),
     caches=CacheDict(problem, method),
     options...
 )

@@ -82,7 +82,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SPARKMe
     for i in 1:nstages(int)
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t=history.t[1] + timestep(int) * tableau(int).q.c[i],
+            t=history[1].t + timestep(int) * tableau(int).q.c[i],
             q=cache(int).Qi[i],
             p=cache(int).Pi[i],
             q̇=cache(int).Vi[i],
@@ -103,7 +103,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SPARKMe
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t=history.t[1] + timestep(int) * tableau(int).q̃.c[i],
+            t=history[1].t + timestep(int) * tableau(int).q̃.c[i],
             q=cache(int).Qp[i],
             p=cache(int).Pp[i],
             q̇=cache(int).Vp[i],
