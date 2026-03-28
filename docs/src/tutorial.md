@@ -50,8 +50,8 @@ Plot and compare with the exact solution
 using CairoMakie
 fig = Figure()
 ax = Axis(fig[1, 1], xlabel = "t", ylabel = "x(t)", limits = ((0, 1), nothing))
-lines!(ax, sol.timeser, sol.q[:,1], label = "numeric")
-lines!(ax, sol.timeser, exp.(sol.timeser), label = "exact")
+lines!(ax, sol.t, sol.q[:,1], label = "numeric")
+lines!(ax, sol.t, exp.(sol.t), label = "exact")
 axislegend(ax, position = :rb)
 save("images/tutorial-ode-1.png", fig) # hide
 ```
