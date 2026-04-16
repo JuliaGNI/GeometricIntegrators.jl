@@ -93,6 +93,45 @@ end
     sol = integrate(ode, Gauss(8))
     @test relative_maximum_error(sol, ref).q < 5E-15
 
+    sol = integrate(ode, RadauIA(2))
+    @test relative_maximum_error(sol, ref).q < 1E-5
+
+    sol = integrate(ode, RadauIB(2))
+    @test relative_maximum_error(sol, ref).q < 5E-8
+
+    sol = integrate(ode, RadauIIA(2))
+    @test relative_maximum_error(sol, ref).q < 1E-5
+
+    sol = integrate(ode, RadauIIB(2))
+    @test relative_maximum_error(sol, ref).q < 5E-8
+
+    sol = integrate(ode, LobattoIII(2))
+    @test relative_maximum_error(sol, ref).q < 1E-3
+
+    sol = integrate(ode, LobattoIIIA(2))
+    @test relative_maximum_error(sol, ref).q < 5E-4
+
+    sol = integrate(ode, LobattoIIIB(2))
+    @test relative_maximum_error(sol, ref).q < 5E-2
+
+    sol = integrate(ode, LobattoIIIC(2))
+    @test relative_maximum_error(sol, ref).q < 1E-3
+
+    sol = integrate(ode, LobattoIIID(2))
+    @test relative_maximum_error(sol, ref).q < 1E-3
+
+    sol = integrate(ode, LobattoIIIE(2))
+    @test relative_maximum_error(sol, ref).q < 1E-4
+
+    sol = integrate(ode, LobattoIIIF(2))
+    @test relative_maximum_error(sol, ref).q < 5E-8
+
+    sol = integrate(ode, LobattoIIIF̄(2))
+    @test relative_maximum_error(sol, ref).q < 5E-8
+
+    sol = integrate(ode, LobattoIIIG(2))
+    @test relative_maximum_error(sol, ref).q < 1E-4
+
 end
 
 
