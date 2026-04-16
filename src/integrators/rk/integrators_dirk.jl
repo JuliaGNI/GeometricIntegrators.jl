@@ -13,6 +13,8 @@ abstract type DIRKMethod <: IRKMethod end
 default_solver(::DIRKMethod) = Newton()
 default_iguess(::DIRKMethod) = HermiteExtrapolation()
 
+solversize(problem::AbstractProblemODE, ::DIRKMethod) = ndims(problem)
+
 
 """
 Diagonally Implicit Runge-Kutta Method
@@ -30,8 +32,6 @@ struct DIRK{TT<:Tableau} <: DIRKMethod
 end
 
 initmethod(method::DIRKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = DIRK(method, TT)
-
-solversize(problem::AbstractProblemODE, ::DIRKMethod) = ndims(problem)
 
 
 function Base.show(io::IO, int::GeometricIntegrator{<:DIRK})
