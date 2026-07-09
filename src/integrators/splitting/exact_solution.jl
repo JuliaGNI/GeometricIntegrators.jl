@@ -4,10 +4,10 @@ Implements the [`GeometricIntegrator`](@ref) interface for the exact solution of
 struct ExactSolution <: GeometricMethod end
 
 function Cache{ST}(problem::SubstepProblem, method::ExactSolution; kwargs...) where {ST}
-    SplittingCache{ST,typeof(timestep(problem)),ndims(problem)}(initial_conditions(problem).q; kwargs...)
+    SplittingCache{ST,typeof(timestep(problem))}(initial_conditions(problem).q; kwargs...)
 end
 
-@inline CacheType(ST, problem::SubstepProblem, ::ExactSolution) = SplittingCache{ST,typeof(timestep(problem)),ndims(problem)}
+@inline CacheType(ST, problem::SubstepProblem, ::ExactSolution) = SplittingCache{ST,typeof(timestep(problem))}
 
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ExactSolution,<:SubstepProblem})

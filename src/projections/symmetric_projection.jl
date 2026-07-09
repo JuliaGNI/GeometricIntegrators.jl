@@ -18,7 +18,7 @@ function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:Symmetric
 end
 
 @inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:SymmetricProjection}) =
-    ProjectionCache{ST,timetype(problem),typeof(problem),ndims(problem),nconstraints(problem),solversize(problem, parent(method))}
+    ProjectionCache{ST,timetype(problem),typeof(problem),nconstraints(problem),solversize(problem, parent(method))}
 
 
 default_solver(::ProjectedMethod{<:SymmetricProjection}) = Newton()
@@ -35,7 +35,7 @@ default_iguess(::ProjectedMethod{<:SymmetricProjection}) = HermiteExtrapolation(
 
 
 function split_nlsolution(x::AbstractVector, int::SymmetricProjectionIntegrator)
-    D = ndims(int)
+    D = ndims(cache(int))
     M = nconstraints(int)
     N = solversize(problem(int), parent(method(int)))
 
@@ -65,10 +65,10 @@ function initial_guess!(sol, history, params, int::SymmetricProjectionIntegrator
     # TODO: Fix this!
 
     # copy initial guess for projected solution to common solution vector
-    cache(int).x̃[1:ndims(int)] .= cache(int).q̃
+    cache(int).x̃[1:ndims(cache(int))] .= cache(int).q̃
 
     # set initial guess for Lagrange multiplier to zero
-    cache(int).x̃[ndims(int)+1:end] .= 0
+    cache(int).x̃[ndims(cache(int))+1:end] .= 0
 end
 
 function components!(x::AbstractVector{ST}, sol, params, int::SymmetricProjectionIntegrator{<:DAEProblem}) where {ST}
@@ -82,7 +82,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::SymmetricProjectio
 
     # copy x to λ
     for k in eachindex(C.λ)
-        C.λ[k] = x[ndims(int)+k]
+        C.λ[k] = x[ndims(C)+k]
     end
 
     # compute u=λ and g=∇ϑ(q)⋅λ
@@ -106,7 +106,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::SymmetricProjectio
 
     # copy x to λ
     for k in eachindex(C.λ)
-        C.λ[k] = x[ndims(int)+k]
+        C.λ[k] = x[ndims(C)+k]
     end
 
     # compute u = λ
@@ -127,7 +127,7 @@ function residual!(b::AbstractVector{ST}, sol, params, int::SymmetricProjectionI
     local C = cache(int, ST)
 
     # compute b = q̄ - q
-    for k in 1:ndims(int)
+    for k in 1:ndims(C)
         b[k] = C.q̄[k] - sol.q[k]
     end
 
@@ -136,7 +136,7 @@ function residual!(b::AbstractVector{ST}, sol, params, int::SymmetricProjectionI
 
     # compute b = ϕ(q) or b = ϕ(q,p) or b = ϕ(...)
     for k in 1:nconstraints(int)
-        b[ndims(int)+k] = C.ϕ[k]
+        b[ndims(C)+k] = C.ϕ[k]
     end
 end
 
@@ -146,7 +146,7 @@ function residual!(b::AbstractVector{ST}, sol, params, int::SymmetricProjectionI
     local C = cache(int, ST)
 
     # compute b = q̄ - q
-    for k in 1:ndims(int)
+    for k in 1:ndims(C)
         b[k] = C.q̄[k] - sol.q[k]
     end
 
@@ -155,7 +155,7 @@ function residual!(b::AbstractVector{ST}, sol, params, int::SymmetricProjectionI
 
     # compute b = ϕ(q) or b = ϕ(q,p) or b = ϕ(...)
     for k in 1:nconstraints(int)
-        b[ndims(int)+k] = C.ϑ[k] - sol.p[k]
+        b[ndims(C)+k] = C.ϑ[k] - sol.p[k]
     end
 end
 

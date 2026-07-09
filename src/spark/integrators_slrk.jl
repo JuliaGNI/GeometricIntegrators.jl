@@ -40,7 +40,7 @@ hasnullvector(method::SLRK{DT,Nothing}) where {DT} = false
 hasnullvector(method::SLRK{DT,<:AbstractVector}) where {DT} = true
 
 solversize(problem::LDAEProblem, method::SLRK) =
-    4 * ndims(problem) * nstages(method)
+    4 * length(vec(initial_conditions(problem).q)) * nstages(method)
 
 
 @doc raw"""
@@ -118,6 +118,7 @@ end
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SLRK,<:LDAEProblem})
     # get caches for nonlinear solver vector
     local x = cache(int).x
+    local D = ndims(cache(int))
 
     # compute initial guess for internal stages
     for i in 1:pstages(method(int))
@@ -134,8 +135,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SLRK,<:
 
     # assemble initial guess for nonlinear solver solution vector
     for i in 1:pstages(method(int))
-        for k in 1:ndims(problem(int))
-            offset = 4 * (ndims(int) * (i - 1) + k - 1)
+        for k in 1:D
+            offset = 4 * (D * (i - 1) + k - 1)
             x[offset+1] = (cache(int).Qp[i][k] - sol.q[k]) / timestep(int)
             x[offset+2] = (cache(int).Pp[i][k] - sol.p[k]) / timestep(int)
             x[offset+3] = cache(int).Vp[i][k]
@@ -144,8 +145,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SLRK,<:
     end
 
     if hasnullvector(method(int))
-        for k in 1:ndims(int)
-            x[4*ndims(int)*pstages(method(int))+k] = 0
+        for k in 1:D
+            x[4*D*pstages(method(int))+k] = 0
         end
     end
 end
@@ -154,14 +155,15 @@ end
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:SLRK}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
+    local D = ndims(C)
 
     for i in eachindex(C.Yp, C.Zp, C.Vp, C.Λp)
         for k in eachindex(C.Yp[i], C.Zp[i], C.Vp[i], C.Λp[i])
             # copy y to Y, Z and Λ
-            C.Yp[i][k] = x[4*(ndims(int)*(i-1)+k-1)+1]
-            C.Zp[i][k] = x[4*(ndims(int)*(i-1)+k-1)+2]
-            C.Vp[i][k] = x[4*(ndims(int)*(i-1)+k-1)+3]
-            C.Λp[i][k] = x[4*(ndims(int)*(i-1)+k-1)+4]
+            C.Yp[i][k] = x[4*(D*(i-1)+k-1)+1]
+            C.Zp[i][k] = x[4*(D*(i-1)+k-1)+2]
+            C.Vp[i][k] = x[4*(D*(i-1)+k-1)+3]
+            C.Λp[i][k] = x[4*(D*(i-1)+k-1)+4]
 
             # compute Q and P
             C.Qp[i][k] = sol.q[k] + timestep(int) * C.Yp[i][k]
@@ -178,7 +180,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
 
     if hasnullvector(method(int))
         for k in eachindex(C.μ)
-            C.μ[k] = x[4*ndims(int)*nstages(int)+k]
+            C.μ[k] = x[4*D*nstages(int)+k]
         end
     end
 
@@ -202,14 +204,14 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # get cache and number of internal stages
     local C = cache(int, ST)
     local S = nstages(int)
-    local D = ndims(int)
+    local D = ndims(C)
 
     # compute stages from nonlinear solver solution x
     components!(x, sol, params, int)
 
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ, ωΨ]
     for i in 1:nstages(int)
-        for k in 1:ndims(int)
+        for k in 1:D
             b[4*(D*(i-1)+k-1)+1] = -C.Yp[i][k]
             b[4*(D*(i-1)+k-1)+2] = -C.Zp[i][k]
             b[4*(D*(i-1)+k-1)+3] = -C.Φp[i][k]
@@ -227,13 +229,13 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
 
     if hasnullvector(method(int))
         for i in 1:nstages(int)
-            for k in 1:ndims(int)
+            for k in 1:D
                 b[4*(D*(i-1)+k-1)+2] += C.μ[k] * method(int).d[i] / method(int).p.b[i]
                 b[4*(D*(i-1)+k-1)+3] += C.μ[k] * method(int).d[i] / method(int).p.b[i]
             end
         end
 
-        for k in 1:ndims(int)
+        for k in 1:D
             b[4*D*S+k] = 0
             for i in 1:nstages(int)
                 b[4*D*S+k] -= C.Vp[i][k] * method(int).d[i]

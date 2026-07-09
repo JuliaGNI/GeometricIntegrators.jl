@@ -15,7 +15,7 @@ Variational partitioned Runge-Kutta integrator cache.
 * `Y`: integral of vector field of internal stages of q
 * `Z`: integral of vector field of internal stages of p
 """
-mutable struct VPRKCache{ST,D,S} <: IODEIntegratorCache{ST,D}
+mutable struct VPRKCache{ST,S} <: IODEIntegratorCache{ST}
     x::Vector{ST}
     x̄::Vector{ST}
 
@@ -57,7 +57,9 @@ mutable struct VPRKCache{ST,D,S} <: IODEIntegratorCache{ST,D}
     G::Vector{Vector{ST}}
     R::Vector{Vector{ST}}
 
-    function VPRKCache{ST,D,S}(n, projection::Bool=false, m=0) where {ST,D,S}
+    function VPRKCache{ST,S}(ics, n, projection::Bool=false, m=0) where {ST,S}
+        D = length(vec(ics.q))
+
         # create solver vector
         x = zeros(ST,n)
         x̄ = zeros(ST,m)
@@ -132,27 +134,26 @@ mutable struct VPRKCache{ST,D,S} <: IODEIntegratorCache{ST,D}
     end
 end
 
-function VPRKCache(ST, D, S, N, ::VPRKMethod)
-    VPRKCache{ST,D,S}(N, false)
+function VPRKCache(ics, ST, S, N, ::VPRKMethod)
+    VPRKCache{ST,S}(ics, N, false)
 end
 
-# function IntegratorCacheVPRK(ST, D, S, N, ::ProjectedVPRK)
-#     IntegratorCacheVPRK{ST,D,S}(N, true)
+# function IntegratorCacheVPRK(ics, ST, S, N, ::ProjectedVPRK)
+#     IntegratorCacheVPRK{ST,S}(ics, N, true)
 # end
 
 nlsolution(cache::VPRKCache) = cache.x
 
 
 function Cache{ST}(problem::AbstractProblemIODE, method::VPRKMethod; kwargs...) where {ST}
-    D = ndims(problem)
     S = nstages(method)
     N = solversize(problem, method)
 
     # if hasnullvector(method)
-    #     N += D
+    #     N += ndims(problem)
     # end
 
-    VPRKCache(ST, D, S, N, method; kwargs...)
+    VPRKCache(initial_conditions(problem), ST, S, N, method; kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblemIODE, method::VPRKMethod) = VPRKCache{ST, ndims(problem), nstages(method)}
+@inline CacheType(ST, ::AbstractProblemIODE, method::VPRKMethod) = VPRKCache{ST, nstages(method)}

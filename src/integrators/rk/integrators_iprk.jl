@@ -73,7 +73,7 @@ end
 
 initmethod(method::IPRKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = IPRK(method, TT)
 
-solversize(problem::AbstractProblemPODE, method::IPRK) = 2 * ndims(problem) * nstages(method)
+solversize(problem::AbstractProblemPODE, method::IPRK) = 2 * length(vec(initial_conditions(problem).q)) * nstages(method)
 
 function Base.show(io::IO, int::GeometricIntegrator{<:IPRK})
     print(io, "\nImplicit Partitioned Runge-Kutta Integrator with:\n")
@@ -100,7 +100,7 @@ Implicit partitioned Runge-Kutta integrator cache.
 * `Y`: summed vector field of internal stages Q
 * `Z`: summed vector field of internal stages P
 """
-struct IPRKCache{ST,D,S,N} <: PODEIntegratorCache{ST,D}
+struct IPRKCache{ST,S,N} <: PODEIntegratorCache{ST}
     x::Vector{ST}
 
     Q::Vector{Vector{ST}}
@@ -110,7 +110,9 @@ struct IPRKCache{ST,D,S,N} <: PODEIntegratorCache{ST,D}
     Y::Vector{Vector{ST}}
     Z::Vector{Vector{ST}}
 
-    function IPRKCache{ST,D,S,N}() where {ST,D,S,N}
+    function IPRKCache{ST,S,N}(ics) where {ST,S,N}
+        D = length(vec(ics.q))
+
         # create solver vector
         x = zeros(ST, N)
 
@@ -128,18 +130,17 @@ end
 
 function Cache{ST}(problem::EquationProblem, method::IPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
-    D = ndims(problem)
-    IPRKCache{ST,D,S,solversize(problem, method)}(; kwargs...)
+    IPRKCache{ST,S,solversize(problem, method)}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::IPRK) = IPRKCache{ST,ndims(problem),nstages(tableau(method)),solversize(problem, method)}
+@inline CacheType(ST, problem::EquationProblem, method::IPRK) = IPRKCache{ST,nstages(tableau(method)),solversize(problem, method)}
 
 nlsolution(cache::IPRKCache) = cache.x
 
 
 function internal_variables(method::IPRK, problem::AbstractProblemPODE{DT,TT}) where {DT,TT}
     S = nstages(method)
-    D = ndims(problem)
+    D = length(vec(initial_conditions(problem).q))
 
     Q = create_internal_stage_vector(DT, D, S)
     P = create_internal_stage_vector(DT, D, S)
@@ -178,13 +179,14 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK,<:
     end
 
     # assemble initial guess for nonlinear solver solution vector
+    D = length(cache(int).V[1])
     for i in eachstage(int)
-        for k in 1:ndims(int)
-            x[2*(ndims(int)*(i-1)+k-1)+1] = 0
-            x[2*(ndims(int)*(i-1)+k-1)+2] = 0
+        for k in 1:D
+            x[2*(D*(i-1)+k-1)+1] = 0
+            x[2*(D*(i-1)+k-1)+2] = 0
             for j in eachstage(int)
-                x[2*(ndims(int)*(i-1)+k-1)+1] += tableau(int).q.a[i, j] * cache(int).V[j][k]
-                x[2*(ndims(int)*(i-1)+k-1)+2] += tableau(int).p.a[i, j] * cache(int).F[j][k]
+                x[2*(D*(i-1)+k-1)+1] += tableau(int).q.a[i, j] * cache(int).V[j][k]
+                x[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[i, j] * cache(int).F[j][k]
             end
         end
     end
@@ -195,7 +197,7 @@ end
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemPODE}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
-    local D = ndims(int)
+    local D = length(C.V[1])
 
     for i in eachstage(int)
         # copy x to Y and Z
@@ -221,7 +223,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
 
     # get cache for internal stages
     local C = cache(int, ST)
-    local D = ndims(int)
+    local D = length(C.V[1])
 
     # compute stages from nonlinear solver solution x
     components!(x, sol, params, int)

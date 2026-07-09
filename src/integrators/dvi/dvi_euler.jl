@@ -27,7 +27,7 @@ end
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DVIEuler})
     # set some local variables for convenience
-    local D = ndims(int)
+    local D = length(cache(int).q)
     local x = nlsolution(int)
 
     # compute initial guess for solution
@@ -53,7 +53,7 @@ end
 
 function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIEuler}) where {ST}
     # set some local variables for convenience
-    local D = ndims(int)
+    local D = length(cache(int, ST).q)
     local t = sol.t
     local t̄ = sol.t - timestep(int)
 
@@ -80,7 +80,7 @@ end
 
 function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIA}) where {ST}
     # set some local variables for convenience
-    local D = ndims(int)
+    local D = length(cache(int, ST).q)
 
     # compute b
     for k in 1:div(D, 2)
@@ -97,7 +97,7 @@ end
 
 function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIB}) where {ST}
     # set some local variables for convenience
-    local D = ndims(int)
+    local D = length(cache(int, ST).q)
 
     # compute b
     for k in 1:div(D, 2)

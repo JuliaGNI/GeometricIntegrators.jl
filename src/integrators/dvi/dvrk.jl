@@ -66,7 +66,7 @@ Degenerate Variational Runge-Kutta integrator cache.
 * `Θ`: implicit function of internal stages
 * `F`: vector field of implicit function
 """
-struct DVRKCache{DT,D,S} <: IODEIntegratorCache{DT,D}
+struct DVRKCache{DT,S} <: IODEIntegratorCache{DT}
     x::Vector{DT}
 
     q̄::Vector{DT}
@@ -82,7 +82,8 @@ struct DVRKCache{DT,D,S} <: IODEIntegratorCache{DT,D}
     Θ::Vector{Vector{DT}}
     F::Vector{Vector{DT}}
 
-    function DVRKCache{DT,D,S}() where {DT,D,S}
+    function DVRKCache{DT,S}(ics) where {DT,S}
+        D = length(vec(ics.q))
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         Θ = create_internal_stage_vector(DT, D, S)
@@ -99,10 +100,10 @@ end
 nlsolution(cache::DVRKCache) = cache.x
 
 function Cache{ST}(problem::Union{IODEProblem,LODEProblem}, method::DVRK; kwargs...) where {ST}
-    DVRKCache{ST,ndims(problem),nstages(tableau(method))}(; kwargs...)
+    DVRKCache{ST,nstages(tableau(method))}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::Union{IODEProblem,LODEProblem}, method::DVRK) = DVRKCache{ST,ndims(problem)}
+@inline CacheType(ST, ::Union{IODEProblem,LODEProblem}, method::DVRK) = DVRKCache{ST,nstages(tableau(method))}
 
 
 function Base.show(io::IO, int::GeometricIntegrator{<:DVRK})
@@ -116,7 +117,7 @@ end
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DVRK})
     # set some local variables for convenience
-    local D = ndims(int)
+    local D = length(cache(int).q)
     local x = nlsolution(int)
 
     # compute initial guess for internal stages
@@ -147,14 +148,14 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DVRK})
     solutionstep!(soltmp, history, problem(int), iguess(int))
 
     for k in 1:D
-        x[ndims(int)*nstages(int)+k] = cache(int).q[k]
+        x[D*nstages(int)+k] = cache(int).q[k]
     end
 end
 
 
 function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVRK}) where {ST}
     # set some local variables for convenience and clarity
-    local D = ndims(int)
+    local D = length(cache(int, ST).q)
     local S = nstages(tableau(int))
 
     # copy x to V
@@ -192,7 +193,7 @@ end
 # Compute stages of fully implicit Runge-Kutta methods.
 function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVRK}) where {ST}
     # set some local variables for convenience and clarity
-    local D = ndims(int)
+    local D = length(cache(int, ST).q)
     local S = nstages(tableau(int))
 
     # compute b

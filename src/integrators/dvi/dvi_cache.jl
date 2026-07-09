@@ -15,7 +15,7 @@ Degenerate variational integrator cache.
 * `v̄`: vector field at previous timestep
 * `f̄`: foce field evaluated on solution at previous timestep
 """
-struct DVICache{DT,D} <: IODEIntegratorCache{DT,D}
+struct DVICache{DT} <: IODEIntegratorCache{DT}
     x::Vector{DT}
 
     q::Vector{DT}
@@ -32,8 +32,9 @@ struct DVICache{DT,D} <: IODEIntegratorCache{DT,D}
     p̃::Vector{DT}
     f̃::Vector{DT}
 
-    function DVICache{DT,D}() where {DT,D}
-        new(zeros(DT,2D), 
+    function DVICache{DT}(ics) where {DT}
+        D = length(vec(ics.q))
+        new(zeros(DT,2D),
             zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D),
             zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D),
             zeros(DT,D), zeros(DT,D), zeros(DT,D))
@@ -43,7 +44,7 @@ end
 nlsolution(cache::DVICache) = cache.x
 
 function Cache{ST}(problem::AbstractProblemIODE, method::DVIMethod; kwargs...) where {ST}
-    DVICache{ST, ndims(problem)}(; kwargs...)
+    DVICache{ST}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblemIODE, method::DVIMethod) = DVICache{ST, ndims(problem)}
+@inline CacheType(ST, ::AbstractProblemIODE, method::DVIMethod) = DVICache{ST}

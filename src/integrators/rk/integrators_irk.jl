@@ -49,7 +49,7 @@ implicit_update(::IRKMethod) = false
 default_solver(::IRKMethod) = Newton()
 default_iguess(::IRKMethod) = HermiteExtrapolation()
 
-solversize(problem::AbstractProblemODE, method::IRKMethod) = ndims(problem) * nstages(method)
+solversize(problem::AbstractProblemODE, method::IRKMethod) = length(vec(initial_conditions(problem).q)) * nstages(method)
 
 
 """
@@ -93,14 +93,15 @@ Implicit Runge-Kutta integrator cache.
 * `Y`: vector field of internal stages
 * `J`: Jacobi matrices for all internal stages
 """
-struct IRKCache{DT,D,S} <: ODEIntegratorCache{DT,D}
+struct IRKCache{DT,S} <: ODEIntegratorCache{DT}
     x::Vector{DT}
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
     J::Vector{Matrix{DT}}
 
-    function IRKCache{DT,D,S}() where {DT,D,S}
+    function IRKCache{DT,S}(ics) where {DT,S}
+        D = length(vec(ics.q))
         x = zeros(DT, D * S)
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
@@ -114,16 +115,15 @@ nlsolution(cache::IRKCache) = cache.x
 
 function Cache{ST}(problem::AbstractProblem, method::IRKMethod; kwargs...) where {ST}
     S = nstages(tableau(method))
-    D = ndims(problem)
-    IRKCache{ST,D,S}(; kwargs...)
+    IRKCache{ST,S}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblem, method::IRKMethod) = IRKCache{ST,ndims(problem),nstages(tableau(method))}
+@inline CacheType(ST, ::AbstractProblem, method::IRKMethod) = IRKCache{ST,nstages(tableau(method))}
 
 
 function internal_variables(method::IRKMethod, problem::AbstractProblemODE{DT,TT}) where {DT,TT}
     S = nstages(method)
-    D = ndims(problem)
+    D = length(vec(initial_conditions(problem).q))
 
     Q = create_internal_stage_vector(DT, D, S)
     V = create_internal_stage_vector(DT, D, S)
@@ -153,9 +153,10 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IRK,<:A
     end
 
     # assemble initial guess for nonlinear solver solution vector
+    D = length(cache(int).V[1])
     for i in eachstage(int)
-        offset = ndims(int) * (i - 1)
-        for k in 1:ndims(int)
+        offset = D * (i - 1)
+        for k in 1:D
             cache(int).x[offset+k] = 0
             for j in eachstage(int)
                 cache(int).x[offset+k] += timestep(int) * tableau(int).a[i, j] * cache(int).V[j][k]
@@ -168,7 +169,7 @@ end
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IRK,<:AbstractProblemODE}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
-    local D = ndims(int)
+    local D = length(C.V[1])
 
     # copy x to Y and compute Q = q + Y
     for i in eachindex(C.Q, C.Y)
@@ -190,7 +191,7 @@ end
 function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IRK,<:AbstractProblemODE}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
-    local D = ndims(int)
+    local D = length(C.V[1])
 
     # compute b = - (Y-AV)
     for i in eachindex(C.Y)

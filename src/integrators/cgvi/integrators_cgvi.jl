@@ -85,7 +85,7 @@ function Base.show(io::IO, method::CGVI)
 end
 
 
-struct CGVICache{ST,D,S,R} <: IODEIntegratorCache{ST,D}
+struct CGVICache{ST,S,R} <: IODEIntegratorCache{ST}
     x::Vector{ST}
 
     q̃::Vector{ST}
@@ -101,7 +101,8 @@ struct CGVICache{ST,D,S,R} <: IODEIntegratorCache{ST,D}
     F::Vector{Vector{ST}}
 
 
-    function CGVICache{ST,D,S,R}() where {ST,D,S,R}
+    function CGVICache{ST,S,R}(ics) where {ST,S,R}
+        D = length(vec(ics.q))
         x = zeros(ST, D * (S + 1))
 
         # create temporary vectors
@@ -125,15 +126,15 @@ end
 nlsolution(cache::CGVICache) = cache.x
 
 function Cache{ST}(problem::AbstractProblemIODE, method::CGVI; kwargs...) where {ST}
-    CGVICache{ST,ndims(problem),nbasis(method),nnodes(method)}(; kwargs...)
+    CGVICache{ST,nbasis(method),nnodes(method)}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblemIODE, method::CGVI) = CGVICache{ST,ndims(problem),nbasis(method),nnodes(method)}
+@inline CacheType(ST, ::AbstractProblemIODE, method::CGVI) = CGVICache{ST,nbasis(method),nnodes(method)}
 
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CGVI})
     # set some local variables for convenience
-    local D = ndims(int)
+    local D = length(cache(int).q̃)
     local S = nbasis(method(int))
     local x = nlsolution(int)
 
@@ -173,7 +174,7 @@ end
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
     # set some local variables for convenience and clarity
     local C = cache(int, ST)
-    local D = ndims(int)
+    local D = length(C.q̃)
     local S = nbasis(method(int))
 
     # copy x to X
@@ -231,7 +232,7 @@ end
 function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
     # set some local variables for convenience and clarity
     local C = cache(int, ST)
-    local D = ndims(int)
+    local D = length(C.q̃)
     local S = nbasis(method(int))
 
     # compute b = - [(P-AF)]

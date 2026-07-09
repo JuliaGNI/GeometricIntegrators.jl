@@ -1,5 +1,5 @@
 
-mutable struct ProjectionCache{DT,TT,PT,D,M,N} <: IODEIntegratorCache{DT,D}
+mutable struct ProjectionCache{DT,TT,PT,M,N} <: IODEIntegratorCache{DT}
     t::TT
 
     x::Vector{DT}
@@ -27,7 +27,7 @@ mutable struct ProjectionCache{DT,TT,PT,D,M,N} <: IODEIntegratorCache{DT,D}
     G::Vector{Vector{DT}}
 
     function ProjectionCache{DT}(problem::EquationProblem, method::ProjectedMethod) where {DT}
-        D = ndims(problem)
+        D = length(vec(initial_conditions(problem).q))
         M = nconstraints(problem)
         N = solversize(problem, parent(method))
 
@@ -58,20 +58,21 @@ mutable struct ProjectionCache{DT,TT,PT,D,M,N} <: IODEIntegratorCache{DT,D}
         U = [zeros(DT, D), zeros(DT, D)]
         G = [zeros(DT, D), zeros(DT, D)]
 
-        new{DT,TT,typeof(problem),D,M,N}(t, x, x̄, x̃, q, p, v, f, q̄, q̃, p̃, ṽ, f̃, λ, ϑ, ϕ, u, g, U, G)
+        new{DT,TT,typeof(problem),M,N}(t, x, x̄, x̃, q, p, v, f, q̄, q̃, p̃, ṽ, f̃, λ, ϑ, ϕ, u, g, U, G)
     end
 end
 
 ProjectionCache(problem::EquationProblem, method::ProjectedMethod) = ProjectionCache{datatype(problem)}(problem, method)
 
-Base.ndims(::ProjectionCache{DT,TT,PT,D,M,N}) where {DT,TT,PT,D,M,N} = D
-nconstraints(::ProjectionCache{DT,TT,PT,D,M,N}) where {DT,TT,PT,D,M,N} = M
-solversize(::ProjectionCache{DT,TT,PT,D,M,N}) where {DT,TT,PT,D,M,N} = N
+Base.ndims(cache::ProjectionCache) = length(cache.q)
+nconstraints(::ProjectionCache{DT,TT,PT,M,N}) where {DT,TT,PT,M,N} = M
+solversize(::ProjectionCache{DT,TT,PT,M,N}) where {DT,TT,PT,M,N} = N
 
 nlsolution(cache::ProjectionCache) = cache.x
 
-function split_nlsolution(cache::ProjectionCache{DT,TT,PT,D,M,N}) where {DT,TT,PT,D,M,N}
+function split_nlsolution(cache::ProjectionCache{DT,TT,PT,M,N}) where {DT,TT,PT,M,N}
     x = nlsolution(cache)
+    D = length(cache.q)
     x̄ = @view x[1:N]
     x̃ = @view x[N+1:N+D+M]
 

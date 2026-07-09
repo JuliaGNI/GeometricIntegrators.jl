@@ -9,7 +9,7 @@ default_iguess(::HPIMethod) = HermiteExtrapolation()
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:HPIMethod})
     # set some local variables for convenience
-    local D = ndims(int)
+    local D = length(cache(int).q̃)
     local A = nparams(method(int))
     local x = nlsolution(int)
 

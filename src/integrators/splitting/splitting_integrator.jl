@@ -39,20 +39,20 @@ initmethod(method::Splitting, ::SODEProblem) = method
 
 
 "Splitting integrator cache."
-mutable struct SplittingCache{DT,TT,D,AT} <: ODEIntegratorCache{DT,D}
+mutable struct SplittingCache{DT,TT,AT} <: ODEIntegratorCache{DT}
     q::AT
     t::TT
 
-    function SplittingCache{DT,TT,D}(q₀::AT) where {DT,TT,D,AT<:AbstractArray{DT}}
-        new{DT,TT,D,AT}(zero(q₀), zero(TT))
+    function SplittingCache{DT,TT}(q₀::AT) where {DT,TT,AT<:AbstractArray{DT}}
+        new{DT,TT,AT}(zero(q₀), zero(TT))
     end
 end
 
 function Cache{ST}(problem::SODEProblem, method::Splitting; kwargs...) where {ST}
-    SplittingCache{ST,typeof(timestep(problem)),ndims(problem)}(initial_conditions(problem).q; kwargs...)
+    SplittingCache{ST,typeof(timestep(problem))}(initial_conditions(problem).q; kwargs...)
 end
 
-@inline CacheType(ST, problem::SODEProblem, ::Splitting) = SplittingCache{ST,typeof(timestep(problem)),ndims(problem)}
+@inline CacheType(ST, problem::SODEProblem, ::Splitting) = SplittingCache{ST,typeof(timestep(problem))}
 
 function reset!(cache::SplittingCache, t, q, λ=missing)
     copyto!(cache.q, q)

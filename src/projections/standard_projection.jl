@@ -25,14 +25,14 @@ function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:StandardP
 end
 
 @inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:StandardProjection}) =
-    ProjectionCache{ST,timetype(problem),typeof(problem),ndims(problem),nconstraints(problem),solversize(problem, parent(method))}
+    ProjectionCache{ST,timetype(problem),typeof(problem),nconstraints(problem),solversize(problem, parent(method))}
 
 
 default_solver(::ProjectedMethod{<:StandardProjection}) = Newton()
 
 
 function split_nlsolution(x::AbstractVector, int::StandardProjectionIntegrator)
-    D = ndims(int)
+    D = ndims(cache(int))
     M = nconstraints(int)
     N = solversize(problem(int), parent(method(int)))
 
@@ -63,7 +63,7 @@ function initial_guess!(sol, history, params, int::StandardProjectionIntegrator)
     initial_guess!(sol, history, params, subint(int))
 
     # set initial guess for Lagrange multiplier to zero
-    cache(int).x̃[ndims(int)+1:end] .= 0
+    cache(int).x̃[ndims(cache(int))+1:end] .= 0
 end
 
 
@@ -78,7 +78,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::StandardProjection
 
     # copy x to λ
     for k in eachindex(C.λ)
-        C.λ[k] = x[ndims(int)+k]
+        C.λ[k] = x[ndims(C)+k]
     end
 
     # compute u = u(q,λ)
@@ -102,7 +102,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::StandardProjection
 
     # copy x to λ
     for k in eachindex(C.λ)
-        C.λ[k] = x[ndims(int)+k]
+        C.λ[k] = x[ndims(C)+k]
     end
 
     # compute u = λ
@@ -129,13 +129,13 @@ function residual!(b::AbstractVector{ST}, sol, params, int::StandardProjectionIn
     local C = cache(int, ST)
 
     # compute b = q̄ - q - Δt * U
-    for k in 1:ndims(int)
+    for k in 1:ndims(C)
         b[k] = C.q[k] - sol.q[k] - timestep(int) * C.U[2][k]
     end
 
     # compute b = ϕ(q) or b = ϕ(q,p) or b = ϕ(...)
     for k in 1:nconstraints(int)
-        b[ndims(int)+k] = C.ϕ[k]
+        b[ndims(C)+k] = C.ϕ[k]
     end
 end
 
@@ -173,7 +173,7 @@ function integrate_step!(sol, history, params, int::StandardProjectionIntegrator
     integrate_step!(sol, history, params, subint(int))
 
     # copy initial guess for projected solution to common solution vector
-    cache(int).x̃[1:ndims(int)] .= sol.q
+    cache(int).x̃[1:ndims(cache(int))] .= sol.q
 
     # call nonlinear solver for projection
     x̄, x̃ = split_nlsolution(nlsolution(int), int)

@@ -17,7 +17,7 @@ Degenerate variational integrator cache.
 * `Θ`: implicit function evaluated on solution
 * `f`: vector field of implicit function
 """
-struct CTDVICache{DT,D} <: IODEIntegratorCache{DT,D}
+struct CTDVICache{DT} <: IODEIntegratorCache{DT}
     x::Vector{DT}
 
     q̄::Vector{DT}
@@ -36,7 +36,8 @@ struct CTDVICache{DT,D} <: IODEIntegratorCache{DT,D}
     θ⁺::Vector{DT}
     f⁺::Vector{DT}
 
-    function CTDVICache{DT,D}() where {DT,D}
+    function CTDVICache{DT}(ics) where {DT}
+        D = length(vec(ics.q))
         new(zeros(DT, 2D), zeros(DT, D), zeros(DT, D),
             zeros(DT, D), zeros(DT, D), zeros(DT, D), zeros(DT, D),
             zeros(DT, D), zeros(DT, D), zeros(DT, D),
@@ -52,10 +53,10 @@ end
 nlsolution(cache::CTDVICache) = cache.x
 
 function Cache{ST}(problem::AbstractProblemIODE, method::CTDVI; kwargs...) where {ST}
-    CTDVICache{ST,ndims(problem)}(; kwargs...)
+    CTDVICache{ST}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblemIODE, ::CTDVI) = CTDVICache{ST,ndims(problem)}
+@inline CacheType(ST, ::AbstractProblemIODE, ::CTDVI) = CTDVICache{ST}
 
 
 function Base.show(io::IO, int::GeometricIntegrator{<:CTDVI})
@@ -66,7 +67,7 @@ end
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CTDVI})
     # set some local variables for convenience
-    local D = ndims(int)
+    local D = length(cache(int).q)
     local x = nlsolution(int)
 
     # compute initial guess for solution q(n+1)
@@ -102,7 +103,7 @@ end
 
 function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:CTDVI}) where {ST}
     # set some local variables for convenience and clarity
-    local D = ndims(int)
+    local D = length(cache(int, ST).q)
     local t⁻ = sol.t - timestep(int)
     local t⁺ = sol.t
 
@@ -134,7 +135,7 @@ end
 
 function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:CTDVI}) where {ST}
     # set some local variables for convenience
-    local D = ndims(int)
+    local D = length(cache(int, ST).q)
 
     # compute b
     b[1:D] .= (cache(int, ST).θ⁻ .+ cache(int, ST).θ⁺) ./ 2 .- sol.p .- timestep(int) .* cache(int, ST).f⁻ ./ 2

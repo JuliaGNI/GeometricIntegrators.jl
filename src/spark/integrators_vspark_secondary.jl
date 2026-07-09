@@ -43,7 +43,7 @@ hasnullvector(method::VSPARKsecondary{DT,Nothing}) where {DT} = false
 hasnullvector(method::VSPARKsecondary{DT,<:AbstractVector}) where {DT} = true
 
 solversize(problem::AbstractProblemIDAE, method::VSPARKsecondary) =
-    4 * ndims(problem) * pstages(method)
+    4 * length(vec(initial_conditions(problem).q)) * pstages(method)
 
 
 @doc raw"""
@@ -111,6 +111,7 @@ end
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VSPARKsecondary,<:Union{IDAEProblem,LDAEProblem}})
     # get cache for internal stages
     local C = cache(int)
+    local D = ndims(C)
 
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
@@ -123,17 +124,17 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VSPARKs
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
-        for k in 1:ndims(int)
-            C.x[4*(ndims(int)*(i-1)+k-1)+1] = (C.Qp[i][k] - sol.q[k]) / timestep(int)
-            C.x[4*(ndims(int)*(i-1)+k-1)+2] = (C.Pp[i][k] - sol.p[k]) / timestep(int)
-            C.x[4*(ndims(int)*(i-1)+k-1)+3] = C.Vp[i][k]
-            C.x[4*(ndims(int)*(i-1)+k-1)+4] = 0
+        for k in 1:D
+            C.x[4*(D*(i-1)+k-1)+1] = (C.Qp[i][k] - sol.q[k]) / timestep(int)
+            C.x[4*(D*(i-1)+k-1)+2] = (C.Pp[i][k] - sol.p[k]) / timestep(int)
+            C.x[4*(D*(i-1)+k-1)+3] = C.Vp[i][k]
+            C.x[4*(D*(i-1)+k-1)+4] = 0
         end
     end
 
     if hasnullvector(method(int))
-        for k in 1:ndims(int)
-            C.x[4*ndims(int)*pstages(method(int))+k] = 0
+        for k in 1:D
+            C.x[4*D*pstages(method(int))+k] = 0
         end
     end
 end
@@ -144,7 +145,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     local C = cache(int, ST)
     local S = nstages(int)
     local R = pstages(method(int))
-    local D = ndims(int)
+    local D = ndims(C)
 
     for i in 1:R
         for k in 1:D
@@ -219,7 +220,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     local C = cache(int, ST)
     local S = nstages(int)
     local R = pstages(method(int))
-    local D = ndims(int)
+    local D = ndims(C)
 
     # compute stages from nonlinear solver solution x
     components!(x, sol, params, int)
