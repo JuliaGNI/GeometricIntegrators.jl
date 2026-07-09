@@ -42,8 +42,8 @@ end
 @inline GeometricBase.tableau(int::AbstractIntegratorSPARK) = parameters(int).tab
 
 
-function IntegratorCache{ST}(params::AbstractParametersSPARK{IT,DT,TT,D,S,R}; kwargs...) where {IT,ST,DT,TT,D,S,R}
-    IntegratorCacheSPARK{ST,D,S,R}(; kwargs...)
+function IntegratorCache{ST}(params::AbstractParametersSPARK{IT,DT,TT,D,S,R}, N::Int; kwargs...) where {IT,ST,DT,TT,D,S,R}
+    IntegratorCacheSPARK{ST,S,R}(params, N)
 end
 
-@inline CacheType(ST, params::AbstractParametersSPARK{IT,DT,TT,D,S,R}) where {IT,DT,TT,D,S,R} = IntegratorCacheSPARK{ST,D,S,R}
+@inline CacheType(ST, params::AbstractParametersSPARK{IT,DT,TT,D,S,R}) where {IT,DT,TT,D,S,R} = IntegratorCacheSPARK{ST,S,R}
