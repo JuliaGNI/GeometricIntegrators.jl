@@ -161,14 +161,11 @@ nlsolution(cache::IntegratorCacheSPARK) = cache.x
 Base.ndims(cache::IntegratorCacheSPARK) = length(cache.q)
 
 function GeometricBase.reset!(cache::IntegratorCacheSPARK)
-    cache.t̄  = cache.t
-    cache.q̄ .= cache.q
-    cache.p̄ .= cache.p
     cache.λ̄ .= cache.λ
     cache.v̄ .= cache.v
     cache.f̄ .= cache.f
-    cache.ū .= cache.u
-    cache.ḡ .= cache.g
+    cache.ū .= cache.u
+    cache.ḡ .= cache.g
     cache.ϕ̅ .= cache.ϕ
 end
 
