@@ -14,7 +14,7 @@ end
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CMDVI})
     # set some local variables for convenience
-    local D = ndims(int)
+    local D = length(cache(int).q)
     local x = nlsolution(int)
 
     # compute initial guess for solution q(n+1)
@@ -50,7 +50,7 @@ end
 
 function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:CMDVI}) where {ST}
     # set some local variables for convenience and clarity
-    local D = ndims(int)
+    local D = length(cache(int, ST).q)
     local t̃ = sol.t - timestep(int) / 2
     local t = sol.t
 
@@ -77,7 +77,7 @@ end
 
 function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:CMDVI}) where {ST}
     # set some local variables for convenience
-    local D = ndims(int)
+    local D = length(cache(int, ST).q)
 
     # compute b
     b[1:D] .= cache(int, ST).p̃ .- sol.p .- timestep(int) .* cache(int, ST).f̃ ./ 2

@@ -1,5 +1,5 @@
 
-solversize(problem::AbstractProblemIODE, method::IPRK) = ndims(problem) * nstages(method)
+solversize(problem::AbstractProblemIODE, method::IPRK) = length(vec(initial_conditions(problem).q)) * nstages(method)
 
 function Base.show(io::IO, int::GeometricIntegrator{<:IPRK,<:AbstractProblemIODE})
     print(io, "\nPartitioned Runge-Kutta Integrator for Implicit Equations with:\n")
@@ -12,11 +12,10 @@ end
 
 function Cache{ST}(problem::AbstractProblemIODE, method::IPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
-    D = ndims(problem)
-    IPRKCache{ST,D,S,solversize(problem, method)}(; kwargs...)
+    IPRKCache{ST,S,solversize(problem, method)}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblemIODE, method::IPRK) = IPRKCache{ST,ndims(problem),nstages(tableau(method)),solversize(problem, method)}
+@inline CacheType(ST, problem::AbstractProblemIODE, method::IPRK) = IPRKCache{ST,nstages(tableau(method)),solversize(problem, method)}
 
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemIODE})
@@ -36,9 +35,10 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK,<:
     end
 
     # assemble initial guess for nonlinear solver solution vector
+    D = length(cache(int).V[1])
     for i in eachstage(int)
-        offset = ndims(int) * (i - 1)
-        for k in 1:ndims(int)
+        offset = D * (i - 1)
+        for k in 1:D
             x[offset+k] = cache(int).P[i][k] - sol.p[k]
             for j in eachstage(int)
                 x[offset+k] -= timestep(int) * tableau(int).p.a[i, j] * cache(int).F[j][k]
@@ -51,11 +51,12 @@ end
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemIODE}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
+    local D = length(C.V[1])
 
     # copy x to V
     for i in eachindex(C.V)
         for k in eachindex(C.V[i])
-            C.V[i][k] = x[ndims(int)*(i-1)+k]
+            C.V[i][k] = x[D*(i-1)+k]
         end
     end
 
@@ -88,6 +89,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
 
     # get cache for internal stages
     local C = cache(int, ST)
+    local D = length(C.V[1])
 
     # compute b = - [(Y-AV), (Z-AF)]
     for i in eachstage(int)
@@ -97,7 +99,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
                 z1 += tableau(int).p.a[i, j] * C.F[j][k]
                 z2 += tableau(int).p.â[i, j] * C.F[j][k]
             end
-            b[ndims(int)*(i-1)+k] = C.P[i][k] - sol.p[k] - timestep(int) * (z1 + z2)
+            b[D*(i-1)+k] = C.P[i][k] - sol.p[k] - timestep(int) * (z1 + z2)
         end
     end
 end

@@ -61,9 +61,9 @@ end
 
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:HPItrapezoidal, <:AbstractProblemIODE}) where {ST}
     # set some local variables for convenience and clarity
-    local D = ndims(int)
+    local D = length(cache(int,ST).q)
     local A = nparams(method(int))
-    
+
     # copy x to q
     cache(int,ST).q .= x[1:D]
     cache(int,ST).a .= x[D+1:D+A]
@@ -101,7 +101,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     components!(x, sol, params, int)
 
     # set some local variables for convenience and clarity
-    local D = ndims(int)
+    local D = length(cache(int,ST).q)
     local A = nparams(method(int))
 
     # compute b

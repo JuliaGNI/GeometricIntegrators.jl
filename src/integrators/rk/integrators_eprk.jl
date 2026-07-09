@@ -55,7 +55,7 @@ end
 
 
 "Explicit Runge-Kutta integrator cache."
-struct EPRKCache{DT,D,S} <: PODEIntegratorCache{DT,D}
+struct EPRKCache{DT,S} <: PODEIntegratorCache{DT}
     Q::OffsetArray{Array{DT,1},1,Array{Array{DT,1},1}}
     P::OffsetArray{Array{DT,1},1,Array{Array{DT,1},1}}
 
@@ -64,7 +64,8 @@ struct EPRKCache{DT,D,S} <: PODEIntegratorCache{DT,D}
     Y::Vector{Vector{DT}}
     Z::Vector{Vector{DT}}
 
-    function EPRKCache{DT,D,S}() where {DT,D,S}
+    function EPRKCache{DT,S}(ics) where {DT,S}
+        D = length(vec(ics.q))
         Q = create_internal_stage_vector_with_zero(DT, D, S)
         P = create_internal_stage_vector_with_zero(DT, D, S)
 
@@ -79,16 +80,15 @@ end
 
 function Cache{ST}(problem::EquationProblem, method::EPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
-    D = ndims(problem)
-    EPRKCache{ST,D,S}(; kwargs...)
+    EPRKCache{ST,S}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::EPRK) = EPRKCache{ST,ndims(problem),nstages(tableau(method))}
+@inline CacheType(ST, ::EquationProblem, method::EPRK) = EPRKCache{ST,nstages(tableau(method))}
 
 
 function internal_variables(method::EPRK, problem::AbstractProblemPODE{DT,TT}) where {DT,TT}
     S = nstages(method)
-    D = ndims(problem)
+    D = length(vec(initial_conditions(problem).q))
 
     Q = create_internal_stage_vector_with_zero(DT, D, S)
     P = create_internal_stage_vector_with_zero(DT, D, S)

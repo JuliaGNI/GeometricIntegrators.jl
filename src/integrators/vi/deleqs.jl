@@ -18,7 +18,7 @@ issymplectic(method::DiscreteEulerLagrange) = true
 @doc raw"""
 Discrete Euler-Lagrange integrator cache.
 """
-struct DiscreteEulerLagrangeCache{DT,D} <: DELEIntegratorCache{DT,D}
+struct DiscreteEulerLagrangeCache{DT} <: DELEIntegratorCache{DT}
     x::Vector{DT}
     q::Vector{DT}
     D1Ld::Vector{DT}
@@ -29,7 +29,8 @@ struct DiscreteEulerLagrangeCache{DT,D} <: DELEIntegratorCache{DT,D}
     θ̃::Vector{DT}
     f̃::Vector{DT}
 
-    function DiscreteEulerLagrangeCache{DT,D}() where {DT,D}
+    function DiscreteEulerLagrangeCache{DT}(ics) where {DT}
+        D = length(vec(ics.q))
         x = zeros(DT, D)
         q = zeros(DT, D)
         D1Ld = zeros(DT, D)
@@ -44,13 +45,13 @@ reset!(::DELEIntegratorCache, t₀, q₀, t₁, q₁) = nothing
 nlsolution(cache::DiscreteEulerLagrangeCache) = cache.x
 
 function Cache{ST}(problem::AbstractProblem, method::DiscreteEulerLagrange; kwargs...) where {ST}
-    DiscreteEulerLagrangeCache{ST,ndims(problem)}(; kwargs...)
+    DiscreteEulerLagrangeCache{ST}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblem, method::DiscreteEulerLagrange) = DiscreteEulerLagrangeCache{ST,ndims(problem)}
+@inline CacheType(ST, ::AbstractProblem, method::DiscreteEulerLagrange) = DiscreteEulerLagrangeCache{ST}
 
 
-solversize(problem::AbstractProblemDELE, ::DiscreteEulerLagrange) = ndims(problem)
+solversize(problem::AbstractProblemDELE, ::DiscreteEulerLagrange) = length(vec(initial_conditions(problem).q))
 
 default_solver(::DiscreteEulerLagrange) = Newton()
 default_iguess(::DiscreteEulerLagrange) = HermiteExtrapolation()

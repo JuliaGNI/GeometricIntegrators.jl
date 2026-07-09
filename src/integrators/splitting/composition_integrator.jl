@@ -89,7 +89,7 @@ problem(int::CompositionIntegrator) = int.problem
 subints(int::CompositionIntegrator) = int.subints
 method(int::CompositionIntegrator) = int.method
 
-Base.ndims(int::CompositionIntegrator) = ndims(problem(int))
+Base.ndims(int::CompositionIntegrator) = length(vec(initial_conditions(problem(int)).q))
 
 timestep(int::CompositionIntegrator) = timestep(problem(int))
 

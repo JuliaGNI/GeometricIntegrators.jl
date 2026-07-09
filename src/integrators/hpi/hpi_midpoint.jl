@@ -76,7 +76,7 @@ end
 
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:HPImidpoint, <:AbstractProblemIODE}) where {ST}
     # set some local variables for convenience and clarity
-    local D = ndims(int)
+    local D = length(cache(int,ST).q)
     local A = nparams(method(int))
     local t̃ = sol.t - timestep(int) / 2
     
@@ -117,7 +117,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     components!(x, sol, params, int)
 
     # set some local variables for convenience and clarity
-    local D = ndims(int)
+    local D = length(cache(int,ST).q)
     local A = nparams(method(int))
 
     # compute b

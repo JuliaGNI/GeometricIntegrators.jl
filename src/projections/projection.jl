@@ -92,7 +92,7 @@ cache(int::ProjectionIntegrator) = cache(int, datatype(problem(int)))
 nconstraints(int::ProjectionIntegrator) = nconstraints(problem(int))
 nlsolution(int::ProjectionIntegrator) = nlsolution(cache(int))
 
-Base.ndims(int::ProjectionIntegrator) = ndims(problem(int))
+Base.ndims(int::ProjectionIntegrator) = ndims(cache(int))
 
 equations(int::ProjectionIntegrator) = functions(problem(int))
 timestep(int::ProjectionIntegrator) = timestep(problem(int))

@@ -42,11 +42,12 @@ end
 
 
 "Explicit Runge-Kutta integrator cache."
-struct ERKCache{DT,D,S} <: ODEIntegratorCache{DT,D}
+struct ERKCache{DT,S} <: ODEIntegratorCache{DT}
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
 
-    function ERKCache{DT,D,S}() where {DT,D,S}
+    function ERKCache{DT,S}(ics) where {DT,S}
+        D = length(vec(ics.q))
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         new(Q, V)
@@ -55,15 +56,14 @@ end
 
 function Cache{ST}(problem::AbstractProblemODE, method::ERK; kwargs...) where {ST}
     S = nstages(tableau(method))
-    D = ndims(problem)
-    ERKCache{ST,D,S}(; kwargs...)
+    ERKCache{ST,S}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblemODE, method::ERK) = ERKCache{ST,ndims(problem),nstages(tableau(method))}
+@inline CacheType(ST, ::AbstractProblemODE, method::ERK) = ERKCache{ST,nstages(tableau(method))}
 
 function internal_variables(method::ERK, problem::AbstractProblemODE{DT,TT}) where {DT,TT}
     S = nstages(method)
-    D = ndims(problem)
+    D = length(vec(initial_conditions(problem).q))
 
     Q = create_internal_stage_vector(DT, D, S)
     V = create_internal_stage_vector(DT, D, S)

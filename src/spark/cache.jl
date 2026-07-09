@@ -26,7 +26,7 @@ Cache of a Specialised Partitioned Additive Runge-Kutta integrator.
 * `Y`: vector field of internal stages of q
 * `Z`: vector field of internal stages of p
 """
-mutable struct IntegratorCacheSPARK{ST,D,S,R} <: IDAEIntegratorCache{ST,D}
+mutable struct IntegratorCacheSPARK{ST,S,R} <: IDAEIntegratorCache{ST}
     x::Vector{ST}
 
     q::Vector{ST}
@@ -81,7 +81,9 @@ mutable struct IntegratorCacheSPARK{ST,D,S,R} <: IDAEIntegratorCache{ST,D}
     Φp::Vector{Vector{ST}}
     Ψp::Vector{Vector{ST}}
 
-    function IntegratorCacheSPARK{ST,D,S,R}(N) where {ST,D,S,R}
+    function IntegratorCacheSPARK{ST,S,R}(ics, N) where {ST,S,R}
+        D = length(vec(ics.q))
+
         # nonlinear solver vector
         x = zeros(ST,N)
 
@@ -156,6 +158,8 @@ end
 
 nlsolution(cache::IntegratorCacheSPARK) = cache.x
 
+Base.ndims(cache::IntegratorCacheSPARK) = length(cache.q)
+
 function GeometricBase.reset!(cache::IntegratorCacheSPARK)
     cache.t̄  = cache.t
     cache.q̄ .= cache.q
@@ -170,17 +174,16 @@ end
 
 
 function Cache{ST}(problem::AbstractSPARKProblem, method::AbstractSPARKMethod; kwargs...) where {ST}
-    D = ndims(problem)
     S = nstages(method)
     R = pstages(method)
     N = solversize(problem, method)
 
     if hasnullvector(method)
-        N += D
+        N += length(vec(initial_conditions(problem).q))
     end
 
-    IntegratorCacheSPARK{ST,D,S,R}(N; kwargs...)
+    IntegratorCacheSPARK{ST,S,R}(initial_conditions(problem), N; kwargs...)
 end
 
 
-@inline CacheType(ST, problem::AbstractSPARKProblem, method::AbstractSPARKMethod) = IntegratorCacheSPARK{ST, ndims(problem), nstages(method), pstages(method)}
+@inline CacheType(ST, ::AbstractSPARKProblem, method::AbstractSPARKMethod) = IntegratorCacheSPARK{ST, nstages(method), pstages(method)}

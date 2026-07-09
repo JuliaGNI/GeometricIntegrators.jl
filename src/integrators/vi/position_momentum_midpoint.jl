@@ -32,7 +32,7 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVI
     local t̃ = sol.t - timestep(int) / 2
     
     # copy x to q
-    cache(int, ST).q .= x[1:ndims(int)]
+    cache(int, ST).q .= x[1:length(cache(int, ST).q)]
 
     # compute q̃ and ṽ
     cache(int, ST).q̃ .= (cache(int, ST).q .+ sol.q) ./ 2

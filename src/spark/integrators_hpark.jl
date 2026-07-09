@@ -10,7 +10,7 @@ end
 tableau(method::HPARK) = method.tableau
 
 solversize(problem::AbstractProblemPDAE, method::HPARK) =
-    2 * ndims(problem) * nstages(method) + 3 * ndims(problem) * pstages(method)
+    2 * length(vec(initial_conditions(problem).q)) * nstages(method) + 3 * length(vec(initial_conditions(problem).q)) * pstages(method)
 
 
 @doc raw"""
@@ -63,7 +63,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     local C = cache(int, ST)
     local S = nstages(int)
     local R = pstages(method(int))
-    local D = ndims(int)
+    local D = ndims(C)
 
     for i in 1:S
         for k in 1:D
@@ -110,7 +110,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     local C = cache(int, ST)
     local S = nstages(int)
     local R = pstages(method(int))
-    local D = ndims(int)
+    local D = ndims(C)
 
     # compute stages from nonlinear solver solution x
     components!(x, sol, params, int)

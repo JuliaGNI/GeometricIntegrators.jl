@@ -13,7 +13,7 @@ Cache for variational integrator in position-momentum form.
 * `θ̄`: implicit function evaluated on solution at previous timestep
 * `f̄`: vector field of implicit function evaluated on solution at previous timestep
 """
-struct IntegratorCachePMVI{DT,D} <: IODEIntegratorCache{DT,D}
+struct IntegratorCachePMVI{DT} <: IODEIntegratorCache{DT}
     x::Vector{DT}
 
     q::Vector{DT}
@@ -31,8 +31,9 @@ struct IntegratorCachePMVI{DT,D} <: IODEIntegratorCache{DT,D}
     θ̃::Vector{DT}
     f̃::Vector{DT}
 
-    function IntegratorCachePMVI{DT,D}() where {DT,D}
-        new(zeros(DT,D), 
+    function IntegratorCachePMVI{DT}(ics) where {DT}
+        D = length(vec(ics.q))
+        new(zeros(DT,D),
             zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D),
             zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D),
             zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D))
@@ -42,7 +43,7 @@ end
 nlsolution(cache::IntegratorCachePMVI) = cache.x
 
 function Cache{ST}(problem::AbstractProblemIODE, method::PMVIMethod; kwargs...) where {ST}
-    IntegratorCachePMVI{ST, ndims(problem)}(; kwargs...)
+    IntegratorCachePMVI{ST}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblemIODE, ::PMVIMethod) = IntegratorCachePMVI{ST, ndims(problem)}
+@inline CacheType(ST, ::AbstractProblemIODE, ::PMVIMethod) = IntegratorCachePMVI{ST}

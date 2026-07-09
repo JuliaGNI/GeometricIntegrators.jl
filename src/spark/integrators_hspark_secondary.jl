@@ -43,7 +43,7 @@ hasnullvector(method::HSPARKsecondary{DT,Nothing}) where {DT} = false
 hasnullvector(method::HSPARKsecondary{DT,<:AbstractVector}) where {DT} = true
 
 solversize(problem::AbstractProblemPDAE, method::HSPARKsecondary) =
-    2 * ndims(problem) * nstages(method) + 4 * ndims(problem) * pstages(method)
+    2 * length(vec(initial_conditions(problem).q)) * nstages(method) + 4 * length(vec(initial_conditions(problem).q)) * pstages(method)
 
 
 @doc raw"""
@@ -96,6 +96,7 @@ end
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Union{HSPARKsecondary},<:Union{HDAEProblem,PDAEProblem}})
     # get cache for internal stages
     local C = cache(int)
+    local D = ndims(C)
 
     for i in 1:nstages(int)
         soltmp = (
@@ -107,9 +108,9 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Union{H
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
-        for k in 1:ndims(int)
-            C.x[2*(ndims(int)*(i-1)+k-1)+1] = (C.Qi[i][k] - sol.q[k]) / timestep(int)
-            C.x[2*(ndims(int)*(i-1)+k-1)+2] = (C.Pi[i][k] - sol.p[k]) / timestep(int)
+        for k in 1:D
+            C.x[2*(D*(i-1)+k-1)+1] = (C.Qi[i][k] - sol.q[k]) / timestep(int)
+            C.x[2*(D*(i-1)+k-1)+2] = (C.Pi[i][k] - sol.p[k]) / timestep(int)
         end
     end
 
@@ -124,17 +125,17 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Union{H
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
-        for k in 1:ndims(int)
-            C.x[2*ndims(int)*nstages(int)+4*(ndims(int)*(i-1)+k-1)+1] = (C.Qp[i][k] - sol.q[k]) / timestep(int)
-            C.x[2*ndims(int)*nstages(int)+4*(ndims(int)*(i-1)+k-1)+2] = (C.Pp[i][k] - sol.p[k]) / timestep(int)
-            C.x[2*ndims(int)*nstages(int)+4*(ndims(int)*(i-1)+k-1)+3] = 0
-            C.x[2*ndims(int)*nstages(int)+4*(ndims(int)*(i-1)+k-1)+4] = 0
+        for k in 1:D
+            C.x[2*D*nstages(int)+4*(D*(i-1)+k-1)+1] = (C.Qp[i][k] - sol.q[k]) / timestep(int)
+            C.x[2*D*nstages(int)+4*(D*(i-1)+k-1)+2] = (C.Pp[i][k] - sol.p[k]) / timestep(int)
+            C.x[2*D*nstages(int)+4*(D*(i-1)+k-1)+3] = 0
+            C.x[2*D*nstages(int)+4*(D*(i-1)+k-1)+4] = 0
         end
     end
 
     if isdefined(tableau(int), :λ) && tableau(int).λ.c[1] == 0
-        for k in 1:ndims(int)
-            C.x[2*ndims(int)*nstages(int)+4*ndims(int)*pstages(method(int))+k] = 0
+        for k in 1:D
+            C.x[2*D*nstages(int)+4*D*pstages(method(int))+k] = 0
         end
     end
 end
@@ -145,7 +146,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     local C = cache(int, ST)
     local S = nstages(method(int))
     local R = pstages(method(int))
-    local D = ndims(int)
+    local D = ndims(C)
 
     for i in 1:S
         for k in 1:D
@@ -220,7 +221,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     local C = cache(int, ST)
     local S = nstages(int)
     local R = pstages(method(int))
-    local D = ndims(int)
+    local D = ndims(C)
 
     # compute stages from nonlinear solver solution x
     components!(x, sol, params, int)

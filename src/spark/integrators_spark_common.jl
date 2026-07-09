@@ -2,7 +2,7 @@
 function internal_variables(method::AbstractSPARKMethod, problem::AbstractSPARKProblem{DT,TT}) where {DT,TT}
     S = nstages(method)
     R = pstages(method)
-    D = ndims(problem)
+    D = length(vec(initial_conditions(problem).q))
 
     Qi = create_internal_stage_vector(DT, D, S)
     Pi = create_internal_stage_vector(DT, D, S)

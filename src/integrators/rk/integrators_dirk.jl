@@ -13,7 +13,7 @@ abstract type DIRKMethod <: IRKMethod end
 default_solver(::DIRKMethod) = Newton()
 default_iguess(::DIRKMethod) = HermiteExtrapolation()
 
-solversize(problem::AbstractProblemODE, ::DIRKMethod) = ndims(problem)
+solversize(problem::AbstractProblemODE, ::DIRKMethod) = length(vec(initial_conditions(problem).q))
 
 
 """
@@ -66,13 +66,14 @@ Diagonally implicit Runge-Kutta integrator cache.
 * `V`: internal stages of vector field v = q̇
 * `Y`: summed vector field of internal stages Q
 """
-struct DIRKCache{DT,D,S} <: ODEIntegratorCache{DT,D}
+struct DIRKCache{DT,S} <: ODEIntegratorCache{DT}
     x::Vector{Vector{DT}}
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
 
-    function DIRKCache{DT,D,S}() where {DT,D,S}
+    function DIRKCache{DT,S}(ics) where {DT,S}
+        D = length(vec(ics.q))
         x = create_internal_stage_vector(DT, D, S)
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
@@ -83,18 +84,17 @@ end
 
 function Cache{ST}(problem::EquationProblem, method::DIRKMethod; kwargs...) where {ST}
     S = nstages(tableau(method))
-    D = ndims(problem)
-    DIRKCache{ST,D,S}(; kwargs...)
+    DIRKCache{ST,S}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::DIRKMethod) = DIRKCache{ST,ndims(problem),nstages(tableau(method))}
+@inline CacheType(ST, ::EquationProblem, method::DIRKMethod) = DIRKCache{ST,nstages(tableau(method))}
 
 nlsolution(cache::DIRKCache, i) = cache.x[i]
 
 
 function internal_variables(method::DIRKMethod, problem::AbstractProblemODE{DT,TT}) where {DT,TT}
     S = nstages(method)
-    D = ndims(problem)
+    D = length(vec(initial_conditions(problem).q))
 
     Q = create_internal_stage_vector(DT, D, S)
     V = create_internal_stage_vector(DT, D, S)
@@ -123,7 +123,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DIRK})
     end
 
     for i in eachstage(int)
-        for k in 1:ndims(int)
+        for k in eachindex(cache(int).V[i])
             cache(int).x[i][k] = 0
             for j in eachstage(int)
                 cache(int).x[i][k] += timestep(int) * tableau(int).a[i, j] * cache(int).V[j][k]
@@ -159,7 +159,7 @@ function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:DIRK}, i) w
     local C = cache(int, ST)
 
     # compute b = - (Y-AV)
-    for k in 1:ndims(int)
+    for k in eachindex(C.Y[i])
         y1 = tableau(int).a[i, i] * C.V[i][k]
         y2 = tableau(int).â[i, i] * C.V[i][k]
         for j in 1:i-1
