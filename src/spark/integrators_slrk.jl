@@ -100,7 +100,7 @@ const IntegratorSLRK{DT,TT} = GeometricIntegrator{<:LDAEProblem{DT,TT},<:SLRK}
 #     f! = (b,x) -> residual!(b, x, solstep, problem, method, caches)
 
 #     # create nonlinear solver
-#     NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = Backtracking(), config = config)
+#     NewtonSolver(zero(caches[DT].x), zero(caches[DT].x), f!; linesearch = StrongWolfe(), config = config)
 # end
 
 
