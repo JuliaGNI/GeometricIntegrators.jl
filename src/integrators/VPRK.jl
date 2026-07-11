@@ -6,7 +6,7 @@ module VPRK
     using SimpleSolvers
 
     import RungeKutta: AbstractTableau
-    
+
     using ..GeometricBase
     using ..GeometricEquations
 
@@ -16,7 +16,7 @@ module VPRK
 
     import ..Integrators
 
-    import ..Integrators: Integrator, PDAEIntegrator, Newton
+    import ..Integrators: Integrator, PDAEIntegrator
     import ..Integrators: Extrapolation, HermiteExtrapolation
     import ..Integrators: initialguess!, initial_guess!, integrate_step!, residual!
     import ..Integrators: IODEIntegrator, IODEIntegratorCache,
@@ -24,7 +24,7 @@ module VPRK
     import ..Integrators: CacheDict, Cache, CacheType, nlsolution
     import ..Integrators: IntegratorCache
     import ..Integrators: AbstractCoefficients, CoefficientsPGLRK
-    import ..Integrators: create_internal_stage_vector, 
+    import ..Integrators: create_internal_stage_vector,
                           update_vector_fields!, update_multiplier!,
                           initialize!, update!
     import ..Integrators: equation, equations, tableau, timestep
