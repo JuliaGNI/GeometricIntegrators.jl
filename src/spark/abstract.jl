@@ -25,8 +25,3 @@ nstages(method::AbstractSPARKMethod) = nstages(tableau(method))
 pstages(method::AbstractSPARKMethod) = pstages(tableau(method))
 eachstage(method::AbstractSPARKMethod) = eachstage(tableau(method))
 hasnullvector(method::AbstractSPARKMethod) = hasnullvector(tableau(method))
-
-# create nonlinear solver
-function initsolver(::Newton, method::AbstractSPARKMethod, caches::CacheDict; kwargs...)
-    NewtonSolver(zero(nlsolution(caches)), residual!, zero(nlsolution(caches)); linesearch=Backtracking(), kwargs...)
-end

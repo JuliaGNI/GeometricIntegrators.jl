@@ -24,7 +24,7 @@ import ..Integrators: AbstractCoefficients, @CoefficientsRK, @HeaderCoefficients
 import ..Integrators: eachstage, nstages
 import ..Integrators: create_internal_stage_vector, update_multiplier!
 
-import GeometricIntegratorsBase: GeometricIntegrator, Newton
+import GeometricIntegratorsBase: GeometricIntegrator
 import GeometricIntegratorsBase: Extrapolation, HermiteExtrapolation
 import GeometricIntegratorsBase: CacheDict, Cache, CacheType, IDAEIntegratorCache
 import GeometricIntegratorsBase: HDAEMethod, IDAEMethod, LDAEMethod, PDAEMethod
