@@ -32,6 +32,9 @@ end
 @safetestset "Galerkin Variational Integrators                                                " begin
     include("integrators/galerkin_integrators_tests.jl")
 end
+@safetestset "Galerkin Variational Integrators II                                               " begin
+    include("integrators/galerkin_integrators_II_tests.jl")
+end
 @safetestset "Hamilton-Pontryagin Integrators                                                 " begin
     include("integrators/hamilton_pontryagin_integrators_tests.jl")
 end
