@@ -11,6 +11,7 @@ meta_methods = (
     VPRK,
     DVRK,
     CGVI,
+    CGVI_II,
     ProjectedMethod,
     HPImidpoint,
     HPItrapezoidal,
