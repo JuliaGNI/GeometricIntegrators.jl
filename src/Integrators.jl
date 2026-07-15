@@ -171,6 +171,7 @@ include("integrators/vi/vprk_integrator.jl")
 
 
 include("integrators/cgvi/integrators_cgvi.jl")
+include("integrators/cgvi/integrators_cgvi_II.jl")
 # include("integrators/dgvi/integrators_dgvi.jl")
 # include("integrators/dgvi/integrators_dgvi_experimental.jl")
 # include("integrators/dgvi/integrators_dgvi_path_integral.jl")
