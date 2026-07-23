@@ -46,7 +46,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i} \, F_{n,i} , \\
 satisfying the symplecticity conditions
 ```math
 \begin{aligned}
-b_{i} \bar{a}_{ij} + b_{j} a_{ji} &= b_{i} b_{j} , &
+b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 \bar{b}_i &= b_i .
 \end{aligned}
 ```

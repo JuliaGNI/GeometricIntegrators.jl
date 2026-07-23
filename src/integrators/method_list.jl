@@ -159,6 +159,8 @@ splitting_methods = (
     McLachlan4,
     TripleJump,
     SuzukiFractal,
+    Yoshida6,
+    Yoshida8,
 )
 
 method_groups = (

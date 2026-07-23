@@ -17,5 +17,10 @@ using GeometricIntegrators.Integrators: coefficients
 
     @test typeof(coefficients(TripleJump()))    <: SplittingCoefficientsSS{Float64}
     @test typeof(coefficients(SuzukiFractal())) <: SplittingCoefficientsSS{Float64}
+    @test typeof(coefficients(Yoshida6()))      <: SplittingCoefficientsSS{Float64}
+    @test typeof(coefficients(Yoshida8()))      <: SplittingCoefficientsSS{Float64}
+
+    @test order(Yoshida6()) == 6
+    @test order(Yoshida8()) == 8
 
 end

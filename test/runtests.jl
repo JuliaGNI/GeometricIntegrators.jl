@@ -50,6 +50,31 @@ end
     include("integrators/ensemble_integrators_tests.jl")
 end
 
+@safetestset "Convergence: Runge-Kutta                                                        " begin
+    include("verification/rk_convergence_tests.jl")
+end
+@safetestset "Convergence: Partitioned Runge-Kutta                                            " begin
+    include("verification/prk_convergence_tests.jl")
+end
+@safetestset "Convergence: Splitting and Composition                                          " begin
+    include("verification/splitting_convergence_tests.jl")
+end
+@safetestset "Convergence: Variational Integrators                                            " begin
+    include("verification/variational_convergence_tests.jl")
+end
+@safetestset "Convergence: Galerkin Variational Integrators                                   " begin
+    include("verification/galerkin_convergence_tests.jl")
+end
+@safetestset "Convergence: Degenerate Variational Integrators                                 " begin
+    include("verification/dvi_convergence_tests.jl")
+end
+@safetestset "Convergence: Hamilton-Pontryagin Integrators                                    " begin
+    include("verification/hpi_convergence_tests.jl")
+end
+@safetestset "Convergence: Projected Integrators                                              " begin
+    include("verification/projection_convergence_tests.jl")
+end
+
 @safetestset "Method Tests                                                                    " begin
     include("methods/methods_tests.jl")
 end
