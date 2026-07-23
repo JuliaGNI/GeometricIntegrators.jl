@@ -84,7 +84,7 @@ For many methods, tabulated coefficients are included, namely
 | **Diagonally Implicit Methods**                  |        |       |
 | [`CrankNicolson`](@ref)                          | 2      | 2     |
 | [`Crouzeix`](@ref)                               | 2      | 3     |
-| [`KraaijevangerSpijker`](@ref)                   | 2      | 2     |
+| [`KraaijevangerSpijker`](@ref)                   | 2      | 1     |
 | [`QinZhang`](@ref)                               | 2      | 2     |
 | **Fully Implicit Methods**                       |        |       |
 | [`ImplicitEuler`](@ref), [`BackwardEuler`](@ref) | 1      | 1     |

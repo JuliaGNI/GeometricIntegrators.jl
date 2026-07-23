@@ -37,6 +37,9 @@ steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
         test_convergence_order(build, CrankNicolson(), steps(10, 5); reference = exact_solution, expected = 2, label = "CrankNicolson")
         test_convergence_order(build, Crouzeix(),      steps(10, 5); reference = exact_solution, expected = 3, label = "Crouzeix")
         test_convergence_order(build, QinZhang(),      steps(10, 5); reference = exact_solution, expected = 2, label = "QinZhang")
+        # KraaijevangerSpijker is a first-order method (its order attribute was
+        # corrected to 1 in RungeKutta.jl v0.5.22).
+        test_convergence_order(build, KraaijevangerSpijker(), steps(10, 5); reference = exact_solution, expected = 1, label = "KraaijevangerSpijker")
     end
 
     @testset "Fully implicit Runge-Kutta" begin
@@ -59,16 +62,12 @@ steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
         test_convergence_order(build, LobattoIIIB(3), steps(6, 4); reference = exact_solution, expected = 4, label = "LobattoIIIB(3)")
     end
 
-    # Known order deficiencies (see VERIFICATION_REPORT.md). These methods do not
-    # reach their documented order when applied as standalone ODE integrators;
-    # the root cause is in the tableau coefficients (RungeKutta.jl). Recorded as
-    # broken so a future fix is detected automatically.
+    # Known order deficiency (see VERIFICATION_REPORT.md): LobattoIIIB has a
+    # singular coefficient matrix, so as a standalone ODE integrator its stage
+    # system is degenerate and it drops to order 1 (it is intended for use in
+    # symplectic partitioned pairs / as a VPRK component). Recorded as broken so
+    # a future change is detected automatically.
     @testset "Known order deficiencies (broken)" begin
-        # KraaijevangerSpijker: coefficients satisfy only the order-1 conditions
-        # (Σᵢbᵢcᵢ = 2 ≠ 1/2), yet order(·) and the docs claim order 2.
-        r = estimate_convergence_order(build, KraaijevangerSpijker(), steps(10, 5); reference = exact_solution)
-        @test_broken isapprox(r.order, 2; atol = 0.35)
-        # LobattoIIIB(2): singular A ⇒ degenerate stage system ⇒ order 1 standalone.
         r = estimate_convergence_order(build, LobattoIIIB(2), steps(10, 4); reference = exact_solution)
         @test_broken isapprox(r.order, 2; atol = 0.35)
     end
