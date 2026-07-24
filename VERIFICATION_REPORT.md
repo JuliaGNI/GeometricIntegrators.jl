@@ -380,3 +380,43 @@ test port. They are left disabled with explanatory comments:
 * **`MidpointProjection(RK4())` / `SymmetricProjection(RK4())`** error in
   `initial_guess!` (explicit RK4 supplies no vector field for the projection
   guess); left disabled.
+
+---
+
+# Third pass — spurious solver-iteration warnings in variational / Hamilton–Pontryagin convergence tests
+
+The `variational` and `hpi` convergence suites printed
+`Warning: Solver took 1000 iterations.` at the finest timestep of `steps(10, 4)`
+(Δt = 1/160). Only the **position–momentum** (`PMVImidpoint`, `PMVItrapezoidal`)
+and **Hamilton–Pontryagin** (`HPImidpoint`, `HPItrapezoidal`) integrators are
+affected; DEL, all VPRK variants and CGVI are clean. On the finest-Δt run a
+handful of the 160 per-step solves hit the cap: `PMVImidpoint` 2,
+`PMVItrapezoidal` 3, `HPImidpoint` 3, `HPItrapezoidal` 2.
+
+**Not a solver-quality problem.** The nonlinear solver is SimpleSolvers.jl's
+Newton (full Newton, `refactorize = 1`) with a `Backtracking` line search. The
+warning (`SimpleSolvers/…/nonlinear_solver_status.jl`) fires when
+`iterations ≥ warn_iterations`, and since `warn_iterations = max_iterations = 1000`
+it means the solve hit the cap without converging. On the affected cases the
+warning count is **identical** for Newton+Backtracking (default), Newton+Static,
+Newton+StrongWolfe and **DogLeg**; Bisection is worse and Quadratic much worse.
+Raising `max_iterations` to 10 000 does not help — the solves are genuinely
+**stalled**, not slow. In every configuration the empirical order stays exactly 2.
+
+**Root cause.** The framework default `f_abstol = 8eps() ≈ 1.78e-15`
+(`GeometricIntegratorsBase.default_options`) is essentially machine precision. At
+a few phase points the residual stagnates just above ~1e-15 and can never meet
+it, so Newton spins to the cap. This is a tolerance-stagnation artefact, not a
+defect in the integrators or the solver.
+
+**Fix (test-only).** The `variational` and `hpi` convergence suites now pass
+`integrate_options = (min_iterations = 1, f_abstol = 4e-15)` to the four affected
+integrator calls. A sweep locates the threshold precisely at `4e-15`: `3e-15`
+still warns (once each for `PMVImidpoint` / `HPImidpoint`), while `4e-15` removes
+all warnings for all four methods with order = 2 and all 5 points valid — still
+far tighter than the `f_reltol ≈ 1.5e-8` default and only ~2.3× the
+machine-precision default. `min_iterations = 1` is repeated because passing any
+solver option replaces the whole `default_options` NamedTuple. The
+`test_convergence_order` / `estimate_convergence_order` helpers in
+`verification_utilities.jl` gained an `integrate_options` keyword (default empty,
+backward-compatible) to thread these options through to `integrate`.
