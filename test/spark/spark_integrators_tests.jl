@@ -620,28 +620,27 @@ end
 
     ### HSPARKsecondary Integrators ###
 
-    # The q̇/v interface incompatibility (the integrator built the initial-guess
-    # NamedTuple with fields `v`/`f` instead of the `q̇`/`ṗ` that `solutionstep!`
-    # consumes) has been FIXED in src/spark/integrators_hspark_secondary.jl, so
-    # these methods now run through the solver instead of raising a FieldError.
-    # They still do not converge, for two separate pre-existing SPARK issues
-    # (see VERIFICATION_REPORT.md):
-    #   * TableauHSPARKLobattoIII{AB,BA,D,E} — singular stage system
-    #     (SingularException at all orders).
-    #   * TableauHSPARKGLRKLobattoIII{AB,BA,D,E} — out-of-bounds tableau access
-    #     (BoundsError: s×s coefficient matrix indexed at [1, s+1]).
-    # Recorded as @test_broken until those numerical issues are resolved.
-
+    # HSPARKsecondary is EXPERIMENTAL and remains @test_broken (see the "SPARK
+    # submodule" pass in VERIFICATION_REPORT.md). Two implementation bugs were fixed:
+    #   * the momentum projection coefficients a_p_2 / a_p_3 in getTableauHSPARK were
+    #     s×s instead of s×σ, so the GLRK variants raised a BoundsError — now built as
+    #     the conjugate-symplectic s×σ partners of α_q_2 / α_q_3;
+    #   * the null-vector residual/component code was commented out while the cache
+    #     still allocated the μ unknown, leaving an unconstrained (zero) Jacobian row —
+    #     now re-enabled, matching the working VSPARKsecondary.
+    # A residual singularity remains in the ω secondary-constraint block: every variant
+    # still raises a SingularException, so all cases stay @test_broken. The solves now
+    # iterate before failing (they no longer abort immediately), so they are muffled.
     for s in (2, 3, 4)
-        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKLobattoIIIAB(s)).q, ref.q) < 1E-6
-        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKLobattoIIIBA(s)).q, ref.q) < 1E-6
-        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKLobattoIIID(s)).q, ref.q) < 1E-6
-        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKLobattoIIIE(s)).q, ref.q) < 1E-6
+        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKLobattoIIIAB(s))).q, ref.q) < 1E-6
+        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKLobattoIIIBA(s))).q, ref.q) < 1E-6
+        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKLobattoIIID(s))).q, ref.q) < 1E-6
+        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKLobattoIIIE(s))).q, ref.q) < 1E-6
 
-        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(s)).q, ref.q) < 4E-6
-        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(s)).q, ref.q) < 4E-6
-        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKGLRKLobattoIIID(s)).q, ref.q) < 4E-6
-        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKGLRKLobattoIIIE(s)).q, ref.q) < 4E-6
+        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(s))).q, ref.q) < 4E-6
+        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(s))).q, ref.q) < 4E-6
+        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKGLRKLobattoIIID(s))).q, ref.q) < 4E-6
+        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKGLRKLobattoIIIE(s))).q, ref.q) < 4E-6
     end
 
 end

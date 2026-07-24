@@ -74,6 +74,9 @@ end
 @safetestset "Convergence: Projected Integrators                                              " begin
     include("verification/projection_convergence_tests.jl")
 end
+@safetestset "Convergence: SPARK Integrators                                                  " begin
+    include("verification/spark_convergence_tests.jl")
+end
 
 @safetestset "Method Tests                                                                    " begin
     include("methods/methods_tests.jl")

@@ -174,7 +174,7 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = d_λ ⋅ Λ
     for i in R-P+1:R
         for k in 1:D
-            b[2*D*S+3*(D*(R-1)+k-1)+3] = 0
+            b[2*D*S+3*(D*(i-1)+k-1)+3] = 0
             for j in 1:R
                 b[2*D*S+3*(D*(i-1)+k-1)+3] -= tableau(int).δ[j] * C.Λp[j][k]
             end

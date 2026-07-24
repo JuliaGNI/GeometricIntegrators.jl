@@ -153,11 +153,12 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         end
 
         # compute f(X)
-        # TODO: Solve Problem !!!
-        # The function f depends von v but Vi has never been initialized !
-        # For degenerate Lagrangians this might be just right, as the corresponding
-        # term in F that multiplies v should not be there in the first place
-        # (cf. SPARK paper) but in general this will cause problems
+        # TODO: Solve Problem !!!  (VERIFICATION_REPORT.md, SPARK submodule pass, finding S9)
+        # The function f depends on v but Vi has never been initialized (initial_guess!
+        # zeroes it and it is never recomputed here). For degenerate Lagrangians this is
+        # correct, as the corresponding term in F that multiplies v vanishes (cf. SPARK
+        # paper), but in general this will cause problems. Left unchanged because no
+        # non-degenerate DAE test problem exists here to validate a fix.
         # tqᵢ = solstep(int).t̄ + timestep(int) * tableau(int).q.c[i]
         tpᵢ = sol.t + timestep(int) * (tableau(int).p.c[i] - 1)
         # equations(int).v̄(C.Vi[i], tqᵢ, C.Qi[i], C.Pi[i], params)

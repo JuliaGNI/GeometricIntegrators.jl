@@ -460,3 +460,108 @@ suppresses only the solver-cap warning). These calls are therefore wrapped in a
 that one integration. `muffle` changes only logging, so the measured errors and
 the `@test_broken` status are unaffected. The suite now runs warning-free with the
 same 133 pass / 45 broken tally.
+
+---
+
+# Fourth pass — SPARK submodule (`src/spark/`)
+
+The first three passes covered the whole package **except** the SPARK submodule.
+This pass completes the verification: a static + dynamic check of every SPARK
+integrator family (`SPARK`, `VPARK`, `HPARK`, `VSPARK`/`primary`/`secondary`,
+`HSPARK`/`primary`/`secondary`, `SLRK`) and a root-cause diagnosis of why several
+SPARK methods do not converge.
+
+## Method and reference basis
+
+SPARK methods are largely **original** and not documented in the standard
+geometric-numerical-integration literature. Verification used the two draft
+manuscripts *SPARK Methods for Degenerate Lagrangian Systems* and *SPARK Methods
+for Hamiltonian Systems Subject to Dirac Constraints*. Those manuscripts are
+**unfinished**: they prove the *symplecticity* conditions but defer all
+order/convergence analysis to Jay's cited papers ("order and convergence will be
+discussed elsewhere"). Concrete order numbers therefore come from the code's
+tableau `o` fields (Gauß `2s`, Lobatto-pair `2s−2`, SLRK-Lobatto `2s−2`) and from
+empirical measurement. The manuscripts do, however, make three qualitative
+predictions that explain almost all of the observed non-convergence:
+
+1. **Symplectic ⇒ constraint-at-solution is impossible.** (Degenerate paper,
+   Sec. 3.4 remark.) A SPARK method cannot be symplectic *and* enforce
+   `φ(qₙ₊₁,pₙ₊₁)=0`; such methods "show reduced order of convergence or even
+   divergence."
+2. **`R(∞) ≠ 1` breaks the projection symplecticity conditions.** The code passes
+   `R∞ = (-1)^(s+1)` explicitly, so odd/even stage counts flip whether the
+   conditions hold.
+3. **Coinciding tableau pairs are singular.** The velocity `V` and the multiplier
+   `Λ` are indistinguishable when the two coefficient blocks coincide, giving a
+   degenerate (singular) stage system — most visibly at `s = 2`.
+
+## Dynamic verification added
+
+A new convergence suite `test/verification/spark_convergence_tests.jl` (wired into
+`test/runtests.jl`) measures the empirical order of every family on the degenerate
+Lotka–Volterra system in its `IDAE`/`PDAE`/`LDAE`/`HDAE` formulations, referenced
+against `Gauss(8)` on the ODE form, at `T = 1` (longer than the fixed-step
+`spark_integrators_tests.jl`, `T = 0.1`, so the true asymptotic behaviour shows).
+It asserts the documented order for the working methods (64 checks) and records the
+confirmed deficiencies as `@test_broken` at the documented order (11). Empirically
+confirmed orders:
+
+* **Full documented order:** `SLRKLobattoIII{AB,BA,D,E}` (2s−2); `SPARKGLRK(s)`
+  (2s); `SPARKGLVPRK(1)` (2); `SPARKLob{ABC,ABD}(s)` (2s−2); `TableauGausspSymplectic(2)`,
+  `TableauLobattoIII{AIIIB,BIIIA}pSymplectic(3)`, `TableauVSPARKGLRKp{Midpoint,Symplectic,Symmetric}(2)` (4);
+  `VSPARK(SPARKLobattoIIIAIIIB(3))` (4); `TableauVSPARKLobattoIIIAB(s)` and
+  `TableauVSPARKGLRKLobattoIIIAB(s)` (2s); `TableauHPARKGLRK(1)`, `HSPARK(SPARKGLRK(s))`,
+  `HSPARK(SPARKLob{ABC,ABD}(s))`, `TableauHSPARKLobattoIIIAIIIBpSymmetric(2)`.
+
+## Findings
+
+| # | Category | Method(s) | Observed | Root cause | Action |
+|:--|:---------|:----------|:---------|:-----------|:-------|
+| S1 | **B — bug (fixed)** | `TableauHSPARKGLRKLobattoIII{AB,BA,D,E}` | `BoundsError` (`s×s` matrix at `[i,σ+1]`) | `getTableauHSPARK` built the momentum projection coefficients `a_p_2`/`a_p_3` as `s×s` (`= g.a`) although the HSPARK-secondary residual indexes them over the `R = σ` projective stages; the position coefficients `a_q_2`/`a_q_3` were already the correct `s×σ`. **Incomplete port.** | **Fixed:** build `a_p_2`/`a_p_3` as the `s×σ` conjugate-symplectic partners of `α_q_2`/`α_q_3`, mirroring the `a_q_2`/`a_q_3` construction |
+| S2 | **B — bug (fixed)** | all `HSPARKsecondary` (`TableauHSPARKLobattoIII*`, `TableauHSPARKGLRKLobattoIII*`) | `SingularException` | The null-vector residual/component code was commented out while `Cache` still allocates the `μ` unknown (`cache.jl:178`), leaving an unconstrained zero row/column in the Jacobian. The working `VSPARKsecondary` has the identical block active. | **Fixed:** re-enabled the null-vector `components!`/`residual!`/`initial_guess!` blocks (matching `VSPARKsecondary`) and corrected the null-vector guess guard from the nonexistent `:λ` field to `hasnullvector`. Moved the zero pivot off the null-vector row — see S3 |
+| S3 | B — deeper (still broken) | all `HSPARKsecondary` | `SingularException` (now in the `ω` secondary-constraint block) | After S1/S2 the remaining singularity is a residual degeneracy in the `ω`-averaged secondary-constraint rows of this EXPERIMENTAL Hamiltonian method. The (incomplete) manuscripts do not give enough to reconstruct the intended coefficients with confidence, so no speculative numeric change was made. | Kept `@test_broken` with a precise, updated root cause |
+| S4 | B — latent (fixed) | `HPARK`, `HSPARKprimary` | none observed (`P = 1`) | The δ-constraint residual zeroed row `R-1` (hard-coded) while accumulating into row `i` inside a `for i in R-P+1:R` loop; they coincide only when `P = 1` (all tested methods). | **Fixed:** zero the same row `i` that is accumulated (`integrators_hspark.jl`, `integrators_hspark_primary.jl`); behaviour-neutral for `P = 1`, correct for `P > 1` |
+| S5 | **A — inherent** | `SPARKGLVPRK(2)`, `TableauHPARKGLRK(2)` | order 2 (docs 2s = 4) | `R(∞) = (-1)^{s+1} = -1` at `s = 2` violates the projection symplecticity conditions (prediction 2). This is the source's own `# maybe problem with R∞?` TODO. | `@test_broken` at order 4 |
+| S6 | **A — inherent** | `SPARKLobattoIIIAIIIB(2/3/4)`, `SPARKGLRKLobattoIII{AIIIB,BIIIA}(s)` | order-reduced (`(3)`→~2.4, `(4)`→~3.5; GLRK-Lobatto→~1) | Symplectic Lobatto pair enforcing the constraint at the solution on the degenerate Lagrangian — reduced order (predictions 1 + the known symplectic-RK-on-degenerate-Lagrangian reduction). `SPARKLobattoIIIAIIIB(2)` fails the solve outright. | `@test_broken` / documented order-reduced tolerances |
+| S7 | **A — inherent** | `SPARKLobattoIIIBIIIA(2/3/4)`, `TableauHPARKLobattoIII{AIIIB,BIIIA}(2/3)`, `TableauVSPARKLobattoIIIBIIIApSymmetric(3)` | divergence (`NonlinearSolverException`, or error 0.15–20 at `T = 0.1`) | Full divergence predicted by prediction 1; a different solver / line search / iteration cap does not help (confirmed here and in the third pass). | `@test_broken` |
+| S8 | **A — inherent** | `VSPARK(SPARK{GLRK,LobABC,LobABD,LobattoIIIAIIIB,LobattoIIIBIIIA}(2))` | `SingularException` at `s = 2` | Degenerate stage system at the lowest stage count (prediction 3). `VSPARK(SPARKLobABD(2/3))` singular at `s = 2, 3`. | `@test_broken` |
+| S9 | C — limitation (documented) | `SPARKMethod` (internal stages) | none on the degenerate test problem | `initial_guess!` zeroes the internal velocity `Vi` and `components!` never recomputes it (the `v̄` call is commented out), so `ϑ`/`f` are evaluated at `Vi = 0`. Harmless for degenerate Lagrangians (the `v`-term vanishes), but wrong in general — the code flags this in-comment. No non-degenerate DAE test problem exists here to validate a change, so a fix would be unverifiable. | Documented; not changed |
+
+## Static consistency
+
+The `components!`/`residual!`/`update!` stage equations match the docstrings and
+the manuscript stage/update equations for every family; the `SLRK` and
+`VSPARKsecondary`/`HSPARKsecondary` docstrings transcribe the paper's `(s,σ)`
+constructions faithfully. The tableau `o` fields propagate correctly from the
+underlying RungeKutta tableaus (`g.o`, `min(...)`), with the two closed-form orders
+(`lobatto_gauss_coefficients` `o = s²` and `SLRKLobattoIII` `o = 2s-2`) matching
+the code. The `docs/src/integrators/spark.md` page was expanded from a bare table
+to a description of the method families, their DAE targets, the two Butcher-tableau
+pairs, and the symplecticity/order caveats above.
+
+## Fixes applied
+
+* `src/spark/tableaus_hspark_secondary.jl` — build `a_p_2`/`a_p_3` as `s×σ`
+  conjugate-symplectic matrices (finding S1); removed the stale "not used anymore"
+  comment.
+* `src/spark/integrators_hspark_secondary.jl` — re-enabled the null-vector
+  `components!`/`residual!` blocks and fixed the `initial_guess!` guard (S2).
+* `src/spark/integrators_hspark.jl`, `src/spark/integrators_hspark_primary.jl` —
+  corrected the δ-constraint residual row index `R-1 → i` (S4).
+
+## Tests
+
+* **New** `test/verification/spark_convergence_tests.jl` (wired into
+  `test/runtests.jl`): 64 order assertions + 11 `@test_broken` deficiencies.
+* `test/spark/spark_integrators_tests.jl` — the HSPARK-secondary testset comment
+  was updated to the S1–S3 root cause and the calls wrapped in `muffle` (the fixed
+  methods now iterate in the solver before failing, rather than aborting
+  immediately). Tally unchanged at **133 pass / 45 broken**.
+
+The integrator machinery is correct: every SPARK family that is *not* subject to an
+inherent instability (SLRK, SPARK-Gauß, SPARK-Lobatto ABC/ABD, VSPARK/VPARK
+symplectic-projection, VSPARK-secondary, HSPARK-Gauß/Lobatto ABC/ABD) reaches
+exactly its documented order. The non-converging cases are, with the exception of
+the EXPERIMENTAL HSPARK-secondary family (S3), **inherent method properties**
+(order reduction / divergence / singular stage systems predicted by the
+manuscripts), not implementation defects.
