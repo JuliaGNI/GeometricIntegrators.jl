@@ -420,3 +420,43 @@ solver option replaces the whole `default_options` NamedTuple. The
 `test_convergence_order` / `estimate_convergence_order` helpers in
 `verification_utilities.jl` gained an `integrate_options` keyword (default empty,
 backward-compatible) to thread these options through to `integrate`.
+
+## SPARK suite (`test/spark/spark_integrators_tests.jl`)
+
+The SPARK suite emitted ~35 warnings per run, of two kinds — `Solver took 1000
+iterations.` (nonlinear solver hit its cap) and `Backtracking line search did not
+satisfy the sufficient decrease condition within 1000 iterations.` Unlike the
+PMVI/HP case these are **mostly not** a uniform benign artefact; they split three
+ways:
+
+* **Genuinely divergent / order-broken methods, already recorded as `@test_broken`**
+  — the bulk of the noise. `SPARKLobattoIIIBIIIA(2/3/4)` (errors 2.96 / 0.58 /
+  7.3e-3, up to 9 solver + hundreds of line-search warnings), `SPARKLobattoIIIAIIIB(2)`
+  (0.107), `TableauVSPARKLobattoIIIBIIIApSymmetric(3)` (order-reduced), and the
+  `TableauHPARKLobattoIII{AIIIB,BIIIA}(2/3)` cases (errors 0.15–20). The warnings
+  are a *correct symptom* of divergence; a different solver (DogLeg), line search,
+  or a higher iteration cap does not help (DogLeg makes matters worse or raises a
+  `NonlinearSolverException`).
+* **Singular / out-of-bounds `@test_broken` methods** — abort with
+  `SingularException` / `BoundsError`; most warn zero times, except
+  `VSPARK(SPARKLobABD(2))`, which emits a few warnings before the singular solve.
+* **Benign warners among the passing cases** — `VSPARK(SPARKLobABD(4))` (1 solver +
+  204 line-search warnings) and `VSPARK(SPARKLobABC(3))` (19 line-search warnings,
+  solver converges). Both pass with full accuracy.
+
+**Root cause & fix.** SPARK overrides `default_options` with an even tighter set
+(`min_iterations=1, x_suctol=2eps(), f_abstol=8eps(), f_suctol=2eps()`,
+`src/spark/abstract.jl`). For `VSPARK(SPARKLobABD(4))` the same machine-precision
+`f_abstol` stall as PMVI/HP applies; relaxing it to `4e-15` (keeping the other
+SPARK defaults, threaded via the module-level `SPARK_RELAXED` named tuple) makes
+the solve converge and removes **both** warning kinds, error unchanged (5.2e-12).
+
+For every other noisy case, tolerance/solver tuning does **not** cleanly help —
+the divergent methods genuinely fail, and the line-search warning cannot be
+silenced through the public API (the line search builds its own `Options` and
+never receives a `verbosity` kwarg passed through `integrate`; `warn_iterations=0`
+suppresses only the solver-cap warning). These calls are therefore wrapped in a
+`muffle(f) = with_logger(f, NullLogger())` helper that suppresses log output for
+that one integration. `muffle` changes only logging, so the measured errors and
+the `@test_broken` status are unaffected. The suite now runs warning-free with the
+same 133 pass / 45 broken tally.
