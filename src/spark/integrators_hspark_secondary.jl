@@ -133,7 +133,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Union{H
         end
     end
 
-    if isdefined(tableau(int), :λ) && tableau(int).λ.c[1] == 0
+    if hasnullvector(method(int))
         for k in 1:D
             C.x[2*D*nstages(int)+4*D*pstages(method(int))+k] = 0
         end
@@ -190,11 +190,11 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         equations(int).ψ(C.Ψp[i], t, C.Qp[i], C.Pp[i], C.Vp[i], C.Fp[i], params)
     end
 
-    # if hasnullvector(method(int))
-    #     for k in 1:D
-    #         C.μ[k] = x[2*D*S+4*D*R+k]
-    #     end
-    # end
+    if hasnullvector(method(int))
+        for k in 1:D
+            C.μ[k] = x[2*D*S+4*D*R+k]
+        end
+    end
 
     # compute q and p
     C.q̃ .= sol.q
@@ -269,20 +269,20 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
         end
     end
 
-    # if hasnullvector(method(int))
-    #     for i in 1:R
-    #         for k in 1:D
-    #             b[2*D*S+4*(D*(i-1)+k-1)+2] -= C.μ[k] * tableau(int).d[i] / tableau(int).p.b[2][i]
-    #         end
-    #     end
+    if hasnullvector(method(int))
+        for i in 1:R
+            for k in 1:D
+                b[2*D*S+4*(D*(i-1)+k-1)+2] -= C.μ[k] * tableau(int).d[i] / tableau(int).p.b[2][i]
+            end
+        end
 
-    #     for k in 1:D
-    #         b[2*D*S+4*D*R+k] = 0
-    #         for i in 1:R
-    #             b[2*D*S+4*D*R+k] -= C.Vp[i][k] * tableau(int).d[i]
-    #         end
-    #     end
-    # end
+        for k in 1:D
+            b[2*D*S+4*D*R+k] = 0
+            for i in 1:R
+                b[2*D*S+4*D*R+k] -= C.Vp[i][k] * tableau(int).d[i]
+            end
+        end
+    end
 end
 
 

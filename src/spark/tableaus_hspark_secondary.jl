@@ -21,16 +21,30 @@ function getTableauHSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=nothing)
     α_q_1 = h.a
     α_p_1 = h.a
 
-    # a_p_1, a_p_2 and a_p_3 are free (they are not used in HSPARKpSecondary integrators anymore)
-    # REALLY?
     a_q_1 = g.a
     b_q_1 = g.b
 
     a_p_1 = g.a
     b_p_1 = g.b
 
-    a_p_2 = g.a
-    a_p_3 = g.a
+    # a_p_2 and a_p_3 couple the internal momentum increment Z_i (i = 1..s) to the
+    # projective forces G_p / G̅_p (j = 1..σ) in the HSPARKsecondary residual, so they
+    # must be s×σ, not s×s. They are the conjugate-symplectic partners of the projective
+    # position coefficients α_q_2 / α_q_3 (mirroring the a_q_2 / a_q_3 construction below
+    # with the roles of q and p swapped): b_p_2_j a_p_2_ij + b_q_1_i α_q_2_ji = b_q_1_i b_p_2_j.
+    a_p_2 = zeros(s,σ)
+    for i in 1:s
+        for j in 1:σ
+            a_p_2[i,j] = b_p_2[j] / b_q_1[i] * (b_q_1[i] - α_q_2[j,i])
+        end
+    end
+
+    a_p_3 = zeros(s,σ)
+    for i in 1:s
+        for j in 1:σ
+            a_p_3[i,j] = b_p_3[j] / b_q_1[i] * (b_q_1[i] - α_q_3[j,i])
+        end
+    end
 
     β_q_1 = lq.b
     β_q_2 = lq.b
