@@ -17,35 +17,30 @@ ssol = integrate(sode, LieA())
 @test relative_maximum_error(ssol, ref).q < 5E-2
 
 ssolc = integrate(sode, Composition(LieA()))
-# disabled: ssol.q != ssolc.q exactly (differ at ~1e-16 roundoff); approximate check below
 @test relative_maximum_error(ssol, ssolc).q < 1E-15
 
 ssol = integrate(sode, LieB())
 @test relative_maximum_error(ssol, ref).q < 5E-2
 
 ssolc = integrate(sode, Composition(LieB()))
-# disabled: ssol.q != ssolc.q exactly (differ at ~1e-16 roundoff); approximate check below
 @test relative_maximum_error(ssol, ssolc).q < 1E-15
 
 ssol = integrate(sode, Strang())
 @test relative_maximum_error(ssol, ref).q < 1E-3
 
 ssolc = integrate(sode, Composition(Strang()))
-# disabled: ssol.q != ssolc.q exactly (differ at ~1e-16 roundoff); approximate check below
 @test relative_maximum_error(ssol, ssolc).q < 1E-15
 
 ssol = integrate(sode, StrangA())
 @test relative_maximum_error(ssol, ref).q < 1E-3
 
 ssolc = integrate(sode, Composition(StrangA()))
-# disabled: ssol.q != ssolc.q exactly (differ at ~1e-16 roundoff); approximate check below
 @test relative_maximum_error(ssol, ssolc).q < 1E-15
 
 ssol = integrate(sode, StrangB())
 @test relative_maximum_error(ssol, ref).q < 1E-3
 
 ssolc = integrate(sode, Composition(StrangB()))
-# disabled: ssol.q != ssolc.q exactly (differ at ~1e-16 roundoff); approximate check below
 @test relative_maximum_error(ssol, ssolc).q < 1E-15
 
 
@@ -60,28 +55,24 @@ ssol = integrate(sode, McLachlan2())
 @test relative_maximum_error(ssol, ref).q < 1E-4
 
 ssolc = integrate(sode, Composition(McLachlan2()))
-# disabled: ssol.q != ssolc.q exactly (differ at ~1e-16 roundoff); approximate check below
 @test relative_maximum_error(ssol, ssolc).q < 1E-15
 
 ssol = integrate(sode, McLachlan4())
 @test relative_maximum_error(ssol, ref).q < 5E-8
 
 ssolc = integrate(sode, Composition(McLachlan4()))
-# disabled: ssol.q != ssolc.q exactly (differ at ~1e-16 roundoff); approximate check below
 @test relative_maximum_error(ssol, ssolc).q < 2E-15
 
 ssol = integrate(sode, TripleJump())
 @test relative_maximum_error(ssol, ref).q < 5E-6
 
 ssolc = integrate(sode, Composition(TripleJump()))
-# disabled: ssol.q != ssolc.q exactly (differ at ~1e-16 roundoff); approximate check below
 @test relative_maximum_error(ssol, ssolc).q < 1E-15
 
 ssol = integrate(sode, SuzukiFractal())
 @test relative_maximum_error(ssol, ref).q < 5E-7
 
 ssolc = integrate(sode, Composition(SuzukiFractal()))
-# disabled: ssol.q != ssolc.q exactly (differ at ~1e-16 roundoff); approximate check below
 @test relative_maximum_error(ssol, ssolc).q < 1E-15
 
 
@@ -93,10 +84,8 @@ ints_erk4  = (RK4(), RK4())
 
 sint = Composition(ints_erk4, LieA())
 ssol = integrate(sode, sint)
-# println(relative_maximum_error(ssol, ref).q)
 @test relative_maximum_error(ssol, ref).q < 5E-2
 
 sint = Composition(ints_glrk1, Strang())
 ssol = integrate(sode, sint)
-# println(relative_maximum_error(ssol, ref).q)
 @test relative_maximum_error(ssol, ref).q < 1E-3
