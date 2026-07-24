@@ -46,81 +46,71 @@ end
 
     sol = integrate(lode, VPRKGauss(1))
     # println(relative_maximum_error(sol.q, pref.q))
-    # println(relative_maximum_error(sol.p, pref.p))
     # println()
     @test relative_maximum_error(sol.q, pref.q) < 4E-4
-    # @test relative_maximum_error(sol.p, pref.p) < 4E-4
+    @test relative_maximum_error(sol.p, pref.p) < 8E-4
 
     ref = integrate(lode, PMVImidpoint())
     @test relative_maximum_error(sol.q, ref.q) < 8 * eps()
 
     sol = integrate(lode, VPRKGauss(2))
     # println(relative_maximum_error(sol.q, pref.q))
-    # println(relative_maximum_error(sol.p, pref.p))
     # println()
     @test relative_maximum_error(sol.q, pref.q) < 4E-8
-    # @test relative_maximum_error(sol.p, pref.p) < 4E-8
+    @test relative_maximum_error(sol.p, pref.p) < 8E-8
 
     sol = integrate(lode, VPRKGauss(3))
     # println(relative_maximum_error(sol.q, pref.q))
-    # println(relative_maximum_error(sol.p, pref.p))
     # println()
     @test relative_maximum_error(sol.q, pref.q) < 8E-13
-    # @test relative_maximum_error(sol.p, pref.p) < 8E-13
+    @test relative_maximum_error(sol.p, pref.p) < 4E-12
 
     sol = integrate(lode, VPRKGauss(4))
     # println(relative_maximum_error(sol.q, pref.q))
-    # println(relative_maximum_error(sol.p, pref.p))
     # println()
     @test relative_maximum_error(sol.q, pref.q) < 4E-16
-    # @test relative_maximum_error(sol.q, pref.q) < 2E-16 # TODO: Reactivate!
-    # @test relative_maximum_error(sol.p, pref.p) < 2E-16
+    # q measured 2.63E-16 (~eps): kept at roundoff floor 4E-16; sol.q != pref.q exactly, so 2E-16 not reachable
+    @test relative_maximum_error(sol.p, pref.p) < 1E-15
 
 
     sol = integrate(lode, VPRKLobattoIIIAIIIĀ(2))
     # println(relative_maximum_error(sol.q, pref.q))
-    # println(relative_maximum_error(sol.p, pref.p))
     # println()
     @test relative_maximum_error(sol.q, pref.q) < 2E-4
-    # @test relative_maximum_error(sol.p, pref.p) < 2E-4
+    @test relative_maximum_error(sol.p, pref.p) < 1E-3
 
     ref = integrate(lode, PMVItrapezoidal())
     @test relative_maximum_error(sol.q, ref.q) < 8 * eps()
 
     sol = integrate(lode, VPRKLobattoIIIAIIIĀ(3))
     # println(relative_maximum_error(sol.q, pref.q))
-    # println(relative_maximum_error(sol.p, pref.p))
     # println()
     @test relative_maximum_error(sol.q, pref.q) < 8E-9
-    # @test relative_maximum_error(sol.p, pref.p) < 8E-9
+    @test relative_maximum_error(sol.p, pref.p) < 2E-7
 
     sol = integrate(lode, VPRKLobattoIIIAIIIĀ(4))
     # println(relative_maximum_error(sol.q, pref.q))
-    # println(relative_maximum_error(sol.p, pref.p))
     # println()
     @test relative_maximum_error(sol.q, pref.q) < 2E-13
-    # @test relative_maximum_error(sol.p, pref.p) < 2E-13
+    @test relative_maximum_error(sol.p, pref.p) < 4E-12
 
 
     sol = integrate(lode, VPRKLobattoIIIBIIIB̄(2))
     # println(relative_maximum_error(sol.q, pref.q))
-    # println(relative_maximum_error(sol.p, pref.p))
     # println()
     @test relative_maximum_error(sol.q, pref.q) < 4E-4
-    # @test relative_maximum_error(sol.p, pref.p) < 4E-4
+    @test relative_maximum_error(sol.p, pref.p) < 8E-4
 
     sol = integrate(lode, VPRKLobattoIIIBIIIB̄(3))
     # println(relative_maximum_error(sol.q, pref.q))
-    # println(relative_maximum_error(sol.p, pref.p))
     # println()
     @test relative_maximum_error(sol.q, pref.q) < 4E-8
-    # @test relative_maximum_error(sol.p, pref.p) < 4E-8
+    @test relative_maximum_error(sol.p, pref.p) < 8E-8
 
     sol = integrate(lode, VPRKLobattoIIIBIIIB̄(4))
     # println(relative_maximum_error(sol.q, pref.q))
-    # println(relative_maximum_error(sol.p, pref.p))
     # println()
     @test relative_maximum_error(sol.q, pref.q) < 8E-13
-    # @test relative_maximum_error(sol.p, pref.p) < 8E-13
+    @test relative_maximum_error(sol.p, pref.p) < 4E-12
 
 end

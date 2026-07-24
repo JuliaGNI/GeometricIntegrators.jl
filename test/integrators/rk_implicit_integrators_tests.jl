@@ -64,6 +64,10 @@ end
 end
 
 
+# DISABLED (blocker): FLRK (Formal Lagrangian RK) is not available in the current
+# architecture — the `FLRK` method is commented out in method_list.jl and the
+# integrator source (integrators_flrk.jl / `IntegratorFLRK`) was removed. Reviving
+# it is a re-implementation; see VERIFICATION_REPORT.md.
 # @testset "$(rpad("Formal Lagrangian Runge-Kutta integrators",80))" begin
 
 #     flint = IntegratorFLRK(lode, TableauGauss(2))

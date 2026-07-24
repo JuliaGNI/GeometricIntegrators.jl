@@ -13,7 +13,7 @@ prefs = exact_solution(podes)
 @testset "$(rpad("ODE Ensembles",80))" begin
 
     sols = integrate(odes, Gauss(2))
-    @test relative_maximum_error(sols, refs).q < 8E-6
+    @test relative_maximum_error(sols, refs).q < 8E-8
 
 end
 

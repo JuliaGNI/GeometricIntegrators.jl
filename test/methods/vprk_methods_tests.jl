@@ -9,8 +9,17 @@ lode = lodeproblem()
 
 @testset "$(rpad("Variational Partitioned Runge-Kutta Methods",80))" begin
 
+    # The `VPRK(<plain method>)` and `VPRK(<VPRK-specific alias>)` construction
+    # paths below produce numerically identical Butcher tableaus (verified: the
+    # q/p `a`, `b`, `c` coefficients are `==`), but the alias tableaus carry
+    # different metadata, so the tableau `==` (which compares name/order too)
+    # returns false. For VPRKGauss/VPSRK3 the symplectic-partitioned construction
+    # (RungeKutta.jl `SymplecticPartitionedTableau`) also relabels the reported
+    # order (e.g. `order(VPRKGauss(1))` = 1 vs `order(Gauss(1))` = 2,
+    # `order(VPSRK3())` = 3 vs `order(SRK3())` = 4). These are metadata
+    # differences in RungeKutta.jl, not distinct methods; the equality is
+    # therefore intentionally not asserted. See VERIFICATION_REPORT.md.
     # @test VPRK(SRK3()) == VPRK(VPSRK3())
-
     # @test VPRK(Gauss(1)) == VPRK(VPRKGauss(1))
     @test VPRK(RadauIIA(2)) == VPRK(VPRKRadauIIA(2))
     @test VPRK(RadauIIB(2)) == VPRK(VPRKRadauIIB(2))
