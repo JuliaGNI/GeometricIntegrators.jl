@@ -59,11 +59,12 @@ Integrate `method` at each `Δt` in `timesteps` (building the problem via
 function estimate_convergence_order(problem_builder, method, timesteps;
         reference,
         errormetric = default_errormetric,
-        plateau = 1e-13)
+        plateau = 1e-13,
+        integrate_options = (;))
     dts = collect(float.(timesteps))
     errs = map(dts) do Δt
         prob = problem_builder(Δt)
-        errormetric(integrate(prob, method), reference(prob))
+        errormetric(integrate(prob, method; integrate_options...), reference(prob))
     end
     # Keep points above the roundoff floor that are still strictly decreasing;
     # this drops the flattened tail where high-order methods hit machine precision.
@@ -89,10 +90,11 @@ function test_convergence_order(problem_builder, method, timesteps;
         atol = 0.35,
         plateau = 1e-13,
         minpoints = 3,
-        label = string(nameof(typeof(method))))
+        label = string(nameof(typeof(method))),
+        integrate_options = (;))
     @assert expected isa Number "pass an explicit `expected` order for $(label)"
     res = estimate_convergence_order(problem_builder, method, timesteps;
-        reference, errormetric, plateau)
+        reference, errormetric, plateau, integrate_options)
     @testset "$(label): order ≈ $(expected)" begin
         @test count(res.mask) >= minpoints
         @test isapprox(res.order, expected; atol = atol)

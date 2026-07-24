@@ -85,7 +85,11 @@ using Test
 
     # test PGLRK coefficients
 
-    # TODO: reactivate
+    # DISABLED: CoefficientsPGLRK(s) is bit-rotted against current dependency
+    # APIs — its constructor fails (unqualified Legendre; QuadratureRules
+    # nodes/weights now return matrices; inner-constructor field type mismatch).
+    # The PGLRK integrator itself was also removed. Needs a revival; see
+    # VERIFICATION_REPORT.md.
     # @test typeof(CoefficientsPGLRK(2)) <: CoefficientsPGLRK
 
 end
@@ -196,6 +200,9 @@ end
     @test typeof(TableauHPARKLobattoIIIBIIIA(2))      <: HPARK
     @test typeof(TableauHPARKLobattoIIIBIIIA(3))      <: HPARK
 
+    # DISABLED: `getTableauHPARK` still exists and runs, but the equality no
+    # longer holds — TableauHPARKGLRK(s) and getTableauHPARK(...) build tableaus
+    # that differ in metadata (e.g. name), so `==` returns false.
     # @test TableauHPARKGLRK(1) == getTableauHPARK(:HPARKGLRK1, TableauGauss(1), TableauGauss(1))
     # @test TableauHPARKGLRK(2) == getTableauHPARK(:HPARKGLRK2, TableauGauss(2), TableauGauss(2))
 

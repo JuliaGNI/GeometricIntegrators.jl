@@ -63,7 +63,7 @@ makedocs(
             "VPRK" => "integrators/vprk.md",
             "SPARK" => "integrators/spark.md",
             "DVI" => "integrators/dvi.md",
-            # "CGVI"        => "integrators/cgvi.md",
+            "CGVI"        => "integrators/cgvi.md",
             # "DGVI"        => "integrators/dgvi.md",
             "Hamilton-Pontryagin" => "integrators/hpi.md",
             "Hamilton-Pontryagin-Galerkin" => "integrators/hpg.md",

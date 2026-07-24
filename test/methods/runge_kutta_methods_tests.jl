@@ -107,6 +107,8 @@ end
 
 end
 
+# DISABLED (blocker): FLRK is not available in the current architecture (method
+# commented out in method_list.jl; integrator source removed). See VERIFICATION_REPORT.md.
 # @testset "$(rpad("Formal Lagrangian Runge-Kutta methods",80))" begin
 
 #     @test typeof(GeometricIntegrator(lode, FLRK(Gauss(1)))) <: IntegratorFLRK

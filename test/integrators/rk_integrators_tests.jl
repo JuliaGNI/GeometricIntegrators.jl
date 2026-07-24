@@ -16,6 +16,10 @@ pdae = pdaeproblem()
 ref = exact_solution(ode)
 pref = exact_solution(pode)
 
+# OBSOLETE (old-API): the `AbstractIntegrator(ode, Tableau...())` / `IntegratorERK`
+# constructors were removed in the method-based rearchitecture. The equivalent
+# integrator-type checks are now covered by test/methods/runge_kutta_methods_tests.jl
+# (`GeometricIntegrator(ode, ExplicitMidpoint()) <: GeometricIntegrator{<:ERK}` etc.).
 # @testset "$(rpad("Runge-Kutta integrators",80))" begin
 
 #     @test typeof(AbstractIntegrator(ode, TableauExplicitMidpoint())) <: IntegratorERK
@@ -76,7 +80,7 @@ end
     @test relative_maximum_error(sol, ref).q < 1E-7
 
     sol = integrate(ode, Gauss(3))
-    @test relative_maximum_error(sol, ref).q < 1E-11
+    @test relative_maximum_error(sol, ref).q < 2E-12
 
     sol = integrate(ode, Gauss(4))
     @test relative_maximum_error(sol, ref).q < 1E-15
@@ -135,6 +139,10 @@ end
 end
 
 
+# OBSOLETE (old-API): `IntegratorIRK(...; exact_jacobian=true)`, `update_params!`,
+# `computeJacobian` and the block-Jacobian machinery were removed in the
+# method-based rearchitecture (the current IRK integrator builds its Jacobian via
+# SimpleSolvers). Reviving this test needs a re-implementation; see VERIFICATION_REPORT.md.
 # @testset "$(rpad("Implicit Runge-Kutta integrators with Block Jacobian",80))" begin
 
 #     # Check Block Jacobian for IRK integrators
@@ -214,31 +222,31 @@ end
     psol = integrate(pode, SymplecticEulerA())
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 5E-2
-    # @test perr.p < 1E-3
+    @test perr.p < 2E-3
     @test psol.q == integrate(hode, SymplecticEulerA()).q
 
     psol = integrate(pode, SymplecticEulerB())
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 5E-2
-    # @test perr.p < 1E-3
+    @test perr.p < 2E-3
     @test psol.q == integrate(hode, SymplecticEulerB()).q
 
     psol = integrate(pode, LobattoIIIAIIIB(2))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 2E-4
-    # @test perr.p < 5E-4
+    @test perr.p < 1E-3
     @test psol.q == integrate(hode, LobattoIIIAIIIB(2)).q
 
     psol = integrate(pode, LobattoIIIBIIIA(2))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 2E-4
-    # @test perr.p < 1E-3
+    @test perr.p < 2E-3
     @test psol.q == integrate(hode, LobattoIIIBIIIA(2)).q
 
     psol = integrate(pode, RK4())
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 2E-7
-    # @test perr.p < 2E-7
+    @test perr.p < 4E-7
     @test psol.q == integrate(hode, RK4()).q
 
 end
@@ -248,7 +256,7 @@ end
     psol = integrate(pode, Gauss(1))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 5E-4
-    # @test perr.p < 5E-4
+    @test perr.p < 8E-4
     @test psol.q == integrate(pode, PartitionedGauss(1)).q
     @test psol.q == integrate(pode, ImplicitMidpoint()).q
     @test psol.q == integrate(hode, Gauss(1)).q
@@ -258,15 +266,15 @@ end
     psol = integrate(pode, Gauss(2))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 1E-7
-    # @test perr.p < 1E-7
+    @test perr.p < 1E-7
     @test psol.q == integrate(pode, PartitionedGauss(2)).q
     @test psol.q == integrate(hode, Gauss(2)).q
     @test psol.q == integrate(hode, PartitionedGauss(2)).q
 
     psol = integrate(pode, Gauss(3))
     perr = relative_maximum_error(psol, pref)
-    @test perr.q < 1E-11
-    # @test perr.p < 1E-11
+    @test perr.q < 2E-12
+    @test perr.p < 4E-12
     @test psol.q == integrate(pode, PartitionedGauss(3)).q
     @test psol.q == integrate(hode, Gauss(3)).q
     @test psol.q == integrate(hode, PartitionedGauss(3)).q
@@ -274,7 +282,7 @@ end
     psol = integrate(pode, Gauss(4))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 1E-15
-    # @test perr.p < 1E-15
+    @test perr.p < 1E-15
     @test psol.q == integrate(pode, PartitionedGauss(4)).q
     @test psol.q == integrate(hode, Gauss(4)).q
     @test psol.q == integrate(hode, PartitionedGauss(4)).q
@@ -282,6 +290,9 @@ end
 end
 
 
+# DISABLED (blocker): the PGLRK integrator (`IntegratorPGLRK` / pglrk_integrators.jl)
+# was removed, and `CoefficientsPGLRK` is bit-rotted against current dependency APIs
+# (see spark_tableaus_tests.jl and VERIFICATION_REPORT.md). Needs a revival.
 # @testset "$(rpad("Projected Gauss-Legendre Runge-Kutta integrators",80))" begin
 
 #     pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(2))
@@ -305,11 +316,8 @@ end
         csol = integrate(code, Gauss(s))
         psol = integrate(pode, Gauss(s))
 
-        # @test csol.q[end][1] == psol.q[end][1] # TODO: Reactivate!
-        # @test csol.q[end][2] == psol.p[end][1] # TODO: Reactivate!
-
-        @test csol.q[end][1] ≈ psol.q[end][1] atol = 1E-15
-        @test csol.q[end][2] ≈ psol.p[end][1] atol = 1E-15
+        @test csol.q[end][1] == psol.q[end][1]
+        @test csol.q[end][2] == psol.p[end][1]
     end
 
     for s in 1:4
@@ -317,11 +325,8 @@ end
         csol = integrate(code, Gauss(s))
         hsol = integrate(hode, Gauss(s))
 
-        # @test csol.q[end][1] == hsol.q[end][1] # TODO: Reactivate!
-        # @test csol.q[end][2] == hsol.p[end][1] # TODO: Reactivate!
-
-        @test csol.q[end][1] ≈ hsol.q[end][1] atol = 1E-15
-        @test csol.q[end][2] ≈ hsol.p[end][1] atol = 1E-15
+        @test csol.q[end][1] == hsol.q[end][1]
+        @test csol.q[end][2] == hsol.p[end][1]
     end
 
     for s in 1:4

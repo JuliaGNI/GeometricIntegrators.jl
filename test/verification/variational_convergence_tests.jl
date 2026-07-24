@@ -22,8 +22,15 @@ vref(prob) = integrate(prob, VPRKGauss(8))
 
 @testset "Variational integrator convergence" begin
     @testset "Position-momentum and discrete Euler-Lagrange" begin
-        test_convergence_order(lbuild, PMVImidpoint(),    steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "PMVImidpoint")
-        test_convergence_order(lbuild, PMVItrapezoidal(), steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "PMVItrapezoidal")
+        # PMVI relaxes the solver residual tolerance to f_abstol = 4e-15 to avoid a
+        # spurious "Solver took 1000 iterations." warning at the finest timestep
+        # (tolerance stagnation near machine precision; see VERIFICATION_REPORT.md,
+        # third pass). min_iterations = 1 is repeated because any solver option
+        # replaces the whole default_options bundle.
+        test_convergence_order(lbuild, PMVImidpoint(),    steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "PMVImidpoint",
+            integrate_options = (min_iterations = 1, f_abstol = 4e-15))
+        test_convergence_order(lbuild, PMVItrapezoidal(), steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "PMVItrapezoidal",
+            integrate_options = (min_iterations = 1, f_abstol = 4e-15))
         test_convergence_order(delbuild_m, DiscreteEulerLagrange(), steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "DEL-midpoint")
         test_convergence_order(delbuild_t, DiscreteEulerLagrange(), steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "DEL-trapezoidal")
     end

@@ -19,16 +19,16 @@ ref = integrate(ode, Gauss(8))
 @testset "$(rpad("Post-projection with Runge-Kutta integrators for implicit equations",80))" begin
 
     sol = integrate(iode, PostProjection(Gauss(1)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-4
+    @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
     sol = integrate(iode, PostProjection(Gauss(2)))
-    @test relative_maximum_error(sol.q, ref.q) < 8E-7
+    @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(iode, PostProjection(Gauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-11
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
     sol = integrate(iode, PostProjection(Gauss(4)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-14
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 end
 
@@ -36,13 +36,13 @@ end
 @testset "$(rpad("Midpoint Projection with Runge-Kutta integrators for implicit equations",80))" begin
 
     sol = integrate(iode, MidpointProjection(Gauss(1)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-4
+    @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
     sol = integrate(iode, MidpointProjection(Gauss(2)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-8
+    @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(iode, MidpointProjection(Gauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-12
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
     sol = integrate(iode, MidpointProjection(Gauss(4)))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
@@ -53,13 +53,13 @@ end
 @testset "$(rpad("Symmetric Projection with Runge-Kutta integrators for implicit equations",80))" begin
 
     sol = integrate(iode, SymmetricProjection(Gauss(1)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-4
+    @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
     sol = integrate(iode, SymmetricProjection(Gauss(2)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-8
+    @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(iode, SymmetricProjection(Gauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-12
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
     sol = integrate(iode, SymmetricProjection(Gauss(4)))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
