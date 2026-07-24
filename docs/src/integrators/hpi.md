@@ -2,7 +2,7 @@
 
 Hamilton-Pontryagin integrators are obtained from discrete versions of the Hamilton-Pontryagin action principle,
 ```math
-\delta \mathcal{A} [q,v,p] = \delta \int_{０}^{T} \left[ L (q, v) - \left< p , \dot{q} - v \right> \right] \, dt = 0 .
+\delta \mathcal{A} [q,v,p] = \delta \int_{0}^{T} \left[ L (q, v) - \left< p , \dot{q} - v \right> \right] \, dt = 0 .
 ```
 
 ## Trapezoidal Discrete Lagrangian

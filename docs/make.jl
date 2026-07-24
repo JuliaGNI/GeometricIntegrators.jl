@@ -66,7 +66,7 @@ makedocs(
             # "CGVI"        => "integrators/cgvi.md",
             # "DGVI"        => "integrators/dgvi.md",
             "Hamilton-Pontryagin" => "integrators/hpi.md",
-            # "Hamilton-Pontryagin-Galerkin" => "integrators/hpg.md",
+            "Hamilton-Pontryagin-Galerkin" => "integrators/hpg.md",
         ],
         "Modules" => [
             # "Discontinuities"     => "modules/discontinuities.md",

@@ -231,7 +231,7 @@ function coefficients(::McLachlan4, ::Type{T}=Float64) where {T}
                                      1 / 5,
                         (-23 - 20*√19) / 270,
                         ( 14 -    √19) / 108])
-    SplittingCoefficientsNonSymmetric(:McLachlanSplitting, 4, a, a[end:-1:1])
+    SplittingCoefficientsNonSymmetric(:McLachlanSplitting, 4, a[end:-1:1], a)
 end
 
 @doc raw"""
@@ -312,4 +312,82 @@ function coefficients(::SuzukiFractal, ::Type{T}=Float64) where {T}
     den = @big 1/(4-fac)
     a = Array{T}([ den, den, -fac*den ])
     SplittingCoefficientsSS(:SuzukiFractalSplitting, 4, a)
+end
+
+
+@doc raw"""
+Yoshida's 6th order symmetric composition method.
+
+The method is the symmetric composition of $m = 7$ symmetric (2nd order) steps,
+```math
+\Phi_{\Delta t} = S_{w_1 \Delta t} \circ S_{w_2 \Delta t} \circ S_{w_3 \Delta t} \circ S_{w_4 \Delta t} \circ S_{w_3 \Delta t} \circ S_{w_2 \Delta t} \circ S_{w_1 \Delta t} ,
+```
+with $w_1 = 0.78451361047755726381949763$, $w_2 = 0.23557321335935813368479318$,
+$w_3 = -1.17767998417887100694641568$, and $w_4 = 1 - 2 (w_1 + w_2 + w_3)$
+(Yoshida's "solution A").
+
+References:
+
+    Haruo Yoshida.
+    Construction of higher order symplectic integrators.
+    Physics Letters A, Volume 150, Pages 262-268, 1990.
+    doi: 10.1016/0375-9601(90)90092-3
+
+    Robert I. McLachlan.
+    On the Numerical Integration of Ordinary Differential Equations by Symmetric Composition Methods
+    SIAM Journal on Scientific Computing, Volume 16, Pages 151-168, 1995.
+    doi: 10.1137/0916010.
+
+"""
+struct Yoshida6 <: AbstractSplittingMethod end
+
+GeometricBase.order(::Union{Yoshida6, Type{Yoshida6}}) = 6
+
+function coefficients(::Yoshida6, ::Type{T}=Float64) where {T}
+    w = parse.(T, ("0.78451361047755726381949763",
+                   "0.23557321335935813368479318",
+                   "-1.17767998417887100694641568"))
+    a = T[w..., 1 - 2 * sum(w)]
+    SplittingCoefficientsSS(:Yoshida6Splitting, 6, a)
+end
+
+
+@doc raw"""
+Yoshida's 8th order symmetric composition method.
+
+The method is the symmetric composition of $m = 15$ symmetric (2nd order) steps
+with weights $w_1, \dotsc, w_8, w_7, \dotsc, w_1$ (Yoshida's "solution D"),
+```math
+w_1 = 0.74167036435061295345 , \quad w_2 = -0.40910082580003159400 , \quad
+w_3 = 0.19075471029623837995 , \quad w_4 = -0.57386247111608226464 ,
+```
+```math
+w_5 = 0.29906418130365592384 , \quad w_6 = 0.33462491824529818378 , \quad
+w_7 = 0.31529309239676659663 , \quad w_8 = 1 - 2 \sum_{i=1}^{7} w_i .
+```
+
+References:
+
+    Haruo Yoshida.
+    Construction of higher order symplectic integrators.
+    Physics Letters A, Volume 150, Pages 262-268, 1990.
+    doi: 10.1016/0375-9601(90)90092-3
+
+    Robert I. McLachlan.
+    On the Numerical Integration of Ordinary Differential Equations by Symmetric Composition Methods
+    SIAM Journal on Scientific Computing, Volume 16, Pages 151-168, 1995.
+    doi: 10.1137/0916010.
+
+"""
+struct Yoshida8 <: AbstractSplittingMethod end
+
+GeometricBase.order(::Union{Yoshida8, Type{Yoshida8}}) = 8
+
+function coefficients(::Yoshida8, ::Type{T}=Float64) where {T}
+    w = parse.(T, ("0.74167036435061295345", "-0.40910082580003159400",
+                   "0.19075471029623837995", "-0.57386247111608226464",
+                   "0.29906418130365592384", "0.33462491824529818378",
+                   "0.31529309239676659663"))
+    a = T[w..., 1 - 2 * sum(w)]
+    SplittingCoefficientsSS(:Yoshida8Splitting, 8, a)
 end

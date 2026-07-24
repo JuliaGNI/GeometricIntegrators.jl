@@ -64,7 +64,7 @@ ssolc = integrate(sode, Composition(McLachlan2()))
 @test relative_maximum_error(ssol, ssolc).q < 1E-15
 
 ssol = integrate(sode, McLachlan4())
-@test relative_maximum_error(ssol, ref).q < 5E-4
+@test relative_maximum_error(ssol, ref).q < 5E-8
 
 ssolc = integrate(sode, Composition(McLachlan4()))
 # @test ssol.q == ssolc.q # TODO: Reactivate!

@@ -84,7 +84,7 @@ For many methods, tabulated coefficients are included, namely
 | **Diagonally Implicit Methods**                  |        |       |
 | [`CrankNicolson`](@ref)                          | 2      | 2     |
 | [`Crouzeix`](@ref)                               | 2      | 3     |
-| [`KraaijevangerSpijker`](@ref)                   | 2      | 2     |
+| [`KraaijevangerSpijker`](@ref)                   | 2      | 1     |
 | [`QinZhang`](@ref)                               | 2      | 2     |
 | **Fully Implicit Methods**                       |        |       |
 | [`ImplicitEuler`](@ref), [`BackwardEuler`](@ref) | 1      | 1     |
@@ -202,9 +202,9 @@ in the following way:
 ```math
 \begin{aligned}
 Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, v(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) , &
-q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i}  \, v(t_{n} + c_j \Delta t, Q_{n,i}, P_{n,i}) , \\
-P_{n,i} &= p_{n} + h  \sum \limits_{i=1}^{s} \bar{a}_{ij} \, f(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) , &
-p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i}   \, f(t_{n} + c_j \Delta t, Q_{n,i}, P_{n,i}) .
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i}  \, v(t_{n} + c_i \Delta t, Q_{n,i}, P_{n,i}) , \\
+P_{n,i} &= p_{n} + h  \sum \limits_{j=1}^{s} \bar{a}_{ij} \, f(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) , &
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i}   \, f(t_{n} + c_i \Delta t, Q_{n,i}, P_{n,i}) .
 \end{aligned}
 ```
 
@@ -244,10 +244,10 @@ Such problems can be integrated with adapted Runge-Kutta methods, namely
 ```math
 \begin{aligned}
 Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, v(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) , &
-q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i}  \, v(t_{n} + c_j \Delta t, Q_{n,i}, P_{n,i}) , \\
-P_{n,i} &= p_{n} + h  \sum \limits_{i=1}^{s} \bar{a}_{ij} \, f(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) , &
-p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i}   \, f(t_{n} + c_j \Delta t, Q_{n,i}, P_{n,i}) , \\
-P_{n,i} &= ϑ(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) .
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i}  \, v(t_{n} + c_i \Delta t, Q_{n,i}, P_{n,i}) , \\
+P_{n,i} &= p_{n} + h  \sum \limits_{j=1}^{s} \bar{a}_{ij} \, f(t_{n} + c_j \Delta t, Q_{n,j}, P_{n,j}) , &
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i}   \, f(t_{n} + c_i \Delta t, Q_{n,i}, P_{n,i}) , \\
+P_{n,i} &= ϑ(t_{n} + c_i \Delta t, Q_{n,i}, P_{n,i}) .
 \end{aligned}
 ```
 
