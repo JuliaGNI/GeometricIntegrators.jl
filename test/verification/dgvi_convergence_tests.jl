@@ -77,15 +77,19 @@ dgviexp(s) = DGVIEXP(basisquad(s)...)
     end
 
     @testset "gauge-transformed problem" begin
-        # `LotkaVolterra2dGauge` is the same system written with a gauge-transformed
-        # one-form; a variational integrator must be insensitive to that. (Note that
-        # `LotkaVolterra2d.iodeproblem_dg_gauge` does not build at the pinned
-        # GeometricProblems 0.6.24 — its `g` closure has arity (g,t,q,λ,params) while
-        # IODE requires (g,t,q,v,λ,params). That was fixed upstream in v0.7.0, which the
-        # compat bound already allows; until the Manifest is bumped, the dedicated
-        # `LotkaVolterra2dGauge` module is used instead.)
+        # The Lagrangian may be augmented by the total time derivative of a gauge term
+        # without changing the continuous Euler-Lagrange equations, and a variational
+        # integrator must be insensitive to that. `iodeproblem_dg_gauge` carries the gauge
+        # parameter κ for exactly this purpose; κ = 0 recovers `iodeproblem_dg`.
+        κbuild(κ) = Δt -> LotkaVolterra2d.iodeproblem_dg_gauge(q₀; timespan=(0.0, T), timestep=Δt, parameters=params, κ=κ)
+
+        test_convergence_order(κbuild(0.0), dgviexp(3), steps(4, 3); reference=ref, errormetric=emq, expected=6, atol=0.5, label="DGVIEXP(3) κ=0")
+        test_convergence_order(κbuild(0.5), dgviexp(3), steps(4, 3); reference=ref, errormetric=emq, expected=6, atol=0.5, label="DGVIEXP(3) κ=1/2")
+
+        # `LotkaVolterra2dGauge` writes the same system with a gauge-transformed one-form
+        # in a separate module; it must agree too.
         gref(prob) = integrate(LotkaVolterra2dGauge.odeproblem(; timespan=timespan(prob), timestep=timestep(prob)), Gauss(8))
-        test_convergence_order(gbuild, dgviexp(3), steps(4, 3); reference=gref, errormetric=emq, expected=6, atol=0.5, label="DGVIEXP(3) gauge")
+        test_convergence_order(gbuild, dgviexp(3), steps(4, 3); reference=gref, errormetric=emq, expected=6, atol=0.5, label="DGVIEXP(3) gauge module")
     end
 
 end

@@ -1,5 +1,6 @@
 using GeometricIntegrators
 using GeometricProblems.LotkaVolterra2d
+import GeometricProblems.PointVortices as PointVortices
 using Test
 
 include("verification_utilities.jl")
@@ -44,6 +45,23 @@ end
         test_convergence_order(build, FLRK(Gauss(1)), steps(4, 4); reference=ref, errormetric=emp, expected=2, label="FLRK(Gauss(1)) p")
         test_convergence_order(build, FLRK(Gauss(2)), steps(4, 4); reference=ref, errormetric=emp, expected=4, label="FLRK(Gauss(2)) p")
         test_convergence_order(build, FLRK(Gauss(3)), steps(4, 3); reference=ref, errormetric=emp, expected=6, label="FLRK(Gauss(3)) p")
+    end
+
+    # The point vortices are the problem this method exists for: `GeometricProblems`
+    # provides `lodeproblem_formal_lagrangian` specifically for the formal-Lagrangian
+    # formulation, and its v̄ depends on q only, as FLRK requires. Measured orders here are
+    # exactly 2s in both components — 2.02/4.00/6.00 in q and 2.03/4.00/6.01 in p.
+    @testset "point vortices (formal Lagrangian formulation)" begin
+        Tpv = 0.5
+        pvbuild(Δt) = PointVortices.lodeproblem_formal_lagrangian(; timespan=(0.0, Tpv), timestep=Δt)
+        pvref(prob) = integrate(PointVortices.odeproblem(; timespan=timespan(prob), timestep=timestep(prob)), Gauss(8))
+        pvsteps(n0, k) = Tpv ./ (n0 .* 2 .^ (0:k))
+        pvemp(sol, r) = maximum(maximum(abs, sol.p[i] .- PointVortices.ϑ(sol.q[i])) for i in eachindex(sol.q))
+
+        for (s, expected) in ((1, 2), (2, 4), (3, 6))
+            test_convergence_order(pvbuild, FLRK(Gauss(s)), pvsteps(16, 3); reference=pvref, errormetric=emq, expected=expected, label="FLRK(Gauss($s)) q [vortices]")
+            test_convergence_order(pvbuild, FLRK(Gauss(s)), pvsteps(16, 3); reference=pvref, errormetric=pvemp, expected=expected, minpoints=2, label="FLRK(Gauss($s)) p [vortices]")
+        end
     end
 
     # The position phase is an implicit Runge-Kutta method applied to q̇ = v̄(q), so it
