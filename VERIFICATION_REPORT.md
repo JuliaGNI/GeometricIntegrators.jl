@@ -604,10 +604,17 @@ numerical.
 | 22 | observation | the disabled DGVI tests | Could never have run | They used the *regular* harmonic oscillator, on which `DGVI`'s closure row collapses to `q − p` — independent of every unknown, hence a singular Jacobian. DGVIs need a **fully degenerate** Lagrangian | Tests moved to `LotkaVolterra2d.iodeproblem_dg` / `LotkaVolterra2dGauge` |
 | 23 | dependency | `GeometricProblems` **0.6.24** (the pinned version) | `LotkaVolterra2d.iodeproblem_dg_gauge` fails `check_methods`; `PointVortices{,Linear}.lodeproblem_formal_lagrangian` fails to construct | The former's `g` closure has arity `(g,t,q,λ,params)` while `IODE` requires `(g,t,q,v,λ,params)`; the latter still passes `Ω=`/`∇H=` kwargs the current `LODEProblem` signature rejects | **Already fixed upstream in v0.7.0** (2026-07-12, `01e8026` "Standardize the problem interface across all example modules"); all five constructors verified working under 0.7.3. Not an upstream defect — `Manifest.toml` pins 0.6.24 while `Project.toml` compat already allows `"0.6, 0.7"`. Worked around for now (`LotkaVolterra2dGauge` for the gauge case, `LotkaVolterra2d.lodeproblem` for FLRK); upgrading the pin would remove the workarounds |
 
-Findings 13, 14, 16, 17 and 20 were implementation bugs in this repository and are
+| 24 | correctness (**fixed**) | `PGLRK` | `issymplectic` returned `true` | The *tableau* `a(λ)` is symplectic for every fixed `λ`, but `λ` is solved from the energy condition at every step, so the step map is that tableau composed with a state-dependent parameter choice and its Jacobian carries an extra rank-one term `(∂Ψ/∂λ)(∂λ/∂q)ᵀ`. Exact energy conservation and symplecticity are in any case mutually exclusive for a general Hamiltonian system unless the method reproduces the exact flow (Ge & Marsden, 1988), and `\|ΔH\|` is measured at 1.1E-15. Note the reference claims preservation of *quadratic invariants*, not symplecticity | **Fixed** to `missing`. Measured on a nonlinear pendulum at `Δt = 0.8` by finite-differencing the step map: the defect `\|JᵀΩJ − Ω\|_∞` converges to a constant **3.06E-7** as the FD step is refined (ε = 1E-3 … 1E-5), whereas `Gauss(3)`'s falls as `O(ε²)` to 7.3E-12 — i.e. Gauss's residual is FD noise and PGLRK's is real. At `Δt = 1.6` the two coincide, consistent with the λ solve finding no root there and falling back to plain Gauss |
+| 25 | correctness (**fixed**) | `DGVIP0` | The documented `nbasis == nnodes` precondition was not enforced anywhere | The boundary one-forms are reconstructed by contracting `r∓` (length `S`) with the one-form sampled at the quadrature nodes (length `R`). The docstring stated the constructor required `S == R`, but no such check existed | **Fixed**: `check_basis_quadrature`, a per-variant hook on the generated DGVI constructors, asserts it. Previously `DGVIP0(Lagrange(nodes(GaussLegendreQuadrature(3))), GaussLegendreQuadrature(4))` constructed silently and then raised a bare `BoundsError` inside the first step for `R > S`, and would have truncated the reconstruction silently — a wrong answer with no error — for `R < S` |
+
+Findings 13, 14, 16, 17, 20, 24 and 25 were implementation bugs in this repository and are
 **fixed**. Findings 18, 19 and 21 are inherent properties of the methods, now asserted
 or recorded. Finding 15 corrects this report; 22 corrects the test suite; 23 is a stale
 dependency pin rather than an upstream defect.
+
+Note that 24 is the one place where the port asserted a structural property that does not
+hold: the same standard applied to `FLRK` (`issymplectic = missing`, because the reference
+proves nothing) had been applied to `PGLRK`'s *tableau* rather than to the method.
 
 ## A structural result used throughout
 
@@ -627,6 +634,10 @@ This is *orthogonal* to the order question: the `(2,1)` slot breaks `bᵀA = 0` 
 PGLRK would therefore be a symplectic method of reduced order, which is why it is
 rejected outright rather than silently allowed.
 
+Both statements are about the **tableau at fixed `λ`**, and neither transfers to a method
+that chooses `λ` from the state — see finding 24. `VPRKpTableau` is subject to the same
+caveat, and already reports `issymplectic = missing`.
+
 ## Verified-correct behaviour (dynamic confirmation)
 
 **FLRK** — the position phase is an implicit Runge-Kutta method applied to `q̇ = v̄(q)`
@@ -642,7 +653,17 @@ modified equation predicts, so no energy assertion is made.
 range). Energy conservation is the point of the method and is confirmed on the
 *nonlinear* Lotka–Volterra problem: **3.6E-15 against Gauß's 7.3E-10** at `s = 3`, five
 orders of magnitude. The harmonic oscillator cannot distinguish them — Gauß already
-conserves quadratic invariants exactly — so it is not used for that test.
+conserves quadratic invariants exactly — so it is not used for that test. What is
+conserved is the energy and *not* the symplectic form: the measured symplecticity defect
+is 3.06E-7 at `Δt = 0.8`, of the same order as the energy error Gauß commits there
+(4.1E-7), which is the trade the method makes (finding 24).
+
+The `λ` solve costs roughly 8 additional nonlinear stage solves per step, so `PGLRK(3)` is
+about 9× the cost of `Gauss(3)` (16.9 ms against 1.9 ms over 100 Lotka–Volterra steps).
+Two of those were removed by not pre-probing the bracket endpoints that
+`SimpleSolvers.bisection` evaluates itself. Replacing the bisection with a secant on `λ`
+would cut most of the remainder and is recorded as possible future work; the residual is
+smooth in `λ`, so it should converge in 3–5 iterations rather than one solve per bit.
 
 **VPRKpTableau** — enforces the Dirac constraint `ϑ(qₙ) − pₙ = 0` to 4.4E-16 … 8.0E-15,
 and recovers on a degenerate Lagrangian the order that a plain VPRK loses there: plain

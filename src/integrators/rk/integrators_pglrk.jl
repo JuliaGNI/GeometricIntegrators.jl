@@ -24,21 +24,38 @@ bisection on the scalar energy-conservation condition
 H (q_{n+1} (\lambda)) = H (q_{0}) .
 ```
 
-Because ``B A`` is skew for ``B = \mathrm{diag}(b)``, the perturbed tableau satisfies
-the symplecticity condition ``b_{i} a_{ij} + b_{j} a_{ji} = b_{i} b_{j}`` for *every*
-``\lambda``, and because ``b^{T} A = 0`` and ``A \mathbb{1} = 0`` it also retains the
-quadrature and row-sum conditions, hence the order ``2s``. Both identities are
+Because ``B A`` is skew for ``B = \mathrm{diag}(b)``, the perturbed *tableau* satisfies
+the symplecticity condition ``b_{i} a_{ij} + b_{j} a_{ji} = b_{i} b_{j}`` for every
+*fixed* ``\lambda``, and because ``b^{T} A = 0`` and ``A \mathbb{1} = 0`` it also retains
+the quadrature and row-sum conditions, hence the order ``2s``. Both identities are
 asserted in `test/methods/pglrk_coefficients_tests.jl`.
 
-The reference energy is that of the **initial condition**, not of the previous step,
-so the absolute energy error stays bounded instead of performing a random walk. A
-reused integrator object therefore keeps the reference energy of its first run.
+That does **not** make the method symplectic. ``\lambda`` is determined from ``q_{n}`` at
+every step, so the step map is a member of the ``\lambda``-family composed with a
+state-dependent choice of parameter, and its Jacobian carries an additional rank-one term
+``(\partial \Psi / \partial \lambda) (\partial \lambda / \partial q)^{T}``. Exact energy
+conservation and symplecticity are in any case mutually exclusive for a general
+Hamiltonian system unless the method reproduces the exact flow (Ge & Marsden, 1988).
+Measured on a nonlinear pendulum at ``\Delta t = 0.8``, the defect
+``\vert J^{T} \Omega J - \Omega \vert`` tends to ``3.1 \times 10^{-7}`` as the
+finite-difference step is refined, against ``7.3 \times 10^{-12}`` for `Gauss(3)` — the
+latter being finite-difference noise rather than a defect. Accordingly `issymplectic`
+returns `missing`.
+
+The reference energy is that of the **initial condition of the problem**, not of the
+previous step, so the absolute energy error stays bounded instead of performing a random
+walk.
 
 Note that ``\lambda`` is sought in the bracket ``[-\lambda_{\max}, +\lambda_{\max}]``
-with ``\lambda_{\max} = 0.2^{s}`` by default. If the energy residual does not change
-sign across that bracket there is no root, and the method falls back to
+with ``\lambda_{\max} = 2 \cdot 10^{-s}`` by default. If the energy residual does not
+change sign across that bracket there is no root, and the method falls back to
 ``\lambda = 0``, i.e. to the plain Gauss method, rather than applying a large
-perturbation.
+perturbation; the number of steps on which that happens is counted in the cache's
+`nfallback`.
+
+!!! note
+    The scalar ``\lambda`` solve uses `SimpleSolvers.bisection`, which SimpleSolvers does
+    not export, so a compat bump there may break this method.
 
 ### Reference
 
@@ -51,15 +68,16 @@ doi: [10.1137/110856617](https://doi.org/10.1137/110856617).
 ### Constructors
 
 ```
-PGLRK(coefficients::CoefficientsPGLRK; λmax = 0.2^s)
-PGLRK(s::Int, T = Float64; λmax = 0.2^s)
+PGLRK(coefficients::CoefficientsPGLRK; λmax = 2 / 10^s)
+PGLRK(s::Int, T = Float64; λmax = 2 / 10^s)
 ```
 """
 struct PGLRK{CT<:CoefficientsPGLRK,T} <: ODEMethod
     coefficients::CT
     λmax::T
 
-    function PGLRK(coefficients::CoefficientsPGLRK{T}; λmax=T(2) / 10^RungeKutta.nstages(coefficients)) where {T}
+    # `T(10)^s` rather than `10^s`: the latter overflows `Int64` for s ≥ 19
+    function PGLRK(coefficients::CoefficientsPGLRK{T}; λmax=T(2) / T(10)^RungeKutta.nstages(coefficients)) where {T}
         @assert λmax > 0 "λmax must be positive"
         new{typeof(coefficients),T}(coefficients, λmax)
     end
@@ -78,8 +96,14 @@ isexplicit(::Union{PGLRK,Type{<:PGLRK}}) = false
 isimplicit(::Union{PGLRK,Type{<:PGLRK}}) = true
 issymmetric(::Union{PGLRK,Type{<:PGLRK}}) = true
 
-# Symplectic for every λ (`B A` is skew), and energy-preserving by construction.
-issymplectic(::Union{PGLRK,Type{<:PGLRK}}) = true
+# The *tableau* a(λ) is symplectic for every fixed λ (`B A` is skew), but λ is solved per
+# step from the energy condition, so the step map is that tableau composed with a
+# state-dependent parameter choice and its Jacobian carries an extra rank-one term.
+# Ge & Marsden (1988) also rule out a method that conserves H exactly *and* is symplectic
+# unless it reproduces the exact flow. Measured on a nonlinear pendulum at Δt = 0.8:
+# |JᵀΩJ − Ω| → 3.1E-7 as the finite-difference step is refined, against 7.3E-12 for
+# Gauss(3) — i.e. Gauss's residual is FD noise and PGLRK's is a genuine defect.
+issymplectic(::Union{PGLRK,Type{<:PGLRK}}) = missing
 isenergypreserving(::Union{PGLRK,Type{<:PGLRK}}) = true
 
 default_solver(::PGLRK) = Newton()
@@ -113,7 +137,8 @@ working tableau `ā = a + λ A` are updated in the course of a step.
 * `ā`: working tableau ``a + \lambda A``
 * `λ`: current value of the projection parameter
 * `h`, `h₀`: current and reference value of the invariant
-* `initialised`: whether `h₀` has been captured yet
+* `nfallback`: number of steps on which no root was found in ``[-\lambda_{\max}, +\lambda_{\max}]``
+  and the method fell back to ``\lambda = 0``, i.e. to the plain Gauss method
 """
 mutable struct PGLRKCache{ST,D,S} <: ODEIntegratorCache{ST}
     x::Vector{ST}
@@ -132,7 +157,7 @@ mutable struct PGLRKCache{ST,D,S} <: ODEIntegratorCache{ST}
     λ::ST
     h::ST
     h₀::ST
-    initialised::Bool
+    nfallback::Int
 
     function PGLRKCache{ST,D,S}(coefficients) where {ST,D,S}
         x = zeros(ST, D * S)
@@ -152,7 +177,7 @@ mutable struct PGLRKCache{ST,D,S} <: ODEIntegratorCache{ST}
         # `update_tableau!` would accumulate into — and permanently corrupt — it.
         ā = Matrix{ST}(coefficients.a)
 
-        new(x, x₀, q, q̃, ṽ, Q, V, Y, ā, zero(ST), zero(ST), zero(ST), false)
+        new(x, x₀, q, q̃, ṽ, Q, V, Y, ā, zero(ST), zero(ST), zero(ST), 0)
     end
 end
 
@@ -274,7 +299,8 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
     # the λ-dependent tableau is real-valued and is read from the DT cache
     local ā = cache(int).ā
 
-    # compute b = Y - a(λ) V
+    # compute b = Y - a(λ) V. Note that `Y` here carries *no* Δt factor (unlike `FLRK`,
+    # where the unknown is Y = Δt a V); the factor sits in `components!` instead.
     for i in eachindex(C.Y)
         for k in eachindex(C.Y[i])
             y = zero(ST)
@@ -318,8 +344,8 @@ Determine the projection parameter `λ` by bisection on the energy residual.
 
 Falls back to `λ = 0` (the plain Gauss method) when the residual already vanishes, or
 when it does not change sign across the bracket — in the latter case
-`SimpleSolvers.bisection` would otherwise return an endpoint, i.e. the largest
-admissible perturbation.
+`SimpleSolvers.bisection` returns an endpoint, i.e. the largest admissible perturbation
+rather than a root. Such steps are counted in `cache(int).nfallback`.
 """
 function solve_λ!(sol, params, int::GeometricIntegrator{<:PGLRK,<:AbstractProblemODE}, DT)
     local C = cache(int)
@@ -328,21 +354,20 @@ function solve_λ!(sol, params, int::GeometricIntegrator{<:PGLRK,<:AbstractProbl
     local args = (sol, params, int)
 
     # the unperturbed method may already conserve the energy to tolerance
-    f₀ = energy_residual!(zero(DT), args)
-    abs(f₀) ≤ ftol && return zero(DT)
+    abs(energy_residual!(zero(DT), args)) ≤ ftol && return zero(DT)
 
-    f₋ = energy_residual!(-λmax, args)
-    f₊ = energy_residual!(+λmax, args)
-
-    if f₋ * f₊ > 0
-        # no root in the bracket: fall back to the plain Gauss method rather than
-        # letting bisection return ±λmax
-        energy_residual!(zero(DT), args)
-        return zero(DT)
-    end
-
+    # Do *not* pre-probe ±λmax here: every probe is a full nonlinear stage solve, and
+    # `bisection` evaluates both endpoints itself. When the bracket shows no sign change
+    # it returns the endpoint with the smaller |f|, which is the largest admissible
+    # perturbation rather than a root — detected and rejected below.
     λ = SimpleSolvers.bisection(energy_residual!, -λmax, +λmax, args,
         Options(DT; f_abstol=ftol, x_suctol=8eps(DT), verbosity=0))
+
+    if abs(λ) ≥ λmax
+        @debug "PGLRK: no energy-conserving λ in [±$(λmax)]; falling back to plain Gauss."
+        C.nfallback += 1
+        λ = zero(DT)
+    end
 
     # leave the cache consistent with the accepted λ
     energy_residual!(λ, args)
@@ -360,11 +385,15 @@ end
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:PGLRK,<:AbstractProblemODE})
     local DT = eltype(cache(int).q)
 
-    # capture the reference energy of the initial condition on the first step
-    if !cache(int).initialised
-        cache(int).h₀ = invariants(problem(int)).h(history[1].t, history[1].q, params)
-        cache(int).initialised = true
-    end
+    # Reference energy, read from the problem's initial condition rather than latched on
+    # the first step. Recomputing it costs one scalar evaluation against the ~10 nonlinear
+    # stage solves below, and it removes a piece of mutable state whose invariant ("h₀
+    # belongs to the initial condition this integrator was built for") would otherwise
+    # hold only by construction. Evaluated with the step's own `params` so that a caller
+    # varying parameters between runs stays correct. Note `ic.t` is a zero-dimensional
+    # array and has to be indexed.
+    local ic = initial_conditions(problem(int))
+    cache(int).h₀ = invariants(problem(int)).h(ic.t[], ic.q, params)
 
     # determine λ from the energy-conservation condition; this performs the stage
     # solves and leaves the cache consistent with the accepted λ

@@ -120,7 +120,8 @@ computation.
 
 * `x`: nonlinear solver solution vector, holding `(V₁, …, V_S, λ)`
 * `λ`: the Dirac-constraint multipliers
-* `q`, `p`, `v`, `θ`: solution and one-form at the end of the step
+* `q`, `p`, `θ`: solution and one-form at the end of the step
+* `z`: permanent zeros, for the unused velocity slot of `ϑ`
 * `q̃`, `p̃`, `ṽ`, `f̃`: temporaries for the initial guess
 * `Q`, `P`, `V`, `F`, `Y`, `Z`: internal stages
 * `W`, `T`, `A`: skew generator, workspace and the perturbation ``A = P W Q``
@@ -132,8 +133,10 @@ struct VPRKpTableauCache{ST,D,S} <: IODEIntegratorCache{ST}
 
     q::Vector{ST}
     p::Vector{ST}
-    v::Vector{ST}
     θ::Vector{ST}
+
+    # permanent zeros, for the unused velocity slot of `ϑ`; never written
+    z::Vector{ST}
 
     q̃::Vector{ST}
     p̃::Vector{ST}
@@ -158,8 +161,8 @@ struct VPRKpTableauCache{ST,D,S} <: IODEIntegratorCache{ST}
 
         q = zeros(ST, D)
         p = zeros(ST, D)
-        v = zeros(ST, D)
         θ = zeros(ST, D)
+        z = zeros(ST, D)
 
         q̃ = zeros(ST, D)
         p̃ = zeros(ST, D)
@@ -177,7 +180,7 @@ struct VPRKpTableauCache{ST,D,S} <: IODEIntegratorCache{ST}
         T = zeros(ST, S, S)
         A = zeros(ST, S, S)
 
-        new(x, λ, q, p, v, θ, q̃, p̃, ṽ, f̃, Q, P, V, F, Y, Z, W, T, A)
+        new(x, λ, q, p, θ, z, q̃, p̃, ṽ, f̃, Q, P, V, F, Y, Z, W, T, A)
     end
 end
 
@@ -327,9 +330,11 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         C.p[k] = sol.p[k] + timestep(int) * z
     end
 
-    # compute θ = ϑ(q) for the Dirac constraint; v is not used by ϑ for the degenerate
-    # Lagrangians this method targets, but must be supplied
-    equations(int).ϑ(C.θ, sol.t, C.q, C.v, params)
+    # compute θ = ϑ(q) for the Dirac constraint. `ϑ` needs a velocity slot, which is
+    # supplied as the permanent zeros `C.z`: this method targets degenerate Lagrangians,
+    # for which `ϑ` does not depend on the velocity. On a `ϑ` that *does* read it the
+    # constraint would silently be imposed at v = 0.
+    equations(int).ϑ(C.θ, sol.t, C.q, C.z, params)
 end
 
 

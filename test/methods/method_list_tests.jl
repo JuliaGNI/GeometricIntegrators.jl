@@ -29,12 +29,20 @@ using Test
     @test length(sprint(show, ml)) > 0
 
     # per-problem-type selectors partition the list non-trivially
-    for selector in (isodemethod, ispodemethod, ishodemethod, isiodemethod,
-                     islodemethod, issodemethod, isdaemethod, ispdaemethod,
-                     ishdaemethod, isidaemethod, isldaemethod)
-        n = length(MethodList(selector=selector))
-        @test 0 ≤ n ≤ length(method_list)
+    selectors = (isodemethod, ispodemethod, ishodemethod, isiodemethod,
+                 islodemethod, issodemethod, isdaemethod, ispdaemethod,
+                 ishdaemethod, isidaemethod, isldaemethod)
+
+    for selector in selectors
+        # a selector can only ever narrow the list
+        @test length(MethodList(selector=selector)) ≤ length(method_list)
     end
+
+    # Every registered method must be applicable to at least one problem type, so the
+    # per-selector counts have to cover the whole list (with multiplicity, since a method
+    # may support several). A method whose `is*method` traits are all `false` — the easy
+    # mistake when registering one — would break this.
+    @test sum(length(MethodList(selector=s)) for s in selectors) ≥ length(method_list)
 
     @test length(MethodList(selector=isodemethod)) > 0
     @test length(MethodList(selector=islodemethod)) > 0

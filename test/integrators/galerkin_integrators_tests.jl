@@ -89,6 +89,18 @@ dgjump = Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2))
     @test GeometricIntegrators.Integrators.nclosure(DGVIP1(BGau4, QGau4)) == 2
     @test GeometricIntegrators.Integrators.nclosure(DGVIEXP(BGau4, QGau4)) == 2
 
+    # `DGVIP0` contracts the basis' boundary coefficients with the one-form sampled at the
+    # quadrature nodes, so it needs the two node sets to coincide. Enforced at
+    # construction: without the check this combination builds fine and then raises a bare
+    # `BoundsError` from inside the first step.
+    @test_throws AssertionError DGVIP0(Lagrange(QuadratureRules.nodes(GaussLegendreQuadrature(3))), QGau4)
+
+    # the other four variants place no such requirement on the pair
+    let B3 = Lagrange(QuadratureRules.nodes(GaussLegendreQuadrature(3)))
+        @test GeometricIntegrators.Integrators.nbasis(DGVI(B3, QGau4)) == 3
+        @test GeometricIntegrators.Integrators.nnodes(DGVI(B3, QGau4)) == 4
+    end
+
     # only the path-integral variant carries jump-quadrature coefficients
     @test GeometricIntegrators.Integrators.njump(DGVI(BGau4, QGau4)) == 0
     @test GeometricIntegrators.Integrators.njump(DGVIPI(BGau4, QGau4, dgjump)) == 2

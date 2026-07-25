@@ -18,6 +18,10 @@ include("verification_utilities.jl")
 #      exhibits an O(h^{2s}) energy error. On the harmonic oscillator both are at
 #      machine precision — Gauss already conserves quadratic invariants exactly — so
 #      the linear problem cannot distinguish them and is not used for the energy test.
+#
+# `VPRKpTableau` is covered here too rather than in its own file, because it is built on
+# the same `CoefficientsPGLRK` tableau family — with the Dirac constraint substituted for
+# the energy condition — and the two are best read side by side.
 
 const T = 2.0
 const q₀ = [1.0, 1.0]
@@ -42,8 +46,12 @@ end
         # Gauss 5.88 / 7.87 — i.e. PGLRK matches the underlying method, and both sit a
         # little under the nominal order here, which is a property of the problem and
         # step range rather than of the projection.
-        test_convergence_order(build, PGLRK(3), steps(2, 3); reference=ref, expected=6, label="PGLRK(3)")
-        test_convergence_order(build, PGLRK(4), steps(2, 3); reference=ref, expected=8, label="PGLRK(4)")
+        #
+        # `atol` is set from those measurements rather than left at the 0.35 default, which
+        # would leave 0.04 of headroom at s = 3 and 0.09 at s = 4 — tight enough that BLAS
+        # or dependency drift could flip the assertion.
+        test_convergence_order(build, PGLRK(3), steps(2, 3); reference=ref, expected=6, atol=0.5, label="PGLRK(3)")
+        test_convergence_order(build, PGLRK(4), steps(2, 3); reference=ref, expected=8, atol=0.5, label="PGLRK(4)")
     end
 
     @testset "energy conservation vs. plain Gauss" begin
@@ -77,7 +85,9 @@ end
         # `VPRKpTableau` uses the same tableau family, with the Dirac constraint
         # ϑ(qₙ₊₁) − pₙ₊₁ = 0 in place of the energy condition. Its point is to recover on
         # a *degenerate* Lagrangian the order that a plain VPRK loses there.
-        muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.NullLogger())
+        # Drops the benign line-search warnings but keeps anything error-level visible: a
+        # `NullLogger` here would also swallow genuine solver failures.
+        muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.SimpleLogger(devnull, Base.CoreLogging.Error))
         lbuild(Δt) = LotkaVolterra2d.lodeproblem(q₀; timespan=(0.0, T), timestep=Δt, parameters=params)
         emq(sol, r) = relative_maximum_error(sol.q, r.q)
 

@@ -46,7 +46,7 @@ nclosure(::DGVIEXP) = 2
 
 function jump!(sol, params, int::GeometricIntegrator{<:DGVIEXP}, ST)
     local C = cache(int, ST)
-    local st = cache(int).state
+    local st = dgvi_state(int)
     local t₀ = sol.t - timestep(int)
     local t₁ = sol.t
 
@@ -71,7 +71,7 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
     local M = method(int)
     local D = length(C.q̃)
     local S = nbasis(M)
-    local st = cache(int).state
+    local st = dgvi_state(int)
 
     residual_interior!(b, sol, params, int)
 
@@ -98,7 +98,7 @@ end
 
 function update_state!(int::GeometricIntegrator{<:DGVIEXP}, DT)
     local C = cache(int, DT)
-    local st = cache(int).state
+    local st = dgvi_state(int)
     st.q⁻ .= C.q̄⁻
     st.q⁺ .= C.q̄⁺
     return

@@ -172,6 +172,13 @@ function dgvi_jump_coefficients(::Nothing, ::Type{T}) where {T}
 end
 
 
+"""
+Per-variant precondition on the `(basis, quadrature)` pair, checked by the generated
+constructors below. The default imposes nothing; [`DGVIP0`](@ref) overrides it.
+"""
+check_basis_quadrature(::Type, ::Basis, ::QuadratureRule) = nothing
+
+
 # The five method types share one field block, of which `DGVIPI`'s use is the widest.
 # They are generated here rather than written out five times; the per-variant files add
 # only the constructor, `jump!`, `residual!` and the state hooks.
@@ -200,6 +207,8 @@ for name in (:DGVI, :DGVIEXP, :DGVIP0, :DGVIP1, :DGVIPI)
             ρ⁺::T
 
             function $name(basis::Basis{T}, quadrature::QuadratureRule{T}, jump=nothing) where {T}
+                check_basis_quadrature($name, basis, quadrature)
+
                 co = dgvi_coefficients(basis, quadrature)
                 jc = jump === nothing ? dgvi_jump_coefficients(nothing, T) : dgvi_jump_coefficients(jump)
 
@@ -253,8 +262,13 @@ State that a DGVI variant carries from one step to the next.
 `DGVI` is a genuine ``(q_n, p_n)`` map and uses none of it; the other four propagate
 one or two of the jump values, which are *not* part of the `SolutionStep`. This lives
 in the `DT` cache only — it is constant with respect to the nonlinear solver unknowns
-and must never be dual-typed — and is therefore always accessed as `cache(int).state`,
-**never** `cache(int, ST).state`.
+and must never be dual-typed — and is therefore always reached through
+[`dgvi_state`](@ref) rather than by naming the field.
+
+The state is seeded once, on the first step, from the initial condition. A DGVI
+`GeometricIntegrator` is therefore single-run: restarting one from different initial
+conditions would carry over the jump values of the previous run. Build a fresh integrator
+instead.
 """
 mutable struct DGVIState{DT}
     initialised::Bool
@@ -338,32 +352,25 @@ struct DGVICache{ST,D,S,R,F,N} <: IODEIntegratorCache{ST}
 
     state::DGVIState{ST}
 
+    # `new` takes 42 positional arguments, 27 of them interchangeable `Vector{ST}`s of
+    # length D, so a misordering would not be caught by the compiler. They are therefore
+    # grouped and labelled in field order, so that inserting or removing one shows up as a
+    # reviewable diff rather than silently shifting everything after it.
     function DGVICache{ST,D,S,R,F,N}() where {ST,D,S,R,F,N}
-        x = zeros(ST, N)
-
-        X = create_internal_stage_vector(ST, D, S)
-        Q = create_internal_stage_vector(ST, D, R)
-        V = create_internal_stage_vector(ST, D, R)
-        P = create_internal_stage_vector(ST, D, R)
-        Fs = create_internal_stage_vector(ST, D, R)
-
         v() = zeros(ST, D)
+        stage(n) = create_internal_stage_vector(ST, D, n)
 
-        new(x, X, Q, V, P, Fs,
-            v(), v(), v(), v(), v(),
-            v(), v(), v(), v(),
-            v(), v(), v(), v(), v(), v(),
-            v(), v(), v(), v(), v(),
-            v(), v(), v(), v(), v(), v(),
-            v(),
-            create_internal_stage_vector(ST, D, F),
-            create_internal_stage_vector(ST, D, F),
-            create_internal_stage_vector(ST, D, F),
-            create_internal_stage_vector(ST, D, F),
-            create_internal_stage_vector(ST, D, F),
-            create_internal_stage_vector(ST, D, F),
-            create_internal_stage_vector(ST, D, F),
-            create_internal_stage_vector(ST, D, F),
+        new(zeros(ST, N),                                   # x
+            stage(S), stage(R), stage(R), stage(R), stage(R),  # X Q V P F
+            v(), v(), v(), v(),                             # q̃ p̃ ṽ f̃
+            v(),                                            # z
+            v(), v(), v(), v(),                             # q⁺ q̄ q̄⁻ q̄⁺
+            v(), v(), v(), v(), v(), v(),                    # ϕ ϕ̅ λ λ⁺ λ̄ λ̄⁻
+            v(), v(), v(), v(), v(),                         # θ θ⁺ Θ̅ Θ̅⁻ Θ̅⁺
+            v(), v(), v(), v(), v(), v(),                    # g g⁺ ḡ ḡ⁻ h⁺ h̅⁻
+            v(),                                            # p̄
+            stage(F), stage(F), stage(F), stage(F),           # Φ Φ̄ Λ Λ̄
+            stage(F), stage(F), stage(F), stage(F),           # Θ Θ̄ G Ḡ
             DGVIState{ST}(D))
     end
 end
@@ -392,6 +399,9 @@ function internal_variables(method::DGVIMethod, problem::AbstractProblemIODE{DT,
     (Q=Q, V=V, P=P, q⁻=zeros(DT, D), q⁺=zeros(DT, D))
 end
 
+# Names `cache.state` directly rather than going through `dgvi_state`, because it receives
+# a cache and not an integrator. Safe: the framework always calls this with the `DT` cache
+# (`copy_internal_variables!(solstep, cache(int))` in GeometricIntegratorsBase).
 function copy_internal_variables!(solstep::SolutionStep, cache::DGVICache)
     haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
     haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
@@ -400,8 +410,15 @@ function copy_internal_variables!(solstep::SolutionStep, cache::DGVICache)
     haskey(internal(solstep), :q⁺) && copyto!(internal(solstep).q⁺, cache.state.q⁺)
 end
 
-# allow a restart to re-capture the carried-over jump values
-reset!(cache::DGVICache) = (cache.state.initialised = false; cache)
+@doc raw"""
+The jump values a DGVI variant carries from one step to the next, as a [`DGVIState`](@ref).
+
+Always reach the state through this function. `DGVIState` is a field of the `ST`-parameterised
+[`DGVICache`](@ref), so `cache(int, ST).state` also exists — but as a *separate*,
+dual-typed object, so writing to it would be silently lost. Going through `dgvi_state`
+keeps that impossible to get wrong.
+"""
+@inline dgvi_state(int::GeometricIntegrator{<:DGVIMethod}) = cache(int).state
 
 
 """
@@ -409,7 +426,7 @@ Seed the carried-over jump values on the first step. The generic version starts 
 continuous trajectory, `qₙ⁻ = qₙ⁺ = qₙ`, and `ϑ(qₙ⁻) = pₙ`; variants override it.
 """
 function initialise_state!(sol, params, int::GeometricIntegrator{<:DGVIMethod})
-    local state = cache(int).state
+    local state = dgvi_state(int)
     state.initialised && return
     state.q⁻ .= sol.q
     state.q⁺ .= sol.q

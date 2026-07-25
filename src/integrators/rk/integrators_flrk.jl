@@ -143,7 +143,7 @@ Formal Lagrangian Runge-Kutta integrator cache.
 * `A`, `δP`: system matrix and right-hand side of the linear adjoint solve
 * `jac`: automatic-differentiation Jacobian of ``\bar{v}``
 """
-struct FLRKCache{ST,D,S,JT} <: IODEIntegratorCache{ST}
+struct FLRKCache{ST,D,S} <: IODEIntegratorCache{ST}
     x::Vector{ST}
 
     q̃::Vector{ST}
@@ -165,9 +165,14 @@ struct FLRKCache{ST,D,S,JT} <: IODEIntegratorCache{ST}
     A::Matrix{ST}
     δP::Vector{ST}
 
-    jac::JT
+    # Type-erased on purpose. The concrete `Jacobian` type depends on the problem's `v̄`
+    # closure, so it cannot be spelled in `CacheType` — and carrying it as a cache type
+    # parameter instead would leave `CacheType` returning an *abstract* type, which makes
+    # every field access above dynamic. Boxing this one field costs a single dynamic call
+    # per stage, inside a ForwardDiff call that dwarfs it.
+    jac::Any
 
-    function FLRKCache{ST,D,S}(jac::JT) where {ST,D,S,JT}
+    function FLRKCache{ST,D,S}(jac) where {ST,D,S}
         x = zeros(ST, D * S)
 
         q̃ = zeros(ST, D)
@@ -189,7 +194,7 @@ struct FLRKCache{ST,D,S,JT} <: IODEIntegratorCache{ST}
         A = zeros(ST, D * S, D * S)
         δP = zeros(ST, D * S)
 
-        new{ST,D,S,JT}(x, q̃, p̃, ṽ, f̃, Q, V, Y, Θ, P, F, G, Ṗ, J, A, δP, jac)
+        new{ST,D,S}(x, q̃, p̃, ṽ, f̃, Q, V, Y, Θ, P, F, G, Ṗ, J, A, δP, jac)
     end
 end
 
@@ -207,9 +212,11 @@ function Cache{ST}(problem::AbstractProblemIODE, method::FLRK; kwargs...) where 
     FLRKCache{ST,D,S}(Jacobian{ST}(v_q!, D, D); kwargs...)
 end
 
-# The Jacobian parameter is left free: the concrete `JacobianAutodiff` type depends on
-# the problem's `v̄` closure, and type parameters are invariant, so naming it here
-# would make the `CacheDict` type assertion fail.
+# Returns a concrete type — the Jacobian is type-erased in the cache rather than carried
+# as a parameter, precisely so that this assertion constrains the field types. Note this is
+# evaluated on *every* cache access (as a type assertion inside `CacheDict`'s `getindex`),
+# so it must stay allocation-free; in particular it must not build a `Jacobian` to learn
+# its type.
 @inline function CacheType(ST, problem::AbstractProblemIODE, method::FLRK)
     D = length(vec(initial_conditions(problem).q))
     FLRKCache{ST,D,nstages(method)}
@@ -292,7 +299,8 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
     local C = cache(int, ST)
     local D = length(C.q̃)
 
-    # compute b = Y - h A V
+    # compute b = Y - h A V. Note that `Y` here carries the Δt factor (unlike `PGLRK`,
+    # where the unknown is Y = a V and the factor sits in `components!`).
     for i in eachindex(C.Y)
         for k in eachindex(C.Y[i])
             y1 = y2 = zero(ST)

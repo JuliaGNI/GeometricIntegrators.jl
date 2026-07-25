@@ -68,7 +68,7 @@ end
 @safetestset "Convergence: Formal Lagrangian Runge-Kutta Integrators                          " begin
     include("verification/flrk_convergence_tests.jl")
 end
-@safetestset "Convergence: Projected Gauss-Legendre Runge-Kutta Integrators                   " begin
+@safetestset "Convergence: Projected Gauss-Legendre RK and VPRKpTableau Integrators           " begin
     include("verification/pglrk_convergence_tests.jl")
 end
 @safetestset "Convergence: Galerkin Variational Integrators                                   " begin

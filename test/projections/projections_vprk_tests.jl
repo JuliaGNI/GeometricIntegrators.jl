@@ -1,5 +1,7 @@
 using GeometricIntegrators
 using GeometricProblems.LotkaVolterra2d
+# a D = 4 degenerate Lagrangian, to exercise `VPRKpTableau`'s stage-count bound s ≥ D+1
+import GeometricProblems.LotkaVolterra4dLagrangian as LotkaVolterra4dLagrangian
 using Test
 
 
@@ -182,13 +184,19 @@ end
     # `VPRKpTableau` couples the Dirac-constraint multipliers into the tableau, so the
     # nonlinear system is harder than a plain VPRK one and the line search occasionally
     # hits its iteration cap. The warnings are benign — the measured errors below are at
-    # machine precision — so they are suppressed for these calls.
-    muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.NullLogger())
+    # machine precision — so they are suppressed for these calls. Only up to `Warn`: a
+    # `NullLogger` would also swallow genuine solver failures.
+    muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.SimpleLogger(devnull, Base.CoreLogging.Error))
 
     # D = 2 multipliers need s ≥ D+1 = 3 stages to fit into the skew generator, and
     # s ≥ D+2 = 4 for full order: at s = 3 the multiplier occupies the (2,1) slot, which
     # is the one pair that destroys the order conditions.
+    #
+    # Note that s = 2 is rejected earlier than that, by `CoefficientsPGLRK`'s own s ≥ 3,
+    # so it does *not* exercise the stage-count bound. The D = 4 problem below does: it
+    # needs s ≥ 5, so s = 4 reaches the assertion in `Cache{ST}`.
     @test_throws AssertionError integrate(iode, VPRKpTableau(2))
+    @test_throws AssertionError integrate(LotkaVolterra4dLagrangian.lodeproblem(), VPRKpTableau(4))
 
     # Measured (Δt = 0.01, nt = 10, reference Gauss(8) on the ODE form):
     #   s = 3: 2.1E-10  (order-degraded, worse than VPRK(Gauss(3)) at 2.3E-11)

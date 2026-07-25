@@ -324,9 +324,29 @@ end
 
     # traits
     @test isimplicit(PGLRK(3))
-    @test issymplectic(PGLRK(3))
     @test isenergypreserving(PGLRK(3))
     @test order(PGLRK(3)) == 6
+
+    # The *tableau* a(λ) is symplectic for every fixed λ, but λ is solved per step from
+    # the energy condition, so the step map is not — and exact energy conservation and
+    # symplecticity are mutually exclusive anyway. Measured on a nonlinear pendulum at
+    # Δt = 0.8, the defect |JᵀΩJ − Ω| converges to 3.1E-7 as the finite-difference step
+    # is refined (Gauss(3): 7.3E-12, i.e. FD noise). The trait must stay `missing`.
+    @test ismissing(issymplectic(PGLRK(3)))
+
+    # The λ solve must actually find a root on every step. When it does not, the method
+    # silently falls back to plain Gauss, which would otherwise show up only as a
+    # mysteriously worse energy error, so the fall-back is counted and asserted here.
+    let int = GeometricIntegrator(ode, PGLRK(3))
+        integrate(int)
+        @test GeometricIntegrators.Integrators.cache(int).nfallback == 0
+    end
+
+    # Reusing one integrator must give the same answer twice: the reference energy is read
+    # from the problem's initial condition on every step, not latched on the first.
+    let int = GeometricIntegrator(ode, PGLRK(3))
+        @test relative_maximum_error(integrate(int).q, integrate(int).q) == 0
+    end
 
     # PGLRK needs an invariant named `h` to project onto
     let bare = ODEProblem(HarmonicOscillator.oscillator_ode_v, timespan(ode), timestep(ode),

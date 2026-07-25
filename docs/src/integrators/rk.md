@@ -289,10 +289,18 @@ A = P W Q ,
 of [`CoefficientsPGLRK`](@ref), where $a$ is the $s$-stage Gauß tableau in W-transformed
 form and $W$ is skew, and fixes $\lambda$ at every step by requiring
 $H(q_{n+1}) = H(q_0)$. Because $B A$ is skew for $B = \mathrm{diag}(b)$ the perturbed
-tableau is symplectic for every $\lambda$, and because $b^{T} A = 0$ and
-$A \mathbb{1} = 0$ it retains the order $2s$. At least three stages are required: for
-$s = 2$ the perturbation would occupy the order-determining entries of the tableau and
-destroy consistency.
+*tableau* satisfies the symplecticity condition for every fixed $\lambda$, and because
+$b^{T} A = 0$ and $A \mathbb{1} = 0$ it retains the order $2s$. At least three stages are
+required: for $s = 2$ the perturbation would occupy the order-determining entries of the
+tableau and destroy consistency.
+
+That property of the tableau does *not* carry over to the method, because $\lambda$ is
+itself determined from $q_n$: the step map is a member of the $\lambda$-family composed
+with a state-dependent choice of parameter, so its Jacobian picks up an extra rank-one
+term. Exact energy conservation and symplecticity are mutually exclusive for a general
+Hamiltonian system in any case, unless the method reproduces the exact flow. Accordingly
+`issymplectic(PGLRK(...))` returns `missing` and `isenergypreserving` returns `true`;
+see the method's docstring for the measured symplecticity defect.
 
 ## Custom Tableaus
 

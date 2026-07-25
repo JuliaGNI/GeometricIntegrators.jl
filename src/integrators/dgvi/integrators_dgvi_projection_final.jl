@@ -63,7 +63,7 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
     local M = method(int)
     local D = length(C.q̃)
     local S = nbasis(M)
-    local st = cache(int).state
+    local st = dgvi_state(int)
 
     residual_interior!(b, sol, params, int)
 
@@ -89,6 +89,6 @@ end
 
 
 function update_state!(int::GeometricIntegrator{<:DGVIP1}, DT)
-    cache(int).state.q⁺ .= cache(int, DT).q̄⁺
+    dgvi_state(int).q⁺ .= cache(int, DT).q̄⁺
     return
 end

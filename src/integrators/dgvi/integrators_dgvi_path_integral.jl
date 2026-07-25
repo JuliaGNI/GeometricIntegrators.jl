@@ -68,7 +68,7 @@ Seed the carried-over jump values. `q₀⁻ = q₀` and `q₀⁺` follows from t
 reconstruction `q₀ = ρ⁻ q₀⁻ + ρ⁺ q₀⁺`.
 """
 function initialise_state!(sol, params, int::GeometricIntegrator{<:DGVIPI})
-    local st = cache(int).state
+    local st = dgvi_state(int)
     local M = method(int)
     st.initialised && return
     st.q⁻ .= sol.q
@@ -82,7 +82,7 @@ end
 function jump!(sol, params, int::GeometricIntegrator{<:DGVIPI}, ST)
     local C = cache(int, ST)
     local M = method(int)
-    local st = cache(int).state
+    local st = dgvi_state(int)
     local t₀ = sol.t - timestep(int)
     local t₁ = sol.t
 
@@ -113,7 +113,7 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
     local M = method(int)
     local D = length(C.q̃)
     local S = nbasis(M)
-    local st = cache(int).state
+    local st = dgvi_state(int)
 
     residual_interior!(b, sol, params, int)
 
@@ -138,6 +138,6 @@ end
 
 
 function update_state!(int::GeometricIntegrator{<:DGVIPI}, DT)
-    cache(int).state.q⁻ .= cache(int, DT).q̄⁻
+    dgvi_state(int).q⁻ .= cache(int, DT).q̄⁻
     return
 end

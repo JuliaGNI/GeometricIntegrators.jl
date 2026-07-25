@@ -75,10 +75,10 @@ struct CoefficientsPGLRK{T} <: AbstractCoefficients{T}
 
         Q = inv(P)
         A = zero(a)
-        B = zero(a)
+        WQ = zero(a)
 
-        mul!(B, W, Q)
-        mul!(A, P, B)
+        mul!(WQ, W, Q)
+        mul!(A, P, WQ)
 
         new(name, o, s, a, b, c, zero(a), zero(b), zero(c), P, Q, X, W, A)
     end
