@@ -1,596 +1,143 @@
 @doc raw"""
-`ParametersDGVIPI`: Parameters for right-hand side function of Discontinuous
-Galerkin Variational Integrator with Path Integral approximation of the jump.
+Discontinuous Galerkin Variational Integrator with a **path-integral** numerical flux.
 
-### Parameters
+This is the general variant, and the one derived in `docs/src/integrators/dgvi.md`. The
+non-conservative product of the one-form and the jump is discretised by integrating
+along a path ``\Phi(\tau; q^-, q^+)`` connecting the two one-sided limits,
+```math
+\int \limits_0^1 \vartheta \big( \Phi(\tau; q^-, q^+) \big) \cdot \frac{d \Phi}{d\tau} \, d\tau
+\approx \sum \limits_{i=1}^{F} \beta_i \, \vartheta \big( \Phi (\gamma_i) \big) \cdot \Phi' (\gamma_i) ,
+```
+with a quadrature rule of ``F`` nodes ``\gamma_i`` and weights ``\beta_i``. Writing the
+path as ``\Phi(\tau) = q^- \varphi^-(\tau) + q^+ \varphi^+(\tau)`` and setting
+```math
+\mu^{\mp}_i = \varphi^{\mp} (\gamma_i) ,
+\qquad
+\alpha^{\mp}_i = \frac{d\varphi^{\mp}}{d\tau} (\gamma_i) ,
+```
+the path values and their derivatives are
+```math
+\Phi_i = \mu^-_i q^- + \mu^+_i q^+ ,
+\qquad
+\Lambda_i = \alpha^-_i q^- + \alpha^+_i q^+ ,
+```
+and the discrete Euler-Lagrange equations read
+```math
+0 = \sum \limits_{i=1}^{R} b_i \big[ h \, m_{ij} \, F_{n,i} + a_{ij} \, P_{n,i} \big]
+ + \sum \limits_{i=1}^{F} \beta_i \Big[
+     r^{+}_{j} \alpha^{+}_i \, \vartheta (\Phi_i)
+   + r^{-}_{j} \alpha^{-}_i \, \vartheta (\bar{\Phi}_i)
+   + r^{+}_{j} \mu^{+}_i \, \nabla \vartheta^{T} (\Phi_i) \cdot \Lambda_i
+   + r^{-}_{j} \mu^{-}_i \, \nabla \vartheta^{T} (\bar{\Phi}_i) \cdot \bar{\Lambda}_i
+ \Big] ,
+```
+where barred quantities are those of the jump at ``t_{n+1}``. Note that the full path is
+integrated at *both* boundaries, but only the ``\partial / \partial q_n^+`` terms are
+taken at ``t_n`` and only the ``\partial / \partial q_{n+1}^-`` terms at ``t_{n+1}``, so
+there is no double counting.
 
-* `DT`: data type
-* `TT`: parameter type
-* `D`:  dimension of the system
-* `S`:  number of basis nodes
-* `QR`: number of quadrature nodes
-* `FR`: number of quadrature nodes for the discontinuity
+The step is closed by reconstructing the nodal value at the midpoint of the path,
+```math
+q_{n} = \Phi (1/2; q_n^-, q_n^+) = \rho^- q_n^- + \rho^+ q_n^+ ,
+```
+and ``q_n^-`` is carried over from the previous step. With
+`Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2))` this reduces to the
+trapezoidal flux on the full jump with ``\rho^- = \rho^+ = 1/2``.
 
-### Fields
+!!! note
+    The gauge term ``\nu`` of `docs/src/integrators/dgvi.md` is *not* implemented: the
+    ``\rho^{\mp}`` above reconstruct the central value and are unrelated to it. Adding it
+    would introduce two further flux terms; `GeometricProblems.LotkaVolterra2dGauge`
+    exists to exercise a gauge-transformed problem in the meantime.
 
-* `Θ`:  function of the noncanonical one-form (∂L/∂v)
-* `f`:  function of the force (∂L/∂q)
-* `g`:  function of the projection ∇ϑ(q)⋅v
-* `Δt`: time step
-* `b`:  quadrature weights
-* `c`:  quadrature nodes
-* `m`:  mass matrix
-* `a`:  derivative matrix
-* `r⁻`: reconstruction coefficients, jump lhs value
-* `r⁺`: reconstruction coefficients, jump rhs value
-* `β`:  weights of the quadrature rule for the discontinuity
-* `γ`:  nodes of the quadrature rule for the discontinuity
-* `μ⁻`: mass vector for the lhs jump value
-* `μ⁺`: mass vector for the rhs jump value
-* `α⁻`: derivative vector for the discontinuity lhs value
-* `α⁺`: derivative vector for the discontinuity rhs value
-* `ρ⁻`: reconstruction coefficients for central jump value, lhs value
-* `ρ⁺`: reconstruction coefficients for central jump value, rhs value
-* `t`:  current time
-* `q`:  current solution of qₙ
-* `q⁻`: current solution of qₙ⁻
-* `q⁺`: current solution of qₙ⁺
+    Its momentum output is diagnostic: ``p_{n+1} = \vartheta (q_{n+1})``.
+
+### Constructor
+
+```
+DGVIPI(basis::Basis, quadrature::QuadratureRule, jump::Discontinuity)
+```
 """
-mutable struct ParametersDGVIPI{DT, TT, D, S, QR, FR, ET <: NamedTuple} <: Parameters{DT,TT}
-    equs::ET
-    Δt::TT
+DGVIPI
 
-    b::Vector{TT}
-    c::Vector{TT}
-    m::Matrix{TT}
-    a::Matrix{TT}
-    r⁻::Vector{TT}
-    r⁺::Vector{TT}
-
-    β::Vector{TT}
-    γ::Vector{TT}
-    μ⁻::Vector{TT}
-    μ⁺::Vector{TT}
-    α⁻::Vector{TT}
-    α⁺::Vector{TT}
-    ρ⁻::TT
-    ρ⁺::TT
-
-    t::TT
-
-    q::Vector{DT}
-    q⁻::Vector{DT}
-    q⁺::Vector{DT}
-
-    function ParametersDGVIPI{DT,D}(equs::ET, Δt::TT, b, c, m, a, r⁻, r⁺, β, γ, μ⁻, μ⁺, α⁻, α⁺, ρ⁻, ρ⁺) where {DT, TT, D, ET <: NamedTuple}
-        @assert length(b)  == length(c)
-        @assert length(β)  == length(γ)
-        @assert length(r⁻) == length(r⁺)
-        new{DT,TT,D,length(r⁻),length(c),length(γ),ET}(equs, Δt, b, c, m, a, r⁻, r⁺, β, γ, μ⁻, μ⁺, α⁻, α⁺, ρ⁻, ρ⁺,
-                    zero(TT), zeros(DT,D), zeros(DT,D), zeros(DT,D))
-    end
-
-    function ParametersDGVIPI{DT,D}(equs::NamedTuple, Δt::TT,
-                    basis::Basis{TT}, quadrature::QuadratureRule{TT}, jump::Discontinuity{TT}) where {DT,TT,D}
-
-        # compute coefficients
-        b = weights(quadrature)
-        c = nodes(quadrature)
-        m = zeros(TT, nnodes(quadrature), nbasis(basis))
-        a = zeros(TT, nnodes(quadrature), nbasis(basis))
-        r⁻= zeros(TT, nbasis(basis))
-        r⁺= zeros(TT, nbasis(basis))
-
-        for i in eachindex(basis)
-            for j in eachindex(quadrature)
-                m[j,i] = basis[nodes(quadrature)[j], i]
-                a[j,i] = basis'[nodes(quadrature)[j], i]
-            end
-            r⁻[i] = basis[one(TT), i]
-            r⁺[i] = basis[zero(TT), i]
-        end
-
-        β  = weights(jump.quadrature)
-        γ  = nodes(jump.quadrature)
-        μ⁰ = zeros(TT, 2)
-        μ⁻ = zeros(TT, nnodes(jump.quadrature))
-        μ⁺ = zeros(TT, nnodes(jump.quadrature))
-        α⁻ = zeros(TT, nnodes(jump.quadrature))
-        α⁺ = zeros(TT, nnodes(jump.quadrature))
-
-        ρ⁻ = evaluate_l(jump.path, TT(0.5))
-        ρ⁺ = evaluate_r(jump.path, TT(0.5))
-
-        for i in 1:nnodes(jump.quadrature)
-            μ⁻[i] = evaluate_l(jump.path, nodes(jump.quadrature)[i])
-            μ⁺[i] = evaluate_r(jump.path, nodes(jump.quadrature)[i])
-            α⁻[i] = derivative_l(jump.path, nodes(jump.quadrature)[i])
-            α⁺[i] = derivative_r(jump.path, nodes(jump.quadrature)[i])
-        end
-
-        if get_config(:verbosity) > 1
-            println()
-            println("  Discontinuous Galerkin Variational Integrator")
-            println("  =============================================")
-            println()
-            println("    b = ", b)
-            println("    c = ", c)
-            println("    m = ", m)
-            println("    a = ", a)
-            println("    r⁻= ", r⁻)
-            println("    r⁺= ", r⁺)
-            println("    β = ", β)
-            println("    γ = ", γ)
-            println("    μ⁻= ", μ⁻)
-            println("    μ⁺= ", μ⁺)
-            println("    α⁻= ", α⁻)
-            println("    α⁺= ", α⁺)
-            println("    ρ⁻= ", ρ⁻)
-            println("    ρ⁺= ", ρ⁺)
-            println()
-        end
-
-        ParametersDGVIPI{DT,D}(equs, Δt, b, c, m, a, r⁻, r⁺,
-                    β, γ, μ⁻, μ⁺, α⁻, α⁺, ρ⁻, ρ⁺)
-    end
-end
-
-# function update_params!(params::ParametersDGVIPI, sol::SolutionStepPODE)
-#     # set time for nonlinear solver and copy previous solution
-#     params.t  = sol.t
-#     params.q .= sol.q
-#     # params.p .= sol.p
-# end
+GeometricBase.description(::DGVIPI) = "Discontinuous Galerkin Variational Integrator (path-integral flux)"
 
 
-@doc raw"""
-Nonlinear function cache for Discontinuous Galerkin Variational Integrator.
-
-### Parameters
-
-* `X`: degrees of freedom
-* `Q`: solution at quadrature nodes
-* `V`: velocity at quadrature nodes
-* `P`: one-form at quadrature nodes
-* `F`: forces at quadrature nodes
-* `q`:  current solution of qₙ
-* `q⁻`: current solution of qₙ⁻
-* `q⁺`: current solution of qₙ⁺
-* `q̄`:  current solution of qₙ₊₁
-* `q̄⁻`: current solution of qₙ₊₁⁻
-* `q̄⁺`: current solution of qₙ₊₁⁺
-* `λ`:  jump of the solution at tₙ
-* `λ̄`:  jump of the solution at tₙ₊₁
-* `ϕ`:  solution evaluated across the jump at tₙ
-* `ϕ̅`:  solution evaluated across the jump at tₙ₊₁
-* `θ`:  one-form evaluated across the jump at tₙ
-* `Θ̅`:  one-form evaluated across the jump at tₙ₊₁
-* `g`:  projection evaluated across the jump at tₙ
-* `ḡ`:  projection evaluated across the jump at tₙ₊₁
 """
-struct IntegratorCacheDGVIPI{ST,D,S,QR,FR} <: IODEIntegratorCache{ST,D}
-    X::Vector{Vector{ST}}
-    Q::Vector{Vector{ST}}
-    V::Vector{Vector{ST}}
-    P::Vector{Vector{ST}}
-    F::Vector{Vector{ST}}
-
-    q̃::Vector{ST}
-    p̃::Vector{ST}
-    ṽ::Vector{ST}
-    f̃::Vector{ST}
-    s̃::Vector{ST}
-
-    q::Vector{ST}
-    q⁻::Vector{ST}
-    q⁺::Vector{ST}
-    q̄::Vector{ST}
-    q̄⁻::Vector{ST}
-    q̄⁺::Vector{ST}
-
-    λ::Vector{Vector{ST}}
-    λ̄::Vector{Vector{ST}}
-    ϕ::Vector{Vector{ST}}
-    ϕ̅::Vector{Vector{ST}}
-    θ::Vector{Vector{ST}}
-    Θ̅::Vector{Vector{ST}}
-    g::Vector{Vector{ST}}
-    ḡ::Vector{Vector{ST}}
-
-    function IntegratorCacheDGVIPI{ST,D,S,QR,FR}() where {ST,D,S,QR,FR}
-        # create internal stage vectors
-        X = create_internal_stage_vector(ST,D,S)
-        Q = create_internal_stage_vector(ST,D,QR)
-        V = create_internal_stage_vector(ST,D,QR)
-        P = create_internal_stage_vector(ST,D,QR)
-        F = create_internal_stage_vector(ST,D,QR)
-
-        # create temporary vectors
-        q̃ = zeros(ST,D)
-        p̃ = zeros(ST,D)
-        ṽ = zeros(ST,D)
-        f̃ = zeros(ST,D)
-        s̃ = zeros(ST,D)
-
-        # create solution vectors
-        q  = zeros(ST,D)
-        q⁻ = zeros(ST,D)
-        q⁺ = zeros(ST,D)
-        q̄  = zeros(ST,D)
-        q̄⁻ = zeros(ST,D)
-        q̄⁺ = zeros(ST,D)
-
-        # create jump vectors
-        λ  = create_internal_stage_vector(ST,D,FR)
-        λ̄ = create_internal_stage_vector(ST,D,FR)
-        ϕ  = create_internal_stage_vector(ST,D,FR)
-        ϕ̅  = create_internal_stage_vector(ST,D,FR)
-        θ  = create_internal_stage_vector(ST,D,FR)
-        Θ̅  = create_internal_stage_vector(ST,D,FR)
-        g  = create_internal_stage_vector(ST,D,FR)
-        ḡ  = create_internal_stage_vector(ST,D,FR)
-
-        new(X, Q, V, P, F, q̃, p̃, ṽ, f̃, s̃, q, q⁻, q⁺, q̄, q̄⁻, q̄⁺, λ, λ̄, ϕ, ϕ̅, θ, Θ̅, g, ḡ)
-    end
-end
-
-function IntegratorCache{ST}(params::ParametersDGVIPI{DT,TT,D,S,QR,FR}; kwargs...) where {ST,DT,TT,D,S,QR,FR}
-    IntegratorCacheDGVIPI{ST,D,S,QR,FR}(; kwargs...)
-end
-
-@inline CacheType(ST, params::ParametersDGVIPI{DT,TT,D,S,QR,FR}) where {DT,TT,D,S,QR,FR} = IntegratorCacheDGVIPI{ST,D,S,QR,FR}
-
-
-@doc raw"""
-`IntegratorDGVIPI`: Discontinuous Galerkin Variational Integrator. *EXPERIMENTAL*
-
-### Parameters
-
-### Fields
-
-* `equation`: Implicit Ordinary Differential Equation
-* `basis`: piecewise polynomial basis
-* `quadrature`: numerical quadrature rule
-* `jump`: jump across discontinuity
-* `Δt`: time step
-* `params`: ParametersDGVIPI
-* `solver`: nonlinear solver
-* `iguess`: initial guess
-* `q`: current solution vector for trajectory
-* `q⁻`: current solution vector for trajectory, lhs of jump
-* `q⁺`: current solution vector for trajectory, rhs of jump
-* `cache`: temporary variables for nonlinear solver
+Seed the carried-over jump values. `q₀⁻ = q₀` and `q₀⁺` follows from the midpoint
+reconstruction `q₀ = ρ⁻ q₀⁻ + ρ⁺ q₀⁺`.
 """
-struct IntegratorDGVIPI{DT, TT, D, S, R,
-                BT <: Basis,
-                JT <: Discontinuity,
-                PT <: ParametersDGVIPI{DT,TT,D,S},
-                ST <: NonlinearSolver,
-                IT <: InitialGuessODE{TT}} <: IODEIntegrator{DT,TT}
-    basis::BT
-    quadrature::QuadratureRule{TT,R}
-    jump::JT
-
-    params::PT
-    solver::ST
-    iguess::IT
-    caches::CacheDict{PT}
-
-    q::Vector{DT}
-    q⁻::Vector{DT}
-    q⁺::Vector{DT}
-
-    function IntegratorDGVIPI(basis::BT, quadrature::QuadratureRule{TT,R}, jump::JT,
-                    params::ParametersDGVIPI{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,R,BT,JT,ST,IT}
-        # create solution vectors
-        q  = zeros(DT,D)
-        q⁻ = zeros(DT,D)
-        q⁺ = zeros(DT,D)
-
-        new{DT, TT, D, S, R, BT, JT, typeof(params), ST, IT}(basis, quadrature, jump, params, solver, iguess, caches, q, q⁻, q⁺)
-    end
-
-    function IntegratorDGVIPI{DT,D}(equations::NamedTuple, basis::Basis{TT}, quadrature::QuadratureRule{TT,R},
-                                    jump::Discontinuity{TT}, Δt::TT;
-                                    interpolation=HermiteExtrapolation{DT}) where {DT,TT,D,R}
-
-        # get number of stages
-        S = nbasis(basis)
-
-        # create params
-        params = ParametersDGVIPI{DT,D}(equations, Δt, basis, quadrature, jump)
-
-        # create cache dict
-        caches = CacheDict(params)
-
-        # create nonlinear solver
-        solver = create_nonlinear_solver(DT, D*(S+1), params, caches)
-
-        # create initial guess
-        iguess = InitialGuessODE(get_config(:ig_extrapolation), equations[:v̄], Δt)
-
-        # create integrator
-        IntegratorDGVIPI(basis, quadrature, jump, params, solver, iguess, caches)
-    end
-
-    function IntegratorDGVIPI(problem::Union{IODEProblem{DT}, LODEProblem{DT}}, basis::Basis, quadrature::QuadratureRule, jump::Discontinuity; kwargs...) where {DT}
-        IntegratorDGVIPI{DT, ndims(problem)}(functions(problem), basis, quadrature, jump, timestep(problem); kwargs...)
-    end
-end
-
-@inline GeometricBase.equation(integrator::IntegratorDGVIPI, i::Symbol) = integrator.params.equs[i]
-@inline GeometricBase.equations(integrator::IntegratorDGVIPI) = integrator.params.equs
-@inline GeometricBase.timestep(integrator::IntegratorDGVIPI) = integrator.params.Δt
-@inline Base.ndims(::IntegratorDGVIPI{DT,TT,D}) where {DT,TT,D} = D
-
-
-function update_params!(params::ParametersDGVIPI, int::IntegratorDGVIPI)
-    # set time for nonlinear solver and copy previous solution
-    params.t  += int.params.Δt
-    params.q  .= int.q
-    params.q⁻ .= int.q⁻
-    params.q⁺ .= int.q⁺
+function initialise_state!(sol, params, int::GeometricIntegrator{<:DGVIPI})
+    local st = dgvi_state(int)
+    local M = method(int)
+    st.initialised && return
+    st.q⁻ .= sol.q
+    st.q⁺ .= (sol.q .- M.ρ⁻ .* st.q⁻) ./ M.ρ⁺
+    st.θ⁻ .= sol.p
+    st.initialised = true
+    return
 end
 
 
-function initialize!(int::IntegratorDGVIPI, sol::SolutionStepPODE)
-    # copy initial conditions from solution
-    int.q  .= sol.q
-    int.q⁻ .= int.q
-    int.q⁺ .= q⁺ = (int.q .- int.params.ρ⁻ .* int.q⁻) ./ int.params.ρ⁺
+function jump!(sol, params, int::GeometricIntegrator{<:DGVIPI}, ST)
+    local C = cache(int, ST)
+    local M = method(int)
+    local st = dgvi_state(int)
+    local t₀ = sol.t - timestep(int)
+    local t₁ = sol.t
 
-    sol.t̄ = sol.t - timestep(int)
+    # the right limit at t_{n+1} follows from the midpoint reconstruction
+    C.q̄⁺ .= (C.q̄ .- M.ρ⁻ .* C.q̄⁻) ./ M.ρ⁺
 
-    equation(int, :v̄)(sol.v, sol.t, sol.q)
-
-    # initialise initial guess
-    initialize!(int.iguess, sol.t, sol.q, sol.v,
-                            sol.t̄, sol.q̄, sol.v̄)
-end
-
-
-function initial_guess!(int::IntegratorDGVIPI{DT,TT,D,S,R}, sol::SolutionStepPODE{DT,TT},
-                        cache::IntegratorCacheDGVIPI{DT}=int.caches[DT]) where {DT,TT,D,S,R}
-    if nbasis(int.basis) > 0
-        for i in eachindex(int.basis)
-            evaluate!(int.iguess, sol.q̄, sol.v̄,
-                                  sol.q, sol.v,
-                                  cache.q̃,
-                                  grid(int.basis)[i])
-
-            for k in 1:D
-                int.solver.x[D*(i-1)+k] = cache.q̃[k]
-            end
-        end
-    else
-        for i in 1:S
-            for k in 1:D
-                int.solver.x[D*(i-1)+k] = 0
-            end
-        end
+    # path values and derivatives at the two boundaries
+    for i in eachindex(C.Φ, C.Λ, C.Φ̄, C.Λ̄)
+        C.Φ[i] .= M.μ⁻[i] .* st.q⁻ .+ M.μ⁺[i] .* C.q⁺
+        C.Λ[i] .= M.α⁻[i] .* st.q⁻ .+ M.α⁺[i] .* C.q⁺
+        C.Φ̄[i] .= M.μ⁻[i] .* C.q̄⁻ .+ M.μ⁺[i] .* C.q̄⁺
+        C.Λ̄[i] .= M.α⁻[i] .* C.q̄⁻ .+ M.α⁺[i] .* C.q̄⁺
     end
 
-    evaluate!(int.iguess, sol.q̄, sol.v̄,
-                          sol.q, sol.v,
-                          cache.q̃,
-                          one(TT))
-
-    for k in 1:D
-        int.solver.x[D*S+k] = cache.q̃[k]
+    for i in eachindex(C.Θ, C.Θ̄, C.G, C.Ḡ)
+        equations(int).ϑ(C.Θ[i], t₀, C.Φ[i], C.Λ[i], params)
+        equations(int).ϑ(C.Θ̄[i], t₁, C.Φ̄[i], C.Λ̄[i], params)
+        equations(int).g(C.G[i], t₀, C.Φ[i], C.z, C.Λ[i], params)
+        equations(int).g(C.Ḡ[i], t₁, C.Φ̄[i], C.z, C.Λ̄[i], params)
     end
+
+    equations(int).ϑ(C.p̄, t₁, C.q̄, C.q̄, params)
 end
 
 
-# Compute stages of variational partitioned Runge-Kutta methods.
-function residual!(x::Vector{ST}, b::Vector{ST}, params::ParametersDGVIPI{DT,TT,D,S,QR,FR},
-                caches::CacheDict) where {ST,DT,TT,D,S,QR,FR}
-    @assert length(x) == length(b)
+function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DGVIPI}) where {ST}
+    local C = cache(int, ST)
+    local M = method(int)
+    local D = length(C.q̃)
+    local S = nbasis(M)
+    local st = dgvi_state(int)
 
-    # get cache for internal stages
-    cache = caches[ST]
+    residual_interior!(b, sol, params, int)
 
-    # copy old solution to cache
-    cache.q  .= params.q
-    cache.q⁻ .= params.q⁻
-
-    # compute stages from nonlinear solver solution x
-    components!(x, cache, params)
-
-    # compute rhs b of nonlinear solver
-    compute_rhs!(b, cache, params)
-end
-
-
-function components!(x, cache::IntegratorCacheDGVIPI{ST,D,S}, params::ParametersDGVIPI{DT,TT,D,S}) where {ST,DT,TT,D,S}
-    # copy x to X
-    for i in 1:S
+    for i in eachindex(M.r⁻, M.r⁺)
         for k in 1:D
-            cache.X[i][k] = x[D*(i-1)+k]
+            z = zero(ST)
+            for j in eachindex(C.Θ, C.Θ̄, C.G, C.Ḡ)
+                z += M.β[j] * M.r⁺[i] * M.α⁺[j] * C.Θ[j][k]
+                z += M.β[j] * M.r⁻[i] * M.α⁻[j] * C.Θ̄[j][k]
+                z += M.β[j] * M.r⁺[i] * M.μ⁺[j] * C.G[j][k]
+                z += M.β[j] * M.r⁻[i] * M.μ⁻[j] * C.Ḡ[j][k]
+            end
+            b[D*(i-1)+k] += z
         end
     end
 
-    # copy x to q̄=qₙ+₁
+    # closure: qₙ = Φ(1/2; qₙ⁻, qₙ⁺)
     for k in 1:D
-        cache.q̄[k] = x[D*S+k]
-    end
-
-    # compute Q, qₙ⁺, qₙ₊₁⁻ and qₙ₊₁⁺
-    compute_stages_q!(cache, params)
-
-    # compute V
-    compute_stages_v!(cache, params)
-
-    # compute P and F
-    compute_stages_p!(cache, params)
-
-    # compute jump
-    compute_stages_λ!(cache, params)
-end
-
-
-# Compute solution at quadrature nodes and across jump.
-function compute_stages_q!(cache::IntegratorCacheDGVIPI{ST,D,S,R},
-                           params::ParametersDGVIPI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
-
-    local q::ST
-    local q⁺::ST
-    local q̄⁻::ST
-
-    local X = cache.X
-    local Q = cache.Q
-
-    # compute Q
-    for i in 1:R
-        for k in 1:D
-            q = 0
-            for j in 1:S
-                q += params.m[i,j] * X[j][k]
-            end
-            Q[i][k] = q
-        end
-    end
-
-    # compute qₙ⁺ and qₙ₊₁⁻
-    for k in 1:D
-        q⁺ = 0
-        q̄⁻ = 0
-        for i in 1:S
-            q⁺ += params.r⁺[i] * X[i][k]
-            q̄⁻ += params.r⁻[i] * X[i][k]
-        end
-        cache.q⁺[k] = q⁺
-        cache.q̄⁻[k] = q̄⁻
-    end
-
-    # compute qₙ₊₁⁺
-    cache.q̄⁺ .= (cache.q̄ .- params.ρ⁻ .* cache.q̄⁻) ./ params.ρ⁺
-end
-
-
-# Compute velocities at quadrature nodes.
-function compute_stages_v!(cache::IntegratorCacheDGVIPI{ST,D,S,R},
-                           params::ParametersDGVIPI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
-    local v::ST
-
-    for i in 1:R
-        for k in 1:D
-            v = 0
-            for j in 1:S
-                v += params.a[i,j] * cache.X[j][k]
-            end
-            cache.V[i][k] = v / params.Δt
-        end
+        b[D*S+k] = sol.q[k] - M.ρ⁻ * st.q⁻[k] - M.ρ⁺ * C.q⁺[k]
     end
 end
 
 
-# Compute one-form and forces at quadrature nodes.
-function compute_stages_p!(cache::IntegratorCacheDGVIPI{ST,D,S,R},
-                           params::ParametersDGVIPI{DT,TT,D,S,R}) where {ST,DT,TT,D,S,R}
-
-    local tᵢ::TT
-
-    # compute P=ϑ(Q) and F=f(Q)
-    for i in 1:R
-        tᵢ = params.t + params.Δt * params.c[i]
-        params.equs[:ϑ](cache.P[i], tᵢ, cache.Q[i], cache.V[i])
-        params.equs[:f](cache.F[i], tᵢ, cache.Q[i], cache.V[i])
-    end
-end
-
-
-function compute_stages_λ!(cache::IntegratorCacheDGVIPI{ST,D,S,QR,FR},
-                           params::ParametersDGVIPI{DT,TT,D,S,QR,FR}) where {ST,DT,TT,D,S,QR,FR}
-
-    local t₀::TT = params.t
-    local t₁::TT = params.t + params.Δt
-
-    # compute λ and λ̄
-    for i in 1:FR
-        cache.λ[i] .= params.α⁻[i] .* cache.q⁻ .+ params.α⁺[i] .* cache.q⁺
-        cache.λ̄[i] .= params.α⁻[i] .* cache.q̄⁻ .+ params.α⁺[i] .* cache.q̄⁺
-        cache.ϕ[i] .= params.μ⁻[i] .* cache.q⁻ .+ params.μ⁺[i] .* cache.q⁺
-        cache.ϕ̅[i] .= params.μ⁻[i] .* cache.q̄⁻ .+ params.μ⁺[i] .* cache.q̄⁺
-    end
-
-    for i in 1:FR
-        params.equs[:ϑ](cache.θ[i], t₀, cache.ϕ[i], cache.λ[i])
-        params.equs[:ϑ](cache.Θ̅[i], t₁, cache.ϕ̅[i], cache.λ̄[i])
-        params.equs[:g](cache.g[i], t₀, cache.ϕ[i], zero(cache.q), cache.λ[i])
-        params.equs[:g](cache.ḡ[i], t₁, cache.ϕ̅[i], zero(cache.q), cache.λ̄[i])
-    end
-end
-
-
-function compute_rhs!(b::Vector{ST}, cache::IntegratorCacheDGVIPI{ST,D,S,QR,FR},
-                params::ParametersDGVIPI{DT,TT,D,S,QR,FR}) where {ST,DT,TT,D,S,QR,FR}
-
-    local z::ST
-
-    # compute b = - [(P-AF)]
-    for i in 1:S
-        for k in 1:D
-            z = 0
-            for j in 1:QR
-                z += params.b[j] * params.m[j,i] * cache.F[j][k] * params.Δt
-                z += params.b[j] * params.a[j,i] * cache.P[j][k]
-            end
-            for j in 1:FR
-                z += params.β[j] * params.r⁺[i] * params.α⁺[j] * cache.θ[j][k]
-                z += params.β[j] * params.r⁻[i] * params.α⁻[j] * cache.Θ̅[j][k]
-                z += params.β[j] * params.r⁺[i] * params.μ⁺[j] * cache.g[j][k]
-                z += params.β[j] * params.r⁻[i] * params.μ⁻[j] * cache.ḡ[j][k]
-            end
-
-            b[D*(i-1)+k] = z
-        end
-    end
-
-    # compute b = [qₙ - ϕ(0.5; qₙ⁻, qₙ⁺)]
-    for k in 1:D
-        b[D*S+k] = cache.q[k] - params.ρ⁻ * cache.q⁻[k] - params.ρ⁺ * cache.q⁺[k]
-    end
-end
-
-
-function update_solution!(int::IntegratorDGVIPI{DT}, cache::IntegratorCacheDGVIPI{DT}) where {DT}
-    int.q  .= cache.q̄
-    int.q⁻ .= cache.q̄⁻
-    int.q⁺ .= cache.q̄⁺
-end
-
-
-function integrate_step!(int::IntegratorDGVIPI{DT,TT}, sol::SolutionStepPODE{DT,TT},
-                         cache::IntegratorCacheDGVIPI{DT}=int.caches[DT]) where {DT,TT}
-    # update nonlinear solver parameters from cache
-    update_params!(int.params, int)
-
-    # compute initial guess
-    initial_guess!(int, sol, cache)
-
-    # reset cache
-    reset!(sol)
-
-    # call nonlinear solver
-    solve!(int.solver)
-
-    # print solver status
-    print_solver_status(int.solver.status, int.solver.params)
-
-    # check if solution contains NaNs or error bounds are violated
-    check_solver_status(int.solver.status, int.solver.params)
-
-    # compute vector fields at internal stages
-    components!(int.solver.x, cache, int.params)
-
-    # copy solution from cache to integrator
-    update_solution!(int, cache)
-    sol.q = int.q
-
-    # take care of periodic solutions
-    # cut_periodic_solution!(int.q,  int.equation.periodicity)
-    # cut_periodic_solution!(int.q⁻, int.equation.periodicity)
-
-    # copy to solution
-    # copy_solution!(sol, int.q, int.q⁻)
+function update_state!(int::GeometricIntegrator{<:DGVIPI}, DT)
+    dgvi_state(int).q⁻ .= cache(int, DT).q̄⁻
+    return
 end

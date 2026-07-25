@@ -84,13 +84,9 @@ using Test
 
 
     # test PGLRK coefficients
+    # (the mathematical identities are checked in test/methods/pglrk_coefficients_tests.jl)
 
-    # DISABLED: CoefficientsPGLRK(s) is bit-rotted against current dependency
-    # APIs — its constructor fails (unqualified Legendre; QuadratureRules
-    # nodes/weights now return matrices; inner-constructor field type mismatch).
-    # The PGLRK integrator itself was also removed. Needs a revival; see
-    # VERIFICATION_REPORT.md.
-    # @test typeof(CoefficientsPGLRK(2)) <: CoefficientsPGLRK
+    @test typeof(CoefficientsPGLRK(3)) <: CoefficientsPGLRK
 
 end
 

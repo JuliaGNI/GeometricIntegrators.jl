@@ -64,22 +64,42 @@ end
 end
 
 
-# DISABLED (blocker): FLRK (Formal Lagrangian RK) is not available in the current
-# architecture — the `FLRK` method is commented out in method_list.jl and the
-# integrator source (integrators_flrk.jl / `IntegratorFLRK`) was removed. Reviving
-# it is a re-implementation; see VERIFICATION_REPORT.md.
-# @testset "$(rpad("Formal Lagrangian Runge-Kutta integrators",80))" begin
+@testset "$(rpad("Formal Lagrangian Runge-Kutta integrators",80))" begin
 
-#     flint = IntegratorFLRK(lode, TableauGauss(2))
-#     flsol = integrate(lode, flint)
-#     @test relative_maximum_error(flsol.q, ref.q) < 4E-12
+    # The position phase of FLRK is exactly an implicit Runge-Kutta method applied to
+    # q̇ = v̄(q), so it must reproduce `integrate(ode, Gauss(s))` to round-off. This is a
+    # much stronger check than the error bound below, and it holds for every s.
+    # (Not bit-for-bit in general: FLRK seeds Newton from `v̄` on top of the Hermite
+    # extrapolation, so the converged iterates may differ by an ulp at coarse Δt. At
+    # this Δt the results happen to be identical.)
+    for s in 2:4
+        @test relative_maximum_error(integrate(lode, FLRK(Gauss(s))).q,
+                                     integrate(ode, Gauss(s)).q) < 4E-16
+    end
 
-#     flint = IntegratorFLRK(lode, TableauGauss(3))
-#     flsol = integrate(lode, flint)
-#     @test relative_maximum_error(flsol.q, ref.q) < 4E-16
+    # Tolerances measured (Δt = 0.01, nt = 10, reference Gauss(8)):
+    #   s = 2: 3.3E-12,  s = 3: 6.7E-16,  s = 4: 5.5E-16
+    flsol = integrate(lode, FLRK(Gauss(2)))
+    @test relative_maximum_error(flsol.q, ref.q) < 8E-12
 
-#     flint = IntegratorFLRK(lode, TableauGauss(4))
-#     flsol = integrate(lode, flint)
-#     @test relative_maximum_error(flsol.q, ref.q) < 8E-16
+    flsol = integrate(lode, FLRK(Gauss(3)))
+    @test relative_maximum_error(flsol.q, ref.q) < 2E-15
 
-# end
+    flsol = integrate(lode, FLRK(Gauss(4)))
+    @test relative_maximum_error(flsol.q, ref.q) < 2E-15
+
+    # The momentum-modified formal Lagrangian is constructed so that p = ϑ(q) solves
+    # the adjoint equations. With p₀ = ϑ(q₀) the adjoint variable must therefore track
+    # ϑ(q) along the whole trajectory. Measured: 1.0E-11 / 4.4E-16 / 1.6E-15.
+    #
+    # This assertion is what catches the stage force being taken from the projection
+    # field `g = (∇ϑ)ᵀv` instead of `f = (∇ϑ)ᵀv − ∇H`: with `g` the error is 9.9E-2 at
+    # every order, while `q` stays bit-for-bit correct.
+    for (s, tol) in ((2, 2E-11), (3, 2E-15), (4, 4E-15))
+        flsol = integrate(lode, FLRK(Gauss(s)))
+        ϑerr = maximum(maximum(abs, flsol.p[i] .- LotkaVolterra2d.ϑ(flsol.t[i], flsol.q[i]))
+                       for i in eachindex(flsol.q))
+        @test ϑerr < tol
+    end
+
+end

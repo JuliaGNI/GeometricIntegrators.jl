@@ -6,7 +6,6 @@
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
 Pages   = [
-            "integrators/integrator_cache.jl",
             "integrators/integrator.jl",
         ]
 ```
@@ -17,8 +16,6 @@ Pages   = [
 Modules = [GeometricIntegrators.Integrators]
 Pages   = [
             "initial_guess/initial_guess.jl",
-            "initial_guess/hermite.jl",
-            "initial_guess/midpoint.jl",
           ]
 ```
 
@@ -38,6 +35,9 @@ Pages   = ["integrators/rk/abstract.jl",
            "integrators/rk/integrators_iprk.jl",
            "integrators/rk/integrators_iprk_implicit.jl",
            "integrators/rk/methods.jl",
+           "integrators/rk/coefficients_pglrk.jl",
+           "integrators/rk/integrators_flrk.jl",
+           "integrators/rk/integrators_pglrk.jl",
           ]
 ```
 
@@ -53,6 +53,7 @@ Pages   = [
             "integrators/vi/position_momentum_trapezoidal.jl",
             "integrators/vi/vprk_integrator.jl",
             "integrators/vi/vprk_methods.jl",
+            "integrators/vi/vprk_ptableau.jl",
         ]
 ```
 
@@ -73,7 +74,12 @@ Pages   = [
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
 Pages   = ["integrators/cgvi/integrators_cgvi.jl",
-           "integrators/dgvi/integrators_dgvi.jl"]
+           "integrators/dgvi/integrators_dgvi_common.jl",
+           "integrators/dgvi/integrators_dgvi.jl",
+           "integrators/dgvi/integrators_dgvi_path_integral.jl",
+           "integrators/dgvi/integrators_dgvi_projection_initial.jl",
+           "integrators/dgvi/integrators_dgvi_projection_final.jl",
+           "integrators/dgvi/integrators_dgvi_experimental.jl"]
 ```
 
 ## Hamilton-Pontryagin Integrators
@@ -81,7 +87,6 @@ Pages   = ["integrators/cgvi/integrators_cgvi.jl",
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
 Pages   = [
-            "integrators/hpi/hpi_methods.jl",
             "integrators/hpi/hpi_midpoint.jl",
             "integrators/hpi/hpi_trapezoidal.jl",
         ]

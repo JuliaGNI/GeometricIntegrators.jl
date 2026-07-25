@@ -49,6 +49,9 @@ end
 @safetestset "Ensemble Integrator Tests                                                       " begin
     include("integrators/ensemble_integrators_tests.jl")
 end
+@safetestset "Show Methods and Integrators                                                    " begin
+    include("integrators/test_show.jl")
+end
 
 @safetestset "Convergence: Runge-Kutta                                                        " begin
     include("verification/rk_convergence_tests.jl")
@@ -62,8 +65,17 @@ end
 @safetestset "Convergence: Variational Integrators                                            " begin
     include("verification/variational_convergence_tests.jl")
 end
+@safetestset "Convergence: Formal Lagrangian Runge-Kutta Integrators                          " begin
+    include("verification/flrk_convergence_tests.jl")
+end
+@safetestset "Convergence: Projected Gauss-Legendre RK and VPRKpTableau Integrators           " begin
+    include("verification/pglrk_convergence_tests.jl")
+end
 @safetestset "Convergence: Galerkin Variational Integrators                                   " begin
     include("verification/galerkin_convergence_tests.jl")
+end
+@safetestset "Convergence: Discontinuous Galerkin Variational Integrators                     " begin
+    include("verification/dgvi_convergence_tests.jl")
 end
 @safetestset "Convergence: Degenerate Variational Integrators                                 " begin
     include("verification/dvi_convergence_tests.jl")

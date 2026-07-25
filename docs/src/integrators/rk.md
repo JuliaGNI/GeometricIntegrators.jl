@@ -254,6 +254,54 @@ P_{n,i} &= ϑ(t_{n} + c_i \Delta t, Q_{n,i}, P_{n,i}) .
 Implicit ODEs can be integrated with any implicit Runge-Kutta or partitioned Runge-Kutta method.
 
 
+## Runge-Kutta Methods for Degenerate and Noncanonical Systems
+
+Two Runge-Kutta methods in this package are not plain collocation methods but build
+extra structure on top of a Butcher tableau.
+
+| Integrator          | Problem type | Description                                                                          |
+|:--------------------|:-------------|:-------------------------------------------------------------------------------------|
+| [`FLRK`](@ref)      | `LODE`/`IODE`| Formal Lagrangian Runge-Kutta method for noncanonical Hamiltonian systems            |
+| [`PGLRK`](@ref)     | `ODE` with an invariant `h` | Energy-preserving projected Gauß-Legendre Runge-Kutta method          |
+
+### Formal Lagrangian Runge-Kutta
+
+[`FLRK`](@ref) applies a Runge-Kutta method to the *formal Lagrangian* of a noncanonical
+Hamiltonian system, which introduces an adjoint variable $p$ alongside $q$. The position
+is advanced by an ordinary implicit Runge-Kutta method applied to $\dot{q} = v(q)$, and
+the adjoint variable by the same tableau applied to the adjoint equations. Since the
+latter are *linear* in $p$, they are not solved by Newton iteration but by a single
+linear solve of size $ds \times ds$ once the position stages have converged.
+
+The tableau should be Gauß-Legendre, and the problem's $\bar{v}$ must depend on $q$
+only. Symplecticity with respect to the noncanonical symplectic form is **not**
+established — see the method's docstring — so `issymplectic(FLRK(...))` returns
+`missing`, and the energy drifts slowly rather than being conserved.
+
+### Projected Gauß-Legendre Runge-Kutta
+
+[`PGLRK`](@ref) uses the one-parameter family of tableaus
+```math
+a(\lambda) = a + \lambda A ,
+\qquad
+A = P W Q ,
+```
+of [`CoefficientsPGLRK`](@ref), where $a$ is the $s$-stage Gauß tableau in W-transformed
+form and $W$ is skew, and fixes $\lambda$ at every step by requiring
+$H(q_{n+1}) = H(q_0)$. Because $B A$ is skew for $B = \mathrm{diag}(b)$ the perturbed
+*tableau* satisfies the symplecticity condition for every fixed $\lambda$, and because
+$b^{T} A = 0$ and $A \mathbb{1} = 0$ it retains the order $2s$. At least three stages are
+required: for $s = 2$ the perturbation would occupy the order-determining entries of the
+tableau and destroy consistency.
+
+That property of the tableau does *not* carry over to the method, because $\lambda$ is
+itself determined from $q_n$: the step map is a member of the $\lambda$-family composed
+with a state-dependent choice of parameter, so its Jacobian picks up an extra rank-one
+term. Exact energy conservation and symplecticity are mutually exclusive for a general
+Hamiltonian system in any case, unless the method reproduces the exact flow. Accordingly
+`issymplectic(PGLRK(...))` returns `missing` and `isenergypreserving` returns `true`;
+see the method's docstring for the measured symplecticity defect.
+
 ## Custom Tableaus
 
 If required, it is straight-forward to create a custom tableau.

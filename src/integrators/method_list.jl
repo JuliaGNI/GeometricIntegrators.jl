@@ -7,8 +7,10 @@ meta_methods = (
     DIRK,
     EPRK,
     IPRK,
-    # FLRK,
+    FLRK,
+    PGLRK,
     VPRK,
+    VPRKpTableau,
     DVRK,
     CGVI,
     ProjectedMethod,
@@ -148,6 +150,14 @@ degenerate_variational_integrators = (
     CTDVI,
 )
 
+discontinuous_galerkin_integrators = (
+    DGVI,
+    DGVIPI,
+    DGVIP0,
+    DGVIP1,
+    DGVIEXP,
+)
+
 splitting_methods = (
     LieA,
     LieB,
@@ -173,6 +183,7 @@ method_groups = (
     variational_partitioned_runge_kutta_families,
     variational_integrators,
     degenerate_variational_integrators,
+    discontinuous_galerkin_integrators,
     splitting_methods,
 )
 

@@ -32,7 +32,7 @@ The following list provides and overview of supported and planned features.
 - [ ] Taylor Variational Integrators (TVI),
 - [x] Degenerate Variational Integrators (DVI),
 - [x] Splitting Methods (SM),
-- [ ] Hamiltonian Boundary Value Methods (HBVM).
+- [x] Energy-preserving Gauß collocation methods (PGLRK; the Hamiltonian Boundary Value Method family more generally is not implemented).
 
 #### Families of Stochastic Integrators
 

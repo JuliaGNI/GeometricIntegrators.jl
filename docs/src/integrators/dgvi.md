@@ -15,6 +15,13 @@ L(q, \dot{q}) = \vartheta (q) \cdot \dot{q} - H(q) ,
 where $\vartheta (q)$ denotes the Cartan one-form and $H(q)$ the Hamiltonian,
 that is usually given by the total energy of the system.
 
+!!! note
+    Throughout this page $\nabla \vartheta (q) \cdot w$ is to be read as
+    $\nabla \vartheta^{T} (q) \cdot w$, i.e. with the transpose of the Jacobian of the
+    one-form. That is the convention the implementations use, and the one in which the
+    projection function `g` of an [`IODE`](@ref)/[`LODE`](@ref) is defined,
+    $g(t, q, \lambda) = \nabla \vartheta^{T} (q) \cdot \lambda$.
+
 
 ## Discrete Trajectories and Numerical Quadrature
 
@@ -106,11 +113,14 @@ and correspondingly that $q_n^+$ is given by some linear
 combinations of the degrees of freedom of the polynomial on the right interval,
 specifically
 ```math
-q_n^- = r^{-} \cdot x_{n} ,
+q_n^- = r^{-} \cdot x_{n-1} ,
 \qquad
-q_n^+ = r^{+} \cdot x_{n+1} ,
+q_n^+ = r^{+} \cdot x_{n} ,
 ```
-where $r^{\pm}$ are appropriate coefficient vectors.
+where $r^{\pm}$ are appropriate coefficient vectors, namely
+$r^{-}_{j} = \varphi_j (1)$ and $r^{+}_{j} = \varphi_j (0)$.
+(The variations below are taken with respect to $x_{n-1}$ and $x_{n}$ accordingly;
+note that $q_n^-$ is reconstructed from the polynomial on the *left* interval.)
 
 
 #### Gauge Terms
@@ -248,3 +258,35 @@ Requiring the variation of the discrete action to vanish yields the discrete equ
  \bigg] ,
 ```
 for all $n$ and all $j$.
+
+
+## The Implemented Variants
+
+`GeometricIntegrators.jl` provides five DGVI methods. They share the interior
+quadrature and the mass/derivative matrices above, and differ in the numerical flux and
+in the equation that closes the step.
+
+| Integrator          | Flux                                                     | Extra unknowns | Carried-over state          |
+|:--------------------|:---------------------------------------------------------|:---------------|:----------------------------|
+| [`DGVIPI`](@ref)    | path integral along $\Phi(\tau; q^-, q^+)$ — the general case derived above | $q_{n+1}$      | $q_n^-$                     |
+| [`DGVIEXP`](@ref)   | midpoint average, $\vartheta(\langle q \rangle_n) \cdot [\![ q ]\!]_n$      | $q_{n+1}, q_{n+1}^+$ | $q_n^-, q_n^+$        |
+| [`DGVI`](@ref)      | trapezoidal, between the nodal value $q_n$ and the one-sided limits         | $q_{n+1}$      | none — a genuine $(q,p)$ map |
+| [`DGVIP0`](@ref)    | as `DGVI`, closed by a projection at $t_n$                | $q_{n+1}$      | $q_n^-, \vartheta(q_n^-)$   |
+| [`DGVIP1`](@ref)    | as `DGVI`, closed by a projection at $t_{n+1}$            | $q_{n+1}, q_{n+1}^+$ | $q_n^+$               |
+
+Only [`DGVIPI`](@ref) implements the general path-integral flux derived on this page;
+[`DGVI`](@ref) is the special case in which the flux is evaluated between the nodal
+value and the one-sided limits. The remaining three are **experimental** and have no
+derivation in the literature — their docstrings say so, and their momentum output is
+diagnostic only.
+
+Note that all five require a **fully degenerate** Lagrangian: $\vartheta$ must not
+depend on the velocity. On a regular Lagrangian the closure equation degenerates and
+the Jacobian becomes singular.
+
+Measured convergence orders on the degenerate Lotka–Volterra system split the family in
+two (see `test/verification/dgvi_convergence_tests.jl`): the two variants that evaluate
+the flux at an *average* of the one-sided limits, [`DGVIPI`](@ref) and
+[`DGVIEXP`](@ref), reach the full order $2s$, whereas the three built on the
+trapezoidal flux through the nodal value are limited to $2 \lfloor s/2 \rfloor$. The
+gauge term $\nu$ derived above is not yet implemented.
