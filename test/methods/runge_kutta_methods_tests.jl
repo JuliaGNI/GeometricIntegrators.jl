@@ -107,10 +107,26 @@ end
 
 end
 
-# DISABLED (blocker): FLRK is not available in the current architecture (method
-# commented out in method_list.jl; integrator source removed). See VERIFICATION_REPORT.md.
-# @testset "$(rpad("Formal Lagrangian Runge-Kutta methods",80))" begin
+@testset "$(rpad("Formal Lagrangian Runge-Kutta methods",80))" begin
 
-#     @test typeof(GeometricIntegrator(lode, FLRK(Gauss(1)))) <: IntegratorFLRK
+    @test typeof(GeometricIntegrator(lode, FLRK(Gauss(1)))) <: GeometricIntegrator{<:FLRK}
+    @test typeof(GeometricIntegrator(iode, FLRK(Gauss(2)))) <: GeometricIntegrator{<:FLRK}
 
-# end
+    # FLRK wraps a plain tableau and must not be silently rewritten into an IRK by
+    # `initmethod` — which is why it is an `LODEMethod` and not an `RKMethod`.
+    @test FLRK(Gauss(2)) == FLRK(TableauGauss(2))
+    @test tableau(FLRK(Gauss(2))) == TableauGauss(2)
+
+    @test isimplicit(FLRK(Gauss(2)))
+    @test !isexplicit(FLRK(Gauss(2)))
+    @test islodemethod(FLRK(Gauss(2)))
+    @test isiodemethod(FLRK(Gauss(2)))
+    @test order(FLRK(Gauss(2))) == 4
+
+    # Symplecticity is asserted nowhere in the reference: the manuscript states the
+    # method is *not* symplectic w.r.t. the noncanonical form, and conjugate
+    # symplecticity is an open conjecture. The trait must stay `missing`.
+    @test ismissing(issymplectic(FLRK(Gauss(2))))
+    @test !isenergypreserving(FLRK(Gauss(2)))
+
+end

@@ -290,24 +290,52 @@ end
 end
 
 
-# DISABLED (blocker): the PGLRK integrator (`IntegratorPGLRK` / pglrk_integrators.jl)
-# was removed, and `CoefficientsPGLRK` is bit-rotted against current dependency APIs
-# (see spark_tableaus_tests.jl and VERIFICATION_REPORT.md). Needs a revival.
-# @testset "$(rpad("Projected Gauss-Legendre Runge-Kutta integrators",80))" begin
+@testset "$(rpad("Projected Gauss-Legendre Runge-Kutta integrators",80))" begin
 
-#     pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(2))
-#     pgsol = integrate(ode, pgint)
-#     @test relative_maximum_error(pgsol.q, reference_solution) < 6E-6
+    # `CoefficientsPGLRK` requires s ≥ 3: at s = 2 the skew perturbation occupies the
+    # order-determining (2,1)/(1,2) entries of X and destroys consistency, so a
+    # two-stage method cannot be built at all. (The old disabled test used
+    # `CoefficientsPGLRK(2)`, which is why its tolerance was 6E-6 — four orders of
+    # magnitude worse than `Gauss(2)` in this very file.)
+    @test_throws AssertionError PGLRK(2)
 
-#     pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(3))
-#     pgsol = integrate(ode, pgint)
-#     @test relative_maximum_error(pgsol.q, reference_solution) < 2E-12
+    # Tolerances measured on the harmonic oscillator (Δt = 0.1, nt = 10):
+    #   s = 3: 7.5E-13,  s = 4: 2.0E-16 — matching `Gauss(s)` to within a few ulp,
+    # as expected since bᵀA = 0 and A·1 = 0 leave the order conditions intact.
+    pgsol = integrate(ode, PGLRK(3))
+    @test relative_maximum_error(pgsol.q, ref.q) < 2E-12
+    @test relative_maximum_error(pgsol.q[end], reference_solution) < 2E-12
 
-#     pgint = IntegratorPGLRK(ode, CoefficientsPGLRK(4))
-#     pgsol = integrate(ode, pgint)
-#     @test relative_maximum_error(pgsol.q, reference_solution) < 8E-16
+    pgsol = integrate(ode, PGLRK(4))
+    @test relative_maximum_error(pgsol.q, ref.q) < 8E-16
+    @test relative_maximum_error(pgsol.q[end], reference_solution) < 8E-16
 
-# end
+    # The point of the method is exact energy conservation. On this linear problem
+    # Gauss already conserves the quadratic invariant, so both are at machine
+    # precision; the nonlinear case is covered in
+    # test/verification/pglrk_convergence_tests.jl.
+    let H = HarmonicOscillator.hamiltonian, ps = parameters(ode)
+        for s in 3:4
+            sol = integrate(ode, PGLRK(s))
+            h = [H(sol.t[i], sol.q[i], ps) for i in eachindex(sol.q)]
+            @test maximum(abs.(h .- h[1])) / abs(h[1]) < 4E-16
+        end
+    end
+
+    # traits
+    @test isimplicit(PGLRK(3))
+    @test issymplectic(PGLRK(3))
+    @test isenergypreserving(PGLRK(3))
+    @test order(PGLRK(3)) == 6
+
+    # PGLRK needs an invariant named `h` to project onto
+    let bare = ODEProblem(HarmonicOscillator.oscillator_ode_v, timespan(ode), timestep(ode),
+                          initial_conditions(ode).q; parameters=parameters(ode))
+        @test !hasinvariants(bare)
+        @test_throws AssertionError integrate(bare, PGLRK(3))
+    end
+
+end
 
 
 @testset "$(rpad("Integrate PODE and HODE with ODE Runge-Kutta integrators",80))" begin

@@ -23,6 +23,7 @@ import Base: Callable
 
 import CompactBasisFunctions
 import CompactBasisFunctions: Basis
+import CompactBasisFunctions: Legendre
 import CompactBasisFunctions: nbasis
 
 import GeometricBase: description, reference, tableau, order
@@ -61,6 +62,7 @@ const DEFAULT_NWRITE = 0
 
 
 export AbstractCoefficients
+export CoefficientsPGLRK, getTableauPGLRK
 
 include("integrators/abstract_coefficients.jl")
 
@@ -134,9 +136,9 @@ include("integrators/rk/integrators_dirk.jl")
 include("integrators/rk/integrators_eprk.jl")
 include("integrators/rk/integrators_iprk.jl")
 include("integrators/rk/integrators_iprk_implicit.jl")
-# include("integrators/rk/integrators_flrk.jl")
-include("integrators/rk/pglrk_coefficients.jl")
-# include("integrators/rk/pglrk_integrators.jl")
+include("integrators/rk/coefficients_pglrk.jl")
+include("integrators/rk/integrators_flrk.jl")
+include("integrators/rk/integrators_pglrk.jl")
 
 include("integrators/rk/methods.jl")
 
@@ -168,14 +170,16 @@ include("integrators/vi/position_momentum_trapezoidal.jl")
 include("integrators/vi/vprk_methods.jl")
 include("integrators/vi/vprk_cache.jl")
 include("integrators/vi/vprk_integrator.jl")
+include("integrators/vi/vprk_ptableau.jl")
 
 
 include("integrators/cgvi/integrators_cgvi.jl")
-# include("integrators/dgvi/integrators_dgvi.jl")
-# include("integrators/dgvi/integrators_dgvi_experimental.jl")
-# include("integrators/dgvi/integrators_dgvi_path_integral.jl")
-# include("integrators/dgvi/integrators_dgvi_projection_initial.jl")
-# include("integrators/dgvi/integrators_dgvi_projection_final.jl")
+include("integrators/dgvi/integrators_dgvi_common.jl")
+include("integrators/dgvi/integrators_dgvi.jl")
+include("integrators/dgvi/integrators_dgvi_experimental.jl")
+include("integrators/dgvi/integrators_dgvi_path_integral.jl")
+include("integrators/dgvi/integrators_dgvi_projection_initial.jl")
+include("integrators/dgvi/integrators_dgvi_projection_final.jl")
 
 
 include("integrators/dvi/dvi_common.jl")

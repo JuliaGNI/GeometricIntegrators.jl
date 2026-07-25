@@ -351,8 +351,20 @@ test port. They are left disabled with explanatory comments:
   matrices; an inner-constructor field-type mismatch remains even after those two
   fixes). The `IntegratorVPRKpTableau` path lives only in the uncompiled legacy
   `vprk/` module.
+
+  > **Superseded by the fourth pass below.** All three families have since been
+  > modernised. Two of the claims above are wrong and are corrected there: the
+  > removed integrator sources are recoverable from `38c64da0^` (and the `FLRK`
+  > *method* struct from `2d927d9f^:src/methods/flrk.jl`), the commented include
+  > named a file (`pglrk_integrators.jl`) that never existed, and
+  > `QuadratureRules` `nodes`/`weights` return `Vector`s, not matrices — the
+  > 0-based `leg_basis[nodes, j-1]` indexing was always correct.
 * **DGVI** — `src/integrators/dgvi/*` use the superseded `Parameters` /
   `update_params!` architecture; a full port to `GeometricIntegrator` is required.
+
+  > **Superseded by the fourth pass below.** All five variants have since been
+  > ported. The port was smaller than this estimate suggests: the numerics had not
+  > regressed since `6245e4f3`, only the surrounding architecture.
 * **Old-API RK tests** — the `AbstractIntegrator(ode, Tableau…())` /
   `IntegratorIRK(…; exact_jacobian=true)` / block-Jacobian tests use constructors
   removed in the rearchitecture. The integrator-type checks are already covered by
@@ -565,3 +577,165 @@ exactly its documented order. The non-converging cases are, with the exception o
 the EXPERIMENTAL HSPARK-secondary family (S3), **inherent method properties**
 (order reduction / divergence / singular stage systems predicted by the
 manuscripts), not implementation defects.
+
+---
+
+# Fourth pass — DGVI, FLRK and PGLRK modernisation and verification
+
+The three integrator families that the passes above recorded as modernisation blockers
+have been ported to the method-based `GeometricIntegrator` architecture, registered as
+methods, documented, and covered by the same static + dynamic verification standard as
+the rest of the package. Nine genuine defects were found in the process, four of them
+numerical.
+
+## Summary of findings
+
+| # | Severity | Method(s) | Issue | Root cause | Action |
+|:--|:---------|:----------|:------|:-----------|:-------|
+| 13 | correctness (**fixed**) | `CoefficientsPGLRK` | The constructor could not run at all — `TypeError` on every call | `new(...)` passed 11 arguments to a 14-field struct: `@CoefficientsRK` gained `â, b̂, ĉ` in `bb8c298b`, so `P` landed in `â` and the `Q` *matrix* in `b̂::Vector{T}` | **Fixed** by supplying zero `â/b̂/ĉ`, as `CoefficientsARK` already did |
+| 14 | correctness (**fixed**) | `CoefficientsPGLRK` | `Legendre` was never imported into `Integrators` | `src/Integrators.jl` imported only `Basis` and `nbasis` from CompactBasisFunctions | **Fixed**; `nodes`/`weights` also qualified as `QuadratureRules.…` |
+| 15 | doc bug (**fixed**) | `VERIFICATION_REPORT.md` | Claimed `QuadratureRules` `nodes`/`weights` "now return matrices" | They return `Vector{Float64}`; the 0-based `leg_basis[nodes, j-1]` indexing was correct all along | **Corrected** above |
+| 16 | correctness (**fixed**) | `FLRK` | The momentum update used the projection field `g = (∇ϑ)ᵀv` as the stage force instead of `f = (∇ϑ)ᵀv − ∇H`, so `ṗ` was missing `−∇H` | Legacy `integrate_diag_flrk!` called `equs[:g]` | **Fixed** to `equations(int).f`. Confirmed by reverting: `max|p − ϑ(q)|` degrades from 1E-15 to **9.9E-2** at every order, while `q` stays correct — which is why the old test, checking only `q`, never caught it |
+| 17 | correctness (**fixed**) | `FLRK` | Would have been silently replaced by a plain `IRK` | `src/integrators/rk/abstract.jl:60` defines `initmethod(::RKMethod, …) = RK(method, TT)`; the historical `FLRK <: RKMethod` is caught by it | **Fixed** by making `FLRK <: LODEMethod`, which also drops the false `isodemethod`/`ispodemethod`/`ishodemethod` traits |
+| 18 | correctness | `CoefficientsPGLRK(2)` | A two-stage method is inconsistent by construction | The skew perturbation occupies `W[2,1]`/`W[1,2]`, the one pair that coincides with the order-determining `ξ₁` entries of `X`. Verified: `bᵀA = 0.5` and `A·1 = 1.0` at `s = 2` versus ~1E-16 for `s ≥ 3`, and a slot-by-slot sweep shows `(2,1)` is the *only* offending slot at every `s` | Constructor now requires **`s ≥ 3`** with an explanatory message. This also explains the old disabled test's `6E-6` tolerance at `s = 2` against `2E-12` at `s = 3` |
+| 19 | correctness | `VPRKpTableau` | Needs two distinct stage-count bounds | `D` multipliers occupy slots `(s,s−1) … (s−D+1,s−D)`: `s ≥ D+1` merely to fit into `W`, `s ≥ D+2` to avoid the `(2,1)` slot and keep full order | `s ≥ D+1` asserted; `s ≥ D+2` documented. Measured on the 2-dimensional problem: `s = 3` gives 2.1E-10 (worse than `VPRK(Gauss(3))`), `s = 4` gives 8.9E-16 |
+| 20 | correctness (**fixed**) | `VPRKpTableau` | The legacy file referenced unbound names `method`, `solstep`, `problem` as if they were globals, and needed a non-dependency (`NLsolve`) | Bit-rotted mid-refactor | Rewritten as `src/integrators/vi/vprk_ptableau.jl` with the multipliers folded into a single coupled Newton system of size `D(s+1)`; `NLsolve` no longer needed |
+| 21 | correctness | `DGVI`, `DGVIP0`, `DGVIP1` | Order capped at `2⌊s/2⌋` instead of `2s` | The trapezoidal flux is evaluated at the *nodal* value `qₙ`, which is only second-order accurate and limits the whole scheme. Consistent with the manuscript's own `% TODO The jump condition is not quite right` | Recorded as `@test_broken` against the nominal `2s`; the achieved orders are asserted |
+| 22 | observation | the disabled DGVI tests | Could never have run | They used the *regular* harmonic oscillator, on which `DGVI`'s closure row collapses to `q − p` — independent of every unknown, hence a singular Jacobian. DGVIs need a **fully degenerate** Lagrangian | Tests moved to `LotkaVolterra2d.iodeproblem_dg` / `LotkaVolterra2dGauge` |
+| 23 | dependency | `GeometricProblems` **0.6.24** (the pinned version) | `LotkaVolterra2d.iodeproblem_dg_gauge` fails `check_methods`; `PointVortices{,Linear}.lodeproblem_formal_lagrangian` fails to construct | The former's `g` closure has arity `(g,t,q,λ,params)` while `IODE` requires `(g,t,q,v,λ,params)`; the latter still passes `Ω=`/`∇H=` kwargs the current `LODEProblem` signature rejects | **Already fixed upstream in v0.7.0** (2026-07-12, `01e8026` "Standardize the problem interface across all example modules"); all five constructors verified working under 0.7.3. Not an upstream defect — `Manifest.toml` pins 0.6.24 while `Project.toml` compat already allows `"0.6, 0.7"`. Worked around for now (`LotkaVolterra2dGauge` for the gauge case, `LotkaVolterra2d.lodeproblem` for FLRK); upgrading the pin would remove the workarounds |
+
+Findings 13, 14, 16, 17 and 20 were implementation bugs in this repository and are
+**fixed**. Findings 18, 19 and 21 are inherent properties of the methods, now asserted
+or recorded. Finding 15 corrects this report; 22 corrects the test suite; 23 is a stale
+dependency pin rather than an upstream defect.
+
+## A structural result used throughout
+
+The `CoefficientsPGLRK` family `a(λ) = a + λA` with `A = P W Q` has two independent
+properties, both now asserted to machine precision in
+`test/methods/pglrk_coefficients_tests.jl`:
+
+* `a = P X Q` reproduces the Gauß tableau **exactly** (measured ≤ 2.4E-16 for `s = 3…6`),
+  and `b`, `c` *are* the Gauß weights and nodes. This is a decisive check on the whole
+  W-transformation construction.
+* `B A` is **skew** for `B = diag(b)`, because `Pᵀ B P = I` (the Legendre basis being
+  orthonormal at the Gauß nodes). Hence `a(λ)` satisfies the symplecticity condition
+  `bᵢaᵢⱼ + bⱼaⱼᵢ = bᵢbⱼ` for **every** `λ` and every choice of nonzero slot in `W`.
+
+This is *orthogonal* to the order question: the `(2,1)` slot breaks `bᵀA = 0` and
+`A·1 = 0` — and hence consistency — while leaving symplecticity intact. A two-stage
+PGLRK would therefore be a symplectic method of reduced order, which is why it is
+rejected outright rather than silently allowed.
+
+## Verified-correct behaviour (dynamic confirmation)
+
+**FLRK** — the position phase is an implicit Runge-Kutta method applied to `q̇ = v̄(q)`
+and reproduces `integrate(ode, Gauss(s))` to 1 ulp (bit-identically at fine `Δt`; the
+1-ulp difference at coarse `Δt` comes from FLRK seeding Newton from `v̄` on top of the
+Hermite extrapolation). Convergence order measured at **exactly `2s` in both `q` and
+`p`** — 2.00/4.01/5.99 and 2.00/4.00/6.00 for `s = 1,2,3` — which is worth recording
+because the reference proves no order theorem at all. Energy drifts slowly, as its own
+modified equation predicts, so no energy assertion is made.
+
+**PGLRK** — order matches the underlying Gauß method (5.69 / 7.74 against Gauß's
+5.88 / 7.87 at `s = 3,4`; both sit slightly under nominal on this problem and step
+range). Energy conservation is the point of the method and is confirmed on the
+*nonlinear* Lotka–Volterra problem: **3.6E-15 against Gauß's 7.3E-10** at `s = 3`, five
+orders of magnitude. The harmonic oscillator cannot distinguish them — Gauß already
+conserves quadratic invariants exactly — so it is not used for that test.
+
+**VPRKpTableau** — enforces the Dirac constraint `ϑ(qₙ) − pₙ = 0` to 4.4E-16 … 8.0E-15,
+and recovers on a degenerate Lagrangian the order that a plain VPRK loses there: plain
+`VPRK(Gauss(s))` shows the documented reduction to ≈ `s` (3.6 / 4.1 / 5.8 for
+`s = 3,4,5`) while `VPRKpTableau` reaches 5.3 / 9.5 / 9.8. A clean order *number* is not
+reproducible, however — the multiplier introduces a `Δt`-independent error floor
+(≈1E-11 at `s = 4`, ≈1E-13 at `s = 5`) and the error sequence is non-monotone, so the
+fitted slope swings with the step window. Tightening the solver tolerances does not move
+the floor, so it is a property of the method. Recorded as `@test_broken`; the method has
+no published order theorem.
+
+**DGVI** — all five variants run and converge on `LotkaVolterra2d.iodeproblem_dg`. They
+split sharply by flux discretisation (measured at `T = 1`, `Δt = 1/4 … 1/32`):
+
+| `s` | `DGVI` | `DGVIP0` | `DGVIP1` | `DGVIPI` | `DGVIEXP` |
+|:----|:-------|:---------|:---------|:---------|:----------|
+| 2 | 1.94 | 2.01 | 1.94 | 1.97 | 2.01 |
+| 3 | 2.01 | 2.01 | 2.01 | **5.95** | **5.97** |
+| 4 | 3.74 | 3.86 | 3.74 | 5.97\* | 6.00\* |
+
+(\* machine-precision limited.) The two variants that evaluate the one-form at an
+*average* of the one-sided limits reach the full `2s`; the three that use the nodal value
+are capped at `2⌊s/2⌋` (finding 21). At `s = 4` and `Δt = 0.05` that is 8.0E-14 and
+5.2E-14 against 2.6E-8 — seven orders of magnitude. Note that `DGVIEXP`, the variant
+carrying no derivation at all, is among the two best performers. `DGVI` and `DGVIP1`
+agree to ~1E-12, as expected since `DGVIP1` only adds a continuity constraint and a
+final projection on top of `DGVI`'s equations. The gauge-transformed problem
+(`LotkaVolterra2dGauge`) is also verified.
+
+## Fixes and changes applied
+
+* `src/integrators/rk/pglrk_coefficients.jl` → **`coefficients_pglrk.jl`**, with the two
+  constructor bugs fixed, `s ≥ 3` enforced, `nstages`/`eachstage`/`order`/`isapprox`
+  added, a readable `show`, and an in-place `getTableauPGLRK` that accepts dual numbers.
+  `CoefficientsPGLRK` and `getTableauPGLRK` are now exported.
+* `src/integrators/rk/integrators_flrk.jl` — ported; the `ϑ/P/F/G/J/A` workspace moved
+  from integrator fields into the cache (as integrator fields they defeated the
+  dual-number `cache(int, ST)` mechanism entirely); Jacobians via
+  `SimpleSolvers.Jacobian` rather than a direct ForwardDiff dependency (removed from
+  `Project.toml` in `a46ef1a5` and no longer loadable); `LinearAlgebra.lu!`/`ldiv!` in
+  place of the removed `LUSolver`.
+* `src/integrators/rk/integrators_pglrk.jl` — ported. `λ`, the reference energy and the
+  working tableau live in a mutable cache; the outer λ solve uses
+  `SimpleSolvers.bisection` (which *does* exist as a scalar root finder, unexported)
+  guarded against the no-sign-change case, where it would otherwise return an endpoint,
+  i.e. the largest admissible perturbation. **Note for future work:** the working
+  tableau must be built with `Matrix{ST}(coeff.a)`, not `convert(Matrix{ST}, coeff.a)` —
+  the latter returns the argument itself when the type already matches, which aliased the
+  cache to the method's own tableau so that every update accumulated into and permanently
+  corrupted it. The symptom was PGLRK conserving energy *worse* than plain Gauß.
+* `src/integrators/vi/vprk_ptableau.jl` — new, replacing the deleted legacy
+  `src/integrators/vprk/integrators_vprk_ptableau.jl`.
+* `src/integrators/dgvi/integrators_dgvi_common.jl` — new shared layer: one abstract
+  `DGVIMethod`, one superset coefficient block (generated once for the five method
+  types), one pruned superset cache, and the shared `initial_guess!`, stage
+  computations, `update!` and `integrate_step!`. The five per-variant files now hold only
+  a docstring, `description`, the flux, the residual and the state hooks. The cache
+  dropped 13 of the legacy 41 `D`-vectors that were computed but never read, and the
+  six-per-residual `zero(cache.q)` allocations inside the Newton loop became one
+  permanent field.
+* The carried-over jump values live in the **`DT` cache only** and are always reached as
+  `cache(int).state`, never `cache(int, ST).state` — they are constant with respect to
+  the solver unknowns and must not be dual-typed. `DGVI` needs no state at all: `p`
+  carries the jump information, making it a genuine `(q,p)` map.
+* Latent DGVI bugs removed in passing: `params.q⁻` was read but never written (harmless
+  only because the fields depending on it were unread); `DGVIP0` used `q̄⁺`/`Θ̅⁺` that were
+  never computed; `DGVIP0` looped `for i in 1:S` over an array of length `R`, a
+  `BoundsError` whenever `S > R`; and the experimental variants accumulated `t` by
+  `params.t += Δt` from zero rather than taking it from the solution.
+* `docs/legacy.md` (untracked) deleted, its one unique row — `VPRKpTableau` — folded into
+  `docs/src/integrators/vprk.md`. The DGVI documentation page is re-enabled in
+  `docs/make.jl`, two notational bugs in it corrected (the `r∓` reconstruction indices,
+  which contradicted the same page's own variation formulae, and the missing transpose in
+  `∇ϑ`), and a section added mapping the five variants onto the framework.
+  `docs/src/modules/integrators.md` gained the new files and lost four `Pages` entries
+  naming files that do not exist.
+* `test/methods/test_list.jl` (untracked, never run, referenced from nowhere) replaced by
+  `test/methods/method_list_tests.jl`, a real testset that sweeps every registered method
+  through `order`/`isexplicit`/`is*method`. Registering a method without its trait
+  overloads breaks the *docs build* rather than the test suite, so this guards a gap that
+  nothing else covered. `test/integrators/test_show.jl`, likewise orphaned, was repaired
+  (it still passed a raw `Tableau` to `GeometricIntegrator`) and wired into `runtests.jl`.
+
+## Tests
+
+New: `test/methods/pglrk_coefficients_tests.jl` (102 assertions),
+`test/methods/method_list_tests.jl` (135), `test/verification/flrk_convergence_tests.jl`
+(21), `test/verification/pglrk_convergence_tests.jl` (15 + 1 broken),
+`test/verification/dgvi_convergence_tests.jl` (20 + 3 broken).
+
+Re-enabled with empirically measured tolerances: the FLRK block in
+`rk_implicit_integrators_tests.jl`, the PGLRK block in `rk_integrators_tests.jl`, all
+five DGVI variants in `galerkin_integrators_tests.jl` (35 assertions, on a degenerate
+problem), the `VPRKpTableau` block in `projections_vprk_tests.jl`, the
+`CoefficientsPGLRK` check in `spark_tableaus_tests.jl`, and the FLRK entries in
+`methods/runge_kutta_methods_tests.jl` and `integrators/test_show.jl`.
