@@ -1167,29 +1167,62 @@ On `MasslessChargedParticle` **every one of the thirty Gauß-inner methods shows
 `O(hᵏ)` defect**, `k ∈ {3,4}`, with 100-step drifts up to 1.2e-05. Nothing is at round-off.
 So the violated conditions do bite; they simply did not show on Lotka–Volterra.
 
-#### Conjecture: an affine component of `ϑ` is what hides the defect
+#### Established: a linear `ϑ` makes any projection method symplectic for free
 
-The three problems on which everything sits at round-off share a structural feature that
-the fourth does not:
+If **every** component of `ϑ` is at most linear in `q`, an unprojected variational
+Runge–Kutta method already lands on the constraint manifold. With `ϑ(q) = Cq + d` and
+`b̄ = b`,
 
-| problem | `ϑ` | `∂²ϑ₂` |
+```
+ϕ(qₙ₊₁,pₙ₊₁) = h Σᵢ bᵢ [ (Cᵀ - C) Vₙ,ᵢ - ∇H(Qₙ,ᵢ) ] ,
+```
+
+which the stage equations annihilate. The projection is then inert, `Λ̃ = 0`, and every
+`Λ̃`-carrying term in the wedge product drops out — so *any* projection built on such an
+inner method is symplectic, whichever of the theorem's conditions it violates.
+
+Verified directly (step 7): unprojected `VPRK` on the IODE form, `max|ϕ|` over 1000 steps
+at `h = 0.1`:
+
+| problem | `VPRKGauss(2)` | `VPRKGauss(3)` |
+|:---|---:|---:|
+| **`PointVorticesLinear`** — `ϑ = ½(-γ₁q₂, γ₁q₁, -γ₂q₄, γ₂q₃)`, linear | **2.6e-15** | **3.6e-15** |
+| `PointVortices` | 2.2e-04 | 4.9e-05 |
+| `LotkaVolterra2d` | 6.7e-02 | 2.3e-05 |
+| `MasslessChargedParticle` | 1.7e-04 | 5.2e-07 |
+| `MasslessChargedParticleSingular` | 3.1e-04 | 3.5e-07 |
+
+And the corollary end-to-end (step 2): on `PointVorticesLinear` **all thirty** Gauß-inner
+projection methods are at round-off — one-step defect `2e-16 … 4e-15` flat across
+`h = 0.5 … 0.05`, 100-step drift `≤ 9e-15`, `max|ϕ| ≤ 4e-15` — including every construction
+that violates one of the theorem's conditions. On the nonlinear `PointVortices` the same
+thirty all fail badly (relative drift of order 1 at `h = 0.5`, `2.8e+00 … 4.2e+01` over 100
+steps). The fitted exponents in that column are not meaningful there: the data is
+non-monotone because the methods are diverging at the larger step sizes rather than
+exhibiting a clean defect.
+
+A test problem with a linear `ϑ` therefore certifies any projection method as symplectic
+and carries no information about its tableau. This is the criterion to check before using
+such results as evidence.
+
+#### Open: why the other three problems also came out at round-off
+
+An earlier revision of this section conjectured that an *affine second component* of `ϑ`
+was the mechanism. That is a strictly weaker condition than the one above, and it is
+**not** an instance of it — none of the four problems of the sweep is in the linear class:
+
+| problem | `ϑ` | |
 |:---|:---|:---|
-| `LotkaVolterra2d` | `(q₂ + log q₂/q₁, q₁)` | `0` — `ϑ₂` affine |
-| `LotkaVolterra2dSingular` | `(log q₂/q₁, 0)` | `0` |
-| `MasslessChargedParticleSingular` | `(-A₀x₂(1+2x₁²+⅔x₂²), 0)` | `0` |
-| `MasslessChargedParticle` | `A₀/2 (1+x₁²+x₂²)(-x₂, x₁)` | **≠ 0** — both components nonlinear |
+| `LotkaVolterra2d` | `(q₂ + log(q₂)/q₁, q₁)` | `ϑ₁` nonlinear |
+| `LotkaVolterra2dSingular` | `(log(q₂)/q₁, 0)` | `ϑ₁` nonlinear |
+| `MasslessChargedParticleSingular` | `(-A₀x₂(1+2x₁²+⅔x₂²), 0)` | `ϑ₁` cubic |
+| `MasslessChargedParticle` | `A₀/2(1+x₁²+x₂²)(-x₂, x₁)` | both cubic |
 
-Exactly the problem with no affine component is the one that exposes the defect. This is a
-conjecture on four data points, not a result, but it is the obvious thing to test next: if
-the leftover term is proportional to second derivatives of `ϑ` in the projected direction,
-it vanishes identically whenever one component of the one-form is affine — and a test
-problem of that shape will certify any method as symplectic regardless of its tableau.
-
-**Implication for the earlier recommendation.** `pSymmetric` / `pMidpoint` / `pInternal`
-are *better behaved* than `pSymplectic` (which additionally fails or degrades in the
-singular gauge, `SingularException` at `s = 1`), but none of them is exactly symplectic on
-a genuinely nonlinear one-form. The honest statement is: **no construction in this family
-is known to be symplectic, by proof or by measurement.**
+and step 5 shows the projection is genuinely active on all of them: `Λ̃` ranges from
+2.4e-03 to 2.6e+01, never zero. So the round-off results on the first three remain an
+unexplained empirical regularity, not a consequence of the linear-`ϑ` criterion. What is
+established is the negative half: on `MasslessChargedParticle`, where no component of `ϑ`
+is affine, every method drifts.
 
 #### What the proof would need
 

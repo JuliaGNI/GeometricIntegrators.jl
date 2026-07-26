@@ -47,7 +47,9 @@ using GeometricIntegrators
 using GeometricIntegrators.SPARK
 using GeometricProblems
 using GeometricProblems: LotkaVolterra2d, LotkaVolterra2dSingular,
-    MasslessChargedParticle, MasslessChargedParticleSingular
+    MasslessChargedParticle, MasslessChargedParticleSingular,
+    PointVortices, PointVorticesLinear
+using GeometricEquations: IDAEProblem
 using RungeKutta
 import GeometricIntegratorsBase
 
@@ -98,11 +100,35 @@ function mcp_problem(name, M)
         [1.0, 1.0], 0.1)
 end
 
+# The point-vortex modules ship no IDAEProblem, so one is assembled here from their
+# own ϑ, f and g plus the standard degenerate u and ϕ. PointVorticesLinear is the
+# decisive case: its ϑ is LINEAR in q, which is the criterion below.
+function pv_problem(name, M)
+    prms = M.default_parameters()
+    q0 = M.q₀
+    idae = function (q, T, h)
+        qq = collect(q)
+        u = (u, t, q, v, p, λ, params) -> (u .= λ; nothing)
+        ϕ = (ϕ, t, q, v, p, params) -> begin
+            Θ = zero(p)
+            M.point_vortices_ϑ(Θ, t, q, v, params)
+            ϕ .= p .- Θ
+            nothing
+        end
+        IDAEProblem(M.point_vortices_ϑ, M.point_vortices_f, u, M.point_vortices_g, ϕ,
+            (0.0, T), h, qq, M.ϑ(qq), zero(qq);
+            v̄ = M.point_vortices_v, parameters = prms)
+    end
+    Problem(name, idae, (t, q) -> M.ϑ(collect(q)), (t, q) -> zeros(0, 0), collect(q0), 0.1)
+end
+
 const PROBLEMS = [
     lv_problem("LotkaVolterra2d", LotkaVolterra2d),
     lv_problem("LotkaVolterra2dSingular", LotkaVolterra2dSingular),
     mcp_problem("MasslessChargedParticle", MasslessChargedParticle),
     mcp_problem("MasslessChargedParticleSingular", MasslessChargedParticleSingular),
+    pv_problem("PointVorticesLinear  [ϑ LINEAR]", PointVorticesLinear),
+    pv_problem("PointVortices", PointVortices),
 ]
 
 
@@ -168,8 +194,15 @@ function loop_integral(qs, ps, D)
     acc
 end
 
-circle(c, r, n) = [[c[1] + r * cos(2π * (i - 1) / n), c[2] + r * sin(2π * (i - 1) / n)]
-                   for i in 1:n]
+"loop of `n` points, a circle of radius `r` in the (q₁,q₂) plane through `c`"
+function circle(c, r, n)
+    map(1:n) do i
+        q = copy(c)
+        q[1] += r * cos(2π * (i - 1) / n)
+        q[2] += r * sin(2π * (i - 1) / n)
+        q
+    end
+end
 
 """
     advance(prob, method, nsteps, h, D)
@@ -405,9 +438,150 @@ function step5()
 end
 
 
-const STEPS = isempty(ARGS) ? ["1", "2", "3", "4", "5"] : ARGS
-"1" in STEPS && step1()
-"2" in STEPS && step2()
-"3" in STEPS && step3()
-"4" in STEPS && step4()
-"5" in STEPS && step5()
+
+
+# ---------------------------------------------------------------- step 6 ----
+# Is (★) really the leftover?  Measure it directly and compare with the observed defect.
+#
+# Restricted to the constraint manifold, the initial data is q₀ ∈ R^D and every stage
+# quantity is a function of q₀ (with p₀ = ϑ(q₀)). For D = 2 a two-form is a single
+# number, the coefficient of dq₀¹ ∧ dq₀². Writing J[f] for the Jacobian ∂f/∂q₀,
+#
+#     (dα ∧ dβ)₁₂ = Σ_μ ( ∂α^μ/∂q₀¹ ∂β^μ/∂q₀² - ∂α^μ/∂q₀² ∂β^μ/∂q₀¹ ) ,
+#
+# so the predicted leftover of the proof is
+#
+#     star = h · Σᵢ b⁴ᵢ (dΦ̃ᵢ ∧ dΛ̃ᵢ)₁₂
+#
+# and the quantity it is supposed to account for is
+#
+#     defect = (dp₁ ∧ dq₁)₁₂ - (dp₀ ∧ dq₀)₁₂ .
+#
+# If star ≈ defect the diagnosis is right and (★) is the condition to attack. If not,
+# the h² terms from the violated tableau conditions dominate instead.
+
+"stage quantities of one step as a function of q₀, for finite differencing"
+function stage_state(prob::Problem, m, q0, h)
+    pr = prob.idae(q0, h, h)
+    int = GeometricIntegrator(pr, m)
+    ss = GeometricIntegratorsBase.solutionstep(int, GeometricIntegratorsBase.initialstate(pr))
+    GeometricIntegratorsBase.reset!(ss, h)
+    GeometricIntegratorsBase.integrate!(ss, int)
+    C = GeometricIntegratorsBase.cache(int)
+    cur = GeometricIntegratorsBase.current(ss)
+    (Φ̃ = [copy(x) for x in C.Φp], Λ̃ = [copy(x) for x in C.Λp],
+     q = collect(cur.q), p = collect(cur.p))
+end
+
+"(dα ∧ dβ)₁₂ from the two Jacobian columns of α and β"
+wedge12(dα1, dα2, dβ1, dβ2) = sum(dα1 .* dβ2 .- dα2 .* dβ1)
+
+function star_vs_defect(prob::Problem, m, h; ε = 1e-5)
+    q0 = prob.centre
+    pert(k, sgn) = (q = copy(q0); q[k] += sgn * ε; q)
+    sp = [stage_state(prob, m, pert(k, +1), h) for k in 1:2]
+    sm = [stage_state(prob, m, pert(k, -1), h) for k in 1:2]
+
+    dΦ̃ = [[(sp[k].Φ̃[i] .- sm[k].Φ̃[i]) ./ (2ε) for k in 1:2] for i in eachindex(sp[1].Φ̃)]
+    dΛ̃ = [[(sp[k].Λ̃[i] .- sm[k].Λ̃[i]) ./ (2ε) for k in 1:2] for i in eachindex(sp[1].Λ̃)]
+    dq1 = [(sp[k].q .- sm[k].q) ./ (2ε) for k in 1:2]
+    dp1 = [(sp[k].p .- sm[k].p) ./ (2ε) for k in 1:2]
+
+    b4 = GeometricIntegrators.SPARK.tableau(m).q.β
+    star = h * sum(b4[i] * wedge12(dΦ̃[i][1], dΦ̃[i][2], dΛ̃[i][1], dΛ̃[i][2])
+                   for i in eachindex(dΦ̃))
+
+    # (dp₀ ∧ dq₀)₁₂ with p₀ = ϑ(q₀), computed by the same stencil
+    dϑ = [(prob.theta(0.0, pert(k, +1)) .- prob.theta(0.0, pert(k, -1))) ./ (2ε) for k in 1:2]
+    e1 = [1.0, 0.0]
+    e2 = [0.0, 1.0]
+    before = wedge12(dϑ[1], dϑ[2], e1, e2)
+    after = wedge12(dp1[1], dp1[2], dq1[1], dq1[2])
+    (star = star, defect = after - before, scale = abs(before))
+end
+
+function step6()
+    header("Step 6 — is (★) = h Σᵢ b⁴ᵢ dΦ̃ᵢ ∧ dΛ̃ᵢ the leftover?  (h = 0.2, ε = 1e-5)")
+    println("  'defect' is the measured one-step change of dp∧dq on the constraint manifold.")
+    println("  If star ≈ defect, (★) is the term to attack; if not, the h² terms dominate.")
+    sel = [("pSymplectic", TableauVSPARKGLRKpSymplectic),
+        ("pSymmetric", TableauVSPARKGLRKpSymmetric),
+        ("pMidpoint", TableauVSPARKGLRKpMidpoint),
+        ("pInternal", TableauVSPARKGLRKpInternal),
+        ("pLobattoIIIAIIIB", TableauVSPARKGLRKpLobattoIIIAIIIB)]
+    for prob in PROBLEMS
+        length(prob.centre) == 2 || continue   # the two-form bookkeeping assumes D = 2
+        sub(prob.name)
+        @printf("  %-30s %13s %13s %10s\n", "method", "star", "defect", "star/defect")
+        for (pname, ctor) in sel, s in 1:3
+            m = try ctor(s) catch; continue end
+            r = try
+                star_vs_defect(prob, m, 0.2)
+            catch
+                (star = NaN, defect = NaN, scale = NaN)
+            end
+            ratio = abs(r.defect) < 1e-14 ? NaN : r.star / r.defect
+            @printf("  %-30s %13.3e %13.3e %10.3f\n", "GLRK($s)$pname", r.star, r.defect, ratio)
+        end
+    end
+end
+
+
+
+
+# ---------------------------------------------------------------- step 7 ----
+# The criterion that actually explains the round-off results.
+#
+# If every component of ϑ is at most LINEAR in q, an unprojected variational
+# Runge-Kutta method already lands on the constraint manifold {p = ϑ(q)}: with
+# ϑ(q) = Cq + d and b̄ = b,
+#
+#     ϕ(qₙ₊₁,pₙ₊₁) = h Σᵢ bᵢ [ (Cᵀ - C) Vₙ,ᵢ - ∇H(Qₙ,ᵢ) ] ,
+#
+# which the stage equations annihilate. The projection is then inert, Λ̃ = 0, and every
+# Λ̃-carrying term in the wedge product drops out — so *any* projection built on such a
+# method is symplectic, whichever of the theorem's conditions it violates.
+#
+# This step verifies the premise directly: an unprojected VPRK on the IODE form.
+
+function step7()
+    header("Step 7 — does an unprojected variational RK preserve ϕ by itself?")
+    println("  Round-off ⇒ ϑ is (at most) linear in q, the projection is inert, and every")
+    println("  projection method built on this inner method is symplectic for free.")
+    cases = [
+        ("PointVorticesLinear  [ϑ LINEAR]", () -> PointVorticesLinear.iodeproblem(),
+            q -> PointVorticesLinear.ϑ(collect(q))),
+        ("PointVortices", () -> PointVortices.iodeproblem(),
+            q -> PointVortices.ϑ(collect(q))),
+        ("LotkaVolterra2d", () -> LotkaVolterra2d.iodeproblem(),
+            q -> LotkaVolterra2d.ϑ(0.0, collect(q))),
+        ("MasslessChargedParticle", () -> MasslessChargedParticle.iodeproblem(),
+            q -> MasslessChargedParticle.ϑ(0.0, collect(q), MCP_PARAMS)),
+        ("MasslessChargedParticleSingular", () -> MasslessChargedParticleSingular.iodeproblem(),
+            q -> MasslessChargedParticleSingular.ϑ(0.0, collect(q), MCP_PARAMS)),
+    ]
+    @printf("  %-34s %-16s %13s %13s\n", "problem", "method", "max|ϕ| 100st", "max|ϕ| 1000st")
+    for (name, mk, th) in cases, (mn, m) in [("VPRKGauss(2)", VPRKGauss(2)), ("VPRKGauss(3)", VPRKGauss(3))]
+        row = String[]
+        for n in (100, 1000)
+            v = try
+                pr = similar(mk(); timespan = (0.0, n * 0.1), timestep = 0.1)
+                sol = integrate(pr, m)
+                maximum(maximum(abs, collect(sol.p[i]) .- th(sol.q[i])) for i in eachindex(sol.t))
+            catch
+                NaN
+            end
+            push!(row, @sprintf("%13.2e", v))
+        end
+        @printf("  %-34s %-16s %s %s\n", name, mn, row[1], row[2])
+    end
+    println("\n  Note: none of the Lotka-Volterra or charged-particle one-forms is linear, so the")
+    println("  round-off results for those problems in steps 2-3 are NOT explained by this")
+    println("  criterion — see step 5, where the multiplier Λ̃ is nonzero throughout.")
+end
+
+
+const STEPS = isempty(ARGS) ? ["1", "2", "3", "4", "5", "6", "7"] : ARGS
+for k in ("1", "2", "3", "4", "5", "6", "7")
+    k in STEPS && getfield(Main, Symbol("step", k))()
+end
