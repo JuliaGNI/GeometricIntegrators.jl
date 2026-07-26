@@ -31,7 +31,8 @@
 # not polluted by finite differences.  Two independent checks tie the harness
 # down: the *unprojected* VPRK method must be canonically symplectic to round-off
 # (`vprk_canonical`), and for those schemes that GeometricIntegrators implements
-# one step must agree with the package's own integrators to round-off
+# one step must agree with the package's own integrators to round-off, for every
+# tableau the package tabulates and for both signs of R(∞)
 # (`report_package_comparison`).
 #
 # Correspondence with the methods of GeometricIntegrators
@@ -118,7 +119,7 @@
 # Usage:  julia --project=scripts scripts/projected_vprk_symplecticity.jl
 #
 # On a fresh checkout run  julia --project=scripts -e 'using Pkg; Pkg.instantiate()'
-# first.  A full run takes a few minutes, most of it in the nested automatic
+# first.  A full run takes about four minutes, most of it in the nested automatic
 # differentiation of the defect tables.
 
 module ProjectedVPRKSymplecticity
@@ -580,38 +581,46 @@ function packagebase(tabname)
 end
 
 """
-    report_package_comparison(prob, tab; h)
+    report_package_comparison(prob; h)
 
 Compare one step of the schemes implemented here against one step of the
-corresponding integrator of GeometricIntegrators.  This is what ties the verdicts
-of this script to the code the package actually ships: agreement at round-off
-means the equations solved here *are* the package's equations, so a symplecticity
-defect measured here is a defect of the shipped method.
+corresponding integrator of GeometricIntegrators, for every tableau the package
+tabulates.  This is what ties the verdicts of this script to the code the package
+actually ships: agreement at round-off means the equations solved here *are* the
+package's equations, so a symplecticity defect measured here is a defect of the
+shipped method.
+
+Both signs of R(∞) are covered -- GLRK1 and GLRK3 have R(∞) = -1, GLRK2 has
+R(∞) = +1 -- so the weights (RU₁, RU₂) are exercised rather than just their
+R(∞) = -1 special case, where several of them coincide.
 
 Only `q_{n+1}` is compared, since it is invariant under the different scaling of
 the multiplier (see the header).
 """
-function report_package_comparison(prob, tab; h=0.1)
-    base = packagebase(tab.name)
-    base === nothing && return
-    println("Agreement with the integrators of GeometricIntegrators (", prob.name, " / ", tab.name, ", h = ", h, ")")
+function report_package_comparison(prob; h=0.1)
+    println("Agreement with the integrators of GeometricIntegrators (", prob.name, ", h = ", h, ")")
     println("-"^90)
-    @printf("%-14s %-24s %14s %14s\n", "scheme", "package method", "‖Δq‖", "‖res‖ (here)")
+    @printf("%-8s %6s %-14s %-24s %11s %11s\n", "tableau", "R(∞)", "scheme", "package method", "‖Δq‖", "‖res‖ (here)")
     d = length(prob.q₀)
-    for (scheme, pkgname, _) in SCHEME_INFO
-        proj = packageprojection(scheme)
-        proj === nothing && continue
-        _, q, _, nr, ok = stepmap(prob, copy(prob.q₀), zeros(d), h, tab, scheme)
-        local qpkg
-        try
-            sol = GI.integrate(prob.iode(h), proj(base))
-            qpkg = collect(sol.q[end])
-        catch err
-            @printf("%-14s %-24s %14s %14.2e  (%s)\n", string(scheme), pkgname, "error", nr, string(typeof(err)))
-            continue
+    for tab in tableaus()
+        base = packagebase(tab.name)
+        base === nothing && continue        # SRK3 is not tabulated in the package
+        for (scheme, pkgname, _) in SCHEME_INFO
+            proj = packageprojection(scheme)
+            proj === nothing && continue
+            _, q, _, nr, ok = stepmap(prob, copy(prob.q₀), zeros(d), h, tab, scheme)
+            local qpkg
+            try
+                sol = GI.integrate(prob.iode(h), proj(base))
+                qpkg = collect(sol.q[end])
+            catch err
+                @printf("%-8s %+6.0f %-14s %-24s %11s %11.1e  (%s)\n", tab.name, tab.R∞,
+                    string(scheme), pkgname, "error", nr, string(typeof(err)))
+                continue
+            end
+            @printf("%-8s %+6.0f %-14s %-24s %11s %11.1e\n", tab.name, tab.R∞,
+                string(scheme), pkgname, ok ? @sprintf("%.2e", norm(q .- qpkg)) : "---", nr)
         end
-        @printf("%-14s %-24s %14s %14.2e\n", string(scheme), pkgname,
-            ok ? @sprintf("%.2e", norm(q .- qpkg)) : "---", nr)
     end
     println()
 end
@@ -1054,7 +1063,7 @@ function main()
         for tab in tableaus()
             report_defects(prob, tab)
         end
-        report_package_comparison(prob, tableaus()[1])
+        report_package_comparison(prob)
         report_convergence(prob, tableaus()[1])
         report_generalised_form(prob, tableaus()[1])
         report_midpoint_R1_obstruction(prob, tableaus()[1])
