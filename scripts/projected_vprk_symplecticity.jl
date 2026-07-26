@@ -28,78 +28,158 @@
 # GeometricIntegrators -- and evaluates the defect in the symplecticity
 # condition together with its order in h.  The step map is differentiated
 # exactly (implicit function theorem + ForwardDiff), so the reported defects are
-# not polluted by finite differences; the harness is validated by checking that
-# the *unprojected* VPRK method is canonically symplectic to round-off.
+# not polluted by finite differences.  Two independent checks tie the harness
+# down: the *unprojected* VPRK method must be canonically symplectic to round-off
+# (`vprk_canonical`), and for those schemes that GeometricIntegrators implements
+# one step must agree with the package's own integrators to round-off
+# (`report_package_comparison`).
+#
+# Correspondence with the methods of GeometricIntegrators
+# -------------------------------------------------------
+# The scheme names used here are those of the paper, *not* those of the package,
+# and the two do not line up one-to-one -- in particular `:symplectic` is not
+# `VPRKpSymplectic` (see `report_scheme_map`, which prints this table):
+#
+#   :standard      RU = (0,  1)   VPRKpStandard   = PostProjection
+#   :standard_Rinf RU = (0, R∞)   VPRKpSymplectic = StandardProjection(…, R∞)
+#   :symmetric     RU = (1, R∞)   VPRKpSymmetric  = SymmetricProjection
+#   :symplectic    RU = (1, R∞)   no counterpart in the package
+#   :midpoint      RU = (1, R∞)   no counterpart (ζ as printed in the paper)
+#   :midpoint_R1   RU = (1,  1)   no counterpart (the sign the proof requires)
+#   :midpoint_gi   RU = (1, R∞)   VPRKpMidpoint   = MidpointProjection
+#   :internal      internal stages  VPRKpInternal (see below)
+#
+# `VPRKpInternal` does not currently run: `InternalStageProjection` is a bare
+# struct without an integrator, the implementation in
+# `src/integrators/vprk/integrators_vprk_pinternal.jl` is not included anywhere
+# and refers to undefined names, and its tests are commented out.  The `:internal`
+# scheme below reproduces the equations of that legacy implementation (and of the
+# paper), so the verdict on it is a statement about the *method*, not about
+# anything executable today.
+#
+# Scaling of the multiplier.  The package uses the weights RU = (½, R∞/2)
+# (`_projection_weights` in `src/projections/common.jl`), this script uses
+# (1, R∞).  Since λ is an unknown of the step equations, the two differ only by
+# λ_script = 2 λ_package: the map q_n ↦ q_{n+1} is identical -- which
+# `report_package_comparison` confirms to round-off -- but the λ printed by
+# `report_degeneracy` is twice the package's.
 #
 # Results obtained with this script (massless charged particle, GLRK1; the two
 # Lotka-Volterra models are degenerate for this test, see `report_degeneracy`):
 #
-#   scheme       form            defect (h=0.2)  order   paper's claim    verdict
-#   standard     ω̄                     7.2e-08      4    not symplectic   confirmed
-#   symmetric    ω̄                     2.2e-10    ~4.5   pseudo-sympl.    confirmed
-#   symplectic   dp∧dq - dA∧dB         1.9e-16     --    symplectic       confirmed (exact)
-#   symplectic   ω_λ, mixed sign +     1.9e-16     --    --               exact after sign fix
-#   symplectic   ω_λ as printed        6.7e-05      3    --               printed sign is wrong
-#   midpoint     ω̄                     8.9e-06      3    SYMPLECTIC       REFUTED
-#   midpoint_R1  --                 unsolvable     --    --               ill-posed
-#   internal     ω̄                     8.9e-06      3    (empty section)  not symplectic
+#   scheme         form            defect (h=0.2)  order   paper's claim    verdict
+#   standard       ω̄                     7.2e-08      4    not symplectic   confirmed
+#   standard_Rinf  ω̄                     7.2e-08      4    --               = standard
+#   symmetric      ω̄                     2.2e-10      5    pseudo-sympl.    confirmed
+#   symplectic     dp∧dq - dA∧dB         1.9e-16     --    symplectic       confirmed (exact)
+#   symplectic     ω_λ, mixed sign +     1.9e-16     --    --               exact after sign fix
+#   symplectic     ω_λ as printed        6.7e-05      3    --               printed sign is wrong
+#   midpoint       ω̄                     8.9e-06      3    SYMPLECTIC       REFUTED
+#   midpoint_R1    --             rank deficient     --    symplectic       ill-posed
+#   midpoint_gi    ω̄                     8.9e-06      3    SYMPLECTIC       REFUTED
+#   internal       ω̄                     8.9e-06      3    (empty section)  not symplectic
+#
+# `:standard` and `:standard_Rinf` agree to the last digit, here and for every
+# tableau: for a post-projection with a single multiplier the factor R(∞) is
+# absorbed by λ ↦ R(∞) λ, so `VPRKpSymplectic` and `VPRKpStandard` are the same
+# map on Δ.  Likewise `:midpoint`, `:midpoint_gi` and `:internal` coincide for a
+# tableau with a midpoint stage -- for s = 1 their step equations are literally
+# identical -- which is why the three rows above are equal.
 #
 # The midpoint projection is the interesting case: its symplecticity proof needs
 # R(∞) = +1, while the requirement that the midpoint coincide with an internal
 # stage forces R(∞) = -1 (see `check_midpoint_stage_lemma` below).  The two
 # hypotheses are mutually exclusive, and with the sign that makes the method
-# solvable the symplecticity defect is O(h^3) per step.  Dropping the R(∞) factor
-# instead (as printed in the arXiv version) makes the step equations unsolvable.
+# solvable the symplecticity defect is O(h^3) per step, i.e. the method is
+# pseudo-symplectic of order two.  Keeping the R(∞) = +1 of the proof (the sign
+# printed in the arXiv version) does not rescue it either:
 #
-# For methods with a midpoint stage the multiplier λ -- and hence the defect -- is
-# governed by the same midpoint/trapezoidal discrepancy irrespective of the order
-# of the base method, which is why GLRK1 and SRK3 give nearly identical defects.
+#   * for a tableau with a midpoint stage (GLRK1, SRK3) -- the case the theorem is
+#     about -- the step map is not defined at all: λ drops out of every equation, so
+#     the Jacobian of the step equations is exactly rank deficient by d, and the
+#     remaining least-squares residual is O(h²), see `report_midpoint_R1_obstruction`;
+#   * for a tableau without one (GLRK3) the equations are solvable, but the defect is
+#     again O(h^3).
+#
+# The O(h³) defect is tied to the midpoint stage, not to the order of the base
+# method: with a midpoint stage the multiplier is governed by the
+# midpoint/trapezoidal discrepancy, so GLRK1 (order two) and SRK3 (order four for
+# the conditions checked here) give defects that agree to three digits.  Without
+# one, the defect follows the order p of the base method: the standard projection
+# gives O(h^{p+2}) (order 4 for GLRK1, ~6 for GLRK2, below round-off for GLRK3)
+# and the midpoint projection O(h^5) for GLRK2 and GLRK3.
+#
+# What the numbers do and do not establish.  All test problems have d = 2, where
+# ω̄ has a single independent component and symplecticity reduces to the scalar
+# condition  det(J) Ω̄₁₂(q_{n+1}) = Ω̄₁₂(q_n).  A defect that grows with h therefore
+# *refutes* a general symplecticity claim -- one counterexample suffices -- whereas
+# a defect at round-off is evidence for, not a proof of, symplecticity in general.
 #
 # Usage:  julia --project=scripts scripts/projected_vprk_symplecticity.jl
+#
+# On a fresh checkout run  julia --project=scripts -e 'using Pkg; Pkg.instantiate()'
+# first.  A full run takes a few minutes, most of it in the nested automatic
+# differentiation of the defect tables.
 
 module ProjectedVPRKSymplecticity
 
 using ForwardDiff
 using LinearAlgebra
 using Printf
+using Random
 
-using GeometricProblems.LotkaVolterra2d
-using GeometricProblems.LotkaVolterra2dSingular
-using GeometricProblems.MasslessChargedParticle
+# imported rather than `using`ed: the problem modules export the same names
+# (`ϑ`, `hamiltonian`, `iodeproblem`, …), and GeometricIntegrators exports names
+# that clash with the functions defined below (`reference`, `tableaus`, …)
+import GeometricIntegrators as GI
+
+import GeometricProblems.LotkaVolterra2d as LV2d
+import GeometricProblems.LotkaVolterra2dSingular as LV2dSingular
+import GeometricProblems.MasslessChargedParticle as MCP
 
 
 # ---------------------------------------------------------------------------
 # degenerate Lagrangian test problems
 # ---------------------------------------------------------------------------
 
-struct DegenerateProblem{TT,TH}
+"""
+A degenerate Lagrangian test problem  L = ϑ(q)⋅q̇ - H(q).  `iode(h)` returns the
+`IODEProblem` for a single step of size `h`, so that the schemes implemented here
+can be compared against the integrators of GeometricIntegrators.
+"""
+struct DegenerateProblem{TT,TH,TI}
     name::String
     ϑ::TT
     H::TH
     q₀::Vector{Float64}
+    iode::TI
 end
 
 function testproblems()
-    lv, lvs, mcp = LotkaVolterra2d, LotkaVolterra2dSingular, MasslessChargedParticle
-    par, pars, parm = lv.default_parameters(), lvs.default_parameters(), mcp.default_parameters()
+    par, pars, parm = LV2d.default_parameters(), LV2dSingular.default_parameters(), MCP.default_parameters()
     [
         DegenerateProblem("LotkaVolterra2d",
-            q -> lv.ϑ(0.0, q), q -> lv.hamiltonian(0.0, q, par), copy(lv.q₀)),
+            q -> LV2d.ϑ(0.0, q), q -> LV2d.hamiltonian(0.0, q, par), copy(LV2d.q₀),
+            h -> LV2d.iodeproblem(copy(LV2d.q₀); timespan=(0.0, h), timestep=h, parameters=par)),
         DegenerateProblem("LotkaVolterra2dSingular",
-            q -> lvs.ϑ(0.0, q), q -> lvs.hamiltonian(0.0, q, pars), copy(lvs.q₀)),
+            q -> LV2dSingular.ϑ(0.0, q), q -> LV2dSingular.hamiltonian(0.0, q, pars), copy(LV2dSingular.q₀),
+            h -> LV2dSingular.iodeproblem(copy(LV2dSingular.q₀); timespan=(0.0, h), timestep=h, parameters=pars)),
         # Both Lotka-Volterra models turn out to be degenerate for this test (see
         # `report_degeneracy`), so the massless charged particle of the same paper
         # is included as a discriminating example: there both components of ϑ are
         # nonlinear.
         DegenerateProblem("MasslessChargedParticle",
-            q -> mcp.ϑ(0.0, q, parm), q -> mcp.hamiltonian(0.0, q, parm), copy(mcp.q₀)),
+            q -> MCP.ϑ(0.0, q, parm), q -> MCP.hamiltonian(0.0, q, parm), copy(MCP.q₀),
+            h -> MCP.iodeproblem(copy(MCP.q₀); timespan=(0.0, h), timestep=h, parameters=parm)),
     ]
 end
 
 # φ(q,p) = p - ϑ(q);  the projection direction is
 # Ω^{-1} ∇φ^T λ = (φ_p^T λ, -φ_q^T λ) = (λ, ∇ϑ(q)^T λ).
 # `fϑ(prob, q, v)` returns (∇ϑ(q)^T v)_i = ∂ϑ_k/∂q^i v^k, computed as a
-# gradient so that it nests cheaply inside further differentiation.
+# gradient so that it nests cheaply inside further differentiation.  This is the
+# same contraction as the force `f` of the IODE and as the `g` that
+# GeometricProblems hands to the projection methods.
 fϑ(prob, q, v) = ForwardDiff.gradient(x -> dot(prob.ϑ(x), v), q)
 ∇H(prob, q) = ForwardDiff.gradient(prob.H, q)
 
@@ -139,9 +219,16 @@ end
 Build a VPRK tableau from `(a, b)`.  The partner coefficients follow from the
 symplecticity conditions  b_i ā_ij + b_j a_ji = b_i b_j,  b̄ = b, and
 R(∞) = 1 - bᵀA⁻¹e is computed rather than tabulated.
+
+`A` must be invertible: both R(∞) and the midpoint-stage lemma of
+`check_midpoint_stage_lemma` are meaningless otherwise, which excludes the
+Lobatto IIIA family, whose first row vanishes.  Invertibility is tested with
+`rank` rather than with `det`, which is uninformative for badly scaled tableaus.
 """
 function VPRKTableau(name, a, b)
     s = length(b)
+    @assert all(!iszero, b) "the weights b of $name must not vanish"
+    @assert rank(a) == s "the coefficient matrix A of $name must be invertible"
     ā = [b[j] * (1 - a[j, i] / b[i]) for i in 1:s, j in 1:s]
     R∞ = 1 - dot(b, a \ ones(s))
     m = 0
@@ -168,6 +255,33 @@ function tableaus()
     ]
 end
 
+"""
+Order of the tableau `(a, b)`, from the classical order conditions up to order
+four.  Used to validate the tableaus -- in contrast to the symplecticity
+condition  b_i ā_ij + b_j a_ji = b_i b_j,  which the `VPRKTableau` constructor
+imposes by construction and which therefore cannot fail.
+"""
+function tableau_order(a, b)
+    s = length(b)
+    c = a * ones(s)
+    conditions = [
+        [isapprox(sum(b), 1; atol=1e-12)],
+        [isapprox(dot(b, c), 1 / 2; atol=1e-12)],
+        [isapprox(dot(b, c .^ 2), 1 / 3; atol=1e-12),
+            isapprox(dot(b, a * c), 1 / 6; atol=1e-12)],
+        [isapprox(dot(b, c .^ 3), 1 / 4; atol=1e-12),
+            isapprox(dot(b, c .* (a * c)), 1 / 8; atol=1e-12),
+            isapprox(dot(b, a * (c .^ 2)), 1 / 12; atol=1e-12),
+            isapprox(dot(b, a * (a * c)), 1 / 24; atol=1e-12)],
+    ]
+    p = 0
+    for (k, cond) in enumerate(conditions)
+        all(cond) || break
+        p = k
+    end
+    p
+end
+
 
 # ---------------------------------------------------------------------------
 # projection schemes
@@ -184,26 +298,46 @@ end
 # and differ only in the weights (RU₁, RU₂), the evaluation points (ζ₁, ζ₂) and
 # whether the pre- and post-multipliers λ₁, λ₂ are the same variable.
 #
-#   :standard    RU = (0,  1 ),  ζ₂ = z_{n+1}
-#   :symmetric   RU = (1, R∞),  ζ₁ = z_n, ζ₂ = z_{n+1},          λ₁ = λ₂ = λ_{n+1/2}
-#   :symplectic  RU = (1, R∞),  ζ₁ = z_n, ζ₂ = z_{n+1},          λ₁ = λ_n, λ₂ = λ_{n+1}
-#   :midpoint    RU = (1, R∞),  ζ₁ = ζ₂ = ½(z̄_n + z̄_{n+1}),      λ₁ = λ₂ = λ_{n+1/2}
-#   :midpoint_R1 as :midpoint but with RU₂ = +1 (the sign the proof of the paper
-#                requires, and the one printed in the arXiv version) -- unsolvable
-#   :midpoint_gi as :midpoint but ζ = ½(z_n + z_{n+1}), i.e. the midpoint of the
-#                *projected* points, as implemented in GeometricIntegrators
+#   :standard      RU = (0,  1),  ζ₂ = z_{n+1}
+#   :standard_Rinf RU = (0, R∞),  ζ₂ = z_{n+1};  the package's `VPRKpSymplectic`.
+#                  Included to make that correspondence checkable; since λ is an
+#                  unknown, this is the same map as :standard with λ ↦ R(∞) λ.
+#   :symmetric     RU = (1, R∞),  ζ₁ = z_n, ζ₂ = z_{n+1},        λ₁ = λ₂ = λ_{n+1/2}
+#   :symplectic    RU = (1, R∞),  ζ₁ = z_n, ζ₂ = z_{n+1},        λ₁ = λ_n, λ₂ = λ_{n+1}
+#   :midpoint      RU = (1, R∞),  ζ₁ = ζ₂ = ½(z̄_n + z̄_{n+1}),    λ₁ = λ₂ = λ_{n+1/2}
+#   :midpoint_R1   as :midpoint but with RU₂ = +1 (the sign the proof of the paper
+#                  requires, and the one printed in the arXiv version) -- unsolvable
+#   :midpoint_gi   as :midpoint but ζ = ½(z_n + z_{n+1}), i.e. the midpoint of the
+#                  *projected* points, as implemented in GeometricIntegrators
 #
 # The internal projection (`:internal`) perturbs the internal stages instead of
 # the endpoints and is handled separately.
 
-const ENDPOINT_SCHEMES = (:standard, :symmetric, :symplectic, :midpoint, :midpoint_R1, :midpoint_gi)
-const ALL_SCHEMES = (ENDPOINT_SCHEMES..., :internal)
+"""
+The schemes, the method of GeometricIntegrators each of them corresponds to, and
+the claim the paper makes about it.  Single source of truth for `ALL_SCHEMES`, for
+the table printed by `report_scheme_map` and for the package cross-check.
+"""
+const SCHEME_INFO = (
+    (:standard, "VPRKpStandard", "not symplectic"),
+    (:standard_Rinf, "VPRKpSymplectic", "--"),
+    (:symmetric, "VPRKpSymmetric", "pseudo-symplectic"),
+    (:symplectic, "--", "symplectic on M × Rᵈ"),
+    (:midpoint, "--", "symplectic"),
+    (:midpoint_R1, "--", "symplectic (proof's sign)"),
+    (:midpoint_gi, "VPRKpMidpoint", "symplectic"),
+    (:internal, "VPRKpInternal (not functional)", "(empty section)"),
+)
+
+const ALL_SCHEMES = Tuple(info[1] for info in SCHEME_INFO)
 
 extended(scheme) = scheme === :symplectic          # map on M × R^d instead of M
-claimed(scheme) = scheme === :symplectic || scheme === :midpoint || scheme === :midpoint_R1
+
+midpointscheme(scheme) = scheme in (:midpoint, :midpoint_R1, :midpoint_gi)
 
 function weights(scheme, R∞)
     scheme === :standard && return (0.0, 1.0)
+    scheme === :standard_Rinf && return (0.0, R∞)
     scheme === :midpoint_R1 && return (1.0, 1.0)
     return (1.0, R∞)
 end
@@ -259,7 +393,7 @@ function residual(x, qₙ, λₙ, h, tab::VPRKTableau, prob, scheme::Symbol)
     else
         qₙ₊₁
     end
-    ζ₁ = (scheme === :midpoint || scheme === :midpoint_R1 || scheme === :midpoint_gi) ? ζ : qₙ
+    ζ₁ = midpointscheme(scheme) ? ζ : qₙ
     pₙ₊₁ = p̄ₙ₊₁ .+ (h * RU₂) .* fϑ(prob, ζ, λ)
 
     res = vcat([prob.ϑ(Q[i]) .- p̄ₙ .- h .* sum(tab.ā[i, j] .* F[j] for j in 1:s) for i in 1:s]...,
@@ -289,8 +423,14 @@ function initialguess(prob, qₙ, h, tab, scheme)
     x
 end
 
+# A step is accepted only well below the smallest defect that is reported as
+# significant, so that a stalling solve cannot masquerade as an O(h³) defect; the
+# residual is carried along and printed by `report_defects`.
+const NEWTON_TOL = 1e-13
+const NEWTON_ACCEPT = 1e-12
+
 "Newton solver with exact (ForwardDiff) Jacobian; returns `(x, ‖res‖, converged)`."
-function newton(prob, qₙ, λₙ, h, tab, scheme; itmax=100, tol=1e-13)
+function newton(prob, qₙ, λₙ, h, tab, scheme; itmax=100, tol=NEWTON_TOL)
     x = initialguess(prob, qₙ, h, tab, scheme)
     f = y -> residual(y, qₙ, λₙ, h, tab, prob, scheme)[1]
     nr = norm(f(x))
@@ -316,7 +456,7 @@ function newton(prob, qₙ, λₙ, h, tab, scheme; itmax=100, tol=1e-13)
         end
         α < 1e-6 && break
     end
-    x, nr, nr < 1e-10
+    x, nr, nr < NEWTON_ACCEPT
 end
 
 """
@@ -395,15 +535,17 @@ function vprk_canonical(prob, z, h, tab)
         Δ = ForwardDiff.jacobian(y -> res(y, z)[1], V) \ res(V, z)[1]
         all(isfinite, Δ) || break
         α = 1.0
+        improved = false
         for _ in 1:30
             Vt = V .- α .* Δ
             nt = norm(res(Vt, z)[1])
             if isfinite(nt) && nt < nr
-                V, nr = Vt, nt
+                V, nr, improved = Vt, nt, true
                 break
             end
             α /= 2
         end
+        improved || break
     end
     isfinite(nr) && nr < 1e-10 || return NaN, nr
     Fx = ForwardDiff.jacobian(y -> res(y, z)[1], V)
@@ -412,7 +554,66 @@ function vprk_canonical(prob, z, h, tab)
     gz = ForwardDiff.jacobian(y -> res(V, y)[2], z)
     J = gz .+ gx * (-(Fx \ Fz))
     Ω = [zeros(d, d) I(d); -I(d) zeros(d, d)]
-    norm(transpose(J) * Ω * J .- Ω), norm(res(V, z)[1])
+    norm(transpose(J) * Ω * J .- Ω), nr
+end
+
+
+# ---------------------------------------------------------------------------
+# validation of the harness: agreement with the integrators of the package
+# ---------------------------------------------------------------------------
+
+"the projection method of GeometricIntegrators corresponding to `scheme`, or `nothing`"
+function packageprojection(scheme)
+    scheme === :standard && return GI.PostProjection
+    scheme === :standard_Rinf && return GI.SymplecticProjection
+    scheme === :symmetric && return GI.SymmetricProjection
+    scheme === :midpoint_gi && return GI.MidpointProjection
+    return nothing
+end
+
+"the VPRK method of GeometricIntegrators corresponding to `tabname`, or `nothing`"
+function packagebase(tabname)
+    tabname == "GLRK1" && return GI.VPRKGauss(1)
+    tabname == "GLRK2" && return GI.VPRKGauss(2)
+    tabname == "GLRK3" && return GI.VPRKGauss(3)
+    return nothing      # SRK3 is not tabulated in the package
+end
+
+"""
+    report_package_comparison(prob, tab; h)
+
+Compare one step of the schemes implemented here against one step of the
+corresponding integrator of GeometricIntegrators.  This is what ties the verdicts
+of this script to the code the package actually ships: agreement at round-off
+means the equations solved here *are* the package's equations, so a symplecticity
+defect measured here is a defect of the shipped method.
+
+Only `q_{n+1}` is compared, since it is invariant under the different scaling of
+the multiplier (see the header).
+"""
+function report_package_comparison(prob, tab; h=0.1)
+    base = packagebase(tab.name)
+    base === nothing && return
+    println("Agreement with the integrators of GeometricIntegrators (", prob.name, " / ", tab.name, ", h = ", h, ")")
+    println("-"^90)
+    @printf("%-14s %-24s %14s %14s\n", "scheme", "package method", "‖Δq‖", "‖res‖ (here)")
+    d = length(prob.q₀)
+    for (scheme, pkgname, _) in SCHEME_INFO
+        proj = packageprojection(scheme)
+        proj === nothing && continue
+        _, q, _, nr, ok = stepmap(prob, copy(prob.q₀), zeros(d), h, tab, scheme)
+        local qpkg
+        try
+            sol = GI.integrate(prob.iode(h), proj(base))
+            qpkg = collect(sol.q[end])
+        catch err
+            @printf("%-14s %-24s %14s %14.2e  (%s)\n", string(scheme), pkgname, "error", nr, string(typeof(err)))
+            continue
+        end
+        @printf("%-14s %-24s %14s %14.2e\n", string(scheme), pkgname,
+            ok ? @sprintf("%.2e", norm(q .- qpkg)) : "---", nr)
+    end
+    println()
 end
 
 
@@ -428,24 +629,30 @@ tableau equals bᵀ/2, then
     e_mᵀ A = ½ bᵀ  ⟹  bᵀA⁻¹ = 2 e_mᵀ  ⟹  bᵀA⁻¹e = 2  ⟹  R(∞) = 1 - bᵀA⁻¹e = -1 ,
 
 so the midpoint-stage property and the R(∞) = +1 required by the proof are
-mutually exclusive.  The same holds for the partner tableau Ā.
+mutually exclusive.  The same holds for the partner tableau Ā.  The argument needs
+`A` invertible, which the `VPRKTableau` constructor enforces.
+
+Also prints the order of each tableau, computed from the order conditions, so that
+the tableaus themselves are validated rather than assumed.
 """
 function check_midpoint_stage_lemma()
     println("Midpoint-stage property vs. R(∞)")
-    println("-"^78)
-    @printf("%-8s %5s %10s %10s %14s %14s\n", "tableau", "s", "R(∞)[A]", "R(∞)[Ā]", "row m of A=b/2", "row m of Ā=b/2")
+    println("-"^90)
+    @printf("%-8s %5s %8s %10s %10s %14s %14s\n", "tableau", "s", "order≥", "R(∞)[A]", "R(∞)[Ā]", "row m of A=b/2", "row m of Ā=b/2")
     for tab in tableaus()
         s = length(tab.b)
         R̄∞ = 1 - dot(tab.b, tab.ā \ ones(s))
         m = tab.midpointstage
+        p = tableau_order(tab.a, tab.b)
         rowa = m > 0 ? "yes (m=$m)" : "no"
         rowā = m > 0 && isapprox(tab.ā[m, :], tab.b ./ 2; atol=1e-12) ? "yes (m=$m)" : "no"
-        @printf("%-8s %5d %10.4f %10.4f %14s %14s\n", tab.name, s, tab.R∞, R̄∞, rowa, rowā)
-        # symplecticity conditions of the tableau
-        @assert all(isapprox(tab.b[i] * tab.ā[i, j] + tab.b[j] * tab.a[j, i], tab.b[i] * tab.b[j]; atol=1e-12)
-                    for i in 1:s, j in 1:s)
+        @printf("%-8s %5d %8d %10.4f %10.4f %14s %14s\n", tab.name, s, p, tab.R∞, R̄∞, rowa, rowā)
+        # the tableau is of at least order two and Ā shares the abscissae of A
+        @assert p ≥ 2 "$(tab.name) is not of order two"
+        @assert isapprox(tab.ā * ones(s), tab.a * ones(s); atol=1e-12) "Ā and A of $(tab.name) must share the abscissae c"
         m > 0 && @assert isapprox(tab.R∞, -1.0; atol=1e-12) "midpoint stage must force R(∞) = -1"
     end
+    println("The order conditions are checked up to order four only, so `order≥` is a lower bound.")
     println()
 end
 
@@ -466,15 +673,39 @@ function orders(defects)
     o
 end
 
+"all order estimates of a sequence, so that a single ratio cannot be mistaken for the order"
+function orderstring(defects)
+    oo = filter(isfinite, orders(defects))
+    isempty(oo) && return "unsolvable"
+    join((@sprintf("%.2f", o) for o in oo), " ")
+end
+
+function report_scheme_map()
+    println("Correspondence with GeometricIntegrators and the claims of the paper")
+    println("-"^90)
+    @printf("%-14s %-9s %-32s %s\n", "scheme", "RU", "package method", "paper's claim")
+    for (scheme, pkgname, claim) in SCHEME_INFO
+        ru = if scheme === :internal
+            "internal"
+        else
+            RU₁, RU₂ = weights(scheme, -1.0)     # shown for a tableau with R(∞) = -1
+            @sprintf("(%.0f,%+.0f)", RU₁, RU₂)
+        end
+        @printf("%-14s %-9s %-32s %s\n", string(scheme), ru, pkgname, claim)
+    end
+    println("RU is shown for R(∞) = -1; the multiplier of this script is twice the package's (see header).")
+    println()
+end
+
 """
 Reference point for the Jacobian test: one step of the corresponding method from
 the initial condition of the problem, so that q and λ lie on an actual
-trajectory (λ = O(h) rather than an arbitrary value).
+trajectory (λ = O(h) rather than an arbitrary value).  Returns `(q, λ, ‖res‖)`.
 """
 function refpoint(prob, h, tab, scheme)
     qₙ, λₙ = copy(prob.q₀), zeros(length(prob.q₀))
-    _, q, λ, _, ok = stepmap(prob, qₙ, λₙ, h, tab, scheme)
-    ok ? (q, λ) : (qₙ, λₙ)
+    _, q, λ, nr, ok = stepmap(prob, qₙ, λₙ, h, tab, scheme)
+    ok ? (q, λ, nr) : (qₙ, λₙ, nr)
 end
 
 """
@@ -495,15 +726,19 @@ M × R^d.  This routine evaluates *both* sides of that identity directly as
     (an algebra slip in the paper), from
   * the identity itself failing (the method is not symplectic in that sense).
 
-Returns `(defect of the identity, defect of ω_λ preservation)`, both relative.
+Returns `(defect of the identity, defect of ω_λ with the corrected sign, defect of
+ω_λ as printed)`, all relative.  The first two are not independent results:
+assembling dp∧dq - dA∧dB by hand yields precisely the matrix
+`Omega_lambda(…; mixedsign = +1)`, so their agreement is a consistency check on
+that assembly, and it is the third number that carries the information.
 """
 function check_generalised_form(prob, tab, h)
     d = length(prob.q₀)
-    qₙ, λₙ = refpoint(prob, h, tab, :symplectic)
+    qₙ, λₙ, _ = refpoint(prob, h, tab, :symplectic)
     J, qₙ₊₁, λₙ₊₁, _, ok = stepmap(prob, qₙ, λₙ, h, tab, :symplectic)
-    ok || return NaN, NaN
+    ok || return NaN, NaN, NaN
 
-    # gradients (as row vectors on the 4-dimensional space of (q_n, λ_n))
+    # gradients (as row vectors on the 2d-dimensional space of (q_n, λ_n))
     E = Matrix{Float64}(I, 2d, 2d)
     gq(i, which) = which === :n ? E[i, :] : J[i, :]
     gλ(k, which) = which === :n ? E[d+k, :] : J[d+k, :]
@@ -543,12 +778,13 @@ end
 
 function report_generalised_form(prob, tab)
     println("Symplectic projection: exact identity and the two signs of ω_λ (", tab.name, ")")
-    println("-"^78)
+    println("-"^90)
     @printf("%-8s %20s %20s %20s\n", "h", "identity dp∧dq-dA∧dB", "ω_λ corrected sign", "ω_λ printed sign")
     for h in [0.2, 0.1, 0.05, 0.025]
         a, b, c = check_generalised_form(prob, tab, h)
         @printf("%-8s %20.3e %20.3e %20.3e\n", string(h), a, b, c)
     end
+    println("The first two columns are the same matrix assembled in two ways (see the docstring).")
     println()
 end
 
@@ -569,16 +805,22 @@ constraint component, so λ = (0, λ²), while ϑ₂ is affine (ϑ₂ = q₁ res
 Every projection method is then exactly symplectic on these problems -- including
 the standard projection, which is provably not symplectic in general.  Such
 problems therefore cannot be used to test symplecticity.
+
+The second criterion is specific to d = 2, where dλ^i∧dλ^j has a single
+independent component.  Affineness of ϑ_k is judged from the largest Hessian norm
+over a few points around q₀ rather than from its value at q₀ alone.
 """
-function report_degeneracy(prob, tab; h=0.1)
+function report_degeneracy(prob, tab; h=0.1, nsamples=5)
     d = length(prob.q₀)
+    @assert d == 2 "the second degeneracy criterion is derived for d = 2"
     x, nr, ok = newton(prob, prob.q₀, zeros(d), h, tab, :standard)
     _, _, λ = residual(x, prob.q₀, zeros(d), h, tab, prob, :standard)
-    hess = [norm(ForwardDiff.hessian(y -> prob.ϑ(y)[k], prob.q₀)) for k in 1:d]
+    points = [prob.q₀, (prob.q₀ .+ 0.1 .* randn(d) for _ in 2:nsamples)...]
+    hess = [maximum(norm(ForwardDiff.hessian(y -> prob.ϑ(y)[k], q)) for q in points) for k in 1:d]
     active = [abs(λ[k]) > 1e-10 for k in 1:d]
     kills2 = all(!active[k] || hess[k] < 1e-12 for k in 1:d)
     kills1 = count(active) <= 1
-    @printf("%-26s λ = %-26s ‖∂²ϑ_k‖ = %-22s %s\n", prob.name,
+    @printf("%-26s λ = %-26s max‖∂²ϑ_k‖ = %-18s %s\n", prob.name,
         string(round.(λ; sigdigits=3)), string(round.(hess; sigdigits=3)),
         (kills1 && kills2) ? "DEGENERATE (defect vanishes structurally)" : "discriminating")
     ok || @printf("%-26s (warning: step did not converge, ‖res‖ = %.2e)\n", "", nr)
@@ -587,26 +829,26 @@ end
 function report_defects(prob, tab)
     @printf("%s / %s   (R(∞) = %+.0f%s)\n", prob.name, tab.name, tab.R∞,
         tab.midpointstage > 0 ? ", midpoint stage m=$(tab.midpointstage)" : "")
-    println("-"^78)
-    @printf("%-13s %-9s", "scheme", "form")
+    println("-"^118)
+    @printf("%-14s %-4s", "scheme", "form")
     for h in STEPSIZES
         @printf("%11s", "h=$h")
     end
-    @printf("   %s\n", "order")
+    @printf("   %-24s %10s\n", "orders", "max‖res‖")
     for scheme in ALL_SCHEMES
         defects = Float64[]
+        residuals = Float64[]
         for h in STEPSIZES
-            q, λ = refpoint(prob, h, tab, scheme)
-            d, _ = defect(prob, q, λ, h, tab, scheme)
-            push!(defects, d)
+            q, λ, nr₁ = refpoint(prob, h, tab, scheme)
+            dfc, nr₂ = defect(prob, q, λ, h, tab, scheme)
+            push!(defects, dfc)
+            push!(residuals, max(nr₁, nr₂))
         end
-        o = orders(defects)
-        @printf("%-13s %-9s", string(scheme), extended(scheme) ? "ω_λ" : "ω̄")
-        for d in defects
-            isfinite(d) ? @printf("%11.2e", d) : @printf("%11s", "---")
+        @printf("%-14s %-4s", string(scheme), extended(scheme) ? "ω_λ" : "ω̄")
+        for dfc in defects
+            isfinite(dfc) ? @printf("%11.2e", dfc) : @printf("%11s", "---")
         end
-        oo = filter(isfinite, o)
-        @printf("   %s\n", isempty(oo) ? "unsolvable" : @sprintf("%.2f", last(oo)))
+        @printf("   %-24s %10.1e\n", orderstring(defects), maximum(residuals))
     end
     println()
 end
@@ -614,9 +856,11 @@ end
 """
 Reference solution of the reduced Euler-Lagrange equations Ω̄(q) q̇ = ∇H(q) by
 classical Runge-Kutta.  Also validates that the projected schemes converge to
-the *correct* dynamics, not merely to something.
+the *correct* dynamics, not merely to something.  With `n = 20000` the error of
+the reference is far below the errors it is compared against, at a tenth of the
+cost of the nested automatic differentiation of a longer run.
 """
-function reference(prob, T; n=200000)
+function reference(prob, T; n=20000)
     q = copy(prob.q₀)
     dt = T / n
     for _ in 1:n
@@ -631,13 +875,13 @@ end
 
 function report_convergence(prob, tab)
     println("Convergence to the exact flow (global error at T = 1, ", tab.name, ")")
-    println("-"^78)
+    println("-"^90)
     qref = reference(prob, 1.0)
-    @printf("%-13s", "scheme")
+    @printf("%-14s", "scheme")
     for h in [0.1, 0.05, 0.025]
         @printf("%13s", "h=$h")
     end
-    @printf("   %s\n", "order")
+    @printf("   %s\n", "orders")
     for scheme in ALL_SCHEMES
         errs = Float64[]
         for h in [0.1, 0.05, 0.025]
@@ -652,50 +896,95 @@ function report_convergence(prob, tab)
             end
             push!(errs, good ? norm(q .- qref) : NaN)
         end
-        o = orders(errs)
-        @printf("%-13s", string(scheme))
+        @printf("%-14s", string(scheme))
         for e in errs
             isfinite(e) ? @printf("%13.3e", e) : @printf("%13s", "---")
         end
-        oo = filter(isfinite, o)
-        @printf("   %s\n", isempty(oo) ? "unsolvable" : @sprintf("%.2f", last(oo)))
+        @printf("   %s\n", orderstring(errs))
     end
     println()
 end
 
 """
-Demonstrate that the R(∞) = +1 midpoint projection (the sign required by the
-symplecticity proof) has no solution: with that sign the perturbation cancels
-out of the midpoint,  z̄_{n+1/2} = ½(z_n + z_{n+1}),  so the constraint that
-holds automatically at the internal stage degenerates into
+    lsqsolve(prob, qₙ, h, tab, scheme; itmax)
+
+Damped Gauss-Newton on the least-squares problem  min ‖res(x)‖,  taking the
+minimum-norm step `pinv(J) res` so that a singular Jacobian is handled rather than
+hit as an error.  Returns `(x, ‖res‖, singular values of J at x)`.  Deterministic:
+no random restarts are involved.
+"""
+function lsqsolve(prob, qₙ, h, tab, scheme; itmax=200)
+    d = length(qₙ)
+    f = y -> residual(y, qₙ, zeros(d), h, tab, prob, scheme)[1]
+    x = initialguess(prob, qₙ, h, tab, scheme)
+    nr = norm(f(x))
+    for _ in 1:itmax
+        J = ForwardDiff.jacobian(f, x)
+        Δ = pinv(J; rtol=1e-8) * f(x)
+        all(isfinite, Δ) || break
+        α, improved = 1.0, false
+        for _ in 1:40
+            xt = x .- α .* Δ
+            nt = norm(f(xt))
+            if isfinite(nt) && nt < nr
+                x, nr, improved = xt, nt, true
+                break
+            end
+            α /= 2
+        end
+        improved || break
+    end
+    x, nr, svdvals(ForwardDiff.jacobian(f, x))
+end
+
+"number of singular values that vanish relative to the largest one"
+rankdeficiency(σ; rtol=1e-10) = count(<(rtol * maximum(σ)), σ)
+
+"""
+Demonstrate that the R(∞) = +1 midpoint projection -- the sign the symplecticity
+proof requires -- has no solution *when the midpoint coincides with an internal
+stage*, which is precisely the case the theorem is about.  With that sign the
+perturbation cancels out of the midpoint,  z̄_{n+1/2} = ½(z_n + z_{n+1}),  so the
+constraint that holds automatically at the internal stage degenerates into
 
     ½ (ϑ(q_n) + ϑ(q_{n+1})) = ϑ(½ (q_n + q_{n+1})) ,
 
-a condition that involves neither λ nor H and is generically violated.  The
-irreducible residual of the step equations equals 2κ with
-κ = ϑ(q_mid) - ½(ϑ(q_n) + ϑ(q_{n+1})).
+a condition that involves neither λ nor H and is generically violated.
+
+Two independent pieces of evidence are reported.  The decisive one is structural
+and needs no solver: the Jacobian of the step equations is *exactly* rank deficient
+by d, since λ has dropped out of every equation, so the step map is not defined no
+matter how the equations are solved.  The second is quantitative: the least-squares
+residual that remains after `lsqsolve` is a step-size-independent fraction of 2κ,
+where κ = ϑ(q_mid) - ½(ϑ(q_n) + ϑ(q_{n+1})) is the discrepancy that cannot be
+absorbed (≈ 0.41 for this tableau, the same fraction for all three problems and all
+step sizes -- the least-squares projection distributes the inconsistency over the
+equations rather than leaving it in one), and it scales like h² exactly as 2κ does.
+A seeded multi-start search is included to show that the least-squares value is not
+merely a poor local minimum; it never improves on it.
+
+For a tableau *without* a midpoint stage the degeneracy does not arise: the
+Jacobian is only nearly singular, the equations are solvable, and `report_defects`
+then shows an O(h³) symplecticity defect instead.
 """
-function report_midpoint_R1_obstruction(prob, tab; ntrials=60)
+function report_midpoint_R1_obstruction(prob, tab; ntrials=24, seed=1234)
+    Random.seed!(seed)
     println("Solvability of the midpoint projection with the R(∞) = +1 sign")
-    println("-"^78)
-    @printf("%-8s %14s %14s %14s\n", "h", "best ‖res‖", "|2κ| there", "‖res‖ (R(∞)=-1)")
+    println("-"^102)
+    @printf("%-8s %12s %8s %14s %14s %14s %14s\n", "h", "σ_min/σ_max", "rank def", "least-sq ‖res‖",
+        "$(ntrials) starts", "|2κ| there", "‖res‖ (R(∞)=-1)")
     d = length(prob.q₀)
     for h in [0.2, 0.1, 0.05]
-        best, bq = Inf, nothing
+        xls, nrls, σ = lsqsolve(prob, prob.q₀, h, tab, :midpoint_R1)
+        best, bq = nrls, residual(xls, prob.q₀, zeros(d), h, tab, prob, :midpoint_R1)[2]
         for t in 1:ntrials
-            x = initialguess(prob, prob.q₀, h, tab, :midpoint_R1) .+ (t == 1 ? 0.0 : 0.3) .* randn(nunknowns(:midpoint_R1, length(tab.b), d))
+            x = initialguess(prob, prob.q₀, h, tab, :midpoint_R1) .+ 0.3 .* randn(nunknowns(:midpoint_R1, length(tab.b), d))
             f = y -> residual(y, prob.q₀, zeros(d), h, tab, prob, :midpoint_R1)[1]
             nr = norm(f(x))
             for _ in 1:80
-                J = ForwardDiff.jacobian(f, x)
-                Δ = try
-                    J \ f(x)
-                catch
-                    break
-                end
+                Δ = pinv(ForwardDiff.jacobian(f, x); rtol=1e-8) * f(x)
                 all(isfinite, Δ) || break
-                α = 1.0
-                improved = false
+                α, improved = 1.0, false
                 for _ in 1:25
                     xt = x .- α .* Δ
                     nt = norm(f(xt))
@@ -714,8 +1003,10 @@ function report_midpoint_R1_obstruction(prob, tab; ntrials=60)
         end
         κ = prob.ϑ((prob.q₀ .+ bq) ./ 2) .- (prob.ϑ(prob.q₀) .+ prob.ϑ(bq)) ./ 2
         _, nrm, _ = newton(prob, prob.q₀, zeros(d), h, tab, :midpoint)
-        @printf("%-8s %14.3e %14.3e %14.3e\n", string(h), best, norm(2 .* κ), nrm)
+        @printf("%-8s %12.3e %8d %14.3e %14.3e %14.3e %14.3e\n", string(h),
+            minimum(σ) / maximum(σ), rankdeficiency(σ), nrls, best, norm(2 .* κ), nrm)
     end
+    println("A rank deficiency of d = $(d) means λ has dropped out of every equation.")
     println()
 end
 
@@ -725,39 +1016,45 @@ end
 # ---------------------------------------------------------------------------
 
 function main()
-    println("="^78)
+    println("="^90)
     println("Symplecticity of projected variational integrators for degenerate")
     println("Lagrangian systems -- numerical verification")
-    println("="^78)
+    println("="^90)
     println()
+
+    report_scheme_map()
 
     check_midpoint_stage_lemma()
 
     println("Validation of the harness: unprojected VPRK on T*M (off the constraint)")
-    println("-"^78)
+    println("-"^90)
     @printf("%-26s %-8s %14s %14s\n", "problem", "tableau", "|JᵀΩJ-Ω|", "‖res‖")
     for prob in testproblems(), tab in tableaus()
-        z = vcat(prob.q₀, prob.ϑ(prob.q₀) .+ [0.05, -0.03])   # deliberately off Δ
+        d = length(prob.q₀)
+        # deliberately off Δ, and not along a single coordinate direction
+        z = vcat(prob.q₀, prob.ϑ(prob.q₀) .+ [0.05 * (-1)^k for k in 1:d])
         dfc, nr = vprk_canonical(prob, z, 0.05, tab)
         @printf("%-26s %-8s %14.3e %14.3e\n", prob.name, tab.name, dfc, nr)
     end
     println()
 
     println("Is the problem able to discriminate between the projection methods?")
-    println("-"^78)
+    println("-"^90)
+    Random.seed!(4321)
     for prob in testproblems()
         report_degeneracy(prob, tableaus()[1])
     end
     println()
 
     for prob in testproblems()
-        println("#"^78)
+        println("#"^90)
         println("# ", prob.name)
-        println("#"^78)
+        println("#"^90)
         println()
         for tab in tableaus()
             report_defects(prob, tab)
         end
+        report_package_comparison(prob, tableaus()[1])
         report_convergence(prob, tableaus()[1])
         report_generalised_form(prob, tableaus()[1])
         report_midpoint_R1_obstruction(prob, tableaus()[1])
