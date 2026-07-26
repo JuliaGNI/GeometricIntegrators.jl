@@ -117,8 +117,10 @@ with** ``\phi (q_{n+1}, p_{n+1}) = 0``.
 The Lobatto stage system is rank deficient by one in the ``V``-direction. The
 multiplier ``\mu`` relaxes the primary constraint along the null vector ``d`` of the
 Lagrange-derivative matrix (`get_lobatto_nullvector`), and the deficiency is removed
-by the extra condition ``\sum_i d_i V_{n,i} = 0``. This is the same convention as in
-`VPRK`.
+by the extra condition ``\sum_i d_i V_{n,i} = 0``. ``\mu`` enters the primary-constraint
+equation and *only* that one, as in `VPARK`/`VSPARK`/`SPARK`. (`VPRK` implements the same
+idea with a different residual layout: it has no primary-constraint row, so it perturbs
+the momentum-stage equation instead — see `residual_correction!`.)
 
 # Requirements on the problem
 
@@ -139,16 +141,17 @@ by the extra condition ``\sum_i d_i V_{n,i} = 0``. This is the same convention a
 * The primary constraint ``\phi(q_n, p_n) = 0`` is preserved to round-off at every
   step (measured: ``\max |\phi| \approx 2 \times 10^{-15}`` over ``10^3`` steps on
   Lotka–Volterra), which is the point of the method.
-* The order is ``2s-2`` for all `SLRKLobattoIII*` families, confirmed empirically.
+* The order is ``2s-2`` for all six `SLRKLobattoIII*` families, confirmed empirically at
+  ``s = 2, 3`` in `test/verification/spark_convergence_tests.jl`.
 * **Symplecticity is approximate, not exact.** The underlying manuscript claims exact
   preservation of the noncanonical symplectic form, but its proof leaves an
   uncontrolled term in the multiplier block: constraint ``\sum_i d_i V_{n,i} = 0``
   has no counterpart for ``\Lambda``, so a residual
   ``h \sum_j b^2_j (d_j / \bar{b}^1_j) \, \mathrm{d}\mu \wedge \mathrm{d}\Lambda_{n,j}``
-  survives. Measured on Lotka–Volterra, the Poincaré invariant ``\oint p \, dq``
-  drifts secularly at ``O(h^{p+1})`` per step, whereas a genuinely symplectic
-  variational integrator holds it to round-off. See the "Fifth pass" section of
-  `VERIFICATION_REPORT.md` for the numbers.
+  survives. Measured on Lotka–Volterra, the first Poincaré invariant ``\oint p \, dq``
+  drifts secularly at ``O(h^{p+1})`` per step, whereas a genuinely symplectic variational
+  integrator holds the same (canonical) invariant to round-off out to ``3 \times 10^3``
+  steps. See the "Fifth pass" section of `VERIFICATION_REPORT.md` for the numbers.
 * The defect is **gauge invariant**: two Lagrangians whose one-forms differ by an exact
   form give the same trajectory and the same drift, to round-off.
 
@@ -304,8 +307,11 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
         # The multiplier μ relaxes the primary constraint along the null vector d,
         #     ϕ(Q_{n,i}, P_{n,i}) = (d_i / b̄_i) μ ,
         # and the rank deficiency is removed by the extra condition Σ_i d_i V_{n,i} = 0
-        # below. The same convention is used by VPRK (`residual_correction!` in
-        # `src/integrators/vi/vprk_integrator.jl`) and by VPARK/VSPARK/SPARK.
+        # below. `vpark`, `vspark` and `spark` use the same convention: they add μ to
+        # their own Φ row and nothing else. (`VPRK` implements the same idea with a
+        # different residual layout — it has no Φ row at all, so `residual_correction!`
+        # in `src/integrators/vi/vprk_integrator.jl` perturbs the P-stage equation
+        # instead. That row is in P-space, not Z-space, so it carries no factor h.)
         #
         # μ must appear in the constraint row only, NOT additionally in the
         # momentum-stage row: that row lives in Z-space (P = p + h·Z), so the same

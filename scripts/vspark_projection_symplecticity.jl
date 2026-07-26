@@ -1,6 +1,8 @@
 # Symplecticity of the VSPARK projection methods — scope study.
 #
-#   julia --project=test scripts/vspark_projection_symplecticity.jl [steps...]
+#   julia --project=scripts scripts/vspark_projection_symplecticity.jl [steps...]
+#
+# On a fresh checkout run  julia --project=scripts -e 'using Pkg; Pkg.instantiate()'
 #
 # Reproduces the S17 numbers of VERIFICATION_REPORT.md.
 #
@@ -31,27 +33,30 @@
 #
 # Two pitfalls this script avoids
 # -------------------------------
-# 1. dq/ds along the loop is differentiated *spectrally*. A central-difference stencil
-#    leaves an O(N⁻²) quadrature error of order 1e-7 that masquerades as a defect.
+# 1. dq/ds along the loop is differentiated *spectrally* (see `loop_invariants.jl`). A
+#    central-difference stencil leaves an O(N⁻²) quadrature error of order 1e-7 that
+#    masquerades as a defect.
 # 2. Each problem is run in two gauges whose one-forms differ by an exact form. They
 #    describe the same continuous system and share ∮ϑ·dq, but give different discrete
 #    methods — and some methods are usable in one gauge and not the other.
 #
-# Optionally cross-checked against PoincareInvariants.jl if that package is available
-# in the active environment (it is not a dependency of this repository).
+# All the numbers below come from the inline spectral loop integral. Step 4 additionally
+# cross-checks that integral, on the *initial* loop only, against PoincareInvariants.jl —
+# if and only if that package happens to be installed in the active environment. It is
+# not a dependency of this repository and nothing here depends on it.
 
 using LinearAlgebra
 using Printf
 
 using GeometricIntegrators
 using GeometricIntegrators.SPARK
-using GeometricProblems
 using GeometricProblems: LotkaVolterra2d, LotkaVolterra2dSingular,
     MasslessChargedParticle, MasslessChargedParticleSingular,
     PointVortices, PointVorticesLinear
 using GeometricEquations: IDAEProblem
-using RungeKutta
 import GeometricIntegratorsBase
+
+include(joinpath(@__DIR__, "loop_invariants.jl"))
 
 const HAVE_PI = try
     @eval using PoincareInvariants
@@ -74,7 +79,6 @@ struct Problem
     name::String
     idae::Function      # q -> IDAEProblem with timespan/timestep
     theta::Function     # (t, q) -> ϑ
-    omega::Function     # (t, q) -> Ω
     centre::Vector{Float64}
     radius::Float64
 end
@@ -87,7 +91,6 @@ function lv_problem(name, M)
         (q, T, h) -> M.idaeproblem(collect(q), M.ϑ(0.0, collect(q)), zero(collect(q));
             timespan = (0.0, T), timestep = h, parameters = LV_PARAMS),
         (t, q) -> M.ϑ(t, collect(q)),
-        (t, q) -> (Ω = zeros(2, 2); M.lotka_volterra_2d_ω(Ω, t, collect(q), LV_PARAMS); Ω),
         [1.0, 1.0], 0.1)
 end
 
@@ -96,7 +99,6 @@ function mcp_problem(name, M)
         (q, T, h) -> M.idaeproblem(collect(q); timespan = (0.0, T), timestep = h,
             parameters = MCP_PARAMS),
         (t, q) -> M.ϑ(t, collect(q), MCP_PARAMS),
-        (t, q) -> M.ω(t, collect(q), MCP_PARAMS),
         [1.0, 1.0], 0.1)
 end
 
@@ -119,7 +121,7 @@ function pv_problem(name, M)
             (0.0, T), h, qq, M.ϑ(qq), zero(qq);
             v̄ = M.point_vortices_v, parameters = prms)
     end
-    Problem(name, idae, (t, q) -> M.ϑ(collect(q)), (t, q) -> zeros(0, 0), collect(q0), 0.1)
+    Problem(name, idae, (t, q) -> M.ϑ(collect(q)), collect(q0), 0.1)
 end
 
 const PROBLEMS = [
@@ -161,48 +163,35 @@ const LOBATTO_PROJECTIONS = [
 const N_LOOP = 128
 const HS = (0.5, 0.2, 0.1, 0.05)
 
+"""
+    selected_problems()
+
+The entries of `PROBLEMS` picked out by a `--problems=a,b,...` argument; all of them by
+default. Each pattern matches a problem name exactly if it can, otherwise as a
+substring — so `--problems=MasslessChargedParticle` selects just that one and does not
+also drag in `MasslessChargedParticleSingular`.
+"""
+function selected_problems()
+    a = filter(startswith("--problems="), ARGS)
+    isempty(a) && return PROBLEMS
+    sel = Problem[]
+    for pat in split(last(a)[12:end], ',')
+        hit = filter(p -> p.name == pat, PROBLEMS)
+        isempty(hit) && (hit = filter(p -> occursin(pat, p.name), PROBLEMS))
+        isempty(hit) && error("--problems: `$pat` matches none of $(getproperty.(PROBLEMS, :name))")
+        append!(sel, hit)
+    end
+    unique(sel)
+end
+
 header(s) = println("\n", "="^110, "\n", s, "\n", "="^110)
 sub(s) = println("\n--- ", s, " ", "-"^max(0, 104 - length(s)))
 
+# The singular and divergent cases below are the finding, not an accident, and their
+# solver/line-search warnings would bury the tables. Log messages are suppressed; the
+# exception type is always printed instead, so nothing is hidden.
+muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.NullLogger())
 
-# ------------------------------------------------------- loop machinery ----
-
-"Fourier spectral differentiation matrix for N uniform points on [0,2π)."
-function fourier_diffmatrix(N)
-    h = 2π / N
-    D = zeros(N, N)
-    for j in 1:N, k in 1:N
-        j == k && continue
-        D[j, k] = 0.5 * (-1)^(j + k) / tan((j - k) * h / 2)
-    end
-    D
-end
-
-"""
-    loop_integral(qs, ps, D)
-
-∮ p·dq on a closed loop sampled at `N` uniform values of the parameter s ∈ [0,1),
-with dq/ds taken spectrally. For a smooth loop this is accurate to round-off.
-"""
-function loop_integral(qs, ps, D)
-    N = length(qs)
-    acc = 0.0
-    for c in eachindex(qs[1])
-        dqc = 2π .* (D * [q[c] for q in qs])
-        acc += sum(ps[i][c] * dqc[i] for i in 1:N) / N
-    end
-    acc
-end
-
-"loop of `n` points, a circle of radius `r` in the (q₁,q₂) plane through `c`"
-function circle(c, r, n)
-    map(1:n) do i
-        q = copy(c)
-        q[1] += r * cos(2π * (i - 1) / n)
-        q[2] += r * sin(2π * (i - 1) / n)
-        q
-    end
-end
 
 """
     advance(prob, method, nsteps, h, D)
@@ -221,7 +210,7 @@ function advance(prob::Problem, method, nsteps, h, D)
     p1 = Vector{Vector{Float64}}(undef, N_LOOP)
     ϕmax = 0.0
     for i in 1:N_LOOP
-        sol = integrate(prob.idae(qs[i], nsteps * h, h), method)
+        sol = muffle(() -> integrate(prob.idae(qs[i], nsteps * h, h), method))
         q1[i] = collect(sol.q[end])
         p1[i] = collect(sol.p[end])
         all(isfinite, q1[i]) && all(isfinite, p1[i]) || error("non-finite solution")
@@ -233,16 +222,47 @@ function advance(prob::Problem, method, nsteps, h, D)
     (can = abs(I1c - I0c) / abs(I0c), non = abs(I1n - I0n) / abs(I0n), ϕ = ϕmax)
 end
 
-"classify a one-step h sweep: round-off (flat) vs a genuine O(hᵏ) defect"
-function classify(vals)
-    ok = filter(isfinite, vals)
-    isempty(ok) && return "fails"
-    m = maximum(ok)
-    m < 1e-13 && return length(ok) == length(vals) ? "round-off" : "round-off*"
-    # fit the slope over the finite values that are above round-off
-    length(ok) < 2 && return "defect"
-    r = log2(maximum(ok) / max(minimum(ok), 1e-300)) / (length(ok) - 1) / log2(HS[1] / HS[2])
-    @sprintf("defect O(h^%.0f)", max(r, 0.0))
+# Anything at or below this is quadrature/solver round-off, not a defect. The loop
+# integral is O(1e-2) here, so 1e-13 is ~1e-11 relative — a decade above eps.
+const ROUNDOFF = 1e-13
+
+"""
+    classify(vals, hs = HS)
+
+Classify a one-step `h` sweep: round-off (flat in `h`) versus a genuine `O(hᵏ)` defect.
+
+`vals[i]` is the defect measured at `hs[i]`. Two effects have to be kept apart, and
+getting either wrong invents an exponent:
+
+  * `HS` is **not** geometrically uniform (0.5 → 0.2 is a factor 2.5, the rest are 2), so
+    there is no single per-interval ratio to divide by; the exponent is fitted by least
+    squares in `log h`.
+  * A sweep can *bottom out*: the defect decays for the large `h` and then sits at
+    round-off for the small ones. Including the floored points drags the fitted slope
+    towards zero and reports, say, `O(h²)` for what is really a steep decay that ran out
+    of dynamic range. Points at or below `ROUNDOFF` are therefore dropped from the fit
+    and flagged with `†`, and a sweep that keeps fewer than two points is reported as
+    `defect` with no exponent rather than a fabricated one.
+
+Suffixes: `*` some step size failed, `†` the fit used only the points above round-off.
+"""
+function classify(vals, hs = HS)
+    @assert length(vals) == length(hs)
+    finite = [i for i in eachindex(vals) if isfinite(vals[i])]
+    isempty(finite) && return "fails"
+    partial = length(finite) < length(vals) ? "*" : ""
+
+    maximum(vals[i] for i in finite) <= ROUNDOFF && return "round-off" * partial
+
+    keep = [i for i in finite if vals[i] > ROUNDOFF]
+    floored = length(keep) < length(finite) ? "†" : ""
+    length(keep) < 2 && return "defect" * floored * partial
+
+    x = [log(hs[i]) for i in keep]
+    y = [log(vals[i]) for i in keep]
+    x̄, ȳ = sum(x) / length(x), sum(y) / length(y)
+    r = sum((x .- x̄) .* (y .- ȳ)) / sum(abs2, x .- x̄)
+    @sprintf("defect O(h^%.1f)%s%s", max(r, 0.0), floored, partial)
 end
 
 
@@ -317,16 +337,20 @@ function sweep(problems, methods, srange)
         for (pname, ctor) in methods, s in srange
             m = try
                 ctor(s)
-            catch
+            catch e
+                @printf("  %-34s  no such tableau (%s)\n",
+                    occursin(" ", pname) ? "$pname($s)" : "GLRK($s)$pname", typeof(e))
                 continue
             end
             label = occursin(" ", pname) ? "$pname($s)" : "GLRK($s)$pname"
             vals = Float64[]
+            why = String[]
             @printf("  %-34s", label)
             for h in HS
                 v = try
                     advance(prob, m, 1, h, D).can
-                catch
+                catch e
+                    push!(why, "h=$h:$(typeof(e))")
                     NaN
                 end
                 push!(vals, v)
@@ -334,10 +358,12 @@ function sweep(problems, methods, srange)
             end
             r = try
                 advance(prob, m, 100, 0.1, D)
-            catch
+            catch e
+                push!(why, "100st:$(typeof(e))")
                 (can = NaN, non = NaN, ϕ = NaN)
             end
             @printf(" | %9.2e %9.2e %9.2e  %s\n", r.can, r.non, r.ϕ, classify(vals))
+            isempty(why) || println(" "^38, "failures: ", join(why, ", "))
         end
     end
 end
@@ -346,12 +372,12 @@ step2() = begin
     header("Step 2 — one-step canonical ∮p·dq defect vs h, Gauss inner method")
     println("  Flat at round-off across a factor of ten in h ⇒ exactly symplectic.")
     println("  Clean decay ⇒ a genuine O(hᵏ) defect. '100 st' is the 100-step drift at h=0.1.")
-    sweep(PROBLEMS, GLRK_PROJECTIONS, 1:3)
+    sweep(selected_problems(), GLRK_PROJECTIONS, 1:3)
 end
 
 step3() = begin
     header("Step 3 — the same, Lobatto inner methods (contrast)")
-    sweep(PROBLEMS, LOBATTO_PROJECTIONS, 2:3)
+    sweep(selected_problems(), LOBATTO_PROJECTIONS, 2:3)
 end
 
 
@@ -411,7 +437,7 @@ function projective_diagnostics(prob::Problem, m, h)
     ss = GeometricIntegratorsBase.solutionstep(int,
         GeometricIntegratorsBase.initialstate(prob.idae(q0, h, h)))
     GeometricIntegratorsBase.reset!(ss, h)
-    GeometricIntegratorsBase.integrate!(ss, int)
+    muffle(() -> GeometricIntegratorsBase.integrate!(ss, int))
     C = GeometricIntegratorsBase.cache(int)
     (Φ̃ = maximum(maximum(abs, x) for x in C.Φp),
      Λ̃ = maximum(maximum(abs, x) for x in C.Λp),
@@ -422,17 +448,19 @@ function step5()
     header("Step 5 — the two factors of the leftover term  Σᵢ b⁴ᵢ dΦ̃ᵢ ∧ dΛ̃ᵢ")
     println("  Φ̃ᵢ = ϕ(Q̃ᵢ,P̃ᵢ) at the projective stages (the theorem demands this be 0),")
     println("  Λ̃ᵢ = the projective multipliers. Either vanishing identically kills (★).")
-    for prob in PROBLEMS
+    for prob in selected_problems()
         sub(prob.name)
         @printf("  %-34s %11s %11s %11s\n", "method", "max|Φ̃ᵢ|", "max|Λ̃ᵢ|", "max|Φᵢ|")
         for (pname, ctor) in GLRK_PROJECTIONS, s in 1:3
             m = try ctor(s) catch; continue end
+            note = ""
             r = try
                 projective_diagnostics(prob, m, 0.1)
-            catch
+            catch e
+                note = "  ($(typeof(e)))"
                 (Φ̃ = NaN, Λ̃ = NaN, Φ = NaN)
             end
-            @printf("  %-34s %11.2e %11.2e %11.2e\n", "GLRK($s)$pname", r.Φ̃, r.Λ̃, r.Φ)
+            @printf("  %-34s %11.2e %11.2e %11.2e%s\n", "GLRK($s)$pname", r.Φ̃, r.Λ̃, r.Φ, note)
         end
     end
 end
@@ -466,7 +494,7 @@ function stage_state(prob::Problem, m, q0, h)
     int = GeometricIntegrator(pr, m)
     ss = GeometricIntegratorsBase.solutionstep(int, GeometricIntegratorsBase.initialstate(pr))
     GeometricIntegratorsBase.reset!(ss, h)
-    GeometricIntegratorsBase.integrate!(ss, int)
+    muffle(() -> GeometricIntegratorsBase.integrate!(ss, int))
     C = GeometricIntegratorsBase.cache(int)
     cur = GeometricIntegratorsBase.current(ss)
     (Φ̃ = [copy(x) for x in C.Φp], Λ̃ = [copy(x) for x in C.Λp],
@@ -500,28 +528,49 @@ function star_vs_defect(prob::Problem, m, h; ε = 1e-5)
     (star = star, defect = after - before, scale = abs(before))
 end
 
+# The stage quantities come out of a nonlinear solve, so the central differences have a
+# noise floor of roughly (solver tolerance)/ε on top of their O(ε²) truncation error.
+# Both `star` and `defect` are therefore swept over ε: a value that is stable across two
+# decades of ε is real, one that moves with ε is stencil noise and no ratio computed from
+# it means anything.
+const STAR_EPSILONS = (1e-4, 1e-5, 1e-6)
+
 function step6()
-    header("Step 6 — is (★) = h Σᵢ b⁴ᵢ dΦ̃ᵢ ∧ dΛ̃ᵢ the leftover?  (h = 0.2, ε = 1e-5)")
+    header("Step 6 — is (★) = h Σᵢ b⁴ᵢ dΦ̃ᵢ ∧ dΛ̃ᵢ the leftover?  (h = 0.2)")
     println("  'defect' is the measured one-step change of dp∧dq on the constraint manifold.")
     println("  If star ≈ defect, (★) is the term to attack; if not, the h² terms dominate.")
+    println("  Swept over ε = ", STAR_EPSILONS, "; 'spread' is the relative variation of")
+    println("  star/defect over the sweep. Trust the ratio only where the spread is small.")
     sel = [("pSymplectic", TableauVSPARKGLRKpSymplectic),
         ("pSymmetric", TableauVSPARKGLRKpSymmetric),
         ("pMidpoint", TableauVSPARKGLRKpMidpoint),
         ("pInternal", TableauVSPARKGLRKpInternal),
         ("pLobattoIIIAIIIB", TableauVSPARKGLRKpLobattoIIIAIIIB)]
-    for prob in PROBLEMS
+    for prob in selected_problems()
         length(prob.centre) == 2 || continue   # the two-form bookkeeping assumes D = 2
         sub(prob.name)
-        @printf("  %-30s %13s %13s %10s\n", "method", "star", "defect", "star/defect")
+        @printf("  %-30s %13s %13s %10s %8s\n",
+            "method", "star", "defect", "star/defect", "spread")
         for (pname, ctor) in sel, s in 1:3
             m = try ctor(s) catch; continue end
-            r = try
-                star_vs_defect(prob, m, 0.2)
-            catch
-                (star = NaN, defect = NaN, scale = NaN)
+            ratios = Float64[]
+            rs = map(STAR_EPSILONS) do ε
+                try
+                    star_vs_defect(prob, m, 0.2; ε = ε)
+                catch e
+                    (star = NaN, defect = NaN, scale = NaN)
+                end
             end
-            ratio = abs(r.defect) < 1e-14 ? NaN : r.star / r.defect
-            @printf("  %-30s %13.3e %13.3e %10.3f\n", "GLRK($s)$pname", r.star, r.defect, ratio)
+            for r in rs
+                abs(r.defect) < 1e-14 && continue
+                push!(ratios, r.star / r.defect)
+            end
+            r = rs[2]                       # report the middle ε, sweep the rest
+            ratio = isempty(ratios) ? NaN : r.star / r.defect
+            spread = length(ratios) < 2 ? NaN :
+                     (maximum(ratios) - minimum(ratios)) / max(abs(ratio), eps())
+            @printf("  %-30s %13.3e %13.3e %10.3f %8.1e\n",
+                "GLRK($s)$pname", r.star, r.defect, ratio, spread)
         end
     end
 end
@@ -566,7 +615,7 @@ function step7()
         for n in (100, 1000)
             v = try
                 pr = similar(mk(); timespan = (0.0, n * 0.1), timestep = 0.1)
-                sol = integrate(pr, m)
+                sol = muffle(() -> integrate(pr, m))
                 maximum(maximum(abs, collect(sol.p[i]) .- th(sol.q[i])) for i in eachindex(sol.t))
             catch
                 NaN
@@ -581,7 +630,13 @@ function step7()
 end
 
 
-const STEPS = isempty(ARGS) ? ["1", "2", "3", "4", "5", "6", "7"] : ARGS
+# `--problems=<substring>` restricts steps 2, 3, 5 and 6 to the matching problems, so a
+# single row of the S17 tables can be reproduced without paying for all six. Every other
+# argument selects a step.
+const STEPS = let a = filter(!startswith("--"), ARGS)
+    isempty(a) ? ["1", "2", "3", "4", "5", "6", "7"] : a
+end
+
 for k in ("1", "2", "3", "4", "5", "6", "7")
     k in STEPS && getfield(Main, Symbol("step", k))()
 end

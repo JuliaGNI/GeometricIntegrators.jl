@@ -1,10 +1,12 @@
 # Numerical confirmation of the SLRK verification findings.
 #
-#   julia --project=test scripts/slrk_verification.jl [steps...]
+#   julia --project=scripts scripts/slrk_verification.jl [steps...]
+#
+# On a fresh checkout run  julia --project=scripts -e 'using Pkg; Pkg.instantiate()'
 #
 # Step 1 tableau symplecticity conditions + ω-matrix equivalence (problem independent)
-# Step 2 C1: Jacobian singularity of the double-counted μ term at Δt = 1
-# Step 3 reference trajectories (compare across the C1 fix)
+# Step 2 S10: Jacobian singularity of the double-counted μ term at Δt = 1
+# Step 3 reference trajectories (compare across the S10 fix)
 # Step 4 discrete symplecticity JᵀΩJ = Ω, constraint and energy drift
 # Step 5 the same JᵀΩJ harness applied to VPRK (an invalid control — see below)
 # Step 6 Poincaré invariant ∮p·dq (the valid test), plus the VPRK control
@@ -14,18 +16,25 @@
 # `LotkaVolterra2dSingular` describe the *same* continuous system: their one-forms
 # differ by the exact form d(q₁q₂), so they share Ω = ∇ϑᵀ - ∇ϑ and the same
 # Euler–Lagrange equations, but they give different discrete methods.
+#
+# Step 6 takes the step counts from the trailing arguments, so the long-time table of
+# VERIFICATION_REPORT.md is reproduced by
+#
+#   julia --project=scripts scripts/slrk_verification.jl 6 --steps=1,10,100,1000,3000
 
+using ForwardDiff
 using LinearAlgebra
 using Printf
 
 using GeometricIntegrators
 using GeometricIntegrators.SPARK
-using GeometricProblems
 using GeometricProblems: LotkaVolterra2d, LotkaVolterra2dSingular
 using RungeKutta
 
 import GeometricIntegratorsBase
 using GeometricIntegratorsBase: solutionstep, current, history, nlsolution, reset!
+
+include(joinpath(@__DIR__, "loop_invariants.jl"))
 
 const PROBLEMS = [
     ("LotkaVolterra2d", LotkaVolterra2d),
@@ -46,6 +55,11 @@ const Q0 = [1.0, 1.0]
 
 header(s) = println("\n", "="^92, "\n", s, "\n", "="^92)
 subheader(s) = println("\n--- ", s, " ", "-"^max(0, 86 - length(s)))
+
+# The singular and divergent cases below are the finding, not an accident, and their
+# solver/line-search warnings would bury the tables. Log messages are suppressed; the
+# exception type is always printed instead, so nothing is hidden.
+muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.NullLogger())
 
 # problem-module accessors
 ldae(M, q, p, λ; kwargs...) = M.ldaeproblem_slrk(q, p, λ; parameters = PARAMS, kwargs...)
@@ -92,6 +106,10 @@ end
 
 # ---------------------------------------------------------------- step 2 ----
 
+# The Jacobian is differentiated exactly (ForwardDiff, the same dual numbers the
+# integrator's own solver uses). A central-difference stencil would put a noise floor
+# of ~1e-9 under it, which turns the *exactly* singular Δt = 1 case into a finite
+# κ ≈ 1e11 and understates the finding.
 function residual_jacobian(M, method, Δt)
     prob = ldae(M, copy(Q0), theta(M, 0.0, Q0), zero(Q0); timespan = (0.0, 10Δt), timestep = Δt)
     int = GeometricIntegrator(prob, method)
@@ -103,41 +121,66 @@ function residual_jacobian(M, method, Δt)
     GeometricIntegratorsBase.initial_guess!(sol, history(solstep), params, int)
 
     x = copy(nlsolution(int))
-    n = length(x)
-    J = zeros(n, n)
-    ε = 1e-7
-    rp = zeros(n)
-    rm = zeros(n)
-    for j in 1:n
-        xp = copy(x); xp[j] += ε
-        xm = copy(x); xm[j] -= ε
-        GeometricIntegratorsBase.residual!(rp, xp, sol, params, int)
-        GeometricIntegratorsBase.residual!(rm, xm, sol, params, int)
-        J[:, j] .= (rp .- rm) ./ (2ε)
-    end
-    J
+    ForwardDiff.jacobian((b, y) -> GeometricIntegratorsBase.residual!(b, y, sol, params, int),
+        similar(x), x)
+end
+
+"""
+    mu_visibility(J, D)
+
+The smallest singular value of the last `D` columns of `J` — the null-vector multiplier
+μ — after projecting out the span of all the other columns.
+
+`cond(J)` alone says the stage system is ill conditioned but not *why*. This says it: it
+is the size of the μ direction that survives in the reduced system, and with the S10 bug
+it is proportional to `(1-Δt)` and vanishes at `Δt = 1`, because the momentum-stage
+contribution then cancels the constraint-row one exactly.
+
+The range of the other columns is taken from their SVD rather than a plain `qr`: those
+columns are themselves rank deficient (that is the whole point of the null vector), and an
+unpivoted QR gives no guarantee that its leading columns span the range.
+"""
+function mu_visibility(J, D)
+    n = size(J, 2)
+    rest = J[:, 1:(n-D)]
+    mu = J[:, (n-D+1):n]
+    F = svd(rest)
+    keep = F.S .> max(size(rest)...) * eps() * maximum(F.S)
+    U = F.U[:, keep]
+    minimum(svdvals(mu .- U * (U' * mu)))
 end
 
 function step2()
-    header("Step 2 — C1: conditioning of the stage Jacobian vs Δt")
+    header("Step 2 — S10: conditioning of the stage Jacobian vs Δt")
+    println("  κ ~ 1/(1-Δt) is the S10 signature; after the fix it stays flat.")
+    println("  σ is `mu_visibility`: the μ direction the reduced system still sees.")
+    println("  With the bug it is ∝ (1-Δt) and vanishes at Δt = 1.")
+    D = length(Q0)
     for (pname, M) in PROBLEMS
         subheader(pname)
         for (name, ctor) in CONSTRUCTORS[1:2], s in 2:3
+            m = ctor(s)
             @printf("  %-18s s=%d :", name, s)
             for Δt in (0.1, 0.5, 0.9, 0.99, 0.999, 1.0)
-                @printf("  Δt=%-5g κ=%.2e", Δt, cond(residual_jacobian(M, ctor(s), Δt)))
+                J = residual_jacobian(M, m, Δt)
+                @printf("  Δt=%-5g κ=%.2e σ=%.2e", Δt, cond(J), mu_visibility(J, D))
             end
             println()
         end
     end
-    println("\n  (κ ~ 1/(1-Δt) is the C1 signature; after the fix it stays flat.)")
 end
 
 
 # ---------------------------------------------------------------- step 3 ----
 
+# A diverging solve does not always throw — `SLRKLobattoIIIBA(3)` on the singular gauge
+# returns NaN instead — so the result is checked for finiteness rather than trusted.
 function trajectory(M, method, Δt; T = 1.0)
-    integrate(ldae(M, copy(Q0), theta(M, 0.0, Q0), zero(Q0); timespan = (0.0, T), timestep = Δt), method)
+    sol = muffle(() -> integrate(ldae(M, copy(Q0), theta(M, 0.0, Q0), zero(Q0);
+        timespan = (0.0, T), timestep = Δt), method))
+    all(all(isfinite, sol.q[i]) && all(isfinite, sol.p[i]) for i in eachindex(sol.t)) ||
+        error("non-finite solution")
+    sol
 end
 
 function step3()
@@ -164,7 +207,9 @@ end
 function onestep_q(M, method, q0, Δt)
     prob = ldae(M, collect(q0), theta(M, 0.0, q0), zero(collect(q0));
         timespan = (0.0, Δt), timestep = Δt)
-    collect(integrate(prob, method).q[end])
+    q1 = collect(muffle(() -> integrate(prob, method)).q[end])
+    all(isfinite, q1) || error("non-finite solution")
+    q1
 end
 
 function jacobian_defect(M, method, q0, h, ε)
@@ -189,10 +234,11 @@ function step4()
             for ε in (1e-2, 1e-3, 1e-4, 1e-5, 1e-6)
                 v = try
                     jacobian_defect(M, ctor(s), Q0, 0.1, ε)
-                catch
+                catch e
+                    @printf("  %.0e→FAIL(%s)", ε, typeof(e))
                     NaN
                 end
-                @printf("  %.0e→%.2e", ε, v)
+                isnan(v) || @printf("  %.0e→%.2e", ε, v)
             end
             println()
         end
@@ -207,9 +253,11 @@ function step4()
             for h in (0.2, 0.1, 0.05, 0.025)
                 dev = try
                     jacobian_defect(M, ctor(s), Q0, h, 1e-3)
-                catch
+                catch e
+                    @printf("  h=%-6g FAIL(%s)", h, typeof(e))
                     NaN
                 end
+                isnan(dev) && continue
                 r = isnan(prev) ? NaN : log2(prev / dev)
                 @printf("  h=%-6g %.2e (p≈%s)", h, dev, isnan(r) ? "--" : @sprintf("%.1f", r))
                 prev = dev
@@ -244,7 +292,7 @@ end
 
 function onestep_q_lode(M, method, q0, Δt)
     prob = lode(M, collect(q0), theta(M, 0.0, q0); timespan = (0.0, Δt), timestep = Δt)
-    collect(integrate(prob, method).q[end])
+    collect(muffle(() -> integrate(prob, method)).q[end])
 end
 
 function step5()
@@ -268,10 +316,11 @@ function step5()
                         J[:, j] .= (onestep_q_lode(M, m, qp, h) .- onestep_q_lode(M, m, qm, h)) ./ 2e-3
                     end
                     maximum(abs, J' * omega(M, h, q1) * J .- Ω0)
-                catch
+                catch e
+                    @printf("  h=%-6g FAIL(%s)", h, typeof(e))
                     NaN
                 end
-                @printf("  h=%-6g %.2e", h, v)
+                isnan(v) || @printf("  h=%-6g %.2e", h, v)
             end
             println()
         end
@@ -284,39 +333,23 @@ end
 # Poincaré invariant. For ANY symplectic map on (q,p) the loop integral ∮p·dq is
 # conserved — no constraint manifold, no finite-difference Jacobian. Valid for SLRK
 # and VPRK alike, so the variational integrators are a genuine control.
+#
+# Two invariants are reported, because they are the same quantity only on {ϕ = 0}:
+#
+#   canonical     ∮p·dq    with the integrator's own p  — what a symplectic map conserves
+#   noncanonical  ∮ϑ(q)·dq                              — the invariant of the
+#                                                          constrained system
+#
+# For SLRK they agree to every digit (it holds ϕ to 1e-15), so either one measures its
+# symplecticity. For VPRK they do NOT: a variational integrator conserves the canonical
+# one exactly and leaves {ϕ = 0}, so its noncanonical value merely oscillates with
+# max|ϕ| and is *not* a symplecticity control. Compare like with like — the decisive
+# comparison is SLRK canonical against VPRK canonical.
 
-"Fourier spectral differentiation matrix for N uniform points on [0,2π)."
-function fourier_diffmatrix(N)
-    h = 2π / N
-    D = zeros(N, N)
-    for j in 1:N, k in 1:N
-        j == k && continue
-        D[j, k] = 0.5 * (-1)^(j + k) / tan((j - k) * h / 2)
-    end
-    D
-end
-
-"""
-∮ p·dq on a closed loop sampled at N uniform values of the parameter s ∈ [0,1).
-
-dq/ds is taken spectrally, so for a smooth loop the quadrature is accurate to
-round-off; a central-difference stencil leaves an O(N⁻²) error of order 1e-7 that
-masquerades as a symplecticity defect.
-"""
-function loop_integral(qs, ps, D = fourier_diffmatrix(length(qs)))
-    N = length(qs)
-    acc = 0.0
-    for c in eachindex(qs[1])
-        dqc = 2π .* (D * [q[c] for q in qs])
-        acc += sum(ps[i][c] * dqc[i] for i in 1:N) / N
-    end
-    acc
-end
-
-circle(q0, r, n) = [[q0[1] + r * cos(2π * (i - 1) / n), q0[2] + r * sin(2π * (i - 1) / n)] for i in 1:n]
-
-function step6()
+function step6(step_counts = (1, 10, 100))
     header("Step 6 — Poincaré invariant ∮p·dq (exact for any symplectic map)")
+    println("  canonical = ∮p·dq (the integrator's own p), noncanonical = ∮ϑ(q)·dq.")
+    println("  For VPRK only the canonical column is a symplecticity control.")
     r = 0.1
     n = 200
     qs = circle(Q0, r, n)
@@ -327,66 +360,82 @@ function step6()
         I0 = loop_integral(qs, ps, D)
         subheader("$pname   (loop: $n points, radius $r,  ∮p·dq = $(round(I0; sigdigits=12)))")
 
+        "relative drift of both invariants after `nsteps` steps of size `h`"
         function advance(stepper, nsteps, h)
             q1 = Vector{Vector{Float64}}(undef, n)
             p1 = Vector{Vector{Float64}}(undef, n)
+            ϕmax = 0.0
             for i in 1:n
                 q1[i], p1[i] = stepper(qs[i], ps[i], nsteps, h)
+                ϕmax = max(ϕmax, maximum(abs, p1[i] .- theta(M, nsteps * h, q1[i])))
             end
-            loop_integral(q1, p1, D)
+            Ican = loop_integral(q1, p1, D)
+            Inon = loop_integral(q1, [theta(M, nsteps * h, q) for q in q1], D)
+            (can = abs(Ican - I0) / abs(I0), non = abs(Inon - I0) / abs(I0), ϕ = ϕmax)
         end
+
+        failed = (can = NaN, non = NaN, ϕ = NaN)
 
         slrk_step(m) = (q, p, nsteps, h) -> begin
-            sol = integrate(ldae(M, copy(q), copy(p), zero(q);
-                    timespan = (0.0, nsteps * h), timestep = h), m)
-            (collect(sol.q[end]), collect(sol.p[end]))
+            sol = muffle(() -> integrate(ldae(M, copy(q), copy(p), zero(q);
+                timespan = (0.0, nsteps * h), timestep = h), m))
+            q1, p1 = collect(sol.q[end]), collect(sol.p[end])
+            all(isfinite, q1) && all(isfinite, p1) || error("non-finite solution")
+            (q1, p1)
         end
         lode_step(m) = (q, p, nsteps, h) -> begin
-            sol = integrate(lode(M, copy(q), copy(p);
-                    timespan = (0.0, nsteps * h), timestep = h), m)
-            (collect(sol.q[end]), collect(sol.p[end]))
+            sol = muffle(() -> integrate(lode(M, copy(q), copy(p);
+                timespan = (0.0, nsteps * h), timestep = h), m))
+            q1, p1 = collect(sol.q[end]), collect(sol.p[end])
+            all(isfinite, q1) && all(isfinite, p1) || error("non-finite solution")
+            (q1, p1)
         end
 
-        println("  CONTROL — symplectic variational integrators:")
+        println("  CONTROL — symplectic variational integrators (canonical / noncanonical):")
         for (name, m) in [("VPRKGauss(2)", VPRKGauss(2)),
+            ("VPRKGauss(3)", VPRKGauss(3)),
             ("VPRKLobattoIIIAIIIĀ(2)", VPRKLobattoIIIAIIIĀ(2)),
             ("VPRKLobattoIIIAIIIĀ(3)", VPRKLobattoIIIAIIIĀ(3))]
             @printf("    %-24s:", name)
-            for (nsteps, h) in ((1, 0.1), (10, 0.1), (100, 0.1))
-                I1 = try
-                    advance(lode_step(m), nsteps, h)
-                catch
-                    NaN
+            for nsteps in step_counts
+                v = try
+                    advance(lode_step(m), nsteps, 0.1)
+                catch e
+                    @printf("  %d: FAIL(%s)", nsteps, typeof(e))
+                    failed
                 end
-                @printf("  %3d×%g: %.2e", nsteps, h, abs(I1 - I0) / abs(I0))
+                isnan(v.can) || @printf("  %4d: %.2e/%.2e", nsteps, v.can, v.non)
             end
             println()
         end
 
-        println("  SLRK — accumulation over steps:")
+        println("  SLRK — accumulation over steps (canonical / noncanonical, max|ϕ|):")
         for (name, ctor) in CONSTRUCTORS, s in 2:3
             @printf("    %-18s s=%d :", name, s)
-            for (nsteps, h) in ((1, 0.1), (10, 0.1), (100, 0.1))
-                I1 = try
-                    advance(slrk_step(ctor(s)), nsteps, h)
-                catch
-                    NaN
+            for nsteps in step_counts
+                v = try
+                    advance(slrk_step(ctor(s)), nsteps, 0.1)
+                catch e
+                    @printf("  %d: FAIL(%s)", nsteps, typeof(e))
+                    failed
                 end
-                @printf("  %3d×%g: %.2e", nsteps, h, abs(I1 - I0) / abs(I0))
+                isnan(v.can) || @printf("  %4d: %.2e/%.2e(ϕ%.0e)", nsteps, v.can, v.non, v.ϕ)
             end
             println()
         end
 
-        println("  SLRK — h dependence after a single step:")
+        println("  SLRK — h dependence of the canonical defect after a single step:")
         for (name, ctor) in CONSTRUCTORS, s in 2:3
             @printf("    %-18s s=%d :", name, s)
             prev = NaN
             for h in (0.2, 0.1, 0.05, 0.025)
                 v = try
-                    abs(advance(slrk_step(ctor(s)), 1, h) - I0) / abs(I0)
-                catch
+                    advance(slrk_step(ctor(s)), 1, h).can
+                catch e
+                    @printf("  h=%-6g FAIL(%s)", h, typeof(e))
                     NaN
                 end
+                isnan(v) && continue
                 rr = isnan(prev) ? NaN : log2(prev / v)
                 @printf("  h=%-6g %.2e(p≈%s)", h, v, isnan(rr) ? "--" : @sprintf("%.1f", rr))
                 prev = v
@@ -414,7 +463,7 @@ function step7()
                 try
                     solstep = solutionstep(int, GeometricIntegratorsBase.initialstate(prob))
                     reset!(solstep, h)
-                    GeometricIntegratorsBase.integrate!(solstep, int)
+                    muffle(() -> GeometricIntegratorsBase.integrate!(solstep, int))
                     C = GeometricIntegratorsBase.cache(int)
                     dV = maximum(abs, sum(m.d[i] .* C.Vp[i] for i in 1:s))
                     dΛ = maximum(abs, sum(m.d[i] .* C.Λp[i] for i in 1:s))
@@ -433,12 +482,18 @@ function step7()
 end
 
 
-const STEPS = isempty(ARGS) ? ["1", "2", "3", "4", "5", "6", "7"] : ARGS
+# `--steps=1,10,100,...` sets the step counts of step 6; anything else selects steps.
+const STEP_COUNTS = let a = filter(startswith("--steps="), ARGS)
+    isempty(a) ? (1, 10, 100) : Tuple(parse.(Int, split(last(a)[9:end], ',')))
+end
+const STEPS = let a = filter(!startswith("--"), ARGS)
+    isempty(a) ? ["1", "2", "3", "4", "5", "6", "7"] : a
+end
 
 "1" in STEPS && step1()
 "2" in STEPS && step2()
 "3" in STEPS && step3()
 "4" in STEPS && step4()
 "5" in STEPS && step5()
-"6" in STEPS && step6()
+"6" in STEPS && step6(STEP_COUNTS)
 "7" in STEPS && step7()

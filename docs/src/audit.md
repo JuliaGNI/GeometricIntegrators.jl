@@ -811,6 +811,32 @@ author left a `% TODO Check signs!`. It was judged critically rather than taken 
 ground truth — and the most consequential finding is a gap in *its* proof, not in the
 code.
 
+## Reproducing the numbers
+
+Every measurement in this pass comes from one of two scripts, both run against the
+`scripts` environment (`julia --project=scripts -e 'using Pkg; Pkg.instantiate()'` once):
+
+```
+julia --project=scripts scripts/slrk_verification.jl                    # steps 1-7
+julia --project=scripts scripts/slrk_verification.jl 6 --steps=1,10,100,1000,3000
+julia --project=scripts scripts/vspark_projection_symplecticity.jl      # S17, steps 1-7
+julia --project=scripts scripts/vspark_projection_symplecticity.jl 2 --problems=MasslessChargedParticle
+```
+
+A trailing step number selects steps; `--steps=` sets the step counts of `slrk`'s step 6
+and `--problems=` restricts `vspark`'s problem list, so any single row of the tables below
+can be regenerated without paying for the whole sweep. Both scripts share the loop
+machinery in `scripts/loop_invariants.jl`: the loop integral `∮p·dq` with `dq/ds` taken
+*spectrally*, since a central-difference stencil leaves an `O(N⁻²)` quadrature error of
+order 1e-7 that masquerades as a symplecticity defect. `PoincareInvariants.jl` is not a
+dependency of this repository and none of the numbers here rely on it — step 4 of the
+`vspark` script cross-checks the inline loop integral against it on the *initial* loop
+only, and only if it happens to be installed in the active environment.
+
+The two `LotkaVolterra2d` variants and the two `MasslessChargedParticle` variants are
+gauge pairs: their one-forms differ by an exact form, so they describe the same continuous
+system and share `Ω = ∇ϑᵀ − ∇ϑ`, but they give different discrete methods.
+
 ## What matches
 
 Notation map (code → manuscript): `q.a → a¹`, `q̃.a → a²`, `p.a → ā¹`, `p̃.a → ā²`,
@@ -908,11 +934,37 @@ through the last column of `ω`.
 
 ## Verification of the S10 fix
 
+The stage Jacobian is differentiated exactly (`ForwardDiff`, the same dual numbers the
+integrator's own solver uses). This matters for the claim: a central-difference stencil
+puts a ~1e-9 noise floor under the Jacobian, which turns the *exactly* singular `Δt = 1`
+case into a finite `κ ≈ 1e11` and understates the finding. All numbers below are on
+`LotkaVolterra2d` (`scripts/slrk_verification.jl`, step 2).
+
+`σ` is the smallest singular value of the `μ` columns after projecting out the span of
+all the other columns — the `μ` direction the reduced system still sees. With the bug it
+tracks `(1−Δt)` to three digits and vanishes at `Δt = 1`, which is the mechanism:
+
+| `SLRKLobattoIIIAB(2)` | Δt=0.1 | Δt=0.5 | Δt=0.9 | Δt=0.99 | Δt=0.999 | Δt=1.0 |
+|:---|---:|---:|---:|---:|---:|---:|
+| `σ`, before | 1.03e0 | 4.97e-1 | 5.78e-2 | 4.09e-3 | 3.94e-4 | **1.18e-15** |
+| `σ`, after | 1.14e0 | 9.94e-1 | 5.78e-1 | 4.09e-1 | 3.94e-1 | **3.92e-1** |
+| `cond(J)`, before | 9.6e1 | 2.6e1 | 1.5e2 | 2.2e3 | 2.3e4 | **3.1e17** |
+| `cond(J)`, after | 8.2e1 | 2.1e1 | 3.0e1 | 4.5e1 | 4.6e1 | **4.7e1** |
+
+The same pattern holds for `IIIBA`, `s = 2,3` (`σ` before: 1.07e0 → 1.18e-15 and
+1.47e0 → 2.00e-15; `κ` before at `Δt = 1`: 2.5e18 and 5.9e16).
+
 | check | before | after |
 |:---|:---|:---|
-| `cond(J)` at `Δt = 0.9 / 0.99 / 0.999 / 1.0`, `SLRKLobattoIIIAB(2)` | 1.5e2 / 2.2e3 / 2.3e4 / **1.6e11** | 3.0e1 / 4.5e1 / 4.6e1 / **4.7e1** |
 | `integrate` at `Δt = 1` | `SingularException` | `NonlinearSolverException` (Newton divergence at a step size comparable to the period — no longer a linear-algebra failure) |
+| `integrate` at `Δt = 0.99` | converges (Newton copes with `κ ≈ 2e3`) | converges |
 | `q(T)`, `p(T)` at `Δt = 0.1`, all six constructors, `s = 2,3` | — | unchanged to ≤ 2 ulp |
+
+Note that the solve at `Δt = 0.99` succeeds either way, so no integration test
+discriminates: the conditioning of the stage Jacobian is the only observable that does.
+That is what the regression test added in `test/spark/spark_integrators_tests.jl`
+("SLRK stage-Jacobian conditioning") checks — `κ < 1e4` at `Δt = 0.99` and `Δt = 1` for
+all six constructors at `s = 2,3`, against `≈ 1e17` with the bug.
 
 The fix is behaviour-neutral at usable step sizes, as predicted: for problems whose
 `g`, `ψ` and `ϕ` do not depend on `p` beyond `ϕ = p − ϑ(q)`, the two variants differ
@@ -925,12 +977,18 @@ stages `Pᵢ` and would change results for any `ψ` or `g` that depends on `p`.
   (S10) with a comment recording the convention; rewrote the docstring (S11, S12);
   aligned the stage-time tableau and zeroed `C.ṽ` explicitly (S14).
 * `src/spark/tableaus_slrk.jl` — corrected the duplicated tableau name (S13).
+* `src/spark/integrators_spark.jl`, `integrators_vspark.jl`,
+  `integrators_vspark_primary.jl`, `integrators_vspark_secondary.jl` — the same `C.ṽ`
+  hardening as S14; all four evaluated `ϕ` with a cache field that is never assigned.
+  Behaviour-neutral (the field is zeroed at construction and `ϕ = p − ϑ(q)` ignores it),
+  but it was relying on that rather than stating it.
 * `docs/src/integrators/spark.md` — added `IntegratorSLRK` to the family table and a
   full "Specialised Lobatto Runge–Kutta methods (`SLRK`)" section: what distinguishes
   it from Jay's SPARK methods, the complete scheme, the `ω` construction, the null
   vector, the table of the six constructors, the `f = ∂L/∂q` warning with a usage
   example, and what the family does and does not preserve.
-* `scripts/slrk_verification.jl` — the seven-step verification script used above.
+* `scripts/slrk_verification.jl`, `scripts/vspark_projection_symplecticity.jl` — the
+  verification scripts used above, sharing `scripts/loop_invariants.jl`.
 
 ## Manuscript corrections
 
@@ -953,9 +1011,24 @@ ones):
 
 ## Tests
 
-No regression. `spark_tableaus_tests.jl` 130 pass; `spark_integrators_tests.jl`
-**133 pass / 45 broken**; `spark_convergence_tests.jl` **64 pass / 11 broken** —
-identical to the fourth-pass tally.
+Three regression tests were added, because none of the three fixed defects was covered:
+
+* **S10** — `spark_integrators_tests.jl`, testset "SLRK stage-Jacobian conditioning":
+  `cond(J) < 1e4` at `Δt = 0.99` and `Δt = 1` for all six constructors at `s = 2,3`
+  (24 assertions), against `≈ 1e17` with the bug. The existing integrator tests run at
+  `Δt = 0.01`, where the effect is invisible, and — as noted above — the *solve* succeeds
+  at `Δt = 0.99` with or without the bug, so an integration test cannot catch this.
+* **S13** — `spark_tableaus_tests.jl`: the six `SLRK` name symbols are pairwise distinct
+  and the two `IIIC` variants carry their own names. The duplicate slipped past the
+  `typeof(...) <: SLRK` checks it sat next to, which cannot see a name.
+* **Order** — `SLRKLobattoIIICC̄` and `SLRKLobattoIIIC̄C` added to
+  `spark_convergence_tests.jl` at `s = 2,3`. The docstring claimed order `2s−2`
+  "confirmed empirically" for all six families while only four were measured; the two
+  IIIC pairs come out at 1.96 / 2.03 and 4.01 / 3.99.
+
+Tally: `spark_tableaus_tests.jl` **133 pass** (was 130); `spark_integrators_tests.jl`
+**157 pass / 45 broken** (was 133 / 45); `spark_convergence_tests.jl`
+**72 pass / 11 broken** (was 64 / 11). No previously passing test changed status.
 
 ## Fifth pass, addendum — the same verification on `LotkaVolterra2dSingular`
 
@@ -1105,17 +1178,45 @@ criticise Jay's SPARK methods) applying to its own scheme.
 
 ### Long-time behaviour: secular vs bounded
 
-`∮ϑ(q)·dq`, relative drift, `h = 0.1`, out to 3000 steps:
+Reproduce with `julia --project=scripts scripts/slrk_verification.jl 6 --steps=1,10,100,1000,3000`.
 
-| | 1 | 10 | 100 | 1000 | 3000 | growth |
+Two invariants have to be kept apart here, because they are the same quantity only on
+`{ϕ = 0}`: the **canonical** `∮p·dq` computed with the integrator's own `p`, which any
+symplectic map conserves exactly, and the **noncanonical** `∮ϑ(q)·dq`, the invariant of
+the constrained system. For SLRK they agree to every digit — it holds `ϕ` to 1e-15, so
+either one measures its symplecticity. For VPRK they do not: a variational integrator
+conserves the canonical one exactly and *leaves* `{ϕ = 0}`, so its noncanonical value
+merely oscillates with `max|ϕ|` and is **not** a symplecticity control. Comparing SLRK's
+drift against VPRK's *noncanonical* number would be comparing unlike things.
+
+The decisive comparison is therefore canonical against canonical, at `h = 0.1`:
+
+| canonical `∮p·dq`, relative drift | 1 | 10 | 100 | 1000 | 3000 |
+|:---|---:|---:|---:|---:|---:|
+| `VPRKGauss(2)` | 5.6e-14 | 7.9e-14 | 6.9e-14 | 2.7e-13 | **4.7e-13** |
+| `VPRKGauss(3)` | 4.6e-14 | 1.0e-13 | 3.8e-14 | 3.5e-13 | **1.1e-13** |
+| `SLRKLobattoIIID(3)` | 8.6e-10 | 9.5e-10 | 5.7e-07 | 6.1e-06 | **1.9e-05** |
+| `SLRKLobattoIIID(2)` | 4.4e-08 | 6.4e-06 | 1.7e-03 | 1.8e-02 | **5.8e-02** |
+| `SLRKLobattoIIICC̄(2)` | 8.5e-05 | 8.0e-04 | 6.9e-02 | 1.4e+00 | diverges |
+
+The controls sit at round-off over the whole range — the harness is clean — while every
+SLRK method drifts, and for SLRK the noncanonical column is identical to the canonical one
+digit for digit. Nine orders of magnitude separate the two groups at 3000 steps.
+
+Out to 3000 steps the growth is *linear in the step count*, which is what distinguishes a
+genuine defect from a bounded oscillation. Measured on the noncanonical invariant (equal
+to the canonical one for SLRK), with the VPRK rows shown only to make the point that
+their noncanonical value is not a control — it is bounded but nowhere near round-off:
+
+| `∮ϑ(q)·dq`, relative drift | 1 | 10 | 100 | 1000 | 3000 | growth |
 |:---|---:|---:|---:|---:|---:|:---|
-| `VPRKGauss(3)` | 1.4e-06 | 1.4e-06 | 5.8e-08 | 7.0e-06 | 7.8e-06 | **bounded** (dips ×24 at 100) |
-| `VPRKGauss(2)` | 1.8e-04 | 1.9e-03 | 4.2e-03 | 3.5e-03 | 3.5e-02 | bounded / non-monotone |
+| `VPRKGauss(3)` (not a control) | 1.4e-06 | 1.4e-06 | 5.8e-08 | 7.0e-06 | 7.8e-06 | bounded (dips ×24 at 100) |
+| `VPRKGauss(2)` (not a control) | 1.8e-04 | 1.9e-03 | 4.2e-03 | 3.5e-03 | 3.5e-02 | bounded / non-monotone |
 | `SLRKLobattoIIID(3)` | 8.6e-10 | 9.5e-10 | 5.7e-07 | 6.1e-06 | 1.9e-05 | **linear** (×10.6, ×3.04) |
 | `SLRKLobattoIIIAB(3)` | 7.8e-08 | 2.5e-07 | 4.1e-04 | 4.3e-03 | 1.3e-02 | **linear** (×10.5, ×3.03) |
 | `SLRKLobattoIIIAB(2)` | 2.6e-04 | 2.0e-03 | 1.6e-01 | 7.2e-01 | 9.2e-01 | monotone, saturating at O(1) |
 
-VPRK's canonical invariant stays at round-off throughout (2.2e-16 → 6.3e-14 over 3000
+VPRK's canonical invariant stays at round-off throughout (5.6e-14 → 4.7e-13 over 3000
 steps) while its noncanonical one merely oscillates with `max|ϕ|`; SLRK's grows linearly
 in the step count to three significant figures over two decades. Different mechanisms:
 a symplectic map measured with a non-invariant quantity, versus genuine non-conservation.
@@ -1163,9 +1264,35 @@ One-step canonical `∮p·dq` defect, `h = 0.5 → 0.05`, `N = 128` loop points:
 | `GLRK(2)pInternal` | round-off | round-off | **2.1e-07 → 1.4e-12**, `O(h⁴)` | round-off |
 | `GLRK(2)pLobattoIIIAIIIB` | round-off | round-off | **1.9e-10 → 6.9e-15** | round-off |
 
-On `MasslessChargedParticle` **every one of the thirty Gauß-inner methods shows a clean
-`O(hᵏ)` defect**, `k ∈ {3,4}`, with 100-step drifts up to 1.2e-05. Nothing is at round-off.
-So the violated conditions do bite; they simply did not show on Lotka–Volterra.
+On `MasslessChargedParticle` **not one of the thirty Gauß-inner methods is at round-off
+across the sweep**, and the eighteen whose decay stays above the round-off floor over all
+four step sizes give a clean `O(hᵏ)` defect with
+
+```
+k ≈ 3.1  (1)pMidpoint, (1)pModifiedMidpoint, (1)pInternal, (1)pModifiedInternal
+k ≈ 4.2  (1)pSymplectic
+k ≈ 4.6  (2)pMidpoint, (2)pModifiedMidpoint, (2)pModifiedInternal
+k ≈ 5.0  (1)pSymmetric, (1)pLobattoIIIAIIIB, (1)pModifiedLobattoIIIAIIIB
+k ≈ 5.1  (3)pMidpoint, (3)pModifiedMidpoint, (3)pInternal, (3)pModifiedInternal,
+         (1)pLobattoIIIBIIIA, (1)pModifiedLobattoIIIBIIIA
+k ≈ 5.2  (2)pInternal
+```
+
+so `k ∈ {3,4,5}`, clustered at 5. 100-step drifts reach 1.2e-05. The remaining twelve
+*bottom out*: they decay for `h = 0.5` and then sit at round-off for the smaller steps, so
+the sweep has no dynamic range left and no exponent can be quoted for them — the script
+marks these `†` and prints `defect` without a number rather than fitting one.
+
+An earlier revision of this section reported `k ∈ {3,4}`. That came from a fit that
+divided by a single per-interval ratio, `log₂(HS₁/HS₂) = log₂(2.5)`, once per interval;
+since `HS = (0.5, 0.2, 0.1, 0.05)` spans a factor of ten in three unequal intervals the
+denominator was 3·log₂2.5 = 3.97 where it should have been log₂10 = 3.32, biasing every
+exponent low by a factor 0.84 — and it fitted the floored points too, which invented
+exponents of 2.0–4.5 for sweeps that had simply run out of range. `classify` now fits by
+least squares in `log h` over the points above the floor only.
+
+Either way the conclusion is the one that matters: the violated conditions do bite; they
+simply did not show on Lotka–Volterra.
 
 #### Established: a linear `ϑ` makes any projection method symplectic for free
 
@@ -1256,6 +1383,28 @@ initial condition. The manuscript states this in its Symmetric-Projection exampl
 not feed it back into the theorem. Restating the theorem with "the projective stages are
 the endpoints and the initial condition is consistent" in place of `P̃ᵢ = ϑ(Q̃ᵢ)` would make
 that hypothesis checkable from the tableau rather than from the solution.
+
+Measured against the observed defect directly (step 6: `(★)` and the one-step change of
+`dp∧dq` on the constraint manifold, both by the same central-difference stencil, swept over
+`ε ∈ {1e-4, 1e-5, 1e-6}` because the stage quantities come out of a nonlinear solve and a
+single stencil width cannot support a quoted ratio):
+
+| `MasslessChargedParticle`, h = 0.2 | star | defect | star/defect | ε-spread |
+|:---|---:|---:|---:|---:|
+| `GLRK(1)pSymplectic` | -9.62e-07 | -1.46e-06 | **0.658** | 2.9e-04 |
+| `GLRK(2)pMidpoint` | 8.58e-10 | 8.56e-10 | **1.002** | 1.9e-01 |
+| `GLRK(1)pLobattoIIIAIIIB` | 1.11e-09 | 1.10e-09 | **1.010** | 1.6e-01 |
+| `GLRK(1)pMidpoint`, `GLRK(1)pInternal` | 0.0 | -3.65e-05 | 0 | 0 |
+
+So `(★)` is the whole defect for `GLRK(2)pMidpoint` and `GLRK(1)pLobattoIIIAIIIB` — though
+the ε-spread is ~20 %, so only the leading digit of those ratios is supported, not the
+three printed. For `GLRK(1)pSymplectic` the ratio is well determined (spread 3e-04) and
+clearly *not* 1: `(★)` accounts for two thirds of its defect and something else for the
+rest. And the two methods with `Φ̃ᵢ = 0` identically have `star = 0` exactly while still
+drifting at 3.6e-05 — which is the clean separation of the two defect sources: `(★)`, and
+the violated tableau conditions. On `LotkaVolterra2d` both quantities sit at the stencil
+noise floor (1e-11 … 1e-16) with `O(1)` ε-spread, so no ratio there means anything — as
+expected, since these methods have no measurable defect on that problem to account for.
 
 That still leaves `pSymmetric`'s `cond4` violation. With `σ = 2`, `ρ = 1` the `δ` row ties
 `Λ̃₁ = R∞Λ̃₂` and the `ω` row ties `Φ̃₁ = -R∞Φ̃₂`, so the multiplier block collapses to one

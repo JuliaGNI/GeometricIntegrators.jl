@@ -132,7 +132,10 @@ equivalent to the ``s-1`` Lobatto-IIIA-averaged secondary constraints together w
 The Lobatto stage system is rank deficient by one in the ``V``-direction; the
 multiplier ``\mu`` relaxes the primary constraint along the null vector ``d``
 (`get_lobatto_nullvector`) and the extra condition ``\sum_i d_i V_{n,i} = 0``
-removes the deficiency — the same construction as in `VPRK`.
+removes the deficiency — the same construction as in `VPRK`. ``\mu`` appears in the
+primary-constraint equation and nowhere else; adding it to the momentum-stage equation as
+well makes the stage Jacobian singular at ``h = 1``, which is what finding S10 of
+`VERIFICATION_REPORT.md` fixed.
 
 ### Available methods
 
@@ -208,17 +211,23 @@ sol  = integrate(prob, SLRKLobattoIIIAB(3))
   over ``10^3`` steps on Lotka–Volterra, for every constructor and every ``s``.
   This is the property the family exists for, and it is the one variational
   integrators lack.
-* **Order: as documented.** ``2s-2``, confirmed empirically.
+* **Order: as documented.** ``2s-2``, confirmed empirically for all six families at
+  ``s = 2, 3`` in `test/verification/spark_convergence_tests.jl`.
 * **Symplecticity: approximate, not exact.** The source manuscript states exact
   preservation of the noncanonical two-form, but its proof leaves an uncontrolled
   term in the multiplier block — constraint ``\sum_i d_i V_{n,i} = 0`` has no
   counterpart for ``\Lambda``, so
   ``h \sum_j b^2_j (d_j/\bar{b}^1_j)\, \mathrm{d}\mu \wedge \mathrm{d}\Lambda_{n,j}``
-  survives. Measured on Lotka–Volterra, the Poincaré invariant ``\oint p\,dq``
+  survives. Measured on Lotka–Volterra, the first Poincaré invariant ``\oint p\,dq``
   drifts secularly, by ``O(h^{p+1})`` per step, e.g. ``2.6\times10^{-4}`` after one
   step and ``1.6\times10^{-1}`` after 100 steps at ``h = 0.1`` for
-  `SLRKLobattoIIIAB(2)`, against ``\sim 10^{-14}`` for a genuinely symplectic
-  variational integrator under the same measurement. `SLRKLobattoIIID` and
+  `SLRKLobattoIIIAB(2)`. Because `SLRK` holds ``\phi`` to round-off, its canonical
+  ``\oint p\,dq`` and noncanonical ``\oint\vartheta(q)\cdot dq`` agree to every digit,
+  so either one measures its symplecticity. The control is a genuinely symplectic
+  variational integrator measured on the **canonical** invariant — `VPRKGauss(2)` and
+  `VPRKGauss(3)` hold it at ``\sim 10^{-14}`` out to ``3\times10^{3}`` steps. Their
+  *noncanonical* value is not a control and is not small (``10^{-6}`` to ``10^{-2}``),
+  because a variational integrator leaves ``\{\phi = 0\}``. `SLRKLobattoIIID` and
   `SLRKLobattoIIIE` have the smallest defect. See the "Fifth pass" section of the
   repository's `VERIFICATION_REPORT.md`.
 * **The symplecticity defect is gauge invariant.** Measured on the two

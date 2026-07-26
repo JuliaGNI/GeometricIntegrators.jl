@@ -231,4 +231,15 @@ end
     @test typeof(SLRKLobattoIIID(2))           <: SLRK
     @test typeof(SLRKLobattoIIIE(2))           <: SLRK
 
+    # Every SLRK constructor must register under its own name symbol: `SLRKLobattoIIIC̄C`
+    # was registered under `SLRKLobattoIIICC̄`'s symbol until the fifth pass (finding S13),
+    # which the `typeof` checks above cannot see.
+    let names = [ctor(2).name for ctor in (SLRKLobattoIIIAB, SLRKLobattoIIIBA,
+                                           SLRKLobattoIIICC̄, SLRKLobattoIIIC̄C,
+                                           SLRKLobattoIIID, SLRKLobattoIIIE)]
+        @test length(unique(names)) == length(names)
+        @test SLRKLobattoIIICC̄(2).name == Symbol("SLRKLobattoIIICIIIC̄")
+        @test SLRKLobattoIIIC̄C(2).name == Symbol("SLRKLobattoIIIC̄IIIC")
+    end
+
 end

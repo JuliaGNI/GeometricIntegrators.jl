@@ -204,7 +204,10 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         C.p̃ .+= timestep(int) .* tableau(int).p.β[i] .* C.Gp[i]
     end
 
-    # compute ϕ(q,p)
+    # compute ϕ(q,p) at the new solution. No velocity is available there; ϕ of a
+    # degenerate Lagrangian, ϕ(q,p) = p - ϑ(q), does not use it. Zero it explicitly
+    # rather than relying on the cache never having been written.
+    C.ṽ .= 0
     equations(int).ϕ(C.ϕ̃, sol.t, C.q̃, C.ṽ, C.p̃, params)
 end
 

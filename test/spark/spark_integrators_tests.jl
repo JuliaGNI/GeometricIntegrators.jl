@@ -1,7 +1,9 @@
 using GeometricIntegrators
 using GeometricIntegrators.SPARK
 using GeometricProblems.LotkaVolterra2d
+using LinearAlgebra
 using RungeKutta
+import GeometricIntegratorsBase
 using Test
 
 const t₀ = 0.0
@@ -102,6 +104,62 @@ const SPARK_RELAXED = (min_iterations = 1, x_suctol = 2eps(), f_abstol = 4e-15, 
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 end
+
+
+@testset "$(rpad("SLRK stage-Jacobian conditioning (finding S10)",80))" begin
+
+    # The null-vector multiplier μ must enter the primary-constraint residual row only.
+    # Until the fifth pass it was added to the momentum-stage row as well; since that
+    # row lives in Z-space (P = p + h·Z), the same coefficient there carries an extra
+    # factor h, the two contributions combine to (1-h)·μ·dᵢ/b̄ᵢ, and the μ column of
+    # the stage Jacobian drops out of the reduced system at Δt = 1 — making it exactly
+    # singular there and ill-conditioned nearby.
+    #
+    # The integrator tests above run at Δt = 0.01, where this is invisible, and the
+    # solver still converges at Δt = 0.99 either way, so only the conditioning of the
+    # stage Jacobian discriminates. With this central-difference stencil, measured with
+    # the bug: κ ≈ 1e11 at Δt = 1 and ≈ 2e3 at Δt = 0.99; without it: κ ≤ 1.3e3 at every
+    # step size and every constructor. (The 1e11 is the stencil's noise floor standing in
+    # for an exactly singular matrix — step 2 of `scripts/slrk_verification.jl`
+    # differentiates exactly and gets 3.1e17. Either way the bound below separates them
+    # by seven orders of magnitude, so the cheap stencil is enough for a regression test.)
+
+    "central-difference stage Jacobian of `residual!` at the initial guess"
+    function stage_jacobian(method, Δt)
+        prob = ldaeproblem_slrk(q₀; timespan=(t₀, t₀ + 10Δt), timestep=Δt, parameters=params)
+        int = GeometricIntegrator(prob, method)
+        solstep = GeometricIntegratorsBase.solutionstep(int, GeometricIntegratorsBase.initialstate(prob))
+        GeometricIntegratorsBase.reset!(solstep, Δt)
+
+        sol = GeometricIntegratorsBase.current(solstep)
+        prm = GeometricIntegratorsBase.parameters(solstep)
+        GeometricIntegratorsBase.initial_guess!(sol, GeometricIntegratorsBase.history(solstep), prm, int)
+
+        x = copy(GeometricIntegratorsBase.nlsolution(int))
+        n = length(x)
+        J = zeros(n, n)
+        rp = zeros(n)
+        rm = zeros(n)
+        ε = 1e-7
+        for j in 1:n
+            xp = copy(x); xp[j] += ε
+            xm = copy(x); xm[j] -= ε
+            GeometricIntegratorsBase.residual!(rp, xp, sol, prm, int)
+            GeometricIntegratorsBase.residual!(rm, xm, sol, prm, int)
+            J[:, j] .= (rp .- rm) ./ (2ε)
+        end
+        J
+    end
+
+    for ctor in (SLRKLobattoIIIAB, SLRKLobattoIIIBA, SLRKLobattoIIICC̄,
+                 SLRKLobattoIIIC̄C, SLRKLobattoIIID, SLRKLobattoIIIE), s in (2, 3)
+        for Δt in (0.99, 1.0)
+            @test cond(stage_jacobian(ctor(s), Δt)) < 1E4
+        end
+    end
+
+end
+
 
 
 @testset "$(rpad("SPARK integrators",80))" begin
