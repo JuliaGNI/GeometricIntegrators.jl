@@ -1120,53 +1120,117 @@ steps) while its noncanonical one merely oscillates with `max|ϕ|`; SLRK's grows
 in the step count to three significant figures over two decades. Different mechanisms:
 a symplectic map measured with a non-invariant quantity, versus genuine non-conservation.
 
-### S17 — the VSPARK projection methods are *not* provably symplectic
+### S17 — the VSPARK projection methods are neither provably nor empirically symplectic
 
-The natural alternative is the projective-SPARK family (a symplectic inner method plus a
-projection). Its theorem (*SPARK Methods for Degenerate Lagrangian Systems*,
+The natural alternative to SLRK is the projective-SPARK family (a symplectic inner method
+plus a projection). Its theorem (*SPARK Methods for Degenerate Lagrangian Systems*,
 `sec:projective_spark`) requires four tableau conditions, `b³ = b¹`, `b⁴ = b²`, **and**
 `P̃_{n,i} = ϑ(Q̃_{n,i})` at *every* projective stage. That manuscript states plainly:
 
 > "We find that none of the constructions satisfies all symplecticity conditions."
 
-Checked per method — `cond4` is `b²ᵢb⁴ⱼ = b²ᵢã⁴ᵢⱼ + b⁴ⱼã²ⱼᵢ`; `max|Φ̃ᵢ|` is the
-per-projective-stage requirement measured after one converged step at `h = 0.1`:
+Confirmed, and it is not always `cond4` and not always `R(∞)`. Over the ten Gauß-inner
+projections at `s = 1,2,3` (`scripts/vspark_projection_symplecticity.jl`, step 1):
 
-| method | cond1 | cond2 | cond3 | cond4 | max\|Φ̃ᵢ\| |
-|:---|---:|---:|---:|---:|---:|
-| `GLRK(1)pSymplectic` | 0 | 0 | 0 | **0.5** | **1.9e-04** |
-| `GLRK(2)pSymplectic` | 7e-18 | 0 | 0 | 0 | **4.0e-05** |
-| `GLRK(3)pSymplectic` | 3e-17 | 0 | 0 | **0.5** | **1.8e-07** |
-| `GLRK(2)pSymmetric` | 7e-18 | 0 | 0 | **0.25** | 0 |
-| `GLRK(2)pMidpoint` | 7e-18 | 0 | 0 | 0 | **1.3e-04** |
-| `LobAB(2)pSymmetric` | 0 | 0 | 0 | **0.25** | 2e-16 |
+| construction | condition that fails |
+|:---|:---|
+| `pSymplectic` | `cond4` at odd `s` (`R(∞) = -1`); holds at `s = 2` |
+| `pSymmetric` | `cond4` = 0.25 at **every** `s` — its own docstring says so |
+| `p{Modified,}Midpoint` | `cond2`/`cond3` at `s = 1,3`; hold at `s = 2` |
+| `pInternal` | `cond2`/`cond3` at **every** `s` |
+| `pModifiedInternal` | `cond2`/`cond3` at `s = 1,3` |
+| `p{Modified,}LobattoIII{AIIIB,BIIIA}` | **all four hold at every `s`** |
 
-`cond4` fails exactly when `R(∞) = (-1)^s = -1`, as the manuscript predicts. The
-per-stage condition fails wherever `ω` averages the projective constraints rather than
-imposing them individually. `TableauVSPARKSymplecticProjection` moreover has **no
-counterpart in the manuscript** — the "Examples" section covers Midpoint, Symmetric,
-Lobatto-IIIA-IIIB, Internal-Stage and Modified-Internal-Stage projections only.
+For the last group the *only* remaining gap is the per-projective-stage requirement.
 
-**Empirically, however, the Gauß-based ones behave as if exactly symplectic.** The
-one-step defect is flat at round-off across a factor of ten in `h` — the signature of
-exactness, not of an `O(h^k)` defect:
+#### The earlier "empirically exactly symplectic" claim was a test-problem artefact
 
-| one step | h=0.5 | h=0.2 | h=0.1 | h=0.05 |
-|:---|---:|---:|---:|---:|
-| `GLRK(2)pSymplectic` | 4.4e-16 | 8.8e-16 | 4.4e-16 | 2.2e-16 |
-| `GLRK(3)pSymplectic` | 4.4e-16 | 8.8e-16 | 6.6e-16 | 2.2e-16 |
-| `GLRK(2)pSymmetric` | 2.2e-16 | 0.0 | 4.4e-16 | 0.0 |
-| `LobAB(2)pSymmetric` | 1.3e-02 | 1.0e-04 | 3.4e-06 | 1.1e-07 |
+An earlier revision of this section recorded that the Gauß-based projections behave as if
+exactly symplectic, on the strength of a one-step defect flat at round-off across a factor
+of ten in `h`. That was measured on `LotkaVolterra2d` alone. Extending to a second
+degenerate system — the massless charged particle, in both gauges — **overturns it.**
 
-Over 5000 steps at `h = 0.1`, `GLRK(2)pSymplectic` reaches 1.5e-12 (consistent with
-`√N` round-off accumulation) with `max|ϕ| = 1.3e-15` throughout — **all three
-properties at once**, which the SLRK ansatz provably cannot deliver. `LobAB(2)pSymmetric`
-is the counter-example: clean `O(h⁵)` decay, i.e. a real defect, and it drifts linearly.
+One-step canonical `∮p·dq` defect, `h = 0.5 → 0.05`, `N = 128` loop points:
 
-So the theorem's conditions are *sufficient, not necessary*, and the Gauß-projection
-methods satisfy something weaker that the current theory does not capture. **Open
-question worth a proof.** Until then they should be described as empirically symplectic,
-not provably so.
+| method | LotkaVolterra2d | LV2dSingular | MasslessChargedParticle | MCPSingular |
+|:---|:---|:---|:---|:---|
+| `GLRK(1)pSymplectic` | round-off | **fails** | **1.6e-05 → 1.0e-09**, `O(h⁴)` | **fails** |
+| `GLRK(2)pSymplectic` | round-off | 5.6e-06 → r.o. | **3.7e-10 → 4.6e-15** | round-off |
+| `GLRK(3)pSymplectic` | round-off | **2.7e-03**, `O(h⁴)` | **6.5e-11 → 1.8e-15** | **1.4e-05**, `O(h⁷)` |
+| `GLRK(1)pSymmetric` | round-off | round-off | **1.9e-08 → 2.1e-13**, `O(h⁴)` | round-off |
+| `GLRK(2)pSymmetric` | round-off | round-off | **1.9e-10 → 9.9e-15** | round-off |
+| `GLRK(1)pMidpoint` | round-off | round-off | **1.3e-04 → 1.1e-07**, `O(h³)` | round-off |
+| `GLRK(2)pInternal` | round-off | round-off | **2.1e-07 → 1.4e-12**, `O(h⁴)` | round-off |
+| `GLRK(2)pLobattoIIIAIIIB` | round-off | round-off | **1.9e-10 → 6.9e-15** | round-off |
+
+On `MasslessChargedParticle` **every one of the thirty Gauß-inner methods shows a clean
+`O(hᵏ)` defect**, `k ∈ {3,4}`, with 100-step drifts up to 1.2e-05. Nothing is at round-off.
+So the violated conditions do bite; they simply did not show on Lotka–Volterra.
+
+#### Conjecture: an affine component of `ϑ` is what hides the defect
+
+The three problems on which everything sits at round-off share a structural feature that
+the fourth does not:
+
+| problem | `ϑ` | `∂²ϑ₂` |
+|:---|:---|:---|
+| `LotkaVolterra2d` | `(q₂ + log q₂/q₁, q₁)` | `0` — `ϑ₂` affine |
+| `LotkaVolterra2dSingular` | `(log q₂/q₁, 0)` | `0` |
+| `MasslessChargedParticleSingular` | `(-A₀x₂(1+2x₁²+⅔x₂²), 0)` | `0` |
+| `MasslessChargedParticle` | `A₀/2 (1+x₁²+x₂²)(-x₂, x₁)` | **≠ 0** — both components nonlinear |
+
+Exactly the problem with no affine component is the one that exposes the defect. This is a
+conjecture on four data points, not a result, but it is the obvious thing to test next: if
+the leftover term is proportional to second derivatives of `ϑ` in the projected direction,
+it vanishes identically whenever one component of the one-form is affine — and a test
+problem of that shape will certify any method as symplectic regardless of its tableau.
+
+**Implication for the earlier recommendation.** `pSymmetric` / `pMidpoint` / `pInternal`
+are *better behaved* than `pSymplectic` (which additionally fails or degrades in the
+singular gauge, `SingularException` at `s = 1`), but none of them is exactly symplectic on
+a genuinely nonlinear one-form. The honest statement is: **no construction in this family
+is known to be symplectic, by proof or by measurement.**
+
+#### What the proof would need
+
+At the point where the manuscript invokes `P̃ᵢ = ϑ(Q̃ᵢ)`, the `h¹` terms have been reduced to
+
+```
+Σᵢ b²ᵢ dG̃ᵢ ∧ dQ̃ᵢ + Σᵢ b⁴ᵢ dP̃ᵢ ∧ dΛ̃ᵢ
+  = Σᵢ (b⁴ᵢ - b²ᵢ) dϑ(Q̃ᵢ) ∧ dΛ̃ᵢ  +  Σᵢ b⁴ᵢ dΦ̃ᵢ ∧ dΛ̃ᵢ ,     Φ̃ᵢ = ϕ(Q̃ᵢ,P̃ᵢ)
+```
+
+With `b⁴ = b²` the first sum dies and what is actually required is the **two-form**
+condition
+
+```
+Σᵢ b⁴ᵢ dΦ̃ᵢ ∧ dΛ̃ᵢ = 0 .                                                (★)
+```
+
+The theorem discharges `(★)` by the far stronger pointwise demand `Φ̃ᵢ = 0`. Measuring both
+factors (step 5) shows neither is the mechanism:
+
+* `Λ̃ᵢ ≠ 0` for every method (1e-3 … 1e-8) — the projection is always active, so "the
+  projection does nothing" is not the explanation.
+* `Φ̃ᵢ = 0` to round-off for `pSymmetric` and `pInternal` at every `s`, but `Φ̃ᵢ ≠ 0` for
+  `pSymplectic` (1.9e-04 … 1.8e-07) and for `pMidpoint` at `s = 2,3` — and *both* groups
+  are at round-off on Lotka–Volterra.
+
+For `pSymmetric` the pointwise condition is a **consequence, not an assumption**: its
+projective stages are `(qₙ,pₙ)` and `(qₙ₊₁,pₙ₊₁)`, so its single `ω` row reads
+`ϕ(qₙ,pₙ) + R∞ ϕ(qₙ₊₁,pₙ₊₁) = 0`, which propagates `ϕ = 0` by induction from a consistent
+initial condition. The manuscript states this in its Symmetric-Projection example but does
+not feed it back into the theorem. Restating the theorem with "the projective stages are
+the endpoints and the initial condition is consistent" in place of `P̃ᵢ = ϑ(Q̃ᵢ)` would make
+that hypothesis checkable from the tableau rather than from the solution.
+
+That still leaves `pSymmetric`'s `cond4` violation. With `σ = 2`, `ρ = 1` the `δ` row ties
+`Λ̃₁ = R∞Λ̃₂` and the `ω` row ties `Φ̃₁ = -R∞Φ̃₂`, so the multiplier block collapses to one
+dimension and `(★)` reduces to `R∞(b⁴₁ - b⁴₂) dΦ̃₁ ∧ dΛ̃₂`, which vanishes for `b⁴₁ = b⁴₂`,
+i.e. `R∞ = +1`. *(Derived here, not verified numerically.)* A rank argument of this kind —
+the `δ` constraints collapsing the multiplier space — looks like the most promising way to
+weaken the hypotheses, but it does not by itself explain the `MasslessChargedParticle`
+results, where all of these methods do drift.
 
 ### Option 3 — composed symplectic projection
 
@@ -1174,8 +1238,10 @@ not provably so.
 inner method plus a projection carried by separate Lobatto projective stages, with the
 endpoint constraint in the last row of `ω_λ`. It escapes the S16 no-go because it does
 **not** impose `ϕ = 0` at every internal stage — only on the projective stages — so the
-counting argument that forces `μ` never arises. Verified above: exact to round-off in
-both invariants with the constraint at 1.3e-15.
+counting argument that forces `μ` never arises, and the constraint is still held at
+`1e-15`. But per S17 it is *not* symplectic on a one-form with no affine component, and it
+is the least robust member of the family under a change of gauge, so it does not resolve
+the question that S16 leaves open.
 
 What remains genuinely unexplored: the VSPARK-primary family projects on the **primary**
 constraint only. SLRK's distinguishing feature — averaging the **secondary** constraint —
