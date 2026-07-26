@@ -1,5 +1,6 @@
 using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
+import GeometricProblems.LotkaVolterra2dSingular
 using RungeKutta.Tableaus: TableauCrouzeix
 
 ode  = odeproblem()
@@ -36,4 +37,8 @@ show(stdout, GeometricIntegrator(lode, DVIB()))
 show(stdout, GeometricIntegrator(lode, CMDVI()))
 show(stdout, GeometricIntegrator(lode, CTDVI()))
 
-show(stdout, GeometricIntegrator(iode, DVRK(Gauss(1))))
+# DVRK needs an even-dimensional configuration space (it splits the coordinates
+# into the half that carries the quadrature update and the half determined by the
+# constraint p = ϑ(q)). The harmonic oscillator IODE used above has D = 1, for
+# which the method is not defined, so use an in-class 2d problem here.
+show(stdout, GeometricIntegrator(LotkaVolterra2dSingular.lodeproblem(), DVRK(Gauss(1))))

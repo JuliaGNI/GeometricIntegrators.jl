@@ -33,7 +33,11 @@ integrators:
 | [`DVIB`](@ref)      | Symplectic-Euler-B type degenerate variational integrator  | 1     |
 | [`CMDVI`](@ref)     | Midpoint (centred) degenerate variational integrator       | 2     |
 | [`CTDVI`](@ref)     | Trapezoidal degenerate variational integrator              | 2     |
-| [`DVRK`](@ref)      | Degenerate variational Runge–Kutta method                  | 2s    |
+| [`DVRK`](@ref)      | Degenerate variational Runge–Kutta method                  | 2s¹   |
+
+¹ With Gauss–Legendre coefficients, and provided the Lagrangian is given in a
+gauge satisfying \eqref{eq:dvi-degenerate-lagrangian}. See *Order of accuracy and
+the role of the gauge* below.
 
 
 ## Euler-Type and Midpoint/Trapezoidal Integrators
@@ -98,27 +102,70 @@ p^{\mu}_{n+1} &= p^{\mu}_{n} + h \sum \limits_{i=1}^{s} b_{i} \, F^{\mu}_{n,i} ,
 p^{\mu}_{n+1} &= \vartheta^{\mu} (q_{n+1}) , && \mu = 1, \, ..., \, d .
 \end{aligned}
 ```
-For systems of the form \eqref{eq:dvi-degenerate-lagrangian} this method is
-symplectic provided the coefficient matrix $A = (a_{ij})$ is invertible, the
-coefficients satisfy the symplecticity relation
+Note that the quadrature updates apply only to the first $d/2$ components. The
+remaining components of $q_{n+1}$ receive no quadrature update and are determined
+implicitly by the constraint $p_{n+1} = \vartheta (q_{n+1})$, which is also what
+defines $p_{n+1}$ on output.
+
+For systems of the form \eqref{eq:dvi-degenerate-lagrangian} this method preserves
+the noncanonical symplectic two-form $\omega = \mathrm{d}\vartheta$ provided the
+coefficient matrix $A = (a_{ij})$ is invertible, the coefficients satisfy the
+symplecticity relation
 ```math
 \begin{equation}\label{eq:dvrk-symplecticity}
 b_{i} a_{ij} + b_{j} a_{ji} = b_{i} b_{j}
 \qquad \text{for all} \qquad i, j = 1, \, ..., \, s ,
 \end{equation}
 ```
-and the momentum is initialised consistently with $p_{0} = \vartheta (q_{0})$
-[[Kraus:2019](@cite)]. Using Gauss–Legendre coefficients (`DVRK(Gauss(s))`)
-yields a method of order $2s$.
+the momentum is initialised consistently with $p_{0} = \vartheta (q_{0})$, and the
+$d/2 \times d/2$ matrix $\partial \vartheta_{\mu} / \partial q^{\nu}$, with
+$\mu \le d/2 < \nu$, is invertible [[Kraus:2019](@cite)]. The last condition is
+what makes $\omega$ nondegenerate — one has $\det \omega = (\det \partial
+\vartheta_{\mu} / \partial q^{\nu})^{2}$ — and what makes the scheme well posed,
+since it is exactly what allows $p_{n+1} = \vartheta (q_{n+1})$ to be solved for
+the components of $q_{n+1}$ that carry no quadrature update.
 
-!!! note
-    The single-tableau form \eqref{eq:dvrk}–\eqref{eq:dvrk-symplecticity} follows
-    [[Kraus:2019](@cite)]. The implementation accepts any
-    [`Tableau`](@ref) and additionally supports a second (embedded) set of
-    coefficients $\bar{a}_{ij}, \bar{b}_{i}$, for which the general symplecticity
-    conditions read $b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} = b_{i} \bar{b}_{j}$
-    and $\bar{b}_{i} = b_{i}$; these reduce to \eqref{eq:dvrk-symplecticity} when
-    $\bar{a} = a$ and $\bar{b} = b$.
+The `DVRK` constructor checks the two tableau conditions and warns if either is
+violated; the initial-condition consistency is checked when the integrator cache
+is built.
+
+!!! note "Admissible tableaus"
+    Conditions \eqref{eq:dvrk-symplecticity} and the invertibility of $A$ are
+    jointly restrictive. They exclude Lobatto IIIA (singular $A$) and Radau IIA
+    (invertible $A$, but \eqref{eq:dvrk-symplecticity} is violated), and they
+    cannot be met by the Lobatto IIIA–IIIB pair, which is symplectic only as a
+    *partitioned* method. The Gauss–Legendre tableaus satisfy both for any number
+    of stages, and are the only family used with `DVRK` in practice.
+
+### Order of accuracy and the role of the gauge
+
+`DVRK(Gauss(s))` attains the full order $2s$ — but only for Lagrangians that
+genuinely satisfy \eqref{eq:dvi-degenerate-lagrangian}, i.e. for which $d/2$
+components of $\vartheta$ vanish identically. The symplectic potential $\vartheta$
+of a given system is only defined up to an exact one-form, and the *gauge* matters:
+
+| Problem | Gauge | $s = 1$ | $s = 2$ | $s = 3$ |
+|:--------|:------|:-------:|:-------:|:-------:|
+| `LotkaVolterra2dSingular`         | $\vartheta_{2} = 0$ (in class)   | 2.00 | 4.00 | 5.99 |
+| `LotkaVolterra2d`                 | $\vartheta_{2} = q_{1} \ne 0$    | 1.01 | 2.00 | 3.01 |
+| `LotkaVolterra2dSymmetric`        | both components $\ne 0$          | 0.99 | 2.00 | 3.01 |
+| `MasslessChargedParticleSingular` | $A_{2} = 0$ (in class)           | 2.00 | 4.00 | 5.99 |
+| `MasslessChargedParticle`         | both components $\ne 0$          | 1.00 | 2.00 | 3.00 |
+
+The rows within each block describe the *same dynamics*, differing only by a gauge
+transformation of $\vartheta$. Applied outside the class, `DVRK` remains
+convergent, but its order is halved from $2s$ to $s$. When using `DVRK`, choose the
+formulation of the problem in which the appropriate components of $\vartheta$
+vanish identically — the `…Singular` variants in `GeometricProblems` exist for
+exactly this purpose.
+
+!!! warning
+    Deleting a component of $\vartheta$ is not a gauge transformation. For the
+    Lotka–Volterra model, $\vartheta = (q_{2} + \log q_{2} / q_{1}, \, q_{1})$ and
+    $\vartheta = (\log q_{2} / q_{1}, \, 0)$ differ by the exact one-form
+    $\mathrm{d}(q_{1} q_{2})$ and describe the same system, whereas
+    $(q_{2} + \log q_{2} / q_{1}, \, 0)$ describes a *different* system — one whose
+    orbits coincide but whose time parametrisation does not.
 
 A `DVRK` integrator is constructed by passing a Runge–Kutta tableau or method:
 ```
