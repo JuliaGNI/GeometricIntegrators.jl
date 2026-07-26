@@ -375,6 +375,7 @@ where `tableau` is any tableau from [RungeKutta.Tableaus](@ref RungeKuttaTableau
 |:--------------------------------|:------|:----------------------------|
 | [`ImplicitEuler`](@ref)         | 1     | Implicit / Backward Euler   |
 | [`ImplicitMidpoint`](@ref)      | 2     | Implicit Midpoint           |
+| [`IRK3`](@ref)                  | 3     | Implicit Runge-Kutta s=2    |
 | [`SRK3`](@ref)                  | 4     | Symmetric Runge-Kutta s=3   |
 
 
@@ -450,6 +451,7 @@ All implicit Runge-Kutta and partitioned Runge-Kutta methods can also be applied
 |:--------------------------------|:------|:----------------------------|
 | [`ImplicitEuler`](@ref)         | 1     | Implicit / Backward Euler   |
 | [`ImplicitMidpoint`](@ref)      | 2     | Implicit Midpoint           |
+| [`IRK3`](@ref)                  | 3     | Implicit Runge-Kutta s=2    |
 | [`SRK3`](@ref)                  | 4     | Symmetric Runge-Kutta s=3   |
 |                                 |       |                             |
 | [`Gauss`](@ref)                 | 2s    | Gauss-Legendre              |

@@ -42,6 +42,7 @@ lode = lodeproblem()
     @test typeof(GeometricIntegrator(ode, BackwardEuler())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(ode, ImplicitEulerRK())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(ode, ImplicitMidpoint())) <: GeometricIntegrator{<:IRK}
+    @test typeof(GeometricIntegrator(ode, IRK3())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(ode, SRK3())) <: GeometricIntegrator{<:IRK}
 
     @test typeof(GeometricIntegrator(ode, Gauss(2))) <: GeometricIntegrator{<:IRK}
@@ -60,12 +61,14 @@ lode = lodeproblem()
     @test typeof(GeometricIntegrator(ode, RadauIIB(2))) <: GeometricIntegrator{<:IRK}
 
     @test tableau(RK4()) == tableau(RK(TableauRK4()))
+    @test tableau(IRK3()) == tableau(RK(TableauIRK3()))
 
 end
 
 
 @testset "$(rpad("Partitioned Runge-Kutta methods",80))" begin
 
+    @test typeof(GeometricIntegrator(pode, IRK3())) <: GeometricIntegrator{<:IPRK}
     @test typeof(GeometricIntegrator(pode, SRK3())) <: GeometricIntegrator{<:IPRK}
 
     @test typeof(GeometricIntegrator(pode, Gauss(2))) <: GeometricIntegrator{<:IPRK}
@@ -102,6 +105,7 @@ end
 @testset "$(rpad("Runge-Kutta methods for Implicit Equations",80))" begin
 
     @test typeof(GeometricIntegrator(iode, ImplicitMidpoint())) <: GeometricIntegrator{<:IRK}
+    @test typeof(GeometricIntegrator(iode, IRK3())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(iode, SRK3())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(iode, Gauss(2))) <: GeometricIntegrator{<:IRK}
 

@@ -289,6 +289,13 @@ $(reference(Val(:ImplicitMidpoint)))
 struct ImplicitMidpoint <: IRKMethod end
 
 """
+Fully implicit Runge-Kutta method with [`TableauIRK3`](@ref).
+
+$(reference(Val(:IRK3)))
+"""
+struct IRK3 <: IRKMethod end
+
+"""
 Fully implicit Runge-Kutta method with [`TableauSRK3`](@ref).
 
 $(reference(Val(:SRK3)))
@@ -298,6 +305,7 @@ struct SRK3 <: IRKMethod end
 GeometricBase.tableau(::BackwardEuler, ::Type{T}=Float64) where {T} = TableauBackwardEuler(T)
 GeometricBase.tableau(::ImplicitEulerRK, ::Type{T}=Float64) where {T} = TableauImplicitEuler(T)
 GeometricBase.tableau(::ImplicitMidpoint, ::Type{T}=Float64) where {T} = TableauImplicitMidpoint(T)
+GeometricBase.tableau(::IRK3, ::Type{T}=Float64) where {T} = TableauIRK3(T)
 GeometricBase.tableau(::SRK3, ::Type{T}=Float64) where {T} = TableauSRK3(T)
 
 """
