@@ -1,5 +1,6 @@
 using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
+import GeometricProblems.LotkaVolterra2dSingular
 using RungeKutta.Tableaus: TableauCrouzeix
 
 ode  = odeproblem()
@@ -31,9 +32,16 @@ show(stdout, GeometricIntegrator(iode, VPRKpVariational(Gauss(1))))
 
 show(stdout, GeometricIntegrator(lode, FLRK(Gauss(1))))
 
-show(stdout, GeometricIntegrator(lode, DVIA()))
-show(stdout, GeometricIntegrator(lode, DVIB()))
-show(stdout, GeometricIntegrator(lode, CMDVI()))
-show(stdout, GeometricIntegrator(lode, CTDVI()))
+# The degenerate variational integrators need an even-dimensional configuration
+# space: they split the coordinates into the half that carries the quadrature
+# update and the half determined by the constraint p = ϑ(q). The harmonic
+# oscillator problems used above have D = 1, for which none of these methods is
+# defined and the cache constructors now throw, so use an in-class 2d problem here.
+dvilode = LotkaVolterra2dSingular.lodeproblem()
 
-show(stdout, GeometricIntegrator(iode, DVRK(Gauss(1))))
+show(stdout, GeometricIntegrator(dvilode, DVIA()))
+show(stdout, GeometricIntegrator(dvilode, DVIB()))
+show(stdout, GeometricIntegrator(dvilode, CMDVI()))
+show(stdout, GeometricIntegrator(dvilode, CTDVI()))
+
+show(stdout, GeometricIntegrator(dvilode, DVRK(Gauss(1))))
