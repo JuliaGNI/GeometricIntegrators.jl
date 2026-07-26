@@ -44,53 +44,125 @@ solversize(problem::LDAEProblem, method::SLRK) =
 
 
 @doc raw"""
-Specialised Partitioned Additive Runge-Kutta integrator for degenerate
-variational systems with projection on secondary constraint.
+Specialised Lobatto Runge-Kutta integrator for degenerate variational systems
+with projection on the secondary constraint.
 
-This integrator solves the following system of equations for the internal stages,
+`SLRK` targets degenerate Lagrangians of the form
+```math
+L (q, v) = \vartheta (q) \cdot v - H (q) ,
+```
+whose fibre derivative ``p = \vartheta(q)`` is not invertible for ``v``, so that the
+equations of motion take the form of an index-two DAE with the *primary* constraint
+``\phi (q,p) = p - \vartheta (q) = 0`` and the *secondary* constraint
+``\psi = \dot{p} - \dot{q} \cdot \nabla \vartheta (q) = \tfrac{d}{dt} \phi = 0``.
+
+Unlike the SPARK methods of Jay, which average the primary constraints over the
+internal stages, `SLRK` imposes the primary constraint at *every* stage and averages
+the *secondary* constraints instead. This is what makes the primary constraint hold
+to round-off along the whole trajectory.
+
+In contrast to [`VSPARKsecondary`](@ref) there is only a **single set of ``s`` stages**:
+the projective stages coincide with the internal stages, so ``\sigma = s`` and the
+``\Lambda`` multipliers live on the same nodes as the velocities ``V``.
+
+One step ``(q_n, p_n) \mapsto (q_{n+1}, p_{n+1})`` solves
 ```math
 \begin{aligned}
-Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a^1_{ij} V_{n,j} + h \sum \limits_{j=1}^{\sigma} a^2_{ij} \tilde{\Lambda}_{n,j} , & i &= 1, ..., s , \\
-P_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} \bar{a}^1_{ij} F^1_{n,j} + h \sum \limits_{j=1}^{s} \bar{a}^2_{ij} F^2_{n,j} + h \sum \limits_{j=1}^{\sigma} \bar{a}^3_{ij} \tilde{F}^3_{n,j} , & i &= 1, ..., s , \\
-0 &= \Phi_{n,i} , & i &= 1, ..., s ,
+Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a^1_{ij} V_{n,j}
+                 + h \sum \limits_{j=1}^{s} a^2_{ij} \Lambda_{n,j} , & i &= 1, ..., s , \\
+P_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} \bar{a}^1_{ij} F_{n,j}
+                 + h \sum \limits_{j=1}^{s} \bar{a}^2_{ij} G_{n,j} , & i &= 1, ..., s , \\
+0 &= \Phi_{n,i} - \frac{d_i}{\bar{b}^1_i} \, \mu , & i &= 1, ..., s , \\
+0 &= \sum \limits_{j=1}^{s} \omega_{ij} \, \Psi_{n,j} + \omega_{i,s+1} \, \phi (q_{n+1}, p_{n+1}) ,
+  & i &= 1, ..., s , \\
+0 &= \sum \limits_{i=1}^{s} d_{i} \, V_{n,i} ,
 \end{aligned}
 ```
-the projective stages
+with the update rule
 ```math
 \begin{aligned}
-\tilde{Q}_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} \alpha^1_{ij} \tilde{V}_{n,j} + h \sum \limits_{j=1}^{\sigma} \alpha^2_{ij} \tilde{\Lambda}_{n,j} , & i &= 1, ..., \sigma , \\
-\tilde{P}_{n,i} &= p_{n} + h \sum \limits_{j=1}^{s} \bar{\alpha}^1_{ij} F^1_{n,j} + h \sum \limits_{j=1}^{s} \bar{\alpha}^2_{ij} \tilde{F}^2_{n,j} + h \sum \limits_{j=1}^{\sigma} \bar{\alpha}^3_{ij} \tilde{F}^3_{n,j} , & i &= 1, ..., \sigma , \\
-0 &= \tilde{\Phi}_{n,i} , & i &= 1, ..., \sigma , \\
-0 &= \sum \limits_{j=1}^{\sigma} \omega_{ij} \tilde{\Psi}_{n,i} , & i &= 1, ..., \sigma-1 ,
+q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b^1_{i} V_{n,i}
+                 + h \sum \limits_{i=1}^{s} b^2_{i} \Lambda_{n,i} , \\
+p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}^1_{i} F_{n,i}
+                 + h \sum \limits_{i=1}^{s} \bar{b}^2_{i} G_{n,i} ,
 \end{aligned}
 ```
-and update rule
+and the definitions
 ```math
 \begin{aligned}
-q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b^1_{i} V_{n,i} + h \sum \limits_{i=1}^{\sigma} b^2_{i} \tilde{\Lambda}_{n,i} , \\
-p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b^1_{i} F^1_{n,i} + h \sum \limits_{i=1}^{s} b^2_{i} F^2_{n,i} + h \sum \limits_{i=1}^{\sigma} b^3_{i} \tilde{F}^3_{n,i} , \\
-0 &= \phi (q_{n+1}, p_{n+1}) ,
+F_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i})
+         = - \nabla H (Q_{n,i}) + \nabla \vartheta (Q_{n,i}) \cdot V_{n,i} , \\
+G_{n,i} &= \nabla \vartheta (Q_{n,i}) \cdot \Lambda_{n,i} , \\
+\Phi_{n,i} &= \phi (Q_{n,i}, P_{n,i}) = P_{n,i} - \vartheta (Q_{n,i}) , \\
+\Psi_{n,i} &= \psi (Q_{n,i}, V_{n,i}, P_{n,i}, F_{n,i})
+            = F_{n,i} - V_{n,i} \cdot \nabla \vartheta (Q_{n,i}) .
 \end{aligned}
 ```
-with definitions
-```math
-\begin{aligned}
-F^1_{n,i} &= \nabla H (Q_{n,i}) , & i &= 1, ..., s , \\
-F^2_{n,i} &= \nabla \vartheta (Q_{n,i}) \cdot V_{n,i} , & i &= 1, ..., s , \\
-\tilde{F}^3_{n,i} &= \nabla \phi (\tilde{Q}_{n,i}, \tilde{P}_{n,i}) \cdot \tilde{\Lambda}_{n,i} , & i &= 1, ..., \sigma , \\
-\Phi_{n,i} &= \phi (Q_{n,i}, P_{n,i}) = P_{n,i} - \vartheta (Q_{n,i}) , & i &= 1, ..., s , \\
-\tilde{\Phi}_{n,i} &= \phi (\tilde{Q}_{n,i}, \tilde{P}_{n,i}) = \tilde{P}_{n,i} - \vartheta (\tilde{Q}_{n,i}) , & i &= 1, ..., \sigma , \\
-\tilde{\Psi}_{n,i} &= \psi (\tilde{Q}_{n,i}, \tilde{V}_{n,i}, \tilde{P}_{n,i}, \tilde{F}_{n,i}) = \tilde{F}_{n,i} - \tilde{V}_{n,i} \cdot \nabla \vartheta (\tilde{Q}_{n,i}) , & i &= 1, ..., \sigma ,
-\end{aligned}
-```
-so that
-```math
-\begin{aligned}
-F^1_{n,i} + F^2_{n,i} &= \frac{\partial L}{\partial q} (Q_{n,i}, V_{n,i}) , & i &= 1, ..., s , \\
-\phi (Q_{n,i}, P_{n,i}) &= P_{n,i} - \frac{\partial L}{\partial v} (Q_{n,i}, V_{n,i}) , & i &= 1, ..., s , \\
-\psi (\tilde{Q}_{n,i}, \tilde{V}_{n,i}, \tilde{P}_{n,i}, \tilde{F}_{n,i}) &= \tilde{F}_{n,i} - \tilde{V}_{n,i} \cdot \nabla \frac{\partial L}{\partial v} (\tilde{Q}_{n,i}, \tilde{V}_{n,i}) , & i &= 1, ..., \sigma .
-\end{aligned}
-```
+
+The four coefficient tableaus are stored as `q` ``\to a^1, b^1``, `q̃` ``\to a^2, b^2``,
+`p` ``\to \bar{a}^1, \bar{b}^1`` and `p̃` ``\to \bar{a}^2, \bar{b}^2``. All
+`SLRKLobattoIII*` constructors set `q̃ = q` and `p̃ = p`, so a method is fixed by one
+Lobatto pair ``(a, \bar{a})``.
+
+## The ``\omega`` constraint
+
+``\omega`` is the ``s \times (s+1)`` matrix returned by `lobatto_ω_matrix(s)`. The
+system ``\omega \, [\Psi_{n,1}, \ldots, \Psi_{n,s}, \phi(q_{n+1},p_{n+1})]^T = 0``
+is equivalent to imposing the ``s-1`` Lobatto-IIIA-averaged secondary constraints
+``\sum_j a^{\mathrm{IIIA}}_{ij} \Psi_{n,j} = 0`` for ``i = 2, ..., s`` **together
+with** ``\phi (q_{n+1}, p_{n+1}) = 0``.
+
+## The null vector
+
+The Lobatto stage system is rank deficient by one in the ``V``-direction. The
+multiplier ``\mu`` relaxes the primary constraint along the null vector ``d`` of the
+Lagrange-derivative matrix (`get_lobatto_nullvector`), and the deficiency is removed
+by the extra condition ``\sum_i d_i V_{n,i} = 0``. This is the same convention as in
+`VPRK`.
+
+# Requirements on the problem
+
+!!! warning
+    `SLRK` requires the [`LDAEProblem`](@ref)'s `f` to be the **full** force
+    ``\partial L / \partial q = - \nabla H + \nabla \vartheta \cdot v``, because `F`
+    is used directly both in the ``p`` update and as ``\dot{p}`` in the secondary
+    constraint ``\psi``. This is the *opposite* convention to `VSPARKsecondary`,
+    which expects `f = -∇H` and reconstructs ``\partial L / \partial q`` as
+    `f + g(V)`. Passing an `LDAEProblem` built for `VSPARKsecondary` to `SLRK`
+    silently drops the ``\nabla \vartheta \cdot v`` term.
+
+    `GeometricProblems.LotkaVolterra2d` ships the two variants side by side:
+    use `ldaeproblem_slrk` with `SLRK`, and `ldaeproblem` with `VSPARKsecondary`.
+
+# Properties
+
+* The primary constraint ``\phi(q_n, p_n) = 0`` is preserved to round-off at every
+  step (measured: ``\max |\phi| \approx 2 \times 10^{-15}`` over ``10^3`` steps on
+  Lotka–Volterra), which is the point of the method.
+* The order is ``2s-2`` for all `SLRKLobattoIII*` families, confirmed empirically.
+* **Symplecticity is approximate, not exact.** The underlying manuscript claims exact
+  preservation of the noncanonical symplectic form, but its proof leaves an
+  uncontrolled term in the multiplier block: constraint ``\sum_i d_i V_{n,i} = 0``
+  has no counterpart for ``\Lambda``, so a residual
+  ``h \sum_j b^2_j (d_j / \bar{b}^1_j) \, \mathrm{d}\mu \wedge \mathrm{d}\Lambda_{n,j}``
+  survives. Measured on Lotka–Volterra, the Poincaré invariant ``\oint p \, dq``
+  drifts secularly at ``O(h^{p+1})`` per step, whereas a genuinely symplectic
+  variational integrator holds it to round-off. See the "Fifth pass" section of
+  `VERIFICATION_REPORT.md` for the numbers.
+* The defect is **gauge invariant**: two Lagrangians whose one-forms differ by an exact
+  form give the same trajectory and the same drift, to round-off.
+
+!!! warning "Choice of gauge"
+    `SLRKLobattoIIIAB` and `SLRKLobattoIIIBA` are the two families for which **both**
+    ``a^1`` and ``\bar{a}^1`` are rank deficient (Lobatto IIIA has a zero first row,
+    IIIB a zero last column, and the conjugate partners inherit it). If a component of
+    ``\vartheta`` vanishes identically, ``\nabla \vartheta^{T}`` loses rank, the
+    projection force ``G = \nabla\vartheta^{T}\Lambda`` can no longer reach the
+    corresponding momentum component, and their stage system is singular at *every*
+    step size — e.g. they fail on
+    `GeometricProblems.LotkaVolterra2dSingular` while running fine on the
+    gauge-equivalent `LotkaVolterra2d`. `SLRKLobattoIIID` and `SLRKLobattoIIIE` are
+    full rank in both blocks and are the safest default.
 """
 const IntegratorSLRK{DT,TT} = GeometricIntegrator{<:LDAEProblem{DT,TT},<:SLRK}
 
@@ -114,8 +186,9 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SLRK,<:
     # compute initial guess for internal stages
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
+        # Use the same node as `components!` (`q.c`); all Lobatto pairs share nodes.
         soltmp = (
-            t=history[1].t + timestep(int) * tableau(int).p̃.c[i],
+            t=history[1].t + timestep(int) * tableau(int).q.c[i],
             q=cache(int).Qp[i],
             p=cache(int).Pp[i],
             q̇=cache(int).Vp[i],
@@ -162,7 +235,11 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         end
 
         # compute f(X)
-        tᵢ = sol.t + timestep(int) * (method(int).p.c[i] - 1)
+        # f, g, ϕ and ψ are all evaluated on the position stage Qᵢ, which is generated
+        # by the `q` tableau, so its node is `q.c[i]`. For every Lobatto tableau the
+        # nodes of the pair coincide, so this agrees with `p.c[i]` for all shipped
+        # `SLRKLobattoIII*` methods; `initial_guess!` uses the same tableau.
+        tᵢ = sol.t + timestep(int) * (method(int).q.c[i] - 1)
         equations(int).f(C.Fp[i], tᵢ, C.Qp[i], C.Vp[i], params)
         equations(int).g(C.Gp[i], tᵢ, C.Qp[i], C.Vp[i], C.Pp[i], C.Λp[i], params)
         equations(int).ϕ(C.Φp[i], tᵢ, C.Qp[i], C.Vp[i], C.Pp[i], params)
@@ -185,7 +262,11 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         C.p̃ .+= timestep(int) .* method(int).p̃.b[i] .* C.Gp[i]
     end
 
-    # compute ϕ(q,p)
+    # compute ϕ(q,p) at the new solution, for the last column of the ω constraint.
+    # No velocity is available at (q_{n+1}, p_{n+1}); ϕ of a degenerate Lagrangian,
+    # ϕ(q,p) = p - ϑ(q), does not use it. Zero it explicitly rather than relying on
+    # the cache never having been written.
+    C.ṽ .= 0
     equations(int).ϕ(C.ϕ̃, sol.t, C.q̃, C.ṽ, C.p̃, params)
 end
 
@@ -219,9 +300,20 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     end
 
     if hasnullvector(method(int))
+        # The Lobatto stage system is rank-deficient by one in the V-direction.
+        # The multiplier μ relaxes the primary constraint along the null vector d,
+        #     ϕ(Q_{n,i}, P_{n,i}) = (d_i / b̄_i) μ ,
+        # and the rank deficiency is removed by the extra condition Σ_i d_i V_{n,i} = 0
+        # below. The same convention is used by VPRK (`residual_correction!` in
+        # `src/integrators/vi/vprk_integrator.jl`) and by VPARK/VSPARK/SPARK.
+        #
+        # μ must appear in the constraint row only, NOT additionally in the
+        # momentum-stage row: that row lives in Z-space (P = p + h·Z), so the same
+        # coefficient there carries an extra factor h and the two contributions
+        # combine to (1-h)·μ·d_i/b̄_i — which makes the Jacobian exactly singular
+        # at Δt = 1 and ill-conditioned near it.
         for i in 1:nstages(int)
             for k in 1:D
-                b[4*(D*(i-1)+k-1)+2] += C.μ[k] * method(int).d[i] / method(int).p.b[i]
                 b[4*(D*(i-1)+k-1)+3] += C.μ[k] * method(int).d[i] / method(int).p.b[i]
             end
         end

@@ -25,7 +25,7 @@ end
 function SLRKLobattoIIIC̄C(s)
     q = TableauLobattoIIIC̄(s)
     p = TableauLobattoIIIC(s)
-    SLRKLobattoIII(Symbol("SLRKLobattoIIICIIIC̄"), s, q, p)
+    SLRKLobattoIII(Symbol("SLRKLobattoIIIC̄IIIC"), s, q, p)
 end
 
 function SLRKLobattoIIID(s)

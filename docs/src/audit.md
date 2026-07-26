@@ -572,9 +572,12 @@ confirmed orders:
 ## Static consistency
 
 The `components!`/`residual!`/`update!` stage equations match the docstrings and
-the manuscript stage/update equations for every family; the `SLRK` and
+the manuscript stage/update equations for every family; the
 `VSPARKsecondary`/`HSPARKsecondary` docstrings transcribe the paper's `(s,σ)`
-constructions faithfully. The tableau `o` fields propagate correctly from the
+constructions faithfully. **Correction (fifth pass):** the claim originally made here
+that the `SLRK` docstring does so too was wrong — it was a verbatim copy of the
+`VSPARKsecondary` docstring and described a different scheme. See finding S11 below.
+The tableau `o` fields propagate correctly from the
 underlying RungeKutta tableaus (`g.o`, `min(...)`), with the two closed-form orders
 (`lobatto_gauss_coefficients` `o = s²` and `SLRKLobattoIII` `o = 2s-2`) matching
 the code. The `docs/src/integrators/spark.md` page was expanded from a bare table
@@ -790,3 +793,392 @@ five DGVI variants in `galerkin_integrators_tests.jl` (35 assertions, on a degen
 problem), the `VPRKpTableau` block in `projections_vprk_tests.jl`, the
 `CoefficientsPGLRK` check in `spark_tableaus_tests.jl`, and the FLRK entries in
 `methods/runge_kutta_methods_tests.jl` and `integrators/test_show.jl`.
+
+---
+
+# Fifth pass — `SLRK` against the SLRK manuscript
+
+The fourth pass verified the SPARK submodule against the two *SPARK Methods for …*
+drafts. `SLRK`, however, has its own source manuscript —
+`/Users/mkraus/Datashare/Papers/Symplectic Lobatto Runge-Kutta Methods for Degenerate
+Lagrangian Systems/slrk_degenerate_lagrangians.tex` (Dec 2019) — which the fourth pass
+did not use. This pass checks `src/spark/integrators_slrk.jl` and
+`src/spark/tableaus_slrk.jl` line by line against it.
+
+The manuscript is an incomplete working draft: Sections 1–3 are largely empty, the
+`.bib` is 0 bytes, six `\eqref`s point at labels that are never defined, and the
+author left a `% TODO Check signs!`. It was judged critically rather than taken as
+ground truth — and the most consequential finding is a gap in *its* proof, not in the
+code.
+
+## What matches
+
+Notation map (code → manuscript): `q.a → a¹`, `q̃.a → a²`, `p.a → ā¹`, `p̃.a → ā²`,
+`q.b → b¹`, `q̃.b → b²`, `p.b → b̄¹`, `p̃.b → b̄²`. All `SLRKLobattoIII*` set `q̃ = q`,
+`p̃ = p`.
+
+| Manuscript | Code | Verdict |
+|:---|:---|:---|
+| Stage equations for `P`, `Q` | `residual!` rows `+1`/`+2` | match |
+| Update rules for `q`, `p` | `components!`, `update!` | match |
+| `F = −∇H + ∇ϑ·V`, `G = ∇ϑ·Λ` | `equations.f`, `equations.g` | match |
+| Primary constraint at **every** stage, un-averaged (the paper's central idea) | row `+3` | match |
+| `0 = Σⱼ ωᵢⱼ ψⱼ + ω_{i,s+1} ϕ(qₙ₊₁,pₙ₊₁)`, `i = 1..s`, `ω ∈ ℝ^{s×(s+1)}` | rows `+4` | match |
+| `0 = Σᵢ dᵢ Vᵢ` | null-vector block | match |
+| `ψ = F̃ − Ṽ·∇ϑ(Q̃)` | `equations.ψ(…, Vp, Fp)` | match |
+
+Verified numerically (`scripts/slrk_verification.jl`, steps 1a/1b):
+
+* **Symplecticity conditions of the tableaus.** Every `X̄` in RungeKutta.jl is
+  `symplectic_conjugate_coefficients(a,b) = bⱼ/bᵢ (bᵢ − aⱼᵢ)`, so `b̄ᵢaᵢⱼ + bⱼāⱼᵢ = b̄ᵢbⱼ`
+  and `b = b̄` hold by construction. Worst deviation over all six constructors and
+  `s = 2,3,4`: **2.8e-17**. With `q̃ = q`, `p̃ = p` the manuscript's eight conditions
+  collapse to these two.
+* **The `ω` matrix.** `lobatto_ω_matrix(s)` builds `ω = L⁻¹R`; since `L` is invertible,
+  `ωX = 0 ⟺ RX = 0`, i.e. exactly the `s−1` Lobatto-IIIA-averaged secondary constraints
+  plus `ϕ(qₙ₊₁,pₙ₊₁) = 0`. Confirmed by cross-nullspace residual ≤ 1e-15 for
+  `s = 2,3,4`; for `s = 2`, `ω = [1 1 −1; 0 0 1]`.
+* **Primary-constraint preservation**, the property the family exists for:
+  `max|ϕ(qₙ,pₙ)| ≈ 1.8e-15` over 1000 steps at `Δt = 0.1`, for every constructor and
+  every `s`.
+
+## Findings
+
+| # | Category | Issue | Root cause | Action |
+|:--|:---------|:------|:-----------|:-------|
+| S10 | **B — bug (fixed)** | The null-vector multiplier `μ` was added to **two** residual rows: the momentum-stage row (`+2`, Z-space) *and* the primary-constraint row (`+3`, P-space). Since `P = p + h·Z`, the same coefficient carries an extra factor `h` in the first, so the two combine to `p + h(…) − ϑ(Qᵢ) = (1−h)·μ·dᵢ/b̄ᵢ`. The stage Jacobian is therefore **exactly singular at `Δt = 1`** and ill-conditioned near it. Present since the original commit `cb1d6406` (2020-02-21). | A copy-paste merge of the two conventions used elsewhere in the submodule: `vpark`/`vspark`/`spark` put `μ` on the `Φ` row only, `vspark_secondary`/`hspark_secondary` on the `Z` row only. `SLRK` was the only integrator doing both. | **Fixed:** dropped the `Z`-row term, kept the `Φ`-row term |
+| S11 | **B — doc bug (fixed)** | The `SLRK` docstring was a **verbatim copy** of the `VSPARKsecondary` docstring and described a different method: two stage sets (`s` internal + `σ` projective), three vector fields `F¹ = ∇H`, `F² = ∇ϑ·V`, `F̃³ = ∇ϕ·Λ`, three momentum weight sets. `SLRK` has one stage set of size `s`, `F = ∂L/∂q`, `G = ∇ϑᵀΛ` and two weight sets, and the `μ`/`d` equations were undocumented. Inherited errors: `F¹ = ∇H` missing its minus sign, `Σⱼ ωᵢⱼ Ψ̃_{n,i}` should be `Ψ̃_{n,j}`, range `i = 1..σ−1` instead of `1..s`, `ω_{i,s+1} ϕ(qₙ₊₁,pₙ₊₁)` term omitted. | Copy-paste; the fourth pass asserted the opposite (corrected above). | **Fixed:** docstring rewritten from the code and the manuscript |
+| S12 | **C — API trap (documented)** | `SLRK` requires the `LDAEProblem`'s `f` to be the **full** `∂L/∂q`, because `F` feeds directly into both the `p` update and `ψ`. `VSPARKsecondary` requires the *opposite* (`f = −∇H`, reconstructing `∂L/∂q = f + g(V)`). Passing a `VSPARKsecondary`-style problem to `SLRK` silently drops the `∇ϑ·v` term. Nothing said so; the docstring said the reverse. | Two conventions coexisting in one submodule — hence the two constructors `ldaeproblem_slrk` / `ldaeproblem` in `GeometricProblems.LotkaVolterra2d`. | **Documented** prominently in the docstring and `docs/src/integrators/spark.md` |
+| S13 | **B — bug (fixed)** | `SLRKLobattoIIIC̄C` was registered under `Symbol("SLRKLobattoIIICIIIC̄")` — the same name as `SLRKLobattoIIICC̄`. | Copy-paste. | **Fixed** to `Symbol("SLRKLobattoIIIC̄IIIC")` |
+| S14 | C — robustness (fixed) | `components!` evaluated `ϕ` with `C.ṽ`, which is never assigned (relies on the cache staying zero); `components!` used `p.c[i]` for the stage time while `initial_guess!` used `p̃.c[i]`, although `Qᵢ` is generated by the `q` tableau. Behaviour-neutral today (all Lobatto pairs share nodes, and `ϕ = p − ϑ(q)` ignores `v`). | Drift. | **Fixed:** both use `q.c`, `C.ṽ` zeroed explicitly, both commented |
+| S15 | **A — inherent (manuscript proof is wrong)** | **`SLRK` is not symplectic.** The Poincaré invariant `∮p·dq` drifts secularly. | See below. | Documented in the docstring, in `docs/src/integrators/spark.md`, and corrected in the manuscript |
+
+### S15 in detail
+
+The manuscript's Theorem claims exact preservation of the noncanonical symplectic
+two-form. Its proof does not close. Reconstructing it in the code's notation, the
+first-order terms reduce to
+
+```
+T₁+T₃ = h Σⱼ (bⱼ − b̄ⱼ) dϑ∧dVⱼ + h Σⱼ (bⱼ dⱼ/b̄ⱼ) dμ∧dVⱼ
+T₂+T₄ = h Σⱼ (βⱼ − β̄ⱼ) dϑ∧dΛⱼ + h Σⱼ (βⱼ dⱼ/b̄ⱼ) dμ∧dΛⱼ
+```
+
+The first summand of each vanishes by `b = b̄`. The `dμ∧dV` term vanishes by the
+null-vector constraint `Σᵢ dᵢVᵢ = 0`. **The `dμ∧dΛ` term has no counterpart** — nothing
+constrains `Σᵢ dᵢΛᵢ`. In the manuscript this is exactly the point where the proof
+defers to `\eqref{eq:projected_lobatto_symplecticity_conditions_constraint}`, *a label
+that is never defined anywhere in the file*.
+
+Measured (`scripts/slrk_verification.jl`, steps 4–7):
+
+* **Control.** The same `∮p·dq` harness (spectral differentiation of the loop, 200
+  points, radius 0.1) applied to genuinely symplectic variational integrators —
+  `VPRKGauss(2)`, `VPRKLobattoIIIAIIIĀ(2)`, `VPRKLobattoIIIAIIIĀ(3)` on the `lode` form
+  of the same problem — gives `|ΔI|/|I| ≈ 1e-14` after 1, 10 **and** 100 steps. The
+  harness is clean.
+* **`SLRK`.** `|ΔI|/|I|` is nonzero and accumulates linearly with the step count. For
+  `SLRKLobattoIIIAB(2)` at `Δt = 0.1`: `2.6e-4` (1 step) → `2.0e-3` (10) → `1.6e-1`
+  (100). Per-step it scales as `O(h^{p+1})`:
+
+  | method | h=0.2 | h=0.1 | h=0.05 | h=0.025 |
+  |:---|---:|---:|---:|---:|
+  | `SLRKLobattoIIIAB(2)` | 1.5e-3 | 2.6e-4 | 3.6e-5 | 4.7e-6 |
+  | `SLRKLobattoIIIAB(3)` | 2.2e-6 | 7.8e-8 | 2.6e-9 | 8.3e-11 |
+  | `SLRKLobattoIIID(3)`  | 9.4e-8 | 8.6e-10 | 7.3e-12 | 1.9e-13 |
+
+  An independent finite-difference measurement of `‖JᵀΩ(qₙ₊₁)J − Ω(qₙ)‖` on the
+  constraint manifold agrees to within a few percent and is flat in the FD step `ε`
+  over four decades, ruling out quadrature and solver noise.
+* **Diagnosis confirmed.** Reading the stage variables out of the cache:
+  `Σᵢ dᵢVᵢ ≈ 1e-16` (imposed) but `Σᵢ dᵢΛᵢ = O(h)` (uncontrolled). The product
+  `h·|μ|·|Σd·Λ|` — the size of the surviving term — predicts the measured defect within
+  ~10 % for most pairs (e.g. `SLRKLobattoIIIAB(2)` at `h = 0.1`: 2.7e-4 predicted vs
+  2.57e-4 measured; `SLRKLobattoIIIBA(2)`: 6.0e-6 vs 6.5e-6).
+* **Not caused by S10.** After the S10 fix the drift is unchanged digit for digit.
+
+`SLRKLobattoIIID` and `SLRKLobattoIIIE` have the smallest defect. The methods remain
+useful: they attain their documented order `2s−2` and preserve the primary constraint
+exactly, which is what variational integrators cannot do. They are *approximately*
+symplectic, with the violation at the level of the local truncation error.
+
+Note that this is consistent with the fourth pass's prediction 1 (symplectic *and*
+constraint-at-the-solution is impossible): `SLRK` does enforce `ϕ(qₙ₊₁,pₙ₊₁) = 0`
+through the last column of `ω`.
+
+## Verification of the S10 fix
+
+| check | before | after |
+|:---|:---|:---|
+| `cond(J)` at `Δt = 0.9 / 0.99 / 0.999 / 1.0`, `SLRKLobattoIIIAB(2)` | 1.5e2 / 2.2e3 / 2.3e4 / **1.6e11** | 3.0e1 / 4.5e1 / 4.6e1 / **4.7e1** |
+| `integrate` at `Δt = 1` | `SingularException` | `NonlinearSolverException` (Newton divergence at a step size comparable to the period — no longer a linear-algebra failure) |
+| `q(T)`, `p(T)` at `Δt = 0.1`, all six constructors, `s = 2,3` | — | unchanged to ≤ 2 ulp |
+
+The fix is behaviour-neutral at usable step sizes, as predicted: for problems whose
+`g`, `ψ` and `ϕ` do not depend on `p` beyond `ϕ = p − ϑ(q)`, the two variants differ
+only by the reparametrisation `μ ↦ (1−h)μ`. It *does* change the reported internal
+stages `Pᵢ` and would change results for any `ψ` or `g` that depends on `p`.
+
+## Fixes applied
+
+* `src/spark/integrators_slrk.jl` — dropped the duplicated `Z`-row null-vector term
+  (S10) with a comment recording the convention; rewrote the docstring (S11, S12);
+  aligned the stage-time tableau and zeroed `C.ṽ` explicitly (S14).
+* `src/spark/tableaus_slrk.jl` — corrected the duplicated tableau name (S13).
+* `docs/src/integrators/spark.md` — added `IntegratorSLRK` to the family table and a
+  full "Specialised Lobatto Runge–Kutta methods (`SLRK`)" section: what distinguishes
+  it from Jay's SPARK methods, the complete scheme, the `ω` construction, the null
+  vector, the table of the six constructors, the `f = ∂L/∂q` warning with a usage
+  example, and what the family does and does not preserve.
+* `scripts/slrk_verification.jl` — the seven-step verification script used above.
+
+## Manuscript corrections
+
+Applied to `slrk_degenerate_lagrangians.tex` (the paper is under git; the file still
+compiles, 10 pages, with no new errors or undefined references beyond the pre-existing
+ones):
+
+| # | Correction |
+|:--|:-----------|
+| M1 | The Remark's `Ω(Q̃)·Ṽ = ∇H(Q̃)` was wrong by a sign given `Ω := ∇ϑ − ∇ϑᵀ` — this is the author's own `% TODO Check signs!`. `Ω` redefined as `∇ϑᵀ − ∇ϑ`, with the derivation from `ψ = 0` written out and the TODO removed. Code and `GeometricProblems`' `ω` already used the correct convention. |
+| M2 | Definition and proof contradicted each other over where `μ` lives — the definition put it in the `P` stage equation and demanded `ϕ(Qᵢ,Pᵢ) = 0` exactly, while the proof substitutes `dP̃ᵢ = dϑ(Q̃ᵢ) + (dᵢ/b⁴ᵢ)dμ`. Adopted the proof's version: `μ` moved into the constraint. |
+| M3 | Proof gaps. (i) After the `Ṽ` block, "vanishes if `b² = b⁴`" only kills two of three summands; the third needs constraint (3c) — now derived, and its sign corrected. (ii) The `Λ̄` block deferred to a **label that is never defined**; the surviving term is now written out explicitly, the missing condition stated as (3c)'s `Λ` analogue, and the numerical evidence for the drift summarised. |
+| M4 | The proof uses three stage sets, five weight vectors `b¹…b⁵` and three coefficient families that the Definition never introduces. Added an explicit notation map and showed the eight conditions collapse to the two standard partitioned ones. |
+| M5 | The `μ` term was the only stage term without an `h`; noted that `μ = O(h)` and that scaling by `h` merely reparametrises it. |
+| M6 | Constraint (3c) was written with `Ṽ_{n,i}`, undefined in the Definition → `V_{n,i}`. Also `ω_{is+1}` → `ω_{i,s+1}`. |
+| M7 | `ω` denoted two different matrices. The `(s−1)×s` Lobatto-IIIA block renamed `ω^A`, and the `s×(s+1)` construction the code uses added as a Remark, with the `s = 2` example. |
+| M8 | The empty `\cite{}`, the empty `.bib` and the six dangling `\eqref`s are now listed as explicit submission blockers in the (empty) Introduction rather than failing silently. |
+| M9 | §5.2's Lagrangian was missing the `+ q₁q̇₂` term, which is why its equations of motion carried a spurious `1/(1+q₁q₂)` factor and did not match `GeometricProblems.LotkaVolterra2d`. Term restored, equations of motion corrected, and a Remark added explaining that `(0,q₁)` is not a gradient (so the truncated version is a genuinely different symplectic structure, not a gauge choice) and that the paper's `b`-sign convention is the negative of the package's. |
+| — | The abstract's claim of exact symplecticity was removed and replaced with the constraint-preservation claim plus a flagged caveat. The Theorem now states the missing condition explicitly. |
+
+## Tests
+
+No regression. `spark_tableaus_tests.jl` 130 pass; `spark_integrators_tests.jl`
+**133 pass / 45 broken**; `spark_convergence_tests.jl` **64 pass / 11 broken** —
+identical to the fourth-pass tally.
+
+## Fifth pass, addendum — the same verification on `LotkaVolterra2dSingular`
+
+`GeometricProblems.LotkaVolterra2dSingular` has `ϑ = (log q₂/q₁, 0)`, which differs
+from `LotkaVolterra2d`'s `ϑ = (q₂ + log q₂/q₁, q₁)` by the **exact** form `d(q₁q₂)`.
+The two therefore describe the *same* continuous system — same `Ω = ∇ϑᵀ − ∇ϑ`, same
+Euler–Lagrange equations, same `∮p·dq` on any closed loop — but give different
+discrete methods. Repeating steps 2, 4, 6 and 7 on both separates what is a property
+of the *system* from what is a property of the *discretisation*.
+
+Confirmed first: the loop integral is gauge invariant, `∮p·dq = −0.031573928398` for
+both, as it must be since `∮∇F·dq = 0`.
+
+### The methods split into two groups
+
+The split is predicted exactly by the ranks of the two coefficient matrices:
+
+| method | `rank(a¹)` = `rank(q.a)` | `rank(ā¹)` = `rank(p.a)` | both singular | on the singular gauge |
+|:---|:---|:---|:---:|:---|
+| `SLRKLobattoIIIAB(s)` | `s−1` | `s−1` | **yes** | `SingularException` |
+| `SLRKLobattoIIIBA(s)` | `s−1` | `s−1` | **yes** | singular / divergent |
+| `SLRKLobattoIIICC̄(s)` | `s` | `s−1` | no | fine |
+| `SLRKLobattoIIIC̄C(s)` | `s−1` | `s` | no | fine |
+| `SLRKLobattoIIID(s)` | `s` | `s` | no | fine |
+| `SLRKLobattoIIIE(s)` | `s` | `s` | no | fine |
+
+Checked for `s = 2,3,4`. The two Lobatto IIIA–IIIB pairs are exactly the ones where
+`a¹` *and* `ā¹` are both rank deficient — `IIIA` has a zero first row, `IIIB` a zero
+last column, and each conjugate partner inherits the defect. On the standard gauge
+this is harmless because `∇ϑᵀ` has full rank 2 and the missing direction is supplied
+by the projection force `G = ∇ϑᵀΛ`. On the singular gauge `ϑ₂ ≡ 0`, so the second
+column of `∇ϑᵀ` vanishes, `∇ϑᵀ` drops to rank 1, `G` can no longer reach the second
+momentum component, and the stage system loses rank outright.
+
+The failure is *not* the `Δt = 1` conditioning problem of S10 — it is present at every
+step size:
+
+| `cond(J)`, singular gauge | Δt=0.1 | Δt=0.5 | Δt=0.9 | Δt=1.0 |
+|:---|---:|---:|---:|---:|
+| `SLRKLobattoIIIAB(2)` | 3.1e12 | 1.0e17 | 2.7e17 | 9.3e11 |
+| `SLRKLobattoIIIBA(3)` | 1.8e14 | 1.1e11 | 1.8e10 | 3.8e10 |
+
+against 8.2e1 … 4.7e1 for the same methods on the standard gauge. `SLRKLobattoIIIBA(3)`
+does complete a single step (agreeing with the standard gauge to 7 digits) but diverges
+over ten: `‖JᵀΩJ − Ω‖` jumps to 1.1e2 … 3.0e0 with no convergence order, and the
+`T = 100` run produces `NaN`.
+
+This is the fourth pass's prediction 1 (symplectic Lobatto `IIIA-IIIB` pairs on a
+degenerate Lagrangian) reappearing — now shown to be **gauge dependent**: the same
+method is usable in one gauge and unusable in a gauge-equivalent one.
+
+### For the four methods that work on both: no difference whatsoever
+
+`CC̄`, `C̄C`, `D` and `E` are **gauge invariant to round-off**. Over `T = 1` at
+`Δt = 0.1`, `max|q_standard − q_singular| ≤ 6.7e-16` for every one of them at `s = 2,3`.
+Every conservation diagnostic follows suit — the numbers below are identical in both
+gauges, digit for digit:
+
+| diagnostic (Δt = 0.1) | `CC̄(2)` | `CC̄(3)` | `C̄C(2)` | `D(2)` | `D(3)` | `E(2)` |
+|:---|---:|---:|---:|---:|---:|---:|
+| `∮p·dq` drift, 1 step | 8.52e-05 | 1.72e-08 | 1.10e-04 | 4.38e-08 | 8.57e-10 | 1.50e-08 |
+| `∮p·dq` drift, 100 steps | 6.90e-02 | 2.74e-05 | 5.70e-02 | 1.72e-03 | 5.74e-07 | 2.40e-04 |
+| `‖JᵀΩJ − Ω‖`, 1 step | 8.63e-05 | 1.82e-08 | 1.11e-04 | 1.09e-07 | 8.41e-10 | 1.37e-08 |
+| `max|ΔH|`, `T = 100` | 1.699e-01 | 6.816e-05 | 7.798e-02 | 9.052e-03 | 7.238e-06 | 7.909e-04 |
+| `max|ϕ|`, `T = 100` | 1.3e-15 | 1.3e-15 | 1.6e-15 | 1.6e-15 | 1.3e-15 | 1.3e-15 |
+
+This is not a coincidence: for these methods the discrete `q`-trajectory is identical,
+and `∮p·dq = ∮ϑ(q)·dq` changes by `∮∇F·dq = 0` under a gauge transformation, so both
+the invariant and its drift must agree exactly.
+
+**Conclusion on the question of gauge dependence.** The S15 symplecticity defect is a
+property of the *discretisation scheme*, not of the representation of the Lagrangian:
+it is unchanged by a gauge transformation. What the gauge *does* change is
+solvability — the two Lobatto IIIA–IIIB pairs break down on the singular gauge, so the
+choice of one-form is not free in practice. `SLRKLobattoIIID` and `SLRKLobattoIIIE`
+are the safest choices on both counts: full-rank coefficient matrices in both blocks,
+and the smallest symplecticity defect.
+
+An incidental observation: `Σᵢ dᵢΛᵢ` — the uncontrolled quantity behind S15 — is itself
+gauge invariant for these four methods (e.g. `CC̄(2)` at `h = 0.2`: 1.70e-01 in both
+gauges), while `|μ|` is not (3.5e-02 vs 1.8e-02). The product `h|μ||Σd·Λ|` is therefore
+only an order-of-magnitude proxy for the surviving wedge term, as noted above; the
+wedge itself is gauge invariant.
+
+## Fifth pass, addendum 2 — can SLRK be made exactly symplectic?
+
+The S15 defect is structural. This section records the attempt to remove it, a
+no-go argument for the SLRK ansatz, and the verification of the alternatives.
+
+### The obstruction
+
+Write `a = a¹ = q.a`, `α = a² = q̃.a`, `ā = ā¹ = p.a`, `ᾱ = ā² = p̃.a` and
+`b, β, b̄, β̄` for the corresponding weights. The `h²` terms of the wedge product give
+
+```
+(C1) b̄ᵢbⱼ = b̄ᵢaᵢⱼ + bⱼāⱼᵢ      (C2) b̄ᵢβⱼ = b̄ᵢαᵢⱼ + βⱼāⱼᵢ
+(C3) β̄ᵢbⱼ = β̄ᵢaᵢⱼ + bⱼᾱⱼᵢ      (C4) β̄ᵢβⱼ = β̄ᵢαᵢⱼ + βⱼᾱⱼᵢ
+```
+
+and the `h¹` terms give `(C5) b = b̄`, `(C6) β = β̄`, plus the two multiplier terms.
+
+1. **`(C1)`–`(C3)` force `αᵢⱼ = (βⱼ/bⱼ)aᵢⱼ` and `ᾱᵢⱼ = (βⱼ/bⱼ)āᵢⱼ`.** Hence `Q`, `P`,
+   `q_{n+1}` and `p_{n+1}` depend on `V` and `Λ` **only** through
+   `Wⱼ = Vⱼ + (βⱼ/bⱼ)Λⱼ`; only `Ψ` sees `V` separately.
+   *Verified:* replacing `Σdᵢ Vᵢ = 0` by `Σdᵢ Λᵢ = 0` gives bit-identical trajectories,
+   drifts and orders for all six families — two points on the same gauge orbit.
+2. **The multiplier is forced.** `ϕ = 0` at `s` stages plus `ϕ(q_{n+1},p_{n+1}) = 0` is
+   `(s+1)D` conditions on the `sD` unknowns `W` — over-determined by exactly `D`.
+3. **The two leftover terms combine into `h·dμ ∧ Σⱼ dⱼ dWⱼ`.** Since `W` is fully
+   determined by the remaining equations, `Σd·W` is a nontrivial function of the
+   initial data, so the term vanishes only if `dμ ≡ 0`.
+4. **`μ ≡ 0` is impossible.** It would require the endpoint constraint to be implied by
+   the stage constraints, i.e. `a` and `ā = conj(a)` both stiffly accurate. But
+   `ā` stiffly accurate ⟺ `a` has a zero last column ⟹ `a_ss = 0`, while `a` stiffly
+   accurate ⟹ `a_ss = b_s`. So `b_s = 0` — impossible for Lobatto.
+5. **Decoupling `Λ` is impossible.** `(C6)` is `β = β̄`, so letting `Λ` project only the
+   position (`β̄ = 0`) forces `β = 0` and then `α = 0`: `Λ` disappears from the scheme.
+
+Four modifications were implemented and measured (via `residual!` overrides; the repo
+source was not changed):
+
+| modification | result |
+|:---|:---|
+| drop `μ` and `d` entirely | **singular** for all six families, including `IIID`/`IIIE` where both tableau blocks are full rank |
+| replace `Σdᵢ Vᵢ = 0` by `Σdᵢ Wᵢ = 0` | **singular** — `W` is already determined, the condition is redundant |
+| replace `Σdᵢ Vᵢ = 0` by `Σdᵢ Λᵢ = 0` | identical results to the current scheme (point 1 above) |
+| drop the endpoint constraint (`ω`'s last column) **and** `μ` | see below |
+
+The last one is the informative case. Dropping the endpoint constraint removes the
+over-determination, `μ` disappears, and the scheme becomes **exactly symplectic**:
+
+| Δt = 0.1 | canonical ∮ 1 / 100 | noncanonical ∮ 1 / 100 | max\|ϕ\| 1 / T=100 | order |
+|:---|:---|:---|:---|---:|
+| `IIID(2)` current | 4.4e-08 / 1.7e-03 | identical | 1.1e-15 / 1.8e-15 | 2 |
+| `IIID(2)` no endpoint | **2.2e-16 / 2.4e-15** | 5.5e-04 / 3.3e-02 | 3.3e-04 / 1.1e-01 | 2 |
+| `IIID(3)` no endpoint | **2.2e-16 / 2.2e-15** | 1.2e-05 / 1.8e-07 | 5.7e-06 / 1.8e-05 | 4 |
+| `IIIAB(2)` no endpoint | 6.6e-16 / 6.3e-14 | 0.0 / 9.0e-15 | 1.2e-01 / 1.0e+02 | **0** |
+
+— but the primary constraint is then lost, the map leaves `{ϕ=0}`, and the
+*noncanonical* invariant drifts instead. `IIIAB(3)`, `IIIBA`, `IIICC̄`, `IIIC̄C` go
+singular without the endpoint constraint; `IIIAB(2)` loses consistency entirely.
+
+**Conclusion (S16).** Within the SLRK ansatz the three properties — exact symplecticity,
+primary constraint at every internal stage, and the constraint at the solution — cannot
+be had together. This is the SLRK manuscript's own Section-3 remark (which it invokes to
+criticise Jay's SPARK methods) applying to its own scheme.
+
+### Long-time behaviour: secular vs bounded
+
+`∮ϑ(q)·dq`, relative drift, `h = 0.1`, out to 3000 steps:
+
+| | 1 | 10 | 100 | 1000 | 3000 | growth |
+|:---|---:|---:|---:|---:|---:|:---|
+| `VPRKGauss(3)` | 1.4e-06 | 1.4e-06 | 5.8e-08 | 7.0e-06 | 7.8e-06 | **bounded** (dips ×24 at 100) |
+| `VPRKGauss(2)` | 1.8e-04 | 1.9e-03 | 4.2e-03 | 3.5e-03 | 3.5e-02 | bounded / non-monotone |
+| `SLRKLobattoIIID(3)` | 8.6e-10 | 9.5e-10 | 5.7e-07 | 6.1e-06 | 1.9e-05 | **linear** (×10.6, ×3.04) |
+| `SLRKLobattoIIIAB(3)` | 7.8e-08 | 2.5e-07 | 4.1e-04 | 4.3e-03 | 1.3e-02 | **linear** (×10.5, ×3.03) |
+| `SLRKLobattoIIIAB(2)` | 2.6e-04 | 2.0e-03 | 1.6e-01 | 7.2e-01 | 9.2e-01 | monotone, saturating at O(1) |
+
+VPRK's canonical invariant stays at round-off throughout (2.2e-16 → 6.3e-14 over 3000
+steps) while its noncanonical one merely oscillates with `max|ϕ|`; SLRK's grows linearly
+in the step count to three significant figures over two decades. Different mechanisms:
+a symplectic map measured with a non-invariant quantity, versus genuine non-conservation.
+
+### S17 — the VSPARK projection methods are *not* provably symplectic
+
+The natural alternative is the projective-SPARK family (a symplectic inner method plus a
+projection). Its theorem (*SPARK Methods for Degenerate Lagrangian Systems*,
+`sec:projective_spark`) requires four tableau conditions, `b³ = b¹`, `b⁴ = b²`, **and**
+`P̃_{n,i} = ϑ(Q̃_{n,i})` at *every* projective stage. That manuscript states plainly:
+
+> "We find that none of the constructions satisfies all symplecticity conditions."
+
+Checked per method — `cond4` is `b²ᵢb⁴ⱼ = b²ᵢã⁴ᵢⱼ + b⁴ⱼã²ⱼᵢ`; `max|Φ̃ᵢ|` is the
+per-projective-stage requirement measured after one converged step at `h = 0.1`:
+
+| method | cond1 | cond2 | cond3 | cond4 | max\|Φ̃ᵢ\| |
+|:---|---:|---:|---:|---:|---:|
+| `GLRK(1)pSymplectic` | 0 | 0 | 0 | **0.5** | **1.9e-04** |
+| `GLRK(2)pSymplectic` | 7e-18 | 0 | 0 | 0 | **4.0e-05** |
+| `GLRK(3)pSymplectic` | 3e-17 | 0 | 0 | **0.5** | **1.8e-07** |
+| `GLRK(2)pSymmetric` | 7e-18 | 0 | 0 | **0.25** | 0 |
+| `GLRK(2)pMidpoint` | 7e-18 | 0 | 0 | 0 | **1.3e-04** |
+| `LobAB(2)pSymmetric` | 0 | 0 | 0 | **0.25** | 2e-16 |
+
+`cond4` fails exactly when `R(∞) = (-1)^s = -1`, as the manuscript predicts. The
+per-stage condition fails wherever `ω` averages the projective constraints rather than
+imposing them individually. `TableauVSPARKSymplecticProjection` moreover has **no
+counterpart in the manuscript** — the "Examples" section covers Midpoint, Symmetric,
+Lobatto-IIIA-IIIB, Internal-Stage and Modified-Internal-Stage projections only.
+
+**Empirically, however, the Gauß-based ones behave as if exactly symplectic.** The
+one-step defect is flat at round-off across a factor of ten in `h` — the signature of
+exactness, not of an `O(h^k)` defect:
+
+| one step | h=0.5 | h=0.2 | h=0.1 | h=0.05 |
+|:---|---:|---:|---:|---:|
+| `GLRK(2)pSymplectic` | 4.4e-16 | 8.8e-16 | 4.4e-16 | 2.2e-16 |
+| `GLRK(3)pSymplectic` | 4.4e-16 | 8.8e-16 | 6.6e-16 | 2.2e-16 |
+| `GLRK(2)pSymmetric` | 2.2e-16 | 0.0 | 4.4e-16 | 0.0 |
+| `LobAB(2)pSymmetric` | 1.3e-02 | 1.0e-04 | 3.4e-06 | 1.1e-07 |
+
+Over 5000 steps at `h = 0.1`, `GLRK(2)pSymplectic` reaches 1.5e-12 (consistent with
+`√N` round-off accumulation) with `max|ϕ| = 1.3e-15` throughout — **all three
+properties at once**, which the SLRK ansatz provably cannot deliver. `LobAB(2)pSymmetric`
+is the counter-example: clean `O(h⁵)` decay, i.e. a real defect, and it drifts linearly.
+
+So the theorem's conditions are *sufficient, not necessary*, and the Gauß-projection
+methods satisfy something weaker that the current theory does not capture. **Open
+question worth a proof.** Until then they should be described as empirically symplectic,
+not provably so.
+
+### Option 3 — composed symplectic projection
+
+`TableauVSPARKSymplecticProjection` *is* the composed construction: a symplectic Gauß
+inner method plus a projection carried by separate Lobatto projective stages, with the
+endpoint constraint in the last row of `ω_λ`. It escapes the S16 no-go because it does
+**not** impose `ϕ = 0` at every internal stage — only on the projective stages — so the
+counting argument that forces `μ` never arises. Verified above: exact to round-off in
+both invariants with the constraint at 1.3e-15.
+
+What remains genuinely unexplored: the VSPARK-primary family projects on the **primary**
+constraint only. SLRK's distinguishing feature — averaging the **secondary** constraint —
+has no composed-projection counterpart yet. A "VSPARK-secondary with symplectic
+projection" is the open construction; `VSPARKsecondary` exists but uses the
+constraint-at-every-stage layout that S16 rules out.
