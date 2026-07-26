@@ -34,6 +34,7 @@ struct DVICache{DT} <: IODEIntegratorCache{DT}
 
     function DVICache{DT}(ics) where {DT}
         D = length(vec(ics.q))
+        check_dvi_dimension(D)
         new(zeros(DT,2D),
             zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D),
             zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D),

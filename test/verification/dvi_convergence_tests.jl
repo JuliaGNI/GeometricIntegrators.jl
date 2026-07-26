@@ -15,9 +15,11 @@ emq(sol, ref) = relative_maximum_error(sol.q, ref.q)
 
 @testset "Degenerate variational integrator convergence" begin
 
-    # DVRK on the (regular) pendulum IODE reaches the full order 2s of its
+    # The pendulum IODE is the degenerate phase-space form of the pendulum: on
+    # q = (x, p) ∈ R² it has ϑ = (m l² q₂, 0), so ϑ₂ ≡ 0 and ∂ϑ₁/∂q₂ = m l² ≠ 0.
+    # It is therefore *in* the DVRK class, and reaches the full order 2s of its
     # underlying Gauss-Legendre tableau.
-    @testset "DVRK order (regular Lagrangian)" begin
+    @testset "DVRK order (degenerate pendulum, in class)" begin
         vbuild(Δt) = Pendulum.iodeproblem(; timespan = (0.0, T), timestep = Δt)
         vref(prob) = integrate(prob, VPRKGauss(8))
         test_convergence_order(vbuild, DVRK(Gauss(2)), steps(4, 3); reference = vref, errormetric = emq, expected = 4, label = "DVRK(Gauss(2))")

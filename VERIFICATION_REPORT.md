@@ -65,7 +65,7 @@ Empirical convergence orders match the documented order for:
 * **Splitting/composition**: `LieA`/`LieB`(1), `Strang`/`McLachlan2`(2), `McLachlan4`/`TripleJump`/`SuzukiFractal`(4, `McLachlan4` after the fix below).
 * **Variational**: `PMVImidpoint`/`PMVItrapezoidal`(2), `DiscreteEulerLagrange` (Midpoint/Trapezoidal)(2), `VPRKGauss(s)`(2s), `VPRKLobattoIIIAIIIB(2)`(2).
 * **Galerkin**: `CGVI(Gauss(s))` at order 2s−2 for s ≥ 2.
-* **Degenerate variational**: `DVRK(Gauss(s))` at order 2s on regular Lagrangians and on degenerate Lagrangians given in a gauge satisfying its hypothesis (`ϑ_μ = 0` for `μ > d/2`); order s outside that class — see finding 10.
+* **Degenerate variational**: `DVRK(Gauss(s))` at order 2s on every problem given in a gauge satisfying its hypothesis (`ϑ_μ = 0` for `μ > d/2`) — the degenerate pendulum, `LotkaVolterra2dSingular`, `MasslessChargedParticleSingular`; order s outside that class — see finding 10.
 * **Hamilton–Pontryagin**: `HPImidpoint`/`HPItrapezoidal`(2).
 * **Projected**: `PostProjection`/`MidpointProjection`/`SymmetricProjection` with `Gauss(s)`(2s), each conserving the Hamiltonian to machine precision.
 
@@ -154,10 +154,10 @@ the suite used `GeometricProblems.LotkaVolterra2d`, whose gauge is
 
 | Problem | Gauge | s = 1 | s = 2 | s = 3 |
 |---|---|---|---|---|
-| `LotkaVolterra2dSingular`         | `ϑ₂ = 0` (in class) | 2.00 | 4.00 | 5.99 |
+| `LotkaVolterra2dSingular`         | `ϑ₂ = 0` (in class) | 2.00 | 4.00 | 5.98 |
 | `LotkaVolterra2d`                 | `ϑ₂ = q₁ ≠ 0`       | 1.01 | 2.00 | 3.01 |
 | `LotkaVolterra2dSymmetric`        | both ≠ 0            | 0.99 | 2.00 | 3.01 |
-| `MasslessChargedParticleSingular` | `A₂ = 0` (in class) | 2.00 | 4.00 | 5.99 |
+| `MasslessChargedParticleSingular` | `A₂ = 0` (in class) | 2.00 | 4.00 | 5.98 |
 | `MasslessChargedParticle`         | both ≠ 0            | 1.00 | 2.00 | 3.00 |
 
 Within each block the rows describe the *same dynamics*, differing only by a gauge
@@ -165,6 +165,16 @@ transformation of `ϑ`. In class, `DVRK(Gauss(s))` attains the full order 2s; ou
 class it remains convergent at order s. Both regimes are now covered by
 `test/verification/dvi_convergence_tests.jl`, and `docs/src/integrators/dvi.md`
 states the hypothesis and the gauge dependence explicitly.
+
+The split is between gauges, not between regular and degenerate Lagrangians: the
+pendulum `IODEProblem`, previously recorded here as a *regular* Lagrangian on which
+`DVRK` reaches 2s, is in fact the degenerate phase-space form with
+`ϑ = (m l² q₂, 0)` on `q = (x, p)` — that is, in class. Every 2s measurement in the
+suite is in class and every order-s measurement is out of class.
+
+The invertibility hypothesis on `∂ϑ_μ/∂q^ν` (`μ ≤ d/2 < ν`) is a separate and
+weaker condition, and does not detect the out-of-class cases: for
+`LotkaVolterra2d`, `∂ϑ₁/∂q² = 1 + 1/q₁q₂ ≠ 0` is invertible while `ϑ₂ ≠ 0`.
 
 **Low-order degenerate integrators (finding 11).** `DVIA`, `DVIB`, `CMDVI`,
 `CTDVI` reproduce the established short-time accuracy on Lotka–Volterra

@@ -89,8 +89,8 @@ end
     # The defining property of DVRK: the one-step map q_n ↦ q_{n+1} preserves
     # ω = dϑ, i.e. Jᵀ Ω(q₁) J = Ω(q₀) with J the Jacobian of the map and
     # Ω_μν = ∂ϑ_ν/∂q^μ - ∂ϑ_μ/∂q^ν. This holds only under the hypotheses of the
-    # theorem: ϑ in a gauge with ϑ_μ = 0 for μ > d/2, and a tableau satisfying
-    # b_i a_ij + b_j a_ji = b_i b_j.
+    # theorem, two of which are exercised below: ϑ in a gauge with ϑ_μ = 0 for
+    # μ > d/2, and a tableau satisfying b_i a_ij + b_j a_ji = b_i b_j.
     Ω(m, q) = (o = m.dϑ₂dx₁(0.0, q) - m.dϑ₁dx₂(0.0, q); [0.0 -o; o 0.0])
 
     function onestep(m, method, q, h)
@@ -105,22 +105,24 @@ end
         maximum(abs, J' * Ω(m, f(q₀)) * J .- Ω(m, q₀))
     end
 
-    p₀ = [2.0, 1.5]
+    qref = [2.0, 1.5]
 
     # In class with a symplectic tableau: exact to the finite-difference floor,
     # and — crucially — independent of the step size.
     for h in (0.1, 0.5), s in 1:3
-        @test symplecticity_defect(LVSingular, DVRK(Gauss(s)), p₀, h) < 1e-8
+        @test symplecticity_defect(LVSingular, DVRK(Gauss(s)), qref, h) < 1e-8
     end
 
     # Out of class (ϑ₂ = q₁ ≠ 0): the same dynamics in a different gauge, no
-    # longer symplectic, and the defect grows with the step size.
-    @test symplecticity_defect(LotkaVolterra2d, DVRK(Gauss(2)), p₀, 0.1) > 1e-6
-    @test symplecticity_defect(LotkaVolterra2d, DVRK(Gauss(2)), p₀, 0.5) >
-          symplecticity_defect(LotkaVolterra2d, DVRK(Gauss(2)), p₀, 0.1)
+    # longer symplectic, and the defect grows with the step size. Note that the
+    # invertibility hypothesis is *not* what fails here — ∂ϑ₁/∂q² = 1 + 1/q₁q₂ ≠ 0
+    # for this gauge too; what fails is ϑ_μ = 0 for μ > d/2.
+    @test symplecticity_defect(LotkaVolterra2d, DVRK(Gauss(2)), qref, 0.1) > 1e-6
+    @test symplecticity_defect(LotkaVolterra2d, DVRK(Gauss(2)), qref, 0.5) >
+          symplecticity_defect(LotkaVolterra2d, DVRK(Gauss(2)), qref, 0.1)
 
     # In class, but with a tableau violating b_i a_ij + b_j a_ji = b_i b_j.
-    @test symplecticity_defect(LVSingular, DVRK(RadauIIA(2); check_conditions=false), p₀, 0.5) > 1e-6
+    @test symplecticity_defect(LVSingular, DVRK(RadauIIA(2); check_conditions=false), qref, 0.5) > 1e-6
 
 end
 
@@ -137,11 +139,21 @@ end
     @test isimplicit(DVRK(Gauss(2)))
     @test !isexplicit(DVRK(Gauss(2)))
 
+    # Symplecticity of DVRK depends on the tableau, so unlike the other DVI
+    # methods it cannot be answered for the bare type.
+    @test ismissing(issymplectic(DVRK))
+    @test issymplectic(CMDVI)
+
     # Tableaus violating the theorem's hypotheses are accepted but warn.
     @test !issymplectic(DVRK(RadauIIA(3); check_conditions=false))
     @test_logs (:warn, r"symplecticity condition") DVRK(RadauIIA(3))
     @test_logs (:warn, r"symplecticity condition") (:warn, r"singular") DVRK(LobattoIIIA(3))
     @test_nowarn DVRK(Gauss(2))
+
+    # Regression: the invertibility check must not be `det`-based. det(a) of the
+    # Gauss tableaus falls below eps^(3/4) from s = 10 on, although cond(a) ≈ 1e2.
+    @test_nowarn DVRK(Gauss(10))
+    @test_nowarn DVRK(Gauss(12))
 
     # Inconsistent initial momentum p₀ ≠ ϑ(q₀) warns; the default p₀ does not.
     @test_logs min_level=Logging.Warn LVSingular.lodeproblem([2.0, 3.0]; timespan=tspan, timestep=Δt) |>

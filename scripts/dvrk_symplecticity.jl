@@ -8,8 +8,11 @@
 #   (a) the coefficient matrix A is invertible,
 #   (b) the tableau satisfies b_i a_ij + b_j a_ji = b_i b_j,
 #   (c) the momentum is initialised with p₀ = ϑ(q₀),
-#   (d) the d/2 × d/2 matrix ∂ϑ_μ/∂q^ν, μ ≤ d/2 < ν, is invertible — which in
-#       particular requires ϑ_μ = 0 for μ > d/2.
+#   (d) ϑ is given in a gauge with ϑ_μ = 0 for μ > d/2,
+#   (e) the d/2 × d/2 matrix ∂ϑ_μ/∂q^ν, μ ≤ d/2 < ν, is invertible.
+#
+# (d) and (e) are independent: for LotkaVolterra2d, which violates (d), the matrix
+# of (e) is ∂ϑ₁/∂q² = 1 + 1/q₁q₂ ≠ 0 and hence invertible.
 #
 # This script measures how far the one-step map q₀ ↦ q₁ is from preserving ω, as
 #

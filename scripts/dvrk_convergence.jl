@@ -54,25 +54,30 @@ lv_builder(m) = Δt -> m.lodeproblem(LV_Q₀; timespan = (0.0, T), timestep = Δ
 mcp_reference(Δt) = integrate(MCP.odeproblem(; timespan = (0.0, T), timestep = Δt), Gauss(8))
 mcp_builder(m) = Δt -> m.lodeproblem(; timespan = (0.0, T), timestep = Δt)
 
-const CASES = [
-    ("Lotka-Volterra",   "ϑ₂ = 0  (in class)",           lv_builder(LVSingular),   lv_reference),
-    ("Lotka-Volterra",   "ϑ₂ = q₁ ≠ 0",                  lv_builder(LV),           lv_reference),
-    ("Lotka-Volterra",   "both components ≠ 0",          lv_builder(LVSymmetric),  lv_reference),
-    ("Charged particle", "A₂ = 0  (in class)",           mcp_builder(MCPSingular), mcp_reference),
-    ("Charged particle", "both components ≠ 0",          mcp_builder(MCP),         mcp_reference),
-]
+# Starting resolutions per stage number. Coarser for the higher-stage methods,
+# which otherwise hit machine precision before the fit has enough points above the
+# roundoff plateau. The in-class cases are 2s-accurate and so saturate several
+# refinements earlier than the out-of-class ones, which need a finer start to be
+# in the asymptotic regime at s = 3; hence one setting per class rather than one
+# global setting.
+const N₀_IN  = Dict(1 => 20, 2 => 10, 3 => 2)
+const N₀_OUT = Dict(1 => 20, 2 => 10, 3 => 5)
 
-# Coarser starting resolutions for the higher-stage methods, which otherwise hit
-# machine precision before the fit has enough points.
-const N₀ = Dict(1 => 20, 2 => 10, 3 => 5)
+const CASES = [
+    ("Lotka-Volterra",   "ϑ₂ = 0  (in class)",           lv_builder(LVSingular),   lv_reference, N₀_IN),
+    ("Lotka-Volterra",   "ϑ₂ = q₁ ≠ 0",                  lv_builder(LV),           lv_reference, N₀_OUT),
+    ("Lotka-Volterra",   "both components ≠ 0",          lv_builder(LVSymmetric),  lv_reference, N₀_OUT),
+    ("Charged particle", "A₂ = 0  (in class)",           mcp_builder(MCPSingular), mcp_reference, N₀_IN),
+    ("Charged particle", "both components ≠ 0",          mcp_builder(MCP),         mcp_reference, N₀_OUT),
+]
 
 function main()
     println("\nDVRK convergence order, T = $T, reference Gauss(8) on the ODE")
     println("Expected: 2s inside the hypothesis class, s outside it.\n")
     @printf("%-18s %-24s %8s %8s %8s\n", "problem", "gauge", "s = 1", "s = 2", "s = 3")
     println("-"^72)
-    for (problem, gauge, build, reference) in CASES
-        orders = [convergence_order(build, reference, DVRK(Gauss(s)), steps(N₀[s], 4)).order
+    for (problem, gauge, build, reference, n₀) in CASES
+        orders = [convergence_order(build, reference, DVRK(Gauss(s)), steps(n₀[s], 4)).order
                   for s in 1:3]
         @printf("%-18s %-24s %8.2f %8.2f %8.2f\n", problem, gauge, orders...)
     end

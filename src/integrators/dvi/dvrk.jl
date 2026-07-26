@@ -9,7 +9,7 @@ L (q, \dot{q}) = \vartheta (q) \cdot \dot{q} - H (q) ,
 \mu = d/2+1, \, ..., \, d ,
 ```
 that is, Lagrangians linear in the velocities whose symplectic potential has
-`d/2` identically vanishing components. The internal stages read
+``d/2`` identically vanishing components. The internal stages read
 ```math
 \begin{aligned}
 Q_{n,i} &= q_{n} + h \sum \limits_{j=1}^{s} a_{ij} \, V_{n,j} , &
@@ -28,36 +28,44 @@ p^{\mu}_{n+1} &= p^{\mu}_{n} + h \sum \limits_{i=1}^{s} b_{i} \, F^{\mu}_{n,i} ,
 p^{\mu}_{n+1} &= \vartheta^{\mu} (q_{n+1}) , && \mu = 1, \, ..., \, d .
 \end{aligned}
 ```
-Note that the quadrature updates are imposed only on the first `d/2` components.
-The remaining components of `q_{n+1}` carry no quadrature update and are
-determined implicitly by the constraint `p_{n+1} = \vartheta (q_{n+1})`, which is
-also what defines `p_{n+1}` on output.
+Note that the quadrature updates are imposed only on the first ``d/2`` components.
+The remaining components of ``q_{n+1}`` carry no quadrature update and are
+determined implicitly by the constraint ``p_{n+1} = \vartheta (q_{n+1})``, which is
+also what defines ``p_{n+1}`` on output.
 
-The method preserves the noncanonical symplectic two-form `\omega = d\vartheta`
-provided that
+The method preserves the noncanonical symplectic two-form
+``\omega = \mathrm{d} \vartheta`` provided that
 
-  * the coefficient matrix `A = (a_{ij})` is invertible,
+  * the symplectic potential is given in a gauge in which ``\vartheta_{\mu} = 0``
+    for ``\mu > d/2``, as assumed above,
+  * the ``d/2 \times d/2`` matrix ``\partial \vartheta_{\mu} / \partial q^{\nu}``,
+    for ``\mu \le d/2 < \nu``, is invertible,
+  * the coefficient matrix ``A = (a_{ij})`` is invertible,
   * the coefficients satisfy the symplecticity condition
-    `b_{i} a_{ij} + b_{j} a_{ji} = b_{i} b_{j}`,
-  * the momentum is initialised consistently with `p_{0} = \vartheta (q_{0})`, and
-  * the `d/2 × d/2` matrix `∂\vartheta_{\mu} / ∂q^{\nu}`, for `\mu ≤ d/2 < \nu`,
-    is invertible.
+    ``b_{i} a_{ij} + b_{j} a_{ji} = b_{i} b_{j}``, and
+  * the momentum is initialised consistently with ``p_{0} = \vartheta (q_{0})``.
 
-The last condition is what makes `\omega` nondegenerate and what renders the
-method well posed. The Gauss-Legendre tableaus satisfy the first two conditions
-for any number of stages, and `DVRK(Gauss(s))` attains the full order `2s` on
-Lagrangians of the above form. Applied to a Lagrangian outside this class — for
-instance the same system written in a gauge in which no component of `\vartheta`
-vanishes — the method remains convergent but the order drops to `s`.
+The first two conditions are independent: the second says that the constraint
+``p_{n+1} = \vartheta (q_{n+1})`` can be solved for the components of ``q_{n+1}``
+that carry no quadrature update, and it is also what makes ``\omega``
+nondegenerate, but it does not by itself imply that the remaining components of
+``\vartheta`` vanish.
+
+The Gauss-Legendre tableaus satisfy the two conditions on the coefficients for any
+number of stages, and `DVRK(Gauss(s))` attains the full order ``2s`` on Lagrangians
+of the above form. Applied to a Lagrangian outside this class — for instance the same
+system written in a gauge in which no component of ``\vartheta`` vanishes, which
+leaves the dynamics unchanged — the method remains convergent but the order drops
+to ``s``.
 
 A Degenerate Variational Runge-Kutta method is instantiated by either
 passing a Runge-Kutta tableau or a Runge-Kutta method:
 ```
-DVRK(tableau::Tableau)
-DVRK(method::RKMethod)
+DVRK(tableau::Tableau; check_conditions = true)
+DVRK(method::RKMethod; check_conditions = true)
 ```
 The constructor checks the two tableau conditions and warns if either is
-violated.
+violated; pass `check_conditions = false` to suppress the warnings.
 """
 struct DVRK{TT} <: DVIMethod
     tableau::TT
@@ -69,7 +77,11 @@ struct DVRK{TT} <: DVIMethod
                       "condition b_i a_ij + b_j a_ji = b_i b_j. The resulting DVRK " *
                       "method will not preserve the symplectic structure."
             end
-            if abs(det(tableau.a)) ≤ eps(eltype(tableau.a))^(3//4)
+            # Test invertibility by rank, not by `det`: the determinant is not
+            # scale-invariant and shrinks rapidly with the number of stages, so
+            # `det(a) ≈ 0` would flag perfectly well-conditioned tableaus
+            # (det(Gauss(10).a) ≈ 1.5e-12 at cond(a) ≈ 1.2e2).
+            if rank(Matrix(tableau.a)) < tableau.s
                 @warn "The coefficient matrix of the tableau $(tableau.name) is " *
                       "singular. The DVRK method requires an invertible coefficient " *
                       "matrix and may fail to be well defined."
@@ -88,6 +100,11 @@ isexplicit(method::DVRK) = false
 isimplicit(method::DVRK) = true
 issymmetric(method::DVRK) = RungeKutta.issymmetric(tableau(method))
 issymplectic(method::DVRK) = RungeKutta.issymplectic(tableau(method))
+
+# Unlike the other DVI methods, symplecticity of DVRK depends on the tableau, so
+# the unconditional `issymplectic(::Type{<:DVIMethod}) = true` of dvi_common.jl
+# cannot be answered for the bare type.
+issymplectic(::Type{DVRK}) = missing
 
 
 @doc raw"""
@@ -122,11 +139,7 @@ struct DVRKCache{DT,S} <: IODEIntegratorCache{DT}
 
     function DVRKCache{DT,S}(ics) where {DT,S}
         D = length(vec(ics.q))
-        # The method splits the coordinates into two halves of equal size: the
-        # first D÷2 components carry the quadrature update, the second D÷2 are
-        # determined by the constraint p = ϑ(q). An odd D has no such splitting.
-        iseven(D) || throw(ArgumentError(
-            "DVRK requires an even-dimensional configuration space, got D = $(D)."))
+        check_dvi_dimension(D)
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         Θ = create_internal_stage_vector(DT, D, S)
@@ -159,7 +172,7 @@ function check_dvrk_initial_conditions(problem::Union{IODEProblem,LODEProblem})
     if maximum(abs, p₀ .- ϑ₀) > tol
         @warn "The initial momentum is not consistent with the primary constraint " *
               "p₀ = ϑ(q₀) (max deviation $(maximum(abs, p₀ .- ϑ₀))). DVRK is only " *
-              "symplectic for consistent initial conditions." maxlog=1
+              "symplectic for consistent initial conditions."
     end
     return nothing
 end
