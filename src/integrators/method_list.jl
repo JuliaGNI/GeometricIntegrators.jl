@@ -58,6 +58,7 @@ fully_implicit_rungekutta_methods = (
     BackwardEuler,
     ImplicitEulerRK,
     ImplicitMidpoint,
+    IRK3,
     SRK3,
 )
 

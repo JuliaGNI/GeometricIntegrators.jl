@@ -89,6 +89,7 @@ For many methods, tabulated coefficients are included, namely
 | **Fully Implicit Methods**                       |        |       |
 | [`ImplicitEuler`](@ref), [`BackwardEuler`](@ref) | 1      | 1     |
 | [`ImplicitMidpoint`](@ref)                       | 2      | 2     |
+| [`IRK3`](@ref)                                   | 2      | 3     |
 | [`SRK3`](@ref)                                   | 3      | 4     |
 
 The coefficients of other methods are computed on-the-fly as described in the following.
