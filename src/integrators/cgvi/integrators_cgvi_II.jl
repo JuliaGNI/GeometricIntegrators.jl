@@ -1,60 +1,7 @@
 @doc raw"""
     CGVI_II(basis, quadrature)
 
-Continuous Galerkin Variational Integrator based on a **Type II generating function**.
-
-## Mathematical background
-
-On each time step $[t_n, t_{n+1}]$ of length $h$, the configuration trajectory is
-approximated by a polynomial expressed in a basis $\{\varphi_j\}_{j=1}^{S}$:
-
-```math
-q_h(\tau) = \sum_{j=1}^{S} X_j \, \varphi_j(\tau), \qquad \tau \in [0,1].
-```
-
-The basis must have nodes at both endpoints of $[0,1]$ (Lobatto-type), so that
-$\varphi_1(0) = 1$ and $\varphi_S(1) = 1$. This ensures that:
-
-* $X_1 = q_n$ can be pinned to the current position (left boundary condition).
-* $X_S$ equals $q_{n+1}$ exactly (no endpoint reconstruction needed).
-
-The **free degrees of freedom** are $X_2, \ldots, X_S$ (size $D \times (S-1)$).
-
-## Discrete equations
-
-Internal stages at quadrature nodes $\{c_i, b_i\}_{i=1}^{R}$:
-
-```math
-Q_i = \sum_j m_{ij} X_j, \qquad
-V_i = \frac{1}{h}\sum_j a_{ij} X_j,
-```
-
-where $m_{ij} = \varphi_j(c_i)$ and $a_{ij} = \varphi_j'(c_i)$.
-
-The nonlinear system has $D \times (S-1)$ equations:
-
-* **Left boundary** ($D$ equations, determines consistency with $p_n$):
-```math
-p_n + \sum_j b_j \bigl[ m_{j1}\, F_j \, h + a_{j1}\, P_j \bigr] = 0
-```
-
-* **Interior Euler–Lagrange** ($(S-2) \times D$ equations, for $i = 2, \ldots, S-1$):
-```math
-\sum_j b_j \bigl[ m_{j,i}\, F_j \, h + a_{j,i}\, P_j \bigr] = 0
-```
-
-where $P_i = \vartheta(Q_i, V_i)$ and $F_i = f(Q_i, V_i)$.
-
-## Update step
-
-After solving the nonlinear system:
-
-```math
-q_{n+1} = X_S, \qquad
-p_{n+1} = \sum_j b_j \bigl[ m_{jS}\, F_j \, h + a_{jS}\, P_j \bigr].
-```
-
-The momentum $p_{n+1}$ is obtained as the discrete right-endpoint Legendre transform.
+Continuous Galerkin Variational Integrator based on strong imposition of continuity condition.
 
 ## Fields
 
@@ -75,9 +22,9 @@ produce incorrect results because $X_1 \neq q(0)$ and $X_S \neq q(1)$.
 ## Example
 
 ```julia
-Q = LobattoLegendreQuadrature(4)
-B = Lagrange(QuadratureRules.nodes(Q))
-method = CGVI_II(B, Q)
+QLob = LobattoLegendreQuadrature(4)
+BLob = Lagrange(QuadratureRules.nodes(Q))
+method = CGVI_II(BLob, QLob)
 sol = integrate(problem, method)
 ```
 
@@ -144,6 +91,7 @@ default_iguess(::CGVI_II) = HermiteExtrapolation()
 function Base.show(io::IO, method::CGVI_II)
     print(io, "\n")
     print(io, "  Continuous Galerkin Variational Integrator", "\n")
+    print(io, "  With strong imposition of continuity condition", "\n")
     print(io, "  ==========================================", "\n")
     print(io, "\n")
     print(io, "    c  = ", method.c, "\n")

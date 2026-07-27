@@ -186,5 +186,26 @@ In order to complete the discrete action, we explicitly add the continuity const
 \bigg] ,
 \end{multline}
 ```
-which ensures that the polynomials in neighbouring intervals, e.g., $[t_{n}, t_{n+1}]$ and $[t_{n+1}, t_{n+2}]$, have the same value at integer timesteps, e.g., $t_{n+1}$.
+which ensures that the polynomials in neighbouring intervals, e.g., $[t_{n}, t_{n+1}]$ and $[t_{n+1}, t_{n+2}]$, have the same value at integer timesteps, e.g., $t_{n+1}$. 
 
+## Galerkin Variational Integrators II
+
+In the Galerkin framework proposed in [OberBloebaum:2015](@cite), the continuity at integer timesteps is enforced by the approximation polynomial. Specifically, the nodes of basis functions are $0 = c_1 < c_2 < ... < c_s = 1$, e.g., quadrature points of Lobatto-type. The internal stages are then
+```math
+t_{n} = t_{n,1} < ... < t_{n,s} = t_{n+1}.
+```
+
+The construction of the Lagrange polynomials is the same as in the previous framework, except that
+$\varphi_1(0) = 1$ and $\varphi_s(1) = 1$. This ensures
+
+* $Q_{n,1} = q_n$ can be pinned to the current position (left boundary condition).
+* $Q_{n,s} = q_{n+1}$ exactly (no endpoint reconstruction needed).
+
+This polynomial under this construction lies exactly in the subspace $\mf{Q}_{d} ( q_{0}, q_{N}, \{ t_{n} \}_{n=0}^{N} )$.
+In contrast to the formulation in the previous section, the continuity constraint is built into the polynomial construction itself, so no Lagrange multipliers $\lambda_{n}$ or $\mu_{n+1}$ are needed in the action, i.e.,
+```math
+\mathcal{A}_{d} [q_{d}]
+= \sum \limits_{n=0}^{N-1} \bigg[
+	\sum \limits_{i=1}^{s} b_{i} \, L \big( Q_{n,i} , \dot{Q}_{n,i} \big)
+\bigg].
+```
