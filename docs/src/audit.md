@@ -1015,9 +1015,13 @@ Three regression tests were added, because none of the three fixed defects was c
 
 * **S10** — `spark_integrators_tests.jl`, testset "SLRK stage-Jacobian conditioning":
   `cond(J) < 1e4` at `Δt = 0.99` and `Δt = 1` for all six constructors at `s = 2,3`
-  (24 assertions), against `≈ 1e17` with the bug. The existing integrator tests run at
-  `Δt = 0.01`, where the effect is invisible, and — as noted above — the *solve* succeeds
-  at `Δt = 0.99` with or without the bug, so an integration test cannot catch this.
+  (24 assertions). The test uses a cheap central-difference stencil rather than
+  `ForwardDiff`, so with the bug it sees `κ ≈ 1e11` — the stencil's noise floor standing in
+  for the exactly singular matrix that step 2 of the script resolves as `3.1e17`. Either
+  figure is seven orders clear of the bound, which is all a regression test needs. The
+  existing integrator tests run at `Δt = 0.01`, where the effect is invisible, and — as
+  noted above — the *solve* succeeds at `Δt = 0.99` with or without the bug, so an
+  integration test cannot catch this at any step size.
 * **S13** — `spark_tableaus_tests.jl`: the six `SLRK` name symbols are pairwise distinct
   and the two `IIIC` variants carry their own names. The duplicate slipped past the
   `typeof(...) <: SLRK` checks it sat next to, which cannot see a name.
