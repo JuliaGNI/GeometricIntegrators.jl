@@ -18,7 +18,7 @@ lode = lodeproblem()
     # order (e.g. `order(VPRKGauss(1))` = 1 vs `order(Gauss(1))` = 2,
     # `order(VPSRK3())` = 3 vs `order(SRK3())` = 4). These are metadata
     # differences in RungeKutta.jl, not distinct methods; the equality is
-    # therefore intentionally not asserted. See VERIFICATION_REPORT.md.
+    # therefore intentionally not asserted. See docs/src/audit.md.
     # @test VPRK(SRK3()) == VPRK(VPSRK3())
     # @test VPRK(Gauss(1)) == VPRK(VPRKGauss(1))
     @test VPRK(RadauIIA(2)) == VPRK(VPRKRadauIIA(2))

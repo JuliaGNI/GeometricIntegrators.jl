@@ -20,7 +20,7 @@ emq(sol, ref) = relative_maximum_error(sol.q, ref.q)
     test_convergence_order(build, LobattoIIIBIIIA(2), steps(5, 4); reference = href, errormetric = emq, expected = 2, label = "LobattoIIIBIIIA(2)")
     test_convergence_order(build, LobattoIIIAIIIB(3), steps(5, 3); reference = href, errormetric = emq, expected = 4, label = "LobattoIIIAIIIB(3)")
 
-    # Known order deficiencies (see VERIFICATION_REPORT.md): the "order 2s" Lobatto
+    # Known order deficiencies (see docs/src/audit.md): the "order 2s" Lobatto
     # IIIF/IIIG pairs only reach order 2s-2 = 2 for s = 2.
     @testset "Known order deficiencies (broken)" begin
         r = estimate_convergence_order(build, LobattoIIIFIIIF̄(2), steps(5, 4); reference = href, errormetric = emq)

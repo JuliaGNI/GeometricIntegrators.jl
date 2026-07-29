@@ -24,7 +24,7 @@ vref(prob) = integrate(prob, VPRKGauss(8))
     @testset "Position-momentum and discrete Euler-Lagrange" begin
         # PMVI relaxes the solver residual tolerance to f_abstol = 4e-15 to avoid a
         # spurious "Solver took 1000 iterations." warning at the finest timestep
-        # (tolerance stagnation near machine precision; see VERIFICATION_REPORT.md,
+        # (tolerance stagnation near machine precision; see docs/src/audit.md,
         # third pass). min_iterations = 1 is repeated because any solver option
         # replaces the whole default_options bundle.
         test_convergence_order(lbuild, PMVImidpoint(),    steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "PMVImidpoint",
@@ -40,7 +40,7 @@ vref(prob) = integrate(prob, VPRKGauss(8))
         test_convergence_order(vbuild, VPRKGauss(3), steps(3, 3); reference = vref, errormetric = emq, expected = 6, label = "VPRKGauss(3)")
         test_convergence_order(vbuild, VPRKLobattoIIIAIIIB(2), steps(5, 4); reference = vref, errormetric = emq, expected = 2, label = "VPRKLobattoIIIAIIIB(2)")
 
-        # Known order deficiencies (see VERIFICATION_REPORT.md): several higher-order
+        # Known order deficiencies (see docs/src/audit.md): several higher-order
         # Lobatto VPRK methods do not reach their documented order. The "order 2s"
         # IIIF/IIIG methods only reach order 2 for s = 2, and VPRKLobattoIIIAIIIB(3)
         # reaches order 2 rather than 2s-2 = 4 (whereas the plain partitioned

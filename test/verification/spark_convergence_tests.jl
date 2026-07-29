@@ -13,7 +13,7 @@ include("verification_utilities.jl")
 # are the tableau `o` fields (Gauß 2s, Lobatto-pair 2s−2). Confirmed order
 # deficiencies / divergent / singular methods are recorded as @test_broken at the
 # documented order with a root-cause tag — see the "SPARK submodule" pass in
-# VERIFICATION_REPORT.md for the A/B/C classification.
+# docs/src/audit.md for the A/B/C classification.
 
 const q₀ = [1.0, 1.0]
 const params = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
@@ -109,7 +109,7 @@ conv(builder, method, tsteps, expected; label) =
     end
 
     # ---------------------------------------------------------------------------
-    # Known deficiencies (see VERIFICATION_REPORT.md, SPARK submodule pass). These
+    # Known deficiencies (see docs/src/audit.md, SPARK submodule pass). These
     # are inherent properties of the methods (category A), not implementation bugs:
     #   * R(∞) ≠ 1 at even σ̃ reduces the GL-VPRK / GL-HPARK order 2s → 2;
     #   * symplectic Lobatto pairs enforcing the constraint at the solution reduce

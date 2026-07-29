@@ -153,7 +153,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         end
 
         # compute f(X)
-        # TODO: Solve Problem !!!  (VERIFICATION_REPORT.md, SPARK submodule pass, finding S9)
+        # TODO: Solve Problem !!!  (docs/src/audit.md, SPARK submodule pass, finding S9)
         # The function f depends on v but Vi has never been initialized (initial_guess!
         # zeroes it and it is never recomputed here). For degenerate Lagrangians this is
         # correct, as the corresponding term in F that multiplies v vanishes (cf. SPARK

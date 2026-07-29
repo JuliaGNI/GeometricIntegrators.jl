@@ -30,7 +30,7 @@ Dₐϕ(d, q̄, q, a, Δt) = (d .= 0)
 @testset "Hamilton-Pontryagin convergence" begin
     # The HP integrators relax the solver residual tolerance to f_abstol = 4e-15 to
     # avoid a spurious "Solver took 1000 iterations." warning at the finest timestep
-    # (tolerance stagnation near machine precision; see VERIFICATION_REPORT.md, third
+    # (tolerance stagnation near machine precision; see docs/src/audit.md, third
     # pass). min_iterations = 1 is repeated because any solver option replaces the
     # whole default_options bundle.
     test_convergence_order(build, HPImidpoint(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]), steps(10, 4);

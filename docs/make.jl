@@ -88,6 +88,7 @@ makedocs(
             "Custom Integrators" => "developer/custom_integrators.md",
             "Adaptive Time Stepping" => "developer/adaptive_time_stepping.md",
         ],
+        "Verification Report" => "audit.md",
         "Release Notes" => "releasenotes.md",
         "Bibliography" => "bibliography.md",
         "Authors" => "authors.md",

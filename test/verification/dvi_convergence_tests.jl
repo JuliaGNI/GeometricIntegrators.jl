@@ -72,7 +72,7 @@ emq(sol, ref) = relative_maximum_error(sol.q, ref.q)
     # Fixed-step accuracy regression for the low-order degenerate variational
     # integrators (matching the established Lotka-Volterra test). NOTE: over long
     # integration times these methods do not converge cleanly to the ODE reference;
-    # see VERIFICATION_REPORT.md. Here we only assert the short-time accuracy that
+    # see docs/src/audit.md. Here we only assert the short-time accuracy that
     # the package already relies on.
     @testset "Low-order DVI accuracy (fixed step)" begin
         q₀ = [1.0, 1.0]

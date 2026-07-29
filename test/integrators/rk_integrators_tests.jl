@@ -142,7 +142,7 @@ end
 # OBSOLETE (old-API): `IntegratorIRK(...; exact_jacobian=true)`, `update_params!`,
 # `computeJacobian` and the block-Jacobian machinery were removed in the
 # method-based rearchitecture (the current IRK integrator builds its Jacobian via
-# SimpleSolvers). Reviving this test needs a re-implementation; see VERIFICATION_REPORT.md.
+# SimpleSolvers). Reviving this test needs a re-implementation; see docs/src/audit.md.
 # @testset "$(rpad("Implicit Runge-Kutta integrators with Block Jacobian",80))" begin
 
 #     # Check Block Jacobian for IRK integrators

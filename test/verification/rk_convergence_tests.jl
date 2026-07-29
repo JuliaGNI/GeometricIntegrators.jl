@@ -62,7 +62,7 @@ steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
         test_convergence_order(build, LobattoIIIB(3), steps(6, 4); reference = exact_solution, expected = 4, label = "LobattoIIIB(3)")
     end
 
-    # Known order deficiency (see VERIFICATION_REPORT.md): LobattoIIIB has a
+    # Known order deficiency (see docs/src/audit.md): LobattoIIIB has a
     # singular coefficient matrix, so as a standalone ODE integrator its stage
     # system is degenerate and it drops to order 1 (it is intended for use in
     # symplectic partitioned pairs / as a VPRK component). Recorded as broken so

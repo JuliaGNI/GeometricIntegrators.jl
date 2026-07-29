@@ -22,7 +22,7 @@ ldae_slrk = ldaeproblem_slrk(q₀; timespan=tspan, timestep=Δt, parameters=para
 ref = integrate(ode, Gauss(8))
 
 # Several known-broken / order-reduced SPARK methods below genuinely diverge, hit
-# singular stage systems, or reduce order (see VERIFICATION_REPORT.md, third pass).
+# singular stage systems, or reduce order (see docs/src/audit.md, third pass).
 # Their solves emit many "Solver took 1000 iterations." and backtracking
 # line-search warnings that are correct symptoms and not fixable via the solver (a
 # different solver, line search or iteration cap does not help). `muffle` runs one
@@ -173,7 +173,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-4
 
 
-    # --- known-broken (see VERIFICATION_REPORT.md) ---
+    # --- known-broken (see docs/src/audit.md) ---
 
     # order deficient at s=2 (meas 0.107)
     @test_broken relative_maximum_error(muffle(() -> integrate(idae, SPARKLobattoIIIAIIIB(2))).q, ref.q) < 1E-6
@@ -258,7 +258,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-14
 
 
-    # --- known-broken (see VERIFICATION_REPORT.md) ---
+    # --- known-broken (see docs/src/audit.md) ---
 
     # throw SingularException: the s=2 pair gives a singular stage system
     @test_broken relative_maximum_error(integrate(idae, VSPARK(SPARKGLRK(1))).q, ref.q) < 1E-6
@@ -330,7 +330,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
-    # --- known-broken (see VERIFICATION_REPORT.md) ---
+    # --- known-broken (see docs/src/audit.md) ---
 
     # order reduction: meas 7.95E-7, no better than s=2
     @test_broken relative_maximum_error(muffle(() -> integrate(idae, TableauVSPARKLobattoIIIBIIIApSymmetric(3))).q, ref.q) < 5E-11
@@ -485,7 +485,7 @@ end
     # TODO: Check errors and large number of solver iterations !!!
 
 
-    # --- known-broken (see VERIFICATION_REPORT.md) ---
+    # --- known-broken (see docs/src/audit.md) ---
 
     # diverge / excessive solver iterations (meas 20.0 / 11.3 / 1.61 / 0.153)
     @test_broken relative_maximum_error(muffle(() -> integrate(pdae, TableauHPARKLobattoIIIAIIIB(2))).q, ref.q) < 2E-2
@@ -556,7 +556,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-4
 
 
-    # --- known-broken (see VERIFICATION_REPORT.md) ---
+    # --- known-broken (see docs/src/audit.md) ---
 
     # throw SingularException
     @test_broken relative_maximum_error(integrate(pdae, HSPARK(SPARKLobattoIIIAIIIB(2))).q, ref.q) < 1E-6
@@ -621,7 +621,7 @@ end
     ### HSPARKsecondary Integrators ###
 
     # HSPARKsecondary is EXPERIMENTAL and remains @test_broken (see the "SPARK
-    # submodule" pass in VERIFICATION_REPORT.md). Two implementation bugs were fixed:
+    # submodule" pass in docs/src/audit.md). Two implementation bugs were fixed:
     #   * the momentum projection coefficients a_p_2 / a_p_3 in getTableauHSPARK were
     #     s×s instead of s×σ, so the GLRK variants raised a BoundsError — now built as
     #     the conjugate-symplectic s×σ partners of α_q_2 / α_q_3;
