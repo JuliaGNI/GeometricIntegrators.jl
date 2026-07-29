@@ -132,10 +132,13 @@ equivalent to the ``s-1`` Lobatto-IIIA-averaged secondary constraints together w
 The Lobatto stage system is rank deficient by one in the ``V``-direction; the
 multiplier ``\mu`` relaxes the primary constraint along the null vector ``d``
 (`get_lobatto_nullvector`) and the extra condition ``\sum_i d_i V_{n,i} = 0``
-removes the deficiency — the same construction as in `VPRK`. ``\mu`` appears in the
-primary-constraint equation and nowhere else; adding it to the momentum-stage equation as
-well makes the stage Jacobian singular at ``h = 1``, which is what finding S10 of
-`VERIFICATION_REPORT.md` fixed.
+removes the deficiency — as in `VPARK`, `VSPARK` and `SPARK`, which add ``\mu`` to their
+own primary-constraint row and to nothing else. (`VPRK` implements the same idea but has
+no primary-constraint row at all, so it perturbs the momentum-stage equation instead; that
+row is in ``P``-space rather than ``Z``-space, so it carries no factor ``h``.) Here ``\mu``
+appears in the primary-constraint equation and nowhere else; adding it to the
+momentum-stage equation as well makes the stage Jacobian singular at ``h = 1``, which is
+what finding S10 of [the verification report](../audit.md) fixed.
 
 ### Available methods
 
@@ -228,8 +231,8 @@ sol  = integrate(prob, SLRKLobattoIIIAB(3))
   `VPRKGauss(3)` hold it at ``\sim 10^{-14}`` out to ``3\times10^{3}`` steps. Their
   *noncanonical* value is not a control and is not small (``10^{-6}`` to ``10^{-2}``),
   because a variational integrator leaves ``\{\phi = 0\}``. `SLRKLobattoIIID` and
-  `SLRKLobattoIIIE` have the smallest defect. See the "Fifth pass" section of the
-  repository's `VERIFICATION_REPORT.md`.
+  `SLRKLobattoIIIE` have the smallest defect. See the "Fifth pass" section of
+  [the verification report](../audit.md).
 * **The symplecticity defect is gauge invariant.** Measured on the two
   gauge-equivalent Lotka–Volterra one-forms, the `∮p·dq` drift, the
   ``\|J^{T}\Omega J - \Omega\|`` defect and the energy drift agree digit for digit for

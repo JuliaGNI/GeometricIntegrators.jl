@@ -4,7 +4,7 @@
 #
 # On a fresh checkout run  julia --project=scripts -e 'using Pkg; Pkg.instantiate()'
 #
-# Reproduces the S17 numbers of VERIFICATION_REPORT.md.
+# Reproduces the S17 numbers of docs/src/audit.md.
 #
 # The question is whether the projective-SPARK methods preserve the *noncanonical*
 # symplectic structure of a degenerate Lagrangian system. Their theorem (SPARK Methods
@@ -244,6 +244,10 @@ getting either wrong invents an exponent:
     and flagged with `†`, and a sweep that keeps fewer than two points is reported as
     `defect` with no exponent rather than a fabricated one.
 
+A fitted slope that comes out non-positive means the defect does not decay with `h` at
+all — the sweep is not measuring a convergence order, so it gets no exponent either,
+rather than being clamped to a printable `O(h^0.0)`.
+
 Suffixes: `*` some step size failed, `†` the fit used only the points above round-off.
 """
 function classify(vals, hs = HS)
@@ -262,7 +266,8 @@ function classify(vals, hs = HS)
     y = [log(vals[i]) for i in keep]
     x̄, ȳ = sum(x) / length(x), sum(y) / length(y)
     r = sum((x .- x̄) .* (y .- ȳ)) / sum(abs2, x .- x̄)
-    @sprintf("defect O(h^%.1f)%s%s", max(r, 0.0), floored, partial)
+    r > 0 || return "defect (no decay)" * floored * partial
+    @sprintf("defect O(h^%.1f)%s%s", r, floored, partial)
 end
 
 

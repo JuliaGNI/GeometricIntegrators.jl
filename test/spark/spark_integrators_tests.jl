@@ -117,12 +117,23 @@ end
     #
     # The integrator tests above run at Δt = 0.01, where this is invisible, and the
     # solver still converges at Δt = 0.99 either way, so only the conditioning of the
-    # stage Jacobian discriminates. With this central-difference stencil, measured with
-    # the bug: κ ≈ 1e11 at Δt = 1 and ≈ 2e3 at Δt = 0.99; without it: κ ≤ 1.3e3 at every
-    # step size and every constructor. (The 1e11 is the stencil's noise floor standing in
-    # for an exactly singular matrix — step 2 of `scripts/slrk_verification.jl`
-    # differentiates exactly and gets 3.1e17. Either way the bound below separates them
-    # by seven orders of magnitude, so the cheap stencil is enough for a regression test.)
+    # stage Jacobian discriminates. With this central-difference stencil, measured over
+    # the twelve cases below:
+    #
+    #             |      Δt = 0.99      |        Δt = 1
+    #   with bug  |  1.2e3 … 6.5e4      |  7.7e10 … 2.0e12
+    #   fixed     |  2.1e1 … 1.6e3      |  2.1e1 … 2.6e3
+    #
+    # So it is the Δt = 1 row that carries the regression — every one of the twelve
+    # breaches the 1e4 bound there — while at Δt = 0.99 only two of them do
+    # (SLRKLobattoIIIC̄C(2) at 2.0e4 and SLRKLobattoIIICC̄(3) at 6.5e4). The Δt = 0.99
+    # assertions are kept because the 1/(1-Δt) growth is the signature, but they are not
+    # what makes the test fail. Worst case for the fixed code anywhere on
+    # Δt ∈ {0.1, 0.5, 0.9, 0.99, 1.0} is 2.6e3, i.e. the bound clears it by a factor of
+    # four. (The 1e11 is the stencil's noise floor standing in for an exactly singular
+    # matrix — step 2 of `scripts/slrk_verification.jl` differentiates exactly and gets
+    # 3.1e17. Either way the bound separates fixed from buggy by seven orders of
+    # magnitude at Δt = 1, so the cheap stencil is enough for a regression test.)
 
     "central-difference stage Jacobian of `residual!` at the initial guess"
     function stage_jacobian(method, Δt)

@@ -151,7 +151,8 @@ the momentum-stage equation instead — see `residual_correction!`.)
   survives. Measured on Lotka–Volterra, the first Poincaré invariant ``\oint p \, dq``
   drifts secularly at ``O(h^{p+1})`` per step, whereas a genuinely symplectic variational
   integrator holds the same (canonical) invariant to round-off out to ``3 \times 10^3``
-  steps. See the "Fifth pass" section of `VERIFICATION_REPORT.md` for the numbers.
+  steps. See the "Fifth pass" section of the verification report,
+  `docs/src/audit.md`, for the numbers.
 * The defect is **gauge invariant**: two Lagrangians whose one-forms differ by an exact
   form give the same trajectory and the same drift, to round-off.
 

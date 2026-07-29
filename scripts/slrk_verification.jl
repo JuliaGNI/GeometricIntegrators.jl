@@ -5,7 +5,9 @@
 # On a fresh checkout run  julia --project=scripts -e 'using Pkg; Pkg.instantiate()'
 #
 # Step 1 tableau symplecticity conditions + ω-matrix equivalence (problem independent)
-# Step 2 S10: Jacobian singularity of the double-counted μ term at Δt = 1
+# Step 2 S10: Jacobian singularity of the double-counted μ term at Δt = 1, before and
+#        after the fix (the "before" residual is reconstructed, see
+#        `residual_with_s10_bug!` — no source revert needed)
 # Step 3 reference trajectories (compare across the S10 fix)
 # Step 4 discrete symplecticity JᵀΩJ = Ω, constraint and energy drift
 # Step 5 the same JᵀΩJ harness applied to VPRK (an invalid control — see below)
@@ -18,7 +20,7 @@
 # Euler–Lagrange equations, but they give different discrete methods.
 #
 # Step 6 takes the step counts from the trailing arguments, so the long-time table of
-# VERIFICATION_REPORT.md is reproduced by
+# docs/src/audit.md is reproduced by
 #
 #   julia --project=scripts scripts/slrk_verification.jl 6 --steps=1,10,100,1000,3000
 
@@ -110,7 +112,30 @@ end
 # integrator's own solver uses). A central-difference stencil would put a noise floor
 # of ~1e-9 under it, which turns the *exactly* singular Δt = 1 case into a finite
 # κ ≈ 1e11 and understates the finding.
-function residual_jacobian(M, method, Δt)
+"""
+    residual_with_s10_bug!(b, x, sol, params, int, method)
+
+The *pre*-S10 residual: the null-vector multiplier μ added to the momentum-stage (`Z`) row
+as well as to the primary-constraint (`Φ`) row.
+
+The "before" column of the S10 table cannot be measured from the shipped source, because
+the bug is fixed there. Rather than asking the reader to revert `integrators_slrk.jl` by
+hand, it is reconstructed: `GeometricIntegratorsBase.residual!` gives the corrected
+residual and this adds the removed term straight back, which reproduces the old code
+exactly. The `Z` row of stage `i`, component `k`, is `b[4*(D*(i-1)+k-1)+2]`, and μ is the
+trailing `D` unknowns of `x` — so `length(x) = D*(4s+1)`.
+"""
+function residual_with_s10_bug!(b, x, sol, params, int, method)
+    GeometricIntegratorsBase.residual!(b, x, sol, params, int)
+    S = method.s
+    D = length(x) ÷ (4S + 1)
+    for i in 1:S, k in 1:D
+        b[4*(D*(i-1)+k-1)+2] += x[4*D*S+k] * method.d[i] / method.p.b[i]
+    end
+    b
+end
+
+function residual_jacobian(M, method, Δt; bug = false)
     prob = ldae(M, copy(Q0), theta(M, 0.0, Q0), zero(Q0); timespan = (0.0, 10Δt), timestep = Δt)
     int = GeometricIntegrator(prob, method)
     solstep = solutionstep(int, GeometricIntegratorsBase.initialstate(prob))
@@ -121,8 +146,10 @@ function residual_jacobian(M, method, Δt)
     GeometricIntegratorsBase.initial_guess!(sol, history(solstep), params, int)
 
     x = copy(nlsolution(int))
-    ForwardDiff.jacobian((b, y) -> GeometricIntegratorsBase.residual!(b, y, sol, params, int),
-        similar(x), x)
+    r! = bug ?
+         (b, y) -> residual_with_s10_bug!(b, y, sol, params, int, method) :
+         (b, y) -> GeometricIntegratorsBase.residual!(b, y, sol, params, int)
+    ForwardDiff.jacobian(r!, similar(x), x)
 end
 
 """
@@ -155,17 +182,21 @@ function step2()
     println("  κ ~ 1/(1-Δt) is the S10 signature; after the fix it stays flat.")
     println("  σ is `mu_visibility`: the μ direction the reduced system still sees.")
     println("  With the bug it is ∝ (1-Δt) and vanishes at Δt = 1.")
+    println("  `before` re-adds the removed Z-row term (`residual_with_s10_bug!`);")
+    println("  `after` is the shipped source. Both rows of the report's table.")
     D = length(Q0)
     for (pname, M) in PROBLEMS
         subheader(pname)
         for (name, ctor) in CONSTRUCTORS[1:2], s in 2:3
             m = ctor(s)
-            @printf("  %-18s s=%d :", name, s)
-            for Δt in (0.1, 0.5, 0.9, 0.99, 0.999, 1.0)
-                J = residual_jacobian(M, m, Δt)
-                @printf("  Δt=%-5g κ=%.2e σ=%.2e", Δt, cond(J), mu_visibility(J, D))
+            for (label, bug) in (("before", true), ("after", false))
+                @printf("  %-18s s=%d %-6s :", name, s, label)
+                for Δt in (0.1, 0.5, 0.9, 0.99, 0.999, 1.0)
+                    J = residual_jacobian(M, m, Δt; bug)
+                    @printf("  Δt=%-5g κ=%.2e σ=%.2e", Δt, cond(J), mu_visibility(J, D))
+                end
+                println()
             end
-            println()
         end
     end
 end

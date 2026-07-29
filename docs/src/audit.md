@@ -825,7 +825,10 @@ julia --project=scripts scripts/vspark_projection_symplecticity.jl 2 --problems=
 
 A trailing step number selects steps; `--steps=` sets the step counts of `slrk`'s step 6
 and `--problems=` restricts `vspark`'s problem list, so any single row of the tables below
-can be regenerated without paying for the whole sweep. Both scripts share the loop
+can be regenerated without paying for the whole sweep. Step 2 of the `slrk` script prints
+the S10 conditioning table in both its `before` and `after` form — the pre-fix residual is
+reconstructed by `residual_with_s10_bug!`, so nothing here requires reverting the source.
+Both scripts share the loop
 machinery in `scripts/loop_invariants.jl`: the loop integral `∮p·dq` with `dq/ds` taken
 *spectrally*, since a central-difference stencil leaves an `O(N⁻²)` quadrature error of
 order 1e-7 that masquerades as a symplecticity defect. `PoincareInvariants.jl` is not a
@@ -940,19 +943,27 @@ puts a ~1e-9 noise floor under the Jacobian, which turns the *exactly* singular 
 case into a finite `κ ≈ 1e11` and understates the finding. All numbers below are on
 `LotkaVolterra2d` (`scripts/slrk_verification.jl`, step 2).
 
+Both rows come from the committed script. The `before` residual is *reconstructed* rather
+than measured against a reverted source: `residual_with_s10_bug!` calls the shipped
+`residual!` and adds the removed `Z`-row term straight back, which is the old code
+verbatim. So no hand-revert is needed to regenerate this table.
+
 `σ` is the smallest singular value of the `μ` columns after projecting out the span of
 all the other columns — the `μ` direction the reduced system still sees. With the bug it
 tracks `(1−Δt)` to three digits and vanishes at `Δt = 1`, which is the mechanism:
 
 | `SLRKLobattoIIIAB(2)` | Δt=0.1 | Δt=0.5 | Δt=0.9 | Δt=0.99 | Δt=0.999 | Δt=1.0 |
 |:---|---:|---:|---:|---:|---:|---:|
-| `σ`, before | 1.03e0 | 4.97e-1 | 5.78e-2 | 4.09e-3 | 3.94e-4 | **1.18e-15** |
+| `σ`, before | 1.03e0 | 4.97e-1 | 5.78e-2 | 4.09e-3 | 3.94e-4 | **round-off** |
 | `σ`, after | 1.14e0 | 9.94e-1 | 5.78e-1 | 4.09e-1 | 3.94e-1 | **3.92e-1** |
 | `cond(J)`, before | 9.6e1 | 2.6e1 | 1.5e2 | 2.2e3 | 2.3e4 | **3.1e17** |
 | `cond(J)`, after | 8.2e1 | 2.1e1 | 3.0e1 | 4.5e1 | 4.6e1 | **4.7e1** |
 
-The same pattern holds for `IIIBA`, `s = 2,3` (`σ` before: 1.07e0 → 1.18e-15 and
-1.47e0 → 2.00e-15; `κ` before at `Δt = 1`: 2.5e18 and 5.9e16).
+The `Δt = 1` entry of the `before` row is the smallest singular value of a matrix that is
+*exactly* singular there, so it is round-off and its digits are not reproducible — repeated
+runs give 1e-15 to 4e-15. Every other entry reproduces to the digits printed. The same
+pattern holds for `IIIBA`, `s = 2,3` (`σ` before: 1.07e0 → round-off and
+1.47e0 → round-off; `κ` before at `Δt = 1`: 2.5e18 and 5.9e16).
 
 | check | before | after |
 |:---|:---|:---|
@@ -964,7 +975,11 @@ Note that the solve at `Δt = 0.99` succeeds either way, so no integration test
 discriminates: the conditioning of the stage Jacobian is the only observable that does.
 That is what the regression test added in `test/spark/spark_integrators_tests.jl`
 ("SLRK stage-Jacobian conditioning") checks — `κ < 1e4` at `Δt = 0.99` and `Δt = 1` for
-all six constructors at `s = 2,3`, against `≈ 1e17` with the bug.
+all six constructors at `s = 2,3`. The test uses a central-difference stencil, not
+`ForwardDiff`, so the figures it sees are the stencil's: with the bug, 7.7e10 … 2.0e12 at
+`Δt = 1` and 1.2e3 … 6.5e4 at `Δt = 0.99`; fixed, at worst 2.6e3 anywhere on
+`Δt ∈ {0.1, …, 1.0}`. It is therefore the `Δt = 1` assertions that fail with the bug in
+all twelve cases; at `Δt = 0.99` only two of the twelve breach the bound.
 
 The fix is behaviour-neutral at usable step sizes, as predicted: for problems whose
 `g`, `ψ` and `ϕ` do not depend on `p` beyond `ϕ = p − ϑ(q)`, the two variants differ
@@ -1016,12 +1031,15 @@ Three regression tests were added, because none of the three fixed defects was c
 * **S10** — `spark_integrators_tests.jl`, testset "SLRK stage-Jacobian conditioning":
   `cond(J) < 1e4` at `Δt = 0.99` and `Δt = 1` for all six constructors at `s = 2,3`
   (24 assertions). The test uses a cheap central-difference stencil rather than
-  `ForwardDiff`, so with the bug it sees `κ ≈ 1e11` — the stencil's noise floor standing in
-  for the exactly singular matrix that step 2 of the script resolves as `3.1e17`. Either
-  figure is seven orders clear of the bound, which is all a regression test needs. The
-  existing integrator tests run at `Δt = 0.01`, where the effect is invisible, and — as
-  noted above — the *solve* succeeds at `Δt = 0.99` with or without the bug, so an
-  integration test cannot catch this at any step size.
+  `ForwardDiff`, so with the bug it sees `κ = 7.7e10 … 2.0e12` at `Δt = 1` — the stencil's
+  noise floor standing in for the exactly singular matrix that step 2 of the script
+  resolves as `3.1e17`. Either figure is seven orders clear of the bound, which is all a
+  regression test needs. The discrimination comes from the `Δt = 1` half: with the bug all
+  twelve cases breach the bound there, whereas at `Δt = 0.99` the stencil reads
+  1.2e3 … 6.5e4 and only two of the twelve do. Fixed, the worst `κ` anywhere on
+  `Δt ∈ {0.1, …, 1.0}` is 2.6e3. The existing integrator tests run at `Δt = 0.01`, where
+  the effect is invisible, and — as noted above — the *solve* succeeds at `Δt = 0.99` with
+  or without the bug, so an integration test cannot catch this at any step size.
 * **S13** — `spark_tableaus_tests.jl`: the six `SLRK` name symbols are pairwise distinct
   and the two `IIIC` variants carry their own names. The duplicate slipped past the
   `typeof(...) <: SLRK` checks it sat next to, which cannot see a name.
