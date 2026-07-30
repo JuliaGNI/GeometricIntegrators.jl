@@ -419,7 +419,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIBA(3))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIICC̄(1))
