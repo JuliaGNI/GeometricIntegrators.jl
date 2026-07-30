@@ -33,6 +33,7 @@ import GeometricIntegratorsBase: cache, caches, iguess, method, problem, solver,
 import GeometricIntegratorsBase: initial_guess!, integrate_step!, residual!, solutionstep!
 import GeometricIntegratorsBase: current, equation, equations, timestep
 import GeometricIntegratorsBase: update!, initialize!, initsolver, internal, nlsolution, internal_variables
+import GeometricIntegratorsBase: solversize
 
 export CoefficientsARK, CoefficientsPRK, CoefficientsMRK, CoefficientsIRK,
     CoefficientsSPARK

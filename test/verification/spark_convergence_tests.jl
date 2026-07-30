@@ -61,10 +61,14 @@ conv(builder, method, tsteps, expected; label) =
     @testset "SLRK (LDAE)" begin
         conv(build_ldae_slrk, SLRKLobattoIIIAB(2), steps(20, 3), 2; label = "SLRKLobattoIIIAB(2)")
         conv(build_ldae_slrk, SLRKLobattoIIIBA(2), steps(20, 3), 2; label = "SLRKLobattoIIIBA(2)")
+        conv(build_ldae_slrk, SLRKLobattoIIICC̄(2), steps(20, 3), 2; label = "SLRKLobattoIIICC̄(2)")
+        conv(build_ldae_slrk, SLRKLobattoIIIC̄C(2), steps(20, 3), 2; label = "SLRKLobattoIIIC̄C(2)")
         conv(build_ldae_slrk, SLRKLobattoIIID(2),  steps(20, 3), 2; label = "SLRKLobattoIIID(2)")
         conv(build_ldae_slrk, SLRKLobattoIIIE(2),  steps(20, 3), 2; label = "SLRKLobattoIIIE(2)")
         conv(build_ldae_slrk, SLRKLobattoIIIAB(3), steps(20, 3), 4; label = "SLRKLobattoIIIAB(3)")
         conv(build_ldae_slrk, SLRKLobattoIIIBA(3), steps(20, 3), 4; label = "SLRKLobattoIIIBA(3)")
+        conv(build_ldae_slrk, SLRKLobattoIIICC̄(3), steps(20, 3), 4; label = "SLRKLobattoIIICC̄(3)")
+        conv(build_ldae_slrk, SLRKLobattoIIIC̄C(3), steps(20, 3), 4; label = "SLRKLobattoIIIC̄C(3)")
         conv(build_ldae_slrk, SLRKLobattoIIID(3),  steps(20, 3), 4; label = "SLRKLobattoIIID(3)")
         conv(build_ldae_slrk, SLRKLobattoIIIE(3),  steps(20, 3), 4; label = "SLRKLobattoIIIE(3)")
     end

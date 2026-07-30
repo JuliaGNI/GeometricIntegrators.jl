@@ -1,7 +1,9 @@
 using GeometricIntegrators
 using GeometricIntegrators.SPARK
 using GeometricProblems.LotkaVolterra2d
+using LinearAlgebra
 using RungeKutta
+import GeometricIntegratorsBase
 using Test
 
 const t₀ = 0.0
@@ -102,6 +104,116 @@ const SPARK_RELAXED = (min_iterations = 1, x_suctol = 2eps(), f_abstol = 4e-15, 
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 end
+
+
+@testset "$(rpad("SLRK stage-Jacobian conditioning (finding S10)",80))" begin
+
+    # The null-vector multiplier μ must enter the primary-constraint residual row only.
+    # Until the fifth pass it was added to the momentum-stage row as well; since that
+    # row lives in Z-space (P = p + h·Z), the same coefficient there carries an extra
+    # factor h, the two contributions combine to (1-h)·μ·dᵢ/b̄ᵢ, and the μ column of
+    # the stage Jacobian drops out of the reduced system at Δt = 1 — making it exactly
+    # singular there and ill-conditioned nearby.
+    #
+    # The integrator tests above run at Δt = 0.01, where this is invisible, and the
+    # solver still converges at Δt = 0.99 either way, so only the conditioning of the
+    # stage Jacobian discriminates. With this central-difference stencil, measured over
+    # the twelve cases below:
+    #
+    #             |      Δt = 0.99      |        Δt = 1
+    #   with bug  |  1.2e3 … 6.5e4      |  7.7e10 … 2.0e12
+    #   fixed     |  2.1e1 … 1.6e3      |  2.1e1 … 2.6e3
+    #
+    # So it is the Δt = 1 row that carries the regression — every one of the twelve
+    # breaches the 1e4 bound there — while at Δt = 0.99 only two of them do
+    # (SLRKLobattoIIIC̄C(2) at 2.0e4 and SLRKLobattoIIICC̄(3) at 6.5e4). The Δt = 0.99
+    # assertions are kept because the 1/(1-Δt) growth is the signature, but they are not
+    # what makes the test fail. Worst case for the fixed code anywhere on
+    # Δt ∈ {0.1, 0.5, 0.9, 0.99, 1.0} is 2.6e3, i.e. the bound clears it by a factor of
+    # four. (The 1e11 is the stencil's noise floor standing in for an exactly singular
+    # matrix — step 2 of `scripts/slrk_verification.jl` differentiates exactly and gets
+    # 3.1e17. Either way the bound separates fixed from buggy by seven orders of
+    # magnitude at Δt = 1, so the cheap stencil is enough for a regression test.)
+
+    "central-difference stage Jacobian of `residual!` at the initial guess"
+    function stage_jacobian(method, Δt)
+        prob = ldaeproblem_slrk(q₀; timespan=(t₀, t₀ + 10Δt), timestep=Δt, parameters=params)
+        int = GeometricIntegrator(prob, method)
+        solstep = GeometricIntegratorsBase.solutionstep(int, GeometricIntegratorsBase.initialstate(prob))
+        GeometricIntegratorsBase.reset!(solstep, Δt)
+
+        sol = GeometricIntegratorsBase.current(solstep)
+        prm = GeometricIntegratorsBase.parameters(solstep)
+        GeometricIntegratorsBase.initial_guess!(sol, GeometricIntegratorsBase.history(solstep), prm, int)
+
+        x = copy(GeometricIntegratorsBase.nlsolution(int))
+        n = length(x)
+        J = zeros(n, n)
+        rp = zeros(n)
+        rm = zeros(n)
+        ε = 1e-7
+        for j in 1:n
+            xp = copy(x); xp[j] += ε
+            xm = copy(x); xm[j] -= ε
+            GeometricIntegratorsBase.residual!(rp, xp, sol, prm, int)
+            GeometricIntegratorsBase.residual!(rm, xm, sol, prm, int)
+            J[:, j] .= (rp .- rm) ./ (2ε)
+        end
+        J
+    end
+
+    for ctor in (SLRKLobattoIIIAB, SLRKLobattoIIIBA, SLRKLobattoIIICC̄,
+                 SLRKLobattoIIIC̄C, SLRKLobattoIIID, SLRKLobattoIIIE), s in (2, 3)
+        for Δt in (0.99, 1.0)
+            @test cond(stage_jacobian(ctor(s), Δt)) < 1E4
+        end
+    end
+
+end
+
+
+
+@testset "$(rpad("SPARK solver size (finding S18)",80))" begin
+
+    # Two invariants that were both broken and both invisible.
+    #
+    # First: `solversize` must be the *same* generic function the rest of the package
+    # extends. `src/SPARK.jl` did not import it from GeometricIntegratorsBase, so the ten
+    # definitions in `src/spark/` built a second, unrelated function under the same name —
+    # GeometricIntegratorsBase.solversize covered every non-SPARK method and raised a
+    # MethodError on every SPARK one.
+    #
+    # Second: `solversize` must be the full length of the solver's unknown vector. The
+    # null-vector multiplier μ contributes D unknowns, and that term used to be added by
+    # the cache constructor rather than by `solversize`, so the length was defined in two
+    # files at once with nothing checking they agreed. Before the fix the two differed by
+    # exactly D for every method carrying a null vector — e.g. 16 against 18 for
+    # SLRKLobattoIIID(2) and for TableauVSPARKLobattoIIIAB(2).
+
+    @test GeometricIntegrators.SPARK.solversize === GeometricIntegratorsBase.solversize
+
+    # one method per family; both null-vector branches, and the `true` branch on two
+    # different families so it is not just an SLRK property
+    solver_size_cases = (
+        (idae,      SPARKGLRK(1),                          false),
+        (idae,      VSPARK(SPARKGLRKLobattoIIIAIIIB(1)),   false),
+        (idae,      TableauVSPARKGLRKpMidpoint(1),          false),
+        (idae,      TableauVSPARKGLRKpSymmetric(2),         false),
+        (idae,      TableauVSPARKLobattoIIIAB(2),           true),
+        (pdae,      TableauHPARKGLRK(1),                    false),
+        (ldae_slrk, SLRKLobattoIIID(2),                     true),
+        (ldae_slrk, SLRKLobattoIIIAB(3),                    true),
+    )
+
+    for (prob, method, hasnull) in solver_size_cases
+        int = GeometricIntegrator(prob, method)
+        @test GeometricIntegrators.SPARK.hasnullvector(method) == hasnull
+        @test GeometricIntegratorsBase.solversize(prob, method) ==
+              length(GeometricIntegratorsBase.nlsolution(int))
+    end
+
+end
+
 
 
 @testset "$(rpad("SPARK integrators",80))" begin

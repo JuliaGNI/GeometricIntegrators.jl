@@ -43,7 +43,7 @@ hasnullvector(method::VSPARKsecondary{DT,Nothing}) where {DT} = false
 hasnullvector(method::VSPARKsecondary{DT,<:AbstractVector}) where {DT} = true
 
 solversize(problem::AbstractProblemIDAE, method::VSPARKsecondary) =
-    4 * length(vec(initial_conditions(problem).q)) * pstages(method)
+    4 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(problem, method)
 
 
 @doc raw"""
@@ -209,7 +209,11 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         C.p̃ .+= timestep(int) .* tableau(int).p.b[3][i] .* C.G̅p[i]
     end
 
-    # compute ϕ(q,p)
+    # compute ϕ(q,p) at the new solution, for the last column of the ω constraint.
+    # No velocity is available at (q_{n+1}, p_{n+1}); ϕ of a degenerate Lagrangian,
+    # ϕ(q,p) = p - ϑ(q), does not use it. Zero it explicitly rather than relying on
+    # the cache never having been written (same as in `integrators_slrk.jl`).
+    C.ṽ .= 0
     equations(int).ϕ(C.ϕ̃, sol.t, C.q̃, C.ṽ, C.p̃, params)
 end
 
