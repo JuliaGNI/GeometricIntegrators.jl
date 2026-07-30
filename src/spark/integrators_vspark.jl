@@ -10,7 +10,7 @@ VSPARK(method::SPARKMethod) = VSPARK(tableau(method))
 tableau(method::VSPARK) = method.tableau
 
 solversize(problem::AbstractProblemIDAE, method::VSPARK) =
-    3 * length(vec(initial_conditions(problem).q)) * nstages(method) + 3 * length(vec(initial_conditions(problem).q)) * pstages(method)
+    3 * length(vec(initial_conditions(problem).q)) * nstages(method) + 3 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(problem, method)
 
 
 @doc raw"""

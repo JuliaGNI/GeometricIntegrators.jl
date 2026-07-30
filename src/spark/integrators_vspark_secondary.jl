@@ -43,7 +43,7 @@ hasnullvector(method::VSPARKsecondary{DT,Nothing}) where {DT} = false
 hasnullvector(method::VSPARKsecondary{DT,<:AbstractVector}) where {DT} = true
 
 solversize(problem::AbstractProblemIDAE, method::VSPARKsecondary) =
-    4 * length(vec(initial_conditions(problem).q)) * pstages(method)
+    4 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(problem, method)
 
 
 @doc raw"""

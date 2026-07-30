@@ -173,6 +173,49 @@ end
 
 
 
+@testset "$(rpad("SPARK solver size (finding S18)",80))" begin
+
+    # Two invariants that were both broken and both invisible.
+    #
+    # First: `solversize` must be the *same* generic function the rest of the package
+    # extends. `src/SPARK.jl` did not import it from GeometricIntegratorsBase, so the ten
+    # definitions in `src/spark/` built a second, unrelated function under the same name —
+    # GeometricIntegratorsBase.solversize covered every non-SPARK method and raised a
+    # MethodError on every SPARK one.
+    #
+    # Second: `solversize` must be the full length of the solver's unknown vector. The
+    # null-vector multiplier μ contributes D unknowns, and that term used to be added by
+    # the cache constructor rather than by `solversize`, so the length was defined in two
+    # files at once with nothing checking they agreed. Before the fix the two differed by
+    # exactly D for every method carrying a null vector — e.g. 16 against 18 for
+    # SLRKLobattoIIID(2) and for TableauVSPARKLobattoIIIAB(2).
+
+    @test GeometricIntegrators.SPARK.solversize === GeometricIntegratorsBase.solversize
+
+    # one method per family; both null-vector branches, and the `true` branch on two
+    # different families so it is not just an SLRK property
+    solver_size_cases = (
+        (idae,      SPARKGLRK(1),                          false),
+        (idae,      VSPARK(SPARKGLRKLobattoIIIAIIIB(1)),   false),
+        (idae,      TableauVSPARKGLRKpMidpoint(1),          false),
+        (idae,      TableauVSPARKGLRKpSymmetric(2),         false),
+        (idae,      TableauVSPARKLobattoIIIAB(2),           true),
+        (pdae,      TableauHPARKGLRK(1),                    false),
+        (ldae_slrk, SLRKLobattoIIID(2),                     true),
+        (ldae_slrk, SLRKLobattoIIIAB(3),                    true),
+    )
+
+    for (prob, method, hasnull) in solver_size_cases
+        int = GeometricIntegrator(prob, method)
+        @test GeometricIntegrators.SPARK.hasnullvector(method) == hasnull
+        @test GeometricIntegratorsBase.solversize(prob, method) ==
+              length(GeometricIntegratorsBase.nlsolution(int))
+    end
+
+end
+
+
+
 @testset "$(rpad("SPARK integrators",80))" begin
 
     sol = integrate(idae, SPARKGLRK(1))

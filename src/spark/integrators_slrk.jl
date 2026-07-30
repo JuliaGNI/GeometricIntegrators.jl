@@ -40,7 +40,7 @@ hasnullvector(method::SLRK{DT,Nothing}) where {DT} = false
 hasnullvector(method::SLRK{DT,<:AbstractVector}) where {DT} = true
 
 solversize(problem::LDAEProblem, method::SLRK) =
-    4 * length(vec(initial_conditions(problem).q)) * nstages(method)
+    4 * length(vec(initial_conditions(problem).q)) * nstages(method) + nullvectorsize(problem, method)
 
 
 @doc raw"""

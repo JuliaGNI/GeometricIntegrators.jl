@@ -79,7 +79,7 @@ end
 tableau(method::VSPARKprimary) = method.tableau
 
 solversize(problem::AbstractProblemIDAE, method::VSPARKprimary) =
-    2 * length(vec(initial_conditions(problem).q)) * nstages(method) + 2 * length(vec(initial_conditions(problem).q)) * pstages(method)
+    2 * length(vec(initial_conditions(problem).q)) * nstages(method) + 2 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(problem, method)
 
 
 @doc raw"""
