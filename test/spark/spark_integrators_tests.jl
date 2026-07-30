@@ -25,14 +25,16 @@ ref = integrate(ode, Gauss(8))
 
 # Several known-broken / order-reduced SPARK methods below genuinely diverge, hit
 # singular stage systems, or reduce order (see docs/src/audit.md, third pass).
-# Their solves emit many "Solver took 1000 iterations." and backtracking
+# Their solves emit nonlinear-solver stagnation, iteration-cap and backtracking
 # line-search warnings that are correct symptoms and not fixable via the solver (a
-# different solver, line search or iteration cap does not help). `muffle` runs one
-# integration with log messages suppressed so the test output stays readable; it
-# changes only logging, so the measured errors and @test_broken status are
-# unaffected. A logger is used rather than solver options because the line search
-# keeps its own Options and never sees a `verbosity` kwarg passed through integrate.
-muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.NullLogger())
+# different solver, line search or iteration cap does not help). Passing both
+# `verbosity = 0` and `warn_iterations = 0` silences those (correct) warnings for the
+# affected integrations: under SimpleSolvers 0.10 the stagnation and line-search
+# messages are gated on `verbosity`, while the "Solver took N iterations" cap message
+# is gated on `warn_iterations`. Since GeometricIntegratorsBase merges these into the
+# method's `default_options`, the tolerances and `min_iterations` are unchanged and
+# only logging is affected, so the measured errors and @test_broken status are
+# unaffected.
 
 
 @testset "$(rpad("SLRK integrators",80))" begin
@@ -281,12 +283,12 @@ end
     # --- known-broken (see docs/src/audit.md) ---
 
     # order deficient at s=2 (meas 0.107)
-    @test_broken relative_maximum_error(muffle(() -> integrate(idae, SPARKLobattoIIIAIIIB(2))).q, ref.q) < 1E-6
+    @test_broken relative_maximum_error(integrate(idae, SPARKLobattoIIIAIIIB(2); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
 
     # diverges (meas 2.96 / 0.58 / 7.3E-3)
-    @test_broken relative_maximum_error(muffle(() -> integrate(idae, SPARKLobattoIIIBIIIA(2))).q, ref.q) < 1E-6
-    @test_broken relative_maximum_error(muffle(() -> integrate(idae, SPARKLobattoIIIBIIIA(3))).q, ref.q) < 1E-6
-    @test_broken relative_maximum_error(muffle(() -> integrate(idae, SPARKLobattoIIIBIIIA(4))).q, ref.q) < 2E-10
+    @test_broken relative_maximum_error(integrate(idae, SPARKLobattoIIIBIIIA(2); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
+    @test_broken relative_maximum_error(integrate(idae, SPARKLobattoIIIBIIIA(3); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
+    @test_broken relative_maximum_error(integrate(idae, SPARKLobattoIIIBIIIA(4); verbosity=0, warn_iterations=0).q, ref.q) < 2E-10
 
 end
 
@@ -332,8 +334,9 @@ end
 
     # converges to 2.7E-10 but the backtracking line search struggles in the tail
     # (many "did not satisfy sufficient decrease" warnings without hitting the
-    # solver iteration cap); tolerance tuning does not clear them, so they are muffled.
-    sol = muffle(() -> integrate(idae, VSPARK(SPARKLobABC(3))))
+    # solver iteration cap); tolerance tuning does not clear them, so they are silenced
+    # with `verbosity = 0`.
+    sol = integrate(idae, VSPARK(SPARKLobABC(3)); verbosity=0, warn_iterations=0)
     @test relative_maximum_error(sol.q, ref.q) < 5E-10
 
     sol = integrate(idae, VSPARK(SPARKLobABC(4)))
@@ -341,16 +344,17 @@ end
 
 
     # order-reduced vs s=4; the solver stalls at a few steps regardless of tolerance
-    # or solver choice, so its warnings are muffled rather than tuned away.
-    sol = muffle(() -> integrate(idae, VSPARK(SPARKLobABD(3))))
+    # or solver choice, so its warnings are silenced with `verbosity = 0` rather than
+    # tuned away.
+    sol = integrate(idae, VSPARK(SPARKLobABD(3)); verbosity=0, warn_iterations=0)
     @test relative_maximum_error(sol.q, ref.q) < 8E-6
 
     # converges to 5.2E-12, but the line search stalls at one step just above machine
-    # precision and warns. Relaxing f_abstol to 4e-15 (the former workaround, a
-    # SPARK_RELAXED option bundle here) no longer removes the warning under
-    # SimpleSolvers 0.9.2 — it turns one warning into twelve at unchanged error — so
-    # the framework defaults are kept and the warning is muffled like the others.
-    sol = muffle(() -> integrate(idae, VSPARK(SPARKLobABD(4))))
+    # precision and warns. Relaxing f_abstol to 4e-15 (a former workaround) does not
+    # remove the warning — it trades one warning for several at unchanged error — so the
+    # framework defaults are kept and the warning is silenced with `verbosity = 0` like
+    # the others.
+    sol = integrate(idae, VSPARK(SPARKLobABD(4)); verbosity=0, warn_iterations=0)
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
 
@@ -368,15 +372,19 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-14
 
 
+    # SPARKLobattoIIIBIIIA(2) was formerly @test_broken (a singular stage system). Under
+    # SimpleSolvers 0.10 its solve now converges, so this case passes and is asserted.
+    sol = integrate(idae, VSPARK(SPARKLobattoIIIBIIIA(2)))
+    @test relative_maximum_error(sol.q, ref.q) < 1E-6
+
     # --- known-broken (see docs/src/audit.md) ---
 
     # throw SingularException: the s=2 pair gives a singular stage system
     @test_broken relative_maximum_error(integrate(idae, VSPARK(SPARKGLRK(1))).q, ref.q) < 1E-6
     @test_broken relative_maximum_error(integrate(idae, VSPARK(SPARKGLRK(2))).q, ref.q) < 1E-11
     @test_broken relative_maximum_error(integrate(idae, VSPARK(SPARKLobABC(2))).q, ref.q) < 1E-6
-    @test_broken relative_maximum_error(muffle(() -> integrate(idae, VSPARK(SPARKLobABD(2)))).q, ref.q) < 1E-6
+    @test_broken relative_maximum_error(integrate(idae, VSPARK(SPARKLobABD(2)); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
     @test_broken relative_maximum_error(integrate(idae, VSPARK(SPARKLobattoIIIAIIIB(2))).q, ref.q) < 1E-6
-    @test_broken relative_maximum_error(integrate(idae, VSPARK(SPARKLobattoIIIBIIIA(2))).q, ref.q) < 1E-6
 
 
     sol = integrate(idae, VSPARK(SPARKGLRKLobattoIIIAIIIB(1)))
@@ -443,7 +451,7 @@ end
     # --- known-broken (see docs/src/audit.md) ---
 
     # order reduction: meas 7.95E-7, no better than s=2
-    @test_broken relative_maximum_error(muffle(() -> integrate(idae, TableauVSPARKLobattoIIIBIIIApSymmetric(3))).q, ref.q) < 5E-11
+    @test_broken relative_maximum_error(integrate(idae, TableauVSPARKLobattoIIIBIIIApSymmetric(3); verbosity=0, warn_iterations=0).q, ref.q) < 5E-11
 
 end
 
@@ -598,10 +606,10 @@ end
     # --- known-broken (see docs/src/audit.md) ---
 
     # diverge / excessive solver iterations (meas 20.0 / 11.3 / 1.61 / 0.153)
-    @test_broken relative_maximum_error(muffle(() -> integrate(pdae, TableauHPARKLobattoIIIAIIIB(2))).q, ref.q) < 2E-2
-    @test_broken relative_maximum_error(muffle(() -> integrate(pdae, TableauHPARKLobattoIIIAIIIB(3))).q, ref.q) < 8E-2
-    @test_broken relative_maximum_error(muffle(() -> integrate(pdae, TableauHPARKLobattoIIIBIIIA(2))).q, ref.q) < 2E-2
-    @test_broken relative_maximum_error(muffle(() -> integrate(pdae, TableauHPARKLobattoIIIBIIIA(3))).q, ref.q) < 4E-3
+    @test_broken relative_maximum_error(integrate(pdae, TableauHPARKLobattoIIIAIIIB(2); verbosity=0, warn_iterations=0).q, ref.q) < 2E-2
+    @test_broken relative_maximum_error(integrate(pdae, TableauHPARKLobattoIIIAIIIB(3); verbosity=0, warn_iterations=0).q, ref.q) < 8E-2
+    @test_broken relative_maximum_error(integrate(pdae, TableauHPARKLobattoIIIBIIIA(2); verbosity=0, warn_iterations=0).q, ref.q) < 2E-2
+    @test_broken relative_maximum_error(integrate(pdae, TableauHPARKLobattoIIIBIIIA(3); verbosity=0, warn_iterations=0).q, ref.q) < 4E-3
 
 end
 
@@ -740,17 +748,18 @@ end
     #     now re-enabled, matching the working VSPARKsecondary.
     # A residual singularity remains in the ω secondary-constraint block: every variant
     # still raises a SingularException, so all cases stay @test_broken. The solves now
-    # iterate before failing (they no longer abort immediately), so they are muffled.
+    # iterate before failing (they no longer abort immediately), so they are silenced
+    # with `verbosity = 0`.
     for s in (2, 3, 4)
-        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKLobattoIIIAB(s))).q, ref.q) < 1E-6
-        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKLobattoIIIBA(s))).q, ref.q) < 1E-6
-        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKLobattoIIID(s))).q, ref.q) < 1E-6
-        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKLobattoIIIE(s))).q, ref.q) < 1E-6
+        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKLobattoIIIAB(s); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
+        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKLobattoIIIBA(s); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
+        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKLobattoIIID(s); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
+        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKLobattoIIIE(s); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
 
-        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(s))).q, ref.q) < 4E-6
-        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(s))).q, ref.q) < 4E-6
-        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKGLRKLobattoIIID(s))).q, ref.q) < 4E-6
-        @test_broken relative_maximum_error(muffle(() -> integrate(hdae, TableauHSPARKGLRKLobattoIIIE(s))).q, ref.q) < 4E-6
+        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(s); verbosity=0, warn_iterations=0).q, ref.q) < 4E-6
+        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(s); verbosity=0, warn_iterations=0).q, ref.q) < 4E-6
+        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKGLRKLobattoIIID(s); verbosity=0, warn_iterations=0).q, ref.q) < 4E-6
+        @test_broken relative_maximum_error(integrate(hdae, TableauHSPARKGLRKLobattoIIIE(s); verbosity=0, warn_iterations=0).q, ref.q) < 4E-6
     end
 
 end

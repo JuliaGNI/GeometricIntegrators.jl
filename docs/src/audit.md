@@ -512,6 +512,40 @@ that one integration. `muffle` changes only logging, so the measured errors and
 the `@test_broken` status are unaffected. The suite now runs warning-free with the
 same 133 pass / 45 broken tally.
 
+**Update (SimpleSolvers 0.10.0 / GeometricIntegratorsBase 0.4.3).** The two root
+causes above are fixed upstream, so all the per-run warning counts in this Third
+pass (~35/run in SPARK, 12 after the 0.9.2 rework, the 2/3/3/2 PMVI/HP breakdown,
+etc.) are **historical** and no longer describe the suite:
+
+* The line search now shares its solver's `Options`, so `verbosity = 0` finally
+  reaches it — the blocker recorded above ("the line search builds its own
+  `Options` and never receives a `verbosity` kwarg") is gone. The `muffle` helper
+  (`with_logger(f, NullLogger())` / `SimpleLogger(devnull, Error)`) has been
+  removed from all six files (tests and `scripts/`) in favour of
+  `integrate(…; verbosity = 0, warn_iterations = 0)` at the genuinely-divergent
+  `@test_broken` sites. Both kwargs are needed: under 0.10 the stagnation and
+  line-search messages are gated on `verbosity`, while the "Solver took N
+  iterations" cap message is gated separately on `warn_iterations`.
+* A converged solve whose residual sits at the round-off floor is now **silent** at
+  default verbosity, and a stalled solve stops after `max_stalls` steps and emits a
+  single, informative stagnation warning (reporting the achievable floor) instead
+  of spinning to `max_iterations` and warning up to a thousand times.
+* `GeometricIntegratorsBase` 0.4.3 **merges** caller options into the method's
+  `default_options` instead of replacing the whole bundle, so the line-461 claim
+  that "`min_iterations = 1` is repeated because passing any solver option replaces
+  the whole `default_options` NamedTuple" **no longer holds** — the redundant
+  `min_iterations = 1` restatements have been dropped, leaving only `f_abstol`.
+* The `f_abstol = 4e-15` relaxation is retained for `PMVI*`/`HPI*` and additionally
+  applied to the `VPRKGauss(8)` reference solve and `VPRKGauss(2)` in the
+  `variational` suite, which reach the same round-off floor at their finest
+  timestep under 0.10's stricter stall detection. Each relaxed converging call now
+  carries a `@test_nowarn` regression tripwire, so a resurfacing solver warning
+  fails the suite rather than merely printing.
+* One formerly-broken case now converges: `VSPARK(SPARKLobattoIIIBIIIA(2))` (a
+  singular stage system under 0.9) solves cleanly under 0.10 and has been promoted
+  from `@test_broken` to `@test`. This is the only pass/broken change; the tally is
+  otherwise unchanged.
+
 ---
 
 # Fourth pass — SPARK submodule (`src/spark/`)

@@ -85,9 +85,11 @@ end
         # `VPRKpTableau` uses the same tableau family, with the Dirac constraint
         # ϑ(qₙ₊₁) − pₙ₊₁ = 0 in place of the energy condition. Its point is to recover on
         # a *degenerate* Lagrangian the order that a plain VPRK loses there.
-        # Drops the benign line-search warnings but keeps anything error-level visible: a
-        # `NullLogger` here would also swallow genuine solver failures.
-        muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.SimpleLogger(devnull, Base.CoreLogging.Error))
+        # The nonlinear solver occasionally runs to its iteration cap on these harder
+        # systems and emits benign warnings. Under SimpleSolvers 0.10 the "Solver took N
+        # iterations" warning is gated on `warn_iterations`, not `verbosity`, so both
+        # `verbosity = 0` and `warn_iterations = 0` are needed to silence them (merged
+        # into the method's `default_options`).
         lbuild(Δt) = LotkaVolterra2d.lodeproblem(q₀; timespan=(0.0, T), timestep=Δt, parameters=params)
         emq(sol, r) = relative_maximum_error(sol.q, r.q)
 
@@ -97,8 +99,8 @@ end
         # roughly doubles the achieved order.
         st = T ./ (2 .* 2 .^ (0:3))
         for s in 3:5
-            rp = muffle(() -> estimate_convergence_order(lbuild, VPRKpTableau(s), st; reference=ref, errormetric=emq))
-            rv = muffle(() -> estimate_convergence_order(lbuild, VPRK(Gauss(s)), st; reference=ref, errormetric=emq))
+            rp = estimate_convergence_order(lbuild, VPRKpTableau(s), st; reference=ref, errormetric=emq, integrate_options=(verbosity=0, warn_iterations=0,))
+            rv = estimate_convergence_order(lbuild, VPRK(Gauss(s)), st; reference=ref, errormetric=emq, integrate_options=(verbosity=0, warn_iterations=0,))
             @test rp.order > rv.order + 1
         end
 
@@ -110,7 +112,7 @@ end
         # the method and not of the solve. `VPRKpTableau` has no published order theorem —
         # see its docstring — so this is recorded rather than asserted.
         @test_broken all(
-            isapprox(muffle(() -> estimate_convergence_order(lbuild, VPRKpTableau(s), T ./ (4 .* 2 .^ (0:4)); reference=ref, errormetric=emq)).order, 2s; atol=0.35)
+            isapprox(estimate_convergence_order(lbuild, VPRKpTableau(s), T ./ (4 .* 2 .^ (0:4)); reference=ref, errormetric=emq, integrate_options=(verbosity=0, warn_iterations=0,)).order, 2s; atol=0.35)
             for s in 4:5
         )
     end

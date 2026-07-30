@@ -184,9 +184,8 @@ end
     # `VPRKpTableau` couples the Dirac-constraint multipliers into the tableau, so the
     # nonlinear system is harder than a plain VPRK one and the line search occasionally
     # hits its iteration cap. The warnings are benign — the measured errors below are at
-    # machine precision — so they are suppressed for these calls. Only up to `Warn`: a
-    # `NullLogger` would also swallow genuine solver failures.
-    muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.SimpleLogger(devnull, Base.CoreLogging.Error))
+    # machine precision — so they are silenced with `verbosity = 0` for these calls. It
+    # is merged into the method's `default_options`, so only logging is affected.
 
     # D = 2 multipliers need s ≥ D+1 = 3 stages to fit into the skew generator, and
     # s ≥ D+2 = 4 for full order: at s = 3 the multiplier occupies the (2,1) slot, which
@@ -201,19 +200,19 @@ end
     # Measured (Δt = 0.01, nt = 10, reference Gauss(8) on the ODE form):
     #   s = 3: 2.1E-10  (order-degraded, worse than VPRK(Gauss(3)) at 2.3E-11)
     #   s = 4: 8.9E-16, s = 5: 6.7E-16, s = 6: 4.4E-16
-    sol = muffle(() -> integrate(iode, VPRKpTableau(4)))
+    sol = integrate(iode, VPRKpTableau(4); verbosity=0, warn_iterations=0)
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
-    sol = muffle(() -> integrate(iode, VPRKpTableau(5)))
+    sol = integrate(iode, VPRKpTableau(5); verbosity=0, warn_iterations=0)
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
-    sol = muffle(() -> integrate(iode, VPRKpTableau(6)))
+    sol = integrate(iode, VPRKpTableau(6); verbosity=0, warn_iterations=0)
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
     # The defining property: the Dirac constraint ϑ(qₙ) − pₙ = 0 must hold at every
     # step. Measured 4.4E-16 … 8.0E-15.
     for s in 3:6
-        sol = muffle(() -> integrate(iode, VPRKpTableau(s)))
+        sol = integrate(iode, VPRKpTableau(s); verbosity=0, warn_iterations=0)
         dirac = maximum(maximum(abs, sol.p[i] .- LotkaVolterra2d.ϑ(sol.t[i], sol.q[i]))
                         for i in eachindex(sol.q))
         @test dirac < 2E-14
@@ -221,8 +220,8 @@ end
 
     # At s = D+1 the projection costs accuracy rather than gaining it, which is the
     # observable consequence of the (2,1)-slot obstruction.
-    let s3 = muffle(() -> integrate(iode, VPRKpTableau(3))),
-        v3 = muffle(() -> integrate(iode, VPRK(Gauss(3))))
+    let s3 = integrate(iode, VPRKpTableau(3); verbosity=0, warn_iterations=0),
+        v3 = integrate(iode, VPRK(Gauss(3)); verbosity=0, warn_iterations=0)
 
         @test relative_maximum_error(s3.q, ref.q) > relative_maximum_error(v3.q, ref.q)
     end
