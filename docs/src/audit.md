@@ -643,7 +643,8 @@ numerical.
 Findings 13, 14, 16, 17, 20, 24 and 25 were implementation bugs in this repository and are
 **fixed**. Findings 18, 19 and 21 are inherent properties of the methods, now asserted
 or recorded. Finding 15 corrects this report; 22 corrects the test suite; 23 was a stale
-dependency bound, now restricted to `GeometricProblems = "0.7"`.
+dependency bound, restricted to `GeometricProblems = "0.7"` at the time of the audit and
+since moved on to `"0.8"`.
 
 Note that 24 is the one place where the port asserted a structural property that does not
 hold: the same standard applied to `FLRK` (`issymplectic = missing`, because the reference

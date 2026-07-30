@@ -1,6 +1,6 @@
 name = "GeometricIntegrators"
 uuid = "dcce2d33-59f6-5b8d-9047-0defad88ae06"
-version = "0.16.9"
+version = "0.16.10"
 authors = ["Michael Kraus <michael.kraus@ipp.mpg.de>"]
 
 [workspace]
@@ -34,7 +34,7 @@ GenericLinearAlgebra = "0.2, 0.3, 0.4"
 GeometricBase = "0.14"
 GeometricEquations = "0.21"
 GeometricIntegratorsBase = "0.3, 0.4"
-GeometricProblems = "0.7.2"
+GeometricProblems = "0.8"
 GeometricSolutions = "0.6.5"
 LinearAlgebra = "1"
 OffsetArrays = "1"
