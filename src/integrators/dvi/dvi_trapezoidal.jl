@@ -96,8 +96,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CTDVI})
     offset_v = D
     offset_x = D + div(D, 2)
     for k in 1:div(D, 2)
-        cache(int).x[offset_v+k] = cache(int).v[k]              # v¹(n+1/2)
-        cache(int).x[offset_x+k] = cache(int).q[div(D, 2)+k]     # q²(n+1/2)
+        x[offset_v+k] = cache(int).v[k]              # v¹(n+1/2)
+        x[offset_x+k] = cache(int).q[div(D, 2)+k]     # q²(n+1/2)
     end
 end
 

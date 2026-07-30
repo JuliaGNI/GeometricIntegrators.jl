@@ -51,8 +51,8 @@ function Base.show(io::IO, int::IntegratorHSPARK)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for Hamiltonian systems *EXPERIMENTAL*\n")
     print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(description(method(int)))\n")
-    print(io, "   $(string(method(int).q))")
-    print(io, "   $(string(method(int).p))")
+    print(io, "   $(string(tableau(method(int)).q))")
+    print(io, "   $(string(tableau(method(int)).p))")
     # print(io, reference(method(int)))
 end
 

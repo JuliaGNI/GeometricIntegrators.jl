@@ -1,6 +1,6 @@
 name = "GeometricIntegrators"
 uuid = "dcce2d33-59f6-5b8d-9047-0defad88ae06"
-version = "0.16.9"
+version = "0.16.10"
 authors = ["Michael Kraus <michael.kraus@ipp.mpg.de>"]
 
 [workspace]
@@ -28,13 +28,14 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+Aqua = "0.8"
 CompactBasisFunctions = "0.2"
 Documenter = "1"
 GenericLinearAlgebra = "0.2, 0.3, 0.4"
 GeometricBase = "0.14"
 GeometricEquations = "0.21"
 GeometricIntegratorsBase = "0.3, 0.4"
-GeometricProblems = "0.7.2"
+GeometricProblems = "0.8"
 GeometricSolutions = "0.6.5"
 LinearAlgebra = "1"
 OffsetArrays = "1"
@@ -44,8 +45,11 @@ ProgressMeter = "1"
 QuadratureRules = "0.1"
 Reexport = "1.0"
 RungeKutta = "0.5.23"
+SafeTestsets = "0.1"
+SharedArrays = "1"
 SimpleSolvers = "0.9"
 StaticArrays = "1"
+Test = "1"
 julia = "1.10"
 
 [extras]

@@ -490,8 +490,17 @@ ways:
 (`min_iterations=1, x_suctol=2eps(), f_abstol=8eps(), f_suctol=2eps()`,
 `src/spark/abstract.jl`). For `VSPARK(SPARKLobABD(4))` the same machine-precision
 `f_abstol` stall as PMVI/HP applies; relaxing it to `4e-15` (keeping the other
-SPARK defaults, threaded via the module-level `SPARK_RELAXED` named tuple) makes
-the solve converge and removes **both** warning kinds, error unchanged (5.2e-12).
+SPARK defaults, threaded via a module-level `SPARK_RELAXED` named tuple) made the
+solve converge and removed **both** warning kinds, error unchanged (5.2e-12).
+
+**Update (SimpleSolvers 0.9.2).** The line search has since been reworked and the
+counts above no longer hold: the whole suite now emits **12** warnings per run, all
+of the line-search kind, and all from that one relaxed `VSPARK(SPARKLobABD(4))`
+call — with the framework defaults it warns just *once*, at the same 5.2e-12 error,
+so the relaxation now costs warnings instead of removing them. `SPARK_RELAXED` was
+therefore dropped and that call muffled like the rest; `VSPARK(SPARKLobABC(3))`
+(19 line-search warnings before, 1 now) and `VSPARK(SPARKLobABD(3))` (2 solver +
+18 line-search) stay muffled, and every other passing case warns zero times.
 
 For every other noisy case, tolerance/solver tuning does **not** cleanly help —
 the divergent methods genuinely fail, and the line-search warning cannot be
@@ -643,7 +652,8 @@ numerical.
 Findings 13, 14, 16, 17, 20, 24 and 25 were implementation bugs in this repository and are
 **fixed**. Findings 18, 19 and 21 are inherent properties of the methods, now asserted
 or recorded. Finding 15 corrects this report; 22 corrects the test suite; 23 was a stale
-dependency bound, now restricted to `GeometricProblems = "0.7"`.
+dependency bound, restricted to `GeometricProblems = "0.7"` at the time of the audit and
+since moved on to `"0.8"`.
 
 Note that 24 is the one place where the port asserted a structural property that does not
 hold: the same standard applied to `FLRK` (`issymplectic = missing`, because the reference

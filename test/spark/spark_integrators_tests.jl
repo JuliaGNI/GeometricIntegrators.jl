@@ -34,13 +34,6 @@ ref = integrate(ode, Gauss(8))
 # keeps its own Options and never sees a `verbosity` kwarg passed through integrate.
 muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.NullLogger())
 
-# Benign counterpart: VSPARK(SPARKLobABD(4)) stalls at one step just above machine
-# precision under the default f_abstol = 8eps(); relaxing it to 4e-15 makes the
-# solve converge and removes the warnings with the error unchanged. The other SPARK
-# defaults (see src/spark/abstract.jl) are repeated because passing any solver
-# option replaces the whole default_options bundle.
-const SPARK_RELAXED = (min_iterations = 1, x_suctol = 2eps(), f_abstol = 4e-15, f_suctol = 2eps())
-
 
 @testset "$(rpad("SLRK integrators",80))" begin
 
@@ -352,7 +345,12 @@ end
     sol = muffle(() -> integrate(idae, VSPARK(SPARKLobABD(3))))
     @test relative_maximum_error(sol.q, ref.q) < 8E-6
 
-    sol = integrate(idae, VSPARK(SPARKLobABD(4)); SPARK_RELAXED...)
+    # converges to 5.2E-12, but the line search stalls at one step just above machine
+    # precision and warns. Relaxing f_abstol to 4e-15 (the former workaround, a
+    # SPARK_RELAXED option bundle here) no longer removes the warning under
+    # SimpleSolvers 0.9.2 — it turns one warning into twelve at unchanged error — so
+    # the framework defaults are kept and the warning is muffled like the others.
+    sol = muffle(() -> integrate(idae, VSPARK(SPARKLobABD(4))))
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
 

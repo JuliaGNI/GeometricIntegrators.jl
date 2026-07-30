@@ -46,13 +46,6 @@ end
     include("projections/projections_vprk_tests.jl")
 end
 
-@safetestset "Ensemble Integrator Tests                                                       " begin
-    include("integrators/ensemble_integrators_tests.jl")
-end
-@safetestset "Show Methods and Integrators                                                    " begin
-    include("integrators/test_show.jl")
-end
-
 @safetestset "Convergence: Runge-Kutta                                                        " begin
     include("verification/rk_convergence_tests.jl")
 end
@@ -92,6 +85,12 @@ end
 
 @safetestset "Method Tests                                                                    " begin
     include("methods/methods_tests.jl")
+end
+@safetestset "Show Methods and Integrators                                                    " begin
+    include("integrators/test_show.jl")
+end
+@safetestset "Ensemble Integrator Tests                                                       " begin
+    include("integrators/ensemble_integrators_tests.jl")
 end
 @safetestset "Simulation Tests                                                                " begin
     include("simulations/simulations_tests.jl")

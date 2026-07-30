@@ -12,5 +12,20 @@ GeometricSolutions = "7843afe4-64f4-4df4-9231-049495c56661"
 RungeKutta = "fb486d5c-30a0-4a8a-8415-a8b4ace5a6f7"
 Weave = "44d3d7a6-8a23-5bf8-98c5-b353f8df5ec9"
 
+# See the note in test/Project.toml: GeometricProblems and the documentation tooling are
+# dependencies of this project, so their bounds belong here, not in the root Project.toml.
+[compat]
+CairoMakie = "0.15"
+Documenter = "1"
+DocumenterCitations = "1.4"
+DocumenterInterLinks = "1.1"
+GeometricBase = "0.14"
+GeometricEquations = "0.21"
+GeometricIntegratorsBase = "0.3, 0.4"
+GeometricProblems = "0.8"
+GeometricSolutions = "0.6.5"
+RungeKutta = "0.5.23"
+Weave = "0.10"
+
 [sources]
 GeometricIntegrators = {path = ".."}

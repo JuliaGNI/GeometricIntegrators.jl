@@ -63,14 +63,14 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{aligned}
 ```
 """
-const IntegratorSPARK{DT,TT} = GeometricIntegrator{<:Union{IDAEProblem{DT,TT},LDAEProblem{DT,TT}},<:SPARKMethod}
+const IntegratorSPARK{DT,TT} = GeometricIntegrator{<:SPARKMethod,<:Union{IDAEProblem{DT,TT},LDAEProblem{DT,TT}}}
 
 function Base.show(io::IO, int::IntegratorSPARK)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for index-two DAE systems:\n")
     print(io, "   Timestep: $(timestep(int))\n")
     print(io, "   Tableau:  $(description(method(int)))\n")
-    print(io, "   $(string(method(int).q))")
-    print(io, "   $(string(method(int).p))")
+    print(io, "   $(string(tableau(method(int)).q))")
+    print(io, "   $(string(tableau(method(int)).p))")
     # print(io, reference(method(int)))
 end
 
