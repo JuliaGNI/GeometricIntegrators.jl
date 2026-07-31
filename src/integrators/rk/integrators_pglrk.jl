@@ -109,7 +109,7 @@ isenergypreserving(::Union{PGLRK,Type{<:PGLRK}}) = true
 default_solver(::PGLRK) = Newton()
 default_iguess(::PGLRK) = HermiteExtrapolation()
 
-solversize(problem::AbstractProblemODE, method::PGLRK) =
+solversize(method::PGLRK, problem::AbstractProblemODE) =
     length(vec(initial_conditions(problem).q)) * nstages(method)
 
 

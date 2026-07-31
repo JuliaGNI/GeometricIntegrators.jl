@@ -25,7 +25,7 @@ function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:StandardP
 end
 
 @inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:StandardProjection}) =
-    ProjectionCache{ST,timetype(problem),typeof(problem),nconstraints(problem),solversize(problem, parent(method))}
+    ProjectionCache{ST,timetype(problem),typeof(problem),nconstraints(problem),solversize(parent(method), problem)}
 
 
 default_solver(::ProjectedMethod{<:StandardProjection}) = Newton()
@@ -34,7 +34,7 @@ default_solver(::ProjectedMethod{<:StandardProjection}) = Newton()
 function split_nlsolution(x::AbstractVector, int::StandardProjectionIntegrator)
     D = ndims(cache(int))
     M = nconstraints(int)
-    N = solversize(problem(int), parent(method(int)))
+    N = solversize(parent(method(int)), problem(int))
 
     x̄ = @view x[1:N]
     x̃ = @view x[N+1:N+D+M]

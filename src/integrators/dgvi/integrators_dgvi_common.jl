@@ -79,7 +79,7 @@ Number of degrees of freedom the step adds on top of the `S` basis coefficients.
 """
 nclosure(::DGVIMethod) = 1
 
-solversize(problem::AbstractProblemIODE, method::DGVIMethod) =
+solversize(method::DGVIMethod, problem::AbstractProblemIODE) =
     length(vec(initial_conditions(problem).q)) * (nbasis(method) + nclosure(method))
 
 
@@ -379,12 +379,12 @@ nlsolution(cache::DGVICache) = cache.x
 
 function Cache{ST}(problem::AbstractProblemIODE, method::DGVIMethod; kwargs...) where {ST}
     D = length(vec(initial_conditions(problem).q))
-    DGVICache{ST,D,nbasis(method),nnodes(method),njump(method),solversize(problem, method)}(; kwargs...)
+    DGVICache{ST,D,nbasis(method),nnodes(method),njump(method),solversize(method, problem)}(; kwargs...)
 end
 
 @inline function CacheType(ST, problem::AbstractProblemIODE, method::DGVIMethod)
     D = length(vec(initial_conditions(problem).q))
-    DGVICache{ST,D,nbasis(method),nnodes(method),njump(method),solversize(problem, method)}
+    DGVICache{ST,D,nbasis(method),nnodes(method),njump(method),solversize(method, problem)}
 end
 
 

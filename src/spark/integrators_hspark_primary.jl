@@ -7,8 +7,8 @@ end
 
 tableau(method::HSPARKprimary) = method.tableau
 
-solversize(problem::AbstractProblemPDAE, method::HSPARKprimary) =
-    2 * length(vec(initial_conditions(problem).q)) * nstages(method) + 3 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(problem, method)
+solversize(method::HSPARKprimary, problem::AbstractProblemPDAE) =
+    2 * length(vec(initial_conditions(problem).q)) * nstages(method) + 3 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(method, problem)
 
 
 @doc raw"""

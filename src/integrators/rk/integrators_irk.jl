@@ -49,7 +49,7 @@ implicit_update(::IRKMethod) = false
 default_solver(::IRKMethod) = Newton()
 default_iguess(::IRKMethod) = HermiteExtrapolation()
 
-solversize(problem::AbstractProblemODE, method::IRKMethod) = length(vec(initial_conditions(problem).q)) * nstages(method)
+solversize(method::IRKMethod, problem::AbstractProblemODE) = length(vec(initial_conditions(problem).q)) * nstages(method)
 
 
 """

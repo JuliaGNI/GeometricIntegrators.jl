@@ -147,7 +147,7 @@ nlsolution(cache::VPRKCache) = cache.x
 
 function Cache{ST}(problem::AbstractProblemIODE, method::VPRKMethod; kwargs...) where {ST}
     S = nstages(method)
-    N = solversize(problem, method)
+    N = solversize(method, problem)
 
     # if hasnullvector(method)
     #     N += ndims(problem)

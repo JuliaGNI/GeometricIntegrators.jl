@@ -575,6 +575,30 @@ test thresholds were re-measured and normalised:
   the 8eps default) and are retained for `PMVI*`/`VPRKGauss` as well; their comments now
   cite the measured floor and the `8eps()` default rather than the old "effectively zero".
 
+**Update (GeometricIntegratorsBase 0.5.1 — sized default).** GIBase 0.5.1 standardises
+`default_options`/`solversize` to a uniform `(method, problem)` argument order and makes the
+framework `f_abstol` default **scale with the system size**:
+`f_abstol = max(8, solversize(method, problem)) * eps(datatype(problem))`. The `max(…)`
+floor is **8**, not 2: several implicit RK methods (`RadauIIA`, the `LobattoIII*` family, …)
+are single-stage-solved and report `solversize = 0`, so with a floor of 2 they would get
+`f_abstol = 2eps ≈ 4.4e-16`, below their ~6e-16 round-off floor, and stagnate. A floor of
+`8eps ≈ 1.78e-15` clears every observed floor (and equals the historical default). Note the
+size *factor* alone (`2*solversize`) does **not** fix this — `2·0 = 0`, so the floor is what
+matters. This sized default is the principled replacement for the two flat overrides above,
+which are therefore **removed**:
+
+* The `src/Integrators.jl` `default_options(::GeometricMethod) = (…, f_abstol = 8eps())`
+  override and SPARK's `src/spark/abstract.jl` `f_abstol = 8e-15` override are both deleted;
+  every family (incl. SPARK) now uses the sized GIBase default. Because SPARK stage systems
+  are high-dimensional, `solversize · eps` lands *above* their round-off floor — e.g.
+  `VSPARK(SPARKLobABD(4))` (solversize 48) gets `f_abstol ≈ 1.1e-14`, comfortably above its
+  ~3e-15 floor, so it stays silent without any override. Small systems (solversize 2–8) get
+  `2eps…8eps`, still orders above their ~1e-19 floor, so single-iteration convergence and the
+  measured errors are unchanged.
+* All 21 `solversize` definitions (11 non-SPARK + 10 SPARK) and `nullvectorsize`, plus every
+  call site, were flipped to the new `(method, problem)` order; the `GeometricIntegratorsBase`
+  compat is pinned to `0.5.1`.
+
 ---
 
 # Fourth pass — SPARK submodule (`src/spark/`)

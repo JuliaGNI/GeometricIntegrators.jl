@@ -64,7 +64,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(ldae_slrk, SLRKLobattoIIIAB(4))
-    @test relative_maximum_error(sol.q, ref.q) < 8E-16
+    @test relative_maximum_error(sol.q, ref.q) < 1E-15
 
 
     sol = integrate(ldae_slrk, SLRKLobattoIIIBA(2))
@@ -74,7 +74,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(ldae_slrk, SLRKLobattoIIIBA(4))
-    @test relative_maximum_error(sol.q, ref.q) < 8E-16
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
     sol = integrate(ldae_slrk, SLRKLobattoIIICC̄(2))
@@ -84,7 +84,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(ldae_slrk, SLRKLobattoIIICC̄(4))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
     sol = integrate(ldae_slrk, SLRKLobattoIIIC̄C(2))
@@ -94,7 +94,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(ldae_slrk, SLRKLobattoIIIC̄C(4))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
     sol = integrate(ldae_slrk, SLRKLobattoIIID(2))
@@ -104,7 +104,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(ldae_slrk, SLRKLobattoIIID(4))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 
     sol = integrate(ldae_slrk, SLRKLobattoIIIE(2))
@@ -114,7 +114,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 8E-12
 
     sol = integrate(ldae_slrk, SLRKLobattoIIIE(4))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 end
 
@@ -221,7 +221,7 @@ end
     for (prob, method, hasnull) in solver_size_cases
         int = GeometricIntegrator(prob, method)
         @test GeometricIntegrators.SPARK.hasnullvector(method) == hasnull
-        @test GeometricIntegratorsBase.solversize(prob, method) ==
+        @test GeometricIntegratorsBase.solversize(method, prob) ==
               length(GeometricIntegratorsBase.nlsolution(int))
     end
 
@@ -256,7 +256,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(idae, SPARKLobABC(4))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 
     sol = integrate(idae, SPARKLobABD(2))
@@ -266,7 +266,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(idae, SPARKLobABD(4))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 
     sol = integrate(idae, SPARKLobattoIIIAIIIB(3))
@@ -336,7 +336,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(idae, TableauLobattoIIIAIIIBpSymplectic(4))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
     sol = integrate(idae, TableauLobattoIIIBIIIApSymplectic(2))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
@@ -362,7 +362,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 4E-10
 
     sol = integrate(idae, VSPARK(SPARKLobABC(4)))
-    @test relative_maximum_error(sol.q, ref.q) < 8E-15
+    @test relative_maximum_error(sol.q, ref.q) < 1E-14
 
 
     # order-reduced vs s=4; the solver stalls at a few steps regardless of tolerance
@@ -383,14 +383,14 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(idae, VSPARK(SPARKLobattoIIIAIIIB(4)))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
     sol = integrate(idae, VSPARK(SPARKLobattoIIIBIIIA(3)))
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(idae, VSPARK(SPARKLobattoIIIBIIIA(4)))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
     # SPARKLobattoIIIBIIIA(2) was formerly @test_broken (a singular stage system). Under
@@ -417,7 +417,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
     sol = integrate(idae, VSPARK(SPARKGLRKLobattoIIIAIIIB(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 
     sol = integrate(idae, VSPARK(SPARKGLRKLobattoIIIBIIIA(1)))
@@ -427,7 +427,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
     sol = integrate(idae, VSPARK(SPARKGLRKLobattoIIIBIIIA(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 end
 
@@ -468,7 +468,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
     sol = integrate(idae, TableauVSPARKLobattoIIIBIIIApSymmetric(4))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 
     # --- known-broken (see docs/src/audit.md) ---
@@ -490,7 +490,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(ldae, TableauVSPARKLobattoIIIAB(4))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
     sol = integrate(ldae, TableauVSPARKLobattoIIIBA(2))
@@ -500,7 +500,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(ldae, TableauVSPARKLobattoIIIBA(4))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
     sol = integrate(ldae, TableauVSPARKLobattoIIICC̄(2))
@@ -510,7 +510,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(ldae, TableauVSPARKLobattoIIICC̄(4))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 
     sol = integrate(ldae, TableauVSPARKLobattoIIIC̄C(2))
@@ -520,7 +520,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(ldae, TableauVSPARKLobattoIIIC̄C(4))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 
     sol = integrate(ldae, TableauVSPARKLobattoIIID(2))
@@ -530,7 +530,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(ldae, TableauVSPARKLobattoIIID(4))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
     sol = integrate(ldae, TableauVSPARKLobattoIIIE(2))
@@ -540,7 +540,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 8E-12
 
     sol = integrate(ldae, TableauVSPARKLobattoIIIE(4))
-    @test relative_maximum_error(sol.q, ref.q) < 8E-16
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIAB(1))
@@ -550,7 +550,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 8E-12
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIAB(3))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIBA(1))
@@ -560,7 +560,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 8E-12
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIBA(3))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIICC̄(1))
@@ -570,7 +570,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIICC̄(3))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIC̄C(1))
@@ -590,7 +590,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIID(3))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIE(1))
@@ -600,7 +600,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 8E-12
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIE(3))
-    @test relative_maximum_error(sol.q, ref.q) < 8E-16
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 end
 
@@ -661,7 +661,7 @@ end
 
     # println("HSPARK(SPARKLobABC(4))")
     sol = integrate(pdae, HSPARK(SPARKLobABC(4)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
 
     # println("HSPARK(SPARKLobABD(2))")
@@ -674,7 +674,7 @@ end
 
     # println("HSPARK(SPARKLobABD(4))")
     sol = integrate(pdae, HSPARK(SPARKLobABD(4)))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-15
+    @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
     # order reduction: accuracy plateaus ~2E-4, does not improve with s

@@ -13,17 +13,11 @@ const AbstractSPARKProblem{DT<:Number,TT<:Real} =
 
 GeometricIntegratorsBase.default_iguess(::AbstractSPARKMethod) = HermiteExtrapolation()
 GeometricIntegratorsBase.default_solver(::AbstractSPARKMethod) = Newton()
-# The SPARK residual settles at a round-off floor between ~4e-16 (well-conditioned tableaux
-# such as SLRK and VSPARK(SPARKLobABC)) and ~3e-15 (the marginal VSPARK(SPARKLobABD(4))).
-# An absolute tolerance one order of magnitude above that floor lets these solves converge
-# silently, rather than stalling against the unreachable framework default f_abstol = 0 and
-# emitting a stagnation warning at the finest steps. 8e-15 was measured to leave the computed
-# solutions unchanged while clearing the SPARKLobABD(4) warning; see docs/src/audit.md (fourth
-# pass). x_suctol/f_suctol are left at the SimpleSolvers default (2eps) and so need no restatement.
-GeometricIntegratorsBase.default_options(::AbstractSPARKMethod) = (
-    min_iterations = 1,
-    f_abstol = 8e-15,
-)
+# No `default_options` override: SPARK relies on the GeometricIntegratorsBase default
+# `f_abstol = max(8, solversize(method, problem)) * eps(datatype(problem))`. SPARK's stage
+# systems are high-dimensional (solversize ≫ 8), so `solversize · eps` sits above their
+# round-off floor (~4e-16 for well-conditioned tableaux, ~3e-15 for the marginal
+# VSPARK(SPARKLobABD(4))), which is why the flat 8e-15 override is no longer needed.
 
 
 nstages(method::AbstractSPARKMethod) = nstages(tableau(method))
@@ -32,7 +26,7 @@ eachstage(method::AbstractSPARKMethod) = eachstage(tableau(method))
 hasnullvector(method::AbstractSPARKMethod) = hasnullvector(tableau(method))
 
 """
-    nullvectorsize(problem, method)
+    nullvectorsize(method, problem)
 
 Number of unknowns the null-vector multiplier `μ` contributes to the nonlinear system:
 one component per degree of freedom when the tableau carries a null vector `d`, zero
@@ -43,5 +37,5 @@ length of the solver's unknown vector and the cache constructor needs no correct
 its own. Keep it that way — the two used to be computed in different files, and nothing
 checked that they agreed (see the `SPARK solver size` testset).
 """
-nullvectorsize(problem::AbstractSPARKProblem, method::AbstractSPARKMethod) =
+nullvectorsize(method::AbstractSPARKMethod, problem::AbstractSPARKProblem) =
     hasnullvector(method) ? length(vec(initial_conditions(problem).q)) : 0

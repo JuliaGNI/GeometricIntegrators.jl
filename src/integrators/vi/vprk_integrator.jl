@@ -1,7 +1,7 @@
 
 description(::GeometricIntegrator{<:VPRKMethod}) = "Variational Partitioned Runge-Kutta Integrator"
 
-solversize(problem::AbstractProblemIODE, method::VPRKMethod) =
+solversize(method::VPRKMethod, problem::AbstractProblemIODE) =
     length(vec(initial_conditions(problem).q)) * nstages(method)
 
 

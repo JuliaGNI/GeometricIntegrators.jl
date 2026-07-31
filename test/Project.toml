@@ -13,14 +13,14 @@ SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 SimpleSolvers = "36b790f5-6434-4fbe-b711-1f64a1e2f6a2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-# The bounds in the root Project.toml only constrain that project's own [deps]; the packages
-# listed there under [extras] are dependencies of *this* project, so they need bounds here to
-# constrain what the test environment resolves.
+[sources]
+GeometricIntegrators = {path = ".."}
+
 [compat]
 Aqua = "0.8"
 CompactBasisFunctions = "0.2"
 GeometricEquations = "0.21"
-GeometricIntegratorsBase = "0.4.3"
+GeometricIntegratorsBase = "0.5.1"
 GeometricProblems = "0.8"
 LinearAlgebra = "1"
 Logging = "1"
@@ -29,6 +29,3 @@ RungeKutta = "0.5.23"
 SafeTestsets = "0.1"
 SimpleSolvers = "0.10"
 Test = "1"
-
-[sources]
-GeometricIntegrators = {path = ".."}

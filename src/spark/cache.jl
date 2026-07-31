@@ -177,7 +177,7 @@ function Cache{ST}(problem::AbstractSPARKProblem, method::AbstractSPARKMethod; k
     # `solversize` already accounts for the null-vector multiplier μ via
     # `nullvectorsize`; it used to be added here instead, so the length of the solver's
     # unknown vector was defined in two files at once.
-    N = solversize(problem, method)
+    N = solversize(method, problem)
 
     IntegratorCacheSPARK{ST,S,R}(initial_conditions(problem), N; kwargs...)
 end

@@ -56,7 +56,7 @@ end
 @inline CacheType(ST, ::AbstractProblemIODE, method::IRK) = IRKimplicitCache{ST,nstages(tableau(method))}
 
 
-function solversize(problem::AbstractProblemIODE, method::IRKMethod)
+function solversize(method::IRKMethod, problem::AbstractProblemIODE)
     n = length(vec(initial_conditions(problem).q)) * nstages(method)
 
     if implicit_update(method)

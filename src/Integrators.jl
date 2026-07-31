@@ -53,21 +53,6 @@ import RungeKutta: AbstractTableau, Tableau, PartitionedTableau, SymplecticTable
 import SimpleSolvers: SolverMethod
 
 
-# Restore a reachable absolute residual tolerance for the nonlinear solves.
-#
-# GeometricIntegratorsBase ≤ 0.4.2 set a framework-wide `f_abstol = 8eps()`; 0.4.3 dropped
-# it to `default_options = (min_iterations = 1,)`, so implicit methods now inherit the
-# SimpleSolvers default `f_abstol = 0.0`. With `f_abstol = 0` the absolute residual gate
-# `rfₐ ≤ f_abstol` can never fire, so a solve that is already at its round-off floor after
-# one Newton step is forced to take a second step just to satisfy the successive-change
-# criterion — measured 1.7–2× slower for the variational (VPRK) integrators, ~1.2× for
-# plain implicit RK, with no change to the computed solution. Re-introducing `8eps()` at the
-# method level (the historical value, also used by SPARK) restores the single-iteration
-# convergence without touching the cross-repo default. The SPARK submodule keeps its own
-# more-specific `default_options`, which takes precedence over this fallback.
-GeometricIntegratorsBase.default_options(::GeometricMethod) = (min_iterations = 1, f_abstol = 8eps())
-
-
 # compat workaround
 # Base.ndims(prob::EquationProblem) = length(vec(prob.ics.q))
 
