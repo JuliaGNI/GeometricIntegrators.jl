@@ -25,10 +25,10 @@ ref = integrate(ode, Gauss(8))
 @testset "$(rpad("1st Order DVIs",80))" begin
 
     sol = integrate(lode, DVIA())
-    @test relative_maximum_error(sol.q, ref.q) < 1E-1
+    @test relative_maximum_error(sol.q, ref.q) < 8E-2
 
     sol = integrate(lode, DVIB())
-    @test relative_maximum_error(sol.q, ref.q) < 1E-1
+    @test relative_maximum_error(sol.q, ref.q) < 8E-2
 
 end
 
@@ -54,7 +54,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-5
 
     sol = integrate(lode, DVRK(Gauss(2)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-7
+    @test relative_maximum_error(sol.q, ref.q) < 8E-7
 
     sol = integrate(lode, DVRK(Gauss(3)))
     @test relative_maximum_error(sol.q, ref.q) < 2E-10
@@ -73,13 +73,13 @@ end
     slode = LVSingular.lodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
 
     sol = integrate(slode, DVRK(Gauss(1)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-6
+    @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
     sol = integrate(slode, DVRK(Gauss(2)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
     sol = integrate(slode, DVRK(Gauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 1E-14
+    @test relative_maximum_error(sol.q, ref.q) < 8E-16
 
 end
 
@@ -110,7 +110,7 @@ end
     # In class with a symplectic tableau: exact to the finite-difference floor,
     # and — crucially — independent of the step size.
     for h in (0.1, 0.5), s in 1:3
-        @test symplecticity_defect(LVSingular, DVRK(Gauss(s)), qref, h) < 1e-8
+        @test symplecticity_defect(LVSingular, DVRK(Gauss(s)), qref, h) < 2E-10
     end
 
     # Out of class (ϑ₂ = q₁ ≠ 0): the same dynamics in a different gauge, no

@@ -13,11 +13,16 @@ const AbstractSPARKProblem{DT<:Number,TT<:Real} =
 
 GeometricIntegratorsBase.default_iguess(::AbstractSPARKMethod) = HermiteExtrapolation()
 GeometricIntegratorsBase.default_solver(::AbstractSPARKMethod) = Newton()
+# The SPARK residual settles at a round-off floor between ~4e-16 (well-conditioned tableaux
+# such as SLRK and VSPARK(SPARKLobABC)) and ~3e-15 (the marginal VSPARK(SPARKLobABD(4))).
+# An absolute tolerance one order of magnitude above that floor lets these solves converge
+# silently, rather than stalling against the unreachable framework default f_abstol = 0 and
+# emitting a stagnation warning at the finest steps. 8e-15 was measured to leave the computed
+# solutions unchanged while clearing the SPARKLobABD(4) warning; see docs/src/audit.md (fourth
+# pass). x_suctol/f_suctol are left at the SimpleSolvers default (2eps) and so need no restatement.
 GeometricIntegratorsBase.default_options(::AbstractSPARKMethod) = (
-    min_iterations=1,
-    x_suctol=2eps(),
-    f_abstol=8eps(),
-    f_suctol=2eps(),
+    min_iterations = 1,
+    f_abstol = 8e-15,
 )
 
 

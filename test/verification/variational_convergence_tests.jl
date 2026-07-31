@@ -27,10 +27,11 @@ vref(prob) = integrate(prob, VPRKGauss(8); f_abstol = 4e-15)
     @testset "Position-momentum and discrete Euler-Lagrange" begin
         # PMVI relaxes the solver residual tolerance to f_abstol = 4e-15 to avoid a
         # spurious stagnation warning at the finest timestep, where the residual
-        # settles at the round-off floor above the default (effectively zero)
-        # f_abstol (see docs/src/audit.md, third pass). GeometricIntegratorsBase
-        # merges this into the method's default_options, so only f_abstol needs to
-        # be given. The DEL solves stay below the floor and need no relaxation.
+        # settles at a round-off floor of ~4e-15 — above the method default
+        # f_abstol = 8eps() ≈ 1.78e-15 this repo now sets (see docs/src/audit.md).
+        # GeometricIntegratorsBase merges this into the method's default_options, so
+        # only f_abstol needs to be given. The DEL solves stay below the floor and
+        # need no relaxation.
         # @test_nowarn is a regression tripwire: under SimpleSolvers 0.10 these
         # converged solves are silent, so any resurfacing solver warning fails here.
         @test_nowarn test_convergence_order(lbuild, PMVImidpoint(),    steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "PMVImidpoint",

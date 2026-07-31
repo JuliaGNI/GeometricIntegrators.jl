@@ -61,14 +61,14 @@ end
         # at the tolerance of the λ bisection rather than at O(h^6).
         pg3 = energy_drift(prob, PGLRK(3))
         g3 = energy_drift(prob, Gauss(3))
-        @test pg3 < 8E-15
+        @test pg3 < 4E-15
         @test pg3 < g3 / 1000
 
         # At s = 4 the plain method's energy error is already near the λ-solve tolerance,
         # so the improvement is smaller; the projection must still not make it worse.
         pg4 = energy_drift(prob, PGLRK(4))
         g4 = energy_drift(prob, Gauss(4))
-        @test pg4 < 8E-13
+        @test pg4 < 4E-13
         @test pg4 < 10 * g4
     end
 

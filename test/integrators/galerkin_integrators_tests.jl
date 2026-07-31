@@ -54,19 +54,19 @@ dgjump = Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2))
     #   DGVIEXP  5.2E-14
 
     dgsol = integrate(dgiode, DGVI(BGau4, QGau4))
-    @test relative_maximum_error(dgsol.q, dgref.q) < 8E-8
+    @test relative_maximum_error(dgsol.q, dgref.q) < 4E-8
 
     dgsol = integrate(dgiode, DGVIP0(BGau4, QGau4))
-    @test relative_maximum_error(dgsol.q, dgref.q) < 8E-8
+    @test relative_maximum_error(dgsol.q, dgref.q) < 4E-8
 
     dgsol = integrate(dgiode, DGVIP1(BGau4, QGau4))
-    @test relative_maximum_error(dgsol.q, dgref.q) < 8E-8
+    @test relative_maximum_error(dgsol.q, dgref.q) < 4E-8
 
     dgsol = integrate(dgiode, DGVIEXP(BGau4, QGau4))
-    @test relative_maximum_error(dgsol.q, dgref.q) < 2E-13
+    @test relative_maximum_error(dgsol.q, dgref.q) < 8E-14
 
     dgsol = integrate(dgiode, DGVIPI(BGau4, QGau4, dgjump))
-    @test relative_maximum_error(dgsol.q, dgref.q) < 2E-13
+    @test relative_maximum_error(dgsol.q, dgref.q) < 1E-13
 
     # `DGVIP1` adds a continuity constraint and a final projection on top of `DGVI`'s
     # equations; on a consistent solution the two agree to round-off.

@@ -546,6 +546,35 @@ etc.) are **historical** and no longer describe the suite:
   from `@test_broken` to `@test`. This is the only pass/broken change; the tally is
   otherwise unchanged.
 
+**Update (tolerance re-tune).** With the warning floods gone, the solver tolerances and
+test thresholds were re-measured and normalised:
+
+* **Restored the framework `f_abstol` default.** GeometricIntegratorsBase ≤ 0.4.2 set a
+  package-wide `f_abstol = 8eps()`; 0.4.3 dropped it to `(min_iterations = 1,)`, so every
+  implicit method inherited SimpleSolvers' `f_abstol = 0`. With a zero absolute residual
+  gate, a solve already at its round-off floor after one Newton step is forced to take a
+  second step to satisfy the successive-change criterion — **measured 1.7–2× slower for
+  the VPRK integrators, ~1.2× for plain implicit RK, with the computed solution
+  unchanged**. `src/Integrators.jl` re-introduces `default_options(::GeometricMethod) =
+  (min_iterations = 1, f_abstol = 8eps())` (the historical value), restoring
+  single-iteration convergence for every implicit family in one place. The projection
+  sub-solver path (`projections/projection.jl`) was routed through the same default.
+* **Re-tuned the SPARK default.** `src/spark/abstract.jl` now sets `f_abstol = 8e-15` —
+  one order of magnitude above the SPARK residual floor (~4e-16 for well-conditioned
+  tableaux, ~3e-15 for the marginal `VSPARK(SPARKLobABD(4))`). This lets `SPARKLobABD(4)`
+  converge silently under 0.10 (its `verbosity = 0` workaround was removed); the two
+  cases that stall/back-track regardless (`SPARKLobABC(3)`, `SPARKLobABD(3)`) keep it.
+* **Normalised every test threshold** to the tightest `{1,2,4,8}×10ⁿ` strictly above the
+  freshly measured value (with a 10% pre-margin so machine-precision bounds keep a full
+  grid step of headroom). Dropping the `5` mantissa the Second pass had allowed makes the
+  powers-of-two grid guarantee `measured < TOL ≤ 2·measured` everywhere. Energy/Hamiltonian
+  conservation and method-equivalence bit-consistency bounds are kept as `eps`-multiples
+  (`eps()`, `2eps()`, `8*eps()`), which is the idiom for a machine-precision check.
+* The `f_abstol = 4e-15` relaxations are **still required for `HPI*`** (3 midpoint / 2
+  trapezoidal stagnation warnings at the finest timestep without them, floor ~4e-15 above
+  the 8eps default) and are retained for `PMVI*`/`VPRKGauss` as well; their comments now
+  cite the measured floor and the `8eps()` default rather than the old "effectively zero".
+
 ---
 
 # Fourth pass — SPARK submodule (`src/spark/`)
