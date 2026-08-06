@@ -86,10 +86,9 @@ end
         # ϑ(qₙ₊₁) − pₙ₊₁ = 0 in place of the energy condition. Its point is to recover on
         # a *degenerate* Lagrangian the order that a plain VPRK loses there.
         # The nonlinear solver occasionally runs to its iteration cap on these harder
-        # systems and emits benign warnings. Under SimpleSolvers 0.10 the "Solver took N
-        # iterations" warning is gated on `warn_iterations`, not `verbosity`, so both
-        # `verbosity = 0` and `warn_iterations = 0` are needed to silence them (merged
-        # into the method's `default_options`).
+        # systems and emits benign warnings. Silencing them needs both kwargs:
+        # `verbosity` gates the stagnation and line-search messages, `warn_iterations` the
+        # "Solver took N iterations" cap message.
         lbuild(Δt) = LotkaVolterra2d.lodeproblem(q₀; timespan=(0.0, T), timestep=Δt, parameters=params)
         emq(sol, r) = relative_maximum_error(sol.q, r.q)
 

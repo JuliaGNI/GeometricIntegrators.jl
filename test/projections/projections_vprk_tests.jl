@@ -184,8 +184,8 @@ end
     # `VPRKpTableau` couples the Dirac-constraint multipliers into the tableau, so the
     # nonlinear system is harder than a plain VPRK one and the line search occasionally
     # hits its iteration cap. The warnings are benign — the measured errors below are at
-    # machine precision — so they are silenced with `verbosity = 0` for these calls. It
-    # is merged into the method's `default_options`, so only logging is affected.
+    # machine precision — so these calls are silenced with `verbosity = 0`, which affects
+    # only logging.
 
     # D = 2 multipliers need s ≥ D+1 = 3 stages to fit into the skew generator, and
     # s ≥ D+2 = 4 for full order: at s = 3 the multiplier occupies the (2,1) slot, which

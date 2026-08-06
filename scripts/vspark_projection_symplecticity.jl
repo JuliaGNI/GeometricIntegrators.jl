@@ -188,9 +188,9 @@ header(s) = println("\n", "="^110, "\n", s, "\n", "="^110)
 sub(s) = println("\n--- ", s, " ", "-"^max(0, 104 - length(s)))
 
 # The singular and divergent cases below are the finding, not an accident, and their
-# solver/line-search warnings would bury the tables. Each integration runs at
-# `verbosity = 0` (merged into the method's `default_options`); the exception type is
-# always printed instead, so nothing is hidden.
+# solver/line-search warnings would bury the tables. Each integration therefore runs
+# silently (`verbosity = 0, warn_iterations = 0`); the exception type is always printed
+# instead, so nothing is hidden.
 
 
 """

@@ -13,11 +13,11 @@ const AbstractSPARKProblem{DT<:Number,TT<:Real} =
 
 GeometricIntegratorsBase.default_iguess(::AbstractSPARKMethod) = HermiteExtrapolation()
 GeometricIntegratorsBase.default_solver(::AbstractSPARKMethod) = Newton()
-# No `default_options` override: SPARK relies on the GeometricIntegratorsBase default
-# `f_abstol = max(8, solversize(method, problem)) * eps(datatype(problem))`. SPARK's stage
-# systems are high-dimensional (solversize ≫ 8), so `solversize · eps` sits above their
-# round-off floor (~4e-16 for well-conditioned tableaux, ~3e-15 for the marginal
-# VSPARK(SPARKLobABD(4))), which is why the flat 8e-15 override is no longer needed.
+# No `default_options` override: SPARK uses the GeometricIntegratorsBase default
+# `f_abstol = max(8, solversize(method, problem)) * eps(datatype(problem))`, which on the
+# 2-dof test problems ranges over solversize 8 … 48, i.e. 1.8e-15 … 1.1e-14. That clears
+# every residual floor: ~4e-16 for the well-conditioned tableaux, and ~3e-15 for the
+# marginal VSPARK(SPARKLobABD(4)), whose solversize of 48 gives it the most headroom.
 
 
 nstages(method::AbstractSPARKMethod) = nstages(tableau(method))

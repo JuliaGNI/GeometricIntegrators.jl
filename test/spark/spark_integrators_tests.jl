@@ -23,26 +23,24 @@ ldae_slrk = ldaeproblem_slrk(q₀; timespan=tspan, timestep=Δt, parameters=para
 
 ref = integrate(ode, Gauss(8))
 
-# Several known-broken / order-reduced SPARK methods below genuinely diverge, hit
-# singular stage systems, or reduce order (see docs/src/audit.md, third pass).
-# Their solves emit nonlinear-solver stagnation, iteration-cap and backtracking
-# line-search warnings that are correct symptoms and not fixable via the solver (a
-# different solver, line search or iteration cap does not help). Passing both
-# `verbosity = 0` and `warn_iterations = 0` silences those (correct) warnings for the
-# affected integrations: under SimpleSolvers 0.10 the stagnation and line-search
-# messages are gated on `verbosity`, while the "Solver took N iterations" cap message
-# is gated on `warn_iterations`. Since GeometricIntegratorsBase merges these into the
-# method's `default_options`, the tolerances and `min_iterations` are unchanged and only
-# logging is affected, so the measured errors are unaffected.
+# Several known-broken / order-reduced SPARK methods below genuinely diverge, hit singular
+# stage systems, or reduce order (see the "SPARK suite" section of docs/src/audit.md). Their
+# solves emit nonlinear-solver stagnation, iteration-cap and backtracking line-search
+# warnings that are correct symptoms and not fixable via the solver (a different solver,
+# line search or iteration cap does not help). Silencing them takes both kwargs:
+# `verbosity` gates the stagnation and line-search messages, `warn_iterations` the "Solver
+# took N iterations" cap message. Neither touches the tolerances, so the measured errors
+# are unaffected.
 
 # Where the mechanism is unambiguous, the known-broken cases below assert *why* each fails
 # rather than merely that it is inaccurate: a structurally singular stage system throws a
 # `SingularException` (`@test_throws`); an order-deficient/unstable method whose per-step
 # solves are healthy is asserted `converged`; a solve that stalls at the residual floor is
 # asserted `stalled`. `nlsolve_outcome` drives one step manually and reads the nonlinear
-# solver's status (SimpleSolvers 0.10 exports these, but not by name). The remaining cases
-# are only *marginally* singular — they converge or zero-pivot depending on rounding — so
-# neither assertion is reliable and they stay `@test_broken`.
+# solver's status (`status`/`isconverged`/`isstalled` are public but unexported, hence the
+# explicit import). The remaining cases are only *marginally* singular — they converge or
+# zero-pivot depending on rounding — so neither assertion is reliable and they stay
+# `@test_broken`.
 using GeometricIntegratorsBase: solver, solverstate
 using SimpleSolvers: status, isconverged, isstalled, config
 function nlsolve_outcome(prob, method)
@@ -371,10 +369,9 @@ end
     sol = integrate(idae, VSPARK(SPARKLobABD(3)); verbosity=0, warn_iterations=0)
     @test relative_maximum_error(sol.q, ref.q) < 8E-6
 
-    # converges to 5.2E-12. Under SimpleSolvers 0.9.2 this stalled one step just above
-    # machine precision and warned regardless of f_abstol. The SPARK method default is
-    # now f_abstol = 8e-15 (see src/spark/abstract.jl), one order above this residual
-    # floor, so under 0.10 the solve converges silently — no warning left to suppress.
+    # converges to 5.2E-12. Its residual floor is ~3e-15, the highest of the SPARK family,
+    # but so is its solversize (48), so the sized default f_abstol ≈ 1.1e-14 still clears it
+    # and the solve is silent — hence no suppression here, unlike the two SPARKLob*(3) cases.
     sol = integrate(idae, VSPARK(SPARKLobABD(4)))
     @test relative_maximum_error(sol.q, ref.q) < 8E-12
 
@@ -393,8 +390,8 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
-    # SPARKLobattoIIIBIIIA(2) was formerly @test_broken (a singular stage system). Under
-    # SimpleSolvers 0.10 its solve now converges, so this case passes and is asserted.
+    # The BIIIA s=2 stage system is nonsingular and solves cleanly, unlike its AIIIB
+    # partner asserted `SingularException` a few lines below.
     sol = integrate(idae, VSPARK(SPARKLobattoIIIBIIIA(2)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
@@ -762,20 +759,11 @@ end
 
     ### HSPARKsecondary Integrators ###
 
-    # HSPARKsecondary is EXPERIMENTAL and remains @test_broken (see the "SPARK
-    # submodule" pass in docs/src/audit.md). Two implementation bugs were fixed:
-    #   * the momentum projection coefficients a_p_2 / a_p_3 in getTableauHSPARK were
-    #     s×s instead of s×σ, so the GLRK variants raised a BoundsError — now built as
-    #     the conjugate-symplectic s×σ partners of α_q_2 / α_q_3;
-    #   * the null-vector residual/component code was commented out while the cache
-    #     still allocated the μ unknown, leaving an unconstrained (zero) Jacobian row —
-    #     now re-enabled, matching the working VSPARKsecondary.
-    # A residual singularity remains in the ω secondary-constraint block: every variant
-    # still raises a SingularException, so all cases stay @test_broken. The solves now
-    # iterate before failing (they no longer abort immediately), so they are silenced
-    # with `verbosity = 0`.
-    # The residual singularity in the ω secondary-constraint block raises a
-    # SingularException for every variant and every s — that is the assertion.
+    # HSPARKsecondary is EXPERIMENTAL: a residual singularity in the ω secondary-constraint
+    # block makes every variant raise a SingularException at every s, which is what is
+    # asserted here. See the "SPARK submodule" pass in docs/src/audit.md for the two
+    # implementation bugs fixed along the way (the a_p_2 / a_p_3 shape in getTableauHSPARK,
+    # and the disabled null-vector residual that left an unconstrained Jacobian row).
     for s in (2, 3, 4)
         @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIIAB(s))
         @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIIBA(s))

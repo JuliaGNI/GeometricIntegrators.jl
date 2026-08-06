@@ -59,9 +59,9 @@ header(s) = println("\n", "="^92, "\n", s, "\n", "="^92)
 subheader(s) = println("\n--- ", s, " ", "-"^max(0, 86 - length(s)))
 
 # The singular and divergent cases below are the finding, not an accident, and their
-# solver/line-search warnings would bury the tables. Each integration runs at
-# `verbosity = 0` (merged into the method's `default_options`); the exception type is
-# always printed instead, so nothing is hidden.
+# solver/line-search warnings would bury the tables. Each integration therefore runs
+# silently (`verbosity = 0, warn_iterations = 0`); the exception type is always printed
+# instead, so nothing is hidden.
 
 # problem-module accessors
 ldae(M, q, p, λ; kwargs...) = M.ldaeproblem_slrk(q, p, λ; parameters = PARAMS, kwargs...)
