@@ -603,6 +603,39 @@ therefore **removed**:
   call site, were flipped to the new `(method, problem)` order; the `GeometricIntegratorsBase`
   compat is pinned to `0.5.1`.
 
+**Update (warning census).** The suite prints **9** solver warnings per run, but that is a
+rate-limiting artefact, not the true count. Every warning SimpleSolvers 0.10 emits here carries
+`maxlog = 3` (`linesearch_status.jl:317,319`, `nonlinear_solver_status.jl:361`), and `maxlog` is
+keyed on the `@warn` source location and so is **process-global**, not per solve. Three distinct
+sites × 3 = exactly the 9 observed. Counted with a logger that ignores `maxlog`, one run produces
+**39** warning-worthy events, all from `test/spark/spark_integrators_tests.jl`; the other 30 are
+dropped silently. Two sources, both new on this branch:
+
+* **The HSPARKsecondary `@test_throws` loop — 12 events, fixed.** Three of its 24 solves
+  (`TableauHSPARKLobattoIIID(2)`, `TableauHSPARKGLRKLobattoIIIE(2)`,
+  `TableauHSPARKGLRKLobattoIIIAB(4)`) iterate and warn before the singular factorisation aborts.
+  These calls were `muffle`d before the `@test_broken` → `@test_throws SingularException`
+  rewrite, which dropped the wrapper without substituting `verbosity = 0`. Both kwargs are now
+  passed on all 24 calls.
+* **`VSPARK(SPARKLobattoIIIBIIIA(2))` — 27 events, open.** This is the case promoted from
+  `@test_broken` to `@test` because it converges under 0.10. It does reach passing accuracy
+  (`< 1E-6`), but its solve **stalls at `rfₐ ≈ 3.6e-5`** on some steps — nine orders above the
+  `f_abstol = 26·eps ≈ 5.8e-15` it was asked for — and emits 21 `no sufficient decrease`,
+  5 `not a descent direction` and 1 stagnation message. It is left unsuppressed deliberately:
+  unlike the divergent cases, a solve that stalls this far from its tolerance while still
+  passing an accuracy assertion is a question about the method, not log noise to silence. Worth
+  resolving before the s=2 case is treated as a supported configuration.
+
+A note on measurement, since it cost a false result here: attributing a warning by walking the
+stack for the innermost frame in the test file does **not** work inside an `@testset` — the body
+is lowered to a single closure, so every warning in a testset reports the same line. Per-call
+attribution needs each call driven individually. Related: because `maxlog` is applied before the
+message reaches a logger, `@test_nowarn` stops seeing warnings from a site whose budget is
+already spent (verified directly). The `@test_nowarn` tripwires in the `variational` and `hpi`
+suites are therefore only effective while that budget is unspent — true today solely because
+`runtests.jl` runs those suites (positions 18 and 24) before the two SPARK files (26 and 31).
+Nothing enforces that ordering.
+
 ---
 
 # Fourth pass — SPARK submodule (`src/spark/`)

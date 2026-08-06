@@ -390,8 +390,10 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
 
-    # The BIIIA s=2 stage system is nonsingular and solves cleanly, unlike its AIIIB
-    # partner asserted `SingularException` a few lines below.
+    # The BIIIA s=2 stage system is nonsingular, unlike its AIIIB partner asserted
+    # `SingularException` below, so this one reaches passing accuracy — but not quietly:
+    # the solve stalls at rfₐ ≈ 3.6e-5 on some steps and emits 27 line-search and
+    # stagnation warnings, the largest single warning source in the suite.
     sol = integrate(idae, VSPARK(SPARKLobattoIIIBIIIA(2)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
@@ -761,19 +763,23 @@ end
 
     # HSPARKsecondary is EXPERIMENTAL: a residual singularity in the ω secondary-constraint
     # block makes every variant raise a SingularException at every s, which is what is
-    # asserted here. See the "SPARK submodule" pass in docs/src/audit.md for the two
-    # implementation bugs fixed along the way (the a_p_2 / a_p_3 shape in getTableauHSPARK,
-    # and the disabled null-vector residual that left an unconstrained Jacobian row).
+    # asserted here. Three of the 24 solves iterate and warn before the factorisation
+    # aborts (TableauHSPARKLobattoIIID(2), TableauHSPARKGLRKLobattoIIIE(2) and
+    # TableauHSPARKGLRKLobattoIIIAB(4) — 12 warning events between them), so all of them
+    # run at `verbosity = 0, warn_iterations = 0`. See the "SPARK submodule" pass in
+    # docs/src/audit.md for the two implementation bugs fixed along the way (the
+    # a_p_2 / a_p_3 shape in getTableauHSPARK, and the disabled null-vector residual that
+    # left an unconstrained Jacobian row).
     for s in (2, 3, 4)
-        @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIIAB(s))
-        @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIIBA(s))
-        @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIID(s))
-        @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIIE(s))
+        @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIIAB(s); verbosity=0, warn_iterations=0)
+        @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIIBA(s); verbosity=0, warn_iterations=0)
+        @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIID(s); verbosity=0, warn_iterations=0)
+        @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIIE(s); verbosity=0, warn_iterations=0)
 
-        @test_throws SingularException integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(s))
-        @test_throws SingularException integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(s))
-        @test_throws SingularException integrate(hdae, TableauHSPARKGLRKLobattoIIID(s))
-        @test_throws SingularException integrate(hdae, TableauHSPARKGLRKLobattoIIIE(s))
+        @test_throws SingularException integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(s); verbosity=0, warn_iterations=0)
+        @test_throws SingularException integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(s); verbosity=0, warn_iterations=0)
+        @test_throws SingularException integrate(hdae, TableauHSPARKGLRKLobattoIIID(s); verbosity=0, warn_iterations=0)
+        @test_throws SingularException integrate(hdae, TableauHSPARKGLRKLobattoIIIE(s); verbosity=0, warn_iterations=0)
     end
 
 end
