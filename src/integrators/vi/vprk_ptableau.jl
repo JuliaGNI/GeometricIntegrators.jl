@@ -97,7 +97,7 @@ issymmetric(::Union{VPRKpTableau,Type{<:VPRKpTableau}}) = missing
 issymplectic(::Union{VPRKpTableau,Type{<:VPRKpTableau}}) = missing
 
 # stage equations (D*S) plus the Dirac constraint (D)
-solversize(problem::AbstractProblemIODE, method::VPRKpTableau) =
+solversize(method::VPRKpTableau, problem::AbstractProblemIODE) =
     length(vec(initial_conditions(problem).q)) * (nstages(method) + 1)
 
 

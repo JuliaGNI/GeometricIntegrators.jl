@@ -188,9 +188,9 @@ header(s) = println("\n", "="^110, "\n", s, "\n", "="^110)
 sub(s) = println("\n--- ", s, " ", "-"^max(0, 104 - length(s)))
 
 # The singular and divergent cases below are the finding, not an accident, and their
-# solver/line-search warnings would bury the tables. Log messages are suppressed; the
-# exception type is always printed instead, so nothing is hidden.
-muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.NullLogger())
+# solver/line-search warnings would bury the tables. Each integration therefore runs
+# silently (`verbosity = 0, warn_iterations = 0`); the exception type is always printed
+# instead, so nothing is hidden.
 
 
 """
@@ -210,7 +210,7 @@ function advance(prob::Problem, method, nsteps, h, D)
     p1 = Vector{Vector{Float64}}(undef, N_LOOP)
     ϕmax = 0.0
     for i in 1:N_LOOP
-        sol = muffle(() -> integrate(prob.idae(qs[i], nsteps * h, h), method))
+        sol = integrate(prob.idae(qs[i], nsteps * h, h), method; verbosity = 0, warn_iterations = 0)
         q1[i] = collect(sol.q[end])
         p1[i] = collect(sol.p[end])
         all(isfinite, q1[i]) && all(isfinite, p1[i]) || error("non-finite solution")
@@ -438,11 +438,11 @@ end
 
 function projective_diagnostics(prob::Problem, m, h)
     q0 = prob.centre
-    int = GeometricIntegrator(prob.idae(q0, h, h), m)
+    int = GeometricIntegrator(prob.idae(q0, h, h), m; verbosity = 0, warn_iterations = 0)
     ss = GeometricIntegratorsBase.solutionstep(int,
         GeometricIntegratorsBase.initialstate(prob.idae(q0, h, h)))
     GeometricIntegratorsBase.reset!(ss, h)
-    muffle(() -> GeometricIntegratorsBase.integrate!(ss, int))
+    GeometricIntegratorsBase.integrate!(ss, int)
     C = GeometricIntegratorsBase.cache(int)
     (Φ̃ = maximum(maximum(abs, x) for x in C.Φp),
      Λ̃ = maximum(maximum(abs, x) for x in C.Λp),
@@ -496,10 +496,10 @@ end
 "stage quantities of one step as a function of q₀, for finite differencing"
 function stage_state(prob::Problem, m, q0, h)
     pr = prob.idae(q0, h, h)
-    int = GeometricIntegrator(pr, m)
+    int = GeometricIntegrator(pr, m; verbosity = 0, warn_iterations = 0)
     ss = GeometricIntegratorsBase.solutionstep(int, GeometricIntegratorsBase.initialstate(pr))
     GeometricIntegratorsBase.reset!(ss, h)
-    muffle(() -> GeometricIntegratorsBase.integrate!(ss, int))
+    GeometricIntegratorsBase.integrate!(ss, int)
     C = GeometricIntegratorsBase.cache(int)
     cur = GeometricIntegratorsBase.current(ss)
     (Φ̃ = [copy(x) for x in C.Φp], Λ̃ = [copy(x) for x in C.Λp],
@@ -620,7 +620,7 @@ function step7()
         for n in (100, 1000)
             v = try
                 pr = similar(mk(); timespan = (0.0, n * 0.1), timestep = 0.1)
-                sol = muffle(() -> integrate(pr, m))
+                sol = integrate(pr, m; verbosity = 0, warn_iterations = 0)
                 maximum(maximum(abs, collect(sol.p[i]) .- th(sol.q[i])) for i in eachindex(sol.t))
             catch
                 NaN

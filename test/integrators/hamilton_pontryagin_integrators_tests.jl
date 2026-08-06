@@ -38,7 +38,7 @@ pref = exact_solution(podeproblem())
 
 
     sol = integrate(lode, HPItrapezoidal(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]))
-    @test relative_maximum_error(sol.q, pref.q) < 4E-4
+    @test relative_maximum_error(sol.q, pref.q) < 2E-4
 
     ref = integrate(lode, PMVItrapezoidal())
     @test relative_maximum_error(sol.q, ref.q) < 8*eps()

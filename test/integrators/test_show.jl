@@ -134,7 +134,7 @@ test_show_default(x) = @test length(sprint(show, x)) > 0
     ### the SPARK integrators ###
 
     # only constructed, never integrated, so none of the solver warnings the SPARK tests
-    # muffle can appear here. All ten print the tableau via `tableau(method(int)).q/.p`;
+    # silence can appear here. All ten print the tableau via `tableau(method(int)).q/.p`;
     # spelling that `method(int).q` threw a `FieldError` for the seven method types that
     # wrap their tableau instead of being one.
     test_show(GeometricIntegrator(lvslrk, SLRKLobattoIIIAB(2)), "Specialised Partitioned Additive Runge-Kutta integrator for degenerate")

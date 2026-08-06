@@ -13,12 +13,11 @@ const AbstractSPARKProblem{DT<:Number,TT<:Real} =
 
 GeometricIntegratorsBase.default_iguess(::AbstractSPARKMethod) = HermiteExtrapolation()
 GeometricIntegratorsBase.default_solver(::AbstractSPARKMethod) = Newton()
-GeometricIntegratorsBase.default_options(::AbstractSPARKMethod) = (
-    min_iterations=1,
-    x_suctol=2eps(),
-    f_abstol=8eps(),
-    f_suctol=2eps(),
-)
+# No `default_options` override: SPARK uses the GeometricIntegratorsBase default
+# `f_abstol = max(8, solversize(method, problem)) * eps(datatype(problem))`, which on the
+# 2-dof test problems ranges over solversize 8 … 48, i.e. 1.8e-15 … 1.1e-14. That clears
+# every residual floor: ~4e-16 for the well-conditioned tableaux, and ~3e-15 for the
+# marginal VSPARK(SPARKLobABD(4)), whose solversize of 48 gives it the most headroom.
 
 
 nstages(method::AbstractSPARKMethod) = nstages(tableau(method))
@@ -27,7 +26,7 @@ eachstage(method::AbstractSPARKMethod) = eachstage(tableau(method))
 hasnullvector(method::AbstractSPARKMethod) = hasnullvector(tableau(method))
 
 """
-    nullvectorsize(problem, method)
+    nullvectorsize(method, problem)
 
 Number of unknowns the null-vector multiplier `μ` contributes to the nonlinear system:
 one component per degree of freedom when the tableau carries a null vector `d`, zero
@@ -38,5 +37,5 @@ length of the solver's unknown vector and the cache constructor needs no correct
 its own. Keep it that way — the two used to be computed in different files, and nothing
 checked that they agreed (see the `SPARK solver size` testset).
 """
-nullvectorsize(problem::AbstractSPARKProblem, method::AbstractSPARKMethod) =
+nullvectorsize(method::AbstractSPARKMethod, problem::AbstractSPARKProblem) =
     hasnullvector(method) ? length(vec(initial_conditions(problem).q)) : 0

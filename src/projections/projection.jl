@@ -48,7 +48,7 @@ function ProjectionIntegrator(
     caches=CacheDict(problem, method),
     options...
 )
-    solver = initsolver(solvermethod, method, caches; (length(options) == 0 ? default_options() : options)...)
+    solver = initsolver(solvermethod, method, caches; (length(options) == 0 ? default_options(projectionmethod, problem) : options)...)
     ProjectionIntegrator(problem, method, caches, solver, iguess, subint)
 end
 
@@ -61,7 +61,7 @@ function ProjectionIntegrator(
     parent_iguess::Union{InitialGuess,Extrapolation};
     kwargs...
 )
-    subint = GeometricIntegrator(problem, parent(projectionmethod), parent_solvermethod, parent_iguess; default_options(parent(projectionmethod))...)
+    subint = GeometricIntegrator(problem, parent(projectionmethod), parent_solvermethod, parent_iguess; default_options(parent(projectionmethod), problem)...)
     ProjectionIntegrator(problem, projectionmethod, solvermethod, iguess, subint; kwargs...)
 end
 

@@ -42,8 +42,8 @@ pstages(method::VSPARKsecondary) = method.r
 hasnullvector(method::VSPARKsecondary{DT,Nothing}) where {DT} = false
 hasnullvector(method::VSPARKsecondary{DT,<:AbstractVector}) where {DT} = true
 
-solversize(problem::AbstractProblemIDAE, method::VSPARKsecondary) =
-    4 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(problem, method)
+solversize(method::VSPARKsecondary, problem::AbstractProblemIDAE) =
+    4 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(method, problem)
 
 
 @doc raw"""

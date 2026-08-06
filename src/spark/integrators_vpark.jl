@@ -8,8 +8,8 @@ end
 
 tableau(method::VPARK) = method.tableau
 
-solversize(problem::AbstractProblemIDAE, method::VPARK) =
-    3 * length(vec(initial_conditions(problem).q)) * nstages(method) + 3 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(problem, method)
+solversize(method::VPARK, problem::AbstractProblemIDAE) =
+    3 * length(vec(initial_conditions(problem).q)) * nstages(method) + 3 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(method, problem)
 
 
 @doc raw"""

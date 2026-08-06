@@ -61,14 +61,14 @@ end
         # at the tolerance of the λ bisection rather than at O(h^6).
         pg3 = energy_drift(prob, PGLRK(3))
         g3 = energy_drift(prob, Gauss(3))
-        @test pg3 < 8E-15
+        @test pg3 < 4E-15
         @test pg3 < g3 / 1000
 
         # At s = 4 the plain method's energy error is already near the λ-solve tolerance,
         # so the improvement is smaller; the projection must still not make it worse.
         pg4 = energy_drift(prob, PGLRK(4))
         g4 = energy_drift(prob, Gauss(4))
-        @test pg4 < 8E-13
+        @test pg4 < 4E-13
         @test pg4 < 10 * g4
     end
 
@@ -85,9 +85,10 @@ end
         # `VPRKpTableau` uses the same tableau family, with the Dirac constraint
         # ϑ(qₙ₊₁) − pₙ₊₁ = 0 in place of the energy condition. Its point is to recover on
         # a *degenerate* Lagrangian the order that a plain VPRK loses there.
-        # Drops the benign line-search warnings but keeps anything error-level visible: a
-        # `NullLogger` here would also swallow genuine solver failures.
-        muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.SimpleLogger(devnull, Base.CoreLogging.Error))
+        # The nonlinear solver occasionally runs to its iteration cap on these harder
+        # systems and emits benign warnings. Silencing them needs both kwargs:
+        # `verbosity` gates the stagnation and line-search messages, `warn_iterations` the
+        # "Solver took N iterations" cap message.
         lbuild(Δt) = LotkaVolterra2d.lodeproblem(q₀; timespan=(0.0, T), timestep=Δt, parameters=params)
         emq(sol, r) = relative_maximum_error(sol.q, r.q)
 
@@ -97,8 +98,8 @@ end
         # roughly doubles the achieved order.
         st = T ./ (2 .* 2 .^ (0:3))
         for s in 3:5
-            rp = muffle(() -> estimate_convergence_order(lbuild, VPRKpTableau(s), st; reference=ref, errormetric=emq))
-            rv = muffle(() -> estimate_convergence_order(lbuild, VPRK(Gauss(s)), st; reference=ref, errormetric=emq))
+            rp = estimate_convergence_order(lbuild, VPRKpTableau(s), st; reference=ref, errormetric=emq, integrate_options=(verbosity=0, warn_iterations=0,))
+            rv = estimate_convergence_order(lbuild, VPRK(Gauss(s)), st; reference=ref, errormetric=emq, integrate_options=(verbosity=0, warn_iterations=0,))
             @test rp.order > rv.order + 1
         end
 
@@ -110,7 +111,7 @@ end
         # the method and not of the solve. `VPRKpTableau` has no published order theorem —
         # see its docstring — so this is recorded rather than asserted.
         @test_broken all(
-            isapprox(muffle(() -> estimate_convergence_order(lbuild, VPRKpTableau(s), T ./ (4 .* 2 .^ (0:4)); reference=ref, errormetric=emq)).order, 2s; atol=0.35)
+            isapprox(estimate_convergence_order(lbuild, VPRKpTableau(s), T ./ (4 .* 2 .^ (0:4)); reference=ref, errormetric=emq, integrate_options=(verbosity=0, warn_iterations=0,)).order, 2s; atol=0.35)
             for s in 4:5
         )
     end

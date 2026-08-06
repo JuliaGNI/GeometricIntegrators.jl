@@ -10,5 +10,9 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 RungeKutta = "fb486d5c-30a0-4a8a-8415-a8b4ace5a6f7"
 SimpleSolvers = "36b790f5-6434-4fbe-b711-1f64a1e2f6a2"
 
+[compat]
+GeometricIntegratorsBase = "0.5.1"
+SimpleSolvers = "0.10"
+
 [sources]
 GeometricIntegrators = {path = ".."}

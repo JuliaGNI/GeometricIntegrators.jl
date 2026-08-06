@@ -114,7 +114,7 @@ isiodemethod(::Union{FLRK,Type{<:FLRK}}) = true
 default_solver(::FLRK) = Newton()
 default_iguess(::FLRK) = HermiteExtrapolation()
 
-solversize(problem::AbstractProblemIODE, method::FLRK) =
+solversize(method::FLRK, problem::AbstractProblemIODE) =
     length(vec(initial_conditions(problem).q)) * nstages(method)
 
 

@@ -10,7 +10,7 @@ ref = exact_solution(odeproblem())
 @testset "$(rpad("Post-projection with Runge-Kutta integrators",80))" begin
 
     sol = integrate(dae, PostProjection(RK4()))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-7
+    @test relative_maximum_error(sol.q, ref.q) < 2E-7
     @test abs(hamiltonian(sol[end].t, sol[end].q, dae.parameters) - hamiltonian(sol[begin].t, sol[begin].q, dae.parameters)) < eps()
 
     sol = integrate(dae, PostProjection(Gauss(1)))
@@ -22,11 +22,11 @@ ref = exact_solution(odeproblem())
     @test abs(hamiltonian(sol[end].t, sol[end].q, dae.parameters) - hamiltonian(sol[begin].t, sol[begin].q, dae.parameters)) < eps()
 
     sol = integrate(dae, PostProjection(Gauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-12
+    @test relative_maximum_error(sol.q, ref.q) < 1E-12
     @test abs(hamiltonian(sol[end].t, sol[end].q, dae.parameters) - hamiltonian(sol[begin].t, sol[begin].q, dae.parameters)) < eps()
 
     sol = integrate(dae, PostProjection(Gauss(4)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-15
+    @test relative_maximum_error(sol.q, ref.q) < 4E-16
     @test abs(hamiltonian(sol[end].t, sol[end].q, dae.parameters) - hamiltonian(sol[begin].t, sol[begin].q, dae.parameters)) < eps()
 
 end
@@ -48,7 +48,7 @@ end
     @test abs(hamiltonian(sol[end].t, sol[end].q, dae.parameters) - hamiltonian(sol[begin].t, sol[begin].q, dae.parameters)) < 2eps()
 
     sol = integrate(dae, MidpointProjection(Gauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-12
+    @test relative_maximum_error(sol.q, ref.q) < 1E-12
     @test abs(hamiltonian(sol[end].t, sol[end].q, dae.parameters) - hamiltonian(sol[begin].t, sol[begin].q, dae.parameters)) < 2eps()
 
     sol = integrate(dae, MidpointProjection(Gauss(4)))
@@ -74,7 +74,7 @@ end
     @test abs(hamiltonian(sol[end].t, sol[end].q, dae.parameters) - hamiltonian(sol[begin].t, sol[begin].q, dae.parameters)) < 2eps()
 
     sol = integrate(dae, SymmetricProjection(Gauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-12
+    @test relative_maximum_error(sol.q, ref.q) < 1E-12
     @test abs(hamiltonian(sol[end].t, sol[end].q, dae.parameters) - hamiltonian(sol[begin].t, sol[begin].q, dae.parameters)) < 2eps()
 
     sol = integrate(dae, SymmetricProjection(Gauss(4)))

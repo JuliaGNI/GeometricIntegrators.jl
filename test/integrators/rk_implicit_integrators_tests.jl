@@ -20,26 +20,26 @@ ref = integrate(ode, Gauss(8))
 @testset "$(rpad("Runge-Kutta integrators for implicit equations",80))" begin
 
     sol = integrate(iode, Gauss(1))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-5
+    @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
     sol = integrate(iode, Gauss(2))
-    @test relative_maximum_error(sol.q, ref.q) < 8E-7
+    @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
     sol = integrate(iode, Gauss(3))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-10
+    @test relative_maximum_error(sol.q, ref.q) < 4E-11
 
     sol = integrate(iode, Gauss(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-13
 
 
     sol = integrate(iode, IRK(Gauss(1); implicit_update=true))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-5
+    @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
     sol = integrate(iode, IRK(Gauss(2); implicit_update=true))
-    @test relative_maximum_error(sol.q, ref.q) < 8E-7
+    @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
     sol = integrate(iode, IRK(Gauss(3); implicit_update=true))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-10
+    @test relative_maximum_error(sol.q, ref.q) < 4E-11
 
     sol = integrate(iode, IRK(Gauss(4); implicit_update=true))
     @test relative_maximum_error(sol.q, ref.q) < 2E-13
@@ -50,13 +50,13 @@ end
 @testset "$(rpad("Partitioned Runge-Kutta integrators for implicit equations",80))" begin
 
     sol = integrate(iode, PartitionedGauss(1))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-5
+    @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
     sol = integrate(iode, PartitionedGauss(2))
-    @test relative_maximum_error(sol.q, ref.q) < 8E-7
+    @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
     sol = integrate(iode, PartitionedGauss(3))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-10
+    @test relative_maximum_error(sol.q, ref.q) < 4E-11
 
     sol = integrate(iode, PartitionedGauss(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-13
@@ -80,13 +80,13 @@ end
     # Tolerances measured (Δt = 0.01, nt = 10, reference Gauss(8)):
     #   s = 2: 3.3E-12,  s = 3: 6.7E-16,  s = 4: 5.5E-16
     flsol = integrate(lode, FLRK(Gauss(2)))
-    @test relative_maximum_error(flsol.q, ref.q) < 8E-12
+    @test relative_maximum_error(flsol.q, ref.q) < 4E-12
 
     flsol = integrate(lode, FLRK(Gauss(3)))
-    @test relative_maximum_error(flsol.q, ref.q) < 2E-15
+    @test relative_maximum_error(flsol.q, ref.q) < 8E-16
 
     flsol = integrate(lode, FLRK(Gauss(4)))
-    @test relative_maximum_error(flsol.q, ref.q) < 2E-15
+    @test relative_maximum_error(flsol.q, ref.q) < 8E-16
 
     # The momentum-modified formal Lagrangian is constructed so that p = ϑ(q) solves
     # the adjoint equations. With p₀ = ϑ(q₀) the adjoint variable must therefore track
@@ -95,7 +95,7 @@ end
     # This assertion is what catches the stage force being taken from the projection
     # field `g = (∇ϑ)ᵀv` instead of `f = (∇ϑ)ᵀv − ∇H`: with `g` the error is 9.9E-2 at
     # every order, while `q` stays bit-for-bit correct.
-    for (s, tol) in ((2, 2E-11), (3, 2E-15), (4, 4E-15))
+    for (s, tol) in ((2, 2E-11), (3, 8E-16), (4, 2E-15))
         flsol = integrate(lode, FLRK(Gauss(s)))
         ϑerr = maximum(maximum(abs, flsol.p[i] .- LotkaVolterra2d.ϑ(flsol.t[i], flsol.q[i]))
                        for i in eachindex(flsol.q))

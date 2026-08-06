@@ -32,17 +32,16 @@ build_ldae(Δt)      = ldaeproblem(q₀; timespan = (0.0, T), timestep = Δt, pa
 build_hdae(Δt)      = hdaeproblem(q₀; timespan = (0.0, T), timestep = Δt, parameters = params)
 build_ldae_slrk(Δt) = ldaeproblem_slrk(q₀; timespan = (0.0, T), timestep = Δt, parameters = params)
 
-# Suppress the (correct) solver-divergence log spam from the broken cases.
-muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.NullLogger())
-
 # @test_broken helper for methods that do not converge, diverge, or raise
-# SingularException / NonlinearSolverException. The measurement is muffled and any
-# thrown exception is recorded as broken (that is exactly the deficiency under test).
+# SingularException / NonlinearSolverException. The measurement runs at `verbosity = 0`
+# to suppress the (correct) solver-divergence warnings, and any thrown exception is
+# recorded as broken (that is exactly the deficiency under test).
 function broken_order(builder, method, tsteps, expected; label)
     @testset "$(label): order ≈ $(expected) (broken)" begin
         ok = try
-            r = muffle(() -> estimate_convergence_order(builder, method, tsteps;
-                reference = ref_ode, errormetric = emq, plateau = 5e-13))
+            r = estimate_convergence_order(builder, method, tsteps;
+                reference = ref_ode, errormetric = emq, plateau = 5e-13,
+                integrate_options = (verbosity = 0, warn_iterations = 0,))
             isapprox(r.order, expected; atol = 0.4)
         catch
             false
@@ -52,8 +51,8 @@ function broken_order(builder, method, tsteps, expected; label)
 end
 
 conv(builder, method, tsteps, expected; label) =
-    muffle(() -> test_convergence_order(builder, method, tsteps; reference = ref_ode,
-        errormetric = emq, expected = expected, atol = 0.4, plateau = 5e-13, label = label))
+    test_convergence_order(builder, method, tsteps; reference = ref_ode,
+        errormetric = emq, expected = expected, atol = 0.4, plateau = 5e-13, label = label)
 
 
 @testset "SPARK convergence" begin

@@ -512,6 +512,130 @@ that one integration. `muffle` changes only logging, so the measured errors and
 the `@test_broken` status are unaffected. The suite now runs warning-free with the
 same 133 pass / 45 broken tally.
 
+**Update (SimpleSolvers 0.10.0 / GeometricIntegratorsBase 0.4.3).** The two root
+causes above are fixed upstream, so all the per-run warning counts in this Third
+pass (~35/run in SPARK, 12 after the 0.9.2 rework, the 2/3/3/2 PMVI/HP breakdown,
+etc.) are **historical** and no longer describe the suite:
+
+* The line search now shares its solver's `Options`, so `verbosity = 0` finally
+  reaches it — the blocker recorded above ("the line search builds its own
+  `Options` and never receives a `verbosity` kwarg") is gone. The `muffle` helper
+  (`with_logger(f, NullLogger())` / `SimpleLogger(devnull, Error)`) has been
+  removed from all six files (tests and `scripts/`) in favour of
+  `integrate(…; verbosity = 0, warn_iterations = 0)` at the genuinely-divergent
+  `@test_broken` sites. Both kwargs are needed: under 0.10 the stagnation and
+  line-search messages are gated on `verbosity`, while the "Solver took N
+  iterations" cap message is gated separately on `warn_iterations`.
+* A converged solve whose residual sits at the round-off floor is now **silent** at
+  default verbosity, and a stalled solve stops after `max_stalls` steps and emits a
+  single, informative stagnation warning (reporting the achievable floor) instead
+  of spinning to `max_iterations` and warning up to a thousand times.
+* `GeometricIntegratorsBase` 0.4.3 **merges** caller options into the method's
+  `default_options` instead of replacing the whole bundle, so the line-461 claim
+  that "`min_iterations = 1` is repeated because passing any solver option replaces
+  the whole `default_options` NamedTuple" **no longer holds** — the redundant
+  `min_iterations = 1` restatements have been dropped, leaving only `f_abstol`.
+* The `f_abstol = 4e-15` relaxation is retained for `PMVI*`/`HPI*` and additionally
+  applied to the `VPRKGauss(8)` reference solve and `VPRKGauss(2)` in the
+  `variational` suite, which reach the same round-off floor at their finest
+  timestep under 0.10's stricter stall detection. Each relaxed converging call now
+  carries a `@test_nowarn` regression tripwire, so a resurfacing solver warning
+  fails the suite rather than merely printing.
+* One formerly-broken case now converges: `VSPARK(SPARKLobattoIIIBIIIA(2))` (a
+  singular stage system under 0.9) solves cleanly under 0.10 and has been promoted
+  from `@test_broken` to `@test`. This is the only pass/broken change; the tally is
+  otherwise unchanged.
+
+**Update (tolerance re-tune).** With the warning floods gone, the solver tolerances and
+test thresholds were re-measured and normalised:
+
+* **Restored the framework `f_abstol` default.** GeometricIntegratorsBase ≤ 0.4.2 set a
+  package-wide `f_abstol = 8eps()`; 0.4.3 dropped it to `(min_iterations = 1,)`, so every
+  implicit method inherited SimpleSolvers' `f_abstol = 0`. With a zero absolute residual
+  gate, a solve already at its round-off floor after one Newton step is forced to take a
+  second step to satisfy the successive-change criterion — **measured 1.7–2× slower for
+  the VPRK integrators, ~1.2× for plain implicit RK, with the computed solution
+  unchanged**. `src/Integrators.jl` re-introduces `default_options(::GeometricMethod) =
+  (min_iterations = 1, f_abstol = 8eps())` (the historical value), restoring
+  single-iteration convergence for every implicit family in one place. The projection
+  sub-solver path (`projections/projection.jl`) was routed through the same default.
+* **Re-tuned the SPARK default.** `src/spark/abstract.jl` now sets `f_abstol = 8e-15` —
+  one order of magnitude above the SPARK residual floor (~4e-16 for well-conditioned
+  tableaux, ~3e-15 for the marginal `VSPARK(SPARKLobABD(4))`). This lets `SPARKLobABD(4)`
+  converge silently under 0.10 (its `verbosity = 0` workaround was removed); the two
+  cases that stall/back-track regardless (`SPARKLobABC(3)`, `SPARKLobABD(3)`) keep it.
+* **Normalised every test threshold** to the tightest `{1,2,4,8}×10ⁿ` strictly above the
+  freshly measured value (with a 10% pre-margin so machine-precision bounds keep a full
+  grid step of headroom). Dropping the `5` mantissa the Second pass had allowed makes the
+  powers-of-two grid guarantee `measured < TOL ≤ 2·measured` everywhere. Energy/Hamiltonian
+  conservation and method-equivalence bit-consistency bounds are kept as `eps`-multiples
+  (`eps()`, `2eps()`, `8*eps()`), which is the idiom for a machine-precision check.
+* The `f_abstol = 4e-15` relaxations are **still required for `HPI*`** (3 midpoint / 2
+  trapezoidal stagnation warnings at the finest timestep without them, floor ~4e-15 above
+  the 8eps default) and are retained for `PMVI*`/`VPRKGauss` as well; their comments now
+  cite the measured floor and the `8eps()` default rather than the old "effectively zero".
+
+**Update (GeometricIntegratorsBase 0.5.1 — sized default).** GIBase 0.5.1 standardises
+`default_options`/`solversize` to a uniform `(method, problem)` argument order and makes the
+framework `f_abstol` default **scale with the system size**:
+`f_abstol = max(8, solversize(method, problem)) * eps(datatype(problem))`. The `max(…)`
+floor is **8**, not 2: the smallest solver systems are genuinely tiny. `default_options` is
+queried on the `initmethod`-specialised method (`GeometricIntegratorsBase/src/integrator.jl`),
+so e.g. `LobattoIIIA(2)` on a 2-dof ODE arrives as a `DIRK` with `solversize = 2` and
+`RadauIIA(2)` as an `IRK` with `solversize = 4`. With a floor of 2 the Lobatto case would get
+`f_abstol = 2eps ≈ 4.4e-16`, below its ~6e-16 round-off floor, and stagnate; a floor of
+`8eps ≈ 1.78e-15` clears every observed floor (and equals the historical default). The size
+*factor* alone therefore cannot fix this — it is the floor that carries the small cases. This
+sized default is the principled replacement for the two flat overrides above, which are
+therefore **removed**:
+
+* The `src/Integrators.jl` `default_options(::GeometricMethod) = (…, f_abstol = 8eps())`
+  override and SPARK's `src/spark/abstract.jl` `f_abstol = 8e-15` override are both deleted;
+  every family (incl. SPARK) now uses the sized GIBase default. SPARK stage systems are large
+  enough that `solversize · eps` lands *above* their round-off floor — measured over the 2-dof
+  test problems they span solversize 8 (`TableauVSPARKGLRKpMidpoint(1)`) to 48
+  (`VSPARK(SPARKLobABD(4))`), i.e. `f_abstol` `1.8e-15 … 1.1e-14`, and the one marginal case
+  (`VSPARK(SPARKLobABD(4))`, floor ~3e-15) is also the largest system, so it gets `1.1e-14`
+  and stays silent without any override. Everything with `solversize ≤ 8` gets exactly the
+  `8eps` floor — the historical default — so its single-iteration convergence and measured
+  errors are unchanged.
+* All 21 `solversize` definitions (11 non-SPARK + 10 SPARK) and `nullvectorsize`, plus every
+  call site, were flipped to the new `(method, problem)` order; the `GeometricIntegratorsBase`
+  compat is pinned to `0.5.1`.
+
+**Update (warning census).** The suite prints **9** solver warnings per run, but that is a
+rate-limiting artefact, not the true count. Every warning SimpleSolvers 0.10 emits here carries
+`maxlog = 3` (`linesearch_status.jl:317,319`, `nonlinear_solver_status.jl:361`), and `maxlog` is
+keyed on the `@warn` source location and so is **process-global**, not per solve. Three distinct
+sites × 3 = exactly the 9 observed. Counted with a logger that ignores `maxlog`, one run produces
+**39** warning-worthy events, all from `test/spark/spark_integrators_tests.jl`; the other 30 are
+dropped silently. Two sources, both new on this branch:
+
+* **The HSPARKsecondary `@test_throws` loop — 12 events, fixed.** Three of its 24 solves
+  (`TableauHSPARKLobattoIIID(2)`, `TableauHSPARKGLRKLobattoIIIE(2)`,
+  `TableauHSPARKGLRKLobattoIIIAB(4)`) iterate and warn before the singular factorisation aborts.
+  These calls were `muffle`d before the `@test_broken` → `@test_throws SingularException`
+  rewrite, which dropped the wrapper without substituting `verbosity = 0`. Both kwargs are now
+  passed on all 24 calls.
+* **`VSPARK(SPARKLobattoIIIBIIIA(2))` — 27 events, open.** This is the case promoted from
+  `@test_broken` to `@test` because it converges under 0.10. It does reach passing accuracy
+  (`< 1E-6`), but its solve **stalls at `rfₐ ≈ 3.6e-5`** on some steps — nine orders above the
+  `f_abstol = 26·eps ≈ 5.8e-15` it was asked for — and emits 21 `no sufficient decrease`,
+  5 `not a descent direction` and 1 stagnation message. It is left unsuppressed deliberately:
+  unlike the divergent cases, a solve that stalls this far from its tolerance while still
+  passing an accuracy assertion is a question about the method, not log noise to silence. Worth
+  resolving before the s=2 case is treated as a supported configuration.
+
+A note on measurement, since it cost a false result here: attributing a warning by walking the
+stack for the innermost frame in the test file does **not** work inside an `@testset` — the body
+is lowered to a single closure, so every warning in a testset reports the same line. Per-call
+attribution needs each call driven individually. Related: because `maxlog` is applied before the
+message reaches a logger, `@test_nowarn` stops seeing warnings from a site whose budget is
+already spent (verified directly). The `@test_nowarn` tripwires in the `variational` and `hpi`
+suites are therefore only effective while that budget is unspent — true today solely because
+`runtests.jl` runs those suites (positions 18 and 24) before the two SPARK files (26 and 31).
+Nothing enforces that ordering.
+
 ---
 
 # Fourth pass — SPARK submodule (`src/spark/`)

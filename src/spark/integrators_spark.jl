@@ -27,8 +27,8 @@ end
 
 tableau(method::SPARKMethod) = method.tableau
 
-solversize(problem::AbstractProblemIDAE, method::SPARKMethod) =
-    2 * length(vec(initial_conditions(problem).q)) * nstages(method) + 3 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(problem, method)
+solversize(method::SPARKMethod, problem::AbstractProblemIDAE) =
+    2 * length(vec(initial_conditions(problem).q)) * nstages(method) + 3 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(method, problem)
 
 
 @doc raw"""

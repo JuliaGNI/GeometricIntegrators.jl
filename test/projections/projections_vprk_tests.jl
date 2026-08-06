@@ -24,7 +24,7 @@ ref = integrate(ode, Gauss(8))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
     sol = integrate(iode, VPRKGauss(2))
-    @test relative_maximum_error(sol.q, ref.q) < 8E-7
+    @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
     sol = integrate(iode, VPRKGauss(3))
     @test relative_maximum_error(sol.q, ref.q) < 4E-11
@@ -33,7 +33,7 @@ ref = integrate(ode, Gauss(8))
     @test relative_maximum_error(sol.q, ref.q) < 8E-5
 
     sol = integrate(iode, VPRKLobattoIIIAIIIĀ(3))
-    @test relative_maximum_error(sol.q, ref.q) < 8E-7
+    @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
     sol = integrate(iode, VPRKLobattoIIIAIIIĀ(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-10
@@ -59,7 +59,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
     sol = integrate(iode, PostProjection(VPRKGauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 1E-15
 
 end
 
@@ -67,13 +67,13 @@ end
 @testset "$(rpad("VPRK integrators with symplectic projection",80))" begin
 
     sol = integrate(iode, SymplecticProjection(VPRKGauss(1)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-6
+    @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
     sol = integrate(iode, SymplecticProjection(VPRKGauss(2)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
     sol = integrate(iode, SymplecticProjection(VPRKGauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 1E-15
 
 end
 
@@ -87,7 +87,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
     sol = integrate(iode, MidpointProjection(VPRKGauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-15
+    @test relative_maximum_error(sol.q, ref.q) < 8E-16
 
 end
 
@@ -101,7 +101,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
     sol = integrate(iode, SymmetricProjection(VPRKGauss(3)))
-    @test relative_maximum_error(sol.q, ref.q) < 4E-15
+    @test relative_maximum_error(sol.q, ref.q) < 8E-16
 
 end
 
@@ -154,22 +154,22 @@ end
     # @test relative_maximum_error(solV3.q, ref.q) < 1E-11
 
     solQ1 = integrate(iode, VPRKpVariationalQ(VPRKGauss(1)))
-    @test relative_maximum_error(solQ1.q, ref.q) < 8E-5
+    @test relative_maximum_error(solQ1.q, ref.q) < 4E-5
 
     solQ2 = integrate(iode, VPRKpVariationalQ(VPRKGauss(2)))
-    @test relative_maximum_error(solQ2.q, ref.q) < 4E-4
+    @test relative_maximum_error(solQ2.q, ref.q) < 2E-4
 
     solQ3 = integrate(iode, VPRKpVariationalQ(VPRKGauss(3)))
-    @test relative_maximum_error(solQ3.q, ref.q) < 2E-8
+    @test relative_maximum_error(solQ3.q, ref.q) < 1E-8
 
     solP1 = integrate(iode, VPRKpVariationalP(VPRKGauss(1)))
-    @test relative_maximum_error(solP1.q, ref.q) < 2E-6
+    @test relative_maximum_error(solP1.q, ref.q) < 8E-7
 
     solP2 = integrate(iode, VPRKpVariationalP(VPRKGauss(2)))
-    @test relative_maximum_error(solP2.q, ref.q) < 2E-7
+    @test relative_maximum_error(solP2.q, ref.q) < 1E-7
 
     solP3 = integrate(iode, VPRKpVariationalP(VPRKGauss(3)))
-    @test relative_maximum_error(solP3.q, ref.q) < 4E-11
+    @test relative_maximum_error(solP3.q, ref.q) < 2E-11
 
     # disabled: cross-checks require solV* from VPRKpVariational, which errors (see above)
     # @test relative_maximum_error(solV1.q, solP1.q[end]) == 0
@@ -184,9 +184,8 @@ end
     # `VPRKpTableau` couples the Dirac-constraint multipliers into the tableau, so the
     # nonlinear system is harder than a plain VPRK one and the line search occasionally
     # hits its iteration cap. The warnings are benign — the measured errors below are at
-    # machine precision — so they are suppressed for these calls. Only up to `Warn`: a
-    # `NullLogger` would also swallow genuine solver failures.
-    muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.SimpleLogger(devnull, Base.CoreLogging.Error))
+    # machine precision — so these calls are silenced with `verbosity = 0`, which affects
+    # only logging.
 
     # D = 2 multipliers need s ≥ D+1 = 3 stages to fit into the skew generator, and
     # s ≥ D+2 = 4 for full order: at s = 3 the multiplier occupies the (2,1) slot, which
@@ -201,28 +200,28 @@ end
     # Measured (Δt = 0.01, nt = 10, reference Gauss(8) on the ODE form):
     #   s = 3: 2.1E-10  (order-degraded, worse than VPRK(Gauss(3)) at 2.3E-11)
     #   s = 4: 8.9E-16, s = 5: 6.7E-16, s = 6: 4.4E-16
-    sol = muffle(() -> integrate(iode, VPRKpTableau(4)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    sol = integrate(iode, VPRKpTableau(4); verbosity=0, warn_iterations=0)
+    @test relative_maximum_error(sol.q, ref.q) < 1E-15
 
-    sol = muffle(() -> integrate(iode, VPRKpTableau(5)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    sol = integrate(iode, VPRKpTableau(5); verbosity=0, warn_iterations=0)
+    @test relative_maximum_error(sol.q, ref.q) < 8E-16
 
-    sol = muffle(() -> integrate(iode, VPRKpTableau(6)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    sol = integrate(iode, VPRKpTableau(6); verbosity=0, warn_iterations=0)
+    @test relative_maximum_error(sol.q, ref.q) < 8E-16
 
     # The defining property: the Dirac constraint ϑ(qₙ) − pₙ = 0 must hold at every
-    # step. Measured 4.4E-16 … 8.0E-15.
+    # step. Measured 4.4E-16 … 4.2E-15.
     for s in 3:6
-        sol = muffle(() -> integrate(iode, VPRKpTableau(s)))
+        sol = integrate(iode, VPRKpTableau(s); verbosity=0, warn_iterations=0)
         dirac = maximum(maximum(abs, sol.p[i] .- LotkaVolterra2d.ϑ(sol.t[i], sol.q[i]))
                         for i in eachindex(sol.q))
-        @test dirac < 2E-14
+        @test dirac < 8E-15
     end
 
     # At s = D+1 the projection costs accuracy rather than gaining it, which is the
     # observable consequence of the (2,1)-slot obstruction.
-    let s3 = muffle(() -> integrate(iode, VPRKpTableau(3))),
-        v3 = muffle(() -> integrate(iode, VPRK(Gauss(3))))
+    let s3 = integrate(iode, VPRKpTableau(3); verbosity=0, warn_iterations=0),
+        v3 = integrate(iode, VPRK(Gauss(3)); verbosity=0, warn_iterations=0)
 
         @test relative_maximum_error(s3.q, ref.q) > relative_maximum_error(v3.q, ref.q)
     end

@@ -18,7 +18,7 @@ function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:Symmetric
 end
 
 @inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:SymmetricProjection}) =
-    ProjectionCache{ST,timetype(problem),typeof(problem),nconstraints(problem),solversize(problem, parent(method))}
+    ProjectionCache{ST,timetype(problem),typeof(problem),nconstraints(problem),solversize(parent(method), problem)}
 
 
 default_solver(::ProjectedMethod{<:SymmetricProjection}) = Newton()
@@ -37,7 +37,7 @@ default_iguess(::ProjectedMethod{<:SymmetricProjection}) = HermiteExtrapolation(
 function split_nlsolution(x::AbstractVector, int::SymmetricProjectionIntegrator)
     D = ndims(cache(int))
     M = nconstraints(int)
-    N = solversize(problem(int), parent(method(int)))
+    N = solversize(parent(method(int)), problem(int))
 
     x̄ = @view x[1:N]
     x̃ = @view x[N+1:N+D+M]

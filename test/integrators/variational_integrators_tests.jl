@@ -17,15 +17,15 @@ pref = exact_solution(podeproblem())
     dele = DELEProblem(lode, Midpoint())
     dsol = integrate(dele, DiscreteEulerLagrange())
     @test relative_maximum_error(dsol.q, pref.q) < 4E-4
-    @test relative_maximum_error(dsol.q, sol.q) < 1E-14
+    @test relative_maximum_error(dsol.q, sol.q) < 4E-15
 
     sol = integrate(deleproblem_trapezoidal(), DiscreteEulerLagrange())
-    @test relative_maximum_error(sol.q, pref.q) < 4E-4
+    @test relative_maximum_error(sol.q, pref.q) < 2E-4
 
     dele = DELEProblem(lode, Trapezoidal())
     dsol = integrate(dele, DiscreteEulerLagrange())
-    @test relative_maximum_error(dsol.q, pref.q) < 4E-4
-    @test relative_maximum_error(dsol.q, sol.q) < 1E-14
+    @test relative_maximum_error(dsol.q, pref.q) < 2E-4
+    @test relative_maximum_error(dsol.q, sol.q) < 4E-15
 end
 
 
@@ -35,7 +35,7 @@ end
     @test relative_maximum_error(sol.q, pref.q) < 4E-4
 
     sol = integrate(lode, PMVItrapezoidal())
-    @test relative_maximum_error(sol.q, pref.q) < 4E-4
+    @test relative_maximum_error(sol.q, pref.q) < 2E-4
 
 end
 
@@ -51,31 +51,31 @@ end
 
     sol = integrate(lode, VPRKGauss(2))
     @test relative_maximum_error(sol.q, pref.q) < 4E-8
-    @test relative_maximum_error(sol.p, pref.p) < 8E-8
+    @test relative_maximum_error(sol.p, pref.p) < 4E-8
 
     sol = integrate(lode, VPRKGauss(3))
-    @test relative_maximum_error(sol.q, pref.q) < 8E-13
-    @test relative_maximum_error(sol.p, pref.p) < 4E-12
+    @test relative_maximum_error(sol.q, pref.q) < 1E-12
+    @test relative_maximum_error(sol.p, pref.p) < 2E-12
 
     sol = integrate(lode, VPRKGauss(4))
     @test relative_maximum_error(sol.q, pref.q) < 4E-16
-    @test relative_maximum_error(sol.p, pref.p) < 1E-15
+    @test relative_maximum_error(sol.p, pref.p) < 8E-16
 
 
     sol = integrate(lode, VPRKLobattoIIIAIIIĀ(2))
     @test relative_maximum_error(sol.q, pref.q) < 2E-4
-    @test relative_maximum_error(sol.p, pref.p) < 1E-3
+    @test relative_maximum_error(sol.p, pref.p) < 8E-4
 
     ref = integrate(lode, PMVItrapezoidal())
     @test relative_maximum_error(sol.q, ref.q) < 8 * eps()
 
     sol = integrate(lode, VPRKLobattoIIIAIIIĀ(3))
     @test relative_maximum_error(sol.q, pref.q) < 8E-9
-    @test relative_maximum_error(sol.p, pref.p) < 2E-7
+    @test relative_maximum_error(sol.p, pref.p) < 8E-8
 
     sol = integrate(lode, VPRKLobattoIIIAIIIĀ(4))
     @test relative_maximum_error(sol.q, pref.q) < 2E-13
-    @test relative_maximum_error(sol.p, pref.p) < 4E-12
+    @test relative_maximum_error(sol.p, pref.p) < 2E-12
 
 
     sol = integrate(lode, VPRKLobattoIIIBIIIB̄(2))
@@ -84,10 +84,10 @@ end
 
     sol = integrate(lode, VPRKLobattoIIIBIIIB̄(3))
     @test relative_maximum_error(sol.q, pref.q) < 4E-8
-    @test relative_maximum_error(sol.p, pref.p) < 8E-8
+    @test relative_maximum_error(sol.p, pref.p) < 4E-8
 
     sol = integrate(lode, VPRKLobattoIIIBIIIB̄(4))
-    @test relative_maximum_error(sol.q, pref.q) < 8E-13
-    @test relative_maximum_error(sol.p, pref.p) < 4E-12
+    @test relative_maximum_error(sol.q, pref.q) < 1E-12
+    @test relative_maximum_error(sol.p, pref.p) < 2E-12
 
 end

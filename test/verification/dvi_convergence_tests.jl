@@ -80,8 +80,8 @@ emq(sol, ref) = relative_maximum_error(sol.q, ref.q)
         tspan = (0.0, 0.1)
         lode = lodeproblem(q₀; timespan = tspan, timestep = 0.01, parameters = params)
         ref = integrate(odeproblem(q₀; timespan = tspan, timestep = 0.01, parameters = params), Gauss(8))
-        @test relative_maximum_error(integrate(lode, DVIA()).q, ref.q) < 1e-1
-        @test relative_maximum_error(integrate(lode, DVIB()).q, ref.q) < 1e-1
+        @test relative_maximum_error(integrate(lode, DVIA()).q, ref.q) < 8E-2
+        @test relative_maximum_error(integrate(lode, DVIB()).q, ref.q) < 8E-2
         @test relative_maximum_error(integrate(lode, CMDVI()).q, ref.q) < 4e-3
         @test relative_maximum_error(integrate(lode, CTDVI()).q, ref.q) < 4e-3
     end

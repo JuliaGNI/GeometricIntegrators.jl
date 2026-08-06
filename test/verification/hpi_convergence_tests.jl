@@ -28,15 +28,17 @@ end
 Dₐϕ(d, q̄, q, a, Δt) = (d .= 0)
 
 @testset "Hamilton-Pontryagin convergence" begin
-    # The HP integrators relax the solver residual tolerance to f_abstol = 4e-15 to
-    # avoid a spurious "Solver took 1000 iterations." warning at the finest timestep
-    # (tolerance stagnation near machine precision; see docs/src/audit.md, third
-    # pass). min_iterations = 1 is repeated because any solver option replaces the
-    # whole default_options bundle.
-    test_convergence_order(build, HPImidpoint(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]), steps(10, 4);
+    # The HP integrators relax the solver residual tolerance to f_abstol = 4e-15 to avoid a
+    # spurious stagnation warning at the finest timestep (Δt = 1/160), where the residual
+    # settles at a round-off floor of ~4e-15 — above the framework default
+    # f_abstol = max(8, solversize)·eps, which for these solversize-0 methods is its floor
+    # 8eps ≈ 1.78e-15 (see docs/src/audit.md). Measured without the relaxation: 3 (midpoint)
+    # / 2 (trapezoidal) stagnation warnings at the finest step; with it, none. @test_nowarn
+    # is the tripwire: a converged solve must not warn.
+    @test_nowarn test_convergence_order(build, HPImidpoint(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]), steps(10, 4);
         reference = pref, errormetric = emq, expected = 2, label = "HPImidpoint",
-        integrate_options = (min_iterations = 1, f_abstol = 4e-15))
-    test_convergence_order(build, HPItrapezoidal(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]), steps(10, 4);
+        integrate_options = (f_abstol = 4e-15,))
+    @test_nowarn test_convergence_order(build, HPItrapezoidal(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]), steps(10, 4);
         reference = pref, errormetric = emq, expected = 2, label = "HPItrapezoidal",
-        integrate_options = (min_iterations = 1, f_abstol = 4e-15))
+        integrate_options = (f_abstol = 4e-15,))
 end

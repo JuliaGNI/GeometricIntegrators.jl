@@ -29,7 +29,7 @@ mutable struct ProjectionCache{DT,TT,PT,M,N} <: IODEIntegratorCache{DT}
     function ProjectionCache{DT}(problem::EquationProblem, method::ProjectedMethod) where {DT}
         D = length(vec(initial_conditions(problem).q))
         M = nconstraints(problem)
-        N = solversize(problem, parent(method))
+        N = solversize(parent(method), problem)
 
         TT = timetype(problem)
         t = initialtime(problem)

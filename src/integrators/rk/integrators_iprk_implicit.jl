@@ -1,5 +1,5 @@
 
-solversize(problem::AbstractProblemIODE, method::IPRK) = length(vec(initial_conditions(problem).q)) * nstages(method)
+solversize(method::IPRK, problem::AbstractProblemIODE) = length(vec(initial_conditions(problem).q)) * nstages(method)
 
 function Base.show(io::IO, int::GeometricIntegrator{<:IPRK,<:AbstractProblemIODE})
     print(io, "\nPartitioned Runge-Kutta Integrator for Implicit Equations with:\n")
@@ -12,10 +12,10 @@ end
 
 function Cache{ST}(problem::AbstractProblemIODE, method::IPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
-    IPRKCache{ST,S,solversize(problem, method)}(initial_conditions(problem); kwargs...)
+    IPRKCache{ST,S,solversize(method, problem)}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::AbstractProblemIODE, method::IPRK) = IPRKCache{ST,nstages(tableau(method)),solversize(problem, method)}
+@inline CacheType(ST, problem::AbstractProblemIODE, method::IPRK) = IPRKCache{ST,nstages(tableau(method)),solversize(method, problem)}
 
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemIODE})

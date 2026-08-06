@@ -14,34 +14,34 @@ sode2 = SubstepProblem(sode, one(timestep(sode)), 2)
 
 
 ssol = integrate(sode, LieA())
-@test relative_maximum_error(ssol, ref).q < 5E-2
+@test relative_maximum_error(ssol, ref).q < 4E-2
 
 ssolc = integrate(sode, Composition(LieA()))
-@test relative_maximum_error(ssol, ssolc).q < 1E-15
+@test relative_maximum_error(ssol, ssolc).q < 2E-16
 
 ssol = integrate(sode, LieB())
-@test relative_maximum_error(ssol, ref).q < 5E-2
+@test relative_maximum_error(ssol, ref).q < 4E-2
 
 ssolc = integrate(sode, Composition(LieB()))
-@test relative_maximum_error(ssol, ssolc).q < 1E-15
+@test relative_maximum_error(ssol, ssolc).q < 2E-16
 
 ssol = integrate(sode, Strang())
-@test relative_maximum_error(ssol, ref).q < 1E-3
+@test relative_maximum_error(ssol, ref).q < 8E-4
 
 ssolc = integrate(sode, Composition(Strang()))
-@test relative_maximum_error(ssol, ssolc).q < 1E-15
+@test relative_maximum_error(ssol, ssolc).q < 8E-16
 
 ssol = integrate(sode, StrangA())
-@test relative_maximum_error(ssol, ref).q < 1E-3
+@test relative_maximum_error(ssol, ref).q < 8E-4
 
 ssolc = integrate(sode, Composition(StrangA()))
-@test relative_maximum_error(ssol, ssolc).q < 1E-15
+@test relative_maximum_error(ssol, ssolc).q < 8E-16
 
 ssol = integrate(sode, StrangB())
-@test relative_maximum_error(ssol, ref).q < 1E-3
+@test relative_maximum_error(ssol, ref).q < 4E-4
 
 ssolc = integrate(sode, Composition(StrangB()))
-@test relative_maximum_error(ssol, ssolc).q < 1E-15
+@test relative_maximum_error(ssol, ssolc).q < 8E-16
 
 
 ssol1 = integrate(sode, Strang())
@@ -52,25 +52,25 @@ ssol3 = integrate(sode, StrangB())
 
 
 ssol = integrate(sode, McLachlan2())
-@test relative_maximum_error(ssol, ref).q < 1E-4
+@test relative_maximum_error(ssol, ref).q < 4E-5
 
 ssolc = integrate(sode, Composition(McLachlan2()))
-@test relative_maximum_error(ssol, ssolc).q < 1E-15
+@test relative_maximum_error(ssol, ssolc).q < 8E-16
 
 ssol = integrate(sode, McLachlan4())
-@test relative_maximum_error(ssol, ref).q < 5E-8
+@test relative_maximum_error(ssol, ref).q < 8E-9
 
 ssolc = integrate(sode, Composition(McLachlan4()))
-@test relative_maximum_error(ssol, ssolc).q < 2E-15
-
-ssol = integrate(sode, TripleJump())
-@test relative_maximum_error(ssol, ref).q < 5E-6
-
-ssolc = integrate(sode, Composition(TripleJump()))
 @test relative_maximum_error(ssol, ssolc).q < 1E-15
 
+ssol = integrate(sode, TripleJump())
+@test relative_maximum_error(ssol, ref).q < 2E-6
+
+ssolc = integrate(sode, Composition(TripleJump()))
+@test relative_maximum_error(ssol, ssolc).q < 8E-16
+
 ssol = integrate(sode, SuzukiFractal())
-@test relative_maximum_error(ssol, ref).q < 5E-7
+@test relative_maximum_error(ssol, ref).q < 8E-8
 
 ssolc = integrate(sode, Composition(SuzukiFractal()))
 @test relative_maximum_error(ssol, ssolc).q < 1E-15
@@ -84,8 +84,8 @@ ints_erk4  = (RK4(), RK4())
 
 sint = Composition(ints_erk4, LieA())
 ssol = integrate(sode, sint)
-@test relative_maximum_error(ssol, ref).q < 5E-2
+@test relative_maximum_error(ssol, ref).q < 4E-2
 
 sint = Composition(ints_glrk1, Strang())
 ssol = integrate(sode, sint)
-@test relative_maximum_error(ssol, ref).q < 1E-3
+@test relative_maximum_error(ssol, ref).q < 8E-4

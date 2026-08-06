@@ -73,7 +73,7 @@ end
 
 initmethod(method::IPRKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = IPRK(method, TT)
 
-solversize(problem::AbstractProblemPODE, method::IPRK) = 2 * length(vec(initial_conditions(problem).q)) * nstages(method)
+solversize(method::IPRK, problem::AbstractProblemPODE) = 2 * length(vec(initial_conditions(problem).q)) * nstages(method)
 
 function Base.show(io::IO, int::GeometricIntegrator{<:IPRK})
     print(io, "\nImplicit Partitioned Runge-Kutta Integrator with:\n")
@@ -130,10 +130,10 @@ end
 
 function Cache{ST}(problem::EquationProblem, method::IPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
-    IPRKCache{ST,S,solversize(problem, method)}(initial_conditions(problem); kwargs...)
+    IPRKCache{ST,S,solversize(method, problem)}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::IPRK) = IPRKCache{ST,nstages(tableau(method)),solversize(problem, method)}
+@inline CacheType(ST, problem::EquationProblem, method::IPRK) = IPRKCache{ST,nstages(tableau(method)),solversize(method, problem)}
 
 nlsolution(cache::IPRKCache) = cache.x
 

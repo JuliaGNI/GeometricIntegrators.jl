@@ -16,29 +16,37 @@ pref(prob) = exact_solution(podeproblem(; timespan = timespan(prob), timestep = 
 delbuild_m(Δt) = DELEProblem(lodeproblem(; timespan = (0.0, T), timestep = Δt), Midpoint())
 delbuild_t(Δt) = DELEProblem(lodeproblem(; timespan = (0.0, T), timestep = Δt), Trapezoidal())
 
-# VPRK integrators on the nonlinear pendulum IODE (true nonlinear order).
+# VPRK integrators on the nonlinear pendulum IODE (true nonlinear order). The high-order
+# VPRKGauss(8) reference is relaxed to f_abstol = 4e-15 for the same reason as PMVI below:
+# at the finest timestep its residual stagnates at the round-off floor, which otherwise
+# trips one spurious stagnation warning.
 vbuild(Δt) = Pendulum.iodeproblem(; timespan = (0.0, T), timestep = Δt)
-vref(prob) = integrate(prob, VPRKGauss(8))
+vref(prob) = integrate(prob, VPRKGauss(8); f_abstol = 4e-15)
 
 @testset "Variational integrator convergence" begin
     @testset "Position-momentum and discrete Euler-Lagrange" begin
         # PMVI relaxes the solver residual tolerance to f_abstol = 4e-15 to avoid a
-        # spurious "Solver took 1000 iterations." warning at the finest timestep
-        # (tolerance stagnation near machine precision; see docs/src/audit.md,
-        # third pass). min_iterations = 1 is repeated because any solver option
-        # replaces the whole default_options bundle.
-        test_convergence_order(lbuild, PMVImidpoint(),    steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "PMVImidpoint",
-            integrate_options = (min_iterations = 1, f_abstol = 4e-15))
-        test_convergence_order(lbuild, PMVItrapezoidal(), steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "PMVItrapezoidal",
-            integrate_options = (min_iterations = 1, f_abstol = 4e-15))
-        test_convergence_order(delbuild_m, DiscreteEulerLagrange(), steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "DEL-midpoint")
-        test_convergence_order(delbuild_t, DiscreteEulerLagrange(), steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "DEL-trapezoidal")
+        # spurious stagnation warning at the finest timestep, where the residual settles
+        # at a round-off floor of ~4e-15 — above the framework default
+        # f_abstol = max(8, solversize)·eps, here its floor 8eps ≈ 1.78e-15 (see
+        # docs/src/audit.md). The DEL solves stay below that floor and need no relaxation.
+        # @test_nowarn is the tripwire: a converged solve must not warn.
+        @test_nowarn test_convergence_order(lbuild, PMVImidpoint(),    steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "PMVImidpoint",
+            integrate_options = (f_abstol = 4e-15,))
+        @test_nowarn test_convergence_order(lbuild, PMVItrapezoidal(), steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "PMVItrapezoidal",
+            integrate_options = (f_abstol = 4e-15,))
+        @test_nowarn test_convergence_order(delbuild_m, DiscreteEulerLagrange(), steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "DEL-midpoint")
+        @test_nowarn test_convergence_order(delbuild_t, DiscreteEulerLagrange(), steps(10, 4); reference = pref, errormetric = emq, expected = 2, label = "DEL-trapezoidal")
     end
 
     @testset "VPRK" begin
-        test_convergence_order(vbuild, VPRKGauss(2), steps(5, 4); reference = vref, errormetric = emq, expected = 4, label = "VPRKGauss(2)")
-        test_convergence_order(vbuild, VPRKGauss(3), steps(3, 3); reference = vref, errormetric = emq, expected = 6, label = "VPRKGauss(3)")
-        test_convergence_order(vbuild, VPRKLobattoIIIAIIIB(2), steps(5, 4); reference = vref, errormetric = emq, expected = 2, label = "VPRKLobattoIIIAIIIB(2)")
+        # VPRKGauss(2) reaches the round-off floor at the finest of its steps(5, 4)
+        # timesteps; f_abstol = 4e-15 (as for PMVI above) keeps the converged solve silent
+        # instead of tripping a stagnation warning.
+        @test_nowarn test_convergence_order(vbuild, VPRKGauss(2), steps(5, 4); reference = vref, errormetric = emq, expected = 4, label = "VPRKGauss(2)",
+            integrate_options = (f_abstol = 4e-15,))
+        @test_nowarn test_convergence_order(vbuild, VPRKGauss(3), steps(3, 3); reference = vref, errormetric = emq, expected = 6, label = "VPRKGauss(3)")
+        @test_nowarn test_convergence_order(vbuild, VPRKLobattoIIIAIIIB(2), steps(5, 4); reference = vref, errormetric = emq, expected = 2, label = "VPRKLobattoIIIAIIIB(2)")
 
         # Known order deficiencies (see docs/src/audit.md): several higher-order
         # Lobatto VPRK methods do not reach their documented order. The "order 2s"

@@ -13,7 +13,7 @@ abstract type DIRKMethod <: IRKMethod end
 default_solver(::DIRKMethod) = Newton()
 default_iguess(::DIRKMethod) = HermiteExtrapolation()
 
-solversize(problem::AbstractProblemODE, ::DIRKMethod) = length(vec(initial_conditions(problem).q))
+solversize(::DIRKMethod, problem::AbstractProblemODE) = length(vec(initial_conditions(problem).q))
 
 
 """

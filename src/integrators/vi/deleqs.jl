@@ -51,7 +51,7 @@ end
 @inline CacheType(ST, ::AbstractProblem, method::DiscreteEulerLagrange) = DiscreteEulerLagrangeCache{ST}
 
 
-solversize(problem::AbstractProblemDELE, ::DiscreteEulerLagrange) = length(vec(initial_conditions(problem).q))
+solversize(::DiscreteEulerLagrange, problem::AbstractProblemDELE) = length(vec(initial_conditions(problem).q))
 
 default_solver(::DiscreteEulerLagrange) = Newton()
 default_iguess(::DiscreteEulerLagrange) = HermiteExtrapolation()

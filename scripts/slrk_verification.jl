@@ -59,9 +59,9 @@ header(s) = println("\n", "="^92, "\n", s, "\n", "="^92)
 subheader(s) = println("\n--- ", s, " ", "-"^max(0, 86 - length(s)))
 
 # The singular and divergent cases below are the finding, not an accident, and their
-# solver/line-search warnings would bury the tables. Log messages are suppressed; the
-# exception type is always printed instead, so nothing is hidden.
-muffle(f) = Base.CoreLogging.with_logger(f, Base.CoreLogging.NullLogger())
+# solver/line-search warnings would bury the tables. Each integration therefore runs
+# silently (`verbosity = 0, warn_iterations = 0`); the exception type is always printed
+# instead, so nothing is hidden.
 
 # problem-module accessors
 ldae(M, q, p, λ; kwargs...) = M.ldaeproblem_slrk(q, p, λ; parameters = PARAMS, kwargs...)
@@ -207,8 +207,8 @@ end
 # A diverging solve does not always throw — `SLRKLobattoIIIBA(3)` on the singular gauge
 # returns NaN instead — so the result is checked for finiteness rather than trusted.
 function trajectory(M, method, Δt; T = 1.0)
-    sol = muffle(() -> integrate(ldae(M, copy(Q0), theta(M, 0.0, Q0), zero(Q0);
-        timespan = (0.0, T), timestep = Δt), method))
+    sol = integrate(ldae(M, copy(Q0), theta(M, 0.0, Q0), zero(Q0);
+        timespan = (0.0, T), timestep = Δt), method; verbosity = 0, warn_iterations = 0)
     all(all(isfinite, sol.q[i]) && all(isfinite, sol.p[i]) for i in eachindex(sol.t)) ||
         error("non-finite solution")
     sol
@@ -238,7 +238,7 @@ end
 function onestep_q(M, method, q0, Δt)
     prob = ldae(M, collect(q0), theta(M, 0.0, q0), zero(collect(q0));
         timespan = (0.0, Δt), timestep = Δt)
-    q1 = collect(muffle(() -> integrate(prob, method)).q[end])
+    q1 = collect(integrate(prob, method; verbosity = 0, warn_iterations = 0).q[end])
     all(isfinite, q1) || error("non-finite solution")
     q1
 end
@@ -323,7 +323,7 @@ end
 
 function onestep_q_lode(M, method, q0, Δt)
     prob = lode(M, collect(q0), theta(M, 0.0, q0); timespan = (0.0, Δt), timestep = Δt)
-    collect(muffle(() -> integrate(prob, method)).q[end])
+    collect(integrate(prob, method; verbosity = 0, warn_iterations = 0).q[end])
 end
 
 function step5()
@@ -408,15 +408,15 @@ function step6(step_counts = (1, 10, 100))
         failed = (can = NaN, non = NaN, ϕ = NaN)
 
         slrk_step(m) = (q, p, nsteps, h) -> begin
-            sol = muffle(() -> integrate(ldae(M, copy(q), copy(p), zero(q);
-                timespan = (0.0, nsteps * h), timestep = h), m))
+            sol = integrate(ldae(M, copy(q), copy(p), zero(q);
+                timespan = (0.0, nsteps * h), timestep = h), m; verbosity = 0, warn_iterations = 0)
             q1, p1 = collect(sol.q[end]), collect(sol.p[end])
             all(isfinite, q1) && all(isfinite, p1) || error("non-finite solution")
             (q1, p1)
         end
         lode_step(m) = (q, p, nsteps, h) -> begin
-            sol = muffle(() -> integrate(lode(M, copy(q), copy(p);
-                timespan = (0.0, nsteps * h), timestep = h), m))
+            sol = integrate(lode(M, copy(q), copy(p);
+                timespan = (0.0, nsteps * h), timestep = h), m; verbosity = 0, warn_iterations = 0)
             q1, p1 = collect(sol.q[end]), collect(sol.p[end])
             all(isfinite, q1) && all(isfinite, p1) || error("non-finite solution")
             (q1, p1)
@@ -490,11 +490,11 @@ function step7()
             @printf("  %-18s s=%d :", name, s)
             for h in (0.2, 0.1, 0.05)
                 prob = ldae(M, copy(Q0), theta(M, 0.0, Q0), zero(Q0); timespan = (0.0, h), timestep = h)
-                int = GeometricIntegrator(prob, m)
+                int = GeometricIntegrator(prob, m; verbosity = 0, warn_iterations = 0)
                 try
                     solstep = solutionstep(int, GeometricIntegratorsBase.initialstate(prob))
                     reset!(solstep, h)
-                    muffle(() -> GeometricIntegratorsBase.integrate!(solstep, int))
+                    GeometricIntegratorsBase.integrate!(solstep, int)
                     C = GeometricIntegratorsBase.cache(int)
                     dV = maximum(abs, sum(m.d[i] .* C.Vp[i] for i in 1:s))
                     dΛ = maximum(abs, sum(m.d[i] .* C.Λp[i] for i in 1:s))

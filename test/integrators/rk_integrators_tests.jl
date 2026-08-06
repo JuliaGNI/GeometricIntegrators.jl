@@ -51,13 +51,13 @@ pref = exact_solution(pode)
 @testset "$(rpad("Explicit Runge-Kutta integrators",80))" begin
 
     sol = integrate(ode, ExplicitEulerRK())
-    @test relative_maximum_error(sol, ref).q < 5E-2
+    @test relative_maximum_error(sol, ref).q < 4E-2
 
     sol = integrate(ode, ExplicitMidpoint())
-    @test relative_maximum_error(sol, ref).q < 1E-3
+    @test relative_maximum_error(sol, ref).q < 8E-4
 
     sol = integrate(ode, RK4())
-    @test relative_maximum_error(sol, ref).q < 5E-7
+    @test relative_maximum_error(sol, ref).q < 2E-7
 
 end
 
@@ -65,73 +65,73 @@ end
 @testset "$(rpad("Implicit Runge-Kutta integrators",80))" begin
 
     sol = integrate(ode, ImplicitEulerRK())
-    @test relative_maximum_error(sol, ref).q < 5E-2
+    @test relative_maximum_error(sol, ref).q < 4E-2
 
     sol = integrate(ode, ImplicitMidpoint())
-    @test relative_maximum_error(sol, ref).q < 5E-4
+    @test relative_maximum_error(sol, ref).q < 4E-4
 
     sol = integrate(ode, SRK3())
-    @test relative_maximum_error(sol, ref).q < 1E-7
+    @test relative_maximum_error(sol, ref).q < 8E-8
 
     sol = integrate(ode, Gauss(1))
-    @test relative_maximum_error(sol, ref).q < 5E-4
+    @test relative_maximum_error(sol, ref).q < 4E-4
 
     sol = integrate(ode, Gauss(2))
-    @test relative_maximum_error(sol, ref).q < 1E-7
+    @test relative_maximum_error(sol, ref).q < 4E-8
 
     sol = integrate(ode, Gauss(3))
-    @test relative_maximum_error(sol, ref).q < 2E-12
+    @test relative_maximum_error(sol, ref).q < 1E-12
 
     sol = integrate(ode, Gauss(4))
-    @test relative_maximum_error(sol, ref).q < 1E-15
+    @test relative_maximum_error(sol, ref).q < 4E-16
 
     sol = integrate(ode, Gauss(5))
-    @test relative_maximum_error(sol, ref).q < 1E-15
+    @test relative_maximum_error(sol, ref).q < 8E-16
 
     sol = integrate(ode, Gauss(6))
-    @test relative_maximum_error(sol, ref).q < 1E-15
+    @test relative_maximum_error(sol, ref).q < 8E-16
 
     sol = integrate(ode, Gauss(7))
-    @test relative_maximum_error(sol, ref).q < 1E-15
+    @test relative_maximum_error(sol, ref).q < 2E-16
 
     sol = integrate(ode, Gauss(8))
-    @test relative_maximum_error(sol, ref).q < 5E-15
+    @test relative_maximum_error(sol, ref).q < 2E-15
 
     sol = integrate(ode, RadauIA(2))
-    @test relative_maximum_error(sol, ref).q < 1E-5
+    @test relative_maximum_error(sol, ref).q < 4E-6
 
     sol = integrate(ode, RadauIB(2))
-    @test relative_maximum_error(sol, ref).q < 5E-8
+    @test relative_maximum_error(sol, ref).q < 4E-8
 
     sol = integrate(ode, RadauIIA(2))
-    @test relative_maximum_error(sol, ref).q < 1E-5
+    @test relative_maximum_error(sol, ref).q < 4E-6
 
     sol = integrate(ode, RadauIIB(2))
-    @test relative_maximum_error(sol, ref).q < 5E-8
+    @test relative_maximum_error(sol, ref).q < 4E-8
 
     sol = integrate(ode, LobattoIII(2))
-    @test relative_maximum_error(sol, ref).q < 1E-3
+    @test relative_maximum_error(sol, ref).q < 8E-4
 
     sol = integrate(ode, LobattoIIIA(2))
-    @test relative_maximum_error(sol, ref).q < 5E-4
+    @test relative_maximum_error(sol, ref).q < 4E-4
 
     sol = integrate(ode, LobattoIIIB(2))
-    @test relative_maximum_error(sol, ref).q < 5E-2
+    @test relative_maximum_error(sol, ref).q < 2E-2
 
     sol = integrate(ode, LobattoIIIC(2))
-    @test relative_maximum_error(sol, ref).q < 1E-3
+    @test relative_maximum_error(sol, ref).q < 8E-4
 
     sol = integrate(ode, LobattoIIID(2))
-    @test relative_maximum_error(sol, ref).q < 1E-3
+    @test relative_maximum_error(sol, ref).q < 8E-4
 
     sol = integrate(ode, LobattoIIIE(2))
-    @test relative_maximum_error(sol, ref).q < 1E-4
+    @test relative_maximum_error(sol, ref).q < 8E-5
 
     sol = integrate(ode, LobattoIIIF(2))
-    @test relative_maximum_error(sol, ref).q < 5E-8
+    @test relative_maximum_error(sol, ref).q < 4E-8
 
     sol = integrate(ode, LobattoIIIF̄(2))
-    @test relative_maximum_error(sol, ref).q < 5E-8
+    @test relative_maximum_error(sol, ref).q < 4E-8
 
     sol = integrate(ode, LobattoIIIG(2))
     @test relative_maximum_error(sol, ref).q < 1E-4
@@ -203,16 +203,16 @@ end
 @testset "$(rpad("Diagonally Implicit Runge-Kutta integrators",80))" begin
 
     sol = integrate(ode, Crouzeix())
-    @test relative_maximum_error(sol, ref).q < 5E-5
+    @test relative_maximum_error(sol, ref).q < 4E-5
 
     sol = integrate(ode, CrankNicolson())
-    @test relative_maximum_error(sol, ref).q < 5E-4
+    @test relative_maximum_error(sol, ref).q < 4E-4
 
     sol = integrate(ode, KraaijevangerSpijker())
-    @test relative_maximum_error(sol, ref).q < 1E-1
+    @test relative_maximum_error(sol, ref).q < 8E-2
 
     sol = integrate(ode, QinZhang())
-    @test relative_maximum_error(sol, ref).q < 1E-4
+    @test relative_maximum_error(sol, ref).q < 8E-5
 
 end
 
@@ -221,26 +221,26 @@ end
 
     psol = integrate(pode, SymplecticEulerA())
     perr = relative_maximum_error(psol, pref)
-    @test perr.q < 5E-2
-    @test perr.p < 2E-3
+    @test perr.q < 4E-2
+    @test perr.p < 1E-3
     @test psol.q == integrate(hode, SymplecticEulerA()).q
 
     psol = integrate(pode, SymplecticEulerB())
     perr = relative_maximum_error(psol, pref)
-    @test perr.q < 5E-2
-    @test perr.p < 2E-3
+    @test perr.q < 4E-2
+    @test perr.p < 1E-3
     @test psol.q == integrate(hode, SymplecticEulerB()).q
 
     psol = integrate(pode, LobattoIIIAIIIB(2))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 2E-4
-    @test perr.p < 1E-3
+    @test perr.p < 8E-4
     @test psol.q == integrate(hode, LobattoIIIAIIIB(2)).q
 
     psol = integrate(pode, LobattoIIIBIIIA(2))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 2E-4
-    @test perr.p < 2E-3
+    @test perr.p < 1E-3
     @test psol.q == integrate(hode, LobattoIIIBIIIA(2)).q
 
     psol = integrate(pode, RK4())
@@ -255,7 +255,7 @@ end
 
     psol = integrate(pode, Gauss(1))
     perr = relative_maximum_error(psol, pref)
-    @test perr.q < 5E-4
+    @test perr.q < 4E-4
     @test perr.p < 8E-4
     @test psol.q == integrate(pode, PartitionedGauss(1)).q
     @test psol.q == integrate(pode, ImplicitMidpoint()).q
@@ -265,24 +265,24 @@ end
 
     psol = integrate(pode, Gauss(2))
     perr = relative_maximum_error(psol, pref)
-    @test perr.q < 1E-7
-    @test perr.p < 1E-7
+    @test perr.q < 4E-8
+    @test perr.p < 4E-8
     @test psol.q == integrate(pode, PartitionedGauss(2)).q
     @test psol.q == integrate(hode, Gauss(2)).q
     @test psol.q == integrate(hode, PartitionedGauss(2)).q
 
     psol = integrate(pode, Gauss(3))
     perr = relative_maximum_error(psol, pref)
-    @test perr.q < 2E-12
-    @test perr.p < 4E-12
+    @test perr.q < 1E-12
+    @test perr.p < 2E-12
     @test psol.q == integrate(pode, PartitionedGauss(3)).q
     @test psol.q == integrate(hode, Gauss(3)).q
     @test psol.q == integrate(hode, PartitionedGauss(3)).q
 
     psol = integrate(pode, Gauss(4))
     perr = relative_maximum_error(psol, pref)
-    @test perr.q < 1E-15
-    @test perr.p < 1E-15
+    @test perr.q < 4E-16
+    @test perr.p < 8E-16
     @test psol.q == integrate(pode, PartitionedGauss(4)).q
     @test psol.q == integrate(hode, Gauss(4)).q
     @test psol.q == integrate(hode, PartitionedGauss(4)).q
@@ -303,12 +303,12 @@ end
     #   s = 3: 7.5E-13,  s = 4: 2.0E-16 — matching `Gauss(s)` to within a few ulp,
     # as expected since bᵀA = 0 and A·1 = 0 leave the order conditions intact.
     pgsol = integrate(ode, PGLRK(3))
-    @test relative_maximum_error(pgsol.q, ref.q) < 2E-12
-    @test relative_maximum_error(pgsol.q[end], reference_solution) < 2E-12
+    @test relative_maximum_error(pgsol.q, ref.q) < 1E-12
+    @test relative_maximum_error(pgsol.q[end], reference_solution) < 1E-12
 
     pgsol = integrate(ode, PGLRK(4))
-    @test relative_maximum_error(pgsol.q, ref.q) < 8E-16
-    @test relative_maximum_error(pgsol.q[end], reference_solution) < 8E-16
+    @test relative_maximum_error(pgsol.q, ref.q) < 4E-16
+    @test relative_maximum_error(pgsol.q[end], reference_solution) < 2E-16
 
     # The point of the method is exact energy conservation. On this linear problem
     # Gauss already conserves the quadratic invariant, so both are at machine
@@ -318,7 +318,7 @@ end
         for s in 3:4
             sol = integrate(ode, PGLRK(s))
             h = [H(sol.t[i], sol.q[i], ps) for i in eachindex(sol.q)]
-            @test maximum(abs.(h .- h[1])) / abs(h[1]) < 4E-16
+            @test maximum(abs.(h .- h[1])) / abs(h[1]) < 2E-16
         end
     end
 
