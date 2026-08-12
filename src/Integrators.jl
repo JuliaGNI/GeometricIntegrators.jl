@@ -27,6 +27,7 @@ import CompactBasisFunctions: Legendre
 import CompactBasisFunctions: nbasis
 
 import GeometricBase: description, reference, tableau, order
+import GeometricBase: basis, nnodes
 import GeometricBase: equations, initialguess, nconstraints, parameters, timestep
 import GeometricBase: integrate, integrate!, reset!, solutionstep!, update!
 import GeometricBase.Utils: @big, @define, compensated_summation
