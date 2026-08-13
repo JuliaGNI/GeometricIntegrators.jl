@@ -1,7 +1,6 @@
 using GeometricIntegrators
 using GeometricProblems.LotkaVolterra2d
 import GeometricProblems.LotkaVolterra2dSingular as LVSingular
-using SimpleSolvers
 using Test
 using Logging
 using LinearAlgebra: I

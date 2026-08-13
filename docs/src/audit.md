@@ -645,6 +645,45 @@ suites are therefore only effective while that budget is unspent — true today 
 `runtests.jl` runs those suites (positions 18 and 24) before the two SPARK files (26 and 31).
 Nothing enforces that ordering.
 
+**Update (SimpleSolvers 0.11.0 / GeometricIntegratorsBase 0.6.0).** The bump changed no test
+outcome: all 24 testsets report the same pass and broken counts as on 0.10.1/0.5.2, measured by
+running the suite immediately before and after. It did add a **third kind of warning, and one
+that neither `verbosity` nor `warn_iterations` gates.**
+
+SimpleSolvers 0.11 rejects a non-finite *direction* (`all(isfinite, …)`) where 0.10 tested only
+`isnan`, and throws `NonlinearSolverException`. An *overflowed* direction previously passed every
+guard the solvers had and stalled silently, because it was handed to a damping that cannot
+shorten it — `Inf * nan_factor` is `Inf`. GeometricIntegratorsBase 0.6 catches exactly that one
+type in its time-stepping loop (`integrate.jl:60`), warns naming the timestep, and breaks before
+the `copy!`, so the solution holds valid data up to `n-1` and the rest stays at the zeros
+`Solution` allocated.
+
+That warning is GeometricIntegratorsBase's own, so the `verbosity = 0, warn_iterations = 0` pair
+that silences the SimpleSolvers messages does not reach it, and it carries **no `maxlog`** — so
+unlike the three sites in the census above, its count is the true number of events. One run
+produces **7**, taking the suite from 7 warning blocks to 14. (The census above puts the
+pre-existing figure at 9, on the arithmetic that three `maxlog = 3` sites saturate. Measured on
+0.10.1 immediately before this bump it is 7: the two line-search sites do saturate at 3 each,
+but the stagnation site fires only once.) The seven new ones break down as one from
+`test/spark/spark_integrators_tests.jl` and six from
+`test/verification/spark_convergence_tests.jl`, all from methods already recorded as
+`@test_broken` for diverging. The warning is therefore a correct symptom, and a strictly more
+informative one than the silent stall it replaces — it names the step at which the trajectory
+stops being meaningful, which nothing previously did.
+
+It is left unsuppressed. Restoring a `muffle`-style logger is the one thing that would silence
+it, and that helper was removed deliberately (see the 0.10.0 update above) because a logger also
+swallows genuine failures; trading that back for seven lines of correct diagnosis is the wrong
+side of the bargain. The `@test_nowarn` tripwires are unaffected, since both files run after the
+`variational` and `hpi` suites.
+
+Also inherited, with no measured effect here: `default_options` now carries
+`f_stall_window = 50` (GIBase's `DEFAULT_F_STALL_WINDOW`), SimpleSolvers 0.11's opt-in stopping
+criterion for a solve whose residual sits on a floor above `f_abstol` while the iterate keeps
+moving — the case `max_stalls` cannot see. It is justified upstream for `Newton()`, which is what
+every method here uses, and options are merged rather than replaced, so a method that needs a
+longer window overrides it with one keyword.
+
 ---
 
 # Fourth pass — SPARK submodule (`src/spark/`)

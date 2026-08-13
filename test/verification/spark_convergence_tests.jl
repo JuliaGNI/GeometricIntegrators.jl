@@ -33,9 +33,16 @@ build_hdae(Δt)      = hdaeproblem(q₀; timespan = (0.0, T), timestep = Δt, pa
 build_ldae_slrk(Δt) = ldaeproblem_slrk(q₀; timespan = (0.0, T), timestep = Δt, parameters = params)
 
 # @test_broken helper for methods that do not converge, diverge, or raise
-# SingularException / NonlinearSolverException. The measurement runs at `verbosity = 0`
-# to suppress the (correct) solver-divergence warnings, and any thrown exception is
-# recorded as broken (that is exactly the deficiency under test).
+# SingularException. The measurement runs at `verbosity = 0` to suppress the (correct)
+# solver-divergence warnings, and any thrown exception is recorded as broken (that is
+# exactly the deficiency under test).
+#
+# `NonlinearSolverException` no longer reaches this `catch`: since GeometricIntegratorsBase
+# 0.6 the time-stepping loop catches it itself, warns naming the timestep, and returns the
+# trajectory truncated there — so the deficiency now arrives as a nonsensical convergence
+# order rather than as a throw, and is recorded broken either way. That warning is
+# GeometricIntegratorsBase's own and `verbosity` does not gate it; six fire here, all from
+# the diverging methods below. See the 0.11.0 update in docs/src/audit.md.
 function broken_order(builder, method, tsteps, expected; label)
     @testset "$(label): order ≈ $(expected) (broken)" begin
         ok = try

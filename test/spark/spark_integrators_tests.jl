@@ -31,6 +31,14 @@ ref = integrate(ode, Gauss(8))
 # `verbosity` gates the stagnation and line-search messages, `warn_iterations` the "Solver
 # took N iterations" cap message. Neither touches the tolerances, so the measured errors
 # are unaffected.
+#
+# One warning is *not* silenced by either, and is expected: since SimpleSolvers 0.11 a
+# non-finite direction throws instead of stalling silently, and GeometricIntegratorsBase
+# catches that in its time-stepping loop, warns naming the timestep, and returns the
+# trajectory truncated at the previous step. That warning is GeometricIntegratorsBase's own,
+# so no SimpleSolvers option reaches it. It fires once here, from a diverging `@test_broken`
+# method, and is left in place as a correct symptom — see the 0.11.0 update in the
+# "warning census" of docs/src/audit.md.
 
 # Where the mechanism is unambiguous, the known-broken cases below assert *why* each fails
 # rather than merely that it is inaccurate: a structurally singular stage system throws a
