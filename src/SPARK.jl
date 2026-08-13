@@ -1,7 +1,6 @@
 module SPARK
 
 using CompactBasisFunctions
-using Documenter: @doc
 using LinearAlgebra: Diagonal
 using QuadratureRules
 using RungeKutta

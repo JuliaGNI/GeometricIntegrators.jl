@@ -5,7 +5,6 @@ using Reexport
 @reexport using GeometricBase
 @reexport using GeometricIntegratorsBase
 
-using Documenter: @doc
 using GeometricBase
 using GeometricEquations
 using GeometricSolutions
