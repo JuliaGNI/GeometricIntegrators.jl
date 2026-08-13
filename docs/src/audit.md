@@ -59,9 +59,9 @@ Gauß) reaches exactly its documented order.
 Empirical convergence orders match the documented order for:
 
 * **Explicit RK**: `ExplicitEulerRK`(1), `ExplicitMidpoint`/`Heun2`/`Ralston2`/`Runge2`/`SSPRK2`(2), `Heun3`/`Kutta3`/`Ralston3`/`SSPRK3`(3), `RK4`/`RK438`(4).
-* **DIRK**: `CrankNicolson`(2), `Crouzeix`(3), `QinZhang`(2).
-* **Fully implicit RK**: `ImplicitEulerRK`(1), `ImplicitMidpoint`(2), `SRK3`(4), `Gauss(s)`(2s), `RadauIA`/`RadauIIA`(2s−1), `LobattoIIIA`/`IIIC`/`IIID`/`IIIE`(2s−2). `RadauIB`/`RadauIIB` confirmed order 2s−1 (their order-4 reading on the harmonic oscillator is linear super-convergence).
-* **Partitioned RK**: `SymplecticEulerA`/`B`(1), `PartitionedGauss(s)`(2s), `LobattoIIIAIIIB`/`LobattoIIIBIIIA`(2s−2).
+* **DIRK**: `CrankNicolsonRK`(2), `Crouzeix`(3), `QinZhang`(2).
+* **Fully implicit RK**: `ImplicitEulerRK`(1), `ImplicitMidpointRK`(2), `SRK3`(4), `Gauss(s)`(2s), `RadauIA`/`RadauIIA`(2s−1), `LobattoIIIA`/`IIIC`/`IIID`/`IIIE`(2s−2). `RadauIB`/`RadauIIB` confirmed order 2s−1 (their order-4 reading on the harmonic oscillator is linear super-convergence).
+* **Partitioned RK**: `SymplecticEulerARK`/`B`(1), `PartitionedGauss(s)`(2s), `LobattoIIIAIIIB`/`LobattoIIIBIIIA`(2s−2).
 * **Splitting/composition**: `LieA`/`LieB`(1), `Strang`/`McLachlan2`(2), `McLachlan4`/`TripleJump`/`SuzukiFractal`(4, `McLachlan4` after the fix below).
 * **Variational**: `PMVImidpoint`/`PMVItrapezoidal`(2), `DiscreteEulerLagrange` (Midpoint/Trapezoidal)(2), `VPRKGauss(s)`(2s), `VPRKLobattoIIIAIIIB(2)`(2).
 * **Galerkin**: `CGVI(Gauss(s))` at order 2s−2 for s ≥ 2.

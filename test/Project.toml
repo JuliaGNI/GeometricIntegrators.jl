@@ -20,7 +20,7 @@ GeometricIntegrators = {path = ".."}
 Aqua = "0.8"
 CompactBasisFunctions = "0.3"
 GeometricEquations = "0.21"
-GeometricIntegratorsBase = "0.5.1"
+GeometricIntegratorsBase = "0.5.2"
 GeometricProblems = "0.8"
 LinearAlgebra = "1"
 Logging = "1"

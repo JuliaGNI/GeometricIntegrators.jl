@@ -82,13 +82,13 @@ For many methods, tabulated coefficients are included, namely
 | [`RK438`](@ref)                                  | 4      | 4     |
 | [`SSPRK3`](@ref)                                 | 3      | 3     |
 | **Diagonally Implicit Methods**                  |        |       |
-| [`CrankNicolson`](@ref)                          | 2      | 2     |
+| [`CrankNicolsonRK`](@ref)                          | 2      | 2     |
 | [`Crouzeix`](@ref)                               | 2      | 3     |
 | [`KraaijevangerSpijker`](@ref)                   | 2      | 1     |
 | [`QinZhang`](@ref)                               | 2      | 2     |
 | **Fully Implicit Methods**                       |        |       |
 | [`ImplicitEuler`](@ref), [`BackwardEuler`](@ref) | 1      | 1     |
-| [`ImplicitMidpoint`](@ref)                       | 2      | 2     |
+| [`ImplicitMidpointRK`](@ref)                       | 2      | 2     |
 | [`IRK3`](@ref)                                   | 2      | 3     |
 | [`SRK3`](@ref)                                   | 3      | 4     |
 

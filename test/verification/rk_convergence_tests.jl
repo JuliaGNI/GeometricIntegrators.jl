@@ -34,7 +34,7 @@ steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
     end
 
     @testset "Diagonally implicit Runge-Kutta" begin
-        test_convergence_order(build, CrankNicolson(), steps(10, 5); reference = exact_solution, expected = 2, label = "CrankNicolson")
+        test_convergence_order(build, CrankNicolsonRK(), steps(10, 5); reference = exact_solution, expected = 2, label = "CrankNicolsonRK")
         test_convergence_order(build, Crouzeix(),      steps(10, 5); reference = exact_solution, expected = 3, label = "Crouzeix")
         test_convergence_order(build, QinZhang(),      steps(10, 5); reference = exact_solution, expected = 2, label = "QinZhang")
         # KraaijevangerSpijker is a first-order method (its order attribute was
@@ -44,7 +44,7 @@ steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
 
     @testset "Fully implicit Runge-Kutta" begin
         test_convergence_order(build, ImplicitEulerRK(), steps(10, 5); reference = exact_solution, expected = 1, label = "ImplicitEulerRK")
-        test_convergence_order(build, ImplicitMidpoint(), steps(10, 5); reference = exact_solution, expected = 2, label = "ImplicitMidpoint")
+        test_convergence_order(build, ImplicitMidpointRK(), steps(10, 5); reference = exact_solution, expected = 2, label = "ImplicitMidpointRK")
         test_convergence_order(build, SRK3(), steps(4, 4); reference = exact_solution, expected = 4, label = "SRK3")
         test_convergence_order(build, Gauss(1), steps(10, 4); reference = exact_solution, expected = 2, label = "Gauss(1)")
         test_convergence_order(build, Gauss(2), steps(4, 4);  reference = exact_solution, expected = 4, label = "Gauss(2)")
