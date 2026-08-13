@@ -81,6 +81,16 @@ using Test
     @test lobatto_gauss_coefficients(3) ≈ _get_lobatto_interstage_coefficients(3)
     @test lobatto_gauss_coefficients(4) ≈ _get_lobatto_interstage_coefficients(4)
 
+    # The Vandermonde system of lobatto_gauss_coefficients is solved in BigFloat and
+    # only the result is narrowed to Float64. Pin that down: the comparisons above use
+    # the default tolerance of ≈, rtol = √eps ≈ 1.5e-8, which is seven orders of
+    # magnitude too loose to see the difference. Solving in Float64 instead moves the
+    # coefficients by 2.0e-15 in relative norm at s = 4 (and by 9.3e-13 at s = 8),
+    # whereas the BigFloat solve reproduces the reference exactly, so rtol = 1e-15
+    # separates the two with room on either side.
+    @test isapprox(lobatto_gauss_coefficients(4).a,
+                   _get_lobatto_interstage_coefficients(4).a; rtol = 1e-15)
+
 
     # test PGLRK coefficients
     # (the mathematical identities are checked in test/methods/pglrk_coefficients_tests.jl)
