@@ -5,6 +5,7 @@ using SimpleSolvers
 using Test
 using Logging
 using LinearAlgebra: I
+using RungeKutta: TableauGauss, TableauLobattoIIIA
 
 
 const t₀ = 0.0
@@ -154,6 +155,15 @@ end
     # Gauss tableaus falls below eps^(3/4) from s = 10 on, although cond(a) ≈ 1e2.
     @test_nowarn DVRK(Gauss(10))
     @test_nowarn DVRK(Gauss(12))
+
+    # Regression: the invertibility check must not require a generic SVD, so that
+    # extended-precision tableaus work without GenericLinearAlgebra loaded (there
+    # is no stdlib `svdvals!(::Matrix{BigFloat})`). Gauss is silent only because
+    # RungeKutta 0.6 takes its nodes from QuadratureRules: up to 0.5.23 the BigFloat
+    # Gauss tableau missed `issymplectic` and warned, so a warning here again would
+    # mean the node accuracy has regressed.
+    @test_nowarn DVRK(TableauGauss(BigFloat, 4))
+    @test_logs (:warn, r"symplecticity condition") (:warn, r"singular") DVRK(TableauLobattoIIIA(BigFloat, 3))
 
     # Inconsistent initial momentum p₀ ≠ ϑ(q₀) warns; the default p₀ does not.
     @test_logs min_level=Logging.Warn LVSingular.lodeproblem([2.0, 3.0]; timespan=tspan, timestep=Δt) |>

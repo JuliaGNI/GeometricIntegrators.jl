@@ -24,7 +24,7 @@ GeometricEquations = "0.21"
 GeometricIntegratorsBase = "0.5.1"
 GeometricProblems = "0.8"
 GeometricSolutions = "0.6.5"
-RungeKutta = "0.5.23"
+RungeKutta = "0.6"
 Weave = "0.10"
 
 [sources]

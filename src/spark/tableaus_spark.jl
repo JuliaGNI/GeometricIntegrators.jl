@@ -27,7 +27,7 @@ function SPARKLobatto(A, B; name=Symbol("Lobatto($s)"))
                         A.b, B.b, A.b, B.b,
                         A.c, B.c, A.c, A.b,
                         lobatto_ω_matrix(s), δ,
-                        get_lobatto_nullvector(s)))
+                        lobatto_nullvector(s)))
 end
 
 "SPARK tableau for Gauss-Lobatto IIIA-IIIB method with s stages."

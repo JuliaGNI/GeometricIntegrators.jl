@@ -8,9 +8,8 @@ using Test
     
     using LinearAlgebra: normalize
     
-    import GeometricIntegrators.SPARK: get_lobatto_nodes, get_lobatto_weights,
-                                       lobatto_gauss_coefficients
-    import QuadratureRules: LobattoLegendreQuadrature, nodes, weights
+    import GeometricIntegrators.SPARK: lobatto_gauss_coefficients
+    import QuadratureRules: lobatto_legendre_nodes, lobatto_legendre_weights
 
 
 
@@ -74,7 +73,7 @@ using Test
             @error("Number of stages s=$(s) and σ=$(σ) is not supported.")
         end
  
-        CoefficientsIRK{T}(:LobattoIIIIS, s^2, s, σ, a, get_lobatto_weights(σ), get_lobatto_nodes(σ))
+        CoefficientsIRK{T}(:LobattoIIIIS, s^2, s, σ, a, lobatto_legendre_weights(BigFloat, σ), lobatto_legendre_nodes(BigFloat, σ))
     end
 
     @test lobatto_gauss_coefficients(1) ≈ _get_lobatto_interstage_coefficients(1)

@@ -310,10 +310,10 @@ GeometricBase.tableau(method::VPRKLobattoIIIFIIIF̄) = TableauLobattoIIIFIIIF̄(
 GeometricBase.tableau(method::VPRKLobattoIIIF̄IIIF) = TableauLobattoIIIF̄IIIF(method.s)
 GeometricBase.tableau(method::VPRKLobattoIIIGIIIḠ) = TableauLobattoIIIGIIIḠ(method.s)
 
-nullvector(method::VPRKLobattoIIIAIIIB) = get_lobatto_nullvector(method.s)
-nullvector(method::VPRKLobattoIIIBIIIA) = get_lobatto_nullvector(method.s)
-nullvector(method::VPRKLobattoIIIAIIIĀ) = get_lobatto_nullvector(method.s)
-nullvector(method::VPRKLobattoIIIBIIIB̄) = get_lobatto_nullvector(method.s)
+nullvector(method::VPRKLobattoIIIAIIIB) = lobatto_nullvector(method.s)
+nullvector(method::VPRKLobattoIIIBIIIA) = lobatto_nullvector(method.s)
+nullvector(method::VPRKLobattoIIIAIIIĀ) = lobatto_nullvector(method.s)
+nullvector(method::VPRKLobattoIIIBIIIB̄) = lobatto_nullvector(method.s)
 
 GeometricBase.order(::Type{VPRKGauss}) = "2s"
 GeometricBase.order(::Type{VPRKLobattoIII}) = "2s-2"

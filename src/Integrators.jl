@@ -50,6 +50,7 @@ import GeometricIntegratorsBase: default_solver, default_linesearch, default_igu
 import RungeKutta
 import RungeKutta: eachstage, nstages
 import RungeKutta: AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
+import RungeKutta.Tableaus: lobatto_nullvector
 
 import SimpleSolvers: SolverMethod
 

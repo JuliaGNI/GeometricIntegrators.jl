@@ -15,6 +15,7 @@ using GeometricIntegratorsBase
 import GeometricBase: tableau
 import GeometricBase.Utils: @define
 import RungeKutta: AbstractTableau, Tableau, nstages, eachstage
+import RungeKutta.Tableaus: lobatto_nullvector
 
 # import ..Integrators
 

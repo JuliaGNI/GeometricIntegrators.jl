@@ -1,7 +1,7 @@
 
 function SLRKLobattoIII(tsym, s, q, p)
     o = 2s-2
-    SLRK(tsym, o, s, q, p, q, p, lobatto_ω_matrix(s), get_lobatto_nullvector(s))
+    SLRK(tsym, o, s, q, p, q, p, lobatto_ω_matrix(s), lobatto_nullvector(s))
 end
 
 function SLRKLobattoIIIAB(s)

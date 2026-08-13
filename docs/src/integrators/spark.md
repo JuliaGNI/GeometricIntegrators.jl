@@ -52,7 +52,7 @@ projective stages,
 with the last row of ``\omega`` selecting the constraint ``\phi(q_{n+1},p_{n+1})``
 at the solution. The building blocks live in `RungeKutta.jl` (Gauß/Lobatto
 tableaus) and in `src/spark/` (`gauss_ω_matrix`, `lobatto_ω_matrix`,
-`lobatto_gauss_coefficients`, `get_lobatto_nullvector`); the concrete method
+`lobatto_gauss_coefficients`, `lobatto_nullvector`); the concrete method
 factories `SPARKGLRK`, `SPARKLob{ABC,ABD}`, `TableauVSPARK…`, `TableauHSPARK…`,
 `SLRKLobatto…` assemble the internal/projective pairs.
 
@@ -131,7 +131,7 @@ equivalent to the ``s-1`` Lobatto-IIIA-averaged secondary constraints together w
 
 The Lobatto stage system is rank deficient by one in the ``V``-direction; the
 multiplier ``\mu`` relaxes the primary constraint along the null vector ``d``
-(`get_lobatto_nullvector`) and the extra condition ``\sum_i d_i V_{n,i} = 0``
+(`lobatto_nullvector`) and the extra condition ``\sum_i d_i V_{n,i} = 0``
 removes the deficiency — as in `VPARK`, `VSPARK` and `SPARK`, which add ``\mu`` to their
 own primary-constraint row and to nothing else. (`VPRK` implements the same idea but has
 no primary-constraint row at all, so it perturbs the momentum-stage equation instead; that
