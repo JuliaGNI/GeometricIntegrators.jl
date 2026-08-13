@@ -81,7 +81,9 @@ struct DVRK{TT} <: DVIMethod
             # scale-invariant and shrinks rapidly with the number of stages, so
             # `det(a) ≈ 0` would flag perfectly well-conditioned tableaus
             # (det(Gauss(10).a) ≈ 1.5e-12 at cond(a) ≈ 1.2e2).
-            if rank(Matrix(tableau.a)) < tableau.s
+            # The rank is computed in Float64 so that extended-precision tableaus
+            # (e.g. Gauss(BigFloat, s)) do not require a generic SVD implementation.
+            if rank(Matrix{Float64}(tableau.a)) < tableau.s
                 @warn "The coefficient matrix of the tableau $(tableau.name) is " *
                       "singular. The DVRK method requires an invertible coefficient " *
                       "matrix and may fail to be well defined."
