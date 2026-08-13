@@ -51,8 +51,8 @@ projective stages,
 
 with the last row of ``\omega`` selecting the constraint ``\phi(q_{n+1},p_{n+1})``
 at the solution. The building blocks live in `RungeKutta.jl` (Gauß/Lobatto
-tableaus) and in `src/spark/` (`gauss_ω_matrix`, `lobatto_ω_matrix`,
-`lobatto_gauss_coefficients`, `lobatto_nullvector`); the concrete method
+tableaus and `lobatto_nullvector`) and in `src/spark/` (`gauss_ω_matrix`,
+`lobatto_ω_matrix`, `lobatto_gauss_coefficients`); the concrete method
 factories `SPARKGLRK`, `SPARKLob{ABC,ABD}`, `TableauVSPARK…`, `TableauHSPARK…`,
 `SLRKLobatto…` assemble the internal/projective pairs.
 
