@@ -17,7 +17,7 @@ nwrte2 = 100
 h5file = "test.hdf5"
 
 
-tab = ImplicitMidpoint()
+tab = ImplicitMidpointRK()
 ode = odeensemble()
 
 

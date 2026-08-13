@@ -13,8 +13,8 @@ steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
 emq(sol, ref) = relative_maximum_error(sol.q, ref.q)
 
 @testset "Partitioned Runge-Kutta convergence" begin
-    test_convergence_order(build, SymplecticEulerA(), steps(20, 4); reference = href, errormetric = emq, expected = 1, label = "SymplecticEulerA")
-    test_convergence_order(build, SymplecticEulerB(), steps(20, 4); reference = href, errormetric = emq, expected = 1, label = "SymplecticEulerB")
+    test_convergence_order(build, SymplecticEulerARK(), steps(20, 4); reference = href, errormetric = emq, expected = 1, label = "SymplecticEulerARK")
+    test_convergence_order(build, SymplecticEulerBRK(), steps(20, 4); reference = href, errormetric = emq, expected = 1, label = "SymplecticEulerBRK")
     test_convergence_order(build, PartitionedGauss(2), steps(5, 4); reference = href, errormetric = emq, expected = 4, label = "PartitionedGauss(2)")
     test_convergence_order(build, LobattoIIIAIIIB(2), steps(5, 4); reference = href, errormetric = emq, expected = 2, label = "LobattoIIIAIIIB(2)")
     test_convergence_order(build, LobattoIIIBIIIA(2), steps(5, 4); reference = href, errormetric = emq, expected = 2, label = "LobattoIIIBIIIA(2)")

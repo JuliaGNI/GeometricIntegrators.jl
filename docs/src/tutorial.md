@@ -363,7 +363,7 @@ where `tableau` is any tableau from [RungeKutta.Tableaus](@ref RungeKuttaTableau
 
 | Function                        | Order | Method                           |
 |:--------------------------------|:------|:---------------------------------|
-| [`CrankNicolson`](@ref)         | 3     | Crank-Nicholson Method           |
+| [`CrankNicolsonRK`](@ref)         | 3     | Crank-Nicholson Method           |
 | [`KraaijevangerSpijker`](@ref)  | 3     | Kraaijevanger & Spijker's Method |
 | [`QinZhang`](@ref)              | 3     | Qin & Zhang's Method             |
 | [`Crouzeix`](@ref)              | 3     | Crouzeix's Method                |
@@ -374,7 +374,7 @@ where `tableau` is any tableau from [RungeKutta.Tableaus](@ref RungeKuttaTableau
 | Function                        | Order | Method                      |
 |:--------------------------------|:------|:----------------------------|
 | [`ImplicitEuler`](@ref)         | 1     | Implicit / Backward Euler   |
-| [`ImplicitMidpoint`](@ref)      | 2     | Implicit Midpoint           |
+| [`ImplicitMidpointRK`](@ref)      | 2     | Implicit Midpoint           |
 | [`IRK3`](@ref)                  | 3     | Implicit Runge-Kutta s=2    |
 | [`SRK3`](@ref)                  | 4     | Symmetric Runge-Kutta s=3   |
 
@@ -450,7 +450,7 @@ All implicit Runge-Kutta and partitioned Runge-Kutta methods can also be applied
 | Function                        | Order | Method                      |
 |:--------------------------------|:------|:----------------------------|
 | [`ImplicitEuler`](@ref)         | 1     | Implicit / Backward Euler   |
-| [`ImplicitMidpoint`](@ref)      | 2     | Implicit Midpoint           |
+| [`ImplicitMidpointRK`](@ref)      | 2     | Implicit Midpoint           |
 | [`IRK3`](@ref)                  | 3     | Implicit Runge-Kutta s=2    |
 | [`SRK3`](@ref)                  | 4     | Symmetric Runge-Kutta s=3   |
 |                                 |       |                             |

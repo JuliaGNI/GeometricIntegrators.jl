@@ -48,7 +48,7 @@ explicit_rungekutta_methods = (
 )
 
 diagonally_implicit_rungekutta_methods = (
-    CrankNicolson,
+    CrankNicolsonRK,
     Crouzeix,
     KraaijevangerSpijker,
     QinZhang,
@@ -57,7 +57,7 @@ diagonally_implicit_rungekutta_methods = (
 fully_implicit_rungekutta_methods = (
     BackwardEuler,
     ImplicitEulerRK,
-    ImplicitMidpoint,
+    ImplicitMidpointRK,
     IRK3,
     SRK3,
 )
@@ -90,8 +90,8 @@ runge_kutta_families = (
 )
 
 partitioned_runge_kutta_methods = (
-    SymplecticEulerA,
-    SymplecticEulerB,
+    SymplecticEulerARK,
+    SymplecticEulerBRK,
 )
 
 partitioned_runge_kutta_families = (

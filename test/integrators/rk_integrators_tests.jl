@@ -67,7 +67,7 @@ end
     sol = integrate(ode, ImplicitEulerRK())
     @test relative_maximum_error(sol, ref).q < 4E-2
 
-    sol = integrate(ode, ImplicitMidpoint())
+    sol = integrate(ode, ImplicitMidpointRK())
     @test relative_maximum_error(sol, ref).q < 4E-4
 
     sol = integrate(ode, SRK3())
@@ -205,7 +205,7 @@ end
     sol = integrate(ode, Crouzeix())
     @test relative_maximum_error(sol, ref).q < 4E-5
 
-    sol = integrate(ode, CrankNicolson())
+    sol = integrate(ode, CrankNicolsonRK())
     @test relative_maximum_error(sol, ref).q < 4E-4
 
     sol = integrate(ode, KraaijevangerSpijker())
@@ -219,17 +219,17 @@ end
 
 @testset "$(rpad("Explicit Partitioned Runge-Kutta integrators",80))" begin
 
-    psol = integrate(pode, SymplecticEulerA())
+    psol = integrate(pode, SymplecticEulerARK())
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 4E-2
     @test perr.p < 1E-3
-    @test psol.q == integrate(hode, SymplecticEulerA()).q
+    @test psol.q == integrate(hode, SymplecticEulerARK()).q
 
-    psol = integrate(pode, SymplecticEulerB())
+    psol = integrate(pode, SymplecticEulerBRK())
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 4E-2
     @test perr.p < 1E-3
-    @test psol.q == integrate(hode, SymplecticEulerB()).q
+    @test psol.q == integrate(hode, SymplecticEulerBRK()).q
 
     psol = integrate(pode, LobattoIIIAIIIB(2))
     perr = relative_maximum_error(psol, pref)
@@ -258,10 +258,10 @@ end
     @test perr.q < 4E-4
     @test perr.p < 8E-4
     @test psol.q == integrate(pode, PartitionedGauss(1)).q
-    @test psol.q == integrate(pode, ImplicitMidpoint()).q
+    @test psol.q == integrate(pode, ImplicitMidpointRK()).q
     @test psol.q == integrate(hode, Gauss(1)).q
     @test psol.q == integrate(hode, PartitionedGauss(1)).q
-    @test psol.q == integrate(hode, ImplicitMidpoint()).q
+    @test psol.q == integrate(hode, ImplicitMidpointRK()).q
 
     psol = integrate(pode, Gauss(2))
     perr = relative_maximum_error(psol, pref)

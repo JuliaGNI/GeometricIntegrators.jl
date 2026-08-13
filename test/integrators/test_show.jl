@@ -86,7 +86,7 @@ test_show_default(x) = @test length(sprint(show, x)) > 0
     test_show(GeometricIntegrator(pode, LobattoIIIAIIIB(2)), "Explicit Partitioned Runge-Kutta Integrator")
     test_show(GeometricIntegrator(pode, Gauss(1)), "Implicit Partitioned Runge-Kutta Integrator")
 
-    test_show(GeometricIntegrator(hode, SymplecticEulerA()), "Explicit Partitioned Runge-Kutta Integrator")
+    test_show(GeometricIntegrator(hode, SymplecticEulerARK()), "Explicit Partitioned Runge-Kutta Integrator")
     test_show(GeometricIntegrator(hode, Gauss(1)), "Implicit Partitioned Runge-Kutta Integrator")
 
     test_show(GeometricIntegrator(iode, Gauss(1)), "Runge-Kutta Integrator for Implicit Equations")

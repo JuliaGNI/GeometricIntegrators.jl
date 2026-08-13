@@ -1,9 +1,4 @@
 
-import LinearAlgebra
-
-import RungeKutta.Tableaus: get_lobatto_nodes, get_lobatto_weights, get_gauss_nodes
-
-
 @doc raw"""
 The projective Lobatto-GLRK coefficients are implicitly given by
 ```math
@@ -16,9 +11,15 @@ function lobatto_gauss_coefficients(s, σ=s+1, T=Float64)
         @error "Lobatto III coefficients for one stage are not defined."
     end
 
-    c = get_gauss_nodes(s)
-    b̄ = get_lobatto_weights(σ)
-    c̄ = get_lobatto_nodes(σ)
+    # Computed in BigFloat and converted to T only in the constructor below: the
+    # Vandermonde system M is ill-conditioned, so the extra precision is what makes ā
+    # accurate to Float64. Solving it in Float64 instead costs 1.1e-15 at s = 4 and
+    # 3.4e-13 at s = 8. QuadratureRules defaults to Float64, unlike the RungeKutta
+    # accessors these replaced, so the element type has to be passed explicitly. Its
+    # nodes and weights are on [0,1] by default, which is the Runge-Kutta convention.
+    c = gauss_legendre_nodes(BigFloat, s)
+    b̄ = lobatto_legendre_weights(BigFloat, σ)
+    c̄ = lobatto_legendre_nodes(BigFloat, σ)
     M = [ c[j]^(k-1) for k in 1:s, j in 1:s ]
     
     row(i) = begin

@@ -34,14 +34,14 @@ lode = lodeproblem()
     @test typeof(GeometricIntegrator(ode, SSPRK2())) <: GeometricIntegrator{<:ERK}
     @test typeof(GeometricIntegrator(ode, SSPRK3())) <: GeometricIntegrator{<:ERK}
 
-    @test typeof(GeometricIntegrator(ode, CrankNicolson())) <: GeometricIntegrator{<:DIRK}
+    @test typeof(GeometricIntegrator(ode, CrankNicolsonRK())) <: GeometricIntegrator{<:DIRK}
     @test typeof(GeometricIntegrator(ode, Crouzeix())) <: GeometricIntegrator{<:DIRK}
     @test typeof(GeometricIntegrator(ode, KraaijevangerSpijker())) <: GeometricIntegrator{<:DIRK}
     @test typeof(GeometricIntegrator(ode, QinZhang())) <: GeometricIntegrator{<:DIRK}
 
     @test typeof(GeometricIntegrator(ode, BackwardEuler())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(ode, ImplicitEulerRK())) <: GeometricIntegrator{<:IRK}
-    @test typeof(GeometricIntegrator(ode, ImplicitMidpoint())) <: GeometricIntegrator{<:IRK}
+    @test typeof(GeometricIntegrator(ode, ImplicitMidpointRK())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(ode, IRK3())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(ode, SRK3())) <: GeometricIntegrator{<:IRK}
 
@@ -104,7 +104,7 @@ end
 
 @testset "$(rpad("Runge-Kutta methods for Implicit Equations",80))" begin
 
-    @test typeof(GeometricIntegrator(iode, ImplicitMidpoint())) <: GeometricIntegrator{<:IRK}
+    @test typeof(GeometricIntegrator(iode, ImplicitMidpointRK())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(iode, IRK3())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(iode, SRK3())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(iode, Gauss(2))) <: GeometricIntegrator{<:IRK}

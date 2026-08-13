@@ -1,6 +1,5 @@
 module VPRK
 
-    using Documenter: @doc
     using LinearAlgebra: mul!
     using RungeKutta
     using SimpleSolvers

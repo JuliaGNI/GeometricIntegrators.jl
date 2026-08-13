@@ -200,7 +200,7 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} \bar{b}_{i}  \, F_{n,i} , \\
 ```
 accounting for the linear dependence of the $\dot{Q}_{n,i}$ and consequently also of the $P_{n,i}$.
 The particular values of $d_{i}$ depend on the number of stages $s$ and the definition of the $q_{n,i}$ [[OberBloebaum:2016](@cite)]. For two stages, we have $d_{1} = - d_{2}$, so that we can choose, for example, $d = (+1, -1)$, and \eqref{eq:vprk-lobatto} becomes equivalent to the variational integrator of the trapezoidal Lagrangian. For three stages, we can choose $d = (\tfrac{1}{2}, -1, \tfrac{1}{2})$, and for four stages we can use $d = (+1, -\sqrt{5}, +\sqrt{5}, -1)$.
-In GeometricIntegrators, these vectors can be obtained via the function [`get_lobatto_nullvector`](@ref) from [RungeKutta.jl](https://github.com/JuliaGNI/RungeKutta.jl).
+In GeometricIntegrators, these vectors can be obtained via the function [`RungeKutta.Tableaus.lobatto_nullvector`](@ref) from [RungeKutta.jl](https://github.com/JuliaGNI/RungeKutta.jl), which no longer exports it.
 
 Another approach that always works is to use directly compute the position-momentum form \eqref{eq:vi-position-momentum-form} of the variational integrator for the discrete Lagrangian \eqref{eq:vprk-discrete-lagrangian} instead of applying the discrete action principle.
 Such subtleties, which are easily overlooked, can be avoided by starting the discretisation of the action from a more fundamental point of view, namely by approximating the function spaces of the trajectories, which leads us to [Galerkin Variational Integrators](@ref cgvi).

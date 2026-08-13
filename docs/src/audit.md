@@ -59,9 +59,9 @@ Gauß) reaches exactly its documented order.
 Empirical convergence orders match the documented order for:
 
 * **Explicit RK**: `ExplicitEulerRK`(1), `ExplicitMidpoint`/`Heun2`/`Ralston2`/`Runge2`/`SSPRK2`(2), `Heun3`/`Kutta3`/`Ralston3`/`SSPRK3`(3), `RK4`/`RK438`(4).
-* **DIRK**: `CrankNicolson`(2), `Crouzeix`(3), `QinZhang`(2).
-* **Fully implicit RK**: `ImplicitEulerRK`(1), `ImplicitMidpoint`(2), `SRK3`(4), `Gauss(s)`(2s), `RadauIA`/`RadauIIA`(2s−1), `LobattoIIIA`/`IIIC`/`IIID`/`IIIE`(2s−2). `RadauIB`/`RadauIIB` confirmed order 2s−1 (their order-4 reading on the harmonic oscillator is linear super-convergence).
-* **Partitioned RK**: `SymplecticEulerA`/`B`(1), `PartitionedGauss(s)`(2s), `LobattoIIIAIIIB`/`LobattoIIIBIIIA`(2s−2).
+* **DIRK**: `CrankNicolsonRK`(2), `Crouzeix`(3), `QinZhang`(2).
+* **Fully implicit RK**: `ImplicitEulerRK`(1), `ImplicitMidpointRK`(2), `SRK3`(4), `Gauss(s)`(2s), `RadauIA`/`RadauIIA`(2s−1), `LobattoIIIA`/`IIIC`/`IIID`/`IIIE`(2s−2). `RadauIB`/`RadauIIB` confirmed order 2s−1 (their order-4 reading on the harmonic oscillator is linear super-convergence).
+* **Partitioned RK**: `SymplecticEulerARK`/`B`(1), `PartitionedGauss(s)`(2s), `LobattoIIIAIIIB`/`LobattoIIIBIIIA`(2s−2).
 * **Splitting/composition**: `LieA`/`LieB`(1), `Strang`/`McLachlan2`(2), `McLachlan4`/`TripleJump`/`SuzukiFractal`(4, `McLachlan4` after the fix below).
 * **Variational**: `PMVImidpoint`/`PMVItrapezoidal`(2), `DiscreteEulerLagrange` (Midpoint/Trapezoidal)(2), `VPRKGauss(s)`(2s), `VPRKLobattoIIIAIIIB(2)`(2).
 * **Galerkin**: `CGVI(Gauss(s))` at order 2s−2 for s ≥ 2.
@@ -350,7 +350,16 @@ the test comments.
   `HSPARK(SPARKLobattoIII{AIIIB,BIIIA}(2/3/4))` raise `SingularException`.
 * **Divergence / excessive solver iterations** — `TableauHPARKLobattoIII{AIIIB,BIIIA}(2/3)`
   (errors 0.15–20), `SPARKLobattoIIIBIIIA(2/3/4)`, `SPARKLobattoIIIAIIIB(2)`.
-* **Order reduction** — `TableauVSPARKLobattoIIIBIIIApSymmetric(3)` (no better than `s = 2`).
+* ~~**Order reduction** — `TableauVSPARKLobattoIIIBIIIApSymmetric(3)`~~ — **retracted.**
+  This was not inherent. The sixteen Lobatto-pair projection constructors passed
+  `R∞=-1^(s+1)`, which Julia parses as `-(1^(s+1))` and so evaluates to `-1` at every
+  `s`; the intended `(-1)^(s+1)` is `+1` at odd `s`. Every one of the sixteen changes
+  at odd `s` and none at even `s`, but the sign only moved the measured order for the
+  two `pSymmetric(3)` methods: `BIIIA` went from a failed measurement to 4.000 and
+  `AIIIB` from 3.094 to 3.999. Both are now ordinary `conv` cases in
+  `test/verification/spark_convergence_tests.jl`. The `pSymplectic(3)` pair was
+  already order 4 either way, which is why the existing convergence test never
+  flagged the bug.
 
 The **HSPARK-secondary** testset (`TableauHSPARKLobatto…` on `hdae`) raised
 `FieldError: type NamedTuple has no field q̇`. Root cause: `initial_guess!` in
@@ -474,7 +483,7 @@ ways:
 * **Genuinely divergent / order-broken methods, already recorded as `@test_broken`**
   — the bulk of the noise. `SPARKLobattoIIIBIIIA(2/3/4)` (errors 2.96 / 0.58 /
   7.3e-3, up to 9 solver + hundreds of line-search warnings), `SPARKLobattoIIIAIIIB(2)`
-  (0.107), `TableauVSPARKLobattoIIIBIIIApSymmetric(3)` (order-reduced), and the
+  (0.107), and the
   `TableauHPARKLobattoIII{AIIIB,BIIIA}(2/3)` cases (errors 0.15–20). The warnings
   are a *correct symptom* of divergence; a different solver (DogLeg), line search,
   or a higher iteration cap does not help (DogLeg makes matters worse or raises a
@@ -698,7 +707,8 @@ confirmed orders:
 | S4 | B — latent (fixed) | `HPARK`, `HSPARKprimary` | none observed (`P = 1`) | The δ-constraint residual zeroed row `R-1` (hard-coded) while accumulating into row `i` inside a `for i in R-P+1:R` loop; they coincide only when `P = 1` (all tested methods). | **Fixed:** zero the same row `i` that is accumulated (`integrators_hspark.jl`, `integrators_hspark_primary.jl`); behaviour-neutral for `P = 1`, correct for `P > 1` |
 | S5 | **A — inherent** | `SPARKGLVPRK(2)`, `TableauHPARKGLRK(2)` | order 2 (docs 2s = 4) | `R(∞) = (-1)^{s+1} = -1` at `s = 2` violates the projection symplecticity conditions (prediction 2). This is the source's own `# maybe problem with R∞?` TODO. | `@test_broken` at order 4 |
 | S6 | **A — inherent** | `SPARKLobattoIIIAIIIB(2/3/4)`, `SPARKGLRKLobattoIII{AIIIB,BIIIA}(s)` | order-reduced (`(3)`→~2.4, `(4)`→~3.5; GLRK-Lobatto→~1) | Symplectic Lobatto pair enforcing the constraint at the solution on the degenerate Lagrangian — reduced order (predictions 1 + the known symplectic-RK-on-degenerate-Lagrangian reduction). `SPARKLobattoIIIAIIIB(2)` fails the solve outright. | `@test_broken` / documented order-reduced tolerances |
-| S7 | **A — inherent** | `SPARKLobattoIIIBIIIA(2/3/4)`, `TableauHPARKLobattoIII{AIIIB,BIIIA}(2/3)`, `TableauVSPARKLobattoIIIBIIIApSymmetric(3)` | divergence (`NonlinearSolverException`, or error 0.15–20 at `T = 0.1`) | Full divergence predicted by prediction 1; a different solver / line search / iteration cap does not help (confirmed here and in the third pass). | `@test_broken` |
+| S7 | **A — inherent** | `SPARKLobattoIIIBIIIA(2/3/4)`, `TableauHPARKLobattoIII{AIIIB,BIIIA}(2/3)` | divergence (`NonlinearSolverException`, or error 0.15–20 at `T = 0.1`) | Full divergence predicted by prediction 1; a different solver / line search / iteration cap does not help (confirmed here and in the third pass). | `@test_broken` |
+| S7b | **B — bug (fixed)** | `TableauVSPARKLobattoIII{AIIIB,BIIIA}pSymmetric(3)`, and structurally all 16 Lobatto-pair projection constructors at odd `s` | `BIIIA(3)` stalled at the residual floor and was no better than `s = 2` (7.95E-7); `AIIIB(3)` order 3.094 | Originally filed under S7 as inherent divergence. It was an operator-precedence bug: `R∞=-1^(s+1)` parses as `-(1^(s+1))` and is `-1` at every `s`, where `(-1)^(s+1)` is `+1` at odd `s`. The Gauss siblings in the same functions already wrote `(-1)^s` correctly. | **Fixed:** all 16 sites parenthesised. `BIIIA(3)` 7.95E-7 → 1.89E-11 (order 4.000), `AIIIB(3)` 4.17E-11 → 1.21E-11 (order 3.999). Both promoted from `@test_broken` to `conv` |
 | S8 | **A — inherent** | `VSPARK(SPARK{GLRK,LobABC,LobABD,LobattoIIIAIIIB,LobattoIIIBIIIA}(2))` | `SingularException` at `s = 2` | Degenerate stage system at the lowest stage count (prediction 3). `VSPARK(SPARKLobABD(2/3))` singular at `s = 2, 3`. | `@test_broken` |
 | S9 | C — limitation (documented) | `SPARKMethod` (internal stages) | none on the degenerate test problem | `initial_guess!` zeroes the internal velocity `Vi` and `components!` never recomputes it (the `v̄` call is commented out), so `ϑ`/`f` are evaluated at `Vi = 0`. Harmless for degenerate Lagrangians (the `v`-term vanishes), but wrong in general — the code flags this in-comment. No non-degenerate DAE test problem exists here to validate a change, so a fix would be unverifiable. | Documented; not changed |
 

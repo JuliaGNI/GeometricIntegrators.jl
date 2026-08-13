@@ -1,8 +1,6 @@
 module SPARK
 
 using CompactBasisFunctions
-using Documenter: @doc
-using GenericLinearAlgebra
 using LinearAlgebra: Diagonal
 using QuadratureRules
 using RungeKutta
@@ -16,6 +14,7 @@ using GeometricIntegratorsBase
 import GeometricBase: tableau
 import GeometricBase.Utils: @define
 import RungeKutta: AbstractTableau, Tableau, nstages, eachstage
+import RungeKutta.Tableaus: lobatto_nullvector
 
 # import ..Integrators
 

@@ -5,7 +5,6 @@ using Reexport
 @reexport using GeometricBase
 @reexport using GeometricIntegratorsBase
 
-using Documenter: @doc
 using GeometricBase
 using GeometricEquations
 using GeometricSolutions
@@ -27,6 +26,7 @@ import CompactBasisFunctions: Legendre
 import CompactBasisFunctions: nbasis
 
 import GeometricBase: description, reference, tableau, order
+import GeometricBase: basis, nnodes
 import GeometricBase: equations, initialguess, nconstraints, parameters, timestep
 import GeometricBase: integrate, integrate!, reset!, solutionstep!, update!
 import GeometricBase.Utils: @big, @define, compensated_summation
@@ -49,6 +49,7 @@ import GeometricIntegratorsBase: default_solver, default_linesearch, default_igu
 import RungeKutta
 import RungeKutta: eachstage, nstages
 import RungeKutta: AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
+import RungeKutta.Tableaus: lobatto_nullvector
 
 import SimpleSolvers: SolverMethod
 

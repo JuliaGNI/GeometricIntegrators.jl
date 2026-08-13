@@ -116,7 +116,7 @@ with** ``\phi (q_{n+1}, p_{n+1}) = 0``.
 
 The Lobatto stage system is rank deficient by one in the ``V``-direction. The
 multiplier ``\mu`` relaxes the primary constraint along the null vector ``d`` of the
-Lagrange-derivative matrix (`get_lobatto_nullvector`), and the deficiency is removed
+Lagrange-derivative matrix (`lobatto_nullvector`), and the deficiency is removed
 by the extra condition ``\sum_i d_i V_{n,i} = 0``. ``\mu`` enters the primary-constraint
 equation and *only* that one, as in `VPARK`/`VSPARK`/`SPARK`. (`VPRK` implements the same
 idea with a different residual layout: it has no primary-constraint row, so it perturbs

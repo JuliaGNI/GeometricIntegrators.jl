@@ -89,6 +89,14 @@ conv(builder, method, tsteps, expected; label) =
         conv(build_idae, TableauVSPARKGLRKpMidpoint(2),         steps(20, 3), 4; label = "VSPARKGLRKpMidpoint(2)")
         conv(build_idae, TableauVSPARKGLRKpSymplectic(2),       steps(20, 3), 4; label = "VSPARKGLRKpSymplectic(2)")
         conv(build_idae, TableauVSPARKGLRKpSymmetric(2),        steps(20, 3), 4; label = "VSPARKGLRKpSymmetric(2)")
+
+        # Both of these were casualties of the R∞ = -1^(s+1) precedence bug, which
+        # pinned R∞ to -1 at every s instead of (-1)^(s+1). At s = 3 the correct value
+        # is +1, and restoring it lifts AIIIB from order 3.09 to 3.999 and BIIIA from
+        # a failed measurement to 4.000. They are the only two Lobatto-pair projections
+        # whose order the sign actually moved, so they are the regression guard for it.
+        conv(build_idae, TableauVSPARKLobattoIIIAIIIBpSymmetric(3), steps(20, 3), 4; label = "VSPARKLobattoIIIAIIIBpSymmetric(3)")
+        conv(build_idae, TableauVSPARKLobattoIIIBIIIApSymmetric(3), steps(20, 3), 4; label = "VSPARKLobattoIIIBIIIApSymmetric(3)")
     end
 
     @testset "VSPARK general (IDAE)" begin
@@ -131,7 +139,6 @@ conv(builder, method, tsteps, expected; label) =
         broken_order(build_idae, SPARKGLRKLobattoIIIAIIIB(2),    steps(20, 3), 4; label = "SPARKGLRKLobattoIIIAIIIB(2)")
         broken_order(build_idae, SPARKLobattoIIIBIIIA(2),        steps(10, 2), 2; label = "SPARKLobattoIIIBIIIA(2)")
         broken_order(build_pdae, TableauHPARKLobattoIIIAIIIB(2), steps(10, 2), 2; label = "HPARKLobattoIIIAIIIB(2)")
-        broken_order(build_idae, TableauVSPARKLobattoIIIBIIIApSymmetric(3), steps(10, 2), 4; label = "VSPARKLobattoIIIBIIIApSymmetric(3)")
 
         # singular stage system at s = 2
         broken_order(build_idae, VSPARK(SPARKLobABC(2)),          steps(10, 1), 2; label = "VSPARK(SPARKLobABC(2))")

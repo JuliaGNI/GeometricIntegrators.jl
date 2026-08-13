@@ -236,7 +236,7 @@ Diagonally implicit Runge-Kutta method with [`TableauCrankNicolson`](@ref).
 
 $(reference(Val(:CrankNicolson)))
 """
-struct CrankNicolson <: DIRKMethod end
+struct CrankNicolsonRK <: DIRKMethod end
 
 """
 Diagonally implicit Runge-Kutta method with [`TableauCrouzeix`](@ref).
@@ -259,7 +259,7 @@ $(reference(Val(:QinZhang)))
 """
 struct QinZhang <: DIRKMethod end
 
-GeometricBase.tableau(::CrankNicolson, ::Type{T}=Float64) where {T} = TableauCrankNicolson(T)
+GeometricBase.tableau(::CrankNicolsonRK, ::Type{T}=Float64) where {T} = TableauCrankNicolson(T)
 GeometricBase.tableau(::Crouzeix, ::Type{T}=Float64) where {T} = TableauCrouzeix(T)
 GeometricBase.tableau(::KraaijevangerSpijker, ::Type{T}=Float64) where {T} = TableauKraaijevangerSpijker(T)
 GeometricBase.tableau(::QinZhang, ::Type{T}=Float64) where {T} = TableauQinZhang(T)
@@ -286,7 +286,7 @@ Fully implicit Runge-Kutta method with [`TableauImplicitMidpoint`](@ref).
 
 $(reference(Val(:ImplicitMidpoint)))
 """
-struct ImplicitMidpoint <: IRKMethod end
+struct ImplicitMidpointRK <: IRKMethod end
 
 """
 Fully implicit Runge-Kutta method with [`TableauIRK3`](@ref).
@@ -304,7 +304,7 @@ struct SRK3 <: IRKMethod end
 
 GeometricBase.tableau(::BackwardEuler, ::Type{T}=Float64) where {T} = TableauBackwardEuler(T)
 GeometricBase.tableau(::ImplicitEulerRK, ::Type{T}=Float64) where {T} = TableauImplicitEuler(T)
-GeometricBase.tableau(::ImplicitMidpoint, ::Type{T}=Float64) where {T} = TableauImplicitMidpoint(T)
+GeometricBase.tableau(::ImplicitMidpointRK, ::Type{T}=Float64) where {T} = TableauImplicitMidpoint(T)
 GeometricBase.tableau(::IRK3, ::Type{T}=Float64) where {T} = TableauIRK3(T)
 GeometricBase.tableau(::SRK3, ::Type{T}=Float64) where {T} = TableauSRK3(T)
 
@@ -525,27 +525,27 @@ issymplectic(::Type{RadauIIB}) = false
 
 
 """
-    SymplecticEulerA
+    SymplecticEulerARK
 
 Symplectic Euler method using explicit Euler for q and implicit Euler for p.
 """
-struct SymplecticEulerA <: EPRKMethod end
+struct SymplecticEulerARK <: EPRKMethod end
 
 """
-    SymplecticEulerB
+    SymplecticEulerBRK
 
 Symplectic Euler method using implicit Euler for q and explicit Euler for p.
 """
-struct SymplecticEulerB <: EPRKMethod end
+struct SymplecticEulerBRK <: EPRKMethod end
 
-GeometricBase.tableau(::SymplecticEulerA, ::Type{T}=Float64) where {T} = PartitionedTableau(:SymplecticEulerA, TableauExplicitEuler(T), TableauImplicitEuler(T))
-GeometricBase.tableau(::SymplecticEulerB, ::Type{T}=Float64) where {T} = PartitionedTableau(:SymplecticEulerB, TableauImplicitEuler(T), TableauExplicitEuler(T))
+GeometricBase.tableau(::SymplecticEulerARK, ::Type{T}=Float64) where {T} = PartitionedTableau(:SymplecticEulerA, TableauExplicitEuler(T), TableauImplicitEuler(T))
+GeometricBase.tableau(::SymplecticEulerBRK, ::Type{T}=Float64) where {T} = PartitionedTableau(:SymplecticEulerB, TableauImplicitEuler(T), TableauExplicitEuler(T))
 
-GeometricBase.order(::Type{SymplecticEulerA}) = 1
-GeometricBase.order(::Type{SymplecticEulerB}) = 1
+GeometricBase.order(::Type{SymplecticEulerARK}) = 1
+GeometricBase.order(::Type{SymplecticEulerBRK}) = 1
 
-issymplectic(::Type{SymplecticEulerA}) = true
-issymplectic(::Type{SymplecticEulerB}) = true
+issymplectic(::Type{SymplecticEulerARK}) = true
+issymplectic(::Type{SymplecticEulerBRK}) = true
 
 
 """
