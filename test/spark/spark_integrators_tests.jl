@@ -458,7 +458,7 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
     sol = integrate(idae, TableauVSPARKLobattoIIIAIIIBpSymmetric(3))
-    @test relative_maximum_error(sol.q, ref.q) < 8E-11
+    @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(idae, TableauVSPARKLobattoIIIAIIIBpSymmetric(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
@@ -466,14 +466,17 @@ end
     sol = integrate(idae, TableauVSPARKLobattoIIIBIIIApSymmetric(2))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
+    # Was known-broken: the solve stalled at the residual floor and the method was no
+    # more accurate than s = 2 (7.95E-7). The cause was the R∞ = -1^(s+1) precedence
+    # bug in TableauVSPARKLobattoIIIBIIIApSymmetric, which pinned R∞ to -1 where s = 3
+    # needs +1. With the sign right the solve converges and the error drops by four
+    # orders of magnitude, to 1.89E-11 — matching its LobattoIIIBIIIApSymplectic(3)
+    # counterpart exactly, as the two share the projection at this s.
+    sol = integrate(idae, TableauVSPARKLobattoIIIBIIIApSymmetric(3))
+    @test relative_maximum_error(sol.q, ref.q) < 4E-11
+
     sol = integrate(idae, TableauVSPARKLobattoIIIBIIIApSymmetric(4))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
-
-
-    # --- known-broken (see docs/src/audit.md) ---
-
-    # order reduction (meas 7.95E-7, no better than s=2); the solve stalls at the floor.
-    @test nlsolve_outcome(idae, TableauVSPARKLobattoIIIBIIIApSymmetric(3)).stalled
 
 end
 
