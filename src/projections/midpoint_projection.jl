@@ -217,17 +217,14 @@ end
 
 
 function integrate_step!(sol, history, params, int::MidpointProjectionIntegrator)
-    # call nonlinear solver for projection
-    solve!(nlsolution(int), solver(int), (sol, params, int))
+    # call nonlinear solver for projection and act on the outcome it reports. A
+    # `ProjectionIntegrator` carries no persistent solver state, so this is the state-building
+    # form of `solve_with_status!` rather than the state-taking one used by the integrators.
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), (sol, params, int))
+    check_solver_status(solverstatus, int)
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))
-
-    # print solver status
-    # println(status(solver(int)))
-
-    # check if solution contains NaNs or error bounds are violated
-    # println(meets_stopping_criteria(status(solver(int))))
 
     # copy solver status
     # get_solver_status!(solver(int), solstep(int).internal[:solver])

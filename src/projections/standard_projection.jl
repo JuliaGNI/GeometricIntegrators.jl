@@ -175,18 +175,15 @@ function integrate_step!(sol, history, params, int::StandardProjectionIntegrator
     # copy initial guess for projected solution to common solution vector
     cache(int).x̃[1:ndims(cache(int))] .= sol.q
 
-    # call nonlinear solver for projection
+    # call nonlinear solver for projection and act on the outcome it reports. A
+    # `ProjectionIntegrator` carries no persistent solver state, so this is the state-building
+    # form of `solve_with_status!` rather than the state-taking one used by the integrators.
     x̄, x̃ = split_nlsolution(nlsolution(int), int)
-    solve!(x̃, solver(int), (sol, params, int))
+    solverstatus = solve_with_status!(x̃, solver(int), (sol, params, int))
+    check_solver_status(solverstatus, int)
 
     # check_jacobian(solver(int))
     # print_jacobian(solver(int))
-
-    # print solver status
-    # println(status(solver(int)))
-
-    # check if solution contains NaNs or error bounds are violated
-    # println(meets_stopping_criteria(status(solver(int))))
 
     # TODO: copy λ/U/G to internal variables
 

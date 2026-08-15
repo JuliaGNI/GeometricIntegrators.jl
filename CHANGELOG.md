@@ -11,6 +11,169 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
+## 0.18.2
+
+### Breaking Changes
+
+* Requires SimpleSolvers 0.12.1 and GeometricIntegratorsBase 0.6.3. Coupled as before:
+  GeometricIntegratorsBase 0.6.3 requires SimpleSolvers 0.12.1, so neither range is satisfiable
+  with the old pin on the other.
+
+  Of the three breaks in SimpleSolvers 0.12, one reaches this package: **a `NonlinearSolver` no
+  longer emits line-search warnings from inside its iteration**. `solver_step!` stopped calling
+  `linesearch_warnings`, so a rejected line search now reports to its *caller* through the returned
+  status and to nobody at all if the caller drops it. Every solve here dropped it, because every
+  solve here called `solve!`. That is what the change below is for. The other two — a new field on
+  `NonlinearSolverStatus`, and a `LinesearchMethod` implementing `solve_with_status` rather than
+  `solve` — do not reach a package that constructs neither.
+
+  `Bisection`'s two fixes in 0.12 (it no longer claims success when it cannot bracket, and it
+  bisects toward a minimum rather than toward whichever root the value bracket held) reach no line
+  search here: `default_linesearch` is `Backtracking` and every method solves with `Newton()`. The
+  one place this package does reach for `Bisection` is not a line search at all — PGLRK bisects the
+  *energy residual* over λ through `SimpleSolvers.bisection`. That call **does** take the
+  no-bracket branch, on every step of every `λmax = 1E-300` run in the test suite, and it is
+  unaffected all the same: the endpoint returned there is bit-for-bit the one 0.11 returned
+  (`abs(y₀) ≤ abs(y₁) ? α₀ : α₁`), the warning that accompanies it is gated behind the
+  `verbosity = 0` that `solve_λ!` passes and predates 0.12 anyway, and the success flag that 0.12
+  corrected is the one thing `bisection` does not hand back to its caller — `solve_λ!` re-derives
+  the failure itself, from `abs(λ) ≥ λmax`.
+
+### New Features
+
+* **Every nonlinear solve goes through `solve_with_status!`**, and the status it returns is handed
+  to GeometricIntegratorsBase 0.6.3's `check_solver_status`. Nineteen call sites: fourteen
+  `integrate_step!` methods across the RK, VI, CGVI, DGVI, DVI, HPI and SPARK families, PGLRK's
+  `energy_residual!` — a stage solve *inside* a step rather than a step, which is why it is
+  counted apart — the three projection integrators, and DIRK's per-stage loop. It replaces the
+  pair of commented-out stubs
+  (`# println(status(solver))` / `# println(meets_stopping_criteria(status(solver)))`, and the
+  older `# print_solver_status(int.solver.status, …)` spelling) that had sat under the solve in
+  most of those files.
+
+  The fifteen that own a persistent `solverstate(int)` use the state-taking form of
+  `solve_with_status!`, added in SimpleSolvers 0.12.1 at GeometricIntegratorsBase's request; the
+  other four have no state to reuse and take the state-building form. DIRK's per-stage solvers get
+  a `NullSolverState` from the `SingleStageSolvers` wrapper, and a `ProjectionIntegrator` has no
+  `solverstate` field at all.
+
+  `check_solver_status` is silent by default — SimpleSolvers remains the one voice that reports a
+  failed solve, and warning here as well would say the same thing twice per time step. So **no run
+  changes what it prints**. See GeometricIntegratorsBase's notes for what the hook is for and how
+  to override it, and for why reading the status now costs nothing per solve.
+
+* PGLRK is the one method where the status needed a decision rather than a rewrite. Its stage
+  solves happen inside `energy_residual!`, which `SimpleSolvers.bisection` calls once per trial λ
+  — including at the endpoints `±λmax`, where a solve that struggles is expected rather than
+  exceptional. Passing every probe's status to `check_solver_status` would hand a caller who had
+  overridden it a bisection probe to reject. `solve_λ!` checks the *accepted* λ once instead,
+  reading its outcome off the persistent solver state that the final `energy_residual!` call
+  leaves behind — which costs nothing and cannot describe a different solve than the one the step
+  keeps. This is the one place here that still calls `status(s, state)` by hand, and it is sound
+  because SimpleSolvers 0.12.1 states the property it relies on outright: nothing touches the state
+  between the end of the solve loop and the caller, so rebuilding the status from it afterwards
+  gives the same value. Its own test suite pins that.
+
+* The seven `solve!` calls under `src/integrators/vprk/` are deliberately left alone. That whole
+  directory is dead: it is reached only through `src/integrators/VPRK.jl`, whose every `include` is
+  commented out and which is itself never included. Converting it would imply it is live.
+
+### Tests
+
+* `test/verification/pglrk_convergence_tests.jl` counts the statuses PGLRK hands to
+  `check_solver_status` and requires exactly one per time step. This is the one decision in this
+  release that no other assertion could catch: the hook's default returns its argument, so calling
+  it once per *bisection probe* instead of once per step is invisible to every other test in the
+  suite, and would only surface for a caller who had overridden it to reject a non-converged step —
+  who would then find bisection probes being rejected.
+
+  `solve_λ!` has **three** ways through it, each with its own `check_solver_status` call site, and
+  the test drives all three at 5 checks over 5 steps. Which route a run took is *asserted* and not
+  assumed, from the count of fallback `@debug` lines captured off a `TestLogger`, because a hook
+  count of `nsteps` is what every route is supposed to produce and so cannot by itself tell them
+  apart:
+
+  | route | problem, `λmax` | fallbacks |
+  |:---|:---|:---|
+  | bisection locates a root | Lotka-Volterra, default | 0 |
+  | bisection finds no sign change, step falls back to plain Gauss | Lotka-Volterra, `1E-300` | 5 |
+  | early return, the unperturbed method already conserves the energy | harmonic oscillator, `1E-300` | 0 |
+
+  The third row needs a problem where plain Gauss conserves `h` to the `ftol` of the early return,
+  which the harmonic oscillator is and Lotka-Volterra is not: Gauss preserves the quadratic
+  invariant of a linear system exactly (|h − h₀| ≈ 7E-18 against ftol ≈ 1.8E-15), whereas on
+  Lotka-Volterra at Δt = 0.1 it drifts to ≈ 6E-11 against ftol ≈ 3.6E-15, four orders too far. Note
+  that `λmax` does *not* reach the early return, whose condition is on the λ = 0 residual alone —
+  which is why the third row keeps the `λmax` of the second: had the early return not been taken,
+  the bisection would have run in [±1E-300] and fallen back on every step exactly as it does in row
+  two, so `nfallback == 0` there is what says the bisection never ran at all.
+
+* **`VSPARK(SPARKLobattoIIIBIIIA(2))` accepts either outcome, which is what CI on Julia 1.13 and
+  nightly was failing on.** That case raises `SingularException: Zero pivot found at index 25` on
+  1.13 and nightly under Linux and Windows, while returning a ~1E-6 answer on 1.10 and 1.12
+  everywhere and on macOS throughout. The failure is older than this release — it is on `main` at
+  the previous commit with the identical signature — and it is not a regression to chase: the stage
+  system is **numerically singular**, cond ≈ 5.6E16 with σmin = 5.7E-17 against σmax = 3.2, which is
+  the same matrix to within a factor of 1.5 as the `SPARKLobattoIIIAIIIB(2)` and `SPARKGLRK(2)`
+  siblings the suite already asserts `SingularException` for. Its σmin sits an order below the
+  `n·eps·σmax ≈ 1.8E-14` at which a 26×26 system stops having a numerical rank.
+
+  Whether LAPACK's `getrf` lands on an exact zero pivot or on one of ~1E-17 is a rounding accident
+  of the BLAS kernel, so the outcome is genuinely platform-dependent. The `@test` on this case was
+  promoted from `@test_broken` under SimpleSolvers 0.10 on the strength of one platform where it
+  survived; that promotion is retracted, and the test now asserts the answer where there is one and
+  `err isa SingularException` where there is not. Audit finding S8 always covered the case — see the
+  S8 retraction in `docs/src/audit.md`, which carries the singular-value measurements.
+
+### Documentation
+
+* **`docs/src/audit.md` carries the re-measured warning census.** This closes the item that stood
+  under `## Open Issues` as *"`docs/src/audit.md` still carries the pre-0.12 warning census"*: the
+  page now has its own `Update (SimpleSolvers 0.12.1 / GeometricIntegratorsBase 0.6.3)` block with
+  the 14 → 8 figures recorded under *Findings* below, and with the one thing 0.12 changes about the
+  reasoning already on that page — the `maxlog` caps having become a back-off, the arithmetic by
+  which three saturating sites gave exactly 9 warnings no longer describes the mechanism, and
+  neither does the `@test_nowarn`-goes-blind caveat that followed from it.
+
+* The same page records the **S8 retraction** for `VSPARK(SPARKLobattoIIIBIIIA(2))` described under
+  *Tests* above, with the singular values behind it, and strikes the 0.17.0 promotion where it was
+  originally recorded rather than leaving two entries that disagree.
+
+### Findings
+
+Test outcomes are unchanged across this bump, and this was measured rather than assumed: the suite
+was run at `HEAD~` against SimpleSolvers 0.11.0 and GeometricIntegratorsBase 0.6.2 in a separate
+worktree, and all **28 testsets report identical pass and broken counts** — the six route
+assertions added above excepted, since they do not exist there.
+
+**The warning census moved, and this is what it moved to.** A full run emitted 14 warnings before
+and emits 8 now. Unchanged: the seven `Nonlinear solver failed at timestep n=…: non-finite
+direction vector` (GeometricIntegratorsBase's own, at n=5, 7, 9×3, 10×2) and the one stagnation
+warning from `VSPARK(SPARKLobattoIIIBIIIA(2))` — the one entry here that is platform-dependent,
+since it is emitted exactly on the runs where that solve returns rather than raising
+`SingularException`, as the *Tests* entry above describes. Gone: **six `Backtracking line search:`
+warnings** —
+three `no step satisfied the sufficient decrease condition in 13/14 trials` and three
+`φ'(0) = <tiny positive> (with φ(0) = …)`. Those are exactly the per-iteration line-search warnings
+SimpleSolvers 0.12 stopped emitting from inside `solver_step!`.
+
+**Nothing was lost with them.** The stagnation warning reports the same residual to the bit
+(`rfₐ = 3.571488053775618e-5`) and the same diagnosis, and 0.12 appends the cause to it:
+
+> The line search reported `LINESEARCH_NO_DESCENT` on 2 of the 3 step(s), i.e. φ'(0) > 0 — the
+> direction was not a descent direction at all, which points at the Jacobian rather than at the
+> tolerance: a stale one under `refactorize > 1`, a nonzero `regularization_factor`, or an inexact
+> linear solve.
+
+That is the same three `φ'(0) > 0` events the deleted per-iteration warnings were reporting one at
+a time, now counted and named once at the end of the solve. `docs/src/audit.md`, where the census
+lives, carries these numbers as its own update — together with the one thing they change about the
+reasoning there: SimpleSolvers 0.12 replaced the `maxlog` caps with a back-off (occurrences 1, 2,
+4, 8, …), so the "three `maxlog = 3` sites saturate at exactly 9" arithmetic of the earlier census
+no longer describes the mechanism. This suite never reaches the back-off regime, the repeating
+diagnosis now firing once per run, so it is inherited but not exercised from here.
+
+
 ## 0.18.1
 
 ### Breaking Changes
@@ -648,6 +811,21 @@ The migration checklist in `todo.md` is fully worked off — all thirteen items 
 two trailing sections are post-mortems rather than tasks. What follows is what is genuinely open,
 taken from the verification report (`docs/src/audit.md`) and the test suite.
 
+### The solver status is available but not acted on
+
+0.18.2 routes every solve through `solve_with_status!` and hands the status to
+`check_solver_status`, whose default returns it and does nothing else. That was the deliberate
+choice — SimpleSolvers stays the single reporting voice, so no run changes what it prints — but it
+means a step that did not converge is still only *reported*, never *acted on*, and the trajectory
+continues past the point where it stopped meaning anything with nothing in `sol` to mark it.
+
+The place to act is GeometricIntegratorsBase's `integrate!`, which already handles two of the three
+ways a step can go wrong (a `NonlinearSolverException`, and NaNs in the iterate) by warning with
+the time step and returning what was computed so far. This is tracked in that package's
+`## Open Issues` rather than here, since the hook and the loop both live there; it is named here
+because this package is where the consequences would show — see the `@test_broken` methods below,
+several of which reach `max_iterations` on every step.
+
 ### SLRK is not symplectic (audit finding S15)
 
 The manuscript's proof leaves an uncontrolled term in the multiplier block: the null-vector
@@ -708,14 +886,104 @@ neither has an `initial_guess!` method for its state layout. Their tests are com
 `test/projections/projections_vprk_tests.jl:109` and `:127`. The verdict recorded above on the
 internal projection is therefore one about the method, not about executable code.
 
-### `VSPARK(SPARKLobattoIIIBIIIA(2))` stalls
+### `VSPARK(SPARKLobattoIIIBIIIA(2))` has a singular stage system
 
-Promoted from `@test_broken` to `@test` in 0.17.0 because it converges under SimpleSolvers 0.10
-and reaches passing accuracy (< 1E-6). But its solve stagnates after 3 iterations at
-rf_a = 3.57e-5, against the `f_abstol = 5.77e-15` it was asked for — some ten orders of
-magnitude — and it is the one stagnation warning a full test run still prints. That is a question
-about the method rather than log noise, so it is recorded at the call site and in `audit.md`
-rather than silenced.
+Restated in 0.18.2, having been recorded here since 0.17.0 as a case that "stalls". It does stall —
+the solve stagnates after 3 iterations at rf_a = 3.57e-5 against the `f_abstol = 5.77e-15` it was
+asked for, and where it returns it is the one stagnation warning a full test run still prints — but
+the stall is a symptom. The stage system is **numerically singular**: cond ≈ 5.6E16, σmin = 5.7E-17
+against σmax = 3.2, with σmin an order below the `n·eps·σmax ≈ 1.8E-14` at which a 26×26 system
+stops having a numerical rank. That is the same matrix, to within a factor of 1.5 in σmin, as the
+`SPARKLobattoIIIAIIIB(2)` and `SPARKGLRK(2)` siblings the suite asserts `SingularException` for.
+
+The 0.17.0 promotion from `@test_broken` to `@test` is therefore retracted: it read one platform's
+luck as a property of the method. Whether LAPACK's `getrf` lands on an exact zero pivot or on one
+of ~1E-17 decides the outcome, so the same call raises on Julia 1.13 and nightly under Linux and
+Windows and returns a ~1E-6 answer on 1.10 and 1.12 everywhere and on macOS throughout. The test
+now accepts both. What stays open is the method: `s = 2` is audit finding S8, degenerate at the
+lowest stage count, and the answer it sometimes returns is one produced by a Newton direction
+solved out of a rank-deficient matrix. It should not be treated as a supported configuration.
+
+### A rank-deficient stage system is diagnosed by luck rather than by design
+
+The entry above is one case of a general gap, and the `Known-broken cases remain` entry below
+already names the class — the *marginally* singular methods "which converge or zero-pivot depending
+on rounding, so that no single assertion is reliable for them". What makes them unassertable is
+that nothing on the path distinguishes rank deficiency from a hard problem. SimpleSolvers' `LU`
+linear solver raises `SingularException` only on an exact zero pivot; a pivot of 1E-17 is accepted,
+and the Newton direction that comes back out of it is arbitrary in magnitude and direction. The
+integrator sees a solve that stalls, not a matrix that has no rank, and the two call for opposite
+responses.
+
+A rank-revealing factorization, or simply a pivot-magnitude threshold relative to `σmax`, would
+make the outcome deterministic and let a caller distinguish "this method is degenerate here" from
+"this step is hard". Both belong in SimpleSolvers rather than here, and neither is a compat-bump
+change. Until then the SPARK suite has to accept two outcomes for at least one case, and this
+package cannot tell a caller which of the two it got.
+
+### The four state-building `solve_with_status!` sites allocate a state per call
+
+0.18.2 leaves DIRK's per-stage loop and the three projection integrators on the state-*building*
+form of `solve_with_status!`, which constructs a `NonlinearSolverState` on every call — once per
+stage per step for DIRK, once per step for each projection. This is not a regression: the
+`solve!(x, s, params)` they replaced went through the same `NonlinearSolverState(x, value(cache(s)))`
+convenience path, so nothing got slower. It is simply now visible, and it is the objection
+SimpleSolvers 0.12.1's own docstring raises against that form — *"a caller stepping through time
+should build one `NonlinearSolver` and one `NonlinearSolverState` and reuse both"*.
+
+Closing it means giving `ProjectionIntegrator` a `solverstate` field and `SingleStageSolvers` one
+state per stage, both structural changes to types that GeometricIntegratorsBase and this package
+own respectively. Out of a compat bump, and worth doing together rather than one at a time.
+
+### `check_solver_status` cannot tell a caller *which* solve it is being asked about
+
+The hook takes `(status, int)`, which is the right signature for the fifteen methods that solve
+once per step. It is thinner than it should be for the other four. DIRK calls it once per stage
+with the same `int` every time, so an override cannot tell which of the `s` stage solves failed,
+and sees `s` calls per step where every other method produces one. The three projections pass a
+`ProjectionIntegrator`, so an override written as GeometricIntegratorsBase's documentation
+suggests — on `GeometricIntegrator{<:MyMethod}` — never sees the projection solve at all, only the
+inner integrator's.
+
+Neither is wrong as far as it goes, and no test here depends on the distinction. But a caller
+overriding the hook to reject a non-converged step gets a coarser instrument than the call sites
+could support, and widening the signature is a GeometricIntegratorsBase decision.
+
+### RungeKutta's barred Lobatto tableaus carry 1E-77 where the plain ones carry exact zeros
+
+Noticed while measuring the stage Jacobians above. `TableauLobattoIIIA(s).a` and
+`TableauLobattoIIIB(s).a` have an exactly zero first row, as they should; the adjoint variants do
+not:
+
+```julia
+julia> TableauLobattoIIIB̄(3).a[1,:]
+3-element Vector{Float64}:
+ -2.1590421387736112e-78
+  8.636168555094445e-78
+ -2.1590421387736112e-78
+```
+
+The magnitude is `eps(BigFloat)` at the default 256-bit precision, so these are rounding residue
+from a coefficient solve carried out in `BigFloat` and surviving the conversion to `Float64`. They
+reach this package through every SPARK tableau built on the barred pairs — `SPARKLobattoIIIBIIIA(s)`
+for `s ≥ 3` shows them in `tableau.p.a`.
+
+Numerically inert: 1E-77 against coefficients of order 1 changes no arithmetic here. What it does
+change is that the structural zeros are no longer *detectable* — `iszero`, `count(iszero, …)` and
+anything asking "is the first stage explicit?" answer wrongly on these tableaus. Nothing in this
+package asks today. The fix is upstream in RungeKutta.jl, where rounding the solve back to exact
+zeros costs nothing.
+
+### The PGLRK status-hook override in the test suite is session-global
+
+`test/verification/pglrk_convergence_tests.jl` adds a counting method to
+`GeometricIntegratorsBase.check_solver_status` for `GeometricIntegrator{<:PGLRK}`. A method is
+global to the session and `runtests.jl` drives its files with `@safetestset` — a fresh module in
+the same process — so it also counts every PGLRK integration in `methods_tests.jl`,
+`test_show.jl` and `spark_tableaus_tests.jl`, which run after it. Harmless today: it returns its
+argument unchanged and nothing there reads the counter. It is recorded because a second counting
+override, for another method or another hook, would silently collide with this one, and because
+there is no way to scope a method to a file.
 
 ### Known-broken cases remain
 

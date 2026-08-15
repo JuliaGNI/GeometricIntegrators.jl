@@ -414,8 +414,9 @@ end
 
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:FLRK,<:AbstractProblemIODE})
-    # solve the position stages
-    solve!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    # solve the position stages and act on the outcome the solver reports
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    check_solver_status(solverstatus, int)
 
     # compute the adjoint momentum and the final update
     update!(sol, params, nlsolution(int), int)

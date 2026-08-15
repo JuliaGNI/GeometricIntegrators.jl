@@ -51,14 +51,9 @@ end
 
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DVIMethod,<:AbstractProblemIODE})
-    # call nonlinear solver
-    solve!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
-
-    # print solver status
-    # print_solver_status(int.solver.status, int.solver.params)
-
-    # check if solution contains NaNs or error bounds are violated
-    # check_solver_status(int.solver.status, int.solver.params)
+    # call nonlinear solver and act on the outcome it reports
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    check_solver_status(solverstatus, int)
 
     # compute final update
     update!(sol, params, nlsolution(int), int)

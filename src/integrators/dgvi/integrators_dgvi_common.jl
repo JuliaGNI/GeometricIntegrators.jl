@@ -615,6 +615,7 @@ end
 
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DGVIMethod,<:AbstractProblemIODE})
-    solve!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    check_solver_status(solverstatus, int)
     update!(sol, params, nlsolution(int), int)
 end
