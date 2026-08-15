@@ -550,10 +550,12 @@ etc.) are **historical** and no longer describe the suite:
   timestep under 0.10's stricter stall detection. Each relaxed converging call now
   carries a `@test_nowarn` regression tripwire, so a resurfacing solver warning
   fails the suite rather than merely printing.
-* One formerly-broken case now converges: `VSPARK(SPARKLobattoIIIBIIIA(2))` (a
+* ~~One formerly-broken case now converges: `VSPARK(SPARKLobattoIIIBIIIA(2))` (a
   singular stage system under 0.9) solves cleanly under 0.10 and has been promoted
-  from `@test_broken` to `@test`. This is the only pass/broken change; the tally is
-  otherwise unchanged.
+  from `@test_broken` to `@test`.~~ **Retracted** — see the S8 retraction under the
+  0.12.1 update below. The stage system is singular here too (cond ≈ 5.6E16); it
+  "solves cleanly" only where the LU misses the zero pivot. This is the only
+  pass/broken change; the tally is otherwise unchanged.
 
 **Update (tolerance re-tune).** With the warning floods gone, the solver tolerances and
 test thresholds were re-measured and normalised:
@@ -692,7 +694,9 @@ It moved the census, though — **a full run emits 8 warning blocks where it emi
 
 * **Unchanged, 8 of the 8**: the seven `non-finite direction vector` warnings recorded in the
   update above (GeometricIntegratorsBase's own, at `n` = 5, 7, 9×3, 10×2) and the one stagnation
-  warning from `VSPARK(SPARKLobattoIIIBIIIA(2))` — the case recorded as open two updates above.
+  warning from `VSPARK(SPARKLobattoIIIBIIIA(2))` — the case recorded as open two updates above,
+  and the one entry in this census that is platform-dependent, for the reason the next update
+  gives.
 * **Gone, the six that went**: three `Backtracking line search: no step satisfied the sufficient
   decrease condition in 13/14 trials` and three `Backtracking line search: φ'(0) = <tiny positive>
   (with φ(0) = …)`. These are exactly the per-iteration line-search messages SimpleSolvers 0.12
@@ -716,6 +720,38 @@ that a site whose budget is spent becomes invisible to `@test_nowarn` — no lon
 form. This suite never reaches the back-off regime, since the repeating diagnosis now fires once
 per run, so the change is inherited but not exercised from here. GeometricIntegratorsBase carries
 the corresponding open issue for a time-stepping loop, where it is.
+
+**Update (S8 retraction: `VSPARK(SPARKLobattoIIIBIIIA(2))` is singular after all).** The promotion
+recorded two updates above — *"one formerly-broken case now converges … promoted from
+`@test_broken` to `@test`"* — is **retracted**. It was over-fitting to one platform, and CI on
+Julia 1.13 and nightly (Linux and Windows) is where that showed: the same call raises
+`SingularException: Zero pivot found at index 25` there while returning a ~1E-6 answer on 1.10 and
+1.12 everywhere and on macOS throughout. The failure predates the 0.12.1 bump — it is present on
+`main` at the previous commit with the identical signature — so it is a property of the case and
+not of any dependency in it.
+
+Measured rather than inferred. Singular values of the residual Jacobian at the first step, on the
+`idae` problem of `test/spark/spark_integrators_tests.jl`:
+
+| method | n | σmax | σmin | cond |
+|:---|---:|---:|---:|---:|
+| `VSPARK(SPARKLobattoIIIBIIIA(2))` | 26 | 3.175 | 5.68E-17 | 5.6E16 |
+| `VSPARK(SPARKLobattoIIIAIIIB(2))` | 26 | 3.199 | 3.78E-17 | 8.5E16 |
+| `VSPARK(SPARKGLRK(2))` | 24 | 2.989 | 9.82E-18 | 3.0E17 |
+
+The lower two rows are asserted `@test_throws SingularException` and pass on every platform. The
+top row is the same matrix to within a factor of 1.5 in σmin, and its σmin sits an order *below*
+the `n·eps·σmax ≈ 1.8E-14` at which a 26×26 system stops having a numerical rank. There is no
+conditioning difference between the three to explain a difference in outcome; what differs is only
+whether LAPACK's `getrf` lands on an exact zero pivot or on one of ~1E-17, which is a rounding
+accident of the BLAS kernel. S8's original classification — *degenerate stage system at the lowest
+stage count, inherent* — covers all three, and this case never left it.
+
+The test now accepts both outcomes and asserts on each branch: the ~1E-6 answer where one is
+returned, `err isa SingularException` where it is not. That is a statement about a case whose
+outcome is genuinely platform-dependent, rather than a threshold tuned on the platform that
+happened to be at hand. It also makes the stagnation warning in the census above platform-dependent
+in the same way: it is emitted exactly on the runs that return.
 
 ---
 
@@ -781,7 +817,7 @@ confirmed orders:
 | S6 | **A — inherent** | `SPARKLobattoIIIAIIIB(2/3/4)`, `SPARKGLRKLobattoIII{AIIIB,BIIIA}(s)` | order-reduced (`(3)`→~2.4, `(4)`→~3.5; GLRK-Lobatto→~1) | Symplectic Lobatto pair enforcing the constraint at the solution on the degenerate Lagrangian — reduced order (predictions 1 + the known symplectic-RK-on-degenerate-Lagrangian reduction). `SPARKLobattoIIIAIIIB(2)` fails the solve outright. | `@test_broken` / documented order-reduced tolerances |
 | S7 | **A — inherent** | `SPARKLobattoIIIBIIIA(2/3/4)`, `TableauHPARKLobattoIII{AIIIB,BIIIA}(2/3)` | divergence (`NonlinearSolverException`, or error 0.15–20 at `T = 0.1`) | Full divergence predicted by prediction 1; a different solver / line search / iteration cap does not help (confirmed here and in the third pass). | `@test_broken` |
 | S7b | **B — bug (fixed)** | `TableauVSPARKLobattoIII{AIIIB,BIIIA}pSymmetric(3)`, and structurally all 16 Lobatto-pair projection constructors at odd `s` | `BIIIA(3)` stalled at the residual floor and was no better than `s = 2` (7.95E-7); `AIIIB(3)` order 3.094 | Originally filed under S7 as inherent divergence. It was an operator-precedence bug: `R∞=-1^(s+1)` parses as `-(1^(s+1))` and is `-1` at every `s`, where `(-1)^(s+1)` is `+1` at odd `s`. The Gauss siblings in the same functions already wrote `(-1)^s` correctly. | **Fixed:** all 16 sites parenthesised. `BIIIA(3)` 7.95E-7 → 1.89E-11 (order 4.000), `AIIIB(3)` 4.17E-11 → 1.21E-11 (order 3.999). Both promoted from `@test_broken` to `conv` |
-| S8 | **A — inherent** | `VSPARK(SPARK{GLRK,LobABC,LobABD,LobattoIIIAIIIB,LobattoIIIBIIIA}(2))` | `SingularException` at `s = 2` | Degenerate stage system at the lowest stage count (prediction 3). `VSPARK(SPARKLobABD(2/3))` singular at `s = 2, 3`. | `@test_broken` |
+| S8 | **A — inherent** | `VSPARK(SPARK{GLRK,LobABC,LobABD,LobattoIIIAIIIB,LobattoIIIBIIIA}(2))` | `SingularException` at `s = 2` | Degenerate stage system at the lowest stage count (prediction 3). `VSPARK(SPARKLobABD(2/3))` singular at `s = 2, 3`. The `LobattoIIIBIIIA(2)` member is cond ≈ 5.6E16 like the rest and only *sometimes* raises — see the S8 retraction under the 0.12.1 update. | `@test_broken`; `LobattoIIIBIIIA(2)` accepts either outcome |
 | S9 | C — limitation (documented) | `SPARKMethod` (internal stages) | none on the degenerate test problem | `initial_guess!` zeroes the internal velocity `Vi` and `components!` never recomputes it (the `v̄` call is commented out), so `ϑ`/`f` are evaluated at `Vi = 0`. Harmless for degenerate Lagrangians (the `v`-term vanishes), but wrong in general — the code flags this in-comment. No non-degenerate DAE test problem exists here to validate a change, so a fix would be unverifiable. | Documented; not changed |
 
 ## Static consistency

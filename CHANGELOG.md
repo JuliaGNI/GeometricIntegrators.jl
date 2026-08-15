@@ -108,6 +108,23 @@ remain a gap.
   the bisection would have run in [±1E-300] and fallen back on every step exactly as it does in row
   two, so `nfallback == 0` there is what says the bisection never ran at all.
 
+* **`VSPARK(SPARKLobattoIIIBIIIA(2))` accepts either outcome, which is what CI on Julia 1.13 and
+  nightly was failing on.** That case raises `SingularException: Zero pivot found at index 25` on
+  1.13 and nightly under Linux and Windows, while returning a ~1E-6 answer on 1.10 and 1.12
+  everywhere and on macOS throughout. The failure is older than this release — it is on `main` at
+  the previous commit with the identical signature — and it is not a regression to chase: the stage
+  system is **numerically singular**, cond ≈ 5.6E16 with σmin = 5.7E-17 against σmax = 3.2, which is
+  the same matrix to within a factor of 1.5 as the `SPARKLobattoIIIAIIIB(2)` and `SPARKGLRK(2)`
+  siblings the suite already asserts `SingularException` for. Its σmin sits an order below the
+  `n·eps·σmax ≈ 1.8E-14` at which a 26×26 system stops having a numerical rank.
+
+  Whether LAPACK's `getrf` lands on an exact zero pivot or on one of ~1E-17 is a rounding accident
+  of the BLAS kernel, so the outcome is genuinely platform-dependent. The `@test` on this case was
+  promoted from `@test_broken` under SimpleSolvers 0.10 on the strength of one platform where it
+  survived; that promotion is retracted, and the test now asserts the answer where there is one and
+  `err isa SingularException` where there is not. Audit finding S8 always covered the case — see the
+  S8 retraction in `docs/src/audit.md`, which carries the singular-value measurements.
+
 ### Findings
 
 Test outcomes are unchanged across this bump, and this was measured rather than assumed: the suite
