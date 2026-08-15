@@ -32,6 +32,7 @@ docs/build/
 docs/site/
 docs/src/authors.md
 docs/src/methods.md
+docs/src/releasenotes.md
 docs/src/images/*.aux
 docs/src/images/*.log
 docs/src/images/*.pdf

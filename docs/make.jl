@@ -9,6 +9,7 @@ using Weave
 ENV["GKSwstype"] = "100"
 
 cp(normpath(@__FILE__, "../../AUTHORS.md"), normpath(@__FILE__, "../src/authors.md"); force=true)
+cp(normpath(@__FILE__, "../../CHANGELOG.md"), normpath(@__FILE__, "../src/releasenotes.md"); force=true)
 
 bib = CitationBibliography(joinpath(@__DIR__, "src", "GeometricIntegrators.bib"))
 
