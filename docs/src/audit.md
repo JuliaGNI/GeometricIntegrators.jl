@@ -684,6 +684,39 @@ moving — the case `max_stalls` cannot see. It is justified upstream for `Newto
 every method here uses, and options are merged rather than replaced, so a method that needs a
 longer window overrides it with one keyword.
 
+**Update (SimpleSolvers 0.12.1 / GeometricIntegratorsBase 0.6.3).** This bump changed no test
+outcome either: all 28 testsets report the same pass and broken counts as on 0.11.0/0.6.2 —
+excepting the six assertions newly added to the PGLRK suite, which do not exist there — measured
+by running the suite in a worktree at the previous commit immediately before and after.
+It moved the census, though — **a full run emits 8 warning blocks where it emitted 14**:
+
+* **Unchanged, 8 of the 8**: the seven `non-finite direction vector` warnings recorded in the
+  update above (GeometricIntegratorsBase's own, at `n` = 5, 7, 9×3, 10×2) and the one stagnation
+  warning from `VSPARK(SPARKLobattoIIIBIIIA(2))` — the case recorded as open two updates above.
+* **Gone, the six that went**: three `Backtracking line search: no step satisfied the sufficient
+  decrease condition in 13/14 trials` and three `Backtracking line search: φ'(0) = <tiny positive>
+  (with φ(0) = …)`. These are exactly the per-iteration line-search messages SimpleSolvers 0.12
+  stopped emitting from inside `solver_step!`: `linesearch_warnings` is no longer called from the
+  solver's iteration, so a rejected line search reports to its *caller* through the returned
+  status instead — which is what 0.18.2 routes every solve through `solve_with_status!` for.
+
+**Nothing was lost with them**, and this is the point of the change rather than a consolation. The
+stagnation warning reports the same residual to the bit (`rfₐ = 3.571488053775618e-5`), and 0.12
+appends to it the cause the six deleted lines were carrying one event at a time: the line search
+reported `LINESEARCH_NO_DESCENT` on 2 of the 3 steps, i.e. `φ'(0) > 0`, so the direction was not a
+descent direction at all — which points at the Jacobian rather than at the tolerance (a stale one
+under `refactorize > 1`, a nonzero `regularization_factor`, or an inexact linear solve). Counted
+and named once at the end of the solve, in the warning that was already firing.
+
+One consequence worth stating, because it changes what the arithmetic at the top of this census
+means: SimpleSolvers 0.12 replaced the `maxlog` caps on its solver report with a back-off
+(occurrences 1, 2, 4, 8, …). The "three `maxlog = 3` sites saturate at exactly 9" reasoning above
+therefore no longer describes the mechanism, and the `@test_nowarn` caveat that followed from it —
+that a site whose budget is spent becomes invisible to `@test_nowarn` — no longer applies in that
+form. This suite never reaches the back-off regime, since the repeating diagnosis now fires once
+per run, so the change is inherited but not exercised from here. GeometricIntegratorsBase carries
+the corresponding open issue for a time-stepping loop, where it is.
+
 ---
 
 # Fourth pass — SPARK submodule (`src/spark/`)

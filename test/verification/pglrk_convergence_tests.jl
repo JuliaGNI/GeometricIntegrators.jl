@@ -2,6 +2,7 @@ using GeometricIntegrators
 using GeometricIntegratorsBase
 using GeometricProblems.HarmonicOscillator
 using GeometricProblems.LotkaVolterra2d
+using Logging
 using Test
 
 include("verification_utilities.jl")
@@ -29,15 +30,30 @@ const q₀ = [1.0, 1.0]
 const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
 
 # Counts the statuses PGLRK hands to `check_solver_status`, for the testset of the same name below.
-# The override only counts and returns its argument, so it leaves every other assertion in this
-# file — and every other PGLRK integration in the suite — exactly as it was. It has to be defined
-# at top level, and it is global once defined, which is why the counter is reset immediately before
-# each integration it is read after rather than once here.
+# The override only counts and returns its argument, so it leaves every assertion that runs under
+# it exactly as it was. Note how far "under it" reaches: a method is global to the *session*, and
+# `runtests.jl` drives its files with `@safetestset`, which is a fresh module in the same process —
+# so this counts every PGLRK integration in every file that runs after this one too. Nothing reads
+# the counter there, and the reset below is immediately before each integration it is read after
+# rather than once here, so that is harmless; it is not file-local, though.
 const PGLRK_STATUS_CHECKS = Ref(0)
 
 function GeometricIntegratorsBase.check_solver_status(status, int::GeometricIntegrator{<:PGLRK})
     PGLRK_STATUS_CHECKS[] += 1
     status
+end
+
+# Run `method` on `prob` and report both of the things the testset below distinguishes routes by:
+# how many statuses reached the hook, and how many steps fell back to plain Gauss. The fallback is
+# read off the `@debug` line `solve_λ!` emits on that branch, which is why the integration runs
+# under a `TestLogger` — it is the only outward sign of which way through `solve_λ!` a step went,
+# and the whole point here is to assert the route rather than to assume it.
+function count_checks_and_fallbacks(prob, method)
+    PGLRK_STATUS_CHECKS[] = 0
+    logger = TestLogger(min_level=Logging.Debug)
+    with_logger(() -> integrate(prob, method), logger)
+    (checks=PGLRK_STATUS_CHECKS[],
+     nfallback=count(r -> occursin("falling back to plain Gauss", r.message), logger.logs))
 end
 
 build(Δt) = LotkaVolterra2d.odeproblem(q₀; timespan=(0.0, T), timestep=Δt, parameters=params)
@@ -98,19 +114,41 @@ end
         # The failure this guards against is not "the hook is never called" but "the hook is called
         # once per probe", i.e. once per bisection trial rather than once per step — so the
         # assertion is an exact count and not a bound.
+        #
+        # `solve_λ!` has three ways through it and a separate `check_solver_status` call site on
+        # each, so all three are driven here — and *which* one a run took is asserted rather than
+        # assumed, from the fallback count, since a hook count of `nsteps` is what every route is
+        # supposed to produce and so cannot itself tell them apart.
         nsteps = 5
-        prob = LotkaVolterra2d.odeproblem(q₀; timespan=(0.0, nsteps * 0.1), timestep=0.1, parameters=params)
+        lv = LotkaVolterra2d.odeproblem(q₀; timespan=(0.0, nsteps * 0.1), timestep=0.1, parameters=params)
 
-        PGLRK_STATUS_CHECKS[] = 0
-        integrate(prob, PGLRK(3))
-        @test PGLRK_STATUS_CHECKS[] == nsteps
+        # Route 1 — the bisection locates a root. On this problem plain Gauss(3) drifts to
+        # |h − h₀| ≈ 6E-11 within these five steps, nowhere near the ftol ≈ 3.6E-15 of the early
+        # return, so the first probe never satisfies it and the bisection runs; that it also finds
+        # a root, rather than falling back, is what `nfallback == 0` says.
+        r = count_checks_and_fallbacks(lv, PGLRK(3))
+        @test r.nfallback == 0
+        @test r.checks == nsteps
 
-        # The early-return path — the unperturbed method already conserves the energy, so the
-        # bisection never runs — is the other way through `solve_λ!`, and it checks its solve too.
-        # It is a separate `check_solver_status` call site and was as easy to leave out.
-        PGLRK_STATUS_CHECKS[] = 0
-        integrate(prob, PGLRK(3; λmax=1e-300))
-        @test PGLRK_STATUS_CHECKS[] == nsteps
+        # Route 2 — the bisection runs and finds no sign change in [±λmax], so the step falls back
+        # to plain Gauss. Note that λmax does *not* reach the early return, whose condition is on
+        # the λ = 0 residual alone: on this problem this is a fallback on every step, not an early
+        # return, and `nfallback == nsteps` is what distinguishes it from route 1.
+        r = count_checks_and_fallbacks(lv, PGLRK(3; λmax=1e-300))
+        @test r.nfallback == nsteps
+        @test r.checks == nsteps
+
+        # Route 3 — the early return: the unperturbed method already conserves the energy to
+        # tolerance, so `solve_λ!` returns before the bisection. Gauss preserves the quadratic
+        # invariant of a linear system exactly, so the harmonic oscillator is where that branch is
+        # reachable (|h − h₀| ≈ 7E-18 against ftol ≈ 1.8E-15). Keeping the λmax of route 2 is what
+        # makes this an assertion instead of a hope: had the early return *not* been taken, the
+        # bisection would have run in [±1E-300] and fallen back on every step exactly as it does
+        # there, so `nfallback == 0` here means the bisection never ran at all.
+        ho = HarmonicOscillator.odeproblem(; timespan=(0.0, nsteps * 0.1), timestep=0.1)
+        r = count_checks_and_fallbacks(ho, PGLRK(3; λmax=1e-300))
+        @test r.nfallback == 0
+        @test r.checks == nsteps
     end
 
     @testset "reduces to Gauss when λ = 0" begin

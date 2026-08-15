@@ -28,18 +28,25 @@ remain a gap.
   `solve` — do not reach a package that constructs neither.
 
   `Bisection`'s two fixes in 0.12 (it no longer claims success when it cannot bracket, and it
-  bisects toward a minimum rather than toward whichever root the value bracket held) do not reach
-  the integrators either: `default_linesearch` is `Backtracking` and every method solves with
-  `Newton()`. The one place this package does reach for `Bisection` is not a line search at all —
-  PGLRK bisects the *energy residual* over λ through `SimpleSolvers.bisection` — and that is a
-  root find on a scalar, which is the case the 0.12 entry describes as unchanged.
+  bisects toward a minimum rather than toward whichever root the value bracket held) reach no line
+  search here: `default_linesearch` is `Backtracking` and every method solves with `Newton()`. The
+  one place this package does reach for `Bisection` is not a line search at all — PGLRK bisects the
+  *energy residual* over λ through `SimpleSolvers.bisection`. That call **does** take the
+  no-bracket branch, on every step of every `λmax = 1E-300` run in the test suite, and it is
+  unaffected all the same: the endpoint returned there is bit-for-bit the one 0.11 returned
+  (`abs(y₀) ≤ abs(y₁) ? α₀ : α₁`), the warning that accompanies it is gated behind the
+  `verbosity = 0` that `solve_λ!` passes and predates 0.12 anyway, and the success flag that 0.12
+  corrected is the one thing `bisection` does not hand back to its caller — `solve_λ!` re-derives
+  the failure itself, from `abs(λ) ≥ λmax`.
 
 ### New Features
 
 * **Every nonlinear solve goes through `solve_with_status!`**, and the status it returns is handed
-  to GeometricIntegratorsBase 0.6.3's `check_solver_status`. Nineteen call sites: fifteen
-  `integrate_step!` methods across the RK, VI, CGVI, DGVI, DVI, HPI and SPARK families, the three
-  projection integrators, and DIRK's per-stage loop. It replaces the pair of commented-out stubs
+  to GeometricIntegratorsBase 0.6.3's `check_solver_status`. Nineteen call sites: fourteen
+  `integrate_step!` methods across the RK, VI, CGVI, DGVI, DVI, HPI and SPARK families, PGLRK's
+  `energy_residual!` — a stage solve *inside* a step rather than a step, which is why it is
+  counted apart — the three projection integrators, and DIRK's per-stage loop. It replaces the
+  pair of commented-out stubs
   (`# println(status(solver))` / `# println(meets_stopping_criteria(status(solver)))`, and the
   older `# print_solver_status(int.solver.status, …)` spelling) that had sat under the solve in
   most of those files.
@@ -74,19 +81,39 @@ remain a gap.
 ### Tests
 
 * `test/verification/pglrk_convergence_tests.jl` counts the statuses PGLRK hands to
-  `check_solver_status`, and requires exactly one per time step on both routes through `solve_λ!` —
-  the bisecting one and the early return taken when the unperturbed method already conserves the
-  energy. This is the one decision in this release that no other assertion could catch: the hook's
-  default returns its argument, so calling it once per *bisection probe* instead of once per step
-  is invisible to every other test in the suite, and would only surface for a caller who had
-  overridden it to reject a non-converged step — who would then find bisection probes being
-  rejected. Measured at 5 checks over 5 steps on both routes.
+  `check_solver_status` and requires exactly one per time step. This is the one decision in this
+  release that no other assertion could catch: the hook's default returns its argument, so calling
+  it once per *bisection probe* instead of once per step is invisible to every other test in the
+  suite, and would only surface for a caller who had overridden it to reject a non-converged step —
+  who would then find bisection probes being rejected.
+
+  `solve_λ!` has **three** ways through it, each with its own `check_solver_status` call site, and
+  the test drives all three at 5 checks over 5 steps. Which route a run took is *asserted* and not
+  assumed, from the count of fallback `@debug` lines captured off a `TestLogger`, because a hook
+  count of `nsteps` is what every route is supposed to produce and so cannot by itself tell them
+  apart:
+
+  | route | problem, `λmax` | fallbacks |
+  |:---|:---|:---|
+  | bisection locates a root | Lotka-Volterra, default | 0 |
+  | bisection finds no sign change, step falls back to plain Gauss | Lotka-Volterra, `1E-300` | 5 |
+  | early return, the unperturbed method already conserves the energy | harmonic oscillator, `1E-300` | 0 |
+
+  The third row needs a problem where plain Gauss conserves `h` to the `ftol` of the early return,
+  which the harmonic oscillator is and Lotka-Volterra is not: Gauss preserves the quadratic
+  invariant of a linear system exactly (|h − h₀| ≈ 7E-18 against ftol ≈ 1.8E-15), whereas on
+  Lotka-Volterra at Δt = 0.1 it drifts to ≈ 6E-11 against ftol ≈ 3.6E-15, four orders too far. Note
+  that `λmax` does *not* reach the early return, whose condition is on the λ = 0 residual alone —
+  which is why the third row keeps the `λmax` of the second: had the early return not been taken,
+  the bisection would have run in [±1E-300] and fallen back on every step exactly as it does in row
+  two, so `nfallback == 0` there is what says the bisection never ran at all.
 
 ### Findings
 
 Test outcomes are unchanged across this bump, and this was measured rather than assumed: the suite
 was run at `HEAD~` against SimpleSolvers 0.11.0 and GeometricIntegratorsBase 0.6.2 in a separate
-worktree, and all **28 testsets report identical pass and broken counts**.
+worktree, and all **28 testsets report identical pass and broken counts** — the six route
+assertions added above excepted, since they do not exist there.
 
 **The warning census moved, and this is what it moved to.** A full run emitted 14 warnings before
 and emits 8 now. Unchanged: the seven `Nonlinear solver failed at timestep n=…: non-finite
@@ -105,8 +132,12 @@ SimpleSolvers 0.12 stopped emitting from inside `solver_step!`.
 > linear solve.
 
 That is the same three `φ'(0) > 0` events the deleted per-iteration warnings were reporting one at
-a time, now counted and named once at the end of the solve. `docs/src/audit.md`'s warning census
-should be updated to these numbers.
+a time, now counted and named once at the end of the solve. `docs/src/audit.md`, where the census
+lives, carries these numbers as its own update — together with the one thing they change about the
+reasoning there: SimpleSolvers 0.12 replaced the `maxlog` caps with a back-off (occurrences 1, 2,
+4, 8, …), so the "three `maxlog = 3` sites saturate at exactly 9" arithmetic of the earlier census
+no longer describes the mechanism. This suite never reaches the back-off regime, the repeating
+diagnosis now firing once per run, so it is inherited but not exercised from here.
 
 
 ## 0.18.1
@@ -760,21 +791,6 @@ the time step and returning what was computed so far. This is tracked in that pa
 `## Open Issues` rather than here, since the hook and the loop both live there; it is named here
 because this package is where the consequences would show — see the `@test_broken` methods below,
 several of which reach `max_iterations` on every step.
-
-### `docs/src/audit.md` still carries the pre-0.12 warning census
-
-The census itself was re-measured for 0.18.2 and the result is recorded under that release's
-*Findings* — 14 warnings before, 8 after, with the six that went being the per-iteration
-`Backtracking line search:` messages SimpleSolvers 0.12 no longer emits. What has *not* been done
-is propagating those numbers into `docs/src/audit.md`, which is where the census lives and which
-still describes the pre-0.12 surface. Clerical, but the page is the reference the release notes
-point at.
-
-One consequence worth stating: SimpleSolvers 0.12 also replaced the `maxlog` caps on its solver
-report with a back-off (occurrences 1, 2, 4, 8, …). This suite never reaches that regime — the
-repeating diagnosis fires once per run — so the census above does not exercise it, and it remains
-untested from here. GeometricIntegratorsBase carries the corresponding open issue for a
-time-stepping loop, where it does.
 
 ### SLRK is not symplectic (audit finding S15)
 
