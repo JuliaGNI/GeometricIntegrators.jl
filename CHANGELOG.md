@@ -125,6 +125,20 @@ remain a gap.
   `err isa SingularException` where there is not. Audit finding S8 always covered the case — see the
   S8 retraction in `docs/src/audit.md`, which carries the singular-value measurements.
 
+### Documentation
+
+* **`docs/src/audit.md` carries the re-measured warning census.** This closes the item that stood
+  under `## Open Issues` as *"`docs/src/audit.md` still carries the pre-0.12 warning census"*: the
+  page now has its own `Update (SimpleSolvers 0.12.1 / GeometricIntegratorsBase 0.6.3)` block with
+  the 14 → 8 figures recorded under *Findings* below, and with the one thing 0.12 changes about the
+  reasoning already on that page — the `maxlog` caps having become a back-off, the arithmetic by
+  which three saturating sites gave exactly 9 warnings no longer describes the mechanism, and
+  neither does the `@test_nowarn`-goes-blind caveat that followed from it.
+
+* The same page records the **S8 retraction** for `VSPARK(SPARKLobattoIIIBIIIA(2))` described under
+  *Tests* above, with the singular values behind it, and strikes the 0.17.0 promotion where it was
+  originally recorded rather than leaving two entries that disagree.
+
 ### Findings
 
 Test outcomes are unchanged across this bump, and this was measured rather than assumed: the suite
@@ -135,7 +149,10 @@ assertions added above excepted, since they do not exist there.
 **The warning census moved, and this is what it moved to.** A full run emitted 14 warnings before
 and emits 8 now. Unchanged: the seven `Nonlinear solver failed at timestep n=…: non-finite
 direction vector` (GeometricIntegratorsBase's own, at n=5, 7, 9×3, 10×2) and the one stagnation
-warning from `VSPARK(SPARKLobattoIIIBIIIA(2))`. Gone: **six `Backtracking line search:` warnings** —
+warning from `VSPARK(SPARKLobattoIIIBIIIA(2))` — the one entry here that is platform-dependent,
+since it is emitted exactly on the runs where that solve returns rather than raising
+`SingularException`, as the *Tests* entry above describes. Gone: **six `Backtracking line search:`
+warnings** —
 three `no step satisfied the sufficient decrease condition in 13/14 trials` and three
 `φ'(0) = <tiny positive> (with φ(0) = …)`. Those are exactly the per-iteration line-search warnings
 SimpleSolvers 0.12 stopped emitting from inside `solver_step!`.
@@ -869,14 +886,104 @@ neither has an `initial_guess!` method for its state layout. Their tests are com
 `test/projections/projections_vprk_tests.jl:109` and `:127`. The verdict recorded above on the
 internal projection is therefore one about the method, not about executable code.
 
-### `VSPARK(SPARKLobattoIIIBIIIA(2))` stalls
+### `VSPARK(SPARKLobattoIIIBIIIA(2))` has a singular stage system
 
-Promoted from `@test_broken` to `@test` in 0.17.0 because it converges under SimpleSolvers 0.10
-and reaches passing accuracy (< 1E-6). But its solve stagnates after 3 iterations at
-rf_a = 3.57e-5, against the `f_abstol = 5.77e-15` it was asked for — some ten orders of
-magnitude — and it is the one stagnation warning a full test run still prints. That is a question
-about the method rather than log noise, so it is recorded at the call site and in `audit.md`
-rather than silenced.
+Restated in 0.18.2, having been recorded here since 0.17.0 as a case that "stalls". It does stall —
+the solve stagnates after 3 iterations at rf_a = 3.57e-5 against the `f_abstol = 5.77e-15` it was
+asked for, and where it returns it is the one stagnation warning a full test run still prints — but
+the stall is a symptom. The stage system is **numerically singular**: cond ≈ 5.6E16, σmin = 5.7E-17
+against σmax = 3.2, with σmin an order below the `n·eps·σmax ≈ 1.8E-14` at which a 26×26 system
+stops having a numerical rank. That is the same matrix, to within a factor of 1.5 in σmin, as the
+`SPARKLobattoIIIAIIIB(2)` and `SPARKGLRK(2)` siblings the suite asserts `SingularException` for.
+
+The 0.17.0 promotion from `@test_broken` to `@test` is therefore retracted: it read one platform's
+luck as a property of the method. Whether LAPACK's `getrf` lands on an exact zero pivot or on one
+of ~1E-17 decides the outcome, so the same call raises on Julia 1.13 and nightly under Linux and
+Windows and returns a ~1E-6 answer on 1.10 and 1.12 everywhere and on macOS throughout. The test
+now accepts both. What stays open is the method: `s = 2` is audit finding S8, degenerate at the
+lowest stage count, and the answer it sometimes returns is one produced by a Newton direction
+solved out of a rank-deficient matrix. It should not be treated as a supported configuration.
+
+### A rank-deficient stage system is diagnosed by luck rather than by design
+
+The entry above is one case of a general gap, and the `Known-broken cases remain` entry below
+already names the class — the *marginally* singular methods "which converge or zero-pivot depending
+on rounding, so that no single assertion is reliable for them". What makes them unassertable is
+that nothing on the path distinguishes rank deficiency from a hard problem. SimpleSolvers' `LU`
+linear solver raises `SingularException` only on an exact zero pivot; a pivot of 1E-17 is accepted,
+and the Newton direction that comes back out of it is arbitrary in magnitude and direction. The
+integrator sees a solve that stalls, not a matrix that has no rank, and the two call for opposite
+responses.
+
+A rank-revealing factorization, or simply a pivot-magnitude threshold relative to `σmax`, would
+make the outcome deterministic and let a caller distinguish "this method is degenerate here" from
+"this step is hard". Both belong in SimpleSolvers rather than here, and neither is a compat-bump
+change. Until then the SPARK suite has to accept two outcomes for at least one case, and this
+package cannot tell a caller which of the two it got.
+
+### The four state-building `solve_with_status!` sites allocate a state per call
+
+0.18.2 leaves DIRK's per-stage loop and the three projection integrators on the state-*building*
+form of `solve_with_status!`, which constructs a `NonlinearSolverState` on every call — once per
+stage per step for DIRK, once per step for each projection. This is not a regression: the
+`solve!(x, s, params)` they replaced went through the same `NonlinearSolverState(x, value(cache(s)))`
+convenience path, so nothing got slower. It is simply now visible, and it is the objection
+SimpleSolvers 0.12.1's own docstring raises against that form — *"a caller stepping through time
+should build one `NonlinearSolver` and one `NonlinearSolverState` and reuse both"*.
+
+Closing it means giving `ProjectionIntegrator` a `solverstate` field and `SingleStageSolvers` one
+state per stage, both structural changes to types that GeometricIntegratorsBase and this package
+own respectively. Out of a compat bump, and worth doing together rather than one at a time.
+
+### `check_solver_status` cannot tell a caller *which* solve it is being asked about
+
+The hook takes `(status, int)`, which is the right signature for the fifteen methods that solve
+once per step. It is thinner than it should be for the other four. DIRK calls it once per stage
+with the same `int` every time, so an override cannot tell which of the `s` stage solves failed,
+and sees `s` calls per step where every other method produces one. The three projections pass a
+`ProjectionIntegrator`, so an override written as GeometricIntegratorsBase's documentation
+suggests — on `GeometricIntegrator{<:MyMethod}` — never sees the projection solve at all, only the
+inner integrator's.
+
+Neither is wrong as far as it goes, and no test here depends on the distinction. But a caller
+overriding the hook to reject a non-converged step gets a coarser instrument than the call sites
+could support, and widening the signature is a GeometricIntegratorsBase decision.
+
+### RungeKutta's barred Lobatto tableaus carry 1E-77 where the plain ones carry exact zeros
+
+Noticed while measuring the stage Jacobians above. `TableauLobattoIIIA(s).a` and
+`TableauLobattoIIIB(s).a` have an exactly zero first row, as they should; the adjoint variants do
+not:
+
+```julia
+julia> TableauLobattoIIIB̄(3).a[1,:]
+3-element Vector{Float64}:
+ -2.1590421387736112e-78
+  8.636168555094445e-78
+ -2.1590421387736112e-78
+```
+
+The magnitude is `eps(BigFloat)` at the default 256-bit precision, so these are rounding residue
+from a coefficient solve carried out in `BigFloat` and surviving the conversion to `Float64`. They
+reach this package through every SPARK tableau built on the barred pairs — `SPARKLobattoIIIBIIIA(s)`
+for `s ≥ 3` shows them in `tableau.p.a`.
+
+Numerically inert: 1E-77 against coefficients of order 1 changes no arithmetic here. What it does
+change is that the structural zeros are no longer *detectable* — `iszero`, `count(iszero, …)` and
+anything asking "is the first stage explicit?" answer wrongly on these tableaus. Nothing in this
+package asks today. The fix is upstream in RungeKutta.jl, where rounding the solve back to exact
+zeros costs nothing.
+
+### The PGLRK status-hook override in the test suite is session-global
+
+`test/verification/pglrk_convergence_tests.jl` adds a counting method to
+`GeometricIntegratorsBase.check_solver_status` for `GeometricIntegrator{<:PGLRK}`. A method is
+global to the session and `runtests.jl` drives its files with `@safetestset` — a fresh module in
+the same process — so it also counts every PGLRK integration in `methods_tests.jl`,
+`test_show.jl` and `spark_tableaus_tests.jl`, which run after it. Harmless today: it returns its
+argument unchanged and nothing there reads the counter. It is recorded because a second counting
+override, for another method or another hook, would silently collide with this one, and because
+there is no way to scope a method to a file.
 
 ### Known-broken cases remain
 
