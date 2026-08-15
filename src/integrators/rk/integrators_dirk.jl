@@ -199,14 +199,12 @@ function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DIRK,<
 
     # consecutively solve for all stages
     for i in eachstage(int)
-        # call nonlinear solver
-        solve!(nlsolution(cache(int), i), solver(int)[i], (sol, params, int, i))
-
-        # print solver status
-        # println(status(solvers[i]))
-
-        # check if solution contains NaNs or error bounds are violated
-        # println(meets_stopping_criteria(status(solvers[i])))
+        # Call the nonlinear solver for this stage and act on the outcome it reports. The
+        # per-stage solvers of `SingleStageSolvers` have no persistent state of their own —
+        # `SolverState` gives the wrapper a `NullSolverState` — so this is the state-building
+        # form of `solve_with_status!`.
+        solverstatus = solve_with_status!(nlsolution(cache(int), i), solver(int)[i], (sol, params, int, i))
+        check_solver_status(solverstatus, int)
 
         # compute vector field at internal stages
         components!(nlsolution(cache(int), i), sol, params, int, i)

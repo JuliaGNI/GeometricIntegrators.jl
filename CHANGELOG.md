@@ -11,6 +11,104 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
+## 0.18.2
+
+### Breaking Changes
+
+* Requires SimpleSolvers 0.12.1 and GeometricIntegratorsBase 0.6.3. Coupled as before:
+  GeometricIntegratorsBase 0.6.3 requires SimpleSolvers 0.12.1, so neither range is satisfiable
+  with the old pin on the other.
+
+  Of the three breaks in SimpleSolvers 0.12, one reaches this package: **a `NonlinearSolver` no
+  longer emits line-search warnings from inside its iteration**. `solver_step!` stopped calling
+  `linesearch_warnings`, so a rejected line search now reports to its *caller* through the returned
+  status and to nobody at all if the caller drops it. Every solve here dropped it, because every
+  solve here called `solve!`. That is what the change below is for. The other two — a new field on
+  `NonlinearSolverStatus`, and a `LinesearchMethod` implementing `solve_with_status` rather than
+  `solve` — do not reach a package that constructs neither.
+
+  `Bisection`'s two fixes in 0.12 (it no longer claims success when it cannot bracket, and it
+  bisects toward a minimum rather than toward whichever root the value bracket held) do not reach
+  the integrators either: `default_linesearch` is `Backtracking` and every method solves with
+  `Newton()`. The one place this package does reach for `Bisection` is not a line search at all —
+  PGLRK bisects the *energy residual* over λ through `SimpleSolvers.bisection` — and that is a
+  root find on a scalar, which is the case the 0.12 entry describes as unchanged.
+
+### New Features
+
+* **Every nonlinear solve goes through `solve_with_status!`**, and the status it returns is handed
+  to GeometricIntegratorsBase 0.6.3's `check_solver_status`. Nineteen call sites: fifteen
+  `integrate_step!` methods across the RK, VI, CGVI, DGVI, DVI, HPI and SPARK families, the three
+  projection integrators, and DIRK's per-stage loop. It replaces the pair of commented-out stubs
+  (`# println(status(solver))` / `# println(meets_stopping_criteria(status(solver)))`, and the
+  older `# print_solver_status(int.solver.status, …)` spelling) that had sat under the solve in
+  most of those files.
+
+  The fifteen that own a persistent `solverstate(int)` use the state-taking form of
+  `solve_with_status!`, added in SimpleSolvers 0.12.1 at GeometricIntegratorsBase's request; the
+  other four have no state to reuse and take the state-building form. DIRK's per-stage solvers get
+  a `NullSolverState` from the `SingleStageSolvers` wrapper, and a `ProjectionIntegrator` has no
+  `solverstate` field at all.
+
+  `check_solver_status` is silent by default — SimpleSolvers remains the one voice that reports a
+  failed solve, and warning here as well would say the same thing twice per time step. So **no run
+  changes what it prints**. See GeometricIntegratorsBase's notes for what the hook is for and how
+  to override it, and for why reading the status now costs nothing per solve.
+
+* PGLRK is the one method where the status needed a decision rather than a rewrite. Its stage
+  solves happen inside `energy_residual!`, which `SimpleSolvers.bisection` calls once per trial λ
+  — including at the endpoints `±λmax`, where a solve that struggles is expected rather than
+  exceptional. Passing every probe's status to `check_solver_status` would hand a caller who had
+  overridden it a bisection probe to reject. `solve_λ!` checks the *accepted* λ once instead,
+  reading its outcome off the persistent solver state that the final `energy_residual!` call
+  leaves behind — which costs nothing and cannot describe a different solve than the one the step
+  keeps. This is the one place here that still calls `status(s, state)` by hand, and it is sound
+  because SimpleSolvers 0.12.1 states the property it relies on outright: nothing touches the state
+  between the end of the solve loop and the caller, so rebuilding the status from it afterwards
+  gives the same value. Its own test suite pins that.
+
+* The seven `solve!` calls under `src/integrators/vprk/` are deliberately left alone. That whole
+  directory is dead: it is reached only through `src/integrators/VPRK.jl`, whose every `include` is
+  commented out and which is itself never included. Converting it would imply it is live.
+
+### Tests
+
+* `test/verification/pglrk_convergence_tests.jl` counts the statuses PGLRK hands to
+  `check_solver_status`, and requires exactly one per time step on both routes through `solve_λ!` —
+  the bisecting one and the early return taken when the unperturbed method already conserves the
+  energy. This is the one decision in this release that no other assertion could catch: the hook's
+  default returns its argument, so calling it once per *bisection probe* instead of once per step
+  is invisible to every other test in the suite, and would only surface for a caller who had
+  overridden it to reject a non-converged step — who would then find bisection probes being
+  rejected. Measured at 5 checks over 5 steps on both routes.
+
+### Findings
+
+Test outcomes are unchanged across this bump, and this was measured rather than assumed: the suite
+was run at `HEAD~` against SimpleSolvers 0.11.0 and GeometricIntegratorsBase 0.6.2 in a separate
+worktree, and all **28 testsets report identical pass and broken counts**.
+
+**The warning census moved, and this is what it moved to.** A full run emitted 14 warnings before
+and emits 8 now. Unchanged: the seven `Nonlinear solver failed at timestep n=…: non-finite
+direction vector` (GeometricIntegratorsBase's own, at n=5, 7, 9×3, 10×2) and the one stagnation
+warning from `VSPARK(SPARKLobattoIIIBIIIA(2))`. Gone: **six `Backtracking line search:` warnings** —
+three `no step satisfied the sufficient decrease condition in 13/14 trials` and three
+`φ'(0) = <tiny positive> (with φ(0) = …)`. Those are exactly the per-iteration line-search warnings
+SimpleSolvers 0.12 stopped emitting from inside `solver_step!`.
+
+**Nothing was lost with them.** The stagnation warning reports the same residual to the bit
+(`rfₐ = 3.571488053775618e-5`) and the same diagnosis, and 0.12 appends the cause to it:
+
+> The line search reported `LINESEARCH_NO_DESCENT` on 2 of the 3 step(s), i.e. φ'(0) > 0 — the
+> direction was not a descent direction at all, which points at the Jacobian rather than at the
+> tolerance: a stale one under `refactorize > 1`, a nonzero `regularization_factor`, or an inexact
+> linear solve.
+
+That is the same three `φ'(0) > 0` events the deleted per-iteration warnings were reporting one at
+a time, now counted and named once at the end of the solve. `docs/src/audit.md`'s warning census
+should be updated to these numbers.
+
+
 ## 0.18.1
 
 ### Breaking Changes
@@ -647,6 +745,36 @@ the full order 2s.
 The migration checklist in `todo.md` is fully worked off — all thirteen items are closed and the
 two trailing sections are post-mortems rather than tasks. What follows is what is genuinely open,
 taken from the verification report (`docs/src/audit.md`) and the test suite.
+
+### The solver status is available but not acted on
+
+0.18.2 routes every solve through `solve_with_status!` and hands the status to
+`check_solver_status`, whose default returns it and does nothing else. That was the deliberate
+choice — SimpleSolvers stays the single reporting voice, so no run changes what it prints — but it
+means a step that did not converge is still only *reported*, never *acted on*, and the trajectory
+continues past the point where it stopped meaning anything with nothing in `sol` to mark it.
+
+The place to act is GeometricIntegratorsBase's `integrate!`, which already handles two of the three
+ways a step can go wrong (a `NonlinearSolverException`, and NaNs in the iterate) by warning with
+the time step and returning what was computed so far. This is tracked in that package's
+`## Open Issues` rather than here, since the hook and the loop both live there; it is named here
+because this package is where the consequences would show — see the `@test_broken` methods below,
+several of which reach `max_iterations` on every step.
+
+### `docs/src/audit.md` still carries the pre-0.12 warning census
+
+The census itself was re-measured for 0.18.2 and the result is recorded under that release's
+*Findings* — 14 warnings before, 8 after, with the six that went being the per-iteration
+`Backtracking line search:` messages SimpleSolvers 0.12 no longer emits. What has *not* been done
+is propagating those numbers into `docs/src/audit.md`, which is where the census lives and which
+still describes the pre-0.12 surface. Clerical, but the page is the reference the release notes
+point at.
+
+One consequence worth stating: SimpleSolvers 0.12 also replaced the `maxlog` caps on its solver
+report with a back-off (occurrences 1, 2, 4, 8, …). This suite never reaches that regime — the
+repeating diagnosis fires once per run — so the census above does not exercise it, and it remains
+untested from here. GeometricIntegratorsBase carries the corresponding open issue for a
+time-stepping loop, where it does.
 
 ### SLRK is not symplectic (audit finding S15)
 

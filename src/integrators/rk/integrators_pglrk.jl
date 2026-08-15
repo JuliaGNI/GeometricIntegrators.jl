@@ -328,11 +328,18 @@ The stage solve is restarted from the λ-independent initial guess `x₀` on eve
 Warm-starting from the previous trial `λ` instead makes the returned residual depend
 on the sequence of trials rather than on `λ` alone, which breaks the bisection: the
 bracket then collapses to a denormal instead of converging on the root.
+
+The status of the stage solve is deliberately *not* passed to `check_solver_status` here.
+This is a bisection probe, not a time step: it is called once per trial `λ`, including at
+the endpoints `±λmax`, where a solve that struggles is expected rather than exceptional,
+and a caller who has overridden `check_solver_status` to reject a non-converged step would
+be rejecting a probe. `solve_λ!` checks the accepted `λ` once instead, reading it off the
+persistent solver state that the last call to this function left behind.
 """
 function energy_residual!(λ, (sol, params, int))
     update_tableau!(int, λ)
     copyto!(nlsolution(int), cache(int).x₀)
-    solve!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
     components!(nlsolution(int), sol, params, int)
     cache(int).h = invariants(problem(int)).h(sol.t, cache(int).q, params)
     return cache(int).h₀ - cache(int).h
@@ -353,8 +360,13 @@ function solve_λ!(sol, params, int::GeometricIntegrator{<:PGLRK,<:AbstractProbl
     local ftol = max(abs(C.h₀), one(DT)) * 8eps(DT)
     local args = (sol, params, int)
 
-    # the unperturbed method may already conserve the energy to tolerance
-    abs(energy_residual!(zero(DT), args)) ≤ ftol && return zero(DT)
+    # the unperturbed method may already conserve the energy to tolerance — in which case this
+    # first probe *is* the solve the step keeps, so its outcome is checked here as the accepted
+    # one is below, and not left to the return path that never runs
+    if abs(energy_residual!(zero(DT), args)) ≤ ftol
+        check_solver_status(status(solver(int), solverstate(int)), int)
+        return zero(DT)
+    end
 
     # Do *not* pre-probe ±λmax here: every probe is a full nonlinear stage solve, and
     # `bisection` evaluates both endpoints itself. When the bracket shows no sign change
@@ -369,8 +381,11 @@ function solve_λ!(sol, params, int::GeometricIntegrator{<:PGLRK,<:AbstractProbl
         λ = zero(DT)
     end
 
-    # leave the cache consistent with the accepted λ
+    # leave the cache consistent with the accepted λ, and act on the outcome of *that* solve —
+    # the one whose result the step actually keeps. `status` reads the persistent solver state
+    # the call above just wrote, so this costs nothing and cannot describe a different solve.
     energy_residual!(λ, args)
+    check_solver_status(status(solver(int), solverstate(int)), int)
 
     return λ
 end

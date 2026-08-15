@@ -52,6 +52,10 @@ import RungeKutta: AbstractTableau, Tableau, PartitionedTableau, SymplecticTable
 import RungeKutta.Tableaus: lobatto_nullvector
 
 import SimpleSolvers: SolverMethod
+# `status` is deliberately not exported by SimpleSolvers — it is a generic name a package doing
+# `using SimpleSolvers` may want for itself — so it is named explicitly here. PGLRK needs it to
+# read the outcome of the stage solve for the λ it accepted, off the persistent solver state.
+import SimpleSolvers: status
 
 
 # compat workaround

@@ -123,14 +123,9 @@ end
 
 
 function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DiscreteEulerLagrange,<:AbstractProblemDELE})
-    # call nonlinear solver
-    solve!(nlsolution(int), solver(int), solverstate(int), (sol, history, params, int))
-
-    # print solver status
-    # println(status(solver))
-
-    # check if solution contains NaNs or error bounds are violated
-    # println(meets_stopping_criteria(status(solver)))
+    # call nonlinear solver and act on the outcome it reports
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, history, params, int))
+    check_solver_status(solverstatus, int)
 
     # compute final update
     update!(sol, history, params, nlsolution(int), int)

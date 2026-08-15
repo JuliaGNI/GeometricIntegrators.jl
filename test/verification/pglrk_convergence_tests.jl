@@ -1,4 +1,5 @@
 using GeometricIntegrators
+using GeometricIntegratorsBase
 using GeometricProblems.HarmonicOscillator
 using GeometricProblems.LotkaVolterra2d
 using Test
@@ -26,6 +27,18 @@ include("verification_utilities.jl")
 const T = 2.0
 const q₀ = [1.0, 1.0]
 const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
+
+# Counts the statuses PGLRK hands to `check_solver_status`, for the testset of the same name below.
+# The override only counts and returns its argument, so it leaves every other assertion in this
+# file — and every other PGLRK integration in the suite — exactly as it was. It has to be defined
+# at top level, and it is global once defined, which is why the counter is reset immediately before
+# each integration it is read after rather than once here.
+const PGLRK_STATUS_CHECKS = Ref(0)
+
+function GeometricIntegratorsBase.check_solver_status(status, int::GeometricIntegrator{<:PGLRK})
+    PGLRK_STATUS_CHECKS[] += 1
+    status
+end
 
 build(Δt) = LotkaVolterra2d.odeproblem(q₀; timespan=(0.0, T), timestep=Δt, parameters=params)
 ref(prob) = integrate(LotkaVolterra2d.odeproblem(q₀; timespan=timespan(prob), timestep=timestep(prob), parameters=params), Gauss(8))
@@ -70,6 +83,34 @@ end
         g4 = energy_drift(prob, Gauss(4))
         @test pg4 < 4E-13
         @test pg4 < 10 * g4
+    end
+
+    @testset "the λ bisection's probes do not reach the solver-status hook" begin
+        # PGLRK is the one method here whose stage solves are *probes*: `energy_residual!` runs a
+        # full nonlinear solve per trial λ, driven by `SimpleSolvers.bisection`, including at the
+        # endpoints ±λmax where a solve that struggles is expected rather than exceptional. Only
+        # the accepted λ's solve — the one whose result the step keeps — is handed to
+        # `check_solver_status`, which is the hook a caller overrides to reject a step that did not
+        # converge. Hand it every probe and such a caller rejects bisection probes instead.
+        #
+        # Nothing asserted that, and nothing would have: the hook's default returns its argument, so
+        # calling it ten times too often is invisible to every other test. Count the calls.
+        # The failure this guards against is not "the hook is never called" but "the hook is called
+        # once per probe", i.e. once per bisection trial rather than once per step — so the
+        # assertion is an exact count and not a bound.
+        nsteps = 5
+        prob = LotkaVolterra2d.odeproblem(q₀; timespan=(0.0, nsteps * 0.1), timestep=0.1, parameters=params)
+
+        PGLRK_STATUS_CHECKS[] = 0
+        integrate(prob, PGLRK(3))
+        @test PGLRK_STATUS_CHECKS[] == nsteps
+
+        # The early-return path — the unperturbed method already conserves the energy, so the
+        # bisection never runs — is the other way through `solve_λ!`, and it checks its solve too.
+        # It is a separate `check_solver_status` call site and was as easy to leave out.
+        PGLRK_STATUS_CHECKS[] = 0
+        integrate(prob, PGLRK(3; λmax=1e-300))
+        @test PGLRK_STATUS_CHECKS[] == nsteps
     end
 
     @testset "reduces to Gauss when λ = 0" begin
