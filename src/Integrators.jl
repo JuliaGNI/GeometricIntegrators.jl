@@ -178,7 +178,9 @@ include("integrators/vi/vprk_integrator.jl")
 include("integrators/vi/vprk_ptableau.jl")
 
 
+include("integrators/cgvi/integrators_cgvi_common.jl")
 include("integrators/cgvi/integrators_cgvi.jl")
+include("integrators/cgvi/integrators_cgvi_nodal.jl")
 include("integrators/dgvi/integrators_dgvi_common.jl")
 include("integrators/dgvi/integrators_dgvi.jl")
 include("integrators/dgvi/integrators_dgvi_experimental.jl")

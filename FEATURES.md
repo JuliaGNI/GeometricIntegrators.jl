@@ -25,7 +25,7 @@ The following list provides and overview of supported and planned features.
 - [x] Variational Partitioned Runge-Kutta Methods (VPRK),
 - [x] Hamiltonian Partitioned Additive Runge-Kutta Methods (HPARK, HSPARK),
 - [x] Variational Partitioned Additive Runge-Kutta Methods (VPARK, VSPARK),
-- [x] Continuous Galerkin Variational Integrators (CGVI),
+- [x] Continuous Galerkin Variational Integrators (CGVI, CGVINodal),
 - [x] Discontinuous Galerkin Variational Integrators (DGVI),
 - [ ] Hamilton-Pontryagin-Galerkin Integrators (HPGI),
 - [ ] Spline Variational Integrators (SVI),

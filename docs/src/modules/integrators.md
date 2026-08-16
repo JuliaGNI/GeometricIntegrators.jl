@@ -73,7 +73,9 @@ Pages   = [
 
 ```@autodocs
 Modules = [GeometricIntegrators.Integrators]
-Pages   = ["integrators/cgvi/integrators_cgvi.jl",
+Pages   = ["integrators/cgvi/integrators_cgvi_common.jl",
+           "integrators/cgvi/integrators_cgvi.jl",
+           "integrators/cgvi/integrators_cgvi_nodal.jl",
            "integrators/dgvi/integrators_dgvi_common.jl",
            "integrators/dgvi/integrators_dgvi.jl",
            "integrators/dgvi/integrators_dgvi_path_integral.jl",

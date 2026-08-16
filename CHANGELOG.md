@@ -11,6 +11,58 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
+## 0.18.3
+
+### New Features
+
+* **`CGVINodal`, a continuous Galerkin variational integrator on a nodal basis.** Where
+  [`CGVI`](@ref) imposes the continuity of the trajectory across the interval boundaries
+  weakly, through Lagrange multipliers added to the action, `CGVINodal` builds it into the
+  basis, following [OberBloebaum:2015](@cite). The basis must be interpolatory with nodes at
+  both ends of the interval — a Lagrange basis on Lobatto-Legendre nodes — so the
+  coefficients *are* nodal values: the first is pinned to the known `qₙ`, the last *is*
+  `qₙ₊₁`, and the momentum is computed explicitly rather than solved for. That leaves
+  `D*(S-1)` unknowns against `CGVI`'s `D*(S+1)`.
+
+  Measured convergence order is 2s-2 in the position on Lobatto(s) nodes, the same as
+  `CGVI` on Gauss(s), and the two are of comparable accuracy at equal `s`.
+
+  The constructor rejects a basis whose nodes do not include the endpoints. The formulation
+  reads `q(0)` off `X[1]` and `q(1)` off `X[S]` rather than reconstructing them, so a Gauss
+  basis builds fine and then integrates a wrong trajectory — the same class of silent error
+  `DGVIP0` already asserts against.
+
+  The integrator comes from NonlinearIntegrators.jl, where it was the linear reference the
+  network integrators were compared against, and is removed there in favour of this one.
+
+### Changes
+
+* **`CGVI` and `CGVINodal` share one core**, `src/integrators/cgvi/integrators_cgvi_common.jl`,
+  in the shape the DGVI family already uses: an abstract `CGVIMethod` supertype carrying the
+  traits, the solver defaults, the accessors, `cgvi_coefficients`, `show`, the cache, the
+  initial-guess helpers, `components_q!`/`components_v!`/`components_p!`, and the
+  `residual!`/`update!`/`integrate_step!` entry points. Each variant supplies only
+  `description`, `solversize`, `initial_guess!`, `components!`, `residual!` and `update!`.
+
+  `CGVI`'s results are unchanged, bit for bit.
+
+* `CGVICache` is now shared by both variants. It lost the `s̃` field, which was allocated and
+  never read, and takes the number of degrees of freedom and the solver size as constructor
+  arguments. It is not exported and no user code should name it. `CacheType` deliberately
+  stays a function of the method alone: `CacheDict` type-asserts its `getindex` on it, and a
+  `CacheType` that reads a value off the problem does not constant-fold, which leaves the
+  cache inferred abstractly and makes the Newton hot path box on every stage access.
+
+* Both variants now define `solversize`, as every other implicit method here does. That is
+  what sizes the nonlinear solution vector and what `initsolver` scales the default
+  `f_abstol` by; previously the CGVI family took the `solversize == 0` fallback.
+
+### Documentation
+
+* `docs/src/integrators/cgvi.md` gains a section on the nodal formulation and the
+  [OberBloebaum:2015](@cite) reference.
+
+
 ## 0.18.2
 
 ### Breaking Changes
