@@ -33,8 +33,8 @@ BLob4 = Lagrange(QuadratureRules.nodes(QLob4))
 
     # Tolerances measured at the default Δt of `iodeproblem()`:
     #
-    #                            q          p
-    #   CGVI(Gauss(4))       3.7E-13    1.2E-12
+    #                              q          p
+    #   CGVI(Gauss(4))         3.7E-13    1.2E-12
     #   CGVINodal(Lobatto(4))  1.1E-13    1.3E-12
 
     cgsol = integrate(iode, CGVI(BGau4, QGau4))
@@ -98,10 +98,8 @@ BLob4 = Lagrange(QuadratureRules.nodes(QLob4))
 
         for meth in (CGVI(BGau4, QGau4), CGVINodal(BLob4, QLob4))
             chsol = integrate(chprob, meth)
-            qend = [collect(chsol.q[:, d])[end] for d in 1:2]
-            pend = [collect(chsol.p[:, d])[end] for d in 1:2]
-            @test maximum(abs.(qend .- qexact)) < 1E-11
-            @test maximum(abs.(pend .- pexact)) < 1E-11
+            @test maximum(abs.(chsol.q[end] .- qexact)) < 1E-11
+            @test maximum(abs.(chsol.p[end] .- pexact)) < 1E-11
         end
     end
 
@@ -123,7 +121,7 @@ BLob4 = Lagrange(QuadratureRules.nodes(QLob4))
             f32sol = integrate(f32prob, meth; f_abstol=T(1E-5))
             @test eltype(f32sol.q[end]) == T
             @test eltype(f32sol.p[end]) == T
-            @test abs(collect(f32sol.q[:, 1])[end] - qexact) < 1E-5
+            @test abs(f32sol.q[end][1] - qexact) < 1E-5
         end
     end
 

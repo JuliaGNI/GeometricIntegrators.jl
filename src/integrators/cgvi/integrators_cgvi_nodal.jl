@@ -9,8 +9,9 @@ and the coefficients *are* nodal values. The first is therefore pinned to the kn
 the last *is* ``q_{n+1}``, and the momentum is computed explicitly rather than solved for.
 
 That leaves `D*(S-1)` unknowns in the nonlinear system, against the `D*(S+1)` of
-[`CGVI`](@ref), which solves for all `S` coefficients plus the endpoint momentum and needs
-no Lagrange multipliers here.
+[`CGVI`](@ref), which solves for all `S` coefficients plus the endpoint momentum. No
+Lagrange multipliers are needed here, since the constraint they enforce in `CGVI` holds
+by construction.
 
 ## Requirements
 
@@ -38,7 +39,7 @@ sol = integrate(problem, CGVINodal(B, Q))
 * `r₁`: reconstruction coefficients at the end of the interval
 
 """
-struct CGVINodal{T,NBASIS,NNODES,NDOF,basisType<:Basis{T}} <: CGVIMethod{T,NBASIS,NNODES}
+struct CGVINodal{T,NBASIS,NNODES,NMA,basisType<:Basis{T}} <: CGVIMethod{T,NBASIS,NNODES}
     basis::basisType
     quadrature::QuadratureRule{T,NNODES}
 
@@ -47,8 +48,8 @@ struct CGVINodal{T,NBASIS,NNODES,NDOF,basisType<:Basis{T}} <: CGVIMethod{T,NBASI
 
     x::SVector{NBASIS,T}
 
-    m::SMatrix{NNODES,NBASIS,T,NDOF}
-    a::SMatrix{NNODES,NBASIS,T,NDOF}
+    m::SMatrix{NNODES,NBASIS,T,NMA}
+    a::SMatrix{NNODES,NBASIS,T,NMA}
 
     r₀::SVector{NBASIS,T}
     r₁::SVector{NBASIS,T}
@@ -67,7 +68,9 @@ struct CGVINodal{T,NBASIS,NNODES,NDOF,basisType<:Basis{T}} <: CGVIMethod{T,NBASI
         e₁ = SVector{NBASIS,T}(ntuple(i -> T(i == NBASIS), NBASIS))
         @assert isapprox(coeffs.r₀, e₀; atol=sqrt(eps(T))) && isapprox(coeffs.r₁, e₁; atol=sqrt(eps(T))) (
             "CGVINodal requires an interpolatory basis with nodes at both ends of the interval, " *
-            "e.g. Lagrange(QuadratureRules.nodes(LobattoLegendreQuadrature(s))).")
+            "e.g. Lagrange(QuadratureRules.nodes(LobattoLegendreQuadrature(s))). " *
+            "Got φ(0) = $(coeffs.r₀) and φ(1) = $(coeffs.r₁), " *
+            "expected $e₀ and $e₁.")
 
         new{T,NBASIS,NNODES,NBASIS * NNODES,typeof(basis)}(
             basis, quadrature, coeffs.b, coeffs.c, coeffs.x, coeffs.m, coeffs.a, coeffs.r₀, coeffs.r₁)
@@ -76,7 +79,9 @@ end
 
 GeometricBase.description(::CGVINodal) = "Continuous Galerkin Variational Integrator (nodal basis)"
 
-nunknowns(method::CGVINodal, D::Int) = D * (nbasis(method) - 1)
+# all `S` basis coefficients but the first, which the initial condition pins to qₙ
+solversize(method::CGVINodal, problem::AbstractProblemIODE) =
+    length(vec(initial_conditions(problem).q)) * (nbasis(method) - 1)
 
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CGVINodal})
@@ -106,8 +111,8 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         end
     end
 
-    components_q!(sol, params, int, ST)
-    components_v!(sol, params, int, ST)
+    components_q!(int, ST)
+    components_v!(int, ST)
     components_p!(sol, params, int, ST)
 end
 
@@ -121,7 +126,7 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
 
     # the first basis function carries the momentum matching condition at the beginning of
     # the interval, since X[1] is pinned rather than free
-    for k in eachindex(p̄)
+    for k in 1:D
         z = zero(ST)
         for j in eachindex(C.P, C.F)
             z += M.b[j] * C.F[j][k] * M.m[j, 1] * timestep(int)

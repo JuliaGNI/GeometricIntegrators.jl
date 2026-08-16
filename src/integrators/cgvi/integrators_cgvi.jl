@@ -25,7 +25,7 @@ See [`CGVINodal`](@ref) for the variant that builds continuity into the basis in
 * `r₁`: reconstruction coefficients at the end of the interval
 
 """
-struct CGVI{T,NBASIS,NNODES,NDOF,basisType<:Basis{T}} <: CGVIMethod{T,NBASIS,NNODES}
+struct CGVI{T,NBASIS,NNODES,NMA,basisType<:Basis{T}} <: CGVIMethod{T,NBASIS,NNODES}
     basis::basisType
     quadrature::QuadratureRule{T,NNODES}
 
@@ -34,8 +34,8 @@ struct CGVI{T,NBASIS,NNODES,NDOF,basisType<:Basis{T}} <: CGVIMethod{T,NBASIS,NNO
 
     x::SVector{NBASIS,T}
 
-    m::SMatrix{NNODES,NBASIS,T,NDOF}
-    a::SMatrix{NNODES,NBASIS,T,NDOF}
+    m::SMatrix{NNODES,NBASIS,T,NMA}
+    a::SMatrix{NNODES,NBASIS,T,NMA}
 
     r₀::SVector{NBASIS,T}
     r₁::SVector{NBASIS,T}
@@ -53,7 +53,9 @@ end
 
 GeometricBase.description(::CGVI) = "Continuous Galerkin Variational Integrator"
 
-nunknowns(method::CGVI, D::Int) = D * (nbasis(method) + 1)
+# all `S` basis coefficients, plus the momentum at the end of the interval
+solversize(method::CGVI, problem::AbstractProblemIODE) =
+    length(vec(initial_conditions(problem).q)) * (nbasis(method) + 1)
 
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CGVI})
@@ -90,7 +92,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         C.p̃[k] = x[D*S+k]
     end
 
-    components_q!(sol, params, int, ST)
+    components_q!(int, ST)
 
     # reconstruct the position at the end of the interval, q = r₁·X
     for k in eachindex(C.q̃)
@@ -101,7 +103,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         C.q̃[k] = y
     end
 
-    components_v!(sol, params, int, ST)
+    components_v!(int, ST)
     components_p!(sol, params, int, ST)
 end
 

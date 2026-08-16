@@ -42,13 +42,20 @@ remain a gap.
   traits, the solver defaults, the accessors, `cgvi_coefficients`, `show`, the cache, the
   initial-guess helpers, `components_q!`/`components_v!`/`components_p!`, and the
   `residual!`/`update!`/`integrate_step!` entry points. Each variant supplies only
-  `description`, `nunknowns`, `initial_guess!`, `components!`, `residual!` and `update!`.
+  `description`, `solversize`, `initial_guess!`, `components!`, `residual!` and `update!`.
 
   `CGVI`'s results are unchanged, bit for bit.
 
 * `CGVICache` is now shared by both variants. It lost the `s̃` field, which was allocated and
-  never read, and gained `D` and the solver size as type parameters. It is not exported and
-  no user code should name it.
+  never read, and takes the number of degrees of freedom and the solver size as constructor
+  arguments. It is not exported and no user code should name it. `CacheType` deliberately
+  stays a function of the method alone: `CacheDict` type-asserts its `getindex` on it, and a
+  `CacheType` that reads a value off the problem does not constant-fold, which leaves the
+  cache inferred abstractly and makes the Newton hot path box on every stage access.
+
+* Both variants now define `solversize`, as every other implicit method here does. That is
+  what sizes the nonlinear solution vector and what `initsolver` scales the default
+  `f_abstol` by; previously the CGVI family took the `solversize == 0` fallback.
 
 ### Documentation
 

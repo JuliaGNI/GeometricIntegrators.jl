@@ -54,15 +54,6 @@ quadrature(method::CGVIMethod) = method.quadrature
 nbasis(::CGVIMethod{T,S,R}) where {T,S,R} = S
 nnodes(::CGVIMethod{T,S,R}) where {T,S,R} = R
 
-"""
-Number of unknowns of the nonlinear system for a problem with `D` degrees of freedom.
-
-This is what distinguishes the two variants at the level of the cache: [`CGVI`](@ref)
-solves for all `S` basis coefficients plus the endpoint momentum, [`CGVINodal`](@ref)
-for the `S-1` coefficients that the boundary conditions leave free.
-"""
-function nunknowns end
-
 
 """
 Compute the shared CGVI coefficient block `(b, c, x, m, a, r₀, r₁)` from a basis and a
@@ -122,12 +113,18 @@ end
 Cache shared by both CGVI variants.
 
 `X` holds the `S` basis coefficients and `Q`, `V`, `P`, `F` the stage values at the `R`
-quadrature nodes; the variants agree on all of these and differ only in the length `N` of
-the nonlinear solution vector `x`, which comes from [`nunknowns`](@ref). `q̃`, `p̃`, `ṽ`,
-`f̃` are the initial-guess temporaries; [`CGVI`](@ref) additionally uses `q̃` and `p̃` to
-carry the reconstructed endpoint values into `update!`.
+quadrature nodes; the variants agree on all of these and differ only in the length of the
+nonlinear solution vector `x`, which comes from `solversize`. `q̃`, `p̃`, `ṽ`, `f̃` are the
+initial-guess temporaries; [`CGVI`](@ref) additionally uses `q̃` and `p̃` to carry the
+reconstructed endpoint values into `update!`.
+
+The number of degrees of freedom `D` and the solver size are constructor *arguments*, not
+type parameters, so that `CacheType` below stays a function of the method alone. It is
+evaluated on every `cache(int, ST)` — `CacheDict` type-asserts its `getindex` on it — and
+a `CacheType` that reads a value off the problem does not constant-fold, which leaves the
+cache inferred abstractly and makes the Newton hot path box on every stage access.
 """
-struct CGVICache{ST,D,S,R,N} <: IODEIntegratorCache{ST}
+struct CGVICache{ST,S,R} <: IODEIntegratorCache{ST}
     x::Vector{ST}
 
     X::Vector{Vector{ST}}
@@ -141,7 +138,7 @@ struct CGVICache{ST,D,S,R,N} <: IODEIntegratorCache{ST}
     ṽ::Vector{ST}
     f̃::Vector{ST}
 
-    function CGVICache{ST,D,S,R,N}() where {ST,D,S,R,N}
+    function CGVICache{ST,S,R}(D::Int, N::Int) where {ST,S,R}
         v() = zeros(ST, D)
         stage(n) = create_internal_stage_vector(ST, D, n)
 
@@ -154,17 +151,15 @@ end
 nlsolution(cache::CGVICache) = cache.x
 
 "Number of degrees of freedom of the problem the cache was built for."
-ndofs(::CGVICache{ST,D}) where {ST,D} = D
+ndofs(cache::CGVICache) = length(cache.q̃)
 
 function Cache{ST}(problem::AbstractProblemIODE, method::CGVIMethod; kwargs...) where {ST}
     D = length(vec(initial_conditions(problem).q))
-    CGVICache{ST,D,nbasis(method),nnodes(method),nunknowns(method, D)}(; kwargs...)
+    CGVICache{ST,nbasis(method),nnodes(method)}(D, solversize(method, problem); kwargs...)
 end
 
-@inline function CacheType(ST, problem::AbstractProblemIODE, method::CGVIMethod)
-    D = length(vec(initial_conditions(problem).q))
-    CGVICache{ST,D,nbasis(method),nnodes(method),nunknowns(method, D)}
-end
+@inline CacheType(ST, ::AbstractProblemIODE, method::CGVIMethod) =
+    CGVICache{ST,nbasis(method),nnodes(method)}
 
 
 """
@@ -187,8 +182,9 @@ Seed consecutive position blocks of the nonlinear solution vector `x` from the i
 guess evaluated at `nodes`, writing block `i` at `x[D*(i-1)+k]`.
 
 The variants pass different node lists — [`CGVI`](@ref) all `S` basis nodes,
-[`CGVINodal`](@ref) the `S-1` nodes whose coefficients are free — but the block layout is
-the same, and it is the layout `components!` and `residual!` assume.
+[`CGVINodal`](@ref) the `S-1` nodes left free once the initial condition has pinned the
+first — but the block layout is the same, and it is the layout `components!` and
+`residual!` assume.
 """
 function initial_guess_positions!(x, sol, history, int::GeometricIntegrator{<:CGVIMethod}, nodes)
     local D = ndofs(cache(int))
@@ -207,7 +203,7 @@ end
 
 
 "Compute the solution at the quadrature nodes, `Q = m X`."
-function components_q!(sol, params, int::GeometricIntegrator{<:CGVIMethod}, ST)
+function components_q!(int::GeometricIntegrator{<:CGVIMethod}, ::Type{ST}) where {ST}
     local C = cache(int, ST)
     local M = method(int)
 
@@ -223,7 +219,7 @@ function components_q!(sol, params, int::GeometricIntegrator{<:CGVIMethod}, ST)
 end
 
 "Compute the velocities at the quadrature nodes, `V = a X / h`."
-function components_v!(sol, params, int::GeometricIntegrator{<:CGVIMethod}, ST)
+function components_v!(int::GeometricIntegrator{<:CGVIMethod}, ::Type{ST}) where {ST}
     local C = cache(int, ST)
     local M = method(int)
 
@@ -239,7 +235,7 @@ function components_v!(sol, params, int::GeometricIntegrator{<:CGVIMethod}, ST)
 end
 
 "Compute the one-form `P = ϑ(Q,V)` and the forces `F = f(Q,V)` at the quadrature nodes."
-function components_p!(sol, params, int::GeometricIntegrator{<:CGVIMethod}, ST)
+function components_p!(sol, params, int::GeometricIntegrator{<:CGVIMethod}, ::Type{ST}) where {ST}
     local C = cache(int, ST)
 
     for i in eachindex(C.Q, C.V, C.P, C.F)
