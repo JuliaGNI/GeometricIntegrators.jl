@@ -1,6 +1,21 @@
 @doc raw"""
 Continuous Galerkin Variational Integrator.
 
+The continuity of the trajectory across the interval boundaries is imposed *weakly*, by
+adding the constraints
+```math
+q_{h} \vert_{[t_{n}, t_{n+1}]} (t_{n}) = q_{n}
+\qquad \text{and} \qquad
+q_{h} \vert_{[t_{n}, t_{n+1}]} (t_{n+1}) = q_{n+1}
+```
+to the discrete action through Lagrange multipliers. The unknowns of the nonlinear system
+are therefore all `S` basis coefficients together with the momentum at the end of the
+interval, `D*(S+1)` in total, and the endpoint position is reconstructed as `q = r₁·X`.
+Any basis may be used; the nodes need not include the interval endpoints.
+
+See [`CGVINodal`](@ref) for the variant that builds continuity into the basis instead, and
+[`CGVIMethod`](@ref) for the construction both share.
+
 * `b`: weights of the quadrature rule
 * `c`: nodes of the quadrature rule
 * `x`: nodes of the basis
@@ -10,7 +25,7 @@ Continuous Galerkin Variational Integrator.
 * `r₁`: reconstruction coefficients at the end of the interval
 
 """
-struct CGVI{T,NBASIS,NNODES,NDOF,basisType<:Basis{T}} <: LODEMethod
+struct CGVI{T,NBASIS,NNODES,NDOF,basisType<:Basis{T}} <: CGVIMethod{T,NBASIS,NNODES}
     basis::basisType
     quadrature::QuadratureRule{T,NNODES}
 
@@ -26,144 +41,31 @@ struct CGVI{T,NBASIS,NNODES,NDOF,basisType<:Basis{T}} <: LODEMethod
     r₁::SVector{NBASIS,T}
 
     function CGVI(basis::Basis{T}, quadrature::QuadratureRule{T}) where {T}
-        # get number of quadrature nodes and number of basis functions
         NNODES = QuadratureRules.nnodes(quadrature)
         NBASIS = CompactBasisFunctions.nbasis(basis)
 
-        # get quadrature nodes and weights
-        quad_weights = QuadratureRules.weights(quadrature)
-        quad_nodes = QuadratureRules.nodes(quadrature)
+        coeffs = cgvi_coefficients(basis, quadrature)
 
-        # compute coefficients
-        r₀ = zeros(T, NBASIS)
-        r₁ = zeros(T, NBASIS)
-        m = zeros(T, NNODES, NBASIS)
-        a = zeros(T, NNODES, NBASIS)
-
-        for i in eachindex(basis)
-            r₀[i] = basis[zero(T), i]
-            r₁[i] = basis[one(T), i]
-            for j in eachindex(quad_nodes)
-                m[j, i] = basis[quad_nodes[j], i]
-                a[j, i] = basis'[quad_nodes[j], i]
-            end
-        end
-
-        new{T,NBASIS,NNODES,NBASIS * NNODES,typeof(basis)}(basis, quadrature, quad_weights, quad_nodes, CompactBasisFunctions.grid(basis), m, a, r₀, r₁)
+        new{T,NBASIS,NNODES,NBASIS * NNODES,typeof(basis)}(
+            basis, quadrature, coeffs.b, coeffs.c, coeffs.x, coeffs.m, coeffs.a, coeffs.r₀, coeffs.r₁)
     end
 end
 
-basis(method::CGVI) = method.basis
-quadrature(method::CGVI) = method.quadrature
+GeometricBase.description(::CGVI) = "Continuous Galerkin Variational Integrator"
 
-nbasis(::CGVI{T,NB,NN}) where {T,NB,NN} = NB
-nnodes(::CGVI{T,NB,NN}) where {T,NB,NN} = NN
-
-isexplicit(::Union{CGVI,Type{<:CGVI}}) = false
-isimplicit(::Union{CGVI,Type{<:CGVI}}) = true
-issymmetric(::Union{CGVI,Type{<:CGVI}}) = missing
-issymplectic(::Union{CGVI,Type{<:CGVI}}) = true
-
-isiodemethod(::Union{CGVI,Type{<:CGVI}}) = true
-
-default_solver(::CGVI) = Newton()
-default_iguess(::CGVI) = HermiteExtrapolation()
-
-function Base.show(io::IO, method::CGVI)
-    print(io, "\n")
-    print(io, "  Continuous Galerkin Variational Integrator", "\n")
-    print(io, "  ==========================================", "\n")
-    print(io, "\n")
-    print(io, "    c  = ", method.c, "\n")
-    print(io, "    b  = ", method.b, "\n")
-    print(io, "    x  = ", method.x, "\n")
-    print(io, "    m  = ", method.m, "\n")
-    print(io, "    a  = ", method.a, "\n")
-    print(io, "    r₀ = ", method.r₀, "\n")
-    print(io, "    r₁ = ", method.r₁, "\n")
-    print(io, "\n")
-end
-
-
-struct CGVICache{ST,S,R} <: IODEIntegratorCache{ST}
-    x::Vector{ST}
-
-    q̃::Vector{ST}
-    p̃::Vector{ST}
-    ṽ::Vector{ST}
-    f̃::Vector{ST}
-    s̃::Vector{ST}
-
-    X::Vector{Vector{ST}}
-    Q::Vector{Vector{ST}}
-    P::Vector{Vector{ST}}
-    V::Vector{Vector{ST}}
-    F::Vector{Vector{ST}}
-
-
-    function CGVICache{ST,S,R}(ics) where {ST,S,R}
-        D = length(vec(ics.q))
-        x = zeros(ST, D * (S + 1))
-
-        # create temporary vectors
-        q̃ = zeros(ST, D)
-        p̃ = zeros(ST, D)
-        ṽ = zeros(ST, D)
-        f̃ = zeros(ST, D)
-        s̃ = zeros(ST, D)
-
-        # create internal stage vectors
-        X = create_internal_stage_vector(ST, D, S)
-        Q = create_internal_stage_vector(ST, D, R)
-        P = create_internal_stage_vector(ST, D, R)
-        V = create_internal_stage_vector(ST, D, R)
-        F = create_internal_stage_vector(ST, D, R)
-
-        new(x, q̃, p̃, ṽ, f̃, s̃, X, Q, P, V, F)
-    end
-end
-
-nlsolution(cache::CGVICache) = cache.x
-
-function Cache{ST}(problem::AbstractProblemIODE, method::CGVI; kwargs...) where {ST}
-    CGVICache{ST,nbasis(method),nnodes(method)}(initial_conditions(problem); kwargs...)
-end
-
-@inline CacheType(ST, ::AbstractProblemIODE, method::CGVI) = CGVICache{ST,nbasis(method),nnodes(method)}
+nunknowns(method::CGVI, D::Int) = D * (nbasis(method) + 1)
 
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CGVI})
-    # set some local variables for convenience
-    local D = length(cache(int).q̃)
+    local D = ndofs(cache(int))
     local S = nbasis(method(int))
     local x = nlsolution(int)
 
-    # TODO: here we should not initialise with the solution q but with the degree of freedom x,
-    # obtained e.g. from an L2 projection of q onto the basis
+    # one position block per basis node
+    initial_guess_positions!(x, sol, history, int, method(int).x)
 
-    for i in eachindex(basis(method(int)))
-        soltmp = (
-            t=sol.t + timestep(int) * (method(int).x[i] - 1),
-            q=cache(int).q̃,
-            p=cache(int).p̃,
-            q̇=cache(int).ṽ,
-            ṗ=cache(int).f̃,
-        )
-        solutionstep!(soltmp, history, problem(int), iguess(int))
-
-        for k in 1:D
-            x[D*(i-1)+k] = cache(int).q̃[k]
-        end
-    end
-
-    soltmp = (
-        t=sol.t,
-        q=cache(int).q̃,
-        p=cache(int).p̃,
-        q̇=cache(int).ṽ,
-        ṗ=cache(int).f̃,
-    )
-    solutionstep!(soltmp, history, problem(int), iguess(int))
+    # the trailing block is the momentum at the end of the step
+    initial_guess_at!(sol, history, int, one(eltype(method(int).x)))
 
     for k in 1:D
         x[D*S+k] = cache(int).p̃[k]
@@ -172,9 +74,8 @@ end
 
 
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
-    # set some local variables for convenience and clarity
     local C = cache(int, ST)
-    local D = length(C.q̃)
+    local D = ndofs(C)
     local S = nbasis(method(int))
 
     # copy x to X
@@ -189,18 +90,9 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         C.p̃[k] = x[D*S+k]
     end
 
-    # compute Q
-    for i in eachindex(C.Q)
-        for k in eachindex(C.Q[i])
-            y = zero(ST)
-            for j in eachindex(C.X)
-                y += method(int).m[i, j] * C.X[j][k]
-            end
-            C.Q[i][k] = y
-        end
-    end
+    components_q!(sol, params, int, ST)
 
-    # compute q
+    # reconstruct the position at the end of the interval, q = r₁·X
     for k in eachindex(C.q̃)
         y = zero(ST)
         for i in eachindex(C.X)
@@ -209,41 +101,26 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         C.q̃[k] = y
     end
 
-    # compute V
-    for i in eachindex(C.V)
-        for k in eachindex(C.V[i])
-            y = zero(ST)
-            for j in eachindex(C.X)
-                y += method(int).a[i, j] * C.X[j][k]
-            end
-            C.V[i][k] = y / timestep(int)
-        end
-    end
-
-    # compute P=ϑ(Q,V) and F=f(Q,V)
-    for i in eachindex(C.Q, C.V, C.P, C.F)
-        tᵢ = sol.t + timestep(int) * (method(int).c[i] - 1)
-        equations(int).ϑ(C.P[i], tᵢ, C.Q[i], C.V[i], params)
-        equations(int).f(C.F[i], tᵢ, C.Q[i], C.V[i], params)
-    end
+    components_v!(sol, params, int, ST)
+    components_p!(sol, params, int, ST)
 end
 
 
-function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
-    # set some local variables for convenience and clarity
+function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
     local C = cache(int, ST)
-    local D = length(C.q̃)
-    local S = nbasis(method(int))
+    local D = ndofs(C)
+    local M = method(int)
+    local S = nbasis(M)
 
     # compute b = - [(P-AF)]
-    for i in eachindex(method(int).r₀, method(int).r₁)
+    for i in eachindex(M.r₀, M.r₁)
         for k in eachindex(C.p̃)#, sol.p # TODO
             z = zero(ST)
             for j in eachindex(C.P, C.F)
-                z += method(int).b[j] * method(int).m[j, i] * C.F[j][k] * timestep(int)
-                z += method(int).b[j] * method(int).a[j, i] * C.P[j][k]
+                z += M.b[j] * M.m[j, i] * C.F[j][k] * timestep(int)
+                z += M.b[j] * M.a[j, i] * C.P[j][k]
             end
-            b[D*(i-1)+k] = (method(int).r₁[i] * C.p̃[k] - method(int).r₀[i] * sol.p[k]) - z
+            b[D*(i-1)+k] = (M.r₁[i] * C.p̃[k] - M.r₀[i] * sol.p[k]) - z
         end
     end
 
@@ -251,45 +128,14 @@ function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:CGVI})
     for k in eachindex(sol.q)
         y = zero(ST)
         for j in eachindex(C.X)
-            y += method(int).r₀[j] * C.X[j][k]
+            y += M.r₀[j] * C.X[j][k]
         end
         b[D*S+k] = sol.q[k] - y
     end
 end
 
 
-# Compute stages of Variational Partitioned Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
-    # check that x and b are compatible
-    @assert axes(x) == axes(b)
-
-    # compute stages from nonlinear solver solution x
-    components!(x, sol, params, int)
-
-    # compute residual vector
-    residual!(b, sol, params, int)
-end
-
-
 function update!(sol, params, int::GeometricIntegrator{<:CGVI}, DT)
     sol.q .= cache(int, DT).q̃
     sol.p .= cache(int, DT).p̃
-end
-
-function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:CGVI}) where {DT}
-    # compute vector field at internal stages
-    components!(x, sol, params, int)
-
-    # compute final update
-    update!(sol, params, int, DT)
-end
-
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:CGVI,<:AbstractProblemIODE})
-    # call nonlinear solver and act on the outcome it reports
-    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
-    check_solver_status(solverstatus, int)
-
-    # compute final update
-    update!(sol, params, nlsolution(int), int)
 end

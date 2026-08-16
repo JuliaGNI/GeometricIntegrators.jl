@@ -13,7 +13,7 @@ meta_methods = (
     VPRKpTableau,
     DVRK,
     CGVI,
-    CGVI_II,
+    CGVINodal,
     ProjectedMethod,
     HPImidpoint,
     HPItrapezoidal,
