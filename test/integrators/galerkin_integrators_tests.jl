@@ -1,5 +1,6 @@
 using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
+import GeometricProblems.CoupledHarmonicOscillator as CoupledHarmonicOscillator
 import GeometricProblems.LotkaVolterra2d as LotkaVolterra2d
 using CompactBasisFunctions
 using QuadratureRules
@@ -12,11 +13,121 @@ pref = exact_solution(podeproblem())
 QGau4 = GaussLegendreQuadrature(4)
 BGau4 = Lagrange(QuadratureRules.nodes(QGau4))
 
+QLob4 = LobattoLegendreQuadrature(4)
+BLob4 = Lagrange(QuadratureRules.nodes(QLob4))
+
 
 ### CGVI Integrators ###
 
-cgsol = integrate(iode, CGVI(BGau4, QGau4))
-@test relative_maximum_error(cgsol.q, pref.q) < 8E-13
+# The two continuous Galerkin variants impose continuity across the interval boundaries
+# differently — `CGVI` weakly, through Lagrange multipliers, `CGVINodal` strongly, through
+# an interpolatory basis with nodes at both ends — and therefore solve for a different set
+# of unknowns. Everything else they share, so they are asserted side by side here.
+#
+# `CGVI` may use any basis and is exercised on Gauss-Legendre nodes; `CGVINodal` requires
+# the endpoints and is exercised on Lobatto-Legendre nodes. At s = 4 both are of order 6
+# (see test/verification/galerkin_convergence_tests.jl), which is why their errors on this
+# problem are comparable.
+
+@testset "$(rpad("Continuous Galerkin variational integrators",80))" begin
+
+    # Tolerances measured at the default Δt of `iodeproblem()`:
+    #
+    #                            q          p
+    #   CGVI(Gauss(4))       3.7E-13    1.2E-12
+    #   CGVINodal(Lobatto(4))  1.1E-13    1.3E-12
+
+    cgsol = integrate(iode, CGVI(BGau4, QGau4))
+    @test relative_maximum_error(cgsol.q, pref.q) < 8E-13
+    @test relative_maximum_error(cgsol.p, pref.p) < 4E-12
+
+    cgnsol = integrate(iode, CGVINodal(BLob4, QLob4))
+    @test relative_maximum_error(cgnsol.q, pref.q) < 8E-13
+    @test relative_maximum_error(cgnsol.p, pref.p) < 4E-12
+
+    # traits
+    for m in (CGVI(BGau4, QGau4), CGVINodal(BLob4, QLob4))
+        @test isexplicit(m) === false
+        @test isimplicit(m) === true
+        @test issymmetric(m) === missing
+        @test issymplectic(m) === true
+        @test islodemethod(m)
+        @test isiodemethod(m)
+    end
+
+    # accessors
+    for (m, B, Q) in ((CGVI(BGau4, QGau4), BGau4, QGau4), (CGVINodal(BLob4, QLob4), BLob4, QLob4))
+        @test GeometricIntegrators.Integrators.basis(m) === B
+        @test GeometricIntegrators.Integrators.quadrature(m) === Q
+        @test GeometricIntegrators.Integrators.nbasis(m) == 4
+        @test GeometricIntegrators.Integrators.nnodes(m) == 4
+    end
+
+    # `CGVINodal` reads q(0) off the first basis coefficient and q(1) off the last instead
+    # of reconstructing them, which is only valid on an interpolatory basis whose nodes
+    # include both endpoints. A Gauss basis builds fine and then integrates a wrong
+    # trajectory, so the constructor rejects it. `CGVI` places no such requirement.
+    @test_throws AssertionError CGVINodal(BGau4, QGau4)
+    @test CGVI(BLob4, QLob4) isa CGVI
+
+    # Regression guard for `D > 1`.
+    #
+    # `components!`, `residual!`, `initial_guess!` and `update!` all index the same flat
+    # vector of basis coefficients, and every layout mistake between them collapses to the
+    # identity at `D = 1`, which is all the assertions above cover. Two of `CGVINodal`'s
+    # used to disagree: `components!` read `x[D*(d-1)+s]`, so at `D = 2, S = 4` it read
+    # `x[3]` twice and `x[6]` never, leaving a zero Jacobian column and a
+    # `SingularException` on the very first step, and `update!` broadcast a single scalar
+    # across all `D` components of `q`.
+    #
+    # `CoupledHarmonicOscillator` with the coupling parameter `k = 0` is two *independent*
+    # harmonic oscillators with different masses, different spring constants and different
+    # initial conditions, so each degree of freedom has its own closed-form solution and
+    # its own frequency. Any layout bug that duplicates, swaps or drops a component
+    # therefore shows up as a wrong number rather than merely a slightly worse one.
+    let params = (m₁=2.0, m₂=1.0, k₁=1.5, k₂=0.3, k=0.0),
+        q₀ = [0.5, -0.3], p₀ = [0.0, 0.4], tend = 1.0
+
+        chprob = CoupledHarmonicOscillator.lodeproblem(q₀, p₀;
+            timespan=(0.0, tend), timestep=0.1, parameters=params)
+
+        m = [params.m₁, params.m₂]
+        ω = sqrt.([params.k₁, params.k₂] ./ m)
+        qexact = q₀ .* cos.(ω .* tend) .+ p₀ ./ (m .* ω) .* sin.(ω .* tend)
+        pexact = .-m .* ω .* q₀ .* sin.(ω .* tend) .+ p₀ .* cos.(ω .* tend)
+
+        for meth in (CGVI(BGau4, QGau4), CGVINodal(BLob4, QLob4))
+            chsol = integrate(chprob, meth)
+            qend = [collect(chsol.q[:, d])[end] for d in 1:2]
+            pend = [collect(chsol.p[:, d])[end] for d in 1:2]
+            @test maximum(abs.(qend .- qexact)) < 1E-11
+            @test maximum(abs.(pend .- pexact)) < 1E-11
+        end
+    end
+
+    # Reduced precision: neither variant may silently promote a `Float32` problem to
+    # `Float64`, and both must still be accurate to roughly the `Float32` solver floor.
+    # `f_abstol` is raised above that floor, which is `8eps(Float32) ≈ 1E-6` here, so the
+    # solver does not report stagnation on a solve that has in fact converged as far as the
+    # precision allows.
+    let T = Float32, params = HarmonicOscillator.default_parameters(Float32)
+        f32prob = HarmonicOscillator.lodeproblem([T(0.5)], [T(0.0)];
+            timespan=(T(0.0), T(1.0)), timestep=T(0.1), parameters=params)
+        qexact = HarmonicOscillator.exact_solution_q(T(1.0), T(0.5), T(0.0), T(0.0), params)
+
+        QGau4f = GaussLegendreQuadrature(T, 4)
+        QLob4f = LobattoLegendreQuadrature(T, 4)
+
+        for meth in (CGVI(Lagrange(QuadratureRules.nodes(QGau4f)), QGau4f),
+                     CGVINodal(Lagrange(QuadratureRules.nodes(QLob4f)), QLob4f))
+            f32sol = integrate(f32prob, meth; f_abstol=T(1E-5))
+            @test eltype(f32sol.q[end]) == T
+            @test eltype(f32sol.p[end]) == T
+            @test abs(collect(f32sol.q[:, 1])[end] - qexact) < 1E-5
+        end
+    end
+
+end
 
 
 ### DGVI Integrators ###

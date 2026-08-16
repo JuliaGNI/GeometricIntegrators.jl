@@ -29,6 +29,8 @@ dvilode = LotkaVolterra2dSingular.lodeproblem()
 # test/spark/spark_integrators_tests.jl.
 QGau4 = GaussLegendreQuadrature(4)
 BGau4 = Lagrange(QuadratureRules.nodes(QGau4))
+QLob4 = LobattoLegendreQuadrature(4)
+BLob4 = Lagrange(QuadratureRules.nodes(QLob4))
 dgjump = Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2))
 
 const lv_q₀ = [1.0, 1.0]
@@ -63,14 +65,16 @@ test_show_default(x) = @test length(sprint(show, x)) > 0
     ### the methods themselves ###
 
     # `RKMethod` and `PRKMethod` (src/integrators/rk/abstract.jl), `VPRKMethod`
-    # (src/integrators/vi/vprk_methods.jl), `CGVI` (src/integrators/cgvi/integrators_cgvi.jl)
-    # and `DGVIMethod` (src/integrators/dgvi/integrators_dgvi_common.jl) print their tableau
-    # or basis; the remaining method structs have no `show` of their own.
+    # (src/integrators/vi/vprk_methods.jl), `CGVIMethod`
+    # (src/integrators/cgvi/integrators_cgvi_common.jl) and `DGVIMethod`
+    # (src/integrators/dgvi/integrators_dgvi_common.jl) print their tableau or basis; the
+    # remaining method structs have no `show` of their own.
     test_show(RK(TableauCrouzeix()), "Runge-Kutta Method with Tableau")
     test_show(Gauss(1), "Runge-Kutta Method with Tableau")
     test_show(LobattoIIIAIIIB(2), "Partitioned Runge-Kutta Method with Tableau")
     test_show(VPRK(Gauss(1)), "Variational Partitioned Runge-Kutta Method with Tableau")
     test_show(CGVI(BGau4, QGau4), "Continuous Galerkin Variational Integrator")
+    test_show(CGVINodal(BLob4, QLob4), "Continuous Galerkin Variational Integrator (nodal basis)")
     test_show(DGVI(BGau4, QGau4), "Discontinuous Galerkin Variational Integrator")
 
     test_show_default(ExplicitEuler())
@@ -173,7 +177,8 @@ test_show_default(x) = @test length(sprint(show, x)) > 0
     test_show_default(GeometricIntegrator(iode, VPRKpSymmetric(Gauss(1))))
     test_show_default(GeometricIntegrator(iode, VPRKpVariational(Gauss(1))))
 
-    # `CGVI` defines `show` for the method (asserted above), not for the integrator
+    # the CGVIs define `show` for the method (asserted above), not for the integrator
     test_show_default(GeometricIntegrator(iode, CGVI(BGau4, QGau4)))
+    test_show_default(GeometricIntegrator(iode, CGVINodal(BLob4, QLob4)))
 
 end
