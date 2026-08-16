@@ -186,9 +186,11 @@ In order to complete the discrete action, we explicitly add the continuity const
 \bigg] ,
 \end{multline}
 ```
-which ensures that the polynomials in neighbouring intervals, e.g., $[t_{n}, t_{n+1}]$ and $[t_{n+1}, t_{n+2}]$, have the same value at integer timesteps, e.g., $t_{n+1}$. 
+which ensures that the polynomials in neighbouring intervals, e.g., $[t_{n}, t_{n+1}]$ and $[t_{n+1}, t_{n+2}]$, have the same value at integer timesteps, e.g., $t_{n+1}$.
 
-## Galerkin Variational Integrators II
+This is the formulation implemented by [`CGVI`](@ref).
+
+## Galerkin Variational Integrators on a Nodal Basis
 
 In the Galerkin framework proposed in [OberBloebaum:2015](@cite), the continuity at integer timesteps is enforced by the approximation polynomial. Specifically, the nodes of basis functions are $0 = c_1 < c_2 < ... < c_s = 1$, e.g., quadrature points of Lobatto-type. The internal stages are then
 ```math
@@ -209,3 +211,12 @@ In contrast to the formulation in the previous section, the continuity constrain
 	\sum \limits_{i=1}^{s} b_{i} \, L \big( Q_{n,i} , \dot{Q}_{n,i} \big)
 \bigg].
 ```
+Because no multipliers appear, the unknowns of the nonlinear system are the $s-1$
+coefficients the boundary conditions leave free, $D \, (s-1)$ in total, against the
+$D \, (s+1)$ of the previous section, which solves for all $s$ coefficients plus the
+momentum at the end of the interval.
+
+This is the formulation implemented by [`CGVINodal`](@ref). It requires an interpolatory
+basis whose nodes include both ends of the interval — a Lagrange basis on Lobatto-Legendre
+nodes — and the constructor rejects any other, since $X_1 \neq q(0)$ and $X_s \neq q(1)$
+would otherwise be read as if they were the boundary values.
