@@ -1,46 +1,61 @@
+# Canonical documentation workflow. Copied verbatim into every repository that has a tracked
+# docs/make.jl, by install-workflows.sh — edit this file and re-run the installer, never a copy in a
+# repository.
+#
+# The file name is Documenter.yml everywhere. Three repositories called it Documentation.yml and one
+# Documentation.yaml; nothing depends on the file name, but a tree in which the same workflow has
+# three names cannot be checked for drift.
+#
+# DOCTESTS ARE NOT HERE. They run in CI.yml, in a job pinned to one OS and one Julia version, so
+# that they produce a required status check of their own. Before that, five repositories listed
+# `:doctest` in `warnonly` and one had `doctest = false`, which meant a doctest failure was a
+# warning inside a docs build that nothing gated.
+#
+# Two repositories legitimately keep their own version of this file, because their docs are a
+# multi-job pipeline rather than a single build and so are not scaffolding drift:
+# Experiments/GeometricExamples (Weave matrix) and Experiments/SolverBenchmark (sweep matrix).
+
 name: Documentation
+
 on:
-  push:
-    branches:
-      - main
-    tags: '*'
-  pull_request:
-jobs:  
-  build:
-    name: Documentation
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      statuses: write
-    steps:
-      - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@v3
-      - name: Configure doc environment
-        run: |
-          julia --project=docs/ -e '
-            using Pkg
-            Pkg.develop(PackageSpec(path=pwd()))
-            Pkg.instantiate()
-            Pkg.build()
-            Pkg.precompile()'
-          sudo apt-get install imagemagick
-          sudo apt-get install poppler-utils
-          sudo apt-get install texlive-xetex
-      - name: Generate Images
-        run: |
-          make all   -C src/images
-          make clean -C src/images
-        working-directory: docs
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-docdeploy@v1
+    push:
+        branches:
+            - main
+            - master
+        tags: ["*"]
+    pull_request:
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+
+jobs:
+    build:
+        name: Documentation
+        runs-on: ubuntu-latest
+        timeout-minutes: 90
+        permissions:
+            actions: write
+            contents: write
+            statuses: write
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
-          GKSwstype: 100
-      - name: Doctests
-        run: |
-          julia --project=docs -e '
-            using Documenter: DocMeta, doctest
-            using GeometricIntegrators
-            DocMeta.setdocmeta!(GeometricIntegrators, :DocTestSetup, :(using GeometricIntegrators); recursive=true)
-            doctest(GeometricIntegrators)'
+            # GR needs a headless backend on the runner. Harmless where the docs use CairoMakie.
+            GKSwstype: "100"
+        steps:
+            - uses: actions/checkout@v7
+            - uses: julia-actions/setup-julia@v3
+              with:
+                  version: "1"
+            - uses: julia-actions/cache@v3
+            - name: Instantiate the documentation environment
+              run: |
+                  julia --project=docs -e '
+                    using Pkg
+                    Pkg.develop(PackageSpec(path = pwd()))
+                    Pkg.instantiate()'
+            - uses: julia-actions/julia-buildpkg@v1
+            - uses: julia-actions/julia-docdeploy@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
