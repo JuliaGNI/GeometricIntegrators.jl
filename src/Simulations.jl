@@ -8,8 +8,6 @@ using GeometricEquations
 
 using ..Integrators
 
-import ..Integrators: DEFAULT_NSAVE, DEFAULT_NWRITE
-
 # export SerialSimulation, ParallelSimulation
 # export run!
 
