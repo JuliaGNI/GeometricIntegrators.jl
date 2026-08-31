@@ -43,7 +43,7 @@ function _VPRKpLegendre_ndofs(D, tableau::PartitionedTableau)
 
     N = (3 * S + 2) * D
 
-    if isdefined(tableau, :d) && length(tableau.d) > 0
+    if isdefined(tableau, :d) && !isempty(tableau.d)
         N += D
     end
 
@@ -143,7 +143,7 @@ function initial_guess!(int::IntegratorVPRKpLegendre{DT,TT}, sol::SolutionStepPO
         cache.x[offset+k] = cache.p̃[k]
     end
 
-    if isdefined(tableau(int), :d) && length(tableau(int).d) > 0
+    if isdefined(tableau(int), :d) && !isempty(tableau(int).d)
         offset = (3 * nstages(int) + 2) * ndims(int)
         for k in eachdim(int)
             cache.x[offset+k] = 0
@@ -186,7 +186,7 @@ function components!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
     functions(problem).ϑ(ϕ, solstep.t̄ + timestep(problem), q, v)
 
     # for Lobatto-type methods, copy y to μ
-    if isdefined(tableau(method), :d) && length(tableau(method).d) > 0
+    if isdefined(tableau(method), :d) && !isempty(tableau(method).d)
         offset = (3 * S + 2) * D
         for k in 1:D
             μ[k] = y[offset+k]
@@ -280,7 +280,7 @@ function compute_rhs!(b::Vector{ST},
     #     end
     # end
 
-    if isdefined(tableau(method), :d) && length(tableau(method).d) > 0
+    if isdefined(tableau(method), :d) && !isempty(tableau(method).d)
         sl = div(S + 1, 2)
         offset = D * (S + sl - 1)
 

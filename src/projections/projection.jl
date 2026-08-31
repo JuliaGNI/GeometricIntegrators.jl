@@ -48,7 +48,7 @@ function ProjectionIntegrator(
     caches=CacheDict(problem, method),
     options...
 )
-    solver = initsolver(solvermethod, method, caches; (length(options) == 0 ? default_options(projectionmethod, problem) : options)...)
+    solver = initsolver(solvermethod, method, caches; (isempty(options) ? default_options(projectionmethod, problem) : options)...)
     ProjectionIntegrator(problem, method, caches, solver, iguess, subint)
 end
 
