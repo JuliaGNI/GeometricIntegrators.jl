@@ -20,24 +20,22 @@ struct PMVImidpoint <: PMVIMethod end
 
 issymmetric(method::PMVImidpoint) = true
 
-
 function Base.show(io::IO, int::GeometricIntegrator{<:PMVImidpoint})
     print(io, "\nMidpoint variational integrator in position-momentum form with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
 end
 
-
 function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVImidpoint}) where {ST}
     # set some local variables for convenience and clarity
     local t̃ = sol.t - timestep(int) / 2
-    
+
     # copy x to q
     cache(int, ST).q .= x[1:length(cache(int, ST).q)]
 
     # compute q̃ and ṽ
     cache(int, ST).q̃ .= (cache(int, ST).q .+ sol.q) ./ 2
     cache(int, ST).ṽ .= (cache(int, ST).q .- sol.q) ./ timestep(int)
- 
+
     # compute Θ̃ = ϑ(q̃,ṽ) and f̃ = f(q̃,ṽ)
     equations(int).ϑ(cache(int, ST).θ̃, t̃, cache(int, ST).q̃, cache(int, ST).ṽ, params)
     equations(int).f(cache(int, ST).f̃, t̃, cache(int, ST).q̃, cache(int, ST).ṽ, params)
@@ -45,7 +43,6 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVI
     # compute p
     cache(int, ST).p .= sol.p .+ timestep(int) .* cache(int, ST).f̃
 end
-
 
 function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVImidpoint}) where {ST}
     # compute b

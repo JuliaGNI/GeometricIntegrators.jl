@@ -31,11 +31,12 @@ import GeometricIntegratorsBase: SolutionStep
 import GeometricIntegratorsBase: cache, caches, iguess, method, problem, solver, solverstate
 import GeometricIntegratorsBase: initial_guess!, integrate_step!, residual!, solutionstep!
 import GeometricIntegratorsBase: current, equation, equations, timestep
-import GeometricIntegratorsBase: update!, initialize!, initsolver, internal, nlsolution, internal_variables
+import GeometricIntegratorsBase: update!, initialize!, initsolver, internal, nlsolution,
+                                 internal_variables
 import GeometricIntegratorsBase: solversize
 
 export CoefficientsARK, CoefficientsPRK, CoefficientsMRK, CoefficientsIRK,
-    CoefficientsSPARK
+       CoefficientsSPARK
 
 export AbstractIntegratorSPARK
 export AbstractTableauSPARK, TableauSPARK
@@ -54,7 +55,6 @@ export VSPARKprimary, IntegratorVSPARKprimary, TableauVSPARKprimary
 export VSPARKsecondary, IntegratorVSPARKsecondary, TableauVSPARKsecondary
 
 export IntegratorSLRK, SLRK
-
 
 include("spark/abstract.jl")
 include("spark/coefficients.jl")
@@ -79,127 +79,124 @@ include("spark/integrators_hspark_secondary.jl")
 
 include("spark/integrators_slrk.jl")
 
-
-
 include("spark/coefficients_glrk.jl")
 include("spark/coefficients_lob.jl")
-
 
 include("spark/tableaus_spark.jl")
 
 export SPARKGLRK,
-    SPARKLobattoIIIAIIIB,
-    SPARKLobattoIIIBIIIA,
-    SPARKGLRKLobattoIIIAIIIB,
-    SPARKGLRKLobattoIIIBIIIA,
-    SPARKLobatto,
-    SPARKLobABC,
-    SPARKLobABD,
-    SPARKVPRK,
-    SPARKGLVPRK
+       SPARKLobattoIIIAIIIB,
+       SPARKLobattoIIIBIIIA,
+       SPARKGLRKLobattoIIIAIIIB,
+       SPARKGLRKLobattoIIIBIIIA,
+       SPARKLobatto,
+       SPARKLobABC,
+       SPARKLobABD,
+       SPARKVPRK,
+       SPARKGLVPRK
 
 export TableauSymplecticProjection,
-    TableauLobattoIIIAIIIBpSymplectic,
-    TableauLobattoIIIBIIIApSymplectic,
-    TableauGausspSymplectic
+       TableauLobattoIIIAIIIBpSymplectic,
+       TableauLobattoIIIBIIIApSymplectic,
+       TableauGausspSymplectic
 
 include("spark/tableaus_vpark.jl")
 
 export TableauVSPARKLobattoIIIAIIIBProjection,
-    TableauVSPARKLobattoIIIBIIIAProjection,
-    TableauVSPARKModifiedLobattoIIIAIIIBProjection,
-    TableauVSPARKModifiedLobattoIIIBIIIAProjection,
-    TableauVSPARKInternalProjection,
-    TableauVSPARKModifiedInternalProjection,
-    TableauVSPARKMidpointProjection,
-    TableauVSPARKModifiedMidpointProjection,
-    TableauVSPARKSymmetricProjection,
-    TableauVSPARKSymplecticProjection,
-    TableauVSPARKGLRKpLobattoIIIAIIIB,
-    TableauVSPARKGLRKpLobattoIIIBIIIA,
-    TableauVSPARKGLRKpModifiedLobattoIIIAIIIB,
-    TableauVSPARKGLRKpModifiedLobattoIIIBIIIA,
-    TableauVSPARKGLRKpInternal,
-    TableauVSPARKGLRKpModifiedInternal,
-    TableauVSPARKGLRKpMidpoint,
-    TableauVSPARKGLRKpModifiedMidpoint,
-    TableauVSPARKGLRKpSymmetric,
-    TableauVSPARKGLRKpSymplectic,
-    TableauVSPARKLobattoIIIAIIIBpLobattoIIIAIIIB,
-    TableauVSPARKLobattoIIIBIIIApLobattoIIIAIIIB,
-    TableauVSPARKLobattoIIIAIIIBpLobattoIIIBIIIA,
-    TableauVSPARKLobattoIIIBIIIApLobattoIIIBIIIA,
-    TableauVSPARKLobattoIIIAIIIBpModifiedLobattoIIIAIIIB,
-    TableauVSPARKLobattoIIIAIIIBpModifiedLobattoIIIBIIIA,
-    TableauVSPARKLobattoIIIBIIIApModifiedLobattoIIIAIIIB,
-    TableauVSPARKLobattoIIIBIIIApModifiedLobattoIIIBIIIA,
-    TableauVSPARKLobattoIIIAIIIBpMidpoint,
-    TableauVSPARKLobattoIIIBIIIApMidpoint,
-    TableauVSPARKLobattoIIIAIIIBpModifiedMidpoint,
-    TableauVSPARKLobattoIIIBIIIApModifiedMidpoint,
-    TableauVSPARKLobattoIIIAIIIBpSymmetric,
-    TableauVSPARKLobattoIIIBIIIApSymmetric,
-    TableauVSPARKLobABCCD,
-    TableauVSPARKLobABCCE,
-    TableauVSPARKLobABDE,
-    TableauVSPARKLobABED,
-    TableauVSPARKLobABD,
-    TableauVSPARKLobABE,
-    TableauVSPARKLobDE,
-    TableauVSPARKLobED
+       TableauVSPARKLobattoIIIBIIIAProjection,
+       TableauVSPARKModifiedLobattoIIIAIIIBProjection,
+       TableauVSPARKModifiedLobattoIIIBIIIAProjection,
+       TableauVSPARKInternalProjection,
+       TableauVSPARKModifiedInternalProjection,
+       TableauVSPARKMidpointProjection,
+       TableauVSPARKModifiedMidpointProjection,
+       TableauVSPARKSymmetricProjection,
+       TableauVSPARKSymplecticProjection,
+       TableauVSPARKGLRKpLobattoIIIAIIIB,
+       TableauVSPARKGLRKpLobattoIIIBIIIA,
+       TableauVSPARKGLRKpModifiedLobattoIIIAIIIB,
+       TableauVSPARKGLRKpModifiedLobattoIIIBIIIA,
+       TableauVSPARKGLRKpInternal,
+       TableauVSPARKGLRKpModifiedInternal,
+       TableauVSPARKGLRKpMidpoint,
+       TableauVSPARKGLRKpModifiedMidpoint,
+       TableauVSPARKGLRKpSymmetric,
+       TableauVSPARKGLRKpSymplectic,
+       TableauVSPARKLobattoIIIAIIIBpLobattoIIIAIIIB,
+       TableauVSPARKLobattoIIIBIIIApLobattoIIIAIIIB,
+       TableauVSPARKLobattoIIIAIIIBpLobattoIIIBIIIA,
+       TableauVSPARKLobattoIIIBIIIApLobattoIIIBIIIA,
+       TableauVSPARKLobattoIIIAIIIBpModifiedLobattoIIIAIIIB,
+       TableauVSPARKLobattoIIIAIIIBpModifiedLobattoIIIBIIIA,
+       TableauVSPARKLobattoIIIBIIIApModifiedLobattoIIIAIIIB,
+       TableauVSPARKLobattoIIIBIIIApModifiedLobattoIIIBIIIA,
+       TableauVSPARKLobattoIIIAIIIBpMidpoint,
+       TableauVSPARKLobattoIIIBIIIApMidpoint,
+       TableauVSPARKLobattoIIIAIIIBpModifiedMidpoint,
+       TableauVSPARKLobattoIIIBIIIApModifiedMidpoint,
+       TableauVSPARKLobattoIIIAIIIBpSymmetric,
+       TableauVSPARKLobattoIIIBIIIApSymmetric,
+       TableauVSPARKLobABCCD,
+       TableauVSPARKLobABCCE,
+       TableauVSPARKLobABDE,
+       TableauVSPARKLobABED,
+       TableauVSPARKLobABD,
+       TableauVSPARKLobABE,
+       TableauVSPARKLobDE,
+       TableauVSPARKLobED
 
 include("spark/tableaus_vspark_primary.jl")
 
 export TableauVSPARKLobattoIIIAB,
-    TableauVSPARKLobattoIIIBA,
-    TableauVSPARKLobattoIIICC̄,
-    TableauVSPARKLobattoIIIC̄C,
-    TableauVSPARKLobattoIIID,
-    TableauVSPARKLobattoIIIE,
-    TableauVSPARKGLRKLobattoIIIAB,
-    TableauVSPARKGLRKLobattoIIIBA,
-    TableauVSPARKGLRKLobattoIIICC̄,
-    TableauVSPARKGLRKLobattoIIIC̄C,
-    TableauVSPARKGLRKLobattoIIID,
-    TableauVSPARKGLRKLobattoIIIE
+       TableauVSPARKLobattoIIIBA,
+       TableauVSPARKLobattoIIICC̄,
+       TableauVSPARKLobattoIIIC̄C,
+       TableauVSPARKLobattoIIID,
+       TableauVSPARKLobattoIIIE,
+       TableauVSPARKGLRKLobattoIIIAB,
+       TableauVSPARKGLRKLobattoIIIBA,
+       TableauVSPARKGLRKLobattoIIICC̄,
+       TableauVSPARKGLRKLobattoIIIC̄C,
+       TableauVSPARKGLRKLobattoIIID,
+       TableauVSPARKGLRKLobattoIIIE
 
 include("spark/tableaus_vspark_secondary.jl")
 
 export getTableauHPARK,
-    TableauHPARKGLRK,
-    TableauHPARKLobattoIIIAIIIB,
-    TableauHPARKLobattoIIIBIIIA
+       TableauHPARKGLRK,
+       TableauHPARKLobattoIIIAIIIB,
+       TableauHPARKLobattoIIIBIIIA
 
 include("spark/tableaus_hpark.jl")
 
 export TableauHSPARKSymmetricProjection,
-    TableauHSPARKGLRKpSymmetric,
-    TableauHSPARKLobattoIIIAIIIBpSymmetric,
-    TableauHSPARKLobattoIIIBIIIApSymmetric
+       TableauHSPARKGLRKpSymmetric,
+       TableauHSPARKLobattoIIIAIIIBpSymmetric,
+       TableauHSPARKLobattoIIIBIIIApSymmetric
 
 include("spark/tableaus_hspark_primary.jl")
 
 export TableauHSPARKLobattoIIIAB,
-    TableauHSPARKLobattoIIIBA,
-    TableauHSPARKLobattoIIICC̄,
-    TableauHSPARKLobattoIIIC̄C,
-    TableauHSPARKLobattoIIID,
-    TableauHSPARKLobattoIIIE,
-    TableauHSPARKGLRKLobattoIIIAB,
-    TableauHSPARKGLRKLobattoIIIBA,
-    TableauHSPARKGLRKLobattoIIICC̄,
-    TableauHSPARKGLRKLobattoIIIC̄C,
-    TableauHSPARKGLRKLobattoIIID,
-    TableauHSPARKGLRKLobattoIIIE
+       TableauHSPARKLobattoIIIBA,
+       TableauHSPARKLobattoIIICC̄,
+       TableauHSPARKLobattoIIIC̄C,
+       TableauHSPARKLobattoIIID,
+       TableauHSPARKLobattoIIIE,
+       TableauHSPARKGLRKLobattoIIIAB,
+       TableauHSPARKGLRKLobattoIIIBA,
+       TableauHSPARKGLRKLobattoIIICC̄,
+       TableauHSPARKGLRKLobattoIIIC̄C,
+       TableauHSPARKGLRKLobattoIIID,
+       TableauHSPARKGLRKLobattoIIIE
 
 include("spark/tableaus_hspark_secondary.jl")
 
 export SLRKLobattoIIIAB,
-    SLRKLobattoIIIBA,
-    SLRKLobattoIIICC̄,
-    SLRKLobattoIIIC̄C,
-    SLRKLobattoIIID,
-    SLRKLobattoIIIE
+       SLRKLobattoIIIBA,
+       SLRKLobattoIIICC̄,
+       SLRKLobattoIIIC̄C,
+       SLRKLobattoIIID,
+       SLRKLobattoIIIE
 
 include("spark/tableaus_slrk.jl")
 

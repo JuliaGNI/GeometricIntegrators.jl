@@ -7,7 +7,6 @@ PathIntegralLinear is a path integral along a linear path
 """
 struct PathIntegralLinear <: PathIntegral end
 
-
 # function evaluate(path::PathIntegralLinear{T}, i::Int, τ::T) where {T}
 #     if i == 1
 #         return one(T)-τ

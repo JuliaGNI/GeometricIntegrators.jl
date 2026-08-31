@@ -1,12 +1,15 @@
 
 abstract type AbstractSplittingMethod <: SODEMethod end
 
-coefficients(::T) where {T <: AbstractSplittingMethod} = error("Splitting method $T does not have a coefficients() method.")
-coefficients(problem::SODEProblem, splitting::AbstractSplittingMethod) = coefficients(problem, coefficients(splitting))
+function coefficients(::T) where {T <: AbstractSplittingMethod}
+    error("Splitting method $T does not have a coefficients() method.")
+end
+function coefficients(problem::SODEProblem, splitting::AbstractSplittingMethod)
+    coefficients(problem, coefficients(splitting))
+end
 
 isexplicit(::Union{AbstractSplittingMethod, Type{<:AbstractSplittingMethod}}) = true
 isimplicit(::Union{AbstractSplittingMethod, Type{<:AbstractSplittingMethod}}) = false
-
 
 @doc raw"""
 Lie-Trotter Splitting A
@@ -28,12 +31,11 @@ struct LieA <: AbstractSplittingMethod end
 
 GeometricBase.order(::Union{LieA, Type{LieA}}) = 1
 
-function coefficients(::LieA, ::Type{T}=Float64) where {T}
-    a = Array{T}([ 1 ])
-    b = Array{T}([ 0 ])
+function coefficients(::LieA, ::Type{T} = Float64) where {T}
+    a = Array{T}([1])
+    b = Array{T}([0])
     SplittingCoefficientsNonSymmetric(:LieTrotterSplittingA, 1, a, b)
 end
-
 
 @doc raw"""
 Lie-Trotter Splitting B
@@ -55,12 +57,11 @@ struct LieB <: AbstractSplittingMethod end
 
 GeometricBase.order(::Union{LieB, Type{LieB}}) = 1
 
-function coefficients(::LieB, ::Type{T}=Float64) where {T}
-    a = Array{T}([ 0 ])
-    b = Array{T}([ 1 ])
+function coefficients(::LieB, ::Type{T} = Float64) where {T}
+    a = Array{T}([0])
+    b = Array{T}([1])
     SplittingCoefficientsNonSymmetric(:LieTrotterSplittingB, 1, a, b)
 end
-
 
 @doc raw"""
 Strang Splitting
@@ -94,12 +95,11 @@ struct Marchuk <: AbstractSplittingMethod end
 
 GeometricBase.order(::Union{Strang, Type{Strang}, Marchuk, Type{Marchuk}}) = 2
 
-function coefficients(::Union{Strang,Marchuk}, ::Type{T}=Float64) where {T}
-    a = Array{T}([ 1//2 ])
-    b = Array{T}([ 1//2 ])
+function coefficients(::Union{Strang, Marchuk}, ::Type{T} = Float64) where {T}
+    a = Array{T}([1//2])
+    b = Array{T}([1//2])
     SplittingCoefficientsNonSymmetric(:StrangSplitting, 2, a, b)
 end
-
 
 @doc raw"""
 Strang Splitting A for a vector field $\dot{x} = f_1 (t,x) + f_2 (t,x)$.
@@ -126,12 +126,11 @@ struct StrangA <: AbstractSplittingMethod end
 
 GeometricBase.order(::Union{StrangA, Type{StrangA}}) = 2
 
-function coefficients(::StrangA, ::Type{T}=Float64) where {T}
-    a = Array{T}([ 1//2, 1//2 ])
-    b = Array{T}([ 1//1, 0//1 ])
+function coefficients(::StrangA, ::Type{T} = Float64) where {T}
+    a = Array{T}([1//2, 1//2])
+    b = Array{T}([1//1, 0//1])
     SplittingCoefficientsGeneral(:StrangSplittingA, 2, a, b)
 end
-
 
 @doc raw"""
 Strang Splitting B for a vector field $\dot{x} = f_1 (t,x) + f_2 (t,x)$
@@ -158,12 +157,11 @@ struct StrangB <: AbstractSplittingMethod end
 
 GeometricBase.order(::Union{StrangB, Type{StrangB}}) = 2
 
-function coefficients(::StrangB, ::Type{T}=Float64) where {T}
-    a = Array{T}([ 0//1, 1//1 ])
-    b = Array{T}([ 1//2, 1//2 ])
+function coefficients(::StrangB, ::Type{T} = Float64) where {T}
+    a = Array{T}([0//1, 1//1])
+    b = Array{T}([1//2, 1//2])
     SplittingCoefficientsGeneral(:StrangSplittingB, 2, a, b)
 end
-
 
 @doc raw"""
 McLachlan's 2nd order symmetric, minimum error composition method
@@ -187,12 +185,11 @@ struct McLachlan2 <: AbstractSplittingMethod end
 
 GeometricBase.order(::Union{McLachlan2, Type{McLachlan2}}) = 2
 
-function coefficients(::McLachlan2, ::Type{T}=Float64; α=0.1932) where {T}
-    a = Array{T}([ α, 0.5 - α ])
-    b = Array{T}([ 0.5 - α, α ])
+function coefficients(::McLachlan2, ::Type{T} = Float64; α = 0.1932) where {T}
+    a = Array{T}([α, 0.5 - α])
+    b = Array{T}([0.5 - α, α])
     SplittingCoefficientsNonSymmetric(:McLachlanSplitting, 2, a, b)
 end
-
 
 @doc raw"""
 McLachlan's 4th order symmetric, minimum error composition method
@@ -225,12 +222,12 @@ struct McLachlan4 <: AbstractSplittingMethod end
 
 GeometricBase.order(::Union{McLachlan4, Type{McLachlan4}}) = 4
 
-function coefficients(::McLachlan4, ::Type{T}=Float64) where {T}
-    a = Array{T}(@big [ (146 +  5*√19) / 540,
-                        ( -2 + 10*√19) / 135,
-                                     1 / 5,
-                        (-23 - 20*√19) / 270,
-                        ( 14 -    √19) / 108])
+function coefficients(::McLachlan4, ::Type{T} = Float64) where {T}
+    a = Array{T}(@big [(146 + 5*√19) / 540,
+        (-2 + 10*√19) / 135,
+        1 / 5,
+        (-23 - 20*√19) / 270,
+        (14 - √19) / 108])
     SplittingCoefficientsNonSymmetric(:McLachlanSplitting, 4, a[end:-1:1], a)
 end
 
@@ -274,13 +271,12 @@ struct TripleJump <: AbstractSplittingMethod end
 
 GeometricBase.order(::Union{TripleJump, Type{TripleJump}}) = 4
 
-function coefficients(::TripleJump, ::Type{T}=Float64) where {T}
+function coefficients(::TripleJump, ::Type{T} = Float64) where {T}
     fac = @big 2^(1/3)
     den = @big 1/(2-fac)
-    a = Array{T}([ den, -fac*den ])
+    a = Array{T}([den, -fac*den])
     SplittingCoefficientsSS(:TripleJumpSplitting, 4, a)
 end
-
 
 @doc raw"""
 Suzuki's 4th order "fractal" composition method
@@ -307,13 +303,12 @@ struct SuzukiFractal <: AbstractSplittingMethod end
 
 GeometricBase.order(::Union{SuzukiFractal, Type{SuzukiFractal}}) = 4
 
-function coefficients(::SuzukiFractal, ::Type{T}=Float64) where {T}
+function coefficients(::SuzukiFractal, ::Type{T} = Float64) where {T}
     fac = @big 4^(1/3)
     den = @big 1/(4-fac)
-    a = Array{T}([ den, den, -fac*den ])
+    a = Array{T}([den, den, -fac*den])
     SplittingCoefficientsSS(:SuzukiFractalSplitting, 4, a)
 end
-
 
 @doc raw"""
 Yoshida's 6th order symmetric composition method.
@@ -343,14 +338,14 @@ struct Yoshida6 <: AbstractSplittingMethod end
 
 GeometricBase.order(::Union{Yoshida6, Type{Yoshida6}}) = 6
 
-function coefficients(::Yoshida6, ::Type{T}=Float64) where {T}
-    w = parse.(T, ("0.78451361047755726381949763",
-                   "0.23557321335935813368479318",
-                   "-1.17767998417887100694641568"))
+function coefficients(::Yoshida6, ::Type{T} = Float64) where {T}
+    w = parse.(T,
+        ("0.78451361047755726381949763",
+            "0.23557321335935813368479318",
+            "-1.17767998417887100694641568"))
     a = T[w..., 1 - 2 * sum(w)]
     SplittingCoefficientsSS(:Yoshida6Splitting, 6, a)
 end
-
 
 @doc raw"""
 Yoshida's 8th order symmetric composition method.
@@ -383,11 +378,12 @@ struct Yoshida8 <: AbstractSplittingMethod end
 
 GeometricBase.order(::Union{Yoshida8, Type{Yoshida8}}) = 8
 
-function coefficients(::Yoshida8, ::Type{T}=Float64) where {T}
-    w = parse.(T, ("0.74167036435061295345", "-0.40910082580003159400",
-                   "0.19075471029623837995", "-0.57386247111608226464",
-                   "0.29906418130365592384", "0.33462491824529818378",
-                   "0.31529309239676659663"))
+function coefficients(::Yoshida8, ::Type{T} = Float64) where {T}
+    w = parse.(T,
+        ("0.74167036435061295345", "-0.40910082580003159400",
+            "0.19075471029623837995", "-0.57386247111608226464",
+            "0.29906418130365592384", "0.33462491824529818378",
+            "0.31529309239676659663"))
     a = T[w..., 1 - 2 * sum(w)]
     SplittingCoefficientsSS(:Yoshida8Splitting, 8, a)
 end

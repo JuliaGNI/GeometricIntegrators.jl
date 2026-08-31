@@ -14,4 +14,3 @@ end
     b̂::Vector{T}
     ĉ::Vector{T}
 end
-

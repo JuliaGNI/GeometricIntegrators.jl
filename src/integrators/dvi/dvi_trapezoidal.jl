@@ -2,10 +2,9 @@
 "Trapezoidal Degenerate Variational Integrator."
 struct CTDVI <: DVIMethod end
 
-order(::Union{CTDVI,Type{CTDVI}}) = 2
+order(::Union{CTDVI, Type{CTDVI}}) = 2
 
-issymmetric(::Union{CTDVI,Type{<:CTDVI}}) = true
-
+issymmetric(::Union{CTDVI, Type{<:CTDVI}}) = true
 
 @doc raw"""
 Degenerate variational integrator cache.
@@ -59,12 +58,10 @@ end
 
 @inline CacheType(ST, ::AbstractProblemIODE, ::CTDVI) = CTDVICache{ST}
 
-
 function Base.show(io::IO, int::GeometricIntegrator{<:CTDVI})
     print(io, "\nTrapezoidal Degenerate Variational Integrator with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
 end
-
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CTDVI})
     # set some local variables for convenience
@@ -73,11 +70,11 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CTDVI})
 
     # compute initial guess for solution q(n+1)
     soltmp = (
-        t=sol.t,
-        q=cache(int).q,
-        p=cache(int).θ,
-        q̇=cache(int).v,
-        ṗ=cache(int).f,
+        t = sol.t,
+        q = cache(int).q,
+        p = cache(int).θ,
+        q̇ = cache(int).v,
+        ṗ = cache(int).f
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -85,22 +82,21 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CTDVI})
 
     # compute initial guess for solution q(n+1/2)
     soltmp = (
-        t=(sol.t + history[1].t) / 2,
-        q=cache(int).q,
-        p=cache(int).θ,
-        q̇=cache(int).v,
-        ṗ=cache(int).f,
+        t = (sol.t + history[1].t) / 2,
+        q = cache(int).q,
+        p = cache(int).θ,
+        q̇ = cache(int).v,
+        ṗ = cache(int).f
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 
     offset_v = D
     offset_x = D + div(D, 2)
     for k in 1:div(D, 2)
-        x[offset_v+k] = cache(int).v[k]              # v¹(n+1/2)
-        x[offset_x+k] = cache(int).q[div(D, 2)+k]     # q²(n+1/2)
+        x[offset_v + k] = cache(int).v[k]              # v¹(n+1/2)
+        x[offset_x + k] = cache(int).q[div(D, 2) + k]     # q²(n+1/2)
     end
 end
-
 
 function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:CTDVI}) where {ST}
     # set some local variables for convenience and clarity
@@ -116,11 +112,11 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:CTDV
         cache(int, ST).q⁻[k] = sol.q[k]
         cache(int, ST).q⁺[k] = cache(int, ST).q[k]
 
-        cache(int, ST).q⁻[div(D, 2)+k] = x[D+div(D, 2)+k]
-        cache(int, ST).q⁺[div(D, 2)+k] = x[D+div(D, 2)+k]
+        cache(int, ST).q⁻[div(D, 2) + k] = x[D + div(D, 2) + k]
+        cache(int, ST).q⁺[div(D, 2) + k] = x[D + div(D, 2) + k]
 
-        cache(int, ST).v[k] = x[D+k]
-        cache(int, ST).v[div(D, 2)+k] = 0
+        cache(int, ST).v[k] = x[D + k]
+        cache(int, ST).v[div(D, 2) + k] = 0
     end
 
     # compute f = f(q,v)
@@ -133,20 +129,21 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:CTDV
     equations(int).ϑ(cache(int, ST).θ, t⁺, cache(int, ST).q, cache(int, ST).v, params)
 end
 
-
 function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:CTDVI}) where {ST}
     # set some local variables for convenience
     local D = length(cache(int, ST).q)
 
     # compute b
-    b[1:D] .= (cache(int, ST).θ⁻ .+ cache(int, ST).θ⁺) ./ 2 .- sol.p .- timestep(int) .* cache(int, ST).f⁻ ./ 2
+    b[1:D] .= (cache(int, ST).θ⁻ .+ cache(int, ST).θ⁺) ./ 2 .- sol.p .-
+              timestep(int) .* cache(int, ST).f⁻ ./ 2
 
     for k in 1:div(D, 2)
-        b[D+k] = cache(int, ST).q[k] - sol.q[k] - timestep(int) * cache(int, ST).v[k]
-        b[D+div(D, 2)+k] = cache(int, ST).θ[k] - sol.p[k] - timestep(int) * (cache(int, ST).f⁻[k] + cache(int, ST).f⁺[k]) / 2
+        b[D + k] = cache(int, ST).q[k] - sol.q[k] - timestep(int) * cache(int, ST).v[k]
+        b[D + div(D, 2) + k] = cache(int, ST).θ[k] - sol.p[k] -
+                               timestep(int) *
+                               (cache(int, ST).f⁻[k] + cache(int, ST).f⁺[k]) / 2
     end
 end
-
 
 function update!(sol, params, int::GeometricIntegrator{<:CTDVI}, DT)
     # compute final update

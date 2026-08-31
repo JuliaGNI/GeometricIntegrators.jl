@@ -1,4 +1,8 @@
-function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Union{HSPARKMethod,PSPARKMethod},<:Union{HDAEProblem,PDAEProblem}})
+function initial_guess!(sol,
+        history,
+        params,
+        int::GeometricIntegrator{
+            <:Union{HSPARKMethod, PSPARKMethod}, <:Union{HDAEProblem, PDAEProblem}})
     # get cache for internal stages
     local C = cache(int)
     local D = ndims(C)
@@ -6,35 +10,39 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Union{H
     for i in 1:nstages(int)
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t=history[1].t + timestep(int) * tableau(int).q.c[i],
-            q=cache(int).Qi[i],
-            p=cache(int).Pi[i],
-            q̇=cache(int).Vi[i],
-            ṗ=cache(int).Fi[i],
+            t = history[1].t + timestep(int) * tableau(int).q.c[i],
+            q = cache(int).Qi[i],
+            p = cache(int).Pi[i],
+            q̇ = cache(int).Vi[i],
+            ṗ = cache(int).Fi[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
         for k in 1:D
-            C.x[2*(D*(i-1)+k-1)+1] = (C.Qi[i][k] - sol.q[k]) / timestep(int)
-            C.x[2*(D*(i-1)+k-1)+2] = (C.Pi[i][k] - sol.p[k]) / timestep(int)
+            C.x[2 * (D * (i - 1) + k - 1) + 1] = (C.Qi[i][k] - sol.q[k]) / timestep(int)
+            C.x[2 * (D * (i - 1) + k - 1) + 2] = (C.Pi[i][k] - sol.p[k]) / timestep(int)
         end
     end
 
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t=sol.t + timestep(int) * (tableau(int).q̃.c[i] - 1),
-            q=cache(int).Qp[i],
-            p=cache(int).Pp[i],
-            q̇=cache(int).Vp[i],
-            ṗ=cache(int).Fp[i],
+            t = sol.t + timestep(int) * (tableau(int).q̃.c[i] - 1),
+            q = cache(int).Qp[i],
+            p = cache(int).Pp[i],
+            q̇ = cache(int).Vp[i],
+            ṗ = cache(int).Fp[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
         for k in 1:D
-            C.x[2*D*nstages(int)+3*(D*(i-1)+k-1)+1] = (C.Qp[i][k] - sol.q[k]) / timestep(int)
-            C.x[2*D*nstages(int)+3*(D*(i-1)+k-1)+2] = (C.Pp[i][k] - sol.p[k]) / timestep(int)
-            C.x[2*D*nstages(int)+3*(D*(i-1)+k-1)+3] = 0
+            C.x[2 * D * nstages(int) + 3 * (D * (i - 1) + k - 1) + 1] = (C.Qp[i][k] -
+                                                                         sol.q[k]) /
+                                                                        timestep(int)
+            C.x[2 * D * nstages(int) + 3 * (D * (i - 1) + k - 1) + 2] = (C.Pp[i][k] -
+                                                                         sol.p[k]) /
+                                                                        timestep(int)
+            C.x[2 * D * nstages(int) + 3 * (D * (i - 1) + k - 1) + 3] = 0
         end
     end
 

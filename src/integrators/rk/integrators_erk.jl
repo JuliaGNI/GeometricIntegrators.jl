@@ -10,9 +10,8 @@ q_{n+1} &= q_{n} + h \sum \limits_{i=1}^{s} b_{i} \, V_{n,i} .
 """
 abstract type ERKMethod <: RKMethod end
 
-isexplicit(method::Union{ERKMethod,Type{<:ERKMethod}}) = true
-isimplicit(method::Union{ERKMethod,Type{<:ERKMethod}}) = false
-
+isexplicit(method::Union{ERKMethod, Type{<:ERKMethod}}) = true
+isimplicit(method::Union{ERKMethod, Type{<:ERKMethod}}) = false
 
 """
 Explicit Runge-Kutta Method
@@ -21,16 +20,17 @@ Explicit Runge-Kutta Method
 ERK(tableau)
 ```
 """
-struct ERK{TT<:Tableau} <: ERKMethod
+struct ERK{TT <: Tableau} <: ERKMethod
     tableau::TT
-    function ERK(tableau::TT) where {TT<:Tableau}
+    function ERK(tableau::TT) where {TT <: Tableau}
         @assert RungeKutta.isexplicit(tableau)
         new{TT}(tableau)
     end
 end
 
-initmethod(method::ERKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = ERK(method, TT)
-
+function initmethod(method::ERKMethod, ::GeometricProblem{ST, DT, TT}) where {ST, DT, TT}
+    ERK(method, TT)
+end
 
 function Base.show(io::IO, int::GeometricIntegrator{<:ERK})
     print(io, "\nExplicit Runge-Kutta Integrator with:\n")
@@ -40,13 +40,12 @@ function Base.show(io::IO, int::GeometricIntegrator{<:ERK})
     # print(io, reference(tableau(int)))
 end
 
-
 "Explicit Runge-Kutta integrator cache."
-struct ERKCache{DT,S} <: ODEIntegratorCache{DT}
+struct ERKCache{DT, S} <: ODEIntegratorCache{DT}
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
 
-    function ERKCache{DT,S}(ics) where {DT,S}
+    function ERKCache{DT, S}(ics) where {DT, S}
         D = length(vec(ics.q))
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
@@ -56,19 +55,20 @@ end
 
 function Cache{ST}(problem::AbstractProblemODE, method::ERK; kwargs...) where {ST}
     S = nstages(tableau(method))
-    ERKCache{ST,S}(initial_conditions(problem); kwargs...)
+    ERKCache{ST, S}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, ::AbstractProblemODE, method::ERK) = ERKCache{ST,nstages(tableau(method))}
+@inline CacheType(ST, ::AbstractProblemODE, method::ERK) = ERKCache{
+    ST, nstages(tableau(method))}
 
-function internal_variables(method::ERK, problem::AbstractProblemODE{DT,TT}) where {DT,TT}
+function internal_variables(method::ERK, problem::AbstractProblemODE{DT, TT}) where {DT, TT}
     S = nstages(method)
     D = length(vec(initial_conditions(problem).q))
 
     Q = create_internal_stage_vector(DT, D, S)
     V = create_internal_stage_vector(DT, D, S)
 
-    (Q=Q, V=V)
+    (Q = Q, V = V)
 end
 
 function copy_internal_variables!(solstep::SolutionStep, cache::ERKCache)
@@ -76,8 +76,7 @@ function copy_internal_variables!(solstep::SolutionStep, cache::ERKCache)
     haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
 end
 
-
-function components!(_, sol, params, int::GeometricIntegrator{<:ERK,<:AbstractProblemODE})
+function components!(_, sol, params, int::GeometricIntegrator{<:ERK, <:AbstractProblemODE})
     # obtain cache
     local Q = cache(int).Q
     local V = cache(int).V
@@ -87,7 +86,7 @@ function components!(_, sol, params, int::GeometricIntegrator{<:ERK,<:AbstractPr
         tᵢ = sol.t + timestep(int) * (tableau(int).c[i] - 1)
         for k in eachindex(Q[i], V[i])
             yᵢ = 0
-            for j in 1:i-1
+            for j in 1:(i - 1)
                 yᵢ += tableau(int).a[i, j] * V[j][k]
             end
             Q[i][k] = sol.q[k] + timestep(int) * yᵢ
@@ -104,7 +103,8 @@ function update!(sol, params, _, int::GeometricIntegrator{<:ERK})
     update!(sol.q, cache(int).V, tableau(int), timestep(int))
 end
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:ERK,<:AbstractProblemODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:ERK, <:AbstractProblemODE})
     # compute final update
     update!(sol, params, nothing, int)
 end

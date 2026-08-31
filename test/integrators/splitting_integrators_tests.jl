@@ -2,16 +2,14 @@ using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
 using Test
 
-
 sode = sodeproblem()
-ref  = exact_solution(odeproblem())
+ref = exact_solution(odeproblem())
 
 sode1 = SubstepProblem(sode, one(timestep(sode)), 1)
 sode2 = SubstepProblem(sode, one(timestep(sode)), 2)
 
-@test_nowarn  GeometricIntegrator(sode1, ExactSolution())
-@test_nowarn  GeometricIntegrator(sode2, ExactSolution())
-
+@test_nowarn GeometricIntegrator(sode1, ExactSolution())
+@test_nowarn GeometricIntegrator(sode2, ExactSolution())
 
 ssol = integrate(sode, LieA())
 @test relative_maximum_error(ssol, ref).q < 4E-2
@@ -43,13 +41,11 @@ ssol = integrate(sode, StrangB())
 ssolc = integrate(sode, Composition(StrangB()))
 @test relative_maximum_error(ssol, ssolc).q < 8E-16
 
-
 ssol1 = integrate(sode, Strang())
 ssol2 = integrate(sode, StrangA())
 ssol3 = integrate(sode, StrangB())
-@test ssol1.q.d ≈ ssol2.q.d  atol=1e-14
-@test ssol1.q.d ≈ ssol3.q.d  atol=1e-3
-
+@test ssol1.q.d ≈ ssol2.q.d atol=1e-14
+@test ssol1.q.d ≈ ssol3.q.d atol=1e-3
 
 ssol = integrate(sode, McLachlan2())
 @test relative_maximum_error(ssol, ref).q < 4E-5
@@ -75,12 +71,11 @@ ssol = integrate(sode, SuzukiFractal())
 ssolc = integrate(sode, Composition(SuzukiFractal()))
 @test relative_maximum_error(ssol, ssolc).q < 1E-15
 
-
 DT = datatype(sode)
-D  = length(sode.ics.q)
+D = length(sode.ics.q)
 
 ints_glrk1 = (Gauss(1), Gauss(1))
-ints_erk4  = (RK4(), RK4())
+ints_erk4 = (RK4(), RK4())
 
 sint = Composition(ints_erk4, LieA())
 ssol = integrate(sode, sint)

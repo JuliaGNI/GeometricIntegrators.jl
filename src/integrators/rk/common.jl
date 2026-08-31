@@ -10,7 +10,6 @@ function create_internal_stage_vector(DT, D, S)
     [zeros(DT, D) for i in 1:S]
 end
 
-
 """
 Create a vector of S solution matrices of type DT to store the solution of S
 internal stages for a problem with `DxM` dimensions.
@@ -18,7 +17,6 @@ internal stages for a problem with `DxM` dimensions.
 function create_internal_stage_matrix(DT, D, M, S)
     [zeros(DT, D, M) for i in 1:S]
 end
-
 
 """
 Create a vector of S+1 solution vectors of type DT to store the solution of S
@@ -34,7 +32,6 @@ function create_internal_stage_vector_with_zero(DT, D, S)
 
     return a
 end
-
 
 """
 Create a vector of (S,M+1) solution vectors of type DT to store the solution of S

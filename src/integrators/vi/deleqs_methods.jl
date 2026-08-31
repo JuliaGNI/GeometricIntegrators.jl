@@ -5,14 +5,12 @@ abstract type DELEQuadrature end
 struct Midpoint <: DELEQuadrature end
 struct Trapezoidal <: DELEQuadrature end
 
-
 function dele_initial_data(prob::LODEProblem, predictor::LODEMethod)
     t₀ = timespan(prob)[begin]
     t₁ = t₀ - timestep(prob)
     sol = integrate(similar(prob, (t₀, t₁), -timestep(prob)), predictor)
     return (sol[1].q, sol[0].q)
 end
-
 
 function dele_midpoint_Ld(t₀, t₁, q₀, q₁, params, prob)
     h = (t₁ - t₀)
@@ -55,23 +53,23 @@ function dele_midpoint_D2Ld(d, t₀, t₁, q₀, q₁, params, prob)
     return nothing
 end
 
-function GeometricEquations.DELEProblem(prob::LODEProblem, ::Midpoint, predictor=VPRKGauss(8))
+function GeometricEquations.DELEProblem(prob::LODEProblem, ::Midpoint, predictor = VPRKGauss(8))
     q₀, q₁ = dele_initial_data(prob, predictor)
 
     DELEProblem(
         (t₀, t₁, q₀, q₁, params) -> dele_midpoint_Ld(t₀, t₁, q₀, q₁, params, prob),
         (d, t₀, t₁, q₀, q₁, params) -> dele_midpoint_D1Ld(d, t₀, t₁, q₀, q₁, params, prob),
         (d, t₀, t₁, q₀, q₁, params) -> dele_midpoint_D2Ld(d, t₀, t₁, q₀, q₁, params, prob),
-        timespan(prob), timestep(prob), q₀, q₁; invariants=invariants(prob), parameters=parameters(prob))
+        timespan(prob), timestep(prob), q₀, q₁; invariants = invariants(prob),
+        parameters = parameters(prob))
 end
-
-
 
 function dele_trapezoidal_Ld(t₀, t₁, q₀, q₁, params, prob)
     h = (t₁ - t₀)
     v = (q₁ .- q₀) ./ h
 
-    return h * (functions(prob).lagrangian(t₀, q₀, v, params) + functions(prob).lagrangian(t₁, q₁, v, params)) / 2
+    return h * (functions(prob).lagrangian(t₀, q₀, v, params) +
+            functions(prob).lagrangian(t₁, q₁, v, params)) / 2
 end
 
 function dele_trapezoidal_D1Ld(d, t₀, t₁, q₀, q₁, params, prob)
@@ -108,12 +106,15 @@ function dele_trapezoidal_D2Ld(d, t₀, t₁, q₀, q₁, params, prob)
     return nothing
 end
 
-function GeometricEquations.DELEProblem(prob::LODEProblem, ::Trapezoidal, predictor=VPRKGauss(8))
+function GeometricEquations.DELEProblem(prob::LODEProblem, ::Trapezoidal, predictor = VPRKGauss(8))
     q₀, q₁ = dele_initial_data(prob, predictor)
 
     DELEProblem(
         (t₀, t₁, q₀, q₁, params) -> dele_trapezoidal_Ld(t₀, t₁, q₀, q₁, params, prob),
-        (d, t₀, t₁, q₀, q₁, params) -> dele_trapezoidal_D1Ld(d, t₀, t₁, q₀, q₁, params, prob),
-        (d, t₀, t₁, q₀, q₁, params) -> dele_trapezoidal_D2Ld(d, t₀, t₁, q₀, q₁, params, prob),
-        timespan(prob), timestep(prob), q₀, q₁; invariants=invariants(prob), parameters=parameters(prob))
+        (d, t₀, t₁, q₀, q₁, params) -> dele_trapezoidal_D1Ld(
+            d, t₀, t₁, q₀, q₁, params, prob),
+        (d, t₀, t₁, q₀, q₁, params) -> dele_trapezoidal_D2Ld(
+            d, t₀, t₁, q₀, q₁, params, prob),
+        timespan(prob), timestep(prob), q₀, q₁; invariants = invariants(prob),
+        parameters = parameters(prob))
 end

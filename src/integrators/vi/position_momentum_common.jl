@@ -5,15 +5,14 @@ isexplicit(method::PMVIMethod) = false
 isimplicit(method::PMVIMethod) = true
 issymplectic(method::PMVIMethod) = true
 
-
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:PMVIMethod})
     # compute initial guess for solution q(n+1)
     soltmp = (
-        t=sol.t,
-        q=cache(int).q̃,
-        p=cache(int).θ̃,
-        q̇=cache(int).ṽ,
-        ṗ=cache(int).f̃,
+        t = sol.t,
+        q = cache(int).q̃,
+        p = cache(int).θ̃,
+        q̇ = cache(int).ṽ,
+        ṗ = cache(int).f̃
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -21,8 +20,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:PMVIMet
     nlsolution(int) .= cache(int).q̃
 end
 
-
-function residual!(b::Vector{ST}, x::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVIMethod}) where {ST}
+function residual!(b::Vector{ST}, x::Vector{ST}, sol, params,
+        int::GeometricIntegrator{<:PMVIMethod}) where {ST}
     # check that x and b are compatible
     @assert axes(x) == axes(b)
 
@@ -32,7 +31,6 @@ function residual!(b::Vector{ST}, x::Vector{ST}, sol, params, int::GeometricInte
     # compute residual vector
     residual!(b, sol, params, int)
 end
-
 
 function update!(sol, params, int::GeometricIntegrator{<:PMVIMethod}, DT)
     # compute final update
@@ -48,10 +46,11 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
     update!(sol, params, int, DT)
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:PMVIMethod,<:AbstractProblemIODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:PMVIMethod, <:AbstractProblemIODE})
     # call nonlinear solver and act on the outcome it reports
-    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (
+        sol, params, int))
     check_solver_status(solverstatus, int)
 
     # compute final update

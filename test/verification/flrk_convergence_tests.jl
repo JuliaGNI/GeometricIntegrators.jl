@@ -19,10 +19,14 @@ include("verification_utilities.jl")
 
 const T = 1.0
 const q₀ = [1.0, 1.0]
-const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
+const params = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
 
-build(Δt) = lodeproblem(q₀; timespan=(0.0, T), timestep=Δt, parameters=params)
-ref(prob) = integrate(odeproblem(q₀; timespan=timespan(prob), timestep=timestep(prob), parameters=params), Gauss(8))
+build(Δt) = lodeproblem(q₀; timespan = (0.0, T), timestep = Δt, parameters = params)
+function ref(prob)
+    integrate(
+        odeproblem(q₀; timespan = timespan(prob), timestep = timestep(prob), parameters = params),
+        Gauss(8))
+end
 steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
 emq(sol, r) = relative_maximum_error(sol.q, r.q)
 
@@ -30,21 +34,26 @@ emq(sol, r) = relative_maximum_error(sol.q, r.q)
 # built precisely so that p = ϑ(q) solves the adjoint equations.
 function emp(sol, r)
     maximum(maximum(abs, sol.p[i] .- LotkaVolterra2d.ϑ(sol.t[i], sol.q[i]))
-            for i in eachindex(sol.q))
+    for i in eachindex(sol.q))
 end
 
 @testset "$(rpad("Formal Lagrangian Runge-Kutta convergence",80))" begin
-
     @testset "position" begin
-        test_convergence_order(build, FLRK(Gauss(1)), steps(4, 4); reference=ref, errormetric=emq, expected=2, label="FLRK(Gauss(1)) q")
-        test_convergence_order(build, FLRK(Gauss(2)), steps(4, 4); reference=ref, errormetric=emq, expected=4, label="FLRK(Gauss(2)) q")
-        test_convergence_order(build, FLRK(Gauss(3)), steps(4, 3); reference=ref, errormetric=emq, expected=6, label="FLRK(Gauss(3)) q")
+        test_convergence_order(build, FLRK(Gauss(1)), steps(4, 4); reference = ref,
+            errormetric = emq, expected = 2, label = "FLRK(Gauss(1)) q")
+        test_convergence_order(build, FLRK(Gauss(2)), steps(4, 4); reference = ref,
+            errormetric = emq, expected = 4, label = "FLRK(Gauss(2)) q")
+        test_convergence_order(build, FLRK(Gauss(3)), steps(4, 3); reference = ref,
+            errormetric = emq, expected = 6, label = "FLRK(Gauss(3)) q")
     end
 
     @testset "adjoint momentum" begin
-        test_convergence_order(build, FLRK(Gauss(1)), steps(4, 4); reference=ref, errormetric=emp, expected=2, label="FLRK(Gauss(1)) p")
-        test_convergence_order(build, FLRK(Gauss(2)), steps(4, 4); reference=ref, errormetric=emp, expected=4, label="FLRK(Gauss(2)) p")
-        test_convergence_order(build, FLRK(Gauss(3)), steps(4, 3); reference=ref, errormetric=emp, expected=6, label="FLRK(Gauss(3)) p")
+        test_convergence_order(build, FLRK(Gauss(1)), steps(4, 4); reference = ref,
+            errormetric = emp, expected = 2, label = "FLRK(Gauss(1)) p")
+        test_convergence_order(build, FLRK(Gauss(2)), steps(4, 4); reference = ref,
+            errormetric = emp, expected = 4, label = "FLRK(Gauss(2)) p")
+        test_convergence_order(build, FLRK(Gauss(3)), steps(4, 3); reference = ref,
+            errormetric = emp, expected = 6, label = "FLRK(Gauss(3)) p")
     end
 
     # The point vortices are the problem this method exists for: `GeometricProblems`
@@ -53,14 +62,22 @@ end
     # exactly 2s in both components — 2.02/4.00/6.00 in q and 2.03/4.00/6.01 in p.
     @testset "point vortices (formal Lagrangian formulation)" begin
         Tpv = 0.5
-        pvbuild(Δt) = PointVortices.lodeproblem_formal_lagrangian(; timespan=(0.0, Tpv), timestep=Δt)
-        pvref(prob) = integrate(PointVortices.odeproblem(; timespan=timespan(prob), timestep=timestep(prob)), Gauss(8))
+        pvbuild(Δt) = PointVortices.lodeproblem_formal_lagrangian(; timespan = (0.0, Tpv), timestep = Δt)
+        pvref(prob) = integrate(
+            PointVortices.odeproblem(; timespan = timespan(prob), timestep = timestep(prob)),
+            Gauss(8))
         pvsteps(n0, k) = Tpv ./ (n0 .* 2 .^ (0:k))
-        pvemp(sol, r) = maximum(maximum(abs, sol.p[i] .- PointVortices.ϑ(sol.q[i])) for i in eachindex(sol.q))
+        pvemp(sol, r) = maximum(maximum(abs, sol.p[i] .- PointVortices.ϑ(sol.q[i]))
+        for i in eachindex(sol.q))
 
         for (s, expected) in ((1, 2), (2, 4), (3, 6))
-            test_convergence_order(pvbuild, FLRK(Gauss(s)), pvsteps(16, 3); reference=pvref, errormetric=emq, expected=expected, label="FLRK(Gauss($s)) q [vortices]")
-            test_convergence_order(pvbuild, FLRK(Gauss(s)), pvsteps(16, 3); reference=pvref, errormetric=pvemp, expected=expected, minpoints=2, label="FLRK(Gauss($s)) p [vortices]")
+            test_convergence_order(pvbuild, FLRK(Gauss(s)), pvsteps(16, 3);
+                reference = pvref, errormetric = emq, expected = expected,
+                label = "FLRK(Gauss($s)) q [vortices]")
+            test_convergence_order(
+                pvbuild, FLRK(Gauss(s)), pvsteps(16, 3); reference = pvref,
+                errormetric = pvemp, expected = expected,
+                minpoints = 2, label = "FLRK(Gauss($s)) p [vortices]")
         end
     end
 
@@ -74,11 +91,11 @@ end
     # coarsest step and identically zero at the finer ones.
     @testset "consistency with the underlying Runge-Kutta method" begin
         for Δt in steps(4, 2), s in 1:3
+
             prob = build(Δt)
-            odeprob = odeproblem(q₀; timespan=timespan(prob), timestep=timestep(prob), parameters=params)
+            odeprob = odeproblem(q₀; timespan = timespan(prob), timestep = timestep(prob), parameters = params)
             @test relative_maximum_error(integrate(prob, FLRK(Gauss(s))).q,
-                                        integrate(odeprob, Gauss(s)).q) < 4E-16
+                integrate(odeprob, Gauss(s)).q) < 4E-16
         end
     end
-
 end

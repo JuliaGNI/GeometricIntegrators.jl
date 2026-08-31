@@ -17,49 +17,90 @@ build(Δt) = odeproblem(; timespan = (0.0, T), timestep = Δt)
 steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
 
 @testset "Runge-Kutta convergence" begin
-
     @testset "Explicit Runge-Kutta" begin
-        test_convergence_order(build, ExplicitEulerRK(), steps(10, 5); reference = exact_solution, expected = 1, label = "ExplicitEulerRK")
-        test_convergence_order(build, ExplicitMidpoint(), steps(10, 5); reference = exact_solution, expected = 2, label = "ExplicitMidpoint")
-        test_convergence_order(build, Heun2(),  steps(10, 5); reference = exact_solution, expected = 2, label = "Heun2")
-        test_convergence_order(build, Heun3(),  steps(10, 5); reference = exact_solution, expected = 3, label = "Heun3")
-        test_convergence_order(build, Kutta3(), steps(10, 5); reference = exact_solution, expected = 3, label = "Kutta3")
-        test_convergence_order(build, Ralston2(), steps(10, 5); reference = exact_solution, expected = 2, label = "Ralston2")
-        test_convergence_order(build, Ralston3(), steps(10, 5); reference = exact_solution, expected = 3, label = "Ralston3")
-        test_convergence_order(build, Runge2(), steps(10, 5); reference = exact_solution, expected = 2, label = "Runge2")
-        test_convergence_order(build, SSPRK2(), steps(10, 5); reference = exact_solution, expected = 2, label = "SSPRK2")
-        test_convergence_order(build, SSPRK3(), steps(10, 5); reference = exact_solution, expected = 3, label = "SSPRK3")
-        test_convergence_order(build, RK4(),   steps(10, 4); reference = exact_solution, expected = 4, label = "RK4")
-        test_convergence_order(build, RK438(), steps(10, 4); reference = exact_solution, expected = 4, label = "RK438")
+        test_convergence_order(
+            build, ExplicitEulerRK(), steps(10, 5); reference = exact_solution,
+            expected = 1, label = "ExplicitEulerRK")
+        test_convergence_order(
+            build, ExplicitMidpoint(), steps(10, 5); reference = exact_solution,
+            expected = 2, label = "ExplicitMidpoint")
+        test_convergence_order(build, Heun2(), steps(10, 5); reference = exact_solution,
+            expected = 2, label = "Heun2")
+        test_convergence_order(build, Heun3(), steps(10, 5); reference = exact_solution,
+            expected = 3, label = "Heun3")
+        test_convergence_order(build, Kutta3(), steps(10, 5); reference = exact_solution,
+            expected = 3, label = "Kutta3")
+        test_convergence_order(build, Ralston2(), steps(10, 5); reference = exact_solution,
+            expected = 2, label = "Ralston2")
+        test_convergence_order(build, Ralston3(), steps(10, 5); reference = exact_solution,
+            expected = 3, label = "Ralston3")
+        test_convergence_order(build, Runge2(), steps(10, 5); reference = exact_solution,
+            expected = 2, label = "Runge2")
+        test_convergence_order(build, SSPRK2(), steps(10, 5); reference = exact_solution,
+            expected = 2, label = "SSPRK2")
+        test_convergence_order(build, SSPRK3(), steps(10, 5); reference = exact_solution,
+            expected = 3, label = "SSPRK3")
+        test_convergence_order(build, RK4(), steps(10, 4); reference = exact_solution,
+            expected = 4, label = "RK4")
+        test_convergence_order(build, RK438(), steps(10, 4); reference = exact_solution,
+            expected = 4, label = "RK438")
     end
 
     @testset "Diagonally implicit Runge-Kutta" begin
-        test_convergence_order(build, CrankNicolsonRK(), steps(10, 5); reference = exact_solution, expected = 2, label = "CrankNicolsonRK")
-        test_convergence_order(build, Crouzeix(),      steps(10, 5); reference = exact_solution, expected = 3, label = "Crouzeix")
-        test_convergence_order(build, QinZhang(),      steps(10, 5); reference = exact_solution, expected = 2, label = "QinZhang")
+        test_convergence_order(
+            build, CrankNicolsonRK(), steps(10, 5); reference = exact_solution,
+            expected = 2, label = "CrankNicolsonRK")
+        test_convergence_order(build, Crouzeix(), steps(10, 5); reference = exact_solution,
+            expected = 3, label = "Crouzeix")
+        test_convergence_order(build, QinZhang(), steps(10, 5); reference = exact_solution,
+            expected = 2, label = "QinZhang")
         # KraaijevangerSpijker is a first-order method (its order attribute was
         # corrected to 1 in RungeKutta.jl v0.5.22).
-        test_convergence_order(build, KraaijevangerSpijker(), steps(10, 5); reference = exact_solution, expected = 1, label = "KraaijevangerSpijker")
+        test_convergence_order(
+            build, KraaijevangerSpijker(), steps(10, 5); reference = exact_solution,
+            expected = 1, label = "KraaijevangerSpijker")
     end
 
     @testset "Fully implicit Runge-Kutta" begin
-        test_convergence_order(build, ImplicitEulerRK(), steps(10, 5); reference = exact_solution, expected = 1, label = "ImplicitEulerRK")
-        test_convergence_order(build, ImplicitMidpointRK(), steps(10, 5); reference = exact_solution, expected = 2, label = "ImplicitMidpointRK")
-        test_convergence_order(build, SRK3(), steps(4, 4); reference = exact_solution, expected = 4, label = "SRK3")
-        test_convergence_order(build, Gauss(1), steps(10, 4); reference = exact_solution, expected = 2, label = "Gauss(1)")
-        test_convergence_order(build, Gauss(2), steps(4, 4);  reference = exact_solution, expected = 4, label = "Gauss(2)")
-        test_convergence_order(build, Gauss(3), steps(2, 4);  reference = exact_solution, expected = 6, label = "Gauss(3)")
+        test_convergence_order(
+            build, ImplicitEulerRK(), steps(10, 5); reference = exact_solution,
+            expected = 1, label = "ImplicitEulerRK")
+        test_convergence_order(
+            build, ImplicitMidpointRK(), steps(10, 5); reference = exact_solution,
+            expected = 2, label = "ImplicitMidpointRK")
+        test_convergence_order(build, SRK3(), steps(4, 4); reference = exact_solution,
+            expected = 4, label = "SRK3")
+        test_convergence_order(build, Gauss(1), steps(10, 4); reference = exact_solution,
+            expected = 2, label = "Gauss(1)")
+        test_convergence_order(build, Gauss(2), steps(4, 4); reference = exact_solution,
+            expected = 4, label = "Gauss(2)")
+        test_convergence_order(build, Gauss(3), steps(2, 4); reference = exact_solution,
+            expected = 6, label = "Gauss(3)")
     end
 
     @testset "Radau and Lobatto" begin
-        test_convergence_order(build, RadauIA(2),  steps(6, 4); reference = exact_solution, expected = 3, label = "RadauIA(2)")
-        test_convergence_order(build, RadauIIA(2), steps(6, 4); reference = exact_solution, expected = 3, label = "RadauIIA(2)")
-        test_convergence_order(build, LobattoIIIA(2), steps(10, 4); reference = exact_solution, expected = 2, label = "LobattoIIIA(2)")
-        test_convergence_order(build, LobattoIIIC(2), steps(10, 4); reference = exact_solution, expected = 2, label = "LobattoIIIC(2)")
-        test_convergence_order(build, LobattoIIID(2), steps(10, 4); reference = exact_solution, expected = 2, label = "LobattoIIID(2)")
-        test_convergence_order(build, LobattoIIIE(2), steps(10, 4); reference = exact_solution, expected = 2, label = "LobattoIIIE(2)")
-        test_convergence_order(build, LobattoIIIA(3), steps(6, 4); reference = exact_solution, expected = 4, label = "LobattoIIIA(3)")
-        test_convergence_order(build, LobattoIIIB(3), steps(6, 4); reference = exact_solution, expected = 4, label = "LobattoIIIB(3)")
+        test_convergence_order(build, RadauIA(2), steps(6, 4); reference = exact_solution,
+            expected = 3, label = "RadauIA(2)")
+        test_convergence_order(build, RadauIIA(2), steps(6, 4); reference = exact_solution,
+            expected = 3, label = "RadauIIA(2)")
+        test_convergence_order(
+            build, LobattoIIIA(2), steps(10, 4); reference = exact_solution,
+            expected = 2, label = "LobattoIIIA(2)")
+        test_convergence_order(
+            build, LobattoIIIC(2), steps(10, 4); reference = exact_solution,
+            expected = 2, label = "LobattoIIIC(2)")
+        test_convergence_order(
+            build, LobattoIIID(2), steps(10, 4); reference = exact_solution,
+            expected = 2, label = "LobattoIIID(2)")
+        test_convergence_order(
+            build, LobattoIIIE(2), steps(10, 4); reference = exact_solution,
+            expected = 2, label = "LobattoIIIE(2)")
+        test_convergence_order(
+            build, LobattoIIIA(3), steps(6, 4); reference = exact_solution,
+            expected = 4, label = "LobattoIIIA(3)")
+        test_convergence_order(
+            build, LobattoIIIB(3), steps(6, 4); reference = exact_solution,
+            expected = 4, label = "LobattoIIIB(3)")
     end
 
     # Known order deficiency (see docs/src/audit.md): LobattoIIIB has a
@@ -71,5 +112,4 @@ steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
         r = estimate_convergence_order(build, LobattoIIIB(2), steps(10, 4); reference = exact_solution)
         @test_broken isapprox(r.order, 2; atol = 0.35)
     end
-
 end

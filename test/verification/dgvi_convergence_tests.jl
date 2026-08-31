@@ -31,11 +31,18 @@ include("verification_utilities.jl")
 
 const T = 1.0
 const q₀ = [1.0, 1.0]
-const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
+const params = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
 
-build(Δt) = LotkaVolterra2d.iodeproblem_dg(q₀; timespan=(0.0, T), timestep=Δt, parameters=params)
-gbuild(Δt) = LotkaVolterra2dGauge.iodeproblem_dg(; timespan=(0.0, T), timestep=Δt)
-ref(prob) = integrate(LotkaVolterra2d.odeproblem(q₀; timespan=timespan(prob), timestep=timestep(prob), parameters=params), Gauss(8))
+function build(Δt)
+    LotkaVolterra2d.iodeproblem_dg(q₀; timespan = (0.0, T), timestep = Δt, parameters = params)
+end
+gbuild(Δt) = LotkaVolterra2dGauge.iodeproblem_dg(; timespan = (0.0, T), timestep = Δt)
+function ref(prob)
+    integrate(
+        LotkaVolterra2d.odeproblem(
+            q₀; timespan = timespan(prob), timestep = timestep(prob), parameters = params),
+        Gauss(8))
+end
 steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
 emq(sol, r) = relative_maximum_error(sol.q, r.q)
 
@@ -48,31 +55,40 @@ dgvip0(s) = DGVIP0(basisquad(s)...)
 dgvip1(s) = DGVIP1(basisquad(s)...)
 dgviexp(s) = DGVIEXP(basisquad(s)...)
 
-
 @testset "$(rpad("Discontinuous Galerkin variational integrator convergence",80))" begin
-
     @testset "average-based flux reaches order 2s" begin
-        test_convergence_order(build, dgvipi(2), steps(4, 3); reference=ref, errormetric=emq, expected=2, label="DGVIPI(2)")
-        test_convergence_order(build, dgvipi(3), steps(4, 3); reference=ref, errormetric=emq, expected=6, label="DGVIPI(3)")
+        test_convergence_order(build, dgvipi(2), steps(4, 3); reference = ref,
+            errormetric = emq, expected = 2, label = "DGVIPI(2)")
+        test_convergence_order(build, dgvipi(3), steps(4, 3); reference = ref,
+            errormetric = emq, expected = 6, label = "DGVIPI(3)")
 
-        test_convergence_order(build, dgviexp(2), steps(4, 3); reference=ref, errormetric=emq, expected=2, label="DGVIEXP(2)")
-        test_convergence_order(build, dgviexp(3), steps(4, 3); reference=ref, errormetric=emq, expected=6, label="DGVIEXP(3)")
+        test_convergence_order(build, dgviexp(2), steps(4, 3); reference = ref,
+            errormetric = emq, expected = 2, label = "DGVIEXP(2)")
+        test_convergence_order(build, dgviexp(3), steps(4, 3); reference = ref,
+            errormetric = emq, expected = 6, label = "DGVIEXP(3)")
     end
 
     @testset "nodal-value flux is capped at 2⌊s/2⌋" begin
         # what these variants actually achieve
-        test_convergence_order(build, dgvi(2), steps(4, 3); reference=ref, errormetric=emq, expected=2, label="DGVI(2)")
-        test_convergence_order(build, dgvi(3), steps(4, 3); reference=ref, errormetric=emq, expected=2, label="DGVI(3)")
-        test_convergence_order(build, dgvi(4), steps(4, 3); reference=ref, errormetric=emq, expected=4, atol=0.4, label="DGVI(4)")
+        test_convergence_order(build, dgvi(2), steps(4, 3); reference = ref,
+            errormetric = emq, expected = 2, label = "DGVI(2)")
+        test_convergence_order(build, dgvi(3), steps(4, 3); reference = ref,
+            errormetric = emq, expected = 2, label = "DGVI(3)")
+        test_convergence_order(build, dgvi(4), steps(4, 3); reference = ref,
+            errormetric = emq, expected = 4, atol = 0.4, label = "DGVI(4)")
 
-        test_convergence_order(build, dgvip0(3), steps(4, 3); reference=ref, errormetric=emq, expected=2, label="DGVIP0(3)")
-        test_convergence_order(build, dgvip1(3), steps(4, 3); reference=ref, errormetric=emq, expected=2, label="DGVIP1(3)")
+        test_convergence_order(build, dgvip0(3), steps(4, 3); reference = ref,
+            errormetric = emq, expected = 2, label = "DGVIP0(3)")
+        test_convergence_order(build, dgvip1(3), steps(4, 3); reference = ref,
+            errormetric = emq, expected = 2, label = "DGVIP1(3)")
 
         # what the nominal order would be: the flux involving the nodal value qₙ is only
         # second-order accurate and limits the whole scheme.
-        for (label, m) in (("DGVI(3)", dgvi(3)), ("DGVIP0(3)", dgvip0(3)), ("DGVIP1(3)", dgvip1(3)))
-            r = estimate_convergence_order(build, m, steps(4, 3); reference=ref, errormetric=emq)
-            @test_broken isapprox(r.order, 6; atol=0.35)
+        for (label, m) in (("DGVI(3)", dgvi(3)), ("DGVIP0(3)", dgvip0(3)), (
+            "DGVIP1(3)", dgvip1(3)))
+            r = estimate_convergence_order(
+                build, m, steps(4, 3); reference = ref, errormetric = emq)
+            @test_broken isapprox(r.order, 6; atol = 0.35)
         end
     end
 
@@ -81,15 +97,21 @@ dgviexp(s) = DGVIEXP(basisquad(s)...)
         # without changing the continuous Euler-Lagrange equations, and a variational
         # integrator must be insensitive to that. `iodeproblem_dg_gauge` carries the gauge
         # parameter κ for exactly this purpose; κ = 0 recovers `iodeproblem_dg`.
-        κbuild(κ) = Δt -> LotkaVolterra2d.iodeproblem_dg_gauge(q₀; timespan=(0.0, T), timestep=Δt, parameters=params, κ=κ)
+        κbuild(κ) = Δt -> LotkaVolterra2d.iodeproblem_dg_gauge(
+            q₀; timespan = (0.0, T), timestep = Δt, parameters = params, κ = κ)
 
-        test_convergence_order(κbuild(0.0), dgviexp(3), steps(4, 3); reference=ref, errormetric=emq, expected=6, atol=0.5, label="DGVIEXP(3) κ=0")
-        test_convergence_order(κbuild(0.5), dgviexp(3), steps(4, 3); reference=ref, errormetric=emq, expected=6, atol=0.5, label="DGVIEXP(3) κ=1/2")
+        test_convergence_order(κbuild(0.0), dgviexp(3), steps(4, 3); reference = ref,
+            errormetric = emq, expected = 6, atol = 0.5, label = "DGVIEXP(3) κ=0")
+        test_convergence_order(κbuild(0.5), dgviexp(3), steps(4, 3); reference = ref,
+            errormetric = emq, expected = 6, atol = 0.5, label = "DGVIEXP(3) κ=1/2")
 
         # `LotkaVolterra2dGauge` writes the same system with a gauge-transformed one-form
         # in a separate module; it must agree too.
-        gref(prob) = integrate(LotkaVolterra2dGauge.odeproblem(; timespan=timespan(prob), timestep=timestep(prob)), Gauss(8))
-        test_convergence_order(gbuild, dgviexp(3), steps(4, 3); reference=gref, errormetric=emq, expected=6, atol=0.5, label="DGVIEXP(3) gauge module")
+        gref(prob) = integrate(
+            LotkaVolterra2dGauge.odeproblem(; timespan = timespan(prob), timestep = timestep(prob)),
+            Gauss(8))
+        test_convergence_order(
+            gbuild, dgviexp(3), steps(4, 3); reference = gref, errormetric = emq,
+            expected = 6, atol = 0.5, label = "DGVIEXP(3) gauge module")
     end
-
 end

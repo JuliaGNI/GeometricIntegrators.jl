@@ -53,12 +53,11 @@ b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 """
 abstract type IPRKMethod <: PRKMethod end
 
-isexplicit(method::Union{IPRKMethod,Type{<:IPRKMethod}}) = false
-isimplicit(method::Union{IPRKMethod,Type{<:IPRKMethod}}) = true
+isexplicit(method::Union{IPRKMethod, Type{<:IPRKMethod}}) = false
+isimplicit(method::Union{IPRKMethod, Type{<:IPRKMethod}}) = true
 
 default_solver(::IPRKMethod) = Newton()
 default_iguess(::IPRKMethod) = HermiteExtrapolation()
-
 
 """
 Implicit Partitioned Runge-Kutta Method
@@ -67,13 +66,17 @@ Implicit Partitioned Runge-Kutta Method
 IPRK(tableau)
 ```
 """
-struct IPRK{TT<:PartitionedTableau} <: IPRKMethod
+struct IPRK{TT <: PartitionedTableau} <: IPRKMethod
     tableau::TT
 end
 
-initmethod(method::IPRKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = IPRK(method, TT)
+function initmethod(method::IPRKMethod, ::GeometricProblem{ST, DT, TT}) where {ST, DT, TT}
+    IPRK(method, TT)
+end
 
-solversize(method::IPRK, problem::AbstractProblemPODE) = 2 * length(vec(initial_conditions(problem).q)) * nstages(method)
+function solversize(method::IPRK, problem::AbstractProblemPODE)
+    2 * length(vec(initial_conditions(problem).q)) * nstages(method)
+end
 
 function Base.show(io::IO, int::GeometricIntegrator{<:IPRK})
     print(io, "\nImplicit Partitioned Runge-Kutta Integrator with:\n")
@@ -83,7 +86,6 @@ function Base.show(io::IO, int::GeometricIntegrator{<:IPRK})
     print(io, "   $(string(tableau(int).p))")
     # print(io, reference(int.params.tab))
 end
-
 
 @doc raw"""
 Implicit partitioned Runge-Kutta integrator cache.
@@ -100,7 +102,7 @@ Implicit partitioned Runge-Kutta integrator cache.
 * `Y`: summed vector field of internal stages Q
 * `Z`: summed vector field of internal stages P
 """
-struct IPRKCache{ST,S,N} <: PODEIntegratorCache{ST}
+struct IPRKCache{ST, S, N} <: PODEIntegratorCache{ST}
     x::Vector{ST}
 
     Q::Vector{Vector{ST}}
@@ -110,7 +112,7 @@ struct IPRKCache{ST,S,N} <: PODEIntegratorCache{ST}
     Y::Vector{Vector{ST}}
     Z::Vector{Vector{ST}}
 
-    function IPRKCache{ST,S,N}(ics) where {ST,S,N}
+    function IPRKCache{ST, S, N}(ics) where {ST, S, N}
         D = length(vec(ics.q))
 
         # create solver vector
@@ -130,15 +132,16 @@ end
 
 function Cache{ST}(problem::EquationProblem, method::IPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
-    IPRKCache{ST,S,solversize(method, problem)}(initial_conditions(problem); kwargs...)
+    IPRKCache{ST, S, solversize(method, problem)}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::IPRK) = IPRKCache{ST,nstages(tableau(method)),solversize(method, problem)}
+@inline CacheType(ST, problem::EquationProblem, method::IPRK) = IPRKCache{
+    ST, nstages(tableau(method)), solversize(method, problem)}
 
 nlsolution(cache::IPRKCache) = cache.x
 
-
-function internal_variables(method::IPRK, problem::AbstractProblemPODE{DT,TT}) where {DT,TT}
+function internal_variables(method::IPRK, problem::AbstractProblemPODE{
+        DT, TT}) where {DT, TT}
     S = nstages(method)
     D = length(vec(initial_conditions(problem).q))
 
@@ -149,7 +152,7 @@ function internal_variables(method::IPRK, problem::AbstractProblemPODE{DT,TT}) w
     Y = create_internal_stage_vector(DT, D, S)
     Z = create_internal_stage_vector(DT, D, S)
 
-    (Q=Q, P=P, V=V, F=F, Y=Y, Z=Z)
+    (Q = Q, P = P, V = V, F = F, Y = Y, Z = Z)
 end
 
 function copy_internal_variables!(solstep::SolutionStep, cache::IPRKCache)
@@ -161,19 +164,19 @@ function copy_internal_variables!(solstep::SolutionStep, cache::IPRKCache)
     haskey(internal(solstep), :Z) && copyto!(internal(solstep).Z, cache.Z)
 end
 
-
-function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemPODE})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{
+        <:IPRK, <:AbstractProblemPODE})
     # get cache for nonlinear solution vector
     local x = nlsolution(int)
 
     # compute initial guess for internal stages
     for i in eachstage(int)
         soltmp = (
-            t=history[1].t + timestep(int) * tableau(int).q.c[i],
-            q=cache(int).Q[i],
-            p=cache(int).P[i],
-            q̇=cache(int).V[i],
-            ṗ=cache(int).F[i],
+            t = history[1].t + timestep(int) * tableau(int).q.c[i],
+            q = cache(int).Q[i],
+            p = cache(int).P[i],
+            q̇ = cache(int).V[i],
+            ṗ = cache(int).F[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
@@ -182,19 +185,21 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:IPRK,<:
     D = length(cache(int).V[1])
     for i in eachstage(int)
         for k in 1:D
-            x[2*(D*(i-1)+k-1)+1] = 0
-            x[2*(D*(i-1)+k-1)+2] = 0
+            x[2 * (D * (i - 1) + k - 1) + 1] = 0
+            x[2 * (D * (i - 1) + k - 1) + 2] = 0
             for j in eachstage(int)
-                x[2*(D*(i-1)+k-1)+1] += tableau(int).q.a[i, j] * cache(int).V[j][k]
-                x[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[i, j] * cache(int).F[j][k]
+                x[2 * (D * (i - 1) + k - 1) + 1] += tableau(int).q.a[i, j] *
+                                                    cache(int).V[j][k]
+                x[2 * (D * (i - 1) + k - 1) + 2] += tableau(int).p.a[i, j] *
+                                                    cache(int).F[j][k]
             end
         end
     end
 end
 
-
 # Compute stages of implicit partitioned Runge-Kutta methods from nonlinear solution vector
-function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemPODE}) where {ST}
+function components!(x::AbstractVector{ST}, sol, params,
+        int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
     local D = length(C.V[1])
@@ -202,8 +207,8 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     for i in eachstage(int)
         # copy x to Y and Z
         for k in eachindex(C.Y[i], C.Z[i])
-            C.Y[i][k] = x[2*(D*(i-1)+k-1)+1]
-            C.Z[i][k] = x[2*(D*(i-1)+k-1)+2]
+            C.Y[i][k] = x[2 * (D * (i - 1) + k - 1) + 1]
+            C.Z[i][k] = x[2 * (D * (i - 1) + k - 1) + 2]
         end
 
         # compute Q and P
@@ -211,14 +216,16 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         C.P[i] .= sol.p .+ timestep(int) .* C.Z[i]
 
         # compute v(Q,P) and f(Q,P)
-        equations(int).v(C.V[i], sol.t + timestep(int) * (tableau(int).q.c[i] - 1), C.Q[i], C.P[i], params)
-        equations(int).f(C.F[i], sol.t + timestep(int) * (tableau(int).p.c[i] - 1), C.Q[i], C.P[i], params)
+        equations(int).v(C.V[i], sol.t + timestep(int) * (tableau(int).q.c[i] - 1),
+            C.Q[i], C.P[i], params)
+        equations(int).f(C.F[i], sol.t + timestep(int) * (tableau(int).p.c[i] - 1),
+            C.Q[i], C.P[i], params)
     end
 end
 
-
 # Compute residual of implicit partitioned Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemPODE}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params,
+        int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE}) where {ST}
     @assert axes(x) == axes(b)
 
     # get cache for internal stages
@@ -231,18 +238,18 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = - [(Y-AV), (Z-AF)]
     for i in eachstage(int)
         for k in eachindex(C.Y[i], C.Z[i])
-            b[2*(D*(i-1)+k-1)+1] = -C.Y[i][k]
-            b[2*(D*(i-1)+k-1)+2] = -C.Z[i][k]
+            b[2 * (D * (i - 1) + k - 1) + 1] = -C.Y[i][k]
+            b[2 * (D * (i - 1) + k - 1) + 2] = -C.Z[i][k]
             for j in eachstage(int)
-                b[2*(D*(i-1)+k-1)+1] += tableau(int).q.a[i, j] * C.V[j][k]
-                b[2*(D*(i-1)+k-1)+2] += tableau(int).p.a[i, j] * C.F[j][k]
+                b[2 * (D * (i - 1) + k - 1) + 1] += tableau(int).q.a[i, j] * C.V[j][k]
+                b[2 * (D * (i - 1) + k - 1) + 2] += tableau(int).p.a[i, j] * C.F[j][k]
             end
         end
     end
 end
 
-
-function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:IPRK,<:AbstractProblemPODE}) where {DT}
+function update!(sol, params, x::AbstractVector{DT},
+        int::GeometricIntegrator{<:IPRK, <:AbstractProblemPODE}) where {DT}
     # compute vector field at internal stages
     components!(x, sol, params, int)
 
@@ -251,10 +258,11 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
     update!(sol.p, cache(int).F, tableau(int).p, timestep(int))
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:IPRK,<:AbstractProblemPODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:IPRK, <:AbstractProblemPODE})
     # call nonlinear solver and act on the outcome it reports
-    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (
+        sol, params, int))
     check_solver_status(solverstatus, int)
 
     # compute vector fields at internal stages

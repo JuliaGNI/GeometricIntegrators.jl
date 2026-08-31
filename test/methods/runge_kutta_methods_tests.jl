@@ -9,9 +9,7 @@ hode = hodeproblem()
 iode = iodeproblem()
 lode = lodeproblem()
 
-
 @testset "$(rpad("Runge-Kutta methods",80))" begin
-
     @test typeof(GeometricIntegrator(ode, ForwardEuler())) <: GeometricIntegrator{<:ERK}
     @test typeof(GeometricIntegrator(ode, ExplicitEulerRK())) <: GeometricIntegrator{<:ERK}
     @test typeof(GeometricIntegrator(ode, ExplicitMidpoint())) <: GeometricIntegrator{<:ERK}
@@ -36,12 +34,14 @@ lode = lodeproblem()
 
     @test typeof(GeometricIntegrator(ode, CrankNicolsonRK())) <: GeometricIntegrator{<:DIRK}
     @test typeof(GeometricIntegrator(ode, Crouzeix())) <: GeometricIntegrator{<:DIRK}
-    @test typeof(GeometricIntegrator(ode, KraaijevangerSpijker())) <: GeometricIntegrator{<:DIRK}
+    @test typeof(GeometricIntegrator(ode, KraaijevangerSpijker())) <:
+          GeometricIntegrator{<:DIRK}
     @test typeof(GeometricIntegrator(ode, QinZhang())) <: GeometricIntegrator{<:DIRK}
 
     @test typeof(GeometricIntegrator(ode, BackwardEuler())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(ode, ImplicitEulerRK())) <: GeometricIntegrator{<:IRK}
-    @test typeof(GeometricIntegrator(ode, ImplicitMidpointRK())) <: GeometricIntegrator{<:IRK}
+    @test typeof(GeometricIntegrator(ode, ImplicitMidpointRK())) <:
+          GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(ode, IRK3())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(ode, SRK3())) <: GeometricIntegrator{<:IRK}
 
@@ -62,12 +62,9 @@ lode = lodeproblem()
 
     @test tableau(RK4()) == tableau(RK(TableauRK4()))
     @test tableau(IRK3()) == tableau(RK(TableauIRK3()))
-
 end
 
-
 @testset "$(rpad("Partitioned Runge-Kutta methods",80))" begin
-
     @test typeof(GeometricIntegrator(pode, IRK3())) <: GeometricIntegrator{<:IPRK}
     @test typeof(GeometricIntegrator(pode, SRK3())) <: GeometricIntegrator{<:IPRK}
 
@@ -87,32 +84,39 @@ end
     @test typeof(GeometricIntegrator(pode, LobattoIIIF̄(2))) <: GeometricIntegrator{<:IPRK}
     @test typeof(GeometricIntegrator(pode, LobattoIIIG(2))) <: GeometricIntegrator{<:IPRK}
 
-    @test typeof(GeometricIntegrator(pode, LobattoIIIAIIIB(2))) <: GeometricIntegrator{<:EPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIIBIIIA(2))) <: GeometricIntegrator{<:EPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIIAIIIĀ(2))) <: GeometricIntegrator{<:EPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIIBIIIB̄(2))) <: GeometricIntegrator{<:EPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIICIIIC̄(2))) <: GeometricIntegrator{<:IPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIIC̄IIIC(2))) <: GeometricIntegrator{<:IPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIIDIIID̄(2))) <: GeometricIntegrator{<:IPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIIEIIIĒ(2))) <: GeometricIntegrator{<:IPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIIFIIIF̄(2))) <: GeometricIntegrator{<:IPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIIF̄IIIF(2))) <: GeometricIntegrator{<:IPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIIGIIIḠ(2))) <: GeometricIntegrator{<:IPRK}
-
+    @test typeof(GeometricIntegrator(pode, LobattoIIIAIIIB(2))) <:
+          GeometricIntegrator{<:EPRK}
+    @test typeof(GeometricIntegrator(pode, LobattoIIIBIIIA(2))) <:
+          GeometricIntegrator{<:EPRK}
+    @test typeof(GeometricIntegrator(pode, LobattoIIIAIIIĀ(2))) <:
+          GeometricIntegrator{<:EPRK}
+    @test typeof(GeometricIntegrator(pode, LobattoIIIBIIIB̄(2))) <:
+          GeometricIntegrator{<:EPRK}
+    @test typeof(GeometricIntegrator(pode, LobattoIIICIIIC̄(2))) <:
+          GeometricIntegrator{<:IPRK}
+    @test typeof(GeometricIntegrator(pode, LobattoIIIC̄IIIC(2))) <:
+          GeometricIntegrator{<:IPRK}
+    @test typeof(GeometricIntegrator(pode, LobattoIIIDIIID̄(2))) <:
+          GeometricIntegrator{<:IPRK}
+    @test typeof(GeometricIntegrator(pode, LobattoIIIEIIIĒ(2))) <:
+          GeometricIntegrator{<:IPRK}
+    @test typeof(GeometricIntegrator(pode, LobattoIIIFIIIF̄(2))) <:
+          GeometricIntegrator{<:IPRK}
+    @test typeof(GeometricIntegrator(pode, LobattoIIIF̄IIIF(2))) <:
+          GeometricIntegrator{<:IPRK}
+    @test typeof(GeometricIntegrator(pode, LobattoIIIGIIIḠ(2))) <:
+          GeometricIntegrator{<:IPRK}
 end
 
-
 @testset "$(rpad("Runge-Kutta methods for Implicit Equations",80))" begin
-
-    @test typeof(GeometricIntegrator(iode, ImplicitMidpointRK())) <: GeometricIntegrator{<:IRK}
+    @test typeof(GeometricIntegrator(iode, ImplicitMidpointRK())) <:
+          GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(iode, IRK3())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(iode, SRK3())) <: GeometricIntegrator{<:IRK}
     @test typeof(GeometricIntegrator(iode, Gauss(2))) <: GeometricIntegrator{<:IRK}
-
 end
 
 @testset "$(rpad("Formal Lagrangian Runge-Kutta methods",80))" begin
-
     @test typeof(GeometricIntegrator(lode, FLRK(Gauss(1)))) <: GeometricIntegrator{<:FLRK}
     @test typeof(GeometricIntegrator(iode, FLRK(Gauss(2)))) <: GeometricIntegrator{<:FLRK}
 
@@ -132,5 +136,4 @@ end
     # symplecticity is an open conjecture. The trait must stay `missing`.
     @test ismissing(issymplectic(FLRK(Gauss(2))))
     @test !isenergypreserving(FLRK(Gauss(2)))
-
 end

@@ -14,28 +14,30 @@ end
 @inline cycles(sim::Simulation) = 1:sim.ncycle
 @inline GeometricBase.eachsample(sim::Simulation) = eachsample(solution(sim))
 
-
-function Simulation(equ::ET, int::IT, sol::ST, run_id::String, filename::String) where {ET,IT,ST}
+function Simulation(
+        equ::ET, int::IT, sol::ST, run_id::String, filename::String) where {ET, IT, ST}
     @assert mod(sol.ntime, sol.nwrite) == 0
     ncycle = div(sol.ntime, sol.nwrite)
-    Simulation{ET,IT,ST}(equ, int, sol, ncycle, run_id, filename)
+    Simulation{ET, IT, ST}(equ, int, sol, ncycle, run_id, filename)
 end
 
-function Simulation(equ::GeometricEquation, int::Integrator, Δt, run_id, filename, ntime; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE)
-    Simulation(equ, int, Solution(equ, Δt, ntime; nsave=nsave, nwrite=nwrite), run_id, filename)
+function Simulation(equ::GeometricEquation, int::Integrator, Δt, run_id, filename,
+        ntime; nsave = DEFAULT_NSAVE, nwrite = DEFAULT_NWRITE)
+    Simulation(equ, int, Solution(equ, Δt, ntime; nsave = nsave, nwrite = nwrite),
+        run_id, filename)
 end
 
-function Simulation(equ::GeometricEquation, tableau::AbstractTableau, Δt, run_id, filename, ntime; kwargs...)
+function Simulation(equ::GeometricEquation, tableau::AbstractTableau,
+        Δt, run_id, filename, ntime; kwargs...)
     Simulation(equ, Integrator(equ, tableau, Δt), Δt, run_id, filename, ntime; kwargs...)
 end
 
-function Simulation(equ::GeometricEquation, integrator, tableau::AbstractTableau, Δt, run_id, filename, ntime; kwargs...)
+function Simulation(equ::GeometricEquation, integrator, tableau::AbstractTableau,
+        Δt, run_id, filename, ntime; kwargs...)
     Simulation(equ, integrator(equ, tableau, Δt), Δt, run_id, filename, ntime; kwargs...)
 end
 
-
 function run!(sim::Simulation)
-
     println("Running ", sim.run_id, "...")
 
     h5io = SolutionHDF5(sim.filename, solution(sim))

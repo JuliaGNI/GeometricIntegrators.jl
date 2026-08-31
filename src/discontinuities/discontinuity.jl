@@ -35,11 +35,11 @@ Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2))
 which integrates along a straight line between the one-sided limits with the
 two-point Lobatto rule, i.e. a trapezoidal flux.
 """
-struct Discontinuity{T<:AbstractFloat, PT<:PathIntegral, QN}
+struct Discontinuity{T <: AbstractFloat, PT <: PathIntegral, QN}
     path::PT
-    quadrature::QuadratureRule{T,QN}
+    quadrature::QuadratureRule{T, QN}
 end
 
-function Discontinuity(path::PT, quadrature::QuadratureRule{T,QN}) where {T,PT,QN}
-    Discontinuity{T,PT,QN}(path, quadrature)
+function Discontinuity(path::PT, quadrature::QuadratureRule{T, QN}) where {T, PT, QN}
+    Discontinuity{T, PT, QN}(path, quadrature)
 end

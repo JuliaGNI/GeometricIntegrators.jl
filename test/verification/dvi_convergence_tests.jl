@@ -22,8 +22,10 @@ emq(sol, ref) = relative_maximum_error(sol.q, ref.q)
     @testset "DVRK order (degenerate pendulum, in class)" begin
         vbuild(Δt) = Pendulum.iodeproblem(; timespan = (0.0, T), timestep = Δt)
         vref(prob) = integrate(prob, VPRKGauss(8))
-        test_convergence_order(vbuild, DVRK(Gauss(2)), steps(4, 3); reference = vref, errormetric = emq, expected = 4, label = "DVRK(Gauss(2))")
-        test_convergence_order(vbuild, DVRK(Gauss(3)), steps(2, 3); reference = vref, errormetric = emq, expected = 6, label = "DVRK(Gauss(3))")
+        test_convergence_order(vbuild, DVRK(Gauss(2)), steps(4, 3); reference = vref,
+            errormetric = emq, expected = 4, label = "DVRK(Gauss(2))")
+        test_convergence_order(vbuild, DVRK(Gauss(3)), steps(2, 3); reference = vref,
+            errormetric = emq, expected = 6, label = "DVRK(Gauss(3))")
     end
 
     # DVRK is designed for degenerate Lagrangians L = ϑ(q)⋅q̇ - H(q) in which d/2
@@ -34,15 +36,26 @@ emq(sol, ref) = relative_maximum_error(sol.q, ref.q)
         q₀ = [2.0, 1.0]
         params = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
         lvbuild(Δt) = LVSingular.lodeproblem(q₀; timespan = (0.0, T), timestep = Δt, parameters = params)
-        lvref(prob) = integrate(odeproblem(q₀; timespan = timespan(prob), timestep = timestep(prob), parameters = params), Gauss(8))
-        test_convergence_order(lvbuild, DVRK(Gauss(1)), steps(20, 4); reference = lvref, errormetric = emq, expected = 2, label = "DVRK(Gauss(1))/LV-singular")
-        test_convergence_order(lvbuild, DVRK(Gauss(2)), steps(10, 4); reference = lvref, errormetric = emq, expected = 4, label = "DVRK(Gauss(2))/LV-singular")
-        test_convergence_order(lvbuild, DVRK(Gauss(3)), steps(5, 4); reference = lvref, errormetric = emq, expected = 6, plateau = 1e-12, label = "DVRK(Gauss(3))/LV-singular")
+        lvref(prob) = integrate(
+            odeproblem(q₀; timespan = timespan(prob), timestep = timestep(prob), parameters = params),
+            Gauss(8))
+        test_convergence_order(lvbuild, DVRK(Gauss(1)), steps(20, 4); reference = lvref,
+            errormetric = emq, expected = 2, label = "DVRK(Gauss(1))/LV-singular")
+        test_convergence_order(lvbuild, DVRK(Gauss(2)), steps(10, 4); reference = lvref,
+            errormetric = emq, expected = 4, label = "DVRK(Gauss(2))/LV-singular")
+        test_convergence_order(
+            lvbuild, DVRK(Gauss(3)), steps(5, 4); reference = lvref, errormetric = emq,
+            expected = 6, plateau = 1e-12, label = "DVRK(Gauss(3))/LV-singular")
 
         mcpbuild(Δt) = MCPSingular.lodeproblem(; timespan = (0.0, T), timestep = Δt)
-        mcpref(prob) = integrate(MCP.odeproblem(; timespan = timespan(prob), timestep = timestep(prob)), Gauss(8))
-        test_convergence_order(mcpbuild, DVRK(Gauss(1)), steps(20, 4); reference = mcpref, errormetric = emq, expected = 2, label = "DVRK(Gauss(1))/MCP-singular")
-        test_convergence_order(mcpbuild, DVRK(Gauss(2)), steps(10, 4); reference = mcpref, errormetric = emq, expected = 4, plateau = 1e-12, label = "DVRK(Gauss(2))/MCP-singular")
+        mcpref(prob) = integrate(
+            MCP.odeproblem(; timespan = timespan(prob), timestep = timestep(prob)),
+            Gauss(8))
+        test_convergence_order(mcpbuild, DVRK(Gauss(1)), steps(20, 4); reference = mcpref,
+            errormetric = emq, expected = 2, label = "DVRK(Gauss(1))/MCP-singular")
+        test_convergence_order(
+            mcpbuild, DVRK(Gauss(2)), steps(10, 4); reference = mcpref, errormetric = emq,
+            expected = 4, plateau = 1e-12, label = "DVRK(Gauss(2))/MCP-singular")
     end
 
     # The symplectic potential ϑ is only defined up to an exact one-form, and the
@@ -52,21 +65,29 @@ emq(sol, ref) = relative_maximum_error(sol.q, ref.q)
     @testset "DVRK order reduction (degenerate Lagrangian, out of class)" begin
         q₀ = [2.0, 1.0]
         params = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
-        lvref(prob) = integrate(odeproblem(q₀; timespan = timespan(prob), timestep = timestep(prob), parameters = params), Gauss(8))
+        lvref(prob) = integrate(
+            odeproblem(q₀; timespan = timespan(prob), timestep = timestep(prob), parameters = params),
+            Gauss(8))
 
         # ϑ = (q₂ + log q₂/q₁, q₁): gauge-equivalent to the singular form, ϑ₂ ≠ 0
         lvbuild(Δt) = lodeproblem(q₀; timespan = (0.0, T), timestep = Δt, parameters = params)
-        test_convergence_order(lvbuild, DVRK(Gauss(1)), steps(20, 4); reference = lvref, errormetric = emq, expected = 1, label = "DVRK(Gauss(1))/LV")
-        test_convergence_order(lvbuild, DVRK(Gauss(2)), steps(10, 4); reference = lvref, errormetric = emq, expected = 2, label = "DVRK(Gauss(2))/LV")
+        test_convergence_order(lvbuild, DVRK(Gauss(1)), steps(20, 4); reference = lvref,
+            errormetric = emq, expected = 1, label = "DVRK(Gauss(1))/LV")
+        test_convergence_order(lvbuild, DVRK(Gauss(2)), steps(10, 4); reference = lvref,
+            errormetric = emq, expected = 2, label = "DVRK(Gauss(2))/LV")
 
         # ϑ = (log q₂/2q₁, -log q₁/2q₂): also gauge-equivalent, both components ≠ 0
         symbuild(Δt) = LVSymmetric.lodeproblem(q₀; timespan = (0.0, T), timestep = Δt, parameters = params)
-        test_convergence_order(symbuild, DVRK(Gauss(2)), steps(10, 4); reference = lvref, errormetric = emq, expected = 2, label = "DVRK(Gauss(2))/LV-symmetric")
+        test_convergence_order(symbuild, DVRK(Gauss(2)), steps(10, 4); reference = lvref,
+            errormetric = emq, expected = 2, label = "DVRK(Gauss(2))/LV-symmetric")
 
         # A₁, A₂ both ≠ 0: gauge-equivalent to MasslessChargedParticleSingular
         mcpbuild(Δt) = MCP.lodeproblem(; timespan = (0.0, T), timestep = Δt)
-        mcpref(prob) = integrate(MCP.odeproblem(; timespan = timespan(prob), timestep = timestep(prob)), Gauss(8))
-        test_convergence_order(mcpbuild, DVRK(Gauss(2)), steps(10, 4); reference = mcpref, errormetric = emq, expected = 2, label = "DVRK(Gauss(2))/MCP")
+        mcpref(prob) = integrate(
+            MCP.odeproblem(; timespan = timespan(prob), timestep = timestep(prob)),
+            Gauss(8))
+        test_convergence_order(mcpbuild, DVRK(Gauss(2)), steps(10, 4); reference = mcpref,
+            errormetric = emq, expected = 2, label = "DVRK(Gauss(2))/MCP")
     end
 
     # Fixed-step accuracy regression for the low-order degenerate variational

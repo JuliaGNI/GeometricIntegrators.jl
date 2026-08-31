@@ -70,7 +70,7 @@ violated; pass `check_conditions = false` to suppress the warnings.
 struct DVRK{TT} <: DVIMethod
     tableau::TT
 
-    function DVRK(tableau::TT; check_conditions = true) where {TT<:Tableau}
+    function DVRK(tableau::TT; check_conditions = true) where {TT <: Tableau}
         if check_conditions
             if !RungeKutta.issymplectic(tableau)
                 @warn "The tableau $(tableau.name) does not satisfy the symplecticity " *
@@ -108,7 +108,6 @@ issymplectic(method::DVRK) = RungeKutta.issymplectic(tableau(method))
 # cannot be answered for the bare type.
 issymplectic(::Type{DVRK}) = missing
 
-
 @doc raw"""
 Degenerate Variational Runge-Kutta integrator cache.
 
@@ -123,7 +122,7 @@ Degenerate Variational Runge-Kutta integrator cache.
 * `Θ`: implicit function of internal stages
 * `F`: vector field of implicit function
 """
-struct DVRKCache{DT,S} <: IODEIntegratorCache{DT}
+struct DVRKCache{DT, S} <: IODEIntegratorCache{DT}
     x::Vector{DT}
 
     q̄::Vector{DT}
@@ -139,14 +138,15 @@ struct DVRKCache{DT,S} <: IODEIntegratorCache{DT}
     Θ::Vector{Vector{DT}}
     F::Vector{Vector{DT}}
 
-    function DVRKCache{DT,S}(ics) where {DT,S}
+    function DVRKCache{DT, S}(ics) where {DT, S}
         D = length(vec(ics.q))
         check_dvi_dimension(D)
         Q = create_internal_stage_vector(DT, D, S)
         V = create_internal_stage_vector(DT, D, S)
         Θ = create_internal_stage_vector(DT, D, S)
         F = create_internal_stage_vector(DT, D, S)
-        new(zeros(DT, D * (S + 1)), zeros(DT, D), zeros(DT, D), zeros(DT, D), zeros(DT, D), zeros(DT, D), zeros(DT, D), Q, V, Θ, F)
+        new(zeros(DT, D * (S + 1)), zeros(DT, D), zeros(DT, D), zeros(DT, D),
+            zeros(DT, D), zeros(DT, D), zeros(DT, D), Q, V, Θ, F)
     end
 end
 
@@ -164,7 +164,7 @@ Warn if the initial momentum of `problem` is not consistent with the primary
 constraint `p₀ = ϑ(t₀, q₀, v₀)`. Symplecticity of [`DVRK`](@ref) is conditional on
 this consistency, and an inconsistent `p₀` silently degrades the method.
 """
-function check_dvrk_initial_conditions(problem::Union{IODEProblem,LODEProblem})
+function check_dvrk_initial_conditions(problem::Union{IODEProblem, LODEProblem})
     ics = initial_conditions(problem)
     q₀, p₀ = vec(ics.q), vec(ics.p)
     v₀ = haskey(ics, :v) ? vec(ics.v) : zero(q₀)
@@ -179,13 +179,13 @@ function check_dvrk_initial_conditions(problem::Union{IODEProblem,LODEProblem})
     return nothing
 end
 
-function Cache{ST}(problem::Union{IODEProblem,LODEProblem}, method::DVRK; kwargs...) where {ST}
+function Cache{ST}(problem::Union{IODEProblem, LODEProblem}, method::DVRK; kwargs...) where {ST}
     check_dvrk_initial_conditions(problem)
-    DVRKCache{ST,nstages(tableau(method))}(initial_conditions(problem); kwargs...)
+    DVRKCache{ST, nstages(tableau(method))}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, ::Union{IODEProblem,LODEProblem}, method::DVRK) = DVRKCache{ST,nstages(tableau(method))}
-
+@inline CacheType(ST, ::Union{IODEProblem, LODEProblem}, method::DVRK) = DVRKCache{
+    ST, nstages(tableau(method))}
 
 function Base.show(io::IO, int::GeometricIntegrator{<:DVRK})
     print(io, "\nRunge-Kutta Integrator for Degenerate Lagrangians with:\n")
@@ -195,7 +195,6 @@ function Base.show(io::IO, int::GeometricIntegrator{<:DVRK})
     # print(io, reference(tableau(int)))
 end
 
-
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DVRK})
     # set some local variables for convenience
     local D = length(cache(int).q)
@@ -204,35 +203,34 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DVRK})
     # compute initial guess for internal stages
     for i in eachstage(int)
         soltmp = (
-            t=sol.t + timestep(int) * (tableau(int).c[i] - 1),
-            q=cache(int).Q[i],
-            p=cache(int).Θ[i],
-            q̇=cache(int).V[i],
-            ṗ=cache(int).F[i],
+            t = sol.t + timestep(int) * (tableau(int).c[i] - 1),
+            q = cache(int).Q[i],
+            p = cache(int).Θ[i],
+            q̇ = cache(int).V[i],
+            ṗ = cache(int).F[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
     for i in eachindex(cache(int).V)
         for k in eachindex(cache(int).V[i])
-            x[D*(i-1)+k] = cache(int).V[i][k]
+            x[D * (i - 1) + k] = cache(int).V[i][k]
         end
     end
 
     # compute initial guess for solution
     soltmp = (
-        t=sol.t,
-        q=cache(int).q,
-        p=cache(int).θ,
-        q̇=cache(int).v,
-        ṗ=cache(int).f,
+        t = sol.t,
+        q = cache(int).q,
+        p = cache(int).θ,
+        q̇ = cache(int).v,
+        ṗ = cache(int).f
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 
     for k in 1:D
-        x[D*nstages(int)+k] = cache(int).q[k]
+        x[D * nstages(int) + k] = cache(int).q[k]
     end
 end
-
 
 function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVRK}) where {ST}
     # set some local variables for convenience and clarity
@@ -242,13 +240,13 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVRK
     # copy x to V
     for i in eachindex(cache(int, ST).V)
         for k in eachindex(cache(int, ST).V[i])
-            cache(int, ST).V[i][k] = x[D*(i-1)+k]
+            cache(int, ST).V[i][k] = x[D * (i - 1) + k]
         end
     end
 
     # copy x to q
     for k in eachindex(cache(int, ST).q)
-        cache(int, ST).q[k] = x[D*S+k]
+        cache(int, ST).q[k] = x[D * S + k]
     end
 
     # compute Q = q + Δt A V, Θ = ϑ(Q), F = f(Q,V)
@@ -262,8 +260,10 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVRK
             end
             cache(int, ST).Q[i][k] = sol.q[k] + timestep(int) * (y1 + y2)
         end
-        equations(int).ϑ(cache(int, ST).Θ[i], tᵢ, cache(int, ST).Q[i], cache(int, ST).V[i], params)
-        equations(int).f(cache(int, ST).F[i], tᵢ, cache(int, ST).Q[i], cache(int, ST).V[i], params)
+        equations(int).ϑ(
+            cache(int, ST).Θ[i], tᵢ, cache(int, ST).Q[i], cache(int, ST).V[i], params)
+        equations(int).f(
+            cache(int, ST).F[i], tᵢ, cache(int, ST).Q[i], cache(int, ST).V[i], params)
     end
 
     # compute θ = ϑ(q_{n+1}), the momentum at the end of the step
@@ -276,7 +276,6 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVRK
     # systems in any case.
     equations(int).ϑ(cache(int, ST).θ, sol.t, cache(int, ST).q, cache(int, ST).v, params)
 end
-
 
 # Compute stages of fully implicit Runge-Kutta methods.
 function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVRK}) where {ST}
@@ -292,7 +291,8 @@ function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVRK})
                 y1 += tableau(int).a[i, j] * cache(int, ST).F[j][k]
                 y2 += tableau(int).â[i, j] * cache(int, ST).F[j][k]
             end
-            b[D*(i-1)+k] = cache(int, ST).Θ[i][k] - sol.p[k] - timestep(int) * (y1 + y2)
+            b[D * (i - 1) + k] = cache(int, ST).Θ[i][k] - sol.p[k] -
+                                 timestep(int) * (y1 + y2)
         end
     end
     for k in 1:div(D, 2)
@@ -301,7 +301,7 @@ function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVRK})
             y1 += tableau(int).b[j] * cache(int, ST).F[j][k]
             y2 += tableau(int).b̂[j] * cache(int, ST).F[j][k]
         end
-        b[D*S+k] = cache(int, ST).θ[k] - sol.p[k] - timestep(int) * (y1 + y2)
+        b[D * S + k] = cache(int, ST).θ[k] - sol.p[k] - timestep(int) * (y1 + y2)
     end
     for k in 1:div(D, 2)
         y1 = y2 = zero(ST)
@@ -309,10 +309,10 @@ function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVRK})
             y1 += tableau(int).b[j] * cache(int, ST).V[j][k]
             y2 += tableau(int).b̂[j] * cache(int, ST).V[j][k]
         end
-        b[D*S+div(D, 2)+k] = cache(int, ST).q[k] - sol.q[k] - timestep(int) * (y1 + y2)
+        b[D * S + div(D, 2) + k] = cache(int, ST).q[k] - sol.q[k] -
+                                   timestep(int) * (y1 + y2)
     end
 end
-
 
 function update!(sol, params, int::GeometricIntegrator{<:DVRK}, DT)
     # compute final update

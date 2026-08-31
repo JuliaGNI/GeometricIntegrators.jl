@@ -13,12 +13,13 @@ isimplicit(method::VPRKMethod) = RungeKutta.isimplicit(tableau(method))
 issymmetric(method::VPRKMethod) = RungeKutta.issymmetric(tableau(method))
 issymplectic(method::VPRKMethod) = RungeKutta.issymplectic(tableau(method))
 
-print_reference(io, method::VPRKMethod) =
+function print_reference(io, method::VPRKMethod)
     try
         ismissing(reference(tableau(method))) || print(io, reference(tableau(method)))
     catch MethodError
         String("")
     end
+end
 
 function Base.show(io::IO, method::VPRKMethod)
     print(io, "\nVariational Partitioned Runge-Kutta Method with Tableau: $(description(tableau(method)))\n")
@@ -26,7 +27,6 @@ function Base.show(io::IO, method::VPRKMethod)
     print(io, string(tableau(method).p))
     print_reference(io, method)
 end
-
 
 @doc raw"""
 Variational Partitioned Runge-Kutta Method
@@ -59,17 +59,23 @@ VPRK(tableau::Tableau, args...; kwargs...) = VPRK(PartitionedTableau(tableau), a
 VPRK(tableau1::Tableau, tableau2::Tableau, args...; kwargs...) = VPRK(PartitionedTableau(tableau1, tableau2), args...; kwargs...)
 ```
 """
-struct VPRK{TT,DT} <: VPRKMethod
+struct VPRK{TT, DT} <: VPRKMethod
     tableau::TT
     d::DT
 
-    function VPRK(tableau::TT, d::DT=nothing) where {TT<:PartitionedTableau,DT<:Union{AbstractVector,Nothing}}
-        new{TT,DT}(tableau, d)
+    function VPRK(tableau::TT,
+            d::DT = nothing) where {
+            TT <: PartitionedTableau, DT <: Union{AbstractVector, Nothing}}
+        new{TT, DT}(tableau, d)
     end
 end
 
-VPRK(tableau::Tableau, args...; kwargs...) = VPRK(PartitionedTableau(tableau), args...; kwargs...)
-VPRK(tableau1::Tableau, tableau2::Tableau, args...; kwargs...) = VPRK(PartitionedTableau(tableau1, tableau2), args...; kwargs...)
+function VPRK(tableau::Tableau, args...; kwargs...)
+    VPRK(PartitionedTableau(tableau), args...; kwargs...)
+end
+function VPRK(tableau1::Tableau, tableau2::Tableau, args...; kwargs...)
+    VPRK(PartitionedTableau(tableau1, tableau2), args...; kwargs...)
+end
 
 VPRK(method::RKMethod, args...; kwargs...) = VPRK(PartitionedTableau(tableau(method)))
 VPRK(method::PRKMethod, args...; kwargs...) = VPRK(tableau(method))
@@ -79,16 +85,16 @@ initmethod(method::VPRKMethod) = VPRK(method)
 
 Base.hash(method::VPRK, h::UInt) = hash(method.tableau, hash(method.d, hash(:VPRK, h)))
 
-Base.:(==)(method1::VPRK, method2::VPRK) = (method1.tableau == method2.tableau && method1.d == method2.d)
+function Base.:(==)(method1::VPRK, method2::VPRK)
+    (method1.tableau == method2.tableau && method1.d == method2.d)
+end
 
 GeometricBase.tableau(method::VPRK) = method.tableau
 nullvector(method::VPRK) = method.d
 GeometricBase.order(method::VPRK) = RungeKutta.order(tableau(method))
 
-hasnullvector(method::VPRK{DT,Nothing}) where {DT} = false
-hasnullvector(method::VPRK{DT,<:AbstractVector}) where {DT} = true
-
-
+hasnullvector(method::VPRK{DT, Nothing}) where {DT} = false
+hasnullvector(method::VPRK{DT, <:AbstractVector}) where {DT} = true
 
 @doc raw"""
 Variational Partitioned Runge-Kutta Method that uses
@@ -98,7 +104,6 @@ for both $a_{ij}$ and $\bar{a}_{ij}$.
 struct VPSRK3 <: VPRKMethod end
 
 GeometricBase.tableau(::VPSRK3) = SymplecticPartitionedTableau(TableauSRK3())
-
 
 @doc raw"""
 Variational Partitioned Runge-Kutta Method that uses
@@ -284,17 +289,36 @@ struct VPRKLobattoIIIGIIIḠ <: VPRKMethod
     s::Int
 end
 
-
-GeometricBase.tableau(method::VPRKGauss) = SymplecticPartitionedTableau(TableauGauss(method.s))
-GeometricBase.tableau(method::VPRKLobattoIII) = PartitionedTableau(TableauLobattoIII(method.s))
-GeometricBase.tableau(method::VPRKLobattoIIIA) = PartitionedTableau(TableauLobattoIIIA(method.s))
-GeometricBase.tableau(method::VPRKLobattoIIIB) = PartitionedTableau(TableauLobattoIIIB(method.s))
-GeometricBase.tableau(method::VPRKLobattoIIIC) = PartitionedTableau(TableauLobattoIIIC(method.s))
-GeometricBase.tableau(method::VPRKLobattoIIID) = PartitionedTableau(TableauLobattoIIID(method.s))
-GeometricBase.tableau(method::VPRKLobattoIIIE) = PartitionedTableau(TableauLobattoIIIE(method.s))
-GeometricBase.tableau(method::VPRKLobattoIIIF) = PartitionedTableau(TableauLobattoIIIF(method.s))
-GeometricBase.tableau(method::VPRKLobattoIIIF̄) = PartitionedTableau(TableauLobattoIIIF̄(method.s))
-GeometricBase.tableau(method::VPRKLobattoIIIG) = PartitionedTableau(TableauLobattoIIIG(method.s))
+function GeometricBase.tableau(method::VPRKGauss)
+    SymplecticPartitionedTableau(TableauGauss(method.s))
+end
+function GeometricBase.tableau(method::VPRKLobattoIII)
+    PartitionedTableau(TableauLobattoIII(method.s))
+end
+function GeometricBase.tableau(method::VPRKLobattoIIIA)
+    PartitionedTableau(TableauLobattoIIIA(method.s))
+end
+function GeometricBase.tableau(method::VPRKLobattoIIIB)
+    PartitionedTableau(TableauLobattoIIIB(method.s))
+end
+function GeometricBase.tableau(method::VPRKLobattoIIIC)
+    PartitionedTableau(TableauLobattoIIIC(method.s))
+end
+function GeometricBase.tableau(method::VPRKLobattoIIID)
+    PartitionedTableau(TableauLobattoIIID(method.s))
+end
+function GeometricBase.tableau(method::VPRKLobattoIIIE)
+    PartitionedTableau(TableauLobattoIIIE(method.s))
+end
+function GeometricBase.tableau(method::VPRKLobattoIIIF)
+    PartitionedTableau(TableauLobattoIIIF(method.s))
+end
+function GeometricBase.tableau(method::VPRKLobattoIIIF̄)
+    PartitionedTableau(TableauLobattoIIIF̄(method.s))
+end
+function GeometricBase.tableau(method::VPRKLobattoIIIG)
+    PartitionedTableau(TableauLobattoIIIG(method.s))
+end
 GeometricBase.tableau(method::VPRKRadauIIA) = PartitionedTableau(TableauRadauIIA(method.s))
 GeometricBase.tableau(method::VPRKRadauIIB) = PartitionedTableau(TableauRadauIIB(method.s))
 

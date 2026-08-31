@@ -7,7 +7,7 @@ Cache for variational integrator in position-momentum form.
 * `Θ`: implicit function evaluated on solution
 * `f`: vector field of implicit function
 """
-struct HPICache{DT,A} <: IODEIntegratorCache{DT}
+struct HPICache{DT, A} <: IODEIntegratorCache{DT}
     x::Vector{DT}
     a::Vector{DT}
 
@@ -30,13 +30,13 @@ struct HPICache{DT,A} <: IODEIntegratorCache{DT}
     D₂ϕ::Matrix{DT}
     Dₐϕ::Matrix{DT}
 
-    function HPICache{DT,A}(ics) where {DT,A}
+    function HPICache{DT, A}(ics) where {DT, A}
         D = length(vec(ics.q))
         new(zeros(DT, D+A), zeros(DT, A),
-            zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D),
-            zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D),
-            zeros(DT,D), zeros(DT,D), zeros(DT,D), zeros(DT,D),
-            zeros(DT,D,D), zeros(DT,D,D), zeros(DT,A,D)
+            zeros(DT, D), zeros(DT, D), zeros(DT, D), zeros(DT, D),
+            zeros(DT, D), zeros(DT, D), zeros(DT, D), zeros(DT, D),
+            zeros(DT, D), zeros(DT, D), zeros(DT, D), zeros(DT, D),
+            zeros(DT, D, D), zeros(DT, D, D), zeros(DT, A, D)
         )
     end
 end
@@ -47,4 +47,5 @@ function Cache{ST}(problem::AbstractProblemIODE, method::HPIMethod; kwargs...) w
     HPICache{ST, nparams(method)}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, ::AbstractProblemIODE, method::HPIMethod) = HPICache{ST, nparams(method)}
+@inline CacheType(ST, ::AbstractProblemIODE, method::HPIMethod) = HPICache{
+    ST, nparams(method)}

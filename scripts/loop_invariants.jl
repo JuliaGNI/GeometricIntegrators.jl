@@ -21,10 +21,12 @@ Only the even-`N` (`cot`) form is implemented — for odd `N` the entries are bu
 `csc` instead, and using this matrix would give a silently wrong derivative.
 """
 function fourier_diffmatrix(N)
-    iseven(N) || throw(ArgumentError("fourier_diffmatrix is the even-N (cot) form, got N = $N"))
+    iseven(N) ||
+        throw(ArgumentError("fourier_diffmatrix is the even-N (cot) form, got N = $N"))
     h = 2π / N
     D = zeros(N, N)
     for j in 1:N, k in 1:N
+
         j == k && continue
         D[j, k] = 0.5 * (-1)^(j + k) / tan((j - k) * h / 2)
     end

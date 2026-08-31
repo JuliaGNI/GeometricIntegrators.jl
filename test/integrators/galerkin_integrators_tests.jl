@@ -6,7 +6,6 @@ using CompactBasisFunctions
 using QuadratureRules
 using Test
 
-
 iode = iodeproblem()
 pref = exact_solution(podeproblem())
 
@@ -15,7 +14,6 @@ BGau4 = Lagrange(QuadratureRules.nodes(QGau4))
 
 QLob4 = LobattoLegendreQuadrature(4)
 BLob4 = Lagrange(QuadratureRules.nodes(QLob4))
-
 
 ### CGVI Integrators ###
 
@@ -56,7 +54,8 @@ BLob4 = Lagrange(QuadratureRules.nodes(QLob4))
     end
 
     # accessors
-    for (m, B, Q) in ((CGVI(BGau4, QGau4), BGau4, QGau4), (CGVINodal(BLob4, QLob4), BLob4, QLob4))
+    for (m, B, Q) in ((CGVI(BGau4, QGau4), BGau4, QGau4), (
+        CGVINodal(BLob4, QLob4), BLob4, QLob4))
         @test GeometricIntegrators.Integrators.basis(m) === B
         @test GeometricIntegrators.Integrators.quadrature(m) === Q
         @test GeometricIntegrators.Integrators.nbasis(m) == 4
@@ -85,11 +84,11 @@ BLob4 = Lagrange(QuadratureRules.nodes(QLob4))
     # initial conditions, so each degree of freedom has its own closed-form solution and
     # its own frequency. Any layout bug that duplicates, swaps or drops a component
     # therefore shows up as a wrong number rather than merely a slightly worse one.
-    let params = (m₁=2.0, m₂=1.0, k₁=1.5, k₂=0.3, k=0.0),
-        q₀ = [0.5, -0.3], p₀ = [0.0, 0.4], tend = 1.0
+    let params = (m₁ = 2.0, m₂ = 1.0, k₁ = 1.5, k₂ = 0.3, k = 0.0), q₀ = [0.5, -0.3],
+        p₀ = [0.0, 0.4], tend = 1.0
 
         chprob = CoupledHarmonicOscillator.lodeproblem(q₀, p₀;
-            timespan=(0.0, tend), timestep=0.1, parameters=params)
+            timespan = (0.0, tend), timestep = 0.1, parameters = params)
 
         m = [params.m₁, params.m₂]
         ω = sqrt.([params.k₁, params.k₂] ./ m)
@@ -110,23 +109,21 @@ BLob4 = Lagrange(QuadratureRules.nodes(QLob4))
     # precision allows.
     let T = Float32, params = HarmonicOscillator.default_parameters(Float32)
         f32prob = HarmonicOscillator.lodeproblem([T(0.5)], [T(0.0)];
-            timespan=(T(0.0), T(1.0)), timestep=T(0.1), parameters=params)
+            timespan = (T(0.0), T(1.0)), timestep = T(0.1), parameters = params)
         qexact = HarmonicOscillator.exact_solution_q(T(1.0), T(0.5), T(0.0), T(0.0), params)
 
         QGau4f = GaussLegendreQuadrature(T, 4)
         QLob4f = LobattoLegendreQuadrature(T, 4)
 
         for meth in (CGVI(Lagrange(QuadratureRules.nodes(QGau4f)), QGau4f),
-                     CGVINodal(Lagrange(QuadratureRules.nodes(QLob4f)), QLob4f))
-            f32sol = integrate(f32prob, meth; f_abstol=T(1E-5))
+            CGVINodal(Lagrange(QuadratureRules.nodes(QLob4f)), QLob4f))
+            f32sol = integrate(f32prob, meth; f_abstol = T(1E-5))
             @test eltype(f32sol.q[end]) == T
             @test eltype(f32sol.p[end]) == T
             @test abs(f32sol.q[end][1] - qexact) < 1E-5
         end
     end
-
 end
-
 
 ### DGVI Integrators ###
 
@@ -138,12 +135,14 @@ end
 # `iodeproblem_dg` is provided by GeometricProblems for exactly this purpose.
 
 const dg_q₀ = [1.0, 1.0]
-const dg_params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
+const dg_params = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
 const dg_tspan = (0.0, 1.0)
 const dg_Δt = 0.05
 
-dgiode = LotkaVolterra2d.iodeproblem_dg(dg_q₀; timespan=dg_tspan, timestep=dg_Δt, parameters=dg_params)
-dgref = integrate(LotkaVolterra2d.odeproblem(dg_q₀; timespan=dg_tspan, timestep=dg_Δt, parameters=dg_params), Gauss(8))
+dgiode = LotkaVolterra2d.iodeproblem_dg(dg_q₀; timespan = dg_tspan, timestep = dg_Δt, parameters = dg_params)
+dgref = integrate(
+    LotkaVolterra2d.odeproblem(dg_q₀; timespan = dg_tspan, timestep = dg_Δt, parameters = dg_params),
+    Gauss(8))
 
 dgjump = Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2))
 
@@ -180,11 +179,11 @@ dgjump = Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2))
     # `DGVIP1` adds a continuity constraint and a final projection on top of `DGVI`'s
     # equations; on a consistent solution the two agree to round-off.
     @test relative_maximum_error(integrate(dgiode, DGVI(BGau4, QGau4)).q,
-                                 integrate(dgiode, DGVIP1(BGau4, QGau4)).q) < 1E-12
+        integrate(dgiode, DGVIP1(BGau4, QGau4)).q) < 1E-12
 
     # traits
     for m in (DGVI(BGau4, QGau4), DGVIP0(BGau4, QGau4), DGVIP1(BGau4, QGau4),
-              DGVIEXP(BGau4, QGau4), DGVIPI(BGau4, QGau4, dgjump))
+        DGVIEXP(BGau4, QGau4), DGVIPI(BGau4, QGau4, dgjump))
         @test isimplicit(m)
         @test !isexplicit(m)
         @test islodemethod(m)
@@ -218,5 +217,4 @@ dgjump = Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2))
     # trapezoidal flux on the full jump, with the nodal value at the path midpoint
     @test DGVIPI(BGau4, QGau4, dgjump).ρ⁻ ≈ 0.5
     @test DGVIPI(BGau4, QGau4, dgjump).ρ⁺ ≈ 0.5
-
 end

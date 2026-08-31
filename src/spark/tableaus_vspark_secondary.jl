@@ -1,5 +1,5 @@
 
-function getTableauVSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
+function getTableauVSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d = Nothing)
     # α_q_1 and α_p_2 need to be conjugate symplectic
     # α_q_1 and α_p_3 need to be conjugate symplectic
     # α_q_2 and α_p_2 need to be conjugate symplectic
@@ -35,21 +35,20 @@ function getTableauVSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
     β_p_3 = lp.b
 
     # a_q_1_ij = b_q_1_j / b_p_1_i * (b_p_1_i - α_p_1_ji)
-    a_q_1 = zeros(s,σ)
+    a_q_1 = zeros(s, σ)
     for i in 1:s
         for j in 1:σ
-            a_q_1[i,j] = b_q_1[j] / b_p_1[i] * (b_p_1[i] - α_p_1[j,i])
+            a_q_1[i, j] = b_q_1[j] / b_p_1[i] * (b_p_1[i] - α_p_1[j, i])
         end
     end
 
     # a_q_2_ij = b_q_2_j / b_p_1_i * (b_p_1_i - α_p_1_ji)
-    a_q_2 = zeros(s,σ)
+    a_q_2 = zeros(s, σ)
     for i in 1:s
         for j in 1:σ
-            a_q_2[i,j] = b_q_2[j] / b_p_1[i] * (b_p_1[i] - α_p_1[j,i])
+            a_q_2[i, j] = b_q_2[j] / b_p_1[i] * (b_p_1[i] - α_p_1[j, i])
         end
     end
-
 
     a_q = Array.((a_q_1, a_q_2))
     b_q = Array.((b_q_1, b_q_2))
@@ -75,10 +74,10 @@ function getTableauVSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=Nothing)
     VSPARKsecondary(tsym, o, s, σ, coeff_q, coeff_p, coeff_q̃, coeff_p̃, ω, d)
 end
 
-
 function TableauVSPARKLobattoIII(s, lq, lp; name = Symbol("VSPARKLobattoIII"))
     o = 2s-2
-    getTableauVSPARK(s, s, o, name, lq, lp, lq, lp, lobatto_ω_matrix(s), lobatto_nullvector(s))
+    getTableauVSPARK(
+        s, s, o, name, lq, lp, lq, lp, lobatto_ω_matrix(s), lobatto_nullvector(s))
 end
 
 function TableauVSPARKLobattoIIIAB(s)
@@ -115,33 +114,39 @@ function TableauVSPARKLobattoIIIE(s)
     TableauVSPARKLobattoIII(s, l, l; name = Symbol("VSPARKLobattoIIIE"))
 end
 
-
 function TableauVSPARKGLRKLobattoIII(s, σ, lq, lp; name = Symbol("VSPARKGLRKLobattoIII"))
     o = 2s
     g = TableauGauss(s)
-    getTableauVSPARK(s, σ, o, name, g, lobatto_gauss_coefficients(s, σ), lq, lp, gauss_ω_matrix(σ), lobatto_nullvector(σ))
+    getTableauVSPARK(s, σ, o, name, g, lobatto_gauss_coefficients(s, σ),
+        lq, lp, gauss_ω_matrix(σ), lobatto_nullvector(σ))
 end
 
-function TableauVSPARKGLRKLobattoIIIAB(s, σ=s+1)
-    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIA(σ), TableauLobattoIIIB(σ); name = Symbol("VSPARKGLRKLobattoIIIAIIIB"))
+function TableauVSPARKGLRKLobattoIIIAB(s, σ = s+1)
+    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIA(σ), TableauLobattoIIIB(σ);
+        name = Symbol("VSPARKGLRKLobattoIIIAIIIB"))
 end
 
-function TableauVSPARKGLRKLobattoIIIBA(s, σ=s+1)
-    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIB(σ), TableauLobattoIIIA(σ); name = Symbol("VSPARKGLRKLobattoIIIBIIIA"))
+function TableauVSPARKGLRKLobattoIIIBA(s, σ = s+1)
+    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIB(σ), TableauLobattoIIIA(σ);
+        name = Symbol("VSPARKGLRKLobattoIIIBIIIA"))
 end
 
-function TableauVSPARKGLRKLobattoIIICC̄(s, σ=s+1)
-    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIC(σ), TableauLobattoIIIC̄(σ); name = Symbol("VSPARKGLRKLobattoIIICIIIC̄"))
+function TableauVSPARKGLRKLobattoIIICC̄(s, σ = s+1)
+    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIC(σ), TableauLobattoIIIC̄(σ);
+        name = Symbol("VSPARKGLRKLobattoIIICIIIC̄"))
 end
 
-function TableauVSPARKGLRKLobattoIIIC̄C(s, σ=s+1)
-    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIC̄(σ), TableauLobattoIIIC(σ); name = Symbol("VSPARKGLRKLobattoIIIC̄IIIC"))
+function TableauVSPARKGLRKLobattoIIIC̄C(s, σ = s+1)
+    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIC̄(σ), TableauLobattoIIIC(σ);
+        name = Symbol("VSPARKGLRKLobattoIIIC̄IIIC"))
 end
 
-function TableauVSPARKGLRKLobattoIIID(s, σ=s+1)
-    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIID(σ), TableauLobattoIIID(σ); name = Symbol("VSPARKGLRKLobattoIIID"))
+function TableauVSPARKGLRKLobattoIIID(s, σ = s+1)
+    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIID(σ), TableauLobattoIIID(σ);
+        name = Symbol("VSPARKGLRKLobattoIIID"))
 end
 
-function TableauVSPARKGLRKLobattoIIIE(s, σ=s+1)
-    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIE(σ), TableauLobattoIIIE(σ); name = Symbol("VSPARKGLRKLobattoIIIE"))
+function TableauVSPARKGLRKLobattoIIIE(s, σ = s+1)
+    TableauVSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIE(σ), TableauLobattoIIIE(σ);
+        name = Symbol("VSPARKGLRKLobattoIIIE"))
 end

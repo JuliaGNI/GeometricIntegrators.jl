@@ -4,22 +4,19 @@ using GeometricProblems.LotkaVolterra2d
 import GeometricProblems.LotkaVolterra4dLagrangian as LotkaVolterra4dLagrangian
 using Test
 
-
 const Δt = 0.01
 const nt = 10
 const q₀ = [1.0, 1.0]
 const tspan = (0.0, Δt * nt)
-const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
+const params = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
 
-ode = odeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
-iode = iodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
-lode = lodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
-ldae = ldaeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+ode = odeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
+iode = iodeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
+lode = lodeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
+ldae = ldaeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
 ref = integrate(ode, Gauss(8))
 
-
 @testset "$(rpad("VPRK integrators without projection",80))" begin
-
     sol = integrate(iode, VPRKGauss(1))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
@@ -46,12 +43,9 @@ ref = integrate(ode, Gauss(8))
 
     sol = integrate(iode, VPRKLobattoIIIBIIIB̄(4))
     @test relative_maximum_error(sol.q, ref.q) < 1E-10
-
 end
 
-
 @testset "$(rpad("VPRK integrators with standard projection",80))" begin
-
     sol = integrate(iode, PostProjection(VPRKGauss(1)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
@@ -60,12 +54,9 @@ end
 
     sol = integrate(iode, PostProjection(VPRKGauss(3)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-15
-
 end
 
-
 @testset "$(rpad("VPRK integrators with symplectic projection",80))" begin
-
     sol = integrate(iode, SymplecticProjection(VPRKGauss(1)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
@@ -74,12 +65,9 @@ end
 
     sol = integrate(iode, SymplecticProjection(VPRKGauss(3)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-15
-
 end
 
-
 @testset "$(rpad("VPRK integrators with midpoint projection",80))" begin
-
     sol = integrate(iode, MidpointProjection(VPRKGauss(1)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
@@ -88,12 +76,9 @@ end
 
     sol = integrate(iode, MidpointProjection(VPRKGauss(3)))
     @test relative_maximum_error(sol.q, ref.q) < 8E-16
-
 end
 
-
 @testset "$(rpad("VPRK integrators with symmetric projection",80))" begin
-
     sol = integrate(iode, SymmetricProjection(VPRKGauss(1)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
@@ -102,9 +87,7 @@ end
 
     sol = integrate(iode, SymmetricProjection(VPRKGauss(3)))
     @test relative_maximum_error(sol.q, ref.q) < 8E-16
-
 end
-
 
 # disabled: VPRKpInternal (InternalStageProjection) errors — no method matching initial_guess! for its state layout (projection not adapted to current API)
 # @testset "$(rpad("VPRK integrators with internal projection",80))" begin
@@ -123,7 +106,6 @@ end
 
 # end
 
-
 # disabled: VPRKpSecondary (SecondaryProjection) errors — no method matching initial_guess! for its state layout (projection not adapted to current API)
 # @testset "$(rpad("VPRK integrators with projection on secondary constraint",80))" begin
 
@@ -139,7 +121,6 @@ end
 #     # @test relative_maximum_error(sol.q, ref.q) < 4E-12
 
 # end
-
 
 @testset "$(rpad("VPRK integrators with variational projection",80))" begin
 
@@ -178,7 +159,6 @@ end
 
 end
 
-
 @testset "$(rpad("VPRK integrators with projection on Runge-Kutta tableau",80))" begin
 
     # `VPRKpTableau` couples the Dirac-constraint multipliers into the tableau, so the
@@ -200,34 +180,32 @@ end
     # Measured (Δt = 0.01, nt = 10, reference Gauss(8) on the ODE form):
     #   s = 3: 2.1E-10  (order-degraded, worse than VPRK(Gauss(3)) at 2.3E-11)
     #   s = 4: 8.9E-16, s = 5: 6.7E-16, s = 6: 4.4E-16
-    sol = integrate(iode, VPRKpTableau(4); verbosity=0, warn_iterations=0)
+    sol = integrate(iode, VPRKpTableau(4); verbosity = 0, warn_iterations = 0)
     @test relative_maximum_error(sol.q, ref.q) < 1E-15
 
-    sol = integrate(iode, VPRKpTableau(5); verbosity=0, warn_iterations=0)
+    sol = integrate(iode, VPRKpTableau(5); verbosity = 0, warn_iterations = 0)
     @test relative_maximum_error(sol.q, ref.q) < 8E-16
 
-    sol = integrate(iode, VPRKpTableau(6); verbosity=0, warn_iterations=0)
+    sol = integrate(iode, VPRKpTableau(6); verbosity = 0, warn_iterations = 0)
     @test relative_maximum_error(sol.q, ref.q) < 8E-16
 
     # The defining property: the Dirac constraint ϑ(qₙ) − pₙ = 0 must hold at every
     # step. Measured 4.4E-16 … 4.2E-15.
     for s in 3:6
-        sol = integrate(iode, VPRKpTableau(s); verbosity=0, warn_iterations=0)
+        sol = integrate(iode, VPRKpTableau(s); verbosity = 0, warn_iterations = 0)
         dirac = maximum(maximum(abs, sol.p[i] .- LotkaVolterra2d.ϑ(sol.t[i], sol.q[i]))
-                        for i in eachindex(sol.q))
+        for i in eachindex(sol.q))
         @test dirac < 8E-15
     end
 
     # At s = D+1 the projection costs accuracy rather than gaining it, which is the
     # observable consequence of the (2,1)-slot obstruction.
-    let s3 = integrate(iode, VPRKpTableau(3); verbosity=0, warn_iterations=0),
-        v3 = integrate(iode, VPRK(Gauss(3)); verbosity=0, warn_iterations=0)
+    let s3 = integrate(iode, VPRKpTableau(3); verbosity = 0, warn_iterations = 0),
+        v3 = integrate(iode, VPRK(Gauss(3)); verbosity = 0, warn_iterations = 0)
 
         @test relative_maximum_error(s3.q, ref.q) > relative_maximum_error(v3.q, ref.q)
     end
-
 end
-
 
 # disabled: VPRKpLegendre (LegendreProjection) errors — no method matching initial_guess! for its state layout (projection not adapted to current API)
 # @testset "$(rpad("VPRK integrators with Legendre projection",80))" begin

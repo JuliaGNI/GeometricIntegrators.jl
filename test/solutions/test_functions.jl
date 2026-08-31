@@ -8,7 +8,7 @@ function fq(t, q, p, fq)
 end
 
 function fp(t, q, p, fp)
-    fp .= q.^2
+    fp .= q .^ 2
 end
 
 function fϕ(t, x, fϕ)
@@ -24,9 +24,9 @@ function gq(t, q, p, λ, fλ)
 end
 
 function gp(t, q, p, λ, fλ)
-    fλ .= q.^2
+    fλ .= q .^ 2
 end
 
 function gϕ(t, q, p, gϕ)
-    gϕ .= p - q.^2
+    gϕ .= p - q .^ 2
 end

@@ -4,13 +4,10 @@ using Test
 
 using GeometricEquations: DELEProblem
 
-
 lode = lodeproblem()
 pref = exact_solution(podeproblem())
 
-
 @testset "$(rpad("Discrete Euler-Lagrange integrators",80))" begin
-
     sol = integrate(deleproblem_midpoint(), DiscreteEulerLagrange())
     @test relative_maximum_error(sol.q, pref.q) < 4E-4
 
@@ -28,20 +25,15 @@ pref = exact_solution(podeproblem())
     @test relative_maximum_error(dsol.q, sol.q) < 4E-15
 end
 
-
 @testset "$(rpad("Vartiational integrators",80))" begin
-
     sol = integrate(lode, PMVImidpoint())
     @test relative_maximum_error(sol.q, pref.q) < 4E-4
 
     sol = integrate(lode, PMVItrapezoidal())
     @test relative_maximum_error(sol.q, pref.q) < 2E-4
-
 end
 
-
 @testset "$(rpad("Vartiational Partitioned Runge-Kutta integrators",80))" begin
-
     sol = integrate(lode, VPRKGauss(1))
     @test relative_maximum_error(sol.q, pref.q) < 4E-4
     @test relative_maximum_error(sol.p, pref.p) < 8E-4
@@ -61,7 +53,6 @@ end
     @test relative_maximum_error(sol.q, pref.q) < 4E-16
     @test relative_maximum_error(sol.p, pref.p) < 8E-16
 
-
     sol = integrate(lode, VPRKLobattoIIIAIIIĀ(2))
     @test relative_maximum_error(sol.q, pref.q) < 2E-4
     @test relative_maximum_error(sol.p, pref.p) < 8E-4
@@ -77,7 +68,6 @@ end
     @test relative_maximum_error(sol.q, pref.q) < 2E-13
     @test relative_maximum_error(sol.p, pref.p) < 2E-12
 
-
     sol = integrate(lode, VPRKLobattoIIIBIIIB̄(2))
     @test relative_maximum_error(sol.q, pref.q) < 4E-4
     @test relative_maximum_error(sol.p, pref.p) < 8E-4
@@ -89,5 +79,4 @@ end
     sol = integrate(lode, VPRKLobattoIIIBIIIB̄(4))
     @test relative_maximum_error(sol.q, pref.q) < 1E-12
     @test relative_maximum_error(sol.p, pref.p) < 2E-12
-
 end

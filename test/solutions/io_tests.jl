@@ -4,8 +4,8 @@ using GeometricProblems.HarmonicOscillator
 using Test
 import HDF5
 
-ode  = odeproblem()
-dae  = daeproblem()
+ode = odeproblem()
+dae = daeproblem()
 pode = podeproblem()
 pdae = pdaeproblem()
 
@@ -23,13 +23,13 @@ z0 = rand(3)
 μ0 = rand(2)
 
 t1 = 1.0
-x1 = [rand(2) for j = 1:ni]
-y1 = [rand(2) for j = 1:ni]
-q1 = [rand(1) for j = 1:ni]
-p1 = [rand(1) for j = 1:ni]
-z1 = [rand(3) for j = 1:ni]
-λ1 = [rand(1) for j = 1:ni]
-μ1 = [rand(2) for j = 1:ni]
+x1 = [rand(2) for j in 1:ni]
+y1 = [rand(2) for j in 1:ni]
+q1 = [rand(1) for j in 1:ni]
+p1 = [rand(1) for j in 1:ni]
+z1 = [rand(3) for j in 1:ni]
+λ1 = [rand(1) for j in 1:ni]
+μ1 = [rand(2) for j in 1:ni]
 
 x100 = rand(length(vec(ode.ics.q)), 100)
 y100 = rand(length(vec(ode.ics.q)), 100)
@@ -40,7 +40,6 @@ p100 = rand(length(vec(pode.ics.p)), 100)
 μ100 = rand(length(vec(pdae.ics.λ)), 100)
 
 h5file = "test.hdf5"
-
 
 @testset "$(rpad("HDF5 I/O for ODE Solution",80))" begin
     # test general hdf5 functions
@@ -90,9 +89,9 @@ h5file = "test.hdf5"
 
     sol1 = Solution(similar(ode; tspan = 10 .* tspan(ode)), nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
-    for i = 1:10
-        for j = 1:10
-            set_solution!(sol1, x100[:, (i-1)*10+j], j)
+    for i in 1:10
+        for j in 1:10
+            set_solution!(sol1, x100[:, (i - 1) * 10 + j], j)
         end
         save(h5io, sol1)
         reset!(sol1)
@@ -107,9 +106,9 @@ h5file = "test.hdf5"
 
     sol1 = Solution(similar(ode; tspan = 10 .* tspan(ode)), nsave = 2, nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
-    for i = 1:10
-        for j = 1:10
-            set_solution!(sol1, x100[:, (i-1)*10+j], j)
+    for i in 1:10
+        for j in 1:10
+            set_solution!(sol1, x100[:, (i - 1) * 10 + j], j)
         end
         save(h5io, sol1)
         reset!(sol1)
@@ -121,9 +120,7 @@ h5file = "test.hdf5"
     @test sol2.ntime == 100
     @test sol2.nsave == 2
     rm(h5file)
-
 end
-
 
 @testset "$(rpad("HDF5 I/O for PODE Solution",80))" begin
     sol1 = Solution(harmonic_oscillator_pode(q0, p0))
@@ -156,8 +153,8 @@ end
 
     sol1 = Solution(similar(pode; tspan = 10 .* tspan(pode)), nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
-    for i = 1:10
-        for j = 1:10
+    for i in 1:10
+        for j in 1:10
             oj = (i - 1) * 10 + j
             set_solution!(sol1, q100[:, oj], p100[:, oj], j)
         end
@@ -175,8 +172,8 @@ end
 
     sol1 = Solution(similar(pode; tspan = 10 .* tspan(pode)), nsave = 2, nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
-    for i = 1:10
-        for j = 1:10
+    for i in 1:10
+        for j in 1:10
             oj = (i - 1) * 10 + j
             set_solution!(sol1, q100[:, oj], p100[:, oj], j)
         end
@@ -192,7 +189,6 @@ end
     @test sol2.nsave == 2
     rm(h5file)
 end
-
 
 @testset "$(rpad("HDF5 I/O for DAE Solution",80))" begin
     sol1 = Solution(harmonic_oscillator_dae(z0, λ0))
@@ -225,8 +221,8 @@ end
 
     sol1 = Solution(similar(dae; tspan = 10 .* tspan(dae)), nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
-    for i = 1:10
-        for j = 1:10
+    for i in 1:10
+        for j in 1:10
             oj = (i - 1) * 10 + j
             set_solution!(sol1, z100[:, oj], λ100[:, oj], j)
         end
@@ -244,8 +240,8 @@ end
 
     sol1 = Solution(similar(dae; tspan = 10 .* tspan(dae)), nsave = 2, nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
-    for i = 1:10
-        for j = 1:10
+    for i in 1:10
+        for j in 1:10
             oj = (i - 1) * 10 + j
             set_solution!(sol1, z100[:, oj], λ100[:, oj], j)
         end
@@ -261,7 +257,6 @@ end
     @test sol2.nsave == 2
     rm(h5file)
 end
-
 
 @testset "$(rpad("HDF5 I/O for PDAE Solution",80))" begin
     sol1 = Solution(harmonic_oscillator_pdae(x0, y0, μ0))
@@ -296,8 +291,8 @@ end
 
     sol1 = Solution(similar(pdae; tspan = 10 .* tspan(pdae)), nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
-    for i = 1:10
-        for j = 1:10
+    for i in 1:10
+        for j in 1:10
             oj = (i - 1) * 10 + j
             set_solution!(sol1, x100[:, oj], y100[:, oj], μ100[:, oj], j)
         end
@@ -319,8 +314,8 @@ end
 
     sol1 = Solution(similar(pdae; tspan = 10 .* tspan(pdae)), nsave = 2, nwrite = 10)
     h5io = SolutionHDF5(h5file, sol1)
-    for i = 1:10
-        for j = 1:10
+    for i in 1:10
+        for j in 1:10
             oj = (i - 1) * 10 + j
             set_solution!(sol1, x100[:, oj], y100[:, oj], μ100[:, oj], j)
         end

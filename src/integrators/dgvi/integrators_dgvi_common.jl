@@ -51,13 +51,13 @@ The five variants are [`DGVI`](@ref), [`DGVIPI`](@ref), [`DGVIP0`](@ref),
     Jacobian. Use `GeometricProblems.LotkaVolterra2d.iodeproblem_dg`,
     `GeometricProblems.HarmonicOscillator.degenerate_lodeproblem` or similar.
 """
-abstract type DGVIMethod{T,S,R,F} <: LODEMethod end
+abstract type DGVIMethod{T, S, R, F} <: LODEMethod end
 
-isexplicit(::Union{DGVIMethod,Type{<:DGVIMethod}}) = false
-isimplicit(::Union{DGVIMethod,Type{<:DGVIMethod}}) = true
-issymmetric(::Union{DGVIMethod,Type{<:DGVIMethod}}) = missing
-issymplectic(::Union{DGVIMethod,Type{<:DGVIMethod}}) = missing
-isiodemethod(::Union{DGVIMethod,Type{<:DGVIMethod}}) = true
+isexplicit(::Union{DGVIMethod, Type{<:DGVIMethod}}) = false
+isimplicit(::Union{DGVIMethod, Type{<:DGVIMethod}}) = true
+issymmetric(::Union{DGVIMethod, Type{<:DGVIMethod}}) = missing
+issymplectic(::Union{DGVIMethod, Type{<:DGVIMethod}}) = missing
+isiodemethod(::Union{DGVIMethod, Type{<:DGVIMethod}}) = true
 
 default_solver(::DGVIMethod) = Newton()
 default_iguess(::DGVIMethod) = HermiteExtrapolation()
@@ -65,23 +65,23 @@ default_iguess(::DGVIMethod) = HermiteExtrapolation()
 basis(method::DGVIMethod) = method.basis
 quadrature(method::DGVIMethod) = method.quadrature
 
-nbasis(::DGVIMethod{T,S,R,F}) where {T,S,R,F} = S
-nnodes(::DGVIMethod{T,S,R,F}) where {T,S,R,F} = R
+nbasis(::DGVIMethod{T, S, R, F}) where {T, S, R, F} = S
+nnodes(::DGVIMethod{T, S, R, F}) where {T, S, R, F} = R
 
 """
 Number of quadrature nodes of the jump path integral; zero for every variant except
 [`DGVIPI`](@ref).
 """
-njump(::DGVIMethod{T,S,R,F}) where {T,S,R,F} = F
+njump(::DGVIMethod{T, S, R, F}) where {T, S, R, F} = F
 
 """
 Number of degrees of freedom the step adds on top of the `S` basis coefficients.
 """
 nclosure(::DGVIMethod) = 1
 
-solversize(method::DGVIMethod, problem::AbstractProblemIODE) =
+function solversize(method::DGVIMethod, problem::AbstractProblemIODE)
     length(vec(initial_conditions(problem).q)) * (nbasis(method) + nclosure(method))
-
+end
 
 """
 Compute the shared DGVI coefficient block `(b, c, x, m, a, r⁻, r⁺)` from a basis and a
@@ -109,13 +109,13 @@ function dgvi_coefficients(basis::Basis{T}, quadrature::QuadratureRule{T}) where
     end
 
     return (
-        b=SVector{R,T}(quad_weights),
-        c=SVector{R,T}(quad_nodes),
-        x=SVector{S,T}(CompactBasisFunctions.grid(basis)),
-        m=SMatrix{R,S,T,R * S}(m),
-        a=SMatrix{R,S,T,R * S}(a),
-        r⁻=SVector{S,T}(r⁻),
-        r⁺=SVector{S,T}(r⁺),
+        b = SVector{R, T}(quad_weights),
+        c = SVector{R, T}(quad_nodes),
+        x = SVector{S, T}(CompactBasisFunctions.grid(basis)),
+        m = SMatrix{R, S, T, R * S}(m),
+        a = SMatrix{R, S, T, R * S}(a),
+        r⁻ = SVector{S, T}(r⁻),
+        r⁺ = SVector{S, T}(r⁺)
     )
 end
 
@@ -146,31 +146,30 @@ function dgvi_jump_coefficients(jump::Discontinuity{T}) where {T}
     end
 
     return (
-        β=SVector{F,T}(β),
-        γ=SVector{F,T}(γ),
-        μ⁻=SVector{F,T}(μ⁻),
-        μ⁺=SVector{F,T}(μ⁺),
-        α⁻=SVector{F,T}(α⁻),
-        α⁺=SVector{F,T}(α⁺),
-        ρ⁻=evaluate_l(jump.path, one(T) / 2),
-        ρ⁺=evaluate_r(jump.path, one(T) / 2),
+        β = SVector{F, T}(β),
+        γ = SVector{F, T}(γ),
+        μ⁻ = SVector{F, T}(μ⁻),
+        μ⁺ = SVector{F, T}(μ⁺),
+        α⁻ = SVector{F, T}(α⁻),
+        α⁺ = SVector{F, T}(α⁺),
+        ρ⁻ = evaluate_l(jump.path, one(T) / 2),
+        ρ⁺ = evaluate_r(jump.path, one(T) / 2)
     )
 end
 
 # empty jump block for the variants that do not integrate along a path
 function dgvi_jump_coefficients(::Nothing, ::Type{T}) where {T}
     (
-        β=SVector{0,T}(),
-        γ=SVector{0,T}(),
-        μ⁻=SVector{0,T}(),
-        μ⁺=SVector{0,T}(),
-        α⁻=SVector{0,T}(),
-        α⁺=SVector{0,T}(),
-        ρ⁻=one(T) / 2,
-        ρ⁺=one(T) / 2,
+        β = SVector{0, T}(),
+        γ = SVector{0, T}(),
+        μ⁻ = SVector{0, T}(),
+        μ⁺ = SVector{0, T}(),
+        α⁻ = SVector{0, T}(),
+        α⁺ = SVector{0, T}(),
+        ρ⁻ = one(T) / 2,
+        ρ⁺ = one(T) / 2
     )
 end
-
 
 """
 Per-variant precondition on the `(basis, quadrature)` pair, checked by the generated
@@ -178,45 +177,45 @@ constructors below. The default imposes nothing; [`DGVIP0`](@ref) overrides it.
 """
 check_basis_quadrature(::Type, ::Basis, ::QuadratureRule) = nothing
 
-
 # The five method types share one field block, of which `DGVIPI`'s use is the widest.
 # They are generated here rather than written out five times; the per-variant files add
 # only the constructor, `jump!`, `residual!` and the state hooks.
 for name in (:DGVI, :DGVIEXP, :DGVIP0, :DGVIP1, :DGVIPI)
     @eval begin
-        struct $name{T,S,R,F,SR,BT<:Basis{T},JT} <: DGVIMethod{T,S,R,F}
+        struct $name{T, S, R, F, SR, BT <: Basis{T}, JT} <: DGVIMethod{T, S, R, F}
             basis::BT
-            quadrature::QuadratureRule{T,R}
+            quadrature::QuadratureRule{T, R}
             jump::JT
 
-            b::SVector{R,T}
-            c::SVector{R,T}
-            x::SVector{S,T}
-            m::SMatrix{R,S,T,SR}
-            a::SMatrix{R,S,T,SR}
-            r⁻::SVector{S,T}
-            r⁺::SVector{S,T}
+            b::SVector{R, T}
+            c::SVector{R, T}
+            x::SVector{S, T}
+            m::SMatrix{R, S, T, SR}
+            a::SMatrix{R, S, T, SR}
+            r⁻::SVector{S, T}
+            r⁺::SVector{S, T}
 
-            β::SVector{F,T}
-            γ::SVector{F,T}
-            μ⁻::SVector{F,T}
-            μ⁺::SVector{F,T}
-            α⁻::SVector{F,T}
-            α⁺::SVector{F,T}
+            β::SVector{F, T}
+            γ::SVector{F, T}
+            μ⁻::SVector{F, T}
+            μ⁺::SVector{F, T}
+            α⁻::SVector{F, T}
+            α⁺::SVector{F, T}
             ρ⁻::T
             ρ⁺::T
 
-            function $name(basis::Basis{T}, quadrature::QuadratureRule{T}, jump=nothing) where {T}
+            function $name(basis::Basis{T}, quadrature::QuadratureRule{T}, jump = nothing) where {T}
                 check_basis_quadrature($name, basis, quadrature)
 
                 co = dgvi_coefficients(basis, quadrature)
-                jc = jump === nothing ? dgvi_jump_coefficients(nothing, T) : dgvi_jump_coefficients(jump)
+                jc = jump === nothing ? dgvi_jump_coefficients(nothing, T) :
+                     dgvi_jump_coefficients(jump)
 
                 S = CompactBasisFunctions.nbasis(basis)
                 R = QuadratureRules.nnodes(quadrature)
                 F = length(jc.β)
 
-                new{T,S,R,F,S * R,typeof(basis),typeof(jump)}(
+                new{T, S, R, F, S * R, typeof(basis), typeof(jump)}(
                     basis, quadrature, jump,
                     co.b, co.c, co.x, co.m, co.a, co.r⁻, co.r⁺,
                     jc.β, jc.γ, jc.μ⁻, jc.μ⁺, jc.α⁻, jc.α⁺, jc.ρ⁻, jc.ρ⁺)
@@ -224,7 +223,6 @@ for name in (:DGVI, :DGVIEXP, :DGVIP0, :DGVIP1, :DGVIPI)
         end
     end
 end
-
 
 function Base.show(io::IO, method::DGVIMethod)
     print(io, "\n", description(method), "\n")
@@ -255,7 +253,6 @@ function Base.show(io::IO, int::GeometricIntegrator{<:DGVIMethod})
     print(io, string(method(int)))
 end
 
-
 @doc raw"""
 State that a DGVI variant carries from one step to the next.
 
@@ -279,7 +276,6 @@ mutable struct DGVIState{DT}
     DGVIState{DT}(D) where {DT} = new(false, zeros(DT, D), zeros(DT, D), zeros(DT, D))
 end
 
-
 @doc raw"""
 Cache shared by all five DGVI variants.
 
@@ -289,7 +285,7 @@ computed and never used. `Φ`, `Λ`, `Θ`, `Θ̄`, `G` and `Ḡ` hold the per-no
 the jump path integral and are empty (`F = 0`) for every variant but
 [`DGVIPI`](@ref).
 """
-struct DGVICache{ST,D,S,R,F,N} <: IODEIntegratorCache{ST}
+struct DGVICache{ST, D, S, R, F, N} <: IODEIntegratorCache{ST}
     x::Vector{ST}
 
     # degrees of freedom and stage values
@@ -356,7 +352,7 @@ struct DGVICache{ST,D,S,R,F,N} <: IODEIntegratorCache{ST}
     # length D, so a misordering would not be caught by the compiler. They are therefore
     # grouped and labelled in field order, so that inserting or removing one shows up as a
     # reviewable diff rather than silently shifting everything after it.
-    function DGVICache{ST,D,S,R,F,N}() where {ST,D,S,R,F,N}
+    function DGVICache{ST, D, S, R, F, N}() where {ST, D, S, R, F, N}
         v() = zeros(ST, D)
         stage(n) = create_internal_stage_vector(ST, D, n)
 
@@ -379,16 +375,19 @@ nlsolution(cache::DGVICache) = cache.x
 
 function Cache{ST}(problem::AbstractProblemIODE, method::DGVIMethod; kwargs...) where {ST}
     D = length(vec(initial_conditions(problem).q))
-    DGVICache{ST,D,nbasis(method),nnodes(method),njump(method),solversize(method, problem)}(; kwargs...)
+    DGVICache{
+        ST, D, nbasis(method), nnodes(method), njump(method), solversize(method, problem)}(;
+        kwargs...)
 end
 
 @inline function CacheType(ST, problem::AbstractProblemIODE, method::DGVIMethod)
     D = length(vec(initial_conditions(problem).q))
-    DGVICache{ST,D,nbasis(method),nnodes(method),njump(method),solversize(method, problem)}
+    DGVICache{
+        ST, D, nbasis(method), nnodes(method), njump(method), solversize(method, problem)}
 end
 
-
-function internal_variables(method::DGVIMethod, problem::AbstractProblemIODE{DT,TT}) where {DT,TT}
+function internal_variables(method::DGVIMethod, problem::AbstractProblemIODE{
+        DT, TT}) where {DT, TT}
     D = length(vec(initial_conditions(problem).q))
     R = nnodes(method)
 
@@ -396,7 +395,7 @@ function internal_variables(method::DGVIMethod, problem::AbstractProblemIODE{DT,
     V = create_internal_stage_vector(DT, D, R)
     P = create_internal_stage_vector(DT, D, R)
 
-    (Q=Q, V=V, P=P, q⁻=zeros(DT, D), q⁺=zeros(DT, D))
+    (Q = Q, V = V, P = P, q⁻ = zeros(DT, D), q⁺ = zeros(DT, D))
 end
 
 # Names `cache.state` directly rather than going through `dgvi_state`, because it receives
@@ -420,7 +419,6 @@ keeps that impossible to get wrong.
 """
 @inline dgvi_state(int::GeometricIntegrator{<:DGVIMethod}) = cache(int).state
 
-
 """
 Seed the carried-over jump values on the first step. The generic version starts from a
 continuous trajectory, `qₙ⁻ = qₙ⁺ = qₙ`, and `ϑ(qₙ⁻) = pₙ`; variants override it.
@@ -440,7 +438,6 @@ Carry the jump values of this step over to the next one. Overridden per variant.
 """
 update_state!(int::GeometricIntegrator{<:DGVIMethod}, DT) = nothing
 
-
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DGVIMethod})
     local x = nlsolution(int)
     local D = length(cache(int).q̃)
@@ -450,38 +447,37 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DGVIMet
     # projection of q onto the basis would be more accurate.
     for i in eachindex(basis(method(int)))
         soltmp = (
-            t=sol.t + timestep(int) * (method(int).x[i] - 1),
-            q=cache(int).q̃,
-            p=cache(int).p̃,
-            q̇=cache(int).ṽ,
-            ṗ=cache(int).f̃,
+            t = sol.t + timestep(int) * (method(int).x[i] - 1),
+            q = cache(int).q̃,
+            p = cache(int).p̃,
+            q̇ = cache(int).ṽ,
+            ṗ = cache(int).f̃
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
         for k in 1:D
-            x[D*(i-1)+k] = cache(int).q̃[k]
+            x[D * (i - 1) + k] = cache(int).q̃[k]
         end
     end
 
     # the trailing block(s) are seeded with the solution at the end of the step
     soltmp = (
-        t=sol.t,
-        q=cache(int).q̃,
-        p=cache(int).p̃,
-        q̇=cache(int).ṽ,
-        ṗ=cache(int).f̃,
+        t = sol.t,
+        q = cache(int).q̃,
+        p = cache(int).p̃,
+        q̇ = cache(int).ṽ,
+        ṗ = cache(int).f̃
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 
-    for i in (S+1):(length(x)÷D)
+    for i in (S + 1):(length(x) ÷ D)
         for k in 1:D
-            x[D*(i-1)+k] = cache(int).q̃[k]
+            x[D * (i - 1) + k] = cache(int).q̃[k]
         end
     end
 
     initialise_state!(sol, params, int)
 end
-
 
 """
 Compute the solution at the quadrature nodes and the two boundary reconstructions
@@ -539,7 +535,6 @@ function components_p!(sol, params, int::GeometricIntegrator{<:DGVIMethod}, ST)
     end
 end
 
-
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DGVIMethod}) where {ST}
     local C = cache(int, ST)
     local D = length(C.q̃)
@@ -548,19 +543,19 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     # copy x to the degrees of freedom
     for i in eachindex(C.X)
         for k in eachindex(C.X[i])
-            C.X[i][k] = x[D*(i-1)+k]
+            C.X[i][k] = x[D * (i - 1) + k]
         end
     end
 
     # the first trailing block is always qₙ₊₁
     for k in eachindex(C.q̄)
-        C.q̄[k] = x[D*S+k]
+        C.q̄[k] = x[D * S + k]
     end
 
     # the second trailing block, where present, is qₙ₊₁⁺
     if nclosure(method(int)) > 1
         for k in eachindex(C.q̄⁺)
-            C.q̄⁺[k] = x[D*(S+1)+k]
+            C.q̄⁺[k] = x[D * (S + 1) + k]
         end
     end
 
@@ -571,13 +566,13 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     jump!(sol, params, int, ST)
 end
 
-
 """
 Interior contribution to the discrete Euler-Lagrange equations, shared by all variants:
 `b[i] = Σⱼ bⱼ (h mⱼᵢ Fⱼ + aⱼᵢ Pⱼ)`. The variant's `residual!` adds its flux terms on
 top and writes the trailing block(s).
 """
-function residual_interior!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DGVIMethod}) where {ST}
+function residual_interior!(b::AbstractVector{ST}, sol, params,
+        int::GeometricIntegrator{<:DGVIMethod}) where {ST}
     local C = cache(int, ST)
     local M = method(int)
     local D = length(C.q̃)
@@ -589,18 +584,17 @@ function residual_interior!(b::AbstractVector{ST}, sol, params, int::GeometricIn
                 z += M.b[j] * M.m[j, i] * C.F[j][k] * timestep(int)
                 z += M.b[j] * M.a[j, i] * C.P[j][k]
             end
-            b[D*(i-1)+k] = z
+            b[D * (i - 1) + k] = z
         end
     end
 end
 
-
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DGVIMethod}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params,
+        int::GeometricIntegrator{<:DGVIMethod}) where {ST}
     @assert axes(x) == axes(b)
     components!(x, sol, params, int)
     residual!(b, sol, params, int)
 end
-
 
 function update!(sol, params, int::GeometricIntegrator{<:DGVIMethod}, DT)
     sol.q .= cache(int, DT).q̄
@@ -613,9 +607,10 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
     update!(sol, params, int, DT)
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DGVIMethod,<:AbstractProblemIODE})
-    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:DGVIMethod, <:AbstractProblemIODE})
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (
+        sol, params, int))
     check_solver_status(solverstatus, int)
     update!(sol, params, nlsolution(int), int)
 end

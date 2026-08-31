@@ -47,26 +47,30 @@ function symplecticity_defect(m, method, q₀, h; δ = 1e-6)
     f(q) = onestep(m, method, q, h)
     J = zeros(length(q₀), length(q₀))
     for k in eachindex(q₀)
-        qp = copy(q₀); qp[k] += δ
-        qm = copy(q₀); qm[k] -= δ
+        qp = copy(q₀)
+        qp[k] += δ
+        qm = copy(q₀)
+        qm[k] -= δ
         J[:, k] = (f(qp) .- f(qm)) ./ 2δ
     end
     maximum(abs, J' * Ω(m, f(q₀)) * J .- Ω(m, q₀))
 end
 
 const CASES = [
-    ("LV singular  (in class)",        LVSingular, () -> DVRK(Gauss(1))),
-    ("LV singular  (in class)",        LVSingular, () -> DVRK(Gauss(2))),
-    ("LV singular  (in class)",        LVSingular, () -> DVRK(Gauss(3))),
-    ("LV standard  (violates (d))",    LV,         () -> DVRK(Gauss(2))),
-    ("LV singular  (violates (b))",    LVSingular, () -> DVRK(RadauIIA(2); check_conditions = false)),
+    ("LV singular  (in class)", LVSingular, () -> DVRK(Gauss(1))),
+    ("LV singular  (in class)", LVSingular, () -> DVRK(Gauss(2))),
+    ("LV singular  (in class)", LVSingular, () -> DVRK(Gauss(3))),
+    ("LV standard  (violates (d))", LV, () -> DVRK(Gauss(2))),
+    ("LV singular  (violates (b))", LVSingular,
+        () -> DVRK(RadauIIA(2); check_conditions = false))
 ]
 
 function main()
     println("\nSymplecticity defect ‖JᵀΩ(q₁)J - Ω(q₀)‖ of the one-step DVRK map")
     @printf("q₀ = %s,  central differences with δ = 1e-6,  ‖Ω(q₀)‖ = %.3g\n\n",
-            Q₀, maximum(abs, Ω(LVSingular, Q₀)))
-    @printf("%-30s %-14s %12s %12s\n", "case", "method", "h = $(STEPS[1])", "h = $(STEPS[2])")
+        Q₀, maximum(abs, Ω(LVSingular, Q₀)))
+    @printf("%-30s %-14s %12s %12s\n", "case", "method", "h = $(STEPS[1])",
+        "h = $(STEPS[2])")
     println("-"^72)
     for (label, m, mk) in CASES
         method = mk()

@@ -1,13 +1,12 @@
 
 abstract type DVIMethod <: LODEMethod end
 
-isexplicit(::Union{DVIMethod,Type{<:DVIMethod}}) = false
-isimplicit(::Union{DVIMethod,Type{<:DVIMethod}}) = true
-issymplectic(::Union{DVIMethod,Type{<:DVIMethod}}) = true
+isexplicit(::Union{DVIMethod, Type{<:DVIMethod}}) = false
+isimplicit(::Union{DVIMethod, Type{<:DVIMethod}}) = true
+issymplectic(::Union{DVIMethod, Type{<:DVIMethod}}) = true
 
 default_solver(::DVIMethod) = Newton()
 default_iguess(::DVIMethod) = HermiteExtrapolation()
-
 
 """
     check_dvi_dimension(D)
@@ -28,8 +27,8 @@ function check_dvi_dimension(D)
     return nothing
 end
 
-
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DVIMethod,<:AbstractProblemIODE}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params,
+        int::GeometricIntegrator{<:DVIMethod, <:AbstractProblemIODE}) where {ST}
     # check that x and b are compatible
     @assert axes(x) == axes(b)
 
@@ -40,8 +39,8 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     residual!(b, sol, params, int)
 end
 
-
-function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:DVIMethod,<:AbstractProblemIODE}) where {DT}
+function update!(sol, params, x::AbstractVector{DT},
+        int::GeometricIntegrator{<:DVIMethod, <:AbstractProblemIODE}) where {DT}
     # compute vector field at internal stages
     components!(x, sol, params, int)
 
@@ -49,10 +48,11 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
     update!(sol, params, int, DT)
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DVIMethod,<:AbstractProblemIODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:DVIMethod, <:AbstractProblemIODE})
     # call nonlinear solver and act on the outcome it reports
-    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (
+        sol, params, int))
     check_solver_status(solverstatus, int)
 
     # compute final update

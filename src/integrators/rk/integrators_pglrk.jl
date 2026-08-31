@@ -72,18 +72,21 @@ PGLRK(coefficients::CoefficientsPGLRK; λmax = 2 / 10^s)
 PGLRK(s::Int, T = Float64; λmax = 2 / 10^s)
 ```
 """
-struct PGLRK{CT<:CoefficientsPGLRK,T} <: ODEMethod
+struct PGLRK{CT <: CoefficientsPGLRK, T} <: ODEMethod
     coefficients::CT
     λmax::T
 
     # `T(10)^s` rather than `10^s`: the latter overflows `Int64` for s ≥ 19
-    function PGLRK(coefficients::CoefficientsPGLRK{T}; λmax=T(2) / T(10)^RungeKutta.nstages(coefficients)) where {T}
+    function PGLRK(coefficients::CoefficientsPGLRK{T};
+            λmax = T(2) / T(10)^RungeKutta.nstages(coefficients)) where {T}
         @assert λmax > 0 "λmax must be positive"
-        new{typeof(coefficients),T}(coefficients, λmax)
+        new{typeof(coefficients), T}(coefficients, λmax)
     end
 end
 
-PGLRK(s::Int, ::Type{T}=Float64; kwargs...) where {T} = PGLRK(CoefficientsPGLRK(T, s); kwargs...)
+function PGLRK(s::Int, ::Type{T} = Float64; kwargs...) where {T}
+    PGLRK(CoefficientsPGLRK(T, s); kwargs...)
+end
 
 GeometricBase.tableau(method::PGLRK, args...; kwargs...) = method.coefficients
 GeometricBase.order(method::PGLRK) = RungeKutta.order(tableau(method))
@@ -92,9 +95,9 @@ GeometricBase.order(::Type{<:PGLRK}) = "2s"
 @inline nstages(method::PGLRK) = RungeKutta.nstages(tableau(method))
 @inline eachstage(method::PGLRK) = RungeKutta.eachstage(tableau(method))
 
-isexplicit(::Union{PGLRK,Type{<:PGLRK}}) = false
-isimplicit(::Union{PGLRK,Type{<:PGLRK}}) = true
-issymmetric(::Union{PGLRK,Type{<:PGLRK}}) = true
+isexplicit(::Union{PGLRK, Type{<:PGLRK}}) = false
+isimplicit(::Union{PGLRK, Type{<:PGLRK}}) = true
+issymmetric(::Union{PGLRK, Type{<:PGLRK}}) = true
 
 # The *tableau* a(λ) is symplectic for every fixed λ (`B A` is skew), but λ is solved per
 # step from the energy condition, so the step map is that tableau composed with a
@@ -103,15 +106,15 @@ issymmetric(::Union{PGLRK,Type{<:PGLRK}}) = true
 # unless it reproduces the exact flow. Measured on a nonlinear pendulum at Δt = 0.8:
 # |JᵀΩJ − Ω| → 3.1E-7 as the finite-difference step is refined, against 7.3E-12 for
 # Gauss(3) — i.e. Gauss's residual is FD noise and PGLRK's is a genuine defect.
-issymplectic(::Union{PGLRK,Type{<:PGLRK}}) = missing
-isenergypreserving(::Union{PGLRK,Type{<:PGLRK}}) = true
+issymplectic(::Union{PGLRK, Type{<:PGLRK}}) = missing
+isenergypreserving(::Union{PGLRK, Type{<:PGLRK}}) = true
 
 default_solver(::PGLRK) = Newton()
 default_iguess(::PGLRK) = HermiteExtrapolation()
 
-solversize(method::PGLRK, problem::AbstractProblemODE) =
+function solversize(method::PGLRK, problem::AbstractProblemODE)
     length(vec(initial_conditions(problem).q)) * nstages(method)
-
+end
 
 function Base.show(io::IO, int::GeometricIntegrator{<:PGLRK})
     print(io, "\nProjected Gauss-Legendre Runge-Kutta Integrator with:\n")
@@ -119,7 +122,6 @@ function Base.show(io::IO, int::GeometricIntegrator{<:PGLRK})
     print(io, "   Tableau:  $(description(tableau(int)))\n")
     print(io, "   $(string(tableau(int)))")
 end
-
 
 @doc raw"""
 Projected Gauss-Legendre Runge-Kutta integrator cache.
@@ -140,7 +142,7 @@ working tableau `ā = a + λ A` are updated in the course of a step.
 * `nfallback`: number of steps on which no root was found in ``[-\lambda_{\max}, +\lambda_{\max}]``
   and the method fell back to ``\lambda = 0``, i.e. to the plain Gauss method
 """
-mutable struct PGLRKCache{ST,D,S} <: ODEIntegratorCache{ST}
+mutable struct PGLRKCache{ST, D, S} <: ODEIntegratorCache{ST}
     x::Vector{ST}
     x₀::Vector{ST}
 
@@ -159,7 +161,7 @@ mutable struct PGLRKCache{ST,D,S} <: ODEIntegratorCache{ST}
     h₀::ST
     nfallback::Int
 
-    function PGLRKCache{ST,D,S}(coefficients) where {ST,D,S}
+    function PGLRKCache{ST, D, S}(coefficients) where {ST, D, S}
         x = zeros(ST, D * S)
         x₀ = zeros(ST, D * S)
 
@@ -187,16 +189,16 @@ function Cache{ST}(problem::AbstractProblemODE, method::PGLRK; kwargs...) where 
     @assert hasinvariants(problem) "PGLRK requires a problem with an invariant `h`"
     @assert :h ∈ keys(invariants(problem)) "PGLRK requires an invariant named `h`"
     D = length(vec(initial_conditions(problem).q))
-    PGLRKCache{ST,D,nstages(method)}(tableau(method); kwargs...)
+    PGLRKCache{ST, D, nstages(method)}(tableau(method); kwargs...)
 end
 
 @inline function CacheType(ST, problem::AbstractProblemODE, method::PGLRK)
     D = length(vec(initial_conditions(problem).q))
-    PGLRKCache{ST,D,nstages(method)}
+    PGLRKCache{ST, D, nstages(method)}
 end
 
-
-function internal_variables(method::PGLRK, problem::AbstractProblemODE{DT,TT}) where {DT,TT}
+function internal_variables(method::PGLRK, problem::AbstractProblemODE{
+        DT, TT}) where {DT, TT}
     S = nstages(method)
     D = length(vec(initial_conditions(problem).q))
 
@@ -204,7 +206,7 @@ function internal_variables(method::PGLRK, problem::AbstractProblemODE{DT,TT}) w
     V = create_internal_stage_vector(DT, D, S)
     Y = create_internal_stage_vector(DT, D, S)
 
-    (Q=Q, V=V, Y=Y)
+    (Q = Q, V = V, Y = Y)
 end
 
 function copy_internal_variables!(solstep::SolutionStep, cache::PGLRKCache)
@@ -212,7 +214,6 @@ function copy_internal_variables!(solstep::SolutionStep, cache::PGLRKCache)
     haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
     haskey(internal(solstep), :Y) && copyto!(internal(solstep).Y, cache.Y)
 end
-
 
 """
 Set the projection parameter `λ` and recompute the working tableau `ā = a + λ A`.
@@ -225,7 +226,6 @@ function update_tableau!(int::GeometricIntegrator{<:PGLRK}, λ)
     return cache(int).ā
 end
 
-
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:PGLRK})
     local x = nlsolution(int)
     local D = length(cache(int).q̃)
@@ -233,9 +233,9 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:PGLRK})
     # compute initial guess for the internal stages
     for i in eachstage(int)
         soltmp = (
-            t=history[1].t + timestep(int) * tableau(int).c[i],
-            q=cache(int).Q[i],
-            q̇=cache(int).V[i],
+            t = history[1].t + timestep(int) * tableau(int).c[i],
+            q = cache(int).Q[i],
+            q̇ = cache(int).V[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
@@ -244,9 +244,9 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:PGLRK})
     for i in eachstage(int)
         offset = D * (i - 1)
         for k in 1:D
-            x[offset+k] = 0
+            x[offset + k] = 0
             for j in eachstage(int)
-                x[offset+k] += tableau(int).a[i, j] * cache(int).V[j][k]
+                x[offset + k] += tableau(int).a[i, j] * cache(int).V[j][k]
             end
         end
     end
@@ -256,7 +256,6 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:PGLRK})
     copyto!(cache(int).x₀, x)
 end
 
-
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:PGLRK}) where {ST}
     local C = cache(int, ST)
     local D = length(C.q̃)
@@ -264,7 +263,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     # copy x to Y
     for i in eachindex(C.Y)
         for k in eachindex(C.Y[i])
-            C.Y[i][k] = x[D*(i-1)+k]
+            C.Y[i][k] = x[D * (i - 1) + k]
         end
     end
 
@@ -291,7 +290,6 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     end
 end
 
-
 function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:PGLRK}) where {ST}
     local C = cache(int, ST)
     local D = length(C.q̃)
@@ -307,18 +305,17 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
             for j in eachindex(C.V)
                 y += ā[i, j] * C.V[j][k]
             end
-            b[D*(i-1)+k] = C.Y[i][k] - y
+            b[D * (i - 1) + k] = C.Y[i][k] - y
         end
     end
 end
 
-
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:PGLRK}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol,
+        params, int::GeometricIntegrator{<:PGLRK}) where {ST}
     @assert axes(x) == axes(b)
     components!(x, sol, params, int)
     residual!(b, sol, params, int)
 end
-
 
 """
 Solve the stage equations for a trial `λ` and return the energy residual
@@ -345,7 +342,6 @@ function energy_residual!(λ, (sol, params, int))
     return cache(int).h₀ - cache(int).h
 end
 
-
 """
 Determine the projection parameter `λ` by bisection on the energy residual.
 
@@ -354,7 +350,7 @@ when it does not change sign across the bracket — in the latter case
 `SimpleSolvers.bisection` returns an endpoint, i.e. the largest admissible perturbation
 rather than a root. Such steps are counted in `cache(int).nfallback`.
 """
-function solve_λ!(sol, params, int::GeometricIntegrator{<:PGLRK,<:AbstractProblemODE}, DT)
+function solve_λ!(sol, params, int::GeometricIntegrator{<:PGLRK, <:AbstractProblemODE}, DT)
     local C = cache(int)
     local λmax = DT(method(int).λmax)
     local ftol = max(abs(C.h₀), one(DT)) * 8eps(DT)
@@ -373,7 +369,7 @@ function solve_λ!(sol, params, int::GeometricIntegrator{<:PGLRK,<:AbstractProbl
     # it returns the endpoint with the smaller |f|, which is the largest admissible
     # perturbation rather than a root — detected and rejected below.
     λ = SimpleSolvers.bisection(energy_residual!, -λmax, +λmax, args,
-        Options(DT; f_abstol=ftol, x_suctol=8eps(DT), verbosity=0))
+        Options(DT; f_abstol = ftol, x_suctol = 8eps(DT), verbosity = 0))
 
     if abs(λ) ≥ λmax
         @debug "PGLRK: no energy-conserving λ in [±$(λmax)]; falling back to plain Gauss."
@@ -390,14 +386,13 @@ function solve_λ!(sol, params, int::GeometricIntegrator{<:PGLRK,<:AbstractProbl
     return λ
 end
 
-
 function update!(sol, params, int::GeometricIntegrator{<:PGLRK}, DT)
     # the accepted candidate is exactly the q whose energy was matched
     sol.q .= cache(int, DT).q
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:PGLRK,<:AbstractProblemODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:PGLRK, <:AbstractProblemODE})
     local DT = eltype(cache(int).q)
 
     # Reference energy, read from the problem's initial condition rather than latched on

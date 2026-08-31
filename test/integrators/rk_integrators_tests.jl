@@ -3,7 +3,8 @@ using GeometricIntegrators
 using Test
 
 using GeometricProblems.HarmonicOscillator
-using GeometricProblems.HarmonicOscillator: reference_solution, reference_solution_q, reference_solution_p
+using GeometricProblems.HarmonicOscillator: reference_solution, reference_solution_q,
+                                            reference_solution_p
 
 ode = odeproblem()
 pode = podeproblem()
@@ -47,9 +48,7 @@ pref = exact_solution(pode)
 
 # end
 
-
 @testset "$(rpad("Explicit Runge-Kutta integrators",80))" begin
-
     sol = integrate(ode, ExplicitEulerRK())
     @test relative_maximum_error(sol, ref).q < 4E-2
 
@@ -58,12 +57,9 @@ pref = exact_solution(pode)
 
     sol = integrate(ode, RK4())
     @test relative_maximum_error(sol, ref).q < 2E-7
-
 end
 
-
 @testset "$(rpad("Implicit Runge-Kutta integrators",80))" begin
-
     sol = integrate(ode, ImplicitEulerRK())
     @test relative_maximum_error(sol, ref).q < 4E-2
 
@@ -135,9 +131,7 @@ end
 
     sol = integrate(ode, LobattoIIIG(2))
     @test relative_maximum_error(sol, ref).q < 1E-4
-
 end
-
 
 # OBSOLETE (old-API): `IntegratorIRK(...; exact_jacobian=true)`, `update_params!`,
 # `computeJacobian` and the block-Jacobian machinery were removed in the
@@ -178,7 +172,6 @@ end
 #     test_IRK_jacobian(ode, TableauGauss(3))
 #     test_IRK_jacobian(ode, TableauGauss(4))
 
-
 #     # Test integration with block Jacobian
 
 #     int = IntegratorIRK(ode, TableauGauss(1); exact_jacobian=true)
@@ -199,9 +192,7 @@ end
 
 # end
 
-
 @testset "$(rpad("Diagonally Implicit Runge-Kutta integrators",80))" begin
-
     sol = integrate(ode, Crouzeix())
     @test relative_maximum_error(sol, ref).q < 4E-5
 
@@ -213,12 +204,9 @@ end
 
     sol = integrate(ode, QinZhang())
     @test relative_maximum_error(sol, ref).q < 8E-5
-
 end
 
-
 @testset "$(rpad("Explicit Partitioned Runge-Kutta integrators",80))" begin
-
     psol = integrate(pode, SymplecticEulerARK())
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 4E-2
@@ -248,11 +236,9 @@ end
     @test perr.q < 2E-7
     @test perr.p < 4E-7
     @test psol.q == integrate(hode, RK4()).q
-
 end
 
 @testset "$(rpad("Implicit Partitioned Runge-Kutta integrators",80))" begin
-
     psol = integrate(pode, Gauss(1))
     perr = relative_maximum_error(psol, pref)
     @test perr.q < 4E-4
@@ -286,9 +272,7 @@ end
     @test psol.q == integrate(pode, PartitionedGauss(4)).q
     @test psol.q == integrate(hode, Gauss(4)).q
     @test psol.q == integrate(hode, PartitionedGauss(4)).q
-
 end
-
 
 @testset "$(rpad("Projected Gauss-Legendre Runge-Kutta integrators",80))" begin
 
@@ -349,14 +333,13 @@ end
     end
 
     # PGLRK needs an invariant named `h` to project onto
-    let bare = ODEProblem(HarmonicOscillator.oscillator_ode_v, timespan(ode), timestep(ode),
-                          initial_conditions(ode).q; parameters=parameters(ode))
+    let bare = ODEProblem(
+            HarmonicOscillator.oscillator_ode_v, timespan(ode), timestep(ode),
+            initial_conditions(ode).q; parameters = parameters(ode))
         @test !hasinvariants(bare)
         @test_throws AssertionError integrate(bare, PGLRK(3))
     end
-
 end
-
 
 @testset "$(rpad("Integrate PODE and HODE with ODE Runge-Kutta integrators",80))" begin
     for s in 1:4

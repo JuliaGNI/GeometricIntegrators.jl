@@ -13,8 +13,9 @@ abstract type DIRKMethod <: IRKMethod end
 default_solver(::DIRKMethod) = Newton()
 default_iguess(::DIRKMethod) = HermiteExtrapolation()
 
-solversize(::DIRKMethod, problem::AbstractProblemODE) = length(vec(initial_conditions(problem).q))
-
+function solversize(::DIRKMethod, problem::AbstractProblemODE)
+    length(vec(initial_conditions(problem).q))
+end
 
 """
 Diagonally Implicit Runge-Kutta Method
@@ -23,16 +24,17 @@ Diagonally Implicit Runge-Kutta Method
 DIRK(tableau)
 ```
 """
-struct DIRK{TT<:Tableau} <: DIRKMethod
+struct DIRK{TT <: Tableau} <: DIRKMethod
     tableau::TT
-    function DIRK(tableau::TT) where {TT<:Tableau}
+    function DIRK(tableau::TT) where {TT <: Tableau}
         @assert RungeKutta.isdiagonallyimplicit(tableau)
         new{TT}(tableau)
     end
 end
 
-initmethod(method::DIRKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = DIRK(method, TT)
-
+function initmethod(method::DIRKMethod, ::GeometricProblem{ST, DT, TT}) where {ST, DT, TT}
+    DIRK(method, TT)
+end
 
 function Base.show(io::IO, int::GeometricIntegrator{<:DIRK})
     print(io, "\nDiagonally Implicit Runge-Kutta Integrator with:\n")
@@ -42,7 +44,6 @@ function Base.show(io::IO, int::GeometricIntegrator{<:DIRK})
     # print(io, reference(int.params.tab))
 end
 
-
 struct SingleStageSolvers{ST} <: AbstractSolver
     solvers::ST
     SingleStageSolvers(solvers...) = new{typeof(solvers)}(solvers)
@@ -50,20 +51,17 @@ end
 
 Base.getindex(s::SingleStageSolvers, args...) = getindex(s.solvers, args...)
 
-
 function initsolver(::Newton, method::DIRK, caches::CacheDict; kwargs...)
     # `default_linesearch(method)` returns a `Backtracking{Float64}` whatever the working type,
     # which the `Linesearch` constructor then has to `change_precision`. Passing `eltype(x)`
     # picks the typed method instead. Its bound is `T<:Real`, so a `ForwardDiff.Dual` working
     # type — a caller differentiating through an integration — still reaches it.
-    SingleStageSolvers([
-        let x = cache(caches).x[i]
-            NewtonSolver(zero(x), residual!, zero(x);
-                linesearch=default_linesearch(eltype(x), method), kwargs...)
-        end
-        for i in eachstage(method)]...)
+    SingleStageSolvers([let x = cache(caches).x[i]
+                            NewtonSolver(zero(x), residual!, zero(x);
+                                linesearch = default_linesearch(eltype(x), method), kwargs...)
+                        end
+                        for i in eachstage(method)]...)
 end
-
 
 """
 Diagonally implicit Runge-Kutta integrator cache.
@@ -75,13 +73,13 @@ Diagonally implicit Runge-Kutta integrator cache.
 * `V`: internal stages of vector field v = q̇
 * `Y`: summed vector field of internal stages Q
 """
-struct DIRKCache{DT,S} <: ODEIntegratorCache{DT}
+struct DIRKCache{DT, S} <: ODEIntegratorCache{DT}
     x::Vector{Vector{DT}}
     Q::Vector{Vector{DT}}
     V::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
 
-    function DIRKCache{DT,S}(ics) where {DT,S}
+    function DIRKCache{DT, S}(ics) where {DT, S}
         D = length(vec(ics.q))
         x = create_internal_stage_vector(DT, D, S)
         Q = create_internal_stage_vector(DT, D, S)
@@ -93,15 +91,16 @@ end
 
 function Cache{ST}(problem::EquationProblem, method::DIRKMethod; kwargs...) where {ST}
     S = nstages(tableau(method))
-    DIRKCache{ST,S}(initial_conditions(problem); kwargs...)
+    DIRKCache{ST, S}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, ::EquationProblem, method::DIRKMethod) = DIRKCache{ST,nstages(tableau(method))}
+@inline CacheType(ST, ::EquationProblem, method::DIRKMethod) = DIRKCache{
+    ST, nstages(tableau(method))}
 
 nlsolution(cache::DIRKCache, i) = cache.x[i]
 
-
-function internal_variables(method::DIRKMethod, problem::AbstractProblemODE{DT,TT}) where {DT,TT}
+function internal_variables(method::DIRKMethod, problem::AbstractProblemODE{
+        DT, TT}) where {DT, TT}
     S = nstages(method)
     D = length(vec(initial_conditions(problem).q))
 
@@ -111,7 +110,7 @@ function internal_variables(method::DIRKMethod, problem::AbstractProblemODE{DT,T
 
     # solver = get_solver_status(int.solver)
 
-    (Q=Q, V=V, Y=Y)#, solver=solver)
+    (Q = Q, V = V, Y = Y)#, solver=solver)
 end
 
 function copy_internal_variables!(solstep::SolutionStep, cache::DIRKCache)
@@ -120,13 +119,12 @@ function copy_internal_variables!(solstep::SolutionStep, cache::DIRKCache)
     haskey(internal(solstep), :Y) && copyto!(internal(solstep).Y, cache.Y)
 end
 
-
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DIRK})
     for i in eachstage(int)
         soltmp = (
-            t=history[1].t + timestep(int) * tableau(int).c[i],
-            q=cache(int).Q[i],
-            q̇=cache(int).V[i],
+            t = history[1].t + timestep(int) * tableau(int).c[i],
+            q = cache(int).Q[i],
+            q̇ = cache(int).V[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
@@ -135,14 +133,15 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DIRK})
         for k in eachindex(cache(int).V[i])
             cache(int).x[i][k] = 0
             for j in eachstage(int)
-                cache(int).x[i][k] += timestep(int) * tableau(int).a[i, j] * cache(int).V[j][k]
+                cache(int).x[i][k] += timestep(int) * tableau(int).a[i, j] *
+                                      cache(int).V[j][k]
             end
         end
     end
 end
 
-
-function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DIRK}, i) where {ST}
+function components!(
+        x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DIRK}, i) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -158,7 +157,6 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     equations(int).v(C.V[i], sol.t + timestep(int) * (tableau(int).c[i] - 1), C.Q[i], params)
 end
 
-
 function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:DIRK}, i) where {ST}
     # temporary variables
     local y1::ST
@@ -171,7 +169,7 @@ function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:DIRK}, i) w
     for k in eachindex(C.Y[i])
         y1 = tableau(int).a[i, i] * C.V[i][k]
         y2 = tableau(int).â[i, i] * C.V[i][k]
-        for j in 1:i-1
+        for j in 1:(i - 1)
             y1 += tableau(int).a[i, j] * C.V[j][k]
             y2 += tableau(int).â[i, j] * C.V[j][k]
         end
@@ -179,9 +177,9 @@ function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:DIRK}, i) w
     end
 end
 
-
 # Compute stages of diagonally implicit Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DIRK}, i) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol,
+        params, int::GeometricIntegrator{<:DIRK}, i) where {ST}
     # compute stages from nonlinear solver solution x
     @assert axes(x) == axes(b)
 
@@ -192,8 +190,8 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     residual!(b, int, i)
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DIRK,<:AbstractProblemODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:DIRK, <:AbstractProblemODE})
     # copy previous solution from solstep to cache
     reset!(cache(int), sol...)
 
@@ -203,7 +201,8 @@ function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DIRK,<
         # per-stage solvers of `SingleStageSolvers` have no persistent state of their own —
         # `SolverState` gives the wrapper a `NullSolverState` — so this is the state-building
         # form of `solve_with_status!`.
-        solverstatus = solve_with_status!(nlsolution(cache(int), i), solver(int)[i], (sol, params, int, i))
+        solverstatus = solve_with_status!(nlsolution(cache(int), i), solver(int)[i], (
+            sol, params, int, i))
         check_solver_status(solverstatus, int)
 
         # compute vector field at internal stages

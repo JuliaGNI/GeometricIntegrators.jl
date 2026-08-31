@@ -8,7 +8,7 @@ using QuadratureRules
 using RungeKutta.Tableaus: TableauCrouzeix
 using Test
 
-ode  = odeproblem()
+ode = odeproblem()
 pode = podeproblem()
 hode = hodeproblem()
 iode = iodeproblem()
@@ -34,11 +34,11 @@ BLob4 = Lagrange(QuadratureRules.nodes(QLob4))
 dgjump = Discontinuity(PathIntegralLinear(), LobattoLegendreQuadrature(2))
 
 const lv_q₀ = [1.0, 1.0]
-const lv_params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
+const lv_params = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
 const lv_tspan = (0.0, 0.1)
 const lv_Δt = 0.01
 
-lvargs = (timespan=lv_tspan, timestep=lv_Δt, parameters=lv_params)
+lvargs = (timespan = lv_tspan, timestep = lv_Δt, parameters = lv_params)
 
 dgiode = LotkaVolterra2d.iodeproblem_dg(lv_q₀; lvargs...)
 lvidae = LotkaVolterra2d.idaeproblem(lv_q₀; lvargs...)
@@ -58,7 +58,6 @@ test_show(x, title) = @test occursin(title, sprint(show, x))
 # dump runs and produces output. They are listed separately below so the gaps stay
 # visible rather than hiding behind a non-emptiness check.
 test_show_default(x) = @test length(sprint(show, x)) > 0
-
 
 @testset "$(rpad("Show Methods and Integrators",80))" begin
 
@@ -80,7 +79,6 @@ test_show_default(x) = @test length(sprint(show, x)) > 0
     test_show_default(ExplicitEuler())
     test_show_default(VPRKpMidpoint(Gauss(1)))
 
-
     ### the integrators ###
 
     test_show(GeometricIntegrator(ode, RK(TableauCrouzeix())), "Diagonally Implicit Runge-Kutta Integrator")
@@ -95,12 +93,15 @@ test_show_default(x) = @test length(sprint(show, x)) > 0
 
     test_show(GeometricIntegrator(iode, Gauss(1)), "Runge-Kutta Integrator for Implicit Equations")
     test_show(GeometricIntegrator(iode, LobattoIIIAIIIB(2)), "Explicit Partitioned Runge-Kutta Integrator")
-    test_show(GeometricIntegrator(iode, VPRKpTableau(4)), "Variational Partitioned Runge-Kutta Integrator with Projection in the Tableau")
+    test_show(GeometricIntegrator(iode, VPRKpTableau(4)),
+        "Variational Partitioned Runge-Kutta Integrator with Projection in the Tableau")
 
     test_show(GeometricIntegrator(lode, FLRK(Gauss(1))), "Formal Lagrangian Runge-Kutta Integrator")
 
-    test_show(GeometricIntegrator(lode, PMVImidpoint()), "Midpoint variational integrator in position-momentum form")
-    test_show(GeometricIntegrator(lode, PMVItrapezoidal()), "Trapezoidal variational integrator in position-momentum form")
+    test_show(GeometricIntegrator(lode, PMVImidpoint()),
+        "Midpoint variational integrator in position-momentum form")
+    test_show(GeometricIntegrator(lode, PMVItrapezoidal()),
+        "Trapezoidal variational integrator in position-momentum form")
 
     # the Hamilton-Pontryagin integrators take the discrete velocity map and its
     # derivatives, as in test/integrators/hamilton_pontryagin_integrators_tests.jl
@@ -122,11 +123,14 @@ test_show_default(x) = @test length(sprint(show, x)) > 0
 
     Dₐϕ(d, q̄, q, a, Δt) = d .= 0
 
-    test_show(GeometricIntegrator(lode, HPImidpoint(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[])), "Hamilton-Pontryagin Integrator using midpoint quadrature")
-    test_show(GeometricIntegrator(lode, HPItrapezoidal(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[])), "Hamilton-Pontryagin Integrator using trapezoidal quadrature")
+    test_show(GeometricIntegrator(lode, HPImidpoint(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[])),
+        "Hamilton-Pontryagin Integrator using midpoint quadrature")
+    test_show(GeometricIntegrator(lode, HPItrapezoidal(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[])),
+        "Hamilton-Pontryagin Integrator using trapezoidal quadrature")
 
     test_show(GeometricIntegrator(dgiode, DGVI(BGau4, QGau4)), "Discontinuous Galerkin Variational Integrator")
-    test_show(GeometricIntegrator(dgiode, DGVIPI(BGau4, QGau4, dgjump)), "Discontinuous Galerkin Variational Integrator")
+    test_show(GeometricIntegrator(dgiode, DGVIPI(BGau4, QGau4, dgjump)),
+        "Discontinuous Galerkin Variational Integrator")
 
     test_show(GeometricIntegrator(dvilode, DVIA()), "Degenerate Variational Integrator (Euler-A)")
     test_show(GeometricIntegrator(dvilode, DVIB()), "Degenerate Variational Integrator (Euler-B)")
@@ -134,24 +138,32 @@ test_show_default(x) = @test length(sprint(show, x)) > 0
     test_show(GeometricIntegrator(dvilode, CTDVI()), "Trapezoidal Degenerate Variational Integrator")
     test_show(GeometricIntegrator(dvilode, DVRK(Gauss(1))), "Runge-Kutta Integrator for Degenerate Lagrangians")
 
-
     ### the SPARK integrators ###
 
     # only constructed, never integrated, so none of the solver warnings the SPARK tests
     # silence can appear here. All ten print the tableau via `tableau(method(int)).q/.p`;
     # spelling that `method(int).q` threw a `FieldError` for the seven method types that
     # wrap their tableau instead of being one.
-    test_show(GeometricIntegrator(lvslrk, SLRKLobattoIIIAB(2)), "Specialised Partitioned Additive Runge-Kutta integrator for degenerate")
-    test_show(GeometricIntegrator(lvidae, SPARKGLRK(1)), "Specialised Partitioned Additive Runge-Kutta integrator for index-two DAE systems")
-    test_show(GeometricIntegrator(lvidae, TableauGausspSymplectic(1)), "Variational partitioned additive Runge-Kutta integrator")
-    test_show(GeometricIntegrator(lvidae, VSPARK(SPARKLobABC(3))), "Specialised Partitioned Additive Runge-Kutta integrator for Variational systems")
-    test_show(GeometricIntegrator(lvidae, TableauVSPARKGLRKpMidpoint(1)), "with projection on primary constraint")
-    test_show(GeometricIntegrator(lvldae, TableauVSPARKLobattoIIIAB(2)), "variational systems with projection on secondary constraint")
-    test_show(GeometricIntegrator(lvpdae, TableauHPARKGLRK(1)), "Partitioned Additive Runge-Kutta integrator for Hamiltonian systems subject")
-    test_show(GeometricIntegrator(lvpdae, HSPARK(SPARKGLRK(1))), "Specialised Partitioned Additive Runge-Kutta integrator for Hamiltonian systems *EXPERIMENTAL*")
-    test_show(GeometricIntegrator(lvpdae, TableauHSPARKGLRKpSymmetric(1)), "with projection on primary constraint *EXPERIMENTAL*")
-    test_show(GeometricIntegrator(lvhdae, TableauHSPARKLobattoIIIAB(2)), "subject to Dirac constraints with projection on secondary constraint")
-
+    test_show(GeometricIntegrator(lvslrk, SLRKLobattoIIIAB(2)),
+        "Specialised Partitioned Additive Runge-Kutta integrator for degenerate")
+    test_show(GeometricIntegrator(lvidae, SPARKGLRK(1)),
+        "Specialised Partitioned Additive Runge-Kutta integrator for index-two DAE systems")
+    test_show(GeometricIntegrator(lvidae, TableauGausspSymplectic(1)),
+        "Variational partitioned additive Runge-Kutta integrator")
+    test_show(GeometricIntegrator(lvidae, VSPARK(SPARKLobABC(3))),
+        "Specialised Partitioned Additive Runge-Kutta integrator for Variational systems")
+    test_show(GeometricIntegrator(lvidae, TableauVSPARKGLRKpMidpoint(1)),
+        "with projection on primary constraint")
+    test_show(GeometricIntegrator(lvldae, TableauVSPARKLobattoIIIAB(2)),
+        "variational systems with projection on secondary constraint")
+    test_show(GeometricIntegrator(lvpdae, TableauHPARKGLRK(1)),
+        "Partitioned Additive Runge-Kutta integrator for Hamiltonian systems subject")
+    test_show(GeometricIntegrator(lvpdae, HSPARK(SPARKGLRK(1))),
+        "Specialised Partitioned Additive Runge-Kutta integrator for Hamiltonian systems *EXPERIMENTAL*")
+    test_show(GeometricIntegrator(lvpdae, TableauHSPARKGLRKpSymmetric(1)),
+        "with projection on primary constraint *EXPERIMENTAL*")
+    test_show(GeometricIntegrator(lvhdae, TableauHSPARKLobattoIIIAB(2)),
+        "subject to Dirac constraints with projection on secondary constraint")
 
     ### integrators that fall back to Julia's default struct dump ###
 
@@ -180,5 +192,4 @@ test_show_default(x) = @test length(sprint(show, x)) > 0
     # the CGVIs define `show` for the method (asserted above), not for the integrator
     test_show_default(GeometricIntegrator(iode, CGVI(BGau4, QGau4)))
     test_show_default(GeometricIntegrator(iode, CGVINodal(BLob4, QLob4)))
-
 end

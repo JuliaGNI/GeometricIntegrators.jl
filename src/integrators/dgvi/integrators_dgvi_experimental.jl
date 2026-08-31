@@ -38,11 +38,12 @@ DGVIEXP(basis::Basis, quadrature::QuadratureRule)
 """
 DGVIEXP
 
-GeometricBase.description(::DGVIEXP) = "Discontinuous Galerkin Variational Integrator (midpoint-average flux)"
+function GeometricBase.description(::DGVIEXP)
+    "Discontinuous Galerkin Variational Integrator (midpoint-average flux)"
+end
 
 # two trailing blocks: q_{n+1} and q_{n+1}⁺
 nclosure(::DGVIEXP) = 2
-
 
 function jump!(sol, params, int::GeometricIntegrator{<:DGVIEXP}, ST)
     local C = cache(int, ST)
@@ -65,7 +66,6 @@ function jump!(sol, params, int::GeometricIntegrator{<:DGVIEXP}, ST)
     C.p̄ .= C.Θ̅
 end
 
-
 function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DGVIEXP}) where {ST}
     local C = cache(int, ST)
     local M = method(int)
@@ -77,24 +77,23 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
 
     for i in eachindex(M.r⁻, M.r⁺)
         for k in 1:D
-            b[D*(i-1)+k] += M.r⁺[i] * C.θ[k]
-            b[D*(i-1)+k] -= M.r⁻[i] * C.Θ̅[k]
-            b[D*(i-1)+k] += M.r⁺[i] * C.g[k] / 2
-            b[D*(i-1)+k] += M.r⁻[i] * C.ḡ[k] / 2
+            b[D * (i - 1) + k] += M.r⁺[i] * C.θ[k]
+            b[D * (i - 1) + k] -= M.r⁻[i] * C.Θ̅[k]
+            b[D * (i - 1) + k] += M.r⁺[i] * C.g[k] / 2
+            b[D * (i - 1) + k] += M.r⁻[i] * C.ḡ[k] / 2
         end
     end
 
     # the nodal value is the average of the one-sided limits
     for k in 1:D
-        b[D*S+k] = C.q̄[k] - C.ϕ̅[k]
+        b[D * S + k] = C.q̄[k] - C.ϕ̅[k]
     end
 
     # continuity with the carried-over right limit
     for k in 1:D
-        b[D*(S+1)+k] = st.q⁺[k] - C.q⁺[k]
+        b[D * (S + 1) + k] = st.q⁺[k] - C.q⁺[k]
     end
 end
-
 
 function update_state!(int::GeometricIntegrator{<:DGVIEXP}, DT)
     local C = cache(int, DT)

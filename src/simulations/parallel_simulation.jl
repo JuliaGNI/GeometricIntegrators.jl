@@ -25,34 +25,36 @@ end
     ns = nsamples(solution(sim))
     ns_thread = div(ns, nthreads)
     i1 = (id-1)*ns_thread + 1
-    i2 =  id   *ns_thread
+    i2 = id * ns_thread
     id == nthreads ? (i1:ns) : (i1:i2)
 end
 
-
-function ParallelSimulation(equ::ET, ints::IT, sol::ST, run_id::String, filename::String) where {ET,IT,ST}
+function ParallelSimulation(
+        equ::ET, ints::IT, sol::ST, run_id::String, filename::String) where {ET, IT, ST}
     @assert mod(sol.ntime, sol.nwrite) == 0
     ncycle = div(sol.ntime, sol.nwrite)
-    ParallelSimulation{ET,IT,ST}(equ, ints, sol, ncycle, run_id, filename)
+    ParallelSimulation{ET, IT, ST}(equ, ints, sol, ncycle, run_id, filename)
 end
 
-function ParallelSimulation(equ::GeometricEquation, ints::Tuple, Δt, run_id, filename, ntime; nsave=DEFAULT_NSAVE, nwrite=DEFAULT_NWRITE)
-    ParallelSimulation(equ, ints, Solution(equ, Δt, ntime; nsave=nsave, nwrite=nwrite), run_id, filename)
+function ParallelSimulation(equ::GeometricEquation, ints::Tuple, Δt, run_id, filename,
+        ntime; nsave = DEFAULT_NSAVE, nwrite = DEFAULT_NWRITE)
+    ParallelSimulation(equ, ints, Solution(equ, Δt, ntime; nsave = nsave, nwrite = nwrite),
+        run_id, filename)
 end
 
-function ParallelSimulation(equ::GeometricEquation, tableau::AbstractTableau, Δt, run_id, filename, ntime; kwargs...)
+function ParallelSimulation(equ::GeometricEquation, tableau::AbstractTableau,
+        Δt, run_id, filename, ntime; kwargs...)
     ints = Tuple(Integrator(equ, tableau, Δt) for i in 1:Threads.nthreads())
     ParallelSimulation(equ, ints, Δt, run_id, filename, ntime; kwargs...)
 end
 
-function ParallelSimulation(equ::GeometricEquation, integrator, tableau::AbstractTableau, Δt, run_id, filename, ntime; kwargs...)
+function ParallelSimulation(equ::GeometricEquation, integrator, tableau::AbstractTableau,
+        Δt, run_id, filename, ntime; kwargs...)
     ints = Tuple(integrator(equ, tableau, Δt) for i in 1:Threads.nthreads())
     ParallelSimulation(equ, ints, Δt, run_id, filename, ntime; kwargs...)
 end
 
-
 function run!(sim::ParallelSimulation)
-
     println("Running ", sim.run_id, "...")
 
     h5io = SolutionHDF5(sim.filename, solution(sim))

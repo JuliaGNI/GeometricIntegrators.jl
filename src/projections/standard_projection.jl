@@ -2,34 +2,45 @@ struct StandardProjection{DT} <: ProjectionMethod
     RU::Vector{DT}
     RG::Vector{DT}
 
-    function StandardProjection(RU, RG, R∞=1)
+    function StandardProjection(RU, RG, R∞ = 1)
         DT, RU, RG = _projection_weights(RU, RG, R∞)
         new{DT}(RU, RG)
     end
 end
 
-PostProjection(method::GeometricMethod) = ProjectedMethod(StandardProjection([0, 1], [0, 1]), method)
-SymplecticProjection(method::Union{PRKMethod,VPRKMethod}) = ProjectedMethod(StandardProjection([0, 1], [0, 1], tableau(method).R∞), method)
-VariationalProjectionOnP(method::GeometricMethod) = ProjectedMethod(StandardProjection([0, 1], [1, 0]), method)
-VariationalProjectionOnQ(method::GeometricMethod) = ProjectedMethod(StandardProjection([1, 0], [0, 1]), method)
+function PostProjection(method::GeometricMethod)
+    ProjectedMethod(StandardProjection([0, 1], [0, 1]), method)
+end
+function SymplecticProjection(method::Union{PRKMethod, VPRKMethod})
+    ProjectedMethod(StandardProjection([0, 1], [0, 1], tableau(method).R∞), method)
+end
+function VariationalProjectionOnP(method::GeometricMethod)
+    ProjectedMethod(StandardProjection([0, 1], [1, 0]), method)
+end
+function VariationalProjectionOnQ(method::GeometricMethod)
+    ProjectedMethod(StandardProjection([1, 0], [0, 1]), method)
+end
 
 # description(::PostProjection) = "Post projection"
 # description(::SymplecticProjection) = "Symplectic Projection"
 # description(::VariationalProjectionOnP) = @doc raw"Variational projection on $(q_{n}, p_{n+1})$"
 # description(::VariationalProjectionOnQ) = @doc raw"Variational projection on $(p_{n}, q_{n+1})$"
 
-const StandardProjectionIntegrator{PT} = ProjectionIntegrator{<:ProjectedMethod{<:StandardProjection,<:GeometricMethod},PT} where {PT<:AbstractProblem}
+const StandardProjectionIntegrator{PT} = ProjectionIntegrator{
+    <:ProjectedMethod{<:StandardProjection, <:GeometricMethod},
+    PT} where {PT <: AbstractProblem}
 
-function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:StandardProjection}; kwargs...) where {ST}
+function Cache{ST}(problem::EquationProblem,
+        method::ProjectedMethod{<:StandardProjection}; kwargs...) where {ST}
     ProjectionCache{ST}(problem, method; kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:StandardProjection}) =
-    ProjectionCache{ST,timetype(problem),typeof(problem),nconstraints(problem),solversize(parent(method), problem)}
-
+@inline CacheType(ST, problem::EquationProblem,
+    method::ProjectedMethod{<:StandardProjection}) = ProjectionCache{
+    ST, timetype(problem), typeof(problem),
+    nconstraints(problem), solversize(parent(method), problem)}
 
 default_solver(::ProjectedMethod{<:StandardProjection}) = Newton()
-
 
 function split_nlsolution(x::AbstractVector, int::StandardProjectionIntegrator)
     D = ndims(cache(int))
@@ -37,17 +48,15 @@ function split_nlsolution(x::AbstractVector, int::StandardProjectionIntegrator)
     N = solversize(parent(method(int)), problem(int))
 
     x̄ = @view x[1:N]
-    x̃ = @view x[N+1:N+D+M]
+    x̃ = @view x[(N + 1):(N + D + M)]
 
     return (x̄, x̃)
 end
-
 
 function initsolver(::Newton, ::ProjectedMethod{<:StandardProjection}, caches::CacheDict; kwargs...)
     x̄, x̃ = split_nlsolution(cache(caches))
     NewtonSolver(zero(x̃), residual!, zero(x̃); kwargs...)
 end
-
 
 # function Base.show(io::IO, int::ProjectedMethod{<:StandardProjection})
 #     print(io, "\nProjection method with:\n")
@@ -57,17 +66,16 @@ end
 #     # print(io, reference(int.params.tab))
 # end
 
-
 function initial_guess!(sol, history, params, int::StandardProjectionIntegrator)
     # compute initial guess for parent method
     initial_guess!(sol, history, params, subint(int))
 
     # set initial guess for Lagrange multiplier to zero
-    cache(int).x̃[ndims(cache(int))+1:end] .= 0
+    cache(int).x̃[(ndims(cache(int)) + 1):end] .= 0
 end
 
-
-function components!(x::AbstractVector{ST}, sol, params, int::StandardProjectionIntegrator{<:DAEProblem}) where {ST}
+function components!(x::AbstractVector{ST}, sol, params,
+        int::StandardProjectionIntegrator{<:DAEProblem}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -78,7 +86,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::StandardProjection
 
     # copy x to λ
     for k in eachindex(C.λ)
-        C.λ[k] = x[ndims(C)+k]
+        C.λ[k] = x[ndims(C) + k]
     end
 
     # compute u = u(q,λ)
@@ -90,8 +98,8 @@ function components!(x::AbstractVector{ST}, sol, params, int::StandardProjection
     equations(int).ϕ(C.ϕ, sol.t, C.q, params)
 end
 
-
-function components!(x::AbstractVector{ST}, sol, params, int::StandardProjectionIntegrator{<:Union{IODEProblem,LODEProblem}}) where {ST}
+function components!(x::AbstractVector{ST}, sol, params,
+        int::StandardProjectionIntegrator{<:Union{IODEProblem, LODEProblem}}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -102,7 +110,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::StandardProjection
 
     # copy x to λ
     for k in eachindex(C.λ)
-        C.λ[k] = x[ndims(C)+k]
+        C.λ[k] = x[ndims(C) + k]
     end
 
     # compute u = λ
@@ -135,11 +143,12 @@ function residual!(b::AbstractVector{ST}, sol, params, int::StandardProjectionIn
 
     # compute b = ϕ(q) or b = ϕ(q,p) or b = ϕ(...)
     for k in 1:nconstraints(int)
-        b[ndims(C)+k] = C.ϕ[k]
+        b[ndims(C) + k] = C.ϕ[k]
     end
 end
 
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::StandardProjectionIntegrator) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol,
+        params, int::StandardProjectionIntegrator) where {ST}
     # check that x and b are compatible
     @assert axes(x) == axes(b)
 
@@ -149,7 +158,6 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute residual of projection method
     residual!(b, sol, params, int)
 end
-
 
 # function update!(sol, params, x::AbstractVector{ST}, int::StandardProjectionIntegrator) where {ST}
 #     # add perturbation for next time step to solution
@@ -162,7 +170,6 @@ end
 #     # add projection to solution
 #     project!(sol, cache(int).U[2], cache(int).G[2], int)
 # end
-
 
 function integrate_step!(sol, history, params, int::StandardProjectionIntegrator)
     # add perturbation for next time step to solution

@@ -29,37 +29,44 @@ struct Splitting{T} <: SODEMethod
     c::Vector{T}
 end
 
-Splitting(method::AbstractSplittingMethod, problem::SODEProblem) = Splitting(coefficients(problem, method)...)
-Splitting(problem::SODEProblem, method::AbstractSplittingMethod) = Splitting(coefficients(problem, method)...)
+function Splitting(method::AbstractSplittingMethod, problem::SODEProblem)
+    Splitting(coefficients(problem, method)...)
+end
+function Splitting(problem::SODEProblem, method::AbstractSplittingMethod)
+    Splitting(coefficients(problem, method)...)
+end
 
-coefficients(method::Splitting) = (f=method.f, c=method.c)
+coefficients(method::Splitting) = (f = method.f, c = method.c)
 
-initmethod(method::AbstractSplittingMethod, problem::SODEProblem) = Splitting(method, problem)
+function initmethod(method::AbstractSplittingMethod, problem::SODEProblem)
+    Splitting(method, problem)
+end
 initmethod(method::Splitting, ::SODEProblem) = method
 
-
 "Splitting integrator cache."
-mutable struct SplittingCache{DT,TT,AT} <: ODEIntegratorCache{DT}
+mutable struct SplittingCache{DT, TT, AT} <: ODEIntegratorCache{DT}
     q::AT
     t::TT
 
-    function SplittingCache{DT,TT}(q₀::AT) where {DT,TT,AT<:AbstractArray{DT}}
-        new{DT,TT,AT}(zero(q₀), zero(TT))
+    function SplittingCache{DT, TT}(q₀::AT) where {DT, TT, AT <: AbstractArray{DT}}
+        new{DT, TT, AT}(zero(q₀), zero(TT))
     end
 end
 
 function Cache{ST}(problem::SODEProblem, method::Splitting; kwargs...) where {ST}
-    SplittingCache{ST,typeof(timestep(problem))}(initial_conditions(problem).q; kwargs...)
+    SplittingCache{ST, typeof(timestep(problem))}(initial_conditions(problem).q; kwargs...)
 end
 
-@inline CacheType(ST, problem::SODEProblem, ::Splitting) = SplittingCache{ST,typeof(timestep(problem))}
+@inline CacheType(ST, problem::SODEProblem, ::Splitting) = SplittingCache{
+    ST, typeof(timestep(problem))}
 
-function reset!(cache::SplittingCache, t, q, λ=missing)
+function reset!(cache::SplittingCache, t, q, λ = missing)
     copyto!(cache.q, q)
     cache.t = t
 end
 
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:Splitting,<:SODEProblem})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:Splitting, <:SODEProblem})
     # compute splitting steps
     for i in eachindex(method(int).f, method(int).c)
         if method(int).c[i] ≠ 0
@@ -68,7 +75,8 @@ function integrate_step!(sol, history, params, int::GeometricIntegrator{<:Splitt
             cache(int).t = sol.t + timestep(int) * (method(int).c[i] - 1)
 
             # compute new solution
-            solutions(problem(int)).q[method(int).f[i]](sol.q, cache(int).t, cache(int).q, sol.t - timestep(int), params)
+            solutions(problem(int)).q[method(int).f[i]](
+                sol.q, cache(int).t, cache(int).q, sol.t - timestep(int), params)
         end
     end
 end

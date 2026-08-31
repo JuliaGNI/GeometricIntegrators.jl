@@ -33,7 +33,7 @@ Least-squares slope of log(err) against log(Δt), over the points that are above
 the roundoff plateau and still strictly decreasing.
 """
 function loglog_slope(dts, errs; plateau = 1e-13)
-    mask = [errs[i] > plateau && (i == 1 || errs[i] < errs[i-1]) for i in eachindex(errs)]
+    mask = [errs[i] > plateau && (i == 1 || errs[i] < errs[i - 1]) for i in eachindex(errs)]
     count(mask) < 2 && return NaN
     x, y = log.(dts[mask]), log.(errs[mask])
     x̄, ȳ = sum(x) / length(x), sum(y) / length(y)
@@ -41,17 +41,25 @@ function loglog_slope(dts, errs; plateau = 1e-13)
 end
 
 function convergence_order(build, reference, method, dts)
-    errs = [relative_maximum_error(integrate(build(Δt), method).q, reference(Δt).q) for Δt in dts]
+    errs = [relative_maximum_error(integrate(build(Δt), method).q, reference(Δt).q)
+            for Δt in dts]
     (order = loglog_slope(collect(dts), errs), errs = errs)
 end
 
 # Lotka-Volterra: all gauges share the same dynamics, hence the same reference.
-lv_reference(Δt) = integrate(LV.odeproblem(LV_Q₀; timespan = (0.0, T), timestep = Δt,
-                                           parameters = LV_PARAMS), Gauss(8))
-lv_builder(m) = Δt -> m.lodeproblem(LV_Q₀; timespan = (0.0, T), timestep = Δt,
-                                    parameters = LV_PARAMS)
+function lv_reference(Δt)
+    integrate(
+        LV.odeproblem(LV_Q₀; timespan = (0.0, T), timestep = Δt,
+            parameters = LV_PARAMS), Gauss(8))
+end
+function lv_builder(m)
+    Δt -> m.lodeproblem(LV_Q₀; timespan = (0.0, T), timestep = Δt,
+        parameters = LV_PARAMS)
+end
 
-mcp_reference(Δt) = integrate(MCP.odeproblem(; timespan = (0.0, T), timestep = Δt), Gauss(8))
+function mcp_reference(Δt)
+    integrate(MCP.odeproblem(; timespan = (0.0, T), timestep = Δt), Gauss(8))
+end
 mcp_builder(m) = Δt -> m.lodeproblem(; timespan = (0.0, T), timestep = Δt)
 
 # Starting resolutions per stage number. Coarser for the higher-stage methods,
@@ -60,15 +68,17 @@ mcp_builder(m) = Δt -> m.lodeproblem(; timespan = (0.0, T), timestep = Δt)
 # refinements earlier than the out-of-class ones, which need a finer start to be
 # in the asymptotic regime at s = 3; hence one setting per class rather than one
 # global setting.
-const N₀_IN  = Dict(1 => 20, 2 => 10, 3 => 2)
+const N₀_IN = Dict(1 => 20, 2 => 10, 3 => 2)
 const N₀_OUT = Dict(1 => 20, 2 => 10, 3 => 5)
 
 const CASES = [
-    ("Lotka-Volterra",   "ϑ₂ = 0  (in class)",           lv_builder(LVSingular),   lv_reference, N₀_IN),
-    ("Lotka-Volterra",   "ϑ₂ = q₁ ≠ 0",                  lv_builder(LV),           lv_reference, N₀_OUT),
-    ("Lotka-Volterra",   "both components ≠ 0",          lv_builder(LVSymmetric),  lv_reference, N₀_OUT),
-    ("Charged particle", "A₂ = 0  (in class)",           mcp_builder(MCPSingular), mcp_reference, N₀_IN),
-    ("Charged particle", "both components ≠ 0",          mcp_builder(MCP),         mcp_reference, N₀_OUT),
+    ("Lotka-Volterra", "ϑ₂ = 0  (in class)", lv_builder(LVSingular), lv_reference, N₀_IN),
+    ("Lotka-Volterra", "ϑ₂ = q₁ ≠ 0", lv_builder(LV), lv_reference, N₀_OUT),
+    ("Lotka-Volterra", "both components ≠ 0",
+        lv_builder(LVSymmetric), lv_reference, N₀_OUT),
+    ("Charged particle", "A₂ = 0  (in class)",
+        mcp_builder(MCPSingular), mcp_reference, N₀_IN),
+    ("Charged particle", "both components ≠ 0", mcp_builder(MCP), mcp_reference, N₀_OUT)
 ]
 
 function main()

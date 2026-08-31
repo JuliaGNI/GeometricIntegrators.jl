@@ -2,23 +2,24 @@
 "Parameters for right-hand side function of Variational Partitioned Runge-Kutta methods."
 const ParametersVPRKpVariational = AbstractParametersVPRK{:vprk_pvariational}
 
-function IntegratorCache(params::ParametersVPRKpVariational{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
-    IntegratorCacheVPRK{DT,D,S}(D * S, true, 2 * D; kwargs...)
+function IntegratorCache(
+        params::ParametersVPRKpVariational{
+            DT, TT, D, S}; kwargs...) where {DT, TT, D, S}
+    IntegratorCacheVPRK{DT, D, S}(D * S, true, 2 * D; kwargs...)
 end
 
-function IntegratorCache{ST}(params::ParametersVPRKpVariational{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
-    IntegratorCacheVPRK{ST,D,S}(D * S, true, 2 * D; kwargs...)
+function IntegratorCache{ST}(params::ParametersVPRKpVariational{DT, TT, D, S};
+        kwargs...) where {ST, DT, TT, D, S}
+    IntegratorCacheVPRK{ST, D, S}(D * S, true, 2 * D; kwargs...)
 end
-
 
 "Variational Partitioned Runge-Kutta Integrator with Variational Projection."
-struct IntegratorVPRKpVariational{DT,TT,D,S,
-    PT<:ParametersVPRK{DT,TT},
-    PPT<:ParametersVPRKpVariational{DT,TT},
-    ST<:NonlinearSolver,
-    PST<:NonlinearSolver,
-    IT<:InitialGuessIODE{TT}} <: GeometricIntegratorVPRKwProjection{DT,TT,D,S}
-
+struct IntegratorVPRKpVariational{DT, TT, D, S,
+    PT <: ParametersVPRK{DT, TT},
+    PPT <: ParametersVPRKpVariational{DT, TT},
+    ST <: NonlinearSolver,
+    PST <: NonlinearSolver,
+    IT <: InitialGuessIODE{TT}} <: GeometricIntegratorVPRKwProjection{DT, TT, D, S}
     params::PT
     pparams::PPT
     solver::ST
@@ -26,24 +27,29 @@ struct IntegratorVPRKpVariational{DT,TT,D,S,
     iguess::IT
     caches::OldCacheDict{PPT}
 
-    function IntegratorVPRKpVariational(params::ParametersVPRK{DT,TT,D,S},
-        pparams::ParametersVPRKpVariational{DT,TT,D,S},
-        solver::ST, projector::PST, iguess::IT, caches) where {DT,TT,D,S,ST,PST,IT}
-        new{DT,TT,D,S,typeof(params),typeof(pparams),ST,PST,IT}(params, pparams, solver, projector, iguess, caches)
+    function IntegratorVPRKpVariational(params::ParametersVPRK{DT, TT, D, S},
+            pparams::ParametersVPRKpVariational{DT, TT, D, S},
+            solver::ST, projector::PST, iguess::IT, caches) where {
+            DT, TT, D, S, ST, PST, IT}
+        new{DT, TT, D, S, typeof(params), typeof(pparams), ST, PST, IT}(
+            params, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKpVariational{DT,D}(equations::NamedTuple, tableau::PartitionedTableau{TT}, nullvec, Δt::TT; R=[1, 1]) where {DT,TT,D}
+    function IntegratorVPRKpVariational{DT, D}(
+            equations::NamedTuple, tableau::PartitionedTableau{TT},
+            nullvec, Δt::TT; R = [1, 1]) where {DT, TT, D}
         # get number of stages
         S = tableau.s
 
         # create params
-        params = ParametersVPRK{DT,D}(equations, tableau, nullvec, Δt)
+        params = ParametersVPRK{DT, D}(equations, tableau, nullvec, Δt)
 
         # create projector params
         R = convert(Vector{TT}, R)
         R1 = [R[1], zero(TT)]
         R2 = [zero(TT), R[2]]
-        pparams = ParametersVPRKpVariational{DT,D}(equations, tableau, nullvec, Δt, NamedTuple{(:R, :R1, :R2)}((R, R1, R2)))
+        pparams = ParametersVPRKpVariational{DT, D}(
+            equations, tableau, nullvec, Δt, NamedTuple{(:R, :R1, :R2)}((R, R1, R2)))
 
         # create cache dict
         caches = OldCacheDict(pparams)
@@ -61,11 +67,12 @@ struct IntegratorVPRKpVariational{DT,TT,D,S,
         IntegratorVPRKpVariational(params, pparams, solver, projector, iguess, caches)
     end
 
-    function IntegratorVPRKpVariational(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
-        IntegratorVPRKpVariational{DT,ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
+    function IntegratorVPRKpVariational(problem::Union{IODEProblem{DT}, LODEProblem{DT}},
+            tableau, nullvec; kwargs...) where {DT}
+        IntegratorVPRKpVariational{DT, ndims(problem)}(
+            functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
 end
-
 
 function Base.show(io::IO, int::IntegratorVPRKpVariational)
     print(io, "\nVariational Partitioned Runge-Kutta Integrator with Variational Projection and:\n")
@@ -76,9 +83,8 @@ function Base.show(io::IO, int::IntegratorVPRKpVariational)
     # print(io, reference(int.tableau(method)))
 end
 
-
 function initialize!(int::IntegratorVPRKpVariational{DT}, sol::SolutionStepPODE{DT},
-    cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
+        cache::IntegratorCacheVPRK{DT} = int.caches[DT]) where {DT}
     equation(int, :v̄)(sol.v, sol.t, sol.q)
     equation(int, :f̄)(sol.f, sol.t, sol.q, sol.v)
 
@@ -90,46 +96,46 @@ function initialize!(int::IntegratorVPRKpVariational{DT}, sol::SolutionStepPODE{
     # cache.U[1] .= cache.λ
 end
 
-
 function initial_guess!(int::IntegratorVPRKpVariational{DT}, sol::SolutionStepPODE{DT},
-    cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
+        cache::IntegratorCacheVPRK{DT} = int.caches[DT]) where {DT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.history[2].q, sol.history[2].p, sol.history[2].v, sol.history[2].f,
+        evaluate!(int.iguess, sol.history[2].q, sol.history[2].p,
+            sol.history[2].v, sol.history[2].f,
             sol.history[1].q, sol.history[1].p, sol.history[1].v, sol.history[1].f,
             cache.q̃, cache.ṽ,
             tableau(int).q.c[i])
 
         for k in eachdim(int)
-            cache.x[ndims(int)*(i-1)+k] = cache.ṽ[k]
+            cache.x[ndims(int) * (i - 1) + k] = cache.ṽ[k]
         end
     end
 end
 
-function initial_guess_projection!(int::IntegratorVPRKpVariational{DT}, sol::SolutionStepPODE{DT},
-    cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT}
+function initial_guess_projection!(
+        int::IntegratorVPRKpVariational{DT}, sol::SolutionStepPODE{DT},
+        cache::IntegratorCacheVPRK{DT} = int.caches[DT]) where {DT}
     offset_q = 0
     offset_λ = ndims(int)
 
     for k in eachdim(int)
-        cache.x̄[offset_q+k] = sol.q[k]
-        cache.x̄[offset_λ+k] = 0
+        cache.x̄[offset_q + k] = sol.q[k]
+        cache.x̄[offset_λ + k] = 0
     end
 end
 
-
 function compute_projection!(
-    x::Vector{ST}, q::AbstractVector{ST}, p::AbstractVector{ST}, v::AbstractVector{ST}, λ::AbstractVector{ST},
-    U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
-    params::ParametersVPRKpVariational{DT,TT,D,S}) where {ST,DT,TT,D,S}
-
+        x::Vector{ST}, q::AbstractVector{ST}, p::AbstractVector{ST},
+        v::AbstractVector{ST}, λ::AbstractVector{ST},
+        U::Vector{Vector{ST}}, G::Vector{Vector{ST}},
+        params::ParametersVPRKpVariational{DT, TT, D, S}) where {ST, DT, TT, D, S}
     @assert D == length(q) == length(p) == length(v) == length(λ)
     @assert D == length(U[1]) == length(U[2])
     @assert D == length(G[1]) == length(G[2])
 
     # copy x to q, λ
     for k in 1:D
-        q[k] = x[0*D+k]
-        λ[k] = x[1*D+k]
+        q[k] = x[0 * D + k]
+        λ[k] = x[1 * D + k]
     end
 
     # compute u=λ and g=∇ϑ(q)⋅λ
@@ -149,9 +155,8 @@ end
 
 "Compute stages of projected variational partitioned Runge-Kutta methods."
 function residual!(x::Vector{ST}, b::Vector{ST},
-    params::ParametersVPRKpVariational{DT,TT,D,S},
-    caches::OldCacheDict) where {ST,DT,TT,D,S}
-
+        params::ParametersVPRKpVariational{DT, TT, D, S},
+        caches::OldCacheDict) where {ST, DT, TT, D, S}
     @assert length(x) == length(b)
 
     # get cache for internal stages
@@ -161,20 +166,21 @@ function residual!(x::Vector{ST}, b::Vector{ST},
 
     # # compute b = - [q̄-q-U]
     for k in 1:D
-        b[0*D+k] = -(cache.q̃[k] - solstep.q̄[k]) + timestep(problem) * params.pparams[:R][2] * cache.U[2][k]
+        b[0 * D + k] = -(cache.q̃[k] - solstep.q̄[k]) +
+                       timestep(problem) * params.pparams[:R][2] * cache.U[2][k]
         # b[0*D+k] = - (cache.q[k] - solstep.q̄[k])
     end
 
     # compute b = - [p̄-p-G]
     for k in 1:D
-        b[1*D+k] = -(cache.p̃[k] - solstep.p̄[k])
+        b[1 * D + k] = -(cache.p̃[k] - solstep.p̄[k])
         # b[1*D+k] = - (cache.p[k] - solstep.p̄[k]) + timestep(problem) * params.R[2] * cache.G[2][k]
     end
 end
 
-
-function integrate_step!(int::IntegratorVPRKpVariational{DT,TT}, sol::SolutionStepPODE{DT,TT},
-    cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
+function integrate_step!(
+        int::IntegratorVPRKpVariational{DT, TT}, sol::SolutionStepPODE{DT, TT},
+        cache::IntegratorCacheVPRK{DT} = int.caches[DT]) where {DT, TT}
     # add perturbation for next time step to solution
     # (same vector field as previous time step)
     project_solution!(int, sol, int.pparams.pparams[:R1], cache)

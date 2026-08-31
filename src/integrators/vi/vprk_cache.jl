@@ -15,7 +15,7 @@ Variational partitioned Runge-Kutta integrator cache.
 * `Y`: integral of vector field of internal stages of q
 * `Z`: integral of vector field of internal stages of p
 """
-mutable struct VPRKCache{ST,S} <: IODEIntegratorCache{ST}
+mutable struct VPRKCache{ST, S} <: IODEIntegratorCache{ST}
     x::Vector{ST}
     x̄::Vector{ST}
 
@@ -57,29 +57,29 @@ mutable struct VPRKCache{ST,S} <: IODEIntegratorCache{ST}
     G::Vector{Vector{ST}}
     R::Vector{Vector{ST}}
 
-    function VPRKCache{ST,S}(ics, n, projection::Bool=false, m=0) where {ST,S}
+    function VPRKCache{ST, S}(ics, n, projection::Bool = false, m = 0) where {ST, S}
         D = length(vec(ics.q))
 
         # create solver vector
-        x = zeros(ST,n)
-        x̄ = zeros(ST,m)
+        x = zeros(ST, n)
+        x̄ = zeros(ST, m)
 
         # create temporary vectors
-        q̃ = zeros(ST,D)
-        p̃ = zeros(ST,D)
-        ṽ = zeros(ST,D)
-        f̃ = zeros(ST,D)
-        θ̃ = zeros(ST,D)
-        s̃ = zeros(ST,D)
+        q̃ = zeros(ST, D)
+        p̃ = zeros(ST, D)
+        ṽ = zeros(ST, D)
+        f̃ = zeros(ST, D)
+        θ̃ = zeros(ST, D)
+        s̃ = zeros(ST, D)
 
-        ϕ = zeros(ST,D)
-        μ = zeros(ST,D)
+        ϕ = zeros(ST, D)
+        μ = zeros(ST, D)
 
         # create update vectors
-        v = zeros(ST,D)
-        f = zeros(ST,D)
-        y = zeros(ST,D)
-        z = zeros(ST,D)
+        v = zeros(ST, D)
+        f = zeros(ST, D)
+        y = zeros(ST, D)
+        z = zeros(ST, D)
 
         # create internal stage vectors
         Q = create_internal_stage_vector(ST, D, S)
@@ -91,16 +91,16 @@ mutable struct VPRKCache{ST,S} <: IODEIntegratorCache{ST}
 
         # projection vectors
         if projection
-            λ = zeros(ST,D)
-            λ̄ = zeros(ST,D)
+            λ = zeros(ST, D)
+            λ̄ = zeros(ST, D)
 
-            q₋= zeros(ST,D)
-            q̄₊= zeros(ST,D)
-            p₋= zeros(ST,D)
-            p̄₊= zeros(ST,D)
+            q₋ = zeros(ST, D)
+            q̄₊ = zeros(ST, D)
+            p₋ = zeros(ST, D)
+            p̄₊ = zeros(ST, D)
 
-            u = zeros(ST,D)
-            g = zeros(ST,D)
+            u = zeros(ST, D)
+            g = zeros(ST, D)
 
             Λ = create_internal_stage_vector(ST, D, S)
             Φ = create_internal_stage_vector(ST, D, S)
@@ -112,10 +112,10 @@ mutable struct VPRKCache{ST,S} <: IODEIntegratorCache{ST}
             λ = Vector{ST}()
             λ̄ = Vector{ST}()
 
-            q₋= Vector{ST}()
-            q̄₊= Vector{ST}()
-            p₋= Vector{ST}()
-            p̄₊= Vector{ST}()
+            q₋ = Vector{ST}()
+            q̄₊ = Vector{ST}()
+            p₋ = Vector{ST}()
+            p̄₊ = Vector{ST}()
 
             u = Vector{ST}()
             g = Vector{ST}()
@@ -135,7 +135,7 @@ mutable struct VPRKCache{ST,S} <: IODEIntegratorCache{ST}
 end
 
 function VPRKCache(ics, ST, S, N, ::VPRKMethod)
-    VPRKCache{ST,S}(ics, N, false)
+    VPRKCache{ST, S}(ics, N, false)
 end
 
 # function IntegratorCacheVPRK(ics, ST, S, N, ::ProjectedVPRK)
@@ -143,7 +143,6 @@ end
 # end
 
 nlsolution(cache::VPRKCache) = cache.x
-
 
 function Cache{ST}(problem::AbstractProblemIODE, method::VPRKMethod; kwargs...) where {ST}
     S = nstages(method)
@@ -156,4 +155,5 @@ function Cache{ST}(problem::AbstractProblemIODE, method::VPRKMethod; kwargs...) 
     VPRKCache(initial_conditions(problem), ST, S, N, method; kwargs...)
 end
 
-@inline CacheType(ST, ::AbstractProblemIODE, method::VPRKMethod) = VPRKCache{ST, nstages(method)}
+@inline CacheType(ST, ::AbstractProblemIODE, method::VPRKMethod) = VPRKCache{
+    ST, nstages(method)}

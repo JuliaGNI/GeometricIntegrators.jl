@@ -37,7 +37,6 @@
 #     TableauVPRKpLegendre{T}(name, order, q, get_symplectic_conjugate_coefficients(q), R∞, ω)
 # end
 
-
 function _VPRKpLegendre_ndofs(D, tableau::PartitionedTableau)
     S = tableau.s
 
@@ -53,36 +52,41 @@ end
 "Parameters for right-hand side function of Variational Partitioned Runge-Kutta methods."
 const ParametersVPRKpLegendre = AbstractParametersVPRK{:vprk_plegendre}
 
-
-function IntegratorCache(params::ParametersVPRKpLegendre{DT,TT,D,S}; kwargs...) where {DT,TT,D,S}
-    IntegratorCacheVPRK{DT,D,S}(_VPRKpLegendre_ndofs(D, tableau(method)), true; kwargs...)
+function IntegratorCache(params::ParametersVPRKpLegendre{DT, TT, D, S}; kwargs...) where {
+        DT, TT, D, S}
+    IntegratorCacheVPRK{DT, D, S}(_VPRKpLegendre_ndofs(D, tableau(method)), true; kwargs...)
 end
 
-function IntegratorCache{ST}(params::ParametersVPRKpLegendre{DT,TT,D,S}; kwargs...) where {ST,DT,TT,D,S}
-    IntegratorCacheVPRK{ST,D,S}(_VPRKpLegendre_ndofs(D, tableau(method)), true; kwargs...)
+function IntegratorCache{ST}(
+        params::ParametersVPRKpLegendre{
+            DT, TT, D, S}; kwargs...) where {ST, DT, TT, D, S}
+    IntegratorCacheVPRK{ST, D, S}(_VPRKpLegendre_ndofs(D, tableau(method)), true; kwargs...)
 end
-
 
 "Variational special partitioned additive Runge-Kutta integrator."
-struct IntegratorVPRKpLegendre{DT,TT,D,S,
-    PT<:ParametersVPRKpLegendre{DT,TT},
-    ST<:NonlinearSolver,
-    IT<:InitialGuessIODE{TT}} <: GeometricIntegratorVPRK{DT,TT,D,S}
+struct IntegratorVPRKpLegendre{DT, TT, D, S,
+    PT <: ParametersVPRKpLegendre{DT, TT},
+    ST <: NonlinearSolver,
+    IT <: InitialGuessIODE{TT}} <: GeometricIntegratorVPRK{DT, TT, D, S}
     params::PT
     solver::ST
     iguess::IT
     caches::OldCacheDict{PT}
 
-    function IntegratorVPRKpLegendre(params::ParametersVPRKpLegendre{DT,TT,D,S}, solver::ST, iguess::IT, caches) where {DT,TT,D,S,ST,IT}
-        new{DT,TT,D,S,typeof(params),ST,IT}(params, solver, iguess, caches)
+    function IntegratorVPRKpLegendre(
+            params::ParametersVPRKpLegendre{DT, TT, D, S}, solver::ST,
+            iguess::IT, caches) where {DT, TT, D, S, ST, IT}
+        new{DT, TT, D, S, typeof(params), ST, IT}(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpLegendre{DT,D}(equations::NamedTuple, tableau::PartitionedTableau{TT}, nullvec, Δt::TT) where {DT,TT,D}
+    function IntegratorVPRKpLegendre{DT, D}(
+            equations::NamedTuple, tableau::PartitionedTableau{TT},
+            nullvec, Δt::TT) where {DT, TT, D}
         # get number of variables for nonlinear solver
         N = _VPRKpLegendre_ndofs(D, tableau)
 
         # create params
-        params = ParametersVPRKpLegendre{DT,D}(equations, tableau, nullvec, Δt)
+        params = ParametersVPRKpLegendre{DT, D}(equations, tableau, nullvec, Δt)
 
         # create cache dict
         caches = OldCacheDict(params)
@@ -97,11 +101,12 @@ struct IntegratorVPRKpLegendre{DT,TT,D,S,
         IntegratorVPRKpLegendre(params, solver, iguess, caches)
     end
 
-    function IntegratorVPRKpLegendre(problem::Union{IODEProblem{DT},LODEProblem{DT}}, tableau, nullvec; kwargs...) where {DT}
-        IntegratorVPRKpLegendre{DT,ndims(problem)}(functions(problem), tableau, nullvec, timestep(problem); kwargs...)
+    function IntegratorVPRKpLegendre(problem::Union{IODEProblem{DT}, LODEProblem{DT}},
+            tableau, nullvec; kwargs...) where {DT}
+        IntegratorVPRKpLegendre{DT, ndims(problem)}(
+            functions(problem), tableau, nullvec, timestep(problem); kwargs...)
     end
 end
-
 
 function Integrators.initialize!(int::IntegratorVPRKpLegendre, sol::SolutionStepPODE)
     equation(int, :v̄)(sol.v, sol.t, sol.q)
@@ -111,50 +116,50 @@ function Integrators.initialize!(int::IntegratorVPRKpLegendre, sol::SolutionStep
         sol.t̄, sol.q̄, sol.p̄, sol.v̄, sol.f̄)
 end
 
-
-function initial_guess!(int::IntegratorVPRKpLegendre{DT,TT}, sol::SolutionStepPODE{DT,TT},
-    cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
+function initial_guess!(
+        int::IntegratorVPRKpLegendre{DT, TT}, sol::SolutionStepPODE{DT, TT},
+        cache::IntegratorCacheVPRK{DT} = int.caches[DT]) where {DT, TT}
     for i in eachstage(int)
-        evaluate!(int.iguess, sol.history[2].q, sol.history[2].p, sol.history[2].v, sol.history[2].f,
+        evaluate!(int.iguess, sol.history[2].q, sol.history[2].p,
+            sol.history[2].v, sol.history[2].f,
             sol.history[1].q, sol.history[1].p, sol.history[1].v, sol.history[1].f,
             cache.q̃, cache.p̃, cache.v, cache.f,
             tableau(int).q.c[i], tableau(int).p.c[i])
 
         for k in eachdim(int)
             offset = 3 * (ndims(int) * (i - 1) + k - 1)
-            cache.x[offset+1] = (cache.q̃[k] - sol.q[k]) / timestep(int)
-            cache.x[offset+2] = (cache.p̃[k] - sol.p[k]) / timestep(int)
-            cache.x[offset+3] = cache.v[k]
+            cache.x[offset + 1] = (cache.q̃[k] - sol.q[k]) / timestep(int)
+            cache.x[offset + 2] = (cache.p̃[k] - sol.p[k]) / timestep(int)
+            cache.x[offset + 3] = cache.v[k]
         end
     end
 
-    evaluate!(int.iguess, sol.history[2].q, sol.history[2].p, sol.history[2].v, sol.history[2].f,
+    evaluate!(
+        int.iguess, sol.history[2].q, sol.history[2].p, sol.history[2].v, sol.history[2].f,
         sol.history[1].q, sol.history[1].p, sol.history[1].v, sol.history[1].f,
         cache.q̃, cache.p̃,
         one(TT), one(TT))
 
     offset = (3 * nstages(int) + 0) * ndims(int)
     for k in eachdim(int)
-        cache.x[offset+k] = cache.q̃[k]
+        cache.x[offset + k] = cache.q̃[k]
     end
 
     offset = (3 * nstages(int) + 1) * ndims(int)
     for k in eachdim(int)
-        cache.x[offset+k] = cache.p̃[k]
+        cache.x[offset + k] = cache.p̃[k]
     end
 
     if isdefined(tableau(int), :d) && !isempty(tableau(int).d)
         offset = (3 * nstages(int) + 2) * ndims(int)
         for k in eachdim(int)
-            cache.x[offset+k] = 0
+            cache.x[offset + k] = 0
         end
     end
 end
 
-
 function components!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
-    params::ParametersVPRKpLegendre{DT,TT,D,S}) where {ST,DT,TT,D,S}
-
+        params::ParametersVPRKpLegendre{DT, TT, D, S}) where {ST, DT, TT, D, S}
     local offset::Int
     local tqᵢ::TT
 
@@ -162,9 +167,9 @@ function components!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
         # copy y to Q and V
         for k in 1:D
             offset = 3 * (D * (i - 1) + k - 1)
-            Y[i][k] = y[offset+1]
-            Z[i][k] = y[offset+2]
-            V[i][k] = y[offset+3]
+            Y[i][k] = y[offset + 1]
+            Z[i][k] = y[offset + 2]
+            V[i][k] = y[offset + 3]
 
             Q[i][k] = solstep.q̄[k] + timestep(problem) * Y[i][k]
             P[i][k] = solstep.p̄[k] + timestep(problem) * Z[i][k]
@@ -178,8 +183,8 @@ function components!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
 
     # copy y to q and p
     for k in 1:D
-        q[k] = y[(3*S+0)*D+k]
-        p[k] = y[(3*S+1)*D+k]
+        q[k] = y[(3 * S + 0) * D + k]
+        p[k] = y[(3 * S + 1) * D + k]
     end
 
     # compute p=p(t,q)
@@ -189,19 +194,18 @@ function components!(y::Vector{ST}, Q, V, P, F, Y, Z, Φ, q, v, p, ϕ, μ,
     if isdefined(tableau(method), :d) && !isempty(tableau(method).d)
         offset = (3 * S + 2) * D
         for k in 1:D
-            μ[k] = y[offset+k]
+            μ[k] = y[offset + k]
         end
     end
 end
 
-
 function compute_rhs!(b::Vector{ST},
-    Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
-    P::Vector{Vector{ST}}, F::Vector{Vector{ST}},
-    Y::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
-    Φ::Vector{Vector{ST}},
-    q::Vector{ST}, p::Vector{ST}, ϕ::Vector{ST}, μ::Vector{ST},
-    params::ParametersVPRKpLegendre{DT,TT,D,S}) where {ST,DT,TT,D,S}
+        Q::Vector{Vector{ST}}, V::Vector{Vector{ST}},
+        P::Vector{Vector{ST}}, F::Vector{Vector{ST}},
+        Y::Vector{Vector{ST}}, Z::Vector{Vector{ST}},
+        Φ::Vector{Vector{ST}},
+        q::Vector{ST}, p::Vector{ST}, ϕ::Vector{ST}, μ::Vector{ST},
+        params::ParametersVPRKpLegendre{DT, TT, D, S}) where {ST, DT, TT, D, S}
     local ω::ST
     local y::ST
     local z::ST
@@ -214,7 +218,7 @@ function compute_rhs!(b::Vector{ST},
             for j in 1:S
                 y += tableau(method).q.a[i, j] * V[j][k]
             end
-            b[offset+k] = Y[i][k] - y
+            b[offset + k] = Y[i][k] - y
         end
     end
 
@@ -226,12 +230,12 @@ function compute_rhs!(b::Vector{ST},
             for j in 1:S
                 z += tableau(method).p.a[i, j] * F[j][k]
             end
-            b[offset+k] = Z[i][k] - z
+            b[offset + k] = Z[i][k] - z
         end
     end
 
     # compute b = - (P-Φ)
-    for i in 1:S-1
+    for i in 1:(S - 1)
         offset = 2 * S * D + D * (i - 1)
         for k in 1:D
             z = 0
@@ -240,14 +244,14 @@ function compute_rhs!(b::Vector{ST},
                 # ω = tableau(method).q.a[i+1,j]
                 z += ω * (Φ[j][k] - P[j][k])
             end
-            b[offset+k] = z
+            b[offset + k] = z
         end
     end
 
     # compute b = - (p-ϕ)
     offset = (3 * S - 1) * D
     for k in 1:D
-        b[offset+k] = ϕ[k] - p[k]
+        b[offset + k] = ϕ[k] - p[k]
     end
 
     # compute b = - (q-q-AV)
@@ -257,7 +261,7 @@ function compute_rhs!(b::Vector{ST},
         for j in 1:S
             y += tableau(method).q.b[j] * V[j][k]
         end
-        b[offset+k] = (solstep.q̄[k] - q[k]) + timestep(problem) * y
+        b[offset + k] = (solstep.q̄[k] - q[k]) + timestep(problem) * y
     end
 
     # compute b = - (p̄-p-AF)
@@ -267,7 +271,7 @@ function compute_rhs!(b::Vector{ST},
         for j in 1:S
             z += tableau(method).p.b[j] * F[j][k]
         end
-        b[offset+k] = (solstep.p̄[k] - p[k]) + timestep(problem) * z
+        b[offset + k] = (solstep.p̄[k] - p[k]) + timestep(problem) * z
     end
 
     # if isdefined(tableau(method), :d) && length(tableau(method).d) > 0
@@ -287,7 +291,7 @@ function compute_rhs!(b::Vector{ST},
         # compute μ
         z = tableau(method).p.b[sl] / tableau(method).d[sl]
         for k in 1:D
-            μ[k] = z * b[offset+k]
+            μ[k] = z * b[offset + k]
         end
 
         # replace equation for Pₗ with constraint on V
@@ -296,7 +300,7 @@ function compute_rhs!(b::Vector{ST},
             for i in 1:S
                 z += V[k, i] * tableau(method).d[i]
             end
-            b[offset+k] = z
+            b[offset + k] = z
         end
 
         # modify P₁, ..., Pₛ except for Pₗ
@@ -305,7 +309,7 @@ function compute_rhs!(b::Vector{ST},
                 offset = D * (S + i - 1)
                 z = tableau(method).d[i] / tableau(method).p.b[i]
                 for k in 1:D
-                    b[offset+k] -= z * μ[k]
+                    b[offset + k] -= z * μ[k]
                 end
             end
         end
@@ -314,17 +318,18 @@ end
 
 "Compute stages of variational special partitioned additive Runge-Kutta methods."
 function Integrators.residual!(y::Vector{ST}, b::Vector{ST},
-    params::ParametersVPRKpLegendre{DT,TT,D,S},
-    caches::OldCacheDict) where {ST,DT,TT,D,S}
-
+        params::ParametersVPRKpLegendre{DT, TT, D, S},
+        caches::OldCacheDict) where {ST, DT, TT, D, S}
     @assert length(y) == length(b)
 
     # get cache for internal stages
     cache = caches[ST]
 
-    components!(y, cache.Q, cache.V, cache.P, cache.F, cache.Y, cache.Z, cache.Φ, cache.q̃, cache.ṽ, cache.p̃, cache.ϕ, cache.μ, params)
+    components!(y, cache.Q, cache.V, cache.P, cache.F, cache.Y, cache.Z,
+        cache.Φ, cache.q̃, cache.ṽ, cache.p̃, cache.ϕ, cache.μ, params)
 
-    compute_rhs!(b, cache.Q, cache.V, cache.P, cache.F, cache.Y, cache.Z, cache.Φ, cache.q̃, cache.p̃, cache.ϕ, cache.μ, params)
+    compute_rhs!(b, cache.Q, cache.V, cache.P, cache.F, cache.Y, cache.Z,
+        cache.Φ, cache.q̃, cache.p̃, cache.ϕ, cache.μ, params)
 
     # debug output
     # println()
@@ -334,9 +339,9 @@ function Integrators.residual!(y::Vector{ST}, b::Vector{ST},
     # println()
 end
 
-
-function integrate_step!(int::IntegratorVPRKpLegendre{DT,TT}, sol::SolutionStepPODE{DT,TT},
-    cache::IntegratorCacheVPRK{DT}=int.caches[DT]) where {DT,TT}
+function integrate_step!(
+        int::IntegratorVPRKpLegendre{DT, TT}, sol::SolutionStepPODE{DT, TT},
+        cache::IntegratorCacheVPRK{DT} = int.caches[DT]) where {DT, TT}
     local offset::Int
 
     # update nonlinear solver parameters from cache

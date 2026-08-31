@@ -14,7 +14,6 @@ isimplicit(method::DiscreteEulerLagrange) = true
 issymmetric(method::DiscreteEulerLagrange) = false
 issymplectic(method::DiscreteEulerLagrange) = true
 
-
 @doc raw"""
 Discrete Euler-Lagrange integrator cache.
 """
@@ -50,12 +49,12 @@ end
 
 @inline CacheType(ST, ::AbstractProblem, method::DiscreteEulerLagrange) = DiscreteEulerLagrangeCache{ST}
 
-
-solversize(::DiscreteEulerLagrange, problem::AbstractProblemDELE) = length(vec(initial_conditions(problem).q))
+function solversize(::DiscreteEulerLagrange, problem::AbstractProblemDELE)
+    length(vec(initial_conditions(problem).q))
+end
 
 default_solver(::DiscreteEulerLagrange) = Newton()
 default_iguess(::DiscreteEulerLagrange) = HermiteExtrapolation()
-
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DiscreteEulerLagrange})
     # compute initial guess for solution q(n+1)
@@ -73,7 +72,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Discret
     nlsolution(int) .= sol.q
 end
 
-function components!(x::AbstractVector{ST}, sol, history, params, int::GeometricIntegrator{<:DiscreteEulerLagrange}) where {ST}
+function components!(x::AbstractVector{ST}, sol, history, params,
+        int::GeometricIntegrator{<:DiscreteEulerLagrange}) where {ST}
     local q = cache(int, ST).q
     local D1Ld = cache(int, ST).D1Ld
     local D2Ld = cache(int, ST).D2Ld
@@ -85,18 +85,18 @@ function components!(x::AbstractVector{ST}, sol, history, params, int::Geometric
     equations(int).D1Ld(D1Ld, history[1].t, sol.t, history[1].q, q, params)
 
     # compute D2Ld(t_n-1, t_n, q_n-1, q_n)
-    equations(int).D2Ld(D2Ld, history[2].t, history[1].t, history[2].q, history[1].q, params)
+    equations(int).D2Ld(
+        D2Ld, history[2].t, history[1].t, history[2].q, history[1].q, params)
 end
-
 
 function residual!(b::AbstractVector{ST}, int::GeometricIntegrator{<:DiscreteEulerLagrange}) where {ST}
     # compute b = D1Ld(t_n, t_n+1, q_n, q_n+1) + D2Ld(t_n-1, t_n, q_n-1, q_n)
     b .= cache(int, ST).D1Ld .+ cache(int, ST).D2Ld
 end
 
-
 # Compute stages of discrete Euler-Lagrange methods.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, history, params, int::GeometricIntegrator{<:DiscreteEulerLagrange}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, history, params,
+        int::GeometricIntegrator{<:DiscreteEulerLagrange}) where {ST}
     @assert axes(x) == axes(b)
 
     # copy previous solution from solstep to cache
@@ -109,8 +109,8 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, history, p
     residual!(b, int)
 end
 
-
-function update!(sol, history, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:DiscreteEulerLagrange}) where {DT}
+function update!(sol, history, params, x::AbstractVector{DT},
+        int::GeometricIntegrator{<:DiscreteEulerLagrange}) where {DT}
     # copy previous solution from solstep to cache
     reset!(cache(int, DT), sol..., history[1].t, history[1].q)
 
@@ -121,10 +121,11 @@ function update!(sol, history, params, x::AbstractVector{DT}, int::GeometricInte
     sol.q .= cache(int, DT).q
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:DiscreteEulerLagrange,<:AbstractProblemDELE})
+function integrate_step!(sol, history, params,
+        int::GeometricIntegrator{<:DiscreteEulerLagrange, <:AbstractProblemDELE})
     # call nonlinear solver and act on the outcome it reports
-    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, history, params, int))
+    solverstatus = solve_with_status!(
+        nlsolution(int), solver(int), solverstate(int), (sol, history, params, int))
     check_solver_status(solverstatus, int)
 
     # compute final update

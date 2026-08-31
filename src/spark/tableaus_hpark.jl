@@ -1,6 +1,5 @@
 
-function getTableauHPARK(name, q::Tableau{T}, p::Tableau{T}, d=nothing) where {T}
-
+function getTableauHPARK(name, q::Tableau{T}, p::Tableau{T}, d = nothing) where {T}
     @assert q.s == p.s
 
     o = min(q.o, p.o)
@@ -12,15 +11,13 @@ function getTableauHPARK(name, q::Tableau{T}, p::Tableau{T}, d=nothing) where {T
     c_q = q.c
     c_p = p.c
 
-
     return HPARK(TableauHPARK(name, o,
-                        a_q, a_p, a_q, a_p,
-                        a_q, a_p, a_q, a_p,
-                        b_q, b_p, b_q, b_p,
-                        c_q, c_p, c_q, c_p,
-                        d))
+        a_q, a_p, a_q, a_p,
+        a_q, a_p, a_q, a_p,
+        b_q, b_p, b_q, b_p,
+        c_q, c_p, c_q, c_p,
+        d))
 end
-
 
 "SPARK tableau for Gauss-Lobatto IIIA-IIIB HPARK method with s stages."
 function TableauHPARKLobattoIIIAIIIB(s)

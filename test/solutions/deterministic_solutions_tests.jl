@@ -3,7 +3,6 @@ using GeometricProblems.HarmonicOscillator
 using GeometricIntegrators
 using Test
 
-
 nt = 10
 Δt = 0.1
 ni = 5
@@ -18,22 +17,22 @@ z0 = rand(3)
 μ0 = rand(1)
 
 t1 = 1.0
-x1 = [rand(2) for j = 1:ni]
-y1 = [rand(2) for j = 1:ni]
-q1 = [rand(1) for j = 1:ni]
-p1 = [rand(1) for j = 1:ni]
-z1 = [rand(3) for j = 1:ni]
-λ1 = [rand(1) for j = 1:ni]
-μ1 = [rand(1) for j = 1:ni]
+x1 = [rand(2) for j in 1:ni]
+y1 = [rand(2) for j in 1:ni]
+q1 = [rand(1) for j in 1:ni]
+p1 = [rand(1) for j in 1:ni]
+z1 = [rand(3) for j in 1:ni]
+λ1 = [rand(1) for j in 1:ni]
+μ1 = [rand(1) for j in 1:ni]
 
 t2 = t1 + (t1 - t0)
-x2 = [rand(2) for j = 1:ni]
-y2 = [rand(2) for j = 1:ni]
-q2 = [rand(1) for j = 1:ni]
-p2 = [rand(1) for j = 1:ni]
-z2 = [rand(3) for j = 1:ni]
-λ2 = [rand(1) for j = 1:ni]
-μ2 = [rand(1) for j = 1:ni]
+x2 = [rand(2) for j in 1:ni]
+y2 = [rand(2) for j in 1:ni]
+q2 = [rand(1) for j in 1:ni]
+p2 = [rand(1) for j in 1:ni]
+z2 = [rand(3) for j in 1:ni]
+λ2 = [rand(1) for j in 1:ni]
+μ2 = [rand(1) for j in 1:ni]
 
 tx = zero(x0)
 ty = zero(y0)
@@ -43,27 +42,26 @@ tz = zero(z0)
 tλ = zero(λ0)
 tμ = zero(μ0)
 
-xs = [rand(2) for i = 1:nt]
-ys = [rand(2) for i = 1:nt]
-qs = [rand(1) for i = 1:nt]
-ps = [rand(1) for i = 1:nt]
-zs = [rand(3) for i = 1:nt]
-λs = [rand(1) for i = 1:nt]
-μs = [rand(1) for i = 1:nt]
+xs = [rand(2) for i in 1:nt]
+ys = [rand(2) for i in 1:nt]
+qs = [rand(1) for i in 1:nt]
+ps = [rand(1) for i in 1:nt]
+zs = [rand(3) for i in 1:nt]
+λs = [rand(1) for i in 1:nt]
+μs = [rand(1) for i in 1:nt]
 
-Xs = [rand(2) for i = 1:nt, j = 1:ni]
-Ys = [rand(2) for i = 1:nt, j = 1:ni]
-Qs = [rand(1) for i = 1:nt, j = 1:ni]
-Ps = [rand(1) for i = 1:nt, j = 1:ni]
-Zs = [rand(3) for i = 1:nt, j = 1:ni]
-Λs = [rand(1) for i = 1:nt, j = 1:ni]
-Ms = [rand(1) for i = 1:nt, j = 1:ni]
+Xs = [rand(2) for i in 1:nt, j in 1:ni]
+Ys = [rand(2) for i in 1:nt, j in 1:ni]
+Qs = [rand(1) for i in 1:nt, j in 1:ni]
+Ps = [rand(1) for i in 1:nt, j in 1:ni]
+Zs = [rand(3) for i in 1:nt, j in 1:ni]
+Λs = [rand(1) for i in 1:nt, j in 1:ni]
+Ms = [rand(1) for i in 1:nt, j in 1:ni]
 
-ode  = odeproblem()
-dae  = daeproblem()
+ode = odeproblem()
+dae = daeproblem()
 pode = podeproblem()
 pdae = pdaeproblem()
-
 
 @testset "$(rpad("ODE Solution",80))" begin
     solstep = SolutionStep(ode)
@@ -103,9 +101,7 @@ pdae = pdaeproblem()
     sol = Solution(similar(ode, tspan = 2 .* timespan(ode)), 10)
     @test ntime(sol) == 20
     @test nstore(sol) == 2
-
 end
-
 
 @testset "$(rpad("PODE Solution",80))" begin
     solstep = SolutionStep(pode)
@@ -130,7 +126,7 @@ end
     # test set/get solution
     sol1 = Solution(similar(pode, ics = (q = StateVariable(q0), p = StateVariable(p0))))
     sol2 = Solution(similar(pode, ics = (q = StateVariable(q0), p = StateVariable(p0))))
-    for i = 1:nt
+    for i in 1:nt
         solstep.q .= qs[i]
         solstep.p .= ps[i]
         sol1[i] = (q = copy(qs[i]), p = copy(ps[i]))
@@ -151,7 +147,6 @@ end
     @test nstore(sol) == 2
 end
 
-
 @testset "$(rpad("DAE Solution",80))" begin
     solstep = SolutionStep(dae)
 
@@ -161,7 +156,8 @@ end
 
     # test_interface(sol)
 
-    sol0 = Solution(similar(dae, ics = (q = StateVariable(x0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
+    sol0 = Solution(similar(dae,
+        ics = (q = StateVariable(x0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
     @test typeof(sol0) <: SolutionDAE
     @test sol != sol0
 
@@ -173,9 +169,11 @@ end
     @test solstep.λ == λ0
 
     # test set/get solution
-    sol1 = Solution(similar(dae, ics = (q = StateVariable(x0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
-    sol2 = Solution(similar(dae, ics = (q = StateVariable(x0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
-    for i = 1:nt
+    sol1 = Solution(similar(dae,
+        ics = (q = StateVariable(x0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
+    sol2 = Solution(similar(dae,
+        ics = (q = StateVariable(x0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
+    for i in 1:nt
         solstep.q .= xs[i]
         solstep.λ .= λs[i]
         sol1[i] = (q = copy(xs[i]), λ = copy(λs[i]))
@@ -196,7 +194,6 @@ end
     @test nstore(sol) == 2
 end
 
-
 @testset "$(rpad("PDAE Solution",80))" begin
     solstep = SolutionStep(pdae)
 
@@ -206,7 +203,9 @@ end
 
     # test_interface(sol)
 
-    sol0 = Solution(similar(pdae, ics = (q = StateVariable(q0), p = StateVariable(p0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
+    sol0 = Solution(similar(pdae,
+        ics = (q = StateVariable(q0), p = StateVariable(p0),
+            λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
     @test typeof(sol0) <: SolutionPDAE
     @test sol != sol0
 
@@ -219,9 +218,13 @@ end
     @test solstep.λ == λ0
 
     # test set/get solution
-    sol1 = Solution(similar(pdae, ics = (q = StateVariable(q0), p = StateVariable(p0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
-    sol2 = Solution(similar(pdae, ics = (q = StateVariable(q0), p = StateVariable(p0), λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
-    for i = 1:nt
+    sol1 = Solution(similar(pdae,
+        ics = (q = StateVariable(q0), p = StateVariable(p0),
+            λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
+    sol2 = Solution(similar(pdae,
+        ics = (q = StateVariable(q0), p = StateVariable(p0),
+            λ = AlgebraicVariable(λ0), μ = AlgebraicVariable(μ0))))
+    for i in 1:nt
         solstep.q .= qs[i]
         solstep.p .= ps[i]
         solstep.λ .= λs[i]
@@ -242,5 +245,4 @@ end
     sol = Solution(similar(pdae, tspan = 2 .* timespan(pdae)), 10)
     @test ntime(sol) == 20
     @test nstore(sol) == 2
-
 end

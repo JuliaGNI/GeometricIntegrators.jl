@@ -1,17 +1,25 @@
 
 const TableauVSPARKprimary = AbstractTableauSPARK{:vspark_primary}
 
-function RungeKutta.check_symplecticity(tab::TableauVSPARKprimary{T}; atol=16 * eps(T), rtol=16 * eps(T)) where {T}
-    s_a_qp = [isapprox(tab.p.b[i] * tab.q.a[i, j] + tab.q.b[j] * tab.p.a[j, i], tab.p.b[i] * tab.q.b[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.s]
-    s_α_q̃p̃ = [isapprox(tab.p.β[i] * tab.q̃.α[i, j] + tab.q.β[j] * tab.p̃.α[j, i], tab.p.β[i] * tab.q.β[j]; atol=atol, rtol=rtol) for i in 1:tab.r, j in 1:tab.r]
-    s_αa_q̃p = [isapprox(tab.p.b[i] * tab.q.α[i, j] + tab.q.β[j] * tab.p̃.a[j, i], tab.p.b[i] * tab.q.β[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.r]
-    s_αa_qp̃ = [isapprox(tab.q.b[i] * tab.p.α[i, j] + tab.p.β[j] * tab.q̃.a[j, i], tab.q.b[i] * tab.p.β[j]; atol=atol, rtol=rtol) for i in 1:tab.s, j in 1:tab.r]
-    s_b_qp = isapprox.(tab.q.b, tab.p.b; atol=atol, rtol=rtol)
-    s_β_qp = isapprox.(tab.q.β, tab.p.β; atol=atol, rtol=rtol)
+function RungeKutta.check_symplecticity(
+        tab::TableauVSPARKprimary{T}; atol = 16 * eps(T), rtol = 16 * eps(T)) where {T}
+    s_a_qp = [isapprox(tab.p.b[i] * tab.q.a[i, j] + tab.q.b[j] * tab.p.a[j, i],
+                  tab.p.b[i] * tab.q.b[j]; atol = atol, rtol = rtol)
+              for i in 1:tab.s, j in 1:tab.s]
+    s_α_q̃p̃ = [isapprox(tab.p.β[i] * tab.q̃.α[i, j] + tab.q.β[j] * tab.p̃.α[j, i],
+                  tab.p.β[i] * tab.q.β[j]; atol = atol, rtol = rtol)
+              for i in 1:tab.r, j in 1:tab.r]
+    s_αa_q̃p = [isapprox(tab.p.b[i] * tab.q.α[i, j] + tab.q.β[j] * tab.p̃.a[j, i],
+                   tab.p.b[i] * tab.q.β[j]; atol = atol, rtol = rtol)
+               for i in 1:tab.s, j in 1:tab.r]
+    s_αa_qp̃ = [isapprox(tab.q.b[i] * tab.p.α[i, j] + tab.p.β[j] * tab.q̃.a[j, i],
+                   tab.q.b[i] * tab.p.β[j]; atol = atol, rtol = rtol)
+               for i in 1:tab.s, j in 1:tab.r]
+    s_b_qp = isapprox.(tab.q.b, tab.p.b; atol = atol, rtol = rtol)
+    s_β_qp = isapprox.(tab.q.β, tab.p.β; atol = atol, rtol = rtol)
 
     return (s_a_qp, s_α_q̃p̃, s_αa_q̃p, s_αa_qp̃, s_b_qp, s_β_qp)
 end
-
 
 function GeometricIntegratorsBase.symplecticity_conditions(::TableauVSPARKprimary)
     (
@@ -20,10 +28,9 @@ function GeometricIntegratorsBase.symplecticity_conditions(::TableauVSPARKprimar
         """`` b^{p}_{i} \\beta^{q}_{j} = b^{p}_{i} \\alpha^{q}_{ij} + \\beta^{q}_{j} \\tilde{a}^{p}_{ji} ``""",
         """`` b^{q}_{i} \\beta^{p}_{j} = b^{q}_{i} \\alpha^{p}_{ij} + \\beta^{p}_{j} \\tilde{a}^{q}_{ji} ``""",
         """`` b^{q}_{i} = b^{p}_{i} ``""",
-        """`` \\beta^{q}_{i} = \\beta^{p}_{i} ``""",
+        """`` \\beta^{q}_{i} = \\beta^{p}_{i} ``"""
     )
 end
-
 
 function compute_conjugate_vspark_primary(a, b, b̄)
     ā = zero(a)
@@ -71,16 +78,17 @@ function get_α_vspark_primary(ã_q, b_q, β_q, ã_p, b_p, β_p)
     return (α_q, α_p)
 end
 
-
-struct VSPARKprimary{TT<:TableauVSPARKprimary} <: ISPARKMethod
+struct VSPARKprimary{TT <: TableauVSPARKprimary} <: ISPARKMethod
     tableau::TT
 end
 
 tableau(method::VSPARKprimary) = method.tableau
 
-solversize(method::VSPARKprimary, problem::AbstractProblemIDAE) =
-    2 * length(vec(initial_conditions(problem).q)) * nstages(method) + 2 * length(vec(initial_conditions(problem).q)) * pstages(method) + nullvectorsize(method, problem)
-
+function solversize(method::VSPARKprimary, problem::AbstractProblemIDAE)
+    2 * length(vec(initial_conditions(problem).q)) * nstages(method) +
+    2 * length(vec(initial_conditions(problem).q)) * pstages(method) +
+    nullvectorsize(method, problem)
+end
 
 @doc raw"""
 Specialised Partitioned Additive Runge-Kutta integrator for Variational systems.
@@ -114,7 +122,8 @@ p_{n+1} &= p_{n} + h \sum \limits_{i=1}^{s} b_{i} F_{n,i} + h \sum \limits_{i=1}
 \end{aligned}
 ```
 """
-const IntegratorVSPARKprimary{DT,TT} = GeometricIntegrator{<:VSPARKprimary,<:Union{IDAEProblem{DT,TT},LDAEProblem{DT,TT}}}
+const IntegratorVSPARKprimary{DT, TT} = GeometricIntegrator{
+    <:VSPARKprimary, <:Union{IDAEProblem{DT, TT}, LDAEProblem{DT, TT}}}
 
 function Base.show(io::IO, int::IntegratorVSPARKprimary)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for Variational systems")
@@ -126,8 +135,8 @@ function Base.show(io::IO, int::IntegratorVSPARKprimary)
     # print(io, reference(method(int)))
 end
 
-
-function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VSPARKprimary,<:Union{IDAEProblem,LDAEProblem}})
+function initial_guess!(sol, history, params,
+        int::GeometricIntegrator{<:VSPARKprimary, <:Union{IDAEProblem, LDAEProblem}})
     # get cache for internal stages
     local C = cache(int)
     local D = ndims(C)
@@ -135,52 +144,56 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VSPARKp
     for i in 1:nstages(int)
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t=history[1].t + timestep(int) * tableau(int).q.c[i],
-            q=cache(int).Qi[i],
-            p=cache(int).Pi[i],
-            q̇=cache(int).Vi[i],
-            ṗ=cache(int).Fi[i],
+            t = history[1].t + timestep(int) * tableau(int).q.c[i],
+            q = cache(int).Qi[i],
+            p = cache(int).Pi[i],
+            q̇ = cache(int).Vi[i],
+            ṗ = cache(int).Fi[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
         for k in 1:D
-            C.x[2*(D*(i-1)+k-1)+1] = C.Vi[i][k]
-            C.x[2*(D*(i-1)+k-1)+2] = (C.Pi[i][k] - sol.p[k]) / timestep(int)
+            C.x[2 * (D * (i - 1) + k - 1) + 1] = C.Vi[i][k]
+            C.x[2 * (D * (i - 1) + k - 1) + 2] = (C.Pi[i][k] - sol.p[k]) / timestep(int)
         end
     end
 
     for i in 1:pstages(method(int))
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         soltmp = (
-            t=history[1].t + timestep(int) * tableau(int).q̃.c[i],
-            q=cache(int).Qp[i],
-            p=cache(int).Pp[i],
-            q̇=cache(int).Vp[i],
-            ṗ=cache(int).Fp[i],
+            t = history[1].t + timestep(int) * tableau(int).q̃.c[i],
+            q = cache(int).Qp[i],
+            p = cache(int).Pp[i],
+            q̇ = cache(int).Vp[i],
+            ṗ = cache(int).Fp[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
         for k in 1:D
-            C.x[2*D*nstages(int)+2*(D*(i-1)+k-1)+1] = 0
-            C.x[2*D*nstages(int)+2*(D*(i-1)+k-1)+2] = (C.Pp[i][k] - sol.p[k]) / timestep(int)
+            C.x[2 * D * nstages(int) + 2 * (D * (i - 1) + k - 1) + 1] = 0
+            C.x[2 * D * nstages(int) + 2 * (D * (i - 1) + k - 1) + 2] = (C.Pp[i][k] -
+                                                                         sol.p[k]) /
+                                                                        timestep(int)
         end
     end
 
     if isdefined(tableau(int), :λ) && tableau(int).λ.c[1] == 0
         for k in 1:D
-            C.x[2*D*nstages(int)+2*(k-1)+1] = C.λ[k]
+            C.x[2 * D * nstages(int) + 2 * (k - 1) + 1] = C.λ[k]
         end
     end
 
     if hasnullvector(method(int))
         for k in 1:D
-            C.x[2*D*nstages(int)+2*D*pstages(method(int))+k] = 0
+            C.x[2 * D * nstages(int) + 2 * D * pstages(method(int)) + k] = 0
         end
     end
 end
 
-
-function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VSPARKprimary,<:Union{IDAEProblem,LDAEProblem}}) where {ST}
+function components!(x::AbstractVector{ST},
+        sol,
+        params,
+        int::GeometricIntegrator{<:VSPARKprimary, <:Union{IDAEProblem, LDAEProblem}}) where {ST}
     # get cache and number of internal stages
     local C = cache(int, ST)
     local S = nstages(int)
@@ -190,16 +203,16 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     # copy x to Vi and Zi
     for i in 1:S
         for k in 1:D
-            C.Vi[i][k] = x[2*(D*(i-1)+k-1)+1]
-            C.Zi[i][k] = x[2*(D*(i-1)+k-1)+2]
+            C.Vi[i][k] = x[2 * (D * (i - 1) + k - 1) + 1]
+            C.Zi[i][k] = x[2 * (D * (i - 1) + k - 1) + 2]
         end
     end
 
     # copy x to Λp and Zp
     for i in 1:R
         for k in 1:D
-            C.Λp[i][k] = x[2*D*S+2*(D*(i-1)+k-1)+1]
-            C.Zp[i][k] = x[2*D*S+2*(D*(i-1)+k-1)+2]
+            C.Λp[i][k] = x[2 * D * S + 2 * (D * (i - 1) + k - 1) + 1]
+            C.Zp[i][k] = x[2 * D * S + 2 * (D * (i - 1) + k - 1) + 2]
         end
         # tλᵢ = sol.t + timestep(int) * (tableau(int).λ.c[i] - 1)
         # params.f_u(tλᵢ, C.Qp[i], C.Pp[i], C.Λp[i], C.Up[i])
@@ -250,7 +263,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
 
     if hasnullvector(method(int))
         for k in 1:D
-            C.μ[k] = x[2*D*S+2*D*R+k]
+            C.μ[k] = x[2 * D * S + 2 * D * R + k]
         end
     end
 
@@ -273,9 +286,12 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     equations(int).ϕ(C.ϕ̃, sol.t, C.q̃, C.ṽ, C.p̃, params)
 end
 
-
 # Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VSPARKprimary,<:Union{IDAEProblem,LDAEProblem}}) where {ST}
+function residual!(b::AbstractVector{ST},
+        x::AbstractVector{ST},
+        sol,
+        params,
+        int::GeometricIntegrator{<:VSPARKprimary, <:Union{IDAEProblem, LDAEProblem}}) where {ST}
     # get cache and number of internal stages
     local C = cache(int, ST)
     local S = nstages(int)
@@ -289,13 +305,13 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = [Φ, (Z-AF-AG)]
     for i in 1:S
         for k in 1:D
-            b[2*(D*(i-1)+k-1)+1] = C.Φi[i][k]
-            b[2*(D*(i-1)+k-1)+2] = C.Zi[i][k]
+            b[2 * (D * (i - 1) + k - 1) + 1] = C.Φi[i][k]
+            b[2 * (D * (i - 1) + k - 1) + 2] = C.Zi[i][k]
             for j in 1:S
-                b[2*(D*(i-1)+k-1)+2] -= tableau(int).p.a[i, j] * C.Fi[j][k]
+                b[2 * (D * (i - 1) + k - 1) + 2] -= tableau(int).p.a[i, j] * C.Fi[j][k]
             end
             for j in 1:R
-                b[2*(D*(i-1)+k-1)+2] -= tableau(int).p.α[i, j] * C.Gp[j][k]
+                b[2 * (D * (i - 1) + k - 1) + 2] -= tableau(int).p.α[i, j] * C.Gp[j][k]
             end
         end
     end
@@ -303,33 +319,38 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = Z-AF-AG
     for i in 1:R
         for k in 1:D
-            b[2*D*S+2*(D*(i-1)+k-1)+2] = C.Zp[i][k]
+            b[2 * D * S + 2 * (D * (i - 1) + k - 1) + 2] = C.Zp[i][k]
             for j in 1:S
-                b[2*D*S+2*(D*(i-1)+k-1)+2] -= tableau(int).p̃.a[i, j] * C.Fi[j][k]
+                b[2 * D * S + 2 * (D * (i - 1) + k - 1) + 2] -= tableau(int).p̃.a[i, j] *
+                                                                C.Fi[j][k]
             end
             for j in 1:R
-                b[2*D*S+2*(D*(i-1)+k-1)+2] -= tableau(int).p̃.α[i, j] * C.Gp[j][k]
+                b[2 * D * S + 2 * (D * (i - 1) + k - 1) + 2] -= tableau(int).p̃.α[i, j] *
+                                                                C.Gp[j][k]
             end
         end
     end
 
     # compute b = ωΦ
-    for i in 1:R-P
+    for i in 1:(R - P)
         for k in 1:D
-            b[2*D*S+2*(D*(i-1)+k-1)+1] = 0
+            b[2 * D * S + 2 * (D * (i - 1) + k - 1) + 1] = 0
             for j in 1:R
-                b[2*D*S+2*(D*(i-1)+k-1)+1] += tableau(int).ω[i, j] * C.Φp[j][k]
+                b[2 * D * S + 2 * (D * (i - 1) + k - 1) + 1] += tableau(int).ω[i, j] *
+                                                                C.Φp[j][k]
             end
-            b[2*D*S+2*(D*(i-1)+k-1)+1] += tableau(int).ω[i, R+1] * C.ϕ̃[k]
+            b[2 * D * S + 2 * (D * (i - 1) + k - 1) + 1] += tableau(int).ω[i, R + 1] *
+                                                            C.ϕ̃[k]
         end
     end
 
     # compute b = d_λ ⋅ Λ
     for i in 1:P
         for k in 1:D
-            b[2*D*S+2*(D*(R-P+i-1)+k-1)+1] = 0
+            b[2 * D * S + 2 * (D * (R - P + i - 1) + k - 1) + 1] = 0
             for j in 1:R
-                b[2*D*S+2*(D*(R-P+i-1)+k-1)+1] += tableau(int).δ[i, j] * C.Λp[j][k]
+                b[2 * D * S + 2 * (D * (R - P + i - 1) + k - 1) + 1] += tableau(int).δ[i, j] *
+                                                                        C.Λp[j][k]
             end
         end
     end
@@ -337,14 +358,15 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     if hasnullvector(method(int))
         for i in 1:S
             for k in 1:D
-                b[2*(D*(i-1)+k-1)+2] += C.μ[k] * tableau(int).d[i] / tableau(int).p.b[i]
+                b[2 * (D * (i - 1) + k - 1) + 2] += C.μ[k] * tableau(int).d[i] /
+                                                    tableau(int).p.b[i]
             end
         end
 
         for k in 1:D
-            b[2*D*S+2*D*R+k] = 0
+            b[2 * D * S + 2 * D * R + k] = 0
             for i in 1:S
-                b[2*D*S+2*D*R+k] += C.Vi[i][k] * tableau(int).d[i]
+                b[2 * D * S + 2 * D * R + k] += C.Vi[i][k] * tableau(int).d[i]
             end
         end
     end

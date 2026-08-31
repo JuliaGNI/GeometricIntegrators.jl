@@ -39,7 +39,9 @@ DGVIP0(basis::Basis, quadrature::QuadratureRule)
 """
 DGVIP0
 
-GeometricBase.description(::DGVIP0) = "Discontinuous Galerkin Variational Integrator with Initial Projection"
+function GeometricBase.description(::DGVIP0)
+    "Discontinuous Galerkin Variational Integrator with Initial Projection"
+end
 
 # `DGVIP0` reconstructs the boundary one-forms by contracting the position basis' boundary
 # coefficients r∓ (length S) with the one-form sampled at the quadrature nodes (length R),
@@ -56,7 +58,6 @@ function check_basis_quadrature(::Type{DGVIP0}, basis::Basis, quadrature::Quadra
 
     return nothing
 end
-
 
 function jump!(sol, params, int::GeometricIntegrator{<:DGVIP0}, ST)
     local C = cache(int, ST)
@@ -94,7 +95,6 @@ function jump!(sol, params, int::GeometricIntegrator{<:DGVIP0}, ST)
     C.p̄ .= C.Θ̅
 end
 
-
 function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DGVIP0}) where {ST}
     local C = cache(int, ST)
     local M = method(int)
@@ -105,19 +105,18 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
 
     for i in eachindex(M.r⁻, M.r⁺)
         for k in 1:D
-            b[D*(i-1)+k] += M.r⁺[i] * (C.θ[k] + C.θ⁺[k]) / 2
-            b[D*(i-1)+k] -= M.r⁻[i] * (C.Θ̅[k] + C.Θ̅⁻[k]) / 2
-            b[D*(i-1)+k] += M.r⁺[i] * C.g⁺[k] / 2
-            b[D*(i-1)+k] += M.r⁻[i] * C.ḡ⁻[k] / 2
+            b[D * (i - 1) + k] += M.r⁺[i] * (C.θ[k] + C.θ⁺[k]) / 2
+            b[D * (i - 1) + k] -= M.r⁻[i] * (C.Θ̅[k] + C.Θ̅⁻[k]) / 2
+            b[D * (i - 1) + k] += M.r⁺[i] * C.g⁺[k] / 2
+            b[D * (i - 1) + k] += M.r⁻[i] * C.ḡ⁻[k] / 2
         end
     end
 
     # closure: the projection at the initial time
     for k in 1:D
-        b[D*S+k] = C.θ⁺[k] - dgvi_state(int).θ⁻[k] - C.g[k]
+        b[D * S + k] = C.θ⁺[k] - dgvi_state(int).θ⁻[k] - C.g[k]
     end
 end
-
 
 function update_state!(int::GeometricIntegrator{<:DGVIP0}, DT)
     local C = cache(int, DT)

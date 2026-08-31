@@ -70,7 +70,7 @@ function estimate_convergence_order(problem_builder, method, timesteps;
     # this drops the flattened tail where high-order methods hit machine precision.
     mask = trues(length(errs))
     for i in eachindex(errs)
-        mask[i] = errs[i] > plateau && (i == 1 || errs[i] < errs[i-1])
+        mask[i] = errs[i] > plateau && (i == 1 || errs[i] < errs[i - 1])
     end
     ord = count(mask) >= 2 ? loglog_slope(dts[mask], errs[mask]) : NaN
     return (order = ord, dts = dts, errs = errs, mask = mask)
@@ -111,8 +111,8 @@ problem's `hamiltonian`. Uses the partitioned `(t, q, p, params)` signature when
 """
 function energy_error(sol, hamiltonian, params; partitioned::Bool)
     _, errds = partitioned ?
-        compute_invariant_error(sol.t, sol.q, sol.p, params, hamiltonian) :
-        compute_invariant_error(sol.t, sol.q, params, hamiltonian)
+               compute_invariant_error(sol.t, sol.q, sol.p, params, hamiltonian) :
+               compute_invariant_error(sol.t, sol.q, params, hamiltonian)
     return errds
 end
 

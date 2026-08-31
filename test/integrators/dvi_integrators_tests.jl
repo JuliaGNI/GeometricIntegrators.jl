@@ -6,43 +6,35 @@ using Logging
 using LinearAlgebra: I
 using RungeKutta: TableauGauss, TableauLobattoIIIA
 
-
 const t₀ = 0.0
 const q₀ = [1.0, 1.0]
-const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
+const params = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
 
 const Δt = 0.01
 const nt = 10
 const tspan = (t₀, Δt * nt)
 
-ode = odeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
-iode = iodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
-lode = lodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+ode = odeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
+iode = iodeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
+lode = lodeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
 
 ref = integrate(ode, Gauss(8))
 
-
 @testset "$(rpad("1st Order DVIs",80))" begin
-
     sol = integrate(lode, DVIA())
     @test relative_maximum_error(sol.q, ref.q) < 8E-2
 
     sol = integrate(lode, DVIB())
     @test relative_maximum_error(sol.q, ref.q) < 8E-2
-
 end
 
-
 @testset "$(rpad("2nd Order Centred DVIs",80))" begin
-
     sol = integrate(lode, CMDVI())
     @test relative_maximum_error(sol.q, ref.q) < 4E-3
 
     sol = integrate(lode, CTDVI())
     @test relative_maximum_error(sol.q, ref.q) < 4E-3
-
 end
-
 
 @testset "$(rpad("Degenerate Variational Runge-Kutta integrators",80))" begin
 
@@ -61,16 +53,14 @@ end
 
     sol = integrate(lode, DVRK(Gauss(4)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-13
-
 end
-
 
 @testset "$(rpad("DVRK on an in-class degenerate Lagrangian",80))" begin
 
     # `LotkaVolterra2dSingular` uses the gauge ϑ = (log q₂/q₁, 0), which satisfies
     # ϑ_μ = 0 for μ > d/2. This is the class for which DVRK is symplectic and of
     # full order 2s. Same dynamics as `LotkaVolterra2d` above, hence same reference.
-    slode = LVSingular.lodeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
+    slode = LVSingular.lodeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
 
     sol = integrate(slode, DVRK(Gauss(1)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
@@ -80,9 +70,7 @@ end
 
     sol = integrate(slode, DVRK(Gauss(3)))
     @test relative_maximum_error(sol.q, ref.q) < 8E-16
-
 end
-
 
 @testset "$(rpad("DVRK preserves the noncanonical symplectic form",80))" begin
 
@@ -94,11 +82,11 @@ end
     Ω(m, q) = (o = m.dϑ₂dx₁(0.0, q) - m.dϑ₁dx₂(0.0, q); [0.0 -o; o 0.0])
 
     function onestep(m, method, q, h)
-        prob = m.lodeproblem(collect(q); timespan=(0.0, h), timestep=h, parameters=params)
+        prob = m.lodeproblem(collect(q); timespan = (0.0, h), timestep = h, parameters = params)
         collect(integrate(prob, method).q[end])
     end
 
-    function symplecticity_defect(m, method, q₀, h; δ=1e-6)
+    function symplecticity_defect(m, method, q₀, h; δ = 1e-6)
         f(q) = onestep(m, method, q, h)
         J = reduce(hcat, [(f(q₀ .+ δ .* e) .- f(q₀ .- δ .* e)) ./ 2δ
                           for e in eachcol(Matrix(1.0I, 2, 2))])
@@ -110,6 +98,7 @@ end
     # In class with a symplectic tableau: exact to the finite-difference floor,
     # and — crucially — independent of the step size.
     for h in (0.1, 0.5), s in 1:3
+
         @test symplecticity_defect(LVSingular, DVRK(Gauss(s)), qref, h) < 2E-10
     end
 
@@ -122,10 +111,9 @@ end
           symplecticity_defect(LotkaVolterra2d, DVRK(Gauss(2)), qref, 0.1)
 
     # In class, but with a tableau violating b_i a_ij + b_j a_ji = b_i b_j.
-    @test symplecticity_defect(LVSingular, DVRK(RadauIIA(2); check_conditions=false), qref, 0.5) > 1e-6
-
+    @test symplecticity_defect(LVSingular, DVRK(RadauIIA(2); check_conditions = false), qref, 0.5) >
+          1e-6
 end
-
 
 @testset "$(rpad("DVRK method traits and tableau validation",80))" begin
 
@@ -145,7 +133,7 @@ end
     @test issymplectic(CMDVI)
 
     # Tableaus violating the theorem's hypotheses are accepted but warn.
-    @test !issymplectic(DVRK(RadauIIA(3); check_conditions=false))
+    @test !issymplectic(DVRK(RadauIIA(3); check_conditions = false))
     @test_logs (:warn, r"symplecticity condition") DVRK(RadauIIA(3))
     @test_logs (:warn, r"symplecticity condition") (:warn, r"singular") DVRK(LobattoIIIA(3))
     @test_nowarn DVRK(Gauss(2))
@@ -165,10 +153,11 @@ end
     @test_logs (:warn, r"symplecticity condition") (:warn, r"singular") DVRK(TableauLobattoIIIA(BigFloat, 3))
 
     # Inconsistent initial momentum p₀ ≠ ϑ(q₀) warns; the default p₀ does not.
-    @test_logs min_level=Logging.Warn LVSingular.lodeproblem([2.0, 3.0]; timespan=tspan, timestep=Δt) |>
-        prob -> integrate(prob, DVRK(Gauss(1)))
+    @test_logs min_level=Logging.Warn LVSingular.lodeproblem([2.0, 3.0]; timespan = tspan, timestep = Δt) |>
+                                      prob -> integrate(prob, DVRK(Gauss(1)))
     @test_logs (:warn, r"not consistent with the primary constraint") match_mode=:any begin
-        integrate(LVSingular.lodeproblem([2.0, 3.0], [0.0, 0.0]; timespan=tspan, timestep=Δt), DVRK(Gauss(1)))
+        integrate(
+            LVSingular.lodeproblem([2.0, 3.0], [0.0, 0.0]; timespan = tspan, timestep = Δt),
+            DVRK(Gauss(1)))
     end
-
 end

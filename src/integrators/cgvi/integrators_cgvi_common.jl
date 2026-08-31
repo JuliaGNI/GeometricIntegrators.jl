@@ -36,14 +36,14 @@ The two variants are [`CGVI`](@ref), which adds the continuity constraint to the
 through Lagrange multipliers, and [`CGVINodal`](@ref), which builds it into the basis.
 See `docs/src/integrators/cgvi.md`.
 """
-abstract type CGVIMethod{T,S,R} <: LODEMethod end
+abstract type CGVIMethod{T, S, R} <: LODEMethod end
 
-isexplicit(::Union{CGVIMethod,Type{<:CGVIMethod}}) = false
-isimplicit(::Union{CGVIMethod,Type{<:CGVIMethod}}) = true
-issymmetric(::Union{CGVIMethod,Type{<:CGVIMethod}}) = missing
-issymplectic(::Union{CGVIMethod,Type{<:CGVIMethod}}) = true
+isexplicit(::Union{CGVIMethod, Type{<:CGVIMethod}}) = false
+isimplicit(::Union{CGVIMethod, Type{<:CGVIMethod}}) = true
+issymmetric(::Union{CGVIMethod, Type{<:CGVIMethod}}) = missing
+issymplectic(::Union{CGVIMethod, Type{<:CGVIMethod}}) = true
 
-isiodemethod(::Union{CGVIMethod,Type{<:CGVIMethod}}) = true
+isiodemethod(::Union{CGVIMethod, Type{<:CGVIMethod}}) = true
 
 default_solver(::CGVIMethod) = Newton()
 default_iguess(::CGVIMethod) = HermiteExtrapolation()
@@ -51,9 +51,8 @@ default_iguess(::CGVIMethod) = HermiteExtrapolation()
 basis(method::CGVIMethod) = method.basis
 quadrature(method::CGVIMethod) = method.quadrature
 
-nbasis(::CGVIMethod{T,S,R}) where {T,S,R} = S
-nnodes(::CGVIMethod{T,S,R}) where {T,S,R} = R
-
+nbasis(::CGVIMethod{T, S, R}) where {T, S, R} = S
+nnodes(::CGVIMethod{T, S, R}) where {T, S, R} = R
 
 """
 Compute the shared CGVI coefficient block `(b, c, x, m, a, r₀, r₁)` from a basis and a
@@ -81,16 +80,15 @@ function cgvi_coefficients(basis::Basis{T}, quadrature::QuadratureRule{T}) where
     end
 
     return (
-        b=SVector{R,T}(quad_weights),
-        c=SVector{R,T}(quad_nodes),
-        x=SVector{S,T}(CompactBasisFunctions.grid(basis)),
-        m=SMatrix{R,S,T,R * S}(m),
-        a=SMatrix{R,S,T,R * S}(a),
-        r₀=SVector{S,T}(r₀),
-        r₁=SVector{S,T}(r₁),
+        b = SVector{R, T}(quad_weights),
+        c = SVector{R, T}(quad_nodes),
+        x = SVector{S, T}(CompactBasisFunctions.grid(basis)),
+        m = SMatrix{R, S, T, R * S}(m),
+        a = SMatrix{R, S, T, R * S}(a),
+        r₀ = SVector{S, T}(r₀),
+        r₁ = SVector{S, T}(r₁)
     )
 end
-
 
 function Base.show(io::IO, method::CGVIMethod)
     local title = description(method)
@@ -108,7 +106,6 @@ function Base.show(io::IO, method::CGVIMethod)
     print(io, "\n")
 end
 
-
 @doc raw"""
 Cache shared by both CGVI variants.
 
@@ -124,7 +121,7 @@ evaluated on every `cache(int, ST)` — `CacheDict` type-asserts its `getindex` 
 a `CacheType` that reads a value off the problem does not constant-fold, which leaves the
 cache inferred abstractly and makes the Newton hot path box on every stage access.
 """
-struct CGVICache{ST,S,R} <: IODEIntegratorCache{ST}
+struct CGVICache{ST, S, R} <: IODEIntegratorCache{ST}
     x::Vector{ST}
 
     X::Vector{Vector{ST}}
@@ -138,7 +135,7 @@ struct CGVICache{ST,S,R} <: IODEIntegratorCache{ST}
     ṽ::Vector{ST}
     f̃::Vector{ST}
 
-    function CGVICache{ST,S,R}(D::Int, N::Int) where {ST,S,R}
+    function CGVICache{ST, S, R}(D::Int, N::Int) where {ST, S, R}
         v() = zeros(ST, D)
         stage(n) = create_internal_stage_vector(ST, D, n)
 
@@ -155,12 +152,11 @@ ndofs(cache::CGVICache) = length(cache.q̃)
 
 function Cache{ST}(problem::AbstractProblemIODE, method::CGVIMethod; kwargs...) where {ST}
     D = length(vec(initial_conditions(problem).q))
-    CGVICache{ST,nbasis(method),nnodes(method)}(D, solversize(method, problem); kwargs...)
+    CGVICache{ST, nbasis(method), nnodes(method)}(D, solversize(method, problem); kwargs...)
 end
 
-@inline CacheType(ST, ::AbstractProblemIODE, method::CGVIMethod) =
-    CGVICache{ST,nbasis(method),nnodes(method)}
-
+@inline CacheType(ST, ::AbstractProblemIODE, method::CGVIMethod) = CGVICache{
+    ST, nbasis(method), nnodes(method)}
 
 """
 Evaluate the initial guess at the relative node `τ ∈ [0,1]` of the current step, into the
@@ -168,11 +164,11 @@ cache temporaries `q̃`, `p̃`, `ṽ`, `f̃`.
 """
 function initial_guess_at!(sol, history, int::GeometricIntegrator{<:CGVIMethod}, τ)
     soltmp = (
-        t=sol.t + timestep(int) * (τ - 1),
-        q=cache(int).q̃,
-        p=cache(int).p̃,
-        q̇=cache(int).ṽ,
-        ṗ=cache(int).f̃,
+        t = sol.t + timestep(int) * (τ - 1),
+        q = cache(int).q̃,
+        p = cache(int).p̃,
+        q̇ = cache(int).ṽ,
+        ṗ = cache(int).f̃
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 end
@@ -186,7 +182,8 @@ The variants pass different node lists — [`CGVI`](@ref) all `S` basis nodes,
 first — but the block layout is the same, and it is the layout `components!` and
 `residual!` assume.
 """
-function initial_guess_positions!(x, sol, history, int::GeometricIntegrator{<:CGVIMethod}, nodes)
+function initial_guess_positions!(
+        x, sol, history, int::GeometricIntegrator{<:CGVIMethod}, nodes)
     local D = ndofs(cache(int))
 
     # TODO: here we should not initialise with the solution q but with the degree of freedom x,
@@ -196,11 +193,10 @@ function initial_guess_positions!(x, sol, history, int::GeometricIntegrator{<:CG
         initial_guess_at!(sol, history, int, τ)
 
         for k in 1:D
-            x[D*(i-1)+k] = cache(int).q̃[k]
+            x[D * (i - 1) + k] = cache(int).q̃[k]
         end
     end
 end
-
 
 "Compute the solution at the quadrature nodes, `Q = m X`."
 function components_q!(int::GeometricIntegrator{<:CGVIMethod}, ::Type{ST}) where {ST}
@@ -245,8 +241,8 @@ function components_p!(sol, params, int::GeometricIntegrator{<:CGVIMethod}, ::Ty
     end
 end
 
-
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:CGVIMethod}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params,
+        int::GeometricIntegrator{<:CGVIMethod}) where {ST}
     # check that x and b are compatible
     @assert axes(x) == axes(b)
 
@@ -257,7 +253,6 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     residual!(b, sol, params, int)
 end
 
-
 function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:CGVIMethod}) where {DT}
     # compute vector field at internal stages
     components!(x, sol, params, int)
@@ -266,10 +261,11 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
     update!(sol, params, int, DT)
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:CGVIMethod,<:AbstractProblemIODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:CGVIMethod, <:AbstractProblemIODE})
     # call nonlinear solver and act on the outcome it reports
-    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (
+        sol, params, int))
     check_solver_status(solverstatus, int)
 
     # compute final update

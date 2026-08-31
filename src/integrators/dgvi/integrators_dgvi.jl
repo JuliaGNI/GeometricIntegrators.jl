@@ -51,7 +51,6 @@ GeometricBase.description(::DGVI) = "Discontinuous Galerkin Variational Integrat
 # information, so nothing has to be propagated separately.
 initialise_state!(sol, params, ::GeometricIntegrator{<:DGVI}) = nothing
 
-
 function jump!(sol, params, int::GeometricIntegrator{<:DGVI}, ST)
     local C = cache(int, ST)
     local t₀ = sol.t - timestep(int)
@@ -77,7 +76,6 @@ function jump!(sol, params, int::GeometricIntegrator{<:DGVI}, ST)
     C.p̄ .= C.Θ̅⁻ .+ C.h̅⁻
 end
 
-
 function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DGVI}) where {ST}
     local C = cache(int, ST)
     local M = method(int)
@@ -88,15 +86,15 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
 
     for i in eachindex(M.r⁻, M.r⁺)
         for k in 1:D
-            b[D*(i-1)+k] += M.r⁺[i] * (C.θ[k] + C.θ⁺[k]) / 2
-            b[D*(i-1)+k] -= M.r⁻[i] * (C.Θ̅[k] + C.Θ̅⁻[k]) / 2
-            b[D*(i-1)+k] += M.r⁺[i] * C.g⁺[k] / 2
-            b[D*(i-1)+k] += M.r⁻[i] * C.ḡ⁻[k] / 2
+            b[D * (i - 1) + k] += M.r⁺[i] * (C.θ[k] + C.θ⁺[k]) / 2
+            b[D * (i - 1) + k] -= M.r⁻[i] * (C.Θ̅[k] + C.Θ̅⁻[k]) / 2
+            b[D * (i - 1) + k] += M.r⁺[i] * C.g⁺[k] / 2
+            b[D * (i - 1) + k] += M.r⁻[i] * C.ḡ⁻[k] / 2
         end
     end
 
     # closure: ϑ(qₙ⁺) - pₙ - ∇ϑᵀ(qₙ)⋅(qₙ⁺ - qₙ) = 0
     for k in 1:D
-        b[D*S+k] = C.θ⁺[k] - sol.p[k] - C.h⁺[k]
+        b[D * S + k] = C.θ⁺[k] - sol.p[k] - C.h⁺[k]
     end
 end

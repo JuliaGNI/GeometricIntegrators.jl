@@ -27,6 +27,3 @@
 #     print(io, "   $(string(method(int).p))")
 #     # print(io, reference(method(int)))
 # end
-
-
-

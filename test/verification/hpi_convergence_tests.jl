@@ -6,7 +6,9 @@ include("verification_utilities.jl")
 
 const T = 1.0
 build(Δt) = lodeproblem(; timespan = (0.0, T), timestep = Δt)
-pref(prob) = exact_solution(podeproblem(; timespan = timespan(prob), timestep = timestep(prob)))
+function pref(prob)
+    exact_solution(podeproblem(; timespan = timespan(prob), timestep = timestep(prob)))
+end
 steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
 emq(sol, ref) = relative_maximum_error(sol.q, ref.q)
 
@@ -35,10 +37,12 @@ Dₐϕ(d, q̄, q, a, Δt) = (d .= 0)
     # 8eps ≈ 1.78e-15 (see docs/src/audit.md). Measured without the relaxation: 3 (midpoint)
     # / 2 (trapezoidal) stagnation warnings at the finest step; with it, none. @test_nowarn
     # is the tripwire: a converged solve must not warn.
-    @test_nowarn test_convergence_order(build, HPImidpoint(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]), steps(10, 4);
+    @test_nowarn test_convergence_order(
+        build, HPImidpoint(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]), steps(10, 4);
         reference = pref, errormetric = emq, expected = 2, label = "HPImidpoint",
         integrate_options = (f_abstol = 4e-15,))
-    @test_nowarn test_convergence_order(build, HPItrapezoidal(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]), steps(10, 4);
+    @test_nowarn test_convergence_order(
+        build, HPItrapezoidal(ϕ, D₁ϕ, D₂ϕ, Dₐϕ, Float64[]), steps(10, 4);
         reference = pref, errormetric = emq, expected = 2, label = "HPItrapezoidal",
         integrate_options = (f_abstol = 4e-15,))
 end

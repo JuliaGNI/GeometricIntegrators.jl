@@ -4,25 +4,24 @@ using GeometricProblems.LotkaVolterra2d: Δt
 using Test
 
 const qᵢ = [1.0, 1.0]
-const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
+const params = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
 
-ode  = odeproblem(qᵢ; parameters=params)
-pode = podeproblem(qᵢ; parameters=params)
-hode = hodeproblem(qᵢ; parameters=params)
-iode = iodeproblem(qᵢ; parameters=params)
-lode = lodeproblem(qᵢ; parameters=params)
+ode = odeproblem(qᵢ; parameters = params)
+pode = podeproblem(qᵢ; parameters = params)
+hode = hodeproblem(qᵢ; parameters = params)
+iode = iodeproblem(qᵢ; parameters = params)
+lode = lodeproblem(qᵢ; parameters = params)
 
-dae  = daeproblem(qᵢ; parameters=params)
-pdae = pdaeproblem(qᵢ; parameters=params)
-hdae = hdaeproblem(qᵢ; parameters=params)
-idae = idaeproblem(qᵢ; parameters=params)
-ldae = ldaeproblem(qᵢ; parameters=params)
-
+dae = daeproblem(qᵢ; parameters = params)
+pdae = pdaeproblem(qᵢ; parameters = params)
+hdae = hdaeproblem(qᵢ; parameters = params)
+idae = idaeproblem(qᵢ; parameters = params)
+ldae = ldaeproblem(qᵢ; parameters = params)
 
 # ODE Reference Solution
 
-ode_prev = similar(ode; tspan=(initialtime(ode), initialtime(ode)-timestep(ode)), tstep=-timestep(ode))
-ode_next = similar(ode; tspan=(initialtime(ode), initialtime(ode)+timestep(ode)), tstep=+timestep(ode))
+ode_prev = similar(ode; tspan = (initialtime(ode), initialtime(ode)-timestep(ode)), tstep = -timestep(ode))
+ode_next = similar(ode; tspan = (initialtime(ode), initialtime(ode)+timestep(ode)), tstep = +timestep(ode))
 
 t₀ = initial_conditions(ode).t
 q₀ = initial_conditions(ode).q
@@ -42,7 +41,6 @@ prev = (t = tₚ, q = qₚ, v = vₚ)
 next = (t = tₙ, q = qₙ, v = vₙ)
 solutionstep!(prev, hist, ode_prev, MidpointExtrapolation(5))
 solutionstep!(next, hist, ode_next, MidpointExtrapolation(5))
-
 
 # ODE Initial Guess
 
@@ -81,11 +79,12 @@ solutionstep!(sol2, hist, ode, HermiteExtrapolation())
 @test q₂ ≈ qₙ atol=1E-8
 @test v₂ ≈ vₙ atol=1E-5
 
-
 # PODE Reference Solution
 
-pode_prev = similar(pode; tspan=(initialtime(pode), initialtime(pode)-timestep(pode)), tstep=-timestep(pode))
-pode_next = similar(pode; tspan=(initialtime(pode), initialtime(pode)+timestep(pode)), tstep=+timestep(pode))
+pode_prev = similar(pode; tspan = (initialtime(pode), initialtime(pode)-timestep(pode)),
+    tstep = -timestep(pode))
+pode_next = similar(pode; tspan = (initialtime(pode), initialtime(pode)+timestep(pode)),
+    tstep = +timestep(pode))
 
 t₀ = initial_conditions(pode).t
 q₀ = initial_conditions(pode).q
@@ -110,7 +109,6 @@ prev = (t = tₚ, q = qₚ, p = pₚ, v = vₚ, f = fₚ)
 next = (t = tₙ, q = qₙ, p = pₙ, v = vₙ, f = fₙ)
 solutionstep!(prev, hist, pode_prev, MidpointExtrapolation(5))
 solutionstep!(next, hist, pode_next, MidpointExtrapolation(5))
-
 
 # PODE Initial Guess
 
@@ -164,11 +162,12 @@ solutionstep!(sol2, hist, pode, HermiteExtrapolation())
 @test v₂ ≈ vₙ atol=1E-5
 @test f₂ ≈ fₙ atol=1E-5
 
-
 # IODE Reference Solution
 
-iode_prev = similar(iode; tspan=(initialtime(iode), initialtime(iode)-timestep(iode)), tstep=-timestep(iode))
-iode_next = similar(iode; tspan=(initialtime(iode), initialtime(iode)+timestep(iode)), tstep=+timestep(iode))
+iode_prev = similar(iode; tspan = (initialtime(iode), initialtime(iode)-timestep(iode)),
+    tstep = -timestep(iode))
+iode_next = similar(iode; tspan = (initialtime(iode), initialtime(iode)+timestep(iode)),
+    tstep = +timestep(iode))
 
 t₀ = initial_conditions(iode).t
 q₀ = initial_conditions(iode).q
@@ -193,7 +192,6 @@ prev = (t = tₚ, q = qₚ, p = pₚ, v = vₚ, f = fₚ)
 next = (t = tₙ, q = qₙ, p = pₙ, v = vₙ, f = fₙ)
 solutionstep!(prev, hist, iode_prev, MidpointExtrapolation(5))
 solutionstep!(next, hist, iode_next, MidpointExtrapolation(5))
-
 
 # IODE Initial Guess
 

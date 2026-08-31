@@ -16,12 +16,12 @@ meta_methods = (
     CGVINodal,
     ProjectedMethod,
     HPImidpoint,
-    HPItrapezoidal,
+    HPItrapezoidal
 )
 
 euler_methods = (
     ExplicitEuler,
-    ImplicitEuler,
+    ImplicitEuler
 )
 
 explicit_rungekutta_methods = (
@@ -45,14 +45,14 @@ explicit_rungekutta_methods = (
     RK5,
     Runge2,
     SSPRK2,
-    SSPRK3,
+    SSPRK3
 )
 
 diagonally_implicit_rungekutta_methods = (
     CrankNicolsonRK,
     Crouzeix,
     KraaijevangerSpijker,
-    QinZhang,
+    QinZhang
 )
 
 fully_implicit_rungekutta_methods = (
@@ -60,17 +60,17 @@ fully_implicit_rungekutta_methods = (
     ImplicitEulerRK,
     ImplicitMidpointRK,
     IRK3,
-    SRK3,
+    SRK3
 )
 
 implicit_rungekutta_methods = (
     diagonally_implicit_rungekutta_methods...,
-    fully_implicit_rungekutta_methods...,
+    fully_implicit_rungekutta_methods...
 )
 
 runge_kutta_methods = (
     explicit_rungekutta_methods...,
-    implicit_rungekutta_methods...,
+    implicit_rungekutta_methods...
 )
 
 runge_kutta_families = (
@@ -87,12 +87,12 @@ runge_kutta_families = (
     RadauIA,
     RadauIB,
     RadauIIA,
-    RadauIIB,
+    RadauIIB
 )
 
 partitioned_runge_kutta_methods = (
     SymplecticEulerARK,
-    SymplecticEulerBRK,
+    SymplecticEulerBRK
 )
 
 partitioned_runge_kutta_families = (
@@ -107,7 +107,7 @@ partitioned_runge_kutta_families = (
     LobattoIIIEIIIĒ,
     LobattoIIIFIIIF̄,
     LobattoIIIF̄IIIF,
-    LobattoIIIGIIIḠ,
+    LobattoIIIGIIIḠ
 )
 
 variational_partitioned_runge_kutta_families = (
@@ -134,7 +134,7 @@ variational_partitioned_runge_kutta_families = (
     VPRKLobattoIIIEIIIĒ,
     VPRKLobattoIIIFIIIF̄,
     VPRKLobattoIIIF̄IIIF,
-    VPRKLobattoIIIGIIIḠ,
+    VPRKLobattoIIIGIIIḠ
 )
 
 variational_integrators = (
@@ -142,14 +142,14 @@ variational_integrators = (
     HPItrapezoidal,
     PMVImidpoint,
     PMVItrapezoidal,
-    DiscreteEulerLagrange,
+    DiscreteEulerLagrange
 )
 
 degenerate_variational_integrators = (
     DVIA,
     DVIB,
     CMDVI,
-    CTDVI,
+    CTDVI
 )
 
 discontinuous_galerkin_integrators = (
@@ -157,7 +157,7 @@ discontinuous_galerkin_integrators = (
     DGVIPI,
     DGVIP0,
     DGVIP1,
-    DGVIEXP,
+    DGVIEXP
 )
 
 splitting_methods = (
@@ -172,7 +172,7 @@ splitting_methods = (
     TripleJump,
     SuzukiFractal,
     Yoshida6,
-    Yoshida8,
+    Yoshida8
 )
 
 method_groups = (
@@ -186,7 +186,7 @@ method_groups = (
     variational_integrators,
     degenerate_variational_integrators,
     discontinuous_galerkin_integrators,
-    splitting_methods,
+    splitting_methods
 )
 
 @inline tuplejoin(x) = x
@@ -228,7 +228,6 @@ export VPRKpVariational
 export VPRKpVariationalP
 export VPRKpVariationalQ
 
-
 _display_property(p::Bool) = p ? "✓" : "✗"
 _display_property(p::Missing) = p
 
@@ -240,7 +239,7 @@ function _row(m, refs, selector)
         string(order(m)),
         _display_property(isexplicit(m)),
         _display_property(issymmetric(m)),
-        _display_property(issymplectic(m)),
+        _display_property(issymplectic(m))
     ]
 
     if selector == _true
@@ -255,7 +254,7 @@ function _row(m, refs, selector)
             _display_property(ispdaemethod(m)),
             _display_property(ishdaemethod(m)),
             _display_property(isidaemethod(m)),
-            _display_property(isldaemethod(m)),
+            _display_property(isldaemethod(m))
         ]
     end
 
@@ -263,32 +262,32 @@ function _row(m, refs, selector)
 end
 
 struct MethodList{MD}
-    header
-    data
+    header::Any
+    data::Any
 
-    function MethodList(list::Tuple=method_list; markdown::Bool=false, selector=_true, refs=false)
+    function MethodList(list::Tuple = method_list; markdown::Bool = false, selector = _true, refs = false)
         header = [
             "Method",
             "Order",
             "Explicit",
             "Symmetric",
-            "Symplectic",
+            "Symplectic"
         ]
 
         if selector == _true
             header = [header...,
-            "ODE",
-            "PODE",
-            "HODE",
-            "IODE",
-            "LODE",
-            "SODE",
-            "DAE",
-            "PDAE",
-            "HDAE",
-            "IDAE",
-            "LDAE",
-        ]
+                "ODE",
+                "PODE",
+                "HODE",
+                "IODE",
+                "LODE",
+                "SODE",
+                "DAE",
+                "PDAE",
+                "HDAE",
+                "IDAE",
+                "LDAE"
+            ]
         end
 
         data = []
@@ -314,13 +313,15 @@ Base.show(io::IO, ::MIME"text/markdown", ml::MethodList)
 Pretty-print MethodList.
 """
 function Base.show(io::IO, ml::MethodList)
-    pretty_table(io, ml.data; column_labels=ml.header, limit_printing=false)
+    pretty_table(io, ml.data; column_labels = ml.header, limit_printing = false)
 end
 
 function Base.show(io::IO, ml::MethodList{true})
-    pretty_table(io, ml.data; column_labels=ml.header, limit_printing=false, table_format=MarkdownTableFormat())
+    pretty_table(io, ml.data; column_labels = ml.header,
+        limit_printing = false, table_format = MarkdownTableFormat())
 end
 
 function Base.show(io::IO, ::MIME"text/markdown", ml::MethodList)
-    pretty_table(io, ml.data; column_labels=ml.header, limit_printing=false, allow_markdown_in_cells=true, table_format=MarkdownTableFormat())
+    pretty_table(io, ml.data; column_labels = ml.header, limit_printing = false,
+        allow_markdown_in_cells = true, table_format = MarkdownTableFormat())
 end

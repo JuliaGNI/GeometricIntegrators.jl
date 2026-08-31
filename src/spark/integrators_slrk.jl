@@ -1,5 +1,5 @@
 "Holds all parameters of an Specialised Partitioned Additive Runge-Kutta method for variational systems subject to constraints."
-struct SLRK{DT<:Number,DVT} <: LSPARKMethod
+struct SLRK{DT <: Number, DVT} <: LSPARKMethod
     name::Symbol
     o::Int
     s::Int
@@ -15,10 +15,10 @@ struct SLRK{DT<:Number,DVT} <: LSPARKMethod
     d::DVT
 
     function SLRK(name::Symbol, o::Int, s::Int,
-        q::Tableau{DT}, p::Tableau{DT},
-        q̃::Tableau{DT}, p̃::Tableau{DT},
-        ω::Matrix{DT}, d::DVT=nothing) where {DT,DVT<:Union{AbstractVector,Nothing}}
-
+            q::Tableau{DT}, p::Tableau{DT},
+            q̃::Tableau{DT}, p̃::Tableau{DT},
+            ω::Matrix{DT}, d::DVT = nothing) where {
+            DT, DVT <: Union{AbstractVector, Nothing}}
         @assert s > 0 "Number of stages s must be > 0"
 
         @assert s == q.s == p.s == q̃.s == p̃.s
@@ -27,7 +27,7 @@ struct SLRK{DT<:Number,DVT} <: LSPARKMethod
 
         @assert d === nothing || length(d) == s
 
-        new{DT,DVT}(name, o, s, s, q, p, q̃, p̃, ω, d)
+        new{DT, DVT}(name, o, s, s, q, p, q̃, p̃, ω, d)
     end
 end
 
@@ -36,12 +36,13 @@ tableau(method::SLRK) = method
 nstages(method::SLRK) = method.s
 pstages(method::SLRK) = method.r
 
-hasnullvector(method::SLRK{DT,Nothing}) where {DT} = false
-hasnullvector(method::SLRK{DT,<:AbstractVector}) where {DT} = true
+hasnullvector(method::SLRK{DT, Nothing}) where {DT} = false
+hasnullvector(method::SLRK{DT, <:AbstractVector}) where {DT} = true
 
-solversize(method::SLRK, problem::LDAEProblem) =
-    4 * length(vec(initial_conditions(problem).q)) * nstages(method) + nullvectorsize(method, problem)
-
+function solversize(method::SLRK, problem::LDAEProblem)
+    4 * length(vec(initial_conditions(problem).q)) * nstages(method) +
+    nullvectorsize(method, problem)
+end
 
 @doc raw"""
 Specialised Lobatto Runge-Kutta integrator for degenerate variational systems
@@ -168,8 +169,7 @@ the momentum-stage equation instead — see `residual_correction!`.)
     gauge-equivalent `LotkaVolterra2d`. `SLRKLobattoIIID` and `SLRKLobattoIIIE` are
     full rank in both blocks and are the safest default.
 """
-const IntegratorSLRK{DT,TT} = GeometricIntegrator{<:SLRK,<:LDAEProblem{DT,TT}}
-
+const IntegratorSLRK{DT, TT} = GeometricIntegrator{<:SLRK, <:LDAEProblem{DT, TT}}
 
 function Base.show(io::IO, int::IntegratorSLRK)
     print(io, "\nSpecialised Partitioned Additive Runge-Kutta integrator for degenerate")
@@ -181,8 +181,8 @@ function Base.show(io::IO, int::IntegratorSLRK)
     # print(io, reference(method(int)))
 end
 
-
-function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SLRK,<:LDAEProblem})
+function initial_guess!(sol, history, params, int::GeometricIntegrator{
+        <:SLRK, <:LDAEProblem})
     # get caches for nonlinear solver vector
     local x = cache(int).x
     local D = ndims(cache(int))
@@ -192,11 +192,11 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SLRK,<:
         # TODO: initialguess! should take two timesteps for c[i] of q and p tableau
         # Use the same node as `components!` (`q.c`); all Lobatto pairs share nodes.
         soltmp = (
-            t=history[1].t + timestep(int) * tableau(int).q.c[i],
-            q=cache(int).Qp[i],
-            p=cache(int).Pp[i],
-            q̇=cache(int).Vp[i],
-            ṗ=cache(int).Fp[i],
+            t = history[1].t + timestep(int) * tableau(int).q.c[i],
+            q = cache(int).Qp[i],
+            p = cache(int).Pp[i],
+            q̇ = cache(int).Vp[i],
+            ṗ = cache(int).Fp[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
@@ -205,20 +205,19 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:SLRK,<:
     for i in 1:pstages(method(int))
         for k in 1:D
             offset = 4 * (D * (i - 1) + k - 1)
-            x[offset+1] = (cache(int).Qp[i][k] - sol.q[k]) / timestep(int)
-            x[offset+2] = (cache(int).Pp[i][k] - sol.p[k]) / timestep(int)
-            x[offset+3] = cache(int).Vp[i][k]
-            x[offset+4] = 0
+            x[offset + 1] = (cache(int).Qp[i][k] - sol.q[k]) / timestep(int)
+            x[offset + 2] = (cache(int).Pp[i][k] - sol.p[k]) / timestep(int)
+            x[offset + 3] = cache(int).Vp[i][k]
+            x[offset + 4] = 0
         end
     end
 
     if hasnullvector(method(int))
         for k in 1:D
-            x[4*D*pstages(method(int))+k] = 0
+            x[4 * D * pstages(method(int)) + k] = 0
         end
     end
 end
-
 
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:SLRK}) where {ST}
     # get cache for internal stages
@@ -228,10 +227,10 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     for i in eachindex(C.Yp, C.Zp, C.Vp, C.Λp)
         for k in eachindex(C.Yp[i], C.Zp[i], C.Vp[i], C.Λp[i])
             # copy y to Y, Z and Λ
-            C.Yp[i][k] = x[4*(D*(i-1)+k-1)+1]
-            C.Zp[i][k] = x[4*(D*(i-1)+k-1)+2]
-            C.Vp[i][k] = x[4*(D*(i-1)+k-1)+3]
-            C.Λp[i][k] = x[4*(D*(i-1)+k-1)+4]
+            C.Yp[i][k] = x[4 * (D * (i - 1) + k - 1) + 1]
+            C.Zp[i][k] = x[4 * (D * (i - 1) + k - 1) + 2]
+            C.Vp[i][k] = x[4 * (D * (i - 1) + k - 1) + 3]
+            C.Λp[i][k] = x[4 * (D * (i - 1) + k - 1) + 4]
 
             # compute Q and P
             C.Qp[i][k] = sol.q[k] + timestep(int) * C.Yp[i][k]
@@ -252,7 +251,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
 
     if hasnullvector(method(int))
         for k in eachindex(C.μ)
-            C.μ[k] = x[4*D*nstages(int)+k]
+            C.μ[k] = x[4 * D * nstages(int) + k]
         end
     end
 
@@ -274,9 +273,9 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     equations(int).ϕ(C.ϕ̃, sol.t, C.q̃, C.ṽ, C.p̃, params)
 end
 
-
 # Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:SLRK}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol,
+        params, int::GeometricIntegrator{<:SLRK}) where {ST}
     # get cache and number of internal stages
     local C = cache(int, ST)
     local S = nstages(int)
@@ -288,17 +287,17 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute b = - [(Y-AV-AU), (Z-AF-AG), Φ, ωΨ]
     for i in 1:nstages(int)
         for k in 1:D
-            b[4*(D*(i-1)+k-1)+1] = -C.Yp[i][k]
-            b[4*(D*(i-1)+k-1)+2] = -C.Zp[i][k]
-            b[4*(D*(i-1)+k-1)+3] = -C.Φp[i][k]
-            b[4*(D*(i-1)+k-1)+4] = method(int).ω[i, S+1] * C.ϕ̃[k]
+            b[4 * (D * (i - 1) + k - 1) + 1] = -C.Yp[i][k]
+            b[4 * (D * (i - 1) + k - 1) + 2] = -C.Zp[i][k]
+            b[4 * (D * (i - 1) + k - 1) + 3] = -C.Φp[i][k]
+            b[4 * (D * (i - 1) + k - 1) + 4] = method(int).ω[i, S + 1] * C.ϕ̃[k]
 
             for j in 1:nstages(int)
-                b[4*(D*(i-1)+k-1)+1] += method(int).q.a[i, j] * C.Vp[j][k]
-                b[4*(D*(i-1)+k-1)+1] += method(int).q̃.a[i, j] * C.Λp[j][k]
-                b[4*(D*(i-1)+k-1)+2] += method(int).p.a[i, j] * C.Fp[j][k]
-                b[4*(D*(i-1)+k-1)+2] += method(int).p̃.a[i, j] * C.Gp[j][k]
-                b[4*(D*(i-1)+k-1)+4] += method(int).ω[i, j] * C.Ψp[j][k]
+                b[4 * (D * (i - 1) + k - 1) + 1] += method(int).q.a[i, j] * C.Vp[j][k]
+                b[4 * (D * (i - 1) + k - 1) + 1] += method(int).q̃.a[i, j] * C.Λp[j][k]
+                b[4 * (D * (i - 1) + k - 1) + 2] += method(int).p.a[i, j] * C.Fp[j][k]
+                b[4 * (D * (i - 1) + k - 1) + 2] += method(int).p̃.a[i, j] * C.Gp[j][k]
+                b[4 * (D * (i - 1) + k - 1) + 4] += method(int).ω[i, j] * C.Ψp[j][k]
             end
         end
     end
@@ -321,21 +320,22 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
         # at Δt = 1 and ill-conditioned near it.
         for i in 1:nstages(int)
             for k in 1:D
-                b[4*(D*(i-1)+k-1)+3] += C.μ[k] * method(int).d[i] / method(int).p.b[i]
+                b[4 * (D * (i - 1) + k - 1) + 3] += C.μ[k] * method(int).d[i] /
+                                                    method(int).p.b[i]
             end
         end
 
         for k in 1:D
-            b[4*D*S+k] = 0
+            b[4 * D * S + k] = 0
             for i in 1:nstages(int)
-                b[4*D*S+k] -= C.Vp[i][k] * method(int).d[i]
+                b[4 * D * S + k] -= C.Vp[i][k] * method(int).d[i]
             end
         end
     end
 end
 
-
-function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:SLRK,<:LDAEProblem}) where {DT}
+function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{
+        <:SLRK, <:LDAEProblem}) where {DT}
     # compute vector field at internal stages
     components!(x, sol, params, int)
 

@@ -4,12 +4,11 @@ abstract type ISPARKMethod <: IDAEMethod end
 abstract type LSPARKMethod <: LDAEMethod end
 abstract type PSPARKMethod <: PDAEMethod end
 
-const AbstractSPARKMethod = Union{HSPARKMethod,ISPARKMethod,LSPARKMethod,PSPARKMethod}
-const AbstractSPARKProblem{DT<:Number,TT<:Real} =
-    Union{HDAEProblem{DT,TT},
-        IDAEProblem{DT,TT},
-        LDAEProblem{DT,TT},
-        PDAEProblem{DT,TT}}
+const AbstractSPARKMethod = Union{HSPARKMethod, ISPARKMethod, LSPARKMethod, PSPARKMethod}
+const AbstractSPARKProblem{DT <: Number, TT <: Real} = Union{HDAEProblem{DT, TT},
+    IDAEProblem{DT, TT},
+    LDAEProblem{DT, TT},
+    PDAEProblem{DT, TT}}
 
 GeometricIntegratorsBase.default_iguess(::AbstractSPARKMethod) = HermiteExtrapolation()
 GeometricIntegratorsBase.default_solver(::AbstractSPARKMethod) = Newton()
@@ -18,7 +17,6 @@ GeometricIntegratorsBase.default_solver(::AbstractSPARKMethod) = Newton()
 # 2-dof test problems ranges over solversize 8 … 48, i.e. 1.8e-15 … 1.1e-14. That clears
 # every residual floor: ~4e-16 for the well-conditioned tableaux, and ~3e-15 for the
 # marginal VSPARK(SPARKLobABD(4)), whose solversize of 48 gives it the most headroom.
-
 
 nstages(method::AbstractSPARKMethod) = nstages(tableau(method))
 pstages(method::AbstractSPARKMethod) = pstages(tableau(method))
@@ -37,5 +35,6 @@ length of the solver's unknown vector and the cache constructor needs no correct
 its own. Keep it that way — the two used to be computed in different files, and nothing
 checked that they agreed (see the `SPARK solver size` testset).
 """
-nullvectorsize(method::AbstractSPARKMethod, problem::AbstractSPARKProblem) =
+function nullvectorsize(method::AbstractSPARKMethod, problem::AbstractSPARKProblem)
     hasnullvector(method) ? length(vec(initial_conditions(problem).q)) : 0
+end

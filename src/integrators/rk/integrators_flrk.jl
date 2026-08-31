@@ -85,10 +85,10 @@ FLRK(tableau::Tableau)
 FLRK(method::RKMethod)
 ```
 """
-struct FLRK{TT<:Tableau} <: LODEMethod
+struct FLRK{TT <: Tableau} <: LODEMethod
     tableau::TT
 
-    function FLRK(tableau::TT) where {TT<:Tableau}
+    function FLRK(tableau::TT) where {TT <: Tableau}
         new{TT}(tableau)
     end
 end
@@ -101,22 +101,22 @@ GeometricBase.order(method::FLRK) = RungeKutta.order(tableau(method))
 @inline nstages(method::FLRK) = RungeKutta.nstages(tableau(method))
 @inline eachstage(method::FLRK) = RungeKutta.eachstage(tableau(method))
 
-isexplicit(::Union{FLRK,Type{<:FLRK}}) = false
-isimplicit(::Union{FLRK,Type{<:FLRK}}) = true
+isexplicit(::Union{FLRK, Type{<:FLRK}}) = false
+isimplicit(::Union{FLRK, Type{<:FLRK}}) = true
 issymmetric(method::FLRK) = RungeKutta.issymmetric(tableau(method))
 
 # Deliberately `missing`, not `true`: see the caveats in the docstring.
-issymplectic(::Union{FLRK,Type{<:FLRK}}) = missing
-isenergypreserving(::Union{FLRK,Type{<:FLRK}}) = false
+issymplectic(::Union{FLRK, Type{<:FLRK}}) = missing
+isenergypreserving(::Union{FLRK, Type{<:FLRK}}) = false
 
-isiodemethod(::Union{FLRK,Type{<:FLRK}}) = true
+isiodemethod(::Union{FLRK, Type{<:FLRK}}) = true
 
 default_solver(::FLRK) = Newton()
 default_iguess(::FLRK) = HermiteExtrapolation()
 
-solversize(method::FLRK, problem::AbstractProblemIODE) =
+function solversize(method::FLRK, problem::AbstractProblemIODE)
     length(vec(initial_conditions(problem).q)) * nstages(method)
-
+end
 
 function Base.show(io::IO, int::GeometricIntegrator{<:FLRK})
     print(io, "\nFormal Lagrangian Runge-Kutta Integrator with:\n")
@@ -124,7 +124,6 @@ function Base.show(io::IO, int::GeometricIntegrator{<:FLRK})
     print(io, "   Tableau:  $(description(tableau(int)))\n")
     print(io, "   $(string(tableau(int)))")
 end
-
 
 @doc raw"""
 Formal Lagrangian Runge-Kutta integrator cache.
@@ -143,7 +142,7 @@ Formal Lagrangian Runge-Kutta integrator cache.
 * `A`, `δP`: system matrix and right-hand side of the linear adjoint solve
 * `jac`: automatic-differentiation Jacobian of ``\bar{v}``
 """
-struct FLRKCache{ST,D,S} <: IODEIntegratorCache{ST}
+struct FLRKCache{ST, D, S} <: IODEIntegratorCache{ST}
     x::Vector{ST}
 
     q̃::Vector{ST}
@@ -172,7 +171,7 @@ struct FLRKCache{ST,D,S} <: IODEIntegratorCache{ST}
     # per stage, inside a ForwardDiff call that dwarfs it.
     jac::Any
 
-    function FLRKCache{ST,D,S}(jac) where {ST,D,S}
+    function FLRKCache{ST, D, S}(jac) where {ST, D, S}
         x = zeros(ST, D * S)
 
         q̃ = zeros(ST, D)
@@ -194,7 +193,7 @@ struct FLRKCache{ST,D,S} <: IODEIntegratorCache{ST}
         A = zeros(ST, D * S, D * S)
         δP = zeros(ST, D * S)
 
-        new{ST,D,S}(x, q̃, p̃, ṽ, f̃, Q, V, Y, Θ, P, F, G, Ṗ, J, A, δP, jac)
+        new{ST, D, S}(x, q̃, p̃, ṽ, f̃, Q, V, Y, Θ, P, F, G, Ṗ, J, A, δP, jac)
     end
 end
 
@@ -209,7 +208,7 @@ function Cache{ST}(problem::AbstractProblemIODE, method::FLRK; kwargs...) where 
     local v̄ = initialguess(problem).v
     v_q!(v, q, p) = v̄(v, p.t, q, p.p, p.params)
 
-    FLRKCache{ST,D,S}(Jacobian{ST}(v_q!, D, D); kwargs...)
+    FLRKCache{ST, D, S}(Jacobian{ST}(v_q!, D, D); kwargs...)
 end
 
 # Returns a concrete type — the Jacobian is type-erased in the cache rather than carried
@@ -219,11 +218,11 @@ end
 # its type.
 @inline function CacheType(ST, problem::AbstractProblemIODE, method::FLRK)
     D = length(vec(initial_conditions(problem).q))
-    FLRKCache{ST,D,nstages(method)}
+    FLRKCache{ST, D, nstages(method)}
 end
 
-
-function internal_variables(method::FLRK, problem::AbstractProblemIODE{DT,TT}) where {DT,TT}
+function internal_variables(method::FLRK, problem::AbstractProblemIODE{
+        DT, TT}) where {DT, TT}
     S = nstages(method)
     D = length(vec(initial_conditions(problem).q))
 
@@ -233,7 +232,7 @@ function internal_variables(method::FLRK, problem::AbstractProblemIODE{DT,TT}) w
     P = create_internal_stage_vector(DT, D, S)
     F = create_internal_stage_vector(DT, D, S)
 
-    (Q=Q, V=V, Θ=Θ, P=P, F=F)
+    (Q = Q, V = V, Θ = Θ, P = P, F = F)
 end
 
 function copy_internal_variables!(solstep::SolutionStep, cache::FLRKCache)
@@ -244,7 +243,6 @@ function copy_internal_variables!(solstep::SolutionStep, cache::FLRKCache)
     haskey(internal(solstep), :F) && copyto!(internal(solstep).F, cache.F)
 end
 
-
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:FLRK})
     local x = nlsolution(int)
     local D = length(cache(int).q̃)
@@ -252,11 +250,11 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:FLRK})
     # compute initial guess for the internal stages
     for i in eachstage(int)
         soltmp = (
-            t=history[1].t + timestep(int) * tableau(int).c[i],
-            q=cache(int).Q[i],
-            p=cache(int).Θ[i],
-            q̇=cache(int).V[i],
-            ṗ=cache(int).F[i],
+            t = history[1].t + timestep(int) * tableau(int).c[i],
+            q = cache(int).Q[i],
+            p = cache(int).Θ[i],
+            q̇ = cache(int).V[i],
+            ṗ = cache(int).F[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
         initialguess(problem(int)).v(soltmp.q̇, soltmp.t, soltmp.q, soltmp.p, params)
@@ -266,14 +264,13 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:FLRK})
     for i in eachstage(int)
         offset = D * (i - 1)
         for k in 1:D
-            x[offset+k] = 0
+            x[offset + k] = 0
             for j in eachstage(int)
-                x[offset+k] += timestep(int) * tableau(int).a[i, j] * cache(int).V[j][k]
+                x[offset + k] += timestep(int) * tableau(int).a[i, j] * cache(int).V[j][k]
             end
         end
     end
 end
-
 
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:FLRK}) where {ST}
     local C = cache(int, ST)
@@ -282,7 +279,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     # copy x to Y and compute Q = q + Y
     for i in eachindex(C.Q, C.Y)
         for k in eachindex(C.Q[i], C.Y[i])
-            C.Y[i][k] = x[D*(i-1)+k]
+            C.Y[i][k] = x[D * (i - 1) + k]
             C.Q[i][k] = sol.q[k] + C.Y[i][k]
         end
     end
@@ -293,7 +290,6 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
         initialguess(problem(int)).v(C.V[i], tᵢ, C.Q[i], sol.p, params)
     end
 end
-
 
 function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:FLRK}) where {ST}
     local C = cache(int, ST)
@@ -308,18 +304,17 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
                 y1 += tableau(int).a[i, j] * C.V[j][k]
                 y2 += tableau(int).â[i, j] * C.V[j][k]
             end
-            b[D*(i-1)+k] = C.Y[i][k] - timestep(int) * (y1 + y2)
+            b[D * (i - 1) + k] = C.Y[i][k] - timestep(int) * (y1 + y2)
         end
     end
 end
 
-
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:FLRK}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol,
+        params, int::GeometricIntegrator{<:FLRK}) where {ST}
     @assert axes(x) == axes(b)
     components!(x, sol, params, int)
     residual!(b, sol, params, int)
 end
-
 
 @doc raw"""
 Solve the linear stage equations of the adjoint (momentum) variable and assemble the
@@ -338,7 +333,7 @@ function adjoint_components!(sol, params, int::GeometricIntegrator{<:FLRK}, DT)
         tᵢ = sol.t + h * (tableau(int).c[i] - 1)
         equations(int).ϑ(C.Θ[i], tᵢ, C.Q[i], C.V[i], params)
         equations(int).f(C.F[i], tᵢ, C.Q[i], C.V[i], params)
-        C.jac(C.J[i], C.Q[i], (t=tᵢ, p=sol.p, params=params))
+        C.jac(C.J[i], C.Q[i], (t = tᵢ, p = sol.p, params = params))
     end
 
     # G = Jᵀ Θ
@@ -354,9 +349,9 @@ function adjoint_components!(sol, params, int::GeometricIntegrator{<:FLRK}, DT)
     # δP = 1 ⊗ p + h (a ⊗ I) (F + Jᵀ Θ)
     for l in eachstage(int)
         for i in 1:D
-            C.δP[(l-1)*D+i] = sol.p[i]
+            C.δP[(l - 1) * D + i] = sol.p[i]
             for k in eachstage(int)
-                C.δP[(l-1)*D+i] += h * tableau(int).a[l, k] * (C.F[k][i] + C.G[k][i])
+                C.δP[(l - 1) * D + i] += h * tableau(int).a[l, k] * (C.F[k][i] + C.G[k][i])
             end
         end
     end
@@ -367,12 +362,13 @@ function adjoint_components!(sol, params, int::GeometricIntegrator{<:FLRK}, DT)
         for l in eachstage(int)
             for i in 1:D
                 for j in 1:D
-                    C.A[(k-1)*D+i, (l-1)*D+j] = h * tableau(int).a[k, l] * C.J[l][j, i]
+                    C.A[(k - 1) * D + i, (l - 1) * D + j] = h * tableau(int).a[k, l] *
+                                                            C.J[l][j, i]
                 end
             end
         end
     end
-    for i in 1:(D*S)
+    for i in 1:(D * S)
         C.A[i, i] += one(DT)
     end
 
@@ -381,7 +377,7 @@ function adjoint_components!(sol, params, int::GeometricIntegrator{<:FLRK}, DT)
 
     for l in eachstage(int)
         for i in 1:D
-            C.P[l][i] = C.δP[(l-1)*D+i]
+            C.P[l][i] = C.δP[(l - 1) * D + i]
         end
     end
 
@@ -397,7 +393,6 @@ function adjoint_components!(sol, params, int::GeometricIntegrator{<:FLRK}, DT)
     end
 end
 
-
 function update!(sol, params, int::GeometricIntegrator{<:FLRK}, DT)
     # advance the position with the Runge-Kutta method applied to q̇ = v̄(q)
     update!(sol.q, cache(int, DT).V, tableau(int), timestep(int))
@@ -412,10 +407,11 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
     update!(sol, params, int, DT)
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:FLRK,<:AbstractProblemIODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:FLRK, <:AbstractProblemIODE})
     # solve the position stages and act on the outcome the solver reports
-    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (
+        sol, params, int))
     check_solver_status(solverstatus, int)
 
     # compute the adjoint momentum and the final update

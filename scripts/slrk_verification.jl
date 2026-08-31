@@ -40,7 +40,7 @@ include(joinpath(@__DIR__, "loop_invariants.jl"))
 
 const PROBLEMS = [
     ("LotkaVolterra2d", LotkaVolterra2d),
-    ("LotkaVolterra2dSingular", LotkaVolterra2dSingular),
+    ("LotkaVolterra2dSingular", LotkaVolterra2dSingular)
 ]
 
 const CONSTRUCTORS = [
@@ -49,7 +49,7 @@ const CONSTRUCTORS = [
     ("SLRKLobattoIIICC̄", SLRKLobattoIIICC̄),
     ("SLRKLobattoIIIC̄C", SLRKLobattoIIIC̄C),
     ("SLRKLobattoIIID", SLRKLobattoIIID),
-    ("SLRKLobattoIIIE", SLRKLobattoIIIE),
+    ("SLRKLobattoIIIE", SLRKLobattoIIIE)
 ]
 
 const PARAMS = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
@@ -70,7 +70,6 @@ theta(M, t, q) = M.ϑ(t, collect(q))
 omega(M, t, q) = (Ω = zeros(2, 2); M.lotka_volterra_2d_ω(Ω, t, collect(q), PARAMS); Ω)
 energy(M, t, q) = M.hamiltonian(t, collect(q), PARAMS)
 
-
 # ---------------------------------------------------------------- step 1 ----
 # The manuscript's symplecticity conditions collapse, for q̃ = q and p̃ = p, to
 #   b̄ = b   and   diag(b̄) a + (diag(b) ā)ᵀ = b̄ bᵀ .
@@ -84,6 +83,7 @@ function step1()
     header("Step 1a — tableau symplecticity conditions (problem independent)")
     worst = 0.0
     for (name, ctor) in CONSTRUCTORS, s in 2:4
+
         m = ctor(s)
         r1 = check_pair(m.q.a, m.q.b, m.p.a, m.p.b)
         r2 = check_pair(m.q̃.a, m.q̃.b, m.p̃.a, m.p̃.b)
@@ -104,7 +104,6 @@ function step1()
         s == 2 && println("        ω = ", round.(ω; digits = 12))
     end
 end
-
 
 # ---------------------------------------------------------------- step 2 ----
 
@@ -130,13 +129,15 @@ function residual_with_s10_bug!(b, x, sol, params, int, method)
     S = method.s
     D = length(x) ÷ (4S + 1)
     for i in 1:S, k in 1:D
-        b[4*(D*(i-1)+k-1)+2] += x[4*D*S+k] * method.d[i] / method.p.b[i]
+
+        b[4 * (D * (i - 1) + k - 1) + 2] += x[4 * D * S + k] * method.d[i] / method.p.b[i]
     end
     b
 end
 
 function residual_jacobian(M, method, Δt; bug = false)
-    prob = ldae(M, copy(Q0), theta(M, 0.0, Q0), zero(Q0); timespan = (0.0, 10Δt), timestep = Δt)
+    prob = ldae(
+        M, copy(Q0), theta(M, 0.0, Q0), zero(Q0); timespan = (0.0, 10Δt), timestep = Δt)
     int = GeometricIntegrator(prob, method)
     solstep = solutionstep(int, GeometricIntegratorsBase.initialstate(prob))
     reset!(solstep, Δt)
@@ -169,8 +170,8 @@ unpivoted QR gives no guarantee that its leading columns span the range.
 """
 function mu_visibility(J, D)
     n = size(J, 2)
-    rest = J[:, 1:(n-D)]
-    mu = J[:, (n-D+1):n]
+    rest = J[:, 1:(n - D)]
+    mu = J[:, (n - D + 1):n]
     F = svd(rest)
     keep = F.S .> max(size(rest)...) * eps() * maximum(F.S)
     U = F.U[:, keep]
@@ -188,6 +189,7 @@ function step2()
     for (pname, M) in PROBLEMS
         subheader(pname)
         for (name, ctor) in CONSTRUCTORS[1:2], s in 2:3
+
             m = ctor(s)
             for (label, bug) in (("before", true), ("after", false))
                 @printf("  %-18s s=%d %-6s :", name, s, label)
@@ -201,14 +203,15 @@ function step2()
     end
 end
 
-
 # ---------------------------------------------------------------- step 3 ----
 
 # A diverging solve does not always throw — `SLRKLobattoIIIBA(3)` on the singular gauge
 # returns NaN instead — so the result is checked for finiteness rather than trusted.
 function trajectory(M, method, Δt; T = 1.0)
-    sol = integrate(ldae(M, copy(Q0), theta(M, 0.0, Q0), zero(Q0);
-        timespan = (0.0, T), timestep = Δt), method; verbosity = 0, warn_iterations = 0)
+    sol = integrate(
+        ldae(M, copy(Q0), theta(M, 0.0, Q0), zero(Q0);
+            timespan = (0.0, T), timestep = Δt),
+        method; verbosity = 0, warn_iterations = 0)
     all(all(isfinite, sol.q[i]) && all(isfinite, sol.p[i]) for i in eachindex(sol.t)) ||
         error("non-finite solution")
     sol
@@ -219,16 +222,17 @@ function step3()
     for (pname, M) in PROBLEMS
         subheader(pname)
         for (name, ctor) in CONSTRUCTORS, s in 2:3
+
             try
                 sol = trajectory(M, ctor(s), 0.1)
-                @printf("  %-18s s=%d   q(T) = [%.16e, %.16e]\n", name, s, sol.q[end][1], sol.q[end][2])
+                @printf("  %-18s s=%d   q(T) = [%.16e, %.16e]\n", name, s, sol.q[end][1],
+                    sol.q[end][2])
             catch e
                 @printf("  %-18s s=%d   FAILED: %s\n", name, s, typeof(e))
             end
         end
     end
 end
-
 
 # ---------------------------------------------------------------- step 4 ----
 # On the constraint manifold p = ϑ(q) one step is a map qₙ ↦ qₙ₊₁; the manuscript's
@@ -248,8 +252,10 @@ function jacobian_defect(M, method, q0, h, ε)
     q1 = onestep_q(M, method, q0, h)
     J = zeros(2, 2)
     for j in 1:2
-        qp = copy(q0); qp[j] += ε
-        qm = copy(q0); qm[j] -= ε
+        qp = copy(q0)
+        qp[j] += ε
+        qm = copy(q0)
+        qm[j] -= ε
         J[:, j] .= (onestep_q(M, method, qp, h) .- onestep_q(M, method, qm, h)) ./ (2ε)
     end
     maximum(abs, J' * omega(M, h, q1) * J .- Ω0)
@@ -261,6 +267,7 @@ function step4()
     for (pname, M) in PROBLEMS
         subheader(pname)
         for (name, ctor) in CONSTRUCTORS, s in 2:3
+
             @printf("  %-18s s=%d :", name, s)
             for ε in (1e-2, 1e-3, 1e-4, 1e-5, 1e-6)
                 v = try
@@ -279,6 +286,7 @@ function step4()
     for (pname, M) in PROBLEMS
         subheader(pname)
         for (name, ctor) in CONSTRUCTORS, s in 2:3
+
             @printf("  %-18s s=%d :", name, s)
             prev = NaN
             for h in (0.2, 0.1, 0.05, 0.025)
@@ -290,7 +298,8 @@ function step4()
                 end
                 isnan(dev) && continue
                 r = isnan(prev) ? NaN : log2(prev / dev)
-                @printf("  h=%-6g %.2e (p≈%s)", h, dev, isnan(r) ? "--" : @sprintf("%.1f", r))
+                @printf("  h=%-6g %.2e (p≈%s)", h, dev,
+                    isnan(r) ? "--" : @sprintf("%.1f", r))
                 prev = dev
             end
             println()
@@ -301,19 +310,22 @@ function step4()
     for (pname, M) in PROBLEMS
         subheader(pname)
         for (name, ctor) in CONSTRUCTORS, s in 2:3
+
             try
                 sol = trajectory(M, ctor(s), 0.1; T = 100.0)
-                ϕmax = maximum(maximum(abs, sol.p[i] .- theta(M, sol.t[i], sol.q[i])) for i in eachindex(sol.t))
+                ϕmax = maximum(maximum(abs, sol.p[i] .- theta(M, sol.t[i], sol.q[i]))
+                for i in eachindex(sol.t))
                 H0 = energy(M, 0.0, sol.q[0])
-                Hmax = maximum(abs(energy(M, sol.t[i], sol.q[i]) - H0) for i in eachindex(sol.t))
-                @printf("  %-18s s=%d   max|ϕ| = %.3e   max|ΔH| = %.3e\n", name, s, ϕmax, Hmax)
+                Hmax = maximum(abs(energy(M, sol.t[i], sol.q[i]) - H0)
+                for i in eachindex(sol.t))
+                @printf("  %-18s s=%d   max|ϕ| = %.3e   max|ΔH| = %.3e\n", name, s, ϕmax,
+                    Hmax)
             catch e
                 @printf("  %-18s s=%d   FAILED: %s\n", name, s, typeof(e))
             end
         end
     end
 end
-
 
 # ---------------------------------------------------------------- step 5 ----
 # CONTROL ATTEMPT THAT DOES NOT WORK. Variational integrators are symplectic on
@@ -342,9 +354,12 @@ function step5()
                     q1 = onestep_q_lode(M, m, Q0, h)
                     J = zeros(2, 2)
                     for j in 1:2
-                        qp = copy(Q0); qp[j] += 1e-3
-                        qm = copy(Q0); qm[j] -= 1e-3
-                        J[:, j] .= (onestep_q_lode(M, m, qp, h) .- onestep_q_lode(M, m, qm, h)) ./ 2e-3
+                        qp = copy(Q0)
+                        qp[j] += 1e-3
+                        qm = copy(Q0)
+                        qm[j] -= 1e-3
+                        J[:, j] .= (onestep_q_lode(M, m, qp, h) .-
+                                    onestep_q_lode(M, m, qm, h)) ./ 2e-3
                     end
                     maximum(abs, J' * omega(M, h, q1) * J .- Ω0)
                 catch e
@@ -358,7 +373,6 @@ function step5()
     end
     println("\n  (nonzero here does NOT mean non-symplectic — the restriction is invalid.)")
 end
-
 
 # ---------------------------------------------------------------- step 6 ----
 # Poincaré invariant. For ANY symplectic map on (q,p) the loop integral ∮p·dq is
@@ -408,15 +422,21 @@ function step6(step_counts = (1, 10, 100))
         failed = (can = NaN, non = NaN, ϕ = NaN)
 
         slrk_step(m) = (q, p, nsteps, h) -> begin
-            sol = integrate(ldae(M, copy(q), copy(p), zero(q);
-                timespan = (0.0, nsteps * h), timestep = h), m; verbosity = 0, warn_iterations = 0)
+            sol = integrate(
+                ldae(M, copy(q), copy(p), zero(q);
+                    timespan = (0.0, nsteps * h), timestep = h),
+                m;
+                verbosity = 0,
+                warn_iterations = 0)
             q1, p1 = collect(sol.q[end]), collect(sol.p[end])
             all(isfinite, q1) && all(isfinite, p1) || error("non-finite solution")
             (q1, p1)
         end
         lode_step(m) = (q, p, nsteps, h) -> begin
-            sol = integrate(lode(M, copy(q), copy(p);
-                timespan = (0.0, nsteps * h), timestep = h), m; verbosity = 0, warn_iterations = 0)
+            sol = integrate(
+                lode(M, copy(q), copy(p);
+                    timespan = (0.0, nsteps * h), timestep = h),
+                m; verbosity = 0, warn_iterations = 0)
             q1, p1 = collect(sol.q[end]), collect(sol.p[end])
             all(isfinite, q1) && all(isfinite, p1) || error("non-finite solution")
             (q1, p1)
@@ -442,6 +462,7 @@ function step6(step_counts = (1, 10, 100))
 
         println("  SLRK — accumulation over steps (canonical / noncanonical, max|ϕ|):")
         for (name, ctor) in CONSTRUCTORS, s in 2:3
+
             @printf("    %-18s s=%d :", name, s)
             for nsteps in step_counts
                 v = try
@@ -450,13 +471,15 @@ function step6(step_counts = (1, 10, 100))
                     @printf("  %d: FAIL(%s)", nsteps, typeof(e))
                     failed
                 end
-                isnan(v.can) || @printf("  %4d: %.2e/%.2e(ϕ%.0e)", nsteps, v.can, v.non, v.ϕ)
+                isnan(v.can) ||
+                    @printf("  %4d: %.2e/%.2e(ϕ%.0e)", nsteps, v.can, v.non, v.ϕ)
             end
             println()
         end
 
         println("  SLRK — h dependence of the canonical defect after a single step:")
         for (name, ctor) in CONSTRUCTORS, s in 2:3
+
             @printf("    %-18s s=%d :", name, s)
             prev = NaN
             for h in (0.2, 0.1, 0.05, 0.025)
@@ -468,14 +491,14 @@ function step6(step_counts = (1, 10, 100))
                 end
                 isnan(v) && continue
                 rr = isnan(prev) ? NaN : log2(prev / v)
-                @printf("  h=%-6g %.2e(p≈%s)", h, v, isnan(rr) ? "--" : @sprintf("%.1f", rr))
+                @printf("  h=%-6g %.2e(p≈%s)", h, v,
+                    isnan(rr) ? "--" : @sprintf("%.1f", rr))
                 prev = v
             end
             println()
         end
     end
 end
-
 
 # ---------------------------------------------------------------- step 7 ----
 # The proof leaves over  h · Σ_j β_j (d_j / b̄_j) · dμ ∧ dΛ_j  in the multiplier
@@ -486,10 +509,12 @@ function step7()
     for (pname, M) in PROBLEMS
         subheader(pname)
         for (name, ctor) in CONSTRUCTORS, s in 2:3
+
             m = ctor(s)
             @printf("  %-18s s=%d :", name, s)
             for h in (0.2, 0.1, 0.05)
-                prob = ldae(M, copy(Q0), theta(M, 0.0, Q0), zero(Q0); timespan = (0.0, h), timestep = h)
+                prob = ldae(M, copy(Q0), theta(M, 0.0, Q0), zero(Q0);
+                    timespan = (0.0, h), timestep = h)
                 int = GeometricIntegrator(prob, m; verbosity = 0, warn_iterations = 0)
                 try
                     solstep = solutionstep(int, GeometricIntegratorsBase.initialstate(prob))
@@ -511,7 +536,6 @@ function step7()
     println("\n  (Σd·V ≈ 0 is the imposed constraint; Σd·Λ ≠ 0 is the uncontrolled leftover.")
     println("   h|μ||Σd·Λ| is the predicted size of the surviving wedge term.)")
 end
-
 
 # `--steps=1,10,100,...` sets the step counts of step 6; anything else selects steps.
 const STEP_COUNTS = let a = filter(startswith("--steps="), ARGS)

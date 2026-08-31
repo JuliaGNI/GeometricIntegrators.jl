@@ -138,7 +138,6 @@ import GeometricProblems.LotkaVolterra2d as LV2d
 import GeometricProblems.LotkaVolterra2dSingular as LV2dSingular
 import GeometricProblems.MasslessChargedParticle as MCP
 
-
 # ---------------------------------------------------------------------------
 # degenerate Lagrangian test problems
 # ---------------------------------------------------------------------------
@@ -148,7 +147,7 @@ A degenerate Lagrangian test problem  L = ϑ(q)⋅q̇ - H(q).  `iode(h)` returns
 `IODEProblem` for a single step of size `h`, so that the schemes implemented here
 can be compared against the integrators of GeometricIntegrators.
 """
-struct DegenerateProblem{TT,TH,TI}
+struct DegenerateProblem{TT, TH, TI}
     name::String
     ϑ::TT
     H::TH
@@ -157,21 +156,23 @@ struct DegenerateProblem{TT,TH,TI}
 end
 
 function testproblems()
-    par, pars, parm = LV2d.default_parameters(), LV2dSingular.default_parameters(), MCP.default_parameters()
+    par, pars, parm = LV2d.default_parameters(), LV2dSingular.default_parameters(),
+    MCP.default_parameters()
     [
         DegenerateProblem("LotkaVolterra2d",
             q -> LV2d.ϑ(0.0, q), q -> LV2d.hamiltonian(0.0, q, par), copy(LV2d.q₀),
-            h -> LV2d.iodeproblem(copy(LV2d.q₀); timespan=(0.0, h), timestep=h, parameters=par)),
+            h -> LV2d.iodeproblem(copy(LV2d.q₀); timespan = (0.0, h), timestep = h, parameters = par)),
         DegenerateProblem("LotkaVolterra2dSingular",
             q -> LV2dSingular.ϑ(0.0, q), q -> LV2dSingular.hamiltonian(0.0, q, pars), copy(LV2dSingular.q₀),
-            h -> LV2dSingular.iodeproblem(copy(LV2dSingular.q₀); timespan=(0.0, h), timestep=h, parameters=pars)),
+            h -> LV2dSingular.iodeproblem(copy(LV2dSingular.q₀); timespan = (0.0, h),
+                timestep = h, parameters = pars)),
         # Both Lotka-Volterra models turn out to be degenerate for this test (see
         # `report_degeneracy`), so the massless charged particle of the same paper
         # is included as a discriminating example: there both components of ϑ are
         # nonlinear.
         DegenerateProblem("MasslessChargedParticle",
             q -> MCP.ϑ(0.0, q, parm), q -> MCP.hamiltonian(0.0, q, parm), copy(MCP.q₀),
-            h -> MCP.iodeproblem(copy(MCP.q₀); timespan=(0.0, h), timestep=h, parameters=parm)),
+            h -> MCP.iodeproblem(copy(MCP.q₀); timespan = (0.0, h), timestep = h, parameters = parm))
     ]
 end
 
@@ -196,12 +197,11 @@ end
 # the opposite sign on the mixed term.  With `mixedsign = +1` the form below is
 # preserved to round-off; with the printed sign `mixedsign = -1` a spurious defect
 # of order h³ appears, since the two differ by 2 h² λ^k ϑ_{k,ij} = O(h³).
-function Omega_lambda(prob, q, λ, h; mixedsign=+1)
+function Omega_lambda(prob, q, λ, h; mixedsign = +1)
     Ω = Omega_bar(prob, q)
     T = ForwardDiff.hessian(x -> dot(prob.ϑ(x), λ), q)   # (λ⋅ϑ_qq)_ij = λ^k ϑ_{k,ij}
     [Ω (mixedsign * h^2 .* T); (-mixedsign * h^2 .* T) (-h^2 .* Ω)]
 end
-
 
 # ---------------------------------------------------------------------------
 # tableaus of variational partitioned Runge-Kutta methods
@@ -234,7 +234,7 @@ function VPRKTableau(name, a, b)
     R∞ = 1 - dot(b, a \ ones(s))
     m = 0
     for i in 1:s
-        isapprox(a[i, :], b ./ 2; atol=1e-13) && (m = i)
+        isapprox(a[i, :], b ./ 2; atol = 1e-13) && (m = i)
     end
     VPRKTableau(name, a, ā, b, R∞, m)
 end
@@ -252,7 +252,7 @@ function tableaus()
         VPRKTableau("SRK3",                        # Table `tab:srk3` of the paper
             [5/36 2/9 25/180-s15/10
              5/36 2/9 5/36
-             25/180+s15/10 2/9 5/36], [5/18, 4/9, 5/18]),
+             25/180+s15/10 2/9 5/36], [5/18, 4/9, 5/18])
     ]
 end
 
@@ -266,14 +266,14 @@ function tableau_order(a, b)
     s = length(b)
     c = a * ones(s)
     conditions = [
-        [isapprox(sum(b), 1; atol=1e-12)],
-        [isapprox(dot(b, c), 1 / 2; atol=1e-12)],
-        [isapprox(dot(b, c .^ 2), 1 / 3; atol=1e-12),
-            isapprox(dot(b, a * c), 1 / 6; atol=1e-12)],
-        [isapprox(dot(b, c .^ 3), 1 / 4; atol=1e-12),
-            isapprox(dot(b, c .* (a * c)), 1 / 8; atol=1e-12),
-            isapprox(dot(b, a * (c .^ 2)), 1 / 12; atol=1e-12),
-            isapprox(dot(b, a * (a * c)), 1 / 24; atol=1e-12)],
+        [isapprox(sum(b), 1; atol = 1e-12)],
+        [isapprox(dot(b, c), 1 / 2; atol = 1e-12)],
+        [isapprox(dot(b, c .^ 2), 1 / 3; atol = 1e-12),
+            isapprox(dot(b, a * c), 1 / 6; atol = 1e-12)],
+        [isapprox(dot(b, c .^ 3), 1 / 4; atol = 1e-12),
+            isapprox(dot(b, c .* (a * c)), 1 / 8; atol = 1e-12),
+            isapprox(dot(b, a * (c .^ 2)), 1 / 12; atol = 1e-12),
+            isapprox(dot(b, a * (a * c)), 1 / 24; atol = 1e-12)]
     ]
     p = 0
     for (k, cond) in enumerate(conditions)
@@ -282,7 +282,6 @@ function tableau_order(a, b)
     end
     p
 end
-
 
 # ---------------------------------------------------------------------------
 # projection schemes
@@ -327,7 +326,7 @@ const SCHEME_INFO = (
     (:midpoint, "--", "symplectic"),
     (:midpoint_R1, "--", "symplectic (proof's sign)"),
     (:midpoint_gi, "VPRKpMidpoint", "symplectic"),
-    (:internal, "VPRKpInternal (not functional)", "(empty section)"),
+    (:internal, "VPRKpInternal (not functional)", "(empty section)")
 )
 
 const ALL_SCHEMES = Tuple(info[1] for info in SCHEME_INFO)
@@ -355,24 +354,26 @@ internal projection.  Returns `(residual, qₙ₊₁, λ)`.
 function residual(x, qₙ, λₙ, h, tab::VPRKTableau, prob, scheme::Symbol)
     d = length(qₙ)
     s = length(tab.b)
-    V = [x[d*(i-1)+1:d*i] for i in 1:s]
+    V = [x[(d * (i - 1) + 1):(d * i)] for i in 1:s]
     pₙ = prob.ϑ(qₙ)
 
     if scheme === :internal
-        λ = x[d*s+1:d*s+d]
+        λ = x[(d * s + 1):(d * s + d)]
         # every internal stage is shifted by h Ω^{-1}∇φ^T λ
         Q = [qₙ .+ h .* sum(tab.a[i, j] .* V[j] for j in 1:s) .+ h .* λ for i in 1:s]
         F = [fϑ(prob, Q[i], V[i]) .- ∇H(prob, Q[i]) for i in 1:s]
         G = sum(tab.b[j] .* fϑ(prob, Q[j], λ) for j in 1:s)
         qₙ₊₁ = qₙ .+ h .* sum(tab.b[i] .* V[i] for i in 1:s) .+ (h * (1 + tab.R∞)) .* λ
         pₙ₊₁ = pₙ .+ h .* sum(tab.b[i] .* F[i] for i in 1:s) .+ (h * (1 + tab.R∞)) .* G
-        res = vcat([prob.ϑ(Q[i]) .- pₙ .- h .* sum(tab.ā[i, j] .* F[j] for j in 1:s) .- h .* G for i in 1:s]...,
+        res = vcat(
+            [prob.ϑ(Q[i]) .- pₙ .- h .* sum(tab.ā[i, j] .* F[j] for j in 1:s) .- h .* G
+             for i in 1:s]...,
             pₙ₊₁ .- prob.ϑ(qₙ₊₁))
         return res, qₙ₊₁, λ
     end
 
-    p̄ₙ = x[d*s+1:d*s+d]
-    λ = x[d*s+d+1:d*s+2d]
+    p̄ₙ = x[(d * s + 1):(d * s + d)]
+    λ = x[(d * s + d + 1):(d * s + 2d)]
     RU₁, RU₂ = weights(scheme, tab.R∞)
     λ₁ = scheme === :symplectic ? λₙ : λ            # pre-perturbation multiplier
 
@@ -397,13 +398,13 @@ function residual(x, qₙ, λₙ, h, tab::VPRKTableau, prob, scheme::Symbol)
     ζ₁ = midpointscheme(scheme) ? ζ : qₙ
     pₙ₊₁ = p̄ₙ₊₁ .+ (h * RU₂) .* fϑ(prob, ζ, λ)
 
-    res = vcat([prob.ϑ(Q[i]) .- p̄ₙ .- h .* sum(tab.ā[i, j] .* F[j] for j in 1:s) for i in 1:s]...,
+    res = vcat(
+        [prob.ϑ(Q[i]) .- p̄ₙ .- h .* sum(tab.ā[i, j] .* F[j] for j in 1:s) for i in 1:s]...,
         p̄ₙ .- pₙ .- (h * RU₁) .* fϑ(prob, ζ₁, λ₁),   # perturbation, p-component
         pₙ₊₁ .- prob.ϑ(qₙ₊₁))                        # 0 = φ(z_{n+1})
 
     return res, qₙ₊₁, λ
 end
-
 
 # ---------------------------------------------------------------------------
 # solving one step and differentiating the step map
@@ -418,9 +419,9 @@ function initialguess(prob, qₙ, h, tab, scheme)
     x = zeros(nunknowns(scheme, s, d))
     v = qdot(prob, qₙ)
     for i in 1:s
-        x[d*(i-1)+1:d*i] .= v
+        x[(d * (i - 1) + 1):(d * i)] .= v
     end
-    scheme === :internal || (x[d*s+1:d*s+d] .= prob.ϑ(qₙ))
+    scheme === :internal || (x[(d * s + 1):(d * s + d)] .= prob.ϑ(qₙ))
     x
 end
 
@@ -431,7 +432,7 @@ const NEWTON_TOL = 1e-13
 const NEWTON_ACCEPT = 1e-12
 
 "Newton solver with exact (ForwardDiff) Jacobian; returns `(x, ‖res‖, converged)`."
-function newton(prob, qₙ, λₙ, h, tab, scheme; itmax=100, tol=NEWTON_TOL)
+function newton(prob, qₙ, λₙ, h, tab, scheme; itmax = 100, tol = NEWTON_TOL)
     x = initialguess(prob, qₙ, h, tab, scheme)
     f = y -> residual(y, qₙ, λₙ, h, tab, prob, scheme)[1]
     nr = norm(f(x))
@@ -476,18 +477,18 @@ function stepmap(prob, qₙ, λₙ, h, tab, scheme)
 
     out = extended(scheme) ? (r -> vcat(r[2], r[3])) : (r -> r[2])
     y = extended(scheme) ? vcat(qₙ, λₙ) : qₙ
-    splity = extended(scheme) ? (v -> (v[1:d], v[d+1:2d])) : (v -> (v, λₙ))
+    splity = extended(scheme) ? (v -> (v[1:d], v[(d + 1):2d])) : (v -> (v, λₙ))
 
     Fx = ForwardDiff.jacobian(z -> residual(z, qₙ, λₙ, h, tab, prob, scheme)[1], x)
     gx = ForwardDiff.jacobian(z -> out(residual(z, qₙ, λₙ, h, tab, prob, scheme)), x)
     Fy = ForwardDiff.jacobian(v -> begin
-        q, l = splity(v)
-        residual(x, q, l, h, tab, prob, scheme)[1]
-    end, y)
+            q, l = splity(v)
+            residual(x, q, l, h, tab, prob, scheme)[1]
+        end, y)
     gy = ForwardDiff.jacobian(v -> begin
-        q, l = splity(v)
-        out(residual(x, q, l, h, tab, prob, scheme))
-    end, y)
+            q, l = splity(v)
+            out(residual(x, q, l, h, tab, prob, scheme))
+        end, y)
 
     J = gy .+ gx * (-(Fx \ Fy))
     return J, qout, λout, nr, true
@@ -498,14 +499,14 @@ function defect(prob, qₙ, λₙ, h, tab, scheme)
     J, qout, λout, nr, ok = stepmap(prob, qₙ, λₙ, h, tab, scheme)
     ok || return NaN, nr
     if extended(scheme)
-        D = transpose(J) * Omega_lambda(prob, qout, λout, h) * J .- Omega_lambda(prob, qₙ, λₙ, h)
+        D = transpose(J) * Omega_lambda(prob, qout, λout, h) * J .-
+            Omega_lambda(prob, qₙ, λₙ, h)
         return norm(D) / max(norm(Omega_lambda(prob, qₙ, λₙ, h)), eps()), nr
     else
         D = transpose(J) * Omega_bar(prob, qout) * J .- Omega_bar(prob, qₙ)
         return norm(D) / max(norm(Omega_bar(prob, qₙ)), eps()), nr
     end
 end
-
 
 # ---------------------------------------------------------------------------
 # validation of the harness: the unprojected VPRK method is canonically symplectic
@@ -520,11 +521,12 @@ function vprk_canonical(prob, z, h, tab)
     d = length(z) ÷ 2
     s = length(tab.b)
     res = function (V, zz)
-        q, p = zz[1:d], zz[d+1:2d]
-        Vs = [V[d*(i-1)+1:d*i] for i in 1:s]
+        q, p = zz[1:d], zz[(d + 1):2d]
+        Vs = [V[(d * (i - 1) + 1):(d * i)] for i in 1:s]
         Q = [q .+ h .* sum(tab.a[i, j] .* Vs[j] for j in 1:s) for i in 1:s]
         F = [fϑ(prob, Q[i], Vs[i]) .- ∇H(prob, Q[i]) for i in 1:s]
-        r = vcat([prob.ϑ(Q[i]) .- p .- h .* sum(tab.ā[i, j] .* F[j] for j in 1:s) for i in 1:s]...)
+        r = vcat([prob.ϑ(Q[i]) .- p .- h .* sum(tab.ā[i, j] .* F[j] for j in 1:s)
+                  for i in 1:s]...)
         znew = vcat(q .+ h .* sum(tab.b[i] .* Vs[i] for i in 1:s),
             p .+ h .* sum(tab.b[i] .* F[i] for i in 1:s))
         r, znew
@@ -557,7 +559,6 @@ function vprk_canonical(prob, z, h, tab)
     Ω = [zeros(d, d) I(d); -I(d) zeros(d, d)]
     norm(transpose(J) * Ω * J .- Ω), nr
 end
-
 
 # ---------------------------------------------------------------------------
 # validation of the harness: agreement with the integrators of the package
@@ -597,10 +598,12 @@ R(∞) = -1 special case, where several of them coincide.
 Only `q_{n+1}` is compared, since it is invariant under the different scaling of
 the multiplier (see the header).
 """
-function report_package_comparison(prob; h=0.1)
-    println("Agreement with the integrators of GeometricIntegrators (", prob.name, ", h = ", h, ")")
+function report_package_comparison(prob; h = 0.1)
+    println("Agreement with the integrators of GeometricIntegrators (",
+        prob.name, ", h = ", h, ")")
     println("-"^90)
-    @printf("%-8s %6s %-14s %-24s %11s %11s\n", "tableau", "R(∞)", "scheme", "package method", "‖Δq‖", "‖res‖ (here)")
+    @printf("%-8s %6s %-14s %-24s %11s %11s\n",
+        "tableau", "R(∞)", "scheme", "package method", "‖Δq‖", "‖res‖ (here)")
     d = length(prob.q₀)
     for tab in tableaus()
         base = packagebase(tab.name)
@@ -625,7 +628,6 @@ function report_package_comparison(prob; h=0.1)
     println()
 end
 
-
 # ---------------------------------------------------------------------------
 # the obstruction: a midpoint stage forces R(∞) = -1
 # ---------------------------------------------------------------------------
@@ -647,24 +649,27 @@ the tableaus themselves are validated rather than assumed.
 function check_midpoint_stage_lemma()
     println("Midpoint-stage property vs. R(∞)")
     println("-"^90)
-    @printf("%-8s %5s %8s %10s %10s %14s %14s\n", "tableau", "s", "order≥", "R(∞)[A]", "R(∞)[Ā]", "row m of A=b/2", "row m of Ā=b/2")
+    @printf("%-8s %5s %8s %10s %10s %14s %14s\n",
+        "tableau", "s", "order≥", "R(∞)[A]", "R(∞)[Ā]", "row m of A=b/2", "row m of Ā=b/2")
     for tab in tableaus()
         s = length(tab.b)
         R̄∞ = 1 - dot(tab.b, tab.ā \ ones(s))
         m = tab.midpointstage
         p = tableau_order(tab.a, tab.b)
         rowa = m > 0 ? "yes (m=$m)" : "no"
-        rowā = m > 0 && isapprox(tab.ā[m, :], tab.b ./ 2; atol=1e-12) ? "yes (m=$m)" : "no"
-        @printf("%-8s %5d %8d %10.4f %10.4f %14s %14s\n", tab.name, s, p, tab.R∞, R̄∞, rowa, rowā)
+        rowā = m > 0 && isapprox(tab.ā[m, :], tab.b ./ 2; atol = 1e-12) ? "yes (m=$m)" :
+               "no"
+        @printf("%-8s %5d %8d %10.4f %10.4f %14s %14s\n", tab.name, s, p, tab.R∞, R̄∞, rowa,
+            rowā)
         # the tableau is of at least order two and Ā shares the abscissae of A
         @assert p ≥ 2 "$(tab.name) is not of order two"
-        @assert isapprox(tab.ā * ones(s), tab.a * ones(s); atol=1e-12) "Ā and A of $(tab.name) must share the abscissae c"
-        m > 0 && @assert isapprox(tab.R∞, -1.0; atol=1e-12) "midpoint stage must force R(∞) = -1"
+        @assert isapprox(tab.ā * ones(s), tab.a * ones(s); atol = 1e-12) "Ā and A of $(tab.name) must share the abscissae c"
+        m > 0 &&
+            @assert isapprox(tab.R∞, -1.0; atol = 1e-12) "midpoint stage must force R(∞) = -1"
     end
     println("The order conditions are checked up to order four only, so `order≥` is a lower bound.")
     println()
 end
-
 
 # ---------------------------------------------------------------------------
 # reports
@@ -675,8 +680,8 @@ const STEPSIZES = [0.2, 0.1, 0.05, 0.025, 0.0125]
 function orders(defects)
     o = fill(NaN, length(defects))
     for i in 2:length(defects)
-        if isfinite(defects[i]) && isfinite(defects[i-1]) && defects[i] > 0
-            o[i] = log2(defects[i-1] / defects[i])
+        if isfinite(defects[i]) && isfinite(defects[i - 1]) && defects[i] > 0
+            o[i] = log2(defects[i - 1] / defects[i])
         end
     end
     o
@@ -750,7 +755,7 @@ function check_generalised_form(prob, tab, h)
     # gradients (as row vectors on the 2d-dimensional space of (q_n, λ_n))
     E = Matrix{Float64}(I, 2d, 2d)
     gq(i, which) = which === :n ? E[i, :] : J[i, :]
-    gλ(k, which) = which === :n ? E[d+k, :] : J[d+k, :]
+    gλ(k, which) = which === :n ? E[d + k, :] : J[d + k, :]
 
     function forms(q, λ, which)
         Jϑ = ForwardDiff.jacobian(prob.ϑ, q)                     # Jϑ[k,i] = ϑ_{k,i}
@@ -764,7 +769,7 @@ function check_generalised_form(prob, tab, h)
         dAdB = zeros(2d, 2d)
         for i in 1:d
             gA = -h .* (sum(λ[k] .* Hϑ[k][i, j] .* gq(j, which) for k in 1:d, j in 1:d) .+
-                        sum(Jϑ[k, i] .* gλ(k, which) for k in 1:d))
+                  sum(Jϑ[k, i] .* gλ(k, which) for k in 1:d))
             gB = h .* gλ(i, which)
             dAdB .+= wedge(gA, gB)
         end
@@ -777,8 +782,8 @@ function check_generalised_form(prob, tab, h)
 
     # ω_λ with the corrected and with the printed sign of the mixed term
     defects = map((+1, -1)) do s
-        Ωλ = Omega_lambda(prob, qₙ, λₙ, h; mixedsign=s)
-        norm(transpose(J) * Omega_lambda(prob, qₙ₊₁, λₙ₊₁, h; mixedsign=s) * J .- Ωλ) /
+        Ωλ = Omega_lambda(prob, qₙ, λₙ, h; mixedsign = s)
+        norm(transpose(J) * Omega_lambda(prob, qₙ₊₁, λₙ₊₁, h; mixedsign = s) * J .- Ωλ) /
         max(norm(Ωλ), eps())
     end
 
@@ -788,7 +793,8 @@ end
 function report_generalised_form(prob, tab)
     println("Symplectic projection: exact identity and the two signs of ω_λ (", tab.name, ")")
     println("-"^90)
-    @printf("%-8s %20s %20s %20s\n", "h", "identity dp∧dq-dA∧dB", "ω_λ corrected sign", "ω_λ printed sign")
+    @printf("%-8s %20s %20s %20s\n", "h", "identity dp∧dq-dA∧dB", "ω_λ corrected sign",
+        "ω_λ printed sign")
     for h in [0.2, 0.1, 0.05, 0.025]
         a, b, c = check_generalised_form(prob, tab, h)
         @printf("%-8s %20.3e %20.3e %20.3e\n", string(h), a, b, c)
@@ -819,18 +825,19 @@ The second criterion is specific to d = 2, where dλ^i∧dλ^j has a single
 independent component.  Affineness of ϑ_k is judged from the largest Hessian norm
 over a few points around q₀ rather than from its value at q₀ alone.
 """
-function report_degeneracy(prob, tab; h=0.1, nsamples=5)
+function report_degeneracy(prob, tab; h = 0.1, nsamples = 5)
     d = length(prob.q₀)
     @assert d == 2 "the second degeneracy criterion is derived for d = 2"
     x, nr, ok = newton(prob, prob.q₀, zeros(d), h, tab, :standard)
     _, _, λ = residual(x, prob.q₀, zeros(d), h, tab, prob, :standard)
     points = [prob.q₀, (prob.q₀ .+ 0.1 .* randn(d) for _ in 2:nsamples)...]
-    hess = [maximum(norm(ForwardDiff.hessian(y -> prob.ϑ(y)[k], q)) for q in points) for k in 1:d]
+    hess = [maximum(norm(ForwardDiff.hessian(y -> prob.ϑ(y)[k], q)) for q in points)
+            for k in 1:d]
     active = [abs(λ[k]) > 1e-10 for k in 1:d]
     kills2 = all(!active[k] || hess[k] < 1e-12 for k in 1:d)
     kills1 = count(active) <= 1
     @printf("%-26s λ = %-26s max‖∂²ϑ_k‖ = %-18s %s\n", prob.name,
-        string(round.(λ; sigdigits=3)), string(round.(hess; sigdigits=3)),
+        string(round.(λ; sigdigits = 3)), string(round.(hess; sigdigits = 3)),
         (kills1 && kills2) ? "DEGENERATE (defect vanishes structurally)" : "discriminating")
     ok || @printf("%-26s (warning: step did not converge, ‖res‖ = %.2e)\n", "", nr)
 end
@@ -869,7 +876,7 @@ the *correct* dynamics, not merely to something.  With `n = 20000` the error of
 the reference is far below the errors it is compared against, at a tenth of the
 cost of the nested automatic differentiation of a longer run.
 """
-function reference(prob, T; n=20000)
+function reference(prob, T; n = 20000)
     q = copy(prob.q₀)
     dt = T / n
     for _ in 1:n
@@ -922,14 +929,14 @@ minimum-norm step `pinv(J) res` so that a singular Jacobian is handled rather th
 hit as an error.  Returns `(x, ‖res‖, singular values of J at x)`.  Deterministic:
 no random restarts are involved.
 """
-function lsqsolve(prob, qₙ, h, tab, scheme; itmax=200)
+function lsqsolve(prob, qₙ, h, tab, scheme; itmax = 200)
     d = length(qₙ)
     f = y -> residual(y, qₙ, zeros(d), h, tab, prob, scheme)[1]
     x = initialguess(prob, qₙ, h, tab, scheme)
     nr = norm(f(x))
     for _ in 1:itmax
         J = ForwardDiff.jacobian(f, x)
-        Δ = pinv(J; rtol=1e-8) * f(x)
+        Δ = pinv(J; rtol = 1e-8) * f(x)
         all(isfinite, Δ) || break
         α, improved = 1.0, false
         for _ in 1:40
@@ -947,7 +954,7 @@ function lsqsolve(prob, qₙ, h, tab, scheme; itmax=200)
 end
 
 "number of singular values that vanish relative to the largest one"
-rankdeficiency(σ; rtol=1e-10) = count(<(rtol * maximum(σ)), σ)
+rankdeficiency(σ; rtol = 1e-10) = count(<(rtol * maximum(σ)), σ)
 
 """
 Demonstrate that the R(∞) = +1 midpoint projection -- the sign the symplecticity
@@ -976,22 +983,24 @@ For a tableau *without* a midpoint stage the degeneracy does not arise: the
 Jacobian is only nearly singular, the equations are solvable, and `report_defects`
 then shows an O(h³) symplecticity defect instead.
 """
-function report_midpoint_R1_obstruction(prob, tab; ntrials=24, seed=1234)
+function report_midpoint_R1_obstruction(prob, tab; ntrials = 24, seed = 1234)
     Random.seed!(seed)
     println("Solvability of the midpoint projection with the R(∞) = +1 sign")
     println("-"^102)
-    @printf("%-8s %12s %8s %14s %14s %14s %14s\n", "h", "σ_min/σ_max", "rank def", "least-sq ‖res‖",
+    @printf("%-8s %12s %8s %14s %14s %14s %14s\n",
+        "h", "σ_min/σ_max", "rank def", "least-sq ‖res‖",
         "$(ntrials) starts", "|2κ| there", "‖res‖ (R(∞)=-1)")
     d = length(prob.q₀)
     for h in [0.2, 0.1, 0.05]
         xls, nrls, σ = lsqsolve(prob, prob.q₀, h, tab, :midpoint_R1)
         best, bq = nrls, residual(xls, prob.q₀, zeros(d), h, tab, prob, :midpoint_R1)[2]
         for t in 1:ntrials
-            x = initialguess(prob, prob.q₀, h, tab, :midpoint_R1) .+ 0.3 .* randn(nunknowns(:midpoint_R1, length(tab.b), d))
+            x = initialguess(prob, prob.q₀, h, tab, :midpoint_R1) .+
+                0.3 .* randn(nunknowns(:midpoint_R1, length(tab.b), d))
             f = y -> residual(y, prob.q₀, zeros(d), h, tab, prob, :midpoint_R1)[1]
             nr = norm(f(x))
             for _ in 1:80
-                Δ = pinv(ForwardDiff.jacobian(f, x); rtol=1e-8) * f(x)
+                Δ = pinv(ForwardDiff.jacobian(f, x); rtol = 1e-8) * f(x)
                 all(isfinite, Δ) || break
                 α, improved = 1.0, false
                 for _ in 1:25
@@ -1019,7 +1028,6 @@ function report_midpoint_R1_obstruction(prob, tab; ntrials=24, seed=1234)
     println()
 end
 
-
 # ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
@@ -1039,6 +1047,7 @@ function main()
     println("-"^90)
     @printf("%-26s %-8s %14s %14s\n", "problem", "tableau", "|JᵀΩJ-Ω|", "‖res‖")
     for prob in testproblems(), tab in tableaus()
+
         d = length(prob.q₀)
         # deliberately off Δ, and not along a single coordinate direction
         z = vcat(prob.q₀, prob.ϑ(prob.q₀) .+ [0.05 * (-1)^k for k in 1:d])

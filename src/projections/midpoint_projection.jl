@@ -2,28 +2,33 @@ struct MidpointProjection{DT} <: ProjectionMethod
     RU::Vector{DT}
     RG::Vector{DT}
 
-    function MidpointProjection(R∞=1)
+    function MidpointProjection(R∞ = 1)
         DT, RU, RG = _projection_weights([1 // 2, 1 // 2], [1 // 2, 1 // 2], R∞)
         new{DT}(RU, RG)
     end
 end
 
 MidpointProjection(method::GeometricMethod) = ProjectedMethod(MidpointProjection(), method)
-MidpointProjection(method::Union{RKMethod,PRKMethod,VPRKMethod}) = ProjectedMethod(MidpointProjection(tableau(method).R∞), method)
+function MidpointProjection(method::Union{RKMethod, PRKMethod, VPRKMethod})
+    ProjectedMethod(MidpointProjection(tableau(method).R∞), method)
+end
 
-const MidpointProjectionIntegrator{PT} = ProjectionIntegrator{<:ProjectedMethod{<:MidpointProjection,<:GeometricMethod},PT} where {PT<:AbstractProblem}
+const MidpointProjectionIntegrator{PT} = ProjectionIntegrator{
+    <:ProjectedMethod{<:MidpointProjection, <:GeometricMethod},
+    PT} where {PT <: AbstractProblem}
 
-function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:MidpointProjection}; kwargs...) where {ST}
+function Cache{ST}(problem::EquationProblem,
+        method::ProjectedMethod{<:MidpointProjection}; kwargs...) where {ST}
     ProjectionCache{ST}(problem, method; kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:MidpointProjection}) =
-    ProjectionCache{ST,timetype(problem),typeof(problem),nconstraints(problem),solversize(parent(method), problem)}
-
+@inline CacheType(ST, problem::EquationProblem,
+    method::ProjectedMethod{<:MidpointProjection}) = ProjectionCache{
+    ST, timetype(problem), typeof(problem),
+    nconstraints(problem), solversize(parent(method), problem)}
 
 default_solver(::ProjectedMethod{<:MidpointProjection}) = Newton()
 default_iguess(::ProjectedMethod{<:MidpointProjection}) = HermiteExtrapolation()
-
 
 # function Base.show(io::IO, int::ProjectedMethod{<:MidpointProjection})
 #     print(io, "\nProjection method with:\n")
@@ -33,18 +38,16 @@ default_iguess(::ProjectedMethod{<:MidpointProjection}) = HermiteExtrapolation()
 #     # print(io, reference(int.params.tab))
 # end
 
-
 function split_nlsolution(x::AbstractVector, int::MidpointProjectionIntegrator)
     D = ndims(cache(int))
     M = nconstraints(int)
     N = solversize(parent(method(int)), problem(int))
 
     x̄ = @view x[1:N]
-    x̃ = @view x[N+1:N+D+M]
+    x̃ = @view x[(N + 1):(N + D + M)]
 
     return (x̄, x̃)
 end
-
 
 function initial_guess!(sol, history, params, int::MidpointProjectionIntegrator)
     # compute initial guess for parent method
@@ -55,11 +58,11 @@ function initial_guess!(sol, history, params, int::MidpointProjectionIntegrator)
 
     # compute initial guess for projected solution
     soltmp = (
-        t=(sol.t + history[1].t) / 2,
-        q=cache(int).q̃,
-        p=cache(int).p̃,
-        q̇=cache(int).ṽ,
-        ṗ=cache(int).f̃,
+        t = (sol.t + history[1].t) / 2,
+        q = cache(int).q̃,
+        p = cache(int).p̃,
+        q̇ = cache(int).ṽ,
+        ṗ = cache(int).f̃
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
     # TODO: Fix this!
@@ -68,11 +71,11 @@ function initial_guess!(sol, history, params, int::MidpointProjectionIntegrator)
     cache(int).x̃[1:ndims(cache(int))] .= cache(int).q̃
 
     # set initial guess for Lagrange multiplier to zero
-    cache(int).x̃[ndims(cache(int))+1:end] .= 0
+    cache(int).x̃[(ndims(cache(int)) + 1):end] .= 0
 end
 
-
-function components!(x::AbstractVector{ST}, sol, params, int::MidpointProjectionIntegrator{<:DAEProblem}) where {ST}
+function components!(x::AbstractVector{ST}, sol, params,
+        int::MidpointProjectionIntegrator{<:DAEProblem}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -84,7 +87,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::MidpointProjection
 
     # copy x to λ
     for k in eachindex(C.λ)
-        C.λ[k] = x[ndims(C)+k]
+        C.λ[k] = x[ndims(C) + k]
     end
 
     # compute u=λ and g=∇ϑ(q)⋅λ
@@ -93,8 +96,8 @@ function components!(x::AbstractVector{ST}, sol, params, int::MidpointProjection
     C.U[2] .= projection(method(int)).RU[2] .* C.u
 end
 
-
-function components!(x::AbstractVector{ST}, sol, params, int::MidpointProjectionIntegrator{<:Union{IODEProblem,LODEProblem}}) where {ST}
+function components!(x::AbstractVector{ST}, sol, params,
+        int::MidpointProjectionIntegrator{<:Union{IODEProblem, LODEProblem}}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -107,7 +110,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::MidpointProjection
 
     # copy x to λ
     for k in eachindex(C.λ)
-        C.λ[k] = x[ndims(C)+k]
+        C.λ[k] = x[ndims(C) + k]
     end
 
     # compute u = λ
@@ -120,8 +123,8 @@ function components!(x::AbstractVector{ST}, sol, params, int::MidpointProjection
     C.G[2] .= projection(method(int)).RG[2] .* C.g
 end
 
-
-function residual!(b::AbstractVector{ST}, sol, params, int::MidpointProjectionIntegrator{<:DAEProblem}) where {ST}
+function residual!(b::AbstractVector{ST}, sol, params,
+        int::MidpointProjectionIntegrator{<:DAEProblem}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -135,12 +138,12 @@ function residual!(b::AbstractVector{ST}, sol, params, int::MidpointProjectionIn
 
     # compute b = ϕ(q) or b = ϕ(q,p) or b = ϕ(...)
     for k in 1:nconstraints(int)
-        b[ndims(C)+k] = C.ϕ[k]
+        b[ndims(C) + k] = C.ϕ[k]
     end
 end
 
-
-function residual!(b::AbstractVector{ST}, sol, params, int::MidpointProjectionIntegrator{<:Union{IODEProblem,LODEProblem}}) where {ST}
+function residual!(b::AbstractVector{ST}, sol, params,
+        int::MidpointProjectionIntegrator{<:Union{IODEProblem, LODEProblem}}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -154,13 +157,13 @@ function residual!(b::AbstractVector{ST}, sol, params, int::MidpointProjectionIn
 
     # compute b = ϕ(q) or b = ϕ(q,p) or b = ϕ(...)
     for k in 1:nconstraints(int)
-        b[ndims(C)+k] = C.ϑ[k] - sol.p[k]
+        b[ndims(C) + k] = C.ϑ[k] - sol.p[k]
     end
 end
 
-
 # Compute stages of variational partitioned Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::MidpointProjectionIntegrator) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol,
+        params, int::MidpointProjectionIntegrator) where {ST}
     # check that x and b are compatible
     @assert axes(x) == axes(b)
 
@@ -194,7 +197,6 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     residual!(b̃, soltemp, params, int)
 end
 
-
 function update!(sol, params, x::AbstractVector{ST}, int::MidpointProjectionIntegrator) where {ST}
     # split x and b
     x̄, x̃ = split_nlsolution(x, int)
@@ -214,7 +216,6 @@ function update!(sol, params, x::AbstractVector{ST}, int::MidpointProjectionInte
     # compute final projection (perturbation)
     project!(sol, C.U[2], C.G[2], int)
 end
-
 
 function integrate_step!(sol, history, params, int::MidpointProjectionIntegrator)
     # call nonlinear solver for projection and act on the outcome it reports. A

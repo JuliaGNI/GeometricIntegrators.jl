@@ -27,9 +27,8 @@ b_{i} \bar{a}_{ij} + \bar{b}_{j} a_{ji} &= b_{i} \bar{b}_{j} , &
 """
 abstract type EPRKMethod <: PRKMethod end
 
-isexplicit(method::Union{EPRKMethod,Type{<:EPRKMethod}}) = true
-isimplicit(method::Union{EPRKMethod,Type{<:EPRKMethod}}) = false
-
+isexplicit(method::Union{EPRKMethod, Type{<:EPRKMethod}}) = true
+isimplicit(method::Union{EPRKMethod, Type{<:EPRKMethod}}) = false
 
 """
 Explicit Partitioned Runge-Kutta Method
@@ -38,11 +37,13 @@ Explicit Partitioned Runge-Kutta Method
 EPRK(tableau)
 ```
 """
-struct EPRK{TT<:PartitionedTableau} <: EPRKMethod
+struct EPRK{TT <: PartitionedTableau} <: EPRKMethod
     tableau::TT
 end
 
-initmethod(method::EPRKMethod, ::GeometricProblem{ST,DT,TT}) where {ST,DT,TT} = EPRK(method, TT)
+function initmethod(method::EPRKMethod, ::GeometricProblem{ST, DT, TT}) where {ST, DT, TT}
+    EPRK(method, TT)
+end
 
 function Base.show(io::IO, int::GeometricIntegrator{<:EPRK})
     print(io, "\nExplicit Partitioned Runge-Kutta Integrator with:\n")
@@ -53,18 +54,17 @@ function Base.show(io::IO, int::GeometricIntegrator{<:EPRK})
     # print(io, reference(int.params.tab))
 end
 
-
 "Explicit Runge-Kutta integrator cache."
-struct EPRKCache{DT,S} <: PODEIntegratorCache{DT}
-    Q::OffsetArray{Array{DT,1},1,Array{Array{DT,1},1}}
-    P::OffsetArray{Array{DT,1},1,Array{Array{DT,1},1}}
+struct EPRKCache{DT, S} <: PODEIntegratorCache{DT}
+    Q::OffsetArray{Array{DT, 1}, 1, Array{Array{DT, 1}, 1}}
+    P::OffsetArray{Array{DT, 1}, 1, Array{Array{DT, 1}, 1}}
 
     V::Vector{Vector{DT}}
     F::Vector{Vector{DT}}
     Y::Vector{Vector{DT}}
     Z::Vector{Vector{DT}}
 
-    function EPRKCache{DT,S}(ics) where {DT,S}
+    function EPRKCache{DT, S}(ics) where {DT, S}
         D = length(vec(ics.q))
         Q = create_internal_stage_vector_with_zero(DT, D, S)
         P = create_internal_stage_vector_with_zero(DT, D, S)
@@ -80,13 +80,14 @@ end
 
 function Cache{ST}(problem::EquationProblem, method::EPRK; kwargs...) where {ST}
     S = nstages(tableau(method))
-    EPRKCache{ST,S}(initial_conditions(problem); kwargs...)
+    EPRKCache{ST, S}(initial_conditions(problem); kwargs...)
 end
 
-@inline CacheType(ST, ::EquationProblem, method::EPRK) = EPRKCache{ST,nstages(tableau(method))}
+@inline CacheType(ST, ::EquationProblem, method::EPRK) = EPRKCache{
+    ST, nstages(tableau(method))}
 
-
-function internal_variables(method::EPRK, problem::AbstractProblemPODE{DT,TT}) where {DT,TT}
+function internal_variables(method::EPRK, problem::AbstractProblemPODE{
+        DT, TT}) where {DT, TT}
     S = nstages(method)
     D = length(vec(initial_conditions(problem).q))
 
@@ -98,7 +99,7 @@ function internal_variables(method::EPRK, problem::AbstractProblemPODE{DT,TT}) w
     V = create_internal_stage_vector(DT, D, S)
     F = create_internal_stage_vector(DT, D, S)
 
-    (Q=Q, P=P, V=V, F=F, Y=Y, Z=Z)
+    (Q = Q, P = P, V = V, F = F, Y = Y, Z = Z)
 end
 
 function copy_internal_variables!(solstep::SolutionStep, cache::EPRKCache)
@@ -110,9 +111,9 @@ function copy_internal_variables!(solstep::SolutionStep, cache::EPRKCache)
     haskey(internal(solstep), :F) && copyto!(internal(solstep).F, cache.F)
 end
 
-
 # Compute Q stages of explicit partitioned Runge-Kutta methods.
-function compute_stage_q!(sol, params, int::GeometricIntegrator{<:EPRK,<:AbstractProblemPODE}, i, jmax, t)
+function compute_stage_q!(
+        sol, params, int::GeometricIntegrator{<:EPRK, <:AbstractProblemPODE}, i, jmax, t)
     # obtain cache
     local C = cache(int)
 
@@ -129,7 +130,8 @@ function compute_stage_q!(sol, params, int::GeometricIntegrator{<:EPRK,<:Abstrac
 end
 
 # Compute P stages of explicit partitioned Runge-Kutta methods.
-function compute_stage_p!(sol, params, int::GeometricIntegrator{<:EPRK,<:AbstractProblemPODE}, i, jmax, t)
+function compute_stage_p!(
+        sol, params, int::GeometricIntegrator{<:EPRK, <:AbstractProblemPODE}, i, jmax, t)
     # obtain cache
     local C = cache(int)
 
@@ -145,8 +147,8 @@ function compute_stage_p!(sol, params, int::GeometricIntegrator{<:EPRK,<:Abstrac
     equations(int).v(C.V[i], t, C.Q[jmax], C.P[i], params)
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:EPRK,<:AbstractProblemPODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:EPRK, <:AbstractProblemPODE})
     # store previous solution
     cache(int).Q[0] .= sol.q
     cache(int).P[0] .= sol.p

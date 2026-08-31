@@ -25,20 +25,20 @@ See [`CGVINodal`](@ref) for the variant that builds continuity into the basis in
 * `r₁`: reconstruction coefficients at the end of the interval
 
 """
-struct CGVI{T,NBASIS,NNODES,NMA,basisType<:Basis{T}} <: CGVIMethod{T,NBASIS,NNODES}
+struct CGVI{T, NBASIS, NNODES, NMA, basisType <: Basis{T}} <: CGVIMethod{T, NBASIS, NNODES}
     basis::basisType
-    quadrature::QuadratureRule{T,NNODES}
+    quadrature::QuadratureRule{T, NNODES}
 
-    b::SVector{NNODES,T}
-    c::SVector{NNODES,T}
+    b::SVector{NNODES, T}
+    c::SVector{NNODES, T}
 
-    x::SVector{NBASIS,T}
+    x::SVector{NBASIS, T}
 
-    m::SMatrix{NNODES,NBASIS,T,NMA}
-    a::SMatrix{NNODES,NBASIS,T,NMA}
+    m::SMatrix{NNODES, NBASIS, T, NMA}
+    a::SMatrix{NNODES, NBASIS, T, NMA}
 
-    r₀::SVector{NBASIS,T}
-    r₁::SVector{NBASIS,T}
+    r₀::SVector{NBASIS, T}
+    r₁::SVector{NBASIS, T}
 
     function CGVI(basis::Basis{T}, quadrature::QuadratureRule{T}) where {T}
         NNODES = QuadratureRules.nnodes(quadrature)
@@ -46,17 +46,18 @@ struct CGVI{T,NBASIS,NNODES,NMA,basisType<:Basis{T}} <: CGVIMethod{T,NBASIS,NNOD
 
         coeffs = cgvi_coefficients(basis, quadrature)
 
-        new{T,NBASIS,NNODES,NBASIS * NNODES,typeof(basis)}(
-            basis, quadrature, coeffs.b, coeffs.c, coeffs.x, coeffs.m, coeffs.a, coeffs.r₀, coeffs.r₁)
+        new{T, NBASIS, NNODES, NBASIS * NNODES, typeof(basis)}(
+            basis, quadrature, coeffs.b, coeffs.c, coeffs.x,
+            coeffs.m, coeffs.a, coeffs.r₀, coeffs.r₁)
     end
 end
 
 GeometricBase.description(::CGVI) = "Continuous Galerkin Variational Integrator"
 
 # all `S` basis coefficients, plus the momentum at the end of the interval
-solversize(method::CGVI, problem::AbstractProblemIODE) =
+function solversize(method::CGVI, problem::AbstractProblemIODE)
     length(vec(initial_conditions(problem).q)) * (nbasis(method) + 1)
-
+end
 
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CGVI})
     local D = ndofs(cache(int))
@@ -70,10 +71,9 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CGVI})
     initial_guess_at!(sol, history, int, one(eltype(method(int).x)))
 
     for k in 1:D
-        x[D*S+k] = cache(int).p̃[k]
+        x[D * S + k] = cache(int).p̃[k]
     end
 end
-
 
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
     local C = cache(int, ST)
@@ -83,13 +83,13 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     # copy x to X
     for i in eachindex(C.X)
         for k in eachindex(C.X[i])
-            C.X[i][k] = x[D*(i-1)+k]
+            C.X[i][k] = x[D * (i - 1) + k]
         end
     end
 
     # copy x to p
     for k in eachindex(C.p̃)
-        C.p̃[k] = x[D*S+k]
+        C.p̃[k] = x[D * S + k]
     end
 
     components_q!(int, ST)
@@ -107,7 +107,6 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     components_p!(sol, params, int, ST)
 end
 
-
 function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:CGVI}) where {ST}
     local C = cache(int, ST)
     local D = ndofs(C)
@@ -122,7 +121,7 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
                 z += M.b[j] * M.m[j, i] * C.F[j][k] * timestep(int)
                 z += M.b[j] * M.a[j, i] * C.P[j][k]
             end
-            b[D*(i-1)+k] = (M.r₁[i] * C.p̃[k] - M.r₀[i] * sol.p[k]) - z
+            b[D * (i - 1) + k] = (M.r₁[i] * C.p̃[k] - M.r₀[i] * sol.p[k]) - z
         end
     end
 
@@ -132,10 +131,9 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
         for j in eachindex(C.X)
             y += M.r₀[j] * C.X[j][k]
         end
-        b[D*S+k] = sol.q[k] - y
+        b[D * S + k] = sol.q[k] - y
     end
 end
-
 
 function update!(sol, params, int::GeometricIntegrator{<:CGVI}, DT)
     sol.q .= cache(int, DT).q̃

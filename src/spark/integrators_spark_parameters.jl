@@ -1,6 +1,8 @@
 
 "Parameters for right-hand side function of Specialised Partitioned Additive Runge-Kutta methods."
-mutable struct AbstractParametersSPARK{IT,DT,TT,D,S,R,P,equType<:NamedTuple,tabType<:AbstractTableau} <: Parameters{DT,TT}
+mutable struct AbstractParametersSPARK{
+    IT, DT, TT, D, S, R, P, equType <: NamedTuple, tabType <: AbstractTableau} <:
+               Parameters{DT, TT}
     equs::equType
     tab::tabType
     Δt::TT
@@ -10,21 +12,24 @@ mutable struct AbstractParametersSPARK{IT,DT,TT,D,S,R,P,equType<:NamedTuple,tabT
     p::Vector{DT}
     λ::Vector{DT}
 
-    function AbstractParametersSPARK{IT,DT,D,S,R,P}(equs::equType, tab::tabType, Δt::TT) where {IT,DT,TT,D,S,R,P,equType,tabType}
+    function AbstractParametersSPARK{IT, DT, D, S, R, P}(equs::equType, tab::tabType,
+            Δt::TT) where {IT, DT, TT, D, S, R, P, equType, tabType}
         # create solution vectors
         q = zeros(DT, D)
         p = zeros(DT, D)
         λ = zeros(DT, D)
 
-        new{IT,DT,TT,D,S,R,P,equType,tabType}(equs, tab, Δt, zero(TT), q, p, λ)
+        new{IT, DT, TT, D, S, R, P, equType, tabType}(equs, tab, Δt, zero(TT), q, p, λ)
     end
 
-    function AbstractParametersSPARK{IT,DT,D}(equs::NamedTuple, tab::AbstractTableauSPARK, Δt::Number) where {IT,DT,D}
-        AbstractParametersSPARK{IT,DT,D,tab.s,tab.r,tab.ρ}(equs, tab, Δt)
+    function AbstractParametersSPARK{IT, DT, D}(
+            equs::NamedTuple, tab::AbstractTableauSPARK, Δt::Number) where {IT, DT, D}
+        AbstractParametersSPARK{IT, DT, D, tab.s, tab.r, tab.ρ}(equs, tab, Δt)
     end
 
-    function AbstractParametersSPARK{IT,DT,D}(equs::NamedTuple, tab::AbstractTableau, Δt::Number) where {IT,DT,D}
-        AbstractParametersSPARK{IT,DT,D,tab.s,tab.r,0}(equs, tab, Δt)
+    function AbstractParametersSPARK{IT, DT, D}(
+            equs::NamedTuple, tab::AbstractTableau, Δt::Number) where {IT, DT, D}
+        AbstractParametersSPARK{IT, DT, D, tab.s, tab.r, 0}(equs, tab, Δt)
     end
 end
 
@@ -41,9 +46,11 @@ end
 @inline GeometricBase.timestep(int::AbstractIntegratorSPARK) = parameters(int).Δt
 @inline GeometricBase.tableau(int::AbstractIntegratorSPARK) = parameters(int).tab
 
-
-function IntegratorCache{ST}(params::AbstractParametersSPARK{IT,DT,TT,D,S,R}, N::Int; kwargs...) where {IT,ST,DT,TT,D,S,R}
-    IntegratorCacheSPARK{ST,S,R}(params, N)
+function IntegratorCache{ST}(params::AbstractParametersSPARK{IT, DT, TT, D, S, R},
+        N::Int; kwargs...) where {IT, ST, DT, TT, D, S, R}
+    IntegratorCacheSPARK{ST, S, R}(params, N)
 end
 
-@inline CacheType(ST, params::AbstractParametersSPARK{IT,DT,TT,D,S,R}) where {IT,DT,TT,D,S,R} = IntegratorCacheSPARK{ST,S,R}
+@inline CacheType(ST,
+    params::AbstractParametersSPARK{IT, DT, TT, D, S, R}) where {
+    IT, DT, TT, D, S, R} = IntegratorCacheSPARK{ST, S, R}

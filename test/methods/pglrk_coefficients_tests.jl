@@ -3,7 +3,6 @@ using RungeKutta
 using LinearAlgebra
 using Test
 
-
 # The `CoefficientsPGLRK(s)` construction is the W-transformation of the Gauss
 # tableau plus a skew perturbation `A = P W Q`, giving the one-parameter family
 # `a(λ) = a + λ A`. Three identities characterise it, and each is a strong
@@ -23,9 +22,7 @@ using Test
 
 const PGLRK_ATOL = 2E-15
 
-
 @testset "$(rpad("Projected Gauss-Legendre Runge-Kutta coefficients",80))" begin
-
     for s in 3:6
         coeff = CoefficientsPGLRK(s)
         tab = TableauGauss(s)
@@ -87,5 +84,4 @@ const PGLRK_ATOL = 2E-15
     @test isapprox(CoefficientsPGLRK(3), CoefficientsPGLRK(3))
 
     @test occursin("Projected Gauss-Legendre", sprint(show, CoefficientsPGLRK(3)))
-
 end

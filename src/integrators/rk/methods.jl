@@ -20,13 +20,20 @@ function RK(tableau::Tableau)
     end
 end
 
-RK(method::RKMethod, ::Type{T}=Float64, args...; kwargs...) where {T} = RK(tableau(method, T), args...; kwargs...)
-ERK(method::RKMethod, ::Type{T}=Float64, args...; kwargs...) where {T} = ERK(tableau(method, T), args...; kwargs...)
-IRK(method::RKMethod, ::Type{T}=Float64, args...; kwargs...) where {T} = IRK(tableau(method, T), args...; kwargs...)
-DIRK(method::RKMethod, ::Type{T}=Float64, args...; kwargs...) where {T} = DIRK(tableau(method, T), args...; kwargs...)
+function RK(method::RKMethod, ::Type{T} = Float64, args...; kwargs...) where {T}
+    RK(tableau(method, T), args...; kwargs...)
+end
+function ERK(method::RKMethod, ::Type{T} = Float64, args...; kwargs...) where {T}
+    ERK(tableau(method, T), args...; kwargs...)
+end
+function IRK(method::RKMethod, ::Type{T} = Float64, args...; kwargs...) where {T}
+    IRK(tableau(method, T), args...; kwargs...)
+end
+function DIRK(method::RKMethod, ::Type{T} = Float64, args...; kwargs...) where {T}
+    DIRK(tableau(method, T), args...; kwargs...)
+end
 
-@inline GeometricBase.tableau(method::Union{ERK,IRK,DIRK}, args...; kwargs...) = method.tableau
-
+@inline GeometricBase.tableau(method::Union{ERK, IRK, DIRK}, args...; kwargs...) = method.tableau
 
 """
 Partitioned Runge-Kutta Method
@@ -47,15 +54,23 @@ function PRK(tableau::PartitionedTableau)
     end
 end
 
-PRK(tableau::Tableau, ::Type{T}=Float64, args...; kwargs...) where {T} = PRK(PartitionedTableau(tableau), args...; kwargs...)
-PRK(method::PRKMethod, ::Type{T}=Float64, args...; kwargs...) where {T} = PRK(tableau(method, T), args...; kwargs...)
-PRK(method::RKMethod, ::Type{T}=Float64, args...; kwargs...) where {T} = PRK(tableau(method, T), args...; kwargs...)
-EPRK(method::PRKMethod, ::Type{T}=Float64, args...; kwargs...) where {T} = EPRK(tableau(method, T), args...; kwargs...)
-IPRK(method::PRKMethod, ::Type{T}=Float64, args...; kwargs...) where {T} = IPRK(tableau(method, T), args...; kwargs...)
+function PRK(tableau::Tableau, ::Type{T} = Float64, args...; kwargs...) where {T}
+    PRK(PartitionedTableau(tableau), args...; kwargs...)
+end
+function PRK(method::PRKMethod, ::Type{T} = Float64, args...; kwargs...) where {T}
+    PRK(tableau(method, T), args...; kwargs...)
+end
+function PRK(method::RKMethod, ::Type{T} = Float64, args...; kwargs...) where {T}
+    PRK(tableau(method, T), args...; kwargs...)
+end
+function EPRK(method::PRKMethod, ::Type{T} = Float64, args...; kwargs...) where {T}
+    EPRK(tableau(method, T), args...; kwargs...)
+end
+function IPRK(method::PRKMethod, ::Type{T} = Float64, args...; kwargs...) where {T}
+    IPRK(tableau(method, T), args...; kwargs...)
+end
 
-@inline GeometricBase.tableau(method::Union{EPRK,IPRK}, args...; kwargs...) = method.tableau
-
-
+@inline GeometricBase.tableau(method::Union{EPRK, IPRK}, args...; kwargs...) = method.tableau
 
 # Explicit Runge-Kutta Methods
 
@@ -206,28 +221,33 @@ $(reference(Val(:SSPRK3)))
 """
 struct SSPRK3 <: ERKMethod end
 
-GeometricBase.tableau(::ForwardEuler, ::Type{T}=Float64) where {T} = TableauForwardEuler(T)
-GeometricBase.tableau(::ExplicitEulerRK, ::Type{T}=Float64) where {T} = TableauExplicitEuler(T)
-GeometricBase.tableau(::ExplicitMidpoint, ::Type{T}=Float64) where {T} = TableauExplicitMidpoint(T)
-GeometricBase.tableau(::Heun2, ::Type{T}=Float64) where {T} = TableauHeun2(T)
-GeometricBase.tableau(::Heun3, ::Type{T}=Float64) where {T} = TableauHeun3(T)
-GeometricBase.tableau(::Kutta3, ::Type{T}=Float64) where {T} = TableauKutta3(T)
-GeometricBase.tableau(::Ralston2, ::Type{T}=Float64) where {T} = TableauRalston2(T)
-GeometricBase.tableau(::Ralston3, ::Type{T}=Float64) where {T} = TableauRalston3(T)
-GeometricBase.tableau(::RK21, ::Type{T}=Float64) where {T} = TableauRK21(T)
-GeometricBase.tableau(::RK22, ::Type{T}=Float64) where {T} = TableauRK22(T)
-GeometricBase.tableau(::RK31, ::Type{T}=Float64) where {T} = TableauRK31(T)
-GeometricBase.tableau(::RK32, ::Type{T}=Float64) where {T} = TableauRK32(T)
-GeometricBase.tableau(::RK4, ::Type{T}=Float64) where {T} = TableauRK4(T)
-GeometricBase.tableau(::RK41, ::Type{T}=Float64) where {T} = TableauRK41(T)
-GeometricBase.tableau(::RK42, ::Type{T}=Float64) where {T} = TableauRK42(T)
-GeometricBase.tableau(::RK416, ::Type{T}=Float64) where {T} = TableauRK416(T)
-GeometricBase.tableau(::RK438, ::Type{T}=Float64) where {T} = TableauRK438(T)
-GeometricBase.tableau(::RK5, ::Type{T}=Float64) where {T} = TableauRK5(T)
-GeometricBase.tableau(::Runge2, ::Type{T}=Float64) where {T} = TableauRunge2(T)
-GeometricBase.tableau(::SSPRK2, ::Type{T}=Float64) where {T} = TableauSSPRK2(T)
-GeometricBase.tableau(::SSPRK3, ::Type{T}=Float64) where {T} = TableauSSPRK3(T)
-
+function GeometricBase.tableau(::ForwardEuler, ::Type{T} = Float64) where {T}
+    TableauForwardEuler(T)
+end
+function GeometricBase.tableau(::ExplicitEulerRK, ::Type{T} = Float64) where {T}
+    TableauExplicitEuler(T)
+end
+function GeometricBase.tableau(::ExplicitMidpoint, ::Type{T} = Float64) where {T}
+    TableauExplicitMidpoint(T)
+end
+GeometricBase.tableau(::Heun2, ::Type{T} = Float64) where {T} = TableauHeun2(T)
+GeometricBase.tableau(::Heun3, ::Type{T} = Float64) where {T} = TableauHeun3(T)
+GeometricBase.tableau(::Kutta3, ::Type{T} = Float64) where {T} = TableauKutta3(T)
+GeometricBase.tableau(::Ralston2, ::Type{T} = Float64) where {T} = TableauRalston2(T)
+GeometricBase.tableau(::Ralston3, ::Type{T} = Float64) where {T} = TableauRalston3(T)
+GeometricBase.tableau(::RK21, ::Type{T} = Float64) where {T} = TableauRK21(T)
+GeometricBase.tableau(::RK22, ::Type{T} = Float64) where {T} = TableauRK22(T)
+GeometricBase.tableau(::RK31, ::Type{T} = Float64) where {T} = TableauRK31(T)
+GeometricBase.tableau(::RK32, ::Type{T} = Float64) where {T} = TableauRK32(T)
+GeometricBase.tableau(::RK4, ::Type{T} = Float64) where {T} = TableauRK4(T)
+GeometricBase.tableau(::RK41, ::Type{T} = Float64) where {T} = TableauRK41(T)
+GeometricBase.tableau(::RK42, ::Type{T} = Float64) where {T} = TableauRK42(T)
+GeometricBase.tableau(::RK416, ::Type{T} = Float64) where {T} = TableauRK416(T)
+GeometricBase.tableau(::RK438, ::Type{T} = Float64) where {T} = TableauRK438(T)
+GeometricBase.tableau(::RK5, ::Type{T} = Float64) where {T} = TableauRK5(T)
+GeometricBase.tableau(::Runge2, ::Type{T} = Float64) where {T} = TableauRunge2(T)
+GeometricBase.tableau(::SSPRK2, ::Type{T} = Float64) where {T} = TableauSSPRK2(T)
+GeometricBase.tableau(::SSPRK3, ::Type{T} = Float64) where {T} = TableauSSPRK3(T)
 
 # Diagonally Implicit Runge-Kutta Methods
 
@@ -259,11 +279,14 @@ $(reference(Val(:QinZhang)))
 """
 struct QinZhang <: DIRKMethod end
 
-GeometricBase.tableau(::CrankNicolsonRK, ::Type{T}=Float64) where {T} = TableauCrankNicolson(T)
-GeometricBase.tableau(::Crouzeix, ::Type{T}=Float64) where {T} = TableauCrouzeix(T)
-GeometricBase.tableau(::KraaijevangerSpijker, ::Type{T}=Float64) where {T} = TableauKraaijevangerSpijker(T)
-GeometricBase.tableau(::QinZhang, ::Type{T}=Float64) where {T} = TableauQinZhang(T)
-
+function GeometricBase.tableau(::CrankNicolsonRK, ::Type{T} = Float64) where {T}
+    TableauCrankNicolson(T)
+end
+GeometricBase.tableau(::Crouzeix, ::Type{T} = Float64) where {T} = TableauCrouzeix(T)
+function GeometricBase.tableau(::KraaijevangerSpijker, ::Type{T} = Float64) where {T}
+    TableauKraaijevangerSpijker(T)
+end
+GeometricBase.tableau(::QinZhang, ::Type{T} = Float64) where {T} = TableauQinZhang(T)
 
 # Fully Implicit Runge-Kutta Methods
 
@@ -302,11 +325,17 @@ $(reference(Val(:SRK3)))
 """
 struct SRK3 <: IRKMethod end
 
-GeometricBase.tableau(::BackwardEuler, ::Type{T}=Float64) where {T} = TableauBackwardEuler(T)
-GeometricBase.tableau(::ImplicitEulerRK, ::Type{T}=Float64) where {T} = TableauImplicitEuler(T)
-GeometricBase.tableau(::ImplicitMidpointRK, ::Type{T}=Float64) where {T} = TableauImplicitMidpoint(T)
-GeometricBase.tableau(::IRK3, ::Type{T}=Float64) where {T} = TableauIRK3(T)
-GeometricBase.tableau(::SRK3, ::Type{T}=Float64) where {T} = TableauSRK3(T)
+function GeometricBase.tableau(::BackwardEuler, ::Type{T} = Float64) where {T}
+    TableauBackwardEuler(T)
+end
+function GeometricBase.tableau(::ImplicitEulerRK, ::Type{T} = Float64) where {T}
+    TableauImplicitEuler(T)
+end
+function GeometricBase.tableau(::ImplicitMidpointRK, ::Type{T} = Float64) where {T}
+    TableauImplicitMidpoint(T)
+end
+GeometricBase.tableau(::IRK3, ::Type{T} = Float64) where {T} = TableauIRK3(T)
+GeometricBase.tableau(::SRK3, ::Type{T} = Float64) where {T} = TableauSRK3(T)
 
 """
 Fully implicit Runge-Kutta method with [`TableauGauss`](@ref).
@@ -430,20 +459,48 @@ struct RadauIIB <: RKMethod
     s::Int
 end
 
-GeometricBase.tableau(method::Gauss, ::Type{T}=Float64) where {T} = TableauGauss(T, method.s)
-GeometricBase.tableau(method::LobattoIII, ::Type{T}=Float64) where {T} = TableauLobattoIII(T, method.s)
-GeometricBase.tableau(method::LobattoIIIA, ::Type{T}=Float64) where {T} = TableauLobattoIIIA(T, method.s)
-GeometricBase.tableau(method::LobattoIIIB, ::Type{T}=Float64) where {T} = TableauLobattoIIIB(T, method.s)
-GeometricBase.tableau(method::LobattoIIIC, ::Type{T}=Float64) where {T} = TableauLobattoIIIC(T, method.s)
-GeometricBase.tableau(method::LobattoIIID, ::Type{T}=Float64) where {T} = TableauLobattoIIID(T, method.s)
-GeometricBase.tableau(method::LobattoIIIE, ::Type{T}=Float64) where {T} = TableauLobattoIIIE(T, method.s)
-GeometricBase.tableau(method::LobattoIIIF, ::Type{T}=Float64) where {T} = TableauLobattoIIIF(T, method.s)
-GeometricBase.tableau(method::LobattoIIIF̄, ::Type{T}=Float64) where {T} = TableauLobattoIIIF̄(T, method.s)
-GeometricBase.tableau(method::LobattoIIIG, ::Type{T}=Float64) where {T} = TableauLobattoIIIG(T, method.s)
-GeometricBase.tableau(method::RadauIA, ::Type{T}=Float64) where {T} = TableauRadauIA(T, method.s)
-GeometricBase.tableau(method::RadauIB, ::Type{T}=Float64) where {T} = TableauRadauIB(T, method.s)
-GeometricBase.tableau(method::RadauIIA, ::Type{T}=Float64) where {T} = TableauRadauIIA(T, method.s)
-GeometricBase.tableau(method::RadauIIB, ::Type{T}=Float64) where {T} = TableauRadauIIB(T, method.s)
+function GeometricBase.tableau(method::Gauss, ::Type{T} = Float64) where {T}
+    TableauGauss(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIII, ::Type{T} = Float64) where {T}
+    TableauLobattoIII(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIA, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIA(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIB, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIB(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIC, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIC(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIID, ::Type{T} = Float64) where {T}
+    TableauLobattoIIID(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIE, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIE(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIF, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIF(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIF̄, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIF̄(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIG, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIG(T, method.s)
+end
+function GeometricBase.tableau(method::RadauIA, ::Type{T} = Float64) where {T}
+    TableauRadauIA(T, method.s)
+end
+function GeometricBase.tableau(method::RadauIB, ::Type{T} = Float64) where {T}
+    TableauRadauIB(T, method.s)
+end
+function GeometricBase.tableau(method::RadauIIA, ::Type{T} = Float64) where {T}
+    TableauRadauIIA(T, method.s)
+end
+function GeometricBase.tableau(method::RadauIIB, ::Type{T} = Float64) where {T}
+    TableauRadauIIB(T, method.s)
+end
 
 GeometricBase.order(::Type{Gauss}) = "2s"
 GeometricBase.order(::Type{LobattoIII}) = "2s-2"
@@ -520,9 +577,7 @@ issymplectic(::Type{RadauIB}) = false
 issymplectic(::Type{RadauIIA}) = false
 issymplectic(::Type{RadauIIB}) = false
 
-
 # Partitioned Runge-Kutta Methods
-
 
 """
     SymplecticEulerARK
@@ -538,15 +593,18 @@ Symplectic Euler method using implicit Euler for q and explicit Euler for p.
 """
 struct SymplecticEulerBRK <: EPRKMethod end
 
-GeometricBase.tableau(::SymplecticEulerARK, ::Type{T}=Float64) where {T} = PartitionedTableau(:SymplecticEulerA, TableauExplicitEuler(T), TableauImplicitEuler(T))
-GeometricBase.tableau(::SymplecticEulerBRK, ::Type{T}=Float64) where {T} = PartitionedTableau(:SymplecticEulerB, TableauImplicitEuler(T), TableauExplicitEuler(T))
+function GeometricBase.tableau(::SymplecticEulerARK, ::Type{T} = Float64) where {T}
+    PartitionedTableau(:SymplecticEulerA, TableauExplicitEuler(T), TableauImplicitEuler(T))
+end
+function GeometricBase.tableau(::SymplecticEulerBRK, ::Type{T} = Float64) where {T}
+    PartitionedTableau(:SymplecticEulerB, TableauImplicitEuler(T), TableauExplicitEuler(T))
+end
 
 GeometricBase.order(::Type{SymplecticEulerARK}) = 1
 GeometricBase.order(::Type{SymplecticEulerBRK}) = 1
 
 issymplectic(::Type{SymplecticEulerARK}) = true
 issymplectic(::Type{SymplecticEulerBRK}) = true
-
 
 """
 Partitioned Runge-Kutta method [`TableauGauss`](@ref) for both ``q`` and ``p``.
@@ -556,7 +614,6 @@ $(reference(Val(:Gauss)))
 struct PartitionedGauss <: IPRKMethod
     s::Int
 end
-
 
 "Partitioned Runge-Kutta method with [`TableauLobattoIIIA`](@ref) for ``q`` and [`TableauLobattoIIIB`](@ref) for ``p``."
 struct LobattoIIIAIIIB <: PRKMethod
@@ -613,19 +670,42 @@ struct LobattoIIIGIIIḠ <: PRKMethod
     s::Int
 end
 
-
-GeometricBase.tableau(method::PartitionedGauss, ::Type{T}=Float64) where {T} = PartitionedTableau(TableauGauss(T, method.s))
-GeometricBase.tableau(method::LobattoIIIAIIIB, ::Type{T}=Float64) where {T} = TableauLobattoIIIAIIIB(T, method.s)
-GeometricBase.tableau(method::LobattoIIIBIIIA, ::Type{T}=Float64) where {T} = TableauLobattoIIIBIIIA(T, method.s)
-GeometricBase.tableau(method::LobattoIIIAIIIĀ, ::Type{T}=Float64) where {T} = TableauLobattoIIIAIIIĀ(T, method.s)
-GeometricBase.tableau(method::LobattoIIIBIIIB̄, ::Type{T}=Float64) where {T} = TableauLobattoIIIBIIIB̄(T, method.s)
-GeometricBase.tableau(method::LobattoIIICIIIC̄, ::Type{T}=Float64) where {T} = TableauLobattoIIICIIIC̄(T, method.s)
-GeometricBase.tableau(method::LobattoIIIC̄IIIC, ::Type{T}=Float64) where {T} = TableauLobattoIIIC̄IIIC(T, method.s)
-GeometricBase.tableau(method::LobattoIIIDIIID̄, ::Type{T}=Float64) where {T} = TableauLobattoIIIDIIID̄(T, method.s)
-GeometricBase.tableau(method::LobattoIIIEIIIĒ, ::Type{T}=Float64) where {T} = TableauLobattoIIIEIIIĒ(T, method.s)
-GeometricBase.tableau(method::LobattoIIIFIIIF̄, ::Type{T}=Float64) where {T} = TableauLobattoIIIFIIIF̄(T, method.s)
-GeometricBase.tableau(method::LobattoIIIF̄IIIF, ::Type{T}=Float64) where {T} = TableauLobattoIIIF̄IIIF(T, method.s)
-GeometricBase.tableau(method::LobattoIIIGIIIḠ, ::Type{T}=Float64) where {T} = TableauLobattoIIIGIIIḠ(T, method.s)
+function GeometricBase.tableau(method::PartitionedGauss, ::Type{T} = Float64) where {T}
+    PartitionedTableau(TableauGauss(T, method.s))
+end
+function GeometricBase.tableau(method::LobattoIIIAIIIB, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIAIIIB(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIBIIIA, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIBIIIA(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIAIIIĀ, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIAIIIĀ(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIBIIIB̄, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIBIIIB̄(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIICIIIC̄, ::Type{T} = Float64) where {T}
+    TableauLobattoIIICIIIC̄(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIC̄IIIC, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIC̄IIIC(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIDIIID̄, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIDIIID̄(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIEIIIĒ, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIEIIIĒ(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIFIIIF̄, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIFIIIF̄(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIF̄IIIF, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIF̄IIIF(T, method.s)
+end
+function GeometricBase.tableau(method::LobattoIIIGIIIḠ, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIGIIIḠ(T, method.s)
+end
 
 GeometricBase.order(::Type{PartitionedGauss}) = "2s"
 GeometricBase.order(::Type{LobattoIIIAIIIB}) = "2s-2"

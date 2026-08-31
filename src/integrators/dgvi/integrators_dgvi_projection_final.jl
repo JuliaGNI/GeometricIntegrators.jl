@@ -29,11 +29,12 @@ DGVIP1(basis::Basis, quadrature::QuadratureRule)
 """
 DGVIP1
 
-GeometricBase.description(::DGVIP1) = "Discontinuous Galerkin Variational Integrator with Final Projection"
+function GeometricBase.description(::DGVIP1)
+    "Discontinuous Galerkin Variational Integrator with Final Projection"
+end
 
 # two trailing blocks: q_{n+1} and q_{n+1}⁺
 nclosure(::DGVIP1) = 2
-
 
 function jump!(sol, params, int::GeometricIntegrator{<:DGVIP1}, ST)
     local C = cache(int, ST)
@@ -57,7 +58,6 @@ function jump!(sol, params, int::GeometricIntegrator{<:DGVIP1}, ST)
     C.p̄ .= C.Θ̅⁺
 end
 
-
 function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DGVIP1}) where {ST}
     local C = cache(int, ST)
     local M = method(int)
@@ -69,24 +69,23 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
 
     for i in eachindex(M.r⁻, M.r⁺)
         for k in 1:D
-            b[D*(i-1)+k] += M.r⁺[i] * (C.θ[k] + C.θ⁺[k]) / 2
-            b[D*(i-1)+k] -= M.r⁻[i] * (C.Θ̅[k] + C.Θ̅⁻[k]) / 2
-            b[D*(i-1)+k] += M.r⁺[i] * C.g⁺[k] / 2
-            b[D*(i-1)+k] += M.r⁻[i] * C.ḡ⁻[k] / 2
+            b[D * (i - 1) + k] += M.r⁺[i] * (C.θ[k] + C.θ⁺[k]) / 2
+            b[D * (i - 1) + k] -= M.r⁻[i] * (C.Θ̅[k] + C.Θ̅⁻[k]) / 2
+            b[D * (i - 1) + k] += M.r⁺[i] * C.g⁺[k] / 2
+            b[D * (i - 1) + k] += M.r⁻[i] * C.ḡ⁻[k] / 2
         end
     end
 
     # continuity with the carried-over right limit
     for k in 1:D
-        b[D*S+k] = st.q⁺[k] - C.q⁺[k]
+        b[D * S + k] = st.q⁺[k] - C.q⁺[k]
     end
 
     # projection at the final time
     for k in 1:D
-        b[D*(S+1)+k] = C.Θ̅⁺[k] - C.Θ̅⁻[k] - C.ḡ[k]
+        b[D * (S + 1) + k] = C.Θ̅⁺[k] - C.Θ̅⁻[k] - C.ḡ[k]
     end
 end
-
 
 function update_state!(int::GeometricIntegrator{<:DGVIP1}, DT)
     dgvi_state(int).q⁺ .= cache(int, DT).q̄⁺

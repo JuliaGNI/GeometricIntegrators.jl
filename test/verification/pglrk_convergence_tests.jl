@@ -27,7 +27,7 @@ include("verification_utilities.jl")
 
 const T = 2.0
 const q₀ = [1.0, 1.0]
-const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
+const params = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
 
 # Counts the statuses PGLRK hands to `check_solver_status`, for the testset of the same name below.
 # The override only counts and returns its argument, so it leaves every assertion that runs under
@@ -50,14 +50,21 @@ end
 # and the whole point here is to assert the route rather than to assume it.
 function count_checks_and_fallbacks(prob, method)
     PGLRK_STATUS_CHECKS[] = 0
-    logger = TestLogger(min_level=Logging.Debug)
+    logger = TestLogger(min_level = Logging.Debug)
     with_logger(() -> integrate(prob, method), logger)
-    (checks=PGLRK_STATUS_CHECKS[],
-     nfallback=count(r -> occursin("falling back to plain Gauss", r.message), logger.logs))
+    (checks = PGLRK_STATUS_CHECKS[],
+        nfallback = count(r -> occursin("falling back to plain Gauss", r.message), logger.logs))
 end
 
-build(Δt) = LotkaVolterra2d.odeproblem(q₀; timespan=(0.0, T), timestep=Δt, parameters=params)
-ref(prob) = integrate(LotkaVolterra2d.odeproblem(q₀; timespan=timespan(prob), timestep=timestep(prob), parameters=params), Gauss(8))
+function build(Δt)
+    LotkaVolterra2d.odeproblem(q₀; timespan = (0.0, T), timestep = Δt, parameters = params)
+end
+function ref(prob)
+    integrate(
+        LotkaVolterra2d.odeproblem(
+            q₀; timespan = timespan(prob), timestep = timestep(prob), parameters = params),
+        Gauss(8))
+end
 steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
 
 # relative energy error over the whole trajectory
@@ -69,7 +76,6 @@ function energy_drift(prob, method)
 end
 
 @testset "$(rpad("Projected Gauss-Legendre Runge-Kutta convergence",80))" begin
-
     @testset "convergence order" begin
         # Measured on this problem and step range: PGLRK 5.69 / 7.74 against
         # Gauss 5.88 / 7.87 — i.e. PGLRK matches the underlying method, and both sit a
@@ -79,12 +85,14 @@ end
         # `atol` is set from those measurements rather than left at the 0.35 default, which
         # would leave 0.04 of headroom at s = 3 and 0.09 at s = 4 — tight enough that BLAS
         # or dependency drift could flip the assertion.
-        test_convergence_order(build, PGLRK(3), steps(2, 3); reference=ref, expected=6, atol=0.5, label="PGLRK(3)")
-        test_convergence_order(build, PGLRK(4), steps(2, 3); reference=ref, expected=8, atol=0.5, label="PGLRK(4)")
+        test_convergence_order(build, PGLRK(3), steps(2, 3); reference = ref,
+            expected = 6, atol = 0.5, label = "PGLRK(3)")
+        test_convergence_order(build, PGLRK(4), steps(2, 3); reference = ref,
+            expected = 8, atol = 0.5, label = "PGLRK(4)")
     end
 
     @testset "energy conservation vs. plain Gauss" begin
-        prob = LotkaVolterra2d.odeproblem(q₀; timespan=(0.0, 10.0), timestep=0.1, parameters=params)
+        prob = LotkaVolterra2d.odeproblem(q₀; timespan = (0.0, 10.0), timestep = 0.1, parameters = params)
 
         # Measured: PGLRK(3) 3.6E-15 vs Gauss(3) 7.3E-10 — five orders of magnitude, and
         # at the tolerance of the λ bisection rather than at O(h^6).
@@ -120,7 +128,7 @@ end
         # assumed, from the fallback count, since a hook count of `nsteps` is what every route is
         # supposed to produce and so cannot itself tell them apart.
         nsteps = 5
-        lv = LotkaVolterra2d.odeproblem(q₀; timespan=(0.0, nsteps * 0.1), timestep=0.1, parameters=params)
+        lv = LotkaVolterra2d.odeproblem(q₀; timespan = (0.0, nsteps * 0.1), timestep = 0.1, parameters = params)
 
         # Route 1 — the bisection locates a root. On this problem plain Gauss(3) drifts to
         # |h − h₀| ≈ 6E-11 within these five steps, nowhere near the ftol ≈ 3.6E-15 of the early
@@ -134,7 +142,7 @@ end
         # to plain Gauss. Note that λmax does *not* reach the early return, whose condition is on
         # the λ = 0 residual alone: on this problem this is a fallback on every step, not an early
         # return, and `nfallback == nsteps` is what distinguishes it from route 1.
-        r = count_checks_and_fallbacks(lv, PGLRK(3; λmax=1e-300))
+        r = count_checks_and_fallbacks(lv, PGLRK(3; λmax = 1e-300))
         @test r.nfallback == nsteps
         @test r.checks == nsteps
 
@@ -145,8 +153,8 @@ end
         # makes this an assertion instead of a hope: had the early return *not* been taken, the
         # bisection would have run in [±1E-300] and fallen back on every step exactly as it does
         # there, so `nfallback == 0` here means the bisection never ran at all.
-        ho = HarmonicOscillator.odeproblem(; timespan=(0.0, nsteps * 0.1), timestep=0.1)
-        r = count_checks_and_fallbacks(ho, PGLRK(3; λmax=1e-300))
+        ho = HarmonicOscillator.odeproblem(; timespan = (0.0, nsteps * 0.1), timestep = 0.1)
+        r = count_checks_and_fallbacks(ho, PGLRK(3; λmax = 1e-300))
         @test r.nfallback == 0
         @test r.checks == nsteps
     end
@@ -155,8 +163,8 @@ end
         # With λmax driven to (almost) zero the method must fall back to plain Gauss.
         prob = build(0.25)
         for s in 3:4
-            @test relative_maximum_error(integrate(prob, PGLRK(s; λmax=1e-300)).q,
-                                        integrate(prob, Gauss(s)).q) < 4E-16
+            @test relative_maximum_error(integrate(prob, PGLRK(s; λmax = 1e-300)).q,
+                integrate(prob, Gauss(s)).q) < 4E-16
         end
     end
 
@@ -168,7 +176,7 @@ end
         # systems and emits benign warnings. Silencing them needs both kwargs:
         # `verbosity` gates the stagnation and line-search messages, `warn_iterations` the
         # "Solver took N iterations" cap message.
-        lbuild(Δt) = LotkaVolterra2d.lodeproblem(q₀; timespan=(0.0, T), timestep=Δt, parameters=params)
+        lbuild(Δt) = LotkaVolterra2d.lodeproblem(q₀; timespan = (0.0, T), timestep = Δt, parameters = params)
         emq(sol, r) = relative_maximum_error(sol.q, r.q)
 
         # Measured on this problem (T = 2, Δt = 1 … 1/8): plain VPRK(Gauss(s)) suffers the
@@ -177,8 +185,12 @@ end
         # roughly doubles the achieved order.
         st = T ./ (2 .* 2 .^ (0:3))
         for s in 3:5
-            rp = estimate_convergence_order(lbuild, VPRKpTableau(s), st; reference=ref, errormetric=emq, integrate_options=(verbosity=0, warn_iterations=0,))
-            rv = estimate_convergence_order(lbuild, VPRK(Gauss(s)), st; reference=ref, errormetric=emq, integrate_options=(verbosity=0, warn_iterations=0,))
+            rp = estimate_convergence_order(
+                lbuild, VPRKpTableau(s), st; reference = ref, errormetric = emq,
+                integrate_options = (verbosity = 0, warn_iterations = 0))
+            rv = estimate_convergence_order(
+                lbuild, VPRK(Gauss(s)), st; reference = ref, errormetric = emq,
+                integrate_options = (verbosity = 0, warn_iterations = 0))
             @test rp.order > rv.order + 1
         end
 
@@ -190,16 +202,22 @@ end
         # the method and not of the solve. `VPRKpTableau` has no published order theorem —
         # see its docstring — so this is recorded rather than asserted.
         @test_broken all(
-            isapprox(estimate_convergence_order(lbuild, VPRKpTableau(s), T ./ (4 .* 2 .^ (0:4)); reference=ref, errormetric=emq, integrate_options=(verbosity=0, warn_iterations=0,)).order, 2s; atol=0.35)
-            for s in 4:5
+            isapprox(
+                estimate_convergence_order(lbuild, VPRKpTableau(s), T ./ (4 .* 2 .^ (0:4));
+                    reference = ref, errormetric = emq,
+                    integrate_options = (verbosity = 0, warn_iterations = 0)).order,
+                2s;
+                atol = 0.35)
+        for s in 4:5
         )
     end
 
     @testset "harmonic oscillator (linear reference)" begin
         # Here the exact solution is available; both PGLRK and Gauss are at machine
         # precision, so this only guards against regressions in the ODE path.
-        hobuild(Δt) = HarmonicOscillator.odeproblem(; timespan=(0.0, 1.0), timestep=Δt)
-        test_convergence_order(hobuild, PGLRK(3), 1.0 ./ (4 .* 2 .^ (0:2)); reference=exact_solution, expected=6, minpoints=2, label="PGLRK(3) harmonic")
+        hobuild(Δt) = HarmonicOscillator.odeproblem(; timespan = (0.0, 1.0), timestep = Δt)
+        test_convergence_order(
+            hobuild, PGLRK(3), 1.0 ./ (4 .* 2 .^ (0:2)); reference = exact_solution,
+            expected = 6, minpoints = 2, label = "PGLRK(3) harmonic")
     end
-
 end

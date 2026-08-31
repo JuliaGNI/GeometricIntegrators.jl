@@ -7,30 +7,30 @@ abstract type SplittingCoefficients end
     s::Int
 end
 
-coefficients(problem::SODEProblem, splitting::SplittingCoefficients) = coefficients(nsteps(equation(problem)), splitting)
-
+function coefficients(problem::SODEProblem, splitting::SplittingCoefficients)
+    coefficients(nsteps(equation(problem)), splitting)
+end
 
 function _splitting_coefficients(r::Int, a::AbstractVector{T}, b::AbstractVector{T}) where {T}
     @assert length(a) == length(b)
 
     s = length(a)
     f = zeros(Int, 2r*s)
-    c = zeros(T,   2r*s)
+    c = zeros(T, 2r*s)
 
     for i in 1:s
         for j in 1:r
-            f[(2i-2)*r+j] = j
-            c[(2i-2)*r+j] = a[i]
+            f[(2i - 2) * r + j] = j
+            c[(2i - 2) * r + j] = a[i]
         end
         for j in 1:r
-            f[(2i-1)*r+j] = r-j+1
-            c[(2i-1)*r+j] = b[i]
+            f[(2i - 1) * r + j] = r-j+1
+            c[(2i - 1) * r + j] = b[i]
         end
     end
 
     return f, c
 end
-
 
 @doc raw"""
 General splitting method for vector fields with two components A and B.
@@ -62,13 +62,13 @@ function coefficients(nequs::Int, method::SplittingCoefficientsGeneral{T}) where
 
     s = length(method.a)
     f = zeros(Int, 2s)
-    c = zeros(T,   2s)
+    c = zeros(T, 2s)
 
     for i in eachindex(method.a, method.b)
-        f[2*(i-1)+1] = 1
-        c[2*(i-1)+1] = method.a[i]
-        f[2*(i-1)+2] = 2
-        c[2*(i-1)+2] = method.b[i]
+        f[2 * (i - 1) + 1] = 1
+        c[2 * (i - 1) + 1] = method.a[i]
+        f[2 * (i - 1) + 2] = 2
+        c[2 * (i - 1) + 2] = method.b[i]
     end
 
     # select all entries with non-vanishing coefficients
@@ -76,7 +76,6 @@ function coefficients(nequs::Int, method::SplittingCoefficientsGeneral{T}) where
 
     return f[y], c[y]
 end
-
 
 @doc raw"""
 Non-symmetric splitting method.
@@ -134,7 +133,6 @@ function coefficients(nequs::Int, method::SplittingCoefficientsNonSymmetric)
     _splitting_coefficients(nequs::Int, method.a, method.b)
 end
 
-
 @doc raw"""
 Symmetric splitting method with general stages.
     See McLachlan, Quispel, 2003, Equ. (4.11).
@@ -168,7 +166,7 @@ function SplittingCoefficientsGS(name, o, a::Vector{T}, b::Vector{T}) where {T}
     SplittingCoefficientsGS{T}(name, o, length(a), a, b)
 end
 
-function coefficients(nequs::Int, method::SplittingCoefficientsGS) 
+function coefficients(nequs::Int, method::SplittingCoefficientsGS)
     # R = nequs
     # S = method.s
     #
@@ -189,7 +187,6 @@ function coefficients(nequs::Int, method::SplittingCoefficientsGS)
     f, c = _splitting_coefficients(nequs::Int, method.a, method.b)
     vcat(f, f[end:-1:1]), vcat(c, c[end:-1:1])
 end
-
 
 @doc raw"""
 Symmetric splitting method with symmetric stages.
@@ -222,18 +219,18 @@ end
 
 function coefficients(nequs::Int, method::SplittingCoefficientsSS{T}) where {T}
     r = nequs
-    a = vcat(method.a, method.a[end-1:-1:1]) ./ 2
+    a = vcat(method.a, method.a[(end - 1):-1:1]) ./ 2
     s = length(a)
 
     f = zeros(Int, 2r*s)
-    c = zeros(T,   2r*s)
+    c = zeros(T, 2r*s)
 
     for i in 1:s
         for j in 1:r
-            f[(2i-2)*r+j] = j
-            c[(2i-2)*r+j] = a[i]
-            f[(2i-1)*r+j] = r-j+1
-            c[(2i-1)*r+j] = a[i]
+            f[(2i - 2) * r + j] = j
+            c[(2i - 2) * r + j] = a[i]
+            f[(2i - 1) * r + j] = r-j+1
+            c[(2i - 1) * r + j] = a[i]
         end
     end
 

@@ -1,5 +1,6 @@
 
-function internal_variables(method::AbstractSPARKMethod, problem::AbstractSPARKProblem{DT,TT}) where {DT,TT}
+function internal_variables(method::AbstractSPARKMethod, problem::AbstractSPARKProblem{
+        DT, TT}) where {DT, TT}
     S = nstages(method)
     R = pstages(method)
     D = length(vec(initial_conditions(problem).q))
@@ -16,9 +17,8 @@ function internal_variables(method::AbstractSPARKMethod, problem::AbstractSPARKP
 
     # solver = get_solver_status(int.solver)
 
-    (Qi=Qi, Pi=Pi, Vi=Vi, Φi=Φi, Qp=Qp, Pp=Pp, Λp=Λp, Φp=Φp)#, solver=solver)
+    (Qi = Qi, Pi = Pi, Vi = Vi, Φi = Φi, Qp = Qp, Pp = Pp, Λp = Λp, Φp = Φp)#, solver=solver)
 end
-
 
 function copy_internal_variables!(solstep::SolutionStep{PDAE}, cache::IntegratorCacheSPARK)
     haskey(internal(solstep), :Qi) && copyto!(internal(solstep).Qi, cache.Qi)
@@ -32,7 +32,6 @@ function copy_internal_variables!(solstep::SolutionStep{PDAE}, cache::Integrator
     haskey(internal(solstep), :Φp) && copyto!(internal(solstep).Φp, cache.Φp)
 end
 
-
 function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:AbstractSPARKMethod}) where {DT}
     # compute vector field at internal stages
     components!(x, sol, params, int)
@@ -45,10 +44,11 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
     return sol
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:AbstractSPARKMethod,<:AbstractSPARKProblem})
+function integrate_step!(sol, history, params,
+        int::GeometricIntegrator{<:AbstractSPARKMethod, <:AbstractSPARKProblem})
     # call nonlinear solver and act on the outcome it reports
-    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (
+        sol, params, int))
     check_solver_status(solverstatus, int)
 
     # check_jacobian(int.solver)

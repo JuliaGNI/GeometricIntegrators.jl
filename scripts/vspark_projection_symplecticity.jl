@@ -51,8 +51,8 @@ using Printf
 using GeometricIntegrators
 using GeometricIntegrators.SPARK
 using GeometricProblems: LotkaVolterra2d, LotkaVolterra2dSingular,
-    MasslessChargedParticle, MasslessChargedParticleSingular,
-    PointVortices, PointVorticesLinear
+                         MasslessChargedParticle, MasslessChargedParticleSingular,
+                         PointVortices, PointVorticesLinear
 using GeometricEquations: IDAEProblem
 import GeometricIntegratorsBase
 
@@ -64,7 +64,6 @@ const HAVE_PI = try
 catch
     false
 end
-
 
 # ---------------------------------------------------------------- problems ----
 # Each entry supplies: an IDAEProblem built from a single q₀ (p₀ = ϑ(q₀) internally or
@@ -130,9 +129,8 @@ const PROBLEMS = [
     mcp_problem("MasslessChargedParticle", MasslessChargedParticle),
     mcp_problem("MasslessChargedParticleSingular", MasslessChargedParticleSingular),
     pv_problem("PointVorticesLinear  [ϑ LINEAR]", PointVorticesLinear),
-    pv_problem("PointVortices", PointVortices),
+    pv_problem("PointVortices", PointVortices)
 ]
-
 
 # ---------------------------------------------------------------- methods ----
 # All projection variants that accept a Gauss inner method, at s = 1, 2, 3, plus the
@@ -148,7 +146,7 @@ const GLRK_PROJECTIONS = [
     ("pLobattoIIIAIIIB", TableauVSPARKGLRKpLobattoIIIAIIIB),
     ("pLobattoIIIBIIIA", TableauVSPARKGLRKpLobattoIIIBIIIA),
     ("pModifiedLobattoIIIAIIIB", TableauVSPARKGLRKpModifiedLobattoIIIAIIIB),
-    ("pModifiedLobattoIIIBIIIA", TableauVSPARKGLRKpModifiedLobattoIIIBIIIA),
+    ("pModifiedLobattoIIIBIIIA", TableauVSPARKGLRKpModifiedLobattoIIIBIIIA)
 ]
 
 const LOBATTO_PROJECTIONS = [
@@ -157,7 +155,7 @@ const LOBATTO_PROJECTIONS = [
     ("LobIIIAIIIB pMidpoint", TableauVSPARKLobattoIIIAIIIBpMidpoint),
     ("LobIIIBIIIA pMidpoint", TableauVSPARKLobattoIIIBIIIApMidpoint),
     ("LobIIIAIIIB pLobIIIAIIIB", TableauVSPARKLobattoIIIAIIIBpLobattoIIIAIIIB),
-    ("LobIIIBIIIA pLobIIIAIIIB", TableauVSPARKLobattoIIIBIIIApLobattoIIIAIIIB),
+    ("LobIIIBIIIA pLobIIIAIIIB", TableauVSPARKLobattoIIIBIIIApLobattoIIIAIIIB)
 ]
 
 const N_LOOP = 128
@@ -178,7 +176,8 @@ function selected_problems()
     for pat in split(last(a)[12:end], ',')
         hit = filter(p -> p.name == pat, PROBLEMS)
         isempty(hit) && (hit = filter(p -> occursin(pat, p.name), PROBLEMS))
-        isempty(hit) && error("--problems: `$pat` matches none of $(getproperty.(PROBLEMS, :name))")
+        isempty(hit) &&
+            error("--problems: `$pat` matches none of $(getproperty.(PROBLEMS, :name))")
         append!(sel, hit)
     end
     unique(sel)
@@ -191,7 +190,6 @@ sub(s) = println("\n--- ", s, " ", "-"^max(0, 104 - length(s)))
 # solver/line-search warnings would bury the tables. Each integration therefore runs
 # silently (`verbosity = 0, warn_iterations = 0`); the exception type is always printed
 # instead, so nothing is hidden.
-
 
 """
     advance(prob, method, nsteps, h, D)
@@ -270,7 +268,6 @@ function classify(vals, hs = HS)
     @sprintf("defect O(h^%.1f)%s%s", r, floored, partial)
 end
 
-
 # ---------------------------------------------------------------- step 1 ----
 # The theorem's conditions, evaluated on the tableaus. Problem independent apart from
 # the per-projective-stage requirement, which is measured on a converged step.
@@ -284,11 +281,16 @@ function tableau_conditions(m)
     ã1, ã2 = t.p̃.a, t.p̃.α
     ã3, ã4 = t.q̃.a, t.q̃.α
     s, σ = length(b1), length(b2)
-    (c1 = maximum(abs, [b1[i] * b3[j] - b1[i] * a3[i, j] - b3[j] * a1[j, i] for i in 1:s, j in 1:s]),
-     c2 = maximum(abs, [b1[i] * b4[j] - b1[i] * a4[i, j] - b4[j] * ã1[j, i] for i in 1:s, j in 1:σ]),
-     c3 = maximum(abs, [b2[i] * b3[j] - b2[i] * ã3[i, j] - b3[j] * a2[j, i] for i in 1:σ, j in 1:s]),
-     c4 = maximum(abs, [b2[i] * b4[j] - b2[i] * ã4[i, j] - b4[j] * ã2[j, i] for i in 1:σ, j in 1:σ]),
-     c5 = maximum(abs, b3 .- b1), c6 = maximum(abs, b4 .- b2))
+    (
+        c1 = maximum(abs, [b1[i] * b3[j] - b1[i] * a3[i, j] - b3[j] * a1[j, i]
+                           for i in 1:s, j in 1:s]),
+        c2 = maximum(abs, [b1[i] * b4[j] - b1[i] * a4[i, j] - b4[j] * ã1[j, i]
+                           for i in 1:s, j in 1:σ]),
+        c3 = maximum(abs, [b2[i] * b3[j] - b2[i] * ã3[i, j] - b3[j] * a2[j, i]
+                           for i in 1:σ, j in 1:s]),
+        c4 = maximum(abs, [b2[i] * b4[j] - b2[i] * ã4[i, j] - b4[j] * ã2[j, i]
+                           for i in 1:σ, j in 1:σ]),
+        c5 = maximum(abs, b3 .- b1), c6 = maximum(abs, b4 .- b2))
 end
 
 function step1()
@@ -297,6 +299,7 @@ function step1()
     @printf("  %-34s %9s %9s %9s %9s %8s %8s\n",
         "method", "cond1", "cond2", "cond3", "cond4", "b³=b¹", "b⁴=b²")
     for (pname, ctor) in GLRK_PROJECTIONS, s in 1:3
+
         c = try
             tableau_conditions(ctor(s))
         catch
@@ -307,6 +310,7 @@ function step1()
             "GLRK($s)$pname", c.c1, c.c2, c.c3, c.c4, c.c5, c.c6)
     end
     for (pname, ctor) in LOBATTO_PROJECTIONS, s in 2:3
+
         c = try
             tableau_conditions(ctor(s))
         catch
@@ -329,7 +333,6 @@ function step1()
     println("  imposing them individually.")
 end
 
-
 # ---------------------------------------------------------------- step 2 ----
 
 function sweep(problems, methods, srange)
@@ -340,6 +343,7 @@ function sweep(problems, methods, srange)
             "method", "h=0.5", "h=0.2", "h=0.1", "h=0.05",
             "can 100", "non 100", "max|ϕ|", "verdict")
         for (pname, ctor) in methods, s in srange
+
             m = try
                 ctor(s)
             catch e
@@ -373,7 +377,7 @@ function sweep(problems, methods, srange)
     end
 end
 
-step2() = begin
+function step2()
     header("Step 2 — one-step canonical ∮p·dq defect vs h, Gauss inner method")
     println("  Flat at round-off across a factor of ten in h ⇒ exactly symplectic.")
     println("  Clean decay ⇒ a genuine O(hᵏ) defect. '100 st' is the 100-step drift at h=0.1.")
@@ -384,7 +388,6 @@ step3() = begin
     header("Step 3 — the same, Lobatto inner methods (contrast)")
     sweep(selected_problems(), LOBATTO_PROJECTIONS, 2:3)
 end
-
 
 # ---------------------------------------------------------------- step 4 ----
 # Cross-check the inline spectral loop integral against PoincareInvariants.jl.
@@ -398,7 +401,7 @@ function step4()
     end
     D = fourier_diffmatrix(N_LOOP)
     prob = PROBLEMS[1]
-    can = PoincareInvariants.FirstPI{Float64,4}(PoincareInvariants.canonical_one_form!, N_LOOP)
+    can = PoincareInvariants.FirstPI{Float64, 4}(PoincareInvariants.canonical_one_form!, N_LOOP)
     qs = circle(prob.centre, prob.radius, N_LOOP)
     ps = [prob.theta(0.0, q) for q in qs]
     Z = Matrix{Float64}(undef, N_LOOP, 4)
@@ -412,10 +415,6 @@ function step4()
     @printf("  PoincareInvariants ∮p·dq = %.16e\n", theirs)
     @printf("  relative difference       = %.2e\n", abs(mine - theirs) / abs(theirs))
 end
-
-
-
-
 
 # ---------------------------------------------------------------- step 5 ----
 # Why do methods that violate the theorem's conditions still conserve the invariant?
@@ -445,8 +444,8 @@ function projective_diagnostics(prob::Problem, m, h)
     GeometricIntegratorsBase.integrate!(ss, int)
     C = GeometricIntegratorsBase.cache(int)
     (Φ̃ = maximum(maximum(abs, x) for x in C.Φp),
-     Λ̃ = maximum(maximum(abs, x) for x in C.Λp),
-     Φ = maximum(maximum(abs, x) for x in C.Φi))
+        Λ̃ = maximum(maximum(abs, x) for x in C.Λp),
+        Φ = maximum(maximum(abs, x) for x in C.Φi))
 end
 
 function step5()
@@ -457,7 +456,12 @@ function step5()
         sub(prob.name)
         @printf("  %-34s %11s %11s %11s\n", "method", "max|Φ̃ᵢ|", "max|Λ̃ᵢ|", "max|Φᵢ|")
         for (pname, ctor) in GLRK_PROJECTIONS, s in 1:3
-            m = try ctor(s) catch; continue end
+
+            m = try
+                ctor(s)
+            catch
+                continue
+            end
             note = ""
             r = try
                 projective_diagnostics(prob, m, 0.1)
@@ -465,13 +469,11 @@ function step5()
                 note = "  ($(typeof(e)))"
                 (Φ̃ = NaN, Λ̃ = NaN, Φ = NaN)
             end
-            @printf("  %-34s %11.2e %11.2e %11.2e%s\n", "GLRK($s)$pname", r.Φ̃, r.Λ̃, r.Φ, note)
+            @printf("  %-34s %11.2e %11.2e %11.2e%s\n", "GLRK($s)$pname", r.Φ̃, r.Λ̃, r.Φ,
+                note)
         end
     end
 end
-
-
-
 
 # ---------------------------------------------------------------- step 6 ----
 # Is (★) really the leftover?  Measure it directly and compare with the observed defect.
@@ -503,7 +505,7 @@ function stage_state(prob::Problem, m, q0, h)
     C = GeometricIntegratorsBase.cache(int)
     cur = GeometricIntegratorsBase.current(ss)
     (Φ̃ = [copy(x) for x in C.Φp], Λ̃ = [copy(x) for x in C.Λp],
-     q = collect(cur.q), p = collect(cur.p))
+        q = collect(cur.q), p = collect(cur.p))
 end
 
 "(dα ∧ dβ)₁₂ from the two Jacobian columns of α and β"
@@ -522,10 +524,11 @@ function star_vs_defect(prob::Problem, m, h; ε = 1e-5)
 
     b4 = GeometricIntegrators.SPARK.tableau(m).q.β
     star = h * sum(b4[i] * wedge12(dΦ̃[i][1], dΦ̃[i][2], dΛ̃[i][1], dΛ̃[i][2])
-                   for i in eachindex(dΦ̃))
+    for i in eachindex(dΦ̃))
 
     # (dp₀ ∧ dq₀)₁₂ with p₀ = ϑ(q₀), computed by the same stencil
-    dϑ = [(prob.theta(0.0, pert(k, +1)) .- prob.theta(0.0, pert(k, -1))) ./ (2ε) for k in 1:2]
+    dϑ = [(prob.theta(0.0, pert(k, +1)) .- prob.theta(0.0, pert(k, -1))) ./ (2ε)
+          for k in 1:2]
     e1 = [1.0, 0.0]
     e2 = [0.0, 1.0]
     before = wedge12(dϑ[1], dϑ[2], e1, e2)
@@ -557,7 +560,12 @@ function step6()
         @printf("  %-30s %13s %13s %10s %8s\n",
             "method", "star", "defect", "star/defect", "spread")
         for (pname, ctor) in sel, s in 1:3
-            m = try ctor(s) catch; continue end
+
+            m = try
+                ctor(s)
+            catch
+                continue
+            end
             ratios = Float64[]
             rs = map(STAR_EPSILONS) do ε
                 try
@@ -579,9 +587,6 @@ function step6()
         end
     end
 end
-
-
-
 
 # ---------------------------------------------------------------- step 7 ----
 # The criterion that actually explains the round-off results.
@@ -611,17 +616,22 @@ function step7()
             q -> LotkaVolterra2d.ϑ(0.0, collect(q))),
         ("MasslessChargedParticle", () -> MasslessChargedParticle.iodeproblem(),
             q -> MasslessChargedParticle.ϑ(0.0, collect(q), MCP_PARAMS)),
-        ("MasslessChargedParticleSingular", () -> MasslessChargedParticleSingular.iodeproblem(),
-            q -> MasslessChargedParticleSingular.ϑ(0.0, collect(q), MCP_PARAMS)),
+        ("MasslessChargedParticleSingular",
+            () -> MasslessChargedParticleSingular.iodeproblem(),
+            q -> MasslessChargedParticleSingular.ϑ(0.0, collect(q), MCP_PARAMS))
     ]
-    @printf("  %-34s %-16s %13s %13s\n", "problem", "method", "max|ϕ| 100st", "max|ϕ| 1000st")
-    for (name, mk, th) in cases, (mn, m) in [("VPRKGauss(2)", VPRKGauss(2)), ("VPRKGauss(3)", VPRKGauss(3))]
+    @printf("  %-34s %-16s %13s %13s\n", "problem", "method", "max|ϕ| 100st",
+        "max|ϕ| 1000st")
+    for (name, mk, th) in cases,
+        (mn, m) in [("VPRKGauss(2)", VPRKGauss(2)), ("VPRKGauss(3)", VPRKGauss(3))]
+
         row = String[]
         for n in (100, 1000)
             v = try
                 pr = similar(mk(); timespan = (0.0, n * 0.1), timestep = 0.1)
                 sol = integrate(pr, m; verbosity = 0, warn_iterations = 0)
-                maximum(maximum(abs, collect(sol.p[i]) .- th(sol.q[i])) for i in eachindex(sol.t))
+                maximum(maximum(abs, collect(sol.p[i]) .- th(sol.q[i]))
+                for i in eachindex(sol.t))
             catch
                 NaN
             end
@@ -633,7 +643,6 @@ function step7()
     println("  round-off results for those problems in steps 2-3 are NOT explained by this")
     println("  criterion — see step 5, where the multiplier Λ̃ is nonzero throughout.")
 end
-
 
 # `--problems=<substring>` restricts steps 2, 3, 5 and 6 to the matching problems, so a
 # single row of the S17 tables can be reproduced without paying for all six. Every other

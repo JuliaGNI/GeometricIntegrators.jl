@@ -74,11 +74,11 @@ VPRKpTableau(coefficients::CoefficientsPGLRK)
 VPRKpTableau(s::Int, T = Float64)
 ```
 """
-struct VPRKpTableau{CT<:CoefficientsPGLRK} <: VIMethod
+struct VPRKpTableau{CT <: CoefficientsPGLRK} <: VIMethod
     coefficients::CT
 end
 
-VPRKpTableau(s::Int, ::Type{T}=Float64) where {T} = VPRKpTableau(CoefficientsPGLRK(T, s))
+VPRKpTableau(s::Int, ::Type{T} = Float64) where {T} = VPRKpTableau(CoefficientsPGLRK(T, s))
 
 GeometricBase.tableau(method::VPRKpTableau, args...; kwargs...) = method.coefficients
 GeometricBase.order(method::VPRKpTableau) = RungeKutta.order(tableau(method))
@@ -87,19 +87,19 @@ GeometricBase.order(::Type{<:VPRKpTableau}) = "2s"
 @inline nstages(method::VPRKpTableau) = RungeKutta.nstages(tableau(method))
 @inline eachstage(method::VPRKpTableau) = RungeKutta.eachstage(tableau(method))
 
-isexplicit(::Union{VPRKpTableau,Type{<:VPRKpTableau}}) = false
-isimplicit(::Union{VPRKpTableau,Type{<:VPRKpTableau}}) = true
-issymmetric(::Union{VPRKpTableau,Type{<:VPRKpTableau}}) = missing
+isexplicit(::Union{VPRKpTableau, Type{<:VPRKpTableau}}) = false
+isimplicit(::Union{VPRKpTableau, Type{<:VPRKpTableau}}) = true
+issymmetric(::Union{VPRKpTableau, Type{<:VPRKpTableau}}) = missing
 
 # `B A(λ)` is skew for every λ, so the perturbed tableau satisfies the symplecticity
 # condition. Whether the *projected* method is symplectic is not established: the
 # relevant derivation in the reference is truncated.
-issymplectic(::Union{VPRKpTableau,Type{<:VPRKpTableau}}) = missing
+issymplectic(::Union{VPRKpTableau, Type{<:VPRKpTableau}}) = missing
 
 # stage equations (D*S) plus the Dirac constraint (D)
-solversize(method::VPRKpTableau, problem::AbstractProblemIODE) =
+function solversize(method::VPRKpTableau, problem::AbstractProblemIODE)
     length(vec(initial_conditions(problem).q)) * (nstages(method) + 1)
-
+end
 
 function Base.show(io::IO, int::GeometricIntegrator{<:VPRKpTableau})
     print(io, "\nVariational Partitioned Runge-Kutta Integrator with Projection in the Tableau with:\n")
@@ -107,7 +107,6 @@ function Base.show(io::IO, int::GeometricIntegrator{<:VPRKpTableau})
     print(io, "   Tableau:  $(description(tableau(int)))\n")
     print(io, "   $(string(tableau(int)))")
 end
-
 
 @doc raw"""
 Cache of [`VPRKpTableau`](@ref).
@@ -126,7 +125,7 @@ computation.
 * `Q`, `P`, `V`, `F`, `Y`, `Z`: internal stages
 * `W`, `T`, `A`: skew generator, workspace and the perturbation ``A = P W Q``
 """
-struct VPRKpTableauCache{ST,D,S} <: IODEIntegratorCache{ST}
+struct VPRKpTableauCache{ST, D, S} <: IODEIntegratorCache{ST}
     x::Vector{ST}
 
     λ::Vector{ST}
@@ -154,7 +153,7 @@ struct VPRKpTableauCache{ST,D,S} <: IODEIntegratorCache{ST}
     T::Matrix{ST}
     A::Matrix{ST}
 
-    function VPRKpTableauCache{ST,D,S}() where {ST,D,S}
+    function VPRKpTableauCache{ST, D, S}() where {ST, D, S}
         x = zeros(ST, D * (S + 1))
 
         λ = zeros(ST, D)
@@ -192,16 +191,16 @@ function Cache{ST}(problem::AbstractProblemIODE, method::VPRKpTableau; kwargs...
     @assert S ≥ D + 1 "VPRKpTableau needs at least D+1 = $(D+1) stages to fit $(D) " *
                       "multipliers into the skew generator W, and s ≥ D+2 = $(D+2) " *
                       "stages for full order (got s = $(S))."
-    VPRKpTableauCache{ST,D,S}(; kwargs...)
+    VPRKpTableauCache{ST, D, S}(; kwargs...)
 end
 
 @inline function CacheType(ST, problem::AbstractProblemIODE, method::VPRKpTableau)
     D = length(vec(initial_conditions(problem).q))
-    VPRKpTableauCache{ST,D,nstages(method)}
+    VPRKpTableauCache{ST, D, nstages(method)}
 end
 
-
-function internal_variables(method::VPRKpTableau, problem::AbstractProblemIODE{DT,TT}) where {DT,TT}
+function internal_variables(method::VPRKpTableau, problem::AbstractProblemIODE{
+        DT, TT}) where {DT, TT}
     S = nstages(method)
     D = length(vec(initial_conditions(problem).q))
 
@@ -210,7 +209,7 @@ function internal_variables(method::VPRKpTableau, problem::AbstractProblemIODE{D
     V = create_internal_stage_vector(DT, D, S)
     F = create_internal_stage_vector(DT, D, S)
 
-    (Q=Q, P=P, V=V, F=F)
+    (Q = Q, P = P, V = V, F = F)
 end
 
 function copy_internal_variables!(solstep::SolutionStep, cache::VPRKpTableauCache)
@@ -219,7 +218,6 @@ function copy_internal_variables!(solstep::SolutionStep, cache::VPRKpTableauCach
     haskey(internal(solstep), :V) && copyto!(internal(solstep).V, cache.V)
     haskey(internal(solstep), :F) && copyto!(internal(solstep).F, cache.F)
 end
-
 
 """
 Recompute the tableau perturbation `A = P W(λ) Q` for the current multipliers.
@@ -233,8 +231,8 @@ function update_tableau!(cache::VPRKpTableauCache, coefficients::CoefficientsPGL
 
     fill!(cache.W, 0)
     for k in eachindex(cache.λ)
-        cache.W[S-k+1, S-k] = +cache.λ[k]
-        cache.W[S-k, S-k+1] = -cache.λ[k]
+        cache.W[S - k + 1, S - k] = +cache.λ[k]
+        cache.W[S - k, S - k + 1] = -cache.λ[k]
     end
 
     mul!(cache.T, cache.W, coefficients.Q)
@@ -243,7 +241,6 @@ function update_tableau!(cache::VPRKpTableauCache, coefficients::CoefficientsPGL
     return cache.A
 end
 
-
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VPRKpTableau})
     local x = nlsolution(int)
     local D = length(cache(int).q̃)
@@ -251,25 +248,24 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VPRKpTa
 
     for i in eachstage(int)
         soltmp = (
-            t=history[1].t + timestep(int) * tableau(int).c[i],
-            q=cache(int).Q[i],
-            p=cache(int).P[i],
-            q̇=cache(int).V[i],
-            ṗ=cache(int).F[i],
+            t = history[1].t + timestep(int) * tableau(int).c[i],
+            q = cache(int).Q[i],
+            p = cache(int).P[i],
+            q̇ = cache(int).V[i],
+            ṗ = cache(int).F[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
         for k in 1:D
-            x[D*(i-1)+k] = cache(int).V[i][k]
+            x[D * (i - 1) + k] = cache(int).V[i][k]
         end
     end
 
     # start from the unperturbed tableau
     for k in 1:D
-        x[D*S+k] = 0
+        x[D * S + k] = 0
     end
 end
-
 
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRKpTableau}) where {ST}
     local C = cache(int, ST)
@@ -279,11 +275,11 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     # copy x to V and λ
     for i in eachindex(C.V)
         for k in eachindex(C.V[i])
-            C.V[i][k] = x[D*(i-1)+k]
+            C.V[i][k] = x[D * (i - 1) + k]
         end
     end
     for k in eachindex(C.λ)
-        C.λ[k] = x[D*S+k]
+        C.λ[k] = x[D * S + k]
     end
 
     # rebuild the perturbed tableau for the current λ
@@ -337,7 +333,6 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     equations(int).ϑ(C.θ, sol.t, C.q, C.z, params)
 end
 
-
 function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRKpTableau}) where {ST}
     local C = cache(int, ST)
     local D = length(C.q̃)
@@ -346,23 +341,22 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
     # stage equations: P - p - Δt Z = 0
     for i in eachindex(C.P, C.Z)
         for k in eachindex(C.P[i])
-            b[D*(i-1)+k] = C.P[i][k] - sol.p[k] - timestep(int) * C.Z[i][k]
+            b[D * (i - 1) + k] = C.P[i][k] - sol.p[k] - timestep(int) * C.Z[i][k]
         end
     end
 
     # Dirac constraint: ϑ(q_{n+1}) - p_{n+1} = 0
     for k in eachindex(C.θ, C.p)
-        b[D*S+k] = C.θ[k] - C.p[k]
+        b[D * S + k] = C.θ[k] - C.p[k]
     end
 end
 
-
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRKpTableau}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params,
+        int::GeometricIntegrator{<:VPRKpTableau}) where {ST}
     @assert axes(x) == axes(b)
     components!(x, sol, params, int)
     residual!(b, sol, params, int)
 end
-
 
 function update!(sol, params, int::GeometricIntegrator{<:VPRKpTableau}, DT)
     sol.q .= cache(int, DT).q
@@ -374,9 +368,10 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
     update!(sol, params, int, DT)
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:VPRKpTableau,<:AbstractProblemIODE})
-    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:VPRKpTableau, <:AbstractProblemIODE})
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (
+        sol, params, int))
     check_solver_status(solverstatus, int)
     update!(sol, params, nlsolution(int), int)
 end

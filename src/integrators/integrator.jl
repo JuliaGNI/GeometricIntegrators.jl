@@ -27,12 +27,10 @@
 
 # eachdim(integrator::GeometricIntegrator) = 1:ndims(integrator)
 
-
 # Create SolutionStep with internal variables of integrator.
 # function SolutionStep(solution::GeometricSolution, integrator::GeometricIntegrator)
 #     SolutionStep(solution, internal_variables(integrator))
 # end
-
 
 # abstract type Parameters{DT,TT} end
 

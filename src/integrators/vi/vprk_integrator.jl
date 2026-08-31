@@ -1,11 +1,14 @@
 
-description(::GeometricIntegrator{<:VPRKMethod}) = "Variational Partitioned Runge-Kutta Integrator"
+function description(::GeometricIntegrator{<:VPRKMethod})
+    "Variational Partitioned Runge-Kutta Integrator"
+end
 
-solversize(method::VPRKMethod, problem::AbstractProblemIODE) =
+function solversize(method::VPRKMethod, problem::AbstractProblemIODE)
     length(vec(initial_conditions(problem).q)) * nstages(method)
+end
 
-
-function internal_variables(method::VPRKMethod, problem::AbstractProblemIODE{DT,TT}) where {DT,TT}
+function internal_variables(method::VPRKMethod, problem::AbstractProblemIODE{
+        DT, TT}) where {DT, TT}
     S = nstages(method)
     D = length(vec(initial_conditions(problem).q))
 
@@ -18,9 +21,8 @@ function internal_variables(method::VPRKMethod, problem::AbstractProblemIODE{DT,
 
     # solver = get_solver_status(int.solver)
 
-    (Q=Q, P=P, V=V, F=F, Y=Y, Z=Z)#, solver=solver)
+    (Q = Q, P = P, V = V, F = F, Y = Y, Z = Z)#, solver=solver)
 end
-
 
 function copy_internal_variables!(solstep::SolutionStep, cache::VPRKCache)
     haskey(internal(solstep), :Q) && copyto!(internal(solstep).Q, cache.Q)
@@ -31,27 +33,25 @@ function copy_internal_variables!(solstep::SolutionStep, cache::VPRKCache)
     haskey(internal(solstep), :Z) && copyto!(internal(solstep).Z, cache.Z)
 end
 
-
 function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VPRK})
     D = length(cache(int).V[1])
     for i in eachstage(int)
         soltmp = (
-            t=history[1].t + timestep(int) * tableau(int).q.c[i],
-            q=cache(int).Q[i],
-            p=cache(int).P[i],
-            q̇=cache(int).V[i],
-            ṗ=cache(int).F[i],
+            t = history[1].t + timestep(int) * tableau(int).q.c[i],
+            q = cache(int).Q[i],
+            p = cache(int).P[i],
+            q̇ = cache(int).V[i],
+            ṗ = cache(int).F[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
         for k in eachindex(cache(int).V[i])
-            cache(int).x[D*(i-1)+k] = cache(int).V[i][k]
+            cache(int).x[D * (i - 1) + k] = cache(int).V[i][k]
         end
         # println("  t = $(solstep.t̄ + timestep(problem) * tableau(method).q.c[i]),",
         #         "  q̄ = $(solstep.q̄), v̄ = $(solstep.v̄), ",
         #         "  q = $(cache.Q[i]), v = $(cache.V[i])")
     end
 end
-
 
 function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRK}) where {ST}
     # get cache for internal stages
@@ -64,7 +64,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     # copy x to V
     for i in eachindex(V)
         for k in eachindex(V[i])
-            V[i][k] = x[D*(i-1)+k]
+            V[i][k] = x[D * (i - 1) + k]
         end
     end
 
@@ -89,7 +89,6 @@ function components!(x::AbstractVector{ST}, sol, params, int::GeometricIntegrato
     end
 end
 
-
 function residual_solution!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRK}) where {ST}
     # get cache for previous solution and internal stages
     local P = cache(int, ST).P
@@ -104,11 +103,10 @@ function residual_solution!(b::AbstractVector{ST}, sol, params, int::GeometricIn
                 z1 += tableau(int).p.a[i, j] * F[j][k]
                 z2 += tableau(int).p.â[i, j] * F[j][k]
             end
-            b[D*(i-1)+k] = -(P[i][k] - sol.p[k]) + timestep(int) * (z1 + z2)
+            b[D * (i - 1) + k] = -(P[i][k] - sol.p[k]) + timestep(int) * (z1 + z2)
         end
     end
 end
-
 
 function residual_correction!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRK}) where {ST}
     # get cache for internal stages
@@ -121,14 +119,14 @@ function residual_correction!(b::AbstractVector{ST}, sol, params, int::Geometric
     if hasnullvector(int)
         # compute μ
         for k in eachindex(μ)
-            μ[k] = tableau(int).p.b[sl] / nullvector(int)[sl] * b[D*(sl-1)+k]
+            μ[k] = tableau(int).p.b[sl] / nullvector(int)[sl] * b[D * (sl - 1) + k]
         end
 
         # replace equation for Pₗ with constraint on V
         for k in eachindex(μ)
-            b[D*(sl-1)+k] = 0
+            b[D * (sl - 1) + k] = 0
             for i in eachindex(nullvector(int))
-                b[D*(sl-1)+k] += V[i][k] * nullvector(int)[i]
+                b[D * (sl - 1) + k] += V[i][k] * nullvector(int)[i]
             end
         end
 
@@ -137,13 +135,12 @@ function residual_correction!(b::AbstractVector{ST}, sol, params, int::Geometric
             if i ≠ sl
                 z = nullvector(int)[i] / tableau(int).p.b[i]
                 for k in eachindex(μ)
-                    b[D*(i-1)+k] -= z * μ[k]
+                    b[D * (i - 1) + k] -= z * μ[k]
                 end
             end
         end
     end
 end
-
 
 # Compute stages of variational partitioned Runge-Kutta methods.
 function residual!(b::AbstractVector, sol, params, int::GeometricIntegrator{<:VPRK})
@@ -151,9 +148,9 @@ function residual!(b::AbstractVector, sol, params, int::GeometricIntegrator{<:VP
     residual_correction!(b, sol, params, int)
 end
 
-
 # Compute stages of Variational Partitioned Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:VPRK}) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol,
+        params, int::GeometricIntegrator{<:VPRK}) where {ST}
     # check that x and b are compatible
     @assert axes(x) == axes(b)
 
@@ -163,7 +160,6 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     # compute residual vector
     residual!(b, sol, params, int)
 end
-
 
 function update!(sol, params, int::GeometricIntegrator{<:VPRK}, DT)
     # compute final update
@@ -179,10 +175,11 @@ function update!(sol, params, x::AbstractVector{DT}, int::GeometricIntegrator{<:
     update!(sol, params, int, DT)
 end
 
-
-function integrate_step!(sol, history, params, int::GeometricIntegrator{<:VPRK,<:AbstractProblemIODE})
+function integrate_step!(sol, history, params, int::GeometricIntegrator{
+        <:VPRK, <:AbstractProblemIODE})
     # call nonlinear solver and act on the outcome it reports
-    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (sol, params, int))
+    solverstatus = solve_with_status!(nlsolution(int), solver(int), solverstate(int), (
+        sol, params, int))
     check_solver_status(solverstatus, int)
 
     # check_jacobian(solver(int))

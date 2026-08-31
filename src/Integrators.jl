@@ -31,24 +31,36 @@ import GeometricBase: equations, initialguess, nconstraints, parameters, timeste
 import GeometricBase: integrate, integrate!, reset!, solutionstep!, update!
 import GeometricBase.Utils: @big, @define, compensated_summation
 
-import GeometricIntegratorsBase: ODEMethod, PODEMethod, HODEMethod, IODEMethod, LODEMethod, SODEMethod, DELEMethod
+import GeometricIntegratorsBase: ODEMethod, PODEMethod, HODEMethod, IODEMethod, LODEMethod,
+                                 SODEMethod, DELEMethod
 import GeometricIntegratorsBase: DAEMethod, PDAEMethod, HDAEMethod, IDAEMethod, LDAEMethod
-import GeometricIntegratorsBase: ODEIntegratorCache, IODEIntegratorCache, PODEIntegratorCache, DELEIntegratorCache
-import GeometricIntegratorsBase: DAEIntegratorCache, IDAEIntegratorCache, PDAEIntegratorCache
+import GeometricIntegratorsBase: ODEIntegratorCache, IODEIntegratorCache,
+                                 PODEIntegratorCache, DELEIntegratorCache
+import GeometricIntegratorsBase: DAEIntegratorCache, IDAEIntegratorCache,
+                                 PDAEIntegratorCache
 
-import GeometricIntegratorsBase: Cache, CacheType, GeometricIntegrator, NoProjection, ProjectionMethod
-import GeometricIntegratorsBase: cache, hasnullvector, iguess, internal, method, nlsolution, nullvector, problem, projection, solver, solverstate
-import GeometricIntegratorsBase: components!, initialize!, initial_guess!, integrate_step!, residual!
-import GeometricIntegratorsBase: default_options, initialize!, initmethod, initsolver, internal_variables, copy_internal_variables!
+import GeometricIntegratorsBase: Cache, CacheType, GeometricIntegrator, NoProjection,
+                                 ProjectionMethod
+import GeometricIntegratorsBase: cache, hasnullvector, iguess, internal, method, nlsolution,
+                                 nullvector, problem, projection, solver, solverstate
+import GeometricIntegratorsBase: components!, initialize!, initial_guess!, integrate_step!,
+                                 residual!
+import GeometricIntegratorsBase: default_options, initialize!, initmethod, initsolver,
+                                 internal_variables, copy_internal_variables!
 
-import GeometricIntegratorsBase: isexplicit, isimplicit, issymmetric, issymplectic, isenergypreserving, isstifflyaccurate, implicit_update
-import GeometricIntegratorsBase: isodemethod, ispodemethod, ishodemethod, isiodemethod, islodemethod, issodemethod
-import GeometricIntegratorsBase: isdaemethod, ispdaemethod, ishdaemethod, isidaemethod, isldaemethod
-import GeometricIntegratorsBase: default_solver, default_linesearch, default_iguess, solversize
+import GeometricIntegratorsBase: isexplicit, isimplicit, issymmetric, issymplectic,
+                                 isenergypreserving, isstifflyaccurate, implicit_update
+import GeometricIntegratorsBase: isodemethod, ispodemethod, ishodemethod, isiodemethod,
+                                 islodemethod, issodemethod
+import GeometricIntegratorsBase: isdaemethod, ispdaemethod, ishdaemethod, isidaemethod,
+                                 isldaemethod
+import GeometricIntegratorsBase: default_solver, default_linesearch, default_iguess,
+                                 solversize
 
 import RungeKutta
 import RungeKutta: eachstage, nstages
-import RungeKutta: AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
+import RungeKutta: AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau,
+                   SymplecticPartitionedTableau
 import RungeKutta.Tableaus: lobatto_nullvector
 
 import SimpleSolvers: SolverMethod
@@ -57,20 +69,16 @@ import SimpleSolvers: SolverMethod
 # read the outcome of the stage solve for the λ it accepted, off the persistent solver state.
 import SimpleSolvers: status
 
-
 # compat workaround
 # Base.ndims(prob::EquationProblem) = length(vec(prob.ics.q))
 
-
 const DEFAULT_NSAVE = 1
 const DEFAULT_NWRITE = 0
-
 
 export AbstractCoefficients
 export CoefficientsPGLRK, getTableauPGLRK
 
 include("integrators/abstract_coefficients.jl")
-
 
 export GeometricMethod
 export ODEMethod, PODEMethod, HODEMethod, IODEMethod, LODEMethod, SODEMethod
@@ -86,16 +94,17 @@ export default_solver, default_iguess, default_projection
 export initmethod, implicit_update
 export internal_variables
 
-export AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau, SymplecticPartitionedTableau
+export AbstractTableau, Tableau, PartitionedTableau, SymplecticTableau,
+       SymplecticPartitionedTableau
 export name, order, description, reference
 # export nstages, eachstage, coefficients, weights, nodes
 export hasnullvector, nullvector
-export isexplicit, isimplicit, issymmetric, issymplectic, isenergypreserving, isstifflyaccurate
+export isexplicit, isimplicit, issymmetric, issymplectic, isenergypreserving,
+       isstifflyaccurate
 export isodemethod, ispodemethod, ishodemethod, isiodemethod, islodemethod, issodemethod
 export isdaemethod, ispdaemethod, ishdaemethod, isidaemethod, isldaemethod
 
 # include("integrators/methods.jl")
-
 
 export DataSeries, TimeSeries, Solution, AbstractSolution, DeterministicSolution
 export current, previous, history
@@ -104,14 +113,12 @@ export SolutionODE, SolutionPODE
 export SolutionDAE, SolutionPDAE
 
 export SolutionStep,
-    SolutionStepODE, SolutionStepPODE,
-    SolutionStepDAE, SolutionStepPDAE
+       SolutionStepODE, SolutionStepPODE,
+       SolutionStepDAE, SolutionStepPDAE
 
 export reset!, update!, update_vector_fields!, cut_periodic_solution!
 
-
 export equation, timestep
-
 
 export NoSolver
 
@@ -120,11 +127,9 @@ export integrate, integrate!, solutionstep!
 
 include("integrators/integrator.jl")
 
-
-
 export get_symplectic_conjugate_coefficients, symplecticize,
-    check_symplecticity, symplecticity_conditions,
-    check_symmetry, compute_symplecticity_error
+       check_symplecticity, symplecticity_conditions,
+       check_symmetry, compute_symplecticity_error
 
 include("integrators/rk/abstract.jl")
 include("integrators/rk/common.jl")
@@ -147,15 +152,14 @@ include("integrators/rk/integrators_pglrk.jl")
 
 include("integrators/rk/methods.jl")
 
-
 export ExactSolution,
-    AbstractTableauSplitting,
-    Composition,
-    Splitting,
-    SplittingCoefficientsGeneral,
-    SplittingCoefficientsNonSymmetric,
-    SplittingCoefficientsGS,
-    SplittingCoefficientsSS
+       AbstractTableauSplitting,
+       Composition,
+       Splitting,
+       SplittingCoefficientsGeneral,
+       SplittingCoefficientsNonSymmetric,
+       SplittingCoefficientsGS,
+       SplittingCoefficientsSS
 
 include("integrators/splitting/exact_solution.jl")
 include("integrators/splitting/splitting_coefficients.jl")
@@ -163,7 +167,6 @@ include("integrators/splitting/splitting_methods.jl")
 include("integrators/splitting/splitting_integrator.jl")
 include("integrators/splitting/composition_methods.jl")
 include("integrators/splitting/composition_integrator.jl")
-
 
 include("integrators/vi/vi_methods.jl")
 include("integrators/vi/deleqs.jl")
@@ -177,7 +180,6 @@ include("integrators/vi/vprk_cache.jl")
 include("integrators/vi/vprk_integrator.jl")
 include("integrators/vi/vprk_ptableau.jl")
 
-
 include("integrators/cgvi/integrators_cgvi_common.jl")
 include("integrators/cgvi/integrators_cgvi.jl")
 include("integrators/cgvi/integrators_cgvi_nodal.jl")
@@ -188,7 +190,6 @@ include("integrators/dgvi/integrators_dgvi_path_integral.jl")
 include("integrators/dgvi/integrators_dgvi_projection_initial.jl")
 include("integrators/dgvi/integrators_dgvi_projection_final.jl")
 
-
 include("integrators/dvi/dvi_common.jl")
 include("integrators/dvi/dvi_cache.jl")
 include("integrators/dvi/dvi_euler.jl")
@@ -196,12 +197,10 @@ include("integrators/dvi/dvi_midpoint.jl")
 include("integrators/dvi/dvi_trapezoidal.jl")
 include("integrators/dvi/dvrk.jl")
 
-
 include("integrators/hpi/hpi_common.jl")
 include("integrators/hpi/hpi_cache.jl")
 include("integrators/hpi/hpi_midpoint.jl")
 include("integrators/hpi/hpi_trapezoidal.jl")
-
 
 export NoProjection, projection
 
@@ -215,9 +214,7 @@ include("projections/symmetric_projection.jl")
 include("projections/methods.jl")
 include("integrators/vi/vprk_projected.jl")
 
-
 include("integrators/method_list.jl")
-
 
 # function __init__()
 #     default_params = (

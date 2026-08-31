@@ -6,7 +6,6 @@ using GeometricIntegrators.Integrators: VPRK, VPRKMethod
 iode = iodeproblem()
 lode = lodeproblem()
 
-
 @testset "$(rpad("Variational Partitioned Runge-Kutta Methods",80))" begin
 
     # The `VPRK(<plain method>)` and `VPRK(<VPRK-specific alias>)` construction
@@ -24,7 +23,7 @@ lode = lodeproblem()
     @test VPRK(RadauIIA(2)) == VPRK(VPRKRadauIIA(2))
     @test VPRK(RadauIIB(2)) == VPRK(VPRKRadauIIB(2))
 
-    @test VPRK(VPRKLobattoIII(2))  == VPRK(VPRKLobattoIII(2))
+    @test VPRK(VPRKLobattoIII(2)) == VPRK(VPRKLobattoIII(2))
     @test VPRK(VPRKLobattoIIIA(2)) == VPRK(VPRKLobattoIIIA(2))
     @test VPRK(VPRKLobattoIIIB(2)) == VPRK(VPRKLobattoIIIB(2))
     @test VPRK(VPRKLobattoIIIC(2)) == VPRK(VPRKLobattoIIIC(2))
@@ -42,7 +41,6 @@ lode = lodeproblem()
     @test VPRK(LobattoIIIEIIIĒ(2)) == VPRK(VPRKLobattoIIIEIIIĒ(2))
     @test VPRK(LobattoIIIFIIIF̄(2)) == VPRK(VPRKLobattoIIIFIIIF̄(2))
     @test VPRK(LobattoIIIGIIIḠ(2)) == VPRK(VPRKLobattoIIIGIIIḠ(2))
-
 
     @test typeof(VPSRK3()) <: VPRKMethod
 
@@ -156,47 +154,58 @@ lode = lodeproblem()
     @test typeof(VPRKLobattoIIIGIIIḠ(4)) <: VPRKMethod
     @test typeof(VPRKLobattoIIIGIIIḠ(5)) <: VPRKMethod
 
-
     @test typeof(GeometricIntegrator(iode, VPSRK3())) <: GeometricIntegrator{<:VPRK}
     @test typeof(GeometricIntegrator(iode, VPRKGauss(2))) <: GeometricIntegrator{<:VPRK}
 
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIII(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIA(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIB(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIC(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIID(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIE(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIF(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIG(2))) <: GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIII(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIA(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIB(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIC(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIID(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIE(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIF(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIG(2))) <:
+          GeometricIntegrator{<:VPRK}
 
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIAIIIB(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIBIIIA(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIAIIIĀ(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIBIIIB̄(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIICIIIC̄(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIC̄IIIC(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIDIIID̄(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIEIIIĒ(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIFIIIF̄(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIF̄IIIF(2))) <: GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIGIIIḠ(2))) <: GeometricIntegrator{<:VPRK}
-
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIAIIIB(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIBIIIA(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIAIIIĀ(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIBIIIB̄(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIICIIIC̄(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIC̄IIIC(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIDIIID̄(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIEIIIĒ(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIFIIIF̄(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIF̄IIIF(2))) <:
+          GeometricIntegrator{<:VPRK}
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIGIIIḠ(2))) <:
+          GeometricIntegrator{<:VPRK}
 end
 
-
 @testset "$(rpad("Degenerate Variational Integrator Methods",80))" begin
-
     @test typeof(DVIA()) <: DVIMethod
     @test typeof(DVIB()) <: DVIMethod
     @test typeof(CMDVI()) <: DVIMethod
     @test typeof(CTDVI()) <: DVIMethod
-
 end
 
-
 @testset "$(rpad("Degenerate Variational Runge-Kutta Methods",80))" begin
-
     @test typeof(DVRK(Gauss(1))) <: DVIMethod
     @test typeof(DVRK(Gauss(2))) <: DVIMethod
-
 end

@@ -8,18 +8,18 @@ using Test
 
 const t₀ = 0.0
 const q₀ = [1.0, 1.0]
-const params = (a₁=1.0, a₂=1.0, b₁=-1.0, b₂=-2.0)
+const params = (a₁ = 1.0, a₂ = 1.0, b₁ = -1.0, b₂ = -2.0)
 
 const Δt = 0.01
 const nt = 10
 const tspan = (t₀, Δt * nt)
 
-ode = odeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
-hdae = hdaeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
-idae = idaeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
-pdae = pdaeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
-ldae = ldaeproblem(q₀; timespan=tspan, timestep=Δt, parameters=params)
-ldae_slrk = ldaeproblem_slrk(q₀; timespan=tspan, timestep=Δt, parameters=params)
+ode = odeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
+hdae = hdaeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
+idae = idaeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
+pdae = pdaeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
+ldae = ldaeproblem(q₀; timespan = tspan, timestep = Δt, parameters = params)
+ldae_slrk = ldaeproblem_slrk(q₀; timespan = tspan, timestep = Δt, parameters = params)
 
 ref = integrate(ode, Gauss(8))
 
@@ -52,7 +52,7 @@ ref = integrate(ode, Gauss(8))
 using GeometricIntegratorsBase: solver, solverstate
 using SimpleSolvers: status, isconverged, isstalled, config
 function nlsolve_outcome(prob, method)
-    int = GeometricIntegrator(prob, method; verbosity=0, warn_iterations=0)
+    int = GeometricIntegrator(prob, method; verbosity = 0, warn_iterations = 0)
     ss = GeometricIntegratorsBase.solutionstep(int, GeometricIntegratorsBase.initialstate(prob))
     GeometricIntegratorsBase.reset!(ss, Δt)
     GeometricIntegratorsBase.integrate!(ss, int)
@@ -60,9 +60,7 @@ function nlsolve_outcome(prob, method)
     (converged = isconverged(st), stalled = isstalled(st, config(solver(int))))
 end
 
-
 @testset "$(rpad("SLRK integrators",80))" begin
-
     sol = integrate(ldae_slrk, SLRKLobattoIIIAB(2))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
@@ -71,7 +69,6 @@ end
 
     sol = integrate(ldae_slrk, SLRKLobattoIIIAB(4))
     @test relative_maximum_error(sol.q, ref.q) < 1E-15
-
 
     sol = integrate(ldae_slrk, SLRKLobattoIIIBA(2))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
@@ -82,7 +79,6 @@ end
     sol = integrate(ldae_slrk, SLRKLobattoIIIBA(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
-
     sol = integrate(ldae_slrk, SLRKLobattoIIICC̄(2))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
@@ -91,7 +87,6 @@ end
 
     sol = integrate(ldae_slrk, SLRKLobattoIIICC̄(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
-
 
     sol = integrate(ldae_slrk, SLRKLobattoIIIC̄C(2))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
@@ -102,7 +97,6 @@ end
     sol = integrate(ldae_slrk, SLRKLobattoIIIC̄C(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
-
     sol = integrate(ldae_slrk, SLRKLobattoIIID(2))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
@@ -112,7 +106,6 @@ end
     sol = integrate(ldae_slrk, SLRKLobattoIIID(4))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
-
     sol = integrate(ldae_slrk, SLRKLobattoIIIE(2))
     @test relative_maximum_error(sol.q, ref.q) < 4E-7
 
@@ -121,9 +114,7 @@ end
 
     sol = integrate(ldae_slrk, SLRKLobattoIIIE(4))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
-
 end
-
 
 @testset "$(rpad("SLRK stage-Jacobian conditioning (finding S10)",80))" begin
 
@@ -156,7 +147,7 @@ end
 
     "central-difference stage Jacobian of `residual!` at the initial guess"
     function stage_jacobian(method, Δt)
-        prob = ldaeproblem_slrk(q₀; timespan=(t₀, t₀ + 10Δt), timestep=Δt, parameters=params)
+        prob = ldaeproblem_slrk(q₀; timespan = (t₀, t₀ + 10Δt), timestep = Δt, parameters = params)
         int = GeometricIntegrator(prob, method)
         solstep = GeometricIntegratorsBase.solutionstep(int, GeometricIntegratorsBase.initialstate(prob))
         GeometricIntegratorsBase.reset!(solstep, Δt)
@@ -172,8 +163,10 @@ end
         rm = zeros(n)
         ε = 1e-7
         for j in 1:n
-            xp = copy(x); xp[j] += ε
-            xm = copy(x); xm[j] -= ε
+            xp = copy(x)
+            xp[j] += ε
+            xm = copy(x)
+            xm[j] -= ε
             GeometricIntegratorsBase.residual!(rp, xp, sol, prm, int)
             GeometricIntegratorsBase.residual!(rm, xm, sol, prm, int)
             J[:, j] .= (rp .- rm) ./ (2ε)
@@ -182,15 +175,14 @@ end
     end
 
     for ctor in (SLRKLobattoIIIAB, SLRKLobattoIIIBA, SLRKLobattoIIICC̄,
-                 SLRKLobattoIIIC̄C, SLRKLobattoIIID, SLRKLobattoIIIE), s in (2, 3)
+            SLRKLobattoIIIC̄C, SLRKLobattoIIID, SLRKLobattoIIIE),
+        s in (2, 3)
+
         for Δt in (0.99, 1.0)
             @test cond(stage_jacobian(ctor(s), Δt)) < 1E4
         end
     end
-
 end
-
-
 
 @testset "$(rpad("SPARK solver size (finding S18)",80))" begin
 
@@ -214,14 +206,14 @@ end
     # one method per family; both null-vector branches, and the `true` branch on two
     # different families so it is not just an SLRK property
     solver_size_cases = (
-        (idae,      SPARKGLRK(1),                          false),
-        (idae,      VSPARK(SPARKGLRKLobattoIIIAIIIB(1)),   false),
-        (idae,      TableauVSPARKGLRKpMidpoint(1),          false),
-        (idae,      TableauVSPARKGLRKpSymmetric(2),         false),
-        (idae,      TableauVSPARKLobattoIIIAB(2),           true),
-        (pdae,      TableauHPARKGLRK(1),                    false),
-        (ldae_slrk, SLRKLobattoIIID(2),                     true),
-        (ldae_slrk, SLRKLobattoIIIAB(3),                    true),
+        (idae, SPARKGLRK(1), false),
+        (idae, VSPARK(SPARKGLRKLobattoIIIAIIIB(1)), false),
+        (idae, TableauVSPARKGLRKpMidpoint(1), false),
+        (idae, TableauVSPARKGLRKpSymmetric(2), false),
+        (idae, TableauVSPARKLobattoIIIAB(2), true),
+        (pdae, TableauHPARKGLRK(1), false),
+        (ldae_slrk, SLRKLobattoIIID(2), true),
+        (ldae_slrk, SLRKLobattoIIIAB(3), true)
     )
 
     for (prob, method, hasnull) in solver_size_cases
@@ -230,19 +222,14 @@ end
         @test GeometricIntegratorsBase.solversize(method, prob) ==
               length(GeometricIntegratorsBase.nlsolution(int))
     end
-
 end
 
-
-
 @testset "$(rpad("SPARK integrators",80))" begin
-
     sol = integrate(idae, SPARKGLRK(1))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
     sol = integrate(idae, SPARKGLRK(2))
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
-
 
     # TODO: Check Errors !!!  GLVPRK should do much better ! (maybe problem with R∞?)
 
@@ -254,7 +241,6 @@ end
     # println(relative_maximum_error(sol.q, ref.q))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
-
     sol = integrate(idae, SPARKLobABC(2))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
@@ -263,7 +249,6 @@ end
 
     sol = integrate(idae, SPARKLobABC(4))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
-
 
     sol = integrate(idae, SPARKLobABD(2))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
@@ -274,13 +259,11 @@ end
     sol = integrate(idae, SPARKLobABD(4))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
-
     sol = integrate(idae, SPARKLobattoIIIAIIIB(3))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
     sol = integrate(idae, SPARKLobattoIIIAIIIB(4))
     @test relative_maximum_error(sol.q, ref.q) < 8E-10
-
 
     sol = integrate(idae, SPARKGLRKLobattoIIIAIIIB(1))
     @test relative_maximum_error(sol.q, ref.q) < 8E-4
@@ -292,7 +275,6 @@ end
     sol = integrate(idae, SPARKGLRKLobattoIIIAIIIB(3))
     @test relative_maximum_error(sol.q, ref.q) < 2E-4
 
-
     sol = integrate(idae, SPARKGLRKLobattoIIIBIIIA(1))
     @test relative_maximum_error(sol.q, ref.q) < 4E-4
 
@@ -303,7 +285,6 @@ end
     sol = integrate(idae, SPARKGLRKLobattoIIIBIIIA(3))
     @test relative_maximum_error(sol.q, ref.q) < 2E-4
 
-
     # --- known-broken (see docs/src/audit.md) ---
     # These are @test_broken rather than mechanism assertions because their stage systems
     # are only *marginally* singular: the LU either converges to an order-deficient answer
@@ -311,18 +292,23 @@ end
     # is reliable — @test_broken robustly tolerates both.
 
     # order-deficient at s=2 (only order 1, meas 0.18)
-    @test_broken relative_maximum_error(integrate(idae, SPARKLobattoIIIAIIIB(2); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
+    @test_broken relative_maximum_error(
+        integrate(idae, SPARKLobattoIIIAIIIB(2); verbosity = 0, warn_iterations = 0).q,
+        ref.q) < 1E-6
 
     # SPARKLobattoIIIBIIIA diverges (non-finite at s=2; finite-but-wrong at s=3/s=4, meas 0.58 / 0.03)
-    @test_broken relative_maximum_error(integrate(idae, SPARKLobattoIIIBIIIA(2); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
-    @test_broken relative_maximum_error(integrate(idae, SPARKLobattoIIIBIIIA(3); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
-    @test_broken relative_maximum_error(integrate(idae, SPARKLobattoIIIBIIIA(4); verbosity=0, warn_iterations=0).q, ref.q) < 2E-10
-
+    @test_broken relative_maximum_error(
+        integrate(idae, SPARKLobattoIIIBIIIA(2); verbosity = 0, warn_iterations = 0).q,
+        ref.q) < 1E-6
+    @test_broken relative_maximum_error(
+        integrate(idae, SPARKLobattoIIIBIIIA(3); verbosity = 0, warn_iterations = 0).q,
+        ref.q) < 1E-6
+    @test_broken relative_maximum_error(
+        integrate(idae, SPARKLobattoIIIBIIIA(4); verbosity = 0, warn_iterations = 0).q,
+        ref.q) < 2E-10
 end
 
-
 @testset "$(rpad("VPARK integrators",80))" begin
-
     sol = integrate(idae, TableauSymplecticProjection(:glrk1ps, TableauGauss(1), TableauGauss(1)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
@@ -352,9 +338,7 @@ end
 
     sol = integrate(idae, TableauLobattoIIIBIIIApSymplectic(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
-
 end
-
 
 # TODO: Replace idae with ldae !!!
 
@@ -364,17 +348,16 @@ end
     # (many "did not satisfy sufficient decrease" warnings without hitting the
     # solver iteration cap); tolerance tuning does not clear them, so they are silenced
     # with `verbosity = 0`.
-    sol = integrate(idae, VSPARK(SPARKLobABC(3)); verbosity=0, warn_iterations=0)
+    sol = integrate(idae, VSPARK(SPARKLobABC(3)); verbosity = 0, warn_iterations = 0)
     @test relative_maximum_error(sol.q, ref.q) < 4E-10
 
     sol = integrate(idae, VSPARK(SPARKLobABC(4)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-14
 
-
     # order-reduced vs s=4; the solver stalls at a few steps regardless of tolerance
     # or solver choice, so its warnings are silenced with `verbosity = 0` rather than
     # tuned away.
-    sol = integrate(idae, VSPARK(SPARKLobABD(3)); verbosity=0, warn_iterations=0)
+    sol = integrate(idae, VSPARK(SPARKLobABD(3)); verbosity = 0, warn_iterations = 0)
     @test relative_maximum_error(sol.q, ref.q) < 8E-6
 
     # converges to 5.2E-12. Its residual floor is ~3e-15, the highest of the SPARK family,
@@ -383,20 +366,17 @@ end
     sol = integrate(idae, VSPARK(SPARKLobABD(4)))
     @test relative_maximum_error(sol.q, ref.q) < 8E-12
 
-
     sol = integrate(idae, VSPARK(SPARKLobattoIIIAIIIB(3)))
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(idae, VSPARK(SPARKLobattoIIIAIIIB(4)))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
-
     sol = integrate(idae, VSPARK(SPARKLobattoIIIBIIIA(3)))
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
     sol = integrate(idae, VSPARK(SPARKLobattoIIIBIIIA(4)))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
-
 
     # The BIIIA s=2 stage system is **numerically singular**, exactly like the AIIIB partner
     # asserted `SingularException` below — the residual Jacobian at the first step has
@@ -431,9 +411,12 @@ end
     @test_throws SingularException integrate(idae, VSPARK(SPARKLobattoIIIAIIIB(2)))
     # SPARKLobABC(2) stalls at the residual floor, SPARKLobABD(2) converges to an
     # order-deficient answer (meas 0.06) — both marginal, so kept as @test_broken.
-    @test_broken relative_maximum_error(integrate(idae, VSPARK(SPARKLobABC(2)); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
-    @test_broken relative_maximum_error(integrate(idae, VSPARK(SPARKLobABD(2)); verbosity=0, warn_iterations=0).q, ref.q) < 1E-6
-
+    @test_broken relative_maximum_error(
+        integrate(idae, VSPARK(SPARKLobABC(2)); verbosity = 0, warn_iterations = 0).q,
+        ref.q) < 1E-6
+    @test_broken relative_maximum_error(
+        integrate(idae, VSPARK(SPARKLobABD(2)); verbosity = 0, warn_iterations = 0).q,
+        ref.q) < 1E-6
 
     sol = integrate(idae, VSPARK(SPARKGLRKLobattoIIIAIIIB(1)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
@@ -444,7 +427,6 @@ end
     sol = integrate(idae, VSPARK(SPARKGLRKLobattoIIIAIIIB(3)))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
-
     sol = integrate(idae, VSPARK(SPARKGLRKLobattoIIIBIIIA(1)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
@@ -453,9 +435,7 @@ end
 
     sol = integrate(idae, VSPARK(SPARKGLRKLobattoIIIBIIIA(3)))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
-
 end
-
 
 @testset "$(rpad("VSPARK integrators with projection on primary constraint",80))" begin
 
@@ -478,7 +458,6 @@ end
 
     sol = integrate(idae, TableauVSPARKGLRKpSymmetric(2))
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
-
 
     sol = integrate(idae, TableauVSPARKLobattoIIIAIIIBpSymmetric(2))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
@@ -503,9 +482,7 @@ end
 
     sol = integrate(idae, TableauVSPARKLobattoIIIBIIIApSymmetric(4))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
-
 end
-
 
 @testset "$(rpad("VSPARK integrators with projection on secondary constraint",80))" begin
 
@@ -520,7 +497,6 @@ end
     sol = integrate(ldae, TableauVSPARKLobattoIIIAB(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
-
     sol = integrate(ldae, TableauVSPARKLobattoIIIBA(2))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
@@ -529,7 +505,6 @@ end
 
     sol = integrate(ldae, TableauVSPARKLobattoIIIBA(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
-
 
     sol = integrate(ldae, TableauVSPARKLobattoIIICC̄(2))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
@@ -540,7 +515,6 @@ end
     sol = integrate(ldae, TableauVSPARKLobattoIIICC̄(4))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
-
     sol = integrate(ldae, TableauVSPARKLobattoIIIC̄C(2))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
 
@@ -549,7 +523,6 @@ end
 
     sol = integrate(ldae, TableauVSPARKLobattoIIIC̄C(4))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
-
 
     sol = integrate(ldae, TableauVSPARKLobattoIIID(2))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
@@ -560,7 +533,6 @@ end
     sol = integrate(ldae, TableauVSPARKLobattoIIID(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
-
     sol = integrate(ldae, TableauVSPARKLobattoIIIE(2))
     @test relative_maximum_error(sol.q, ref.q) < 4E-7
 
@@ -569,7 +541,6 @@ end
 
     sol = integrate(ldae, TableauVSPARKLobattoIIIE(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
-
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIAB(1))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
@@ -580,7 +551,6 @@ end
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIAB(3))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
-
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIBA(1))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
@@ -589,7 +559,6 @@ end
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIBA(3))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
-
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIICC̄(1))
     @test relative_maximum_error(sol.q, ref.q) < 4E-6
@@ -600,7 +569,6 @@ end
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIICC̄(3))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
-
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIC̄C(1))
     @test relative_maximum_error(sol.q, ref.q) < 4E-6
 
@@ -609,7 +577,6 @@ end
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIC̄C(3))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
-
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIID(1))
     @test relative_maximum_error(sol.q, ref.q) < 4E-6
@@ -620,7 +587,6 @@ end
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIID(3))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
 
-
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIE(1))
     @test relative_maximum_error(sol.q, ref.q) < 8E-7
 
@@ -629,12 +595,9 @@ end
 
     sol = integrate(ldae, TableauVSPARKGLRKLobattoIIIE(3))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
-
 end
 
-
 @testset "$(rpad("HPARK integrators",80))" begin
-
     sol = integrate(pdae, TableauHPARKGLRK(1))
     # println(relative_maximum_error(sol.q, ref.q))
     @test relative_maximum_error(sol.q, ref.q) < 2E-6
@@ -653,7 +616,6 @@ end
     @test relative_maximum_error(sol.q, ref.q) < 4E-2
     # TODO: Check errors and large number of solver iterations !!!
 
-
     # --- known-broken (see docs/src/audit.md) ---
 
     # The per-step solves converge cleanly, but the method is unstable on this problem:
@@ -662,9 +624,7 @@ end
     @test nlsolve_outcome(pdae, TableauHPARKLobattoIIIAIIIB(3)).converged
     @test nlsolve_outcome(pdae, TableauHPARKLobattoIIIBIIIA(2)).converged
     @test nlsolve_outcome(pdae, TableauHPARKLobattoIIIBIIIA(3)).converged
-
 end
-
 
 # TODO: Replace pdae with hdae !!!
 
@@ -678,7 +638,6 @@ end
     sol = integrate(pdae, HSPARK(SPARKGLRK(2)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-11
 
-
     # println("HSPARK(SPARKLobABC(2))")
     sol = integrate(pdae, HSPARK(SPARKLobABC(2)))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
@@ -690,7 +649,6 @@ end
     # println("HSPARK(SPARKLobABC(4))")
     sol = integrate(pdae, HSPARK(SPARKLobABC(4)))
     @test relative_maximum_error(sol.q, ref.q) < 4E-15
-
 
     # println("HSPARK(SPARKLobABD(2))")
     sol = integrate(pdae, HSPARK(SPARKLobABD(2)))
@@ -704,7 +662,6 @@ end
     sol = integrate(pdae, HSPARK(SPARKLobABD(4)))
     @test relative_maximum_error(sol.q, ref.q) < 2E-15
 
-
     # order reduction: accuracy plateaus ~2E-4, does not improve with s
     sol = integrate(pdae, HSPARK(SPARKGLRKLobattoIIIAIIIB(1)))
     @test relative_maximum_error(sol.q, ref.q) < 8E-4
@@ -715,7 +672,6 @@ end
     sol = integrate(pdae, HSPARK(SPARKGLRKLobattoIIIAIIIB(3)))
     @test relative_maximum_error(sol.q, ref.q) < 2E-4
 
-
     sol = integrate(pdae, HSPARK(SPARKGLRKLobattoIIIBIIIA(1)))
     @test relative_maximum_error(sol.q, ref.q) < 4E-4
 
@@ -724,7 +680,6 @@ end
 
     sol = integrate(pdae, HSPARK(SPARKGLRKLobattoIIIBIIIA(3)))
     @test relative_maximum_error(sol.q, ref.q) < 2E-4
-
 
     # --- known-broken (see docs/src/audit.md) ---
 
@@ -735,9 +690,7 @@ end
     @test_throws SingularException integrate(pdae, HSPARK(SPARKLobattoIIIBIIIA(2)))
     @test_throws SingularException integrate(pdae, HSPARK(SPARKLobattoIIIBIIIA(3)))
     @test_throws SingularException integrate(pdae, HSPARK(SPARKLobattoIIIBIIIA(4)))
-
 end
-
 
 @testset "$(rpad("HSPARK integrators with projection on primary constraint",80))" begin
 
@@ -785,7 +738,6 @@ end
 
 end
 
-
 @testset "$(rpad("HSPARK integrators with projection on secondary constraint",80))" begin
 
     ### HSPARKsecondary Integrators ###
@@ -800,15 +752,22 @@ end
     # a_p_2 / a_p_3 shape in getTableauHSPARK, and the disabled null-vector residual that
     # left an unconstrained Jacobian row).
     for s in (2, 3, 4)
-        @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIIAB(s); verbosity=0, warn_iterations=0)
-        @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIIBA(s); verbosity=0, warn_iterations=0)
-        @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIID(s); verbosity=0, warn_iterations=0)
-        @test_throws SingularException integrate(hdae, TableauHSPARKLobattoIIIE(s); verbosity=0, warn_iterations=0)
+        @test_throws SingularException integrate(
+            hdae, TableauHSPARKLobattoIIIAB(s); verbosity = 0, warn_iterations = 0)
+        @test_throws SingularException integrate(
+            hdae, TableauHSPARKLobattoIIIBA(s); verbosity = 0, warn_iterations = 0)
+        @test_throws SingularException integrate(
+            hdae, TableauHSPARKLobattoIIID(s); verbosity = 0, warn_iterations = 0)
+        @test_throws SingularException integrate(
+            hdae, TableauHSPARKLobattoIIIE(s); verbosity = 0, warn_iterations = 0)
 
-        @test_throws SingularException integrate(hdae, TableauHSPARKGLRKLobattoIIIAB(s); verbosity=0, warn_iterations=0)
-        @test_throws SingularException integrate(hdae, TableauHSPARKGLRKLobattoIIIBA(s); verbosity=0, warn_iterations=0)
-        @test_throws SingularException integrate(hdae, TableauHSPARKGLRKLobattoIIID(s); verbosity=0, warn_iterations=0)
-        @test_throws SingularException integrate(hdae, TableauHSPARKGLRKLobattoIIIE(s); verbosity=0, warn_iterations=0)
+        @test_throws SingularException integrate(
+            hdae, TableauHSPARKGLRKLobattoIIIAB(s); verbosity = 0, warn_iterations = 0)
+        @test_throws SingularException integrate(
+            hdae, TableauHSPARKGLRKLobattoIIIBA(s); verbosity = 0, warn_iterations = 0)
+        @test_throws SingularException integrate(
+            hdae, TableauHSPARKGLRKLobattoIIID(s); verbosity = 0, warn_iterations = 0)
+        @test_throws SingularException integrate(
+            hdae, TableauHSPARKGLRKLobattoIIIE(s); verbosity = 0, warn_iterations = 0)
     end
-
 end

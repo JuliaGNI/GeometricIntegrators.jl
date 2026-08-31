@@ -1,5 +1,5 @@
 
-function getTableauHSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=nothing)
+function getTableauHSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d = nothing)
     # α_q_1 and α_p_2 need to be conjugate symplectic
     # α_q_1 and α_p_3 need to be conjugate symplectic
     # α_q_2 and α_p_2 need to be conjugate symplectic
@@ -32,17 +32,17 @@ function getTableauHSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=nothing)
     # must be s×σ, not s×s. They are the conjugate-symplectic partners of the projective
     # position coefficients α_q_2 / α_q_3 (mirroring the a_q_2 / a_q_3 construction below
     # with the roles of q and p swapped): b_p_2_j a_p_2_ij + b_q_1_i α_q_2_ji = b_q_1_i b_p_2_j.
-    a_p_2 = zeros(s,σ)
+    a_p_2 = zeros(s, σ)
     for i in 1:s
         for j in 1:σ
-            a_p_2[i,j] = b_p_2[j] / b_q_1[i] * (b_q_1[i] - α_q_2[j,i])
+            a_p_2[i, j] = b_p_2[j] / b_q_1[i] * (b_q_1[i] - α_q_2[j, i])
         end
     end
 
-    a_p_3 = zeros(s,σ)
+    a_p_3 = zeros(s, σ)
     for i in 1:s
         for j in 1:σ
-            a_p_3[i,j] = b_p_3[j] / b_q_1[i] * (b_q_1[i] - α_q_3[j,i])
+            a_p_3[i, j] = b_p_3[j] / b_q_1[i] * (b_q_1[i] - α_q_3[j, i])
         end
     end
 
@@ -64,22 +64,21 @@ function getTableauHSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=nothing)
 
     # a_q_1_ij = b_q_1_j / b_p_1_i * (b_p_1_i - α_p_1_ji)
     # TODO check this
-    a_q_2 = zeros(s,σ)
+    a_q_2 = zeros(s, σ)
     for i in 1:s
         for j in 1:σ
-            a_q_2[i,j] = b_q_2[j] / b_p_1[i] * (b_p_1[i] - α_p_2[j,i])
+            a_q_2[i, j] = b_q_2[j] / b_p_1[i] * (b_p_1[i] - α_p_2[j, i])
         end
     end
 
     # a_q_2_ij = b_q_2_j / b_p_1_i * (b_p_1_i - α_p_1_ji)
     # TODO check this
-    a_q_3 = zeros(s,σ)
+    a_q_3 = zeros(s, σ)
     for i in 1:s
         for j in 1:σ
-            a_q_3[i,j] = b_q_3[j] / b_p_1[i] * (b_p_1[i] - α_p_3[j,i])
+            a_q_3[i, j] = b_q_3[j] / b_p_1[i] * (b_p_1[i] - α_p_3[j, i])
         end
     end
-
 
     a_q = Array.((a_q_1, a_q_2, a_q_3))
     b_q = Array.((b_q_1, b_q_2, b_q_3))
@@ -105,10 +104,10 @@ function getTableauHSPARK(s, σ, o, tsym, g, h, lq, lp, ω, d=nothing)
     HSPARKsecondary(tsym, o, s, σ, coeff_q, coeff_p, coeff_q̃, coeff_p̃, ω, d)
 end
 
-
 function TableauHSPARKLobattoIII(s, lq, lp; name = Symbol("HSPARKLobattoIII"))
     o = 2s-2
-    getTableauHSPARK(s, s, o, name, lq, lp, lq, lp, lobatto_ω_matrix(s), lobatto_nullvector(s))
+    getTableauHSPARK(
+        s, s, o, name, lq, lp, lq, lp, lobatto_ω_matrix(s), lobatto_nullvector(s))
 end
 
 function TableauHSPARKLobattoIIIAB(s)
@@ -145,33 +144,39 @@ function TableauHSPARKLobattoIIIE(s)
     TableauHSPARKLobattoIII(s, l, l; name = Symbol("HSPARKLobattoIIIE"))
 end
 
-
 function TableauHSPARKGLRKLobattoIII(s, σ, lq, lp; name = Symbol("HSPARKGLRKLobattoIII"))
     o = 2s
     g = TableauGauss(s)
-    getTableauHSPARK(s, σ, o, name, g, lobatto_gauss_coefficients(s, σ), lq, lp, gauss_ω_matrix(σ), lobatto_nullvector(σ))
+    getTableauHSPARK(s, σ, o, name, g, lobatto_gauss_coefficients(s, σ),
+        lq, lp, gauss_ω_matrix(σ), lobatto_nullvector(σ))
 end
 
-function TableauHSPARKGLRKLobattoIIIAB(s, σ=s+1)
-    TableauHSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIA(σ), TableauLobattoIIIB(σ); name = Symbol("HSPARKGLRKLobattoIIIAIIIB"))
+function TableauHSPARKGLRKLobattoIIIAB(s, σ = s+1)
+    TableauHSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIA(σ), TableauLobattoIIIB(σ);
+        name = Symbol("HSPARKGLRKLobattoIIIAIIIB"))
 end
 
-function TableauHSPARKGLRKLobattoIIIBA(s, σ=s+1)
-    TableauHSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIB(σ), TableauLobattoIIIA(σ); name = Symbol("HSPARKGLRKLobattoIIIBIIIA"))
+function TableauHSPARKGLRKLobattoIIIBA(s, σ = s+1)
+    TableauHSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIB(σ), TableauLobattoIIIA(σ);
+        name = Symbol("HSPARKGLRKLobattoIIIBIIIA"))
 end
 
-function TableauHSPARKGLRKLobattoIIICC̄(s, σ=s+1)
-    TableauHSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIC(σ), TableauLobattoIIIC̄(σ); name = Symbol("HSPARKGLRKLobattoIIICIIIC̄"))
+function TableauHSPARKGLRKLobattoIIICC̄(s, σ = s+1)
+    TableauHSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIC(σ), TableauLobattoIIIC̄(σ);
+        name = Symbol("HSPARKGLRKLobattoIIICIIIC̄"))
 end
 
-function TableauHSPARKGLRKLobattoIIIC̄C(s, σ=s+1)
-    TableauHSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIC̄(σ), TableauLobattoIIIC(σ); name = Symbol("HSPARKGLRKLobattoIIIC̄IIIC"))
+function TableauHSPARKGLRKLobattoIIIC̄C(s, σ = s+1)
+    TableauHSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIC̄(σ), TableauLobattoIIIC(σ);
+        name = Symbol("HSPARKGLRKLobattoIIIC̄IIIC"))
 end
 
-function TableauHSPARKGLRKLobattoIIID(s, σ=s+1)
-    TableauHSPARKGLRKLobattoIII(s, σ, TableauLobattoIIID(σ), TableauLobattoIIID(σ); name = Symbol("HSPARKGLRKLobattoIIID"))
+function TableauHSPARKGLRKLobattoIIID(s, σ = s+1)
+    TableauHSPARKGLRKLobattoIII(s, σ, TableauLobattoIIID(σ), TableauLobattoIIID(σ);
+        name = Symbol("HSPARKGLRKLobattoIIID"))
 end
 
-function TableauHSPARKGLRKLobattoIIIE(s, σ=s+1)
-    TableauHSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIE(σ), TableauLobattoIIIE(σ); name = Symbol("HSPARKGLRKLobattoIIIE"))
+function TableauHSPARKGLRKLobattoIIIE(s, σ = s+1)
+    TableauHSPARKGLRKLobattoIII(s, σ, TableauLobattoIIIE(σ), TableauLobattoIIIE(σ);
+        name = Symbol("HSPARKGLRKLobattoIIIE"))
 end

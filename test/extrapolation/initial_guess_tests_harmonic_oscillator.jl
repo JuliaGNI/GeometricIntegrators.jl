@@ -3,23 +3,22 @@ using GeometricProblems.HarmonicOscillator
 using GeometricProblems.HarmonicOscillator: Δt
 using Test
 
-ode  = odeproblem()
+ode = odeproblem()
 pode = podeproblem()
 hode = hodeproblem()
 iode = iodeproblem()
 lode = lodeproblem()
 
-dae  = daeproblem()
+dae = daeproblem()
 pdae = pdaeproblem()
 hdae = hdaeproblem()
 idae = idaeproblem()
 ldae = ldaeproblem()
 
-
 # ODE Reference Solution
 
-ode_prev = similar(ode; tspan=(initialtime(ode), initialtime(ode)-timestep(ode)), tstep=-timestep(ode))
-ode_next = similar(ode; tspan=(initialtime(ode), initialtime(ode)+timestep(ode)), tstep=+timestep(ode))
+ode_prev = similar(ode; tspan = (initialtime(ode), initialtime(ode)-timestep(ode)), tstep = -timestep(ode))
+ode_next = similar(ode; tspan = (initialtime(ode), initialtime(ode)+timestep(ode)), tstep = +timestep(ode))
 
 t₀ = initial_conditions(ode).t
 q₀ = initial_conditions(ode).q
@@ -39,7 +38,6 @@ prev = (t = tₚ, q = qₚ, v = vₚ)
 next = (t = tₙ, q = qₙ, v = vₙ)
 solutionstep!(prev, hist, ode_prev, MidpointExtrapolation(5))
 solutionstep!(next, hist, ode_next, MidpointExtrapolation(5))
-
 
 # ODE Initial Guess
 
@@ -78,11 +76,12 @@ solutionstep!(sol2, hist, ode, HermiteExtrapolation())
 @test q₂ ≈ qₙ atol=1E-5
 @test v₂ ≈ vₙ atol=1E-4
 
-
 # PODE Reference Solution
 
-pode_prev = similar(pode; tspan=(initialtime(pode), initialtime(pode)-timestep(pode)), tstep=-timestep(pode))
-pode_next = similar(pode; tspan=(initialtime(pode), initialtime(pode)+timestep(pode)), tstep=+timestep(pode))
+pode_prev = similar(pode; tspan = (initialtime(pode), initialtime(pode)-timestep(pode)),
+    tstep = -timestep(pode))
+pode_next = similar(pode; tspan = (initialtime(pode), initialtime(pode)+timestep(pode)),
+    tstep = +timestep(pode))
 
 t₀ = initial_conditions(pode).t
 q₀ = initial_conditions(pode).q
@@ -107,7 +106,6 @@ prev = (t = tₚ, q = qₚ, p = pₚ, v = vₚ, f = fₚ)
 next = (t = tₙ, q = qₙ, p = pₙ, v = vₙ, f = fₙ)
 solutionstep!(prev, hist, pode_prev, MidpointExtrapolation(5))
 solutionstep!(next, hist, pode_next, MidpointExtrapolation(5))
-
 
 # PODE Initial Guess
 
@@ -160,7 +158,6 @@ solutionstep!(sol2, hist, pode, HermiteExtrapolation())
 @test p₂ ≈ pₙ atol=1E-7
 @test v₂ ≈ vₙ atol=1E-4
 @test f₂ ≈ fₙ atol=1E-6
-
 
 # IODE Initial Guess
 

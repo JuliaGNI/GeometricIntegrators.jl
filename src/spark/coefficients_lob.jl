@@ -6,7 +6,7 @@ The projective Lobatto-GLRK coefficients are implicitly given by
 ```
 where $c$ are Gauß-Legendre nodes with $s$ stages and $\bar{c}$ are Gauß-Lobatto nodes with $\sigma$ stages.
 """
-function lobatto_gauss_coefficients(s, σ=s+1, T=Float64)
+function lobatto_gauss_coefficients(s, σ = s+1, T = Float64)
     if σ == 1
         @error "Lobatto III coefficients for one stage are not defined."
     end
@@ -20,27 +20,26 @@ function lobatto_gauss_coefficients(s, σ=s+1, T=Float64)
     c = gauss_legendre_nodes(BigFloat, s)
     b̄ = lobatto_legendre_weights(BigFloat, σ)
     c̄ = lobatto_legendre_nodes(BigFloat, σ)
-    M = [ c[j]^(k-1) for k in 1:s, j in 1:s ]
-    
+    M = [c[j]^(k-1) for k in 1:s, j in 1:s]
+
     row(i) = begin
-        r = [ c̄[i]^k / k for k in 1:s ]
+        r = [c̄[i]^k / k for k in 1:s]
         M \ r
     end
-    
+
     ā = vcat([row(i)' for i in 1:σ]...)
 
     CoefficientsIRK{T}(:LobattoIIIGLRK, s^2, s, σ, ā, b̄, c̄)
 end
 
-
 function lobatto_ω_matrix(s)
-    as = TableauLobattoIIIA(s).a[2:s,1:s]
+    as = TableauLobattoIIIA(s).a[2:s, 1:s]
     es = zeros(s)
     es[s] = 1
 
-    Q = vcat( hcat(as, zeros(s-1)), hcat(zeros(s)', 1) )
-    L = vcat( as, es' )
+    Q = vcat(hcat(as, zeros(s-1)), hcat(zeros(s)', 1))
+    L = vcat(as, es')
     ω = inv(L) * Q
-    
+
     return ω
 end

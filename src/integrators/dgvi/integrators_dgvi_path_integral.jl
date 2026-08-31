@@ -60,8 +60,9 @@ DGVIPI(basis::Basis, quadrature::QuadratureRule, jump::Discontinuity)
 """
 DGVIPI
 
-GeometricBase.description(::DGVIPI) = "Discontinuous Galerkin Variational Integrator (path-integral flux)"
-
+function GeometricBase.description(::DGVIPI)
+    "Discontinuous Galerkin Variational Integrator (path-integral flux)"
+end
 
 """
 Seed the carried-over jump values. `q₀⁻ = q₀` and `q₀⁺` follows from the midpoint
@@ -77,7 +78,6 @@ function initialise_state!(sol, params, int::GeometricIntegrator{<:DGVIPI})
     st.initialised = true
     return
 end
-
 
 function jump!(sol, params, int::GeometricIntegrator{<:DGVIPI}, ST)
     local C = cache(int, ST)
@@ -107,7 +107,6 @@ function jump!(sol, params, int::GeometricIntegrator{<:DGVIPI}, ST)
     equations(int).ϑ(C.p̄, t₁, C.q̄, C.q̄, params)
 end
 
-
 function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{<:DGVIPI}) where {ST}
     local C = cache(int, ST)
     local M = method(int)
@@ -126,16 +125,15 @@ function residual!(b::AbstractVector{ST}, sol, params, int::GeometricIntegrator{
                 z += M.β[j] * M.r⁺[i] * M.μ⁺[j] * C.G[j][k]
                 z += M.β[j] * M.r⁻[i] * M.μ⁻[j] * C.Ḡ[j][k]
             end
-            b[D*(i-1)+k] += z
+            b[D * (i - 1) + k] += z
         end
     end
 
     # closure: qₙ = Φ(1/2; qₙ⁻, qₙ⁺)
     for k in 1:D
-        b[D*S+k] = sol.q[k] - M.ρ⁻ * st.q⁻[k] - M.ρ⁺ * C.q⁺[k]
+        b[D * S + k] = sol.q[k] - M.ρ⁻ * st.q⁻[k] - M.ρ⁺ * C.q⁺[k]
     end
 end
-
 
 function update_state!(int::GeometricIntegrator{<:DGVIPI}, DT)
     dgvi_state(int).q⁻ .= cache(int, DT).q̄⁻

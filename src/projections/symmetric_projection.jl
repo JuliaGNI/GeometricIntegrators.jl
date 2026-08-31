@@ -2,28 +2,35 @@ struct SymmetricProjection{DT} <: ProjectionMethod
     RU::Vector{DT}
     RG::Vector{DT}
 
-    function SymmetricProjection(R∞=1)
+    function SymmetricProjection(R∞ = 1)
         DT, RU, RG = _projection_weights([1 // 2, 1 // 2], [1 // 2, 1 // 2], R∞)
         new{DT}(RU, RG)
     end
 end
 
-SymmetricProjection(method::GeometricMethod) = ProjectedMethod(SymmetricProjection(), method)
-SymmetricProjection(method::Union{RKMethod,PRKMethod,VPRKMethod}) = ProjectedMethod(SymmetricProjection(tableau(method).R∞), method)
+function SymmetricProjection(method::GeometricMethod)
+    ProjectedMethod(SymmetricProjection(), method)
+end
+function SymmetricProjection(method::Union{RKMethod, PRKMethod, VPRKMethod})
+    ProjectedMethod(SymmetricProjection(tableau(method).R∞), method)
+end
 
-const SymmetricProjectionIntegrator{PT} = ProjectionIntegrator{<:ProjectedMethod{<:SymmetricProjection,<:GeometricMethod},PT} where {PT<:AbstractProblem}
+const SymmetricProjectionIntegrator{PT} = ProjectionIntegrator{
+    <:ProjectedMethod{<:SymmetricProjection, <:GeometricMethod},
+    PT} where {PT <: AbstractProblem}
 
-function Cache{ST}(problem::EquationProblem, method::ProjectedMethod{<:SymmetricProjection}; kwargs...) where {ST}
+function Cache{ST}(problem::EquationProblem,
+        method::ProjectedMethod{<:SymmetricProjection}; kwargs...) where {ST}
     ProjectionCache{ST}(problem, method; kwargs...)
 end
 
-@inline CacheType(ST, problem::EquationProblem, method::ProjectedMethod{<:SymmetricProjection}) =
-    ProjectionCache{ST,timetype(problem),typeof(problem),nconstraints(problem),solversize(parent(method), problem)}
-
+@inline CacheType(ST, problem::EquationProblem,
+    method::ProjectedMethod{<:SymmetricProjection}) = ProjectionCache{
+    ST, timetype(problem), typeof(problem),
+    nconstraints(problem), solversize(parent(method), problem)}
 
 default_solver(::ProjectedMethod{<:SymmetricProjection}) = Newton()
 default_iguess(::ProjectedMethod{<:SymmetricProjection}) = HermiteExtrapolation()
-
 
 # function Base.show(io::IO, int::ProjectedMethod{<:SymmetricProjection})
 #     print(io, "\nProjection method with:\n")
@@ -33,18 +40,16 @@ default_iguess(::ProjectedMethod{<:SymmetricProjection}) = HermiteExtrapolation(
 #     # print(io, reference(int.params.tab))
 # end
 
-
 function split_nlsolution(x::AbstractVector, int::SymmetricProjectionIntegrator)
     D = ndims(cache(int))
     M = nconstraints(int)
     N = solversize(parent(method(int)), problem(int))
 
     x̄ = @view x[1:N]
-    x̃ = @view x[N+1:N+D+M]
+    x̃ = @view x[(N + 1):(N + D + M)]
 
     return (x̄, x̃)
 end
-
 
 function initial_guess!(sol, history, params, int::SymmetricProjectionIntegrator)
     # compute initial guess for parent method
@@ -55,11 +60,11 @@ function initial_guess!(sol, history, params, int::SymmetricProjectionIntegrator
 
     # compute initial guess for projected solution
     soltmp = (
-        t=(sol.t + history[1].t) / 2,
-        q=cache(int).q̃,
-        p=cache(int).p̃,
-        q̇=cache(int).ṽ,
-        ṗ=cache(int).f̃,
+        t = (sol.t + history[1].t) / 2,
+        q = cache(int).q̃,
+        p = cache(int).p̃,
+        q̇ = cache(int).ṽ,
+        ṗ = cache(int).f̃
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
     # TODO: Fix this!
@@ -68,10 +73,11 @@ function initial_guess!(sol, history, params, int::SymmetricProjectionIntegrator
     cache(int).x̃[1:ndims(cache(int))] .= cache(int).q̃
 
     # set initial guess for Lagrange multiplier to zero
-    cache(int).x̃[ndims(cache(int))+1:end] .= 0
+    cache(int).x̃[(ndims(cache(int)) + 1):end] .= 0
 end
 
-function components!(x::AbstractVector{ST}, sol, params, int::SymmetricProjectionIntegrator{<:DAEProblem}) where {ST}
+function components!(x::AbstractVector{ST}, sol, params,
+        int::SymmetricProjectionIntegrator{<:DAEProblem}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -82,7 +88,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::SymmetricProjectio
 
     # copy x to λ
     for k in eachindex(C.λ)
-        C.λ[k] = x[ndims(C)+k]
+        C.λ[k] = x[ndims(C) + k]
     end
 
     # compute u=λ and g=∇ϑ(q)⋅λ
@@ -93,8 +99,8 @@ function components!(x::AbstractVector{ST}, sol, params, int::SymmetricProjectio
     C.U[2] .*= projection(method(int)).RU[2]
 end
 
-
-function components!(x::AbstractVector{ST}, sol, params, int::SymmetricProjectionIntegrator{<:Union{IODEProblem,LODEProblem}}) where {ST}
+function components!(x::AbstractVector{ST}, sol, params,
+        int::SymmetricProjectionIntegrator{<:Union{IODEProblem, LODEProblem}}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -106,7 +112,7 @@ function components!(x::AbstractVector{ST}, sol, params, int::SymmetricProjectio
 
     # copy x to λ
     for k in eachindex(C.λ)
-        C.λ[k] = x[ndims(C)+k]
+        C.λ[k] = x[ndims(C) + k]
     end
 
     # compute u = λ
@@ -121,8 +127,8 @@ function components!(x::AbstractVector{ST}, sol, params, int::SymmetricProjectio
     C.G[2] .*= projection(method(int)).RG[2]
 end
 
-
-function residual!(b::AbstractVector{ST}, sol, params, int::SymmetricProjectionIntegrator{<:DAEProblem}) where {ST}
+function residual!(b::AbstractVector{ST}, sol, params,
+        int::SymmetricProjectionIntegrator{<:DAEProblem}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -136,12 +142,12 @@ function residual!(b::AbstractVector{ST}, sol, params, int::SymmetricProjectionI
 
     # compute b = ϕ(q) or b = ϕ(q,p) or b = ϕ(...)
     for k in 1:nconstraints(int)
-        b[ndims(C)+k] = C.ϕ[k]
+        b[ndims(C) + k] = C.ϕ[k]
     end
 end
 
-
-function residual!(b::AbstractVector{ST}, sol, params, int::SymmetricProjectionIntegrator{<:Union{IODEProblem,LODEProblem}}) where {ST}
+function residual!(b::AbstractVector{ST}, sol, params,
+        int::SymmetricProjectionIntegrator{<:Union{IODEProblem, LODEProblem}}) where {ST}
     # get cache for internal stages
     local C = cache(int, ST)
 
@@ -155,13 +161,13 @@ function residual!(b::AbstractVector{ST}, sol, params, int::SymmetricProjectionI
 
     # compute b = ϕ(q) or b = ϕ(q,p) or b = ϕ(...)
     for k in 1:nconstraints(int)
-        b[ndims(C)+k] = C.ϑ[k] - sol.p[k]
+        b[ndims(C) + k] = C.ϑ[k] - sol.p[k]
     end
 end
 
-
 # Compute stages of variational partitioned Runge-Kutta methods.
-function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, int::SymmetricProjectionIntegrator) where {ST}
+function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol,
+        params, int::SymmetricProjectionIntegrator) where {ST}
     # check that x and b are compatible
     @assert axes(x) == axes(b)
 
@@ -196,7 +202,6 @@ function residual!(b::AbstractVector{ST}, x::AbstractVector{ST}, sol, params, in
     residual!(b̃, soltemp, params, int)
 end
 
-
 function update!(sol, params, x::AbstractVector{ST}, int::SymmetricProjectionIntegrator) where {ST}
     # split x and b
     x̄, x̃ = split_nlsolution(x, int)
@@ -216,7 +221,6 @@ function update!(sol, params, x::AbstractVector{ST}, int::SymmetricProjectionInt
     # compute final projection (perturbation)
     project!(sol, C.U[2], C.G[2], int)
 end
-
 
 function integrate_step!(sol, history, params, int::SymmetricProjectionIntegrator)
     # call nonlinear solver for projection and act on the outcome it reports. A

@@ -20,24 +20,22 @@ struct PMVItrapezoidal <: PMVIMethod end
 
 issymmetric(method::PMVItrapezoidal) = true
 
-
 function Base.show(io::IO, int::GeometricIntegrator{<:PMVItrapezoidal})
     print(io, "\nTrapezoidal variational integrator in position-momentum form with:\n")
     print(io, "   Timestep: $(timestep(int))\n")
 end
 
-
 function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVItrapezoidal}) where {ST}
     # set some local variables for convenience and clarity
     local t̄ = sol.t - timestep(int)
     local t = sol.t
-    
+
     # copy x to q
     cache(int, ST).q .= x[1:length(cache(int, ST).q)]
 
     # compute v
     cache(int, ST).ṽ .= (cache(int, ST).q .- sol.q) ./ timestep(int)
- 
+
     # compute Θ = ϑ(q,ṽ) and f = f(q,ṽ)
     equations(int).ϑ(cache(int, ST).θ̄, t̄, sol.q, cache(int, ST).ṽ, params)
     equations(int).ϑ(cache(int, ST).θ, t, cache(int, ST).q, cache(int, ST).ṽ, params)
@@ -46,9 +44,9 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVI
 
     # compute p
     cache(int, ST).θ̃ .= (cache(int, ST).θ .+ cache(int, ST).θ̄) ./ 2
-    cache(int, ST).p .= sol.p .+ timestep(int) .* (cache(int, ST).f .+ cache(int, ST).f̄) ./ 2
+    cache(int, ST).p .= sol.p .+
+                        timestep(int) .* (cache(int, ST).f .+ cache(int, ST).f̄) ./ 2
 end
-
 
 function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVItrapezoidal}) where {ST}
     # compute b

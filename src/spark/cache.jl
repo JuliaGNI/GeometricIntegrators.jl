@@ -26,7 +26,7 @@ Cache of a Specialised Partitioned Additive Runge-Kutta integrator.
 * `Y`: vector field of internal stages of q
 * `Z`: vector field of internal stages of p
 """
-mutable struct IntegratorCacheSPARK{ST,S,R} <: IDAEIntegratorCache{ST}
+mutable struct IntegratorCacheSPARK{ST, S, R} <: IDAEIntegratorCache{ST}
     x::Vector{ST}
 
     q::Vector{ST}
@@ -81,41 +81,41 @@ mutable struct IntegratorCacheSPARK{ST,S,R} <: IDAEIntegratorCache{ST}
     Φp::Vector{Vector{ST}}
     Ψp::Vector{Vector{ST}}
 
-    function IntegratorCacheSPARK{ST,S,R}(ics, N) where {ST,S,R}
+    function IntegratorCacheSPARK{ST, S, R}(ics, N) where {ST, S, R}
         D = length(vec(ics.q))
 
         # nonlinear solver vector
-        x = zeros(ST,N)
+        x = zeros(ST, N)
 
         # create temporary solution vectors
-        q = zeros(ST,D)
-        q̄ = zeros(ST,D)
-        p = zeros(ST,D)
-        p̄ = zeros(ST,D)
-        λ = zeros(ST,D)
-        λ̄ = zeros(ST,D)
-        μ = zeros(ST,D)
-        μ̅ = zeros(ST,D)
+        q = zeros(ST, D)
+        q̄ = zeros(ST, D)
+        p = zeros(ST, D)
+        p̄ = zeros(ST, D)
+        λ = zeros(ST, D)
+        λ̄ = zeros(ST, D)
+        μ = zeros(ST, D)
+        μ̅ = zeros(ST, D)
 
         # create update vectors
-        v = zeros(ST,D)
-        v̄ = zeros(ST,D)
-        f = zeros(ST,D)
-        f̄ = zeros(ST,D)
-        u = zeros(ST,D)
-        ū = zeros(ST,D)
-        g = zeros(ST,D)
-        ḡ = zeros(ST,D)
-        ϕ = zeros(ST,D)
-        ϕ̅ = zeros(ST,D)
+        v = zeros(ST, D)
+        v̄ = zeros(ST, D)
+        f = zeros(ST, D)
+        f̄ = zeros(ST, D)
+        u = zeros(ST, D)
+        ū = zeros(ST, D)
+        g = zeros(ST, D)
+        ḡ = zeros(ST, D)
+        ϕ = zeros(ST, D)
+        ϕ̅ = zeros(ST, D)
 
         # create temporary vectors
-        q̃ = zeros(ST,D)
-        p̃ = zeros(ST,D)
-        ṽ = zeros(ST,D)
-        f̃ = zeros(ST,D)
-        ϕ̃ = zeros(ST,D)
-        s̃ = zeros(ST,D)
+        q̃ = zeros(ST, D)
+        p̃ = zeros(ST, D)
+        ṽ = zeros(ST, D)
+        f̃ = zeros(ST, D)
+        ϕ̃ = zeros(ST, D)
+        s̃ = zeros(ST, D)
 
         # create internal stage vectors
         Qi = create_internal_stage_vector(ST, D, S)
@@ -169,7 +169,6 @@ function GeometricBase.reset!(cache::IntegratorCacheSPARK)
     cache.ϕ̅ .= cache.ϕ
 end
 
-
 function Cache{ST}(problem::AbstractSPARKProblem, method::AbstractSPARKMethod; kwargs...) where {ST}
     S = nstages(method)
     R = pstages(method)
@@ -179,8 +178,8 @@ function Cache{ST}(problem::AbstractSPARKProblem, method::AbstractSPARKMethod; k
     # unknown vector was defined in two files at once.
     N = solversize(method, problem)
 
-    IntegratorCacheSPARK{ST,S,R}(initial_conditions(problem), N; kwargs...)
+    IntegratorCacheSPARK{ST, S, R}(initial_conditions(problem), N; kwargs...)
 end
 
-
-@inline CacheType(ST, ::AbstractSPARKProblem, method::AbstractSPARKMethod) = IntegratorCacheSPARK{ST, nstages(method), pstages(method)}
+@inline CacheType(ST, ::AbstractSPARKProblem, method::AbstractSPARKMethod) = IntegratorCacheSPARK{
+    ST, nstages(method), pstages(method)}

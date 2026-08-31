@@ -25,7 +25,8 @@ function update!(x::AbstractVector{T}, ẋ::StageVector{T}, b::AbstractVector, �
     return x
 end
 
-function update!(x::AbstractVector{T}, xₑᵣᵣ::AbstractVector{T}, ẋ::StageVector{T}, b::AbstractVector, Δt) where {T}
+function update!(x::AbstractVector{T}, xₑᵣᵣ::AbstractVector{T},
+        ẋ::StageVector{T}, b::AbstractVector, Δt) where {T}
     @assert length(b) == length(ẋ)
     @assert length(x) == length(ẋ[1])
     @assert length(x) == length(xₑᵣᵣ)
@@ -39,27 +40,30 @@ function update!(x::AbstractVector{T}, xₑᵣᵣ::AbstractVector{T}, ẋ::Stage
     return x
 end
 
-function update!(x::AbstractVector{T}, xₑᵣᵣ::AbstractVector{T}, ẋ::StageVector{T}, b::AbstractVector, b̂::AbstractVector, Δt) where {T}
+function update!(x::AbstractVector{T}, xₑᵣᵣ::AbstractVector{T}, ẋ::StageVector{T},
+        b::AbstractVector, b̂::AbstractVector, Δt) where {T}
     update!(x, xₑᵣᵣ, ẋ, b, Δt)
     update!(x, xₑᵣᵣ, ẋ, b̂, Δt)
 end
 
-function update!(solstep::Union{SolutionStep{ODE},SolutionStep{DAE}}, V::StageVector, tableau::Tableau, Δt)
+function update!(solstep::Union{SolutionStep{ODE}, SolutionStep{DAE}}, V::StageVector, tableau::Tableau, Δt)
     update!(solstep.q, solstep.q̃, V, tableau.b, tableau.b̂, Δt)
 end
 
-function update!(solstep::Union{SolutionStep{PODE},SolutionStep{PDAE}}, V::StageVector, F::StageVector, tableau::Tableau, Δt)
+function update!(solstep::Union{SolutionStep{PODE}, SolutionStep{PDAE}},
+        V::StageVector, F::StageVector, tableau::Tableau, Δt)
     update!(solstep.q, solstep.q̃, V, tableau.b, tableau.b̂, Δt)
     update!(solstep.p, solstep.p̃, F, tableau.b, tableau.b̂, Δt)
 end
 
-function update!(solstep::Union{SolutionStep{PODE},SolutionStep{PDAE}}, V::StageVector, F::StageVector, tableau::PartitionedTableau, Δt)
+function update!(solstep::Union{SolutionStep{PODE}, SolutionStep{PDAE}},
+        V::StageVector, F::StageVector, tableau::PartitionedTableau, Δt)
     update!(solstep.q, solstep.q̃, V, tableau.q.b, tableau.q.b̂, Δt)
     update!(solstep.p, solstep.p̃, F, tableau.p.b, tableau.p.b̂, Δt)
 end
 
-
-function update_vector!(Δq::AbstractVector{T}, ẋ::StageVector{T}, b::AbstractVector, b̂::AbstractVector, Δt) where {T}
+function update_vector!(Δq::AbstractVector{T}, ẋ::StageVector{T},
+        b::AbstractVector, b̂::AbstractVector, Δt) where {T}
     @assert length(b) == length(ẋ)
 
     local δq₁::Base.TwicePrecision{T}
@@ -81,16 +85,17 @@ function update_vector!(Δq::AbstractVector, V::StageVector, tableau::Tableau, �
     update_vector!(Δq, V, tableau.b, tableau.b̂, Δt)
 end
 
-function update_vector!(Δq::AbstractVector, Δp::AbstractVector, V::StageVector, F::StageVector, tableau::Tableau, Δt)
+function update_vector!(Δq::AbstractVector, Δp::AbstractVector,
+        V::StageVector, F::StageVector, tableau::Tableau, Δt)
     update_vector!(Δq, V, tableau.b, tableau.b̂, Δt)
     update_vector!(Δp, F, tableau.b, tableau.b̂, Δt)
 end
 
-function update_vector!(Δq::AbstractVector, Δp::AbstractVector, V::StageVector, F::StageVector, tableau::PartitionedTableau, Δt)
+function update_vector!(Δq::AbstractVector, Δp::AbstractVector, V::StageVector,
+        F::StageVector, tableau::PartitionedTableau, Δt)
     update_vector!(Δq, V, tableau.q.b, tableau.q.b̂, Δt)
     update_vector!(Δp, F, tableau.p.b, tableau.p.b̂, Δt)
 end
-
 
 function update_multiplier!(λ::AbstractVector{T}, Λ::StageVector{T}, b::AbstractVector) where {T}
     for Λᵢ in Λ
@@ -106,7 +111,6 @@ function update_multiplier!(λ::AbstractVector{T}, Λ::StageVector{T}, b::Abstra
     end
     nothing
 end
-
 
 # function update_solution!(x::Vector{T}, xₑᵣᵣ::Vector{T}, ẋ::Matrix{T}, b::AbstractVector, Δt) where {T}
 #     @assert length(x) == length(xₑᵣᵣ)
@@ -146,7 +150,6 @@ end
 #         x[k] += Δt * Δx
 #     end
 # end
-
 
 # function update_solution!(x::AbstractVector{T}, ẋ::Vector{Vector{T}}, b::AbstractVector, Δt) where {T}
 #     @assert length(b) == length(ẋ)
