@@ -11,9 +11,9 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
-## Unreleased
+## [Unreleased] — targeting 0.18.5
 
-### Changed
+### Changes
 
 - Every tracked source file is now Unicode NFC-normalised. Fifty-one files stored `ṽ` (73 times),
   `Ā` (40), `ṗ` (31), `Ē` (30), `Ḡ` (29), `ã` (19), `ẋ` (10), `ẏ` (6), `ḡ` (3), `ū` (3), `ā` (2),
@@ -27,12 +27,15 @@ remain a gap.
 
   **One thing does change at runtime.** String literals are *not* parser-normalised, so
   `Symbol("SLRKLobattoIIIAIIIĀ")` in `src/spark/tableaus_slrk.jl` now produces a precomposed symbol
-  where it produced a decomposed one. That symbol is the tableau's `name`, used for display; the
-  only test near it, `test/spark/spark_tableaus_tests.jl:245`, compares `SLRKLobattoIIICC̄` — a
-  macron over `C`, which has no precomposed form and is unaffected. No result changes.
+  where it produced a decomposed one. That symbol is the tableau's `name`, used for display. Two
+  tests in `test/spark/spark_tableaus_tests.jl` read it: `:240–244` asserts the six SLRK names are
+  distinct, which holds in either normalisation, and `:245–246` compares `SLRKLobattoIIICIIIC̄` and
+  `SLRKLobattoIIIC̄IIIC` — a macron over `C` has no precomposed codepoint, so those two names are
+  byte-identical before and after. No result changes.
 
-  The sibling literals in `RungeKutta/src/tableaus/prk.jl` are normalised in the same pass, since
-  the two files name the same tableaus and are a byte contract with each other.
+  The analogous literal in `RungeKutta/src/tableaus/prk.jl` is normalised in the same sweep. The
+  names are independent — `SLRKLobattoIIIAIIIĀ` here, `LobattoIIIAIIIĀ<s>` there — and nothing
+  reads one against the other.
 
   No changed line falls inside a `jldoctest` block; the seven in `README.md` and
   `docs/src/tutorial.md` are inside `@example` blocks, whose output Documenter does not compare.
