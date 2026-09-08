@@ -63,8 +63,8 @@ function initial_guess!(sol, history, params, int::SymmetricProjectionIntegrator
         t = (sol.t + history[1].t) / 2,
         q = cache(int).q̃,
         p = cache(int).p̃,
-        q̇ = cache(int).ṽ,
-        ṗ = cache(int).f̃
+        q̇ = cache(int).ṽ,
+        ṗ = cache(int).f̃
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
     # TODO: Fix this!
@@ -107,7 +107,7 @@ function components!(x::AbstractVector{ST}, sol, params,
     # copy x to q
     for k in eachindex(C.q̃)
         C.q̄[k] = x[k]
-        C.ṽ[k] = (C.q̄[k] - sol.q[k]) / timestep(int)
+        C.ṽ[k] = (C.q̄[k] - sol.q[k]) / timestep(int)
     end
 
     # copy x to λ
@@ -120,8 +120,8 @@ function components!(x::AbstractVector{ST}, sol, params,
     C.U[2] .= projection(method(int)).RU[2] .* C.λ
 
     # compute g = ∇ϑ(q)⋅λ
-    equations(int).g(C.G[1], sol.t - timestep(int), sol.q, C.ṽ, C.λ, params)
-    equations(int).g(C.G[2], sol.t, C.q̄, C.ṽ, C.λ, params)
+    equations(int).g(C.G[1], sol.t - timestep(int), sol.q, C.ṽ, C.λ, params)
+    equations(int).g(C.G[2], sol.t, C.q̄, C.ṽ, C.λ, params)
 
     C.G[1] .*= projection(method(int)).RG[1]
     C.G[2] .*= projection(method(int)).RG[2]

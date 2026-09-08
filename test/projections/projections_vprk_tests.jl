@@ -26,13 +26,13 @@ ref = integrate(ode, Gauss(8))
     sol = integrate(iode, VPRKGauss(3))
     @test relative_maximum_error(sol.q, ref.q) < 4E-11
 
-    sol = integrate(iode, VPRKLobattoIIIAIIIĀ(2))
+    sol = integrate(iode, VPRKLobattoIIIAIIIĀ(2))
     @test relative_maximum_error(sol.q, ref.q) < 8E-5
 
-    sol = integrate(iode, VPRKLobattoIIIAIIIĀ(3))
+    sol = integrate(iode, VPRKLobattoIIIAIIIĀ(3))
     @test relative_maximum_error(sol.q, ref.q) < 1E-6
 
-    sol = integrate(iode, VPRKLobattoIIIAIIIĀ(4))
+    sol = integrate(iode, VPRKLobattoIIIAIIIĀ(4))
     @test relative_maximum_error(sol.q, ref.q) < 2E-10
 
     sol = integrate(iode, VPRKLobattoIIIBIIIB̄(2))

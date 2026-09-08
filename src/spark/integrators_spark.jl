@@ -95,7 +95,7 @@ function initial_guess!(sol, history, params,
             q = cache(int).Qi[i],
             p = cache(int).Pi[i],
             q̇ = cache(int).Vi[i],
-            ṗ = cache(int).Fi[i]
+            ṗ = cache(int).Fi[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -116,7 +116,7 @@ function initial_guess!(sol, history, params,
             q = cache(int).Qp[i],
             p = cache(int).Pp[i],
             q̇ = cache(int).Vp[i],
-            ṗ = cache(int).Fp[i]
+            ṗ = cache(int).Fp[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -222,7 +222,7 @@ function components!(x::AbstractVector{ST},
     # degenerate Lagrangian, ϕ(q,p) = p - ϑ(q), does not use it. Zero it explicitly
     # rather than relying on the cache never having been written.
     C.ṽ .= 0
-    equations(int).ϕ(C.ϕ̃, sol.t, C.q̃, C.ṽ, C.p̃, params)
+    equations(int).ϕ(C.ϕ̃, sol.t, C.q̃, C.ṽ, C.p̃, params)
 end
 
 # Compute stages of specialised partitioned additive Runge-Kutta methods for variational systems.

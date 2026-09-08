@@ -46,7 +46,7 @@ end
 "Tableau for Gauss-Lobatto IIIA-IIIB method with s stages and symmetric projection."
 function TableauHSPARKLobattoIIIAIIIBpSymmetric(s)
     TableauHSPARKSymmetricProjection(Symbol("HSPARKLobattoIIIAIIIB($s)pSymmetric"),
-        TableauLobattoIIIA(s), TableauLobattoIIIĀ(s))
+        TableauLobattoIIIA(s), TableauLobattoIIIĀ(s))
 end
 
 "Tableau for Gauss-Lobatto IIIB-IIIA method with s stages and symmetric projection."

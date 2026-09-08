@@ -74,7 +74,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CTDVI})
         q = cache(int).q,
         p = cache(int).θ,
         q̇ = cache(int).v,
-        ṗ = cache(int).f
+        ṗ = cache(int).f
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -86,7 +86,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:CTDVI})
         q = cache(int).q,
         p = cache(int).θ,
         q̇ = cache(int).v,
-        ṗ = cache(int).f
+        ṗ = cache(int).f
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 

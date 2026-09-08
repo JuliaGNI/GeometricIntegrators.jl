@@ -24,7 +24,7 @@ struct DiscreteEulerLagrangeCache{DT} <: DELEIntegratorCache{DT}
     D2Ld::Vector{DT}
 
     q̃::Vector{DT}
-    ṽ::Vector{DT}
+    ṽ::Vector{DT}
     θ̃::Vector{DT}
     f̃::Vector{DT}
 
@@ -62,7 +62,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:Discret
     #     t=sol.t,
     #     q=cache(int).q̃,
     #     p=cache(int).θ̃,
-    #     v=cache(int).ṽ,
+    #     v=cache(int).ṽ,
     #     f=cache(int).f̃,
     # )
     # solutionstep!(soltmp, history, problem(int), iguess(int))

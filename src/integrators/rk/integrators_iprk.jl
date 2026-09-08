@@ -98,7 +98,7 @@ Implicit partitioned Runge-Kutta integrator cache.
 * `Q`: internal stages of solution q
 * `P`: internal stages of momentum p
 * `V`: internal stages of vector field v = q̇
-* `F`: internal stages of vector field f = ṗ
+* `F`: internal stages of vector field f = ṗ
 * `Y`: summed vector field of internal stages Q
 * `Z`: summed vector field of internal stages P
 """
@@ -176,7 +176,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{
             q = cache(int).Q[i],
             p = cache(int).P[i],
             q̇ = cache(int).V[i],
-            ṗ = cache(int).F[i]
+            ṗ = cache(int).F[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end

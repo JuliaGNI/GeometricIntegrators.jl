@@ -5,7 +5,7 @@ Variational partitioned Runge-Kutta integrator cache.
 
 * `q̃`: initial guess of q
 * `p̃`: initial guess of p
-* `ṽ`: initial guess of v
+* `ṽ`: initial guess of v
 * `f̃`: initial guess of f
 * `s̃`: holds shift due to periodicity of solution
 * `Q`: internal stages of q
@@ -32,7 +32,7 @@ mutable struct VPRKCache{ST, S} <: IODEIntegratorCache{ST}
 
     q̃::Vector{ST}
     p̃::Vector{ST}
-    ṽ::Vector{ST}
+    ṽ::Vector{ST}
     f̃::Vector{ST}
     θ̃::Vector{ST}
     s̃::Vector{ST}
@@ -67,7 +67,7 @@ mutable struct VPRKCache{ST, S} <: IODEIntegratorCache{ST}
         # create temporary vectors
         q̃ = zeros(ST, D)
         p̃ = zeros(ST, D)
-        ṽ = zeros(ST, D)
+        ṽ = zeros(ST, D)
         f̃ = zeros(ST, D)
         θ̃ = zeros(ST, D)
         s̃ = zeros(ST, D)
@@ -129,7 +129,7 @@ mutable struct VPRKCache{ST, S} <: IODEIntegratorCache{ST}
         end
 
         new(x, x̄, λ, λ̄, q₋, q̄₊, p₋, p̄₊,
-            u, g, q̃, p̃, ṽ, f̃, θ̃, s̃, ϕ, μ, v, f, y, z,
+            u, g, q̃, p̃, ṽ, f̃, θ̃, s̃, ϕ, μ, v, f, y, z,
             Q, P, V, F, Λ, Φ, Y, Z, U, G, R)
     end
 end

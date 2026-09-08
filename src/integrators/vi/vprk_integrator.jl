@@ -41,7 +41,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:VPRK})
             q = cache(int).Q[i],
             p = cache(int).P[i],
             q̇ = cache(int).V[i],
-            ṗ = cache(int).F[i]
+            ṗ = cache(int).F[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
         for k in eachindex(cache(int).V[i])

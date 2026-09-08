@@ -34,13 +34,13 @@ lode = lodeproblem()
 
     # @test VPRK(LobattoIIIAIIIB(2)) == VPRK(VPRKLobattoIIIAIIIB(2))
     # @test VPRK(LobattoIIIBIIIA(2)) == VPRK(VPRKLobattoIIIBIIIA(2))
-    # @test VPRK(LobattoIIIAIIIĀ(2)) == VPRK(VPRKLobattoIIIAIIIĀ(2))
+    # @test VPRK(LobattoIIIAIIIĀ(2)) == VPRK(VPRKLobattoIIIAIIIĀ(2))
     # @test VPRK(LobattoIIIBIIIB̄(2)) == VPRK(VPRKLobattoIIIBIIIB̄(2))
     @test VPRK(LobattoIIICIIIC̄(2)) == VPRK(VPRKLobattoIIICIIIC̄(2))
     @test VPRK(LobattoIIIDIIID̄(2)) == VPRK(VPRKLobattoIIIDIIID̄(2))
-    @test VPRK(LobattoIIIEIIIĒ(2)) == VPRK(VPRKLobattoIIIEIIIĒ(2))
+    @test VPRK(LobattoIIIEIIIĒ(2)) == VPRK(VPRKLobattoIIIEIIIĒ(2))
     @test VPRK(LobattoIIIFIIIF̄(2)) == VPRK(VPRKLobattoIIIFIIIF̄(2))
-    @test VPRK(LobattoIIIGIIIḠ(2)) == VPRK(VPRKLobattoIIIGIIIḠ(2))
+    @test VPRK(LobattoIIIGIIIḠ(2)) == VPRK(VPRKLobattoIIIGIIIḠ(2))
 
     @test typeof(VPSRK3()) <: VPRKMethod
 
@@ -109,10 +109,10 @@ lode = lodeproblem()
     @test typeof(VPRKLobattoIIIBIIIA(4)) <: VPRKMethod
     @test typeof(VPRKLobattoIIIBIIIA(5)) <: VPRKMethod
 
-    @test typeof(VPRKLobattoIIIAIIIĀ(2)) <: VPRKMethod
-    @test typeof(VPRKLobattoIIIAIIIĀ(3)) <: VPRKMethod
-    @test typeof(VPRKLobattoIIIAIIIĀ(4)) <: VPRKMethod
-    @test typeof(VPRKLobattoIIIAIIIĀ(5)) <: VPRKMethod
+    @test typeof(VPRKLobattoIIIAIIIĀ(2)) <: VPRKMethod
+    @test typeof(VPRKLobattoIIIAIIIĀ(3)) <: VPRKMethod
+    @test typeof(VPRKLobattoIIIAIIIĀ(4)) <: VPRKMethod
+    @test typeof(VPRKLobattoIIIAIIIĀ(5)) <: VPRKMethod
 
     @test typeof(VPRKLobattoIIIBIIIB̄(2)) <: VPRKMethod
     @test typeof(VPRKLobattoIIIBIIIB̄(3)) <: VPRKMethod
@@ -134,10 +134,10 @@ lode = lodeproblem()
     @test typeof(VPRKLobattoIIIDIIID̄(4)) <: VPRKMethod
     @test typeof(VPRKLobattoIIIDIIID̄(5)) <: VPRKMethod
 
-    @test typeof(VPRKLobattoIIIEIIIĒ(2)) <: VPRKMethod
-    @test typeof(VPRKLobattoIIIEIIIĒ(3)) <: VPRKMethod
-    @test typeof(VPRKLobattoIIIEIIIĒ(4)) <: VPRKMethod
-    @test typeof(VPRKLobattoIIIEIIIĒ(5)) <: VPRKMethod
+    @test typeof(VPRKLobattoIIIEIIIĒ(2)) <: VPRKMethod
+    @test typeof(VPRKLobattoIIIEIIIĒ(3)) <: VPRKMethod
+    @test typeof(VPRKLobattoIIIEIIIĒ(4)) <: VPRKMethod
+    @test typeof(VPRKLobattoIIIEIIIĒ(5)) <: VPRKMethod
 
     @test typeof(VPRKLobattoIIIFIIIF̄(2)) <: VPRKMethod
     @test typeof(VPRKLobattoIIIFIIIF̄(3)) <: VPRKMethod
@@ -149,10 +149,10 @@ lode = lodeproblem()
     @test typeof(VPRKLobattoIIIF̄IIIF(4)) <: VPRKMethod
     @test typeof(VPRKLobattoIIIF̄IIIF(5)) <: VPRKMethod
 
-    @test typeof(VPRKLobattoIIIGIIIḠ(2)) <: VPRKMethod
-    @test typeof(VPRKLobattoIIIGIIIḠ(3)) <: VPRKMethod
-    @test typeof(VPRKLobattoIIIGIIIḠ(4)) <: VPRKMethod
-    @test typeof(VPRKLobattoIIIGIIIḠ(5)) <: VPRKMethod
+    @test typeof(VPRKLobattoIIIGIIIḠ(2)) <: VPRKMethod
+    @test typeof(VPRKLobattoIIIGIIIḠ(3)) <: VPRKMethod
+    @test typeof(VPRKLobattoIIIGIIIḠ(4)) <: VPRKMethod
+    @test typeof(VPRKLobattoIIIGIIIḠ(5)) <: VPRKMethod
 
     @test typeof(GeometricIntegrator(iode, VPSRK3())) <: GeometricIntegrator{<:VPRK}
     @test typeof(GeometricIntegrator(iode, VPRKGauss(2))) <: GeometricIntegrator{<:VPRK}
@@ -178,7 +178,7 @@ lode = lodeproblem()
           GeometricIntegrator{<:VPRK}
     @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIBIIIA(2))) <:
           GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIAIIIĀ(2))) <:
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIAIIIĀ(2))) <:
           GeometricIntegrator{<:VPRK}
     @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIBIIIB̄(2))) <:
           GeometricIntegrator{<:VPRK}
@@ -188,13 +188,13 @@ lode = lodeproblem()
           GeometricIntegrator{<:VPRK}
     @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIDIIID̄(2))) <:
           GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIEIIIĒ(2))) <:
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIEIIIĒ(2))) <:
           GeometricIntegrator{<:VPRK}
     @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIFIIIF̄(2))) <:
           GeometricIntegrator{<:VPRK}
     @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIF̄IIIF(2))) <:
           GeometricIntegrator{<:VPRK}
-    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIGIIIḠ(2))) <:
+    @test typeof(GeometricIntegrator(iode, VPRKLobattoIIIGIIIḠ(2))) <:
           GeometricIntegrator{<:VPRK}
 end
 

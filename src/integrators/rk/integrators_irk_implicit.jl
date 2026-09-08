@@ -110,7 +110,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{
             q = cache(int).Q[i],
             p = cache(int).Θ[i],
             q̇ = cache(int).V[i],
-            ṗ = cache(int).F[i]
+            ṗ = cache(int).F[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
         initialguess(problem(int)).v(soltmp.q̇, soltmp.t, soltmp.q, soltmp.p, params)
@@ -127,7 +127,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{
             q = cache(int).q,
             p = cache(int).θ,
             q̇ = cache(int).v,
-            ṗ = cache(int).f
+            ṗ = cache(int).f
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 

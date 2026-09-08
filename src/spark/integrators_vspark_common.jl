@@ -12,7 +12,7 @@ function initial_guess!(sol, history, params,
             q = cache(int).Qi[i],
             p = cache(int).Pi[i],
             q̇ = cache(int).Vi[i],
-            ṗ = cache(int).Fi[i]
+            ṗ = cache(int).Fi[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 
@@ -30,7 +30,7 @@ function initial_guess!(sol, history, params,
             q = cache(int).Qp[i],
             p = cache(int).Pp[i],
             q̇ = cache(int).Vp[i],
-            ṗ = cache(int).Fp[i]
+            ṗ = cache(int).Fp[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
 

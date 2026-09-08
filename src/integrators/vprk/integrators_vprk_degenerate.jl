@@ -89,10 +89,10 @@ function initial_guess!(int::IntegratorVPRKdegenerate{DT}, sol::SolutionStepPODE
         evaluate!(int.iguess, sol.history[2].q, sol.history[2].p,
             sol.history[2].v, sol.history[2].f,
             sol.history[1].q, sol.history[1].p, sol.history[1].v, sol.history[1].f,
-            cache.q̃, cache.ṽ,
+            cache.q̃, cache.ṽ,
             tableau(int).q.c[i])
         for k in eachdim(int)
-            cache.x[ndims(int) * (i - 1) + k] = cache.ṽ[k]
+            cache.x[ndims(int) * (i - 1) + k] = cache.ṽ[k]
         end
     end
 end
@@ -125,7 +125,7 @@ function Integrators.residual!(x::Vector{ST}, b::Vector{ST},
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_solution!(x, cache.q̃, cache.ṽ, cache.p̃, params)
+    compute_solution!(x, cache.q̃, cache.ṽ, cache.p̃, params)
 
     # compute b = - [q̄-q-BV]
     for k in 1:div(D, 2)
@@ -192,5 +192,5 @@ function integrate_step!(
     # check_solver_status(int.projector.status, int.projector.params)
 
     # compute projection vector fields
-    compute_solution!(cache.x̄, sol.q, cache.ṽ, sol.p, int.pparams)
+    compute_solution!(cache.x̄, sol.q, cache.ṽ, sol.p, int.pparams)
 end

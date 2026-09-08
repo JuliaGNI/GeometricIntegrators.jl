@@ -81,10 +81,10 @@ function Base.show(io::IO, tab::CoefficientsARK)
     print(io, "  β = ", tab.β)
 end
 
-function update!(x::AbstractArray{T}, ẋ::StageVector{T}, ẏ::StageVector{T},
+function update!(x::AbstractArray{T}, ẋ::StageVector{T}, ẏ::StageVector{T},
         tableau::CoefficientsARK, Δt) where {T}
     @assert length(tableau.b) == length(ẋ)
-    @assert length(tableau.β) == length(ẏ)
+    @assert length(tableau.β) == length(ẏ)
 
     for i in eachindex(ẋ, tableau.b, tableau.b̂)
         @assert axes(x) == axes(ẋ[i])
@@ -92,10 +92,10 @@ function update!(x::AbstractArray{T}, ẋ::StageVector{T}, ẏ::StageVector{T},
         x .+= Δt .* tableau.b̂[i] .* ẋ[i]
     end
 
-    for i in eachindex(ẏ, tableau.β, tableau.β̂)
-        @assert axes(x) == axes(ẏ[i])
-        x .+= Δt .* tableau.β[i] .* ẏ[i]
-        x .+= Δt .* tableau.β̂[i] .* ẏ[i]
+    for i in eachindex(ẏ, tableau.β, tableau.β̂)
+        @assert axes(x) == axes(ẏ[i])
+        x .+= Δt .* tableau.β[i] .* ẏ[i]
+        x .+= Δt .* tableau.β̂[i] .* ẏ[i]
     end
 
     return x

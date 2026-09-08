@@ -11,8 +11,8 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:PMVIMet
         t = sol.t,
         q = cache(int).q̃,
         p = cache(int).θ̃,
-        q̇ = cache(int).ṽ,
-        ṗ = cache(int).f̃
+        q̇ = cache(int).ṽ,
+        ṗ = cache(int).f̃
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 

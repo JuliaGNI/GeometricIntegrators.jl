@@ -88,7 +88,7 @@ end
           GeometricIntegrator{<:EPRK}
     @test typeof(GeometricIntegrator(pode, LobattoIIIBIIIA(2))) <:
           GeometricIntegrator{<:EPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIIAIIIĀ(2))) <:
+    @test typeof(GeometricIntegrator(pode, LobattoIIIAIIIĀ(2))) <:
           GeometricIntegrator{<:EPRK}
     @test typeof(GeometricIntegrator(pode, LobattoIIIBIIIB̄(2))) <:
           GeometricIntegrator{<:EPRK}
@@ -98,13 +98,13 @@ end
           GeometricIntegrator{<:IPRK}
     @test typeof(GeometricIntegrator(pode, LobattoIIIDIIID̄(2))) <:
           GeometricIntegrator{<:IPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIIEIIIĒ(2))) <:
+    @test typeof(GeometricIntegrator(pode, LobattoIIIEIIIĒ(2))) <:
           GeometricIntegrator{<:IPRK}
     @test typeof(GeometricIntegrator(pode, LobattoIIIFIIIF̄(2))) <:
           GeometricIntegrator{<:IPRK}
     @test typeof(GeometricIntegrator(pode, LobattoIIIF̄IIIF(2))) <:
           GeometricIntegrator{<:IPRK}
-    @test typeof(GeometricIntegrator(pode, LobattoIIIGIIIḠ(2))) <:
+    @test typeof(GeometricIntegrator(pode, LobattoIIIGIIIḠ(2))) <:
           GeometricIntegrator{<:IPRK}
 end
 

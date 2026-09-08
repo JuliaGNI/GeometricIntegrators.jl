@@ -221,7 +221,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIA`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIAIIIĀ <: VPRKMethod
+struct VPRKLobattoIIIAIIIĀ <: VPRKMethod
     s::Int
 end
 
@@ -261,7 +261,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIE`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIEIIIĒ <: VPRKMethod
+struct VPRKLobattoIIIEIIIĒ <: VPRKMethod
     s::Int
 end
 
@@ -285,7 +285,7 @@ end
 Variational Partitioned Runge-Kutta Method that uses
 [`TableauLobattoIIIG`](@ref) for the coefficients $a_{ij}$ and its symplectic conjugate for the coefficients $\bar{a}_{ij}$.
 """
-struct VPRKLobattoIIIGIIIḠ <: VPRKMethod
+struct VPRKLobattoIIIGIIIḠ <: VPRKMethod
     s::Int
 end
 
@@ -324,19 +324,19 @@ GeometricBase.tableau(method::VPRKRadauIIB) = PartitionedTableau(TableauRadauIIB
 
 GeometricBase.tableau(method::VPRKLobattoIIIAIIIB) = TableauLobattoIIIAIIIB(method.s)
 GeometricBase.tableau(method::VPRKLobattoIIIBIIIA) = TableauLobattoIIIBIIIA(method.s)
-GeometricBase.tableau(method::VPRKLobattoIIIAIIIĀ) = TableauLobattoIIIAIIIĀ(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIAIIIĀ) = TableauLobattoIIIAIIIĀ(method.s)
 GeometricBase.tableau(method::VPRKLobattoIIIBIIIB̄) = TableauLobattoIIIBIIIB̄(method.s)
 GeometricBase.tableau(method::VPRKLobattoIIICIIIC̄) = TableauLobattoIIICIIIC̄(method.s)
 GeometricBase.tableau(method::VPRKLobattoIIIC̄IIIC) = TableauLobattoIIIC̄IIIC(method.s)
 GeometricBase.tableau(method::VPRKLobattoIIIDIIID̄) = TableauLobattoIIIDIIID̄(method.s)
-GeometricBase.tableau(method::VPRKLobattoIIIEIIIĒ) = TableauLobattoIIIEIIIĒ(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIEIIIĒ) = TableauLobattoIIIEIIIĒ(method.s)
 GeometricBase.tableau(method::VPRKLobattoIIIFIIIF̄) = TableauLobattoIIIFIIIF̄(method.s)
 GeometricBase.tableau(method::VPRKLobattoIIIF̄IIIF) = TableauLobattoIIIF̄IIIF(method.s)
-GeometricBase.tableau(method::VPRKLobattoIIIGIIIḠ) = TableauLobattoIIIGIIIḠ(method.s)
+GeometricBase.tableau(method::VPRKLobattoIIIGIIIḠ) = TableauLobattoIIIGIIIḠ(method.s)
 
 nullvector(method::VPRKLobattoIIIAIIIB) = lobatto_nullvector(method.s)
 nullvector(method::VPRKLobattoIIIBIIIA) = lobatto_nullvector(method.s)
-nullvector(method::VPRKLobattoIIIAIIIĀ) = lobatto_nullvector(method.s)
+nullvector(method::VPRKLobattoIIIAIIIĀ) = lobatto_nullvector(method.s)
 nullvector(method::VPRKLobattoIIIBIIIB̄) = lobatto_nullvector(method.s)
 
 GeometricBase.order(::Type{VPRKGauss}) = "2s"
@@ -354,15 +354,15 @@ GeometricBase.order(::Type{VPRKRadauIIB}) = "2s-1"
 
 GeometricBase.order(::Type{VPRKLobattoIIIAIIIB}) = "2s-2"
 GeometricBase.order(::Type{VPRKLobattoIIIBIIIA}) = "2s-2"
-GeometricBase.order(::Type{VPRKLobattoIIIAIIIĀ}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIAIIIĀ}) = "2s-2"
 GeometricBase.order(::Type{VPRKLobattoIIIBIIIB̄}) = "2s-2"
 GeometricBase.order(::Type{VPRKLobattoIIICIIIC̄}) = "2s-2"
 GeometricBase.order(::Type{VPRKLobattoIIIC̄IIIC}) = "2s-2"
 GeometricBase.order(::Type{VPRKLobattoIIIDIIID̄}) = "2s-2"
-GeometricBase.order(::Type{VPRKLobattoIIIEIIIĒ}) = "2s-2"
+GeometricBase.order(::Type{VPRKLobattoIIIEIIIĒ}) = "2s-2"
 GeometricBase.order(::Type{VPRKLobattoIIIFIIIF̄}) = "2s"
 GeometricBase.order(::Type{VPRKLobattoIIIF̄IIIF}) = "2s"
-GeometricBase.order(::Type{VPRKLobattoIIIGIIIḠ}) = "2s"
+GeometricBase.order(::Type{VPRKLobattoIIIGIIIḠ}) = "2s"
 
 issymplectic(::Type{VPRKGauss}) = true
 issymplectic(::Type{VPRKLobattoIII}) = false
@@ -379,12 +379,12 @@ issymplectic(::Type{VPRKRadauIIB}) = false
 
 issymplectic(::Type{VPRKLobattoIIIAIIIB}) = true
 issymplectic(::Type{VPRKLobattoIIIBIIIA}) = true
-issymplectic(::Type{VPRKLobattoIIIAIIIĀ}) = true
+issymplectic(::Type{VPRKLobattoIIIAIIIĀ}) = true
 issymplectic(::Type{VPRKLobattoIIIBIIIB̄}) = true
 issymplectic(::Type{VPRKLobattoIIICIIIC̄}) = true
 issymplectic(::Type{VPRKLobattoIIIC̄IIIC}) = true
 issymplectic(::Type{VPRKLobattoIIIDIIID̄}) = true
-issymplectic(::Type{VPRKLobattoIIIEIIIĒ}) = true
+issymplectic(::Type{VPRKLobattoIIIEIIIĒ}) = true
 issymplectic(::Type{VPRKLobattoIIIFIIIF̄}) = true
 issymplectic(::Type{VPRKLobattoIIIF̄IIIF}) = true
-issymplectic(::Type{VPRKLobattoIIIGIIIḠ}) = true
+issymplectic(::Type{VPRKLobattoIIIGIIIḠ}) = true

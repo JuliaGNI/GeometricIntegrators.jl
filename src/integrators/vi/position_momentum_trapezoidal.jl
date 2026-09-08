@@ -34,13 +34,13 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:PMVI
     cache(int, ST).q .= x[1:length(cache(int, ST).q)]
 
     # compute v
-    cache(int, ST).ṽ .= (cache(int, ST).q .- sol.q) ./ timestep(int)
+    cache(int, ST).ṽ .= (cache(int, ST).q .- sol.q) ./ timestep(int)
 
-    # compute Θ = ϑ(q,ṽ) and f = f(q,ṽ)
-    equations(int).ϑ(cache(int, ST).θ̄, t̄, sol.q, cache(int, ST).ṽ, params)
-    equations(int).ϑ(cache(int, ST).θ, t, cache(int, ST).q, cache(int, ST).ṽ, params)
-    equations(int).f(cache(int, ST).f̄, t̄, sol.q, cache(int, ST).ṽ, params)
-    equations(int).f(cache(int, ST).f, t, cache(int, ST).q, cache(int, ST).ṽ, params)
+    # compute Θ = ϑ(q,ṽ) and f = f(q,ṽ)
+    equations(int).ϑ(cache(int, ST).θ̄, t̄, sol.q, cache(int, ST).ṽ, params)
+    equations(int).ϑ(cache(int, ST).θ, t, cache(int, ST).q, cache(int, ST).ṽ, params)
+    equations(int).f(cache(int, ST).f̄, t̄, sol.q, cache(int, ST).ṽ, params)
+    equations(int).f(cache(int, ST).f, t, cache(int, ST).q, cache(int, ST).ṽ, params)
 
     # compute p
     cache(int, ST).θ̃ .= (cache(int, ST).θ .+ cache(int, ST).θ̄) ./ 2

@@ -16,7 +16,7 @@ Cache of a Specialised Partitioned Additive Runge-Kutta integrator.
 * `f̄`: vector field of p̄
 * `q̃`: initial guess of q
 * `p̃`: initial guess of p
-* `ṽ`: initial guess of v
+* `ṽ`: initial guess of v
 * `f̃`: initial guess of f
 * `s̃`: holds shift due to periodicity of solution
 * `Q`: internal stages of q
@@ -43,15 +43,15 @@ mutable struct IntegratorCacheSPARK{ST, S, R} <: IDAEIntegratorCache{ST}
     f::Vector{ST}
     f̄::Vector{ST}
     u::Vector{ST}
-    ū::Vector{ST}
+    ū::Vector{ST}
     g::Vector{ST}
-    ḡ::Vector{ST}
+    ḡ::Vector{ST}
     ϕ::Vector{ST}
     ϕ̅::Vector{ST}
 
     q̃::Vector{ST}
     p̃::Vector{ST}
-    ṽ::Vector{ST}
+    ṽ::Vector{ST}
     f̃::Vector{ST}
     ϕ̃::Vector{ST}
     s̃::Vector{ST}
@@ -103,16 +103,16 @@ mutable struct IntegratorCacheSPARK{ST, S, R} <: IDAEIntegratorCache{ST}
         f = zeros(ST, D)
         f̄ = zeros(ST, D)
         u = zeros(ST, D)
-        ū = zeros(ST, D)
+        ū = zeros(ST, D)
         g = zeros(ST, D)
-        ḡ = zeros(ST, D)
+        ḡ = zeros(ST, D)
         ϕ = zeros(ST, D)
         ϕ̅ = zeros(ST, D)
 
         # create temporary vectors
         q̃ = zeros(ST, D)
         p̃ = zeros(ST, D)
-        ṽ = zeros(ST, D)
+        ṽ = zeros(ST, D)
         f̃ = zeros(ST, D)
         ϕ̃ = zeros(ST, D)
         s̃ = zeros(ST, D)
@@ -145,8 +145,8 @@ mutable struct IntegratorCacheSPARK{ST, S, R} <: IDAEIntegratorCache{ST}
 
         new(x,
             q, q̄, p, p̄, λ, λ̄, μ, μ̅,
-            v, v̄, f, f̄, u, ū, g, ḡ, ϕ, ϕ̅,
-            q̃, p̃, ṽ, f̃, ϕ̃, s̃,
+            v, v̄, f, f̄, u, ū, g, ḡ, ϕ, ϕ̅,
+            q̃, p̃, ṽ, f̃, ϕ̃, s̃,
             Qi, Pi, Vi, Fi, Gi, Hi, Yi, Zi, Φi, Ψi,
             Qp, Pp, Vp, Λp, Up, Fp, Gp, G̅p, Hp, Yp, Zp, Φp, Ψp)
     end

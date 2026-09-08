@@ -149,11 +149,11 @@ function initial_guess!(int::IntegratorVPRKpSecondary{DT}, sol::SolutionStepPDAE
         evaluate!(int.iguess, sol.history[2].q, sol.history[2].p,
             sol.history[2].v, sol.history[2].f,
             sol.history[1].q, sol.history[1].p, sol.history[1].v, sol.history[1].f,
-            cache.q̃, cache.ṽ,
+            cache.q̃, cache.ṽ,
             tableau(int).q.c[i])
 
         for k in eachdim(int)
-            cache.x[ndims(int) * (0 * nstages(int) + i - 1) + k] = cache.ṽ[k]
+            cache.x[ndims(int) * (0 * nstages(int) + i - 1) + k] = cache.ṽ[k]
             cache.x[ndims(int) * (1 * nstages(int) + i - 1) + k] = 0
         end
     end
@@ -317,7 +317,7 @@ function Integrators.residual!(x::Vector{ST}, b::Vector{ST},
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_stages_vprk!(x, cache.q̃, cache.ṽ, cache.p̃,
+    compute_stages_vprk!(x, cache.q̃, cache.ṽ, cache.p̃,
         cache.Q, cache.V, cache.Λ,
         cache.P, cache.F, cache.R,
         cache.Φ, params)
@@ -354,7 +354,7 @@ function integrate_step!(
 
     # compute final update
     compute_stages_vprk!(cache.x,
-        cache.q̃, cache.ṽ, cache.p̃,
+        cache.q̃, cache.ṽ, cache.p̃,
         cache.Q, cache.V, cache.Λ,
         cache.P, cache.F, cache.R,
         cache.Φ, int.params)

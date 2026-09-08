@@ -61,8 +61,8 @@ function initial_guess!(sol, history, params, int::MidpointProjectionIntegrator)
         t = (sol.t + history[1].t) / 2,
         q = cache(int).q̃,
         p = cache(int).p̃,
-        q̇ = cache(int).ṽ,
-        ṗ = cache(int).f̃
+        q̇ = cache(int).ṽ,
+        ṗ = cache(int).f̃
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
     # TODO: Fix this!
@@ -105,7 +105,7 @@ function components!(x::AbstractVector{ST}, sol, params,
     for k in eachindex(C.q̃)
         C.q̄[k] = x[k]
         C.q̃[k] = (C.q̄[k] + sol.q[k]) / 2
-        C.ṽ[k] = (C.q̄[k] - sol.q[k]) / timestep(int)
+        C.ṽ[k] = (C.q̄[k] - sol.q[k]) / timestep(int)
     end
 
     # copy x to λ
@@ -118,7 +118,7 @@ function components!(x::AbstractVector{ST}, sol, params,
     C.U[2] .= projection(method(int)).RU[2] .* C.λ
 
     # compute g = ∇ϑ(q)⋅λ
-    equations(int).g(C.g, sol.t - timestep(int) / 2, C.q̃, C.ṽ, C.λ, params)
+    equations(int).g(C.g, sol.t - timestep(int) / 2, C.q̃, C.ṽ, C.λ, params)
     C.G[1] .= projection(method(int)).RG[1] .* C.g
     C.G[2] .= projection(method(int)).RG[2] .* C.g
 end
