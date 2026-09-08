@@ -35,7 +35,7 @@ using GeometricIntegrators
 ```
 Then we can create an ODE problem for the equation $\dot{x} (t) = x(t)$ with integration time span $(0, 1)$. a time step of $\Delta t = 0.1$, and initial condition $x(0) = 1$, 
 ```@example 1
-prob = ODEProblem((ẋ, t, x, params) -> ẋ[1] = x[1], (0.0, 1.0), 0.1, [1.0])
+prob = ODEProblem((ẋ, t, x, params) -> ẋ[1] = x[1], (0.0, 1.0), 0.1, [1.0])
 ```
 create an integrator for this ODE, using the explicit Euler method
 ```@example 1
@@ -100,10 +100,10 @@ x_2 \\
 Together with the integration time span `(t₀,t₁)` and the time step, an
 ODE defines an `ODEProblem`.
 
-The user needs to specify a function `ẋ` that computes the vector field and
+The user needs to specify a function `ẋ` that computes the vector field and
 must have the interface
 ```julia
-function ẋ(v, t, x, params)
+function ẋ(v, t, x, params)
     v[1] = ...
     v[2] = ...
     ...
@@ -116,7 +116,7 @@ field may depend.
 
 For the mathematical pendulum, this could look as follows:
 ```@example 1
-function ẋ(v, t, x, params)
+function ẋ(v, t, x, params)
     v[1] = x[2]
     v[2] = sin(x[1])
 end
@@ -126,7 +126,7 @@ An `ODEProblem` is instantiated by
 ```
 ODEProblem(<vector field>, <time span>, <time step>, <initial conditions>; kwargs...)
 ```
-so to create and `ODEProblem`, one only needs to pass the above function `ẋ`, a tuple
+so to create and `ODEProblem`, one only needs to pass the above function `ẋ`, a tuple
 `tspan` containing the start and end times of the integration, the time step
 `tstep` as well as an initial condition:
 ```@example 1
@@ -134,11 +134,11 @@ tspan = (0.0, 10.0)
 tstep = 0.1
 x₀ = [acos(0.4), 0.0]
 
-ode = ODEProblem(ẋ, tspan, tstep, x₀)
+ode = ODEProblem(ẋ, tspan, tstep, x₀)
 ```
 The full constructor would look like
 ```@example 1
-ode = ODEProblem(ẋ, tspan, tstep, x₀; invariants = NullInvariants(),
+ode = ODEProblem(ẋ, tspan, tstep, x₀; invariants = NullInvariants(),
                  parameters = NullParameters(), periodicity = NullPeriodicity())
 ```
 where all keyword arguments, namely invariants, parameters and periodicity, are
@@ -164,11 +164,11 @@ function q̇(v, t, q, p, params)
     v[1] = p[1]
 end
 
-function ṗ(f, t, q, p, params)
+function ṗ(f, t, q, p, params)
     f[1] = sin(q[1])
 end
 
-pode = PODEProblem(q̇, ṗ, (0.0, 25.0), 0.1, [acos(0.4)], [0.0])
+pode = PODEProblem(q̇, ṗ, (0.0, 25.0), 0.1, [acos(0.4)], [0.0])
 ```
 The first two arguments to the PODE constructor are the functions that determine
 the vector fields of the equations $\dot{q} (t) = v(t, q(t), p(t))$ and
@@ -432,15 +432,15 @@ For most tableaus there also exist explicit shortcuts to select the method. Thes
 |:--------------------------------|:------|:----------------------------|
 | [`LobattoIIIAIIIB`](@ref)       | 2s-2  | Lobatto-IIIA-IIIB           |
 | [`LobattoIIIBIIIA`](@ref)       | 2s-2  | Lobatto-IIIB-IIIA           |
-| [`LobattoIIIAIIIĀ`](@ref)       | 2s-2  | Lobatto-IIIA-IIIĀ           |
+| [`LobattoIIIAIIIĀ`](@ref)       | 2s-2  | Lobatto-IIIA-IIIĀ           |
 | [`LobattoIIIBIIIB̄`](@ref)       | 2s-2  | Lobatto-IIIB-IIIB̄           |
 | [`LobattoIIICIIIC̄`](@ref)       | 2s-2  | Lobatto-IIIC-IIIC̄           |
 | [`LobattoIIIC̄IIIC`](@ref)       | 2s-2  | Lobatto-IIIC̄-IIIC           |
 | [`LobattoIIIDIIID̄`](@ref)       | 2s-2  | Lobatto-IIID-IIID̄           |
-| [`LobattoIIIEIIIĒ`](@ref)       | 2s-2  | Lobatto-IIIE-IIIĒ           |
+| [`LobattoIIIEIIIĒ`](@ref)       | 2s-2  | Lobatto-IIIE-IIIĒ           |
 | [`LobattoIIIFIIIF̄`](@ref)       | 2s    | Lobatto-IIIF-IIIF̄           |
 | [`LobattoIIIF̄IIIF`](@ref)       | 2s    | Lobatto-IIIF̄-IIIF           |
-| [`LobattoIIIGIIIḠ`](@ref)       | 2s    | Lobatto-IIIG-IIIḠ           |
+| [`LobattoIIIGIIIḠ`](@ref)       | 2s    | Lobatto-IIIG-IIIḠ           |
 
 
 ### Integrators for implicit ODEs
@@ -470,15 +470,15 @@ All implicit Runge-Kutta and partitioned Runge-Kutta methods can also be applied
 |                                 |       |                             |
 | [`LobattoIIIAIIIB`](@ref)       | 2s-2  | Lobatto-IIIA-IIIB           |
 | [`LobattoIIIBIIIA`](@ref)       | 2s-2  | Lobatto-IIIB-IIIA           |
-| [`LobattoIIIAIIIĀ`](@ref)       | 2s-2  | Lobatto-IIIA-IIIĀ           |
+| [`LobattoIIIAIIIĀ`](@ref)       | 2s-2  | Lobatto-IIIA-IIIĀ           |
 | [`LobattoIIIBIIIB̄`](@ref)       | 2s-2  | Lobatto-IIIB-IIIB̄           |
 | [`LobattoIIICIIIC̄`](@ref)       | 2s-2  | Lobatto-IIIC-IIIC̄           |
 | [`LobattoIIIC̄IIIC`](@ref)       | 2s-2  | Lobatto-IIIC̄-IIIC           |
 | [`LobattoIIIDIIID̄`](@ref)       | 2s-2  | Lobatto-IIID-IIID̄           |
-| [`LobattoIIIEIIIĒ`](@ref)       | 2s-2  | Lobatto-IIIE-IIIĒ           |
+| [`LobattoIIIEIIIĒ`](@ref)       | 2s-2  | Lobatto-IIIE-IIIĒ           |
 | [`LobattoIIIFIIIF̄`](@ref)       | 2s    | Lobatto-IIIF-IIIF̄           |
 | [`LobattoIIIF̄IIIF`](@ref)       | 2s    | Lobatto-IIIF̄-IIIF           |
-| [`LobattoIIIGIIIḠ`](@ref)       | 2s    | Lobatto-IIIG-IIIḠ           |
+| [`LobattoIIIGIIIḠ`](@ref)       | 2s    | Lobatto-IIIG-IIIḠ           |
 
 
 ### Integrators for Lagrangian ODEs
@@ -503,15 +503,15 @@ methods or Continuous Galerkin Variational Integrators ([`CGVI`](@ref)).
 | [`VPRKLobattoIIIG`](@ref)       | VPRK integrator with [`LobattoIIIG`](@ref)                         |
 | [`VPRKLobattoIIIAIIIB`](@ref)   | VPRK integrator with [`LobattoIIIAIIIB`](@ref)                     |
 | [`VPRKLobattoIIIBIIIA`](@ref)   | VPRK integrator with [`LobattoIIIBIIIA`](@ref)                     |
-| [`VPRKLobattoIIIAIIIĀ`](@ref)   | VPRK integrator with [`LobattoIIIAIIIĀ`](@ref)                     |
+| [`VPRKLobattoIIIAIIIĀ`](@ref)   | VPRK integrator with [`LobattoIIIAIIIĀ`](@ref)                     |
 | [`VPRKLobattoIIIBIIIB̄`](@ref)   | VPRK integrator with [`LobattoIIIBIIIB̄`](@ref)                     |
 | [`VPRKLobattoIIICIIIC̄`](@ref)   | VPRK integrator with [`LobattoIIICIIIC̄`](@ref)                     |
 | [`VPRKLobattoIIIC̄IIIC`](@ref)   | VPRK integrator with [`LobattoIIIC̄IIIC`](@ref)                     |
 | [`VPRKLobattoIIIDIIID̄`](@ref)   | VPRK integrator with [`LobattoIIIDIIID̄`](@ref)                     |
-| [`VPRKLobattoIIIEIIIĒ`](@ref)   | VPRK integrator with [`LobattoIIIEIIIĒ`](@ref)                     |
+| [`VPRKLobattoIIIEIIIĒ`](@ref)   | VPRK integrator with [`LobattoIIIEIIIĒ`](@ref)                     |
 | [`VPRKLobattoIIIFIIIF̄`](@ref)   | VPRK integrator with [`LobattoIIIFIIIF̄`](@ref)                     |
 | [`VPRKLobattoIIIF̄IIIF`](@ref)   | VPRK integrator with [`LobattoIIIF̄IIIF`](@ref)                     |
-| [`VPRKLobattoIIIGIIIḠ`](@ref)   | VPRK integrator with [`LobattoIIIGIIIḠ`](@ref)                     |
+| [`VPRKLobattoIIIGIIIḠ`](@ref)   | VPRK integrator with [`LobattoIIIGIIIḠ`](@ref)                     |
 
 
 ### Integrators for Degenerate Lagrangian ODEs

@@ -37,7 +37,7 @@ using GeometricIntegrators
 ```
 Then we can create an ODE problem for the equation $\dot{x} (t) = x(t)$ with integration time span $(0, 1)$. a time step of $\Delta t = 0.1$, and initial condition $x(0) = 1$, 
 ```@example 1
-prob = ODEProblem((ẋ, t, x, params) -> ẋ[1] = x[1], (0.0, 1.0), 0.1, [1.0])
+prob = ODEProblem((ẋ, t, x, params) -> ẋ[1] = x[1], (0.0, 1.0), 0.1, [1.0])
 ```
 An integrator for this ODE, using the explicit Euler method is obtained by
 ```julia

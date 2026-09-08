@@ -625,8 +625,8 @@ struct LobattoIIIBIIIA <: PRKMethod
     s::Int
 end
 
-"Partitioned Runge-Kutta method with [`TableauLobattoIIIA`](@ref) for ``q`` and [`TableauLobattoIIIĀ`](@ref) for ``p``."
-struct LobattoIIIAIIIĀ <: PRKMethod
+"Partitioned Runge-Kutta method with [`TableauLobattoIIIA`](@ref) for ``q`` and [`TableauLobattoIIIĀ`](@ref) for ``p``."
+struct LobattoIIIAIIIĀ <: PRKMethod
     s::Int
 end
 
@@ -650,8 +650,8 @@ struct LobattoIIIDIIID̄ <: PRKMethod
     s::Int
 end
 
-"Partitioned Runge-Kutta method with [`TableauLobattoIIIE`](@ref) for ``q`` and [`TableauLobattoIIIĒ`](@ref) for ``p``."
-struct LobattoIIIEIIIĒ <: PRKMethod
+"Partitioned Runge-Kutta method with [`TableauLobattoIIIE`](@ref) for ``q`` and [`TableauLobattoIIIĒ`](@ref) for ``p``."
+struct LobattoIIIEIIIĒ <: PRKMethod
     s::Int
 end
 
@@ -665,8 +665,8 @@ struct LobattoIIIF̄IIIF <: PRKMethod
     s::Int
 end
 
-"Partitioned Runge-Kutta method with [`TableauLobattoIIIG`](@ref) for ``q`` and [`TableauLobattoIIIḠ`](@ref) for ``p``."
-struct LobattoIIIGIIIḠ <: PRKMethod
+"Partitioned Runge-Kutta method with [`TableauLobattoIIIG`](@ref) for ``q`` and [`TableauLobattoIIIḠ`](@ref) for ``p``."
+struct LobattoIIIGIIIḠ <: PRKMethod
     s::Int
 end
 
@@ -679,8 +679,8 @@ end
 function GeometricBase.tableau(method::LobattoIIIBIIIA, ::Type{T} = Float64) where {T}
     TableauLobattoIIIBIIIA(T, method.s)
 end
-function GeometricBase.tableau(method::LobattoIIIAIIIĀ, ::Type{T} = Float64) where {T}
-    TableauLobattoIIIAIIIĀ(T, method.s)
+function GeometricBase.tableau(method::LobattoIIIAIIIĀ, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIAIIIĀ(T, method.s)
 end
 function GeometricBase.tableau(method::LobattoIIIBIIIB̄, ::Type{T} = Float64) where {T}
     TableauLobattoIIIBIIIB̄(T, method.s)
@@ -694,8 +694,8 @@ end
 function GeometricBase.tableau(method::LobattoIIIDIIID̄, ::Type{T} = Float64) where {T}
     TableauLobattoIIIDIIID̄(T, method.s)
 end
-function GeometricBase.tableau(method::LobattoIIIEIIIĒ, ::Type{T} = Float64) where {T}
-    TableauLobattoIIIEIIIĒ(T, method.s)
+function GeometricBase.tableau(method::LobattoIIIEIIIĒ, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIEIIIĒ(T, method.s)
 end
 function GeometricBase.tableau(method::LobattoIIIFIIIF̄, ::Type{T} = Float64) where {T}
     TableauLobattoIIIFIIIF̄(T, method.s)
@@ -703,32 +703,32 @@ end
 function GeometricBase.tableau(method::LobattoIIIF̄IIIF, ::Type{T} = Float64) where {T}
     TableauLobattoIIIF̄IIIF(T, method.s)
 end
-function GeometricBase.tableau(method::LobattoIIIGIIIḠ, ::Type{T} = Float64) where {T}
-    TableauLobattoIIIGIIIḠ(T, method.s)
+function GeometricBase.tableau(method::LobattoIIIGIIIḠ, ::Type{T} = Float64) where {T}
+    TableauLobattoIIIGIIIḠ(T, method.s)
 end
 
 GeometricBase.order(::Type{PartitionedGauss}) = "2s"
 GeometricBase.order(::Type{LobattoIIIAIIIB}) = "2s-2"
 GeometricBase.order(::Type{LobattoIIIBIIIA}) = "2s-2"
-GeometricBase.order(::Type{LobattoIIIAIIIĀ}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIAIIIĀ}) = "2s-2"
 GeometricBase.order(::Type{LobattoIIIBIIIB̄}) = "2s-2"
 GeometricBase.order(::Type{LobattoIIICIIIC̄}) = "2s-2"
 GeometricBase.order(::Type{LobattoIIIC̄IIIC}) = "2s-2"
 GeometricBase.order(::Type{LobattoIIIDIIID̄}) = "2s-2"
-GeometricBase.order(::Type{LobattoIIIEIIIĒ}) = "2s-2"
+GeometricBase.order(::Type{LobattoIIIEIIIĒ}) = "2s-2"
 GeometricBase.order(::Type{LobattoIIIFIIIF̄}) = "2s"
 GeometricBase.order(::Type{LobattoIIIF̄IIIF}) = "2s"
-GeometricBase.order(::Type{LobattoIIIGIIIḠ}) = "2s"
+GeometricBase.order(::Type{LobattoIIIGIIIḠ}) = "2s"
 
 issymplectic(::Type{PartitionedGauss}) = true
 issymplectic(::Type{LobattoIIIAIIIB}) = true
 issymplectic(::Type{LobattoIIIBIIIA}) = true
-issymplectic(::Type{LobattoIIIAIIIĀ}) = true
+issymplectic(::Type{LobattoIIIAIIIĀ}) = true
 issymplectic(::Type{LobattoIIIBIIIB̄}) = true
 issymplectic(::Type{LobattoIIICIIIC̄}) = true
 issymplectic(::Type{LobattoIIIC̄IIIC}) = true
 issymplectic(::Type{LobattoIIIDIIID̄}) = true
-issymplectic(::Type{LobattoIIIEIIIĒ}) = true
+issymplectic(::Type{LobattoIIIEIIIĒ}) = true
 issymplectic(::Type{LobattoIIIFIIIF̄}) = true
 issymplectic(::Type{LobattoIIIF̄IIIF}) = true
-issymplectic(::Type{LobattoIIIGIIIḠ}) = true
+issymplectic(::Type{LobattoIIIGIIIḠ}) = true

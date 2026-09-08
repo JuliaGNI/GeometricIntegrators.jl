@@ -27,7 +27,7 @@ struct IntegratorCachePMVI{DT} <: IODEIntegratorCache{DT}
     f̄::Vector{DT}
 
     q̃::Vector{DT}
-    ṽ::Vector{DT}
+    ṽ::Vector{DT}
     θ̃::Vector{DT}
     f̃::Vector{DT}
 

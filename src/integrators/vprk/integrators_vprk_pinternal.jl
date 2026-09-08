@@ -89,11 +89,11 @@ function initial_guess!(
         evaluate!(int.iguess, sol.history[2].q, sol.history[2].p,
             sol.history[2].v, sol.history[2].f,
             sol.history[1].q, sol.history[1].p, sol.history[1].v, sol.history[1].f,
-            cache.q̃, cache.ṽ,
+            cache.q̃, cache.ṽ,
             tableau(int).q.c[i])
 
         for k in eachdim(int)
-            cache.x[ndims(int) * (i - 1) + k] = cache.ṽ[k]
+            cache.x[ndims(int) * (i - 1) + k] = cache.ṽ[k]
         end
     end
 
@@ -173,7 +173,7 @@ function Integrators.residual!(x::Vector{ST}, b::Vector{ST},
     # get cache for internal stages
     cache = caches[ST]
 
-    components!(x, cache.q̃, cache.p̃, cache.ṽ, cache.λ, cache.Q,
+    components!(x, cache.q̃, cache.p̃, cache.ṽ, cache.λ, cache.Q,
         cache.V, cache.U, cache.P, cache.F, cache.G, params)
 
     # compute b = - [P-AF-U]
@@ -208,7 +208,7 @@ function integrate_step!(
 
     # compute vector fields at internal stages and projection vector fields
     components!(cache.x,
-        cache.q̃, cache.p̃, cache.ṽ, cache.λ,
+        cache.q̃, cache.p̃, cache.ṽ, cache.λ,
         cache.Q, cache.V, cache.U,
         cache.P, cache.F, cache.G, int.params)
 

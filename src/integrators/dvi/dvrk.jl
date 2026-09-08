@@ -207,7 +207,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DVRK})
             q = cache(int).Q[i],
             p = cache(int).Θ[i],
             q̇ = cache(int).V[i],
-            ṗ = cache(int).F[i]
+            ṗ = cache(int).F[i]
         )
         solutionstep!(soltmp, history, problem(int), iguess(int))
     end
@@ -223,7 +223,7 @@ function initial_guess!(sol, history, params, int::GeometricIntegrator{<:DVRK})
         q = cache(int).q,
         p = cache(int).θ,
         q̇ = cache(int).v,
-        ṗ = cache(int).f
+        ṗ = cache(int).f
     )
     solutionstep!(soltmp, history, problem(int), iguess(int))
 

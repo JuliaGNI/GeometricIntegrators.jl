@@ -14,7 +14,7 @@ mutable struct ProjectionCache{DT, TT, PT, M, N} <: IODEIntegratorCache{DT}
     q̄::Vector{DT}
     q̃::Vector{DT}
     p̃::Vector{DT}
-    ṽ::Vector{DT}
+    ṽ::Vector{DT}
     f̃::Vector{DT}
 
     λ::Vector{DT}
@@ -46,7 +46,7 @@ mutable struct ProjectionCache{DT, TT, PT, M, N} <: IODEIntegratorCache{DT}
         q̄ = zeros(DT, D)
         q̃ = zeros(DT, D)
         p̃ = zeros(DT, D)
-        ṽ = zeros(DT, D)
+        ṽ = zeros(DT, D)
         f̃ = zeros(DT, D)
 
         λ = zeros(DT, M)
@@ -59,7 +59,7 @@ mutable struct ProjectionCache{DT, TT, PT, M, N} <: IODEIntegratorCache{DT}
         G = [zeros(DT, D), zeros(DT, D)]
 
         new{DT, TT, typeof(problem), M, N}(
-            t, x, x̄, x̃, q, p, v, f, q̄, q̃, p̃, ṽ, f̃, λ, ϑ, ϕ, u, g, U, G)
+            t, x, x̄, x̃, q, p, v, f, q̄, q̃, p̃, ṽ, f̃, λ, ϑ, ϕ, u, g, U, G)
     end
 end
 

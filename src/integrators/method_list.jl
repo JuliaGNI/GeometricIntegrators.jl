@@ -99,15 +99,15 @@ partitioned_runge_kutta_families = (
     PartitionedGauss,
     LobattoIIIAIIIB,
     LobattoIIIBIIIA,
-    LobattoIIIAIIIĀ,
+    LobattoIIIAIIIĀ,
     LobattoIIIBIIIB̄,
     LobattoIIICIIIC̄,
     LobattoIIIC̄IIIC,
     LobattoIIIDIIID̄,
-    LobattoIIIEIIIĒ,
+    LobattoIIIEIIIĒ,
     LobattoIIIFIIIF̄,
     LobattoIIIF̄IIIF,
-    LobattoIIIGIIIḠ
+    LobattoIIIGIIIḠ
 )
 
 variational_partitioned_runge_kutta_families = (
@@ -126,15 +126,15 @@ variational_partitioned_runge_kutta_families = (
     VPRKLobattoIIIG,
     VPRKLobattoIIIAIIIB,
     VPRKLobattoIIIBIIIA,
-    VPRKLobattoIIIAIIIĀ,
+    VPRKLobattoIIIAIIIĀ,
     VPRKLobattoIIIBIIIB̄,
     VPRKLobattoIIICIIIC̄,
     VPRKLobattoIIIC̄IIIC,
     VPRKLobattoIIIDIIID̄,
-    VPRKLobattoIIIEIIIĒ,
+    VPRKLobattoIIIEIIIĒ,
     VPRKLobattoIIIFIIIF̄,
     VPRKLobattoIIIF̄IIIF,
-    VPRKLobattoIIIGIIIḠ
+    VPRKLobattoIIIGIIIḠ
 )
 
 variational_integrators = (

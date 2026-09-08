@@ -11,6 +11,36 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
+## [Unreleased] — targeting 0.18.5
+
+### Changes
+
+- Every tracked source file is now Unicode NFC-normalised. Fifty-one files stored `ṽ` (73 times),
+  `Ā` (40), `ṗ` (31), `Ē` (30), `Ḡ` (29), `ã` (19), `ẋ` (10), `ẏ` (6), `ḡ` (3), `ū` (3), `ā` (2),
+  `â` (1) and `ĉ` (1) as a base letter plus a combining mark, inherited from macOS rather than
+  chosen.
+
+  Nothing about the compiled code changes: Julia's parser normalises identifiers to NFC, so the
+  symbols were already precomposed and dispatch, field names and method resolution are untouched.
+  What changes is that the source now matches what a keyboard, an editor search or a `grep` pattern
+  produces — in an NFD file a pattern typed in NFC matches nothing at all, silently.
+
+  **One thing does change at runtime.** String literals are *not* parser-normalised, so
+  `Symbol("SLRKLobattoIIIAIIIĀ")` in `src/spark/tableaus_slrk.jl` now produces a precomposed symbol
+  where it produced a decomposed one. That symbol is the tableau's `name`, used for display. Two
+  tests in `test/spark/spark_tableaus_tests.jl` read it: `:240–244` asserts the six SLRK names are
+  distinct, which holds in either normalisation, and `:245–246` compares `SLRKLobattoIIICIIIC̄` and
+  `SLRKLobattoIIIC̄IIIC` — a macron over `C` has no precomposed codepoint, so those two names are
+  byte-identical before and after. No result changes.
+
+  The analogous literal in `RungeKutta/src/tableaus/prk.jl` is normalised in the same sweep. The
+  names are independent — `SLRKLobattoIIIAIIIĀ` here, `LobattoIIIAIIIĀ<s>` there — and nothing
+  reads one against the other.
+
+  No changed line falls inside a `jldoctest` block; the seven in `README.md` and
+  `docs/src/tutorial.md` are inside `@example` blocks, whose output Documenter does not compare.
+  Every changed file is exactly the NFC normalisation of its predecessor.
+
 ## 0.18.3
 
 ### New Features

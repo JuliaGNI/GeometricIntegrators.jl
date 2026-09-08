@@ -102,11 +102,11 @@ function initial_guess!(int::IntegratorVPRKpVariational{DT}, sol::SolutionStepPO
         evaluate!(int.iguess, sol.history[2].q, sol.history[2].p,
             sol.history[2].v, sol.history[2].f,
             sol.history[1].q, sol.history[1].p, sol.history[1].v, sol.history[1].f,
-            cache.q̃, cache.ṽ,
+            cache.q̃, cache.ṽ,
             tableau(int).q.c[i])
 
         for k in eachdim(int)
-            cache.x[ndims(int) * (i - 1) + k] = cache.ṽ[k]
+            cache.x[ndims(int) * (i - 1) + k] = cache.ṽ[k]
         end
     end
 end
@@ -162,7 +162,7 @@ function residual!(x::Vector{ST}, b::Vector{ST},
     # get cache for internal stages
     cache = caches[ST]
 
-    compute_projection!(x, cache.q̃, cache.p̃, cache.ṽ, cache.λ, cache.U, cache.G, params)
+    compute_projection!(x, cache.q̃, cache.p̃, cache.ṽ, cache.λ, cache.U, cache.G, params)
 
     # # compute b = - [q̄-q-U]
     for k in 1:D
@@ -225,7 +225,7 @@ function integrate_step!(
     # check_solver_status(int.projector.status, int.projector.params)
 
     # compute projection vector fields
-    compute_projection!(cache.x̄, cache.q̃, cache.p̃, cache.ṽ, cache.λ,
+    compute_projection!(cache.x̄, cache.q̃, cache.p̃, cache.ṽ, cache.λ,
         cache.U, cache.G, int.pparams)
 
     # add projection to solution

@@ -6,8 +6,8 @@ end
 
 function SLRKLobattoIIIAB(s)
     q = TableauLobattoIIIA(s)
-    p = TableauLobattoIIIĀ(s)
-    SLRKLobattoIII(Symbol("SLRKLobattoIIIAIIIĀ"), s, q, p)
+    p = TableauLobattoIIIĀ(s)
+    SLRKLobattoIII(Symbol("SLRKLobattoIIIAIIIĀ"), s, q, p)
 end
 
 function SLRKLobattoIIIBA(s)
@@ -36,6 +36,6 @@ end
 
 function SLRKLobattoIIIE(s)
     q = TableauLobattoIIIE(s)
-    p = TableauLobattoIIIĒ(s)
+    p = TableauLobattoIIIĒ(s)
     SLRKLobattoIII(Symbol("SLRKLobattoIIIE"), s, q, p)
 end

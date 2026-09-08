@@ -32,7 +32,7 @@ end
 
 "SPARK tableau for Gauss-Lobatto IIIA-IIIB method with s stages."
 function SPARKLobattoIIIAIIIB(s)
-    SPARKLobatto(TableauLobattoIIIA(s), TableauLobattoIIIĀ(s); name = Symbol("LobattoIIIAIIIB($s)"))
+    SPARKLobatto(TableauLobattoIIIA(s), TableauLobattoIIIĀ(s); name = Symbol("LobattoIIIAIIIB($s)"))
 end
 
 "SPARK tableau for Gauss-Lobatto IIIB-IIIA method with s stages."
@@ -47,14 +47,14 @@ function SPARKGLRKLobattoIIIAIIIB(s, σ = s+1)
     B = TableauLobattoIIIB(σ)
 
     α = A.a[2:σ, 1:σ]
-    ã = B.a[1:σ, 1:s]
+    ã = B.a[1:σ, 1:s]
 
     o = min(g.o, A.o, B.o)
     δ = zeros(0, σ)
 
     return SPARKMethod(TableauSPARK(Symbol("GLRK($s)LobattoIIIAIIIB($σ)"), o,
         g.a, g.a, α, α,
-        ã, ã, A.a, B.a,
+        ã, ã, A.a, B.a,
         g.b, g.b, A.b, B.b,
         g.c, g.c, A.c, A.b,
         lobatto_ω_matrix(σ), δ))
@@ -67,14 +67,14 @@ function SPARKGLRKLobattoIIIBIIIA(s, σ = s+1)
     B = TableauLobattoIIIB(σ)
 
     α = B.a[2:σ, 1:σ]
-    ã = A.a[1:σ, 1:s]
+    ã = A.a[1:σ, 1:s]
 
     o = min(g.o, B.o, A.o)
     δ = zeros(0, σ)
 
     return SPARKMethod(TableauSPARK(Symbol("GLRK($s)LobattoIIIAIIIB($σ)"), o,
         g.a, g.a, α, α,
-        ã, ã, B.a, A.a,
+        ã, ã, B.a, A.a,
         g.b, g.b, B.b, A.b,
         g.c, g.c, A.c, A.b,
         lobatto_ω_matrix(σ), δ))

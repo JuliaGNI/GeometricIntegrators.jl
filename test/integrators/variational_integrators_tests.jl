@@ -53,18 +53,18 @@ end
     @test relative_maximum_error(sol.q, pref.q) < 4E-16
     @test relative_maximum_error(sol.p, pref.p) < 8E-16
 
-    sol = integrate(lode, VPRKLobattoIIIAIIIĀ(2))
+    sol = integrate(lode, VPRKLobattoIIIAIIIĀ(2))
     @test relative_maximum_error(sol.q, pref.q) < 2E-4
     @test relative_maximum_error(sol.p, pref.p) < 8E-4
 
     ref = integrate(lode, PMVItrapezoidal())
     @test relative_maximum_error(sol.q, ref.q) < 8 * eps()
 
-    sol = integrate(lode, VPRKLobattoIIIAIIIĀ(3))
+    sol = integrate(lode, VPRKLobattoIIIAIIIĀ(3))
     @test relative_maximum_error(sol.q, pref.q) < 8E-9
     @test relative_maximum_error(sol.p, pref.p) < 8E-8
 
-    sol = integrate(lode, VPRKLobattoIIIAIIIĀ(4))
+    sol = integrate(lode, VPRKLobattoIIIAIIIĀ(4))
     @test relative_maximum_error(sol.q, pref.q) < 2E-13
     @test relative_maximum_error(sol.p, pref.p) < 2E-12
 

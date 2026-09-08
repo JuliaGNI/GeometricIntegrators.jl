@@ -253,14 +253,14 @@ function TableauVSPARKMidpointProjection(
 
     α = 0.5 * ones(T, s, 1)
 
-    q_ã = zeros(T, 1, s)
+    q_ã = zeros(T, 1, s)
     for i in 1:s
-        q_ã[1, i] = q.b[i] / β[1] * (β[1] - α[i, 1])
+        q_ã[1, i] = q.b[i] / β[1] * (β[1] - α[i, 1])
     end
 
-    p_ã = zeros(T, 1, s)
+    p_ã = zeros(T, 1, s)
     for i in 1:s
-        p_ã[1, i] = p.b[i] / β[1] * (β[1] - α[i, 1])
+        p_ã[1, i] = p.b[i] / β[1] * (β[1] - α[i, 1])
     end
 
     β .= (1 + R∞) / 2
@@ -270,7 +270,7 @@ function TableauVSPARKMidpointProjection(
 
     return VSPARKprimary(TableauVSPARKprimary(name, min(q.o, p.o),
         q.a, p.a, α, α,
-        q_ã, p_ã, α̃, α̃,
+        q_ã, p_ã, α̃, α̃,
         q.b, p.b, β, β,
         q.c, p.c, γ, dλ,
         ω, δ, d))
@@ -342,15 +342,15 @@ function TableauVSPARKModifiedMidpointProjection(
     β = Array(g.b)
     γ = g.c
 
-    q_ã = reshape(q.b ./ 2, 1, s)
-    p_ã = reshape(p.b ./ 2, 1, s)
+    q_ã = reshape(q.b ./ 2, 1, s)
+    p_ã = reshape(p.b ./ 2, 1, s)
 
     α_q = zeros(T, s, 1)
     α_p = zeros(T, s, 1)
 
     for i in 1:s
-        α_q[i, 1] = β[1] / p.b[i] * (p.b[i] - p_ã[1, i])
-        α_p[i, 1] = β[1] / q.b[i] * (q.b[i] - q_ã[1, i])
+        α_q[i, 1] = β[1] / p.b[i] * (p.b[i] - p_ã[1, i])
+        α_p[i, 1] = β[1] / q.b[i] * (q.b[i] - q_ã[1, i])
     end
 
     β .= (1 + R∞) / 2
@@ -360,7 +360,7 @@ function TableauVSPARKModifiedMidpointProjection(
 
     return VSPARKprimary(TableauVSPARKprimary(name, min(q.o, p.o),
         q.a, p.a, α_q, α_p,
-        q_ã, p_ã, α̃, α̃,
+        q_ã, p_ã, α̃, α̃,
         q.b, p.b, β, β,
         q.c, p.c, γ, dλ,
         ω, δ, d))

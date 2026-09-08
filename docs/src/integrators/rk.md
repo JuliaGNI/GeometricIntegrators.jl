@@ -218,15 +218,15 @@ specifically
 |:--------------------------------|:----------------------------|:------|
 | [`LobattoIIIAIIIB(s)`](@ref)    | Lobatto-IIIA-IIIB           | 2s-2  |
 | [`LobattoIIIBIIIA(s)`](@ref)    | Lobatto-IIIB-IIIA           | 2s-2  |
-| [`LobattoIIIAIIIĀ(s)`](@ref)    | Lobatto-IIIA-IIIĀ           | 2s-2  |
+| [`LobattoIIIAIIIĀ(s)`](@ref)    | Lobatto-IIIA-IIIĀ           | 2s-2  |
 | [`LobattoIIIBIIIB̄(s)`](@ref)    | Lobatto-IIIB-IIIB̄           | 2s-2  |
 | [`LobattoIIICIIIC̄(s)`](@ref)    | Lobatto-IIIC-IIIC̄           | 2s-2  |
 | [`LobattoIIIC̄IIIC(s)`](@ref)    | Lobatto-IIIC̄-IIIC           | 2s-2  |
 | [`LobattoIIIDIIID̄(s)`](@ref)    | Lobatto-IIID-IIID̄           | 2s-2  |
-| [`LobattoIIIEIIIĒ(s)`](@ref)    | Lobatto-IIIE-IIIĒ           | 2s-2  |
+| [`LobattoIIIEIIIĒ(s)`](@ref)    | Lobatto-IIIE-IIIĒ           | 2s-2  |
 | [`LobattoIIIFIIIF̄(s)`](@ref)    | Lobatto-IIIF-IIIF̄           | 2s    |
 | [`LobattoIIIF̄IIIF(s)`](@ref)    | Lobatto-IIIF̄-IIIF           | 2s    |
-| [`LobattoIIIGIIIḠ(s)`](@ref)    | Lobatto-IIIG-IIIḠ           | 2s    |
+| [`LobattoIIIGIIIḠ(s)`](@ref)    | Lobatto-IIIG-IIIḠ           | 2s    |
 
 
 ## Implicit Equations

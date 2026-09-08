@@ -27,9 +27,9 @@ function lobatto_gauss_coefficients(s, σ = s+1, T = Float64)
         M \ r
     end
 
-    ā = vcat([row(i)' for i in 1:σ]...)
+    ā = vcat([row(i)' for i in 1:σ]...)
 
-    CoefficientsIRK{T}(:LobattoIIIGLRK, s^2, s, σ, ā, b̄, c̄)
+    CoefficientsIRK{T}(:LobattoIIIGLRK, s^2, s, σ, ā, b̄, c̄)
 end
 
 function lobatto_ω_matrix(s)

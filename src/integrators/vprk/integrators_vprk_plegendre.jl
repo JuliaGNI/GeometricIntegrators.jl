@@ -326,7 +326,7 @@ function Integrators.residual!(y::Vector{ST}, b::Vector{ST},
     cache = caches[ST]
 
     components!(y, cache.Q, cache.V, cache.P, cache.F, cache.Y, cache.Z,
-        cache.Φ, cache.q̃, cache.ṽ, cache.p̃, cache.ϕ, cache.μ, params)
+        cache.Φ, cache.q̃, cache.ṽ, cache.p̃, cache.ϕ, cache.μ, params)
 
     compute_rhs!(b, cache.Q, cache.V, cache.P, cache.F, cache.Y, cache.Z,
         cache.Φ, cache.q̃, cache.p̃, cache.ϕ, cache.μ, params)
@@ -369,7 +369,7 @@ function integrate_step!(
     # compute vector fields at internal stages
     components!(cache.x, cache.Q, cache.V, cache.P,
         cache.F, cache.Y, cache.Z, cache.Φ,
-        cache.q̃, cache.ṽ, cache.p̃, cache.ϕ,
+        cache.q̃, cache.ṽ, cache.p̃, cache.ϕ,
         cache.μ, int.params)
 
     # compute final update
