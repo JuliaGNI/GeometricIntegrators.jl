@@ -11,7 +11,7 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
-## [Unreleased] — targeting 0.18.5
+## 0.18.5
 
 ### Changes
 
