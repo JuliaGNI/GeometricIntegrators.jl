@@ -1,8 +1,11 @@
 using GeometricIntegrators
 using GeometricIntegrators.Integrators: save#load, 
 using GeometricProblems.HarmonicOscillator
+using Random
 using Test
 import HDF5
+
+Random.seed!(1234)
 
 ode = odeproblem()
 dae = daeproblem()

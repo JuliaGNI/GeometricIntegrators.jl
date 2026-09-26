@@ -5,7 +5,7 @@ using GeometricProblems.LotkaVolterra2d
 using Logging
 using Test
 
-include("verification_utilities.jl")
+include("../helpers/verification_utilities.jl")
 
 # Projected Gauss-Legendre Runge-Kutta: the energy-preserving Gauss collocation method
 # of Brugnano, Iavernaro & Trigiante (SINUM 50(6), 2012).
@@ -201,7 +201,7 @@ end
         # 1E-16, extra Newton iterations) does not change the floor, so it is a property of
         # the method and not of the solve. `VPRKpTableau` has no published order theorem —
         # see its docstring — so this is recorded rather than asserted.
-        @test_broken all(
+        @test_broken all(  # issue #251
             isapprox(
                 estimate_convergence_order(lbuild, VPRKpTableau(s), T ./ (4 .* 2 .^ (0:4));
                     reference = ref, errormetric = emq,

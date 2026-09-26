@@ -1,7 +1,10 @@
 # using GeometricSolutions: test_interface
 using GeometricProblems.HarmonicOscillator
 using GeometricIntegrators
+using Random
 using Test
+
+Random.seed!(1234)
 
 nt = 10
 Δt = 0.1

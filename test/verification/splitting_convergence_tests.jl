@@ -2,7 +2,7 @@ using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
 using Test
 
-include("verification_utilities.jl")
+include("../helpers/verification_utilities.jl")
 
 # Splitting/composition methods are tested on the harmonic oscillator SODE; the
 # reference is the analytic solution of the corresponding ODE.

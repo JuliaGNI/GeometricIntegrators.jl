@@ -2,7 +2,7 @@ using GeometricIntegrators
 import GeometricProblems.Pendulum as Pendulum
 using Test
 
-include("verification_utilities.jl")
+include("../helpers/verification_utilities.jl")
 
 # Nonlinear pendulum PODE with a high-order reference, so that the measured order
 # is the true (nonlinear) order rather than a linear super-convergence artifact.
@@ -31,9 +31,9 @@ emq(sol, ref) = relative_maximum_error(sol.q, ref.q)
     @testset "Known order deficiencies (broken)" begin
         r = estimate_convergence_order(
             build, LobattoIIIFIIIF̄(2), steps(5, 4); reference = href, errormetric = emq)
-        @test_broken isapprox(r.order, 4; atol = 0.4)
+        @test_broken isapprox(r.order, 4; atol = 0.4)  # issue #247
         r = estimate_convergence_order(
             build, LobattoIIIGIIIḠ(2), steps(5, 4); reference = href, errormetric = emq)
-        @test_broken isapprox(r.order, 4; atol = 0.4)
+        @test_broken isapprox(r.order, 4; atol = 0.4)  # issue #247
     end
 end

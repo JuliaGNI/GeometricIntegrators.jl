@@ -2,7 +2,7 @@ using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
 using Test
 
-include("verification_utilities.jl")
+include("../helpers/verification_utilities.jl")
 
 # Projected Runge-Kutta integrators on the harmonic oscillator DAE, referenced
 # against the analytic ODE solution. Projected Gauss(s) converges at order 2s and

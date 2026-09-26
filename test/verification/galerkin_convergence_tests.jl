@@ -4,7 +4,7 @@ using QuadratureRules
 using CompactBasisFunctions
 using Test
 
-include("verification_utilities.jl")
+include("../helpers/verification_utilities.jl")
 
 # Continuous Galerkin variational integrators with a Lagrange basis, on the harmonic
 # oscillator IODE (analytic PODE reference).

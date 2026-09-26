@@ -1,5 +1,7 @@
+using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
 using RungeKutta.Tableaus
+using Test
 
 using GeometricIntegrators.Integrators: tableau
 

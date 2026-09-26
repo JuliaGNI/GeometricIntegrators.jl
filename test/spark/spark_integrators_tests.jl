@@ -292,18 +292,18 @@ end
     # is reliable — @test_broken robustly tolerates both.
 
     # order-deficient at s=2 (only order 1, meas 0.18)
-    @test_broken relative_maximum_error(
+    @test_broken relative_maximum_error(  # issue #245
         integrate(idae, SPARKLobattoIIIAIIIB(2); verbosity = 0, warn_iterations = 0).q,
         ref.q) < 1E-6
 
     # SPARKLobattoIIIBIIIA diverges (non-finite at s=2; finite-but-wrong at s=3/s=4, meas 0.58 / 0.03)
-    @test_broken relative_maximum_error(
+    @test_broken relative_maximum_error(  # issue #245
         integrate(idae, SPARKLobattoIIIBIIIA(2); verbosity = 0, warn_iterations = 0).q,
         ref.q) < 1E-6
-    @test_broken relative_maximum_error(
+    @test_broken relative_maximum_error(  # issue #245
         integrate(idae, SPARKLobattoIIIBIIIA(3); verbosity = 0, warn_iterations = 0).q,
         ref.q) < 1E-6
-    @test_broken relative_maximum_error(
+    @test_broken relative_maximum_error(  # issue #245
         integrate(idae, SPARKLobattoIIIBIIIA(4); verbosity = 0, warn_iterations = 0).q,
         ref.q) < 2E-10
 end
@@ -411,10 +411,10 @@ end
     @test_throws SingularException integrate(idae, VSPARK(SPARKLobattoIIIAIIIB(2)))
     # SPARKLobABC(2) stalls at the residual floor, SPARKLobABD(2) converges to an
     # order-deficient answer (meas 0.06) — both marginal, so kept as @test_broken.
-    @test_broken relative_maximum_error(
+    @test_broken relative_maximum_error(  # issue #245
         integrate(idae, VSPARK(SPARKLobABC(2)); verbosity = 0, warn_iterations = 0).q,
         ref.q) < 1E-6
-    @test_broken relative_maximum_error(
+    @test_broken relative_maximum_error(  # issue #245
         integrate(idae, VSPARK(SPARKLobABD(2)); verbosity = 0, warn_iterations = 0).q,
         ref.q) < 1E-6
 

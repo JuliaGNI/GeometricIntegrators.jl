@@ -1,5 +1,6 @@
-
+using GeometricIntegrators
 using GeometricIntegrators.Integrators: coefficients
+using Test
 
 @testset "$(rpad("Splitting Methods",80))" begin
 
