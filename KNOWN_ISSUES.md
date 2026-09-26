@@ -35,8 +35,7 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 - **Evidence:** `test/integrators/rk_integrators_tests.jl:22` names
   `test/methods/runge_kutta_methods_tests.jl`, and `test/spark/spark_tableaus_tests.jl:93` and
   `src/integrators/rk/integrators_pglrk.jl:31` name `test/methods/pglrk_coefficients_tests.jl`.
-  Both files are now under `test/integrators/rk/`. `docs/src/audit.md:239–240` places
-  `verification_utilities.jl` under `test/verification/`; it is now in `test/helpers/`.
+  Both files are now under `test/integrators/rk/`.
 
 ## KI-6 · Integrator tests do not mirror the subdirectories of `src/integrators/`
 

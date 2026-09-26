@@ -238,7 +238,7 @@ the docs, so this is documentation rather than a discrepancy.
 
 New suite under `test/verification/`, wired into `test/runtests.jl`:
 
-* `verification_utilities.jl` — `estimate_convergence_order`,
+* `test/helpers/verification_utilities.jl` — `estimate_convergence_order`,
   `test_convergence_order`, `test_energy_behaviour`, `loglog_slope`.
 * Per-family files: `rk`, `prk`, `splitting`, `variational`, `galerkin`, `dvi`,
   `hpi`, `projection` convergence tests. Confirmed order deficiencies (findings
