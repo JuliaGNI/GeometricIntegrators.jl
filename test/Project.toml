@@ -18,10 +18,15 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 GeometricIntegrators = {path = ".."}
 
 [compat]
+Aqua = "0.8"
 CompactBasisFunctions = "0.3, 0.4"
 GeometricEquations = "0.21"
 GeometricIntegratorsBase = "0.6.3"
+GeometricProblems = "0.8"
 LinearAlgebra = "1"
+Logging = "1"
 QuadratureRules = "0.2"
 RungeKutta = "0.6"
+SafeTestsets = "0.1"
 SimpleSolvers = "0.12.1, 0.13, 0.14"
+Test = "1"

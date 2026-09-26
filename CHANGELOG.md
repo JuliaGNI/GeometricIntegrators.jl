@@ -26,7 +26,7 @@ remain a gap.
   `solutions_tests.jl`) are removed. Test helpers moved to `test/helpers/`. Code-quality checks
   moved to `test/quality/aqua.jl` and enabled in the `core` group.
 
-* **Tests grouped by runtime.** Seven test files exceeding 60 seconds (RK, variational, projection,
+* **Tests grouped by runtime.** Ten test files at or above 60 seconds (RK, variational, Galerkin, projection,
   SPARK, and convergence variants) moved to the `slow` group. Five files that cannot run against
   the current API moved to `test/integration/` and marked as `broken` (issue references: #248,
   #249, #250, #252, #253).

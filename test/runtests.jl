@@ -12,7 +12,6 @@ if "core" in GROUPS
     @safetestset "Runge-Kutta integrators for implicit equations" include("integrators/rk_implicit_integrators_tests.jl")
     @safetestset "Splitting integrators" include("integrators/splitting_integrators_tests.jl")
     @safetestset "Degenerate variational integrators" include("integrators/dvi_integrators_tests.jl")
-    @safetestset "Galerkin variational integrators" include("integrators/galerkin_integrators_tests.jl")
     @safetestset "Hamilton-Pontryagin integrators" include("integrators/hamilton_pontryagin_integrators_tests.jl")
     @safetestset "Show methods and integrators" include("integrators/test_show.jl")
     @safetestset "Ensemble integrators" include("integrators/ensemble_integrators_tests.jl")
@@ -26,18 +25,19 @@ if "core" in GROUPS
     @safetestset "Convergence: formal Lagrangian Runge-Kutta" include("verification/flrk_convergence_tests.jl")
     @safetestset "Convergence: projected Gauss-Legendre RK and VPRKpTableau" include("verification/pglrk_convergence_tests.jl")
     @safetestset "Convergence: Galerkin variational integrators" include("verification/galerkin_convergence_tests.jl")
-    @safetestset "Convergence: discontinuous Galerkin variational integrators" include("verification/dgvi_convergence_tests.jl")
     @safetestset "Convergence: Hamilton-Pontryagin integrators" include("verification/hpi_convergence_tests.jl")
-    @safetestset "Convergence: projected integrators" include("verification/projection_convergence_tests.jl")
 end
 if "slow" in GROUPS
     @safetestset "Runge-Kutta integrators" include("integrators/rk_integrators_tests.jl")
     @safetestset "Variational integrators" include("integrators/variational_integrators_tests.jl")
+    @safetestset "Galerkin variational integrators" include("integrators/galerkin_integrators_tests.jl")
     @safetestset "Projection methods with VPRK integrators" include("projections/projections_vprk_tests.jl")
     @safetestset "SPARK integrators" include("spark/spark_integrators_tests.jl")
     @safetestset "Convergence: variational integrators" include("verification/variational_convergence_tests.jl")
     @safetestset "Convergence: degenerate variational integrators" include("verification/dvi_convergence_tests.jl")
     @safetestset "Convergence: SPARK integrators" include("verification/spark_convergence_tests.jl")
+    @safetestset "Convergence: discontinuous Galerkin variational integrators" include("verification/dgvi_convergence_tests.jl")
+    @safetestset "Convergence: projected integrators" include("verification/projection_convergence_tests.jl")
 end
 if "broken" in GROUPS
     @safetestset "Solution steps" include("integration/solution_step_tests.jl")  # issue #248
