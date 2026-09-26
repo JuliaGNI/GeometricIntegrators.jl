@@ -41,8 +41,8 @@ if "slow" in GROUPS
 end
 if "broken" in GROUPS
     @safetestset "Solution steps" include("integration/solution_step_tests.jl")  # issue #248
-    @safetestset "Deterministic solutions" include("integration/deterministic_solutions_tests.jl")
-    @safetestset "Solution I/O" include("integration/io_tests.jl")
+    @safetestset "Deterministic solutions" include("integration/deterministic_solutions_tests.jl")  # issue #252
+    @safetestset "Solution I/O" include("integration/io_tests.jl")  # issue #253
     @safetestset "Initial guesses (harmonic oscillator)" include("integration/initial_guess_tests_harmonic_oscillator.jl")  # issue #249
     @safetestset "Initial guesses (Lotka-Volterra)" include("integration/initial_guess_tests_lotka_volterra.jl")  # issue #250
 end

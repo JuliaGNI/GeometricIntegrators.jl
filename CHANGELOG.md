@@ -11,6 +11,30 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
+## Unreleased
+
+### Tests
+
+* **Test infrastructure reorganized to enable selective test runs.** `test/runtests.jl` now uses
+  `SafeTestsets` and accepts a `GROUPS` argument from `ARGS` to select which groups to run:
+  `core`, `slow`, and `broken` tests are separated, with empty `ARGS` running `core` and
+  `slow`.
+
+* **Test files reorganized to mirror the source tree structure.** Method tests moved under
+  `test/integrators/`: `method_list_tests.jl`, `test/integrators/rk/`, `test/integrators/splitting/`,
+  and `test/integrators/vi/`. Aggregator files that held no tests (`methods_tests.jl` and
+  `solutions_tests.jl`) are removed. Test helpers moved to `test/helpers/`. Code-quality checks
+  moved to `test/quality/aqua.jl` and enabled in the `core` group.
+
+* **Tests grouped by runtime.** Seven test files exceeding 60 seconds (RK, variational, projection,
+  SPARK, and convergence variants) moved to the `slow` group. Five files that cannot run against
+  the current API moved to `test/integration/` and marked as `broken` (issue references: #248,
+  #249, #250, #252, #253).
+
+* **Test failure tracking improved.** Every `@test_broken` line now names its issue. `test/Project.toml`
+  gains `Random` as a dependency and aligns compat bounds with the root `Project.toml` for shared
+  dependencies.
+
 ## 0.18.5
 
 ### Changes
