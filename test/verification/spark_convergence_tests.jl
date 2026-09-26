@@ -4,7 +4,7 @@ using GeometricProblems.LotkaVolterra2d
 using RungeKutta
 using Test
 
-include("verification_utilities.jl")
+include("../helpers/verification_utilities.jl")
 
 # Dynamic (multi-Δt) convergence verification for the SPARK family, mirroring the
 # other test/verification/*_convergence_tests.jl suites. SPARK methods integrate the
@@ -57,7 +57,7 @@ function broken_order(builder, method, tsteps, expected; label)
         catch
             false
         end
-        @test_broken ok
+        @test_broken ok  # issue #245
     end
 end
 

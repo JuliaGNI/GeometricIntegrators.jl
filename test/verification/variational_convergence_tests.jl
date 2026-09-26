@@ -3,7 +3,7 @@ using GeometricProblems.HarmonicOscillator
 import GeometricProblems.Pendulum as Pendulum
 using Test
 
-include("verification_utilities.jl")
+include("../helpers/verification_utilities.jl")
 
 const T = 1.0
 steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
@@ -74,13 +74,13 @@ vref(prob) = integrate(prob, VPRKGauss(8); f_abstol = 4e-15)
         @testset "Known order deficiencies (broken)" begin
             r = estimate_convergence_order(vbuild, VPRKLobattoIIIF̄(2), steps(5, 4);
                 reference = vref, errormetric = emq)
-            @test_broken isapprox(r.order, 4; atol = 0.4)
+            @test_broken isapprox(r.order, 4; atol = 0.4)  # issue #247
             r = estimate_convergence_order(vbuild, VPRKLobattoIIIG(2), steps(5, 4);
                 reference = vref, errormetric = emq)
-            @test_broken isapprox(r.order, 4; atol = 0.4)
+            @test_broken isapprox(r.order, 4; atol = 0.4)  # issue #247
             r = estimate_convergence_order(vbuild, VPRKLobattoIIIAIIIB(3), steps(3, 4);
                 reference = vref, errormetric = emq)
-            @test_broken isapprox(r.order, 4; atol = 0.4)
+            @test_broken isapprox(r.order, 4; atol = 0.4)  # issue #247
         end
     end
 end

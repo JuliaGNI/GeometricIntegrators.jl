@@ -1,6 +1,9 @@
 using GeometricProblems.HarmonicOscillator
 using GeometricIntegrators
+using Random
 using Test
+
+Random.seed!(1234)
 
 Δt = 0.1
 t0 = 0.0

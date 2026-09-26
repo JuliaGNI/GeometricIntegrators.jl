@@ -2,7 +2,7 @@ using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
 using Test
 
-include("verification_utilities.jl")
+include("../helpers/verification_utilities.jl")
 
 # The harmonic oscillator has an analytic solution, so we can measure the true
 # error directly. It is a *linear* problem, so some methods super-converge on it;
@@ -110,6 +110,6 @@ steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))
     # a future change is detected automatically.
     @testset "Known order deficiencies (broken)" begin
         r = estimate_convergence_order(build, LobattoIIIB(2), steps(10, 4); reference = exact_solution)
-        @test_broken isapprox(r.order, 2; atol = 0.35)
+        @test_broken isapprox(r.order, 2; atol = 0.35)  # issue #247
     end
 end

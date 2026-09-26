@@ -3,7 +3,7 @@ using GeometricProblems.LotkaVolterra2d
 import GeometricProblems.PointVortices as PointVortices
 using Test
 
-include("verification_utilities.jl")
+include("../helpers/verification_utilities.jl")
 
 # Formal Lagrangian Runge-Kutta methods on the (degenerate) Lotka-Volterra 2d
 # Lagrangian system, referenced against a high-order solution of the equivalent ODE.

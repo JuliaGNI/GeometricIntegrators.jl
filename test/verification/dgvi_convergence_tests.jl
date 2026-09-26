@@ -5,7 +5,7 @@ using CompactBasisFunctions
 using QuadratureRules
 using Test
 
-include("verification_utilities.jl")
+include("../helpers/verification_utilities.jl")
 
 # Discontinuous Galerkin variational integrators on the degenerate Lotka-Volterra
 # Lagrangian, referenced against a high-order solution of the equivalent ODE.
@@ -88,7 +88,7 @@ dgviexp(s) = DGVIEXP(basisquad(s)...)
             "DGVIP1(3)", dgvip1(3)))
             r = estimate_convergence_order(
                 build, m, steps(4, 3); reference = ref, errormetric = emq)
-            @test_broken isapprox(r.order, 6; atol = 0.35)
+            @test_broken isapprox(r.order, 6; atol = 0.35)  # issue #246
         end
     end
 

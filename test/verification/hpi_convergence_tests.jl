@@ -2,7 +2,7 @@ using GeometricIntegrators
 using GeometricProblems.HarmonicOscillator
 using Test
 
-include("verification_utilities.jl")
+include("../helpers/verification_utilities.jl")
 
 const T = 1.0
 build(Δt) = lodeproblem(; timespan = (0.0, T), timestep = Δt)

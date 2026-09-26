@@ -7,7 +7,7 @@ import GeometricProblems.MasslessChargedParticleSingular as MCPSingular
 using GeometricProblems.LotkaVolterra2d
 using Test
 
-include("verification_utilities.jl")
+include("../helpers/verification_utilities.jl")
 
 const T = 1.0
 steps(n0, k) = T ./ (n0 .* 2 .^ (0:k))

@@ -265,7 +265,7 @@ oscillator. (During transcription a ~1e-11 error in the 6th-order `w₁` was cau
 by this high-precision cross-check — the low-precision test could not distinguish
 it — and corrected against the value already recorded in `docs/src/integrators/splitting.md`.)
 Convergence tests for both were added to `test/verification/splitting_convergence_tests.jl`
-and type/order checks to `test/methods/splitting_methods_tests.jl`.
+and type/order checks to `test/integrators/splitting/splitting_methods_tests.jl`.
 
 ## Dead / disabled code (noted, not verified)
 
@@ -407,7 +407,7 @@ test port. They are left disabled with explanatory comments:
 * **Old-API RK tests** — the `AbstractIntegrator(ode, Tableau…())` /
   `IntegratorIRK(…; exact_jacobian=true)` / block-Jacobian tests use constructors
   removed in the rearchitecture. The integrator-type checks are already covered by
-  `test/methods/runge_kutta_methods_tests.jl`; the block-Jacobian test has no
+  `test/integrators/rk/runge_kutta_methods_tests.jl`; the block-Jacobian test has no
   current equivalent.
 
 ## Additional findings (not fixed)
@@ -420,7 +420,7 @@ test port. They are left disabled with explanatory comments:
   the symplectic-conjugate partitioned tableau), analogous to findings 1–3/5. The
   `test/verification` convergence tests pass **explicit** expected orders, so they
   are unaffected; the disabled `VPRK(X) == VPRK(Y)` equivalence checks in
-  `test/methods/vprk_methods_tests.jl` legitimately fail on this (and on the
+  `test/integrators/vi/vprk_methods_tests.jl` legitimately fail on this (and on the
   tableau `name`) metadata and are left disabled with a note.
 * **Several VPRK projection wrappers are non-functional.** `VPRKpInternal`,
   `VPRKpSecondary`, `VPRKpVariational` (and `VPRKpLegendre`) are exported but
@@ -905,7 +905,7 @@ proves nothing) had been applied to `PGLRK`'s *tableau* rather than to the metho
 
 The `CoefficientsPGLRK` family `a(λ) = a + λA` with `A = P W Q` has two independent
 properties, both now asserted to machine precision in
-`test/methods/pglrk_coefficients_tests.jl`:
+`test/integrators/rk/pglrk_coefficients_tests.jl`:
 
 * `a = P X Q` reproduces the Gauß tableau **exactly** (measured ≤ 2.4E-16 for `s = 3…6`),
   and `b`, `c` *are* the Gauß weights and nodes. This is a decisive check on the whole
@@ -1026,7 +1026,7 @@ final projection on top of `DGVI`'s equations. The gauge-transformed problem
   `docs/src/modules/integrators.md` gained the new files and lost four `Pages` entries
   naming files that do not exist.
 * `test/methods/test_list.jl` (untracked, never run, referenced from nowhere) replaced by
-  `test/methods/method_list_tests.jl`, a real testset that sweeps every registered method
+  `test/integrators/method_list_tests.jl`, a real testset that sweeps every registered method
   through `order`/`isexplicit`/`is*method`. Registering a method without its trait
   overloads breaks the *docs build* rather than the test suite, so this guards a gap that
   nothing else covered. `test/integrators/test_show.jl`, likewise orphaned, was repaired
@@ -1034,8 +1034,8 @@ final projection on top of `DGVI`'s equations. The gauge-transformed problem
 
 ## Tests
 
-New: `test/methods/pglrk_coefficients_tests.jl` (102 assertions),
-`test/methods/method_list_tests.jl` (135), `test/verification/flrk_convergence_tests.jl`
+New: `test/integrators/rk/pglrk_coefficients_tests.jl` (102 assertions),
+`test/integrators/method_list_tests.jl` (135), `test/verification/flrk_convergence_tests.jl`
 (21), `test/verification/pglrk_convergence_tests.jl` (15 + 1 broken),
 `test/verification/dgvi_convergence_tests.jl` (20 + 3 broken).
 
@@ -1044,7 +1044,7 @@ Re-enabled with empirically measured tolerances: the FLRK block in
 five DGVI variants in `galerkin_integrators_tests.jl` (35 assertions, on a degenerate
 problem), the `VPRKpTableau` block in `projections_vprk_tests.jl`, the
 `CoefficientsPGLRK` check in `spark_tableaus_tests.jl`, and the FLRK entries in
-`methods/runge_kutta_methods_tests.jl` and `integrators/test_show.jl`.
+`integrators/rk/runge_kutta_methods_tests.jl` and `integrators/test_show.jl`.
 
 ---
 
