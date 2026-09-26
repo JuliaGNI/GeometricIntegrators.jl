@@ -19,7 +19,7 @@ GeometricIntegrators = {path = ".."}
 
 [compat]
 Aqua = "0.8"
-CompactBasisFunctions = "0.3, 0.4"
+CompactBasisFunctions = "0.3"
 GeometricEquations = "0.21"
 GeometricIntegratorsBase = "0.6.3"
 GeometricProblems = "0.8"
@@ -28,5 +28,5 @@ Logging = "1"
 QuadratureRules = "0.2"
 RungeKutta = "0.6"
 SafeTestsets = "0.1"
-SimpleSolvers = "0.12.1, 0.13, 0.14"
+SimpleSolvers = "0.12.1"
 Test = "1"
