@@ -90,7 +90,7 @@ using Test
         _get_lobatto_interstage_coefficients(4).a; rtol = 1e-15)
 
     # test PGLRK coefficients
-    # (the mathematical identities are checked in test/methods/pglrk_coefficients_tests.jl)
+    # (the mathematical identities are checked in test/integrators/rk/pglrk_coefficients_tests.jl)
 
     @test typeof(CoefficientsPGLRK(3)) <: CoefficientsPGLRK
 end

@@ -11,18 +11,16 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
-## Unreleased
+## [Unreleased] — targeting 0.18.6
 
 ### Tests
 
-* **Test infrastructure reorganized to enable selective test runs.** `test/runtests.jl` now uses
-  `SafeTestsets` and accepts a `GROUPS` argument from `ARGS` to select which groups to run:
-  `core`, `slow`, and `broken` tests are separated, with empty `ARGS` running `core` and
-  `slow`.
+* **Test groups selected by `ARGS`.** `test/runtests.jl` reads a `GROUPS` list from `ARGS`, with
+  the groups `core`, `slow` and `broken`; empty `ARGS` runs `core` and `slow`.
 
-* **Test files reorganized to mirror the source tree structure.** Method tests moved under
-  `test/integrators/`: `method_list_tests.jl`, `test/integrators/rk/`, `test/integrators/splitting/`,
-  and `test/integrators/vi/`. Aggregator files that held no tests (`methods_tests.jl` and
+* **Method tests follow the source tree.** `method_list_tests.jl` moved to `test/integrators/`,
+  and the other method tests to `test/integrators/rk/`, `test/integrators/splitting/` and
+  `test/integrators/vi/`. The integrator tests stay in `test/integrators/`. Aggregator files that held no tests (`methods_tests.jl` and
   `solutions_tests.jl`) are removed. Test helpers moved to `test/helpers/`. Code-quality checks
   moved to `test/quality/aqua.jl` and enabled in the `core` group.
 

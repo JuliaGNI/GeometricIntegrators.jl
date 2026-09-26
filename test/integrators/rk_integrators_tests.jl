@@ -19,7 +19,7 @@ pref = exact_solution(pode)
 
 # OBSOLETE (old-API): the `AbstractIntegrator(ode, Tableau...())` / `IntegratorERK`
 # constructors were removed in the method-based rearchitecture. The equivalent
-# integrator-type checks are now covered by test/methods/runge_kutta_methods_tests.jl
+# integrator-type checks are now covered by test/integrators/rk/runge_kutta_methods_tests.jl
 # (`GeometricIntegrator(ode, ExplicitMidpoint()) <: GeometricIntegrator{<:ERK}` etc.).
 # @testset "$(rpad("Runge-Kutta integrators",80))" begin
 

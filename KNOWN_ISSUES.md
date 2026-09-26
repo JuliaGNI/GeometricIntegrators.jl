@@ -29,13 +29,13 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 - **Kind:** dead test.
 - **Evidence:** every `@test` in the file is commented out; `run-tests.jl` reports 0 tests.
 
-## KI-5 · Stale paths of moved test files
+## KI-5 · A stale path of a moved test file under `src/`
 
 - **Kind:** docs.
-- **Evidence:** `test/integrators/rk_integrators_tests.jl:22` names
-  `test/methods/runge_kutta_methods_tests.jl`, and `test/spark/spark_tableaus_tests.jl:93` and
-  `src/integrators/rk/integrators_pglrk.jl:31` name `test/methods/pglrk_coefficients_tests.jl`.
-  Both files are now under `test/integrators/rk/`.
+- **Evidence:** `src/integrators/rk/integrators_pglrk.jl:31` names
+  `test/methods/pglrk_coefficients_tests.jl`, which is now
+  `test/integrators/rk/pglrk_coefficients_tests.jl`. The test migration changes nothing under
+  `src/`.
 
 ## KI-6 · Integrator tests do not mirror the subdirectories of `src/integrators/`
 
