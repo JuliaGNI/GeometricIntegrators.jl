@@ -244,10 +244,10 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 
 ### K15 · `SPARK` imports several names from a module that does not own them
 
-- location: `src/SPARK.jl:14-36`
+- location: `src/SPARK.jl:31-34`
 - evidence: `check_all_explicit_imports_via_owners(GeometricIntegrators.SPARK)` (ExplicitImports.jl)
   reports six names imported from `GeometricIntegratorsBase` whose owner, by `Base.which`, is a
-  different package: `equation` and `equations` and `timestep` are owned by `GeometricBase`,
+  different package: `equation`, `equations` and `timestep` are owned by `GeometricBase`,
   `initialize!` and `method` by `SimpleSolvers`, and `problem` by `GeometricEquations`. Run with
   `JULIA_LOAD_PATH="@:@v1.13:@stdlib" julia --project=<checkout>` and `using ExplicitImports` at
   top level, since ExplicitImports lives in the shared `@v1.13` environment.
@@ -258,8 +258,8 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 
 - location: `src/spark/integrators_spark_parameters.jl`
 - evidence: `SPARK.jl` does not `include` this file (`grep -n "include(" src/SPARK.jl`), and no
-  other file in `src/` or `test/` names it (`grep -rn integrators_spark_parameters`). It holds the
-  only definitions of `equation(int::AbstractIntegratorSPARK, i::Symbol)` and
+  other file in `src/` or `test/` names it (`grep -rn integrators_spark_parameters src test`). It
+  holds the only definitions of `equation(int::AbstractIntegratorSPARK, i::Symbol)` and
   `equations(int::AbstractIntegratorSPARK)`, both of which `SPARK.jl` imports.
 - kind: dead code
 - found: 2026-09-27
