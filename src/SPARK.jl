@@ -21,18 +21,17 @@ import RungeKutta.Tableaus: lobatto_nullvector
 import ..Integrators: StageVector
 import ..Integrators: AbstractCoefficients, @CoefficientsRK, @HeaderCoefficientsRK
 import ..Integrators: eachstage, nstages
-import ..Integrators: create_internal_stage_vector, update_multiplier!
+import ..Integrators: create_internal_stage_vector
 
 import GeometricIntegratorsBase: GeometricIntegrator
-import GeometricIntegratorsBase: Extrapolation, HermiteExtrapolation
-import GeometricIntegratorsBase: CacheDict, Cache, CacheType, IDAEIntegratorCache
+import GeometricIntegratorsBase: HermiteExtrapolation
+import GeometricIntegratorsBase: Cache, CacheType, IDAEIntegratorCache
 import GeometricIntegratorsBase: HDAEMethod, IDAEMethod, LDAEMethod, PDAEMethod
 import GeometricIntegratorsBase: SolutionStep
-import GeometricIntegratorsBase: cache, caches, iguess, method, problem, solver, solverstate
+import GeometricIntegratorsBase: cache, iguess, method, problem, solver, solverstate
 import GeometricIntegratorsBase: initial_guess!, integrate_step!, residual!, solutionstep!
-import GeometricIntegratorsBase: current, equation, equations, timestep
-import GeometricIntegratorsBase: update!, initialize!, initsolver, internal, nlsolution,
-                                 internal_variables
+import GeometricIntegratorsBase: equations, timestep
+import GeometricIntegratorsBase: update!, internal, nlsolution, internal_variables
 import GeometricIntegratorsBase: solversize
 
 export CoefficientsARK, CoefficientsPRK, CoefficientsMRK, CoefficientsIRK,
