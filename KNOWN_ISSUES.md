@@ -308,3 +308,48 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
   `galerkin_integrators_tests.jl` stay in `test/integrators/`, while their sources are in
   `src/integrators/rk/`, `splitting/`, `vi/`, `hpi/`, `dvi/` and `cgvi/`. `test-layout.jl --check`
   checks only that the directory exists in `src/`, so it does not report this.
+
+### K17 · The docstring of `linear_solver_defaults` is on no docs page
+
+- location: `src/integrators/solver_defaults.jl:1`
+- evidence: no `Pages` list in `docs/src/modules/integrators.md` names
+  `integrators/solver_defaults.jl` (`grep -rn solver_defaults docs/src` finds nothing). The
+  default checkdocs reports the docstring as missing; `docs/make.jl:26` keeps `:missing_docs`
+  warn-only, so the build warns and does not fail.
+- kind: docs
+- found: 2026-09-28, critic round 1 of the `LU()` default
+
+### K18 · The `LU()` default is not measured against `LapackLU` at this package's sizes
+
+- location: `src/integrators/solver_defaults.jl:14`
+- evidence: the SimpleSolvers 0.14.0 docstring at `linear/linear_solvers.jl:260–265` gives `LU()`
+  2× slower than `LapackLU` at n = 64 and 32× slower at n = 768. No measurement of the stage-system
+  sizes of this package exists.
+- kind: not verified
+- found: 2026-09-28, critic round 1 of the `LU()` default
+
+### K19 · The root walk of `solver_defaults.jl` does not check that the default is applied
+
+- location: `test/integrators/solver_defaults.jl:63`
+- evidence: the walk checks only that `which(initsolver, …)` for each method root is defined in
+  GeometricIntegrators. An override there that leaves out `linear_solver_defaults` passes it; only
+  the DIRK and StandardProjection overrides have read-backs of their own.
+- kind: missing test
+- found: 2026-09-28, critic round 1 of the `LU()` default
+
+### K20 · `integrate` of a `BigFloat` problem fails in GeometricIntegratorsBase
+
+- location: GeometricIntegratorsBase `src/integrate.jl:113`
+- evidence: an ODE with a `BigFloat` timespan gives `TypeError: in Type, in parameter, expected
+  Int64, got a value of type BigInt` (critic probe `round-1b/probe_defaults.jl`, earlier version).
+- kind: upstream
+- found: 2026-09-28, critic round 1 of the `LU()` default
+
+### K21 · `test/integrators/solver_defaults.jl` is not run on the Julia 1.10 floor locally
+
+- location: `test/integrators/solver_defaults.jl`
+- evidence: `julia +1.10 … run-tests.jl <worktree> integrators/solver_defaults.jl` stops with
+  "Could not locate the source code for the StyledStrings package", from a gitignored 1.13
+  `Manifest.toml` in the worktree. The `min` CI job is the check.
+- kind: not verified
+- found: 2026-09-28, critic round 1 of the `LU()` default

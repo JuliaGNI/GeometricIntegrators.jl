@@ -27,6 +27,9 @@ hdae = LotkaVolterra2d.hdaeproblem()
           SimpleSolvers.LU
 
     # the caller's value wins
+    int = GeometricIntegrator(hdae, TableauHSPARKLobattoIIIAB(2);
+        linear_solver_method = SimpleSolvers.LapackLU())
+    @test linearmethod(solver(int)) isa SimpleSolvers.LapackLU
     int = GeometricIntegrator(ode, Gauss(2); linear_solver_method = SimpleSolvers.LapackLU())
     @test linearmethod(solver(int)) isa SimpleSolvers.LapackLU
 
