@@ -24,8 +24,10 @@ remain a gap.
   identical, so no method changes. This closes K15. #264 (f2a5652c) had already removed
   `equation` and `initialize!` from SPARK as stale imports.
 
-* **fatou findings cleared.** Twenty unused local bindings in the VPRK, projection and VSPARK
-  tableau sources are removed.
+* **fatou findings cleared.** The 20 `unused-binding` findings in the VPRK, projection and VSPARK
+  tableau sources are resolved: 18 unused local declarations and assignments are deleted, and two
+  unused destructured elements in `standard_projection.jl` become `_`. The guard cannot see a stale
+  import of a re-exported name (KI-7).
 
 * **Test groups selected by `ARGS`.** `test/runtests.jl` reads a `GROUPS` list from `ARGS`, with
   the groups `core`, `slow` and `broken`; empty `ARGS` runs `core` and `slow`.

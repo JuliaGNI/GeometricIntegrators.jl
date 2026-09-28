@@ -109,6 +109,7 @@ function compute_projection_vprk!(x::Vector{ST},
 
     # create temporary variables
     local t₁::TT = solstep.t̄ + timestep(problem)
+    local tₘ::TT
     local y1::ST
     local y2::ST
     local g = zeros(ST, D)

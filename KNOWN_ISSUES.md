@@ -296,3 +296,13 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
   `galerkin_integrators_tests.jl` stay in `test/integrators/`, while their sources are in
   `src/integrators/rk/`, `splitting/`, `vi/`, `hpi/`, `dvi/` and `cgvi/`. `test-layout.jl --check`
   checks only that the directory exists in `src/`, so it does not report this.
+
+## KI-7 · The ExplicitImports guard cannot see a stale import of a re-exported name
+
+- **Kind:** missing test.
+- **Evidence:** the mutant `import GeometricBase: timestep`, added after `using Reexport` in
+  `src/GeometricIntegrators.jl`, survives `test/quality/explicit_imports.jl`. ExplicitImports
+  never calls a public or exported name stale (`src/improper_explicit_imports.jl:31` of
+  ExplicitImports 1.15). The blind spot covers the top module, which has four `@reexport using`
+  packages (GeometricBase, GeometricEquations, GeometricIntegratorsBase, GeometricSolutions), and
+  `Integrators`, which re-exports `GeometricBase` and `GeometricIntegratorsBase`.
