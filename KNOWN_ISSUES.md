@@ -328,11 +328,15 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 - kind: missing test
 - found: 2026-09-28, critic round 1 of the `LU()` default
 
-### K20 · `integrate` of a `BigFloat` problem fails in GeometricIntegratorsBase
+### K20 · `integrate` of a `BigFloat` problem fails in GeometricSolutions
 
-- location: GeometricIntegratorsBase `src/integrate.jl:113`
+- location: GeometricSolutions `src/timeseries.jl:8`
 - evidence: with GeometricIntegratorsBase 0.6.8,
   `integrate(HarmonicOscillator.odeproblem(big.([0.5, 0.0]); timespan = (big(0.0), big(1.0)), timestep = big(0.1)), Gauss(1))`
-  throws `TypeError: in Type, in parameter, expected Int64, got a value of type BigInt`.
+  throws `TypeError: in Type, in parameter, expected Int64, got a value of type BigInt` in
+  `TimeSeries(ti::StepRangeLen{BigFloat, BigFloat, BigFloat, BigInt}, Δt)`: its
+  `new{T, n, typeof(t)}(t, Δt)` takes `n = length(ti) - 1`, a `BigInt`. The call comes from
+  `GeometricSolution` (`geometric_solution.jl:77`), through GeometricIntegratorsBase
+  `src/integrate.jl:113`.
 - kind: upstream
 - found: 2026-09-28, critic round 1 of the `LU()` default
