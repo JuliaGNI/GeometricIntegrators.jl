@@ -309,16 +309,6 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
   `src/integrators/rk/`, `splitting/`, `vi/`, `hpi/`, `dvi/` and `cgvi/`. `test-layout.jl --check`
   checks only that the directory exists in `src/`, so it does not report this.
 
-### K17 · The docstring of `linear_solver_defaults` is on no docs page
-
-- location: `src/integrators/solver_defaults.jl:1`
-- evidence: no `Pages` list in `docs/src/modules/integrators.md` names
-  `integrators/solver_defaults.jl` (`grep -rn solver_defaults docs/src` finds nothing). The
-  default checkdocs reports the docstring as missing; `docs/make.jl:26` keeps `:missing_docs`
-  warn-only, so the build warns and does not fail.
-- kind: docs
-- found: 2026-09-28, critic round 1 of the `LU()` default
-
 ### K18 · The `LU()` default is not measured against `LapackLU` at this package's sizes
 
 - location: `src/integrators/solver_defaults.jl:14`
@@ -332,24 +322,17 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 
 - location: `test/integrators/solver_defaults.jl:63`
 - evidence: the walk checks only that `which(initsolver, …)` for each method root is defined in
-  GeometricIntegrators. An override there that leaves out `linear_solver_defaults` passes it; only
-  the DIRK and StandardProjection overrides have read-backs of their own.
+  GeometricIntegrators. Each of the four present overrides (the generic one, SPARK, DIRK and
+  StandardProjection) has a read-back of its own, but a future override that leaves out
+  `linear_solver_defaults` passes the walk.
 - kind: missing test
 - found: 2026-09-28, critic round 1 of the `LU()` default
 
 ### K20 · `integrate` of a `BigFloat` problem fails in GeometricIntegratorsBase
 
 - location: GeometricIntegratorsBase `src/integrate.jl:113`
-- evidence: an ODE with a `BigFloat` timespan gives `TypeError: in Type, in parameter, expected
-  Int64, got a value of type BigInt` (critic probe `round-1b/probe_defaults.jl`, earlier version).
+- evidence: with GeometricIntegratorsBase 0.6.8,
+  `integrate(HarmonicOscillator.odeproblem(big.([0.5, 0.0]); timespan = (big(0.0), big(1.0)), timestep = big(0.1)), Gauss(1))`
+  throws `TypeError: in Type, in parameter, expected Int64, got a value of type BigInt`.
 - kind: upstream
-- found: 2026-09-28, critic round 1 of the `LU()` default
-
-### K21 · `test/integrators/solver_defaults.jl` is not run on the Julia 1.10 floor locally
-
-- location: `test/integrators/solver_defaults.jl`
-- evidence: `julia +1.10 … run-tests.jl <worktree> integrators/solver_defaults.jl` stops with
-  "Could not locate the source code for the StyledStrings package", from a gitignored 1.13
-  `Manifest.toml` in the worktree. The `min` CI job is the check.
-- kind: not verified
 - found: 2026-09-28, critic round 1 of the `LU()` default
