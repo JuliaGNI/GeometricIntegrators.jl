@@ -242,18 +242,6 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 - kind: defect
 - found: 2026-08-15
 
-### K15 · `SPARK` imports several names from a module that does not own them
-
-- location: `src/SPARK.jl:31-34`
-- evidence: `check_all_explicit_imports_via_owners(GeometricIntegrators.SPARK)` (ExplicitImports.jl)
-  reports six names imported from `GeometricIntegratorsBase` whose owner, by `Base.which`, is a
-  different package: `equation`, `equations` and `timestep` are owned by `GeometricBase`,
-  `initialize!` and `method` by `SimpleSolvers`, and `problem` by `GeometricEquations`. Run with
-  `JULIA_LOAD_PATH="@:@v1.13:@stdlib" julia --project=<checkout>` and `using ExplicitImports` at
-  top level, since ExplicitImports lives in the shared `@v1.13` environment.
-- kind: defect
-- found: 2026-08-31
-
 ### K16 · `src/spark/integrators_spark_parameters.jl` is not included
 
 - location: `src/spark/integrators_spark_parameters.jl`

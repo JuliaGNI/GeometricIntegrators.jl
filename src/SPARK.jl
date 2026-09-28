@@ -11,7 +11,9 @@ using GeometricBase
 using GeometricEquations
 using GeometricIntegratorsBase
 
-import GeometricBase: tableau
+import GeometricBase: equations, tableau, timestep
+import GeometricEquations: problem
+import SimpleSolvers: method
 import GeometricBase.Utils: @define
 import RungeKutta: AbstractTableau, Tableau, nstages, eachstage
 import RungeKutta.Tableaus: lobatto_nullvector
@@ -28,9 +30,8 @@ import GeometricIntegratorsBase: HermiteExtrapolation
 import GeometricIntegratorsBase: Cache, CacheType, IDAEIntegratorCache
 import GeometricIntegratorsBase: HDAEMethod, IDAEMethod, LDAEMethod, PDAEMethod
 import GeometricIntegratorsBase: SolutionStep
-import GeometricIntegratorsBase: cache, iguess, method, problem, solver, solverstate
+import GeometricIntegratorsBase: cache, iguess, solver, solverstate
 import GeometricIntegratorsBase: initial_guess!, integrate_step!, residual!, solutionstep!
-import GeometricIntegratorsBase: equations, timestep
 import GeometricIntegratorsBase: update!, internal, nlsolution, internal_variables
 import GeometricIntegratorsBase: solversize
 

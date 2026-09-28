@@ -1,6 +1,7 @@
 [deps]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 CompactBasisFunctions = "a09551c4-f815-4143-809e-dd1986753ba7"
+ExplicitImports = "7d51a73a-1435-4ff3-83d9-f097790105c7"
 GeometricEquations = "c85262ba-a08a-430a-b926-d29770767bf2"
 GeometricIntegrators = "dcce2d33-59f6-5b8d-9047-0defad88ae06"
 GeometricIntegratorsBase = "71212ab4-08a2-48eb-a02b-4cbad0e9c44a"
@@ -20,6 +21,7 @@ GeometricIntegrators = {path = ".."}
 [compat]
 Aqua = "0.8"
 CompactBasisFunctions = "0.3"
+ExplicitImports = "1.15"
 GeometricEquations = "0.21"
 GeometricIntegratorsBase = "0.6.3"
 GeometricProblems = "0.8"

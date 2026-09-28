@@ -275,11 +275,6 @@ end
 function compute_rhs_vprk_projection!(b::Vector{ST}, p::Vector{ST},
         F::Vector{Vector{ST}}, R::Vector{Vector{ST}}, Ψ::Vector{Vector{ST}}, offset::Int,
         params::ParametersVPRKpSecondary{DT, TT, D, S}) where {ST, DT, TT, D, S}
-    local z1::ST
-    local z2::ST
-    local z3::ST
-    local z4::ST
-
     for i in 1:S
         for k in 1:D
             b[offset + D * (i - 1) + k] = Ψ[i][k]
