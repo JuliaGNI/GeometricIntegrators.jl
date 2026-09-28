@@ -32,6 +32,13 @@ remain a gap.
 * **Test failure tracking improved.** Every `@test_broken` line now names its issue. `test/Project.toml`
   gains `Random` as a dependency; its existing compat bounds stay as they are.
 
+### Changes
+
+* **SPARK module cleanup.** Removed eight stale explicit imports from `src/SPARK.jl`:
+  `CacheDict`, `Extrapolation`, `caches`, `current`, `equation`, `initialize!`, `initsolver`,
+  and `update_multiplier!`. These were identified by ExplicitImports' `check_no_stale_explicit_imports`
+  as unused and not reached through the parent module.
+
 ## 0.18.5
 
 ### Changes
