@@ -316,7 +316,7 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
   2× slower than `LapackLU` at n = 64 and 32× slower at n = 768. No measurement of the stage-system
   sizes of this package exists.
 - kind: not verified
-- found: 2026-09-28, critic round 1 of the `LU()` default
+- found: 2026-09-28
 
 ### K19 · The root walk of `solver_defaults.jl` does not check that the default is applied
 
@@ -326,7 +326,7 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
   StandardProjection) has a read-back of its own, but a future override that leaves out
   `linear_solver_defaults` passes the walk.
 - kind: missing test
-- found: 2026-09-28, critic round 1 of the `LU()` default
+- found: 2026-09-28
 
 ### K20 · `integrate` of a `BigFloat` problem fails in GeometricSolutions
 
@@ -339,4 +339,4 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
   `GeometricSolution` (`geometric_solution.jl:77`), through GeometricIntegratorsBase
   `src/integrate.jl:113`.
 - kind: upstream
-- found: 2026-09-28, critic round 1 of the `LU()` default
+- found: 2026-09-28
