@@ -28,16 +28,18 @@ hdae = LotkaVolterra2d.hdaeproblem()
 
     # the caller's value wins
     int = GeometricIntegrator(hdae, TableauHSPARKLobattoIIIAB(2);
-        linear_solver_method = SimpleSolvers.LapackLU())
-    @test linearmethod(solver(int)) isa SimpleSolvers.LapackLU
-    int = GeometricIntegrator(ode, Gauss(2); linear_solver_method = SimpleSolvers.LapackLU())
-    @test linearmethod(solver(int)) isa SimpleSolvers.LapackLU
+        linear_solver_method = SimpleSolvers.LU(; static = false))
+    @test linearmethod(solver(int)) isa SimpleSolvers.LU{Bool}
+    int = GeometricIntegrator(ode, Gauss(2); linear_solver_method = SimpleSolvers.LU(;
+        static = false))
+    @test linearmethod(solver(int)) isa SimpleSolvers.LU{Bool}
 
     # the DIRK stage solvers
     int = GeometricIntegrator(ode, Crouzeix())
     @test all(linearmethod(s) isa SimpleSolvers.LU for s in solver(int).solvers)
-    int = GeometricIntegrator(ode, Crouzeix(); linear_solver_method = SimpleSolvers.LapackLU())
-    @test all(linearmethod(s) isa SimpleSolvers.LapackLU for s in solver(int).solvers)
+    int = GeometricIntegrator(ode, Crouzeix(); linear_solver_method = SimpleSolvers.LU(;
+        static = false))
+    @test all(linearmethod(s) isa SimpleSolvers.LU{Bool} for s in solver(int).solvers)
 
     # the projection solver and the solver of the projected method
     int = GeometricIntegrator(dae, PostProjection(Gauss(1)))
@@ -52,8 +54,8 @@ hdae = LotkaVolterra2d.hdaeproblem()
     int = GeometricIntegrator(dae, MidpointProjection(Gauss(1)); f_abstol = 1e-14)
     @test linearmethod(solver(int)) isa SimpleSolvers.LU
     int = GeometricIntegrator(dae, PostProjection(Gauss(1));
-        linear_solver_method = SimpleSolvers.LapackLU())
-    @test linearmethod(solver(int)) isa SimpleSolvers.LapackLU
+        linear_solver_method = SimpleSolvers.LU(; static = false))
+    @test linearmethod(solver(int)) isa SimpleSolvers.LU{Bool}
 
     # Picard takes no `linear_solver_method`
     @test solver(GeometricIntegrator(ode, Gauss(2); solver = Picard())) isa
