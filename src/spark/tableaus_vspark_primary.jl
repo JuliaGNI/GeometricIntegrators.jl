@@ -974,7 +974,6 @@ function TableauVSPARKLobABED(s = 2, T = Float64)
     lob = TableauLobattoIIIC̄(s)
     loba = TableauLobattoIIIA(s)
     lobb = TableauLobattoIIIB(s)
-    lobc = TableauLobattoIIIC(s)
     lobd = TableauLobattoIIID(s)
     lobe = TableauLobattoIIIE(s)
 
@@ -1017,7 +1016,6 @@ function TableauVSPARKLobABDE(s = 2, T = Float64)
     lob = TableauLobattoIIIC̄(s)
     loba = TableauLobattoIIIA(s)
     lobb = TableauLobattoIIIB(s)
-    lobc = TableauLobattoIIIC(s)
     lobd = TableauLobattoIIID(s)
     lobe = TableauLobattoIIIE(s)
 
@@ -1060,9 +1058,7 @@ function TableauVSPARKLobABD(s = 2, T = Float64)
     lob = TableauLobattoIIIC̄(s)
     loba = TableauLobattoIIIA(s)
     lobb = TableauLobattoIIIB(s)
-    lobc = TableauLobattoIIIC(s)
     lobd = TableauLobattoIIID(s)
-    lobe = TableauLobattoIIIE(s)
 
     a_q = lobd.a
     a_p = lobd.a
@@ -1103,8 +1099,6 @@ function TableauVSPARKLobABE(s = 2, T = Float64)
     lob = TableauLobattoIIIC̄(s)
     loba = TableauLobattoIIIA(s)
     lobb = TableauLobattoIIIB(s)
-    lobc = TableauLobattoIIIC(s)
-    lobd = TableauLobattoIIID(s)
     lobe = TableauLobattoIIIE(s)
 
     a_q = lobe.a
@@ -1144,9 +1138,6 @@ end
 
 function TableauVSPARKLobDE(s = 2, T = Float64)
     lob = TableauLobattoIIIC̄(s)
-    loba = TableauLobattoIIIA(s)
-    lobb = TableauLobattoIIIB(s)
-    lobc = TableauLobattoIIIC(s)
     lobd = TableauLobattoIIID(s)
     lobe = TableauLobattoIIIE(s)
 
@@ -1187,9 +1178,6 @@ end
 
 function TableauVSPARKLobED(s = 2, T = Float64)
     lob = TableauLobattoIIIC̄(s)
-    loba = TableauLobattoIIIA(s)
-    lobb = TableauLobattoIIIB(s)
-    lobc = TableauLobattoIIIC(s)
     lobd = TableauLobattoIIID(s)
     lobe = TableauLobattoIIIE(s)
 

@@ -342,8 +342,6 @@ end
 function integrate_step!(
         int::IntegratorVPRKpLegendre{DT, TT}, sol::SolutionStepPODE{DT, TT},
         cache::IntegratorCacheVPRK{DT} = int.caches[DT]) where {DT, TT}
-    local offset::Int
-
     # update nonlinear solver parameters from cache
     update_params!(int.params, sol)
 

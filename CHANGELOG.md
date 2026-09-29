@@ -15,6 +15,9 @@ remain a gap.
 
 ### Tests
 
+* **ExplicitImports guard.** `test/quality/explicit_imports.jl` runs `test_explicit_imports` on
+  the package in the `core` group, with `ExplicitImports = "1.15"` in `test/Project.toml`.
+
 * **Test groups selected by `ARGS`.** `test/runtests.jl` reads a `GROUPS` list from `ARGS`, with
   the groups `core`, `slow` and `broken`; empty `ARGS` runs `core` and `slow`.
 
@@ -33,6 +36,17 @@ remain a gap.
   gains `Random` as a dependency; its existing compat bounds stay as they are.
 
 ### Changes
+
+* **Imports from their owners.** `Integrators` no longer imports the unused `Callable`,
+  `DAEIntegratorCache`, `IDAEIntegratorCache` and `PDAEIntegratorCache`. `Integrators` and
+  `SPARK` now import `equations`, `timestep`, `initialize!`, `method` and `problem` from their
+  owners (GeometricBase, SimpleSolvers, GeometricEquations) rather than from
+  GeometricIntegratorsBase; the bindings are identical, so no method changes. This closes K15.
+  #264 (f2a5652c) had already removed `equation` and `initialize!` from SPARK as stale imports.
+
+* **fatou findings cleared.** The 20 `unused-binding` findings in the VPRK, projection and VSPARK
+  tableau sources are resolved: 18 unused local declarations and assignments are deleted, and two
+  unused destructured elements in `standard_projection.jl` become `_`.
 
 * **SPARK module cleanup.** Removed eight stale explicit imports from `src/SPARK.jl`:
   `CacheDict`, `Extrapolation`, `caches`, `current`, `equation`, `initialize!`, `initsolver`,

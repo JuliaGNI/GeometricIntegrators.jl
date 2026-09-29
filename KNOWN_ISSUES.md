@@ -242,18 +242,6 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 - kind: defect
 - found: 2026-08-15
 
-### K15 · `SPARK` imports several names from a module that does not own them
-
-- location: `src/SPARK.jl:31-34`
-- evidence: `check_all_explicit_imports_via_owners(GeometricIntegrators.SPARK)` (ExplicitImports.jl)
-  reports six names imported from `GeometricIntegratorsBase` whose owner, by `Base.which`, is a
-  different package: `equation`, `equations` and `timestep` are owned by `GeometricBase`,
-  `initialize!` and `method` by `SimpleSolvers`, and `problem` by `GeometricEquations`. Run with
-  `JULIA_LOAD_PATH="@:@v1.13:@stdlib" julia --project=<checkout>` and `using ExplicitImports` at
-  top level, since ExplicitImports lives in the shared `@v1.13` environment.
-- kind: defect
-- found: 2026-08-31
-
 ### K16 · `src/spark/integrators_spark_parameters.jl` is not included
 
 - location: `src/spark/integrators_spark_parameters.jl`
@@ -308,6 +296,16 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
   `galerkin_integrators_tests.jl` stay in `test/integrators/`, while their sources are in
   `src/integrators/rk/`, `splitting/`, `vi/`, `hpi/`, `dvi/` and `cgvi/`. `test-layout.jl --check`
   checks only that the directory exists in `src/`, so it does not report this.
+
+## KI-7 · The ExplicitImports guard cannot see a stale import of a re-exported name
+
+- **Kind:** missing test.
+- **Evidence:** the mutant `import GeometricBase: timestep`, added after `using Reexport` in
+  `src/GeometricIntegrators.jl`, survives `test/quality/explicit_imports.jl`. ExplicitImports
+  never calls a public or exported name stale (`src/improper_explicit_imports.jl:31` of
+  ExplicitImports 1.15). The blind spot covers the top module, which has four `@reexport using`
+  packages (GeometricBase, GeometricEquations, GeometricIntegratorsBase, GeometricSolutions), and
+  `Integrators`, which re-exports `GeometricBase` and `GeometricIntegratorsBase`.
 
 ### K18 · The `LU()` default is not measured against `LapackLU` at this package's sizes
 
