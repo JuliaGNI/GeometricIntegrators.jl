@@ -53,9 +53,11 @@ function split_nlsolution(x::AbstractVector, int::StandardProjectionIntegrator)
     return (x̄, x̃)
 end
 
-function initsolver(::Newton, ::ProjectedMethod{<:StandardProjection}, caches::CacheDict; kwargs...)
+function initsolver(solvermethod::Newton, ::ProjectedMethod{<:StandardProjection},
+        caches::CacheDict; kwargs...)
     _, x̃ = split_nlsolution(cache(caches))
-    NewtonSolver(zero(x̃), residual!, zero(x̃); kwargs...)
+    NewtonSolver(
+        zero(x̃), residual!, zero(x̃); linear_solver_defaults(solvermethod)..., kwargs...)
 end
 
 # function Base.show(io::IO, int::ProjectedMethod{<:StandardProjection})

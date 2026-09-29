@@ -306,3 +306,35 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
   ExplicitImports 1.15). The blind spot covers the top module, which has four `@reexport using`
   packages (GeometricBase, GeometricEquations, GeometricIntegratorsBase, GeometricSolutions), and
   `Integrators`, which re-exports `GeometricBase` and `GeometricIntegratorsBase`.
+
+### K18 · The `LU()` default is not measured against `LapackLU` at this package's sizes
+
+- location: `src/integrators/solver_defaults.jl:14`
+- evidence: the SimpleSolvers 0.14.0 docstring at `linear/linear_solvers.jl:260–265` gives `LU()`
+  2× slower than `LapackLU` at n = 64 and 32× slower at n = 768. No measurement of the stage-system
+  sizes of this package exists.
+- kind: not verified
+- found: 2026-09-28
+
+### K19 · The root walk of `solver_defaults.jl` does not check that the default is applied
+
+- location: `test/integrators/solver_defaults.jl:63`
+- evidence: the walk checks only that `which(initsolver, …)` for each method root is defined in
+  GeometricIntegrators. Each of the four present overrides (the generic one, SPARK, DIRK and
+  StandardProjection) has a read-back of its own, but a future override that leaves out
+  `linear_solver_defaults` passes the walk.
+- kind: missing test
+- found: 2026-09-28
+
+### K20 · `integrate` of a `BigFloat` problem fails in GeometricSolutions
+
+- location: GeometricSolutions `src/timeseries.jl:8`
+- evidence: with GeometricIntegratorsBase 0.6.8,
+  `integrate(HarmonicOscillator.odeproblem(big.([0.5, 0.0]); timespan = (big(0.0), big(1.0)), timestep = big(0.1)), Gauss(1))`
+  throws `TypeError: in Type, in parameter, expected Int64, got a value of type BigInt` in
+  `TimeSeries(ti::StepRangeLen{BigFloat, BigFloat, BigFloat, BigInt}, Δt)`: its
+  `new{T, n, typeof(t)}(t, Δt)` takes `n = length(ti) - 1`, a `BigInt`. The call comes from
+  `GeometricSolution` (`geometric_solution.jl:77`), through GeometricIntegratorsBase
+  `src/integrate.jl:113`.
+- kind: upstream
+- found: 2026-09-28

@@ -213,6 +213,8 @@ include("projections/symmetric_projection.jl")
 include("projections/methods.jl")
 include("integrators/vi/vprk_projected.jl")
 
+include("integrators/solver_defaults.jl")
+
 include("integrators/method_list.jl")
 
 # function __init__()
