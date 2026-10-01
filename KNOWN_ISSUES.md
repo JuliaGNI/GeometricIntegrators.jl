@@ -1,6 +1,8 @@
 # Known issues
 
-Defects found and recorded, not fixed. Each entry gives its kind and its evidence.
+What is known to be wrong in GeometricIntegrators.jl and is not fixed yet. Each entry gives its
+location, its evidence, its kind and where it was found. An entry leaves this file when its fix
+merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
 
 ### K1 · The solver status is available but not acted on
 
