@@ -6,10 +6,10 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 
 - location: —
 - evidence: 0.18.2 routes every solve through `solve_with_status!` and hands the status to
-  `check_solver_status`, whose default returns it and does nothing else. That was the deliberate
+  `check_solver_status`, whose default returns it and does nothing else. This is a deliberate
   choice — SimpleSolvers stays the single reporting voice, so no run changes what it prints — but it
-  means a step that did not converge is still only *reported*, never *acted on*, and the trajectory
-  continues past the point where it stopped meaning anything with nothing in `sol` to mark it.
+  means a step that does not converge is only *reported*, never *acted on*, and the trajectory
+  continues past the point where it stops meaning anything with nothing in `sol` to mark it.
 
   The place to act is GeometricIntegratorsBase's `integrate!`, which already handles two of the three
   ways a step can go wrong (a `NonlinearSolverException`, and NaNs in the iterate) by warning with
@@ -95,23 +95,25 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 ### K6 · `VSPARK(SPARKLobattoIIIBIIIA(2))` has a singular stage system
 
 - location: —
-- evidence: Restated in 0.18.2, having been recorded here since 0.17.0 as a case that "stalls". It does stall —
-  the solve stagnates after 3 iterations at rf_a = 3.57e-5 against the `f_abstol = 5.77e-15` it was
-  asked for, and where it returns it is the one stagnation warning a full test run still prints — but
+- evidence: The case stalls —
+  the solve stagnates after 3 iterations at rf_a = 3.57e-5 against the `f_abstol = 5.77e-15` it
+  asks for, and where it returns it is the one stagnation warning a full test run prints — but
   the stall is a symptom. The stage system is **numerically singular**: cond ≈ 5.6E16, σmin = 5.7E-17
   against σmax = 3.2, with σmin an order below the `n·eps·σmax ≈ 1.8E-14` at which a 26×26 system
   stops having a numerical rank. That is the same matrix, to within a factor of 1.5 in σmin, as the
   `SPARKLobattoIIIAIIIB(2)` and `SPARKGLRK(2)` siblings the suite asserts `SingularException` for.
 
-  The 0.17.0 promotion from `@test_broken` to `@test` is therefore retracted: it read one platform's
-  luck as a property of the method. Whether LAPACK's `getrf` lands on an exact zero pivot or on one
+  A plain `@test` on this case therefore reads one platform's luck as a property of the method.
+  Whether LAPACK's `getrf` lands on an exact zero pivot or on one
   of ~1E-17 decides the outcome, so the same call raises on Julia 1.13 and nightly under Linux and
   Windows and returns a ~1E-6 answer on 1.10 and 1.12 everywhere and on macOS throughout. The test
-  now accepts both. What stays open is the method: `s = 2` is audit finding S8, degenerate at the
+  accepts both. What stays open is the method: `s = 2` is audit finding S8, degenerate at the
   lowest stage count, and the answer it sometimes returns is one produced by a Newton direction
   solved out of a rank-deficient matrix. It should not be treated as a supported configuration.
 - kind: defect
-- found: 2026-08-16
+- found: 2026-08-16; recorded as a case that "stalls" from 0.17.0, which promotes its
+  `@test_broken` to `@test`; restated as a singular stage system in 0.18.2, which retracts that
+  promotion
 
 ### K7 · A rank-deficient stage system is diagnosed by luck rather than by design
 
@@ -139,8 +141,8 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 - evidence: 0.18.2 leaves DIRK's per-stage loop and the three projection integrators on the state-*building*
   form of `solve_with_status!`, which constructs a `NonlinearSolverState` on every call — once per
   stage per step for DIRK, once per step for each projection. This is not a regression: the
-  `solve!(x, s, params)` they replaced went through the same `NonlinearSolverState(x, value(cache(s)))`
-  convenience path, so nothing got slower. It is simply now visible, and it is the objection
+  `solve!(x, s, params)` form they replace goes through the same `NonlinearSolverState(x, value(cache(s)))`
+  convenience path, so nothing is slower. The cost is visible at these sites, and it is the objection
   SimpleSolvers 0.12.1's own docstring raises against that form — *"a caller stepping through time
   should build one `NonlinearSolver` and one `NonlinearSolverState` and reuse both"*.
 
@@ -170,7 +172,7 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 ### K10 · RungeKutta's barred Lobatto tableaus carry 1E-77 where the plain ones carry exact zeros
 
 - location: —
-- evidence: Noticed while measuring the stage Jacobians above. `TableauLobattoIIIA(s).a` and
+- evidence: `TableauLobattoIIIA(s).a` and
   `TableauLobattoIIIB(s).a` have an exactly zero first row, as they should; the adjoint variants do
   not:
 
@@ -188,12 +190,12 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
   for `s ≥ 3` shows them in `tableau.p.a`.
 
   Numerically inert: 1E-77 against coefficients of order 1 changes no arithmetic here. What it does
-  change is that the structural zeros are no longer *detectable* — `iszero`, `count(iszero, …)` and
+  change is that the structural zeros are not *detectable* — `iszero`, `count(iszero, …)` and
   anything asking "is the first stage explicit?" answer wrongly on these tableaus. Nothing in this
-  package asks today. The fix is upstream in RungeKutta.jl, where rounding the solve back to exact
+  package asks. The fix is upstream in RungeKutta.jl, where rounding the solve back to exact
   zeros costs nothing.
 - kind: upstream
-- found: 2026-08-16
+- found: 2026-08-16; while measuring the stage Jacobians of K6
 
 ### K11 · The PGLRK status-hook override in the test suite is session-global
 
@@ -202,7 +204,7 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
   `GeometricIntegratorsBase.check_solver_status` for `GeometricIntegrator{<:PGLRK}`. A method is
   global to the session and `runtests.jl` drives its files with `@safetestset` — a fresh module in
   the same process — so it also counts every PGLRK integration in `methods_tests.jl`,
-  `test_show.jl` and `spark_tableaus_tests.jl`, which run after it. Harmless today: it returns its
+  `test_show.jl` and `spark_tableaus_tests.jl`, which run after it. It is harmless: it returns its
   argument unchanged and nothing there reads the counter. It is recorded because a second counting
   override, for another method or another hook, would silently collide with this one, and because
   there is no way to scope a method to a file.
@@ -220,7 +222,7 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
   Most are inherent properties of the methods rather than implementation defects: symplectic plus
   constraint-at-solution reduces order or diverges for the Lobatto IIIA-IIIB and IIIB-IIIA
   SPARK/HPARK families; R(∞) = (-1)^(s+1) ≠ 1 drops GLVPRK and HPARKGLRK from order 2s to 2 at
-  s = 2; coinciding tableau pairs give a singular stage system at s = 2. The SPARK cases still left
+  s = 2; coinciding tableau pairs give a singular stage system at s = 2. The SPARK cases left
   as `@test_broken`, rather than asserting a specific failure mechanism, are the *marginally*
   singular ones, which converge or zero-pivot depending on rounding, so that no single assertion is
   reliable for them.
@@ -237,7 +239,7 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 ### K14 · `HSPARKsecondary` remains EXPERIMENTAL
 
 - location: —
-- evidence: The `BoundsError` and `SingularException` fixed in 0.16.7 got the family as far as the solver, but
+- evidence: With the `BoundsError` and `SingularException` fixed in 0.16.7, the family reaches the solver, but
   a deeper singularity remains in its ω secondary-constraint block.
 - kind: defect
 - found: 2026-08-15
@@ -252,60 +254,75 @@ Defects found and recorded, not fixed. Each entry gives its kind and its evidenc
 - kind: dead code
 - found: 2026-09-27
 
-## KI-1 · `test/helpers/test_functions.jl` is included by no file
+### KI-1 · `test/helpers/test_functions.jl` is included by no file
 
-- **Kind:** dead code.
-- **Evidence:** `grep -rn test_functions test` finds no `include`. On `origin/main`, as
-  `test/solutions/test_functions.jl`, no file included it either.
+- location: `test/helpers/test_functions.jl`
+- evidence: `grep -rn test_functions test` finds no `include`. The gap predates the test
+  migration (#254), which moves the file from `test/solutions/test_functions.jl`; no file includes
+  it at that path either.
+- kind: dead code
+- found: #254
 
-## KI-2 · `splitting_methods_tests.jl` checks the order of two methods only
+### KI-2 · `splitting_methods_tests.jl` checks the order of two methods only
 
-- **Kind:** missing test.
-- **Evidence:** the mutants `order(LieA)` 1→2 and `order(McLachlan2)` 2→3 in
+- location: `test/integrators/splitting/splitting_methods_tests.jl`
+- evidence: the mutants `order(LieA)` 1→2 and `order(McLachlan2)` 2→3 in
   `src/integrators/splitting/splitting_methods.jl` survive
   `test/integrators/splitting/splitting_methods_tests.jl`, which asserts `order` only for
   `Yoshida6` and `Yoshida8`.
+- kind: missing test
+- found: #254
 
-## KI-3 · Aqua's piracy check does not see the `Integrators` submodule
+### KI-3 · Aqua's piracy check does not see the `Integrators` submodule
 
-- **Kind:** missing test.
-- **Evidence:** the mutant `Base.length(::Symbol) = 0` in `src/integrators/vi/vprk_methods.jl`
+- location: `src/integrators/vi/vprk_methods.jl`
+- evidence: the mutant `Base.length(::Symbol) = 0` in `src/integrators/vi/vprk_methods.jl`
   survives `test/quality/aqua.jl`. `Aqua.Piracy.hunt(GeometricIntegrators)` lists the same method
   when it is defined at the top level of `GeometricIntegrators`, and not when it is defined in
   `GeometricIntegrators.Integrators`.
+- kind: missing test
+- found: #254
 
-## KI-4 · `test/simulations/simulations_tests.jl` holds no active test
+### KI-4 · `test/simulations/simulations_tests.jl` holds no active test
 
-- **Kind:** dead test.
-- **Evidence:** every `@test` in the file is commented out; `run-tests.jl` reports 0 tests.
+- location: `test/simulations/simulations_tests.jl`
+- evidence: every `@test` in the file is commented out; `run-tests.jl` reports 0 tests.
+- kind: missing test
+- found: #254
 
-## KI-5 · A stale path of a moved test file under `src/`
+### KI-5 · A docstring under `src/` names a moved test file by its stale path
 
-- **Kind:** docs.
-- **Evidence:** `src/integrators/rk/integrators_pglrk.jl:31` names
-  `test/methods/pglrk_coefficients_tests.jl`, which is now
+- location: `src/integrators/rk/integrators_pglrk.jl:31`
+- evidence: `src/integrators/rk/integrators_pglrk.jl:31` names
+  `test/methods/pglrk_coefficients_tests.jl`, whose path is
   `test/integrators/rk/pglrk_coefficients_tests.jl`. The test migration changes nothing under
   `src/`.
+- kind: docs
+- found: #254
 
-## KI-6 · Integrator tests do not mirror the subdirectories of `src/integrators/`
+### KI-6 · Integrator tests do not mirror the subdirectories of `src/integrators/`
 
-- **Kind:** layout.
-- **Evidence:** `rk_integrators_tests.jl`, `rk_implicit_integrators_tests.jl`,
+- location: `src/integrators/`
+- evidence: `rk_integrators_tests.jl`, `rk_implicit_integrators_tests.jl`,
   `splitting_integrators_tests.jl`, `variational_integrators_tests.jl`,
   `hamilton_pontryagin_integrators_tests.jl`, `dvi_integrators_tests.jl` and
   `galerkin_integrators_tests.jl` stay in `test/integrators/`, while their sources are in
   `src/integrators/rk/`, `splitting/`, `vi/`, `hpi/`, `dvi/` and `cgvi/`. `test-layout.jl --check`
   checks only that the directory exists in `src/`, so it does not report this.
+- kind: docs
+- found: #254
 
-## KI-7 · The ExplicitImports guard cannot see a stale import of a re-exported name
+### KI-7 · The ExplicitImports guard cannot see a stale import of a re-exported name
 
-- **Kind:** missing test.
-- **Evidence:** the mutant `import GeometricBase: timestep`, added after `using Reexport` in
+- location: `src/GeometricIntegrators.jl`
+- evidence: the mutant `import GeometricBase: timestep`, added after `using Reexport` in
   `src/GeometricIntegrators.jl`, survives `test/quality/explicit_imports.jl`. ExplicitImports
   never calls a public or exported name stale (`src/improper_explicit_imports.jl:31` of
   ExplicitImports 1.15). The blind spot covers the top module, which has four `@reexport using`
   packages (GeometricBase, GeometricEquations, GeometricIntegratorsBase, GeometricSolutions), and
   `Integrators`, which re-exports `GeometricBase` and `GeometricIntegratorsBase`.
+- kind: missing test
+- found: #267
 
 ### K18 · The `LU()` default is not measured against `LapackLU` at this package's sizes
 

@@ -57,6 +57,8 @@ remain a gap.
 
   `test/Project.toml` and `docs/Project.toml` drop their `[compat]` entries for dependencies shared with root (test: CompactBasisFunctions, GeometricEquations, GeometricIntegratorsBase, LinearAlgebra, QuadratureRules, RungeKutta, SimpleSolvers; docs: GeometricBase, GeometricEquations, GeometricIntegratorsBase, GeometricSolutions, RungeKutta), so tests and docs now resolve the root's bounds instead of the old `0.12.1` and `0.3` pins. This brings SimpleSolvers 0.13 and 0.14, and CompactBasisFunctions 0.4 into test runs. `InteractiveUtils` is a new test-only dependency.
 
+* **`KNOWN_ISSUES.md` follows the known-issues form.** KI-1 to KI-7 gain `location` and `found` fields, and the entries are in the present tense; no code changes.
+
 ## 0.18.5
 
 ### Changes
