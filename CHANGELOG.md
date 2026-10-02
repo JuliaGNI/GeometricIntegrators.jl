@@ -41,7 +41,7 @@ remain a gap.
   #249, #250, #252, #253).
 
 * **Test failure tracking improved.** Every `@test_broken` line now names its issue. `test/Project.toml`
-  gains `Random` as a dependency; its existing compat bounds stay as they are.
+  gains `Random` as a dependency.
 
 ### Changes
 
