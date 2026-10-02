@@ -40,3 +40,10 @@ GeometricEquations.SDEProblem
 GeometricEquations.PSDEProblem
 GeometricEquations.SPSDEProblem
 ```
+
+## Stochastic Processes
+
+```@docs
+GeometricEquations.WienerProcess
+GeometricEquations.GridProcess
+```
