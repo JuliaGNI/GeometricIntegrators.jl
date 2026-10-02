@@ -13,6 +13,14 @@ remain a gap.
 
 ## [Unreleased] — targeting 0.18.6
 
+### Compatibility
+
+* The floors rise to Julia 1.11, GeometricBase 0.15.0, CompactBasisFunctions 0.4.2,
+  GeometricEquations 0.21.5, GeometricIntegratorsBase 0.6.9, GeometricSolutions 0.6.6,
+  QuadratureRules 0.2.2, RungeKutta 0.6.4 and SimpleSolvers 0.14.1, and to GeometricProblems 0.9.1
+  in the test and docs environments, because GeometricBase 0.15 declares its stubs public and
+  requires Julia 1.11.
+
 ### Tests
 
 * **ExplicitImports guard.** `test/quality/explicit_imports.jl` runs `test_explicit_imports` on
@@ -55,7 +63,7 @@ remain a gap.
 
 * **Newton, DogLeg and QuasiNewton solvers default to SimpleSolvers' pure-Julia `LU()` as their linear solver** unless a caller passes `linear_solver_method`, whose value wins. This holds for every such solver the package builds for its own methods: through `initsolver`, the DIRK stage solvers, `StandardProjection` and SPARK. `Picard` takes no linear solver and gets no keyword. On SimpleSolvers 0.12 nothing changes, because `LU()` is its default. SimpleSolvers 0.13.0 changed its default for a LAPACK element type to `LapackLU`, under which the numerically singular HSPARKsecondary stage systems no longer raise `SingularException`: 22 of 24 returned silently wrong answers (relative errors 3.4e-5 to 1.0). The reason for this change is issue #255, the `SingularException` of `VPRKpTableau` in the PGLRK convergence test on ubuntu x86_64 with SimpleSolvers 0.14, which stays open.
 
-  `test/Project.toml` and `docs/Project.toml` drop their `[compat]` entries for dependencies shared with root (test: CompactBasisFunctions, GeometricEquations, GeometricIntegratorsBase, LinearAlgebra, QuadratureRules, RungeKutta, SimpleSolvers; docs: GeometricBase, GeometricEquations, GeometricIntegratorsBase, GeometricSolutions, RungeKutta), so tests and docs now resolve the root's bounds instead of the old `0.12.1` and `0.3` pins. This brings SimpleSolvers 0.13 and 0.14, and CompactBasisFunctions 0.4 into test runs. `InteractiveUtils` is a new test-only dependency.
+  `test/Project.toml` and `docs/Project.toml` drop their `[compat]` entries for dependencies shared with root (test: CompactBasisFunctions, GeometricEquations, GeometricIntegratorsBase, LinearAlgebra, QuadratureRules, RungeKutta, SimpleSolvers; docs: GeometricBase, GeometricEquations, GeometricIntegratorsBase, GeometricSolutions, RungeKutta), so tests and docs now resolve the root's bounds instead of the old `0.12.1` and `0.3` pins. This brings SimpleSolvers 0.14 and CompactBasisFunctions 0.4 into test runs. `InteractiveUtils` is a new test-only dependency.
 
 * **`KNOWN_ISSUES.md` follows the known-issues form.** KI-1 to KI-7 gain `location` and `found` fields, and the entries are in the present tense; no code changes.
 
