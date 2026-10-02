@@ -61,11 +61,6 @@ remain a gap.
 
 ### Documentation
 
-* **The figures are tracked.** The ten PNG figures in `docs/src/images/` are committed, built
-  from their TikZ sources by `make images` in `docs/`. The shared Documentation workflow has no
-  TeX step, so the figures were never built on CI and seven image links in the VPRK and
-  Variational pages failed the docs build.
-
 * **`WienerProcess` and `GridProcess` are documented.** The *Problems* module page gains a
   *Stochastic Processes* section. The `SDEProblem`, `PSDEProblem` and `SPSDEProblem` docstrings
   of GeometricEquations 0.21.3 and later link to both types, and without their docstrings in the
