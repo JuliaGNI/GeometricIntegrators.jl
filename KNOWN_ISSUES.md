@@ -367,8 +367,9 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
   makes `LapackLU`, not `LU`, the default linear solver for a dense LAPACK element type; 0.14.0
   renames 0.13.3's `PivotedQR` and `SVDSolver` to `LapackPivotedQR` and `LapackSVDSolver`. No
   script under `scripts/` names SimpleSolvers or these types
-  (`grep -rln -E "SimpleSolvers|PivotedQR|SVDSolver|LapackLU|linear_solver_method" scripts` finds
-  nothing), so the risks reach a script only through the solvers that GeometricIntegrators builds.
+  (`grep -rln --include='*.jl' -E "SimpleSolvers|PivotedQR|SVDSolver|LapackLU|linear_solver_method"
+  scripts` finds nothing), so the risks reach a script only through the solvers that
+  GeometricIntegrators builds.
   The env resolves only
   after the GeometricProblems 0.9.1 release: every registered GeometricProblems from 0.8.0 to
   0.9.0 bounds GeometricBase `"0.14"`. Follow-up: after that release registers, resolve the env,
