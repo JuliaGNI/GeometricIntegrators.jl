@@ -376,3 +376,24 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
   run each script, and fix the callers in a later PR.
 - kind: not verified
 - found: 2026-10-02
+
+### K22 · Two figures in the VPRK manual page have an empty alt text
+
+- location: `docs/src/integrators/vprk.md:324`
+- evidence: `grep -n '!\[\]' docs/src/integrators/vprk.md` gives lines 324–325
+  (`omega-orthogonal-projection`) and 538–539 (`post-projection`), each `![](https://…)`. The
+  same two images are `![](../images/<name>.png)` on `7f59317`. GeometricFigures' `figures.toml`
+  has a caption for both figures, and the italic line below each image holds one too.
+- kind: docs
+- found: 2026-10-03
+
+### K23 · The `_light` figure shows under the dark catppuccin themes
+
+- location: GeometricFigures `docs/src/figures.css:16`
+- evidence: on GeometricFigures `0124c89`, `figures.css` switches the images only under
+  `html.theme--documenter-dark`. Documenter 1.19 also has the dark themes `catppuccin-frappe`,
+  `catppuccin-macchiato` and `catppuccin-mocha`, which set `html.theme--catppuccin-*`. Under these
+  themes the manual shows the `_light` SVG on a dark background and hides the `_dark` SVG. The
+  fix is in GeometricFigures: add the three classes to the two dark rules.
+- kind: upstream
+- found: 2026-10-03
