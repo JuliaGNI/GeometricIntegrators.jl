@@ -19,7 +19,7 @@ CairoMakie = "0.15"
 Documenter = "1"
 DocumenterCitations = "1.4"
 DocumenterInterLinks = "1.1"
-GeometricProblems = "0.8"
+GeometricProblems = "0.9.1"
 Weave = "0.10"
 
 [sources]

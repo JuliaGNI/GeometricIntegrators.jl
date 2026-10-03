@@ -357,3 +357,22 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
   `src/integrate.jl:113`.
 - kind: upstream
 - found: 2026-09-28
+
+### K21 · The `scripts/` environment is not resolved or run at its new bounds
+
+- location: `scripts/Project.toml:15`
+- evidence: the floor raise to GeometricBase 0.15 sets `SimpleSolvers = "0.14.1"` and
+  `GeometricIntegratorsBase = "0.6.9"` in `scripts/Project.toml`. No script has run on
+  SimpleSolvers 0.13.0–0.13.3, 0.14.0 or 0.14.1. Known risks from the skipped CHANGELOGs: 0.13.0
+  makes `LapackLU`, not `LU`, the default linear solver for a dense LAPACK element type; 0.14.0
+  renames 0.13.3's `PivotedQR` and `SVDSolver` to `LapackPivotedQR` and `LapackSVDSolver`. No
+  script under `scripts/` names SimpleSolvers or these types
+  (`grep -rln --include='*.jl' -E "SimpleSolvers|PivotedQR|SVDSolver|LapackLU|linear_solver_method"
+  scripts` finds nothing), so the risks reach a script only through the solvers that
+  GeometricIntegrators builds.
+  The env resolves only
+  after the GeometricProblems 0.9.1 release: every registered GeometricProblems from 0.8.0 to
+  0.9.0 bounds GeometricBase `"0.14"`. Follow-up: after that release registers, resolve the env,
+  run each script, and fix the callers in a later PR.
+- kind: not verified
+- found: 2026-10-02
