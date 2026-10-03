@@ -11,14 +11,15 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
-## Unreleased
+## [Unreleased] — targeting 0.18.7
 
 ### Documentation
 
 * **Manual figures published by GeometricFigures.jl.** The seven figures in the manual link the
   light and dark SVGs that GeometricFigures.jl publishes, and `docs/make.jl` loads its
-  `figures.css`, which shows the SVG that matches the Documenter theme. The TikZ sources in
-  `docs/src/images/`, their `Makefile` and the `images` target of `docs/Makefile` are removed.
+  `figures.css`, which shows the SVG that matches the `documenter-light` or `documenter-dark`
+  theme. The TikZ sources in `docs/src/images/`, their `Makefile` and the `images` target of
+  `docs/Makefile` are removed.
 
 ## 0.18.6
 
