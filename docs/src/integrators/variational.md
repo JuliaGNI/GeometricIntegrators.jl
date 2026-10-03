@@ -123,7 +123,8 @@ mapping two points on the discrete trajectory into the real numbers.
 
 ## Discrete Euler-Lagrange Equations
 
-![Variations of the discrete trajectory](../images/variation-discrete.png)
+![Variations of the discrete trajectory](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/variation-discrete/variation-discrete_light.svg)
+![Variations of the discrete trajectory](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/variation-discrete/variation-discrete_dark.svg)
 
 The discrete trajectories $q_{d} = \{ q_{n} \}_{n=0}^{N}$ are required to satisfy a discrete version of Hamilton's principle of stationary action
 ```math
