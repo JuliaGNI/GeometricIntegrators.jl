@@ -321,7 +321,8 @@ Then, we may or may not perturb these initial conditions off the constraint subm
 The perturbation is followed by the application of some canonically symplectic algorithm $\Psi_{h}$ on $\cb{\mf{M}}$, namely a variational integrator in position-momentum form \eqref{eq:vi-position-momentum-form} or a variational Runge-Kutta method \eqref{eq:vprk} or \eqref{eq:vprk-lobatto}, in which cases we have that $\Psi_{h} = \big( \mathbb{F}^{+} L_{d} \big) \circ \big( \mathbb{F}^{-} L_{d} \big)^{-1}$.
 In general, the result of this algorithm, $(\bar{q}_{n+1}, \bar{p}_{n+1}) = \Psi_{h} (\bar{q}_{n}, \bar{p}_{n})$, will not lie on the constraint submanifold \eqref{eq:constraint-submanifold}. Therefore we apply a projection $(\bar{q}_{n+1}, \bar{p}_{n+1}) \mapsto (q_{n+1}, p_{n+1})$ which enforces $\phi (q_{n+1}, p_{n+1}) = p_{n+1} - \vartheta(q_{n+1}) = 0$. As this final result is a point in $i(\Delta)$ it is completely characterized by the value $q_{n+1}$.
 
-![](../images/omega-orthogonal-projection.png)
+![](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/omega-orthogonal-projection/omega-orthogonal-projection_light.svg)
+![](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/omega-orthogonal-projection/omega-orthogonal-projection_dark.svg)
 
 *Gradient of the constraint function $\phi$ orthogonal and $\Omega$-orthogonal to constant surfaces of $\phi(q, p) = p - \sqrt{p_{0}^{2} - q^{2}}$ for $p_{0} \in \{ 1, 2, 3 \}$.*
 
@@ -453,7 +454,8 @@ The idea of the construction of the methods is still the same, though. Only the 
 
 ### [Standard Projection](@id sec:standard-projection)
 
-![Illustration of the standard projection method](../images/standard-projection.png)
+![Illustration of the standard projection method](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/standard-projection/standard-projection_light.svg)
+![Illustration of the standard projection method](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/standard-projection/standard-projection_dark.svg)
 
 *Illustration of the standard projection method: The solution is projected to the constraint submanifold $\Delta$ after each step of the numerical integrator $\Psi_{h}$.*
 
@@ -477,8 +479,10 @@ This projection method, combined with the variational integrator in position-mom
 
 ### [Symmetric Projection](@id sec:symmetric-projection)
 
-![Symmetric Projection +](../images/symmetric-projection-plus.png)
-![Symmetric Projection -](../images/symmetric-projection-minus.png)
+![Symmetric Projection +](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/symmetric-projection-plus/symmetric-projection-plus_light.svg)
+![Symmetric Projection +](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/symmetric-projection-plus/symmetric-projection-plus_dark.svg)
+![Symmetric Projection -](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/symmetric-projection-minus/symmetric-projection-minus_light.svg)
+![Symmetric Projection -](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/symmetric-projection-minus/symmetric-projection-minus_dark.svg)
 
 *Illustration of the symmetric projection method: The solution is first perturbed off the constraint submanifold $\Delta$, then one step of the numerical integrator $\Psi_{h}$ is performed, and the result is projected back onto $\Delta$.*
 
@@ -531,7 +535,8 @@ For certain systems, this method can even be shown to be symplectic. In general,
 
 ### [Symplectic Projection](@id sec:symplectic-projection)
 
-![](../images/post-projection.png)
+![](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/post-projection/post-projection_light.svg)
+![](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/post-projection/post-projection_dark.svg)
 
 *Illustration of the post projection method. Starting on the constraint submanifold $\Delta$, the numerical integrator $\Psi_{h}$ moves the solution away from $\Delta$ in the first step. After each step, the solution is projected back onto $\Delta$, but the perturbation at the beginning of each consecutive step is exactly the inverse of the previous projection, so that, practically speaking, the solution is projected back onto $\Delta$ only for output purposes.*
 
@@ -609,7 +614,8 @@ If the sign is the opposite of the one in \eqref{eq:symplectic-projection-pre}, 
 ```
 so that the following diagram commutes
 
-![Commuting Diagram](../images/commuting-diagram.png)
+![Commuting Diagram](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/commuting-diagram/commuting-diagram_light.svg)
+![Commuting Diagram](https://juliagni.github.io/GeometricFigures.jl/figures/integrators/commuting-diagram/commuting-diagram_dark.svg)
 
 and the projection is effectively only applied for the output of the solution, but the actual advancement of the solution in time happens outside of the constraint submanifold.
 In other words, applying $n$ times the algorithm $\Phi_{h}$ to a point $(q_{0}, 0)$ is equivalent to applying the perturbation $\mathbb{P}^{-1}$, then applying $n$ times the algorithm $\Psi_{h}$ and projecting the result with $\mathbb{P}$.
