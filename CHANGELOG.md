@@ -13,6 +13,11 @@ remain a gap.
 
 ## [Unreleased] — targeting 0.18.7
 
+### Changed
+
+* **CI coverage and cache.** CI uploads coverage from the `Julia 1 - ubuntu-latest` job instead of
+  `Julia min`, and a test job saves the Julia cache only when it succeeds.
+
 ### Documentation
 
 * **Manual figures published by GeometricFigures.jl.** The seven figures in the manual link the
