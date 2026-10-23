@@ -17,7 +17,7 @@ In both, the library leaves maximum control to the user. While trying to pick se
 ## Package Description
 
 Differential equations are ubiquitous in science and engineering. Many equations possess geometric features or abstract mathematical structures that need to be preserved in the discretisation in order to obtain reliable simulation results, especially for nonlinear problems and long-time simulations. The preservation of such properties improves stability, bounds global error growth and reduces numerical artefacts.
-Robust, performant and structure-preserving solvers for different types of differential equations are thus needed across many disciplines. GeometricIntegrators.jl provides such solvers and makes them available for both direct use as well as integration into other codes. Furthermore, the implemented algorithms can also be used within the [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) ecosystem [[Rackauckas:2017](@cite)], which is the defacto standard differential equation solver for the Julia programming language [[Bezanson:2017](@cite)].
+Robust, performant and structure-preserving solvers for different types of differential equations are thus needed across many disciplines. GeometricIntegrators.jl provides such solvers and makes them available for both direct use as well as integration into other codes. Furthermore, the implemented algorithms can also be used within the [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) ecosystem [[RackauckasNie:2017](@cite)], which is the defacto standard differential equation solver for the Julia programming language [[Bezanson:2017](@cite)].
 
 GeometricIntegrators.jl provides a comprehensive library of geometric integration algorithms as well as some non-geometric algorithms.
 It collects native Julia implementations of many known methods under a unified interface.
@@ -39,7 +39,7 @@ In particular, this requires interfaces to appropriate iterative and parallel li
 
 ## Similar Software
 
-A Julia package closely related to GeometricIntegrators.jl is [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) [[Rackauckas:2017](@cite)]. Although serving similar purposes, the scope of the two libraries is rather different.
+A Julia package closely related to GeometricIntegrators.jl is [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) [[RackauckasNie:2017](@cite)]. Although serving similar purposes, the scope of the two libraries is rather different.
 While DifferentialEquations.jl provides a feature-rich ecosystem for the solution of differential equations, the focus of GeometricIntegrators.jl is on algorithms. While [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) is based around adaptive time stepping algorithms, GeometricIntegrators.jl focuses on fixed time step methods, given that structure-preservation is not easily combined with time step adaptivity. Therefore both packages are rather complementary, and GeometricIntegrators.jl can in fact be used as backend for DifferentialEquations.jl via [GeometricIntegratorsDiffEq.jl](https://github.com/JuliaDiffEq/GeometricIntegratorsDiffEq.jl).
 
 
