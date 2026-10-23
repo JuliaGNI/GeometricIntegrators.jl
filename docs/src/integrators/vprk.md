@@ -305,11 +305,11 @@ In the standard projection method, a projection is applied after each step of th
 Assuming that the initial condition lies in the manifold, the solution of the projected integrator will stay in the manifold.
 The problem with this approach is that even though assuming that the numerical integrator is symmetric, the whole algorithm comprised of the integrator and the projection will not be symmetric.
 This often leads to growing errors in the solution and consequently a drift in the total energy of the system.
-This can be remedied by symmetrizing the projection [[Hairer:2000](@cite), [Hairer:2001](@cite), [Chan:2004](@cite), [HairerLubichWanner:2006](@cite)], where the initial data is first perturbed out of the constraint submanifold, before the numerical integrator is applied, and then projected back to the manifold.
+This can be remedied by symmetrizing the projection [[Hairer:2000](@cite), [Hairer:2001](@cite), [ChanChartierMurua:2004](@cite), [HairerLubichWanner:2006](@cite)], where the initial data is first perturbed out of the constraint submanifold, before the numerical integrator is applied, and then projected back to the manifold.
 This leads to very good long-time stability and improved energy behaviour.
 
 While such projection methods, both standard and symmetric ones, are standard procedures for conserving energy, as well as holonomic and non-holonomic constraints, not much is known about their application to Dirac constraints. 
-Some authors consider general differential algebraic systems of index two [[HairerLubichRoche:1989](@cite), [Ascher:1991](@cite), [Chan:2002](@cite), [Chan:2004](@cite), [Jay:2003](@cite), [Jay:2006](@cite)], the class to which the systems considered here belong, but a discussion of symplecticity seems to be mostly lacking from the literature, aside from some remarks on the conservation of quadratic invariants by the post-projection method of [[Chan:2002](@cite)].
+Some authors consider general differential algebraic systems of index two [[HairerLubichRoche:1989](@cite), [AscherPetzold:1991](@cite), [ChanChartierMurua:2002](@cite), [ChanChartierMurua:2004](@cite), [Jay:2003](@cite), [Jay:2006](@cite)], the class to which the systems considered here belong, but a discussion of symplecticity seems to be mostly lacking from the literature, aside from some remarks on the conservation of quadratic invariants by the post-projection method of [[ChanChartierMurua:2002](@cite)].
 
 In the following, we apply several projection methods (standard, symmetric, symplectic, midpoint) to variational integrators in position-momentum form.
 As it turns out, both the standard projection and the symmetric projection are not symplectic. The symmetric projection nevertheless shows very good long-time stability, as it can be shown to be pseudo-symplectic. The symplectic projection method, as the name suggests, is indeed symplectic, although in a generalized sense. The midpoint projection method is symplectic in the usual sense but only for particular integrators.
@@ -441,7 +441,7 @@ The difference of the various algorithms lies in the choice of $\lambda_{n}^{-}$
 | Symmetric  | $\lambda_{n+1/2}$ | $R (\infty) \, \lambda_{n+1/2}$            |
 | Midpoint   | $\lambda_{n+1/2}$ | $R (\infty) \, \lambda_{n+1/2}$            |
 
-For the symmetric, symplectic and midpoint projections, it is important to adapt the sign in the projection according to the stability function $R(\infty)$ of the basic integrator (for details see e.g. [Chan:2004](@cite)).
+For the symmetric, symplectic and midpoint projections, it is important to adapt the sign in the projection according to the stability function $R(\infty)$ of the basic integrator (for details see e.g. [ChanChartierMurua:2004](@cite)).
 For the methods we are interested in, namely Runge-Kutta methods, the stability function is given by $R(z) = 1 + z b^{T} (\identity - zA)^{-1} e$ with $e = (1, 1, ..., 1)^{T} \in \mathbb{R}^{s}$, and we have $\abs{R(\infty)}=1$ or, more specifically, for Gauss-Legendre methods $R(\infty) = (-1)^{s}$ and for partitioned Gauss-Lobatto IIIA-IIIB and IIIB-IIIA methods we have $R(\infty) = (-1)^{s-1}$.
 
 Let us remark that for the standard projection, the basic integrator and the projection step can be applied independently.
@@ -486,7 +486,7 @@ This projection method, combined with the variational integrator in position-mom
 
 *Illustration of the symmetric projection method: The solution is first perturbed off the constraint submanifold $\Delta$, then one step of the numerical integrator $\Psi_{h}$ is performed, and the result is projected back onto $\Delta$.*
 
-To overcome the shortcomings of the standard projection, we consider a symmetric projection of the variational Runge-Kutta integrators following [Hairer:2000](@cite), [Hairer:2001](@cite) and [Chan:2004](@cite), see also [HairerLubichWanner:2006](@cite), Section V.4.1. Here, one starts again by computing the momentum $p_{n}$ as a function of the coordinates $q_{n}$ according to the continuous fibre derivative, which can be expressed with the constraint function as
+To overcome the shortcomings of the standard projection, we consider a symmetric projection of the variational Runge-Kutta integrators following [Hairer:2000](@cite), [Hairer:2001](@cite) and [ChanChartierMurua:2004](@cite), see also [HairerLubichWanner:2006](@cite), Section V.4.1. Here, one starts again by computing the momentum $p_{n}$ as a function of the coordinates $q_{n}$ according to the continuous fibre derivative, which can be expressed with the constraint function as
 ```math
 \begin{equation}\label{eq:symmetric-symplectic-projection}
 0 = \phi (z_{n}) .
@@ -603,12 +603,12 @@ This corresponds to a modified one-form $\vartheta_{\lambda}$, such that $\omega
 \vartheta_{\lambda} = ( \vartheta_{i} (q) - h \, \lambda^{k} \vartheta_{k,i} (q) ) \, ( \ext q^{i} - h \, \ext \lambda^{i} )
 \end{equation}
 ```
-As noted by [Chan:2004](@cite), the modified perturbation \eqref{eq:symplectic-projection-pre-constraint}-\eqref{eq:symplectic-projection-pre} can be viewed as a change of variables from $(q, \lambda)$ on $\mf{M} \times \mathbb{R}^{d}$ to $(q, p)$ on $\cb{\mf{M}}$, and the projection \eqref{eq:symplectic-projection-post}-\eqref{eq:symplectic-projection-post-constraint} as a change of variables back from $(q, p)$ to $(q, \lambda)$.
+As noted by [ChanChartierMurua:2004](@cite), the modified perturbation \eqref{eq:symplectic-projection-pre-constraint}-\eqref{eq:symplectic-projection-pre} can be viewed as a change of variables from $(q, \lambda)$ on $\mf{M} \times \mathbb{R}^{d}$ to $(q, p)$ on $\cb{\mf{M}}$, and the projection \eqref{eq:symplectic-projection-post}-\eqref{eq:symplectic-projection-post-constraint} as a change of variables back from $(q, p)$ to $(q, \lambda)$.
 The symplectic form $\omega_{\lambda}$ on $\mf{M} \times \mathbb{R}^{d}$ thus corresponds to the pullback of the canonical symplectic form $\omega$ on $\cb{\mf{M}}$ by this variable transformation.
 
 Let us note that the sign in in front of the projection in \eqref{eq:symplectic-projection-post}, given by the stability function of the basic integrator, has very important implications on the nature of the algorithm.
 If it is the same as in \eqref{eq:symplectic-projection-pre}, the character of the method is very similar to the symmetric projection method described before.
-If the sign is the opposite of the one in \eqref{eq:symplectic-projection-pre}, like for Gauss-Legendre Runge-Kutta methods with an odd number of stages, the perturbation reverses the projection of the previous step, so that we effectively apply the post-projection method of [Chan:2002](@cite). That is, the projected integrator $\Phi_{h}$ is conjugate to the unprojected integrator $\Psi_{h}$ by
+If the sign is the opposite of the one in \eqref{eq:symplectic-projection-pre}, like for Gauss-Legendre Runge-Kutta methods with an odd number of stages, the perturbation reverses the projection of the previous step, so that we effectively apply the post-projection method of [ChanChartierMurua:2002](@cite). That is, the projected integrator $\Phi_{h}$ is conjugate to the unprojected integrator $\Psi_{h}$ by
 ```math
 \Phi_{h} = \mathbb{P}^{-1} \circ \Psi_{h} \circ \mathbb{P} ,
 ```
@@ -620,7 +620,7 @@ so that the following diagram commutes
 and the projection is effectively only applied for the output of the solution, but the actual advancement of the solution in time happens outside of the constraint submanifold.
 In other words, applying $n$ times the algorithm $\Phi_{h}$ to a point $(q_{0}, 0)$ is equivalent to applying the perturbation $\mathbb{P}^{-1}$, then applying $n$ times the algorithm $\Psi_{h}$ and projecting the result with $\mathbb{P}$.
 
-Potentially, this might degrade the performance of the algorithm. If the accumulated global error drives the solution too far away from the constraint submanifold, the projection step might not have a solution anymore. Interestingly, however, post-projected Gauss-Legendre Runge-Kutta methods retain their optimal order of $2s$ [[Chan:2002](@cite)]. Moreover, for methods with an odd number of stages, the global error of the unprojected solution is $\mathcal{O}(h^{s+1})$, compared to $\mathcal{O}(h^{s})$ for methods with an even number of stages. In practice this seems to be at least part of the reason of the good long-time stability of these methods.
+Potentially, this might degrade the performance of the algorithm. If the accumulated global error drives the solution too far away from the constraint submanifold, the projection step might not have a solution anymore. Interestingly, however, post-projected Gauss-Legendre Runge-Kutta methods retain their optimal order of $2s$ [[ChanChartierMurua:2002](@cite)]. Moreover, for methods with an odd number of stages, the global error of the unprojected solution is $\mathcal{O}(h^{s+1})$, compared to $\mathcal{O}(h^{s})$ for methods with an even number of stages. In practice this seems to be at least part of the reason of the good long-time stability of these methods.
 
 
 ### [Midpoint Projection](@id sec:midpoint-projection)
@@ -665,7 +665,7 @@ in order to force the solution to satisfy the constraint,
 ```
 For certain systems, this method can be shown to be symplectic with respect to the original noncanonical symplectic form on $\mf{M}$ if the integrator $\Psi_{h}$ is a symmetric, symplectic Runge-Kutta method with an odd number of stages $s$, for which the central stage with index $(s+1)/2$ corresponds to $z_{n+1/2}$.
 This is obviously the case for the implicit midpoint rule, that is the Gauss-Legendre Runge-Kutta method with $s=1$, but unfortunately not for higher-order Gauss-Legendre or for Gauss-Lobatto methods.
-However, following [OevelSofroniou:1997](@cite) and [Zhao:2014](@cite), higher-order methods similar to Gauss-Legendre methods but satisfying the requested property can be obtained. See for example the method with three stages, implemented as [`SRK3`](@ref).
+However, following [OevelSofroniou:1997](@cite) and [ZhaoWei:2014](@cite), higher-order methods similar to Gauss-Legendre methods but satisfying the requested property can be obtained. See for example the method with three stages, implemented as [`SRK3`](@ref).
 
 
 ### [Internal Stage Projection](@id sec:internal-stage-projection)
