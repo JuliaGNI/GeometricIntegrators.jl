@@ -11,12 +11,12 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
-## [Unreleased] — targeting 0.18.7
+## [0.18.7] — 2026-10-24
 
 ### Changed
 
-* **Julia 1.12 is the floor** (`[compat] julia = "1.12"`, from 1.11). A breaking change under
-  this package's pre-1.0 convention: a caller on Julia 1.11 can no longer install this version.
+* **Julia 1.12 is the floor** (`[compat] julia = "1.12"`, from 1.11). A patch release, because no
+  API changes: a caller on Julia 1.11 can no longer install this version.
   The repository records no reason for the raise, and the package contains no version-conditional
   code, so no workaround is removed.
 
