@@ -375,8 +375,12 @@ end
     sol = integrate(idae, VSPARK(SPARKLobattoIIIBIIIA(3)))
     @test relative_maximum_error(sol.q, ref.q) < 2E-11
 
+    # The error is round-off; the order-6 truncation error is about 4E-17 here. It is 7.8E-16
+    # to 1.8E-15 (3.5 to 8 eps) on aarch64, depending on the manifest, and 3.1E-15 (14 eps) in
+    # CI's Downgrade job and both Windows jobs. The bound is the one of
+    # `VSPARK(SPARKLobABC(4))` above.
     sol = integrate(idae, VSPARK(SPARKLobattoIIIBIIIA(4)))
-    @test relative_maximum_error(sol.q, ref.q) < 2E-15
+    @test relative_maximum_error(sol.q, ref.q) < 1E-14
 
     # The BIIIA s=2 stage system is **numerically singular**, exactly like the AIIIB partner
     # asserted `SingularException` below — the residual Jacobian at the first step has

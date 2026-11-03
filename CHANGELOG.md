@@ -28,6 +28,14 @@ remain a gap.
     `TypeName.mt`, which Julia 1.12 removed. Aqua 0.8.14 is the first release that reads
     `Core.methodtable` instead.
 
+### Tests
+
+* **The error bound of `VSPARK(SPARKLobattoIIIBIIIA(4))` is `1E-14`, from `2E-15`**, the bound of
+  `VSPARK(SPARKLobABC(4))`. The error against the `Gauss(8)` reference is round-off; the order-6
+  truncation error is about `4E-17` at this step. It is `7.8E-16` to `1.8E-15` on aarch64,
+  depending on the manifest, and `3.1E-15` in CI's Downgrade job and both Windows jobs, which
+  failed the old bound. The other Linux jobs passed it.
+
 
 ## [0.18.7] — 2026-10-24
 
