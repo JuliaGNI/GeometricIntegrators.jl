@@ -11,6 +11,32 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
+## [Unreleased]
+
+### Changed
+
+* **Compat floors raised to versions that resolve and load together on Julia 1.12.** CI's
+  downgrade job resolves `Project.toml` and `test/Project.toml` together at their lower bounds
+  and runs the tests there. No API changes.
+  * `PrettyTables` `"2, 3"` → `"3"`: RungeKutta 0.6.4 requires PrettyTables 3, and the method
+    list uses `MarkdownTableFormat`, which PrettyTables 2 does not have.
+  * `StaticArrays` `"1"` → `"1.9.13"`: SimpleSolvers 0.4 and later require StaticArrays 1.9.13.
+  * `OffsetArrays` `"1"` → `"1.14"`: earlier versions redefine `Base.fill`, `zeros`, `ones`,
+    `trues` and `falses` for range dimensions, which Base already defines from Julia 1.12, and
+    fail to precompile there. OffsetArrays 1.14 skips these methods on Julia 1.12.
+  * `Aqua` (tests) `"0.8"` → `"0.8.14"`: the piracy check of earlier versions reads
+    `TypeName.mt`, which Julia 1.12 removed. Aqua 0.8.14 is the first release that reads
+    `Core.methodtable` instead.
+
+### Tests
+
+* **The error bound of `VSPARK(SPARKLobattoIIIBIIIA(4))` is `1E-14`, from `2E-15`**, the bound of
+  `VSPARK(SPARKLobABC(4))`. The error against the `Gauss(8)` reference is round-off; the order-6
+  truncation error is about `4E-17` at this step. It is `7.8E-16` to `1.8E-15` on aarch64,
+  depending on the manifest, and `3.1E-15` in CI's Downgrade job and both Windows jobs, which
+  failed the old bound. The other Linux jobs passed it.
+
+
 ## [0.18.7] — 2026-10-24
 
 ### Changed
