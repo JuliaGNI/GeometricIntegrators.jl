@@ -74,7 +74,7 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIE
     # equations(int).ϑ(cache(int,ST).θ̄, t̄, solstep(int).q̄, cache(int,ST).v̄, params)
 end
 
-function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIA}) where {ST}
+function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIB}) where {ST}
     # set some local variables for convenience
     local D = length(cache(int, ST).q)
 
@@ -90,7 +90,7 @@ function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIA})
     end
 end
 
-function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIB}) where {ST}
+function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIA}) where {ST}
     # set some local variables for convenience
     local D = length(cache(int, ST).q)
 

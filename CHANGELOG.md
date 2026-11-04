@@ -13,6 +13,17 @@ remain a gap.
 
 ## [Unreleased]
 
+### Breaking Changes
+
+* **`SymplecticEulerARK` and `SymplecticEulerBRK` exchange their meaning, and so do `DVIA` and
+  `DVIB`.** The letters now follow Leimkuhler and Reich, *Simulating Hamiltonian Dynamics* (2004),
+  Eqs. (4.6)-(4.9), the only source of these letters: A evaluates at `(q_{n+1}, p_n)` and B at
+  `(q_n, p_{n+1})`. The tableaus keep their names `:SymplecticEulerA` and `:SymplecticEulerB`. The
+  names stay, so a caller's code runs without an error and computes the adjoint method: exchange
+  the two names to keep a result. The code now agrees with the page on splitting methods, which
+  already used these letters. `SymplecticEulerA` and `SymplecticEulerB` come from
+  GeometricIntegratorsBase, which makes the same change.
+
 ### Changed
 
 * **Compat floors raised to versions that resolve and load together on Julia 1.12.** CI's
