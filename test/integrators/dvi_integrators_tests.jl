@@ -1,5 +1,6 @@
 using GeometricIntegrators
 using GeometricProblems.LotkaVolterra2d
+using GeometricProblems.HarmonicOscillator: degenerate_lodeproblem
 import GeometricProblems.LotkaVolterra2dSingular as LVSingular
 using Test
 using Logging
@@ -26,6 +27,23 @@ ref = integrate(ode, Gauss(8))
 
     sol = integrate(lode, DVIB())
     @test relative_maximum_error(sol.q, ref.q) < 8E-2
+end
+
+@testset "$(rpad("Letters of the symplectic Euler DVIs",80))" begin
+    # L = y ẋ - (x² + y²) / 2 is separable, so the letters of Leimkuhler and Reich (2004),
+    # Eqs. (4.6)-(4.9) show in closed form: A evaluates at (xₙ₊₁, yₙ) and B at (xₙ, yₙ₊₁). On a
+    # non-separable Hamiltonian neither method evaluates at one of these points.
+    x₀, y₀, h = 0.7, 1.1, 0.1
+    function onestep(method)
+        prob = degenerate_lodeproblem([x₀, y₀]; timespan = (0.0, h), timestep = h,
+            parameters = (m = 1.0, k = 1.0, ω = 1.0))
+        collect(integrate(prob, method).q[end])
+    end
+
+    xA = x₀ + h * y₀
+    yB = y₀ - h * x₀
+    @test onestep(DVIA()) ≈ [xA, y₀ - h * xA]
+    @test onestep(DVIB()) ≈ [x₀ + h * yB, yB]
 end
 
 @testset "$(rpad("2nd Order Centred DVIs",80))" begin
