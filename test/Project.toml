@@ -20,7 +20,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 GeometricIntegrators = {path = ".."}
 
 [compat]
-Aqua = "0.8"
+Aqua = "0.8.14"
 ExplicitImports = "1.15"
 GeometricProblems = "0.9.1"
 InteractiveUtils = "1"
