@@ -6,7 +6,7 @@
 #
 # Euler-B is the left and Euler-A the right form of Hairer, Lubich & Wanner (2006), Eq. (VI.3.1).
 #
-# Run with `julia --startup-file=no --project=scripts scripts/symplectic_euler_points.jl`. It exits
+# Run with `julia --startup-file=no --project=. scripts/symplectic_euler_points.jl`. It exits
 # nonzero when `IPRK` with a tableau misses its letter or reaches the other one, and on a separable
 # Hamiltonian when the explicit integrator does. On a non-separable Hamiltonian the explicit
 # integrator computes neither formula: see `KNOWN_ISSUES.md`.
