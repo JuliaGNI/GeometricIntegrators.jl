@@ -11,7 +11,7 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
-## [Unreleased]
+## [0.19.0] — 2026-11-04
 
 ### Breaking Changes
 
