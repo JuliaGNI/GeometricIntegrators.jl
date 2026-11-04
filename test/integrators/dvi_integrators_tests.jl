@@ -46,6 +46,72 @@ end
     @test onestep(DVIB()) ≈ [xA, y₀ - h * xA]
 end
 
+@testset "$(rpad("Staggered states of the symplectic Euler DVIs",80))" begin
+    # The docstrings of DVIA and DVIB state their letters on a staggered state for any Hamiltonian,
+    # so this one is non-separable: H = y² (1 + x²) / 2 + cos x. The expected steps solve the two
+    # formulas directly. The other letter is the control and must not match.
+    H(x, y) = y^2 * (1 + x^2) / 2 + cos(x)
+    Hx(x, y) = x * y^2 - sin(x)
+    Hy(x, y) = y * (1 + x^2)
+
+    x₀, y₀, h, nsteps = 0.7, 1.1, 0.1, 10
+
+    function fixedpoint(g, u)
+        for _ in 1:200
+            unew = g(u)
+            abs(unew - u) < 1E-15 && return unew
+            u = unew
+        end
+        error("the fixed-point iteration did not converge")
+    end
+
+    function euler_a((x, y))
+        x̃ = fixedpoint(u -> x + h * Hy(u, y), x)
+        (x̃, y - h * Hx(x̃, y))
+    end
+
+    function euler_b((x, y))
+        ỹ = fixedpoint(u -> y - h * Hx(x, u), y)
+        (x + h * Hy(x, ỹ), ỹ)
+    end
+
+    function states(method)
+        ϑ!(θ, t, q, v, params) = (θ[1] = q[2]; θ[2] = 0; nothing)
+        f!(f, t, q, v, params) = (
+            f[1] = -Hx(q[1], q[2]); f[2] = v[1] - Hy(q[1], q[2]); nothing)
+        g!(g, t, q, v, λ, params) = (g[1] = 0; g[2] = λ[1]; nothing)
+        ω!(ω, t, q, v, params) = (fill!(ω, 0); ω[1, 2] = -1; ω[2, 1] = 1; nothing)
+        l(t, q, v, params) = q[2] * v[1] - H(q[1], q[2])
+        v̄!(v, t, q, p, params) = (v[1] = Hy(q[1], q[2]); v[2] = -Hx(q[1], q[2]); nothing)
+        prob = LODEProblem(
+            ϑ!, f!, g!, ω!, l, (0.0, nsteps * h), h, [x₀, y₀], [y₀, 0.0]; v̄ = v̄!)
+        sol = integrate(prob, method)
+        [(sol.q[n][1], sol.q[n][2]) for n in 0:nsteps]
+    end
+
+    # the largest distance of the staggered states from `step` started at the first of them
+    function distance(step, staggered)
+        z, d = staggered[1], 0.0
+        for zₙ in staggered[2:end]
+            z = step(z)
+            d = max(d, hypot(z[1] - zₙ[1], z[2] - zₙ[2]))
+        end
+        d
+    end
+
+    zA = states(DVIA())
+    zB = states(DVIB())
+
+    # DVIA on (xₙ₋₁, yₙ) and DVIB on (xₙ, yₙ₋₁)
+    stateA = [(zA[n][1], zA[n + 1][2]) for n in 1:nsteps]
+    stateB = [(zB[n + 1][1], zB[n][2]) for n in 1:nsteps]
+
+    @test distance(euler_a, stateA) < 1E-12
+    @test distance(euler_b, stateB) < 1E-12
+    @test distance(euler_b, stateA) > 1E-3
+    @test distance(euler_a, stateB) > 1E-3
+end
+
 @testset "$(rpad("2nd Order Centred DVIs",80))" begin
     sol = integrate(lode, CMDVI())
     @test relative_maximum_error(sol.q, ref.q) < 4E-3
