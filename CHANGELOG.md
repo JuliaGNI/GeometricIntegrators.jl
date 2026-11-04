@@ -24,8 +24,8 @@ remain a gap.
   without an error and computes a different method: exchange the two names to keep a result. On a
   separable Hamiltonian the two are adjoint. The code now agrees with the page on splitting methods,
   which already used these letters. `SymplecticEulerA` and `SymplecticEulerB` come from
-  GeometricIntegratorsBase: its release with the same change must go out with this one, because
-  until then `SymplecticEulerA` and `SymplecticEulerARK` compute adjoint methods.
+  GeometricIntegratorsBase, which makes the same change in 0.7, so that is the new compat floor and
+  `SymplecticEulerA` and `SymplecticEulerARK` compute the same method.
 
 ### Documentation
 

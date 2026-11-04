@@ -224,6 +224,10 @@ end
     @test all(step(Hq, Hp, SymplecticEulerARK()) .≈ (qA, p₀ - h * qA))
     @test all(step(Hq, Hp, SymplecticEulerBRK()) .≈ (q₀ + h * pB, pB))
 
+    # the names re-exported from GeometricIntegratorsBase carry the same letters
+    @test all(step(Hq, Hp, SymplecticEulerA()) .≈ (qA, p₀ - h * qA))
+    @test all(step(Hq, Hp, SymplecticEulerB()) .≈ (q₀ + h * pB, pB))
+
     # non-separable: H = (1 + q²) p² / 2, where the point is seen by the implicit integrator
     Hq, Hp = (q, p) -> q * p^2, (q, p) -> (1 + q^2) * p
     residual(q₁, p₁, q̃, p̃) = hypot(q₁ - q₀ - h * Hp(q̃, p̃), p₁ - p₀ + h * Hq(q̃, p̃))
