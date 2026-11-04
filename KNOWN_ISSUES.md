@@ -397,3 +397,15 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
   fix is in GeometricFigures: add the three classes to the two dark rules.
 - kind: upstream
 - found: 2026-10-03
+
+### K24 · `SymplecticEulerARK` and `SymplecticEulerBRK` compute neither symplectic Euler formula on a non-separable Hamiltonian
+
+- location: `src/integrators/rk/integrators_eprk.jl`
+- evidence: `scripts/symplectic_euler_points.jl` takes one step of `H = ½p²(1+q²) + cos q` and
+  compares it with a Newton solve of each formula. `IPRK` with the same tableaus is exact; the
+  explicit integrator misses the nearer form by `2.7e-3` for `SymplecticEulerBRK` and `1.1e-2` for
+  `SymplecticEulerARK`. The integrator passes the stale stage to the first of `f` and `v`, so that
+  one is evaluated at `(q_n, p_n)`. Neither the `EPRK` docstring nor the two methods state that `H`
+  must be separable, and `issymplectic` returns `true` for both.
+- kind: defect
+- found: 2026-11-04
