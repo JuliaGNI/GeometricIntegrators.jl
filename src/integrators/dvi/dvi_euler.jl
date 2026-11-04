@@ -4,16 +4,16 @@ abstract type DVIEuler <: DVIMethod end
 """
 Symplectic Euler-A Degenerate Variational Integrator.
 
-The letter holds on the staggered state ``(x_{n-1}, y_{n})``, where the method is Euler-A of
-Leimkuhler and Reich (2004) for any Hamiltonian.
+For `L = y ẋ - H(x, y)` the letter holds on the staggered state ``(x_{n-1}, y_{n})``, where the
+method is Euler-A of Leimkuhler and Reich (2004) for any Hamiltonian.
 """
 struct DVIA <: DVIEuler end
 
 """
 Symplectic Euler-B Degenerate Variational Integrator.
 
-The letter holds on the staggered state ``(x_{n}, y_{n-1})``, where the method is Euler-B of
-Leimkuhler and Reich (2004) for any Hamiltonian.
+For `L = y ẋ - H(x, y)` the letter holds on the staggered state ``(x_{n}, y_{n-1})``, where the
+method is Euler-B of Leimkuhler and Reich (2004) for any Hamiltonian.
 """
 struct DVIB <: DVIEuler end
 

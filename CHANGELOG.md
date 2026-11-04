@@ -30,8 +30,8 @@ remain a gap.
 ### Documentation
 
 * `DVIA` and `DVIB` keep their meaning. Their letters follow Leimkuhler and Reich on a staggered
-  state, for any Hamiltonian, and the docstrings and the page on degenerate variational integrators
-  now say so.
+  state, for any Hamiltonian in the form `L = y ẋ - H(x, y)`, and the docstrings and the page on
+  degenerate variational integrators now say so.
 
 ### Changed
 
