@@ -30,9 +30,9 @@ ref = integrate(ode, Gauss(8))
 end
 
 @testset "$(rpad("Letters of the symplectic Euler DVIs",80))" begin
-    # L = y ẋ - (x² + y²) / 2 is separable, so the letters of Leimkuhler and Reich (2004),
-    # Eqs. (4.6)-(4.9) show in closed form: A evaluates at (xₙ₊₁, yₙ) and B at (xₙ, yₙ₊₁). On a
-    # non-separable Hamiltonian neither method evaluates at one of these points.
+    # L = y ẋ - (x² + y²) / 2 is separable, so one step has a closed form. The letters of Leimkuhler
+    # and Reich (2004), Eqs. (4.6)-(4.9), hold on the staggered state: DVIA is Euler-A on
+    # (xₙ₋₁, yₙ) and DVIB is Euler-B on (xₙ, yₙ₋₁). On (xₙ, yₙ) each one step is the adjoint letter.
     x₀, y₀, h = 0.7, 1.1, 0.1
     function onestep(method)
         prob = degenerate_lodeproblem([x₀, y₀]; timespan = (0.0, h), timestep = h,
@@ -42,8 +42,8 @@ end
 
     xA = x₀ + h * y₀
     yB = y₀ - h * x₀
-    @test onestep(DVIA()) ≈ [xA, y₀ - h * xA]
-    @test onestep(DVIB()) ≈ [x₀ + h * yB, yB]
+    @test onestep(DVIA()) ≈ [x₀ + h * yB, yB]
+    @test onestep(DVIB()) ≈ [xA, y₀ - h * xA]
 end
 
 @testset "$(rpad("2nd Order Centred DVIs",80))" begin

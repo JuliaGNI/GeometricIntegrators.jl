@@ -409,17 +409,3 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
   must be separable, and `issymplectic` returns `true` for both.
 - kind: defect
 - found: 2026-11-04
-
-### K25 · The letters of `DVIA` and `DVIB` hold on a separable Hamiltonian only
-
-- location: `src/integrators/dvi/dvi_euler.jl`
-- evidence: one step of `L = q₂ q̇₁ - H` with `ϑ = (q₂, 0)`, `(x₀, y₀, h) = (0.7, 1.1, 0.1)`, against a
-  Newton solve of each formula. On `H = y²/2 + cos x`, `DVIA` is `0` from Euler-A and `1.028e-2` from
-  Euler-B, and `DVIB` the reverse. On `H = y²(1+x²)/2 + cos x`, `DVIA` is `3.558e-2` and `6.910e-3`
-  from the two, and `DVIB` is `1.119e-2` and `3.316e-2`. The residuals give `x₁ = x₀ + h H_y(x₀, y₀)`,
-  `y₁ = y₀ - h H_x(x₁, y₁)` for `DVIA`, and `y₁ = y₀ - h H_x(x₀, y₀)`, `x₁ = x₀ + h H_y(x₁, y₁)` for
-  `DVIB`. By algebra, not run, `DVIA` is Euler-B on the staggered state `(x_n, y_{n-1})`, and `DVIB`
-  is Euler-A on `(x_{n-1}, y_n)`, so on a non-separable `H` the letter depends on the state that is
-  read. `docs/src/integrators/dvi.md` does not state this.
-- kind: docs
-- found: 2026-11-04

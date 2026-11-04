@@ -15,16 +15,23 @@ remain a gap.
 
 ### Breaking Changes
 
-* **`SymplecticEulerARK` and `SymplecticEulerBRK` exchange their meaning, and so do `DVIA` and
-  `DVIB`.** The letters now follow Leimkuhler and Reich, *Simulating Hamiltonian Dynamics* (2004),
-  Eqs. (4.6)-(4.9), the only source of these letters: A evaluates at `(q_{n+1}, p_n)` and B at
-  `(q_n, p_{n+1})`. For `DVIA` and `DVIB` this holds on a separable Hamiltonian only (K25). The
-  tableaus keep their names `:SymplecticEulerA` and `:SymplecticEulerB`. The names stay, so a
-  caller's code runs without an error and computes the adjoint method: exchange the two names to
-  keep a result. The code now agrees with the page on splitting methods, which already used these
-  letters. `SymplecticEulerA` and `SymplecticEulerB` come from GeometricIntegratorsBase: its release
-  with the same change must go out with this one, because until then the two names `SymplecticEulerA`
-  and `SymplecticEulerARK` compute adjoint methods.
+* **`SymplecticEulerARK` and `SymplecticEulerBRK` exchange their meaning.** The letters now follow
+  Leimkuhler and Reich, *Simulating Hamiltonian Dynamics* (2004), Eqs. (4.6)-(4.9), the only source
+  of these letters: A evaluates at `(q_{n+1}, p_n)` and B at `(q_n, p_{n+1})`. `IPRK` with these
+  tableaus does this on any Hamiltonian; the explicit integrator that `SymplecticEulerARK()` and
+  `SymplecticEulerBRK()` select does it on a separable Hamiltonian only (K24). The tableaus keep
+  their names `:SymplecticEulerA` and `:SymplecticEulerB`. The names stay, so a caller's code runs
+  without an error and computes a different method: exchange the two names to keep a result. On a
+  separable Hamiltonian the two are adjoint. The code now agrees with the page on splitting methods,
+  which already used these letters. `SymplecticEulerA` and `SymplecticEulerB` come from
+  GeometricIntegratorsBase: its release with the same change must go out with this one, because
+  until then `SymplecticEulerA` and `SymplecticEulerARK` compute adjoint methods.
+
+### Documentation
+
+* `DVIA` and `DVIB` keep their meaning. Their letters follow Leimkuhler and Reich on a staggered
+  state, for any Hamiltonian, and the docstrings and the page on degenerate variational integrators
+  now say so.
 
 ### Changed
 

@@ -73,7 +73,11 @@ v^1_{n} &= \big( \nabla_{2} \vartheta_1 (x^1_{n}, x^2_{n}) \big)^{-1} \nabla_{2}
 under an appropriate invertibility condition on $\nabla_2 \vartheta_1$. The
 [`DVIA`](@ref) and [`DVIB`](@ref) integrators correspond to the two
 symplectic-Euler-type discretisations of this principle (evaluating $\vartheta$
-and $H$ at the beginning or the end of the interval) and are first order. The
+and $H$ at the beginning or the end of the interval) and are first order. Their
+letters are those of Leimkuhler and Reich (2004) and hold on a staggered state, for
+any Hamiltonian: with $x = x^1$ and $y = x^2$, [`DVIA`](@ref) is Euler-A on
+$(x_{n-1}, y_{n})$ and [`DVIB`](@ref) is Euler-B on $(x_{n}, y_{n-1})$. Read on
+$(x_{n}, y_{n})$, one step on a separable Hamiltonian is the adjoint letter. The
 [`CMDVI`](@ref) and [`CTDVI`](@ref) integrators use, respectively, a midpoint and
 a trapezoidal discretisation and are symmetric and second order.
 

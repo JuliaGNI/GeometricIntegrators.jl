@@ -1,10 +1,20 @@
 
 abstract type DVIEuler <: DVIMethod end
 
-"Symplectic Euler-A Degenerate Variational Integrator."
+"""
+Symplectic Euler-A Degenerate Variational Integrator.
+
+The letter holds on the staggered state ``(x_{n-1}, y_{n})``, where the method is Euler-A of
+Leimkuhler and Reich (2004) for any Hamiltonian.
+"""
 struct DVIA <: DVIEuler end
 
-"Symplectic Euler-B Degenerate Variational Integrator."
+"""
+Symplectic Euler-B Degenerate Variational Integrator.
+
+The letter holds on the staggered state ``(x_{n}, y_{n-1})``, where the method is Euler-B of
+Leimkuhler and Reich (2004) for any Hamiltonian.
+"""
 struct DVIB <: DVIEuler end
 
 order(::Union{DVIA, Type{DVIA}}) = 1
@@ -74,7 +84,7 @@ function components!(x::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIE
     # equations(int).ϑ(cache(int,ST).θ̄, t̄, solstep(int).q̄, cache(int,ST).v̄, params)
 end
 
-function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIB}) where {ST}
+function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIA}) where {ST}
     # set some local variables for convenience
     local D = length(cache(int, ST).q)
 
@@ -90,7 +100,7 @@ function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIB})
     end
 end
 
-function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIA}) where {ST}
+function residual!(b::Vector{ST}, sol, params, int::GeometricIntegrator{<:DVIB}) where {ST}
     # set some local variables for convenience
     local D = length(cache(int, ST).q)
 
