@@ -1,16 +1,18 @@
 "Holds the tableau of an Specialised Partitioned Additive Runge-Kutta method for Variational systems."
-struct VSPARKsecondary{DT <: Number, DVT} <: LSPARKMethod
+struct VSPARKsecondary{DT <: Number, DVT, QT <: CoefficientsSPARK{DT},
+    PT <: CoefficientsSPARK{DT}, Q̃T <: CoefficientsSPARK{DT},
+    P̃T <: CoefficientsSPARK{DT}} <: LSPARKMethod
     name::Symbol
     o::Int
     s::Int
     r::Int
     ρ::Int
 
-    q::CoefficientsSPARK{DT}
-    p::CoefficientsSPARK{DT}
+    q::QT
+    p::PT
 
-    q̃::CoefficientsSPARK{DT}
-    p̃::CoefficientsSPARK{DT}
+    q̃::Q̃T
+    p̃::P̃T
 
     ω::Matrix{DT}
     d::DVT
@@ -30,7 +32,8 @@ struct VSPARKsecondary{DT <: Number, DVT} <: LSPARKMethod
 
         @assert d === nothing || length(d) == r
 
-        new{DT, DVT}(name, o, s, r, 0, q, p, q̃, p̃, ω, d)
+        new{DT, DVT, typeof(q), typeof(p), typeof(q̃), typeof(p̃)}(
+            name, o, s, r, 0, q, p, q̃, p̃, ω, d)
     end
 end
 
