@@ -20,8 +20,7 @@ remain a gap.
   fields `q`, `p`, `q̃` and `p̃`, which were the partial `UnionAll`s `Tableau{DT}` and
   `CoefficientsSPARK{DT}`. The constructors and their arguments do not change, and neither do the
   results. A method that names the type with its first two parameters, such as
-  `SLRK{DT, Nothing}`, still matches. `FLRKCache.jac` (K25) and `MethodList.header` and `.data`
-  (K26) stay `Any`.
+  `SLRK{DT, Nothing}`, still matches.
 
 
 ## [0.19.0] — 2026-11-04
