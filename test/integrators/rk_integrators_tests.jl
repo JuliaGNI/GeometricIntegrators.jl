@@ -206,6 +206,41 @@ end
     @test relative_maximum_error(sol, ref).q < 8E-5
 end
 
+@testset "$(rpad("Letters of the symplectic Euler methods",80))" begin
+    # The letters are those of Leimkuhler and Reich (2004), Eqs. (4.6)-(4.9): A evaluates at
+    # (qₙ₊₁, pₙ) and B at (qₙ, pₙ₊₁). The expected steps are the closed forms of these formulas.
+    q₀, p₀, h = 0.7, 1.1, 0.1
+    function step(Hq, Hp, method)
+        v!(v, t, q, p, params) = (v[1] = Hp(q[1], p[1]); nothing)
+        f!(f, t, q, p, params) = (f[1] = -Hq(q[1], p[1]); nothing)
+        sol = integrate(PODEProblem(v!, f!, (0.0, h), h, [q₀], [p₀]), method)
+        (sol.q[end][1], sol.p[end][1])
+    end
+
+    # separable: H = (p² + q²) / 2
+    Hq, Hp = (q, p) -> q, (q, p) -> p
+    qA = q₀ + h * p₀
+    pB = p₀ - h * q₀
+    @test all(step(Hq, Hp, SymplecticEulerARK()) .≈ (qA, p₀ - h * qA))
+    @test all(step(Hq, Hp, SymplecticEulerBRK()) .≈ (q₀ + h * pB, pB))
+
+    # the names re-exported from GeometricIntegratorsBase carry the same letters
+    @test all(step(Hq, Hp, SymplecticEulerA()) .≈ (qA, p₀ - h * qA))
+    @test all(step(Hq, Hp, SymplecticEulerB()) .≈ (q₀ + h * pB, pB))
+
+    # non-separable: H = (1 + q²) p² / 2, where the point is seen by the implicit integrator
+    Hq, Hp = (q, p) -> q * p^2, (q, p) -> (1 + q^2) * p
+    residual(q₁, p₁, q̃, p̃) = hypot(q₁ - q₀ - h * Hp(q̃, p̃), p₁ - p₀ + h * Hq(q̃, p̃))
+
+    q₁, p₁ = step(Hq, Hp, IPRK(SymplecticEulerARK()))
+    @test residual(q₁, p₁, q₁, p₀) < 1E-12
+    @test residual(q₁, p₁, q₀, p₁) > 1E-3
+
+    q₁, p₁ = step(Hq, Hp, IPRK(SymplecticEulerBRK()))
+    @test residual(q₁, p₁, q₀, p₁) < 1E-12
+    @test residual(q₁, p₁, q₁, p₀) > 1E-3
+end
+
 @testset "$(rpad("Explicit Partitioned Runge-Kutta integrators",80))" begin
     psol = integrate(pode, SymplecticEulerARK())
     perr = relative_maximum_error(psol, pref)

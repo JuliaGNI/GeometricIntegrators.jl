@@ -229,9 +229,9 @@ the docs, so this is documentation rather than a discrepancy.
 * `docs/src/integrators/hpg.md` — Hamilton–Pontryagin–Galerkin framework page
   (continuous HP principle, broken-Galerkin discretisation, Type I–IV continuity
   constraints / numerical fluxes). Marked clearly as a not-yet-implemented
-  framework; re-enabled in `docs/make.jl`. References [Yoshimura:2006a],
-  [Yoshimura:2006b], [BouRabee:2009], [Leok:2011].
-* `docs/src/GeometricIntegrators.bib` — added `Yoshimura:2006a`, `Yoshimura:2006b`,
+  framework; re-enabled in `docs/make.jl`. References [YoshimuraMarsden:2006a],
+  [YoshimuraMarsden:2006], [BouRabee:2009], [Leok:2011].
+* `docs/src/GeometricIntegrators.bib` — added `YoshimuraMarsden:2006a`, `YoshimuraMarsden:2006`,
   `BouRabee:2009`, `Tyranowski:2014linear`, `Ellison:2018`, `Kraus:2019`.
 
 ## Tests added

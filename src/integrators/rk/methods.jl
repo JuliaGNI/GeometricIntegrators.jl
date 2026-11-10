@@ -582,22 +582,28 @@ issymplectic(::Type{RadauIIB}) = false
 """
     SymplecticEulerARK
 
-Symplectic Euler method using explicit Euler for q and implicit Euler for p.
+Symplectic Euler method using implicit Euler for q and explicit Euler for p.
+
+The tableau evaluates at ``(q_{n+1}, p_{n})``, which is Euler-A of Leimkuhler and Reich, *Simulating
+Hamiltonian Dynamics* (2004), Eqs. (4.8)-(4.9).
 """
 struct SymplecticEulerARK <: EPRKMethod end
 
 """
     SymplecticEulerBRK
 
-Symplectic Euler method using implicit Euler for q and explicit Euler for p.
+Symplectic Euler method using explicit Euler for q and implicit Euler for p.
+
+The tableau evaluates at ``(q_{n}, p_{n+1})``, which is Euler-B of Leimkuhler and Reich, *Simulating
+Hamiltonian Dynamics* (2004), Eqs. (4.6)-(4.7).
 """
 struct SymplecticEulerBRK <: EPRKMethod end
 
 function GeometricBase.tableau(::SymplecticEulerARK, ::Type{T} = Float64) where {T}
-    PartitionedTableau(:SymplecticEulerA, TableauExplicitEuler(T), TableauImplicitEuler(T))
+    PartitionedTableau(:SymplecticEulerA, TableauImplicitEuler(T), TableauExplicitEuler(T))
 end
 function GeometricBase.tableau(::SymplecticEulerBRK, ::Type{T} = Float64) where {T}
-    PartitionedTableau(:SymplecticEulerB, TableauImplicitEuler(T), TableauExplicitEuler(T))
+    PartitionedTableau(:SymplecticEulerB, TableauExplicitEuler(T), TableauImplicitEuler(T))
 end
 
 GeometricBase.order(::Type{SymplecticEulerARK}) = 1

@@ -30,6 +30,7 @@ makedocs(
         prettyurls = get(ENV, "CI", nothing) == "true",
         size_threshold = 524288,
         size_threshold_warn = 262144,
+        assets = [asset("https://juliagni.github.io/GeometricFigures.jl/figures.css"; islocal = false)],
         mathengine = MathJax3(
             Dict(
                 :tex => Dict(

@@ -1,15 +1,16 @@
 "Holds all parameters of an Specialised Partitioned Additive Runge-Kutta method for variational systems subject to constraints."
-struct SLRK{DT <: Number, DVT} <: LSPARKMethod
+struct SLRK{DT <: Number, DVT, QT <: Tableau{DT}, PT <: Tableau{DT},
+    Q̃T <: Tableau{DT}, P̃T <: Tableau{DT}} <: LSPARKMethod
     name::Symbol
     o::Int
     s::Int
     r::Int
 
-    q::Tableau{DT}
-    p::Tableau{DT}
+    q::QT
+    p::PT
 
-    q̃::Tableau{DT}
-    p̃::Tableau{DT}
+    q̃::Q̃T
+    p̃::P̃T
 
     ω::Matrix{DT}
     d::DVT
@@ -27,7 +28,8 @@ struct SLRK{DT <: Number, DVT} <: LSPARKMethod
 
         @assert d === nothing || length(d) == s
 
-        new{DT, DVT}(name, o, s, s, q, p, q̃, p̃, ω, d)
+        new{DT, DVT, typeof(q), typeof(p), typeof(q̃), typeof(p̃)}(
+            name, o, s, s, q, p, q̃, p̃, ω, d)
     end
 end
 

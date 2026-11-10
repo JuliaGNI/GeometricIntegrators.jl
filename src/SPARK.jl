@@ -11,7 +11,9 @@ using GeometricBase
 using GeometricEquations
 using GeometricIntegratorsBase
 
-import GeometricBase: tableau
+import GeometricBase: equations, tableau, timestep
+import GeometricEquations: problem
+import SimpleSolvers: method
 import GeometricBase.Utils: @define
 import RungeKutta: AbstractTableau, Tableau, nstages, eachstage
 import RungeKutta.Tableaus: lobatto_nullvector
@@ -22,15 +24,15 @@ import ..Integrators: StageVector
 import ..Integrators: AbstractCoefficients, @CoefficientsRK, @HeaderCoefficientsRK
 import ..Integrators: eachstage, nstages
 import ..Integrators: create_internal_stage_vector
+import ..Integrators: linear_solver_defaults
 
 import GeometricIntegratorsBase: GeometricIntegrator
 import GeometricIntegratorsBase: HermiteExtrapolation
 import GeometricIntegratorsBase: Cache, CacheType, IDAEIntegratorCache
 import GeometricIntegratorsBase: HDAEMethod, IDAEMethod, LDAEMethod, PDAEMethod
 import GeometricIntegratorsBase: SolutionStep
-import GeometricIntegratorsBase: cache, iguess, method, problem, solver, solverstate
+import GeometricIntegratorsBase: cache, iguess, solver, solverstate
 import GeometricIntegratorsBase: initial_guess!, integrate_step!, residual!, solutionstep!
-import GeometricIntegratorsBase: equations, timestep
 import GeometricIntegratorsBase: update!, internal, nlsolution, internal_variables
 import GeometricIntegratorsBase: solversize
 
@@ -77,6 +79,15 @@ include("spark/integrators_hspark_primary.jl")
 include("spark/integrators_hspark_secondary.jl")
 
 include("spark/integrators_slrk.jl")
+
+# the linear solver default of `Integrators.initsolver`, for the method types of this module
+function GeometricIntegratorsBase.initsolver(solvermethod::NonlinearSolverMethod,
+        method::Union{HSPARKMethod, ISPARKMethod, LSPARKMethod, PSPARKMethod},
+        caches::GeometricIntegratorsBase.CacheDict; kwargs...)
+    invoke(GeometricIntegratorsBase.initsolver,
+        Tuple{NonlinearSolverMethod, GeometricMethod, GeometricIntegratorsBase.CacheDict},
+        solvermethod, method, caches; linear_solver_defaults(solvermethod)..., kwargs...)
+end
 
 include("spark/coefficients_glrk.jl")
 include("spark/coefficients_lob.jl")

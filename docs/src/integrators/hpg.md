@@ -26,7 +26,7 @@ methods, and symplectic and variational Runge–Kutta methods.
 
 ## Continuous Hamilton–Pontryagin Principle
 
-The Hamilton–Pontryagin principle [[Yoshimura:2006b](@cite)] is an action
+The Hamilton–Pontryagin principle [[YoshimuraMarsden:2006](@cite)] is an action
 principle on the Pontryagin bundle $TQ \oplus T^*Q$. In contrast to Hamilton's
 principle of stationary action, where the variations $\delta v$ are induced by
 variations $\delta q$, here the variations of the velocity $v$ are left free.
@@ -63,7 +63,7 @@ whose variations lead to a set of generalised Hamilton equations
 \end{aligned}
 ```
 For constrained systems, the Hamilton–Pontryagin principle generalises to the
-Lagrange–d'Alembert–Pontryagin principle [[Yoshimura:2006a](@cite), [Yoshimura:2006b](@cite)].
+Lagrange–d'Alembert–Pontryagin principle [[YoshimuraMarsden:2006a](@cite), [YoshimuraMarsden:2006](@cite)].
 
 
 ## Galerkin Discretisation

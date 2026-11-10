@@ -1,6 +1,6 @@
 # [Continuous Galerkin Variational Integrators](@id cgvi)
 
-In the following, we first present the Galerkin framework for variational integrators [[Leok:2004](@cite), [Leok:2011](@cite), [Campos:2014](@cite), [Campos:2015](@cite), [OberBloebaum:2014](@cite), [OberBloebaum:2016](@cite)] where the space of curves $\mf{Q}$ that connect two points in $\mf{M}$ is approximated by a finite-dimensional subspace (Galerkin integrators of 0th kind).
+In the following, we first present the Galerkin framework for variational integrators [[Leok:2004](@cite), [Leok:2011](@cite), [Campos:2014](@cite), [CamposOberBlobaumTrelat:2015](@cite), [OberBloebaum:2014](@cite), [OberBloebaum:2016](@cite)] where the space of curves $\mf{Q}$ that connect two points in $\mf{M}$ is approximated by a finite-dimensional subspace (Galerkin integrators of 0th kind).
 We use Lagrange polynomials to approximate the trajectories albeit other choices are possible.
 Alternatively, we can approximate the generalised velocities 
 (Galerkin integrators of 1st kind), which leads us to variational-partitioned Runge-Kutta methods.

@@ -53,9 +53,11 @@ function split_nlsolution(x::AbstractVector, int::StandardProjectionIntegrator)
     return (x̄, x̃)
 end
 
-function initsolver(::Newton, ::ProjectedMethod{<:StandardProjection}, caches::CacheDict; kwargs...)
-    x̄, x̃ = split_nlsolution(cache(caches))
-    NewtonSolver(zero(x̃), residual!, zero(x̃); kwargs...)
+function initsolver(solvermethod::Newton, ::ProjectedMethod{<:StandardProjection},
+        caches::CacheDict; kwargs...)
+    _, x̃ = split_nlsolution(cache(caches))
+    NewtonSolver(
+        zero(x̃), residual!, zero(x̃); linear_solver_defaults(solvermethod)..., kwargs...)
 end
 
 # function Base.show(io::IO, int::ProjectedMethod{<:StandardProjection})
@@ -185,7 +187,7 @@ function integrate_step!(sol, history, params, int::StandardProjectionIntegrator
     # call nonlinear solver for projection and act on the outcome it reports. A
     # `ProjectionIntegrator` carries no persistent solver state, so this is the state-building
     # form of `solve_with_status!` rather than the state-taking one used by the integrators.
-    x̄, x̃ = split_nlsolution(nlsolution(int), int)
+    _, x̃ = split_nlsolution(nlsolution(int), int)
     solverstatus = solve_with_status!(x̃, solver(int), (sol, params, int))
     check_solver_status(solverstatus, int)
 

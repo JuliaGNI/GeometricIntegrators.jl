@@ -18,8 +18,6 @@ using StaticArrays
 
 using ..Discontinuities
 
-import Base: Callable
-
 import CompactBasisFunctions
 import CompactBasisFunctions: Basis
 import CompactBasisFunctions: Legendre
@@ -36,16 +34,14 @@ import GeometricIntegratorsBase: ODEMethod, PODEMethod, HODEMethod, IODEMethod, 
 import GeometricIntegratorsBase: DAEMethod, PDAEMethod, HDAEMethod, IDAEMethod, LDAEMethod
 import GeometricIntegratorsBase: ODEIntegratorCache, IODEIntegratorCache,
                                  PODEIntegratorCache, DELEIntegratorCache
-import GeometricIntegratorsBase: DAEIntegratorCache, IDAEIntegratorCache,
-                                 PDAEIntegratorCache
 
 import GeometricIntegratorsBase: Cache, CacheType, GeometricIntegrator, NoProjection,
                                  ProjectionMethod
-import GeometricIntegratorsBase: cache, hasnullvector, iguess, internal, method, nlsolution,
-                                 nullvector, problem, projection, solver, solverstate
-import GeometricIntegratorsBase: components!, initialize!, initial_guess!, integrate_step!,
+import GeometricIntegratorsBase: cache, hasnullvector, iguess, internal, nlsolution,
+                                 nullvector, projection, solver, solverstate
+import GeometricIntegratorsBase: components!, initial_guess!, integrate_step!,
                                  residual!
-import GeometricIntegratorsBase: default_options, initialize!, initmethod, initsolver,
+import GeometricIntegratorsBase: default_options, initmethod, initsolver,
                                  internal_variables, copy_internal_variables!
 
 import GeometricIntegratorsBase: isexplicit, isimplicit, issymmetric, issymplectic,
@@ -63,7 +59,10 @@ import RungeKutta: AbstractTableau, Tableau, PartitionedTableau, SymplecticTable
                    SymplecticPartitionedTableau
 import RungeKutta.Tableaus: lobatto_nullvector
 
+import GeometricEquations: problem
+
 import SimpleSolvers: SolverMethod
+import SimpleSolvers: initialize!, method
 # `status` is deliberately not exported by SimpleSolvers — it is a generic name a package doing
 # `using SimpleSolvers` may want for itself — so it is named explicitly here. PGLRK needs it to
 # read the outcome of the stage solve for the λ it accepted, off the persistent solver state.
@@ -213,6 +212,8 @@ include("projections/symmetric_projection.jl")
 
 include("projections/methods.jl")
 include("integrators/vi/vprk_projected.jl")
+
+include("integrators/solver_defaults.jl")
 
 include("integrators/method_list.jl")
 

@@ -11,9 +11,98 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
-## [Unreleased] — targeting 0.18.6
+## [Unreleased]
+
+### Changed
+
+* **`SLRK`, `VSPARKsecondary` and `HSPARKsecondary` store their four coefficient sets in concrete
+  fields.** Each struct takes four more type parameters after `DT` and `DVT`, one for each of the
+  fields `q`, `p`, `q̃` and `p̃`, which were the partial `UnionAll`s `Tableau{DT}` and
+  `CoefficientsSPARK{DT}`. The constructors and their arguments do not change, and neither do the
+  results. A method that names the type with its first two parameters, such as
+  `SLRK{DT, Nothing}`, still matches.
+
+
+## [0.19.0] — 2026-11-04
+
+### Breaking Changes
+
+* **`SymplecticEulerARK` and `SymplecticEulerBRK` exchange their meaning.** The letters now follow
+  Leimkuhler and Reich, *Simulating Hamiltonian Dynamics* (2004), Eqs. (4.6)-(4.9), the only source
+  of these letters: A evaluates at `(q_{n+1}, p_n)` and B at `(q_n, p_{n+1})`. `IPRK` with these
+  tableaus does this on any Hamiltonian; the explicit integrator that `SymplecticEulerARK()` and
+  `SymplecticEulerBRK()` select does it on a separable Hamiltonian only (K24). The tableaus keep
+  their names `:SymplecticEulerA` and `:SymplecticEulerB`. The names stay, so a caller's code runs
+  without an error and computes a different method: exchange the two names to keep a result. On a
+  separable Hamiltonian the two are adjoint. The code now agrees with the page on splitting methods,
+  which already used these letters. `SymplecticEulerA` and `SymplecticEulerB` come from
+  GeometricIntegratorsBase, which makes the same change in 0.7, so that is the new compat floor and
+  `SymplecticEulerA` and `SymplecticEulerARK` compute the same method.
+
+### Documentation
+
+* `DVIA` and `DVIB` keep their meaning. Their letters follow Leimkuhler and Reich on a staggered
+  state, for any Hamiltonian in the form `L = y ẋ - H(x, y)`, and the docstrings and the page on
+  degenerate variational integrators now say so.
+
+### Changed
+
+* **Compat floors raised to versions that resolve and load together on Julia 1.12.** CI's
+  downgrade job resolves `Project.toml` and `test/Project.toml` together at their lower bounds
+  and runs the tests there. No API changes.
+  * `PrettyTables` `"2, 3"` → `"3"`: RungeKutta 0.6.4 requires PrettyTables 3, and the method
+    list uses `MarkdownTableFormat`, which PrettyTables 2 does not have.
+  * `StaticArrays` `"1"` → `"1.9.13"`: SimpleSolvers 0.4 and later require StaticArrays 1.9.13.
+  * `OffsetArrays` `"1"` → `"1.14"`: earlier versions redefine `Base.fill`, `zeros`, `ones`,
+    `trues` and `falses` for range dimensions, which Base already defines from Julia 1.12, and
+    fail to precompile there. OffsetArrays 1.14 skips these methods on Julia 1.12.
+  * `Aqua` (tests) `"0.8"` → `"0.8.14"`: the piracy check of earlier versions reads
+    `TypeName.mt`, which Julia 1.12 removed. Aqua 0.8.14 is the first release that reads
+    `Core.methodtable` instead.
 
 ### Tests
+
+* **The error bound of `VSPARK(SPARKLobattoIIIBIIIA(4))` is `1E-14`, from `2E-15`**, the bound of
+  `VSPARK(SPARKLobABC(4))`. The error against the `Gauss(8)` reference is round-off; the order-6
+  truncation error is about `4E-17` at this step. It is `7.8E-16` to `1.8E-15` on aarch64,
+  depending on the manifest, and `3.1E-15` in CI's Downgrade job and both Windows jobs, which
+  failed the old bound. The other Linux jobs passed it.
+
+
+## [0.18.7] — 2026-10-24
+
+### Changed
+
+* **Julia 1.12 is the floor** (`[compat] julia = "1.12"`, from 1.11). A patch release, because no
+  API changes: a caller on Julia 1.11 can no longer install this version.
+  The repository records no reason for the raise, and the package contains no version-conditional
+  code, so no workaround is removed.
+
+* **CI coverage and cache.** CI uploads coverage from the `Julia 1 - ubuntu-latest` job instead of
+  `Julia min`, and a test job saves the Julia cache only when it succeeds.
+
+### Documentation
+
+* **Manual figures published by GeometricFigures.jl.** The seven figures in the manual link the
+  light and dark SVGs that GeometricFigures.jl publishes, and `docs/make.jl` loads its
+  `figures.css`, which shows the SVG that matches the `documenter-light` or `documenter-dark`
+  theme. The TikZ sources in `docs/src/images/`, their `Makefile` and the `images` target of
+  `docs/Makefile` are removed.
+
+## 0.18.6
+
+### Compatibility
+
+* The floors rise to Julia 1.11, GeometricBase 0.15.0, CompactBasisFunctions 0.4.2,
+  GeometricEquations 0.21.5, GeometricIntegratorsBase 0.6.9, GeometricSolutions 0.6.6,
+  QuadratureRules 0.2.2, RungeKutta 0.6.4 and SimpleSolvers 0.14.1, and to GeometricProblems 0.9.1
+  in the test and docs environments, because GeometricBase 0.15 declares its stubs public and
+  requires Julia 1.11.
+
+### Tests
+
+* **ExplicitImports guard.** `test/quality/explicit_imports.jl` runs `test_explicit_imports` on
+  the package in the `core` group, with `ExplicitImports = "1.15"` in `test/Project.toml`.
 
 * **Test groups selected by `ARGS`.** `test/runtests.jl` reads a `GROUPS` list from `ARGS`, with
   the groups `core`, `slow` and `broken`; empty `ARGS` runs `core` and `slow`.
@@ -30,14 +119,38 @@ remain a gap.
   #249, #250, #252, #253).
 
 * **Test failure tracking improved.** Every `@test_broken` line now names its issue. `test/Project.toml`
-  gains `Random` as a dependency; its existing compat bounds stay as they are.
+  gains `Random` as a dependency.
 
 ### Changes
+
+* **Imports from their owners.** `Integrators` no longer imports the unused `Callable`,
+  `DAEIntegratorCache`, `IDAEIntegratorCache` and `PDAEIntegratorCache`. `Integrators` and
+  `SPARK` now import `equations`, `timestep`, `initialize!`, `method` and `problem` from their
+  owners (GeometricBase, SimpleSolvers, GeometricEquations) rather than from
+  GeometricIntegratorsBase; the bindings are identical, so no method changes. This closes K15.
+  #264 (f2a5652c) had already removed `equation` and `initialize!` from SPARK as stale imports.
+
+* **fatou findings cleared.** The 20 `unused-binding` findings in the VPRK, projection and VSPARK
+  tableau sources are resolved: 18 unused local declarations and assignments are deleted, and two
+  unused destructured elements in `standard_projection.jl` become `_`.
 
 * **SPARK module cleanup.** Removed eight stale explicit imports from `src/SPARK.jl`:
   `CacheDict`, `Extrapolation`, `caches`, `current`, `equation`, `initialize!`, `initsolver`,
   and `update_multiplier!`. These were identified by ExplicitImports' `check_no_stale_explicit_imports`
   as unused and not reached through the parent module.
+
+* **Newton, DogLeg and QuasiNewton solvers default to SimpleSolvers' pure-Julia `LU()` as their linear solver** unless a caller passes `linear_solver_method`, whose value wins. This holds for every such solver the package builds for its own methods: through `initsolver`, the DIRK stage solvers, `StandardProjection` and SPARK. `Picard` takes no linear solver and gets no keyword. On SimpleSolvers 0.12 nothing changes, because `LU()` is its default. SimpleSolvers 0.13.0 changed its default for a LAPACK element type to `LapackLU`, under which the numerically singular HSPARKsecondary stage systems no longer raise `SingularException`: 22 of 24 returned silently wrong answers (relative errors 3.4e-5 to 1.0). The reason for this change is issue #255, the `SingularException` of `VPRKpTableau` in the PGLRK convergence test on ubuntu x86_64 with SimpleSolvers 0.14, which stays open.
+
+  `test/Project.toml` and `docs/Project.toml` drop their `[compat]` entries for dependencies shared with root (test: CompactBasisFunctions, GeometricEquations, GeometricIntegratorsBase, LinearAlgebra, QuadratureRules, RungeKutta, SimpleSolvers; docs: GeometricBase, GeometricEquations, GeometricIntegratorsBase, GeometricSolutions, RungeKutta), so tests and docs now resolve the root's bounds instead of the old `0.12.1` and `0.3` pins. This brings SimpleSolvers 0.14 and CompactBasisFunctions 0.4 into test runs. `InteractiveUtils` is a new test-only dependency.
+
+* **`KNOWN_ISSUES.md` follows the known-issues form.** KI-1 to KI-7 gain `location` and `found` fields, and the entries are in the present tense; no code changes.
+
+### Documentation
+
+* **`WienerProcess` and `GridProcess` are documented.** The *Problems* module page gains a
+  *Stochastic Processes* section. The `SDEProblem`, `PSDEProblem` and `SPSDEProblem` docstrings
+  of GeometricEquations 0.21.3 and later link to both types, and without their docstrings in the
+  manual those links failed the docs build.
 
 ## 0.18.5
 

@@ -7,6 +7,7 @@
 Modules = [GeometricIntegrators.Integrators]
 Pages   = [
             "integrators/integrator.jl",
+            "integrators/solver_defaults.jl",
         ]
 ```
 

@@ -51,14 +51,15 @@ end
 
 Base.getindex(s::SingleStageSolvers, args...) = getindex(s.solvers, args...)
 
-function initsolver(::Newton, method::DIRK, caches::CacheDict; kwargs...)
+function initsolver(solvermethod::Newton, method::DIRK, caches::CacheDict; kwargs...)
     # `default_linesearch(method)` returns a `Backtracking{Float64}` whatever the working type,
     # which the `Linesearch` constructor then has to `change_precision`. Passing `eltype(x)`
     # picks the typed method instead. Its bound is `T<:Real`, so a `ForwardDiff.Dual` working
     # type — a caller differentiating through an integration — still reaches it.
     SingleStageSolvers([let x = cache(caches).x[i]
                             NewtonSolver(zero(x), residual!, zero(x);
-                                linesearch = default_linesearch(eltype(x), method), kwargs...)
+                                linesearch = default_linesearch(eltype(x), method),
+                                linear_solver_defaults(solvermethod)..., kwargs...)
                         end
                         for i in eachstage(method)]...)
 end
