@@ -409,3 +409,26 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
   must be separable, and `issymplectic` returns `true` for both.
 - kind: defect
 - found: 2026-11-04
+
+### K25 · `FLRKCache.jac` is typed `Any`
+
+- location: `src/integrators/rk/integrators_flrk.jl:172`
+- evidence: `jac::Any` holds the ForwardDiff Jacobian of `v̄`, whose type depends on the problem's
+  closure. The comment above the field says that a type parameter would make `CacheType` return an
+  abstract type. A census of the struct fields of the package (every field concrete up to type
+  variables) reports `GeometricIntegrators.Integrators.FLRKCache.jac::Any`. The FLRK cache needs
+  the same modernisation as the other caches, so that the Jacobian type is known where the cache is
+  built.
+- kind: defect
+- found: 2026-11-09
+
+### K26 · `MethodList.header` and `MethodList.data` are typed `Any`
+
+- location: `src/integrators/method_list.jl:265`
+- evidence: `header::Any` and `data::Any`. The constructor builds `header` as a `Vector{String}`
+  and `data` as `permutedims(hcat(data...))` from rows grown by splatting an untyped `[]`. A census
+  of the struct fields of the package (every field concrete up to type variables) reports
+  `GeometricIntegrators.Integrators.MethodList.header::Any` and
+  `GeometricIntegrators.Integrators.MethodList.data::Any`.
+- kind: defect
+- found: 2026-11-09
