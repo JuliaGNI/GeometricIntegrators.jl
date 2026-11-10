@@ -21,9 +21,13 @@ GeometricIntegrators = {path = ".."}
 
 [compat]
 Aqua = "0.8.14"
+CompactBasisFunctions = "0.3, 0.4"
 ExplicitImports = "1.15"
+GeometricEquations = "0.21"
+GeometricIntegratorsBase = "0.6.3"
 GeometricProblems = "0.9.1, 0.10"
 InteractiveUtils = "1"
+LinearAlgebra = "1"
 Logging = "1"
 SafeTestsets = "0.1"
 Test = "1"
