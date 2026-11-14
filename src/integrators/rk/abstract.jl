@@ -22,9 +22,11 @@ nodes(method::RungeKuttaMethod) = RungeKutta.nodes(tableau(method))
 function print_reference(io, method::RungeKuttaMethod)
     try
         ismissing(reference(tableau(method))) || print(io, reference(tableau(method)))
-    catch MethodError
-        String("")
+    catch e
+        # a tableau without a literature reference has no `reference` method
+        e isa MethodError && e.f === reference || rethrow()
     end
+    return nothing
 end
 
 ispodemethod(::Union{RKMethod, Type{<:RKMethod}}) = true

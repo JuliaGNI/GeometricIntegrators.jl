@@ -22,12 +22,23 @@ remain a gap.
   results. A method that names the type with its first two parameters, such as
   `SLRK{DT, Nothing}`, still matches.
 
+### Fixes
+
+* **`show` of a Runge-Kutta, partitioned Runge-Kutta or VPRK method no longer swallows every
+  exception from the reference printing.** `print_reference` wrote `catch MethodError`, which binds
+  a variable of that name and catches everything, so an `InterruptException` or an error of the
+  `IO` was dropped silently. It now catches only the `MethodError` of `reference` for a tableau
+  without a literature reference, which still prints nothing, and rethrows every other exception.
+
 ### Compatibility
 
 * GeometricSolutions compat widens from `"0.6.6"` to `"0.6.6, 0.7"`. The one breaking change of
-  GeometricSolutions 0.7, a fifth type parameter `tsType` of `EnsembleSolution`, does not reach
-  this package: no file in `src/`, `test/` or `docs/` names `EnsembleSolution`. A compat-only
-  change; no behaviour, signature or result changes.
+  GeometricSolutions 0.7 is a fifth type parameter `tsType` of `EnsembleSolution`. No file in
+  `src/`, `test/` or `docs/` names `EnsembleSolution`, so this package's own code, signatures and
+  results do not change. GeometricIntegrators re-exports `EnsembleSolution`, however, so the new
+  parameter reaches its users when they resolve GeometricSolutions 0.7: a four-parameter spelling
+  `EnsembleSolution{A, B, C, D}` becomes a `UnionAll`, so `typeof(sol) == EnsembleSolution{A, B,
+  C, D}` is `false` there, while `sol isa EnsembleSolution{A, B, C, D}` still holds.
 
 
 ## [0.19.0] — 2026-11-04

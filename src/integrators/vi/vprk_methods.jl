@@ -16,9 +16,11 @@ issymplectic(method::VPRKMethod) = RungeKutta.issymplectic(tableau(method))
 function print_reference(io, method::VPRKMethod)
     try
         ismissing(reference(tableau(method))) || print(io, reference(tableau(method)))
-    catch MethodError
-        String("")
+    catch e
+        # a tableau without a literature reference has no `reference` method
+        e isa MethodError && e.f === reference || rethrow()
     end
+    return nothing
 end
 
 function Base.show(io::IO, method::VPRKMethod)

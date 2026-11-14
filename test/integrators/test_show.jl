@@ -1,5 +1,6 @@
 using GeometricIntegrators
 using GeometricIntegrators.SPARK
+using GeometricIntegrators.Integrators: print_reference, reference, tableau
 using GeometricProblems.HarmonicOscillator
 import GeometricProblems.LotkaVolterra2d as LotkaVolterra2d
 import GeometricProblems.LotkaVolterra2dSingular
@@ -59,6 +60,21 @@ test_show(x, title) = @test occursin(title, sprint(show, x))
 # visible rather than hiding behind a non-emptiness check.
 test_show_default(x) = @test length(sprint(show, x)) > 0
 
+# `print_reference` prints nothing for a tableau without a `reference` method, and must
+# let every other exception propagate: one `IO` whose writes throw an `ErrorException`,
+# and one whose writes throw a `MethodError` of a function other than `reference`.
+struct FailingIO <: IO end
+Base.write(::FailingIO, ::UInt8) = error("FailingIO cannot be written to")
+function Base.unsafe_write(::FailingIO, ::Ptr{UInt8}, ::UInt)
+    error("FailingIO cannot be written to")
+end
+
+struct MethodErrorIO <: IO end
+Base.write(io::MethodErrorIO, b::UInt8) = throw(MethodError(write, (io, b)))
+function Base.unsafe_write(io::MethodErrorIO, p::Ptr{UInt8}, n::UInt)
+    throw(MethodError(unsafe_write, (io, p, n)))
+end
+
 @testset "$(rpad("Show Methods and Integrators",80))" begin
 
     ### the methods themselves ###
@@ -78,6 +94,18 @@ test_show_default(x) = @test length(sprint(show, x)) > 0
 
     test_show_default(ExplicitEuler())
     test_show_default(VPRKpMidpoint(Gauss(1)))
+
+    ### the literature reference of a method ###
+
+    # `Gauss` has a reference; the partitioned `LobattoIIIAIIIB2` tableau has none, so
+    # `reference` raises a `MethodError` for it.
+    for (with, without) in (
+        (Gauss(1), LobattoIIIAIIIB(2)), (VPRK(Gauss(1)), VPRK(LobattoIIIAIIIB(2))))
+        @test sprint(print_reference, with) == reference(tableau(with))
+        @test sprint(print_reference, without) == ""
+        @test_throws ErrorException("FailingIO cannot be written to") print_reference(FailingIO(), with)
+        @test_throws MethodError print_reference(MethodErrorIO(), with)
+    end
 
     ### the integrators ###
 
