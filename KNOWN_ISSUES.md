@@ -432,3 +432,22 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
   `GeometricIntegrators.Integrators.MethodList.data::Any`.
 - kind: defect
 - found: 2026-11-09
+
+### K27 · The `Downgrade` job fails Aqua's persistent-tasks check on Julia 1.12
+
+- location: `test/quality/aqua.jl`
+- evidence: JuliaLang/julia#62917. On Julia 1.12.7, `Pkg.precompile()` compiles the active
+  project's own module at the same time as a cold dependency graph, not after it. Aqua 0.8.14's
+  persistent-tasks wrapper is such a project. In `Downgrade` the test environment sits at the
+  floors and the wrapper resolves the newest versions, so its whole stack is cold. The wrapper
+  module then fails to precompile, `Pkg.precompile()` exits 0, and Aqua reports `Unexpected
+  error: …/done.log was not created, but precompilation exited` (job 132182835336 of PR #282).
+  The diagnostic PR JuliaGNI/SimpleSolvers.jl#223 shows the hidden error on ubuntu-26.04 and
+  ubuntu-24.04 alike: "The call to compilecache failed to create a usable precompiled cache file
+  for ForwardDiff … Required dependency DiffRules failed to load from a cache file". Serial
+  precompilation does not help. Julia 1.13 orders the project after its dependencies
+  (JuliaLang/julia#60000); that fix has no 1.12 backport. The job is advisory
+  (`continue-on-error: true`), so it blocks no merge. The entry leaves when 1.13 is the floor or
+  1.12 gets the fix.
+- kind: upstream
+- found: 2026-11-14
