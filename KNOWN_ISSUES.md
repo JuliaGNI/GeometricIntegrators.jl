@@ -436,17 +436,21 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
 ### K27 · The `Downgrade` job fails Aqua's persistent-tasks check on Julia 1.12
 
 - location: `test/quality/aqua.jl`
-- evidence: JuliaLang/julia#62917. On Julia 1.12.7, `Pkg.precompile()` compiles the active
-  project's own module at the same time as a cold dependency graph, not after it. Aqua 0.8.14's
-  persistent-tasks wrapper is such a project. In `Downgrade` the test environment sits at the
-  floors and the wrapper resolves the newest versions, so its whole stack is cold. The wrapper
-  module then fails to precompile, `Pkg.precompile()` exits 0, and Aqua reports `Unexpected
+- evidence: JuliaLang/julia#62917. On Julia 1.12.7, `Pkg.precompile()` can fail to precompile the
+  active project's own module when most of its dependency graph is cold, and still exit 0.
+  Aqua 0.8.14's persistent-tasks wrapper is such a project. In `Downgrade` the test environment
+  sits at the floors and the wrapper resolves the newest versions, so its whole stack is cold. The
+  wrapper module then fails to precompile, `Pkg.precompile()` exits 0, and Aqua reports `Unexpected
   error: …/done.log was not created, but precompilation exited` (job 132182835336 of PR #282).
   The diagnostic PR JuliaGNI/SimpleSolvers.jl#223 shows the hidden error on ubuntu-26.04 and
   ubuntu-24.04 alike: "The call to compilecache failed to create a usable precompiled cache file
-  for ForwardDiff … Required dependency DiffRules failed to load from a cache file". Serial
-  precompilation does not help. Julia 1.13 orders the project after its dependencies
-  (JuliaLang/julia#60000); that fix has no 1.12 backport. The job is advisory
+  for ForwardDiff … Required dependency Base.PkgId(…, "DiffRules") failed to load from a cache
+  file". Serial precompilation (`JULIA_NUM_PRECOMPILE_TASKS=1`) fails the same check there.
+  Upstream closes the issue as likely fixed by JuliaLang/julia#60000, the reland of
+  JuliaLang/julia#59765 ("Do not allow serial compile fallbacks"). That change is on `release-1.13`
+  and has no 1.12 backport; no CI run here tests 1.13 at the floors. A local probe (a generated
+  project with only `using ForwardDiff`, a cold depot, macOS arm64) ends `?` in 3 of 3 runs on
+  1.12.7, and on 1.13.4 compiles the project after ForwardDiff and passes. The job is advisory
   (`continue-on-error: true`), so it blocks no merge. The entry leaves when 1.13 is the floor or
   1.12 gets the fix.
 - kind: upstream
