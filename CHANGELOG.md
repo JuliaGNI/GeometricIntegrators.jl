@@ -22,6 +22,13 @@ remain a gap.
   results. A method that names the type with its first two parameters, such as
   `SLRK{DT, Nothing}`, still matches.
 
+### Compatibility
+
+* GeometricSolutions compat widens from `"0.6.6"` to `"0.6.6, 0.7"`. The one breaking change of
+  GeometricSolutions 0.7, a fifth type parameter `tsType` of `EnsembleSolution`, does not reach
+  this package: no file in `src/`, `test/` or `docs/` names `EnsembleSolution`. A compat-only
+  change; no behaviour, signature or result changes.
+
 
 ## [0.19.0] — 2026-11-04
 
