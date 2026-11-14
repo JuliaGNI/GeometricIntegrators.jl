@@ -30,6 +30,16 @@ remain a gap.
   `IO` was dropped silently. It now catches only the `MethodError` of `reference` for a tableau
   without a literature reference, which still prints nothing, and rethrows every other exception.
 
+### Compatibility
+
+* GeometricSolutions compat widens from `"0.6.6"` to `"0.6.6, 0.7"`. The one breaking change of
+  GeometricSolutions 0.7 is a fifth type parameter `tsType` of `EnsembleSolution`. No file in
+  `src/`, `test/` or `docs/` names `EnsembleSolution`, so this package's own code, signatures and
+  results do not change. GeometricIntegrators re-exports `EnsembleSolution`, however, so the new
+  parameter reaches its users when they resolve GeometricSolutions 0.7: a four-parameter spelling
+  `EnsembleSolution{A, B, C, D}` becomes a `UnionAll`, so `typeof(sol) == EnsembleSolution{A, B,
+  C, D}` is `false` there, while `sol isa EnsembleSolution{A, B, C, D}` still holds.
+
 
 ## [0.19.0] — 2026-11-04
 
