@@ -22,6 +22,14 @@ remain a gap.
   results. A method that names the type with its first two parameters, such as
   `SLRK{DT, Nothing}`, still matches.
 
+### Fixes
+
+* **`show` of a Runge-Kutta, partitioned Runge-Kutta or VPRK method no longer swallows every
+  exception from the reference printing.** `print_reference` wrote `catch MethodError`, which binds
+  a variable of that name and catches everything, so an `InterruptException` or an error of the
+  `IO` was dropped silently. It now catches only the `MethodError` of `reference` for a tableau
+  without a literature reference, which still prints nothing, and rethrows every other exception.
+
 
 ## [0.19.0] — 2026-11-04
 
