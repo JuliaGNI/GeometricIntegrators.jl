@@ -24,9 +24,9 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 CompactBasisFunctions = "0.4.2"
-GeometricBase = "0.15.0"
+GeometricBase = "0.15.5"
 GeometricEquations = "0.21.5"
-GeometricIntegratorsBase = "0.7"
+GeometricIntegratorsBase = "0.7.2"
 GeometricSolutions = "0.6.6, 0.7"
 LinearAlgebra = "1"
 OffsetArrays = "1.14"
