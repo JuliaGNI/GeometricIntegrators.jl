@@ -138,4 +138,13 @@ const METHOD_INSTANCES = [
     @testset "$label" for (label, method) in METHOD_INSTANCES
         @test isempty(GeometricBase.interface_violations(method))
     end
+
+    # A new method type without a constructor of no argument and without an instance above fails here.
+    @testset "every owned method type is covered" begin
+        covered = vcat(NULLARY_METHOD_TYPES, [typeof(method)
+                                              for (_, method) in METHOD_INSTANCES])
+        @testset "$T" for T in OWNED_METHOD_TYPES
+            @test any(S -> S <: T, covered)
+        end
+    end
 end

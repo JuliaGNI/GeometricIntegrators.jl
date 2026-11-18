@@ -28,8 +28,9 @@ remain a gap.
   with a constructor of no argument, and for an explicit list of instances of the method types
   without one: Runge-Kutta, partitioned and variational Runge-Kutta, Galerkin variational,
   Hamilton-Pontryagin, splitting, projection and SPARK methods. Each method is its own testset,
-  so a failure names the method and lists its violations. GeometricBase joins the test
-  environment's `[deps]`.
+  so a failure names the method and lists its violations. A further testset walks the subtypes
+  of `GeometricBase.AbstractMethod` and fails for an owned concrete method type that is in
+  neither set. GeometricBase joins the test environment's `[deps]`.
 
 
 ## [0.19.1] — 2026-11-14
