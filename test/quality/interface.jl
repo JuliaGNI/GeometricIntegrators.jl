@@ -141,10 +141,9 @@ const METHOD_INSTANCES = [
 
     # A new method type without a constructor of no argument and without an instance above fails here.
     @testset "every owned method type is covered" begin
-        covered = vcat(NULLARY_METHOD_TYPES, [typeof(method)
-                                              for (_, method) in METHOD_INSTANCES])
+        checked = vcat([T() for T in NULLARY_METHOD_TYPES], last.(METHOD_INSTANCES))
         @testset "$T" for T in OWNED_METHOD_TYPES
-            @test any(S -> S <: T, covered)
+            @test any(method -> method isa T, checked)
         end
     end
 end
