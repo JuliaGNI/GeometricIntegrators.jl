@@ -11,6 +11,23 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
+## [Unreleased]
+
+### Tests
+
+* **Three SPARK cases whose outcome depends on rounding are asserted as rates.** Each runs from
+  50 starts that differ from q₀ by up to 24 ULPs in one component (`test/helpers/rounding_sweep.jl`),
+  and the test counts the starts with an accepted outcome. `VSPARK(SPARKLobattoIIIBIIIA(2))`
+  (K6) passes when at least 3/4 of them give an error below 1E-6 or raise `SingularException`;
+  `VSPARK(SPARKLobABD(3))` when at least 3/4 give an error below 8E-6; the order of
+  `SPARKLobattoIIIBIIIA(2)` stays `@test_broken` as "order ≈ 2 from at least 3/4 of the starts".
+  Each assertion at q₀ alone failed on some CI runners and passed on others with the same
+  packages and the same Julia: the `Julia 1` jobs on Ubuntu and Windows got an error of 5.8E-4 for
+  the first case, the `Julia min` jobs a `SingularException` for the second, and one `Julia min`
+  job an Unexpected Pass for the third. On aarch64 with Julia 1.12 and 1.13 the rates are 90 %,
+  88 % and 2 %. `scripts/spark_rounding_sweep.jl` measures them. No change to `src/`.
+
+
 ## [0.19.1] — 2026-11-14
 
 ### Changed
