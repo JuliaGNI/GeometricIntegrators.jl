@@ -1,10 +1,12 @@
 using GeometricIntegrators
 using GeometricIntegrators.SPARK
 using GeometricProblems.LotkaVolterra2d
+using Logging
 using RungeKutta
 using Test
 
 include("../helpers/verification_utilities.jl")
+include("../helpers/rounding_sweep.jl")
 
 # Dynamic (multi-Δt) convergence verification for the SPARK family, mirroring the
 # other test/verification/*_convergence_tests.jl suites. SPARK methods integrate the
@@ -45,8 +47,9 @@ end
 # 0.6 the time-stepping loop catches it itself, warns naming the timestep, and returns the
 # trajectory truncated there — so the deficiency now arrives as a nonsensical convergence
 # order rather than as a throw, and is recorded broken either way. That warning is
-# GeometricIntegratorsBase's own and `verbosity` does not gate it; six fire here, all from
-# the diverging methods below. See the 0.11.0 update in docs/src/audit.md.
+# GeometricIntegratorsBase's own and `verbosity` does not gate it; it fires from the diverging
+# methods below, three times on aarch64 with Julia 1.13, a number that depends on rounding.
+# See the 0.11.0 update in docs/src/audit.md.
 function broken_order(builder, method, tsteps, expected; label)
     @testset "$(label): order ≈ $(expected) (broken)" begin
         ok = try
@@ -58,6 +61,34 @@ function broken_order(builder, method, tsteps, expected; label)
             false
         end
         @test_broken ok  # issue #245
+    end
+end
+
+# `broken_order` as a rate, for an IDAE method whose order depends on rounding: the order is
+# estimated from each start of `perturbed_starts(q₀, 24)`, 50 starts, and the deficiency is that
+# fewer than 3/4 of them give `expected`. The sweep runs under a `NullLogger`, because the warning
+# of GeometricIntegratorsBase that `verbosity` does not gate would fire from most starts.
+function broken_order_rate(method, tsteps, expected; label)
+    @testset "$(label): order ≈ $(expected) over 50 starts (broken)" begin
+        hits = map(perturbed_starts(q₀, 24)) do q
+            build(Δt) = idaeproblem(q; timespan = (0.0, T), timestep = Δt, parameters = params)
+            function reference(prob)
+                ode = odeproblem(q; timespan = (0.0, T), timestep = timestep(prob),
+                    parameters = params)
+                integrate(ode, Gauss(8))
+            end
+            try
+                r = with_logger(NullLogger()) do
+                    estimate_convergence_order(build, method, tsteps;
+                        reference = reference, errormetric = emq, plateau = 5e-13,
+                        integrate_options = (verbosity = 0, warn_iterations = 0))
+                end
+                isapprox(r.order, expected; atol = 0.4)
+            catch
+                false
+            end
+        end
+        @test_broken count(hits) ≥ 3 * length(hits) / 4  # issue #245
     end
 end
 
@@ -180,8 +211,10 @@ end
             4; label = "SPARKLobattoIIIAIIIB(3)")
         broken_order(build_idae, SPARKGLRKLobattoIIIAIIIB(2), steps(20, 3),
             4; label = "SPARKGLRKLobattoIIIAIIIB(2)")
-        broken_order(build_idae, SPARKLobattoIIIBIIIA(2), steps(10, 2),
-            2; label = "SPARKLobattoIIIBIIIA(2)")
+        # its order depends on rounding: ≈ 2 from 1 of 50 starts on aarch64 with Julia 1.12 and
+        # 1.13 (`scripts/spark_rounding_sweep.jl`), and ≈ 2 at q₀ on a CI runner
+        broken_order_rate(SPARKLobattoIIIBIIIA(2), steps(10, 2), 2;
+            label = "SPARKLobattoIIIBIIIA(2)")
         broken_order(build_pdae, TableauHPARKLobattoIIIAIIIB(2),
             steps(10, 2), 2; label = "HPARKLobattoIIIAIIIB(2)")
 
