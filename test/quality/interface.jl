@@ -131,8 +131,11 @@ const METHOD_INSTANCES = [
 @testset "Interface conformance" begin
     @test !isempty(NULLARY_METHOD_TYPES)
 
-    @testset "$T()" for T in NULLARY_METHOD_TYPES
-        @test isempty(GeometricBase.interface_violations(T()))
+    # Each nullary method is built once, so the coverage check below counts the instances checked here.
+    nullary_methods = [T() for T in NULLARY_METHOD_TYPES]
+
+    @testset "$T()" for (T, method) in zip(NULLARY_METHOD_TYPES, nullary_methods)
+        @test isempty(GeometricBase.interface_violations(method))
     end
 
     @testset "$label" for (label, method) in METHOD_INSTANCES
@@ -141,7 +144,7 @@ const METHOD_INSTANCES = [
 
     # A new method type without a constructor of no argument and without an instance above fails here.
     @testset "every owned method type is covered" begin
-        checked = vcat([T() for T in NULLARY_METHOD_TYPES], last.(METHOD_INSTANCES))
+        checked = vcat(nullary_methods, last.(METHOD_INSTANCES))
         @testset "$T" for T in OWNED_METHOD_TYPES
             @test any(method -> method isa T, checked)
         end
