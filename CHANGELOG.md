@@ -11,6 +11,28 @@ are the original release notes, kept verbatim. Versions 0.12 – 0.14 were never
 remain a gap.
 
 
+## [Unreleased]
+
+### Compatibility
+
+* The floors rise to GeometricBase 0.15.5 and GeometricIntegratorsBase 0.7.2 for the
+  conformance check below. GeometricIntegratorsBase 0.7.2 adds the method of
+  `GeometricBase.interface_violations` for `GeometricMethod`. GeometricBase 0.15.5 accepts the
+  formula strings, such as `"2s"`, that `order` answers on many method types of this package;
+  0.15.4 reports each of them as a violation. No API changes.
+
+### Tests
+
+* **Interface conformance check.** `test/quality/interface.jl` runs in the `core` group and tests
+  `isempty(GeometricBase.interface_violations(m))` for every concrete method type of this package
+  with a constructor of no argument, and for an explicit list of instances of the method types
+  without one: Runge-Kutta, partitioned and variational Runge-Kutta, Galerkin variational,
+  Hamilton-Pontryagin, splitting, projection and SPARK methods. Each method is its own testset,
+  so a failure names the method and lists its violations. A further testset walks the subtypes
+  of `GeometricBase.AbstractMethod` and fails for an owned concrete method type that is in
+  neither set. GeometricBase joins the test environment's `[deps]`.
+
+
 ## [0.19.1] — 2026-11-14
 
 ### Changed
