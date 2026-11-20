@@ -48,7 +48,8 @@ end
 # trajectory truncated there — so the deficiency now arrives as a nonsensical convergence
 # order rather than as a throw, and is recorded broken either way. That warning is
 # GeometricIntegratorsBase's own and `verbosity` does not gate it; it fires from the diverging
-# methods below, three times on aarch64 with Julia 1.13, a number that depends on rounding. See the 0.11.0 update in docs/src/audit.md.
+# methods below, three times on aarch64 with Julia 1.13, a number that depends on rounding.
+# See the 0.11.0 update in docs/src/audit.md.
 function broken_order(builder, method, tsteps, expected; label)
     @testset "$(label): order ≈ $(expected) (broken)" begin
         ok = try
@@ -87,7 +88,7 @@ function broken_order_rate(method, tsteps, expected; label)
                 false
             end
         end
-        @test_broken count(hits) ≥ 3 * length(hits) ÷ 4  # issue #245
+        @test_broken count(hits) ≥ 3 * length(hits) / 4  # issue #245
     end
 end
 

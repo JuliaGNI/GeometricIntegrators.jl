@@ -379,7 +379,7 @@ end
     # aarch64 with Julia 1.12 and 1.13 (`scripts/spark_rounding_sweep.jl`). A CI runner raised
     # `SingularException` at q₀. So the test asserts the rate, with a margin for other CPUs.
     outcomes = errors_over_starts(VSPARK(SPARKLobABD(3)); verbosity = 0, warn_iterations = 0)
-    @test count(x -> x isa Float64 && x < 8E-6, outcomes) ≥ 3 * length(outcomes) ÷ 4
+    @test count(x -> x isa Float64 && x < 8E-6, outcomes) ≥ 3 * length(outcomes) / 4
 
     # converges to 5.2E-12. Its residual floor is ~3e-15, the highest of the SPARK family,
     # but so is its solversize (48), so the sized default f_abstol ≈ 1.1e-14 still clears it
@@ -420,7 +420,7 @@ end
     # runs at `verbosity = 0`.
     outcomes = errors_over_starts(VSPARK(SPARKLobattoIIIBIIIA(2)); verbosity = 0,
         warn_iterations = 0)
-    @test count(x -> x === :singular || x < 1E-6, outcomes) ≥ 3 * length(outcomes) ÷ 4
+    @test count(x -> x === :singular || x < 1E-6, outcomes) ≥ 3 * length(outcomes) / 4
 
     # --- known-broken (see docs/src/audit.md) --- assert the mechanism per case.
 

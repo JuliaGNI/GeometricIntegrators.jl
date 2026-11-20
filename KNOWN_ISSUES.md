@@ -99,8 +99,7 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
 - location: —
 - evidence: The case stalls —
   the solve stagnates after 3 iterations at rf_a = 3.57e-5 against the `f_abstol = 5.77e-15` it
-  asks for, and where it returns it is the one stagnation warning a full test run prints — but
-  the stall is a symptom. The stage system is **numerically singular**: cond ≈ 5.6E16, σmin = 5.7E-17
+  asks for — but the stall is a symptom. The stage system is **numerically singular**: cond ≈ 5.6E16, σmin = 5.7E-17
   against σmax = 3.2, with σmin an order below the `n·eps·σmax ≈ 1.8E-14` at which a 26×26 system
   stops having a numerical rank. That is the same matrix, to within a factor of 1.5 in σmin, as the
   `SPARKLobattoIIIAIIIB(2)` and `SPARKGLRK(2)` siblings the suite asserts `SingularException` for.
