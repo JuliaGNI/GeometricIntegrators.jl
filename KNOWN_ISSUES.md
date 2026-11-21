@@ -99,17 +99,19 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
 - location: —
 - evidence: The case stalls —
   the solve stagnates after 3 iterations at rf_a = 3.57e-5 against the `f_abstol = 5.77e-15` it
-  asks for, and where it returns it is the one stagnation warning a full test run prints — but
-  the stall is a symptom. The stage system is **numerically singular**: cond ≈ 5.6E16, σmin = 5.7E-17
+  asks for — but the stall is a symptom. The stage system is **numerically singular**: cond ≈ 5.6E16, σmin = 5.7E-17
   against σmax = 3.2, with σmin an order below the `n·eps·σmax ≈ 1.8E-14` at which a 26×26 system
   stops having a numerical rank. That is the same matrix, to within a factor of 1.5 in σmin, as the
   `SPARKLobattoIIIAIIIB(2)` and `SPARKGLRK(2)` siblings the suite asserts `SingularException` for.
 
   A plain `@test` on this case therefore reads one platform's luck as a property of the method.
-  Whether LAPACK's `getrf` lands on an exact zero pivot or on one
-  of ~1E-17 decides the outcome, so the same call raises on Julia 1.13 and nightly under Linux and
-  Windows and returns a ~1E-6 answer on 1.10 and 1.12 everywhere and on macOS throughout. The test
-  accepts both. What stays open is the method: `s = 2` is audit finding S8, degenerate at the
+  Whether the factorisation lands on an exact zero pivot, on one of ~1E-17 or on a usable one
+  decides the outcome, and a start a few ULPs away from q₀ or another CPU changes it. From 50
+  starts that differ from q₀ by up to 24 ULPs in one component, on aarch64 with Julia 1.12 and
+  1.13, 68 % give an error below 1E-6, 22 % raise `SingularException` and 10 % give errors up to
+  3.1E-3 (`scripts/spark_rounding_sweep.jl`); an x86 CI runner gave 5.8E-4 at q₀. The test asserts
+  that at least 3/4 of these starts give one of the first two outcomes. What stays open is the
+  method: `s = 2` is audit finding S8, degenerate at the
   lowest stage count, and the answer it sometimes returns is one produced by a Newton direction
   solved out of a rank-deficient matrix. It should not be treated as a supported configuration.
 - kind: defect
@@ -132,8 +134,11 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
   A rank-revealing factorization, or simply a pivot-magnitude threshold relative to `σmax`, would
   make the outcome deterministic and let a caller distinguish "this method is degenerate here" from
   "this step is hard". Both belong in SimpleSolvers rather than here, and neither is a compat-bump
-  change. Until then the SPARK suite has to accept two outcomes for at least one case, and this
-  package cannot tell a caller which of the two it got.
+  change. Until then the SPARK suite asserts a rate over 50 perturbed starts for the cases whose
+  outcome depends on rounding: `VSPARK(SPARKLobattoIIIBIIIA(2))` (the entry above),
+  `VSPARK(SPARKLobABD(3))`, which raises `SingularException` from 10 % of the starts on aarch64,
+  and the order of `SPARKLobattoIIIBIIIA(2)`, ≈ 2 from 1 of 50 starts there and from q₀ on an x86
+  CI runner. This package cannot tell a caller which outcome it got.
 - kind: upstream
 - found: 2026-08-16
 
