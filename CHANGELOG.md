@@ -13,6 +13,14 @@ remain a gap.
 
 ## [Unreleased]
 
+### Fixes
+
+* **`order` gives `"2s-2"` for the Lobatto IIIF, IIIF̄ and IIIG methods.** It gave `"2s"` for
+  `LobattoIIIF`, `LobattoIIIF̄`, `LobattoIIIG`, the partitioned pairs `LobattoIIIFIIIF̄`,
+  `LobattoIIIF̄IIIF` and `LobattoIIIGIIIḠ`, and the six VPRK methods of the same names. The
+  classical order of these tableaus is 2s − 2, as RungeKutta.jl states in its tableau docstrings
+  (JuliaGNI/RungeKutta.jl#57). No change to the coefficients or to the results.
+
 ### Compatibility
 
 * The floors rise to GeometricBase 0.15.5 and GeometricIntegratorsBase 0.7.2 for the
