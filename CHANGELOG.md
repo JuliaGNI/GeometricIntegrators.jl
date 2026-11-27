@@ -30,7 +30,9 @@ remain a gap.
 ### Compatibility
 
 * The RungeKutta floor rises from 0.6.4 to 0.6.8, so that `order` of a Lobatto IIIF, IIIF̄ or
-  IIIG method instance agrees with `order` of its type. No API changes.
+  IIIG method instance agrees with `order` of its type. The PrettyTables floor rises from 3.0.0
+  to 3.0.9, the floor of RungeKutta 0.6.8, so that the lowest versions resolve together. No API
+  changes.
 
 * The floors rise to GeometricBase 0.15.5 and GeometricIntegratorsBase 0.7.2 for the
   conformance check below. GeometricIntegratorsBase 0.7.2 adds the method of
