@@ -461,13 +461,3 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
   1.12 gets the fix.
 - kind: upstream
 - found: 2026-11-14
-
-### K28 · `order` of the `VPRKpTableau` type is `"2s"` for every tableau
-
-- location: `src/integrators/vi/vprk_ptableau.jl:85`
-- evidence: `GeometricBase.order(::Type{<:VPRKpTableau}) = "2s"` gives one string for every
-  projected VPRK method, whatever its tableau. The instance method on the line above reads the
-  order from the tableau, `RungeKutta.order(tableau(method))`, so the type and an instance can
-  disagree.
-- kind: defect
-- found: 2026-11-27
