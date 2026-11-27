@@ -148,7 +148,7 @@ a_{ij}^{E} &= \tfrac{1}{2} ( a_{ij}^{A} + a_{ij}^{B} ) .
 ```
 While the Lobatto IIIA, IIIB, IIIC and IIIC̄ methods are not symplectic on their own (although the Lobatto IIIA-IIIB and IIIC-IIIC̄ pairs constitute symplectic partitioned Runge-Kutta methods), the Lobatto IIID and IIIE methods are each symplectic by themselves.
 
-The Gauß methods are of order $2s$, the Radau methods or order $2s-1$ and the Lobatto methods are of order $2s-2$, with the exception of the Lobatto IIIF method. This method has been specifically constructed to be of order $2s$ as described in [[Fangzong:2016](@cite)].
+The Gauß methods are of order $2s$, the Radau methods or order $2s-1$ and the Lobatto methods are of order $2s-2$. The Lobatto IIIF method of [[Fangzong:2016](@cite)] is constructed so that its linear order, the order of its stability function, is $2s$. Its classical order is $2s-2$, because the Lobatto weights satisfy the simplifying assumption $B(2s-2)$ and not $B(2s-1)$.
 The Lobatto IIIG method is constructed in a similar fashion as the Lobatto IIID and IIIE methods by averaging the coefficients of the Lobatto IIIF method with its symplectic complement, i.e.,
 ```math
 a_{ij}^{G} = \tfrac{1}{2} ( a_{ij}^{F} + \bar{a}_{ij}^{F} ) ,
@@ -224,9 +224,9 @@ specifically
 | [`LobattoIIIC̄IIIC(s)`](@ref)    | Lobatto-IIIC̄-IIIC           | 2s-2  |
 | [`LobattoIIIDIIID̄(s)`](@ref)    | Lobatto-IIID-IIID̄           | 2s-2  |
 | [`LobattoIIIEIIIĒ(s)`](@ref)    | Lobatto-IIIE-IIIĒ           | 2s-2  |
-| [`LobattoIIIFIIIF̄(s)`](@ref)    | Lobatto-IIIF-IIIF̄           | 2s    |
-| [`LobattoIIIF̄IIIF(s)`](@ref)    | Lobatto-IIIF̄-IIIF           | 2s    |
-| [`LobattoIIIGIIIḠ(s)`](@ref)    | Lobatto-IIIG-IIIḠ           | 2s    |
+| [`LobattoIIIFIIIF̄(s)`](@ref)    | Lobatto-IIIF-IIIF̄           | 2s-2  |
+| [`LobattoIIIF̄IIIF(s)`](@ref)    | Lobatto-IIIF̄-IIIF           | 2s-2  |
+| [`LobattoIIIGIIIḠ(s)`](@ref)    | Lobatto-IIIG-IIIḠ           | 2s-2  |
 
 
 ## Implicit Equations

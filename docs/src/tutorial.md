@@ -394,9 +394,9 @@ where `tableau` is any tableau from [RungeKutta.Tableaus](@ref RungeKuttaTableau
 | [`LobattoIIIC`](@ref)           | 2s-2  | Lobatto-IIIC                |
 | [`LobattoIIID`](@ref)           | 2s-2  | Lobatto-IIID                |
 | [`LobattoIIIE`](@ref)           | 2s-2  | Lobatto-IIIE                |
-| [`LobattoIIIF`](@ref)           | 2s    | Lobatto-IIIF                |
-| [`LobattoIIIF`](@ref)           | 2s    | Lobatto-IIIF                |
-| [`LobattoIIIG`](@ref)           | 2s    | Lobatto-IIIG                |
+| [`LobattoIIIF`](@ref)           | 2s-2  | Lobatto-IIIF                |
+| [`LobattoIIIF̄`](@ref)           | 2s-2  | Lobatto-IIIF̄                |
+| [`LobattoIIIG`](@ref)           | 2s-2  | Lobatto-IIIG                |
 
 All of these tableaus are generated on the fly and take the number of stages `s` as parameter.
 
@@ -438,9 +438,9 @@ For most tableaus there also exist explicit shortcuts to select the method. Thes
 | [`LobattoIIIC̄IIIC`](@ref)       | 2s-2  | Lobatto-IIIC̄-IIIC           |
 | [`LobattoIIIDIIID̄`](@ref)       | 2s-2  | Lobatto-IIID-IIID̄           |
 | [`LobattoIIIEIIIĒ`](@ref)       | 2s-2  | Lobatto-IIIE-IIIĒ           |
-| [`LobattoIIIFIIIF̄`](@ref)       | 2s    | Lobatto-IIIF-IIIF̄           |
-| [`LobattoIIIF̄IIIF`](@ref)       | 2s    | Lobatto-IIIF̄-IIIF           |
-| [`LobattoIIIGIIIḠ`](@ref)       | 2s    | Lobatto-IIIG-IIIḠ           |
+| [`LobattoIIIFIIIF̄`](@ref)       | 2s-2  | Lobatto-IIIF-IIIF̄           |
+| [`LobattoIIIF̄IIIF`](@ref)       | 2s-2  | Lobatto-IIIF̄-IIIF           |
+| [`LobattoIIIGIIIḠ`](@ref)       | 2s-2  | Lobatto-IIIG-IIIḠ           |
 
 
 ### Integrators for implicit ODEs
@@ -465,8 +465,8 @@ All implicit Runge-Kutta and partitioned Runge-Kutta methods can also be applied
 | [`LobattoIIIC`](@ref)           | 2s-2  | Lobatto-IIIC                |
 | [`LobattoIIID`](@ref)           | 2s-2  | Lobatto-IIID                |
 | [`LobattoIIIE`](@ref)           | 2s-2  | Lobatto-IIIE                |
-| [`LobattoIIIF`](@ref)           | 2s    | Lobatto-IIIF                |
-| [`LobattoIIIG`](@ref)           | 2s    | Lobatto-IIIG                |
+| [`LobattoIIIF`](@ref)           | 2s-2  | Lobatto-IIIF                |
+| [`LobattoIIIG`](@ref)           | 2s-2  | Lobatto-IIIG                |
 |                                 |       |                             |
 | [`LobattoIIIAIIIB`](@ref)       | 2s-2  | Lobatto-IIIA-IIIB           |
 | [`LobattoIIIBIIIA`](@ref)       | 2s-2  | Lobatto-IIIB-IIIA           |
@@ -476,9 +476,9 @@ All implicit Runge-Kutta and partitioned Runge-Kutta methods can also be applied
 | [`LobattoIIIC̄IIIC`](@ref)       | 2s-2  | Lobatto-IIIC̄-IIIC           |
 | [`LobattoIIIDIIID̄`](@ref)       | 2s-2  | Lobatto-IIID-IIID̄           |
 | [`LobattoIIIEIIIĒ`](@ref)       | 2s-2  | Lobatto-IIIE-IIIĒ           |
-| [`LobattoIIIFIIIF̄`](@ref)       | 2s    | Lobatto-IIIF-IIIF̄           |
-| [`LobattoIIIF̄IIIF`](@ref)       | 2s    | Lobatto-IIIF̄-IIIF           |
-| [`LobattoIIIGIIIḠ`](@ref)       | 2s    | Lobatto-IIIG-IIIḠ           |
+| [`LobattoIIIFIIIF̄`](@ref)       | 2s-2  | Lobatto-IIIF-IIIF̄           |
+| [`LobattoIIIF̄IIIF`](@ref)       | 2s-2  | Lobatto-IIIF̄-IIIF           |
+| [`LobattoIIIGIIIḠ`](@ref)       | 2s-2  | Lobatto-IIIG-IIIḠ           |
 
 
 ### Integrators for Lagrangian ODEs

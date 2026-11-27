@@ -221,10 +221,11 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
 ### K12 · Known-broken cases remain
 
 - location: —
-- evidence: A full run reports 26 broken assertions, concentrated in SPARK: 10 in the SPARK convergence suite
-  and 6 in the SPARK integrator suite, with 3 variational, 3 DGVI, 2 PRK, 1 RK and 1
-  PGLRK/VPRKpTableau making up the rest. (The suite contains 24 `@test_broken` statements; the two
-  tallies differ because several sit inside loops and others are not reached.)
+- evidence: The suite contains 21 `@test_broken` statements, concentrated in SPARK: 11 in
+  `test/spark/spark_integrators_tests.jl` and 5 in `test/verification/spark_convergence_tests.jl`,
+  with 2 DGVI, 1 variational, 1 RK and 1 PGLRK/VPRKpTableau making up the rest
+  (`git grep -c "@test_broken" -- test`). A run reports a different number of broken assertions,
+  because several statements sit inside loops and others are not reached.
 
   Most are inherent properties of the methods rather than implementation defects: symplectic plus
   constraint-at-solution reduces order or diverges for the Lobatto IIIA-IIIB and IIIB-IIIA
@@ -460,3 +461,13 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
   1.12 gets the fix.
 - kind: upstream
 - found: 2026-11-14
+
+### K28 · `order` of the `VPRKpTableau` type is `"2s"` for every tableau
+
+- location: `src/integrators/vi/vprk_ptableau.jl:85`
+- evidence: `GeometricBase.order(::Type{<:VPRKpTableau}) = "2s"` gives one string for every
+  projected VPRK method, whatever its tableau. The instance method on the line above reads the
+  order from the tableau, `RungeKutta.order(tableau(method))`, so the type and an instance can
+  disagree.
+- kind: defect
+- found: 2026-11-27

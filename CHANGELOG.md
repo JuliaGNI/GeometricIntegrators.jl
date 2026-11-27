@@ -19,7 +19,11 @@ remain a gap.
   `LobattoIIIF`, `LobattoIIIF̄`, `LobattoIIIG`, the partitioned pairs `LobattoIIIFIIIF̄`,
   `LobattoIIIF̄IIIF` and `LobattoIIIGIIIḠ`, and the six VPRK methods of the same names. The
   classical order of these tableaus is 2s − 2, as RungeKutta.jl states in its tableau docstrings
-  (JuliaGNI/RungeKutta.jl#57). No change to the coefficients or to the results.
+  (JuliaGNI/RungeKutta.jl#57). The order tables of `rk.md` and of the tutorial give 2s − 2 for
+  them too, and the tutorial lists `LobattoIIIF̄` where it listed `LobattoIIIF` twice. The four
+  convergence tests of `LobattoIIIFIIIF̄(2)`, `LobattoIIIGIIIḠ(2)`, `VPRKLobattoIIIF̄(2)` and
+  `VPRKLobattoIIIG(2)` assert order 2, where they were `@test_broken` at order 4, and audit finding
+  2 is resolved. No change to the coefficients or to the results.
 
 ### Compatibility
 

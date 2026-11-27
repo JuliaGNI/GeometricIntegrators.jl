@@ -65,19 +65,17 @@ vref(prob) = integrate(prob, VPRKGauss(8); f_abstol = 4e-15)
         @test_nowarn test_convergence_order(
             vbuild, VPRKLobattoIIIAIIIB(2), steps(5, 4); reference = vref,
             errormetric = emq, expected = 2, label = "VPRKLobattoIIIAIIIB(2)")
+        @test_nowarn test_convergence_order(
+            vbuild, VPRKLobattoIIIF̄(2), steps(5, 4); reference = vref,
+            errormetric = emq, expected = 2, label = "VPRKLobattoIIIF̄(2)")
+        @test_nowarn test_convergence_order(
+            vbuild, VPRKLobattoIIIG(2), steps(5, 4); reference = vref,
+            errormetric = emq, expected = 2, label = "VPRKLobattoIIIG(2)")
 
-        # Known order deficiencies (see docs/src/audit.md): several higher-order
-        # Lobatto VPRK methods do not reach their documented order. The "order 2s"
-        # IIIF/IIIG methods only reach order 2 for s = 2, and VPRKLobattoIIIAIIIB(3)
-        # reaches order 2 rather than 2s-2 = 4 (whereas the plain partitioned
-        # LobattoIIIAIIIB(3) does reach order 4).
+        # Known order deficiency (see docs/src/audit.md): VPRKLobattoIIIAIIIB(3)
+        # reaches order 2 rather than 2s-2 = 4, whereas the plain partitioned
+        # LobattoIIIAIIIB(3) does reach order 4.
         @testset "Known order deficiencies (broken)" begin
-            r = estimate_convergence_order(vbuild, VPRKLobattoIIIF̄(2), steps(5, 4);
-                reference = vref, errormetric = emq)
-            @test_broken isapprox(r.order, 4; atol = 0.4)  # issue #247
-            r = estimate_convergence_order(vbuild, VPRKLobattoIIIG(2), steps(5, 4);
-                reference = vref, errormetric = emq)
-            @test_broken isapprox(r.order, 4; atol = 0.4)  # issue #247
             r = estimate_convergence_order(vbuild, VPRKLobattoIIIAIIIB(3), steps(3, 4);
                 reference = vref, errormetric = emq)
             @test_broken isapprox(r.order, 4; atol = 0.4)  # issue #247
