@@ -18,14 +18,18 @@ remain a gap.
 * **`order` gives `"2s-2"` for the Lobatto IIIF, IIIF̄ and IIIG methods.** It gave `"2s"` for
   `LobattoIIIF`, `LobattoIIIF̄`, `LobattoIIIG`, the partitioned pairs `LobattoIIIFIIIF̄`,
   `LobattoIIIF̄IIIF` and `LobattoIIIGIIIḠ`, and the six VPRK methods of the same names. The
-  classical order of these tableaus is 2s − 2, as RungeKutta.jl states in its tableau docstrings
-  (JuliaGNI/RungeKutta.jl#57). The order tables of `rk.md` and of the tutorial give 2s − 2 for
+  classical order of these tableaus is 2s − 2, as RungeKutta.jl 0.6.8 states in its tableau
+  docstrings. `order` of an instance, such as `order(LobattoIIIF(2))`, reads the order of the
+  RungeKutta tableau and gives 2s − 2 with RungeKutta 0.6.8, where it gave 2s. The order tables of `rk.md` and of the tutorial give 2s − 2 for
   them too, and the tutorial lists `LobattoIIIF̄` where it listed `LobattoIIIF` twice. The four
   convergence tests of `LobattoIIIFIIIF̄(2)`, `LobattoIIIGIIIḠ(2)`, `VPRKLobattoIIIF̄(2)` and
   `VPRKLobattoIIIG(2)` assert order 2, where they were `@test_broken` at order 4, and audit finding
   2 is resolved. No change to the coefficients or to the results.
 
 ### Compatibility
+
+* The RungeKutta floor rises from 0.6.4 to 0.6.8, so that `order` of a Lobatto IIIF, IIIF̄ or
+  IIIG method instance agrees with `order` of its type. No API changes.
 
 * The floors rise to GeometricBase 0.15.5 and GeometricIntegratorsBase 0.7.2 for the
   conformance check below. GeometricIntegratorsBase 0.7.2 adds the method of
