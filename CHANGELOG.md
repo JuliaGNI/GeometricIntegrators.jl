@@ -24,7 +24,8 @@ remain a gap.
   of `rk.md` and of the tutorial give 2s − 2 for them too, and the tutorial lists `LobattoIIIF̄`
   where it listed `LobattoIIIF` twice. The four convergence tests of `LobattoIIIFIIIF̄(2)`,
   `LobattoIIIGIIIḠ(2)`, `VPRKLobattoIIIF̄(2)` and `VPRKLobattoIIIG(2)` assert order 2, where they
-  were `@test_broken` at order 4, and audit finding 2 is resolved. No change to the coefficients or to the results.
+  were `@test_broken` at order 4, and audit finding 2 is resolved. No change to the coefficients
+  or to the results.
 
 ### Compatibility
 
