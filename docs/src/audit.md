@@ -14,8 +14,10 @@ Two complementary passes were used:
   empirically measures the convergence order of every method and the
   energy behaviour of the geometric integrators. Convergence orders were
   measured on the **nonlinear** pendulum / Lotka–Volterra problems where the true
-  (nonlinear) order matters, because the harmonic oscillator is linear and lets
-  some methods *super-converge* beyond their nominal order.
+  (nonlinear) order matters, and for the single-tableau Runge–Kutta methods on the
+  nonlinear non-autonomous scalar problem `y' = cos(t)⋅y²`, `y(0) = 1/2`, with the
+  exact solution `y(t) = 1/(2 − sin t)`, because the harmonic oscillator is linear
+  and lets some methods *super-converge* beyond their nominal order.
 
 Concrete Butcher-tableau coefficients (Gauß/Radau/Lobatto nodes, weights, `aᵢⱼ`)
 are defined in the external **RungeKutta.jl** package, not in this repository, so
@@ -30,7 +32,7 @@ order).
 | # | Severity | Method(s) | Issue | Root cause | Action |
 |:--|:---------|:----------|:------|:-----------|:-------|
 | 1 | correctness (**resolved**) | `KraaijevangerSpijker` | `order()` and the docs claimed 2, but the method is order **1** | Order *attribute* was wrong; the tableau genuinely satisfies only the order-1 conditions | Fixed upstream in RungeKutta.jl **v0.5.22** (`order()` now returns 1); `rk.md` order table corrected 2→1; verification test now asserts order 1 |
-| 2 | correctness (**resolved**) | `LobattoIIIF`, `LobattoIIIG` and their partitioned/VPRK variants | Documented "order 2s"; achieve order **2s−2** (order 2 for s=2) | Order *attribute* was wrong; the construction gives linear order 2s and classical order 2s−2 | Fixed upstream in RungeKutta.jl **v0.6.8** (the tableau order is 2s−2); `order` of the method types, `rk.md` and the tutorial tables corrected 2s→2s−2; verification tests now assert order 2 |
+| 2 | correctness (**resolved**) | `LobattoIIIF`, `LobattoIIIG` and their partitioned/VPRK variants | Documented "order 2s"; achieve order **2s−2** (order 2 for s=2) | Order *attribute* was wrong; the construction gives linear order 2s and classical order 2s−2 | Fixed upstream in RungeKutta.jl **v0.6.8** (the tableau order is 2s−2); `order` of the method types, `rk.md` and the tutorial tables corrected 2s→2s−2; verification tests now assert order 2s−2 for s = 2, 3 on `y' = cos(t)⋅y²` and order 2 for the partitioned and VPRK forms on the pendulum |
 | 3 | correctness | `LobattoIIIB(s)` as a **standalone ODE** integrator | Documented 2s−2, achieves order **1** | Singular `A` ⇒ degenerate stage system when used standalone | Recorded as `@test_broken`; documented as partitioned/variational-only |
 | 4 | correctness (**fixed**) | `McLachlan4` | Documented 4th-order composition achieved only order **2** | Composition-*ordering* bug — each stage applied `φ` before its adjoint `φ*`; the √19 coefficient values themselves are the correct McLachlan (1995) values | **Fixed** (swap the `a`/`b` vectors in the `SplittingCoefficientsNonSymmetric` constructor); now converges at order 4 |
 | 5 | correctness | `VPRKLobattoIIIAIIIB(3)` | Documented 2s−2 = 4, achieves order **2** (the plain PRK `LobattoIIIAIIIB(3)` reaches 4) | VPRK-specific | Recorded as `@test_broken`; reported |
@@ -91,7 +93,10 @@ property is not realised by the coefficients. **Resolved:** the construction giv
 linear order 2s, the order of the stability function, and classical order 2s−2,
 because the Lobatto weights satisfy B(2s−2) and not B(2s−1). RungeKutta.jl v0.6.8
 corrects the order attribute of the tableaus to 2s−2; `order` of the method types,
-`rk.md` and the tutorial tables give 2s−2, and the verification tests assert order 2.
+`rk.md` and the tutorial tables give 2s−2. The verification tests assert order
+2s−2 for s = 2, 3 on the nonlinear non-autonomous problem `y' = cos(t)⋅y²`, the
+linear order 2s of `LobattoIIIF(2)` and `LobattoIIIF̄(2)` on the harmonic
+oscillator, and order 2 for the partitioned and VPRK forms on the pendulum.
 
 **LobattoIIIB standalone (finding 3).** `LobattoIIIB(2)` has a singular
 coefficient matrix (`A = [[½,0],[½,0]]`), so applied directly to an ODE its stage
