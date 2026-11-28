@@ -63,6 +63,20 @@ remain a gap.
   of `GeometricBase.AbstractMethod` and fails for an owned concrete method type that is in
   neither set. GeometricBase joins the test environment's `[deps]`.
 
+* **The single-tableau Runge-Kutta methods are tested for their classical order on a nonlinear
+  non-autonomous problem.** `test/verification/rk_convergence_tests.jl` integrates
+  `y' = cos(t)⋅y²`, `y(0) = 1/2`, on `[0, 1]` and measures the error against the exact solution
+  `y(t) = 1/(2 − sin t)`. It asserts the order of every method of its harmonic-oscillator
+  testsets except `LobattoIIIB(2)`, and order 2s − 2 of `LobattoIIIF(s)`, `LobattoIIIF̄(s)` and
+  `LobattoIIIG(s)` for s = 2, 3. The harmonic oscillator is linear, so it measures only the
+  linear order and cannot see a stage time that ignores `c`, nor a Gauss tableau swapped for
+  Lobatto IIIF, which has the same stability function. The same file asserts the linear order 4
+  of `LobattoIIIF(2)` and `LobattoIIIF̄(2)` and 2 of `LobattoIIIG(2)` on the harmonic oscillator,
+  `order(M) == "2s-2"` for the twelve Lobatto IIIF, IIIF̄ and IIIG method types, and
+  `order(M(s)) == 2s - 2` for the six single and partitioned ones at s = 2, 3, 4. The two
+  remaining `@test_broken` order tests of issue #247, `LobattoIIIB(2)` and
+  `VPRKLobattoIIIAIIIB(3)`, name their audit findings 3 and 5. No change to `src/`.
+
 
 ## [0.19.1] — 2026-11-14
 

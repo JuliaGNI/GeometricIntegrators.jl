@@ -461,3 +461,22 @@ merges, and the CHANGELOG entry of the fix names its ID. IDs are never reused.
   1.12 gets the fix.
 - kind: upstream
 - found: 2026-11-14
+
+### K28 · Audit finding 2 lists the standalone `LobattoIIIG(3)` among the VPRK methods
+
+- location: `docs/src/audit.md:91`
+- evidence: the paragraph of finding 2 reads "as VPRK methods (`VPRKLobattoIIIF̄(2)`,
+  `VPRKLobattoIIIG(2)`→2; `LobattoIIIG(3)`→4)". `LobattoIIIG(3)` is the single-tableau method,
+  not a VPRK method; `grep -rn "LobattoIIIG(3)" test/` finds it only in the nonlinear testset of
+  `test/verification/rk_convergence_tests.jl`, and no convergence test of `VPRKLobattoIIIG(3)`.
+- kind: docs
+- found: #288
+
+### K29 · A comment in `rk_convergence_tests.jl` tells the history of an order attribute
+
+- location: `test/verification/rk_convergence_tests.jl:74`
+- evidence: the comment above the `KraaijevangerSpijker` test reads "its order attribute was
+  corrected to 1 in RungeKutta.jl v0.5.22". A comment states the present; the history belongs in
+  `CHANGELOG.md`.
+- kind: docs
+- found: #288

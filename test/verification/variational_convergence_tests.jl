@@ -72,9 +72,9 @@ vref(prob) = integrate(prob, VPRKGauss(8); f_abstol = 4e-15)
             vbuild, VPRKLobattoIIIG(2), steps(5, 4); reference = vref,
             errormetric = emq, expected = 2, label = "VPRKLobattoIIIG(2)")
 
-        # Known order deficiency (see docs/src/audit.md): VPRKLobattoIIIAIIIB(3)
-        # reaches order 2 rather than 2s-2 = 4, whereas the plain partitioned
-        # LobattoIIIAIIIB(3) does reach order 4.
+        # Known order deficiency (audit finding 5 in docs/src/audit.md):
+        # VPRKLobattoIIIAIIIB(3) reaches order 2 rather than 2s-2 = 4, whereas the
+        # plain partitioned LobattoIIIAIIIB(3) does reach order 4.
         @testset "Known order deficiencies (broken)" begin
             r = estimate_convergence_order(vbuild, VPRKLobattoIIIAIIIB(3), steps(3, 4);
                 reference = vref, errormetric = emq)
