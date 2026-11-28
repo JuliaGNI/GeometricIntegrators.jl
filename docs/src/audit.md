@@ -85,8 +85,8 @@ valid order-1 method); the `rk.md` order table has been updated to 1 and the
 verification test now asserts order 1.
 
 **LobattoIIIF / LobattoIIIG (finding 2).** Documented as order `2s` (the Fangzong
-construction, [Fangzong:2016]). Measured order is `2s−2` in every context tested
-— standalone (`LobattoIIIF(2)`→2), as symplectic partitioned pairs
+construction, [Fangzong:2016]). Measured classical order is `2s−2` in every context
+tested — standalone (`LobattoIIIF(2)`→2), as symplectic partitioned pairs
 (`LobattoIIIFIIIF̄(2)`, `LobattoIIIGIIIḠ(2)`→2), and as VPRK methods
 (`VPRKLobattoIIIF̄(2)`, `VPRKLobattoIIIG(2)`→2; `LobattoIIIG(3)`→4). The order-2s
 property is not realised by the coefficients. **Resolved:** the construction gives
