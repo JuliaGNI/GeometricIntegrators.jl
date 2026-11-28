@@ -177,7 +177,7 @@ end
             ("LobattoIIIG(2)", LobattoIIIG(2), 10, 4, 2),
             ("LobattoIIIG(3)", LobattoIIIG(3), 6, 4, 4)
         )
-        for (label, method, n0, k, expected) in cases
+        @testset "$label" for (label, method, n0, k, expected) in cases
             test_convergence_order(
                 nonlinear_build, method, steps(n0, k); reference = prob -> nothing,
                 errormetric = nonlinear_error, expected = expected,
