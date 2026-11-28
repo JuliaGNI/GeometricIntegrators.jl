@@ -5,9 +5,11 @@ using Test
 include("../helpers/verification_utilities.jl")
 
 # The harmonic oscillator has an analytic solution, so we can measure the true
-# error directly. It is a *linear* problem, so some methods super-converge on it;
-# the assertions below therefore only require the empirical order to match the
-# documented order (super-convergence beyond that is not flagged).
+# error directly. It is a *linear* problem, so it measures the linear order, and
+# some methods super-converge on it. The harmonic-oscillator testsets below
+# therefore only require the empirical order to match the documented order
+# (super-convergence beyond that is not flagged); only the testset "Linear order
+# of Lobatto IIIF, IIIF̄ and IIIG" asserts a linear order above the classical one.
 const T = 1.0
 build(Δt) = odeproblem(; timespan = (0.0, T), timestep = Δt)
 
