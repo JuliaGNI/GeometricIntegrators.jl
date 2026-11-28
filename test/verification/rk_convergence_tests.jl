@@ -136,7 +136,8 @@ end
     end
 
     # Classical order on the nonlinear non-autonomous problem, with the same base
-    # steps and refinement levels as on the harmonic oscillator.
+    # steps and refinement levels as on the harmonic oscillator; LobattoIIIF(3),
+    # LobattoIIIF̄(3) and LobattoIIIG(3) take those of LobattoIIIA(3).
     @testset "Nonlinear non-autonomous problem" begin
         cases = (
             ("ExplicitEulerRK", ExplicitEulerRK(), 10, 5, 1),
